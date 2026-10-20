@@ -1,0 +1,67 @@
+From ac3538c45cb4d4f84450acf6140865adf95f8c7d Mon Sep 17 00:00:00 2001
+From: "aryehcitron@gmail.com" <aryehcitron@gmail.com>
+Date: Tue, 20 Oct 2026 05:03:52 +0100
+Subject: [PATCH 7/8] 5.0.0 draft, LOCAL ONLY: the data file's rows say
+ TestRunReport.krkl (merge note, query's folder search, Run.json example,
+ TestRunReportDataFormat, GenerateMergeableData)
+
+---
+ Generated-Reports.md    | 8 ++++----
+ Report-Configuration.md | 4 ++--
+ 2 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/Generated-Reports.md b/Generated-Reports.md
+index 427b36e..f775726 100644
+--- a/Generated-Reports.md
++++ b/Generated-Reports.md
+@@ -23,12 +23,12 @@ After tests complete, the following files are written to the `Reports` folder in
+ | `Run.json` | What this run is and what it wrote: its run id, when it ended, the suite, how many scenarios and how many failed, and the files and attachments that reached disk. Written **last**, so a directory without one is a run that did not finish. See [Earlier runs](#earlier-runs-runjson-and-runs) | No | Yes (JSON) | Yes (3.27.0) |
+ | `runs/<run>/` | The runs before this one, each whole. See [Earlier runs](#earlier-runs-runjson-and-runs) | - | - | When `KeepRuns` > 0: 3 off CI, 0 on CI by default (3.27.0) |
+ 
+-> A merged run (`kronikol merge`) writes its own `TestRunReport.html` and `TestRunReport.json` — see
++> A merged run (`kronikol merge`) writes its own `TestRunReport.html` and data file (`TestRunReport.krkl` when any input is one); see
+ > [Merging Parallel Reports](Merging-Parallel-Reports).
+ 
+ > **Data format:** `Specifications` data defaults to `.yml` (`SpecificationsDataFormat`); `TestRunReport` data defaults to `.json` (`TestRunReportDataFormat`). Set either to `DataFormat.Json`, `DataFormat.Yaml` or `DataFormat.Xml` to change it.
+ 
+-> **File names:** All file names are configurable via `HtmlSpecificationsFileName`, `HtmlTestRunReportFileName`, and `YamlSpecificationsFileName` on `ReportConfigurationOptions`. A `kronikol query` given a folder finds a `TestRunReport.json` and nothing else, so with a custom `HtmlTestRunReportFileName` every command the run prints, and every command in `Failures.md`, names the data file itself (`kronikol query failures Checkout.json`; `Failures.md` since 4.20.6).
++> **File names:** All file names are configurable via `HtmlSpecificationsFileName`, `HtmlTestRunReportFileName`, and `YamlSpecificationsFileName` on `ReportConfigurationOptions`. A `kronikol query` given a folder finds a `.krkl` of any name, but a JSON data file only when its name ends `TestRunReport.json`, so with a custom `HtmlTestRunReportFileName` every command the run prints, and every command in `Failures.md`, names the data file itself (`kronikol query failures Checkout.krkl`; `Failures.md` since 4.20.6).
+ 
+ ---
+ 
+@@ -432,8 +432,8 @@ Reports/
+ 
+ ```json
+ { "runManifestVersion": 1, "run": "local:20260918T101611Z:ab12cd34", "at": "2026-09-18T10:16:11Z",
+-  "suite": "Checkout", "scenarios": 396, "failed": 1, "partial": null, "kronikolVersion": "3.27.0",
+-  "files": ["TestRunReport.html", "TestRunReport.json", "Failures.md", "Failures.jsonl", "History.run.json"],
++  "suite": "Checkout", "scenarios": 396, "failed": 1, "partial": null, "kronikolVersion": "5.0.0",
++  "files": ["TestRunReport.html", "TestRunReport.krkl", "Failures.md", "Failures.jsonl", "History.run.json"],
+   "attachments": ["attachments/checkout_failure.png"] }
+ ```
+ 
+diff --git a/Report-Configuration.md b/Report-Configuration.md
+index ee09d8a..44f1125 100644
+--- a/Report-Configuration.md
++++ b/Report-Configuration.md
+@@ -90,7 +90,7 @@ new ReportConfigurationOptions
+ }
+ ```
+ 
+-The `TestRunReportDataFormat` controls the format of the machine-readable test run data file (default: `TestRunReport.json`). When diagram and tracking data is available, the file includes PlantUML source and HTTP interaction traces per scenario. See [[Generated Reports › TestRunReport.json (Machine-Readable Test Run Data)|Generated-Reports#testrunreportjson-machine-readable-test-run-data]].
++The `TestRunReportDataFormat` controls the format of the machine-readable test run data file (default: JSON, written compressed as `TestRunReport.krkl` from 5.0.0; see `CompressTestRunReport`). When diagram and tracking data is available, the file includes PlantUML source and HTTP interaction traces per scenario. See [[Generated Reports › TestRunReport.json (Machine-Readable Test Run Data)|Generated-Reports#testrunreportjson-machine-readable-test-run-data]].
+ 
+ The `SpecificationsDataFormat` controls the format of the machine-readable specifications file (default: `Specifications.yml`).
+ 
+@@ -187,7 +187,7 @@ The `SpecificationsDataFormat` controls the format of the machine-readable speci
+ | `GenerateSpecificationsData` | `bool` | `true` | When `false`, skips generating the specifications data file (YAML/JSON/XML). |
+ | `GenerateTestRunReportData` | `bool` | `true` | When `false`, skips generating the test run report data file. |
+ | `CompressTestRunReportPayloads` | `bool` | `true` (`false` before 4.0.0) | When `true` (and the data format is JSON), a captured body or a diagram's PlantUML source of 8,192 characters or more (512 in 4.0.0 and 4.0.1) is written in `TestRunReport.json` as `{"$h", "$n", "$z"}` in place of its text, unless that would not make it smaller: `$z` is the base64 of the gzip of the text's UTF-8, `$h` its `b:` address and `$n` its length. A file holding one declares `formatVersion` 2. `kronikol query`, `kronikol merge` and the skill's `query.py` from 3.35.0 read it as they read the plain form; an older `kronikol` refuses it and says to upgrade. See [[Generated Reports › Compressed payloads|Generated-Reports#compressed-payloads-3350]] (3.35.0, #85; the default becomes `true` at 4.0.0). **Obsolete from 5.0.0** (warning CS0618), and removed in v6: it applies only to the `TestRunReport.json` a run writes with `CompressTestRunReport = false`, since a `.krkl` holds every payload as text inside a file compressed whole. |
+-| `GenerateMergeableData` | `bool` | `false` | When `true` (and the data format is JSON), enriches `TestRunReport.json` with everything needed to reconstruct a full HTML report later — component relationships, internal-flow data, whole-test-flow fragments, CI metadata and the run's diagnostics — so several files can be combined with `kronikol merge`, which since 3.1.0 writes the merged data file beside the merged HTML. See [Merging Parallel Reports](Merging-Parallel-Reports). The file is larger than the standard report. |
++| `GenerateMergeableData` | `bool` | `false` | When `true` (and the data format is JSON), enriches the data file (`TestRunReport.krkl`, or `TestRunReport.json`) with everything needed to reconstruct a full HTML report later — component relationships, internal-flow data, whole-test-flow fragments, CI metadata and the run's diagnostics — so several files can be combined with `kronikol merge`, which since 3.1.0 writes the merged data file beside the merged HTML. See [Merging Parallel Reports](Merging-Parallel-Reports). The file is larger than the standard report. |
+ | `GenerateTestRunReportSchema` | `bool` | `false` (`true` in 4.x) | When `true`, writes the data file's schema beside it: `TestRunReport.schema.json` for a JSON or `.krkl` data file, `TestRunReport.schema.xsd` for XML. Nothing in Kronikol reads it; it is there for a consumer who validates the data file, or the JSON `kronikol decode` writes. `kronikol merge --schema` and `kronikol ingest --schema` ask for it from a command line. |
+ | `GenerateSpecificationsMarkdown` | `bool` | `false` | When `true`, writes `<YamlSpecificationsFileName>.md` — the specification as prose, with no run data at all. Unlike its two siblings it is **not** blanked on a failed run. Suppressed by `ExpectedTestCount` like every other specification output. See [Generated Reports](Generated-Reports#specificationsmd). Since 3.1.0. |
+ | `GenerateCtrfReport` | `bool` | `false` | When `true`, writes `ctrf-report.json` — the run in [Common Test Report Format](https://ctrf.io), for CI tooling that already reads it. Carries failure messages and traces verbatim, and is swept up by `PublishCiArtifacts` like every other `.json` in the folder. See [Generated Reports](Generated-Reports#ctrf-reportjson-optional). Since 3.1.0. |
+-- 
+2.53.0.windows.3
+

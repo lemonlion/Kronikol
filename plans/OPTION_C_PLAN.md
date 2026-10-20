@@ -1310,3 +1310,19 @@ decision of the owner's, not part of this plan.
   change listener not reading the empty state: the two typed facts; no read at start: the link, both ways; Clear All
   wired only with the bar: the fact without it; an empty state that never hides again: the two typed facts)
   (`checks/mutate-s14-empty.ps1`).
+- 2026-10-20, S14 closes, and with it the plan. The wiki's 5.0.0 pages are in `wiki/series/` as eight patches on the
+  live wiki's `master` at `7295fb3`: TAGS_PLAN T4's patch, REPORT_FORMAT_PLAN's six from kronikol-39's wiki clone, and
+  this plan's pages. Migrating to v5 is one page, with one table of every 5.0.0 change and the setting that keeps the
+  4.x behaviour, one snippet, kronikol-39's data file sections, and the report's and the tags' pages beside it for the
+  detail. `wiki/NOTES.md` says how to apply the series, which applied to `7295fb3` gives exactly the tree it was
+  exported from, and `wiki/linkcheck.py` checks every link and anchor. That check found a 4.x fault on the live wiki:
+  Merging Parallel Reports linked Querying Reports' compressed reports section by an anchor ending `4290`, from before
+  the section shipped as 4.30.0, so the link opened the page at its top; kronikol-39 fixed it on the live wiki the
+  same day (`7295fb3`, `b5c9a27` and that line), and the series was exported again on it. An adversarial review of the
+  pages against the code found eleven faults, ten in the wording, fixed in the pages, and one in the code, the empty
+  state on a page without the bar (the entry before this). The Kronikol4J ledger entry is `kronikol4j-ledger.md`, for
+  the port's `docs/REMAINING_PARITY.md` when 5.0.0 ships; its references hold at the port's `92d6b28`. origin/main is
+  merged in at `ed7fb583` (`7e673e70`; two conflicts, the changelog's two Documentation lists joined, and
+  PLANS_STATUS's new TAGS_PLAN row beside v5's REPORT_FORMAT_PLAN row). Checks: on `7e673e70` the full Playwright
+  suite passes 1,377 with 28 skipped and the full core suite 8,499 with 2 skipped. Nothing is pushed: the branch, the
+  wiki series and the ledger entry wait for 5.0.0.

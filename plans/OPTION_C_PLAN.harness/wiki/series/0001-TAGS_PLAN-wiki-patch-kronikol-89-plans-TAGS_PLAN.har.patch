@@ -1,0 +1,1119 @@
+From 7720e389f0513b2210127f3552dd14cc2801d3f4 Mon Sep 17 00:00:00 2001
+From: "aryehcitron@gmail.com" <aryehcitron@gmail.com>
+Date: Tue, 20 Oct 2026 05:22:31 +0100
+Subject: [PATCH 1/8] TAGS_PLAN wiki patch (kronikol-89,
+ plans/TAGS_PLAN.harness/wiki/wiki-tags.patch at cd993d45) on origin/master
+ b5c9a27; its Querying-Reports scenarios-row hunk applied by hand (the rows
+ around it changed after 450844e). Here only to test my series on top
+
+---
+ API-Reference.md                 |  7 +--
+ Framework-Integration-Guides.md  | 16 +++++--
+ Generated-Reports.md             | 38 +++++++++++------
+ Home.md                          |  2 +-
+ How-To-Guides.md                 |  4 +-
+ Ingesting-External-Captures.md   |  7 +--
+ Ingesting-From-Jest.md           |  4 +-
+ Integration-BDDfy-xUnit3.md      |  4 ++
+ Integration-Cucumber-Messages.md | 18 ++++----
+ Integration-LightBDD-TUnit.md    |  1 +
+ Integration-LightBDD-xUnit2.md   |  1 +
+ Integration-LightBDD-xUnit3.md   |  1 +
+ Integration-MSTest.md            |  2 +-
+ Integration-NUnit.md             |  1 +
+ Integration-Playwright.md        |  4 +-
+ Integration-ReqNRoll-TUnit.md    | 25 ++++++++---
+ Integration-ReqNRoll-xUnit2.md   | 25 ++++++++---
+ Integration-ReqNRoll-xUnit3.md   | 23 +++++++---
+ Integration-TUnit.md             |  3 +-
+ Integration-xUnit2.md            |  2 +-
+ Integration-xUnit3.md            |  1 +
+ Marking-New-and-Changed-Tests.md | 73 +++++++++++++++++---------------
+ Merging-Parallel-Reports.md      |  1 +
+ Migrating-to-v5-Tags.md          | 62 +++++++++++++++++++++++++++
+ Querying-Reports.md              |  6 +--
+ Report-Configuration.md          |  4 +-
+ Search-Syntax.md                 | 12 ++++--
+ Tags-and-Attributes.md           | 67 +++++++++++++++++++----------
+ _Sidebar.md                      |  1 +
+ 29 files changed, 292 insertions(+), 123 deletions(-)
+ create mode 100644 Migrating-to-v5-Tags.md
+
+diff --git a/API-Reference.md b/API-Reference.md
+index c2b3e02..94bda5d 100644
+--- a/API-Reference.md
++++ b/API-Reference.md
+@@ -57,8 +57,9 @@
+ | `DataFormat` | Enum: `Json`, `Xml`, `Yaml`. Format for generated report data files (`Specifications.*`, `TestRunReport.*`). |
+ | `CiMetadata` | Record: `Provider`, `BuildId`, `BuildNumber`, `Branch`, `CommitSha`, `PipelineName`, `PipelineUrl`, `RunUrl`. Embedded in reports when CI environment is detected. |
+ | `RunEnvironment` | Record (3.1.0): `Os`, `Runtime` — `RuntimeInformation.OSDescription` and `FrameworkDescription`, written to the data file as `environment`. `RunEnvironment.Current` computes this process's values once. Deliberately two fields and no more: a report is an artifact other people download, so the machine name, the user name and the environment block stay out of it. Together with `CiMetadata` this is what tells a downloaded `TestRunReport.json` which run it is. `RunEnvironment.Unrecorded` (3.4.0) is the marker for "nobody can say": the writers leave the `environment` key out entirely rather than fill it in with the writing process's own answer. `kronikol merge` uses it when its shards disagree, and `kronikol ingest` when the source file does not report one - a Cucumber Messages source usually does, in its `meta` envelope, and that is what an ingested report now records. |
+-| `Feature` | Record: `DisplayName`, `Description?`, `Endpoint?`, `Labels?[]`, `Scenarios[]`. |
+-| `Scenario` | Record: `Id`, `DisplayName`, `IsHappyPath`, `Result`, `Duration?` (TimeSpan), `ErrorMessage?`, `ErrorStackTrace?`, `FailureCause?` (3.1.0 — the framework's own name for what went wrong, e.g. xUnit v3's `Assert.Equal() Failure`, kept out of `ErrorMessage` so it cannot become the thing failures are clustered by), `Steps?` (ScenarioStep[]), `BackgroundSteps?`, `Labels?` (string[]), `Categories?` (string[]), `Rule?`, `OutlineId?` (string), `ExampleValues?`, `Attachments?`. `BackgroundSteps` contains common prefix steps extracted by `BackgroundStepsDetector`. |
++| `Feature` | Record: `DisplayName`, `Description?`, `Endpoint?`, `Tags?` (string[]: the feature's own tags, which count for each of its scenarios; 5.0.0, in place of `Labels`), `Scenarios[]`. |
++| `Scenario` | Record: `Id`, `DisplayName`, `IsHappyPath`, `Result`, `Duration?` (TimeSpan), `ErrorMessage?`, `ErrorStackTrace?`, `FailureCause?` (3.1.0 — the framework's own name for what went wrong, e.g. xUnit v3's `Assert.Equal() Failure`, kept out of `ErrorMessage` so it cannot become the thing failures are clustered by), `Steps?` (ScenarioStep[]), `BackgroundSteps?`, `Tags?` (string[]: the scenario's own tags, which the report puts after its feature's; 5.0.0, in place of `Labels` and `Categories`), `Rule?`, `OutlineId?` (string), `ExampleValues?`, `Attachments?`. `BackgroundSteps` contains common prefix steps extracted by `BackgroundStepsDetector`. |
++| `ScenarioTags` | Static class: the tag conventions every lane shares. `Classify(tags)` returns `Classified(Tags, Endpoint, IsHappyPath)`: a leading `@` and surrounding whitespace dropped, the first `endpoint:x` as the endpoint, a happy-path name as the flag, `category:x` as the tag `x` (`CategoryPrefix`), and every other name as a tag, each once. Before 5.0.0 `Classified` carried `Labels` and `Categories`. `Comparer` is the fold every lane and the report compare tags under (ASCII letters only, so `Smoke` and `smoke` are one tag); `Merge(lists)` gives the tags of every list in turn, each once, the first spelling kept; `Shared(lists)` the tags every list holds, in the first list's order and spelling; `Normalise(tag)` drops a leading `@` and surrounding whitespace; `EndpointPrefix` is `endpoint:`. See [[Tags and Attributes › Tags|Tags-and-Attributes#tags]]. |
+ | `ScenarioStep` | Record representing a test scenario step with `Keyword`, `Text`, `Status`, `Duration`, `BypassReason?`, `SubSteps[]`, `Parameters[]`, `Comments[]`, `Attachments[]`, `DocString?`, `DocStringMediaType?`, `TextSegments[]`. |
+ | `BackgroundStepsDetector` | Static class; `DetectAndExtract(Scenario[])` groups scenarios by `Rule`, finds the longest common step prefix within each group, moves matched steps to `Scenario.BackgroundSteps`, and trims them from `Scenario.Steps`. No-op for single-scenario groups or groups with no common prefix. Detection only — the extracted steps render inline with the scenario's own unless `SeparateBackgroundSteps` is set. Note it assigns the **same array instance** to every scenario in a group. See [[Step Tracking › Background Steps|Step-Tracking#background-steps]]. |
+ | `StepKeywordCollapser` | Static class; `DisplayKeywords(IReadOnlyList<ScenarioStep>)` returns the keyword to *display* for each step, substituting `And` where a step repeats the primary keyword in force. A render-time projection — it never mutates the steps, because background steps are shared across scenarios and the data writers run concurrently with the HTML one. Unrecognised (localised) keywords pass through and switch collapsing off until the next recognised primary. |
+@@ -145,7 +146,7 @@ Each integration package provides the same set of framework-specific types:
+ | `ReqNRollTrackingHooks` | Auto-registered `[Binding]` class with `[BeforeScenario]`/`[AfterStep]`/`[AfterScenario]` hooks. |
+ | `ReqNRollScenarioCollector` | Thread-safe collector for ReqNRoll scenario metadata. |
+ | `ReqNRollScenarioInfo` / `ReqNRollStepInfo` | Records for Gherkin scenario and step metadata. |
+-| `ReqNRollConstants` | Constants for context keys and tag conventions. |
++| `ReqNRollConstants` | Constants for context keys and tag conventions. `CategoryTagPrefix` is gone in 5.0.0, since `@category:x` is the tag `x`. |
+ | `ReqNRollReportEnhancer` | Post-processes ReqNRoll's native HTML report to inject sequence diagram attachments linked to each scenario's last step. Registered automatically by `ReqNRollReportGenerator`. |
+ | `AttachmentCapturingOutputHelper` | Decorator for `IReqnrollOutputHelper`. Intercepts `AddAttachment(filePath)` and routes it through `Track.Attachment()` so Reqnroll attachments automatically appear in Kronikol reports. |
+ | `AttachmentCapturingPlugin` | `IRuntimePlugin` that registers `AttachmentCapturingOutputHelper` at test thread initialization. Activated automatically via `[assembly: RuntimePlugin]` — no configuration needed. |
+diff --git a/Framework-Integration-Guides.md b/Framework-Integration-Guides.md
+index f5056e7..f82f00a 100644
+--- a/Framework-Integration-Guides.md
++++ b/Framework-Integration-Guides.md
+@@ -1,4 +1,4 @@
+-Each framework has a complete, step-by-step integration guide. The sections below summarise the key concepts for each; follow the links for the full walkthrough.
++Each framework has a complete, step-by-step integration guide. The sections below summarise the key concepts for each; follow the links for the full walkthrough. Where each framework's tags come from is in [[Tags and Attributes › Tags|Tags-and-Attributes#tags]].
+ 
+ ## xUnit v3
+ 
+@@ -11,6 +11,7 @@ The simplest integration path. Uses xUnit v3 collection fixtures to manage the t
+ - `DiagrammedComponentTest` — Base class for test classes; automatically enqueues `TestContext.Current` on dispose
+ - `XUnitReportGenerator.CreateStandardReportsWithDiagrams()` — Generates all three report files
+ - `[HappyPath]` and `[Endpoint("/path")]` attributes for test metadata
++- Tags: `[Trait("Category", "smoke")]` on the test method or the test class
+ 
+ ---
+ 
+@@ -27,6 +28,7 @@ Same pattern as xUnit v3 but adapted for xUnit v2, which lacks `TestContext.Curr
+ - `DiagrammedComponentTest` — Base class for test classes; applies `[TestTracking]` (a `BeforeAfterTestAttribute` that sets `AsyncLocal` identity)
+ - `XUnit2ReportGenerator.CreateStandardReportsWithDiagrams()` — Generates all three report files
+ - `[HappyPath]` and `[Endpoint("/path")]` attributes (using `ITraitAttribute` + `ITraitDiscoverer`)
++- Tags: `[Trait("Category", "smoke")]` on the test method, the test class or a base class
+ 
+ ---
+ 
+@@ -41,6 +43,7 @@ Uses NUnit 4's `[SetUpFixture]` for test lifecycle management.
+ - `DiagrammedComponentTest` — Base class for test fixtures; captures `TestContext.CurrentContext` in `[TearDown]`
+ - `NUnitReportGenerator.CreateStandardReportsWithDiagrams()` — Generates all three report files
+ - `[HappyPath]` and `[Endpoint("/path")]` attributes (NUnit `PropertyAttribute` based)
++- Tags: `[Category("smoke")]` on the test, the fixture, a `[SetUpFixture]` or the assembly
+ 
+ > **Important:** Use `[FixtureLifeCycle(LifeCycle.InstancePerTestCase)]` to ensure each test gets a fresh instance.
+ 
+@@ -57,6 +60,7 @@ Uses MSTest v3's `[AssemblyInitialize]`/`[AssemblyCleanup]` for test lifecycle m
+ - `DiagrammedComponentTest` — Base class for test classes; uses `AsyncLocal<TestContext>` for test identity and enqueues `MSTestScenarioInfo` on `[TestCleanup]`
+ - `MSTestReportGenerator.CreateStandardReportsWithDiagrams()` — Generates all three report files
+ - `[HappyPath]` and `[Endpoint("/path")]` attributes
++- Tags: `[TestCategory("smoke")]` on the test method, the test class or the assembly
+ 
+ > **Note:** MSTest's `TestContext` is instance-based (not static like NUnit/xUnit v3), so the library uses `AsyncLocal` internally to make it available to the HTTP tracking pipeline.
+ 
+@@ -72,7 +76,8 @@ Uses TUnit's `[Before(Test)]`/`[After(Test)]` hooks and `TestContext.Current` fo
+ - `DiagrammedTestRun` — Base class for assembly-level hooks; tracks `StartRunTime`/`EndRunTime` and holds a `ConcurrentQueue<TestContext>`
+ - `DiagrammedComponentTest` — Base class for test classes; uses `[After(Test)]` to enqueue `TestContext` for report collection
+ - `TUnitReportGenerator.CreateStandardReportsWithDiagrams()` — Generates all three report files
+-- `[HappyPath]` and `[Endpoint("/path")]` attributes (TUnit `CategoryAttribute` and `PropertyAttribute` based)
++- `[HappyPath]` and `[Endpoint("/path")]` attributes (TUnit `CategoryAttribute` and `PropertyAttribute` based); `[HappyPath]` is the category Happy Path, which sets the happy-path flag and is not a tag
++- Tags: `[Category("smoke")]` on the test method, the test class or the assembly
+ 
+ > **Note:** TUnit test projects require `<OutputType>Exe</OutputType>` in the csproj — this is handled automatically by the TUnit meta package.
+ 
+@@ -88,7 +93,7 @@ BDD with BDDfy's fluent API (`this.Given(...).When(...).Then(...).BDDfy()`). Dia
+ - `BDDfyDiagramsConfigurator.Configure()` — Must be called before tests run; registers BDDfy processors
+ - `BDDfyScenarioCollector` — Thread-safe collector for scenario metadata
+ - `BDDfyReportGenerator.CreateStandardReportsWithDiagrams()` — Generates reports with BDD step details
+-- Tags: `"happy-path"`, `"endpoint:/path"` passed via `.WithTags()`
++- Tags: every name passed via `.WithTags()` is a tag, apart from Kronikol's markers `"happy-path"` and `"endpoint:/path"`; the xUnit test's `Category` traits are tags too
+ 
+ > **Note:** For xUnit v3, set `<OutputType>Exe</OutputType>` in the test project's csproj.
+ 
+@@ -104,6 +109,7 @@ BDD with LightBDD's C# scenario runner (`Runner.RunScenarioAsync(given => ..., w
+ - `ReportWritersConfiguration.CreateStandardReportsWithDiagrams()` — Fluent extension for LightBDD's report writer pipeline
+ - `LightBddTestTrackingMessageHandlerOptions` — Auto-fetches test info from `ScenarioExecutionContext`
+ - `LightBddDiagramsFetcher` — Wraps diagrams with LightBDD's `DiagramAsCode` type
++- Tags: `[Label("smoke")]` and `[ScenarioCategory("smoke")]` on a scenario method, `[Label]` on the feature class
+ 
+ > **Note:** Requires `[assembly: ClassCollectionBehavior(AllowTestParallelization = false)]`.
+ 
+@@ -120,6 +126,7 @@ BDD with LightBDD's C# scenario runner (`Runner.RunScenarioAsync(given => ..., w
+ - `ReportWritersConfiguration.CreateStandardReportsWithDiagrams()` — Legacy overload; hooks into the report pipeline only (no automatic argument capture).
+ - `LightBddTestTrackingMessageHandlerOptions` — Auto-fetches test info from `ScenarioExecutionContext`
+ - `LightBddDiagramsFetcher` — Wraps diagrams with LightBDD's `DiagramAsCode` type
++- Tags: `[Label("smoke")]` and `[ScenarioCategory("smoke")]` on a scenario method, `[Label]` on the feature class
+ 
+ > **Note:** Uses `[assembly: TestPipelineStartup(typeof(ConfiguredLightBddScope))]` instead of the xUnit v2 scope attribute. Requires `<OutputType>Exe</OutputType>` in the test project's csproj.
+ 
+@@ -137,6 +144,7 @@ BDD with LightBDD's C# scenario runner (`Runner.RunScenarioAsync(given => ..., w
+ - `ReportWritersConfiguration.CreateStandardReportsWithDiagrams()` — Fluent extension for LightBDD's report writer pipeline
+ - `LightBddTestTrackingMessageHandlerOptions` — Auto-fetches test info from `ScenarioExecutionContext`
+ - `LightBddDiagramsFetcher` — Wraps diagrams with LightBDD's `DiagramAsCode` type
++- Tags: `[Label("smoke")]` and `[ScenarioCategory("smoke")]` on a scenario method, `[Label]` on the feature class
+ 
+ > **Note:** Uses `[assembly: ConfiguredLightBddScope]` with a custom `LightBddScopeAttribute` subclass. Requires `<OutputType>Exe</OutputType>` in the test project's csproj.
+ 
+@@ -152,7 +160,7 @@ Gherkin-based BDD with `.feature` files and `[Binding]` step definitions.
+ - `ReqNRollTrackingHooks` — Auto-registered via `reqnroll.json` binding assembly; captures scenario IDs, steps, and results
+ - `ReqNRollReportGenerator.CreateStandardReportsWithDiagrams()` — Generates reports with Gherkin step details
+ - `ReqNRollReportEnhancer` — Additionally enhances ReqNRoll's native HTML report with sequence diagram attachments (when the `html` formatter is enabled in `reqnroll.json`). The standard custom reports are still generated as before
+-- Tags: `@happy-path`, `@endpoint:/path` in feature files
++- Tags: every Gherkin tag is a tag in the report (a `Feature:`'s on the feature, a `Rule:`'s on its scenarios), apart from Kronikol's markers `@happy-path` and `@endpoint:/path`
+ 
+ > **Critical:** Add to `reqnroll.json`:
+ > ```json
+diff --git a/Generated-Reports.md b/Generated-Reports.md
+index 9706f1c..645389c 100644
+--- a/Generated-Reports.md
++++ b/Generated-Reports.md
+@@ -38,6 +38,8 @@ A YAML specification document listing all features and scenarios. The ReqNRoll a
+ 
+ A scenario's background steps are emitted as a `BackgroundSteps` collection alongside `Steps`, matching the shape the `TestRunReport` data files already used. The YAML writer and `Specifications.xml` (`<BackgroundSteps>`) omit the collection entirely when a scenario has none; `Specifications.json` always emits `backgroundSteps`, as an empty array when there are none. *(Before v3.0.48 these files dropped background steps altogether, although the HTML report showed them.)*
+ 
++Each feature and each scenario lists the tags written at its own level ([[Tags and Attributes › Tags|Tags-and-Attributes#tags]]): `Tags` in `Specifications.yml` and `Specifications.xml` (`<Tags><Tag>…</Tag></Tags>`), `tags` in `Specifications.json`. Before 5.0.0 these were `Labels` and `Categories`, so a committed copy of one of these files changes on the upgrade.
++
+ ## Specifications.html
+ 
+ An HTML specification file with embedded sequence diagrams for each test scenario. Features and scenarios are grouped hierarchically.
+@@ -58,7 +60,9 @@ what an agent, a README, a docs site and a pull request review all read natively
+ 
+ It carries **two things the data files drop entirely**: a scenario's `Rule`, which groups the scenarios
+ written under it, and a scenario's own `Description`. Author prose is emitted as a block quote, so a line
+-of somebody's Gherkin description beginning `##` cannot restructure the document around itself.
++of somebody's Gherkin description beginning `##` cannot restructure the document around itself. A
++feature's tags and each scenario's own are printed on one `Tags:` line under its heading (before 5.0.0, a
++`Labels:` line and a `Categories:` line).
+ 
+ Since **3.5.0** the same is true of the names. Every heading below the first is a feature or scenario
+ name the suite chose, and `Inline` collapsed whitespace and nothing else — so a scenario named
+@@ -176,7 +180,7 @@ The top-level structure contains the test run time window and a list of features
+       "name": "Order Management",
+       "endpoint": "/api/orders",
+       "description": "...",
+-      "labels": ["api"],
++      "tags": ["api"],
+       "scenarios": [
+         {
+           "id": "test-runtime-id",
+@@ -187,8 +191,7 @@ The top-level structure contains the test run time window and a list of features
+           "errorMessage": null,
+           "errorStackTrace": null,
+           "failureCause": null,
+-          "labels": ["smoke"],
+-          "categories": ["Integration"],
++          "tags": ["smoke", "Integration"],
+           "steps": [
+             {
+               "keyword": "Given",
+@@ -285,9 +288,10 @@ The top-level structure contains the test run time window and a list of features
+ | `annotations` | Diagram markers carrying information found nowhere else in the file: which row of a [tabular input](Tabular-Attributes) was in flight (`kind: "Row"`), and fragments injected with `DefaultTrackingDiagramOverride.InsertPlantUml` (`kind: "Custom"`). `index` is the position in `httpInteractions` the marker preceded. Step and assertion markers are deliberately absent — those are already structured in `steps`. |
+ | `backgroundSteps` | The scenario's background steps (3.0.48+), shaped exactly like `steps`. Kept as a sibling of `steps` rather than merged, preserving the `b{i}`/`{i}` split that `stepPath` addresses and interaction attribution use. Always present in JSON (an empty array when the scenario has none); the YAML and XML writers omit it when empty. Declared in both the JSON schema and the XSD. |
+ | `endedAt` | When the scenario finished, millisecond UTC, as the framework recorded it (3.17.0); `null` when the adapter did not record one. A call that inherited this scenario's identity after this instant is background, not the scenario's. |
+-| `attempt` | Which run of the scenario produced its result when the runner retries, 1-based: 2 is the first retry. Set by the Cucumber Messages lane and, from 4.2.0, by a tests NDJSON's `attempt` or its repeated `start` records ([Ingesting-External-Captures](Ingesting-External-Captures#retries-and-source-locations-420)); `null` where the runner reports nothing about attempts. |
++| `attempt` | Which run of the scenario produced its result when the runner retries, 1-based: 2 is the first retry. Set by the Cucumber Messages lane and, from 4.2.0, by a tests NDJSON's `attempt` or its repeated `start` records ([Ingesting-External-Captures](Ingesting-External-Captures#retries-and-source-locations-420)); `null` where the runner reports nothing about attempts. The HTML report shows a later attempt as one retry badge, `retry 2` for attempt 3 (5.0.0; the ingest lanes wrote a `retry N` label per earlier attempt before). |
+ | `warmUpSeconds` | How much of the scenario's `durationSeconds` was the run's first-call warm-up (4.8.0): the time its marked calls (`warmUp`, below) cover, each instant counted once and never more than `durationSeconds`, so `durationSeconds - warmUpSeconds` is the scenario's own time. Written only on a scenario that carries such a call; `TestRunReport.xml` and `.yml` write it as `WarmUpSeconds`, and the XSD takes it as optional. |
+ | `sourceFile`, `sourceLine` (scenario and feature) | Where the scenario is written: a project-relative path with forward slashes and the declaration's line. From the Gherkin document on the BDD lanes and, from 4.2.0, from a tests NDJSON `start` record's `sourceFile` and `sourceLine`; the feature's is the first one seen. `null` on the unit-test adapters. |
++| `tags` (feature and scenario) | The tags written at that level (5.0.0): a feature's own, and a scenario's own (in Gherkin, its own, its rule's and its `Examples:` block's). A scenario's tags in the report are its feature's, then these; a feature's `tags` is written before its `scenarios`. `TestRunReport.xml` and `.yml` write `Tags` (`<Tags><Tag>…</Tag></Tags>` in XML). Before 5.0.0 a feature carried `labels` and a scenario `labels` and `categories`: Kronikol.Tool 5.x reads those as tags, and a 4.x tool reads a 5.0.0 file as untagged. See [[Tags and Attributes › Tags|Tags-and-Attributes#tags]]. |
+ 
+ #### Interaction fields
+ 
+@@ -532,7 +536,7 @@ Both HTML reports include:
+ - **Feature grouping** — Tests are grouped by feature (test class / story title / feature file).
+ - **Context menu** — Right-click any diagram (SVG, flame chart, or call tree) for copy/save options including PNG, SVG, and diagram source. See [[Inline SVG Rendering]] for details.
+ - **Status filter** — Toggle buttons for each `ExecutionResult` value to show/hide scenarios by status.
+-- **Category filter** — When scenarios have categories, filter by category with AND/OR toggle (LightBDD, ReqNRoll).
++- **Tags filter**: when scenarios have tags, the Tags row has a chip per tag with its count, Happy Path first and Untagged for the scenarios with none, and an ANY/ALL switch. A chip cycles through has, has not and off (Alt+click or right-click for has not), and a feature's tag picks every scenario of the feature. A row of more than 30 tags starts with the 30 the most scenarios carry and an "N more" chip. Every adapter fills it from its framework's own tagging (5.0.0; before, a Categories row showed only the categories LightBDD and ReqNRoll made). See [[Tags and Attributes › Tags|Tags-and-Attributes#tags]].
+ - **Pie chart** — A donut chart showing the pass/fail/skip/bypass breakdown with a pass rate percentage in the centre (TestRunReport only).
+ - **Duration columns** — Feature summary table includes Duration, Avg, and Longest columns when scenario durations are available.
+ - **Duration badge**: a scenario with a recorded duration shows it in its header, green under 2 s, amber under 5 s and red
+@@ -565,7 +569,7 @@ Both HTML reports include:
+ - **Note width control** (browser-rendered reports, 3.0.85+): hovering a note whose text wraps shows a **`↔`** button that widens it to fill the diagram, and **`→←`** takes it back. A compact **Wrap / Wide** dropdown beside the filter toggles does the same for every note, report-wide or per scenario; it read `Fit` / `Full` before 3.22.0. `Wide` changes only notes that wrap, so on a scenario of short payloads it appears to do nothing. 4.0.0 removed the opt-in monospace control that sat beside it. See [Note Appearance](PlantUML-Browser-Rendering#note-appearance-note-width).
+ - **Export Filtered HTML / CSV** — Two toolbar buttons write out whatever the current filters leave visible. **Export Filtered CSV** gives one row per visible scenario (feature, scenario, status, duration). **Export Filtered HTML** writes a standalone `filtered-report.html`: the report's `<head>` (styles and every behaviour script), an `<h1>Filtered Report</h1>`, the visible `details.feature` elements, and the diagram sources those features need. It is deliberately just the features — no toolbar, timeline or [component diagram](Component-Diagrams) — so the exported file cannot be re-filtered. A default report carries no [cross-run history](Cross-Run-History#in-the-html-460) (4.6.0), so neither does its export. In a report drawn with `ShowScenarioHistory` the sparklines and verdict pills live in the scenario headers and are carried; the History section (`ShowHistorySection`) sits beside the timeline and is left behind with it (3.11.0).
+   > **Diagrams in the export were blank before 3.0.83.** Under `BrowserJs` rendering a diagram element is an empty `<div class="plantuml-browser" id="puml-N">` and every source lives gzipped in a single `<script id="puml-data">` at the end of the **body**, keyed by that id. The export copied the head and the features and nothing else, so it shipped the whole render machinery with none of the data: source lookup returned null, the render queue silently dropped the element, and every diagram that had not already been drawn before the export stayed permanently blank — no error, no message, just an empty box. Measured on a real 488-diagram report: 12 of 460 diagrams drew (only the ones already rendered, serialised as inline SVG), 448 did not. The export now carries the body's data payloads, with `#puml-data` pruned to the ids the exported markup actually contains.
+-- **Configurable toggle default start states** (3.0.80+) — Every toggle, radio group and stateful dropdown in both reports (Details radio, truncate lines, headers/assertions/steps/databases, note format, note width and font, feature/scenario expansion, diagram-type tab, timeline/component panels, dependency/category filter modes, and the disclosure sections) can be given a configured default start state via `ReportConfigurationOptions.TestRunReportToggleDefaults`, with `SpecificationsToggleDefaults` overriding per property for `Specifications.html` (inherit-unless-overridden). See [Report Configuration → Toggle Default Start States](Report-Configuration#toggle-default-start-states).
++- **Configurable toggle default start states** (3.0.80+) — Every toggle, radio group and stateful dropdown in both reports (Details radio, truncate lines, headers/assertions/steps/databases, note format, note width and font, feature/scenario expansion, diagram-type tab, timeline/component panels, dependency/tag filter modes, and the disclosure sections) can be given a configured default start state via `ReportConfigurationOptions.TestRunReportToggleDefaults`, with `SpecificationsToggleDefaults` overriding per property for `Specifications.html` (inherit-unless-overridden). See [Report Configuration → Toggle Default Start States](Report-Configuration#toggle-default-start-states).
+ 
+ ### Execution Result Statuses
+ 
+@@ -714,6 +718,13 @@ rendered twice, once in the flat parameter table and once in the grouped one, th
+ whichever copy is displayed. Setting the hash on an already-open report works too — it does not need a
+ reload.
+ 
++The Tags row writes `tags=` for the tags a scenario must have, `tagx=` for those it must not, and
++`tagmode=` when its ANY/ALL switch is not on its default. Each name is percent-encoded on its own and the
++names are joined with commas, so a tag with a comma, a quote or a space in it survives the link, and a
++value that does not decode loses only itself. A link a 4.x report wrote keeps its meaning (5.0.0): its
++`cats=` is read as `tags=`, its `catmode=` as the tag mode when the link has no `tagmode=`, and
++`__uncategorized__` as Untagged.
++
+ ### Named Examples blocks
+ 
+ A Gherkin scenario outline may split its rows across several `Examples:` blocks, each with an
+@@ -869,15 +880,18 @@ Two results share `skipped` and `Bypassed` has nowhere but `other` to go, so the
+ as `rawStatus` and nothing is lost in the translation. Kronikol's own facts that CTRF has no field for
+ travel in the schema's `extra` escape hatch: `extra.kronikolAddress` is the scenario's `sN` address, so a
+ consumer that finds a failure can hand it straight to [`kronikol query`](Querying-Reports);
+-`extra.stableId` and `extra.categories` sit beside it, and `environment.extra` carries `runId` and
+-`runAttempt`.
++`extra.stableId` sits beside it, and `environment.extra` carries `runId` and `runAttempt`. A test's
++`tags` are its scenario's tags, its feature's first ([[Tags and Attributes › Tags|Tags-and-Attributes#tags]]).
++Before 5.0.0 `tags` held the scenario's own labels and its categories travelled in `extra.categories`,
++which is gone.
+ 
+ Deliberately absent: per-test `start` / `stop` (a scenario records a duration and no start time, and a
+ fabricated timeline is worse than an absent one), `attempts[]` (earlier attempts are folded into one
+ scenario before the report is built), and `filePath` on lanes that supply only a bare file name — CTRF
+-consumers place annotations with it, and a name where a path is expected annotates the wrong file. The
+-`retry N` labels Kronikol generates for a folded retry are filtered out of `tags`, because `retries`
+-already carries that fact.
++consumers place annotations with it, and a name where a path is expected annotates the wrong file. A
++retry is in `retries`, not in `tags`: since 5.0.0 the ingest lanes make no `retry N` label, so an author's
++own `retry 2` tag is sent like any other. Read from a 4.x report by `kronikol ctrf`, the `retry N` labels
++its ingest made are left out where the scenario's `attempt` accounts for them.
+ 
+ `specVersion` is pinned to the CTRF revision the writer was checked against rather than tracked
+ automatically, and a test lists every key the schema declares and fails on any other.
+diff --git a/Home.md b/Home.md
+index 12c8874..ea1805a 100644
+--- a/Home.md
++++ b/Home.md
+@@ -48,7 +48,7 @@ Kronikol was published as **TestTrackingDiagrams** until 3.0.0 (May 2026); it is
+ - [Diagram Customisation](Diagram-Customisation)
+ - [Content Formatting](Content-Formatting)
+   - [DiagramFocus (Field Highlighting)](Content-Formatting#diagramfocus-field-highlighting)
+-- [Tags and Attributes](Tags-and-Attributes)
++- [Tags and Attributes](Tags-and-Attributes): the tags each framework gives a feature and a scenario, the happy path and the endpoint
+ - [Excluding Requests](Excluding-Requests)
+ - [Excluded Headers](Excluded-Headers)
+ - [Event Annotations](Event-Annotations)
+diff --git a/How-To-Guides.md b/How-To-Guides.md
+index 2639df0..648d374 100644
+--- a/How-To-Guides.md
++++ b/How-To-Guides.md
+@@ -59,8 +59,8 @@ Task-oriented guides for common Kronikol scenarios. Each entry links to the rele
+ **How do I debug empty or missing diagram entries?**
+ → [[Diagnostics and Debugging]]
+ 
+-**How do I filter reports by dependency or category?**
+-→ [[Search Syntax]]; captured data (bodies, URIs, headers) is searched with `kronikol query grep` instead, see [[Querying Reports]]
++**How do I filter reports by dependency or tag?**
++→ [[Search Syntax]]; where each framework's tags come from is in [[Tags and Attributes › Tags|Tags-and-Attributes#tags]]; captured data (bodies, URIs, headers) is searched with `kronikol query grep` instead, see [[Querying Reports]]
+ 
+ **How do I debug a failing test from its report data?**
+ → [[Querying Reports]] (`kronikol query failures`, `steps` and `values` answer it from the command line, without opening the report file)
+diff --git a/Ingesting-External-Captures.md b/Ingesting-External-Captures.md
+index 607818a..66c7113 100644
+--- a/Ingesting-External-Captures.md
++++ b/Ingesting-External-Captures.md
+@@ -131,7 +131,7 @@ emits only `event`/`testId`/`text` still works exactly as before.
+ | `featureDescription` | The prose under `Feature:` → `Feature.Description`. Taken from the first scenario of the feature that carries one. |
+ | `description` | The prose under `Scenario:` → `Scenario.Description`, rendered above the step list. |
+ | `rule` | The `Rule:` this scenario sits under → `Scenario.Rule`; scenarios group by it. |
+-| `tags` | `["@gemma","@category:smoke","@endpoint:/overview","@happy-path"]` — the leading `@` is optional. The ReqNRoll conventions apply: `@category:x` → `Categories`, `@endpoint:x` → the feature's `Endpoint`, `@happy-path` (`happy_path`, `happypath`) → `IsHappyPath`, everything else → `Labels`. **A tag carried by every scenario of a feature also becomes the feature's own label** — in Gherkin that is exactly what a feature tag is. To mark the tests a pull request added or edited, see [[Marking New and Changed Tests]]. |
++| `tags` | `["@gemma","@category:smoke","@endpoint:/overview","@happy-path"]`; the leading `@` is optional. The ReqNRoll conventions apply: `@endpoint:x` → the feature's `Endpoint`, `@happy-path` (`happy_path`, `happypath`, `Happy Path`) → `IsHappyPath`, `@category:x` → the tag `x` (the prefix is read and dropped), everything else → a tag of the scenario (`Scenario.Tags`). **A tag carried by every scenario of a feature is also the feature's tag**, as a feature tag is in Gherkin, and the report draws it once, on the feature. Before 5.0.0 a `category:` tag made a category and the rest were labels. See [[Tags and Attributes › Tags|Tags-and-Attributes#tags]]; to mark the tests a pull request added or edited, see [[Marking New and Changed Tests]]. |
+ | `outlineId` | The name of the `Scenario Outline` this row came from. Rows sharing it render as one parameterised group. |
+ | `exampleValues` | `{ "plan": "pro" }` — this row's `Examples:` columns, which drive the pivot table and the row's display name. |
+ | `examplesBlockName` | Name of the `Examples:` block this row came from (`Examples: the merchant gained share`). Rows of a named block render under a separator band carrying the name and a per-block pass/fail count (3.0.64+). |
+@@ -178,8 +178,9 @@ Three optional fields, the ones a runner knows and the report model always had r
+ 
+ **Retries.** Keep one `testId` per test across its retries, as the runners do, and write a `start` per attempt.
+ The report shows the **last attempt**, the rule the [Cucumber Messages](#cucumber-messages) lane has always
+-had: its verdict, error, duration, steps and attachments, `Scenario.Attempt` set, and a `retry N` label for
+-each earlier attempt (N being that attempt's number). The earlier attempts' calls, every call of the test made
++had: its verdict, error, duration, steps and attachments, and `Scenario.Attempt` set, which the report shows as
++one retry badge (`retry 2` for a third attempt; before 5.0.0 the scenario also took a `retry N` label for each
++earlier attempt, N being that attempt's number). The earlier attempts' calls, every call of the test made
+ before its last attempt started, are left out, and one diagnostic counts them. A second `start` without
+ `attempt` is read as the next attempt, and a diagnostic says how many tests were read that way. Before 4.2.0 a
+ retried test was one scenario holding both attempts' steps and calls, which kept the failed attempt's error
+diff --git a/Ingesting-From-Jest.md b/Ingesting-From-Jest.md
+index 7491588..0be3dd2 100644
+--- a/Ingesting-From-Jest.md
++++ b/Ingesting-From-Jest.md
+@@ -46,7 +46,7 @@ module.exports = {
+ A custom environment sees every test event. Each test gets an id stable across runs (its file and full name), set
+ on the test's global for the capture points; its `beforeEach` hooks are its `Given` step and its body its `When`
+ step, written when the test ends so each carries its status; a retry (`jest.retryTimes`) is the next `attempt` of
+-the same id, which the report shows as its last attempt with a `retry 1` label.
++the same id, which the report shows as its last attempt with a `retry 1` badge.
+ 
+ ```js
+ 'use strict'
+@@ -425,7 +425,7 @@ partition. The recipe's run printed:
+ Spans: 87 span(s) from 1 file(s):
+ Spans supplied to the ingest: 87 span(s).
+ Replayed 32 interaction record(s) into 2 scenario(s).
+-  Other: 8 interaction record(s) of earlier attempts of retried tests left out: a retried test's scenario shows its last attempt, with a retry label for each earlier one.
++  Other: 8 interaction record(s) of earlier attempts of retried tests left out: a retried test's scenario shows its last attempt, its retry badge counting the earlier ones.
+   Other: 31 supplied span(s) are in no call's internal flow: 31 of a trace no call carries (graphql.parseSchema, graphql.parse, graphql.validate, …).
+ ```
+ 
+diff --git a/Integration-BDDfy-xUnit3.md b/Integration-BDDfy-xUnit3.md
+index 762b924..7257ac9 100644
+--- a/Integration-BDDfy-xUnit3.md
++++ b/Integration-BDDfy-xUnit3.md
+@@ -246,6 +246,10 @@ public class CakeFeature : BaseFixture
+ |-----|---------|
+ | `endpoint:/cake` | Sets the endpoint label on the feature in the report |
+ | `happy-path` | Marks the scenario as a "happy path" (highlighted in reports, filterable) |
++| any other tag, such as `smoke` | A tag of the scenario: a chip in the report's Tags row, found by `@smoke` in the search bar |
++| `category:smoke` | The tag `smoke`: the prefix is read and dropped (before 5.0.0 it stayed the label `category:smoke`) |
++
++A scenario also takes its xUnit test's `[Trait("Category", "smoke")]` traits as tags, after the ones `.WithTags` gives it. A story has no tags, so a BDDfy feature has none of its own. See [[Tags and Attributes › Tags|Tags-and-Attributes#tags]].
+ 
+ ### BDDfy Step Patterns
+ 
+diff --git a/Integration-Cucumber-Messages.md b/Integration-Cucumber-Messages.md
+index 1b1b09c..38440fd 100644
+--- a/Integration-Cucumber-Messages.md
++++ b/Integration-Cucumber-Messages.md
+@@ -40,12 +40,12 @@ underneath it.
+ | Cucumber Messages | Kronikol |
+ |---|---|
+ | `GherkinDocument.feature.name` / `.description` | `Feature.DisplayName` / `Feature.Description` |
+-| feature tags | `Feature.Labels` (minus the conventions below) |
++| feature tags | `Feature.Tags` (minus the conventions below) |
+ | `Rule` | `Scenario.Rule` |
+ | `Background` steps | `Scenario.BackgroundSteps` — **explicit**, never guessed |
+ | `Pickle.name`, scenario `description` | `Scenario.DisplayName`, `Scenario.Description` |
+ | `Pickle.astNodeIds` → outline + example row | `Scenario.OutlineId`, `ExampleValues`, `ExampleRawValues` |
+-| `Pickle.tags` | `Scenario.Labels` / `Categories` / `IsHappyPath` / `Feature.Endpoint` |
++| `Pickle.tags` | `Scenario.Tags` (the pickle's tags less its feature's: the scenario's own, its rule's and its `Examples:` block's) / `Feature.Endpoint` |
+ | Gherkin step `keyword` (`Given `, `And `, `But `…) | `ScenarioStep.Keyword` (as authored) |
+ | `PickleStep.type` (`Context`/`Action`/`Outcome`) | the step's phase, in any Gherkin language (an `And` carries the type it continues) — used for phase attribution and `--separate-setup`'s boundary (4.1.0+; before, only an English keyword got a phase) |
+ | `PickleStep.text` (placeholders expanded) | `ScenarioStep.Text` (+ `TextSegments` highlighting the substituted values) |
+@@ -58,7 +58,7 @@ underneath it.
+ | `TestStepStarted.timestamp` | the `<<stepDelimiter>>` bar in the sequence diagram |
+ | hook test steps | dropped, or steps named by the hook with `--include-hooks`, in the order they ran |
+ | `Attachment` | `Scenario.Attachments` / `ScenarioStep.Attachments` |
+-| `TestCaseStarted.attempt` | retries — last attempt wins (`Scenario.Attempt`), earlier ones leave a `retry N` label. From 4.2.0 an earlier attempt's calls are left out of the scenario and counted in a diagnostic: the `kronikol-test-id` stays the same across a test's retries, so before 4.2.0 they joined the scenario the last attempt built. An earlier attempt that minted an id of its own is left out by that id, where before its reporter records and calls made a scenario of their own |
++| `TestCaseStarted.attempt` | retries — last attempt wins (`Scenario.Attempt`), which the report shows as one retry badge, `retry 2` for a third attempt (5.0.0; before, each earlier attempt left a `retry N` label). From 4.2.0 an earlier attempt's calls are left out of the scenario and counted in a diagnostic: the `kronikol-test-id` stays the same across a test's retries, so before 4.2.0 they joined the scenario the last attempt built. An earlier attempt that minted an id of its own is left out by that id, where before its reporter records and calls made a scenario of their own |
+ | `TestRunStarted` / `TestRunFinished` | the run window in the report header |
+ 
+ Statuses map as `PASSED → Passed`, `SKIPPED`/`PENDING → Skipped`, `FAILED`/`UNDEFINED`/`AMBIGUOUS → Failed`,
+@@ -80,13 +80,15 @@ The same conventions the [[ReqNRoll integration|Integration-ReqNRoll-xUnit3]] us
+ | Tag | Effect |
+ |---|---|
+ | `@happy-path` (`@happy_path`, `@happypath`) | `Scenario.IsHappyPath` — the scenario sorts first and is highlighted |
+-| `@category:<name>` | `Scenario.Categories` |
++| `@category:<name>` | the tag `<name>`: the prefix is read and dropped (a category before 5.0.0) |
+ | `@endpoint:<path>` | `Feature.Endpoint` |
+-| anything else | `Scenario.Labels` (scenario's own tags) / `Feature.Labels` (feature's own tags) |
++| anything else | a tag: `Scenario.Tags` for the scenario's own, its `Rule:`'s and its `Examples:` block's, `Feature.Tags` for the `Feature:`'s |
+ 
+-Categories and the endpoint are read from the **pickle's** tags, so a `@category:` on the feature applies to
+-every scenario in it. Labels and happy-path are read from the node's **own** tags, so a feature-level tag does
+-not repeat on every scenario row.
++A scenario's tags are its pickle's tags less its feature's, so a `Rule:`'s tags reach its scenarios and no others.
++The feature's tags count for every scenario of the feature in the report, and are drawn once, on the feature. The
++happy path is read from the scenario's **own** tags and its `Examples:` block's only. Before 5.0.0 a plain tag on a
++`Rule:` reached no scenario, and a `@category:` tag was read from the pickle's tags as a category. See
++[[Tags and Attributes › Tags|Tags-and-Attributes#tags]].
+ 
+ To mark the scenarios a pull request added or edited, as your own detector found them, see
+ [[Marking New and Changed Tests]].
+diff --git a/Integration-LightBDD-TUnit.md b/Integration-LightBDD-TUnit.md
+index a265e25..9b32b31 100644
+--- a/Integration-LightBDD-TUnit.md
++++ b/Integration-LightBDD-TUnit.md
+@@ -255,6 +255,7 @@ public partial class Cake_Feature : BaseFixture
+ **Key points:**
+ - `[FeatureDescription("/cake")]` sets the endpoint label in the report.
+ - `[HappyPath]` marks a scenario as a happy path (from `Kronikol.LightBDD.TUnit`).
++- `[Label("smoke")]` and `[ScenarioCategory("smoke")]` on a scenario method give the scenario the tag `smoke`, and `[Label]` on the feature class gives it to the feature (5.0.0; see [[Tags and Attributes › Tags|Tags-and-Attributes#tags]]). `[HappyPath]` sets the happy-path flag and is not a tag.
+ - `[Scenario]` is an alias for TUnit's `[Test]` attribute provided by `LightBDD.TUnit`.
+ - Steps are regular `async Task` methods — method names are converted to readable text by LightBDD (underscores become spaces).
+ 
+diff --git a/Integration-LightBDD-xUnit2.md b/Integration-LightBDD-xUnit2.md
+index 34edcd2..40e8f95 100644
+--- a/Integration-LightBDD-xUnit2.md
++++ b/Integration-LightBDD-xUnit2.md
+@@ -251,6 +251,7 @@ public partial class Cake_Feature : BaseFixture
+ **Key points:**
+ - `[FeatureDescription("/cake")]` sets the endpoint label in the report (equivalent to `@endpoint:/cake` in Gherkin).
+ - `[HappyPath]` marks a scenario as a happy path (from `Kronikol.LightBDD`, defined in the `Kronikol.LightBDD.Core` package).
++- `[Label("smoke")]` and `[ScenarioCategory("smoke")]` on a scenario method give the scenario the tag `smoke`, and `[Label]` on the feature class gives it to the feature (5.0.0; see [[Tags and Attributes › Tags|Tags-and-Attributes#tags]]). `[HappyPath]` sets the happy-path flag and is not a tag.
+ - Steps are regular `async Task` methods — method names are converted to readable text by LightBDD (underscores become spaces).
+ 
+ ---
+diff --git a/Integration-LightBDD-xUnit3.md b/Integration-LightBDD-xUnit3.md
+index f811fd9..a544dd7 100644
+--- a/Integration-LightBDD-xUnit3.md
++++ b/Integration-LightBDD-xUnit3.md
+@@ -263,6 +263,7 @@ public partial class Cake_Feature : BaseFixture
+ **Key points:**
+ - `[FeatureDescription("/cake")]` sets the endpoint label in the report (equivalent to `@endpoint:/cake` in Gherkin).
+ - `[HappyPath]` marks a scenario as a happy path (from `Kronikol.LightBDD`, defined in the `Kronikol.LightBDD.Core` package).
++- `[Label("smoke")]` and `[ScenarioCategory("smoke")]` on a scenario method give the scenario the tag `smoke`, and `[Label]` on the feature class gives it to the feature (5.0.0; see [[Tags and Attributes › Tags|Tags-and-Attributes#tags]]). `[HappyPath]` sets the happy-path flag and is not a tag.
+ - Steps are regular `async Task` methods — method names are converted to readable text by LightBDD (underscores become spaces).
+ 
+ ---
+diff --git a/Integration-MSTest.md b/Integration-MSTest.md
+index e3d1313..56d8915 100644
+--- a/Integration-MSTest.md
++++ b/Integration-MSTest.md
+@@ -147,7 +147,7 @@ public abstract class BaseFixture : DiagrammedComponentTest, IDisposable
+ 
+ ## Step 5: Write Test Scenarios
+ 
+-Tests are written as regular MSTest `[TestMethod]` methods. Use the `[Endpoint]` and `[HappyPath]` attributes to add metadata for the report.
++Tests are written as regular MSTest `[TestMethod]` methods. Use the `[Endpoint]` and `[HappyPath]` attributes to add metadata for the report. A `[TestCategory("smoke")]` on the method gives the scenario the tag `smoke`, and on the class or the assembly gives it to the feature (5.0.0; see [[Tags and Attributes › Tags|Tags-and-Attributes#tags]]).
+ 
+ ### `Scenarios/Cake_Feature.cs`:
+ 
+diff --git a/Integration-NUnit.md b/Integration-NUnit.md
+index eafc343..e99d305 100644
+--- a/Integration-NUnit.md
++++ b/Integration-NUnit.md
+@@ -257,6 +257,7 @@ public partial class Cake_Feature : BaseFixture
+ **Key points:**
+ - `[Endpoint("/cake")]` — Sets the endpoint label for this feature group in the report. This attribute maps to NUnit's `PropertyAttribute`.
+ - `[HappyPath]` — Marks a scenario as a happy path (filterable in the HTML report).
++- `[Category("smoke")]` on the test gives the scenario the tag `smoke`, and on the fixture, a `[SetUpFixture]` above it or the assembly gives it to the feature (5.0.0; see [[Tags and Attributes › Tags|Tags-and-Attributes#tags]]).
+ - `[TestFixture]` — Required on the partial class with steps that inherits from `BaseFixture`.
+ - Class and method names are converted from underscore-separated to space-separated in reports.
+ 
+diff --git a/Integration-Playwright.md b/Integration-Playwright.md
+index e3633ab..52a3bc6 100644
+--- a/Integration-Playwright.md
++++ b/Integration-Playwright.md
+@@ -186,7 +186,9 @@ Two rules make this work:
+ 
+ With both sources present the messages win for structure and the reporter still supplies assertions, UI
+ actions and attachments; with the messages file absent the reporter alone still produces keyword bars and
+-✓/✗ notes, so the recipe degrades cleanly. Full mapping: [[Integration Cucumber Messages]].
++✓/✗ notes, so the recipe degrades cleanly. Full mapping: [[Integration Cucumber Messages]]. The Gherkin tags
++become the report's tags: a `Feature:`'s on the feature, and a `Rule:`'s on that rule's scenarios
++([[tag conventions|Integration-Cucumber-Messages#tag-conventions]]).
+ 
+ ## Other languages
+ 
+diff --git a/Integration-ReqNRoll-TUnit.md b/Integration-ReqNRoll-TUnit.md
+index ae5d985..23d64b8 100644
+--- a/Integration-ReqNRoll-TUnit.md
++++ b/Integration-ReqNRoll-TUnit.md
+@@ -220,7 +220,10 @@ Scenario: Calling Create Cake Endpoint Without Eggs
+ | Tag | Purpose |
+ |-----|---------|
+ | `@endpoint:/cake` | Sets the endpoint label on the feature in the report |
+-| `@happy-path` | Marks the scenario as a "happy path" (highlighted in reports, filterable) || `@category:MyCategory` | Assigns the scenario to a named category for grouping/filtering in reports |
++| `@happy-path` | Marks the scenario as a "happy path" (highlighted in reports, filterable) |
++| any other tag, such as `@smoke` | A tag: a chip in the report's Tags row, found by `@smoke` in the search bar. On `Feature:` it is the feature's and counts for every scenario of it, on a `Rule:` it reaches that rule's scenarios, and on a scenario or its `Examples:` block it is the scenario's |
++| `@category:smoke` | The tag `smoke`: the prefix is read and dropped (a category before 5.0.0) |
++
+ ---
+ 
+ ## Step 6: Write Step Definitions
+@@ -363,17 +366,27 @@ Pass these when calling `TrackDependenciesForDiagrams` and `CreateTestTrackingCl
+ 
+ ## Advanced Gherkin Features
+ 
+-### Category Tags
++### Tags
+ 
+-Use `@category:` tags to group scenarios into named categories. Categories appear in generated reports and can be used for filtering:
++Every Gherkin tag other than Kronikol's own (`@happy-path`, `@endpoint:`) is a tag in the report: it gets a chip in the Tags row, and `@tag` search finds it.
+ 
+ ```gherkin
+-@category:payments
+-@category:critical
++@payments @critical
+ Feature: Payment Processing
++
++  @refunds
++  Rule: Refunds over the limit need an approval
++
++    @slow
++    Scenario: A refund over the limit waits for approval
+ ```
+ 
+-Multiple `@category:` tags can be applied to a single feature or scenario. The prefix is case-insensitive.
++- A `Feature:`'s tags are the feature's (Reqnroll's `FeatureInfo.Tags`) and count for every scenario of it, so the scenario above carries `payments`, `critical`, `refunds` and `slow`.
++- A `Rule:`'s tags reach that rule's scenarios and no others.
++- A scenario's own tags and its `Examples:` block's are the scenario's. The happy path is read from these only.
++- Tags that differ only in the case of an ASCII letter are one tag. `@category:payments`, the way to write a category before 5.0.0, is the tag `payments`: the prefix is read and dropped, whatever its case.
++
++Before 5.0.0 a feature's tags were read from its first scenario, which could give one rule's tags to the whole feature. See [[Tags and Attributes › Tags|Tags-and-Attributes#tags]].
+ 
+ ### Rule Blocks
+ 
+diff --git a/Integration-ReqNRoll-xUnit2.md b/Integration-ReqNRoll-xUnit2.md
+index 5830354..61a47ce 100644
+--- a/Integration-ReqNRoll-xUnit2.md
++++ b/Integration-ReqNRoll-xUnit2.md
+@@ -225,7 +225,10 @@ Scenario: Calling Create Cake Endpoint Without Eggs
+ | Tag | Purpose |
+ |-----|---------|
+ | `@endpoint:/cake` | Sets the endpoint label on the feature in the report |
+-| `@happy-path` | Marks the scenario as a "happy path" (highlighted in reports, filterable) || `@category:MyCategory` | Assigns the scenario to a named category for grouping/filtering in reports |
++| `@happy-path` | Marks the scenario as a "happy path" (highlighted in reports, filterable) |
++| any other tag, such as `@smoke` | A tag: a chip in the report's Tags row, found by `@smoke` in the search bar. On `Feature:` it is the feature's and counts for every scenario of it, on a `Rule:` it reaches that rule's scenarios, and on a scenario or its `Examples:` block it is the scenario's |
++| `@category:smoke` | The tag `smoke`: the prefix is read and dropped (a category before 5.0.0) |
++
+ ---
+ 
+ ## Step 6: Write Step Definitions
+@@ -381,17 +384,27 @@ See [[Tracking Dependencies › Faking Dependencies: Getting Proper HTTP Trackin
+ 
+ ## Advanced Gherkin Features
+ 
+-### Category Tags
++### Tags
+ 
+-Use `@category:` tags to group scenarios into named categories. Categories appear in generated reports and can be used for filtering:
++Every Gherkin tag other than Kronikol's own (`@happy-path`, `@endpoint:`) is a tag in the report: it gets a chip in the Tags row, and `@tag` search finds it.
+ 
+ ```gherkin
+-@category:payments
+-@category:critical
++@payments @critical
+ Feature: Payment Processing
++
++  @refunds
++  Rule: Refunds over the limit need an approval
++
++    @slow
++    Scenario: A refund over the limit waits for approval
+ ```
+ 
+-Multiple `@category:` tags can be applied to a single feature or scenario. The prefix is case-insensitive.
++- A `Feature:`'s tags are the feature's (Reqnroll's `FeatureInfo.Tags`) and count for every scenario of it, so the scenario above carries `payments`, `critical`, `refunds` and `slow`.
++- A `Rule:`'s tags reach that rule's scenarios and no others.
++- A scenario's own tags and its `Examples:` block's are the scenario's. The happy path is read from these only.
++- Tags that differ only in the case of an ASCII letter are one tag. `@category:payments`, the way to write a category before 5.0.0, is the tag `payments`: the prefix is read and dropped, whatever its case.
++
++Before 5.0.0 a feature's tags were read from its first scenario, which could give one rule's tags to the whole feature. See [[Tags and Attributes › Tags|Tags-and-Attributes#tags]].
+ 
+ ### Rule Blocks
+ 
+diff --git a/Integration-ReqNRoll-xUnit3.md b/Integration-ReqNRoll-xUnit3.md
+index 2c850d9..1547e08 100644
+--- a/Integration-ReqNRoll-xUnit3.md
++++ b/Integration-ReqNRoll-xUnit3.md
+@@ -223,7 +223,8 @@ Scenario: Calling Create Cake Endpoint Without Eggs
+ |-----|---------|
+ | `@endpoint:/cake` | Sets the endpoint label on the feature in the report |
+ | `@happy-path` | Marks the scenario as a "happy path" (sorted first within the feature, displays a badge, filterable via "Happy Paths Only" toggle) |
+-| `@category:MyCategory` | Assigns the scenario to a named category for grouping/filtering in reports |
++| any other tag, such as `@smoke` | A tag: a chip in the report's Tags row, found by `@smoke` in the search bar. On `Feature:` it is the feature's and counts for every scenario of it, on a `Rule:` it reaches that rule's scenarios, and on a scenario or its `Examples:` block it is the scenario's |
++| `@category:smoke` | The tag `smoke`: the prefix is read and dropped (a category before 5.0.0) |
+ 
+ ---
+ 
+@@ -359,17 +360,27 @@ See [[Tracking Dependencies › Faking Dependencies: Getting Proper HTTP Trackin
+ 
+ ## Advanced Gherkin Features
+ 
+-### Category Tags
++### Tags
+ 
+-Use `@category:` tags to group scenarios into named categories. Categories appear in generated reports and can be used for filtering:
++Every Gherkin tag other than Kronikol's own (`@happy-path`, `@endpoint:`) is a tag in the report: it gets a chip in the Tags row, and `@tag` search finds it.
+ 
+ ```gherkin
+-@category:payments
+-@category:critical
++@payments @critical
+ Feature: Payment Processing
++
++  @refunds
++  Rule: Refunds over the limit need an approval
++
++    @slow
++    Scenario: A refund over the limit waits for approval
+ ```
+ 
+-Multiple `@category:` tags can be applied to a single feature or scenario. The prefix is case-insensitive.
++- A `Feature:`'s tags are the feature's (Reqnroll's `FeatureInfo.Tags`) and count for every scenario of it, so the scenario above carries `payments`, `critical`, `refunds` and `slow`.
++- A `Rule:`'s tags reach that rule's scenarios and no others.
++- A scenario's own tags and its `Examples:` block's are the scenario's. The happy path is read from these only.
++- Tags that differ only in the case of an ASCII letter are one tag. `@category:payments`, the way to write a category before 5.0.0, is the tag `payments`: the prefix is read and dropped, whatever its case.
++
++Before 5.0.0 a feature's tags were read from its first scenario, which could give one rule's tags to the whole feature. See [[Tags and Attributes › Tags|Tags-and-Attributes#tags]].
+ 
+ ### Rule Blocks
+ 
+diff --git a/Integration-TUnit.md b/Integration-TUnit.md
+index c317f64..62a4843 100644
+--- a/Integration-TUnit.md
++++ b/Integration-TUnit.md
+@@ -245,7 +245,8 @@ public partial class Cake_Feature : BaseFixture
+ 
+ **Key points:**
+ - `[Endpoint("/cake")]` — Sets the endpoint label for this feature group in the report. This attribute maps to TUnit's `PropertyAttribute`.
+-- `[HappyPath]` — Marks a scenario as a happy path (filterable in the HTML report). This maps to TUnit's `CategoryAttribute`.
++- `[HappyPath]` — Marks a scenario as a happy path (filterable in the HTML report). This maps to TUnit's `CategoryAttribute`. On the class it marks every test in it, and it is not a tag.
++- `[Category("smoke")]` on the method gives the scenario the tag `smoke`, and on the class or the assembly gives it to the feature (5.0.0; see [[Tags and Attributes › Tags|Tags-and-Attributes#tags]]).
+ - Class and method names are converted from underscore-separated / PascalCase to human-readable format in reports.
+ 
+ ---
+diff --git a/Integration-xUnit2.md b/Integration-xUnit2.md
+index f3c9a1c..4435902 100644
+--- a/Integration-xUnit2.md
++++ b/Integration-xUnit2.md
+@@ -201,7 +201,7 @@ public abstract class BaseFixture : DiagrammedComponentTest
+ 
+ ## Step 7: Write Test Scenarios
+ 
+-Tests are written as regular xUnit `[Fact]` or `[Theory]` methods. Use the `[Endpoint]` and `[HappyPath]` attributes to add metadata for the report.
++Tests are written as regular xUnit `[Fact]` or `[Theory]` methods. Use the `[Endpoint]` and `[HappyPath]` attributes to add metadata for the report. A `[Trait("Category", "smoke")]` on the method gives the scenario the tag `smoke`, and on the class or a base class gives it to the feature (5.0.0; see [[Tags and Attributes › Tags|Tags-and-Attributes#tags]]).
+ 
+ ### `Scenarios/Cake_Feature.cs`:
+ 
+diff --git a/Integration-xUnit3.md b/Integration-xUnit3.md
+index 957e3d4..8595da0 100644
+--- a/Integration-xUnit3.md
++++ b/Integration-xUnit3.md
+@@ -255,6 +255,7 @@ public partial class Cake_Feature : BaseFixture
+ **Key points:**
+ - `[Endpoint("/cake")]` — Sets the endpoint label for this feature group in the report.
+ - `[HappyPath]` — Marks a scenario as a happy path (filterable in the HTML report).
++- `[Trait("Category", "smoke")]` on the method gives the scenario the tag `smoke`, and on the class gives it to the feature (5.0.0; see [[Tags and Attributes › Tags|Tags-and-Attributes#tags]]).
+ - Class names are converted to feature names: underscores become spaces (e.g. `Cake_Feature` → "Cake Feature").
+ - Method names are converted to scenario names in the same way.
+ - Since 4.14.11 a suite that sets xUnit's `methodDisplayOptions` (such as `replaceUnderscoreWithSpace`) gets scenarios named after the test method again; from 4.11.1 until then, such a suite's scenario names kept the namespace and class. A `DisplayName` is used whole, its own dots and parentheses included, and a theory row's arguments follow the name in brackets (`Returns 404 (not found) [id: 1]`).
+diff --git a/Marking-New-and-Changed-Tests.md b/Marking-New-and-Changed-Tests.md
+index 0c5e98f..7ab0b89 100644
+--- a/Marking-New-and-Changed-Tests.md
++++ b/Marking-New-and-Changed-Tests.md
+@@ -1,33 +1,35 @@
+ If you already know which tests a pull request added and which it edited, from your own script, a test-impact tool or
+-a diff of the test files, you can mark them in the Kronikol report. Give each one of two categories, `pr-new` or
+-`pr-edited` here (any names work). The report then has a button for each in its Categories row, `@pr-new` in the
+-search bar finds them, and `kronikol query scenarios <reports> --label pr-new` lists them. Nothing runs twice and no
+-new option is needed: each route below puts the category in something Kronikol already reads, before the report is
+-built or rebuilt.
++a diff of the test files, you can mark them in the Kronikol report. Give each one of two tags, `pr-new` or
++`pr-edited` here (any names work). The report then has a chip for each in its Tags row, `@pr-new` in the search bar
++finds them, and `kronikol query scenarios <reports> --tag pr-new` lists them. Nothing runs twice and no new option is
++needed: each route below puts the tag in something Kronikol already reads, before the report is built or rebuilt.
+ 
+ Kronikol does not work out what changed here. What counts as new or edited, and which test each change belongs to, is
+ your detector's answer; this page carries it into the report.
+ 
+-## Why categories
++## Why tags
+ 
+-- A category gets a button in the report's Categories row, beside All and Uncategorized, and the row's OR/AND toggle
+-  combines it with the categories you already have. Any other tag becomes a label: shown on the test and found by the
+-  search bar, but with no button. On an ingested run, a label that every test of a feature carries also becomes the
+-  feature's own label; a category never does.
+-- In the search bar, `@pr-new` matches the category (case-insensitively) and `@pr-new || @pr-edited` either one
++- Every tag gets a chip in the report's Tags row, with the number of tests that carry it, and the row's ANY/ALL switch
++  combines it with the tags you already have ([[Tags and Attributes › Tags|Tags-and-Attributes#tags]]). On a run
++  ingested from a tests file, a tag that every test of a feature carries is also the feature's: the report draws it
++  once, on the feature, and its chip still picks each of those tests.
++- In the search bar, `@pr-new` matches the tag (case-insensitively) and `@pr-new || @pr-edited` either one
+   ([[Search Syntax › Tag Filtering (@tag)|Search-Syntax#tag-filtering-tag]]).
+-- `kronikol query scenarios --label` matches any part of a name: `--label pr-new` lists the new tests and
+-  `--label pr-` both kinds ([[Querying Reports]]).
+-- A category does not change which test it is. History keys a test by its suite, feature, scenario name and outline
+-  row, so its history carries on.
++- `kronikol query scenarios --tag` matches any part of a name: `--tag pr-new` lists the new tests and `--tag pr-`
++  both kinds ([[Querying Reports]]). `--label`, the flag's name before 5.0.0, does the same.
++- A tag does not change which test it is. History keys a test by its suite, feature, scenario name and outline row,
++  so its history carries on.
++
++Before 5.0.0 only a category got a button in the report, so these recipes added `category:pr-new` and wrote
++`categories` into the data file. A `category:` tag still works, since the prefix is read and dropped.
+ 
+ ## Which route
+ 
+-| How your report is built | For example | Where the category goes |
++| How your report is built | For example | Where the tag goes |
+ |---|---|---|
+ | `kronikol ingest` of a capture in the [[tests format\|Ingesting-External-Captures#the-tests-format-optional]] | Jest through the harness on [[Ingesting From Jest]], or any runner whose capture writes `tests.ndjson` | `tags` on each test's `start` record |
+ | `kronikol ingest` of [[Cucumber Messages\|Integration-Cucumber-Messages]] | Cucumber-JVM, cucumber-js, playwright-bdd | `tags` on each pickle |
+-| A Kronikol adapter in the test process | ReqNRoll, xUnit, NUnit, MSTest, TUnit, LightBDD, BDDfy | `categories` on each scenario of the run's `TestRunReport.json`, rendered again with `kronikol merge` |
++| A Kronikol adapter in the test process | ReqNRoll, xUnit, NUnit, MSTest, TUnit, LightBDD, BDDfy | `tags` on each scenario of the run's `TestRunReport.json`, rendered again with `kronikol merge` |
+ 
+ Each example reads your detector's answer from `changed.json`, in this shape; convert your detector's output to it:
+ 
+@@ -49,7 +51,7 @@ The examples use `jq`, which GitHub's hosted runners have.
+ 
+ ## Ingested tests: `tags` on the `start` record
+ 
+-Ingest reads a test's tags from its `start` record. Add the category there, then run `kronikol ingest` as you do now:
++Ingest reads a test's tags from its `start` record. Add the tag there, then run `kronikol ingest` as you do now:
+ 
+ ```bash
+ jq -cR --slurpfile changed changed.json '
+@@ -59,8 +61,8 @@ jq -cR --slurpfile changed changed.json '
+       | (.sourceLine // -1) as $line
+       | [ $changed[0].tests[]
+           | select(.path == $file and .line <= $line and $line <= (.end // .line))
+-          | if .change == "added" then "category:pr-new"
+-            elif .change == "edited" then "category:pr-edited"
++          | if .change == "added" then "pr-new"
++            elif .change == "edited" then "pr-edited"
+             else empty end ] as $marks
+       | if ($marks | length) > 0 then .tags = ((.tags // []) + $marks | unique) else . end
+     else . end' kronikol-capture/tests.ndjson > tests.tagged.ndjson
+@@ -83,9 +85,9 @@ kronikol ingest kronikol-capture --tests kronikol-capture/tests.ndjson -o Report
+ 
+ ## Cucumber Messages: `tags` on the pickle
+ 
+-Kronikol reads a scenario's categories from its pickle's tags (its labels come from the Gherkin document, see
+-[[tag conventions|Integration-Cucumber-Messages#tag-conventions]]), so add a `@category:` tag to each pickle. A pickle
+-names its scenario by id, and the scenario's line is in the Gherkin document:
++Kronikol reads a scenario's tags from its pickle's tags, less its feature's (see
++[[tag conventions|Integration-Cucumber-Messages#tag-conventions]]), so add the tag to each pickle. A pickle names its
++scenario by id, and the scenario's line is in the Gherkin document:
+ 
+ ```bash
+ jq -c -n --slurpfile changed changed.json --slurpfile messages cucumber/messages.ndjson '
+@@ -98,8 +100,8 @@ jq -c -n --slurpfile changed changed.json --slurpfile messages cucumber/messages
+       | $lines[.pickle.astNodeIds[0]] as $line
+       | [ $changed[0].tests[]
+           | select(.path == $uri and .line == $line)
+-          | if .change == "added" then "@category:pr-new"
+-            elif .change == "edited" then "@category:pr-edited"
++          | if .change == "added" then "@pr-new"
++            elif .change == "edited" then "@pr-edited"
+             else empty end ] as $marks
+       | if ($marks | length) > 0 then .pickle.tags = ((.pickle.tags // []) + ($marks | map({ name: . }))) else . end
+     else . end' > messages.tagged.ndjson
+@@ -118,12 +120,12 @@ Then pass `messages.tagged.ndjson` to `kronikol ingest --cucumber-messages`.
+ 
+ ## A .NET run: tag the report's data, then render it again
+ 
+-An adapter in the test process takes a test's categories from the test code ([[Tags and Attributes]]), so they cannot
+-be added from outside the run. Tag the report's data instead, and build the report again from it:
++An adapter in the test process takes a test's tags from the test code ([[Tags and Attributes]]), so they cannot be
++added from outside the run. Tag the report's data instead, and build the report again from it:
+ 
+ 1. Set `GenerateMergeableData = true` in the project's `ReportConfigurationOptions`. The run's `TestRunReport.json`
+    then holds everything a report is built from ([[Merging Parallel Reports]]).
+-2. After the run, add the categories to `TestRunReport.json` and render it with `kronikol merge`:
++2. After the run, add the tags to `TestRunReport.json` and render it with `kronikol merge`:
+ 
+ ```bash
+ jq --arg project tests/Orders.Tests --slurpfile changed changed.json '
+@@ -135,7 +137,7 @@ jq --arg project tests/Orders.Tests --slurpfile changed changed.json '
+         | if .change == "added" then "pr-new"
+           elif .change == "edited" then "pr-edited"
+           else empty end ] as $marks
+-    | if ($marks | length) > 0 then .categories = ((.categories // []) + $marks | unique) else . end)' \
++    | if ($marks | length) > 0 then .tags = ((.tags // []) + $marks | unique) else . end)' \
+   Reports/TestRunReport.json > tagged-run.json
+ kronikol merge tagged-run.json -o Tagged/TestRunReport.html -t "Orders component tests"
+ ```
+@@ -143,7 +145,7 @@ kronikol merge tagged-run.json -o Tagged/TestRunReport.html -t "Orders component
+ - `Reports/` is the folder the run wrote its report to, under the test project's build output unless you configured
+   another. `$project` is the test project's folder from the repository's root: a ReqNRoll scenario's `sourceFile` is
+   relative to it, and its `sourceLine` is the line of its `Scenario:` keyword.
+-- In the data file a category has no `category:` prefix.
++- In the data file a tag is its bare name, `pr-new`, with no `@` and no `category:` prefix.
+ - `-t` sets the title, which is otherwise `Test Run Report`. Write the output to a folder of its own:
+   `kronikol merge` also writes a `.json` beside the HTML, and refuses to overwrite its input.
+ - The rebuilt report is the full interactive report. It has a History section only when `--history` names the
+@@ -162,13 +164,16 @@ jq --slurpfile changed changed.json '
+         | if .change == "added" then "pr-new"
+           elif .change == "edited" then "pr-edited"
+           else empty end ] as $marks
+-    | if ($marks | length) > 0 then .categories = ((.categories // []) + $marks | unique) else . end))' \
++    | if ($marks | length) > 0 then .tags = ((.tags // []) + $marks | unique) else . end))' \
+   Reports/TestRunReport.json > tagged-run.json
+ ```
+ 
+ ## What this does not show
+ 
+-The categories say which tests are new or edited, not what changed in them, and a removed test is not in the report
+-to carry one. Showing the change itself in the report is [#124](https://github.com/lemonlion/Kronikol/issues/124).
++The tags say which tests are new or edited, not what changed in them, and a removed test is not in the report to
++carry one. Showing the change itself in the report is [#124](https://github.com/lemonlion/Kronikol/issues/124).
+ 
+-These steps were checked with Kronikol.Tool 4.26.4 and jq 1.7.1.
++Checked on a 5.0.0 build of Kronikol.Tool: a tests capture, a playwright-bdd run's Messages (a scenario outline among
++them) and a data file, tagged by source location and by name, each give `kronikol query scenarios --tag pr-` the tests
++marked and no others. There the edits were made by a script of the same logic as the jq programs; the programs
++themselves ran with jq 1.7.1 in their 4.x form, which wrote `category:pr-new`, with Kronikol.Tool 4.26.4.
+diff --git a/Merging-Parallel-Reports.md b/Merging-Parallel-Reports.md
+index 4ab4c45..77a1bd5 100644
+--- a/Merging-Parallel-Reports.md
++++ b/Merging-Parallel-Reports.md
+@@ -123,6 +123,7 @@ and never takes the report with it. `--no-json` means the HTML only.
+ ### How merging works
+ 
+ - **Features** are grouped by name, so a feature split across runners is recombined; its scenarios are concatenated. Scenario-outline rows keep their `Examples:` block identity (name, description, index) across the merge, so a split outline reassembles its named-block separator bands (3.0.64+).
++- **Tags** (5.0.0): a merged feature keeps the tags every shard gives it, and a feature tag only some shards give it moves onto those shards' scenarios, so no scenario gains or loses a tag. A 4.x shard's labels and categories are read as its tags, so shards written before and after 5.0.0 merge together. Before 5.0.0 a merged feature kept the first shard's labels. See [[Tags and Attributes › Tags|Tags-and-Attributes#tags]].
+ - **A shard given twice is counted once** (3.6.0) — the same artifact downloaded into two folders, yesterday's merged file left in the directory being merged, the merge's own output fed back in. What tells a copy from a second run is the scenario's content *including how the run ended*: the same scenario with the same result, timing and message is the same runner's output twice, and its second copy is dropped with everything hung off it — traffic, diagrams, side tables — and a diagnostic saying how many were counted once. Before 3.6.0 the scenario was deduplicated but its interactions, diagrams and component counts were not, so a re-merge doubled every call count and every diagram. **Two runs of one scenario are both kept**: an overlapping partition, or a failed shard re-run beside its first attempt, differ in result or duration, and first-wins would merge a failing run green. A retried scenario keeps both attempts. Each case is named in the merged file's `diagnostics`.
+ - **Runtime ids are not trusted across shards** (3.6.0). NUnit's scenario id is a per-process counter, so two shards routinely mint `0-1002` for two different tests; the merge used to deduplicate on it and *delete* one of them — a shard whose test failed merged green. Colliding ids of different scenarios are renumbered (`0-1002#1`), and everything keyed to them travels with the right scenario. `stableId` is unaffected: it is computed from content, and it is what the report prints and every cross-run comparison uses.
+ - **Component relationships** are re-aggregated across runners (call counts and test counts sum; method sets are unioned), producing **one** merged Component Diagram. A shard that was the same runner's output twice is skipped whole, so the sum stays exact.
+diff --git a/Migrating-to-v5-Tags.md b/Migrating-to-v5-Tags.md
+new file mode 100644
+index 0000000..328248b
+--- /dev/null
++++ b/Migrating-to-v5-Tags.md
+@@ -0,0 +1,62 @@
++## Labels and categories are tags
++
++Kronikol 5.0.0 keeps one list of tags on each feature and on each scenario, where 4.x kept a feature's labels and a scenario's labels and categories. A scenario's tags in the report are its feature's tags, then its own. Every adapter reads its framework's own tagging ([[Tags and Attributes › Tags|Tags-and-Attributes#tags]] lists where each one looks), so a suite whose 4.x report showed no tags can show them on 5.0.0 without a change to its tests.
++
++### What changed
++
++| | 4.x | 5.0.0 |
++|---|---|---|
++| The model | `Feature.Labels`; `Scenario.Labels` and `Scenario.Categories` | `Feature.Tags` and `Scenario.Tags`, each the tags written at that level |
++| Where tags come from | LightBDD's `[Label]` and `[ScenarioCategory]`, Gherkin tags, BDDfy's tags and the tests NDJSON; the xUnit, NUnit, MSTest and TUnit adapters read none | every adapter: xUnit `Category` traits, NUnit `[Category]`, MSTest `[TestCategory]`, TUnit `[Category]`, BDDfy's tags and its test's `Category` traits, LightBDD's `[Label]` and `[ScenarioCategory]`, Gherkin tags (a `Rule:`'s included) and the tests NDJSON |
++| `@category:smoke`, `.WithTags("category:smoke")` | the category `smoke` (on BDDfy, the label `category:smoke`) | the tag `smoke`: the prefix is read and dropped, with no warning |
++| Case | `Smoke` and `smoke` were two categories with a button each, and `@smoke` matched both | one tag, spelled as the report first meets it; only ASCII letters fold, so `Über` and `über` are two |
++| LightBDD's `[HappyPath]` | the label `Happy Path` as well as the flag | the flag only: `Happy Path` is a happy-path name on every lane |
++| The filter box | a Categories row: All, a button per category, Uncategorized and an OR/AND switch | one Tags row: a chip per tag with its count, Happy Path first, Untagged, and an ANY/ALL switch |
++| A feature's tags | a badge and free-text search only | they count for each of the feature's scenarios, in the Tags row and in `@tag` search |
++| `@tag` search | a scenario's own labels and categories | the Tags row's tags, Happy Path included; `@"two words"` for a tag with a space |
++| Scenario element attributes | `data-labels` and `data-categories` | `data-tags`, each tag percent-encoded, joined with commas |
++| Toggle default | `ReportToggleDefaults.CategoryFilterMode` | `ReportToggleDefaults.TagFilterMode` (default `Or`, which the switch shows as ANY) |
++| Retries on the ingest lanes | a `retry N` label for each earlier attempt | one retry badge drawn from the attempt (`retry 2` for a third attempt); an author's own `retry 2` is an ordinary tag |
++| Data files | `labels` and `categories` (`Labels` and `Categories` in YAML and XML) | `tags` (`Tags`, and `<Tags><Tag>` in XML), each level's own; `Specifications.md` prints one `Tags:` line |
++| CTRF | `tags` held the scenario's labels; its categories were in `extra.categories` | `tags` hold the scenario's tags, its feature's first; no `extra.categories` |
++| `kronikol query scenarios` | `--label`; `--json` items carry `labels` and `categories` | `--tag`, with `--label` still taken as the same flag; `--json` items carry `tags`, the feature's first |
++| `kronikol merge` | a merged feature kept the first shard's labels | a merged feature keeps the tags every shard gives it, and a shard's other feature tags move onto that shard's scenarios |
++
++Only the framework's category attribute is read: other xUnit trait keys, such as `[Trait("Produces", "openapi.json")]`, and NUnit or TUnit properties are not tags.
++
++### Code
++
++These members are gone, so code that uses them does not build on 5.0.0:
++
++- `Feature.Labels`: use `Feature.Tags`.
++- `Scenario.Labels` and `Scenario.Categories`: use `Scenario.Tags`, which holds both. Code that built a scenario with labels and categories puts both lists in `Tags`.
++- `ScenarioTags.Classified.Labels` and `.Categories`: `Classified` is `(Tags, Endpoint, IsHappyPath)`.
++- `ReqNRollConstants.CategoryTagPrefix`: a `category:` prefix is read and dropped wherever a tag is read, and `ScenarioTags.CategoryPrefix` names it.
++- `ReportToggleDefaults.CategoryFilterMode`: set `TagFilterMode`.
++- `ReportGenerator.GenerateYamlSpecs`: a second writer of the specifications YAML that nothing in Kronikol called. The run writes `Specifications.yml` as before.
++
++`HappyPathDetection.IsHappyPathTag` also takes `Happy Path`, with its space.
++
++### Data files and tools
++
++- **Kronikol.Tool 5.x reads a 4.x file** (`kronikol query`, `kronikol ctrf` and `kronikol merge`): its labels and categories are its tags, and a feature's labels are the feature's. The `retry N` labels a 4.x ingest generated are left out where the scenario's `attempt` accounts for them. A report Kronikol4J wrote with `labels` and `categories` reads the same way.
++- **A 4.x tool reads a 5.0.0 file as untagged.** This change does not move `formatVersion` (it stays 3), so the file is not refused and its `tags` are skipped as a key the tool does not know: `query scenarios --label` matches nothing, `kronikol ctrf` writes no tags, and `kronikol merge` writes a merged report without them. Read 5.0.0 reports with Kronikol.Tool 5.x.
++- **History does not read tags**, so the history action and `kronikol history` work as before, whichever version of the tool reads the file.
++- **A committed `Specifications.yml`, `.json` or `.xml` changes on the upgrade**: its `Labels` and `Categories` become `Tags` (`tags` in JSON), and a suite that tags its tests through its framework gains tags it did not have.
++- **Your own scripts** that read `labels` or `categories` from `TestRunReport.json` read `tags`, on the feature and on the scenario. A scenario's tags in the report are its feature's, then its own.
++
++### The report
++
++- The Categories row is gone, and with it the classes a custom stylesheet may target: `.category-filters`, `.category-toggle`, `.category-active` and `.cat-mode-toggle`.
++- A link a 4.x report wrote keeps its meaning: `cats=` is read as `tags=`, `catmode=` as the tag mode when the link has no `tagmode=`, and `__uncategorized__` as Untagged. 5.0.0 writes `tags=`, `tagx=` and `tagmode=`, each name percent-encoded ([[Generated Reports › Deep links|Generated-Reports#deep-links-scenario--and-sid-]]).
++
++### What a report shows differently
++
++Besides the tags the adapters now read, 5.0.0 changes what some reports show:
++
++- **ReqNRoll:** a feature's tags are its `Feature:`'s (Reqnroll's `FeatureInfo.Tags`). 4.x read them from the feature's first scenario, which gave that scenario's rule tags to the whole feature and lost a feature tag the scenario repeated.
++- **Gherkin rules:** a `Rule:`'s tags reach its scenarios, on ReqNRoll and on the Cucumber Messages lane, where 4.x dropped a plain rule tag.
++- **NUnit `[TestCase]`:** `[HappyPath]` on a `[TestCase]` method marks its cases, and a fixture whose first captured test is a `[TestCase]` keeps its `[Endpoint]`.
++- **A tag with a comma, a double quote or a space** filters, is found by search and survives a link. 4.x split a tag at a comma, and a quote in one broke a shared link.
++- **A parameterized group** shows the tags all of its rows carry, less its feature's.
++- **The chips' order** no longer depends on the machine's culture: Happy Path first, then by name with ASCII letters folded.
+diff --git a/Querying-Reports.md b/Querying-Reports.md
+index 567a106..512fa28 100644
+--- a/Querying-Reports.md
++++ b/Querying-Reports.md
+@@ -266,7 +266,7 @@ not read is refused, naming the flag, the verbs that do read it, and what this o
+ every flag was accepted by every verb and silently discarded, so `kronikol query failures <report>
+ --service payments` printed every failure in the report under a filter that had never run — which reads
+ exactly like "nothing payments did broke a test". The distinction to hold on to is that some flags filter
+-**scenarios** (`--result`, `--feature`, `--label`, `--slower-than`) and others filter **calls**
++**scenarios** (`--result`, `--feature`, `--tag`, `--slower-than`) and others filter **calls**
+ (`--service`, `--status`, `--method`, `--step`); `--grep` exists on both and matches a scenario name on
+ one and a URI on the other.
+ 
+@@ -388,7 +388,7 @@ Row ceilings still apply, so `total` can exceed what one page returns whatever `
+ | Verb | `items` | Also |
+ |---|---|---|
+ | `summary` | one row per feature (`feature`, `total`, `passed`, `failed`, and from 4.7.0 `skipped` and `bypassed`; `passed` counts the scenarios that passed, 4.6.2+, where it counted every one that did not fail) | `run` (file, size, from 4.30.0 `jsonBytes`, the JSON the file holds, times, counts, `ci`), `failed` (up to ten), `failedTotal`, `slowest` (from 4.8.0 an item carries `warmUpSeconds` when it has one, and the list is ordered by `durationSeconds - warmUpSeconds`), `warmUp` (4.8.0, when the run marked any: `seconds`, `scenarios`, `calls`, and `largest` with its `address`, `warmUpSeconds` and `durationSeconds`), `diagnostics` |
+-| `scenarios` | address, stableId, feature, scenario, result, failed, durationSeconds, interactions, errorMessage, attempt, labels, categories, exampleValues | — |
++| `scenarios` | address, stableId, feature, scenario, result, failed, durationSeconds, interactions, errorMessage, attempt, tags (the scenario's tags, its feature's first; `labels` and `categories` before 5.0.0), exampleValues | — |
+ | `failures` | the `Failures.jsonl` shape: address, stableId, feature, scenario, exampleValues, durationSeconds, errorMessage, deepLink, sourceFile, sourceLine, `thrownAt` (`{ method, file, line }` or null), `testName`, `rerun`, `failingSteps[]` (each with its `calls[]` and, from 4.24.0, the `attachments[]` that step made; from 4.28.0 `callsTotal` and `attachmentsTotal`), attachments, and from 4.28.0 `attachmentsTotal` and `stepAttachmentsTotal` | — |
+ | `attachments` (4.28.0) | name, path, step (the step's address, null for the scenario's own) | — |
+ | `repro` | address, stableId, feature, scenario, result, `thrownAt`, `testName`, `rerun` (null when no frame names a test) | — |
+@@ -476,7 +476,7 @@ variable, and a null is honest where a guess would not be.
+ |---|---|
+ | `--result Failed` | filter on execution result |
+ | `--feature X` | substring match on feature name |
+-| `--label L` | matches scenario labels, categories and feature labels |
++| `--tag T` | keeps the scenarios that carry a tag containing `T`, ignoring case, their feature's tags included (5.0.0). `--label` is the same flag under its name before 5.0.0, when it matched labels, categories and feature labels |
+ | `--grep T` | substring match on scenario name |
+ | `--slower-than 5` | seconds of the scenario's own time: from 4.8.0 a marked first-call warm-up is left out. From 4.16.3 a note counts the scenarios that took as long only with their warm-up, a marked scenario's row ends `  0.6s warm-up` (its time is wall time), and its `--json` item carries `warmUpSeconds` |
+ 
+diff --git a/Report-Configuration.md b/Report-Configuration.md
+index a22dc60..19b8bf7 100644
+--- a/Report-Configuration.md
++++ b/Report-Configuration.md
+@@ -252,7 +252,7 @@ Resolution per setting, most specific wins: **built-in default ← `TestRunRepor
+ | `ScenarioTimelineVisible` | `bool?` | `false` | The Scenario Timeline panel starts visible (when duration data exists). |
+ | `ComponentDiagramVisible` | `bool?` | `false` | The embedded Component Diagram panel starts visible (test run report only). The two panels are mutually exclusive: when both are configured visible, the timeline wins and the component diagram stays one click away. |
+ | `DependencyFilterMode` | `FilterCombinationMode?` | `And` | The dependency filter's AND/OR mode button, the mode the first filtering uses, what *Clear All* resets to, and the URL-hash grammar (see below). |
+-| `CategoryFilterMode` | `FilterCombinationMode?` | `Or` | The category filter's AND/OR mode, same surfaces. |
++| `TagFilterMode` | `FilterCombinationMode?` | `Or` | The Tags row's ANY/ALL switch (`Or` is ANY), same surfaces (5.0.0). It replaces `CategoryFilterMode`, which seeded the Categories row's AND/OR mode before 5.0.0. |
+ | `FeaturesSummaryOpen` | `bool?` | `false` | The Features Summary table disclosure (test run report only). |
+ | `FailureClustersOpen` | `bool?` | `true` | The Failure Clusters disclosure. |
+ | `StepsSectionOpen` | `bool?` | `true` | Every scenario's **Steps** disclosure. |
+@@ -270,7 +270,7 @@ A setting whose control a given report does not emit — a different rendering m
+ 
+ - **Defaults govern the initial state only.** After any interaction the page state is whatever the interaction leaves, exactly as with the built-ins. Search still collapses non-matching scenarios and force-opens a single match (including its steps and diagrams sections, and an enclosing rule, if a configured default closed them); *Clear All* does not restore `open` states. There is no "return to configured defaults" button.
+ - **Zero-click rendering follows the seed.** The configured state drives the render pipeline itself, not just the buttons — an `AssertionsShown = true` report draws assertion notes on first paint.
+-- **URL-hash grammar** (changes even for non-adopters, 3.0.80): the hash omits `depmode`/`catmode` when the mode equals the *configured* default (previously the built-in), and `parse_url_hash` now accepts both values symmetrically — `depmode=AND` and `catmode=OR`, previously ignored, are valid, so a deep link from an AND-default report forces AND on an OR-default report. *Clear All* resets the modes to the configured defaults, never to hard-coded AND/OR. Since 3.1.0 a `#scenario-`/`#sid-` anchor may lead the hash (`#sid-<id>&status=Failed`); filter rewrites and *Clear All* both preserve it — see [Generated Reports › Deep links](Generated-Reports#deep-links-scenario--and-sid-).
++- **URL-hash grammar** (changes even for non-adopters, 3.0.80): the hash omits `depmode`/`tagmode` when the mode equals the *configured* default (previously the built-in), and `parse_url_hash` now accepts both values symmetrically — `depmode=AND` and `tagmode=OR`, previously ignored, are valid, so a deep link from an AND-default report forces AND on an OR-default report. Before 5.0.0 the category filter's mode was `catmode`; a link that carries it, and no `tagmode`, sets the tag mode. *Clear All* resets the modes to the configured defaults, never to hard-coded AND/OR. Since 3.1.0 a `#scenario-`/`#sid-` anchor may lead the hash (`#sid-<id>&status=Failed`); filter rewrites and *Clear All* both preserve it — see [Generated Reports › Deep links](Generated-Reports#deep-links-scenario--and-sid-).
+ - **Deep search vs seeded-hidden diagram content:** the search index is generation-time and state-independent, so a hit can land on content a seeded state strips from the rendered diagram (e.g. database notes with `DatabasesShown = false`) — the same class of behaviour assertions have always had (hidden by default, still searchable). The toggle that re-reveals the content is the one named by the setting.
+ - **Merged reports** (`kronikol merge`) resolve toggle defaults from the merge-time options record, like every other option on the merge path.
+ - **Firefox form restoration:** every seeded control keeps `autocomplete="off"` (the 3.0.68 rule), so what a control reads is always what the report is doing.
+diff --git a/Search-Syntax.md b/Search-Syntax.md
+index 3babc9a..fafa58d 100644
+--- a/Search-Syntax.md
++++ b/Search-Syntax.md
+@@ -6,7 +6,7 @@ The report search bar supports a powerful query language for filtering scenarios
+ 
+ ## Basic Text Search
+ 
+-Type any word to filter scenarios by **feature name**, **feature description**, **scenario name**, **step text** (background steps included, 3.0.48+), **error messages**, **tags** (categories/labels), and **diagram source**.
++Type any word to filter scenarios by **feature name**, **feature description**, **scenario name**, **step text** (background steps included, 3.0.48+), **error messages**, **tags** (the scenario's and its feature's), and **diagram source**.
+ 
+ ```
+ order
+@@ -78,14 +78,17 @@ You can mix implicit and explicit operators freely.
+ 
+ ## Tag Filtering (`@tag`)
+ 
+-Filter by tags (categories/labels) using the `@` prefix:
++Filter by tags using the `@` prefix:
+ 
+ ```
+ @smoke
+ @api && @smoke
++@"Happy Path"
+ ```
+ 
+-Tags match against scenario categories and labels (case-insensitive).
++`@smoke` matches a scenario that carries the tag `smoke`, in any case. A scenario's tags are its feature's tags and its own, the same tags the report's Tags row shows, Happy Path included ([[Tags and Attributes › Tags|Tags-and-Attributes#tags]]). Quote a tag that has a space in it: `@"Happy Path"`, `@"two words"`. Quoting works in advanced queries and in the legacy expressions below.
++
++Before 5.0.0 `@tag` read a scenario's own labels and categories only: not its feature's tags, and not Happy Path.
+ 
+ ### Legacy Tag Expressions
+ 
+@@ -167,6 +170,7 @@ You can freely mix text, tags, status, and operators:
+ | `$flaky` | Scenarios the cross-run ledger calls flaky, whatever their status this run (a report drawn with `ShowScenarioHistory`) |
+ | `$failed && !!$flaky` | Failing scenarios that are not flaky — the regressions worth reading first (a report drawn with `ShowScenarioHistory`) |
+ | `$passed && @smoke` | Passed scenarios tagged "smoke" |
++| `@"Happy Path"` | Happy path scenarios, as the Tags row's Happy Path chip picks them |
+ | `@api && @smoke` | Scenarios with both "api" and "smoke" tags |
+ | `(a \|\| b) && c` | Scenarios matching ("a" or "b") and "c" |
+ | `@smoke and not @slow` | Legacy tag expression — "smoke" tag without "slow" tag |
+@@ -183,7 +187,7 @@ Every keystroke instantly matches against:
+ - **Error messages** (for failed scenarios)
+ - **Parameterized example values** (3.0.70+)
+ - **Diagram participant names and request URLs**
+-- **Tags/categories** (via `@tag` syntax only)
++- **Tags**, the scenario's and its feature's (as text, and by name with `@tag`)
+ - **Status** (via `$status` syntax only)
+ 
+ ### Deep search — "search everything" (3.0.70+)
+diff --git a/Tags-and-Attributes.md b/Tags-and-Attributes.md
+index 455b88a..80f6115 100644
+--- a/Tags-and-Attributes.md
++++ b/Tags-and-Attributes.md
+@@ -1,4 +1,4 @@
+-Tags control how scenarios are categorised and filtered in the generated reports.
++Tags group and filter the scenarios in the generated reports. Kronikol also reads two markers of its own, the happy path and the endpoint, and neither of them is a tag.
+ 
+ ## Happy Path
+ 
+@@ -7,13 +7,16 @@ Mark a scenario as a "happy path" to support filtering in the HTML reports.
+ | Framework | How to mark |
+ |---|---|
+ | **xUnit** | `[HappyPath]` attribute on the test method |
+-| **NUnit** | `[HappyPath]` attribute on the test method |
++| **NUnit** | `[HappyPath]` attribute on the test method; on a `[TestCase]` method it marks every case (since 5.0.0) |
+ | **MSTest** | `[HappyPath]` attribute on the test method |
++| **TUnit** | `[HappyPath]` attribute on the test method, or on the class to mark every test in it (it is TUnit's `[Category("Happy Path")]`) |
+ | **BDDfy** | `.WithTags("happy-path")` |
+-| **LightBDD** | `[HappyPath]` attribute on the scenario method (from `Kronikol.LightBDD.Core` — extends `LabelAttribute`) |
+-| **ReqNRoll** | `@happy-path` tag on the Gherkin scenario |
++| **LightBDD** | `[HappyPath]` attribute on the scenario method (from `Kronikol.LightBDD.Core`; it extends `LabelAttribute`) |
++| **ReqNRoll** | `@happy-path` tag on the Gherkin scenario or its `Examples:` block |
+ 
+-In the HTML reports, happy path scenarios are **sorted first** within each feature and display a "Happy Path" badge. Use the **"Happy Paths Only"** toggle in the filtering toolbar to show only happy path scenarios.
++The happy-path names are `happy-path`, `happy_path`, `happypath` and, since 5.0.0, `Happy Path`, in any case. A category or label the framework gives a test marks the happy path too when it has one of these names, so NUnit's `[Category("happy-path")]` means what `@happy-path` means in Gherkin. A happy-path name sets the happy-path flag and is not a tag.
++
++In the HTML reports, happy path scenarios are **sorted first** within each feature and display a "Happy Path" badge. Use the **"Happy Paths Only"** toggle in the filtering toolbar to show only happy path scenarios. The report's Tags row starts with a Happy Path chip, and `@"Happy Path"` in the search bar finds them.
+ 
+ ## Endpoint
+ 
+@@ -27,27 +30,45 @@ Associate a feature/test class with an API endpoint. This appears as metadata in
+ | **BDDfy** | `.WithTags("endpoint:/api/cake")` |
+ | **ReqNRoll** | `@endpoint:/api/cake` tag on the Gherkin `Feature` |
+ 
+-## Category
+-
+-Assign categories to scenarios for grouping and filtering in the reports. Categories appear as filterable tags in the search bar using the `@tag` syntax.
+-
+-| Framework | How to set |
+-|---|---|
+-| **xUnit** | `[Trait("Category", "smoke")]` attribute on the test method |
+-| **NUnit** | `[Category("smoke")]` attribute on the test method |
+-| **MSTest** | `[TestCategory("smoke")]` attribute on the test method |
+-| **BDDfy** | `.WithTags("category:smoke")` |
+-| **LightBDD** | `[Label("smoke")]` attribute on the scenario method |
+-| **ReqNRoll** | `@category:smoke` tag on the Gherkin scenario or feature |
+-
+-In the HTML reports, categories are searchable using `@smoke` in the search bar. See [[Search Syntax › Tag Filtering (@tag)|Search-Syntax#tag-filtering-tag]].
++## Tags
++
++A tag is a name on a feature or on a scenario, given through the framework's own tagging. Each level keeps its own list, and a scenario's tags in the report are its feature's tags, then its own, each once.
++
++| Framework | Scenario tags | Feature tags |
++|---|---|---|
++| **xUnit v3** | `[Trait("Category", "smoke")]` on the test method | `[Trait("Category", "smoke")]` on the test class |
++| **xUnit v2** | `[Trait("Category", "smoke")]` on the test method | `[Trait("Category", "smoke")]` on the test class or one of its base classes |
++| **NUnit 4** | `[Category("smoke")]` on the test; for a `[TestCase]`, its `Category = "smoke"` and the method's `[Category]` | `[Category]` or `[TestFixture(Category = "smoke")]` on the fixture, `[Category]` on a `[SetUpFixture]` above it, and `[assembly: Category("smoke")]` |
++| **MSTest** | `[TestCategory("smoke")]`, or any other `TestCategoryBaseAttribute`, on the test method | the same on the test class (a base class's included) and on the assembly |
++| **TUnit** | `[Category("smoke")]` on the test method | `[Category]` on the test class (a base class's included) and on the assembly |
++| **BDDfy** | the scenario's `.WithTags("smoke")`, then the xUnit test's `Category` traits | none: a story has no tags |
++| **LightBDD** | `[Label("smoke")]` and `[ScenarioCategory("smoke")]` on the scenario method | `[Label]` on the feature class |
++| **ReqNRoll** | the scenario's own Gherkin tags, its `Rule:`'s and its `Examples:` block's | the `Feature:`'s tags (Reqnroll's `FeatureInfo.Tags`) |
++| **Cucumber Messages** (`kronikol ingest`) | the scenario's own Gherkin tags, its `Rule:`'s and its `Examples:` block's | the `Feature:`'s tags |
++| **Tests NDJSON** (`kronikol ingest`) | the `tags` of the test's `start` record | the tags every scenario of the feature carries |
++
++- **The `category:` prefix is read and dropped.** `@category:smoke` in Gherkin and `.WithTags("category:smoke")` in BDDfy are the tag `smoke`, with no warning, so a scenario tagged both `@smoke` and `@category:smoke` has one tag. A `category:` value is a tag whatever it spells: `@category:happy-path` is the tag `happy-path`, not the happy path.
++- **Kronikol's markers are not tags.** A happy-path name sets the happy-path flag (see [Happy Path](#happy-path)) and `endpoint:/x` sets the feature's endpoint. No xUnit trait key other than `Category` is read, and no NUnit or TUnit property, so `[HappyPath]`, `[Endpoint]` and a trait such as `[Trait("Produces", "openapi.json")]` add no tag.
++- **Case.** Tags that differ only in the case of an ASCII letter are one tag (`Smoke` and `smoke`), spelled as the report first meets it. Other letters do not fold: `Über` and `über` are two tags.
++- **A feature's tags count for every one of its scenarios** and are drawn once, on the feature. A tag a scenario repeats from its feature is the feature's and is not drawn again on the scenario.
++- **Gherkin.** A `Rule:`'s tags reach its scenarios and no others. The happy path is read from a scenario's own tags and its `Examples:` block's only.
++- **LightBDD.** `[HappyPath]` sets the flag and is not a tag. A `[ScenarioCategory]` on the class reaches every scenario without saying which level it came from, so it stays on each scenario.
++- **xUnit v2** reads the traits on both of its capture paths, the test framework's results sink and the `[TestTracking]` attribute. Assembly-level traits are not read.
++- **Retries.** A retried scenario shows one retry badge, drawn from its attempt (`retry 2` for a third attempt). The ingest lanes no longer add `retry N` labels, so an author's own `retry 2` tag is an ordinary tag.
++
++### In the report
++
++- The filter box has one **Tags** row: a chip per tag with the number of scenarios carrying it, Happy Path first, and **Untagged** for the scenarios with no tag (a happy path counts as tagged). A click cycles a chip through has, has not and off; Alt+click or right-click sets has not. The row's ANY/ALL switch says whether a scenario needs any of the chosen tags or all of them. It starts on ANY, or where `ReportToggleDefaults.TagFilterMode` sets it ([[Report Configuration › Toggle Default Start States|Report-Configuration#toggle-default-start-states]]).
++- Choosing a feature's tag picks every scenario of that feature.
++- A row of more than 30 tags starts with the 30 the most scenarios carry and an "N more" chip that shows the rest.
++- `@smoke` in the search bar reads the same tags as the row, Happy Path included, ignoring case, and `@"two words"` finds a tag with a space. See [[Search Syntax › Tag Filtering (@tag)|Search-Syntax#tag-filtering-tag]].
++- Each scenario's element carries `data-tags`: its tags, each percent-encoded, joined with commas. It replaces `data-labels` and `data-categories`.
++- A link to a filtered report names the tags in `tags=` (has), `tagx=` (has not) and `tagmode=` ([[Generated Reports › Deep links|Generated-Reports#deep-links-scenario--and-sid-]]).
++
++Before 5.0.0 a scenario had two lists, labels and categories. Only a category had a button in the report (in a Categories row), only LightBDD and ReqNRoll made categories, and the xUnit, NUnit, MSTest and TUnit adapters read neither. [[Migrating to v5: tags|Migrating-to-v5-Tags]] lists what the change means for code, data files and links.
+ 
+ To mark the tests a pull request added or edited, as worked out by your own detector and without changing the test code, see [[Marking New and Changed Tests]].
+ 
+-## Labels
+-
+-Labels provide additional metadata attached to features and scenarios. In LightBDD, labels are set via `[Label("...")]` attributes and appear in the report alongside the scenario name. In ReqNRoll/BDDfy, tags that don't match the `happy-path`, `endpoint:`, or `category:` prefixes are treated as general labels.
+-
+ ## DocString
+ 
+ Gherkin DocString content (triple-quoted blocks in `.feature` files) is captured as part of scenario steps and rendered as `<pre>` code blocks in the HTML reports. The optional media type (e.g. `json`, `xml`) specified after the opening `"""` delimiter controls syntax highlighting in the rendered output.
+diff --git a/_Sidebar.md b/_Sidebar.md
+index e862b6e..cccf92b 100644
+--- a/_Sidebar.md
++++ b/_Sidebar.md
+@@ -112,6 +112,7 @@
+ * [[Inline SVG Rendering]]
+ * [[Internal Flow Tracking]]
+ * [[Tags and Attributes]]
++  * [Tags](Tags-and-Attributes#tags)
+   * [[Marking New and Changed Tests]]
+ * [[Excluding Requests]]
+ * [[Excluded Headers]]
+-- 
+2.53.0.windows.3
+

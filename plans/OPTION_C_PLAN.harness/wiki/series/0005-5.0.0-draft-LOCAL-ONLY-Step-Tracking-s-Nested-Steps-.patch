@@ -1,0 +1,31 @@
+From a6d8dc56e45f1fa28f7a135b4fe200ee02571764 Mon Sep 17 00:00:00 2001
+From: "aryehcitron@gmail.com" <aryehcitron@gmail.com>
+Date: Tue, 20 Oct 2026 04:34:05 +0100
+Subject: [PATCH 5/8] 5.0.0 draft, LOCAL ONLY: Step-Tracking's Nested Steps
+ says a composite step's sub-steps are drawn the first time it opens, and how
+ to draw them all (REPORT_FORMAT_PLAN R5)
+
+---
+ Step-Tracking.md | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/Step-Tracking.md b/Step-Tracking.md
+index 59c2e3a..af47303 100644
+--- a/Step-Tracking.md
++++ b/Step-Tracking.md
+@@ -261,6 +261,12 @@ public void Setup_database() { /* ... */ }
+ public void Seed_test_data() { /* ... */ }
+ ```
+ 
++In the HTML report a step with sub-steps is drawn closed, and opens to show them. From 5.0.0, where its sub-steps come
++to 2 KB of HTML or more, the page holds them compressed and draws them the first time the step is opened, so a suite of
++deeply nested steps keeps a small report. A step on the way to a failure is drawn and open as before. The report's
++search box finds a word in a step nobody opened; the browser's own find (Ctrl+F) does not. Set
++`RenderCollapsedSubStepsOnExpand = false` on `ReportConfigurationOptions` to draw every step. See [[Report Configuration]].
++
+ ---
+ 
+ ## Background Steps
+-- 
+2.53.0.windows.3
+

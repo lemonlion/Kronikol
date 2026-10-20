@@ -1,0 +1,1793 @@
+From e943ec917193d21c2d777ff2c0deb6ef30da435a Mon Sep 17 00:00:00 2001
+From: "aryehcitron@gmail.com" <aryehcitron@gmail.com>
+Date: Tue, 20 Oct 2026 06:02:58 +0100
+Subject: [PATCH 8/8] 5.0.0 draft, LOCAL ONLY (do not push before 5.0.0 ships):
+ OPTION_C_PLAN S14, the report's 5.0.0 pages on the data file and tags pages.
+ Generated-Reports describes the 5.0.0 report (its tabs, themes, filters,
+ toggles, focus kept clear of the bar, tooltips and the parameter table);
+ Report-Configuration its settings and start states; Report Themes (new) its
+ colour tokens; Migrating to v5 (new) is the page for an upgrade, with one
+ table of every 5.0.0 change and the setting that keeps the 4.x behaviour, one
+ snippet, the data file's sections (kronikol-39's fragment) and pointers to
+ Migrating to v5: the report (new) and Migrating to v5: tags; the sidebar and
+ Home link them. Search-Syntax, Cross-Run-History, Merging-Parallel-Reports,
+ Component-Diagrams, Diagnostics-and-Debugging, PlantUML-Browser-Rendering,
+ Ingesting-External-Captures, Tags-and-Attributes,
+ Tracking-Custom-Dependencies and Integration-ReqNRoll-xUnit3 say what 5.0.0
+ changed for them. Checked against the code by an adversarial review, whose
+ ten wording findings are fixed here (the eleventh, the empty state on a page
+ without the report bar, was a code gap, fixed on v5 in a5e0ec91). Carried
+ onto ddef9ff with three conflicts, resolved by row: the data file's rows and
+ the attachments item as upstream and kronikol-39 wrote them, the history rows
+ as S14 wrote them
+
+---
+ Component-Diagrams.md           |   6 +-
+ Cross-Run-History.md            | 108 ++++---
+ Diagnostics-and-Debugging.md    |  23 +-
+ Generated-Reports.md            | 502 +++++++++++++++++++++++++++-----
+ Home.md                         |   1 +
+ Ingesting-External-Captures.md  |  10 +-
+ Integration-ReqNRoll-xUnit3.md  |   2 +-
+ Merging-Parallel-Reports.md     |  15 +-
+ Migrating-to-v5-Report.md       | 135 +++++++++
+ Migrating-to-v5.md              | 115 ++++++++
+ PlantUML-Browser-Rendering.md   |  22 +-
+ Report-Configuration.md         |  86 ++++--
+ Report-Themes.md                | 202 +++++++++++++
+ Search-Syntax.md                |  60 +++-
+ Tags-and-Attributes.md          |   5 +-
+ Tracking-Custom-Dependencies.md |   6 +-
+ _Sidebar.md                     |   4 +
+ 17 files changed, 1131 insertions(+), 171 deletions(-)
+ create mode 100644 Migrating-to-v5-Report.md
+ create mode 100644 Migrating-to-v5.md
+ create mode 100644 Report-Themes.md
+
+diff --git a/Component-Diagrams.md b/Component-Diagrams.md
+index dd8dd28..089c449 100644
+--- a/Component-Diagrams.md
++++ b/Component-Diagrams.md
+@@ -88,7 +88,9 @@ Reports/ directory
+ 
+ 3. **Generate** — The aggregated relationships are converted into PlantUML C4 Component diagram syntax. Participants are classified as `Person()` (pure callers), `System()` (HTTP APIs), `SystemDb()` (databases/storage), or `SystemQueue()` (message queues) based on their `DependencyCategory`. Arrows are coloured by dependency type by default.
+ 
+-4. **Write** — The PlantUML source is written to a `.puml` file, wrapped in an HTML page for standalone viewing, and optionally embedded in the TestRunReport (hidden by default, with a toolbar toggle button to show/hide).
++4. **Write**: the PlantUML source is written to a `.puml` file, wrapped in an HTML page for standalone viewing, and
++   optionally embedded in the TestRunReport, where from 5.0.0 it is the report's Components tab (before 5.0.0, a panel
++   hidden by default behind a toolbar toggle button).
+ 
+ ---
+ 
+@@ -124,7 +126,7 @@ When `GenerateComponentDiagram` is `false`, no component diagram files are gener
+ | Property | Type | Default | Description |
+ |----------|------|---------|-------------|
+ | `FileName` | `string` | `"ComponentDiagram"` | Base filename for the generated `.puml` and `.html` files |
+-| `EmbedInTestRunReport` | `bool` | `true` | When `true`, the component diagram is embedded in the TestRunReport (hidden by default) with a "Component Diagram" toggle button in the toolbar. Clicking the button shows/hides the diagram. The standalone file is always generated. The embedded diagram is exempt from the report's filter toggles (headers/assertions/steps/databases) — in particular, hiding databases never removes the overview's database/collections dependency nodes (3.0.82+). |
++| `EmbedInTestRunReport` | `bool` | `true` | When `true`, the component diagram is embedded in the TestRunReport. From 5.0.0 it is the report's **Components** tab, headed by `Title`, which the tab's drawing leaves out (the standalone page keeps it); `ReportToggleDefaults.ComponentDiagramVisible` opens the page on it, and a run whose calls give the diagram no connection has no Components tab. Where the page draws the diagram (`BrowserJs`), the tab's controls are Show, Direction and Call summaries: Show Filtered, the start, draws the components and connections used by the scenarios the filters leave showing, where the report knows which scenarios made each connection's calls. Before 5.0.0 the embedded diagram was hidden by default behind a "Component Diagram" toggle button in the toolbar. The standalone file is always generated. The embedded diagram is exempt from the report's display toggles (Headers, Assertions, Steps, Databases, and from 5.0.0 Events and Setup), which act on sequence diagrams only: in particular, hiding databases never removes the overview's database/collections dependency nodes (3.0.82+). |
+ | `Title` | `string` | `"Component Diagram"` | The title displayed in the PlantUML diagram and HTML page |
+ | `PlantUmlTheme` | `string?` | `null` | Optional PlantUML theme name (e.g. `"cerulean"`, `"superhero"`). Applied under `PlantUmlRendering.Server` and `Local` only; see [PlantUML Theme](#plantuml-theme) |
+ | `ParticipantFilter` | `Func<string, bool>?` | `null` | Predicate to include/exclude participants by name |
+diff --git a/Cross-Run-History.md b/Cross-Run-History.md
+index c4a770c..0da60aa 100644
+--- a/Cross-Run-History.md
++++ b/Cross-Run-History.md
+@@ -18,7 +18,9 @@ HTML report (a sparkline and verdict beside each scenario, a History section bes
+ CI. The plan is executed in full. 3.21.0 leaves the History section out of the report unless
+ `ShowHistorySection` asks for it. 4.6.0 takes the sparklines, the verdict pills and `$flaky` out of the
+ default report as well: the history is drawn on a labs page beside the report, `TestRunReport.labs.html`,
+-and each view comes back in the report with a switch ([In the HTML](#in-the-html-460)).
++and each view comes back in the report with a switch. 5.0.0 puts the History section back in the default report,
++as its History tab (`ShowHistorySection` is on by default); the sparklines, the pills and `$flaky` stay out of the
++report unless `ShowScenarioHistory` asks ([In the HTML](#in-the-html-460)).
+ 
+ ## What you get
+ 
+@@ -40,7 +42,8 @@ The run-end pointer and the CI job summary carry the same one line — `history:
+ each failure whenever a ledger is there to read. `ctrf-report.json` sets `flaky` from the ledger (so a
+ CTRF consumer's flaky table sees what the last runs saw, not only what this run's retries saw) and adds
+ `extra.kronikolHistory` per test. The labs page beside the report, `TestRunReport.labs.html` (4.6.0),
+-draws the History section and every scenario's sparkline and verdict.
++draws the History section and every scenario's sparkline and verdict, and from 5.0.0 the report's History tab draws
++the section too.
+ 
+ Every surface says the same thing because the verdicts are computed once, before any output is written,
+ and handed to all of them.
+@@ -560,19 +563,44 @@ this one not partial), the new `caller>service` dependency pairs, the pass-rate
+ 
+ ## In the HTML (4.6.0)
+ 
+-A default `TestRunReport.html` carries no history. What the run read is drawn on a page of its own
+-beside the report, the **labs page**: `{HtmlTestRunReportFileName}.labs.html`, so `TestRunReport.labs.html`
+-by default and `Checkout.labs.html` beside `Checkout.html`. Under its title it says what it is ("Labs:
+-views still being designed. Their layout may change in any release."), and it holds:
+-
+-- **a header**: the report's title with a "Labs" badge, the suite, the run id, when the run ended, and,
+-  when a report is written, a link back to it;
+-- **the History section**, always open: the run's summary line (`1 broke, 2 flaky (against 12 earlier
+-  runs on main)`), the `HistoryCompareBranch` reading when one is set (`on main: 1 broke (against 12
+-  earlier runs on main)`), the pass-rate and total-duration trend of the last runs, and the lists (new
+-  failures, failing since, flaky, newly fixed, slower, behaviour changed, new scenarios, quarantined,
+-  absent since the previous run, new `caller>service` dependencies). On a cold start it says how many
+-  runs it has and how many the statistical verdicts need;
++From 5.0.0 a default `TestRunReport.html` shows the history the run read in its **History** tab, and nothing of it
++in the features: each scenario's sparkline and verdict are on the labs page beside the report, and in the report only
++with `ShowScenarioHistory`. From 4.6.0 to 4.x a default report carried no history at all. The labs page was the one
++place it was drawn, and `ShowHistorySection`, off by default from 3.21.0, put the History section back in the report
++beside the Scenario Timeline.
++
++### The History tab (5.0.0)
++
++With `ShowHistorySection` on, the default from 5.0.0, a report whose run read history has a History tab in its report
++bar ([[Generated Reports › The other tabs|Generated-Reports#the-other-tabs]]). It holds the History section, open in
++its tab:
++
++- **the run's reading**: the summary line (`1 broke, 2 flaky (against 12 earlier runs on main)`), the stream, the run
++  id and how many earlier runs are in the window, and the `HistoryCompareBranch` reading when one is set (`on main:
++  1 broke (against 12 earlier runs on main)`). On a cold start it says how many runs it has and how many the
++  statistical verdicts need;
++- **the trend of the last runs**: the pass rate as a ring per run, drawn like the run band's ring with the rate
++  inside, never 100% while any scenario of the run did not pass, and with a fail arc for a run that failed, each ring
++  keeping its run's tooltip; and the total duration as bars that carry their time (`850ms`, `44s`, `2m 26s`,
++  `1h 5m`). A window too long for its card scrolls inside it and opens on the newest run;
++- **the lists**: new failures, failing since, flaky, newly fixed, slower, behaviour changed, new scenarios,
++  quarantined, absent since the previous run, and new `caller>service` dependencies. Each scenario links to its place
++  on the Features tab, and each kind of verdict pill has its own colour, in the light and the dark theme.
++
++The tab is there only when the run read history, with `EmbedHistoryInReport` on; `ShowHistorySection = false` leaves
++it out. 4.x drew the trend as a bar chart, `svg.history-chart-svg` with the `history-bar-pass`, `history-bar-fail`,
++`history-bar-duration` and `history-bar-partial` classes; a stylesheet or a script that reads them finds none.
++
++### The labs page (4.6.0)
++
++What the run read is also drawn on a page of its own beside the report, the **labs page**:
++`{HtmlTestRunReportFileName}.labs.html`, so `TestRunReport.labs.html` by default and `Checkout.labs.html` beside
++`Checkout.html`. Under its title it says what it is ("Labs: views still being designed. Their layout may change in
++any release."), and it holds:
++
++- **a header**: the report's title with a "Labs" badge and, from 5.0.0, the report's light and dark switch, then the
++  suite, the run id, when the run ended, and, when a report is written, a link back to it;
++- **the History section**, always open: the same section as the report's History tab;
+ - **Every scenario**, a collapsed table in report order: each scenario's **sparkline** of its last runs
+   (oldest on the left, this run on the right, one colour stop per run: green passed, red failed, grey
+   skipped or absent; the verdict and each run's commit, date, result and duration in its tooltip), its
+@@ -586,32 +614,29 @@ A run whose ledger file does not exist yet reads it as empty and shows its own f
+ ledger to read (history off, or no ledger found) has no history to show. `GenerateLabsReport = false`
+ turns the page off.
+ 
+-It has no script. Each scenario name links into the report by its stable id,
+-`TestRunReport.html#sid-<stableId>`, which the report opens on load, as it does a link from
++From 5.0.0 the page opens in the report's light or dark theme ([[Report Themes]]) and runs only the theme's two
++scripts; before 5.0.0 it had no script. Each scenario name links into the report by its stable id,
++`TestRunReport.html#sid-<stableId>`, which the report opens on load, on its Features tab, as it does a link from
+ `Failures.md`; with `GenerateTestRunReport = false` the names are plain text. The page is listed in
+ `Run.json` and moves with its run under `runs/` ([Earlier runs](Generated-Reports#earlier-runs-runjson-and-runs)),
+ and the run-end pointer lists it after the report. `kronikol ingest` and `kronikol merge` write it too.
+ 
+-### In the report, when asked
++### Each scenario's history, when asked
+ 
+-Each view can be put back in the report itself. Both switches need `EmbedHistoryInReport` and a ledger
+-to read:
+-
+-- **`ShowScenarioHistory = true`** (4.6.0) draws each scenario's history in its header, as every report
+-  that read a ledger did from 3.11.0 to 4.5.x: the sparkline beside the duration badge, a **pill** for
+-  any verdict other than stable (`broke`, `failing`, `always-failing`, `fixed`, `flaky`, `new`, `slower`,
+-  `behaviour-changed`, `quarantined`), and the `data-history-verdicts` attribute the search box reads. A
+-  parameterised group carries the union of its rows' verdicts and one pill for the worst of them, and
+-  each example row carries its own. The sparkline is a single element whose background paints the runs,
+-  so two hundred scenarios cost the page two hundred nodes and the filter and toggle budgets stay where
+-  they were.
+-- **`ShowHistorySection = true`** (3.21.0) puts the History section beside the Scenario Timeline. In the
+-  report it opens when there is something to say, and its links open the scenario on the same page.
++**`ShowScenarioHistory = true`** (4.6.0, still off by default in 5.0.0) draws each scenario's history in its header,
++as every report that read a ledger did from 3.11.0 to 4.5.x: the sparkline beside the duration badge, a **pill** for
++any verdict other than stable (`broke`, `failing`, `always-failing`, `fixed`, `flaky`, `new`, `slower`,
++`behaviour-changed`, `quarantined`), and the `data-history-verdicts` attribute the search box reads. A
++parameterised group carries the union of its rows' verdicts and one pill for the worst of them, and
++each example row carries its own. The sparkline is a single element whose background paints the runs,
++so two hundred scenarios cost the page two hundred nodes and the filter and toggle budgets stay where
++they were. It needs `EmbedHistoryInReport` and a ledger to read.
+ 
+ A report carries the stylesheet rules of the history views only when it draws them, and the verdict
+-search code only with `ShowScenarioHistory`. To keep the report 4.5.x drew, set
+-`ShowScenarioHistory = true` (and `ShowHistorySection = true` for the section, off by default since
+-3.21.0).
++search code only with `ShowScenarioHistory`. To keep the scenario headers 4.5.x drew, set
++`ShowScenarioHistory = true`; the History section is the report's History tab from 5.0.0, on by default. From 3.21.0
++to 4.x the section was in the report only with `ShowHistorySection = true`, beside the Scenario Timeline, open when
++there was something to say.
+ 
+ The **search box** of a report drawn with `ShowScenarioHistory` takes the verdicts with the `$` sigil,
+ beside the statuses, and they combine: `$flaky`, `$failed && !!$flaky` (the regressions),
+@@ -621,8 +646,8 @@ default report the verdict operators match nothing, without an error. See
+ [Search Syntax](Search-Syntax#history-verdicts).
+ 
+ **Export Filtered HTML** of a report drawn with `ShowScenarioHistory` keeps the sparklines and pills,
+-which live in the scenario headers it copies, and leaves the History section behind on purpose, as it
+-does the timeline and the toolbar. A default report's export carries no history.
++which live in the scenario headers it copies, and leaves the History tab behind on purpose, as it
++does the other tabs and the report bar. A default report's export carries no history.
+ 
+ `EmbedHistoryInReport = false` keeps history out of the page and the report alike. The ledger is still
+ read and still appended to, and `Failures.md`, the CTRF document, the pointer and `History.run.json` are
+@@ -676,8 +701,9 @@ not flaky. Both are described under [Querying Reports](Querying-Reports#without-
+ 
+ **Merged reports.** `kronikol merge <shards> --history <ledger>` (3.11.0) reads the merged run against
+ the ledger: the history lines in `Failures.md`, the summary in the pointer, and since 4.6.0 the labs page
+-beside the merged report (`<output>.labs.html`), which also lists the shards' diagnostics. The merged
+-report itself carries no history; before 4.6.0 it drew the History section, sparklines and pills. It
++beside the merged report (`<output>.labs.html`), which also lists the shards' diagnostics. From 5.0.0 the
++merged report has the History tab, as a run's report does; from 4.6.0 to 4.x it carried no history, and before
++4.6.0 it drew the History section, sparklines and pills. It
+ never writes to the ledger: folding the shards'
+ `History.run.json` fragments is `kronikol history record`'s job, because a merge is a render and a
+ render that recorded would count every re-render as a run. See
+@@ -869,10 +895,10 @@ All on `ReportConfigurationOptions`; see [Report Configuration](Report-Configura
+ | `HistoryCompareBranch` | `null` | a second stream, read out beside the run's own (3.12.0) |
+ | `GenerateHistoryFragment` | `true` | write `History.run.json` beside the report |
+ | `WriteHistoryLedger` | `null` | append to the ledger: `null` = when named explicitly or off CI; `true` always; `false` never |
+-| `EmbedHistoryInReport` | `true` | the master switch for history in the run's HTML: the labs page's History section and scenario table, and the report's two opt-ins below; `false` keeps history out of both, and `Failures.md`, the CTRF document, the pointer, the fragment and the ledger are not affected (3.11.0; the labs page since 4.6.0) |
++| `EmbedHistoryInReport` | `true` | the master switch for history in the run's HTML: the labs page's History section and scenario table, and the report's History tab and scenario history below; `false` keeps history out of both, and `Failures.md`, the CTRF document, the pointer, the fragment and the ledger are not affected (3.11.0; the labs page since 4.6.0) |
+ | `GenerateLabsReport` | `true` | write the labs page beside the report, `{HtmlTestRunReportFileName}.labs.html`, when the run read history or recorded a diagnostic (4.6.0) |
+-| `ShowScenarioHistory` | `false` | the sparkline, verdict pill and `data-history-verdicts` attribute in each scenario header of the report, with `$flaky` and the other verdict operators in its search box (4.6.0) |
+-| `ShowHistorySection` | `false` | the History section in the report, beside the timeline (3.21.0) |
++| `ShowScenarioHistory` | `false` | the sparkline, verdict pill and `data-history-verdicts` attribute in each scenario header of the report, with `$flaky` and the other verdict operators in its search box (4.6.0; still off in 5.0.0) |
++| `ShowHistorySection` | `true` (`false` from 3.21.0 to 4.x) | the report's History tab (5.0.0); from 3.21.0 to 4.x, the History section in the report, beside the timeline |
+ 
+ ## The file
+ 
+diff --git a/Diagnostics-and-Debugging.md b/Diagnostics-and-Debugging.md
+index 2caebf1..a3cbb10 100644
+--- a/Diagnostics-and-Debugging.md
++++ b/Diagnostics-and-Debugging.md
+@@ -72,9 +72,9 @@ var options = new ReportConfigurationOptions
+ 
+ A run never fails over its [history](Cross-Run-History); everything that stops it is one of four
+ diagnostic kinds. Each is in the `diagnostics` array of `TestRunReport.json` and on the labs page beside
+-the report (4.6.0), and in the report's Report diagnostics section when `ShowReportDiagnosticsSection`
+-asks for it, except a failed append: the run appends its line to the ledger after those files are
+-written.
++the report (4.6.0), and in the report's Diagnostics tab (5.0.0, with `ShowReportDiagnosticsSection` on by
++default; from 3.21.0 to 4.x, its Report diagnostics section when that option asked for it), except a failed
++append: the run appends its line to the ledger after those files are written.
+ 
+ | Kind | When |
+ |---|---|
+@@ -159,14 +159,23 @@ Every capture component exposes the same surface — `TcpTap.Diagnostics()`, `Pr
+ 
+ 1. **`IngestResult.Diagnostics`** — first, ahead of what the ingest itself records, so `kronikol ingest` prints them and a dashboard sees them with everything else.
+ 2. **The labs page beside the report**, `TestRunReport.labs.html` (4.6.0; see [Generated Reports](Generated-Reports#testrunreportlabshtml)): an open **"Report diagnostics"** list, `Report diagnostics (3: CaptureDegraded ×2, MalformedLine)`, one line per entry with a kind badge (amber for `CaptureDegraded`, red for render/output/attachment failures), the message and the scenario id when there is one. It shows *every* diagnostic recorded before the outputs are written (host entries, skipped lines, diagram render failures), and the page is written whenever there is one, unless `GenerateLabsReport = false`. With the JSON below, this is where to look when arrows are missing and the report is quiet.
+-3. **`TestRunReport.html`**, only when `ShowReportDiagnosticsSection = true` asks for it (`kronikol ingest --diagnostics-section` on the CLI): the same list as a collapsed block under the summary, after the failure clusters when there are any, and absent when there are no entries. Off by default since 3.21.0, because on a healthy run it was a line of noise above the features; `ReportToggleDefaults.DiagnosticsOpen` sets whether it starts open.
++3. **`TestRunReport.html`**, as its **Diagnostics** tab (5.0.0): the same list, open in its tab, with the count of
++   entries on the tab, on a card in the report's light or dark theme, a degraded capture in amber (`CaptureDegraded`), a
++   render, output or attachment failure in red, and every other kind neutral. There is no tab when there are no entries.
++   `ShowReportDiagnosticsSection` is on by default from 5.0.0; `false` leaves the tab out, and so does `kronikol ingest
++   --no-diagnostics-section` on the CLI. From 3.21.0 to 4.x the option was off by default, because the list was a
++   collapsed block under the summary, after the failure clusters, and on a healthy run a line of noise above the
++   features; `ReportToggleDefaults.DiagnosticsOpen` set whether it started open, and has nothing to open in the tab.
+ 4. **`TestRunReport.json`** (and the mergeable JSON) — a top-level `diagnostics` array of `{ "kind", "message", "scenarioId" }`; `TestRunReport.schema.json` describes it (`$defs/diagnostic`, `kind` an enum of the `DiagnosticKind` names). Empty array when nothing was recorded.
+ 
+-The CLI form is `kronikol ingest --diagnostic "<kind>:<message>"` (repeatable; the kind is a `DiagnosticKind` name, anything else — or no colon — counts as `Other`), with `--diagnostics-section` to render the block in `TestRunReport.html` as well (3.21.0):
++The CLI form is `kronikol ingest --diagnostic "<kind>:<message>"` (repeatable; the kind is a `DiagnosticKind`
++name, and anything else, or no colon, counts as `Other`). The report's Diagnostics tab shows the entries by default
++(5.0.0), and `--no-diagnostics-section` leaves the tab out. `--diagnostics-section`, which from 3.21.0 to 4.x drew
++the block in `TestRunReport.html`, is the default now and is still taken, so a 4.x command line runs unchanged:
+ 
+ ```bash
+-kronikol ingest ./captures --tests ./captures/tests.ndjson --diagnostics-section \
+-  --diagnostic "CaptureDegraded:tap-di-redis: decoding disabled on 1 connection(s) — Redis arrows after 14:03:35Z are missing"
++kronikol ingest ./captures --tests ./captures/tests.ndjson \
++  --diagnostic "CaptureDegraded:tap-di-redis: decoding disabled on 1 connection; Redis arrows after 14:03:35Z missing"
+ ```
+ 
+ Nothing changes when the list is empty: no host entries on the labs page or in the report, an empty `diagnostics` array in the JSON, `IngestResult.Diagnostics` exactly as before. The lesson behind the feature: *when arrows are missing, check the capture component's counters before reasoning about the app — and a capture give-up must be a report diagnostic, never only a log line.*
+diff --git a/Generated-Reports.md b/Generated-Reports.md
+index f775726..0058272 100644
+--- a/Generated-Reports.md
++++ b/Generated-Reports.md
+@@ -7,7 +7,7 @@ After tests complete, the following files are written to the `Reports` folder in
+ | `Specifications.html` | Feature specifications with embedded sequence diagrams | Yes | No | Yes |
+ | `Specifications.yml` | Machine-readable scenario specifications | No | Yes (YAML) | Yes |
+ | `TestRunReport.html` | Full test run report with diagrams, CI metadata, failure details | Yes | No | Yes |
+-| `TestRunReport.labs.html` | The views a default report leaves out while their design is worked out: the cross-run History section, every scenario's sparkline and verdict, and the run's report diagnostics. Named after the report. See [TestRunReport.labs.html](#testrunreportlabshtml) | No | No | When the run read history or recorded a diagnostic (4.6.0), unless `GenerateLabsReport = false` |
++| `TestRunReport.labs.html` | The cross-run History section, every scenario's sparkline and verdict, and the run's report diagnostics, on a page of their own beside the report (from 5.0.0 the report has History and Diagnostics tabs as well). From 5.0.0 it opens in the report's light or dark theme, drawn in the report's tokens, and runs the theme's two scripts, the one in its head that chooses light or dark and the switch's; before, it had no script. Named after the report. See [TestRunReport.labs.html](#testrunreportlabshtml) | No | No | When the run read history or recorded a diagnostic (4.6.0), unless `GenerateLabsReport = false` |
+ | `TestRunReport.krkl` (`TestRunReport.json` with `CompressTestRunReport = false`) | Machine-readable test run results with PlantUML diagrams and HTTP interactions, compressed whole from 5.0.0 | Yes (PlantUML source) | Yes (JSON) | Yes |
+ | `TestRunReport.schema.json` | JSON Schema / XSD for the test run data file, for validation and IDE auto-complete; written only with `GenerateTestRunReportSchema = true` from 5.0.0 | No | Yes | Yes |
+ | `ComponentDiagram.html` | C4-style component diagram showing service relationships | Yes | No | When `GenerateComponentDiagram = true` |
+@@ -83,40 +83,69 @@ red and run green produces identical bytes, which is what makes it safe to commi
+ 
+ ## TestRunReport.html
+ 
+-A full test run report including:
+-- **Execution summary** — Total pass/fail/skip counts and run duration
+-- **Sequence diagrams** — Embedded for each scenario
+-- **BDD steps** — Included when using ReqNRoll, BDDfy, LightBDD, or [[Step Tracking]]
+-- **Failure details** — Error messages and stack traces for failed tests
+-
+-By default it carries no cross-run history (since 4.6.0) and no report diagnostics (since 3.21.0): both
+-are on the labs page beside it ([TestRunReport.labs.html](#testrunreportlabshtml)). `ShowScenarioHistory`,
+-`ShowHistorySection` and `ShowReportDiagnosticsSection` put each view back in the report
+-([[Report Configuration]]).
++A full test run report. From 5.0.0 its parts are, from the top (each is described under
++[Report Features](#report-features)):
++
++- **The title line**: the report's title, and at its right the switch between the light and the dark theme (5.0.0).
++  A `CustomLogoHtml` logo sits above it.
++- **The run band** (5.0.0, in place of 4.x's header row and its two tables): the ring, the Test Execution Summary
++  and, on CI, the CI details, on one row in a card.
++- **The filter box**, a card on a row of its own: the search, the filter rows, what the filters leave showing,
++  Clear All and the two exports.
++- **The report bar**, with the report's sections as tabs (5.0.0). Each tab shows a panel of its own:
++  - **Features**: the failure clusters and the Background calls section, where the run has them, then every feature
++    with its scenarios. A scenario holds its BDD steps (ReqNRoll, BDDfy, LightBDD or [[Step Tracking]]), its failure
++    details (the error message, the stack trace and the expected/actual diff) and its diagrams.
++  - **Timeline**, when scenarios recorded a duration: every scenario as a bar, slowest first.
++  - **Components**, when the report embeds a [[component diagram|Component-Diagrams]] that has a connection: the
++    services, databases and queues the scenarios called, drawn as one diagram.
++  - **History**, when the run read history: this run against the earlier runs on the same branch, with the run's
++    summary line, the trend of the last runs and the lists of what changed
++    ([[cross-run history|Cross-Run-History#in-the-html-460]]).
++  - **Diagnostics**, when the run recorded a diagnostic, with their count on the tab
++    ([[report diagnostics|Diagnostics-and-Debugging#structured-diagnostics-ingestresultdiagnostics]]).
++
++History and diagnostics are back in the report (5.0.0), as its History and Diagnostics tabs:
++`ShowHistorySection` and `ShowReportDiagnosticsSection` default to `true`. In 4.x both were `false`, and a default
++report carried no history (from 4.6.0) and no report diagnostics (from 3.21.0). Nothing of history is in the
++features unless `ShowScenarioHistory` (still `false` by default) asks for each scenario's sparkline and verdict, and a
++run that read no history and recorded no diagnostic carries neither anywhere in the file. The labs page beside the
++report carries both, as before ([TestRunReport.labs.html](#testrunreportlabshtml)). `kronikol ingest` shows the
++Diagnostics tab by default too: `--no-diagnostics-section` leaves it out, and `--diagnostics-section`, now the
++default, is still taken, so a command line written for 4.x runs unchanged. `kronikol merge` renders its report with
++the defaults, so a merge given `--history` has a History tab, and one whose shards recorded a diagnostic has a
++Diagnostics tab. See [[Report Configuration]].
+ 
+ ## TestRunReport.labs.html
+ 
+-Since 4.6.0. The views a default `TestRunReport.html` leaves out while their design is worked out:
+-[cross-run history](Cross-Run-History#in-the-html-460) and the run's
+-[report diagnostics](Diagnostics-and-Debugging#structured-diagnostics-ingestresultdiagnostics). The page
+-is named after the report, `{HtmlTestRunReportFileName}.labs.html` (`Checkout.labs.html` beside
+-`Checkout.html`), and says under its title: "Labs: views still being designed. Their layout may change in
+-any release." It holds:
+-
+-- a header: the report's title with a "Labs" badge, the suite, the run id, when the run ended, and,
+-  when a report is written, a link back to it;
++Since 4.6.0. Cross-run history and the run's report diagnostics on a page of their own beside the report, with each
++scenario's sparkline and verdict, which the report itself draws only with `ShowScenarioHistory`. From 4.6.0 to 4.x a
++default `TestRunReport.html` left all of these out; from 5.0.0 the report has
++[[cross-run history|Cross-Run-History#in-the-html-460]] and the run's
++[[report diagnostics|Diagnostics-and-Debugging#structured-diagnostics-ingestresultdiagnostics]] as its History and
++Diagnostics tabs, and this page carries both, as before. The page is named after the report,
++`{HtmlTestRunReportFileName}.labs.html` (`Checkout.labs.html` beside `Checkout.html`), and says under its title:
++"Labs: views still being designed. Their layout may change in any release." It holds:
++
++- a header: the report's title with a "Labs" badge and, at its right, the report's light/dark switch (5.0.0), then
++  the suite, the run id, when the run ended, and, when a report is written, a link back to it;
+ - the **History** section, open, when the run read history;
+ - **Every scenario**, collapsed, when the run read history: each scenario's sparkline, verdict (`stable`
+   when there is nothing to say) and evidence, in report order;
+ - the **Report diagnostics** list, open, when the run recorded a diagnostic.
+ 
+-It is written when the run read history (with `EmbedHistoryInReport` on) or recorded a diagnostic, and
+-only then; `GenerateLabsReport = false` turns it off. It has no script. Its scenario names link into the
+-report by `TestRunReport.html#sid-<stableId>`, which opens that scenario on load
+-([Deep links](#deep-links-scenario--and-sid-)); with `GenerateTestRunReport = false` they are plain text.
+-It is listed in `Run.json` and moves with its run under `runs/`
+-([Earlier runs](#earlier-runs-runjson-and-runs)), and the run-end pointer lists it after the report.
+-`kronikol ingest` writes it too, and `kronikol merge` writes `<output>.labs.html` beside the merged report.
++From 5.0.0 the page opens light or dark as the report does and draws its parts in the report's tokens: the table of
++every scenario is a card, as the History section and the diagnostics are, and History's pass rate is a ring per run,
++as in the report ([[Report Themes]]). Of the report's scripts it runs only the theme's two: the one in its head that
++chooses light or dark before anything is drawn, and the switch's. Before 5.0.0 the page had no script.
++
++It is written when the run read history (with `EmbedHistoryInReport` on) or recorded a diagnostic, and only then;
++`GenerateLabsReport = false` turns it off. Its scenario names link into the report by
++`TestRunReport.html#sid-<stableId>`, which opens that scenario on load, on the Features tab
++([Deep links](#deep-links-scenario--and-sid-)); with `GenerateTestRunReport = false` they are plain text. It is
++listed in `Run.json` and moves with its run under `runs/` ([Earlier runs](#earlier-runs-runjson-and-runs)), and the
++run-end pointer lists it after the report. `kronikol ingest` writes it too, and `kronikol merge` writes
++`<output>.labs.html` beside the merged report.
+ 
+ ## TestRunReport.json (Machine-Readable Test Run Data)
+ 
+@@ -528,48 +557,363 @@ both carry `thrownAt`, `testName` and `rerun`, read from `errorStackTrace` by th
+ 
+ ## Report Features
+ 
+-Both HTML reports include:
+-
+-- **Search** — A powerful search bar with boolean operators (`&&`, `||`, `!!`), tag filtering (`@tag`), status filtering (`$status`), quoted phrases, and parenthesized grouping. See [[Search Syntax]] for full documentation.
+-- **Happy path filter** — A toggle to show only scenarios marked as happy path.
+-- **Click-to-reveal PlantUML** — Click any diagram image to reveal the raw PlantUML code behind it.
+-- **Feature grouping** — Tests are grouped by feature (test class / story title / feature file).
+-- **Context menu** — Right-click any diagram (SVG, flame chart, or call tree) for copy/save options including PNG, SVG, and diagram source. See [[Inline SVG Rendering]] for details.
+-- **Status filter** — Toggle buttons for each `ExecutionResult` value to show/hide scenarios by status.
+-- **Tags filter**: when scenarios have tags, the Tags row has a chip per tag with its count, Happy Path first and Untagged for the scenarios with none, and an ANY/ALL switch. A chip cycles through has, has not and off (Alt+click or right-click for has not), and a feature's tag picks every scenario of the feature. A row of more than 30 tags starts with the 30 the most scenarios carry and an "N more" chip. Every adapter fills it from its framework's own tagging (5.0.0; before, a Categories row showed only the categories LightBDD and ReqNRoll made). See [[Tags and Attributes › Tags|Tags-and-Attributes#tags]].
+-- **Pie chart** — A donut chart showing the pass/fail/skip/bypass breakdown with a pass rate percentage in the centre (TestRunReport only).
+-- **Duration columns** — Feature summary table includes Duration, Avg, and Longest columns when scenario durations are available.
+-- **Duration badge**: a scenario with a recorded duration shows it in its header, green under 2 s, amber under 5 s and red
+-  above; a parameterized group's badge is the sum of its rows. From 4.9.0, a scenario that paid the run's
+-  [first-call warm-up](Why-Is-My-First-Scenario-Slow) keeps its wall time as the badge's text and adds the warm-up as muted text, as in
+-  `1.3s · 1.2s warm-up`. Hovering the badge names the calls (`1.27 s, 1.19 s of it first-call warm-up: POST /orders
+-  661 ms (later calls 7.6 ms), GET /milk 82 ms (2.3 ms)`), and its colour is the one the time left earns, so a scenario
+-  slow only because it went first is not coloured slow. A group sums its rows' warm-up as it sums their durations.
+-- **Scenario Timeline**: a toolbar toggle draws every scenario's duration as a bar, longest first, coloured by result
+-  (green passed, red failed, grey skipped, orange bypassed). From 4.9.0 the warm-up's share of a marked scenario's bar is
+-  shaded from its start, with the badge's tooltip; the bars keep their order, which is elapsed time.
++Both HTML reports include what follows, but for the items marked TestRunReport only. 5.0.0 redesigned the report,
++and an item marked (5.0.0) is new in it or was changed by it. [[Migrating to v5: the report|Migrating-to-v5-Report]]
++lists what a 4.x stylesheet, script, test or setting has to change.
++
++### Theme and layout
++
++- **Light and dark themes** (5.0.0): a report follows the system's light or dark setting until the reader picks one
++  with the switch at the right of its title, and then keeps that pick, over a reload and over the system's setting.
++  The theme is chosen in the page's head, before anything is drawn. The pick is the one thing a report stores in the
++  browser (`kronikol.theme` in local storage); the filters live in the page's link. The diagrams the page draws, the
++  internal-flow popup, the History tab and the Diagnostics tab take the theme too, and the Specifications report's
++  violet theme has a light and a dark form. A diagram copied, saved or opened as SVG or PNG carries the look the page
++  gives it, in the light theme's colours whichever theme the page shows. See [[Report Themes]].
++- **Custom branding**: inject custom CSS, favicon, and logo HTML via `ReportConfigurationOptions` (`CustomCss`,
++  `CustomFaviconBase64`, `CustomLogoHtml`). From 5.0.0 the page's colours and type are CSS custom properties,
++  `--kron-*` for the page and `--dg-*` for its diagrams, each with a light and a dark value, defined first in the
++  page's styles, so a theme or a `CustomCss` sheet can set them again. A sheet or a theme written against the 4.x
++  rules or colours of the parts 5.0.0 redrew (the features and their steps, the failure diff, the parameter table,
++  the run band, the filter rows) may no longer apply: set the tokens instead ([[Report Themes]]).
++- **Run band** (TestRunReport only, 5.0.0, in place of 4.x's header row and pie chart): the ring, the Test Execution
++  Summary and, on CI, the CI details share one row in a card. The CI details move under the summary when the three do
++  not fit side by side, decided on their measured widths and measured again when the window or the text changes (a
++  reader's text spacing included). The ring has an arc for each outcome the run had (passed, failed, skipped,
++  bypassed), coloured by the theme, and the pass rate in its centre, which reads 100% only when every scenario passed:
++  a rate under 100 rounds down and stops at 99%, where 4.x rounded 213 passed of 214 to 100%. The summary gives the
++  overall status, the run's start and end on one line, and its counts as labelled figures (Scenarios, Passed, Failed,
++  Skipped, Bypassed when there were any, Features and Duration). A scenario a framework skipped after an earlier
++  failure counts as skipped, in the summary and in the ring (4.x left it out of both). A duration of an hour or more
++  reads in hours (`1h 5m`, where it read `65m 0s`), here and in the features table. The hidden Kronikol Version row
++  is gone: the version stays in the page's `generator` meta. A sheet or a script that reads `.header-row`,
++  `.test-execution-summary`, `.summary-chart`, `.ci-chart-group` or `.ci-metadata` finds none of them.
++- **CI metadata** (TestRunReport only): when running in CI (GitHub Actions or Azure DevOps), the run band's CI
++  details show the provider, the build number, branch, commit SHA, repository and a link to the pipeline run. From
++  5.0.0 the labels lose their colons (`Build #:` and `42` are now `Build` and `#42`).
++- **The report bar and its tabs** (5.0.0): the report's sections are tabs of a bar that stays at the top of the
++  window on a desktop: Features; Timeline, where scenarios recorded a duration; and in TestRunReport.html only,
++  Components, History and Diagnostics, where it has them ([TestRunReport.html](#testrunreporthtml)). So
++  Specifications.html has the bar whenever its scenarios carry durations, with the Features and Timeline tabs and
++  none of the others. Each tab shows a panel of its own, and the arrow keys, Home and End move between them. Next
++  Failure, a history link or a scenario's address goes to the Features tab first
++  ([Deep links](#deep-links-scenario--and-sid-)). Right of the tabs the bar shows what the filters leave showing
++  (shortened, then left out, where the bar is narrow) and Clear All while anything is filtered. On the Features tab
++  it also carries the tab's tools and, in a browser-rendered report, the display settings, grouped: the payload details
++  first, then the payload's format and width, then the toggles. While the list scrolls under it, the bar's corners
++  square and it casts a shadow, and a Filters button brings the filter box into the bar, where it pins with the bar
++  and covers nothing; Esc, the box's close button, a phone's width or scrolling back up puts it back, and opening and
++  closing keep what was being read just below the bar. A page with nothing beside its features, such as a
++  Specifications.html whose scenarios carry no duration, has no tabs and no bar: its tools and display settings sit
++  in a toolbar row above the features. The Scenario Timeline and Component Diagram toggles of 4.x are gone, with
++  `toggle_timeline` and `toggle_component_diagram`.
++- **Feature grouping**: tests are grouped by feature (test class / story title / feature file). From 5.0.0 a feature
++  is a card on a tinted ground, with its scenarios as rows inside it and a cross before a failed one, and steps line
++  up on one column with their status circles, the triangles of collapsible steps in the gutter beside it.
++- **On a phone** (768 px wide or less, 5.0.0): the report bar scrolls away with the page instead of pinning, and its
++  display settings show behind a Display settings gear. The filter rows fold under the box's own Filters button, a
++  real button the keyboard reaches and a screen reader hears as open or folded, on a line of its own that also says
++  what the filters leave showing. The rows start folded from the first paint, the search help opens while they are
++  folded, and rows opened or folded stay so when the window crosses the phone's width, either way. A scenario's
++  settings gear sits on its diagrams' title, the display settings and each scenario's settings are a sheet with their
++  zones (Payloads, Format, Toggle) one under another, and a filter control is 36 px tall (28 px on a desktop). At
++  every width the filter rows reflow on the filter box's own width, not the window's, and the filter box keeps a row
++  of its own (above 1160 px, 4.x set it beside the summary and the CI box). Whatever is wider than its scenario stays
++  inside it (3.29.3+): a table, a doc string, and a diagram drawn by a PlantUML server or a local jar, with its
++  source, scroll sideways inside it, and a long token in text (a type name, an identifier, a URL) breaks where it
++  must, there and everywhere else in the report (3.29.4+).
++
++### Search and filters
++
++- **Search**: a search bar with boolean operators (`&&`, `||`, `!!`), tag filtering (`@tag`), status filtering
++  (`$status`), quoted phrases, and parenthesized grouping. `/` puts the cursor in it and `?` beside it shows the
++  syntax. See [[Search Syntax]] for full documentation.
++- **Search qualifiers** (5.0.0): `dep:`, `duration:` and `is:happy` narrow a search as the filters do. `dep:payment`
++  keeps the scenarios that call a dependency with `payment` in its name (case and spaces ignored; quotes for a name
++  with spaces, commas for any of several). `duration:>2s`, `duration:<500ms`, `duration:1s..5s` and
++  `duration:>=p90` compare a scenario's own time, the first-call warm-up left out, in ms, s or m, or against the
++  report's percentiles. `is:happy` keeps the happy paths. `!!` negates one, and they combine with the rest of the
++  search by AND. A qualifier the search cannot read stays in it as text, and the field's border says so. See
++  [[Search Syntax]].
++- **The filter box** (5.0.0): a card on a row of its own, under the run band in TestRunReport.html. Its first line,
++  Filtering, holds the readout, Clear All and the two exports. The readout says what the filters leave showing, `All 214
++  scenarios, 73 features` or `Filtered 12 of 214 scenarios, 3 of 73 features`, with a parameterized scenario counted
++  once for each of its examples. Whenever the scenarios shown change, the page raises a `kron-filter-change` event on
++  the document, with `{ shown, total }` in its `detail`. Clear All clears the search, with its qualifiers, and every
++  filter row. The search line ends with More filters: on a desktop the filter rows (Status, Duration, Happy paths, Tags,
++  Dependencies) stay folded until it is pressed, and while they are folded it counts the filters on in them. The readout
++  and Clear All stay in view either way, and the search help opens on its own. The box carries `rows-folded` while the
++  rows are folded, so a script or test that uses a row's control on a desktop opens them first. Each row's label is an
++  uppercase word in a column of its own (`Status`, where 4.x wrote `Status:`). Status, Duration and Happy paths are
++  segmented groups, which share one line only where they fit whole, decided on their measured widths (a reader's text
++  spacing and late fonts included), and otherwise each takes a line of its own; tags and dependencies are chips; every
++  control in the rows is 28 px tall. A row's switch reads ANY or ALL (4.x: OR or AND) and keeps the mode in `data-mode`,
++  which the link writes as before. When the filters leave no scenario, the page says so where the features were (on a
++  page without tabs too), with a Clear All that puts focus back in the search. A sheet written against the 4.x rules of
++  `.status-toggle`, `.percentile-btn`, `.dependency-toggle` or `.dep-mode-toggle` may no longer apply.
++- **Status filter**: the Status row has a button for each status (Passed, Failed, Skipped, Bypassed). A pressed
++  status shows only its scenarios, and statuses pressed together show them together.
+ - **Duration filter**: `Duration ≥` buttons for the run's P50, P90, P95 and P99, and a custom number of seconds, hide
+   every scenario below the threshold, and one with no recorded duration. From 4.9.0 the percentiles and the comparison
+   read each scenario's own time, its first-call warm-up left out, and a percentile is the nearest rank: the P50 of two
+-  durations is the smaller, where it was the larger. Export Filtered CSV still writes wall time.
+-- **CI metadata** — When running in CI (GitHub Actions or Azure DevOps), the report displays build number, branch, commit SHA, and a link to the pipeline run.
+-- **Step numbering** — Configurable hierarchical step numbers (e.g. `1.`, `2.`, `2.1.`) via `SpecificationsShowStepNumbers` and `TestRunReportShowStepNumbers`.
+-- **Custom branding** — Inject custom CSS, favicon, and logo HTML via `ReportConfigurationOptions`.
+-- **Layout by window width**: at 768 px and below the header stacks into one column, and the filters and each scenario's diagram toolbar fold behind a button. From 769 to 1160 px the filtering box takes a row of its own under the summary and the CI box; wider, the three sit side by side, with the CI box at most 20 em wide and a long branch or repository name wrapped. Toolbars wrap whole buttons onto a new row rather than wrapping the labels inside them, in every report, with or without internal-flow tracking (3.29.2+). An export button wraps its label only when it is wider than the whole filtering box, which happens under WCAG text spacing just above 1160 px, where it used to run out of the box (3.29.4+). Whatever is wider than its scenario stays inside it at every width (3.29.3+): a table (a step's table, a combined table, the parameter table), a doc string, and a diagram rendered by a PlantUML server or a local jar, with its source, scroll sideways inside it, and a long token in text (a type name, an identifier, a URL) breaks where it must. Before 3.29.3 a scenario cut such content off at its edge with nothing to scroll to: a scenario skips painting whatever overflows it (`content-visibility: auto`, which keeps a large report fast). A long token breaks the same way everywhere else in the report (3.29.4+): a failure cluster's message, a test reported by its method's full name in the failure clusters and the History section (drawn with `ShowHistorySection`), the History section's branch, a dependency chip named after a typed client; before, each scrolled the whole page sideways. The run summary's two tables scroll inside their boxes too, instead of scrolling the page: the features table when it is wider than the window above 768 px, and the Test Execution Summary under WCAG text spacing on a phone. The search help scrolls its table inside its panel when the panel is narrower than it (3.29.4+).
+-- **DocString rendering** — Steps with a `DocString` property render a `<pre>` code block below the step text: a grey block that scrolls a long line sideways (3.29.3+; before, stray text in the stylesheet made the browser drop the block's rule, so a doc string was unstyled and a long line was cut off at the scenario's edge). A `DocStringMediaType` (e.g. `json`, `xml`) is written on the code element as a `language-*` class, for a stylesheet or script of your own to pick up; the report does not highlight syntax itself.
+-- **Rules grouping** — Scenarios with a `Rule` property are grouped under a collapsible rule heading. Background step detection is scoped per-rule when rules are present.
+-- **Examples / Scenario Outline tables** — Scenarios sharing an `OutlineId` are rendered as examples tables with parameter columns and per-row status icons. When an outline has multiple named `Examples:` blocks, a separator band carrying the block name, its optional description and a per-block pass/fail count is drawn between the row groups (3.0.64+; see [Named Examples blocks](#named-examples-blocks) below).
+-- **Failure clustering** — Failed scenarios are grouped by the **first line of the error message** (with a Shouldly message's check from its second line; for one Shouldly wrote without its source, its check and expected value) — not by the stack trace, and not by similarity — and collapsed under one cluster heading. The report and `Failures.md` use the same key, so the two cannot disagree about which failures share a cause. Treat a cluster as a strong hint that one cause is behind all of them rather than a finding that one is: two unrelated assertions can open with the same line.
+-- **Expected/Actual diff rendering** — When a failed scenario's error message contains "Expected: X" / "Actual: Y" patterns (common in assertion libraries), the report automatically parses these and renders an inline visual diff highlighting the differences. Values whose lengths multiply past 4,000,000 (two of 2,000 characters) keep their common start and end and mark the middle, so a response body compared whole no longer costs the run that writes the report its memory (before 4.22.3, two values of 50,000 characters took a 10 GB table, and where the machine had less, the run had no HTML report); an emoji is shown whole (before 4.22.3, as two U+FFFD).
+-- **Background steps** — A Gherkin `Background:` block, or the leading steps multiple scenarios in a feature (or Rule) share, are rendered as the first entries of the scenario's one **Steps** list, marked with a muted left accent, and numbered continuously with the rest. A repeated primary keyword collapses to `And`. Set `SeparateBackgroundSteps = true` to put them back in their own collapsible section. The Features Summary step counts include background steps too (3.0.48+). See [[Step Tracking › Background Steps|Step-Tracking#background-steps]].
+-- **File attachments** — Steps can include `FileAttachment` entries (name + relative path) that are rendered in the report: an image inline, anything else as a link, and one the report does not hold as its name and why, with no link (4.29.0). The data files mark such an attachment with `problem` (`NotFound`, `NotCopied` or `NotUsable`), written only where there is one. Attachments can be added via `Track.Attachment()` (any framework), LightBDD's step attachment API, or ReqNRoll's `IReqnrollOutputHelper.AddAttachment()`. See [[Step Tracking › File Attachments|Step-Tracking#file-attachments]].
+-- **Step comments** — Steps with a `Comments` property render comment text below the step. In LightBDD, comments are added via `StepExecution.Current.Comment()`. See [[Tags and Attributes › Step Comments|Tags-and-Attributes#step-comments]].
+-- **Database toggle** — When any diagram in the report contains a `database` or `collections` participant (from CosmosDB, EF Core, MongoDB, DynamoDB, Spanner, BigQuery, Redis, distributed caches, or any extension that renders as a database/collections shape), a **"Databases Shown" / "Databases Hidden"** toggle button appears in the toolbar. Clicking it hides all database and cache participants and their associated arrows, simplifying the diagram to show only service-to-service communication. The toggle works at both report level and scenario level. It applies only to scenario sequence diagrams — the embedded [component diagram](Component-Diagrams) is an architecture overview and is never affected by any of the filter toggles (3.0.82+; its database/collections dependency nodes always stay drawn). See [[Tracking Custom Dependencies]] for how participants are assigned the `database` or `collections` shape.
+-- **Note JSON ⇄ YAML toggle** (browser-rendered reports, 3.0.59+) — Hovering a diagram note whose body is JSON shows a **`Y`** button that re-renders the payload as YAML, unfolding `\n` (and uniform `\r\n`) escapes in string values (SQL queries, stack traces) into literal block scalars with their original line breaks; **`J`** toggles back to the exact original JSON. Since 3.0.66 compact **JSON/YAML** dropdowns beside the filter toggles convert every eligible note at once — report-wide or per scenario — and reports start in YAML from 4.0.0; `ReportConfigurationOptions.NotePayloadFormat` (CLI: `kronikol ingest --note-format`) chooses the format a report starts in. See [[PlantUML Browser Rendering › Note Payload JSON ⇄ YAML Toggle (3.0.59+)|PlantUML-Browser-Rendering#note-payload-json--yaml-toggle-3059]].
+-- **Note width control** (browser-rendered reports, 3.0.85+): hovering a note whose text wraps shows a **`↔`** button that widens it to fill the diagram, and **`→←`** takes it back. A compact **Wrap / Wide** dropdown beside the filter toggles does the same for every note, report-wide or per scenario; it read `Fit` / `Full` before 3.22.0. `Wide` changes only notes that wrap, so on a scenario of short payloads it appears to do nothing. 4.0.0 removed the opt-in monospace control that sat beside it. See [Note Appearance](PlantUML-Browser-Rendering#note-appearance-note-width).
+-- **Export Filtered HTML / CSV** — Two toolbar buttons write out whatever the current filters leave visible. **Export Filtered CSV** gives one row per visible scenario (feature, scenario, status, duration). **Export Filtered HTML** writes a standalone `filtered-report.html`: the report's `<head>` (styles and every behaviour script), an `<h1>Filtered Report</h1>`, the visible `details.feature` elements, and the diagram sources those features need. It is deliberately just the features — no toolbar, timeline or [component diagram](Component-Diagrams) — so the exported file cannot be re-filtered. A default report carries no [cross-run history](Cross-Run-History#in-the-html-460) (4.6.0), so neither does its export. In a report drawn with `ShowScenarioHistory` the sparklines and verdict pills live in the scenario headers and are carried; the History section (`ShowHistorySection`) sits beside the timeline and is left behind with it (3.11.0).
+-  > **Diagrams in the export were blank before 3.0.83.** Under `BrowserJs` rendering a diagram element is an empty `<div class="plantuml-browser" id="puml-N">` and every source lives gzipped in a single `<script id="puml-data">` at the end of the **body**, keyed by that id. The export copied the head and the features and nothing else, so it shipped the whole render machinery with none of the data: source lookup returned null, the render queue silently dropped the element, and every diagram that had not already been drawn before the export stayed permanently blank — no error, no message, just an empty box. Measured on a real 488-diagram report: 12 of 460 diagrams drew (only the ones already rendered, serialised as inline SVG), 448 did not. The export now carries the body's data payloads, with `#puml-data` pruned to the ids the exported markup actually contains.
+-- **Configurable toggle default start states** (3.0.80+) — Every toggle, radio group and stateful dropdown in both reports (Details radio, truncate lines, headers/assertions/steps/databases, note format, note width and font, feature/scenario expansion, diagram-type tab, timeline/component panels, dependency/tag filter modes, and the disclosure sections) can be given a configured default start state via `ReportConfigurationOptions.TestRunReportToggleDefaults`, with `SpecificationsToggleDefaults` overriding per property for `Specifications.html` (inherit-unless-overridden). See [Report Configuration → Toggle Default Start States](Report-Configuration#toggle-default-start-states).
++  durations is the smaller, where it was the larger. From 5.0.0 each percentile's tooltip names its threshold and its
++  share of the run (the slowest half for P50), and that the first-call warm-up is left out when the run had one.
++  Export Filtered CSV still writes wall time.
++- **Happy paths filter** (5.0.0; a Happy Paths Only toggle before): Show, Only or Hide, on the Status line. It drives
++  the Tags row's Happy Path chip, and a report without a happy path has neither. `#hp=1` still opens on Only.
++  `.happy-path-toggle`, `.happy-path-active` and `filter_happy_paths` are gone.
++- **Tags filter**: when scenarios have tags, the Tags row has a chip per tag with its count, Happy Path first and
++  Untagged for the scenarios with none, and an ANY/ALL switch. A chip cycles through has, has not and off (Alt+click or
++  right-click for has not), and a feature's tag picks every scenario of the feature. A row of more than 30 tags starts
++  with the 30 the most scenarios carry and an "N more" chip. Every adapter fills it from its framework's own tagging
++  (5.0.0; before, a Categories row showed only the categories LightBDD and ReqNRoll made). See
++  [[Tags and Attributes › Tags|Tags-and-Attributes#tags]].
++- **Dependencies filter**: the Dependencies row has a chip for each participant the scenarios' diagrams name, a
++  No dependencies chip for the scenarios whose diagrams name none, and an ANY/ALL switch. From 5.0.0 a chip goes from
++  off to has (a scenario must call it) to has not (it must not), and back to off; Alt+click or a right-click goes
++  straight to has not. A chosen chip carries `dependency-active`, as in 4.x, and a left-out one `dependency-exclude`,
++  with `aria-pressed` `true`, `mixed` or `false`, and the row has a Clear while one of its chips is set. The switch
++  starts on ANY, a scenario with any of the chosen dependencies (5.0.0; 4.x started on AND, a scenario with all of
++  them): `ReportToggleDefaults.DependencyFilterMode = FilterCombinationMode.And` keeps the 4.x behaviour. A scenario
++  whose diagram makes no call has no dependency and is under No dependencies (5.0.0; 4.x listed the
++  `(no interactions)` participant as a dependency).
++- **The link carries every filter** (5.0.0): the page's address carries the search and every filter as they change,
++  so a copied link opens the same view. The Tags row writes `tags=` for the tags a scenario must have, `tagx=` for
++  those it must not, and `tagmode=` when its ANY/ALL switch is not on its default. `depx=` names the dependencies left
++  out, and `hpx=1` says happy paths are hidden. A link copied from a 4.x report opens the same view (`hp=1` is still
++  happy paths only), except one that chose dependencies and has no `depmode`: it meant AND, and on a 5.0.0 report it
++  means OR, the report's own mode (AND only on a report built with
++  `DependencyFilterMode = FilterCombinationMode.And`). One that says `depmode=OR` still means OR, and a 5.0.0 report
++  writes `depmode=AND` when AND is chosen. A 4.x link that chose `(no interactions)` opens on No dependencies. The
++  display settings are not in the link: each load starts them from the report's settings. See
++  [Deep links](#deep-links-scenario--and-sid-).
++
++### The Features tab
++
++- **Full and Summary views** (TestRunReport only, 5.0.0): Full and Summary, at the left of the Features tab's tools,
++  show the feature cards or the features table, one at a time, and a row of the table opens its feature in the Full
++  view, from a click or from the keyboard (the name is a button). The table has one row per feature. It names its
++  column groups, Scenarios, Steps and Duration, in a row above its headings, and each group's first column reads
++  Total (4.x: Scenarios, Steps and Duration); the Duration group, with Total, Avg and Longest, is there when scenario
++  durations are available. In 4.x the table was the Features Summary disclosure above the run's summary; a sheet or
++  a script that reads `.features-summary-details` finds none.
++- **Sort** (TestRunReport only, 5.0.0): a Sort dropdown at the right of the Features tab's tools orders the feature
++  cards and the features table alike: the report's own order, the feature's name A to Z, failures first, most
++  scenarios, and, for a run with durations, slowest total, slowest average and longest scenario.
++- **Expand and collapse** (5.0.0): a pair of icon buttons for features and a pair for scenarios, in place of 4.x's
++  Expand All buttons whose labels flipped, so what a reader opened by hand can be closed without opening everything
++  first. A button with nothing to do is dimmed (and `aria-disabled`), and expanding the scenarios opens their features
++  and rules too. `toggle_expand_collapse` and the `.collapse-expand-all` class are gone.
++- **Failure clustering**: failed scenarios are grouped by the **first line of the error message** (with a Shouldly
++  message's check from its second line; for one Shouldly wrote without its source, its check and expected value),
++  not by the stack trace and not by similarity, and collapsed under one cluster heading. The clusters sit at the top
++  of the Features tab (5.0.0). The report and `Failures.md` use the same key, so the two cannot disagree about which
++  failures share a cause. Treat a cluster as a strong hint that one cause is behind all of them rather than a finding
++  that one is: two unrelated assertions can open with the same line.
++- **Duration badge**: a scenario with a recorded duration shows it in its header, green under 2 s, amber under 5 s and
++  red above; a parameterized group's badge is the sum of its rows. From 4.9.0, a scenario that paid the run's
++  [[first-call warm-up|Why-Is-My-First-Scenario-Slow]] keeps its wall time as the badge's text and adds the warm-up as
++  muted text, as in `1.3s · 1.2s warm-up`. Hovering the badge names the calls (`1.27 s, 1.19 s of it first-call
++  warm-up: POST /orders 661 ms (later calls 7.6 ms), GET /milk 82 ms (2.3 ms)`), and its colour is the one the time
++  left earns, so a scenario slow only because it went first is not coloured slow. A group sums its rows' warm-up as it
++  sums their durations.
++- **Step numbering**: configurable hierarchical step numbers (e.g. `1.`, `2.`, `2.1.`) via
++  `SpecificationsShowStepNumbers` and `TestRunReportShowStepNumbers`.
++- **Rules grouping**: scenarios with a `Rule` property are grouped under a collapsible rule heading. Background step
++  detection is scoped per-rule when rules are present.
++- **Background steps**: a Gherkin `Background:` block, or the leading steps multiple scenarios in a feature (or Rule)
++  share, are rendered as the first entries of the scenario's one **Steps** list, marked with a muted left accent, and
++  numbered continuously with the rest. A repeated primary keyword collapses to `And`. Set
++  `SeparateBackgroundSteps = true` to put them back in their own collapsible section. The features table's step
++  counts include background steps too (3.0.48+). See
++  [[Step Tracking › Background Steps|Step-Tracking#background-steps]].
++- **Examples / Scenario Outline tables**: scenarios sharing an `OutlineId` are rendered as examples tables with
++  parameter columns and per-row status icons. When an outline has multiple named `Examples:` blocks, a separator band
++  carrying the block name, its optional description and a per-block pass/fail count is drawn between the row groups
++  (3.0.64+; see [Named Examples blocks](#named-examples-blocks) below). From 5.0.0 the parameter table has one even
++  border in a rounded frame and no longer tints its rows by status: the Status column says it.
++- **Expected/Actual diff rendering**: when a failed scenario's error message contains "Expected: X" / "Actual: Y"
++  patterns (common in assertion libraries), the report parses these and renders an inline visual diff highlighting
++  the differences. From 5.0.0 the expected text is green and the actual text red, under the labels Expected and
++  Actual, no longer followed by a colon. Values whose lengths multiply past 4,000,000 (two of 2,000 characters) keep
++  their common start and end and mark the middle, so a response body compared whole no longer costs the run that
++  writes the report its memory (before 4.22.3, two values of 50,000 characters took a 10 GB table, and where the
++  machine had less, the run had no HTML report); an emoji is shown whole (before 4.22.3, as two U+FFFD).
++- **DocString rendering**: steps with a `DocString` property render a `<pre>` code block below the step text, a
++  block that scrolls a long line sideways (3.29.3+; before, stray text in the stylesheet made the browser drop the
++  block's rule, so a doc string was unstyled and a long line was cut off at the scenario's edge). A
++  `DocStringMediaType` (e.g. `json`, `xml`) is written on the code element as a `language-*` class, for a stylesheet
++  or script of your own to pick up; the report does not highlight syntax itself.
++- **File attachments**: steps can include `FileAttachment` entries (name + relative path) that are rendered in the
++  report: an image inline, anything else as a link, and one the report does not hold as its name and why, with no
++  link (4.29.0). The data files mark such an attachment with `problem` (`NotFound`, `NotCopied` or `NotUsable`),
++  written only where there is one. Attachments can be added via `Track.Attachment()` (any framework), LightBDD's
++  step attachment API, or ReqNRoll's `IReqnrollOutputHelper.AddAttachment()`. See
++  [[Step Tracking › File Attachments|Step-Tracking#file-attachments]].
++- **Step comments**: steps with a `Comments` property render comment text below the step. In LightBDD, comments are
++  added via `StepExecution.Current.Comment()`. See
++  [[Tags and Attributes › Step Comments|Tags-and-Attributes#step-comments]].
++
++### Diagrams
++
++- **A scenario's diagrams** (5.0.0): a card in the scenario. Where a scenario has more than one view, Sequence
++  Diagrams, Activity Diagrams and Flame Chart are tabs (`role="tab"`) on a bar of their own; the arrow keys, Home and
++  End move between them, and only the one showing is in the tab order. The activity diagram and the flame chart show
++  the whole test's flow, with [[Internal Flow Tracking]] on.
++- **Diagram look** (5.0.0): a sequence diagram starts with flat boxes, participants with rounded corners and thin
++  edges, thin lifelines and note edges, and messages centred over their arrows, and, where a browser engine draws it
++  (BrowserJs and NodeJs rendering), the system's own font. A diagram drawn with a `PlantUmlTheme` leaves the look out
++  and keeps the theme's. Where the page draws a diagram, every step bar is a rectangle with its label in bold, in
++  place of the black hexagon, and the drawing's parts take the theme's colours by their role. A service is drawn as
++  a box, not a circle on a line, and databases are deep cyan (`#0E7C86`, red before), which `DependencyColors` still
++  overrides.
++- **Display settings** (browser-rendered reports): the same controls act on every sequence diagram in the report from
++  the report bar, and on one scenario's from its settings (below). **Payloads** (5.0.0; the Details radio before) is
++  Expanded, Collapsed or Truncated; its line count reads "N lines" under a "Payload length" heading and shows only
++  while Truncated is picked. **Payload format** (JSON or YAML) and **Payload width** (Wrap or Wide) are dropdowns. The
++  toggles are Headers, and where some diagram has something for them to act on, Assertions, Steps, Databases, Events
++  and Setup. A toggle says its word alone and whether it is on with `aria-pressed` (5.0.0; 4.x rewrote its label, as
++  in "Databases Shown"). From 5.0.0 every diagram toggle but Headers starts on, and payloads start Truncated at 10
++  lines (4.x: assertion notes hidden, and 40 lines); to open a report as 4.x did, set
++  `ReportToggleDefaults.AssertionsShown` to `false` and `TruncateLines` to `TruncateLineCount.Lines40`. Assertions,
++  Steps, Databases, Events and Setup share one model: a scenario's own choice holds for the diagrams it draws later,
++  and the report's choice holds everywhere, over a scenario's own. Each label sits in `span.btn-label`, which holds
++  its bold width, so switching a control moves nothing beside it, and a control being redrawn keeps its size, with a
++  sweep along its bottom edge in place of 4.x's spinner. A collapsed payload's one-line preview leaves out a JSON
++  body's braces, and each of a note's own buttons has a tooltip saying what a click does (5.0.0).
++- **This scenario's settings** (browser-rendered reports, 5.0.0): a gear at the top right of a scenario's diagrams,
++  grey until pointed at, opens that scenario's payload settings (Payloads, the format and width dropdowns and the
++  toggles) on a bar that starts "This scenario:", so it reads apart from the report's own. The gear stays where it
++  was, as the bar's last control, so a second click closes it, and the open bar stays under the report's bar while
++  the scenario's diagrams are in view. The settings act on sequence diagrams only, so they step aside on the Activity
++  Diagrams and Flame Chart tabs, and a section with no sequence diagram has none (4.x gave it payload controls that
++  acted on nothing). On a phone the gear sits on the diagrams' title. Each bar starts closed, and nothing is
++  remembered. A script or test that uses a scenario's payload controls opens its settings first.
++- **Database toggle**: when any diagram in the report contains a `database` or `collections` participant (from
++  CosmosDB, EF Core, MongoDB, DynamoDB, Spanner, BigQuery, Redis, distributed caches, or any extension that renders as
++  a database/collections shape), a **Databases** toggle appears in the display settings (5.0.0; it read "Databases
++  Shown" / "Databases Hidden" before). Turning it off hides all database and cache participants and their associated
++  arrows, simplifying the diagram to show only service-to-service communication. The toggle works at both report level
++  and scenario level. It applies only to scenario sequence diagrams: no toggle changes the
++  [[component diagram|Component-Diagrams]] on the Components tab (3.0.82+; its database/collections dependency nodes
++  always stay drawn), whose own Show control follows the scenario filters instead (5.0.0). See
++  [[Tracking Custom Dependencies]] for how participants are assigned the `database` or `collections` shape.
++- **Events and Setup toggles** (5.0.0): Events takes the calls to and from message brokers (the participants drawn as
++  queues, such as Kafka, Event Hubs, Pub/Sub, Service Bus, SQS and SNS) out of the sequence diagrams, with their
++  payloads. Setup takes a scenario's setup out: its Setup frame where the report keeps setup apart (`SeparateSetup`),
++  otherwise everything before its first When step, with the participants only the setup called. Each appears where some
++  diagram has something for it to take out. `ReportToggleDefaults.EventsShown` and `SetupShown` (both default `true`)
++  set their start states.
++- **Note JSON ⇄ YAML toggle** (browser-rendered reports, 3.0.59+): hovering a diagram note whose body is JSON shows a
++  **`Y`** button that re-renders the payload as YAML, unfolding `\n` (and uniform `\r\n`) escapes in string values
++  (SQL queries, stack traces) into literal block scalars with their original line breaks; **`J`** toggles back to the
++  exact original JSON. Since 3.0.66 a dropdown converts every eligible note at once, report-wide or per scenario:
++  from 5.0.0 it is **Payload format** in the display settings. Reports start in YAML from 4.0.0;
++  `ReportConfigurationOptions.NotePayloadFormat` (CLI: `kronikol ingest --note-format`) chooses the format a report
++  starts in. See
++  [[PlantUML Browser Rendering › JSON ⇄ YAML|PlantUML-Browser-Rendering#note-payload-json--yaml-toggle-3059]].
++- **Note width control** (browser-rendered reports, 3.0.85+): hovering a note whose text wraps shows a **`↔`** button
++  that widens it to fill the diagram, and **`→←`** takes it back; from 5.0.0 their tooltips read "Widen this box to
++  fill the diagram" and "Back to the default width". The **Payload width** dropdown (named so from 5.0.0), Wrap or
++  Wide, does the same for every note, report-wide or per scenario; it read `Fit` / `Full` before 3.22.0. `Wide`
++  changes only notes that wrap, so on a scenario of short payloads it appears to do nothing. 4.0.0 removed the opt-in
++  monospace control that sat beside it. See
++  [[Note Appearance|PlantUML-Browser-Rendering#note-appearance-note-width]].
++- **Click-to-reveal PlantUML**: click any diagram image to reveal the raw PlantUML code behind it.
++- **Context menu**: right-click any diagram (SVG, flame chart, or call tree) for copy/save options including PNG, SVG,
++  and diagram source. See [[Inline SVG Rendering]] for details. From 5.0.0 the menu is drawn on the page's card in
++  the page's ink, in both themes, and its "in new tab" items open their tab in Firefox too, each tab titled for what
++  it holds ("Diagram (PNG)", "Diagram (SVG)", "PlantUML source", "Box text").
++- **Internal-flow popup**: with the browser engine (BrowserJs, the default) an arrow's link label is one Tab stop,
++  named from its label, and Enter or Space opens its popup; where links show only on hover, focus shows it (5.0.0;
++  before, only a pointer could open it). A diagram the Java engine drew keeps its links as they were. The popup takes
++  the theme, its Activity and Flame Chart views drawn as tabs (5.0.0). See [[Internal Flow Tracking]].
++
++### The other tabs
++
++- **Scenario Timeline** (the Timeline tab, 5.0.0; a toolbar toggle before): every scenario's duration as a bar, longest
++  first, coloured by result in the theme's colours (green passed, red failed, grey skipped, blue bypassed, as the run
++  band's ring draws it; orange before 5.0.0), a failed scenario's row opening with a cross. From 4.9.0 the warm-up's
++  share of a marked scenario's bar is shaded from its start, with the badge's tooltip. Its controls (5.0.0) are Show,
++  Filtered (the start) or Full, and where a scenario paid a first-call warm-up, Warm-up, Shown or Hidden, and Order,
++  With or Without warm-up. Filtered draws the scenarios the filters leave showing and says how many of the run's
++  scenarios it shows, and the bars are drawn to the longest one showing; with the warm-up hidden a bar and its time are
++  the scenario's own. Order With warm-up keeps the bars in elapsed-time order, and Without warm-up orders them by each
++  scenario's own time.
++- **Components tab** (TestRunReport only, 5.0.0; a toolbar toggle before): the embedded
++  [[component diagram|Component-Diagrams]], headed by its title (`ComponentDiagramOptions.Title`, under every
++  renderer), which the drawing leaves out; `ComponentDiagram.html` still draws it. Where the page draws the diagram,
++  its controls are Show, Filtered (the start) or Full, where the report knows which scenarios made each connection's
++  calls; Direction, Left to right (the start) or Top to bottom; and Call summaries, Shown (the start) or Hidden.
++  Filtered draws the components and connections used by the scenarios the filters leave showing, read from the run's
++  calls rather than matched by name, and a note says how many scenarios it follows. A run whose calls give the diagram
++  no connection has no Components tab (4.x drew the title alone).
++- **History tab** (TestRunReport only, 5.0.0): the History section in a tab of its own, open there. The pass rate is
++  a ring per run, drawn like the run band's ring with the rate inside, never 100% while any scenario of the run did
++  not pass, and a run that failed has a fail arc; each ring keeps its run's tooltip. The duration bars carry their
++  time (`850ms`, `44s`, `2m 26s`, `1h 5m`), in the bar or just above a short one, and a window too long for its card
++  scrolls inside it and opens on the newest run. The section and its verdict pills take the theme, each kind in its
++  own colour. The `svg.history-chart-svg` chart and its `history-bar-pass`, `history-bar-fail`,
++  `history-bar-duration` and `history-bar-partial` classes are gone. See
++  [[cross-run history|Cross-Run-History#in-the-html-460]].
++- **Diagnostics tab** (TestRunReport only, 5.0.0): the run's report diagnostics, open in their tab, with their count
++  on it: a card on the theme's colours, with one rule between its entries, a failure's kind in the failure colour and
++  a degraded capture's in amber. See
++  [[report diagnostics|Diagnostics-and-Debugging#structured-diagnostics-ingestresultdiagnostics]].
++
++### Keyboard and tooltips
++
++- **Keyboard**: `/` puts the cursor in the search, and the down and up arrows move between the scenarios shown. A
++  dropdown keeps its own arrow keys (5.0.0; the scenario keys took them from every dropdown, the payload format, width
++  and line count among them), and Enter presses the button that has the focus (5.0.0; once the arrows had picked a
++  scenario, Enter folded it wherever the focus was). The report's tabs, the Features tab's Full and Summary views and
++  a scenario's diagram views move with the arrow keys, Home and End, with only the selected one in the tab order
++  (5.0.0).
++- **Focus kept clear of the report bar** (5.0.0): Tab or Shift+Tab to a control the pinned bar covers, or a
++  scenario's settings stuck under it, brings the control 12 px below them, and to one cut by the top or the foot of
++  the window, 12 px inside it. For a second after, a control the page moves away, as a diagram drawn above it does,
++  is brought back, until the reader scrolls, points or presses a key. Focus a click or a script gives stays where it
++  lands, as does a control in the bar, in those settings or in the internal-flow popup, and a control taller than
++  the space below the bar that already shows in it. On a phone, where the bar scrolls away, nothing moves.
++- **Tooltips** (5.0.0): each tab of the report bar, each payload control, each filter, each heading of a scenario's
++  sections, each link and the page's own buttons has a tooltip saying what it does or what it holds. A payload
++  control's tooltip names the diagrams it acts on: every sequence diagram in the report on the report bar, the
++  scenario's own on a scenario's bar. Clear All's names the search and every filter row the box has, and a chip's
++  gives the number of scenarios it picks out and then what a click does. A composite step's says how many steps it
++  holds, given when it is first pointed at or focused. In their tabs, the History and Diagnostics headings say what
++  the section is, not that a click opens it. The back-to-top button, the payload line count dropdown and the
++  internal-flow popup's close have names a screen reader can read: "Back to top", "Payload length" and "Close".
++
++### Export and start states
++
++- **Export Filtered HTML / CSV**: two buttons on the filter box's Filtering line write out whatever the current
++  filters leave visible; where the box is narrow they read Export HTML and Export CSV (5.0.0). **Export Filtered
++  CSV** gives one row per visible scenario (feature, scenario, status, duration in milliseconds). **Export Filtered
++  HTML** writes a standalone `filtered-report.html`: the report's `<head>` (styles and every behaviour script), an
++  `<h1>Filtered Report</h1>`, the visible `details.feature` elements, and the diagram sources those features need.
++  It is deliberately just the features (no run band, filter box, report bar or other tab), so the exported file
++  cannot be re-filtered. A default report's features carry no [[cross-run history|Cross-Run-History#in-the-html-460]],
++  so neither does its export. In a report drawn with `ShowScenarioHistory` the sparklines and verdict pills live in
++  the scenario headers and are carried; the History tab is left behind, as the History section was (3.11.0).
++  > **Diagrams in the export were blank before 3.0.83.** Under `BrowserJs` rendering a diagram element is an empty
++  > `<div class="plantuml-browser" id="puml-N">` and every source lives gzipped in a single `<script id="puml-data">`
++  > at the end of the **body**, keyed by that id. The export copied the head and the features and nothing else, so it
++  > shipped the whole render machinery with none of the data: source lookup returned null, the render queue silently
++  > dropped the element, and every diagram that had not already been drawn before the export stayed permanently
++  > blank, with no error and no message, just an empty box. Measured on a real 488-diagram report: 12 of 460
++  > diagrams drew (only the ones already rendered, serialised as inline SVG), 448 did not. The export now carries the
++  > body's data payloads, with `#puml-data` pruned to the ids the exported markup actually contains.
++- **Configurable toggle default start states** (3.0.80+): every toggle, radio group and stateful dropdown in both
++  reports (Payloads and its line count, headers/assertions/steps/databases/events/setup, payload format and width,
++  feature/scenario expansion, diagram view tab, the tab the page opens on, the Features tab's view, dependency/tag
++  filter modes, and the disclosure sections) can be given a configured default start state via
++  `ReportConfigurationOptions.TestRunReportToggleDefaults`, with `SpecificationsToggleDefaults` overriding per
++  property for `Specifications.html` (inherit-unless-overridden). From 5.0.0 `ScenarioTimelineVisible` and
++  `ComponentDiagramVisible` choose the tab the page opens on (the timeline when both are set), `FeaturesSummaryOpen`
++  opens the Features tab on its Summary view, `FeaturesExpanded` and `ScenariosExpanded` start the matching expand
++  button dimmed, `EventsShown` and `SetupShown` are new, `DependencyFilterMode` defaults to `Or`, and
++  `DiagnosticsOpen` has nothing left to open. See
++  [[Report Configuration › Toggle Default Start States|Report-Configuration#toggle-default-start-states]].
+ 
+ ### Execution Result Statuses
+ 
+@@ -659,7 +1003,14 @@ The parameter table uses one of two layouts:
+ 
+ ### Interactive Features
+ 
+-Each row in the parameter table shows the test's status badge and duration, and is tinted by its status: green passed, red failed, amber skipped, lavender bypassed. A row darkens its tint under the pointer and further when selected (3.29.3+; before, the pointer gave no feedback on any row, and a selected skipped or bypassed row looked like the others). A table wider than its scenario scrolls sideways inside it (3.29.3+; before, above 768 px its last columns were cut off with nothing to scroll to). Clicking a row switches the visible:
++Each row in the parameter table shows the test's status badge and duration. From 5.0.0 a row is not tinted by its
++status, since the Status column says it: a row takes the hover colour under the pointer, and the selected row is shaded
++in the selected colour with a bar in the accent colour at its left edge, in the report's light or dark theme. Through
++4.x each row was tinted by its status (green passed, red failed, amber skipped, lavender bypassed), and from 3.29.3 it
++darkened its tint under the pointer and further when selected; before 3.29.3 the pointer gave no feedback on any row,
++and a selected skipped or bypassed row looked like the others. A table wider than its scenario scrolls sideways inside
++it (3.29.3+; before, above 768 px its last columns were cut off with nothing to scroll to). Clicking a row switches the
++visible:
+ 
+ - **Detail panel** — Steps, tabular parameters, and failure details for that specific test case
+ - **Sequence diagrams** — The diagrams rendered for that specific test case (or a single diagram with an "All diagrams identical" badge when every test case produces the same diagram)
+@@ -691,6 +1042,10 @@ survives a reorder and tells an outline's rows apart. It is *not* unique in ever
+ `[Theory]` data, the same example row in two `Examples:` blocks and retries all share one — and a `#sid-`
+ link then resolves to the first match in document order.
+ 
++From 5.0.0 a scenario's address goes to the Features tab first, and to its Full view where the Summary view is
++showing: on load, when the address changes, and when a link to a scenario in the page (a failure cluster's, a History
++entry's) or *Next Failure* is clicked.
++
+ Following a link opens every section around the scenario and puts the scenario in the middle of the screen at
+ once. Before 3.31.10 the report scrolled there smoothly, and in a report longer than a few features the scroll
+ ended past the scenario, at the bottom of the page: a feature the browser has not drawn yet counts as a 500 px
+@@ -725,6 +1080,13 @@ value that does not decode loses only itself. A link a 4.x report wrote keeps it
+ `cats=` is read as `tags=`, its `catmode=` as the tag mode when the link has no `tagmode=`, and
+ `__uncategorized__` as Untagged.
+ 
++The other filters write `q=` (the search, its qualifiers included), `status=`, `deps=` and `depx=` (the
++dependencies chosen and left out), `depmode=` when the Dependencies switch is not on the report's default, `hp=1`
++or `hpx=1` (happy paths only, or hidden), `dur=` and `pctl=`; `depx=` and `hpx=` are new in 5.0.0. A link with
++chosen dependencies and no `depmode` takes the report's own mode, so one a default 4.x report wrote for AND opens on
++OR in a default 5.0.0 report. The display settings and the tab are not in the link: each load starts them from the
++report's settings, but for a scenario's address, which opens the Features tab.
++
+ ### Named Examples blocks
+ 
+ A Gherkin scenario outline may split its rows across several `Examples:` blocks, each with an
+@@ -1020,8 +1382,10 @@ public static string GenerateHtmlReport(
+ ```
+ 
+ It draws what it is handed. Verdicts in `history` draw each scenario's sparkline, verdict pill and
+-`data-history-verdicts` attribute, as they did before 4.6.0, and the History section with
+-`showHistorySection`; `diagnostics` draw the Report diagnostics section with `showReportDiagnostics`.
++`data-history-verdicts` attribute, as they did before 4.6.0, and the History tab with
++`showHistorySection`; `diagnostics` draw the Diagnostics tab with `showReportDiagnostics` (5.0.0; before,
++the History and Report diagnostics sections). Both parameters default to `false` here, where the options a run
++reads default to `true` from 5.0.0.
+ Each brings the stylesheet rules it needs, and the verdicts bring the search code of the verdict
+ operators. A run hands it history only when
+ `ShowScenarioHistory` or `ShowHistorySection` asks, and writes the [labs page](#testrunreportlabshtml)
+diff --git a/Home.md b/Home.md
+index ea1805a..5768e77 100644
+--- a/Home.md
++++ b/Home.md
+@@ -2,6 +2,7 @@ Welcome to the **Kronikol** wiki. This wiki contains the full documentation for
+ 
+ For an overview of the project, see the [README](https://github.com/lemonlion/Kronikol#readme).
+ 
++Upgrading from 4.x? **[[Migrating to v5]]** lists what 5.0.0 changed and how to keep the 4.x behaviour.
+ Upgrading from 3.x? **[[Migrating to v4]]** lists what 4.0.0 changed and how to keep the 3.x behaviour.
+ 
+ Kronikol was published as **TestTrackingDiagrams** until 3.0.0 (May 2026); it is the same project, renamed. The `TestTrackingDiagrams.*` NuGet packages are the old identity and are no longer updated - install `Kronikol.*`.
+diff --git a/Ingesting-External-Captures.md b/Ingesting-External-Captures.md
+index 1c56247..2dfb087 100644
+--- a/Ingesting-External-Captures.md
++++ b/Ingesting-External-Captures.md
+@@ -282,7 +282,8 @@ kronikol ingest ./captures --tests ./captures/tests.ndjson -o ./Reports -t "E2E
+ | `--cucumber-messages <file>` | — | A Cucumber Messages NDJSON (repeatable) — the Gherkin structure of a BDD run. Wins over `--tests` for the scenarios it owns; see [Cucumber Messages](#cucumber-messages). |
+ | `--include-hooks` | off | Keep the Cucumber hook steps (`BeforeEach hook`, …) in the step list. |
+ | `--diagnostic <kind>:<message>` | — | Carry a host diagnostic into the report (repeatable) — typically a tap's capture health, e.g. `"CaptureDegraded:tap-di-redis: decoding disabled on 1 connection(s)"`. The kind is a `DiagnosticKind` name (anything else, or no colon, counts as `Other`); the message is free text. See [Host diagnostics](#host-diagnostics). |
+-| `--diagnostics-section` | off | Also draw the **"Report diagnostics"** section in `TestRunReport.html` (`ShowReportDiagnosticsSection`, 3.21.0). Either way every diagnostic is on the labs page beside the report (4.6.0) and in `TestRunReport.json`, and the command prints it. See [Host diagnostics](#host-diagnostics). |
++| `--no-diagnostics-section` | off | Leave the **Diagnostics** tab out of `TestRunReport.html` (`ShowReportDiagnosticsSection = false`, 5.0.0). Either way every diagnostic is on the labs page beside the report (4.6.0) and in the data file, and the command prints it. See [Host diagnostics](#host-diagnostics). |
++| `--diagnostics-section` | on (off before 5.0.0) | Draw the run's diagnostics in `TestRunReport.html` (`ShowReportDiagnosticsSection`, 3.21.0): from 5.0.0 the default, as the report's Diagnostics tab, and still taken so a 4.x command line runs unchanged; from 3.21.0 to 4.x it drew the **"Report diagnostics"** section, which was off by default. |
+ 
+ Exit codes: `0` ok, `1` runtime failure (nothing found, malformed line), `2` usage.
+ 
+@@ -699,9 +700,10 @@ a `TcpTap` whose decoder gave up on a connection (every arrow after that moment
+ looks healthy), an `OtlpTap` that dropped export payloads, a `ProxyTap` that answered `502`.
+ `IngestRequest.HostDiagnostics` (`IReadOnlyList<DiagnosticEntry>`, default empty) carries that knowledge
+ into the report **verbatim**: the entries come first in `IngestResult.Diagnostics`, are listed on the
+-labs page beside the report (`TestRunReport.labs.html`, 4.6.0), appear in the collapsed
+-**"Report diagnostics"** block of `TestRunReport.html` only when `ShowReportDiagnosticsSection` (or
+-`kronikol ingest --diagnostics-section`) asks for it, off by default from 3.21.0, and are in the
++labs page beside the report (`TestRunReport.labs.html`, 4.6.0), appear in the **Diagnostics** tab of
++`TestRunReport.html` (5.0.0, `ShowReportDiagnosticsSection`, on by default, which
++`kronikol ingest --no-diagnostics-section` turns off; from 3.21.0 to 4.x a collapsed **"Report diagnostics"**
++block, off by default, which `--diagnostics-section` drew), and are in the
+ top-level `diagnostics` array of `TestRunReport.json` (`{ kind, message, scenarioId }`, described by
+ `TestRunReport.schema.json`). Every tap exposes the same surface — `TcpTap.Diagnostics()`,
+ `ProxyTap.Diagnostics()`, `OtlpTap.Diagnostics()` — one `CaptureDegraded` entry per non-zero problem counter,
+diff --git a/Integration-ReqNRoll-xUnit3.md b/Integration-ReqNRoll-xUnit3.md
+index 1547e08..fc2a089 100644
+--- a/Integration-ReqNRoll-xUnit3.md
++++ b/Integration-ReqNRoll-xUnit3.md
+@@ -222,7 +222,7 @@ Scenario: Calling Create Cake Endpoint Without Eggs
+ | Tag | Purpose |
+ |-----|---------|
+ | `@endpoint:/cake` | Sets the endpoint label on the feature in the report |
+-| `@happy-path` | Marks the scenario as a "happy path" (sorted first within the feature, displays a badge, filterable via "Happy Paths Only" toggle) |
++| `@happy-path` | Marks the scenario as a "happy path": sorted first within the feature, displays a badge, and filterable with the Happy paths filter (Show, Only or Hide; a "Happy Paths Only" toggle before 5.0.0) |
+ | any other tag, such as `@smoke` | A tag: a chip in the report's Tags row, found by `@smoke` in the search bar. On `Feature:` it is the feature's and counts for every scenario of it, on a `Rule:` it reaches that rule's scenarios, and on a scenario or its `Examples:` block it is the scenario's |
+ | `@category:smoke` | The tag `smoke`: the prefix is read and dropped (a category before 5.0.0) |
+ 
+diff --git a/Merging-Parallel-Reports.md b/Merging-Parallel-Reports.md
+index 79e02a4..3545098 100644
+--- a/Merging-Parallel-Reports.md
++++ b/Merging-Parallel-Reports.md
+@@ -61,7 +61,7 @@ kronikol merge ./artifacts -o TestRunReport.html -t "Nightly Build"
+ | `--no-json` | Write the HTML only (since 3.1.0): no data file, and none of the files that exist to help somebody read it. The labs page is HTML, so it is still written when the merge has one (4.6.0). |
+ | `--ci-summary` | Also write `CiSummary.md` and post it to the CI job summary — the GitHub Actions step summary, or an Azure DevOps upload (since 3.6.0). Off, a **failing** merge on CI still posts the short "Debug this run" section, exactly as a failing run does. |
+ | `--publish-artifacts` | Hand the output directory to the CI artifact upload — the `reports-path` output on GitHub Actions, `artifact.upload` on Azure DevOps (since 3.6.0), with the files the merge carried into `attachments/` (4.28.1). |
+-| `--history <ledger>` | Read the [cross-run history ledger](Cross-Run-History) and show what it says about the merged run (since 3.11.0): the History section, sparklines and verdicts on the labs page beside the merged report (`<output>.labs.html`, 4.6.0), the history lines in `Failures.md`, the summary in the pointer. The merged report itself carries no history; before 4.6.0 it drew the History section, sparklines and verdict pills. Never writes to the ledger — folding the shards' `History.run.json` fragments is `kronikol history record`'s job. A ledger that is not there is exit 2; one that cannot be read is exit 1. |
++| `--history <ledger>` | Read the [cross-run history ledger](Cross-Run-History) and show what it says about the merged run (since 3.11.0): the History section, sparklines and verdicts on the labs page beside the merged report (`<output>.labs.html`, 4.6.0), the history lines in `Failures.md`, the summary in the pointer. From 5.0.0 the merged report has a History tab as well, since the merge renders it with the default options, where `ShowHistorySection` is on; from 4.6.0 to 4.x the merged report carried no history, and before 4.6.0 it drew the History section, sparklines and verdict pills. Never writes to the ledger: folding the shards' `History.run.json` fragments is `kronikol history record`'s job. A ledger that is not there is exit 2; one that cannot be read is exit 1. |
+ | `--schema` | Also write the merged data file's schema beside it, `<name>.schema.json` (5.0.0; before it the schema was always written). |
+ | `-h`, `--help` | Show usage. |
+ 
+@@ -105,7 +105,8 @@ above — so the one shape of run that is always on CI had none of the things Kr
+   Kronikol did not write is left alone. See [Querying Reports](Querying-Reports).
+ - **The labs page**, `<output>.labs.html` (4.6.0), when the merge has something for it: what `--history`
+   read, and the merged run's diagnostics (the shards' own and what the merge recorded, such as a shard
+-  counted once). The merged report carries neither. See [Generated Reports](Generated-Reports#testrunreportlabshtml).
++  counted once). From 5.0.0 the merged report carries both as well, as its History and Diagnostics tabs; from
++  4.6.0 to 4.x it carried neither. See [Generated Reports](Generated-Reports#testrunreportlabshtml).
+ - **The run-end pointer** on stdout: where the files are, how big the data file is, what failed, and the
+   `kronikol query failures` command that explains it. When the data file is not called
+   `TestRunReport.json` — `-o Combined.html` gives `Combined.json` — the command names the **file**,
+@@ -287,9 +288,13 @@ File.WriteAllText("TestRunReport.json", MergeableReportRenderer.Serialize(combin
+ Since 4.6.0 `Render` follows its options as a run does: history and diagnostics are drawn in the merged
+ report only where `ShowScenarioHistory`, `ShowHistorySection` and `ShowReportDiagnosticsSection` ask, and
+ the labs page is written beside it whenever there is history for it (its `history` argument, with
+-`EmbedHistoryInReport` on) or a diagnostic, unless `GenerateLabsReport = false`. The report's Report
+-diagnostics section lists the shards' diagnostics (`MergeableReport.Diagnostics`), which it dropped
+-before 4.6.0. Since 4.14.10 its component diagram takes `DependencyColors` from the options when `ComponentDiagramOptions` names none, as a run's does; it drew the default palette before.
++`EmbedHistoryInReport` on) or a diagnostic, unless `GenerateLabsReport = false`. From 5.0.0
++`ShowHistorySection` and `ShowReportDiagnosticsSection` are on by default, and `options` left `null` (as
++`Render` and `MergeFilesToHtml` take it) means the defaults, so a merged report has the History tab when it is
++given history and the Diagnostics tab when the shards recorded a diagnostic. The report's Diagnostics tab (its
++Report diagnostics section before 5.0.0) lists the shards' diagnostics (`MergeableReport.Diagnostics`), which it
++dropped before 4.6.0. Since 4.14.10 its component diagram takes `DependencyColors` from the options when
++`ComponentDiagramOptions` names none, as a run's does; it drew the default palette before.
+ 
+ ---
+ 
+diff --git a/Migrating-to-v5-Report.md b/Migrating-to-v5-Report.md
+new file mode 100644
+index 0000000..bf82945
+--- /dev/null
++++ b/Migrating-to-v5-Report.md
+@@ -0,0 +1,135 @@
++## The report's tabs, themes and settings
++
++Kronikol 5.0.0 redraws the HTML report: a light and a dark theme on colour tokens, a run band in place of the header
++row, a filter box with rows of chips, and tabs where 4.x had toolbar toggles, panels and disclosures. A report opens as
++before and a 4.x link still works, but a stylesheet, a script or a browser test written against 4.x's markup may need
++changing, and some settings now mean something else.
++[[Generated Reports › Report Features|Generated-Reports#report-features]] describes the 5.0.0 report and
++[[Report Themes]] its tokens. Labels and categories, which became tags, have a page of their own:
++[[Migrating to v5: tags|Migrating-to-v5-Tags]]. [[Migrating to v5]] lists every 5.0.0 change, with the settings that
++keep the 4.x behaviour.
++
++### What changed
++
++| | 4.x | 5.0.0 |
++|---|---|---|
++| Colours | fixed colours on each rule, one theme | tokens (`--kron-*` for the page, `--dg-*` for its diagrams), each with a light and a dark value; the page follows the system's setting until the reader picks a theme with the switch at the right of the title |
++| The report's sections | Scenario Timeline and Component Diagram toolbar toggles, and History and Report diagnostics sections above the features | the Features, Timeline, Components, History and Diagnostics tabs of a report bar that pins to the top of the window on a desktop |
++| The run summary | a header row: the pie chart, the Test Execution Summary table and the CI table | the run band: the ring, the summary as labelled figures and the CI details, in one card |
++| The features table | the Features Summary disclosure above the run summary | the Summary view of the Features tab, beside the Full view of the feature cards |
++| Expand and collapse | Expand All buttons whose labels flipped | a pair of icon buttons for features and a pair for scenarios, dimmed while they have nothing to do |
++| Happy paths | a Happy Paths Only toggle | Show, Only or Hide |
++| The filter rows | always open on a desktop; OR/AND switches; a dependency button on or off | folded under More filters on a desktop; ANY/ALL switches; a chip goes off, has, has not |
++| A scenario's diagram toolbar | the view toggles and the payload controls on one bar | the views as tabs on a bar of their own, and the payload controls behind a gear |
++| Payload controls | the Details radio (Expand, Collapse, Truncate) and labels such as "Databases Shown" | Payloads (Expanded, Collapsed, Truncated), and toggles that say their word alone, with `aria-pressed` |
++| Start states | assertion notes hidden, payloads cut at 40 lines, the dependency filter on AND | every diagram toggle but Headers on, payloads cut at 10 lines, the dependency filter on ANY (OR) |
++| History in the report | none by default (the History section from 3.21.0, the rest from 4.6.0) | the History tab, on by default; each scenario's history still only with `ShowScenarioHistory` |
++| Diagnostics in the report | none by default (from 3.21.0) | the Diagnostics tab, on by default |
++| The labs page | no script, 4.x's colours | the report's theme, with the theme's two scripts |
++
++### Stylesheets
++
++- Every colour of the report is a token. Set the tokens in `CustomCss`: the light values on `:root`, the dark values
++  on `:root[data-theme="dark"]` and again on `:root:not([data-theme])` under `prefers-color-scheme: dark`
++  ([[Report Themes › Restyling a report with its tokens|Report-Themes#restyling-a-report-with-its-tokens]]).
++- A sheet written against 4.x's rules or colours may no longer apply where 5.0.0 changed the markup: the features and
++  their steps, the failure diff, the parameter table, the run band, the filter rows and the payload controls. Where
++  it still applies it paints the same colours in both themes, so its light colours stay on a dark page. Set the
++  tokens instead.
++- These classes are gone: `.header-row`, `.test-execution-summary`, `.summary-chart`, `.ci-chart-group` and
++  `.ci-metadata` (the run band replaced them); `.features-summary-details`; `.collapse-expand-all`; `.happy-path-toggle`
++  and `.happy-path-active`; and `svg.history-chart-svg` with `history-bar-pass`, `history-bar-fail`,
++  `history-bar-duration` and `history-bar-partial`: the pass rate is a ring per run now, and the duration trend is
++  drawn as HTML bars (`.history-bars`, `.history-bar`). The Categories row's classes went with the row
++  ([[Migrating to v5: tags › The report|Migrating-to-v5-Tags#the-report]]).
++- `.status-toggle`, `.percentile-btn`, `.dependency-toggle` and `.dep-mode-toggle` keep their names under new rules,
++  so a 4.x rule for them may no longer apply.
++- `Stylesheets.VioletThemeStyleSheet`, the Specifications report's default sheet, sets the colour tokens for the light
++  and the dark theme, and keeps 4.x's solid violet, with white on it, for a chosen control, the passed step and the
++  back-to-top button. A sheet built on the 4.x constant's rules sets the tokens instead
++  ([[Report Themes › The violet theme|Report-Themes#the-violet-theme]]).
++
++### Scripts and browser tests
++
++- These page functions are gone: `toggle_timeline` and `toggle_component_diagram` (click the tab,
++  `button.report-tab[data-tab="timeline"]` or `[data-tab="components"]`); `toggle_expand_collapse` (the
++  `button.fold-btn` pairs); `toggle_happy_paths` and `filter_happy_paths` (the `button.happy-seg` buttons);
++  `toggle_dependency` (the chips and switches answer one delegated handler, so click the chip); and
++  `toggle_examples_detail`, which every 4.x report carried and nothing in it called. `filter_categories`,
++  `toggle_cat_mode` and `toggle_category` went with the Categories row.
++- The timeline, the component diagram, the History section and the diagnostics are in tab panels that stay hidden
++  until their tab is chosen. A test that checks one of them is visible selects its tab first.
++- On a desktop the filter rows are folded under More filters, and the filter box carries `rows-folded` while they
++  are, so a test that uses a row's control presses `button.more-filters` first. The search field sits in
++  `span.search-field`.
++- A scenario's payload controls are behind its gear: `button.scenario-settings-gear` opens `div.scenario-settings`,
++  whose bar is `div.diagram-toggle.diagram-options-bar`, and the view tabs are `div.diagram-toggle.diagram-toggle-tabs`.
++  A section showing another view carries `diagrams-not-seq`, and a section with no sequence diagram has no payload
++  controls. On a phone, `button.scenario-diagram-controls-toggle.gear-in-summary` on the diagrams' title replaces
++  4.x's "Diagram Settings" button.
++- A toggle's label is its word alone (Headers, Assertions, Steps, Databases, Events, Setup), and its state is in
++  `aria-pressed` and `data-shown`: a test that looked for "Databases Shown" reads `aria-pressed`. Each label sits in
++  `span.btn-label`. The Details radio reads Payloads, and its line count shows only while Truncated is picked.
++- A filter row's switch reads ANY or ALL and keeps AND or OR in `data-mode`, which the link writes as before. A chip
++  carries `aria-pressed` (`true`, `mixed` or `false`) and `dependency-active` or `dependency-exclude`.
++- The CI details lose their colons (`Build #:` and `42` are `Build` and `#42`), and the hidden Kronikol Version row
++  is gone: the version is in the page's `generator` meta.
++- A note's buttons are named in `data-note-btn`; `truncate`, `truncate-bottom`, `collapse-bottom` and
++  `expand-bottom` are new.
++- Whenever the scenarios shown change, the page raises `kron-filter-change` on the document, with
++  `{ shown, total }` in its `detail`, which a test can wait for.
++
++### Settings
++
++- **`ReportToggleDefaults`**
++  ([[Report Configuration › Toggle Default Start States|Report-Configuration#toggle-default-start-states]]):
++  - `AssertionsShown` defaults to `true` (4.x: `false`), `TruncateLines` to `TruncateLineCount.Lines10` (4.x:
++    `Lines40`), and `DependencyFilterMode` to `FilterCombinationMode.Or` (4.x: `And`). Set the three back to open a
++    report as 4.x did.
++  - `ScenarioTimelineVisible` and `ComponentDiagramVisible` choose the tab the page opens on, the Timeline when both
++    are set, where they showed a panel.
++  - `FeaturesSummaryOpen` opens the Features tab on its Summary view, where it opened the Features Summary
++    disclosure.
++  - `FeaturesExpanded` and `ScenariosExpanded` still open the sections, and start the matching expand button dimmed,
++    where they seeded its label.
++  - `DiagnosticsOpen` has nothing left to open: the Diagnostics tab is always open.
++  - `EventsShown` and `SetupShown` are new, both `true` by default.
++  - `CategoryFilterMode` is `TagFilterMode`.
++- **`ShowHistorySection` and `ShowReportDiagnosticsSection`** default to `true` (`false` from 3.21.0 to 4.x): a run
++  that read history has a History tab, and one that recorded a diagnostic has a Diagnostics tab with their count on
++  it. `ShowScenarioHistory` stays `false`. Set the two to `false` for a report without the tabs; the labs page beside
++  the report carries both either way. `kronikol merge` renders with the defaults, so a merge given `--history` has a
++  History tab, and one whose shards recorded a diagnostic a Diagnostics tab.
++- **`kronikol ingest`** shows the Diagnostics tab by default. `--no-diagnostics-section` leaves it out, and
++  `--diagnostics-section` is still taken, so a 4.x command line runs unchanged.
++- **`ComponentDiagramOptions.Title`** heads the Components tab under every renderer, and the drawing leaves it out;
++  `ComponentDiagram.html` still draws it.
++
++### Links
++
++- A link copied from a 4.x report opens the same view, except one that chose dependencies and has no `depmode`: it
++  meant AND, and in a default 5.0.0 report it means OR. A report whose old links should keep AND sets
++  `DependencyFilterMode = FilterCombinationMode.And`, or a link can say `depmode=AND`.
++- `hp=1` still opens on happy paths Only, and a link that chose `(no interactions)` opens on No dependencies.
++- 5.0.0 adds `depx=`, `hpx=1`, `tags=`, `tagx=` and `tagmode=`. The display settings are not in the link: each load
++  starts them from the report's settings
++  ([[Generated Reports › Deep links|Generated-Reports#deep-links-scenario--and-sid-]]).
++
++### What a report shows differently
++
++- Assertion notes are drawn from the first render, and payloads are cut at 10 lines.
++- A service is drawn as a box: `DependencyPalette.GetSequenceShape(DependencyType.HttpApi)` returns `participant`, where
++  it returned `entity`. Databases are deep cyan, `#0E7C86` where they were `#E74C3C`, and `DependencyColors` still
++  overrides it. Where the page draws a diagram, a step bar is a flat band in the step colour (`--dg-step`) with its
++  label in bold, in place of the black hexagon.
++- The ring reads 100% only when every scenario passed (4.x rounded 213 passed of 214 up to 100%), and a scenario
++  skipped after an earlier failure counts as skipped in the summary and the ring.
++- The parameter table's rows are not tinted by their status, and the failure diff's labels read Expected and Actual,
++  without a colon.
++- A bypassed scenario's timeline bar is blue, as the ring draws it (orange in 4.x).
++- A scenario whose diagram makes no call has no dependency: it is under No dependencies.
++- A collapsed payload's one-line preview leaves out a JSON body's braces.
++- A duration of an hour or more reads in hours (`1h 5m`, where it read `65m 0s`).
++- A run whose calls give the component diagram no connection has no Components tab, where 4.x drew the title alone.
++- `Specifications.html` is dark and violet in the dark theme, and has the report bar, with the Features and Timeline
++  tabs, whenever its scenarios carry durations.
+diff --git a/Migrating-to-v5.md b/Migrating-to-v5.md
+new file mode 100644
+index 0000000..c39de9a
+--- /dev/null
++++ b/Migrating-to-v5.md
+@@ -0,0 +1,115 @@
++# Migrating to v5
++
++Kronikol 5.0.0 writes the run's data file as `TestRunReport.krkl`, redraws the HTML report with tabs, a light and a
++dark theme and new filters, replaces labels and categories with tags, and runs on .NET 10 alone. This page lists
++each change and the setting that keeps the 4.x behaviour where there is one; the report and the tags each have a page
++of their own with the detail. Upgrading from 3.x? Read [[Migrating to v4]] first.
++
++## What changed
++
++| | 4.x | 5.0.0 | To keep the 4.x behaviour |
++|---|---|---|---|
++| The run's data file | `TestRunReport.json` | `TestRunReport.krkl`: the same report, compressed whole | `CompressTestRunReport = false`, or `kronikol ingest --data-file json` |
++| The data file's schema | Written beside every report | Written only when asked | `GenerateTestRunReportSchema = true`, or `--schema` on `kronikol merge` and `kronikol ingest` |
++| Target frameworks | net8.0, net9.0 and net10.0 | net10.0 | None: a test project on .NET 8 or 9 stays on 4.x |
++| `CompressTestRunReportPayloads` | On by default | Obsolete (warning CS0618), and reaches only the JSON file | Set it only alongside `CompressTestRunReport = false`; v6 removes it |
++| A closed composite step's sub-steps | Drawn in the page | Drawn the first time the step opens, where they come to 2 KB of HTML or more | `RenderCollapsedSubStepsOnExpand = false` |
++| The HTML report | Toolbar toggles, panels and disclosures, one set of colours | Tabs on a report bar, a light and a dark theme on colour tokens, a run band, filter rows folded under More filters | None: a stylesheet, a script or a browser test written against 4.x's markup may need changing ([[Migrating to v5: the report|Migrating-to-v5-Report]]) |
++| Start states | Assertion notes hidden, payloads cut at 40 lines, the dependency filter on AND | Every diagram toggle but Headers on, payloads cut at 10 lines, the dependency filter on ANY (OR) | `AssertionsShown = false`, `TruncateLines = TruncateLineCount.Lines40` and `DependencyFilterMode = FilterCombinationMode.And` on `TestRunReportToggleDefaults` (and `SpecificationsToggleDefaults`) |
++| History and diagnostics in the report | Left out by default (on the labs page from 4.6.0) | The History and Diagnostics tabs, on by default | `ShowHistorySection = false` and `ShowReportDiagnosticsSection = false`, or `kronikol ingest --no-diagnostics-section` |
++| Labels and categories | `Feature.Labels`; `Scenario.Labels` and `Scenario.Categories` | `Feature.Tags` and `Scenario.Tags`, filled by every adapter from its framework's own tagging | None: the members are gone, and code that used them moves to tags ([[Migrating to v5: tags|Migrating-to-v5-Tags]]) |
++
++```csharp
++var options = new ReportConfigurationOptions
++{
++    CompressTestRunReport = false,             // TestRunReport.json, as 4.x wrote it
++    GenerateTestRunReportSchema = true,        // TestRunReport.schema.json beside it
++    RenderCollapsedSubStepsOnExpand = false,   // every step drawn in the page
++    ShowHistorySection = false,                // no History tab
++    ShowReportDiagnosticsSection = false,      // no Diagnostics tab
++    TestRunReportToggleDefaults = new ReportToggleDefaults
++    {
++        AssertionsShown = false,                          // assertion notes hidden
++        TruncateLines = TruncateLineCount.Lines40,        // payloads cut at 40 lines
++        DependencyFilterMode = FilterCombinationMode.And, // the dependency filter on AND
++    },
++};
++```
++
++
++## The data file is `TestRunReport.krkl`
++
++A run writes `TestRunReport.krkl` in place of `TestRunReport.json`. It is the same report as compact JSON, without the
++keys that hold nothing (unless the schema requires them), with every payload as text, and the whole compressed with
++zstd. It declares `formatVersion` 3. On BreakfastProvider's LightBDD report the JSON was 6,150,370 bytes and the
++`.krkl` 279,968, about a twentieth; a report filled by large payloads shrinks less, since each payload is already
++most of its own size. A mergeable run (`GenerateMergeableData`) writes its mergeable file the same way.
++
++What reads it:
++
++- **`kronikol` 4.30.0 and later**: every `kronikol query` verb, `kronikol merge`, `kronikol diff` and the rest. An older
++  `kronikol` refuses the file rather than half-reading it. Update the tool: `dotnet tool update -g Kronikol.Tool`.
++- **The `query.cs` beside the report** reads it, with nothing installed.
++- **`query.py`** reads it on Python 3.14 or later, which can decompress zstd; on an older Python it says so and stops.
++- **The history action.** The tool its `VERSION` file installs reads `.krkl`, so a workflow that pins the action to
++  a tag before `v4.30.0` has to move it on.
++- **Your own scripts.** The file is not JSON on disk, so `jq`, a `grep` or a JSON parser reads nothing from it.
++  `kronikol decode TestRunReport.krkl -o TestRunReport.json` writes the JSON, and `--indent` indents it; or set
++  `CompressTestRunReport = false` and keep the JSON. To answer a question about a run, `kronikol query` never needs
++  the JSON.
++- **CI uploads.** An artifact step that names `TestRunReport.json` finds nothing: name `TestRunReport.krkl`, or upload
++  the reports folder. See [[CI Artifact Upload]].
++- **Kronikol4J** writes its own file and is not affected.
++
++`CompressTestRunReportPayloads` has no effect on a `.krkl`: the payloads are text inside a file compressed whole, which
++comes out smaller than payloads compressed one by one.
++
++## The schema is written only when asked
++
++`GenerateTestRunReportSchema` defaults to `false`, so a run no longer writes `TestRunReport.schema.json` beside its
++report. Nothing in Kronikol reads it. Set the option to `true`, or pass `--schema` to `kronikol merge` or
++`kronikol ingest`, if something of yours validates the data file or the JSON `kronikol decode` writes. A schema an
++earlier run left at the top of the reports folder stays there, since no `Run.json` lists it.
++
++## .NET 10 alone
++
++Every package targets net10.0 alone; net8.0 and net9.0 are dropped, and net11.0 joins in a 5.x release when .NET 11
++ships. A test project on .NET 8 or 9 stays on 4.x. The project templates offer `--Framework net10.0` alone.
++
++## `CompressTestRunReportPayloads` is obsolete
++
++It still works where it did, on the JSON file a run writes with `CompressTestRunReport = false`, and v6 removes it.
++Code that sets it gets warning CS0618 when it builds, which fails a build that treats warnings as errors: delete the
++line, unless you keep the JSON file and want its payloads compressed. `kronikol ingest --payloads` is obsolete with it.
++
++## Sub-steps are drawn when their step first opens
++
++A composite step is drawn closed, as in 4.x. Where its sub-steps come to 2 KB of HTML or more, the page now holds them
++compressed and draws them the first time the step is opened, so a suite of deeply nested steps (LightBDD composites
++20 levels down, say) keeps a small report. A step on the way to a failure is drawn and open as before. The report's
++search box finds a word in a step nobody opened, Export Filtered HTML carries the steps its scenarios need, and a row
++of a parameterized group opens the steps that were open in the row it replaced.
++
++The browser's own find (Ctrl+F) cannot see a step nobody opened, and neither can a script or a test of yours that
++looks for a sub-step's markup in the page's HTML. Set `RenderCollapsedSubStepsOnExpand = false` to draw every step in
++the page.
++
++## `kronikol ingest` and `kronikol merge`
++
++`kronikol ingest` follows the library: without flags it writes `TestRunReport.krkl` and no schema.
++`--data-file json` writes the JSON, `--schema` the schema, and `--payloads` applies only with `--data-file json`.
++`kronikol merge` writes a `.krkl` when any input is one or `-o` names that extension, so shards from 5.0.0 runs merge
++into a `.krkl`; `--schema` writes the schema beside the merged file. See [[Ingesting External Captures]] and
++[[Merging Parallel Reports]].
++
++## The report
++
++[[Migrating to v5: the report|Migrating-to-v5-Report]] covers the report's tabs, themes and settings: the stylesheet
++classes and page functions that are gone or changed, what a browser test should select now, the settings that mean
++something new, the links, and what a report shows differently. [[Report Themes]] lists the colour tokens.
++
++## Tags
++
++[[Migrating to v5: tags|Migrating-to-v5-Tags]] covers labels and categories becoming tags: the members that are
++gone, what each adapter reads, how a 4.x data file and a 4.x tool read a 5.0.0 one, and what the report's Tags row
++shows.
+diff --git a/PlantUML-Browser-Rendering.md b/PlantUML-Browser-Rendering.md
+index 625238b..0f0f6db 100644
+--- a/PlantUML-Browser-Rendering.md
++++ b/PlantUML-Browser-Rendering.md
+@@ -137,7 +137,11 @@ The toggle is entirely client-side: nothing extra is embedded in the report, and
+ 
+ ### Bulk toggles and the default format (3.0.66+)
+ 
+-Beside the **Headers/Assertions/Steps/Databases** toggles — at report level and on each scenario's diagram toolbar — sits a compact **JSON/YAML** dropdown (no label; hover it for the "Note payload format" tooltip):
++From 5.0.0 a compact **JSON/YAML** dropdown with no label sits in the display settings, between the Payloads radio
++and the Headers, Assertions, Steps, Databases, Events and Setup toggles: once for the report, and once in each
++scenario's settings, behind its gear. Screen readers name it "Payload format", and the same words head its options
++while it is open. From 3.0.66 to 4.x it sat beside the **Headers/Assertions/Steps/Databases** toggles, at report level
++and on each scenario's diagram toolbar, with "Note payload format" as its tooltip. The two levels act differently:
+ 
+ - **Report-level dropdown** — converts every eligible note in every scenario, syncs all scenario dropdowns to the same value, and becomes the default for diagrams that have not rendered yet (a scenario opened later renders straight into the chosen format).
+ - **Scenario-level dropdown** — converts only that scenario's notes, including its not-yet-rendered diagrams. It deliberately does not move the report-level dropdown or affect other scenarios.
+@@ -168,7 +172,9 @@ The block scalar header records the trailing newline: `|` when the string ends w
+ 
+ The format is per-note state, exactly like expand/truncate: it survives expand/truncate/collapse, the headers toggle, the assertion/step/database filters, and client-side fragment splitting. Truncation and the long-note arrows count the *displayed* lines — a 3-line JSON note whose SQL unfolds to 50 YAML lines becomes a "long" note in YAML view. The collapsed one-line preview always uses the original JSON text — a collapsed note in a YAML-mode diagram previews its JSON until expanded (the preview is a content hint, and the per-note format button is hidden while collapsed). Notes with `FocusFields` emphasis lose the emphasis markup in YAML view (the JSON view keeps it).
+ 
+-The dropdowns show the last *bulk* command (initially the report's configured default); per-note `Y`/`J` clicks do not move them — the same contract as per-note **+**/**−** not moving the Details radio.
++The dropdowns show the last *bulk* command (initially the report's configured default); per-note `Y`/`J` clicks do
++not move them, the same contract as per-note **+**/**−** not moving the Payloads radio (the Details radio before
++5.0.0).
+ 
+ A page refresh resets the dropdowns to the report's configured default, together with the notes they describe. Firefox restores form-control state across a plain reload (Chromium does not), which used to bring a scenario dropdown back reading **YAML** over notes the freshly-loaded report had rendered as JSON — and re-picking YAML on an already-YAML `<select>` fires no `change`, so the view could not be reconciled. Since 3.0.68 every report control (the format and truncate-lines dropdowns, the search box and the duration threshold) opts out of that restoration, so what a control reads is always what the report is doing. Filter state you want to keep across reloads belongs in the URL hash, which the report writes and restores itself.
+ 
+@@ -192,10 +198,11 @@ can do. For `Server`, `Local` and `NodeJs` the generation-time
+ |---|---|
+ | **`↔`** / **`→←`** | Widens this note to fill the diagram's container, and back. |
+ 
+-A compact dropdown beside the filter toggles does the same for every note at once, report-wide or per
+-scenario. It reads **Wrap** (the state a report starts in: notes wrap at the report's
+-`DiagramNoteWrapWidth`) and **Wide** (notes widen to fill the diagram), under a *Note width* heading
+-that shows when the dropdown is open. Before 3.22.0 the two options read `Fit` and `Full`.
++A compact dropdown does the same for every note at once, report-wide or per scenario. From 5.0.0 it sits in the
++display settings, after the format dropdown (before 5.0.0, beside the filter toggles). It reads **Wrap** (the state a
++report starts in: notes wrap at the report's `DiagramNoteWrapWidth`) and **Wide** (notes widen to fill the diagram),
++under a *Payload width* heading that shows when the dropdown is open (*Note width* before 5.0.0). Before 3.22.0 the
++two options read `Fit` and `Full`.
+ `ReportConfigurationOptions.TestRunReportToggleDefaults.NoteWidth` starts the whole report in either
+ state.
+ 
+@@ -209,7 +216,8 @@ participants right rather than extending the canvas, so the relation is not quit
+ 
+ The `↔` glyph appears only where widening would change something — a note whose text does not wrap
+ does not offer it. The dropdown cannot be gated the same way, because diagrams render lazily and a
+-scenario's notes are not all drawn when the toolbar is. Wide changes only notes that wrap; a note that
++scenario's notes are not all drawn when its settings are (its toolbar, before 5.0.0). Wide changes only notes that
++wrap; a note that
+ already fits stays as it is, so on a scenario of short payloads the control appears to do nothing. Window resizes are deliberately not tracked: re-rendering every widened diagram on
+ a resize costs far more than it returns, and using the control again recomputes the target.
+ 
+diff --git a/Report-Configuration.md b/Report-Configuration.md
+index 44f1125..7cafdab 100644
+--- a/Report-Configuration.md
++++ b/Report-Configuration.md
+@@ -110,7 +110,7 @@ The `SpecificationsDataFormat` controls the format of the machine-readable speci
+ | `HtmlSpecificationsFileName` | `string` | `"Specifications"` | File name (without extension) for the HTML specifications file. |
+ | `HtmlTestRunReportFileName` | `string` | `"TestRunReport"` | File name (without extension) for the HTML test run report. |
+ | `YamlSpecificationsFileName` | `string` | `"Specifications"` | File name (without extension) for the YAML specifications file. |
+-| `HtmlSpecificationsCustomStyleSheet` | `string?` | `Stylesheets.VioletThemeStyleSheet` | Custom CSS added to the HTML specifications file after the built-in stylesheets (base, context menu, inline SVG, notes, internal flow), so its rules win over theirs at equal specificity, and before `InternalFlowPopupCustomStyleSheet` and `CustomCss`. It does not replace the base stylesheet, which every report carries: the default, the built-in violet theme, is an overlay on it. Set to `null` for the built-in blue, or provide your own CSS string. Before 3.29.2 it came before the component stylesheets, which won over it. |
++| `HtmlSpecificationsCustomStyleSheet` | `string?` | `Stylesheets.VioletThemeStyleSheet` | Custom CSS added to the HTML specifications file after the built-in stylesheets (base, context menu, inline SVG, notes, internal flow), so its rules win over theirs at equal specificity, and before `InternalFlowPopupCustomStyleSheet` and `CustomCss`. It does not replace the base stylesheet, which every report carries: the default, the built-in violet theme, is an overlay on it. From 5.0.0 the violet theme sets the report's colour tokens for the light and the dark theme ([[Report Themes › The violet theme|Report-Themes#the-violet-theme]]). Set to `null` for the built-in blue, or provide your own CSS string. Before 3.29.2 it came before the component stylesheets, which won over it. |
+ | `ReportsFolderPath` | `string` | `"Reports"` | Folder where reports are written — relative paths resolve against `AppDomain.CurrentDomain.BaseDirectory`, absolute paths are used as-is. Honoured by every file the standard pipeline emits (HTML, data, schema, component diagram, CI summary, copied attachments). `ReportGenerator.ResolveReportsDirectory(options)` returns the resolved path. *(Before 3.0.44 this option was ignored and everything went to `<BaseDirectory>/Reports`.)* |
+ | `ExcludedHeaders` | `string[]` | `[]` | HTTP headers to exclude from diagram notes. Combined with `PlantUmlCreator.DefaultExcludedHeaders` (`Cache-Control`, `Pragma`). **Render-only** — the raw headers are still stored and written to the data files; for secrets use [[Capture-Time Redaction]]. See [[Excluded Headers]] and [[Filtering and Redacting Diagram Content]]. |
+ | `CollapseConsecutiveIdenticalCalls` | `bool` | `false` | Collapse maximal runs of consecutive identical request/response pairs (same caller, service, method, path+query, GraphQL operation, status) into one pair inside a PlantUML `loop ×N · min–max ms` fragment. Keeps poll/retry-heavy traffic legible. |
+@@ -131,9 +131,9 @@ The `SpecificationsDataFormat` controls the format of the machine-readable speci
+ | `PlantUmlRendering` | `PlantUmlRendering` | `BrowserJs` | How PlantUML diagrams are rendered. `BrowserJs` (default) renders client-side in the browser via the PlantUML TeaVM JS engine. `Server` uses a remote PlantUML server. `Local` renders in-process via IKVM (requires `LocalDiagramRenderer`). `NodeJs` renders at report-generation time through one local Node.js process running the same engine as `BrowserJs`. See [[PlantUML Browser Rendering]] and [[Integration PlantUML IKVM]]. The CI job summary is not affected by this option: see [[CI Summary Integration › Where the Diagram Images Come From|CI-Summary-Integration#where-the-diagram-images-come-from]]. |
+ | `BrowserRenderWorkers` | `int` | `4` | `BrowserJs` only. Number of Web Workers the report page renders diagrams on (capped by the viewer's `navigator.hardwareConcurrency`), so the 7 MB engine never runs on the main thread: the page is interactive immediately, fragments render in parallel, toggles never freeze the page. `0` renders on the main thread (the pre-3.0.45 path — also the automatic fallback when Workers/`fetch`/`OffscreenCanvas` are unavailable or the engine cannot be fetched). An engine file that fails its known-hash check is never run on either path (3.31.1, see [[PlantUML Browser Rendering › Engine integrity|PlantUML-Browser-Rendering#engine-integrity-3311]]). `kronikol ingest --browser-render-workers <n>`. See [[PlantUML Browser Rendering › How Rendering Runs (3.0.45+)|PlantUML-Browser-Rendering#how-rendering-runs-3045]]. |
+ | `BrowserRenderCacheMegabytes` | `int` | `64` | `BrowserJs` only. Byte bound of the page's rendered-SVG cache keyed by fragment source; every successful render fills it, so a note/assertion/step toggle that re-splits a big diagram is mostly cache hits (the toggle paths also prefetch their new fragments in parallel). Oldest entries go first; `0` disables it. |
+-| `NotePayloadFormat` | `NotePayloadFormat` | `Yaml` (`Json` before 4.0.0) | `BrowserJs` only. Initial display format for JSON note payloads in sequence diagrams. `Yaml` starts every eligible JSON payload in the derived YAML view (SQL and other embedded multi-line strings render as block scalars); readers can still switch any note — or all of them via the JSON/YAML toolbar dropdowns — either way in the report itself. `kronikol ingest --note-format yaml` sets it from the CLI. Since 3.0.80 this is also settable per report via the toggle-defaults groups (a group value wins over this flat option) — see [Toggle Default Start States](#toggle-default-start-states). |
++| `NotePayloadFormat` | `NotePayloadFormat` | `Yaml` (`Json` before 4.0.0) | `BrowserJs` only. Initial display format for JSON note payloads in sequence diagrams. `Yaml` starts every eligible JSON payload in the derived YAML view (SQL and other embedded multi-line strings render as block scalars); readers can still switch any note, or all of them with the Payload format dropdowns (the JSON/YAML toolbar dropdowns before 5.0.0), either way in the report itself. `kronikol ingest --note-format yaml` sets it from the CLI. Since 3.0.80 this is also settable per report via the toggle-defaults groups (a group value wins over this flat option); see [Toggle Default Start States](#toggle-default-start-states). |
+ | `DiagramNoteWrapWidth` | `int` | `800` | How wide, in pixels, a sequence-diagram note body is drawn before PlantUML breaks it at a space (`skinparam wrapWidth`). Raise it when your notes carry wide content — analytics SQL, XML, tabular text. This is the **only** note-width control that reaches `Server`, `Local`, `NodeJs` and a source a reader copies out of the report, because the per-note full-width toggle is client-side; under `BrowserJs` it sets the width every note *starts* at and readers can still widen individual notes. Valid range **720–4096** — the floor is the width a form-url-encoded note chunk needs to stay on one drawn line, the ceiling is PlantUML's own `PLANTUML_LIMIT_SIZE`, past which a **rasterised** diagram (a PNG render, or a source pasted into plantuml.com) is silently cropped. A value outside it fails report generation with the range in the message. (3.0.85+) |
+-| `TestRunReportToggleDefaults` | `ReportToggleDefaults` | all unset | Default start states for the interactive report controls (Details radio, truncate lines, headers/assertions/steps/databases toggles, note format, expand states, diagram tab, panels, filter modes, disclosure sections). Applies to the HTML test run report AND, unless a property is specifically overridden via `SpecificationsToggleDefaults`, to `Specifications.html`. Every property is nullable; `null` = built-in default. See [Toggle Default Start States](#toggle-default-start-states). (3.0.80+) |
++| `TestRunReportToggleDefaults` | `ReportToggleDefaults` | all unset | Default start states for the interactive report controls (Payloads and its line count, the Headers, Assertions, Steps, Databases, Events and Setup toggles, payload format and width, expand states, diagram view tab, the tab the page opens on, the Features tab's view, filter modes, disclosure sections; 5.0.0 made the panels tabs). Applies to the HTML test run report AND, unless a property is specifically overridden via `SpecificationsToggleDefaults`, to `Specifications.html`. Every property is nullable; `null` = built-in default. See [Toggle Default Start States](#toggle-default-start-states). (3.0.80+) |
+ | `SpecificationsToggleDefaults` | `ReportToggleDefaults` | all unset | `Specifications.html` overrides for `TestRunReportToggleDefaults`. Any property left `null` inherits the effective TestRunReport value. See [Toggle Default Start States](#toggle-default-start-states). (3.0.80+) |
+ | `BrowserFragmentMaxHeight` | `int` | `12000` | `BrowserJs` only. Estimated rendered height in px (45 per arrow, 18 per note line) at which the browser splits one diagram into separately rendered fragments. The default is the fastest height measured on the current engine (3.31.1): at 4,000 px a note-heavy report took 56–66 % longer to render and 41–77 % longer to re-render on a note toggle, with three times the fragment seams. See [[Large Response and Diagram Handling]]. |
+ | `LocalDiagramRenderer` | `Func<string, PlantUmlImageFormat, byte[]>?` | `null` | Function that renders PlantUML text to image bytes locally. Required when `PlantUmlRendering` is `Local`. Use `IkvmPlantUmlRenderer.Render` from the `Kronikol.PlantUml.Ikvm` package. See [[Integration PlantUML IKVM]]. |
+@@ -172,18 +172,18 @@ The `SpecificationsDataFormat` controls the format of the machine-readable speci
+ | `CollapseRepeatedStepKeywords` | `bool` | `true` | When `true`, a step repeating the primary keyword already in force displays as `And` — a background `Given` followed by a scenario `Given` reads `Given / And`. Rendering only: every data output emits the keyword the producer recorded. Localised Gherkin keywords are not recognised and pass through unchanged. See [[Step Tracking › Background Steps|Step-Tracking#background-steps]]. (3.0.48+) |
+ | `RenderCollapsedSubStepsOnExpand` | `bool` | `true` | From 5.0.0. When `true`, the sub-steps of a closed composite step whose HTML comes to 2 KB or more are held gzipped in the page, on both HTML reports, and drawn the first time the step is opened, so a report of deeply nested composite steps stays small. A step on the way to a failure is drawn and open as before, the report's search box still finds a word in a step nobody opened, and Export Filtered HTML carries the steps it needs. A browser that cannot decompress them (Chrome before 80, Firefox before 113, Safari before 16.4) shows a line saying so in their place. The browser's own find (Ctrl+F) cannot see a step nobody opened: set it to `false` to draw every step as 4.x did. |
+ | ~~`InlineBackgroundSteps`~~ | `bool` | `false` | **Deprecated** — was never read by any code path. Background steps are inlined by default now; set `SeparateBackgroundSteps = true` for the old separate section. Setting it produces an `[Obsolete]` compiler warning. |
+-| `CustomCss` | `string?` | `null` | Extra CSS injected in a separate `<style>` block after the default stylesheet. Allows customising report appearance without replacing the entire stylesheet. |
++| `CustomCss` | `string?` | `null` | Extra CSS injected in a separate `<style>` block after the default stylesheet. Allows customising report appearance without replacing the entire stylesheet. From 5.0.0 the report's colours and type are CSS custom properties with a light and a dark value, which this sheet can set again; a sheet written against 4.x's rules or colours may no longer apply where 5.0.0 changed the markup. See [[Report Themes]]. |
+ | `CustomFaviconBase64` | `string?` | `null` | Base64-encoded data URI for a custom favicon. Set to e.g. `"data:image/png;base64,ABC123..."` to override the browser tab icon. |
+ | `CustomLogoHtml` | `string?` | `null` | Raw HTML injected inside a `<div class="custom-logo">` before the report title `<h1>`. Useful for adding a company logo, e.g. `"<img src='data:image/png;base64,...' alt='Logo'>"`. |
+ | `ActivitySourceDiscovery` | `bool` | `false` | When `true`, report diagnostics include a list of all discovered `ActivitySource` names and their span counts. Helps identify which OpenTelemetry sources are producing data. See [[Diagnostics and Debugging]]. |
+ | `DiagnosticMode` | `bool` | `false` | When `true`, generates a `DiagnosticReport.html` file alongside normal reports containing configuration dumps, log counts, unpaired requests, orphaned test IDs, and activity source discovery. See [[Diagnostics and Debugging]]. |
+-| `ShowReportDiagnosticsSection` | `bool` | `false` | Also render the **"Report diagnostics"** section in `TestRunReport.html`: the collapsed list of what the run recorded about itself (a tap whose decoder gave up, a skipped capture line, a render that failed). Off by default since 3.21.0, because on a healthy run it is a line of noise above the features. The same list is on the labs page beside the report whenever the run recorded an entry (`GenerateLabsReport`, 4.6.0), and every diagnostic still reaches `IngestResult.Diagnostics`, the `diagnostics` array of `TestRunReport.json` and the console. `ReportToggleDefaults.DiagnosticsOpen` decides whether the report's section starts open and is inert while this is `false`; the labs page's list is always open. See [[Diagnostics and Debugging]]. Since 3.21.0. |
++| `ShowReportDiagnosticsSection` | `bool` | `true` (`false` from 3.21.0 to 4.x) | Give `TestRunReport.html` a **Diagnostics** tab when the run recorded something about itself (a tap whose decoder gave up, a skipped capture line, a render that failed): the list, open in its tab, with the count of its entries on the tab. A healthy run has nothing to list and no tab. `false` leaves the tab out (`kronikol ingest --no-diagnostics-section`). From 3.21.0 to 4.x it was off by default, because the list was a collapsed section above the features, a line of noise on a healthy run, and `ReportToggleDefaults.DiagnosticsOpen` set whether it started open; in the tab that setting has nothing to open. The same list is on the labs page beside the report whenever the run recorded an entry (`GenerateLabsReport`, 4.6.0), where it is always open, and every diagnostic still reaches `IngestResult.Diagnostics` and the `diagnostics` array of the data file, and `kronikol ingest` prints every one. See [[Diagnostics and Debugging]]. Since 3.21.0; the tab and the default since 5.0.0. |
+ | `GroupParameterizedTests` | `bool` | `true` | When `true`, parameterized tests (e.g. `[Theory]`, `[TestCase]`, `Scenario Outline`) that share the same test method are grouped into a single collapsible entry with a parameter table. Each row shows the input parameters, status, and duration. Clicking a row switches the detail panel, sequence diagrams, and whole-test-flow visualisations. When `false`, parameterized tests render individually (except tests with a shared `OutlineId`, which are always grouped). Even single-instance parameterized tests (e.g. a single `[InlineData]`) are rendered in table format when they have parameters. See [[Generated Reports › Parameterized Test Grouping|Generated-Reports#parameterized-test-grouping]]. |
+ | `MaxParameterColumns` | `int` | `10` | Maximum number of parameter columns to display in the R1 (scalar columns) layout. When a parameterized group has more parameters than this limit, the table falls back to R0 (full display name) layout. This prevents excessively wide tables when test methods have many parameters. Only applies when `GroupParameterizedTests` is `true`. |
+ | `TitleizeParameterNames` | `bool` | `true` | When `true`, parameter names in column headers are titleized (e.g. `region` → `Region`, `firstName` → `First Name`). When `false`, raw parameter names from the test framework are displayed as-is. |
+ | `GenerateSpecificationsReport` | `bool` | `true` | When `false`, skips generating the HTML specifications report. |
+ | `GenerateTestRunReport` | `bool` | `true` | When `false`, skips generating the HTML test run report. |
+-| `GenerateLabsReport` | `bool` | `true` | Write the labs page beside the report, `{HtmlTestRunReportFileName}.labs.html` (`TestRunReport.labs.html` by default): the views a default report does not carry while their design is worked out. It holds the History section and every scenario's sparkline and verdict when the run read history and `EmbedHistoryInReport` is on, and the Report diagnostics list when the run recorded a diagnostic; with neither, no page is written. It has no script, and its scenario names link into the report. See [[Generated Reports › TestRunReport.labs.html|Generated-Reports#testrunreportlabshtml]]. Since 4.6.0. |
++| `GenerateLabsReport` | `bool` | `true` | Write the labs page beside the report, `{HtmlTestRunReportFileName}.labs.html` (`TestRunReport.labs.html` by default): the history and diagnostics views on a page of their own, while their design is worked out. It holds the History section and every scenario's sparkline and verdict when the run read history and `EmbedHistoryInReport` is on, and the Report diagnostics list when the run recorded a diagnostic; with neither, no page is written. From 5.0.0 the report itself has History and Diagnostics tabs as well (`ShowHistorySection`, `ShowReportDiagnosticsSection`), and the page opens in the report's light or dark theme: of the report's scripts it runs only the theme's two, where before 5.0.0 it had no script. Its scenario names link into the report. See [[Generated Reports › TestRunReport.labs.html|Generated-Reports#testrunreportlabshtml]]. Since 4.6.0. |
+ | `GenerateSpecificationsData` | `bool` | `true` | When `false`, skips generating the specifications data file (YAML/JSON/XML). |
+ | `GenerateTestRunReportData` | `bool` | `true` | When `false`, skips generating the test run report data file. |
+ | `CompressTestRunReportPayloads` | `bool` | `true` (`false` before 4.0.0) | When `true` (and the data format is JSON), a captured body or a diagram's PlantUML source of 8,192 characters or more (512 in 4.0.0 and 4.0.1) is written in `TestRunReport.json` as `{"$h", "$n", "$z"}` in place of its text, unless that would not make it smaller: `$z` is the base64 of the gzip of the text's UTF-8, `$h` its `b:` address and `$n` its length. A file holding one declares `formatVersion` 2. `kronikol query`, `kronikol merge` and the skill's `query.py` from 3.35.0 read it as they read the plain form; an older `kronikol` refuses it and says to upgrade. See [[Generated Reports › Compressed payloads|Generated-Reports#compressed-payloads-3350]] (3.35.0, #85; the default becomes `true` at 4.0.0). **Obsolete from 5.0.0** (warning CS0618), and removed in v6: it applies only to the `TestRunReport.json` a run writes with `CompressTestRunReport = false`, since a `.krkl` holds every payload as text inside a file compressed whole. |
+@@ -210,13 +210,13 @@ The `SpecificationsDataFormat` controls the format of the machine-readable speci
+ | `HistoryPartialThreshold` | `double` | `0.10` | The share of the previous run's scenarios a run may lack before it is recorded as partial. Since 3.9.0. |
+ | `HistoryPartialRun` | `bool?` | `null` | Say outright whether the run is partial; `null` applies the threshold. Since 3.9.0. |
+ | `HistoryBranch` | `string?` | `null` | The branch stream to read the run against. Null: on a pull request build, the branch the pull request targets (`GITHUB_BASE_REF` on GitHub Actions, `SYSTEM_PULLREQUEST_TARGETBRANCH` on Azure DevOps); otherwise the run's own branch. An empty string is the run's own branch even on a pull request build; any other value names the stream to read against. The run's own line still records under its own branch. Since 3.12.0, the pull-request default since 3.13.0. |
+-| `HistoryCompareBranch` | `string?` | `null` | A second stream to read the same run against, reported beside the run's own reading on the digest, the pointer and the History section (`on main: 1 broke (against 12 earlier runs on main)`), which is on the labs page beside the report and, with `ShowHistorySection`, in the report. Since 3.12.0. |
++| `HistoryCompareBranch` | `string?` | `null` | A second stream to read the same run against, reported beside the run's own reading on the digest, the pointer and the History section (`on main: 1 broke (against 12 earlier runs on main)`), which is on the labs page beside the report and in the report's History tab (`ShowHistorySection`, on by default from 5.0.0). Since 3.12.0. |
+ | `HistoryReordered` | `bool` | `false` | Whether the same calls in a different order is a verdict (`reordered`); off because parallel steps reorder calls run to run. Since 3.9.0. |
+ | `GenerateHistoryFragment` | `bool` | `true` | Write `History.run.json` beside the report — the run's own line of history, which `kronikol history record` folds into the ledger. Since 3.9.0. |
+ | `WriteHistoryLedger` | `bool?` | `null` | Append the run's line to the ledger: `null` appends when the ledger was named explicitly or the run is not on CI (a CI checkout is discarded; its fragments are what the workflow records); `true` always; `false` never. Since 3.9.0. |
+-| `EmbedHistoryInReport` | `bool` | `true` | Whether the history the run read reaches its HTML: the labs page beside the report (`GenerateLabsReport`) and the report's own opt-ins (`ShowScenarioHistory`, `ShowHistorySection`). `false` keeps history out of both; `Failures.md`, the CTRF document, the console pointer, `History.run.json` and the ledger are not affected. A run with no ledger to read (history off, or no ledger found) has no history to show either way; one whose ledger file does not exist yet reads it as empty and shows its own first run. Before 4.6.0 it drew a sparkline and verdict pill beside each scenario of every report that read a ledger. Since 3.9.0. |
+-| `ShowHistorySection` | `bool` | `false` | Also render the **History** section in `TestRunReport.html`, beside the timeline: the run's summary line, the trend of the last runs, and the lists of what changed. Off by default since 3.21.0, because a run where nothing changed still has a section saying so. The section is on the labs page beside the report whenever the run read history (`GenerateLabsReport`, 4.6.0), and the history a run read is still in `Failures.md`, the CTRF document, the pointer and `kronikol query history`. Needs `EmbedHistoryInReport`. Since 3.21.0. |
+-| `ShowScenarioHistory` | `bool` | `false` | Put each scenario's history back in `TestRunReport.html`: in its header a sparkline of the last runs and a pill for a verdict that is not `stable`, the `data-history-verdicts` attribute the search box reads for `$flaky`, `$broke` and the other verdict operators, and the stylesheet rules and search code they need. Off by default: since 4.6.0 a default report carries no history, and the same sparklines and verdicts are on the labs page beside it. Set it to keep the report 4.5.x drew. Needs `EmbedHistoryInReport` and a ledger. See [[Cross-Run History]]. Since 4.6.0. |
++| `EmbedHistoryInReport` | `bool` | `true` | Whether the history the run read reaches its HTML: the labs page beside the report (`GenerateLabsReport`), the report's History tab (`ShowHistorySection`) and each scenario's history in the report (`ShowScenarioHistory`). `false` keeps history out of all three; `Failures.md`, the CTRF document, the console pointer, `History.run.json` and the ledger are not affected. A run with no ledger to read (history off, or no ledger found) has no history to show either way; one whose ledger file does not exist yet reads it as empty and shows its own first run. Before 4.6.0 it drew a sparkline and verdict pill beside each scenario of every report that read a ledger. Since 3.9.0. |
++| `ShowHistorySection` | `bool` | `true` (`false` from 3.21.0 to 4.x) | Give `TestRunReport.html` a **History** tab when the run read history: the run's summary line, the trend of the last runs, and the lists of what changed, open in its tab, each scenario linked to its place on the Features tab. Nothing of history is in the features unless `ShowScenarioHistory` asks. `false` leaves the tab out. From 3.21.0 to 4.x it was off by default, since it drew the History section above the features, beside the timeline, and a run where nothing changed still had a section saying so. The section is on the labs page beside the report whenever the run read history (`GenerateLabsReport`, 4.6.0), and the history a run read is still in `Failures.md`, the CTRF document, the pointer and `kronikol query history`. Needs `EmbedHistoryInReport`. Since 3.21.0; the tab and the default since 5.0.0. See [[Cross-Run History › In the HTML|Cross-Run-History#in-the-html-460]]. |
++| `ShowScenarioHistory` | `bool` | `false` | Put each scenario's history back in `TestRunReport.html`: in its header a sparkline of the last runs and a pill for a verdict that is not `stable`, the `data-history-verdicts` attribute the search box reads for `$flaky`, `$broke` and the other verdict operators, and the stylesheet rules and search code they need. Off by default: since 4.6.0 a default report's features carry no history (from 5.0.0 the run's history is the report's History tab, `ShowHistorySection`), and the same sparklines and verdicts are on the labs page beside it. Set it to keep the scenario headers 4.5.x drew. Needs `EmbedHistoryInReport` and a ledger. See [[Cross-Run History]]. Since 4.6.0. |
+ | `WriteAgentInstructions` | `bool` | `true` | When `true`, writes byte-identical `CLAUDE.md` and `AGENTS.md` files into the reports directory, telling an AI agent to read `Failures.md` and use [`kronikol query`](Querying-Reports) rather than open the report. Static text — no scenario names, no captured content — because an instruction file carrying attacker-influenceable text is a prompt-injection channel. Since 3.1.0. From 4.27.1 the rule never to open the data file names the one the run wrote: `TestRunReport.xml` or `TestRunReport.yml` when `TestRunReportDataFormat` is XML or YAML (it named the JSON file whatever the format). |
+ | `WriteQueryScript` | `bool` | `true` | When `true`, writes `query.cs` into the reports directory beside a JSON data file (3.32.0): `kronikol query` for a machine where the tool is not installed and cannot be, such as an AI agent's session that may not install tools or reach the NuGet feed. From the reports directory, `dotnet run --file query.cs -- summary .` prints what `kronikol query summary .` prints, because it runs the same engine: the `Kronikol` that wrote the report, loaded from the test run's output or the NuGet cache. It restores and downloads nothing, and needs the .NET 10 SDK. Never written into a folder a C# project would compile (below one holding a `.csproj`, outside its `bin`, its `obj` and any folder whose name starts with a dot, such as `.logs/kronikol/`, unless the project leaves the folder out); the run records an `OptionNotApplied` diagnostic instead. A `query.cs` Kronikol did not write is left alone. See [Querying Reports](Querying-Reports#with-nothing-installed-and-no-network-querycs-3320) |
+ | `WriteRunSummaryToConsole` | `bool` | `true` | When `true`, the run prints one closing block naming the reports directory, the size of the data file, the failing scenarios and the `kronikol query failures` command that explains them. Paths, counts, `stableId`s and scenario names only — never a message, a URI or a body, because CI logs are read far more widely than artifacts. On GitHub Actions a matching `::notice` annotation follows. The console is a best-effort channel rather than a guaranteed one: measured on .NET 10, every VSTest-hosted runner under `dotnet test` swallows what a library writes from a run-end hook, at `detailed` verbosity too (xUnit v3 through its VSTest adapter, measured again on 2026-10-13), and TUnit's runner suppresses it at any verbosity. A directly run MTP host, `kronikol merge` and `kronikol ingest` own their stdout and show it. That is why `GenerateFailuresDigest` and `WriteAgentInstructions` write *files*. On GitHub Actions the job summary is a file the runner reads, so it arrives too; Azure DevOps takes its summary as a logging command on stdout, which `dotnet test` swallows. Since 3.1.0. |
+@@ -229,36 +229,45 @@ Since 3.0.80, every toggle, radio group and stateful `<select>` in the generated
+ 
+ ```csharp
+ options.TestRunReportToggleDefaults.Details = ReportDetailsState.Expanded;   // both reports
+-options.TestRunReportToggleDefaults.AssertionsShown = true;                  // both reports
++options.TestRunReportToggleDefaults.HeadersShown = true;                     // both reports
+ options.SpecificationsToggleDefaults.Details = ReportDetailsState.Truncated; // Specifications.html only
+ ```
+ 
+ Resolution per setting, most specific wins: **built-in default ← `TestRunReportToggleDefaults` (when set) ← `SpecificationsToggleDefaults` (when set; Specifications.html only)**. `Specifications.html` inherits the TestRunReport values automatically unless a property is specifically overridden — unlike the older flat pairs (`SpecificationsShowStepNumbers`, `SpecificationsDataFormat`, …), which are independent values.
+ 
++From 5.0.0 every diagram toggle but Headers starts on, payloads start Truncated at 10 lines, and the dependency filter
++starts on ANY (`Or`). 4.x hid assertion notes, truncated at 40 lines and started the dependency filter
++on ALL (`And`). To open a report as 4.x did, set `AssertionsShown` to `false`, `TruncateLines` to
++`TruncateLineCount.Lines40` and `DependencyFilterMode` to `FilterCombinationMode.And`. 5.0.0 also turned the
++report's panels into tabs, so the settings that showed a panel now choose the tab the page opens on
++([[Migrating to v5: the report|Migrating-to-v5-Report]]).
++
+ ### Settings
+ 
+ | Property | Type | Built-in | Seeds |
+ |---|---|---|---|
+-| `Details` | `ReportDetailsState?` | `Truncated` | *BrowserJs only.* The Details radio (Expand / Collapse / Truncate) at report and scenario level, including the zero-click render. A non-truncated default also disables the truncate-lines dropdowns until Truncate is picked, exactly as clicking does. |
+-| `TruncateLines` | `TruncateLineCount?` | `Lines40` | *BrowserJs only.* The truncate-lines dropdowns — one of the dropdown's existing presets (`Lines3` … `Lines100`; the enum is the single source of truth for the option list, so off-preset values are unrepresentable by design). An undefined cast like `(TruncateLineCount)37` fails report generation with an error naming the valid members. |
+-| `HeadersShown` | `bool?` | `false` (`true` before 4.0.0) | *BrowserJs only.* The Headers Shown/Hidden toggle and whether note header lines render. `kronikol ingest --headers shown\|hidden` sets it (3.36.0+). |
+-| `AssertionsShown` | `bool?` | `false` | *BrowserJs only.* The Assertions toggle (emitted only when assertion notes exist). |
++| `Details` | `ReportDetailsState?` | `Truncated` | *BrowserJs only.* The Payloads radio (Expanded / Collapsed / Truncated; before 5.0.0 the Details radio, Expand / Collapse / Truncate) at report and scenario level, including the zero-click render. A start other than `Truncated` hides the line count until Truncated is picked, exactly as clicking does (before 5.0.0 it disabled the truncate-lines dropdowns). |
++| `TruncateLines` | `TruncateLineCount?` | `Lines10` (`Lines40` before 5.0.0) | *BrowserJs only.* The line count, "N lines" under the "Payload length" heading (the truncate-lines dropdowns before 5.0.0): one of the dropdown's presets (`Lines3` … `Lines100`; the enum is the single source of truth for the option list, so off-preset values are unrepresentable by design). An undefined cast like `(TruncateLineCount)37` fails report generation with an error naming the valid members. |
++| `HeadersShown` | `bool?` | `false` (`true` before 4.0.0) | *BrowserJs only.* The Headers toggle and whether note header lines render. `kronikol ingest --headers shown\|hidden` sets it (3.36.0+). |
++| `AssertionsShown` | `bool?` | `true` (`false` through 4.x) | *BrowserJs only.* The Assertions toggle (emitted only when assertion notes exist). |
+ | `StepsShown` | `bool?` | `true` | *BrowserJs only.* The Steps toggle (emitted only when step-delimiter bars exist). |
+ | `DatabasesShown` | `bool?` | `true` | *BrowserJs only.* The Databases toggle (emitted only when database participants exist). |
+-| `NotePayloadFormat` | `NotePayloadFormat?` | `null` → flat option | *BrowserJs only.* The JSON ⇄ YAML note format. `null` falls back to the flat `NotePayloadFormat` option (which stays the simple both-reports knob); a group value wins when set — the one way the two reports can start in different note formats. |
+-| `NoteWidth` | `NoteWidthMode?` | `Default` | *BrowserJs only.* The width notes start at. `Default` is the **Wrap** state of the note-width dropdown and `Full` is **Wide** (the dropdown read `Fit` / `Full` before 3.22.0). `Full` widens every note to fill its diagram's container on first paint, which changes every diagram's geometry — worth choosing deliberately. The target is measured from the drawn diagram's slack, so it fits the container rather than overflowing it (`svg { max-width: 100% }` scales an over-wide diagram *down*, so past the container wider text is smaller text). (3.0.85+) |
+-| `FeaturesExpanded` | `bool?` | `false` | Feature sections start open, with the *Expand All Features* button seeded to its flip label. |
+-| `ScenariosExpanded` | `bool?` | `false` | Scenario sections (plain and parameterized) start open, with the button seeded. Opening every scenario on a huge report starts lazy diagram rendering for the viewport immediately — it trades first-paint work for click-free reading. |
+-| `DiagramTab` | `DiagramTabKind?` | `Sequence` | Which diagram-type tab (Sequence / Activity / Flame Chart) a scenario's diagram section starts on — honoured where that view exists for the scenario, with the built-in fallback order (sequence, then activity) otherwise. |
+-| `ScenarioTimelineVisible` | `bool?` | `false` | The Scenario Timeline panel starts visible (when duration data exists). |
+-| `ComponentDiagramVisible` | `bool?` | `false` | The embedded Component Diagram panel starts visible (test run report only). The two panels are mutually exclusive: when both are configured visible, the timeline wins and the component diagram stays one click away. |
+-| `DependencyFilterMode` | `FilterCombinationMode?` | `And` | The dependency filter's AND/OR mode button, the mode the first filtering uses, what *Clear All* resets to, and the URL-hash grammar (see below). |
++| `EventsShown` | `bool?` | `true` | *BrowserJs only.* The Events toggle (5.0.0), emitted only when some diagram has a participant drawn as a queue: the calls to and from message brokers (such as Kafka, Event Hubs, Pub/Sub, Service Bus, SQS and SNS) and their payloads. |
++| `SetupShown` | `bool?` | `true` | *BrowserJs only.* The Setup toggle (5.0.0), emitted only when some diagram has a setup to take out: a scenario's Setup frame where the report keeps setup apart (`SeparateSetup`), otherwise everything before its first When step, with the participants only the setup called. |
++| `NotePayloadFormat` | `NotePayloadFormat?` | `null` → flat option | *BrowserJs only.* The JSON ⇄ YAML note format, which the Payload format dropdown shows. `null` falls back to the flat `NotePayloadFormat` option (which stays the simple both-reports knob); a group value wins when set, the one way the two reports can start in different note formats. |
++| `NoteWidth` | `NoteWidthMode?` | `Default` | *BrowserJs only.* The width notes start at. `Default` is the **Wrap** state of the Payload width dropdown and `Full` is **Wide** (the dropdown read `Fit` / `Full` before 3.22.0). `Full` widens every note to fill its diagram's container on first paint, which changes every diagram's geometry, so it is worth choosing deliberately. The target is measured from the drawn diagram's slack, so it fits the container rather than overflowing it (`svg { max-width: 100% }` scales an over-wide diagram *down*, so past the container wider text is smaller text). (3.0.85+) |
++| `FeaturesExpanded` | `bool?` | `false` | Feature sections start open, and the Features tools' expand button for features starts dimmed, with nothing to do (5.0.0; before, the *Expand All Features* button was seeded to its flip label). |
++| `ScenariosExpanded` | `bool?` | `false` | Scenario sections (plain and parameterized) start open, and the expand button for scenarios starts dimmed (5.0.0; before, its button was seeded to its flip label). Opening every scenario on a huge report starts lazy diagram rendering for the viewport immediately: it trades first-paint work for click-free reading. |
++| `DiagramTab` | `DiagramTabKind?` | `Sequence` | Which view tab (Sequence Diagrams / Activity Diagrams / Flame Chart) a scenario's diagrams start on, honoured where that view exists for the scenario, with the built-in fallback order (sequence, then activity) otherwise. |
++| `ScenarioTimelineVisible` | `bool?` | `false` | The page opens on the Timeline tab (when duration data exists). Before 5.0.0, the Scenario Timeline panel started visible. When this and `ComponentDiagramVisible` are both set, the timeline wins. |
++| `ComponentDiagramVisible` | `bool?` | `false` | The page opens on the Components tab (test run report only, when the report has one). Before 5.0.0, the embedded Component Diagram panel started visible. |
++| `DependencyFilterMode` | `FilterCombinationMode?` | `Or` (`And` before 5.0.0) | The Dependencies row's ANY/ALL switch (`Or` is ANY, a scenario with any of the chosen dependencies), the mode the first filtering uses, what *Clear All* resets to, and the URL-hash grammar (see below). |
+ | `TagFilterMode` | `FilterCombinationMode?` | `Or` | The Tags row's ANY/ALL switch (`Or` is ANY), same surfaces (5.0.0). It replaces `CategoryFilterMode`, which seeded the Categories row's AND/OR mode before 5.0.0. |
+-| `FeaturesSummaryOpen` | `bool?` | `false` | The Features Summary table disclosure (test run report only). |
+-| `FailureClustersOpen` | `bool?` | `true` | The Failure Clusters disclosure. |
++| `FeaturesSummaryOpen` | `bool?` | `false` | The Features tab opens on its Summary view, the features table (test run report only). Before 5.0.0, the Features Summary table disclosure above the run's summary started open. |
++| `FailureClustersOpen` | `bool?` | `true` | The Failure Clusters disclosure (at the top of the Features tab from 5.0.0). |
+ | `StepsSectionOpen` | `bool?` | `true` | Every scenario's **Steps** disclosure. |
+ | `DiagramsSectionOpen` | `bool?` | `true` | Every scenario's diagrams disclosure. |
+-| `DiagnosticsOpen` | `bool?` | `false` | The report-diagnostics disclosure (test run report only). Inert unless `ShowReportDiagnosticsSection` renders the section, which it does not by default from 3.21.0. The labs page's list is always open (4.6.0). |
++| `DiagnosticsOpen` | `bool?` | `false` | Nothing from 5.0.0: the report diagnostics are the Diagnostics tab, always open in it. Before 5.0.0, the report-diagnostics disclosure (test run report only), inert unless `ShowReportDiagnosticsSection` rendered the section, which it did not by default from 3.21.0. The labs page's list is always open (4.6.0). |
+ | `RulesOpen` | `bool?` | `true` | Gherkin `Rule:` sections. |
+ | `BackgroundStepsOpen` | `bool?` | `false` | The separate **Background Steps** disclosure (only emitted with `SeparateBackgroundSteps`). |
+ | `RawPlantUmlOpen` | `bool?` | `false` | The Raw Plant UML disclosure under each diagram image (`Server`/`Local` rendering modes only). |
+@@ -270,9 +279,21 @@ A setting whose control a given report does not emit — a different rendering m
+ ### Semantics worth knowing
+ 
+ - **Defaults govern the initial state only.** After any interaction the page state is whatever the interaction leaves, exactly as with the built-ins. Search still collapses non-matching scenarios and force-opens a single match (including its steps and diagrams sections, and an enclosing rule, if a configured default closed them); *Clear All* does not restore `open` states. There is no "return to configured defaults" button.
+-- **Zero-click rendering follows the seed.** The configured state drives the render pipeline itself, not just the buttons — an `AssertionsShown = true` report draws assertion notes on first paint.
+-- **URL-hash grammar** (changes even for non-adopters, 3.0.80): the hash omits `depmode`/`tagmode` when the mode equals the *configured* default (previously the built-in), and `parse_url_hash` now accepts both values symmetrically — `depmode=AND` and `tagmode=OR`, previously ignored, are valid, so a deep link from an AND-default report forces AND on an OR-default report. Before 5.0.0 the category filter's mode was `catmode`; a link that carries it, and no `tagmode`, sets the tag mode. *Clear All* resets the modes to the configured defaults, never to hard-coded AND/OR. Since 3.1.0 a `#scenario-`/`#sid-` anchor may lead the hash (`#sid-<id>&status=Failed`); filter rewrites and *Clear All* both preserve it — see [Generated Reports › Deep links](Generated-Reports#deep-links-scenario--and-sid-).
+-- **Deep search vs seeded-hidden diagram content:** the search index is generation-time and state-independent, so a hit can land on content a seeded state strips from the rendered diagram (e.g. database notes with `DatabasesShown = false`) — the same class of behaviour assertions have always had (hidden by default, still searchable). The toggle that re-reveals the content is the one named by the setting.
++- **Zero-click rendering follows the seed.** The configured state drives the render pipeline itself, not just the
++  buttons: an `AssertionsShown = false` report draws no assertion note on first paint.
++- **URL-hash grammar** (changes even for non-adopters, 3.0.80): the hash omits `depmode`/`tagmode` when the mode
++  equals the *configured* default (previously the built-in), and `parse_url_hash` now accepts both values
++  symmetrically: `depmode=AND` and `tagmode=OR`, previously ignored, are valid, so a deep link from an AND-default
++  report forces AND on an OR-default report. A link with no `depmode` takes the report's configured mode, so a link a
++  default 4.x report wrote for AND (it wrote no `depmode`) opens on OR in a default 5.0.0 report. Before 5.0.0 the
++  category filter's mode was `catmode`; a link that carries it, and no `tagmode`, sets the tag mode. *Clear All*
++  resets the modes to the configured defaults, never to hard-coded AND/OR. Since 3.1.0 a `#scenario-`/`#sid-` anchor
++  may lead the hash (`#sid-<id>&status=Failed`); filter rewrites and *Clear All* both preserve it. See
++  [Generated Reports › Deep links](Generated-Reports#deep-links-scenario--and-sid-).
++- **Deep search vs seeded-hidden diagram content:** the search index is generation-time and state-independent, so a
++  hit can land on content a seeded state strips from the rendered diagram (e.g. database notes with
++  `DatabasesShown = false`), as it can on hidden assertion notes, which stay searchable. The toggle that re-reveals
++  the content is the one named by the setting.
+ - **Merged reports** (`kronikol merge`) resolve toggle defaults from the merge-time options record, like every other option on the merge path.
+ - **Firefox form restoration:** every seeded control keeps `autocomplete="off"` (the 3.0.68 rule), so what a control reads is always what the report is doing.
+ 
+@@ -283,8 +304,8 @@ var options = new ReportConfigurationOptions
+ {
+     TestRunReportToggleDefaults =
+     {
+-        AssertionsShown = true,             // both reports draw assertion notes
+-        DependencyFilterMode = FilterCombinationMode.Or
++        AssertionsShown = false,            // both reports hide assertion notes, as 4.x did
++        DependencyFilterMode = FilterCombinationMode.And
+     },
+     SpecificationsToggleDefaults =
+     {
+@@ -294,4 +315,5 @@ var options = new ReportConfigurationOptions
+ };
+ ```
+ 
+-`TestRunReport.html` starts truncated with assertions shown and OR dependency filtering; `Specifications.html` starts fully expanded with everything else inherited.
++`TestRunReport.html` starts truncated, with assertions hidden and AND dependency filtering; `Specifications.html`
++starts fully expanded with everything else inherited.
+diff --git a/Report-Themes.md b/Report-Themes.md
+new file mode 100644
+index 0000000..d4745f1
+--- /dev/null
++++ b/Report-Themes.md
+@@ -0,0 +1,202 @@
++# Report Themes
++
++A report opens in a light or a dark theme (5.0.0). Every colour it draws comes from a set of CSS custom properties,
++its tokens, so a stylesheet of your own can restyle it by setting them again.
++
++## Light and dark
++
++A report follows the system's light or dark setting, and keeps following it as it changes, until the reader picks a
++theme with the switch at the right of the report's title. The pick then holds, over a reload and over the system's
++setting. The theme is chosen in the page's head, before anything is drawn, so the page never flashes the other theme.
++
++The pick is the one thing a report keeps in the browser: it is stored in local storage as `kronikol.theme`. Where the
++browser refuses the page its storage, the pick holds while the page is open, over the system's setting too, and the
++next load follows the system's setting again.
++
++Only the filters live in the page's link: the search (`q`), `status`, `deps`, `depx`, `depmode`, `hp`, `hpx`, `tags`,
++`tagx`, `tagmode`, `dur` and `pctl`
++([[Generated Reports › Deep links|Generated-Reports#deep-links-scenario--and-sid-]]), beside a scenario's address,
++which opens the Features tab. Nothing else is kept: the display toggles, the payload controls, the tab and what is
++open start from the report's settings on each load
++([[Report Configuration › Toggle Default Start States|Report-Configuration#toggle-default-start-states]]).
++
++A copy of the page opened without its scripts still follows the system's setting, through a
++`prefers-color-scheme` block in the token sheet.
++
++The labs page (`TestRunReport.labs.html`) and the Specifications report take the theme the same way, with the same
++switch on their title line.
++
++## Diagrams
++
++The page draws a diagram in the theme's colours: participants, arrows, notes, step bars, lanes and labels read their
++colours from the `--dg-*` tokens. A copy of a diagram (the right-click menu's Copy, Save and Open in new tab, as SVG
++or PNG) carries the look in the light theme's colours, whichever theme the page shows, so a pasted diagram reads on a
++white document.
++
++## Restyling a report with its tokens
++
++Set the tokens again in a sheet of your own, given as `CustomCss` (see [[Report Configuration|Report-Configuration]]).
++That sheet comes after the report's own sheets, so its values win. Set the light values on `:root`, and the dark
++values twice, as the token sheet does: on `:root[data-theme="dark"]`, which the script in the page's head sets for a
++reader who picked dark and for a page following a dark system setting, and again on `:root:not([data-theme])` under
++`prefers-color-scheme: dark`, for a copy of the page opened without its scripts. A value set on `:root` alone shows
++in the light theme only.
++
++```css
++:root {
++    --kron-accent: #0b6e4f;
++    --kron-selected: #d7efe5;
++    --kron-selected-ink: #0a5c42;
++}
++:root[data-theme="dark"] {
++    --kron-accent: #5fd0a8;
++    --kron-selected: #17362b;
++    --kron-selected-ink: #a8e6cf;
++}
++@media (prefers-color-scheme: dark) {
++    :root:not([data-theme]) {
++        --kron-accent: #5fd0a8;
++        --kron-selected: #17362b;
++        --kron-selected-ink: #a8e6cf;
++    }
++}
++```
++
++Keep text at 4.5:1 or more on the grounds it sits on (`--kron-card`, `--kron-ground`, `--kron-strip`), in both themes.
++
++A sheet written against 4.x's rules or colours may no longer apply where 5.0.0 changed the markup: the features and
++their steps, the failure diff, the parameter table, the run band, the filter rows and the payload controls. Where it
++still applies, it paints the same colours in both themes. Set the tokens instead.
++[[Migrating to v5: the report|Migrating-to-v5-Report]] lists the classes and functions 5.0.0 took out.
++
++### The violet theme
++
++The Specifications report's default sheet, `Stylesheets.VioletThemeStyleSheet` (the default of
++`HtmlSpecificationsCustomStyleSheet`), is a theme written this way. It sets the report's tokens for the light and the
++dark theme in the three blocks above, adds a few variables of its own (`--violet-card`, `--violet-rail`,
++`--violet-edge`, `--violet-solid`, `--violet-solid-hover`) for its cards and its solid violet, and then gives a short
++list of rules their colours from those variables: the violet cards, the hover edges, and the chosen controls in solid
++violet under white. Set `HtmlSpecificationsCustomStyleSheet` to `null` for the Specifications report in the default
++blue.
++
++## Token reference
++
++Every token, with its value in each theme. The page tokens colour the report itself; the diagram tokens colour what
++the page draws in a diagram.
++
++### Page tokens (`--kron-*`)
++
++| Token | Light | Dark |
++|---|---|---|
++| `--kron-accent` | `#2559c7` | `#7ea6f2` |
++| `--kron-selected` | `#dce8fb` | `#1f3254` |
++| `--kron-selected-ink` | `#1d4fb0` | `#b0c9fb` |
++| `--kron-selected-edge` | `#6a8fd9` | `#5b82cf` |
++| `--kron-accent-rail` | `rgba(37, 89, 199, .18)` | `rgba(126, 166, 242, .30)` |
++| `--kron-hover` | `#edf1f8` | `#222b38` |
++| `--kron-ground` | `#ebeef4` | `#0e131a` |
++| `--kron-card` | `#ffffff` | `#171d26` |
++| `--kron-strip` | `#f8fafd` | `#1b222c` |
++| `--kron-strip-edge` | `#d3d9e3` | `#323c4b` |
++| `--kron-field` | `#f2f5f9` | `#1f2732` |
++| `--kron-quiet` | `#f7f9fc` | `#1b222c` |
++| `--kron-quiet-edge` | `#d3d9e3` | `#323c4b` |
++| `--kron-hairline` | `#d0d7e2` | `#343e4d` |
++| `--kron-hairline-soft` | `#e2e7ee` | `#262f3b` |
++| `--kron-divider` | `#cdd4df` | `#384354` |
++| `--kron-divider-soft` | `#dde2ea` | `#2b3440` |
++| `--kron-control-border` | `#aeb7c6` | `#4a5568` |
++| `--kron-select-border` | `#7a8496` | `#748093` |
++| `--kron-dot` | `#8a94a5` | `#7d899b` |
++| `--kron-shadow` | `rgba(20, 30, 60, .06)` | `rgba(0, 0, 0, .45)` |
++| `--kron-card-shadow` | `0 1px 2px rgba(20, 30, 60, .07), 0 2px 6px rgba(20, 30, 60, .05)` | `0 1px 2px rgba(0, 0, 0, .5), 0 2px 8px rgba(0, 0, 0, .3)` |
++| `--kron-panel` | `#f4f6fa` | `#12181f` |
++| `--kron-ink` | `#242b36` | `#e4e9f0` |
++| `--kron-ink-soft` | `#4a5361` | `#c5cdd8` |
++| `--kron-ink-quiet` | `#545c6a` | `#b3bcc8` |
++| `--kron-muted` | `#5b6474` | `#a0aab7` |
++| `--kron-label` | `#5f6878` | `#9ba5b3` |
++| `--kron-label-soft` | `#616a7a` | `#98a2b0` |
++| `--kron-faint` | `#626b7a` | `#949eac` |
++| `--kron-on-solid` | `#ffffff` | `#ffffff` |
++| `--kron-on-accent` | `#ffffff` | `#10161e` |
++| `--kron-pass` | `#276c44` | `#62cd8f` |
++| `--kron-pass-soft` | `#e6f3ec` | `#15301f` |
++| `--kron-pass-ring` | `#3f9a62` | `#3fa66a` |
++| `--kron-fail` | `#b3372e` | `#f28b81` |
++| `--kron-fail-soft` | `#fbecea` | `#3b1d1b` |
++| `--kron-fail-edge` | `#efc7c2` | `#6e302b` |
++| `--kron-fail-ink` | `#7c2a24` | `#f6b3ab` |
++| `--kron-fail-shadow` | `rgba(120, 30, 25, .25)` | `rgba(0, 0, 0, .45)` |
++| `--kron-fail-solid` | `#b3372e` | `#b8433a` |
++| `--kron-exclude-soft` | `#fbf1f0` | `#351f1d` |
++| `--kron-exclude-edge` | `#e6c9c5` | `#6a3934` |
++| `--kron-exclude-ink` | `#8a4a43` | `#eea69d` |
++| `--kron-exception-soft` | `#f8dcd9` | `#4a2220` |
++| `--kron-warn` | `#8a5a17` | `#e5b066` |
++| `--kron-warn-soft` | `#fbf3e7` | `#2d2415` |
++| `--kron-warn-edge` | `#ecd3ae` | `#66502a` |
++| `--kron-skip` | `#5b6170` | `#a9b1be` |
++| `--kron-skip-soft` | `#eef0f3` | `#262e39` |
++| `--kron-bypass` | `#285fba` | `#8ab1f6` |
++| `--kron-bypass-soft` | `#e8f0fc` | `#1c2a45` |
++| `--kron-code-bg` | `#e9edf3` | `#262f3c` |
++| `--kron-track` | `#edf0f5` | `#232b37` |
++| `--kron-prop-key` | `#7d3c98` | `#c99be3` |
++| `--kron-prop-val` | `#1a5276` | `#8fc3ec` |
++| `--kron-overlay` | `rgba(0, 0, 0, .4)` | `rgba(0, 0, 0, .6)` |
++| `--kron-font` | `-apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Roboto, "Helvetica Neue", Arial, sans-serif` | (the light value) |
++| `--kron-mono` | `ui-monospace, SFMono-Regular, "SF Mono", Menlo, "Cascadia Mono", Consolas, "Liberation Mono", monospace` | (the light value) |
++| `--kron-fs-label` | `11px` | (the light value) |
++| `--kron-fs-meta` | `12px` | (the light value) |
++| `--kron-fs-control` | `13px` | (the light value) |
++| `--kron-fs-body` | `14px` | (the light value) |
++| `--kron-fs-feature` | `16px` | (the light value) |
++| `--kron-fs-title` | `22px` | (the light value) |
++| `--kron-label-track` | `.06em` | (the light value) |
++
++### Diagram tokens (`--dg-*`)
++
++| Token | Light | Dark |
++|---|---|---|
++| `--dg-bg` | `#ffffff` | `#171d26` |
++| `--dg-ink` | `#242b36` | `#e4e9f0` |
++| `--dg-ink-soft` | `#5b6474` | `#aab3c0` |
++| `--dg-line` | `#4a5361` | `#8792a3` |
++| `--dg-participant` | `#e9eef6` | `#253041` |
++| `--dg-participant-edge` | `#b6c2d5` | `#4d5d76` |
++| `--dg-lifeline` | `#cdd5e0` | `#334052` |
++| `--dg-note` | `#fdf6e4` | `#2b2618` |
++| `--dg-note-edge` | `#b9a57a` | `#75653f` |
++| `--dg-card-edge` | `#e0cf9f` | `#5e5236` |
++| `--dg-event` | `#eee1f7` | `#2a2140` |
++| `--dg-event-edge` | `#b48cc8` | `#7d5c9c` |
++| `--dg-event-card-edge` | `#cfb6e6` | `#5d4780` |
++| `--dg-pass` | `#e3f1e8` | `#15301f` |
++| `--dg-pass-edge` | `#8cbf9f` | `#33724d` |
++| `--dg-fail` | `#fbe8e6` | `#3b1d1b` |
++| `--dg-fail-edge` | `#dc9f97` | `#7c3b34` |
++| `--dg-bar` | `#2f3b4f` | `#3d4d69` |
++| `--dg-step` | `#e9eef6` | `#222c3a` |
++| `--dg-step-edge` | `#c4cfdf` | `#3b4a60` |
++| `--dg-step-ink` | `#2f3b4f` | `#dbe3ee` |
++| `--dg-step-table` | `#ffffff` | `#131a24` |
++| `--dg-flame-fill` | `58% 93%` | `26% 21%` |
++| `--dg-flame-edge` | `42% 54%` | `48% 60%` |
++| `--dg-flame-hover` | `62% 87%` | `30% 27%` |
++| `--dg-activity` | `#eef3fc` | `#1d2638` |
++| `--dg-activity-edge` | `#5f6878` | `#7d899b` |
++| `--dg-lane` | `#c9d1de` | `#3a4656` |
++| `--dg-http` | `#438dd5` | `#6aa5e4` |
++| `--dg-http-fill` | `#2b6cb0` | (the light value) |
++| `--dg-db` | `#0e7c86` | `#45b3bf` |
++| `--dg-db-fill` | `#0b6c75` | (the light value) |
++| `--dg-db-edge` | `#09616a` | `#2f8f99` |
++| `--dg-msg` | `#9b59b6` | `#c18fdc` |
++| `--dg-msg-fill` | `#8e44ad` | (the light value) |
++| `--dg-person` | `#08427b` | `#2f6db0` |
++| `--dg-icon` | `#ffffff` | `#222b38` |
++| `--dg-icon-edge` | `#8a94a5` | `#7d899b` |
++| `--dg-icon-ink` | `#5b6474` | `#c5cdd8` |
++| `--dg-badge` | `#2f3b4e` | `#c5cdd8` |
++| `--dg-badge-ink` | `#ffffff` | `#171d26` |
+diff --git a/Search-Syntax.md b/Search-Syntax.md
+index fafa58d..869b7f7 100644
+--- a/Search-Syntax.md
++++ b/Search-Syntax.md
+@@ -1,6 +1,8 @@
+ # Search Syntax
+ 
+-The report search bar supports a powerful query language for filtering scenarios. You can combine text search, tag filtering, status filtering, and boolean operators.
++The report search bar takes a query language for filtering scenarios. You can combine text search, tag filtering,
++status filtering, the `dep:`, `duration:` and `is:happy` qualifiers (5.0.0, [below](#qualifiers-500)), and boolean
++operators.
+ 
+ > **Tip:** Press <kbd>/</kbd> anywhere in the report to focus the search bar. Click the **?** icon next to the search bar for a quick syntax reference.
+ 
+@@ -147,6 +149,55 @@ differently. A default report carries no verdicts (since 4.6.0 they are on the
+ [labs page](Cross-Run-History#in-the-html-460) beside it), and neither does a report generated with no
+ ledger: in either, a verdict query matches nothing, without an error.
+ 
++## Qualifiers (5.0.0)
++
++Three qualifiers narrow a search as the filter rows do: a key, a colon and a value, with no space after the colon.
++
++| Qualifier | Keeps | Example |
++|-----------|-------|---------|
++| `dep:name` | Scenarios that call a dependency whose name holds `name` (`dependency:` is the same key) | `dep:payment` |
++| `duration:` | Scenarios by their own time, compared with a time, a percentile or a range | `duration:>2s` |
++| `is:happy` | Happy paths | `is:happy` |
++
++### Dependencies (`dep:`)
++
++`dep:payment` keeps the scenarios that call a dependency whose name holds `payment`: one of the participants the
++Dependencies row lists for the scenario. Case, spaces and punctuation are ignored on both sides, so
++`dep:orderservice` finds `Order Service` and `order-service`. Quote a name with a space in it
++(`dep:"order service"`), and separate names with commas to keep a scenario that calls any of them
++(`dep:payment,order`).
++
++### Own time (`duration:`)
++
++`duration:` compares a scenario's own time, its recorded duration less the first-call warm-up it paid, as the
++Duration row does ([[Why is my first scenario slow?|Why-Is-My-First-Scenario-Slow]]):
++
++- **An operator and a time**: `>`, `>=`, `<`, `<=` or `=`, as in `duration:<500ms`. With no operator the time is a
++  minimum, so `duration:2s` is `duration:>=2s`. `=` matches a time within half a millisecond.
++- **A range**, both ends included: `duration:1s..5s`.
++- **A time** is a number with `ms`, `s`, `m` or `min` after it, a decimal point allowed (`duration:>1.5s`); a number
++  alone is seconds. `p50`, `p90`, `p95` and `p99` are this report's percentiles, the times the Duration row's buttons
++  show: `duration:>=p90`.
++
++A scenario with no recorded duration is never kept by `duration:`, and always kept by `!!duration:`.
++
++### Happy paths (`is:happy`)
++
++`is:happy` keeps the scenarios marked as happy paths, the ones the Happy paths filter shows on Only
++([[Tags and Attributes|Tags-and-Attributes]]). `is:happy-path`, `is:happypath` and their plurals are the same.
++
++### How qualifiers combine
++
++- A qualifier stands on its own: at the start of the search, or after a space or `(`.
++- `!!` before a qualifier keeps the scenarios it would leave out: `!!dep:payment`, `!!is:happy`.
++- Qualifiers always narrow. They combine with the rest of the search, and with each other, by AND, whatever operator
++  stands beside them: `order || dep:payment` keeps the scenarios that match `order` and call a payment dependency.
++  Put the alternatives inside one qualifier instead (`dep:payment,order`).
++- Only `dep:`, `dependency:`, `duration:` and `is:` are keys, in any case: `status:400` and `milk:` are text.
++- A qualifier the search cannot read, such as `duration:fast`, `is:sad` or a percentile in a report with no
++  durations, stays in the search as text, and the search field's border turns amber.
++- They are part of the search, so the page's link carries them in `q=`, and Clear All clears them.
++
+ ## Combining Everything
+ 
+ You can freely mix text, tags, status, and operators:
+@@ -155,6 +206,7 @@ You can freely mix text, tags, status, and operators:
+ @api && $failed && !!timeout
+ (order || payment) && $passed
+ @smoke && "expected result" && !!@slow
++$failed dep:payment duration:>1s
+ ```
+ 
+ ## Examples
+@@ -174,6 +226,9 @@ You can freely mix text, tags, status, and operators:
+ | `@api && @smoke` | Scenarios with both "api" and "smoke" tags |
+ | `(a \|\| b) && c` | Scenarios matching ("a" or "b") and "c" |
+ | `@smoke and not @slow` | Legacy tag expression — "smoke" tag without "slow" tag |
++| `dep:payment` | Scenarios that call a dependency with "payment" in its name (5.0.0) |
++| `$failed duration:>2s` | Failed scenarios whose own time is over 2 seconds (5.0.0) |
++| `!!is:happy` | Scenarios that are not happy paths (5.0.0) |
+ 
+ ## What Gets Searched
+ 
+@@ -189,6 +244,9 @@ Every keystroke instantly matches against:
+ - **Diagram participant names and request URLs**
+ - **Tags**, the scenario's and its feature's (as text, and by name with `@tag`)
+ - **Status** (via `$status` syntax only)
++- **Own time** (via the `duration:` qualifier only, 5.0.0)
++- **Dependencies and happy paths** as the filter rows pick them, with `dep:` and `is:happy` (5.0.0); a dependency's
++  name also matches as text, as a participant name, and a happy path by its `Happy Path` tag
+ 
+ ### Deep search — "search everything" (3.0.70+)
+ 
+diff --git a/Tags-and-Attributes.md b/Tags-and-Attributes.md
+index 80f6115..686f7ab 100644
+--- a/Tags-and-Attributes.md
++++ b/Tags-and-Attributes.md
+@@ -16,7 +16,10 @@ Mark a scenario as a "happy path" to support filtering in the HTML reports.
+ 
+ The happy-path names are `happy-path`, `happy_path`, `happypath` and, since 5.0.0, `Happy Path`, in any case. A category or label the framework gives a test marks the happy path too when it has one of these names, so NUnit's `[Category("happy-path")]` means what `@happy-path` means in Gherkin. A happy-path name sets the happy-path flag and is not a tag.
+ 
+-In the HTML reports, happy path scenarios are **sorted first** within each feature and display a "Happy Path" badge. Use the **"Happy Paths Only"** toggle in the filtering toolbar to show only happy path scenarios. The report's Tags row starts with a Happy Path chip, and `@"Happy Path"` in the search bar finds them.
++In the HTML reports, happy path scenarios are **sorted first** within each feature and display a "Happy Path" badge.
++Set the **Happy paths** filter to **Only** to show only happy path scenarios, or to **Hide** to leave them out (5.0.0;
++before, a "Happy Paths Only" toggle in the filtering toolbar). The report's Tags row starts with a Happy Path chip,
++and `@"Happy Path"` in the search bar finds them.
+ 
+ ## Endpoint
+ 
+diff --git a/Tracking-Custom-Dependencies.md b/Tracking-Custom-Dependencies.md
+index 2806a70..6ba4aa6 100644
+--- a/Tracking-Custom-Dependencies.md
++++ b/Tracking-Custom-Dependencies.md
+@@ -707,7 +707,11 @@ new CosmosTrackingMessageHandlerOptions
+ 
+ ## Report Toggle — Databases
+ 
+-When any diagram in the report contains a `database` or `collections` participant (rendered by any dependency extension that uses the `database` or `collections` PlantUML shape — CosmosDB, EF Core, MongoDB, DynamoDB, Spanner, BigQuery, Redis, distributed caches, etc.), a **"Databases Shown" / "Databases Hidden"** toggle button appears in the report toolbar.
++When any diagram in the report contains a `database` or `collections` participant (rendered by any dependency
++extension that uses the `database` or `collections` PlantUML shape: CosmosDB, EF Core, MongoDB, DynamoDB, Spanner,
++BigQuery, Redis, distributed caches, etc.), a **Databases** toggle appears in the report's display settings and in each
++scenario's settings, behind its gear (5.0.0). It says whether it is on with `aria-pressed`; before 5.0.0 it was a
++**"Databases Shown" / "Databases Hidden"** button in the report toolbar, its label changing with its state.
+ 
+ - **Default**: Shown — database and cache participants and their arrows are visible in diagrams
+ - **Hide Databases**: Re-renders all diagrams with database/cache participants and all associated request/response arrows removed
+diff --git a/_Sidebar.md b/_Sidebar.md
+index cccf92b..485ab2c 100644
+--- a/_Sidebar.md
++++ b/_Sidebar.md
+@@ -12,6 +12,9 @@
+ * [[Project Templates]]
+ * [[AI Integration Prompt]]
+ * [[Framework Integration Guides]]
++* [[Migrating to v5]]
++  * [[Migrating to v5: the report|Migrating-to-v5-Report]]
++  * [[Migrating to v5: tags|Migrating-to-v5-Tags]]
+ * [[Migrating to v4]]
+ 
+ **Common Tasks**
+@@ -103,6 +106,7 @@
+ 
+ **Features**
+ * [[Generated Reports]]
++* [[Report Themes]]
+ * [[Search Syntax]]
+ * [[Component Diagrams]]
+ * [[PlantUML Browser Rendering]]
+-- 
+2.53.0.windows.3
+

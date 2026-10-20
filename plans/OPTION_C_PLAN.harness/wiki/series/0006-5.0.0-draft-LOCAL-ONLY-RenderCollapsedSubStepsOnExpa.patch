@@ -1,0 +1,27 @@
+From 438bf99f3f3c29c85b8c1ab15c977c1e4f578e66 Mon Sep 17 00:00:00 2001
+From: "aryehcitron@gmail.com" <aryehcitron@gmail.com>
+Date: Tue, 20 Oct 2026 04:41:36 +0100
+Subject: [PATCH 6/8] 5.0.0 draft, LOCAL ONLY: RenderCollapsedSubStepsOnExpand
+ reaches both HTML reports, and a browser that cannot decompress the steps
+ says so (REPORT_FORMAT_PLAN R5)
+
+---
+ Report-Configuration.md | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Report-Configuration.md b/Report-Configuration.md
+index e29ad4c..ee09d8a 100644
+--- a/Report-Configuration.md
++++ b/Report-Configuration.md
+@@ -170,7 +170,7 @@ The `SpecificationsDataFormat` controls the format of the machine-readable speci
+ | `TestRunReportShowStepNumbers` | `bool` | `false` | When `true`, shows hierarchical step numbers in the TestRunReport HTML report. |
+ | `SeparateBackgroundSteps` | `bool` | `false` | When `true`, a scenario's background steps get their own collapsible **Background Steps** section above **Steps**. By default they are listed inline, first, in the one **Steps** list — the order the data files and step paths already use (`b0`, `b1`, then `0`, `1`). Applies to both HTML reports; the data outputs keep the two collections separate either way. See [[Step Tracking › Background Steps|Step-Tracking#background-steps]]. (3.0.48+) |
+ | `CollapseRepeatedStepKeywords` | `bool` | `true` | When `true`, a step repeating the primary keyword already in force displays as `And` — a background `Given` followed by a scenario `Given` reads `Given / And`. Rendering only: every data output emits the keyword the producer recorded. Localised Gherkin keywords are not recognised and pass through unchanged. See [[Step Tracking › Background Steps|Step-Tracking#background-steps]]. (3.0.48+) |
+-| `RenderCollapsedSubStepsOnExpand` | `bool` | `true` | From 5.0.0. When `true`, the sub-steps of a closed composite step whose HTML comes to 2 KB or more are held gzipped in the page and drawn the first time the step is opened, so a report of deeply nested composite steps stays small. A step on the way to a failure is drawn and open as before, the report's search box still finds a word in a step nobody opened, and Export Filtered HTML carries the steps it needs. The browser's own find (Ctrl+F) cannot see a step nobody opened: set it to `false` to draw every step as 4.x did. |
++| `RenderCollapsedSubStepsOnExpand` | `bool` | `true` | From 5.0.0. When `true`, the sub-steps of a closed composite step whose HTML comes to 2 KB or more are held gzipped in the page, on both HTML reports, and drawn the first time the step is opened, so a report of deeply nested composite steps stays small. A step on the way to a failure is drawn and open as before, the report's search box still finds a word in a step nobody opened, and Export Filtered HTML carries the steps it needs. A browser that cannot decompress them (Chrome before 80, Firefox before 113, Safari before 16.4) shows a line saying so in their place. The browser's own find (Ctrl+F) cannot see a step nobody opened: set it to `false` to draw every step as 4.x did. |
+ | ~~`InlineBackgroundSteps`~~ | `bool` | `false` | **Deprecated** — was never read by any code path. Background steps are inlined by default now; set `SeparateBackgroundSteps = true` for the old separate section. Setting it produces an `[Obsolete]` compiler warning. |
+ | `CustomCss` | `string?` | `null` | Extra CSS injected in a separate `<style>` block after the default stylesheet. Allows customising report appearance without replacing the entire stylesheet. |
+ | `CustomFaviconBase64` | `string?` | `null` | Base64-encoded data URI for a custom favicon. Set to e.g. `"data:image/png;base64,ABC123..."` to override the browser tab icon. |
+-- 
+2.53.0.windows.3
+

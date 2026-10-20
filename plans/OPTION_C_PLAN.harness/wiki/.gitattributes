@@ -1,0 +1,2 @@
+# The series carries the wiki's own line endings (some of its pages are stored with CRLF): keep its bytes as written
+*.patch -text

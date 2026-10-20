@@ -1,0 +1,234 @@
+From 5eb09722dce6927e991442512fb25d619108ab65 Mon Sep 17 00:00:00 2001
+From: "aryehcitron@gmail.com" <aryehcitron@gmail.com>
+Date: Tue, 20 Oct 2026 03:03:22 +0100
+Subject: [PATCH 2/8] 5.0.0 draft, LOCAL ONLY (do not push before 5.0.0 ships):
+ data file .krkl by default, schema only when asked,
+ CompressTestRunReportPayloads and ingest --payloads obsolete, net10.0 alone;
+ Report-Configuration, Generated-Reports, CI-Artifact-Upload, Ingesting,
+ Merging, Capture-Time-Redaction, Project-Templates, three Integration pages
+
+---
+ CI-Artifact-Upload.md          |  4 ++--
+ Capture-Time-Redaction.md      | 18 +++++++++++-------
+ Generated-Reports.md           |  8 ++++----
+ Ingesting-External-Captures.md |  5 +++--
+ Integration-LightBDD-TUnit.md  |  2 +-
+ Integration-LightBDD-xUnit3.md |  2 +-
+ Integration-ReqNRoll-TUnit.md  |  2 +-
+ Merging-Parallel-Reports.md    |  3 ++-
+ Project-Templates.md           | 11 ++++++-----
+ Report-Configuration.md        |  6 +++---
+ 10 files changed, 34 insertions(+), 27 deletions(-)
+
+diff --git a/CI-Artifact-Upload.md b/CI-Artifact-Upload.md
+index 0c53a96..131403d 100644
+--- a/CI-Artifact-Upload.md
++++ b/CI-Artifact-Upload.md
+@@ -78,8 +78,8 @@ and uploads them with it:
+ | `TestRunReport.html` | Always generated |
+ | `TestRunReport.labs.html` | When the run read history or recorded a diagnostic, unless `GenerateLabsReport = false` (4.6.0): the cross-run history and report diagnostics views a default `TestRunReport.html` leaves out |
+ | `TestRunReport.json` | Always generated (`GenerateTestRunReportData`; `.xml`/`.yml` when `TestRunReportDataFormat` says so) |
+-| `TestRunReport.krkl` | In place of `TestRunReport.json` when `CompressTestRunReport = true` (4.32.0): the same report, compressed. `kronikol query` reads it from the downloaded artifact as it reads the JSON |
+-| `TestRunReport.schema.json` | Always generated (`GenerateTestRunReportSchema`) |
++| `TestRunReport.krkl` | In place of `TestRunReport.json` when `CompressTestRunReport = true` (4.32.0; the default from 5.0.0): the same report, compressed. An upload step that names `TestRunReport.json` finds nothing from 5.0.0: name the `.krkl`, or the folder. `kronikol query` reads it from the downloaded artifact as it reads the JSON |
++| `TestRunReport.schema.json` | With `GenerateTestRunReportSchema = true`, the default in 4.x; from 5.0.0 only when asked |
+ | `Specifications.html` | Always generated |
+ | `Specifications.yml` | Always generated |
+ | `Failures.md`, `Failures.jsonl` | Always generated (`GenerateFailuresDigest`) — written on a green run too, so that the file's *absence* means the run did not finish rather than that nothing broke |
+diff --git a/Capture-Time-Redaction.md b/Capture-Time-Redaction.md
+index f703fe8..9eef947 100644
+--- a/Capture-Time-Redaction.md
++++ b/Capture-Time-Redaction.md
+@@ -79,21 +79,25 @@ test "$hits" = 0
+ `--in` names every target because the default set leaves out headers and diagram notes. `--count` prints the number
+ of hits, and the command exits 0 either way, so the check compares the number. See [[Querying Reports]].
+ 
+-An assertion inside a test can read the data file as text, but only with payload compression off for that run.
+-`CompressTestRunReportPayloads`, on by default since 4.0.0, stores every body and diagram source of 8,192 characters
+-or more gzipped, where a text search cannot see it, so a text check of such a file passes whatever it holds:
++`TestRunReport.krkl`, the data file a run writes from 5.0.0 (`CompressTestRunReport`, 4.32.0+), is compressed whole:
++its bytes hold no text to search, so a text check of them passes whatever the file holds. Check it through
++`kronikol query grep` as above, or write its JSON out with `kronikol decode` and check that.
++
++An assertion inside a test can read the data file as text only where nothing in it is compressed: the run has to
++write `TestRunReport.json`, with payload compression off. `CompressTestRunReportPayloads`, on by default since 4.0.0,
++stores every body and diagram source of 8,192 characters or more gzipped, where a text search cannot see it. It is
++obsolete from 5.0.0 (warning CS0618) until v6 removes it, so the line that turns it off needs the warning suppressed:
+ 
+ ```csharp
++options.CompressTestRunReport = false;         // TestRunReport.json, not the compressed TestRunReport.krkl
++#pragma warning disable CS0618                 // obsolete from 5.0.0
+ options.CompressTestRunReportPayloads = false; // every body and diagram stays plain text in the data file
++#pragma warning restore CS0618
+ // ... run the tests and write the report ...
+ var json = File.ReadAllText(Path.Combine(ReportGenerator.ResolveReportsDirectory(options), "TestRunReport.json"));
+ Assert.DoesNotContain("my-secret-token", json);
+ ```
+ 
+-The same goes for `CompressTestRunReport` (4.32.0+), which writes the whole file compressed as `TestRunReport.krkl`:
+-its bytes hold no text to search, so a text check of them passes whatever the file holds. Check it through
+-`kronikol query grep` as above, or write its JSON out with `kronikol decode` and check that.
+-
+ ## The history ledger (3.9.0)
+ 
+ The [cross-run history ledger](Cross-Run-History) is derived from the same captured data, so it is
+diff --git a/Generated-Reports.md b/Generated-Reports.md
+index 645389c..9e0ebd4 100644
+--- a/Generated-Reports.md
++++ b/Generated-Reports.md
+@@ -8,8 +8,8 @@ After tests complete, the following files are written to the `Reports` folder in
+ | `Specifications.yml` | Machine-readable scenario specifications | No | Yes (YAML) | Yes |
+ | `TestRunReport.html` | Full test run report with diagrams, CI metadata, failure details | Yes | No | Yes |
+ | `TestRunReport.labs.html` | The views a default report leaves out while their design is worked out: the cross-run History section, every scenario's sparkline and verdict, and the run's report diagnostics. Named after the report. See [TestRunReport.labs.html](#testrunreportlabshtml) | No | No | When the run read history or recorded a diagnostic (4.6.0), unless `GenerateLabsReport = false` |
+-| `TestRunReport.json` | Machine-readable test run results with PlantUML diagrams and HTTP interactions | Yes (PlantUML source) | Yes (JSON) | Yes |
+-| `TestRunReport.schema.json` | JSON Schema / XSD for the test run data file, for validation and IDE auto-complete | No | Yes | Yes |
++| `TestRunReport.krkl` (`TestRunReport.json` with `CompressTestRunReport = false`) | Machine-readable test run results with PlantUML diagrams and HTTP interactions, compressed whole from 5.0.0 | Yes (PlantUML source) | Yes (JSON) | Yes |
++| `TestRunReport.schema.json` | JSON Schema / XSD for the test run data file, for validation and IDE auto-complete; written only with `GenerateTestRunReportSchema = true` from 5.0.0 | No | Yes | Yes |
+ | `ComponentDiagram.html` | C4-style component diagram showing service relationships | Yes | No | When `GenerateComponentDiagram = true` |
+ | `DiagnosticReport.html` | Setup troubleshooting: the configuration, log counts per service and per test, unpaired requests, orphaned test ids, scenarios with no logs and the activity sources seen. See [[Diagnostics and Debugging]] | No | No | When `DiagnosticMode = true` |
+ | `CiSummary.md` | CI-friendly markdown summary with failure details | Inline PlantUML | Partially | When `WriteCiSummary = true` |
+@@ -124,8 +124,8 @@ A machine-readable structured data file containing the complete test run results
+ 
+ > **Data format:** The default format is JSON (`TestRunReportDataFormat = DataFormat.Json`). Set to `DataFormat.Yaml` or `DataFormat.Xml` to produce `.yml` or `.xml` files instead.
+ 
+-> **Compressed (4.32.0+):** with `CompressTestRunReport = true` the run writes `TestRunReport.krkl` in place of
+-> `TestRunReport.json`. It holds the JSON this page describes, written compact, with every payload as text
++> **Compressed (4.32.0+, the default from 5.0.0):** with `CompressTestRunReport = true`, the default from 5.0.0, the
++> run writes `TestRunReport.krkl` in place of `TestRunReport.json`; set it to `false` for the JSON. It holds the JSON this page describes, written compact, with every payload as text
+ > (`formatVersion` 3), and a key whose value is `null`, `[]` or `{}` is left out unless the schema requires it, so a
+ > reader takes a missing key as holding nothing. The whole is one zstd frame behind a 24-byte marker, about a
+ > twentieth of the JSON. Only Kronikol's tools read it: `kronikol query` and every other reader from 4.30.0, and
+diff --git a/Ingesting-External-Captures.md b/Ingesting-External-Captures.md
+index 66c7113..1c56247 100644
+--- a/Ingesting-External-Captures.md
++++ b/Ingesting-External-Captures.md
+@@ -257,8 +257,9 @@ kronikol ingest ./captures --tests ./captures/tests.ndjson -o ./Reports -t "E2E
+ | `--collapse` / `--no-collapse`, `--collapse-threshold <n>` | on / 2 | Collapse consecutive identical calls into a `loop ×N` fragment. |
+ | `--max-arrows <n>` | unlimited | Cap pairs per diagram (`… +N more calls omitted …`). |
+ | `--browser-render-workers <n>` | `4` | Web Workers the browserjs report renders diagrams on, capped by the viewer's CPU count; `0` renders on the main thread. Sets `ReportConfigurationOptions.BrowserRenderWorkers` (see [[PlantUML Browser Rendering]]). |
+-| `--payloads <plain\|compressed>` | `compressed` (`plain` before 4.0.0) | How `TestRunReport.json` holds a body or a diagram of 8,192 characters or more (512 in 4.0.0 and 4.0.1): as text, or compressed in place (`formatVersion` 2, read by `kronikol` 3.35.0 and later; [[Generated Reports › Compressed payloads|Generated-Reports#compressed-payloads-3350]]). Sets `ReportConfigurationOptions.CompressTestRunReportPayloads` (3.35.0+). |
+-| `--data-file <json\|krkl>` | `json` | The data file the ingest writes: `TestRunReport.json`, or `TestRunReport.krkl`, the same report compressed whole, about a twentieth of the size (4.32.0+; read by `kronikol` 4.30.0 and later, [[Querying Reports › Compressed reports|Querying-Reports#compressed-reports-testrunreportkrkl-4300]]). `--payloads` does not apply to it. Sets `ReportConfigurationOptions.CompressTestRunReport`. |
++| `--payloads <plain\|compressed>` | `compressed` (`plain` before 4.0.0) | How `TestRunReport.json` holds a body or a diagram of 8,192 characters or more (512 in 4.0.0 and 4.0.1): as text, or compressed in place (`formatVersion` 2, read by `kronikol` 3.35.0 and later; [[Generated Reports › Compressed payloads|Generated-Reports#compressed-payloads-3350]]). Sets `ReportConfigurationOptions.CompressTestRunReportPayloads` (3.35.0+). From 5.0.0 it applies only with `--data-file json`, and is obsolete with the option: v6 removes both. |
++| `--data-file <json\|krkl>` | `krkl` from 5.0.0 (`json` in 4.x) | The data file the ingest writes: `TestRunReport.json`, or `TestRunReport.krkl`, the same report compressed whole, about a twentieth of the size (4.32.0+; read by `kronikol` 4.30.0 and later, [[Querying Reports › Compressed reports|Querying-Reports#compressed-reports-testrunreportkrkl-4300]]). `--payloads` does not apply to it. Sets `ReportConfigurationOptions.CompressTestRunReport`. |
++| `--schema` | off | Also write the data file's schema beside it, `TestRunReport.schema.json` (5.0.0; before it the schema was always written). Sets `ReportConfigurationOptions.GenerateTestRunReportSchema`. |
+ | `--note-format <json\|yaml>` | `yaml` (`json` before 4.0.0) | Initial display format for JSON note payloads in the browserjs report; `yaml` starts every eligible payload in the derived YAML view (readers can still switch either way in the report). Sets `ReportConfigurationOptions.NotePayloadFormat` (see [[PlantUML Browser Rendering › Note Payload JSON ⇄ YAML Toggle (3.0.59+)|PlantUML-Browser-Rendering#note-payload-json--yaml-toggle-3059]]). |
+ | `--headers <shown\|hidden>` | `hidden` (`shown` before 4.0.0) | Whether the browserjs report's diagrams start with request and response headers in their notes; readers can still switch either way in the report. Sets `ReportConfigurationOptions.TestRunReportToggleDefaults.HeadersShown` (3.36.0+). |
+ | `--no-component-diagram` | | Skip `ComponentDiagram.html`. |
+diff --git a/Integration-LightBDD-TUnit.md b/Integration-LightBDD-TUnit.md
+index 9b32b31..23ee9a9 100644
+--- a/Integration-LightBDD-TUnit.md
++++ b/Integration-LightBDD-TUnit.md
+@@ -20,7 +20,7 @@ LightBDD is a BDD framework that lets you write scenarios as C# method calls (`g
+ 
+ ## Prerequisites
+ 
+-- .NET 8.0 SDK or later
++- .NET 10.0 SDK or later (4.x: .NET 8.0 or later)
+ - An ASP.NET Core API project to test (your "Service Under Test")
+ - Basic familiarity with LightBDD and TUnit
+ 
+diff --git a/Integration-LightBDD-xUnit3.md b/Integration-LightBDD-xUnit3.md
+index a544dd7..6e74c7e 100644
+--- a/Integration-LightBDD-xUnit3.md
++++ b/Integration-LightBDD-xUnit3.md
+@@ -20,7 +20,7 @@ LightBDD is a BDD framework that lets you write scenarios as C# method calls (`g
+ 
+ ## Prerequisites
+ 
+-- .NET 8.0 SDK or later
++- .NET 10.0 SDK or later (4.x: .NET 8.0 or later)
+ - An ASP.NET Core API project to test (your "Service Under Test")
+ - Basic familiarity with LightBDD
+ 
+diff --git a/Integration-ReqNRoll-TUnit.md b/Integration-ReqNRoll-TUnit.md
+index 23d64b8..2c2f5da 100644
+--- a/Integration-ReqNRoll-TUnit.md
++++ b/Integration-ReqNRoll-TUnit.md
+@@ -14,7 +14,7 @@ This guide walks you through integrating **Kronikol** with [ReqNRoll](https://re
+ 
+ ## Prerequisites
+ 
+-- .NET 8.0 SDK or later (recommended: .NET 10.0)
++- .NET 10.0 SDK or later (4.x: .NET 8.0 or later)
+ - An ASP.NET Core API project to test (your "Service Under Test")
+ - Basic familiarity with ReqNRoll / SpecFlow and Gherkin syntax
+ - Basic familiarity with [TUnit](https://tunit.dev/)
+diff --git a/Merging-Parallel-Reports.md b/Merging-Parallel-Reports.md
+index 77a1bd5..79e02a4 100644
+--- a/Merging-Parallel-Reports.md
++++ b/Merging-Parallel-Reports.md
+@@ -62,6 +62,7 @@ kronikol merge ./artifacts -o TestRunReport.html -t "Nightly Build"
+ | `--ci-summary` | Also write `CiSummary.md` and post it to the CI job summary — the GitHub Actions step summary, or an Azure DevOps upload (since 3.6.0). Off, a **failing** merge on CI still posts the short "Debug this run" section, exactly as a failing run does. |
+ | `--publish-artifacts` | Hand the output directory to the CI artifact upload — the `reports-path` output on GitHub Actions, `artifact.upload` on Azure DevOps (since 3.6.0), with the files the merge carried into `attachments/` (4.28.1). |
+ | `--history <ledger>` | Read the [cross-run history ledger](Cross-Run-History) and show what it says about the merged run (since 3.11.0): the History section, sparklines and verdicts on the labs page beside the merged report (`<output>.labs.html`, 4.6.0), the history lines in `Failures.md`, the summary in the pointer. The merged report itself carries no history; before 4.6.0 it drew the History section, sparklines and verdict pills. Never writes to the ledger — folding the shards' `History.run.json` fragments is `kronikol history record`'s job. A ledger that is not there is exit 2; one that cannot be read is exit 1. |
++| `--schema` | Also write the merged data file's schema beside it, `<name>.schema.json` (5.0.0; before it the schema was always written). |
+ | `-h`, `--help` | Show usage. |
+ 
+ ### The merged data file (3.1.0)
+@@ -97,7 +98,7 @@ above — so the one shape of run that is always on CI had none of the things Kr
+   merged run, with each call attributed to the step that made it from the `stepPath` the shards carry.
+ - **`CLAUDE.md` and `AGENTS.md`** — the agent instruction files, naming the merged report's own file
+   names. A file already in the output directory keeps its own text; the block is spliced in.
+-- **`<name>.schema.json`** — the schema the merged data file validates against, named after `-o`.
++- **`<name>.schema.json`** — the schema the merged data file validates against, named after `-o`. From 5.0.0 only with `--schema`.
+ - **`query.cs`** (3.32.0) — `kronikol query` with no tool installed, running the engine of the
+   `Kronikol` version that did the merge: from the output directory, `dotnet run --file query.cs -- failures .`,
+   or with the data file's name when it is not `TestRunReport.json` (`-- failures Combined.json`). A `query.cs`
+diff --git a/Project-Templates.md b/Project-Templates.md
+index 1d5efd5..8d8f317 100644
+--- a/Project-Templates.md
++++ b/Project-Templates.md
+@@ -49,8 +49,8 @@ dotnet new kronikol-xunit3 -n MyApi.Tests.Component \
+   --downstreamService "PaymentGateway" \
+   --downstreamPort 15060
+ 
+-# Create a ReqNRoll project targeting .NET 9
+-dotnet new kronikol-reqnroll-xunit3 -n MyApi.Tests.BDD --Framework net9.0
++# Create a ReqNRoll project
++dotnet new kronikol-reqnroll-xunit3 -n MyApi.Tests.BDD
+ ```
+ 
+ ---
+@@ -64,10 +64,11 @@ All templates accept these parameters:
+ | `--serviceName` | `MyApi` | Name of the service under test (used in diagram labels and report titles) |
+ | `--downstreamService` | `DownstreamService` | Name of a downstream dependency (used in port-to-service mapping) |
+ | `--downstreamPort` | `15050` | Port for the downstream service |
+-| `--Framework` | `net10.0` | Target framework (`net8.0`, `net9.0`, or `net10.0`) |
++| `--Framework` | `net10.0` | Target framework: `net10.0` from 5.0.0 (4.x also offers `net8.0` and `net9.0`) |
+ 
+-Since 4.14.11 a project created with `--Framework net8.0` or `net9.0` restores and runs: each takes the
+-`Microsoft.AspNetCore.Mvc.Testing` version for its own framework. Before, every template referenced the .NET 10
++From 5.0.0 every package targets `net10.0` alone, so the templates offer it alone ([[Migrating to v5]]). In 4.x, from
++4.14.11, a project created with `--Framework net8.0` or `net9.0` restores and runs: each takes the
++`Microsoft.AspNetCore.Mvc.Testing` version for its own framework. Before 4.14.11, every template referenced the .NET 10
+ version, which is for `net10.0` only, so those two failed to restore.
+ 
+ ---
+diff --git a/Report-Configuration.md b/Report-Configuration.md
+index 19b8bf7..37f6f34 100644
+--- a/Report-Configuration.md
++++ b/Report-Configuration.md
+@@ -97,7 +97,7 @@ The `SpecificationsDataFormat` controls the format of the machine-readable speci
+ | Property | Type | Default | Description |
+ |---|---|---|---|
+ | `TestRunReportDataFormat` | `DataFormat` | `Json` | Format for the test run data file. `Json` (default), `Yaml`, or `Xml`. |
+-| `CompressTestRunReport` | `bool` | `false` | From 4.32.0, when `true` and the format is JSON, the run writes `TestRunReport.krkl` in place of `TestRunReport.json`: the same report, compact, without the keys that hold nothing (unless the schema requires them), every payload as text, and the whole compressed with zstd, about a twentieth of the JSON. `formatVersion` 3 says so. Only Kronikol's tools read it, from 4.30.0: `kronikol query` and every other reader, and `kronikol decode` writes the JSON out for a script that needs it ([Querying Reports](Querying-Reports#compressed-reports-testrunreportkrkl-4300)). `CompressTestRunReportPayloads` does not apply to it, and a mergeable run writes its mergeable file the same way. |
++| `CompressTestRunReport` | `bool` | `true` (`false` in 4.x) | From 4.32.0, when `true` and the format is JSON, the run writes `TestRunReport.krkl` in place of `TestRunReport.json`: the same report, compact, without the keys that hold nothing (unless the schema requires them), every payload as text, and the whole compressed with zstd, about a twentieth of the JSON. `formatVersion` 3 says so. Only Kronikol's tools read it, from 4.30.0: `kronikol query` and every other reader, and `kronikol decode` writes the JSON out for a script that needs it ([Querying Reports](Querying-Reports#compressed-reports-testrunreportkrkl-4300)). `CompressTestRunReportPayloads` does not apply to it, and a mergeable run writes its mergeable file the same way. On by default from 5.0.0; set it to `false` for the JSON file every release before 5.0.0 wrote ([[Migrating to v5]]). |
+ | `SpecificationsDataFormat` | `DataFormat` | `Yaml` | Format for the specifications data file. `Yaml` (default), `Json`, or `Xml`. |
+ | `TestRunReportFullStepDetail` | `bool` | `true` | When `true`, every step in the data file carries its full detail: parameters (inline values, data tables, tree values), text segments, doc string, comments and bypass reason. This is what makes a parameterised failure legible from the data file alone. In `TestRunReport.krkl` (`CompressTestRunReport`), written compact, a step costs a few hundred bytes before compression however deep it is; the indented `TestRunReport.json` indents every line of a sub-step four spaces further at each level, so there a suite of deeply nested composite steps can spend more of the file on steps than on payloads (a LightBDD step 20 levels down takes about 5 KB). Turn it off only if file size genuinely matters. A step's `failureMessage`, `sourceFile` and `sourceLine` are written either way. The data files are designed to be read with `kronikol query` rather than by hand; see [[Querying Reports]]. Added in 3.0.47; before it, the richer step mapping ran only for the mergeable file, which is off by default. |
+ 
+@@ -185,9 +185,9 @@ The `SpecificationsDataFormat` controls the format of the machine-readable speci
+ | `GenerateLabsReport` | `bool` | `true` | Write the labs page beside the report, `{HtmlTestRunReportFileName}.labs.html` (`TestRunReport.labs.html` by default): the views a default report does not carry while their design is worked out. It holds the History section and every scenario's sparkline and verdict when the run read history and `EmbedHistoryInReport` is on, and the Report diagnostics list when the run recorded a diagnostic; with neither, no page is written. It has no script, and its scenario names link into the report. See [[Generated Reports › TestRunReport.labs.html|Generated-Reports#testrunreportlabshtml]]. Since 4.6.0. |
+ | `GenerateSpecificationsData` | `bool` | `true` | When `false`, skips generating the specifications data file (YAML/JSON/XML). |
+ | `GenerateTestRunReportData` | `bool` | `true` | When `false`, skips generating the test run report data file. |
+-| `CompressTestRunReportPayloads` | `bool` | `true` (`false` before 4.0.0) | When `true` (and the data format is JSON), a captured body or a diagram's PlantUML source of 8,192 characters or more (512 in 4.0.0 and 4.0.1) is written in `TestRunReport.json` as `{"$h", "$n", "$z"}` in place of its text, unless that would not make it smaller: `$z` is the base64 of the gzip of the text's UTF-8, `$h` its `b:` address and `$n` its length. A file holding one declares `formatVersion` 2. `kronikol query`, `kronikol merge` and the skill's `query.py` from 3.35.0 read it as they read the plain form; an older `kronikol` refuses it and says to upgrade. See [[Generated Reports › Compressed payloads|Generated-Reports#compressed-payloads-3350]] (3.35.0, #85; the default becomes `true` at 4.0.0). |
++| `CompressTestRunReportPayloads` | `bool` | `true` (`false` before 4.0.0) | When `true` (and the data format is JSON), a captured body or a diagram's PlantUML source of 8,192 characters or more (512 in 4.0.0 and 4.0.1) is written in `TestRunReport.json` as `{"$h", "$n", "$z"}` in place of its text, unless that would not make it smaller: `$z` is the base64 of the gzip of the text's UTF-8, `$h` its `b:` address and `$n` its length. A file holding one declares `formatVersion` 2. `kronikol query`, `kronikol merge` and the skill's `query.py` from 3.35.0 read it as they read the plain form; an older `kronikol` refuses it and says to upgrade. See [[Generated Reports › Compressed payloads|Generated-Reports#compressed-payloads-3350]] (3.35.0, #85; the default becomes `true` at 4.0.0). **Obsolete from 5.0.0** (warning CS0618), and removed in v6: it applies only to the `TestRunReport.json` a run writes with `CompressTestRunReport = false`, since a `.krkl` holds every payload as text inside a file compressed whole. |
+ | `GenerateMergeableData` | `bool` | `false` | When `true` (and the data format is JSON), enriches `TestRunReport.json` with everything needed to reconstruct a full HTML report later — component relationships, internal-flow data, whole-test-flow fragments, CI metadata and the run's diagnostics — so several files can be combined with `kronikol merge`, which since 3.1.0 writes the merged data file beside the merged HTML. See [Merging Parallel Reports](Merging-Parallel-Reports). The file is larger than the standard report. |
+-| `GenerateTestRunReportSchema` | `bool` | `true` | When `false`, skips generating the test run report schema file (`.schema.json` or `.schema.xsd`). |
++| `GenerateTestRunReportSchema` | `bool` | `false` (`true` in 4.x) | When `true`, writes the data file's schema beside it: `TestRunReport.schema.json` for a JSON or `.krkl` data file, `TestRunReport.schema.xsd` for XML. Nothing in Kronikol reads it; it is there for a consumer who validates the data file, or the JSON `kronikol decode` writes. `kronikol merge --schema` and `kronikol ingest --schema` ask for it from a command line. |
+ | `GenerateSpecificationsMarkdown` | `bool` | `false` | When `true`, writes `<YamlSpecificationsFileName>.md` — the specification as prose, with no run data at all. Unlike its two siblings it is **not** blanked on a failed run. Suppressed by `ExpectedTestCount` like every other specification output. See [Generated Reports](Generated-Reports#specificationsmd). Since 3.1.0. |
+ | `GenerateCtrfReport` | `bool` | `false` | When `true`, writes `ctrf-report.json` — the run in [Common Test Report Format](https://ctrf.io), for CI tooling that already reads it. Carries failure messages and traces verbatim, and is swept up by `PublishCiArtifacts` like every other `.json` in the folder. See [Generated Reports](Generated-Reports#ctrf-reportjson-optional). Since 3.1.0. |
+ | `GenerateFailuresDigest` | `bool` | `true` | When `true`, writes `Failures.md` and `Failures.jsonl` beside the report: every failure in context — error, parsed expected/actual, the failing step and its `file:line`, the calls made inside it, attachments, and the query address of each — clustered so that twenty scenarios broken by one cause read as one cause. Never a payload, a header or a diagram. **Written on a green run too**, as `# No failures` (nothing failed **in the newest run**: since 3.27.0, when the run it replaced had failures, the line under the heading says so and where that run is kept, see `KeepRuns`), so that the file's absence always means the run did not finish. See [Generated Reports](Generated-Reports#failuresmd-and-failuresjsonl). Since 3.1.0. |
+-- 
+2.53.0.windows.3
+

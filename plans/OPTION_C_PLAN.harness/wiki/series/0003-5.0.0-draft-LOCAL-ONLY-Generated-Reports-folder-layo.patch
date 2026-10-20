@@ -1,0 +1,65 @@
+From c95f4d09c5d12f5818ef172e9631fb1f5e378141 Mon Sep 17 00:00:00 2001
+From: "aryehcitron@gmail.com" <aryehcitron@gmail.com>
+Date: Tue, 20 Oct 2026 03:03:54 +0100
+Subject: [PATCH 3/8] 5.0.0 draft, LOCAL ONLY: Generated-Reports' folder layout
+ and baseline recipe name TestRunReport.krkl
+
+---
+ Generated-Reports.md | 17 +++++++++--------
+ 1 file changed, 9 insertions(+), 8 deletions(-)
+
+diff --git a/Generated-Reports.md b/Generated-Reports.md
+index 9e0ebd4..427b36e 100644
+--- a/Generated-Reports.md
++++ b/Generated-Reports.md
+@@ -380,10 +380,10 @@ always was plus one small `Run.json`**. Before a run writes, the previous run's
+ 
+ ```
+ Reports/
+-  TestRunReport.html  TestRunReport.json  Failures.md  …  Run.json     <- the newest run
++  TestRunReport.html  TestRunReport.krkl  Failures.md  …  Run.json     <- the newest run
+   runs/
+     local_20260918T101611Z_ab12cd34/                                   <- the run before it, whole
+-      TestRunReport.html  TestRunReport.json  Failures.md  History.run.json  attachments/  Run.json
++      TestRunReport.html  TestRunReport.krkl  Failures.md  History.run.json  attachments/  Run.json
+ ```
+ 
+ - **It is a move, not a copy**: a rename inside one volume, constant time for a report of any size, no
+@@ -1088,18 +1088,19 @@ When upgrading Kronikol versions, changing tracking configuration, or refactorin
+ 
+ ### Gold Standard Workflow
+ 
+-1. **Capture a baseline** before any changes — run your full test suite and keep the JSON report where
+-   the tool looks for it:
++1. **Capture a baseline** before any changes — run your full test suite and keep the data file where
++   the tool looks for it (`TestRunReport.krkl` from 5.0.0, `TestRunReport.json` before it or with
++   `CompressTestRunReport = false`):
+    ```powershell
+    New-Item -ItemType Directory -Force Reports/baseline | Out-Null
+-   Copy-Item Reports/TestRunReport.json Reports/baseline/TestRunReport.json
++   Copy-Item Reports/TestRunReport.krkl Reports/baseline/TestRunReport.krkl
+    ```
+ 
+ 2. **Make changes one at a time** for easier diagnosis.
+ 
+ 3. **Re-run the suite, and ask what moved:**
+    ```bash
+-   kronikol query diff ./Reports/TestRunReport.json --baseline
++   kronikol query diff ./Reports/TestRunReport.krkl --baseline
+    ```
+ 
+    The answer names what broke, what was fixed, what is new, what got materially slower, what
+@@ -1108,8 +1109,8 @@ When upgrading Kronikol versions, changing tracking configuration, or refactorin
+    the baseline neither hides a loss nor invents one (3.6.0):
+ 
+    ```
+-   - baseline/TestRunReport.json  2026-01-14T22:10:03Z  412 scenarios, 0 failed
+-   + TestRunReport.json           2026-01-15T09:31:44Z  412 scenarios, 0 failed
++   - baseline/TestRunReport.krkl  2026-01-14T22:10:03Z  412 scenarios, 0 failed
++   + TestRunReport.krkl           2026-01-15T09:31:44Z  412 scenarios, 0 failed
+ 
+    Tracking (2):
+      total  3,908 -> 3,656 calls  (-252)
+-- 
+2.53.0.windows.3
+
