@@ -271,6 +271,154 @@ public class FeaturesToolsTests : PlaywrightTestBase
         Assert.True(await Page.EvaluateAsync<bool>("() => document.activeElement.matches('#report-content > details.feature > summary')"));
     }
 
+    // what shows in the cards' column, in the order it shows: each card that shows, and the line a link writes for a
+    // scenario the filters hide, as "note"
+    private Task<string[]> ShownInColumn() => Page.EvaluateAsync<string[]>("""
+        () => Array.from(document.getElementById('report-content').children)
+            .map((e, i) => ({ e, i, o: parseInt(getComputedStyle(e).order, 10) || 0 }))
+            .filter(({ e }) => getComputedStyle(e).display !== 'none')
+            .sort((a, b) => a.o - b.o || a.i - b.i)
+            .map(({ e }) => e.classList.contains('filtered-out-note') ? 'note'
+                : e.querySelector(':scope > summary').firstChild.textContent.trim() + ':' + e.querySelectorAll('details.scenario').length)
+        """);
+
+    private Task SortByAsync(string value) => Page.EvaluateAsync(
+        "v => { const s = document.getElementById('features-sort'); s.value = v; s.dispatchEvent(new Event('change', { bubbles: true })); }", value);
+
+    // the page's turns after a sort, many more than the four cards' catch-up takes
+    private Task LetThePageRunAsync() => Page.EvaluateAsync("() => new Promise(r => setTimeout(r, 300))");
+
+    // A link to a scenario the filters hide writes a line where the scenario would be (5.2.0). In the sorted column the
+    // line goes with its card, before a sort and after one (5.2.5: 5.2.1 drew it after the first card, every card's order
+    // putting it there), and it adds no space of its own to the column's gap.
+    [Fact]
+    public async Task The_line_for_a_scenario_the_filters_hide_shows_where_its_card_would_be_in_the_sorted_column()
+    {
+        await OpenBakery("FeaturesTools_SortHiddenNote.html");
+        await Page.Locator("#features-sort").SelectOptionAsync("name");
+        await WaitForPageOrderAsync();
+        // only the passed scenarios show: every Croissants scenario failed, so its card hides
+        await OpenFilterRowsAsync();
+        await Page.Locator(".status-toggle[data-status='Passed']").ClickAsync();
+        Assert.Equal(["Bagels:1", "Bagels:3", "Muffins:1"], await ShownInColumn());
+
+        await Page.EvaluateAsync("""
+            () => reveal_url_anchor('sid-' + Array.from(document.querySelectorAll('details.scenario'))
+                .find(s => s.textContent.includes('Fold the dough')).getAttribute('data-stable-id'))
+            """);
+        await Expect(Page.Locator(".filtered-out-note")).ToBeVisibleAsync();
+        Assert.Equal(["Bagels:1", "Bagels:3", "note", "Muffins:1"], await ShownInColumn());
+        Assert.Equal("0px", await Page.Locator(".filtered-out-note").EvaluateAsync<string>("n => getComputedStyle(n).marginBottom"));
+
+        // A sort with the line showing takes it along with its card, the page's own order still the last sort's (a held
+        // button keeps it): by CSS order alone the line follows the card before its own, wherever that is in the page.
+        await Page.Mouse.MoveAsync(5, 5);
+        await Page.Mouse.DownAsync();
+        await SortByAsync("order");
+        await LetThePageRunAsync();
+        Assert.Equal(["Muffins:1", "note", "Bagels:1", "Bagels:3"], await ShownInColumn());
+        // and where its card goes first
+        await SortByAsync("failed");
+        await LetThePageRunAsync();
+        var failedFirst = (await Cards()).Select(c => c.StartsWith("Croissants") ? "note" : c).ToArray();
+        Assert.Equal("note", failedFirst[0]); // every Croissants scenario failed
+        Assert.Equal(failedFirst, await ShownInColumn());
+        await Page.Mouse.UpAsync();
+        await WaitForPageOrderAsync();
+        Assert.Equal(failedFirst, await ShownInColumn());
+        Assert.True(await Page.EvaluateAsync<bool>(
+            "() => document.querySelector('.filtered-out-note').nextElementSibling.querySelector(':scope > summary').textContent.includes('Croissants')"),
+            "in the page the line is just before its card");
+
+        // the page in a sort's order, the line between two cards: the same sort again moves no card
+        await SortByAsync("name");
+        await WaitForPageOrderAsync();
+        await LetThePageRunAsync();
+        await Page.EvaluateAsync("""
+            () => {
+                window.__moved = 0;
+                new MutationObserver(function(records) {
+                    records.forEach(function(r) { window.__moved += Array.from(r.removedNodes).filter(function(n) { return n.matches && n.matches('details.feature'); }).length; });
+                }).observe(document.getElementById('report-content'), { childList: true });
+            }
+            """);
+        await SortByAsync("name");
+        await LetThePageRunAsync();
+        Assert.Equal(0, await Page.EvaluateAsync<int>("() => window.__moved"));
+        Assert.Equal(["Bagels:1", "Bagels:3", "note", "Muffins:1"], await ShownInColumn());
+    }
+
+    // The page's order follows the screen's a few cards at a time after a sort (5.2.1). A card moved under a pressed
+    // button loses the press (its click, or the text being selected), so the cards wait while a button is held (5.2.5).
+    [Fact]
+    public async Task The_page_order_waits_while_a_mouse_button_is_held_and_follows_once_it_is_released()
+    {
+        await OpenBakery("FeaturesTools_SortHeld.html");
+        await Page.Mouse.MoveAsync(5, 5);
+        await Page.Mouse.DownAsync();
+        await SortByAsync("name");
+        await LetThePageRunAsync();
+
+        Assert.Equal(["Bagels:1", "Bagels:3", "Croissants:2", "Muffins:1"], await Cards());
+        Assert.Equal(["Muffins:1", "Croissants:2", "Bagels:1", "Bagels:3"], await PageOrder());
+
+        await Page.Mouse.UpAsync();
+        await WaitForPageOrderAsync();
+        Assert.Equal(["Bagels:1", "Bagels:3", "Croissants:2", "Muffins:1"], await PageOrder());
+    }
+
+    // A node taken out of the page loses the text selected in it: a card the page moves gives it back (5.2.5)
+    [Fact]
+    public async Task A_card_the_page_moves_after_a_sort_keeps_the_text_selected_in_it()
+    {
+        await OpenBakery("FeaturesTools_SortSelection.html");
+        // the first Bagels card's name, third in the page: the name sort moves it to the front
+        var selected = await Page.EvaluateAsync<string>("""
+            () => {
+                const summary = document.querySelectorAll('#report-content > details.feature > summary')[2];
+                const walk = document.createTreeWalker(summary, NodeFilter.SHOW_TEXT, { acceptNode: t => t.textContent.trim() ? 1 : 3 });
+                const text = walk.nextNode(), start = text.textContent.indexOf('Bagels');
+                getSelection().setBaseAndExtent(text, start, text, start + 'Bagels'.length);
+                return getSelection().toString();
+            }
+            """);
+        Assert.Equal("Bagels", selected);
+
+        await SortByAsync("name");
+        await WaitForPageOrderAsync();
+
+        Assert.Equal(["Bagels:1", "Bagels:3", "Croissants:2", "Muffins:1"], await PageOrder());
+        Assert.Equal("Bagels", await Page.EvaluateAsync<string>("() => getSelection().toString()"));
+        Assert.Equal("Bagels:1", await Page.EvaluateAsync<string>(
+            "() => { const f = getSelection().anchorNode.parentElement.closest('details.feature'); return f.querySelector(':scope > summary').firstChild.textContent.trim() + ':' + f.querySelectorAll('details.scenario').length; }"));
+    }
+
+    // An open dropdown closes when its card is moved in the page (a scenario's payload format and width lists live in
+    // the cards): a card holding a focused dropdown is moved once the dropdown is left (5.2.5)
+    [Fact]
+    public async Task A_card_holding_a_focused_dropdown_is_moved_once_the_dropdown_is_left()
+    {
+        await OpenBakery("FeaturesTools_SortDropdown.html");
+        await Page.EvaluateAsync("""
+            () => {
+                const summary = document.querySelectorAll('#report-content > details.feature > summary')[2];
+                const list = document.createElement('select');
+                list.id = 'held-list';
+                list.innerHTML = '<option>JSON</option><option>YAML</option>';
+                summary.appendChild(list);
+                list.focus();
+            }
+            """);
+        await SortByAsync("name");
+        await LetThePageRunAsync();
+        Assert.Equal(["Muffins:1", "Croissants:2", "Bagels:1", "Bagels:3"], await PageOrder());
+        Assert.Equal("held-list", await Page.EvaluateAsync<string>("() => document.activeElement.id"));
+
+        await Page.EvaluateAsync("() => document.activeElement.blur()");
+        await WaitForPageOrderAsync();
+        Assert.Equal(["Bagels:1", "Bagels:3", "Croissants:2", "Muffins:1"], await PageOrder());
+    }
+
     [Fact]
     public async Task The_cards_keep_their_spacing_and_the_Summary_view_still_hides_them()
     {

@@ -62,6 +62,11 @@ function filtered_out_note(hidden, anchor) {
     note.appendChild(text);
     note.appendChild(clear);
     hidden.parentNode.insertBefore(note, hidden);
+    // a feature's card, which the Features sort places by CSS order: the line takes the order just before it (5.2.5)
+    if (hidden.parentNode.id === 'report-content') {
+        note._card = hidden;
+        if (hidden.style.order !== '') note.style.order = String(parseInt(hidden.style.order, 10) - 1);
+    }
     // the sections round the line open, as they do round a scenario a link shows: in a closed feature it showed nothing
     for (var p = note.parentElement; p; p = p.parentElement) if (p.tagName === 'DETAILS') p.setAttribute('open', '');
     jump_into_view(note, 'center');

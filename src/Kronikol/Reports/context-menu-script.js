@@ -1065,6 +1065,8 @@
             container.style.cursor = '';
             container.classList.remove('diagram-natural-size');
         }
+        // the place the box is left at with this level: a zoom that moves no scroll fires no scroll event (5.2.5)
+        container._lastScrollLeft = isZoomed ? container.scrollLeft : undefined;
 
         // Update slider
         var slider = ownSlider(container);
@@ -1078,8 +1080,9 @@
     function addZoomButton(container) {
         // A diagram drawn in parts zooms part by part, and its container has no picture of its own: the scroll observer
         // or a redraw asking for the container's zoom gives each drawn part its own, and takes back any the container
-        // was given before it was drawn in parts.
-        var parts = container.querySelectorAll(':scope > .puml-fragment');
+        // was given before it was drawn in parts. Parts still being drawn are hidden until they replace the picture, and
+        // take its zoom then: asked meanwhile, the diagram keeps it (5.2.5).
+        var parts = container.querySelectorAll(':scope > .puml-fragment:not(.puml-fragment-new)');
         if (parts.length) {
             var stale = container.querySelector(':scope > .diagram-zoom-controls');
             if (stale) stale.remove();
@@ -1089,8 +1092,13 @@
         }
         if (container.querySelector(':scope > .diagram-zoom-controls')) return;
         var svg = getSvg(container);
-        if (!svg) return;
-        if (!isDiagramZoomable(container)) return;
+        // A picture that fits its box, or none, has no zoom: given the zoom of the picture before it (drawn again
+        // narrower, or a part of a diagram zoomed whole), it gives it back, or a drag over it panned it and its text could
+        // not be selected (5.2.5). A box not laid out measures nothing, and is asked again when it is.
+        if (!svg || !isDiagramZoomable(container)) {
+            if (container.clientWidth > 0) dropZoom(container);
+            return;
+        }
         container.style.position = 'relative';
 
         var controls = document.createElement('div');
@@ -1126,6 +1134,7 @@
         box.style.cursor = '';
         box._zoomPercent = undefined;
         box._zoomScrollLeft = undefined;
+        box._lastScrollLeft = undefined;
     }
 
     // Re-apply zoom inline styles after SVG re-render (innerHTML replacement destroys them): the level the box was zoomed
@@ -1137,7 +1146,10 @@
         if (container.classList.contains('diagram-natural-size')) {
             if (container._zoomPercent && container.clientWidth > 0) {
                 applyZoomLevel(container, container._zoomPercent);
-                if (typeof container._zoomScrollLeft === 'number') container.scrollLeft = container._zoomScrollLeft;
+                if (typeof container._zoomScrollLeft === 'number') {
+                    container.scrollLeft = container._zoomScrollLeft;
+                    container._lastScrollLeft = container.scrollLeft;
+                }
                 container._zoomScrollLeft = undefined;
                 return;
             }
@@ -1159,6 +1171,8 @@
         if (!isPlus && !isMinus) return;
 
         if (!selectedDiagram) return;
+        // a part drawn again away keeps no selection, and the keys go to the browser (5.2.5)
+        if (!selectedDiagram.isConnected) { deselectDiagram(); return; }
         var container = selectedDiagram;
         var slider = ownSlider(container);
         if (!slider) return;
@@ -1248,6 +1262,9 @@
 
     window._zoomState = {
         of: function(box) {
+            // Not zoomed, a box has no level or place to keep, and nothing of its layout is read: every diagram a control
+            // draws again is asked, and a box read far from the screen lays its scenario out (5.2.5).
+            if (!box.classList.contains('diagram-natural-size')) return { zoomed: false, selected: selectedDiagram === box };
             var place = box.clientWidth > 0 ? box.scrollLeft
                 : typeof box._zoomScrollLeft === 'number' ? box._zoomScrollLeft : box._lastScrollLeft || 0;
             return { zoomed: box.classList.contains('diagram-natural-size'), percent: box._zoomPercent,

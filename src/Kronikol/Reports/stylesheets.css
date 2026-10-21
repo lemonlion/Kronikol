@@ -73,6 +73,7 @@
           it was drawn and gave it its card colours only once it came into view (one to three of 60 diagrams). */
        #report-content { display: flex; flex-direction: column; gap: 14px; margin: 14px 0; }
        #report-content > .feature { margin: 0; content-visibility: visible; }
+       #report-content > .filtered-out-note { margin: 0; }
        .feature > summary {
            padding: 11px 16px;
            background: var(--kron-strip);

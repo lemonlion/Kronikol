@@ -4,6 +4,85 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.2.5] - 2026-10-21
+
+The patch part moves (5.2.4 to 5.2.5): bug fixes and a performance fix, with nothing new to call or configure. Most of
+them were found by a review of 5.1.0 to 5.2.3; each entry names the release it came from.
+
+### Fixed
+
+- **A scenario's diagram tabs far down the page are laid out for the page's width (5.1.0).** The Sequence, Activity and
+  Flame tabs float on the "Diagrams" title line when they fit beside it. Since 5.1.0 the page lays out only the tab
+  bars within half a screen of the screen, and a bar farther off as its section takes a size. But the browser lays out
+  the scenarios up to about a screen and a half away, so a bar whose section took its size out there (the page scrolled,
+  the window resized, a phone turned) kept the layout it had: under its title where it would now fit, or on the title
+  line where it no longer fits, over the title. Now a bar is laid out whenever its section takes a new size, wherever it
+  is; the browser reports only sections it has laid out, so nothing far from the screen is laid out for it.
+- **Two clicks of a report control in quick succession leave a diagram drawn in parts as the second says (5.1.1).** The
+  first click's queue puts a diagram's cached parts in one task at a time, and the second click's queue, finding the old
+  parts still first on the page, passed over the diagram as already drawn from its source. The first click's picture
+  stayed (headers shown, say, with the Headers control saying hidden), and Copy PlantUML source copied the other state.
+  A queue now waits for a diagram that is being drawn, by another queue or by a note's own button.
+- **A folded note's buttons follow the Headers control and the JSON or YAML choice again (5.1.1).** A control that
+  changes nothing in a diagram's picture passes over it (5.1.1), and with the notes folded the Headers control and the
+  format choice draw the same picture, so the note's buttons, which depend on both, were not made again: a folded note
+  whose preview is all of it got no + when its header line came to show, and its tooltip kept the other format. The
+  buttons are now made again when the headers, the format or the line limit changed.
+- **A diagram drawn whole, then in parts, while far from the screen gets its buttons part by part (5.1.1).** The diagram
+  still waited for the buttons of its whole picture, and as it came near they were made for the whole diagram on its
+  first part, with the whole diagram's notes.
+- **A zoomed diagram drawn again to fit its box takes no zoom (5.2.3).** Folding a wide note of a zoomed diagram drew it
+  narrower than its box: it had no slider, but it was still marked zoomed, so a drag over it panned it and its text
+  could not be selected. The same went for the parts of a zoomed diagram that came back in parts and fit their box.
+- **The selection and the zoom keys follow a diagram drawn again in fewer parts (5.2.2).** A selected part with no part
+  in its place stayed selected off the page, and Ctrl with + or - zoomed nothing and kept the keys from the browser. The
+  last part now takes the selection, and a selected diagram taken off the page any other way leaves the keys to the
+  browser.
+- **A zoomed diagram keeps its zoom when the page asks for its slider while it is drawn again in parts (5.2.2).** The
+  new parts are on the page, hidden, until they replace the picture, and the page took them for the diagram's parts and
+  the zoom off the diagram, so every part came back at its fit.
+- **A diagram unzoomed and zoomed again without a scroll keeps its place when drawn again while not displayed (5.2.3).**
+  The place kept for a box that is not laid out was the last scroll seen, from before the zoom.
+- **The Components tab's diagram keeps its place across the picture when the filters draw it again.** It kept its zoom
+  level, but the new picture came back at its left edge.
+- **The Features sort keeps the line for a hidden scenario in place, and leaves the reader's press, selection and open
+  list alone (5.2.1).** The line a link writes for a scenario the filters hide showed after the first card of a sorted
+  column, not where the scenario's feature sorts; it now shows just before that card, at the same spacing as the cards.
+  The page's own order, which follows a sort a few milliseconds at a time, moved cards from under a held mouse button
+  (the click was lost), out of a text selection (it went) and with a list open in them (it closed): a move now waits
+  while a mouse button is down or a list in the card is open, and text selected in a card moved is selected again.
+- **A note drawing the engine refuses leaves nothing running.** When the engine threw, the note went back to what it
+  showed, but the wait for the drawing kept polling, and half a minute later it put the note back again, over anything
+  done since, and said no drawing was running.
+
+### Performance
+
+- **A control drawing diagrams again reads no layout of a diagram that is not zoomed (5.2.3).** Each diagram drawn again
+  was measured for its zoom before its picture was replaced, and measuring one in a scenario far from the screen lays
+  that scenario out, the cost 5.1.1 took out of the report's controls. Only a zoomed diagram is measured now.
+
+### Tests
+
+- `DiagramToggleLayoutTests`: on 14 open scenarios with tab bars (`ReportTestHelper.GenerateReportWithManyDiagramTabs`),
+  every bar on the screen sits on its title line as the page scrolls, and after the window narrows to 520 px none does.
+- `NoteRedrawQueueTests` (new): two clicks of Headers in one task on a diagram drawn in parts; a folded note whose
+  preview is all of it gets its + when Headers shows its header line (`GenerateReportWithShortNoteAndHeader`); a diagram
+  drawn whole and then in parts far from the screen waits only for its parts' buttons; a refused note drawing leaves no
+  timer running; and reading the zoom of a diagram that is not zoomed reads no width or scroll.
+- `ZoomKeptOnRedrawTests` gains a diagram drawn again to fit its box (`GenerateReportWithNarrowDiagramAndWideNote`), the
+  selection on a part a redraw takes away, the zoom kept when asked for mid-redraw, the zoom keys after a selected
+  diagram leaves the page, a zoom again without a scroll, and a guard for a second redraw far from the screen.
+- `ComponentDiagramZoomTests` (new): the Components tab's diagram zoomed and scrolled keeps both when a status filter
+  draws it again.
+- `FeaturesToolsTests` gains the line for a hidden scenario in a sorted column, a held mouse button, a text selection and
+  a focused list across the page's catch-up moves.
+- Proofs: the facts were written first, and all but two fail on 5.2.3's scripts, each at the fault it names; the zoom
+  keys fact and the folded note's + were proved by mutation. 22 of 22 mutations of the fixes are killed, three of them
+  only once the hidden scenario's fact moved that card in the column: a later sort not re-ordering the line, the line
+  not passed over between two cards, and the cards' odd orders. Two reported faults did not reproduce, and their code
+  is unchanged: a zoom place not yet given back, lost by a second redraw far from the screen (Chromium lays the box out
+  as it is read; a guard fact keeps it), and a queued diagram taken off the page (the engine fails at once).
+
 ## [5.2.4] - 2026-10-21
 
 The patch part moves (5.2.3 to 5.2.4): bug fixes found while planning the payload scroll box

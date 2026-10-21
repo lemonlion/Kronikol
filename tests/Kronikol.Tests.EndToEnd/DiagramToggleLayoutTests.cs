@@ -98,4 +98,65 @@ public class DiagramToggleLayoutTests : DiagramNotePlaywrightBase
         Assert.Equal("none", g.GetProperty("float").GetString());
         Assert.True(g.GetProperty("below").GetBoolean(), "the settings must open under the title");
     }
+
+    /// <summary>Scrolls the page from top to bottom a step at a time, letting the page answer each step.</summary>
+    private async Task<List<string>> ScrollThroughAsync(int step, string checkOnScreen)
+    {
+        var found = new List<string>();
+        var height = await Page.EvaluateAsync<int>("() => document.documentElement.scrollHeight");
+        for (var y = 0; y <= height; y += step)
+        {
+            await Page.EvaluateAsync("y => window.scrollTo(0, y)", y);
+            // the diagrams of the scenarios on the screen drawn (each drawing gives its section its size)
+            await Page.WaitForFunctionAsync("""
+                () => Array.from(document.querySelectorAll('details.scenario[open]')).every(function(s) {
+                    var r = s.getBoundingClientRect();
+                    if (!(r.bottom > 0 && r.top < innerHeight)) return true;
+                    return Array.from(s.querySelectorAll('.plantuml-browser')).every(function(c) { return !c.getClientRects().length || !!c.querySelector('svg'); });
+                })
+                """, null, new() { Timeout = 30_000, PollingInterval = 200 });
+            await TwoAnimationFramesAsync(Page);
+            await Page.WaitForTimeoutAsync(150);
+            found.AddRange(await Page.EvaluateAsync<string[]>(checkOnScreen));
+            height = await Page.EvaluateAsync<int>("() => document.documentElement.scrollHeight");
+        }
+        return found;
+    }
+
+    // A bar the page laid out on its title line, and then a narrower page: the bar half a screen to a screen and a half
+    // away (laid out by the page, as content-visibility: auto lays out what is that near, but beyond the half screen the
+    // bars are laid out within) had its section change size with nothing to lay it out again, and kept its place on the
+    // title line it no longer fitted on when it came onto the screen (5.2.5: 5.1.0 laid out the near bars only).
+    [Fact]
+    public async Task A_bar_off_the_screen_when_the_page_narrows_is_laid_out_for_the_new_width_when_it_comes_onto_it()
+    {
+        await Page.SetViewportSizeAsync(1400, 900);
+        await Page.GotoAsync(ReportTestHelper.GenerateReportWithManyDiagramTabs(TempDir, OutputDir, "ToggleLayoutFar.html"));
+        await Page.Locator("details.feature").First.WaitForAsync();
+        await Page.EvaluateAsync("() => document.querySelectorAll('details.feature, details.scenario, details.example-diagrams').forEach(d => d.open = true)");
+        const string onScreenBars = """
+            (inline) => {
+                var out = [];
+                document.querySelectorAll('details.example-diagrams > summary + .diagram-toggle-tabs').forEach(function(t, i) {
+                    var r = t.getBoundingClientRect();
+                    if (r.width && r.bottom > 0 && r.top < innerHeight && (t.getAttribute('data-layout') === 'inline') === inline) out.push('bar ' + i);
+                });
+                return out;
+            }
+            """;
+
+        // every bar on its title line, the page drawn from top to bottom
+        var stacked = await ScrollThroughAsync(450, "() => (" + onScreenBars + ")(false)");
+        Assert.True(await Page.Locator("details.example-diagrams > summary + .diagram-toggle-tabs").CountAsync() >= 12, "the scenarios have tab bars");
+        Assert.Empty(stacked.Distinct());
+
+        await Page.EvaluateAsync("() => window.scrollTo(0, 0)");
+        await TwoAnimationFramesAsync(Page);
+        await Page.SetViewportSizeAsync(520, 900);
+        await TwoAnimationFramesAsync(Page);
+
+        // too narrow for the title line now: no bar shows on it
+        var inline = await ScrollThroughAsync(300, "() => (" + onScreenBars + ")(true)");
+        Assert.Empty(inline.Distinct());
+    }
 }

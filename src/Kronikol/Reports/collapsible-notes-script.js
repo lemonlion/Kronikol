@@ -2036,6 +2036,14 @@
     function recordDrawn(container, source) {
         container._drawnSource = source;
         container._drawnSvg = container.querySelector('svg');
+        container._drawnButtons = buttonsStateOf(container);
+    }
+    // What a note's buttons follow that its drawn source may not carry: a folded note shows its preview whatever the
+    // headers, its format and the line limit, and its buttons (whether a + opens it, its tooltip, what a + opens to)
+    // follow all three (5.2.5).
+    function buttonsStateOf(container) {
+        var hh = container._headersHidden !== undefined ? container._headersHidden : window._headersHidden;
+        return (hh ? 'h' : 's') + '|' + container._truncateLines + '|' + JSON.stringify(container._noteFormats || {});
     }
     function drawnFrom(container, source) {
         return container._drawnSource === source && !!container._drawnSvg && container.querySelector('svg') === container._drawnSvg;
@@ -2083,6 +2091,10 @@
             window._zoomState.give(newParts[i], { zoomed: state.zoomed, percent: state.percent, scrollLeft: state.scrollLeft,
                 selected: state.selected && (!before.whole || i === 0) });
         }
+        // a selected part with no part in its place now (the diagram drawn again in fewer parts) gives its selection to
+        // the last part (5.2.5)
+        if (!before.whole && newParts.length && before.states.slice(newParts.length).some(function(s) { return s.selected; }))
+            window._zoomState.give(newParts[newParts.length - 1], { zoomed: false, selected: true });
         if (before.whole) window._zoomState.drop(container);
     }
 
@@ -2280,6 +2292,8 @@
         try {
             window.plantuml.render(newSource.split('\n'), renderTarget.id);
         } catch(e) {
+            // done, so the poll below stops at once: left running, it gave the state back again 30 s later (5.2.5)
+            done = true;
             mo.disconnect();
             if (renderTarget.parentNode) renderTarget.parentNode.removeChild(renderTarget);
             container._noteRendering = false;
@@ -2841,6 +2855,13 @@
         requestAnimationFrame(function() { if (window._addZoomButton) window._addZoomButton(el); });
     }
 
+    // The hover-only work for `el` now when it is near the screen, else as it comes near.
+    function decorateWhenNear(el, near) {
+        if (near || !nearWatch) { decorateNow(el); return; }
+        el._kDecorate = true;
+        watchNear(el);
+    }
+
     // After a redraw of `el` (the diagram, or one of its fragments) for the diagram `owner`: the internal-flow links
     // and what shows at once, then the hover-only work now when it is near the screen, else as it comes near.
     function afterRedraw(el, owner, near) {
@@ -2881,7 +2902,7 @@
 
     // Shared serialized render queue — TeaVM engine uses shared global state
     function processRenderQueue(queue, onAllDone) {
-        var renderWaitCount = 0;
+        var renderWaitCount = 0, drawingWaitCount = 0;
         // Nearest the screen first (5.1.1), so what the reader is looking at shows the new state first however many
         // diagrams come after it. Every box is read before anything is written.
         var boxes = new Map();
@@ -2949,11 +2970,30 @@
             if (redrawSliceSpent()) { setTimeout(processNext, 0); return; }
             var item = takeNext();
             var container = item.container;
+            // A diagram being drawn again (by a note's button, or by another control's queue in parts, which swaps its
+            // parts in a task each) waits for that drawing: passed over as drawn from this source by the parts still on
+            // the page, or drawn alongside, it kept the earlier state (5.2.5).
+            if (container._noteRendering && drawingWaitCount < 300) {
+                drawingWaitCount++;
+                queue.unshift(item);
+                setTimeout(processNext, 50);
+                return;
+            }
+            drawingWaitCount = 0;
             var origNoteBlocks = parseNoteBlocks(container._noteOriginalSource);
             var newSource = composeNoteSource(container, container._noteOriginalSource, origNoteBlocks);
             container.setAttribute('data-plantuml', newSource);
             // the picture on the page was drawn from this very source: drawing it again would draw it again
-            if (drawnFrom(container, newSource)) { settled(item); processNext(); return; }
+            if (drawnFrom(container, newSource)) {
+                if (container._drawnButtons !== buttonsStateOf(container)) {
+                    container._drawnButtons = buttonsStateOf(container);
+                    var drawnParts = Array.from(container.querySelectorAll(':scope > .puml-fragment'));
+                    (drawnParts.length ? drawnParts : [container]).forEach(function(el) { decorateWhenNear(el, isNear(item)); });
+                }
+                settled(item);
+                processNext();
+                return;
+            }
 
             // Re-split into fragments if needed
             if (window._splitWithChunkedNotes) {
@@ -2966,6 +3006,8 @@
                     // Keep old children visible until new fragments are rendered
                     var oldChildren = Array.from(container.children);
                     container.dataset.rendered = '1';
+                    // drawing until the swap, the cached parts a task each: a note's button and another queue wait for it
+                    container._noteRendering = true;
                     var fragList = [];
                     for (var fi = 0; fi < fragments.length; fi++) {
                         var fragDiv = document.createElement('div');
@@ -2991,6 +3033,9 @@
                                 oldChildren[oi]._kDecorate = false;
                                 unwatchNear(oldChildren[oi]);
                             }
+                            // drawn in parts now, the diagram has no buttons of its own to wait for: its parts get theirs
+                            container._kDecorate = false;
+                            container._noteRendering = false;
                             var newFrags = container.querySelectorAll('.puml-fragment-new');
                             for (var ni = 0; ni < newFrags.length; ni++) {
                                 newFrags[ni].style.display = '';

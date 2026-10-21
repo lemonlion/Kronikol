@@ -315,6 +315,82 @@ public static class ReportTestHelper
     }
 
     /// <summary>
+    /// One scenario ("Several diagrams") whose diagram has two calls and one note: a header line, then a body of one
+    /// word, "Accepted". Folded with the headers hidden, the note's preview is the whole of what it shows.
+    /// </summary>
+    public static string GenerateReportWithShortNoteAndHeader(string tempDir, string outputDir, string fileName)
+    {
+        var features = new[]
+        {
+            new Feature
+            {
+                DisplayName = "Note Feature",
+                Scenarios =
+                [
+                    new Scenario { Id = "t1", DisplayName = "Several diagrams", Result = ExecutionResult.Passed, Duration = TimeSpan.FromSeconds(1) }
+                ]
+            }
+        };
+        var diagrams = new[]
+        {
+            new DiagramAsCode("t1", "",
+                "@startuml\nparticipant \"Caller\" as a1\nparticipant \"Kitchen\" as a2\na1 -> a2 : order\nnote right\n<color:gray>[X-Request=long]\n\nAccepted\nend note\na2 --> a1 : accepted\n@enduml")
+        };
+
+        var path = ReportGenerator.GenerateHtmlReport(
+            diagrams, features,
+            DateTime.UtcNow, DateTime.UtcNow,
+            null, Path.Combine(tempDir, fileName), "Test Report", true,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs);
+
+        File.Copy(path, Path.Combine(outputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
+    }
+
+    /// <summary>
+    /// One scenario ("Several diagrams") whose diagram is narrow, three participants, but carries one note of
+    /// <paramref name="noteLines"/> lines of about 300 characters: shown, cut to the line limit or whole, the note makes
+    /// the diagram wider than the page, and folded to its one-line preview the diagram fits its box. After the note come
+    /// <paramref name="callPairs"/> calls with their replies between the three participants.
+    /// </summary>
+    public static string GenerateReportWithNarrowDiagramAndWideNote(string tempDir, string outputDir, string fileName,
+        int noteLines, int callPairs)
+    {
+        var filler = new string('x', 280);
+        var note = "note right\n{\n"
+            + string.Join("\n", Enumerable.Range(1, noteLines).Select(k => $"  \"field{k}\": \"{filler}\",")) + "\n}\nend note\n";
+        var calls = string.Join("\n", Enumerable.Range(1, callPairs).Select(i =>
+            $"a{1 + i % 2} -> a{2 + i % 2} : call {i}\na{2 + i % 2} --> a{1 + i % 2} : reply {i}"));
+        var features = new[]
+        {
+            new Feature
+            {
+                DisplayName = "Zoom Feature",
+                Scenarios =
+                [
+                    new Scenario { Id = "t1", DisplayName = "Several diagrams", Result = ExecutionResult.Passed, Duration = TimeSpan.FromSeconds(1) }
+                ]
+            }
+        };
+        var diagrams = new[]
+        {
+            new DiagramAsCode("t1", "",
+                $"@startuml\nparticipant \"Caller\" as a1\nparticipant \"Kitchen\" as a2\nparticipant \"Store\" as a3\na1 -> a2 : request with a long body\n{note}a2 --> a1 : reply\n{calls}\n@enduml")
+        };
+
+        var path = ReportGenerator.GenerateHtmlReport(
+            diagrams, features,
+            DateTime.UtcNow, DateTime.UtcNow,
+            null, Path.Combine(tempDir, fileName), "Test Report", true,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs);
+
+        File.Copy(path, Path.Combine(outputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
+    }
+
+    /// <summary>
     /// A wide PlantUML diagram that also contains notes (for testing zoom + note interaction).
     /// </summary>
     private const string WideWithNotesPlantUmlSource = """
@@ -2672,6 +2748,75 @@ public static class ReportTestHelper
         child.Dispose();
         root.Dispose();
 
+        File.Copy(path, Path.Combine(outputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
+    }
+
+    /// <summary>
+    /// One feature of <paramref name="scenarios"/> scenarios, each with a sequence diagram and its own whole-test flow,
+    /// so each has the Sequence, Activity and Flame tabs on its "Diagrams" title line: a page several screens long of tab
+    /// bars, for the bars far from the screen.
+    /// </summary>
+    public static string GenerateReportWithManyDiagramTabs(string tempDir, string outputDir, string fileName, int scenarios = 14)
+    {
+        var ids = Enumerable.Range(1, scenarios).Select(k => "tab-" + k).ToArray();
+        var features = new[]
+        {
+            new Feature
+            {
+                DisplayName = "Tabs Feature",
+                Scenarios = ids.Select((id, k) => new Scenario
+                {
+                    Id = id, DisplayName = "Tabs scenario " + (k + 1), Result = ExecutionResult.Passed, Duration = TimeSpan.FromSeconds(1),
+                    Steps =
+                    [
+                        new ScenarioStep { Keyword = "Given", Text = "the system is running", Status = ExecutionResult.Passed },
+                        new ScenarioStep { Keyword = "When", Text = "I save my preferences", Status = ExecutionResult.Passed }
+                    ]
+                }).ToArray()
+            }
+        };
+        var diagrams = ids.Select(id => new DiagramAsCode(id, "", WideDatabaseParticipantPlantUmlSource)).ToArray();
+
+        using var activitySource = new System.Diagnostics.ActivitySource("Kronikol.Tests.ManyTabs.E2E");
+        using var listener = new System.Diagnostics.ActivityListener
+        {
+            ShouldListenTo = _ => true,
+            Sample = (ref System.Diagnostics.ActivityCreationOptions<System.Diagnostics.ActivityContext> _) =>
+                System.Diagnostics.ActivitySamplingResult.AllDataAndRecorded
+        };
+        System.Diagnostics.ActivitySource.AddActivityListener(listener);
+        var baseTime = DateTime.UtcNow;
+        var segments = new Dictionary<string, InternalFlowSegment>();
+        var spans = new List<System.Diagnostics.Activity>();
+        foreach (var id in ids)
+        {
+            System.Diagnostics.Activity.Current = null;
+            var root = activitySource.StartActivity("HTTP PUT /customer-preferences", System.Diagnostics.ActivityKind.Server)!;
+            root.SetStartTime(baseTime);
+            root.SetEndTime(baseTime.AddMilliseconds(500));
+            var rootCtx = new System.Diagnostics.ActivityContext(root.TraceId, root.SpanId, System.Diagnostics.ActivityTraceFlags.Recorded);
+            var child = activitySource.StartActivity("Spanner: InsertOrUpdate", System.Diagnostics.ActivityKind.Internal, rootCtx)!;
+            child.SetStartTime(baseTime.AddMilliseconds(20));
+            child.SetEndTime(baseTime.AddMilliseconds(400));
+            segments["iflow-test-" + id] = new(Guid.Empty, RequestResponseType.Request, id, baseTime, baseTime.AddMilliseconds(500), [root, child]);
+            spans.Add(child);
+            spans.Add(root);
+        }
+        System.Diagnostics.Activity.Current = null;
+
+        var path = ReportGenerator.GenerateHtmlReport(
+            diagrams, features,
+            DateTime.UtcNow, DateTime.UtcNow,
+            null, Path.Combine(tempDir, fileName), "Test Report", true,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs,
+            internalFlowTracking: true,
+            wholeTestSegments: segments,
+            wholeTestVisualization: WholeTestFlowVisualization.Both,
+            toggleDefaults: ReportToggleDefaultsResolver.Resolve(new ReportConfigurationOptions(), specifications: false));
+
+        spans.ForEach(s => s.Dispose());
         File.Copy(path, Path.Combine(outputDir, fileName), true);
         return new Uri(path).AbsoluteUri;
     }

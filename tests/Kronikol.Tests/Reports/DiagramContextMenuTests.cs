@@ -898,9 +898,11 @@ public class DiagramContextMenuTests
     [Fact]
     public void ZoomButton_not_added_when_diagram_fits_container()
     {
-        // addZoomButtons should check isDiagramZoomable before adding a button
+        // addZoomButtons should check isDiagramZoomable before adding a button, and a diagram that cannot zoom gives
+        // back a zoom it was given (5.2.5)
         Assert.Contains("function isDiagramZoomable(container)", _script);
-        Assert.Contains("if (!isDiagramZoomable(container)) return", _script);
+        Assert.Contains("if (!svg || !isDiagramZoomable(container)) {", _script);
+        Assert.Contains("if (container.clientWidth > 0) dropZoom(container);", _script);
     }
 
     [Fact]

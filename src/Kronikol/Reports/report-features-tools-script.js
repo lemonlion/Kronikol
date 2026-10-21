@@ -86,24 +86,47 @@
     // keeps the height the browser remembered for it, so nothing on the screen shifts. moveBefore would keep a moved
     // card's focus, but its cost lands in the next frame, out of the slice's sight (277 ms there), so a card that held
     // the focus is given it back instead. Anything written around the cards stays put: each goes before the first card
-    // or after the one before it.
-    var PLACE_SLICE_MS = 8, placing = null;
+    // or after the one before it. The cards take the odd orders, so the line for a scenario the filters hide (in
+    // report-url-hash-function.js) takes the even one before its card and shows in its place (5.2.5: it took 0 and showed
+    // after the first card). A move waits while a mouse button is down, as the card under a press or a drag selecting
+    // text would go from under it, and while a list in the card is open, which a move closes; text selected in a card
+    // moved is selected again (5.2.5).
+    var PLACE_SLICE_MS = 8, placing = null, pressed = false;
+    document.addEventListener('pointerdown', function () { pressed = true; }, true);
+    ['pointerup', 'pointercancel'].forEach(function (type) { document.addEventListener(type, function () { pressed = false; }, true); });
+    document.addEventListener('pointermove', function (e) { if (!e.buttons) pressed = false; }, true);
+    window.addEventListener('blur', function () { pressed = false; });
     function placeCards(sorted) {
         if (placing) clearTimeout(placing);
-        sorted.forEach(function (p, i) { p.card.style.order = String(i); });
+        sorted.forEach(function (p, i) { p.card.style.order = String(2 * i + 1); });
         var parent = sorted[0].card.parentNode, i = 0;
+        var note = parent.querySelector(':scope > .filtered-out-note');
+        if (note && note._card) note.style.order = String(parseInt(note._card.style.order, 10) - 1);
+        // the card after this one in the page, the line for a hidden scenario passed over
+        function next(card) {
+            var el = card.nextElementSibling;
+            return el && el === note ? el.nextElementSibling : el;
+        }
         function step() {
             placing = null;
+            if (pressed) { placing = setTimeout(step, 50); return; }
             var start = performance.now();
             for (; i < sorted.length; i++) {
                 var card = sorted[i].card;
                 var first = i === 0 ? parent.querySelector(':scope > details.feature') : null;
-                if (i === 0 ? first === card : sorted[i - 1].card.nextElementSibling === card) continue;
+                if (i === 0 ? first === card : next(sorted[i - 1].card) === card) continue;
                 if (performance.now() - start > PLACE_SLICE_MS) { placing = setTimeout(step, 0); return; }
                 var focus = document.activeElement, held = focus && card.contains(focus) ? focus : null;
+                if (held && held.tagName === 'SELECT') { placing = setTimeout(step, 100); return; }
+                var sel = window.getSelection ? window.getSelection() : null, kept = null;
+                if (sel && sel.rangeCount && (card.contains(sel.anchorNode) || card.contains(sel.focusNode)))
+                    kept = [sel.anchorNode, sel.anchorOffset, sel.focusNode, sel.focusOffset];
                 parent.insertBefore(card, i === 0 ? first : sorted[i - 1].card.nextSibling);
                 if (held && document.activeElement !== held) held.focus({ preventScroll: true });
+                if (kept) try { sel.setBaseAndExtent(kept[0], kept[1], kept[2], kept[3]); } catch (e) { }
             }
+            if (note && note._card && note._card.parentNode === parent && note.nextElementSibling !== note._card)
+                parent.insertBefore(note, note._card);
         }
         placing = setTimeout(step, 0);
     }

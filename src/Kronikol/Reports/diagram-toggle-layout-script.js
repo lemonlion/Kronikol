@@ -11,6 +11,11 @@
     var scheduled = false;
 
     var NEAR = 0.5; // of the screen's height: how far from it a bar is laid out, ahead of being seen
+    // The sections the ResizeObserver saw take a size since the last pass. The page laid each out to measure it, so its
+    // bar is laid out too however far from the screen it is: the page lays out what is within a screen and a half of the
+    // screen (content-visibility: auto), farther than NEAR, and a bar whose section took its size out there had nothing
+    // to lay it out again when it came near (5.2.5). The observer never reports a section the page has not laid out.
+    var grown = new Set();
 
     // A bar in a closed <details> or a hidden panel is not drawn, and the page's structure says so without a layout; it
     // keeps the layout it had, and is laid out again when it shows (its <details> opening, or its panel, sets one off).
@@ -23,8 +28,8 @@
     // near the screen (content-visibility: auto), and a box read in one it skipped lays that one out for the reading, so
     // with every scenario of 750 open a click held the page for seconds (5.1.0): a feature's box is read before anything
     // in it, then its scenario's, and nothing is read in one far from the screen. A bar farther off keeps the layout it
-    // had, and is laid out as it comes near: the page lays its scenario out then, and the ResizeObserver in start sees
-    // the bar's section take its size.
+    // had, and is laid out as its section takes a size: the page lays its scenario out as it comes near, and the
+    // ResizeObserver in start sees the section take its size.
     function nearToggles() {
         var margin = window.innerHeight * NEAR, near = new Map();
         function isNear(section) {
@@ -40,8 +45,10 @@
         var all = document.querySelectorAll('summary + .diagram-toggle'), toggles = [];
         for (var i = 0; i < all.length; i++) {
             var toggle = all[i];
-            if (drawn(toggle) && isNear(toggle.closest('.feature')) && isNear(toggle.closest('.scenario'))) toggles.push(toggle);
+            if (!drawn(toggle)) continue;
+            if (grown.has(toggle.parentElement) || (isNear(toggle.closest('.feature')) && isNear(toggle.closest('.scenario')))) toggles.push(toggle);
         }
+        grown.clear();
         return toggles;
     }
 
@@ -91,7 +98,10 @@
         document.addEventListener('toggle', schedule, true);
         // a bar's section taking a size (laid out as it comes near, scrolled to or brought there by a sort) lays it out
         if (typeof ResizeObserver === 'function') {
-            var ro = new ResizeObserver(schedule);
+            var ro = new ResizeObserver(function (entries) {
+                entries.forEach(function (e) { grown.add(e.target); });
+                schedule();
+            });
             var hosts = document.querySelectorAll('summary + .diagram-toggle');
             for (var i = 0; i < hosts.length; i++) if (hosts[i].parentElement) ro.observe(hosts[i].parentElement);
         }

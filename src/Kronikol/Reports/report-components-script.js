@@ -134,7 +134,11 @@
                     return;
                 }
                 if (window._describeEngineFailure) window._describeEngineFailure(target, source);
+                // the diagram keeps its zoom, the level and its place across the picture, as the report's diagrams do
+                // (5.2.5: the swap took the scroll with the old picture)
+                var zoom = window._zoomState ? window._zoomState.of(el) : null;
                 el.innerHTML = target.innerHTML;
+                if (zoom) window._zoomState.give(el, zoom);
                 el.setAttribute('data-plantuml', source);
                 drawn = source;
                 if (window._iflowBindLinks) window._iflowBindLinks(el, source);
