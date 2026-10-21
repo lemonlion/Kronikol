@@ -120,15 +120,32 @@ public class NoteAppearanceScriptTests
         Assert.Contains("MAX_NOTE_WIDTH_PX", _script);
     }
 
+    /// <summary>
+    /// The correction pass runs at most twice (5.2.4): the flag is cleared before the redraw, and only a first pass, one
+    /// with no earlier pass recorded, may set it again; the second reads and clears that record before it draws, so it
+    /// cannot schedule a third. Until 5.2.4 it ran at most once, and one pass left a diagram drawn in parts 38 px wider
+    /// than its column.
+    /// </summary>
     [Fact]
-    public void The_correction_pass_runs_at_most_once()
+    public void The_correction_pass_runs_at_most_twice()
     {
-        var idx = _script.IndexOf("if (container._refineNoteWidth", StringComparison.Ordinal);
+        var idx = _script.IndexOf("function refineNoteWidth(owner)", StringComparison.Ordinal);
         Assert.True(idx >= 0);
-        var body = _script[idx..(idx + 800)];
-        // Cleared before the retry, so a retry cannot schedule another.
-        Assert.True(body.IndexOf("container._refineNoteWidth = false;", StringComparison.Ordinal)
-            < body.IndexOf("rerenderWithNoteStates(container", StringComparison.Ordinal));
+        var end = _script.IndexOf("\n    }\n", idx, StringComparison.Ordinal);
+        var body = _script[idx..end];
+        var redraw = body.IndexOf("rerenderWithNoteStates(owner", StringComparison.Ordinal);
+        var cleared = body.IndexOf("owner._refineNoteWidth = false;", StringComparison.Ordinal);
+        var recordRead = body.IndexOf("var previous = owner._refinePrevious;", StringComparison.Ordinal);
+        var recordCleared = body.IndexOf("owner._refinePrevious = null;", StringComparison.Ordinal);
+        Assert.True(redraw > 0 && cleared > 0 && cleared < redraw, "the flag is cleared before the redraw");
+        Assert.True(recordRead > 0 && recordRead < recordCleared && recordCleared < redraw,
+            "the earlier pass's record is read and cleared before the redraw");
+        var rearm = body.IndexOf("owner._refineNoteWidth = true;", StringComparison.Ordinal);
+        Assert.True(rearm > 0 && body.IndexOf("owner._refineNoteWidth = true;", rearm + 1, StringComparison.Ordinal) < 0,
+            "the flag is set again in one place");
+        var guard = body.LastIndexOf("if (!previous) {", rearm, StringComparison.Ordinal);
+        Assert.True(guard > 0 && !body[guard..rearm].Split('\n').Any(l => l.Trim() == "}"),
+            "only a first pass sets the flag again");
     }
 
     [Fact]

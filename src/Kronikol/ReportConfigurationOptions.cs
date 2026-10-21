@@ -606,7 +606,7 @@ public record ReportConfigurationOptions
     /// Raise it when your notes carry wide content — analytics SQL, XML, tabular text — and the report
     /// is not rendered with <see cref="PlantUmlRendering.BrowserJs"/>: this is the only note-width
     /// control that reaches <c>Local</c>, <c>NodeJs</c> and a source a reader copies out of the report,
-    /// because the per-note full-width and monospace toggles are client-side. Under <c>BrowserJs</c> it
+    /// because the reader's per-note width control (Wide) is client-side. Under <c>BrowserJs</c> it
     /// sets the width every note <em>starts</em> at; readers can still widen individual notes.
     /// </para>
     /// <para>

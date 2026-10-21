@@ -74,7 +74,7 @@ public class ScenarioTruncateAndCollapsibleNotesTests
     {
         var fnBody = ExtractFunctionBody(_script, "buildDetailsQueue");
         Assert.Contains("container._truncateLines", fnBody);
-        Assert.Matches(@"isLongNote\(noteBlocks\[i\]\.contentLines,\s*containerLines", fnBody);
+        Assert.Matches(@"isLongNote\(activeNoteContentLines\(container,\s*i,\s*noteBlocks\[i\]\.contentLines\),\s*containerLines", fnBody);
     }
 
     [Fact]
@@ -169,7 +169,7 @@ public class ScenarioTruncateAndCollapsibleNotesTests
     public void BuildDetailsQueue_passes_headersHidden_to_isLongNote()
     {
         var fnBody = ExtractFunctionBody(_script, "buildDetailsQueue");
-        Assert.Matches(@"isLongNote\(noteBlocks\[i\]\.contentLines,\s*containerLines,\s*\w+", fnBody);
+        Assert.Matches(@"isLongNote\(activeNoteContentLines\(container,\s*i,\s*noteBlocks\[i\]\.contentLines\),\s*containerLines,\s*\w+", fnBody);
     }
 
     [Fact]
@@ -177,7 +177,8 @@ public class ScenarioTruncateAndCollapsibleNotesTests
     {
         var fnBody = ExtractFunctionBody(_script, "buildHeadersQueue");
         // Should pass the `hiding` parameter (the target state) to isLongNote
-        Assert.Matches(@"isLongNote\(noteBlocks\[i\]\.contentLines,\s*containerLines,\s*hiding\)", fnBody);
+        // the lines the note shows: its YAML view's when it is shown as YAML (5.2.4)
+        Assert.Matches(@"isLongNote\(activeNoteContentLines\(container,\s*i,\s*noteBlocks\[i\]\.contentLines\),\s*containerLines,\s*hiding\)", fnBody);
     }
 
     [Fact]

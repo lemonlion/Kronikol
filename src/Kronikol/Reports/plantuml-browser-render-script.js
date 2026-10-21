@@ -1411,6 +1411,7 @@
                         if (smallerFrags.length > 1) {
                             item.el.innerHTML = '';
                             item.el.dataset.rendered = '1';
+                            var retriedParts = [];
                             for (var rf = 0; rf < smallerFrags.length; rf++) {
                                 var rDiv = document.createElement('div');
                                 rDiv.className = 'puml-fragment';
@@ -1418,8 +1419,11 @@
                                 rDiv.dataset.fragment = rf;
                                 rDiv.setAttribute('data-plantuml', smallerFrags[rf]);
                                 item.el.appendChild(rDiv);
-                                renderQueue.unshift({ el: rDiv, source: smallerFrags[rf], isFragment: true, parentEl: item.el, _retried: true });
+                                retriedParts.push({ el: rDiv, source: smallerFrags[rf], isFragment: true, parentEl: item.el, _retried: true });
                             }
+                            // to the front of the queue in their order, the top part first, which is the one on the screen
+                            // (5.2.4: one unshift per part, in this loop, put them in reverse)
+                            renderQueue.unshift.apply(renderQueue, retriedParts);
                             processQueue();
                             return true;
                         }

@@ -1055,19 +1055,50 @@
             })(ni, sourceIndexMap ? sourceIndexMap[ni] : ni);
         }
 
-        // Widening a note is not exactly linear: a `note left` pushes the participants right, which
-        // moves the arrow labels drawn over the shifted lifelines. One correction pass is worth its
-        // cost and no more, so the flag is cleared before the retry can set it again.
-        if (container._refineNoteWidth && !container._noteRendering && !window._plantumlRendering) {
-            container._refineNoteWidth = false;
-            var refDrawn = drawnSvgWidth(container);
-            var refInner = containerInnerWidth(container);
-            if (refDrawn > 0 && refInner > 0 && Math.abs(refInner - refDrawn) > 24) {
-                var refined = clampNoteWidth((container._noteWidthPx || FALLBACK_NOTE_WIDTH_PX) + (refInner - refDrawn));
-                if (refined !== container._noteWidthPx) {
-                    container._noteWidthPx = refined;
-                    rerenderWithNoteStates(container, function() {});
+        refineNoteWidth(owner);
+    }
+
+    // Widening a note is not exactly linear: a `note left` pushes the participants right, which
+    // moves the arrow labels drawn over the shifted lifelines, and widening both notes of a call
+    // can grow the picture by more than the width given. A correction pass assumes one pixel of
+    // picture per pixel of note; one that still misses the column takes a second and last pass,
+    // which divides the miss by the change the first one measured (5.2.4). The flag is cleared
+    // before the retry can set it again. The flag, the width and the redraw are the diagram's, not
+    // a part's (a diagram drawn in parts decorates each part), and a pass due while a drawing is in
+    // flight waits for it to end: a report's first drawing decorates a diagram before its own
+    // drawing stops counting (5.2.4).
+    var REFINE_WAIT_MS = 100, REFINE_WAIT_TRIES = 1200;
+    function refineNoteWidth(owner) {
+        if (!owner._refineNoteWidth) return;
+        if (owner._noteRendering || window._plantumlRendering) {
+            if (!owner._refineWaiting) {
+                owner._refineWaiting = 0;
+                (function wait() {
+                    if (!owner._refineNoteWidth || ++owner._refineWaiting > REFINE_WAIT_TRIES) { owner._refineWaiting = 0; return; }
+                    if (owner._noteRendering || window._plantumlRendering) { setTimeout(wait, REFINE_WAIT_MS); return; }
+                    owner._refineWaiting = 0;
+                    refineNoteWidth(owner);
+                })();
+            }
+            return;
+        }
+        owner._refineNoteWidth = false;
+        var previous = owner._refinePrevious;
+        owner._refinePrevious = null;
+        var refDrawn = drawnDiagramWidth(owner);
+        var refInner = containerInnerWidth(owner);
+        if (refDrawn > 0 && refInner > 0 && Math.abs(refInner - refDrawn) > 24) {
+            var px = owner._noteWidthPx || FALLBACK_NOTE_WIDTH_PX;
+            var slope = previous && px !== previous.px ? (refDrawn - previous.drawn) / (px - previous.px) : 1;
+            if (!(slope > 0.25 && slope < 4)) slope = 1;
+            var refined = clampNoteWidth(px + (refInner - refDrawn) / slope);
+            if (refined !== owner._noteWidthPx) {
+                owner._noteWidthPx = refined;
+                if (!previous) {
+                    owner._refinePrevious = { px: px, drawn: refDrawn };
+                    owner._refineNoteWidth = true;
                 }
+                rerenderWithNoteStates(owner, function() { owner._refinePrevious = null; owner._refineNoteWidth = false; });
             }
         }
     }
@@ -1841,6 +1872,16 @@
         return svg ? svg.getBoundingClientRect().width : 0;
     }
 
+    // The width a diagram is drawn at: its widest part's, when it is drawn in parts. Its first part
+    // alone, which drawnSvgWidth reads, can be narrower than the rest (5.2.4).
+    function drawnDiagramWidth(owner) {
+        var parts = owner.querySelectorAll(':scope > .puml-fragment');
+        if (!parts.length) return drawnSvgWidth(owner);
+        var widest = 0;
+        for (var i = 0; i < parts.length; i++) widest = Math.max(widest, drawnSvgWidth(parts[i]));
+        return widest;
+    }
+
     function clampNoteWidth(px) {
         return Math.round(Math.max(MIN_NOTE_WIDTH_PX, Math.min(MAX_NOTE_WIDTH_PX, px)));
     }
@@ -1861,7 +1902,7 @@
     }
 
     function computeNoteWidthTarget(container, noteWidth) {
-        var drawn = drawnSvgWidth(container);
+        var drawn = drawnDiagramWidth(container);
         var inner = containerInnerWidth(container);
         if (!noteWidth) noteWidth = widestDrawnNoteWidth(container);
         if (!noteWidth || !drawn || !inner) return clampNoteWidth(FALLBACK_NOTE_WIDTH_PX);
@@ -2210,10 +2251,14 @@
         function afterRender() {
             if (done) return;
             done = true;
+            // The engine may have answered with a failure, in text or drawn as a picture (its stack overflow): describe
+            // it, and never cache a failure as a result, as the report's controls and a diagram drawn in parts do (5.2.4).
+            var failed = window._describeEngineFailure ? window._describeEngineFailure(renderTarget, newSource) : false;
+            var drewSvg = !!renderTarget.querySelector('svg');
             // Swap: remove old content, show new SVG
             var newSvg = renderTarget.innerHTML;
             swapPicture(container, newSvg);
-            _svgCache[newSource] = newSvg;
+            if (!failed && drewSvg) _svgCache[newSource] = newSvg;
             container._noteRendering = false;
             window._plantumlRendering = false;
             container.style.minHeight = '';
@@ -2224,7 +2269,9 @@
         }
 
         var mo = new MutationObserver(function(mutations) {
-            if (!renderTarget.querySelector('svg')) return;
+            // An <svg>, or the engine's failure in text, ends the drawing. Waiting for an <svg> alone held every note
+            // button on the page until the poll below gave up, 30 s later (5.2.4).
+            if (!renderTarget.querySelector('svg') && !(renderTarget.textContent || '').trim()) return;
             mo.disconnect();
             afterRender();
         });
@@ -2249,7 +2296,7 @@
             pollCount++;
             if (done) { clearInterval(poll); return; }
             var svg = renderTarget.querySelector('svg');
-            if (svg && !svg.querySelector('.note-toggle-icon')) {
+            if (svg ? !svg.querySelector('.note-toggle-icon') : (renderTarget.textContent || '').trim()) {
                 clearInterval(poll);
                 mo.disconnect();
                 afterRender();
@@ -2738,9 +2785,9 @@
     //   - The buttons then need a role and an accessible name, Enter and Space to press them, and to show on
     //     :focus-within as they do on hover.
     //   - Or, simpler: open the diagram's context menu from the keyboard (the Menu key, or Shift+F10 on the focused
-    //     container). It already holds every note action (context-menu-script.js); its items would need focus and the
-    //     arrow keys, and Escape already closes it. Keyboard zoom (Ctrl and + or -) works only on a diagram selected by
-    //     a click today.
+    //     container). Its note items copy and open a payload's text (context-menu-script.js); it would also need the
+    //     note's own actions (expand, fold, format, width), its items focus and the arrow keys, and Escape already
+    //     closes it. Keyboard zoom (Ctrl and + or -) works only on a diagram selected by a click today.
     var NEAR_SCREENS = 0.5; // of the window's height, above and below it: about what the page lays out
     var REDRAW_SLICE_MS = 10;
 
@@ -3095,7 +3142,8 @@
                 if (targetState === 'expanded') {
                     targetStep = 2;
                 } else if (targetState === 'truncated') {
-                    targetStep = isLongNote(noteBlocks[i].contentLines, containerLines, hh) ? 1 : 2;
+                    // long by the lines the note shows: a YAML view can be longer than its JSON (5.2.4)
+                    targetStep = isLongNote(activeNoteContentLines(container, i, noteBlocks[i].contentLines), containerLines, hh) ? 1 : 2;
                 } else {
                     targetStep = 0;
                 }
@@ -3124,7 +3172,7 @@
                 var containerLines = container._truncateLines;
                 for (var i = 0; i < noteBlocks.length; i++) {
                     if (state === 'expanded') { container._noteSteps[i] = 2; }
-                    else if (state === 'truncated') { container._noteSteps[i] = isLongNote(noteBlocks[i].contentLines, containerLines, hiding) ? 1 : 2; }
+                    else if (state === 'truncated') { container._noteSteps[i] = isLongNote(activeNoteContentLines(container, i, noteBlocks[i].contentLines), containerLines, hiding) ? 1 : 2; }
                     else { container._noteSteps[i] = 0; }
                 }
             }
@@ -3136,7 +3184,7 @@
             var containerLines = container._truncateLines;
             for (var i = 0; i < noteBlocks.length; i++) {
                 var curStep = container._noteSteps[i] || 0;
-                if (curStep === 1 && !isLongNote(noteBlocks[i].contentLines, containerLines, hiding)) {
+                if (curStep === 1 && !isLongNote(activeNoteContentLines(container, i, noteBlocks[i].contentLines), containerLines, hiding)) {
                     container._noteSteps[i] = 2;
                 }
             }

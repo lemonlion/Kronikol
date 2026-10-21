@@ -503,8 +503,9 @@
         setTimeout(function() { toast.remove(); }, 3000);
     }
 
-    // A right-click only: no key opens this menu, though it holds every note action. "Accessibility" above
-    // processRenderQueue (collapsible-notes-script.js) says what a keyboard route needs (5.1.1).
+    // A right-click only: no key opens this menu. Its note items copy and open a payload's text; a note's other actions
+    // (expand, fold, format, width) are its own buttons. "Accessibility" above processRenderQueue
+    // (collapsible-notes-script.js) says what a keyboard route needs (5.1.1).
     document.addEventListener('contextmenu', function(e) {
         var container = findDiagramContainer(e.target);
         if (!container) return;

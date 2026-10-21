@@ -4,6 +4,69 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.2.4] - 2026-10-21
+
+The patch part moves (5.2.3 to 5.2.4): bug fixes found while planning the payload scroll box
+(`plans/LONG_NOTE_SCROLL_PLAN.md` section 6), with nothing new to call or configure.
+
+### Fixed
+
+- **Payloads -> Truncated cuts a note that is long in its YAML view.** A JSON body holding a string with line breaks is
+  short as JSON and long in the YAML view a report starts in (the string becomes a block, a line each). The report's
+  and a scenario's Payloads control judged a note's length by its JSON lines, so Truncated left such a note whole and
+  the Headers toggle expanded it, while the first drawing and the note's own buttons cut it. Both now count the lines
+  the note shows.
+- **A note's redraw that the engine answers with a failure no longer holds the page.** On a diagram drawn whole, a
+  note's buttons waited for an SVG: a failure written as text held every note button on the page for 30 s (the
+  report's controls waited up to 15 s for it), and a failure drawn as a picture (the engine's stack overflow) was shown
+  without its explanation and kept in the page's cache, so drawing the same note state again drew the failure from the
+  cache. The drawing now ends on any answer, as the report's controls and a diagram drawn in parts already did: the
+  failure is shown, described, and never cached.
+- **Payload width Wide fits a diagram to its column on a report's first drawing and on a diagram drawn in parts.** The
+  correction pass after a widened drawing read its flag on the element it decorated, so a diagram drawn in parts (each
+  part decorated on its own) never ran it; and a report's first drawing decorated a diagram while its own drawing still
+  counted as in flight, which the pass waits out, so a report that starts Wide kept its first, fallback width: 1,607 px
+  in a column of 1,804 px, and 1,622 px for a diagram drawn in parts. The pass now runs on the diagram, waits for
+  drawings in flight to end, and measures the diagram's widest part, as does the first estimate (a first part narrower
+  than the rest drew a diagram 2,347 px wide in that column). A pass that still misses by more than 24 px takes one
+  more, dividing the miss by the change the first one measured: widening both notes of a call grew one picture by 1.2
+  px for each pixel of note width, and a single pass left it 38 px too wide.
+- **A diagram the engine says is too large is drawn again top part first.** The retry at half the height queued its
+  parts in reverse, so the bottom part was drawn first and the top one, usually the one on the screen, last.
+- `ReportConfigurationOptions.DiagramNoteWrapWidth`'s documentation no longer names a monospace control (removed in
+  4.0.0), and two comments in the page scripts no longer say the diagram's context menu holds every note action.
+
+### Tests
+
+- `NoteLengthInYamlViewTests`, three facts on a response whose JSON holds a query with 15 line breaks: four lines as
+  JSON, 18 in the YAML view (`LongPayloadReports.YamlLongerThanJson`). Cut to 11 rows with its `...` at load, the note
+  is cut again by the report's Payloads -> Truncated after Expanded, by the scenario's, and stays cut when the Headers
+  toggle draws the diagram again.
+- `NoteRedrawFailureTests`, two facts with the page's engine stubbed for one drawing (in the page, not on the network):
+  an answer in text ends the note's redraw within 2 s and leaves another diagram's note buttons working; a stack
+  overflow drawn as a picture is described, and drawing the note's other states and then that state again goes to the
+  engine, not to the cache.
+- `NoteWidthFitTests`, four facts on calls with 70-column queries (`LongPayloadReports.WideQueries`): a report that
+  starts Wide draws a diagram drawn whole, and one drawn in parts, within 24 px of its column; Payload width Wide on a
+  diagram drawn in parts whose first part is narrower than the rest does too, and its first drawing after Wide is
+  already within a tenth of the column.
+- `TooLargeRetryOrderTests`: with the engine's first answer stubbed to "too large", the parts drawn at half the height
+  receive their pictures top first.
+- `NoteAppearanceScriptTests.The_correction_pass_runs_at_most_twice` replaces `..._at_most_once`; three pins in
+  `ScenarioTruncateAndCollapsibleNotesTests` now read the lines a note shows.
+- Proofs: every new fact but the first-drawing one fails on 5.2.3's scripts, each at its own assertion: the note stays
+  whole (18 rows) after Truncated, and is expanded (20 rows) when the Headers toggle shows its headers; the redraw
+  holds past 2 s; the failure picture is not described (0 of 1); the diagram is drawn 1,607 px wide (whole) and
+  1,622 px (in parts) in a column of 1,804 px, and 2,347 px when its first part is narrower; the bottom part is drawn
+  first. Then 11 of 13 mutations of the fixes are killed: each queue counting JSON lines again; the redraw waiting for
+  an SVG again; the failure not described, or cached; the pass reading its flag on the part, not waiting for drawings
+  in flight, measuring the first part (4,040 px in that column), taking no second pass (1,842 px); the first estimate
+  measuring the first part (its first drawing 2,347 px wide, the first-drawing fact); the retry's reversed order. Two
+  survive, with reasons: the Headers queue's first pass over a diagram never drawn reads the lines it shows when the
+  note has no YAML view yet, which is the JSON lines, so its change is equivalent there; and the redraw's observer
+  taking text as an answer is also covered by its poll, a quarter second later. The three mutations that let the
+  correction pass schedule a third run each fail the pin.
+
 ## [5.2.3] - 2026-10-21
 
 The patch part moves (5.2.2 to 5.2.3): a bug fix, with nothing new to call or configure.
