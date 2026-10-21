@@ -274,6 +274,47 @@ public static class ReportTestHelper
     }
 
     /// <summary>
+    /// One scenario ("Several diagrams") whose diagram is wider than the page and carries one long note, cut to the line
+    /// limit until it is expanded: fourteen participants, the note of <paramref name="noteLines"/> payload lines on the
+    /// first call, then six calls. Expanded, a note of 900 lines makes the diagram tall enough to be drawn in parts. With
+    /// <paramref name="headerLine"/> the note starts with a header line, so the headers toggle draws the diagram again.
+    /// </summary>
+    public static string GenerateReportWithWideLongNoteDiagram(string tempDir, string outputDir, string fileName, int noteLines,
+        bool headerLine = false)
+    {
+        var participants = string.Join("\n", Enumerable.Range(1, 14).Select(i => $"participant \"WideParticipantNumber{i}\" as a{i}"));
+        var note = "note left\n" + (headerLine ? "<color:gray>[X-Request=long]\n\n" : "") + "{\n"
+            + string.Join("\n", Enumerable.Range(1, noteLines).Select(k => $"  \"field{k}\": \"value {k}\",")) + "\n}\nend note\n";
+        var calls = string.Join("\n", Enumerable.Range(1, 6).Select(i =>
+            $"a{1 + i % 13} -> a{2 + i % 13} : call {i}\na{2 + i % 13} --> a{1 + i % 13} : reply {i}"));
+        var features = new[]
+        {
+            new Feature
+            {
+                DisplayName = "Zoom Feature",
+                Scenarios =
+                [
+                    new Scenario { Id = "t1", DisplayName = "Several diagrams", Result = ExecutionResult.Passed, Duration = TimeSpan.FromSeconds(1) }
+                ]
+            }
+        };
+        var diagrams = new[]
+        {
+            new DiagramAsCode("t1", "", $"@startuml\n{participants}\na3 -> a4 : request with a long body\n{note}a4 --> a3 : reply\n{calls}\n@enduml")
+        };
+
+        var path = ReportGenerator.GenerateHtmlReport(
+            diagrams, features,
+            DateTime.UtcNow, DateTime.UtcNow,
+            null, Path.Combine(tempDir, fileName), "Test Report", true,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs);
+
+        File.Copy(path, Path.Combine(outputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
+    }
+
+    /// <summary>
     /// A wide PlantUML diagram that also contains notes (for testing zoom + note interaction).
     /// </summary>
     private const string WideWithNotesPlantUmlSource = """

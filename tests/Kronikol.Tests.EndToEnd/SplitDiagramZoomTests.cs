@@ -201,6 +201,74 @@ public class SplitDiagramZoomTests : PlaywrightTestBase
         Assert.Equal(after[0].Min, after[0].Slider);
     }
 
+    // Drawn again twice while the scenario is not displayed (Headers on and off), the second part is a new part each time
+    // and never laid out in between: the place it was left at goes from part to part until it is shown (5.2.3).
+    [Fact]
+    public async Task A_second_part_zoomed_partway_keeps_its_place_when_drawn_again_twice_while_not_displayed()
+    {
+        await OpenAsync("SplitZoomRedrawHidden.html", headerNotes: true);
+        var level = await Page.EvaluateAsync<int>("""
+            () => {
+                var p = document.querySelectorAll('[data-diagram-type] > .puml-fragment')[1];
+                var s = p.querySelector(':scope > .diagram-zoom-controls .diagram-zoom-slider');
+                s.value = String(Math.round((parseInt(s.min) + 100) / 2));
+                s.dispatchEvent(new Event('input', { bubbles: true }));
+                p.scrollLeft = 150;
+                return parseInt(s.value);
+            }
+            """);
+        await TwoAnimationFramesAsync(Page);
+        await Page.EvaluateAsync("() => { document.querySelector('details.scenario').style.display = 'none'; }");
+
+        for (var i = 0; i < 2; i++)
+        {
+            await Page.EvaluateAsync("() => { window.__before = document.querySelectorAll('[data-diagram-type] > .puml-fragment')[1]; }");
+            await Page.EvaluateAsync("() => document.querySelector(\"button[data-toggle='headers'][onclick*='_toggleHeaders(']\").click()");
+            await Page.WaitForFunctionAsync("""
+                () => {
+                    var parts = document.querySelectorAll('[data-diagram-type] > .puml-fragment');
+                    return parts.length >= 2 && !document.contains(window.__before) && Array.from(parts).every(p => p.querySelector(':scope > svg'));
+                }
+                """, null, new() { Timeout = 60000, PollingInterval = 200 });
+            await TwoAnimationFramesAsync(Page);
+        }
+        await Page.EvaluateAsync("() => { document.querySelector('details.scenario').style.display = ''; }");
+        await PointInPartAsync(1);
+        await Page.WaitForFunctionAsync(
+            "() => !!document.querySelectorAll('[data-diagram-type] > .puml-fragment')[1].querySelector(':scope > .diagram-zoom-controls')",
+            null, new() { Timeout = 15000, PollingInterval = 200 });
+        await TwoAnimationFramesAsync(Page);
+
+        var after = await PartsAsync();
+        Assert.Equal(level, after[1].Slider);
+        Assert.Equal(150, after[1].ScrollLeft);
+    }
+
+    // Zoomed partway and scrolled sideways, the second part keeps both its level and its place when drawn again (5.2.3).
+    [Fact]
+    public async Task A_second_part_zoomed_partway_keeps_its_level_and_its_place_when_the_headers_toggle_draws_it_again()
+    {
+        await OpenAsync("SplitZoomRedrawPartway.html", headerNotes: true);
+        var level = await Page.EvaluateAsync<int>("""
+            () => {
+                var p = document.querySelectorAll('[data-diagram-type] > .puml-fragment')[1];
+                var s = p.querySelector(':scope > .diagram-zoom-controls .diagram-zoom-slider');
+                s.value = String(Math.round((parseInt(s.min) + 100) / 2));
+                s.dispatchEvent(new Event('input', { bubbles: true }));
+                p.scrollLeft = 150;
+                return parseInt(s.value);
+            }
+            """);
+        Assert.InRange(level, 60, 99);
+
+        await RedrawAndWaitAsync("b => b.click()");
+
+        var after = await PartsAsync();
+        Assert.Equal(level, after[1].Slider);
+        Assert.Equal(150, after[1].ScrollLeft);
+        Assert.Equal(after[0].Min, after[0].Slider);
+    }
+
     // A click outside a diagram unselects it, so the toggle is called here as a redraw that comes without one (a note's
     // own button, a key): the new second part is the one selected, and the keys zoom it.
     [Fact]

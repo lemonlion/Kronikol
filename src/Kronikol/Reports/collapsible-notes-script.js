@@ -2024,11 +2024,33 @@
     }
 
     // A diagram drawn again in parts: each new part takes the zoom and the selection of the part in its place before
-    // (5.2.2). It runs before the parts' hooks, which restore a zoomed part's picture from what it takes here.
-    function carryPartZoom(oldChildren, newParts) {
-        if (!window._carryZoomState) return;
+    // (5.2.2), the level and the place across the picture too (5.2.3), and a diagram drawn whole before gives its zoom to
+    // every part. zoomsBefore reads them while the old picture is still on the page (a part taken off it reads no
+    // scroll); carryPartZoom runs before the parts' hooks, which restore each part's picture from what it takes here.
+    function zoomsBefore(container, oldChildren) {
+        if (!window._zoomState) return null;
         var oldParts = oldChildren.filter(function(c) { return c.classList && c.classList.contains('puml-fragment'); });
-        for (var i = 0; i < newParts.length && i < oldParts.length; i++) window._carryZoomState(oldParts[i], newParts[i]);
+        return { whole: !oldParts.length, states: (oldParts.length ? oldParts : [container]).map(window._zoomState.of) };
+    }
+
+    function carryPartZoom(container, before, newParts) {
+        if (!before) return;
+        for (var i = 0; i < newParts.length; i++) {
+            var state = before.whole ? before.states[0] : before.states[i];
+            if (!state) continue;
+            // the diagram's selection goes to its first part only
+            window._zoomState.give(newParts[i], { zoomed: state.zoomed, percent: state.percent, scrollLeft: state.scrollLeft,
+                selected: state.selected && (!before.whole || i === 0) });
+        }
+        if (before.whole) window._zoomState.drop(container);
+    }
+
+    // A diagram's picture written again in its box: the box keeps its zoom, the level and the place across the picture
+    // read before the swap, which takes the picture's zoomed width and the box's scroll with it (5.2.3).
+    function swapPicture(container, html) {
+        var before = window._zoomState ? window._zoomState.of(container) : null;
+        container.innerHTML = html;
+        if (before) window._zoomState.give(container, before);
     }
 
     // Shared rebuild + re-render path for per-note state changes (step or
@@ -2074,6 +2096,7 @@
                 function renderNextFrag() {
                     if (fragIdx >= fragQueue.length) {
                         // All new fragments rendered — swap: remove old, show new
+                        var zooms = zoomsBefore(container, oldChildren);
                         for (var oi = 0; oi < oldChildren.length; oi++) {
                             if (oldChildren[oi].parentNode === container) container.removeChild(oldChildren[oi]);
                         }
@@ -2083,7 +2106,7 @@
                             newFrags[ni].classList.remove('puml-fragment-new');
                             newFrags[ni].id = container.id + '-frag-' + ni;
                         }
-                        carryPartZoom(oldChildren, newFrags);
+                        carryPartZoom(container, zooms, newFrags);
                         // Apply post-render hooks after fragments are visible (getBBox needs visible elements)
                         for (var pi = 0; pi < fragQueue.length; pi++) {
                             if (window._iflowBindLinks) window._iflowBindLinks(fragQueue[pi].el, origSource);
@@ -2162,7 +2185,7 @@
         // Single diagram (no splitting needed) — existing behavior
         // Check SVG cache — skip plantuml.js re-render if we have a cached result
         if (_svgCache[newSource]) {
-            container.innerHTML = _svgCache[newSource];
+            swapPicture(container, _svgCache[newSource]);
             if (window._iflowBindLinks) window._iflowBindLinks(container, origSource);
             makeNotesCollapsible(container);
             addAssertionTooltips(container);
@@ -2189,7 +2212,7 @@
             done = true;
             // Swap: remove old content, show new SVG
             var newSvg = renderTarget.innerHTML;
-            container.innerHTML = newSvg;
+            swapPicture(container, newSvg);
             _svgCache[newSource] = newSvg;
             container._noteRendering = false;
             window._plantumlRendering = false;
@@ -2914,6 +2937,7 @@
                     function renderNextFragment() {
                         if (fragI >= fragList.length) {
                             // All new fragments rendered — swap: remove old, show new
+                            var zooms = zoomsBefore(container, oldChildren);
                             for (var oi = 0; oi < oldChildren.length; oi++) {
                                 if (oldChildren[oi].parentNode === container) container.removeChild(oldChildren[oi]);
                                 // a fragment drawn before whose hover-only work was still waiting goes with it
@@ -2926,7 +2950,7 @@
                                 newFrags[ni].classList.remove('puml-fragment-new');
                                 newFrags[ni].id = container.id + '-frag-' + ni;
                             }
-                            carryPartZoom(oldChildren, newFrags);
+                            carryPartZoom(container, zooms, newFrags);
                             // Apply post-render hooks after fragments are visible (getBBox needs visible elements)
                             var fragsNear = isNear(item);
                             for (var pi = 0; pi < fragList.length; pi++) afterRedraw(fragList[pi].el, container, fragsNear);
@@ -2999,7 +3023,7 @@
             // Single diagram — existing behavior
             // Check SVG cache first
             if (_svgCache[newSource]) {
-                container.innerHTML = _svgCache[newSource];
+                swapPicture(container, _svgCache[newSource]);
                 recordDrawn(container, newSource);
                 afterRedraw(container, container, isNear(item));
                 settled(item);
@@ -3023,7 +3047,7 @@
                 done = true;
                 var failed = window._describeEngineFailure ? window._describeEngineFailure(renderTarget, newSource) : false;
                 var newSvg = renderTarget.innerHTML;
-                container.innerHTML = newSvg;
+                swapPicture(container, newSvg);
                 if (!failed && renderTarget.querySelector('svg')) { _svgCache[newSource] = newSvg; recordDrawn(container, newSource); }
                 container._noteRendering = false;
                 window._plantumlRendering = false;

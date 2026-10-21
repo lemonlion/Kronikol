@@ -4,6 +4,38 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.2.3] - 2026-10-21
+
+The patch part moves (5.2.2 to 5.2.3): a bug fix, with nothing new to call or configure.
+
+### Fixed
+
+- **A zoomed diagram drawn again keeps its zoom: the level it was zoomed to, and its place across the picture.** A
+  note's buttons (expanding or folding a note, its format, its width) and the report's controls (Headers and the rest)
+  draw a diagram again with a new picture and a new slider, and the page kept only whether the diagram was zoomed. A
+  diagram zoomed partway came back at full size and scrolled to its left edge, and one that an expanded note made tall
+  enough to be drawn in parts came back at its fit, every part of it. Now the level and the scroll are kept on the
+  diagram, or on each part, read before the picture is replaced and given back once the new one is drawn; a diagram
+  that comes back in parts gives its zoom to every part, and its selection to the first. A diagram drawn again while
+  it is not shown (its scenario closed, or not displayed at all) gets its zoom back when it shows: a box that is not
+  laid out reads no scroll, so the place a zoomed box was last left at is kept as the reader scrolls it.
+
+### Tests
+
+- `ZoomKeptOnRedrawTests`, five facts on a scenario whose one diagram, 14 participants wide, carries a note cut to the
+  line limit (`ReportTestHelper.GenerateReportWithWideLongNoteDiagram`): zoomed halfway between its fit and full size
+  and scrolled 150 px, the diagram keeps its level (slider and drawn width) and its scroll when the note is expanded,
+  when the Headers control draws it again, and when the Headers control draws it again while its scenario is closed or
+  not displayed; and with a note of 900 lines, whose expansion has the diagram drawn in parts, each part takes the
+  diagram's level and scroll and the diagram itself is no longer marked zoomed. `SplitDiagramZoomTests` gains two
+  facts: a second part zoomed partway and scrolled keeps both when the Headers control draws the diagram again, and
+  keeps its place when the diagram is drawn again twice while not displayed, a new part each time.
+- Proofs: four of the facts fail on 5.2.2's scripts (the level comes back at 100, or at the parts' fit); the rest were
+  proved by mutation: 12 of 12 mutations are killed, among them the level not kept on the box, the place not given back,
+  the restore measuring a box that is not laid out, a swap that gives nothing back, the parts read after they leave the
+  page, a whole diagram's zoom going to its first part only or staying on the diagram, and the last place not kept, or
+  not read, for a box that is not laid out.
+
 ## [5.2.2] - 2026-10-21
 
 The patch part moves (5.2.1 to 5.2.2): bug fixes, with nothing new to call or configure.
