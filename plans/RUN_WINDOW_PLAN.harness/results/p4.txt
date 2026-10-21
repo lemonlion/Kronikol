@@ -1,0 +1,9 @@
+# P4 on Kronikol 5.2.3 (p4-merge.cs + p4-merge.sh; the merge was re-run by hand with --history naming a copy of the ingest's ledger, since merge reads a ledger and never creates or writes one)
+## the ingest's ledger run line (the fold scenario first in the roster)
+"results":"NPP"
+"names":["Traffic outside any test","Lists orders","Shows the menu"]
+## the merge left the ledger unchanged: yes
+## shard/TestRunReport.labs.html, the fold scenario's history row
+aria-label="stable: not a test: it collects the traffic no test could be given"
+## merged/TestRunReport.labs.html, the fold scenario's history row
+aria-label="stable: passing"

@@ -166,6 +166,14 @@ public static class CtrfReportGenerator
         {
             foreach (var scenario in feature.Scenarios ?? [])
             {
+                // A scenario that is not a test is no test result, and CTRF's readers take every entry for one: it is
+                // left out, and keeps its address, so every test after it keeps its own (plans/RUN_WINDOW_PLAN.md R1).
+                if (scenario.NotATest)
+                {
+                    ordinal++;
+                    continue;
+                }
+
                 var retries = scenario.Attempt is { } attempt && attempt > 1 ? attempt - 1 : 0;
                 var tags = ScenarioTags.Effective(feature, scenario);
                 var stableId = ScenarioStableId.Compute(suite, feature.DisplayName, scenario.DisplayName, scenario.OutlineId, scenario.ExampleValues);

@@ -156,7 +156,10 @@ public static class FailuresDigestGenerator
         ArgumentNullException.ThrowIfNull(features);
 
         var scenarios = Enumerate(features).ToArray();
-        var failures = scenarios.Where(s => s.Scenario.Result == ExecutionResult.Failed).ToArray();
+        // Counted and listed: the run's tests. A scenario that is not a test keeps its address (sN counts every scenario,
+        // as the data file does) and is in no count and no failure (plans/RUN_WINDOW_PLAN.md R1).
+        var tests = scenarios.Where(s => !s.Scenario.NotATest).ToArray();
+        var failures = tests.Where(s => s.Scenario.Result == ExecutionResult.Failed).ToArray();
         var attributed = stepPaths ?? ReportGenerator.AttributeInteractionsToStepPaths(trackedLogs, features);
         var interactions = IndexInteractions(trackedLogs);
 
@@ -180,8 +183,8 @@ public static class FailuresDigestGenerator
                              && ParameterCaptureHint.Applies(l.DependencyCategory, l.Content)));
 
         return new FailuresDigest(
-            BuildMarkdown(entries, scenarios.Length, scenarios.Count(x => x.Scenario.Result == ExecutionResult.Passed), kronikolVersion, diagnostics, unparameterisedSql, history, earlierAttempt, queryScript, dataFileName),
-            BuildJsonl(entries, scenarios.Length, kronikolVersion, suite));
+            BuildMarkdown(entries, tests.Length, tests.Count(x => x.Scenario.Result == ExecutionResult.Passed), kronikolVersion, diagnostics, unparameterisedSql, history, earlierAttempt, queryScript, dataFileName),
+            BuildJsonl(entries, tests.Length, kronikolVersion, suite));
     }
 
     // ─── Model ─────────────────────────────────────────────────

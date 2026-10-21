@@ -1299,6 +1299,10 @@
         .feature-summary-table tr.failed td {
             background: var(--kron-fail-soft);
         }
+        /* a feature of no test (a stack's start-up) reads "not a test", muted as the label beside such a scenario is */
+        .feature-summary-table tr.not-a-test td:not(:first-child) {
+            color: var(--kron-muted);
+        }
         /* The features table is the Features tab's Summary view (5.0.0, S4): a card beside the feature cards, a row above
            the headers naming the column groups, each group's first column ruled off, and a row opening its feature. */
         .features-table-view {

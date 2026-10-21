@@ -724,8 +724,9 @@ public static partial class QueryCommand
         var (leftLabel, rightLabel) = DiffLabels(left.Path, right.Path);
         if (!options.Count)
         {
-            writer.Line($"- {leftLabel}  {left.StartTime}  {left.Scenarios.Count} scenarios, {left.Scenarios.Count(s => s.Failed)} failed");
-            writer.Line($"+ {rightLabel}  {right.StartTime}  {right.Scenarios.Count} scenarios, {right.Scenarios.Count(s => s.Failed)} failed");
+            // each run's tests, as its summary counts them: a scenario that is not a test is in no count (plans/RUN_WINDOW_PLAN.md R1)
+            writer.Line($"- {leftLabel}  {left.StartTime}  {left.Scenarios.Count(s => !s.NotATest)} scenarios, {left.Scenarios.Count(s => s.Failed && !s.NotATest)} failed");
+            writer.Line($"+ {rightLabel}  {right.StartTime}  {right.Scenarios.Count(s => !s.NotATest)} scenarios, {right.Scenarios.Count(s => s.Failed && !s.NotATest)} failed");
             writer.Line();
         }
 

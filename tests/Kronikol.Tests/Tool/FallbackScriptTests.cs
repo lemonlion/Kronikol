@@ -96,6 +96,32 @@ public class FallbackScriptTests : IDisposable
     }
 
     [Fact]
+    public void It_counts_tests_as_the_tool_does_when_a_scenario_is_not_a_test()
+    {
+        Assert.SkipWhen(!PythonProbe.IsAvailable, "no python on PATH");
+        // An ingest's fold, failed: the tool counts it as no test and no failure (plans/RUN_WINDOW_PLAN.md R1).
+        var report = WriteReport(withNotATest: true);
+
+        var summary = PythonProbe.Run(ScriptPath, "summary", report);
+        var counts = Regex.Match(summary, @"(\d+) scenarios . 1 not a test . (\d+) failed");
+        Assert.True(counts.Success, "query.py summary does not count the scenario that is not a test apart:\n" + summary);
+        Assert.Equal(Tool("summary", report, "--count").Trim(), counts.Groups[1].Value);
+        Assert.Equal(Tool("failures", report, "--count").Trim(), counts.Groups[2].Value);
+        var footer = Regex.Match(PythonProbe.Run(ScriptPath, "failures", report), @"(\d+) failed");
+        Assert.Equal(Tool("failures", report, "--count").Trim(), footer.Groups[1].Value);
+    }
+
+    [Fact]
+    public void It_says_all_passed_for_the_tests_alone()
+    {
+        Assert.SkipWhen(!PythonProbe.IsAvailable, "no python on PATH");
+        var report = WriteReport(withNotATest: true, passing: true);
+
+        Assert.Contains("2 scenarios, all passed · 1 not a test", PythonProbe.Run(ScriptPath, "failures", report), StringComparison.Ordinal);
+        Assert.Contains("2 scenarios, all passed · 1 not a test", Tool("failures", report), StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void It_finds_a_report_beside_its_retained_runs_and_baseline_as_the_tool_does()
     {
         Assert.SkipWhen(!PythonProbe.IsAvailable, "no python on PATH");
@@ -332,10 +358,19 @@ public class FallbackScriptTests : IDisposable
         Assert.Contains("→ Pricing", output);
     }
 
-    private string WriteReport()
+    private string WriteReport(bool withNotATest = false, bool passing = false)
     {
+        var features = Features();
+        if (passing)
+            features[0].Scenarios[1].Result = ExecutionResult.Passed;
+        if (withNotATest)
+            features = [.. features, new Feature
+            {
+                DisplayName = "Ingested",
+                Scenarios = [new Scenario { Id = "session", DisplayName = "Traffic outside any test", Result = passing ? ExecutionResult.Passed : ExecutionResult.Failed, NotATest = true }]
+            }];
         var written = ReportGenerator.GenerateTestRunReportData(
-            Features(),
+            features,
             new DateTime(2026, 1, 1, 10, 0, 0, DateTimeKind.Utc),
             new DateTime(2026, 1, 1, 10, 5, 0, DateTimeKind.Utc),
             "Fallback_" + Guid.NewGuid().ToString("N")[..8] + ".json", DataFormat.Json, null, Logs());

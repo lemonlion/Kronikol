@@ -23,7 +23,8 @@ public static partial class CiSummaryGenerator
         Func<string, PlantUmlImageFormat, byte[]>? localDiagramRenderer = null)
     {
         var sb = new StringBuilder();
-        var allScenarios = features.SelectMany(f => f.Scenarios).ToArray();
+        // The run's tests: a scenario that is not a test is in no count (plans/RUN_WINDOW_PLAN.md R1).
+        var allScenarios = features.SelectMany(f => f.Scenarios).Where(s => !s.NotATest).ToArray();
         var passed = allScenarios.Count(s => s.Result == ExecutionResult.Passed);
         var failed = allScenarios.Count(s => s.Result == ExecutionResult.Failed);
         var skipped = allScenarios.Count(s => s.Result is ExecutionResult.Skipped or ExecutionResult.SkippedAfterFailure);
@@ -83,7 +84,7 @@ public static partial class CiSummaryGenerator
         var shown = 0;
         foreach (var feature in features)
         {
-            var failedScenarios = feature.Scenarios.Where(s => s.Result == ExecutionResult.Failed);
+            var failedScenarios = feature.Scenarios.Where(s => s.Result == ExecutionResult.Failed && !s.NotATest);
             foreach (var scenario in failedScenarios)
             {
                 if (shown >= maxDiagrams) break;
@@ -137,9 +138,11 @@ public static partial class CiSummaryGenerator
         DiagramFormat diagramFormat,
         string plantUmlServerBaseUrl)
     {
+        // A diagram here is a passed test's, with a tick: one of a scenario that is not a test (a stack's start-up, which
+        // can be the run's largest) would claim a pass and take a place a test's diagram should have.
         var scenariosWithDiagrams = features
             .SelectMany(f => f.Scenarios.Select(s => (Feature: f, Scenario: s)))
-            .Where(x => truncatedByTestId[x.Scenario.Id].Any())
+            .Where(x => !x.Scenario.NotATest && truncatedByTestId[x.Scenario.Id].Any())
             .ToArray();
 
         if (scenariosWithDiagrams.Length == 0) return;

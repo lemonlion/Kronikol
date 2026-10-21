@@ -1,0 +1,277 @@
+--- a/src/Kronikol/Ingestion/IngestPipeline.cs
++++ b/src/Kronikol/Ingestion/IngestPipeline.cs
+@@ -188,6 +188,12 @@
+     /// <summary>Explicit end of the run window (UTC); implies <see cref="DropOutsideRunWindow"/>. Default null — derived from a <c>testrun</c> end marker, else open.</summary>
+     public DateTimeOffset? RunEndedAt { get; init; }
+ 
++    /// <summary>PROTOTYPE (#187): the stack's start-up, kept as one scenario instead of dropped with the run window.</summary>
++    public SetupWindow? SetupWindow { get; init; }
++
++    /// <summary>PROTOTYPE (#187): other runs that share the capture; their traffic is left to their reports, uncounted.</summary>
++    public IReadOnlyList<OtherRunWindow> OtherRunWindows { get; init; } = [];
++
+     /// <summary>
+     /// Give interactions the phase of the top-level step their call started in: <c>Given</c>/<c>Context</c>
+     /// becomes <see cref="TestPhase.Setup"/>, <c>When</c>/<c>Then</c> becomes <see cref="TestPhase.Action"/>,
+@@ -277,6 +283,18 @@
+ /// <param name="ScenarioId">Scenario id (also the <c>testId</c> the folded interactions take).</param>
+ public sealed record UnknownTestFold(string ScenarioName, string ScenarioId = "outside-any-test");
+ 
++/// <summary>PROTOTYPE (#187).</summary>
++public sealed record SetupWindow(DateTimeOffset Start, DateTimeOffset End, string ScenarioName = "Stack start-up", string ScenarioId = "stack-start-up")
++{
++    internal bool Contains(DateTimeOffset at) => at >= Start && at <= End;
++}
++
++/// <summary>PROTOTYPE (#187).</summary>
++public sealed record OtherRunWindow(string Name, DateTimeOffset Start, DateTimeOffset? End = null)
++{
++    internal bool Contains(DateTimeOffset at) => at >= Start && (End is not { } e || at <= e);
++}
++
+ /// <summary>Outcome of <see cref="IngestPipeline.Run"/>.</summary>
+ /// <param name="InteractionCount">Interaction lines replayed into the store.</param>
+ /// <param name="ScenarioCount">Scenarios in the synthesised model.</param>
+@@ -320,6 +338,12 @@
+     /// off. Printed by <c>kronikol ingest</c>, and not a diagnostic: it is the run doing what it was asked.
+     /// </summary>
+     internal int WindowAttributedRecords { get; init; }
++
++    /// <summary>PROTOTYPE (#187): records kept in the setup scenario.</summary>
++    public int SetupRecords { get; init; }
++
++    /// <summary>PROTOTYPE (#187): records outside the run window left to other runs, by run name.</summary>
++    public IReadOnlyDictionary<string, int> OtherRunRecords { get; init; } = new Dictionary<string, int>();
+ }
+ 
+ /// <summary>
+@@ -486,7 +510,7 @@
+                 + "Write attempt on start records to say which run each is.");
+         var current = attempts.Current(testRecords);
+ 
+-        records = DropOutsideRunWindow(records, testRecords, request, diagnostics);
++        records = DropOutsideRunWindow(records, testRecords, request, diagnostics, out var setupRecords, out var otherRunRecords);
+         records = Attribute(records, testRecords, current, request, diagnostics, out var windowAttributedRecords, out var phasedRecords);
+         records = DropEarlierAttempts(records, attempts, ref earlierAttemptRecords);
+         if (earlierAttemptRecords > 0)
+@@ -495,7 +519,15 @@
+                 + "scenario shows its last attempt, its retry badge counting the earlier ones.");
+         AddDiagramMarkers(records, current);
+         if (options.SeparateSetup)
++        {
+             AddSetupBoundaries(records, current);
++            // PROTOTYPE (#187): the setup scenario is all setup, so its boundary goes after its last call.
++            if (request.SetupWindow is { } sw && setupRecords > 0)
++            {
++                var last = records.Where(r => r.TestId == sw.ScenarioId).Max(r => r.Timestamp);
++                records.Add(SetupBoundary(sw.ScenarioId, last));
++            }
++        }
+ 
+         var reportsDirectory = ReportGenerator.ResolveReportsDirectory(options);
+ 
+@@ -506,7 +538,8 @@
+         var logs = Replay(ordered, current);
+ 
+         var synthesised = FeatureSynthesizer.Build(
+-            testRecords, logs, request.DefaultFeatureName, request.ResultWhenUnknown, attachmentsBase, attempts);
++            testRecords, logs, request.DefaultFeatureName, request.ResultWhenUnknown, attachmentsBase, attempts,
++            setupRecords > 0 ? request.SetupWindow : null);
+         // What the copier cannot see of the capture's attachments, for its one entry: read before the messages are merged in,
+         // since the merge makes a result of its own.
+         var attachmentContext = new AttachmentContext
+@@ -533,6 +566,20 @@
+         }
+ 
+         var defaultedResultCount = synthesised.DefaultedResultCount;
++        // PROTOTYPE (#187): the setup scenario is not a test either.
++        if (request.SetupWindow is { } setupInto)
++        {
++            foreach (var scenario in synthesised.Features.SelectMany(f => f.Scenarios).Where(s => s.Id == setupInto.ScenarioId))
++            {
++                scenario.Result = ExecutionResult.Passed;
++                if (scenario.ResultDefaulted)
++                {
++                    scenario.ResultDefaulted = false;
++                    defaultedResultCount--;
++                }
++                scenario.NotATest = true;
++            }
++        }
+         if (request.FoldUnknownTestsInto is { } foldedInto)
+         {
+             // The fold scenario is not a test: nothing ran and nothing ended, so ResultWhenUnknown (meant
+@@ -572,7 +619,7 @@
+             {
+                 Diagnostics = diagnostics.Entries,
+                 WindowAttributedRecords = windowAttributedRecords,
+-                PhasedRecords = phasedRecords,
++                PhasedRecords = phasedRecords, SetupRecords = setupRecords, OtherRunRecords = otherRunRecords,
+             };
+ 
+         // Cleaned by the generator's beforeFirstWrite hook below, not here: a run with scenarios first
+@@ -612,7 +659,7 @@
+         {
+             Diagnostics = diagnostics.Entries,
+             WindowAttributedRecords = windowAttributedRecords,
+-            PhasedRecords = phasedRecords,
++            PhasedRecords = phasedRecords, SetupRecords = setupRecords, OtherRunRecords = otherRunRecords,
+         };
+     }
+ 
+@@ -743,9 +790,14 @@
+     /// fold it. A pair is judged on its earliest record, so a late response to an in-run request stays.
+     /// </summary>
+     private static List<InteractionRecord> DropOutsideRunWindow(
+-        List<InteractionRecord> records, List<TestRunRecord> testRecords, IngestRequest request, ReportDiagnosticsCollector diagnostics)
++        List<InteractionRecord> records, List<TestRunRecord> testRecords, IngestRequest request, ReportDiagnosticsCollector diagnostics,
++        out int setupRecords, out IReadOnlyDictionary<string, int> otherRunRecords)
+     {
+-        if (!request.DropOutsideRunWindow && request.RunStartedAt is null && request.RunEndedAt is null)
++        setupRecords = 0;
++        otherRunRecords = new Dictionary<string, int>(StringComparer.Ordinal);
++        var setup = request.SetupWindow;
++        var others = request.OtherRunWindows;
++        if (!request.DropOutsideRunWindow && request.RunStartedAt is null && request.RunEndedAt is null && setup is null && others.Count == 0)
+             return records;
+ 
+         var window = ResolveRunWindow(request, testRecords);
+@@ -755,6 +807,78 @@
+             return records;
+         }
+ 
++        var (start, openEnd) = window.Value;
++        // PROTOTYPE (#187): an open end is closed by the first other run that begins after this one (exclusive).
++        var closedBy = openEnd is null ? others.Where(o => o.Start > start).Select(o => (DateTimeOffset?)o.Start).Min() : null;
++        var ownIds = new HashSet<string>(testRecords.Where(t => !t.IsRunMarker && !string.IsNullOrWhiteSpace(t.TestId)).Select(t => t.TestId), StringComparer.Ordinal);
++
++        var pairStart2 = new Dictionary<string, DateTimeOffset>(StringComparer.Ordinal);
++        foreach (var record in records)
++        {
++            if (record.RequestResponseId is { Length: > 0 } id && record.Timestamp is { } ts
++                && (!pairStart2.TryGetValue(id, out var known) || ts < known))
++                pairStart2[id] = ts;
++        }
++
++        var explained = new Dictionary<string, int>(StringComparer.Ordinal);
++        var kept2 = new List<InteractionRecord>(records.Count);
++        int before2 = 0, after2 = 0, own = 0;
++        foreach (var record in records)
++        {
++            DateTimeOffset? at = record.RequestResponseId is { Length: > 0 } id && pairStart2.TryGetValue(id, out var ps) ? ps : record.Timestamp;
++            if (at is not { } when)
++            {
++                kept2.Add(record);
++                continue;
++            }
++
++            var inside = when >= start && (openEnd is { } e ? when <= e : closedBy is not { } c || when < c);
++            if (inside)
++            {
++                kept2.Add(record);
++                continue;
++            }
++
++            var other = others.FirstOrDefault(o => o.Contains(when));
++            if (other is not null)
++            {
++                explained[other.Name] = explained.GetValueOrDefault(other.Name) + 1;
++                continue;
++            }
++
++            if (setup is not null && setup.Contains(when))
++            {
++                setupRecords++;
++                kept2.Add(record with { TestId = setup.ScenarioId, TestName = setup.ScenarioName, Phase = nameof(TestPhase.Setup) });
++                continue;
++            }
++
++            if (when < start) before2++;
++            else after2++;
++            if (ownIds.Contains(record.TestId)) own++;
++        }
++
++        otherRunRecords = explained;
++        if (before2 + after2 > 0)
++        {
++            var endText2 = openEnd is { } e3 ? e3.ToString("o") : closedBy is { } c3 ? c3.ToString("o") + " (where " + others.First(o => o.Start == c3).Name + " began)" : "open";
++            var explains = setup is not null || others.Count > 0 ? " that no other window explains" : "";
++            var ownText = own > 0 ? $" {own} of them carry the id of a test in this run's tests file." : "";
++            diagnostics.Add(DiagnosticKind.DroppedOutsideRunWindow,
++                $"{before2 + after2} interaction record(s) outside the run window ({start:o} → {endText2}) dropped{explains}: {before2} before the run began, {after2} after it ended.{ownText}");
++        }
++
++        return kept2;
++    }
++
++    // The 5.2.3 body, kept unreachable for comparison.
++    private static List<InteractionRecord> DropOutsideRunWindowOld(
++        List<InteractionRecord> records, List<TestRunRecord> testRecords, IngestRequest request, ReportDiagnosticsCollector diagnostics)
++    {
++        var window = ResolveRunWindow(request, testRecords);
++        if (window is null)
++            return records;
++
+         var (start, end) = window.Value;
+ 
+         // Pairs are judged by their earliest timestamp (the request); a record with no pair id stands alone.
+@@ -957,7 +1081,8 @@
+         bool IsUnattributed(InteractionRecord record) =>
+             IngestAttribution.NeedsAttribution(record, request.WindowAttributionFallbackId)
+             || (knownTestIds is not null && !knownTestIds.Contains(record.TestId)
+-                && record.TestId != request.FoldUnknownTestsInto!.ScenarioId);
++                && record.TestId != request.FoldUnknownTestsInto!.ScenarioId
++                && record.TestId != request.SetupWindow?.ScenarioId);
+ 
+         // First pass decides on the records that carry the identity; the second removes their partners,
+         // so a dropped request never leaves an orphaned response arrow behind.
+@@ -1163,7 +1288,7 @@
+                 testRecords.Where(t => !string.IsNullOrWhiteSpace(t.TestId)).Select(t => t.TestId!),
+                 StringComparer.Ordinal);
+             ordered = ordered
+-                .Select(r => known.Contains(r.TestId) || r.TestId == fold.ScenarioId
++                .Select(r => known.Contains(r.TestId) || r.TestId == fold.ScenarioId || r.TestId == request.SetupWindow?.ScenarioId
+                     ? r
+                     : r with { TestId = fold.ScenarioId, TestName = fold.ScenarioName })
+                 .ToList();
+--- a/src/Kronikol/Ingestion/FeatureSynthesizer.cs
++++ b/src/Kronikol/Ingestion/FeatureSynthesizer.cs
+@@ -73,7 +73,8 @@
+         string defaultFeatureName,
+         ExecutionResult resultWhenUnknown,
+         string? attachmentsBase,
+-        TestAttempts attempts)
++        TestAttempts attempts,
++        SetupWindow? setup = null)
+     {
+         var logList = (logs ?? []).ToList();
+ 
+@@ -221,13 +222,16 @@
+ 
+             ApplyAttachments(scenario, acc.Attachments, attachmentsBase, attachmentPaths);
+ 
+-            var feature = acc.Feature ?? defaultFeatureName;
++            // PROTOTYPE (#187): the setup scenario has a feature of its own, drawn first.
++            var isSetup = setup is not null && testId == setup.ScenarioId;
++            var feature = isSetup ? setup!.ScenarioName : acc.Feature ?? defaultFeatureName;
+             if (!featureGroups.TryGetValue(feature, out var list))
+             {
+                 list = [];
+                 featureGroups[feature] = list;
+                 featureTags[feature] = [];
+-                featureOrder.Add(feature);
++                if (isSetup) featureOrder.Insert(0, feature);
++                else featureOrder.Add(feature);
+             }
+ 
+             list.Add(scenario);
+@@ -240,6 +244,9 @@
+             if (tags.Endpoint is { Length: > 0 } endpoint)
+                 featureEndpoints.TryAdd(feature, endpoint);
+ 
++            // PROTOTYPE (#187): the stack's start-up is not the run's time.
++            if (isSetup)
++                continue;
+             // The run began with a retried test's first attempt, not the one the report shows.
+             foreach (var candidate in new[] { attempts.FirstAttemptStart(testId), acc.Start, acc.End, acc.FirstLog, acc.LastLog })
+             {

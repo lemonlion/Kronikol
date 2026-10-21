@@ -578,7 +578,10 @@ internal static class ReportHistory
         for (var i = 0; i < index.Scenarios.Count; i++)
         {
             var scenario = index.Scenarios[i];
-            results[i] = Enum.TryParse<ExecutionResult>(scenario.Result, ignoreCase: true, out var parsed) ? HistoryFormat.ResultChar(parsed) : HistoryFormat.Unknown;
+            // A scenario that is not a test is N, as the run's own fragment records it: rebuilt from a file without the
+            // flag, an ingest's fold scenario was imported as a pass (plans/RUN_WINDOW_PLAN.md R1).
+            results[i] = scenario.NotATest ? HistoryFormat.NotATest
+                : Enum.TryParse<ExecutionResult>(scenario.Result, ignoreCase: true, out var parsed) ? HistoryFormat.ResultChar(parsed) : HistoryFormat.Unknown;
             attempts[i] = HistoryFormat.AttemptChar(scenario.Attempt);
             durations[i] = scenario.DurationSeconds > 0 ? (int)Math.Round(scenario.DurationSeconds * 1000, MidpointRounding.AwayFromZero) : null;
             if (results[i] == HistoryFormat.Failed)

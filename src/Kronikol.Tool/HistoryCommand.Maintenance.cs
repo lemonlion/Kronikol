@@ -111,8 +111,9 @@ internal static partial class HistoryCommand
         var slower = rows.Where(r => Free(r.Entry!) && r.Entry!.Has(HistoryVerdictKind.Slower)).ToList();
         var changed = rows.Where(r => Free(r.Entry!) && r.Entry!.Has(HistoryVerdictKind.BehaviourChanged)).ToList();
         var quarantined = rows.Where(r => !Free(r.Entry!)).ToList();
-        var passed = index.Scenarios.Count(s => s.Result.Equals("Passed", StringComparison.OrdinalIgnoreCase));
-        var failed = index.Scenarios.Count(s => s.Failed);
+        // The tests' pass rate: a scenario that is not a test (an ingest's fold) passed nothing (plans/RUN_WINDOW_PLAN.md R1).
+        var passed = index.Scenarios.Count(s => !s.NotATest && s.Result.Equals("Passed", StringComparison.OrdinalIgnoreCase));
+        var failed = index.Scenarios.Count(s => !s.NotATest && s.Failed);
         var passRate = passed + failed == 0 ? 1.0 : (double)passed / (passed + failed);
 
         @out.WriteLine($"history: {HistorySummary.Line(verdicts)}");

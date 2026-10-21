@@ -31,6 +31,8 @@ public static class SpecificationsMarkdownGenerator
     public static string Generate(Feature[] features, string title)
     {
         ArgumentNullException.ThrowIfNull(features);
+        // a scenario that is not a test specifies nothing (plans/RUN_WINDOW_PLAN.md R1)
+        features = ReportGenerator.SpecifiedFeatures(features);
 
         var markdown = new StringBuilder();
         markdown.Append("# ").Append(Heading(title)).Append("\n\n");

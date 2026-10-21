@@ -1,0 +1,66 @@
+== A'. browser run: the start-up kept, the device run left to its report
+run: 10:00:00.500 -> 10:00:10.000 (9.5 s)
+setup records: 16; left to other runs: device 6
+  DroppedOutsideRunWindow: 4 interaction record(s) outside the run window (2026-10-21T10:00:00.0000000+00:00 → 2026-10-21T10:00:11.0000000+00:00) dropped that no other window explains: 0 before the run began, 4 after it ended. 2 of them carry the id of a test in this run's tests file.
+  UnattributedInteractions: 2 interaction record(s) could not be attributed to a test.
+  [Stack start-up] Stack start-up (id stack-start-up, not a test, Passed, 25.01 s): 16 record(s), phase Setup
+  [Orders] Lists orders (id b1, Passed, 4 s): 4 record(s), phase Unknown
+  [Orders] Shows the menu (id b2, Passed, 4 s): 4 record(s), phase Unknown
+  [Ingested] Traffic outside any test (id outside-any-test, not a test, Passed, 0.1 s): 2 record(s), phase Unknown
+  report: <scratch>/p3-rerun2\out-a
+
+== B'. device run: the start-up kept, the browser run left to its report
+run: 10:00:12.000 -> 10:00:20.000 (8 s)
+setup records: 16; left to other runs: browser 10
+  DroppedOutsideRunWindow: 4 interaction record(s) outside the run window (2026-10-21T10:00:11.6000000+00:00 → 2026-10-21T10:00:21.0000000+00:00) dropped that no other window explains: 4 before the run began, 0 after it ended.
+  [Stack start-up] Stack start-up (id stack-start-up, not a test, Passed, 25.01 s): 16 record(s), phase Setup
+  [Device] Orders on a phone (id d1, Passed, 8 s): 6 record(s), phase Unknown
+  report: <scratch>/p3-rerun2\out-b
+
+== B''. device run: the start-up and the browser run both left to the browser report
+run: 10:00:12.000 -> 10:00:20.000 (8 s)
+setup records: 0; left to other runs: browser 26
+  DroppedOutsideRunWindow: 4 interaction record(s) outside the run window (2026-10-21T10:00:11.6000000+00:00 → 2026-10-21T10:00:21.0000000+00:00) dropped that no other window explains: 4 before the run began, 0 after it ended.
+  [Device] Orders on a phone (id d1, Passed, 8 s): 6 record(s), phase Unknown
+  report: <scratch>/p3-rerun2\out-b2
+
+== E. browser run with DropUnattributed on the database: the predicate is not asked about the start-up
+run: 10:00:00.500 -> 10:00:10.000 (9.5 s)
+setup records: 16; left to other runs: device 6
+  DroppedOutsideRunWindow: 4 interaction record(s) outside the run window (2026-10-21T10:00:00.0000000+00:00 → 2026-10-21T10:00:11.0000000+00:00) dropped that no other window explains: 0 before the run began, 4 after it ended. 2 of them carry the id of a test in this run's tests file.
+  UnattributedInteractions: 2 interaction record(s) could not be attributed to a test.
+  DropUnattributed was asked about: http://orders-api/login
+  [Stack start-up] Stack start-up (id stack-start-up, not a test, Passed, 25.01 s): 16 record(s), phase Setup
+  [Orders] Lists orders (id b1, Passed, 4 s): 4 record(s), phase Unknown
+  [Orders] Shows the menu (id b2, Passed, 4 s): 4 record(s), phase Unknown
+  [Ingested] Traffic outside any test (id outside-any-test, not a test, Passed, 0.1 s): 2 record(s), phase Unknown
+  report: <scratch>/p3-rerun2\out-e
+
+== F. browser run with SeparateSetup: the start-up drawn inside the Setup partition
+run: 10:00:00.500 -> 10:00:10.000 (9.5 s)
+setup records: 16; left to other runs: device 6
+  DroppedOutsideRunWindow: 4 interaction record(s) outside the run window (2026-10-21T10:00:00.0000000+00:00 → 2026-10-21T10:00:11.0000000+00:00) dropped that no other window explains: 0 before the run began, 4 after it ended. 2 of them carry the id of a test in this run's tests file.
+  UnattributedInteractions: 2 interaction record(s) could not be attributed to a test.
+  [Stack start-up] Stack start-up (id stack-start-up, not a test, Passed, 25.01 s): 17 record(s), phase Setup/Unknown
+  [Orders] Lists orders (id b1, Passed, 4 s): 4 record(s), phase Unknown
+  [Orders] Shows the menu (id b2, Passed, 4 s): 4 record(s), phase Unknown
+  [Ingested] Traffic outside any test (id outside-any-test, not a test, Passed, 0.1 s): 2 record(s), phase Unknown
+  report: <scratch>/p3-rerun2\out-f
+
+== H. device run: everything before it declared as its setup, the browser run as another run inside that
+run: 10:00:12.000 -> 10:00:20.000 (8 s)
+setup records: 20; left to other runs: browser 10
+  [Stack start-up] Stack start-up (id stack-start-up, not a test, Passed, 791.45 s): 20 record(s), phase Setup
+  [Device] Orders on a phone (id d1, Passed, 8 s): 6 record(s), phase Unknown
+  report: <scratch>/p3-rerun2\out-h
+
+== G. browser run that wrote no end marker: closed where the device run began
+run: 10:00:00.500 -> 10:00:11.450 (10.95 s)
+setup records: 0; left to other runs: device 6
+  DroppedOutsideRunWindow: 16 interaction record(s) outside the run window (2026-10-21T10:00:00.0000000+00:00 → 2026-10-21T10:00:11.6000000+00:00 (where device began)) dropped that no other window explains: 16 before the run began, 0 after it ended.
+  UnattributedInteractions: 4 interaction record(s) could not be attributed to a test.
+  [Orders] Lists orders (id b1, Passed, 4 s): 4 record(s), phase Unknown
+  [Orders] Shows the menu (id b2, Passed, 4 s): 6 record(s), phase Unknown
+  [Ingested] Traffic outside any test (id outside-any-test, not a test, Passed, 10.95 s): 4 record(s), phase Unknown
+  report: <scratch>/p3-rerun2\out-g
+

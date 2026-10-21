@@ -148,7 +148,8 @@ function export_csv() {
     var lines = ['Feature,Scenario,Status,Duration'];
     for (var i = 0; i < c.items.length; i++) {
         var d = c.items[i];
-        if (d.el.style.display === 'none') continue;
+        // a scenario that is not a test (data-not-a-test) is no test result, as the CTRF report leaves it out
+        if (d.el.style.display === 'none' || d.el.hasAttribute('data-not-a-test')) continue;
         var f = d.f;
         // A name column holds the name alone: a header also carries labels, the endpoint, the duration
         // badge, the history pill and the copy and link buttons. A scenario's copy button holds its name.

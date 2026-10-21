@@ -85,12 +85,12 @@ internal static class ListCapRegistry
             HeldBy = "QueryAttachmentListTests.Failures_json_carries_the_texts_entries_and_every_lists_total",
             Reason = "failures --json: the scenario's own attachments, with attachmentsTotal beside them (R1)"
         },
-        new(Overview, "foreach (var scenario in scenarios.Where(s => s.Failed).Take(10))")
+        new(Overview, "foreach (var scenario in tests.Where(s => s.Failed).Take(10))")
         {
             HeldBy = "QueryCommandTests.Summary_says_how_many_failed_scenarios_it_did_not_list_and_names_the_listing",
             Reason = "summary: \"… N more · scenarios --result Failed\""
         },
-        new(Overview, "writer.Data(\"failed\", scenarios.Where(s => s.Failed).Take(10)")
+        new(Overview, "writer.Data(\"failed\", tests.Where(s => s.Failed).Take(10)")
         {
             HeldBy = "QueryCommandTests.Summary_says_how_many_failed_scenarios_it_did_not_list_and_names_the_listing",
             Reason = "summary --json: failedTotal beside the first ten"

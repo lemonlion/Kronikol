@@ -19,7 +19,8 @@ public sealed record RunSummaryFailure(string StableId, string FeatureName, stri
 /// <summary>What the run-end pointer says, gathered before anything is formatted.</summary>
 /// <param name="Directory">The directory the reports were written to.</param>
 /// <param name="Files">The files worth naming, in the order they should be printed.</param>
-/// <param name="ScenarioCount">How many scenarios the run held.</param>
+/// <param name="ScenarioCount">How many scenarios the run held that are tests: one that is not a test
+/// (<see cref="Scenario.NotATest"/>) is not counted.</param>
 /// <param name="Failures">The failing scenarios, in report order.</param>
 /// <param name="AgentInstructionsWritten">Whether <c>CLAUDE.md</c> / <c>AGENTS.md</c> sit in the directory.</param>
 /// <param name="QueryTarget">
@@ -137,6 +138,9 @@ public static class RunSummaryConsoleWriter
         {
             foreach (var scenario in feature.Scenarios ?? [])
             {
+                // the run's tests: a scenario that is not a test is in no count and no failure (plans/RUN_WINDOW_PLAN.md R1)
+                if (scenario.NotATest)
+                    continue;
                 scenarioCount++;
                 if (scenario.Result != ExecutionResult.Failed)
                     continue;

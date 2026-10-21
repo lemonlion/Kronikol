@@ -97,8 +97,10 @@ internal static class CtrfCommand
         if (ReportGate.Refuse(index, resolved, error) is { } refused)
             return refused;
 
+        // A scenario that is not a test is no test result, as the run's own CTRF report leaves it out (its address is its
+        // own, so the others keep theirs).
         var document = CtrfReportGenerator.Build(
-            [.. index.Scenarios.Select(Map)],
+            [.. index.Scenarios.Where(s => !s.NotATest).Select(Map)],
             ParseTime(index.StartTime),
             ParseTime(index.EndTime),
             Environment(index),

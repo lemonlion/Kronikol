@@ -21,18 +21,22 @@ public static partial class QueryCommand
         }
 
         var scenarios = index.Scenarios;
+        // Counted: the run's tests. A scenario that is not a test (an ingest's fold, a stack's start-up) is named and in no
+        // count, as the report's band counts (plans/RUN_WINDOW_PLAN.md R1); its calls are the run's, so they are counted.
+        var tests = scenarios.Where(s => !s.NotATest).ToList();
+        var notATest = scenarios.Count - tests.Count;
         if (options.Count)
         {
-            writer.Count(scenarios.Count);
+            writer.Count(tests.Count);
             return 0;
         }
 
-        var failed = scenarios.Count(s => s.Failed);
+        var failed = tests.Count(s => s.Failed);
         var interactions = scenarios.Sum(s => s.Interactions.Count);
 
         // Five heterogeneous sections and no list, so `items` alone would be a lie: the per-feature rows
         // are the one repeated thing here, and the rest are named members beside them. Inert in text mode.
-        writer.Data("run", new
+        var run = new
         {
             file = Path.GetFileName(index.Path),
             sizeBytes = index.FileLength,
@@ -40,7 +44,7 @@ public static partial class QueryCommand
             jsonBytes = index.JsonLength,
             startTime = index.StartTime,
             endTime = index.EndTime,
-            scenarios = scenarios.Count,
+            scenarios = tests.Count,
             failed,
             interactions,
             distinctBodies = index.Bodies.Count,
@@ -56,7 +60,8 @@ public static partial class QueryCommand
                     runAttempt = index.CiRunAttempt
                 }
                 : null
-        });
+        };
+        writer.Data("run", notATest > 0 ? QueryWriter.WithMember(run, "notATest", notATest) : run);
 
         writer.Line($"{Path.GetFileName(index.Path)}  {QueryWriter.Size((int)Math.Min(index.FileLength, int.MaxValue))}"
                     + (index.Snapshot is null ? "" : $" on disk, {QueryWriter.Size((int)Math.Min(index.JsonLength, int.MaxValue))} as JSON")
@@ -76,37 +81,44 @@ public static partial class QueryCommand
                         // the one the same runId already produced.
                         + (index.CiRunAttempt is { } attempt && attempt != "1" ? $"  attempt {attempt}" : ""));
         }
-        writer.Line($"{scenarios.Count} scenarios · {failed} failed · {interactions} interactions · {index.Bodies.Count} distinct bodies");
+        writer.Line($"{tests.Count} scenarios{(notATest > 0 ? $" · {notATest} not a test" : "")} · {failed} failed · {interactions} interactions · {index.Bodies.Count} distinct bodies");
         writer.Line();
 
         foreach (var feature in scenarios.GroupBy(s => s.FeatureName))
         {
+            var featureTests = feature.Where(s => !s.NotATest).ToList();
+            var featureNotATest = feature.Count() - featureTests.Count;
             // Counted, not inferred from the failures: a scenario that was skipped or bypassed did not pass.
-            var featureFailed = feature.Count(s => s.Failed);
-            var featurePassed = feature.Count(s => s.Result.Equals("Passed", StringComparison.OrdinalIgnoreCase));
-            var featureSkipped = feature.Count(s => s.Result.Equals("Skipped", StringComparison.OrdinalIgnoreCase)
+            var featureFailed = featureTests.Count(s => s.Failed);
+            var featurePassed = featureTests.Count(s => s.Result.Equals("Passed", StringComparison.OrdinalIgnoreCase));
+            var featureSkipped = featureTests.Count(s => s.Result.Equals("Skipped", StringComparison.OrdinalIgnoreCase)
                                                     || s.Result.Equals("SkippedAfterFailure", StringComparison.OrdinalIgnoreCase));
-            var featureBypassed = feature.Count(s => s.Result.Equals("Bypassed", StringComparison.OrdinalIgnoreCase));
-            writer.Line($"{QueryWriter.OneLine(feature.Key, 80)}  {featurePassed} passed"
-                        + (featureSkipped > 0 ? $", {featureSkipped} skipped" : "")
-                        + (featureBypassed > 0 ? $", {featureBypassed} bypassed" : "")
-                        + (featureFailed > 0 ? $", {featureFailed} FAILED" : ""));
-            writer.Item(new
+            var featureBypassed = featureTests.Count(s => s.Result.Equals("Bypassed", StringComparison.OrdinalIgnoreCase));
+            // A feature of no test (a stack's start-up) says only that; one with tests says it after their counts.
+            writer.Line(featureTests.Count == 0 && featureNotATest > 0
+                ? $"{QueryWriter.OneLine(feature.Key, 80)}  {featureNotATest} not a test"
+                : $"{QueryWriter.OneLine(feature.Key, 80)}  {featurePassed} passed"
+                  + (featureSkipped > 0 ? $", {featureSkipped} skipped" : "")
+                  + (featureBypassed > 0 ? $", {featureBypassed} bypassed" : "")
+                  + (featureFailed > 0 ? $", {featureFailed} FAILED" : "")
+                  + (featureNotATest > 0 ? $", {featureNotATest} not a test" : ""));
+            var item = new
             {
                 feature = feature.Key,
-                total = feature.Count(),
+                total = featureTests.Count,
                 passed = featurePassed,
                 failed = featureFailed,
                 skipped = featureSkipped,
                 bypassed = featureBypassed
-            });
+            };
+            writer.Item(featureNotATest > 0 ? QueryWriter.WithMember(item, "notATest", featureNotATest) : item);
         }
 
         if (failed > 0)
         {
             writer.Line();
             writer.Line("Failed:");
-            foreach (var scenario in scenarios.Where(s => s.Failed).Take(10))
+            foreach (var scenario in tests.Where(s => s.Failed).Take(10))
                 writer.Line($"  {scenario.Address}  {scenario.Name}"
                             + (scenario.ErrorMessage is { } e ? $"  — {QueryWriter.OneLine(e, 90)}" : ""));
             if (failed > 10)
@@ -115,7 +127,7 @@ public static partial class QueryCommand
 
             // The same ten, and the same reason for the cap: this is the orientation view, and `failures`
             // is the one that pages. `failedTotal` says how many the ten came out of.
-            writer.Data("failed", scenarios.Where(s => s.Failed).Take(10).Select(s => new
+            writer.Data("failed", tests.Where(s => s.Failed).Take(10).Select(s => new
             {
                 address = s.Address,
                 stableId = s.StableId,
@@ -132,7 +144,8 @@ public static partial class QueryCommand
         // Ties on the time left go to the longer scenario by wall time: a scenario that was all warm-up and a skipped one of
         // 0 s both leave none, and the skipped one, first in the file, stood at the top and dropped the whole block (until
         // 4.16.3), which shows only when a scenario took any time.
-        var slowest = scenarios.OrderByDescending(s => s.TimeLeftSeconds).ThenByDescending(s => s.DurationSeconds).Take(3).ToArray();
+        // A scenario that is not a test spans no test's time: the start-up's minutes are not the slowest test.
+        var slowest = tests.OrderByDescending(s => s.TimeLeftSeconds).ThenByDescending(s => s.DurationSeconds).Take(3).ToArray();
         if (slowest.Length > 0 && slowest[0].DurationSeconds > 0)
         {
             writer.Line();
@@ -249,7 +262,9 @@ public static partial class QueryCommand
 
         writer.Page(matches, options.Offset, options.PageSize(200, writer, "scenarios"), "scenarios", scenario =>
         {
-            var flags = scenario.Failed ? "FAIL" : scenario.Result.Length > 0 ? scenario.Result[..Math.Min(4, scenario.Result.Length)].ToLowerInvariant() : "";
+            // A scenario that is not a test has no verdict to flag, and says what it is after its name.
+            var flags = scenario.NotATest ? "" : scenario.Failed ? "FAIL" : scenario.Result.Length > 0 ? scenario.Result[..Math.Min(4, scenario.Result.Length)].ToLowerInvariant() : "";
+            var notATest = scenario.NotATest ? "  not a test" : "";
             var repeats = shared.TryGetValue(scenario.StableId, out var count) ? $"  ×{count}" : "";
             var attempt = scenario.Attempt is > 1 ? $"  attempt {scenario.Attempt}" : "";
             // A call is its request, as `interactions` and `services` count it: the records count each half (the JSON's
@@ -258,10 +273,10 @@ public static partial class QueryCommand
             // The row's time is wall time; what of it was the run's first-call warm-up follows, as --slower-than leaves it out.
             var warmUp = scenario.WarmUpSeconds is > 0 and var seconds ? $"  {seconds:0.##}s warm-up" : "";
             writer.Line($"{scenario.Address,-5} {flags,-4} {scenario.DurationSeconds,6:0.##}s  {calls,4} calls  "
-                        + QueryWriter.OneLine(scenario.Name, 80) + repeats + attempt + warmUp);
+                        + QueryWriter.OneLine(scenario.Name, 80) + notATest + repeats + attempt + warmUp);
             if (scenario.Failed && scenario.ErrorMessage is { } message)
                 writer.Line($"        {QueryWriter.OneLine(message, 100)}");
-        }, options.RerunArgs(), scenario => WithWarmUp(scenario, new
+        }, options.RerunArgs(), scenario => WithNotATest(scenario, WithWarmUp(scenario, new
         {
             address = scenario.Address,
             stableId = scenario.StableId,
@@ -278,7 +293,7 @@ public static partial class QueryCommand
             stableIdShared = shared.TryGetValue(scenario.StableId, out var repeats) ? repeats : 1,
             tags = scenario.EffectiveTags,
             exampleValues = scenario.ExampleValues
-        }));
+        })));
         NoteWarmedOut();
 
         return 0;
@@ -288,6 +303,10 @@ public static partial class QueryCommand
     /// writes it, and as it was otherwise.</summary>
     private static object WithWarmUp(ScenarioEntry scenario, object item) =>
         scenario.WarmUpSeconds is { } seconds ? QueryWriter.WithMember(item, "warmUpSeconds", seconds) : item;
+
+    /// <summary>A scenario's item with <c>notATest</c> when it is not a test, as the report writes it, and as it was otherwise.</summary>
+    private static object WithNotATest(ScenarioEntry scenario, object item) =>
+        scenario.NotATest ? QueryWriter.WithMember(item, "notATest", true) : item;
 
     private static bool Matches(ScenarioEntry scenario, QueryOptions options) =>
         MatchesBesidesTime(scenario, options)

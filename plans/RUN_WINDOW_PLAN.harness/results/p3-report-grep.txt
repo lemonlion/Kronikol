@@ -1,0 +1,11 @@
+# P3 F report (prototype, R1 not applied): run band, timeline order, feature order
+<dt>Scenarios</dt><dd>4</dd>
+<dt>Passed</dt><dd>4</dd>
+<dt>Duration</dt><dd>9s</dd>
+class="timeline-label" title="Stack start-up">Stack start-up<
+class="timeline-label" title="Lists orders">Lists orders<
+class="timeline-label" title="Shows the menu">Shows the menu<
+class="timeline-label" title="Traffic outside any test">Traffic outside any test<
+<summary class="h2">Stack start-up
+<summary class="h2">Orders
+<summary class="h2">Ingested

@@ -40,7 +40,8 @@ public static partial class QueryCommand
                 writer.Note($"! the failure digest is per scenario — scoped to {one.Address}; `steps {one.Address}/{step}` answers for the step");
         }
 
-        var failed = scope.Where(s => s.Failed).ToList();
+        // a scenario that is not a test is no failure of the run's, as the report's band counts
+        var failed = scope.Where(s => s.Failed && !s.NotATest).ToList();
 
         if (options.Count)
         {
@@ -53,15 +54,20 @@ public static partial class QueryCommand
             writer.Note("nothing failed");
             // Counted, not inferred from the absence of failures. A scenario that was skipped did not
             // pass, and saying it did is the one line here that ends an investigation.
-            var passed = index.Scenarios.Count(s => s.Result.Equals("Passed", StringComparison.OrdinalIgnoreCase));
+            // The run's tests: a scenario that is not a test (an ingest's fold) is named apart (plans/RUN_WINDOW_PLAN.md R1).
+            var tests = index.Scenarios.Where(s => !s.NotATest).ToList();
+            var notATest = index.Scenarios.Count - tests.Count;
+            var passed = tests.Count(s => s.Result.Equals("Passed", StringComparison.OrdinalIgnoreCase));
             // A bypassed scenario ran: a step of it was skipped over while the steps after it ran.
-            var bypassed = index.Scenarios.Count(s => s.Result.Equals("Bypassed", StringComparison.OrdinalIgnoreCase));
-            var notRun = index.Scenarios.Count - passed - bypassed;
-            writer.Footer(passed == index.Scenarios.Count
-                ? $"{index.Scenarios.Count} scenarios, all passed · next: scenarios · services"
-                : $"{index.Scenarios.Count} scenarios: {passed} passed"
+            var bypassed = tests.Count(s => s.Result.Equals("Bypassed", StringComparison.OrdinalIgnoreCase));
+            var notRun = tests.Count - passed - bypassed;
+            var notATestText = notATest > 0 ? $" · {notATest} not a test" : "";
+            writer.Footer(passed == tests.Count
+                ? $"{tests.Count} scenarios, all passed{notATestText} · next: scenarios · services"
+                : $"{tests.Count} scenarios: {passed} passed"
                   + (notRun > 0 ? $", {notRun} did not run" : "")
                   + (bypassed > 0 ? $", {bypassed} bypassed" : "")
+                  + notATestText
                   + " · next: scenarios · services");
             return 0;
         }

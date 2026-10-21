@@ -1,0 +1,33 @@
+== a. a run with no end marker, then another run
+run: 10:00:01.000 -> 10:00:13.100
+  UnattributedInteractions: 2 interaction record(s) could not be attributed to a test.
+  Lists orders (b1): http://orders-api/orders
+  Traffic outside any test (outside-any-test): http://orders-api/orders, db://orders/find?customer=2
+  report: <scratch>/p2-rerun\out-a
+
+== b. RunStartedAt after RunEndedAt
+run: 10:00:01.000 -> 10:00:05.000
+  DroppedOutsideRunWindow: 6 interaction record(s) outside the run window (2026-10-21T10:00:10.0000000+00:00 → 2026-10-21T10:00:00.0000000+00:00) dropped: 2 before the run began, 4 after it ended.
+  Lists orders (b1): 
+  report: <scratch>/p2-rerun\out-b
+
+== c1. the same suite's second run, with the run window
+run: 10:00:01.000 -> 10:00:10.000
+  DroppedOutsideRunWindow: 4 interaction record(s) outside the run window (2026-10-21T10:00:00.0000000+00:00 → 2026-10-21T10:00:11.0000000+00:00) dropped: 4 before the run began, 0 after it ended.
+  Lists orders (t1): http://orders-api/orders?run=2
+  Shows the menu (t2): http://orders-api/menu?run=2
+  report: <scratch>/p2-rerun\out-c1
+
+== c2. the same suite's second run, without it
+run: 09:00:02.000 -> 10:00:10.000
+  Lists orders (t1): http://orders-api/orders?run=1, http://orders-api/orders?run=2
+  Shows the menu (t2): http://orders-api/menu?run=1, http://orders-api/menu?run=2
+  report: <scratch>/p2-rerun\out-c2
+
+== d. a Phase boundary after the fold scenario's last call, SeparateSetup on
+run: 10:00:00.200 -> 10:00:05.000
+  UnattributedInteractions: 5 interaction record(s) could not be attributed to a test.
+  Lists orders (b1): http://orders-api/orders
+  Traffic outside any test (outside-any-test): db://orders/insert?seed=1, db://orders/insert?seed=2, http://override.com/
+  report: <scratch>/p2-rerun\out-d
+

@@ -290,6 +290,13 @@ internal static class IngestCommand
             return 2;
         }
 
+        // Both given the wrong way round is no window: refused here, where the pipeline can only say so (F10).
+        if (runStart is { } givenStart && runEnd is { } givenEnd && givenEnd < givenStart)
+        {
+            error.WriteLine($"--run-end ({givenEnd:o}) is before --run-start ({givenStart:o})");
+            return 2;
+        }
+
         var files = CliInputs.Resolve(inputs, InteractionPatterns, error);
         if (tests is not null)
         {
@@ -466,7 +473,10 @@ internal static class IngestCommand
                 return 1;
             }
 
-            @out.WriteLine($"Replayed {result.InteractionCount} interaction record(s) into {result.ScenarioCount} scenario(s).");
+            // The pointer below counts tests, so the scenarios that are not tests (the fold) are named here (plans/RUN_WINDOW_PLAN.md R1).
+            var notATest = result.Features.Sum(f => f.Scenarios.Count(s => s.NotATest));
+            @out.WriteLine($"Replayed {result.InteractionCount} interaction record(s) into {result.ScenarioCount} scenario(s)"
+                           + (notATest > 0 ? $", {notATest} of them not a test." : "."));
             // One line per pass, in the order the passes run, not a diagnostic: the diagnostics list means "silence is a
             // clean run", and this is the option doing what it was asked. Zero is printed too, since it is the value worth a
             // look (a capture whose calls already name their tests, steps with no durationMs).
@@ -548,8 +558,9 @@ internal static class IngestCommand
         if (blank.Count == 0)
             return;
 
-        var scenarios = features.SelectMany(f => f.Scenarios ?? []).ToArray();
-        // The generator's predicate: a failure, or a result that is a default rather than a verdict, blanks the files.
+        // The scenarios the specifications describe (a scenario that is not a test is not one of them), and the
+        // generator's predicate: a failure, or a result that is a default rather than a verdict, blanks the files.
+        var scenarios = ReportGenerator.SpecifiedFeatures(features).SelectMany(f => f.Scenarios ?? []).ToArray();
         var failed = scenarios.Count(s => s.Result == ExecutionResult.Failed);
         var defaulted = scenarios.Count(s => s.Result != ExecutionResult.Failed && s.ResultDefaulted);
         if (failed == 0 && defaulted == 0)

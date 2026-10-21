@@ -84,6 +84,8 @@ public sealed class IngestRequest
     /// interaction, when there are no tests records — are re-attributed to this one scenario (typically
     /// "Traffic outside any test": warm-ups, health probes, manual browsing, background jobs). Leave
     /// null to render each unknown test id as its own scenario.
+    /// <para>The scenario is not a test (<see cref="Scenario.NotATest"/>): it is drawn like any scenario, and the report's
+    /// counts and times, the CI summary, <c>Failures.md</c>, the CTRF report and the specifications leave it out.</para>
     /// </summary>
     public UnknownTestFold? FoldUnknownTestsInto { get; init; }
 
@@ -176,7 +178,9 @@ public sealed class IngestRequest
     /// a global login, inside the run), end = the latest <c>testrun</c> marker that is not
     /// <see cref="TestRunRecord.RunStartedStatus"/>, or open when there is none (a run that died never
     /// wrote one, and its late traffic must not vanish). With no tests records and no explicit start nothing
-    /// is dropped, and a diagnostic says so.</para>
+    /// is dropped, and a diagnostic says so; so it is with a window that ends before it starts (explicit bounds the
+    /// wrong way round, or a <see cref="RunStartedAt"/> after the end the tests records give). A window of one instant is
+    /// a window: both bounds are inclusive.</para>
     /// <para>Traffic inside the window that belongs to no test — a runner's global set-up, a health probe —
     /// is untouched: it still reaches <see cref="FoldUnknownTestsInto"/> / <see cref="DropUnattributed"/>.</para>
     /// </remarks>
@@ -757,6 +761,16 @@ public static class IngestPipeline
 
         var (start, end) = window.Value;
 
+        // A window that ends before it starts is none: an explicit start after the end the tests file gives, or explicit
+        // bounds the wrong way round. Applied, it dropped every record, the tests' own calls with them, and printed the
+        // inverted window as if it were one (plans/RUN_WINDOW_PLAN.md F10). Bounds are inclusive, so one instant is a window.
+        if (end is { } closes && closes < start)
+        {
+            diagnostics.Add(DiagnosticKind.Other,
+                $"DropOutsideRunWindow: the run window ends before it starts ({start:o} → {closes:o}); nothing was dropped.");
+            return records;
+        }
+
         // Pairs are judged by their earliest timestamp (the request); a record with no pair id stands alone.
         var pairStart = new Dictionary<string, DateTimeOffset>(StringComparer.Ordinal);
         foreach (var record in records)
@@ -1162,8 +1176,11 @@ public static class IngestPipeline
             var known = new HashSet<string>(
                 testRecords.Where(t => !string.IsNullOrWhiteSpace(t.TestId)).Select(t => t.TestId!),
                 StringComparer.Ordinal);
+            // Every record of the fold takes its name, those that already carry its id too: a capture that names what it
+            // could not attribute by the fold's own id (its fallback id, "session") otherwise drew the fold scenario under
+            // the id, since only the records renamed here carried the name.
             ordered = ordered
-                .Select(r => known.Contains(r.TestId) || r.TestId == fold.ScenarioId
+                .Select(r => known.Contains(r.TestId) || (r.TestId == fold.ScenarioId && r.TestName == fold.ScenarioName)
                     ? r
                     : r with { TestId = fold.ScenarioId, TestName = fold.ScenarioName })
                 .ToList();

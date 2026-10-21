@@ -288,13 +288,17 @@ def covered_by(path, scope):
 
 def cmd_summary(path, report, _args):
     found = scenarios(report)
-    failed = [s for s in found if s.get("result") == "Failed"]
+    # A scenario that is not a test (an ingest's fold, a stack's start-up) is counted as none, as the tool counts it;
+    # its calls are the stack's traffic, and stay in the count of interactions.
+    tests = [s for s in found if not s.get("notATest")]
+    not_a_test = len(found) - len(tests)
+    failed = [s for s in tests if s.get("result") == "Failed"]
     calls = sum(len(s.get("httpInteractions") or []) for s in found)
 
     lines = [
         f"{os.path.basename(path)}  {os.path.getsize(path) // 1024} KB",
         f"{report.get('startTime')} → {report.get('endTime')}",
-        f"{len(found)} scenarios · {len(failed)} failed · {calls} interactions",
+        f"{len(tests)} scenarios" + (f" · {not_a_test} not a test" if not_a_test else "") + f" · {len(failed)} failed · {calls} interactions",
         "",
     ]
 
@@ -313,10 +317,12 @@ def cmd_summary(path, report, _args):
 
 def cmd_failures(_path, report, _args):
     found = scenarios(report)
-    failed = [(i, s) for i, s in enumerate(found) if s.get("result") == "Failed"]
+    failed = [(i, s) for i, s in enumerate(found) if s.get("result") == "Failed" and not s.get("notATest")]
 
     if not failed:
-        emit(["nothing failed"], f"{len(found)} scenarios, all passed")
+        tests = sum(1 for s in found if not s.get("notATest"))
+        not_a_test = len(found) - tests
+        emit(["nothing failed"], f"{tests} scenarios, all passed" + (f" · {not_a_test} not a test" if not_a_test else ""))
         return
 
     lines = []

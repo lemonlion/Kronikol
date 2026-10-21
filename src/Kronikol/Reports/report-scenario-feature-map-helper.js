@@ -5,17 +5,20 @@ function fc() {
     var features = document.getElementsByClassName('feature');
     var items = [];
     var fMap = new Map();
-    var runs = 0;
+    var runs = 0, testFeatures = 0;
     for (var fi = 0; fi < features.length; fi++) {
         var sc = features[fi].getElementsByClassName('scenario');
+        var featureRuns = 0;
         for (var si = 0; si < sc.length; si++) {
             var s = sc[si];
             var raw = s.getAttribute('data-dependencies') || '';
             var d = raw ? new Set(raw.split(',')) : new Set();
             // A parameterized scenario holds one run per example (5.0.0): what the filters leave showing is counted in
-            // runs, as the run band counts scenarios.
-            var n = parseInt(s.getAttribute('data-runs') || '1', 10) || 1;
+            // runs, as the run band counts scenarios. A scenario that is not a test (data-not-a-test: an ingest's fold, a
+            // stack's start-up) is no run, and a feature of nothing else is no feature of the run's, as the band counts.
+            var n = s.hasAttribute('data-not-a-test') ? 0 : parseInt(s.getAttribute('data-runs') || '1', 10) || 1;
             runs += n;
+            featureRuns += n;
 // kron:verdicts
             // The cross-run history verdicts, when the run had a ledger: what `$flaky` and `$broke` read.
             var hv = s.getAttribute('data-history-verdicts') || '';
@@ -26,8 +29,9 @@ function fc() {
             items.push(item);
             fMap.set(s, features[fi]);
         }
+        if (featureRuns > 0) testFeatures++;
     }
-    _filterCache = { items: items, features: features, scenarios: scenarios, fMap: fMap, runs: runs, shown: null };
+    _filterCache = { items: items, features: features, scenarios: scenarios, fMap: fMap, runs: runs, testFeatures: testFeatures, shown: null };
     return _filterCache;
 }
 // A scenario's tags as its data-tags attribute carries them (5.0.0, plans/TAGS_PLAN.md §4.9): its feature's and its
@@ -87,26 +91,33 @@ function applyVisibility(c) {
 // What the filters leave showing (5.0.0, plans/OPTION_C_PLAN.md S5, D14): the readout beside Clear All, and a
 // `kron-filter-change` event on the document, { shown, total } in runs, whenever the scenarios shown change.
 function filter_readout(c) {
-    var shown = 0, signature = '', features = 0;
+    // Tests, and the features with a test shown, as the band counts them; whether any scenario shows at all, a scenario
+    // that is not a test included, is what the empty state reads (data-none-shown).
+    var shown = 0, signature = '', any = false, withTest = new Set();
     for (var i = 0; i < c.items.length; i++) {
         var on = c.items[i].el.style.display !== 'none';
-        if (on) shown += c.items[i].runs;
+        if (on) {
+            shown += c.items[i].runs;
+            any = true;
+            if (c.items[i].runs > 0) withTest.add(c.items[i].f);
+        }
         signature += on ? '1' : '0';
     }
-    for (var j = 0; j < c.features.length; j++) if (c.features[j].style.display !== 'none') features++;
+    var features = withTest.size;
     var readout = document.querySelector('.filter-readout');
     if (readout) {
         var filtered = shown < c.runs;
-        var scenarios = c.runs === 1 ? ' scenario, ' : ' scenarios, ', ofFeatures = c.features.length === 1 ? ' feature' : ' features';
+        if (any) readout.removeAttribute('data-none-shown'); else readout.setAttribute('data-none-shown', '1');
+        var scenarios = c.runs === 1 ? ' scenario, ' : ' scenarios, ', ofFeatures = c.testFeatures === 1 ? ' feature' : ' features';
         readout.classList.toggle('is-filtered', filtered);
         readout.textContent = '';
         if (filtered) {
             var b = document.createElement('b');
             b.textContent = 'Filtered';
             readout.appendChild(b);
-            readout.appendChild(document.createTextNode(' ' + shown + ' of ' + c.runs + scenarios + features + ' of ' + c.features.length + ofFeatures));
+            readout.appendChild(document.createTextNode(' ' + shown + ' of ' + c.runs + scenarios + features + ' of ' + c.testFeatures + ofFeatures));
         } else {
-            readout.appendChild(document.createTextNode('All ' + c.runs + scenarios + c.features.length + ofFeatures));
+            readout.appendChild(document.createTextNode('All ' + c.runs + scenarios + c.testFeatures + ofFeatures));
         }
     }
     if (c.shown === null) c.shown = new Array(c.items.length + 1).join('1');

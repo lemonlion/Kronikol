@@ -1,0 +1,7 @@
+@startuml
+autonumber 1
+actor "seeder" as seeder
+participant "Database" as database
+participant "compose" as compose
+participant "Orders Api" as ordersApi
+@enduml

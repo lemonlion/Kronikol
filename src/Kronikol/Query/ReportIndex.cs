@@ -165,6 +165,13 @@ internal sealed class ScenarioEntry
     public double TimeLeftSeconds => DurationSeconds - (WarmUpSeconds ?? 0);
 
     public bool IsHappyPath { get; set; }
+
+    /// <summary>
+    /// Not a test (the data file's <c>notATest</c>: an ingest's fold scenario, a stack's start-up): listed and marked, and
+    /// in no count of the run's tests (plans/RUN_WINDOW_PLAN.md R1). Internal, so a patch adds no public member.
+    /// </summary>
+    internal bool NotATest { get; set; }
+
     public string? ErrorMessage { get; set; }
     public string? ErrorStackTrace { get; set; }
     public string? Rule { get; set; }

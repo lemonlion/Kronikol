@@ -277,11 +277,12 @@
     // ---- the empty state ----
     // the Features panel says when the filters leave no scenario, on a page with the bar and on one without it (a page
     // with nothing beside its features has no tabs, and so no bar)
+    // "No scenarios match" only while nothing shows: the readout counts tests, and a scenario that is not a test (a
+    // stack's start-up) can show while it reads 0 of them (data-none-shown, report-scenario-feature-map-helper.js)
     function emptyState() {
         var readout = empty && $('.filter-readout', box);
         if (!readout) return;
-        var m = /(\d+) of (\d+) scenarios?/.exec(readout.textContent);
-        empty.hidden = !(readout.classList.contains('is-filtered') && m && m[1] === '0');
+        empty.hidden = !(readout.classList.contains('is-filtered') && readout.hasAttribute('data-none-shown'));
     }
 
     function start() {

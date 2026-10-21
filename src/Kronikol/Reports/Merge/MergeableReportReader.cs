@@ -245,6 +245,9 @@ public static class MergeableReportReader
             ? TimeSpan.FromSeconds(d.GetDouble())
             : null,
         IsHappyPath = se.TryGetProperty("isHappyPath", out var hp) && hp.ValueKind == JsonValueKind.True,
+        // The merge used to lose it: the merged report counted a shard's fold scenario as a passed test, and its
+        // history called it passing against the ledger that recorded it as not a test (plans/RUN_WINDOW_PLAN.md R1, F7).
+        NotATest = se.TryGetProperty("notATest", out var notATest) && notATest.ValueKind == JsonValueKind.True,
         ErrorMessage = GetString(se, "errorMessage"),
         ErrorStackTrace = GetString(se, "errorStackTrace"),
         FailureCause = GetString(se, "failureCause"),

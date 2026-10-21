@@ -4,6 +4,72 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.2.6] - 2026-10-22
+
+The patch part moves (5.2.5 to 5.2.6): bug fixes, with nothing new to call or configure. A scenario that is not a test
+was counted as a passed test by everything but the history, and the data files lost the flag; an explicit run window
+that ends before it starts dropped every record (plans/RUN_WINDOW_PLAN.md R1, found while planning #187). **Counts
+move** for every report that holds such a scenario, the one `--fold-unknown` (`FoldUnknownTestsInto`) adds: each reader
+that moves is named below.
+
+### Fixed
+
+- **A scenario that is not a test is counted as none (#187).** `Scenario.NotATest` marks the scenario an ingest folds
+  unattributed traffic into, and only the history read it: the run band, the ring, the features table, the readout the
+  filters keep, the timeline, the duration percentiles and filter, the CI summary, `Failures.md`, the console summary,
+  `Run.json`, the CTRF report (and `kronikol ctrf`), Export Filtered CSV and `kronikol query` counted it as a passed
+  test, and the Specifications listed it. A run of two tests with a fold read "Scenarios 3, Passed 3", and its
+  `Failures.md` "All 3 scenarios passed.". Now it is drawn as before, with a muted **not a test** badge beside its name
+  and its time with no speed colour, and every one of those leaves it out of its counts and times: the band reads
+  "Scenarios 2" and counts the features that hold a test; a feature that holds nothing else reads `not a test` in the
+  features table, with empty time cells, so the Features tab's time sorts put it last; the timeline, the percentiles,
+  the duration filter and the CSV have no row for it; the CI summary draws no diagram of it with a tick; the CTRF
+  report has no test for it and keeps every other test's `kronikolAddress`; and the specifications leave it out, and
+  its result never blanks them. Its status stays `Passed`, so the status filters show it as before, and the component
+  diagram and `query services` still count its calls, which are the stack's traffic. "No scenarios match the filters"
+  shows only while nothing is shown, where it read the readout's count, which counts tests.
+- **The data files carry it, so `kronikol merge` and `kronikol query` keep it.** `TestRunReport.json` (and `.krkl`, and
+  the mergeable file) writes `"notATest": true` on such a scenario, and only there, so every other scenario's bytes are
+  as they were; the XML and YAML write `NotATest`, and the schema and the XSD declare it optional. A merged report
+  counted a shard's fold as a passed test, and its history called it `stable: passing`, read against the very ledger
+  in which the shard's own run had recorded it as `N`; it now reads `stable: not a test`. `query summary` counts tests
+  (`2 scenarios · 1 not a test · 0 failed · …`), a feature line says `Ingested  1 not a test`, `Slowest:` leaves it out,
+  and `--json` adds `notATest` to the run and to such a feature; `query scenarios` marks its row `not a test`, with no
+  verdict in the flags column, and `--json` adds `notATest: true`; `failures` with nothing failed counts tests; the
+  run diff's header counts tests. `kronikol ingest` says `into 3 scenario(s), 1 of them not a test.`
+- **The history read from a data file records it as `N`.** Without the report's `History.run.json` beside it,
+  `kronikol history import`, `history gate` and `query history` rebuild the run from the data file, which did not carry
+  the flag: an ingest's fold was imported into the ledger as a pass, and the gate's pass rate counted it, so a run of
+  one failed test, one passed and a fold read 0.67 against a 0.6 minimum and passed. It reads 0.50 now, and a fold that
+  failed lowers no pass rate.
+- **A run window that ends before it starts drops nothing, and says why.** `RunStartedAt` after `RunEndedAt`, or after
+  the end the tests file gives, dropped every record, the tests' own calls with them, and the diagnostic printed the
+  inverted window as if it were one (`6 ... (10:00:10 → 10:00:00) dropped: 2 before the run began, 4 after it
+  ended`). The window is now not applied, and an `Other` diagnostic says `DropOutsideRunWindow: the run window ends
+  before it starts (… → …); nothing was dropped.` `kronikol ingest` refuses a `--run-end` before `--run-start` with
+  exit 2. A window of one instant is still a window.
+- **The agent skill's `query.py` counts tests as the tool does.** The fallback script the skill ships for a machine
+  with no .NET tool (`scripts/query.py`) printed `3 scenarios · 2 failed` for a run of two tests, one failed, and a fold
+  that failed; its `summary` and `failures` now count tests, with `· 1 not a test`, as `kronikol query` does.
+- **A fold scenario is named as the fold when its records already carry its id.** A capture whose unattributed calls
+  carry the fold's own id (the wiki's recipe folds into `"session"`, the window attribution's fallback id) drew the
+  fold scenario under the id, since only the records the fold renamed took its name. Every record of the fold now
+  takes it.
+
+### Tests
+
+- No fact covered `--run-window`, `--run-start` or `--run-end`: `IngestRunWindowCommandTests` runs each, alone and
+  together, against a capture with a start-up before the run and another run after it, and each refusal.
+- `NotATestReportTests`, `NotATestIngestTests`, `NotATestMergeTests`, `QueryNotATestTests`, `HistoryNotATestTests`,
+  `RunWindowTests` and two `FallbackScriptTests` facts hold the rest, and `NotATestPaintTests` (Playwright) the badge as painted, the readout as the filters
+  change, the time sort, the duration filter, the empty state and the CSV. Proofs: the facts were written first and run
+  on 5.2.5's code: 27 failed, each at the reader it names, the 7 CLI facts of the run-window flags passed (they cover
+  code that worked, and are proved by mutating the flags' mapping), and so did the guard of a one-instant window; the
+  five Playwright facts failed on 5.2.5's page. 47 of 47 mutations are killed: 40 of the C# code (each reader's filter,
+  the data files' key, the merge, the query, the history's rebuild and gate, the inverted window, the fold's name, the
+  CLI's mapping) and 7 of the page scripts, run against the Playwright facts (the readout's tests and features, the empty
+  state's flag, the CSV).
+
 ## [5.2.5] - 2026-10-21
 
 The patch part moves (5.2.4 to 5.2.5): bug fixes and a performance fix, with nothing new to call or configure. Most of

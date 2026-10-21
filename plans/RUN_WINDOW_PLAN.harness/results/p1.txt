@@ -1,0 +1,38 @@
+== A. browser run, as the issue's host ingests it
+run: 10:00:00.500 -> 10:00:10.000 (9.5 s)
+diagnostics: 2
+  DroppedOutsideRunWindow: 26 interaction record(s) outside the run window (2026-10-21T10:00:00.0000000+00:00 → 2026-10-21T10:00:11.0000000+00:00) dropped: 16 before the run began, 10 after it ended.
+  UnattributedInteractions: 2 interaction record(s) could not be attributed to a test.
+scenarios, in the order the report lists them:
+  [Orders] Lists orders (id b1, Passed): 4 record(s): http://orders-api/orders, db://orders/find?customer=1
+  [Orders] Shows the menu (id b2, Passed): 4 record(s): http://orders-api/menu, db://menu/find
+  [Ingested] Traffic outside any test (id outside-any-test, not a test, Passed): 2 record(s): http://orders-api/login
+
+== B. device run, as the issue's host ingests it
+run: 10:00:12.000 -> 10:00:20.000 (8 s)
+diagnostics: 1
+  DroppedOutsideRunWindow: 30 interaction record(s) outside the run window (2026-10-21T10:00:11.6000000+00:00 → 2026-10-21T10:00:21.0000000+00:00) dropped: 30 before the run began, 0 after it ended.
+scenarios, in the order the report lists them:
+  [Device] Orders on a phone (id d1, Passed): 6 record(s): http://orders-api/orders, db://orders/find?customer=2, http://orders-api/menu
+
+== C. browser run, window started at the stack's start to keep the start-up (workaround 1)
+run: 09:47:00.000 -> 10:00:10.000 (790 s)
+diagnostics: 2
+  DroppedOutsideRunWindow: 10 interaction record(s) outside the run window (2026-10-21T09:47:00.0000000+00:00 → 2026-10-21T10:00:11.0000000+00:00) dropped: 0 before the run began, 10 after it ended.
+  UnattributedInteractions: 18 interaction record(s) could not be attributed to a test.
+scenarios, in the order the report lists them:
+  [Orders] Lists orders (id b1, Passed): 4 record(s): http://orders-api/orders, db://orders/find?customer=1
+  [Orders] Shows the menu (id b2, Passed): 4 record(s): http://orders-api/menu, db://menu/find
+  [Ingested] Traffic outside any test (id outside-any-test, not a test, Passed): 18 record(s): db://orders/insert?seed=0, db://orders/insert?seed=1, db://orders/insert?seed=2, db://orders/insert?seed=3, db://orders/insert?seed=4, db://orders/insert?seed=5, http://orders-api/health, http://orders-api/health, http://orders-api/login
+
+== D. browser run, start-up dropped by a predicate instead (workaround 2, DropUnattributed on the database)
+run: 09:47:20.000 -> 10:00:10.000 (770 s)
+diagnostics: 3
+  DroppedOutsideRunWindow: 10 interaction record(s) outside the run window (2026-10-21T09:47:00.0000000+00:00 → 2026-10-21T10:00:11.0000000+00:00) dropped: 0 before the run began, 10 after it ended.
+  DroppedUnattributed: 12 unattributed interaction record(s) dropped by DropUnattributed.
+  UnattributedInteractions: 6 interaction record(s) could not be attributed to a test.
+scenarios, in the order the report lists them:
+  [Orders] Lists orders (id b1, Passed): 4 record(s): http://orders-api/orders, db://orders/find?customer=1
+  [Orders] Shows the menu (id b2, Passed): 4 record(s): http://orders-api/menu, db://menu/find
+  [Ingested] Traffic outside any test (id outside-any-test, not a test, Passed): 6 record(s): http://orders-api/health, http://orders-api/health, http://orders-api/login
+

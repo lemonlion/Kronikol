@@ -20,6 +20,9 @@ namespace Kronikol.Tests.Reports;
 /// (plans/BACK_BUTTON_NAVIGATION_PLAN.md): the helper holds the visibility pass while an address is put on the page
 /// (<c>hold_visibility</c>, <c>release_visibility</c>), and the search opens a single match's feature, closes on
 /// emptying only what it opened, and answers at once on Enter or when emptied; their fenced lines are unchanged.
+/// plans/RUN_WINDOW_PLAN.md R1 changed the helper outside its fences: a scenario that is not a test
+/// (<c>data-not-a-test</c>) is no run, the readout counts the features that hold a test, and it marks when nothing at all
+/// is shown; its fenced lines are unchanged.
 /// </summary>
 public class VerdictFencesTests
 {
@@ -27,7 +30,7 @@ public class VerdictFencesTests
     {
         // script, default variant (no verdicts), verdict variant
         { "advanced-search.js", "bd95ec17e218564784d4868f54985392751c51772ed5ee593cb63fbb8f2c9d34", "f8e26b59e269fcebd3bfc36c251ac06264946049b46c8157cd24740a98fc0c7c" },
-        { "report-scenario-feature-map-helper.js", "16bc2d61445712a20145a0711abd01dba1508fcc4b0545d2138a1c429ff3e1b8", "0d791260f4caa7c10091ea61ef5296a6b928396464f8d6d21a2411a759da1af9" },
+        { "report-scenario-feature-map-helper.js", "5590a6c65f5ebdf8b916ff3a7145206f720b257a8e6b8f358d4b72782d049526", "fc238de794fa7a32120271efcbc6af27864193239e96bc97b8f418658476690e" },
         { "report-search-function.js", "ab75c0bb1f7ce86693309f4010a9c4217110c742d8471602d058c348b8402aed", "7c9e45b202c90c56acec5a9755955bdc7bd3e0e9a3e24f844bfa14a331879965" },
         { "report-search-index.js", "7efeaa109b0ac98cb76f510dc9ea0ddeb0324428bd6c9169e08f8bf85b77028a", "58b3e65874a3a7bce211f85517f802d69f5d27f6b0649e925ead354f26a33bbb" },
     };

@@ -724,7 +724,7 @@ public static class ReportGenerator
                 : null,
             // Only when it has something to say, or when the pointer is speaking anyway: a line on every
             // green run is a line people learn to skip.
-            history: history is not null && (history.Verdicts?.HasAnything == true || features.Any(f => (f.Scenarios ?? []).Any(s => s.Result == ExecutionResult.Failed)))
+            history: history is not null && (history.Verdicts?.HasAnything == true || features.Any(f => (f.Scenarios ?? []).Any(s => s.Result == ExecutionResult.Failed && !s.NotATest)))
                 ? history.Summary()
                 : null)
             with
@@ -778,8 +778,9 @@ public static class ReportGenerator
             Run = runId,
             At = runEndedAt,
             Suite = suite,
-            Scenarios = features.Sum(f => f.Scenarios?.Length ?? 0),
-            Failed = features.Sum(f => (f.Scenarios ?? []).Count(s => s.Result == ExecutionResult.Failed)),
+            // the run's tests: a scenario that is not a test is in no count (plans/RUN_WINDOW_PLAN.md R1)
+            Scenarios = features.Sum(f => (f.Scenarios ?? []).Count(s => !s.NotATest)),
+            Failed = features.Sum(f => (f.Scenarios ?? []).Count(s => s.Result == ExecutionResult.Failed && !s.NotATest)),
             Partial = history?.Run.Partial,
             KronikolVersion = KronikolVersion
         });
@@ -1437,6 +1438,10 @@ public static class ReportGenerator
         WarmUpResult? warmUp = null,
         EmbeddedComponentDiagram? componentDiagram = null)
     {
+        // The Specifications page describes the tests, so a scenario that is not a test is not in it.
+        if (!includeTestRunData)
+            features = SpecifiedFeatures(features);
+
         if (generateBlankOnFailedTests && CannotVouchForSpecifications(features))
             return WriteFile(string.Empty, fileName);
 
@@ -1519,12 +1524,13 @@ public static class ReportGenerator
         var paramExpandJs = LoadResource("report-param-expand-js.js");
 
         // Jump to failure
-        var hasFailures = features.SelectMany(f => f.Scenarios).Any(s => s.Result == ExecutionResult.Failed);
-        var failureCount = features.SelectMany(f => f.Scenarios).Count(s => s.Result == ExecutionResult.Failed);
+        // A scenario that is not a test is no failure of the run's and has no test time (plans/RUN_WINDOW_PLAN.md R1).
+        var hasFailures = features.SelectMany(f => f.Scenarios).Any(s => s.Result == ExecutionResult.Failed && !s.NotATest);
+        var failureCount = features.SelectMany(f => f.Scenarios).Count(s => s.Result == ExecutionResult.Failed && !s.NotATest);
         var jumpToFailureFunction = LoadResource("report-jump-to-failure-function.js");
 
         // Duration filter
-        var hasDurations = features.SelectMany(f => f.Scenarios).Any(s => s.Duration.HasValue);
+        var hasDurations = features.SelectMany(f => f.Scenarios).Any(s => s.Duration.HasValue && !s.NotATest);
         var durationFilterFunction = LoadResource("report-duration-filter-function.js");
 
         // Export filtered view
@@ -1757,8 +1763,11 @@ public static class ReportGenerator
         int? durationCol = null;
         if (includeTestRunData)
         {
-            var numberOfFeatures = features.Length;
-            var scenarios = features.SelectMany(x => x.Scenarios).ToArray();
+            // A scenario that is not a test (Scenario.NotATest: ingest's fold, a stack's start-up) is drawn like any and
+            // counted as none, here and in every count and time of the run's tests (plans/RUN_WINDOW_PLAN.md R1): the
+            // fold used to count as a passed test, and a run of two tests read "Scenarios 3, Passed 3".
+            var numberOfFeatures = features.Count(HoldsATest);
+            var scenarios = features.SelectMany(x => x.Scenarios).Where(x => !x.NotATest).ToArray();
             var passedScenarios = scenarios.Where(x => x.Result == ExecutionResult.Passed).ToArray();
             // A scenario skipped after a failure is skipped (5.0.0): 4.x left it out of the summary and the ring, so
             // their counts did not add up to the scenarios, while the features table already counted it.
@@ -1771,8 +1780,8 @@ public static class ReportGenerator
             // Features Summary above the execution summary. Passed, Failed and Skipped repeat for scenarios and for steps,
             // so a row above the headers names each group and the group's first column reads Total. The rows are in the
             // cards' order, which report-features-tools-script.js relies on to pair a row with its card.
-            var hasAnySteps = features.Any(f => f.Scenarios.Any(s => s.Steps is { Length: > 0 } || s.BackgroundSteps is { Length: > 0 }));
-            var hasAnyDurations = features.Any(f => f.Scenarios.Any(s => s.Duration.HasValue));
+            var hasAnySteps = scenarios.Any(s => s.Steps is { Length: > 0 } || s.BackgroundSteps is { Length: > 0 });
+            var hasAnyDurations = scenarios.Any(s => s.Duration.HasValue);
             var nextCol = 5;
             featureTable.Append("<div class=\"features-summary-table-wrapper\">");
             featureTable.Append("<table class=\"feature-summary-table\"><thead>");
@@ -1803,15 +1812,29 @@ public static class ReportGenerator
 
             foreach (var feature in features)
             {
-                var totalSc = feature.Scenarios.Length;
-                var passedSc = feature.Scenarios.Count(s => s.Result == ExecutionResult.Passed);
-                var failedSc = feature.Scenarios.Count(s => s.Result == ExecutionResult.Failed);
-                var skippedSc = feature.Scenarios.Count(s => s.Result is ExecutionResult.Skipped or ExecutionResult.Bypassed or ExecutionResult.SkippedAfterFailure);
+                var tests = feature.Scenarios.Where(s => !s.NotATest).ToArray();
+                // the name is a button: a row opens its feature in the Full view, from the keyboard as well
+                var nameCell = $"<td><button type=\"button\" class=\"feature-open\" title=\"Open this feature's card in the Full view\">{System.Net.WebUtility.HtmlEncode(feature.DisplayName)}</button></td>";
+
+                // A feature that holds no test, only scenarios that are not tests (a stack's start-up): its counts say so,
+                // and its time cells are empty, so the Features tab's time sorts put it last rather than its minutes first.
+                if (tests.Length == 0 && feature.Scenarios.Length > 0)
+                {
+                    featureTable.Append("<tr class=\"not-a-test\">").Append(nameCell).Append("<td data-sort=\"0\">not a test</td><td></td><td></td><td></td>");
+                    if (hasAnySteps) featureTable.Append("<td class=\"grp-start\"></td><td></td><td></td><td></td>");
+                    if (hasAnyDurations) featureTable.Append("<td class=\"grp-start\"></td><td></td><td></td>");
+                    featureTable.Append("</tr>");
+                    continue;
+                }
+
+                var totalSc = tests.Length;
+                var passedSc = tests.Count(s => s.Result == ExecutionResult.Passed);
+                var failedSc = tests.Count(s => s.Result == ExecutionResult.Failed);
+                var skippedSc = tests.Count(s => s.Result is ExecutionResult.Skipped or ExecutionResult.Bypassed or ExecutionResult.SkippedAfterFailure);
                 var featureHasFail = failedSc > 0;
 
                 featureTable.Append($"<tr{(featureHasFail ? " class=\"failed\"" : "")}>");
-                // the name is a button: a row opens its feature in the Full view, from the keyboard as well
-                featureTable.Append($"<td><button type=\"button\" class=\"feature-open\" title=\"Open this feature's card in the Full view\">{System.Net.WebUtility.HtmlEncode(feature.DisplayName)}</button></td>");
+                featureTable.Append(nameCell);
                 featureTable.Append($"<td>{totalSc}</td>");
                 featureTable.Append($"<td>{passedSc}</td>");
                 featureTable.Append($"<td>{failedSc}</td>");
@@ -1819,7 +1842,7 @@ public static class ReportGenerator
 
                 if (hasAnySteps)
                 {
-                    var allSteps = feature.Scenarios
+                    var allSteps = tests
                         .SelectMany(s => (s.BackgroundSteps ?? []).Concat(s.Steps ?? []))
                         .ToArray();
                     var stepCount = CountStepsRecursive(allSteps);
@@ -1832,7 +1855,7 @@ public static class ReportGenerator
 
                 if (hasAnyDurations)
                 {
-                    var durations = feature.Scenarios.Where(s => s.Duration.HasValue).Select(s => s.Duration!.Value).ToArray();
+                    var durations = tests.Where(s => s.Duration.HasValue).Select(s => s.Duration!.Value).ToArray();
                     var totalDuration = durations.Length > 0 ? durations.Aggregate(TimeSpan.Zero, (a, b) => a + b) : TimeSpan.Zero;
                     var avgDuration = durations.Length > 0 ? totalDuration / durations.Length : TimeSpan.Zero;
                     var maxDuration = durations.Length > 0 ? durations.Max() : TimeSpan.Zero;
@@ -1886,7 +1909,10 @@ public static class ReportGenerator
         var rowsTitle = FilterRowsTitle(features, hasDurations, allDependencies.Count > 0);
         // Clear All's title names what it clears, the same rows (D49)
         var clearTitle = ClearAllTitle(features, hasDurations, allDependencies.Count > 0);
-        var readoutText = $"All {ScenarioCount(features.Sum(f => f.Scenarios.Length))}, {(features.Length == 1 ? "1 feature" : string.Create(CultureInfo.InvariantCulture, $"{features.Length} features"))}";
+        // Counted as the band counts: tests, and the features that hold one (report-scenario-feature-map-helper.js agrees).
+        var testCount = features.Sum(f => f.Scenarios.Count(s => !s.NotATest));
+        var testFeatures = features.Count(HoldsATest);
+        var readoutText = $"All {ScenarioCount(testCount)}, {(testFeatures == 1 ? "1 feature" : string.Create(CultureInfo.InvariantCulture, $"{testFeatures} features"))}";
         body.Append($"""
                  <div class="filtering-box rows-folded" id="filtering-box">
                     <div class="filtering-box-header"><h2>Filtering</h2><div class="filtering-box-export"><span class="filter-readout" role="status" title="{FiltersLeaveShowing}">{readoutText}</span><button class="export-btn" onclick="clear_all_filters()" title="{clearTitle}">Clear All</button><button class="export-btn" onclick="export_html()" title="Download a copy of this report holding only the features the filters show">Export <span class="wide-only">Filtered </span>HTML</button><button class="export-btn" onclick="export_csv()" title="Download the scenarios the filters show as a CSV file: feature, scenario, status and duration in milliseconds">Export <span class="wide-only">Filtered </span>CSV</button>{FiltersClose}</div></div>
@@ -1942,7 +1968,7 @@ public static class ReportGenerator
             // some scenario takes and the button that names it shows that scenario (until 4.16.3 the difference was
             // rounded once, and could sit a millisecond above it).
             var durationsMs = features.SelectMany(f => f.Scenarios)
-                .Where(s => s.Duration.HasValue)
+                .Where(s => s.Duration.HasValue && !s.NotATest)
                 .Select(s => WholeMs(s.Duration!.Value.TotalMilliseconds) - WholeMs(WarmUpMsOf(warmUp, s.Id)))
                 .OrderBy(d => d)
                 .ToArray();
@@ -2021,7 +2047,7 @@ public static class ReportGenerator
             if (hasHistoryTab) body.Append(ReportTab("history", "History", HistoryHtml.Description, startTab));
             if (hasDiagnosticsTab) body.Append(ReportTab("diagnostics", "Diagnostics", DiagnosticsDescription, startTab, diagnostics!.Count));
             body.Append("</div>");
-            body.Append(NavFilters(readoutText, ScenarioCount(features.Sum(f => f.Scenarios.Length)), clearTitle)).Append("</div>");
+            body.Append(NavFilters(readoutText, ScenarioCount(testCount), clearTitle)).Append("</div>");
         }
         // The Features tools (5.0.0, plans/OPTION_C_PLAN.md S4, D21, D22, D35): the Full and Summary views as tabs when
         // the page has the features table; expand and collapse for features and for scenarios, each a pair of icon
@@ -2187,9 +2213,10 @@ public static class ReportGenerator
         var timelineHtml = new StringBuilder();
         if (hasDurations)
         {
+            // the tests' times: a scenario that is not a test spans no test's time (plans/RUN_WINDOW_PLAN.md R1)
             var timelineScenarios = features
                 .SelectMany(f => f.Scenarios.Select(s => (Feature: f.DisplayName, Scenario: s)))
-                .Where(x => x.Scenario.Duration.HasValue)
+                .Where(x => x.Scenario.Duration.HasValue && !x.Scenario.NotATest)
                 .OrderByDescending(x => x.Scenario.Duration!.Value)
                 .ToArray();
 
@@ -2392,11 +2419,20 @@ public static class ReportGenerator
                     ? $" data-dependencies=\"{System.Net.WebUtility.HtmlEncode(string.Join(",", deps.OrderBy(d => d)))}\""
                     : "";
                 var statusAttr = $" data-status=\"{scenario.Result}\"";
+                // A scenario that is not a test (plans/RUN_WINDOW_PLAN.md R1) keeps its status, so the status filters treat
+                // it as before, and is marked for the readout and the CSV export, which count tests.
+                var notATestAttr = scenario.NotATest ? " data-not-a-test=\"1\"" : "";
 
                 // Duration attributes and badge
                 var durationAttr = "";
                 var durationBadge = "";
-                if (scenario.Duration.HasValue)
+                if (scenario.Duration.HasValue && scenario.NotATest)
+                {
+                    // Its time is shown but is no test's: no data-duration-ms, which the duration filter, the duration:
+                    // qualifier and the CSV read, and no speed colour, which judges a test.
+                    durationBadge = $" <span class=\"duration-badge\">{FormatDurationBadge(scenario.Duration.Value)}</span>";
+                }
+                else if (scenario.Duration.HasValue)
                 {
                     var durationMs = scenario.Duration.Value.TotalMilliseconds;
                     durationAttr = string.Create(CultureInfo.InvariantCulture, $" data-duration-ms=\"{durationMs:F0}\"");
@@ -2435,7 +2471,7 @@ public static class ReportGenerator
                 var encodedName = System.Net.WebUtility.HtmlEncode(scenario.DisplayName);
                 var scenarioLabelsHtml = TagChips.Badges(TagChips.BadgeTags(feature.Tags, scenario)) + TagChips.RetryBadge(scenario);
 
-                var scenarioTooltip = scenario.Result switch
+                var scenarioTooltip = scenario.NotATest ? NotATestTitle : scenario.Result switch
                 {
                     ExecutionResult.Passed => "Passed — all assertions passed",
                     ExecutionResult.Failed => "Failed — an assertion or runtime failure occurred",
@@ -2456,8 +2492,8 @@ public static class ReportGenerator
                 var historyBadges = historyEntry is null ? "" : HistoryHtml.Sparkline(historyEntry) + HistoryHtml.Pill(historyEntry);
 
                 body.Append($"""
-                         <details class="scenario{(scenario.IsHappyPath ? " happy-path" : "")}"{(toggles.ScenariosExpanded ? " open" : "")}{depsAttr}{statusAttr}{searchAttr}{durationAttr}{tagsAttr}{historyAttr} data-stable-id="{scenarioStableId}" id="{anchorId}" tabindex="0">
-                            <summary class="h3{(failed ? " failed" : skipped ? " skipped" : "")}" title="{scenarioTooltip}">{encodedName}{(scenario.IsHappyPath ? " <span class=\"label\">Happy Path</span>" : "")}{scenarioLabelsHtml}{durationBadge}{historyBadges}<button class="copy-scenario-name" title="Copy scenario name" data-scenario-name="{encodedName}" onclick="copy_scenario_name(this, event)">&#128203;</button><a class="scenario-link" href="#{anchorId}" title="Link to this scenario" onclick="event.stopPropagation()">&#128279;</a></summary>
+                         <details class="scenario{(scenario.IsHappyPath ? " happy-path" : "")}"{(toggles.ScenariosExpanded ? " open" : "")}{depsAttr}{statusAttr}{notATestAttr}{searchAttr}{durationAttr}{tagsAttr}{historyAttr} data-stable-id="{scenarioStableId}" id="{anchorId}" tabindex="0">
+                            <summary class="h3{(failed ? " failed" : skipped ? " skipped" : "")}" title="{scenarioTooltip}">{encodedName}{(scenario.IsHappyPath ? " <span class=\"label\">Happy Path</span>" : "")}{(scenario.NotATest ? NotATestBadge : "")}{scenarioLabelsHtml}{durationBadge}{historyBadges}<button class="copy-scenario-name" title="Copy scenario name" data-scenario-name="{encodedName}" onclick="copy_scenario_name(this, event)">&#128203;</button><a class="scenario-link" href="#{anchorId}" title="Link to this scenario" onclick="event.stopPropagation()">&#128279;</a></summary>
                          """);
 
                 if (failed)
@@ -2974,6 +3010,18 @@ public static class ReportGenerator
     private const string ChipClicks = "Click: only these. Click again: leave them out. Once more: off. Alt+click or right-click leaves them out at once.";
 
     private static string ScenarioCount(int n) => n == 1 ? "1 scenario" : string.Create(CultureInfo.InvariantCulture, $"{n} scenarios");
+
+    /// <summary>
+    /// Whether a feature holds a test: one that holds only scenarios that are not tests (<see cref="Scenario.NotATest"/>,
+    /// a stack's start-up) is no feature of the run's in the band, the readout and the features table's counts.
+    /// </summary>
+    private static bool HoldsATest(Feature feature) => feature.Scenarios.Any(s => !s.NotATest);
+
+    /// <summary>The summary title of a scenario that is not a test, in place of its result's (plans/RUN_WINDOW_PLAN.md R1).</summary>
+    private const string NotATestTitle = "Not a test: what it holds is drawn, and the run's counts and times leave it out";
+
+    /// <summary>A scenario that is not a test says so beside its name, muted as every label is.</summary>
+    private const string NotATestBadge = " <span class=\"label not-a-test\">not a test</span>";
 
     /// <summary>
     /// A long Tags row's More chip (plans/TAGS_PLAN.md §4.8, Q9): it shows the chips the row starts without, and hides them
@@ -5332,6 +5380,11 @@ public static class ReportGenerator
                 if (warmUp is not null && warmUp.ScenarioMs.TryGetValue(s.Id, out var warmUpMs))
                     scenario = InsertAfter(scenario, "durationSeconds", "warmUpSeconds", Math.Round(warmUpMs / 1000, 7));
 
+                // Beside isHappyPath, and only on a scenario that is not a test (plans/RUN_WINDOW_PLAN.md R1), so every other
+                // scenario's bytes stay as they were; a merge and the query read it back, where they used to lose it.
+                if (s.NotATest)
+                    scenario = InsertAfter(scenario, "isHappyPath", "notATest", true);
+
                 if (diagramLookup != null)
                     scenario["diagrams"] = diagramLookup[s.Id].Select(d => payloads is null ? d : payloads.Write(d)).ToArray();
 
@@ -5890,6 +5943,7 @@ public static class ReportGenerator
                                             ? new XElement("WarmUpSeconds", (xmlWarmUpMs / 1000).ToString("F3", CultureInfo.InvariantCulture))
                                             : null,
                                         new XElement("IsHappyPath", s.IsHappyPath.ToString().ToLowerInvariant()),
+                                        s.NotATest ? new XElement("NotATest", "true") : null,
                                         s.ErrorMessage != null ? new XElement("ErrorMessage", s.ErrorMessage) : null,
                                         s.ErrorStackTrace != null ? new XElement("ErrorStackTrace", s.ErrorStackTrace) : null,
                                         s.FailureCause != null ? new XElement("FailureCause", s.FailureCause) : null,
@@ -6188,6 +6242,9 @@ public static class ReportGenerator
                 if (scenario.EndedAt is { } ymlEndedAt)
                     AppendYaml(yml, "        EndedAt: ", FormatInstant(ymlEndedAt));
                 yml.Append("        IsHappyPath: " + scenario.IsHappyPath.ToString().ToLowerInvariant() + "\n");
+                // only on a scenario that is not a test, as the JSON writes notATest (plans/RUN_WINDOW_PLAN.md R1)
+                if (scenario.NotATest)
+                    yml.Append("        NotATest: true\n");
 
                 if (scenario.ErrorMessage is not null)
                     AppendYaml(yml, "        ErrorMessage: ", scenario.ErrorMessage);
@@ -6440,8 +6497,23 @@ public static class ReportGenerator
     private static bool CannotVouchForSpecifications(Feature[] features) =>
         features.Any(x => x.Scenarios.Any(y => y.Result == ExecutionResult.Failed || y.ResultDefaulted));
 
+    /// <summary>
+    /// The features the specifications describe: a scenario that is not a test (<see cref="Scenario.NotATest"/>, ingest's
+    /// fold, a stack's start-up) specifies nothing, so it is left out, and a feature it leaves with no scenario goes with it
+    /// (plans/RUN_WINDOW_PLAN.md R1; the Specifications used to list "Traffic outside any test"). Its result is no
+    /// verdict either, so it never blanks them.
+    /// </summary>
+    internal static Feature[] SpecifiedFeatures(Feature[] features) =>
+        features.Any(f => f.Scenarios.Any(s => s.NotATest))
+            ? features
+                .Where(f => f.Scenarios.Length == 0 || f.Scenarios.Any(s => !s.NotATest))
+                .Select(f => f.Scenarios.Any(s => s.NotATest) ? f with { Scenarios = f.Scenarios.Where(s => !s.NotATest).ToArray() } : f)
+                .ToArray()
+            : features;
+
     public static string GenerateSpecificationsData(Feature[] features, string fileName, string title, DataFormat format, bool generateBlankOnFailedTests = false)
     {
+        features = SpecifiedFeatures(features);
         if (generateBlankOnFailedTests && CannotVouchForSpecifications(features))
             return WriteFile(string.Empty, fileName);
 
@@ -7298,6 +7370,7 @@ public static class ReportGenerator
                                         ["warmUpSeconds"] = new Dictionary<string, object?> { ["type"] = "number", ["minimum"] = 0, ["description"] = "Seconds of durationSeconds that the run's first-call warm-up took: the time the scenario's calls marked warmUp cover, each instant counted once, never more than durationSeconds. durationSeconds less this is the scenario's own time. Present only on a scenario that carries such a call." },
                                         ["endedAt"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["format"] = "date-time", ["description"] = "When the scenario finished (UTC), as the framework recorded it; null when the adapter did not record one. A call that inherited this scenario's context after this moment is background (see httpInteractions[].attributionSource = Expired)" },
                                         ["isHappyPath"] = new Dictionary<string, object?> { ["type"] = "boolean", ["description"] = "Marked as the happy path (an @happy-path tag or the adapter's attribute); the report lists happy paths first" },
+                                        ["notATest"] = new Dictionary<string, object?> { ["type"] = "boolean", ["description"] = "Present, and true, only on a scenario that is not a test, such as an ingest's \"Traffic outside any test\": it is drawn like any scenario, the run's counts and times, the timeline, the CI summary, Failures.md, the CTRF report and the specifications leave it out, and the history records it as N. Its result says only that it was drawn" },
                                         ["errorMessage"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The failure message the framework reported, when the scenario failed" },
                                         ["errorStackTrace"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The stack trace the framework reported, when the scenario failed" },
                                         ["failureCause"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The framework's CLASSIFICATION of the failure (xUnit v3: Assertion, Exception, Timeout, Other; MSTest: the exception type name), null where the framework does not classify. A category, not a cause - it says an assertion failed, never which one - so it is never a grouping key" },
@@ -7817,6 +7890,7 @@ public static class ReportGenerator
                 new XElement(xs + "element", new XAttribute("name", "DurationSeconds"), new XAttribute("type", "xs:decimal")),
                 new XElement(xs + "element", new XAttribute("name", "WarmUpSeconds"), NonNegativeDecimal(), new XAttribute("minOccurs", "0")),
                 new XElement(xs + "element", new XAttribute("name", "IsHappyPath"), new XAttribute("type", "xs:boolean")),
+                new XElement(xs + "element", new XAttribute("name", "NotATest"), new XAttribute("type", "xs:boolean"), new XAttribute("minOccurs", "0")),
                 new XElement(xs + "element", new XAttribute("name", "ErrorMessage"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
                 new XElement(xs + "element", new XAttribute("name", "ErrorStackTrace"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
                 new XElement(xs + "element", new XAttribute("name", "FailureCause"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),

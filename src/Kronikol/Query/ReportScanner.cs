@@ -329,7 +329,7 @@ internal static class ReportScanner
                 "traceId", "stepPath", "phase", "metaType", "dependencyCategory", "activityTraceId",
                 "activitySpanId", "capturedBy", "isUserAction", "durationMs", "content", "keyword", "status",
                 "durationSeconds", "failureMessage", "sourceFile", "sourceLine", "bypassReason", "docString", "assertion",
-                "id", "stableId", "result", "isHappyPath", "errorMessage", "errorStackTrace", "rule",
+                "id", "stableId", "result", "isHappyPath", "notATest", "errorMessage", "errorStackTrace", "rule",
                 "features", "scenarios", "httpInteractions", "annotations", "attachments", "diagnostics",
                 "steps", "backgroundSteps", "subSteps", "headers", "tags", "labels", "categories", "exampleValues",
                 "diagrams", "comments", "parameters", "attempt", "endedAt",
@@ -936,6 +936,7 @@ internal static class ReportScanner
                 case "durationSeconds": scenario.DurationSeconds = reader.TokenType == JsonTokenType.Number && reader.TryGetDouble(out var d) ? d : 0; break;
                 case "warmUpSeconds": scenario.WarmUpSeconds = reader.TokenType == JsonTokenType.Number && reader.TryGetDouble(out var w) && w > 0 ? w : null; break;
                 case "isHappyPath": scenario.IsHappyPath = reader.TokenType == JsonTokenType.True; break;
+                case "notATest": scenario.NotATest = reader.TokenType == JsonTokenType.True; break;
                 case "errorMessage": scenario.ErrorMessage = reader.GetString(); break;
                 case "errorStackTrace": scenario.ErrorStackTrace = reader.GetString(); break;
                 case "rule": scenario.Rule = reader.GetString(); break;
