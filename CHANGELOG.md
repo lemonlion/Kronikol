@@ -4,6 +4,55 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.2.2] - 2026-10-21
+
+The patch part moves (5.2.1 to 5.2.2): bug fixes, with nothing new to call or configure.
+
+### Fixed
+
+- **A sequence diagram with one participant keeps its step bars light.** The pass that gives a drawn diagram its look
+  by role (5.0.0) took a strip to be what runs from the leftmost lifeline to the rightmost, so a drawing with one
+  lifeline had none: its step bars kept the source's black, and its assertion strips did not run the drawing's width.
+  The usual such drawing is a scenario that made no calls, drawn with its "(no interactions)" participant. With one
+  lifeline a strip is now what runs at least 12 px past it on both sides, so the arrowheads of a call to itself and an
+  activation bar, which touch the lifeline too, are not taken for strips. Every 5.x release before this one drew such
+  bars black.
+- **Each part of a long diagram zooms on its own.** The page draws a diagram taller than `BrowserFragmentMaxHeight` in
+  parts, one picture under the other, inside the one diagram. Every zoom went to the diagram rather than the part, and
+  so to its first part's picture: Ctrl and the wheel over any part, and Ctrl with + or - after clicking one, zoomed
+  the first part; the only slider that showed on hover was the diagram's own, when it had one, and it zoomed the first
+  part too, while each part's slider never showed; and a later part could not be panned. Now the wheel, the pan and a part's slider act on the part
+  under the pointer and the keys on the part last clicked, a part's slider shows while the pointer is over it, the
+  diagram has no slider of its own, and a part drawn again by a control or a note's buttons keeps its zoom and stays
+  selected. Two diagrams in one scenario already zoomed apart.
+- **Panning a zoomed diagram leaves it selected, or not, as it was.** A drag ended with the click the browser sends
+  after it, which selected the diagram, or unselected it if it was selected. A drag that moves more than 3 px is no
+  longer a click.
+
+### Tests
+
+- `DiagramRolesTests`: in the drawing of a scenario that made no calls (the report's own source, from a consumer's
+  run), the three step bars are light bands with dark ink, every word drawn in them takes the bars' ink, and nothing
+  is painted black; in a drawing with one participant that calls itself, with an activation, only the step bar is a
+  step and no arrowhead is stretched. `OpenAsync` takes the source to draw.
+- Proofs: both facts fail on 5.2.1's script (no step bar found in either drawing). With the reach past the lifeline
+  set to 0, the second fails: an arrowhead is taken for a strip and stretched to 41 px.
+- `SplitDiagramZoomTests`, eight facts on a scenario whose one diagram, 14 participants wide and 260 calls long, is
+  drawn in two parts (`ReportTestHelper.GenerateReportWithWideDiagramInParts`, with notes carrying a header line when
+  asked): each part has its own slider and the diagram none, whichever of the scroll observer and the parts' drawings
+  asks first; Ctrl and the wheel over the second part zoom it alone; a click on it and then Ctrl and + zoom it alone;
+  the pointer over it shows its slider; zoomed, it pans when dragged and stays selected; it stays zoomed when the
+  Headers control draws the diagram again; selected, it stays selected when the diagram is drawn again without a click
+  elsewhere, and the keys zoom it; and a note's button drawing it again leaves it zoomed and selected.
+- Proofs: five of the zoom facts fail on 5.2.1's scripts. The first passed there by timing until it asked for the
+  diagram's zoom before the parts', the order a probe saw on a page. The three facts on drawing again were proved by
+  mutation: 12 of 12 mutations are killed, among them the carry left out of either redraw path, the carry without
+  the zoom or the selection, the click after a drag kept, the hover rule for a part left out, the container keeping
+  its slider, and the wheel, the selection or the pan going to the container.
+- `IflowPopupThemeTests` waits for the popup to be filled before reading its heading and tabs: it opens with
+  Loading... and is filled once the flow data decodes, and a full run read the tabs before then (getComputedStyle on
+  null). With the fill delayed by 500 ms, the three cases fail as written in 5.2.1 and pass as written now.
+
 ## [5.2.1] - 2026-10-21
 
 The patch part moves (5.2.0 to 5.2.1): performance work, with nothing new to call or configure.

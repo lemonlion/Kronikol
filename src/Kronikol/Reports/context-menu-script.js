@@ -19,6 +19,20 @@
         return null;
     }
 
+    // What a zoom acts on: the part under the pointer when the page draws a long diagram in parts (.puml-fragment, each
+    // its own picture inside the diagram's container), else the diagram's container. Each part zooms on its own; until
+    // 5.2.2 every zoom on a diagram in parts went to its container, and so to its first part's picture.
+    function zoomBoxOf(el) {
+        var container = findDiagramContainer(el);
+        if (!container) return null;
+        var part = el.closest ? el.closest('.puml-fragment') : null;
+        return part && container.contains(part) ? part : container;
+    }
+
+    function ownSlider(box) {
+        return box.querySelector(':scope > .diagram-zoom-controls .diagram-zoom-slider');
+    }
+
     function getDiagramFilename(container, ext) {
         var scenario = container.closest('details.scenario');
         var baseName = 'diagram';
@@ -914,7 +928,7 @@
     }
 
     document.addEventListener('click', function(e) {
-        var container = findDiagramContainer(e.target);
+        var container = zoomBoxOf(e.target);
         if (container) {
             if (container === selectedDiagram) {
                 deselectDiagram();
@@ -975,7 +989,7 @@
 
     // Track last known cursor position per container
     document.addEventListener('mousemove', function(e) {
-        var c = findDiagramContainer(e.target);
+        var c = zoomBoxOf(e.target);
         if (c) { c._lastCursorX = e.clientX; c._lastCursorY = e.clientY; }
     });
 
@@ -1050,7 +1064,7 @@
         }
 
         // Update slider
-        var slider = container.querySelector('.diagram-zoom-slider');
+        var slider = ownSlider(container);
         if (slider) slider.value = String(percent);
     }
 
@@ -1059,7 +1073,22 @@
     // ── Zoom Controls (slider) ──
 
     function addZoomButton(container) {
-        if (container.querySelector('.diagram-zoom-controls')) return;
+        // A diagram drawn in parts zooms part by part, and its container has no picture of its own: the scroll observer
+        // or a redraw asking for the container's zoom gives each drawn part its own, and takes back any the container
+        // was given before it was drawn in parts.
+        var parts = container.querySelectorAll(':scope > .puml-fragment');
+        if (parts.length) {
+            var stale = container.querySelector(':scope > .diagram-zoom-controls');
+            if (stale) stale.remove();
+            if (container.classList.contains('diagram-natural-size')) {
+                container.classList.remove('diagram-natural-size');
+                container.style.overflowX = '';
+                container.style.cursor = '';
+            }
+            parts.forEach(function(part) { if (getSvg(part)) addZoomButton(part); });
+            return;
+        }
+        if (container.querySelector(':scope > .diagram-zoom-controls')) return;
         var svg = getSvg(container);
         if (!svg) return;
         if (!isDiagramZoomable(container)) return;
@@ -1116,10 +1145,10 @@
 
         if (!selectedDiagram) return;
         var container = selectedDiagram;
-        if (!container.querySelector('.diagram-zoom-slider')) return;
+        var slider = ownSlider(container);
+        if (!slider) return;
 
         e.preventDefault();
-        var slider = container.querySelector('.diagram-zoom-slider');
         var current = parseInt(slider.value);
         var range = 100 - parseInt(slider.min);
         var step = Math.max(1, Math.round(range * 0.05));
@@ -1133,9 +1162,9 @@
 
     document.addEventListener('wheel', function(e) {
         if (!e.ctrlKey && !e.metaKey) return;
-        var container = findDiagramContainer(e.target);
+        var container = zoomBoxOf(e.target);
         if (!container) return;
-        var slider = container.querySelector('.diagram-zoom-slider');
+        var slider = ownSlider(container);
         if (!slider) return;
 
         e.preventDefault();
@@ -1147,17 +1176,22 @@
         applyZoomLevel(container, newVal, e.clientX, e.clientY);
     }, { passive: false });
 
-    // Drag-to-pan when zoomed
+    // Drag-to-pan when zoomed. A drag that moved is not a click: the click the browser sends after it is dropped, so
+    // panning a diagram leaves it selected or not as it was (until 5.2.2 every pan selected or unselected it).
     (function() {
-        var dragging = false, dragContainer, startX, startY, scrollL;
+        var dragging = false, dragContainer, startX, startY, scrollL, downX, downY, moved;
+        function dropClick(e) { e.stopPropagation(); e.preventDefault(); }
         document.addEventListener('mousedown', function(e) {
-            var c = findDiagramContainer(e.target);
+            var c = zoomBoxOf(e.target);
             if (!c || !c.classList.contains('diagram-natural-size')) return;
             if (e.target.closest('.diagram-zoom-controls')) return;
             dragging = true;
             dragContainer = c;
             startX = e.pageX;
             startY = e.clientY;
+            downX = e.clientX;
+            downY = e.clientY;
+            moved = false;
             scrollL = c.scrollLeft;
             c.style.cursor = 'grabbing';
             c.style.userSelect = 'none';
@@ -1165,6 +1199,7 @@
         });
         document.addEventListener('mousemove', function(e) {
             if (!dragging) return;
+            if (Math.abs(e.clientX - downX) > 3 || Math.abs(e.clientY - downY) > 3) moved = true;
             dragContainer.scrollLeft = scrollL - (e.pageX - startX);
             window.scrollBy(0, startY - e.clientY);
             startY = e.clientY;
@@ -1174,12 +1209,22 @@
             dragging = false;
             dragContainer.style.cursor = 'grab';
             dragContainer.style.userSelect = '';
+            if (!moved) return;
+            // the click comes in this same task, after the mouseup; when none comes (released over another element), the
+            // listener goes with the next task
+            window.addEventListener('click', dropClick, { capture: true, once: true });
+            setTimeout(function() { window.removeEventListener('click', dropClick, true); }, 0);
         });
     })();
 
     window._addZoomButton = addZoomButton;
     // the zoom a diagram drawn again keeps, for one whose zoom slider waits until it is near the screen (5.1.1)
     window._restoreZoomState = restoreZoomState;
+    // A part drawn again is a new element: it takes the zoom and the selection of the part it replaces (5.2.2).
+    window._carryZoomState = function(from, to) {
+        if (from.classList.contains('diagram-natural-size')) to.classList.add('diagram-natural-size');
+        if (selectedDiagram === from) selectDiagram(to);
+    };
 
     // The diagram's NATURAL width in CSS pixels — what it would draw at with the container's
     // `max-width: 100%` lifted. The note full-width control needs exactly this number to work out

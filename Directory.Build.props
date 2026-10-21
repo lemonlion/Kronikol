@@ -1,7 +1,7 @@
 <Project>
 
   <PropertyGroup>
-    <Version>5.2.1</Version>
+    <Version>5.2.2</Version>
     <TargetFramework>net10.0</TargetFramework>
     <MultiTargetFrameworks>net10.0</MultiTargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>

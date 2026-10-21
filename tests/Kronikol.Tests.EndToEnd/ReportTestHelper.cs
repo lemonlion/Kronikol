@@ -237,6 +237,43 @@ public static class ReportTestHelper
     }
 
     /// <summary>
+    /// One scenario ("Several diagrams") whose diagram is both wider than the page and long enough for the page to draw
+    /// it in parts: fourteen participants and 260 calls with their replies, two parts at a 1920 px viewport. With
+    /// <paramref name="headerNotes"/> every 40th call carries a note with a header line, so the headers toggle draws
+    /// the diagram again.
+    /// </summary>
+    public static string GenerateReportWithWideDiagramInParts(string tempDir, string outputDir, string fileName, bool headerNotes = false)
+    {
+        var participants = string.Join("\n", Enumerable.Range(1, 14).Select(i => $"participant \"WideParticipantNumber{i}\" as a{i}"));
+        var calls = string.Join("\n", Enumerable.Range(1, 260).Select(i =>
+            $"a{1 + i % 13} -> a{2 + i % 13} : call {i}\n"
+            + (headerNotes && i % 40 == 0 ? $"note left\n<color:gray>[X-Call={i}]\n\n{{\"call\": {i}}}\nend note\n" : "")
+            + $"a{2 + i % 13} --> a{1 + i % 13} : reply {i}"));
+        var features = new[]
+        {
+            new Feature
+            {
+                DisplayName = "Zoom Feature",
+                Scenarios =
+                [
+                    new Scenario { Id = "t1", DisplayName = "Several diagrams", Result = ExecutionResult.Passed, Duration = TimeSpan.FromSeconds(1) }
+                ]
+            }
+        };
+        var diagrams = new[] { new DiagramAsCode("t1", "", $"@startuml\n{participants}\n{calls}\n@enduml") };
+
+        var path = ReportGenerator.GenerateHtmlReport(
+            diagrams, features,
+            DateTime.UtcNow, DateTime.UtcNow,
+            null, Path.Combine(tempDir, fileName), "Test Report", true,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs);
+
+        File.Copy(path, Path.Combine(outputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
+    }
+
+    /// <summary>
     /// A wide PlantUML diagram that also contains notes (for testing zoom + note interaction).
     /// </summary>
     private const string WideWithNotesPlantUmlSource = """

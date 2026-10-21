@@ -1922,9 +1922,14 @@
             return lifeXs.some(function(x) { return x >= b.x - 2 && x <= b.x + b.width + 2; });
         });
         // everything filled that spans the lifelines
-        var spans = lifeXs.length < 2 ? [] : shapes.filter(function(o) {
+        // With one lifeline (a scenario that made no calls, drawn with its placeholder participant) a strip is what runs
+        // well past it on both sides: an arrowhead of a call to itself or an activation bar touches the lifeline too.
+        // Until 5.2.2 such a drawing had no strips, so its step bars kept the source's black.
+        var REACH = 12;
+        var spans = shapes.filter(function(o) {
             var b = o.b;
-            return (o.t === 'rect' || o.t === 'path' || o.t === 'polygon') && o.filled && b.x <= minX + 1 && b.x + b.width >= maxX - 1 && b.y > top - 2 && b.y + b.height < bottom + 2;
+            if (!((o.t === 'rect' || o.t === 'path' || o.t === 'polygon') && o.filled && b.y > top - 2 && b.y + b.height < bottom + 2)) return false;
+            return lifeXs.length > 1 ? b.x <= minX + 1 && b.x + b.width >= maxX - 1 : b.x <= minX - REACH && b.x + b.width >= maxX + REACH;
         });
         function within(list, x, y) { return list.some(function(o) { return o.b.x <= x && x <= o.b.x + o.b.width && o.b.y <= y && y <= o.b.y + o.b.height; }); }
         // the step bars: the shim draws every step as a rectangle in the source's black, of any height (a step

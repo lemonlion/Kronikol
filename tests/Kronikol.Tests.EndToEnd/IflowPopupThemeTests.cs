@@ -26,7 +26,8 @@ public class IflowPopupThemeTests : PlaywrightTestBase
                 .dispatchEvent(new MouseEvent('click', { bubbles: true }))
             """);
         var popup = Page.Locator(".iflow-popup");
-        await Expect(popup).ToBeVisibleAsync();
+        // the popup opens with Loading... and is filled once the flow data decodes
+        await Expect(popup.Locator("h3")).ToBeVisibleAsync();
 
         var r = await popup.EvaluateAsync<string[]>("""
             el => {
@@ -56,7 +57,8 @@ public class IflowPopupThemeTests : PlaywrightTestBase
             """);
         await Page.Locator("#trigger-seg-1").ClickAsync();
         var popup = Page.Locator(".iflow-popup");
-        await Expect(popup).ToBeVisibleAsync();
+        // the popup opens with Loading... and is filled, its tabs with it, once the flow data decodes
+        await Expect(popup.Locator(".iflow-toggle-active")).ToBeVisibleAsync();
 
         var r = await popup.EvaluateAsync<string[]>("""
             el => {

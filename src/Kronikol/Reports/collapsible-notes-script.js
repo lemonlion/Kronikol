@@ -2023,6 +2023,14 @@
         rerenderWithNoteStates(container, function() { container._noteFormats[noteIdx] = oldFormat; });
     }
 
+    // A diagram drawn again in parts: each new part takes the zoom and the selection of the part in its place before
+    // (5.2.2). It runs before the parts' hooks, which restore a zoomed part's picture from what it takes here.
+    function carryPartZoom(oldChildren, newParts) {
+        if (!window._carryZoomState) return;
+        var oldParts = oldChildren.filter(function(c) { return c.classList && c.classList.contains('puml-fragment'); });
+        for (var i = 0; i < newParts.length && i < oldParts.length; i++) window._carryZoomState(oldParts[i], newParts[i]);
+    }
+
     // Shared rebuild + re-render path for per-note state changes (step or
     // format). restoreState reverts the state mutation if the render fails.
     function rerenderWithNoteStates(container, restoreState) {
@@ -2075,6 +2083,7 @@
                             newFrags[ni].classList.remove('puml-fragment-new');
                             newFrags[ni].id = container.id + '-frag-' + ni;
                         }
+                        carryPartZoom(oldChildren, newFrags);
                         // Apply post-render hooks after fragments are visible (getBBox needs visible elements)
                         for (var pi = 0; pi < fragQueue.length; pi++) {
                             if (window._iflowBindLinks) window._iflowBindLinks(fragQueue[pi].el, origSource);
@@ -2917,6 +2926,7 @@
                                 newFrags[ni].classList.remove('puml-fragment-new');
                                 newFrags[ni].id = container.id + '-frag-' + ni;
                             }
+                            carryPartZoom(oldChildren, newFrags);
                             // Apply post-render hooks after fragments are visible (getBBox needs visible elements)
                             var fragsNear = isNear(item);
                             for (var pi = 0; pi < fragList.length; pi++) afterRedraw(fragList[pi].el, container, fragsNear);

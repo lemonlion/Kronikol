@@ -54,7 +54,9 @@ body.plantuml-ready .puml-fragment:not([data-rendered])::before {
     height: 0;
     overflow: visible;
 }
-[data-diagram-type]:hover > .diagram-zoom-controls {
+/* a part of a diagram drawn in parts has its own zoom (5.2.2) */
+[data-diagram-type]:hover > .diagram-zoom-controls,
+.puml-fragment:hover > .diagram-zoom-controls {
     opacity: 0.4;
     pointer-events: auto;
 }

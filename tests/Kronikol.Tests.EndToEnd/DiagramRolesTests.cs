@@ -65,7 +65,7 @@ public class DiagramRolesTests : DiagramNotePlaywrightBase
         };
         """;
 
-    private async Task OpenAsync(string fileName, NoteWidthMode noteWidth = NoteWidthMode.Default)
+    private async Task OpenAsync(string fileName, NoteWidthMode noteWidth = NoteWidthMode.Default, string source = Source)
     {
         Feature[] features =
         [
@@ -75,7 +75,7 @@ public class DiagramRolesTests : DiagramNotePlaywrightBase
                 Scenarios = [new() { Id = "s1", DisplayName = "Place an order", Result = ExecutionResult.Passed, Duration = TimeSpan.FromMilliseconds(10) }]
             }
         ];
-        var path = ReportGenerator.GenerateHtmlReport([new DefaultDiagramsFetcher.DiagramAsCode("s1", "", Source)],
+        var path = ReportGenerator.GenerateHtmlReport([new DefaultDiagramsFetcher.DiagramAsCode("s1", "", source)],
             features, DateTime.UtcNow, DateTime.UtcNow, null, Path.Combine(TempDir, fileName), "Bakery", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs,
             toggleDefaults: ResolvedToggleDefaults.BuiltIn with { NoteWidth = noteWidth });
@@ -111,6 +111,116 @@ public class DiagramRolesTests : DiagramNotePlaywrightBase
         Assert.True(int.Parse(r[1]) >= 6, $"participants: {r[1]}");
         Assert.Equal(r[3], r[2]);
         Assert.Equal(r[5], r[4]);
+    }
+
+    // A scenario that made no calls: its one participant is the generator's placeholder, so the drawing has one lifeline
+    // (the owner's report, 2026-10-21: its step bars stayed black)
+    private const string NoInteractions = """
+        @startuml
+        !pragma teoz true
+        skinparam defaultFontName system-ui
+        skinparam shadowing false
+        skinparam SequenceMessagePadding 4
+        skinparam sequenceMessageAlignment center
+        <style>
+        sequenceDiagram { participant { RoundCorner 12; Padding 8 14; Margin 0 10; LineThickness 1 } }
+        sequenceDiagram { actor, database, queue, collections, boundary, control, entity { Margin 0 10; LineThickness 1 } }
+        sequenceDiagram { lifeLine { LineStyle 0; LineThickness 1 } }
+        sequenceDiagram { note { LineThickness 1 } }
+        </style>
+
+        <style>
+         .assertionNote {
+             FontSize 11
+             RoundCorner 5
+         }
+        </style>
+        skinparam wrapWidth 800
+        autonumber 1
+
+        participant "(no interactions)" as noInteractions
+
+
+        hnote across <<stepDelimiter>> #black:<color:white>Given I have never signed in
+
+
+        hnote across <<stepDelimiter>> #black:<color:white>When that visitor asks graphql for the canonical merchant's locations
+
+
+        hnote across <<assertionNote>> #d4edda
+        ✓ An unauthenticated caller is rejected outright
+        end note
+
+
+        hnote across <<stepDelimiter>> #black:<color:white>Then that visitor receives no customer locations
+
+        @enduml
+        """;
+
+    [Fact]
+    public async Task A_step_bar_is_a_light_band_with_dark_ink_in_a_drawing_with_one_lifeline()
+    {
+        await OpenAsync("RolesBandsOneLifeline.html", source: NoInteractions);
+
+        var r = await InSvgAsync<string[]>("""
+            const bands = Array.from(el.querySelectorAll('.k-step'));
+            // the words drawn in a bar (wrapWidth draws one text per word), found by where they stand
+            const boxes = bands.map(b => b.getBBox());
+            const labels = Array.from(el.querySelectorAll('text')).filter(t => {
+                const x = parseFloat(t.getAttribute('x')), y = parseFloat(t.getAttribute('y')) - 3;
+                return boxes.some(b => x >= b.x - 1 && x <= b.x + b.width + 1 && y >= b.y - 1 && y <= b.y + b.height + 1);
+            });
+            const black = Array.from(el.querySelectorAll('rect, path, polygon')).filter(e => getComputedStyle(e).fill === 'rgb(0, 0, 0)');
+            return [String(bands.length), bands.length ? getComputedStyle(bands[0]).fill : 'none', __tok('--dg-step'),
+                    String(labels.length), String(labels.filter(t => t.classList.contains('k-step-text')).length),
+                    labels.length ? getComputedStyle(labels[0]).fill : 'none', __tok('--dg-step-ink'), String(black.length)];
+            """);
+
+        Assert.Equal("3", r[0]);
+        Assert.Equal(r[2], r[1]);
+        Assert.True(int.Parse(r[3]) >= 3, $"words in the bars: {r[3]}");
+        Assert.Equal(r[3], r[4]);
+        Assert.Equal(r[6], r[5]);
+        Assert.Equal("0", r[7]);
+    }
+
+    // One participant that calls itself, with an activation: the arrowheads and the activation bar touch the one lifeline
+    // too, and only the step bar runs well past it on both sides
+    private const string SelfCall = """
+        @startuml
+        !pragma teoz true
+        skinparam shadowing false
+        autonumber 1
+        participant "Kitchen" as kitchen
+        hnote across <<stepDelimiter>> #black:<color:white>When the kitchen checks its own oven
+        kitchen -> kitchen : check the oven
+        activate kitchen
+        kitchen --> kitchen : hot enough
+        deactivate kitchen
+        @enduml
+        """;
+
+    [Fact]
+    public async Task In_a_drawing_with_one_lifeline_only_the_step_bar_is_a_step_and_nothing_else_is_stretched()
+    {
+        await OpenAsync("RolesOneLifelineSelfCall.html", source: SelfCall);
+
+        var r = await InSvgAsync<string[]>("""
+            const roles = JSON.parse(el.getAttribute('data-k-roles'));
+            const bands = Array.from(el.querySelectorAll('.k-step'));
+            const label = Array.from(el.querySelectorAll('text')).find(t => t.textContent.includes('checks its own oven'));
+            // an arrowhead or the activation bar taken for a strip would be stretched to the drawing's width
+            const widest = Math.max(0, ...Array.from(el.querySelectorAll('polygon')).map(p => p.getBBox().width));
+            const narrowSteps = bands.filter(b => b.getBBox().width < 40).length;
+            return [String(roles.lifelines), String(bands.length), String(Math.round(widest)), String(narrowSteps),
+                    label && label.classList.contains('k-step-text') ? 'tagged' : 'untagged'];
+            """);
+
+        Assert.Equal("1", r[0]);
+        Assert.Equal("1", r[1]);
+        Assert.True(int.Parse(r[2]) < 20, $"the widest arrowhead is {r[2]} wide");
+        Assert.Equal("0", r[3]);
+        Assert.Equal("tagged", r[4]);
     }
 
     [Fact]
