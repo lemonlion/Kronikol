@@ -135,6 +135,38 @@ public class ReportToggleResponsivenessTests : PlaywrightTestBase
     }
 
     [Fact]
+    public async Task Sorting_the_features_with_every_diagram_drawn_runs_no_long_task_and_the_page_order_follows()
+    {
+        await OpenAllDrawnAsync();
+
+        // a card moved in the page has the layout of its drawn diagrams built again: the sort places the cards with CSS
+        // order and moves them in the page after, in slices (5.2.1; 213 ms on 200 scenarios with 400 drawn before it)
+        var results = new List<(string Action, double Worst, double Stretch)>();
+        foreach (var order in new[] { "duration", "name", "order" })
+        {
+            var from = await Page.EvaluateAsync<double>($$"""
+                () => {
+                    var t = performance.now(), sort = document.getElementById('features-sort');
+                    sort.value = '{{order}}';
+                    sort.dispatchEvent(new Event('change', { bubbles: true }));
+                    return t;
+                }
+                """);
+            await Page.WaitForFunctionAsync("""
+                () => {
+                    var o = Array.prototype.map.call(document.querySelectorAll('#report-content > details.feature'),
+                        function (f) { return parseInt(getComputedStyle(f).order, 10) || 0; });
+                    return o.every(function (v, i) { return i === 0 || o[i - 1] <= v; });
+                }
+                """, null, new() { Timeout = 60_000, PollingInterval = 200 });
+            var (worst, stretch) = await WorstTaskSinceAsync(from);
+            results.Add(($"sorting by {order}", worst, stretch));
+        }
+
+        foreach (var (action, worst, stretch) in results) AssertWithinBudget(action, worst, stretch);
+    }
+
+    [Fact]
     public async Task A_toggle_draws_the_diagram_on_screen_first_and_one_scrolled_to_next_and_a_far_one_gets_its_buttons_as_it_comes_near()
     {
         await OpenAllDrawnAsync();

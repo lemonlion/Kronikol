@@ -64,6 +64,15 @@
            contain-intrinsic-size: auto 500px;
            scroll-margin-top: calc(var(--kron-nav-h, 0px) + 12px);
        }
+       /* The cards are a flex column so that the Features sort places them with CSS order and moves none of them in the
+          page (5.2.1, report-features-tools-script.js says why). The gap is the 14 px their margins left between them,
+          and the column's own margin stands where the first and last card's overlapped their neighbours' (the Summary
+          view's hidden attribute still wins: report-tokens.css makes it !important). A card in the column is laid out
+          even far from the screen, its scenarios still skipped (content-visibility: auto): in Chromium 149 a skipped
+          flex or grid item could read as no size inside, so the role pass found a far diagram's picture 0 px wide as
+          it was drawn and gave it its card colours only once it came into view (one to three of 60 diagrams). */
+       #report-content { display: flex; flex-direction: column; gap: 14px; margin: 14px 0; }
+       #report-content > .feature { margin: 0; content-visibility: visible; }
        .feature > summary {
            padding: 11px 16px;
            background: var(--kron-strip);

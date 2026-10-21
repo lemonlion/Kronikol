@@ -22,6 +22,9 @@ public static class TestProjectRunner
     private static readonly string ArchivedReportsRoot =
         Path.Combine(TestProjects.SolutionRoot, "TestResults", "ArchivedReports");
 
+    private static readonly string NestedResultsRoot =
+        Path.Combine(TestProjects.SolutionRoot, "TestResults", "NestedRuns");
+
     // A component project is built once per test process, and each run starts it with --no-build. Each run used to build
     // it first: measured on 2026-10-08 (the TUnit example, Windows, other builds on the machine), a build with nothing to
     // do took 76 to 84 s against 2 s for the run itself, so a third of the TUnit rows hit the 120 s timeout. A failed build
@@ -59,10 +62,14 @@ public static class TestProjectRunner
                 environment[key] = value;
         }
 
-        // TUnit / Microsoft.Testing.Platform projects require "dotnet run" on .NET 10+
-        var arguments = TestProjects.MicrosoftTestingPlatformProjects.Contains(projectName)
+        // TUnit / Microsoft.Testing.Platform projects require "dotnet run" on .NET 10+. A "dotnet test" run writes a results
+        // file, read if the run fails: a test assembly's cleanup failure reaches the console as one line naming the
+        // exception's type, and the file carries its message and stack trace (TrxFailures).
+        var microsoftTestingPlatform = TestProjects.MicrosoftTestingPlatformProjects.Contains(projectName);
+        var resultsFile = $"{projectName.Replace("Example.Api.Tests.Component.", "")}.{runLabel}.{Guid.NewGuid():N}.trx";
+        var arguments = microsoftTestingPlatform
             ? "run --no-restore --no-build"
-            : "test --no-restore --no-build --verbosity quiet";
+            : $"test --no-restore --no-build --verbosity quiet --logger \"trx;LogFileName={resultsFile}\" --results-directory \"{NestedResultsRoot}\"";
 
         var effectiveTimeout = timeout ?? DefaultTimeout;
         var (completed, exitCode, stdout, stderr) = await RunDotnetAsync(arguments, projectPath, environment, effectiveTimeout);
@@ -72,6 +79,9 @@ public static class TestProjectRunner
 
         ArchiveReports(reportsFolderPath, projectName, runLabel);
 
+        var failures = exitCode == 0 || microsoftTestingPlatform ? "" : TrxFailures.Read(Path.Combine(NestedResultsRoot, resultsFile));
+        if (failures.Length > 0)
+            stderr += $"\n--- the run's results file, {resultsFile} ---\n{failures}\n";
         return new TestProjectRunResult(exitCode == 0, stdout, stderr, reportsFolderPath, exitCode);
     }
 

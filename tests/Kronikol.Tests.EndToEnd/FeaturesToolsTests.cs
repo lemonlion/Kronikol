@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Kronikol.Reports;
 using Microsoft.Playwright;
 
@@ -55,8 +56,22 @@ public class FeaturesToolsTests : PlaywrightTestBase
     }
 
     // the cards' names and the rows' first cells, in page order, each with the scenario count it carries
+    // in the order they show: their CSS order, then the page's (from 5.2.1 a sort places the cards with CSS order at once
+    // and moves them in the page after it)
     private Task<string[]> Cards() => Page.EvaluateAsync<string[]>(
+        "() => Array.from(document.querySelectorAll('#report-content > details.feature')).map((f, i) => ({ f, i, o: parseInt(getComputedStyle(f).order, 10) || 0 })).sort((a, b) => a.o - b.o || a.i - b.i).map(({ f }) => f.querySelector(':scope > summary').firstChild.textContent.trim() + ':' + f.querySelectorAll('details.scenario').length)");
+    private Task<string[]> PageOrder() => Page.EvaluateAsync<string[]>(
         "() => Array.from(document.querySelectorAll('#report-content > details.feature')).map(f => f.querySelector(':scope > summary').firstChild.textContent.trim() + ':' + f.querySelectorAll('details.scenario').length)");
+
+    // the page's order has caught up with the screen's
+    private Task WaitForPageOrderAsync() => Page.WaitForFunctionAsync(
+        "() => { const o = Array.from(document.querySelectorAll('#report-content > details.feature')).map(f => parseInt(getComputedStyle(f).order, 10) || 0); return o.every((v, i) => i === 0 || o[i - 1] <= v); }",
+        null, new() { PollingInterval = 200 });
+
+    // the card holding the keyboard's focus, or the scenario the arrow keys picked, as name:count
+    private Task<string?> CardOf(string selector) => Page.EvaluateAsync<string?>(
+        "s => { const e = s === 'focus' ? document.activeElement : document.querySelector(s); const f = e && e.closest('details.feature'); return f ? f.querySelector(':scope > summary').firstChild.textContent.trim() + ':' + f.querySelectorAll('details.scenario').length : null; }",
+        selector);
     private Task<string[]> Rows() => Page.EvaluateAsync<string[]>(
         "() => Array.from(document.querySelectorAll('#features-table-view tbody tr')).map(r => r.cells[0].textContent.trim() + ':' + r.cells[1].textContent.trim())");
 
@@ -155,6 +170,148 @@ public class FeaturesToolsTests : PlaywrightTestBase
         Assert.Equal(["Muffins:1", "Croissants:2", "Bagels:1", "Bagels:3"], await Rows());
         Assert.Equal(await Cards(), await Rows());
     }
+
+    [Fact]
+    public async Task The_sort_moves_no_card_in_its_own_task_and_the_page_order_follows_the_screen()
+    {
+        await OpenBakery("FeaturesTools_SortMoves.html");
+
+        // a card moved in the page has the layout of every diagram drawn in it thrown away and built again: until 5.2.1 a
+        // sort with 400 diagrams drawn held the page 213 ms, and the frame after it came at 295 ms
+        // read in the sort's own task, before the page moves anything: the cards already show in the new order
+        var sorted = await Page.EvaluateAsync<JsonElement>("""
+            () => {
+                const watch = new MutationObserver(() => {});
+                watch.observe(document.getElementById('report-content'), { childList: true });
+                const sort = document.getElementById('features-sort');
+                sort.value = 'name';
+                sort.dispatchEvent(new Event('change', { bubbles: true }));
+                const moved = watch.takeRecords().length;
+                watch.disconnect();
+                const shown = Array.from(document.querySelectorAll('#report-content > details.feature'))
+                    .map((f, i) => ({ f, i, o: parseInt(getComputedStyle(f).order, 10) || 0 })).sort((a, b) => a.o - b.o || a.i - b.i)
+                    .map(({ f }) => f.querySelector(':scope > summary').firstChild.textContent.trim() + ':' + f.querySelectorAll('details.scenario').length);
+                return { moved, shown };
+            }
+            """);
+        Assert.Equal(0, sorted.GetProperty("moved").GetInt32());
+        Assert.Equal(["Bagels:1", "Bagels:3", "Croissants:2", "Muffins:1"], sorted.GetProperty("shown").EnumerateArray().Select(e => e.GetString()));
+        Assert.Equal(["Bagels:1", "Bagels:3", "Croissants:2", "Muffins:1"], await Cards());
+        Assert.Equal(["Bagels:1", "Bagels:3", "Croissants:2", "Muffins:1"], await Rows());
+
+        // the page's order follows, for the keyboard, screen readers, the arrow keys and Next Failure
+        await WaitForPageOrderAsync();
+        Assert.Equal(["Bagels:1", "Bagels:3", "Croissants:2", "Muffins:1"], await PageOrder());
+
+        // and back: the report's order needs no card placed by CSS
+        await Page.Locator("#features-sort").SelectOptionAsync("order");
+        Assert.Equal(["Muffins:1", "Croissants:2", "Bagels:1", "Bagels:3"], await Cards());
+        await WaitForPageOrderAsync();
+        Assert.Equal(["Muffins:1", "Croissants:2", "Bagels:1", "Bagels:3"], await PageOrder());
+
+        // a sort that leaves the order as it stands moves nothing, once the page has had its turns to
+        var moves = await Page.EvaluateAsync<int>("""
+            () => new Promise(resolve => {
+                // counted as they are delivered: a record handed to the callback is no longer in takeRecords
+                let moves = 0;
+                const watch = new MutationObserver(records => { moves += records.length; });
+                watch.observe(document.getElementById('report-content'), { childList: true });
+                const sort = document.getElementById('features-sort');
+                sort.value = 'order';
+                sort.dispatchEvent(new Event('change', { bubbles: true }));
+                setTimeout(() => setTimeout(() => { moves += watch.takeRecords().length; watch.disconnect(); resolve(moves); }, 0), 50);
+            })
+            """);
+        Assert.Equal(0, moves);
+    }
+
+    [Fact]
+    public async Task After_a_sort_Tab_the_arrow_keys_and_Next_Failure_go_in_the_order_the_cards_show()
+    {
+        await OpenBakery("FeaturesTools_SortKeys.html");
+        await Page.EvaluateAsync("() => document.querySelectorAll('details.feature, details.scenario').forEach(d => { d.open = false; })");
+        await Page.Locator("#features-sort").SelectOptionAsync("name");
+        await WaitForPageOrderAsync();
+
+        // Tab from the second card's heading: in the page's old order it was the last card, and Tab left the cards
+        await Page.Locator("#report-content > details.feature > summary").Nth(1).FocusAsync();
+        Assert.Equal("Bagels:3", await CardOf("focus"));
+        await Page.Keyboard.PressAsync("Tab");
+        Assert.Equal("Croissants:2", await CardOf("focus"));
+        await Page.Keyboard.PressAsync("Tab");
+        Assert.Equal("Muffins:1", await CardOf("focus"));
+
+        // the arrow keys start at the first card that shows (Muffins, first in the page's old order)
+        await Page.EvaluateAsync("() => document.activeElement.blur()");
+        await Page.Keyboard.PressAsync("ArrowDown");
+        Assert.Equal("Bagels:1", await CardOf(".scenario-focused"));
+        await Page.Keyboard.PressAsync("ArrowDown");
+        Assert.Equal("Bagels:3", await CardOf(".scenario-focused"));
+
+        // Next Failure goes to the second Bagels card's failure first (Croissants', in the page's old order)
+        await Page.Locator(".jump-to-failure").ClickAsync();
+        await Page.WaitForFunctionAsync("() => !!document.querySelector('details.scenario[data-status=\"Failed\"][open]')", null, new() { PollingInterval = 200 });
+        Assert.Equal("Bagels:3", await CardOf("details.scenario[data-status=\"Failed\"][open]"));
+        await Expect(Page.Locator("#failure-counter")).ToHaveTextAsync("(1/3)");
+    }
+
+    [Fact]
+    public async Task A_card_the_page_moves_after_a_sort_keeps_the_keyboard_s_focus()
+    {
+        await OpenBakery("FeaturesTools_SortFocus.html");
+        // the reader is on the first Bagels heading, third in the page, and the page moves that card to the front (a
+        // node taken out of the page loses the focus)
+        await Page.Locator("#report-content > details.feature > summary").Nth(2).FocusAsync();
+        Assert.Equal("Bagels:1", await CardOf("focus"));
+        await Page.EvaluateAsync("() => { const s = document.getElementById('features-sort'); s.value = 'name'; s.dispatchEvent(new Event('change', { bubbles: true })); }");
+        await WaitForPageOrderAsync();
+
+        Assert.Equal(["Bagels:1", "Bagels:3", "Croissants:2", "Muffins:1"], await PageOrder());
+        Assert.Equal("Bagels:1", await CardOf("focus"));
+        Assert.True(await Page.EvaluateAsync<bool>("() => document.activeElement.matches('#report-content > details.feature > summary')"));
+    }
+
+    [Fact]
+    public async Task The_cards_keep_their_spacing_and_the_Summary_view_still_hides_them()
+    {
+        await OpenBakery("FeaturesTools_Spacing.html");
+        // short enough that the page scrolls, so its end is the cards' own and not the window's
+        await Page.SetViewportSizeAsync(1280, 300);
+        await Page.Locator("#features-sort").SelectOptionAsync("name");
+        await WaitForPageOrderAsync();
+
+        // 14 px between cards, and above the first card and from the last to the page's end what 5.2.0 had: there the
+        // cards' margins overlapped their neighbours' in the page's flow, and a flex column's do not
+        var gaps = await Page.EvaluateAsync<int[]>("""
+            () => {
+                const cards = Array.from(document.querySelectorAll('#report-content > details.feature'))
+                    .map(c => c.getBoundingClientRect()).sort((a, b) => a.top - b.top);
+                const content = document.getElementById('report-content'), panel = content.closest('.features-panel') || content;
+                const last = cards[cards.length - 1].bottom;
+                let before = panel.previousElementSibling;
+                while (before && !before.getClientRects().length) before = before.previousElementSibling;
+                // the nearest box below the cards in the page's flow: a pinned button, bar or popup is not in it
+                const after = Array.from(document.body.querySelectorAll('*')).filter(e =>
+                    (panel.compareDocumentPosition(e) & Node.DOCUMENT_POSITION_FOLLOWING) && !panel.contains(e)
+                    && e.getBoundingClientRect().height > 0 && e.getBoundingClientRect().top >= last - 1
+                    && ['static', 'relative'].includes(getComputedStyle(e).position))
+                    .sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top)[0];
+                const gaps = cards.slice(1).map((r, i) => Math.round(r.top - cards[i].bottom));
+                gaps.push(before ? Math.round(cards[0].top - before.getBoundingClientRect().bottom) : -1);
+                gaps.push(Math.round(after ? after.getBoundingClientRect().top - last : document.documentElement.scrollHeight - (last + window.scrollY)));
+                return gaps;
+            }
+            """);
+        Assert.Equal([14, 14, 14, ExpectedGapAbove, ExpectedGapBelow], gaps);
+
+        await Page.Locator("#view-summary").ClickAsync();
+        await Expect(Page.Locator("#report-content")).ToBeHiddenAsync();
+        await Expect(Page.Locator("#features-table-view")).ToBeVisibleAsync();
+    }
+
+    // measured on 5.2.0, before the cards were placed by CSS order: the last card's 14 px margin, the report panel's
+    // and the body's padding to the page's end (nothing in the page's flow comes after the cards)
+    private const int ExpectedGapAbove = 14, ExpectedGapBelow = 89;
 
     [Fact]
     public async Task A_row_opens_its_feature_in_the_Full_view_from_a_click_or_the_keyboard()

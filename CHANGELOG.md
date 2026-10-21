@@ -4,6 +4,56 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.2.1] - 2026-10-21
+
+The patch part moves (5.2.0 to 5.2.1): performance work, with nothing new to call or configure.
+
+### Fixed
+
+- **The Features sort no longer holds the page when the diagrams are drawn.** The sort moved every feature card to its
+  new place in the page, and the browser throws away and builds again the layout of everything in a card it moves, its
+  drawn diagrams with it. On 200 scenarios with all 400 diagrams drawn, the first sort ran a task of 172 to 213 ms
+  (two runs) and the next frame came at 254 to 295 ms; later sorts ran tasks of 37 to 53 ms. The cards now show in their new order at once, placed by
+  CSS order in a flex column: the sort's own task takes under a millisecond, and the next frame comes within 15 ms. The
+  page's own order follows after it, a few cards at a time, for what goes by it: Tab, screen readers, the arrow keys
+  and Next Failure. On the same report it caught up within 510 ms of the first sort after drawing, in tasks of up to
+  60 ms, and within 150 ms of a later one, with no task of 50 ms or more. A card the page moves keeps the keyboard's
+  focus, and the cards keep their spacing: 14 px between them, and the same space above the first and below the last.
+
+  In the flex column a card is laid out even far from the screen, while its scenarios are still skipped
+  (`content-visibility: auto`) as before. A skipped flex item could read as having no size inside (Chromium 149), so
+  the pass that gives a sequence diagram its card colours found one to three of 60 far diagrams 0 px wide as they were
+  drawn, and coloured them only once they came into view. A closed card far from the screen also no longer counts at a
+  500 px placeholder until the browser draws it, so a long report of closed features no longer shrinks under the reader
+  as they scroll up through it.
+
+### Tests
+
+- `FeaturesToolsTests`: the sort moves no card in its own task (fails on 5.2.0's scripts, which moved 4 cards out and
+  back in) and the page's order then follows the screen's; after a sort, Tab, the arrow keys and Next Failure go in the
+  order the cards show; a card the page moves keeps the keyboard's focus; the cards' spacing, pinned from 5.2.0, and
+  the Summary view still hiding them. The class reads the cards' order as they show (their CSS order, then the
+  page's).
+- `ReportToggleResponsivenessTests`: sorting the features with every diagram drawn runs no long task, and the page's
+  order follows. Its facts that draw every diagram are what found the far diagrams left without their card colours.
+- `BackForwardRestoreTests` R16 opens every feature before its link is pressed, and reads the page's position as the
+  link is pressed. The closed features above its scenario no longer change height once drawn, so its check that Back
+  still lands after the page above shifted had no shift to stand on; open, their scenarios still count at a
+  placeholder's height until drawn. Read before the press, the position missed the scroll Playwright makes to bring a
+  link the bar covers into the open (106 px), and Back rightly returns to where the press was. With the restore cut
+  down to the pixel position, R16 fails in all three engines, 7,000 to 9,400 px off.
+- `Example.Api.Tests.Integration`: a nested `dotnet test` run writes a results file, and a failed run's message quotes
+  the failures it holds (`TrxFailures`, `TrxFailuresTests`). A test assembly's cleanup failure reached the console as
+  one line naming the exception's type, as the ReqNRoll xUnit3 example's did on CI on 2026-10-13 and 2026-10-20, while
+  the VSTest adapter attaches its message and stack trace to each of the assembly's tests in that file.
+- Proofs: run on 5.2.0's scripts, the fact that the sort moves no card fails (8 records, the 4 cards taken out and
+  put back), while the Tab, arrow keys and Next Failure fact passes there: it guards what 5.2.0 already did. The
+  spacing fact's values were measured on 5.2.0. The facts came before the code but the focus one, which came with the
+  focus handling. Seven of eight mutations of the new code make a fact fail; the eighth, appending the first card
+  instead of putting it before the others, is equivalent on these pages, where nothing is written around the cards.
+  `TrxFailuresTests` failed on a stub reader (2 of 3; the third, a missing or broken file, passes by design) before the
+  reader was written.
+
 ## [5.2.0] - 2026-10-20
 
 The minor part moves (5.1.1 to 5.2.0): the browser's Back and Forward buttons are the report's navigation, and its

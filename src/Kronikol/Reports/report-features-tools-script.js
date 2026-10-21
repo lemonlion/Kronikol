@@ -71,18 +71,41 @@
             else if (col > 0) d = (parseFloat(cell(b, col)) || 0) - (parseFloat(cell(a, col)) || 0);
             return d || a.order - b.order;
         });
-        // the cards go back where they stood, in the new order; anything written around them stays put
-        var last = pairs.reduce(function (m, p) {
-            return m && (m.compareDocumentPosition(p.card) & Node.DOCUMENT_POSITION_FOLLOWING) ? p.card : m;
-        }, pairs[0].card);
-        var parent = last.parentNode, next = last.nextSibling;
         var body = pairs[0].row.parentNode, table = body.closest('table');
-        sorted.forEach(function (p) {
-            parent.insertBefore(p.card, next);
-            body.appendChild(p.row);
-        });
+        sorted.forEach(function (p) { body.appendChild(p.row); });
+        placeCards(sorted);
         // the table's own column sort no longer holds
         if (table) { table.removeAttribute('data-sort-col'); table.removeAttribute('data-sort-dir'); }
+    }
+
+    // The cards show in their new order at once, placed by CSS order in their flex column (5.2.1). A card moved in the
+    // page has the layout of every diagram drawn in it thrown away and built again: on 200 scenarios with all 400
+    // diagrams drawn, the first sort held the page 213 ms and the frame after it came at 295 ms (later sorts 41 to 53 ms).
+    // The page's own order follows after the sort, a slice of a few milliseconds at a time, for what goes by it: Tab,
+    // screen readers, the arrow keys and Next Failure. The CSS order holds the picture still meanwhile, and a card moved
+    // keeps the height the browser remembered for it, so nothing on the screen shifts. moveBefore would keep a moved
+    // card's focus, but its cost lands in the next frame, out of the slice's sight (277 ms there), so a card that held
+    // the focus is given it back instead. Anything written around the cards stays put: each goes before the first card
+    // or after the one before it.
+    var PLACE_SLICE_MS = 8, placing = null;
+    function placeCards(sorted) {
+        if (placing) clearTimeout(placing);
+        sorted.forEach(function (p, i) { p.card.style.order = String(i); });
+        var parent = sorted[0].card.parentNode, i = 0;
+        function step() {
+            placing = null;
+            var start = performance.now();
+            for (; i < sorted.length; i++) {
+                var card = sorted[i].card;
+                var first = i === 0 ? parent.querySelector(':scope > details.feature') : null;
+                if (i === 0 ? first === card : sorted[i - 1].card.nextElementSibling === card) continue;
+                if (performance.now() - start > PLACE_SLICE_MS) { placing = setTimeout(step, 0); return; }
+                var focus = document.activeElement, held = focus && card.contains(focus) ? focus : null;
+                parent.insertBefore(card, i === 0 ? first : sorted[i - 1].card.nextSibling);
+                if (held && document.activeElement !== held) held.focus({ preventScroll: true });
+            }
+        }
+        placing = setTimeout(step, 0);
     }
 
     // a row of the table opens its feature in the Full view

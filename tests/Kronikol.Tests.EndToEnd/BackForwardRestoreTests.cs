@@ -464,9 +464,11 @@ public class BackForwardRestoreTests : BackForwardTestBase
     [InlineData("webkit")]
     public Task R16_Back_lands_on_the_same_scenario_after_the_features_above_it_were_drawn(string engine) => InEngineAsync(engine, async page =>
     {
-        // A link far down a long report lands with every feature above it undrawn, each counted at its placeholder height
+        // A link far down a long report lands with every scenario above it undrawn, each counted at its placeholder height
         // (content-visibility: auto). Scrolled up through, they are drawn at their own, so the pixel position the entry
-        // saved no longer holds the scenario: Back finds it by its element and its distance below the bar (plan fact 4)
+        // saved no longer holds the scenario: Back finds it by its element and its distance below the bar (plan fact 4).
+        // The features are opened for it: from 5.2.1 a feature card is laid out even far from the screen (the sort places
+        // the cards in a flex column), so a closed one no longer counts at a placeholder's height
         var url = GenerateLongReport($"BackNav_R16_{engine}.html");
         await OpenAsync(page, url);
         var sid = (await page.Locator("details.scenario", new() { HasTextString = "Scenario 40.1" }).First.GetAttributeAsync("data-stable-id"))!;
@@ -474,14 +476,20 @@ public class BackForwardRestoreTests : BackForwardTestBase
         // a real interaction first, on the page's margin, which moves nothing: Firefox's Back does nothing on a page that
         // has had none (plan fact 2)
         await page.Mouse.ClickAsync(4, 400);
+        // opening every feature adds no entry to the session history
+        await page.Locator(".fold-btn.fold-expand[data-fold='features']").First.ClickAsync();
         var scenario = page.Locator($"details.scenario[data-stable-id='{sid}']");
         var link = page.Locator("details.scenario", new() { HasTextString = "Scenario 40.2" }).First.Locator(":scope > summary a.scenario-link");
         await link.ScrollIntoViewIfNeededAsync();
         await ScrollSettledAsync(page);
-        var top = await scenario.EvaluateAsync<double>("s => s.getBoundingClientRect().top");
-        var before = await page.EvaluateAsync<double>("() => scrollY");
+        // where the page stands as the link is pressed: a link the bar covers is scrolled into the open by the click
+        // itself, after any reading made before it, and Back rightly returns to where the click was
+        await scenario.EvaluateAsync(
+            "s => addEventListener('pointerdown', () => { window.__atClick = { top: s.getBoundingClientRect().top, y: scrollY }; }, { capture: true, once: true })");
 
         await ActAsync(page, () => link.ClickAsync());
+        var top = await page.EvaluateAsync<double>("() => window.__atClick.top");
+        var before = await page.EvaluateAsync<double>("() => window.__atClick.y");
         // up through every feature above, half a window at a time, two frames for each, so they are drawn
         for (var step = 0; step < 1000; step++)
         {
