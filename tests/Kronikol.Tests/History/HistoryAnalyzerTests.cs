@@ -339,6 +339,22 @@ public class HistoryAnalyzerTests
     }
 
     [Fact]
+    public void Slower_reads_a_run_against_its_tests_only()
+    {
+        // A scenario that is not a test (an ingest's fold, a stack's start-up) lasts as long as the traffic it holds: in the
+        // run's median, a 13-minute start-up lifted the bar a tripled test was read against, on a roster of two tests.
+        var roster = Roster("a1", "a2", "ffff000000000009");
+        var baseline = Enumerable.Range(1, 6).Select(i => (roster, Run(roster, i, "PPN", durations: [1000, 1000, 100]))).ToList();
+        int?[] Tripled() => [3000, 1000, 780_000];
+
+        var verdicts = Analyse(Ledger(baseline.Append((roster, Run(roster, 7, "PPN", durations: Tripled())))), roster,
+            Run(roster, 8, "PPN", durations: Tripled()), new HistoryAnalysisOptions { MinRuns = 3 });
+
+        Assert.Contains(HistoryVerdictKind.Slower, verdicts.Scenarios[0].Verdicts);
+        Assert.DoesNotContain(HistoryVerdictKind.Slower, verdicts.Scenarios[1].Verdicts);
+    }
+
+    [Fact]
     public void Slower_needs_the_excess_over_the_bar_to_clear_a_floor()
     {
         // 8 ms that became 13 ms is above the bar by the factor and below anyone's notice: without a
@@ -701,6 +717,42 @@ public class HistoryAnalyzerTests
 
         Assert.True(verdicts.Partial);
         Assert.Empty(verdicts.Absent);
+    }
+
+    [Fact]
+    public void A_run_without_the_previous_runs_scenario_that_was_not_a_test_is_not_partial()
+    {
+        // An ingest's fold or a stack's start-up (N) comes and goes with the traffic: the second run on a stack already up has
+        // no start-up. Counted as missing, it made a run of three tests partial (1 of 4 over 0.10), and every run after it,
+        // since the run before stayed the last full one.
+        const string fold = "ffff000000000009";
+        var before = Roster([.. Ids, fold]);
+        var ledger = Ledger([(before, Run(before, 1, "PPPN"))]);
+        var full = Roster(Ids);
+
+        var verdicts = Analyse(ledger, full, Run(full, 9, "PPP", partial: null), new HistoryAnalysisOptions { PartialThreshold = 0.10 });
+
+        Assert.False(verdicts.Partial);
+        Assert.Empty(verdicts.Absent);
+        Assert.False(HistoryAnalyzer.IsPartial(full, HistoryAnalyzer.TestsOf(before, Run(before, 1, "PPPN")), 0.10));
+    }
+
+    [Fact]
+    public void A_run_point_counts_the_tests_and_their_time_only()
+    {
+        // The History tab's ring and duration bar: 4 passed tests and a 780 s fold read 80% and 13 minutes.
+        const string fold = "ffff000000000009";
+        var roster = Roster([.. Ids, fold]);
+        var current = Run(roster, 2, "PPPN", durations: [1000, 2000, 3000, 780_000]);
+
+        var verdicts = Analyse(Ledger([(roster, Run(roster, 1, "PPPN", durations: [1000, 2000, 3000, 780_000]))]), roster, current);
+
+        Assert.All(verdicts.Runs, point =>
+        {
+            Assert.Equal(3, point.Passed);
+            Assert.Equal(3, point.Total);
+            Assert.Equal(6000, point.DurationMs);
+        });
     }
 
     [Fact]

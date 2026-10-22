@@ -245,7 +245,7 @@ public class PartialRunBaselineTests
 
         Assert.Equal(HistoryFormat.NotATest, fold.Current);
         Assert.Equal("stable", fold.VerdictNames);
-        Assert.Equal("not a test: it collects the traffic no test could be given", fold.Evidence);
+        Assert.Equal("not a test: it holds traffic no test made", fold.Evidence);
         Assert.Equal(0, verdicts.FirstSeen);
     }
 

@@ -149,11 +149,28 @@ public class IngestSetupWindowCommandTests : IDisposable
         Assert.DoesNotContain("--other-run:", plain.Out);
     }
 
+    [Fact]
+    public void A_window_that_holds_nothing_says_zero()
+    {
+        // Zero is the value worth a look: a window taken from another clock than the taps'.
+        var (exit, @out, error, _) = Ingest("--setup-window", "2026-10-21T08:00:00Z/2026-10-21T08:10:00Z",
+            "--other-run", "device=2026-10-21T11:00:00Z/");
+
+        Assert.True(exit == 0, error);
+        Assert.Equal(
+        [
+            "--setup-window: 0 interaction record(s) outside the run window kept in \"Stack start-up\".",
+            "--other-run: 0 interaction record(s) outside the run window left to other runs: device 0.",
+        ], LinesAfterReplayed(@out));
+    }
+
     [Theory]
     [InlineData("--setup-window", "2026-10-21T09:50:00Z/2026-10-21T09:40:00Z", "--setup-window ends before it starts (2026-10-21T09:50:00.0000000+00:00 → 2026-10-21T09:40:00.0000000+00:00)")]
     [InlineData("--setup-window", "2026-10-21T09:40:00Z", "--setup-window expects <start>/<end>, two ISO-8601 instants, got '2026-10-21T09:40:00Z'")]
     [InlineData("--setup-window", "nonsense/2026-10-21T09:40:00Z", "--setup-window expects <start>/<end>, two ISO-8601 instants, got 'nonsense/2026-10-21T09:40:00Z'")]
     [InlineData("--setup-window", "2026-10-21T09:40:00Z/", "--setup-window expects <start>/<end>, two ISO-8601 instants, got '2026-10-21T09:40:00Z/'")]
+    [InlineData("--setup-window", "2026-10-21T09:40:00Z/bad", "--setup-window expects <start>/<end>, two ISO-8601 instants, got '2026-10-21T09:40:00Z/bad'")]
+    [InlineData("--other-run", "device=2026-10-21T10:00:11.6Z/bad", "--other-run expects <name>=<start>/[<end>], got 'device=2026-10-21T10:00:11.6Z/bad'")]
     [InlineData("--other-run", "device", "--other-run expects <name>=<start>/[<end>], got 'device'")]
     [InlineData("--other-run", "device=2026-10-21T10:00:11.6Z", "--other-run expects <name>=<start>/[<end>], got 'device=2026-10-21T10:00:11.6Z'")]
     [InlineData("--other-run", "device=bad/", "--other-run expects <name>=<start>/[<end>], got 'device=bad/'")]

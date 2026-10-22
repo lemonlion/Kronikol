@@ -232,7 +232,7 @@ public static partial class QueryCommand
         // --slower-than reads each scenario's own time and the rows read wall time, so a scenario that took longer than
         // the ones listed can be missing from them: the answer says so (until 4.16.3 it did not).
         var warmedOut = options.SlowerThan is { } slowerThan
-            ? scope.Count(s => s.DurationSeconds >= slowerThan && s.TimeLeftSeconds < slowerThan && MatchesBesidesTime(s, options))
+            ? scope.Count(s => !s.NotATest && s.DurationSeconds >= slowerThan && s.TimeLeftSeconds < slowerThan && MatchesBesidesTime(s, options))
             : 0;
         void NoteWarmedOut()
         {
@@ -246,7 +246,8 @@ public static partial class QueryCommand
         {
             writer.Note("no scenarios matched");
             NoteWarmedOut();
-            writer.Footer($"{index.Scenarios.Count} scenarios in the report");
+            var notATest = index.Scenarios.Count(s => s.NotATest);
+            writer.Footer($"{index.Scenarios.Count - notATest} scenarios in the report" + (notATest > 0 ? $" · {notATest} not a test" : ""));
             return 0;
         }
 
@@ -310,12 +311,14 @@ public static partial class QueryCommand
 
     private static bool Matches(ScenarioEntry scenario, QueryOptions options) =>
         MatchesBesidesTime(scenario, options)
-        // The scenario's own time: a scenario slow only because it paid the run's first-call warm-up is not slow.
-        && !(options.SlowerThan is { } slower && scenario.TimeLeftSeconds < slower);
+        // The scenario's own time: a scenario slow only because it paid the run's first-call warm-up is not slow, and one that
+        // is not a test spans no test's time, as the summary's Slowest leaves it out.
+        && !(options.SlowerThan is { } slower && (scenario.NotATest || scenario.TimeLeftSeconds < slower));
 
     private static bool MatchesBesidesTime(ScenarioEntry scenario, QueryOptions options)
     {
-        if (options.Result is { } result && !scenario.Result.Equals(result, StringComparison.OrdinalIgnoreCase))
+        // A scenario that is not a test has no verdict for a result to match.
+        if (options.Result is { } result && (scenario.NotATest || !scenario.Result.Equals(result, StringComparison.OrdinalIgnoreCase)))
             return false;
         if (options.Failed && !scenario.Failed)
             return false;

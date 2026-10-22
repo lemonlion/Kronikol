@@ -69,7 +69,7 @@ public class NotATestMergeTests : IDisposable
         var row = labs.IndexOf("Traffic outside any test", StringComparison.Ordinal);
         Assert.True(row >= 0, "the labs page holds the fold scenario's history row");
         var label = Regex.Match(labs.Substring(row, Math.Min(300, labs.Length - row)), "aria-label=\"([^\"]*)\"");
-        Assert.Equal("stable: not a test: it collects the traffic no test could be given", label.Groups[1].Value);
+        Assert.Equal("stable: not a test: it holds traffic no test made", label.Groups[1].Value);
     }
 
     [Fact]
@@ -86,5 +86,32 @@ public class NotATestMergeTests : IDisposable
 
         Assert.True(merged.Features.SelectMany(f => f.Scenarios).Single(s => s.DisplayName == "Traffic outside any test").NotATest);
         Assert.False(merged.Features.SelectMany(f => f.Scenarios).Single(s => s.DisplayName == "Lists orders").NotATest);
+    }
+
+    [Fact]
+    public void Each_shards_own_fold_is_kept_and_is_no_overlap()
+    {
+        // Each shard folds its own unattributed traffic, so two folds are two scenarios that are not tests, and no sign that
+        // the shards ran a test twice. 5.4.0 said "1 scenario(s) ran in more than one shard ... Shards of one run should
+        // partition it." about them.
+        var start = new DateTime(2026, 10, 21, 10, 0, 0, DateTimeKind.Utc);
+        var shards = Path.Combine(_dir, "shards-two");
+        Directory.CreateDirectory(shards);
+        Feature[] ShardOf(int test, double foldSeconds)
+        {
+            var features = Shard();
+            features[0].Scenarios[0].Duration = TimeSpan.FromSeconds(foldSeconds);
+            features[1].Scenarios = [features[1].Scenarios[test]];
+            return features;
+        }
+        foreach (var (name, features) in new[] { ("browser.json", ShardOf(0, 1)), ("device.json", ShardOf(1, 2)) })
+            File.WriteAllText(Path.Combine(shards, name), ReportGenerator.GenerateMergeableReportJson(features, start, start.AddSeconds(9),
+                diagramLookup: null, componentRelationships: null, internalFlowSegmentData: null, wholeTestFlow: null,
+                WholeTestFlowVisualization.None, ciMetadata: null));
+
+        var merged = MergeableReportRenderer.MergeFiles(Directory.GetFiles(shards));
+
+        Assert.Equal(2, merged.Features.SelectMany(f => f.Scenarios).Count(s => s.NotATest));
+        Assert.DoesNotContain(merged.Diagnostics, d => d.Message.Contains("ran in more than one shard", StringComparison.Ordinal));
     }
 }

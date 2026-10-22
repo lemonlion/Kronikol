@@ -211,6 +211,10 @@ public static class MergeableReportMerger
                     survivors++;
                     survivorIds.Add(scenario.Id);
 
+                    // A scenario that is not a test is each shard's own (an ingest folds the traffic it could not attribute),
+                    // so two of them are no test that ran twice.
+                    if (scenario.NotATest)
+                        continue;
                     var what = WhatItIs(report.Suite, feature, scenario);
                     if (!shardsThatRan.TryGetValue(what, out var shards))
                         shardsThatRan[what] = shards = [];

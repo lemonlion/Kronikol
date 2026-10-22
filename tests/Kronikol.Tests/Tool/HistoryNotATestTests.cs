@@ -70,6 +70,39 @@ public class HistoryNotATestTests : IDisposable
         Assert.Equal("FPN", run.Results);
     }
 
+    [Fact]
+    public void Import_and_show_count_the_tests_and_name_what_is_not_one()
+    {
+        // 5.3.0 read "3 scenarios" and "3 scenarios: 1 passed, 1 failed, 1 other" for two tests and the fold.
+        var (imported, importError, importExit) = Run("import", WriteReport("labels"), "--history", Ledger);
+        var (shown, showError, showExit) = Run("show", "--history", Ledger);
+
+        Assert.True(importExit == 0, importError);
+        Assert.Contains("imported   gh:500:1  Suite  2 scenarios, 1 not a test  ", imported);
+        Assert.True(showExit == 0, showError);
+        Assert.Contains(" · 2 scenarios: 1 passed, 1 failed, 1 not a test", shown);
+    }
+
+    [Fact]
+    public void A_run_without_the_fold_the_runs_before_it_held_is_imported_as_full()
+    {
+        // The fold comes and goes with the traffic. Counted as a missing scenario, it made this run of the same two tests
+        // partial (1 of 3 over 0.10): nothing absent was reported, and its times were no baseline.
+        Seed(2);
+        var directory = WriteReport("nofold", pay: "Passed");
+        var path = Path.Combine(directory, "TestRunReport.json");
+        var json = System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(path))!;
+        json["features"]!.AsArray().RemoveAt(1);
+        File.WriteAllText(path, json.ToJsonString());
+
+        var (_, error, exit) = Run("import", directory, "--history", Ledger);
+
+        Assert.True(exit == 0, error);
+        var run = HistoryLedgerReader.Read(Ledger, 50).Ledger!.Runs("Suite").Last();
+        Assert.Equal("PP", run.Results);
+        Assert.False(run.Partial);
+    }
+
     /// <summary>Earlier runs of the same three scenarios, every test passing and the fold not a test.</summary>
     private void Seed(int runs)
     {

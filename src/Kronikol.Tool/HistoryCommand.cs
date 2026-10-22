@@ -350,7 +350,7 @@ internal static partial class HistoryCommand
             }
 
             var result = HistoryLedgerWriter.Append(ledger, roster, line, Commands.Version, shapes: shapes);
-            var label = $"{run.Id}  {run.Suite ?? "(no suite)"}  {roster.Count} scenarios"
+            var label = $"{run.Id}  {run.Suite ?? "(no suite)"}  {Scenarios(line)}"
                         + (run.Shards > 1 ? $" from {run.Shards} shards" : "")
                         + (attemptCounts.GetValueOrDefault((run.Suite, run.Id)) is var tries and > 1 ? $", {tries} attempts" : "")
                         + (line.Partial == true ? "  partial" : "");
@@ -493,9 +493,10 @@ internal static partial class HistoryCommand
         if (read.Ledger is not { } held)
             return null;
         var runs = held.Runs(suite);
+        // Its tests: a scenario it recorded as not a test is none this run can be missing (HistoryAnalyzer.TestsOf).
         for (var i = runs.Count - 1; i >= 0; i--)
             if (runs[i].Partial != true && held.Roster(runs[i].RosterHash) is { } roster)
-                return roster;
+                return HistoryAnalyzer.TestsOf(roster, runs[i]);
         return null;
     }
 
@@ -622,9 +623,22 @@ internal static partial class HistoryCommand
     {
         var passed = run.Results.Count(c => c == HistoryFormat.Passed);
         var failed = run.Results.Count(c => c == HistoryFormat.Failed);
-        var other = run.Results.Length - passed - failed;
-        return $"{run.Results.Length.ToString(CultureInfo.InvariantCulture)} scenarios: {passed.ToString(CultureInfo.InvariantCulture)} passed, {failed.ToString(CultureInfo.InvariantCulture)} failed"
-               + (other > 0 ? $", {other.ToString(CultureInfo.InvariantCulture)} other" : "");
+        var notATest = run.Results.Count(c => c == HistoryFormat.NotATest);
+        var other = run.Results.Length - passed - failed - notATest;
+        return $"{(run.Results.Length - notATest).ToString(CultureInfo.InvariantCulture)} scenarios: {passed.ToString(CultureInfo.InvariantCulture)} passed, {failed.ToString(CultureInfo.InvariantCulture)} failed"
+               + (other > 0 ? $", {other.ToString(CultureInfo.InvariantCulture)} other" : "")
+               + (notATest > 0 ? $", {notATest.ToString(CultureInfo.InvariantCulture)} not a test" : "");
+    }
+
+    /// <summary>
+    /// A run's scenarios as a label counts them: its tests, and then what was not a test (an ingest's fold, a stack's
+    /// start-up), which no count of the run's tests holds.
+    /// </summary>
+    internal static string Scenarios(HistoryRun run)
+    {
+        var notATest = run.Results.Count(c => c == HistoryFormat.NotATest);
+        return $"{(run.Results.Length - notATest).ToString(CultureInfo.InvariantCulture)} scenarios"
+               + (notATest > 0 ? $", {notATest.ToString(CultureInfo.InvariantCulture)} not a test" : "");
     }
 
     // ─── verify ────────────────────────────────────────────────

@@ -51,7 +51,8 @@
         function used(connection) {
             return (connection.scenarios || []).some(function (i) { return (byId[stableIds[i]] || []).some(showing); });
         }
-        // the scenarios the filters show, and all of them, in runs, as the filter readout counts them
+        // the scenarios the filters show, and all of them, in runs; unlike the filter readout, one that is not a test (an
+        // ingest's fold) counts, since the diagram draws its calls
         function counts() {
             var shown = 0, total = 0, features = document.getElementsByClassName('feature');
             for (var f = 0; f < features.length; f++) {

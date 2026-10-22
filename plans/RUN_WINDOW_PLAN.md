@@ -2,7 +2,8 @@
 
 **Date:** 2026-10-21 · **Repo version:** 5.2.3 (`main` at `9d89b793`; line numbers are for that commit, and no file under
 `src/Kronikol/Ingestion/` changed since `4a0dad9e`, the 5.2.2 the issue cites, so the issue's line references hold) ·
-**Status:** 📝 **Draft, not green-lit.** Written in a worktree of its own (`Kronikol-187`, branch `plan/187-run-windows`)
+**Status:** ✅ **Executed**: the owner green-lit it on 2026-10-21 ("implement the plan in full", every recommendation of
+section 11 taken); R1 shipped as 5.2.6, R2 as 5.3.0, and an audit's fixes as 5.4.2 (see the Log). Written in a worktree of its own (`Kronikol-187`, branch `plan/187-run-windows`)
 while other sessions worked in theirs. Nothing outside `plans/` changes.
 
 Evidence labels: **RUN** (measured on 2026-10-21 against Kronikol 5.2.3 from nuget.org, or against the prototype of
@@ -564,7 +565,8 @@ straight away.
 ## 7. Where it sits in the roadmap
 
 Not placed. Placing it edits `ROADMAP.md`, which other sessions edit too, so it is placed when it is green-lit, beside
-the ingest rows of stage 1 (#179's plan is in the same state).
+the ingest rows of stage 1 (#179's plan is in the same state). **Placed as row 1.31 by the audit (5.4.2)**: the green light
+of 2026-10-21 should have placed it, and neither release did.
 
 ## 8. Found on the way, not in this plan
 
@@ -720,3 +722,45 @@ applied. Run each from a folder outside the repository, so that the repository's
     (`DocCommentPlacementTests`), and the Playwright class's ingest, which cleared the process-wide store and left
     records behind whose "Orders Api" another class's component diagram drew for its "OrdersApi". The class now runs in
     the Diagrams collection under the suite's pipeline lock, without clearing the store, with names and ids of its own.
+- 2026-10-22, **audited** at the owner's ask ("make sure that no bugs were introduced in this session, and fix any you
+  find", and "make sure that nothing was missed from the plan"), and **released as 5.4.2**. Three read-only reviews: the
+  plan's test list fact by fact, its design, documentation and questions against the code and the wiki, and every reader
+  of `notATest`. Each finding was read again in the code before it was fixed, and each fix has a fact, written first or
+  proved by mutation.
+  - **Missed from the plan:** Appendix A's `RunRotation.cs:512-537` was never edited, so a kept run's `Run.json` rebuilt
+    from its history fragment counted the fold; §7's roadmap row, due at the green light (now row 1.31); §10's "a clash
+    with a test id is documented, not checked" was not documented, and the clash hid a failure, so it is checked now
+    (a setup window or a fold whose id is a test's is not applied, the fold's case there since 3.23.0); §6's doc of the
+    open end that another run closes (`RunEndedAt`, `DropOutsideRunWindow`); this plan's status line and
+    `PLANS_STATUS.md`'s count of F17 to F23.
+  - **Readers §3.10 did not list, which counted a scenario that is not a test:** the history's partial check (a run
+    without the fold or the start-up the run before held was partial, and so was every run after it), its run points
+    and run speeds, `history show`, `record` and `import`, `query history`'s partial line, `query diff`, `query
+    scenarios --result` and `--slower-than` and its footer, `query repro`, `ExpectedTestCount`, `kronikol merge`'s
+    overlap count, the filter readout (a filter that hid only the start-up read "All"), and the fallback `query.py`'s
+    feature line. The history's evidence for it now fits the start-up too.
+  - **Weak facts strengthened:** 2 (a report order the sorts must change, and all three time sorts), 6 (YAML writes the
+    key on such a scenario only), 16 (the window is applied), 23 (a malformed end), 25 (a later call of the shape, so the
+    test's half can fail), 29 (an assertion note and a Phase boundary as well as a step bar). Claims given facts: the
+    run diff's header, one run declared twice, each "not applied" wording, the lines that say zero, `Run.json`'s failed
+    count and the CI summary's failed list.
+  - **Corrected in place:** the 5.3.0 changelog's "figures as before" (the entry also says how many name a test) and
+    "`kronikol ingest` refuses each" (its flags cannot give two of them); the wiki's `!` line, which a query answer cuts
+    at 160 characters.
+  - **Left as they are:** the component diagram's "calls across N tests" counts the fold's id, since it is drawn from the
+    calls (Q16 kept the component diagram as it is); the Features tab's badge counts the cards it lists; the fold's
+    calls widen the run's start and end when no run window applies; `kronikol merge` takes two shards' folds of the
+    same result, duration to the tick and message for one copied shard; a feature of the tests file named as the
+    start-up is (the synthesizer groups features by name) holds the start-up too, and is drawn first with it.
+  - Proofs: the facts for the defects found by reading were written first and failed on the unchanged code at what they
+    name: the setup window's test-id fact (16 start-up records kept in the test), the three history analyzer facts (the
+    run partial, 4 counted for 3 tests, no slower verdict), the fragment's count (3 for 2) and the expected test count
+    (the specifications written). Every fix is also proved by mutation: 30 of 30 mutations of the fixed code are killed,
+    each by the fact that names it: the setup window's and the fold's test-id checks, the fold not applied in the order,
+    the not-a-test loop and DropUnattributed, the history's tests of a roster, its partial check, the last full run's
+    count, a run point's tests and time, the run speeds, the tool's last full roster and both labels, query history's
+    count, the run diff's grouping and JSON counts, the result and time filters, the scenarios and repro footers, the
+    warm-up note, repro's scope, Run.json's rebuild, ExpectedTestCount, the merge's overlap count and the fallback
+    script's feature line, and on the page the filter readout (2 Playwright facts red), the status filter and a feature
+    of no test's empty time cells (the sort theory red in all three sorts). Two survived the first run, the fold not
+    applied in DropUnattributed and the warm-up note, and were killed once facts were added for them.

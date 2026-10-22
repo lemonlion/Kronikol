@@ -13,9 +13,9 @@ public class NotATestPaintTests : PlaywrightTestBase
 {
     public NotATestPaintTests(PlaywrightFixture fixture) : base(fixture) { }
 
-    private string Generate(string fileName)
+    private string Generate(string fileName, Feature[]? only = null)
     {
-        var features = new[]
+        var features = only ?? new[]
         {
             new Feature
             {
@@ -48,9 +48,9 @@ public class NotATestPaintTests : PlaywrightTestBase
         return new Uri(path).AbsoluteUri;
     }
 
-    private async Task OpenAsync(string fileName)
+    private async Task OpenAsync(string fileName, Feature[]? only = null)
     {
-        await Page.GotoAsync(Generate(fileName));
+        await Page.GotoAsync(Generate(fileName, only));
         await Page.Locator("details.feature").First.WaitForAsync();
     }
 
@@ -109,18 +109,118 @@ public class NotATestPaintTests : PlaywrightTestBase
         Assert.Equal("All 3 scenarios, 2 features", await ReadoutAsync());
     }
 
-    [Fact]
-    public async Task A_sort_by_time_puts_a_feature_of_no_test_last()
+    private static Feature StartUp() => new()
     {
-        await OpenAsync("NotATest_Sort.html");
+        DisplayName = "Stack start-up",
+        Scenarios = [new Scenario { Id = "nat-start-up", DisplayName = "Stack start-up", Result = ExecutionResult.Passed, NotATest = true, Duration = TimeSpan.FromSeconds(25) }]
+    };
 
-        await Page.Locator("#features-sort").SelectOptionAsync("duration");
+    [Fact]
+    public async Task A_filter_that_hides_only_a_scenario_that_is_not_a_test_still_reads_as_filtered()
+    {
+        // Every test shows and the start-up does not: the readout said "All", as if no filter were on.
+        await OpenAsync("NotATest_HiddenAlone.html",
+        [
+            new Feature
+            {
+                DisplayName = "Orders",
+                Scenarios =
+                [
+                    new Scenario { Id = "nat-create", DisplayName = "Create order", Result = ExecutionResult.Passed, Duration = TimeSpan.FromSeconds(2) },
+                    new Scenario { Id = "nat-reject", DisplayName = "Reject order", Result = ExecutionResult.Passed, Duration = TimeSpan.FromSeconds(1) },
+                ]
+            },
+            StartUp(),
+        ]);
+        Assert.Equal("All 2 scenarios, 1 feature", await ReadoutAsync());
 
-        var rows = await Page.EvaluateAsync<string[]>("() => Array.from(document.querySelectorAll('#features-table-view tbody tr')).map(r => r.cells[0].textContent.trim())");
-        Assert.Equal(["Orders", "Ingested", "Stack start-up"], rows);
-        await Page.Locator("#features-sort").SelectOptionAsync("longest");
-        rows = await Page.EvaluateAsync<string[]>("() => Array.from(document.querySelectorAll('#features-table-view tbody tr')).map(r => r.cells[0].textContent.trim())");
-        Assert.Equal(["Orders", "Ingested", "Stack start-up"], rows);
+        await FillSearchBar("order");
+        await Page.WaitForFunctionAsync("() => document.querySelector('.filter-readout').classList.contains('is-filtered')", null, new() { PollingInterval = 200 });
+        Assert.Equal(["Create order", "Reject order"], await ShownScenariosAsync());
+        Assert.Equal("Filtered 2 of 2 scenarios, 1 of 1 feature", await ReadoutAsync());
+    }
+
+    [Fact]
+    public async Task The_status_filters_read_it_as_passed()
+    {
+        // Its status stays Passed (plans/RUN_WINDOW_PLAN.md Q9): the Failed filter hides it, the Passed filter shows it.
+        await OpenAsync("NotATest_Status.html",
+        [
+            new Feature
+            {
+                DisplayName = "Orders",
+                Scenarios =
+                [
+                    new Scenario { Id = "nat-create", DisplayName = "Create order", Result = ExecutionResult.Passed, Duration = TimeSpan.FromSeconds(2) },
+                    new Scenario { Id = "nat-reject", DisplayName = "Reject order", Result = ExecutionResult.Failed, ErrorMessage = "boom", Duration = TimeSpan.FromSeconds(1) },
+                ]
+            },
+            StartUp(),
+        ]);
+        var failed = Page.Locator(".status-toggle[data-status='Failed']").First;
+        var passed = Page.Locator(".status-toggle[data-status='Passed']").First;
+        await Page.Locator(".more-filters").ClickAsync();
+        await Expect(failed).ToBeVisibleAsync();
+
+        await failed.ClickAsync();
+        await Page.WaitForFunctionAsync("() => document.querySelector('.filter-readout').classList.contains('is-filtered')", null, new() { PollingInterval = 200 });
+        Assert.Equal(["Reject order"], await ShownScenariosAsync());
+
+        await failed.ClickAsync();
+        await passed.ClickAsync();
+        await Page.WaitForFunctionAsync("() => Array.from(document.querySelectorAll('details.scenario')).filter(s => s.style.display === 'none').length === 1",
+            null, new() { PollingInterval = 200 });
+        Assert.Equal(["Create order", "Stack start-up"], await ShownScenariosAsync());
+    }
+
+    [Fact]
+    public async Task A_page_of_no_test_says_when_nothing_matches()
+    {
+        await OpenAsync("NotATest_NoTest.html", [StartUp()]);
+
+        await FillSearchBar("no scenario has this");
+        await Page.WaitForFunctionAsync("() => Array.from(document.querySelectorAll('details.scenario')).every(s => s.style.display === 'none')", null, new() { PollingInterval = 200 });
+        await Expect(Page.Locator(".filters-empty")).ToBeVisibleAsync();
+    }
+
+    [Theory]
+    [InlineData("duration")]
+    [InlineData("average")]
+    [InlineData("longest")]
+    public async Task A_sort_by_time_puts_a_feature_of_no_test_last(string sort)
+    {
+        // The start-up is first in the report and the longest by far: each time sort must move it to the end, and order
+        // the features of tests by their tests' times (until this fact took its own order, the report's was the sorted one).
+        await OpenAsync("NotATest_Sort_" + sort + ".html",
+        [
+            StartUp(),
+            new Feature
+            {
+                DisplayName = "Fast",
+                Scenarios =
+                [
+                    new Scenario { Id = "nat-fast-1", DisplayName = "Fast one", Result = ExecutionResult.Passed, Duration = TimeSpan.FromSeconds(1) },
+                    new Scenario { Id = "nat-fast-2", DisplayName = "Fast two", Result = ExecutionResult.Passed, Duration = TimeSpan.FromSeconds(1) },
+                ]
+            },
+            new Feature
+            {
+                DisplayName = "Slow",
+                Scenarios =
+                [
+                    new Scenario { Id = "nat-slow-1", DisplayName = "Slow one", Result = ExecutionResult.Passed, Duration = TimeSpan.FromSeconds(3) },
+                    new Scenario { Id = "nat-slow-2", DisplayName = "Slow two", Result = ExecutionResult.Passed, Duration = TimeSpan.FromSeconds(1) },
+                ]
+            },
+        ]);
+        const string Rows = "() => Array.from(document.querySelectorAll('#features-table-view tbody tr')).map(r => r.cells[0].textContent.trim())";
+        Assert.Equal(["Stack start-up", "Fast", "Slow"], await Page.EvaluateAsync<string[]>(Rows));
+
+        await Page.Locator("#features-sort").SelectOptionAsync(sort);
+        await Page.WaitForFunctionAsync("() => document.querySelector('#features-table-view tbody tr').cells[0].textContent.trim() === 'Slow'",
+            null, new() { PollingInterval = 200 });
+
+        Assert.Equal(["Slow", "Fast", "Stack start-up"], await Page.EvaluateAsync<string[]>(Rows));
     }
 
     [Fact]

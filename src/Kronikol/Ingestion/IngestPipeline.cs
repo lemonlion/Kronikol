@@ -86,6 +86,8 @@ public sealed class IngestRequest
     /// null to render each unknown test id as its own scenario.
     /// <para>The scenario is not a test (<see cref="Scenario.NotATest"/>): it is drawn like any scenario, and the report's
     /// counts and times, the CI summary, <c>Failures.md</c>, the CTRF report and the specifications leave it out.</para>
+    /// <para>A fold whose <see cref="UnknownTestFold.ScenarioId"/> is a test's in the tests records is not applied, and a
+    /// diagnostic says so: the traffic would join that test, and the test would be taken for the fold.</para>
     /// </summary>
     public UnknownTestFold? FoldUnknownTestsInto { get; init; }
 
@@ -179,7 +181,8 @@ public sealed class IngestRequest
     /// <see cref="TestRunRecord.Events.TestRun"/> — therefore keeps the runner's own set-up traffic, such as
     /// a global login, inside the run), end = the latest <c>testrun</c> marker that is not
     /// <see cref="TestRunRecord.RunStartedStatus"/>, or open when there is none (a run that died never
-    /// wrote one, and its late traffic must not vanish). With no tests records and no explicit start nothing
+    /// wrote one, and its late traffic must not vanish), unless <see cref="OtherRunWindows"/> closes it where the next run
+    /// begins. With no tests records and no explicit start nothing
     /// is dropped, and a diagnostic says so; so it is with a window that ends before it starts (explicit bounds the
     /// wrong way round, or a <see cref="RunStartedAt"/> after the end the tests records give). A window of one instant is
     /// a window: both bounds are inclusive.</para>
@@ -191,7 +194,7 @@ public sealed class IngestRequest
     /// <summary>Explicit start of the run window (UTC); implies <see cref="DropOutsideRunWindow"/>. Default null — derived from the tests records.</summary>
     public DateTimeOffset? RunStartedAt { get; init; }
 
-    /// <summary>Explicit end of the run window (UTC); implies <see cref="DropOutsideRunWindow"/>. Default null — derived from a <c>testrun</c> end marker, else open.</summary>
+    /// <summary>Explicit end of the run window (UTC); implies <see cref="DropOutsideRunWindow"/>. Default null — derived from a <c>testrun</c> end marker, else closed where the next of <see cref="OtherRunWindows"/> begins, else open.</summary>
     public DateTimeOffset? RunEndedAt { get; init; }
 
     /// <summary>
@@ -211,8 +214,10 @@ public sealed class IngestRequest
     /// with <see cref="ReportConfigurationOptions.SeparateSetup"/> its diagram is drawn inside the Setup partition.</para>
     /// <para>Take the window from the clock the capturers use, and end it where the start-up ends: whatever falls in it
     /// that no run claims is kept in the scenario, another run's late calls among them unless that run is declared as
-    /// running up to its last call. A window that ends before it starts, or whose id is the fold's, is not applied, and a
-    /// diagnostic says so. <see cref="IngestResult.SetupRecords"/> counts what it kept.</para>
+    /// running up to its last call. Write the <c>testrun</c> start marker when the runner starts, not before the stack
+    /// starts: a run window that begins before the start-up leaves this window nothing to take. A window that ends before it starts, or has a blank name or id, or whose id is the fold's
+    /// or a test's in the tests records (whose scenario it would join), is not applied, and a diagnostic says so.
+    /// <see cref="IngestResult.SetupRecords"/> counts what it kept.</para>
     /// </remarks>
     public SetupWindow? SetupWindow { get; init; }
 
@@ -228,7 +233,7 @@ public sealed class IngestRequest
     /// exclusively: a call that began at that instant is the other run's (<see cref="IngestPipeline.ResolveRunWindow"/>
     /// returns the last instant before it). A window that ends before it starts, or has a blank name, is not applied, and a
     /// diagnostic says so. <see cref="IngestResult.OtherRunRecords"/> counts what each was left; the same name given
-    /// twice is one run.</para>
+    /// twice is one run. Take the windows from the clock the capturers use: a skew moves calls across a bound.</para>
     /// </remarks>
     public IReadOnlyList<OtherRunWindow> OtherRunWindows { get; init; } = [];
 
@@ -563,8 +568,9 @@ public static class IngestPipeline
                 + "Write attempt on start records to say which run each is.");
         var current = attempts.Current(testRecords);
 
-        records = DropOutsideRunWindow(records, testRecords, request, diagnostics, out var setup, out var setupRecords, out var otherRunRecords);
-        records = Attribute(records, testRecords, current, request, setup?.ScenarioId, diagnostics, out var windowAttributedRecords, out var phasedRecords);
+        var fold = AppliedFold(request, testRecords, diagnostics);
+        records = DropOutsideRunWindow(records, testRecords, request, fold, diagnostics, out var setup, out var setupRecords, out var otherRunRecords);
+        records = Attribute(records, testRecords, current, request, fold, setup?.ScenarioId, diagnostics, out var windowAttributedRecords, out var phasedRecords);
         records = DropEarlierAttempts(records, attempts, ref earlierAttemptRecords);
         if (earlierAttemptRecords > 0)
             diagnostics.Add(DiagnosticKind.Other,
@@ -585,7 +591,7 @@ public static class IngestPipeline
         if (request.ClearExistingLogs)
             RequestResponseLogger.Clear();
 
-        var ordered = Order(records, current, request, setup?.ScenarioId);
+        var ordered = Order(records, current, request, fold, setup?.ScenarioId);
         var logs = Replay(ordered, current);
 
         var setupKept = setupRecords > 0 ? setup : null;
@@ -619,7 +625,7 @@ public static class IngestPipeline
         var defaultedResultCount = synthesised.DefaultedResultCount;
         if (setupKept is not null)
             synthesised = SetupFirst(synthesised, setupKept, ref defaultedResultCount);
-        if (request.FoldUnknownTestsInto is { } foldedInto)
+        if (fold is { } foldedInto)
         {
             // The fold scenario is not a test: nothing ran and nothing ended, so ResultWhenUnknown (meant
             // for tests that started but never reported an end) must not mark it failed.
@@ -875,10 +881,31 @@ public static class IngestPipeline
     private static bool Applies(OtherRunWindow run) => !string.IsNullOrWhiteSpace(run.Name) && (run.End is not { } end || end >= run.Start);
 
     /// <summary>
-    /// <see cref="IngestRequest.SetupWindow"/> when it can be applied; otherwise null, and an <see cref="DiagnosticKind.Other"/>
-    /// entry says why: a blank name or id, an end before its start, or the fold's id, whose scenario it would join.
+    /// <see cref="IngestRequest.FoldUnknownTestsInto"/> when it can be applied; null, and an <see cref="DiagnosticKind.Other"/>
+    /// entry, when its id is a test's in the tests records: the traffic it folds would join that test, and the test would
+    /// then be made the fold, passed and not a test, its failure gone from every count. Not applied, each unknown test id is
+    /// drawn as a scenario of its own, as with no fold.
     /// </summary>
-    private static SetupWindow? AppliedSetupWindow(IngestRequest request, ReportDiagnosticsCollector diagnostics)
+    private static UnknownTestFold? AppliedFold(IngestRequest request, IReadOnlyList<TestRunRecord> testRecords, ReportDiagnosticsCollector diagnostics)
+    {
+        if (request.FoldUnknownTestsInto is not { } fold)
+            return null;
+        if (testRecords.Any(t => !t.IsRunMarker && string.Equals(t.TestId, fold.ScenarioId, StringComparison.Ordinal)))
+        {
+            diagnostics.Add(DiagnosticKind.Other,
+                $"FoldUnknownTestsInto: its scenario id \"{fold.ScenarioId}\" is a test's in the tests records; it was not applied.");
+            return null;
+        }
+        return fold;
+    }
+
+    /// <summary>
+    /// <see cref="IngestRequest.SetupWindow"/> when it can be applied; otherwise null, and an <see cref="DiagnosticKind.Other"/>
+    /// entry says why: a blank name or id, an end before its start, the fold's id, whose scenario it would join, or a test's
+    /// id, whose scenario it would join and then make the start-up, passed and not a test.
+    /// </summary>
+    private static SetupWindow? AppliedSetupWindow(IngestRequest request, UnknownTestFold? fold, IReadOnlyList<TestRunRecord> testRecords,
+        ReportDiagnosticsCollector diagnostics)
     {
         if (request.SetupWindow is not { } setup)
             return null;
@@ -893,10 +920,16 @@ public static class IngestPipeline
                 $"SetupWindow: the setup window ends before it starts ({setup.Start:o} → {setup.End:o}); it was not applied.");
             return null;
         }
-        if (request.FoldUnknownTestsInto is { } fold && fold.ScenarioId == setup.ScenarioId)
+        if (fold is not null && fold.ScenarioId == setup.ScenarioId)
         {
             diagnostics.Add(DiagnosticKind.Other,
                 $"SetupWindow: its scenario id \"{setup.ScenarioId}\" is the fold's (FoldUnknownTestsInto); it was not applied.");
+            return null;
+        }
+        if (testRecords.Any(t => !t.IsRunMarker && string.Equals(t.TestId, setup.ScenarioId, StringComparison.Ordinal)))
+        {
+            diagnostics.Add(DiagnosticKind.Other,
+                $"SetupWindow: its scenario id \"{setup.ScenarioId}\" is a test's in the tests records; it was not applied.");
             return null;
         }
         return setup;
@@ -946,8 +979,8 @@ public static class IngestPipeline
     /// in-run request stays. The entry counts what no window explains; <paramref name="setup"/> is the setup window applied.
     /// </summary>
     private static List<InteractionRecord> DropOutsideRunWindow(
-        List<InteractionRecord> records, List<TestRunRecord> testRecords, IngestRequest request, ReportDiagnosticsCollector diagnostics,
-        out SetupWindow? setup, out int setupRecords, out IReadOnlyDictionary<string, int> otherRunRecords)
+        List<InteractionRecord> records, List<TestRunRecord> testRecords, IngestRequest request, UnknownTestFold? fold,
+        ReportDiagnosticsCollector diagnostics, out SetupWindow? setup, out int setupRecords, out IReadOnlyDictionary<string, int> otherRunRecords)
     {
         setup = null;
         setupRecords = 0;
@@ -957,7 +990,7 @@ public static class IngestPipeline
             && request.SetupWindow is null && declaredRuns.Count == 0)
             return records;
 
-        var setupWindow = AppliedSetupWindow(request, diagnostics);
+        var setupWindow = AppliedSetupWindow(request, fold, testRecords, diagnostics);
         var others = AppliedOtherRuns(declaredRuns, diagnostics);
         var notApplied = NotApplied(setupWindow, others);
 
@@ -1060,7 +1093,8 @@ public static class IngestPipeline
     /// </remarks>
     private static List<InteractionRecord> Attribute(
         List<InteractionRecord> records, List<TestRunRecord> testRecords, List<TestRunRecord> currentAttempts,
-        IngestRequest request, string? setupScenarioId, ReportDiagnosticsCollector diagnostics, out int windowAttributedRecords, out int phasedRecords)
+        IngestRequest request, UnknownTestFold? fold, string? setupScenarioId, ReportDiagnosticsCollector diagnostics, out int windowAttributedRecords,
+        out int phasedRecords)
     {
         // What a pass did is the run working as asked, never a diagnostic: the list is "what went wrong", every kronikol
         // query answer carries it, and UnattributedInteractions means "could not be attributed" (#130). The counts
@@ -1107,7 +1141,7 @@ public static class IngestPipeline
         if (request.MergeDuplicateInteractions)
             records = InteractionMerger.Merge(ByTimestamp(records), request.MergeOverlapThreshold, request.WindowAttributionFallbackId);
 
-        records = DropUnattributed(records, testRecords, request, setupScenarioId, diagnostics);
+        records = DropUnattributed(records, testRecords, request, fold, setupScenarioId, diagnostics);
 
         var stillUnattributed = records.Count(r => IngestAttribution.NeedsAttribution(r, request.WindowAttributionFallbackId));
         if (stillUnattributed > 0)
@@ -1187,13 +1221,13 @@ public static class IngestPipeline
     /// still unattributed, and dropping a request takes its paired response with it.
     /// </summary>
     private static List<InteractionRecord> DropUnattributed(
-        List<InteractionRecord> records, List<TestRunRecord> testRecords, IngestRequest request, string? setupScenarioId,
+        List<InteractionRecord> records, List<TestRunRecord> testRecords, IngestRequest request, UnknownTestFold? fold, string? setupScenarioId,
         ReportDiagnosticsCollector diagnostics)
     {
         if (request.DropUnattributed is not { } predicate)
             return records;
 
-        var knownTestIds = request.FoldUnknownTestsInto is null
+        var knownTestIds = fold is null
             ? null
             : new HashSet<string>(
                 testRecords.Where(t => !string.IsNullOrWhiteSpace(t.TestId)).Select(t => t.TestId),
@@ -1202,7 +1236,7 @@ public static class IngestPipeline
         bool IsUnattributed(InteractionRecord record) =>
             IngestAttribution.NeedsAttribution(record, request.WindowAttributionFallbackId)
             || (knownTestIds is not null && !knownTestIds.Contains(record.TestId)
-                && record.TestId != request.FoldUnknownTestsInto!.ScenarioId
+                && record.TestId != fold!.ScenarioId
                 // the stack's start-up is no unknown test: the host kept it (IngestRequest.SetupWindow)
                 && record.TestId != setupScenarioId);
 
@@ -1401,11 +1435,11 @@ public static class IngestPipeline
 
     /// <summary>Sorts by timestamp, folds unknown tests, then (optionally) rewrites the order as a call tree.</summary>
     private static List<InteractionRecord> Order(List<InteractionRecord> records, List<TestRunRecord> testRecords, IngestRequest request,
-        string? setupScenarioId)
+        UnknownTestFold? fold, string? setupScenarioId)
     {
         var ordered = ByTimestamp(records);
 
-        if (request.FoldUnknownTestsInto is { } fold)
+        if (fold is not null)
         {
             var known = new HashSet<string>(
                 testRecords.Where(t => !string.IsNullOrWhiteSpace(t.TestId)).Select(t => t.TestId!),

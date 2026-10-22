@@ -476,7 +476,7 @@ internal static partial class HistoryCommand
         {
             var line = run.Partial is null ? run with { Partial = HistoryAnalyzer.IsPartial(roster, LastFullRoster(ledgerPath, run.Suite), 0.10) } : run;
             var result = HistoryLedgerWriter.Append(ledgerPath, roster, line, Commands.Version, shapes: shapes);
-            var label = $"{run.Id}  {run.Suite ?? "(no suite)"}  {roster.Count} scenarios  {run.At.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture)}";
+            var label = $"{run.Id}  {run.Suite ?? "(no suite)"}  {Scenarios(line)}  {run.At.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture)}";
             switch (result.Outcome)
             {
                 case HistoryAppendOutcome.Appended: imported++; @out.WriteLine($"imported   {label}"); break;

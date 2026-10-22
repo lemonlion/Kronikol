@@ -171,6 +171,25 @@ public class QueryHistoryHintsTests : IDisposable
     }
 
     [Fact]
+    public void The_partial_line_counts_the_tests_on_both_sides()
+    {
+        // A scenario that is not a test (N in the ledger, notATest in the report) is in neither count: 5.4.0 read "3
+        // scenarios, the last full run had 13" for two tests and a fold against twelve tests and a fold.
+        int[] withFold = [.. Full, 99];
+        Record(1, withFold, Green(12) + "N");
+        Record(2, withFold, Green(12) + "N");
+        var report = WriteReport([3, 4, 99], "PPP");
+        var json = System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(report))!;
+        json["features"]![0]!["scenarios"]![2]!["notATest"] = true;
+        File.WriteAllText(report, json.ToJsonString());
+
+        var (output, error, exit) = Query("history", report);
+
+        Assert.True(exit == 0, error);
+        Assert.True(output.Contains("this run is partial: 2 scenarios, the last full run had 12 — a filter answers for these 2 only"), output);
+    }
+
+    [Fact]
     public void A_partial_run_says_so_on_its_own_line_with_both_counts()
     {
         var report = TheIssue();

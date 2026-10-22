@@ -288,7 +288,8 @@ public static class ReportGenerator
 
         if (options.ExpectedTestCount != null)
         {
-            var scenarioCount = features.SelectMany(f => f.Scenarios).Count();
+            // the run's tests: a scenario that is not a test (an ingest's fold, a stack's start-up) is none of those expected
+            var scenarioCount = features.SelectMany(f => f.Scenarios).Count(s => !s.NotATest);
             if (scenarioCount < options.ExpectedTestCount())
             {
                 options.GenerateSpecificationsReport = false;

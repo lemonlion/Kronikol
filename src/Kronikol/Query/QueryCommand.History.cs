@@ -280,7 +280,8 @@ public static partial class QueryCommand
             return 0;
         }
 
-        var scenarioCount = verdicts.Scenarios.Count;
+        // The run's tests, as the partial check counts them: a scenario that is not a test is none a filter answers for.
+        var scenarioCount = verdicts.Scenarios.Count(s => s.Current != HistoryFormat.NotATest);
         writer.Line($"history: {HistorySummary.Line(verdicts)}");
         writer.Line($"ledger: {reading.LedgerPath} · stream {verdicts.Stream} · run {verdicts.RunId}");
         // Its own line: `· partial` at the end of the line above had the weight of the stream name, and

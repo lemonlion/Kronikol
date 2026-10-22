@@ -324,8 +324,15 @@ def cmd_summary(path, report, _args):
 
     for feature in report.get("features", []):
         rows = feature.get("scenarios", [])
-        broken = sum(1 for s in rows if s.get("result") == "Failed")
-        lines.append(f"{feature.get('name')}  {len(rows) - broken} passed" + (f", {broken} FAILED" if broken else ""))
+        feature_tests = [s for s in rows if not s.get("notATest")]
+        others = len(rows) - len(feature_tests)
+        broken = sum(1 for s in feature_tests if s.get("result") == "Failed")
+        if not feature_tests and others:
+            # a feature of no test (a stack's start-up) says only that, as the tool says it
+            lines.append(f"{feature.get('name')}  {others} not a test")
+        else:
+            lines.append(f"{feature.get('name')}  {len(feature_tests) - broken} passed" + (f", {broken} FAILED" if broken else "")
+                         + (f", {others} not a test" if others else ""))
 
     if failed:
         lines += ["", "Failed:"]

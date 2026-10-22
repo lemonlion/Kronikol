@@ -78,7 +78,7 @@ public static partial class HistoryAnalyzer
         var priorPositions = PositionsOf(priorRosters);
         var priorShapes = prior.Select(r => r.ShapesHash is { } hash ? ledger.Shapes(hash) : null).ToArray();
         var previousFull = LastFull(prior, priorRosters);
-        var partial = current.Partial ?? IsPartial(roster, previousFull.Roster, options.PartialThreshold);
+        var partial = current.Partial ?? IsPartial(roster, TestsOf(previousFull.Roster, previousFull.Run), options.PartialThreshold);
 
         // A partial run's speed is the median of whichever scenarios its filter left, so a full run is not
         // read against it: measured, the same scenarios' bars stood at 1.88x in a filtered run from the mix
@@ -154,7 +154,7 @@ public static partial class HistoryAnalyzer
                 ? $"{prior.Count.ToString(CultureInfo.InvariantCulture)} run{(prior.Count == 1 ? "" : "s")} recorded in the {stream} stream; flakiness and duration verdicts need {options.MinRuns.ToString(CultureInfo.InvariantCulture)}"
                 : null,
             Partial = partial,
-            PreviousFullCount = previousFull.Roster?.Count,
+            PreviousFullCount = TestsOf(previousFull.Roster, previousFull.Run)?.Count,
             FailingOutside = outside,
             Scenarios = scenarios,
             Absent = absent,
@@ -216,12 +216,27 @@ public static partial class HistoryAnalyzer
         return distinct > 0 && (double)missing / distinct > threshold;
     }
 
+    /// <summary>
+    /// The roster's tests in <paramref name="run"/>, the run it was recorded with: a position the run recorded as not a test
+    /// (<see cref="HistoryFormat.NotATest"/>, an ingest's fold or a stack's start-up) is no scenario a later run can be
+    /// missing, since it comes and goes with the traffic. The roster as it is when the run is unknown or recorded none.
+    /// </summary>
+    internal static HistoryRoster? TestsOf(HistoryRoster? roster, HistoryRun? run)
+    {
+        if (roster is null || run is null || !run.Results.Contains(HistoryFormat.NotATest))
+            return roster;
+        return HistoryRoster.Create(roster.Suite, roster.Entries().Where((_, i) => run.ResultAt(i) != HistoryFormat.NotATest).ToArray());
+    }
+
     private static RunPoint RunPointOf(HistoryRun run)
     {
         var passed = run.Results.Count(c => c == HistoryFormat.Passed);
         var failed = run.Results.Count(c => c == HistoryFormat.Failed);
-        long? duration = run.Durations is { } durations && durations.Any(d => d.HasValue) ? durations.Sum(d => (long)(d ?? 0)) : null;
-        return new RunPoint(run.Id, run.At, run.Commit, passed, failed, run.Results.Length, duration, run.Partial == true);
+        // The run's tests and their time: a scenario that is not a test is in neither, as the report's band counts.
+        var tests = run.Results.Count(c => c != HistoryFormat.NotATest);
+        var timed = run.Durations?.Where((d, i) => d.HasValue && run.ResultAt(i) != HistoryFormat.NotATest).ToArray() ?? [];
+        long? duration = timed.Length > 0 ? timed.Sum(d => (long)d!.Value) : null;
+        return new RunPoint(run.Id, run.At, run.Commit, passed, failed, tests, duration, run.Partial == true);
     }
 
     private static ScenarioHistory AnalyseScenario(int position, HistoryRoster roster, HistoryRun current, List<HistoryRun> prior, Dictionary<(string Id, int Slot), int>?[] priorPositions,
@@ -695,7 +710,7 @@ public static partial class HistoryAnalyzer
             Current = HistoryFormat.NotATest,
             Primary = HistoryVerdictKind.Stable,
             Verdicts = new HashSet<HistoryVerdictKind> { HistoryVerdictKind.Stable },
-            Evidence = "not a test: it collects the traffic no test could be given",
+            Evidence = "not a test: it holds traffic no test made",
             RunsSeen = 0,
             RealVerdicts = 0,
             Failures = 0,
@@ -974,7 +989,8 @@ public static partial class HistoryAnalyzer
             foreach (var run in runs)
             {
                 if (run.Durations is not { } durations) continue;
-                var sorted = durations.Where(d => d.HasValue).Select(d => d!.Value).ToArray();
+                // The tests' durations: a scenario that is not a test lasts as long as the traffic it holds.
+                var sorted = durations.Where((d, i) => d.HasValue && run.ResultAt(i) != HistoryFormat.NotATest).Select(d => d!.Value).ToArray();
                 Array.Sort(sorted);
                 _sorted[run.Id] = sorted;
             }

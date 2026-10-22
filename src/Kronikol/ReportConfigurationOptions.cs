@@ -680,7 +680,7 @@ public record ReportConfigurationOptions
     /// Optional delegate returning the total number of test scenarios expected in this assembly.
     /// When set, report generation is skipped if the actual scenario count is less than the expected
     /// count — preventing partial test runs (e.g. single-test filtering) from overwriting the
-    /// full Specifications report.
+    /// full Specifications report. A scenario that is not a test (<see cref="Reports.Scenario.NotATest"/>) is not counted.
     /// </summary>
     public Func<int>? ExpectedTestCount { get; set; }
 

@@ -220,6 +220,55 @@ public class NotATestReportTests : IDisposable
     }
 
     [Fact]
+    public void Run_json_and_the_ci_summarys_failed_list_name_the_failed_tests_only()
+    {
+        // A failed test beside a failed scenario that is not one: each output names the test and not the other.
+        var features = Features(reject: ExecutionResult.Failed);
+        features[1].Scenarios[1].Result = ExecutionResult.Failed;
+        features[1].Scenarios[1].ErrorMessage = "the seeder timed out";
+
+        var markdown = CiSummaryGenerator.GenerateMarkdown(features, [], [], Start, Start.AddSeconds(9));
+        Assert.Contains("## ❌ Failed Scenarios (1)", markdown);
+        Assert.Contains("Orders — Reject order", markdown);
+        Assert.DoesNotContain("Traffic outside any test", markdown);
+
+        var reports = Path.Combine(_dir, "RunJson");
+        var options = new ReportConfigurationOptions
+        {
+            ReportsFolderPath = reports, PlantUmlRendering = PlantUmlRendering.BrowserJs, GenerateComponentDiagram = false,
+            WriteRunSummaryToConsole = false,
+        };
+        DefaultDiagramsFetcher.Reset();
+        using (ReportDiagnosticsScope.Begin(new ReportDiagnosticsCollector()))
+            ReportGenerator.CreateStandardReportsWithDiagramsInEnvironment(features, Start, Start.AddSeconds(9), options, RunEnvironment.Unrecorded, _ => null);
+        DefaultDiagramsFetcher.Reset();
+        var manifest = RunManifest.TryRead(reports)!;
+        Assert.Equal(3, manifest.Scenarios);
+        Assert.Equal(1, manifest.Failed);
+    }
+
+    [Theory]
+    [InlineData(3, true)]
+    [InlineData(4, false)]
+    public void The_expected_test_count_counts_the_tests(int expected, bool written)
+    {
+        // Three tests and two scenarios that are not tests: a run of three of four expected tests is partial, and must not
+        // overwrite the whole suite's specifications.
+        var reports = Path.Combine(_dir, "Expected" + expected);
+        var options = new ReportConfigurationOptions
+        {
+            ReportsFolderPath = reports, PlantUmlRendering = PlantUmlRendering.BrowserJs, GenerateComponentDiagram = false,
+            WriteRunSummaryToConsole = false, ExpectedTestCount = () => expected,
+        };
+        DefaultDiagramsFetcher.Reset();
+        using (ReportDiagnosticsScope.Begin(new ReportDiagnosticsCollector()))
+            ReportGenerator.CreateStandardReportsWithDiagramsInEnvironment(Features(), Start, Start.AddSeconds(9), options, RunEnvironment.Unrecorded, _ => null);
+        DefaultDiagramsFetcher.Reset();
+
+        Assert.Equal(written, File.Exists(Path.Combine(reports, options.HtmlSpecificationsFileName + ".html")));
+    }
+
+    [Fact]
     public void The_ctrf_report_leaves_it_out_and_keeps_every_other_test_at_its_address()
     {
         using var ctrf = JsonDocument.Parse(CtrfReportGenerator.Generate(Features(), Start, Start.AddSeconds(9), null, "5.2.5"));
@@ -293,6 +342,8 @@ public class NotATestReportTests : IDisposable
         var yaml = File.ReadAllText(ReportGenerator.GenerateTestRunReportData(features, Start, Start.AddSeconds(9),
             Path.Combine(_dir, "TestRunReport.yml"), DataFormat.Yaml));
         Assert.Equal(2, Regex.Matches(yaml, "^        NotATest: true$", RegexOptions.Multiline).Count);
+        // Only there: the key is not written false on the others.
+        Assert.Equal(2, Regex.Matches(yaml, "NotATest", RegexOptions.Multiline).Count);
     }
 
     [Fact]

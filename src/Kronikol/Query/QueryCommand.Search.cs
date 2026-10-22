@@ -305,12 +305,17 @@ public static partial class QueryCommand
     private sealed record RunChange(string Kind, string Address, string StableId, string Name, string Result,
         string? ErrorMessage, double? BeforeSeconds, double? AfterSeconds, string Text);
 
-    /// <summary>Scenarios keyed by stableId, each key holding every scenario that carries it, in file order.</summary>
-    private static Dictionary<string, List<ScenarioEntry>> GroupByStableId(ReportIndex index)
+    /// <summary>
+    /// Scenarios keyed by stableId, each key holding every scenario that carries it, in file order; with
+    /// <paramref name="testsOnly"/>, the tests alone.
+    /// </summary>
+    private static Dictionary<string, List<ScenarioEntry>> GroupByStableId(ReportIndex index, bool testsOnly = false)
     {
         var groups = new Dictionary<string, List<ScenarioEntry>>(StringComparer.Ordinal);
         foreach (var scenario in index.Scenarios)
         {
+            if (testsOnly && scenario.NotATest)
+                continue;
             if (!groups.TryGetValue(scenario.StableId, out var group))
                 groups[scenario.StableId] = group = [];
             group.Add(scenario);
@@ -702,8 +707,10 @@ public static partial class QueryCommand
         // It is not unique, though: a [Theory] with repeated data, the same row in two Examples: blocks or a
         // retried scenario give several scenarios one id, so each id holds a list and the lists are matched
         // in order — a duplicate key must never take the whole diff down.
-        var before = GroupByStableId(left);
-        var after = GroupByStableId(right);
+        // The runs' tests: a scenario that is not a test comes and goes with the traffic, and lasts as long as it does, so
+        // it is no change of the run's, new, gone, fixed or slower (plans/RUN_WINDOW_PLAN.md R1).
+        var before = GroupByStableId(left, testsOnly: true);
+        var after = GroupByStableId(right, testsOnly: true);
 
         // Before a line is written: a pair that cannot be matched is refused whole, not half-answered.
         if (RefuseUnmatchable(left, right, before, after, error) is { } refusal)
@@ -866,8 +873,8 @@ public static partial class QueryCommand
         // One flat `items`, each row saying which kind of change it is - the text renders the same
         // rows under five headings, but a heading is a layout, not a field. Uncapped here on purpose:
         // the Take(15)/Take(10) above keep the terminal readable, and a script asked for everything.
-        writer.Data("left", new { report = left.Path, startTime = left.StartTime, scenarios = left.Scenarios.Count, failed = left.Scenarios.Count(s => s.Failed) });
-        writer.Data("right", new { report = right.Path, startTime = right.StartTime, scenarios = right.Scenarios.Count, failed = right.Scenarios.Count(s => s.Failed) });
+        writer.Data("left", new { report = left.Path, startTime = left.StartTime, scenarios = left.Scenarios.Count(s => !s.NotATest), failed = left.Scenarios.Count(s => s.Failed && !s.NotATest) });
+        writer.Data("right", new { report = right.Path, startTime = right.StartTime, scenarios = right.Scenarios.Count(s => !s.NotATest), failed = right.Scenarios.Count(s => s.Failed && !s.NotATest) });
         foreach (var change in broke.Concat(fixedUp).Concat(fresh).Concat(slower).Concat(goneRows))
             writer.Item(new
             {

@@ -330,6 +330,9 @@ public class RunWindowSetupTests : IDisposable
         asked.Clear();
         var without = Ingest("Plain", Capture(), BrowserTests(), dropUnattributed: Ask);
 
+        // The window is applied, so what follows holds of a run that keeps the start-up, not of one that ignored it.
+        Assert.Equal(16, with.SetupRecords);
+        Assert.Contains("stack-start-up", RequestsByScenario(with).Keys);
         // Harness P3 E: the predicate is asked about the login only.
         Assert.Equal(["http://orders-api/login"], askedWith);
         Assert.Equal(["http://orders-api/login"], asked.Distinct());
@@ -467,6 +470,22 @@ public class RunWindowSetupTests : IDisposable
         Assert.Equal(["SetupWindow: its scenario id \"outside-any-test\" is the fold's (FoldUnknownTestsInto); it was not applied."], Others(result));
     }
 
+    [Fact]
+    public void A_setup_window_with_a_tests_id_is_not_applied_and_the_test_keeps_its_verdict()
+    {
+        // Applied, the start-up's calls joined the test, and the test was then made the start-up: passed, and not a test, its
+        // failure gone from every count.
+        var tests = BrowserTests().Select(t => t.TestId == "b2" && t.Event == "end" ? t with { Status = "failed" } : t).ToArray();
+        var result = Ingest("SetupTestId", Capture(losses: false), tests, StartUp with { ScenarioId = "b2" }, [Device]);
+
+        Assert.Equal(0, result.SetupRecords);
+        Assert.Equal(["SetupWindow: its scenario id \"b2\" is a test's in the tests records; it was not applied."], Others(result));
+        var b2 = Scenarios(result).Single(s => s.GetProperty("id").GetString() == "b2");
+        Assert.Equal("Failed", b2.GetProperty("result").GetString());
+        Assert.False(b2.TryGetProperty("notATest", out _));
+        Assert.DoesNotContain(RequestsByScenario(result)["b2"], uri => uri.StartsWith("db://orders/insert", StringComparison.Ordinal));
+    }
+
     [Theory]
     [InlineData("", "")]
     [InlineData("Stack start-up", " ")]
@@ -513,6 +532,34 @@ public class RunWindowSetupTests : IDisposable
                       + "and the setup window and the other run were not applied."], Others(result));
     }
 
+    [Theory]
+    [InlineData(false, 1, ", and the other run was not applied.")]
+    [InlineData(false, 2, ", and the other runs were not applied.")]
+    [InlineData(true, 0, ", and the setup window was not applied.")]
+    [InlineData(true, 2, ", and the setup window and the other runs were not applied.")]
+    public void With_no_run_window_the_entry_names_each_window_not_applied(bool setup, int runs, string named)
+    {
+        var result = IngestPipeline.Run(new IngestRequest
+        {
+            Interactions = Capture(), Options = Options("NoWindow" + Guid.NewGuid().ToString("N")[..4]),
+            SetupWindow = setup ? StartUp : null, OtherRunWindows = new[] { Device, Browser }[..runs],
+        });
+
+        Assert.Equal(["DropOutsideRunWindow: no run window could be derived (no tests records and no explicit start); nothing was dropped"
+                      + named], Others(result));
+    }
+
+    [Fact]
+    public void The_same_name_given_twice_is_one_run()
+    {
+        // The device run declared in two parts: its calls are left to one run, counted once under its name.
+        var result = Ingest("SameName", Capture(), BrowserTests(), StartUp,
+            [Device with { End = At("10:00:14.000") }, Device with { Start = At("10:00:14.000") }]);
+
+        Assert.Equal(["device"], result.OtherRunRecords.Keys);
+        Assert.Equal(6, result.OtherRunRecords["device"]);
+    }
+
     [Fact]
     public void With_an_inverted_run_window_the_setup_window_is_not_applied_and_the_entry_says_so()
     {
@@ -535,8 +582,10 @@ public class RunWindowSetupTests : IDisposable
     public void The_start_ups_slow_first_call_of_a_shape_is_the_warm_up_and_the_tests_later_call_is_not()
     {
         var capture = Capture();
-        // The stack's own first GET /orders took 3.5 s; b1's, 13 minutes later, 0.3 s.
+        // The stack's own first GET /orders took 3.5 s; b1's, 13 minutes later, 0.3 s; b2's, later still, 20 ms. Without the
+        // start-up's call, b1's would be the run's first of its shape, and 15 times b2's: a warm-up.
         capture.AddRange(Call("09:47:26.000", "09:47:29.500", "session", "Orders Api", "compose", "GET", "http://orders-api/orders"));
+        capture.AddRange(Call("10:00:08.000", "10:00:08.020", "b2", "Orders Api", "browser", "GET", "http://orders-api/orders"));
 
         var scenarios = Scenarios(Ingest("WarmUp", capture, BrowserTests(), StartUp, [Device]));
 
@@ -563,19 +612,28 @@ public class RunWindowSetupTests : IDisposable
     }
 
     [Fact]
-    public void A_raw_step_marker_in_the_setup_window_is_not_kept_and_is_counted_as_before()
+    public void A_raw_marker_in_the_setup_window_is_not_kept_and_is_counted_as_before()
     {
+        // Each kind of marker a capture carries: a step bar, an assertion note and a Setup/Action boundary.
         var capture = Capture();
         capture.Add(InteractionRecord.StepMarker("session", "a step of nobody's", At("09:47:15.000"), keyword: "Given"));
+        capture.Add(InteractionRecord.AssertionMarker("session", "an assertion of nobody's", passed: true, At("09:47:16.000"), null));
+        capture.Add(new InteractionRecord
+        {
+            Kind = InteractionRecord.Kinds.Marker, MarkerKind = nameof(DiagramMarkerKind.Phase), Type = "Request", Uri = "http://override.com/",
+            ServiceName = "", CallerName = "", TestId = "session", Timestamp = At("09:47:17.000"),
+        });
 
         var result = Ingest("Marker", capture, BrowserTests(), StartUp, [Device], separateSetup: true);
 
         Assert.Equal(16, result.SetupRecords);
-        Assert.Equal("5 interaction record(s) outside the run window dropped that no other window explains: 1 before the run began, "
+        Assert.Equal("7 interaction record(s) outside the run window dropped that no other window explains: 3 before the run began, "
                      + "4 after it ended (2 name a test in this run's tests file). The run window: 2026-10-21T10:00:00.0000000+00:00 → "
                      + "2026-10-21T10:00:11.0000000+00:00.", Dropped(result));
         var setup = Scenarios(result).Single(s => s.GetProperty("id").GetString() == "stack-start-up");
-        Assert.DoesNotContain("a step of nobody", ReportPayloadText.Of(setup.GetProperty("diagrams")[0]));
+        var source = ReportPayloadText.Of(setup.GetProperty("diagrams")[0]);
+        Assert.DoesNotContain("a step of nobody", source);
+        Assert.DoesNotContain("an assertion of nobody", source);
     }
 
     // ------------------------------------------------------------------------------------------

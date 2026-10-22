@@ -4,6 +4,91 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.4.2] - 2026-10-22
+
+The patch part moves (5.4.1 to 5.4.2): bug fixes, with nothing new to call or configure. They come from an audit of the
+two releases of plans/RUN_WINDOW_PLAN.md (5.2.6 and 5.3.0, #187), at the owner's ask: readers that still counted a
+scenario that is not a test, two ways a real test could be taken for one, and a filter readout that missed a hidden one.
+
+### Fixed
+
+- **A test could be taken for the stack's start-up or the fold, its failure hidden.** `IngestRequest.SetupWindow` with a
+  `ScenarioId` that a test in the tests records carries put the start-up's calls in that test, then made the test the
+  start-up: passed, not a test, and in no count. `FoldUnknownTestsInto` with a test's id did the same with the
+  unattributed traffic (since 3.23.0). Each is now not applied, and an `Other` diagnostic says so: `SetupWindow: its
+  scenario id "b2" is a test's in the tests records; it was not applied.` `kronikol ingest` gives fixed ids
+  (`stack-start-up`, `outside-any-test`), so this reached a library host, or a tests file with a test of one of those
+  ids. The plan had left the clash "documented, not checked"; it was not documented, and what it did was hide a failure.
+- **The history read a scenario that is not a test as one:**
+  - A run without the fold or the start-up the run before held was partial for it (one of nine missing is over the 10%
+    threshold), so nothing absent was reported and its times were no baseline; and since the run before stayed the last
+    full one, so was every run after it. The analyzer, `history record` and `history import` now compare the tests alone.
+  - The History tab's rings and duration bars counted it (four passed tests and a fold read 80%, and the fold's minutes
+    were in the run's time), and its time moved the run speed every slower verdict is read against.
+  - `history show` read `3 scenarios: 2 passed, 0 failed, 1 other` for two tests and a fold, and `history record` and
+    `history import` `3 scenarios`; they read `2 scenarios: 2 passed, 0 failed, 1 not a test` and `2 scenarios, 1 not a
+    test`. `query history`'s partial line counts tests on both sides.
+  - Its row's evidence said "it collects the traffic no test could be given", which the start-up does not; it says "it
+    holds traffic no test made".
+- **`kronikol query` counted it in more places:** `query diff` listed a fold or start-up that came, went or took longer
+  as new, gone or slower, and counted it in `--count` and in `--json`'s `left` and `right`; `query scenarios --result`
+  and `--slower-than` matched it, and the footer of an empty answer counted it; `query repro` took a failed one for a
+  failure of the run, and its footer counted it.
+- **`Run.json` rebuilt for a kept run from its history fragment counted it**, where no `Failures.jsonl` was beside the
+  report (`GenerateFailuresDigest` off).
+- **`ExpectedTestCount` counted it:** a run of three of four expected tests and a fold passed the check, and overwrote
+  the whole suite's Specifications.
+- **`kronikol merge` said that two shards' folds "ran in more than one shard"**: each shard folds its own traffic.
+- **The filter readout missed a hidden scenario that is not a test:** a filter that hid only the start-up read "All",
+  with no Clear All, and a page of no test never said "No scenarios match".
+- **The skill's fallback `scripts/query.py`** read a feature of no test as `Stack start-up  1 passed`; it reads `1 not a
+  test`, as the tool does.
+
+### Documentation
+
+- `Scenario.NotATest`, `IngestRequest.DropOutsideRunWindow`, `RunEndedAt`, `SetupWindow`, `OtherRunWindows`,
+  `FoldUnknownTestsInto`, `ReportConfigurationOptions.ExpectedTestCount` and `RunPoint` say what the code does: the
+  start-up is not a test either; another run closes an open end; take the windows from the taps' clock and write the
+  `testrun` start marker when the runner starts; a window or a fold with a test's id is not applied.
+- The 5.3.0 entry said that for a host with no windows the entry's figures are as before; the entry also adds how many
+  of them name a test of the run. It also said `kronikol ingest` refuses each window that cannot be one, two of which
+  its flags cannot give. Both sentences are corrected in place.
+
+### Tests
+
+- `RunWindowSetupTests`: a setup window with a test's id; the entry with no run window, one fact per wording of what was
+  not applied; one run declared twice; and three facts made to prove what they name: fact 16 asserts that the window was
+  applied, fact 25 holds a later call of the shape so that the test's half can fail, and fact 29 tries an assertion note
+  and a Phase boundary as well as a step bar.
+- `NotATestIngestTests`: a fold with a test's id is not applied, the test keeps its verdict, and `DropUnattributed` is
+  asked as it is with no fold. `IngestSetupWindowCommandTests`: a malformed end for both flags, and a window that holds
+  nothing says 0.
+- `HistoryAnalyzerTests`: a run without the run before's fold is not partial; a run point counts the tests and their
+  time; a slower verdict is read against the tests alone. `HistoryNotATestTests`: `history import` compares the tests
+  alone; `import` and `show` count the tests. `QueryHistoryHintsTests`: the partial line counts the tests on both sides.
+  `PartialRunBaselineTests` and `NotATestMergeTests` pin the evidence's new words.
+- `QueryNotATestTests`: the run diff lists no change of it and counts it in neither run (text, `--count`, `--json`), its
+  header counts the tests, `--result` and `--slower-than` match no such scenario, the footers count the tests, the
+  warm-up note names none, and `repro` leaves a failed one out.
+- `NotATestReportTests`: `Run.json` and the CI summary name the failed tests only; `ExpectedTestCount` counts the tests;
+  YAML writes the key on such a scenario only. `RunRotationTests`: a fragment counts it as none. `NotATestMergeTests`:
+  two shards' folds are no overlap. `FallbackScriptTests`: a feature of no test reads as the tool reads it.
+  `VerdictFencesTests` pins the filter readout helper's new bytes.
+- Playwright, `NotATestPaintTests`: a filter that hides only the start-up reads as filtered; a page of no test says when
+  nothing matches; the status filters read it as passed; and the time sorts, over a report order they must change.
+- Proofs: the facts for the defects found by reading were written first and failed on the unchanged code at what they
+  name: the setup window's test-id fact (16 start-up records kept in the test), the three history analyzer facts (the
+  run partial, 4 counted for 3 tests, no slower verdict), the fragment's count (3 for 2) and the expected test count
+  (the specifications written). Every fix is also proved by mutation: 30 of 30 mutations of the fixed code are killed,
+  each by the fact that names it: the setup window's and the fold's test-id checks, the fold not applied in the order,
+  the not-a-test loop and DropUnattributed, the history's tests of a roster, its partial check, the last full run's
+  count, a run point's tests and time, the run speeds, the tool's last full roster and both labels, query history's
+  count, the run diff's grouping and JSON counts, the result and time filters, the scenarios and repro footers, the
+  warm-up note, repro's scope, Run.json's rebuild, ExpectedTestCount, the merge's overlap count and the fallback
+  script's feature line, and on the page the filter readout (2 Playwright facts red), the status filter and a feature of
+  no test's empty time cells (the sort theory red in all three sorts). Two survived the first run, the fold not applied
+  in DropUnattributed and the warm-up note, and were killed once facts were added for them.
+
 ## [5.4.1] - 2026-10-22
 
 The patch part moves (5.4.0 to 5.4.1): bug fixes, with nothing new to call or configure. CI's Linux run of 5.4.0's
@@ -156,8 +241,8 @@ with its whole body in a scroll box; set `PayloadScrollLines = 0` to draw every 
 The minor part moves (5.2.7 to 5.3.0): new public types and members (`SetupWindow`, `OtherRunWindow`,
 `IngestRequest.SetupWindow`, `IngestRequest.OtherRunWindows`, `IngestResult.SetupRecords`, `IngestResult.OtherRunRecords`)
 and three new `kronikol ingest` flags, with the fixes they need. The `DroppedOutsideRunWindow` entry's text changes order
-for every user, figures first; the figures and what they count are as before for a host that declares no window
-(plans/RUN_WINDOW_PLAN.md R2, #187).
+for every user, figures first; the figures and what they count are as before for a host that declares no window, and
+it adds how many of them name a test of this run's tests file (plans/RUN_WINDOW_PLAN.md R2, #187).
 
 ### Added
 
@@ -185,8 +270,8 @@ for every user, figures first; the figures and what they count are as before for
     `--setup-window: 16 interaction record(s) outside the run window kept in "Stack start-up".` and
     `--other-run: 6 interaction record(s) outside the run window left to other runs: device 6.`
   - A window that ends before it starts, another run with a blank name, or a setup scenario with a blank name or id,
-    or with the fold's id, is not applied, and an `Other` diagnostic names it; `kronikol ingest` refuses each with exit
-    2, and `--setup-name` without `--setup-window`.
+    or with the fold's id, is not applied, and an `Other` diagnostic names it; `kronikol ingest` refuses each its flags
+    can give (a window the wrong way round, a blank name) with exit 2, and `--setup-name` without `--setup-window`.
 
 ### Changed
 

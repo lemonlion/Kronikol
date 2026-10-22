@@ -309,7 +309,8 @@ public static partial class QueryCommand
         }
         else
         {
-            scope = index.Scenarios.Where(s => s.Failed).ToList();
+            // the run's failed tests, as failures counts them: a scenario that is not a test is no failure of the run's
+            scope = index.Scenarios.Where(s => s.Failed && !s.NotATest).ToList();
         }
 
         if (options.Count)
@@ -321,7 +322,8 @@ public static partial class QueryCommand
         if (scope.Count == 0)
         {
             writer.Note("nothing failed");
-            writer.Footer($"{index.Scenarios.Count} scenarios · next: failures · scenarios");
+            var notATest = index.Scenarios.Count(s => s.NotATest);
+            writer.Footer($"{index.Scenarios.Count - notATest} scenarios{(notATest > 0 ? $" · {notATest} not a test" : "")} · next: failures · scenarios");
             return 0;
         }
 

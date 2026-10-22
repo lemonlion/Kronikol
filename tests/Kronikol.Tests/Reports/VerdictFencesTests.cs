@@ -22,7 +22,8 @@ namespace Kronikol.Tests.Reports;
 /// emptying only what it opened, and answers at once on Enter or when emptied; their fenced lines are unchanged.
 /// plans/RUN_WINDOW_PLAN.md R1 changed the helper outside its fences: a scenario that is not a test
 /// (<c>data-not-a-test</c>) is no run, the readout counts the features that hold a test, and it marks when nothing at all
-/// is shown; its fenced lines are unchanged.
+/// is shown; its fenced lines are unchanged. The audit of that plan's releases changed the helper outside its fences again:
+/// the readout reads as filtered while any scenario is hidden, one that is not a test included.
 /// 5.2.7 changed the search function again outside its fences (the review of 5.0.0): a qualifier is read by where it
 /// stands, the legacy and or or it leaves goes with it, and a tag expression reads both sides of each operator and the
 /// brackets written against its tags.
@@ -33,7 +34,7 @@ public class VerdictFencesTests
     {
         // script, default variant (no verdicts), verdict variant
         { "advanced-search.js", "bd95ec17e218564784d4868f54985392751c51772ed5ee593cb63fbb8f2c9d34", "f8e26b59e269fcebd3bfc36c251ac06264946049b46c8157cd24740a98fc0c7c" },
-        { "report-scenario-feature-map-helper.js", "5590a6c65f5ebdf8b916ff3a7145206f720b257a8e6b8f358d4b72782d049526", "fc238de794fa7a32120271efcbc6af27864193239e96bc97b8f418658476690e" },
+        { "report-scenario-feature-map-helper.js", "d3d00e12dfb1ae86fce149860f5ffbe970a43af27dd8b80c0a39f3438a187202", "235ffa5649c597fa43429959c0eacc0d90f7bbcdb5f7a740b6636a5ecd076caa" },
         { "report-search-function.js", "dbdfcbe5ea893e6dd89a1412c8e5dd1ff423afc22dccc927ff686c1544e84daf", "e8a0c76ac338519d83d2f84163d29f1761deb1c5e9f2fba880fc0239925401ac" },
         { "report-search-index.js", "7efeaa109b0ac98cb76f510dc9ea0ddeb0324428bd6c9169e08f8bf85b77028a", "58b3e65874a3a7bce211f85517f802d69f5d27f6b0649e925ead354f26a33bbb" },
     };

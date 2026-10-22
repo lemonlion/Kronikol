@@ -568,6 +568,34 @@ public class RunRotationTests : IDisposable
     }
 
     [Fact]
+    public void A_fragment_counts_a_scenario_that_is_not_a_test_as_none()
+    {
+        // With no digest beside the report, the fragment's results are the count, and its N (an ingest's fold) was counted
+        // as one of the run's scenarios (plans/RUN_WINDOW_PLAN.md Appendix A, RunRotation).
+        var features = Features(ExecutionResult.Failed);
+        features[0].Scenarios =
+        [
+            .. features[0].Scenarios,
+            new Scenario { Id = "rotation-fold", DisplayName = "Traffic outside any test", Result = ExecutionResult.Passed, NotATest = true },
+        ];
+        Run(ExecutionResult.Failed, o =>
+        {
+            o.KeepRuns = 0;
+            o.HistoryFilePath = Ledger;
+            o.HistoryRunId = "gh:32:1";
+            o.HistoryBranch = "";
+            o.GenerateFailuresDigest = false;
+        }, features: features);
+        File.Delete(Path.Combine(Reports, RunManifest.FileName));
+
+        Run(ExecutionResult.Passed);
+
+        var manifest = Manifest(Path.Combine(Runs, "gh_32_1"));
+        Assert.Equal(2, manifest.Scenarios);
+        Assert.Equal(1, manifest.Failed);
+    }
+
+    [Fact]
     public void A_run_killed_before_its_manifest_leaves_none_and_is_kept_but_never_counted_or_pruned()
     {
         // Killed while the outputs were being written: the report is there, the digest is not, and

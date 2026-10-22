@@ -346,8 +346,9 @@ public sealed record FailingOutside(string StableId, int Slot, string Name, stri
 /// <param name="Commit">What it tested.</param>
 /// <param name="Passed">Scenarios that passed.</param>
 /// <param name="Failed">Scenarios that failed.</param>
-/// <param name="Total">Scenarios in the run.</param>
-/// <param name="DurationMs">The sum of recorded durations, or null when none were.</param>
+/// <param name="Total">Tests in the run: a scenario it recorded as not a test (an ingest's fold, a stack's start-up) is in no
+/// count.</param>
+/// <param name="DurationMs">The sum of the tests' recorded durations, or null when none were.</param>
 /// <param name="Partial">Whether the run was partial.</param>
 /// <param name="Pace">
 /// The run's pace (3.24.0): the median, over the scenarios that passed in it and usually take at least ten
@@ -384,7 +385,7 @@ public sealed record HistoryVerdicts
     /// <summary>Whether the current run was judged partial.</summary>
     public required bool Partial { get; init; }
 
-    /// <summary>How many scenarios the last full run of the stream had - what a partial run is partial OF; null when the window holds no full run.</summary>
+    /// <summary>How many tests the last full run of the stream had - what a partial run is partial OF, a scenario it recorded as not a test left out; null when the window holds no full run.</summary>
     public int? PreviousFullCount { get; init; }
 
     /// <summary>

@@ -128,4 +128,81 @@ public class QueryNotATestTests : IDisposable
         Assert.Equal(["s1", "s2"], results.GetProperty("tests").EnumerateArray()
             .Select(t => t.GetProperty("extra").GetProperty("kronikolAddress").GetString()!).ToArray());
     }
+
+    /// <summary>A copy of <paramref name="report"/> with <paramref name="change"/> made to its JSON.</summary>
+    private string Variant(string report, Action<System.Text.Json.Nodes.JsonNode> change)
+    {
+        var json = System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(report))!;
+        change(json);
+        var path = Path.Combine(_directory, $"TestRunReport-{Guid.NewGuid():N}.json");
+        File.WriteAllText(path, json.ToJsonString());
+        return path;
+    }
+
+    [Fact]
+    public void The_run_diff_lists_no_change_of_a_scenario_that_is_not_a_test()
+    {
+        // It comes and goes with the traffic, and lasts as long as the traffic does: new, gone or slower, it is no change of
+        // the run's. 5.4.0 listed the fold under each, and counted it in --json's left and right.
+        var with = Report();
+        var without = Variant(with, json => json["features"]!.AsArray().RemoveAt(0));
+        var longer = Variant(with, json => json["features"]![0]!["scenarios"]![0]!["durationSeconds"] = 2000);
+
+        Assert.DoesNotContain("Traffic outside any test", Run("diff", without, with));
+        Assert.DoesNotContain("Traffic outside any test", Run("diff", with, without));
+        Assert.DoesNotContain("Traffic outside any test", Run("diff", with, longer));
+        Assert.Equal("0", Run("diff", without, with, "--count").Trim());
+        using var json = JsonDocument.Parse(Run("diff", with, longer, "--json"));
+        Assert.Equal(2, json.RootElement.GetProperty("left").GetProperty("scenarios").GetInt32());
+        Assert.Equal(2, json.RootElement.GetProperty("right").GetProperty("scenarios").GetInt32());
+        Assert.Empty(json.RootElement.GetProperty("items").EnumerateArray());
+    }
+
+    [Fact]
+    public void Result_and_time_filters_match_no_scenario_that_is_not_a_test_and_the_footers_count_the_tests()
+    {
+        // 5.4.0 listed the fold under --result Passed and under --slower-than 100 (its 780 s are the traffic's), and the
+        // footers counted it as a scenario.
+        var report = Report();
+
+        Assert.Equal("2", Run("scenarios", report, "--result", "Passed", "--count").Trim());
+        var slow = Run("scenarios", report, "--slower-than", "100");
+        Assert.DoesNotContain("Traffic outside any test", slow);
+        Assert.Contains("2 scenarios in the report · 1 not a test", slow);
+        Assert.Contains("2 scenarios · 1 not a test · next: failures · scenarios", Run("repro", report));
+    }
+
+    [Fact]
+    public void The_warm_up_note_names_no_scenario_that_is_not_a_test()
+    {
+        // The start-up can pay the run's first-call warm-up: under --slower-than it is left out for being no test, and the
+        // note said its warm-up was the reason.
+        var warmed = Variant(Report(), json => json["features"]![0]!["scenarios"]![0]!["warmUpSeconds"] = 779.5);
+
+        var answer = Run("scenarios", warmed, "--slower-than", "100");
+
+        Assert.DoesNotContain("first-call warm-up", answer);
+        Assert.DoesNotContain("Traffic outside any test", answer);
+    }
+
+    [Fact]
+    public void Repro_leaves_out_a_failed_scenario_that_is_not_a_test()
+    {
+        // NotATest is public: a host can set it on a scenario that failed, and its result is no failure of the run's, as
+        // failures counts it.
+        var failedFold = Variant(Report(), json => json["features"]![0]!["scenarios"]![0]!["result"] = "Failed");
+
+        Assert.Contains("2 scenarios · 1 not a test · next: failures · scenarios", Run("repro", failedFold));
+        Assert.Equal("0", Run("repro", failedFold, "--count").Trim());
+    }
+
+    [Fact]
+    public void The_run_diffs_header_counts_each_runs_tests()
+    {
+        // 5.2.5 read "3 scenarios, 0 failed" on each side: the fold counted as a scenario of each run.
+        var header = Lines(Run("diff", Report(), Report())).Take(2).ToArray();
+
+        Assert.Equal(2, header.Length);
+        Assert.All(header, line => Assert.EndsWith("  2 scenarios, 0 failed", line));
+    }
 }

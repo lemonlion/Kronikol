@@ -93,20 +93,22 @@ function applyVisibility(c) {
 function filter_readout(c) {
     // Tests, and the features with a test shown, as the band counts them; whether any scenario shows at all, a scenario
     // that is not a test included, is what the empty state reads (data-none-shown).
-    var shown = 0, signature = '', any = false, withTest = new Set();
+    var shown = 0, signature = '', any = false, hidden = false, withTest = new Set();
     for (var i = 0; i < c.items.length; i++) {
         var on = c.items[i].el.style.display !== 'none';
         if (on) {
             shown += c.items[i].runs;
             any = true;
             if (c.items[i].runs > 0) withTest.add(c.items[i].f);
-        }
+        } else hidden = true;
         signature += on ? '1' : '0';
     }
     var features = withTest.size;
     var readout = document.querySelector('.filter-readout');
     if (readout) {
-        var filtered = shown < c.runs;
+        // Filtered while the filters hide any scenario, one that is not a test included: counting tests alone, a filter
+        // that hid only the start-up read "All", without Clear All, and a page of no test never read filtered.
+        var filtered = hidden;
         if (any) readout.removeAttribute('data-none-shown'); else readout.setAttribute('data-none-shown', '1');
         var scenarios = c.runs === 1 ? ' scenario, ' : ' scenarios, ', ofFeatures = c.testFeatures === 1 ? ' feature' : ' features';
         readout.classList.toggle('is-filtered', filtered);

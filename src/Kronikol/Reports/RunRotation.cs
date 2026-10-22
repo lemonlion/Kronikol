@@ -516,7 +516,8 @@ internal static class RunRotation
                 at = fragment.Run.At;
                 suite = fragment.Run.Suite;
                 partial = fragment.Run.Partial;
-                scenarios = fragment.Run.Results.Length;
+                // the run's tests: a scenario it recorded as not a test (N) is in no count, as its Run.json counted it
+                scenarios = fragment.Run.Results.Count(result => result != HistoryFormat.NotATest);
                 failed = fragment.Run.Results.Count(result => result == HistoryFormat.Failed);
                 if (!files.Contains(HistoryFormat.FragmentFileName, StringComparer.OrdinalIgnoreCase))
                     files.Add(HistoryFormat.FragmentFileName);

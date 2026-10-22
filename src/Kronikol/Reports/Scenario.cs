@@ -90,14 +90,17 @@ public record Scenario
 
     /// <summary>
     /// True for a scenario that is not a test: the one an ingest folds the traffic of unknown tests into
-    /// (<c>IngestRequest.FoldUnknownTestsInto</c>). Nothing ran and nothing ended; it exists only in the
-    /// runs where unattributed traffic survived. The report draws it like any scenario, with a "not a test"
-    /// badge, and counts it as no test: the run band, the ring, the features table, the timeline, the
-    /// duration percentiles and filter, the CI summary, <c>Failures.md</c>, the console summary,
-    /// <c>Run.json</c>, the CTRF report and <c>kronikol query</c> leave it out of their counts and times, and
-    /// the specifications leave it out altogether. Its result is no verdict of the run's. The data files
-    /// write it as <c>notATest</c> (only where it is true), so a merge and the query keep it. The cross-run
-    /// ledger records it as <c>N</c>, so it reads no verdict and is never reported new or absent.
+    /// (<c>IngestRequest.FoldUnknownTestsInto</c>), and the stack's start-up an ingest keeps
+    /// (<c>IngestRequest.SetupWindow</c>). Nothing ran and nothing ended; it holds traffic, and comes and goes
+    /// with it. The report draws it like any scenario, with a "not a test" badge, and counts it as no test:
+    /// the run band, the ring, the features table, the timeline, the duration percentiles and filter, the CI
+    /// summary, <c>Failures.md</c>, the console summary, <c>Run.json</c>, the CTRF report,
+    /// <see cref="ReportConfigurationOptions.ExpectedTestCount"/> and <c>kronikol query</c> (its counts, its
+    /// result and time filters, and the run diff) leave it out of their counts and times, and the
+    /// specifications leave it out altogether. Its result is no verdict of the run's. The data files write it
+    /// as <c>notATest</c> (only where it is true), so a merge and the query keep it. The cross-run ledger
+    /// records it as <c>N</c>, so it reads no verdict, is never reported new or absent, makes no run partial,
+    /// and is in no run's count, time or speed.
     /// </summary>
     public bool NotATest { get; set; }
 

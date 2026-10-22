@@ -111,6 +111,20 @@ public class FallbackScriptTests : IDisposable
         Assert.Equal(Tool("failures", report, "--count").Trim(), footer.Groups[1].Value);
     }
 
+    private static string[] Lines(string output) => output.Replace("\r\n", "\n").Split('\n');
+
+    [Fact]
+    public void It_names_a_feature_of_no_test_as_the_tool_does()
+    {
+        Assert.SkipWhen(!PythonProbe.IsAvailable, "no python on PATH");
+        // The fold failed: the feature line said "0 passed, 1 FAILED" where the tool says what it is.
+        var report = WriteReport(withNotATest: true);
+
+        var lines = Lines(PythonProbe.Run(ScriptPath, "summary", report));
+        Assert.Contains("Ingested  1 not a test", lines);
+        Assert.Contains("Ingested  1 not a test", Lines(Tool("summary", report)));
+    }
+
     [Fact]
     public void It_says_all_passed_for_the_tests_alone()
     {
