@@ -55,6 +55,9 @@ internal static class IngestCommand
         var runWindow = false;
         DateTimeOffset? runStart = null;
         DateTimeOffset? runEnd = null;
+        (DateTimeOffset Start, DateTimeOffset End)? setupWindow = null;
+        string? setupName = null;
+        var otherRuns = new List<OtherRunWindow>();
         var phaseFromSteps = false;
         var separateSetup = false;
         string? attachmentsBase = null;
@@ -232,6 +235,50 @@ internal static class IngestCommand
                     if (arg == "--run-start") runStart = instant; else runEnd = instant;
                     runWindow = true;
                     break;
+                case "--setup-window":
+                    if (++i >= args.Count) { error.WriteLine("Missing value for " + arg); return 2; }
+                    if (!TryInterval(args[i], openEnd: false, out var setupStart, out var setupEnd))
+                    {
+                        error.WriteLine($"--setup-window expects <start>/<end>, two ISO-8601 instants, got '{args[i]}'");
+                        return 2;
+                    }
+                    if (setupEnd < setupStart)
+                    {
+                        error.WriteLine($"--setup-window ends before it starts ({setupStart:o} → {setupEnd:o})");
+                        return 2;
+                    }
+                    setupWindow = (setupStart, setupEnd!.Value);
+                    runWindow = true;
+                    break;
+                case "--setup-name":
+                    if (++i >= args.Count) { error.WriteLine("Missing value for " + arg); return 2; }
+                    if (string.IsNullOrWhiteSpace(args[i])) { error.WriteLine("--setup-name must not be blank"); return 2; }
+                    setupName = args[i];
+                    break;
+                case "--other-run":
+                {
+                    if (++i >= args.Count) { error.WriteLine("Missing value for " + arg); return 2; }
+                    var equals = args[i].IndexOf('=');
+                    if (equals < 0 || !TryInterval(args[i][(equals + 1)..], openEnd: true, out var otherStart, out var otherEnd))
+                    {
+                        error.WriteLine($"--other-run expects <name>=<start>/[<end>], got '{args[i]}'");
+                        return 2;
+                    }
+                    var otherName = args[i][..equals];
+                    if (string.IsNullOrWhiteSpace(otherName))
+                    {
+                        error.WriteLine($"--other-run needs a name before '=', got '{args[i]}'");
+                        return 2;
+                    }
+                    if (otherEnd < otherStart)
+                    {
+                        error.WriteLine($"--other-run {otherName} ends before it starts ({otherStart:o} → {otherEnd:o})");
+                        return 2;
+                    }
+                    otherRuns.Add(new OtherRunWindow(otherName, otherStart, otherEnd));
+                    runWindow = true;
+                    break;
+                }
                 case "--attribute-by-window":
                     attributeByWindow = true;
                     // The optional value is the capturer's fallback test id ("session"); a following
@@ -296,6 +343,15 @@ internal static class IngestCommand
             error.WriteLine($"--run-end ({givenEnd:o}) is before --run-start ({givenStart:o})");
             return 2;
         }
+
+        if (setupName is not null && setupWindow is null)
+        {
+            error.WriteLine("--setup-name needs --setup-window");
+            return 2;
+        }
+
+        var setup = setupWindow is not { } window ? null
+            : setupName is null ? new SetupWindow(window.Start, window.End) : new SetupWindow(window.Start, window.End, setupName);
 
         var files = CliInputs.Resolve(inputs, InteractionPatterns, error);
         if (tests is not null)
@@ -458,6 +514,8 @@ internal static class IngestCommand
                 DropOutsideRunWindow = runWindow,
                 RunStartedAt = runStart,
                 RunEndedAt = runEnd,
+                SetupWindow = setup,
+                OtherRunWindows = otherRuns,
                 PhaseFromSteps = phaseFromSteps,
                 AttachmentsBase = attachmentsBase is null ? null : Path.GetFullPath(attachmentsBase),
                 SourceRoot = sourceRoot,
@@ -480,6 +538,11 @@ internal static class IngestCommand
             // One line per pass, in the order the passes run, not a diagnostic: the diagnostics list means "silence is a
             // clean run", and this is the option doing what it was asked. Zero is printed too, since it is the value worth a
             // look (a capture whose calls already name their tests, steps with no durationMs).
+            if (setup is not null)
+                @out.WriteLine($"--setup-window: {result.SetupRecords} interaction record(s) outside the run window kept in \"{setup.ScenarioName}\".");
+            if (otherRuns.Count > 0)
+                @out.WriteLine($"--other-run: {result.OtherRunRecords.Values.Sum()} interaction record(s) outside the run window left to other runs"
+                               + (result.OtherRunRecords.Count == 0 ? "." : ": " + string.Join(", ", result.OtherRunRecords.Select(r => $"{r.Key} {r.Value}")) + "."));
             if (attributeByWindow)
                 @out.WriteLine($"--attribute-by-window: {result.WindowAttributedRecords} interaction record(s) attributed to a test by time window.");
             if (phaseFromSteps)
@@ -575,6 +638,33 @@ internal static class IngestCommand
         var names = blank.Count == 1 ? blank[0] + " is" : string.Join(" and ", blank) + " are";
         @out.WriteLine($"{names} blank: {why}, and the specification is only published from a green run.");
     }
+
+    /// <summary>
+    /// An interval as two ISO-8601 instants joined by <c>/</c>, each read as <c>--run-start</c> reads one; with
+    /// <paramref name="openEnd"/>, an empty end is a window still open.
+    /// </summary>
+    private static bool TryInterval(string value, bool openEnd, out DateTimeOffset start, out DateTimeOffset? end)
+    {
+        end = null;
+        var slash = value.IndexOf('/');
+        if (slash < 0)
+        {
+            start = default;
+            return false;
+        }
+        if (!TryInstant(value[..slash], out start))
+            return false;
+        if (slash == value.Length - 1)
+            return openEnd;
+        if (!TryInstant(value[(slash + 1)..], out var closes))
+            return false;
+        end = closes;
+        return true;
+    }
+
+    private static bool TryInstant(string value, out DateTimeOffset instant) =>
+        DateTimeOffset.TryParse(value, System.Globalization.CultureInfo.InvariantCulture,
+            System.Globalization.DateTimeStyles.AssumeUniversal | System.Globalization.DateTimeStyles.AdjustToUniversal, out instant);
 
     /// <summary>
     /// Prints what the ingest wants the operator to know: skipped torn lines, diagrams that could not be
@@ -731,6 +821,13 @@ internal static class IngestCommand
         w.WriteLine("                           traffic otherwise lands in --fold-unknown.");
         w.WriteLine("  --run-start <iso>        Explicit run window bounds (UTC); each implies --run-window.");
         w.WriteLine("  --run-end <iso>");
+        w.WriteLine("  --setup-window <start>/<end>  Keep the stack's start-up: interactions outside the run window whose");
+        w.WriteLine("                           call began in this window (two instants, UTC) are kept in one scenario, drawn");
+        w.WriteLine("                           first, in the Setup phase, that is not a test; implies --run-window.");
+        w.WriteLine("  --setup-name <name>      The setup scenario's name (default \"Stack start-up\"); needs --setup-window.");
+        w.WriteLine("  --other-run <name>=<start>/[<end>]  Another run on the same stack: interactions outside the run window");
+        w.WriteLine("                           whose call began in its window are left to its report and not counted as");
+        w.WriteLine("                           dropped; an empty end is a run still going. Repeatable; implies --run-window.");
         w.WriteLine("  --phase-from-steps       Give each interaction the phase (Setup or Action) of the Given/When/Then step");
         w.WriteLine("                           its call started in (a response takes its request's phase), in the data");
         w.WriteLine("                           files and for kronikol query, and print how many records took one. The");

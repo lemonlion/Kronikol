@@ -73,7 +73,8 @@ public static class FeatureSynthesizer
         string defaultFeatureName,
         ExecutionResult resultWhenUnknown,
         string? attachmentsBase,
-        TestAttempts attempts)
+        TestAttempts attempts,
+        SetupWindow? setup = null)
     {
         var logList = (logs ?? []).ToList();
 
@@ -172,7 +173,7 @@ public static class FeatureSynthesizer
         var featureTags = new Dictionary<string, List<string[]>>(StringComparer.Ordinal);
         var featureOrder = new List<string>();
         var names = new Dictionary<string, string>(StringComparer.Ordinal);
-        DateTimeOffset? runStart = null, runEnd = null;
+        DateTimeOffset? runStart = null, runEnd = null, setupStart = null, setupEnd = null;
 
         var defaultedResults = 0;
 
@@ -221,7 +222,9 @@ public static class FeatureSynthesizer
 
             ApplyAttachments(scenario, acc.Attachments, attachmentsBase, attachmentPaths);
 
-            var feature = acc.Feature ?? defaultFeatureName;
+            // The stack's start-up (IngestRequest.SetupWindow) has a feature of its own, named after it; the pipeline draws it first.
+            var isSetup = setup is not null && testId == setup.ScenarioId;
+            var feature = isSetup ? setup!.ScenarioName : acc.Feature ?? defaultFeatureName;
             if (!featureGroups.TryGetValue(feature, out var list))
             {
                 list = [];
@@ -239,6 +242,18 @@ public static class FeatureSynthesizer
                 featureSources.TryAdd(feature, source);
             if (tags.Endpoint is { Length: > 0 } endpoint)
                 featureEndpoints.TryAdd(feature, endpoint);
+
+            // The stack's start-up is not the run's time, unless nothing else gives one.
+            if (isSetup)
+            {
+                foreach (var candidate in new[] { acc.Start, acc.End, acc.FirstLog, acc.LastLog })
+                {
+                    if (candidate is not { } c) continue;
+                    setupStart = setupStart is null || c < setupStart ? c : setupStart;
+                    setupEnd = setupEnd is null || c > setupEnd ? c : setupEnd;
+                }
+                continue;
+            }
 
             // The run began with a retried test's first attempt, not the one the report shows.
             foreach (var candidate in new[] { attempts.FirstAttemptStart(testId), acc.Start, acc.End, acc.FirstLog, acc.LastLog })
@@ -270,8 +285,8 @@ public static class FeatureSynthesizer
         var now = DateTimeOffset.UtcNow;
         return new Result(
             features,
-            (runStart ?? now).UtcDateTime,
-            (runEnd ?? runStart ?? now).UtcDateTime,
+            (runStart ?? setupStart ?? now).UtcDateTime,
+            (runEnd ?? runStart ?? setupEnd ?? now).UtcDateTime,
             names)
         {
             DefaultedResultCount = defaultedResults,

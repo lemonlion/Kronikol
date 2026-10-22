@@ -164,7 +164,9 @@ public sealed class IngestRequest
     /// <summary>
     /// Keep only the traffic of <em>this</em> run: every interaction whose request happened before the run
     /// began, or after it ended, is dropped before attribution (with its paired response), and counted as
-    /// <see cref="DiagnosticKind.DroppedOutsideRunWindow"/>. Default <c>false</c>.
+    /// <see cref="DiagnosticKind.DroppedOutsideRunWindow"/>, unless a window the host declared explains it:
+    /// <see cref="SetupWindow"/> keeps the stack's start-up, <see cref="OtherRunWindows"/> leaves another run's traffic to
+    /// that run's report, and the entry counts only what no window explains. Default <c>false</c>.
     /// </summary>
     /// <remarks>
     /// <para>The use case is a capturer whose files outlive a run — taps that append for as long as the
@@ -191,6 +193,44 @@ public sealed class IngestRequest
 
     /// <summary>Explicit end of the run window (UTC); implies <see cref="DropOutsideRunWindow"/>. Default null — derived from a <c>testrun</c> end marker, else open.</summary>
     public DateTimeOffset? RunEndedAt { get; init; }
+
+    /// <summary>
+    /// The stack's start-up: what the services did before this run began. An interaction outside the run window whose
+    /// call began inside this window is kept, in one scenario of its own, instead of dropped: the scenario is
+    /// <see cref="Kronikol.Ingestion.SetupWindow.ScenarioName"/>, in a feature of the same name drawn first, every call in it has
+    /// the phase <see cref="TestPhase.Setup"/>, and it is not a test (<see cref="Scenario.NotATest"/>). Implies
+    /// <see cref="DropOutsideRunWindow"/>. Default null.
+    /// </summary>
+    /// <remarks>
+    /// <para>The run window wins: a call that began inside it is this run's, whatever this window says, so a runner's own
+    /// set-up (a global login after the <c>testrun</c> start marker) stays in the run. Another run wins too
+    /// (<see cref="OtherRunWindows"/>): a call inside both is left to that run's report. A capture's step bars,
+    /// assertion notes and phase boundaries (<see cref="InteractionRecord.IsMarker"/>) belong to a test and are never
+    /// kept here. The scenario's time is not the run's (<see cref="IngestResult.Start"/>, <see cref="IngestResult.End"/>),
+    /// its calls are not folded (<see cref="FoldUnknownTestsInto"/>) and never reach <see cref="DropUnattributed"/>, and
+    /// with <see cref="ReportConfigurationOptions.SeparateSetup"/> its diagram is drawn inside the Setup partition.</para>
+    /// <para>Take the window from the clock the capturers use, and end it where the start-up ends: whatever falls in it
+    /// that no run claims is kept in the scenario, another run's late calls among them unless that run is declared as
+    /// running up to its last call. A window that ends before it starts, or whose id is the fold's, is not applied, and a
+    /// diagnostic says so. <see cref="IngestResult.SetupRecords"/> counts what it kept.</para>
+    /// </remarks>
+    public SetupWindow? SetupWindow { get; init; }
+
+    /// <summary>
+    /// Other runs that share the capture, such as a second suite run against the same stack: an interaction outside this
+    /// run's window whose call began inside one of these is left to that run's report, and is not counted as dropped.
+    /// Implies <see cref="DropOutsideRunWindow"/>. Default empty.
+    /// </summary>
+    /// <remarks>
+    /// <para>Bounds are inclusive, and a run with no end holds everything after its start. Two that overlap: the first
+    /// declared takes the call. When this run's window has no end (no <c>testrun</c> end marker and no
+    /// <see cref="RunEndedAt"/>), it is closed at the start of the first of these that begins after it began,
+    /// exclusively: a call that began at that instant is the other run's (<see cref="IngestPipeline.ResolveRunWindow"/>
+    /// returns the last instant before it). A window that ends before it starts, or has a blank name, is not applied, and a
+    /// diagnostic says so. <see cref="IngestResult.OtherRunRecords"/> counts what each was left; the same name given
+    /// twice is one run.</para>
+    /// </remarks>
+    public IReadOnlyList<OtherRunWindow> OtherRunWindows { get; init; } = [];
 
     /// <summary>
     /// Give interactions the phase of the top-level step their call started in: <c>Given</c>/<c>Context</c>
@@ -281,6 +321,26 @@ public sealed class IngestRequest
 /// <param name="ScenarioId">Scenario id (also the <c>testId</c> the folded interactions take).</param>
 public sealed record UnknownTestFold(string ScenarioName, string ScenarioId = "outside-any-test");
 
+/// <summary>
+/// The stack's start-up, kept as one scenario that is not a test (<see cref="IngestRequest.SetupWindow"/>). Bounds are
+/// inclusive, as the run window's are.
+/// </summary>
+/// <param name="Start">The window's first instant.</param>
+/// <param name="End">The window's last instant.</param>
+/// <param name="ScenarioName">Display name of the scenario, and of the feature it is drawn in. Default "Stack start-up".</param>
+/// <param name="ScenarioId">Scenario id (also the <c>testId</c> its interactions take). Default "stack-start-up".</param>
+public sealed record SetupWindow(
+    DateTimeOffset Start, DateTimeOffset End, string ScenarioName = "Stack start-up", string ScenarioId = "stack-start-up");
+
+/// <summary>
+/// Another run on the same stack, whose traffic is left to its own report (<see cref="IngestRequest.OtherRunWindows"/>).
+/// Bounds are inclusive.
+/// </summary>
+/// <param name="Name">The run's name, as <see cref="IngestResult.OtherRunRecords"/> and <c>kronikol ingest</c> give it.</param>
+/// <param name="Start">The run's first instant.</param>
+/// <param name="End">The run's last instant; null for a run still going, which holds everything after its start.</param>
+public sealed record OtherRunWindow(string Name, DateTimeOffset Start, DateTimeOffset? End = null);
+
 /// <summary>Outcome of <see cref="IngestPipeline.Run"/>.</summary>
 /// <param name="InteractionCount">Interaction lines replayed into the store.</param>
 /// <param name="ScenarioCount">Scenarios in the synthesised model.</param>
@@ -324,6 +384,19 @@ public sealed record IngestResult(
     /// off. Printed by <c>kronikol ingest</c>, and not a diagnostic: it is the run doing what it was asked.
     /// </summary>
     internal int WindowAttributedRecords { get; init; }
+
+    /// <summary>
+    /// How many interaction records outside the run window <see cref="IngestRequest.SetupWindow"/> kept in its scenario; 0
+    /// without one. Printed by <c>kronikol ingest</c>, and not a diagnostic: it is the run doing what it was asked.
+    /// </summary>
+    public int SetupRecords { get; init; }
+
+    /// <summary>
+    /// How many interaction records outside the run window were left to each run of
+    /// <see cref="IngestRequest.OtherRunWindows"/>, by name, in the order declared, a run left none included; empty
+    /// without them, and for a run not applied. Printed by <c>kronikol ingest</c>, and not a diagnostic.
+    /// </summary>
+    public IReadOnlyDictionary<string, int> OtherRunRecords { get; init; } = new Dictionary<string, int>();
 }
 
 /// <summary>
@@ -490,8 +563,8 @@ public static class IngestPipeline
                 + "Write attempt on start records to say which run each is.");
         var current = attempts.Current(testRecords);
 
-        records = DropOutsideRunWindow(records, testRecords, request, diagnostics);
-        records = Attribute(records, testRecords, current, request, diagnostics, out var windowAttributedRecords, out var phasedRecords);
+        records = DropOutsideRunWindow(records, testRecords, request, diagnostics, out var setup, out var setupRecords, out var otherRunRecords);
+        records = Attribute(records, testRecords, current, request, setup?.ScenarioId, diagnostics, out var windowAttributedRecords, out var phasedRecords);
         records = DropEarlierAttempts(records, attempts, ref earlierAttemptRecords);
         if (earlierAttemptRecords > 0)
             diagnostics.Add(DiagnosticKind.Other,
@@ -499,18 +572,25 @@ public static class IngestPipeline
                 + "scenario shows its last attempt, its retry badge counting the earlier ones.");
         AddDiagramMarkers(records, current);
         if (options.SeparateSetup)
+        {
             AddSetupBoundaries(records, current);
+            // The start-up is all setup: its boundary goes after its last call, so every call is drawn inside the Setup
+            // partition and the page's Setup filter hides it as it hides a test's setup.
+            if (setup is not null && setupRecords > 0)
+                records.Add(SetupBoundary(setup.ScenarioId, records.Where(r => r.TestId == setup.ScenarioId).Max(r => r.Timestamp)));
+        }
 
         var reportsDirectory = ReportGenerator.ResolveReportsDirectory(options);
 
         if (request.ClearExistingLogs)
             RequestResponseLogger.Clear();
 
-        var ordered = Order(records, current, request);
+        var ordered = Order(records, current, request, setup?.ScenarioId);
         var logs = Replay(ordered, current);
 
+        var setupKept = setupRecords > 0 ? setup : null;
         var synthesised = FeatureSynthesizer.Build(
-            testRecords, logs, request.DefaultFeatureName, request.ResultWhenUnknown, attachmentsBase, attempts);
+            testRecords, logs, request.DefaultFeatureName, request.ResultWhenUnknown, attachmentsBase, attempts, setupKept);
         // What the copier cannot see of the capture's attachments, for its one entry: read before the messages are merged in,
         // since the merge makes a result of its own.
         var attachmentContext = new AttachmentContext
@@ -537,6 +617,8 @@ public static class IngestPipeline
         }
 
         var defaultedResultCount = synthesised.DefaultedResultCount;
+        if (setupKept is not null)
+            synthesised = SetupFirst(synthesised, setupKept, ref defaultedResultCount);
         if (request.FoldUnknownTestsInto is { } foldedInto)
         {
             // The fold scenario is not a test: nothing ran and nothing ended, so ResultWhenUnknown (meant
@@ -577,6 +659,8 @@ public static class IngestPipeline
                 Diagnostics = diagnostics.Entries,
                 WindowAttributedRecords = windowAttributedRecords,
                 PhasedRecords = phasedRecords,
+                SetupRecords = setupRecords,
+                OtherRunRecords = otherRunRecords,
             };
 
         // Cleaned by the generator's beforeFirstWrite hook below, not here: a run with scenarios first
@@ -617,7 +701,35 @@ public static class IngestPipeline
             Diagnostics = diagnostics.Entries,
             WindowAttributedRecords = windowAttributedRecords,
             PhasedRecords = phasedRecords,
+            SetupRecords = setupRecords,
+            OtherRunRecords = otherRunRecords,
         };
+    }
+
+    /// <summary>
+    /// The stack's start-up (<see cref="IngestRequest.SetupWindow"/>) as the report draws it: its own feature first, placed
+    /// after the Cucumber merge, which puts every feature the messages do not own after theirs; and, as the fold's, a
+    /// scenario that is not a test, passed, whose result is no default standing in for a verdict.
+    /// </summary>
+    private static FeatureSynthesizer.Result SetupFirst(FeatureSynthesizer.Result synthesised, SetupWindow setup, ref int defaultedResultCount)
+    {
+        var features = synthesised.Features;
+        var index = Array.FindIndex(features, f => f.Scenarios.Any(s => s.Id == setup.ScenarioId));
+        if (index < 0)
+            return synthesised;
+
+        foreach (var scenario in features[index].Scenarios.Where(s => s.Id == setup.ScenarioId))
+        {
+            scenario.Result = ExecutionResult.Passed;
+            if (scenario.ResultDefaulted)
+            {
+                scenario.ResultDefaulted = false;
+                defaultedResultCount--;
+            }
+            scenario.NotATest = true;
+        }
+
+        return index == 0 ? synthesised : synthesised with { Features = [features[index], .. features[..index], .. features[(index + 1)..]] };
     }
 
     /// <summary>
@@ -713,9 +825,17 @@ public static class IngestPipeline
 
     /// <summary>
     /// The run window (<see cref="IngestRequest.DropOutsideRunWindow"/>): explicit bounds win, else the tests
-    /// records supply them. Returns null when no window can be established.
+    /// records supply them. Returns null when no window can be established. Both bounds are inclusive. An open end (no
+    /// <c>testrun</c> end marker and no <see cref="IngestRequest.RunEndedAt"/>) is closed by the first of
+    /// <see cref="IngestRequest.OtherRunWindows"/> that begins after this run began, at the last instant before that run's
+    /// start, one tick earlier, since a call that began at that instant is the other run's; with no other runs the end
+    /// stays open.
     /// </summary>
-    public static (DateTimeOffset Start, DateTimeOffset? End)? ResolveRunWindow(IngestRequest request, IReadOnlyList<TestRunRecord> testRecords)
+    public static (DateTimeOffset Start, DateTimeOffset? End)? ResolveRunWindow(IngestRequest request, IReadOnlyList<TestRunRecord> testRecords) =>
+        RunWindowOf(request, testRecords) is { } window ? (window.Start, window.End) : null;
+
+    /// <summary><see cref="ResolveRunWindow"/>, with the other run that closed an open end, which the entry names.</summary>
+    private static (DateTimeOffset Start, DateTimeOffset? End, OtherRunWindow? ClosedBy)? RunWindowOf(IngestRequest request, IReadOnlyList<TestRunRecord> testRecords)
     {
         var start = request.RunStartedAt;
         if (start is null)
@@ -738,28 +858,117 @@ public static class IngestPipeline
                 end = endMarkers.Max();
         }
 
-        return (start.Value, end);
+        if (end is null)
+        {
+            // The host has said where the next run begins (plans/RUN_WINDOW_PLAN.md §3.4): left open, this run kept that run's
+            // traffic. The first declared wins a tie.
+            var next = (request.OtherRunWindows ?? []).Where(o => o is not null && Applies(o) && o.Start > start.Value)
+                .OrderBy(o => o.Start).FirstOrDefault();
+            if (next is not null)
+                return (start.Value, next.Start.AddTicks(-1), next);
+        }
+
+        return (start.Value, end, null);
     }
+
+    /// <summary>Whether another run's window can be applied: a name, and an end, when it has one, no earlier than its start.</summary>
+    private static bool Applies(OtherRunWindow run) => !string.IsNullOrWhiteSpace(run.Name) && (run.End is not { } end || end >= run.Start);
+
+    /// <summary>
+    /// <see cref="IngestRequest.SetupWindow"/> when it can be applied; otherwise null, and an <see cref="DiagnosticKind.Other"/>
+    /// entry says why: a blank name or id, an end before its start, or the fold's id, whose scenario it would join.
+    /// </summary>
+    private static SetupWindow? AppliedSetupWindow(IngestRequest request, ReportDiagnosticsCollector diagnostics)
+    {
+        if (request.SetupWindow is not { } setup)
+            return null;
+        if (string.IsNullOrWhiteSpace(setup.ScenarioName) || string.IsNullOrWhiteSpace(setup.ScenarioId))
+        {
+            diagnostics.Add(DiagnosticKind.Other, "SetupWindow: its scenario name and id must not be blank; it was not applied.");
+            return null;
+        }
+        if (setup.End < setup.Start)
+        {
+            diagnostics.Add(DiagnosticKind.Other,
+                $"SetupWindow: the setup window ends before it starts ({setup.Start:o} → {setup.End:o}); it was not applied.");
+            return null;
+        }
+        if (request.FoldUnknownTestsInto is { } fold && fold.ScenarioId == setup.ScenarioId)
+        {
+            diagnostics.Add(DiagnosticKind.Other,
+                $"SetupWindow: its scenario id \"{setup.ScenarioId}\" is the fold's (FoldUnknownTestsInto); it was not applied.");
+            return null;
+        }
+        return setup;
+    }
+
+    /// <summary>
+    /// The runs of <see cref="IngestRequest.OtherRunWindows"/> that can be applied, in the order declared; an
+    /// <see cref="DiagnosticKind.Other"/> entry names each that cannot.
+    /// </summary>
+    private static List<OtherRunWindow> AppliedOtherRuns(IReadOnlyList<OtherRunWindow> declared, ReportDiagnosticsCollector diagnostics)
+    {
+        var applied = new List<OtherRunWindow>(declared.Count);
+        foreach (var run in declared)
+        {
+            if (run is null)
+                continue;
+            if (string.IsNullOrWhiteSpace(run.Name))
+                diagnostics.Add(DiagnosticKind.Other,
+                    $"OtherRunWindows: a run with a blank name ({run.Start:o} → {(run.End is { } end ? end.ToString("o") : "open")}) was not applied.");
+            else if (!Applies(run))
+                diagnostics.Add(DiagnosticKind.Other,
+                    $"OtherRunWindows: the run \"{run.Name}\" ends before it starts ({run.Start:o} → {run.End:o}); it was not applied.");
+            else
+                applied.Add(run);
+        }
+        return applied;
+    }
+
+    /// <summary>What a run window that cannot be applied leaves undone besides, for its entry: the windows the host declared.</summary>
+    private static string NotApplied(SetupWindow? setup, IReadOnlyList<OtherRunWindow> others) => (setup is not null, others.Count) switch
+    {
+        (false, 0) => "",
+        (true, 0) => ", and the setup window was not applied",
+        (false, 1) => ", and the other run was not applied",
+        (false, _) => ", and the other runs were not applied",
+        (true, 1) => ", and the setup window and the other run were not applied",
+        (true, _) => ", and the setup window and the other runs were not applied",
+    };
 
     /// <summary>
     /// Drops every interaction pair whose request lies outside the run window — the previous run's
     /// traffic, the stack's start-up, anything after the run ended — before attribution gets a chance to
-    /// fold it. A pair is judged on its earliest record, so a late response to an in-run request stays.
+    /// fold it, unless a window the host declared explains it (plans/RUN_WINDOW_PLAN.md §3.3): a call that began inside
+    /// another run's window is left to that run, the first declared taking an overlap, and one that began inside the setup
+    /// window is kept, its records given the setup scenario's id and name and the phase Setup (never a marker, which
+    /// belongs to a test). The run window wins over both. A pair is judged on its earliest record, so a late response to an
+    /// in-run request stays. The entry counts what no window explains; <paramref name="setup"/> is the setup window applied.
     /// </summary>
     private static List<InteractionRecord> DropOutsideRunWindow(
-        List<InteractionRecord> records, List<TestRunRecord> testRecords, IngestRequest request, ReportDiagnosticsCollector diagnostics)
+        List<InteractionRecord> records, List<TestRunRecord> testRecords, IngestRequest request, ReportDiagnosticsCollector diagnostics,
+        out SetupWindow? setup, out int setupRecords, out IReadOnlyDictionary<string, int> otherRunRecords)
     {
-        if (!request.DropOutsideRunWindow && request.RunStartedAt is null && request.RunEndedAt is null)
+        setup = null;
+        setupRecords = 0;
+        otherRunRecords = new Dictionary<string, int>();
+        var declaredRuns = request.OtherRunWindows ?? [];
+        if (!request.DropOutsideRunWindow && request.RunStartedAt is null && request.RunEndedAt is null
+            && request.SetupWindow is null && declaredRuns.Count == 0)
             return records;
 
-        var window = ResolveRunWindow(request, testRecords);
+        var setupWindow = AppliedSetupWindow(request, diagnostics);
+        var others = AppliedOtherRuns(declaredRuns, diagnostics);
+        var notApplied = NotApplied(setupWindow, others);
+
+        var window = RunWindowOf(request, testRecords);
         if (window is null)
         {
-            diagnostics.Add(DiagnosticKind.Other, "DropOutsideRunWindow: no run window could be derived (no tests records and no explicit start); nothing was dropped.");
+            diagnostics.Add(DiagnosticKind.Other, $"DropOutsideRunWindow: no run window could be derived (no tests records and no explicit start); nothing was dropped{notApplied}.");
             return records;
         }
 
-        var (start, end) = window.Value;
+        var (start, end, closedBy) = window.Value;
 
         // A window that ends before it starts is none: an explicit start after the end the tests file gives, or explicit
         // bounds the wrong way round. Applied, it dropped every record, the tests' own calls with them, and printed the
@@ -767,7 +976,7 @@ public static class IngestPipeline
         if (end is { } closes && closes < start)
         {
             diagnostics.Add(DiagnosticKind.Other,
-                $"DropOutsideRunWindow: the run window ends before it starts ({start:o} → {closes:o}); nothing was dropped.");
+                $"DropOutsideRunWindow: the run window ends before it starts ({start:o} → {closes:o}); nothing was dropped{notApplied}.");
             return records;
         }
 
@@ -780,37 +989,58 @@ public static class IngestPipeline
                 pairStart[id] = ts;
         }
 
+        // A record outside the window that names a test of this run's tests file is counted, never kept: an earlier or a
+        // later run of the same tests carries the same ids (plans/RUN_WINDOW_PLAN.md §3.6, Q6).
+        var ownTests = new HashSet<string>(
+            testRecords.Where(t => !t.IsRunMarker && !string.IsNullOrWhiteSpace(t.TestId)).Select(t => t.TestId!), StringComparer.Ordinal);
+        var left = new Dictionary<string, int>(StringComparer.Ordinal);
+        foreach (var run in others)
+            left.TryAdd(run.Name, 0);
+
         var kept = new List<InteractionRecord>(records.Count);
-        int before = 0, after = 0;
+        int before = 0, after = 0, own = 0;
         foreach (var record in records)
         {
             DateTimeOffset? at = record.RequestResponseId is { Length: > 0 } id && pairStart.TryGetValue(id, out var ps) ? ps : record.Timestamp;
-            if (at is null)
+            if (at is not { } when || (when >= start && (end is not { } e || when <= e)))
             {
                 kept.Add(record);
                 continue;
             }
 
-            if (at < start)
+            // Another run's traffic is that run's report's, whatever else holds it.
+            if (others.FirstOrDefault(o => when >= o.Start && (o.End is not { } oe || when <= oe)) is { } other)
             {
+                left[other.Name]++;
+                continue;
+            }
+
+            if (setupWindow is not null && !record.IsMarker && when >= setupWindow.Start && when <= setupWindow.End)
+            {
+                setupRecords++;
+                kept.Add(record with { TestId = setupWindow.ScenarioId, TestName = setupWindow.ScenarioName, Phase = nameof(TestPhase.Setup) });
+                continue;
+            }
+
+            if (when < start)
                 before++;
-                continue;
-            }
-
-            if (end is { } e && at > e)
-            {
+            else
                 after++;
-                continue;
-            }
-
-            kept.Add(record);
+            if (record.TestId is { } testId && ownTests.Contains(testId))
+                own++;
         }
 
+        setup = setupWindow;
+        otherRunRecords = left;
         if (before + after > 0)
         {
-            var endText = end is { } e2 ? e2.ToString("o") : "open";
+            // The figures first: a query answer keeps 160 characters of an entry, and the window's two instants take 70.
+            var endText = closedBy is not null ? $"{closedBy.Start:o}, where {closedBy.Name} began" : end is { } e2 ? e2.ToString("o") : "open";
+            var explains = setupWindow is not null || others.Count > 0 ? " that no other window explains" : "";
+            var named = own > 0 ? $" ({own} name a test in this run's tests file)" : "";
             diagnostics.Add(DiagnosticKind.DroppedOutsideRunWindow,
-                $"{before + after} interaction record(s) outside the run window ({start:o} → {endText}) dropped: {before} before the run began, {after} after it ended.");
+                $"{before + after} interaction record(s) outside the run window dropped{explains}: {before} before the run began, {after} after it ended{named}. "
+                + $"The run window: {start:o} → {endText}.");
         }
 
         return kept;
@@ -830,7 +1060,7 @@ public static class IngestPipeline
     /// </remarks>
     private static List<InteractionRecord> Attribute(
         List<InteractionRecord> records, List<TestRunRecord> testRecords, List<TestRunRecord> currentAttempts,
-        IngestRequest request, ReportDiagnosticsCollector diagnostics, out int windowAttributedRecords, out int phasedRecords)
+        IngestRequest request, string? setupScenarioId, ReportDiagnosticsCollector diagnostics, out int windowAttributedRecords, out int phasedRecords)
     {
         // What a pass did is the run working as asked, never a diagnostic: the list is "what went wrong", every kronikol
         // query answer carries it, and UnattributedInteractions means "could not be attributed" (#130). The counts
@@ -877,7 +1107,7 @@ public static class IngestPipeline
         if (request.MergeDuplicateInteractions)
             records = InteractionMerger.Merge(ByTimestamp(records), request.MergeOverlapThreshold, request.WindowAttributionFallbackId);
 
-        records = DropUnattributed(records, testRecords, request, diagnostics);
+        records = DropUnattributed(records, testRecords, request, setupScenarioId, diagnostics);
 
         var stillUnattributed = records.Count(r => IngestAttribution.NeedsAttribution(r, request.WindowAttributionFallbackId));
         if (stillUnattributed > 0)
@@ -957,7 +1187,8 @@ public static class IngestPipeline
     /// still unattributed, and dropping a request takes its paired response with it.
     /// </summary>
     private static List<InteractionRecord> DropUnattributed(
-        List<InteractionRecord> records, List<TestRunRecord> testRecords, IngestRequest request, ReportDiagnosticsCollector diagnostics)
+        List<InteractionRecord> records, List<TestRunRecord> testRecords, IngestRequest request, string? setupScenarioId,
+        ReportDiagnosticsCollector diagnostics)
     {
         if (request.DropUnattributed is not { } predicate)
             return records;
@@ -971,7 +1202,9 @@ public static class IngestPipeline
         bool IsUnattributed(InteractionRecord record) =>
             IngestAttribution.NeedsAttribution(record, request.WindowAttributionFallbackId)
             || (knownTestIds is not null && !knownTestIds.Contains(record.TestId)
-                && record.TestId != request.FoldUnknownTestsInto!.ScenarioId);
+                && record.TestId != request.FoldUnknownTestsInto!.ScenarioId
+                // the stack's start-up is no unknown test: the host kept it (IngestRequest.SetupWindow)
+                && record.TestId != setupScenarioId);
 
         // First pass decides on the records that carry the identity; the second removes their partners,
         // so a dropped request never leaves an orphaned response arrow behind.
@@ -1167,7 +1400,8 @@ public static class IngestPipeline
             .ToList();
 
     /// <summary>Sorts by timestamp, folds unknown tests, then (optionally) rewrites the order as a call tree.</summary>
-    private static List<InteractionRecord> Order(List<InteractionRecord> records, List<TestRunRecord> testRecords, IngestRequest request)
+    private static List<InteractionRecord> Order(List<InteractionRecord> records, List<TestRunRecord> testRecords, IngestRequest request,
+        string? setupScenarioId)
     {
         var ordered = ByTimestamp(records);
 
@@ -1180,7 +1414,7 @@ public static class IngestPipeline
             // could not attribute by the fold's own id (its fallback id, "session") otherwise drew the fold scenario under
             // the id, since only the records renamed here carried the name.
             ordered = ordered
-                .Select(r => known.Contains(r.TestId) || (r.TestId == fold.ScenarioId && r.TestName == fold.ScenarioName)
+                .Select(r => known.Contains(r.TestId) || r.TestId == setupScenarioId || (r.TestId == fold.ScenarioId && r.TestName == fold.ScenarioName)
                     ? r
                     : r with { TestId = fold.ScenarioId, TestName = fold.ScenarioName })
                 .ToList();

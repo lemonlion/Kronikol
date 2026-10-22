@@ -4,6 +4,62 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.3.0] - 2026-10-22
+
+The minor part moves (5.2.7 to 5.3.0): new public types and members (`SetupWindow`, `OtherRunWindow`,
+`IngestRequest.SetupWindow`, `IngestRequest.OtherRunWindows`, `IngestResult.SetupRecords`, `IngestResult.OtherRunRecords`)
+and three new `kronikol ingest` flags, with the fixes they need. The `DroppedOutsideRunWindow` entry's text changes order
+for every user, figures first; the figures and what they count are as before for a host that declares no window
+(plans/RUN_WINDOW_PLAN.md R2, #187).
+
+### Added
+
+- **A stack's start-up kept as a scenario of its own, and other runs' traffic left to their reports (#187).** A stack
+  that stays up for more than one run captures both runs and its own start-up in one file, and `DropOutsideRunWindow`
+  (`--run-window`) counted all of it as one "dropped" figure, which heads every `kronikol query` answer as a lower
+  bound: on the issue's shape the browser report said 26 dropped where 4 were real losses, and the device report 30.
+  The host is the only party that knows what lies outside the window, so it can now say:
+  - `IngestRequest.SetupWindow` (`--setup-window <start>/<end>`, `--setup-name <name>`): a call outside the run window
+    that began in this window is kept, in one scenario (`Stack start-up` by default) in a feature of its own drawn
+    first, every call in the phase `Setup`. It is not a test (`Scenario.NotATest`, counted as none since 5.2.6), its
+    time is not the run's, it is never folded or asked about by `DropUnattributed`, and with `SeparateSetup` it is drawn
+    inside the Setup partition, so the page's Setup filter takes its calls out. With Cucumber messages its feature is
+    still the first.
+  - `IngestRequest.OtherRunWindows` (`--other-run <name>=<start>/[<end>]`, repeatable): a call outside the run window
+    that began in another run's window is left to that run's report, and not counted. A run with no end marker is
+    closed where the first declared run that begins after it begins (`ResolveRunWindow` returns the tick before), where
+    it used to keep the next run's traffic.
+  - Each implies the run window. A call is judged once, on its earliest record: inside the run window it is the run's;
+    inside another run's window, that run's (the first declared wins an overlap); inside the setup window, it is kept
+    in the start-up; anywhere else it is dropped and counted. A capture's step bars, assertion notes and phase
+    boundaries are never kept in the start-up.
+  - `IngestResult.SetupRecords` and `IngestResult.OtherRunRecords` say what the windows explained, and `kronikol
+    ingest` prints it right after `Replayed`, as it prints the window attribution's count:
+    `--setup-window: 16 interaction record(s) outside the run window kept in "Stack start-up".` and
+    `--other-run: 6 interaction record(s) outside the run window left to other runs: device 6.`
+  - A window that ends before it starts, another run with a blank name, or a setup scenario with a blank name or id,
+    or with the fold's id, is not applied, and an `Other` diagnostic names it; `kronikol ingest` refuses each with exit
+    2, and `--setup-name` without `--setup-window`.
+
+### Changed
+
+- **The `DroppedOutsideRunWindow` entry counts only what no window explains, and gives its figures first:**
+  `4 interaction record(s) outside the run window dropped that no other window explains: 0 before the run began, 4
+  after it ended (2 name a test in this run's tests file). The run window: … → ….` The figures used to follow the
+  window's two instants, so a query answer's one line of 160 characters cut off what the second figure counts.
+  `(N name a test in this run's tests file)` counts the records whose test id is one of this run's tests (a test's own
+  call made after the run's verdict, or a clock that disagrees with the tests file's at the run's edges); such records
+  are counted, never kept. A report whose windows explain everything outside it has no entry. A window closed by
+  another run reads `<instant>, where <name> began`. With no run window to apply, the entry that says so adds that the
+  declared windows were not applied.
+
+### Tests
+
+- `RunWindowSetupTests` (the issue's capture: both reports, the precedence, the bounds, the open end, the setup scenario's shape,
+  time and exemptions, the warm-up, a call captured from both sides, a marker, Cucumber messages, each window that
+  cannot be one), `IngestSetupWindowCommandTests` (the flags, their lines and each refusal) and `SetupWindowPaintTests`
+  (Playwright: the start-up painted first with its badge, and the Setup filter taking its calls out). Proofs: the facts were written first and run on 5.2.6 with the new types in place and doing nothing: 41 failed, each at what it names, and a guard of the setup scenario's exemptions and time passed (it is proved by mutation); the two Playwright facts failed on the page. 50 of 51 mutations are killed: 47 of 48 of the code (the precedence, the run window first, the open end, the setup scenario's time, feature, name, phase, result and badge, the exemptions, the counts and the entry's text, the bounds, each window that cannot be one, the CLI's mapping, parsing and lines), four of them only once facts were added for them (a call at either window's last instant, a window not applied explaining nothing, a run that cannot be applied closing no open end), and 3 of 3 against the Playwright facts (the feature placed first, the boundary after the start-up, the badge). The one survivor is equivalent: `--setup-window` setting the CLI's own `--run-window` flag, which the pipeline implies from the setup window anyway
+
 ## [5.2.7] - 2026-10-22
 
 The patch part moves (5.2.6 to 5.2.7): bug fixes, with nothing new to call or configure. They were found by a review of

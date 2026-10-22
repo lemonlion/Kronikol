@@ -709,3 +709,14 @@ applied. Run each from a folder outside the repository, so that the repository's
     5.2.5's page. 47 of 47 mutations killed: 40 of the C# code and 7 of the page scripts through the Playwright facts.
   - Found on the way and fixed in R1: F17 to F23, added to section 0. F20 is a consequence of R1 itself (the readout
     counts tests), caught before it shipped.
+- 2026-10-22, **R2 executed** and **released as 5.3.0**, in the same worktree on R1's release.
+  - Proofs, for facts 12 to 29: the facts were written first and run on 5.2.6 with the new types in place and doing nothing: 41 failed, each at what it names, and a guard of the setup scenario's exemptions and time passed (it is proved by mutation); the two Playwright facts failed on the page. 50 of 51 mutations are killed: 47 of 48 of the code (the precedence, the run window first, the open end, the setup scenario's time, feature, name, phase, result and badge, the exemptions, the counts and the entry's text, the bounds, each window that cannot be one, the CLI's mapping, parsing and lines), four of them only once facts were added for them (a call at either window's last instant, a window not applied explaining nothing, a run that cannot be applied closing no open end), and 3 of 3 against the Playwright facts (the feature placed first, the boundary after the start-up, the badge). The one survivor is equivalent: `--setup-window` setting the CLI's own `--run-window` flag, which the pipeline implies from the setup window anyway.
+  - Decided while building, inside the plan's design: a setup window with a blank name or id is not applied, as one
+    with the fold's id is; the open end's text names the run that closed it with its start, not the tick before; the
+    entry's "that no other window explains" is said only when a declared window was applied; a run declared twice under
+    one name is one run in `OtherRunRecords`; with no run window to apply, the entry names the declared windows not
+    applied, "the other run" or "the other runs" by their number.
+  - Found while proving it, in R2's own code before it shipped: a doc comment written under another member's summary
+    (`DocCommentPlacementTests`), and the Playwright class's ingest, which cleared the process-wide store and left
+    records behind whose "Orders Api" another class's component diagram drew for its "OrdersApi". The class now runs in
+    the Diagrams collection under the suite's pipeline lock, without clearing the store, with names and ids of its own.

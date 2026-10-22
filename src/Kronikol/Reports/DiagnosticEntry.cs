@@ -40,7 +40,13 @@ public enum DiagnosticKind
     /// <summary>Feature, rule or scenario titles that still start with a lower-case letter after <see cref="StepText.ApplyToTitles"/> ran (or with <see cref="ReportConfigurationOptions.CapitaliseTitles"/> off).</summary>
     TitlesNotStartingWithCapital,
 
-    /// <summary>Interactions whose request happened before the run began or after it ended and that <see cref="Kronikol.Ingestion.IngestRequest.DropOutsideRunWindow"/> discarded.</summary>
+    /// <summary>
+    /// Interactions whose request happened before the run began or after it ended and that
+    /// <see cref="Kronikol.Ingestion.IngestRequest.DropOutsideRunWindow"/> discarded, which no window the host declared
+    /// explains: what <see cref="Kronikol.Ingestion.IngestRequest.SetupWindow"/> kept and what
+    /// <see cref="Kronikol.Ingestion.IngestRequest.OtherRunWindows"/> left to other runs are not in it. The entry gives
+    /// the figures first, then how many name a test of this run's tests file, then the window.
+    /// </summary>
     DroppedOutsideRunWindow,
 
     /// <summary>
