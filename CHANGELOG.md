@@ -4,6 +4,53 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.4.1] - 2026-10-22
+
+The patch part moves (5.4.0 to 5.4.1): bug fixes, with nothing new to call or configure. CI's Linux run of 5.4.0's
+facts found both: one in 5.4.0's scroll box, the other in the diagram menu's copies, older than the box.
+
+### Fixed
+
+- **A payload's widest line that fits on one row keeps its note as wide as itself (5.4.0).** The clear row that holds a
+  boxed note open is its widest line and room for a scrollbar, and it was cut at a space whenever the two together
+  passed 95% of the wrap width: a line the engine draws on one row then sat in a note narrower than itself and wrapped
+  in its box. It showed in any font for a widest line from about 3 em under 95% of the wrap width up to the wrap
+  width, wherever the cut took off more than the room gave back; on Linux, whose DejaVu Sans is wider than Windows'
+  Segoe UI, the widest line of `LongPayloadScrollTests` T1 did. The row now keeps
+  a line no wider than the wrap width whole, as the engine draws it in full, its spaces made no-break so the room
+  cannot push its last word onto a row of its own, and cuts only a line wider than that. A note whose widest line is
+  that close to the wrap width is drawn up to the room wider than before.
+- **Copy and Save as PNG, and the SVG copies, work on a diagram whose source the engine encoded with a double hyphen.**
+  The engine writes the diagram's source into the SVG as an instruction, `<?plantuml-src ...?>`. Drawn into the page it
+  becomes a comment, and an encoded source can hold `--`, which no XML comment may: the SVG the menu serialized was not
+  XML, so the PNG items (copy, save, open in a new tab, each with and without transparency) did nothing, and Copy as
+  SVG, Save as SVG and Open as SVG image in new tab gave a file no viewer opens. Which diagrams it hit was chance: 2 of
+  40 diagrams of eight messages each, and more of the longer ones (5.4.0's T12 diagram on Linux, whose composed source
+  differs from Windows' by its clear rows). The menu now writes such a comment back as the instruction it was, so the
+  SVG still carries the source, and leaves out any other comment XML cannot hold.
+
+### Tests
+
+- `LongPayloadScrollTests` T45 (Playwright, new): 24 payloads whose widest lines, under the 40 drawn, are two
+  characters apart and end in a long word; no box wraps for a widest line no wider than the wrap width, with a premise
+  that one falls within 30 px under it, so the band 5.4.0 cut is covered in any font.
+- `CapturedTextPageTests` (Playwright, new fact): forty diagrams are drawn and the first whose source comment holds `--`
+  (a premise) is saved as PNG and as SVG: the PNG decodes, and the SVG parses with the engine's instruction in it;
+  comments added that XML cannot hold are left out of the next copy, and one it can hold stays.
+- Proofs: both facts were red on 5.4.0 at their own assertions (with 5.4.0's two scripts swapped in, six of T45's
+  widest lines under the wrap width wrapped, the narrowest 725.7 px, on Windows; the comment fact's Save as PNG never
+  downloaded). Of seven mutations of the fixes, all seven are killed, each at an assertion of these facts: the
+  serializer left as it was, the instruction dropped instead of written back, a comment XML cannot hold kept, its
+  trailing hyphen let through, 5.4.0's cut (the room counted), the kept line's spaces left breakable, and the 95%
+  margin put back on the line kept whole. A first cut of the fix kept 5.4.0's 95% for the line kept whole, and the
+  last two mutations survived it: the room then never carried a kept line past the wrap width.
+- Linux: T1, T12 and T45 replayed with probes in Playwright's Ubuntu image with DejaVu Sans installed, the font CI's
+  runner draws `system-ui` in: on 5.4.0, T1's box was 743 px for a 746.3 px line and T12's SVG failed to load ("Double
+  hyphen within comment"); on 5.4.1 the box is 798 px, the PNG reaches the clipboard, and every T45 widest line no
+  wider than the 800 px wrap width stays on one row, the widest of them 799 px.
+- Checks: after the version bump the core suite passes 8,642 with 2 skipped and the full Playwright suite 1,598 with
+  28 skipped, and `release.slnf` builds in Release with no warning from the changed files.
+
 ## [5.4.0] - 2026-10-22
 
 The minor part moves (5.3.0 to 5.4.0): a new option, `ReportConfigurationOptions.PayloadScrollLines`, and the scroll

@@ -1,6 +1,6 @@
 # LONG_NOTE_SCROLL_PLAN: a long payload scrolls inside its box
 
-**Status: executed and released, R0 as 5.2.4 and R1 as 5.4.0 (section 10); green-lit by the owner on 2026-10-21 ("Implement the plan in full"); Q1 answered: on by default (40), shipped as a minor.** Written 2026-10-21 at the owner's ask (section 1), and
+**Status: executed and released, R0 as 5.2.4 and R1 as 5.4.0, with two fixes CI's Linux run found as 5.4.1 (section 10); green-lit by the owner on 2026-10-21 ("Implement the plan in full"); Q1 answered: on by default (40), shipped as a minor.** Written 2026-10-21 at the owner's ask (section 1), and
 revised the same day after an independent review (section 10). Every `file:line` is at `origin/main` `4a0dad9e` (5.2.2),
 under `src/Kronikol/` unless it says otherwise; CN, RS, CM, IS, KN, RES, RG and PC are `Reports/collapsible-notes-script.js`,
 `Reports/plantuml-browser-render-script.js`, `Reports/context-menu-script.js`, `Reports/inline-svg-styles.css`,
@@ -766,6 +766,22 @@ Recommended answers first; the plan above is written to them.
   paints. One kill in the first run was a timeout under load (T33's diagram not drawn in 60 s while two other
   sessions' suites ran); run again, it fails at its assertion. The other timeouts are the facts' own: a box that
   never came.
+
+- 2026-10-22, 5.4.1 (kronikol-93): CI's Linux E2E job failed two of R1's facts on 5.4.0, the first Linux run of
+  `LongPayloadScrollTests`; both were real, and both reproduced in Playwright's Ubuntu image (`v1.59.1-noble`) once
+  `fonts-dejavu-core` was installed, which is what CI's runner draws `system-ui` in. T1: `clearWidthRow` cut the clear
+  row whenever the widest line and its room passed 95% of the wrap width, so its 746.3 px line (Segoe UI: 647.5 px) sat
+  in a 743 px box and wrapped; it showed in any font wherever a widest line came within the room of that width. A
+  line no wider than the wrap width is now kept whole with its spaces made no-break, so the room cannot wrap it, and
+  only a wider line is cut, which is what 4.1's rule 5 asks of the row ("as wide as the whole body would"). T12: the
+  PNG copy never reached the clipboard, because the SVG did not load as an image: the engine's `<?plantuml-src ...?>`
+  instruction is a comment in the page, and its encoded source held `--`, which an XML comment may not. That bug is as
+  old as the menu's PNG copies; the clear rows only changed which source was encoded. `serializeSvg` now writes such a
+  comment back as the instruction and drops any other comment XML cannot hold. New facts: T45 (24 payloads whose
+  widest lines step two characters across the wrap width, under the 40 drawn) and a `CapturedTextPageTests` fact
+  (forty diagrams, the first whose comment holds `--` saved as PNG and SVG). Seven of seven mutations are killed; a
+  first cut kept the 95% for the line kept whole, and the no-break spaces and the margin both survived it, so the rule
+  became the wrap width itself.
 
 ## Appendix A. The harness
 

@@ -1378,6 +1378,53 @@ public class LongPayloadScrollTests : PlaywrightTestBase
     }
 
     /// <summary>
+    /// A widest line no wider than the wrap width, which the engine draws on one row, keeps its note as wide as itself,
+    /// whatever the font draws it. The clear row is the widest line and room for a scrollbar, and 5.4.0 cut it at a
+    /// space whenever the two together passed 95% of the wrap width: the line was drawn in a note narrower than itself
+    /// and wrapped in its box. CI's Linux draws in DejaVu Sans, wider than Windows' Segoe UI, and T1's widest line fell there. Twenty-four
+    /// payloads whose widest lines are two characters apart put several in that band in any font; each widest line is
+    /// under the 40 lines drawn, where only the clear row holds the note open, and ends in a long word, so a cut there
+    /// takes off more than the room gives back.
+    /// </summary>
+    [Fact]
+    public async Task T45_A_widest_line_that_fits_on_one_row_never_wraps_in_its_box_whatever_the_font()
+    {
+        const string words = "the widest value of this payload sits deep in its body and sets how wide the whole note "
+            + "is drawn when its box is laid over it";
+        string Value(int length) => words[..length].TrimEnd() + " internationalisation";
+        var calls = Enumerable.Range(0, 24).SelectMany(k => LongPayloadReports.Call("scroll-band", k,
+            JsonSerializer.Serialize(Enumerable.Range(1, 43).ToDictionary(i => $"band{k:D2}_{i:D4}",
+                i => i == 42 ? Value(56 + 2 * k) : $"value {i}")))).ToArray();
+        await OpenOneCallAsync("scroll-t45.html", "scroll-band", calls);
+
+        var readings = new List<(double Widest, double Limit, bool Wraps)>();
+        for (var k = 0; k < 24; k++)
+        {
+            var idx = await BoxAsync($"band{k:D2}");
+            var r = await Page.EvaluateAsync<double[]>($$"""
+                () => {
+                    var b = window.__scroll.box({{idx}}), cs = getComputedStyle(b);
+                    var ctx = document.createElement('canvas').getContext('2d');
+                    ctx.font = cs.fontStyle + ' ' + cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily;
+                    var lines = b.textContent.split('\n');
+                    var widest = Math.max.apply(null, lines.map(l => ctx.measureText(l).width));
+                    var wrap = /skinparam\s+wrapWidth\s+(\d+)/.exec(window.__scroll.container().getAttribute('data-plantuml'));
+                    var lh = parseFloat(b.style.lineHeight);
+                    return [widest, wrap ? +wrap[1] : -1,
+                        b.scrollHeight > lines.length * lh + 2 || b.scrollWidth > b.clientWidth + 1 ? 1 : 0];
+                }
+                """);
+            readings.Add((r[0], r[1], r[2] > 0));
+        }
+        Assert.All(readings, r => Assert.True(r.Limit > 0, "premise: the diagram's source sets its wrap width"));
+        // the band 5.4.0 cut: a line within the room of the wrap width (the room is about 3 em, over 30 px at 13 px)
+        Assert.True(readings.Any(r => r.Widest <= r.Limit && r.Widest > r.Limit - 30),
+            "premise: a widest line falls just under the limit: " + string.Join(", ", readings.Select(r => Math.Round(r.Widest))));
+        Assert.All(readings.Where(r => r.Widest <= r.Limit), r =>
+            Assert.False(r.Wraps, $"a widest line of {r.Widest:F1} px, under the {r.Limit:F0} px a row holds, wraps in its box"));
+    }
+
+    /// <summary>
     /// The token's pieces in the form <paramref name="crlf"/> picks, whichever this platform's generator wrote: LF line
     /// ends with each piece in its own tags, or CRLF line ends with the pieces, joined by bare LFs, in one pair.
     /// </summary>

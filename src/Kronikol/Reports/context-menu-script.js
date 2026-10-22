@@ -136,11 +136,30 @@
         return { svg: withoutScrollBoxes(clone), ground: ground };
     }
 
+    // The engine writes the diagram's source into the SVG as an instruction, <?plantuml-src ...?>. Drawn into the page
+    // it becomes a comment, and an encoded source can hold "--", which no XML comment may: the SVG was not XML, so its
+    // PNG never loaded (Copy and Save as PNG did nothing) and its SVG file opened in no viewer, for whichever diagrams
+    // the engine encoded so (5.4.1). The copy writes such a comment back as the instruction it was, and leaves out any
+    // other comment XML cannot hold.
+    function xmlComments(node) {
+        var doc = node.ownerDocument, walker = doc.createTreeWalker(node, NodeFilter.SHOW_COMMENT), bad = [], comment;
+        while ((comment = walker.nextNode())) if (comment.data.indexOf('--') >= 0 || /-$/.test(comment.data)) bad.push(comment);
+        bad.forEach(function(c) {
+            var pi = /^\?([A-Za-z_][\w.-]*)\s+([\s\S]*?)\??$/.exec(c.data), instruction = null;
+            if (pi && pi[2].indexOf('?>') < 0) {
+                try { instruction = doc.createProcessingInstruction(pi[1], pi[2]); } catch (e) { instruction = null; }
+            }
+            if (instruction) c.parentNode.replaceChild(instruction, c);
+            else c.parentNode.removeChild(c);
+        });
+        return node;
+    }
+
     // XMLSerializer writes a C0 control, U+FFFE or U+FFFF as it is, and an SVG holding one is not XML: its PNG never
     // loaded (Copy and Save did nothing) and its SVG file opened in no viewer. Kronikol's generator no longer writes
     // one, but a source from an earlier report can, so the copy writes each as the generator would (§12.6).
     function serializeSvg(svg) {
-        return new XMLSerializer().serializeToString(svg.isConnected ? lookClone(svg).svg : svg).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]/g, function (c) {
+        return new XMLSerializer().serializeToString(xmlComments(svg.isConnected ? lookClone(svg).svg : svg)).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]/g, function (c) {
             var code = c.charCodeAt(0);
             return code < 0x20 ? String.fromCharCode(0x2400 + code) : '\uFFFD';
         });

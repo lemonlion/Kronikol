@@ -1989,7 +1989,12 @@
     // it has the engine paint the whole line as written, its colour tag too, so it is taken off first.
     // A widest line wider than the note wraps at would wrap as the clear row too, and a row the engine wraps adds a band
     // of clear rows under the cut: it is cut at a space to what fits on one row, which is as wide as the wrapped note is
-    // drawn. `wraps` says the box's text will wrap, which the note's Wide button goes by before its box is made.
+    // drawn. A line no wider than that, which the engine draws on one row, is kept whole with its spaces made no-break,
+    // which the engine never wraps at (the tags left in a line, <b>, <size:N> and <U+...>, hold no space: colour and
+    // font tags are taken off above), so its room cannot push its last word onto a row of its own. Until 5.4.1 such a
+    // line was cut too whenever it came within its room of 95% of the wrap width, and the note drawn narrower than the
+    // line wrapped it in the box. `wraps` says the box's text will wrap, which the note's Wide button goes by before its
+    // box is made.
     function clearWidthRow(bodyLines, yaml, wrapPx, base) {
         var widest = '', widestPx = -1;
         for (var i = 0; i < bodyLines.length; i++) {
@@ -2000,9 +2005,12 @@
             if (px > widestPx) { widestPx = px; widest = line; }
         }
         var row = widest.replace(/<\/?color(?::[^>]*)?>/g, '');
-        var fit = (wrapPx || Infinity) * 0.95 - paintedWidth(NOTE_SCROLL_ROOM, [], base);
-        var wraps = widestPx > fit;
-        if (wraps) {
+        var wraps = widestPx > (wrapPx || Infinity);
+        if (!wraps) {
+            var indent = /^ */.exec(row)[0];
+            row = indent + row.slice(indent.length).replace(/ /g, '\u00A0');
+        } else {
+            var fit = (wrapPx || Infinity) * 0.95 - paintedWidth(NOTE_SCROLL_ROOM, [], base);
             var spaces = [];
             for (var k = 1; k < row.length; k++) if (row.charAt(k) === ' ' && row.charAt(k - 1) !== ' ') spaces.push(k);
             var lo = 0, hi = spaces.length - 1, best = -1;
