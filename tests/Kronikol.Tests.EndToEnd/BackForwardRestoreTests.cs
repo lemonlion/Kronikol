@@ -98,9 +98,12 @@ public class BackForwardRestoreTests : BackForwardTestBase
         await WaitForScrollToSettleAsync();
         var top = await file.EvaluateAsync<double>("a => a.getBoundingClientRect().top");
 
+        // committed is enough: a text file's own load is not this test's, and on Linux Chromium it never came. The wait
+        // starts before the click: started after it, it found the file's URL already there when the file came quickly,
+        // and then waited for the load after all, since WaitForURLAsync waits for a load state when the URL matches
+        var committed = Page.WaitForURLAsync(new Regex("files/"), new() { WaitUntil = WaitUntilState.Commit });
         await file.ClickAsync();
-        // committed is enough: a text file's own load is not this test's, and on Linux Chromium it never came
-        await Page.WaitForURLAsync(new Regex("files/"), new() { WaitUntil = WaitUntilState.Commit });
+        await committed;
         await Page.GoBackAsync(new() { WaitUntil = WaitUntilState.Commit });
         await Page.Locator("details.feature").First.WaitForAsync();
         await SettledAsync(Page, 0);
