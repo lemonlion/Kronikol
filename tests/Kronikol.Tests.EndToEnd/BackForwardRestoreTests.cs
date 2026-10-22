@@ -480,8 +480,7 @@ public class BackForwardRestoreTests : BackForwardTestBase
         await page.Locator(".fold-btn.fold-expand[data-fold='features']").First.ClickAsync();
         var scenario = page.Locator($"details.scenario[data-stable-id='{sid}']");
         var link = page.Locator("details.scenario", new() { HasTextString = "Scenario 40.2" }).First.Locator(":scope > summary a.scenario-link");
-        await link.ScrollIntoViewIfNeededAsync();
-        await ScrollSettledAsync(page);
+        await InViewAndStillAsync(page, link);
         // where the page stands as the link is pressed: a link the bar covers is scrolled into the open by the click
         // itself, after any reading made before it, and Back rightly returns to where the click was
         await scenario.EvaluateAsync(

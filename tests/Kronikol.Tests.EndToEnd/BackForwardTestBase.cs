@@ -48,6 +48,35 @@ public abstract class BackForwardTestBase : PlaywrightTestBase
             "n => !window.kronikol_nav || parseInt(document.documentElement.getAttribute('data-kron-nav') || '0', 10) > n",
             after, new() { PollingInterval = 200, Timeout = 30000 });
 
+    /// <summary>
+    /// Brings <paramref name="element"/> into the open, under the report's bar and above the window's bottom, and waits
+    /// until it has held its place there for half a second, bringing it back whenever the page moves it away. WebKit
+    /// anchors no scroll: after the features far above are opened, the scenarios near the screen are laid out and drawn
+    /// as they come near, and what is on the screen moves while the page's scroll holds still. A scroll into view then
+    /// left the element far below the window, and the click aimed at it went to whatever had moved into its place (a
+    /// feature's title, in R16 under WebKit, about one run in three).
+    /// </summary>
+    protected static async Task InViewAndStillAsync(IPage page, ILocator element)
+    {
+        await element.EvaluateAsync("el => { window.__heldStill = el; window.__heldSince = null; }");
+        await page.WaitForFunctionAsync(
+            """
+            () => {
+                const el = window.__heldStill, bar = document.querySelector('.toolbar-row.report-nav');
+                const r = el.getBoundingClientRect(), now = performance.now(), last = window.__heldSince;
+                const under = bar ? bar.getBoundingClientRect().bottom + 8 : 8;
+                if (r.top < under || r.bottom > innerHeight - 8) {
+                    el.scrollIntoView({ block: 'center', inline: 'nearest' });
+                    window.__heldSince = null;
+                    return false;
+                }
+                if (!last || Math.abs(last.top - r.top) > 0.5) { window.__heldSince = { top: r.top, since: now }; return false; }
+                return now - last.since >= 500;
+            }
+            """,
+            null, new() { PollingInterval = 200, Timeout = 20000 });
+    }
+
     /// <summary>Waits until <paramref name="page"/> has held one scroll offset for half a second (WaitForScrollToSettleAsync, for any page).</summary>
     protected static Task ScrollSettledAsync(IPage page) =>
         page.WaitForFunctionAsync(
