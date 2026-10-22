@@ -68,7 +68,7 @@
         }
         // the arrow keys move between scenarios, which are on the Features tab (not while a tab list has the focus: its
         // own keys are Left, Right, Home and End, and Up and Down there moved a scenario in a hidden panel, S11)
-        if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && !(e.target && e.target.closest && e.target.closest('[role="tablist"]'))
+        if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && !(e.target && e.target.closest && e.target.closest('[role="tablist"], .note-scroll'))
             && !/^(input|select|textarea)$/i.test((document.activeElement || {}).tagName || '')) toFeatures();
     }, true);
 

@@ -670,6 +670,9 @@
         var _estimatedArrowHeight = 45;
         var _estimatedNoteLineHeight = 18;
         window._splitDiagramSource = splitDiagramSource;
+        // the characters past which a note is cut across diagrams, which a capped payload stays under (5.4.0,
+        // collapsible-notes-script.js, capLongNotes)
+        window._maxNoteChars = _maxNoteChars;
         window._chunkLargeNotes = chunkLargeNotes;
         window._countArrows = function(lines) { return countArrows(lines); };
         // A message arrow in any of PlantUML's forms: ->, -->, -[#color]>, -[#color]->, <-, ->>. From 3.0.48 the
@@ -1375,6 +1378,8 @@
                     if (!failed && !item.isFragment && window._recordDrawnSource && whole && item.el.querySelector('svg')
                         && item.source.replace(/\r/g, '') === whole.replace(/\r/g, '')) window._recordDrawnSource(item.el, whole);
                     bindIflowLinks(hookTarget, iflowSource);
+                    // the records of a long payload's box go with the picture, before it is decorated (5.4.0)
+                    if (window._installNoteScroll) window._installNoteScroll(item.isFragment && item.parentEl ? item.parentEl : item.el);
                     if (window._makeNotesCollapsible) window._makeNotesCollapsible(hookTarget);
                     if (window._addAssertionTooltips) window._addAssertionTooltips(hookTarget);
                     requestAnimationFrame(function() { if (window._addZoomButton) window._addZoomButton(hookTarget); });
@@ -1932,7 +1937,7 @@
         var kids = Array.prototype.slice.call(main.querySelectorAll('*')).filter(function(e) {
             var t = tag(e);
             if (t === 'g' || t === 'a' || t === 'title' || t === 'tspan' || t === 'defs') return false;
-            return !(e.closest('.note-toggle-icon') || (e.classList && e.classList.contains('note-hover-rect')));
+            return !(e.closest('.note-toggle-icon') || e.closest('.note-scroll-frame') || (e.classList && e.classList.contains('note-hover-rect')));
         });
         var vb = svg.viewBox && svg.viewBox.baseVal;
         var height = vb && vb.height ? vb.height : (box(svg) || { height: 0 }).height;

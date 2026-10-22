@@ -89,10 +89,18 @@
     // theme the page shows, as every copy did before: it is pasted into documents, nearly always on white. The theme is
     // put back in the same task, so the page paints nothing in between, and its own picture is left as it is.
     var PAINTED = /^(path|rect|line|polygon|polyline|circle|ellipse|text|tspan)$/i;
+    // A copied picture is plain SVG (5.4.0): a long payload's scroll box is left out and the rows the engine drew under it
+    // are shown, the note's first lines and its `...`, so the copy opens anywhere and reads like a truncated note.
+    function withoutScrollBoxes(clone) {
+        clone.querySelectorAll('.note-scroll-frame').forEach(function(f) { f.remove(); });
+        clone.querySelectorAll('.note-scroll-under').forEach(function(t) { t.classList.remove('note-scroll-under'); });
+        return clone;
+    }
+
     function lookClone(svg) {
         var clone = svg.cloneNode(true);
         var from = svg.querySelectorAll('*'), to = clone.querySelectorAll('*');
-        if (from.length !== to.length || !window.getComputedStyle) return { svg: clone, ground: null };
+        if (from.length !== to.length || !window.getComputedStyle) return { svg: withoutScrollBoxes(clone), ground: null };
         var root = document.documentElement, theme = root.getAttribute('data-theme');
         var probe = document.createElement('i');
         probe.style.display = 'none';
@@ -117,7 +125,7 @@
                     var p = k ? 'stroke' : 'fill', v = cs.getPropertyValue(p);
                     if (v && v !== computed(from[i].getAttribute(p))) to[i].style.setProperty(p, v);
                 }
-                if (cs.visibility === 'hidden') to[i].style.setProperty('visibility', 'hidden');
+                if (cs.visibility === 'hidden' && !from[i].classList.contains('note-scroll-under')) to[i].style.setProperty('visibility', 'hidden');
             }
             var bg = getComputedStyle(svg).backgroundColor;
             if (bg && bg !== 'transparent' && !/^rgba\(.*,\s*0\)$/.test(bg)) ground = bg;
@@ -125,7 +133,7 @@
             if (theme === null) root.removeAttribute('data-theme'); else root.setAttribute('data-theme', theme);
             probe.remove();
         }
-        return { svg: clone, ground: ground };
+        return { svg: withoutScrollBoxes(clone), ground: ground };
     }
 
     // XMLSerializer writes a C0 control, U+FFFE or U+FFFF as it is, and an SVG holding one is not XML: its PNG never
@@ -372,9 +380,17 @@
         return window._rejoinWrappedNoteLines ? window._rejoinWrappedNoteLines(text) : text;
     }
 
+    // A FocusFields payload's emphasis (its focused field in <b>, the rest in <color:lightgray>) is Kronikol's markup, not
+    // the payload, so it goes with the header tags (5.4.0). It comes off each line once a long run's pieces are joined:
+    // one pair of tags can span them (collapsible-notes-script.js, liftEmphasisOverJoins).
     function noteLinesToText(lines, unescapeLine) {
-        var stripped = lines.map(function(l) { return l.replace(NOTE_HEADER_TAG_INDENTED, '').replace(NOTE_KEY_LINE_INDENTED, '$1Key '); });
-        return rejoinNoteSource(stripped.join('\n')).split('\n').map(unescapeLine).join('\n');
+        var headless = lines.map(function(l) {
+            return l.replace(NOTE_HEADER_TAG_INDENTED, '').replace(NOTE_KEY_LINE_INDENTED, '$1Key ');
+        });
+        if (window._liftEmphasisOverJoins) headless = window._liftEmphasisOverJoins(headless);
+        return rejoinNoteSource(headless.join('\n')).split('\n').map(function(l) {
+            return unescapeLine(window._stripNoteEmphasis ? window._stripNoteEmphasis(l) : l);
+        }).join('\n');
     }
 
     // A note's gray header lines are a contiguous prefix: the tagged lines, then any blank lines that
@@ -423,12 +439,25 @@
                 var piece = node.data.substring(
                     node === range.startContainer ? range.startOffset : 0,
                     node === range.endContainer ? range.endOffset : node.data.length);
+                // A long payload's box (5.4.0) holds the note's body as text, a line to a row; the rows the engine drew
+                // under it, and the clear row that keeps the note as wide as its widest line, are not what the reader sees.
+                var box = node.parentNode && node.parentNode.closest ? node.parentNode.closest('.note-scroll') : null;
+                if (box) {
+                    if (!piece) continue;
+                    piece.split('\n').forEach(function(seg, k) {
+                        if (k > 0 || !(last && last.box === box)) { row = []; rows.push(row); }
+                        row.push(seg);
+                    });
+                    last = { box: box };
+                    continue;
+                }
                 var el = node.parentNode && node.parentNode.closest ? node.parentNode.closest('text') : null;
                 if (!el || el.namespaceURI !== 'http://www.w3.org/2000/svg') {
                     if (/\S/.test(piece)) return null;
                     continue;
                 }
-                if (!piece) continue;
+                if (!piece || el.classList.contains('note-scroll-under')
+                    || /^#[0-9a-f]{6}00$/i.test(el.getAttribute('fill') || '')) continue;
                 var at = { svg: el.ownerSVGElement, text: el,
                     x: parseFloat(el.getAttribute('x')), y: parseFloat(el.getAttribute('y')) };
                 var sameRow = last && (at.text === last.text || (at.svg === last.svg
@@ -664,6 +693,10 @@
                         // escapes must never reach the clipboard either way, and nor must the width
                         // budget's breaks.
                         var curLines = currentNoteBlocks[curBlockIdx].contentLines;
+                        // A long payload's box holds its lines in place of the rows drawn under it, which end in a clear
+                        // row (5.4.0): its current text is read from them, with the note's drawn header lines.
+                        var boxLines = window._noteScrollLines ? window._noteScrollLines(container, globalNoteIdx) : null;
+                        if (boxLines) curLines = splitGrayHeader(curLines).header.concat(boxLines);
                         if (yamlLines) {
                             var curParts = splitGrayHeader(curLines);
                             currentText = joinNoteParts(
@@ -753,20 +786,23 @@
                     copyTextToClipboard(serializeSvg(svg));
                 })
             ])));
+            // The source the picture was composed from before a long payload's cap (5.4.0, Q4): the cap is how the page
+            // shows a payload, not part of the diagram, so a copied source never holds its clear rows.
+            var currentSource = (source && window._noteUncappedSource && window._noteUncappedSource(container, source)) || source;
             if (source) {
-                var origSource = container._noteOriginalSource || source;
-                if (origSource !== source) {
+                var origSource = container._noteOriginalSource || currentSource;
+                if (origSource !== currentSource) {
                     menu.appendChild(createSubMenu('Copy ' + typeLabel + ' source', [
                         createMenuItem('Copy full ' + typeLabel + ' source', function() {
                             copyTextToClipboard(origSource);
                         }),
                         createMenuItem('Copy current ' + typeLabel + ' source', function() {
-                            copyTextToClipboard(source);
+                            copyTextToClipboard(currentSource);
                         })
                     ]));
                 } else {
                     menu.appendChild(createMenuItem('Copy ' + typeLabel + ' source', function() {
-                        copyTextToClipboard(source);
+                        copyTextToClipboard(currentSource);
                     }));
                 }
             }
@@ -817,19 +853,19 @@
                 })
             ]));
             if (source) {
-                var origSource2 = container._noteOriginalSource || source;
-                if (origSource2 !== source) {
+                var origSource2 = container._noteOriginalSource || currentSource;
+                if (origSource2 !== currentSource) {
                     menu.appendChild(createSubMenu('Open ' + typeLabel + ' source in new tab', [
                         createMenuItem('Open full ' + typeLabel + ' in new tab', function() {
                             openTextInTab(origSource2, typeLabel + ' source');
                         }),
                         createMenuItem('Open current ' + typeLabel + ' in new tab', function() {
-                            openTextInTab(source, typeLabel + ' source');
+                            openTextInTab(currentSource, typeLabel + ' source');
                         })
                     ]));
                 } else {
                     menu.appendChild(createMenuItem('Open ' + typeLabel + ' source in new tab', function() {
-                        openTextInTab(source, typeLabel + ' source');
+                        openTextInTab(currentSource, typeLabel + ' source');
                     }));
                 }
             }
@@ -929,6 +965,8 @@
     }
 
     document.addEventListener('click', function(e) {
+        // a click inside a payload's scroll box places the caret or works its scrollbar: the selection stays (5.4.0)
+        if (e.target.closest && e.target.closest('.note-scroll')) return;
         var container = zoomBoxOf(e.target);
         if (container) {
             if (container === selectedDiagram) {
@@ -1214,6 +1252,8 @@
             var c = zoomBoxOf(e.target);
             if (!c || !c.classList.contains('diagram-natural-size')) return;
             if (e.target.closest('.diagram-zoom-controls')) return;
+            // a drag inside a payload's scroll box selects its text (5.4.0)
+            if (e.target.closest('.note-scroll')) return;
             dragging = true;
             dragContainer = c;
             startX = e.pageX;

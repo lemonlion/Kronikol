@@ -63,4 +63,7 @@ public static class TrackingDefaults
 
     /// <summary>Default estimated-height (px) at which the browser renderer splits one diagram into fragments. See <see cref="ReportConfigurationOptions.BrowserFragmentMaxHeight"/>.</summary>
     public const int BrowserFragmentMaxHeight = 12000;
+
+    /// <summary>Default for the most body lines a payload note draws before it scrolls in its box. See <see cref="ReportConfigurationOptions.PayloadScrollLines"/>.</summary>
+    public const int PayloadScrollLines = 40;
 }

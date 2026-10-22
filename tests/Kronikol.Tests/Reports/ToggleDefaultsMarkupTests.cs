@@ -82,7 +82,8 @@ public class ToggleDefaultsMarkupTests
     [
         "__NOTE_FORMAT_DEFAULT__", "__HEADERS_HIDDEN_DEFAULT__", "__TRUNCATE_LINES_DEFAULT__",
         "__DETAILS_DEFAULT__", "__ASSERTIONS_VISIBLE_DEFAULT__", "__STEPS_VISIBLE_DEFAULT__",
-        "__DATABASES_VISIBLE_DEFAULT__", "__EVENTS_VISIBLE_DEFAULT__", "__SETUP_VISIBLE_DEFAULT__", "__NOTE_WIDTH_DEFAULT__"
+        "__DATABASES_VISIBLE_DEFAULT__", "__EVENTS_VISIBLE_DEFAULT__", "__SETUP_VISIBLE_DEFAULT__", "__NOTE_WIDTH_DEFAULT__",
+        "__PAYLOAD_SCROLL_LINES_DEFAULT__"
     ];
 
     [Fact]
@@ -99,6 +100,8 @@ public class ToggleDefaultsMarkupTests
         Assert.Contains("window._stepsVisible = true", script);
         Assert.Contains("window._databasesVisible = true", script);
         Assert.Contains("window._noteFormatDefault = 'yaml'", script);
+        // 5.4.0 (the owner, 2026-10-21): a payload longer than 40 body lines scrolls in its box
+        Assert.Contains("window._payloadScrollLines = 40;", script);
         foreach (var token in ScriptTokens)
             Assert.DoesNotContain(token, script);
     }
@@ -114,8 +117,10 @@ public class ToggleDefaultsMarkupTests
             AssertionsShown = true,
             StepsShown = false,
             DatabasesShown = false,
-            NotePayloadFormat = NotePayloadFormat.Yaml
+            NotePayloadFormat = NotePayloadFormat.Yaml,
+            PayloadScrollLines = 0
         });
+        Assert.Contains("window._payloadScrollLines = 0;", script);
         Assert.Contains("window._headersHidden = true", script);
         Assert.Contains("window._truncateLinesDefault = 10", script);
         Assert.Contains("window._detailsDefault = 'expanded'", script);
@@ -175,13 +180,13 @@ public class ToggleDefaultsMarkupTests
     public void Details_default_seeds_active_button_and_disables_the_truncate_select()
     {
         var content = Generate(t => t.Details = ReportDetailsState.Expanded);
-        Assert.Contains("<button class=\"details-radio-btn details-active\" data-state=\"expanded\" onclick=\"window._setReportDetails('expanded')\" title=\"The payloads in every sequence diagram in the report show in full\"><span class=\"btn-label\" data-label=\"Expanded\">Expanded</span></button>", content);
+        Assert.Contains("<button class=\"details-radio-btn details-active\" data-state=\"expanded\" onclick=\"window._setReportDetails('expanded')\" title=\"The payloads in every sequence diagram in the report show in full; a long one scrolls in its box\"><span class=\"btn-label\" data-label=\"Expanded\">Expanded</span></button>", content);
         Assert.Contains("<button class=\"details-radio-btn\" data-state=\"truncated\" onclick=\"window._setReportDetails('truncated')\" title=\"Payloads in every sequence diagram in the report longer than the line limit beside this are cut at that many lines\"><span class=\"btn-label\" data-label=\"Truncated\">Truncated</span></button>", content);
         // syncRadioButtons disables the select whenever the state is not truncated — the
         // seeded markup must agree before the first click.
         Assert.Contains("<select class=\"truncate-lines-select\" autocomplete=\"off\" aria-label=\"Payload length\" title=\"How many lines a cut payload box keeps in every sequence diagram in the report (with Truncated picked)\" disabled onchange=\"window._setTruncateLines(this)\">", content);
         // Scenario-level twin seeds consistently
-        Assert.Contains("<button class=\"details-radio-btn details-active\" data-state=\"expanded\" onclick=\"window._setAllNotes(this,'expanded')\" title=\"The payloads in this scenario's sequence diagrams show in full\"><span class=\"btn-label\" data-label=\"Expanded\">Expanded</span></button>", content);
+        Assert.Contains("<button class=\"details-radio-btn details-active\" data-state=\"expanded\" onclick=\"window._setAllNotes(this,'expanded')\" title=\"The payloads in this scenario's sequence diagrams show in full; a long one scrolls in its box\"><span class=\"btn-label\" data-label=\"Expanded\">Expanded</span></button>", content);
     }
 
     [Fact]
@@ -619,7 +624,7 @@ public class ToggleDefaultsMarkupTests
         var output = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Reports", $"ToggleMerge_{Guid.NewGuid():N}.html");
         var written = MergeableReportRenderer.Render(report, output, options: options);
         var content = File.ReadAllText(written);
-        Assert.Contains("<button class=\"details-radio-btn details-active\" data-state=\"expanded\" onclick=\"window._setReportDetails('expanded')\" title=\"The payloads in every sequence diagram in the report show in full\"><span class=\"btn-label\" data-label=\"Expanded\">Expanded</span></button>", content);
+        Assert.Contains("<button class=\"details-radio-btn details-active\" data-state=\"expanded\" onclick=\"window._setReportDetails('expanded')\" title=\"The payloads in every sequence diagram in the report show in full; a long one scrolls in its box\"><span class=\"btn-label\" data-label=\"Expanded\">Expanded</span></button>", content);
         Assert.Contains("window._detailsDefault = 'expanded'", content);
         Assert.Contains("data-toggle=\"headers\" data-shown=\"false\" aria-pressed=\"false\"", content);
     }

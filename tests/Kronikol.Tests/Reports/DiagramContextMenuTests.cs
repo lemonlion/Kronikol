@@ -1314,7 +1314,8 @@ public class DiagramContextMenuTests
     {
         Assert.Contains("window.open('', '_blank')", _script);
         Assert.Contains("openSvgInTab(serializeSvg(svg))", _script);
-        Assert.Contains("openTextInTab(source, typeLabel + ' source')", _script);
+        // the source the picture was composed from before a long payload's cap (5.4.0)
+        Assert.Contains("openTextInTab(currentSource, typeLabel + ' source')", _script);
         Assert.Contains("openTextInTab(_fullNoteText, 'Box text')", _script);
         // the three fallbacks (PNG, SVG, text) are the only blob: URLs a tab is opened on
         Assert.Equal(3, _script.Split("window.open(URL.createObjectURL(").Length - 1);

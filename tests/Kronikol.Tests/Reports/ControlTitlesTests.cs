@@ -311,7 +311,7 @@ public class ControlTitlesTests : IDisposable
             TitleOf(bar, ".details-radio-label"));
         Assert.Equal(
             [
-                $"expanded: The payloads in {diagrams} show in full",
+                $"expanded: The payloads in {diagrams} show in full; a long one scrolls in its box",
                 $"collapsed: The payloads in {diagrams} fold to one line each; a box's + button opens it",
                 $"truncated: Payloads in {diagrams} longer than the line limit beside this are cut at that many lines"
             ],

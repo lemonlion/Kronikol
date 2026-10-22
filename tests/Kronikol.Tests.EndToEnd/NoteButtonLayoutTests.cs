@@ -38,7 +38,7 @@ public class NoteButtonLayoutTests : DiagramNotePlaywrightBase
         "\ncaller -> orders : POST /orders\nnote right\n" + LongBody + "\nend note\norders --> caller : 201\n" +
         string.Join("\n", Enumerable.Repeat(Calls, 40)) + "\n@enduml";
 
-    private async Task OpenAsync(string fileName, string source)
+    private async Task OpenAsync(string fileName, string source, ResolvedToggleDefaults? toggles = null)
     {
         Feature[] features =
         [
@@ -50,7 +50,7 @@ public class NoteButtonLayoutTests : DiagramNotePlaywrightBase
         ];
         var path = ReportGenerator.GenerateHtmlReport([new DefaultDiagramsFetcher.DiagramAsCode("s1", "", source)],
             features, DateTime.UtcNow, DateTime.UtcNow, null, Path.Combine(TempDir, fileName), "Bakery", true,
-            diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
+            diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs, toggleDefaults: toggles);
         File.Copy(path, Path.Combine(OutputDir, fileName), true);
         await Page.GotoAsync(new Uri(path).AbsoluteUri);
         await Page.Locator("details.feature").First.WaitForAsync();
@@ -227,7 +227,9 @@ public class NoteButtonLayoutTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task The_top_right_buttons_follow_the_visible_part_of_a_tall_note_the_triangle_too()
     {
-        await OpenAsync("NoteButtonsTall.html", LongNote);
+        // a tall note: drawn in full, as 5.4.0 draws an expanded payload 40 lines tall with its body in a scroll box,
+        // whose buttons stay in its top row (LongPayloadScrollTests.T24)
+        await OpenAsync("NoteButtonsTall.html", LongNote, ReportTestHelper.InFull(ResolvedToggleDefaults.BuiltIn));
         await SetScenarioState("expanded");
         // the note's top 300 px above the window
         await Page.EvaluateAsync("() => { const r = document.querySelector('.note-hover-rect').getBoundingClientRect(); window.scrollBy(0, r.top + 300); }");

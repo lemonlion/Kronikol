@@ -1,6 +1,6 @@
 # LONG_NOTE_SCROLL_PLAN: a long payload scrolls inside its box
 
-**Status: green-lit by the owner on 2026-10-21 ("Implement the plan in full"), being executed; Q1 answered: on by default (40), shipped as a minor. R0 shipped as 5.2.4 (section 10).** Written 2026-10-21 at the owner's ask (section 1), and
+**Status: executed and released, R0 as 5.2.4 and R1 as 5.4.0 (section 10); green-lit by the owner on 2026-10-21 ("Implement the plan in full"); Q1 answered: on by default (40), shipped as a minor.** Written 2026-10-21 at the owner's ask (section 1), and
 revised the same day after an independent review (section 10). Every `file:line` is at `origin/main` `4a0dad9e` (5.2.2),
 under `src/Kronikol/` unless it says otherwise; CN, RS, CM, IS, KN, RES, RG and PC are `Reports/collapsible-notes-script.js`,
 `Reports/plantuml-browser-render-script.js`, `Reports/context-menu-script.js`, `Reports/inline-svg-styles.css`,
@@ -350,7 +350,8 @@ match is a manual check), not a box that is not filled yet, nor a diagram not ye
 ### 4.8 The option
 
 `ReportConfigurationOptions.PayloadScrollLines` (int): the most body lines a payload draws before it scrolls; 0 never
-caps; otherwise 10 to 1,000. Default 0 in R1 and 40 at the next major (Q1); the docs name 40 as the value to set. Under
+caps; otherwise 10 to 1,000. Default 40, the owner's answer to Q1 (this paragraph first said 0 in R1 and 40 at the next
+major). Under
 BrowserJs only; the Server, Local and NodeJs renderers keep today's split.
 
 It reaches the page the way `NotePayloadFormat` does (`ReportConfigurationOptions.cs:593-600` feeds the resolved
@@ -467,6 +468,29 @@ the change (5.2.2 at this writing), except the three controls.
 | T25 | The FocusFields response: the emphasised field is bold and coloured in the box, no `<b>` or `<color` text shows, and the note is as wide as its widest line drawn | no box |
 | T26 | Truncated at 100: "Copy current box text" copies the 100 lines and `...` | (a control: passes before the change; fails on R1 if the item reads the drawn source) |
 | T27 | After Wide and its correction pass, each boxed note has exactly one box | no box |
+| T28 | Copy Highlighted Text over every row the engine drew for a boxed note copies what Copy box text copies (added in R1: the rows under the box and the clear row were copied as painted) | the rows under the box, the cut and the widest line again |
+| T29 | A selection from a boxed note's headers into its box copies the headers and the box's lines it covers (added in R1) | the rows' text run together |
+| T30 | With headers hidden, Truncated at 40 draws a long payload's 40 lines and its cut with no box (added in R1: the cap counted the cut as a 41st line) | a box over 41 lines |
+| T31 | A payload of 60 lines of about 700 characters stays one note with one box holding every line, its drawn note under 15,000 characters (added in R1: 40 such lines were cut across diagrams, a box in each part) | "Continued On Next Diagram", a box per part |
+| T32 | A widest line longer than the note's wrap width (a 600-character value with spaces) leaves one clear row: the note ends within 40 px of its `...` row (added in R1: the clear row wrapped as the line does) | a band of clear rows under the box, 107 px |
+| T33 | A `FocusFields` token the generator broke into pieces is one line in the box and copies without markup, with LF and with CRLF line ends (a theory; added in R1) | LF: the pieces stay apart, as each carries its own tags; CRLF: the copies keep `<color:lightgray>` |
+| T34 | A box that could not be made when its note first came near (nothing measured yet) is made when the note comes near again (added in R1: the first attempt ended the note's watch) | no box |
+| T35 | A first drawing installs the records composed for it, not those of a compose made while it was drawn (added in R1: the slot was read when the drawing ended) | the other compose's records |
+| T37 | A boxed note whose lines wrap offers Wide before its box is made (added in R1: Wide went by the box's own text) | no Wide button until the box is made |
+
+| T38 | A message's note, drawn at 11 px, is measured at that size: a line that fits stays one row in its box and Wide is not offered (added in R1, second review) | the line wraps in the box; Wide offered |
+| T39 | A form body's grey `&` dividers and a long URL's "[Full path]" line read in the box and copy without Kronikol's markup, and the clear row paints nothing (added in R1, second review) | `<font color="lightgray">&` in the box and the copy; a grey `&` under the cut |
+| T40 | A first drawing records the source before the cap it was composed with, not the slot's (added in R1, second review) | another compose's source |
+| T41 | A widest line whose first word is wider than the wrap width leaves one clear row (added in R1, second review) | a band of clear rows |
+| T42 | A first line alone past 15,000 characters is drawn cut at a space, and the note stays one note with one box (added in R1, second review) | "Continued On Next Diagram" |
+| T43 | A note the browser's IntersectionObserver cannot see gets its box as it comes near, and not before: the observer stubbed to answer as WebKit's does for an element inside an svg (added in R1: the acceptance found no box in WebKit) | no box |
+| T44 | A selection from a box past its note, into the next arrow's label, copies the box's lines and the label's row as it reads (added in R1: no fact read a selection past the note, 7.4) | the label's words a line each |
+
+T10 also checks the box's role (`group`), and T23 that a failed redraw leaves the box where it was, one box, and the
+picture's source on the diagram (added in R1, second review and mutations). T25's widest line moved past the 40 lines
+drawn, and T29's headers include one of several words (R1, mutations). T36 was written in R1 for a box taking a smaller font from a
+de-emphasised first row, and removed: a JSON body's first row is its brace, which `FocusFields` never de-emphasises, so
+the case cannot arise.
 
 Plus, for section 6: F1 (the M10 report: Expanded then Truncated cuts the YAML note to 11 rows with `...`), F2 (the
 stubbed failure on a whole-diagram note redraw frees every note button within 2 s), F3 (Wide on a note in a diagram drawn
@@ -493,7 +517,8 @@ same source then draws through the engine, not the cache).
 
 ### 7.3 Pins that move
 
-With the default 0, R1 moves no pin: every existing fact draws as before, and T16 holds that. The flip to 40 (Q1) will
+The owner's answer to Q1 (40 by default in R1) makes R1 the flip this section first left for the next major. With the
+default 0, R1 would have moved no pin: every existing fact draws as before, and T16 holds that. The flip to 40 will
 need the full Playwright suite (4.0.0's header and YAML flips turned 77 facts red across 20 classes). Research section 5
 lists the facts that expand a note past 40 body lines, read its drawn rows or need the 15,000-character pieces; for the
 flip they sort three ways:
@@ -523,6 +548,8 @@ Each red is read before it is moved: a flip can expose a latent bug in the newly
   composing (T15); the cleanup missing the frame (T27); the scroll position not kept (T18); every box filled at once
   (T21's count).
 - The acceptance (8.4) is a deliverable: run and recorded before the tag.
+- R1 ran 56 mutations (the list above and one for each fix R1 found, section 10): 53 killed, three that cannot be seen
+  (section 10 has each).
 
 ### 7.5 Browsers, load and what only a person can check
 
@@ -554,7 +581,8 @@ whatever `origin/main` then holds, in a worktree of its own, and re-reads those 
 
 ### 8.3 Version
 
-R1 adds a public option and leaves every report as it was until the option is set: a minor (CLAUDE.md: a new
+(Superseded by the owner's answer to Q1, 2026-10-21: R1 ships the option on at 40, as a minor, the owner's call; the
+changelog says so.) R1 adds a public option and leaves every report as it was until the option is set: a minor (CLAUDE.md: a new
 configuration option is a minor bump even when its default preserves today's behaviour exactly). Making 40 the default
 would change what an unchanged project's report draws, which CLAUDE.md's MAJOR line names ("changing a default so that
 existing code behaves differently without being touched"), as 4.0.0 did for the display defaults (`5ab2a3ea`); so the
@@ -654,6 +682,90 @@ Recommended answers first; the plan above is written to them.
   the branch F2 fixes. The per-line cost of a box was corrected the same day to the figures without
   `content-visibility`, which the design does not use (10 to 18 ms for the largest real payload, where the first version
   said 15 to 40). Nothing in a package changes.
+- 2026-10-21 and 2026-10-22, R1 (5.4.0, kronikol-93; built on 5.2.5 `2820cd89` and rebased onto 5.3.0 `0d00548b`, as
+  5.2.6, 5.2.7 and 5.3.0, other sessions' releases, landed first): section 4 built, the option on at 40 by the owner's
+  answer to Q1. What the build found that the plan had not, each fixed with its fact first:
+  - A carriage return in the middle of a note line makes the engine paint the whole line as written, colour tag and
+    all: the generator writes a JSON body with CRLF line ends, so the clear row came out as visible text until
+    `clearWidthRow` and `scrollBoxLines` took `\r` off (T1, T2).
+  - The engine paints no text at all in a clear ink: a clear row is only the width and height it adds. A widest line
+    wider than the note wraps at wrapped as the clear row too, a band of clear rows under the cut (107 px on T32's
+    600-character line); the clear row is now cut at a space to one row, and `wraps` records that the box's text will
+    wrap, which Wide goes by before the box is made (T37).
+  - The cap counted a truncated note's `...` as a line of its payload, so Payload length 40 with headers hidden was
+    boxed (T30); 40 lines of about 700 characters passed the 15,000 characters at which the page cuts a note, and each
+    part got a box (T31): the cap now draws fewer lines to stay under `window._maxNoteChars`.
+  - A selection across a boxed note copied the rows under the box and the clear row (T28): the box now sits before the
+    body's first row in the SVG, and `selectedSvgText` reads the box's text a line to a row and skips the rows under
+    it. T29 (headers into the box) passed before the change in Chromium, whose `Selection.toString()` skips the hidden
+    rows; it is kept as a guard for the browsers that do not.
+  - FocusFields emphasis around a long token the generator broke into pieces: where the generator's line ends are LF
+    each piece carries its own tags, so the box showed the token in pieces; where they are CRLF one pair spans the
+    pieces, so the copies kept both tags (T33, both forms). `liftEmphasisOverJoins` gives the CRLF form, which joins.
+  - A box whose note could not be measured on the observer's first call was never made (T34): the observer now keeps
+    watching until a box is made. A first drawing read its records when it ended, so a compose in between could give
+    it another's (T35): `_preProcessSource` records them with the source it composed, at all three of its composes
+    (T22 caught the third when the first two were done).
+  - The option's range was checked under BrowserJs only, though its documentation says any other value fails report
+    generation: the resolver and the generator check it now (two core facts).
+  - The full Playwright suite found one more (`OpenInNewTabTests`, the source item): the menu took the source the
+    picture was composed from whenever the diagram had a picture, so with no note capped, or after the diagram's
+    source was set again, it opened a source other than the one it was given. `_noteUncappedSource(owner, source)`
+    now answers only for a picture with a capped note drawn from that very source.
+  - A second review (agent, read-only) of the code after those fixes found seven more, each read in the code and given
+    a fact that failed before its fix: a message's note is drawn at 11 px (`.eventNote`) and was measured at 13, so a
+    line that fits was taken to wrap and the note drawn too narrow (T38); a form body's divider
+    (`<font color="lightgray">&`) and a long URL's "[Full path]" line showed in the box as markup, and the divider
+    painted a grey `&` in the clear row (T39; "Copy box text" copied the divider's markup since form bodies had it, a
+    released bug); a failed note redraw left its source on the diagram, so the kept picture was decorated against it
+    and its box placed from the wrong header lines (T23); the first drawing recorded the slot's source, not its own
+    compose's (T40); a widest line whose first word is wider than the wrap width kept the whole line as the clear row
+    (T41); a first line alone past 15,000 characters was drawn whole and cut across diagrams (T42); and the box's
+    name had no role to carry it (T10).
+  - The acceptance in WebKit found no box at all: WebKit's IntersectionObserver reads an SVG element inside the
+    report's scaled `<svg>` as a box with no height at the svg's corner (every note read the same top, height 0), so it
+    never saw a note come near; on a bare page with an unscaled svg it reports the path's top correctly, still with no
+    height. The outer `<svg>` and HTML elements it reads correctly. Once the observer misreads a note, the notes waiting
+    for a box are now checked by their own boxes as the page scrolls (T43, the observer stubbed to answer as WebKit's
+    does, since CI runs Chromium only). Chromium and Firefox keep the observer.
+  - The note's own copies kept FocusFields markup as text (F8, a bug since FocusFields shipped; `NoteEmphasisCopyTests`,
+    red on 5.2.4).
+  - A code review (agent, read-only) found the clear-row band, the FocusFields pieces, the box never retried, Wide
+    before the box, the first drawing's records and the range check; its seventh point (the box's face read from its
+    first two rows under FocusDeEmphasis.SmallerText) cannot occur: a JSON body's first row is its brace, which
+    FocusFields leaves plain. T36 was written for it, passed on the unchanged code, and was removed.
+  - 7.3, each red read before it moved (the default on, no pins, 205 facts in 20 classes): 20 red. ContinuationNote-
+    InteractivityTests 9 and ThreeFragmentContinuationTests 5 waited for a long note's parts; CapturedTextEscapeTests 2
+    ("the note must be split"); NoteButtonLayoutTests 1 (a boxed note's buttons stay in its top row, T24); and 5.2.5's
+    ZoomKeptOnRedrawTests 3 and NoteRedrawQueueTests 2 (the expanded note no longer draws the diagram in parts): their
+    fixtures pin `ReportTestHelper.InFull` (PayloadScrollLines 0). ToggleDefaultsTests 2 read 40 of 45 lines in
+    `data-plantuml`: they read the source before the cap and the box. YamlNoteCopyTextTests 1 (a selection over the
+    note) passes with the selection fix. DiagramNoteLongNoteTests, DiagramNoteSplitTests, DiagramNotePartitionTests,
+    NoteButtonsAfterHeaderHideTests and ten more passed with the default on and stay on it.
+  Acceptance (8.4), 2026-10-22, on the built page in Playwright's bundled Chromium, Firefox and WebKit
+  (`probe/acceptance.js`): the 1,500-line response is one diagram with no "Continued", its
+  box holds its 1,500 lines and is named "Payload, 1,500 lines"; the wheel over it scrolls the box and not the page;
+  ArrowDown, PageDown and End scroll it down and ArrowUp, PageUp and Home up, moving no scenario; and a selection over
+  three of its lines keeps their line breaks (Firefox reads them as CRLF). In all three after the WebKit fix; before
+  it, WebKit made no box. T21's 40-call report from load to every part decorated, three loads each on a quiet
+  machine, before the second review's fixes: Chromium 4.4 to 4.7 s capped, against 4.7 s for the first load in full
+  and 10.2 to 10.3 s for the next two; Firefox 1.9 s against 3.7 s; WebKit's Windows build 20 to 53 s capped and 35
+  to 38 s in full, with no order that held from load to load. The cap's own work is small: composing that diagram
+  took 16 ms with its 16 notes capped (Chromium), and the 7,800 width measurements behind it take 7 to 58 ms in the
+  three engines (a bare page). BreakfastProvider (its ReqNRoll lane, in memory, on packages of this build from a local feed): all 214 scenarios
+  pass; with every note expanded, its 428 sequence diagrams are cut into 474 parts in full (11 diagrams cut) and 429
+  capped (1 cut), 37 notes boxed, and composing them all takes 128 ms in full and 78 ms capped (Chromium).
+  Mutations (7.4): 56 of the new code, 53 killed, each at an assertion of the fact it names. The first run showed
+  three facts too weak, made stronger before the count: T25's widest line was drawn among the 40 lines, so the clear
+  row never set the width (moved past them); T27 could not see a cleanup missing, since Wide draws a new picture (T23
+  now counts the boxes on the picture a failed redraw decorates again); and no fact read a selection that runs past the
+  box's note (T44; inside one note the menu maps any selection onto the note's own text, so T29 passed without the
+  box's reading). Three survive, none of them visible: the box taken out of the tabs' and the Features tools' arrow-key
+  handlers, whose Up and Down only bring the Features tab and its Full view to the front, where any box already is
+  (`PayloadScrollLinesTests` holds both lines), and a selection keeping text in a clear ink, which the engine never
+  paints. One kill in the first run was a timeout under load (T33's diagram not drawn in 60 s while two other
+  sessions' suites ran); run again, it fails at its assertion. The other timeouts are the facts' own: a box that
+  never came.
 
 ## Appendix A. The harness
 
@@ -677,6 +789,9 @@ Recommended answers first; the plan above is written to them.
 | `probe/kbd.js` | M8: keys on a focused box with the exemption |
 | `probe/notesizes.js` | M9: aggregates of a real report's notes and the split estimate (prints numbers only) |
 | `probe/repro-yaml.js` | M10: F1 |
+| `probe/acceptance.js` | R1's acceptance (8.4): the built page's boxes in the three engines, and T21's report capped against in full |
+| `probe/io-svg.js` | R1: what each engine's IntersectionObserver reads for an SVG path, the outer svg and HTML in a foreignObject |
+| `probe/measure.js` | R1: the cost of the cap's width measurements in each engine |
 
 The probes take Playwright from `KRONIKOL_PW` (default `probe/pw/package`): point it at the E2E project's bundled driver
 (`tests/Kronikol.Tests.EndToEnd/bin/Debug/net10.0/.playwright/package`, whose Chromium, Firefox and WebKit builds

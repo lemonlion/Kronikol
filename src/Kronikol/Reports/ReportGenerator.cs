@@ -1093,7 +1093,7 @@ public static class ReportGenerator
             $"<option value=\"{(int)v}\"{(v == toggles.TruncateLines ? " selected" : "")}>{(int)v} lines</option>"));
         var diagrams = PayloadsWhere(scenarioLevel);
         return $"<span class=\"details-radio\"><span class=\"details-radio-label\" title=\"How the payloads in {diagrams} are shown (the boxes beside the arrows, holding each request, response and message, with its headers): whole, folded to one line, or cut at a line limit\">Payloads</span>"
-            + $"<button class=\"details-radio-btn{Active(ReportDetailsState.Expanded)}\" data-state=\"expanded\" onclick=\"{Click("expanded")}\" title=\"The payloads in {diagrams} show in full\">{BuildButtonLabel("Expanded")}</button>"
+            + $"<button class=\"details-radio-btn{Active(ReportDetailsState.Expanded)}\" data-state=\"expanded\" onclick=\"{Click("expanded")}\" title=\"The payloads in {diagrams} show in full{(toggles.PayloadScrollLines > 0 ? "; a long one scrolls in its box" : "")}\">{BuildButtonLabel("Expanded")}</button>"
             + $"<button class=\"details-radio-btn{Active(ReportDetailsState.Collapsed)}\" data-state=\"collapsed\" onclick=\"{Click("collapsed")}\" title=\"The payloads in {diagrams} fold to one line each; a box's + button opens it\">{BuildButtonLabel("Collapsed")}</button>"
             + $"<button class=\"details-radio-btn{Active(ReportDetailsState.Truncated)}\" data-state=\"truncated\" onclick=\"{Click("truncated")}\" title=\"Payloads in {diagrams} longer than the line limit beside this are cut at that many lines\">{BuildButtonLabel("Truncated")}</button>"
             + $"<select class=\"truncate-lines-select\" autocomplete=\"off\" aria-label=\"Payload length\" title=\"How many lines a cut payload box keeps in {diagrams} (with Truncated picked)\"{disabled} onchange=\"{change}\"><optgroup label=\"Payload length\">{options}</optgroup></select></span>";
@@ -1468,6 +1468,8 @@ public static class ReportGenerator
         // parameter (kept for compatibility — tests and helpers call it directly) folds into the
         // built-ins otherwise.
         var toggles = toggleDefaults ?? ResolvedToggleDefaults.BuiltIn with { NotePayloadFormat = notePayloadFormat };
+        // whatever draws the diagrams: a value out of range fails the report as the option's documentation says
+        ReportToggleDefaultsResolver.CheckPayloadScrollLines(toggles.PayloadScrollLines);
 
         // The per-scenario history (sparkline, pill, verdict attribute) is drawn only when the report asks for it
         // (ReportConfigurationOptions.ShowScenarioHistory); the section has a switch of its own. The $verdict search

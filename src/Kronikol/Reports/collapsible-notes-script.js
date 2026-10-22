@@ -68,6 +68,29 @@
         return out;
     }
 
+    // FocusFields wraps each line of a payload in its emphasis after the generator has broken a long run into pieces,
+    // each ending in the join marker. Where the generator's line ends are LF it wraps each piece, so a piece's marker
+    // sits inside its closing tags and the next piece opens the same tags again; where they are CRLF one pair spans the
+    // pieces. Taking the inner tags off gives the CRLF form, whose pieces join as a payload's without emphasis do, and
+    // whose one pair then comes off the joined line (5.4.0).
+    var EMPHASIS_CLOSED_AFTER_MARKER = /^([\s\S]*?)((?:<\/(?:b|i|u|color|size)>)+)(\r?)$/;
+    var EMPHASIS_OPENED = /^(?:<(?:b|i|u|color:[^>]+|size:\d+)>)+/;
+    function emphasisNames(tags) {
+        return (tags.match(/<\/?(?:b|i|u|color|size)\b/g) || []).map(function(t) { return t.replace(/[<\/]/g, ''); });
+    }
+    function liftEmphasisOverJoins(lines) {
+        var out = lines.slice();
+        for (var i = 0; i < out.length - 1; i++) {
+            var closed = EMPHASIS_CLOSED_AFTER_MARKER.exec(out[i]);
+            if (!closed || !endsWithOwnMarker(closed[1], NOTE_JOIN_MARKER)) continue;
+            var opened = EMPHASIS_OPENED.exec(out[i + 1]);
+            if (!opened || emphasisNames(opened[0]).join() !== emphasisNames(closed[2]).reverse().join()) continue;
+            out[i] = closed[1] + closed[3];
+            out[i + 1] = out[i + 1].slice(opened[0].length);
+        }
+        return out;
+    }
+
     // The engine resolves the marker to a real zero-width space, so it reaches the PAINTED svg text.
     // Anything reading note text out of the DOM rather than out of the source has to drop it.
     function stripZeroWidth(text) {
@@ -355,7 +378,7 @@
 
     // For the mouse only: no tabindex, role or key handling, shown on hover. A diagram far from the screen gets its buttons
     // only as it comes near; "Accessibility" above processRenderQueue says what a keyboard route needs (5.1.1).
-    function createNoteButtons(svg, bbox, noteStep, onExpand, onContract, onTruncate, onCycle, contentLines, grp, container, forceIsLong, formatInfo, appearanceInfo) {
+    function createNoteButtons(svg, bbox, noteStep, onExpand, onContract, onTruncate, onCycle, contentLines, grp, container, forceIsLong, formatInfo, appearanceInfo, boxed) {
         var size = 12;
         var topSize = 14;
         var pad = 3;
@@ -690,9 +713,10 @@
                 if (widthBtn._eligible === undefined) widthBtn._eligible = appearanceInfo.canWiden();
                 widthBtn.style.display = widthBtn._eligible ? '' : 'none';
             }
-            // For tall notes, the top-right cluster follows the visible part of the note, so it is not scrolled off.
+            // For tall notes, the top-right cluster follows the visible part of the note, so it is not scrolled off; a boxed
+            // note's stays in its top row, clear of the box's scrollbar (5.4.0).
             var dy;
-            if (bbox.height > 500 && svg.getScreenCTM) {
+            if (bbox.height > 500 && !boxed && svg.getScreenCTM) {
                 try {
                     var ctm = svg.getScreenCTM();
                     if (ctm) {
@@ -705,11 +729,12 @@
                 } catch(e) {}
             }
             packTopRight(dy);
-            buttons.forEach(function(b) { if (b.style.display !== 'none') b.style.opacity = '1'; });
+            buttons.forEach(function(b) { if (b.style.display !== 'none') { b.style.opacity = '1'; b.style.pointerEvents = ''; } });
         }
+        // A hidden button takes no click (5.4.0): an invisible Fold or Cut over a payload's box took the click meant for it.
         function _noteScheduleHide() {
             _noteHideTimeout = setTimeout(function() {
-                buttons.forEach(function(b) { b.style.opacity = '0'; });
+                buttons.forEach(function(b) { b.style.opacity = '0'; b.style.pointerEvents = 'none'; });
             }, 300);
         }
 
@@ -776,8 +801,9 @@
         });
         grp.paths[0].parentNode.insertBefore(hoverRect, grp.paths[0]);
 
-        // Insert buttons on top (after hoverRect so they receive clicks)
-        buttons.forEach(function(b) { svg.appendChild(b); });
+        // Insert buttons on top (after hoverRect so they receive clicks), taking none until shown
+        buttons.forEach(function(b) { b.style.pointerEvents = 'none'; svg.appendChild(b); });
+        if (grp) grp._noteHover = { show: _noteShowButtons, hide: _noteScheduleHide };
     }
 
     // ── Fragment note indexing ──────────────────────────────────────────
@@ -834,9 +860,11 @@
         var svg = container.querySelector('svg');
         if (!svg) return;
 
-        // Remove existing toggle icons and hover rects from previous renders
+        // Remove existing toggle icons and hover rects from previous renders, and the scroll boxes (5.4.0)
         svg.querySelectorAll('.note-toggle-icon').forEach(function(el) { el.remove(); });
         svg.querySelectorAll('.note-hover-rect').forEach(function(el) { el.remove(); });
+        svg.querySelectorAll('.note-scroll-frame').forEach(function(el) { el.remove(); });
+        svg.querySelectorAll('.note-scroll-under').forEach(function(el) { el.classList.remove('note-scroll-under'); });
 
         // Resolve the owner container (the .plantuml-browser parent for fragments)
         var owner = container.classList.contains('puml-fragment') ? container.parentElement : container;
@@ -899,8 +927,10 @@
         }
 
         var noteGroups = findNoteGroups(svg);
-        // A note drawn before keeps no indices from an earlier pass over these elements.
-        noteGroups.forEach(function(g) { if (g.paths[0]) g.paths[0]._noteIndices = null; });
+        // A note drawn before keeps no indices, and no box waiting to be made, from an earlier pass over these elements.
+        noteGroups.forEach(function(g) { if (g.paths[0]) { g.paths[0]._noteIndices = null; unwatchScrollBox(g.paths[0]); } });
+        // the records of the boxes this picture was drawn with (installNoteScroll)
+        var scroll = owner._noteScrollDrawn;
 
         // Safety net: if more SVG groups were detected than note blocks exist,
         // filter to only groups whose fill matches the expected note count.
@@ -1033,11 +1063,14 @@
                         setNoteFormat(owner, globalIdx, next);
                     }
                 };
+                var record = scroll && scroll.records && scroll.records[globalIdx];
                 var appearanceInfo = {
                     width: noteWidthOf(owner, globalIdx),
                     canWiden: function() {
                         // An already-widened note always keeps its button: that is the only way back.
                         if (noteWidthOf(owner, globalIdx) === 'full') return true;
+                        // before its box is made, by what the cap measured of its lines
+                        if (record) return grp._noteScrollFrame ? scrollBoxWraps(grp._noteScrollFrame) : !!record.wraps;
                         var sourceLines = noteBlocks[localIdx] ? noteBlocks[localIdx].contentLines.length : 0;
                         return sourceLines > 0 && paintedRowCount(grp) > sourceLines;
                     },
@@ -1068,7 +1101,21 @@
                         else nextStep = long ? 1 : 2;
                         setNoteState(owner, globalIdx, nextStep);
                     },
-                    origContentLines, grp, container, forceIsLong, formatInfo, appearanceInfo);
+                    origContentLines, grp, container, forceIsLong, formatInfo, appearanceInfo, !!record);
+                if (record) {
+                    var drawnMeta = noteBlocks[localIdx].contentLines.slice(0, record.metaLines);
+                    // true once there is nothing more to do: a box made, or a picture gone
+                    watchScrollBox(grp.paths[0], function() {
+                        if (!grp.paths[0].isConnected) return true;
+                        var frame = makeScrollBox(owner, grp, record, globalIdx, drawnMeta);
+                        // the note's buttons show over its box as over the rest of it
+                        if (frame && grp._noteHover) {
+                            frame.addEventListener('mouseenter', grp._noteHover.show);
+                            frame.addEventListener('mouseleave', grp._noteHover.hide);
+                        }
+                        return !!frame;
+                    });
+                }
             })(ni, sourceIndexMap ? sourceIndexMap[ni] : ni);
         }
 
@@ -1852,12 +1899,472 @@
         return scenario && scenario[flag] !== undefined ? !!scenario[flag] : !!window[flag];
     }
 
+    // ── A long payload scrolls in its box (5.4.0, plans/LONG_NOTE_SCROLL_PLAN.md) ──────────────────────────────────
+    // A payload whose body would draw more than window._payloadScrollLines lines (0: never) is drawn that many lines
+    // tall, then its `...` line and one clear row as wide as its widest line, and a scroll box laid over its body rows
+    // holds the whole body as text. Under `skinparam wrapWidth` the engine paints every word and every space of a note as
+    // its own <text>, so a note of 1,500 lines was 11,000 elements and three diagrams; capped, it is one diagram.
+    // The cap is a step of the composer's own, after the note states and before the filters, where every note still has
+    // its index in the original source. What it records for each capped note belongs to the picture drawn from that
+    // source: installNoteScroll gives it to the diagram as the picture is swapped in, never with a source composed since,
+    // as the cap makes different note states draw the same source (Truncated at 100 lines and Expanded both draw 40).
+    var NOTE_CLEAR_INK = '<color:#FFFFFF00>';
+    // About 3 em of no-break spaces after the widest line: room for a classic scrollbar beside it.
+    var NOTE_SCROLL_ROOM = '          ';
+    // The generator's own emphasis around a line's content (PlantUml/JsonFocusFormatter.cs, FocusFields): a payload's
+    // `<` is always escaped, so a tag in a note line is Kronikol's.
+    var NOTE_EMPHASIS_OPEN = /^<(b|i|u|color:[^>]+|size:\d+)>/;
+
+    // How many of a note's lines are its meta lines: the key line, the grey header lines and the blank lines after them.
+    function noteMetaCount(contentLines) {
+        var n = 0, afterMeta = false;
+        for (; n < contentLines.length; n++) {
+            var t = contentLines[n].trim();
+            if (isNoteMetaLine(t)) { afterMeta = true; continue; }
+            if (afterMeta && t === '') continue;
+            break;
+        }
+        return n;
+    }
+
+    // A line's emphasis tags peeled off its content: { indent, tags, content }, the outermost tag first.
+    function peelEmphasis(line) {
+        var indent = /^\s*/.exec(line)[0];
+        var rest = line.slice(indent.length);
+        var tags = [];
+        var m;
+        while ((m = NOTE_EMPHASIS_OPEN.exec(rest))) {
+            var close = '</' + m[1].replace(/:.*$/, '') + '>';
+            if (rest.length < m[0].length + close.length || rest.slice(-close.length) !== close) break;
+            tags.push(m[1]);
+            rest = rest.slice(m[0].length, rest.length - close.length);
+        }
+        // a header line the body carries (a long URL's "[Full path]"): its grey runs to the line's end, unclosed
+        var header = !tags.length && NOTE_HEADER_TAG.exec(rest);
+        if (header) {
+            tags.push(header[0].slice(1, -1));
+            rest = rest.slice(header[0].length);
+        }
+        return { indent: indent, tags: tags, content: rest };
+    }
+    // A note line without that emphasis, for the note's copies (context-menu-script.js): the tags are Kronikol's markup,
+    // not the payload, and "Copy box text" copied them as text until 5.4.0. A carriage return at the line's end stays.
+    window._stripNoteEmphasis = function(line) {
+        var cr = /\r$/.test(line) ? '\r' : '';
+        var peeled = peelEmphasis(cr ? line.slice(0, -1) : line);
+        return peeled.indent + peeled.content.replace(NOTE_FONT_TAG, '') + cr;
+    };
+    // A form body's grey `&` after each field (PlantUmlCreator.FormatFormFieldLines): Kronikol's markup, which the copies
+    // and the box drop, keeping the `&` (5.4.0; the copies kept it as text before).
+    var NOTE_FONT_TAG = /<\/?font\b[^>]*>/g;
+    var NOTE_FONT_TAIL = /^([\s\S]*?)<font color="([^"]*)">([\s\S]*)$/;
+
+    var _measureCtx = null;
+    // A line's painted width in the note's face: the widest line by characters is not the widest drawn (bold, a smaller
+    // size, wide and narrow letters).
+    function paintedWidth(text, tags, base) {
+        if (_measureCtx === null) {
+            var canvas = document.createElement('canvas');
+            _measureCtx = (canvas.getContext && canvas.getContext('2d')) || false;
+        }
+        if (!_measureCtx) return text.length;
+        var size = base || 13, bold = false;
+        tags.forEach(function(t) {
+            if (t === 'b') bold = true;
+            var sz = /^size:(\d+)$/.exec(t);
+            if (sz) size = +sz[1];
+        });
+        _measureCtx.font = (bold ? 'bold ' : '') + size + 'px system-ui, sans-serif';
+        return _measureCtx.measureText(text).width;
+    }
+
+    function shownNoteLine(content, yaml) {
+        return stripZeroWidth(yaml ? unescapeNoteDisplayLine(content) : decodeNoteEscapes(content));
+    }
+
+    // The row that keeps a capped note as wide as the whole note: its widest body line with its colour tags dropped, so
+    // nothing in it paints, drawn in a clear ink, then room for a scrollbar. The engine sizes a note by the lines it is
+    // given and paints no text in a clear ink (plans/LONG_NOTE_SCROLL_PLAN.md M5).
+    // A source written with CRLF line ends keeps a carriage return at the end of each note line: in the middle of a line
+    // it has the engine paint the whole line as written, its colour tag too, so it is taken off first.
+    // A widest line wider than the note wraps at would wrap as the clear row too, and a row the engine wraps adds a band
+    // of clear rows under the cut: it is cut at a space to what fits on one row, which is as wide as the wrapped note is
+    // drawn. `wraps` says the box's text will wrap, which the note's Wide button goes by before its box is made.
+    function clearWidthRow(bodyLines, yaml, wrapPx, base) {
+        var widest = '', widestPx = -1;
+        for (var i = 0; i < bodyLines.length; i++) {
+            // a form body's divider markup paints in its own ink: it never reaches the clear row
+            var line = bodyLines[i].replace(/\r$/, '').replace(NOTE_FONT_TAG, '');
+            var peeled = peelEmphasis(line);
+            var px = paintedWidth(peeled.indent + shownNoteLine(peeled.content, yaml), peeled.tags, base);
+            if (px > widestPx) { widestPx = px; widest = line; }
+        }
+        var row = widest.replace(/<\/?color(?::[^>]*)?>/g, '');
+        var fit = (wrapPx || Infinity) * 0.95 - paintedWidth(NOTE_SCROLL_ROOM, [], base);
+        var wraps = widestPx > fit;
+        if (wraps) {
+            var spaces = [];
+            for (var k = 1; k < row.length; k++) if (row.charAt(k) === ' ' && row.charAt(k - 1) !== ' ') spaces.push(k);
+            var lo = 0, hi = spaces.length - 1, best = -1;
+            while (lo <= hi) {
+                var mid = (lo + hi) >> 1, part = peelEmphasis(row.slice(0, spaces[mid]));
+                if (paintedWidth(part.indent + shownNoteLine(part.content, yaml), part.tags, base) <= fit) { best = mid; lo = mid + 1; }
+                else hi = mid - 1;
+            }
+            // a first word wider than that is a row of its own: the engine never breaks a word
+            if (best < 0 && spaces.length) best = 0;
+            if (best >= 0) row = row.slice(0, spaces[best]);
+        }
+        return { row: NOTE_CLEAR_INK + row + NOTE_SCROLL_ROOM, wraps: wraps };
+    }
+
+    // A note's font size: its stereotype's, from the diagram's style (the generator draws a message's note at 11 px,
+    // `.eventNote`), else the engine's 13.
+    function noteFontSize(source, noteLine) {
+        var stereotype = /<<([\w-]+)>>/.exec(noteLine || '');
+        var style = stereotype && new RegExp('\\.' + stereotype[1] + '\\s*\\{[^}]*?\\bFontSize\\s+(\\d+)').exec(source);
+        return style ? +style[1] : 13;
+    }
+
+    // A note line cut at a space to at most `max` characters, its emphasis kept round what is left; a line with no
+    // space that early is cut at `max`, short of an escape the cut would split.
+    function cutNoteLine(line, max) {
+        var cr = /\r$/.test(line) ? '\r' : '';
+        if (cr) line = line.slice(0, -1);
+        if (line.length <= max) return line + cr;
+        var p = peelEmphasis(line);
+        var open = p.tags.map(function(t) { return '<' + t + '>'; }).join('');
+        var close = p.tags.slice().reverse().map(function(t) { return '</' + t.replace(/:.*$/, '') + '>'; }).join('');
+        var content = p.content.slice(0, Math.max(1, max - p.indent.length - open.length - close.length));
+        var space = content.lastIndexOf(' ');
+        content = space > 0 ? content.slice(0, space) : content.replace(/<U\+[0-9A-Fa-f]*$|~$/, '');
+        return p.indent + open + content + close + cr;
+    }
+
+    // The width at which the engine wraps a note's lines: a widened note's own, else the diagram's wrapWidth.
+    function noteWrapPx(container, wrapWidth, idx) {
+        return noteWidthOf(container, idx) === 'full' ? (container._noteWidthPx || FALLBACK_NOTE_WIDTH_PX) : wrapWidth;
+    }
+
+    // Caps every payload of a composed source whose body is longer than `cap` lines. Returns the capped source and, for
+    // each capped note, its record under the note's index in this source, which is its original index (the filters
+    // come after): the body's lines as the note would have drawn them, whether they are the YAML view's, and how many
+    // meta lines are drawn above them.
+    function capLongNotes(container, source, cap) {
+        if (!(cap > 0) || !source) return { source: source, records: null };
+        var blocks = parseNoteBlocks(source);
+        var lines = null, records = null;
+        var wrapWidth = /^\s*skinparam\s+wrapWidth\s+(\d+)/m.exec(source);
+        wrapWidth = wrapWidth ? +wrapWidth[1] : Infinity;
+        for (var b = blocks.length - 1; b >= 0; b--) {
+            var content = blocks[b].contentLines;
+            var meta = noteMetaCount(content);
+            var body = content.slice(meta);
+            // a truncated note's cut is not a line of its payload: a Payload length at the cap or under it draws as it did
+            var cut = noteStepState((container._noteSteps && container._noteSteps[b]) || 0) === 'truncated'
+                && body.length && body[body.length - 1] === '...';
+            if (body.length - (cut ? 1 : 0) <= cap) continue;
+            if (!lines) { lines = source.split('\n'); records = {}; }
+            var yaml = !!(container._noteFormats && container._noteFormats[b] === 'yaml');
+            var width = clearWidthRow(body, yaml, noteWrapPx(container, wrapWidth, b), noteFontSize(source, lines[blocks[b].start]));
+            var clear = width.row;
+            records[b] = { lines: body, yaml: yaml, metaLines: meta, wraps: width.wraps };
+            var drawn = content.slice(0, meta);
+            // with nothing drawn above the body, a clear row the top-right buttons sit on
+            if (!meta) drawn.push(NOTE_CLEAR_INK + '.');
+            // fewer lines when long ones would carry the note past the characters at which the page cuts a note across
+            // diagrams (plantuml-browser-render-script.js): it stays one note, with one box
+            var room = (window._maxNoteChars || Infinity) - drawn.concat(['...', clear]).join('\n').length;
+            var shown = 0;
+            while (shown < cap && body[shown].length + 1 <= room) {
+                room -= body[shown].length + 1;
+                shown++;
+            }
+            // a first line alone past that limit is drawn cut at a space, so the note keeps one body row under its box
+            drawn = drawn.concat(shown ? body.slice(0, shown) : [cutNoteLine(body[0], room - 1)], ['...', clear]);
+            lines.splice.apply(lines, [blocks[b].start + 1, content.length].concat(drawn));
+        }
+        return lines ? { source: lines.join('\n'), records: records } : { source: source, records: null };
+    }
+
+    // Whether the cap would draw any of these notes shorter: a source with none is drawn as it is (_preProcessSource).
+    function anyNoteCapped(noteBlocks) {
+        var cap = window._payloadScrollLines;
+        if (!(cap > 0)) return false;
+        for (var i = 0; i < noteBlocks.length; i++) {
+            var content = noteBlocks[i].contentLines;
+            if (content.length - noteMetaCount(content) > cap) return true;
+        }
+        return false;
+    }
+
+    // A capped note's box lines, as "Copy box text" reads a note: the width budget's breaks joined, then the escapes
+    // undone; the emphasis is peeled off each line and given back as elements, never as markup.
+    function scrollBoxLines(record) {
+        var lines = record.lines.map(function(l) { return l.replace(/\r$/, ''); });
+        return rejoinWrappedNoteLines(liftEmphasisOverJoins(lines).join('\n')).split('\n').map(function(l) {
+            var p = peelEmphasis(l);
+            var divider = NOTE_FONT_TAIL.exec(p.content);
+            return {
+                indent: p.indent, tags: p.tags, text: shownNoteLine(divider ? divider[1] : p.content, record.yaml),
+                tail: divider ? { color: divider[2], text: shownNoteLine(divider[3].replace(NOTE_FONT_TAG, ''), record.yaml) } : null
+            };
+        });
+    }
+    function fillScrollBox(box, lines) {
+        var frag = document.createDocumentFragment();
+        for (var i = 0; i < lines.length; i++) {
+            var line = lines[i];
+            if (line.indent) frag.appendChild(document.createTextNode(line.indent));
+            if (line.tags.length) {
+                var span = document.createElement('span');
+                line.tags.forEach(function(t) {
+                    if (t === 'b') span.style.fontWeight = 'bold';
+                    else if (t === 'i') span.style.fontStyle = 'italic';
+                    else if (t === 'u') span.style.textDecoration = 'underline';
+                    else if (/^size:/.test(t)) span.style.fontSize = t.slice(5) + 'px';
+                    else if (/^color:/.test(t)) span.style.color = t.slice(6);
+                });
+                span.textContent = line.text;
+                frag.appendChild(span);
+            } else if (line.text) {
+                frag.appendChild(document.createTextNode(line.text));
+            }
+            if (line.tail) {
+                var tail = document.createElement('span');
+                tail.style.color = line.tail.color;
+                tail.textContent = line.tail.text;
+                frag.appendChild(tail);
+            }
+            if (i < lines.length - 1) frag.appendChild(document.createTextNode('\n'));
+        }
+        box.textContent = '';
+        box.appendChild(frag);
+    }
+
+    // ── The box ──────────────────────────────────────────────────────────────────────────────────────────────────────
+    // A <foreignObject> holding a scrolling <div>, laid over the note's body rows inside the SVG, so it keeps its place at
+    // every zoom. It is made and filled only when its note comes within a window height of the window: a box costs the
+    // layout of its text once, and 100 boxes of 1,500 lines made at once held the first paint for 0.3 to 0.5 s (M4).
+    // Until then the note reads like a truncated one.
+    var XHTMLNS = 'http://www.w3.org/1999/xhtml';
+    var _scrollBoxWatch = null, _scrollBoxObserved = [];
+    function watchScrollBox(anchor, make) {
+        if (typeof IntersectionObserver === 'undefined') { make(); return; }
+        anchor._noteScrollMake = make;
+        if (_scrollBoxBlind) { pollScrollBox(anchor); return; }
+        if (!_scrollBoxWatch) {
+            _scrollBoxWatch = new IntersectionObserver(function(entries) {
+                entries.forEach(function(e) {
+                    var fn = e.target._noteScrollMake;
+                    if (!e.isIntersecting) {
+                        // read as a box with no height, though the note has one: this observer cannot see it come near
+                        if (fn && !e.boundingClientRect.height && e.target.getBoundingClientRect().height) blindScrollBoxWatch();
+                        return;
+                    }
+                    // a box that could not be made (nothing measured yet) is tried again when the note next comes near
+                    if (fn && !fn()) return;
+                    _scrollBoxWatch.unobserve(e.target);
+                    e.target._noteScrollMake = null;
+                });
+            }, { rootMargin: '100% 0px' });
+        }
+        _scrollBoxObserved = _scrollBoxObserved.filter(function(a) { return a._noteScrollMake && a.isConnected; });
+        _scrollBoxObserved.push(anchor);
+        _scrollBoxWatch.observe(anchor);
+    }
+
+    // WebKit's observer reads an SVG element inside the report's scaled <svg> as a box with no height at the svg's
+    // corner, so it never saw a note come near and made no box (5.4.0). Once it misreads a note, every note waiting for a
+    // box is checked by its own box as the page scrolls, against the observer's margin: a window height either side.
+    var _scrollBoxBlind = false, _scrollBoxPolled = [], _scrollBoxTick = 0, _scrollBoxPolling = false;
+    function blindScrollBoxWatch() {
+        if (_scrollBoxBlind) return;
+        _scrollBoxBlind = true;
+        _scrollBoxWatch.disconnect();
+        var observed = _scrollBoxObserved;
+        _scrollBoxObserved = [];
+        observed.forEach(function(a) { if (a._noteScrollMake && a.isConnected) pollScrollBox(a); });
+    }
+    function pollScrollBox(anchor) {
+        if (_scrollBoxPolled.indexOf(anchor) < 0) _scrollBoxPolled.push(anchor);
+        if (!_scrollBoxPolling) {
+            _scrollBoxPolling = true;
+            // capture: a scroll inside the page as well as the page's own; a scenario opened lays notes out unscrolled
+            document.addEventListener('scroll', pollScrollBoxes, { capture: true, passive: true });
+            window.addEventListener('resize', pollScrollBoxes, { passive: true });
+            document.addEventListener('toggle', pollScrollBoxes, true);
+        }
+        pollScrollBoxes();
+    }
+    function pollScrollBoxes() {
+        if (_scrollBoxTick) return;
+        _scrollBoxTick = requestAnimationFrame(function() {
+            _scrollBoxTick = 0;
+            var near = window.innerHeight;
+            _scrollBoxPolled = _scrollBoxPolled.filter(function(anchor) {
+                var fn = anchor._noteScrollMake;
+                if (!fn || !anchor.isConnected) return false;
+                var r = anchor.getBoundingClientRect();
+                if (!r.height || r.bottom < -near || r.top > 2 * near) return true;
+                // a box that could not be made is tried again on the next check
+                if (!fn()) return true;
+                anchor._noteScrollMake = null;
+                return false;
+            });
+        });
+    }
+    function unwatchScrollBox(anchor) {
+        if (!anchor || !anchor._noteScrollMake) return;
+        anchor._noteScrollMake = null;
+        if (_scrollBoxWatch) _scrollBoxWatch.unobserve(anchor);
+    }
+
+    function isClearInk(t) {
+        return /^#[0-9a-f]{6}00$/.test((t.getAttribute('fill') || '').toLowerCase());
+    }
+
+    // The rows a capped note's box lies over: from its first body row to its `...` row, the last row it paints (the clear
+    // row paints nothing). The body's first row comes after the rows the meta lines paint, found by their text, as the
+    // engine wraps a header line longer than the note. Rows are the texts' distinct baselines.
+    function scrollBoxRows(grp, metaLines) {
+        var texts = grp.texts.filter(function(t) { return !isClearInk(t); });
+        var metaChars = metaLines.map(function(l) {
+            return decodeNoteEscapes(l.replace(NOTE_HEADER_TAG_INDENTED, '').replace(NOTE_KEY_LINE_INDENTED, '$1Key '));
+        }).join('').replace(/[\s​]+/g, '').length;
+        var seen = 0, first = null;
+        for (var i = 0; i < texts.length && !first; i++) {
+            var chars = (texts[i].textContent || '').replace(/[\s​]+/g, '').length;
+            if (seen >= metaChars && chars) first = texts[i];
+            seen += chars;
+        }
+        if (!first) return null;
+        var rows = [], byY = {};
+        texts.forEach(function(t) {
+            var y = t.getAttribute('y');
+            if (!byY[y]) { byY[y] = []; rows.push({ y: parseFloat(y), texts: byY[y] }); }
+            byY[y].push(t);
+        });
+        rows.sort(function(a, b) { return a.y - b.y; });
+        for (var r = 0; r < rows.length; r++) if (rows[r].texts.indexOf(first) >= 0) return rows.slice(r);
+        return null;
+    }
+
+    // The box: left where the note's text starts, right 4 px inside its body, top at the first body row's top, bottom at
+    // the `...` row's bottom. The rows it hides keep their geometry under visibility: hidden.
+    function scrollBoxPlace(grp, rows) {
+        var top = Infinity, bottom = -Infinity, left = Infinity, right = -Infinity, area = -1;
+        grp.texts.forEach(function(t) {
+            if (isClearInk(t)) return;
+            try { left = Math.min(left, t.getBBox().x); } catch (e) {}
+        });
+        rows[0].texts.forEach(function(t) { try { top = Math.min(top, t.getBBox().y); } catch (e) {} });
+        rows[rows.length - 1].texts.forEach(function(t) { try { var b = t.getBBox(); bottom = Math.max(bottom, b.y + b.height); } catch (e) {} });
+        grp.paths.forEach(function(p) {
+            try { var b = p.getBBox(); if (b.width * b.height > area) { area = b.width * b.height; right = b.x + b.width; } } catch (e) {}
+        });
+        if (!isFinite(top) || !isFinite(bottom) || !isFinite(left) || !isFinite(right)) return null;
+        return { x: left, y: top, width: right - 4 - left, height: bottom - top };
+    }
+
+    // Makes a capped note's box and fills it; it starts where the reader left the note's box before (Q9).
+    function makeScrollBox(owner, grp, record, originalIdx, metaLines) {
+        var rows = scrollBoxRows(grp, metaLines);
+        var place = rows && scrollBoxPlace(grp, rows);
+        if (!place || place.width <= 0 || place.height <= 0) return null;
+        var lines = scrollBoxLines(record);
+        var frame = document.createElementNS(SVGNS, 'foreignObject');
+        frame.setAttribute('class', 'note-scroll-frame');
+        // the note it belongs to, by its index in the original source
+        frame.setAttribute('data-note', originalIdx);
+        frame.setAttribute('x', place.x);
+        frame.setAttribute('y', place.y);
+        frame.setAttribute('width', place.width);
+        frame.setAttribute('height', place.height);
+        var box = document.createElementNS(XHTMLNS, 'div');
+        box.className = 'note-scroll';
+        // a Tab stop (WebKit focuses a scroller only with one), named for what it holds
+        box.setAttribute('tabindex', '0');
+        // a group, so its name is read out: ARIA allows no name on an element with no role
+        box.setAttribute('role', 'group');
+        box.setAttribute('aria-label', 'Payload, ' + lines.length.toLocaleString('en-US') + ' lines');
+        var sample = rows[0].texts[0];
+        box.style.fontFamily = sample.getAttribute('font-family') || 'system-ui, sans-serif';
+        box.style.fontSize = (sample.getAttribute('font-size') || '13') + 'px';
+        if (rows.length > 1) box.style.lineHeight = (rows[1].y - rows[0].y) + 'px';
+        fillScrollBox(box, lines);
+        frame.appendChild(box);
+        // before the body's first row: a selection from the headers down takes the box's text with it, wherever under
+        // the box it ends (context-menu-script.js, selectedSvgText); the rows after it are hidden, so it paints the same
+        var first = rows[0].texts.reduce(function(a, b) {
+            return a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_PRECEDING ? b : a;
+        });
+        first.parentNode.insertBefore(frame, first);
+        rows.forEach(function(row) { row.texts.forEach(function(t) { t.classList.add('note-scroll-under'); }); });
+        var kept = owner._noteScrollTop || (owner._noteScrollTop = {});
+        if (kept[originalIdx]) box.scrollTop = kept[originalIdx];
+        box.addEventListener('scroll', function() { kept[originalIdx] = box.scrollTop; }, { passive: true });
+        grp._noteScrollFrame = frame;
+        return frame;
+    }
+
+    // Whether a box's text wraps: its laid-out height against its lines (a capped note's clear rows count as source lines
+    // and paint nothing, so the painted rows say nothing about it).
+    function scrollBoxWraps(frame) {
+        var box = frame && frame.firstChild;
+        if (!box) return false;
+        var lineHeight = parseFloat(box.style.lineHeight) || parseFloat(getComputedStyle(box).lineHeight) || 0;
+        var lines = box.textContent.split('\n').length;
+        return lineHeight > 0 && box.scrollHeight > lines * lineHeight + 2;
+    }
+
+    // The records of the boxes a picture was drawn with, given to the diagram as the picture is swapped in and before it
+    // is decorated. A picture drawn from another source than the records' gets none.
+    function installNoteScroll(container, scroll, source) {
+        container._noteScrollDrawn = scroll && scroll.source === source ? scroll : null;
+    }
+    // the first drawing (plantuml-browser-render-script.js), from the source _preProcessSource composed
+    // A first drawing keeps the records composed for it, which its picture is given when the drawing ends: read from
+    // the slot then, they could be a later compose's (the queue's reset after 15 s composes the same diagram again).
+    function firstDrawing(el, drawn) {
+        el._noteScrollFirst = { scroll: el._noteScrollPending, source: drawn };
+        return drawn;
+    }
+    window._installNoteScroll = function(owner) {
+        var first = owner._noteScrollFirst;
+        installNoteScroll(owner, first && first.scroll, first && first.source);
+    };
+    // For the context menu: a boxed note's lines as the composer had them (its "current" text reads them in place of the
+    // rows drawn under the box), and the source the picture was composed from before the cap (its "current" source).
+    window._noteScrollLines = function(owner, originalIdx) {
+        var scroll = owner && owner._noteScrollDrawn;
+        var record = scroll && scroll.records && scroll.records[originalIdx];
+        return record ? record.lines.slice() : null;
+    };
+    // Only for a picture with a capped note drawn from `source`, the source the menu reads as it opens: anything else
+    // (a source set on the diagram since) is read as it stands.
+    window._noteUncappedSource = function(owner, source) {
+        var scroll = owner && owner._noteScrollDrawn;
+        if (!scroll || !scroll.records || scroll.source !== source) return null;
+        for (var k in scroll.records) return scroll.uncapped;
+        return null;
+    };
+
     function composeNoteSource(container, origSource, noteBlocks) {
         var withFormats = applyNoteFormats(origSource, container._noteFormats, container._noteYamlLines);
         var withAppearance = applyNoteAppearance(withFormats, container);
         var built = buildSourceWithNoteStates(withAppearance, container._noteSteps, noteBlocks,
             !!container._headersHidden, container._truncateLines);
-        return applyFilters(built, container);
+        var capped = capLongNotes(container, built, window._payloadScrollLines);
+        var drawn = applyFilters(capped.source, container);
+        // what the cap recorded, with the source it goes with: every caller takes it at once, as the next compose (a
+        // prefetch's) replaces it
+        container._noteScrollPending = {
+            source: drawn,
+            uncapped: capped.records ? applyFilters(built, container) : drawn,
+            records: capped.records
+        };
+        return drawn;
     }
 
     // ── Choosing the width ───────────────────────────────────────────────────
@@ -2050,10 +2557,14 @@
     // the same picture, so a toggle passes over a diagram it leaves as it was: an activity diagram under every filter,
     // a sequence diagram with no database calls under Databases. The picture is kept as well, so one replaced since by
     // anything else (an engine failure, a message, a note's own redraw) is drawn again.
-    function recordDrawn(container, source) {
+    // The source before the cap is kept too (5.4.0): two note states can draw the same capped source while their boxes
+    // hold different text, so a picture drawn from the same source with other records is decorated again, not passed over.
+    function recordDrawn(container, source, scroll) {
+        if (scroll === undefined) scroll = container._noteScrollPending;
         container._drawnSource = source;
         container._drawnSvg = container.querySelector('svg');
         container._drawnButtons = buttonsStateOf(container);
+        container._drawnUncapped = scroll && scroll.source === source ? scroll.uncapped : source;
     }
     // What a note's buttons follow that its drawn source may not carry: a folded note shows its preview whatever the
     // headers, its format and the line limit, and its buttons (whether a + opens it, its tooltip, what a + opens to)
@@ -2062,11 +2573,19 @@
         var hh = container._headersHidden !== undefined ? container._headersHidden : window._headersHidden;
         return (hh ? 'h' : 's') + '|' + container._truncateLines + '|' + JSON.stringify(container._noteFormats || {});
     }
-    function drawnFrom(container, source) {
+    function pictureFrom(container, source) {
         return container._drawnSource === source && !!container._drawnSvg && container.querySelector('svg') === container._drawnSvg;
     }
-    // for a diagram's first drawing (plantuml-browser-render-script.js)
-    window._recordDrawnSource = recordDrawn;
+    function drawnFrom(container, source, scroll) {
+        return pictureFrom(container, source)
+            && container._drawnUncapped === (scroll && scroll.source === source ? scroll.uncapped : source);
+    }
+    // for a diagram's first drawing (plantuml-browser-render-script.js), with the records composed for it (firstDrawing):
+    // read from the slot when the drawing ends, they could be a later compose's
+    window._recordDrawnSource = function(el, source) {
+        var first = el._noteScrollFirst;
+        recordDrawn(el, source, first ? first.scroll : null);
+    };
 
     function setNoteState(container, noteIdx, targetStep) {
         if (container._noteRendering || window._plantumlRendering) return;
@@ -2123,6 +2642,13 @@
         if (before) window._zoomState.give(container, before);
     }
 
+    // A failed redraw keeps the picture drawn before, and the picture keeps its source: decorated again against the source
+    // that failed, its box took its header rows from that source, and the menu's current source items read it (5.4.0).
+    function keepDrawnSource(container, source) {
+        if (source === null) container.removeAttribute('data-plantuml');
+        else container.setAttribute('data-plantuml', source);
+    }
+
     // Shared rebuild + re-render path for per-note state changes (step or
     // format). restoreState reverts the state mutation if the render fails.
     function rerenderWithNoteStates(container, restoreState) {
@@ -2130,6 +2656,9 @@
         if (!origSource) { restoreState(); return; }
         var noteBlocks = parseNoteBlocks(origSource);
         var newSource = composeNoteSource(container, origSource, noteBlocks);
+        var scroll = container._noteScrollPending;
+        // given back with the picture a failed redraw keeps
+        var drawnBefore = container.getAttribute('data-plantuml');
 
         container.setAttribute('data-plantuml', newSource);
 
@@ -2177,6 +2706,8 @@
                             newFrags[ni].id = container.id + '-frag-' + ni;
                         }
                         carryPartZoom(container, zooms, newFrags);
+                        installNoteScroll(container, scroll, newSource);
+                        if (fragQueue.every(function(f) { return f.el.querySelector('svg'); })) recordDrawn(container, newSource, scroll);
                         // Apply post-render hooks after fragments are visible (getBBox needs visible elements)
                         for (var pi = 0; pi < fragQueue.length; pi++) {
                             if (window._iflowBindLinks) window._iflowBindLinks(fragQueue[pi].el, origSource);
@@ -2256,6 +2787,8 @@
         // Check SVG cache — skip plantuml.js re-render if we have a cached result
         if (_svgCache[newSource]) {
             swapPicture(container, _svgCache[newSource]);
+            installNoteScroll(container, scroll, newSource);
+            recordDrawn(container, newSource, scroll);
             if (window._iflowBindLinks) window._iflowBindLinks(container, origSource);
             makeNotesCollapsible(container);
             addAssertionTooltips(container);
@@ -2287,7 +2820,8 @@
             // Swap: remove old content, show new SVG
             var newSvg = renderTarget.innerHTML;
             swapPicture(container, newSvg);
-            if (!failed && drewSvg) _svgCache[newSource] = newSvg;
+            installNoteScroll(container, scroll, newSource);
+            if (!failed && drewSvg) { _svgCache[newSource] = newSvg; recordDrawn(container, newSource, scroll); }
             container._noteRendering = false;
             window._plantumlRendering = false;
             container.style.minHeight = '';
@@ -2317,6 +2851,7 @@
             window._plantumlRendering = false;
             container.style.minHeight = '';
             // Render failed — restore previous state and sync buttons
+            keepDrawnSource(container, drawnBefore);
             restoreState();
             makeNotesCollapsible(container);
             addAssertionTooltips(container);
@@ -2340,6 +2875,7 @@
                 window._plantumlRendering = false;
                 container.style.minHeight = '';
                 // Render timed out — restore previous state and sync buttons
+                keepDrawnSource(container, drawnBefore);
                 restoreState();
                 makeNotesCollapsible(container);
                 addAssertionTooltips(container);
@@ -2360,6 +2896,7 @@
     window._parseNoteBlocks = parseNoteBlocks;
     window._getNotePreview = getNotePreview;
     window._rejoinWrappedNoteLines = rejoinWrappedNoteLines;
+    window._liftEmphasisOverJoins = liftEmphasisOverJoins;
     window._stripZeroWidth = stripZeroWidth;
     window._computeGlobalNoteIndex = computeGlobalNoteIndex;
     // Pure JSON ⇄ YAML functions, exposed for the Playwright unit-style fixture
@@ -2390,6 +2927,8 @@
     window._setupVisible = __SETUP_VISIBLE_DEFAULT__;
     window._noteFormatDefault = '__NOTE_FORMAT_DEFAULT__';
     window._noteWidthDefault = '__NOTE_WIDTH_DEFAULT__';
+    // The most body lines a payload draws before it scrolls in its box (PayloadScrollLines, 5.4.0); 0 never caps.
+    window._payloadScrollLines = __PAYLOAD_SCROLL_LINES_DEFAULT__;
 
     // The note ends at a line reading `end note`: its message can say "the end notes" mid-line, which ended the match
     // there and left the rest of the note in the source, so hiding assertions broke the diagram (§12.6). A message line
@@ -2744,6 +3283,8 @@
 
     // Pre-process source before initial render — applies current report-level defaults
     window._preProcessSource = function(el, source) {
+        // what this drawing is composed with, for its picture when the drawing ends (firstDrawing)
+        el._noteScrollFirst = null;
         // The component diagram renders its source untouched — filters never apply to it
         if (isComponentDiagramContainer(el)) return source;
         // The filters apply before note-block parsing, each with the state the diagram is drawn in
@@ -2799,9 +3340,12 @@
         }
         el._headersHidden = window._headersHidden;
         if (state !== 'expanded' || window._headersHidden || anyYaml) {
-            return composeNoteSource(el, source, origNoteBlocks);
+            return firstDrawing(el, composeNoteSource(el, source, origNoteBlocks));
         }
-        if (containerHasAppearance(el)) return composeNoteSource(el, source, origNoteBlocks);
+        if (containerHasAppearance(el)) return firstDrawing(el, composeNoteSource(el, source, origNoteBlocks));
+        // a payload the cap draws shorter is composed too, so a report that starts Expanded caps its first drawing (5.4.0)
+        if (anyNoteCapped(origNoteBlocks)) return firstDrawing(el, composeNoteSource(el, source, origNoteBlocks));
+        el._noteScrollPending = null;
         return renderSource;
     };
 
@@ -2971,7 +3515,7 @@
                 next.started = true;
                 built++;
                 var src = composeNoteSource(c, c._noteOriginalSource, parseNoteBlocks(c._noteOriginalSource));
-                if (drawnFrom(c, src) || _svgCache[src]) continue;
+                if (pictureFrom(c, src) || _svgCache[src]) continue;
                 var parts = window._splitWithChunkedNotes ? window._splitWithChunkedNotes(src) : [src];
                 Array.prototype.push.apply(sources, parts.length > 1 ? parts : [src]);
             }
@@ -3009,14 +3553,28 @@
             drawingWaitCount = 0;
             var origNoteBlocks = parseNoteBlocks(container._noteOriginalSource);
             var newSource = composeNoteSource(container, container._noteOriginalSource, origNoteBlocks);
+            var scroll = container._noteScrollPending;
             container.setAttribute('data-plantuml', newSource);
             // the picture on the page was drawn from this very source: drawing it again would draw it again
-            if (drawnFrom(container, newSource)) {
+            if (drawnFrom(container, newSource, scroll)) {
                 if (container._drawnButtons !== buttonsStateOf(container)) {
                     container._drawnButtons = buttonsStateOf(container);
                     var drawnParts = Array.from(container.querySelectorAll(':scope > .puml-fragment'));
                     (drawnParts.length ? drawnParts : [container]).forEach(function(el) { decorateWhenNear(el, isNear(item)); });
                 }
+                settled(item);
+                processNext();
+                return;
+            }
+            // The picture is right and only what the cap recorded differs (Payload length 100 and Expanded draw the same 40
+            // lines of a long payload): its boxes and buttons are made again from the new records, with no engine call.
+            if (pictureFrom(container, newSource)) {
+                installNoteScroll(container, scroll, newSource);
+                recordDrawn(container, newSource, scroll);
+                var shownParts = container.querySelectorAll(':scope > .puml-fragment');
+                var partsNear = isNear(item);
+                if (shownParts.length) for (var sp = 0; sp < shownParts.length; sp++) afterRedraw(shownParts[sp], container, partsNear);
+                else afterRedraw(container, container, partsNear);
                 settled(item);
                 processNext();
                 return;
@@ -3070,10 +3628,11 @@
                                 newFrags[ni].id = container.id + '-frag-' + ni;
                             }
                             carryPartZoom(container, zooms, newFrags);
+                            installNoteScroll(container, scroll, newSource);
+                            if (fragList.every(function(f) { return f.el.querySelector('svg'); })) recordDrawn(container, newSource, scroll);
                             // Apply post-render hooks after fragments are visible (getBBox needs visible elements)
                             var fragsNear = isNear(item);
                             for (var pi = 0; pi < fragList.length; pi++) afterRedraw(fragList[pi].el, container, fragsNear);
-                            if (fragList.every(function(f) { return f.el.querySelector('svg'); })) recordDrawn(container, newSource);
                             container.style.minHeight = '';
                             settled(item);
                             processNext();
@@ -3143,7 +3702,8 @@
             // Check SVG cache first
             if (_svgCache[newSource]) {
                 swapPicture(container, _svgCache[newSource]);
-                recordDrawn(container, newSource);
+                installNoteScroll(container, scroll, newSource);
+                recordDrawn(container, newSource, scroll);
                 afterRedraw(container, container, isNear(item));
                 settled(item);
                 processNext();
@@ -3167,7 +3727,8 @@
                 var failed = window._describeEngineFailure ? window._describeEngineFailure(renderTarget, newSource) : false;
                 var newSvg = renderTarget.innerHTML;
                 swapPicture(container, newSvg);
-                if (!failed && renderTarget.querySelector('svg')) { _svgCache[newSource] = newSvg; recordDrawn(container, newSource); }
+                installNoteScroll(container, scroll, newSource);
+                if (!failed && renderTarget.querySelector('svg')) { _svgCache[newSource] = newSvg; recordDrawn(container, newSource, scroll); }
                 container._noteRendering = false;
                 window._plantumlRendering = false;
                 container.style.minHeight = '';

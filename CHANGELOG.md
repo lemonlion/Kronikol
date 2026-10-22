@@ -4,6 +4,106 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.4.0] - 2026-10-22
+
+The minor part moves (5.3.0 to 5.4.0): a new option, `ReportConfigurationOptions.PayloadScrollLines`, and the scroll
+box it draws a long payload in. **The option is on by default, at 40 lines, by the owner's decision of 2026-10-21.**
+CLAUDE.md files a default that changes what an unchanged project's report draws under MAJOR; the owner chose to ship it
+in a minor all the same. A report written with 5.4.0 draws an expanded payload longer than 40 body lines 40 lines tall,
+with its whole body in a scroll box; set `PayloadScrollLines = 0` to draw every payload in full, as through 5.3.
+
+### Added
+
+- **A long payload scrolls in its box instead of being cut across diagrams** (BrowserJs reports,
+  `plans/LONG_NOTE_SCROLL_PLAN.md`). A request, response or message body that would draw more than `PayloadScrollLines`
+  lines is drawn that many lines tall, with its `...` line under them and a clear row as wide as its widest line, and a
+  scroll box laid over its body holds the whole body as text. Its headers stay drawn above the box. A body whose lines
+  are so long that 40 of them would pass the 15,000 characters at which the page cuts a note across diagrams draws
+  fewer, so it stays one note with one box; and a widest line wider than the note wraps at gives a clear row cut to one
+  row, so no blank band opens under the box. Until now an expanded payload was drawn in full: one of 1,500 lines was
+  11,000 drawn elements, cut into three diagrams with "Continued On Next Diagram". The box takes the wheel and keeps its
+  place at every zoom. It is a Tab stop named for what it holds ("Payload, 1,500 lines"), whose arrow keys, Page Up and
+  Down, Home and End scroll it, and it is made and filled only when its note comes within a window height of the window
+  (a note it could not be measured for yet is tried again when it next comes near). In the box a drag selects text and a
+  click places the caret, without panning or selecting the diagram; the note's buttons show over it as over the rest of
+  the note, and Wide is offered by what the note's lines measure before the box is made; a FocusFields payload's
+  emphasis shows as bold and coloured text, a long token the generator broke into pieces as one line, and a form body's
+  grey `&` after each field and a long URL's grey "[Full path]" line as the note draws them; a message's note, drawn at
+  11 px, is measured at that size; and Copy Highlighted Text keeps the line breaks of what is selected. A selection that starts on the note's headers and runs
+  into the box, or past it, copies the headers and the box's lines it covers, never the rows drawn under the box. A box
+  drawn again (a toggle, a format change) starts where the reader left it. Measured on a test of 40 calls with every
+  payload expanded, four of them 1,500 lines long and twelve 150: 17 parts, 53,854 drawn text elements and 2.5 s drawn
+  in full; 3 parts, 6,218 elements and 1.2 s capped.
+- `ReportConfigurationOptions.PayloadScrollLines` (an int, 40 by default), and `ResolvedToggleDefaults.PayloadScrollLines`
+  beside the start states it travels with: 0 never caps; otherwise 10 to 1000, and any other value fails report
+  generation, naming the range, whatever draws the diagrams. The Server, Local and NodeJs renderers and the CI summary
+  run none of the page's scripts and never cap a payload: they draw each as through 5.3.
+
+### Changed
+
+- What the default changes in a report that sets nothing: an expanded payload longer than 40 body lines, and one cut at
+  a Payload length of 50, 60, 80 or 100 lines, is drawn 40 lines tall with its scroll box, instead of in full. Payload
+  lengths up to 40 and collapsed payloads draw as before. A copied or saved picture (SVG or PNG) draws the note's 40 lines
+  and its `...`, never the box, and "Copy current PlantUML source" copies the source before the cap. The Expanded
+  control's title adds "a long one scrolls in its box".
+
+### Fixed
+
+- **"Copy box text" on a FocusFields payload copies the payload, not Kronikol's markup.** A payload drawn with
+  FocusFields emphasis carries Kronikol's own tags in its note (by default `<b>` around the focused field and
+  `<color:lightgray>` around every other line), and the note's copies kept them as text, as in
+  `<color:lightgray>"id": 1,</color>`. They now copy the payload as it reads, a long token the generator broke into
+  pieces included, in either form the generator writes it (on a platform with CRLF line ends one pair of tags spans the
+  pieces).
+- **"Copy box text" on a form body copies the fields, not Kronikol's markup.** A form-url-encoded request body is drawn
+  a field to a line, each followed by a grey `&` the generator writes as `<font color="lightgray">&`, and the note's
+  copies kept that tag as text, as in `grant_type=client_credentials<font color="lightgray">&`. They now copy
+  `grant_type=client_credentials&`, as the note reads.
+
+### Tests
+
+- `LongPayloadScrollTests` (Playwright, new; `LongPayloadReports` builds its reports): T1 to T35 and T37 to T44, one per
+  behaviour above: one diagram for an expanded 1,500-line response, its box holding every line on its own row; 40
+  lines with no box and 41 under one; the box's text against Copy box text; headers above the box, and the box below
+  the buttons' row with them hidden; the wheel, the slider's zoom, the hover buttons, a drag on a zoomed diagram, a
+  click, the Tab stop and its keys; Copy Highlighted Text over the box, over every drawn row, and from the headers into
+  the box; a copied picture; the current source and box text; the YAML view and Payload lengths; a report that starts
+  Expanded; `PayloadScrollLines = 0`; a diagram drawn in parts by its calls; the scroll place across a redraw; the
+  box's ink and a theme switch; a filter dropping notes before a boxed one; 40 calls drawn in three parts, filling
+  only boxes near the window; a state drawn the same as the last; a redraw the engine throws on; the buttons' row;
+  FocusFields emphasis, and a token broken into pieces with LF and with CRLF line ends; Truncated at 40 with headers
+  hidden; lines long enough to pass 15,000 characters; a widest line wider than the wrap width; a box retried; a first
+  drawing's records and the source it records with them; Wide before the box is made; one box after Wide's correction
+  pass; a message's note measured at its own size; a form body's dividers and a long URL's "[Full path]" in the box
+  and its copies; a first word wider than the wrap width; a first line alone past 15,000 characters; the box's role;
+  a failed redraw that leaves the box in its place and the picture's source on the diagram; and a note whose box the
+  browser's observer cannot see, as WebKit's cannot, made as it comes near; and a selection from a box past its note,
+  into the next arrow's label.
+- `NoteEmphasisCopyTests` (Playwright, new): Copy box text on a FocusFields payload copies it without the markup.
+- `PayloadScrollLinesTests` (core, new): the default, the option through every overlay, the range where the page reads
+  it, where the generator takes a resolved record, under the Server renderer and as the options are resolved, the
+  Expanded title, and pins for the cap's place in the composer, the records swapped in with every picture, the role
+  pass, the context menu's exemptions and the three arrow-key handlers.
+- The fixtures whose facts need a long note drawn in full pin `ReportTestHelper.InFull` (`PayloadScrollLines = 0`):
+  the wide long note, large note, chunked database note and three-fragment fixtures, the PlantUML quoting fixture and
+  `NoteButtonLayoutTests`' tall note. `ToggleDefaultsTests` reads a note's lines in the source before the cap, and the
+  Expanded title's pins in `ControlTitlesTests`, `ScenarioToolbarTests` and `ToggleDefaultsMarkupTests` read the new
+  title.
+- Proofs: every new fact was red before its change, at its own assertion, but the controls T13, T16 and T26, and T29,
+  which passes on the unchanged code because the menu maps a selection inside a note onto the note's own text (T44
+  holds the page's own reading of the box, past the note). With the default on
+  and nothing pinned, 20 of 205 facts in the 20 classes that draw long notes were red, each read before it moved: 17
+  needed a note drawn in full and are pinned, two read a note's lines in the drawn source and now read them before the
+  cap, and one, a selection over a note, passes with the selection fix (T28); 5.2.5's five facts on a long note drawn
+  in parts are pinned too. Of 56 mutations of the new code, 53 are killed, each at an assertion of the fact it
+  names; the run showed three facts too weak first, now stronger: T25's widest line moved past the 40 lines drawn,
+  T23 counts the boxes after the failed redraw, and T44 is new. Three survive and cannot be seen: the box taken out
+  of the tabs' and the Features tools' arrow-key handlers, whose Up and Down only bring the Features tab and its Full
+  view to the front, where any box already is (a core fact holds both lines), and a selection's reading keeping text
+  in a clear ink, which the engine never paints.
+- Checks: after the version bump and the rebase onto 5.3.0, the core suite passes 8,642 with 2 skipped and the full
+  Playwright suite 1,596 with 28 skipped, and `release.slnf` builds in Release with no warning from the changed files.
+
 ## [5.3.0] - 2026-10-22
 
 The minor part moves (5.2.7 to 5.3.0): new public types and members (`SetupWindow`, `OtherRunWindow`,

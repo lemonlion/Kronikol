@@ -29,6 +29,15 @@ public static class ReportTestHelper
             TruncateLines = TruncateLineCount.Lines40
         };
 
+    /// <summary>
+    /// <paramref name="start"/> with every payload drawn in full (<see cref="ResolvedToggleDefaults.PayloadScrollLines"/>
+    /// at 0), as through 5.3. Since 5.4.0 an expanded payload longer than 40 body lines is drawn 40 lines tall, with its
+    /// whole body in a scroll box (<c>plans/LONG_NOTE_SCROLL_PLAN.md</c>). A fixture whose facts need a long note drawn in
+    /// full (cut across diagrams, a diagram drawn in parts by it, buttons following its height) pins this; the capped
+    /// drawing is <c>LongPayloadScrollTests</c>'. Fixtures whose facts pass either way stay on the default.
+    /// </summary>
+    public static ResolvedToggleDefaults InFull(ResolvedToggleDefaults start) => start with { PayloadScrollLines = 0 };
+
     private const string PlantUmlSource = """
         @startuml
         actor "Caller" as caller
@@ -308,7 +317,9 @@ public static class ReportTestHelper
             DateTime.UtcNow, DateTime.UtcNow,
             null, Path.Combine(tempDir, fileName), "Test Report", true,
             diagramFormat: DiagramFormat.PlantUml,
-            plantUmlRendering: PlantUmlRendering.BrowserJs);
+            plantUmlRendering: PlantUmlRendering.BrowserJs,
+            // a long note drawn in full: its facts need it to draw the diagram in parts
+            toggleDefaults: InFull(ResolvedToggleDefaults.BuiltIn));
 
         File.Copy(path, Path.Combine(outputDir, fileName), true);
         return new Uri(path).AbsoluteUri;
@@ -3909,7 +3920,8 @@ public static class ReportTestHelper
             null, Path.Combine(tempDir, fileName), "Test Report", true,
             diagramFormat: DiagramFormat.PlantUml,
             plantUmlRendering: PlantUmlRendering.BrowserJs,
-            toggleDefaults: ClassicStart);
+            // a long note drawn in full: its facts need it cut across diagrams
+            toggleDefaults: InFull(ClassicStart));
 
         File.Copy(path, Path.Combine(outputDir, fileName), true);
         return new Uri(path).AbsoluteUri;
@@ -4128,7 +4140,8 @@ public static class ReportTestHelper
             null, Path.Combine(tempDir, fileName), "Test Report", true,
             diagramFormat: DiagramFormat.PlantUml,
             plantUmlRendering: PlantUmlRendering.BrowserJs,
-            toggleDefaults: ClassicStart);
+            // a long note drawn in full: its facts need it cut across diagrams
+            toggleDefaults: InFull(ClassicStart));
 
         File.Copy(path, Path.Combine(outputDir, fileName), true);
         return new Uri(path).AbsoluteUri;
@@ -4207,7 +4220,8 @@ public static class ReportTestHelper
             null, Path.Combine(tempDir, fileName), "Test Report", true,
             diagramFormat: DiagramFormat.PlantUml,
             plantUmlRendering: PlantUmlRendering.BrowserJs,
-            toggleDefaults: ClassicStart);
+            // a long note drawn in full: its facts need it cut across diagrams
+            toggleDefaults: InFull(ClassicStart));
 
         File.Copy(path, Path.Combine(outputDir, fileName), true);
         return new Uri(path).AbsoluteUri;
@@ -4815,6 +4829,8 @@ public static class ReportTestHelper
         // Headers shown, as in 3.x; the note format is the fact's to choose (JSON unless it says).
         options.TestRunReportToggleDefaults.HeadersShown = true;
         options.NotePayloadFormat = notePayloadFormat;
+        // drawn in full, as the splitter needs it (5.4.0 caps an expanded payload at 40 lines)
+        options.PayloadScrollLines = 0;
 
         var path = ReportGenerator.GenerateHtmlReport(
             [new DiagramAsCode("t1", "", plantUml)], features,

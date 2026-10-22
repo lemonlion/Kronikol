@@ -169,6 +169,22 @@ public record ReportConfigurationOptions
     /// </summary>
     public int BrowserFragmentMaxHeight { get; set; } = Constants.TrackingDefaults.BrowserFragmentMaxHeight;
 
+    /// <summary>
+    /// <c>BrowserJs</c> only. The most body lines a payload note draws before it scrolls (5.4.0). A request, response or
+    /// message body that would draw more lines is drawn this many lines tall (fewer when its lines are so long that this
+    /// many would pass the 15,000 characters at which the page cuts a note across diagrams), with a <c>...</c> line under
+    /// them, and a scroll box over its body holds the whole of it, so a long payload stays in its diagram instead of being
+    /// cut across several. The payload's headers stay drawn above the box. It caps an expanded payload, and one cut to a
+    /// Payload length above this value; a copied picture draws the lines the note draws, and the box's text is the payload's.
+    /// <para>
+    /// <c>0</c> never caps: a payload is drawn in full, and one longer than 15,000 characters is cut into pieces, each in a
+    /// diagram of its own, as through 5.3. Otherwise <c>10</c> to <c>1000</c>; any other value fails report generation,
+    /// whatever draws the diagrams. The <c>Server</c>, <c>Local</c> and <c>NodeJs</c> renderers and the CI summary run none
+    /// of the page's scripts and never cap a payload: they draw each as through 5.3. Default: <c>40</c>.
+    /// </para>
+    /// </summary>
+    public int PayloadScrollLines { get; set; } = Constants.TrackingDefaults.PayloadScrollLines;
+
     /// <summary>When <c>true</c>, internal flow tracking data (OpenTelemetry spans) is included in reports. Default: <c>true</c>.</summary>
     public bool InternalFlowTracking { get; set; } = true;
 

@@ -23,6 +23,8 @@ document.addEventListener('keydown', function(e) {
     // a tab list keeps its other keys: Up and Down on a report tab moved a scenario inside the hidden Features panel
     // (5.2.0, S11)
     if (e.target.closest && e.target.closest('[role="tablist"]')) return;
+    // so does a payload's scroll box: its arrow keys, Page Up and Down, Home and End scroll it (5.4.0)
+    if (e.target.closest && e.target.closest('.note-scroll')) return;
     var scenarios = Array.from(document.querySelectorAll('details.scenario')).filter(function(s) { return s.style.display !== 'none'; });
     if (scenarios.length === 0) return;
     var focused = document.querySelector('.scenario-focused');

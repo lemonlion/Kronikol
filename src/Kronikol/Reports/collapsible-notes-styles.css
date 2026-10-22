@@ -185,3 +185,16 @@
 :is(.plantuml-browser, .iflow-diagram) svg .note-toggle-icon line { stroke: var(--dg-icon-ink); }
 :is(.plantuml-browser, .iflow-diagram) svg .note-toggle-icon text { fill: var(--dg-icon-ink); }
 :is(.plantuml-browser, .iflow-diagram) svg .note-toggle-icon polygon { fill: var(--dg-icon-ink); }
+
+/* A long payload's scroll box (5.4.0, plans/LONG_NOTE_SCROLL_PLAN.md): a <foreignObject> laid over the note's body rows
+   inside the SVG, holding the whole body as text in the note's face, over the note's own fill. The rows the engine drew
+   under it are hidden once it is filled; a copied picture shows them again (context-menu-script.js, lookClone). */
+.note-scroll-frame { overflow: visible; }
+.note-scroll {
+    box-sizing: border-box; width: 100%; height: 100%; margin: 0; padding: 0; overflow: auto;
+    white-space: pre-wrap; overflow-wrap: anywhere; color: var(--dg-ink, #000000); background: transparent;
+    cursor: text; user-select: text; -webkit-user-select: text;
+}
+.note-scroll:focus { outline: none; }
+.note-scroll:focus-visible { outline: 2px solid var(--kron-accent, #2563eb); outline-offset: -2px; }
+.plantuml-browser svg .note-scroll-under { visibility: hidden; }

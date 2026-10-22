@@ -159,7 +159,8 @@ public static class DiagramContextMenu
             .Replace("__STEPS_VISIBLE_DEFAULT__", toggleDefaults.StepsShown ? "true" : "false")
             .Replace("__DATABASES_VISIBLE_DEFAULT__", toggleDefaults.DatabasesShown ? "true" : "false")
             .Replace("__EVENTS_VISIBLE_DEFAULT__", toggleDefaults.EventsShown ? "true" : "false")
-            .Replace("__SETUP_VISIBLE_DEFAULT__", toggleDefaults.SetupShown ? "true" : "false");
+            .Replace("__SETUP_VISIBLE_DEFAULT__", toggleDefaults.SetupShown ? "true" : "false")
+            .Replace("__PAYLOAD_SCROLL_LINES_DEFAULT__", ReportToggleDefaultsResolver.CheckPayloadScrollLines(toggleDefaults.PayloadScrollLines).ToString(System.Globalization.CultureInfo.InvariantCulture));
 
     /// <summary>
     /// Floats a scenario's diagram toolbar (Details / Headers / … and the diagram-type tabs) onto the

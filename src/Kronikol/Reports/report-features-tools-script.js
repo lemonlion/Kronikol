@@ -228,7 +228,7 @@
             return;
         }
         // the arrow keys move between scenarios, which are in the cards (not while a tab list has the focus, S11)
-        if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && !(t && t.closest && t.closest('[role="tablist"]'))
+        if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && !(t && t.closest && t.closest('[role="tablist"], .note-scroll'))
             && !/^(input|select|textarea)$/i.test((document.activeElement || {}).tagName || '')) {
             // on another tab, the tabs script takes the reader to the Features tab and this view in one step
             var away = document.querySelector('.report-tabs > .report-tab[aria-selected="true"]:not([data-tab="features"])');

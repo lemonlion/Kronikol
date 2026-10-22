@@ -24,6 +24,9 @@ public record ResolvedToggleDefaults
     public bool SetupShown { get; init; } = true;
     public NotePayloadFormat NotePayloadFormat { get; init; } = NotePayloadFormat.Yaml;
     public NoteWidthMode NoteWidth { get; init; } = NoteWidthMode.Default;
+    /// <summary>The most body lines a payload draws before it scrolls in its box (<see cref="ReportConfigurationOptions.PayloadScrollLines"/>);
+    /// 0 never caps. Not a start state a reader changes: the report's author sets it.</summary>
+    public int PayloadScrollLines { get; init; } = Constants.TrackingDefaults.PayloadScrollLines;
 
     public bool FeaturesExpanded { get; init; }
     public bool ScenariosExpanded { get; init; }
@@ -53,14 +56,28 @@ public record ResolvedToggleDefaults
 /// (most specific wins, per property). <see cref="ReportToggleDefaults.NotePayloadFormat"/>
 /// treats the flat <see cref="ReportConfigurationOptions.NotePayloadFormat"/> option as its
 /// built-in, so the flat property keeps working and a group value wins when set.
+/// <see cref="ResolvedToggleDefaults.PayloadScrollLines"/> comes from <see cref="ReportConfigurationOptions.PayloadScrollLines"/>
+/// alone: it is not a start state, so no group overrides it.
 /// </summary>
 public static class ReportToggleDefaultsResolver
 {
+    /// <summary>
+    /// The range of <see cref="ReportConfigurationOptions.PayloadScrollLines"/>: 0, or 10 to 1000. Checked as the options
+    /// are resolved, and again where a report is generated and where the page is given the value, since a caller can hand
+    /// <c>GenerateHtmlReport</c> a <see cref="ResolvedToggleDefaults"/> of its own and so pass the resolver by.
+    /// </summary>
+    internal static int CheckPayloadScrollLines(int lines) =>
+        lines == 0 || lines is >= 10 and <= 1000
+            ? lines
+            : throw new ArgumentOutOfRangeException(nameof(ReportConfigurationOptions.PayloadScrollLines), lines,
+                $"PayloadScrollLines is {lines}: it must be 0 (never cap a payload) or 10 to 1000 lines.");
+
     public static ResolvedToggleDefaults Resolve(ReportConfigurationOptions options, bool specifications)
     {
         var resolved = ResolvedToggleDefaults.BuiltIn with
         {
-            NotePayloadFormat = options.NotePayloadFormat
+            NotePayloadFormat = options.NotePayloadFormat,
+            PayloadScrollLines = CheckPayloadScrollLines(options.PayloadScrollLines)
         };
         resolved = Overlay(resolved, options.TestRunReportToggleDefaults);
         if (specifications)
@@ -80,6 +97,7 @@ public static class ReportToggleDefaultsResolver
         SetupShown = overrides.SetupShown ?? baseline.SetupShown,
         NotePayloadFormat = Defined(overrides.NotePayloadFormat) ?? baseline.NotePayloadFormat,
         NoteWidth = Defined(overrides.NoteWidth) ?? baseline.NoteWidth,
+        PayloadScrollLines = baseline.PayloadScrollLines,
         FeaturesExpanded = overrides.FeaturesExpanded ?? baseline.FeaturesExpanded,
         ScenariosExpanded = overrides.ScenariosExpanded ?? baseline.ScenariosExpanded,
         DiagramTab = Defined(overrides.DiagramTab) ?? baseline.DiagramTab,

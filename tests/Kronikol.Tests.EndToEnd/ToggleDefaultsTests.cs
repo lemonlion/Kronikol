@@ -33,13 +33,36 @@ public class ToggleDefaultsTests : DiagramNotePlaywrightBase
         await WaitForNoteElements();
     }
 
+    /// <summary>
+    /// The note lines in the source composed for the notes' states, before the payload cap. Since 5.4.0 an expanded
+    /// payload longer than <c>PayloadScrollLines</c> (40 by default) is drawn 40 lines tall with its whole body in a
+    /// scroll box (<c>plans/LONG_NOTE_SCROLL_PLAN.md</c>), so <c>data-plantuml</c>, the source drawn, holds 40 of this
+    /// note's 45 lines; the state a seed sets is the source before that cap.
+    /// </summary>
     private Task<int> CountNoteLinesInSource() => Page.EvaluateAsync<int>("""
         () => {
             var container = document.querySelector('[data-diagram-type="plantuml"]');
-            var source = container.getAttribute('data-plantuml') || '';
+            var drawn = container.getAttribute('data-plantuml') || '';
+            var source = (window._noteUncappedSource && window._noteUncappedSource(container, drawn)) || drawn;
             return (source.match(/^Line \d+/gm) || []).length;
         }
     """);
+
+    /// <summary>The note lines drawn, and the lines in the note's scroll box once it is filled.</summary>
+    private async Task<(int Drawn, int Boxed)> CountDrawnAndBoxedNoteLines()
+    {
+        await Page.WaitForFunctionAsync("""
+            () => { var box = document.querySelector('.note-scroll'); return !!box && /^Line 45\b/m.test(box.textContent); }
+        """, null, new() { Timeout = 15000, PollingInterval = 200 });
+        var counts = await Page.EvaluateAsync<int[]>("""
+            () => {
+                var source = document.querySelector('[data-diagram-type="plantuml"]').getAttribute('data-plantuml') || '';
+                var box = document.querySelector('.note-scroll').textContent;
+                return [(source.match(/^Line \d+/gm) || []).length, (box.match(/^Line \d+/gm) || []).length];
+            }
+        """);
+        return (counts[0], counts[1]);
+    }
 
     // ═══════════════════════════════════════════════════════════
     // Control 1 — Details radio
@@ -52,6 +75,8 @@ public class ToggleDefaultsTests : DiagramNotePlaywrightBase
 
         // Zero-click render honours the seed: all 45 note lines are in the render source
         Assert.Equal(45, await CountNoteLinesInSource());
+        // drawn as the default payload cap draws them (5.4.0): 40 drawn, all 45 in the note's scroll box
+        Assert.Equal((40, 45), await CountDrawnAndBoxedNoteLines());
 
         // The toolbar shows the seeded state at both levels, and the truncate select is disabled
         Assert.Equal("true", await Page.EvaluateAsync<string>(
