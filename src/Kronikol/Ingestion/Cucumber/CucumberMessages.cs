@@ -275,7 +275,10 @@ public sealed record CucumberPickle
     /// <summary>Feature file path.</summary>
     [JsonPropertyName("uri")] public string? Uri { get; init; }
 
-    /// <summary>Scenario name. For an outline row this is the outline name, <em>unexpanded</em>.</summary>
+    /// <summary>
+    /// Scenario name. For an outline row, the outline's title with each <c>&lt;header&gt;</c> filled from the row's values
+    /// by Gherkin's compiler, the name the row is shown by; the title as written is the scenario node's.
+    /// </summary>
     [JsonPropertyName("name")] public string? Name { get; init; }
 
     /// <summary>

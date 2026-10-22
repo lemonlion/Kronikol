@@ -4,6 +4,41 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.4.4] - 2026-10-22
+
+The patch part moves (5.4.3 to 5.4.4): a bug fix, with nothing new to call or configure. It holds the two items of
+plans/OUTLINE_ROW_NAMES_PLAN.md section 8, found while #101 was planned and kept for a patch of their own (the plan's
+Q6). It changes the values and the stable id of a Cucumber outline row whose `Examples:` table names a column twice;
+both are said below.
+
+### Fixed
+
+- **A Cucumber outline row whose `Examples:` table names a column twice took the rightmost value, while Gherkin names
+  the row and fills its steps with the leftmost.** Gherkin fills a title's and a step's `<size>` one column at a time,
+  left to right, so the leftmost `size` fills them all and the rightmost finds none left. The Cucumber lane kept the
+  rightmost in the row's values, so the value table and a step's highlighted parameter disagreed with the row's name and
+  the step's own text: `Pick a small box`, with `size = large` beside it. The row now keeps the leftmost, the value its
+  name and steps show. Reqnroll refuses such a table when it generates its code, so its lane never meets one.
+- **Behaviour change:** the stable id hashes a row's values, so such a row's id changes once, as does the value its
+  table shows. A row of a table that names each column once is as it was, byte for byte.
+
+### Documentation
+
+- `CucumberPickle.Name` said an outline row's pickle name is "the outline name, unexpanded"; it is the title with its
+  placeholders filled by Gherkin, which the lane names the row by.
+- The wiki's Cucumber Messages page says which of two same-named columns a row keeps.
+
+### Tests
+
+- `CucumberRepeatedColumnTests`: a table that names `size` twice gives the row the leftmost value, in its values, its
+  raw values and its step's parameter, and its name is the pickle's.
+- Proofs: `CucumberRepeatedColumnTests` was written first and failed on the unchanged code at both of its assertions:
+  the row's values read `size = large` where Gherkin names the row `Pick a small box`, and the step's parameter read
+  `large` beside its own text, `a small box`. The Cucumber lane's other 160 facts pass as before.
+- Checks: the core suite passes 8,746 with 2 skipped after the version bump, as it passed 8,746 with 2 skipped on the
+  same code before it; the full Playwright suite passes 1,609 with 28 skipped on the same code before the bump; and
+  release.slnf builds in Release with no warning from the lines this release changes.
+
 ## [5.4.3] - 2026-10-22
 
 The patch part moves (5.4.2 to 5.4.3): a bug fix, with nothing new to call or configure. It answers #101

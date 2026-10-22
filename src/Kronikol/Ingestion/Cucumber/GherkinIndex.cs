@@ -120,8 +120,10 @@ internal sealed class GherkinIndex
                     continue;
                 var cells = (row.Cells ?? []).Select(c => c.Value ?? "").ToArray();
                 var values = new Dictionary<string, string>(StringComparer.Ordinal);
+                // A column named twice keeps its leftmost value: Gherkin fills each <header> one column at a time, left to
+                // right, so the leftmost fills the row's name and its steps and the rightmost finds nothing left to fill.
                 for (var i = 0; i < headers.Length; i++)
-                    values[headers[i]] = i < cells.Length ? cells[i] : "";
+                    values.TryAdd(headers[i], i < cells.Length ? cells[i] : "");
                 _exampleRows[rowId] = new ExampleRow(values, tags, blockName, blockDescription, blockIndex);
             }
         }

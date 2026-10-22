@@ -2,8 +2,9 @@
 
 **Date:** 2026-10-22 · **Repo version:** 5.4.0 (`main` at `eabec2bd`; line numbers are for that commit) ·
 **Status:** ✅ **Executed**: the owner green-lit it on 2026-10-22 ("implement the plan in full", every
-recommendation of section 11 taken); R1 shipped as 5.4.3 (see the Log). Written in a worktree of its own (`Kronikol-101`,
-branch `plan/101-outline-row-names`) while other sessions worked in theirs.
+recommendation of section 11 taken); R1 shipped as 5.4.3, and the two items of section 8 that Q6 kept for a patch of
+their own as 5.4.4 (see the Log). Written in a worktree of its own (`Kronikol-101`, branch
+`plan/101-outline-row-names`) while other sessions worked in theirs.
 
 Evidence labels: **RUN** (measured on 2026-10-22 against Kronikol 5.4.0 from nuget.org, Reqnroll 3.3.4 and Gherkin's own
 compiler, with the scripts and verbatim answers in [`OUTLINE_ROW_NAMES_PLAN.harness/`](OUTLINE_ROW_NAMES_PLAN.harness/README.md)),
@@ -436,10 +437,11 @@ Row 1.32 of `ROADMAP.md`, taken at the green light (2026-10-22) and done as 5.4.
 
 ## 8. Found on the way, not in this plan
 
-- `CucumberMessages.cs:278` documents a pickle's name as "the outline name, unexpanded"; Gherkin fills it, and
-  `CucumberFeatureSynthesizer.cs:489` relies on that. A doc-comment fix, separate.
-- The Cucumber lane's `ExampleValues` keep the rightmost of two same-named columns (`GherkinIndex.cs:123-124`), where
-  Gherkin's name takes the leftmost. Reqnroll refuses such tables; cucumber-js and playwright-bdd were not checked.
+- **Done in 5.4.4:** `CucumberMessages.cs:278` documented a pickle's name as "the outline name, unexpanded"; Gherkin
+  fills it, and `CucumberFeatureSynthesizer.cs:489` relies on that. A doc-comment fix, separate.
+- **Done in 5.4.4:** the Cucumber lane's `ExampleValues` kept the rightmost of two same-named columns
+  (`GherkinIndex.cs:123-124`), where Gherkin's name takes the leftmost. Reqnroll refuses such tables; cucumber-js and
+  playwright-bdd were not checked.
 - `ExamplesBlockResolver`'s line lookup keeps the last of two scenarios of one title (`:184`); Reqnroll refuses two
   scenarios of one name in a feature (research/gherkin-cucumber.md 1.6), so it cannot arise in this lane.
 - Quarantine does not follow history rename aliases (`HistoryAnalyzer.cs:625`).
@@ -533,3 +535,11 @@ written by a read-only research agent and checked by hand where this plan cites 
   with 28 skipped), CI's Integration (ReqNRoll) job (66 of 66) and the Reqnroll examples pass, and release.slnf builds
   in Release with no warning from the changed lines.
   Found while doing it and left as it is: nothing new beyond section 8.
+- 2026-10-22: **the two items of section 8 that Q6 kept for a patch of their own shipped as 5.4.4**, after R1 was
+  published. `GherkinIndex.AddExamples` keeps the leftmost of two same-named columns (`TryAdd`), the value Gherkin
+  fills the row's name and its steps with; the rightmost had also made a step's highlighted parameter disagree with
+  its own text (`a small box`, parameter `large`), which the plan had not seen. Such a row's values and stable id
+  change once; Reqnroll refuses the table, so its lane never meets one. `CucumberPickle.Name`'s doc says Gherkin fills
+  an outline row's name. `CucumberRepeatedColumnTests` was written first and failed on the unchanged code at both of
+  its assertions; the core suite (8,746 before the bump) and the full Playwright suite (1,609 with 28 skipped) pass,
+  and release.slnf builds in Release with no warning from the changed lines.
