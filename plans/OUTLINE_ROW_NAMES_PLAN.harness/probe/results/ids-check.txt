@@ -1,0 +1,37 @@
+suite (none): Compute(suite, feature, title, outlineId: title, values) reproduces 0 of 30
+suite Probe101.xUnit2: Compute(suite, feature, title, outlineId: title, values) reproduces 30 of 30
+plain scenarios (no outline): Compute(suite, feature, name) misses 0
+
+title | filled by Gherkin's rule | pickle name found | id 5.4.0 wrote | id if the filled name were hashed
+A basket is weighed on the UK scale (<case>) | A basket is weighed on the UK scale (empty basket) | yes | 69eac833973c4e19 | 2e0156c2fba7e468
+A basket is weighed on the UK scale (<case>) | A basket is weighed on the UK scale (one apple) | yes | 72500d3179f76468 | d00aec85a59a0f77
+A basket is weighed on the UK scale (<case>) | A basket is weighed on the UK scale (two apples) | yes | 48092cbd5fd324ec | 877942b57bc51e42
+E01 a title without a placeholder | E01 a title without a placeholder | yes | a3993d2568941100 | same
+E11 <a> and <a> again | E11 1 and 1 again | yes | cf9517561438e15c | f7fcf1c8e3d58e80
+E01 a title without a placeholder | E01 a title without a placeholder | yes | 1aa0850dace137ae | same
+E11 <a> and <a> again | E11 2 and 2 again | yes | a67ed5332adbe938 | 6641ab46d8917b6f
+E02 <a> then <b>, a value that names a later column | E02 x then x, a value that names a later column | yes | da51d8e3fc7da63b | 36a2fee86eefd11a
+E02 <a> then <b>, a value that names a later column | E02 y then z, a value that names a later column | yes | 13572176eed870d6 | b9ed0703d50b8bc2
+E04 the <fruit name> in <größe> and <class> | E04 the apple in klein and A | yes | 545ce3d8a66f0bbe | c2da3955dc6ca132
+E04 the <fruit name> in <größe> and <class> | E04 the pear in groß and B | yes | 01cadccbd45c3d54 | 37047be4c64acdf6
+E03 weighs <count> on <missing> | E03 weighs 1 on <missing> | yes | 5a3a4f4736c0d40d | 66f4e1e416b71c2b
+E03 weighs <count> on <missing> | E03 weighs 2 on <missing> | yes | eab4381f9ca40fa3 | fa296b4b8149ba03
+<fruit> starts E12 | Pear starts E12 | yes | 89b5e3ed14af3965 | b677618fd66cf610
+E06 the same name for <fruit> | E06 the same name for apple | yes | ba08a4471cf38abc | 66924ca33e2f1078
+E06 the same name for <fruit> | E06 the same name for apple | yes | 99cc6d5b878cb800 | e09f64a58725d08c
+<fruit> starts E12 | Apple starts E12 | yes | d90298f3d38a8fd0 | e6ffe3d2a4cb33dc
+E05 <fruit> by block | E05 apple by block | yes | 04fb5a906de0beb8 | 01c432af51c91a51
+E10 <fruit> under a rule | E10 apple under a rule | yes | b967fc8e1342584e | cb0f2fa7a192aaf3
+E05 <fruit> by block | E05 pear by block | yes | 77e00461a002c4b1 | f2ac84ddac9b7b82
+E10 <fruit> under a rule | E10 pear under a rule | yes | d45c86320bb59bfb | 09a7f6a16c17b334
+E07 escapes [<v>] | E07 escapes [] | yes | cdde0aa9f8323eab | 7bb1d7a8f7aefb60
+E08 markup <v> | E08 markup <b>bold</b> & co | yes | 10ab332b51d5c558 | 1fbba835ba48382b
+E08 markup <v> | E08 markup "quoted" 'single' | yes | 052d06e6f7e61b70 | 85e9f7aeac72f7cb
+E13 <v> | E13 a long value: Lorem-free filler text that keeps going past two hundred characters so that any cut, wrap or budget a reader applies to a name is reached by this row of the outline and shows up in what the reader prints, which is what this row is for, nothing more | yes | 19e8d1dcb5e56cc6 | 47f66046cc6b6d42
+E07 escapes [<v>] | E07 escapes [back \ sl] | yes | e6f9cd6852238ac3 | fad6c502ed60032c
+E07 escapes [<v>] | E07 escapes [line\nbreak] | yes | d1a2c4b7159ea71a | f55b1daea23de93b
+E07 escapes [<v>] | E07 escapes [pipe | bar] | yes | 10e27d62c4bd4680 | abfd0d3502a283ff
+E13 <v> | E13 short | yes | f6b3d0809e4c5b66 | 6ff2b79df183fbb6
+
+29 of 29 outline rows: Gherkin's rule gives the pickle's own name (Cucumber lane, same run)
+27 of 29 outline rows would get a new id if the filled name were hashed; the rest fill to their title

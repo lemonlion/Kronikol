@@ -1,0 +1,7 @@
+<Project>
+  <!-- With -p:KronikolSource=<checkout>, the probe runs on that checkout's adapter instead of the package. -->
+  <ItemGroup Condition="'$(KronikolSource)' != ''">
+    <PackageReference Remove="$(KronikolAdapter)" />
+    <ProjectReference Include="$(KronikolSource)/src/$(KronikolAdapter)/$(KronikolAdapter).csproj" />
+  </ItemGroup>
+</Project>

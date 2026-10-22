@@ -1,0 +1,30 @@
+Baskets	{"case": "empty basket", "count": "0", "grams": "0"}	A basket is weighed on the UK scale (<case>)	69eac833973c4e19
+Baskets	{"case": "one apple", "count": "1", "grams": "150"}	A basket is weighed on the UK scale (<case>)	72500d3179f76468
+Baskets	{"case": "two apples", "count": "2", "grams": "301"}	A basket is weighed on the UK scale (<case>)	48092cbd5fd324ec
+Edges	{"a": "1"}	E01 a title without a placeholder	a3993d2568941100
+Edges	{"a": "1"}	E11 <a> and <a> again	cf9517561438e15c
+Edges	{"a": "2"}	E01 a title without a placeholder	1aa0850dace137ae
+Edges	{"a": "2"}	E11 <a> and <a> again	a67ed5332adbe938
+Edges	{"a": "<b>", "b": "x"}	E02 <a> then <b>, a value that names a later column	da51d8e3fc7da63b
+Edges	{"a": "y", "b": "z"}	E02 <a> then <b>, a value that names a later column	13572176eed870d6
+Edges	{"class": "A", "fruit name": "apple", "größe": "klein"}	E04 the <fruit name> in <größe> and <class>	545ce3d8a66f0bbe
+Edges	{"class": "B", "fruit name": "pear", "größe": "groß"}	E04 the <fruit name> in <größe> and <class>	01cadccbd45c3d54
+Edges	{"count": "1"}	E03 weighs <count> on <missing>	5a3a4f4736c0d40d
+Edges	{"count": "2"}	E03 weighs <count> on <missing>	eab4381f9ca40fa3
+Edges	{"fruit": "Pear"}	<fruit> starts E12	89b5e3ed14af3965
+Edges	{"fruit": "apple", "n": "1"}	E06 the same name for <fruit>	ba08a4471cf38abc
+Edges	{"fruit": "apple", "n": "2"}	E06 the same name for <fruit>	99cc6d5b878cb800
+Edges	{"fruit": "apple"}	<fruit> starts E12	d90298f3d38a8fd0
+Edges	{"fruit": "apple"}	E05 <fruit> by block	04fb5a906de0beb8
+Edges	{"fruit": "apple"}	E10 <fruit> under a rule	b967fc8e1342584e
+Edges	{"fruit": "pear"}	E05 <fruit> by block	77e00461a002c4b1
+Edges	{"fruit": "pear"}	E10 <fruit> under a rule	d45c86320bb59bfb
+Edges	{"v": ""}	E07 escapes [<v>]	cdde0aa9f8323eab
+Edges	{"v": "<b>bold</b> & co"}	E08 markup <v>	10ab332b51d5c558
+Edges	{"v": "\"quoted\" 'single'"}	E08 markup <v>	052d06e6f7e61b70
+Edges	{"v": "a long value: Lorem-free filler text that keeps going past two hundred characters so that any cut, wrap or budget a reader applies to a name is reached by this row of the outline and shows up in what the reader prints, which is what this row is for, nothing more"}	E13 <v>	19e8d1dcb5e56cc6
+Edges	{"v": "back \\ sl"}	E07 escapes [<v>]	e6f9cd6852238ac3
+Edges	{"v": "line\nbreak"}	E07 escapes [<v>]	d1a2c4b7159ea71a
+Edges	{"v": "pipe | bar"}	E07 escapes [<v>]	10e27d62c4bd4680
+Edges	{"v": "short"}	E13 <v>	f6b3d0809e4c5b66
+Edges	{}	E09 a plain scenario that writes <x> in its title	30d6c409126691b5

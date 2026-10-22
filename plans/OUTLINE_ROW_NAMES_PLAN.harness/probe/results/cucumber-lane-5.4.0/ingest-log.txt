@@ -1,0 +1,17 @@
+Ingesting 0 capture file(s):
+Cucumber messages: C:\Code\Kronikol-101\plans\OUTLINE_ROW_NAMES_PLAN.harness\probe\results\before-5.4.0\cucumber-messages.ndjson
+Report diagnostics: 66 log entries across 30 test(s).
+Replayed 66 interaction record(s) into 30 scenario(s).
+  Other: Cucumber messages: 30 scenario(s) have no 'kronikol-test-id' attachment, so captured interactions cannot be joined to them: 'E07 escapes [line
+break]', 'E07 escapes []', 'E07 escapes [back \ sl]', 'E07 escapes [pipe | bar]', 'E13 short' and 25 more.
+  HistoryUnavailable: no history ledger: no .git or .kronikol directory above C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\4446b339-7f87-4b87-990f-495a136f5c68\scratchpad\plan101 or C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\4446b339-7f87-4b87-990f-495a136f5c68\scratchpad\plan101\work\cucumber-lane. Run git init in the project, or kronikol history init, or set ReportConfigurationOptions.HistoryFilePath or KRONIKOL_HISTORY to the ledger file (KRONIKOL_HISTORY=off switches history off).
+  StepAttributionMismatch [110093ee2f74fe52bcaa712a13b023ab#0]: Step marker 1 does not match step 'note line
+break'; interactions after it carry no stepPath.
+  StepAttributionMismatch [c5238c117ee9c3569db76ef2665e9150#0]: Step marker 1 does not match step 'note back \ sl'; interactions after it carry no stepPath.
+  StepAttributionMismatch [a1ba45034bf72f5f9055776bb7129fb8#0]: Step marker 1 does not match step 'note a long value: Lorem-free filler text that keeps going past two hundred characters so that any cut, wrap or budget a reader applies to a name is reached by this row of the outline and shows up in what the reader prints, which is what this row is for, nothing more'; interactions after it carry no stepPath.
+Specifications.html and Specifications.yml are blank: 1 of 30 scenario(s) failed, and the specification is only published from a green run.
+Kronikol: reports written to C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\4446b339-7f87-4b87-990f-495a136f5c68\scratchpad\plan101\work\cucumber-lane  (TestRunReport.html · TestRunReport.krkl · Failures.md · TestRunReport.labs.html)
+  1 failed — kronikol query failures C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\4446b339-7f87-4b87-990f-495a136f5c68\scratchpad\plan101\work\cucumber-lane
+    57c7506551010200  Baskets › A basket is weighed on the UK scale (two apples)
+  agents: read C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\4446b339-7f87-4b87-990f-495a136f5c68\scratchpad\plan101\work\cucumber-lane\CLAUDE.md first; never open TestRunReport.krkl
+ingest exit 0

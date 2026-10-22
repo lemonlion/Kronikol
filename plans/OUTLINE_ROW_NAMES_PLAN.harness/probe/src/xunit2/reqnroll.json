@@ -1,0 +1,9 @@
+{
+  "$schema": "https://schemas.reqnroll.net/reqnroll-config-latest.json",
+  "bindingAssemblies": [
+    { "assembly": "Kronikol.ReqNRoll.xUnit2" }
+  ],
+  "formatters": {
+    "message": { "outputFilePath": "cucumber-messages.ndjson" }
+  }
+}

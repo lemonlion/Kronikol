@@ -1,0 +1,30 @@
+Baskets	{"case": "empty basket", "count": "0", "grams": "0"}	A basket is weighed on the UK scale (empty basket)	ba9245000d57875e
+Baskets	{"case": "one apple", "count": "1", "grams": "150"}	A basket is weighed on the UK scale (one apple)	16f57fa372f0b035
+Baskets	{"case": "two apples", "count": "2", "grams": "301"}	A basket is weighed on the UK scale (two apples)	57c7506551010200
+Edges	{"a": "1"}	E01 a title without a placeholder	7584beced66ba0cb
+Edges	{"a": "1"}	E11 1 and 1 again	733f6ac610b58c8b
+Edges	{"a": "2"}	E01 a title without a placeholder	f401ecd500517dc2
+Edges	{"a": "2"}	E11 2 and 2 again	bfd8449ea914742c
+Edges	{"a": "<b>", "b": "x"}	E02 x then x, a value that names a later column	a1fe3fcc2ee888f9
+Edges	{"a": "y", "b": "z"}	E02 y then z, a value that names a later column	cdaecf6c0e7c3462
+Edges	{"class": "A", "fruit name": "apple", "größe": "klein"}	E04 the apple in klein and A	1090f07a82389f10
+Edges	{"class": "B", "fruit name": "pear", "größe": "groß"}	E04 the pear in groß and B	14c14ced57007c80
+Edges	{"count": "1"}	E03 weighs 1 on <missing>	66f7f0d71be211bf
+Edges	{"count": "2"}	E03 weighs 2 on <missing>	e0567deb271e2993
+Edges	{"fruit": "Pear"}	Pear starts E12	218268d2cf35fa77
+Edges	{"fruit": "apple", "n": "1"}	E06 the same name for apple	63c4cda56e1c5e15
+Edges	{"fruit": "apple", "n": "2"}	E06 the same name for apple	3905deb1ae0062c5
+Edges	{"fruit": "apple"}	Apple starts E12	77e35d8bdce7beea
+Edges	{"fruit": "apple"}	E05 apple by block	d66982b12e0bffec
+Edges	{"fruit": "apple"}	E10 apple under a rule	f860494422600242
+Edges	{"fruit": "pear"}	E05 pear by block	889d302e3e2070a2
+Edges	{"fruit": "pear"}	E10 pear under a rule	0fb17d1dbc90930f
+Edges	{"v": ""}	E07 escapes []	d2be1949c0291043
+Edges	{"v": "<b>bold</b> & co"}	E08 markup <b>bold</b> & co	23753f1eeda82c6c
+Edges	{"v": "\"quoted\" 'single'"}	E08 markup "quoted" 'single'	82c1f72d6360eb7f
+Edges	{"v": "a long value: Lorem-free filler text that keeps going past two hundred characters so that any cut, wrap or budget a reader applies to a name is reached by this row of the outline and shows up in what the reader prints, which is what this row is for, nothing more"}	E13 a long value: Lorem-free filler text that keeps going past two hundred characters so that any cut, wrap or budget a reader applies to a name is reached by this row of the outline and shows up in what the reader prints, which is what this row is for, nothing more	4686bd3705d14f2e
+Edges	{"v": "back \\ sl"}	E07 escapes [back \ sl]	65d91c673138b453
+Edges	{"v": "line\nbreak"}	E07 escapes [line\nbreak]	e7a216ce25116573
+Edges	{"v": "pipe | bar"}	E07 escapes [pipe | bar]	652d7738369e6b1a
+Edges	{"v": "short"}	E13 short	15cf5083c8232295
+Edges	{}	E09 a plain scenario that writes <x> in its title	dc93179dbfe7fb58

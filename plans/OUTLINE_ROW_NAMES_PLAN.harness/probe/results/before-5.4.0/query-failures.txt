@@ -1,0 +1,11 @@
+s2  Baskets › A basket is weighed on the UK scale (<case>)
+  example: case=two apples, count=2, grams=301
+  at Features/Baskets.feature:3
+  thrown at Probe101.xUnit2.Features.BasketsFeature.ABasketIsWeighedOnTheUKScaleCase(String case, String count, String grams, String __pickleIndex, String[] exampleTags) — C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\4446b339-7f87-4b87-990f-495a136f5c68\scratchpad\plan101\work\before-5.4.0\xunit2\Features\Baskets.feature:5
+  rerun: dotnet test --filter "FullyQualifiedName~Probe101.xUnit2.Features.BasketsFeature.ABasketIsWeighedOnTheUKScaleCase"
+  open: TestRunReport.html#sid-48092cbd5fd324ec
+  Assert.Equal() Failure: Values differ Expected: 301 Actual: 300
+  ✗ s2/1  Then the basket weighs 301 grams
+
+1 failed · steps s? for the whole tree · grep "<value>" --values to trace a number
+exit 0

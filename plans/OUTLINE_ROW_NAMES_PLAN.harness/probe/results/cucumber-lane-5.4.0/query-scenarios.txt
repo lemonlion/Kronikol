@@ -1,0 +1,33 @@
+! Cucumber messages: 30 scenario(s) have no 'kronikol-test-id' attachment, so captured interactions cannot be joined to them: 'E07 escapes [line break]', 'E07 esc…
+s0    FAIL   0.36s     0 calls  A basket is weighed on the UK scale (two apples)
+        Assert.Equal() Failure: Values differ Expected: 301 Actual: 300
+s1    pass      0s     0 calls  A basket is weighed on the UK scale (one apple)
+s2    pass      0s     0 calls  A basket is weighed on the UK scale (empty basket)
+s3    pass   0.06s     0 calls  E07 escapes [line break]
+s4    pass      0s     0 calls  E07 escapes []
+s5    pass      0s     0 calls  E07 escapes [back \ sl]
+s6    pass      0s     0 calls  E07 escapes [pipe | bar]
+s7    pass      0s     0 calls  E13 short
+s8    pass      0s     0 calls  E13 a long value: Lorem-free filler text that keeps going past two hundred chara…
+s9    pass      0s     0 calls  E09 a plain scenario that writes <x> in its title
+s10   pass      0s     0 calls  E06 the same name for apple
+s11   pass      0s     0 calls  E06 the same name for apple
+s12   pass      0s     0 calls  E10 pear under a rule
+s13   pass      0s     0 calls  E10 apple under a rule
+s14   pass      0s     0 calls  E02 x then x, a value that names a later column
+s15   pass      0s     0 calls  E02 y then z, a value that names a later column
+s16   pass      0s     0 calls  E03 weighs 1 on <missing>
+s17   pass      0s     0 calls  E03 weighs 2 on <missing>
+s18   pass      0s     0 calls  E04 the apple in klein and A
+s19   pass      0s     0 calls  E04 the pear in groß and B
+s20   pass      0s     0 calls  E05 pear by block
+s21   pass      0s     0 calls  E05 apple by block
+s22   pass      0s     0 calls  E01 a title without a placeholder
+s23   pass      0s     0 calls  E01 a title without a placeholder
+s24   pass      0s     0 calls  E08 markup "quoted" 'single'
+s25   pass      0s     0 calls  E08 markup <b>bold</b> & co
+s26   pass      0s     0 calls  E11 2 and 2 again
+s27   pass      0s     0 calls  E11 1 and 1 again
+s28   pass      0s     0 calls  Apple starts E12
+s29   pass      0s     0 calls  Pear starts E12
+30 scenarios
