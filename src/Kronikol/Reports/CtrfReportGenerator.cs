@@ -176,7 +176,7 @@ public static class CtrfReportGenerator
 
                 var retries = scenario.Attempt is { } attempt && attempt > 1 ? attempt - 1 : 0;
                 var tags = ScenarioTags.Effective(feature, scenario);
-                var stableId = ScenarioStableId.Compute(suite, feature.DisplayName, scenario.DisplayName, scenario.OutlineId, scenario.ExampleValues);
+                var stableId = ScenarioStableId.For(suite, feature.DisplayName, scenario);
                 // The ledger's flaky verdict counts as CTRF's flaky flag: a consumer that lists flaky tests
                 // (github-test-reporter's flaky table) then sees what the last runs saw, not only what
                 // this run's retries saw.

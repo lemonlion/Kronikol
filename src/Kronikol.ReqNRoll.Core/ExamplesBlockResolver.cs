@@ -1,3 +1,5 @@
+using System.Collections;
+using System.Collections.Specialized;
 using System.Globalization;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -80,6 +82,62 @@ internal static class ExamplesBlockResolver
             return ScenarioSource.None;
         }
     }
+
+    /// <summary>
+    /// The running row's name as Gherkin names its pickle (#101): the title with each <c>&lt;header&gt;</c> filled from the
+    /// row's <c>Examples:</c> values. The pickle Reqnroll embeds is Gherkin's own answer, taken when it is found, belongs
+    /// to this scenario and holds this row's values; otherwise <see cref="FillPlaceholders"/> gives the same answer from
+    /// the title and the arguments. A scenario with no arguments keeps its title, as Gherkin keeps a plain scenario's.
+    /// Never throws: anything unexpected gives the rule's answer.
+    /// </summary>
+    public static string ResolveRowName(FeatureInfo? featureInfo, ScenarioInfo? scenarioInfo)
+    {
+        if (scenarioInfo is null)
+            return "";
+        var title = scenarioInfo.Title ?? "";
+        if (scenarioInfo.Arguments is not { Count: > 0 } arguments)
+            return title;
+        try
+        {
+            if (featureInfo is not null
+                && PickleName(LookupCache.GetValue(featureInfo, BuildLookup), scenarioInfo) is { Length: > 0 } pickleName)
+            {
+                return pickleName;
+            }
+        }
+        catch
+        {
+            // the rule gives Gherkin's name without the messages
+        }
+        return FillPlaceholders(title, arguments);
+    }
+
+    /// <summary>
+    /// Gherkin's rule for an outline row's name, as <c>PickleCompiler.Interpolate</c> applies it (Gherkin 35.0.0, which
+    /// Reqnroll 3.3.4 compiles with): for each column in the order it is written, every <c>&lt;header&gt;</c> in the name
+    /// so far becomes the row's value, ordinally. A placeholder that names no column stays as written, and a value that
+    /// holds a later column's placeholder is filled again. An empty result gives the title, as the Cucumber lane shows a
+    /// pickle with no name (plans/OUTLINE_ROW_NAMES_PLAN.md 2.4).
+    /// </summary>
+    public static string FillPlaceholders(string title, IOrderedDictionary? arguments)
+    {
+        if (arguments is not { Count: > 0 })
+            return title;
+        var name = title;
+        foreach (DictionaryEntry entry in arguments)
+            name = name.Replace("<" + entry.Key + ">", entry.Value?.ToString() ?? "", StringComparison.Ordinal);
+        return name.Length > 0 ? name : title;
+    }
+
+    /// <summary>The pickle's name when the pickle is this row's: its scenario's title and its row's cells match.</summary>
+    private static string? PickleName(FeatureBlockLookup lookup, ScenarioInfo scenarioInfo) =>
+        FindPickle(lookup, scenarioInfo) is { AstNodeIds.Count: > 1 } pickle
+        && lookup.RowsById.TryGetValue(pickle.AstNodeIds[1], out var entry)
+        && string.Equals(entry.ScenarioName, scenarioInfo.Title, StringComparison.Ordinal)
+        && ArgumentValues(scenarioInfo) is { } argumentValues
+        && entry.CellValues.SequenceEqual(argumentValues, StringComparer.Ordinal)
+            ? pickle.Name
+            : null;
 
     private static ExamplesBlock ResolveCore(FeatureInfo featureInfo, ScenarioInfo scenarioInfo)
     {

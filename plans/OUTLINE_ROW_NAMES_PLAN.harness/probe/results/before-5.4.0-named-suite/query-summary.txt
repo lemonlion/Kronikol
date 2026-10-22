@@ -1,0 +1,20 @@
+TestRunReport.krkl  4.8 KB on disk, 41.4 KB as JSON  Kronikol 5.4.0+eabec2bd7b2efa60814ec1a5223027bad4d055b8
+2026-10-22T11:21:48Z → 2026-10-22T11:21:49Z
+30 scenarios · 1 failed · 0 interactions · 0 distinct bodies
+
+Baskets  2 passed, 1 FAILED
+Edges  27 passed
+
+Failed:
+  s2  A basket is weighed on the UK scale (<case>)  — Assert.Equal() Failure: Values differ Expected: 301 Actual: 300
+  → failures
+
+Slowest:
+  s2  0.29s  A basket is weighed on the UK scale (<case>)
+  s19  0.07s  E07 escapes [<v>]
+  s18  0.01s  E07 escapes [<v>]
+
+Diagnostics (1):
+  HistoryUnavailable ×1  no history ledger: no .git or .kronikol directory above C:\Users\cex\AppData\Local\Temp\cl…
+next: failures
+exit 0

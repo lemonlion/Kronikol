@@ -2,6 +2,7 @@
 # Runs the #101 probe and keeps what it wrote in results/<label>/.
 #   run.sh <work-dir> before [version]   the published Kronikol.ReqNRoll.xUnit2 (default 5.4.0) from nuget.org
 #   run.sh <work-dir> after <checkout>    the adapter of a checkout (ProjectReference), e.g. a prototype
+#   PROBE_LABEL=<name> before it names the results folder (default before-<version> or after)
 # The probe is copied into <work-dir> first, outside the repository, so the repository's Directory.Build.props does
 # not apply to it. Reports are never opened: names, ids and values are read back through the report's own query.cs.
 set -u
@@ -12,6 +13,7 @@ case "$MODE" in
   after)  LABEL="after"; PROPS="-p:KronikolVersion=0.0.0 -p:KronikolSource=$ARG" ;;
   *) echo "usage: run.sh <work-dir> before [version] | after <checkout>"; exit 2 ;;
 esac
+LABEL="${PROBE_LABEL:-$LABEL}"   # another name for the answers, so a re-run keeps the recorded ones
 D="$W/$LABEL"; OUT="$H/results/$LABEL"
 rm -rf "$D" "$OUT"; mkdir -p "$D" "$OUT"
 cp -r "$H/src/." "$D/"

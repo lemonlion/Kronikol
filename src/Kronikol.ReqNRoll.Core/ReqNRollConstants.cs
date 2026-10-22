@@ -11,4 +11,7 @@ public static class ReqNRollConstants
     public const string EndpointTagPrefix = "endpoint:";
     public const string StepStopwatchKey = "Kronikol.StepStopwatch";
     public const string OwnerHooksKey = "Kronikol.OwnerHooks";
+
+    /// <summary>The running row's name, as <c>BeforeScenario</c> resolved it (#101).</summary>
+    internal const string RowNameKey = "Kronikol.RowName";
 }

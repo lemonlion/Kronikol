@@ -12,11 +12,17 @@ and value was read back through the report's own `query.cs` or `kronikol query`.
   `src/Directory.Build.targets` swaps the package for a checkout's project with `-p:KronikolSource=<checkout>`.
 - `run.sh <work-dir> before [version]` runs the suite on the published package (default 5.4.0);
   `run.sh <work-dir> after <checkout>` on a checkout's adapter. The probe is copied into `<work-dir>` first, outside the
-  repository, so the repository's `Directory.Build.props` does not apply to it. Answers land in `results/<label>/`.
+  repository, so the repository's `Directory.Build.props` does not apply to it. Answers land in `results/<label>/`, or
+  in `results/$PROBE_LABEL/` when that is set.
+- `Steps.cs` names the suite, `Probe101.xUnit2`, since the execution of R1: built from a checkout, the adapter's project
+  references put four `*.deps.json` beside the test assembly, and `RunSuite` then finds no suite, so every id of the
+  "after" lane differed from 5.4.0's, its unchanged rows' too. The name is the one 5.4.0 probed from the package build.
 - `tsv.py <labels...>` turns `results/<label>/query-scenarios-all.json` into `ids.tsv` (feature, values, name, id).
 - `ids-check.cs` (`dotnet run --file ids-check.cs`, from `probe/`): which `Compute` inputs reproduce the ids 5.4.0
   wrote, whether Gherkin's rule gives the pickle's name, and each row's id if the filled name were hashed.
   Needs `#:property PublishAot=false`: file-based apps default to AOT, which turns off reflection-based System.Text.Json.
+- `after-check.py` (`python -I after-check.py`, from `probe/`): the proof of the plan's 4.6, the "after" lane against
+  5.4.0's and against the Cucumber lane, row by row.
 
 ## probe/results/
 
@@ -27,6 +33,17 @@ and value was read back through the report's own `query.cs` or `kronikol query`.
 - `ids-check.txt`: 30 of 30 ids reproduced by `Compute(suite, feature, title, outlineId: title, values)` under the
   suite `Probe101.xUnit2`; Gherkin's rule gives the pickle's name on 29 of 29 rows; 27 of 29 ids would move if the
   filled name were hashed.
+- `after/` (R1's adapter, the checkout at the release's commit, 2026-10-22) and `after-check.txt`: every row keeps the
+  address, feature, values and stable id 5.4.0 wrote (30 of 30) and takes the name the Cucumber lane gives it (30 of
+  30); 27 of 30 names change, and none reads `(<case>)`. `Failures.md` heads the failing row `Baskets › A basket is
+  weighed on the UK scale (two apples)`, stableId `48092cbd5fd324ec`, as 5.4.0 wrote it.
+- `before-5.4.0-named-suite/`: the 5.4.0 lane again with the suite named, its 30 ids those of `before-5.4.0/`.
+
+## mutations/
+
+- `mutate-101.py <worktree> <log>`: the mutations of plan section 4.5 that proved R1's facts, each one or more exact
+  replacements in a worktree of the release's code, the test project built for net10.0 and the facts run, every file put
+  back. `mutate-101.txt` is its answer on 2026-10-22: 38 of 38 killed, each by a fact it names.
 
 ## research/
 

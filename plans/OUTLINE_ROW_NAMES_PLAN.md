@@ -1,8 +1,9 @@
 # Each Reqnroll outline row named as Gherkin names its pickle (#101)
 
 **Date:** 2026-10-22 · **Repo version:** 5.4.0 (`main` at `eabec2bd`; line numbers are for that commit) ·
-**Status:** 📝 **Draft, not green-lit.** Written in a worktree of its own (`Kronikol-101`, branch
-`plan/101-outline-row-names`) while other sessions worked in theirs. Nothing outside `plans/` changes.
+**Status:** ✅ **Executed**: the owner green-lit it on 2026-10-22 ("implement the plan in full", every
+recommendation of section 11 taken); R1 shipped as 5.4.3 (see the Log). Written in a worktree of its own (`Kronikol-101`,
+branch `plan/101-outline-row-names`) while other sessions worked in theirs.
 
 Evidence labels: **RUN** (measured on 2026-10-22 against Kronikol 5.4.0 from nuget.org, Reqnroll 3.3.4 and Gherkin's own
 compiler, with the scripts and verbatim answers in [`OUTLINE_ROW_NAMES_PLAN.harness/`](OUTLINE_ROW_NAMES_PLAN.harness/README.md)),
@@ -431,7 +432,7 @@ name (Q2), and the data file's new optional key. If Q1 takes B, it also says tha
 
 ## 7. Where it sits in the roadmap
 
-No row yet. At green light it takes the next stage-1 bug row by "taking 1.N now", as the other issue plans did.
+Row 1.32 of `ROADMAP.md`, taken at the green light (2026-10-22) and done as 5.4.3.
 
 ## 8. Found on the way, not in this plan
 
@@ -504,3 +505,31 @@ written by a read-only research agent and checked by hand where this plan cites 
   (generated code, the embedded pickles, the cases it refuses), every reader of a scenario's name, and Gherkin's rule
   with the Cucumber lane and Kronikol4J; their citations used here were re-read by hand. The probe ran on Kronikol
   5.4.0 from nuget.org; the Cucumber lane on the same run's messages; `ids-check.cs` reproduced every id. Not committed.
+- 2026-10-22: **executed** at the owner's ask ("Can you implement the plan in full"), every recommendation of section 11
+  taken: Q1 A (the ids and the order kept), Q2 yes (the identity takes the filled name), Q3 yes (the anchors kept), Q4
+  `keyedByOutline`, Q5 #102 left separate, Q6 the two items of section 8 left for a patch of their own. R1 shipped as 5.4.3
+  (2026-10-22), built in this worktree after a rebase onto 5.4.2. 5.4.1 and 5.4.2, other sessions' releases, landed
+  after `eabec2bd` and touch none of the sites; they move some cited lines: `ReportGenerator.cs` by one after its
+  line 291, `MergeableReportMerger.cs:372` to `:376` and `HistoryAnalyzer.cs:625` to `:640`. Departures from sections
+  3 and 4, each found while the facts were written:
+  - `ResolveRowName` takes a pickle only when its row belongs to the running scenario's title as well as holding its
+    values. Section 3.2 named the cells check alone, which a pickle index pointing at another outline's row with the
+    same values passes, and that row's name would have been taken (a fact holds it).
+  - W3's "Copy scenario name on a row" has nothing to copy: a Reqnroll row is always in its outline's group, and the
+    group's button copies its heading, as before. W3 reads a failure cluster instead: it names each row by its filled
+    name, and its link opens that row through the kept anchor.
+  - W4's outline is `Features/PartyMuffins.feature`, named to sort after the example's other features: the pipeline
+    facts read the first parameterized group, and one counted every row on the page, which now counts its own group's.
+  - `ReportGenerator.cs:2496` writes a scenario element's id, which a marked row never reaches (rows with values are
+    always grouped); its fact uses a marked scenario with no values.
+  - D2: `kronikol query failures` prints a row's `sN`, not its `stableId`; the fact reads the address.
+  - The probe's "after" lane builds the adapter from the checkout, whose project references put four `*.deps.json` in
+    the output, so `RunSuite` found no suite and every id of that run differed from 5.4.0's, its unchanged rows' too.
+    `Steps.cs` now names the suite 5.4.0 probed (`SuiteName = "Probe101.xUnit2"`), and `run.sh` takes `PROBE_LABEL`.
+  Proofs: the facts were run red on stubs where a stub could tell (16 name facts, 3 hooks facts, 3 key facts); 38 of
+  38 mutations of the new code are killed, each by a fact it names (the harness's `mutations/`); the probe's "after"
+  lane keeps every address, value and stable id 5.4.0 wrote (30 of 30) and takes the Cucumber lane's name for every
+  row (30 of 30), `results/after-check.txt`; the core suite (8,744 before the bump), the full Playwright suite (1,609
+  with 28 skipped), CI's Integration (ReqNRoll) job (66 of 66) and the Reqnroll examples pass, and release.slnf builds
+  in Release with no warning from the changed lines.
+  Found while doing it and left as it is: nothing new beyond section 8.

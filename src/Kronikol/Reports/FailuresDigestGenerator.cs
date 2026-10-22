@@ -264,7 +264,7 @@ public static class FailuresDigestGenerator
     {
         var scenario = located.Scenario;
         var address = "s" + located.Ordinal;
-        var stableId = ScenarioStableId.Compute(suite, located.Feature.DisplayName, scenario.DisplayName, scenario.OutlineId, scenario.ExampleValues);
+        var stableId = ScenarioStableId.For(suite, located.Feature.DisplayName, scenario);
         var scenarioHistory = history?.At(located.Ordinal, stableId);
         var diff = ErrorDiffParser.TryParseExpectedActual(scenario.ErrorMessage);
 

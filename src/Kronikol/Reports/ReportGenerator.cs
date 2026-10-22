@@ -2138,7 +2138,7 @@ public static class ReportGenerator
         var anchorIdCounts = new Dictionary<string, int>();
         foreach (var scenario in allScenarios)
         {
-            var baseAnchor = GenerateScenarioAnchorId(scenario.DisplayName);
+            var baseAnchor = GenerateScenarioAnchorId(ScenarioStableId.KeyName(scenario));
             if (anchorIdCounts.TryGetValue(baseAnchor, out var count))
             {
                 anchorIdCounts[baseAnchor] = count + 1;
@@ -2256,7 +2256,7 @@ public static class ReportGenerator
                     // milliseconds as that element writes them (D27), so the page reads nothing back from a title or a
                     // name. Under data-sid: data-stable-id is the scenario element's own address, which a #sid- link
                     // resolves through. A failed scenario's row is marked, and the stylesheet opens its name with a cross.
-                    var timelineStableId = ScenarioStableId.Compute(suite, featureName, scenario.DisplayName, scenario.OutlineId, scenario.ExampleValues);
+                    var timelineStableId = ScenarioStableId.For(suite, featureName, scenario);
                     var timelineWarmUpAttr = timelineWarmUpMs > 0 ? string.Create(CultureInfo.InvariantCulture, $" data-warmup-ms=\"{timelineWarmUpMs:F0}\"") : "";
                     timelineHtml.Append(CultureInfo.InvariantCulture, $"<div class=\"timeline-row{(scenario.Result == ExecutionResult.Failed ? " timeline-row-failed" : "")}\" data-sid=\"{timelineStableId}\" data-duration-ms=\"{durationMs:F0}\"{timelineWarmUpAttr}>");
                     timelineHtml.Append($"<div class=\"timeline-label\" title=\"{System.Net.WebUtility.HtmlEncode(scenario.DisplayName)}\">{System.Net.WebUtility.HtmlEncode(scenario.DisplayName)}</div>");
@@ -2327,7 +2327,7 @@ public static class ReportGenerator
                 body.Append($"""<div class="feature-description">{System.Net.WebUtility.HtmlEncode(feature.Description)}</div>""");
             }
 
-            var orderedScenarios = feature.Scenarios.OrderByDescending(x => x.IsHappyPath).ThenBy(x => x.DisplayName).ToArray();
+            var orderedScenarios = feature.Scenarios.OrderByDescending(x => x.IsHappyPath).ThenBy(ScenarioStableId.KeyName).ToArray();
 
             // Group parameterized scenarios using ParameterGrouper
             Func<Scenario[], bool> diagramComparer = groupScenarios =>
@@ -2493,7 +2493,7 @@ public static class ReportGenerator
                 // file, `kronikol query` and Failures.md all speak, and `#sid-<id>` resolves here.
                 // It goes BEFORE ` id=`: the cluster-link pins match `[^>]*id="([^"]+)"` greedily,
                 // and `data-stable-id="` ends in a word-boundary `id="` that would win that race.
-                var scenarioStableId = ScenarioStableId.Compute(suite, feature.DisplayName, scenario.DisplayName, scenario.OutlineId, scenario.ExampleValues);
+                var scenarioStableId = ScenarioStableId.For(suite, feature.DisplayName, scenario);
                 var historyEntry = scenarioHistory is null ? null : HistoryHtml.Entry(scenarioHistory, historySlots!, scenarioStableId);
                 var historyAttr = historyEntry is null ? "" : HistoryHtml.VerdictAttribute(historyEntry);
                 var historyBadges = historyEntry is null ? "" : HistoryHtml.Sparkline(historyEntry) + HistoryHtml.Pill(historyEntry);
@@ -2971,7 +2971,7 @@ public static class ReportGenerator
         foreach (var feature in features)
             foreach (var scenario in feature.Scenarios)
                 if (used.Contains(scenario.Id) && placeOf.TryAdd(scenario.Id, stableIds.Count))
-                    stableIds.Add(ScenarioStableId.Compute(suite, feature.DisplayName, scenario.DisplayName, scenario.OutlineId, scenario.ExampleValues));
+                    stableIds.Add(ScenarioStableId.For(suite, feature.DisplayName, scenario));
         var byConnection = diagram.Connections
             .Select(c => c.TestIds!.Where(placeOf.ContainsKey).Select(t => placeOf[t]).Distinct().OrderBy(i => i).ToArray())
             .ToArray();
@@ -3491,7 +3491,7 @@ public static class ReportGenerator
             rowHistory = new Dictionary<string, ScenarioHistory>(StringComparer.Ordinal);
             foreach (var row in scenarios)
             {
-                var rowId = ScenarioStableId.Compute(suite, featureDisplayName ?? "", row.DisplayName, row.OutlineId, row.ExampleValues);
+                var rowId = ScenarioStableId.For(suite, featureDisplayName ?? "", row);
                 if (HistoryHtml.Entry(history, historySlots, rowId) is { } rowEntry)
                     rowHistory[row.Id] = rowEntry;
             }
@@ -3667,7 +3667,7 @@ public static class ReportGenerator
                 // too — deliberately without an `id`, which the grouped copy of the same row owns
                 // (Flat_table_rows_have_no_id_attribute). Duplicate data attributes are legal; the
                 // hash script picks whichever copy is displayed.
-                var flatRowStableId = ScenarioStableId.Compute(suite, featureDisplayName ?? "", s.DisplayName, s.OutlineId, s.ExampleValues);
+                var flatRowStableId = ScenarioStableId.For(suite, featureDisplayName ?? "", s);
                 body.Append($"<tr class=\"{rowStatusClass}{activeClass}\" data-row-idx=\"{ri}\"{RowHistoryAttr(s)} data-stable-id=\"{flatRowStableId}\"{rowSearchAttr} onclick=\"selectRow(this,'{prefix}')\">");
                 body.Append($"<td>{ri + 1}</td>");
 
@@ -3771,10 +3771,11 @@ public static class ReportGenerator
                 AppendExamplesBlockBand(body, groupedBand, groupedCols);
             }
 
-            var rowAnchorId = scenarioAnchorIds?.GetValueOrDefault(s.Id) ?? GenerateScenarioAnchorId(s.DisplayName);
-            // Every row of an outline shares one display name, so the slug cannot address a row and
-            // the stable id — which hashes the example values — is the only handle `#sid-` can use.
-            var rowStableId = ScenarioStableId.Compute(suite, featureDisplayName ?? "", s.DisplayName, s.OutlineId, s.ExampleValues);
+            var rowAnchorId = scenarioAnchorIds?.GetValueOrDefault(s.Id) ?? GenerateScenarioAnchorId(ScenarioStableId.KeyName(s));
+            // A row's slug is not its own: many outlines' rows share one display name, and a Reqnroll row whose name
+            // was filled keys its slug on the outline's title as before (#101), so the stable id, which hashes the
+            // example values, is the only handle `#sid-` can use.
+            var rowStableId = ScenarioStableId.For(suite, featureDisplayName ?? "", s);
             body.Append($"<tr class=\"{rowStatusClass}{activeClass}\" data-row-idx=\"{ri}\"{RowHistoryAttr(s)} data-stable-id=\"{rowStableId}\" id=\"{rowAnchorId}\" data-scenario-id=\"{rowAnchorId}\"{rowSearchAttr} onclick=\"selectRow(this,'{prefix}')\">");
             body.Append($"<td>{ri + 1}</td>");
 
@@ -5353,7 +5354,7 @@ public static class ReportGenerator
                 var scenario = new Dictionary<string, object?>
                 {
                     ["id"] = s.Id,
-                    ["stableId"] = ScenarioStableId.Compute(suite, f.DisplayName, s.DisplayName, s.OutlineId, s.ExampleValues),
+                    ["stableId"] = ScenarioStableId.For(suite, f.DisplayName, s),
                     ["name"] = s.DisplayName,
                     ["description"] = s.Description,
                     ["result"] = s.Result.ToString(),
@@ -5391,6 +5392,11 @@ public static class ReportGenerator
                 // scenario's bytes stay as they were; a merge and the query read it back, where they used to lose it.
                 if (s.NotATest)
                     scenario = InsertAfter(scenario, "isHappyPath", "notATest", true);
+
+                // Beside outlineId, and only on an outline row whose name Kronikol filled (#101), so every other scenario's
+                // bytes stay as they were; a merge reads it back and keys the row's id on its outline's title, as this run did.
+                if (s.KeyedByOutline)
+                    scenario = InsertAfter(scenario, "outlineId", "keyedByOutline", true);
 
                 if (diagramLookup != null)
                     scenario["diagrams"] = diagramLookup[s.Id].Select(d => payloads is null ? d : payloads.Write(d)).ToArray();
@@ -5941,7 +5947,7 @@ public static class ReportGenerator
                                     var scenarioElements = new List<object?>
                                     {
                                         new XElement("Id", s.Id),
-                                        new XElement("StableId", ScenarioStableId.Compute(resolvedSuite, f.DisplayName, s.DisplayName, s.OutlineId, s.ExampleValues)),
+                                        new XElement("StableId", ScenarioStableId.For(resolvedSuite, f.DisplayName, s)),
                                         new XElement("Name", s.DisplayName),
                                         s.Description != null ? new XElement("Description", s.Description) : null,
                                         new XElement("Result", s.Result.ToString()),
@@ -6233,7 +6239,7 @@ public static class ReportGenerator
             {
                 AppendYaml(yml, "      - Id: ", scenario.Id);
                 AppendYaml(yml, "        Name: ", scenario.DisplayName);
-                AppendYaml(yml, "        StableId: ", ScenarioStableId.Compute(resolvedSuite, feature.DisplayName, scenario.DisplayName, scenario.OutlineId, scenario.ExampleValues));
+                AppendYaml(yml, "        StableId: ", ScenarioStableId.For(resolvedSuite, feature.DisplayName, scenario));
                 if (scenario.Description is not null)
                     AppendYaml(yml, "        Description: ", scenario.Description);
                 if (scenario.Attempt is not null)
@@ -6558,7 +6564,7 @@ public static class ReportGenerator
 
             yml.Append("    Scenarios:\n");
 
-            var orderedScenarios = feature.Scenarios.OrderByDescending(x => x.IsHappyPath).ThenBy(x => x.DisplayName);
+            var orderedScenarios = feature.Scenarios.OrderByDescending(x => x.IsHappyPath).ThenBy(ScenarioStableId.KeyName);
             foreach (var scenario in orderedScenarios)
             {
                 AppendYaml(yml, "      - Scenario: ", scenario.DisplayName);
@@ -6606,7 +6612,7 @@ public static class ReportGenerator
                 f.Endpoint,
                 f.Description,
                 Tags = f.Tags ?? [],
-                Scenarios = f.Scenarios.OrderByDescending(s => s.IsHappyPath).ThenBy(s => s.DisplayName).Select(s => new
+                Scenarios = f.Scenarios.OrderByDescending(s => s.IsHappyPath).ThenBy(ScenarioStableId.KeyName).Select(s => new
                 {
                     Name = s.DisplayName,
                     s.IsHappyPath,
@@ -6640,7 +6646,7 @@ public static class ReportGenerator
                             f.Description != null ? new XElement("Description", f.Description) : null,
                             (f.Tags is { Length: > 0 }) ? new XElement("Tags", f.Tags.Select(t => new XElement("Tag", t))) : null,
                             new XElement("Scenarios",
-                                f.Scenarios.OrderByDescending(s => s.IsHappyPath).ThenBy(s => s.DisplayName).Select(s =>
+                                f.Scenarios.OrderByDescending(s => s.IsHappyPath).ThenBy(ScenarioStableId.KeyName).Select(s =>
                                     new XElement("Scenario",
                                         new XElement("Name", s.DisplayName),
                                         new XElement("IsHappyPath", s.IsHappyPath.ToString().ToLowerInvariant()),
@@ -7387,6 +7393,7 @@ public static class ReportGenerator
                                         ["sourceFile"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Where the scenario is written, matching the feature's sourceFile. NOT the same contract as a step's sourceFile, which is a bare file name from [CallerFilePath] on the build machine.", ["examples"] = new[] { "Features/Cake.feature" } },
                                         ["sourceLine"] = new Dictionary<string, object?> { ["type"] = new[] { "integer", "null" }, ["description"] = "The line the Scenario: or Scenario Outline: keyword is on - the declaration, not the Examples: row, so every row of an outline points at the same line. exampleValues is what says which row." },
                                         ["outlineId"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Original scenario outline name for parameterized scenarios" },
+                                        ["keyedByOutline"] = new Dictionary<string, object?> { ["type"] = "boolean", ["description"] = "Present, and true, only on an outline row whose name was filled from its example values (a Reqnroll row): its stableId, its place and its anchor key on outlineId in place of name, the name it bore before" },
                                         ["examplesBlockName"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Name of the Examples: block this outline row came from" },
                                         ["examplesBlockDescription"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Free-text description under the Examples: header" },
                                         ["examplesBlockIndex"] = new Dictionary<string, object?> { ["type"] = new[] { "integer", "null" }, ["description"] = "0-based position of the Examples: block within the outline" },

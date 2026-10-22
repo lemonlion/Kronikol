@@ -41,10 +41,15 @@ internal static class ScenarioInfoEnumerableExtensions
                             // feature's (plans/TAGS_PLAN.md §4.5); the happy path from its own and its Examples block's
                             var tags = ScenarioTags.Classify(x.CombinedTags).Tags.Except(featureTags, ScenarioTags.Comparer).ToArray();
 
+                            // The row's name as Gherkin names its pickle (#101). A row whose name differs from its outline's
+                            // title keys its id and its place on the title, as it did when it was named by it.
+                            var displayName = x.RowName ?? x.ScenarioTitle;
+
                             return new Scenario
                             {
                                 Id = x.ScenarioId,
-                                DisplayName = x.ScenarioTitle,
+                                DisplayName = displayName,
+                                KeyedByOutline = x.OutlineId is not null && !string.Equals(displayName, x.OutlineId, StringComparison.Ordinal),
                                 Description = GherkinText.NullIfBlank(GherkinText.Dedent(x.ScenarioDescription)),
                                 IsHappyPath = ScenarioTags.Classify(x.ScenarioTags).IsHappyPath,
                                 Result = x.ExecutionStatus.ToExecutionResult(),

@@ -52,7 +52,11 @@ public class ReqNRollTrackingHooks
         _scenarioContext[ReqNRollConstants.ScenarioRuntimeIdKey] = scenarioId;
         _scenarioContext[ReqNRollConstants.OwnerHooksKey] = this;
         _scenarioContext[ReqNRollConstants.StepsCollectionKey] = new List<ReqNRollStepInfo>();
-        ReqNRollTestContext.CurrentTestInfo = (_scenarioContext.ScenarioInfo.Title, scenarioId);
+        // The row's name as Gherkin names its pickle (#101), resolved once, before any step: the test identity every call
+        // carries and the row the report shows have one name.
+        var rowName = ExamplesBlockResolver.ResolveRowName(_featureContext.FeatureInfo, _scenarioContext.ScenarioInfo);
+        _scenarioContext[ReqNRollConstants.RowNameKey] = rowName;
+        ReqNRollTestContext.CurrentTestInfo = (rowName, scenarioId);
 
         // Subscribe to AttachmentAddedEvent to capture attachments for the report.
         // We use the event system instead of wrapping IReqnrollOutputHelper because
@@ -216,7 +220,10 @@ public class ReqNRollTrackingHooks
             ExamplesBlockDescription = examplesBlock.Description,
             ExamplesBlockIndex = examplesBlock.Index,
             SourceFile = source.File,
-            SourceLine = source.Line
+            SourceLine = source.Line,
+            RowName = _scenarioContext.TryGetValue(ReqNRollConstants.RowNameKey, out string? rowName)
+                ? rowName
+                : ExamplesBlockResolver.ResolveRowName(_featureContext.FeatureInfo, _scenarioContext.ScenarioInfo)
         });
 
         ReqNRollTestContext.CurrentTestInfo = null;

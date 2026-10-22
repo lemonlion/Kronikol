@@ -1,0 +1,33 @@
+s0    pass      0s     0 calls  A basket is weighed on the UK scale (<case>)
+s1    pass      0s     0 calls  A basket is weighed on the UK scale (<case>)
+s2    FAIL   0.29s     0 calls  A basket is weighed on the UK scale (<case>)
+        Assert.Equal() Failure: Values differ Expected: 301 Actual: 300
+s3    pass      0s     0 calls  <fruit> starts E12
+s4    pass      0s     0 calls  <fruit> starts E12
+s5    pass      0s     0 calls  E01 a title without a placeholder
+s6    pass      0s     0 calls  E01 a title without a placeholder
+s7    pass      0s     0 calls  E02 <a> then <b>, a value that names a later column
+s8    pass      0s     0 calls  E02 <a> then <b>, a value that names a later column
+s9    pass      0s     0 calls  E03 weighs <count> on <missing>
+s10   pass      0s     0 calls  E03 weighs <count> on <missing>
+s11   pass      0s     0 calls  E04 the <fruit name> in <größe> and <class>
+s12   pass      0s     0 calls  E04 the <fruit name> in <größe> and <class>
+s13   pass      0s     0 calls  E05 <fruit> by block
+s14   pass      0s     0 calls  E05 <fruit> by block
+s15   pass      0s     0 calls  E06 the same name for <fruit>
+s16   pass      0s     0 calls  E06 the same name for <fruit>
+s17   pass      0s     0 calls  E07 escapes [<v>]
+s18   pass   0.01s     0 calls  E07 escapes [<v>]
+s19   pass   0.07s     0 calls  E07 escapes [<v>]
+s20   pass      0s     0 calls  E07 escapes [<v>]
+s21   pass      0s     0 calls  E08 markup <v>
+s22   pass      0s     0 calls  E08 markup <v>
+s23   pass      0s     0 calls  E09 a plain scenario that writes <x> in its title
+s24   pass      0s     0 calls  E10 <fruit> under a rule
+s25   pass      0s     0 calls  E10 <fruit> under a rule
+s26   pass      0s     0 calls  E11 <a> and <a> again
+s27   pass      0s     0 calls  E11 <a> and <a> again
+s28   pass      0s     0 calls  E13 <v>
+s29   pass      0s     0 calls  E13 <v>
+30 scenarios
+exit 0

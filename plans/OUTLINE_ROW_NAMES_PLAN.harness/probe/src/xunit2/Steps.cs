@@ -21,6 +21,10 @@ public sealed class Steps
     public void GivenNote() { }
 
     [AfterTestRun]
+    // The suite the ids are scoped to, named: on the published package it is probed from the one *.deps.json beside the
+    // test assembly, Probe101.xUnit2, but the "after" lane builds the adapter from a checkout, whose project references
+    // put their own *.deps.json there too, and the probe then finds no suite (RunSuite.cs). Naming it gives both lanes
+    // the suite 5.4.0 probed, so their ids can be compared.
     public static void WriteReports() =>
-        ReqNRollReportGenerator.CreateStandardReportsWithDiagrams(new ReportConfigurationOptions());
+        ReqNRollReportGenerator.CreateStandardReportsWithDiagrams(new ReportConfigurationOptions { SuiteName = "Probe101.xUnit2" });
 }

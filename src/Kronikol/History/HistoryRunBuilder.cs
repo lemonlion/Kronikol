@@ -55,7 +55,7 @@ public static class HistoryRunBuilder
         // translation.
         var scenarios = features.OrderBy(f => f.DisplayName).SelectMany(f => (f.Scenarios ?? []).Select(s => (Feature: f, Scenario: s))).ToArray();
         var entries = scenarios.Select(pair => new HistoryRosterEntry(
-            ScenarioStableId.Compute(suite, pair.Feature.DisplayName, pair.Scenario.DisplayName, pair.Scenario.OutlineId, pair.Scenario.ExampleValues),
+            ScenarioStableId.For(suite, pair.Feature.DisplayName, pair.Scenario),
             pair.Scenario.DisplayName,
             pair.Feature.DisplayName,
             Source(pair.Scenario))).ToArray();

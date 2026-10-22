@@ -8,6 +8,10 @@ namespace Kronikol.ReqNRoll;
 public record ReqNRollScenarioInfo
 {
     public required string ScenarioId { get; init; }
+    /// <summary>
+    /// The title as written, <c>ScenarioInfo.Title</c>: for an outline, with its <c>&lt;header&gt;</c> placeholders unfilled,
+    /// the same on every row. The rows are ordered by it and the outline is named by it.
+    /// </summary>
     public required string ScenarioTitle { get; init; }
     public string? ScenarioDescription { get; init; }
     public required string FeatureTitle { get; init; }
@@ -37,4 +41,11 @@ public record ReqNRollScenarioInfo
 
     /// <summary>The line the <c>Scenario:</c> / <c>Scenario Outline:</c> keyword is on.</summary>
     public int? SourceLine { get; init; }
+
+    /// <summary>
+    /// The scenario's name as Gherkin names its pickle (#101): for an outline row, the title with its <c>&lt;header&gt;</c>
+    /// placeholders filled from the row's values; for anything else, the title. The report shows it; null where the
+    /// hooks did not resolve one, and the title is shown then.
+    /// </summary>
+    internal string? RowName { get; init; }
 }

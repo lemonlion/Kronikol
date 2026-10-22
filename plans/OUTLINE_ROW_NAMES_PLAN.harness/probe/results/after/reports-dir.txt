@@ -1,0 +1,16 @@
+total 1493
+drwxr-xr-x 1 cex 197121       0 Oct 22 12:21 .
+drwxr-xr-x 1 cex 197121       0 Oct 22 12:21 ..
+-rw-r--r-- 1 cex 197121   10011 Oct 22 12:21 AGENTS.md
+-rw-r--r-- 1 cex 197121   10011 Oct 22 12:21 CLAUDE.md
+-rw-r--r-- 1 cex 197121  246547 Oct 22 12:21 ComponentDiagram.html
+-rw-r--r-- 1 cex 197121    1589 Oct 22 12:21 Failures.jsonl
+-rw-r--r-- 1 cex 197121    1940 Oct 22 12:21 Failures.md
+-rw-r--r-- 1 cex 197121    7378 Oct 22 12:21 History.run.json
+-rw-r--r-- 1 cex 197121     533 Oct 22 12:21 Run.json
+-rw-r--r-- 1 cex 197121       0 Oct 22 12:21 Specifications.html
+-rw-r--r-- 1 cex 197121       0 Oct 22 12:21 Specifications.yml
+-rw-r--r-- 1 cex 197121 1052927 Oct 22 12:21 TestRunReport.html
+-rw-r--r-- 1 cex 197121    5061 Oct 22 12:21 TestRunReport.krkl
+-rw-r--r-- 1 cex 197121  132377 Oct 22 12:21 TestRunReport.labs.html
+-rw-r--r-- 1 cex 197121    6822 Oct 22 12:21 query.cs

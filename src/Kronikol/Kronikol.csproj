@@ -29,6 +29,7 @@
 		<!-- ReportFileFormat: the xUnit2 lane reads the TestRunReport.krkl its fixtures write -->
 		<InternalsVisibleTo Include="Kronikol.Tests.xUnit2" />
 		<InternalsVisibleTo Include="Kronikol.xUnit3" />
+		<InternalsVisibleTo Include="Kronikol.ReqNRoll.Core" />
 		<!-- ProcessDiagnostics: build interception records at setup that tiered compilation can end it -->
 		<InternalsVisibleTo Include="Kronikol.Extensions.Kafka.BuildInterception" />
 		<InternalsVisibleTo Include="Kronikol.Tests.Kafka.BuildInterception" />

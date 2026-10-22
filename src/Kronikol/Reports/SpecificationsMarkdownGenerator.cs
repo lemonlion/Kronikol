@@ -103,7 +103,7 @@ public static class SpecificationsMarkdownGenerator
     private static IEnumerable<IGrouping<string, Scenario>> Grouped(Scenario[] scenarios) =>
         scenarios
             .OrderByDescending(s => s.IsHappyPath)
-            .ThenBy(s => s.DisplayName)
+            .ThenBy(ScenarioStableId.KeyName)
             .GroupBy(s => s.Rule ?? "")
             .OrderBy(g => g.Key.Length == 0 ? 0 : 1);
 

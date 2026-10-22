@@ -24,7 +24,11 @@ public static class ScenarioStableId
     /// suite cannot be resolved keeps the ids it has always had rather than silently minting new ones.
     /// </param>
     /// <param name="featureName">The feature's display name — the test class, or the title after Feature:.</param>
-    /// <param name="scenarioDisplayName">The scenario's display name; for an outline row, its expanded name.</param>
+    /// <param name="scenarioDisplayName">
+    /// The scenario's display name; for an outline row, its expanded name. The exception is a Reqnroll outline row: its
+    /// name is filled from its values since #101, and the report hashes its outline's title here instead, the name it
+    /// bore before, so that its id did not change.
+    /// </param>
     /// <param name="outlineId">The outline the scenario belongs to, when it is a row of one.</param>
     /// <param name="exampleValues">
     /// The row's example values, in declaration order. What tells row 1 from row 3 when both carry the
@@ -51,4 +55,17 @@ public static class ScenarioStableId
         var hash = SHA256.HashData(Encoding.UTF8.GetBytes(input));
         return Convert.ToHexString(hash)[..16].ToLowerInvariant();
     }
+
+    /// <summary>
+    /// The name a scenario's id, order and in-page anchor key on: its display name, except for an outline row whose
+    /// name Kronikol filled from its values (<see cref="Scenario.KeyedByOutline"/>, a Reqnroll row since #101), which
+    /// keys on its outline's title, the name it bore before. Read when it is used, so a title
+    /// <see cref="ReportConfigurationOptions.CapitaliseTitles"/> re-cased is the key as it is.
+    /// </summary>
+    internal static string KeyName(Scenario scenario) =>
+        scenario is { KeyedByOutline: true, OutlineId: { } outlineId } ? outlineId : scenario.DisplayName;
+
+    /// <summary>The stable id of a scenario the report holds: <see cref="Compute"/> over <see cref="KeyName"/>.</summary>
+    internal static string For(string? suite, string featureName, Scenario scenario) =>
+        Compute(suite, featureName, KeyName(scenario), scenario.OutlineId, scenario.ExampleValues);
 }

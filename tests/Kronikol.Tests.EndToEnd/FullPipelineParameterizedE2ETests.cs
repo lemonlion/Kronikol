@@ -489,7 +489,38 @@ public class FullPipelineParameterizedE2ETests : PlaywrightTestBase
         await ExpandAll();
         await OpenParameterizedGroup("Different muffin recipes");
 
-        Assert.Equal(3, await GetParamRows().CountAsync());
+        // the muffin outline's own rows: the example's Party Muffins outline has rows of its own (#101)
+        var muffinRows = Page.Locator("details.scenario-parameterized", new() { HasTextString = "Different muffin recipes" }).First
+            .Locator("table.param-test-table:not(.param-table-grouped) > tbody > tr[data-row-idx]");
+        Assert.Equal(3, await muffinRows.CountAsync());
+    }
+
+    [Fact]
+    public async Task ReqNRoll_pipeline_names_each_outline_row_as_Gherkin_fills_its_title()
+    {
+        // #101 (plans/OUTLINE_ROW_NAMES_PLAN.md W4): Features/PartyMuffins.feature writes <occasion> in its outline's title,
+        // and each row is named with it filled, as Gherkin names the row's pickle. The outline's heading keeps it as written.
+        await NavigateToReport(_pipeline.ReqNRollReportPath);
+        await ExpandAll();
+        await OpenParameterizedGroup("A batch of apple cinnamon muffins");
+
+        var group = Page.Locator("details.scenario-parameterized", new() { HasTextString = "A batch of apple cinnamon muffins" }).First;
+        Assert.Contains("<occasion>", await group.Locator(".copy-scenario-name").First.GetAttributeAsync("data-scenario-name"));
+        var rowSearch = await group.Locator("table.param-test-table:not(.param-table-grouped) > tbody > tr[data-row-idx]")
+            .EvaluateAllAsync<string[]>("rows => rows.map(r => r.getAttribute('data-row-search'))");
+        Assert.Equal(2, rowSearch.Length);
+        Assert.Contains(rowSearch, r => r.Contains("a batch of apple cinnamon muffins is baked for breakfast", StringComparison.Ordinal));
+        Assert.Contains(rowSearch, r => r.Contains("a batch of apple cinnamon muffins is baked for a picnic", StringComparison.Ordinal));
+        Assert.DoesNotContain(rowSearch, r => r.Contains("<occasion>", StringComparison.Ordinal));
+
+        // the run's own report lists each row on its own in the timeline, by its filled name
+        await NavigateToReport(Path.Combine(Path.GetDirectoryName(_pipeline.ReqNRollReportPath)!, "TestRunReport.html"));
+        await OpenReportTabAsync("timeline");
+        var labels = await Page.EvaluateAsync<string[]>(
+            "() => Array.from(document.querySelectorAll('#scenario-timeline > .timeline-row .timeline-label')).map(l => l.textContent)");
+        Assert.Contains("A batch of apple cinnamon muffins is baked for breakfast", labels);
+        Assert.Contains("A batch of apple cinnamon muffins is baked for a picnic", labels);
+        Assert.DoesNotContain(labels, l => l.Contains("<occasion>", StringComparison.Ordinal));
     }
 
     [Fact]

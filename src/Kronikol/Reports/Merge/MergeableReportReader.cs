@@ -249,6 +249,9 @@ public static class MergeableReportReader
         // The merge used to lose it: the merged report counted a shard's fold scenario as a passed test, and its
         // history called it passing against the ledger that recorded it as not a test (plans/RUN_WINDOW_PLAN.md R1, F7).
         NotATest = se.TryGetProperty("notATest", out var notATest) && notATest.ValueKind == JsonValueKind.True,
+        // A Reqnroll outline row named from its values keys its id on its outline's title (#101); without the mark the
+        // merge would hash the filled name and give the row an id its shard never wrote.
+        KeyedByOutline = se.TryGetProperty("keyedByOutline", out var keyedByOutline) && keyedByOutline.ValueKind == JsonValueKind.True,
         ErrorMessage = GetString(se, "errorMessage"),
         ErrorStackTrace = GetString(se, "errorStackTrace"),
         FailureCause = GetString(se, "failureCause"),

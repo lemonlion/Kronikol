@@ -155,6 +155,8 @@ public class IdentityHeaderEncodingTests
     [InlineData("Café order")]
     [InlineData("Theory(a\nb)")]
     [InlineData(" Place an order ")]
+    // a Reqnroll outline row's identity since #101: its name filled from cells that held \| and \n (OUTLINE_ROW_NAMES_PLAN D4)
+    [InlineData("E07 escapes [pipe | bar] [line\nbreak]")]
     public async Task The_handler_sends_a_name_and_id_that_are_not_plain_ascii_encoded(string name)
     {
         var id = "Ns.Klass.Prüfung." + Guid.NewGuid().ToString("N");

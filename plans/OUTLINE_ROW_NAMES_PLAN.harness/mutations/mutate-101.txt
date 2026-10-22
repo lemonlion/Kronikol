@@ -1,0 +1,115 @@
+pickle-no-row-check: KILLED (1 red, 1 named, 31 s) Failed!  - Failed:     1, Passed:    72, Skipped:     0, Total:    73, Duration: 10 s - Kronikol.Tests.dll (net10.0)
+    Failed Kronikol.Tests.ReqNRoll.OutlineRowNameTests.A_pickle_index_that_points_at_another_row_never_gives_that_row_s_name [3 ms]
+pickle-no-title-check: KILLED (1 red, 1 named, 32 s) Failed!  - Failed:     1, Passed:    72, Skipped:     0, Total:    73, Duration: 10 s - Kronikol.Tests.dll (net10.0)
+    Failed Kronikol.Tests.ReqNRoll.OutlineRowNameTests.A_pickle_of_another_outline_with_the_same_values_never_gives_its_name [2 ms]
+one-pass: KILLED (2 red, 2 named, 36 s) Failed!  - Failed:     2, Passed:    71, Skipped:     0, Total:    73, Duration: 10 s - Kronikol.Tests.dll (net10.0)
+    Failed Kronikol.Tests.ReqNRoll.OutlineRowNameTests.The_rule_fills_one_column_at_a_time_in_written_order(title: "E02 <a> then <b>", row: "a=<b>;b=x", expected: "E02 x then x") [3 ms]
+    Failed Kronikol.Tests.ReqNRoll.OutlineRowNameTests.The_rule_names_every_row_as_Gherkin_s_own_compiler_does(file: "Edges.feature") [35 ms]
+case-insensitive: KILLED (2 red, 1 named, 36 s) Failed!  - Failed:     2, Passed:    71, Skipped:     0, Total:    73, Duration: 10 s - Kronikol.Tests.dll (net10.0)
+    Failed Kronikol.Tests.ReqNRoll.OutlineRowNameTests.The_rule_fills_one_column_at_a_time_in_written_order(title: "case <CASE> <case>", row: "case=lower", expected: "case <CASE> lower") [3 ms]
+    Failed Kronikol.Tests.ReqNRoll.OutlineRowNameTests.A_title_with_no_placeholder_that_names_a_column_keeps_its_name_byte_for_byte(title: "<Case> is not <case >") [< 1 ms]
+no-fallback: KILLED (10 red, 1 named, 33 s) Failed!  - Failed:    10, Passed:    63, Skipped:     0, Total:    73, Duration: 10 s - Kronikol.Tests.dll (net10.0)
+    Failed Kronikol.Tests.ReqNRoll.OutlineRowNameTests.A_pickle_index_that_points_at_another_row_never_gives_that_row_s_name [3 ms]
+    Failed Kronikol.Tests.ReqNRoll.OutlineRowHooksTests.The_identity_and_the_collected_row_carry_the_row_s_name(withMessages: False) [1 ms]
+    Failed Kronikol.Tests.ReqNRoll.OutlineRowNameTests.A_pickle_index_past_the_pickles_falls_back_to_the_rule [< 1 ms]
+    Failed Kronikol.Tests.ReqNRoll.OutlineRowNameTests.The_rule_names_every_row_as_Gherkin_s_own_compiler_does(file: "Edges.feature") [33 ms]
+    Failed Kronikol.Tests.ReqNRoll.OutlineRowNameTests.The_rule_names_every_row_as_Gherkin_s_own_compiler_does(file: "Baskets.feature") [< 1 ms]
+    Failed Kronikol.Tests.ReqNRoll.OutlineRowNameTests.Without_messages_the_row_is_named_by_Gherkin_s_rule [< 1 ms]
+    Failed Kronikol.Tests.ReqNRoll.OutlineRowNameTests.An_empty_pickle_name_falls_back_to_the_rule [< 1 ms]
+    Failed Kronikol.Tests.ReqNRoll.OutlineRowNameTests.A_pickle_of_another_outline_with_the_same_values_never_gives_its_name [< 1 ms]
+empty-pickle-name-taken: KILLED (1 red, 1 named, 29 s) Failed!  - Failed:     1, Passed:    72, Skipped:     0, Total:    73, Duration: 8 s - Kronikol.Tests.dll (net10.0)
+    Failed Kronikol.Tests.ReqNRoll.OutlineRowNameTests.An_empty_pickle_name_falls_back_to_the_rule [2 ms]
+identity-raw: KILLED (2 red, 2 named, 39 s) Failed!  - Failed:     2, Passed:    71, Skipped:     0, Total:    73, Duration: 10 s - Kronikol.Tests.dll (net10.0)
+    Failed Kronikol.Tests.ReqNRoll.OutlineRowHooksTests.The_identity_and_the_collected_row_carry_the_row_s_name(withMessages: True) [326 ms]
+    Failed Kronikol.Tests.ReqNRoll.OutlineRowHooksTests.The_identity_and_the_collected_row_carry_the_row_s_name(withMessages: False) [1 ms]
+collected-row-unnamed: KILLED (3 red, 3 named, 31 s) Failed!  - Failed:     3, Passed:    70, Skipped:     0, Total:    73, Duration: 10 s - Kronikol.Tests.dll (net10.0)
+    Failed Kronikol.Tests.ReqNRoll.OutlineRowHooksTests.The_identity_and_the_collected_row_carry_the_row_s_name(withMessages: True) [341 ms]
+    Failed Kronikol.Tests.ReqNRoll.OutlineRowHooksTests.The_identity_and_the_collected_row_carry_the_row_s_name(withMessages: False) [1 ms]
+    Failed Kronikol.Tests.ReqNRoll.OutlineRowHooksTests.A_plain_scenario_keeps_its_title_in_the_identity_and_the_row [< 1 ms]
+source-by-filled-name: KILLED (1 red, 1 named, 31 s) Failed!  - Failed:     1, Passed:    72, Skipped:     0, Total:    73, Duration: 10 s - Kronikol.Tests.dll (net10.0)
+    Failed Kronikol.Tests.ReqNRoll.OutlineRowNameTests.A_placeholder_row_still_finds_its_source_line_and_its_block [3 ms]
+value-match-by-filled-name: KILLED (1 red, 1 named, 35 s) Failed!  - Failed:     1, Passed:    72, Skipped:     0, Total:    73, Duration: 10 s - Kronikol.Tests.dll (net10.0)
+    Failed Kronikol.Tests.ReqNRoll.OutlineRowNameTests.A_placeholder_row_still_finds_its_source_line_and_its_block [6 ms]
+mark-never-set: KILLED (20 red, 2 named, 35 s) Failed!  - Failed:    20, Passed:    53, Skipped:     0, Total:    73, Duration: 10 s - Kronikol.Tests.dll (net10.0)
+    Failed Kronikol.Tests.Reports.OutlineRowKeyTests.The_converter_names_a_row_by_its_row_name_and_marks_it [1 ms]
+    Failed Kronikol.Tests.Reports.OutlineRowKeySiteTests.Failures_jsonl_names_the_row_and_writes_the_id_its_title_gave_it [23 ms]
+    Failed Kronikol.Tests.Reports.OutlineRowKeySiteTests.The_CTRF_report_names_the_row_and_writes_the_id_its_title_gave_it [5 ms]
+    Failed Kronikol.Tests.Reports.OutlineRowKeySiteTests.The_component_diagram_s_model_lists_the_row_by_the_id_its_title_gave_it [1 s]
+    Failed Kronikol.Tests.Reports.OutlineRowKeySiteTests.The_labs_page_links_the_row_by_the_id_its_title_gave_it [79 ms]
+    Failed Kronikol.Tests.Reports.OutlineRowKeySiteTests.The_XML_data_file_names_the_row_and_writes_the_id_its_title_gave_it [28 ms]
+    Failed Kronikol.Tests.Reports.OutlineRowKeySiteTests.The_outline_s_row_reads_its_history_by_the_id_its_title_gave_it [1 s]
+    Failed Kronikol.Tests.Reports.OutlineRowKeySiteTests.The_outline_s_flat_row_carries_the_id_its_title_gave_it [1 s]
+mark-every-outline-row: KILLED (3 red, 3 named, 33 s) Failed!  - Failed:     3, Passed:    70, Skipped:     0, Total:    73, Duration: 11 s - Kronikol.Tests.dll (net10.0)
+    Failed Kronikol.Tests.Reports.OutlineRowKeyTests.A_row_named_by_its_title_is_not_marked_and_is_what_it_was(title: "E03 weighs <count> on <missing>", rowName: "E03 weighs <count> on <missing>") [342 ms]
+    Failed Kronikol.Tests.Reports.OutlineRowKeyTests.A_row_named_by_its_title_is_not_marked_and_is_what_it_was(title: "E06 <a>", rowName: null) [< 1 ms]
+    Failed Kronikol.Tests.Reports.OutlineRowKeyTests.A_row_named_by_its_title_is_not_marked_and_is_what_it_was(title: "E01 a title without a placeholder", rowName: "E01 a title without a placeholder") [< 1 ms]
+key-ignores-mark: KILLED (1 red, 1 named, 40 s) Failed!  - Failed:     1, Passed:    72, Skipped:     0, Total:    73, Duration: 9 s - Kronikol.Tests.dll (net10.0)
+    Failed Kronikol.Tests.Reports.OutlineRowKeyTests.An_unmarked_row_whose_name_differs_from_its_outline_keys_on_its_name [2 ms]
+key-not-recased: KILLED (1 red, 1 named, 40 s) Failed!  - Failed:     1, Passed:    72, Skipped:     0, Total:    73, Duration: 10 s - Kronikol.Tests.dll (net10.0)
+    Failed Kronikol.Tests.Reports.OutlineRowKeyTests.A_marked_row_keys_on_its_title_as_CapitaliseTitles_re_cased_it [3 ms]
+reader-drops-mark: KILLED (2 red, 2 named, 38 s) Failed!  - Failed:     2, Passed:    71, Skipped:     0, Total:    73, Duration: 10 s - Kronikol.Tests.dll (net10.0)
+    Failed Kronikol.Tests.Reports.Merge.OutlineRowMergeTests.A_row_from_a_shard_written_before_its_name_was_filled_and_one_written_after_are_one_scenario [37 ms]
+    Failed Kronikol.Tests.Reports.Merge.OutlineRowMergeTests.The_merge_reads_the_mark_back_and_writes_the_shard_s_ids [2 ms]
+writer-drops-mark: KILLED (4 red, 2 named, 40 s) Failed!  - Failed:     4, Passed:    69, Skipped:     0, Total:    73, Duration: 10 s - Kronikol.Tests.dll (net10.0)
+    Failed Kronikol.Tests.Reports.Merge.OutlineRowMergeTests.The_data_file_marks_a_filled_row_and_no_other [1 ms]
+    Failed Kronikol.Tests.Reports.Merge.OutlineRowMergeTests.A_row_from_a_shard_written_before_its_name_was_filled_and_one_written_after_are_one_scenario [53 ms]
+    Failed Kronikol.Tests.Reports.Merge.OutlineRowMergeTests.The_merge_reads_the_mark_back_and_writes_the_shard_s_ids [3 ms]
+    Failed Kronikol.Tests.Reports.OutlineRowKeySiteTests.The_JSON_data_file_names_the_row_and_writes_the_id_its_title_gave_it [18 ms]
+page-sort: KILLED (1 red, 1 named, 51 s) Failed!  - Failed:     1, Passed:    72, Skipped:     0, Total:    73, Duration: 10 s - Kronikol.Tests.dll (net10.0)
+    Failed Kronikol.Tests.Reports.OutlineRowOrderTests.The_page_keeps_the_rows_order_and_every_anchor [1 s]
+yml-sort: KILLED (1 red, 1 named, 66 s) Failed!  - Failed:     1, Passed:    72, Skipped:     0, Total:    73, Duration: 10 s - Kronikol.Tests.dll (net10.0)
+    Failed Kronikol.Tests.Reports.OutlineRowOrderTests.Specifications_yml_keeps_the_adapter_s_order [4 ms]
+json-sort: KILLED (1 red, 1 named, 62 s) Failed!  - Failed:     1, Passed:    72, Skipped:     0, Total:    73, Duration: 10 s - Kronikol.Tests.dll (net10.0)
+    Failed Kronikol.Tests.Reports.OutlineRowOrderTests.Specifications_json_keeps_the_adapter_s_order [12 ms]
+xml-sort: KILLED (1 red, 1 named, 63 s) Failed!  - Failed:     1, Passed:    72, Skipped:     0, Total:    73, Duration: 10 s - Kronikol.Tests.dll (net10.0)
+    Failed Kronikol.Tests.Reports.OutlineRowOrderTests.Specifications_xml_keeps_the_adapter_s_order [7 ms]
+md-sort: KILLED (1 red, 1 named, 65 s) Failed!  - Failed:     1, Passed:    72, Skipped:     0, Total:    73, Duration: 10 s - Kronikol.Tests.dll (net10.0)
+    Failed Kronikol.Tests.Reports.OutlineRowOrderTests.Specifications_md_keeps_the_adapter_s_order [4 ms]
+adapter-sorts-by-row-name: KILLED (7 red, 2 named, 65 s) Failed!  - Failed:     7, Passed:    66, Skipped:     0, Total:    73, Duration: 10 s - Kronikol.Tests.dll (net10.0)
+    Failed Kronikol.Tests.Reports.OutlineRowKeyTests.The_converter_orders_rows_by_their_title_never_by_their_filled_names [13 ms]
+    Failed Kronikol.Tests.Reports.OutlineRowOrderTests.The_page_keeps_the_rows_order_and_every_anchor [2 s]
+    Failed Kronikol.Tests.Reports.OutlineRowOrderTests.Specifications_json_keeps_the_adapter_s_order [10 ms]
+    Failed Kronikol.Tests.Reports.OutlineRowOrderTests.Specifications_yml_keeps_the_adapter_s_order [3 ms]
+    Failed Kronikol.Tests.Reports.OutlineRowOrderTests.The_data_file_keeps_the_adapter_s_order [1 ms]
+    Failed Kronikol.Tests.Reports.OutlineRowOrderTests.Specifications_md_keeps_the_adapter_s_order [2 ms]
+    Failed Kronikol.Tests.Reports.OutlineRowOrderTests.Specifications_xml_keeps_the_adapter_s_order [3 ms]
+slug-from-name: KILLED (1 red, 1 named, 57 s) Failed!  - Failed:     1, Passed:    72, Skipped:     0, Total:    73, Duration: 11 s - Kronikol.Tests.dll (net10.0)
+    Failed Kronikol.Tests.Reports.OutlineRowOrderTests.The_page_keeps_the_rows_order_and_every_anchor [2 s]
+site-history-roster: KILLED (1 red, 1 named, 56 s) Failed!  - Failed:     1, Passed:    72, Skipped:     0, Total:    73, Duration: 10 s - Kronikol.Tests.dll (net10.0)
+    Failed Kronikol.Tests.Reports.OutlineRowKeySiteTests.The_history_roster_keys_the_row_on_the_id_its_title_gave_it [3 ms]
+site-ctrf: KILLED (1 red, 1 named, 56 s) Failed!  - Failed:     1, Passed:    72, Skipped:     0, Total:    73, Duration: 10 s - Kronikol.Tests.dll (net10.0)
+    Failed Kronikol.Tests.Reports.OutlineRowKeySiteTests.The_CTRF_report_names_the_row_and_writes_the_id_its_title_gave_it [7 ms]
+site-digest: KILLED (2 red, 2 named, 57 s) Failed!  - Failed:     2, Passed:    71, Skipped:     0, Total:    73, Duration: 10 s - Kronikol.Tests.dll (net10.0)
+    Failed Kronikol.Tests.Reports.OutlineRowKeySiteTests.Failures_jsonl_names_the_row_and_writes_the_id_its_title_gave_it [23 ms]
+    Failed Kronikol.Tests.Reports.OutlineRowKeySiteTests.Failures_md_heads_the_row_with_its_name_and_keeps_its_example_row_and_its_id [4 ms]
+site-labs: KILLED (1 red, 1 named, 56 s) Failed!  - Failed:     1, Passed:    72, Skipped:     0, Total:    73, Duration: 10 s - Kronikol.Tests.dll (net10.0)
+    Failed Kronikol.Tests.Reports.OutlineRowKeySiteTests.The_labs_page_links_the_row_by_the_id_its_title_gave_it [86 ms]
+site-merge-identity: KILLED (1 red, 1 named, 56 s) Failed!  - Failed:     1, Passed:    72, Skipped:     0, Total:    73, Duration: 10 s - Kronikol.Tests.dll (net10.0)
+    Failed Kronikol.Tests.Reports.Merge.OutlineRowMergeTests.A_row_from_a_shard_written_before_its_name_was_filled_and_one_written_after_are_one_scenario [39 ms]
+site-console: KILLED (1 red, 1 named, 58 s) Failed!  - Failed:     1, Passed:    72, Skipped:     0, Total:    73, Duration: 10 s - Kronikol.Tests.dll (net10.0)
+    Failed Kronikol.Tests.Reports.OutlineRowKeySiteTests.The_console_summary_names_the_row_and_writes_the_id_its_title_gave_it [3 ms]
+site-timeline: KILLED (3 red, 1 named, 57 s) Failed!  - Failed:     3, Passed:    70, Skipped:     0, Total:    73, Duration: 10 s - Kronikol.Tests.dll (net10.0)
+    Failed Kronikol.Tests.Reports.OutlineRowKeySiteTests.The_outline_s_flat_row_carries_the_id_its_title_gave_it [1 s]
+    Failed Kronikol.Tests.Reports.OutlineRowKeySiteTests.The_outline_s_row_carries_the_id_its_title_gave_it [1 s]
+    Failed Kronikol.Tests.Reports.OutlineRowKeySiteTests.The_timeline_names_the_row_and_joins_it_by_the_id_its_title_gave_it [1 s]
+site-scenario-element: KILLED (1 red, 1 named, 56 s) Failed!  - Failed:     1, Passed:    72, Skipped:     0, Total:    73, Duration: 10 s - Kronikol.Tests.dll (net10.0)
+    Failed Kronikol.Tests.Reports.OutlineRowKeySiteTests.A_marked_scenario_shown_on_its_own_carries_the_id_its_title_gave_it [1 s]
+site-component-model: KILLED (1 red, 1 named, 57 s) Failed!  - Failed:     1, Passed:    72, Skipped:     0, Total:    73, Duration: 10 s - Kronikol.Tests.dll (net10.0)
+    Failed Kronikol.Tests.Reports.OutlineRowKeySiteTests.The_component_diagram_s_model_lists_the_row_by_the_id_its_title_gave_it [1 s]
+site-row-history: KILLED (1 red, 1 named, 37 s) Failed!  - Failed:     1, Passed:    72, Skipped:     0, Total:    73, Duration: 9 s - Kronikol.Tests.dll (net10.0)
+    Failed Kronikol.Tests.Reports.OutlineRowKeySiteTests.The_outline_s_row_reads_its_history_by_the_id_its_title_gave_it [1 s]
+site-flat-row: KILLED (1 red, 1 named, 34 s) Failed!  - Failed:     1, Passed:    72, Skipped:     0, Total:    73, Duration: 10 s - Kronikol.Tests.dll (net10.0)
+    Failed Kronikol.Tests.Reports.OutlineRowKeySiteTests.The_outline_s_flat_row_carries_the_id_its_title_gave_it [1 s]
+site-grouped-row: KILLED (4 red, 1 named, 35 s) Failed!  - Failed:     4, Passed:    69, Skipped:     0, Total:    73, Duration: 10 s - Kronikol.Tests.dll (net10.0)
+    Failed Kronikol.Tests.Reports.OutlineRowKeySiteTests.The_outline_s_row_reads_its_history_by_the_id_its_title_gave_it [1 s]
+    Failed Kronikol.Tests.Reports.OutlineRowKeySiteTests.The_outline_s_flat_row_carries_the_id_its_title_gave_it [1 s]
+    Failed Kronikol.Tests.Reports.OutlineRowKeySiteTests.The_outline_s_row_carries_the_id_its_title_gave_it [1 s]
+    Failed Kronikol.Tests.Reports.OutlineRowOrderTests.The_page_keeps_the_rows_order_and_every_anchor [2 s]
+site-json-data: KILLED (2 red, 2 named, 35 s) Failed!  - Failed:     2, Passed:    71, Skipped:     0, Total:    73, Duration: 10 s - Kronikol.Tests.dll (net10.0)
+    Failed Kronikol.Tests.Reports.Merge.OutlineRowMergeTests.A_filled_row_s_data_file_id_is_the_id_its_title_gave_it [64 ms]
+    Failed Kronikol.Tests.Reports.OutlineRowKeySiteTests.The_JSON_data_file_names_the_row_and_writes_the_id_its_title_gave_it [35 ms]
+site-xml-data: KILLED (1 red, 1 named, 34 s) Failed!  - Failed:     1, Passed:    72, Skipped:     0, Total:    73, Duration: 10 s - Kronikol.Tests.dll (net10.0)
+    Failed Kronikol.Tests.Reports.OutlineRowKeySiteTests.The_XML_data_file_names_the_row_and_writes_the_id_its_title_gave_it [23 ms]
+site-yaml-data: KILLED (1 red, 1 named, 43 s) Failed!  - Failed:     1, Passed:    72, Skipped:     0, Total:    73, Duration: 10 s - Kronikol.Tests.dll (net10.0)
+    Failed Kronikol.Tests.Reports.OutlineRowKeySiteTests.The_YAML_data_file_names_the_row_and_writes_the_id_its_title_gave_it [17 ms]
+done

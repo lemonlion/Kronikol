@@ -1,0 +1,5 @@
+rows: before 30, after 30, cucumber lane 30
+address, feature, values and stableId as 5.4.0 wrote them: 30 of 30
+names the Cucumber lane gives the same rows: 30 of 30
+rows still named (<case>): 0
+rows whose name changed: 27 of 30

@@ -1,0 +1,43 @@
+  Determining projects to restore...
+  Restored C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\4446b339-7f87-4b87-990f-495a136f5c68\scratchpad\plan101\work\after\xunit2\Probe101.xUnit2.csproj (in 250 ms).
+  3 of 4 projects are up-to-date for restore.
+  Kronikol -> C:\Code\Kronikol-101\src\Kronikol\bin\Debug\net10.0\Kronikol.dll
+  Kronikol.ReqNRoll.Core -> C:\Code\Kronikol-101\src\Kronikol.ReqNRoll.Core\bin\Debug\net10.0\Kronikol.ReqNRoll.Core.dll
+  Kronikol.ReqNRoll.xUnit2 -> C:\Code\Kronikol-101\src\Kronikol.ReqNRoll.xUnit2\bin\Debug\net10.0\Kronikol.ReqNRoll.xUnit2.dll
+  Probe101.xUnit2 -> C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\4446b339-7f87-4b87-990f-495a136f5c68\scratchpad\plan101\work\after\xunit2\bin\Debug\net10.0\Probe101.xUnit2.dll
+Test run for C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\4446b339-7f87-4b87-990f-495a136f5c68\scratchpad\plan101\work\after\xunit2\bin\Debug\net10.0\Probe101.xUnit2.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:05.01]     A basket is weighed on the UK scale (<case>)(case: "two apples", count: "2", grams: "301", __pickleIndex: "2", exampleTags: []) [FAIL]
+  Failed A basket is weighed on the UK scale (<case>)(case: "two apples", count: "2", grams: "301", __pickleIndex: "2", exampleTags: []) [372 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 301
+Actual:   300
+  Stack Trace:
+     at Probe101.Steps.ThenTheBasketWeighs(Int32 grams) in C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\4446b339-7f87-4b87-990f-495a136f5c68\scratchpad\plan101\work\after\xunit2\Steps.cs:line 17
+   at InvokeStub_Action`2.Invoke(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+--- End of stack trace from previous location ---
+   at Reqnroll.Bindings.BindingInvoker.InvokeBindingAsync(IBinding binding, IContextManager contextManager, Object[] arguments, ITestTracer testTracer, DurationHolder durationHolder)
+   at Reqnroll.Infrastructure.TestExecutionEngine.ExecuteStepMatchAsync(BindingMatch match, Object[] arguments, DurationHolder durationHolder)
+   at Reqnroll.Infrastructure.TestExecutionEngine.ExecuteStepMatchAsync(BindingMatch match, Object[] arguments, DurationHolder durationHolder)
+   at Reqnroll.Infrastructure.TestExecutionEngine.<>c__DisplayClass57_0.<<ExecuteStepAsync>b__7>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Reqnroll.Infrastructure.TestExecutionEngine.<>c__DisplayClass57_0.<<ExecuteStepAsync>g__HandleStepExecutionExceptions|0>d.MoveNext()
+   at Reqnroll.Infrastructure.TestExecutionEngine.OnAfterLastStepAsync()
+   at Reqnroll.TestRunner.CollectScenarioErrorsAsync()
+   at Probe101.xUnit2.Features.BasketsFeature.ScenarioCleanupAsync()
+   at Probe101.xUnit2.Features.BasketsFeature.ABasketIsWeighedOnTheUKScaleCase(String case, String count, String grams, String __pickleIndex, String[] exampleTags) in C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\4446b339-7f87-4b87-990f-495a136f5c68\scratchpad\plan101\work\after\xunit2\Features\Baskets.feature:line 5
+--- End of stack trace from previous location ---
+  Standard Output Messages:
+ Given a basket holding 2 apples
+ -> done: Steps.GivenABasket(2) (0.0s)
+ Then the basket weighs 301 grams
+ -> error: Assert.Equal() Failure: Values differ
+ Expected: 301
+ Actual:   300 (0.3s)
+
+
+
+Failed!  - Failed:     1, Passed:    29, Skipped:     0, Total:    30, Duration: 397 ms - Probe101.xUnit2.dll (net10.0)
+dotnet test exit 1

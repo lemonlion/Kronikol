@@ -4,6 +4,93 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.4.3] - 2026-10-22
+
+The patch part moves (5.4.2 to 5.4.3): a bug fix, with nothing new to call or configure. It answers #101
+(plans/OUTLINE_ROW_NAMES_PLAN.md R1, at the owner's ask to implement the plan in full, every recommendation of its
+section 11 taken). It changes what a report shows for a Reqnroll outline row whose title holds a placeholder, and the
+name that row's test identity carries; both are said below.
+
+### Fixed
+
+- **Every row of a Reqnroll Scenario Outline was named with its title as written** (#101).
+  `Scenario Outline: A basket is weighed on the UK scale (<case>)` named each of its three rows `A basket is weighed on
+  the UK scale (<case>)`, so a failure's heading in `Failures.md`, the timeline and every list of rows read `(<case>)`
+  and not which case failed, while the same run's Cucumber messages, ingested, named each row from its pickle. A row is
+  now named as Gherkin names its pickle: `A basket is weighed on the UK scale (two apples)`. The name is the pickle's
+  own, read from the messages Reqnroll embeds in its generated code, which the lookup that names a row's `Examples:`
+  block already reads, and taken only when the pickle belongs to the row's scenario and holds the row's values. Where
+  the messages are missing, as in a test project published trimmed or AOT, Gherkin's own rule gives the name from the
+  title and the row's values: one column at a time, in the order the columns are written, each on the name so far,
+  ordinally. On the plan's probe of 29 rows the rule gives the pickle's name for every row, where a single pass over the
+  title does not (`E02 x then x`). A placeholder that names no column stays as written, and a title with no placeholder
+  that names a column keeps its name byte for byte, so no other scenario changes, on this lane or any other.
+- What changes is what a reader sees. The failure heading, the timeline, failure clusters, `Failures.jsonl`, the CI and
+  console summaries, the data files' `name`, the Specifications files, the CTRF `name` and `kronikol query` show the
+  filled name, and the search finds it. The outline's grouped heading and `outlineId` keep the title as written (#102,
+  the heading's humaniser, is separate), and so do the row's value table, its `Examples:` block and its source line.
+- **Ids, order and links are kept.** A row's `stableId` hashes the outline's title with its values, as when every row
+  bore the title, so every id written before is the id written now (30 of 30 on the probe, against 5.4.0's; hashing the
+  filled name would have moved 27 of its 29 rows, and a history would have counted them new, recorded runs as partial
+  and dropped their quarantine). So are every `sN` address, the rows' order on the page and in the data and
+  Specifications files, and every in-page anchor. Such a row carries `"keyedByOutline": true` in the data file, so
+  `kronikol merge` computes the ids its shards wrote, and the same row from a shard written by 5.4.2 and from one
+  written now is one scenario.
+
+### Changed
+
+- **A Reqnroll outline row's test identity carries its filled name**, set once, before the row's first step:
+  `CurrentTestInfo.Fetcher` returns it to user code, a service sees it in the `test-tracking-current-test-name` header
+  (encoded as before when it holds non-ASCII text, or a line feed from an escaped cell), and a component diagram's popup
+  and the OTLP `kronikol.test.name` attribute show it. Calls join their scenario by the identity's id, which is as it
+  was.
+- The data files gain one optional key, `keyedByOutline`, written only where it is true and declared in the JSON
+  schema. A `kronikol merge` of 5.4.2 or earlier, reading a file written now, ignores it and hashes the filled name, so
+  its merged ids for those rows differ from the shards' ids, as other mixed-version merges already may.
+
+### Documentation
+
+- `ScenarioStableId.Compute`'s `scenarioDisplayName` says what the report hashes for a Reqnroll row, and
+  `ReqNRollScenarioInfo.ScenarioTitle` says it is the title as written; the grouped table's comment that "every row of
+  an outline shares one display name" is corrected.
+- The wiki: the Scenario Outlines sections of the three Reqnroll integration pages (the rule and the kept id),
+  `Generated-Reports` (`stableId`, and the new `keyedByOutline`), `Querying-Reports`, `API-Reference` and
+  `Integration-Cucumber-Messages`.
+
+### Tests
+
+- `OutlineRowNameTests` (N1 to N6, K7): the pickle's name, even where the rule would differ; the rule without messages
+  or a feature; a pickle index at another row, at another outline's row with the same values, or past the pickles; an
+  empty pickle name; titles that keep their name; the rule's order, case and escapes; the rule and the resolver against
+  Gherkin 35.0.0's own compiler over the probe's two feature files, 29 rows; a placeholder row's source line and block.
+- `OutlineRowHooksTests` (N7): the hooks, on real Reqnroll contexts, give the identity and the collected row one name,
+  with and without the messages.
+- `OutlineRowKeyTests` (K1 to K3, and the converter's name, mark and order), `OutlineRowKeySiteTests` (K1, D1 and D3:
+  one fact per output that writes an id: the history roster, CTRF, `Failures.md`, `Failures.jsonl`, the labs page, the
+  console summary, the timeline, the grouped and the flat row, a row's history, a scenario shown on its own, the
+  component diagram's model, and the JSON, XML and YAML data files; and the CI summary), `OutlineRowMergeTests` (K4),
+  `OutlineRowOrderTests` (K5 and K6), `QueryOutlineRowNameTests` (D2) and, in `IdentityHeaderEncodingTests`, a filled
+  name with a pipe and a line feed (D4).
+- Playwright: `OutlineRowNameE2ETests` (W1 to W3: the timeline, the search, a failure cluster's links and its row, the
+  outline's copy button), and a full-pipeline fact on a new outline in the xUnit v3 Reqnroll example,
+  `Features/PartyMuffins.feature` (W4); the example's row count fact now counts its own outline's rows.
+- Proofs: the facts were written against stubs and run red first where the stubs could tell: 16 of the first 24 name
+  facts (the 8 that passed are the controls, titles that keep their name), 3 of the 4 hooks facts, each at the
+  identity's or the collected row's name, and 3 of the key facts, at the key, the title's id and the re-cased title. The
+  facts written after the code are proved by mutation, as are those: 38 of 38 mutations of the new code are killed, each
+  by a fact it names: the pickle taken without the row check or without the title check, a fill in one pass or ignoring
+  case, no fallback, an empty pickle name taken, the identity left raw, the collected row left unnamed, the source line
+  and the value match given the filled name, the mark never set or set on every outline row, a key that ignores the
+  mark, the outline's title not re-cased, the reader or the writer dropping the mark, each of the five sorts left on the
+  name, the adapter sorting by the filled name, the slug made from the name, and each of the 15 id sites put back on the
+  name. On the plan's probe (`run.sh after`, then `after-check.py`), every row keeps the address, values and stable id
+  5.4.0 wrote (30 of 30) and takes the name the Cucumber lane gives it (30 of 30).
+- Checks: the core suite passes 8,744 with 2 skipped after the version bump, as it passed 8,744 with 2 skipped on the
+  same code before it; the full Playwright suite passes 1,609 with 28 skipped on the same code before the bump, the
+  full-pipeline facts among them (32 of 32); the Reqnroll examples pass (xUnit v2 2 of 2, TUnit 2 of 2, xUnit v3 through
+  the pipeline facts), and so does CI's Integration (ReqNRoll) job run locally (66 of 66); and release.slnf builds in
+  Release with no warning from the lines this release changes.
+
 ## [5.4.2] - 2026-10-22
 
 The patch part moves (5.4.1 to 5.4.2): bug fixes, with nothing new to call or configure. They come from an audit of the

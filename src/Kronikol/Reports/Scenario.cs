@@ -105,6 +105,15 @@ public record Scenario
     public bool NotATest { get; set; }
 
     /// <summary>
+    /// True for an outline row whose name Kronikol filled from its <c>Examples:</c> values, so that its
+    /// <see cref="DisplayName"/> is no longer the title it was keyed by: a Reqnroll row since #101, which 5.4.2 and
+    /// earlier named by the outline's title. Its stable id, its place in a feature and its in-page anchor key on
+    /// <see cref="OutlineId"/> as they did then (<c>ScenarioStableId.KeyName</c>). The data files write it as
+    /// <c>keyedByOutline</c> (only where it is true), so a merge computes the same ids.
+    /// </summary>
+    internal bool KeyedByOutline { get; set; }
+
+    /// <summary>
     /// Where the scenario is written - a project-relative path with forward slashes, matching
     /// <see cref="Feature.SourceFile"/>. Null on the lanes that cannot supply one. Deliberately NOT the
     /// bare-file-name contract of <see cref="ScenarioStep.SourceFile"/>: a step's path comes from
