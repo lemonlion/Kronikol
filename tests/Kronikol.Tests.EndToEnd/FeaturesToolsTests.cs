@@ -481,6 +481,30 @@ public class FeaturesToolsTests : PlaywrightTestBase
         await Expect(Page.Locator("#view-full")).ToHaveAttributeAsync("aria-selected", "true");
     }
 
+    // A row for a feature the filters hide gives the line that says so, as a link to a scenario they hide does, and its
+    // button clears them and opens the feature. Until 5.2.7 the row showed the Full view and opened nothing in it.
+    [Fact]
+    public async Task A_row_for_a_feature_the_filters_hide_says_so_and_its_line_can_show_it()
+    {
+        await OpenBakery("FeaturesTools_RowHidden.html");
+        await OpenFilterRowsAsync();
+        // every Croissants scenario failed, so its card hides
+        await Page.Locator(".status-toggle[data-status='Passed']").ClickAsync();
+        await Page.Locator("#view-summary").ClickAsync();
+        await Page.Locator("#features-table-view tbody tr").Filter(new() { HasText = "Croissants" }).Locator("td").Nth(2).ClickAsync();
+
+        var note = Page.Locator(".filtered-out-note");
+        await Expect(note).ToBeVisibleAsync();
+        await Expect(note).ToContainTextAsync("This feature is hidden by the filters.");
+        await note.Locator(".filtered-out-clear").ClickAsync();
+
+        var croissants = Page.Locator("#report-content > details.feature").Filter(new() { HasText = "Croissants" });
+        await Expect(croissants).ToBeVisibleAsync();
+        await Expect(croissants).ToHaveAttributeAsync("open", "");
+        await Expect(croissants.Locator(":scope > summary")).ToBeFocusedAsync();
+        await Expect(note).ToHaveCountAsync(0);
+    }
+
     [Fact]
     public async Task Expanding_the_scenarios_opens_their_features_too()
     {
@@ -570,6 +594,29 @@ public class FeaturesToolsTests : PlaywrightTestBase
         var queued = await Page.EvaluateAsync<int>(
             "() => Array.from(document.querySelectorAll('details.scenario')).slice(1).filter(s => !s.open).flatMap(s => Array.from(s.querySelectorAll('.plantuml-browser[data-queued]'))).length");
         Assert.Equal(0, queued);
+    }
+
+    // The arrow keys give the keyboard's focus to the scenario they pick, so Enter opens that one. Until 5.2.7 they moved
+    // only its outline: after a click the focus stayed where the click had left it, and Enter folded the scenario clicked
+    // before (or pressed the button clicked) instead of opening the one picked
+    [Fact]
+    public async Task Enter_opens_the_scenario_the_arrow_keys_picked_after_a_click_elsewhere()
+    {
+        await OpenBakery("FeaturesTools_ArrowsThenEnter.html");
+        var first = Page.Locator("details.scenario").Nth(0);
+        var clicked = Page.Locator("details.scenario").Nth(2);
+        await clicked.EvaluateAsync("s => { s.closest('details.feature').open = true; }");
+        await clicked.Locator(":scope > summary").ClickAsync();
+        await Expect(clicked).ToHaveAttributeAsync("open", "");
+        Assert.False(await first.EvaluateAsync<bool>("s => s.open"));
+
+        await Page.Keyboard.PressAsync("ArrowDown");
+        await Expect(first).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("scenario-focused"));
+        await Page.Keyboard.PressAsync("Enter");
+
+        await Expect(first).ToHaveAttributeAsync("open", "");
+        await Expect(clicked).ToHaveAttributeAsync("open", "");
+        await Expect(first.Locator(":scope > summary")).ToBeFocusedAsync();
     }
 
     [Fact]

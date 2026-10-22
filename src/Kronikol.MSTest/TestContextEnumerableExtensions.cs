@@ -13,7 +13,9 @@ internal static class TestContextEnumerableExtensions
             .Select(scenariosForFeature =>
             {
                 var firstScenario = scenariosForFeature.First();
-                var featureTags = ScenarioTags.Classify(firstScenario.FeatureTags).Tags;
+                // The feature's are the categories all its tests have at its level, not the first test's (5.2.7): two
+                // classes of one name are one feature. A test keeps the rest of its class's on its own.
+                var featureTags = ScenarioTags.Shared(scenariosForFeature.Select(x => ScenarioTags.Classify(x.FeatureTags).Tags));
 
                 return new Feature
                 {
@@ -30,7 +32,8 @@ internal static class TestContextEnumerableExtensions
                             var parsed = ParameterParser.Parse(displayName);
                             parsed = RebindParameterNames(parsed, x.ParameterNames);
                             var classified = ScenarioTags.Classify(x.Tags);
-                            var tags = classified.Tags.Except(featureTags, ScenarioTags.Comparer).ToArray();
+                            var tags = ScenarioTags.Merge(ScenarioTags.Classify(x.FeatureTags).Tags, classified.Tags)
+                                .Except(featureTags, ScenarioTags.Comparer).ToArray();
                             return new Scenario
                             {
                                 Id = x.TestId,

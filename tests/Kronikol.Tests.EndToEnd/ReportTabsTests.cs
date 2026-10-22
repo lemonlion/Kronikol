@@ -69,6 +69,20 @@ public class ReportTabsTests : PlaywrightTestBase
         Assert.Equal(["features"], await ShownPanelsAsync());
     }
 
+    // a tab keeps its arrow keys, and / goes to the search from it as from anywhere else: from 5.2.0 to 5.2.6 the guard
+    // that leaves a tab its keys took / as well
+    [Fact]
+    public async Task Slash_on_a_tab_goes_to_the_search()
+    {
+        await OpenAsync("Tabs_Slash.html");
+        await Page.Locator("#tab-features").FocusAsync();
+
+        await Page.Keyboard.PressAsync("/");
+
+        await Expect(Page.Locator("#searchbar")).ToBeFocusedAsync();
+        await Expect(Page.Locator("#searchbar")).ToHaveValueAsync("");
+    }
+
     [Fact]
     public async Task The_component_diagram_is_drawn_when_its_tab_first_shows()
     {

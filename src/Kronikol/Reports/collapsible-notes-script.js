@@ -94,14 +94,30 @@
         return notes;
     }
 
+    // Whether text that starts with { is one JSON object, or the start of one cut short: its first brace opens an object
+    // (a key or } comes next) and closes at the text's end or not at all, braces in strings left alone.
+    function oneJsonObject(raw) {
+        if (!/^\{\s*["}]/.test(raw)) return false;
+        var depth = 0, inString = false;
+        for (var i = 0; i < raw.length; i++) {
+            var c = raw.charAt(i);
+            if (inString) { if (c === '\\') i++; else if (c === '"') inString = false; continue; }
+            if (c === '"') inString = true;
+            else if (c === '{' || c === '[') depth++;
+            else if ((c === '}' || c === ']') && --depth === 0) return i === raw.length - 1;
+        }
+        return true;
+    }
+
     function getNotePreview(contentLines) {
         var nonGray = contentLines.map(function(l) { return l.trim(); })
             .filter(function(l) { return !isNoteMetaLine(l); });
         var raw = nonGray.join(' ').trim();
         if (!raw) return '';
         // A JSON body's braces say nothing on one line (5.0.0): the opening one goes, and the closing one too when the
-        // whole body fits. "{}" stays as it is.
-        if (raw.charAt(0) === '{') {
+        // whole body fits. "{}" stays as it is, and so do braces that are not one object's: until 5.2.7 two objects (one
+        // a line, as NDJSON writes them) previewed as "a":1} {"b":2, and a template's {{name}} as {name}.
+        if (raw.charAt(0) === '{' && oneJsonObject(raw)) {
             var body = raw.replace(/^\{\s*/, '');
             var whole = body.replace(/\s*\}$/, '');
             if (whole && whole !== body && whole.length <= 60) return whole;
@@ -356,24 +372,24 @@
         // as drawing it again replaces every fragment and the owner carries the rendering flag.
         var host = container.classList && container.classList.contains('puml-fragment') && container.parentElement
             ? container.parentElement : container;
+        // The note clicked is this one: its own hover rect, and once drawn again the hover rect of the note with its index
+        // in the source, which every note given buttons has. Until 5.2.7 it was the first note whose place in its picture
+        // held this one's corner, among the notes of every fragment, so a click in a later fragment found an earlier
+        // fragment's note in that place and kept nobody's place.
         function keepPlace(fn, ev) {
             var y = ev && typeof ev.clientY === 'number' ? ev.clientY : null;
-            var rects = Array.prototype.slice.call(host.querySelectorAll('svg .note-hover-rect'));
-            var idx = -1;
-            for (var i = 0; i < rects.length; i++) {
-                var b = rects[i].getBBox();
-                if (bbox.x + 1 >= b.x - 1 && bbox.x + 1 <= b.x + b.width + 1 && bbox.y + 1 >= b.y - 1 && bbox.y + 1 <= b.y + b.height + 1) { idx = i; break; }
-            }
-            var before = idx >= 0 ? rects[idx].getBoundingClientRect() : null;
+            var original = hoverRect._noteOriginal;
+            var before = hoverRect.getBoundingClientRect();
             var oldSvg = host.querySelector('svg');
             fn();
-            if (!before || y === null || y < before.top + before.height / 2) return;
+            if (y === null || y < before.top + before.height / 2) return;
             var t0 = Date.now();
             (function wait() {
                 var now = host.querySelector('svg');
                 var ready = now && now !== oldSvg && !host._noteRendering && host.querySelector('svg .note-hover-rect');
                 if (!ready) { if (Date.now() - t0 < 10000) setTimeout(wait, 50); return; }
-                var r = host.querySelectorAll('svg .note-hover-rect')[idx];
+                var all = host.querySelectorAll('svg .note-hover-rect'), r = null;
+                for (var i = 0; i < all.length && !r; i++) if (all[i]._noteOriginal === original) r = all[i];
                 if (!r) return;
                 var rb = r.getBoundingClientRect();
                 if (rb.height >= before.height - 1) return;
@@ -752,6 +768,7 @@
         hoverRect.setAttribute('stroke', 'none');
         hoverRect.setAttribute('class', 'note-hover-rect');
         hoverRect.style.pointerEvents = 'all';
+        hoverRect._noteOriginal = grp.paths[0] && grp.paths[0]._noteIndices ? grp.paths[0]._noteIndices.original : null;
         hoverRect.addEventListener('mouseenter', _noteShowButtons);
         hoverRect.addEventListener('mouseleave', _noteScheduleHide);
         hoverRect.addEventListener('dblclick', function(ev) {
@@ -2562,8 +2579,10 @@
             var t = lines[i].trim();
             if (inStyle) { if (/^<\/style>/.test(t)) inStyle = false; continue; }
             if (inNote) { if (noteEnd(t)) inNote = false; continue; }
-            // (written without a literal style tag, which a report-wide scan could not tell from a real block)
-            if (/^<style\s*>/.test(t)) { inStyle = true; continue; }
+            // (written without a literal style tag, which a report-wide scan could not tell from a real block); a block on
+            // one line closes where it opens, where until 5.2.7 every statement after it was taken for its lines and the
+            // setup stayed
+            if (/^<style\s*>/.test(t)) { inStyle = !/<\/style>/.test(t); continue; }
             stmts.push({ i: i, t: t });
             if (noteStart(t)) inNote = true;
         }
@@ -2614,8 +2633,16 @@
         });
         if (anyCall) {
             var DECL = /^(?:participant|actor|boundary|control|entity|database|collections|queue)\s+(?:"[^"]*"|\S+)(?:\s+as\s+([A-Za-z0-9_]+))?/;
+            // a note's lines and a style block's are no declarations: until 5.2.7 "database connection opened" in a note
+            // went as one, and so did a style block's participant { line
+            var inBody = false, inCss = false;
             kept = kept.filter(function (l) {
-                var dm = DECL.exec(l.trim());
+                var t = l.trim();
+                if (inCss) { if (/^<\/style>/.test(t)) inCss = false; return true; }
+                if (inBody) { if (noteEnd(t)) inBody = false; return true; }
+                if (/^<style\s*>/.test(t)) { inCss = !/<\/style>/.test(t); return true; }
+                if (noteStart(t)) { inBody = true; return true; }
+                var dm = DECL.exec(t);
                 if (!dm) return true;
                 var alias = dm[1] || (/^\S+\s+"?([^"\s]+)/.exec(l.trim()) || [])[1];
                 return !alias || used[alias];

@@ -43,21 +43,24 @@ function drop_filtered_out_note() {
     if (note) note.remove();
 }
 // A link to a scenario the filters hide (5.2.0, plans/BACK_BUTTON_NAVIGATION_PLAN.md S7, Q5): a line where it would be
-// says so, with a button that clears the filters and shows it. Until 5.2.0 the link did nothing anyone could see.
-function filtered_out_note(hidden, anchor) {
+// says so, with a button that clears the filters and shows it. Until 5.2.0 the link did nothing anyone could see. A
+// Summary row for a feature they hide gives the feature's line, whose button shows it through the row (until 5.2.7 the
+// row opened nothing anyone could see).
+function filtered_out_note(hidden, anchor, noun, show) {
+    noun = noun || 'scenario';
     drop_filtered_out_note();
     var note = document.createElement('div');
     note.className = 'filtered-out-note';
     var text = document.createElement('span');
-    text.textContent = 'This scenario is hidden by the filters.';
+    text.textContent = 'This ' + noun + ' is hidden by the filters.';
     var clear = document.createElement('button');
     clear.type = 'button';
     clear.className = 'filtered-out-clear';
     clear.textContent = 'Clear the filters and show it';
-    clear.title = 'Clear every filter and go to this scenario';
+    clear.title = 'Clear every filter and go to this ' + noun;
     clear.addEventListener('click', function() {
         clear_all_filters();
-        reveal_url_anchor(anchor);
+        if (show) show(); else reveal_url_anchor(anchor);
     });
     note.appendChild(text);
     note.appendChild(clear);

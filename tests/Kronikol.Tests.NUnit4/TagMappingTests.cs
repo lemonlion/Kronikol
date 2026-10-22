@@ -59,6 +59,36 @@ public class TagMappingTests
         return test;
     }
 
+    [Category("Checkout")]
+    private sealed class Checkout : DiagrammedComponentTest
+    {
+        public Checkout(string browser) { }
+
+        public void Pay() { }
+    }
+
+    /// <summary>
+    /// The fixtures NUnit's own builder makes of <paramref name="type"/>, one for each <c>[TestFixture]</c>, under the
+    /// <c>ParameterizedFixtureSuite</c> NUnit puts them in: each holds its own <c>Category =</c>, then the class's
+    /// <c>[Category]</c> (NUnit 4.6.0, probed).
+    /// </summary>
+    private static TestSuite[] FixturesOf(Type type, params TestFixtureAttribute[] attributes)
+    {
+        var info = new TypeWrapper(type);
+        var suite = new ParameterizedFixtureSuite(info);
+        foreach (var attribute in attributes)
+            foreach (var fixture in attribute.BuildFrom(info))
+                suite.Add(fixture);
+        return suite.Tests.Cast<TestSuite>().ToArray();
+    }
+
+    private static TestMethod Test(TestSuite fixture, string method)
+    {
+        var test = new TestMethod(new MethodWrapper(fixture.TypeInfo!.Type, method), fixture);
+        fixture.Add(test);
+        return test;
+    }
+
     private static Feature[] Features(params TestMethod[] tests) =>
         tests.Select(test =>
         {
@@ -158,6 +188,38 @@ public class TagMappingTests
         var second = feature.Scenarios.Single(s => s.Id == named.Id);
         Assert.That(second.IsHappyPath, Is.True);
         Assert.That(second.Tags, Is.Null);
+    }
+
+    [Test]
+    public void Fixtures_of_one_class_keep_their_own_categories_and_share_the_class_s([Values] bool firefoxFirst)
+    {
+        // [TestFixture("chrome", Category = "Chrome")] and [TestFixture("firefox", Category = "Firefox")] make two fixtures
+        // of one feature. Until 5.2.7 the feature took the categories of whichever test finished first, so the other
+        // fixture's tests carried its category and their own was nowhere.
+        var fixtures = FixturesOf(typeof(Checkout),
+            new TestFixtureAttribute("chrome") { Category = "Chrome" }, new TestFixtureAttribute("firefox") { Category = "Firefox" });
+        var chrome = Test(fixtures[0], nameof(Checkout.Pay));
+        var firefox = Test(fixtures[1], nameof(Checkout.Pay));
+
+        var feature = (firefoxFirst ? Features(firefox, chrome) : Features(chrome, firefox)).Single();
+
+        Assert.That(feature.Tags, Is.EqualTo(new[] { "Checkout" }));
+        Assert.That(feature.Scenarios.Single(s => s.Id == chrome.Id).Tags, Is.EqualTo(new[] { "Chrome" }));
+        Assert.That(feature.Scenarios.Single(s => s.Id == firefox.Id).Tags, Is.EqualTo(new[] { "Firefox" }));
+    }
+
+    [Test]
+    public void Two_classes_of_one_name_keep_their_own_categories()
+    {
+        // NUnit names both features Orders, so they are one feature; neither class's category is the other's tests'
+        var web = Test(new TestFixtureAttribute().BuildFrom(new TypeWrapper(typeof(Web.Orders))).Single(), nameof(Web.Orders.Pay));
+        var api = Test(new TestFixtureAttribute().BuildFrom(new TypeWrapper(typeof(Api.Orders))).Single(), nameof(Api.Orders.Pay));
+
+        var feature = Features(web, api).Single();
+
+        Assert.That(feature.Tags, Is.Null);
+        Assert.That(feature.Scenarios.Single(s => s.Id == web.Id).Tags, Is.EqualTo(new[] { "Web" }));
+        Assert.That(feature.Scenarios.Single(s => s.Id == api.Id).Tags, Is.EqualTo(new[] { "Api" }));
     }
 
     [Test]

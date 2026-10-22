@@ -27,6 +27,17 @@ public class NoteButtonLayoutTests : DiagramNotePlaywrightBase
         "caller -> orders : POST /orders\nnote right\n" + LongBody + "\nend note\norders --> caller : 201\n" +
         string.Join("\n", Enumerable.Range(1, 160).Select(i => $"caller -> orders : GET /orders/{i}\norders --> caller : 200")) + "\n@enduml";
 
+    // a short note and a long one, each at the top of a fragment of its own, so each sits where the other does in its own
+    // picture, the first shorter than the second is made: the 125 calls after the first fill the first fragment, each
+    // labelled as the rest, so both fragments space their participants alike, and 40 after the second keep the page going
+    // below it (a page that ends at the note scrolls back by what the note loses, and keeps the place whatever the page does)
+    private static readonly string Calls = "caller -> orders : GET /orders\norders --> caller : 200";
+    private static readonly string LongNoteAtTheTopOfEachFragment = "@startuml\nparticipant \"Caller\" as caller\nparticipant \"Orders\" as orders\n" +
+        "caller -> orders : POST /orders\nnote right\nLine 1\nLine 2\nLine 3\nLine 4\nend note\norders --> caller : 201\n" +
+        string.Join("\n", Enumerable.Repeat(Calls, 125)) +
+        "\ncaller -> orders : POST /orders\nnote right\n" + LongBody + "\nend note\norders --> caller : 201\n" +
+        string.Join("\n", Enumerable.Repeat(Calls, 40)) + "\n@enduml";
+
     private async Task OpenAsync(string fileName, string source)
     {
         Feature[] features =
@@ -261,6 +272,51 @@ public class NoteButtonLayoutTests : DiagramNotePlaywrightBase
         // drawn again shorter, and scrolled so the new bottom sits just under the click
         await Page.WaitForFunctionAsync(
             "y => { const r = document.querySelector('.note-hover-rect'); if (!r) return false; const b = r.getBoundingClientRect(); return b.height < 400 && Math.abs(b.bottom - Math.min(y + 8, innerHeight - 24)) <= 2; }",
+            y, new() { Timeout = 20000, PollingInterval = 200 });
+    }
+
+    // The page found the note clicked by its place in its picture, among the notes of every fragment: a click on a note
+    // in the second fragment found the first fragment's note in that place, and kept nobody's place (5.0.0 to 5.2.6)
+    [Fact]
+    public async Task Making_a_note_shorter_in_a_later_fragment_brings_that_note_s_new_bottom_back_to_the_click()
+    {
+        await OpenAsync("NoteButtonsKeepPlaceLaterFragment.html", LongNoteAtTheTopOfEachFragment);
+        await SetScenarioState("expanded");
+        Assert.Equal("the same place", await Page.EvaluateAsync<string>("""
+            () => {
+                const f = document.querySelectorAll('.puml-fragment');
+                if (f.length < 2) return 'fragments: ' + f.length;
+                const a = f[0].querySelector('.note-hover-rect'), b = f[1].querySelector('.note-hover-rect');
+                if (!a || !b) return 'a fragment without a note';
+                const p = a.getBBox(), q = b.getBBox();
+                return Math.abs(p.x - q.x) < 1 && Math.abs(p.y - q.y) < 1 ? 'the same place' : 'apart: ' + [p.x, p.y, q.x, q.y].join(' ');
+            }
+            """));
+
+        // with the browser's own scroll anchoring off, as Safari has none, so that the place is the page's to keep: Chromium
+        // anchors the scroll to what follows the note, and kept the place without the page
+        await Page.AddStyleTagAsync(new() { Content = "html, body { overflow-anchor: none; }" });
+
+        // the second note's bottom button in the middle of the window, then a click on it
+        await Page.EvaluateAsync("() => { const r = document.querySelectorAll('.note-hover-rect')[1].getBoundingClientRect(); window.scrollBy(0, r.bottom - innerHeight / 2); }");
+        await HoverNoteRect(1);
+        await WaitForButtonsAsync();
+        var y = await Page.EvaluateAsync<double>("""
+            () => {
+                window.__bottom = Array.from(document.querySelectorAll(".note-toggle-icon[data-note-btn='truncate-bottom']")).find(i => i.style.opacity === '1').querySelector('rect');
+                const r = window.__bottom.getBoundingClientRect();
+                return r.top + r.height / 2;
+            }
+            """);
+        await Page.EvaluateAsync("""
+            y => {
+                const b = window.__bottom.getBoundingClientRect();
+                window.__bottom.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, clientX: b.left + b.width / 2, clientY: y }));
+            }
+            """, y);
+
+        await Page.WaitForFunctionAsync(
+            "y => { const r = document.querySelectorAll('.note-hover-rect')[1]; if (!r) return false; const b = r.getBoundingClientRect(); return b.height < 400 && Math.abs(b.bottom - Math.min(y + 8, innerHeight - 24)) <= 2; }",
             y, new() { Timeout = 20000, PollingInterval = 200 });
     }
 }

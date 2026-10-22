@@ -683,6 +683,10 @@ public static class ReportGenerator
         var written = RunOutputs(actions);
         AfterOutputsForTests.Value?.Invoke();
 
+        // The data file under its other name, which this run replaces (PlannedFiles), goes once this run's is on disk (5.2.7).
+        if (options.GenerateTestRunReportData && written.Contains($"{options.HtmlTestRunReportFileName}.{testRunDataExtension}"))
+            RunRotation.RemoveReplacedDataFile(reportsDir, options.HtmlTestRunReportFileName, testRunDataExtension);
+
         // After every output is on disk: a run whose report failed to write still has its fragment, and a
         // ledger that stays locked past the retry budget costs a diagnostic, never the run.
         history?.Append();
@@ -1934,7 +1938,7 @@ public static class ReportGenerator
                     <tr><td><code>duration:&gt;2s</code></td><td>Scenarios by their own time: &gt;, &gt;=, &lt;, &lt;= or a range; ms, s or m; p50, p90, p95, p99 are this report's percentiles</td><td><code>duration:&gt;2s</code>, <code>duration:&lt;500ms</code>, <code>duration:&gt;p90</code>, <code>duration:1s..5s</code></td></tr>
                     <tr><td><code>is:happy</code></td><td>Happy paths</td><td><code>is:happy</code>, <code>!!is:happy</code></td></tr>
                     </table>
-                    <p class="search-help-note">Space-separated words use implicit AND. Press <kbd>/</kbd> to focus the search bar. Operators <code>&&</code> <code>||</code> <code>!!</code> activate advanced mode; without them, legacy tag expressions (<code>@a and @b or not @c</code>) are also supported. <code>dep:</code>, <code>duration:</code> and <code>is:</code> always narrow the search: they combine with the rest of it by AND, and can be negated with <code>!!</code>.</p>
+                    <p class="search-help-note">Space-separated words use implicit AND. Press <kbd>/</kbd> to focus the search bar. Operators <code>&&</code> <code>||</code> <code>!!</code> activate advanced mode; without them, legacy tag expressions (<code>@a and @b or not @c</code>) are also supported. <code>dep:</code>, <code>duration:</code> and <code>is:</code> always narrow the search: they combine with the rest of it by AND, and can be negated with <code>!!</code> or <code>not</code>. Inside a group that <code>!!</code> or <code>not</code> negates, one is read as text, and the search bar is marked.</p>
                     </div>
                     <div class="filter-row">
                  """);

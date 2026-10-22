@@ -17,8 +17,10 @@ internal static class TestContextEnumerableExtensions
             .Select(scenariosForFeature =>
             {
                 var featureClass = scenariosForFeature.First().TestClass!;
-                // xUnit merges the class's traits into each test's, so the scenario's own are the test's less these
-                var featureTags = ScenarioTags.Classify(CategoryTraits(featureClass.Traits)).Tags;
+                // The class traits all the feature's tests have, not the first test's (5.2.7): two classes of one name
+                // are one feature. xUnit merges the class's traits into each test's, so the scenario's own are the
+                // test's less these, the rest of its class's among them.
+                var featureTags = ScenarioTags.Shared(scenariosForFeature.Select(x => ScenarioTags.Classify(CategoryTraits(x.TestClass!.Traits)).Tags));
                 return new Feature
                 {
                     DisplayName = ScenarioTitleResolver.FormatFeatureName(scenariosForFeature.Key),

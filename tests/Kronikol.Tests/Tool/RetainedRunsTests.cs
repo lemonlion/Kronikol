@@ -1,6 +1,8 @@
+using System.Text;
 using Kronikol.History;
 using Kronikol.Query;
 using Kronikol.Reports;
+using Kronikol.Tests.Compression;
 using Kronikol.Tool;
 
 namespace Kronikol.Tests.Tool;
@@ -45,13 +47,21 @@ public class RetainedRunsTests : IDisposable
         }
         """;
 
-    /// <summary>One run's files in <paramref name="directory"/>: the report, its manifest, and - for a run that kept them - its fragment and an attachment.</summary>
-    private static void WriteRun(string directory, string runId, string pay, DateTimeOffset at, bool withFragmentAndAttachment = false, string? body = null, string name = "TestRunReport")
+    /// <summary>
+    /// One run's files in <paramref name="directory"/>: the report, as JSON or, as 5.0.0 writes it, compressed
+    /// (<paramref name="krkl"/>), its manifest, and - for a run that kept them - its fragment and an attachment.
+    /// </summary>
+    private static void WriteRun(string directory, string runId, string pay, DateTimeOffset at, bool withFragmentAndAttachment = false, string? body = null, string name = "TestRunReport", bool krkl = false)
     {
         Directory.CreateDirectory(directory);
-        File.WriteAllText(Path.Combine(directory, name + ".json"), Report(pay, runId, withFragmentAndAttachment, body));
+        var report = Report(pay, runId, withFragmentAndAttachment, body);
+        var data = name + (krkl ? ".krkl" : ".json");
+        if (krkl)
+            File.WriteAllBytes(Path.Combine(directory, data), ReportFileFormatTests.Krkl(Encoding.UTF8.GetBytes(report)));
+        else
+            File.WriteAllText(Path.Combine(directory, data), report);
         File.WriteAllText(Path.Combine(directory, name + ".html"), "<html></html>");
-        var files = new List<string> { name + ".json", name + ".html" };
+        var files = new List<string> { data, name + ".html" };
         var attachments = new List<string>();
         if (withFragmentAndAttachment)
         {
@@ -271,6 +281,33 @@ public class RetainedRunsTests : IDisposable
             Assert.True(exit == 0, wanted + ": " + error);
             Assert.Contains("Expected 200 but got 500", output);
         }
+    }
+
+    /// <summary>
+    /// A run kept by 4.x under its own report name wrote <c>Checkout.json</c>, and the run on top since 5.0.0 writes
+    /// <c>Checkout.krkl</c>: the kept report was looked for as <c>Checkout.krkl</c> and then as a folder, which finds no
+    /// JSON but a <c>TestRunReport.json</c>, so every <c>--run</c> and <c>--baseline-run</c> answered "No TestRunReport.json
+    /// or TestRunReport.krkl under …runs/gh_7_1", the commands the run prints for its previous run included (5.2.7).
+    /// </summary>
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Run_opens_a_kept_run_whose_own_named_report_has_the_other_extension(bool keptAsJson)
+    {
+        WriteRun(Path.Combine(Reports, "runs", "gh_7_1"), "7", "Failed", Noon.AddMinutes(-10), name: "Checkout", krkl: !keptAsJson);
+        WriteRun(Reports, "8", "Passed", Noon, name: "Checkout", krkl: keptAsJson);
+        var top = Path.Combine(Reports, keptAsJson ? "Checkout.krkl" : "Checkout.json");
+
+        foreach (var wanted in new[] { "gh_7_1", "gh:7:1", "last-failed", "previous" })
+        {
+            var (output, error, exit) = Query("failures", top, "--run", wanted);
+
+            Assert.True(exit == 0, wanted + ": " + error);
+            Assert.Contains("Expected 200 but got 500", output);
+        }
+        var diff = Query("diff", top, "--baseline-run", "last-failed");
+        Assert.True(diff.Exit == 0, diff.Error);
+        Assert.Contains("fixed s0 Pay by card", diff.Output);
     }
 
     [Fact]

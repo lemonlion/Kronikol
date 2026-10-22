@@ -41,6 +41,21 @@ public class TagMappingTests
         Assert.Equal(["Own", "Inherited", "Assembly level"], TestTags.OfFeature(typeof(Derived)));
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Two_classes_of_one_name_are_one_feature_with_the_tags_both_have(bool apiFirst)
+    {
+        // Both are the feature Orders. Until 5.2.7 it took the categories of whichever test finished first, so the other
+        // class's tests carried them and their own were nowhere.
+        var feature = TestTags.OfFeature(apiFirst ? [typeof(Api.Orders), typeof(Web.Orders)] : [typeof(Web.Orders), typeof(Api.Orders)]);
+        // a Web test's categories as TUnit lists them: the method's, then the class's and the assembly's
+        var (tags, _) = TestTags.OfScenario(["Smoke", "Web", "Shop", "Assembly level"], feature);
+
+        Assert.Equal(["Shop", "Assembly level"], feature);
+        Assert.Equal(["Smoke", "Web"], tags);
+    }
+
     [Fact]
     public void A_test_s_own_tags_are_its_categories_less_the_feature_s()
     {

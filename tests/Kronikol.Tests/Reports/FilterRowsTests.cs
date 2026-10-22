@@ -222,7 +222,7 @@ public class FilterRowsTests
         Assert.Contains("<tr><td><code>dep:name</code></td><td>Scenarios that call a dependency: part of its name is enough; commas for any of several</td>", box);
         Assert.Contains("<tr><td><code>duration:&gt;2s</code></td>", box);
         Assert.Contains("<tr><td><code>is:happy</code></td><td>Happy paths</td>", box);
-        Assert.Contains("<code>dep:</code>, <code>duration:</code> and <code>is:</code> always narrow the search: they combine with the rest of it by AND, and can be negated with <code>!!</code>.</p>", box);
+        Assert.Contains("<code>dep:</code>, <code>duration:</code> and <code>is:</code> always narrow the search: they combine with the rest of it by AND, and can be negated with <code>!!</code> or <code>not</code>. Inside a group that <code>!!</code> or <code>not</code> negates, one is read as text, and the search bar is marked.</p>", box);
     }
 
     [Fact]

@@ -189,12 +189,19 @@ internal sealed class ScenarioEntry
 
     /// <summary>
     /// The scenario's own tags, each once: <c>tags</c>, or in a file written before 5.0.0 its <c>labels</c>, less the
-    /// <c>retry N</c> ones its attempt accounts for, then its <c>categories</c> (plans/TAGS_PLAN.md §4.13).
+    /// <c>retry N</c> ones its attempt accounts for and a happy-path name, which is <see cref="IsHappyPath"/> (5.2.7),
+    /// then its <c>categories</c> (plans/TAGS_PLAN.md §4.13).
     /// </summary>
     public List<string> Tags { get; } = [];
 
     /// <summary>The effective tags: the feature's, then the scenario's own, each once.</summary>
     public string[] EffectiveTags => ScenarioTags.Merge(FeatureTags, Tags);
+
+    /// <summary>
+    /// The tags the report's Tags row and its <c>@</c> search give the scenario: its effective tags, and Happy Path first
+    /// for a happy path, which is a flag and not one of its tags (TagChips). What <c>--tag</c> reads (5.2.7).
+    /// </summary>
+    public string[] RowTags => IsHappyPath ? ScenarioTags.Merge([ScenarioTags.HappyPathTag], EffectiveTags) : EffectiveTags;
 
     // A file written before 5.0.0, read as its keys come and folded into Tags when the scenario ends, once its attempt
     // is known (the attempt is written after them).
@@ -205,7 +212,9 @@ internal sealed class ScenarioEntry
     {
         if (LegacyLabels.Count == 0 && LegacyCategories.Count == 0)
             return;
-        var own = ScenarioTags.Merge(Tags, LegacyLabels.Where(l => !ScenarioTags.IsGeneratedRetryLabel(l, Attempt)), LegacyCategories);
+        IsHappyPath |= LegacyLabels.Any(ScenarioTags.IsHappyPathLabel);
+        var own = ScenarioTags.Merge(Tags,
+            LegacyLabels.Where(l => !ScenarioTags.IsHappyPathLabel(l) && !ScenarioTags.IsGeneratedRetryLabel(l, Attempt)), LegacyCategories);
         Tags.Clear();
         Tags.AddRange(own);
         LegacyLabels.Clear();

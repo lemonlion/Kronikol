@@ -63,6 +63,34 @@ public class KrklLookupTests : IDisposable
         }
     }
 
+    [Theory]
+    [InlineData("TestRunReport.krkl")]
+    [InlineData("TestRunReport.json")]
+    public void Of_a_report_written_both_ways_the_one_its_Run_json_lists_is_read_whatever_the_times_say(string listed)
+    {
+        // The folder's Run.json lists what its newest run wrote. A copy or a download of the artifacts gives each file the
+        // time it was written out, in no set order, so until 5.2.7 a stale file could be read as the newer.
+        var folder = Path.Combine(_root, "listed");
+        var krkl = KrklReports.WriteKrkl(_json, folder);
+        var json = Path.Combine(folder, "TestRunReport.json");
+        File.Copy(_json, json);
+        new RunManifest { Run = "gh:1:1", At = DateTimeOffset.UtcNow, Files = [listed, "TestRunReport.html"] }.Write(folder);
+        File.SetLastWriteTimeUtc(listed.EndsWith(".krkl", StringComparison.Ordinal) ? json : krkl, DateTime.UtcNow);
+        File.SetLastWriteTimeUtc(Path.Combine(folder, listed), DateTime.UtcNow.AddHours(-1));
+
+        // At the top of a folder, and found by searching below one.
+        foreach (var target in new[] { folder, _root })
+        {
+            if (target == _root)
+                Directory.Delete(Path.Combine(_root, "source"), recursive: true);
+            var (exit, output, error) = Query("summary", target);
+
+            Assert.True(exit == 0, error);
+            Assert.Contains(listed, output.Split('\n')[0], StringComparison.Ordinal);
+            Assert.Contains($"reading {listed}, the one its Run.json lists", error, StringComparison.Ordinal);
+        }
+    }
+
     [Fact]
     public void Kept_runs_and_the_baseline_copy_are_not_searched()
     {

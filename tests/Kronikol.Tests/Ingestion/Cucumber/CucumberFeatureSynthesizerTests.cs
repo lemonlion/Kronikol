@@ -133,6 +133,51 @@ public class CucumberFeatureSynthesizerTests
         Assert.Null(feature.Scenarios.Single(s => s.DisplayName == "outside the rule").Tags);
     }
 
+    /// <summary>
+    /// Two files whose features share the title Checkout, with feature tags of their own and one they share, and a scenario
+    /// in each; <paramref name="apiFirst"/> runs the second file's first.
+    /// </summary>
+    private static string SameTitleStream(bool apiFirst)
+    {
+        // whichever runs first starts first, so that neither the messages' order nor the times put web first
+        var (webAt, apiAt) = apiFirst ? (1787393376, 1787393374) : (1787393374, 1787393376);
+        static string At(string line, int seconds) => line.Replace("SECONDS", seconds.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        string[] web =
+        [
+            """{"pickle":{"id":"pk-1","uri":"features/web/checkout.feature","astNodeIds":["sc-1"],"name":"pay","language":"en","steps":[],"tags":[{"name":"@web","astNodeId":"t-w"},{"name":"@shop","astNodeId":"t-s1"}]}}""",
+            """{"testCase":{"id":"tc-1","pickleId":"pk-1","testSteps":[]}}""",
+            At("""{"testCaseStarted":{"id":"att-1","attempt":0,"testCaseId":"tc-1","timestamp":{"seconds":SECONDS,"nanos":0}}}""", webAt),
+            At("""{"testCaseFinished":{"testCaseStartedId":"att-1","timestamp":{"seconds":SECONDS,"nanos":0}}}""", webAt + 1),
+        ];
+        string[] api =
+        [
+            """{"pickle":{"id":"pk-2","uri":"features/api/checkout.feature","astNodeIds":["sc-2"],"name":"refund","language":"en","steps":[],"tags":[{"name":"@api","astNodeId":"t-a"},{"name":"@shop","astNodeId":"t-s2"},{"name":"@own","astNodeId":"t-o"}]}}""",
+            """{"testCase":{"id":"tc-2","pickleId":"pk-2","testSteps":[]}}""",
+            At("""{"testCaseStarted":{"id":"att-2","attempt":0,"testCaseId":"tc-2","timestamp":{"seconds":SECONDS,"nanos":0}}}""", apiAt),
+            At("""{"testCaseFinished":{"testCaseStartedId":"att-2","timestamp":{"seconds":SECONDS,"nanos":0}}}""", apiAt + 1),
+        ];
+        string[] documents =
+        [
+            """{"gherkinDocument":{"uri":"features/web/checkout.feature","feature":{"keyword":"Feature","name":"Checkout","tags":[{"name":"@web","id":"t-w"},{"name":"@shop","id":"t-s1"}],"children":[{"scenario":{"id":"sc-1","keyword":"Scenario","name":"pay","tags":[],"steps":[]}}]}}}""",
+            """{"gherkinDocument":{"uri":"features/api/checkout.feature","feature":{"keyword":"Feature","name":"Checkout","tags":[{"name":"@api","id":"t-a"},{"name":"@shop","id":"t-s2"}],"children":[{"scenario":{"id":"sc-2","keyword":"Scenario","name":"refund","tags":[{"name":"@own","id":"t-o"}],"steps":[]}}]}}}""",
+        ];
+        return string.Join("\n", documents.Concat(apiFirst ? api.Concat(web) : web.Concat(api)));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Two_files_whose_features_share_a_title_keep_their_own_feature_tags(bool apiFirst)
+    {
+        // One feature, Checkout, whose tags were the first file's until 5.2.7: the other file's scenarios carried them and
+        // lost their own, though a scenario's effective tags are its pickle's (§4.5). The tag both files have stays the feature's.
+        var feature = CucumberFeatureSynthesizer.Build(CucumberMessagesReader.Read(new StringReader(SameTitleStream(apiFirst)))).Features.Single();
+
+        Assert.Equal(["shop"], feature.Tags);
+        Assert.Equal(["web"], feature.Scenarios.Single(s => s.DisplayName == "pay").Tags);
+        Assert.Equal(["api", "own"], feature.Scenarios.Single(s => s.DisplayName == "refund").Tags);
+    }
+
     [Fact]
     public void A_feature_s_or_a_rule_s_happy_path_tag_marks_none_of_its_scenarios()
     {

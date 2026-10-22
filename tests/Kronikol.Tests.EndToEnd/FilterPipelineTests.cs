@@ -184,6 +184,47 @@ public class FilterPipelineTests : PlaywrightTestBase
         Assert.Equal(All, await Shown());
     }
 
+    // Only means only: the Happy Path chip set to has asks for a happy path whatever the Tags row's mode, as 4.x's Happy
+    // Paths Only did beside its categories. From 5.0.0 to 5.2.6 the chip joined the row's ANY, and Only with the smoke
+    // chip showed every smoke scenario as well
+    [Fact]
+    public async Task Happy_paths_Only_asks_for_a_happy_path_beside_chips_in_the_ANY_mode()
+    {
+        await OpenAsync("Filters_HappyOnlyAny.html");
+        await Expect(Page.Locator(".tag-mode-toggle")).ToHaveTextAsync("ANY");
+        await Tag("Slow").ClickAsync();
+        Assert.Equal([R], await Shown());
+
+        // a happy path with Slow: there is none
+        await Page.Locator(".happy-seg[data-hp='in']").ClickAsync();
+        Assert.Empty(await Shown());
+
+        // a happy path with Slow or smoke
+        await Tag("smoke").ClickAsync();
+        Assert.Equal([A], await Shown());
+    }
+
+    // A tag is one tag whatever the case of its ASCII letters (ScenarioTags.Comparer), and its chip carries the first
+    // spelling met: a 4.x report's fast and Fast were two categories, and a link that chose fast chose no chip (5.0.0 to
+    // 5.2.6)
+    [Fact]
+    public async Task A_link_finds_a_tag_s_chip_whatever_the_case_of_its_letters()
+    {
+        await OpenAsync("Filters_LinkCase.html", "#cats=fast&tags=SMOKE&tagmode=AND");
+        await Expect(Tag("Fast")).ToHaveAttributeAsync("aria-pressed", "true");
+        await Expect(Tag("smoke")).ToHaveAttributeAsync("aria-pressed", "true");
+        Assert.Equal([A, R], await Shown());
+    }
+
+    // 4.x combined Happy Paths Only with the chosen categories whatever their mode, and a 4.x link keeps its meaning (Q5)
+    [Fact]
+    public async Task A_link_from_a_4x_report_with_Happy_Paths_Only_and_a_category_shows_its_happy_paths()
+    {
+        await OpenAsync("Filters_OldLinkAny.html", "#cats=Fast&hp=1");
+        await Expect(Page.Locator(".tag-mode-toggle")).ToHaveTextAsync("ANY");
+        Assert.Equal([A], await Shown());
+    }
+
     [Fact]
     public async Task A_row_has_a_Clear_while_one_of_its_chips_is_set()
     {

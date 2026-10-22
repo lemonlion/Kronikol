@@ -15,7 +15,7 @@ internal static class TestContextEnumerableExtensions
             .Select(scenariosForFeature =>
             {
                 var featureClass = scenariosForFeature.First();
-                var featureTags = TestTags.OfFeature(featureClass.Metadata.TestDetails.ClassType);
+                var featureTags = TestTags.OfFeature(scenariosForFeature.Select(x => x.Metadata.TestDetails.ClassType));
 
                 string? endpoint = null;
                 if (featureClass.Metadata.TestDetails.CustomProperties.TryGetValue(EndpointAttribute.EndpointPropertyKey, out var endpointValue))

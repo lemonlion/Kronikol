@@ -65,13 +65,30 @@ if (typeof document !== 'undefined') {
 // them. dep:cow is a scenario that calls a dependency whose name holds "cow" (case, spaces and punctuation ignored;
 // quotes for a name with spaces, commas for any of several); duration: compares a scenario's own time (the first-call
 // warm-up left out, as the duration filter does) with >, >=, <, <=, = or a range a..b, in ms, s or m, or the report's
-// percentiles p50 to p99, a bare value meaning at least; is:happy is a happy path. !! negates one. A qualifier only
-// narrows: it combines with the rest of the search, and with the others, by AND. Only these keys, and never inside
+// percentiles p50 to p99, a bare value meaning at least; is:happy is a happy path. !! or not negates one. A qualifier
+// only narrows: it combines with the rest of the search, and with the others, by AND. Only these keys, and never inside
 // quotes, so a search for "status: 400" or "milk:" is still text. The qualifiers are taken out before the search runs,
 // so the search, its deep search of the diagrams and the link see the rest, and a flag of their own hides a scenario.
-var SEARCH_QUALIFIER = /(^|[\s(])(!!\s*)?(dep|dependency|duration|is):("[^"]*"|[^\s()"]+)/gi;
+var SEARCH_QUALIFIER = /(^|[\s(])(!!\s*|not\s+)?(dep|dependency|duration|is):("[^"]*"|[^\s()"]+)/gi;
 var DURATION_UNIT = { ms: 1, s: 1000, m: 60000, min: 60000 };
-function qualifier_name(s) { return String(s).toLowerCase().replace(/[^a-z0-9]/g, ''); }
+// a name's letters and digits, in every alphabet: until 5.2.7 only a to z and 0 to 9 were kept, so dep:Ödeme matched
+// Deme Service and a name in other letters (支付) was no name at all
+function qualifier_name(s) { return String(s).toLowerCase().replace(/[^\p{L}\p{N}]/gu, ''); }
+// Where a qualifier stands: in quotes, where it is text, as the rule above says (until 5.2.7 one was read there too);
+// inside a group that !! or not negates, where reading it as a narrowing would turn the search round, so it stays text
+// and the bar says so (until 5.2.7 !!(dep:x) showed the scenarios calling x); or anywhere else, where it narrows.
+function qualifier_place(input, at) {
+    var negated = [], quoted = false;
+    for (var i = 0; i < at; i++) {
+        var ch = input.charAt(i);
+        if (ch === '"') quoted = !quoted;
+        else if (quoted) continue;
+        else if (ch === '(') negated.push(/(!!\s*|\bnot\s+)$/i.test(input.slice(0, i)));
+        else if (ch === ')') negated.pop();
+    }
+    if (quoted) return 'quoted';
+    return negated.indexOf(true) >= 0 ? 'negated' : 'top';
+}
 function qualifier_ms(v, percentiles) {
     v = v.toLowerCase();
     if (percentiles[v] !== undefined) return percentiles[v];
@@ -102,7 +119,10 @@ function search_qualifier(key, value, negated, percentiles) {
             if (lo === null || hi === null) return null;
             test = function (d) { var t = qualifier_own_ms(d); return t !== null && t >= lo && t <= hi; };
         } else {
-            var m = /^(>=|<=|>|<|=)?(.+)$/.exec(value), op = m[1] || '>=', at = qualifier_ms(m[2], percentiles);
+            // duration:"" has no value at all: until 5.2.7 reading one threw, and the search did nothing
+            var m = /^(>=|<=|>|<|=)?(.+)$/.exec(value);
+            if (!m) return null;
+            var op = m[1] || '>=', at = qualifier_ms(m[2], percentiles);
             if (at === null) return null;
             test = function (d) {
                 var t = qualifier_own_ms(d);
@@ -117,23 +137,28 @@ function search_qualifier(key, value, negated, percentiles) {
     if (!test) return null;
     return negated ? function (d) { return !test(d); } : test;
 }
-// the search, split into its qualifiers and the rest; an operator a qualifier leaves dangling goes with it
+// the search, split into its qualifiers and the rest; an operator a qualifier leaves dangling goes with it, a legacy and
+// or or among them (@smoke and dep:x left @smoke and, which matched nothing, until 5.2.7)
 function split_search_qualifiers(input) {
     var quals = [], bad = [], percentiles = {};
     var box = document.querySelector('.duration-filters');
     if (box) ['p50', 'p90', 'p95', 'p99'].forEach(function (k) { var v = parseFloat(box.getAttribute('data-' + k)); if (!isNaN(v)) percentiles[k] = v; });
     SEARCH_QUALIFIER.lastIndex = 0;
-    var rest = input.replace(SEARCH_QUALIFIER, function (all, lead, negated, key, value) {
-        var q = search_qualifier(key, value, !!negated, percentiles);
-        if (!q) { bad.push(all.trim()); return all; }
+    var rest = input.replace(SEARCH_QUALIFIER, function (all, lead, negated, key, value, offset) {
+        var place = qualifier_place(input, offset + lead.length);
+        if (place === 'quoted') return all;
+        var q = place === 'top' ? search_qualifier(key, value, !!negated, percentiles) : null;
+        if (!q) { bad.push(all.slice(lead.length).trim()); return all; }
         quals.push(q);
         return lead + ' ';
     });
     if (quals.length) {
         for (var i = 0, prev = null; i < 6 && prev !== rest; i++) {
             prev = rest;
-            rest = rest.replace(/(&&|\|\|)\s*(&&|\|\|)/g, '$1').replace(/\(\s*(&&|\|\|)/g, '(').replace(/(&&|\|\|)\s*\)/g, ')')
-                .replace(/\(\s*\)/g, ' ').replace(/^\s*(&&|\|\|)/, '').replace(/(&&|\|\|)\s*$/, '').replace(/!!\s*(?=$|&&|\|\||\))/g, '');
+            rest = rest.replace(/(&&|\|\||\band\b|\bor\b)\s*(?:&&|\|\||\band\b|\bor\b)/gi, '$1')
+                .replace(/\(\s*(&&|\|\||\band\b|\bor\b)/gi, '(').replace(/(&&|\|\||\band\b|\bor\b)\s*\)/gi, ')')
+                .replace(/\(\s*\)/g, ' ').replace(/^\s*(?:&&|\|\||\band\b|\bor\b)/i, '')
+                .replace(/(?:&&|\|\||\band\b|\bor\b)\s*$/i, '').replace(/!!\s*(?=$|&&|\|\||\))/g, '');
         }
         rest = rest.replace(/\s+/g, ' ').trim();
     }
@@ -311,9 +336,22 @@ function run_search_scenarios() {
     if (window._kronDeepQuery) window._kronDeepQuery(input);
 }
 
-// A legacy query's words, where @"a tag" is one word for a tag with spaces (plans/TAGS_PLAN.md §4.8).
+// A legacy query's words, where @"a tag" is one word for a tag with spaces (plans/TAGS_PLAN.md §4.8), and a bracket
+// written against a tag is a word of its own: until 5.2.7, (@ui or @api) and not @slow, as the wiki's Search-Syntax
+// writes it, read (@ui and @api) as words that were no tags. A tag keeps the brackets it closes (@issue(12)), and a
+// bracket inside any other word stays in it.
 function legacySearchWords(input) {
-    return input.match(/@"[^"]*"?|\S+/g) || [];
+    var words = [];
+    (input.match(/\((?=\(*@)|@"[^"]*"?|\S+/g) || []).forEach(function (w) {
+        var tail = 0;
+        if (/^@[^"]/.test(w)) {
+            var opens = (w.match(/\(/g) || []).length, closes = (w.match(/\)/g) || []).length;
+            while (closes - tail > opens && w.charAt(w.length - 1 - tail) === ')') tail++;
+        }
+        words.push(w.slice(0, w.length - tail));
+        for (var i = 0; i < tail; i++) words.push(')');
+    });
+    return words;
 }
 // Splits a legacy query into its @tag expression and its plain-text remainder. Shared with the
 // deep-search worker (included in its Blob by name), so the two paths cannot drift.
@@ -384,7 +422,10 @@ function evaluateTagExpression(expr, tags) {
         let left = parseAnd();
         while (pos.i < tokens.length && tokens[pos.i].type === 'or') {
             pos.i++;
-            left = left || parseAnd();
+            // the right side is read whatever the left says: left unread, the expression stopped at it, and @a and @b
+            // or @c missed a scenario tagged c (until 5.2.7)
+            let right = parseAnd();
+            left = left || right;
         }
         return left;
     }
@@ -392,7 +433,8 @@ function evaluateTagExpression(expr, tags) {
         let left = parseNot();
         while (pos.i < tokens.length && tokens[pos.i].type === 'and') {
             pos.i++;
-            left = left && parseNot();
+            let right = parseNot();
+            left = left && right;
         }
         return left;
     }

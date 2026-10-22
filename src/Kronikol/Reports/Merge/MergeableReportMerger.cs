@@ -147,7 +147,7 @@ public static class MergeableReportMerger
     /// A half's scenarios, each given the tags its feature had that the merged feature does not keep, ahead of its own,
     /// so its effective tags hold what they held.
     /// </summary>
-    private static IEnumerable<Scenario> WithFeatureTags(Scenario[] scenarios, string[]? featureTags, string[] kept)
+    internal static IEnumerable<Scenario> WithFeatureTags(Scenario[] scenarios, string[]? featureTags, string[] kept)
     {
         var moved = (featureTags ?? []).Except(kept, ScenarioTags.Comparer).ToArray();
         return moved.Length == 0 ? scenarios : scenarios.Select(s => s with { Tags = ScenarioTags.Merge(moved, s.Tags) });

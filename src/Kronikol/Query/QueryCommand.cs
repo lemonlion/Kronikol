@@ -522,8 +522,10 @@ public static partial class QueryCommand
         || Path.GetFileName(path).EndsWith("TestRunReport.json", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>
-    /// The newer of two files that may both exist, saying which was taken when they do: a report written both ways,
-    /// which happens once, when the first <c>.krkl</c> is written beside the last <c>.json</c> (4.4).
+    /// The one of two files that may both exist to read, saying which was taken when they do: a report written both ways,
+    /// which happens once, when the first <c>.krkl</c> is written beside the last <c>.json</c> (4.4). The one the folder's
+    /// <c>Run.json</c> lists is its newest run's, whatever the times say, which a copy or a download of the artifacts
+    /// scrambles (5.2.7); without one, the newer.
     /// </summary>
     internal static string? Newer(string first, string second, TextWriter error)
     {
@@ -532,9 +534,31 @@ public static partial class QueryCommand
         if (!hasFirst || !hasSecond)
             return hasFirst ? first : hasSecond ? second : null;
 
+        if (ListedOfTwo(first, second) is { } listed)
+        {
+            error.WriteLine($"{Path.GetDirectoryName(listed)} holds {Path.GetFileName(first)} and {Path.GetFileName(second)}: reading {Path.GetFileName(listed)}, the one its {RunManifest.FileName} lists.");
+            return listed;
+        }
+
         var (newer, older) = File.GetLastWriteTimeUtc(first) >= File.GetLastWriteTimeUtc(second) ? (first, second) : (second, first);
         error.WriteLine($"{Path.GetDirectoryName(newer)} holds {Path.GetFileName(first)} and {Path.GetFileName(second)}: reading {Path.GetFileName(newer)}, the newer.");
         return newer;
+    }
+
+    /// <summary>
+    /// Of two files in one folder, the one its <c>Run.json</c> lists when it lists that one and not the other; null when
+    /// the folder has none, or it lists both or neither (the manifest of another report written into the folder).
+    /// </summary>
+    private static string? ListedOfTwo(string first, string second)
+    {
+        var directory = Path.GetDirectoryName(Path.GetFullPath(first));
+        if (directory is null || !string.Equals(directory, Path.GetDirectoryName(Path.GetFullPath(second)), StringComparison.Ordinal)
+            || RunManifest.TryRead(Path.Combine(directory, RunManifest.FileName)) is not { } manifest)
+            return null;
+
+        var listsFirst = manifest.Files.Contains(Path.GetFileName(first), StringComparer.OrdinalIgnoreCase);
+        var listsSecond = manifest.Files.Contains(Path.GetFileName(second), StringComparer.OrdinalIgnoreCase);
+        return listsFirst == listsSecond ? null : listsFirst ? first : second;
     }
 
     /// <summary>The report files among <paramref name="files"/>, a report written both ways counted once: the newer, named.</summary>

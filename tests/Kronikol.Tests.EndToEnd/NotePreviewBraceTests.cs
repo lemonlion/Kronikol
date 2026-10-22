@@ -38,6 +38,11 @@ public class NotePreviewBraceTests : PlaywrightTestBase
     [InlineData("{}", "{}")]
     [InlineData("[1, 2]", "[1, 2]")]
     [InlineData("1 row", "1 row")]
+    [InlineData("{\"note\":\"a } b\"}", "\"note\":\"a } b\"")]
+    // only one object's braces: two objects (one a line, as NDJSON writes them) and a template's {{name}} keep theirs,
+    // which until 5.2.7 previewed as "a":1} {"b":2 and {template}
+    [InlineData("{\"a\":1} {\"b\":2}", "{\"a\":1} {\"b\":2}")]
+    [InlineData("{{template}}", "{{template}}")]
     public async Task A_short_body_previews_without_its_braces(string body, string preview)
     {
         await OpenAsync();
@@ -52,6 +57,14 @@ public class NotePreviewBraceTests : PlaywrightTestBase
 
         Assert.StartsWith("\"description\"", preview);
         Assert.EndsWith("...", preview);
+    }
+
+    // a body cut before its object closes is still that object's start
+    [Fact]
+    public async Task A_body_cut_before_its_object_closes_loses_its_opening_brace()
+    {
+        await OpenAsync();
+        Assert.Equal("\"a\": 1, \"b\":", await PreviewAsync("{", "  \"a\": 1,", "  \"b\":"));
     }
 
     [Fact]

@@ -268,6 +268,6 @@ public static class DecodeCommand
         w.WriteLine("  --indent      indent the JSON two spaces a level (compact without it)");
         w.WriteLine();
         w.WriteLine("Example:");
-        w.WriteLine("  kronikol decode ./Reports --indent | jq '.features[].scenarios[].displayName'");
+        w.WriteLine("  kronikol decode ./Reports --indent | jq '.features[].scenarios[].name'");
     }
 }

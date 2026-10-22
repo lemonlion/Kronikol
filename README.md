@@ -145,11 +145,11 @@ Enable `PublishCiArtifacts = true` to hand generated report files to your CI's a
 
 ### Merging parallel reports
 
-Splitting a large suite across several parallel CI runners is faster, but you still want one report. Set `GenerateMergeableData = true` so each runner emits an enriched `TestRunReport.json`, then run the `kronikol` .NET tool in a final job to combine them into a single `TestRunReport.html` — with the same information as a single combined run, including one merged Component Diagram across all runners:
+Splitting a large suite across several parallel CI runners is faster, but you still want one report. Set `GenerateMergeableData = true` so each runner emits an enriched `TestRunReport.krkl` (a `TestRunReport.json` with `CompressTestRunReport = false`), then run the `kronikol` .NET tool in a final job to combine them into a single `TestRunReport.html` — with the same information as a single combined run, including one merged Component Diagram across all runners:
 
 ```bash
 dotnet tool install --global Kronikol.Tool
-kronikol merge ./artifacts -o TestRunReport.html   # writes TestRunReport.json beside it
+kronikol merge ./artifacts -o TestRunReport.html   # writes TestRunReport.krkl beside it, or TestRunReport.json when every shard is JSON
 ```
 
 See the [Merging Parallel Reports](https://github.com/lemonlion/Kronikol/wiki/Merging-Parallel-Reports) wiki page for a full GitHub Actions example.
@@ -176,7 +176,7 @@ Captured W3C trace ids are preserved, and pairs without one group into one trace
 
 ### <a name="debugging-a-run"></a>Debugging a run — including with an AI agent
 
-`TestRunReport.json` holds everything about a run. On real suites that has measured 10.7 MB on one and 82.7 MB on another, with single embedded diagrams past 600 KB. Even the smaller file is roughly 2.7 million tokens: an agent asked to debug a failing test spends its entire context reading the file and never gets to the question. `kronikol query` answers questions about the report without loading it, from run summaries through aggregation, structural diffs and trace following:
+The report's data file, `TestRunReport.krkl` (`TestRunReport.json` before 5.0.0), holds everything about a run. As JSON that has measured 10.7 MB on one real suite and 82.7 MB on another, with single embedded diagrams past 600 KB. Even the smaller is roughly 2.7 million tokens: an agent asked to debug a failing test spends its entire context reading the file and never gets to the question, and a `.krkl` is compressed, so only Kronikol's tools read it. `kronikol query` answers questions about the report without loading it, from run summaries through aggregation, structural diffs and trace following:
 
 ```bash
 kronikol query summary  ./Reports          # the run, its failures, the slowest scenarios

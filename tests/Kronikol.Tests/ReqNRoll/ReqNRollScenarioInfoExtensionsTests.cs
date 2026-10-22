@@ -368,6 +368,24 @@ public class ReqNRollScenarioInfoExtensionsTests
         Assert.Null(feature.Scenarios.Single(s => s.Id == "s2").Tags);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Two_feature_files_of_one_title_keep_their_own_feature_tags(bool apiFirst)
+    {
+        // Both are the feature Checkout. Until 5.2.7 it took the feature tags of whichever scenario finished first, so the
+        // other file's scenarios carried them, which their pickles do not (§4.5); the tag both files have stays the feature's.
+        var web = MakeScenario("s1", "Pay", featureTitle: "Checkout", combinedTags: ["web", "shop"]) with { FeatureTags = ["web", "shop"] };
+        var api = MakeScenario("s2", "Refund", featureTitle: "Checkout", scenarioTags: ["own"], combinedTags: ["api", "shop", "own"])
+            with { FeatureTags = ["api", "shop"] };
+
+        var feature = (apiFirst ? new[] { api, web } : [web, api]).ToFeatures().Single();
+
+        Assert.Equal(["shop"], feature.Tags);
+        Assert.Equal(["web"], feature.Scenarios.Single(s => s.Id == "s1").Tags);
+        Assert.Equal(["api", "own"], feature.Scenarios.Single(s => s.Id == "s2").Tags);
+    }
+
     [Fact]
     public void A_feature_s_or_a_rule_s_happy_path_tag_marks_none_of_its_scenarios()
     {

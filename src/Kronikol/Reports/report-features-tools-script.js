@@ -138,6 +138,10 @@
             if (pairs[i].row !== row) continue;
             var card = pairs[i].card;
             setView('full');
+            if (card.style.display === 'none' && typeof filtered_out_note === 'function') {
+                filtered_out_note(card, null, 'feature', function () { openRow(row); });
+                return;
+            }
             card.open = true;
             card.scrollIntoView({ block: 'start' });
             var summary = card.querySelector(':scope > summary');

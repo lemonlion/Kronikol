@@ -150,6 +150,30 @@ public class ScenarioSettingsTests : PlaywrightTestBase
         Assert.True(await Section.EvaluateAsync<bool>("d => d.open"));
     }
 
+    // The gear on a closed section's title opens the section with its settings showing, whether they were open or not.
+    // Until 5.2.7 it only turned them over, inside the closed section: nothing showed, and with them open it closed them.
+    [Fact]
+    public async Task On_a_phone_the_gear_on_a_closed_sections_title_opens_the_section_with_its_settings()
+    {
+        await OpenAsync("ScenarioSettings_PhoneClosed.html", width: 400);
+        var titleGear = Section.Locator(":scope > summary > .gear-in-summary");
+        await Section.EvaluateAsync("d => { d.open = false; }");
+
+        await titleGear.ClickAsync();
+
+        Assert.True(await Section.EvaluateAsync<bool>("d => d.open"));
+        Assert.True(await Bar.IsVisibleAsync());
+        Assert.Equal("true", await titleGear.GetAttributeAsync("aria-expanded"));
+
+        // closed again with its settings open
+        await Section.EvaluateAsync("d => { d.open = false; }");
+        await titleGear.ClickAsync();
+
+        Assert.True(await Section.EvaluateAsync<bool>("d => d.open"));
+        Assert.True(await Bar.IsVisibleAsync());
+        Assert.Equal("true", await titleGear.GetAttributeAsync("aria-expanded"));
+    }
+
     [Fact]
     public async Task A_toggle_keeps_its_word_and_its_width_when_switched()
     {

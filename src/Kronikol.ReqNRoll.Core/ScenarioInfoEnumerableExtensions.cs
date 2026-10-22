@@ -16,10 +16,11 @@ internal static class ScenarioInfoEnumerableExtensions
             {
                 var firstScenario = featureGroup.First();
                 // The feature's own tags, FeatureInfo.Tags (F9: 4.x took the first scenario's combined tags less its own,
-                // which lost a feature tag it repeated and lifted its rule's to every scenario). The endpoint is the
-                // feature's, else the first scenario's that has one.
+                // which lost a feature tag it repeated and lifted its rule's to every scenario), as every file of the feature
+                // has them: two files with one title are one feature, and until 5.2.7 it took the first scenario's file's.
+                // The endpoint is the feature's, else the first scenario's that has one.
                 var feature = ScenarioTags.Classify(firstScenario.FeatureTags);
-                var featureTags = feature.Tags;
+                var featureTags = ScenarioTags.Shared(featureGroup.Select(s => ScenarioTags.Classify(s.FeatureTags).Tags));
                 var endpoint = feature.Endpoint
                     ?? featureGroup.Select(s => ScenarioTags.Classify(s.CombinedTags).Endpoint).FirstOrDefault(e => e is not null);
 

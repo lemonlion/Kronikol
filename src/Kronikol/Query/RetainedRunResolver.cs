@@ -90,14 +90,16 @@ internal static class RetainedRunResolver
     }
 
     /// <summary>
-    /// The report of a run kept in <paramref name="directory"/>: the file named as the one on top, when that is there. A
-    /// folder lookup finds a <c>TestRunReport.json</c> and nothing else, so a run with its own report name
-    /// (<c>HtmlTestRunReportFileName</c>, or a merge's <c>-o</c>) answered every <c>--run</c> with "No TestRunReport.json
-    /// under …runs/&lt;name&gt;", the previous-run line the run itself prints included.
+    /// The report of a run kept in <paramref name="directory"/>: the file named as the one on top, as a <c>.krkl</c> or a
+    /// <c>.json</c>, when that is there. A folder lookup finds a <c>.krkl</c> or a <c>TestRunReport.json</c> and nothing
+    /// else, so a run with its own report name (<c>HtmlTestRunReportFileName</c>, or a merge's <c>-o</c>) answered every
+    /// <c>--run</c> with "No TestRunReport.json under …runs/&lt;name&gt;", the previous-run line the run itself prints
+    /// included; and until 5.2.7 so did a run 4.x kept as <c>Checkout.json</c> under the <c>Checkout.krkl</c> 5.0.0 writes.
     /// </summary>
     private static string? KeptReport(string directory, string? topReport, TextWriter error)
     {
-        if (topReport is not null && Path.Combine(directory, Path.GetFileName(topReport)) is var named && File.Exists(named))
+        if (topReport is not null && Path.GetFileNameWithoutExtension(topReport) is { Length: > 0 } name
+            && QueryCommand.Newer(Path.Combine(directory, name + ".krkl"), Path.Combine(directory, name + ".json"), error) is { } named)
             return named;
         return QueryCommand.ResolveReport(directory, error);
     }

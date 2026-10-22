@@ -365,6 +365,18 @@ internal sealed class QueryWriter
             temporary = $"{full}.{Guid.NewGuid():N}.tmp";
             using (var stream = new FileStream(temporary, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None))
                 write(stream);
+            // A file this process may not write stays as it is, as the string writer above leaves it and the run's own writer
+            // does (4.32.1): a rename needs only the folder, so it replaced a read-only file on Linux and macOS, and on Windows
+            // one whose ACL refuses this user a write (5.2.7). Opening for write without truncating asks and changes nothing.
+            try
+            {
+                if (File.Exists(full))
+                    using (new FileStream(full, FileMode.Open, FileAccess.Write, FileShare.ReadWrite | FileShare.Delete)) { }
+            }
+            catch (IOException)
+            {
+                // Held open by a reader: the rename below replaces it where it can, and says so where it cannot.
+            }
             File.Move(temporary, full, overwrite: true);
             temporary = null;
             return true;

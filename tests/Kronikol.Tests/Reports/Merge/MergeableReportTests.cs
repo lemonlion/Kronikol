@@ -69,6 +69,33 @@ public class MergeableReportTests
         Assert.Null(f.Scenarios.Single(s => s.Id == "a2").Tags);
     }
 
+    [Fact]
+    public void A_4x_file_s_Happy_Path_label_reads_as_the_happy_path_and_not_as_a_tag()
+    {
+        // 4.x's LightBDD wrote [HappyPath] as the label Happy Path beside isHappyPath; 5.0.0 writes the flag alone, so a
+        // shard of either kind merges the same (5.2.7). A happy-path name 4.x kept as a label sets the flag as 5.0.0 does.
+        var json = System.Text.Json.Nodes.JsonNode.Parse(SerializeA())!;
+        var feature = json["features"]![0]!.AsObject();
+        var placed = feature["scenarios"]!.AsArray().Single(s => (string?)s!["id"] == "a1")!.AsObject();
+        placed.Remove("tags");
+        placed["labels"] = new System.Text.Json.Nodes.JsonArray("Happy Path", "fast");
+        var cancelled = feature["scenarios"]!.AsArray().Single(s => (string?)s!["id"] == "a2")!.AsObject();
+        cancelled.Remove("isHappyPath");
+        cancelled["labels"] = new System.Text.Json.Nodes.JsonArray("happy path");
+        // a category was written as one, @category:happy-path, which 4.x and 5.0.0 read as a tag
+        cancelled["categories"] = new System.Text.Json.Nodes.JsonArray("happy-path");
+
+        var report = MergeableReportReader.Parse(json.ToJsonString());
+
+        var f = Assert.Single(report.Features);
+        var a1 = f.Scenarios.Single(s => s.Id == "a1");
+        Assert.True(a1.IsHappyPath);
+        Assert.Equal(["fast"], a1.Tags);
+        var a2 = f.Scenarios.Single(s => s.Id == "a2");
+        Assert.True(a2.IsHappyPath);
+        Assert.Equal(["happy-path"], a2.Tags);
+    }
+
     // ─── Tags across shards (plans/TAGS_PLAN.md §4.13, F22) ──────────
 
     private static MergeableReport Shard(params Feature[] features) =>

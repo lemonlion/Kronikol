@@ -221,7 +221,7 @@
         // be read by the page and shown as something else.
         function escapeMarkupText(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
         function tooLargeMarkup(source) {
-            return '<div style="color:#c00;padding:1em;border:1px solid #c00;border-radius:6px;margin:0.5em 0;">'
+            return '<div style="color:var(--kron-fail, #c00);padding:1em;border:1px solid var(--kron-fail, #c00);border-radius:6px;margin:0.5em 0;">'
                 + '<strong>Diagram too large for client-side rendering.</strong><br>'
                 + 'Use <code>PlantUmlRendering.Server</code> or <code>PlantUmlRendering.Local</code> for large diagrams.'
                 + '<details style="margin-top:0.5em"><summary title="The PlantUML source this diagram was drawn from">Raw PlantUML</summary><pre style="white-space:pre-wrap">'
@@ -1264,6 +1264,8 @@
         // Source text shown inside markup: `&` first, or a `&lt;`, `&copy` or `&amp;` in the source would
         // be read by the page and shown as something else.
         function escapeMarkupText(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+        // Each failure line the page writes takes the theme's failure colour, #c00 on a page without the theme's tokens:
+        // until 5.2.7 every theme drew #c00, 2.9:1 on the dark theme's ground
         function describeEngineFailure(el, source) {
             if (!el) return false;
             var text = el.textContent || '';
@@ -1271,7 +1273,7 @@
             var rawDetails = '<details style="margin-top:0.5em"><summary title="The PlantUML source this diagram was drawn from">Raw PlantUML</summary><pre style="white-space:pre-wrap">'
                 + escapeMarkupText(source || el.getAttribute('data-plantuml') || '') + '</pre></details>';
             if (!svg && _engineTooLargeRx.test(text)) {
-                el.innerHTML = '<div class="engine-failure" data-engine-failure="too-large" style="color:#c00;padding:1em;border:1px solid #c00;border-radius:6px;margin:0.5em 0;">'
+                el.innerHTML = '<div class="engine-failure" data-engine-failure="too-large" style="color:var(--kron-fail, #c00);padding:1em;border:1px solid var(--kron-fail, #c00);border-radius:6px;margin:0.5em 0;">'
                     + '<strong>Diagram too large for client-side rendering.</strong> '
                     + 'One note is wider than the engine can draw — usually a single very long unbreakable line in a captured body. '
                     + '<code>' + escapeMarkupText(text.slice(0, 200)) + '</code>'
@@ -1280,7 +1282,7 @@
             }
             var bundle = !svg && _engineBundleLoadRx.exec(text);
             if (bundle) {
-                el.innerHTML = '<div class="engine-failure" data-engine-failure="loader" style="color:#c00;padding:1em;border:1px solid #c00;border-radius:6px;margin:0.5em 0;">'
+                el.innerHTML = '<div class="engine-failure" data-engine-failure="loader" style="color:var(--kron-fail, #c00);padding:1em;border:1px solid var(--kron-fail, #c00);border-radius:6px;margin:0.5em 0;">'
                     + '<strong>This diagram uses PlantUML ' + (bundle[1] === 'emoji' ? 'emoji' : 'icons') + ', which this report\'s renderer does not load.</strong> '
                     + 'OpenIconic icons (<code>&lt;&amp;name&gt;</code>) and emoji (<code>&lt;:name:&gt;</code>) need a bundle ('
                     + bundle[1] + '.js) that the engine in the page cannot fetch. <code>PlantUmlRendering.Server</code> and <code>PlantUmlRendering.Local</code> draw them.'
@@ -1304,11 +1306,11 @@
                     var stack = document.createElement('div');
                     stack.className = 'engine-failure';
                     stack.setAttribute('data-engine-failure', 'stack');
-                    stack.style.cssText = 'color:#c00;margin-bottom:0.5em';
+                    stack.style.cssText = 'color:var(--kron-fail, #c00);margin-bottom:0.5em';
                     stack.innerHTML = cause + rawDetails;
                     el.insertBefore(stack, el.firstChild);
                 } else {
-                    el.innerHTML = '<div class="engine-failure" data-engine-failure="stack" style="color:#c00;padding:1em;border:1px solid #c00;border-radius:6px;margin:0.5em 0;">'
+                    el.innerHTML = '<div class="engine-failure" data-engine-failure="stack" style="color:var(--kron-fail, #c00);padding:1em;border:1px solid var(--kron-fail, #c00);border-radius:6px;margin:0.5em 0;">'
                         + cause + ' <code>' + escapeMarkupText(text.slice(0, 200)) + '</code>' + rawDetails + '</div>';
                 }
                 return true;
@@ -1319,7 +1321,7 @@
                 note.setAttribute('data-engine-failure', 'syntax');
                 var overLong = findOverLongStatement(source || el.getAttribute('data-plantuml') || '');
                 note.innerHTML = (overLong
-                    ? '<div style="color:#c00;margin-bottom:0.5em"><strong>A statement is longer than the engine parses.</strong> '
+                    ? '<div style="color:var(--kron-fail, #c00);margin-bottom:0.5em"><strong>A statement is longer than the engine parses.</strong> '
                       + 'Line ' + overLong.line + ' is ' + withArticle(overLong.kind) + ' of ' + overLong.length + ' characters (limit ' + overLong.limit + '). '
                       + 'The parser reports nothing for this — it abandons the whole diagram, which is why every other statement in this fragment is gone too.</div>'
                     : '') + rawDetails;
@@ -1428,7 +1430,7 @@
                             return true;
                         }
                     }
-                    item.el.innerHTML = '<div style="color:#c00;padding:1em;border:1px solid #c00;border-radius:6px;margin:0.5em 0;">'
+                    item.el.innerHTML = '<div style="color:var(--kron-fail, #c00);padding:1em;border:1px solid var(--kron-fail, #c00);border-radius:6px;margin:0.5em 0;">'
                         + '<strong>Diagram too large for client-side rendering.</strong><br>'
                         + 'Use <code>PlantUmlRendering.Server</code> or <code>PlantUmlRendering.Local</code> for large diagrams.'
                         + '<details style="margin-top:0.5em"><summary title="The PlantUML source this diagram was drawn from">Raw PlantUML</summary><pre style="white-space:pre-wrap">'
@@ -1596,6 +1598,13 @@
                         anchors[0].addEventListener('focus', showLink);
                         anchors[0].addEventListener('blur', atRest);
                     }
+                    // Enter is the anchor's own, a click the popup script answers; Space opens the popup too, as on a link
+                    // drawn as text (until 5.2.7 Space there scrolled the page)
+                    anchors[0].addEventListener('keydown', function(ev) {
+                        if (ev.key !== ' ') return;
+                        ev.preventDefault();
+                        if (window._iflowShowPopup) window._iflowShowPopup(segId);
+                    });
                 }
                 function showLink() {
                     groupEls.forEach(function(el, k) {
@@ -1804,10 +1813,11 @@
     });
 // The role pass (5.0.0, plans/OPTION_C_PLAN.md S10, P24 to P30). Once the page has drawn a sequence diagram, each element
 // is found by its STRUCTURE and given a role class, and the stylesheet colours the roles from the theme's tokens, so a
-// PlantUML theme or a recoloured source changes nothing here and a report theme is just other token values. Lifelines
-// are the long vertical lines; participants are the shapes at their ends; a step bar is a black shape spanning every
-// lifeline (the shim draws it as a rectangle); a note is a filled path with its fold at a corner, as the report's note
-// script finds it. Note kinds (an event) come from the drawn source, in order.
+// PlantUML theme or a recoloured source changes nothing here and a report theme is just other token values (a
+// participant given its own colour on its declaration keeps it). Lifelines are the long vertical lines; participants
+// are the shapes at their ends; a step bar is a black shape spanning every lifeline (the shim draws it as a rectangle);
+// a note is a filled path with its fold at a corner, as the report's note script finds it. Note kinds (an event) come
+// from the drawn source, in order.
 (function() {
     var NS = 'http://www.w3.org/2000/svg';
     function isSequence(lines) {
@@ -1831,6 +1841,31 @@
             kinds.push(kind);
         }
         return kinds;
+    }
+    // The colours a source gives participants on their declarations, as the drawing writes them (#rrggbb).
+    // SequenceDiagramParticipantColors writes a participant's dependency colour there (database "Stock" as stock #0E7C86):
+    // such a participant keeps it, and one drawn in the engine's colour or a PlantUML theme's takes the report theme's.
+    // Until 5.2.7 every filled participant took the theme's, and the option drew no colour at all.
+    var DECLARED = /^(?:actor|participant|database|queue|collections|boundary|control|entity)\s+(?:"(?:[^"\\]|\\.)*"|\S+)(?:\s+as\s+\S+)?\s+(#[0-9A-Za-z]+)\s*$/;
+    var namedPaint = null;
+    function hexOf(colour) {
+        if (/^#[0-9a-f]{6}$/i.test(colour)) return colour.toLowerCase();
+        if (/^#[0-9a-f]{3}$/i.test(colour)) return ('#' + colour.slice(1).replace(/./g, '$&$&')).toLowerCase();
+        // a colour's name (#LightBlue), as a canvas resolves it; a name it does not know is no colour here
+        try {
+            namedPaint = namedPaint || document.createElement('canvas').getContext('2d');
+            namedPaint.fillStyle = '#010203';
+            namedPaint.fillStyle = colour.slice(1);
+            return namedPaint.fillStyle === '#010203' ? null : namedPaint.fillStyle;
+        } catch (x) { return null; }
+    }
+    function declaredFills(lines) {
+        var fills = {};
+        for (var i = 0; i < lines.length; i++) {
+            var m = DECLARED.exec(lines[i]), hex = m && hexOf(m[1]);
+            if (hex) fills[hex] = true;
+        }
+        return fills;
     }
     function box(e) { try { return e.getBBox(); } catch (x) { return null; } }
     function tag(e) { return e.tagName.toLowerCase(); }
@@ -2033,10 +2068,12 @@
             if (fromSource.length === notes.length) kinds = fromSource;
         }
         if (!kinds && host._noteKinds && host._noteKinds.length === notes.length) kinds = host._noteKinds;
+        var ownFills = drawnSource ? declaredFills(drawnSource.split('\n')) : {};
+        var themed = function(o) { return o.filled && !ownFills[(o.e.getAttribute('fill') || '').toLowerCase()]; };
 
         /* WRITES */
         lifelines.forEach(function(e) { addClass(e, 'k-lifeline'); counts.lifelines++; });
-        participants.forEach(function(o) { addClass(o.e, o.filled ? 'k-participant k-participant-fill' : 'k-participant'); counts.participants++; });
+        participants.forEach(function(o) { addClass(o.e, themed(o) ? 'k-participant k-participant-fill' : 'k-participant'); counts.participants++; });
         stepBands.forEach(function(o) { addClass(o.e, 'k-step'); counts.bands++; });
         bandTexts.forEach(function(t) { addClass(t, 'k-step-text'); });
         stepRules.forEach(function(o) { addClass(o.e, 'k-step-rule'); });

@@ -54,8 +54,9 @@ def load(path):
 
 def find(path):
     """The report a path names: a file, or the one report in a folder, as the tool finds it. TestRunReport.krkl or
-    TestRunReport.json at the top, the newer when both are there, else the one report below; runs/ holds earlier
-    runs of the report above it, and baseline/ the copy --baseline compares against, so neither is a second report."""
+    TestRunReport.json at the top, and of both the one of_both takes, else the one report below; runs/ holds
+    earlier runs of the report above it, and baseline/ the copy --baseline compares against, so neither is a second
+    report."""
     if not os.path.exists(path):
         die(f"No such file or directory: {path}")
     if not os.path.isdir(path):
@@ -63,7 +64,7 @@ def find(path):
     top = [os.path.join(path, name) for name in ("TestRunReport.krkl", "TestRunReport.json")
            if os.path.exists(os.path.join(path, name))]
     if top:
-        return max(top, key=os.path.getmtime)
+        return of_both(top)
     reports = {}
     for root, folders, names in os.walk(path):
         folders[:] = [f for f in folders if f.lower() not in ("runs", "baseline")]
@@ -71,10 +72,29 @@ def find(path):
             if name.lower().endswith(".krkl") or name.endswith("TestRunReport.json"):
                 stem = os.path.join(root, os.path.splitext(name)[0]).lower()
                 reports.setdefault(stem, []).append(os.path.join(root, name))
-    matches = [max(pair, key=os.path.getmtime) for pair in reports.values()]
+    matches = [of_both(pair) for pair in reports.values()]
     if len(matches) != 1:
         die(f"{len(matches)} reports under {path} — name the one you mean")
     return matches[0]
+
+
+def of_both(files):
+    """Of a report written both ways, as the tool takes it: the one the folder's Run.json lists when it lists one and
+    not the other, since a copy or a download of the artifacts scrambles the times; else the newer."""
+    if len(files) == 2:
+        listed = set()
+        try:
+            with open(os.path.join(os.path.dirname(files[0]), "Run.json"), encoding="utf-8") as handle:
+                manifest = json.load(handle)
+            names = manifest.get("files") if isinstance(manifest, dict) and manifest.get("run") and manifest.get("at") else None
+            if isinstance(names, list) and all(isinstance(name, str) for name in names):
+                listed = {name.lower() for name in names}
+        except (OSError, ValueError):
+            pass
+        named = [file for file in files if os.path.basename(file).lower() in listed]
+        if len(named) == 1:
+            return named[0]
+    return max(files, key=os.path.getmtime)
 
 
 def read_report(path):

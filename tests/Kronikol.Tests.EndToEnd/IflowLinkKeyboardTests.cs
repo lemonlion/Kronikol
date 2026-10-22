@@ -166,6 +166,23 @@ public class IflowLinkKeyboardTests : PlaywrightTestBase
         Assert.NotEqual("a-link-2", await Focused());
     }
 
+    // Space on the engine's anchor opens the popup, as on a link drawn as text (Enter is the anchor's own, which the
+    // popup script answers): until 5.2.7 Space there scrolled the page
+    [Fact]
+    public async Task Space_on_the_engines_anchor_opens_its_popup()
+    {
+        await OpenAndBind(InternalFlowHasDataBehavior.ShowLink, EngineAnchors);
+        await Page.Locator("#a-link-1").FocusAsync();
+        var y = await Page.EvaluateAsync<double>("() => scrollY");
+
+        await Page.Keyboard.PressAsync("Space");
+
+        Assert.Equal(new[] { "iflow-seg-1" }, await Opened());
+        Assert.Equal(y, await Page.EvaluateAsync<double>("() => scrollY"));
+        await Page.Keyboard.PressAsync("a");
+        Assert.Single(await Opened());
+    }
+
     [Fact]
     public async Task An_anchor_bound_twice_and_a_dead_one_are_left_without_a_title()
     {

@@ -1,3 +1,4 @@
+using Kronikol.Reports;
 using Microsoft.Playwright;
 
 namespace Kronikol.Tests.EndToEnd;
@@ -126,6 +127,49 @@ public class ThemedSourceRendersTests : PlaywrightTestBase
         await Expect(failure).ToContainTextAsync("icons");
         Assert.DoesNotContain("java.lang.RuntimeException", await Page.Locator("#d-icon").TextContentAsync() ?? "");
         Assert.Equal(icon, await failure.Locator("details pre").TextContentAsync());
+    }
+
+    // The page's own failure lines (a bundle the engine cannot load here, a diagram too large, the engine out of stack)
+    // take the theme's failure colour: until 5.2.7 they were #c00 in every theme, 2.9:1 on the dark theme's ground
+    [Theory]
+    [InlineData("light")]
+    [InlineData("dark")]
+    public async Task A_failure_line_takes_the_theme_s_failure_colour(string theme)
+    {
+        var fileName = $"FailureColour_{theme}.html";
+        Feature[] features =
+        [
+            new()
+            {
+                DisplayName = "Icons",
+                Scenarios = [new() { Id = "s1", DisplayName = "An icon in a label", Result = ExecutionResult.Passed, Duration = TimeSpan.FromMilliseconds(10) }]
+            }
+        ];
+        var path = ReportGenerator.GenerateHtmlReport(
+            [new DefaultDiagramsFetcher.DiagramAsCode("s1", "", "@startuml\nAlice -> Bob : <&copy> done\n@enduml")],
+            features, DateTime.UtcNow, DateTime.UtcNow, null, Path.Combine(TempDir, fileName), "Icons", true,
+            diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
+        File.Copy(path, Path.Combine(OutputDir, fileName), true);
+        await Page.GotoAsync(new Uri(path).AbsoluteUri);
+        await Page.Locator("details.feature").First.WaitForAsync();
+        await Page.EvaluateAsync("t => document.documentElement.setAttribute('data-theme', t)", theme);
+        await ExpandFirstScenarioWithDiagram();
+        var failure = Page.Locator("[data-engine-failure='loader']");
+        await failure.WaitForAsync(new() { Timeout = RenderWaitMs });
+
+        var paint = await failure.EvaluateAsync<string[]>("""
+            el => {
+                const p = document.createElement('div');
+                p.style.color = 'var(--kron-fail)';
+                document.body.appendChild(p);
+                const want = getComputedStyle(p).color;
+                p.remove();
+                const cs = getComputedStyle(el);
+                return [cs.color, cs.borderTopColor, want];
+            }
+            """);
+        Assert.Equal(paint[2], paint[0]);
+        Assert.Equal(paint[2], paint[1]);
     }
 
     [Fact]

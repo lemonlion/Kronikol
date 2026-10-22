@@ -16,9 +16,15 @@ function chip_family(b) {
     return null;
 }
 function filter_chips(family) { return Array.prototype.slice.call(document.querySelectorAll('.filtering-box .' + family + '-toggle')); }
+// A tag is one tag whatever the case of its ASCII letters, as ScenarioTags.Comparer reads tags, and its chip carries the
+// first spelling met: until 5.2.7 a link that spelled it another way (a 4.x report's fast beside Fast) chose no chip
+function ascii_fold(s) { return String(s).replace(/[A-Z]/g, function (c) { return c.toLowerCase(); }); }
 function find_chip(family, value) {
     var chips = filter_chips(family);
     for (var i = 0; i < chips.length; i++) if (chips[i].getAttribute('data-' + family) === value) return chips[i];
+    if (family !== 'tag' || value == null) return null;
+    var folded = ascii_fold(value);
+    for (var j = 0; j < chips.length; j++) if (ascii_fold(chips[j].getAttribute('data-tag')) === folded) return chips[j];
     return null;
 }
 function chip_state(b) {
@@ -88,7 +94,14 @@ function item_tags(d) {
 }
 function filter_tags() {
     var c = fc(), sets = chip_sets('tag');
-    for (var i = 0; i < c.items.length; i++) c.items[i].tag = !chip_match(item_tags(c.items[i]), sets, _tagMode === 'AND');
+    // Only asks for a happy path whatever the row's mode, as 4.x's Happy Paths Only did beside its categories: from 5.0.0
+    // to 5.2.6 the Happy Path chip joined the row's ANY, and Only with another chip showed that chip's scenarios as well
+    var happyOnly = sets.req.indexOf(HAPPY_PATH_TAG) >= 0;
+    if (happyOnly) sets.req = sets.req.filter(function (n) { return n !== HAPPY_PATH_TAG; });
+    for (var i = 0; i < c.items.length; i++) {
+        var names = item_tags(c.items[i]);
+        c.items[i].tag = !(chip_match(names, sets, _tagMode === 'AND') && (!happyOnly || names.has(HAPPY_PATH_TAG)));
+    }
     sync_happy_paths();
     applyVisibility(c);
     sync_group_clears();

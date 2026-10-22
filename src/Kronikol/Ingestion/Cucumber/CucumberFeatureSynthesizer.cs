@@ -314,12 +314,13 @@ public static class CucumberFeatureSynthesizer
             {
                 // The accumulator is created once per feature NAME, so where two files share a
                 // `Feature:` title the first path seen wins - the same first-wins rule the display-name
-                // grouping already imposes on description, endpoint and tags.
+                // grouping already imposes on description and endpoint. Not on tags since 5.2.7: the
+                // feature keeps those every file's feature has (FeatureAccumulator.ToFeature).
                 featureGroups[featureName] = group = new FeatureAccumulator(featureName, node?.Feature, NormalisePath(node?.Uri));
                 featureOrder.Add(featureName);
             }
 
-            group.Scenarios.Add(built.Scenario);
+            group.Add(built.Scenario, FeatureTagsOf(node?.Feature));
             group.Endpoint ??= built.Endpoint;
 
             testNames[scenarioId] = built.Scenario.DisplayName;
@@ -1130,15 +1131,27 @@ public static class CucumberFeatureSynthesizer
     private static string[] FeatureTagsOf(CucumberFeatureNode? feature) =>
         ScenarioTags.Classify((feature?.Tags ?? []).Select(t => Strip(t.Name)).Where(t => t is not null).Select(t => t!)).Tags;
 
-    /// <summary>Collects the scenarios of one feature while they arrive out of the message stream.</summary>
+    /// <summary>
+    /// Collects the scenarios of one feature while they arrive out of the message stream, each with the tags of the feature
+    /// node it was written under: two files whose features share a title are one feature.
+    /// </summary>
     private sealed class FeatureAccumulator(string name, CucumberFeatureNode? node, string? sourceFile)
     {
-        public List<Scenario> Scenarios { get; } = [];
+        private readonly List<(Scenario Scenario, string[] FeatureTags)> _scenarios = [];
+
         public string? Endpoint { get; set; }
 
+        /// <summary>A scenario, whose own tags leave out <paramref name="featureTags"/>, its feature node's.</summary>
+        public void Add(Scenario scenario, string[] featureTags) => _scenarios.Add((scenario, featureTags));
+
+        /// <summary>
+        /// The feature, with the tags all its files' features have, not the first file's (5.2.7); a scenario is given the
+        /// rest of its own file's ahead of its own tags, as a merge gives a shard's (MergeableReportMerger), so that its
+        /// effective tags stay its pickle's (plans/TAGS_PLAN.md §4.5).
+        /// </summary>
         public Feature ToFeature()
         {
-            var tags = FeatureTagsOf(node);
+            var tags = ScenarioTags.Shared(_scenarios.Select(s => s.FeatureTags));
 
             return new Feature
             {
@@ -1147,7 +1160,9 @@ public static class CucumberFeatureSynthesizer
                 Endpoint = Endpoint,
                 SourceFile = sourceFile,
                 Tags = tags.Length > 0 ? tags : null,
-                Scenarios = Scenarios.ToArray(),
+                Scenarios = _scenarios.Select(s => s.FeatureTags.Except(tags, ScenarioTags.Comparer).ToArray() is { Length: > 0 } moved
+                    ? s.Scenario with { Tags = ScenarioTags.Merge(moved, s.Scenario.Tags) }
+                    : s.Scenario).ToArray(),
             };
         }
     }

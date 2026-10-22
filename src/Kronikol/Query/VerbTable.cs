@@ -62,7 +62,7 @@ internal static class VerbTable
         new("--lines", "RANGE", "A line range of a payload, like 20-60."),
         new("--result", "RESULT", "Only scenarios with this result: Passed, Failed, Skipped."),
         new("--feature", "TEXT", "Only scenarios whose feature name contains TEXT."),
-        new("--tag", "TAG", "Only scenarios with a tag holding TAG, in any case; a feature's tags are each of its scenarios'."),
+        new("--tag", "TAG", "Only scenarios with a tag holding TAG, in any case; a feature's tags are each of its scenarios', and a happy path has Happy Path, as the report's Tags row shows."),
         new("--label", "TAG", "The same as --tag, by its name before 5.0.0."),
         new("--service", "TEXT", "Only calls whose service name contains TEXT."),
         new("--status", "STATUS", "Only calls with this status: a code (500), a name (InternalServerError) or a class (5xx)."),

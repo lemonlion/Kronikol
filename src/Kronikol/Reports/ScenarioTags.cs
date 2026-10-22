@@ -164,6 +164,14 @@ public static class ScenarioTags
         && int.TryParse(label.AsSpan("retry ".Length), NumberStyles.None, CultureInfo.InvariantCulture, out var number)
         && number >= 1 && number < attempt;
 
+    /// <summary>
+    /// Whether a scenario's label in a file written before 5.0.0 is a happy-path name, which the readers of a 4.x file
+    /// read as <see cref="Scenario.IsHappyPath"/> and leave out of its tags, as <see cref="Classify"/> does on every lane
+    /// since 5.0.0 (5.2.7): 4.x's LightBDD wrote <c>[HappyPath]</c> as the label Happy Path. A 4.x category is not one,
+    /// since it was written with its prefix.
+    /// </summary>
+    internal static bool IsHappyPathLabel(string label) => HappyPathDetection.IsHappyPathTag(Normalise(label));
+
     private static char Fold(char c) => c is >= 'A' and <= 'Z' ? (char)(c + ('a' - 'A')) : c;
 
     private sealed class AsciiFoldComparer : IEqualityComparer<string>

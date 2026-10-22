@@ -156,6 +156,29 @@ public class CucumberFeatureMergerTests : IDisposable
         Assert.Equal("A gherkin scenario", merged.TestNames["t1"]);
     }
 
+    [Fact]
+    public void An_unowned_scenario_under_a_gherkin_feature_s_name_keeps_its_own_tags_and_gains_none()
+    {
+        // The tests file's scenario joins the Gherkin feature of its name. Until 5.2.7 it took that feature's tags among its
+        // effective tags; the tags the two sides share stay the feature's, and each side's others move onto its own scenarios.
+        var cucumber = BuildCucumber("t1", ("Given", "a customer", 0));
+        cucumber.Features[0].Tags = ["web", "shop"];
+        // the tests file lifts the tag its two scenarios share to the feature (FeatureSynthesizer), and keeps it on them
+        var fromTests = FeatureSynthesizer.Build(
+        [
+            new TestRunRecord { Event = "start", TestId = "t2", TestName = "a unit test", Feature = "Gherkin feature", Tags = ["shop", "unit"], Timestamp = T0 },
+            new TestRunRecord { Event = "start", TestId = "t3", TestName = "another unit test", Feature = "Gherkin feature", Tags = ["shop"], Timestamp = T0 },
+        ], null);
+
+        var merged = CucumberFeatureMerger.Merge(cucumber, fromTests);
+
+        var feature = merged.Features.Single();
+        Assert.Equal(["shop"], feature.Tags);
+        Assert.Equal(["shop", "web"], ScenarioTags.Effective(feature, feature.Scenarios.Single(s => s.Id == "t1")));
+        Assert.Equal(["shop", "unit"], ScenarioTags.Effective(feature, feature.Scenarios.Single(s => s.Id == "t2")));
+        Assert.Equal(["shop"], ScenarioTags.Effective(feature, feature.Scenarios.Single(s => s.Id == "t3")));
+    }
+
     // ---- attachments (#175, plans/ATTACHMENT_MERGE_PLAN.md section 4) -------------------------------
 
     /// <summary>

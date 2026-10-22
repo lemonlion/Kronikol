@@ -81,8 +81,9 @@ body.plantuml-ready .puml-fragment:not([data-rendered])::before {
 }
 
 /* The roles the page gives a drawn sequence diagram's elements (5.0.0, plans/OPTION_C_PLAN.md S10), coloured from the
-   theme's tokens, so a PlantUML theme or a recoloured source changes nothing here. The classes are doubled so that a
-   role outranks a rule mapping one of the engine's own colours to the theme. */
+   theme's tokens, so a PlantUML theme or a recoloured source changes nothing here. A participant given its own colour on
+   its declaration (SequenceDiagramParticipantColors) keeps it: the role pass gives it no k-participant-fill. The classes
+   are doubled so that a role outranks a rule mapping one of the engine's own colours to the theme. */
 .plantuml-browser svg .k-lifeline.k-lifeline { stroke: var(--dg-lifeline) !important; }
 .plantuml-browser svg .k-participant.k-participant { stroke: var(--dg-participant-edge) !important; }
 .plantuml-browser svg .k-participant-fill.k-participant-fill { fill: var(--dg-participant) !important; }

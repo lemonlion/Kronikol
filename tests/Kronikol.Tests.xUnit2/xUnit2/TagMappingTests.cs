@@ -111,6 +111,37 @@ public class TagMappingTests : IDisposable
         }
     }
 
+    // Both classes are the feature Orders. Until 5.2.7 it took the categories of whichever test finished first, so the
+    // other class's tests carried them and their own were nowhere; the one both classes have stays the feature's.
+    private static void AssertEachKeepsItsOwn(Feature feature)
+    {
+        Assert.Equal(["Shop"], feature.Tags);
+        Assert.Equal(["Web"], feature.Scenarios.Single(s => s.DisplayName == "Pay").Tags);
+        Assert.Equal(["Api"], feature.Scenarios.Single(s => s.DisplayName == "Refund").Tags);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Through_the_sink_two_classes_of_one_name_keep_their_own_categories(bool apiFirst)
+    {
+        var web = Test<Web.Orders>(nameof(Web.Orders.Pay));
+        var api = Test<Api.Orders>(nameof(Api.Orders.Refund));
+
+        AssertEachKeepsItsOwn((apiFirst ? ThroughTheSink(api, web) : ThroughTheSink(web, api)).ToFeatures().Single());
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Through_the_attribute_two_classes_of_one_name_keep_their_own_categories(bool apiFirst)
+    {
+        var web = ThroughTheAttribute(typeof(Web.Orders), nameof(Web.Orders.Pay));
+        var api = ThroughTheAttribute(typeof(Api.Orders), nameof(Api.Orders.Refund));
+
+        AssertEachKeepsItsOwn((apiFirst ? new[] { api, web } : [web, api]).ToFeatures().Single());
+    }
+
     [Fact]
     public void A_happy_path_category_marks_the_happy_path_and_is_not_a_tag()
     {

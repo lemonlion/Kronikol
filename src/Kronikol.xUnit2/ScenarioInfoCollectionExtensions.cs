@@ -13,7 +13,9 @@ internal static class ScenarioInfoCollectionExtensions
             .Select(scenariosForFeature =>
             {
                 var first = scenariosForFeature.First();
-                var featureTags = ScenarioTags.Classify(first.FeatureTags).Tags;
+                // The feature's are the categories all its tests have at its level, not the first test's (5.2.7): two
+                // classes of one name are one feature. A test keeps the rest of its class's on its own.
+                var featureTags = ScenarioTags.Shared(scenariosForFeature.Select(x => ScenarioTags.Classify(x.FeatureTags).Tags));
                 return new Feature
                 {
                     DisplayName = first.FeatureName,
@@ -26,7 +28,8 @@ internal static class ScenarioInfoCollectionExtensions
                         {
                             var parsed = ParameterParser.Parse(x.ScenarioName);
                             var classified = ScenarioTags.Classify(x.Tags);
-                            var tags = classified.Tags.Except(featureTags, ScenarioTags.Comparer).ToArray();
+                            var tags = ScenarioTags.Merge(ScenarioTags.Classify(x.FeatureTags).Tags, classified.Tags)
+                                .Except(featureTags, ScenarioTags.Comparer).ToArray();
                             return new Scenario
                             {
                                 Id = x.Id,

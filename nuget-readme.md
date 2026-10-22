@@ -66,7 +66,7 @@ See the [Quick Start guide](https://github.com/lemonlion/Kronikol/wiki/Quick-Sta
 
 ## Query the report from the terminal
 
-On a real suite `TestRunReport.json` runs to megabytes; the `Kronikol.Tool` CLI answers questions about it without loading it:
+On a real suite the report's data file (`TestRunReport.krkl`, or `TestRunReport.json` before 5.0.0) holds megabytes of JSON; the `Kronikol.Tool` CLI answers questions about it without loading it:
 
 ```bash
 kronikol query summary  ./Reports              # the run, its failures, the slowest scenarios

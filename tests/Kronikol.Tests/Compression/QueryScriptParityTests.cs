@@ -66,6 +66,32 @@ public class QueryScriptParityTests : IDisposable
         Assert.Contains("TestRunReport.krkl", output, StringComparison.Ordinal);
     }
 
+    [Theory]
+    [InlineData("TestRunReport.krkl")]
+    [InlineData("TestRunReport.json")]
+    public void Of_a_report_written_both_ways_the_script_reads_the_one_its_Run_json_lists_as_the_tool_does(string listed)
+    {
+        // The tool has taken the one Run.json lists since 5.2.7, whatever the times say, which a download scrambles; the
+        // script took the newer.
+        Assert.SkipWhen(!PythonProbe.IsAvailable, "no python on PATH");
+        var folder = Directory.CreateDirectory(Path.Combine(_root, "both")).FullName;
+        var krkl = Path.Combine(folder, "TestRunReport.krkl");
+        File.Copy(Path.Combine(Fixtures, "failing-with-steps.json.gz"), krkl);
+        var json = Path.Combine(folder, "TestRunReport.json");
+        File.WriteAllBytes(json, Json);
+        new Kronikol.Reports.RunManifest { Run = "gh:1:1", At = DateTimeOffset.UtcNow, Files = [listed, "TestRunReport.html"] }.Write(folder);
+        File.SetLastWriteTimeUtc(listed.EndsWith(".krkl", StringComparison.Ordinal) ? json : krkl, DateTime.UtcNow);
+        File.SetLastWriteTimeUtc(Path.Combine(folder, listed), DateTime.UtcNow.AddHours(-1));
+        var toolSays = new StringWriter();
+
+        var (output, error, exit) = PythonProbe.RunFull(Script, "summary", folder);
+        QueryCommand.Run(["summary", folder], new StringWriter(), toolSays);
+
+        Assert.True(exit == 0, error);
+        Assert.Contains(listed, output.Split('\n')[0], StringComparison.Ordinal);
+        Assert.Contains($"reading {listed}, the one its Run.json lists", toolSays.ToString(), StringComparison.Ordinal);
+    }
+
     private static byte[] Bytes(string input) => input switch
     {
         "json" => Json,

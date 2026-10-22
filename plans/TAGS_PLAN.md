@@ -469,6 +469,13 @@ lane's numbering with a test before anything moves.
   `Happy Path` and `Endpoint` out without a list of exclusions.
 - **Not read in 5.0.0:** other trait keys and properties, such as BreakfastProvider's `[Trait("Produces", …)]` (Q7).
 - **Every lane gets a mapping test** (§5). NUnit 4, MSTest, xUnit v2, xUnit v3 and TUnit have none today (F20).
+- **A feature made of several parts (5.2.7, the review of 5.0.0).** One feature can gather tests that read different
+  feature tags: two NUnit fixtures of one class (`[TestFixture("chrome", Category = "Chrome")]` beside
+  `[TestFixture("firefox", Category = "Firefox")]`), two classes of one name in two namespaces, or two feature files of
+  one title. 5.0.0 took the feature's tags from whichever of its tests came first, so every test of the other parts
+  carried them and their own were nowhere. From 5.2.7 the NUnit, MSTest, xUnit v2, xUnit v3, TUnit and ReqNRoll
+  adapters, the Cucumber importer and its merger give such a feature the tags all its parts share
+  (`ScenarioTags.Shared`), and each scenario keeps its part's others, the rule merging shards follows (§4.13, F22).
 
 ### 4.8 The report (v5)
 
@@ -565,6 +572,12 @@ lane's numbering with a test before anything moves.
   - Its `--json` field is `tags`, holding the effective tags, with the feature's first.
   - `--tag T` keeps today's `--label` match: a case-insensitive substring over effective tags, so the wiki's
     `--label pr-` trick still lists both kinds.
+  - From 5.2.7 `--tag` and `--label` also match Happy Path on a happy path, as the report's Tags row lists it
+    (`ScenarioEntry.RowTags`): 5.0.0 matched the effective tags only, so `--tag "Happy Path"` listed nothing on a file
+    5.0.0 wrote. Both readers read a 4.x scenario label that is a happy-path name (`ScenarioTags.IsHappyPathLabel`) as
+    the flag and leave it out of the tags, as 5.0.0 writes the same run; a 4.x category stays a tag whatever it spells,
+    and a feature's labels read as before. An `isHappyPath` field in `--json` would be new output, a minor, and is left
+    to the owner.
   - `--label` stays as an alias (Q2). `VerbTable` holds both, as the one source of the CLI.
 - **The skill** changes in both copies (`templates/skills/kronikol-test-debugging/references/commands.md:53`, `:121`,
   and `.claude/skills/…`), and `SkillDriftTests` holds them equal (`:142`, `:161`, `:206`).

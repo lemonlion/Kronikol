@@ -244,14 +244,15 @@ public static class MergeableReportReader
         Duration = se.TryGetProperty("durationSeconds", out var d) && d.ValueKind == JsonValueKind.Number && d.GetDouble() > 0
             ? TimeSpan.FromSeconds(d.GetDouble())
             : null,
-        IsHappyPath = se.TryGetProperty("isHappyPath", out var hp) && hp.ValueKind == JsonValueKind.True,
+        IsHappyPath = se.TryGetProperty("isHappyPath", out var hp) && hp.ValueKind == JsonValueKind.True
+                      || ReadStringArray(se, "labels")?.Any(ScenarioTags.IsHappyPathLabel) == true,
         // The merge used to lose it: the merged report counted a shard's fold scenario as a passed test, and its
         // history called it passing against the ledger that recorded it as not a test (plans/RUN_WINDOW_PLAN.md R1, F7).
         NotATest = se.TryGetProperty("notATest", out var notATest) && notATest.ValueKind == JsonValueKind.True,
         ErrorMessage = GetString(se, "errorMessage"),
         ErrorStackTrace = GetString(se, "errorStackTrace"),
         FailureCause = GetString(se, "failureCause"),
-        Tags = ReadTags(se, ReadInt(se, "attempt")),
+        Tags = ReadTags(se, ReadInt(se, "attempt"), scenario: true),
         Rule = GetString(se, "rule"),
         Attempt = ReadInt(se, "attempt"),
         EndedAt = ReadInstant(se, "endedAt"),
@@ -752,13 +753,14 @@ public static class MergeableReportReader
     /// <summary>
     /// A feature's or a scenario's tags: <c>tags</c>, or in a file written before 5.0.0 its <c>labels</c> and then its
     /// <c>categories</c> as one list, less the <c>retry N</c> labels 4.x's ingest lanes made for the attempts before
-    /// <paramref name="attempt"/> (plans/TAGS_PLAN.md §4.13). Null when there are none.
+    /// <paramref name="attempt"/> (plans/TAGS_PLAN.md §4.13), and a scenario's less a happy-path name, which is its flag
+    /// (5.2.7). Null when there are none.
     /// </summary>
-    private static string[]? ReadTags(JsonElement element, int? attempt)
+    private static string[]? ReadTags(JsonElement element, int? attempt, bool scenario = false)
     {
         var tags = ScenarioTags.Merge(
             ReadStringArray(element, "tags"),
-            ReadStringArray(element, "labels")?.Where(l => !ScenarioTags.IsGeneratedRetryLabel(l, attempt)),
+            ReadStringArray(element, "labels")?.Where(l => !ScenarioTags.IsGeneratedRetryLabel(l, attempt) && !(scenario && ScenarioTags.IsHappyPathLabel(l))),
             ReadStringArray(element, "categories"));
         return tags.Length > 0 ? tags : null;
     }

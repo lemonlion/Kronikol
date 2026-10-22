@@ -430,7 +430,12 @@ public static class CucumberFeatureMerger
         };
     }
 
-    /// <summary>Cucumber features first (in Gherkin order), then whatever the tests file had left over.</summary>
+    /// <summary>
+    /// Cucumber features first (in Gherkin order), then whatever the tests file had left over. A leftover under a Cucumber
+    /// feature's name joins it with the tags both give the feature, and each side's others move onto its own scenarios, as
+    /// a merge of two shards does (<see cref="Reports.Merge.MergeableReportMerger"/>): until 5.2.7 the Cucumber feature's
+    /// tags reached the tests file's scenarios, and the tests file's feature tags were dropped.
+    /// </summary>
     private static Feature[] MergeFeatures(Feature[] cucumber, List<Feature> leftovers)
     {
         var result = new List<Feature>(cucumber);
@@ -438,7 +443,15 @@ public static class CucumberFeatureMerger
         foreach (var feature in leftovers)
         {
             if (byName.TryGetValue(feature.DisplayName, out var existing))
-                existing.Scenarios = existing.Scenarios.Concat(feature.Scenarios).ToArray();
+            {
+                var shared = ScenarioTags.Shared([existing.Tags, feature.Tags]);
+                existing.Scenarios =
+                [
+                    .. Reports.Merge.MergeableReportMerger.WithFeatureTags(existing.Scenarios, existing.Tags, shared),
+                    .. Reports.Merge.MergeableReportMerger.WithFeatureTags(feature.Scenarios, feature.Tags, shared)
+                ];
+                existing.Tags = shared.Length > 0 ? shared : null;
+            }
             else
                 result.Add(feature);
         }

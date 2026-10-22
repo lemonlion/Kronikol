@@ -40,6 +40,9 @@
             // open (Chrome and Firefox, by click, Enter and Space)
             var section = gear.closest('details');
             settings = section && section.querySelector(':scope > .scenario-settings');
+            // a closed section opens with its settings showing: until 5.2.7 the gear only turned them over inside it, so
+            // nothing showed, and settings left open were closed
+            if (settings && !section.open) { section.open = true; set(settings, true); return; }
         } else {
             settings = gear.parentElement;
         }

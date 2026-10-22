@@ -63,6 +63,32 @@ public class TagMappingTests : DiagrammedComponentTest
     }
 
     [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void Two_classes_of_one_name_keep_their_own_categories(bool apiFirst)
+    {
+        // Both are the feature Orders. Until 5.2.7 it took the categories of whichever test finished first, so the other
+        // class's tests carried them and their own were nowhere; the assembly's, which both have, stay the feature's.
+        static MSTestScenarioInfo Recorded(Type type, string method)
+        {
+            var (featureTags, tags) = TestCategories(type, type.GetMethod(method));
+            return new()
+            {
+                TestClassSimpleName = type.Name, TestMethodName = method, TestId = $"{type.FullName}.{method}", Outcome = UnitTestOutcome.Passed,
+                FeatureTags = featureTags, Tags = tags
+            };
+        }
+        var web = Recorded(typeof(Web.Orders), nameof(Web.Orders.Pay));
+        var api = Recorded(typeof(Api.Orders), nameof(Api.Orders.Refund));
+
+        var feature = (apiFirst ? new[] { api, web } : [web, api]).ToFeatures().Single();
+
+        CollectionAssert.AreEqual(new[] { "Assembly level" }, feature.Tags);
+        CollectionAssert.AreEqual(new[] { "Web" }, feature.Scenarios.Single(s => s.Id == web.TestId).Tags);
+        CollectionAssert.AreEqual(new[] { "Api" }, feature.Scenarios.Single(s => s.Id == api.TestId).Tags);
+    }
+
+    [TestMethod]
     public void The_report_gives_the_feature_its_tags_and_each_scenario_its_own_through_the_classifier()
     {
         MSTestScenarioInfo Info(string method, string[]? tags) => new()

@@ -4,6 +4,128 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.2.7] - 2026-10-22
+
+The patch part moves (5.2.6 to 5.2.7): bug fixes, with nothing new to call or configure. They were found by a review of
+5.0.0; each entry names the release it came from. Five change what a report or the tool does in a way someone may rely
+on, and say so.
+
+### Fixed
+
+- **A participant keeps the colour `SequenceDiagramParticipantColors` gives it (5.0.0).** The page draws a participant
+  in the theme's participant colour, and from 5.0.0 that covered the colour the option writes on the declaration of a
+  participant with a dependency category, so the option drew no colour at all, on the page or in a copy of the picture.
+  A participant given its own colour in the diagram's source now keeps it, by name or by hex; one drawn in the engine's
+  colour, or a PlantUML theme's, still takes the report theme's.
+- **Enter opens the scenario the arrow keys picked (5.0.0).** The arrow keys moved only the outline: after a click the
+  keyboard's focus stayed where the click had left it, so Enter folded the scenario clicked before, or pressed the
+  button clicked. The arrow keys now give the picked scenario's title the keyboard's focus as well.
+- **`/` goes to the search from a report tab (5.2.0).** The rule that leaves a tab list its arrow keys took `/` too.
+- **Happy paths Only shows only happy paths, in either mode of the Tags row (5.0.0).** Only is the Happy Path chip set
+  to has, and the chip joined the row's ANY like any other: Only with the smoke chip showed every smoke scenario as
+  well, and a link from a 4.x report such as `#cats=Fast&hp=1` showed the Fast scenarios that are not happy paths, where
+  4.x showed only its happy paths. Behaviour change: the Happy Path chip set to has now asks for a happy path besides
+  the rest of the row in the ANY mode too, so Happy Path with Fast shows the happy paths among the Fast scenarios, not
+  both.
+- **A link chooses a tag's chip whatever the case of its ASCII letters (5.0.0).** A tag is one tag whatever their case,
+  and its chip carries the first spelling met, so a link that spelled it another way (a 4.x report's `fast` beside
+  `Fast`, two categories there) chose no chip.
+- **A qualifier beside a legacy `and` or `or` narrows the search (5.0.0).** Taking `dep:payment` out of `@smoke and
+  dep:payment` left a dangling `and`, and the search matched nothing; it now keeps the smoke scenarios that call a
+  payment dependency, as `@smoke && dep:payment` does, and `@smoke or dep:payment` keeps the same, as the qualifiers'
+  rule says for `||`.
+- **`not` before a qualifier negates it, as `!!` does (5.0.0).** `not dep:payment` kept the scenarios that call payment.
+- **A qualifier inside a group that `!!` or `not` negates stays text (5.0.0).** `!!(dep:payment)` was read as
+  `dep:payment`, keeping the scenarios the search meant to leave out. A qualifier there cannot narrow the search, so it
+  is read as text and the search field's border turns amber, as for a qualifier the search cannot read. `!!dep:payment`
+  negates it.
+- **A qualifier inside quotes is text (5.0.0).** `"order dep:payment"` read `dep:payment` as a qualifier, against the
+  qualifiers' own rule.
+- **`duration:""` is a qualifier the search cannot read (5.0.0).** It threw, and the search did nothing at all.
+- **`dep:` compares a dependency's name in every alphabet (5.0.0).** Only a to z and 0 to 9 were compared, so
+  `dep:ödeme` matched `Deme Service`, and a name in other letters (`dep:支付`) was no name, so the qualifier could not be
+  read.
+- **A legacy tag expression reads both sides of each `and` and `or`, and its brackets (2.0.77).** Where the left side
+  answered the expression, the right side was left unread and the expression stopped there: `@a and @b or @c` missed a
+  scenario tagged only `c`. A bracket written against a tag was read into it, so `(@ui or @api) and not @slow`, the
+  wiki's own example, matched nothing it should; a bracket is a word of its own there now, and a tag keeps the brackets
+  it closes (`@issue(12)`). The deep search of the diagrams reads tag expressions the same way.
+- **Making a note shorter in a later part of a long diagram keeps the reader's place (5.0.0).** The page found the note
+  clicked by its place in its picture among the notes of every part, so a click in the second part found the first
+  part's note in that place, and kept nobody's place. It finds the note by its index in the diagram's source now.
+- **A Summary row for a feature the filters hide says so (5.0.0).** The row showed the Full view and opened nothing in
+  it. It now shows the line a link to a hidden scenario shows, "This feature is hidden by the filters.", whose button
+  clears the filters and opens the feature.
+- **On a phone, the gear on a closed Diagrams section opens it with its settings (5.0.0).** The gear turned the settings
+  over inside the closed section: nothing showed, and settings left open were closed.
+- **A diagram's failure line takes the theme's failure colour (5.0.0).** A diagram the engine could not draw (a bundle
+  it cannot load in the page, a diagram too large, the engine out of stack, a statement past its parse limit) said so in
+  `#c00` in every theme, 2.9:1 on the dark theme's ground.
+- **A collapsed note's preview keeps the braces that are not one object's (5.0.0).** The preview leaves out a JSON
+  body's braces, and it took them from any body that starts with one: two objects, one a line as NDJSON writes them,
+  read `"a":1} {"b":2`, and a template's `{{name}}` read `{name}`.
+- **Space opens the internal-flow popup from a link the engine drew as a link (5.0.0).** As on a link drawn as text;
+  Space scrolled the page.
+- **Hiding a scenario's setup keeps the lines of its notes and style blocks (5.0.0).** Once the setup was out, the
+  declarations of the participants nothing called went too, looked for in every line: a note's line that read like one
+  (`database connection opened`) went with them, and so did a style block's `participant {` line, which left the block's
+  braces unmatched. A style block written on one line no longer leaves the setup in: every statement after it was taken
+  for the block's.
+- **A feature's tags are those all its tests have at its level (5.0.0).** The NUnit, MSTest, xUnit v2, xUnit v3, TUnit
+  and Reqnroll adapters, the Cucumber importer and its merger took a feature's tags from whichever of its tests came
+  first: an NUnit class with `[TestFixture("chrome", Category = "Chrome")]` and `[TestFixture("firefox", Category =
+  "Firefox")]`, two classes of one name in two namespaces, or two feature files of one title, gave the feature one
+  part's tags by finish order, every test of the other part carried them, and its own were nowhere. A scenario's
+  effective tags are now its own test's, as `kronikol merge` already made them for shards (plans/TAGS_PLAN.md §4.7).
+  Behaviour change: such a feature carries only the tags its parts share, and each scenario its part's others.
+- **`kronikol query scenarios --tag` finds happy paths (5.0.0).** `--tag "Happy Path"` listed nothing on a file written
+  by 5.0.0, where a happy path is a flag the report's Tags row shows as the tag Happy Path; it matches that tag now.
+  Behaviour change: a 4.x file's Happy Path label reads as the happy path, as 5.0.0 writes the same run, so
+  `scenarios --json`, `ctrf` and `merge` no longer give a 4.x LightBDD happy path the tag Happy Path.
+- **`--run` opens a kept run whose report has its own name and the other data file extension (5.0.0).** A 4.x run kept
+  as `runs/<x>/MyReport.json` beside a top report written as `MyReport.krkl` was not found.
+- **A run removes its data file under the other name (5.0.0).** With no runs kept (`KeepRuns = 0`, or on CI another
+  run's), the `TestRunReport.json` the run before a switch of `CompressTestRunReport` wrote stayed beside the new
+  `TestRunReport.krkl` for good, every lookup said the folder held both, and the CI upload took it. Behaviour change:
+  a run now deletes that one name once its own data file is written, never a file this process may not write, and a
+  folder that holds both reads the one its `Run.json` lists, whatever the files' times say, in the tool and in the
+  skill's `query.py`.
+- **`kronikol merge` leaves a merged `.krkl` this process may not write as it is (5.0.0).** On Linux and macOS it
+  replaced such a file and exited 0, since a rename needs only the folder, where a run leaves the file alone and a merge
+  to `.json` refuses it. Behaviour change: such a merge now says `Could not write -o` with the path and exits non-zero,
+  as a merge to `.json` does.
+- **The README and the NuGet readme name the data file a 5.0.0 run and merge write.** They said `TestRunReport.json`,
+  and `kronikol decode`'s example asked jq for a scenario's `displayName`, where the key is `name`.
+
+### Tests
+
+- `DiagramRolesTests`: a participant coloured by its dependency through the real emitter keeps the palette's colour, a
+  colour's name and a three-digit hex, while the others take the theme's.
+- `FeaturesToolsTests`: Enter after a click elsewhere and the arrow keys opens the picked scenario; a Summary row for a
+  feature the filters hide shows the filtered-out line, whose button opens it. `ReportTabsTests`: `/` on a tab.
+- `FilterPipelineTests`: Happy paths Only beside chips in the ANY mode, a 4.x link with `hp=1` and a category, and a
+  link that spells a tag's ASCII letters in another case.
+- `SearchQualifierPlacementTests` (new, the search's own Jint tests): qualifiers beside `&&`, `and`, `||` and `or`, in
+  brackets, in quotes and in negated groups, `not` and `!!`, `duration:""`, names in other alphabets, both sides of each
+  operator of a tag expression, and brackets written against tags, the wiki's example among them.
+- `NoteButtonLayoutTests`: a note made shorter in the second part of a diagram drawn in parts brings its own new bottom
+  back to the click. `NotePreviewBraceTests`: two objects, a template and a brace in a string. `IflowLinkKeyboardTests`:
+  Space on the engine's anchor. `ScenarioSettingsTests`: the gear on a closed section. `ThemedSourceRendersTests`: a
+  failure line in the light and dark themes. `EventsAndSetupToggleTests`: a note's lines and a style block's.
+- The adapters' `TagMappingTests` (NUnit, MSTest, xUnit v2, xUnit v3, TUnit), Reqnroll's, the Cucumber importer's and
+  its merger's: fixtures and classes of one name and feature files of one title. `QueryTagsTests` and
+  `MergeableReportTests`: `--tag` and a 4.x Happy Path label. `RetainedRunsTests`, `KrklRunTests`, `KrklLookupTests` and
+  `QueryScriptParityTests`: a kept run with the other extension, the data file under the other name, and the lookup by
+  `Run.json`. `MergeKeepsAnUnwritableFileTests` (new): a merged file this process may not write.
+- `FilterRowsTests` reads the search help's new sentence, and `VerdictFencesTests` pins the search script's new text.
+- Proofs: the facts were written first and fail on the unchanged code, each at the fault it names; of the search's 40
+  new rows, the 16 that pass there are controls and the documented rules held as they are. The later part's place fails
+  there only with Chromium's own scroll anchoring off, as Safari has none, and with the page going on below the note;
+  the style block's only once it checks that no call's label takes the participants' colour. 48 of 48 mutations of the
+  page's fixes are killed; two that first survived led to a short first note in the later part's fact and to a fallback
+  that could not run being taken out. The adapters', the tool's and the readers' facts fail on the unchanged code, each
+  at the tags, the listing or the file it names.
+
 ## [5.2.6] - 2026-10-22
 
 The patch part moves (5.2.5 to 5.2.6): bug fixes, with nothing new to call or configure. A scenario that is not a test

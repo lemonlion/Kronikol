@@ -113,6 +113,39 @@ public class DiagramRolesTests : DiagramNotePlaywrightBase
         Assert.Equal(r[5], r[4]);
     }
 
+    // SequenceDiagramParticipantColors writes a participant's dependency colour on its declaration, the real emitter's
+    // source here: from 5.0.0 the role pass gave every filled participant the theme's participant colour, so the option
+    // drew no colour at all, on the page or in a copy
+    [Theory]
+    [InlineData(null, "rgb(14, 124, 134)")] // the palette's database colour, #0E7C86
+    [InlineData("#LightBlue", "rgb(173, 216, 230)")] // a colour's name, which the drawing writes as #ADD8E6
+    [InlineData("#0AF", "rgb(0, 170, 255)")] // three digits, which the drawing writes as six
+    public async Task A_participant_coloured_by_its_dependency_keeps_its_colour(string? colour, string painted)
+    {
+        var pairId = Guid.NewGuid();
+        Kronikol.Tracking.RequestResponseLog Log(Kronikol.Tracking.RequestResponseType type) =>
+            new("t1", "t1", "SELECT", null, new Uri("http://stock/items"), [], "Stock", "OrderService", type,
+                Guid.NewGuid(), pairId, TrackingIgnore: false, DependencyCategory: "SqlServer");
+        var source = Kronikol.PlantUml.PlantUmlCreator.GetPlantUmlImageTagsPerTestId(
+                [Log(Kronikol.Tracking.RequestResponseType.Request), Log(Kronikol.Tracking.RequestResponseType.Response)],
+                sequenceDiagramParticipantColors: true,
+                dependencyColors: colour is null ? null : new() { ["SqlServer"] = colour })
+            .Single().PlantUmls.First().PlainText;
+        Assert.Contains("database \"Stock\" as stock " + (colour ?? "#0E7C86"), source);
+        await OpenAsync($"RolesParticipantColours{(colour ?? "").TrimStart('#')}.html", source: source);
+
+        var r = await InSvgAsync<string[]>($"""
+            const parts = [...el.querySelectorAll('.k-participant')];
+            const own = parts.filter(e => getComputedStyle(e).fill === '{painted}').length;
+            const themed = parts.filter(e => e.classList.contains('k-participant-fill')).map(e => getComputedStyle(e).fill);
+            return [String(own), String(themed.length), String(themed.every(f => f === __tok('--dg-participant')))];
+            """);
+
+        Assert.True(int.Parse(r[0]) >= 2, $"participants painted in the database's colour: {r[0]}");
+        Assert.True(int.Parse(r[1]) >= 1, $"participants in the theme's colour: {r[1]}");
+        Assert.Equal("true", r[2]);
+    }
+
     // A scenario that made no calls: its one participant is the generator's placeholder, so the drawing has one lifeline
     // (the owner's report, 2026-10-21: its step bars stayed black)
     private const string NoInteractions = """

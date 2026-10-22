@@ -55,6 +55,60 @@ public class KrklRunTests : IDisposable
         Assert.Single(Directory.EnumerateFiles(Path.Combine(directory, ReportFolders.RunsFolderName), "TestRunReport.krkl", SearchOption.AllDirectories));
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void With_no_runs_kept_the_earlier_run_s_data_file_under_the_other_name_does_not_stay(bool krklFirst)
+    {
+        // KeepRuns = 0 rotates nothing, so until 5.2.7 the other name, a file the run replaces, stayed on top for good: every
+        // lookup said the folder holds both, the CI upload took it, and a lookup took the newer by time, which a download of
+        // the artifacts scrambles.
+        var directory = Path.Combine(_root, krklFirst ? "zero-back" : "zero");
+        Run(directory, compress: krklFirst, runId: "first", keepRuns: 0);
+
+        Run(directory, compress: !krklFirst, runId: "second", keepRuns: 0);
+
+        var (written, earlier) = krklFirst ? ("TestRunReport.json", "TestRunReport.krkl") : ("TestRunReport.krkl", "TestRunReport.json");
+        Assert.True(File.Exists(Path.Combine(directory, written)));
+        Assert.False(File.Exists(Path.Combine(directory, earlier)), $"the earlier run's {earlier} stayed on top beside the new {written}");
+        Assert.False(Directory.Exists(Path.Combine(directory, ReportFolders.RunsFolderName)));
+    }
+
+    [Fact]
+    public void With_no_runs_kept_another_report_s_data_file_stays()
+    {
+        // A host may write Checkout.* and Payments.* into one folder: only this report's own other name is this run's to replace.
+        var directory = Path.Combine(_root, "zero-two-reports");
+        Run(directory, compress: false, runId: "payments", name: "Payments", keepRuns: 0);
+
+        Run(directory, compress: true, runId: "checkout", name: "Checkout", keepRuns: 0);
+
+        Assert.True(File.Exists(Path.Combine(directory, "Payments.json")));
+        Assert.True(File.Exists(Path.Combine(directory, "Checkout.krkl")));
+    }
+
+    [Fact]
+    public void With_no_runs_kept_a_data_file_this_process_may_not_write_stays()
+    {
+        // The owner's read-only mark means do not touch, as the rotation reads it (RunRotation.Move).
+        Assert.SkipUnless(ReadOnlyProbe.RefusesThisProcess, "a read-only file does not refuse this process (root)");
+        var directory = Path.Combine(_root, "zero-read-only");
+        Run(directory, compress: false, runId: "first", keepRuns: 0);
+        var earlier = Path.Combine(directory, "TestRunReport.json");
+        File.SetAttributes(earlier, FileAttributes.ReadOnly);
+        try
+        {
+            Run(directory, compress: true, runId: "second", keepRuns: 0);
+
+            Assert.True(File.Exists(earlier));
+            Assert.True(File.Exists(Path.Combine(directory, "TestRunReport.krkl")));
+        }
+        finally
+        {
+            File.SetAttributes(earlier, FileAttributes.Normal);
+        }
+    }
+
     [Fact]
     public void An_earlier_run_without_a_manifest_is_named_for_its_data_file_under_the_other_name()
     {
@@ -136,13 +190,13 @@ public class KrklRunTests : IDisposable
         Assert.Contains("hunter2-on-disk", ReportFile.Read(path), StringComparison.Ordinal);
     }
 
-    private static void Run(string directory, bool compress, string runId, string name = "TestRunReport")
+    private static void Run(string directory, bool compress, string runId, string name = "TestRunReport", int keepRuns = 3)
     {
         using var _ = RequestResponseLogger.IsolateForTests();
-        Write(directory, compress, runId, name, LogCalls(scenarios: 2));
+        Write(directory, compress, runId, name, LogCalls(scenarios: 2), keepRuns);
     }
 
-    private static void Write(string directory, bool compress, string runId, string name, string[] ids)
+    private static void Write(string directory, bool compress, string runId, string name, string[] ids, int keepRuns = 3)
     {
         Directory.CreateDirectory(directory);
         // A process rotates a directory once; each write here stands for a run of its own.
@@ -155,7 +209,7 @@ public class KrklRunTests : IDisposable
                 InternalFlowTracking = false,
                 CompressTestRunReport = compress,
                 HistoryRunId = runId,
-                KeepRuns = 3,
+                KeepRuns = keepRuns,
             });
     }
 

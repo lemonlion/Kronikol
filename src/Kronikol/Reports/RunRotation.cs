@@ -329,6 +329,33 @@ internal static class RunRotation
         moved.Add((from, to));
     }
 
+    /// <summary>
+    /// After this run's data file is on disk: removes the one under its other name, the <c>.json</c> beside the <c>.krkl</c>
+    /// it wrote or the <c>.krkl</c> beside the <c>.json</c>, which the run before a switch of
+    /// <see cref="ReportConfigurationOptions.CompressTestRunReport"/> wrote and this run replaces. A rotation takes it to
+    /// <c>runs/</c> with the run it belongs to; with no run kept nothing did (<see cref="ReportConfigurationOptions.KeepRuns"/>
+    /// 0, or on CI another run's), and until 5.2.7 it stayed on top for good, where every lookup said the folder holds both
+    /// and the CI upload took it. That one name only, and never a file marked read-only that this process may not write,
+    /// which is the owner's (<see cref="Move"/>). One held open stays. Never throws.
+    /// </summary>
+    internal static void RemoveReplacedDataFile(string reportsDirectory, string reportName, string dataExtension)
+    {
+        if (dataExtension is not ("json" or "krkl"))
+            return;
+
+        var path = Path.Combine(reportsDirectory, $"{reportName}.{(dataExtension == "json" ? "krkl" : "json")}");
+        try
+        {
+            if (!File.Exists(path) || (File.GetAttributes(path) & FileAttributes.ReadOnly) != 0 && !CanWrite(path))
+                return;
+            File.Delete(path);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            // It stays, and a lookup of the folder reads the file its Run.json lists.
+        }
+    }
+
     /// <summary>Whether this process could open the file to write it where it is, as the run's writers do. Nothing is written.</summary>
     private static bool CanWrite(string path)
     {

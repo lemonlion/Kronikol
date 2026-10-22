@@ -103,6 +103,42 @@ public class QueryTagsTests : IDisposable
         Assert.Equal(expected, TagsByScenario(path, flag, text).Keys.Order(StringComparer.Ordinal));
     }
 
+    [Theory]
+    [InlineData("--tag", "Happy Path")]
+    [InlineData("--tag", "happy")]
+    [InlineData("--label", "Happy Path")]
+    public void Tag_finds_a_happy_path_by_the_name_the_report_s_Tags_row_gives_it(string flag, string text)
+    {
+        // 4.x's --label "Happy Path" listed LightBDD's happy paths, whose [HappyPath] it wrote as that label. Since 5.0.0 a
+        // happy path is a flag on every lane, which the report's Tags row and its @ search read as the tag Happy Path, and
+        // until 5.2.7 --tag did not
+        var features = Shop();
+        features[0].Scenarios[0] = features[0].Scenarios[0] with { IsHappyPath = true };
+        var path = Written(features);
+
+        Assert.Equal(["Pay"], TagsByScenario(path, flag, text).Keys);
+        // the flag is not one of the scenario's tags
+        Assert.Equal(["checkout", "Smoke", "payments"], TagsByScenario(path)["Pay"]);
+    }
+
+    [Fact]
+    public void A_4x_file_s_Happy_Path_label_reads_as_the_happy_path_and_not_as_a_tag()
+    {
+        // 4.x's LightBDD wrote [HappyPath] as the label Happy Path beside isHappyPath; 5.0.0 writes the flag alone, so a
+        // file of either kind reads the same (5.2.7)
+        var path = Written(Shop());
+        var json = JsonNode.Parse(File.ReadAllText(path))!;
+        var feature = WithLabels(json["features"]!.AsArray(), "Checkout", "checkout");
+        var pay = feature["scenarios"]!.AsArray().Single(s => (string?)s!["id"] == "pay")!.AsObject();
+        pay.Remove("tags");
+        pay["isHappyPath"] = true;
+        pay["labels"] = new JsonArray("Happy Path", "fast");
+        File.WriteAllText(path, json.ToJsonString());
+
+        Assert.Equal(["checkout", "fast"], TagsByScenario(path)["Pay"]);
+        Assert.Equal(["Pay"], TagsByScenario(path, "--tag", "Happy Path").Keys);
+    }
+
     [Fact]
     public void A_listing_cut_short_by_tag_or_label_says_how_to_go_on_with_tag()
     {

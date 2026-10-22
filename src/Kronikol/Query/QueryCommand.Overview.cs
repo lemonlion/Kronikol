@@ -322,7 +322,7 @@ public static partial class QueryCommand
         if (options.Feature is { } feature && !scenario.FeatureName.Contains(feature, StringComparison.OrdinalIgnoreCase))
             return false;
         if (options.Tag is { } tag
-            && !scenario.EffectiveTags.Any(t => t.Contains(tag, StringComparison.OrdinalIgnoreCase)))
+            && !scenario.RowTags.Any(t => t.Contains(tag, StringComparison.OrdinalIgnoreCase)))
             return false;
         if (options.Grep is { } grep && !scenario.Name.Contains(grep, StringComparison.OrdinalIgnoreCase))
             return false;
