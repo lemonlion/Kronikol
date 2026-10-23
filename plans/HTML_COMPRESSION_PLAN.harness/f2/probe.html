@@ -1,0 +1,26 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>probe</title>
+<pre id="out">running</pre>
+<script>
+// Inside a worker made from a blob: URL: can it read a Blob, and does a stream built from the bytes decode?
+// (plans/HTML_COMPRESSION_PLAN.md F2; the search worker gunzips its index this way.)
+var src = "onmessage = async function () {\n" +
+  "  var r = { ua: navigator.userAgent };\n" +
+  "  var text = 'hello hello hello hello';\n" +
+  "  var gz;\n" +
+  "  try { gz = new Uint8Array(await new Response(new ReadableStream({ start: function (c) { c.enqueue(new TextEncoder().encode(text)); c.close(); } }).pipeThrough(new CompressionStream('gzip'))).arrayBuffer()); r.compress = 'ok ' + gz.length; } catch (e) { r.compress = 'ERR ' + e; postMessage(r); return; }\n" +
+  "  try { r.blobArrayBuffer = 'ok ' + (await new Blob([gz]).arrayBuffer()).byteLength; } catch (e) { r.blobArrayBuffer = 'ERR ' + e; }\n" +
+  "  try { var x = await new Blob([gz]).stream().getReader().read(); r.blobStreamRead = 'ok ' + (x.value ? x.value.length : 'done'); } catch (e) { r.blobStreamRead = 'ERR ' + e; }\n" +
+  "  try { r.blobGunzip = 'ok ' + (await new Response(new Blob([gz]).stream().pipeThrough(new DecompressionStream('gzip'))).text() === text); } catch (e) { r.blobGunzip = 'ERR ' + e; }\n" +
+  "  try { r.bytesGunzip = 'ok ' + (await new Response(new ReadableStream({ start: function (c) { c.enqueue(gz); c.close(); } }).pipeThrough(new DecompressionStream('gzip'))).text() === text); } catch (e) { r.bytesGunzip = 'ERR ' + e; }\n" +
+  "  postMessage(r);\n" +
+  "};";
+var out = document.getElementById('out');
+try {
+  var w = new Worker(URL.createObjectURL(new Blob([src], { type: 'text/javascript' })));
+  w.onmessage = function (e) { out.textContent = JSON.stringify(e.data); document.title = 'done'; };
+  w.onerror = function (e) { out.textContent = 'worker error: ' + (e.message || e); document.title = 'done'; };
+  w.postMessage(1);
+} catch (e) { out.textContent = 'no worker: ' + e; document.title = 'done'; }
+</script>

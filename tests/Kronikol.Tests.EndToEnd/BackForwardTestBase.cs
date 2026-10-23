@@ -194,40 +194,4 @@ public abstract class BackForwardTestBase : PlaywrightTestBase
             """,
             null, new() { PollingInterval = 200, Timeout = 10000 });
     }
-
-    /// <summary>
-    /// Runs <paramref name="body"/> on the test's Chromium page, or on a page of Playwright's own Firefox or WebKit, skipped
-    /// where that browser is not installed (CI installs Chromium only). Never an installed Chrome or Edge (CLAUDE.md).
-    /// </summary>
-    protected async Task InEngineAsync(string engine, Func<IPage, Task> body)
-    {
-        if (engine == "chromium") { await body(Page); return; }
-        using var playwright = await Playwright.CreateAsync();
-        var browser = await LaunchAsync(playwright, engine);
-        Assert.SkipWhen(browser is null, $"{engine} is not installed (CI installs chromium only)");
-        await using var _ = browser!;
-        var page = await OpenPageAsync(browser!, new BrowserNewPageOptions { ViewportSize = new() { Width = ViewportWidth, Height = ViewportHeight } });
-        await body(page);
-    }
-
-    /// <summary>
-    /// Launches Playwright's own Firefox or WebKit, or null where it is not installed (CI installs Chromium only), as
-    /// FilterBarTests does. Never an installed Chrome or Edge (CLAUDE.md).
-    /// </summary>
-    protected static async Task<IBrowser?> LaunchAsync(IPlaywright playwright, string engine)
-    {
-        try
-        {
-            return engine switch
-            {
-                "firefox" => await playwright.Firefox.LaunchAsync(new BrowserTypeLaunchOptions { Headless = true }),
-                "webkit" => await playwright.Webkit.LaunchAsync(new BrowserTypeLaunchOptions { Headless = true }),
-                _ => throw new ArgumentOutOfRangeException(nameof(engine), engine, null)
-            };
-        }
-        catch (PlaywrightException)
-        {
-            return null;
-        }
-    }
 }

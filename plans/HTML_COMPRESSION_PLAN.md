@@ -1,8 +1,9 @@
 # A compressed TestRunReport.html: the page as zstd frames inside a small loader (29 MB to 7 MB)
 
 **Date:** 2026-10-23 · **Repo version:** 5.5.2 (`origin/main` at `2933b7a0`; line numbers are for that commit, and
-those the first draft cited are unchanged from `91d1afd7`, 5.5.1) · **Status: draft, not green-lit.** Audited the same
-day (section 8).
+those the first draft cited are unchanged from `91d1afd7`, 5.5.1) · **Status: green-lit on 2026-10-23** ("Can you
+implement the plan in full, taking all your recommendations"): every recommendation of section 7 is taken. Audited the
+same day (section 8). F2 shipped as 5.5.4.
 
 This plan was written at the owner's asks of 2026-10-23:
 - "Can we investigate options for getting the 29mb html report such as the one in
@@ -384,8 +385,10 @@ prototypes: inside a worker made from a `blob:` URL every read of a `Blob` fails
 operation failed." (`Blob.stream()`, `Blob.arrayBuffer()`, and `Response` over either), and the search worker gunzips
 its index through `new Blob([...]).stream()` (`report-search-index.js:307-314`). A `ReadableStream` built from the
 bytes (`start(c) { c.enqueue(bytes); c.close(); }`) decodes there (`wk-search-probe.js`,
-`results/webkit-worker-blob.txt`). Whether Safari on macOS does the same is not known. Step F2 fixes it, and the loader
-and its workers never read a `Blob` (section 4.2).
+`results/webkit-worker-blob.txt`). F2 found that it takes a page opened from `file://`: over `http://` the same
+reads work, in Playwright's WebKit on Windows, Linux and macOS alike, and in Safari 26.6.2 over `http://`; under
+WebDriver Safari opens no local file, so its `file://` case is not known (`results/f2-blob-probe.txt`). Step F2 fixes it
+(5.5.4), and the loader and its workers never read a `Blob` (section 4.2).
 
 ## 4. The design (C2)
 
@@ -765,6 +768,19 @@ they are: a compressed page is no more readable than a plain one.
   and deep search broken in WebKit today (F2, new). Corrected: 251 test files reading the page (131 do); Appendix A's
   lines for two unused public methods, and its ranges for the search and export scripts; "five copies" of the helper,
   which is the most, by rendering mode. Every reference re-read at `2933b7a0` (5.5.2).
+- 2026-10-23 (kronikol-08): the owner green-lit the plan ("Can you implement the plan in full, taking all your
+  recommendations"), every recommendation of section 7 taken, F2 first as its own patch (Q15). **F2 shipped as 5.5.4.**
+  `DeepSearchTests.Text_only_in_a_diagram_source_is_found_in_every_engine` failed in WebKit on 5.5.3 (the index never
+  became ready) and passes in Chromium, Firefox and WebKit with the search worker's streams built from the bytes; the
+  render workers read no `Blob` (`plantuml-worker-host.js`), so nothing else needed the change. The check on other
+  builds (`probe.html`, a `blob:` worker that reads a `Blob` and gunzips a stream built from bytes): Playwright's WebKit
+  26.4 fails every `Blob` read for a page opened from `file://` and reads them over `http://`, on Windows and on Linux
+  alike (the podman runner, `mcr.microsoft.com/playwright:v1.59.1-noble`); a stream built from the bytes decodes in both;
+  Chromium 147 and Firefox 148 read both. On a GitHub macOS runner
+  (`probe-f2-safari.yml` on a temporary branch, deleted after) Playwright's WebKit does the same as on Windows and Linux,
+  and Safari 26.6.2 reads every `Blob` over `http://`; under WebDriver it opens no local file ("Failed to open page"),
+  so whether Safari fails on `file://` too is not known. A stream built from the bytes works in every case
+  (`HTML_COMPRESSION_PLAN.harness/f2/`, `results/f2-blob-probe.txt`).
 
 ## Appendix A. Edit sites at `2933b7a0`
 

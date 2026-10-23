@@ -197,6 +197,27 @@ public class DeepSearchTests : PlaywrightTestBase
         await WaitForChipText("more found");
     }
 
+    // The search worker reads the index and each diagram's source out of gzip. In WebKit (the Windows build of
+    // Playwright's, at least) every read of a Blob inside a worker fails ("NotReadableError: The I/O read operation
+    // failed."), so a worker that gunzipped through a Blob never loaded its index and deep search found nothing.
+    [Theory]
+    [InlineData("chromium")]
+    [InlineData("firefox")]
+    [InlineData("webkit")]
+    public Task Text_only_in_a_diagram_source_is_found_in_every_engine(string engine) => InEngineAsync(engine, async page =>
+    {
+        await page.GotoAsync(GenerateDeepReport($"DeepSearchEngine-{engine}.html"));
+        await page.Locator("details.feature").First.WaitForAsync();
+
+        await FillSearchBar(page, MessageNeedle);
+        await page.WaitForFunctionAsync(
+            "() => Array.from(document.querySelectorAll('.scenario')).filter(s => getComputedStyle(s).display !== 'none').length === 1",
+            null, new() { Timeout = 15000, PollingInterval = 200 });
+
+        Assert.Equal("ready", await page.EvaluateAsync<string>("() => window.__kronikolSearch.indexState"));
+        Assert.Equal(1, await page.EvaluateAsync<int>("() => window.__kronikolSearch.lastQuery.added"));
+    });
+
     [Fact]
     public async Task Wrapped_unbreakable_run_is_found_across_the_formatter_line_break()
     {

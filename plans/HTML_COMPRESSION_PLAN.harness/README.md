@@ -43,6 +43,7 @@ fresh profile of either costs the Windows account a failed sign-in).
 | `fz19_inputs.py`, `fz19.js`, `fz19-nocopy.js` | fzstd's open issue #19 recreated: its recipe through every fzstd path and zstddec |
 | `extract_frames.py`, `dec-compare.js` | A prototype's frames to files, then fzstd against zstddec (libzstd in Wasm) on them: output, time, a bad checksum |
 | `dec-browser.js` | The same two decoders on the same frames inside each engine, on the main thread |
+| `f2/` | Step F2: `probe.html`, a `blob:` worker that reads a `Blob` and gunzips a stream built from bytes; `run-playwright.js` opens it over `file://` and `http://` in Playwright's builds, `linux-webkit.sh` in the Linux ones on the podman runner, `run-safari.py` in Safari through safaridriver, and `probe-f2-safari.yml` is the workflow that ran the last two on a GitHub macOS runner |
 
 ```bash
 py -I anatomy.py TestRunReport.html                      > results/anatomy.txt
@@ -72,6 +73,10 @@ py -I fz19_inputs.py out/fz19; node fz19.js out/fz19; node fz19-nocopy.js out/fz
 py -I extract_frames.py out/c2s/vC2s-one.html out/frames
 node dec-compare.js out/frames/krn-z1.zst out/frames/krn-d0.zst                              # results/decoders-2.txt
 node dec-browser.js out/frames                                                                # results/decoders-2.txt
+# Step F2 (results/f2-blob-probe.txt)
+node f2/run-playwright.js webkit,chromium
+wsl -d podman-machine-default -u root -- sh f2/linux-webkit.sh /mnt/c/<path to f2>
+# macOS: f2/probe-f2-safari.yml as .github/workflows/ on a temporary branch probe/f2-safari, with f2/ as probes/webkit-blob/
 ```
 
 `firefox+zstd` in `bench.js` is Firefox with `dom.compression_streams.zstd.enabled` set, so its loader takes the native

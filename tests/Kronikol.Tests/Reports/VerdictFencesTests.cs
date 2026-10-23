@@ -27,6 +27,8 @@ namespace Kronikol.Tests.Reports;
 /// 5.2.7 changed the search function again outside its fences (the review of 5.0.0): a qualifier is read by where it
 /// stands, the legacy and or or it leaves goes with it, and a tag expression reads both sides of each operator and the
 /// brackets written against its tags.
+/// 5.5.4 changed the search index script outside its fences (plans/HTML_COMPRESSION_PLAN.md F2): its worker builds the
+/// streams it gunzips from the bytes, where it read them out of a Blob, which WebKit refuses inside a worker.
 /// </summary>
 public class VerdictFencesTests
 {
@@ -36,7 +38,7 @@ public class VerdictFencesTests
         { "advanced-search.js", "bd95ec17e218564784d4868f54985392751c51772ed5ee593cb63fbb8f2c9d34", "f8e26b59e269fcebd3bfc36c251ac06264946049b46c8157cd24740a98fc0c7c" },
         { "report-scenario-feature-map-helper.js", "d3d00e12dfb1ae86fce149860f5ffbe970a43af27dd8b80c0a39f3438a187202", "235ffa5649c597fa43429959c0eacc0d90f7bbcdb5f7a740b6636a5ecd076caa" },
         { "report-search-function.js", "dbdfcbe5ea893e6dd89a1412c8e5dd1ff423afc22dccc927ff686c1544e84daf", "e8a0c76ac338519d83d2f84163d29f1761deb1c5e9f2fba880fc0239925401ac" },
-        { "report-search-index.js", "7efeaa109b0ac98cb76f510dc9ea0ddeb0324428bd6c9169e08f8bf85b77028a", "58b3e65874a3a7bce211f85517f802d69f5d27f6b0649e925ead354f26a33bbb" },
+        { "report-search-index.js", "12e4ec5d2a5093f86725aebb97509e6331591f8619a42338e0830425d6009791", "f4178d54d8c962098cf84fa3f6c74aefc88f28cf07a37ca56f7c76cec305f17a" },
     };
 
     private static string Sha256(string text) =>

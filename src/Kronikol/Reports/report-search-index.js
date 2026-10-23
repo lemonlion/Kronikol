@@ -304,13 +304,18 @@ function kronSearchWorkerMain(self) {
         for (var i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
         return bytes;
     }
+    // The stream is built from the bytes, never read out of a Blob: in WebKit every read of a Blob inside a worker
+    // fails ("NotReadableError: The I/O read operation failed."), which left the index unloaded there.
+    function gunzipStream(b64) {
+        var bytes = b64ToBytes(b64);
+        return new ReadableStream({ start: function(c) { c.enqueue(bytes); c.close(); } })
+            .pipeThrough(new DecompressionStream('gzip'));
+    }
     function gunzipToText(b64) {
-        var stream = new Blob([b64ToBytes(b64)]).stream().pipeThrough(new DecompressionStream('gzip'));
-        return new Response(stream).text();
+        return new Response(gunzipStream(b64)).text();
     }
     function gunzipToBytes(b64) {
-        var stream = new Blob([b64ToBytes(b64)]).stream().pipeThrough(new DecompressionStream('gzip'));
-        return new Response(stream).arrayBuffer().then(function(buf) { return new Uint8Array(buf); });
+        return new Response(gunzipStream(b64)).arrayBuffer().then(function(buf) { return new Uint8Array(buf); });
     }
     function cachePut(i, corpus) {
         corpusCache.set(i, corpus);

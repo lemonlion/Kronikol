@@ -1,0 +1,33 @@
+name: Probe F2 Safari
+
+# A one-off probe for plans/HTML_COMPRESSION_PLAN.md step F2, on a temporary branch: can a worker made from a blob: URL
+# read a Blob in WebKit and Safari on macOS, over file:// and over http://? The branch is deleted after the run.
+
+on:
+  push:
+    branches: [probe/f2-safari]
+
+permissions:
+  contents: read
+
+jobs:
+  safari:
+    runs-on: macos-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - name: Playwright's WebKit on macOS
+        continue-on-error: true
+        run: |
+          sw_vers
+          cd probes/webkit-blob
+          npm i --no-save --silent playwright-core@1.59.1
+          npx -y playwright@1.59.1 install webkit
+          node run-playwright.js webkit
+      - name: Safari through safaridriver
+        continue-on-error: true
+        run: |
+          defaults read /Applications/Safari.app/Contents/Info CFBundleShortVersionString
+          sudo safaridriver --enable
+          python3 -m pip install --quiet --break-system-packages selenium
+          perl -e 'alarm 240; exec @ARGV' python3 probes/webkit-blob/run-safari.py

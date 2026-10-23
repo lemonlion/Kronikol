@@ -1,0 +1,21 @@
+Step F2 (2026-10-23): f2/probe.html, a worker made from a blob: URL that reads a Blob three ways and gunzips a stream
+built from the bytes, over file:// and over http://127.0.0.1 (f2/run-playwright.js serves it).
+
+Windows 11, Playwright 1.59.0's builds (node f2/run-playwright.js webkit,chromium):
+webkit 26.4   file://  compress ok; blob.arrayBuffer(), blob.stream().read(), Response(blob.stream() | gunzip).text():
+                       all "NotReadableError: The I/O read operation failed."; a stream built from the bytes: ok
+webkit 26.4   http://  every read ok
+chromium 147  file://  every read ok          http://  every read ok
+
+Linux, the podman runner (sh f2/linux-webkit.sh, mcr.microsoft.com/playwright:v1.59.1-noble):
+webkit 26.4   file://  the same three failures; a stream built from the bytes: ok
+webkit 26.4   http://  every read ok
+chromium 147  file://  ok   http://  ok
+firefox 148   file://  ok   http://  ok
+
+macOS, a GitHub macos-latest runner (f2/probe-f2-safari.yml on a temporary branch):
+Playwright's webkit 26.4 (macOS 26.6.2, the runner's)  file://  the same three failures; a stream built from the bytes: ok
+                                                         http://  every read ok
+Safari 26.6.2, through safaridriver                      http://  every read ok
+                                                         file://  not opened: under WebDriver, Safari shows "Failed to
+                                                         open page" (safari-resource:/ErrorPage.html) for a local file

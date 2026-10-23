@@ -317,10 +317,49 @@ public abstract class PlaywrightTestBase : IAsyncLifetime
         """, null, new() { Timeout = 15000, PollingInterval = 200 });
     }
 
-    protected async Task FillSearchBar(string query)
+    /// <summary>
+    /// Runs <paramref name="body"/> on the test's Chromium page, or on a page of Playwright's own Firefox or WebKit, skipped
+    /// where that browser is not installed (CI installs Chromium only). Never an installed Chrome or Edge (CLAUDE.md).
+    /// </summary>
+    protected async Task InEngineAsync(string engine, Func<IPage, Task> body)
     {
-        await Page.Locator("#searchbar").FillAsync(query);
-        await Page.Locator("#searchbar").DispatchEventAsync("keyup");
+        if (engine == "chromium") { await body(Page); return; }
+        using var playwright = await Playwright.CreateAsync();
+        var browser = await LaunchAsync(playwright, engine);
+        Assert.SkipWhen(browser is null, $"{engine} is not installed (CI installs chromium only)");
+        await using var _ = browser!;
+        var page = await OpenPageAsync(browser!, new BrowserNewPageOptions { ViewportSize = new() { Width = ViewportWidth, Height = ViewportHeight } });
+        await body(page);
+    }
+
+    /// <summary>
+    /// Launches Playwright's own Firefox or WebKit, or null where it is not installed (CI installs Chromium only), as
+    /// FilterBarTests does. Never an installed Chrome or Edge (CLAUDE.md).
+    /// </summary>
+    protected static async Task<IBrowser?> LaunchAsync(IPlaywright playwright, string engine)
+    {
+        try
+        {
+            return engine switch
+            {
+                "firefox" => await playwright.Firefox.LaunchAsync(new BrowserTypeLaunchOptions { Headless = true }),
+                "webkit" => await playwright.Webkit.LaunchAsync(new BrowserTypeLaunchOptions { Headless = true }),
+                _ => throw new ArgumentOutOfRangeException(nameof(engine), engine, null)
+            };
+        }
+        catch (PlaywrightException)
+        {
+            return null;
+        }
+    }
+
+    protected Task FillSearchBar(string query) => FillSearchBar(Page, query);
+
+    /// <summary>Types <paramref name="query"/> into <paramref name="page"/>'s search bar, which searches on keyup.</summary>
+    protected static async Task FillSearchBar(IPage page, string query)
+    {
+        await page.Locator("#searchbar").FillAsync(query);
+        await page.Locator("#searchbar").DispatchEventAsync("keyup");
     }
 
     protected static ILocatorAssertions Expect(ILocator locator) =>

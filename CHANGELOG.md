@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.5.4] - 2026-10-23
+
+The patch part moves (5.5.3 to 5.5.4): a fix, with nothing new to call or configure.
+
+### Fixed
+
+- **Deep search works in WebKit for a report opened from disk.** The search worker read its index, and each diagram
+  source it checks, out of gzip through a `Blob`, and in WebKit every read of a `Blob` inside a worker fails for a page
+  opened from `file://` ("NotReadableError: The I/O read operation failed."). So the index never loaded there: the
+  chip never came, and a word found only in a payload or a diagram matched nothing. Seen in Playwright's WebKit on
+  Windows, Linux and macOS alike; over `http://` it reads them, and so does Safari 26.6.2, which under automation opens
+  no local file, so whether Safari fails on `file://` too is not known. The worker now builds its streams from the
+  bytes, which every engine reads (`plans/HTML_COMPRESSION_PLAN.md` step F2).
+
+### Tests
+
+- `DeepSearchTests`: a word found only in a diagram's source is found in Chromium, Firefox and WebKit, each where it is
+  installed (red on 5.5.3 in WebKit only: the index never became ready). `InEngineAsync` moves from
+  `BackForwardTestBase` to `PlaywrightTestBase` so that any class can run a fact in all three engines.
+
 ## [5.5.3] - 2026-10-23
 
 The patch part moves (5.5.2 to 5.5.3): two fixes to 5.5.1 and 5.5.2, found by reviewing them, with nothing new to call
