@@ -79,7 +79,7 @@ public class ParameterizedRenderingIntegrationTests
             groupParameterizedTests: groupParameterizedTests,
             maxParameterColumns: maxParameterColumns,
             titleizeParameterNames: titleizeParameterNames);
-        return File.ReadAllText(path);
+        return ReportHtml.Read(path);
     }
 
     private static int CountOccurrences(string content, string substring)

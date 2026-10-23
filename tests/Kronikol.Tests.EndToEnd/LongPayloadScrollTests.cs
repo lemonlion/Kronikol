@@ -56,7 +56,7 @@ public class LongPayloadScrollTests : PlaywrightTestBase
     private async Task OpenAsync(string fileName, ResolvedToggleDefaults toggles, bool manyCalls = false)
     {
         await Context.GrantPermissionsAsync(["clipboard-read", "clipboard-write"]);
-        await Page.GotoAsync(LongPayloadReports.ScrollMix(TempDir, OutputDir, fileName, toggles, manyCalls));
+        await Page.GotoReportAsync(LongPayloadReports.ScrollMix(TempDir, OutputDir, fileName, toggles, manyCalls));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg(60000);
@@ -616,7 +616,7 @@ public class LongPayloadScrollTests : PlaywrightTestBase
     /// the page's start), its parts, the notes the cap recorded and the boxes made.</summary>
     private async Task<Drawing> DrawFortyCallsAsync(string fileName, int scrollLines)
     {
-        await Page.GotoAsync(LongPayloadReports.FortyCalls(TempDir, OutputDir, fileName, Expanded(scrollLines)));
+        await Page.GotoReportAsync(LongPayloadReports.FortyCalls(TempDir, OutputDir, fileName, Expanded(scrollLines)));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg(60000);
@@ -653,7 +653,7 @@ public class LongPayloadScrollTests : PlaywrightTestBase
     [Fact]
     public async Task T22_A_state_drawn_the_same_as_the_last_is_not_drawn_again_and_its_box_holds_the_new_state()
     {
-        await Page.GotoAsync(LongPayloadReports.Write(TempDir, OutputDir, "scroll-t22.html",
+        await Page.GotoReportAsync(LongPayloadReports.Write(TempDir, OutputDir, "scroll-t22.html",
             [("scroll-one", "One long response", LongPayloadReports.Call("scroll-one", 0, LongPayloadReports.JsonOfLines(150, "r150", wideAt: 5)))],
             ReportTestHelper.ClassicStart with { TruncateLines = TruncateLineCount.Lines100, PayloadScrollLines = 40 }));
         await Page.Locator("details.feature").First.WaitForAsync();
@@ -958,7 +958,7 @@ public class LongPayloadScrollTests : PlaywrightTestBase
         await Context.GrantPermissionsAsync(["clipboard-read", "clipboard-write"]);
         var words = string.Join(" ", Enumerable.Repeat("word", 140));
         var body = System.Text.Json.JsonSerializer.Serialize(Enumerable.Range(1, 58).ToDictionary(i => $"w60_{i:D4}", _ => words));
-        await Page.GotoAsync(LongPayloadReports.Write(TempDir, OutputDir, "scroll-t31.html",
+        await Page.GotoReportAsync(LongPayloadReports.Write(TempDir, OutputDir, "scroll-t31.html",
             [("scroll-long-lines", "A response of long lines", LongPayloadReports.Call("scroll-long-lines", 0, body))], Expanded()));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
@@ -984,7 +984,7 @@ public class LongPayloadScrollTests : PlaywrightTestBase
         ResolvedToggleDefaults? toggles = null)
     {
         await Context.GrantPermissionsAsync(["clipboard-read", "clipboard-write"]);
-        await Page.GotoAsync(LongPayloadReports.WriteEdited(TempDir, OutputDir, fileName, [(id, "One long response", call)],
+        await Page.GotoReportAsync(LongPayloadReports.WriteEdited(TempDir, OutputDir, fileName, [(id, "One long response", call)],
             edit ?? (source => source), toggles ?? Expanded()));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
@@ -1081,14 +1081,12 @@ public class LongPayloadScrollTests : PlaywrightTestBase
     [Fact]
     public async Task T35_A_first_drawing_installs_the_records_composed_for_it_and_not_a_later_compose_s()
     {
-        await Page.AddInitScriptAsync("""
-            document.addEventListener('DOMContentLoaded', () => {
+        await Page.AddReportInitScriptAsync("""
                 var install = window._installNoteScroll;
                 window._installNoteScroll = function(owner) {
                     owner._noteScrollPending = { source: 'another compose', uncapped: 'another compose', records: {} };
                     return install.apply(this, arguments);
                 };
-            });
             """);
         await OpenAsync("scroll-t35.html", Expanded());
         var idx = await BoxAsync("r150");
@@ -1219,14 +1217,12 @@ public class LongPayloadScrollTests : PlaywrightTestBase
     [Fact]
     public async Task T40_A_first_drawing_records_the_source_before_the_cap_it_was_composed_with()
     {
-        await Page.AddInitScriptAsync("""
-            document.addEventListener('DOMContentLoaded', () => {
+        await Page.AddReportInitScriptAsync("""
                 var record = window._recordDrawnSource;
                 window._recordDrawnSource = function(el, source) {
                     el._noteScrollPending = { source: source, uncapped: 'another compose', records: {} };
                     return record.apply(this, arguments);
                 };
-            });
             """);
         await OpenAsync("scroll-t40.html", Expanded());
         await BoxAsync("r150");

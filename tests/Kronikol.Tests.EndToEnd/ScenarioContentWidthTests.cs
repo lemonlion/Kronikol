@@ -20,7 +20,7 @@ public class ScenarioContentWidthTests : PlaywrightTestBase
     private async Task Open(int width)
     {
         await Page.SetViewportSizeAsync(width, 900);
-        await Page.GotoAsync(ReportTestHelper.GenerateReportWithWideContent(TempDir, OutputDir, $"WideContent_{width}.html"));
+        await Page.GotoReportAsync(ReportTestHelper.GenerateReportWithWideContent(TempDir, OutputDir, $"WideContent_{width}.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await Page.EvaluateAsync("() => document.querySelectorAll('details').forEach(d => d.open = true)");
     }
@@ -115,7 +115,7 @@ public class ScenarioContentWidthTests : PlaywrightTestBase
         File.Copy(path, Path.Combine(OutputDir, $"ServerDiagram_{width}.html"), true);
         File.Copy(Path.Combine(TempDir, "wide-diagram.svg"), Path.Combine(OutputDir, "wide-diagram.svg"), true);
         await Page.SetViewportSizeAsync(width, 900);
-        await Page.GotoAsync(new Uri(path).AbsoluteUri);
+        await Page.GotoReportAsync(new Uri(path).AbsoluteUri);
         await Page.EvaluateAsync("() => document.querySelectorAll('details').forEach(d => d.open = true)");
 
         var image = Page.Locator("summary.example-image img").First;

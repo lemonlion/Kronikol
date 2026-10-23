@@ -19,7 +19,7 @@ public class NoteWidthFitTests : PlaywrightTestBase
 
     private async Task OpenAsync(string fileName, int calls, NoteWidthMode noteWidth, int shortFirst = 0)
     {
-        await Page.GotoAsync(LongPayloadReports.WideQueries(TempDir, OutputDir, fileName, calls, noteWidth, shortFirst));
+        await Page.GotoReportAsync(LongPayloadReports.WideQueries(TempDir, OutputDir, fileName, calls, noteWidth, shortFirst));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg(60000);

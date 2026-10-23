@@ -24,7 +24,7 @@ public class ReportThemeTests
             DateTime.UtcNow, DateTime.UtcNow,
             null, fileName, title, true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
-        return File.ReadAllText(path);
+        return ReportHtml.Read(path);
     }
 
     private static string Block(string css, string opener)

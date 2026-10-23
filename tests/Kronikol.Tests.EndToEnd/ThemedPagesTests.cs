@@ -30,13 +30,13 @@ public class ThemedPagesTests : PlaywrightTestBase
     private async Task OpenLabsPageAsync(string name)
     {
         ReportTestHelper.GenerateReportWithEverySection(TempDir, OutputDir, name + "-report.html", labsPageFileName: name + ".html");
-        await Page.GotoAsync(new Uri(Path.Combine(TempDir, name + ".html")).AbsoluteUri);
+        await Page.GotoReportAsync(new Uri(Path.Combine(TempDir, name + ".html")).AbsoluteUri);
         await Page.Locator("header.labs-header").WaitForAsync();
     }
 
     private async Task OpenVioletRunReportAsync(string fileName)
     {
-        await Page.GotoAsync(ReportTestHelper.GenerateWholeTestFlowToggleDefaultsReport(TempDir, OutputDir, fileName, _ => { },
+        await Page.GotoReportAsync(ReportTestHelper.GenerateWholeTestFlowToggleDefaultsReport(TempDir, OutputDir, fileName, _ => { },
             stylesheet: Stylesheets.VioletThemeStyleSheet));
         await Page.Locator("details.feature").First.WaitForAsync();
     }
@@ -98,7 +98,7 @@ public class ThemedPagesTests : PlaywrightTestBase
         await Expect(Switch).ToHaveAttributeAsync("title", "Switch to the light theme");
         await Expect(Page.Locator("body")).ToHaveCSSAsync("background-color", "rgb(14, 19, 26)");
 
-        await Page.ReloadAsync();
+        await Page.ReloadReportAsync();
         await Page.Locator("header.labs-header").WaitForAsync();
         Assert.Equal("dark", await ThemeAsync());
         await Expect(Switch).ToHaveAttributeAsync("aria-pressed", "true");
@@ -112,7 +112,7 @@ public class ThemedPagesTests : PlaywrightTestBase
     public async Task The_specifications_report_is_violet_in_the_light_and_the_dark_theme(string scheme, string ground, string card, string chosen)
     {
         await Page.EmulateMediaAsync(new() { ColorScheme = Scheme(scheme) });
-        await Page.GotoAsync(ReportTestHelper.GenerateReportWithWideHeader(TempDir, OutputDir, $"ThemedSpecs-{scheme}.html",
+        await Page.GotoReportAsync(ReportTestHelper.GenerateReportWithWideHeader(TempDir, OutputDir, $"ThemedSpecs-{scheme}.html",
             specifications: true, internalFlowTracking: false));
         await Page.Locator("details.feature").First.WaitForAsync();
         Assert.Equal(scheme, await ThemeAsync());
@@ -174,7 +174,7 @@ public class ThemedPagesTests : PlaywrightTestBase
     public async Task The_search_help_reads_in_every_theme(bool violet, string scheme)
     {
         await Page.EmulateMediaAsync(new() { ColorScheme = Scheme(scheme) });
-        await Page.GotoAsync(ReportTestHelper.GenerateWholeTestFlowToggleDefaultsReport(TempDir, OutputDir, $"ThemedHelp-{violet}-{scheme}.html", _ => { },
+        await Page.GotoReportAsync(ReportTestHelper.GenerateWholeTestFlowToggleDefaultsReport(TempDir, OutputDir, $"ThemedHelp-{violet}-{scheme}.html", _ => { },
             stylesheet: violet ? Stylesheets.VioletThemeStyleSheet : null));
         await Page.Locator("details.feature").First.WaitForAsync();
 

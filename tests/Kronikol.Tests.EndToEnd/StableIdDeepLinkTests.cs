@@ -128,7 +128,7 @@ public class StableIdDeepLinkTests : PlaywrightTestBase
         var wanted = Sid("Refunds", "Pay");
         var other = Sid("Checkout", "Pay");
 
-        await Page.GotoAsync(url + "#sid-" + wanted);
+        await Page.GotoReportAsync(url + "#sid-" + wanted);
         await Page.WaitForFunctionAsync(
             $"() => document.querySelector('[data-stable-id=\"{wanted}\"]').hasAttribute('open')",
             null, new() { PollingInterval = 200 });
@@ -147,7 +147,7 @@ public class StableIdDeepLinkTests : PlaywrightTestBase
         var url = Generate("SidKeptOnFilter.html", SameNameInTwoFeatures());
         var wanted = Sid("Refunds", "Pay");
 
-        await Page.GotoAsync(url + "#sid-" + wanted);
+        await Page.GotoReportAsync(url + "#sid-" + wanted);
         await Page.WaitForFunctionAsync(
             $"() => document.querySelector('[data-stable-id=\"{wanted}\"]').hasAttribute('open')",
             null, new() { PollingInterval = 200 });
@@ -170,7 +170,7 @@ public class StableIdDeepLinkTests : PlaywrightTestBase
         var url = Generate("SidWithFilters.html", SameNameInTwoFeatures());
         var wanted = Sid("Checkout", "Pay");
 
-        await Page.GotoAsync($"{url}#sid-{wanted}&status=Failed");
+        await Page.GotoReportAsync($"{url}#sid-{wanted}&status=Failed");
         await Page.WaitForFunctionAsync(
             $"() => document.querySelector('[data-stable-id=\"{wanted}\"]').hasAttribute('open')",
             null, new() { PollingInterval = 200 });
@@ -186,7 +186,7 @@ public class StableIdDeepLinkTests : PlaywrightTestBase
         var url = Generate("SidSurvivesClearAll.html", SameNameInTwoFeatures());
         var wanted = Sid("Checkout", "Pay");
 
-        await Page.GotoAsync($"{url}#sid-{wanted}&status=Failed");
+        await Page.GotoReportAsync($"{url}#sid-{wanted}&status=Failed");
         await Page.WaitForFunctionAsync(
             $"() => document.querySelector('[data-stable-id=\"{wanted}\"]').hasAttribute('open')",
             null, new() { PollingInterval = 200 });
@@ -209,7 +209,7 @@ public class StableIdDeepLinkTests : PlaywrightTestBase
         var url = Generate("SidHashChange.html", SameNameInTwoFeatures());
         var wanted = Sid("Refunds", "Pay");
 
-        await Page.GotoAsync(url);
+        await Page.GotoReportAsync(url);
         Assert.False(await Page.Locator($"[data-stable-id='{wanted}']").First
             .EvaluateAsync<bool>("el => el.hasAttribute('open')"));
 
@@ -227,7 +227,7 @@ public class StableIdDeepLinkTests : PlaywrightTestBase
         var silver = Sid("Pricing", "Discount applies", "discount",
             new Dictionary<string, string> { ["tier"] = "silver" });
 
-        await Page.GotoAsync(url + "#sid-" + silver);
+        await Page.GotoReportAsync(url + "#sid-" + silver);
 
         // The row lives inside a parameterized group that starts collapsed; the deep link has to open
         // every enclosing <details>, not only the feature.
@@ -249,7 +249,7 @@ public class StableIdDeepLinkTests : PlaywrightTestBase
         var silver = Sid("Pricing", "Discount applies", "discount",
             new Dictionary<string, string> { ["tier"] = "silver" });
 
-        await Page.GotoAsync(url + "#sid-" + silver);
+        await Page.GotoReportAsync(url + "#sid-" + silver);
 
         await Page.WaitForFunctionAsync(
             $"() => {{ var r = document.querySelector('table.param-table-flat tr[data-stable-id=\"{silver}\"]'); return r && r.classList.contains('row-active'); }}",
@@ -269,7 +269,7 @@ public class StableIdDeepLinkTests : PlaywrightTestBase
         var url = Generate("SlugRowAnchor.html", AnOutline());
         var slug = ReportGenerator.GenerateScenarioAnchorId("Discount applies");
 
-        await Page.GotoAsync(url + "#" + slug);
+        await Page.GotoReportAsync(url + "#" + slug);
 
         await Page.WaitForFunctionAsync(
             $"() => {{ var r = document.getElementById('{slug}'); return r && r.closest('details.scenario-parameterized').hasAttribute('open'); }}",
@@ -286,7 +286,7 @@ public class StableIdDeepLinkTests : PlaywrightTestBase
         var url = GenerateLongReport("SidDeepLinkFarDown.html");
         var wanted = Sid("Feature 30", "Scenario 30.2");
 
-        await Page.GotoAsync(url + "#sid-" + wanted);
+        await Page.GotoReportAsync(url + "#sid-" + wanted);
         await WaitForScrollToSettleAsync();
 
         Assert.True(await SummaryIsOnScreenAsync($"[data-stable-id='{wanted}']"),
@@ -304,7 +304,7 @@ public class StableIdDeepLinkTests : PlaywrightTestBase
         var url = GenerateLongReport("SidDeepLinkPhone.html");
         var wanted = Sid("Feature 01", "Scenario 01.2");
 
-        await Page.GotoAsync(url + "#sid-" + wanted);
+        await Page.GotoReportAsync(url + "#sid-" + wanted);
         await WaitForScrollToSettleAsync();
 
         Assert.True(await SummaryIsOnScreenAsync($"[data-stable-id='{wanted}']"),

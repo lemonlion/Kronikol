@@ -16,7 +16,7 @@ public class ThemeTests : PlaywrightTestBase
     private async Task OpenAsync(string fileName, ColorScheme scheme)
     {
         await Page.EmulateMediaAsync(new() { ColorScheme = scheme });
-        await Page.GotoAsync(GenerateReport(fileName));
+        await Page.GotoReportAsync(GenerateReport(fileName));
         await Switch.WaitForAsync();
     }
 
@@ -95,7 +95,7 @@ public class ThemeTests : PlaywrightTestBase
         Assert.Equal("true", await Switch.GetAttributeAsync("aria-pressed"));
         Assert.NotEqual(lightGround, (await GroundAndDarkTokenAsync())[0]);
 
-        await Page.ReloadAsync();
+        await Page.ReloadReportAsync();
         await Switch.WaitForAsync();
         Assert.Equal("dark", await ThemeAsync());
 
@@ -146,7 +146,7 @@ public class ThemeTests : PlaywrightTestBase
         Assert.Equal("true", await Switch.GetAttributeAsync("aria-pressed"));
 
         // nothing was kept, so the next load follows the system's setting again
-        await Page.ReloadAsync();
+        await Page.ReloadReportAsync();
         await Switch.WaitForAsync();
         Assert.Equal("light", await ThemeAsync());
     }

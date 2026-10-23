@@ -60,7 +60,7 @@ public class MergeCarriesWarmUpTests : IDisposable
 
         var renamed = Scenarios(merged).Select(s => s.GetProperty("id").GetString()).Where(id => id!.Contains('#')).ToArray();
         Assert.Equal(2, renamed.Length);
-        var html = File.ReadAllText(System.IO.Path.Combine(_directory, "Combined.html"));
+        var html = ReportHtml.Read(System.IO.Path.Combine(_directory, "Combined.html"));
         var document = BrowsingContext.New(AngleSharp.Configuration.Default).OpenAsync(req => req.Content(html)).GetAwaiter().GetResult();
         var badges = document.QuerySelectorAll("details.scenario[data-warmup-ms]")
             .ToDictionary(e => e.GetAttribute("data-warmup-ms")!, e => e.QuerySelector("summary .duration-badge")!.GetAttribute("title")!);
@@ -159,7 +159,7 @@ public class MergeCarriesWarmUpTests : IDisposable
         var exit = MergeCommand.Run([System.IO.Path.Combine(_directory, "shards"), "-o", System.IO.Path.Combine(_directory, "Combined.html")], new StringWriter(), error);
         Assert.True(exit == 0, error.ToString());
         Assert.Equal(2, shards.Length);
-        return JsonDocument.Parse(File.ReadAllText(System.IO.Path.Combine(_directory, "Combined.json")));
+        return JsonDocument.Parse(ReportHtml.Read(System.IO.Path.Combine(_directory, "Combined.json")));
     }
 
     private static Guid Call(List<RequestResponseLog> logs, string scenario, double startMs, double durationMs)
@@ -176,7 +176,7 @@ public class MergeCarriesWarmUpTests : IDisposable
     /// <summary>The <c>data-warmup-ms</c> of every scenario the merged (or ingested) report draws a mark on.</summary>
     private string[] MarkedInReport(string? path = null)
     {
-        var html = File.ReadAllText(path ?? System.IO.Path.Combine(_directory, "Combined.html"));
+        var html = ReportHtml.Read(path ?? System.IO.Path.Combine(_directory, "Combined.html"));
         var document = BrowsingContext.New(AngleSharp.Configuration.Default).OpenAsync(req => req.Content(html)).GetAwaiter().GetResult();
         return document.QuerySelectorAll("details.scenario[data-warmup-ms]").Select(e => e.GetAttribute("data-warmup-ms")!).ToArray();
     }

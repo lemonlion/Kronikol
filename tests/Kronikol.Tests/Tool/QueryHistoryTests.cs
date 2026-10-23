@@ -703,7 +703,7 @@ public class QueryHistoryTests : IDisposable
     {
         Seed("PP");
         var report = WriteReport(pay: "Failed").Replace("TestRunReport.json", "Old.json", StringComparison.Ordinal);
-        File.WriteAllText(report, File.ReadAllText(Path.Combine(_dir, "reports", "TestRunReport.json")).Replace("\"stableId\": \"" + PayId + "\", ", "", StringComparison.Ordinal));
+        File.WriteAllText(report, ReportHtml.Read(Path.Combine(_dir, "reports", "TestRunReport.json")).Replace("\"stableId\": \"" + PayId + "\", ", "", StringComparison.Ordinal));
         File.Delete(Path.Combine(_dir, "reports", "TestRunReport.json"));
 
         var (_, error, exit) = Query(null, "history", report);

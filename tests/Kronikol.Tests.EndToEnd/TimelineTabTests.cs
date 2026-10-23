@@ -48,7 +48,7 @@ public class TimelineTabTests : PlaywrightTestBase
 
     private async Task OpenAsync(string url)
     {
-        await Page.GotoAsync(url);
+        await Page.GotoReportAsync(url);
         await Page.Locator("details.feature").First.WaitForAsync();
     }
 

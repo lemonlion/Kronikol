@@ -82,7 +82,7 @@ public class BaseSurfaceStyleTests : PlaywrightTestBase
     private async Task OpenAsync(string fileName, string theme)
     {
         await Context.AddInitScriptAsync($"try {{ localStorage.setItem('kronikol.theme', '{theme}'); }} catch (e) {{ }}");
-        await Page.GotoAsync(GenerateSurfacesReport(fileName));
+        await Page.GotoReportAsync(GenerateSurfacesReport(fileName));
         await Page.Locator("details.feature").First.WaitForAsync();
         await Page.EvaluateAsync("() => document.querySelectorAll('details.feature, details.rule, details.scenario, details.scenario-steps, details.failure-result, details.step-collapsible').forEach(d => d.open = true)");
     }

@@ -12,7 +12,7 @@ public class ParameterRenderingReportTests
             DateTime.UtcNow, DateTime.UtcNow,
             null, "ParamRender.html", "Test", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
-        return File.ReadAllText(path);
+        return ReportHtml.Read(path);
     }
 
     [Fact]

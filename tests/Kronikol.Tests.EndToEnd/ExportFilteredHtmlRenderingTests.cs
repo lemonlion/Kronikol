@@ -46,13 +46,13 @@ public class ExportFilteredHtmlRenderingTests : PlaywrightTestBase
     /// </summary>
     private async Task OpenExport(string path)
     {
-        await Page.GotoAsync(new Uri(path).AbsoluteUri);
+        await Page.GotoReportAsync(new Uri(path).AbsoluteUri);
     }
 
     [Fact]
     public async Task Exported_filtered_report_still_renders_its_diagrams()
     {
-        await Page.GotoAsync(GenerateReport("ExportRender_Diagrams.html"));
+        await Page.GotoReportAsync(GenerateReport("ExportRender_Diagrams.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         var exported = await ExportFilteredHtml();
@@ -79,7 +79,7 @@ public class ExportFilteredHtmlRenderingTests : PlaywrightTestBase
     public async Task Exported_filtered_report_carries_the_diagram_payload()
     {
         // The direct statement of the defect: the export referenced sources it did not ship.
-        await Page.GotoAsync(GenerateReport("ExportRender_Payload.html"));
+        await Page.GotoReportAsync(GenerateReport("ExportRender_Payload.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         var exported = await ExportFilteredHtml();
@@ -103,7 +103,7 @@ public class ExportFilteredHtmlRenderingTests : PlaywrightTestBase
     {
         // Rendering one diagram is not enough: a diagram already drawn before the export is serialised
         // as inline SVG and would pass on its own. This asserts every container can resolve a source.
-        await Page.GotoAsync(GenerateReport("ExportRender_AllSources.html"));
+        await Page.GotoReportAsync(GenerateReport("ExportRender_AllSources.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         var exported = await ExportFilteredHtml();
@@ -135,7 +135,7 @@ public class ExportFilteredHtmlRenderingTests : PlaywrightTestBase
         // drawn before the export was serialised as the SVG it drew, its link texts still styled as bound, but no
         // listener survives serialisation, so a click opened nothing.
         var (uri, _) = ReportTestHelper.GenerateRunReportWithFlowArrows(TempDir, OutputDir, $"ExportRender_Arrows_{drawnBeforeTheExport}.html", withFlow: 1, withoutFlow: 1);
-        await Page.GotoAsync(uri);
+        await Page.GotoReportAsync(uri);
         await ExpandFirstScenarioWithDiagram();
         if (drawnBeforeTheExport)
             await DrawAll();
@@ -159,7 +159,7 @@ public class ExportFilteredHtmlRenderingTests : PlaywrightTestBase
         // §5, Q1: the export copies the head, and the segment element with it, whole: the element is small once
         // compressed, and pruning it by key would need its ids read back out of the map.
         var (uri, reportsDir) = ReportTestHelper.GenerateRunReportWithFlowArrows(TempDir, OutputDir, "ExportRender_Map.html", withFlow: 2, withoutFlow: 1);
-        await Page.GotoAsync(uri);
+        await Page.GotoReportAsync(uri);
         await Page.Locator("details.feature").First.WaitForAsync();
 
         var exported = await ExportFilteredHtml();
@@ -171,7 +171,7 @@ public class ExportFilteredHtmlRenderingTests : PlaywrightTestBase
             Assert.True(start >= 0, "the page carries the segment element");
             return html[start..(html.IndexOf("</script>", start, StringComparison.Ordinal) + "</script>".Length)];
         }
-        Assert.Equal(Element(File.ReadAllText(Path.Combine(reportsDir, "TestRunReport.html"))), Element(File.ReadAllText(exported)));
+        Assert.Equal(Element(ReportFileText.Read(Path.Combine(reportsDir, "TestRunReport.html"))), Element(ReportFileText.Read(exported)));
     }
 
     [Fact]
@@ -179,7 +179,7 @@ public class ExportFilteredHtmlRenderingTests : PlaywrightTestBase
     {
         // F14 (INTERNAL_FLOW_BLOB_PLAN §11.1) beyond the links: every listener the render script bound to a drawn
         // diagram was lost in the export, a note's fold on a double-click among them.
-        await Page.GotoAsync(ReportTestHelper.GenerateReportWithLongNotes(TempDir, OutputDir, "ExportRender_Notes.html"));
+        await Page.GotoReportAsync(ReportTestHelper.GenerateReportWithLongNotes(TempDir, OutputDir, "ExportRender_Notes.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await DrawAll();
@@ -202,7 +202,7 @@ public class ExportFilteredHtmlRenderingTests : PlaywrightTestBase
     public async Task A_flame_chart_drawn_before_the_export_still_zooms_in_the_export()
     {
         // A flame chart went into the export drawn and marked as drawn, so the export never bound its click-to-zoom.
-        await Page.GotoAsync(ReportTestHelper.GenerateReportWithMarkersInTheWholeTestFlow(TempDir, OutputDir, "ExportRender_Flame.html"));
+        await Page.GotoReportAsync(ReportTestHelper.GenerateReportWithMarkersInTheWholeTestFlow(TempDir, OutputDir, "ExportRender_Flame.html"));
         await ExpandFirstScenarioWithDiagram();
         await Page.Locator(".diagram-toggle-btn[data-dtype='flame']").First.ClickAsync();
         var bar = Page.Locator(".diagram-view-flame .iflow-flame .iflow-flame-bar").First;
@@ -241,7 +241,7 @@ public class ExportFilteredHtmlRenderingTests : PlaywrightTestBase
             internalFlowTracking: true,
             internalFlowDataScript: dataScript);
         File.Copy(path, Path.Combine(OutputDir, "ExportRender_Inline.html"), true);
-        await Page.GotoAsync(new Uri(path).AbsoluteUri);
+        await Page.GotoReportAsync(new Uri(path).AbsoluteUri);
         await ExpandFirstScenarioWithDiagram();
         await Page.Locator(".plantuml-inline-svg").First.ScrollIntoViewIfNeededAsync();
         await Page.WaitForFunctionAsync("() => document.querySelector('.plantuml-inline-svg').dataset.iflowBound === '1'", null,
@@ -249,7 +249,7 @@ public class ExportFilteredHtmlRenderingTests : PlaywrightTestBase
 
         var exported = await ExportFilteredHtml();
 
-        var copies = System.Text.RegularExpressions.Regex.Matches(File.ReadAllText(exported), "<div class=\"plantuml-inline-svg\"[^>]*>");
+        var copies = System.Text.RegularExpressions.Regex.Matches(ReportFileText.Read(exported), "<div class=\"plantuml-inline-svg\"[^>]*>");
         Assert.Single(copies);
         Assert.DoesNotContain("data-iflow-bound", copies[0].Value, StringComparison.Ordinal);
     }

@@ -57,7 +57,7 @@ public class DurationPaintTests : PlaywrightTestBase
     [InlineData("ar-SA")]
     public async Task The_timeline_paints_each_bar_at_its_share_of_the_longest(string culture)
     {
-        await Page.GotoAsync(Generate($"TimelineWidths_{culture}.html", TimelineFeatures(), culture));
+        await Page.GotoReportAsync(Generate($"TimelineWidths_{culture}.html", TimelineFeatures(), culture));
         await OpenReportTabAsync("timeline"); // 5.0.0: a tab of the report bar (plans/OPTION_C_PLAN.md S3)
         await Expect(Page.Locator("#scenario-timeline")).ToBeVisibleAsync();
 
@@ -78,7 +78,7 @@ public class DurationPaintTests : PlaywrightTestBase
     [InlineData("ar-SA")]
     public async Task The_pie_chart_paints_its_rings(string culture)
     {
-        await Page.GotoAsync(Generate($"PieChart_{culture}.html", TimelineFeatures(), culture));
+        await Page.GotoReportAsync(Generate($"PieChart_{culture}.html", TimelineFeatures(), culture));
         await Page.Locator(".run-ring svg").WaitForAsync();
 
         var rings = await Page.EvaluateAsync<double[][]>("""
@@ -108,7 +108,7 @@ public class DurationPaintTests : PlaywrightTestBase
             Scenarios = ms.Select((m, i) => Scenario($"{name}-{i}", ExecutionResult.Passed, m)).ToArray()
         };
         // Written as "500ms", "1m 5s" and "2s": the number at the start of each is 500, 1 and 2.
-        await Page.GotoAsync(Generate("SummarySort.html", [Feature("Short", 500), Feature("Long", 65_400), Feature("Middle", 1200, 800)]));
+        await Page.GotoReportAsync(Generate("SummarySort.html", [Feature("Short", 500), Feature("Long", 65_400), Feature("Middle", 1200, 800)]));
 
         // 5.0.0: the table is the Features tab's Summary view, and the Duration group's first column reads Total, the
         // last of the header row's Total columns (plans/OPTION_C_PLAN.md S4)

@@ -32,10 +32,10 @@ public class SkillDriftTests
     private static string CanonicalSkillDir =>
         Path.Combine(RepoRoot, "templates", "skills", "kronikol-test-debugging");
 
-    private static string Skill => File.ReadAllText(Path.Combine(CanonicalSkillDir, "SKILL.md"));
+    private static string Skill => ReportHtml.Read(Path.Combine(CanonicalSkillDir, "SKILL.md"));
 
     private static string Reference =>
-        File.ReadAllText(Path.Combine(CanonicalSkillDir, "references", "commands.md"));
+        ReportHtml.Read(Path.Combine(CanonicalSkillDir, "references", "commands.md"));
 
     private static string RenderedUsage()
     {
@@ -161,7 +161,7 @@ public class SkillDriftTests
     public void Every_flag_the_parser_accepts_is_documented_in_the_reference()
     {
         var parsed = Regex.Matches(
-                File.ReadAllText(Path.Combine(RepoRoot, "src", "Kronikol", "Query", "QueryOptions.cs")),
+                ReportHtml.Read(Path.Combine(RepoRoot, "src", "Kronikol", "Query", "QueryOptions.cs")),
                 @"case ""(--[a-z][a-z-]*)""")
             .Select(m => m.Groups[1].Value)
             .Distinct(StringComparer.Ordinal);
@@ -209,7 +209,7 @@ public class SkillDriftTests
         // list from falling behind the switch, which would drop a real flag out of the legality table and
         // so refuse it on every verb.
         var cases = Regex.Matches(
-                File.ReadAllText(Path.Combine(RepoRoot, "src", "Kronikol", "Query", "QueryOptions.cs")),
+                ReportHtml.Read(Path.Combine(RepoRoot, "src", "Kronikol", "Query", "QueryOptions.cs")),
                 @"case ""(--[a-z][a-z-]*)""")
             .Select(m => m.Groups[1].Value)
             .Distinct(StringComparer.Ordinal);
@@ -292,7 +292,7 @@ public class SkillDriftTests
         var sources = Directory.GetFiles(Path.Combine(RepoRoot, "src", "Kronikol.Tool"), "*.cs", SearchOption.AllDirectories)
             .Concat(Directory.GetFiles(Path.Combine(RepoRoot, "src", "Kronikol", "Query"), "*.cs", SearchOption.AllDirectories));
         foreach (var file in sources)
-        foreach (Match match in Regex.Matches(File.ReadAllText(file), @"\$?""! (.*)$", RegexOptions.Multiline))
+        foreach (Match match in Regex.Matches(ReportHtml.Read(file), @"\$?""! (.*)$", RegexOptions.Multiline))
             phrases.Add(Anchor(match.Groups[1].Value));
 
         // The two the tool composes at run time, keyed on the stable half of each message.
@@ -421,8 +421,8 @@ public class SkillDriftTests
         Assert.Equal(minesFiles, shippedFiles);
 
         var differing = minesFiles
-            .Where(f => !File.ReadAllText(Path.Combine(mine, f)).ReplaceLineEndings("\n")
-                    .Equals(File.ReadAllText(Path.Combine(shipped, f)).ReplaceLineEndings("\n"), StringComparison.Ordinal))
+            .Where(f => !ReportHtml.Read(Path.Combine(mine, f)).ReplaceLineEndings("\n")
+                    .Equals(ReportHtml.Read(Path.Combine(shipped, f)).ReplaceLineEndings("\n"), StringComparison.Ordinal))
             .ToList();
 
         Assert.True(differing.Count == 0,
@@ -449,7 +449,7 @@ public class SkillDriftTests
     {
         static string Block(string path)
         {
-            var text = File.ReadAllText(path).ReplaceLineEndings("\n");
+            var text = ReportHtml.Read(path).ReplaceLineEndings("\n");
             var begin = text.IndexOf("<!-- kronikol:begin -->", StringComparison.Ordinal);
             var end = text.IndexOf("<!-- kronikol:end -->", StringComparison.Ordinal);
             Assert.True(begin >= 0 && end > begin, $"no managed block in {path}");

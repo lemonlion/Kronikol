@@ -14,7 +14,7 @@ public class ToggleButtonPendingTests : DiagramNotePlaywrightBase
     private async Task OpenRendered(string fileName)
     {
         // Long notes with headers: Expand and the Headers toggle really re-render (short notes would queue nothing).
-        await Page.GotoAsync(GenerateLongNoteWithHeadersReport(fileName));
+        await Page.GotoReportAsync(GenerateLongNoteWithHeadersReport(fileName));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await RenderAllDiagramsAndWait(1);

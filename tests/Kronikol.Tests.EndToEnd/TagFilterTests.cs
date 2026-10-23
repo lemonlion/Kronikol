@@ -54,7 +54,7 @@ public class TagFilterTests : PlaywrightTestBase
 
     private async Task OpenAsync(string fileName, string hash = "")
     {
-        await Page.GotoAsync(Generate(fileName) + hash);
+        await Page.GotoReportAsync(Generate(fileName) + hash);
         // attached, not visible: a link can hide the first feature
         await Page.Locator("details.feature").First.WaitForAsync(new() { State = WaitForSelectorState.Attached });
         await OpenFilterRowsAsync();
@@ -71,7 +71,7 @@ public class TagFilterTests : PlaywrightTestBase
     private async Task<IPage> FreshPageAt(string url)
     {
         var fresh = await OpenPageAsync(Page.Context);
-        await fresh.GotoAsync(url);
+        await fresh.GotoReportAsync(url);
         await fresh.Locator("details.feature").First.WaitForAsync(new() { State = WaitForSelectorState.Attached });
         return fresh;
     }
@@ -94,7 +94,7 @@ public class TagFilterTests : PlaywrightTestBase
             DateTime.UtcNow, null, Path.Combine(TempDir, fileName), "Long", true, diagramFormat: DiagramFormat.PlantUml,
             plantUmlRendering: PlantUmlRendering.BrowserJs);
         File.Copy(path, Path.Combine(OutputDir, fileName), true);
-        await Page.GotoAsync(new Uri(path).AbsoluteUri + hash);
+        await Page.GotoReportAsync(new Uri(path).AbsoluteUri + hash);
         await Page.Locator("details.feature").First.WaitForAsync(new() { State = WaitForSelectorState.Attached });
         await OpenFilterRowsAsync();
     }

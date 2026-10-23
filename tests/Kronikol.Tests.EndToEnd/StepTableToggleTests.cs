@@ -10,7 +10,7 @@ public class StepTableToggleTests : PlaywrightTestBase
     [Fact]
     public async Task Toggle_button_renders_with_param_name()
     {
-        await Page.GotoAsync(GenerateReportWithStepTableToggle("StepToggleRender.html"));
+        await Page.GotoReportAsync(GenerateReportWithStepTableToggle("StepToggleRender.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         // Expand all to see step content
@@ -27,7 +27,7 @@ public class StepTableToggleTests : PlaywrightTestBase
     [Fact]
     public async Task Toggle_button_click_scrolls_and_highlights_table()
     {
-        await Page.GotoAsync(GenerateReportWithStepTableToggle("StepToggleHighlight.html"));
+        await Page.GotoReportAsync(GenerateReportWithStepTableToggle("StepToggleHighlight.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await ExpandAllFeaturesAsync();
@@ -56,7 +56,7 @@ public class StepTableToggleTests : PlaywrightTestBase
     [Fact]
     public async Task Toggle_button_highlight_fades_after_timeout()
     {
-        await Page.GotoAsync(GenerateReportWithStepTableToggle("StepToggleFade.html"));
+        await Page.GotoReportAsync(GenerateReportWithStepTableToggle("StepToggleFade.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await ExpandAllFeaturesAsync();
@@ -84,7 +84,7 @@ public class StepTableToggleTests : PlaywrightTestBase
     [Fact]
     public async Task Table_contains_expected_data()
     {
-        await Page.GotoAsync(GenerateReportWithStepTableToggle("StepToggleData.html"));
+        await Page.GotoReportAsync(GenerateReportWithStepTableToggle("StepToggleData.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await ExpandAllFeaturesAsync();

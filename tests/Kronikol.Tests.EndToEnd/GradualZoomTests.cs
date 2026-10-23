@@ -13,7 +13,7 @@ public class GradualZoomTests : PlaywrightTestBase
 
     private async Task SetupWideDiagram(string fileName)
     {
-        await Page.GotoAsync(GenerateReportWithWideDiagram(fileName));
+        await Page.GotoReportAsync(GenerateReportWithWideDiagram(fileName));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -110,7 +110,7 @@ public class GradualZoomTests : PlaywrightTestBase
     [Fact]
     public async Task Zoom_slider_does_not_appear_on_non_zoomable_diagram()
     {
-        await Page.GotoAsync(GenerateReport("SliderNonZoomable.html"));
+        await Page.GotoReportAsync(GenerateReport("SliderNonZoomable.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();

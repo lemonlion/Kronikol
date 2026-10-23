@@ -84,7 +84,7 @@ public class ComponentDiagramDatabaseToggleTests : PlaywrightTestBase
     [Fact]
     public async Task Databases_toggle_leaves_component_diagram_intact()
     {
-        await Page.GotoAsync(GenerateComponentDatabasesReport("CompDbToggleIntact.html"));
+        await Page.GotoReportAsync(GenerateComponentDatabasesReport("CompDbToggleIntact.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -131,7 +131,7 @@ public class ComponentDiagramDatabaseToggleTests : PlaywrightTestBase
     [Fact]
     public async Task Hiding_databases_before_opening_panel_keeps_component_diagram_intact()
     {
-        await Page.GotoAsync(GenerateComponentDatabasesReport("CompDbToggleBeforeOpen.html"));
+        await Page.GotoReportAsync(GenerateComponentDatabasesReport("CompDbToggleBeforeOpen.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         // Hide databases while the component diagram panel is still closed and unrendered —
@@ -151,7 +151,7 @@ public class ComponentDiagramDatabaseToggleTests : PlaywrightTestBase
     [Fact]
     public async Task Databases_hidden_default_keeps_component_diagram_intact()
     {
-        await Page.GotoAsync(GenerateComponentDatabasesReport("CompDbDefaultHidden.html", o =>
+        await Page.GotoReportAsync(GenerateComponentDatabasesReport("CompDbDefaultHidden.html", o =>
         {
             o.TestRunReportToggleDefaults.DatabasesShown = false;
             o.TestRunReportToggleDefaults.ComponentDiagramVisible = true;
@@ -189,7 +189,7 @@ public class ComponentDiagramDatabaseToggleTests : PlaywrightTestBase
     [Fact]
     public async Task Steps_and_assertions_toggles_do_not_reapply_database_filter_to_component_diagram()
     {
-        await Page.GotoAsync(GenerateComponentDatabasesReport("CompDbStepsAssertions.html"));
+        await Page.GotoReportAsync(GenerateComponentDatabasesReport("CompDbStepsAssertions.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();

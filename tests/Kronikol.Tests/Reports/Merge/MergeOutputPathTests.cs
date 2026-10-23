@@ -54,7 +54,7 @@ public class MergeOutputPathTests : IDisposable
 
         Assert.Equal(Path.GetFullPath(wanted), Path.GetFullPath(written));
         Assert.True(File.Exists(wanted), $"nothing at {wanted}");
-        Assert.Contains("Combined", File.ReadAllText(wanted), StringComparison.Ordinal);
+        Assert.Contains("Combined", ReportHtml.Read(wanted), StringComparison.Ordinal);
     }
 
     [Fact]
@@ -82,7 +82,7 @@ public class MergeOutputPathTests : IDisposable
             () => MergeableReportRenderer.Render(OneReport("Orders"), first, title: "First"),
             () => MergeableReportRenderer.Render(OneReport("Inventory"), second, title: "Second"));
 
-        Assert.Contains("First", File.ReadAllText(first), StringComparison.Ordinal);
-        Assert.Contains("Second", File.ReadAllText(second), StringComparison.Ordinal);
+        Assert.Contains("First", ReportHtml.Read(first), StringComparison.Ordinal);
+        Assert.Contains("Second", ReportHtml.Read(second), StringComparison.Ordinal);
     }
 }

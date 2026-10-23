@@ -11,7 +11,7 @@ public class TagExpressionSearchReportTests
             DateTime.UtcNow, DateTime.UtcNow,
             null, "TagExprSearch.html", "Test", includeTestRunData: true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
-        return File.ReadAllText(path);
+        return ReportHtml.Read(path);
     }
 
     [Fact]

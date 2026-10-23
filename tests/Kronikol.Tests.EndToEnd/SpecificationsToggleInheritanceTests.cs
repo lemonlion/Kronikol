@@ -23,7 +23,7 @@ public class SpecificationsToggleInheritanceTests : DiagramNotePlaywrightBase
             });
 
         // TestRunReport: Details keeps the built-in (truncated active), headers hidden.
-        await Page.GotoAsync(testRunUri);
+        await Page.GotoReportAsync(testRunUri);
         await Page.Locator("details.feature").First.WaitForAsync();
         Assert.True(await Page.EvaluateAsync<bool>(
             "() => document.querySelector('.toolbar-right .details-radio-btn[data-state=\"truncated\"]').classList.contains('details-active')"));
@@ -32,7 +32,7 @@ public class SpecificationsToggleInheritanceTests : DiagramNotePlaywrightBase
         Assert.Equal("truncated", await Page.EvaluateAsync<string>("() => window._detailsDefault"));
 
         // Specifications: Details overridden to expanded; HeadersShown INHERITED from the test-run group.
-        await Page.GotoAsync(specUri);
+        await Page.GotoReportAsync(specUri);
         await Page.Locator("details.feature").First.WaitForAsync();
         Assert.True(await Page.EvaluateAsync<bool>(
             "() => document.querySelector('.toolbar-right .details-radio-btn[data-state=\"expanded\"]').classList.contains('details-active')"));
@@ -43,7 +43,7 @@ public class SpecificationsToggleInheritanceTests : DiagramNotePlaywrightBase
         // An unset property matches between the two files (steps toggle seeds shown in both).
         Assert.Equal("Steps", (await Page.Locator(".toolbar-right .toggle-btn[data-toggle='steps']").TextContentAsync())!.Trim());
         Assert.Equal("true", await Page.Locator(".toolbar-right .toggle-btn[data-toggle='steps']").GetAttributeAsync("aria-pressed"));
-        await Page.GotoAsync(testRunUri);
+        await Page.GotoReportAsync(testRunUri);
         await Page.Locator("details.feature").First.WaitForAsync();
         Assert.Equal("Steps", (await Page.Locator(".toolbar-right .toggle-btn[data-toggle='steps']").TextContentAsync())!.Trim());
         Assert.Equal("true", await Page.Locator(".toolbar-right .toggle-btn[data-toggle='steps']").GetAttributeAsync("aria-pressed"));

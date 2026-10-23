@@ -31,7 +31,7 @@ public class StepStatusTooltipTests(PlaywrightFixture fixture) : PlaywrightTestB
     [InlineData("a step never reached", SkippedAfterFailure)]
     public async Task Hovering_a_status_icon_shows_its_text(string step, string expected)
     {
-        await Page.GotoAsync(Generate("StatusHover.html"));
+        await Page.GotoReportAsync(Generate("StatusHover.html"));
         await OpenEveryStep();
         var icon = Icon(step);
 
@@ -44,7 +44,7 @@ public class StepStatusTooltipTests(PlaywrightFixture fixture) : PlaywrightTestB
     [Fact]
     public async Task Focusing_a_composite_step_gives_its_icon_its_text()
     {
-        await Page.GotoAsync(Generate("StatusFocus.html"));
+        await Page.GotoReportAsync(Generate("StatusFocus.html"));
         await OpenEveryStep();
         var summary = Summary("a composite with a bypassed child");
 
@@ -58,7 +58,7 @@ public class StepStatusTooltipTests(PlaywrightFixture fixture) : PlaywrightTestB
     [Fact]
     public async Task Every_passed_step_above_a_skipped_leaf_20_deep_says_so()
     {
-        await Page.GotoAsync(Generate("StatusDeep.html"));
+        await Page.GotoReportAsync(Generate("StatusDeep.html"));
         await OpenEveryStep();
 
         for (var depth = 0; depth < 20; depth++)
@@ -72,7 +72,7 @@ public class StepStatusTooltipTests(PlaywrightFixture fixture) : PlaywrightTestB
         Assert.Equal(Skipped, await leaf.GetAttributeAsync("title"));
 
         // Focus reaches the same text, from the keyboard's side.
-        await Page.ReloadAsync();
+        await Page.ReloadReportAsync();
         await OpenEveryStep();
         await Summary("level 12").FocusAsync();
         Assert.Equal(PassedSkipped, await Icon("level 12").GetAttributeAsync("title"));
@@ -81,13 +81,13 @@ public class StepStatusTooltipTests(PlaywrightFixture fixture) : PlaywrightTestB
     [Fact]
     public async Task An_exported_page_gives_its_icons_their_text()
     {
-        await Page.GotoAsync(Generate("StatusExport.html"));
+        await Page.GotoReportAsync(Generate("StatusExport.html"));
         var download = await Page.RunAndWaitForDownloadAsync(async () =>
             await Page.Locator("button.export-btn", new() { HasTextString = "Export Filtered HTML" }).ClickAsync());
         var path = Path.Combine(TempDir, $"export_{Guid.NewGuid():N}.html");
         await download.SaveAsAsync(path);
 
-        await Page.GotoAsync(new Uri(path).AbsoluteUri);
+        await Page.GotoReportAsync(new Uri(path).AbsoluteUri);
         await OpenEveryStep();
         var icon = Icon("a failed leaf");
         await icon.HoverAsync();

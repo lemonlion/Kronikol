@@ -3,7 +3,7 @@
 **Date:** 2026-10-23 · **Repo version:** 5.5.2 (`origin/main` at `2933b7a0`; line numbers are for that commit, and
 those the first draft cited are unchanged from `91d1afd7`, 5.5.1) · **Status: green-lit on 2026-10-23** ("Can you
 implement the plan in full, taking all your recommendations"): every recommendation of section 7 is taken. Audited the
-same day (section 8). F2 shipped as 5.5.4.
+same day (section 8). F2 shipped as 5.5.4, R1 as 5.6.0.
 
 This plan was written at the owner's asks of 2026-10-23:
 - "Can we investigate options for getting the 29mb html report such as the one in
@@ -552,7 +552,9 @@ changes. What follows from that:
   scripts that hook `DOMContentLoaded` to wrap the report's functions (`LongPayloadScrollTests.cs:1085`, `:1223`;
   `BrowserRenderWorkerTests.cs:39`) would see only the loader page, since `document.open` erases their listeners and
   init scripts do not run again. So the suites' opening helpers wait for `window.__kronikolReady`, and those hooks
-  listen for `kronikol:ready` (section 4.2). CI runs Chromium only (`.github/workflows/ci.yml:266`, `:272`); the
+  run at the report's `DOMContentLoaded` through a wrapper of `Document.prototype.open` that adds their listener after
+  it (corrected in R1: an init script's own `kronikol:ready` listener is added on the loader page, so `document.open`
+  erases it too). CI runs Chromium only (`.github/workflows/ci.yml:266`, `:272`); the
   Firefox and WebKit cases run where those engines are installed.
 - **Kronikol4J** keeps writing the plain page until it is ported: a divergence ledger line, as `CLAUDE.md` asks for a
   change to report output (Q11). Its parity harness reads .NET's pages as fixtures (section 3.13), so it decodes them
@@ -628,7 +630,8 @@ Page (Playwright, the bundled Chromium; Firefox and WebKit where the suite runs 
 12. Deep search finds text that is only in a diagram source (from pieces far apart), only in a flame span, and only in
     internal-flow text: the same scenarios as the plain page.
 13. Export from a compressed page writes a compressed page (a `gzip` page frame and the pieces it needs) that opens and
-    works: diagrams drawn, sub-steps open, deep search.
+    works: diagrams drawn, sub-steps open (R1: not deep search, since the export has never carried the search bar
+    or the index).
 14. The dark theme gives a dark loading screen, and the theme switch works after the rebuild.
 15. A corrupted frame shows the failure in the loading screen, never a blank page; so does a frame whose checksum is
     wrong, with the Wasm decoder.
@@ -636,8 +639,9 @@ Page (Playwright, the bundled Chromium; Firefox and WebKit where the suite runs 
 17. Firefox with `dom.compression_streams.zstd.enabled`: the native path decodes (if the suite runs Firefox; else a
     unit test of the loader's branch).
 18. The suites' opening helpers wait for the rebuilt report: with the loader slowed down, an `EvaluateAsync` straight
-    after the helper still sees the report, never the loader page; an init script that listens for `kronikol:ready`
-    sees the report's functions.
+    after the helper still sees the report, never the loader page; an init script made by the suites'
+    `AddReportInitScriptAsync` sees the report's functions (R1: one that listens for `kronikol:ready` itself never hears
+    it, section 4.7).
 19. A report script that declares, at its top level, every name the loader uses still runs after the rebuild (the
     loader declares none).
 20. With JavaScript off (a context with `JavaScriptEnabled = false`), the notice and the loading text's hint show.
@@ -781,6 +785,31 @@ they are: a compressed page is no more readable than a plain one.
   and Safari 26.6.2 reads every `Blob` over `http://`; under WebDriver it opens no local file ("Failed to open page"),
   so whether Safari fails on `file://` too is not known. A stream built from the bytes works in every case
   (`HTML_COMPRESSION_PLAN.harness/f2/`, `results/f2-blob-probe.txt`).
+- 2026-10-24 (kronikol-08): **R1 shipped as 5.6.0.** Built as section 4 says, with these departures, each for what the
+  building found:
+  - The writer is a hybrid (4.6): the bulk is raw from birth (the diagram map holds the sources and `StepDeferral` the
+    sub-steps' HTML), and one pass at the end, `CompressedPage.Raw`, turns every other gzip item raw: flame charts,
+    merged flows, the segments, and a caller's own segment script. `Plain` is its exact inverse, so `kronikol decode`
+    gives the page 5.5.4 writes for the same input, and `FromPlain` then `Build` gives back the writer's own bytes.
+  - The pieces carry their number (`data-kron-piece`, from 1), so an export keeps only the pieces it needs under their
+    own numbers; the diagram tokens count from 0.
+  - The export's page frame is gzip from the browser's `CompressionStream`, and its hint names `filtered-report.html`,
+    the file the export downloads. A browser without `CompressionStream` stores the frame as it is (`data-codec="none"`),
+    which the loader and `kronikol decode` read too: found by review, as the export first threw there.
+  - `HtmlReportFile` (`IsCompressed`, `ToPlain`, `ReadPlain`) is public, for code that parses the page (the example's
+    `ReportParser`, Kronikol4J's harness, ProxyTap's test).
+  - The hint and the `<noscript>` text name the file, not its folder: test 20 found the first build writing the full
+    path, which named the writing machine's folders in every report.
+  - Corrected in 4.7 and test 18: `document.open` erases an init script's own `kronikol:ready` listener too, since it
+    is added on the loader page. The suites' `AddReportInitScriptAsync` wraps `Document.prototype.open` and adds its
+    listener after it (`ReportPageExtensions.cs`).
+  - Test 13 checks no deep search: the export has never carried the search bar or the index.
+  - Test 5's driver sets `process.exitCode`: `process.exit` in its rejection handler aborts Node 25.9 on Windows (a
+    libuv assertion in `src/win/async.c`, exit 0xC0000409).
+  - The first full Playwright run passed 1,625 of 1,655. `HeldSubStepsTests`' "cannot decompress" message no longer
+    comes on a compressed page, which draws the steps: the fact is kept for a plain page and a new one holds the
+    compressed page's. `BrowserStallTests` sent the new class's contexts through the bounded helpers.
+  - Results: the core suite passes 8,780 with 2 skipped, the full Playwright suite 1,643 with 28 skipped, ProxyTap's 200 with 4 skipped, xUnit2's 105 and the example Integration suite's 257. On the owner's 5.4.4 report the page goes from 28,954,978 bytes to 7,212,857, written in 1.1 s in a Release build, and decoding it gives back every item.
 
 ## Appendix A. Edit sites at `2933b7a0`
 

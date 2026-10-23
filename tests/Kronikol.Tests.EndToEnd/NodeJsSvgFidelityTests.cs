@@ -15,7 +15,7 @@ public class NodeJsSvgFidelityTests : PlaywrightTestBase
     private async Task Open(bool inlineSvg, [System.Runtime.CompilerServices.CallerMemberName] string? testName = null)
     {
         Assert.SkipWhen(!NodeAvailable.Value, "Node.js not available on PATH");
-        await Page.GotoAsync(ReportTestHelper.GenerateNodeJsReport(TempDir, OutputDir, $"NodeJsSvg_{testName}.html", inlineSvg));
+        await Page.GotoReportAsync(ReportTestHelper.GenerateNodeJsReport(TempDir, OutputDir, $"NodeJsSvg_{testName}.html", inlineSvg));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
     }

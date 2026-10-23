@@ -37,7 +37,7 @@ public class AttributionSourceDataTests
         };
 
         var path = ReportGenerator.GenerateTestRunReportData(features, DateTime.UtcNow, DateTime.UtcNow, "TestRunData_attribution.json", DataFormat.Json, trackedLogs: logs);
-        using var doc = JsonDocument.Parse(File.ReadAllText(path));
+        using var doc = JsonDocument.Parse(ReportHtml.Read(path));
 
         var interactions = doc.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0].GetProperty("httpInteractions");
         Assert.Equal("TestContext", interactions[0].GetProperty("attributionSource").GetString());
@@ -57,7 +57,7 @@ public class AttributionSourceDataTests
         };
 
         var path = ReportGenerator.GenerateTestRunReportData(features, DateTime.UtcNow, DateTime.UtcNow, "TestRunData_attribution_null.json", DataFormat.Json, trackedLogs: logs);
-        using var doc = JsonDocument.Parse(File.ReadAllText(path));
+        using var doc = JsonDocument.Parse(ReportHtml.Read(path));
 
         var interaction = doc.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0].GetProperty("httpInteractions")[0];
         Assert.Equal(JsonValueKind.Null, interaction.GetProperty("attributionSource").ValueKind);
@@ -85,7 +85,7 @@ public class AttributionSourceDataTests
         var schemaPath = ReportGenerator.GenerateTestRunReportSchema($"TestRunData_attribution_{Guid.NewGuid():N}.xsd", DataFormat.Xml);
 
         var schemaSet = new System.Xml.Schema.XmlSchemaSet();
-        schemaSet.Add("", System.Xml.XmlReader.Create(new StringReader(File.ReadAllText(schemaPath))));
+        schemaSet.Add("", System.Xml.XmlReader.Create(new StringReader(ReportHtml.Read(schemaPath))));
         var errors = new List<string>();
         System.Xml.Linq.XDocument.Load(dataPath).Validate(schemaSet, (_, e) => errors.Add(e.Message));
 

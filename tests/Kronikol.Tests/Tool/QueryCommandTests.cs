@@ -483,7 +483,7 @@ public class QueryCommandTests : IDisposable
         var output = Run("http", Report(), "s2/i1", "--body", "--out", target);
 
         Assert.True(File.Exists(target));
-        Assert.Contains("3902", File.ReadAllText(target));
+        Assert.Contains("3902", ReportHtml.Read(target));
         Assert.DoesNotContain("3902", output);
         // The metadata block, and nothing else. It grew by one line in 3.1.0 — the address of the call's
         // other half — so the bound moved with it; what the bound is for is that the payload is not here.
@@ -517,7 +517,7 @@ public class QueryCommandTests : IDisposable
 
         Run("diagram", Report(), "s0/d0", "--out", target);
 
-        Assert.Contains("@startuml", File.ReadAllText(target));
+        Assert.Contains("@startuml", ReportHtml.Read(target));
     }
 
     [Fact]
@@ -2151,7 +2151,7 @@ public class QueryCommandTests : IDisposable
 
         var target = Path.Combine(_directory, "big.json");
         Run("http", path, "s0/i0", "--body", "--out", target);
-        Assert.Contains("filler", File.ReadAllText(target));
+        Assert.Contains("filler", ReportHtml.Read(target));
     }
 
     // ─── Perf observables (plans/QUERY_PERF_PLAN.md) ─────────────────
@@ -2165,7 +2165,7 @@ public class QueryCommandTests : IDisposable
         // lives and dies in tier-0 JIT without it (~25-30% of every command on a large report), and the
         // property would be silently lost by a csproj rewrite.
         var path = Path.Combine(AppContext.BaseDirectory, "Kronikol.Tool.runtimeconfig.json");
-        using var document = System.Text.Json.JsonDocument.Parse(File.ReadAllText(path));
+        using var document = System.Text.Json.JsonDocument.Parse(ReportHtml.Read(path));
         var properties = document.RootElement.GetProperty("runtimeOptions").GetProperty("configProperties");
 
         Assert.True(properties.TryGetProperty("System.Runtime.TieredCompilation.QuickJitForLoops", out var value)
@@ -2444,7 +2444,7 @@ public class QueryCommandTests : IDisposable
     {
         var (report, index, body) = AScannedReportAndItsLastBody("Longer.TestRunReport.json");
         // A late body: the first sits at the same offset in both files and would "pass" by luck.
-        File.WriteAllText(report, new string(' ', 4096) + File.ReadAllText(report));
+        File.WriteAllText(report, new string(' ', 4096) + ReportHtml.Read(report));
 
         var thrown = Assert.Throws<ReportChangedException>(() => PayloadReader.Read(index, body));
 
@@ -2468,7 +2468,7 @@ public class QueryCommandTests : IDisposable
         var output = new StringWriter();
         var error = new StringWriter();
 
-        QueryCommand.AfterScan = path => File.WriteAllText(path, new string(' ', 4096) + File.ReadAllText(path));
+        QueryCommand.AfterScan = path => File.WriteAllText(path, new string(' ', 4096) + ReportHtml.Read(path));
         int exit;
         try
         {
@@ -2498,7 +2498,7 @@ public class QueryCommandTests : IDisposable
             File.Move(report, aside);
         }
 
-        Assert.StartsWith("""{"kronikolVersion":"3.1.0",""", File.ReadAllText(aside));
+        Assert.StartsWith("""{"kronikolVersion":"3.1.0",""", ReportHtml.Read(aside));
     }
 
     // ─── Harness ───────────────────────────────────────────────

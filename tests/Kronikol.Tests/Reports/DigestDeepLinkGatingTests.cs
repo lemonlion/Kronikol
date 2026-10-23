@@ -63,12 +63,12 @@ public class DigestDeepLinkGatingTests : IDisposable
 
         Assert.False(File.Exists(Path.Combine(_dir, "TestRunReport.html")));
 
-        var markdown = File.ReadAllText(Path.Combine(_dir, "Failures.md"));
+        var markdown = ReportHtml.Read(Path.Combine(_dir, "Failures.md"));
         Assert.DoesNotContain("#sid-", markdown, StringComparison.Ordinal);
         Assert.DoesNotContain("open in the report", markdown, StringComparison.Ordinal);
 
         // The jsonl says absent rather than guessing, so a script can branch on it.
-        var failure = Assert.Single(FailuresJsonl.Failures(File.ReadAllText(Path.Combine(_dir, "Failures.jsonl"))));
+        var failure = Assert.Single(FailuresJsonl.Failures(ReportHtml.Read(Path.Combine(_dir, "Failures.jsonl"))));
         Assert.Equal(JsonValueKind.Null, failure.GetProperty("deepLink").ValueKind);
 
         // What the failure IS addressed by does not depend on the HTML, and must still be there.
@@ -81,8 +81,8 @@ public class DigestDeepLinkGatingTests : IDisposable
     {
         Run(html: true);
 
-        var markdown = File.ReadAllText(Path.Combine(_dir, "Failures.md"));
-        var failure = Assert.Single(FailuresJsonl.Failures(File.ReadAllText(Path.Combine(_dir, "Failures.jsonl"))));
+        var markdown = ReportHtml.Read(Path.Combine(_dir, "Failures.md"));
+        var failure = Assert.Single(FailuresJsonl.Failures(ReportHtml.Read(Path.Combine(_dir, "Failures.jsonl"))));
         var stableId = failure.GetProperty("stableId").GetString();
 
         Assert.Contains($"TestRunReport.html#sid-{stableId}", markdown, StringComparison.Ordinal);
@@ -91,7 +91,7 @@ public class DigestDeepLinkGatingTests : IDisposable
         // ...and the thing it names is really in the page, which is the half a link test usually skips.
         // `#sid-` is not an element id: the page carries `data-stable-id` and a hash handler resolves the
         // one to the other, so both halves have to be there for the link to land.
-        var page = File.ReadAllText(Path.Combine(_dir, "TestRunReport.html"));
+        var page = ReportHtml.Read(Path.Combine(_dir, "TestRunReport.html"));
         Assert.Contains($"data-stable-id=\"{stableId}\"", page, StringComparison.Ordinal);
         Assert.Contains("sid-", page, StringComparison.Ordinal);
     }

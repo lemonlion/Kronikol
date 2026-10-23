@@ -25,7 +25,7 @@ public class ScenarioImageLightboxTests : IDisposable
     [Fact]
     public void A_scenarios_image_a_rows_image_and_a_steps_image_each_open_in_the_lightbox()
     {
-        var html = File.ReadAllText(ReportGenerator.GenerateHtmlReport(
+        var html = ReportHtml.Read(ReportGenerator.GenerateHtmlReport(
             Array.Empty<DiagramAsCode>(), Features(), Start, Start.AddMinutes(1), null, Path.Combine(_dir, "Lightbox.html"), "Test", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs));
 

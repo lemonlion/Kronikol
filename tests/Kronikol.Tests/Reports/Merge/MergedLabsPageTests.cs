@@ -48,11 +48,11 @@ public class MergedLabsPageTests : IDisposable
     {
         Render(Report(Dropped));
 
-        var page = File.ReadAllText(Path.Combine(_dir, "Combined.labs.html"));
+        var page = ReportHtml.Read(Path.Combine(_dir, "Combined.labs.html"));
         Assert.Contains("<details class=\"report-diagnostics\" open>", page);
         Assert.Contains("shard 2: a tap dropped 3 segments", page);
         // since 5.0.0 the merged report has its Diagnostics tab by default (plans/OPTION_C_PLAN.md S3)
-        var merged = File.ReadAllText(Path.Combine(_dir, "Combined.html"));
+        var merged = ReportHtml.Read(Path.Combine(_dir, "Combined.html"));
         Assert.Contains("id=\"tab-diagnostics\"", merged);
         Assert.Contains("shard 2: a tap dropped 3 segments", merged);
     }
@@ -62,7 +62,7 @@ public class MergedLabsPageTests : IDisposable
     {
         Render(Report(Dropped), new ReportConfigurationOptions { ShowReportDiagnosticsSection = false });
 
-        Assert.DoesNotContain("report-diagnostic", File.ReadAllText(Path.Combine(_dir, "Combined.html")));
+        Assert.DoesNotContain("report-diagnostic", ReportHtml.Read(Path.Combine(_dir, "Combined.html")));
     }
 
     [Fact]
@@ -70,7 +70,7 @@ public class MergedLabsPageTests : IDisposable
     {
         Render(Report(Dropped), new ReportConfigurationOptions { ShowReportDiagnosticsSection = true });
 
-        var html = File.ReadAllText(Path.Combine(_dir, "Combined.html"));
+        var html = ReportHtml.Read(Path.Combine(_dir, "Combined.html"));
         Assert.Contains("<details class=\"report-diagnostics\"", html);
         Assert.Contains("shard 2: a tap dropped 3 segments", html);
     }

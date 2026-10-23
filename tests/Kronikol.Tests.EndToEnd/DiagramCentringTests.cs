@@ -48,7 +48,7 @@ public class DiagramCentringTests : DiagramNotePlaywrightBase
             features, DateTime.UtcNow, DateTime.UtcNow, null, Path.Combine(TempDir, "CentredWhole.html"), "Bakery", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
         File.Copy(path, Path.Combine(OutputDir, "CentredWhole.html"), true);
-        await Page.GotoAsync(new Uri(path).AbsoluteUri);
+        await Page.GotoReportAsync(new Uri(path).AbsoluteUri);
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -69,7 +69,7 @@ public class DiagramCentringTests : DiagramNotePlaywrightBase
     {
         var (uri, _) = ReportTestHelper.GenerateRunReportWithFlowArrows(TempDir, OutputDir, "CentredFragments.html",
             withFlow: 6, withoutFlow: 0, paths: Enumerable.Repeat("/health", 6).ToArray(), browserFragmentMaxHeight: 250);
-        await Page.GotoAsync(uri);
+        await Page.GotoReportAsync(uri);
         await ExpandFirstScenarioWithDiagram();
         await Page.EvaluateAsync("() => window._renderDiagramsInContainer(document.body)");
         await Page.WaitForFunctionAsync(BrowserRenderWorkerTests.AllRenderedJs, null, new() { Timeout = 300000, PollingInterval = 200 });

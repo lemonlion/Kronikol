@@ -98,7 +98,7 @@ public class MergeableReportSuiteTests
         var directory = Directory.CreateTempSubdirectory("kronikol-merge-ids").FullName;
         try
         {
-            var html = File.ReadAllText(MergeableReportRenderer.Render(merged, Path.Combine(directory, "Merged.html")));
+            var html = ReportHtml.Read(MergeableReportRenderer.Render(merged, Path.Combine(directory, "Merged.html")));
             var json = MergeableReportRenderer.Serialize(merged);
 
             var inHtml = System.Text.RegularExpressions.Regex.Matches(html, "data-stable-id=\"([0-9a-f]{16})\"")

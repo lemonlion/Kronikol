@@ -26,7 +26,7 @@ public class AdvancedSearchTests : PlaywrightTestBase
     [Fact]
     public async Task And_operator_matches_scenarios_containing_both_terms()
     {
-        await Page.GotoAsync(GenerateReport("AdvSearchAnd.html"));
+        await Page.GotoReportAsync(GenerateReport("AdvSearchAnd.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await SearchAndWaitForCount("order && successfully", 1);
@@ -42,7 +42,7 @@ public class AdvancedSearchTests : PlaywrightTestBase
     [Fact]
     public async Task And_operator_hides_all_when_no_scenario_matches_both_terms()
     {
-        await Page.GotoAsync(GenerateReport("AdvSearchAndNoMatch.html"));
+        await Page.GotoReportAsync(GenerateReport("AdvSearchAndNoMatch.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await SearchAndWaitForCount("payment && order", 0);
@@ -53,7 +53,7 @@ public class AdvancedSearchTests : PlaywrightTestBase
     [Fact]
     public async Task Or_operator_matches_scenarios_containing_either_term()
     {
-        await Page.GotoAsync(GenerateReport("AdvSearchOr.html"));
+        await Page.GotoReportAsync(GenerateReport("AdvSearchOr.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await FillSearchBar("payment || delete");
@@ -77,7 +77,7 @@ public class AdvancedSearchTests : PlaywrightTestBase
     [Fact]
     public async Task Not_operator_excludes_matching_scenarios()
     {
-        await Page.GotoAsync(GenerateReport("AdvSearchNot.html"));
+        await Page.GotoReportAsync(GenerateReport("AdvSearchNot.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await FillSearchBar("order && !!delete");
@@ -98,7 +98,7 @@ public class AdvancedSearchTests : PlaywrightTestBase
     [Fact]
     public async Task Status_filter_matches_scenarios_by_status()
     {
-        await Page.GotoAsync(GenerateReport("AdvSearchStatus.html"));
+        await Page.GotoReportAsync(GenerateReport("AdvSearchStatus.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await SearchAndWaitForCount("$failed", 1);
@@ -114,7 +114,7 @@ public class AdvancedSearchTests : PlaywrightTestBase
     [Fact]
     public async Task Status_filter_combined_with_text_using_and()
     {
-        await Page.GotoAsync(GenerateReport("AdvSearchStatusAnd.html"));
+        await Page.GotoReportAsync(GenerateReport("AdvSearchStatusAnd.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await SearchAndWaitForCount("$passed && order", 2);
@@ -125,7 +125,7 @@ public class AdvancedSearchTests : PlaywrightTestBase
     [Fact]
     public async Task Tag_filter_matches_scenarios_by_category()
     {
-        await Page.GotoAsync(GenerateReport("AdvSearchTag.html"));
+        await Page.GotoReportAsync(GenerateReport("AdvSearchTag.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await SearchAndWaitForCount("@smoke", 2);
@@ -134,7 +134,7 @@ public class AdvancedSearchTests : PlaywrightTestBase
     [Fact]
     public async Task Tag_with_and_operator_narrows_results()
     {
-        await Page.GotoAsync(GenerateReport("AdvSearchTagAnd.html"));
+        await Page.GotoReportAsync(GenerateReport("AdvSearchTagAnd.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await SearchAndWaitForCount("@api && @smoke", 1);
@@ -145,7 +145,7 @@ public class AdvancedSearchTests : PlaywrightTestBase
     [Fact]
     public async Task Parentheses_change_evaluation_order()
     {
-        await Page.GotoAsync(GenerateReport("AdvSearchParens.html"));
+        await Page.GotoReportAsync(GenerateReport("AdvSearchParens.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await SearchAndWaitForCount("payment || (order && delete)", 3);
@@ -156,7 +156,7 @@ public class AdvancedSearchTests : PlaywrightTestBase
     [Fact]
     public async Task Mixed_text_tag_and_status_operators()
     {
-        await Page.GotoAsync(GenerateReport("AdvSearchMixed.html"));
+        await Page.GotoReportAsync(GenerateReport("AdvSearchMixed.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await SearchAndWaitForCount("@api && $passed", 1);
@@ -167,7 +167,7 @@ public class AdvancedSearchTests : PlaywrightTestBase
     [Fact]
     public async Task Search_help_icon_is_present()
     {
-        await Page.GotoAsync(GenerateReport("AdvSearchHelpIcon.html"));
+        await Page.GotoReportAsync(GenerateReport("AdvSearchHelpIcon.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await Expect(Page.Locator(".search-help-toggle")).ToBeVisibleAsync();
@@ -176,7 +176,7 @@ public class AdvancedSearchTests : PlaywrightTestBase
     [Fact]
     public async Task Search_help_panel_toggles_on_click()
     {
-        await Page.GotoAsync(GenerateReport("AdvSearchHelpToggle.html"));
+        await Page.GotoReportAsync(GenerateReport("AdvSearchHelpToggle.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         var helpIcon = Page.Locator(".search-help-toggle");
@@ -194,7 +194,7 @@ public class AdvancedSearchTests : PlaywrightTestBase
     [Fact]
     public async Task Search_help_panel_contains_syntax_reference()
     {
-        await Page.GotoAsync(GenerateReport("AdvSearchHelpContent.html"));
+        await Page.GotoReportAsync(GenerateReport("AdvSearchHelpContent.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await Page.Locator(".search-help-toggle").ClickAsync();
@@ -213,7 +213,7 @@ public class AdvancedSearchTests : PlaywrightTestBase
     [Fact]
     public async Task Search_by_feature_name_shows_all_scenarios_in_that_feature()
     {
-        await Page.GotoAsync(GenerateReport("AdvSearchFeatureName.html"));
+        await Page.GotoReportAsync(GenerateReport("AdvSearchFeatureName.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await SearchAndWaitForCount("order feature", 3);
@@ -222,7 +222,7 @@ public class AdvancedSearchTests : PlaywrightTestBase
     [Fact]
     public async Task Search_by_feature_name_hides_other_features()
     {
-        await Page.GotoAsync(GenerateReport("AdvSearchFeatureNameFilter.html"));
+        await Page.GotoReportAsync(GenerateReport("AdvSearchFeatureNameFilter.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await SearchAndWaitForCount("payment feature", 2);

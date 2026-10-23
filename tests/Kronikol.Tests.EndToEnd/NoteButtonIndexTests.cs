@@ -14,7 +14,7 @@ public class NoteButtonIndexTests : PlaywrightTestBase
 
     private async Task ExpandAndRender(string url)
     {
-        await Page.GotoAsync(url);
+        await Page.GotoReportAsync(url);
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();

@@ -69,7 +69,7 @@ public class ComponentDiagramZoomTests : PlaywrightTestBase
     [Fact]
     public async Task The_filters_drawing_a_zoomed_component_diagram_again_keep_its_level_and_its_place()
     {
-        await Page.GotoAsync(Write("ComponentsZoomKept.html"));
+        await Page.GotoReportAsync(Write("ComponentsZoomKept.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await OpenReportTabAsync("components");
         await Page.WaitForFunctionAsync(

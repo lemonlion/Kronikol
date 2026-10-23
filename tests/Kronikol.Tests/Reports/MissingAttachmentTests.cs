@@ -286,7 +286,7 @@ public class MissingAttachmentTests : IDisposable
             Assert.StartsWith("1 attachment(s) changed after it was attached, and the report holds the version found when it was drawn: ", message, StringComparison.Ordinal);
             Assert.Contains(file, message, StringComparison.Ordinal);
             Assert.All(AllAttachments(features), a => Assert.Equal("attachments/screenshot.png", a.RelativePath));
-            Assert.Equal("second, longer", File.ReadAllText(Path.Combine(Reports, "attachments", "screenshot.png")));
+            Assert.Equal("second, longer", ReportHtml.Read(Path.Combine(Reports, "attachments", "screenshot.png")));
         }
         finally
         {
@@ -340,9 +340,9 @@ public class MissingAttachmentTests : IDisposable
 
         var links = AllAttachments(features).Select(a => a.RelativePath).ToArray();
         Assert.Equal("attachments/shot.png", links[1]);
-        Assert.Equal("in place", File.ReadAllText(inPlace));
+        Assert.Equal("in place", ReportHtml.Read(inPlace));
         Assert.NotEqual(links[0], links[1]);
-        Assert.Equal("from elsewhere", File.ReadAllText(Path.Combine(Reports, links[0])));
+        Assert.Equal("from elsewhere", ReportHtml.Read(Path.Combine(Reports, links[0])));
     }
 
     // ─── How it is linked (F11, F21) ──────────────────────────────
@@ -398,7 +398,7 @@ public class MissingAttachmentTests : IDisposable
             },
         ];
 
-        var html = File.ReadAllText(ReportGenerator.GenerateHtmlReport(
+        var html = ReportHtml.Read(ReportGenerator.GenerateHtmlReport(
             Array.Empty<DiagramAsCode>(), features, Start, Start.AddMinutes(1), null, PathOf("Encoded.html"), "Test", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs));
 

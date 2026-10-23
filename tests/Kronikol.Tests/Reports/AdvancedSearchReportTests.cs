@@ -11,7 +11,7 @@ public class AdvancedSearchReportTests
             DateTime.UtcNow, DateTime.UtcNow,
             null, "AdvancedSearch.html", "Test", includeTestRunData: true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
-        return File.ReadAllText(path);
+        return ReportHtml.Read(path);
     }
 
     [Fact]

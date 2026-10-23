@@ -8,7 +8,7 @@ namespace Kronikol.Tests.Tool;
 /// </summary>
 public class AgentTextNamesTheDataFileTests
 {
-    private static string Read(params string[] parts) => File.ReadAllText(Path.Combine([BuiltTool.RepoRoot, .. parts]));
+    private static string Read(params string[] parts) => ReportHtml.Read(Path.Combine([BuiltTool.RepoRoot, .. parts]));
 
     [Fact]
     public void The_init_agents_block_forbids_opening_the_krkl_and_the_json()

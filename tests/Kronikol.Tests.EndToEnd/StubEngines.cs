@@ -40,19 +40,21 @@ internal static class StubEngines
     /// </summary>
     internal static void WithWasmEngine(string pagePath, string url, string bundle)
     {
-        var html = File.ReadAllText(pagePath);
         var hash = global::Kronikol.PlantUml.EngineCache.Integrity(System.Text.Encoding.UTF8.GetBytes(bundle));
-        foreach (var (from, to) in new[]
-                 {
-                     ($"'{Constants.TrackingDefaults.PlantUmlJsCdnBase}/{WasmBundle}'", $"'{url}'"),
-                     ($"'{Constants.TrackingDefaults.PlantUmlWasmEngineIntegrity}'", $"'{hash}'"),
-                 })
+        ReportFileText.Edit(pagePath, html =>
         {
-            var at = html.IndexOf(from, StringComparison.Ordinal);
-            Assert.True(at >= 0 && html.IndexOf(from, at + 1, StringComparison.Ordinal) < 0, $"the render script should carry {from} exactly once");
-            html = html.Replace(from, to);
-        }
-        File.WriteAllText(pagePath, html);
+            foreach (var (from, to) in new[]
+                     {
+                         ($"'{Constants.TrackingDefaults.PlantUmlJsCdnBase}/{WasmBundle}'", $"'{url}'"),
+                         ($"'{Constants.TrackingDefaults.PlantUmlWasmEngineIntegrity}'", $"'{hash}'"),
+                     })
+            {
+                var at = html.IndexOf(from, StringComparison.Ordinal);
+                Assert.True(at >= 0 && html.IndexOf(from, at + 1, StringComparison.Ordinal) < 0, $"the render script should carry {from} exactly once");
+                html = html.Replace(from, to);
+            }
+            return html;
+        });
     }
 
     /// <summary>

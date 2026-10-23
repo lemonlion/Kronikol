@@ -8,7 +8,7 @@ public class RuleRenderingTests : PlaywrightTestBase
     [Fact]
     public async Task Scenarios_with_rules_are_grouped_under_rule_details()
     {
-        await Page.GotoAsync(GenerateReportWithRules("RuleGrouping.html"));
+        await Page.GotoReportAsync(GenerateReportWithRules("RuleGrouping.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         // Expand the first feature
@@ -22,7 +22,7 @@ public class RuleRenderingTests : PlaywrightTestBase
     [Fact]
     public async Task Rule_sections_display_rule_title_in_summary()
     {
-        await Page.GotoAsync(GenerateReportWithRules("RuleTitles.html"));
+        await Page.GotoReportAsync(GenerateReportWithRules("RuleTitles.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await Page.Locator("details.feature summary").First.ClickAsync();
@@ -39,7 +39,7 @@ public class RuleRenderingTests : PlaywrightTestBase
     [Fact]
     public async Task Rule_sections_are_open_by_default()
     {
-        await Page.GotoAsync(GenerateReportWithRules("RuleOpen.html"));
+        await Page.GotoReportAsync(GenerateReportWithRules("RuleOpen.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await Page.Locator("details.feature summary").First.ClickAsync();
@@ -55,7 +55,7 @@ public class RuleRenderingTests : PlaywrightTestBase
     [Fact]
     public async Task Rule_summary_has_h2_5_class()
     {
-        await Page.GotoAsync(GenerateReportWithRules("RuleSummaryClass.html"));
+        await Page.GotoReportAsync(GenerateReportWithRules("RuleSummaryClass.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await Page.Locator("details.feature summary").First.ClickAsync();
@@ -67,7 +67,7 @@ public class RuleRenderingTests : PlaywrightTestBase
     [Fact]
     public async Task Scenarios_outside_rules_render_without_rule_wrapper()
     {
-        await Page.GotoAsync(GenerateReportWithRules("RuleNoWrapper.html"));
+        await Page.GotoReportAsync(GenerateReportWithRules("RuleNoWrapper.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await Page.Locator("details.feature summary").First.ClickAsync();
@@ -83,7 +83,7 @@ public class RuleRenderingTests : PlaywrightTestBase
     [Fact]
     public async Task Rule_sections_contain_correct_number_of_scenarios()
     {
-        await Page.GotoAsync(GenerateReportWithRules("RuleScenarioCount.html"));
+        await Page.GotoReportAsync(GenerateReportWithRules("RuleScenarioCount.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await Page.Locator("details.feature summary").First.ClickAsync();
@@ -104,7 +104,7 @@ public class RuleRenderingTests : PlaywrightTestBase
     [Fact]
     public async Task Feature_with_only_rules_has_no_direct_scenarios()
     {
-        await Page.GotoAsync(GenerateReportWithRules("RuleOnlyFeature.html"));
+        await Page.GotoReportAsync(GenerateReportWithRules("RuleOnlyFeature.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         // Expand the second feature ("Payment Feature") which has only rules
@@ -123,7 +123,7 @@ public class RuleRenderingTests : PlaywrightTestBase
     [Fact]
     public async Task Multiple_rules_render_as_separate_collapsible_sections()
     {
-        await Page.GotoAsync(GenerateReportWithRules("RuleMultiple.html"));
+        await Page.GotoReportAsync(GenerateReportWithRules("RuleMultiple.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await Page.Locator("details.feature summary").First.ClickAsync();
@@ -145,7 +145,7 @@ public class RuleRenderingTests : PlaywrightTestBase
     [Fact]
     public async Task Search_hides_rule_when_all_child_scenarios_filtered_out()
     {
-        await Page.GotoAsync(GenerateReportWithRules("RuleSearchHide.html"));
+        await Page.GotoReportAsync(GenerateReportWithRules("RuleSearchHide.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         // Search for "express" which only matches 1 scenario in "Valid Order Creation" rule
@@ -168,7 +168,7 @@ public class RuleRenderingTests : PlaywrightTestBase
     [Fact]
     public async Task Search_shows_rule_when_cleared()
     {
-        await Page.GotoAsync(GenerateReportWithRules("RuleSearchRestore.html"));
+        await Page.GotoReportAsync(GenerateReportWithRules("RuleSearchRestore.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await FillSearchBar("express");
@@ -196,7 +196,7 @@ public class RuleRenderingTests : PlaywrightTestBase
     [Fact]
     public async Task Status_filter_hides_rule_when_all_child_scenarios_filtered()
     {
-        await Page.GotoAsync(GenerateReportWithRules("RuleStatusFilter.html"));
+        await Page.GotoReportAsync(GenerateReportWithRules("RuleStatusFilter.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await OpenFilterRowsAsync();

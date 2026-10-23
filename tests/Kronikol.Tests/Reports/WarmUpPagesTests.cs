@@ -49,7 +49,7 @@ public class WarmUpPagesTests : IDisposable
 
         foreach (var page in new[] { "TestRunReport.html", "Specifications.html" })
         {
-            var document = Parse(File.ReadAllText(Path.Combine(_directory, page)));
+            var document = Parse(ReportHtml.Read(Path.Combine(_directory, page)));
             var marked = document.QuerySelectorAll("details.scenario[data-warmup-ms]").ToList();
             var scenario = Assert.Single(marked);
             Assert.Equal("600", scenario.GetAttribute("data-warmup-ms"));

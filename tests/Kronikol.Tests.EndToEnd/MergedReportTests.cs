@@ -14,7 +14,7 @@ public class MergedReportTests : PlaywrightTestBase
     [Fact]
     public async Task Merged_report_shows_features_from_all_runners()
     {
-        await Page.GotoAsync(GenerateMergedReport("MergedFeatures.html"));
+        await Page.GotoReportAsync(GenerateMergedReport("MergedFeatures.html"));
         await Page.Locator("details.feature").First.WaitForAsync(new() { Timeout = 10000 });
 
         var bodyText = await Page.Locator("body").TextContentAsync();
@@ -27,7 +27,7 @@ public class MergedReportTests : PlaywrightTestBase
     [Fact]
     public async Task Merged_report_counts_scenarios_across_runners()
     {
-        await Page.GotoAsync(GenerateMergedReport("MergedCounts.html"));
+        await Page.GotoReportAsync(GenerateMergedReport("MergedCounts.html"));
         await Page.Locator("details.feature").First.WaitForAsync(new() { Timeout = 10000 });
 
         // Two features rendered (one per runner).
@@ -39,7 +39,7 @@ public class MergedReportTests : PlaywrightTestBase
     [Fact]
     public async Task Merged_report_renders_combined_component_diagram()
     {
-        await Page.GotoAsync(GenerateMergedReport("MergedComponent.html"));
+        await Page.GotoReportAsync(GenerateMergedReport("MergedComponent.html"));
 
         await OpenReportTabAsync("components"); // 5.0.0: a tab of the report bar (plans/OPTION_C_PLAN.md S3)
 
@@ -55,7 +55,7 @@ public class MergedReportTests : PlaywrightTestBase
     [Fact]
     public async Task Merged_report_preserves_step_parameter_table()
     {
-        await Page.GotoAsync(GenerateMergedReport("MergedStepDetail.html"));
+        await Page.GotoReportAsync(GenerateMergedReport("MergedStepDetail.html"));
         await Page.Locator("details.feature").First.WaitForAsync(new() { Timeout = 10000 });
 
         await ExpandAllFeaturesAsync();
@@ -74,7 +74,7 @@ public class MergedReportTests : PlaywrightTestBase
     [Fact]
     public async Task Merged_report_sequence_diagram_renders()
     {
-        await Page.GotoAsync(GenerateMergedReport("MergedSeq.html"));
+        await Page.GotoReportAsync(GenerateMergedReport("MergedSeq.html"));
         await Page.Locator("details.feature").First.WaitForAsync(new() { Timeout = 10000 });
         await ExpandFirstScenarioWithDiagram();
 

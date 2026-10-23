@@ -12,7 +12,7 @@ public class SeparatedBackgroundRenderingTests : PlaywrightTestBase
 
     private async Task OpenReport(string fileName)
     {
-        await Page.GotoAsync(GenerateReportWithSeparatedBackground(fileName));
+        await Page.GotoReportAsync(GenerateReportWithSeparatedBackground(fileName));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandAllFeaturesAsync();
         await ExpandAllScenariosAsync();
@@ -135,7 +135,7 @@ public class SeparatedBackgroundRenderingTests : PlaywrightTestBase
     [Fact]
     public async Task Search_matches_text_that_only_appears_in_a_background_step()
     {
-        await Page.GotoAsync(GenerateReportWithSeparatedBackground("SepBgSearch.html"));
+        await Page.GotoReportAsync(GenerateReportWithSeparatedBackground("SepBgSearch.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await FillSearchBar("the database is available");

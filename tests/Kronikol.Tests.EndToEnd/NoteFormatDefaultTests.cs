@@ -13,7 +13,7 @@ public class NoteFormatDefaultTests : DiagramNotePlaywrightBase
 
     private async Task NavigateYamlDefault(string fileName)
     {
-        await Page.GotoAsync(ReportTestHelper.GenerateReportWithJsonYamlNotes(
+        await Page.GotoReportAsync(ReportTestHelper.GenerateReportWithJsonYamlNotes(
             TempDir, OutputDir, fileName, notePayloadFormat: Kronikol.Reports.NotePayloadFormat.Yaml));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
@@ -41,7 +41,7 @@ public class NoteFormatDefaultTests : DiagramNotePlaywrightBase
     {
         // The YAML view breaks a whitespace-free run past 120 characters, as the generator does for the JSON view, and
         // it broke it by code unit: an emoji split across the break drew as two U+FFFD.
-        await Page.GotoAsync(ReportTestHelper.GenerateReportWithEmojiRunNote(TempDir, OutputDir, "FormatDefault_EmojiRun.html"));
+        await Page.GotoReportAsync(ReportTestHelper.GenerateReportWithEmojiRunNote(TempDir, OutputDir, "FormatDefault_EmojiRun.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -73,7 +73,7 @@ public class NoteFormatDefaultTests : DiagramNotePlaywrightBase
         // The zero-click path goes through setAllNoteFormats/_preProcessSource rather
         // than the hover toggle, so it needs its own pin: a capped response must reach
         // first paint as YAML with its `... (N more rows not shown)` footnote intact.
-        await Page.GotoAsync(ReportTestHelper.GenerateReportWithCappedRowsNote(
+        await Page.GotoReportAsync(ReportTestHelper.GenerateReportWithCappedRowsNote(
             TempDir, OutputDir, "FormatDefault_CappedRows.html",
             notePayloadFormat: Kronikol.Reports.NotePayloadFormat.Yaml));
         await Page.Locator("details.feature").First.WaitForAsync();

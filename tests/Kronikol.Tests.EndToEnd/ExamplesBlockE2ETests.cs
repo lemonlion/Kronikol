@@ -83,7 +83,7 @@ public class ExamplesBlockE2ETests : PlaywrightTestBase
     [Fact]
     public async Task Bands_render_with_names_counts_and_description()
     {
-        await Page.GotoAsync(GenerateBlockReport("BlockBands.html"));
+        await Page.GotoReportAsync(GenerateBlockReport("BlockBands.html"));
         await OpenGroup();
 
         Assert.Equal(3, await FlatBands.CountAsync());
@@ -108,7 +108,7 @@ public class ExamplesBlockE2ETests : PlaywrightTestBase
     [Fact]
     public async Task Bands_sit_before_their_rows_with_continuous_numbering()
     {
-        await Page.GotoAsync(GenerateBlockReport("BlockOrder.html"));
+        await Page.GotoReportAsync(GenerateBlockReport("BlockOrder.html"));
         await OpenGroup();
 
         // All rows of the flat table body: band, r1, r2, band, r3, r4, band, r5
@@ -130,7 +130,7 @@ public class ExamplesBlockE2ETests : PlaywrightTestBase
     [Fact]
     public async Task Member_row_below_a_band_still_switches_the_detail_panel()
     {
-        await Page.GotoAsync(GenerateBlockReport("BlockRowSelect.html"));
+        await Page.GotoReportAsync(GenerateBlockReport("BlockRowSelect.html"));
         await OpenGroup();
 
         var panels = Group.Locator(".param-detail-panel");
@@ -148,7 +148,7 @@ public class ExamplesBlockE2ETests : PlaywrightTestBase
     [Fact]
     public async Task Band_row_click_is_inert()
     {
-        await Page.GotoAsync(GenerateBlockReport("BlockBandInert.html"));
+        await Page.GotoReportAsync(GenerateBlockReport("BlockBandInert.html"));
         await OpenGroup();
 
         // Select row 2, then click a band: selection and panel must not change.
@@ -168,7 +168,7 @@ public class ExamplesBlockE2ETests : PlaywrightTestBase
     [Fact]
     public async Task Bands_present_in_both_table_variants_and_active_row_survives_toggle()
     {
-        await Page.GotoAsync(GenerateBlockReport("BlockToggle.html"));
+        await Page.GotoReportAsync(GenerateBlockReport("BlockToggle.html"));
         await OpenGroup();
 
         Assert.Equal(3, await FlatBands.CountAsync());
@@ -191,7 +191,7 @@ public class ExamplesBlockE2ETests : PlaywrightTestBase
     [Fact]
     public async Task Searching_a_block_name_keeps_the_section_and_highlights_its_rows()
     {
-        await Page.GotoAsync(GenerateBlockReport("BlockSearch.html"));
+        await Page.GotoReportAsync(GenerateBlockReport("BlockSearch.html"));
         await OpenGroup();
 
         await FillSearchBar("lost share");

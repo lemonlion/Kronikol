@@ -14,7 +14,7 @@ public class HistorySparklineTests : PlaywrightTestBase
 
     private async Task Open(string fileName)
     {
-        await Page.GotoAsync(HistoryReportHelper.Generate(TempDir, OutputDir, fileName));
+        await Page.GotoReportAsync(HistoryReportHelper.Generate(TempDir, OutputDir, fileName));
         await Page.Locator("details.feature").First.WaitForAsync();
         // Features start collapsed, and a collapsed feature hides its scenario headers.
         await Page.EvaluateAsync("() => document.querySelectorAll('details.feature').forEach(d => d.setAttribute('open', ''))");
@@ -81,7 +81,7 @@ public class HistorySparklineTests : PlaywrightTestBase
     {
         // 3.23.0: a position an ingest folded unattributed traffic into is written N, and used to fall to
         // the default arm - an unnamed bar in the "bypassed" colour. A partial run's row now says it was one.
-        await Page.GotoAsync(HistoryReportHelper.Generate(TempDir, OutputDir, "HistorySparkline_NotATest.html",
+        await Page.GotoReportAsync(HistoryReportHelper.Generate(TempDir, OutputDir, "HistorySparkline_NotATest.html",
             (i, run) => i == 2 ? run with { Results = "PNPP" } : i == 4 ? run with { Partial = true } : run));
         await Page.Locator("details.feature").First.WaitForAsync();
         await Page.EvaluateAsync("() => document.querySelectorAll('details.feature').forEach(d => d.setAttribute('open', ''))");

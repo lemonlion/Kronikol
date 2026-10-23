@@ -4,6 +4,72 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.6.0] - 2026-10-24
+
+The minor part moves (5.5.4 to 5.6.0): `kronikol decode` reads a report page, and `HtmlReportFile` is new public API
+for code that reads a page's markup. The compressed page on its own would be performance work, a patch
+(`plans/HTML_COMPRESSION_PLAN.md` R1).
+
+### Changed
+
+- **`TestRunReport.html` and `Specifications.html` are written compressed.** The file is a small page that holds the
+  report as zstd frames (level 9) in base64: the page itself, then the diagram sources in pieces of at most 16 MB. In
+  the browser it shows a loading screen, decodes the page and puts the report in its place; a diagram's source is
+  decoded from its piece, in a worker, the first time the diagram is drawn. On the owner's 5.4.4 report (28,954,978
+  bytes, 1,553 diagrams) the page is 7,212,857 bytes, a quarter of it, and writing it compressed takes 1.1 s (measured
+  in a Release build). Every such page is written so, from a run, `kronikol merge` and `kronikol ingest`, with no
+  option: nothing a reader of the report does changes. The component diagram page, the labs page and the diagnostic
+  pages stay plain.
+- The page decodes with the browser's own zstd where it has one (Firefox with `dom.compression_streams.zstd.enabled`),
+  else with libzstd's decoder built to WebAssembly (from zstddec 0.3.4), else with fzstd 0.1.1 where the page's policy
+  refuses WebAssembly. Each frame carries its checksum and its length, and a frame that does not decode to what was
+  written is refused: the loading screen says what failed and how to get a plain copy, never a blank page. After four
+  seconds the loading screen says what to do if the report never opens, and with JavaScript off the page says it needs
+  JavaScript.
+- Inside the page every item is stored as it is, so nothing in it is gzip but the search index: a held step's
+  sub-steps, the internal-flow segments, flame charts and the flows a merge carries. A held step therefore opens in a
+  browser without `DecompressionStream` (Chrome before 80, Firefox before 113, Safari before 16.4), where it said its
+  steps could not be drawn.
+- **Export Filtered HTML** from a compressed report writes a compressed page: the page as a gzip frame (the browser's
+  `CompressionStream`), with the pieces of diagram sources the exported scenarios draw, copied as they are. A browser
+  without `CompressionStream` stores the page frame as it is, and the page it writes opens all the same.
+- What changes for a reader of the file rather than of the report: a search of the file (`grep`) or an HTML parser
+  finds nothing in it, so `kronikol decode` writes the plain page (below); and a tool that opens the page in a browser
+  and reads it once `load` fires reads the loading page, so it waits for `window.__kronikolReady` to be `true` (the
+  document's `kronikol:ready` event fires at the same moment, for the report's own scripts). A listener added before
+  the report is in place does not survive it, since the loader writes the report with `document.open`.
+
+### Added
+
+- **`kronikol decode TestRunReport.html -o plain.html`** writes the plain page of a compressed one (Q9): the report as
+  a page written before 5.6.0 holds it, every item in gzip and base64, which a browser opens as it is and a search or a
+  parser reads in full. A plain page is written as it is; `--indent` is for the JSON and is refused for a page; a
+  damaged page is one error and writes nothing.
+- **`Kronikol.Reports.HtmlReportFile`**: `IsCompressed(html)`, `ToPlain(html)` and `ReadPlain(path)`, the same
+  decoding for code that reads a page's markup itself, such as an HTML parser in a test.
+
+### Tests
+
+- `CompressedPageTests` (core): the loader page's parts; the page frame and the pieces with their lengths; a frame over
+  8 MB keeps a 2^23 window, with its content size and checksum; the round trip of every item; tokens across pieces; a
+  source larger than a piece; `Specifications.html`; decoding and writing back gives the writer's own bytes; the search
+  index byte for byte as 5.5.4 writes it; two runs give the same bytes; the hint names the file and not its folder; the
+  loader and the decoder declare no global name; and the decoder the page carries, run in Node, decodes a frame over
+  32 MB byte for byte by the Wasm path and by fzstd, and the Wasm path refuses a frame whose checksum is wrong.
+- `CompressedReportTests` (Playwright): the loading screen and then the report, with no page error; a deep link lands
+  where it lands in the plain page; Back and Forward stay in the document; diagrams from the first and the last piece,
+  a held step, a flame chart and the component diagram draw; deep search finds what the plain page finds; the export
+  is compressed and opens, and so does one made without `CompressionStream`; a damaged page frame and a wrong checksum say so on the loading screen; the dark loading
+  screen and the theme switch after the rebuild; with workers refused the pieces decode on the page; Firefox's own
+  zstd; the suites' opening helpers wait for the report; a report script that declares the loader's names still runs;
+  and the page with JavaScript off.
+- `DecodeCommandTests`: six facts for a page (red on 5.5.4, which refused a page as not a report it reads); the merge and
+  ingest facts check the compressed page they write; `HeldSubStepsTests` keeps its "cannot decompress" fact on a plain
+  page and adds one for the compressed page, which draws.
+- Every suite reads a page through a decoding helper (`ReportHtml` in the core suite, `ReportFileText` in Playwright)
+  and opens one through helpers that wait for the report (`GotoReportAsync` and the rest), so each fact reads and opens
+  the page a reader gets.
+
 ## [5.5.4] - 2026-10-23
 
 The patch part moves (5.5.3 to 5.5.4): a fix, with nothing new to call or configure.

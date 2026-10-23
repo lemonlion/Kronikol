@@ -53,7 +53,7 @@ public class OnDemandRenderingReportTests : IDisposable
         };
         configure(options);
         ReportGenerator.CreateStandardReportsWithDiagrams(OneScenario(testId), DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow, options);
-        return File.ReadAllText(Path.Combine(_dir, "TestRunReport.html"));
+        return ReportHtml.Read(Path.Combine(_dir, "TestRunReport.html"));
     }
 
     /// <summary>The component panel's markup, up to the next tab's panel or, when it is the last, the page's last button
@@ -123,7 +123,7 @@ public class OnDemandRenderingReportTests : IDisposable
 
         var src = Regex.Match(Panel(html), "<img src=\"([^\"]+)\" alt=\"Component diagram\"").Groups[1].Value;
         Assert.StartsWith("https://plantuml.example/plantuml/svg/", src);
-        var standalone = Regex.Match(File.ReadAllText(Path.Combine(_dir, "ComponentDiagram.html")),
+        var standalone = Regex.Match(ReportHtml.Read(Path.Combine(_dir, "ComponentDiagram.html")),
             "<img src=\"(https://plantuml\\.example/plantuml/svg/[^\"]+)\"").Groups[1].Value;
         // Since 5.0.0 the Components tab's heading carries the diagram's title, so the panel's drawing leaves it out
         // (plans/OPTION_C_PLAN.md S11, D26): it is the standalone page's diagram, which keeps the title, but for that line.
@@ -314,7 +314,7 @@ public class OnDemandRenderingReportTests : IDisposable
             DateTime.UtcNow, DateTime.UtcNow, null, Path.Combine(_dir, $"engine-{rendering}-{internalFlowTracking}.html"), "Test", true,
             plantUmlRendering: rendering, inlineSvgRendering: true, internalFlowTracking: internalFlowTracking);
 
-        var html = File.ReadAllText(path);
+        var html = ReportHtml.Read(path);
         var flag = Regex.Match(html, @"var ON_DEMAND = (true|false);");
         if (onDemand is null)
             Assert.False(flag.Success, "the page carries the engine");

@@ -35,7 +35,7 @@ public class MobileFilterLineTests : PlaywrightTestBase
     private async Task OpenAsync(string fileName, int width)
     {
         await Page.SetViewportSizeAsync(width, 800);
-        await Page.GotoAsync(Generate(fileName));
+        await Page.GotoReportAsync(Generate(fileName));
         await Page.Locator("details.feature").First.WaitForAsync();
         await TwoAnimationFramesAsync(Page);
     }

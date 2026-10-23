@@ -14,7 +14,7 @@ public class HistorySectionTests : PlaywrightTestBase
 
     private async Task Open(string fileName)
     {
-        await Page.GotoAsync(HistoryReportHelper.Generate(TempDir, OutputDir, fileName));
+        await Page.GotoReportAsync(HistoryReportHelper.Generate(TempDir, OutputDir, fileName));
         await Page.Locator("details.feature").First.WaitForAsync();
         // since 5.0.0 the section is the History tab's panel (plans/OPTION_C_PLAN.md S3)
         await OpenReportTabAsync("history");
@@ -66,7 +66,7 @@ public class HistorySectionTests : PlaywrightTestBase
     {
         // 3.24.0 (#83): the fourth earlier run took three times as long in every scenario. Its ring and its bar
         // name it in their tooltips (since 5.0.0); the run being reported is healthy, so nothing is said above the charts.
-        await Page.GotoAsync(HistoryReportHelper.Generate(TempDir, OutputDir, "HistorySection_Degraded.html",
+        await Page.GotoReportAsync(HistoryReportHelper.Generate(TempDir, OutputDir, "HistorySection_Degraded.html",
             (i, run) => i == 3 ? run with { Durations = [.. run.Durations!.Select(d => d * 3)] } : run, wide: true));
         await OpenReportTabAsync("history");
         var section = Page.Locator("#history-section");

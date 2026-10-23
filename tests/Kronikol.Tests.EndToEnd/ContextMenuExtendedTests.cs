@@ -15,7 +15,7 @@ public class ContextMenuExtendedTests : PlaywrightTestBase
     [Fact]
     public async Task Context_menu_z_index_is_high_enough()
     {
-        await Page.GotoAsync(GenerateReport("CtxZIndex.html"));
+        await Page.GotoReportAsync(GenerateReport("CtxZIndex.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         var svg = (await WaitForDiagramSvg()).First;
@@ -31,7 +31,7 @@ public class ContextMenuExtendedTests : PlaywrightTestBase
     [Fact]
     public async Task Context_menu_has_box_shadow()
     {
-        await Page.GotoAsync(GenerateReport("CtxShadow.html"));
+        await Page.GotoReportAsync(GenerateReport("CtxShadow.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         var svg = (await WaitForDiagramSvg()).First;
@@ -49,7 +49,7 @@ public class ContextMenuExtendedTests : PlaywrightTestBase
     [Fact]
     public async Task Copy_image_submenu_has_submenu_children()
     {
-        await Page.GotoAsync(GenerateReport("CtxSubmenuChildren.html"));
+        await Page.GotoReportAsync(GenerateReport("CtxSubmenuChildren.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         var svg = (await WaitForDiagramSvg()).First;
@@ -71,7 +71,7 @@ public class ContextMenuExtendedTests : PlaywrightTestBase
     [Fact]
     public async Task Submenu_is_hidden_by_default()
     {
-        await Page.GotoAsync(GenerateReport("CtxSubmenuHidden.html"));
+        await Page.GotoReportAsync(GenerateReport("CtxSubmenuHidden.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         var svg = (await WaitForDiagramSvg()).First;
@@ -87,7 +87,7 @@ public class ContextMenuExtendedTests : PlaywrightTestBase
     [Fact]
     public async Task Submenu_shows_on_parent_hover()
     {
-        await Page.GotoAsync(GenerateReport("CtxSubmenuHover.html"));
+        await Page.GotoReportAsync(GenerateReport("CtxSubmenuHover.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         var svg = (await WaitForDiagramSvg()).First;
@@ -110,7 +110,7 @@ public class ContextMenuExtendedTests : PlaywrightTestBase
     [Fact]
     public async Task Submenu_parent_has_arrow_indicator()
     {
-        await Page.GotoAsync(GenerateReport("CtxSubmenuArrow.html"));
+        await Page.GotoReportAsync(GenerateReport("CtxSubmenuArrow.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         var svg = (await WaitForDiagramSvg()).First;
@@ -133,7 +133,7 @@ public class ContextMenuExtendedTests : PlaywrightTestBase
     [Fact]
     public async Task Context_menu_has_show_browser_menu_item()
     {
-        await Page.GotoAsync(GenerateReport("CtxBrowserMenu.html"));
+        await Page.GotoReportAsync(GenerateReport("CtxBrowserMenu.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         var svg = (await WaitForDiagramSvg()).First;
@@ -154,7 +154,7 @@ public class ContextMenuExtendedTests : PlaywrightTestBase
     [Fact]
     public async Task Context_menu_has_copy_source_item()
     {
-        await Page.GotoAsync(GenerateReport("CtxCopySource.html"));
+        await Page.GotoReportAsync(GenerateReport("CtxCopySource.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         var svg = (await WaitForDiagramSvg()).First;
@@ -175,7 +175,7 @@ public class ContextMenuExtendedTests : PlaywrightTestBase
     [Fact]
     public async Task New_right_click_replaces_existing_context_menu()
     {
-        await Page.GotoAsync(GenerateReport("CtxReplace.html"));
+        await Page.GotoReportAsync(GenerateReport("CtxReplace.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         var svg = (await WaitForDiagramSvg()).First;
@@ -195,7 +195,7 @@ public class ContextMenuExtendedTests : PlaywrightTestBase
     [Fact]
     public async Task Context_menu_has_open_in_new_tab_submenu()
     {
-        await Page.GotoAsync(GenerateReport("CtxOpenTab.html"));
+        await Page.GotoReportAsync(GenerateReport("CtxOpenTab.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         var svg = (await WaitForDiagramSvg()).First;
@@ -223,7 +223,7 @@ public class ContextMenuExtendedTests : PlaywrightTestBase
     [Fact]
     public async Task Context_menu_has_separator()
     {
-        await Page.GotoAsync(GenerateReport("CtxSeparator.html"));
+        await Page.GotoReportAsync(GenerateReport("CtxSeparator.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         var svg = (await WaitForDiagramSvg()).First;
@@ -238,7 +238,7 @@ public class ContextMenuExtendedTests : PlaywrightTestBase
     [Fact]
     public async Task Context_menu_show_browser_menu_shows_toast()
     {
-        await Page.GotoAsync(GenerateReport("CtxBrowserMenuToast.html"));
+        await Page.GotoReportAsync(GenerateReport("CtxBrowserMenuToast.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         var svg = (await WaitForDiagramSvg()).First;

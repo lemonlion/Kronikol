@@ -226,7 +226,7 @@ public class WikiGifTests : PlaywrightTestBase
 
     private async Task OpenUrl(string url)
     {
-        await Page.GotoAsync(url);
+        await Page.GotoReportAsync(url);
         await Task.Delay(500);
     }
 
@@ -602,7 +602,7 @@ public class WikiGifTests : PlaywrightTestBase
     private async Task NavigateToReport()
     {
         var url = GenerateReport();
-        await Page.GotoAsync(url);
+        await Page.GotoReportAsync(url);
         await Page.Locator("details.feature").First.WaitForAsync();
         await Page.EvaluateAsync("document.documentElement.style.scrollBehavior='smooth';");
         await InjectFakeCursor();

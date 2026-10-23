@@ -218,7 +218,7 @@ public class ReportToggleTests : IDisposable
 
         var path = Path.Combine(_reportsDir, $"Specifications_{_suffix}.html");
         Assert.True(File.Exists(path));
-        Assert.Equal(string.Empty, File.ReadAllText(path));
+        Assert.Equal(string.Empty, ReportHtml.Read(path));
     }
 
     [Fact]
@@ -231,7 +231,7 @@ public class ReportToggleTests : IDisposable
 
         var path = Path.Combine(_reportsDir, $"Specifications_{_suffix}.yml");
         Assert.True(File.Exists(path));
-        Assert.Equal(string.Empty, File.ReadAllText(path));
+        Assert.Equal(string.Empty, ReportHtml.Read(path));
     }
 
     [Fact]
@@ -244,7 +244,7 @@ public class ReportToggleTests : IDisposable
 
         var path = Path.Combine(_reportsDir, $"TestRunReport_{_suffix}.html");
         Assert.True(File.Exists(path));
-        Assert.NotEqual(string.Empty, File.ReadAllText(path));
+        Assert.NotEqual(string.Empty, ReportHtml.Read(path));
     }
 
     [Fact]
@@ -270,7 +270,7 @@ public class ReportToggleTests : IDisposable
 
         var path = Path.Combine(_reportsDir, $"Specifications_{_suffix}.html");
         Assert.True(File.Exists(path));
-        Assert.NotEqual(string.Empty, File.ReadAllText(path));
+        Assert.NotEqual(string.Empty, ReportHtml.Read(path));
     }
 
     // --- ExpectedTestCount (partial-run guard) ---
@@ -321,7 +321,7 @@ public class ReportToggleTests : IDisposable
         Assert.True(File.Exists(path));
         // Named from the data file's option, not the html's, so renaming the data file renames its
         // narrative with it.
-        Assert.StartsWith("# ", File.ReadAllText(path));
+        Assert.StartsWith("# ", ReportHtml.Read(path));
     }
 
     [Fact]
@@ -399,7 +399,7 @@ public class ReportToggleTests : IDisposable
             [], DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow, options);
 
         // Pre-existing report must still contain the original content
-        Assert.Equal("<html>previous</html>", File.ReadAllText(preExisting));
+        Assert.Equal("<html>previous</html>", ReportHtml.Read(preExisting));
     }
 
     [Fact]
@@ -418,7 +418,7 @@ public class ReportToggleTests : IDisposable
         ReportGenerator.CreateStandardReportsWithDiagrams(
             emptyFeatures, DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow, options);
 
-        Assert.Equal("<html>previous</html>", File.ReadAllText(preExisting));
+        Assert.Equal("<html>previous</html>", ReportHtml.Read(preExisting));
     }
 
     [Fact]
@@ -433,7 +433,7 @@ public class ReportToggleTests : IDisposable
             SimpleFeatures, DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow, options);
 
         // Report should have been overwritten with real content
-        var content = File.ReadAllText(preExisting);
+        var content = ReportHtml.Read(preExisting);
         Assert.NotEqual("<html>previous</html>", content);
         Assert.Contains("Toggle scenario", content);
     }
@@ -452,12 +452,12 @@ public class ReportToggleTests : IDisposable
         ReportGenerator.CreateStandardReportsWithDiagrams(
             SimpleFeatures, DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow, options);
 
-        var testRun = File.ReadAllText(Path.Combine(_reportsDir, $"TestRunReport_{_suffix}.html"));
+        var testRun = ReportHtml.Read(Path.Combine(_reportsDir, $"TestRunReport_{_suffix}.html"));
         Assert.Contains("window._detailsDefault = 'truncated'", testRun);
         Assert.Contains("window._headersHidden = true", testRun);
         Assert.Contains("data-toggle=\"headers\" data-shown=\"false\" aria-pressed=\"false\"", testRun);
 
-        var specs = File.ReadAllText(Path.Combine(_reportsDir, $"Specifications_{_suffix}.html"));
+        var specs = ReportHtml.Read(Path.Combine(_reportsDir, $"Specifications_{_suffix}.html"));
         Assert.Contains("window._detailsDefault = 'expanded'", specs);
         Assert.Contains("window._headersHidden = true", specs);   // inherited
         Assert.Contains("data-toggle=\"headers\" data-shown=\"false\" aria-pressed=\"false\"", specs);

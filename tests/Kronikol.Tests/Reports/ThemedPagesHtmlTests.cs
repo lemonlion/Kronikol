@@ -53,7 +53,7 @@ public partial class ThemedPagesHtmlTests : IDisposable
             DateTime.UtcNow, DateTime.UtcNow,
             null, Path.Combine(_dir, "ThemedPages_Report.html"), "Test", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
-        var button = Parse(File.ReadAllText(path)).QuerySelector("div.title-line > button.theme-toggle");
+        var button = Parse(ReportHtml.Read(path)).QuerySelector("div.title-line > button.theme-toggle");
         Assert.True(button is not null, "the run report has no theme switch on its title line");
         return button!.OuterHtml;
     }

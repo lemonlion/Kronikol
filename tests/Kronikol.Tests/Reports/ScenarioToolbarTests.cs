@@ -48,7 +48,7 @@ public class ScenarioToolbarTests
             [new DefaultDiagramsFetcher.DiagramAsCode("s1", "", NotesSource)], OneScenario,
             DateTime.UtcNow, DateTime.UtcNow, null, $"ScenarioToolbar_{Guid.NewGuid():N}.html", "Test", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: rendering);
-        return File.ReadAllText(path);
+        return ReportHtml.Read(path);
     }
 
     private static string GenerateRich(Action<ReportToggleDefaults>? configure = null)
@@ -59,7 +59,7 @@ public class ScenarioToolbarTests
             var options = new ReportConfigurationOptions();
             configure?.Invoke(options.TestRunReportToggleDefaults);
             var resolved = ReportToggleDefaultsResolver.Resolve(options, specifications: false);
-            return File.ReadAllText(ToggleDefaultsBaselineTests.GenerateTestRunShape(diagrams, testRunFeatures, segments,
+            return ReportHtml.Read(ToggleDefaultsBaselineTests.GenerateTestRunShape(diagrams, testRunFeatures, segments,
                 $"ScenarioToolbarRich_{Guid.NewGuid():N}.html", resolved));
         }
     }

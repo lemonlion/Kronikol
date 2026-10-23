@@ -258,7 +258,7 @@ public class BackForwardPlacesTests : BackForwardTestBase
 
     private async Task ReloadAsync()
     {
-        await Page.ReloadAsync();
+        await Page.ReloadReportAsync();
         await Page.Locator("details.feature").First.WaitForAsync(new() { State = WaitForSelectorState.Attached });
         await SettledAsync(Page, 0);
     }
@@ -308,7 +308,7 @@ public class BackForwardPlacesTests : BackForwardTestBase
         var opened = await Context.RunAndWaitForPageAsync(() => link.ClickAsync(new() { Modifiers = [modifier] }),
             new() { Timeout = 10000 });
         // a new tab starts at about:blank and goes on to the link
-        await opened.WaitForURLAsync(u => u.EndsWith(href, StringComparison.Ordinal), new() { Timeout = 10000 });
+        await opened.WaitForURLReportAsync(u => u.EndsWith(href, StringComparison.Ordinal), new() { Timeout = 10000 });
         Assert.EndsWith(href, opened.Url);
         Assert.Equal(here, Page.Url);
         Assert.Equal("history", await SelectedTabAsync());
@@ -322,7 +322,7 @@ public class BackForwardPlacesTests : BackForwardTestBase
         opened = await Context.RunAndWaitForPageAsync(() => cluster.ClickAsync(new() { Modifiers = [modifier] }),
             new() { Timeout = 10000 });
         // a new tab starts at about:blank and goes on to the link
-        await opened.WaitForURLAsync(u => u.EndsWith(clusterHref, StringComparison.Ordinal), new() { Timeout = 10000 });
+        await opened.WaitForURLReportAsync(u => u.EndsWith(clusterHref, StringComparison.Ordinal), new() { Timeout = 10000 });
         Assert.EndsWith(clusterHref, opened.Url);
         Assert.Equal(here, Page.Url);
         await opened.CloseAsync();
@@ -403,7 +403,7 @@ public class BackForwardPlacesTests : BackForwardTestBase
         var opened = await Context.RunAndWaitForPageAsync(() => link.ClickAsync(new() { Modifiers = [modifier] }),
             new() { Timeout = 10000 });
         // a new tab starts at about:blank and goes on to the link
-        await opened.WaitForURLAsync(u => u.EndsWith(href, StringComparison.Ordinal), new() { Timeout = 10000 });
+        await opened.WaitForURLReportAsync(u => u.EndsWith(href, StringComparison.Ordinal), new() { Timeout = 10000 });
         Assert.EndsWith(href, opened.Url);
         Assert.Equal(here, Page.Url);
         Assert.Equal("timeline", await SelectedTabAsync());

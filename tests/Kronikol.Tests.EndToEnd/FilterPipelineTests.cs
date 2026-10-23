@@ -63,7 +63,7 @@ public class FilterPipelineTests : PlaywrightTestBase
 
     private async Task OpenAsync(string fileName, string hash = "")
     {
-        await Page.GotoAsync(Generate(fileName) + hash);
+        await Page.GotoReportAsync(Generate(fileName) + hash);
         await Page.Locator("details.feature").First.WaitForAsync();
         await OpenFilterRowsAsync();
     }
@@ -292,7 +292,7 @@ public class FilterPipelineTests : PlaywrightTestBase
 
         var url = await Page.EvaluateAsync<string>("() => location.href");
         var fresh = await OpenPageAsync(Page.Context);
-        await fresh.GotoAsync(url);
+        await fresh.GotoReportAsync(url);
         await fresh.Locator("details.feature").First.WaitForAsync();
         Assert.Equal(shown, await fresh.EvaluateAsync<string[]>(
             "() => Array.from(document.querySelectorAll('#report-content details.scenario')).filter(s => s.style.display !== 'none' && s.closest('details.feature').style.display !== 'none').map(s => s.id)"));

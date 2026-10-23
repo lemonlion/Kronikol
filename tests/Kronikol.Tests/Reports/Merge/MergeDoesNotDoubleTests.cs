@@ -176,7 +176,7 @@ public class MergeDoesNotDoubleTests : IDisposable
     private string In(string name) => Path.Combine(_dir, name);
 
     private JsonElement Root(string? json = null) =>
-        JsonDocument.Parse(File.ReadAllText(json ?? In("Combined.json"))).RootElement;
+        JsonDocument.Parse(ReportHtml.Read(json ?? In("Combined.json"))).RootElement;
 
     private JsonElement[] Scenarios(string? json = null) =>
         Root(json).GetProperty("features").EnumerateArray()

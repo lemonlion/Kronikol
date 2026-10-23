@@ -16,7 +16,7 @@ namespace Kronikol.Tests.Tool;
 /// </summary>
 public class QueryScriptAdviceTests
 {
-    private static string Read(params string[] parts) => File.ReadAllText(Path.Combine([BuiltTool.RepoRoot, .. parts]));
+    private static string Read(params string[] parts) => ReportHtml.Read(Path.Combine([BuiltTool.RepoRoot, .. parts]));
 
     private static readonly Feature[] OneFailure =
     [

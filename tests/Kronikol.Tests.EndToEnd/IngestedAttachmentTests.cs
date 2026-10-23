@@ -19,7 +19,7 @@ public class IngestedAttachmentTests(PlaywrightFixture fixture) : PlaywrightTest
     public async Task Each_artefact_is_painted_once_where_the_run_made_it()
     {
         var (address, result) = Ingest("attachments");
-        await Page.GotoAsync(address);
+        await Page.GotoReportAsync(address);
         await ExpandFirstScenarioWithDiagram();
 
         var scenario = Page.Locator("details.scenario", new() { HasTextString = FailingScenario }).First;

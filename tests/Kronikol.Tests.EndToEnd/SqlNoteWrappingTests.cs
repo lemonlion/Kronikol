@@ -18,7 +18,7 @@ public class SqlNoteWrappingTests : DiagramNotePlaywrightBase
 
     private async Task NavigateAndSetup(string fileName)
     {
-        await Page.GotoAsync(ReportTestHelper.GenerateReportWithMultiLineSqlNote(TempDir, OutputDir, fileName));
+        await Page.GotoReportAsync(ReportTestHelper.GenerateReportWithMultiLineSqlNote(TempDir, OutputDir, fileName));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();

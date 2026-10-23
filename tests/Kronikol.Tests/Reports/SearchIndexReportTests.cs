@@ -161,7 +161,7 @@ public class SearchIndexReportTests
             null, fileName, "Test", includeTestRunData: true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: rendering,
             inlineSvgRendering: inlineSvg, fullSearchIndex: fullSearchIndex);
-        return File.ReadAllText(path);
+        return ReportHtml.Read(path);
     }
 
     // ---------- facts ----------
@@ -545,7 +545,7 @@ public class SearchIndexReportTests
             internalFlowTracking: true,
             wholeTestVisualization: WholeTestFlowVisualization.FlameChart,
             precomputedWholeTestContent: precomputed);
-        var html = File.ReadAllText(path);
+        var html = ReportHtml.Read(path);
         var decoded = DecodeBlob(ExtractBlobBase64(html)!);
 
         foreach (var needle in new[] { "qmxspan-frobnicate", "zorblatt.activitysource", "qwyjibo-marker" })

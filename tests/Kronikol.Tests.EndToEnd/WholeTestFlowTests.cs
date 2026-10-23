@@ -11,7 +11,7 @@ public class WholeTestFlowTests : PlaywrightTestBase
     [Fact]
     public async Task Whole_test_flow_renders_collapsed_details_block()
     {
-        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateWholeTestFlowPage()));
+        await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateWholeTestFlowPage()));
 
         var details = Page.Locator("details.whole-test-flow");
         await Expect(details).ToBeVisibleAsync();
@@ -23,7 +23,7 @@ public class WholeTestFlowTests : PlaywrightTestBase
     [Fact]
     public async Task Whole_test_flow_expands_on_click()
     {
-        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateWholeTestFlowPage()));
+        await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateWholeTestFlowPage()));
 
         await Page.Locator("details.whole-test-flow > summary").ClickAsync();
         Assert.NotNull(await Page.Locator("details.whole-test-flow").GetAttributeAsync("open"));
@@ -32,7 +32,7 @@ public class WholeTestFlowTests : PlaywrightTestBase
     [Fact]
     public async Task Whole_test_flow_Both_shows_toggle_buttons()
     {
-        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateWholeTestFlowPage(WholeTestFlowVisualization.Both)));
+        await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateWholeTestFlowPage(WholeTestFlowVisualization.Both)));
         await Page.Locator("details.whole-test-flow > summary").ClickAsync();
 
         var toggleBtns = Page.Locator(".whole-test-flow .iflow-toggle-btn");
@@ -44,7 +44,7 @@ public class WholeTestFlowTests : PlaywrightTestBase
     [Fact]
     public async Task Whole_test_flow_toggle_switches_views()
     {
-        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateWholeTestFlowPage(WholeTestFlowVisualization.Both)));
+        await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateWholeTestFlowPage(WholeTestFlowVisualization.Both)));
         await Page.Locator("details.whole-test-flow > summary").ClickAsync();
 
         var toggleBtns = Page.Locator(".whole-test-flow .iflow-toggle-btn");
@@ -73,7 +73,7 @@ public class WholeTestFlowTests : PlaywrightTestBase
     [Fact]
     public async Task Whole_test_flow_FlameChart_only_shows_flame_bars()
     {
-        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateWholeTestFlowPage(WholeTestFlowVisualization.FlameChart)));
+        await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateWholeTestFlowPage(WholeTestFlowVisualization.FlameChart)));
         await Page.Locator("details.whole-test-flow > summary").ClickAsync();
 
         var flameBars = Page.Locator(".whole-test-flow .iflow-flame-bar");
@@ -85,7 +85,7 @@ public class WholeTestFlowTests : PlaywrightTestBase
     [Fact]
     public async Task Whole_test_flow_flame_has_boundary_markers()
     {
-        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateWholeTestFlowPage(WholeTestFlowVisualization.FlameChart)));
+        await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateWholeTestFlowPage(WholeTestFlowVisualization.FlameChart)));
         await Page.Locator("details.whole-test-flow > summary").ClickAsync();
 
         var markers = Page.Locator(".whole-test-flow .iflow-boundary-marker");
@@ -97,7 +97,7 @@ public class WholeTestFlowTests : PlaywrightTestBase
     {
         // #100: since 3.15.1 a marker record carries a time, and each step bar and assertion note drew a dashed line
         // labelled ": /" among the calls' own.
-        await Page.GotoAsync(ReportTestHelper.GenerateReportWithMarkersInTheWholeTestFlow(TempDir, OutputDir, "WholeTestFlow_Markers.html"));
+        await Page.GotoReportAsync(ReportTestHelper.GenerateReportWithMarkersInTheWholeTestFlow(TempDir, OutputDir, "WholeTestFlow_Markers.html"));
         await ExpandFirstScenarioWithDiagram();
 
         var scenario = Scenario("Two calls");
@@ -116,7 +116,7 @@ public class WholeTestFlowTests : PlaywrightTestBase
     {
         // #100: a scenario with only a step bar and an assertion note has no trace id of its own, and its whole-test
         // flow showed every span of the run.
-        await Page.GotoAsync(ReportTestHelper.GenerateReportWithMarkersInTheWholeTestFlow(TempDir, OutputDir, "WholeTestFlow_NoCall.html"));
+        await Page.GotoReportAsync(ReportTestHelper.GenerateReportWithMarkersInTheWholeTestFlow(TempDir, OutputDir, "WholeTestFlow_NoCall.html"));
         await ExpandFirstScenarioWithDiagram();
 
         await Expect(Scenario("Two calls").Locator(".diagram-toggle-btn[data-dtype='flame']")).ToBeVisibleAsync();

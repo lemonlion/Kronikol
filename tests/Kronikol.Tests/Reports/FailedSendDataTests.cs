@@ -43,7 +43,7 @@ public class FailedSendDataTests
     [Fact]
     public void The_json_carries_the_type_as_the_status_text_and_the_message_as_the_error()
     {
-        using var doc = JsonDocument.Parse(File.ReadAllText(Write("failed-1", DataFormat.Json)));
+        using var doc = JsonDocument.Parse(ReportHtml.Read(Write("failed-1", DataFormat.Json)));
 
         var interactions = doc.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0].GetProperty("httpInteractions");
         var request = interactions[0];
@@ -58,7 +58,7 @@ public class FailedSendDataTests
     public void The_json_schema_describes_the_error()
     {
         var schemaPath = ReportGenerator.GenerateTestRunReportSchema($"FailedSend_{Guid.NewGuid():N}.schema.json", DataFormat.Json);
-        using var schema = JsonDocument.Parse(File.ReadAllText(schemaPath));
+        using var schema = JsonDocument.Parse(ReportHtml.Read(schemaPath));
 
         var interaction = schema.RootElement.GetProperty("$defs").GetProperty("httpInteraction").GetProperty("properties");
         Assert.True(interaction.TryGetProperty("error", out var error));
@@ -72,7 +72,7 @@ public class FailedSendDataTests
         var schemaPath = ReportGenerator.GenerateTestRunReportSchema($"FailedSend_{Guid.NewGuid():N}.xsd", DataFormat.Xml);
 
         var schemaSet = new XmlSchemaSet();
-        schemaSet.Add("", System.Xml.XmlReader.Create(new StringReader(File.ReadAllText(schemaPath))));
+        schemaSet.Add("", System.Xml.XmlReader.Create(new StringReader(ReportHtml.Read(schemaPath))));
         var errors = new List<string>();
         var document = XDocument.Load(dataPath);
         document.Validate(schemaSet, (_, e) => errors.Add(e.Message));
@@ -88,7 +88,7 @@ public class FailedSendDataTests
         var yamlPath = Write("failed-3", DataFormat.Yaml);
         var schemaPath = ReportGenerator.GenerateTestRunReportSchema($"FailedSend_{Guid.NewGuid():N}.schema.json", DataFormat.Yaml);
 
-        Assert.Contains("Error: \"Error while copying content to a stream. Caused by: The pipe was advanced too far.\"", File.ReadAllText(yamlPath), StringComparison.Ordinal);
+        Assert.Contains("Error: \"Error while copying content to a stream. Caused by: The pipe was advanced too far.\"", ReportHtml.Read(yamlPath), StringComparison.Ordinal);
         Assert.Empty(YamlSchemaValidationTests.ValidateYaml(schemaPath, yamlPath));
     }
 }

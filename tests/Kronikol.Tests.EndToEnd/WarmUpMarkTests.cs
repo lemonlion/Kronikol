@@ -114,7 +114,7 @@ public class WarmUpMarkTests : PlaywrightTestBase
     [Fact]
     public async Task The_marker_and_its_tooltip_are_on_the_marked_scenario_alone()
     {
-        await Page.GotoAsync(Generate("WarmUpMarker.html"));
+        await Page.GotoReportAsync(Generate("WarmUpMarker.html"));
 
         var notes = Page.Locator(".duration-badge > .warm-up-note");
         await Expect(notes).ToHaveCountAsync(1);
@@ -133,7 +133,7 @@ public class WarmUpMarkTests : PlaywrightTestBase
     [Fact]
     public async Task The_timeline_shades_the_warm_ups_share_of_the_bar()
     {
-        await Page.GotoAsync(Generate("WarmUpTimeline.html"));
+        await Page.GotoReportAsync(Generate("WarmUpTimeline.html"));
         await OpenReportTabAsync("timeline"); // 5.0.0: a tab of the report bar (plans/OPTION_C_PLAN.md S3)
         await Expect(Page.Locator("#scenario-timeline")).ToBeVisibleAsync();
 
@@ -154,7 +154,7 @@ public class WarmUpMarkTests : PlaywrightTestBase
     [Fact]
     public async Task The_percentile_filter_ranks_by_each_scenarios_own_time()
     {
-        await Page.GotoAsync(Generate("WarmUpFilter.html"));
+        await Page.GotoReportAsync(Generate("WarmUpFilter.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         // Own time: Browse 300, Search 400, Place 500, Place again 1,200 ms, so P90 is 1,200 ms, and the filter shows
@@ -172,7 +172,7 @@ public class WarmUpMarkTests : PlaywrightTestBase
     {
         // Rounded to a tenth of a second, a P50 of 30 ms read 0.0 s, which filters nothing, and a P90 of 1,259 ms read 1.3 s,
         // which hid the scenario it names (until 4.16.3). Place's own time is 30 ms here: 1,600 less 1,570 of warm-up.
-        await Page.GotoAsync(GenerateOwnTimes("WarmUpPercentileUnder.html",
+        await Page.GotoReportAsync(GenerateOwnTimes("WarmUpPercentileUnder.html",
             ("Place", 1600, 1570), ("Again", 40, 0), ("Browse", 10, 0), ("Search", 20, 0), ("Pay", 2000, 0)));
         await Page.Locator("details.feature").First.WaitForAsync();
         await OpenFilterRowsAsync();
@@ -184,7 +184,7 @@ public class WarmUpMarkTests : PlaywrightTestBase
         Assert.Equal(["Again", "Pay", "Place"], (await VisibleScenarios()).Order(StringComparer.Ordinal));
 
         // 1,910.4 ms with 650.6 ms of warm-up: the filter reads 1,910 less 651, 1,259 ms of its own, and that is the P90.
-        await Page.GotoAsync(GenerateOwnTimes("WarmUpPercentileOver.html",
+        await Page.GotoReportAsync(GenerateOwnTimes("WarmUpPercentileOver.html",
             ("Place", 1910.4, 650.6), ("Again", 100, 0), ("Browse", 200, 0), ("Search", 300, 0), ("Pay", 400, 0)));
         await Page.Locator("details.feature").First.WaitForAsync();
         await OpenFilterRowsAsync();
@@ -200,7 +200,7 @@ public class WarmUpMarkTests : PlaywrightTestBase
     {
         // The menu names a saved diagram after its scenario's title with the duration badge taken out; the warm-up note sits
         // inside the badge and goes with it (plans/WARM_UP_PLAN.md 4.5, which 4.9.0 read and did not run).
-        await Page.GotoAsync(Generate("WarmUpDiagramName.html",
+        await Page.GotoReportAsync(Generate("WarmUpDiagramName.html",
             diagrams: [new("place", "", "@startuml\nCaller -> Orders : POST /orders\nOrders --> Caller : 201 Created\n@enduml")]));
         await Expect(ScenarioNamed("Place").Locator(":scope > summary .duration-badge > .warm-up-note")).ToHaveTextAsync(" · 1.5s warm-up");
         await Page.Locator("details.feature > summary").First.ClickAsync();
@@ -221,10 +221,10 @@ public class WarmUpMarkTests : PlaywrightTestBase
     [Fact]
     public async Task The_specifications_page_draws_the_same_mark_and_the_exports_keep_what_they_kept()
     {
-        await Page.GotoAsync(Generate("WarmUpSpecifications.html", includeTestRunData: false));
+        await Page.GotoReportAsync(Generate("WarmUpSpecifications.html", includeTestRunData: false));
         await Expect(ScenarioNamed("Place").Locator(":scope > summary .duration-badge > .warm-up-note")).ToHaveTextAsync(" · 1.5s warm-up");
 
-        await Page.GotoAsync(Generate("WarmUpExports.html"));
+        await Page.GotoReportAsync(Generate("WarmUpExports.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         // Export Filtered CSV writes wall time.
@@ -241,7 +241,7 @@ public class WarmUpMarkTests : PlaywrightTestBase
             await Page.Locator("button.export-btn", new() { HasTextString = "Export Filtered HTML" }).ClickAsync());
         var htmlPath = Path.Combine(TempDir, $"warm-up_{Guid.NewGuid():N}.html");
         await html.SaveAsAsync(htmlPath);
-        await Page.GotoAsync(new Uri(htmlPath).AbsoluteUri);
+        await Page.GotoReportAsync(new Uri(htmlPath).AbsoluteUri);
         var badge = ScenarioNamed("Place").Locator(":scope > summary .duration-badge");
         await Expect(badge).ToHaveAttributeAsync("title", "2 s, 1.5 s of it first-call warm-up: POST /orders 1.5 s (later calls 5 ms)");
         Assert.Equal("0.75", await badge.Locator(".warm-up-note").EvaluateAsync<string>("n => getComputedStyle(n).opacity"));

@@ -70,7 +70,7 @@ public class BackgroundCallsSectionTests : PlaywrightTestBase
     {
         var url = GenerateBackgroundReport("background-calls.html");
 
-        await Page.GotoAsync(url);
+        await Page.GotoReportAsync(url);
         var section = Page.Locator("details.background-calls");
         await section.WaitForAsync();
 

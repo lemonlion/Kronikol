@@ -18,7 +18,7 @@ public class LoaderMarkupInCapturedTextTests : PlaywrightTestBase
 
     private async Task OpenReport(NotePayloadFormat format, [System.Runtime.CompilerServices.CallerMemberName] string? testName = null)
     {
-        await Page.GotoAsync(ReportTestHelper.GenerateReportWithLoaderMarkupPayloads(TempDir, OutputDir, $"LoaderMarkup_{testName}.html", format));
+        await Page.GotoReportAsync(ReportTestHelper.GenerateReportWithLoaderMarkupPayloads(TempDir, OutputDir, $"LoaderMarkup_{testName}.html", format));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await Page.EvaluateAsync("() => window._renderDiagramsInContainer(document.body)");

@@ -59,7 +59,7 @@ public class UrlHashFilterHighlightTests : PlaywrightTestBase
     public async Task Status_filter_buttons_highlighted_after_url_hash_restore()
     {
         var url = GenerateAndServeReport("UrlHashStatusHighlight.html");
-        await Page.GotoAsync(url + "#status=Passed");
+        await Page.GotoReportAsync(url + "#status=Passed");
         await OpenFilterRowsAsync();
 
         var passedBtn = Page.Locator(".status-toggle[data-status='Passed']");
@@ -74,7 +74,7 @@ public class UrlHashFilterHighlightTests : PlaywrightTestBase
     public async Task Status_filter_hides_scenarios_and_highlights_button_on_url_restore()
     {
         var url = GenerateAndServeReport("UrlHashStatusHideHighlight.html");
-        await Page.GotoAsync(url + "#status=Failed");
+        await Page.GotoReportAsync(url + "#status=Failed");
         await OpenFilterRowsAsync();
 
         var failedBtn = Page.Locator(".status-toggle[data-status='Failed']");
@@ -94,7 +94,7 @@ public class UrlHashFilterHighlightTests : PlaywrightTestBase
     public async Task Happy_path_button_highlighted_after_url_hash_restore()
     {
         var url = GenerateAndServeReport("UrlHashHappyPathHighlight.html");
-        await Page.GotoAsync(url + "#hp=1");
+        await Page.GotoReportAsync(url + "#hp=1");
         await OpenFilterRowsAsync();
 
         // 5.0.0: hp=1 is Happy paths Only (plans/OPTION_C_PLAN.md S6)
@@ -108,7 +108,7 @@ public class UrlHashFilterHighlightTests : PlaywrightTestBase
     public async Task Search_text_restored_after_url_hash_restore()
     {
         var url = GenerateAndServeReport("UrlHashSearchRestore.html");
-        await Page.GotoAsync(url + "#q=" + Uri.EscapeDataString("Create order"));
+        await Page.GotoReportAsync(url + "#q=" + Uri.EscapeDataString("Create order"));
         await OpenFilterRowsAsync();
 
         var searchBar = Page.Locator("#searchbar");
@@ -120,7 +120,7 @@ public class UrlHashFilterHighlightTests : PlaywrightTestBase
     public async Task Status_filter_highlighted_after_click_then_refresh()
     {
         var url = GenerateAndServeReport("UrlHashClickRefresh.html");
-        await Page.GotoAsync(url);
+        await Page.GotoReportAsync(url);
         await OpenFilterRowsAsync();
 
         var passedBtn = Page.Locator(".status-toggle[data-status='Passed']");
@@ -130,7 +130,7 @@ public class UrlHashFilterHighlightTests : PlaywrightTestBase
         Assert.True(await IsHighlighted(await GetComputedBgColor(".status-toggle[data-status='Passed']")));
         Assert.Contains("#", Page.Url);
 
-        await Page.ReloadAsync();
+        await Page.ReloadReportAsync();
         await OpenFilterRowsAsync();
 
         await Expect(passedBtn).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("status-active"));
@@ -141,7 +141,7 @@ public class UrlHashFilterHighlightTests : PlaywrightTestBase
     public async Task Happy_path_highlighted_after_click_then_refresh()
     {
         var url = GenerateAndServeReport("UrlHashHPClickRefresh.html");
-        await Page.GotoAsync(url);
+        await Page.GotoReportAsync(url);
         await OpenFilterRowsAsync();
 
         // 5.0.0: Happy paths Only (plans/OPTION_C_PLAN.md S6)
@@ -152,7 +152,7 @@ public class UrlHashFilterHighlightTests : PlaywrightTestBase
 
         Assert.True(await IsHighlighted(await GetComputedBgColor(only)));
 
-        await Page.ReloadAsync();
+        await Page.ReloadReportAsync();
         await OpenFilterRowsAsync();
 
         await hpBtn.WaitForAsync(new() { Timeout = 10000 });
@@ -164,13 +164,13 @@ public class UrlHashFilterHighlightTests : PlaywrightTestBase
     public async Task Multiple_status_filters_highlighted_after_click_then_refresh()
     {
         var url = GenerateAndServeReport("UrlHashMultiStatusRefresh.html");
-        await Page.GotoAsync(url);
+        await Page.GotoReportAsync(url);
         await OpenFilterRowsAsync();
 
         await Page.Locator(".status-toggle[data-status='Passed']").ClickAsync();
         await Page.Locator(".status-toggle[data-status='Failed']").ClickAsync();
 
-        await Page.ReloadAsync();
+        await Page.ReloadReportAsync();
         await OpenFilterRowsAsync();
 
         var passedBtn = Page.Locator(".status-toggle[data-status='Passed']");
@@ -187,13 +187,13 @@ public class UrlHashFilterHighlightTests : PlaywrightTestBase
     public async Task Status_and_happy_path_both_highlighted_after_click_then_refresh()
     {
         var url = GenerateAndServeReport("UrlHashComboRefresh.html");
-        await Page.GotoAsync(url);
+        await Page.GotoReportAsync(url);
         await OpenFilterRowsAsync();
 
         await Page.Locator(".status-toggle[data-status='Failed']").ClickAsync();
         await Page.Locator(".filtering-box .happy-seg[data-hp='in']").ClickAsync();
 
-        await Page.ReloadAsync();
+        await Page.ReloadReportAsync();
         await OpenFilterRowsAsync();
 
         var failedBtn = Page.Locator(".status-toggle[data-status='Failed']");
@@ -207,7 +207,7 @@ public class UrlHashFilterHighlightTests : PlaywrightTestBase
     public async Task Percentile_button_highlighted_after_click_then_refresh()
     {
         var url = GenerateAndServeReport("UrlHashP99Refresh.html");
-        await Page.GotoAsync(url);
+        await Page.GotoReportAsync(url);
         await OpenFilterRowsAsync();
 
         var p99Btn = Page.Locator("button.percentile-btn", new() { HasTextString = "P99" });
@@ -217,7 +217,7 @@ public class UrlHashFilterHighlightTests : PlaywrightTestBase
         await Expect(p99Btn).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("percentile-active"));
         Assert.Contains("pctl=", Page.Url);
 
-        await Page.ReloadAsync();
+        await Page.ReloadReportAsync();
         await OpenFilterRowsAsync();
 
         await p99Btn.WaitForAsync(new() { Timeout = 10000 });
@@ -229,7 +229,7 @@ public class UrlHashFilterHighlightTests : PlaywrightTestBase
     public async Task User_report_status_filter_highlighted_after_url_hash_restore()
     {
         var url = GenerateAndServeReport("UrlHashUserReport.html");
-        await Page.GotoAsync(url + "#status=Passed");
+        await Page.GotoReportAsync(url + "#status=Passed");
         await OpenFilterRowsAsync();
 
         var passedBtn = Page.Locator(".status-toggle[data-status='Passed']");

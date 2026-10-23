@@ -36,7 +36,7 @@ public class AssertionTooltipTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Assertion_notes_have_source_location_tooltips()
     {
-        await Page.GotoAsync(GenerateAssertionReport("AssertTooltip1.html"));
+        await Page.GotoReportAsync(GenerateAssertionReport("AssertTooltip1.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await RenderAllDiagramsAndWait();
@@ -68,7 +68,7 @@ public class AssertionTooltipTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Assertion_tooltips_present_after_report_level_show()
     {
-        await Page.GotoAsync(GenerateAssertionReport("AssertTooltip2.html"));
+        await Page.GotoReportAsync(GenerateAssertionReport("AssertTooltip2.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await RenderAllDiagramsAndWait();

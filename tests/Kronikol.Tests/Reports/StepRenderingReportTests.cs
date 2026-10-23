@@ -21,7 +21,7 @@ public class StepRenderingReportTests
             null, fileName, "Test", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs,
             renderCollapsedSubStepsOnExpand: renderCollapsedSubStepsOnExpand);
-        return File.ReadAllText(path);
+        return ReportHtml.Read(path);
     }
 
     private static string GenerateReportSeparateBackground(Feature[] features, string fileName)
@@ -32,7 +32,7 @@ public class StepRenderingReportTests
             null, fileName, "Test", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs,
             separateBackgroundSteps: true);
-        return File.ReadAllText(path);
+        return ReportHtml.Read(path);
     }
 
     private static string GenerateReportNumbered(Feature[] features, string fileName, bool separateBackgroundSteps = false)
@@ -43,7 +43,7 @@ public class StepRenderingReportTests
             null, fileName, "Test", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs,
             showStepNumbers: true, separateBackgroundSteps: separateBackgroundSteps);
-        return File.ReadAllText(path);
+        return ReportHtml.Read(path);
     }
 
     private static string GenerateReportWithoutKeywordCollapsing(Feature[] features, string fileName)
@@ -54,7 +54,7 @@ public class StepRenderingReportTests
             null, fileName, "Test", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs,
             collapseRepeatedStepKeywords: false);
-        return File.ReadAllText(path);
+        return ReportHtml.Read(path);
     }
 
     [Fact]

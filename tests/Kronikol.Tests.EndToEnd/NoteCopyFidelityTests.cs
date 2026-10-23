@@ -17,7 +17,7 @@ public class NoteCopyFidelityTests : DiagramNotePlaywrightBase
 
     private async Task NavigateTokenFixture(string fileName)
     {
-        await Page.GotoAsync(ReportTestHelper.GenerateReportWithWrappedTokenNote(TempDir, OutputDir, fileName));
+        await Page.GotoReportAsync(ReportTestHelper.GenerateReportWithWrappedTokenNote(TempDir, OutputDir, fileName));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();

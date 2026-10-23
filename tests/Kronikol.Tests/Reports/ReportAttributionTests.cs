@@ -315,7 +315,7 @@ public class ReportAttributionTests
         ReportGenerator.GenerateTestRunReportData(features, Start, End, fileName, DataFormat.Json, trackedLogs: logs);
 
     private static JsonElement Scenario(string path) =>
-        JsonDocument.Parse(File.ReadAllText(path)).RootElement
+        JsonDocument.Parse(ReportHtml.Read(path)).RootElement
             .GetProperty("features")[0].GetProperty("scenarios")[0];
 
     private static JsonElement FirstStep(string path) => Scenario(path).GetProperty("steps")[0];

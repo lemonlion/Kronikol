@@ -8,7 +8,7 @@ public class DiagramNotePartitionTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Note_hover_rects_found_inside_partition_groups()
     {
-        await Page.GotoAsync(GeneratePartitionReport("PartitionNoteHoverRects.html"));
+        await Page.GotoReportAsync(GeneratePartitionReport("PartitionNoteHoverRects.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -21,7 +21,7 @@ public class DiagramNotePartitionTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Note_toggle_icons_found_inside_partition_groups()
     {
-        await Page.GotoAsync(GeneratePartitionReport("PartitionNoteToggleIcons.html"));
+        await Page.GotoReportAsync(GeneratePartitionReport("PartitionNoteToggleIcons.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -34,7 +34,7 @@ public class DiagramNotePartitionTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Partition_note_buttons_respond_to_hover()
     {
-        await Page.GotoAsync(GeneratePartitionReport("PartitionNoteHover.html"));
+        await Page.GotoReportAsync(GeneratePartitionReport("PartitionNoteHover.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -51,7 +51,7 @@ public class DiagramNotePartitionTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Partition_note_double_click_cycles_state()
     {
-        await Page.GotoAsync(GeneratePartitionReport("PartitionNoteDblClick.html"));
+        await Page.GotoReportAsync(GeneratePartitionReport("PartitionNoteDblClick.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -63,7 +63,7 @@ public class DiagramNotePartitionTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Partition_note_scenario_collapse_shows_plus_buttons()
     {
-        await Page.GotoAsync(GeneratePartitionReport("PartitionNoteCollapse.html"));
+        await Page.GotoReportAsync(GeneratePartitionReport("PartitionNoteCollapse.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -79,7 +79,7 @@ public class DiagramNotePartitionTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Partition_svg_structure_has_expected_note_groups()
     {
-        await Page.GotoAsync(GeneratePartitionReport("PartitionSvgStructure.html"));
+        await Page.GotoReportAsync(GeneratePartitionReport("PartitionSvgStructure.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -97,7 +97,7 @@ public class DiagramNotePartitionTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Partition_long_notes_have_hover_rects()
     {
-        await Page.GotoAsync(GeneratePartitionLongNoteReport("PartitionLongNoteHoverRects.html"));
+        await Page.GotoReportAsync(GeneratePartitionLongNoteReport("PartitionLongNoteHoverRects.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -109,7 +109,7 @@ public class DiagramNotePartitionTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Partition_long_note_double_click_cycles_state()
     {
-        await Page.GotoAsync(GeneratePartitionLongNoteReport("PartitionLongNoteDblClick.html"));
+        await Page.GotoReportAsync(GeneratePartitionLongNoteReport("PartitionLongNoteDblClick.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -122,7 +122,7 @@ public class DiagramNotePartitionTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Partition_long_note_expand_click_works()
     {
-        await Page.GotoAsync(GeneratePartitionLongNoteReport("PartitionLongNoteExpand.html"));
+        await Page.GotoReportAsync(GeneratePartitionLongNoteReport("PartitionLongNoteExpand.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -142,7 +142,7 @@ public class DiagramNotePartitionTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Safety_net_excludes_non_note_fills_from_collapsible_buttons()
     {
-        await Page.GotoAsync(GeneratePartitionReport("PartitionExcludeParticipant.html"));
+        await Page.GotoReportAsync(GeneratePartitionReport("PartitionExcludeParticipant.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -198,7 +198,7 @@ public class DiagramNotePartitionTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task FindNoteGroups_still_detects_note_fill_FEFFDD()
     {
-        await Page.GotoAsync(GeneratePartitionReport("PartitionDetectNoteFill.html"));
+        await Page.GotoReportAsync(GeneratePartitionReport("PartitionDetectNoteFill.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -210,7 +210,7 @@ public class DiagramNotePartitionTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task MakeNotesCollapsible_matches_groups_to_blocks_correctly_when_extra_groups_exist()
     {
-        await Page.GotoAsync(GeneratePartitionReport("PartitionGroupBlockMatch.html"));
+        await Page.GotoReportAsync(GeneratePartitionReport("PartitionGroupBlockMatch.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();

@@ -132,7 +132,7 @@ public class QueryNotATestTests : IDisposable
     /// <summary>A copy of <paramref name="report"/> with <paramref name="change"/> made to its JSON.</summary>
     private string Variant(string report, Action<System.Text.Json.Nodes.JsonNode> change)
     {
-        var json = System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(report))!;
+        var json = System.Text.Json.Nodes.JsonNode.Parse(ReportHtml.Read(report))!;
         change(json);
         var path = Path.Combine(_directory, $"TestRunReport-{Guid.NewGuid():N}.json");
         File.WriteAllText(path, json.ToJsonString());

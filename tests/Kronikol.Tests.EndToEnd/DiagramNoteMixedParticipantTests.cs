@@ -14,7 +14,7 @@ public class DiagramNoteMixedParticipantTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task FindNoteGroups_excludes_entity_queue_database_shapes()
     {
-        await Page.GotoAsync(GenerateMixedParticipantNotesReport("MixedParticExclude.html"));
+        await Page.GotoReportAsync(GenerateMixedParticipantNotesReport("MixedParticExclude.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -45,7 +45,7 @@ public class DiagramNoteMixedParticipantTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Hover_rects_match_note_count_not_participant_count()
     {
-        await Page.GotoAsync(GenerateMixedParticipantNotesReport("MixedParticHoverRects.html"));
+        await Page.GotoReportAsync(GenerateMixedParticipantNotesReport("MixedParticHoverRects.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -70,7 +70,7 @@ public class DiagramNoteMixedParticipantTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Minus_button_collapses_correct_note_content()
     {
-        await Page.GotoAsync(GenerateMixedParticipantNotesReport("MixedParticMinusCorrect.html"));
+        await Page.GotoReportAsync(GenerateMixedParticipantNotesReport("MixedParticMinusCorrect.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -123,7 +123,7 @@ public class DiagramNoteMixedParticipantTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Second_note_unaffected_when_first_note_collapsed()
     {
-        await Page.GotoAsync(GenerateMixedParticipantNotesReport("MixedParticIsolation.html"));
+        await Page.GotoReportAsync(GenerateMixedParticipantNotesReport("MixedParticIsolation.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -164,7 +164,7 @@ public class DiagramNoteMixedParticipantTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Event_note_with_different_fill_is_detected()
     {
-        await Page.GotoAsync(GenerateMixedParticipantNotesReport("MixedParticEventNote.html"));
+        await Page.GotoReportAsync(GenerateMixedParticipantNotesReport("MixedParticEventNote.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();

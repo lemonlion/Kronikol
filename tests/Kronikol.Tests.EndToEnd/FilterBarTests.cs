@@ -42,7 +42,7 @@ public class FilterBarTests : PlaywrightTestBase
     private async Task OpenAsync(string fileName, string hash = "", int width = 1400, int height = 700)
     {
         await Page.SetViewportSizeAsync(width, height);
-        await Page.GotoAsync(Generate(fileName) + hash);
+        await Page.GotoReportAsync(Generate(fileName) + hash);
         await Page.Locator("details.feature").First.WaitForAsync();
         await TwoAnimationFramesAsync(Page);
     }
@@ -231,7 +231,7 @@ public class FilterBarTests : PlaywrightTestBase
     public async Task On_a_page_without_the_bar_no_scenario_left_still_shows_the_empty_state()
     {
         await Page.SetViewportSizeAsync(1400, 700);
-        await Page.GotoAsync(Generate("FilterBar_Empty_NoBar.html", durations: false));
+        await Page.GotoReportAsync(Generate("FilterBar_Empty_NoBar.html", durations: false));
         await Page.Locator("details.feature").First.WaitForAsync();
         await Expect(Page.Locator(".toolbar-row.report-nav")).ToHaveCountAsync(0);
         var empty = Page.Locator(".filters-empty");
@@ -255,7 +255,7 @@ public class FilterBarTests : PlaywrightTestBase
     public async Task A_link_whose_filters_leave_no_scenario_opens_on_the_empty_state(bool bar)
     {
         await Page.SetViewportSizeAsync(1400, 700);
-        await Page.GotoAsync(Generate(bar ? "FilterBar_Empty_Link.html" : "FilterBar_Empty_Link_NoBar.html", durations: bar) + "#q=nothing-matches-this");
+        await Page.GotoReportAsync(Generate(bar ? "FilterBar_Empty_Link.html" : "FilterBar_Empty_Link_NoBar.html", durations: bar) + "#q=nothing-matches-this");
         await Expect(Page.Locator("#searchbar")).ToHaveValueAsync("nothing-matches-this");
         await Expect(Page.Locator(".toolbar-row.report-nav")).ToHaveCountAsync(bar ? 1 : 0);
         await Expect(Page.Locator(".filters-empty")).ToBeVisibleAsync();
@@ -306,7 +306,7 @@ public class FilterBarTests : PlaywrightTestBase
         Assert.SkipWhen(firefox is null, "Firefox is not installed (CI installs chromium only)");
         await using var _ = firefox!;
         var page = await OpenPageAsync(firefox!, new BrowserNewPageOptions { ViewportSize = new() { Width = 1400, Height = 700 } });
-        await page.GotoAsync(Generate("FilterBar_Firefox_Status.html"));
+        await page.GotoReportAsync(Generate("FilterBar_Firefox_Status.html"));
         await page.Locator("details.feature").First.WaitForAsync();
         await page.Locator(".filtering-box .more-filters").ClickAsync();
         await Expect(page.Locator(".filter-row")).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("\\bpair-fits\\b"));

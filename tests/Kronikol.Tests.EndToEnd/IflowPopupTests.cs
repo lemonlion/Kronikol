@@ -20,7 +20,7 @@ public class IflowPopupTests : PlaywrightTestBase
     [Fact]
     public async Task Clicking_trigger_opens_popup_overlay()
     {
-        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage()));
+        await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage()));
 
         await Page.Locator("#trigger-seg-1").ClickAsync();
 
@@ -38,7 +38,7 @@ public class IflowPopupTests : PlaywrightTestBase
     [Fact]
     public async Task Popup_shows_segment_title_and_content()
     {
-        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage()));
+        await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage()));
         await Page.Locator("#trigger-seg-1").ClickAsync();
 
         var popup = Page.Locator(".iflow-popup");
@@ -55,7 +55,7 @@ public class IflowPopupTests : PlaywrightTestBase
     [Fact]
     public async Task Close_button_removes_overlay()
     {
-        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage()));
+        await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage()));
         await Page.Locator("#trigger-seg-1").ClickAsync();
         await Page.Locator(".iflow-overlay").WaitForAsync(new() { State = WaitForSelectorState.Visible });
 
@@ -67,7 +67,7 @@ public class IflowPopupTests : PlaywrightTestBase
     [Fact]
     public async Task Escape_key_closes_popup()
     {
-        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage()));
+        await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage()));
         await Page.Locator("#trigger-seg-1").ClickAsync();
         await Page.Locator(".iflow-overlay").WaitForAsync(new() { State = WaitForSelectorState.Visible });
 
@@ -79,7 +79,7 @@ public class IflowPopupTests : PlaywrightTestBase
     [Fact]
     public async Task Clicking_overlay_background_closes_popup()
     {
-        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage()));
+        await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage()));
         await Page.Locator("#trigger-seg-1").ClickAsync();
         var overlay = Page.Locator(".iflow-overlay");
         await overlay.WaitForAsync(new() { State = WaitForSelectorState.Visible });
@@ -92,7 +92,7 @@ public class IflowPopupTests : PlaywrightTestBase
     [Fact]
     public async Task Missing_segment_shows_no_data_message()
     {
-        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage()));
+        await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage()));
         await Page.Locator("#trigger-seg-missing").ClickAsync();
 
         var noData = Page.Locator(".iflow-popup .iflow-no-data");
@@ -103,7 +103,7 @@ public class IflowPopupTests : PlaywrightTestBase
     [Fact]
     public async Task Empty_segment_shows_no_activity_message()
     {
-        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage(includeEmptySegment: true)));
+        await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage(includeEmptySegment: true)));
         await Page.Locator("#trigger-seg-empty").ClickAsync();
 
         var noData = Page.Locator(".iflow-popup .iflow-no-data");
@@ -117,7 +117,7 @@ public class IflowPopupTests : PlaywrightTestBase
     [Fact]
     public async Task Toggle_buttons_are_rendered_when_flame_chart_enabled()
     {
-        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage(includeToggle: true)));
+        await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage(includeToggle: true)));
         await Page.Locator("#trigger-seg-1").ClickAsync();
 
         var popup = Page.Locator(".iflow-popup");
@@ -133,7 +133,7 @@ public class IflowPopupTests : PlaywrightTestBase
     [Fact]
     public async Task Activity_view_is_visible_by_default_flame_is_hidden()
     {
-        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage(includeToggle: true)));
+        await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage(includeToggle: true)));
         await Page.Locator("#trigger-seg-1").ClickAsync();
         await Expect(Page.Locator(".iflow-popup")).ToBeVisibleAsync();
 
@@ -144,7 +144,7 @@ public class IflowPopupTests : PlaywrightTestBase
     [Fact]
     public async Task Clicking_flame_chart_toggle_shows_flame_hides_activity()
     {
-        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage(includeToggle: true)));
+        await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage(includeToggle: true)));
         await Page.Locator("#trigger-seg-1").ClickAsync();
         await Expect(Page.Locator(".iflow-popup")).ToBeVisibleAsync();
         await WaitForActivityDiagramSvg();
@@ -161,7 +161,7 @@ public class IflowPopupTests : PlaywrightTestBase
     [Fact]
     public async Task Clicking_activity_toggle_back_restores_activity_view()
     {
-        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage(includeToggle: true)));
+        await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage(includeToggle: true)));
         await Page.Locator("#trigger-seg-1").ClickAsync();
         await Expect(Page.Locator(".iflow-popup")).ToBeVisibleAsync();
 
@@ -176,7 +176,7 @@ public class IflowPopupTests : PlaywrightTestBase
     [Fact]
     public async Task Active_toggle_button_has_active_class()
     {
-        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage(includeToggle: true)));
+        await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage(includeToggle: true)));
         await Page.Locator("#trigger-seg-1").ClickAsync();
         await Expect(Page.Locator(".iflow-popup")).ToBeVisibleAsync();
 
@@ -194,7 +194,7 @@ public class IflowPopupTests : PlaywrightTestBase
     [Fact]
     public async Task Flame_chart_has_flame_bars()
     {
-        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage(includeToggle: true)));
+        await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage(includeToggle: true)));
         await Page.Locator("#trigger-seg-1").ClickAsync();
         await Expect(Page.Locator(".iflow-popup")).ToBeVisibleAsync();
 
@@ -207,7 +207,7 @@ public class IflowPopupTests : PlaywrightTestBase
     [Fact]
     public async Task Call_tree_view_renders_nested_list()
     {
-        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage(includeCallTree: true)));
+        await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage(includeCallTree: true)));
         await Page.Locator("#trigger-seg-1").ClickAsync();
         await Expect(Page.Locator(".iflow-popup")).ToBeVisibleAsync();
 
@@ -228,7 +228,7 @@ public class IflowPopupTests : PlaywrightTestBase
     [Fact]
     public async Task The_popup_opens_before_the_map_is_decoded_and_fills_when_it_is()
     {
-        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage()));
+        await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage()));
         // Hold the decode until the test lets it go.
         await Page.EvaluateAsync("""
             () => {
@@ -253,7 +253,7 @@ public class IflowPopupTests : PlaywrightTestBase
     [Fact]
     public async Task The_map_is_decoded_once_however_many_popups_open()
     {
-        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage(includeEmptySegment: true)));
+        await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage(includeEmptySegment: true)));
         // Count the decodes of the map itself; an activity diagram's own island goes through the same helper.
         await Page.EvaluateAsync("""
             () => {
@@ -279,7 +279,7 @@ public class IflowPopupTests : PlaywrightTestBase
     public async Task A_popup_draws_its_activity_diagram_with_no_decode_of_its_own()
     {
         // Q7: the diagram's PlantUML is in data-plantuml inside the map, so the map is the only thing decoded.
-        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage()));
+        await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage()));
         await Page.EvaluateAsync("""
             () => {
                 const real = window.decompressGzipBase64;
@@ -300,7 +300,7 @@ public class IflowPopupTests : PlaywrightTestBase
     {
         // F12: the render shim writes a cached diagram at once, into whatever its target id names then. A popup that was
         // not in the page yet drew nothing; the popup is attached before it renders.
-        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage(includeTwin: true)));
+        await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage(includeTwin: true)));
 
         await Page.Locator("#trigger-seg-1").ClickAsync();
         await WaitForActivityDiagramSvg();
@@ -319,7 +319,7 @@ public class IflowPopupTests : PlaywrightTestBase
             TestPageGenerator.GenerateIflowPopupTestPage(), "\"z\":\"[^\"]*\"", "\"z\":\"bm90IGd6aXA=\"");
         var errors = new List<string>();
         Page.Console += (_, message) => { if (message.Type == "error") errors.Add(message.Text); };
-        await Page.GotoAsync(ServePage(html));
+        await Page.GotoReportAsync(ServePage(html));
 
         await Page.Locator("#trigger-seg-1").ClickAsync();
 
@@ -348,7 +348,7 @@ public class IflowPopupTests : PlaywrightTestBase
             await Page.AddInitScriptAsync("delete window.DecompressionStream;");
         var errors = new List<string>();
         Page.Console += (_, message) => { if (message.Type == "error") errors.Add(message.Text); };
-        await Page.GotoAsync(ServePage(html));
+        await Page.GotoReportAsync(ServePage(html));
 
         await Page.Locator("#trigger-seg-1").ClickAsync();
 
@@ -370,7 +370,7 @@ public class IflowPopupTests : PlaywrightTestBase
         // browser's own reading of the attribute gives back the name as the report wrote it, a literal "&lt" included (a
         // reference a browser decodes even without its semicolon), and the engine draws it.
         const string name = "a \"b\" < c && d\tsays &lt";
-        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage(childSpanName: name)));
+        await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage(childSpanName: name)));
 
         await Page.Locator("#trigger-seg-1").ClickAsync();
         var svg = await WaitForActivityDiagramSvg();
@@ -386,7 +386,7 @@ public class IflowPopupTests : PlaywrightTestBase
     {
         var page = TestPageGenerator.GenerateIflowPopupTestPage();
         Assert.Single(System.Text.RegularExpressions.Regex.Matches(page, SegmentElementPattern));
-        await Page.GotoAsync(ServePage(System.Text.RegularExpressions.Regex.Replace(page, SegmentElementPattern, "")));
+        await Page.GotoReportAsync(ServePage(System.Text.RegularExpressions.Regex.Replace(page, SegmentElementPattern, "")));
 
         Assert.True(await Page.EvaluateAsync<bool>("() => document.getElementById('iflow-segments') === null"));
         Assert.False(await Page.EvaluateAsync<bool>("() => window._iflowHasSegment('iflow-seg-1')"));
@@ -400,7 +400,7 @@ public class IflowPopupTests : PlaywrightTestBase
         // A page built by hand, or carrying an older emitter's script, sets window.__iflowSegments itself.
         var html = System.Text.RegularExpressions.Regex.Replace(TestPageGenerator.GenerateIflowPopupTestPage(), SegmentElementPattern,
             "<script>window.__iflowSegments = { 'iflow-seg-1': { title: 'Legacy flow', content: '<p class=\"legacy\">flow</p>' } };</script>");
-        await Page.GotoAsync(ServePage(html));
+        await Page.GotoReportAsync(ServePage(html));
 
         Assert.True(await Page.EvaluateAsync<bool>("() => window._iflowHasSegment('iflow-seg-1')"));
         Assert.False(await Page.EvaluateAsync<bool>("() => window._iflowHasSegment('iflow-nonexistent')"));
@@ -422,7 +422,7 @@ public class IflowPopupTests : PlaywrightTestBase
               <a href="#iflow-dropped" xlink:href="#iflow-dropped"><text id="t-dead" x="10" y="80" fill="#0000FF">GET /dead</text></a>
             </svg>
             """;
-        await Page.GotoAsync(ServePage(withSegment.Replace("<h1 id=\"page-title\">", svg + "<h1 id=\"page-title\">")));
+        await Page.GotoReportAsync(ServePage(withSegment.Replace("<h1 id=\"page-title\">", svg + "<h1 id=\"page-title\">")));
 
         var dead = Page.Locator("#t-dead");
         Assert.Null(await dead.EvaluateAsync<string?>("t => t.parentNode.getAttribute('href')"));
@@ -442,7 +442,7 @@ public class IflowPopupTests : PlaywrightTestBase
     {
         // The load-time pass cannot see a link that arrives later: the click handler asks, and a link with no segment
         // loses its href there and opens nothing, while one with a segment opens it.
-        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage()));
+        await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage()));
         await Page.EvaluateAsync("""
             () => {
                 const ns = 'http://www.w3.org/2000/svg', xlink = 'http://www.w3.org/1999/xlink';
@@ -480,7 +480,7 @@ public class IflowPopupTests : PlaywrightTestBase
     [Fact]
     public async Task Opening_new_popup_replaces_existing_one()
     {
-        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage(includeEmptySegment: true)));
+        await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage(includeEmptySegment: true)));
         await Page.Locator("#trigger-seg-1").ClickAsync();
         await Page.Locator(".iflow-popup").WaitForAsync(new() { State = WaitForSelectorState.Visible });
 
@@ -493,7 +493,7 @@ public class IflowPopupTests : PlaywrightTestBase
     [Fact]
     public async Task Context_menu_appears_on_activity_diagram_right_click()
     {
-        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage(includeContextMenu: true)));
+        await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage(includeContextMenu: true)));
         await Page.Locator("#trigger-seg-1").ClickAsync();
         await Expect(Page.Locator(".iflow-popup")).ToBeVisibleAsync();
         var svg = await WaitForActivityDiagramSvg();
@@ -512,7 +512,7 @@ public class IflowPopupTests : PlaywrightTestBase
     [Fact]
     public async Task Context_menu_z_index_is_above_popup_overlay()
     {
-        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage(includeContextMenu: true)));
+        await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage(includeContextMenu: true)));
         await Page.Locator("#trigger-seg-1").ClickAsync();
         await Expect(Page.Locator(".iflow-popup")).ToBeVisibleAsync();
         var svg = await WaitForActivityDiagramSvg();
@@ -528,7 +528,7 @@ public class IflowPopupTests : PlaywrightTestBase
     [Fact]
     public async Task Context_menu_on_flame_chart_has_png_only()
     {
-        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage(includeToggle: true, includeContextMenu: true)));
+        await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage(includeToggle: true, includeContextMenu: true)));
         await Page.Locator("#trigger-seg-1").ClickAsync();
         await Expect(Page.Locator(".iflow-popup")).ToBeVisibleAsync();
         await WaitForActivityDiagramSvg();
@@ -549,7 +549,7 @@ public class IflowPopupTests : PlaywrightTestBase
     [Fact]
     public async Task PNG_no_transparency_opaque_for_InlineSvg_sequence_diagram()
     {
-        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateInlineSvgSequenceDiagramPage()));
+        await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateInlineSvgSequenceDiagramPage()));
         await Page.Locator(".plantuml-inline-svg svg").WaitForAsync();
 
         var result = await Page.EvaluateAsync<string>(PngOpacityCheckScript(".plantuml-inline-svg svg"));
@@ -564,7 +564,7 @@ public class IflowPopupTests : PlaywrightTestBase
     [Fact]
     public async Task PNG_no_transparency_opaque_for_BrowserJs_sequence_diagram()
     {
-        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateBrowserJsSequenceDiagramPage()));
+        await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateBrowserJsSequenceDiagramPage()));
         await Page.Locator(".plantuml-browser svg").WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 15000 });
 
         var result = await Page.EvaluateAsync<string>(PngOpacityCheckScript(".plantuml-browser svg"));
@@ -579,7 +579,7 @@ public class IflowPopupTests : PlaywrightTestBase
     [Fact]
     public async Task Save_as_PNG_no_transparency_produces_opaque_pixels()
     {
-        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage(includeContextMenu: true)));
+        await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage(includeContextMenu: true)));
         await Page.Locator("#trigger-seg-1").ClickAsync();
         await Expect(Page.Locator(".iflow-popup")).ToBeVisibleAsync();
         await WaitForActivityDiagramSvg();
@@ -596,7 +596,7 @@ public class IflowPopupTests : PlaywrightTestBase
     [Fact]
     public async Task Popup_styles_are_applied_from_stylesheet()
     {
-        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage(includeToggle: true)));
+        await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage(includeToggle: true)));
         await Page.Locator("#trigger-seg-1").ClickAsync();
         var popup = Page.Locator(".iflow-popup");
         await Expect(popup).ToBeVisibleAsync();

@@ -269,15 +269,15 @@ public class ToggleDefaultsBaselineTests
             var resolvedSpec = ReportToggleDefaultsResolver.Resolve(new ReportConfigurationOptions(), specifications: true);
             var resolvedTestRun = ReportToggleDefaultsResolver.Resolve(new ReportConfigurationOptions(), specifications: false);
 
-            var specA = File.ReadAllText(GenerateSpecShape(diagrams, specFeatures, segments, "ToggleBaseline_Spec_A.html"));
-            var specB = File.ReadAllText(GenerateSpecShape(diagrams, specFeatures, segments, "ToggleBaseline_Spec_B.html", ResolvedToggleDefaults.BuiltIn));
-            var specC = File.ReadAllText(GenerateSpecShape(diagrams, specFeatures, segments, "ToggleBaseline_Spec_C.html", resolvedSpec));
+            var specA = ReportHtml.Read(GenerateSpecShape(diagrams, specFeatures, segments, "ToggleBaseline_Spec_A.html"));
+            var specB = ReportHtml.Read(GenerateSpecShape(diagrams, specFeatures, segments, "ToggleBaseline_Spec_B.html", ResolvedToggleDefaults.BuiltIn));
+            var specC = ReportHtml.Read(GenerateSpecShape(diagrams, specFeatures, segments, "ToggleBaseline_Spec_C.html", resolvedSpec));
             Assert.Equal(specA, specB);
             Assert.Equal(specA, specC);
 
-            var runA = File.ReadAllText(GenerateTestRunShape(diagrams, testRunFeatures, segments, "ToggleBaseline_Run_A.html"));
-            var runB = File.ReadAllText(GenerateTestRunShape(diagrams, testRunFeatures, segments, "ToggleBaseline_Run_B.html", ResolvedToggleDefaults.BuiltIn));
-            var runC = File.ReadAllText(GenerateTestRunShape(diagrams, testRunFeatures, segments, "ToggleBaseline_Run_C.html", resolvedTestRun));
+            var runA = ReportHtml.Read(GenerateTestRunShape(diagrams, testRunFeatures, segments, "ToggleBaseline_Run_A.html"));
+            var runB = ReportHtml.Read(GenerateTestRunShape(diagrams, testRunFeatures, segments, "ToggleBaseline_Run_B.html", ResolvedToggleDefaults.BuiltIn));
+            var runC = ReportHtml.Read(GenerateTestRunShape(diagrams, testRunFeatures, segments, "ToggleBaseline_Run_C.html", resolvedTestRun));
             Assert.Equal(runA, runB);
             Assert.Equal(runA, runC);
         }

@@ -19,7 +19,7 @@ public class ReportTabsTests : PlaywrightTestBase
     private async Task OpenAsync(string fileName, string? hash = null)
     {
         var url = ReportTestHelper.GenerateReportWithEverySection(TempDir, OutputDir, fileName);
-        await Page.GotoAsync(url + (hash ?? ""));
+        await Page.GotoReportAsync(url + (hash ?? ""));
         await Page.Locator(".report-tabs").WaitForAsync();
     }
 

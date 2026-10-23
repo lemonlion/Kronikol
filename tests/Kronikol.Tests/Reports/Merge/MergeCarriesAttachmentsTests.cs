@@ -105,7 +105,7 @@ public class MergeCarriesAttachmentsTests : IDisposable
         // Each shard's own bytes, though both named their screenshot shot.png.
         Assert.Equal(new byte[] { 1, 2 }, attachments.Where(a => a.Name == "shot.png").Select(a => File.ReadAllBytes(Path.Combine(merged, a.RelativePath))[^1]).Order().ToArray());
         // And the digest names the files that are there.
-        var digest = File.ReadAllText(Path.Combine(merged, "Failures.md"));
+        var digest = ReportHtml.Read(Path.Combine(merged, "Failures.md"));
         Assert.All(attachments.Where(a => a.Name == "shot.png"), a => Assert.Contains(a.RelativePath, digest, StringComparison.Ordinal));
     }
 
@@ -175,7 +175,7 @@ public class MergeCarriesAttachmentsTests : IDisposable
         var message = Assert.Single(MergeableReportReader.ReadFile(ReportFile.Resolve(Path.Combine(merged, "Combined.json"))).Diagnostics, d => d.Kind == DiagnosticKind.AttachmentFailure).Message;
         Assert.StartsWith("1 attachment(s) are not in the report: 1 not found when the report was drawn: ", message, StringComparison.Ordinal);
         Assert.Contains(gone, message, StringComparison.Ordinal);
-        Assert.Contains("1 attachment(s) are not in the report: 1 not found when the report was drawn: ", File.ReadAllText(Path.Combine(merged, "Combined.labs.html")), StringComparison.Ordinal);
+        Assert.Contains("1 attachment(s) are not in the report: 1 not found when the report was drawn: ", ReportHtml.Read(Path.Combine(merged, "Combined.labs.html")), StringComparison.Ordinal);
     }
 
     [Fact]
@@ -187,7 +187,7 @@ public class MergeCarriesAttachmentsTests : IDisposable
         MergeableReportRenderer.Render(MergeableReportRenderer.MergeFiles([first, second]), html,
             options: new ReportConfigurationOptions { ShowReportDiagnosticsSection = true });
 
-        Assert.Contains("1 attachment(s) are not in the report: 1 not found when the report was drawn: ", File.ReadAllText(html), StringComparison.Ordinal);
+        Assert.Contains("1 attachment(s) are not in the report: 1 not found when the report was drawn: ", ReportHtml.Read(html), StringComparison.Ordinal);
     }
 
     [Fact]

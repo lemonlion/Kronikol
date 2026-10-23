@@ -153,7 +153,7 @@ public class DeepSearchTests : PlaywrightTestBase
     [Fact]
     public async Task Payload_only_text_is_found_and_chip_reports_the_addition()
     {
-        await Page.GotoAsync(GenerateDeepReport("DeepSearchPayload.html"));
+        await Page.GotoReportAsync(GenerateDeepReport("DeepSearchPayload.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await SearchAndWaitForVisible(PayloadNeedle, 1);
@@ -168,7 +168,7 @@ public class DeepSearchTests : PlaywrightTestBase
     [Fact]
     public async Task Header_only_text_is_found()
     {
-        await Page.GotoAsync(GenerateDeepReport("DeepSearchHeader.html"));
+        await Page.GotoReportAsync(GenerateDeepReport("DeepSearchHeader.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await SearchAndWaitForVisible(HeaderNeedle, 1);
@@ -179,7 +179,7 @@ public class DeepSearchTests : PlaywrightTestBase
     {
         // The needle travels the genuine SQL-capture shape (string method, database category,
         // SQL as content) — not a JSON payload wearing SQL clothing.
-        await Page.GotoAsync(GenerateDeepReport("DeepSearchSql.html"));
+        await Page.GotoReportAsync(GenerateDeepReport("DeepSearchSql.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await SearchAndWaitForVisible("zorbtable_qx", 1);
@@ -190,7 +190,7 @@ public class DeepSearchTests : PlaywrightTestBase
     {
         // The SQL arrow label "INSERT: /zqxmsgpath-42" is message text the shallow search never
         // sees (ExtractDiagramSearchTerms only extracts HTTP-verb targets).
-        await Page.GotoAsync(GenerateDeepReport("DeepSearchMessage.html"));
+        await Page.GotoReportAsync(GenerateDeepReport("DeepSearchMessage.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await SearchAndWaitForVisible(MessageNeedle, 1);
@@ -206,7 +206,7 @@ public class DeepSearchTests : PlaywrightTestBase
     [InlineData("webkit")]
     public Task Text_only_in_a_diagram_source_is_found_in_every_engine(string engine) => InEngineAsync(engine, async page =>
     {
-        await page.GotoAsync(GenerateDeepReport($"DeepSearchEngine-{engine}.html"));
+        await page.GotoReportAsync(GenerateDeepReport($"DeepSearchEngine-{engine}.html"));
         await page.Locator("details.feature").First.WaitForAsync();
 
         await FillSearchBar(page, MessageNeedle);
@@ -229,7 +229,7 @@ public class DeepSearchTests : PlaywrightTestBase
             .SelectMany(t => t.PlantUmls.Select(p => p.PlainText)).ToArray();
         Assert.DoesNotContain(codeBehinds, c => c.Contains(WrapNeedle));
 
-        await Page.GotoAsync(GenerateDeepReport("DeepSearchWrapped.html"));
+        await Page.GotoReportAsync(GenerateDeepReport("DeepSearchWrapped.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await SearchAndWaitForVisible(WrapNeedle, 1);
@@ -243,7 +243,7 @@ public class DeepSearchTests : PlaywrightTestBase
         // present in data-row-search always shallow-matches the group too, since the group
         // data-search aggregates all row text — so the shallow row highlight already covers
         // every reachable row-highlight case.)
-        await Page.GotoAsync(GenerateDeepReport("DeepSearchParamRow.html"));
+        await Page.GotoReportAsync(GenerateDeepReport("DeepSearchParamRow.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await SearchAndWaitForVisible(ParamPayloadNeedle, 1);
@@ -258,7 +258,7 @@ public class DeepSearchTests : PlaywrightTestBase
     [Fact]
     public async Task Example_values_are_found_via_the_coverage_fix()
     {
-        await Page.GotoAsync(GenerateDeepReport("DeepSearchExampleValue.html"));
+        await Page.GotoReportAsync(GenerateDeepReport("DeepSearchExampleValue.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         // shallow finds it now (data-search carries example values) — visible without deep
@@ -270,7 +270,7 @@ public class DeepSearchTests : PlaywrightTestBase
     [Fact]
     public async Task InlineSvg_mode_finds_payload_text()
     {
-        await Page.GotoAsync(GenerateDeepReport("DeepSearchInlineSvg.html", PlantUmlRendering.Local, inlineSvg: true));
+        await Page.GotoReportAsync(GenerateDeepReport("DeepSearchInlineSvg.html", PlantUmlRendering.Local, inlineSvg: true));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await SearchAndWaitForVisible(PayloadNeedle, 1);
@@ -279,7 +279,7 @@ public class DeepSearchTests : PlaywrightTestBase
     [Fact]
     public async Task Img_mode_finds_payload_text_via_raw_plantuml_pre()
     {
-        await Page.GotoAsync(GenerateDeepReport("DeepSearchImgMode.html", PlantUmlRendering.Server));
+        await Page.GotoReportAsync(GenerateDeepReport("DeepSearchImgMode.html", PlantUmlRendering.Server));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await SearchAndWaitForVisible(PayloadNeedle, 1);
@@ -290,7 +290,7 @@ public class DeepSearchTests : PlaywrightTestBase
     [Fact]
     public async Task Negated_payload_term_removes_a_shallow_match_and_chip_says_refined()
     {
-        await Page.GotoAsync(GenerateDeepReport("DeepSearchNegation.html"));
+        await Page.GotoReportAsync(GenerateDeepReport("DeepSearchNegation.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         // shallow: both "running" scenarios match (needle is not in data-search, so !! passes);
@@ -310,7 +310,7 @@ public class DeepSearchTests : PlaywrightTestBase
     public async Task InlineSvg_mode_negation_removes_a_shallow_match()
     {
         // Mode-specific verify-corpus assembly under negation: InlineSvg reads #puml-data too.
-        await Page.GotoAsync(GenerateDeepReport("DeepSearchInlineSvgNegation.html", PlantUmlRendering.Local, inlineSvg: true));
+        await Page.GotoReportAsync(GenerateDeepReport("DeepSearchInlineSvgNegation.html", PlantUmlRendering.Local, inlineSvg: true));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await FillSearchBar($"running && !!{PayloadNeedle}");
@@ -328,7 +328,7 @@ public class DeepSearchTests : PlaywrightTestBase
     [Fact]
     public async Task Scenario_description_and_endpoint_are_found_instantly()
     {
-        await Page.GotoAsync(GenerateDeepReport("DeepSearchDescEndpoint.html"));
+        await Page.GotoReportAsync(GenerateDeepReport("DeepSearchDescEndpoint.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         // both are in data-search now — shallow finds them, no deep round-trip needed
@@ -377,7 +377,7 @@ public class DeepSearchTests : PlaywrightTestBase
     [Fact]
     public async Task Stack_trace_text_is_found_via_deep_search_only()
     {
-        await Page.GotoAsync(GenerateFailedReport("DeepSearchStackTrace.html"));
+        await Page.GotoReportAsync(GenerateFailedReport("DeepSearchStackTrace.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         // deep-only by design: not in any data-search attribute…
@@ -396,7 +396,7 @@ public class DeepSearchTests : PlaywrightTestBase
     public async Task Failure_message_with_angle_brackets_renders_visibly()
     {
         // "<null>" used to parse as an unknown tag and vanish from the rendered failure text
-        await Page.GotoAsync(GenerateFailedReport("DeepSearchFailureEncoding.html"));
+        await Page.GotoReportAsync(GenerateFailedReport("DeepSearchFailureEncoding.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         var preText = await Page.Locator(".failure-result pre").First.EvaluateAsync<string>("el => el.textContent");
@@ -411,15 +411,17 @@ public class DeepSearchTests : PlaywrightTestBase
     {
         var url = GenerateDeepReport("DeepSearchCorruptBlob.html");
         var path = new Uri(url).LocalPath;
-        var html = File.ReadAllText(path);
-        // valid base64, not gzip — the worker's DecompressionStream throws during init
-        var corrupted = System.Text.RegularExpressions.Regex.Replace(html,
-            "(<script id=\"kron-search-index\" type=\"application/json\">\")[^\"]*",
-            "$1" + Convert.ToBase64String("not-gzip-data"u8.ToArray()));
-        Assert.NotEqual(html, corrupted);
-        File.WriteAllText(path, corrupted);
+        ReportFileText.Edit(path, html =>
+        {
+            // valid base64, not gzip — the worker's DecompressionStream throws during init
+            var corrupted = System.Text.RegularExpressions.Regex.Replace(html,
+                "(<script id=\"kron-search-index\" type=\"application/json\">\")[^\"]*",
+                "$1" + Convert.ToBase64String("not-gzip-data"u8.ToArray()));
+            Assert.NotEqual(html, corrupted);
+            return corrupted;
+        });
 
-        await Page.GotoAsync(url);
+        await Page.GotoReportAsync(url);
         await Page.Locator("details.feature").First.WaitForAsync();
 
         // deep-eligible query triggers init; the failure must surface as indexState 'error'
@@ -443,7 +445,7 @@ public class DeepSearchTests : PlaywrightTestBase
     {
         // The bulk toggle rewrites data-plantuml attributes and re-renders every note; verify
         // reads #puml-data, so deep results must be identical before and after.
-        await Page.GotoAsync(GenerateDeepReport("DeepSearchYamlToggle.html"));
+        await Page.GotoReportAsync(GenerateDeepReport("DeepSearchYamlToggle.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await SearchAndWaitForVisible(PayloadNeedle, 1);
@@ -469,7 +471,7 @@ public class DeepSearchTests : PlaywrightTestBase
     [Fact]
     public async Task Chip_reports_no_additional_matches_when_deep_adds_nothing()
     {
-        await Page.GotoAsync(GenerateDeepReport("DeepSearchChipZero.html"));
+        await Page.GotoReportAsync(GenerateDeepReport("DeepSearchChipZero.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await SearchAndWaitForVisible("successfully", 1);
@@ -479,7 +481,7 @@ public class DeepSearchTests : PlaywrightTestBase
     [Fact]
     public async Task Chip_is_hidden_for_metadata_only_queries()
     {
-        await Page.GotoAsync(GenerateDeepReport("DeepSearchChipHidden.html"));
+        await Page.GotoReportAsync(GenerateDeepReport("DeepSearchChipHidden.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await FillSearchBar(PayloadNeedle);
@@ -494,7 +496,7 @@ public class DeepSearchTests : PlaywrightTestBase
     [Fact]
     public async Task Clear_all_filters_resets_deep_state_and_chip()
     {
-        await Page.GotoAsync(GenerateDeepReport("DeepSearchClearAll.html"));
+        await Page.GotoReportAsync(GenerateDeepReport("DeepSearchClearAll.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await SearchAndWaitForVisible(PayloadNeedle, 1);
@@ -513,7 +515,7 @@ public class DeepSearchTests : PlaywrightTestBase
     public async Task Hash_restore_applies_deep_results_once_the_index_is_ready()
     {
         var url = GenerateDeepReport("DeepSearchHashRestore.html");
-        await Page.GotoAsync(url + "#q=" + PayloadNeedle);
+        await Page.GotoReportAsync(url + "#q=" + PayloadNeedle);
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await Page.WaitForFunctionAsync(
@@ -526,7 +528,7 @@ public class DeepSearchTests : PlaywrightTestBase
     [Fact]
     public async Task Opt_out_report_has_no_index_no_chip_and_shallow_search_still_works()
     {
-        await Page.GotoAsync(GenerateDeepReport("DeepSearchOptOut.html", fullSearchIndex: false));
+        await Page.GotoReportAsync(GenerateDeepReport("DeepSearchOptOut.html", fullSearchIndex: false));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         Assert.False(await Page.EvaluateAsync<bool>("() => !!document.getElementById('kron-search-index')"));
@@ -544,7 +546,7 @@ public class DeepSearchTests : PlaywrightTestBase
     [Fact]
     public async Task Deep_results_are_unchanged_after_rendering_mutates_data_plantuml()
     {
-        await Page.GotoAsync(GenerateDeepReport("DeepSearchAfterRender.html"));
+        await Page.GotoReportAsync(GenerateDeepReport("DeepSearchAfterRender.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await SearchAndWaitForVisible(PayloadNeedle, 1);
@@ -571,7 +573,7 @@ public class DeepSearchTests : PlaywrightTestBase
         var errors = new List<string>();
         Page.PageError += (_, e) => errors.Add(e);
 
-        await Page.GotoAsync(GenerateDeepReport("DeepSearchTelemetry.html"));
+        await Page.GotoReportAsync(GenerateDeepReport("DeepSearchTelemetry.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await SearchAndWaitForVisible(PayloadNeedle, 1);

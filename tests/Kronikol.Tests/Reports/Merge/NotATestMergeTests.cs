@@ -63,9 +63,9 @@ public class NotATestMergeTests : IDisposable
         var error = new StringWriter();
         Assert.True(MergeCommand.Run([shards, "-o", output, "--history", ledger], new StringWriter(), error, _ => null) == 0, error.ToString());
 
-        Assert.Contains("<div class=\"run-stat\"><dt>Scenarios</dt><dd>2</dd></div>", File.ReadAllText(output));
-        Assert.Contains("All 2 scenarios passed.", File.ReadAllText(Path.Combine(_dir, "Failures.md")));
-        var labs = File.ReadAllText(Path.Combine(_dir, "Merged.labs.html"));
+        Assert.Contains("<div class=\"run-stat\"><dt>Scenarios</dt><dd>2</dd></div>", ReportHtml.Read(output));
+        Assert.Contains("All 2 scenarios passed.", ReportHtml.Read(Path.Combine(_dir, "Failures.md")));
+        var labs = ReportHtml.Read(Path.Combine(_dir, "Merged.labs.html"));
         var row = labs.IndexOf("Traffic outside any test", StringComparison.Ordinal);
         Assert.True(row >= 0, "the labs page holds the fold scenario's history row");
         var label = Regex.Match(labs.Substring(row, Math.Min(300, labs.Length - row)), "aria-label=\"([^\"]*)\"");

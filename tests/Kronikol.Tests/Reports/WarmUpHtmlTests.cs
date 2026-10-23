@@ -304,7 +304,7 @@ public class WarmUpHtmlTests : IDisposable
             Path.Combine(_directory, $"WarmUp_{Guid.NewGuid():N}.html"), "Warm-up", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs,
             trackedLogs: run.Logs.ToArray(), warmUp: warmUp);
-        return File.ReadAllText(path);
+        return ReportHtml.Read(path);
     }
 
     private IDocument Page((Feature[] Features, List<RequestResponseLog> Logs) run) => Parse(Html(run));

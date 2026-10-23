@@ -205,7 +205,7 @@ public class QuerySizesTests : IDisposable
     [Fact]
     public void Internal_flow_segments_and_the_whole_test_flow_are_parts_of_their_own()
     {
-        var node = JsonNode.Parse(File.ReadAllText(_plain))!.AsObject();
+        var node = JsonNode.Parse(ReportHtml.Read(_plain))!.AsObject();
         node["internalFlowSegments"] = new JsonObject { ["seg-1"] = new string('f', 3000) };
         node["wholeTestFlow"] = new JsonObject { ["flow"] = new JsonObject { ["activityHtml"] = new string('a', 2000) } };
         var path = Path.Combine(_root, "mergeable", "TestRunReport.json");
@@ -262,7 +262,7 @@ public class QuerySizesTests : IDisposable
         File.Copy(_plain, path);
         Assert.Contains("bytes on disk", Query(["sizes", path]), StringComparison.Ordinal);
 
-        QueryCommand.AfterScan = changed => File.WriteAllText(changed, File.ReadAllText(_compressed));
+        QueryCommand.AfterScan = changed => File.WriteAllText(changed, ReportHtml.Read(_compressed));
         int exit;
         try
         {

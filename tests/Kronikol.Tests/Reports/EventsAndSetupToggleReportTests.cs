@@ -41,7 +41,7 @@ public class EventsAndSetupToggleReportTests
             null, $"EventsSetup_{Guid.NewGuid():N}.html", "Test", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs,
             toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: false));
-        return File.ReadAllText(path);
+        return ReportHtml.Read(path);
     }
 
     private static string[] Toggles(string html, string name) => ReportMarkup.Elements(html, "button", $"data-toggle=\"{name}\"");

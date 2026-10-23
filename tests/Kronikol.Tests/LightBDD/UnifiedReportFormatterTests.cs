@@ -155,7 +155,7 @@ public class StandardPipelineFormatterTests : IDisposable
         // Call with zero features (simulates xUnit3 discovery pass)
         formatter.Format(Stream.Null);
 
-        Assert.Equal("<html>previous</html>", File.ReadAllText(preExisting));
+        Assert.Equal("<html>previous</html>", ReportHtml.Read(preExisting));
     }
 
     // ── Stubs ──

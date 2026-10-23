@@ -15,7 +15,7 @@ public class YamlNoteCopyTextTests : DiagramNotePlaywrightBase
 
     private async Task NavigateEscapingFixture(string fileName)
     {
-        await Page.GotoAsync(ReportTestHelper.GenerateReportWithEscapingYamlNote(TempDir, OutputDir, fileName));
+        await Page.GotoReportAsync(ReportTestHelper.GenerateReportWithEscapingYamlNote(TempDir, OutputDir, fileName));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -65,7 +65,7 @@ public class YamlNoteCopyTextTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Copy_box_text_on_expanded_yaml_note_yields_yaml_not_json()
     {
-        await Page.GotoAsync(ReportTestHelper.GenerateReportWithJsonYamlNotes(TempDir, OutputDir, "YamlCopy_ExpandedBoxText.html"));
+        await Page.GotoReportAsync(ReportTestHelper.GenerateReportWithJsonYamlNotes(TempDir, OutputDir, "YamlCopy_ExpandedBoxText.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -177,7 +177,7 @@ public class YamlNoteCopyTextTests : DiagramNotePlaywrightBase
         // The copy contract is "exactly as displayed": the newly-eligible
         // BigQuery shape copies as the stripped block scalar — no trailing
         // spaces, no \r, no \n escapes.
-        await Page.GotoAsync(ReportTestHelper.GenerateReportWithBigQueryTrailingWhitespaceNote(
+        await Page.GotoReportAsync(ReportTestHelper.GenerateReportWithBigQueryTrailingWhitespaceNote(
             TempDir, OutputDir, "YamlCopy_TrailingWs.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();

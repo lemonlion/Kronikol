@@ -12,7 +12,7 @@ public class BackgroundRenderingTests : PlaywrightTestBase
 
     private async Task OpenReport(string fileName)
     {
-        await Page.GotoAsync(GenerateReportWithBackground(fileName));
+        await Page.GotoReportAsync(GenerateReportWithBackground(fileName));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandAllFeaturesAsync();
         await ExpandAllScenariosAsync();
@@ -136,7 +136,7 @@ public class BackgroundRenderingTests : PlaywrightTestBase
     [Fact]
     public async Task Search_matches_text_that_only_appears_in_a_background_step()
     {
-        await Page.GotoAsync(GenerateReportWithBackground("BgSearch.html"));
+        await Page.GotoReportAsync(GenerateReportWithBackground("BgSearch.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         // "the database is available" lives only in the three backgrounds; bg3 has none.

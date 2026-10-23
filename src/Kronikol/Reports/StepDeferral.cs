@@ -1,20 +1,20 @@
 using System.Globalization;
-using Kronikol.InternalFlow;
 
 namespace Kronikol.Reports;
 
 /// <summary>
 /// The sub-steps one page holds out of its markup until a reader opens their step (5.0.0, plans/REPORT_FORMAT_PLAN.md
-/// 4.8 part b, Q8). Each entry is the HTML of a closed composite step's sub-steps, gzipped and base64-encoded, keyed from
-/// the step's empty <c>div.sub-steps</c>; the page writes the map once, as <c>#step-data</c>, and
-/// <c>report-sub-steps-on-expand.js</c> draws an entry the first time its step opens. One per page: the pages of a run are
-/// written in parallel.
+/// 4.8 part b, Q8). Each entry is the HTML of a closed composite step's sub-steps, keyed from the step's empty
+/// <c>div.sub-steps</c>; the page writes the map once, as <c>#step-data</c>, and <c>report-sub-steps-on-expand.js</c> draws
+/// an entry the first time its step opens. The HTML is held as it is: the compressed page carries it raw inside its frame,
+/// and a plain page (<c>kronikol decode</c>) in gzip and base64 (plans/HTML_COMPRESSION_PLAN.md 4.3). One per page: the
+/// pages of a run are written in parallel.
 /// </summary>
 internal sealed class StepDeferral
 {
     /// <summary>
-    /// A subtree's HTML of this many characters or more is held. Below it the entry costs more than it saves: base64 adds a
-    /// third, and drawing it waits on a decompression.
+    /// A subtree's HTML of this many characters or more is held. Below it the entry costs more than it saves: a plain page
+    /// carries it in base64, a third larger, and drawing it waits on reading it back.
     /// </summary>
     internal const int Threshold = 2048;
 
@@ -31,7 +31,7 @@ internal sealed class StepDeferral
     public string Add(string html)
     {
         var key = "s" + (Map.Count + 1).ToString(CultureInfo.InvariantCulture);
-        Map[key] = InternalFlowHtmlGenerator.CompressToBase64(html);
+        Map[key] = html;
         return key;
     }
 }

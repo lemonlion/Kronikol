@@ -39,7 +39,7 @@ public class FilterRowLabelTests : PlaywrightTestBase
     [Fact]
     public async Task Every_label_takes_one_line_in_a_face_that_draws_it_wider_than_its_column()
     {
-        await Page.GotoAsync(GenerateReport("FilterLabels_WideFace.html"));
+        await Page.GotoReportAsync(GenerateReport("FilterLabels_WideFace.html"));
         await OpenFilterRowsAsync();
         // the labels as a wider face draws them: DEPENDENCIES and HAPPY PATHS take more than 92 px
         await Page.AddStyleTagAsync(new() { Content = ".filtering-box [class$='-filters-label'] { letter-spacing: 2px; }" });
@@ -59,7 +59,7 @@ public class FilterRowLabelTests : PlaywrightTestBase
     [Fact]
     public async Task Each_column_is_92_px_or_its_label_s_width_where_that_is_more()
     {
-        await Page.GotoAsync(GenerateReport("FilterLabels_Fit.html"));
+        await Page.GotoReportAsync(GenerateReport("FilterLabels_Fit.html"));
         await OpenFilterRowsAsync();
 
         var columns = await ColumnsAsync();

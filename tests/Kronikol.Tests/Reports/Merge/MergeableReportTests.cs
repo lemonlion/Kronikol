@@ -252,7 +252,7 @@ public class MergeableReportTests
             new DateTime(2026, 1, 1, 10, 5, 0, DateTimeKind.Utc),
             "standard_for_merge_reject.json",
             DataFormat.Json);
-        var content = File.ReadAllText(standard);
+        var content = ReportHtml.Read(standard);
 
         Assert.Throws<FormatException>(() => MergeableReportReader.Parse(content));
     }
@@ -511,7 +511,7 @@ public class MergeableReportTests
 
         var outputPath = Path.Combine(Path.GetTempPath(), "kronikol-merge-test", "Combined.html");
         var written = MergeableReportRenderer.Render(merged, outputPath, title: "Combined Report");
-        var html = File.ReadAllText(written);
+        var html = ReportHtml.Read(written);
 
         Assert.Contains("Combined Report", html);
         Assert.Contains("Orders", html);
@@ -553,7 +553,7 @@ public class MergeableReportTests
 
         var outputPath = Path.Combine(Path.GetTempPath(), "kronikol-merge-edge-test", "Combined.html");
         var written = MergeableReportRenderer.Render(merged, outputPath, title: "Combined Report");
-        var html = File.ReadAllText(written);
+        var html = ReportHtml.Read(written);
         File.Delete(written);
 
         // The page's diagram sources, gzipped in its puml-data map, the component panel's among them.
@@ -595,7 +595,7 @@ public class MergeableReportTests
         var outputPath = Path.Combine(Path.GetTempPath(), "kronikol-merge-colour-test", "Combined.html");
         var written = MergeableReportRenderer.Render(merged, outputPath, title: "Combined Report",
             options: new ReportConfigurationOptions { DependencyColors = new() { ["sql"] = "#123456" } });
-        var html = File.ReadAllText(written);
+        var html = ReportHtml.Read(written);
         File.Delete(written);
 
         var edge = ComponentSources(html).SelectMany(src => src.Split('\n')).Select(l => l.TrimEnd('\r'))

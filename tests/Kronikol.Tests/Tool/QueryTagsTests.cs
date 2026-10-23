@@ -73,7 +73,7 @@ public class QueryTagsTests : IDisposable
     {
         // what a 4.x writer wrote: the same report with labels and categories in place of tags, Pay on its third attempt
         var path = Written(Shop());
-        var json = JsonNode.Parse(File.ReadAllText(path))!;
+        var json = JsonNode.Parse(ReportHtml.Read(path))!;
         var feature = WithLabels(json["features"]!.AsArray(), "Checkout", "checkout");
         var pay = feature["scenarios"]!.AsArray().Single(s => (string?)s!["id"] == "pay")!.AsObject();
         pay.Remove("tags");
@@ -127,7 +127,7 @@ public class QueryTagsTests : IDisposable
         // 4.x's LightBDD wrote [HappyPath] as the label Happy Path beside isHappyPath; 5.0.0 writes the flag alone, so a
         // file of either kind reads the same (5.2.7)
         var path = Written(Shop());
-        var json = JsonNode.Parse(File.ReadAllText(path))!;
+        var json = JsonNode.Parse(ReportHtml.Read(path))!;
         var feature = WithLabels(json["features"]!.AsArray(), "Checkout", "checkout");
         var pay = feature["scenarios"]!.AsArray().Single(s => (string?)s!["id"] == "pay")!.AsObject();
         pay.Remove("tags");

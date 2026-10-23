@@ -69,7 +69,7 @@ public class HeldSubStepsTests(PlaywrightFixture fixture) : PlaywrightTestBase(f
     [Fact]
     public async Task Opening_a_held_step_draws_its_steps()
     {
-        await Page.GotoAsync(Generate("HeldDraw.html", Holding("a", "A basket", Composite("the basket"))));
+        await Page.GotoReportAsync(Generate("HeldDraw.html", Holding("a", "A basket", Composite("the basket"))));
         await OpenScenarios();
         var holder = Holder("the basket");
         Assert.Equal("30", await holder.GetAttributeAsync("data-count"));
@@ -86,7 +86,7 @@ public class HeldSubStepsTests(PlaywrightFixture fixture) : PlaywrightTestBase(f
     [Fact]
     public async Task The_specifications_page_draws_a_held_step_too()
     {
-        await Page.GotoAsync(Generate("HeldSpecifications.html", false,
+        await Page.GotoReportAsync(Generate("HeldSpecifications.html", false,
             new Feature { DisplayName = "Held", Scenarios = [Holding("p", "A basket", Composite("the basket"))] }));
         await OpenScenarios();
         var holder = Holder("the basket");
@@ -99,11 +99,15 @@ public class HeldSubStepsTests(PlaywrightFixture fixture) : PlaywrightTestBase(f
     }
 
     [Fact]
-    public async Task Where_the_browser_cannot_decompress_an_opened_step_says_its_steps_could_not_be_drawn()
+    public async Task Where_the_browser_cannot_decompress_a_plain_page_s_opened_step_says_its_steps_could_not_be_drawn()
     {
-        // Chrome before 80, Firefox before 113 and Safari before 16.4 have no DecompressionStream.
+        // Chrome before 80, Firefox before 113 and Safari before 16.4 have no DecompressionStream. A plain page (one
+        // kronikol decode writes, or one written before 5.6.0) holds a held step's sub-steps in gzip.
         await Page.AddInitScriptAsync("delete window.DecompressionStream;");
-        await Page.GotoAsync(Generate("HeldNoDecompress.html", Holding("d", "A basket", Composite("the basket"))));
+        var path = new Uri(Generate("HeldNoDecompress.html", Holding("d", "A basket", Composite("the basket")))).LocalPath;
+        var plain = Path.Combine(Path.GetDirectoryName(path)!, "HeldNoDecompress.plain.html");
+        File.WriteAllText(plain, ReportFileText.Read(path));
+        await Page.GotoReportAsync(new Uri(plain).AbsoluteUri);
         await OpenScenarios();
 
         await Summary("the basket").ClickAsync();
@@ -113,9 +117,23 @@ public class HeldSubStepsTests(PlaywrightFixture fixture) : PlaywrightTestBase(f
     }
 
     [Fact]
+    public async Task Where_the_browser_cannot_decompress_a_compressed_page_still_draws_an_opened_step()
+    {
+        // The compressed page holds the sub-steps raw in its page frame, which the page's own decoder opens.
+        await Page.AddInitScriptAsync("delete window.DecompressionStream;");
+        await Page.GotoReportAsync(Generate("HeldNoDecompressCompressed.html", Holding("d", "A basket", Composite("the basket"))));
+        await OpenScenarios();
+
+        await Summary("the basket").ClickAsync();
+
+        await Page.WaitForFunctionAsync(Drawn, null, new() { PollingInterval = 200 });
+        await Expect(Page.Locator("xpath=//" + StepText + "[contains(., 'the basket step 30')]").First).ToBeVisibleAsync();
+    }
+
+    [Fact]
     public async Task A_chain_opens_level_by_level_from_one_entry()
     {
-        await Page.GotoAsync(Generate("HeldChain.html", Holding("c", "A chain", Chain("deep", 12))));
+        await Page.GotoReportAsync(Generate("HeldChain.html", Holding("c", "A chain", Chain("deep", 12))));
         await OpenScenarios();
         Assert.Equal(1, await Page.Locator(".sub-steps[data-steps]").CountAsync());
 
@@ -131,7 +149,7 @@ public class HeldSubStepsTests(PlaywrightFixture fixture) : PlaywrightTestBase(f
     [Fact]
     public async Task A_held_step_says_how_many_steps_it_holds_before_it_is_opened()
     {
-        await Page.GotoAsync(Generate("HeldTitle.html", Holding("t", "A basket", Composite("the basket"))));
+        await Page.GotoReportAsync(Generate("HeldTitle.html", Holding("t", "A basket", Composite("the basket"))));
         await OpenScenarios();
         var summary = Summary("the basket");
 
@@ -145,7 +163,7 @@ public class HeldSubStepsTests(PlaywrightFixture fixture) : PlaywrightTestBase(f
     {
         var needle = Composite("the basket");
         needle.SubSteps![12] = new ScenarioStep { Keyword = "And", Text = "a quokka in the basket", Status = ExecutionResult.Passed };
-        await Page.GotoAsync(Generate("HeldSearch.html", Holding("n", "Has the word", needle), Holding("o", "Other", Composite("the shelf"))));
+        await Page.GotoReportAsync(Generate("HeldSearch.html", Holding("n", "Has the word", needle), Holding("o", "Other", Composite("the shelf"))));
         await OpenScenarios();
         Assert.Equal(2, await Page.Locator(".sub-steps[data-steps]").CountAsync());
 
@@ -158,7 +176,7 @@ public class HeldSubStepsTests(PlaywrightFixture fixture) : PlaywrightTestBase(f
     [Fact]
     public async Task Export_Filtered_HTML_carries_the_held_steps_its_scenarios_need_and_no_other()
     {
-        await Page.GotoAsync(Generate("HeldExport.html",
+        await Page.GotoReportAsync(Generate("HeldExport.html",
             new Feature { DisplayName = "First", Scenarios = [Holding("f", "First basket", Composite("the first basket"))] },
             new Feature { DisplayName = "Second", Scenarios = [Holding("s", "Second basket", Composite("the second basket"))] }));
         await FillSearchBar("First basket");
@@ -169,7 +187,7 @@ public class HeldSubStepsTests(PlaywrightFixture fixture) : PlaywrightTestBase(f
             await Page.Locator("button.export-btn", new() { HasTextString = "Export Filtered HTML" }).ClickAsync());
         var path = Path.Combine(TempDir, $"export_{Guid.NewGuid():N}.html");
         await download.SaveAsAsync(path);
-        await Page.GotoAsync(new Uri(path).AbsoluteUri);
+        await Page.GotoReportAsync(new Uri(path).AbsoluteUri);
 
         Assert.Equal(1, await Page.EvaluateAsync<int>("() => Object.keys(JSON.parse(document.getElementById('step-data').textContent)).length"));
         await OpenScenarios();
@@ -181,7 +199,7 @@ public class HeldSubStepsTests(PlaywrightFixture fixture) : PlaywrightTestBase(f
     [Fact]
     public async Task An_export_taken_while_a_step_is_being_drawn_lets_the_exported_page_draw_it()
     {
-        await Page.GotoAsync(Generate("HeldInFlight.html", Holding("i", "A basket", Composite("the basket"))));
+        await Page.GotoReportAsync(Generate("HeldInFlight.html", Holding("i", "A basket", Composite("the basket"))));
         await OpenScenarios();
         // The decompression waits until the export is taken.
         await Page.EvaluateAsync(@"() => {
@@ -197,7 +215,7 @@ public class HeldSubStepsTests(PlaywrightFixture fixture) : PlaywrightTestBase(f
         await Page.EvaluateAsync("() => window.__held.forEach(release => release())");
         var path = Path.Combine(TempDir, $"export_{Guid.NewGuid():N}.html");
         await download.SaveAsAsync(path);
-        await Page.GotoAsync(new Uri(path).AbsoluteUri);
+        await Page.GotoReportAsync(new Uri(path).AbsoluteUri);
         await OpenScenarios();
 
         // Closed and opened again, in case the copy's open step was not drawn as the page loaded.
@@ -217,7 +235,7 @@ public class HeldSubStepsTests(PlaywrightFixture fixture) : PlaywrightTestBase(f
             ExampleValues = new Dictionary<string, string> { ["region"] = region },
             Steps = [Chain("deep", 12)],
         };
-        await Page.GotoAsync(Generate("HeldRows.html", Row("r0", "UK"), Row("r1", "US")));
+        await Page.GotoReportAsync(Generate("HeldRows.html", Row("r0", "UK"), Row("r1", "US")));
         await OpenScenarios();
         var group = Page.Locator("details.scenario-parameterized").First;
         var panel0 = "//*[contains(@id, '-detail-0')]";
@@ -252,7 +270,7 @@ public class HeldSubStepsTests(PlaywrightFixture fixture) : PlaywrightTestBase(f
             BackgroundSteps = [Composite("the shelf")],
             Steps = [Composite("the basket")],
         };
-        await Page.GotoAsync(Generate("HeldRowsBackground.html", true, separateBackground: true,
+        await Page.GotoReportAsync(Generate("HeldRowsBackground.html", true, separateBackground: true,
             [new Feature { DisplayName = "Held", Scenarios = [Row("r0", "UK"), Row("r1", "US")] }]));
         await OpenScenarios();
         var group = Page.Locator("details.scenario-parameterized").First;

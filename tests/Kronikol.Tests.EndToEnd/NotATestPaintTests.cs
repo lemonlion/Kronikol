@@ -50,7 +50,7 @@ public class NotATestPaintTests : PlaywrightTestBase
 
     private async Task OpenAsync(string fileName, Feature[]? only = null)
     {
-        await Page.GotoAsync(Generate(fileName, only));
+        await Page.GotoReportAsync(Generate(fileName, only));
         await Page.Locator("details.feature").First.WaitForAsync();
     }
 

@@ -105,11 +105,11 @@ public class OnDemandRenderingTests : PlaywrightTestBase
         child.Dispose();
         root.Dispose();
         if (rewrite is not null)
-            File.WriteAllText(path, rewrite(File.ReadAllText(path)));
+            ReportFileText.Edit(path, rewrite);
         File.Copy(path, Path.Combine(OutputDir, fileName), true);
 
         WatchEngineRequests();
-        await Page.GotoAsync(new Uri(path).AbsoluteUri);
+        await Page.GotoReportAsync(new Uri(path).AbsoluteUri);
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
     }
@@ -181,7 +181,7 @@ public class OnDemandRenderingTests : PlaywrightTestBase
             await Page.Locator("button.export-btn", new() { HasTextString = "Export Filtered HTML" }).ClickAsync());
         var path = Path.Combine(TempDir, $"export_{Guid.NewGuid():N}.html");
         await download.SaveAsAsync(path);
-        await Page.GotoAsync(new Uri(path).AbsoluteUri);
+        await Page.GotoReportAsync(new Uri(path).AbsoluteUri);
         await Page.Locator("details.feature").First.WaitForAsync();
         // The export carries no toolbar to expand with.
         await Page.EvaluateAsync("() => document.querySelectorAll('details').forEach(d => d.setAttribute('open', ''))");
@@ -338,7 +338,7 @@ public class OnDemandRenderingTests : PlaywrightTestBase
         File.Copy(html, Path.Combine(OutputDir, "OnDemand_component_panel.html"), true);
 
         WatchEngineRequests();
-        await Page.GotoAsync(new Uri(html).AbsoluteUri);
+        await Page.GotoReportAsync(new Uri(html).AbsoluteUri);
         await OpenReportTabAsync("components"); // 5.0.0: a tab of the report bar (plans/OPTION_C_PLAN.md S3)
 
         var svg = Page.Locator("#component-diagram svg").First;

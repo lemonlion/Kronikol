@@ -17,7 +17,7 @@ public class IngestedSetupPartitionTests(PlaywrightFixture fixture) : Playwright
     [Fact]
     public async Task An_ingested_report_draws_the_setup_group_when_SeparateSetup_is_on()
     {
-        await Page.GotoAsync(Ingest("separated", separateSetup: true));
+        await Page.GotoReportAsync(Ingest("separated", separateSetup: true));
         var setup = await SetupGroupAsync();
         Assert.True(setup.Label, "The rendered diagram has no Setup label.");
         Assert.True(setup.Fill, "The rendered diagram has no #F6F6F6 group behind the setup call.");
@@ -26,7 +26,7 @@ public class IngestedSetupPartitionTests(PlaywrightFixture fixture) : Playwright
     [Fact]
     public async Task An_ingested_report_draws_no_setup_group_when_SeparateSetup_is_off()
     {
-        await Page.GotoAsync(Ingest("plain", separateSetup: false));
+        await Page.GotoReportAsync(Ingest("plain", separateSetup: false));
         var setup = await SetupGroupAsync();
         Assert.False(setup.Label);
         Assert.False(setup.Fill);

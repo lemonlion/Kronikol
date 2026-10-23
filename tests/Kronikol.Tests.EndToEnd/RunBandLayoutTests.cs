@@ -47,7 +47,7 @@ public class RunBandLayoutTests : PlaywrightTestBase
     [Fact]
     public async Task On_a_wide_page_the_ring_the_summary_and_ci_share_one_row_and_the_filters_follow()
     {
-        await Page.GotoAsync(GenerateBandReport("Band_Wide.html"));
+        await Page.GotoReportAsync(GenerateBandReport("Band_Wide.html"));
         await Page.Locator(".run-band").WaitForAsync();
 
         Assert.False(await Page.Locator(".run-band").EvaluateAsync<bool>("b => b.classList.contains('ci-below')"));
@@ -64,7 +64,7 @@ public class RunBandLayoutTests : PlaywrightTestBase
     public async Task On_a_narrow_page_the_ci_zone_moves_under_the_summary_and_back()
     {
         await Page.SetViewportSizeAsync(820, 900);
-        await Page.GotoAsync(GenerateBandReport("Band_Narrow.html"));
+        await Page.GotoReportAsync(GenerateBandReport("Band_Narrow.html"));
         await Page.Locator(".run-band.ci-below").WaitForAsync(new() { Timeout = 5000 });
 
         var summary = await Page.Locator(".run-summary").BoundingBoxAsync();
@@ -83,7 +83,7 @@ public class RunBandLayoutTests : PlaywrightTestBase
     [Fact]
     public async Task Text_spacing_applied_after_load_moves_the_ci_zone_under_the_summary_and_back()
     {
-        await Page.GotoAsync(GenerateBandReport("Band_Spacing.html"));
+        await Page.GotoReportAsync(GenerateBandReport("Band_Spacing.html"));
         await Page.Locator(".run-band").WaitForAsync();
         Assert.False(await Page.Locator(".run-band").EvaluateAsync<bool>("b => b.classList.contains('ci-below')"));
 
@@ -111,7 +111,7 @@ public class RunBandLayoutTests : PlaywrightTestBase
     public async Task The_filter_box_is_a_card_like_the_band_with_text_export_buttons(string theme)
     {
         await Context.AddInitScriptAsync($"try {{ localStorage.setItem('kronikol.theme', '{theme}'); }} catch (e) {{ }}");
-        await Page.GotoAsync(GenerateBandReport($"Band_FilterCard_{theme}.html"));
+        await Page.GotoReportAsync(GenerateBandReport($"Band_FilterCard_{theme}.html"));
         await Page.Locator("#filtering-box").WaitForAsync();
 
         var styles = await Page.EvaluateAsync<string[]>(
@@ -142,7 +142,7 @@ public class RunBandLayoutTests : PlaywrightTestBase
     public async Task The_ring_takes_its_colours_from_the_tokens(string theme)
     {
         await Context.AddInitScriptAsync($"try {{ localStorage.setItem('kronikol.theme', '{theme}'); }} catch (e) {{ }}");
-        await Page.GotoAsync(GenerateBandReport($"Band_Ring_{theme}.html"));
+        await Page.GotoReportAsync(GenerateBandReport($"Band_Ring_{theme}.html"));
         await Page.Locator(".run-ring svg").WaitForAsync();
 
         var colours = await Page.EvaluateAsync<string[]>(

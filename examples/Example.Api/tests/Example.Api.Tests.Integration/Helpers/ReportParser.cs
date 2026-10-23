@@ -30,7 +30,7 @@ public static class ReportParser
 
     public static async Task<string[]> ExtractPlantUmlSourcesAsync(string htmlFilePath)
     {
-        var html = await File.ReadAllTextAsync(htmlFilePath);
+        var html = Kronikol.Reports.HtmlReportFile.ToPlain(await File.ReadAllTextAsync(htmlFilePath));
         var config = Configuration.Default;
         using var context = BrowsingContext.New(config);
         using var document = await context.OpenAsync(req => req.Content(html));
@@ -71,7 +71,7 @@ public static class ReportParser
 
     public static async Task<ParsedScenario[]> ExtractScenariosAsync(string htmlFilePath)
     {
-        var html = await File.ReadAllTextAsync(htmlFilePath);
+        var html = Kronikol.Reports.HtmlReportFile.ToPlain(await File.ReadAllTextAsync(htmlFilePath));
         var config = Configuration.Default;
         using var context = BrowsingContext.New(config);
         using var document = await context.OpenAsync(req => req.Content(html));
@@ -129,7 +129,7 @@ public static class ReportParser
 
     public static async Task<string?> ExtractTitleAsync(string htmlFilePath)
     {
-        var html = await File.ReadAllTextAsync(htmlFilePath);
+        var html = Kronikol.Reports.HtmlReportFile.ToPlain(await File.ReadAllTextAsync(htmlFilePath));
         var config = Configuration.Default;
         using var context = BrowsingContext.New(config);
         using var document = await context.OpenAsync(req => req.Content(html));
@@ -203,7 +203,7 @@ public static class ReportParser
 
     public static async Task<DiagramImgInfo[]> ExtractDiagramImgsAsync(string htmlFilePath)
     {
-        var html = await File.ReadAllTextAsync(htmlFilePath);
+        var html = Kronikol.Reports.HtmlReportFile.ToPlain(await File.ReadAllTextAsync(htmlFilePath));
         var config = Configuration.Default;
         using var context = BrowsingContext.New(config);
         using var document = await context.OpenAsync(req => req.Content(html));
@@ -218,7 +218,7 @@ public static class ReportParser
 
     public static async Task<ParsedParameterizedGroup[]> ExtractParameterizedGroupsAsync(string htmlFilePath)
     {
-        var html = await File.ReadAllTextAsync(htmlFilePath);
+        var html = Kronikol.Reports.HtmlReportFile.ToPlain(await File.ReadAllTextAsync(htmlFilePath));
         var config = Configuration.Default;
         using var context = BrowsingContext.New(config);
         using var document = await context.OpenAsync(req => req.Content(html));

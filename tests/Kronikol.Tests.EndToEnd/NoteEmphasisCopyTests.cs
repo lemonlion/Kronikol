@@ -20,7 +20,7 @@ public class NoteEmphasisCopyTests : PlaywrightTestBase
         await Context.GrantPermissionsAsync(["clipboard-read", "clipboard-write"]);
         var logs = LongPayloadReports.Call("emphasis", 0, LongPayloadReports.JsonOfLines(12, "emph"));
         logs[1].FocusFields = ["emph_0003"];
-        await Page.GotoAsync(LongPayloadReports.Write(TempDir, OutputDir, "emphasis-copy.html", [("emphasis", "A focused field", logs)],
+        await Page.GotoReportAsync(LongPayloadReports.Write(TempDir, OutputDir, "emphasis-copy.html", [("emphasis", "A focused field", logs)],
             ReportTestHelper.ClassicStart with { Details = ReportDetailsState.Expanded }));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();

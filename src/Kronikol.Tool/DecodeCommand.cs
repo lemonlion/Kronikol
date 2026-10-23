@@ -12,7 +12,8 @@ namespace Kronikol.Tool;
 /// (plans/REPORT_FORMAT_PLAN.md 4.4, Q15). It reads every form the query engine reads, a compressed <c>.krkl</c>
 /// included, and inflates each payload stored compressed in place (<c>$z</c>), so its output is plain JSON a
 /// <c>jq</c> recipe or a redaction check can read in full. Compact, or indented with <c>--indent</c>; to stdout, or to
-/// the file <c>-o</c> names. One forward pass: a report is never held whole.
+/// the file <c>-o</c> names. One forward pass: a report is never held whole. Given a report page it writes the plain
+/// page instead (plans/HTML_COMPRESSION_PLAN.md Q9).
 /// </summary>
 public static class DecodeCommand
 {
@@ -53,7 +54,7 @@ public static class DecodeCommand
 
         if (report is null)
         {
-            error.WriteLine("No report given. Pass a TestRunReport.json or TestRunReport.krkl, or a directory holding one.");
+            error.WriteLine("No report given. Pass a TestRunReport.json or TestRunReport.krkl, or a directory holding one, or a report page.");
             PrintUsage(error);
             return 2;
         }
@@ -70,6 +71,9 @@ public static class DecodeCommand
 
         try
         {
+            if (IsPage(resolved))
+                return DecodePage(resolved, written, indent, @out, error);
+
             using var file = ReportScanner.OpenShared(resolved);
             using var content = ReportFileFormat.Open(file);
             using var destination = written is null ? new TextWriterStream(@out) : (Stream)File.Create(written);
@@ -89,6 +93,53 @@ public static class DecodeCommand
             return 1;
         }
 
+        return 0;
+    }
+
+    /// <summary>
+    /// Whether <paramref name="path"/> holds a page rather than a report data file: its first character, past a byte order
+    /// mark and white space, is <c>&lt;</c>, which no form of the data file starts with.
+    /// </summary>
+    private static bool IsPage(string path)
+    {
+        Span<byte> head = stackalloc byte[64];
+        using var file = ReportScanner.OpenShared(path);
+        var text = head[..file.ReadAtLeast(head, head.Length, throwOnEndOfStream: false)];
+        if (text.StartsWith((ReadOnlySpan<byte>)[0xEF, 0xBB, 0xBF]))
+            text = text[3..];
+        text = text.TrimStart(" \t\r\n"u8);
+        return !text.IsEmpty && text[0] == (byte)'<';
+    }
+
+    /// <summary>
+    /// A report page (plans/HTML_COMPRESSION_PLAN.md Q9): a compressed <c>TestRunReport.html</c> or
+    /// <c>Specifications.html</c> written as its plain page, which a browser opens as it is and a search or an HTML parser
+    /// reads in full; any other page as it is. The page is held whole, as a browser holds it, and nothing is written
+    /// unless it decodes.
+    /// </summary>
+    private static int DecodePage(string resolved, string? written, bool indent, TextWriter @out, TextWriter error)
+    {
+        if (indent)
+        {
+            error.WriteLine("--indent indents JSON; a page is written as its plain page, as it is.");
+            return 2;
+        }
+
+        string plain;
+        try
+        {
+            plain = HtmlReportFile.ToPlain(File.ReadAllText(resolved));
+        }
+        catch (InvalidDataException exception)
+        {
+            error.WriteLine($"{resolved} is a compressed report that is damaged, and cannot be decoded: {exception.Message}");
+            return 1;
+        }
+
+        if (written is null)
+            @out.Write(plain);
+        else
+            File.WriteAllText(written, plain);
         return 0;
     }
 
@@ -263,11 +314,15 @@ public static class DecodeCommand
         w.WriteLine("  payload stored compressed (\"$z\") written out as text. For a script or a jq recipe that needs the JSON");
         w.WriteLine("  itself; to answer a question about a run, use kronikol query, which never needs it.");
         w.WriteLine();
-        w.WriteLine("  <report>      a TestRunReport.json or TestRunReport.krkl, or a directory holding one");
-        w.WriteLine("  -o <file>     write to <file> instead of stdout");
-        w.WriteLine("  --indent      indent the JSON two spaces a level (compact without it)");
+        w.WriteLine("  Given a report page (TestRunReport.html or Specifications.html, which are written compressed), writes");
+        w.WriteLine("  its plain page: one a browser opens as it is, and a search or an HTML parser reads in full.");
         w.WriteLine();
-        w.WriteLine("Example:");
+        w.WriteLine("  <report>      a TestRunReport.json or TestRunReport.krkl, or a directory holding one; or a report page");
+        w.WriteLine("  -o <file>     write to <file> instead of stdout");
+        w.WriteLine("  --indent      indent the JSON two spaces a level (compact without it); not for a page");
+        w.WriteLine();
+        w.WriteLine("Examples:");
         w.WriteLine("  kronikol decode ./Reports --indent | jq '.features[].scenarios[].name'");
+        w.WriteLine("  kronikol decode TestRunReport.html -o plain.html");
     }
 }

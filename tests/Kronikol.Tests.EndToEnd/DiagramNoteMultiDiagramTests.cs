@@ -13,7 +13,7 @@ public class DiagramNoteMultiDiagramTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Two_diagram_minus_button_collapses_first_note()
     {
-        await Page.GotoAsync(GenerateTwoLongNoteReport("TwoDiagMinus.html"));
+        await Page.GotoReportAsync(GenerateTwoLongNoteReport("TwoDiagMinus.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -46,7 +46,7 @@ public class DiagramNoteMultiDiagramTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Split_diagram_minus_collapses_and_shows_plus()
     {
-        await Page.GotoAsync(GenerateSplitDiagramReport("SplitDiagMinus.html"));
+        await Page.GotoReportAsync(GenerateSplitDiagramReport("SplitDiagMinus.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -91,7 +91,7 @@ public class DiagramNoteMultiDiagramTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Three_diagram_rendering_flags_clear_after_all_render()
     {
-        await Page.GotoAsync(GenerateThreeDiagramSplitReport("ThreeDiagFlags.html"));
+        await Page.GotoReportAsync(GenerateThreeDiagramSplitReport("ThreeDiagFlags.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -113,7 +113,7 @@ public class DiagramNoteMultiDiagramTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Header_notes_report_minus_reduces_text_in_first_diagram()
     {
-        await Page.GotoAsync(GenerateLongNoteWithHeadersReport("HeaderMinusContent.html"));
+        await Page.GotoReportAsync(GenerateLongNoteWithHeadersReport("HeaderMinusContent.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -133,7 +133,7 @@ public class DiagramNoteMultiDiagramTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Two_diagram_collapse_does_not_affect_second_diagram()
     {
-        await Page.GotoAsync(GenerateTwoLongNoteReport("TwoDiagIsolation.html"));
+        await Page.GotoReportAsync(GenerateTwoLongNoteReport("TwoDiagIsolation.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();

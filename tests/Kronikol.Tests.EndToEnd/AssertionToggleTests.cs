@@ -17,7 +17,7 @@ public class AssertionToggleTests : DiagramNotePlaywrightBase
 
     private async Task ExpandBothScenariosAndRender(string fileName)
     {
-        await Page.GotoAsync(GenerateAssertionReport(fileName));
+        await Page.GotoReportAsync(GenerateAssertionReport(fileName));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
 

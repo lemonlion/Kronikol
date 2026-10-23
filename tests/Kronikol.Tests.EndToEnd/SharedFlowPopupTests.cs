@@ -23,12 +23,12 @@ public class SharedFlowPopupTests : PlaywrightTestBase
 
         // Stored once: the outer call's segment holds the flow and the inner call's names it. Read by the calls' own
         // keys: the map also holds the segments of every other fixture this process has logged.
-        var map = SegmentMap(File.ReadAllText(new Uri(uri).LocalPath));
+        var map = SegmentMap(ReportFileText.Read(new Uri(uri).LocalPath));
         Assert.Contains("SELECT orders", Diagram(map, $"iflow-{outer}"), StringComparison.Ordinal);
         Assert.Equal($"iflow-{outer}", map.GetProperty($"iflow-{inner}").GetProperty("sameAs").GetString());
         Assert.False(map.GetProperty($"iflow-{inner}").TryGetProperty("content", out _), "the inner call's segment holds no copy");
 
-        await Page.GotoAsync(uri);
+        await Page.GotoReportAsync(uri);
         await Page.EvaluateAsync("() => document.querySelectorAll('details').forEach(d => d.open = true)");
         await Page.EvaluateAsync("() => window._renderDiagramsInContainer(document.body)");
         await Page.WaitForFunctionAsync(BrowserRenderWorkerTests.AllRenderedJs, null, new() { Timeout = 60000, PollingInterval = 200 });
@@ -53,14 +53,14 @@ public class SharedFlowPopupTests : PlaywrightTestBase
     {
         var (uri, _, outer, _, later, laterInner) = ReportTestHelper.GenerateRunReportWithSharedFlow(TempDir, OutputDir, "SharedDiagram.html");
 
-        var map = SegmentMap(File.ReadAllText(new Uri(uri).LocalPath));
+        var map = SegmentMap(ReportFileText.Read(new Uri(uri).LocalPath));
         var outerSegment = map.GetProperty($"iflow-{outer}");
         var laterSegment = map.GetProperty($"iflow-{later}");
         Assert.Equal(outerSegment.GetProperty("contentAt").GetInt32(), laterSegment.GetProperty("contentAt").GetInt32());
         Assert.NotEqual(outerSegment.GetProperty("flameAt").GetInt32(), laterSegment.GetProperty("flameAt").GetInt32());
         Assert.Equal($"iflow-{later}", map.GetProperty($"iflow-{laterInner}").GetProperty("sameAs").GetString());
 
-        await Page.GotoAsync(uri);
+        await Page.GotoReportAsync(uri);
         await Page.EvaluateAsync("() => document.querySelectorAll('details').forEach(d => d.open = true)");
         await Page.EvaluateAsync("() => window._renderDiagramsInContainer(document.body)");
         await Page.WaitForFunctionAsync(BrowserRenderWorkerTests.AllRenderedJs, null, new() { Timeout = 60000, PollingInterval = 200 });

@@ -46,7 +46,7 @@ public class ReportTabsTests
             componentDiagramPlantUml: component, diagnostics: diagnostics, showReportDiagnostics: diagnostics is not null,
             background: background, toggleDefaults: toggles is null ? null
                 : ReportToggleDefaultsResolver.Resolve(new ReportConfigurationOptions { TestRunReportToggleDefaults = toggles }, specifications: false));
-        return File.ReadAllText(path);
+        return ReportHtml.Read(path);
     }
 
     private static readonly DiagnosticEntry[] TwoDiagnostics =

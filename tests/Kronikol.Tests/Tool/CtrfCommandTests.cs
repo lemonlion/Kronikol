@@ -120,7 +120,7 @@ public class CtrfCommandTests : IDisposable
         var (output, _, exit) = Run(Report);
 
         Assert.Equal(0, exit);
-        Assert.Equal(File.ReadAllText(Path.Combine(_directory, "ctrf-report.json")), output.TrimEnd('\r', '\n'));
+        Assert.Equal(ReportHtml.Read(Path.Combine(_directory, "ctrf-report.json")), output.TrimEnd('\r', '\n'));
     }
 
     [Fact]
@@ -133,7 +133,7 @@ public class CtrfCommandTests : IDisposable
 
         Assert.Equal(0, exit);
         Assert.Equal("", output.Trim());
-        Assert.Equal(File.ReadAllText(Path.Combine(_directory, "ctrf-report.json")), File.ReadAllText(target));
+        Assert.Equal(ReportHtml.Read(Path.Combine(_directory, "ctrf-report.json")), ReportHtml.Read(target));
     }
 
     // ─── Tags ──────────────────────────────────────────────────
@@ -174,7 +174,7 @@ public class CtrfCommandTests : IDisposable
         // what a 4.x writer wrote: a feature's labels, a scenario's labels and categories, and a retry N label an ingest
         // lane made for each earlier attempt (§4.6, §4.13)
         WriteRun(json: true);
-        var json = JsonNode.Parse(File.ReadAllText(Report))!;
+        var json = JsonNode.Parse(ReportHtml.Read(Report))!;
         var feature = QueryTagsTests.WithLabels(json["features"]!.AsArray(), "Checkout", "checkout");
         var scenarios = feature["scenarios"]!.AsArray().Select(s => s!.AsObject()).ToArray();
         foreach (var scenario in scenarios)

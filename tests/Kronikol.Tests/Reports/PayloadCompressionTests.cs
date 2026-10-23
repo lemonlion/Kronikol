@@ -158,7 +158,7 @@ public class PayloadCompressionTests : IDisposable
             GenerateSpecificationsData = false,
         });
 
-        using var report = JsonDocument.Parse(File.ReadAllText(Path.Combine(_directory, "TestRunReport.json")));
+        using var report = JsonDocument.Parse(ReportHtml.Read(Path.Combine(_directory, "TestRunReport.json")));
         var scenario = report.RootElement.GetProperty("features").EnumerateArray()
             .SelectMany(f => f.GetProperty("scenarios").EnumerateArray())
             .Single(s => s.GetProperty("id").GetString() == testId);
@@ -214,7 +214,7 @@ public class PayloadCompressionTests : IDisposable
             Path.Combine(_directory, "TestRunReport.json"), DataFormat.Json, Diagrams(diagrams ?? ["@startuml\nA -> B\n@enduml"]),
             Logs(requestBody, responseBody), diagnostics: null, fullStepDetail: true, ciMetadata: null, suite: "payloads",
             environment: RunEnvironment.Unrecorded, attribution: null, compressPayloads: compress);
-        return JsonDocument.Parse(File.ReadAllText(path));
+        return JsonDocument.Parse(ReportHtml.Read(path));
     }
 
     private static JsonElement Scenario(JsonElement root) => root.GetProperty("features")[0].GetProperty("scenarios")[0];

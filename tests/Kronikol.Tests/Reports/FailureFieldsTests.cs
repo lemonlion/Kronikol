@@ -89,7 +89,7 @@ public class FailureFieldsTests
     public void The_json_carries_the_failure_cause_beside_the_message_not_inside_it()
     {
         var path = ReportGenerator.GenerateTestRunReportData(Features("Assertion"), Start, End, "FailureCause.json", DataFormat.Json);
-        var root = JsonDocument.Parse(File.ReadAllText(path)).RootElement;
+        var root = JsonDocument.Parse(ReportHtml.Read(path)).RootElement;
 
         var scenario = root.GetProperty("features")[0].GetProperty("scenarios")[1];
         Assert.Equal("Assertion", scenario.GetProperty("failureCause").GetString());
@@ -101,7 +101,7 @@ public class FailureFieldsTests
     public void A_scenario_with_no_cause_reports_it_as_null_rather_than_omitting_the_key()
     {
         var path = ReportGenerator.GenerateTestRunReportData(Features(null), Start, End, "FailureCauseNull.json", DataFormat.Json);
-        var root = JsonDocument.Parse(File.ReadAllText(path)).RootElement;
+        var root = JsonDocument.Parse(ReportHtml.Read(path)).RootElement;
 
         var scenario = root.GetProperty("features")[0].GetProperty("scenarios")[1];
         Assert.Equal(JsonValueKind.Null, scenario.GetProperty("failureCause").ValueKind);
@@ -111,7 +111,7 @@ public class FailureFieldsTests
     public void The_xml_and_yaml_carry_it_too()
     {
         var xml = XDocument.Load(ReportGenerator.GenerateTestRunReportData(Features("Timeout"), Start, End, "FailureCause.xml", DataFormat.Xml));
-        var yaml = File.ReadAllText(ReportGenerator.GenerateTestRunReportData(Features("Timeout"), Start, End, "FailureCause.yml", DataFormat.Yaml));
+        var yaml = ReportHtml.Read(ReportGenerator.GenerateTestRunReportData(Features("Timeout"), Start, End, "FailureCause.yml", DataFormat.Yaml));
 
         Assert.Contains("Timeout", xml.Descendants().Where(e => e.Name.LocalName == "FailureCause").Select(e => e.Value));
         Assert.Contains("FailureCause: Timeout", yaml);
@@ -152,7 +152,7 @@ public class FailureFieldsTests
             }
         };
 
-        var html = File.ReadAllText(ReportGenerator.GenerateHtmlReport(
+        var html = ReportHtml.Read(ReportGenerator.GenerateHtmlReport(
             [], features, Start, End, null, "BothBlocks.html", "Contract", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs,
             groupParameterizedTests: true));
@@ -174,7 +174,7 @@ public class FailureFieldsTests
     public void The_schema_declares_it()
     {
         var path = ReportGenerator.GenerateTestRunReportSchema("FailureCause_schema.json", DataFormat.Json);
-        var scenario = JsonDocument.Parse(File.ReadAllText(path)).RootElement
+        var scenario = JsonDocument.Parse(ReportHtml.Read(path)).RootElement
             .GetProperty("properties").GetProperty("features")
             .GetProperty("items").GetProperty("properties").GetProperty("scenarios")
             .GetProperty("items").GetProperty("properties");

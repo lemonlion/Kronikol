@@ -54,7 +54,7 @@ public class FeaturesToolsTests
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs,
             toggleDefaults: toggles is null ? null
                 : ReportToggleDefaultsResolver.Resolve(new ReportConfigurationOptions { TestRunReportToggleDefaults = toggles }, specifications: false));
-        return File.ReadAllText(path);
+        return ReportHtml.Read(path);
     }
 
     private static string Line(string html)

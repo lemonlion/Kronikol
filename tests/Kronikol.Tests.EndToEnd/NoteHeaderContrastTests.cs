@@ -49,7 +49,7 @@ public class NoteHeaderContrastTests : PlaywrightTestBase
 
     private async Task Open([System.Runtime.CompilerServices.CallerMemberName] string? testName = null)
     {
-        await Page.GotoAsync(ReportTestHelper.GenerateReportWithHeaderInkNotes(TempDir, OutputDir, $"HeaderContrast_{testName}.html"));
+        await Page.GotoReportAsync(ReportTestHelper.GenerateReportWithHeaderInkNotes(TempDir, OutputDir, $"HeaderContrast_{testName}.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();

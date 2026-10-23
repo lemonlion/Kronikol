@@ -41,7 +41,7 @@ public class RunEnvironmentProvenanceTests : IDisposable
         var path = ReportGenerator.GenerateTestRunReportData(
             Features(), Start, End, $"Env_live_{Guid.NewGuid():N}.json", DataFormat.Json);
 
-        var environment = JsonDocument.Parse(File.ReadAllText(path)).RootElement.GetProperty("environment");
+        var environment = JsonDocument.Parse(ReportHtml.Read(path)).RootElement.GetProperty("environment");
 
         Assert.Equal(RunEnvironment.Current.Os, environment.GetProperty("os").GetString());
         Assert.Equal(RunEnvironment.Current.Runtime, environment.GetProperty("runtime").GetString());
@@ -58,7 +58,7 @@ public class RunEnvironmentProvenanceTests : IDisposable
             Features(), Start, End, $"Env_none_{Guid.NewGuid():N}.json", DataFormat.Json,
             environment: RunEnvironment.Unrecorded);
 
-        var root = JsonDocument.Parse(File.ReadAllText(path)).RootElement;
+        var root = JsonDocument.Parse(ReportHtml.Read(path)).RootElement;
 
         Assert.False(root.TryGetProperty("environment", out _));
     }
@@ -74,7 +74,7 @@ public class RunEnvironmentProvenanceTests : IDisposable
             Features(), Start, End, $"Env_none_{Guid.NewGuid():N}.{extension}", format,
             environment: RunEnvironment.Unrecorded);
 
-        Assert.DoesNotContain("Environment", File.ReadAllText(path), StringComparison.Ordinal);
+        Assert.DoesNotContain("Environment", ReportHtml.Read(path), StringComparison.Ordinal);
     }
 
     // ─── Merge ──────────────────────────────────────────────────

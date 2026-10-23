@@ -18,7 +18,7 @@ public class NoteLengthInYamlViewTests : PlaywrightTestBase
 
     private async Task OpenAsync(string fileName)
     {
-        await Page.GotoAsync(LongPayloadReports.YamlLongerThanJson(TempDir, OutputDir, fileName));
+        await Page.GotoReportAsync(LongPayloadReports.YamlLongerThanJson(TempDir, OutputDir, fileName));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg(60000);

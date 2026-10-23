@@ -111,7 +111,7 @@ public class KrklQueryTests : IDisposable
     public void A_krkl_replaced_after_the_scan_answers_from_what_was_scanned()
     {
         var other = KrklReports.WriteJson(Path.Combine(_root, "other"));
-        File.WriteAllText(other, File.ReadAllText(other).Replace("x-correlation-id", "x-request-id", StringComparison.Ordinal));
+        File.WriteAllText(other, ReportHtml.Read(other).Replace("x-correlation-id", "x-request-id", StringComparison.Ordinal));
         var placing = Placing(_krkl);
         QueryCommand.AfterScan = _ => KrklReports.WriteKrkl(other, Path.GetDirectoryName(_krkl)!);
 
@@ -125,7 +125,7 @@ public class KrklQueryTests : IDisposable
     public void A_json_replaced_after_the_scan_still_says_it_changed()
     {
         var other = KrklReports.WriteJson(Path.Combine(_root, "other"));
-        File.WriteAllText(other, File.ReadAllText(other).Replace("x-correlation-id", "x-request-id", StringComparison.Ordinal) + "\n");
+        File.WriteAllText(other, ReportHtml.Read(other).Replace("x-correlation-id", "x-request-id", StringComparison.Ordinal) + "\n");
         var placing = Placing(_json);
         QueryCommand.AfterScan = _ => File.Copy(other, _json, overwrite: true);
 

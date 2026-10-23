@@ -110,14 +110,14 @@ public class QueryCultureTests : IDisposable
         var args = Calls.Single(c => c.Verb == verb).Args;
 
         var expected = CultureRun.Under("en-US", () => Run(verb, Report(), Resolve(args)));
-        var expectedDiagram = verb == "diagram" ? File.ReadAllText(Diagram) : null;
+        var expectedDiagram = verb == "diagram" ? ReportHtml.Read(Diagram) : null;
         var actual = CultureRun.Under(culture, () => Run(verb, Report(), Resolve(args)));
 
         Assert.True(expected.Exit == 0, $"exit {expected.Exit}: {expected.Error}");
         Assert.Equal(expected.Output, actual.Output);
         Assert.Equal(expected.Error, actual.Error);
         if (expectedDiagram is not null)
-            Assert.Equal(expectedDiagram, File.ReadAllText(Diagram));
+            Assert.Equal(expectedDiagram, ReportHtml.Read(Diagram));
     }
 
     [Fact]
@@ -145,7 +145,7 @@ public class QueryCultureTests : IDisposable
         var path = Path.Combine(_directory, "Numeric.json");
         File.Move(ReportGenerator.GenerateTestRunReportData(features, new DateTime(2026, 1, 1, 10, 0, 0, DateTimeKind.Utc),
             new DateTime(2026, 1, 1, 10, 5, 0, DateTimeKind.Utc), "Numeric_" + Guid.NewGuid().ToString("N")[..8] + ".json", DataFormat.Json), path, overwrite: true);
-        var json = File.ReadAllText(path);
+        var json = ReportHtml.Read(path);
         Assert.Contains("\"value\": \"1.10\"", json, StringComparison.Ordinal);
         File.WriteAllText(path, json.Replace("\"value\": \"1.10\"", "\"value\": 1.10", StringComparison.Ordinal));
 

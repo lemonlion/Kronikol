@@ -80,7 +80,7 @@ public class SchemaValidationTests
 
         var errors = Validate(schemaPath, reportPath);
 
-        Assert.Contains("\"$z\"", File.ReadAllText(reportPath), StringComparison.Ordinal);
+        Assert.Contains("\"$z\"", ReportHtml.Read(reportPath), StringComparison.Ordinal);
         Assert.True(errors.Count == 0, $"{errors.Count} schema violations:\n  " + string.Join("\n  ", errors.Take(25)));
     }
 
@@ -89,7 +89,7 @@ public class SchemaValidationTests
     public void A_compressed_payload_without_its_text_fails_the_schema()
     {
         var (reportPath, schemaPath) = WriteCompressed();
-        var report = System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(reportPath))!;
+        var report = System.Text.Json.Nodes.JsonNode.Parse(ReportHtml.Read(reportPath))!;
         var content = report["features"]![0]!["scenarios"]![0]!["httpInteractions"]![0]!["content"]!.AsObject();
         content.Remove("$z");
         File.WriteAllText(reportPath, report.ToJsonString());
@@ -159,7 +159,7 @@ public class SchemaValidationTests
 
     internal static List<string> Validate(string schemaPath, string reportPath)
     {
-        var schema = JsonSchema.FromText(File.ReadAllText(schemaPath));
+        var schema = JsonSchema.FromText(ReportHtml.Read(schemaPath));
         using var instance = JsonDocument.Parse(ReportFile.Read(reportPath));
 
         var result = schema.Evaluate(instance.RootElement, new EvaluationOptions

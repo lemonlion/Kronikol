@@ -66,7 +66,7 @@ public class TrackThatIntegrationTests : IDisposable
             plantUmlRendering: PlantUmlRendering.BrowserJs,
             trackedLogs: trackedLogs);
 
-        var content = File.ReadAllText(html);
+        var content = ReportHtml.Read(html);
         Assert.Contains("data-toggle=\"assertions\"", content);
         // assertions start shown since 5.0.0
         Assert.Contains("data-toggle=\"assertions\" data-shown=\"true\" aria-pressed=\"true\"", content);
@@ -102,7 +102,7 @@ public class TrackThatIntegrationTests : IDisposable
             plantUmlRendering: PlantUmlRendering.BrowserJs,
             trackedLogs: trackedLogs);
 
-        var content = File.ReadAllText(html);
+        var content = ReportHtml.Read(html);
         // The button markup should not be present. The JS and CSS that drive it always are, and the
         // scripts select on this very attribute, so the search has to skip them.
         Assert.Empty(Reports.ReportMarkup.Elements(content, "button", "data-toggle=\"assertions\""));
@@ -132,7 +132,7 @@ public class TrackThatIntegrationTests : IDisposable
             plantUmlRendering: PlantUmlRendering.BrowserJs,
             trackedLogs: trackedLogs);
 
-        var content = File.ReadAllText(html);
+        var content = ReportHtml.Read(html);
         Assert.Contains("stripAssertionNotes", content);
         Assert.Contains("_assertionsVisible", content);
     }

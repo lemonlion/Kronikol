@@ -150,7 +150,7 @@ public class ResultDefaultedDiagnosticTests : IDisposable
         // "No failures" is exactly the reassurance nobody should get.
         var result = Ingest();
 
-        var digest = File.ReadAllText(Path.Combine(result.ReportsDirectory, "Failures.md"));
+        var digest = ReportHtml.Read(Path.Combine(result.ReportsDirectory, "Failures.md"));
         Assert.Contains("# No failures", digest);
         Assert.Contains("Read that carefully", digest);
         Assert.Contains("recorded no result", digest);

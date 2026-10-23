@@ -155,7 +155,7 @@ public class CucumberIngestPipelineTests : IDisposable
         Assert.True(result.Generated);
         Assert.All(result.Features.SelectMany(f => f.Scenarios), s => Assert.Equal(ExecutionResult.Passed, s.Result));
 
-        var html = File.ReadAllText(System.IO.Path.Combine(output, "Specifications.html"));
+        var html = ReportHtml.Read(System.IO.Path.Combine(output, "Specifications.html"));
 
         // Feature description, rule and background all reach the living document.
         Assert.Contains("Cucumber Messages importer has to map.", html);

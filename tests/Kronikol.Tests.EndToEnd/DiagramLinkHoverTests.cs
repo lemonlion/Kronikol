@@ -19,7 +19,7 @@ public class DiagramLinkHoverTests : PlaywrightTestBase
     public async Task A_link_takes_the_themes_accent(string theme)
     {
         var (uri, _) = ReportTestHelper.GenerateRunReportWithFlowArrows(TempDir, OutputDir, $"LinkAccent-{theme}.html", withFlow: 1, withoutFlow: 0);
-        await Page.GotoAsync(uri);
+        await Page.GotoReportAsync(uri);
         await Page.EvaluateAsync("t => document.documentElement.setAttribute('data-theme', t)", theme);
         await ExpandFirstScenarioWithDiagram();
         await Page.EvaluateAsync("() => window._renderDiagramsInContainer(document.body)");

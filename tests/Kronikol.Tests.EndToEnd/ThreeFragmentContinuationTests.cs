@@ -42,7 +42,7 @@ public class ThreeFragmentContinuationTests : DiagramNotePlaywrightBase
         var jsErrors = new List<string>();
         Page.PageError += (_, msg) => jsErrors.Add(msg);
 
-        await Page.GotoAsync(GenerateThreeFragmentContinuationReport("ThreeFragNoError.html"));
+        await Page.GotoReportAsync(GenerateThreeFragmentContinuationReport("ThreeFragNoError.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -55,7 +55,7 @@ public class ThreeFragmentContinuationTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Three_fragment_continuation_all_fragments_have_hover_rects()
     {
-        await Page.GotoAsync(GenerateThreeFragmentContinuationReport("ThreeFragHoverRects.html"));
+        await Page.GotoReportAsync(GenerateThreeFragmentContinuationReport("ThreeFragHoverRects.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -91,7 +91,7 @@ public class ThreeFragmentContinuationTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Three_fragment_continuation_render_queue_completes()
     {
-        await Page.GotoAsync(GenerateThreeFragmentContinuationReport("ThreeFragQueue.html"));
+        await Page.GotoReportAsync(GenerateThreeFragmentContinuationReport("ThreeFragQueue.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -107,7 +107,7 @@ public class ThreeFragmentContinuationTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Three_fragment_continuation_note_steps_map_to_correct_global_indices()
     {
-        await Page.GotoAsync(GenerateThreeFragmentContinuationReport("ThreeFragSteps.html"));
+        await Page.GotoReportAsync(GenerateThreeFragmentContinuationReport("ThreeFragSteps.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -144,7 +144,7 @@ public class ThreeFragmentContinuationTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Middle_fragment_continuation_minus_collapses_the_split_note()
     {
-        await Page.GotoAsync(GenerateThreeFragmentContinuationReport("ThreeFragMiddleMinus.html"));
+        await Page.GotoReportAsync(GenerateThreeFragmentContinuationReport("ThreeFragMiddleMinus.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();

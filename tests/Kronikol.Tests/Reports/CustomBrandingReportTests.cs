@@ -12,7 +12,7 @@ public class CustomBrandingReportTests
             null, "CustomBranding.html", "Test", includeTestRunData: true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs,
             customCss: customCss, customFaviconBase64: customFaviconBase64, customLogoHtml: customLogoHtml);
-        return File.ReadAllText(path);
+        return ReportHtml.Read(path);
     }
 
     private static Feature[] SimpleFeatures() =>

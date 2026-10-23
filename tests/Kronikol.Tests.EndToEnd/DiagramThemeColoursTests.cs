@@ -62,7 +62,7 @@ public class DiagramThemeColoursTests : DiagramNotePlaywrightBase
             features, DateTime.UtcNow, DateTime.UtcNow, null, Path.Combine(TempDir, fileName), "Bakery", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
         File.Copy(path, Path.Combine(OutputDir, fileName), true);
-        await Page.GotoAsync(new Uri(path).AbsoluteUri);
+        await Page.GotoReportAsync(new Uri(path).AbsoluteUri);
         await Page.EvaluateAsync("t => document.documentElement.setAttribute('data-theme', t)", theme);
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();

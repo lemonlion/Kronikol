@@ -51,7 +51,7 @@ public class FilterRowsTests
              new DefaultDiagramsFetcher.DiagramAsCode("s5", "", PaymentSource)],
             features ?? Bakery(), Start, Start.AddSeconds(5), null, fileName, "Test", includeTestRunData,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
-        return File.ReadAllText(path);
+        return ReportHtml.Read(path);
     }
 
     private static string Box(string html)

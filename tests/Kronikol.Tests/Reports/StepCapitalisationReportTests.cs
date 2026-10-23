@@ -61,7 +61,7 @@ public class StepCapitalisationReportTests : IDisposable
     [Fact]
     public void Every_rendered_step_line_starts_with_a_capital_or_a_quoted_literal()
     {
-        var html = File.ReadAllText(Run("on").TestRunReportHtml);
+        var html = ReportHtml.Read(Run("on").TestRunReportHtml);
 
         // A Gherkin step renders its keyword in its own span before the text, and that keyword is what
         // the reader sees first — so the line is judged on whichever comes first.
@@ -148,7 +148,7 @@ public class StepCapitalisationReportTests : IDisposable
     {
         var json = Run("agree-json");
         var scenario = json.Features[0].Scenarios[0];
-        Assert.Contains("The user accepts the trial", File.ReadAllText(json.TestRunReportHtml));
+        Assert.Contains("The user accepts the trial", ReportHtml.Read(json.TestRunReportHtml));
         Assert.Contains("\"text\":\"The user accepts the trial\"",
             ReportFile.ReadAny(Path.Combine(json.ReportsDirectory, "TestRunReport.json")));
 
@@ -175,7 +175,7 @@ public class StepCapitalisationReportTests : IDisposable
         var on = Run("titles-on");
         var scenario = on.Features[0].Scenarios[0];
         Assert.Equal("Overview renders", scenario.DisplayName);
-        Assert.Contains("Overview renders", File.ReadAllText(on.TestRunReportHtml));
+        Assert.Contains("Overview renders", ReportHtml.Read(on.TestRunReportHtml));
         Assert.Contains("\"name\":\"Overview renders\"",
             ReportFile.ReadAny(Path.Combine(on.ReportsDirectory, "TestRunReport.json")));
         Assert.DoesNotContain(on.Diagnostics, d => d.Kind == DiagnosticKind.TitlesNotStartingWithCapital);

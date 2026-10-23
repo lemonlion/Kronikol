@@ -63,7 +63,7 @@ public class AssertionMarkTests
     private static string Write(Feature[] features, DataFormat format)
     {
         var extension = format switch { DataFormat.Json => "json", DataFormat.Xml => "xml", _ => "yml" };
-        return File.ReadAllText(ReportGenerator.GenerateTestRunReportData(
+        return ReportHtml.Read(ReportGenerator.GenerateTestRunReportData(
             features, DateTime.UtcNow, DateTime.UtcNow, $"AssertionMark_{Guid.NewGuid():N}.{extension}", format));
     }
 

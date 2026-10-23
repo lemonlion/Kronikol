@@ -51,7 +51,7 @@ public class FeaturesToolsTests : PlaywrightTestBase
 
     private async Task OpenBakery(string fileName)
     {
-        await Page.GotoAsync(Generate(fileName, Bakery()));
+        await Page.GotoReportAsync(Generate(fileName, Bakery()));
         await Page.Locator("details.feature").First.WaitForAsync();
     }
 
@@ -536,7 +536,7 @@ public class FeaturesToolsTests : PlaywrightTestBase
     [Fact]
     public async Task A_page_that_opens_on_Summary_shows_no_failure_clusters_until_Full()
     {
-        await Page.GotoAsync(Generate("FeaturesTools_ClustersSummaryStart.html", Bakery(), new ReportToggleDefaults { FeaturesSummaryOpen = true }));
+        await Page.GotoReportAsync(Generate("FeaturesTools_ClustersSummaryStart.html", Bakery(), new ReportToggleDefaults { FeaturesSummaryOpen = true }));
         await Expect(Page.Locator("#features-table-view")).ToBeVisibleAsync();
         await Expect(Page.Locator(".failure-clusters")).ToBeHiddenAsync();
 
@@ -560,7 +560,7 @@ public class FeaturesToolsTests : PlaywrightTestBase
     public async Task On_a_phone_the_gear_shows_and_hides_the_display_settings()
     {
         await Page.SetViewportSizeAsync(400, 800);
-        await Page.GotoAsync(GenerateReport("FeaturesTools_PhoneGear.html"));
+        await Page.GotoReportAsync(GenerateReport("FeaturesTools_PhoneGear.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         var gear = Page.Locator(".tools-gear");
 
@@ -583,7 +583,7 @@ public class FeaturesToolsTests : PlaywrightTestBase
     public async Task Returning_to_the_Features_tab_draws_only_the_diagrams_that_show()
     {
         // S3 drew everything the Features tab held when it showed again: every diagram in every closed scenario
-        await Page.GotoAsync(GenerateReport("FeaturesTools_TabDraws.html"));
+        await Page.GotoReportAsync(GenerateReport("FeaturesTools_TabDraws.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await OpenReportTabAsync("timeline");

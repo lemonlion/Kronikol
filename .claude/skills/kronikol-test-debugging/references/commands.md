@@ -719,6 +719,11 @@ reads (a `TestRunReport.krkl` decoded), with every payload stored compressed (`$
 a `jq` recipe that needs the JSON itself. Never for answering a question about a run, which the verbs above do without
 it.
 
+Given a report page instead, `kronikol decode TestRunReport.html -o plain.html` (5.6.0) writes its plain page:
+`TestRunReport.html` and `Specifications.html` are written compressed, so a search of the file or an HTML parser finds
+nothing in them, and the plain page is the same report, which a browser opens as it is. To answer a question about the
+run, the verbs above still read the data file, never the page.
+
 ## Exit codes
 
 | Code | Meaning |

@@ -98,7 +98,7 @@ public class CultureInvariantPipelineTests : IDisposable
 
         return Directory.EnumerateFiles(reports, "*", SearchOption.AllDirectories)
             .ToDictionary(path => Path.GetRelativePath(reports, path).Replace('\\', '/'),
-                path => Normalise(path, path.EndsWith(".krkl", StringComparison.Ordinal) ? ReportFile.Read(path) : File.ReadAllText(path)));
+                path => Normalise(path, path.EndsWith(".krkl", StringComparison.Ordinal) ? ReportFile.Read(path) : ReportHtml.Read(path)));
     }
 
     /// <summary>

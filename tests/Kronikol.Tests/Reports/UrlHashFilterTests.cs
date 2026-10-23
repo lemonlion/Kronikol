@@ -32,7 +32,7 @@ public class UrlHashFilterTests
             DateTime.UtcNow, DateTime.UtcNow,
             null, fileName, "Test", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
-        return File.ReadAllText(path);
+        return ReportHtml.Read(path);
     }
 
     /// <summary>

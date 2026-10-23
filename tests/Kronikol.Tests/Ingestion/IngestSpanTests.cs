@@ -58,7 +58,7 @@ public class IngestSpanTests : IDisposable
 
         var result = Ingest(Spike(), options);
 
-        var html = File.ReadAllText(result.TestRunReportHtml);
+        var html = ReportHtml.Read(result.TestRunReportHtml);
         var map = InternalFlowSegmentMapReportTests.PageMap(html);
         var graphQl = SegmentMapText.Resolve(map, Key(_graphQl));
         Assert.Equal("Internal Flow (15 spans)", graphQl.Title);
@@ -115,7 +115,7 @@ public class IngestSpanTests : IDisposable
 
         var result = Ingest(lines, Options());
 
-        var graphQl = SegmentMapText.Resolve(InternalFlowSegmentMapReportTests.PageMap(File.ReadAllText(result.TestRunReportHtml)), Key(_graphQl));
+        var graphQl = SegmentMapText.Resolve(InternalFlowSegmentMapReportTests.PageMap(ReportHtml.Read(result.TestRunReportHtml)), Key(_graphQl));
         Assert.Equal("Internal Flow (15 spans)", graphQl.Title);
         using var data = JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(result.ReportsDirectory, "TestRunReport.json")));
         var call = data.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0].GetProperty("httpInteractions")[0];
@@ -130,7 +130,7 @@ public class IngestSpanTests : IDisposable
 
         var result = Ingest(Spike(), Options(), [.. spans, .. SpikeSpans()]);
 
-        var graphQl = SegmentMapText.Resolve(InternalFlowSegmentMapReportTests.PageMap(File.ReadAllText(result.TestRunReportHtml)), Key(_graphQl));
+        var graphQl = SegmentMapText.Resolve(InternalFlowSegmentMapReportTests.PageMap(ReportHtml.Read(result.TestRunReportHtml)), Key(_graphQl));
         Assert.Equal("Internal Flow (15 spans)", graphQl.Title);
         Assert.Contains(result.Diagnostics, d => d.Message.StartsWith($"{spans.Count} span(s) were supplied more than once", StringComparison.Ordinal));
     }
@@ -140,7 +140,7 @@ public class IngestSpanTests : IDisposable
     {
         var result = Ingest(Spike(), Options(), spans: null);
 
-        var html = File.ReadAllText(result.TestRunReportHtml);
+        var html = ReportHtml.Read(result.TestRunReportHtml);
         Assert.DoesNotContain("id=\"iflow-segments\"", html, StringComparison.Ordinal);
         Assert.DoesNotContain($"iflow-puml-whole-{_testId}", html, StringComparison.Ordinal);
         Assert.All(InternalFlowSegmentMapReportTests.DiagramSourcesInPage(html), source => Assert.DoesNotContain("[[#iflow-", source, StringComparison.Ordinal));
@@ -169,7 +169,7 @@ public class IngestSpanTests : IDisposable
 
         var result = Ingest(Spike(), options);
 
-        var graphQl = SegmentMapText.Resolve(InternalFlowSegmentMapReportTests.PageMap(File.ReadAllText(result.TestRunReportHtml)), Key(_graphQl));
+        var graphQl = SegmentMapText.Resolve(InternalFlowSegmentMapReportTests.PageMap(ReportHtml.Read(result.TestRunReportHtml)), Key(_graphQl));
         Assert.Equal("Internal Flow (4 spans)", graphQl.Title);
         Assert.Contains("|@fastify/otel|", graphQl.Content, StringComparison.Ordinal);
         Assert.DoesNotContain("graphql.resolve charge", graphQl.Content, StringComparison.Ordinal);
@@ -200,7 +200,7 @@ public class IngestSpanTests : IDisposable
         options.InternalFlowSpanGranularity = InternalFlowSpanGranularity.Full;
         var result = Ingest(Spike(), options);
 
-        var html = File.ReadAllText(result.TestRunReportHtml);
+        var html = ReportHtml.Read(result.TestRunReportHtml);
         Assert.DoesNotContain(name, InternalFlowSegmentMapReportTests.PageMap(html).GetRawText(), StringComparison.Ordinal);
         Assert.Equal("Internal Flow (15 spans)", SegmentMapText.Resolve(InternalFlowSegmentMapReportTests.PageMap(html), Key(_graphQl)).Title);
         var onTrace = InternalFlowSpanStore.GetSpans().Where(a => a.TraceId.ToString() == Trace).ToArray();

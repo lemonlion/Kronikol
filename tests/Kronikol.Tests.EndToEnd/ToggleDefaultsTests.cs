@@ -15,7 +15,7 @@ public class ToggleDefaultsTests : DiagramNotePlaywrightBase
 
     private async Task NavigateWide(string fileName, Action<Kronikol.Reports.ReportToggleDefaults> configure)
     {
-        await Page.GotoAsync(ReportTestHelper.GenerateToggleDefaultsReport(
+        await Page.GotoReportAsync(ReportTestHelper.GenerateToggleDefaultsReport(
             TempDir, OutputDir, fileName, o => configure(o.TestRunReportToggleDefaults)));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
@@ -25,7 +25,7 @@ public class ToggleDefaultsTests : DiagramNotePlaywrightBase
 
     private async Task NavigateLongNote(string fileName, Action<Kronikol.Reports.ReportToggleDefaults> configure)
     {
-        await Page.GotoAsync(ReportTestHelper.GenerateLongNoteToggleDefaultsReport(
+        await Page.GotoReportAsync(ReportTestHelper.GenerateLongNoteToggleDefaultsReport(
             TempDir, OutputDir, fileName, o => configure(o.TestRunReportToggleDefaults)));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
@@ -257,7 +257,7 @@ public class ToggleDefaultsTests : DiagramNotePlaywrightBase
     {
         // Flat option says JSON; the toggle group says YAML — the group wins (Q6), and the
         // zero-click render plus both dropdowns follow it.
-        await Page.GotoAsync(ReportTestHelper.GenerateToggleDefaultsReport(
+        await Page.GotoReportAsync(ReportTestHelper.GenerateToggleDefaultsReport(
             TempDir, OutputDir, "Toggle_NoteFormatGroup.html", o =>
             {
                 o.NotePayloadFormat = Kronikol.Reports.NotePayloadFormat.Json;
@@ -327,7 +327,7 @@ public class ToggleDefaultsTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Features_and_scenarios_expanded_defaults_open_everything_and_seed_the_buttons()
     {
-        await Page.GotoAsync(ReportTestHelper.GenerateToggleDefaultsReport(
+        await Page.GotoReportAsync(ReportTestHelper.GenerateToggleDefaultsReport(
             TempDir, OutputDir, "Toggle_Expanded.html", o =>
             {
                 o.TestRunReportToggleDefaults.FeaturesExpanded = true;
@@ -367,7 +367,7 @@ public class ToggleDefaultsTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Activity_diagram_tab_default_starts_on_the_activity_view()
     {
-        await Page.GotoAsync(ReportTestHelper.GenerateWholeTestFlowToggleDefaultsReport(
+        await Page.GotoReportAsync(ReportTestHelper.GenerateWholeTestFlowToggleDefaultsReport(
             TempDir, OutputDir, "Toggle_DiagramTabActivity.html",
             o => o.TestRunReportToggleDefaults.DiagramTab = Kronikol.Reports.DiagramTabKind.Activity));
         await Page.Locator("details.feature").First.WaitForAsync();
@@ -418,7 +418,7 @@ public class ToggleDefaultsTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Timeline_visible_default_opens_the_page_on_the_timeline_tab()
     {
-        await Page.GotoAsync(ReportTestHelper.GenerateComponentTimelineToggleDefaultsReport(
+        await Page.GotoReportAsync(ReportTestHelper.GenerateComponentTimelineToggleDefaultsReport(
             TempDir, OutputDir, "Toggle_TimelineVisible.html",
             o => o.TestRunReportToggleDefaults.ScenarioTimelineVisible = true));
         await Page.Locator(".report-tabs").WaitForAsync();
@@ -435,7 +435,7 @@ public class ToggleDefaultsTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Component_diagram_visible_default_opens_the_page_on_the_components_tab()
     {
-        await Page.GotoAsync(ReportTestHelper.GenerateComponentTimelineToggleDefaultsReport(
+        await Page.GotoReportAsync(ReportTestHelper.GenerateComponentTimelineToggleDefaultsReport(
             TempDir, OutputDir, "Toggle_ComponentVisible.html",
             o => o.TestRunReportToggleDefaults.ComponentDiagramVisible = true));
         await Page.Locator(".report-tabs").WaitForAsync();
@@ -448,7 +448,7 @@ public class ToggleDefaultsTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Both_panels_configured_visible_the_timeline_wins()
     {
-        await Page.GotoAsync(ReportTestHelper.GenerateComponentTimelineToggleDefaultsReport(
+        await Page.GotoReportAsync(ReportTestHelper.GenerateComponentTimelineToggleDefaultsReport(
             TempDir, OutputDir, "Toggle_BothPanels.html", o =>
             {
                 o.TestRunReportToggleDefaults.ScenarioTimelineVisible = true;
@@ -471,7 +471,7 @@ public class ToggleDefaultsTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Steps_section_closed_default_collapses_steps_but_search_reveal_opens_them()
     {
-        await Page.GotoAsync(ReportTestHelper.GenerateToggleDefaultsReport(
+        await Page.GotoReportAsync(ReportTestHelper.GenerateToggleDefaultsReport(
             TempDir, OutputDir, "Toggle_StepsSectionClosed.html",
             o => o.TestRunReportToggleDefaults.StepsSectionOpen = false));
         await Page.Locator("details.feature").First.WaitForAsync();
@@ -495,7 +495,7 @@ public class ToggleDefaultsTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Diagrams_section_closed_default_collapses_the_diagram_disclosure()
     {
-        await Page.GotoAsync(ReportTestHelper.GenerateToggleDefaultsReport(
+        await Page.GotoReportAsync(ReportTestHelper.GenerateToggleDefaultsReport(
             TempDir, OutputDir, "Toggle_DiagramsSectionClosed.html",
             o => o.TestRunReportToggleDefaults.DiagramsSectionOpen = false));
         await Page.Locator("details.feature").First.WaitForAsync();
@@ -512,7 +512,7 @@ public class ToggleDefaultsTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Features_summary_open_default_opens_the_summary_table()
     {
-        await Page.GotoAsync(ReportTestHelper.GenerateToggleDefaultsReport(
+        await Page.GotoReportAsync(ReportTestHelper.GenerateToggleDefaultsReport(
             TempDir, OutputDir, "Toggle_FeaturesSummaryOpen.html",
             o => o.TestRunReportToggleDefaults.FeaturesSummaryOpen = true));
         await Page.Locator("details.feature").First.WaitForAsync(new() { State = WaitForSelectorState.Attached });

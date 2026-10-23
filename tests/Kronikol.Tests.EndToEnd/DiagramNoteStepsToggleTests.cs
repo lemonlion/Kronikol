@@ -13,7 +13,7 @@ public class DiagramNoteStepsToggleTests : DiagramNotePlaywrightBase
     public async Task Steps_remain_hidden_after_collapsing_note()
     {
         // Navigate to report with step delimiters + notes
-        await Page.GotoAsync(GenerateStepDelimitersAndNotesReport("StepsHiddenCollapse.html"));
+        await Page.GotoReportAsync(GenerateStepDelimitersAndNotesReport("StepsHiddenCollapse.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -51,7 +51,7 @@ public class DiagramNoteStepsToggleTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Steps_remain_hidden_after_expanding_collapsed_note()
     {
-        await Page.GotoAsync(GenerateStepDelimitersAndNotesReport("StepsHiddenExpand.html"));
+        await Page.GotoReportAsync(GenerateStepDelimitersAndNotesReport("StepsHiddenExpand.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();

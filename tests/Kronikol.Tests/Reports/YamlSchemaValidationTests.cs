@@ -45,8 +45,8 @@ public class YamlSchemaValidationTests
 
     internal static List<string> ValidateYaml(string schemaPath, string reportPath)
     {
-        var schema = JsonSchema.FromText(File.ReadAllText(schemaPath));
-        var instance = YamlToJson(File.ReadAllText(reportPath));
+        var schema = JsonSchema.FromText(ReportHtml.Read(schemaPath));
+        var instance = YamlToJson(ReportHtml.Read(reportPath));
 
         using var document = JsonDocument.Parse(instance.ToJsonString());
         var result = schema.Evaluate(document.RootElement, new EvaluationOptions

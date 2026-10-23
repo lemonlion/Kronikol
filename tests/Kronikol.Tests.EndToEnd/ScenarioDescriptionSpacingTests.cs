@@ -46,7 +46,7 @@ public class ScenarioDescriptionSpacingTests : PlaywrightTestBase
     [Fact]
     public async Task Scenario_description_has_one_em_of_margin_above_and_below()
     {
-        await Page.GotoAsync(GenerateDescriptionReport("ScenarioDescMargins.html"));
+        await Page.GotoReportAsync(GenerateDescriptionReport("ScenarioDescMargins.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandAll();
 
@@ -62,7 +62,7 @@ public class ScenarioDescriptionSpacingTests : PlaywrightTestBase
     [Fact]
     public async Task Parameterized_detail_panel_description_has_the_same_margins()
     {
-        await Page.GotoAsync(GenerateDescriptionReport("ScenarioDescParamMargins.html"));
+        await Page.GotoReportAsync(GenerateDescriptionReport("ScenarioDescParamMargins.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandAll();
 
@@ -94,7 +94,7 @@ public class ScenarioDescriptionSpacingTests : PlaywrightTestBase
     [Fact]
     public async Task Description_actually_paints_a_gap_to_the_elements_around_it()
     {
-        await Page.GotoAsync(GenerateDescriptionReport("ScenarioDescPaintedGap.html"));
+        await Page.GotoReportAsync(GenerateDescriptionReport("ScenarioDescPaintedGap.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandAll();
         await Page.Locator(".scenario-description").First.WaitForAsync(new() { Timeout = 5000 });

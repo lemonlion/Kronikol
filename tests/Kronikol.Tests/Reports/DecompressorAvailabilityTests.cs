@@ -45,7 +45,7 @@ public class DecompressorAvailabilityTests
             null, "DecompressorInlineSvg.html", "Test", includeTestRunData: true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.Local,
             inlineSvgRendering: true);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
 
         Assert.True(References(content), "expected the context-menu script (which calls decompressGzipBase64) to be emitted for InlineSvg");
         Assert.True(Defines(content), "InlineSvg report calls decompressGzipBase64 but never defines it (ReferenceError)");
@@ -60,7 +60,7 @@ public class DecompressorAvailabilityTests
             null, "DecompressorIflowImg.html", "Test", includeTestRunData: true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.Server,
             internalFlowTracking: true);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
 
         Assert.True(References(content), "expected the internal-flow popup script (which calls decompressGzipBase64) to be emitted");
         Assert.True(Defines(content), "internal-flow report calls decompressGzipBase64 but never defines it (ReferenceError)");
@@ -83,7 +83,7 @@ public class DecompressorAvailabilityTests
                 ComponentDiagramOptions = new Kronikol.ComponentDiagram.ComponentDiagramOptions { FileName = "DecompressorCompDiagram" },
                 PlantUmlRendering = PlantUmlRendering.BrowserJs
             });
-        var content = File.ReadAllText(result.HtmlFilePath);
+        var content = ReportHtml.Read(result.HtmlFilePath);
 
         Assert.True(References(content), "expected the browser render script (which calls decompressGzipBase64) to be emitted");
         Assert.True(Defines(content), "standalone component diagram page calls decompressGzipBase64 but never defines it");
@@ -119,7 +119,7 @@ public class DecompressorAvailabilityTests
             DateTime.UtcNow, DateTime.UtcNow,
             null, "DecompressorBrowserJs.html", "Test", includeTestRunData: true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
 
         Assert.True(Defines(content));
     }

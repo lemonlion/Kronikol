@@ -37,7 +37,7 @@ public class NonSecureOriginTests : PlaywrightTestBase
         {
             await Context.GrantPermissionsAsync(["clipboard-read", "clipboard-write"], new() { Origin = Server.UrlOf("").TrimEnd('/') });
             var reader = await PlaywrightTestBase.OpenPageAsync(Context);
-            await reader.GotoAsync(Server.UrlOf("blank.html"));
+            await reader.GotoReportAsync(Server.UrlOf("blank.html"));
             return reader;
         }
 
@@ -63,7 +63,7 @@ public class NonSecureOriginTests : PlaywrightTestBase
         page.Console += (_, m) => { if (m.Type == "error") lock (lan.ConsoleErrors) lan.ConsoleErrors.Add(m.Text); };
         page.PageError += (_, error) => { lock (lan.PageErrors) lan.PageErrors.Add(error); };
 
-        await page.GotoAsync(server.UrlOf(Path.GetFileName(file), LanHost));
+        await page.GotoReportAsync(server.UrlOf(Path.GetFileName(file), LanHost));
 
         // The control: the page is the case these facts are for, with none of the secure context's APIs.
         var origin = await page.EvaluateAsync<JsonElement>(
@@ -215,7 +215,7 @@ public class NonSecureOriginTests : PlaywrightTestBase
 
         // The control: the same report from the loopback address, a secure context, offers them.
         var loopback = await OpenPageAsync(lan.Context);
-        await loopback.GotoAsync(lan.Server.UrlOf("LanHostImageCopies.html"));
+        await loopback.GotoReportAsync(lan.Server.UrlOf("LanHostImageCopies.html"));
         var loopbackItems = await MenuItems(loopback, await FirstDrawnDiagram(loopback));
         Assert.Contains("Copy as PNG", loopbackItems);
         Assert.Contains("Copy as PNG (no transparency)", loopbackItems);

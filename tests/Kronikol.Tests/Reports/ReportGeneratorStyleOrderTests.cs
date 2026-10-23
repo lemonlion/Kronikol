@@ -56,7 +56,7 @@ public class ReportGeneratorStyleOrderTests : IDisposable
             stylesheet, Path.Combine(_dir, $"StyleOrder-{Guid.NewGuid():N}.html"), "Style order", includeTestRunData: false,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs,
             internalFlowTracking: internalFlowTracking, customCss: customCss);
-        return File.ReadAllText(path);
+        return ReportHtml.Read(path);
     }
 
     private static int EndOf(string html, string sheet)
@@ -136,7 +136,7 @@ public class ReportGeneratorStyleOrderTests : IDisposable
         {
             var path = Path.Combine(dir, name);
             Assert.True(File.Exists(path), $"{name} was not written");
-            return File.ReadAllText(path);
+            return ReportHtml.Read(path);
         }
         return (Read("Specifications.html"), Read("TestRunReport.html"));
     }

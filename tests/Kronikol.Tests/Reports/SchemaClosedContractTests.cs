@@ -98,7 +98,7 @@ public class SchemaClosedContractTests : IDisposable
         Assert.Empty(SchemaValidationTests.Validate(schemaPath, reportPath));
 
         var mutated = Path.Combine(_dir, $"Mutated_{suffix}.json");
-        File.WriteAllText(mutated, AddKey(File.ReadAllText(reportPath), where, key));
+        File.WriteAllText(mutated, AddKey(ReportHtml.Read(reportPath), where, key));
 
         Assert.NotEmpty(SchemaValidationTests.Validate(schemaPath, mutated));
     }

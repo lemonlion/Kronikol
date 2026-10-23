@@ -45,12 +45,12 @@ public class MergeRefusesBeforeItWritesTests : IDisposable
         WriteShard("runner1.json", "Orders", "r1s1", "Place order");
         WriteShard("runner2.json", "Inventory", "r2s1", "Adjust stock");
         var shard = Path.Combine(_dir, "runner1.json");
-        var before = File.ReadAllText(shard);
+        var before = ReportHtml.Read(shard);
 
         var (exit, _, error) = Merge(Path.Combine(_dir, output));
 
         Assert.Equal(2, exit);
-        Assert.Equal(before, File.ReadAllText(shard));
+        Assert.Equal(before, ReportHtml.Read(shard));
         Assert.Contains("runner1.json", error, StringComparison.Ordinal);
     }
 
@@ -63,12 +63,12 @@ public class MergeRefusesBeforeItWritesTests : IDisposable
     {
         WriteShard("runner1.json", "Orders", "r1s1", "Place order");
         var shard = Path.Combine(_dir, "runner1.json");
-        var before = File.ReadAllText(shard);
+        var before = ReportHtml.Read(shard);
 
         var (exit, _, error) = Merge(shard, "--no-json");
 
         Assert.Equal(2, exit);
-        Assert.Equal(before, File.ReadAllText(shard));
+        Assert.Equal(before, ReportHtml.Read(shard));
         Assert.NotEqual("", error.Trim());
     }
 

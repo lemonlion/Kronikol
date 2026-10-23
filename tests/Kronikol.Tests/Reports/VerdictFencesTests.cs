@@ -28,7 +28,9 @@ namespace Kronikol.Tests.Reports;
 /// stands, the legacy and or or it leaves goes with it, and a tag expression reads both sides of each operator and the
 /// brackets written against its tags.
 /// 5.5.4 changed the search index script outside its fences (plans/HTML_COMPRESSION_PLAN.md F2): its worker builds the
-/// streams it gunzips from the bytes, where it read them out of a Blob, which WebKit refuses inside a worker.
+/// streams it gunzips from the bytes, where it read them out of a Blob, which WebKit refuses inside a worker. 5.6.0 changed
+/// it outside its fences too (plans/HTML_COMPRESSION_PLAN.md R1, 4.4): on a compressed page the worker reads a diagram's
+/// source from its piece of the page's zstd frames, and every other item as it is, where it gunzipped each.
 /// </summary>
 public class VerdictFencesTests
 {
@@ -38,7 +40,7 @@ public class VerdictFencesTests
         { "advanced-search.js", "bd95ec17e218564784d4868f54985392751c51772ed5ee593cb63fbb8f2c9d34", "f8e26b59e269fcebd3bfc36c251ac06264946049b46c8157cd24740a98fc0c7c" },
         { "report-scenario-feature-map-helper.js", "d3d00e12dfb1ae86fce149860f5ffbe970a43af27dd8b80c0a39f3438a187202", "235ffa5649c597fa43429959c0eacc0d90f7bbcdb5f7a740b6636a5ecd076caa" },
         { "report-search-function.js", "dbdfcbe5ea893e6dd89a1412c8e5dd1ff423afc22dccc927ff686c1544e84daf", "e8a0c76ac338519d83d2f84163d29f1761deb1c5e9f2fba880fc0239925401ac" },
-        { "report-search-index.js", "12e4ec5d2a5093f86725aebb97509e6331591f8619a42338e0830425d6009791", "f4178d54d8c962098cf84fa3f6c74aefc88f28cf07a37ca56f7c76cec305f17a" },
+        { "report-search-index.js", "a1cf2d89b91cfa441e97bd6976fe98af7d6fb239225925a3881210cdc152d380", "6b0afff5359560acdb2e9b9de83ead6cec0d8368cbeb68acf12855bbb9d1a3ef" },
     };
 
     private static string Sha256(string text) =>

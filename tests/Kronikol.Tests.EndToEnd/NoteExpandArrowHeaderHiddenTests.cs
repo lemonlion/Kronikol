@@ -35,7 +35,7 @@ public class NoteExpandArrowHeaderHiddenTests : DiagramNotePlaywrightBase
 
     private async Task NavigateAndSetup(string fileName)
     {
-        await Page.GotoAsync(GenerateReport(fileName));
+        await Page.GotoReportAsync(GenerateReport(fileName));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();

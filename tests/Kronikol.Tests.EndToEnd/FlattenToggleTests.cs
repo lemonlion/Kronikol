@@ -96,7 +96,7 @@ public class FlattenToggleTests : PlaywrightTestBase
     [Fact]
     public async Task Flatten_toggle_button_renders_with_minus_when_flat_is_default()
     {
-        await Page.GotoAsync(GenerateFlatReport("FlatToggleRender.html"));
+        await Page.GotoReportAsync(GenerateFlatReport("FlatToggleRender.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFeatures();
 
@@ -114,7 +114,7 @@ public class FlattenToggleTests : PlaywrightTestBase
     [Fact]
     public async Task Flat_table_visible_by_default_grouped_hidden()
     {
-        await Page.GotoAsync(GenerateFlatReport("FlatDefaultVisibility.html"));
+        await Page.GotoReportAsync(GenerateFlatReport("FlatDefaultVisibility.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFeatures();
 
@@ -133,7 +133,7 @@ public class FlattenToggleTests : PlaywrightTestBase
     [Fact]
     public async Task Toggle_click_shows_grouped_table_hides_flat()
     {
-        await Page.GotoAsync(GenerateFlatReport("FlatToggleClick.html"));
+        await Page.GotoReportAsync(GenerateFlatReport("FlatToggleClick.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFeatures();
 
@@ -161,7 +161,7 @@ public class FlattenToggleTests : PlaywrightTestBase
     [Fact]
     public async Task Toggle_twice_restores_flat_view()
     {
-        await Page.GotoAsync(GenerateFlatReport("FlatToggleTwice.html"));
+        await Page.GotoReportAsync(GenerateFlatReport("FlatToggleTwice.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFeatures();
 
@@ -186,7 +186,7 @@ public class FlattenToggleTests : PlaywrightTestBase
     [Fact]
     public async Task Flat_table_shows_original_column_headers()
     {
-        await Page.GotoAsync(GenerateFlatReport("FlatHeaders.html"));
+        await Page.GotoReportAsync(GenerateFlatReport("FlatHeaders.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFeatures();
 
@@ -213,7 +213,7 @@ public class FlattenToggleTests : PlaywrightTestBase
     [Fact]
     public async Task Flat_table_rows_contain_scalar_values()
     {
-        await Page.GotoAsync(GenerateFlatReport("FlatScalarValues.html"));
+        await Page.GotoReportAsync(GenerateFlatReport("FlatScalarValues.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFeatures();
 
@@ -237,7 +237,7 @@ public class FlattenToggleTests : PlaywrightTestBase
     [Fact]
     public async Task Active_row_syncs_when_toggling()
     {
-        await Page.GotoAsync(GenerateFlatReport("FlatRowSync.html"));
+        await Page.GotoReportAsync(GenerateFlatReport("FlatRowSync.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFeatures();
 
@@ -263,7 +263,7 @@ public class FlattenToggleTests : PlaywrightTestBase
     [Fact]
     public async Task Clicking_flat_row_switches_detail_panel()
     {
-        await Page.GotoAsync(GenerateFlatReport("FlatRowDetail.html"));
+        await Page.GotoReportAsync(GenerateFlatReport("FlatRowDetail.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFeatures();
 
@@ -289,7 +289,7 @@ public class FlattenToggleTests : PlaywrightTestBase
     [Fact]
     public async Task Search_does_not_match_hidden_grouped_table_rows()
     {
-        await Page.GotoAsync(GenerateFlatReport("FlatSearchSkip.html"));
+        await Page.GotoReportAsync(GenerateFlatReport("FlatSearchSkip.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         // Search for a value while grouped table is hidden (flat is default)
@@ -312,7 +312,7 @@ public class FlattenToggleTests : PlaywrightTestBase
     [Fact]
     public async Task Wrapper_allows_horizontal_scrolling()
     {
-        await Page.GotoAsync(GenerateFlatReport("FlatScroll.html"));
+        await Page.GotoReportAsync(GenerateFlatReport("FlatScroll.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFeatures();
 

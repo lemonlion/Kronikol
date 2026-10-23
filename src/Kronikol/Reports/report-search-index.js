@@ -317,6 +317,46 @@ function kronSearchWorkerMain(self) {
     function gunzipToBytes(b64) {
         return new Response(gunzipStream(b64)).arrayBuffer().then(function(buf) { return new Uint8Array(buf); });
     }
+    // A compressed report (plans/HTML_COMPRESSION_PLAN.md 4.4) holds every item raw, and each diagram source as a token
+    // (U+0001 and its number) read from the diagram sources' pieces, which the page posts compressed with the index; the
+    // decoder (self.__kronikolZstd) goes ahead of this worker's source. A piece is decoded the first time a check needs
+    // one of its diagrams, and at most two are kept. A value still in gzip (H4sI), as a fragment merge took from an older
+    // data file can be, is read as before; so is every value of a plain page.
+    var frames = null;
+    function setFrames(f) {
+        frames = { pieces: f.pieces, pieceOf: [], startOf: [], endOf: [], cache: [] };
+        for (var p = 0; p < f.index.length; p++) {
+            var at = 0;
+            for (var k = 0; k < f.index[p].length; k++) {
+                frames.pieceOf.push(p); frames.startOf.push(at); at += f.index[p][k]; frames.endOf.push(at);
+            }
+        }
+    }
+    function framePiece(p) {
+        for (var i = 0; i < frames.cache.length; i++) {
+            if (frames.cache[i].p === p) {
+                var hit = frames.cache.splice(i, 1)[0];
+                frames.cache.unshift(hit);
+                return hit.promise;
+            }
+        }
+        var piece = frames.pieces[p];
+        if (!piece) return Promise.reject(new Error('the diagram sources of piece ' + (p + 1) + ' are not in this file'));
+        var entry = { p: p, promise: self.__kronikolZstd.decode(new Uint8Array(piece.bytes), piece.length, piece.codec) };
+        frames.cache.unshift(entry);
+        if (frames.cache.length > 2) frames.cache.length = 2;
+        return entry.promise;
+    }
+    function itemText(value) {
+        if (!frames || (typeof value === 'string' && value.lastIndexOf('H4sI', 0) === 0)) return gunzipToText(value);
+        if (typeof value === 'string' && value.charCodeAt(0) === 1) {
+            var n = Number(value.slice(1));
+            return framePiece(frames.pieceOf[n]).then(function(bytes) {
+                return new TextDecoder('utf-8').decode(bytes.subarray(frames.startOf[n], frames.endOf[n]));
+            });
+        }
+        return Promise.resolve(value);
+    }
     function cachePut(i, corpus) {
         corpusCache.set(i, corpus);
         corpusCacheBytes += corpus.length * 2;
@@ -337,14 +377,14 @@ function kronSearchWorkerMain(self) {
         var k;
         for (k = 0; k < item.diagramIds.length; k++) {
             var z = pumlMap && pumlMap[item.diagramIds[k]];
-            if (z) parts.push(kronNormalizeForSearch(await gunzipToText(z)));
+            if (z) parts.push(kronNormalizeForSearch(await itemText(z)));
         }
         for (k = 0; k < item.plantumlZ.length; k++)
-            parts.push(kronNormalizeForSearch(await gunzipToText(item.plantumlZ[k])));
+            parts.push(kronNormalizeForSearch(await itemText(item.plantumlZ[k])));
         for (k = 0; k < item.rawTexts.length; k++)
             parts.push(kronNormalizeForSearch(item.rawTexts[k]));
         for (k = 0; k < item.flameZ.length; k++)
-            parts.push(kronNormalizeForSearch(kronExtractFlameText(await gunzipToText(item.flameZ[k]))));
+            parts.push(kronNormalizeForSearch(kronExtractFlameText(await itemText(item.flameZ[k]))));
         var corpus = parts.join('\n');
         cachePut(i, corpus);
         return corpus;
@@ -388,6 +428,7 @@ function kronSearchWorkerMain(self) {
         if (msg.type === 'init') {
             items = msg.items;
             pumlMap = msg.pumlDataJson ? JSON.parse(msg.pumlDataJson) : null;
+            if (msg.frames) setFrames(msg.frames);
             gunzipToBytes(msg.indexB64).then(function(bytes) {
                 ix = kronDecodeSearchIndex(bytes);
                 self.postMessage({ type: 'anchors', anchors: ix.anchors, buckets: ix.buckets, docCount: ix.docCount });
@@ -517,6 +558,8 @@ function kronSearchWorkerMain(self) {
             kronSearchWorkerMain
         ];
         var src = fns.map(function(f) { return f.toString(); }).join('\n\n') + '\n\nkronSearchWorkerMain(self);\n';
+        // A compressed report's decoder goes ahead, for the diagram sources' pieces (plans/HTML_COMPRESSION_PLAN.md 4.4).
+        if (window.__kronikolFrames && window.__kronikolLoader) src = window.__kronikolLoader.decoder + '\n;\n' + src;
         var url = URL.createObjectURL(new Blob([src], { type: 'application/javascript' }));
         var worker = new Worker(url);
         URL.revokeObjectURL(url);
@@ -577,7 +620,11 @@ function kronSearchWorkerMain(self) {
             type: 'init',
             indexB64: indexB64,
             pumlDataJson: pumlScript ? pumlScript.textContent : null,
-            items: collectItemMeta()
+            items: collectItemMeta(),
+            frames: window.__kronikolFrames ? {
+                pieces: window.__kronikolFrames.pieces.map(function(p) { return p ? { bytes: p.bytes, length: p.length, codec: p.codec } : null; }),
+                index: window.__kronikolFrames.index
+            } : null
         });
     }
 

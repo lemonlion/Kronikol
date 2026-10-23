@@ -76,7 +76,7 @@ public class ComponentsTabHtmlTests : IDisposable
                 ]
             }
         ], DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow, options);
-        return (File.ReadAllText(Path.Combine(_dir, "TestRunReport.html")), File.ReadAllText(Path.Combine(_dir, "ComponentDiagram.html")));
+        return (ReportHtml.Read(Path.Combine(_dir, "TestRunReport.html")), ReportHtml.Read(Path.Combine(_dir, "ComponentDiagram.html")));
     }
 
     private static IDocument Parse(string html) =>
@@ -271,7 +271,7 @@ public class ComponentsTabHtmlTests : IDisposable
         var path = ReportGenerator.GenerateHtmlReport([], [new Feature { DisplayName = "F", Scenarios = [new Scenario { Id = "s", DisplayName = "S", Result = ExecutionResult.Passed }] }],
             DateTime.UtcNow, DateTime.UtcNow, null, Path.Combine(_dir, "SourceAlone.html"), "Test", true,
             plantUmlRendering: PlantUmlRendering.BrowserJs, componentDiagramPlantUml: source);
-        var html = File.ReadAllText(path);
+        var html = ReportHtml.Read(path);
         var page = Parse(html);
 
         Assert.Equal("Component Diagram ", page.QuerySelector("#component-diagram > .timeline-header")!.ChildNodes[0].TextContent);
@@ -316,7 +316,7 @@ public class ComponentsTabHtmlTests : IDisposable
                 ComponentRelationships = ComponentDiagramGenerator.ExtractRelationships(calls),
                 Interactions = interactions
             }, Path.Combine(_dir, $"Merged_{Guid.NewGuid():N}.html"));
-            return Parse(File.ReadAllText(written));
+            return Parse(ReportHtml.Read(written));
         }
 
         var withCalls = Render(calls);

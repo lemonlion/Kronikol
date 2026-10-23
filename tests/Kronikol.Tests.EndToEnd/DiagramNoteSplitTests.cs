@@ -7,7 +7,7 @@ public class DiagramNoteSplitTests : DiagramNotePlaywrightBase
 
     private async Task ExpandAndRenderSplitDiagram(string fileName)
     {
-        await Page.GotoAsync(GenerateSplitDiagramReport(fileName));
+        await Page.GotoReportAsync(GenerateSplitDiagramReport(fileName));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -159,7 +159,7 @@ public class DiagramNoteSplitTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Three_diagram_split_continuation_note_has_hover_rects()
     {
-        await Page.GotoAsync(GenerateThreeDiagramSplitReport("ThreeSplitHoverRects.html"));
+        await Page.GotoReportAsync(GenerateThreeDiagramSplitReport("ThreeSplitHoverRects.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -172,7 +172,7 @@ public class DiagramNoteSplitTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Three_diagram_split_continuation_note_has_toggle_icons()
     {
-        await Page.GotoAsync(GenerateThreeDiagramSplitReport("ThreeSplitToggleIcons.html"));
+        await Page.GotoReportAsync(GenerateThreeDiagramSplitReport("ThreeSplitToggleIcons.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -185,7 +185,7 @@ public class DiagramNoteSplitTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Three_diagram_split_findNoteGroups_matches_noteBlocks_on_all_diagrams()
     {
-        await Page.GotoAsync(GenerateThreeDiagramSplitReport("ThreeSplitGroupBlockMatch.html"));
+        await Page.GotoReportAsync(GenerateThreeDiagramSplitReport("ThreeSplitGroupBlockMatch.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -203,7 +203,7 @@ public class DiagramNoteSplitTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Three_diagram_split_all_diagrams_with_notes_have_hover_rects()
     {
-        await Page.GotoAsync(GenerateThreeDiagramSplitReport("ThreeSplitAllHoverRects.html"));
+        await Page.GotoReportAsync(GenerateThreeDiagramSplitReport("ThreeSplitAllHoverRects.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -241,7 +241,7 @@ public class DiagramNoteSplitTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Three_diagram_split_dblclick_on_continuation_note_cycles_state()
     {
-        await Page.GotoAsync(GenerateThreeDiagramSplitReport("ThreeSplitDblClickCont.html"));
+        await Page.GotoReportAsync(GenerateThreeDiagramSplitReport("ThreeSplitDblClickCont.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -286,7 +286,7 @@ public class DiagramNoteSplitTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Three_diagram_split_hover_on_continuation_note_shows_buttons()
     {
-        await Page.GotoAsync(GenerateThreeDiagramSplitReport("ThreeSplitHoverContNote.html"));
+        await Page.GotoReportAsync(GenerateThreeDiagramSplitReport("ThreeSplitHoverContNote.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -315,7 +315,7 @@ public class DiagramNoteSplitTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Split_diagram_note_click_does_not_cause_layout_shift()
     {
-        await Page.GotoAsync(GenerateFragmentedDiagramReport("SplitNoLayoutShift.html"));
+        await Page.GotoReportAsync(GenerateFragmentedDiagramReport("SplitNoLayoutShift.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -372,7 +372,7 @@ public class DiagramNoteSplitTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Split_diagram_note_click_keeps_svg_visible_during_rerender()
     {
-        await Page.GotoAsync(GenerateFragmentedDiagramReport("SplitSvgVisibleDuringRerender.html"));
+        await Page.GotoReportAsync(GenerateFragmentedDiagramReport("SplitSvgVisibleDuringRerender.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -436,7 +436,7 @@ public class DiagramNoteSplitTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Split_diagram_hover_buttons_present_after_note_toggle_rerender()
     {
-        await Page.GotoAsync(GenerateFragmentedDiagramReport("SplitHoverAfterRerender.html"));
+        await Page.GotoReportAsync(GenerateFragmentedDiagramReport("SplitHoverAfterRerender.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();

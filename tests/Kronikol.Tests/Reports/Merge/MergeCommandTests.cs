@@ -49,7 +49,7 @@ public class MergeCommandTests
 
             Assert.Equal(0, exit);
             Assert.True(File.Exists(output), "Combined HTML should be written. Stderr: " + errWriter);
-            var html = File.ReadAllText(output);
+            var html = ReportHtml.Read(output);
             Assert.Contains("Combined CLI", html);
             Assert.Contains("Orders", html);
             Assert.Contains("Inventory", html);
@@ -150,7 +150,7 @@ public class MergeCommandTests
             var exit = MergeCommand.Run([dir, "-o", output, "--no-json"], outWriter, errWriter);
 
             Assert.True(exit == 0, errWriter.ToString());
-            Assert.Contains("Place order", File.ReadAllText(output));
+            Assert.Contains("Place order", ReportHtml.Read(output));
             Assert.Contains("skipped 2 files Kronikol writes beside a report (History.run.json, ctrf-report.json)", errWriter.ToString());
         }
         finally
@@ -218,17 +218,17 @@ public class MergeCommandTests
             Assert.True(exit == 0, errWriter.ToString());
             // The merged report is a default report: since 5.0.0 what --history read is its History tab, and nothing of
             // it is in the features (plans/OPTION_C_PLAN.md S3). It is on the labs page beside it too, named after it.
-            var combined = File.ReadAllText(output);
+            var combined = ReportHtml.Read(output);
             Assert.Contains("<details id=\"history-section\" class=\"history-section\" open><summary class=\"h2\" tabindex=\"-1\" title=\"This run against the earlier runs on the same branch: what is failing, flaky, fixed, slower, new or gone\">", combined);
             Assert.DoesNotContain("data-history-verdicts=\"", combined);
             Assert.DoesNotContain("<span class=\"history-sparkline\"", combined);
-            var page = File.ReadAllText(Path.Combine(dir, "Combined.labs.html"));
+            var page = ReportHtml.Read(Path.Combine(dir, "Combined.labs.html"));
             Assert.Contains("<details id=\"history-section\" class=\"history-section\" open>", page);
             Assert.Contains("<span class=\"history-verdict history-verdict-broke\"", page);
             Assert.Contains("<span class=\"history-sparkline\"", page);
             Assert.Contains("<a class=\"history-link\" href=\"Combined.html#sid-", page);
             Assert.Contains("Combined.labs.html", outWriter.ToString());
-            var digest = File.ReadAllText(Path.Combine(dir, "Failures.md"));
+            var digest = ReportHtml.Read(Path.Combine(dir, "Failures.md"));
             Assert.Contains("**History:**", digest);
             Assert.Contains("**broke**", digest);
             Assert.Contains("history: 1 broke", outWriter.ToString());
@@ -236,7 +236,7 @@ public class MergeCommandTests
 
             var plain = Path.Combine(dir, "Plain.html");
             Assert.Equal(0, MergeCommand.Run([Path.Combine(dir, "shards"), "-o", plain], new StringWriter(), new StringWriter()));
-            Assert.DoesNotContain("history-", File.ReadAllText(plain));
+            Assert.DoesNotContain("history-", ReportHtml.Read(plain));
             Assert.False(File.Exists(Path.Combine(dir, "Plain.labs.html")), "a merge with no history and no diagnostics wrote a page");
 
             // On a pull request build the merge reads against the branch the pull request targets, as the

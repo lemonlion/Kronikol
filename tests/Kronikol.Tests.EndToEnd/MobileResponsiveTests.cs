@@ -18,7 +18,7 @@ public class MobileResponsiveTests : PlaywrightTestBase
     [Fact]
     public async Task Report_has_viewport_meta_tag()
     {
-        await Page.GotoAsync(GenerateReport("MobileViewport.html"));
+        await Page.GotoReportAsync(GenerateReport("MobileViewport.html"));
         var meta = Page.Locator("meta[name='viewport']");
         var content = await meta.GetAttributeAsync("content");
         Assert.Contains("width=device-width", content);
@@ -27,7 +27,7 @@ public class MobileResponsiveTests : PlaywrightTestBase
     [Fact]
     public async Task Report_has_doctype_and_charset()
     {
-        await Page.GotoAsync(GenerateReport("MobileDoctype.html"));
+        await Page.GotoReportAsync(GenerateReport("MobileDoctype.html"));
         var charset = Page.Locator("meta[charset]");
         Assert.Equal("utf-8", await charset.GetAttributeAsync("charset"));
     }
@@ -37,7 +37,7 @@ public class MobileResponsiveTests : PlaywrightTestBase
     [Fact]
     public async Task Run_band_fits_a_phone_with_a_smaller_ring()
     {
-        await Page.GotoAsync(GenerateReport("MobileHeaderStack.html"));
+        await Page.GotoReportAsync(GenerateReport("MobileHeaderStack.html"));
         var band = Page.Locator(".run-band");
         await band.WaitForAsync(new() { Timeout = 5000 });
         var right = await band.EvaluateAsync<double>("e => e.getBoundingClientRect().right");
@@ -50,7 +50,7 @@ public class MobileResponsiveTests : PlaywrightTestBase
     [Fact]
     public async Task Toolbar_stacks_vertically_on_mobile()
     {
-        await Page.GotoAsync(GenerateReport("MobileToolbar.html"));
+        await Page.GotoReportAsync(GenerateReport("MobileToolbar.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         var toolbar = Page.Locator(".toolbar-row");
@@ -63,7 +63,7 @@ public class MobileResponsiveTests : PlaywrightTestBase
     [Fact]
     public async Task Page_does_not_overflow_horizontally()
     {
-        await Page.GotoAsync(GenerateReport("MobileOverflow.html"));
+        await Page.GotoReportAsync(GenerateReport("MobileOverflow.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         var viewportWidth = await Page.EvaluateAsync<long>("() => window.innerWidth");
@@ -78,7 +78,7 @@ public class MobileResponsiveTests : PlaywrightTestBase
     [Fact]
     public async Task Filter_row_stacks_vertically_on_mobile()
     {
-        await Page.GotoAsync(GenerateReport("MobileFilters.html"));
+        await Page.GotoReportAsync(GenerateReport("MobileFilters.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         // Expand the collapsed filter section first
@@ -95,7 +95,7 @@ public class MobileResponsiveTests : PlaywrightTestBase
     [Fact]
     public async Task Feature_summary_table_scrolls_horizontally()
     {
-        await Page.GotoAsync(GenerateReport("MobileTable.html"));
+        await Page.GotoReportAsync(GenerateReport("MobileTable.html"));
         // 5.0.0: the table is the Features tab's Summary view (plans/OPTION_C_PLAN.md S4)
         await Page.Locator("#view-summary").ClickAsync();
 
@@ -109,7 +109,7 @@ public class MobileResponsiveTests : PlaywrightTestBase
     [Fact]
     public async Task Filtering_box_takes_full_width_on_mobile()
     {
-        await Page.GotoAsync(GenerateReport("MobileFilterBox.html"));
+        await Page.GotoReportAsync(GenerateReport("MobileFilterBox.html"));
         var filterBox = Page.Locator(".filtering-box");
         await filterBox.WaitForAsync(new() { Timeout = 5000 });
 
@@ -127,7 +127,7 @@ public class MobileResponsiveTests : PlaywrightTestBase
     [Fact]
     public async Task Jump_to_failure_button_visible_on_mobile()
     {
-        await Page.GotoAsync(GenerateReport("MobileJump.html"));
+        await Page.GotoReportAsync(GenerateReport("MobileJump.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         var buttons = Page.Locator(".jump-to-failure");
@@ -148,7 +148,7 @@ public class MobileResponsiveTests : PlaywrightTestBase
     [Fact]
     public async Task Desktop_layout_unaffected_at_1920_width()
     {
-        await Page.GotoAsync(GenerateReport("MobileDesktopCheck.html"));
+        await Page.GotoReportAsync(GenerateReport("MobileDesktopCheck.html"));
         await Page.Locator(".run-band").WaitForAsync(new() { Timeout = 5000 });
 
         // At 375px the ring is the phone's 52px (5.0.0: the run band in place of the 4.x header row)
@@ -157,7 +157,7 @@ public class MobileResponsiveTests : PlaywrightTestBase
 
         // Resize viewport to desktop
         await Page.SetViewportSizeAsync(1920, 1080);
-        await Page.ReloadAsync();
+        await Page.ReloadReportAsync();
         await Page.Locator(".run-band").WaitForAsync(new() { Timeout = 5000 });
         Assert.Equal(64, await Page.Locator(".run-ring").EvaluateAsync<double>("e => e.getBoundingClientRect().width"), 1);
 
@@ -170,7 +170,7 @@ public class MobileResponsiveTests : PlaywrightTestBase
     [Fact]
     public async Task Run_ring_is_centred_on_the_summary_on_mobile()
     {
-        await Page.GotoAsync(GenerateReport("MobileChartCenter.html"));
+        await Page.GotoReportAsync(GenerateReport("MobileChartCenter.html"));
         var ring = Page.Locator(".run-ring");
         await ring.WaitForAsync(new() { Timeout = 5000 });
         var middles = await Page.EvaluateAsync<double[]>(
@@ -183,7 +183,7 @@ public class MobileResponsiveTests : PlaywrightTestBase
     [Fact]
     public async Task Toolbar_right_details_does_not_overflow()
     {
-        await Page.GotoAsync(GenerateReport("MobileDetailsOverflow.html"));
+        await Page.GotoReportAsync(GenerateReport("MobileDetailsOverflow.html"));
         // since 5.0.0 a phone shows the display settings behind the Features tools' gear (plans/OPTION_C_PLAN.md S4)
         await Page.Locator(".tools-gear").ClickAsync();
         await Page.Locator(".toolbar-right").WaitForAsync(new() { Timeout = 5000 });
@@ -200,7 +200,7 @@ public class MobileResponsiveTests : PlaywrightTestBase
     [Fact]
     public async Task Diagram_toggle_wraps_on_mobile()
     {
-        await Page.GotoAsync(GenerateReport("MobileDiagramToggle.html"));
+        await Page.GotoReportAsync(GenerateReport("MobileDiagramToggle.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await Page.EvaluateAsync("""
@@ -230,7 +230,7 @@ public class MobileResponsiveTests : PlaywrightTestBase
     [Fact]
     public async Task Headers_toggle_has_no_left_margin_on_mobile()
     {
-        await Page.GotoAsync(GenerateReport("MobileHeadersMargin.html"));
+        await Page.GotoReportAsync(GenerateReport("MobileHeadersMargin.html"));
         // since 5.0.0 a phone shows the display settings behind the Features tools' gear (plans/OPTION_C_PLAN.md S4)
         await Page.Locator(".tools-gear").ClickAsync();
         await Page.Locator(".toolbar-right").WaitForAsync(new() { Timeout = 5000 });
@@ -248,7 +248,7 @@ public class MobileResponsiveTests : PlaywrightTestBase
     [Fact]
     public async Task Diagram_toggle_buttons_have_no_max_width_on_mobile()
     {
-        await Page.GotoAsync(GenerateReport("MobileDiagramBtns.html"));
+        await Page.GotoReportAsync(GenerateReport("MobileDiagramBtns.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await Page.EvaluateAsync("""
@@ -274,7 +274,7 @@ public class MobileResponsiveTests : PlaywrightTestBase
     [Fact]
     public async Task Zoom_controls_hidden_on_mobile()
     {
-        await Page.GotoAsync(GenerateReport("MobileZoomHidden.html"));
+        await Page.GotoReportAsync(GenerateReport("MobileZoomHidden.html"));
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
 
@@ -291,7 +291,7 @@ public class MobileResponsiveTests : PlaywrightTestBase
     [Fact]
     public async Task Context_menu_renders_as_bottom_sheet_on_mobile()
     {
-        await Page.GotoAsync(GenerateReport("MobileContextMenu.html"));
+        await Page.GotoReportAsync(GenerateReport("MobileContextMenu.html"));
         await ExpandFirstScenarioWithDiagram();
         var svg = await WaitForDiagramSvg();
 
@@ -329,7 +329,7 @@ public class MobileResponsiveTests : PlaywrightTestBase
     [Fact]
     public async Task Filters_collapsed_by_default_on_mobile()
     {
-        await Page.GotoAsync(GenerateReport("MobileFiltersCollapse1.html"));
+        await Page.GotoReportAsync(GenerateReport("MobileFiltersCollapse1.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         // The .mobile-filter-toggle should be visible
@@ -345,7 +345,7 @@ public class MobileResponsiveTests : PlaywrightTestBase
     [Fact]
     public async Task Filter_toggle_expands_and_collapses_filters()
     {
-        await Page.GotoAsync(GenerateReport("MobileFiltersCollapse2.html"));
+        await Page.GotoReportAsync(GenerateReport("MobileFiltersCollapse2.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         var toggle = Page.Locator(".mobile-filter-toggle");
@@ -368,7 +368,7 @@ public class MobileResponsiveTests : PlaywrightTestBase
     [Fact]
     public async Task Search_bar_is_sticky_on_mobile()
     {
-        await Page.GotoAsync(GenerateReport("MobileStickySearch.html"));
+        await Page.GotoReportAsync(GenerateReport("MobileStickySearch.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         var position = await Page.EvaluateAsync<string>(
@@ -381,7 +381,7 @@ public class MobileResponsiveTests : PlaywrightTestBase
     [Fact]
     public async Task Back_to_top_hidden_initially()
     {
-        await Page.GotoAsync(GenerateReport("MobileBackToTop1.html"));
+        await Page.GotoReportAsync(GenerateReport("MobileBackToTop1.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         var display = await Page.EvaluateAsync<string>(
@@ -392,7 +392,7 @@ public class MobileResponsiveTests : PlaywrightTestBase
     [Fact]
     public async Task Back_to_top_appears_after_scrolling()
     {
-        await Page.GotoAsync(GenerateReport("MobileBackToTop2.html"));
+        await Page.GotoReportAsync(GenerateReport("MobileBackToTop2.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         // Expand features and inject a spacer to guarantee enough page height
@@ -416,7 +416,7 @@ public class MobileResponsiveTests : PlaywrightTestBase
     [Fact]
     public async Task Back_to_top_scrolls_to_top()
     {
-        await Page.GotoAsync(GenerateReport("MobileBackToTop3.html"));
+        await Page.GotoReportAsync(GenerateReport("MobileBackToTop3.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await ExpandAllFeaturesAsync();
@@ -446,7 +446,7 @@ public class MobileResponsiveTests : PlaywrightTestBase
     [Fact]
     public async Task Diagram_container_is_horizontally_scrollable()
     {
-        await Page.GotoAsync(GenerateReport("MobileDiagramScrollable.html"));
+        await Page.GotoReportAsync(GenerateReport("MobileDiagramScrollable.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
 
@@ -460,7 +460,7 @@ public class MobileResponsiveTests : PlaywrightTestBase
     [Fact]
     public async Task Diagram_fullscreen_overlay_does_not_exist_in_dom()
     {
-        await Page.GotoAsync(GenerateReport("MobileDiagramFullscreen.html"));
+        await Page.GotoReportAsync(GenerateReport("MobileDiagramFullscreen.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         var exists = await Page.EvaluateAsync<bool>(
@@ -471,7 +471,7 @@ public class MobileResponsiveTests : PlaywrightTestBase
     [Fact]
     public async Task Diagram_containers_do_not_have_zoom_in_cursor()
     {
-        await Page.GotoAsync(GenerateReport("MobileDiagramNoCursor.html"));
+        await Page.GotoReportAsync(GenerateReport("MobileDiagramNoCursor.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
 
@@ -485,7 +485,7 @@ public class MobileResponsiveTests : PlaywrightTestBase
     [Fact]
     public async Task Diagram_controls_toggle_button_appears_on_mobile()
     {
-        await Page.GotoAsync(GenerateReport("MobileDiagramCtrlToggle1.html"));
+        await Page.GotoReportAsync(GenerateReport("MobileDiagramCtrlToggle1.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
 
@@ -510,7 +510,7 @@ public class MobileResponsiveTests : PlaywrightTestBase
     [Fact]
     public async Task Diagram_controls_toggle_shows_and_hides_controls()
     {
-        await Page.GotoAsync(GenerateReport("MobileDiagramCtrlToggle2.html"));
+        await Page.GotoReportAsync(GenerateReport("MobileDiagramCtrlToggle2.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
 
@@ -539,7 +539,7 @@ public class MobileResponsiveTests : PlaywrightTestBase
     [Fact]
     public async Task Touch_targets_meet_minimum_height()
     {
-        await Page.GotoAsync(GenerateReport("MobileTouchTargets.html"));
+        await Page.GotoReportAsync(GenerateReport("MobileTouchTargets.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         // Check that status toggle buttons have at least 36px min-height
@@ -553,7 +553,7 @@ public class MobileResponsiveTests : PlaywrightTestBase
     [Fact]
     public async Task Dependency_buttons_truncate_long_text()
     {
-        await Page.GotoAsync(GenerateReport("MobileDepTruncate.html"));
+        await Page.GotoReportAsync(GenerateReport("MobileDepTruncate.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         // Expand filters first
@@ -570,7 +570,7 @@ public class MobileResponsiveTests : PlaywrightTestBase
     [Fact]
     public async Task Step_duration_does_not_wrap()
     {
-        await Page.GotoAsync(GenerateReport("MobileStepDuration.html"));
+        await Page.GotoReportAsync(GenerateReport("MobileStepDuration.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
 
@@ -597,7 +597,7 @@ public class MobileResponsiveTests : PlaywrightTestBase
     [Fact]
     public async Task Diagram_settings_button_is_block_display_on_mobile()
     {
-        await Page.GotoAsync(GenerateReport("MobileSettingsBtn.html"));
+        await Page.GotoReportAsync(GenerateReport("MobileSettingsBtn.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
 

@@ -41,7 +41,7 @@ public class FocusScriptTests : IDisposable
         var path = ReportGenerator.GenerateHtmlReport(
             [], Features(durations), Start, Start.AddSeconds(5), null, Path.Combine(_dir, fileName), "Orders", includeTestRunData,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs, componentDiagramPlantUml: component);
-        return BrowsingContext.New(Configuration.Default).OpenAsync(req => req.Content(File.ReadAllText(path))).GetAwaiter().GetResult();
+        return BrowsingContext.New(Configuration.Default).OpenAsync(req => req.Content(ReportHtml.Read(path))).GetAwaiter().GetResult();
     }
 
     private static string Resource(string name)

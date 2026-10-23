@@ -17,7 +17,7 @@ public class DiagramToggleLayoutTests : DiagramNotePlaywrightBase
 
     private async Task OpenReport(string fileName)
     {
-        await Page.GotoAsync(ReportTestHelper.GenerateWholeTestFlowToggleDefaultsReport(TempDir, OutputDir, fileName, _ => { }));
+        await Page.GotoReportAsync(ReportTestHelper.GenerateWholeTestFlowToggleDefaultsReport(TempDir, OutputDir, fileName, _ => { }));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await Page.EvaluateAsync("() => document.querySelectorAll('details.example-diagrams').forEach(d => d.open = true)");
@@ -79,7 +79,7 @@ public class DiagramToggleLayoutTests : DiagramNotePlaywrightBase
     {
         // a scenario with only sequence diagrams: no tabs, and its settings are the only bar
         await Page.SetViewportSizeAsync(1400, 900);
-        await Page.GotoAsync(ReportTestHelper.GenerateReportWithAssertionNotes(TempDir, OutputDir, "ToggleLayoutSettings.html"));
+        await Page.GotoReportAsync(ReportTestHelper.GenerateReportWithAssertionNotes(TempDir, OutputDir, "ToggleLayoutSettings.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await OpenScenarioSettingsAsync();
@@ -131,7 +131,7 @@ public class DiagramToggleLayoutTests : DiagramNotePlaywrightBase
     public async Task A_bar_off_the_screen_when_the_page_narrows_is_laid_out_for_the_new_width_when_it_comes_onto_it()
     {
         await Page.SetViewportSizeAsync(1400, 900);
-        await Page.GotoAsync(ReportTestHelper.GenerateReportWithManyDiagramTabs(TempDir, OutputDir, "ToggleLayoutFar.html"));
+        await Page.GotoReportAsync(ReportTestHelper.GenerateReportWithManyDiagramTabs(TempDir, OutputDir, "ToggleLayoutFar.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await Page.EvaluateAsync("() => document.querySelectorAll('details.feature, details.scenario, details.example-diagrams').forEach(d => d.open = true)");
         const string onScreenBars = """

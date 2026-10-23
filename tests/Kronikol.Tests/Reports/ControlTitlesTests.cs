@@ -221,7 +221,7 @@ public class ControlTitlesTests : IDisposable
             wholeTestVisualization: segments is null ? WholeTestFlowVisualization.None : visualization,
             ciMetadata: ci, componentDiagramPlantUml: component, diagnostics: diagnostics, showReportDiagnostics: diagnostics is not null,
             separateBackgroundSteps: true, suite: Suite, history: history, showHistorySection: history is not null);
-        return File.ReadAllText(path);
+        return ReportHtml.Read(path);
     }
 
     /// <summary>The report of <see cref="Shop"/> with every tab: the timeline, the components, history and diagnostics.</summary>

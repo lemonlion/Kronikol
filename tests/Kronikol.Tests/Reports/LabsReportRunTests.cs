@@ -109,7 +109,7 @@ public class LabsReportRunTests : IDisposable
         Run("r1", "labs:1:1");
         Run("r2", "labs:2:1", ExecutionResult.Failed, diagnostic: "a tap dropped 3 segments");
 
-        var page = File.ReadAllText(Page("r2"));
+        var page = ReportHtml.Read(Page("r2"));
         Assert.Contains("<details id=\"history-section\" class=\"history-section\" open>", page);
         Assert.Contains("<span class=\"history-sparkline\"", page);
         Assert.Contains("<span class=\"history-verdict history-verdict-broke\"", page);
@@ -127,7 +127,7 @@ public class LabsReportRunTests : IDisposable
         Run("c2", "labs:2:1", ExecutionResult.Failed, configure: o => o.HtmlTestRunReportFileName = "Checkout");
 
         Assert.False(File.Exists(Page("c2")), "the page took the default report's name");
-        var page = File.ReadAllText(Page("c2", "Checkout.labs.html"));
+        var page = ReportHtml.Read(Page("c2", "Checkout.labs.html"));
         Assert.Contains("<a class=\"history-link\" href=\"Checkout.html#sid-", page);
         Assert.Contains("<a class=\"labs-back\" href=\"Checkout.html\">", page);
         Assert.DoesNotContain("TestRunReport.html", page);
@@ -140,7 +140,7 @@ public class LabsReportRunTests : IDisposable
         Run("t2", "labs:2:1", ExecutionResult.Failed, configure: o => o.GenerateTestRunReport = false);
 
         Assert.False(File.Exists(Path.Combine(Reports("t2"), "TestRunReport.html")));
-        var page = File.ReadAllText(Page("t2"));
+        var page = ReportHtml.Read(Page("t2"));
         Assert.Contains("<span class=\"history-name\">Checkout &rsaquo; Pay with an expired card</span>", page);
         Assert.DoesNotContain("<a ", page);
     }
@@ -169,14 +169,14 @@ public class LabsReportRunTests : IDisposable
     public void Diagnostics_alone_give_a_page_with_no_history_and_history_alone_one_with_no_diagnostics()
     {
         Run("d1", "labs:1:1", ledger: false, diagnostic: "a tap dropped 3 segments");
-        var diagnosticsOnly = File.ReadAllText(Page("d1"));
+        var diagnosticsOnly = ReportHtml.Read(Page("d1"));
         Assert.Contains("<details class=\"report-diagnostics\" open>", diagnosticsOnly);
         Assert.DoesNotContain("<details id=\"history-section\"", diagnosticsOnly);
         Assert.DoesNotContain("<span class=\"history-sparkline\"", diagnosticsOnly);
 
         Run("h1", "labs:2:1");
         Run("h2", "labs:3:1", ExecutionResult.Failed);
-        var historyOnly = File.ReadAllText(Page("h2"));
+        var historyOnly = ReportHtml.Read(Page("h2"));
         Assert.Contains("<details id=\"history-section\"", historyOnly);
         Assert.DoesNotContain("<details class=\"report-diagnostics\"", historyOnly);
     }
@@ -189,12 +189,12 @@ public class LabsReportRunTests : IDisposable
         Assert.False(File.Exists(Page("e2")), "a page was written for history the run was told not to embed");
 
         Run("e3", "labs:3:1", ExecutionResult.Failed, diagnostic: "a tap dropped 3 segments", configure: o => o.EmbedHistoryInReport = false);
-        var page = File.ReadAllText(Page("e3"));
+        var page = ReportHtml.Read(Page("e3"));
         Assert.DoesNotContain("<details id=\"history-section\"", page);
         Assert.DoesNotContain("<span class=\"history-sparkline\"", page);
         Assert.Contains("<details class=\"report-diagnostics\" open>", page);
         // The ledger still saw the runs: embedding is about the HTML, not about recording.
-        Assert.Contains("labs:3:1", File.ReadAllText(Ledger));
+        Assert.Contains("labs:3:1", ReportHtml.Read(Ledger));
     }
 
     [Fact]
@@ -203,7 +203,7 @@ public class LabsReportRunTests : IDisposable
         Run("x1", "labs:1:1");
         Run("x2", "labs:2:1", configure: o => o.HistoryCompareBranch = "trunk");
 
-        var page = File.ReadAllText(Page("x2"));
+        var page = ReportHtml.Read(Page("x2"));
         Assert.Contains("class=\"history-compare\"", page);
         Assert.Contains("on <code>trunk</code>", page);
     }

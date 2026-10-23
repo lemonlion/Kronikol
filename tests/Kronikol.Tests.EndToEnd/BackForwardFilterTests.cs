@@ -136,7 +136,7 @@ public class BackForwardFilterTests : BackForwardTestBase
         await OpenAsync(url);
         Assert.False(await FailedChosenAsync());
 
-        await ActAsync(() => Page.GotoAsync(url + "#status=Failed"));
+        await ActAsync(() => Page.GotoReportAsync(url + "#status=Failed"));
 
         Assert.True(await FailedChosenAsync(), "the typed address's filter is applied");
         Assert.Equal(178, await HiddenScenariosAsync());
@@ -195,7 +195,7 @@ public class BackForwardFilterTests : BackForwardTestBase
 
         await Chip("area-05").ClickAsync();
         Assert.Equal("#tags=area-05", await HashSoonAsync("#tags=area-05"));
-        await Page.GoForwardAsync();
+        await Page.GoForwardReportAsync();
         await TwoAnimationFramesAsync(Page);
 
         Assert.Equal("#tags=area-05", await HashAsync());

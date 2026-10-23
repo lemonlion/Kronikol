@@ -248,7 +248,7 @@ public class FailureClusterLinkTests : PlaywrightTestBase
     public async Task Cluster_link_scrolls_to_correct_scenario()
     {
         var url = GenerateClusterReport("ClusterBasicScroll.html", CreateBasicClusterData());
-        await Page.GotoAsync(url);
+        await Page.GotoReportAsync(url);
         await Page.Locator(".failure-clusters").WaitForAsync();
 
         await Page.Locator(".failure-cluster > summary").First.ClickAsync();
@@ -269,7 +269,7 @@ public class FailureClusterLinkTests : PlaywrightTestBase
         // A long report's features have mostly never been drawn, so each counts as its 500 px
         // content-visibility placeholder, and a smooth scroll aimed across them ends past the scenario
         // (StableIdDeepLinkTests has the same fault for a #sid- link).
-        await Page.GotoAsync(GenerateLongReport("ClusterFarDown.html", "Scenario 30.2", "Scenario 31.1"));
+        await Page.GotoReportAsync(GenerateLongReport("ClusterFarDown.html", "Scenario 30.2", "Scenario 31.1"));
         await Page.Locator(".failure-cluster > summary").First.ClickAsync();
         var link = Page.Locator(".failure-cluster-scenario-link").First;
         var target = (await link.GetAttributeAsync("href"))!.TrimStart('#');
@@ -285,7 +285,7 @@ public class FailureClusterLinkTests : PlaywrightTestBase
     public async Task Cluster_link_opens_scenario_details()
     {
         var url = GenerateClusterReport("ClusterOpensScenario.html", CreateBasicClusterData());
-        await Page.GotoAsync(url);
+        await Page.GotoReportAsync(url);
         await Page.Locator(".failure-clusters").WaitForAsync();
 
         await Page.Locator(".failure-cluster > summary").First.ClickAsync();
@@ -299,7 +299,7 @@ public class FailureClusterLinkTests : PlaywrightTestBase
     public async Task Cluster_link_opens_parent_feature()
     {
         var url = GenerateClusterReport("ClusterOpensFeature.html", CreateBasicClusterData());
-        await Page.GotoAsync(url);
+        await Page.GotoReportAsync(url);
         await Page.Locator(".failure-clusters").WaitForAsync();
 
         var feature = Page.Locator("details.feature").First;
@@ -318,7 +318,7 @@ public class FailureClusterLinkTests : PlaywrightTestBase
     public async Task Cluster_link_navigates_to_scenario_in_second_feature()
     {
         var url = GenerateClusterReport("ClusterSecondFeature.html", CreateMultiFeatureClusterData());
-        await Page.GotoAsync(url);
+        await Page.GotoReportAsync(url);
         await Page.Locator(".failure-clusters").WaitForAsync();
 
         await Page.Locator(".failure-cluster > summary").First.ClickAsync();
@@ -338,7 +338,7 @@ public class FailureClusterLinkTests : PlaywrightTestBase
     public async Task Cluster_link_navigates_to_scenario_in_third_feature()
     {
         var url = GenerateClusterReport("ClusterThirdFeature.html", CreateMultiFeatureClusterData());
-        await Page.GotoAsync(url);
+        await Page.GotoReportAsync(url);
         await Page.Locator(".failure-clusters").WaitForAsync();
 
         await Page.Locator(".failure-cluster > summary").First.ClickAsync();
@@ -359,7 +359,7 @@ public class FailureClusterLinkTests : PlaywrightTestBase
     public async Task Clicking_second_cluster_link_scrolls_to_second_scenario()
     {
         var url = GenerateClusterReport("ClusterSequentialNav.html", CreateMultiFeatureClusterData());
-        await Page.GotoAsync(url);
+        await Page.GotoReportAsync(url);
         await Page.Locator(".failure-clusters").WaitForAsync();
 
         await Page.Locator(".failure-cluster > summary").First.ClickAsync();
@@ -387,7 +387,7 @@ public class FailureClusterLinkTests : PlaywrightTestBase
     public async Task Sequential_cluster_link_clicks_without_scrolling_back()
     {
         var url = GenerateClusterReport("ClusterSequentialDirect.html", CreateMultiFeatureClusterData());
-        await Page.GotoAsync(url);
+        await Page.GotoReportAsync(url);
         await Page.Locator(".failure-clusters").WaitForAsync();
 
         await Page.Locator(".failure-cluster > summary").First.ClickAsync();
@@ -410,7 +410,7 @@ public class FailureClusterLinkTests : PlaywrightTestBase
     public async Task Cluster_link_navigates_to_parameterized_row()
     {
         var url = GenerateClusterReport("ClusterParamRow.html", CreateParameterizedClusterData());
-        await Page.GotoAsync(url);
+        await Page.GotoReportAsync(url);
         await Page.Locator(".failure-clusters").WaitForAsync();
 
         await Page.Locator(".failure-cluster > summary").First.ClickAsync();
@@ -427,7 +427,7 @@ public class FailureClusterLinkTests : PlaywrightTestBase
     public async Task Cluster_link_activates_correct_parameterized_row()
     {
         var url = GenerateClusterReport("ClusterParamActive.html", CreateParameterizedClusterData());
-        await Page.GotoAsync(url);
+        await Page.GotoReportAsync(url);
         await Page.Locator(".failure-clusters").WaitForAsync();
 
         await Page.Locator(".failure-cluster > summary").First.ClickAsync();
@@ -442,7 +442,7 @@ public class FailureClusterLinkTests : PlaywrightTestBase
     public async Task Cluster_link_to_parameterized_row_shows_correct_detail_panel()
     {
         var url = GenerateClusterReport("ClusterParamPanel.html", CreateParameterizedClusterData());
-        await Page.GotoAsync(url);
+        await Page.GotoReportAsync(url);
         await Page.Locator(".failure-clusters").WaitForAsync();
 
         await Page.Locator(".failure-cluster > summary").First.ClickAsync();
@@ -473,7 +473,7 @@ public class FailureClusterLinkTests : PlaywrightTestBase
     public async Task Cluster_link_with_duplicate_names_navigates_to_correct_feature()
     {
         var url = GenerateClusterReport("ClusterDuplicateNames.html", CreateDuplicateNameClusterData());
-        await Page.GotoAsync(url);
+        await Page.GotoReportAsync(url);
         await Page.Locator(".failure-clusters").WaitForAsync();
 
         await Page.Locator(".failure-cluster > summary").First.ClickAsync();
@@ -498,7 +498,7 @@ public class FailureClusterLinkTests : PlaywrightTestBase
     public async Task Cluster_link_updates_url_hash()
     {
         var url = GenerateClusterReport("ClusterUrlHash.html", CreateBasicClusterData());
-        await Page.GotoAsync(url);
+        await Page.GotoReportAsync(url);
         await Page.Locator(".failure-clusters").WaitForAsync();
 
         await Page.Locator(".failure-cluster > summary").First.ClickAsync();
@@ -514,7 +514,7 @@ public class FailureClusterLinkTests : PlaywrightTestBase
     public async Task Clicking_links_between_different_clusters()
     {
         var url = GenerateClusterReport("ClusterMultiCluster.html", CreateMultiClusterData());
-        await Page.GotoAsync(url);
+        await Page.GotoReportAsync(url);
         await Page.Locator(".failure-clusters").WaitForAsync();
 
         var clusterSummaries = Page.Locator(".failure-cluster > summary");
@@ -549,7 +549,7 @@ public class FailureClusterLinkTests : PlaywrightTestBase
     public async Task Cluster_link_works_when_feature_already_expanded()
     {
         var url = GenerateClusterReport("ClusterFeatureAlreadyOpen.html", CreateBasicClusterData());
-        await Page.GotoAsync(url);
+        await Page.GotoReportAsync(url);
         await Page.Locator(".failure-clusters").WaitForAsync();
 
         await Page.Locator("details.feature > summary").First.ClickAsync();
@@ -571,7 +571,7 @@ public class FailureClusterLinkTests : PlaywrightTestBase
     public async Task Cluster_links_show_feature_name_prefix()
     {
         var url = GenerateClusterReport("ClusterFeaturePrefix.html", CreateMultiFeatureClusterData());
-        await Page.GotoAsync(url);
+        await Page.GotoReportAsync(url);
         await Page.Locator(".failure-clusters").WaitForAsync();
 
         await Page.Locator(".failure-cluster > summary").First.ClickAsync();
@@ -588,7 +588,7 @@ public class FailureClusterLinkTests : PlaywrightTestBase
     public async Task Cluster_link_opens_parameterized_group_parent_details()
     {
         var url = GenerateClusterReport("ClusterParamParentOpen.html", CreateParameterizedClusterData());
-        await Page.GotoAsync(url);
+        await Page.GotoReportAsync(url);
         await Page.Locator(".failure-clusters").WaitForAsync();
 
         var paramGroup = Page.Locator("details.scenario-parameterized");
@@ -606,7 +606,7 @@ public class FailureClusterLinkTests : PlaywrightTestBase
     public async Task Cluster_link_to_parameterized_row_scrolls_to_visible_row()
     {
         var url = GenerateClusterReport("ClusterParamVisible.html", CreateParameterizedClusterData());
-        await Page.GotoAsync(url);
+        await Page.GotoReportAsync(url);
         await Page.Locator(".failure-clusters").WaitForAsync();
 
         await Page.Locator(".failure-cluster > summary").First.ClickAsync();
@@ -624,7 +624,7 @@ public class FailureClusterLinkTests : PlaywrightTestBase
     public async Task Second_cluster_link_works_after_first_click_without_manual_scroll()
     {
         var url = GenerateClusterReport("ClusterSecondNoScroll.html", CreateMultiFeatureClusterData());
-        await Page.GotoAsync(url);
+        await Page.GotoReportAsync(url);
         await Page.Locator(".failure-clusters").WaitForAsync();
 
         await Page.Locator(".failure-cluster > summary").First.ClickAsync();
@@ -650,7 +650,7 @@ public class FailureClusterLinkTests : PlaywrightTestBase
     public async Task Third_cluster_link_works_after_first_two_clicks()
     {
         var url = GenerateClusterReport("ClusterThirdClick.html", CreateMultiFeatureClusterData());
-        await Page.GotoAsync(url);
+        await Page.GotoReportAsync(url);
         await Page.Locator(".failure-clusters").WaitForAsync();
 
         await Page.Locator(".failure-cluster > summary").First.ClickAsync();

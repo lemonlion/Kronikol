@@ -16,7 +16,7 @@ public class SpansLeftOutPopupTests : PlaywrightTestBase
 
     private async Task OpenAndDrawBothScenarios(string uri)
     {
-        await Page.GotoAsync(uri);
+        await Page.GotoReportAsync(uri);
         await Page.EvaluateAsync("() => document.querySelectorAll('details').forEach(d => d.open = true)");
         await Page.EvaluateAsync("() => window._renderDiagramsInContainer(document.body)");
         await Page.WaitForFunctionAsync(BrowserRenderWorkerTests.AllRenderedJs, null, new() { Timeout = 60000, PollingInterval = 200 });

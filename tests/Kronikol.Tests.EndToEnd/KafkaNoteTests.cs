@@ -19,7 +19,7 @@ public class KafkaNoteTests : DiagramNotePlaywrightBase
 
     private async Task Navigate(string fileName, bool headersShown, NotePayloadFormat format = NotePayloadFormat.Json)
     {
-        await Page.GotoAsync(ReportTestHelper.GenerateReportWithKafkaNote(TempDir, OutputDir, fileName, headersShown, format));
+        await Page.GotoReportAsync(ReportTestHelper.GenerateReportWithKafkaNote(TempDir, OutputDir, fileName, headersShown, format));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();

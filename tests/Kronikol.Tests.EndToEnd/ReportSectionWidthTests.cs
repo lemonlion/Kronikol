@@ -27,7 +27,7 @@ public class ReportSectionWidthTests : PlaywrightTestBase
     private async Task Open(int width, bool textSpacing = false)
     {
         await Page.SetViewportSizeAsync(width, 900);
-        await Page.GotoAsync(ReportTestHelper.GenerateReportWithEverySection(TempDir, OutputDir, $"EverySection_{width}{(textSpacing ? "_spaced" : "")}.html"));
+        await Page.GotoReportAsync(ReportTestHelper.GenerateReportWithEverySection(TempDir, OutputDir, $"EverySection_{width}{(textSpacing ? "_spaced" : "")}.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await Page.EvaluateAsync("() => document.querySelectorAll('details').forEach(d => d.open = true)");
         if (textSpacing)

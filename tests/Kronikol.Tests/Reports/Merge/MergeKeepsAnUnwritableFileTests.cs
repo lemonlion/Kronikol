@@ -41,7 +41,7 @@ public class MergeKeepsAnUnwritableFileTests : IDisposable
         Assert.NotEqual(0, exit);
         Assert.Contains("Could not write -o", error.ToString(), StringComparison.Ordinal);
         Assert.Contains(name, error.ToString(), StringComparison.Ordinal);
-        Assert.Equal("an earlier merge", File.ReadAllText(target));
+        Assert.Equal("an earlier merge", ReportHtml.Read(target));
         Assert.DoesNotContain(Directory.GetFiles(_root), file => file.EndsWith(".tmp", StringComparison.Ordinal));
     }
 

@@ -43,7 +43,7 @@ public class TooLargeRetryOrderTests : PlaywrightTestBase
             })();
             """);
         // 30 calls: drawn whole under the 12,000 px estimate, and in parts at half of it
-        await Page.GotoAsync(LongPayloadReports.WideQueries(TempDir, OutputDir, "too-large-retry-order.html", calls: 30, NoteWidthMode.Default));
+        await Page.GotoReportAsync(LongPayloadReports.WideQueries(TempDir, OutputDir, "too-large-retry-order.html", calls: 30, NoteWidthMode.Default));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await Page.EvaluateAsync("() => { if (window._renderDiagramsInContainer) window._renderDiagramsInContainer(document.body); }");

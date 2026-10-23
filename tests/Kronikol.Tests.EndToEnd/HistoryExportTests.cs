@@ -15,7 +15,7 @@ public class HistoryExportTests : PlaywrightTestBase
     [Fact]
     public async Task The_filtered_export_keeps_the_sparklines_and_leaves_the_section_behind()
     {
-        await Page.GotoAsync(HistoryReportHelper.Generate(TempDir, OutputDir, "HistoryExport.html"));
+        await Page.GotoReportAsync(HistoryReportHelper.Generate(TempDir, OutputDir, "HistoryExport.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         // the section is the History tab's panel since 5.0.0; the export copies what the Features tab shows
         await OpenReportTabAsync("history");
@@ -28,7 +28,7 @@ public class HistoryExportTests : PlaywrightTestBase
         });
         var path = Path.Combine(TempDir, $"export_{Guid.NewGuid():N}.html");
         await download.SaveAsAsync(path);
-        var exported = await File.ReadAllTextAsync(path);
+        var exported = ReportFileText.Read(path);
 
         Assert.Contains("class=\"history-sparkline\"", exported);
         Assert.Contains($"data-history-verdicts=\"broke\"", exported);
@@ -36,7 +36,7 @@ public class HistoryExportTests : PlaywrightTestBase
         Assert.DoesNotContain("<details id=\"history-section\"", exported);
 
         // Opened in a clean page, the exported scenario still shows its history.
-        await Page.GotoAsync(new Uri(path).AbsoluteUri);
+        await Page.GotoReportAsync(new Uri(path).AbsoluteUri);
         await Page.EvaluateAsync("() => document.querySelectorAll('details.feature').forEach(d => d.setAttribute('open', ''))");
         var pay = Page.Locator($"details.scenario[data-stable-id='{HistoryReportHelper.PayId}']");
         await Expect(pay.Locator("summary .history-sparkline")).ToBeVisibleAsync();

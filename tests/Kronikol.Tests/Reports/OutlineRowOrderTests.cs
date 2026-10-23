@@ -63,13 +63,13 @@ public class OutlineRowOrderTests : IDisposable
         var path = ReportGenerator.GenerateHtmlReport(diagrams, features, DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow, null,
             Path.Combine(_dir, $"Weights_{Guid.NewGuid():N}.html"), "Weights", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs, suite: "Suite");
-        return File.ReadAllText(path);
+        return ReportHtml.Read(path);
     }
 
     private string Specifications(DataFormat format, string extension)
     {
         using var _ = ReportGenerator.ScopeReportsDirectory(_dir);
-        return File.ReadAllText(ReportGenerator.GenerateSpecificationsData(Weights(), $"Specifications_{Guid.NewGuid():N}.{extension}", "Weights", format));
+        return ReportHtml.Read(ReportGenerator.GenerateSpecificationsData(Weights(), $"Specifications_{Guid.NewGuid():N}.{extension}", "Weights", format));
     }
 
     [Fact]

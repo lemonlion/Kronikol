@@ -21,7 +21,7 @@ public class VersionEmbeddingTests
             DateTime.UtcNow, DateTime.UtcNow,
             null, "VersionMeta.html", "Test", includeTestRunData: true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
 
         Assert.Contains("<meta name=\"generator\" content=\"Kronikol v", content);
     }
@@ -34,7 +34,7 @@ public class VersionEmbeddingTests
             DateTime.UtcNow, DateTime.UtcNow,
             null, "VersionSummary.html", "Test", includeTestRunData: true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
 
         // 5.0.0 (plans/OPTION_C_PLAN.md S2): the run band has no hidden version row; the meta says it
         Assert.Contains($"<meta name=\"generator\" content=\"Kronikol v{ReportGenerator.KronikolVersion}", content);
@@ -48,7 +48,7 @@ public class VersionEmbeddingTests
             DateTime.UtcNow, DateTime.UtcNow,
             null, "VersionHidden.html", "Test", includeTestRunData: true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
 
         // 4.x drew a hidden "Kronikol Version:" row in the summary table; the run band draws none (5.0.0)
         Assert.DoesNotContain("Kronikol Version", content);

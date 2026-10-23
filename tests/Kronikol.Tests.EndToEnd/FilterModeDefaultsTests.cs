@@ -18,7 +18,7 @@ public class FilterModeDefaultsTests : DiagramNotePlaywrightBase
         var url = ReportTestHelper.GenerateToggleDefaultsReport(
             TempDir, OutputDir, fileName,
             o => o.TestRunReportToggleDefaults.DependencyFilterMode = Kronikol.Reports.FilterCombinationMode.Or);
-        await Page.GotoAsync(url);
+        await Page.GotoReportAsync(url);
         await Page.Locator("details.feature").First.WaitForAsync();
         await OpenFilterRowsAsync();
         return url;
@@ -30,7 +30,7 @@ public class FilterModeDefaultsTests : DiagramNotePlaywrightBase
     public async Task Dependency_mode_is_or_when_nothing_is_configured()
     {
         var url = ReportTestHelper.GenerateToggleDefaultsReport(TempDir, OutputDir, "FilterMode_BuiltIn.html", _ => { });
-        await Page.GotoAsync(url);
+        await Page.GotoReportAsync(url);
         await Page.Locator("details.feature").First.WaitForAsync();
         await OpenFilterRowsAsync();
 
@@ -67,7 +67,7 @@ public class FilterModeDefaultsTests : DiagramNotePlaywrightBase
         var url = ReportTestHelper.GenerateToggleDefaultsReport(
             TempDir, OutputDir, "FilterMode_HashBeats.html",
             o => o.TestRunReportToggleDefaults.DependencyFilterMode = Kronikol.Reports.FilterCombinationMode.Or);
-        await Page.GotoAsync(url + "#depmode=AND");
+        await Page.GotoReportAsync(url + "#depmode=AND");
         await Page.Locator("details.feature").First.WaitForAsync();
         await OpenFilterRowsAsync();
 
@@ -97,7 +97,7 @@ public class FilterModeDefaultsTests : DiagramNotePlaywrightBase
         var url = ReportTestHelper.GenerateToggleDefaultsReport(
             TempDir, OutputDir, "FilterMode_TagAnd.html",
             o => o.TestRunReportToggleDefaults.TagFilterMode = Kronikol.Reports.FilterCombinationMode.And);
-        await Page.GotoAsync(url);
+        await Page.GotoReportAsync(url);
         await Page.Locator("details.feature").First.WaitForAsync();
         await OpenFilterRowsAsync();
 
@@ -129,7 +129,7 @@ public class FilterModeDefaultsTests : DiagramNotePlaywrightBase
         });
         var path = Path.Combine(TempDir, $"export_{Guid.NewGuid():N}.html");
         await download.SaveAsAsync(path);
-        var content = await File.ReadAllTextAsync(path);
+        var content = ReportFileText.Read(path);
         // The export clones the head scripts, so the seeded default rides along
         Assert.Contains("var _depModeDefault = 'OR'", content);
     }

@@ -60,7 +60,7 @@ public class BackForwardLayerTests : BackForwardTestBase
         Assert.InRange(await page.EvaluateAsync<double>("() => scrollY") - y, -2, 2);
         Assert.Equal("href=" + link, await FocusedAsync(page));
 
-        await page.GoBackAsync();
+        await page.GoBackReportAsync();
         // GoBack can return before the page before has loaded: its title shows once it has
         await Expect(page).ToHaveTitleAsync(BeforeTitle, new() { Timeout = 15000 });
     });
@@ -80,7 +80,7 @@ public class BackForwardLayerTests : BackForwardTestBase
         await Page.WaitForFunctionAsync("() => !history.state || !history.state.kronikol || !history.state.kronikol.layer",
             null, new() { PollingInterval = 200, Timeout = 5000 });
 
-        await Page.GoBackAsync();
+        await Page.GoBackReportAsync();
         await Expect(Page).ToHaveTitleAsync(BeforeTitle, new() { Timeout = 15000 });
     }
 
@@ -133,7 +133,7 @@ public class BackForwardLayerTests : BackForwardTestBase
         await Expect(popup).ToHaveCountAsync(0);
         await Page.WaitForFunctionAsync("() => !history.state || !history.state.kronikol || !history.state.kronikol.layer",
             null, new() { PollingInterval = 200, Timeout = 5000 });
-        await Page.GoBackAsync();
+        await Page.GoBackReportAsync();
         await Expect(Page).ToHaveTitleAsync(BeforeTitle, new() { Timeout = 15000 });
     }
 
@@ -144,7 +144,7 @@ public class BackForwardLayerTests : BackForwardTestBase
         await OpenWithImageAsync("BackNav_L5.html");
         await OpenLightboxAsync();
 
-        await Page.ReloadAsync();
+        await Page.ReloadReportAsync();
         await Page.Locator("details.feature").First.WaitForAsync();
         await SettledAsync(Page, 0);
 

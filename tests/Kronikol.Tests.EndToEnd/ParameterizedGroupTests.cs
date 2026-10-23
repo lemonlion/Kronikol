@@ -185,7 +185,7 @@ public class ParameterizedGroupTests : PlaywrightTestBase
     [Fact]
     public async Task Parameterized_group_renders_with_table()
     {
-        await Page.GotoAsync(GenerateParamReport("ParamGroup.html"));
+        await Page.GotoReportAsync(GenerateParamReport("ParamGroup.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFeatures();
 
@@ -198,7 +198,7 @@ public class ParameterizedGroupTests : PlaywrightTestBase
     [Fact]
     public async Task Clicking_row_switches_detail_panel()
     {
-        await Page.GotoAsync(GenerateParamReport("ParamRowSwitch.html"));
+        await Page.GotoReportAsync(GenerateParamReport("ParamRowSwitch.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFeatures();
 
@@ -218,7 +218,7 @@ public class ParameterizedGroupTests : PlaywrightTestBase
     [Fact]
     public async Task Clicking_row_switches_visible_detail_content()
     {
-        await Page.GotoAsync(GenerateParamReport("ParamDetailSwitch.html"));
+        await Page.GotoReportAsync(GenerateParamReport("ParamDetailSwitch.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFeatures();
 
@@ -240,7 +240,7 @@ public class ParameterizedGroupTests : PlaywrightTestBase
     [Fact]
     public async Task Status_badges_show_correct_status_per_row()
     {
-        await Page.GotoAsync(GenerateParamReport("ParamStatus.html", withFailure: true));
+        await Page.GotoReportAsync(GenerateParamReport("ParamStatus.html", withFailure: true));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFeatures();
 
@@ -258,7 +258,7 @@ public class ParameterizedGroupTests : PlaywrightTestBase
     [Fact]
     public async Task Copy_scenario_name_button_exists_on_parameterized_group()
     {
-        await Page.GotoAsync(GenerateParamReport("ParamCopy.html"));
+        await Page.GotoReportAsync(GenerateParamReport("ParamCopy.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFeatures();
 
@@ -273,7 +273,7 @@ public class ParameterizedGroupTests : PlaywrightTestBase
     [Fact]
     public async Task Copy_button_shows_checkmark_after_click()
     {
-        await Page.GotoAsync(GenerateParamReport("ParamCopyCheck.html"));
+        await Page.GotoReportAsync(GenerateParamReport("ParamCopyCheck.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFeatures();
 
@@ -290,7 +290,7 @@ public class ParameterizedGroupTests : PlaywrightTestBase
     [Fact]
     public async Task Scenario_link_exists_on_parameterized_group()
     {
-        await Page.GotoAsync(GenerateParamReport("ParamLink.html"));
+        await Page.GotoReportAsync(GenerateParamReport("ParamLink.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFeatures();
 
@@ -308,7 +308,7 @@ public class ParameterizedGroupTests : PlaywrightTestBase
     public async Task Deep_link_hash_opens_parameterized_group_and_selects_row()
     {
         var url = GenerateParamReport("ParamDeepLink.html");
-        await Page.GotoAsync(url);
+        await Page.GotoReportAsync(url);
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await ExpandFeatures();
@@ -318,7 +318,7 @@ public class ParameterizedGroupTests : PlaywrightTestBase
         var secondRowId = await rows.Nth(1).GetAttributeAsync("data-scenario-id");
         Assert.False(string.IsNullOrEmpty(secondRowId));
 
-        await Page.GotoAsync(url + "#" + secondRowId);
+        await Page.GotoReportAsync(url + "#" + secondRowId);
         await Page.WaitForFunctionAsync(
             "() => document.querySelector('details.scenario-parameterized')?.hasAttribute('open')",
             null, new() { Timeout = 5000, PollingInterval = 200 });
@@ -329,7 +329,7 @@ public class ParameterizedGroupTests : PlaywrightTestBase
     [Fact]
     public async Task Search_highlights_matching_rows_in_parameterized_group()
     {
-        await Page.GotoAsync(GenerateParamReport("ParamSearch.html"));
+        await Page.GotoReportAsync(GenerateParamReport("ParamSearch.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await FillSearchBar("region: US");
@@ -347,7 +347,7 @@ public class ParameterizedGroupTests : PlaywrightTestBase
     [Fact]
     public async Task Parameterized_group_has_diagram_section()
     {
-        await Page.GotoAsync(GenerateParamReport("ParamDiagrams.html"));
+        await Page.GotoReportAsync(GenerateParamReport("ParamDiagrams.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFeatures();
 
@@ -361,7 +361,7 @@ public class ParameterizedGroupTests : PlaywrightTestBase
     [Fact]
     public async Task First_row_diagram_renders_on_page_load()
     {
-        await Page.GotoAsync(GenerateParamReport("ParamDiagramFirstRow.html"));
+        await Page.GotoReportAsync(GenerateParamReport("ParamDiagramFirstRow.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandAll();
 
@@ -382,7 +382,7 @@ public class ParameterizedGroupTests : PlaywrightTestBase
     [Fact]
     public async Task Clicking_second_row_renders_its_diagram()
     {
-        await Page.GotoAsync(GenerateParamReport("ParamDiagramSecondRow.html"));
+        await Page.GotoReportAsync(GenerateParamReport("ParamDiagramSecondRow.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandAll();
 
@@ -414,7 +414,7 @@ public class ParameterizedGroupTests : PlaywrightTestBase
     [Fact]
     public async Task Parameter_column_headers_are_titleized()
     {
-        await Page.GotoAsync(GenerateParamReport("ParamTitleize.html"));
+        await Page.GotoReportAsync(GenerateParamReport("ParamTitleize.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFeatures();
 
@@ -432,7 +432,7 @@ public class ParameterizedGroupTests : PlaywrightTestBase
     [Fact]
     public async Task Single_instance_parameterized_scenario_renders_as_table()
     {
-        await Page.GotoAsync(GenerateSingleParamReport("ParamSingle.html"));
+        await Page.GotoReportAsync(GenerateSingleParamReport("ParamSingle.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFeatures();
 
@@ -447,7 +447,7 @@ public class ParameterizedGroupTests : PlaywrightTestBase
     [Fact]
     public async Task Search_match_uses_box_shadow_not_outline()
     {
-        await Page.GotoAsync(GenerateParamReport("ParamSearchStyle.html"));
+        await Page.GotoReportAsync(GenerateParamReport("ParamSearchStyle.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await FillSearchBar("region: US");
@@ -468,7 +468,7 @@ public class ParameterizedGroupTests : PlaywrightTestBase
     {
         var url = GenerateMultiFeatureParamReport("ParamCrossFeature.html");
         var htmlPath = new Uri(url).LocalPath;
-        var html = await File.ReadAllTextAsync(htmlPath);
+        var html = ReportFileText.Read(htmlPath);
 
         var detailIds = System.Text.RegularExpressions.Regex.Matches(html, @"id=""(pgrp\d+-detail-\d+)""")
             .Cast<System.Text.RegularExpressions.Match>()
@@ -486,7 +486,7 @@ public class ParameterizedGroupTests : PlaywrightTestBase
     [Fact]
     public async Task Clicking_row_in_second_feature_does_not_hide_first_feature_panels()
     {
-        await Page.GotoAsync(GenerateMultiFeatureParamReport("ParamCrossFeatureClick.html"));
+        await Page.GotoReportAsync(GenerateMultiFeatureParamReport("ParamCrossFeatureClick.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandAll();
 
@@ -517,7 +517,7 @@ public class ParameterizedGroupTests : PlaywrightTestBase
     [Fact]
     public async Task Steps_and_diagrams_borders_are_left_aligned_in_parameterized_group()
     {
-        await Page.GotoAsync(GenerateParamReport("ParamBorderAlign.html"));
+        await Page.GotoReportAsync(GenerateParamReport("ParamBorderAlign.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandAll();
 
@@ -538,7 +538,7 @@ public class ParameterizedGroupTests : PlaywrightTestBase
     [Fact]
     public async Task Clicking_third_row_renders_its_diagram()
     {
-        await Page.GotoAsync(GenerateParamReport("ParamDiagramThirdRow.html"));
+        await Page.GotoReportAsync(GenerateParamReport("ParamDiagramThirdRow.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandAll();
 
@@ -568,7 +568,7 @@ public class ParameterizedGroupTests : PlaywrightTestBase
     [Fact]
     public async Task Each_row_click_renders_a_diagram()
     {
-        await Page.GotoAsync(GenerateParamReport("ParamDiagramDistinct.html"));
+        await Page.GotoReportAsync(GenerateParamReport("ParamDiagramDistinct.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandAll();
 
@@ -609,7 +609,7 @@ public class ParameterizedGroupTests : PlaywrightTestBase
     [Fact]
     public async Task Single_instance_parameterized_scenario_shows_parameter_values()
     {
-        await Page.GotoAsync(GenerateSingleParamReport("ParamSingleValues.html"));
+        await Page.GotoReportAsync(GenerateSingleParamReport("ParamSingleValues.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFeatures();
 
@@ -629,7 +629,7 @@ public class ParameterizedGroupTests : PlaywrightTestBase
     [Fact]
     public async Task Single_instance_parameterized_scenario_shows_titleized_headers()
     {
-        await Page.GotoAsync(GenerateSingleParamReport("ParamSingleHeaders.html"));
+        await Page.GotoReportAsync(GenerateSingleParamReport("ParamSingleHeaders.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFeatures();
 
@@ -649,7 +649,7 @@ public class ParameterizedGroupTests : PlaywrightTestBase
     [Fact]
     public async Task Switching_back_to_first_row_still_shows_its_diagram()
     {
-        await Page.GotoAsync(GenerateParamReport("ParamDiagramSwitchBack.html"));
+        await Page.GotoReportAsync(GenerateParamReport("ParamDiagramSwitchBack.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandAll();
 
@@ -686,7 +686,7 @@ public class ParameterizedGroupTests : PlaywrightTestBase
     [Fact]
     public async Task Collapsing_steps_section_syncs_to_other_rows()
     {
-        await Page.GotoAsync(GenerateParamReport("ParamLayoutSync.html"));
+        await Page.GotoReportAsync(GenerateParamReport("ParamLayoutSync.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFeatures();
 
@@ -770,7 +770,7 @@ public class ParameterizedGroupTests : PlaywrightTestBase
     public async Task A_row_of_any_status_shows_the_same_hover_and_selection(string region, string status)
     {
         const string resting = "rgba(0, 0, 0, 0)", hovered = "rgb(237, 241, 248)", selected = "rgb(220, 232, 251)";
-        await Page.GotoAsync(GenerateStatusRowsReport($"RowStates_{status}.html"));
+        await Page.GotoReportAsync(GenerateStatusRowsReport($"RowStates_{status}.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFeatures();
 

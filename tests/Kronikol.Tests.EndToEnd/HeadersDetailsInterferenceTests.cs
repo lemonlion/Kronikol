@@ -162,7 +162,7 @@ public class HeadersDetailsInterferenceTests : PlaywrightTestBase
     [Fact]
     public async Task Toggling_headers_hidden_preserves_details_truncated_state()
     {
-        await Page.GotoAsync(GenerateReport("HD_HeadersPreservesTrunc.html"));
+        await Page.GotoReportAsync(GenerateReport("HD_HeadersPreservesTrunc.html"));
         await ExpandScenario();
         await WaitForDiagramRender();
 
@@ -181,7 +181,7 @@ public class HeadersDetailsInterferenceTests : PlaywrightTestBase
     [Fact]
     public async Task Toggling_headers_hidden_preserves_details_expanded_state()
     {
-        await Page.GotoAsync(GenerateReport("HD_HeadersPreservesExp.html"));
+        await Page.GotoReportAsync(GenerateReport("HD_HeadersPreservesExp.html"));
         await ExpandScenario();
         await WaitForDiagramRender();
 
@@ -202,7 +202,7 @@ public class HeadersDetailsInterferenceTests : PlaywrightTestBase
     [Fact]
     public async Task Toggling_details_expanded_preserves_headers_hidden_state()
     {
-        await Page.GotoAsync(GenerateReport("HD_DetailsPreservesHidden.html"));
+        await Page.GotoReportAsync(GenerateReport("HD_DetailsPreservesHidden.html"));
         await ExpandScenario();
         await WaitForDiagramRender();
 
@@ -225,7 +225,7 @@ public class HeadersDetailsInterferenceTests : PlaywrightTestBase
     [Fact]
     public async Task Toggling_details_collapsed_preserves_headers_hidden_state()
     {
-        await Page.GotoAsync(GenerateReport("HD_DetailsCollapsedPreservesHidden.html"));
+        await Page.GotoReportAsync(GenerateReport("HD_DetailsCollapsedPreservesHidden.html"));
         await ExpandScenario();
         await WaitForDiagramRender();
 
@@ -244,7 +244,7 @@ public class HeadersDetailsInterferenceTests : PlaywrightTestBase
     [Fact]
     public async Task Toggling_headers_shown_after_hidden_preserves_details_state()
     {
-        await Page.GotoAsync(GenerateReport("HD_HeadersShownPreserves.html"));
+        await Page.GotoReportAsync(GenerateReport("HD_HeadersShownPreserves.html"));
         await ExpandScenario();
         await WaitForDiagramRender();
 
@@ -267,7 +267,7 @@ public class HeadersDetailsInterferenceTests : PlaywrightTestBase
     [Fact]
     public async Task Scenario_level_headers_toggle_does_not_affect_details_radio_buttons()
     {
-        await Page.GotoAsync(GenerateReport("HD_ScenarioHeadersRadio.html"));
+        await Page.GotoReportAsync(GenerateReport("HD_ScenarioHeadersRadio.html"));
         await ExpandScenario();
         await WaitForDiagramRender();
 
@@ -285,7 +285,7 @@ public class HeadersDetailsInterferenceTests : PlaywrightTestBase
     [Fact]
     public async Task Report_level_details_change_preserves_scenario_level_headers_override()
     {
-        await Page.GotoAsync(GenerateReport("HD_ReportDetailsScenarioHeaders.html"));
+        await Page.GotoReportAsync(GenerateReport("HD_ReportDetailsScenarioHeaders.html"));
         await ExpandScenario();
         await WaitForDiagramRender();
 
@@ -305,7 +305,7 @@ public class HeadersDetailsInterferenceTests : PlaywrightTestBase
     [Fact]
     public async Task Headers_hidden_state_initializes_noteSteps_from_default()
     {
-        await Page.GotoAsync(GenerateReport("HD_HeadersInitNoteSteps.html"));
+        await Page.GotoReportAsync(GenerateReport("HD_HeadersInitNoteSteps.html"));
         await ExpandScenario();
         await WaitForDiagramRender();
 
@@ -323,7 +323,7 @@ public class HeadersDetailsInterferenceTests : PlaywrightTestBase
     [Fact]
     public async Task Toggling_headers_hidden_preserves_scenario_truncation_line_count()
     {
-        await Page.GotoAsync(GenerateReportWithManyLines("HD_HeadersPreservesLineCount.html"));
+        await Page.GotoReportAsync(GenerateReportWithManyLines("HD_HeadersPreservesLineCount.html"));
         await ExpandScenario();
         await WaitForDiagramRender();
 
@@ -350,7 +350,7 @@ public class HeadersDetailsInterferenceTests : PlaywrightTestBase
     [Fact]
     public async Task Switching_expanded_to_truncated_respects_scenario_dropdown_value()
     {
-        await Page.GotoAsync(GenerateReportWithManyLines("HD_ExpandedToTruncDropdown.html"));
+        await Page.GotoReportAsync(GenerateReportWithManyLines("HD_ExpandedToTruncDropdown.html"));
         await ExpandScenario();
         await WaitForDiagramRender();
 
@@ -380,7 +380,7 @@ public class HeadersDetailsInterferenceTests : PlaywrightTestBase
     [Fact]
     public async Task Toggling_headers_shown_after_hidden_preserves_scenario_truncation_line_count()
     {
-        await Page.GotoAsync(GenerateReportWithManyLines("HD_HeadersShownPreservesLineCount.html"));
+        await Page.GotoReportAsync(GenerateReportWithManyLines("HD_HeadersShownPreservesLineCount.html"));
         await ExpandScenario();
         await WaitForDiagramRender();
 

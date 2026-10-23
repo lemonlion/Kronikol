@@ -44,7 +44,7 @@ public class ComponentDiagramPageTests : PlaywrightTestBase
     [Fact]
     public async Task The_page_is_drawn_in_standards_mode_and_names_itself()
     {
-        await Page.GotoAsync(new Uri(Generate("component-page-standards")).AbsoluteUri);
+        await Page.GotoReportAsync(new Uri(Generate("component-page-standards")).AbsoluteUri);
 
         Assert.Equal("CSS1Compat", await Page.EvaluateAsync<string>("() => document.compatMode"));
         Assert.Equal(Title, await Page.TitleAsync());
@@ -75,7 +75,7 @@ public class ComponentDiagramPageTests : PlaywrightTestBase
     [Fact]
     public async Task Every_line_the_engine_drew_is_still_painted_on_a_page_without_the_theme()
     {
-        await Page.GotoAsync(new Uri(Generate("component-page-lines")).AbsoluteUri);
+        await Page.GotoReportAsync(new Uri(Generate("component-page-lines")).AbsoluteUri);
         var svg = await WaitForDiagramSvg(60000);
 
         var lost = await svg.EvaluateAsync<string[]>("""
@@ -92,7 +92,7 @@ public class ComponentDiagramPageTests : PlaywrightTestBase
 
     private async Task<(string Mode, float Width, float Height, string Text)> Drawn(string path)
     {
-        await Page.GotoAsync(new Uri(path).AbsoluteUri);
+        await Page.GotoReportAsync(new Uri(path).AbsoluteUri);
         var svg = await WaitForDiagramSvg(60000);
         var box = await svg.BoundingBoxAsync();
         Assert.NotNull(box);

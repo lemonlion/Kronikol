@@ -65,7 +65,7 @@ public class DarkThemeColoursTests : PlaywrightTestBase
     public async Task The_diagram_menu_is_drawn_on_the_card_in_the_pages_ink(string scheme)
     {
         await Page.EmulateMediaAsync(new() { ColorScheme = Scheme(scheme) });
-        await Page.GotoAsync(GenerateReport($"DarkColoursMenu-{scheme}.html"));
+        await Page.GotoReportAsync(GenerateReport($"DarkColoursMenu-{scheme}.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         Assert.Equal(scheme, await ThemeAsync());
         await ExpandFirstScenarioWithDiagram();
@@ -126,7 +126,7 @@ public class DarkThemeColoursTests : PlaywrightTestBase
     public async Task The_flatten_toggle_takes_the_muted_ink_inside_a_controls_border(string scheme)
     {
         await Page.EmulateMediaAsync(new() { ColorScheme = Scheme(scheme) });
-        await Page.GotoAsync(GenerateFlatReport($"DarkColoursFlatten-{scheme}.html"));
+        await Page.GotoReportAsync(GenerateFlatReport($"DarkColoursFlatten-{scheme}.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         Assert.Equal(scheme, await ThemeAsync());
         await ExpandAllFeaturesAsync();
@@ -161,7 +161,7 @@ public class DarkThemeColoursTests : PlaywrightTestBase
     public async Task The_line_that_says_no_interactions_were_captured_takes_the_faint_ink(string scheme)
     {
         await Page.EmulateMediaAsync(new() { ColorScheme = Scheme(scheme) });
-        await Page.GotoAsync(GenerateReportWithoutInteractions($"DarkColoursNoInteractions-{scheme}.html"));
+        await Page.GotoReportAsync(GenerateReportWithoutInteractions($"DarkColoursNoInteractions-{scheme}.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         Assert.Equal(scheme, await ThemeAsync());
         await ExpandAllFeaturesAsync();
@@ -192,7 +192,7 @@ public class DarkThemeColoursTests : PlaywrightTestBase
     {
         await Page.EmulateMediaAsync(new() { ColorScheme = Scheme(scheme) });
         // the Refund scenario is the roster's second position (HistoryReportHelper.Seed)
-        await Page.GotoAsync(HistoryReportHelper.Generate(TempDir, OutputDir, $"DarkColoursSparkline-{scheme}.html",
+        await Page.GotoReportAsync(HistoryReportHelper.Generate(TempDir, OutputDir, $"DarkColoursSparkline-{scheme}.html",
             (i, run) => run with { Results = run.Results[..1] + RefundRuns[i] + run.Results[2..] }));
         await Page.Locator("details.feature").First.WaitForAsync();
         Assert.Equal(scheme, await ThemeAsync());
@@ -225,7 +225,7 @@ public class DarkThemeColoursTests : PlaywrightTestBase
 
     private async Task OpenMissingAttachmentsReport(string fileName)
     {
-        await Page.GotoAsync(ReportTestHelper.GenerateReportWithMissingAttachments(TempDir, OutputDir, fileName));
+        await Page.GotoReportAsync(ReportTestHelper.GenerateReportWithMissingAttachments(TempDir, OutputDir, fileName));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandAllFeaturesAsync();
         await ExpandAllScenariosAsync();

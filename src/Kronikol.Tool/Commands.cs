@@ -36,7 +36,7 @@ internal static class Commands
             "Push NDJSON interaction captures to an OTLP/HTTP collector as OpenTelemetry spans.",
             (a, o, e) => ExportCommand.Run(a, o, e), ExportCommand.PrintUsage),
         new("decode",
-            "Write the JSON a TestRunReport.krkl or .json holds, with its compressed payloads written out, for a script that needs it.",
+            "Write the JSON a TestRunReport.krkl or .json holds, with its compressed payloads written out, or a report page's plain page, for a script that needs it.",
             (a, o, e) => DecodeCommand.Run(a, o, e), DecodeCommand.PrintUsage),
         new("ctrf",
             "Convert a TestRunReport.json or .krkl into a Common Test Report Format document.",

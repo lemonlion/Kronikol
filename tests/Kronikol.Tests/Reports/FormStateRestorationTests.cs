@@ -59,7 +59,7 @@ public class FormStateRestorationTests
             null, fileName, "Test", true,
             diagramFormat: DiagramFormat.PlantUml,
             plantUmlRendering: PlantUmlRendering.BrowserJs);
-        return File.ReadAllText(path);
+        return ReportHtml.Read(path);
     }
 
     [Fact]

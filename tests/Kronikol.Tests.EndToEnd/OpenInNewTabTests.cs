@@ -39,7 +39,7 @@ public class OpenInNewTabTests : PlaywrightTestBase
     private async Task<IPage> OpenFromMenuAsync(string fileName, string submenu, string item, Func<string, string>? editSource = null)
     {
         await Context.AddInitScriptAsync(Recorder);
-        await Page.GotoAsync(GenerateReport(fileName));
+        await Page.GotoReportAsync(GenerateReport(fileName));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         var svg = (await WaitForDiagramSvg()).First;

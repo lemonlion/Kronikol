@@ -16,7 +16,7 @@ public class ContinuationIndexingInternalsTests : DiagramNotePlaywrightBase
 
     private async Task NavigateToReport([System.Runtime.CompilerServices.CallerMemberName] string? testName = null)
     {
-        await Page.GotoAsync(GenerateReport($"ContIndexing_{testName}.html"));
+        await Page.GotoReportAsync(GenerateReport($"ContIndexing_{testName}.html"));
         await Page.WaitForFunctionAsync("() => !!window._computeGlobalNoteIndex",
             null, new() { Timeout = 10000, PollingInterval = 200 });
     }

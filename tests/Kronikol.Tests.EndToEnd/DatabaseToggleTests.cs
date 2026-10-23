@@ -12,7 +12,7 @@ public class DatabaseToggleTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Databases_toggle_button_is_rendered_when_database_participant_exists()
     {
-        await Page.GotoAsync(GenerateDatabaseParticipantReport("DbToggleBtn.html"));
+        await Page.GotoReportAsync(GenerateDatabaseParticipantReport("DbToggleBtn.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         var btn = Page.Locator("button[data-toggle='databases']").First;
@@ -25,7 +25,7 @@ public class DatabaseToggleTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Databases_toggle_hides_database_participant_and_arrows()
     {
-        await Page.GotoAsync(GenerateDatabaseParticipantReport("DbToggleHide.html"));
+        await Page.GotoReportAsync(GenerateDatabaseParticipantReport("DbToggleHide.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -60,7 +60,7 @@ public class DatabaseToggleTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Databases_toggle_shows_database_after_hiding()
     {
-        await Page.GotoAsync(GenerateDatabaseParticipantReport("DbToggleShow.html"));
+        await Page.GotoReportAsync(GenerateDatabaseParticipantReport("DbToggleShow.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -95,7 +95,7 @@ public class DatabaseToggleTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Databases_toggle_button_text_changes_on_click()
     {
-        await Page.GotoAsync(GenerateDatabaseParticipantReport("DbToggleText.html"));
+        await Page.GotoReportAsync(GenerateDatabaseParticipantReport("DbToggleText.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         var btn = Page.Locator("button[data-toggle='databases']").First;
@@ -120,7 +120,7 @@ public class DatabaseToggleTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Databases_toggle_does_not_clip_diagram_left_edge()
     {
-        await Page.GotoAsync(GenerateDatabaseParticipantReport("DbToggleClip.html"));
+        await Page.GotoReportAsync(GenerateDatabaseParticipantReport("DbToggleClip.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -161,7 +161,7 @@ public class DatabaseToggleTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Databases_toggle_resets_zoom_so_diagram_is_not_clipped()
     {
-        await Page.GotoAsync(GenerateWideDatabaseParticipantReport("DbToggleZoomClip.html"));
+        await Page.GotoReportAsync(GenerateWideDatabaseParticipantReport("DbToggleZoomClip.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -242,7 +242,7 @@ public class DatabaseToggleTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Databases_toggle_removes_notes_following_database_arrows()
     {
-        await Page.GotoAsync(GenerateWideDatabaseParticipantReport("DbToggleOrphanedNotes.html"));
+        await Page.GotoReportAsync(GenerateWideDatabaseParticipantReport("DbToggleOrphanedNotes.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -275,7 +275,7 @@ public class DatabaseToggleTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Databases_toggle_button_is_rendered_when_collections_participant_exists()
     {
-        await Page.GotoAsync(GenerateCollectionsParticipantReport("DbToggleCollectionsBtn.html"));
+        await Page.GotoReportAsync(GenerateCollectionsParticipantReport("DbToggleCollectionsBtn.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         var btn = Page.Locator("button[data-toggle='databases']").First;
@@ -287,7 +287,7 @@ public class DatabaseToggleTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Databases_toggle_hides_collections_participant_and_arrows()
     {
-        await Page.GotoAsync(GenerateCollectionsParticipantReport("DbToggleCollectionsHide.html"));
+        await Page.GotoReportAsync(GenerateCollectionsParticipantReport("DbToggleCollectionsHide.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -317,7 +317,7 @@ public class DatabaseToggleTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Databases_toggle_hides_both_database_and_collections_participants()
     {
-        await Page.GotoAsync(GenerateMixedDatabaseCollectionsReport("DbToggleMixedHide.html"));
+        await Page.GotoReportAsync(GenerateMixedDatabaseCollectionsReport("DbToggleMixedHide.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();

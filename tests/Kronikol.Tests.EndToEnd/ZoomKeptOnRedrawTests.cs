@@ -20,7 +20,7 @@ public class ZoomKeptOnRedrawTests : PlaywrightTestBase
 
     private async Task OpenUrlAsync(string url)
     {
-        await Page.GotoAsync(url);
+        await Page.GotoReportAsync(url);
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await Page.WaitForFunctionAsync("""

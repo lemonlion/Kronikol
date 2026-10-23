@@ -40,7 +40,7 @@ public class RunIdentityDataTests
         var path = ReportGenerator.GenerateTestRunReportData(
             Features(), DateTime.UtcNow, DateTime.UtcNow,
             $"RunIdentity_{Guid.NewGuid():N}.{extension}", format, ciMetadata: ciMetadata);
-        return File.ReadAllText(path);
+        return ReportHtml.Read(path);
     }
 
     // ─── JSON ───────────────────────────────────────────────────
@@ -156,7 +156,7 @@ public class RunIdentityDataTests
 
         // Anchored on the emitted markup, not on the class name: the stylesheet declares
         // `.run-ci` in every report whether or not the zone is drawn (5.0.0: the run band's CI zone).
-        var html = File.ReadAllText(path);
+        var html = ReportHtml.Read(path);
         Assert.DoesNotContain("<div class=\"run-zone run-ci\">", html);
         Assert.DoesNotContain("<h2 class=\"run-title\">CI</h2>", html);
         Assert.DoesNotContain(">None</span>", html);

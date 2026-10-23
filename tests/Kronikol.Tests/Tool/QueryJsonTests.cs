@@ -521,7 +521,7 @@ public class QueryJsonTests : IDisposable
         Assert.Contains(path, output);
         Assert.Single(output.Split('\n', StringSplitOptions.RemoveEmptyEntries));
 
-        var envelope = JsonDocument.Parse(File.ReadAllText(path)).RootElement;
+        var envelope = JsonDocument.Parse(ReportHtml.Read(path)).RootElement;
         Assert.Equal(7, envelope.GetProperty("items").GetArrayLength());
     }
 
@@ -531,7 +531,7 @@ public class QueryJsonTests : IDisposable
         var path = Path.Combine(_directory, "big.json");
         Run("interactions", ["--out", path, "--max-bytes", "200"]);
 
-        var envelope = JsonDocument.Parse(File.ReadAllText(path)).RootElement;
+        var envelope = JsonDocument.Parse(ReportHtml.Read(path)).RootElement;
         Assert.Equal(JsonValueKind.Null, envelope.GetProperty("truncated").ValueKind);
         Assert.True(envelope.GetProperty("items").GetArrayLength() > 1);
     }
@@ -546,7 +546,7 @@ public class QueryJsonTests : IDisposable
 
         Assert.True(exit == 0, error);
         Assert.Contains("wrote ", output);
-        Assert.Contains("Browse the catalogue", File.ReadAllText(path));
+        Assert.Contains("Browse the catalogue", ReportHtml.Read(path));
     }
 
     [Fact]
@@ -558,7 +558,7 @@ public class QueryJsonTests : IDisposable
         Run2("body", Report(), BodyHashOf(RequestAddress("s5")), "--out", path);
 
         // The body s5 sent, not the sentence announcing that it was written.
-        var written = File.ReadAllText(path);
+        var written = ReportHtml.Read(path);
         Assert.Contains("\"region\"", written);
         Assert.DoesNotContain("wrote ", written);
     }

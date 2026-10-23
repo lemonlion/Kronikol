@@ -77,11 +77,35 @@ public class CompressedMergeTests : IDisposable
     {
         WriteShard("runner1.json", "a1", "Orders", Body("orders"), compress: true);
         var path = Path.Combine(_directory, "runner1.json");
-        File.WriteAllText(path, File.ReadAllText(path).Replace("\"formatVersion\": 2", "\"formatVersion\": 4", StringComparison.Ordinal));
+        File.WriteAllText(path, ReportHtml.Read(path).Replace("\"formatVersion\": 2", "\"formatVersion\": 4", StringComparison.Ordinal));
 
         var error = Assert.Throws<FormatException>(() => MergeableReportReader.ReadFile(path));
 
         Assert.Contains("formatVersion 4", error.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void The_merged_page_is_compressed_and_its_plain_page_holds_every_shard_s_diagram()
+    {
+        // plans/HTML_COMPRESSION_PLAN.md R1, tests 1, 7 and 7c: shards as today's release writes them, one with its
+        // payloads stored compressed, merge into a compressed page with no gzip in its page frame but the search index.
+        WriteShard("runner1.json", "s1", "Orders", Body("Orders"), compress: false);
+        WriteShard("runner2.json", "s2", "Stock", Body("Stock"), compress: true);
+
+        Merge();
+
+        var file = File.ReadAllText(Path.Combine(_directory, "Combined.html"));
+        Assert.True(HtmlReportFile.IsCompressed(file));
+        var frames = CompressedPage.Read(file);
+        Assert.Single(System.Text.RegularExpressions.Regex.Matches(frames.Page, "H4sI[A-Za-z0-9+/]{20,}"));
+        var sources = Enumerable.Range(0, frames.DiagramCount).Select(frames.Diagram).ToArray();
+        Assert.Contains(sources, s => s.Contains("Test -> Orders : call 1\n", StringComparison.Ordinal));
+        Assert.Contains(sources, s => s.Contains("Test -> Stock : call 1\n", StringComparison.Ordinal));
+        // The plain page holds the same sources, in gzip and base64 as a page written before.
+        var plain = HtmlReportFile.ToPlain(file);
+        var map = JsonDocument.Parse(System.Text.RegularExpressions.Regex.Match(plain, "<script id=\"puml-data\" type=\"application/json\">(.*?)</script>").Groups[1].Value);
+        Assert.Equal(sources.Order(StringComparer.Ordinal),
+            map.RootElement.EnumerateObject().Select(p => CompressedPage.ItemText(p.Value.GetString()!, attribute: false)).Order(StringComparer.Ordinal));
     }
 
     // ─── Fixture ───────────────────────────────────────────────
@@ -122,7 +146,7 @@ public class CompressedMergeTests : IDisposable
         var error = new StringWriter();
         var exit = MergeCommand.Run([_directory, "-o", Path.Combine(_directory, "Combined.html")], output, error);
         Assert.True(exit == 0, error.ToString());
-        return JsonDocument.Parse(File.ReadAllText(Path.Combine(_directory, "Combined.json")));
+        return JsonDocument.Parse(ReportHtml.Read(Path.Combine(_directory, "Combined.json")));
     }
 
     private static JsonElement Scenario(JsonElement root, string id) =>

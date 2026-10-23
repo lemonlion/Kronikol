@@ -19,7 +19,7 @@ public class SubStepsOnExpandTests
     private static readonly DateTime At = new(2026, 10, 20, 9, 0, 0, DateTimeKind.Utc);
 
     private static string Report(Scenario scenario, string name, bool onExpand = true, bool numbered = false) =>
-        File.ReadAllText(ReportGenerator.GenerateHtmlReport([], [new Feature { DisplayName = "F", Scenarios = [scenario] }],
+        ReportHtml.Read(ReportGenerator.GenerateHtmlReport([], [new Feature { DisplayName = "F", Scenarios = [scenario] }],
             At, At, null, name, "Test", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs, showStepNumbers: numbered,
             renderCollapsedSubStepsOnExpand: onExpand));
@@ -207,7 +207,7 @@ public class SubStepsOnExpandTests
             // Both of the run's pages: the test run report and the specifications.
             foreach (var page in new[] { "TestRunReport.html", "Specifications.html" })
             {
-                var html = File.ReadAllText(Path.Combine(directory, page));
+                var html = ReportHtml.Read(Path.Combine(directory, page));
                 Assert.DoesNotContain("data-steps=", html, StringComparison.Ordinal);
                 Assert.Equal(30, DrawnLeafSteps(html));
             }

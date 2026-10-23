@@ -63,7 +63,7 @@ public class NotATestReportTests : IDisposable
     ];
 
     private static string Report(string fileName, Feature[] features, bool includeTestRunData = true) =>
-        File.ReadAllText(ReportGenerator.GenerateHtmlReport([], features, Start, Start.AddSeconds(9), null, fileName, "Run", includeTestRunData,
+        ReportHtml.Read(ReportGenerator.GenerateHtmlReport([], features, Start, Start.AddSeconds(9), null, fileName, "Run", includeTestRunData,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs));
 
     /// <summary>A scenario's opening tag and summary, up to its copy button, which carries its name.</summary>
@@ -293,7 +293,7 @@ public class NotATestReportTests : IDisposable
         Assert.DoesNotContain("Traffic outside any test", html);
         Assert.DoesNotContain("Stack start-up", html);
 
-        var yaml = File.ReadAllText(ReportGenerator.GenerateSpecificationsData(features, Path.Combine(_dir, "Specifications.yml"), "Specs", DataFormat.Yaml));
+        var yaml = ReportHtml.Read(ReportGenerator.GenerateSpecificationsData(features, Path.Combine(_dir, "Specifications.yml"), "Specs", DataFormat.Yaml));
         Assert.Contains("Logged only", yaml);
         Assert.DoesNotContain("Traffic outside any test", yaml);
         Assert.DoesNotContain("Stack start-up", yaml);
@@ -310,10 +310,10 @@ public class NotATestReportTests : IDisposable
         var features = Features();
         features[2].Scenarios[0].Result = ExecutionResult.Failed;
 
-        var yaml = File.ReadAllText(ReportGenerator.GenerateSpecificationsData(features, Path.Combine(_dir, "Specifications.yml"), "Specs", DataFormat.Yaml,
+        var yaml = ReportHtml.Read(ReportGenerator.GenerateSpecificationsData(features, Path.Combine(_dir, "Specifications.yml"), "Specs", DataFormat.Yaml,
             generateBlankOnFailedTests: true));
         Assert.Contains("Create order", yaml);
-        var page = File.ReadAllText(ReportGenerator.GenerateHtmlReport([], features, Start, Start.AddSeconds(9), null, "NotATest_SpecsWritten.html",
+        var page = ReportHtml.Read(ReportGenerator.GenerateHtmlReport([], features, Start, Start.AddSeconds(9), null, "NotATest_SpecsWritten.html",
             "Specs", includeTestRunData: false, generateBlankOnFailedTests: true));
         Assert.Contains("Create order", page);
     }
@@ -323,7 +323,7 @@ public class NotATestReportTests : IDisposable
     {
         var features = Features();
 
-        using var json = JsonDocument.Parse(File.ReadAllText(ReportGenerator.GenerateTestRunReportData(features, Start, Start.AddSeconds(9),
+        using var json = JsonDocument.Parse(ReportHtml.Read(ReportGenerator.GenerateTestRunReportData(features, Start, Start.AddSeconds(9),
             Path.Combine(_dir, "TestRunReport.json"), DataFormat.Json)));
         var flagged = json.RootElement.GetProperty("features").EnumerateArray()
             .SelectMany(f => f.GetProperty("scenarios").EnumerateArray())
@@ -339,7 +339,7 @@ public class NotATestReportTests : IDisposable
             xml.Descendants("NotATest").Select(n => (Value: n.Value, Name: n.Parent!.Element("Name")!.Value))
                 .Select(n => { Assert.Equal("true", n.Value); return n.Name; }).ToArray());
 
-        var yaml = File.ReadAllText(ReportGenerator.GenerateTestRunReportData(features, Start, Start.AddSeconds(9),
+        var yaml = ReportHtml.Read(ReportGenerator.GenerateTestRunReportData(features, Start, Start.AddSeconds(9),
             Path.Combine(_dir, "TestRunReport.yml"), DataFormat.Yaml));
         Assert.Equal(2, Regex.Matches(yaml, "^        NotATest: true$", RegexOptions.Multiline).Count);
         // Only there: the key is not written false on the others.
@@ -354,7 +354,7 @@ public class NotATestReportTests : IDisposable
         var jsonPath = ReportGenerator.GenerateTestRunReportData(features, Start, Start.AddSeconds(9), Path.Combine(_dir, "Valid.json"), DataFormat.Json);
         var schemaPath = ReportGenerator.GenerateTestRunReportSchema(Path.Combine(_dir, "Valid.schema.json"), DataFormat.Json);
         Assert.Empty(SchemaValidationTests.Validate(schemaPath, jsonPath));
-        using (var schema = JsonDocument.Parse(File.ReadAllText(schemaPath)))
+        using (var schema = JsonDocument.Parse(ReportHtml.Read(schemaPath)))
         {
             var scenario = schema.RootElement.GetProperty("properties").GetProperty("features").GetProperty("items")
                 .GetProperty("properties").GetProperty("scenarios").GetProperty("items").GetProperty("properties");
@@ -364,7 +364,7 @@ public class NotATestReportTests : IDisposable
         var xmlPath = ReportGenerator.GenerateTestRunReportData(features, Start, Start.AddSeconds(9), Path.Combine(_dir, "Valid.xml"), DataFormat.Xml);
         var xsdPath = ReportGenerator.GenerateTestRunReportSchema(Path.Combine(_dir, "Valid.xsd"), DataFormat.Xml);
         var schemaSet = new XmlSchemaSet();
-        schemaSet.Add("", System.Xml.XmlReader.Create(new StringReader(File.ReadAllText(xsdPath))));
+        schemaSet.Add("", System.Xml.XmlReader.Create(new StringReader(ReportHtml.Read(xsdPath))));
         var errors = new List<string>();
         XDocument.Load(xmlPath).Validate(schemaSet, (_, e) => errors.Add(e.Message));
         Assert.Empty(errors);

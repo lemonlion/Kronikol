@@ -29,7 +29,7 @@ public class YamlStepsReportTests
         };
 
         var path = ReportGenerator.GenerateSpecificationsData(features, "YamlSteps.yml", "Test", DataFormat.Yaml);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
 
         Assert.Contains("Steps:", content);
         Assert.Contains("Given a valid request", content);
@@ -50,7 +50,7 @@ public class YamlStepsReportTests
         };
 
         var path = ReportGenerator.GenerateSpecificationsData(features, "YamlNoSteps.yml", "Test", DataFormat.Yaml);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
 
         Assert.DoesNotContain("Steps:", content);
     }
@@ -69,7 +69,7 @@ public class YamlStepsReportTests
         };
 
         var path = ReportGenerator.GenerateSpecificationsData(features, "YamlDesc.yml", "Test", DataFormat.Yaml);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
 
         Assert.Contains("Description:", content);
         Assert.Contains("As a user I want to order cakes", content);

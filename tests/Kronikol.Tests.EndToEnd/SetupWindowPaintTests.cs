@@ -62,7 +62,7 @@ public class SetupWindowPaintTests : PlaywrightTestBase
         });
         File.Copy(result.TestRunReportHtml, Path.Combine(OutputDir, name + ".html"), true);
 
-        await Page.GotoAsync(new Uri(result.TestRunReportHtml).AbsoluteUri);
+        await Page.GotoReportAsync(new Uri(result.TestRunReportHtml).AbsoluteUri);
         await Page.Locator("details.feature").First.WaitForAsync();
     }
 

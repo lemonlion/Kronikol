@@ -69,10 +69,10 @@ public class ReportGeneratorAgentOutputsTests : IDisposable
         foreach (var file in new[] { "Failures.md", "Failures.jsonl", "CLAUDE.md", "AGENTS.md" })
             Assert.True(File.Exists(Path.Combine(_dir, file)), $"expected {file} in {_dir}");
 
-        Assert.Contains("Pay with an expired card", File.ReadAllText(Path.Combine(_dir, "Failures.md")));
+        Assert.Contains("Pay with an expired card", ReportHtml.Read(Path.Combine(_dir, "Failures.md")));
         Assert.Equal(
-            File.ReadAllText(Path.Combine(_dir, "CLAUDE.md")),
-            File.ReadAllText(Path.Combine(_dir, "AGENTS.md")));
+            ReportHtml.Read(Path.Combine(_dir, "CLAUDE.md")),
+            ReportHtml.Read(Path.Combine(_dir, "AGENTS.md")));
     }
 
     [Fact]
@@ -96,7 +96,7 @@ public class ReportGeneratorAgentOutputsTests : IDisposable
     {
         Run(Options(_dir));
 
-        var failure = Assert.Single(FailuresJsonl.Failures(File.ReadAllText(Path.Combine(_dir, "Failures.jsonl"))));
+        var failure = Assert.Single(FailuresJsonl.Failures(ReportHtml.Read(Path.Combine(_dir, "Failures.jsonl"))));
         var address = failure.GetProperty("address").GetString();
 
         using var report = JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(_dir, "TestRunReport.json")));
@@ -124,7 +124,7 @@ public class ReportGeneratorAgentOutputsTests : IDisposable
         ];
         ReportGenerator.CreateStandardReportsWithDiagrams(features, DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow, Options(_dir));
 
-        var caseFailure = Assert.Single(FailuresJsonl.Failures(File.ReadAllText(Path.Combine(_dir, "Failures.jsonl"))));
+        var caseFailure = Assert.Single(FailuresJsonl.Failures(ReportHtml.Read(Path.Combine(_dir, "Failures.jsonl"))));
         var ordinal = int.Parse(caseFailure.GetProperty("address").GetString()![1..]);
 
         using var report = JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(_dir, "TestRunReport.json")));
@@ -166,7 +166,7 @@ public class ReportGeneratorAgentOutputsTests : IDisposable
         // plausible, and describing different failures.
         Assert.True(File.Exists(Path.Combine(_dir, "Failures.jsonl")),
             "the jsonl went down with the markdown");
-        Assert.Contains("\"kind\":\"failure\"", File.ReadAllText(Path.Combine(_dir, "Failures.jsonl")), StringComparison.Ordinal);
+        Assert.Contains("\"kind\":\"failure\"", ReportHtml.Read(Path.Combine(_dir, "Failures.jsonl")), StringComparison.Ordinal);
 
         // The failure is announced rather than swallowed. It cannot reach the data files' `diagnostics`
         // array: that snapshot is taken before the outputs run, so the HTML and the JSON agree with each
@@ -196,7 +196,7 @@ public class ReportGeneratorAgentOutputsTests : IDisposable
 
         Run(options);
 
-        using var ctrf = JsonDocument.Parse(File.ReadAllText(Path.Combine(_dir, "ctrf-report.json")));
+        using var ctrf = JsonDocument.Parse(ReportHtml.Read(Path.Combine(_dir, "ctrf-report.json")));
         var results = ctrf.RootElement.GetProperty("results");
         Assert.Equal("CTRF", ctrf.RootElement.GetProperty("reportFormat").GetString());
         Assert.Equal(1, results.GetProperty("summary").GetProperty("failed").GetInt32());
@@ -244,7 +244,7 @@ public class ReportGeneratorAgentOutputsTests : IDisposable
 
         Run(options);
 
-        var markdown = File.ReadAllText(Path.Combine(_dir, "Specifications.md"));
+        var markdown = ReportHtml.Read(Path.Combine(_dir, "Specifications.md"));
         Assert.Contains("## Checkout", markdown);
         Assert.Contains("Pay with an expired card", markdown);
         // A specification, not a second report: the run was red and nothing here says so.
@@ -329,7 +329,7 @@ public class ReportGeneratorAgentOutputsTests : IDisposable
 
         Run(options);
 
-        var summary = File.ReadAllText(Path.Combine(_dir, "CiSummary.md"));
+        var summary = ReportHtml.Read(Path.Combine(_dir, "CiSummary.md"));
         Assert.Contains("## Debug this run", summary);
         // This reads the process's CI: on this repository's own pipeline a download of the run, off it the folder.
         Assert.Contains("kronikol query failures ", summary);
@@ -352,10 +352,10 @@ public class ReportGeneratorAgentOutputsTests : IDisposable
             Console.SetOut(original);
         }
 
-        Assert.Contains("# No failures", File.ReadAllText(Path.Combine(_dir, "Failures.md")));
+        Assert.Contains("# No failures", ReportHtml.Read(Path.Combine(_dir, "Failures.md")));
         // A green run writes one header line rather than nothing: an empty file and a missing file are the
         // same bytes to a reader, and the absence of this file is the signal that the run did not finish.
-        var greenJsonl = File.ReadAllText(Path.Combine(_dir, "Failures.jsonl"));
+        var greenJsonl = ReportHtml.Read(Path.Combine(_dir, "Failures.jsonl"));
         Assert.Equal(0, FailuresJsonl.Header(greenJsonl).GetProperty("failures").GetInt32());
         Assert.Empty(FailuresJsonl.Failures(greenJsonl));
         var own = ConsoleLines.About(captured.ToString(), _dir);

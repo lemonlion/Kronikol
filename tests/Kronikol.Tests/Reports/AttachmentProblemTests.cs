@@ -177,7 +177,7 @@ public class AttachmentProblemTests : IDisposable
     [Fact]
     public void The_yaml_data_file_says_it_only_on_the_attachment_it_does_not_hold()
     {
-        var root = YamlSchemaValidationTests.YamlToJson(File.ReadAllText(WriteRichFixture(DataFormat.Yaml, "yml")));
+        var root = YamlSchemaValidationTests.YamlToJson(ReportHtml.Read(WriteRichFixture(DataFormat.Yaml, "yml")));
 
         Assert.Equal("NotFound", (string?)Assert.Single(Named(root, "Name", "lost.png"))["Problem"]);
         Assert.False(Assert.Single(Named(root, "Name", "receipt.png")).ContainsKey("Problem"));
@@ -191,7 +191,7 @@ public class AttachmentProblemTests : IDisposable
         var path = ReportGenerator.GenerateTestRunReportData(features, Start, Start.AddMinutes(1), $"AttachmentProblem_{Guid.NewGuid():N}.yml",
             DataFormat.Yaml, [], [], []);
 
-        var root = YamlSchemaValidationTests.YamlToJson(File.ReadAllText(path));
+        var root = YamlSchemaValidationTests.YamlToJson(ReportHtml.Read(path));
 
         Assert.Equal("NotCopied", (string?)Assert.Single(Named(root, "Name", "trace.zip"))["Problem"]);
     }
@@ -205,7 +205,7 @@ public class AttachmentProblemTests : IDisposable
             DataFormat.Xml, [], [], []);
         var schema = ReportGenerator.GenerateTestRunReportSchema($"AttachmentProblem_{suffix}.schema.xsd", DataFormat.Xml);
         var set = new XmlSchemaSet();
-        set.Add("", System.Xml.XmlReader.Create(new StringReader(File.ReadAllText(schema))));
+        set.Add("", System.Xml.XmlReader.Create(new StringReader(ReportHtml.Read(schema))));
 
         var errors = new List<string>();
         var document = XDocument.Load(data);
@@ -240,7 +240,7 @@ public class AttachmentProblemTests : IDisposable
             o.CompressTestRunReport = false;
         });
         var path = Path.Combine(Reports, "TestRunReport.json");
-        File.WriteAllText(path, System.Text.RegularExpressions.Regex.Replace(File.ReadAllText(path), @",\s*""problem""\s*:\s*""[A-Za-z]+""", ""));
+        File.WriteAllText(path, System.Text.RegularExpressions.Regex.Replace(ReportHtml.Read(path), @",\s*""problem""\s*:\s*""[A-Za-z]+""", ""));
 
         var report = MergeableReportReader.ReadFile(path);
 
@@ -254,7 +254,7 @@ public class AttachmentProblemTests : IDisposable
     {
         var (lost, trace) = RunWithMissingFiles();
 
-        var digest = File.ReadAllText(Path.Combine(Reports, "Failures.md"));
+        var digest = ReportHtml.Read(Path.Combine(Reports, "Failures.md"));
 
         Assert.Contains("- shot.png — `attachments/shot.png`\n", digest, StringComparison.Ordinal);
         Assert.Contains($"- lost.png — `{lost}` ({NotFound})\n", digest, StringComparison.Ordinal);
@@ -357,7 +357,7 @@ public class AttachmentProblemTests : IDisposable
     {
         var (lost, trace) = RunWithMissingFiles();
 
-        var html = File.ReadAllText(Path.Combine(Reports, "TestRunReport.html"));
+        var html = ReportHtml.Read(Path.Combine(Reports, "TestRunReport.html"));
 
         // The path in a title only (Q3), so a published page shows no machine path in its text.
         Assert.Contains($"<span class=\"attachment-missing\" title=\"{WebUtility.HtmlEncode(lost)}\">lost.png ({NotFound})</span>", html, StringComparison.Ordinal);

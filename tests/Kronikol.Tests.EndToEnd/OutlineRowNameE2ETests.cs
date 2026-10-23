@@ -49,7 +49,7 @@ public class OutlineRowNameE2ETests : PlaywrightTestBase
 
     private async Task OpenAsync(string fileName)
     {
-        await Page.GotoAsync(Write(fileName));
+        await Page.GotoReportAsync(Write(fileName));
         await Page.Locator("details.feature").First.WaitForAsync();
     }
 

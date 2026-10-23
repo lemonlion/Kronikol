@@ -62,7 +62,7 @@ public class ReportToggleResponsivenessTests : PlaywrightTestBase
     private async Task OpenAllDrawnAsync(string? report = null, int diagrams = Diagrams)
     {
         await Page.AddInitScriptAsync(BrowserRenderWorkerTests.BenchInitWithProbe);
-        await Page.GotoAsync(report ?? Report.Value, new() { Timeout = PageOpenTimeout });
+        await Page.GotoReportAsync(report ?? Report.Value, new() { Timeout = PageOpenTimeout });
         await Page.EvaluateAsync("() => document.querySelectorAll('details.feature, details.scenario').forEach(function (d) { d.open = true; })");
         await Page.EvaluateAsync("() => window._renderDiagramsInContainer(document.body)");
         // every diagram drawn, the views behind each scenario's tab bar as well: a toggle measured while the page still
@@ -397,7 +397,7 @@ public class ReportToggleResponsivenessTests : PlaywrightTestBase
     private async Task OpenLongUnderTheBarAsync()
     {
         await Page.AddInitScriptAsync(BrowserRenderWorkerTests.BenchInitWithProbe);
-        await Page.GotoAsync(Long.Value, new() { Timeout = PageOpenTimeout });
+        await Page.GotoReportAsync(Long.Value, new() { Timeout = PageOpenTimeout });
         await Page.EvaluateAsync("""
             () => {
                 document.querySelectorAll('details.feature, details.scenario').forEach(function (d) { d.open = true; });

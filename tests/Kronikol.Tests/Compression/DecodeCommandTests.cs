@@ -1,6 +1,7 @@
 using System.IO.Compression;
 using System.Text;
 using System.Text.Json.Nodes;
+using Kronikol.Reports;
 using Kronikol.Tool;
 
 namespace Kronikol.Tests.Compression;
@@ -8,7 +9,8 @@ namespace Kronikol.Tests.Compression;
 /// <summary>
 /// <c>kronikol decode</c> (plans/REPORT_FORMAT_PLAN.md 4.4, Q15): the JSON a report file holds, from every form the
 /// reader takes, with each payload stored compressed written out as text, so a script or a redaction check reads it in
-/// full; compact, or indented on request; to stdout or a file; and one error for a file it cannot read.
+/// full; compact, or indented on request; to stdout or a file; and one error for a file it cannot read. A report page
+/// (plans/HTML_COMPRESSION_PLAN.md Q9) is written as its plain page.
 /// </summary>
 public class DecodeCommandTests : IDisposable
 {
@@ -118,6 +120,98 @@ public class DecodeCommandTests : IDisposable
         Assert.Equal(2, exit);
         Assert.Contains("is the report being decoded", error, StringComparison.Ordinal);
         Assert.Equal(KrklReportsBytes(), File.ReadAllBytes(_krkl));
+    }
+
+    // ---------- a report page (plans/HTML_COMPRESSION_PLAN.md R1, Q9; section 5 tests 7a and 7b) ----------
+
+    private string Page(string name = "TestRunReport.html") =>
+        Kronikol.Reports.ReportGenerator.GenerateHtmlReport(
+            new[] { new DefaultDiagramsFetcher.DiagramAsCode("s1", "", "@startuml\nA -> B : GET: /api/decoded-page\n@enduml") },
+            new[] { new Feature
+            {
+                DisplayName = "F1",
+                Scenarios = [new Scenario { Id = "s1", DisplayName = "Create order", Result = ExecutionResult.Passed,
+                    Steps = [new ScenarioStep { Keyword = "Given", Text = "a valid request", Status = ExecutionResult.Passed }] }]
+            } },
+            new DateTime(2026, 1, 2, 3, 0, 0, DateTimeKind.Utc), new DateTime(2026, 1, 2, 3, 10, 0, DateTimeKind.Utc),
+            null, Path.Combine(_root, name), "Decoded Page", true,
+            diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
+
+    [Fact]
+    public void A_compressed_page_decodes_to_its_plain_page()
+    {
+        var page = Page();
+        Assert.True(Kronikol.Reports.HtmlReportFile.IsCompressed(File.ReadAllText(page)));
+
+        var (exit, output, error) = Decode(page);
+
+        Assert.True(exit == 0, error);
+        Assert.Equal(Kronikol.Reports.HtmlReportFile.ReadPlain(page), output);
+        Assert.False(Kronikol.Reports.HtmlReportFile.IsCompressed(output));
+        var source = System.Text.RegularExpressions.Regex.Match(output, "<script id=\"puml-data\" type=\"application/json\">\\{\"[^\"]+\":\"(H4sI[^\"]+)\"").Groups[1].Value;
+        Assert.Contains("/api/decoded-page", Kronikol.Reports.CompressedPage.ItemText(source, attribute: false), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Out_writes_the_plain_page_s_bytes_and_nothing_to_stdout()
+    {
+        var page = Page();
+        var target = Path.Combine(_root, "plain.html");
+
+        var (exit, output, error) = Decode(page, "-o", target);
+
+        Assert.True(exit == 0, error);
+        Assert.Equal("", output);
+        Assert.Equal(Encoding.UTF8.GetBytes(Kronikol.Reports.HtmlReportFile.ReadPlain(page)), File.ReadAllBytes(target));
+    }
+
+    [Fact]
+    public void A_plain_page_is_written_as_it_is()
+    {
+        var plain = Path.Combine(_root, "plain-input.html");
+        File.WriteAllText(plain, Kronikol.Reports.HtmlReportFile.ReadPlain(Page()));
+
+        var (exit, output, error) = Decode(plain);
+
+        Assert.True(exit == 0, error);
+        Assert.Equal(File.ReadAllText(plain), output);
+    }
+
+    [Fact]
+    public void A_damaged_page_is_one_error_and_writes_nothing()
+    {
+        var page = Page();
+        var text = File.ReadAllText(page);
+        var frame = System.Text.RegularExpressions.Regex.Match(text, "(?<=<script id=\"kron-frame-page\"[^>]*>)[A-Za-z0-9+/=]+");
+        var bytes = Convert.FromBase64String(frame.Value);
+        bytes[bytes.Length / 2] ^= 0x5a;
+        File.WriteAllText(page, text[..frame.Index] + Convert.ToBase64String(bytes) + text[(frame.Index + frame.Length)..]);
+        var target = Path.Combine(_root, "never.html");
+
+        var (exit, output, error) = Decode(page, "-o", target);
+
+        Assert.Equal(1, exit);
+        Assert.Equal("", output);
+        Assert.Contains("is a compressed report that is damaged", error, StringComparison.Ordinal);
+        Assert.False(File.Exists(target));
+    }
+
+    [Fact]
+    public void Indent_is_for_the_JSON_and_refused_for_a_page()
+    {
+        var (exit, output, error) = Decode(Page(), "--indent");
+
+        Assert.Equal(2, exit);
+        Assert.Equal("", output);
+        Assert.Contains("--indent", error, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void The_tests_reading_helper_returns_the_page_decode_writes()
+    {
+        var page = Page();
+
+        Assert.Equal(Decode(page).Output, ReportHtml.Read(page));
     }
 
     private byte[] KrklReportsBytes() => ReportFileFormatTests.Krkl(File.ReadAllBytes(_json));

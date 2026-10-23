@@ -17,7 +17,7 @@ public class ExamplesTableReportTests
             DateTime.UtcNow, DateTime.UtcNow,
             null, "ExamplesTable.html", "Test", includeTestRunData: true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
-        return File.ReadAllText(path);
+        return ReportHtml.Read(path);
     }
 
     [Fact]

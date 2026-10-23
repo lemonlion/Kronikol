@@ -34,7 +34,7 @@ public class DiagramActivityAndComponentColoursTests : DiagramNotePlaywrightBase
         // two sources: the flow draws two swimlanes and the line between them, which is the lane colour's only stroke
         var (uri, _) = ReportTestHelper.GenerateRunReportWithFlowArrows(TempDir, OutputDir, fileName, withFlow: 1, withoutFlow: 0,
             twoSources: true);
-        await Page.GotoAsync(uri);
+        await Page.GotoReportAsync(uri);
         await Page.EvaluateAsync("t => document.documentElement.setAttribute('data-theme', t)", theme);
         await ExpandFirstScenarioWithDiagram();
         await Page.EvaluateAsync("() => window._renderDiagramsInContainer(document.body)");
@@ -143,7 +143,7 @@ public class DiagramActivityAndComponentColoursTests : DiagramNotePlaywrightBase
             Path.Combine(TempDir, $"Components-{theme}.html"), "Bakery", true, diagramFormat: DiagramFormat.PlantUml,
             plantUmlRendering: PlantUmlRendering.BrowserJs, componentDiagramPlantUml: Components);
         File.Copy(path, Path.Combine(OutputDir, $"Components-{theme}.html"), true);
-        await Page.GotoAsync(new Uri(path).AbsoluteUri);
+        await Page.GotoReportAsync(new Uri(path).AbsoluteUri);
         await Page.EvaluateAsync("t => document.documentElement.setAttribute('data-theme', t)", theme);
         await OpenReportTabAsync("components");
         await Page.WaitForFunctionAsync("() => !!document.querySelector('#component-diagram .plantuml-browser svg')", null,
@@ -228,7 +228,7 @@ public class DiagramActivityAndComponentColoursTests : DiagramNotePlaywrightBase
             Path.Combine(TempDir, file), "Bakery", true, diagramFormat: DiagramFormat.PlantUml,
             plantUmlRendering: PlantUmlRendering.BrowserJs, componentDiagramPlantUml: plantUml);
         File.Copy(path, Path.Combine(OutputDir, file), true);
-        await Page.GotoAsync(new Uri(path).AbsoluteUri);
+        await Page.GotoReportAsync(new Uri(path).AbsoluteUri);
         await Page.EvaluateAsync("t => document.documentElement.setAttribute('data-theme', t)", theme);
         await OpenReportTabAsync("components");
         await Page.WaitForFunctionAsync("() => !!document.querySelector('#component-diagram .plantuml-browser svg')", null,
@@ -259,7 +259,7 @@ public class DiagramActivityAndComponentColoursTests : DiagramNotePlaywrightBase
     [InlineData("dark")]
     public async Task A_notes_header_line_takes_the_themes_soft_ink(string theme)
     {
-        await Page.GotoAsync(ReportTestHelper.GenerateReportWithHeaderInkNotes(TempDir, OutputDir, $"HeaderInk-{theme}.html"));
+        await Page.GotoReportAsync(ReportTestHelper.GenerateReportWithHeaderInkNotes(TempDir, OutputDir, $"HeaderInk-{theme}.html"));
         await Page.EvaluateAsync("t => document.documentElement.setAttribute('data-theme', t)", theme);
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();

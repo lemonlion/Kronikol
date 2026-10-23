@@ -282,7 +282,7 @@ public class FeatureResultExtensionsTests
             LightBddRun(LightBddFeatures(LightBddAttachment(reports)), reports, "run-2");
 
             var kept = Path.Combine(reports, "runs", "run-1");
-            Assert.Contains($"src=\"attachments/{firstName}\"", File.ReadAllText(Path.Combine(kept, "TestRunReport.html")), StringComparison.Ordinal);
+            Assert.Contains($"src=\"attachments/{firstName}\"", ReportHtml.Read(Path.Combine(kept, "TestRunReport.html")), StringComparison.Ordinal);
             Assert.True(File.Exists(Path.Combine(kept, "attachments", firstName)));
         }
         finally

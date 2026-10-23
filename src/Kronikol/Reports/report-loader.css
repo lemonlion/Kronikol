@@ -1,0 +1,50 @@
+/* The loading screen of a compressed report (plans/HTML_COMPRESSION_PLAN.md 4.1), in the report's own ground and ink
+   (report-tokens.css), light or dark as the theme boot script chose before the first paint. The hint under the title
+   shows after a few seconds, by CSS alone, so a viewer that runs no script still says what to do; with styles blocked
+   it shows at once, and an open that takes a moment never shows it. */
+:root {
+    color-scheme: light;
+    --kron-loading-ground: #ebeef4;
+    --kron-loading-ink: #242b36;
+    --kron-loading-muted: #5b6474;
+    --kron-loading-accent: #2559c7;
+}
+:root[data-theme="dark"] {
+    color-scheme: dark;
+    --kron-loading-ground: #0e131a;
+    --kron-loading-ink: #e4e9f0;
+    --kron-loading-muted: #a0aab7;
+    --kron-loading-accent: #7ea6f2;
+}
+/* Without scripts the boot script sets no theme: the system's setting decides. The two dark blocks stay identical. */
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        color-scheme: dark;
+        --kron-loading-ground: #0e131a;
+        --kron-loading-ink: #e4e9f0;
+        --kron-loading-muted: #a0aab7;
+        --kron-loading-accent: #7ea6f2;
+    }
+}
+html, body { margin: 0; min-height: 100%; background: var(--kron-loading-ground); color: var(--kron-loading-ink); }
+body { font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+#kron-loading, noscript p {
+    box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 10px; min-height: 100vh; margin: 0; padding: 16px; text-align: center;
+}
+#kron-loading p { margin: 0; max-width: 36em; }
+.kron-loading-title { font-weight: 600; }
+.kron-loading-bar {
+    width: 160px; height: 3px; border-radius: 2px; overflow: hidden;
+    background: color-mix(in srgb, var(--kron-loading-accent) 18%, transparent);
+}
+.kron-loading-bar::before {
+    content: ""; display: block; width: 40%; height: 100%; border-radius: 2px; background: var(--kron-loading-accent);
+    animation: kron-loading-slide 1.1s ease-in-out infinite;
+}
+.kron-loading-hint { color: var(--kron-loading-muted); opacity: 0; animation: kron-loading-hint 0s 4s forwards; }
+#kron-loading[data-failed] .kron-loading-bar { display: none; }
+#kron-loading[data-failed] p { opacity: 1; animation: none; }
+@keyframes kron-loading-slide { from { transform: translateX(-100%); } to { transform: translateX(250%); } }
+@keyframes kron-loading-hint { to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .kron-loading-bar::before { animation: none; width: 100%; opacity: .5; } }

@@ -51,7 +51,7 @@ public class ReportJsonEncodingTests : IDisposable
     [Fact]
     public void The_standard_file_writes_quotes_and_markup_characters_as_they_are()
     {
-        var text = File.ReadAllText(WriteStandard());
+        var text = ReportHtml.Read(WriteStandard());
 
         AssertRelaxed(text);
     }
@@ -74,7 +74,7 @@ public class ReportJsonEncodingTests : IDisposable
         var exit = MergeCommand.Run([_directory, "-o", Path.Combine(_directory, "Combined.html")], output, error);
 
         Assert.True(exit == 0, error.ToString());
-        AssertRelaxed(File.ReadAllText(Path.Combine(_directory, "Combined.json")));
+        AssertRelaxed(ReportHtml.Read(Path.Combine(_directory, "Combined.json")));
     }
 
     [Fact]
@@ -89,7 +89,7 @@ public class ReportJsonEncodingTests : IDisposable
 
         var target = Path.Combine(_directory, "body.json");
         Query("http", report, "s0/i0", "--body", "--out", target);
-        using var written = JsonDocument.Parse(File.ReadAllText(target, Encoding.UTF8));
+        using var written = JsonDocument.Parse(ReportHtml.Read(target, Encoding.UTF8));
         Assert.Equal("a \"quoted\" <b>tag</b> & 'apos' + plus", written.RootElement.GetProperty("note").GetString());
         Assert.Equal("C:" + (char)92 + "tmp", written.RootElement.GetProperty("path").GetString());
         Assert.Equal("Zoë ✓ 😀", written.RootElement.GetProperty("name").GetString());
@@ -126,9 +126,9 @@ public class ReportJsonEncodingTests : IDisposable
     [Fact]
     public void The_file_matches_its_pin()
     {
-        var actual = Normalise(File.ReadAllText(WriteStandard()));
+        var actual = Normalise(ReportHtml.Read(WriteStandard()));
         var pin = Path.Combine(AppContext.BaseDirectory, "TestData", "Reports", "TestRunReport.pin.json");
-        var expected = File.Exists(pin) ? Normalise(File.ReadAllText(pin)) : "";
+        var expected = File.Exists(pin) ? Normalise(ReportHtml.Read(pin)) : "";
 
         if (actual != expected)
         {

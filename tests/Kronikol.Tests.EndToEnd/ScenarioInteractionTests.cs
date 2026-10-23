@@ -12,7 +12,7 @@ public class ScenarioInteractionTests : PlaywrightTestBase
     [Fact]
     public async Task Clicking_feature_summary_opens_feature()
     {
-        await Page.GotoAsync(GenerateReport("ScenarioFeatureOpen.html"));
+        await Page.GotoReportAsync(GenerateReport("ScenarioFeatureOpen.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         var feature = Page.Locator("details.feature").First;
@@ -25,7 +25,7 @@ public class ScenarioInteractionTests : PlaywrightTestBase
     [Fact]
     public async Task Clicking_scenario_summary_opens_scenario()
     {
-        await Page.GotoAsync(GenerateReport("ScenarioOpen.html"));
+        await Page.GotoReportAsync(GenerateReport("ScenarioOpen.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await Page.Locator("details.feature summary").First.ClickAsync();
@@ -43,7 +43,7 @@ public class ScenarioInteractionTests : PlaywrightTestBase
     [Fact]
     public async Task Copy_scenario_name_button_exists_on_each_scenario()
     {
-        await Page.GotoAsync(GenerateReport("ScenarioCopyBtn.html"));
+        await Page.GotoReportAsync(GenerateReport("ScenarioCopyBtn.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await ExpandAllFeaturesAsync();
@@ -56,7 +56,7 @@ public class ScenarioInteractionTests : PlaywrightTestBase
     [Fact]
     public async Task Copy_scenario_name_button_shows_checkmark_after_click()
     {
-        await Page.GotoAsync(GenerateReport("ScenarioCopyCheck.html"));
+        await Page.GotoReportAsync(GenerateReport("ScenarioCopyCheck.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         // Grant clipboard permissions
@@ -73,7 +73,7 @@ public class ScenarioInteractionTests : PlaywrightTestBase
     [Fact]
     public async Task Copy_scenario_name_button_reverts_after_delay()
     {
-        await Page.GotoAsync(GenerateReport("ScenarioCopyRevert.html"));
+        await Page.GotoReportAsync(GenerateReport("ScenarioCopyRevert.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await Context.GrantPermissionsAsync(["clipboard-read", "clipboard-write"]);
@@ -91,7 +91,7 @@ public class ScenarioInteractionTests : PlaywrightTestBase
     [Fact]
     public async Task Copy_scenario_name_has_correct_data_attribute()
     {
-        await Page.GotoAsync(GenerateReport("ScenarioCopyData.html"));
+        await Page.GotoReportAsync(GenerateReport("ScenarioCopyData.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await ExpandAllFeaturesAsync();
@@ -105,7 +105,7 @@ public class ScenarioInteractionTests : PlaywrightTestBase
     [Fact]
     public async Task Scenario_link_exists_on_each_scenario()
     {
-        await Page.GotoAsync(GenerateReport("ScenarioLink.html"));
+        await Page.GotoReportAsync(GenerateReport("ScenarioLink.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await ExpandAllFeaturesAsync();
@@ -118,7 +118,7 @@ public class ScenarioInteractionTests : PlaywrightTestBase
     [Fact]
     public async Task Scenario_link_href_points_to_scenario_id()
     {
-        await Page.GotoAsync(GenerateReport("ScenarioLinkHref.html"));
+        await Page.GotoReportAsync(GenerateReport("ScenarioLinkHref.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await ExpandAllFeaturesAsync();
@@ -132,7 +132,7 @@ public class ScenarioInteractionTests : PlaywrightTestBase
     [Fact]
     public async Task Duration_badge_shows_time_for_scenarios_with_duration()
     {
-        await Page.GotoAsync(GenerateReport("ScenarioDuration.html"));
+        await Page.GotoReportAsync(GenerateReport("ScenarioDuration.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await ExpandAllFeaturesAsync();
@@ -155,7 +155,7 @@ public class ScenarioInteractionTests : PlaywrightTestBase
     [Fact]
     public async Task Scenarios_have_correct_status_data_attribute()
     {
-        await Page.GotoAsync(GenerateReport("ScenarioStatus.html"));
+        await Page.GotoReportAsync(GenerateReport("ScenarioStatus.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         var passed = await Page.Locator(".scenario[data-status='Passed']").CountAsync();
@@ -172,7 +172,7 @@ public class ScenarioInteractionTests : PlaywrightTestBase
     [Fact]
     public async Task Happy_path_scenarios_have_class()
     {
-        await Page.GotoAsync(GenerateReport("ScenarioHappyPath.html"));
+        await Page.GotoReportAsync(GenerateReport("ScenarioHappyPath.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         var happyPaths = await Page.Locator(".scenario.happy-path").CountAsync();
@@ -184,7 +184,7 @@ public class ScenarioInteractionTests : PlaywrightTestBase
     [Fact]
     public async Task Scenario_steps_render_inside_open_scenario()
     {
-        await Page.GotoAsync(GenerateReport("ScenarioSteps.html"));
+        await Page.GotoReportAsync(GenerateReport("ScenarioSteps.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
 
@@ -195,7 +195,7 @@ public class ScenarioInteractionTests : PlaywrightTestBase
     [Fact]
     public async Task Steps_section_is_collapsible_details_element()
     {
-        await Page.GotoAsync(GenerateReport("StepsCollapsible.html"));
+        await Page.GotoReportAsync(GenerateReport("StepsCollapsible.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
 
@@ -209,7 +209,7 @@ public class ScenarioInteractionTests : PlaywrightTestBase
     [Fact]
     public async Task Steps_section_can_be_collapsed_by_clicking_summary()
     {
-        await Page.GotoAsync(GenerateReport("StepsCollapse.html"));
+        await Page.GotoReportAsync(GenerateReport("StepsCollapse.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
 
@@ -227,7 +227,7 @@ public class ScenarioInteractionTests : PlaywrightTestBase
     [Fact]
     public async Task Steps_section_has_rounded_border()
     {
-        await Page.GotoAsync(GenerateReport("StepsBorder.html"));
+        await Page.GotoReportAsync(GenerateReport("StepsBorder.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
 
@@ -243,7 +243,7 @@ public class ScenarioInteractionTests : PlaywrightTestBase
     [Fact]
     public async Task Plantuml_browser_diagram_renders_svg()
     {
-        await Page.GotoAsync(GenerateReport("ScenarioDiagramRender.html"));
+        await Page.GotoReportAsync(GenerateReport("ScenarioDiagramRender.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
 
@@ -256,7 +256,7 @@ public class ScenarioInteractionTests : PlaywrightTestBase
     [Fact]
     public async Task Right_click_on_diagram_shows_context_menu()
     {
-        await Page.GotoAsync(GenerateReport("ScenarioCtxMenu.html"));
+        await Page.GotoReportAsync(GenerateReport("ScenarioCtxMenu.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         var svg = await WaitForDiagramSvg();
@@ -270,7 +270,7 @@ public class ScenarioInteractionTests : PlaywrightTestBase
     [Fact]
     public async Task Context_menu_has_copy_and_save_submenus()
     {
-        await Page.GotoAsync(GenerateReport("ScenarioCtxMenuItems.html"));
+        await Page.GotoReportAsync(GenerateReport("ScenarioCtxMenuItems.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         var svg = await WaitForDiagramSvg();
@@ -288,7 +288,7 @@ public class ScenarioInteractionTests : PlaywrightTestBase
     [Fact]
     public async Task Context_menu_dismissed_by_clicking_elsewhere()
     {
-        await Page.GotoAsync(GenerateReport("ScenarioCtxMenuDismiss.html"));
+        await Page.GotoReportAsync(GenerateReport("ScenarioCtxMenuDismiss.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         var svg = await WaitForDiagramSvg();
@@ -304,7 +304,7 @@ public class ScenarioInteractionTests : PlaywrightTestBase
     [Fact]
     public async Task Context_menu_dismissed_by_escape_key()
     {
-        await Page.GotoAsync(GenerateReport("ScenarioCtxMenuEsc.html"));
+        await Page.GotoReportAsync(GenerateReport("ScenarioCtxMenuEsc.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         var svg = await WaitForDiagramSvg();
@@ -322,7 +322,7 @@ public class ScenarioInteractionTests : PlaywrightTestBase
     [Fact]
     public async Task Clicking_status_filter_hides_non_matching_scenarios()
     {
-        await Page.GotoAsync(GenerateReport("ScenarioStatusFilter.html"));
+        await Page.GotoReportAsync(GenerateReport("ScenarioStatusFilter.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await OpenFilterRowsAsync();
@@ -345,7 +345,7 @@ public class ScenarioInteractionTests : PlaywrightTestBase
     [Fact]
     public async Task Clicking_status_filter_again_deactivates_it()
     {
-        await Page.GotoAsync(GenerateReport("ScenarioStatusToggle.html"));
+        await Page.GotoReportAsync(GenerateReport("ScenarioStatusToggle.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await OpenFilterRowsAsync();
@@ -369,7 +369,7 @@ public class ScenarioInteractionTests : PlaywrightTestBase
     [Fact]
     public async Task Clicking_happy_path_filter_hides_non_happy_scenarios()
     {
-        await Page.GotoAsync(GenerateReport("ScenarioHappyFilter.html"));
+        await Page.GotoReportAsync(GenerateReport("ScenarioHappyFilter.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await OpenFilterRowsAsync();
@@ -392,7 +392,7 @@ public class ScenarioInteractionTests : PlaywrightTestBase
     [Fact]
     public async Task A_scenario_s_categories_are_chips_of_the_tags_row()
     {
-        await Page.GotoAsync(GenerateReport("ScenarioCategoryBtns.html"));
+        await Page.GotoReportAsync(GenerateReport("ScenarioCategoryBtns.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         Assert.Equal(1, await Page.Locator(".filtering-box .tag-toggle[data-tag='Smoke']").CountAsync());

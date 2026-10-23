@@ -59,7 +59,7 @@ public class ReportsFolderPathTests : IDisposable
         foreach (var file in new[] { "TestRunReport.html", "TestRunReport.krkl", "Specifications.html", "Specifications.yml", "ComponentDiagram.html", "CiSummary.md" })
             Assert.True(File.Exists(Path.Combine(_dir, file)), $"expected {file} in {_dir}");
 
-        Assert.Contains("Place order", File.ReadAllText(Path.Combine(_dir, "TestRunReport.html")));
+        Assert.Contains("Place order", ReportHtml.Read(Path.Combine(_dir, "TestRunReport.html")));
     }
 
     [Fact]
@@ -80,7 +80,7 @@ public class ReportsFolderPathTests : IDisposable
         RequestResponseLogger.LogPair("Second", secondId, HttpMethod.Get, new Uri("http://svc/second-path"), "Svc", "Test");
         ReportGenerator.CreateStandardReportsWithDiagrams(OneFeature(secondId, "Second"), DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow, Options(secondDir));
 
-        var secondHtml = File.ReadAllText(Path.Combine(secondDir, "TestRunReport.html"));
+        var secondHtml = ReportHtml.Read(Path.Combine(secondDir, "TestRunReport.html"));
         Assert.Contains("second-path", secondHtml);
     }
 
@@ -91,7 +91,7 @@ public class ReportsFolderPathTests : IDisposable
 
         ReportGenerator.CreateStandardReportsWithDiagrams(OneFeature(testId, "Pure UI test"), DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow, Options(_dir));
 
-        var html = File.ReadAllText(Path.Combine(_dir, "TestRunReport.html"));
+        var html = ReportHtml.Read(Path.Combine(_dir, "TestRunReport.html"));
         Assert.Contains("No interactions captured for this scenario.", html);
         Assert.Contains("data-no-interactions=\"true\"", html);
     }
@@ -105,7 +105,7 @@ public class ReportsFolderPathTests : IDisposable
 
         ReportGenerator.CreateStandardReportsWithDiagrams(OneFeature(testId, "Pure UI test"), DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow, options);
 
-        Assert.DoesNotContain("data-no-interactions", File.ReadAllText(Path.Combine(_dir, "TestRunReport.html")));
+        Assert.DoesNotContain("data-no-interactions", ReportHtml.Read(Path.Combine(_dir, "TestRunReport.html")));
     }
 
     [Fact]

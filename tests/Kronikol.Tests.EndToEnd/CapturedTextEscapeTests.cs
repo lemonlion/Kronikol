@@ -17,7 +17,7 @@ public class CapturedTextEscapeTests : PlaywrightTestBase
 
     private async Task OpenReport(string uri)
     {
-        await Page.GotoAsync(uri);
+        await Page.GotoReportAsync(uri);
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await Page.EvaluateAsync("() => window._renderDiagramsInContainer(document.body)");
@@ -124,7 +124,7 @@ public class CapturedTextEscapeTests : PlaywrightTestBase
     /// <summary>Renders <paramref name="source"/> alone in the worker and returns its painted lines (text sharing a baseline).</summary>
     private async Task<string[]> RenderAlone(string source)
     {
-        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateBrowserJsPage(("d1", source))));
+        await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateBrowserJsPage(("d1", source))));
         await Page.EvaluateAsync("() => window._renderDiagramsInContainer(document.body)");
         await Page.WaitForFunctionAsync("() => { const el = document.getElementById('d1'); return el && el.dataset.rendered === '1' && el.querySelector('svg'); }",
             null, new() { Timeout = 60_000, PollingInterval = 200 });

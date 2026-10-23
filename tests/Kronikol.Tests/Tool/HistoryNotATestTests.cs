@@ -91,7 +91,7 @@ public class HistoryNotATestTests : IDisposable
         Seed(2);
         var directory = WriteReport("nofold", pay: "Passed");
         var path = Path.Combine(directory, "TestRunReport.json");
-        var json = System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(path))!;
+        var json = System.Text.Json.Nodes.JsonNode.Parse(ReportHtml.Read(path))!;
         json["features"]!.AsArray().RemoveAt(1);
         File.WriteAllText(path, json.ToJsonString());
 

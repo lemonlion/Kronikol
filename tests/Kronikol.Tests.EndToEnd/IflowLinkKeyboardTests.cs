@@ -23,7 +23,7 @@ public class IflowLinkKeyboardTests : PlaywrightTestBase
     // the page, its popup opener recorded (what it was asked to open, in order), then the diagram bound
     private async Task OpenAndBind(InternalFlowHasDataBehavior behavior, string? beforeBinding = null)
     {
-        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateIflowLinkColourPage(behavior)));
+        await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateIflowLinkColourPage(behavior)));
         await Page.WaitForFunctionAsync("() => typeof window._iflowBindLinks === 'function'", null,
             new() { Timeout = 10_000, PollingInterval = 200 });
         await Page.EvaluateAsync("() => { window.__opened = []; window._iflowShowPopup = id => window.__opened.push(id); }");

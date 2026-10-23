@@ -49,7 +49,7 @@ public class TimestampUtcTests
             $"TimestampUtc_{Guid.NewGuid():N}.{extension}", format,
             [], Logs(), []);
 
-        var written = File.ReadAllText(path);
+        var written = ReportHtml.Read(path);
 
         Assert.Contains(ExpectedUtc, written, StringComparison.Ordinal);
         Assert.DoesNotContain(TheLocalReading, written, StringComparison.Ordinal);

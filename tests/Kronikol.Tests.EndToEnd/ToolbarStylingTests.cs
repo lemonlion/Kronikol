@@ -33,7 +33,7 @@ public class ToolbarStylingTests : PlaywrightTestBase
 
     private async Task Open(string fileName, bool violet, bool internalFlowTracking = true, string? stylesheet = null)
     {
-        await Page.GotoAsync(ReportTestHelper.GenerateWholeTestFlowToggleDefaultsReport(TempDir, OutputDir, fileName, _ => { },
+        await Page.GotoReportAsync(ReportTestHelper.GenerateWholeTestFlowToggleDefaultsReport(TempDir, OutputDir, fileName, _ => { },
             stylesheet: stylesheet ?? (violet ? Stylesheets.VioletThemeStyleSheet : null), internalFlowTracking: internalFlowTracking));
         await Page.Locator("details.feature").First.WaitForAsync();
     }
@@ -56,7 +56,7 @@ public class ToolbarStylingTests : PlaywrightTestBase
     [Fact]
     public async Task Scenario_toolbar_is_a_wrapping_flex_row_without_internal_flow_tracking()
     {
-        await Page.GotoAsync(GenerateReport("ToolbarNoFlow.html"));
+        await Page.GotoReportAsync(GenerateReport("ToolbarNoFlow.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await OpenFirstScenarioDiagrams();
 
@@ -293,7 +293,7 @@ public class ToolbarStylingTests : PlaywrightTestBase
             HasTouch = true
         });
         var page = await OpenPageAsync(phone);
-        await page.GotoAsync(ReportTestHelper.GenerateWholeTestFlowToggleDefaultsReport(TempDir, OutputDir, $"PhoneTap{violet}.html", _ => { },
+        await page.GotoReportAsync(ReportTestHelper.GenerateWholeTestFlowToggleDefaultsReport(TempDir, OutputDir, $"PhoneTap{violet}.html", _ => { },
             stylesheet: violet ? Stylesheets.VioletThemeStyleSheet : null));
         await page.Locator("details.feature").First.WaitForAsync();
 

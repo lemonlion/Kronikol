@@ -31,7 +31,7 @@ public class TimelineControlsTests : IDisposable
         var path = ReportGenerator.GenerateHtmlReportCore([], features, T0.UtcDateTime, T0.UtcDateTime.AddMinutes(1), null,
             Path.Combine(_directory, $"Timeline_{Guid.NewGuid():N}.html"), "Timeline", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs, trackedLogs: logs?.ToArray());
-        return File.ReadAllText(path);
+        return ReportHtml.Read(path);
     }
 
     private IDocument Page(Feature[] features, List<RequestResponseLog>? logs = null) => Parse(Html(features, logs));

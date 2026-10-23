@@ -96,7 +96,7 @@ public class OutlineRowKeySiteTests : IDisposable
             Path.Combine(_dir, $"Baskets_{Guid.NewGuid():N}.html"), "Baskets", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs,
             suite: Suite, history: history, showHistorySection: history is not null);
-        return File.ReadAllText(path);
+        return ReportHtml.Read(path);
     }
 
     private static void HasTheTitleIdOnly(string text, string? suite)
@@ -269,7 +269,7 @@ public class OutlineRowKeySiteTests : IDisposable
             Interactions = calls
         }, Path.Combine(_dir, $"Merged_{Guid.NewGuid():N}.html"));
 
-        var model = Regex.Match(File.ReadAllText(written), "<script id=\"component-diagram-model\" type=\"application/json\">(.*?)</script>", RegexOptions.Singleline);
+        var model = Regex.Match(ReportHtml.Read(written), "<script id=\"component-diagram-model\" type=\"application/json\">(.*?)</script>", RegexOptions.Singleline);
         Assert.True(model.Success, "no component diagram model");
         using var json = JsonDocument.Parse(model.Groups[1].Value);
         Assert.Contains(TitleId(Suite), json.RootElement.GetProperty("scenarios").EnumerateArray().Select(e => e.GetString()));
@@ -280,7 +280,7 @@ public class OutlineRowKeySiteTests : IDisposable
     private string DataFile(DataFormat format, string extension)
     {
         using var _ = ReportGenerator.ScopeReportsDirectory(_dir);
-        return File.ReadAllText(ReportGenerator.GenerateTestRunReportData(Baskets(), At.UtcDateTime, At.UtcDateTime,
+        return ReportHtml.Read(ReportGenerator.GenerateTestRunReportData(Baskets(), At.UtcDateTime, At.UtcDateTime,
             $"TestRunData_{Guid.NewGuid():N}.{extension}", format, suite: Suite));
     }
 

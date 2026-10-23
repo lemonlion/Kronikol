@@ -37,7 +37,7 @@ public class FallbackScriptTests : IDisposable
     [Fact]
     public void The_docstring_names_exactly_the_commands_the_script_registers()
     {
-        var source = File.ReadAllText(ScriptPath);
+        var source = ReportHtml.Read(ScriptPath);
 
         var registered = Regex.Matches(source, @"^    ""([a-z]+)"": cmd_", RegexOptions.Multiline)
             .Select(m => m.Groups[1].Value)
@@ -59,7 +59,7 @@ public class FallbackScriptTests : IDisposable
     [Fact]
     public void The_docstring_does_not_promise_a_command_the_script_lacks()
     {
-        var source = File.ReadAllText(ScriptPath);
+        var source = ReportHtml.Read(ScriptPath);
         var registered = Regex.Matches(source, @"^    ""([a-z]+)"": cmd_", RegexOptions.Multiline)
             .Select(m => m.Groups[1].Value)
             .ToHashSet(StringComparer.Ordinal);
@@ -278,7 +278,7 @@ public class FallbackScriptTests : IDisposable
             Kronikol.Tests.Reports.PayloadCompressionTests.Logs(body, "{\"ok\":true}"),
             diagnostics: null, fullStepDetail: true, ciMetadata: null, suite: null, environment: null, attribution: null,
             compressPayloads: true);
-        Assert.Contains("\"$z\"", File.ReadAllText(report), StringComparison.Ordinal);
+        Assert.Contains("\"$z\"", ReportHtml.Read(report), StringComparison.Ordinal);
 
         var listing = PythonProbe.Run(ScriptPath, "http", report, "s0/i0");
         var keys = PythonProbe.Run(ScriptPath, "http", report, "s0/i0", "--keys");

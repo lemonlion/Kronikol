@@ -61,7 +61,7 @@ public class ReportHtmlEncodingTests : IDisposable
     ];
 
     private string Render(string fileName, bool includeTestRunData, bool grouped = true) =>
-        File.ReadAllText(ReportGenerator.GenerateHtmlReport(
+        ReportHtml.Read(ReportGenerator.GenerateHtmlReport(
             [], EveryText(grouped), DateTime.UtcNow, DateTime.UtcNow, null,
             Path.Combine(_dir, fileName), "Title " + M("title"), includeTestRunData,
             groupParameterizedTests: grouped));

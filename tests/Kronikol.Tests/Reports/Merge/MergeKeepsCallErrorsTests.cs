@@ -63,7 +63,7 @@ public class MergeKeepsCallErrorsTests : IDisposable
         WriteShard("runner2.json", "b1", "Payments");
 
         Merge().Dispose();
-        var html = File.ReadAllText(Path.Combine(_directory, "Combined.html"));
+        var html = ReportHtml.Read(Path.Combine(_directory, "Combined.html"));
 
         Assert.Contains("<details class=\"background-calls\">", html, StringComparison.Ordinal);
         Assert.Contains("<td>/x</td>", html, StringComparison.Ordinal);
@@ -177,7 +177,7 @@ public class MergeKeepsCallErrorsTests : IDisposable
         var error = new StringWriter();
         var exit = MergeCommand.Run([_directory, "-o", Path.Combine(_directory, "Combined.html")], new StringWriter(), error);
         Assert.True(exit == 0, error.ToString());
-        return JsonDocument.Parse(File.ReadAllText(Path.Combine(_directory, "Combined.json")));
+        return JsonDocument.Parse(ReportHtml.Read(Path.Combine(_directory, "Combined.json")));
     }
 
     private static JsonElement Scenario(JsonElement root, string id) =>

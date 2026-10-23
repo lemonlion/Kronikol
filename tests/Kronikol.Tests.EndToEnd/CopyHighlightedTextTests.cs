@@ -14,7 +14,7 @@ public class CopyHighlightedTextTests : PlaywrightTestBase
     private async Task NavigateAndSetup(string fileName)
     {
         var url = ReportTestHelper.GenerateReportWithLongLineNote(TempDir, OutputDir, fileName);
-        await Page.GotoAsync(url);
+        await Page.GotoReportAsync(url);
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -120,7 +120,7 @@ public class CopyHighlightedTextTests : PlaywrightTestBase
 
     private async Task OpenDiagram(string url)
     {
-        await Page.GotoAsync(url);
+        await Page.GotoReportAsync(url);
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();

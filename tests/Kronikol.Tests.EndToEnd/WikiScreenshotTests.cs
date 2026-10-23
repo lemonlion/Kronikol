@@ -32,7 +32,7 @@ public class WikiScreenshotTests : PlaywrightTestBase
     private async Task OpenFile(string path)
     {
         var uri = new Uri(Path.GetFullPath(path)).AbsoluteUri;
-        await Page.GotoAsync(uri);
+        await Page.GotoReportAsync(uri);
         await Task.Delay(500);
     }
 

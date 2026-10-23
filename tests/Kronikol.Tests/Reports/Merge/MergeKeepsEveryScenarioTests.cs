@@ -104,7 +104,7 @@ public class MergeKeepsEveryScenarioTests : IDisposable
 
     private JsonElement[] Scenarios()
     {
-        var root = JsonDocument.Parse(File.ReadAllText(Path.Combine(_dir, "Combined.json"))).RootElement;
+        var root = JsonDocument.Parse(ReportHtml.Read(Path.Combine(_dir, "Combined.json"))).RootElement;
         return root.GetProperty("features").EnumerateArray()
             .SelectMany(f => f.GetProperty("scenarios").EnumerateArray())
             .ToArray();

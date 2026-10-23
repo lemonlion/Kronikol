@@ -58,7 +58,7 @@ public class MongoNoteTests : DiagramNotePlaywrightBase
 
     private async Task Open(string url)
     {
-        await Page.GotoAsync(url);
+        await Page.GotoReportAsync(url);
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();

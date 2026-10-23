@@ -19,7 +19,7 @@ public class CapturedTextPageTests : PlaywrightTestBase
     {
         // The engine copies the character into the SVG and XMLSerializer writes it as it is, so the SVG the menu turned
         // into an image was not XML: the image never loaded, and Save as PNG (and every PNG and SVG copy) did nothing.
-        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateBrowserJsPage("",
+        await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateBrowserJsPage("",
             ("old-escape", "@startuml\nCaller -> Orders : exit \u001B[31mred\u001B[0m\nOrders --> Caller : 200\n@enduml"))));
         var svg = Page.Locator("#old-escape svg");
         await svg.WaitForAsync(new() { Timeout = 60_000 });
@@ -49,7 +49,7 @@ public class CapturedTextPageTests : PlaywrightTestBase
         var diagrams = Enumerable.Range(0, 40).Select(i => ($"dash-{i}", "@startuml\n" + string.Join("\n",
             Enumerable.Range(0, 8).Select(m => $"Caller -> Orders : request {i} step {m}\nOrders --> Caller : 200 for {i * 31 + m}"))
             + "\n@enduml")).ToArray();
-        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateBrowserJsPage("", diagrams)));
+        await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateBrowserJsPage("", diagrams)));
         // the page draws a diagram as it comes near the window: each one still waiting is brought there in turn
         await Page.WaitForFunctionAsync("""
             n => {
@@ -139,7 +139,7 @@ public class CapturedTextPageTests : PlaywrightTestBase
             toggleDefaults: ResolvedToggleDefaults.BuiltIn with { AssertionsShown = false });
         File.Copy(path, Path.Combine(OutputDir, fileName), true);
 
-        await Page.GotoAsync(new Uri(path).AbsoluteUri);
+        await Page.GotoReportAsync(new Uri(path).AbsoluteUri);
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         var svg = await WaitForDiagramSvg(60_000);

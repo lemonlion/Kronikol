@@ -49,7 +49,7 @@ public class ThemedSourceRendersTests : PlaywrightTestBase
         var console = new List<string>();
         Page.Console += (_, message) => { lock (console) console.Add(message.Text); };
 
-        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateBrowserJsPage(("d-themed", Themed), ("d-plain", Plain))));
+        await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateBrowserJsPage(("d-themed", Themed), ("d-plain", Plain))));
         await RenderAll("d-themed", "d-plain");
         // The page measures each diagram a frame after it is drawn, to decide whether it needs a zoom button, and the
         // measuring leaves an empty style on the svg. A full run under load read the themed diagram after its frame and
@@ -95,7 +95,7 @@ public class ThemedSourceRendersTests : PlaywrightTestBase
     {
         const string include = "@startuml\n!include <C4/C4_Context>\nPerson(user, \"User\")\n@enduml";
 
-        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateBrowserJsPage(("d-include", include), ("d-after", Plain))));
+        await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateBrowserJsPage(("d-include", include), ("d-after", Plain))));
         await RenderAll("d-include", "d-after");
 
         // The stdlib is not in the engine build, so what it draws is its own error picture. The point is
@@ -116,7 +116,7 @@ public class ThemedSourceRendersTests : PlaywrightTestBase
             ("d-two", Plain.Replace("Hello", "Two")),
             ("d-three", Plain.Replace("Hello", "Three")));
 
-        await Page.GotoAsync(ServePage(page));
+        await Page.GotoReportAsync(ServePage(page));
         await RenderAll("d-icon", "d-one", "d-two", "d-three");
 
         foreach (var id in new[] { "d-one", "d-two", "d-three" })
@@ -150,7 +150,7 @@ public class ThemedSourceRendersTests : PlaywrightTestBase
             features, DateTime.UtcNow, DateTime.UtcNow, null, Path.Combine(TempDir, fileName), "Icons", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
         File.Copy(path, Path.Combine(OutputDir, fileName), true);
-        await Page.GotoAsync(new Uri(path).AbsoluteUri);
+        await Page.GotoReportAsync(new Uri(path).AbsoluteUri);
         await Page.Locator("details.feature").First.WaitForAsync();
         await Page.EvaluateAsync("t => document.documentElement.setAttribute('data-theme', t)", theme);
         await ExpandFirstScenarioWithDiagram();
@@ -177,7 +177,7 @@ public class ThemedSourceRendersTests : PlaywrightTestBase
     {
         var (uri, reportsDir) = ReportTestHelper.GenerateThemedRunReport(TempDir, OutputDir, "ThemedRunReport.html");
 
-        await Page.GotoAsync(uri);
+        await Page.GotoReportAsync(uri);
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await Page.EvaluateAsync("() => window._renderDiagramsInContainer(document.body)");

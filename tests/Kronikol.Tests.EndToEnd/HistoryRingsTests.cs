@@ -18,7 +18,7 @@ public class HistoryRingsTests : PlaywrightTestBase
 
     private async Task OpenHistoryAsync(string url)
     {
-        await Page.GotoAsync(url);
+        await Page.GotoReportAsync(url);
         await Page.Locator("details.feature").First.WaitForAsync();
         await OpenReportTabAsync("history");
     }
@@ -149,7 +149,7 @@ public class HistoryRingsTests : PlaywrightTestBase
             Partial = false, Scenarios = [], Absent = [], Counts = new Dictionary<HistoryVerdictKind, int>(), Runs = runs, NewDependencies = [],
             FirstSeen = 0, Compare = null
         };
-        await Page.GotoAsync(ServePage("<!DOCTYPE html><html><head><meta charset=\"utf-8\"><style>" + Stylesheets.ReportTokensStyleSheet
+        await Page.GotoReportAsync(ServePage("<!DOCTYPE html><html><head><meta charset=\"utf-8\"><style>" + Stylesheets.ReportTokensStyleSheet
             + Stylesheets.HtmlReportStyleSheet + Stylesheets.HistoryStyleSheet + "</style></head><body>" + HistoryHtml.Section(verdicts, null)
             + "</body></html>"));
         await Page.Locator(".history-bars-scroll").WaitForAsync();
@@ -185,7 +185,7 @@ public class HistoryRingsTests : PlaywrightTestBase
     public async Task The_labs_page_draws_the_rings_and_the_timed_bars_with_none_of_the_reports_scripts()
     {
         var labs = HistoryReportHelper.GenerateWithLabsPage(TempDir, OutputDir, "HistoryRings_Labs.html").Page;
-        await Page.GotoAsync(labs);
+        await Page.GotoReportAsync(labs);
         await Page.Locator("header.labs-header").WaitForAsync();
 
         // the theme's two scripts and none that draws: the rings and the bars are markup (5.0.0, plans/OPTION_C_PLAN.md S13)

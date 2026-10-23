@@ -18,7 +18,7 @@ public class DiagramZoomTests : PlaywrightTestBase
     [Fact]
     public async Task Zoom_slider_appears_on_diagram_container()
     {
-        await Page.GotoAsync(GenerateReportWithWideDiagram("ZoomSliderExists.html"));
+        await Page.GotoReportAsync(GenerateReportWithWideDiagram("ZoomSliderExists.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -34,7 +34,7 @@ public class DiagramZoomTests : PlaywrightTestBase
     [Fact]
     public async Task Zoom_controls_hidden_until_hover()
     {
-        await Page.GotoAsync(GenerateReportWithWideDiagram("ZoomHoverHidden.html"));
+        await Page.GotoReportAsync(GenerateReportWithWideDiagram("ZoomHoverHidden.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -51,7 +51,7 @@ public class DiagramZoomTests : PlaywrightTestBase
     [Fact]
     public async Task Zoom_controls_become_visible_on_container_hover()
     {
-        await Page.GotoAsync(GenerateReportWithWideDiagram("ZoomHoverVisible.html"));
+        await Page.GotoReportAsync(GenerateReportWithWideDiagram("ZoomHoverVisible.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -74,7 +74,7 @@ public class DiagramZoomTests : PlaywrightTestBase
     [Fact]
     public async Task Slider_at_max_adds_natural_size_class()
     {
-        await Page.GotoAsync(GenerateReportWithWideDiagram("ZoomSliderNatural.html"));
+        await Page.GotoReportAsync(GenerateReportWithWideDiagram("ZoomSliderNatural.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -99,7 +99,7 @@ public class DiagramZoomTests : PlaywrightTestBase
     [Fact]
     public async Task Slider_at_min_removes_natural_size_class()
     {
-        await Page.GotoAsync(GenerateReportWithWideDiagram("ZoomSliderToggle.html"));
+        await Page.GotoReportAsync(GenerateReportWithWideDiagram("ZoomSliderToggle.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -134,7 +134,7 @@ public class DiagramZoomTests : PlaywrightTestBase
     [Fact]
     public async Task Zoomed_container_has_overflow_x_auto()
     {
-        await Page.GotoAsync(GenerateReportWithWideDiagram("ZoomOverflow.html"));
+        await Page.GotoReportAsync(GenerateReportWithWideDiagram("ZoomOverflow.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -162,7 +162,7 @@ public class DiagramZoomTests : PlaywrightTestBase
     [Fact]
     public async Task Unzooming_clears_overflow()
     {
-        await Page.GotoAsync(GenerateReportWithWideDiagram("ZoomClearOverflow.html"));
+        await Page.GotoReportAsync(GenerateReportWithWideDiagram("ZoomClearOverflow.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -193,7 +193,7 @@ public class DiagramZoomTests : PlaywrightTestBase
     [Fact]
     public async Task Clicking_selected_diagram_deselects_it()
     {
-        await Page.GotoAsync(GenerateReportWithWideDiagram("ClickDeselect.html"));
+        await Page.GotoReportAsync(GenerateReportWithWideDiagram("ClickDeselect.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -218,7 +218,7 @@ public class DiagramZoomTests : PlaywrightTestBase
     [Fact]
     public async Task Non_zoomable_diagram_has_no_zoom_slider()
     {
-        await Page.GotoAsync(GenerateReport("NonZoomableNoSlider.html"));
+        await Page.GotoReportAsync(GenerateReport("NonZoomableNoSlider.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -235,7 +235,7 @@ public class DiagramZoomTests : PlaywrightTestBase
     [Fact]
     public async Task Text_in_steps_can_still_be_highlighted()
     {
-        await Page.GotoAsync(GenerateReportWithWideDiagram("StepTextSelectable.html"));
+        await Page.GotoReportAsync(GenerateReportWithWideDiagram("StepTextSelectable.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -260,7 +260,7 @@ public class DiagramZoomTests : PlaywrightTestBase
     [Fact]
     public async Task Zoom_slider_persists_after_note_collapse()
     {
-        await Page.GotoAsync(GenerateReportWithWideNoteDiagram("ZoomAfterNoteCollapse.html"));
+        await Page.GotoReportAsync(GenerateReportWithWideNoteDiagram("ZoomAfterNoteCollapse.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -292,7 +292,7 @@ public class DiagramZoomTests : PlaywrightTestBase
     [Fact]
     public async Task Zoom_slider_works_after_note_collapse()
     {
-        await Page.GotoAsync(GenerateReportWithWideNoteDiagram("ZoomWorksAfterNoteCollapse.html"));
+        await Page.GotoReportAsync(GenerateReportWithWideNoteDiagram("ZoomWorksAfterNoteCollapse.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();

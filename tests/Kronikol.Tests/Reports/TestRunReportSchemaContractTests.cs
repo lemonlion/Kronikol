@@ -31,7 +31,7 @@ public class TestRunReportSchemaContractTests
         var schemaPath = ReportGenerator.GenerateTestRunReportSchema($"SchemaContract_{suffix}.schema.json", DataFormat.Json);
 
         using var report = JsonDocument.Parse(ReportFile.Read(reportPath));
-        using var schema = JsonDocument.Parse(File.ReadAllText(schemaPath));
+        using var schema = JsonDocument.Parse(ReportHtml.Read(schemaPath));
 
         var undeclared = new SortedSet<string>(StringComparer.Ordinal);
         Walk(report.RootElement, schema.RootElement, schema.RootElement, "$", undeclared);
@@ -43,7 +43,7 @@ public class TestRunReportSchemaContractTests
     public void Every_schema_property_has_a_description()
     {
         var schemaPath = ReportGenerator.GenerateTestRunReportSchema($"SchemaDescribed_{Guid.NewGuid():N}.schema.json", DataFormat.Json);
-        using var schema = JsonDocument.Parse(File.ReadAllText(schemaPath));
+        using var schema = JsonDocument.Parse(ReportHtml.Read(schemaPath));
 
         var undescribed = new SortedSet<string>(StringComparer.Ordinal);
         CollectUndescribed(schema.RootElement, "$", undescribed);
@@ -56,7 +56,7 @@ public class TestRunReportSchemaContractTests
     {
         // No lane writes retry N labels since 5.0.0 (plans/TAGS_PLAN.md §4.6): the report draws a badge from attempt.
         var schemaPath = ReportGenerator.GenerateTestRunReportSchema($"SchemaAttempt_{Guid.NewGuid():N}.schema.json", DataFormat.Json);
-        using var schema = JsonDocument.Parse(File.ReadAllText(schemaPath));
+        using var schema = JsonDocument.Parse(ReportHtml.Read(schemaPath));
 
         var attempt = Assert.Single(Descriptions(schema.RootElement, "attempt"));
 
@@ -90,7 +90,7 @@ public class TestRunReportSchemaContractTests
     public void Schema_names_the_query_tool_and_the_size_trap()
     {
         var schemaPath = ReportGenerator.GenerateTestRunReportSchema($"SchemaComment_{Guid.NewGuid():N}.schema.json", DataFormat.Json);
-        using var schema = JsonDocument.Parse(File.ReadAllText(schemaPath));
+        using var schema = JsonDocument.Parse(ReportHtml.Read(schemaPath));
 
         var comment = schema.RootElement.GetProperty("$comment").GetString();
         Assert.Contains("kronikol query", comment);
@@ -103,7 +103,7 @@ public class TestRunReportSchemaContractTests
     public void Address_bearing_fields_carry_examples()
     {
         var schemaPath = ReportGenerator.GenerateTestRunReportSchema($"SchemaExamples_{Guid.NewGuid():N}.schema.json", DataFormat.Json);
-        using var schema = JsonDocument.Parse(File.ReadAllText(schemaPath));
+        using var schema = JsonDocument.Parse(ReportHtml.Read(schemaPath));
         var root = schema.RootElement;
 
         var scenario = root.GetProperty("properties").GetProperty("features").GetProperty("items")

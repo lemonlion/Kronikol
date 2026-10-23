@@ -80,7 +80,7 @@ public class DiagramRolesTests : DiagramNotePlaywrightBase
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs,
             toggleDefaults: ResolvedToggleDefaults.BuiltIn with { NoteWidth = noteWidth });
         File.Copy(path, Path.Combine(OutputDir, fileName), true);
-        await Page.GotoAsync(new Uri(path).AbsoluteUri);
+        await Page.GotoReportAsync(new Uri(path).AbsoluteUri);
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();

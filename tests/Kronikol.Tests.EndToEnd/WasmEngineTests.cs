@@ -102,7 +102,7 @@ public class WasmEngineTests : PlaywrightTestBase
     public async Task Chromium_draws_with_the_wasm_engine_in_its_workers()
     {
         var requests = EngineRequests();
-        await Page.GotoAsync(GenerateReport("WasmEngineChromium.html"));
+        await Page.GotoReportAsync(GenerateReport("WasmEngineChromium.html"));
 
         var r = await RenderTheFirstDiagram();
 
@@ -122,7 +122,7 @@ public class WasmEngineTests : PlaywrightTestBase
     public async Task The_main_thread_draws_with_the_javascript_engine()
     {
         var requests = EngineRequests();
-        await Page.GotoAsync(LargeReportFixture.Generate(TempDir, OutputDir, "WasmEngineMainThread.html", diagrams: 2, stepsPerDiagram: 2, browserRenderWorkers: 0));
+        await Page.GotoReportAsync(LargeReportFixture.Generate(TempDir, OutputDir, "WasmEngineMainThread.html", diagrams: 2, stepsPerDiagram: 2, browserRenderWorkers: 0));
 
         var r = await RenderTheFirstDiagram();
 
@@ -149,7 +149,7 @@ public class WasmEngineTests : PlaywrightTestBase
         File.WriteAllText(path, html.Insert(head + "<head>".Length, $"<meta http-equiv=\"Content-Security-Policy\" content=\"{policy}\">"));
         var requests = EngineRequests();
         var console = ConsoleMessages();
-        await Page.GotoAsync(uri);
+        await Page.GotoReportAsync(uri);
 
         var r = await RenderTheFirstDiagram();
 
@@ -176,7 +176,7 @@ public class WasmEngineTests : PlaywrightTestBase
             StubEngines.Bundle("draw(['drawn: ' + lines[1]]);", "Promise.reject(new Error('the stub engine cannot start'))"), "stub-does-not-start.js");
         await using var _ = server;
         var console = ConsoleMessages();
-        await Page.GotoAsync(pageUrl);
+        await Page.GotoReportAsync(pageUrl);
 
         var r = await RenderTheFirstDiagram();
 
@@ -196,7 +196,7 @@ public class WasmEngineTests : PlaywrightTestBase
     {
         var (server, pageUrl) = StubPage("wasm-engine-crash", CrashingBundle);
         await using var _ = server;
-        await Page.GotoAsync(pageUrl);
+        await Page.GotoReportAsync(pageUrl);
 
         var outcome = await RenderEach("@startuml\nfirst\n@enduml", "@startuml\nCRASH\n@enduml", "@startuml\nthird\n@enduml");
 
@@ -220,7 +220,7 @@ public class WasmEngineTests : PlaywrightTestBase
         // first crash, naming the overflow, which the page then describes as the engine's stack failure.
         var (server, pageUrl) = StubPage("wasm-engine-overflow", CrashingBundle);
         await using var _ = server;
-        await Page.GotoAsync(pageUrl);
+        await Page.GotoReportAsync(pageUrl);
 
         var outcome = await RenderEach("@startuml\nfirst\n@enduml", "@startuml\nOVERFLOW\n@enduml");
 
@@ -238,7 +238,7 @@ public class WasmEngineTests : PlaywrightTestBase
         // 5.0.0's engine draws any length of statement Kronikol writes, but nesting this deep still runs it out of stack
         // (plans/WASM_ENGINE_PLAN.md): the real engine, in a worker, fails that diagram with the overflow named and draws
         // the next one.
-        await Page.GotoAsync(ServePage($$"""
+        await Page.GotoReportAsync(ServePage($$"""
             <!DOCTYPE html><html><head><meta charset="utf-8"><title>nested</title>
             {{DiagramContextMenu.GetPlantUmlBrowserRenderScript()}}
             </head><body></body></html>

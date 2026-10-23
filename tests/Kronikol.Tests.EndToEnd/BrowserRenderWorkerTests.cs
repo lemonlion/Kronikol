@@ -97,7 +97,7 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
             await Page.AddInitScriptAsync(BenchInitWithProbe);
             _benchInitInstalled = true;
         }
-        await Page.GotoAsync(LargeReportFixture.Generate(TempDir, OutputDir, fileName, diagrams, stepsPerDiagram,
+        await Page.GotoReportAsync(LargeReportFixture.Generate(TempDir, OutputDir, fileName, diagrams, stepsPerDiagram,
             browserRenderWorkers: workers, browserFragmentMaxHeight: fragmentMaxHeight));
         await Page.WaitForFunctionAsync("() => window.__bench && window.__bench.readyAt !== null", null,
             new() { Timeout = 120000, PollingInterval = 200 });
@@ -298,7 +298,7 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
         // refused), the budgets silently fall back to false-failing under load. Pin that the probe
         // produces positive samples on a real report page.
         await Page.AddInitScriptAsync(BenchInitWithProbe);
-        await Page.GotoAsync(LargeReportFixture.Generate(TempDir, OutputDir, "ProbeCheck.html", diagrams: 2, stepsPerDiagram: 2));
+        await Page.GotoReportAsync(LargeReportFixture.Generate(TempDir, OutputDir, "ProbeCheck.html", diagrams: 2, stepsPerDiagram: 2));
         await Page.WaitForFunctionAsync("() => window.__bench && window.__bench.probe.length >= 3", null,
             new() { Timeout = 60000, PollingInterval = 200 });
 
@@ -334,7 +334,7 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
     [Fact]
     public async Task Zero_workers_option_renders_on_the_main_thread()
     {
-        await Page.GotoAsync(LargeReportFixture.Generate(TempDir, OutputDir, "ZeroWorkers.html", diagrams: 2, stepsPerDiagram: 2, browserRenderWorkers: 0));
+        await Page.GotoReportAsync(LargeReportFixture.Generate(TempDir, OutputDir, "ZeroWorkers.html", diagrams: 2, stepsPerDiagram: 2, browserRenderWorkers: 0));
         await Page.WaitForFunctionAsync("() => document.body.classList.contains('plantuml-ready')", null, new() { Timeout = 60000, PollingInterval = 200 });
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg(60000);
@@ -354,7 +354,7 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
     {
         var url = GenerateReport("WorkerFileUrl.html");
         Assert.StartsWith("file:", url);
-        await Page.GotoAsync(url);
+        await Page.GotoReportAsync(url);
         await Page.WaitForFunctionAsync("() => document.body.classList.contains('plantuml-ready')", null, new() { Timeout = 60000, PollingInterval = 200 });
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg(60000);
@@ -372,7 +372,7 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
     public async Task Falls_back_to_the_main_thread_engine_when_workers_are_unavailable()
     {
         await Page.AddInitScriptAsync("window.Worker = undefined;");
-        await Page.GotoAsync(GenerateReport("WorkerFallback.html"));
+        await Page.GotoReportAsync(GenerateReport("WorkerFallback.html"));
         await Page.WaitForFunctionAsync("() => document.body.classList.contains('plantuml-ready')", null, new() { Timeout = 60000, PollingInterval = 200 });
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg(90000);
@@ -401,11 +401,13 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
     internal static string WithWrongHash(string reportUrl, string rightHash)
     {
         var path = new Uri(reportUrl).LocalPath;
-        var html = File.ReadAllText(path);
-        var quoted = $"'{rightHash}'";
-        var at = html.IndexOf(quoted, StringComparison.Ordinal);
-        Assert.True(at >= 0 && html.IndexOf(quoted, at + 1, StringComparison.Ordinal) < 0, "the render script should carry the hash exactly once");
-        File.WriteAllText(path, html.Replace(quoted, $"'{WrongHash}'"));
+        ReportFileText.Edit(path, html =>
+        {
+            var quoted = $"'{rightHash}'";
+            var at = html.IndexOf(quoted, StringComparison.Ordinal);
+            Assert.True(at >= 0 && html.IndexOf(quoted, at + 1, StringComparison.Ordinal) < 0, "the render script should carry the hash exactly once");
+            return html.Replace(quoted, $"'{WrongHash}'");
+        });
         return reportUrl;
     }
 
@@ -457,7 +459,7 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
         // refuses them, the engine is never evaluated, and every diagram says which file failed: here the Wasm engine the
         // workers fetch, which gives way to no other engine, since the same mirror serves both.
         var errors = ConsoleErrors();
-        await Page.GotoAsync(WithWrongHash(GenerateReport("EngineWrongHash.html"), Constants.TrackingDefaults.PlantUmlWasmEngineIntegrity));
+        await Page.GotoReportAsync(WithWrongHash(GenerateReport("EngineWrongHash.html"), Constants.TrackingDefaults.PlantUmlWasmEngineIntegrity));
 
         var diagrams = await RenderEveryDiagramAndReadIt();
 
@@ -483,15 +485,17 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
     internal static string WithEngineBase(string reportUrl, string engineBase)
     {
         var path = new Uri(reportUrl).LocalPath;
-        var html = File.ReadAllText(path);
-        foreach (var file in new[] { "viz-global.js", "plantuml.js", WorkerEngineFile })
+        ReportFileText.Edit(path, html =>
         {
-            var quoted = $"'{Constants.TrackingDefaults.PlantUmlJsCdnBase}/{file}'";
-            var at = html.IndexOf(quoted, StringComparison.Ordinal);
-            Assert.True(at >= 0 && html.IndexOf(quoted, at + 1, StringComparison.Ordinal) < 0, $"the render script should carry {quoted} exactly once");
-            html = html.Replace(quoted, $"'{engineBase}/{file}'");
-        }
-        File.WriteAllText(path, html);
+            foreach (var file in new[] { "viz-global.js", "plantuml.js", WorkerEngineFile })
+            {
+                var quoted = $"'{Constants.TrackingDefaults.PlantUmlJsCdnBase}/{file}'";
+                var at = html.IndexOf(quoted, StringComparison.Ordinal);
+                Assert.True(at >= 0 && html.IndexOf(quoted, at + 1, StringComparison.Ordinal) < 0, $"the render script should carry {quoted} exactly once");
+                html = html.Replace(quoted, $"'{engineBase}/{file}'");
+            }
+            return html;
+        });
         return reportUrl;
     }
 
@@ -530,7 +534,7 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
         using var closed = new ClosedPort();
         var engineBase = $"http://127.0.0.1:{closed.Port}/npm/engine";
         var errors = ConsoleErrors();
-        await Page.GotoAsync(WithEngineBase(GenerateReport("EngineUnreachable.html"), engineBase));
+        await Page.GotoReportAsync(WithEngineBase(GenerateReport("EngineUnreachable.html"), engineBase));
 
         var diagrams = await RenderEveryDiagramAndReadIt();
 
@@ -548,7 +552,7 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
         var engineBase = server.UrlOf("no-engine-here");
         WithEngineBase(new Uri(file).AbsoluteUri, engineBase);
         var errors = ConsoleErrors();
-        await Page.GotoAsync(server.UrlOf(Path.GetFileName(file)));
+        await Page.GotoReportAsync(server.UrlOf(Path.GetFileName(file)));
 
         var diagrams = await RenderEveryDiagramAndReadIt();
 
@@ -562,7 +566,7 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
         // verified: a refused tag leaves a failed entry, and the diagrams say so exactly as on the worker path.
         var url = LargeReportFixture.Generate(TempDir, OutputDir, "EngineWrongHashMainThread.html", diagrams: 2, stepsPerDiagram: 2, browserRenderWorkers: 0);
         var errors = ConsoleErrors();
-        await Page.GotoAsync(WithWrongHash(url, Constants.TrackingDefaults.PlantUmlJsIntegrity));
+        await Page.GotoReportAsync(WithWrongHash(url, Constants.TrackingDefaults.PlantUmlJsIntegrity));
 
         var diagrams = await RenderEveryDiagramAndReadIt();
 
@@ -581,7 +585,7 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
         // Graphviz is only used for non-sequence diagrams: a refused viz-global.js must not take the sequence
         // diagrams down with it (plans/ENGINE_PIN_PLAN.md Q7).
         var errors = ConsoleErrors();
-        await Page.GotoAsync(WithWrongHash(GenerateReport("VizWrongHash.html"), Constants.TrackingDefaults.VizGlobalJsIntegrity));
+        await Page.GotoReportAsync(WithWrongHash(GenerateReport("VizWrongHash.html"), Constants.TrackingDefaults.VizGlobalJsIntegrity));
         await Page.WaitForFunctionAsync("() => document.body.classList.contains('plantuml-ready')", null, new() { Timeout = 60000, PollingInterval = 200 });
         await ExpandFirstScenarioWithDiagram();
 
@@ -603,7 +607,7 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
         // component diagram out with Smetana, and the console says so, as on the worker path.
         var url = LargeReportFixture.Generate(TempDir, OutputDir, "VizWrongHashMainThread.html", diagrams: 2, stepsPerDiagram: 2, browserRenderWorkers: 0);
         var errors = ConsoleErrors();
-        await Page.GotoAsync(WithWrongHash(url, Constants.TrackingDefaults.VizGlobalJsIntegrity));
+        await Page.GotoReportAsync(WithWrongHash(url, Constants.TrackingDefaults.VizGlobalJsIntegrity));
         await Page.WaitForFunctionAsync("() => document.body.classList.contains('plantuml-ready')", null, new() { Timeout = 60000, PollingInterval = 200 });
         await ExpandFirstScenarioWithDiagram();
 
@@ -659,7 +663,7 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
     {
         // The positive case every other worker test exercises without saying so: both files match their known
         // hashes on the real CDN, and the worker runs what was checked.
-        await Page.GotoAsync(GenerateReport("EngineIntegrityVerified.html"));
+        await Page.GotoReportAsync(GenerateReport("EngineIntegrityVerified.html"));
         await Page.WaitForFunctionAsync("() => document.body.classList.contains('plantuml-ready')", null, new() { Timeout = 60000, PollingInterval = 200 });
         await ExpandFirstScenarioWithDiagram();
 
@@ -678,7 +682,7 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
         // fetches go out with a real Origin: the plan's acceptance names it (ENGINE_PIN_PLAN §5), measured by a probe.
         var file = new Uri(GenerateReport("ServedOverHttp.html")).LocalPath;
         await using var server = LoopbackFileServer.Start(Path.GetDirectoryName(file)!);
-        await Page.GotoAsync(server.UrlOf(Path.GetFileName(file)));
+        await Page.GotoReportAsync(server.UrlOf(Path.GetFileName(file)));
         await Page.WaitForFunctionAsync("() => document.body.classList.contains('plantuml-ready')", null, new() { Timeout = 60000, PollingInterval = 200 });
         await ExpandFirstScenarioWithDiagram();
 
@@ -700,7 +704,7 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
         var file = new Uri(WithWrongHash(GenerateReport("ServedOverHttpWrongHash.html"), Constants.TrackingDefaults.PlantUmlWasmEngineIntegrity)).LocalPath;
         await using var server = LoopbackFileServer.Start(Path.GetDirectoryName(file)!);
         var errors = ConsoleErrors();
-        await Page.GotoAsync(server.UrlOf(Path.GetFileName(file)));
+        await Page.GotoReportAsync(server.UrlOf(Path.GetFileName(file)));
 
         var diagrams = await RenderEveryDiagramAndReadIt();
 
@@ -726,7 +730,7 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
             <div class="plantuml-browser" id="puml-1" data-plantuml="{{encoded}}" data-diagram-type="plantuml"></div>
             </div></body></html>
             """;
-        await Page.GotoAsync(ServePage(html));
+        await Page.GotoReportAsync(ServePage(html));
         await Page.Locator("[data-engine-failure='too-large']").WaitForAsync(new() { Timeout = 120000 });
         var text = await Page.Locator("#puml-1").InnerTextAsync();
         Assert.Contains("Diagram too large for client-side rendering", text);
@@ -756,7 +760,7 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
             <div class="plantuml-browser" id="puml-1" data-plantuml="{{encoded}}" data-diagram-type="plantuml"></div>
             </div></body></html>
             """;
-        await Page.GotoAsync(ServePage(html));
+        await Page.GotoReportAsync(ServePage(html));
         await Page.Locator("#puml-1 svg").WaitForAsync(new() { Timeout = 120000 });
         var width = await Page.EvaluateAsync<double>(
             "() => Number(document.querySelector('#puml-1 svg').getAttribute('width'))");
@@ -778,7 +782,7 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
             "a1 -> a4 : processOrder\nnote left\nOrder payload\n{\"item\":\"Widget\",\"qty\":2}\nend note\na4 -> a5 : checkInventory\na5 --> a1 : complete\n@enduml",
             LargeReportFixture.BuildDiagram(0, 3)
         ];
-        await Page.GotoAsync(GenerateReport("WorkerFidelity.html"));
+        await Page.GotoReportAsync(GenerateReport("WorkerFidelity.html"));
         await Page.WaitForFunctionAsync("() => document.body.classList.contains('plantuml-ready')", null, new() { Timeout = 60000, PollingInterval = 200 });
 
         // Worker side: through the shim, raw (no post-render hooks), into fresh divs.
@@ -857,7 +861,7 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
     [Fact]
     public async Task Second_render_of_an_identical_source_is_a_synchronous_cache_hit_that_still_fires_the_observer()
     {
-        await Page.GotoAsync(GenerateReport("WorkerCacheHit.html"));
+        await Page.GotoReportAsync(GenerateReport("WorkerCacheHit.html"));
         await Page.WaitForFunctionAsync("() => document.body.classList.contains('plantuml-ready')", null, new() { Timeout = 60000, PollingInterval = 200 });
         // Let the page's own (first-scenario) diagram land first, so its cache entry cannot interleave.
         await ExpandFirstScenarioWithDiagram();
@@ -895,7 +899,7 @@ public class BrowserRenderWorkerTests : PlaywrightTestBase
     [Fact]
     public async Task Cache_eviction_respects_the_byte_bound()
     {
-        await Page.GotoAsync(GenerateReport("WorkerCacheBound.html"));
+        await Page.GotoReportAsync(GenerateReport("WorkerCacheBound.html"));
         await Page.WaitForFunctionAsync("() => document.body.classList.contains('plantuml-ready')", null, new() { Timeout = 60000, PollingInterval = 200 });
         // Let the page's own (first-scenario) diagram land first, so its cache entry cannot interleave.
         await ExpandFirstScenarioWithDiagram();

@@ -8,7 +8,7 @@ public class DiagramNoteBasicTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Note_toggle_icons_appear_after_render()
     {
-        await Page.GotoAsync(GenerateReport("NoteToggleIcons.html"));
+        await Page.GotoReportAsync(GenerateReport("NoteToggleIcons.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -21,7 +21,7 @@ public class DiagramNoteBasicTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Note_hover_rects_exist_after_render()
     {
-        await Page.GotoAsync(GenerateReport("NoteHoverRects.html"));
+        await Page.GotoReportAsync(GenerateReport("NoteHoverRects.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -33,7 +33,7 @@ public class DiagramNoteBasicTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Scenario_truncated_is_active_by_default()
     {
-        await Page.GotoAsync(GenerateReport("NoteScenarioTruncDefault.html"));
+        await Page.GotoReportAsync(GenerateReport("NoteScenarioTruncDefault.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -46,7 +46,7 @@ public class DiagramNoteBasicTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Clicking_scenario_expanded_activates_it()
     {
-        await Page.GotoAsync(GenerateReport("NoteScenarioExpanded.html"));
+        await Page.GotoReportAsync(GenerateReport("NoteScenarioExpanded.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -64,7 +64,7 @@ public class DiagramNoteBasicTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Clicking_scenario_collapsed_activates_it()
     {
-        await Page.GotoAsync(GenerateReport("NoteScenarioCollapsed.html"));
+        await Page.GotoReportAsync(GenerateReport("NoteScenarioCollapsed.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -78,7 +78,7 @@ public class DiagramNoteBasicTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Scenario_line_count_dropdown_exists()
     {
-        await Page.GotoAsync(GenerateReport("NoteLineDropdown.html"));
+        await Page.GotoReportAsync(GenerateReport("NoteLineDropdown.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -92,7 +92,7 @@ public class DiagramNoteBasicTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Changing_scenario_line_count_updates_selected_value()
     {
-        await Page.GotoAsync(GenerateReport("NoteLineChange.html"));
+        await Page.GotoReportAsync(GenerateReport("NoteLineChange.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -108,7 +108,7 @@ public class DiagramNoteBasicTests : DiagramNotePlaywrightBase
     public async Task Scenario_headers_hidden_is_the_start_state()
     {
         // 4.0.0 (plans/V4_PLAN.md R8); headers started shown through 3.x.
-        await Page.GotoAsync(GenerateReport("NoteHeadersDefault.html"));
+        await Page.GotoReportAsync(GenerateReport("NoteHeadersDefault.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -123,7 +123,7 @@ public class DiagramNoteBasicTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Clicking_scenario_headers_shows_then_hides_them()
     {
-        await Page.GotoAsync(GenerateReport("NoteHeadersHidden.html"));
+        await Page.GotoReportAsync(GenerateReport("NoteHeadersHidden.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -145,7 +145,7 @@ public class DiagramNoteBasicTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Double_click_on_note_hover_rect_cycles_state()
     {
-        await Page.GotoAsync(GenerateReport("NoteDblClick.html"));
+        await Page.GotoReportAsync(GenerateReport("NoteDblClick.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -158,7 +158,7 @@ public class DiagramNoteBasicTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Collapsed_note_shows_plus_button_in_top_right()
     {
-        await Page.GotoAsync(GenerateReport("NotePlusCollapsed.html"));
+        await Page.GotoReportAsync(GenerateReport("NotePlusCollapsed.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -175,7 +175,7 @@ public class DiagramNoteBasicTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Truncated_note_shows_minus_button_not_plus()
     {
-        await Page.GotoAsync(GenerateReport("NoteMinusTruncated.html"));
+        await Page.GotoReportAsync(GenerateReport("NoteMinusTruncated.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -189,7 +189,7 @@ public class DiagramNoteBasicTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Clicking_plus_button_expands_note_and_shows_minus()
     {
-        await Page.GotoAsync(GenerateReport("NotePlusClick.html"));
+        await Page.GotoReportAsync(GenerateReport("NotePlusClick.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -207,7 +207,7 @@ public class DiagramNoteBasicTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Report_level_expanded_activates_for_all_scenarios()
     {
-        await Page.GotoAsync(GenerateReport("NoteReportExpanded.html"));
+        await Page.GotoReportAsync(GenerateReport("NoteReportExpanded.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();

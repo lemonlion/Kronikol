@@ -83,7 +83,7 @@ public class DiagramFailureIsolationTests : IDisposable
         Assert.True(result.Generated);
         Assert.True(File.Exists(result.TestRunReportHtml));
 
-        var html = File.ReadAllText(result.TestRunReportHtml);
+        var html = ReportHtml.Read(result.TestRunReportHtml);
         // The healthy scenario still has its rendered image…
         Assert.Contains("data:image/svg+xml;base64,", html);
 

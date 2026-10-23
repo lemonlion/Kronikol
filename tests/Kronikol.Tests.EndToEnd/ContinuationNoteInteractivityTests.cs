@@ -16,7 +16,7 @@ public class ContinuationNoteInteractivityTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Continuation_note_in_separate_container_has_copy_box_text_in_context_menu()
     {
-        await Page.GotoAsync(GenerateThreeDiagramSplitReport("ContNoteCopyBoxSeparate.html"));
+        await Page.GotoReportAsync(GenerateThreeDiagramSplitReport("ContNoteCopyBoxSeparate.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -53,7 +53,7 @@ public class ContinuationNoteInteractivityTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Continuation_note_in_separate_container_hover_shows_buttons()
     {
-        await Page.GotoAsync(GenerateThreeDiagramSplitReport("ContNoteHoverSeparate.html"));
+        await Page.GotoReportAsync(GenerateThreeDiagramSplitReport("ContNoteHoverSeparate.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -84,7 +84,7 @@ public class ContinuationNoteInteractivityTests : DiagramNotePlaywrightBase
 
     private async Task SetupDatabaseContinuationDiagram(string fileName)
     {
-        await Page.GotoAsync(GenerateDatabaseContinuationSplitReport(fileName));
+        await Page.GotoReportAsync(GenerateDatabaseContinuationSplitReport(fileName));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -194,7 +194,7 @@ public class ContinuationNoteInteractivityTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Chunked_database_note_continuation_fragment_has_hover_rects()
     {
-        await Page.GotoAsync(GenerateChunkedDatabaseNoteReport("ChunkedDbContHovers.html"));
+        await Page.GotoReportAsync(GenerateChunkedDatabaseNoteReport("ChunkedDbContHovers.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -264,7 +264,7 @@ public class ContinuationNoteInteractivityTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Chunked_continuation_note_has_expand_button()
     {
-        await Page.GotoAsync(GenerateChunkedDatabaseNoteReport("ChunkedExpandBtn.html"));
+        await Page.GotoReportAsync(GenerateChunkedDatabaseNoteReport("ChunkedExpandBtn.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -332,7 +332,7 @@ public class ContinuationNoteInteractivityTests : DiagramNotePlaywrightBase
 
     private async Task SetupChunkedFragments(string fileName)
     {
-        await Page.GotoAsync(GenerateChunkedDatabaseNoteReport(fileName));
+        await Page.GotoReportAsync(GenerateChunkedDatabaseNoteReport(fileName));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -583,7 +583,7 @@ public class ContinuationNoteInteractivityTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Chunked_continuation_note_not_merged_with_adjacent_paths()
     {
-        await Page.GotoAsync(GenerateChunkedDatabaseNoteReport("ChunkedNoMerge.html"));
+        await Page.GotoReportAsync(GenerateChunkedDatabaseNoteReport("ChunkedNoMerge.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -638,7 +638,7 @@ public class ContinuationNoteInteractivityTests : DiagramNotePlaywrightBase
 
     private async Task RenderLargeNoteExpandedAndWaitForFragments(string fileName)
     {
-        await Page.GotoAsync(GenerateLargeNoteReport(fileName));
+        await Page.GotoReportAsync(GenerateLargeNoteReport(fileName));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();

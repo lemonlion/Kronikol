@@ -16,7 +16,7 @@ public class NoteAppearanceTests : DiagramNotePlaywrightBase
 
     private async Task NavigateToSqlNote(string fileName, NoteWidthMode noteWidth = NoteWidthMode.Default)
     {
-        await Page.GotoAsync(ReportTestHelper.GenerateReportWithWideSqlNote(TempDir, OutputDir, fileName, noteWidth));
+        await Page.GotoReportAsync(ReportTestHelper.GenerateReportWithWideSqlNote(TempDir, OutputDir, fileName, noteWidth));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -108,7 +108,7 @@ public class NoteAppearanceTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task A_width_class_on_one_note_widens_only_that_note()
     {
-        await Page.GotoAsync(ReportTestHelper.GenerateReportWithNoteWidthClassDiagram(TempDir, OutputDir, "NoteWidthClass.html"));
+        await Page.GotoReportAsync(ReportTestHelper.GenerateReportWithNoteWidthClassDiagram(TempDir, OutputDir, "NoteWidthClass.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -125,7 +125,7 @@ public class NoteAppearanceTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task A_width_class_composes_with_the_notes_own_stereotype()
     {
-        await Page.GotoAsync(ReportTestHelper.GenerateReportWithNoteWidthClassDiagram(TempDir, OutputDir, "NoteWidthCompose.html"));
+        await Page.GotoReportAsync(ReportTestHelper.GenerateReportWithNoteWidthClassDiagram(TempDir, OutputDir, "NoteWidthCompose.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();

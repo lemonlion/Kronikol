@@ -15,7 +15,7 @@ public class ColoredArrowSplitTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task CountArrows_detects_colored_forward_arrows()
     {
-        await Page.GotoAsync(GenerateColoredArrowReport("CountColoredForward.html"));
+        await Page.GotoReportAsync(GenerateColoredArrowReport("CountColoredForward.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         var count = await Page.EvaluateAsync<int>("""
@@ -36,7 +36,7 @@ public class ColoredArrowSplitTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task CountArrows_detects_colored_return_arrows()
     {
-        await Page.GotoAsync(GenerateColoredArrowReport("CountColoredReturn.html"));
+        await Page.GotoReportAsync(GenerateColoredArrowReport("CountColoredReturn.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         var count = await Page.EvaluateAsync<int>("""
@@ -55,7 +55,7 @@ public class ColoredArrowSplitTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task SplitDiagramSource_produces_valid_fragments_with_colored_arrows()
     {
-        await Page.GotoAsync(GenerateColoredArrowReport("SplitColoredValid.html"));
+        await Page.GotoReportAsync(GenerateColoredArrowReport("SplitColoredValid.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         var result = await Page.EvaluateAsync<string>("""
@@ -91,7 +91,7 @@ public class ColoredArrowSplitTests : DiagramNotePlaywrightBase
         // Collapsed repeated calls render as `loop ×N … end` blocks. A height split that lands inside
         // one used to strand the `end` in the next fragment (and leave the opener unclosed in the
         // previous one) — plantuml.js then reports "Syntax Error? (Assumed diagram type: class)".
-        await Page.GotoAsync(GenerateColoredArrowReport("SplitLoopBalanced.html"));
+        await Page.GotoReportAsync(GenerateColoredArrowReport("SplitLoopBalanced.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         var result = await Page.EvaluateAsync<string>("""
@@ -133,7 +133,7 @@ public class ColoredArrowSplitTests : DiagramNotePlaywrightBase
     {
         // A huge note forces a split boundary *inside* the note (chunkLargeNotes); when that note sits
         // inside a `loop … end` block the opener and the `end` land in different parts.
-        await Page.GotoAsync(GenerateColoredArrowReport("SplitChunkedLoopBalanced.html"));
+        await Page.GotoReportAsync(GenerateColoredArrowReport("SplitChunkedLoopBalanced.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         var result = await Page.EvaluateAsync<string>("""
@@ -176,7 +176,7 @@ public class ColoredArrowSplitTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task SplitDiagramSource_autonumber_accounts_for_colored_arrows()
     {
-        await Page.GotoAsync(GenerateColoredArrowReport("SplitColoredAutonum.html"));
+        await Page.GotoReportAsync(GenerateColoredArrowReport("SplitColoredAutonum.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         var result = await Page.EvaluateAsync<string>("""
@@ -211,7 +211,7 @@ public class ColoredArrowSplitTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Colored_arrow_diagram_renders_all_fragments_without_syntax_error()
     {
-        await Page.GotoAsync(GenerateColoredArrowReport("ColoredArrowRender.html"));
+        await Page.GotoReportAsync(GenerateColoredArrowReport("ColoredArrowRender.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();

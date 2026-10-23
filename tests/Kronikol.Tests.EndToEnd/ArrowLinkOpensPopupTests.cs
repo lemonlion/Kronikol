@@ -22,7 +22,7 @@ public class ArrowLinkOpensPopupTests : PlaywrightTestBase
 
     private async Task OpenAndDraw(string uri)
     {
-        await Page.GotoAsync(uri);
+        await Page.GotoReportAsync(uri);
         await ExpandFirstScenarioWithDiagram();
         await Page.EvaluateAsync("() => window._renderDiagramsInContainer(document.body)");
         await Page.WaitForFunctionAsync(BrowserRenderWorkerTests.AllRenderedJs, null, new() { Timeout = AllDrawnTimeout, PollingInterval = 200 });
@@ -48,7 +48,7 @@ public class ArrowLinkOpensPopupTests : PlaywrightTestBase
     private static string WithList(string uri, string list)
     {
         var path = new Uri(uri).LocalPath;
-        var html = File.ReadAllText(path);
+        var html = ReportFileText.Read(path);
         const string head = "<script id=\"iflow-segments\" type=\"application/json\">";
         var start = html.IndexOf(head, StringComparison.Ordinal) + head.Length;
         var end = html.IndexOf("</script>", start, StringComparison.Ordinal);
@@ -70,7 +70,7 @@ public class ArrowLinkOpensPopupTests : PlaywrightTestBase
         Assert.NotEmpty(ids);
 
         var copy = Path.Combine(Path.GetDirectoryName(path)!, $"TestRunReport.{list}.html");
-        File.WriteAllText(copy, html[..start] + "{\"" + list + "\":" + System.Text.Json.JsonSerializer.Serialize(ids) + ",\"z\":\"" + z + "\"}" + html[end..]);
+        ReportFileText.EditInto(path, copy, _ => html[..start] + "{\"" + list + "\":" + System.Text.Json.JsonSerializer.Serialize(ids) + ",\"z\":\"" + z + "\"}" + html[end..]);
         return new Uri(copy).AbsoluteUri;
     }
 
@@ -207,7 +207,7 @@ public class ArrowLinkOpensPopupTests : PlaywrightTestBase
         var written = Kronikol.Reports.Merge.MergeableReportRenderer.Render(merged, Path.Combine(TempDir, "merged-" + Guid.NewGuid().ToString("N"), "TestRunReport.html"));
         File.Copy(written, Path.Combine(OutputDir, "ArrowLink_Merged.html"), true);
 
-        await Page.GotoAsync(new Uri(written).AbsoluteUri);
+        await Page.GotoReportAsync(new Uri(written).AbsoluteUri);
         await Page.EvaluateAsync("() => document.querySelectorAll('details').forEach(d => d.open = true)");
         await Page.EvaluateAsync("() => window._renderDiagramsInContainer(document.body)");
         await Page.WaitForFunctionAsync(BrowserRenderWorkerTests.AllRenderedJs, null, new() { Timeout = AllDrawnTimeout, PollingInterval = 200 });

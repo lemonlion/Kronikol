@@ -14,7 +14,7 @@ public class SubStepTableTests(PlaywrightFixture fixture) : PlaywrightTestBase(f
     [Fact]
     public async Task Opening_a_composite_step_shows_its_sub_step_s_table()
     {
-        await Page.GotoAsync(Generate("SubStepTable.html"));
+        await Page.GotoReportAsync(Generate("SubStepTable.html"));
         // The feature and scenario open as any reader opens them; the composite step is the click under test.
         await Page.EvaluateAsync("() => document.querySelectorAll('details.feature, details.scenario').forEach(d => d.open = true)");
         await Page.Locator("details.step-collapsible > summary").First.ClickAsync();

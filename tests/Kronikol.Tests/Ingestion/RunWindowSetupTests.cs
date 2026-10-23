@@ -659,7 +659,7 @@ public class RunWindowSetupTests : IDisposable
 
         Assert.Equal(2, result.SetupRecords);
         Assert.Equal(["Stack start-up", CucumberFixtures.DemoFeature, CucumberFixtures.RetryFeature], result.Features.Select(f => f.DisplayName));
-        var html = File.ReadAllText(result.TestRunReportHtml);
+        var html = ReportHtml.Read(result.TestRunReportHtml);
         var setupAt = html.IndexOf(">Stack start-up<", StringComparison.Ordinal);
         Assert.True(setupAt >= 0 && setupAt < html.IndexOf(">" + CucumberFixtures.DemoFeature + "<", StringComparison.Ordinal));
     }

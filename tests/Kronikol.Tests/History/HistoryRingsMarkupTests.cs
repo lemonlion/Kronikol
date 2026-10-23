@@ -203,7 +203,7 @@ public class HistoryRingsMarkupTests : IDisposable
         var path = ReportGenerator.GenerateHtmlReport([], features, start, start.AddMinutes(65).AddSeconds(30), null,
             Path.Combine(_dir, "HourLong.html"), "Hour", includeTestRunData: true);
 
-        Assert.Contains("<dt>Duration</dt><dd>1h 5m</dd>", File.ReadAllText(path));
+        Assert.Contains("<dt>Duration</dt><dd>1h 5m</dd>", ReportHtml.Read(path));
     }
 
     /// <summary>A guard, passing before S11f too: the run band's ring, which now shares its drawing with the History rings,

@@ -146,7 +146,7 @@ public class InternalFlowSegmentMapReportTests : IDisposable
 
         var element = Element(run.Html);
         Assert.Contains($"iflow-{run.First}", SegmentKeysInPage(run.Html));
-        Assert.Equal(element, Element(File.ReadAllText(merged)));
+        Assert.Equal(element, Element(ReportHtml.Read(merged)));
     }
 
     /// <summary>The page's segment element, whole.</summary>
@@ -335,7 +335,7 @@ public class InternalFlowSegmentMapReportTests : IDisposable
             .Where(l => l.TestId == callsId || l.TestId == quietId)
             .Select(l => $"iflow-{l.RequestResponseId}")
             .ToHashSet();
-        return new Run(File.ReadAllText(Path.Combine(_directory, "TestRunReport.html")), own, first, second, callsId, quietId, nested);
+        return new Run(ReportHtml.Read(Path.Combine(_directory, "TestRunReport.html")), own, first, second, callsId, quietId, nested);
     }
 
     private static void Log(RequestResponseLog log) => RequestResponseLogger.Log(log);

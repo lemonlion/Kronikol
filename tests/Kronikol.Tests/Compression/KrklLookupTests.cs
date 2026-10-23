@@ -214,7 +214,7 @@ public class KrklLookupTests : IDisposable
         var exit = HistoryCommand.Run(["import", folder, "--history", ledger], output, error, _ => null);
 
         Assert.True(exit == 0, $"exit {exit}: {error}");
-        Assert.True(File.Exists(ledger) && File.ReadAllText(ledger).Length > 0, $"nothing imported: {output}{error}");
+        Assert.True(File.Exists(ledger) && ReportHtml.Read(ledger).Length > 0, $"nothing imported: {output}{error}");
     }
 
     [Fact]
@@ -253,7 +253,7 @@ public class KrklLookupTests : IDisposable
         var shard = Path.Combine(_root, "shards", "TestRunReport.krkl");
         Directory.CreateDirectory(Path.GetDirectoryName(shard)!);
         // A body long enough to be wrapped in $z, which a merge writing its data file plain would wrap.
-        var document = JsonNode.Parse(File.ReadAllText(Mergeable))!;
+        var document = JsonNode.Parse(ReportHtml.Read(Mergeable))!;
         var body = FirstWithContent(document);
         Assert.NotNull(body);
         var longBody = new string('x', ReportPayloads.Threshold * 2);

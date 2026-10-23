@@ -10,7 +10,7 @@ public class ComplexInlineParamTests : PlaywrightTestBase
     [Fact]
     public async Task Small_complex_param_renders_inline_span()
     {
-        await Page.GotoAsync(GenerateReportWithComplexInlineParams("SmallInline.html"));
+        await Page.GotoReportAsync(GenerateReportWithComplexInlineParams("SmallInline.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await ExpandAllFeaturesAsync();
@@ -32,7 +32,7 @@ public class ComplexInlineParamTests : PlaywrightTestBase
     [Fact]
     public async Task Large_complex_param_renders_as_expandable_button()
     {
-        await Page.GotoAsync(GenerateReportWithComplexInlineParams("LargeButton.html"));
+        await Page.GotoReportAsync(GenerateReportWithComplexInlineParams("LargeButton.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await ExpandAllFeaturesAsync();
@@ -49,7 +49,7 @@ public class ComplexInlineParamTests : PlaywrightTestBase
     [Fact]
     public async Task Large_complex_param_button_click_expands_pre_block()
     {
-        await Page.GotoAsync(GenerateReportWithComplexInlineParams("LargeExpand.html"));
+        await Page.GotoReportAsync(GenerateReportWithComplexInlineParams("LargeExpand.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await ExpandAllFeaturesAsync();
@@ -82,7 +82,7 @@ public class ComplexInlineParamTests : PlaywrightTestBase
     [Fact]
     public async Task Large_complex_param_button_click_again_collapses()
     {
-        await Page.GotoAsync(GenerateReportWithComplexInlineParams("LargeCollapse.html"));
+        await Page.GotoReportAsync(GenerateReportWithComplexInlineParams("LargeCollapse.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await ExpandAllFeaturesAsync();

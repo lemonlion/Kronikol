@@ -71,7 +71,7 @@ public class ToggleDefaultsMarkupTests
             null, $"ToggleMarkup_{Guid.NewGuid():N}.html", "Test", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs,
             toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: false));
-        return File.ReadAllText(path);
+        return ReportHtml.Read(path);
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -327,7 +327,7 @@ public class ToggleDefaultsMarkupTests
             null, $"ToggleMarkupNoBrowser_{Guid.NewGuid():N}.html", "Test", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.Server,
             toggleDefaults: ResolvedToggleDefaults.BuiltIn);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
 
         Assert.DoesNotContain("note-width-select", content);
     }
@@ -405,7 +405,7 @@ public class ToggleDefaultsMarkupTests
             var path = specifications
                 ? ToggleDefaultsBaselineTests.GenerateSpecShape(diagrams, specFeatures, segments, $"ToggleRich_{Guid.NewGuid():N}.html", resolved)
                 : ToggleDefaultsBaselineTests.GenerateTestRunShape(diagrams, testRunFeatures, segments, $"ToggleRich_{Guid.NewGuid():N}.html", resolved);
-            return File.ReadAllText(path);
+            return ReportHtml.Read(path);
         }
     }
 
@@ -516,7 +516,7 @@ public class ToggleDefaultsMarkupTests
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs,
             separateBackgroundSteps: true,
             toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: false));
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
         Assert.Contains("<details class=\"scenario-background\" open>", content);
     }
 
@@ -530,7 +530,7 @@ public class ToggleDefaultsMarkupTests
             null, $"ToggleRaw_{Guid.NewGuid():N}.html", "Test", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.Server,
             toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: false));
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
         Assert.Contains("<details class=\"example\" open>", content);
     }
 
@@ -623,7 +623,7 @@ public class ToggleDefaultsMarkupTests
         };
         var output = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Reports", $"ToggleMerge_{Guid.NewGuid():N}.html");
         var written = MergeableReportRenderer.Render(report, output, options: options);
-        var content = File.ReadAllText(written);
+        var content = ReportHtml.Read(written);
         Assert.Contains("<button class=\"details-radio-btn details-active\" data-state=\"expanded\" onclick=\"window._setReportDetails('expanded')\" title=\"The payloads in every sequence diagram in the report show in full; a long one scrolls in its box\"><span class=\"btn-label\" data-label=\"Expanded\">Expanded</span></button>", content);
         Assert.Contains("window._detailsDefault = 'expanded'", content);
         Assert.Contains("data-toggle=\"headers\" data-shown=\"false\" aria-pressed=\"false\"", content);

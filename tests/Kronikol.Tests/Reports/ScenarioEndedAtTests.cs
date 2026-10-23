@@ -42,7 +42,7 @@ public class ScenarioEndedAtTests
 
     private static JsonElement JsonScenario(Feature[] features)
     {
-        using var document = JsonDocument.Parse(File.ReadAllText(Write(features, DataFormat.Json)));
+        using var document = JsonDocument.Parse(ReportHtml.Read(Write(features, DataFormat.Json)));
         return document.RootElement.GetProperty("features").EnumerateArray().Single()
             .GetProperty("scenarios").EnumerateArray().Single().Clone();
     }
@@ -84,7 +84,7 @@ public class ScenarioEndedAtTests
         Assert.Equal("2026-01-01T10:00:03.250Z", scenario.Element("EndedAt")!.Value);
 
         var schemaSet = new XmlSchemaSet();
-        schemaSet.Add("", System.Xml.XmlReader.Create(new StringReader(File.ReadAllText(
+        schemaSet.Add("", System.Xml.XmlReader.Create(new StringReader(ReportHtml.Read(
             ReportGenerator.GenerateTestRunReportSchema($"EndedAt_{Guid.NewGuid():N}.xsd", DataFormat.Xml)))));
         var errors = new List<string>();
         XDocument.Load(xmlPath).Validate(schemaSet, (_, e) => errors.Add(e.Message));
@@ -94,7 +94,7 @@ public class ScenarioEndedAtTests
     [Fact]
     public void The_yaml_carries_it_at_the_scenario_indent()
     {
-        var yaml = File.ReadAllText(Write(Timed(Ended), DataFormat.Yaml));
+        var yaml = ReportHtml.Read(Write(Timed(Ended), DataFormat.Yaml));
 
         var line = Assert.Single(yaml.Split((char)10), l => l.TrimStart().StartsWith("EndedAt:", StringComparison.Ordinal));
         Assert.StartsWith("        EndedAt: ", line, StringComparison.Ordinal);
@@ -105,13 +105,13 @@ public class ScenarioEndedAtTests
     public void A_lane_that_did_not_record_an_end_omits_the_element_and_the_line()
     {
         Assert.Null(XmlScenario(Timed()).Element("EndedAt"));
-        Assert.DoesNotContain("EndedAt:", File.ReadAllText(Write(Timed(), DataFormat.Yaml)), StringComparison.Ordinal);
+        Assert.DoesNotContain("EndedAt:", ReportHtml.Read(Write(Timed(), DataFormat.Yaml)), StringComparison.Ordinal);
     }
 
     [Fact]
     public void The_schema_declares_it_as_a_nullable_date_time()
     {
-        using var schema = JsonDocument.Parse(File.ReadAllText(
+        using var schema = JsonDocument.Parse(ReportHtml.Read(
             ReportGenerator.GenerateTestRunReportSchema($"EndedAt_{Guid.NewGuid():N}.schema.json", DataFormat.Json)));
 
         var endedAt = schema.RootElement.GetProperty("properties").GetProperty("features").GetProperty("items")

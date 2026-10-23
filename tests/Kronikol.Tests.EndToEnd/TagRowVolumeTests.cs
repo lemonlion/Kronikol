@@ -59,7 +59,7 @@ public class TagRowVolumeTests : PlaywrightTestBase
             await Page.SetViewportSizeAsync(width, height);
             foreach (var tags in new[] { 0, 1, 9, 40, 60, 100, 400 })
             {
-                await Page.GotoAsync(Generate(tags));
+                await Page.GotoReportAsync(Generate(tags));
                 await Page.Locator("details.feature").First.WaitForAsync();
                 // a phone keeps the filter box behind its own Filters toggle
                 var phoneToggle = Page.Locator(".mobile-filter-toggle");

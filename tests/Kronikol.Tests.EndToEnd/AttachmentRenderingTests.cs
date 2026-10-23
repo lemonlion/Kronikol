@@ -8,7 +8,7 @@ public class AttachmentRenderingTests : PlaywrightTestBase
     [Fact]
     public async Task Step_with_attachment_renders_link()
     {
-        await Page.GotoAsync(GenerateReportWithAttachments("AttLink.html"));
+        await Page.GotoReportAsync(GenerateReportWithAttachments("AttLink.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await ExpandAllFeaturesAsync();
@@ -24,7 +24,7 @@ public class AttachmentRenderingTests : PlaywrightTestBase
     [Fact]
     public async Task Attachment_link_has_correct_href()
     {
-        await Page.GotoAsync(GenerateReportWithAttachments("AttHref.html"));
+        await Page.GotoReportAsync(GenerateReportWithAttachments("AttHref.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await ExpandAllFeaturesAsync();
@@ -39,7 +39,7 @@ public class AttachmentRenderingTests : PlaywrightTestBase
     [Fact]
     public async Task Step_with_multiple_attachments_renders_all()
     {
-        await Page.GotoAsync(GenerateReportWithAttachments("AttMultiple.html"));
+        await Page.GotoReportAsync(GenerateReportWithAttachments("AttMultiple.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await ExpandAllFeaturesAsync();
@@ -58,7 +58,7 @@ public class AttachmentRenderingTests : PlaywrightTestBase
     [Fact]
     public async Task Step_without_attachments_has_no_link()
     {
-        await Page.GotoAsync(GenerateReportWithAttachments("AttNone.html"));
+        await Page.GotoReportAsync(GenerateReportWithAttachments("AttNone.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await ExpandAllFeaturesAsync();
@@ -74,7 +74,7 @@ public class AttachmentRenderingTests : PlaywrightTestBase
     public async Task Absolute_path_attachment_is_copied_and_href_rewritten()
     {
         var url = GenerateReportWithCopiedAttachment("AttCopy.html");
-        await Page.GotoAsync(url);
+        await Page.GotoReportAsync(url);
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await ExpandAllFeaturesAsync();
@@ -92,7 +92,7 @@ public class AttachmentRenderingTests : PlaywrightTestBase
     [Fact]
     public async Task Image_attachment_renders_inline_img()
     {
-        await Page.GotoAsync(GenerateReportWithAttachments("AttImg.html"));
+        await Page.GotoReportAsync(GenerateReportWithAttachments("AttImg.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await ExpandAllFeaturesAsync();
@@ -112,7 +112,7 @@ public class AttachmentRenderingTests : PlaywrightTestBase
     public async Task Images_whose_names_hold_a_hash_or_a_percent_sign_draw_and_open_in_the_lightbox()
     {
         // #148 F11: linked HTML-encoded only, shot#1.png requested attachments/shot and 50%.png an escape it is not.
-        await Page.GotoAsync(GenerateReportWithAwkwardAttachmentNames("AttAwkward.html"));
+        await Page.GotoReportAsync(GenerateReportWithAwkwardAttachmentNames("AttAwkward.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await ExpandAllFeaturesAsync();
@@ -140,7 +140,7 @@ public class AttachmentRenderingTests : PlaywrightTestBase
 
     private async Task OpenMissingAttachmentsReport(string fileName)
     {
-        await Page.GotoAsync(ReportTestHelper.GenerateReportWithMissingAttachments(TempDir, OutputDir, fileName));
+        await Page.GotoReportAsync(ReportTestHelper.GenerateReportWithMissingAttachments(TempDir, OutputDir, fileName));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandAllFeaturesAsync();
         await ExpandAllScenariosAsync();
@@ -199,7 +199,7 @@ public class AttachmentRenderingTests : PlaywrightTestBase
             await Page.Locator("button.export-btn", new() { HasTextString = "Export Filtered HTML" }).ClickAsync());
         var exported = Path.Combine(TempDir, $"export_{Guid.NewGuid():N}.html");
         await download.SaveAsAsync(exported);
-        await Page.GotoAsync(new Uri(exported).AbsoluteUri);
+        await Page.GotoReportAsync(new Uri(exported).AbsoluteUri);
 
         await Page.Locator("span.attachment-missing", new() { HasTextString = "shot.png (could not be loaded)" }).First
             .WaitForAsync(new() { State = Microsoft.Playwright.WaitForSelectorState.Attached });
@@ -213,7 +213,7 @@ public class AttachmentRenderingTests : PlaywrightTestBase
     {
         // Only a step's image called openLightbox; a scenario's own, Playwright's failure screenshot among them, and a
         // parameterized row's opened a new tab (plans/LIST_CAPS_PLAN.md 3.10).
-        await Page.GotoAsync(GenerateReportWithScenarioImages("AttScenarioImages.html"));
+        await Page.GotoReportAsync(GenerateReportWithScenarioImages("AttScenarioImages.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await ExpandAllFeaturesAsync();
@@ -239,7 +239,7 @@ public class AttachmentRenderingTests : PlaywrightTestBase
     [Fact]
     public async Task Image_attachment_has_lightbox_link()
     {
-        await Page.GotoAsync(GenerateReportWithAttachments("AttImgLink.html"));
+        await Page.GotoReportAsync(GenerateReportWithAttachments("AttImgLink.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await ExpandAllFeaturesAsync();
@@ -254,7 +254,7 @@ public class AttachmentRenderingTests : PlaywrightTestBase
     [Fact]
     public async Task Non_image_attachment_renders_as_link_not_img()
     {
-        await Page.GotoAsync(GenerateReportWithAttachments("AttNonImg.html"));
+        await Page.GotoReportAsync(GenerateReportWithAttachments("AttNonImg.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await ExpandAllFeaturesAsync();
@@ -272,7 +272,7 @@ public class AttachmentRenderingTests : PlaywrightTestBase
     [Fact]
     public async Task Image_attachment_shows_filename_caption()
     {
-        await Page.GotoAsync(GenerateReportWithAttachments("AttImgCaption.html"));
+        await Page.GotoReportAsync(GenerateReportWithAttachments("AttImgCaption.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await ExpandAllFeaturesAsync();

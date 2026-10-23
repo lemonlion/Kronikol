@@ -12,7 +12,7 @@ public class NoteFormatCardColourTests : DiagramNotePlaywrightBase
 
     private async Task OpenAsync(string report)
     {
-        await Page.GotoAsync(report);
+        await Page.GotoReportAsync(report);
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();

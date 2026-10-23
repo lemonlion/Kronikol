@@ -20,7 +20,7 @@ public class NoteFormatDropdownTests : DiagramNotePlaywrightBase
 
     private async Task NavigateSingleScenario(string fileName)
     {
-        await Page.GotoAsync(ReportTestHelper.GenerateReportWithJsonYamlNotes(TempDir, OutputDir, fileName));
+        await Page.GotoReportAsync(ReportTestHelper.GenerateReportWithJsonYamlNotes(TempDir, OutputDir, fileName));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -29,7 +29,7 @@ public class NoteFormatDropdownTests : DiagramNotePlaywrightBase
 
     private async Task NavigateTwoScenariosAndRenderBoth(string fileName)
     {
-        await Page.GotoAsync(ReportTestHelper.GenerateReportWithJsonNotesInTwoScenarios(TempDir, OutputDir, fileName));
+        await Page.GotoReportAsync(ReportTestHelper.GenerateReportWithJsonNotesInTwoScenarios(TempDir, OutputDir, fileName));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await RenderAllDiagramsAndWait();
@@ -62,7 +62,7 @@ public class NoteFormatDropdownTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Dropdown_is_not_emitted_for_a_report_without_json_payloads()
     {
-        await Page.GotoAsync(GenerateReportWithWideDiagram("FormatDropdown_NoJson.html"));
+        await Page.GotoReportAsync(GenerateReportWithWideDiagram("FormatDropdown_NoJson.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         Assert.Equal(0, await Page.Locator(".note-format-select").CountAsync());
@@ -165,7 +165,7 @@ public class NoteFormatDropdownTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Lazy_scenario_opened_after_report_yaml_selection_renders_straight_into_yaml()
     {
-        await Page.GotoAsync(ReportTestHelper.GenerateReportWithJsonNotesInTwoScenarios(TempDir, OutputDir, "FormatDropdown_LazyScenario.html"));
+        await Page.GotoReportAsync(ReportTestHelper.GenerateReportWithJsonNotesInTwoScenarios(TempDir, OutputDir, "FormatDropdown_LazyScenario.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandAllFeaturesAsync();
 
@@ -203,7 +203,7 @@ public class NoteFormatDropdownTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Scenario_yaml_selection_before_its_diagram_renders_applies_on_decompression()
     {
-        await Page.GotoAsync(ReportTestHelper.GenerateReportWithJsonNotesInTwoScenarios(TempDir, OutputDir, "FormatDropdown_LazyInScenario.html"));
+        await Page.GotoReportAsync(ReportTestHelper.GenerateReportWithJsonNotesInTwoScenarios(TempDir, OutputDir, "FormatDropdown_LazyInScenario.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandAllFeaturesAsync();
 

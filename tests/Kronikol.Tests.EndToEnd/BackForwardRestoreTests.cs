@@ -101,10 +101,10 @@ public class BackForwardRestoreTests : BackForwardTestBase
         // committed is enough: a text file's own load is not this test's, and on Linux Chromium it never came. The wait
         // starts before the click: started after it, it found the file's URL already there when the file came quickly,
         // and then waited for the load after all, since WaitForURLAsync waits for a load state when the URL matches
-        var committed = Page.WaitForURLAsync(new Regex("files/"), new() { WaitUntil = WaitUntilState.Commit });
+        var committed = Page.WaitForURLReportAsync(new Regex("files/"), new() { WaitUntil = WaitUntilState.Commit });
         await file.ClickAsync();
         await committed;
-        await Page.GoBackAsync(new() { WaitUntil = WaitUntilState.Commit });
+        await Page.GoBackReportAsync(new() { WaitUntil = WaitUntilState.Commit });
         await Page.Locator("details.feature").First.WaitForAsync();
         await SettledAsync(Page, 0);
 
@@ -118,8 +118,8 @@ public class BackForwardRestoreTests : BackForwardTestBase
         var url = EverySection("BackNav_R5.html");
         var embed = Path.Combine(TempDir, "embed.html");
         File.WriteAllText(embed, $"<!DOCTYPE html><html><head><title>Embedding page</title></head><body style=\"margin:0\"><iframe src=\"{url}\" style=\"width:1260px;height:680px;border:0\"></iframe></body></html>");
-        await Page.GotoAsync(BeforePage());
-        await Page.GotoAsync(new Uri(embed).AbsoluteUri);
+        await Page.GotoReportAsync(BeforePage());
+        await Page.GotoReportAsync(new Uri(embed).AbsoluteUri);
         var frame = Page.Frames.First(f => f.Url.Contains("BackNav_R5"));
         await frame.Locator("details.feature").First.WaitForAsync();
         await frame.WaitForFunctionAsync("() => !!document.documentElement.getAttribute('data-kron-nav')", null, new() { PollingInterval = 200, Timeout = 30000 });
@@ -341,7 +341,7 @@ public class BackForwardRestoreTests : BackForwardTestBase
         {
             var errors = new List<string>();
             page.PageError += (_, e) => errors.Add(e);
-            await page.GotoAsync(server.UrlOf($"viewer_{engine}.html"));
+            await page.GotoReportAsync(server.UrlOf($"viewer_{engine}.html"));
             var frame = page.Frames.First(f => f != page.MainFrame);
             await frame.Locator("details.feature").First.WaitForAsync(new() { Timeout = 60000 });
             await frame.WaitForFunctionAsync("() => !!document.documentElement.getAttribute('data-kron-nav')", null, new() { PollingInterval = 200, Timeout = 30000 });
@@ -435,7 +435,7 @@ public class BackForwardRestoreTests : BackForwardTestBase
         Assert.True(await tall.EvaluateAsync<double>("d => d.getBoundingClientRect().height") > ViewportHeight,
             "the scenario is taller than the window");
 
-        await ActAsync(() => Page.GotoAsync(url + "#sid-" + sid));
+        await ActAsync(() => Page.GotoReportAsync(url + "#sid-" + sid));
         await WaitForScrollToSettleAsync();
 
         var gap = await Page.EvaluateAsync<double>($$"""

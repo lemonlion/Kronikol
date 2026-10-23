@@ -179,7 +179,7 @@ public class QueryHistoryHintsTests : IDisposable
         Record(1, withFold, Green(12) + "N");
         Record(2, withFold, Green(12) + "N");
         var report = WriteReport([3, 4, 99], "PPP");
-        var json = System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(report))!;
+        var json = System.Text.Json.Nodes.JsonNode.Parse(ReportHtml.Read(report))!;
         json["features"]![0]!["scenarios"]![2]!["notATest"] = true;
         File.WriteAllText(report, json.ToJsonString());
 

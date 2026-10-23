@@ -66,7 +66,7 @@ public class ComponentDiagramReportTests : IDisposable
         var result = ComponentDiagramReportGenerator.GenerateComponentDiagramReport(logs, new ReportConfigurationOptions { ComponentDiagramOptions = options });
 
         Assert.True(File.Exists(result.HtmlFilePath));
-        var content = File.ReadAllText(result.HtmlFilePath);
+        var content = ReportHtml.Read(result.HtmlFilePath);
         Assert.Contains("<html>", content);
         Assert.Contains("Component Diagram", content);
         Assert.Contains("data-plantuml-z=", content);
@@ -93,7 +93,7 @@ public class ComponentDiagramReportTests : IDisposable
 
             Assert.True(File.Exists(result.HtmlFilePath));
             Assert.True(File.Exists(Path.Combine(dir, "ComponentDiagram.svg")), "expected an SVG next to the HTML");
-            Assert.Contains("ComponentDiagram.svg", File.ReadAllText(result.HtmlFilePath));
+            Assert.Contains("ComponentDiagram.svg", ReportHtml.Read(result.HtmlFilePath));
         }
         finally
         {
@@ -150,7 +150,7 @@ public class ComponentDiagramReportTests : IDisposable
 
         var result = ComponentDiagramReportGenerator.GenerateComponentDiagramReport(logs, new ReportConfigurationOptions { ComponentDiagramOptions = options, PlantUmlRendering = PlantUmlRendering.Server });
 
-        var html = File.ReadAllText(result.HtmlFilePath);
+        var html = ReportHtml.Read(result.HtmlFilePath);
         Assert.Contains("<img src=", html);
         Assert.Contains("plantuml.com/plantuml", html);
     }
@@ -163,7 +163,7 @@ public class ComponentDiagramReportTests : IDisposable
 
         var result = ComponentDiagramReportGenerator.GenerateComponentDiagramReport(logs, new ReportConfigurationOptions { ComponentDiagramOptions = options });
 
-        var html = File.ReadAllText(result.HtmlFilePath);
+        var html = ReportHtml.Read(result.HtmlFilePath);
         // BrowserJs default: diagram source is compressed in data-plantuml-z
         Assert.Contains("data-plantuml-z=", html);
         // BrowserJs uses plain PlantUML with skinparams (verify via result.PlantUml)
@@ -181,7 +181,7 @@ public class ComponentDiagramReportTests : IDisposable
         var result = ComponentDiagramReportGenerator.GenerateComponentDiagramReport(
             logs, new ReportConfigurationOptions { ComponentDiagramOptions = options, PlantUmlServerBaseUrl = "https://plantuml.com/plantuml", PlantUmlImageFormat = PlantUmlImageFormat.Svg, PlantUmlRendering = PlantUmlRendering.Server });
 
-        var html = File.ReadAllText(result.HtmlFilePath);
+        var html = ReportHtml.Read(result.HtmlFilePath);
         Assert.Contains("plantuml.com/plantuml/svg/", html);
     }
 
@@ -194,7 +194,7 @@ public class ComponentDiagramReportTests : IDisposable
         var result = ComponentDiagramReportGenerator.GenerateComponentDiagramReport(
             logs, new ReportConfigurationOptions { ComponentDiagramOptions = options, PlantUmlImageFormat = PlantUmlImageFormat.Png, PlantUmlRendering = PlantUmlRendering.Server });
 
-        var html = File.ReadAllText(result.HtmlFilePath);
+        var html = ReportHtml.Read(result.HtmlFilePath);
         Assert.Contains("plantuml.com/plantuml/png/", html);
     }
 
@@ -214,7 +214,7 @@ public class ComponentDiagramReportTests : IDisposable
                 LocalDiagramRenderer = (_, _) => fakeImageBytes
             });
 
-        var html = File.ReadAllText(result.HtmlFilePath);
+        var html = ReportHtml.Read(result.HtmlFilePath);
         Assert.Contains("data:image/png;base64,", html);
     }
 
@@ -247,7 +247,7 @@ public class ComponentDiagramReportTests : IDisposable
                 PlantUmlRendering = PlantUmlRendering.BrowserJs
             });
 
-        var html = File.ReadAllText(result.HtmlFilePath);
+        var html = ReportHtml.Read(result.HtmlFilePath);
         Assert.Contains("plantuml-browser", html);
         Assert.Contains("data-plantuml", html);
         Assert.Contains("plantuml.js", html);
@@ -266,7 +266,7 @@ public class ComponentDiagramReportTests : IDisposable
                 PlantUmlRendering = PlantUmlRendering.Server
             });
 
-        var html = File.ReadAllText(result.HtmlFilePath);
+        var html = ReportHtml.Read(result.HtmlFilePath);
         Assert.Contains("<img src=", html);
     }
 
@@ -285,7 +285,7 @@ public class ComponentDiagramReportTests : IDisposable
         // Read the diagram source the page renders, gzipped into data-plantuml-z, not the whole page: the
         // page also carries the render scripts, whose comments may name the syntax the source must not use,
         // and a search of the page text never reached the compressed source at all.
-        var html = File.ReadAllText(result.HtmlFilePath);
+        var html = ReportHtml.Read(result.HtmlFilePath);
         var embedded = string.Join("\n", System.Text.RegularExpressions.Regex
             .Matches(html, "data-plantuml-z=\"([^\"]*)\"")
             .Select(m =>
@@ -347,7 +347,7 @@ public class ComponentDiagramReportTests : IDisposable
         var result = ComponentDiagramReportGenerator.GenerateComponentDiagramReport(
             logs, new ReportConfigurationOptions { ComponentDiagramOptions = new ComponentDiagramOptions() });
 
-        var html = File.ReadAllText(result.HtmlFilePath);
+        var html = ReportHtml.Read(result.HtmlFilePath);
         Assert.DoesNotContain("<summary><strong>PlantUML Source</strong></summary>", html);
         Assert.DoesNotContain("diagram-container", html);
     }
@@ -362,7 +362,7 @@ public class ComponentDiagramReportTests : IDisposable
         var result = ComponentDiagramReportGenerator.GenerateComponentDiagramReport(
             logs, new ReportConfigurationOptions { ComponentDiagramOptions = new ComponentDiagramOptions() });
 
-        var html = File.ReadAllText(result.HtmlFilePath);
+        var html = ReportHtml.Read(result.HtmlFilePath);
         Assert.DoesNotContain("iflow-rel-list", html);
         Assert.DoesNotContain("System Flow", html);
         // Neither the element a report carries its segment map in (3.31.9) nor the global the map was before it.
@@ -428,7 +428,7 @@ public class ComponentDiagramReportTests : IDisposable
             plantUmlRendering: PlantUmlRendering.BrowserJs,
             componentDiagramPlantUml: plantUml);
 
-        var content = File.ReadAllText(html);
+        var content = ReportHtml.Read(html);
         // Anchor on the section's MARKUP: the shared report script also carries the string
         // as a CSS selector (the filter-pipeline guard), so a bare substring search would
         // pass even for a report that emitted no component diagram at all.
@@ -450,7 +450,7 @@ public class ComponentDiagramReportTests : IDisposable
             plantUmlRendering: PlantUmlRendering.BrowserJs,
             componentDiagramPlantUml: plantUml);
 
-        var content = File.ReadAllText(html);
+        var content = ReportHtml.Read(html);
         // 5.0.0 (plans/OPTION_C_PLAN.md S3): hidden as its tab's panel until the tab is chosen
         Assert.Contains("""data-panel="components" hidden><div id="component-diagram" class="component-diagram-section">""", content);
         // Slice from the section's MARKUP (not the CSS selector the shared script carries,
@@ -474,7 +474,7 @@ public class ComponentDiagramReportTests : IDisposable
             plantUmlRendering: PlantUmlRendering.BrowserJs,
             componentDiagramPlantUml: plantUml);
 
-        var content = File.ReadAllText(html);
+        var content = ReportHtml.Read(html);
         // 5.0.0 (plans/OPTION_C_PLAN.md S3): a tab of the report bar in place of the toolbar's toggle
         Assert.Contains("<button class=\"report-tab\" id=\"tab-components\" role=\"tab\" aria-controls=\"panel-components\"", content);
         Assert.Contains(">Components</button>", content);
@@ -490,7 +490,7 @@ public class ComponentDiagramReportTests : IDisposable
             plantUmlRendering: PlantUmlRendering.BrowserJs,
             componentDiagramPlantUml: null);
 
-        var content = File.ReadAllText(html);
+        var content = ReportHtml.Read(html);
         Assert.DoesNotContain("toggle_component_diagram", content);
         Assert.DoesNotContain("id=\"tab-components\"", content);
     }
@@ -507,7 +507,7 @@ public class ComponentDiagramReportTests : IDisposable
             plantUmlRendering: PlantUmlRendering.BrowserJs,
             componentDiagramPlantUml: plantUml);
 
-        var content = File.ReadAllText(html);
+        var content = ReportHtml.Read(html);
         // 5.0.0 (S3): the tabs script draws a panel's diagrams when the panel shows, as the toggle did, and (S4) only
         // the ones that show
         Assert.Contains("<script id=\"kronikol-report-tabs\">", content);
@@ -524,7 +524,7 @@ public class ComponentDiagramReportTests : IDisposable
             plantUmlRendering: PlantUmlRendering.BrowserJs,
             componentDiagramPlantUml: null);
 
-        var content = File.ReadAllText(html);
+        var content = ReportHtml.Read(html);
         // No component diagram MARKUP. The shared report script always carries the class as a
         // CSS selector (the filter-pipeline guard), so assert on the emitted attributes rather
         // than on any occurrence of the name anywhere in the file.
@@ -544,7 +544,7 @@ public class ComponentDiagramReportTests : IDisposable
             plantUmlRendering: PlantUmlRendering.BrowserJs,
             componentDiagramPlantUml: plantUml);
 
-        var content = File.ReadAllText(html);
+        var content = ReportHtml.Read(html);
         // The section's MARKUP, not the script's CSS selector for it, which sits in the <head> script.
         // Since 5.0.0 the section is the Components tab's panel, after the features (plans/OPTION_C_PLAN.md S3).
         var componentIdx = content.IndexOf("class=\"component-diagram-section\"", StringComparison.Ordinal);
@@ -595,7 +595,7 @@ public class ComponentDiagramReportTests : IDisposable
             plantUmlRendering: PlantUmlRendering.BrowserJs,
             componentDiagramPlantUml: plantUml);
 
-        var content = File.ReadAllText(html);
+        var content = ReportHtml.Read(html);
         Assert.DoesNotContain("Loading component diagram", content);
     }
 
@@ -616,7 +616,7 @@ public class ComponentDiagramReportTests : IDisposable
             plantUmlRendering: PlantUmlRendering.BrowserJs,
             componentDiagramPlantUml: plantUml);
 
-        var content = File.ReadAllText(html);
+        var content = ReportHtml.Read(html);
         Assert.Contains("data-panel=\"timeline\" hidden>", content);
         Assert.Contains("data-panel=\"components\" hidden>", content);
         Assert.Contains("data-panel=\"features\">", content);
@@ -636,7 +636,7 @@ public class ComponentDiagramReportTests : IDisposable
         var result = ComponentDiagramReportGenerator.GenerateComponentDiagramReport(
             logs, new ReportConfigurationOptions { PlantUmlRendering = PlantUmlRendering.BrowserJs });
 
-        var html = File.ReadAllText(result.HtmlFilePath);
+        var html = ReportHtml.Read(result.HtmlFilePath);
         var embedded = string.Join("\n", System.Text.RegularExpressions.Regex
             .Matches(html, "data-plantuml-z=\"([^\"]*)\"")
             .Select(m =>

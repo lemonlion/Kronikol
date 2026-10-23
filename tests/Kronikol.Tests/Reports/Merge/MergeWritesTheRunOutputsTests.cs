@@ -42,7 +42,7 @@ public class MergeWritesTheRunOutputsTests : IDisposable
         var (exit, _, error) = Merge();
 
         Assert.True(exit == 0, error);
-        var digest = File.ReadAllText(Out("Failures.md"));
+        var digest = ReportHtml.Read(Out("Failures.md"));
         Assert.Contains("Discount is applied", digest);
         Assert.Contains("expected 10 but was 12", digest);
         // The digest links into the report that was actually written, not into TestRunReport.html.
@@ -50,7 +50,7 @@ public class MergeWritesTheRunOutputsTests : IDisposable
         // ...and its commands name Combined.json: a folder lookup finds a TestRunReport.json and nothing else.
         Assert.Contains("kronikol query failures Combined.json  # this file, live", digest);
         Assert.DoesNotMatch(@"kronikol query [a-z]+ \.(?![/\w])", digest);
-        Assert.NotEmpty(File.ReadAllText(Out("Failures.jsonl")));
+        Assert.NotEmpty(ReportHtml.Read(Out("Failures.jsonl")));
     }
 
     /// <summary>
@@ -81,7 +81,7 @@ public class MergeWritesTheRunOutputsTests : IDisposable
         Assert.True(exit == 0, error);
         foreach (var name in new[] { "CLAUDE.md", "AGENTS.md" })
         {
-            var text = File.ReadAllText(Out(name));
+            var text = ReportHtml.Read(Out(name));
             Assert.Contains(AgentInstructionsBlock.BeginMarker, text);
             Assert.Contains("Combined.json", text);
             Assert.DoesNotContain("TestRunReport.json", text);
@@ -100,7 +100,7 @@ public class MergeWritesTheRunOutputsTests : IDisposable
         var (exit, _, error) = Merge();
 
         Assert.True(exit == 0, error);
-        Assert.StartsWith("// Written by Kronikol ", File.ReadAllText(Out("query.cs")), StringComparison.Ordinal);
+        Assert.StartsWith("// Written by Kronikol ", ReportHtml.Read(Out("query.cs")), StringComparison.Ordinal);
     }
 
     /// <summary>
@@ -121,8 +121,8 @@ public class MergeWritesTheRunOutputsTests : IDisposable
 
         Assert.True(exit == 0, error);
         Assert.True(File.Exists(Out("Combined.json")));
-        Assert.DoesNotContain("query.cs", File.ReadAllText(Out("Failures.md")), StringComparison.Ordinal);
-        Assert.Equal("// Written by Kronikol 0.0.1 beside the report in this directory\n", File.ReadAllText(Out("query.cs")));
+        Assert.DoesNotContain("query.cs", ReportHtml.Read(Out("Failures.md")), StringComparison.Ordinal);
+        Assert.Equal("// Written by Kronikol 0.0.1 beside the report in this directory\n", ReportHtml.Read(Out("query.cs")));
     }
 
     [Fact]
@@ -134,7 +134,7 @@ public class MergeWritesTheRunOutputsTests : IDisposable
         var (exit, _, error) = Merge();
 
         Assert.True(exit == 0, error);
-        var text = File.ReadAllText(Out("CLAUDE.md"));
+        var text = ReportHtml.Read(Out("CLAUDE.md"));
         Assert.Contains("Keep this paragraph.", text);
         Assert.Contains(AgentInstructionsBlock.BeginMarker, text);
     }
@@ -267,7 +267,7 @@ public class MergeWritesTheRunOutputsTests : IDisposable
         var (exit, output, error) = Merge(GitHub(("GITHUB_STEP_SUMMARY", summaryFile)));
 
         Assert.True(exit == 0, error);
-        var summary = File.ReadAllText(summaryFile);
+        var summary = ReportHtml.Read(summaryFile);
         Assert.Contains("## Debug this run", summary);
         Assert.Contains($"kronikol query failures {RunSummaryConsoleWriter.ShellWord(Out("Combined.json"))}", summary);
         Assert.Contains("## Debug this run", output);
@@ -283,11 +283,11 @@ public class MergeWritesTheRunOutputsTests : IDisposable
         var (exit, _, error) = Merge(GitHub(("GITHUB_STEP_SUMMARY", summaryFile)), "--ci-summary");
 
         Assert.True(exit == 0, error);
-        var markdown = File.ReadAllText(Out("CiSummary.md"));
+        var markdown = ReportHtml.Read(Out("CiSummary.md"));
         Assert.Contains("# Diagrammed Test Run Summary", markdown);
         Assert.Contains("Discount is applied", markdown);
         Assert.Contains("## Debug this run", markdown);
-        Assert.Equal(markdown, File.ReadAllText(summaryFile));
+        Assert.Equal(markdown, ReportHtml.Read(summaryFile));
     }
 
     [Fact]
@@ -299,7 +299,7 @@ public class MergeWritesTheRunOutputsTests : IDisposable
         var (exit, _, error) = Merge(GitHub(("GITHUB_OUTPUT", githubOutput)), "--publish-artifacts");
 
         Assert.True(exit == 0, error);
-        var text = File.ReadAllText(githubOutput);
+        var text = ReportHtml.Read(githubOutput);
         Assert.Contains($"reports-path={_out}", text);
         Assert.Contains("reports-retention-days=1", text);
     }

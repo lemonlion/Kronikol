@@ -14,7 +14,7 @@ public class HistoryFilterTests : PlaywrightTestBase
 
     private async Task Open(string fileName)
     {
-        await Page.GotoAsync(HistoryReportHelper.Generate(TempDir, OutputDir, fileName));
+        await Page.GotoReportAsync(HistoryReportHelper.Generate(TempDir, OutputDir, fileName));
         await Page.Locator("details.feature").First.WaitForAsync();
     }
 

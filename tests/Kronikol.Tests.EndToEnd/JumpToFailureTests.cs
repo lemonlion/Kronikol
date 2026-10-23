@@ -8,7 +8,7 @@ public class JumpToFailureTests : PlaywrightTestBase
     [Fact]
     public async Task Jump_to_failure_scrolls_scenario_title_into_view()
     {
-        await Page.GotoAsync(GenerateReport("JumpToFailureScroll.html"));
+        await Page.GotoReportAsync(GenerateReport("JumpToFailureScroll.html"));
 
         var jumpBtn = Page.Locator("button.jump-to-failure");
         await jumpBtn.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 5000 });
@@ -35,7 +35,7 @@ public class JumpToFailureTests : PlaywrightTestBase
         // been drawn. In a long report most have not: each counts as its 500 px content-visibility
         // placeholder, a smooth scroll aimed across them ends past the failure, at the bottom of the page
         // (StableIdDeepLinkTests has the same fault for a #sid- link).
-        await Page.GotoAsync(GenerateLongReport("JumpToFailureFarDown.html", "Scenario 30.2"));
+        await Page.GotoReportAsync(GenerateLongReport("JumpToFailureFarDown.html", "Scenario 30.2"));
 
         await Page.Locator("button.jump-to-failure").ClickAsync();
         await WaitForScrollToSettleAsync();
@@ -47,7 +47,7 @@ public class JumpToFailureTests : PlaywrightTestBase
     [Fact]
     public async Task Jump_to_failure_counter_updates()
     {
-        await Page.GotoAsync(GenerateReport("JumpToFailureCounter.html"));
+        await Page.GotoReportAsync(GenerateReport("JumpToFailureCounter.html"));
 
         var jumpBtn = Page.Locator("button.jump-to-failure");
         await jumpBtn.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 5000 });
@@ -74,7 +74,7 @@ public class JumpToFailureTests : PlaywrightTestBase
     [Fact]
     public async Task Jump_to_failure_opens_feature_and_scenario()
     {
-        await Page.GotoAsync(GenerateReport("JumpToFailureOpens.html"));
+        await Page.GotoReportAsync(GenerateReport("JumpToFailureOpens.html"));
 
         var jumpBtn = Page.Locator("button.jump-to-failure");
         await jumpBtn.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 5000 });

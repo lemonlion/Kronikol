@@ -133,7 +133,7 @@ public class KrklRunTests : IDisposable
         var directory = Path.Combine(_root, "agents");
         Run(directory, compress: true, runId: "agents");
 
-        var instructions = File.ReadAllText(Path.Combine(directory, AgentInstructionsGenerator.ClaudeFileName));
+        var instructions = ReportHtml.Read(Path.Combine(directory, AgentInstructionsGenerator.ClaudeFileName));
 
         Assert.Contains("`TestRunReport.krkl`", instructions, StringComparison.Ordinal);
         Assert.DoesNotContain("`TestRunReport.json`", instructions, StringComparison.Ordinal);
@@ -146,7 +146,7 @@ public class KrklRunTests : IDisposable
         var directory = Path.Combine(_root, "named");
         Run(directory, compress: true, runId: "named", name: "Checkout");
 
-        var digest = File.ReadAllText(Path.Combine(directory, ReportGenerator.FailuresDigestFileName));
+        var digest = ReportHtml.Read(Path.Combine(directory, ReportGenerator.FailuresDigestFileName));
 
         Assert.True(File.Exists(Path.Combine(directory, "Checkout.krkl")));
         Assert.Contains("Checkout.krkl", digest, StringComparison.Ordinal);

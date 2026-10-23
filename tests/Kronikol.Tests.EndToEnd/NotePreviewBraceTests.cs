@@ -26,7 +26,7 @@ public class NotePreviewBraceTests : PlaywrightTestBase
             [new DefaultDiagramsFetcher.DiagramAsCode("s1", "", "@startuml\nA -> B : call\nnote right\n{\"a\":1}\nend note\n@enduml")],
             features, DateTime.UtcNow, DateTime.UtcNow, null, Path.Combine(TempDir, "NotePreviewBraces.html"), "Bakery", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
-        await Page.GotoAsync(new Uri(path).AbsoluteUri);
+        await Page.GotoReportAsync(new Uri(path).AbsoluteUri);
         await Page.WaitForFunctionAsync("() => typeof window._getNotePreview === 'function'", null, new() { PollingInterval = 200 });
     }
 

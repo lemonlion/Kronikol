@@ -21,7 +21,7 @@ public class LabsPageTests : PlaywrightTestBase
     private async Task<(string Page, string Report)> Open(string reportFileName)
     {
         var urls = HistoryReportHelper.GenerateWithLabsPage(TempDir, OutputDir, reportFileName, Diagnostics);
-        await Page.GotoAsync(urls.Page);
+        await Page.GotoReportAsync(urls.Page);
         await Page.Locator("header.labs-header").WaitForAsync();
         return urls;
     }
@@ -68,7 +68,7 @@ public class LabsPageTests : PlaywrightTestBase
         await Expect(link).ToBeVisibleAsync();
         await link.ClickAsync();
 
-        await Page.WaitForURLAsync(report + "#sid-" + HistoryReportHelper.PayId);
+        await Page.WaitForURLReportAsync(report + "#sid-" + HistoryReportHelper.PayId);
         await Page.WaitForFunctionAsync(
             $"() => {{ const el = document.querySelector('[data-stable-id=\"{HistoryReportHelper.PayId}\"]'); return el && el.hasAttribute('open'); }}",
             null, new() { Timeout = 10000, PollingInterval = 200 });

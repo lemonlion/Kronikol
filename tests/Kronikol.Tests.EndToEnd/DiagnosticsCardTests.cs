@@ -16,7 +16,7 @@ public class DiagnosticsCardTests : PlaywrightTestBase
     [InlineData("dark")]
     public async Task The_diagnostics_card_takes_the_theme(string theme)
     {
-        await Page.GotoAsync(ReportTestHelper.GenerateReportWithEverySection(TempDir, OutputDir, $"DiagnosticsCard-{theme}.html"));
+        await Page.GotoReportAsync(ReportTestHelper.GenerateReportWithEverySection(TempDir, OutputDir, $"DiagnosticsCard-{theme}.html"));
         await Page.EvaluateAsync("t => document.documentElement.setAttribute('data-theme', t)", theme);
         await OpenReportTabAsync("diagnostics");
 
@@ -53,7 +53,7 @@ public class DiagnosticsCardTests : PlaywrightTestBase
     public async Task On_the_labs_page_the_diagnostics_stay_a_disclosure_in_the_themes_tokens()
     {
         ReportTestHelper.GenerateReportWithEverySection(TempDir, OutputDir, "DiagnosticsCard-labs-report.html", labsPageFileName: "DiagnosticsCard-labs.html");
-        await Page.GotoAsync(new Uri(Path.Combine(TempDir, "DiagnosticsCard-labs.html")).AbsoluteUri);
+        await Page.GotoReportAsync(new Uri(Path.Combine(TempDir, "DiagnosticsCard-labs.html")).AbsoluteUri);
 
         var r = await Page.Locator("details.report-diagnostics > summary").First.EvaluateAsync<string[]>("""
             s => {

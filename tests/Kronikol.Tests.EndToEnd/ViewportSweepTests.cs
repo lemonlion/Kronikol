@@ -161,8 +161,8 @@ public class ViewportSweepTests : IClassFixture<ClassicScrollbarBrowser>, IDispo
         foreach (var width in Widths)
         {
             await page.SetViewportSizeAsync(width, 900);
-            if (loaded) await page.ReloadAsync();
-            else { await page.GotoAsync(url); loaded = true; }
+            if (loaded) await page.ReloadReportAsync();
+            else { await page.GotoReportAsync(url); loaded = true; }
             await page.WaitForFunctionAsync("() => document.querySelector('header.labs-header') !== null",
                 null, new() { Timeout = 30000, PollingInterval = 200 });
             await page.EvaluateAsync("() => document.querySelectorAll('details').forEach(d => d.open = true)");
@@ -230,8 +230,8 @@ public class ViewportSweepTests : IClassFixture<ClassicScrollbarBrowser>, IDispo
         foreach (var width in Widths)
         {
             await page.SetViewportSizeAsync(width, 900);
-            if (loaded) await page.ReloadAsync();
-            else { await page.GotoAsync(url); loaded = true; }
+            if (loaded) await page.ReloadReportAsync();
+            else { await page.GotoReportAsync(url); loaded = true; }
             await page.WaitForFunctionAsync("() => document.querySelector('details.feature') !== null",
                 null, new() { Timeout = 30000, PollingInterval = 200 });
             await page.EvaluateAsync("() => document.querySelectorAll('details').forEach(d => d.open = true)");

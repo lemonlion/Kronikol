@@ -34,7 +34,7 @@ public class FilterToggleModelTests : PlaywrightTestBase
             [new Feature { DisplayName = "Orders", Scenarios = scenarios }], DateTime.UtcNow, DateTime.UtcNow, null,
             Path.Combine(TempDir, fileName), "Bakery", true, diagramFormat: DiagramFormat.PlantUml,
             plantUmlRendering: PlantUmlRendering.BrowserJs, groupParameterizedTests: true);
-        await Page.GotoAsync(new Uri(path).AbsoluteUri);
+        await Page.GotoReportAsync(new Uri(path).AbsoluteUri);
         await ExpandFirstScenarioWithDiagram();
         var group = Page.Locator("details.scenario-parameterized");
         await group.ScrollIntoViewIfNeededAsync();

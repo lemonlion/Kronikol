@@ -12,7 +12,7 @@ public class ReportToolbarTests : PlaywrightTestBase
     [Fact]
     public async Task Expand_all_features_opens_all_feature_details()
     {
-        await Page.GotoAsync(GenerateReport("ToolbarExpandFeatures.html"));
+        await Page.GotoReportAsync(GenerateReport("ToolbarExpandFeatures.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await Fold("expand", "features").ClickAsync();
@@ -27,7 +27,7 @@ public class ReportToolbarTests : PlaywrightTestBase
     [Fact]
     public async Task Collapse_all_features_closes_all_feature_details()
     {
-        await Page.GotoAsync(GenerateReport("ToolbarCollapseFeatures.html"));
+        await Page.GotoReportAsync(GenerateReport("ToolbarCollapseFeatures.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await Fold("expand", "features").ClickAsync();
@@ -42,7 +42,7 @@ public class ReportToolbarTests : PlaywrightTestBase
     [Fact]
     public async Task Expand_all_scenarios_opens_all_scenario_details()
     {
-        await Page.GotoAsync(GenerateReport("ToolbarExpandScenarios.html"));
+        await Page.GotoReportAsync(GenerateReport("ToolbarExpandScenarios.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await Fold("expand", "scenarios").ClickAsync();
@@ -57,7 +57,7 @@ public class ReportToolbarTests : PlaywrightTestBase
     [Fact]
     public async Task Collapse_all_scenarios_closes_all_scenario_details()
     {
-        await Page.GotoAsync(GenerateReport("ToolbarCollapseScenarios.html"));
+        await Page.GotoReportAsync(GenerateReport("ToolbarCollapseScenarios.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await Fold("expand", "scenarios").ClickAsync();
@@ -72,7 +72,7 @@ public class ReportToolbarTests : PlaywrightTestBase
     [Fact]
     public async Task A_fold_button_is_dimmed_while_it_has_nothing_to_do()
     {
-        await Page.GotoAsync(GenerateReport("ToolbarFoldIdle.html"));
+        await Page.GotoReportAsync(GenerateReport("ToolbarFoldIdle.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         // nothing is open: collapsing has nothing to do
@@ -94,7 +94,7 @@ public class ReportToolbarTests : PlaywrightTestBase
     [Fact]
     public async Task Truncated_is_active_by_default()
     {
-        await Page.GotoAsync(GenerateReport("ToolbarTruncDefault.html"));
+        await Page.GotoReportAsync(GenerateReport("ToolbarTruncDefault.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         var truncBtn = Page.Locator(".toolbar-row .details-radio-btn[data-state='truncated']");
@@ -104,7 +104,7 @@ public class ReportToolbarTests : PlaywrightTestBase
     [Fact]
     public async Task Clicking_expanded_activates_it_and_deactivates_truncated()
     {
-        await Page.GotoAsync(GenerateReport("ToolbarExpandedRadio.html"));
+        await Page.GotoReportAsync(GenerateReport("ToolbarExpandedRadio.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         var expandedBtn = Page.Locator(".toolbar-row .details-radio-btn[data-state='expanded']");
@@ -119,7 +119,7 @@ public class ReportToolbarTests : PlaywrightTestBase
     [Fact]
     public async Task Clicking_collapsed_activates_it()
     {
-        await Page.GotoAsync(GenerateReport("ToolbarCollapsedRadio.html"));
+        await Page.GotoReportAsync(GenerateReport("ToolbarCollapsedRadio.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         var collapsedBtn = Page.Locator(".toolbar-row .details-radio-btn[data-state='collapsed']");
@@ -132,7 +132,7 @@ public class ReportToolbarTests : PlaywrightTestBase
     [Fact]
     public async Task Changing_line_count_syncs_all_dropdowns()
     {
-        await Page.GotoAsync(GenerateReport("ToolbarLineSync.html"));
+        await Page.GotoReportAsync(GenerateReport("ToolbarLineSync.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await ExpandAllFeaturesAsync();
@@ -157,7 +157,7 @@ public class ReportToolbarTests : PlaywrightTestBase
     public async Task Headers_hidden_is_the_start_state()
     {
         // 4.0.0 (plans/V4_PLAN.md R8); headers started shown through 3.x.
-        await Page.GotoAsync(GenerateReport("ToolbarHeaderDefault.html"));
+        await Page.GotoReportAsync(GenerateReport("ToolbarHeaderDefault.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         var headersBtn = Page.Locator(".toolbar-row .toggle-btn[data-toggle='headers']");
@@ -169,7 +169,7 @@ public class ReportToolbarTests : PlaywrightTestBase
     [Fact]
     public async Task Clicking_headers_toggle_shows_then_hides_headers_and_updates_text()
     {
-        await Page.GotoAsync(GenerateReport("ToolbarHiddenHeaders.html"));
+        await Page.GotoReportAsync(GenerateReport("ToolbarHiddenHeaders.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         var headersBtn = Page.Locator(".toolbar-row .toggle-btn[data-toggle='headers']");
@@ -191,7 +191,7 @@ public class ReportToolbarTests : PlaywrightTestBase
     [Fact]
     public async Task Search_filters_scenarios_by_name()
     {
-        await Page.GotoAsync(GenerateReport("ToolbarSearch.html"));
+        await Page.GotoReportAsync(GenerateReport("ToolbarSearch.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await FillSearchBar("Delete");
@@ -211,7 +211,7 @@ public class ReportToolbarTests : PlaywrightTestBase
     [Fact]
     public async Task Search_single_match_auto_expands_scenario()
     {
-        await Page.GotoAsync(GenerateReport("ToolbarSearchAutoExpand.html"));
+        await Page.GotoReportAsync(GenerateReport("ToolbarSearchAutoExpand.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await FillSearchBar("Process payment");
@@ -242,7 +242,7 @@ public class ReportToolbarTests : PlaywrightTestBase
     [Fact]
     public async Task Search_with_quoted_phrase_matches_scenarios()
     {
-        await Page.GotoAsync(GenerateReport("ToolbarSearchQuoted.html"));
+        await Page.GotoReportAsync(GenerateReport("ToolbarSearchQuoted.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await FillSearchBar("\"Delete order\"");
@@ -267,7 +267,7 @@ public class ReportToolbarTests : PlaywrightTestBase
     [Fact]
     public async Task Search_with_quoted_phrase_that_does_not_match_hides_all()
     {
-        await Page.GotoAsync(GenerateReport("ToolbarSearchQuotedNoMatch.html"));
+        await Page.GotoReportAsync(GenerateReport("ToolbarSearchQuotedNoMatch.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await FillSearchBar("\"order create\"");
@@ -284,7 +284,7 @@ public class ReportToolbarTests : PlaywrightTestBase
     [Fact]
     public async Task Search_by_step_text_matches_scenario()
     {
-        await Page.GotoAsync(GenerateReport("ToolbarSearchStepText.html"));
+        await Page.GotoReportAsync(GenerateReport("ToolbarSearchStepText.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await FillSearchBar("non-existent");
@@ -305,7 +305,7 @@ public class ReportToolbarTests : PlaywrightTestBase
     [Fact]
     public async Task Clear_all_resets_search_and_status_filters()
     {
-        await Page.GotoAsync(GenerateReport("ToolbarClearAll.html"));
+        await Page.GotoReportAsync(GenerateReport("ToolbarClearAll.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await FillSearchBar("Delete");
@@ -334,7 +334,7 @@ public class ReportToolbarTests : PlaywrightTestBase
     [Fact]
     public async Task Timeline_info_icon_is_present_with_tooltip()
     {
-        await Page.GotoAsync(GenerateReport("ToolbarTimelineInfo.html"));
+        await Page.GotoReportAsync(GenerateReport("ToolbarTimelineInfo.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await OpenReportTabAsync("timeline"); // 5.0.0: a tab of the report bar (plans/OPTION_C_PLAN.md S3)

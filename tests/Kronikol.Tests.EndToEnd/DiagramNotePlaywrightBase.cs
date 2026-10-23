@@ -75,7 +75,7 @@ public abstract class DiagramNotePlaywrightBase : PlaywrightTestBase
 
     protected async Task ExpandAndRenderLongNoteDiagram(string fileName)
     {
-        await Page.GotoAsync(GenerateLongNoteReport(fileName));
+        await Page.GotoReportAsync(GenerateLongNoteReport(fileName));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();

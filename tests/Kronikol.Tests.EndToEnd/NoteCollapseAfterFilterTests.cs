@@ -220,7 +220,7 @@ public class NoteCollapseAfterFilterTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Wide_database_response_note_collapses_after_hiding_databases()
     {
-        await Page.GotoAsync(GenerateWideDatabaseParticipantReport("WideDbNoteCollapse.html"));
+        await Page.GotoReportAsync(GenerateWideDatabaseParticipantReport("WideDbNoteCollapse.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -247,7 +247,7 @@ public class NoteCollapseAfterFilterTests : DiagramNotePlaywrightBase
 
     private async Task NavigateAndRender(string fileName)
     {
-        await Page.GotoAsync(GenerateDatabaseStepNoteCollapseReport(fileName));
+        await Page.GotoReportAsync(GenerateDatabaseStepNoteCollapseReport(fileName));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();

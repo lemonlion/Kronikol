@@ -31,8 +31,8 @@ public abstract class BackForwardTestBase : PlaywrightTestBase
 
     protected async Task OpenAsync(IPage page, string url, string hash = "")
     {
-        await page.GotoAsync(BeforePage());
-        await page.GotoAsync(url + hash);
+        await page.GotoReportAsync(BeforePage());
+        await page.GotoReportAsync(url + hash);
         // in the page, not on screen: a page that opens on another tab, or at an address naming one, hides the features
         await page.Locator("details.feature").First.WaitForAsync(new() { State = WaitForSelectorState.Attached });
         await SettledAsync(page, 0);
@@ -104,7 +104,7 @@ public abstract class BackForwardTestBase : PlaywrightTestBase
     protected static async Task BackAsync(IPage page)
     {
         var n = await CountAsync(page);
-        await page.GoBackAsync(new() { Timeout = 30000 });
+        await page.GoBackReportAsync(new() { Timeout = 30000 });
         await SettledAsync(page, n);
     }
 
@@ -113,7 +113,7 @@ public abstract class BackForwardTestBase : PlaywrightTestBase
     protected static async Task ForwardAsync(IPage page)
     {
         var n = await CountAsync(page);
-        await page.GoForwardAsync(new() { Timeout = 30000 });
+        await page.GoForwardReportAsync(new() { Timeout = 30000 });
         await SettledAsync(page, n);
     }
 

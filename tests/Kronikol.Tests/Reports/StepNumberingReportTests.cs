@@ -12,7 +12,7 @@ public class StepNumberingReportTests
             null, "StepNumbering.html", "Test", includeTestRunData: true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs,
             showStepNumbers: showStepNumbers);
-        return File.ReadAllText(path);
+        return ReportHtml.Read(path);
     }
 
     private static Feature[] FeaturesWithSteps(params ScenarioStep[] steps) =>

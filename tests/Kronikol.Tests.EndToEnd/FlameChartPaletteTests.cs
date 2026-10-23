@@ -16,7 +16,7 @@ public class FlameChartPaletteTests : DiagramNotePlaywrightBase
     private async Task OpenFlameAsync(string fileName, string theme)
     {
         await Page.SetViewportSizeAsync(1400, 800);
-        await Page.GotoAsync(ReportTestHelper.GenerateWholeTestFlowToggleDefaultsReport(TempDir, OutputDir, fileName, _ => { }));
+        await Page.GotoReportAsync(ReportTestHelper.GenerateWholeTestFlowToggleDefaultsReport(TempDir, OutputDir, fileName, _ => { }));
         await Page.EvaluateAsync("t => document.documentElement.setAttribute('data-theme', t)", theme);
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();

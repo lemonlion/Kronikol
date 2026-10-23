@@ -12,7 +12,7 @@ public class CiMetadataReportTests
             null, "CiMetadata.html", "Test", includeTestRunData: true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs,
             ciMetadata: ciMetadata);
-        return File.ReadAllText(path);
+        return ReportHtml.Read(path);
     }
 
     private static Feature[] SimpleFeatures() =>

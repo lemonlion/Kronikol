@@ -29,7 +29,7 @@ public class WarmUpDataTests : IDisposable
     {
         var (features, logs, ids) = Marked();
 
-        using var json = JsonDocument.Parse(File.ReadAllText(Write(features, logs, DataFormat.Json)));
+        using var json = JsonDocument.Parse(ReportHtml.Read(Write(features, logs, DataFormat.Json)));
         var records = Records(json).ToList();
 
         var marked = records.Where(r => r.TryGetProperty("warmUp", out _)).ToList();
@@ -54,7 +54,7 @@ public class WarmUpDataTests : IDisposable
     {
         var (features, logs, _) = Marked();
 
-        using var json = JsonDocument.Parse(File.ReadAllText(Write(features, logs, DataFormat.Json)));
+        using var json = JsonDocument.Parse(ReportHtml.Read(Write(features, logs, DataFormat.Json)));
         var names = Records(json).First(r => r.TryGetProperty("warmUp", out _)).EnumerateObject().Select(p => p.Name).ToList();
 
         Assert.Equal(names.IndexOf("durationMs") + 1, names.IndexOf("warmUp"));
@@ -65,7 +65,7 @@ public class WarmUpDataTests : IDisposable
     {
         var (features, logs, _) = Marked();
 
-        using var json = JsonDocument.Parse(File.ReadAllText(Write(features, logs, DataFormat.Json)));
+        using var json = JsonDocument.Parse(ReportHtml.Read(Write(features, logs, DataFormat.Json)));
         var scenarios = Scenarios(json).ToDictionary(s => s.GetProperty("id").GetString()!);
 
         Assert.Equal(0.6, scenarios["s1"].GetProperty("warmUpSeconds").GetDouble(), 6);
@@ -80,7 +80,7 @@ public class WarmUpDataTests : IDisposable
     {
         var (features, logs, _) = Marked(firstMs: 5);
 
-        var text = File.ReadAllText(Write(features, logs, DataFormat.Json));
+        var text = ReportHtml.Read(Write(features, logs, DataFormat.Json));
 
         Assert.DoesNotContain("\"warmUp", text);
     }
@@ -93,7 +93,7 @@ public class WarmUpDataTests : IDisposable
         var schemaPath = Path.Combine(_directory, "TestRunReport.schema.json");
         File.Move(ReportGenerator.GenerateTestRunReportSchema($"WarmUpSchema_{Guid.NewGuid():N}.schema.json", DataFormat.Json), schemaPath, overwrite: true);
 
-        using var schema = JsonDocument.Parse(File.ReadAllText(schemaPath));
+        using var schema = JsonDocument.Parse(ReportHtml.Read(schemaPath));
         var defs = schema.RootElement.GetProperty("$defs");
         var scenarioKey = schema.RootElement.GetProperty("properties").GetProperty("features").GetProperty("items").GetProperty("properties")
             .GetProperty("scenarios").GetProperty("items").GetProperty("properties").GetProperty("warmUpSeconds");
@@ -112,7 +112,7 @@ public class WarmUpDataTests : IDisposable
     {
         var (features, logs, ids) = Marked();
 
-        var text = File.ReadAllText(Write(features, logs, format));
+        var text = ReportHtml.Read(Write(features, logs, format));
 
         if (format == DataFormat.Xml)
         {
@@ -153,7 +153,7 @@ public class WarmUpDataTests : IDisposable
         foreach (var firstMs in new[] { 600.0, 5.0 })
         {
             var (features, logs, _) = Marked(firstMs);
-            var document = XDocument.Parse(File.ReadAllText(Write(features, logs, DataFormat.Xml)));
+            var document = XDocument.Parse(ReportHtml.Read(Write(features, logs, DataFormat.Xml)));
             var errors = new List<string>();
             document.Validate(schemas, (_, e) => errors.Add(e.Message));
             Assert.Empty(errors);
@@ -173,7 +173,7 @@ public class WarmUpDataTests : IDisposable
         var schemas = new System.Xml.Schema.XmlSchemaSet();
         schemas.Add(null, schemaPath);
         var (features, logs, _) = Marked(600);
-        var document = XDocument.Parse(File.ReadAllText(Write(features, logs, DataFormat.Xml)));
+        var document = XDocument.Parse(ReportHtml.Read(Write(features, logs, DataFormat.Xml)));
         var target = document.Descendants().First(e => e.Name.LocalName == element);
 
         target.Value = value;
@@ -190,7 +190,7 @@ public class WarmUpDataTests : IDisposable
     {
         var (features, logs, _) = Marked(firstMs: 600.25);
 
-        var text = CultureRun.Under("de-DE", () => File.ReadAllText(Write(features, logs, format)));
+        var text = CultureRun.Under("de-DE", () => ReportHtml.Read(Write(features, logs, format)));
 
         Assert.DoesNotContain("0,6", text);
         Assert.DoesNotContain("5,000", text);

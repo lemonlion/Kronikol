@@ -55,7 +55,7 @@ public class CappedResponseNoteRenderingTests : PlaywrightTestBase
     [Fact]
     public async Task A_row_capped_response_paints_as_indented_rows_with_the_cap_note_on_its_own_line()
     {
-        await Page.GotoAsync(ServePage(CappedNoteHtml()));
+        await Page.GotoReportAsync(ServePage(CappedNoteHtml()));
 
         await Page.WaitForFunctionAsync(
             "() => document.querySelector('#puml-1')?.getAttribute('data-rendered') === '1'",

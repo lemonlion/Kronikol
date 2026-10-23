@@ -79,7 +79,7 @@ public class IngestHostDiagnosticsTests : IDisposable
         Assert.Equal(DeadTap, result.Diagnostics[0]);
         Assert.Equal(HostNote, result.Diagnostics[1]);
 
-        var html = File.ReadAllText(result.TestRunReportHtml);
+        var html = ReportHtml.Read(result.TestRunReportHtml);
         Assert.Contains("class=\"report-diagnostics\"", html);
         // Anchored on the elements: the section's stylesheet, which comes with it, holds the kind's class in a
         // selector, so a bare substring would pass on the stylesheet alone.
@@ -101,7 +101,7 @@ public class IngestHostDiagnosticsTests : IDisposable
         Assert.Equal(TestId, diagnostics[1].GetProperty("scenarioId").GetString());
 
         // The schema describes the new block.
-        var schema = File.ReadAllText(Path.Combine(result.ReportsDirectory, "TestRunReport.schema.json"));
+        var schema = ReportHtml.Read(Path.Combine(result.ReportsDirectory, "TestRunReport.schema.json"));
         using var schemaJson = JsonDocument.Parse(schema);
         Assert.True(schemaJson.RootElement.GetProperty("properties").TryGetProperty("diagnostics", out _));
         var kinds = schemaJson.RootElement.GetProperty("$defs").GetProperty("diagnostic").GetProperty("properties").GetProperty("kind").GetProperty("enum")
@@ -123,7 +123,7 @@ public class IngestHostDiagnosticsTests : IDisposable
         // Everything the data file lists was recorded (an OutputFailure raised by a parallel output can only be in the result).
         Assert.All(written, message => Assert.Contains(result.Diagnostics, d => d.Message == message));
 
-        var html = File.ReadAllText(result.TestRunReportHtml);
+        var html = ReportHtml.Read(result.TestRunReportHtml);
         if (written.Length == 0)
             Assert.DoesNotContain("class=\"report-diagnostics\"", html);
         else
@@ -145,13 +145,13 @@ public class IngestHostDiagnosticsTests : IDisposable
         var quiet = IngestPipeline.Run(Request("SectionOff", [DeadTap, HostNote], showSection: false));
 
         // The whole file: since 4.6.0 a report without the section carries none of its stylesheet either.
-        var html = File.ReadAllText(quiet.TestRunReportHtml);
+        var html = ReportHtml.Read(quiet.TestRunReportHtml);
         Assert.DoesNotContain("report-diagnostic", html);
         Assert.DoesNotContain(">Report diagnostics (", html);
 
         // Only the report's section goes: the labs page beside it lists them, and the result and TestRunReport.json
         // say everything they said before.
-        var page = File.ReadAllText(Path.Combine(Path.GetDirectoryName(quiet.TestRunReportHtml)!, "TestRunReport.labs.html"));
+        var page = ReportHtml.Read(Path.Combine(Path.GetDirectoryName(quiet.TestRunReportHtml)!, "TestRunReport.labs.html"));
         Assert.Contains("<details class=\"report-diagnostics\" open>", page);
         Assert.Contains(System.Net.WebUtility.HtmlEncode(DeadTap.Message), page);
         Assert.Equal(DeadTap, quiet.Diagnostics[0]);
@@ -162,7 +162,7 @@ public class IngestHostDiagnosticsTests : IDisposable
         Assert.Equal(HostNote.Message, written[1].GetProperty("message").GetString());
 
         var asked = IngestPipeline.Run(Request("SectionOn", [DeadTap, HostNote]));
-        Assert.Contains("class=\"report-diagnostics\"", File.ReadAllText(asked.TestRunReportHtml));
+        Assert.Contains("class=\"report-diagnostics\"", ReportHtml.Read(asked.TestRunReportHtml));
     }
 
     [Fact]

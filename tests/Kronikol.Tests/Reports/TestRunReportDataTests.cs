@@ -31,7 +31,7 @@ public class TestRunReportDataTests
         var end = new DateTime(2026, 1, 1, 10, 5, 0, DateTimeKind.Utc);
 
         var path = ReportGenerator.GenerateTestRunReportData(features, start, end, "TestRunData_json.json", DataFormat.Json);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
 
         var doc = JsonDocument.Parse(content);
         var root = doc.RootElement;
@@ -73,7 +73,7 @@ public class TestRunReportDataTests
         var end = new DateTime(2026, 1, 1, 10, 5, 0, DateTimeKind.Utc);
 
         var path = ReportGenerator.GenerateTestRunReportData(features, start, end, "TestRunData_xml.xml", DataFormat.Xml);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
 
         var doc = XDocument.Parse(content);
         Assert.Equal("TestRunReport", doc.Root!.Name.LocalName);
@@ -100,7 +100,7 @@ public class TestRunReportDataTests
         var end = new DateTime(2026, 1, 1, 10, 5, 0, DateTimeKind.Utc);
 
         var path = ReportGenerator.GenerateTestRunReportData(features, start, end, "TestRunData_yaml.yml", DataFormat.Yaml);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
 
         Assert.Contains("StartTime:", content);
         Assert.Contains("EndTime:", content);
@@ -138,7 +138,7 @@ public class TestRunReportDataTests
         var end = DateTime.UtcNow;
 
         var path = ReportGenerator.GenerateTestRunReportData(features, start, end, "TestRunData_steps.json", DataFormat.Json);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
 
         var doc = JsonDocument.Parse(content);
         var steps = doc.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0].GetProperty("steps");
@@ -174,7 +174,7 @@ public class TestRunReportDataTests
         var end = DateTime.UtcNow;
 
         var path = ReportGenerator.GenerateTestRunReportData(features, start, end, "TestRunData_meta.json", DataFormat.Json);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
 
         var doc = JsonDocument.Parse(content);
         var feature = doc.RootElement.GetProperty("features")[0];
@@ -200,7 +200,7 @@ public class TestRunReportDataTests
         var features = new[] { new Feature { DisplayName = "F1", Tags = ["api"], Scenarios = [new Scenario { Id = "s1", DisplayName = "S1" }] } };
 
         var path = ReportGenerator.GenerateTestRunReportData(features, DateTime.UtcNow, DateTime.UtcNow, "TestRunData_tag_order.json", DataFormat.Json);
-        var keys = JsonDocument.Parse(File.ReadAllText(path)).RootElement.GetProperty("features")[0].EnumerateObject().Select(p => p.Name).ToList();
+        var keys = JsonDocument.Parse(ReportHtml.Read(path)).RootElement.GetProperty("features")[0].EnumerateObject().Select(p => p.Name).ToList();
 
         Assert.True(keys.Contains("tags") && keys.IndexOf("tags") < keys.IndexOf("scenarios"), string.Join(", ", keys));
     }
@@ -212,7 +212,7 @@ public class TestRunReportDataTests
         var features = new[] { new Feature { DisplayName = "F1", Scenarios = [new Scenario { Id = "s1", DisplayName = "S1" }] } };
 
         var path = ReportGenerator.GenerateTestRunReportData(features, DateTime.UtcNow, DateTime.UtcNow, "TestRunData_no_tags.json", DataFormat.Json);
-        var feature = JsonDocument.Parse(File.ReadAllText(path)).RootElement.GetProperty("features")[0];
+        var feature = JsonDocument.Parse(ReportHtml.Read(path)).RootElement.GetProperty("features")[0];
 
         Assert.Equal(JsonValueKind.Array, feature.GetProperty("tags").ValueKind);
         Assert.Empty(feature.GetProperty("tags").EnumerateArray());
@@ -227,7 +227,7 @@ public class TestRunReportDataTests
             new Feature { DisplayName = "F1", Tags = ["api"], Scenarios = [new Scenario { Id = "s1", DisplayName = "S1", Tags = ["smoke", "Integration"] }] }
         };
 
-        var xml = XDocument.Parse(File.ReadAllText(
+        var xml = XDocument.Parse(ReportHtml.Read(
             ReportGenerator.GenerateTestRunReportData(features, DateTime.UtcNow, DateTime.UtcNow, "TestRunData_tags.xml", DataFormat.Xml)));
         var xmlFeature = xml.Descendants("Feature").Single();
         Assert.Equal(["api"], xmlFeature.Element("Tags")!.Elements("Tag").Select(t => t.Value));
@@ -236,7 +236,7 @@ public class TestRunReportDataTests
         Assert.Empty(xml.Descendants("Categories"));
 
         var yaml = new YamlStream();
-        yaml.Load(new StringReader(File.ReadAllText(
+        yaml.Load(new StringReader(ReportHtml.Read(
             ReportGenerator.GenerateTestRunReportData(features, DateTime.UtcNow, DateTime.UtcNow, "TestRunData_tags.yml", DataFormat.Yaml))));
         var yamlFeature = (YamlMappingNode)((YamlSequenceNode)((YamlMappingNode)yaml.Documents[0].RootNode)["Features"])[0];
         var yamlScenario = (YamlMappingNode)((YamlSequenceNode)yamlFeature["Scenarios"])[0];
@@ -280,7 +280,7 @@ public class TestRunReportDataTests
         var end = DateTime.UtcNow;
 
         var path = ReportGenerator.GenerateTestRunReportData(features, start, end, "TestRunData_sub.json", DataFormat.Json);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
 
         var doc = JsonDocument.Parse(content);
         var step = doc.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0].GetProperty("steps")[0];
@@ -315,7 +315,7 @@ public class TestRunReportDataTests
         var end = DateTime.UtcNow;
 
         var path = ReportGenerator.GenerateTestRunReportData(features, start, end, "TestRunData_diagrams.json", DataFormat.Json, diagrams);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
         var doc = JsonDocument.Parse(content);
 
         var s1 = doc.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0];
@@ -354,7 +354,7 @@ public class TestRunReportDataTests
         var end = DateTime.UtcNow;
 
         var path = ReportGenerator.GenerateTestRunReportData(features, start, end, "TestRunData_multi_diagrams.json", DataFormat.Json, diagrams);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
         var doc = JsonDocument.Parse(content);
 
         var scenarioDiagrams = doc.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0].GetProperty("diagrams");
@@ -387,7 +387,7 @@ public class TestRunReportDataTests
         var end = DateTime.UtcNow;
 
         var path = ReportGenerator.GenerateTestRunReportData(features, start, end, "TestRunData_no_match.json", DataFormat.Json, diagrams);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
         var doc = JsonDocument.Parse(content);
 
         var scenarioDiagrams = doc.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0].GetProperty("diagrams");
@@ -450,7 +450,7 @@ public class TestRunReportDataTests
         var end = DateTime.UtcNow;
 
         var path = ReportGenerator.GenerateTestRunReportData(features, start, end, "TestRunData_http.json", DataFormat.Json, trackedLogs: logs);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
         var doc = JsonDocument.Parse(content);
 
         var interactions = doc.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0].GetProperty("httpInteractions");
@@ -507,7 +507,7 @@ public class TestRunReportDataTests
         var end = DateTime.UtcNow;
 
         var path = ReportGenerator.GenerateTestRunReportData(features, start, end, "TestRunData_no_http.json", DataFormat.Json, trackedLogs: logs);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
         var doc = JsonDocument.Parse(content);
 
         var interactions = doc.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0].GetProperty("httpInteractions");
@@ -533,7 +533,7 @@ public class TestRunReportDataTests
         var end = DateTime.UtcNow;
 
         var path = ReportGenerator.GenerateTestRunReportData(features, start, end, "TestRunData_nodiag.json", DataFormat.Json);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
         var doc = JsonDocument.Parse(content);
 
         var scenario = doc.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0];
@@ -585,7 +585,7 @@ public class TestRunReportDataTests
         var end = DateTime.UtcNow;
 
         var path = ReportGenerator.GenerateTestRunReportData(features, start, end, "TestRunData_xml_diag.xml", DataFormat.Xml, diagrams, logs);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
         var doc = XDocument.Parse(content);
 
         var scenario = doc.Root!.Element("Features")!.Element("Feature")!.Element("Scenarios")!.Element("Scenario")!;
@@ -643,7 +643,7 @@ public class TestRunReportDataTests
         var end = DateTime.UtcNow;
 
         var path = ReportGenerator.GenerateTestRunReportData(features, start, end, "TestRunData_yaml_diag.yml", DataFormat.Yaml, diagrams, logs);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
 
         Assert.Contains("Diagrams:", content);
         Assert.Contains("@startuml", content);
@@ -688,7 +688,7 @@ public class TestRunReportDataTests
         var end = DateTime.UtcNow;
 
         var path = ReportGenerator.GenerateTestRunReportData(features, start, end, "TestRunData_headers.json", DataFormat.Json, trackedLogs: logs);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
         var doc = JsonDocument.Parse(content);
 
         var interaction = doc.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0].GetProperty("httpInteractions")[0];
@@ -702,7 +702,7 @@ public class TestRunReportDataTests
     public void GenerateTestRunReportSchema_produces_valid_json_schema()
     {
         var path = ReportGenerator.GenerateTestRunReportSchema("TestRunReport.schema.json", DataFormat.Json);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
 
         var doc = JsonDocument.Parse(content);
         var root = doc.RootElement;
@@ -720,7 +720,7 @@ public class TestRunReportDataTests
     public void GenerateTestRunReportSchema_json_schema_defines_feature_structure()
     {
         var path = ReportGenerator.GenerateTestRunReportSchema("TestRunReport_feat.schema.json", DataFormat.Json);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
 
         var doc = JsonDocument.Parse(content);
         var featureItems = doc.RootElement.GetProperty("properties").GetProperty("features").GetProperty("items");
@@ -735,7 +735,7 @@ public class TestRunReportDataTests
     public void GenerateTestRunReportSchema_json_schema_defines_scenario_structure()
     {
         var path = ReportGenerator.GenerateTestRunReportSchema("TestRunReport_scen.schema.json", DataFormat.Json);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
 
         var doc = JsonDocument.Parse(content);
         var scenarioItems = doc.RootElement
@@ -755,7 +755,7 @@ public class TestRunReportDataTests
     public void GenerateTestRunReportSchema_json_schema_defines_result_enum()
     {
         var path = ReportGenerator.GenerateTestRunReportSchema("TestRunReport_enum.schema.json", DataFormat.Json);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
 
         var doc = JsonDocument.Parse(content);
         var resultProp = doc.RootElement
@@ -775,7 +775,7 @@ public class TestRunReportDataTests
     public void GenerateTestRunReportSchema_json_schema_defines_steps_with_recursive_substeps()
     {
         var path = ReportGenerator.GenerateTestRunReportSchema("TestRunReport_steps.schema.json", DataFormat.Json);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
 
         var doc = JsonDocument.Parse(content);
 
@@ -802,7 +802,7 @@ public class TestRunReportDataTests
     public void GenerateTestRunReportSchema_json_schema_defines_http_interaction_structure()
     {
         var path = ReportGenerator.GenerateTestRunReportSchema("TestRunReport_http.schema.json", DataFormat.Json);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
 
         var doc = JsonDocument.Parse(content);
         var scenarioProps = doc.RootElement
@@ -845,8 +845,8 @@ public class TestRunReportDataTests
         var dataPath = ReportGenerator.GenerateTestRunReportData(features, start, end, "TestRunData_validate.json", DataFormat.Json);
         var schemaPath = ReportGenerator.GenerateTestRunReportSchema("TestRunReport_validate.schema.json", DataFormat.Json);
 
-        var dataContent = File.ReadAllText(dataPath);
-        var schemaContent = File.ReadAllText(schemaPath);
+        var dataContent = ReportHtml.Read(dataPath);
+        var schemaContent = ReportHtml.Read(schemaPath);
 
         // Both should be valid JSON
         var dataDoc = JsonDocument.Parse(dataContent);
@@ -862,7 +862,7 @@ public class TestRunReportDataTests
     public void GenerateTestRunReportSchema_produces_valid_xsd()
     {
         var path = ReportGenerator.GenerateTestRunReportSchema("TestRunReport.schema.xsd", DataFormat.Xml);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
 
         var doc = XDocument.Parse(content);
         Assert.Equal("schema", doc.Root!.Name.LocalName);
@@ -873,7 +873,7 @@ public class TestRunReportDataTests
     public void GenerateTestRunReportSchema_xsd_defines_root_element()
     {
         var path = ReportGenerator.GenerateTestRunReportSchema("TestRunReport_root.schema.xsd", DataFormat.Xml);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
 
         var doc = XDocument.Parse(content);
         var xs = XNamespace.Get("http://www.w3.org/2001/XMLSchema");
@@ -903,7 +903,7 @@ public class TestRunReportDataTests
         var dataPath = ReportGenerator.GenerateTestRunReportData(features, start, end, "TestRunData_xsd_validate.xml", DataFormat.Xml);
         var schemaPath = ReportGenerator.GenerateTestRunReportSchema("TestRunReport_xsd_validate.schema.xsd", DataFormat.Xml);
 
-        var schemaContent = File.ReadAllText(schemaPath);
+        var schemaContent = ReportHtml.Read(schemaPath);
         var schemaSet = new XmlSchemaSet();
         schemaSet.Add("", System.Xml.XmlReader.Create(new StringReader(schemaContent)));
 
@@ -956,7 +956,7 @@ public class TestRunReportDataTests
         var dataPath = ReportGenerator.GenerateTestRunReportData(features, start, end, "TestRunData_xsd_full.xml", DataFormat.Xml, diagrams, logs);
         var schemaPath = ReportGenerator.GenerateTestRunReportSchema("TestRunReport_xsd_full.schema.xsd", DataFormat.Xml);
 
-        var schemaContent = File.ReadAllText(schemaPath);
+        var schemaContent = ReportHtml.Read(schemaPath);
         var schemaSet = new XmlSchemaSet();
         schemaSet.Add("", System.Xml.XmlReader.Create(new StringReader(schemaContent)));
 
@@ -971,7 +971,7 @@ public class TestRunReportDataTests
     {
         // YAML uses JSON Schema for validation (no separate YAML schema standard)
         var path = ReportGenerator.GenerateTestRunReportSchema("TestRunReport_yaml.schema.json", DataFormat.Yaml);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
 
         var doc = JsonDocument.Parse(content);
         Assert.Equal("https://json-schema.org/draft/2020-12/schema", doc.RootElement.GetProperty("$schema").GetString());
@@ -981,7 +981,7 @@ public class TestRunReportDataTests
     public void GenerateTestRunReportSchema_json_schema_required_properties_are_defined()
     {
         var path = ReportGenerator.GenerateTestRunReportSchema("TestRunReport_required.schema.json", DataFormat.Json);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
 
         var doc = JsonDocument.Parse(content);
         var required = doc.RootElement.GetProperty("required").EnumerateArray().Select(e => e.GetString()).ToArray();
@@ -995,7 +995,7 @@ public class TestRunReportDataTests
     {
         var features = new[] { new Feature { DisplayName = "F1", Scenarios = [new Scenario { Id = "s1", DisplayName = "S1", Result = ExecutionResult.Passed }] } };
         var path = ReportGenerator.GenerateTestRunReportData(features, DateTime.UtcNow, DateTime.UtcNow, "TestRunData_version.json", DataFormat.Json);
-        var doc = JsonDocument.Parse(File.ReadAllText(path));
+        var doc = JsonDocument.Parse(ReportHtml.Read(path));
         var version = doc.RootElement.GetProperty("kronikolVersion").GetString();
         Assert.NotNull(version);
         Assert.NotEmpty(version!);
@@ -1006,7 +1006,7 @@ public class TestRunReportDataTests
     {
         var features = new[] { new Feature { DisplayName = "F1", Scenarios = [new Scenario { Id = "s1", DisplayName = "S1", Result = ExecutionResult.Passed }] } };
         var path = ReportGenerator.GenerateTestRunReportData(features, DateTime.UtcNow, DateTime.UtcNow, "TestRunData_version.xml", DataFormat.Xml);
-        var doc = XDocument.Parse(File.ReadAllText(path));
+        var doc = XDocument.Parse(ReportHtml.Read(path));
         Assert.NotNull(doc.Root!.Element("KronikolVersion"));
         Assert.NotEmpty(doc.Root.Element("KronikolVersion")!.Value);
     }
@@ -1016,7 +1016,7 @@ public class TestRunReportDataTests
     {
         var features = new[] { new Feature { DisplayName = "F1", Scenarios = [new Scenario { Id = "s1", DisplayName = "S1", Result = ExecutionResult.Passed }] } };
         var path = ReportGenerator.GenerateTestRunReportData(features, DateTime.UtcNow, DateTime.UtcNow, "TestRunData_version.yml", DataFormat.Yaml);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
         Assert.Contains("KronikolVersion:", content);
     }
 
@@ -1037,7 +1037,7 @@ public class TestRunReportDataTests
         };
 
         var path = ReportGenerator.GenerateTestRunReportData(features, DateTime.UtcNow, DateTime.UtcNow, "TestRunData_stableId.json", DataFormat.Json);
-        var doc = JsonDocument.Parse(File.ReadAllText(path));
+        var doc = JsonDocument.Parse(ReportHtml.Read(path));
         var scenarios = doc.RootElement.GetProperty("features")[0].GetProperty("scenarios");
 
         var s1StableId = scenarios[0].GetProperty("stableId").GetString();
@@ -1066,7 +1066,7 @@ public class TestRunReportDataTests
         };
 
         var path = ReportGenerator.GenerateTestRunReportData(features, DateTime.UtcNow, DateTime.UtcNow, "TestRunData_stableId.xml", DataFormat.Xml);
-        var doc = XDocument.Parse(File.ReadAllText(path));
+        var doc = XDocument.Parse(ReportHtml.Read(path));
         var scenario = doc.Root!.Element("Features")!.Element("Feature")!.Element("Scenarios")!.Element("Scenario")!;
         var stableId = scenario.Element("StableId")?.Value;
 
@@ -1087,7 +1087,7 @@ public class TestRunReportDataTests
         };
 
         var path = ReportGenerator.GenerateTestRunReportData(features, DateTime.UtcNow, DateTime.UtcNow, "TestRunData_stableId.yml", DataFormat.Yaml);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
 
         Assert.Contains("StableId: " + ScenarioStableId.Compute(RunSuite.Current, "Orders", "Place order"), content);
     }
@@ -1109,7 +1109,7 @@ public class TestRunReportDataTests
         };
 
         var path = ReportGenerator.GenerateTestRunReportData(features, DateTime.UtcNow, DateTime.UtcNow, "TestRunData_stableId_outline.json", DataFormat.Json);
-        var doc = JsonDocument.Parse(File.ReadAllText(path));
+        var doc = JsonDocument.Parse(ReportHtml.Read(path));
         var scenarios = doc.RootElement.GetProperty("features")[0].GetProperty("scenarios");
 
         var s1StableId = scenarios[0].GetProperty("stableId").GetString();
@@ -1137,7 +1137,7 @@ public class TestRunReportDataTests
         };
 
         var path = ReportGenerator.GenerateTestRunReportData(features, DateTime.UtcNow, DateTime.UtcNow, "TestRunData_rule.json", DataFormat.Json);
-        var doc = JsonDocument.Parse(File.ReadAllText(path));
+        var doc = JsonDocument.Parse(ReportHtml.Read(path));
         var scenarios = doc.RootElement.GetProperty("features")[0].GetProperty("scenarios");
 
         Assert.Equal("Account creation", scenarios[0].GetProperty("rule").GetString());
@@ -1161,7 +1161,7 @@ public class TestRunReportDataTests
         };
 
         var path = ReportGenerator.GenerateTestRunReportData(features, DateTime.UtcNow, DateTime.UtcNow, "TestRunData_rule.xml", DataFormat.Xml);
-        var doc = XDocument.Parse(File.ReadAllText(path));
+        var doc = XDocument.Parse(ReportHtml.Read(path));
         var scenarios = doc.Root!.Element("Features")!.Element("Feature")!.Element("Scenarios")!.Elements("Scenario").ToArray();
 
         Assert.Equal("Account creation", scenarios[0].Element("Rule")?.Value);
@@ -1184,7 +1184,7 @@ public class TestRunReportDataTests
         };
 
         var path = ReportGenerator.GenerateTestRunReportData(features, DateTime.UtcNow, DateTime.UtcNow, "TestRunData_rule.yml", DataFormat.Yaml);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
 
         Assert.Contains("Rule: Account creation", content);
     }
@@ -1216,7 +1216,7 @@ public class TestRunReportDataTests
         };
 
         var path = ReportGenerator.GenerateTestRunReportData(features, DateTime.UtcNow, DateTime.UtcNow, "TestRunData_attachments.json", DataFormat.Json);
-        var doc = JsonDocument.Parse(File.ReadAllText(path));
+        var doc = JsonDocument.Parse(ReportHtml.Read(path));
         var step = doc.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0].GetProperty("steps")[0];
         var attachments = step.GetProperty("attachments");
 
@@ -1252,7 +1252,7 @@ public class TestRunReportDataTests
         };
 
         var path = ReportGenerator.GenerateTestRunReportData(features, DateTime.UtcNow, DateTime.UtcNow, "TestRunData_attachments.xml", DataFormat.Xml);
-        var doc = XDocument.Parse(File.ReadAllText(path));
+        var doc = XDocument.Parse(ReportHtml.Read(path));
         var step = doc.Root!.Element("Features")!.Element("Feature")!.Element("Scenarios")!.Element("Scenario")!.Element("Steps")!.Element("Step")!;
         var attachment = step.Element("Attachments")?.Element("Attachment");
 
@@ -1288,7 +1288,7 @@ public class TestRunReportDataTests
         };
 
         var path = ReportGenerator.GenerateTestRunReportData(features, DateTime.UtcNow, DateTime.UtcNow, "TestRunData_attachments.yml", DataFormat.Yaml);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
 
         Assert.Contains("Attachments:", content);
         Assert.Contains("Name: openapi.json", content);
@@ -1319,7 +1319,7 @@ public class TestRunReportDataTests
         };
 
         var path = ReportGenerator.GenerateTestRunReportData(features, DateTime.UtcNow, DateTime.UtcNow, "TestRunData_scenario_attachments.json", DataFormat.Json);
-        var doc = JsonDocument.Parse(File.ReadAllText(path));
+        var doc = JsonDocument.Parse(ReportHtml.Read(path));
         var scenario = doc.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0];
         var attachments = scenario.GetProperty("attachments");
 
@@ -1352,7 +1352,7 @@ public class TestRunReportDataTests
         };
 
         var path = ReportGenerator.GenerateTestRunReportData(features, DateTime.UtcNow, DateTime.UtcNow, "TestRunData_scenario_attachments.xml", DataFormat.Xml);
-        var doc = XDocument.Parse(File.ReadAllText(path));
+        var doc = XDocument.Parse(ReportHtml.Read(path));
         var scenario = doc.Root!.Element("Features")!.Element("Feature")!.Element("Scenarios")!.Element("Scenario")!;
         var attachment = scenario.Element("Attachments")?.Element("Attachment");
 
@@ -1385,7 +1385,7 @@ public class TestRunReportDataTests
         };
 
         var path = ReportGenerator.GenerateTestRunReportData(features, DateTime.UtcNow, DateTime.UtcNow, "TestRunData_scenario_attachments.yml", DataFormat.Yaml);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
 
         // Should appear at scenario level (not step level)
         Assert.Contains("Attachments:", content);
@@ -1420,7 +1420,7 @@ public class TestRunReportDataTests
         };
 
         var path = ReportGenerator.GenerateTestRunReportData(features, DateTime.UtcNow, DateTime.UtcNow, "TestRunData_bg.json", DataFormat.Json);
-        var doc = JsonDocument.Parse(File.ReadAllText(path));
+        var doc = JsonDocument.Parse(ReportHtml.Read(path));
         var scenario = doc.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0];
         var bgSteps = scenario.GetProperty("backgroundSteps");
 
@@ -1449,7 +1449,7 @@ public class TestRunReportDataTests
         };
 
         var path = ReportGenerator.GenerateTestRunReportData(features, DateTime.UtcNow, DateTime.UtcNow, "TestRunData_outline.json", DataFormat.Json);
-        var doc = JsonDocument.Parse(File.ReadAllText(path));
+        var doc = JsonDocument.Parse(ReportHtml.Read(path));
         var scenario = doc.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0];
 
         Assert.Equal("Pay with card", scenario.GetProperty("outlineId").GetString());
@@ -1524,11 +1524,11 @@ public class TestRunReportDataTests
         };
 
         var path = ReportGenerator.GenerateTestRunReportData(SingleScenario(), DateTime.UtcNow, DateTime.UtcNow, "TestRunData_markers.json", DataFormat.Json, trackedLogs: logs);
-        var doc = JsonDocument.Parse(File.ReadAllText(path));
+        var doc = JsonDocument.Parse(ReportHtml.Read(path));
         var interactions = doc.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0].GetProperty("httpInteractions");
 
         Assert.Equal(2, interactions.GetArrayLength());
-        Assert.DoesNotContain("override.com", File.ReadAllText(path));
+        Assert.DoesNotContain("override.com", ReportHtml.Read(path));
     }
 
     [Fact]
@@ -1537,7 +1537,7 @@ public class TestRunReportDataTests
         var logs = new[] { MarkerLog("test-1", overrideStart: true), MarkerLog("test-1", overrideEnd: true) };
 
         var path = ReportGenerator.GenerateTestRunReportData(SingleScenario(), DateTime.UtcNow, DateTime.UtcNow, "TestRunData_markers_only.json", DataFormat.Json, trackedLogs: logs);
-        var doc = JsonDocument.Parse(File.ReadAllText(path));
+        var doc = JsonDocument.Parse(ReportHtml.Read(path));
         var scenario = doc.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0];
 
         Assert.Equal(0, scenario.GetProperty("httpInteractions").GetArrayLength());
@@ -1556,11 +1556,11 @@ public class TestRunReportDataTests
         };
 
         var path = ReportGenerator.GenerateTestRunReportData(SingleScenario(), DateTime.UtcNow, DateTime.UtcNow, "TestRunData_markers.xml", DataFormat.Xml, trackedLogs: logs);
-        var doc = XDocument.Parse(File.ReadAllText(path));
+        var doc = XDocument.Parse(ReportHtml.Read(path));
         var interactions = doc.Descendants("HttpInteractions").Single();
 
         Assert.Equal(2, interactions.Elements().Count());
-        Assert.DoesNotContain("override.com", File.ReadAllText(path));
+        Assert.DoesNotContain("override.com", ReportHtml.Read(path));
     }
 
     [Fact]
@@ -1569,7 +1569,7 @@ public class TestRunReportDataTests
         var logs = new[] { MarkerLog("test-1", overrideStart: true), MarkerLog("test-1", overrideEnd: true) };
 
         var path = ReportGenerator.GenerateTestRunReportData(SingleScenario(), DateTime.UtcNow, DateTime.UtcNow, "TestRunData_markers_only.xml", DataFormat.Xml, trackedLogs: logs);
-        var doc = XDocument.Parse(File.ReadAllText(path));
+        var doc = XDocument.Parse(ReportHtml.Read(path));
 
         Assert.Empty(doc.Descendants("HttpInteractions"));
     }
@@ -1587,7 +1587,7 @@ public class TestRunReportDataTests
         };
 
         var path = ReportGenerator.GenerateTestRunReportData(SingleScenario(), DateTime.UtcNow, DateTime.UtcNow, "TestRunData_markers.yml", DataFormat.Yaml, trackedLogs: logs);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
 
         Assert.DoesNotContain("override.com", content);
         Assert.Contains("HttpInteractions:", content);
@@ -1599,7 +1599,7 @@ public class TestRunReportDataTests
         var logs = new[] { MarkerLog("test-1", overrideStart: true), MarkerLog("test-1", overrideEnd: true) };
 
         var path = ReportGenerator.GenerateTestRunReportData(SingleScenario(), DateTime.UtcNow, DateTime.UtcNow, "TestRunData_markers_only.yml", DataFormat.Yaml, trackedLogs: logs);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
 
         Assert.DoesNotContain("HttpInteractions:", content);
     }

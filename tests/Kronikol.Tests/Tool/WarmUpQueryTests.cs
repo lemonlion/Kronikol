@@ -120,7 +120,7 @@ public class WarmUpQueryTests : IDisposable
         // As the merge reader reads it: a kind other than first or waited is not a mark, and a field of the wrong type is
         // not a crash. Until 4.16.3 a numeric kind threw out of the query and an unknown one read as a first call.
         var report = Report("unreadable");
-        var json = File.ReadAllText(report);
+        var json = ReportHtml.Read(report);
         Assert.Contains("\"kind\": \"first\"", json);
         Assert.Contains("\"kind\": \"waited\"", json);
         File.WriteAllText(report, json.Replace("\"kind\": \"first\"", "\"kind\": 7").Replace("\"kind\": \"waited\"", "\"kind\": \"layered\""));
@@ -266,7 +266,7 @@ public class WarmUpQueryTests : IDisposable
         // A report from before 4.8.0 says nothing about the warm-up: its 1.5 s may hold one, so both runs are read by wall
         // time, as they were.
         var before = Report("before", firstMs: 5, firstScenarioSeconds: 1.5);
-        File.WriteAllText(before, Regex.Replace(File.ReadAllText(before), "\"kronikolVersion\": \"[^\"]+\"", "\"kronikolVersion\": \"4.7.3\""));
+        File.WriteAllText(before, Regex.Replace(ReportHtml.Read(before), "\"kronikolVersion\": \"[^\"]+\"", "\"kronikolVersion\": \"4.7.3\""));
         var after = Report("after");
 
         Assert.Contains("1.5s → 2.5s  Place", Query("diff", before, after));

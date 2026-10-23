@@ -96,7 +96,7 @@ public class FullPipelineParameterizedE2ETests : PlaywrightTestBase
         Assert.True(File.Exists(reportPath), $"Report not found at: {reportPath}");
         File.Copy(reportPath, Path.Combine(OutputDir, Path.GetFileName(reportPath) + "_" + Guid.NewGuid().ToString("N")[..6] + ".html"), true);
 
-        await Page.GotoAsync(new Uri(reportPath).AbsoluteUri);
+        await Page.GotoReportAsync(new Uri(reportPath).AbsoluteUri);
         await Page.Locator("details.feature").First.WaitForAsync(new() { Timeout = 10000 });
     }
 

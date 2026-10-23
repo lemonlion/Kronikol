@@ -13,7 +13,7 @@ public class ComponentFlowPopupTests : PlaywrightTestBase
     [Fact]
     public async Task Relationship_list_is_rendered()
     {
-        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateComponentFlowPage()));
+        await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateComponentFlowPage()));
 
         var list = Page.Locator(".iflow-rel-list");
         await Expect(list).ToBeVisibleAsync();
@@ -27,7 +27,7 @@ public class ComponentFlowPopupTests : PlaywrightTestBase
     [Fact]
     public async Task Clicking_relationship_opens_popup_with_flow_diagram()
     {
-        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateComponentFlowPage()));
+        await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateComponentFlowPage()));
         await Page.Locator("#rel-api-db").ClickAsync();
 
         var popup = Page.Locator(".iflow-popup");
@@ -42,7 +42,7 @@ public class ComponentFlowPopupTests : PlaywrightTestBase
     [Fact]
     public async Task Relationship_popup_contains_summary_table()
     {
-        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateComponentFlowPage()));
+        await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateComponentFlowPage()));
         await Page.Locator("#rel-api-db").ClickAsync();
 
         var table = Page.Locator(".iflow-popup .iflow-rel-summary-table");
@@ -59,7 +59,7 @@ public class ComponentFlowPopupTests : PlaywrightTestBase
     [Fact]
     public async Task Relationship_popup_close_button_works()
     {
-        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateComponentFlowPage()));
+        await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateComponentFlowPage()));
         await Page.Locator("#rel-api-db").ClickAsync();
         await Page.Locator(".iflow-popup").WaitForAsync(new() { State = WaitForSelectorState.Visible });
 
@@ -71,7 +71,7 @@ public class ComponentFlowPopupTests : PlaywrightTestBase
     [Fact]
     public async Task Activity_diagram_popup_does_not_show_loading_text_after_render()
     {
-        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateComponentFlowPage()));
+        await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateComponentFlowPage()));
         await Page.Locator("#rel-api-db").ClickAsync();
 
         var popup = Page.Locator(".iflow-popup");

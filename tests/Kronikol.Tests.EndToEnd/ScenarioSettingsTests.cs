@@ -18,7 +18,7 @@ public class ScenarioSettingsTests : PlaywrightTestBase
     private async Task OpenAsync(string fileName, int width = 1400, int height = 800)
     {
         await Page.SetViewportSizeAsync(width, height);
-        await Page.GotoAsync(ReportTestHelper.GenerateWholeTestFlowToggleDefaultsReport(TempDir, OutputDir, fileName, _ => { }));
+        await Page.GotoReportAsync(ReportTestHelper.GenerateWholeTestFlowToggleDefaultsReport(TempDir, OutputDir, fileName, _ => { }));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();

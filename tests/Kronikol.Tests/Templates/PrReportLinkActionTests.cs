@@ -472,7 +472,7 @@ public class PrReportLinkActionTests
             .Run(102, Unit, Label("Unit tests"))
             .Go();
 
-        var readme = File.ReadAllText(Path.Combine(ActionDir, "README.md")).ReplaceLineEndings("\n");
+        var readme = ReportHtml.Read(Path.Combine(ActionDir, "README.md")).ReplaceLineEndings("\n");
         var sample = Regex.Match(readme, @"^```markdown\n(.*?)\n```$", RegexOptions.Singleline | RegexOptions.Multiline);
         Assert.True(sample.Success, "the README shows no ```markdown sample of the comment the action writes");
         Assert.Equal(Assert.Single(outcome.BotComments).Body, sample.Groups[1].Value);
@@ -490,7 +490,7 @@ public class PrReportLinkActionTests
     public void The_readme_workflow_calls_the_action_as_it_is_declared_from_a_job_that_can_use_it()
     {
         var action = ActionDefinition.Load(ActionDir);
-        var readme = File.ReadAllText(Path.Combine(ActionDir, "README.md")).ReplaceLineEndings("\n");
+        var readme = ReportHtml.Read(Path.Combine(ActionDir, "README.md")).ReplaceLineEndings("\n");
 
         var calls = 0;
         foreach (Match block in Regex.Matches(readme, @"^```ya?ml\n(.*?)^```", RegexOptions.Singleline | RegexOptions.Multiline))
@@ -545,7 +545,7 @@ public class PrReportLinkActionTests
     public void The_live_lane_calls_the_action_as_it_is_declared()
     {
         var action = ActionDefinition.Load(ActionDir);
-        var laneText = File.ReadAllText(LanePath);
+        var laneText = ReportHtml.Read(LanePath);
         var lane = ActionDefinition.LoadYaml(laneText);
 
         Assert.Equal(1, CallsOfTheAction(lane, action));
@@ -564,7 +564,7 @@ public class PrReportLinkActionTests
         Assert.Contains(tested + "/**", paths);
 
         var writers = Directory.EnumerateFiles(Path.Combine(RepoRoot, "src"), "*.cs", SearchOption.AllDirectories)
-            .Where(file => File.ReadAllText(file).Contains("reports-path=", StringComparison.Ordinal))
+            .Where(file => ReportHtml.Read(file).Contains("reports-path=", StringComparison.Ordinal))
             .Select(file => Path.GetRelativePath(RepoRoot, file).Replace('\\', '/'))
             .ToList();
         Assert.NotEmpty(writers);
@@ -579,12 +579,12 @@ public class PrReportLinkActionTests
     [Fact]
     public void The_readme_workflow_uses_its_actions_at_the_versions_the_live_lane_runs()
     {
-        var readme = File.ReadAllText(Path.Combine(ActionDir, "README.md")).ReplaceLineEndings("\n");
+        var readme = ReportHtml.Read(Path.Combine(ActionDir, "README.md")).ReplaceLineEndings("\n");
         var workflows = string.Concat(Regex.Matches(readme, @"^```ya?ml\n(.*?)^```", RegexOptions.Singleline | RegexOptions.Multiline)
             .Select(block => block.Groups[1].Value));
 
         var inReadme = ActionsUsed(workflows);
-        var inLane = ActionsUsed(File.ReadAllText(LanePath));
+        var inLane = ActionsUsed(ReportHtml.Read(LanePath));
 
         Assert.NotEmpty(inReadme);
         var unproven = inReadme.Where(use => !inLane.Contains(use)).ToList();
@@ -736,7 +736,7 @@ public class PrReportLinkActionTests
     {
         public static LaneCheck Load()
         {
-            var lane = ActionDefinition.LoadYaml(File.ReadAllText(LanePath));
+            var lane = ActionDefinition.LoadYaml(ReportHtml.Read(LanePath));
             foreach (var job in ((YamlMappingNode)lane["jobs"]).Children.Values.Cast<YamlMappingNode>())
             {
                 if (!job.Children.TryGetValue(new YamlScalarNode("steps"), out var stepsNode))

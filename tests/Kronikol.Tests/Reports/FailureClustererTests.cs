@@ -209,7 +209,7 @@ public class FailureClustererTests
             var path = ReportGenerator.GenerateHtmlReport(
                 [], features, DateTime.UtcNow, DateTime.UtcNow,
                 null, tempFile, "Test", false);
-            var html = File.ReadAllText(path);
+            var html = ReportHtml.Read(path);
 
             // First occurrence gets the base ID
             Assert.Contains("id=\"scenario-health-check-fails\"", html);

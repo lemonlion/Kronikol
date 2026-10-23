@@ -31,7 +31,7 @@ public class DefaultReportCleanTests : IDisposable
 
     private string Reports(string run) => Path.Combine(_dir, run);
 
-    private string Report(string run, string name = "TestRunReport.html") => File.ReadAllText(Path.Combine(Reports(run), name));
+    private string Report(string run, string name = "TestRunReport.html") => ReportHtml.Read(Path.Combine(Reports(run), name));
 
     // One set of features for every run, so two renders differ only by what the run read and recorded.
     private readonly Feature[] _features =

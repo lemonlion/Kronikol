@@ -33,7 +33,7 @@ public class PayloadScrollLinesTests
         var path = ReportGenerator.GenerateHtmlReport(diagrams, Features, DateTime.UtcNow, DateTime.UtcNow, null,
             $"PayloadScrollLines_{Guid.NewGuid():N}.html", "Test", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: rendering, toggleDefaults: toggles);
-        return File.ReadAllText(path);
+        return ReportHtml.Read(path);
     }
 
     [Fact]

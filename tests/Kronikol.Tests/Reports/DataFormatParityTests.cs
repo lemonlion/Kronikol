@@ -47,7 +47,7 @@ public class DataFormatParityTests
     [Fact]
     public void Yaml_carries_the_run_diagnostics()
     {
-        var yaml = File.ReadAllText(Write(DataFormat.Yaml, $"Parity_diag_{Guid.NewGuid():N}.yml"));
+        var yaml = ReportHtml.Read(Write(DataFormat.Yaml, $"Parity_diag_{Guid.NewGuid():N}.yml"));
         var root = (System.Text.Json.Nodes.JsonObject)YamlSchemaValidationTests.YamlToJson(yaml);
 
         var entries = (System.Text.Json.Nodes.JsonArray)root["Diagnostics"]!;
@@ -77,7 +77,7 @@ public class DataFormatParityTests
     [Fact]
     public void Yaml_carries_the_scenario_annotations()
     {
-        var yaml = File.ReadAllText(Write(DataFormat.Yaml, $"Parity_annot_{Guid.NewGuid():N}.yml"));
+        var yaml = ReportHtml.Read(Write(DataFormat.Yaml, $"Parity_annot_{Guid.NewGuid():N}.yml"));
 
         Assert.Contains("Annotations:", yaml, StringComparison.Ordinal);
         Assert.Contains("Kind: Custom", yaml, StringComparison.Ordinal);
@@ -97,7 +97,7 @@ public class DataFormatParityTests
         var schemaPath = ReportGenerator.GenerateTestRunReportSchema($"Parity_xsd_{suffix}.schema.xsd", DataFormat.Xml);
 
         var schemaSet = new XmlSchemaSet();
-        schemaSet.Add("", System.Xml.XmlReader.Create(new StringReader(File.ReadAllText(schemaPath))));
+        schemaSet.Add("", System.Xml.XmlReader.Create(new StringReader(ReportHtml.Read(schemaPath))));
 
         var errors = new List<string>();
         XDocument.Load(dataPath).Validate(schemaSet, (_, e) => errors.Add(e.Message));

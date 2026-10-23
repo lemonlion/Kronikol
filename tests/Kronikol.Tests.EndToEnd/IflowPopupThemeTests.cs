@@ -16,7 +16,7 @@ public class IflowPopupThemeTests : PlaywrightTestBase
     public async Task The_popup_takes_the_theme(string theme, string overlayAlpha)
     {
         var (uri, _) = ReportTestHelper.GenerateRunReportWithFlowArrows(TempDir, OutputDir, $"IflowPopupTheme-{theme}.html", withFlow: 1, withoutFlow: 0);
-        await Page.GotoAsync(uri);
+        await Page.GotoReportAsync(uri);
         await Page.EvaluateAsync("t => document.documentElement.setAttribute('data-theme', t)", theme);
         await Page.WaitForFunctionAsync("() => !!document.querySelector('.plantuml-browser:not(.iflow-diagram) svg')",
             null, new() { PollingInterval = 200 });
@@ -51,7 +51,7 @@ public class IflowPopupThemeTests : PlaywrightTestBase
     [Fact]
     public async Task The_popups_tabs_take_the_accent_and_the_quiet_ink()
     {
-        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage(includeToggle: true)));
+        await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage(includeToggle: true)));
         await Page.EvaluateAsync("""
             () => { const s = document.documentElement.style; s.setProperty('--kron-accent', 'rgb(1, 2, 3)'); s.setProperty('--kron-ink-quiet', 'rgb(4, 5, 6)'); }
             """);

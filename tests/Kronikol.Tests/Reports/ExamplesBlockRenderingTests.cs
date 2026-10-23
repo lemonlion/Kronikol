@@ -14,7 +14,7 @@ public class ExamplesBlockRenderingTests
             FixedTime, FixedTime,
             null, fileName, "Test", includeTestRunData: true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
-        return File.ReadAllText(path);
+        return ReportHtml.Read(path);
     }
 
     private static Scenario MakeScenario(

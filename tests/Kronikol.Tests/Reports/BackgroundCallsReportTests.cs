@@ -73,7 +73,7 @@ public class BackgroundCallsReportTests : IDisposable
     {
         var (features, logs) = ExpiredRun("bg-1");
 
-        using var document = JsonDocument.Parse(File.ReadAllText(Write(features, logs, DataFormat.Json)));
+        using var document = JsonDocument.Parse(ReportHtml.Read(Write(features, logs, DataFormat.Json)));
         var root = document.RootElement;
 
         var background = root.GetProperty("background");
@@ -102,7 +102,7 @@ public class BackgroundCallsReportTests : IDisposable
     {
         var features = Features("bg-2", Ended);
 
-        using var document = JsonDocument.Parse(File.ReadAllText(Write(features, Pair("bg-2", Ended.AddSeconds(-2)), DataFormat.Json)));
+        using var document = JsonDocument.Parse(ReportHtml.Read(Write(features, Pair("bg-2", Ended.AddSeconds(-2)), DataFormat.Json)));
 
         var background = document.RootElement.GetProperty("background");
         Assert.Equal(0, background.GetProperty("calls").GetInt32());
@@ -123,7 +123,7 @@ public class BackgroundCallsReportTests : IDisposable
     [Fact]
     public void A_report_written_without_any_logs_still_writes_the_block()
     {
-        using var document = JsonDocument.Parse(File.ReadAllText(Write(Features("bg-3", Ended), null, DataFormat.Json)));
+        using var document = JsonDocument.Parse(ReportHtml.Read(Write(Features("bg-3", Ended), null, DataFormat.Json)));
 
         Assert.Equal(0, document.RootElement.GetProperty("background").GetProperty("calls").GetInt32());
     }
@@ -135,7 +135,7 @@ public class BackgroundCallsReportTests : IDisposable
         var reportPath = Write(features, logs, DataFormat.Json);
         var schemaPath = ReportGenerator.GenerateTestRunReportSchema($"Background_{Guid.NewGuid():N}.schema.json", DataFormat.Json);
 
-        using var schema = JsonDocument.Parse(File.ReadAllText(schemaPath));
+        using var schema = JsonDocument.Parse(ReportHtml.Read(schemaPath));
         var background = schema.RootElement.GetProperty("properties").GetProperty("background");
         Assert.Equal("object", background.GetProperty("type").GetString());
         Assert.Equal(["calls", "afterScenarioEnd", "interactions"], background.GetProperty("required").EnumerateArray().Select(r => r.GetString()));
@@ -161,7 +161,7 @@ public class BackgroundCallsReportTests : IDisposable
         Assert.Equal(2, background.Element("Interactions")!.Elements("HttpInteraction").Count());
 
         var schemaSet = new XmlSchemaSet();
-        schemaSet.Add("", System.Xml.XmlReader.Create(new StringReader(File.ReadAllText(
+        schemaSet.Add("", System.Xml.XmlReader.Create(new StringReader(ReportHtml.Read(
             ReportGenerator.GenerateTestRunReportSchema($"Background_{Guid.NewGuid():N}.xsd", DataFormat.Xml)))));
         var errors = new List<string>();
         XDocument.Load(xmlPath).Validate(schemaSet, (_, e) => errors.Add(e.Message));
@@ -173,7 +173,7 @@ public class BackgroundCallsReportTests : IDisposable
     {
         var (features, logs) = ExpiredRun("bg-6");
         var yamlPath = Write(features, logs, DataFormat.Yaml);
-        var yaml = File.ReadAllText(yamlPath);
+        var yaml = ReportHtml.Read(yamlPath);
 
         Assert.Contains("\nBackground:\n  Calls: 1\n  AfterScenarioEnd:\n    - ScenarioId: bg-6\n      Scenario: Pay by card\n      Calls: 1\n", yaml, StringComparison.Ordinal);
         Assert.Contains("\n  Interactions:\n    - Type: Request\n", yaml, StringComparison.Ordinal);
@@ -189,9 +189,9 @@ public class BackgroundCallsReportTests : IDisposable
         var (features, logs) = ExpiredRun("bg-7");
         var summary = BackgroundAttribution.Summarise(logs, features);
 
-        var with = File.ReadAllText(ReportGenerator.GenerateHtmlReport([], features, DateTime.UtcNow, DateTime.UtcNow, null,
+        var with = ReportHtml.Read(ReportGenerator.GenerateHtmlReport([], features, DateTime.UtcNow, DateTime.UtcNow, null,
             $"Background_{Guid.NewGuid():N}.html", "Run", true, background: summary));
-        var without = File.ReadAllText(ReportGenerator.GenerateHtmlReport([], features, DateTime.UtcNow, DateTime.UtcNow, null,
+        var without = ReportHtml.Read(ReportGenerator.GenerateHtmlReport([], features, DateTime.UtcNow, DateTime.UtcNow, null,
             $"Background_{Guid.NewGuid():N}.html", "Run", true, background: BackgroundCalls.None));
 
         Assert.Contains("<details class=\"background-calls\">", with, StringComparison.Ordinal);
@@ -218,7 +218,7 @@ public class BackgroundCallsReportTests : IDisposable
         };
         var summary = BackgroundAttribution.Summarise([.. logs, .. kept], features);
 
-        var html = File.ReadAllText(ReportGenerator.GenerateHtmlReport([], features, DateTime.UtcNow, DateTime.UtcNow, null,
+        var html = ReportHtml.Read(ReportGenerator.GenerateHtmlReport([], features, DateTime.UtcNow, DateTime.UtcNow, null,
             $"Background_{Guid.NewGuid():N}.html", "Run", true, background: summary));
 
         Assert.Equal(2, summary.Calls);
@@ -239,7 +239,7 @@ public class BackgroundCallsReportTests : IDisposable
                 RequestResponseType.Request, trace, pair, false) { Timestamp = Ended, AttributionSource = AttributionSource.Detached }
         };
 
-        var html = File.ReadAllText(ReportGenerator.GenerateHtmlReport([], features, DateTime.UtcNow, DateTime.UtcNow, null,
+        var html = ReportHtml.Read(ReportGenerator.GenerateHtmlReport([], features, DateTime.UtcNow, DateTime.UtcNow, null,
             $"Background_{Guid.NewGuid():N}.html", "Run", true, background: BackgroundAttribution.Summarise(kept, features)));
 
         Assert.Contains("Background calls (1 with no scenario)", html, StringComparison.Ordinal);
@@ -281,7 +281,7 @@ public class BackgroundCallsReportTests : IDisposable
             d => d.GetProperty("kind").GetString() == "BackgroundCalls" && d.GetProperty("scenarioId").GetString() == testId);
         Assert.Contains("1 call arrived after 'Pay by card' ended", diagnostic.GetProperty("message").GetString(), StringComparison.Ordinal);
 
-        var html = File.ReadAllText(Path.Combine(_dir, "TestRunReport.html"));
+        var html = ReportHtml.Read(Path.Combine(_dir, "TestRunReport.html"));
         Assert.Contains("<details class=\"background-calls\">", html, StringComparison.Ordinal);
         Assert.Contains("<td>/api/orders/sweep</td>", html, StringComparison.Ordinal);
     }

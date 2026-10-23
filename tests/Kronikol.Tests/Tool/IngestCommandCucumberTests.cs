@@ -51,7 +51,7 @@ public class IngestCommandCucumberTests : IDisposable
         Assert.Equal(0, exit);
         Assert.Contains("Cucumber messages:", @out.ToString());
         Assert.Contains("into 6 scenario(s)", @out.ToString());
-        var html = File.ReadAllText(Path.Combine(output, "TestRunReport.html"));
+        var html = ReportHtml.Read(Path.Combine(output, "TestRunReport.html"));
         Assert.Contains("BDD run", html);
         Assert.Contains(CucumberFixtures.DemoFeature, html);
         Assert.Contains(CucumberFixtures.Rule, html);
@@ -103,7 +103,7 @@ public class IngestCommandCucumberTests : IDisposable
             new StringWriter(), new StringWriter());
 
         Assert.Equal(0, exit);
-        Assert.Contains("BeforeEach hook", File.ReadAllText(Path.Combine(output, "TestRunReport.html")));
+        Assert.Contains("BeforeEach hook", ReportHtml.Read(Path.Combine(output, "TestRunReport.html")));
     }
 
     [Fact]

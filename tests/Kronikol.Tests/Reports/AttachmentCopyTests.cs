@@ -312,7 +312,7 @@ public class AttachmentCopyTests : IDisposable
             diagramFormat: DiagramFormat.PlantUml,
             plantUmlRendering: PlantUmlRendering.BrowserJs);
 
-        var content = File.ReadAllText(html);
+        var content = ReportHtml.Read(html);
         Assert.Contains("href=\"attachments/openapi.json\"", content);
         Assert.Contains(">OpenAPI Spec</a>", content);
     }

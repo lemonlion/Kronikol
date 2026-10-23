@@ -95,7 +95,7 @@ public class CiDebugSectionTests : IDisposable
         return captured.ToString();
     }
 
-    private string StepSummary() => File.Exists(_summary) ? File.ReadAllText(_summary) : "";
+    private string StepSummary() => File.Exists(_summary) ? ReportHtml.Read(_summary) : "";
 
     /// <summary>
     /// Both channels are process-wide. While this class points <c>GITHUB_STEP_SUMMARY</c> at its own file,

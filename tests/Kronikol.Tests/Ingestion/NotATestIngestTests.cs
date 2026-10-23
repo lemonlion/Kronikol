@@ -73,11 +73,11 @@ public class NotATestIngestTests : IDisposable
         Assert.True(fold.NotATest);
 
         var reports = result.ReportsDirectory;
-        Assert.Contains("<div class=\"run-stat\"><dt>Scenarios</dt><dd>2</dd></div>", File.ReadAllText(Path.Combine(reports, "TestRunReport.html")));
-        Assert.Contains("All 2 scenarios passed.", File.ReadAllText(Path.Combine(reports, "Failures.md")));
+        Assert.Contains("<div class=\"run-stat\"><dt>Scenarios</dt><dd>2</dd></div>", ReportHtml.Read(Path.Combine(reports, "TestRunReport.html")));
+        Assert.Contains("All 2 scenarios passed.", ReportHtml.Read(Path.Combine(reports, "Failures.md")));
         Assert.Equal(2, RunManifest.TryRead(reports)!.Scenarios);
 
-        using var ctrf = JsonDocument.Parse(File.ReadAllText(Path.Combine(reports, CtrfReportGenerator.FileName)));
+        using var ctrf = JsonDocument.Parse(ReportHtml.Read(Path.Combine(reports, CtrfReportGenerator.FileName)));
         Assert.Equal(2, ctrf.RootElement.GetProperty("results").GetProperty("summary").GetProperty("tests").GetInt32());
 
         // The flag reaches the data file, so a merge or a query of it knows too.

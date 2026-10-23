@@ -39,7 +39,7 @@ public class RequestResponseLoggerTests
         var path = Kronikol.Reports.ReportGenerator.GenerateTestRunReportData(features, DateTime.UtcNow, DateTime.UtcNow,
             $"LogPair_{Guid.NewGuid():N}.json", Kronikol.Reports.DataFormat.Json, null, GetLogsFromThisTest());
 
-        using var document = System.Text.Json.JsonDocument.Parse(File.ReadAllText(path));
+        using var document = System.Text.Json.JsonDocument.Parse(ReportHtml.Read(path));
         var calls = document.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0].GetProperty("httpInteractions").EnumerateArray().ToArray();
         Assert.Equal(2, calls.Length);
         Assert.All(calls, call => Assert.Equal(System.Text.Json.JsonValueKind.Null, call.GetProperty("durationMs").ValueKind));

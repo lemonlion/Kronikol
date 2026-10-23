@@ -144,7 +144,7 @@ public class SpecificationsYamlStructureTests
     private static YamlMappingNode FirstFeature(string path)
     {
         var stream = new YamlStream();
-        stream.Load(new StringReader(File.ReadAllText(path)));
+        stream.Load(new StringReader(ReportHtml.Read(path)));
         var root = (YamlMappingNode)stream.Documents[0].RootNode;
         return (YamlMappingNode)((YamlSequenceNode)root["Features"])[0];
     }

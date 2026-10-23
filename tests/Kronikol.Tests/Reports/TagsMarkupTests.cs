@@ -27,7 +27,7 @@ public class TagsMarkupTests
     {
         var path = ReportGenerator.GenerateHtmlReport([], features, Start, Start.AddSeconds(5), null, fileName, "Test", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
-        return File.ReadAllText(path);
+        return ReportHtml.Read(path);
     }
 
     /// <summary>Where the <c>&lt;summary&gt;</c> of class <paramref name="cls"/> whose text starts with

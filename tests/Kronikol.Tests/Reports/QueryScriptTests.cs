@@ -63,7 +63,7 @@ public class QueryScriptTests : IDisposable
         ], DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow, options);
     }
 
-    private static string Script(string dir) => File.ReadAllText(Path.Combine(dir, "query.cs"));
+    private static string Script(string dir) => ReportHtml.Read(Path.Combine(dir, "query.cs"));
 
     private static Assembly Library => typeof(QueryCommand).Assembly;
 
@@ -211,7 +211,7 @@ public class QueryScriptTests : IDisposable
 
         Run(Options(dir));
 
-        Assert.Equal(theirs, File.ReadAllText(Path.Combine(dir, "query.cs")));
+        Assert.Equal(theirs, ReportHtml.Read(Path.Combine(dir, "query.cs")));
         Assert.True(File.Exists(Path.Combine(dir, "TestRunReport.krkl")));
     }
 
@@ -233,8 +233,8 @@ public class QueryScriptTests : IDisposable
             Run(Options(dir));
 
         Assert.True(File.Exists(Path.Combine(dir, "TestRunReport.krkl")));
-        Assert.DoesNotContain("query.cs", File.ReadAllText(Path.Combine(dir, "Failures.md")), StringComparison.Ordinal);
-        Assert.Equal(earlier, File.ReadAllText(path));
+        Assert.DoesNotContain("query.cs", ReportHtml.Read(Path.Combine(dir, "Failures.md")), StringComparison.Ordinal);
+        Assert.Equal(earlier, ReportHtml.Read(path));
     }
 
     [Fact]
@@ -256,7 +256,7 @@ public class QueryScriptTests : IDisposable
         var dir = Dir("Reports");
         Run(Options(dir));
 
-        using var manifest = JsonDocument.Parse(File.ReadAllText(Path.Combine(dir, "Run.json")));
+        using var manifest = JsonDocument.Parse(ReportHtml.Read(Path.Combine(dir, "Run.json")));
         var files = manifest.RootElement.GetProperty("files").EnumerateArray().Select(f => f.GetString()).ToArray();
         Assert.Contains("TestRunReport.krkl", files);
         Assert.DoesNotContain("query.cs", files);

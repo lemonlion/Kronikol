@@ -11,7 +11,7 @@ public class PieChartReportTests
             DateTime.UtcNow, DateTime.UtcNow,
             null, "PieChart.html", "Test", includeTestRunData,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
-        return File.ReadAllText(path);
+        return ReportHtml.Read(path);
     }
 
     [Fact]

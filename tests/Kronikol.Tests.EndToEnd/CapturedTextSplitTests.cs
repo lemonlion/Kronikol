@@ -35,7 +35,7 @@ public class CapturedTextSplitTests : DiagramNotePlaywrightBase
 
     private async Task OpenPage([System.Runtime.CompilerServices.CallerMemberName] string? testName = null)
     {
-        await Page.GotoAsync(GenerateColoredArrowReport($"CapturedTextSplit_{testName}.html"));
+        await Page.GotoReportAsync(GenerateColoredArrowReport($"CapturedTextSplit_{testName}.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await Page.WaitForFunctionAsync("() => typeof window._splitDiagramSource === 'function'", null, new() { PollingInterval = 200 });
     }

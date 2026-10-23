@@ -40,7 +40,7 @@ public class FilteredMarkerTests : PlaywrightTestBase
             features, DateTime.UtcNow, DateTime.UtcNow, null, Path.Combine(TempDir, fileName), "Bakery", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs,
             toggleDefaults: ResolvedToggleDefaults.BuiltIn with { AssertionsShown = assertionsShown });
-        await Page.GotoAsync(new Uri(path).AbsoluteUri);
+        await Page.GotoReportAsync(new Uri(path).AbsoluteUri);
         await ExpandFirstScenarioWithDiagram();
     }
 

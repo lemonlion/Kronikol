@@ -44,7 +44,7 @@ function clear_all_filters() {
 // not already been drawn before the export stayed blank forever — no error, no message, just an empty
 // box. The body holds exactly these data payloads and no behaviour (they are `application/json`), so
 // carrying them cannot re-run anything the head already ran.
-function export_data_scripts(exported) {
+function export_data_scripts(exported, keptTokens) {
     // `#puml-data` covers the whole report; a filtered export only needs the ids it actually contains.
     // Pruning is safe to the letter because `_pumlData` has exactly one reader — `_pumlData[el.id]` in
     // the render script's getPumlZ — so an id that is not in the exported markup can never be asked for.
@@ -67,12 +67,17 @@ function export_data_scripts(exported) {
         var all;
         try { all = JSON.parse(s.textContent); } catch (e) { out += s.outerHTML; return; }
         var kept = {};
-        for (var k in all) if (keep[k]) kept[k] = all[k];
+        for (var k in all) if (keep[k]) {
+            kept[k] = all[k];
+            // A compressed report's diagram token (U+0001 and its number): the export carries its piece.
+            if (keptTokens && typeof all[k] === 'string' && all[k].charCodeAt(0) === 1) keptTokens.push(Number(all[k].slice(1)));
+        }
         // Clone the element and swap its text rather than writing the tag out by hand: the attributes
         // come from the real thing, and the report does not end up carrying a second, decoy
-        // `<script id="puml-data">` in its source for anything scanning the file to trip over.
+        // `<script id="puml-data">` in its source for anything scanning the file to trip over. A `<` is
+        // written as \u003c, as the writer does: a compressed report holds its held sub-steps' HTML raw.
         var pruned = s.cloneNode(false);
-        pruned.textContent = JSON.stringify(kept);
+        pruned.textContent = JSON.stringify(kept).replace(/</g, '\\u003c');
         out += pruned.outerHTML;
     });
     return out;
@@ -122,17 +127,66 @@ function export_html() {
         exported.push(c.features[i]);
         featuresHtml += export_undrawn(c.features[i]);
     }
+    var keptTokens = [];
     var html = '<html><head>' + headHtml + '</head><body>';
     html += '<h1>Filtered Report</h1>';
     html += featuresHtml;
-    html += export_data_scripts(exported);
+    html += export_data_scripts(exported, keptTokens);
     html += '</body></html>';
+    if (window.__kronikolFrames && window.__kronikolLoader) {
+        // From a compressed report the export is compressed too (plans/HTML_COMPRESSION_PLAN.md 4.5): the page it built,
+        // gzipped by the browser's own CompressionStream into a gzip page frame, and the diagram sources' pieces its
+        // diagrams name, copied as they are, around this report's loader and decoder.
+        export_compressed(html, keptTokens).then(export_download, function (err) {
+            if (window.console && console.error) console.error('Export failed: ' + (err && err.message ? err.message : err));
+        });
+        return;
+    }
+    export_download(html);
+}
+function export_download(html) {
     var blob = new Blob([html], { type: 'text/html' });
     var a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = 'filtered-report.html';
     a.click();
     URL.revokeObjectURL(a.href);
+}
+// Base64 of bytes, in slices so that no single call is given millions of arguments.
+function export_base64(bytes) {
+    if (typeof bytes.toBase64 === 'function') return bytes.toBase64();
+    var out = '';
+    for (var i = 0; i < bytes.length; i += 0x8000) out += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+    return btoa(out);
+}
+function export_frame(id, piece, codec, length, bytes) {
+    return '<script id="' + id + '"' + (piece ? ' data-kron-piece="' + piece + '"' : '') + ' type="application/octet-stream" data-codec="'
+        + codec + '" data-length="' + length + '">' + export_base64(bytes) + '<\/script>\n';
+}
+function export_compressed(html, tokens) {
+    var frames = window.__kronikolFrames, loader = window.__kronikolLoader;
+    var bytes = new TextEncoder().encode(html);
+    // A browser without CompressionStream (Chrome before 80, Firefox before 113, Safari before 16.4) opens the report
+    // with the page's own decoder, and stores the export's page frame as it is.
+    var stored = typeof CompressionStream !== 'function';
+    var framed = stored ? Promise.resolve(bytes)
+        : new Response(new ReadableStream({ start: function (c) { c.enqueue(bytes); c.close(); } }).pipeThrough(new CompressionStream('gzip'))).arrayBuffer();
+    return framed.then(function (gz) {
+        var pieces = {};
+        tokens.forEach(function (n) { var p = frames.pieceOfDiagram(n); if (p >= 0) pieces[p] = true; });
+        // The hint names the file the export downloads, not the report it was made from.
+        var named = function (part) { return part.replace(/kronikol decode [^<]*? -o plain\.html/g, 'kronikol decode filtered-report.html -o plain.html'); };
+        var out = '<!DOCTYPE html>\n<html>\n<head>\n' + loader.head + '\n</head>\n<body>\n' + named(loader.loading) + '\n' + named(loader.notice) + '\n';
+        out += export_frame('kron-frame-page', 0, stored ? 'none' : 'gzip', bytes.length, new Uint8Array(gz));
+        Object.keys(pieces).map(Number).sort(function (a, b) { return a - b; }).forEach(function (p) {
+            var piece = frames.pieces[p];
+            out += export_frame('kron-frame-diagrams-' + (p + 1), p + 1, piece.codec, piece.length, piece.bytes);
+        });
+        out += '<script id="kron-diagram-index" type="application/json">' + JSON.stringify(frames.index) + '<\/script>\n';
+        out += '<script id="kron-zstd">' + loader.decoder + '<\/script>\n';
+        out += '<script id="kron-loader">' + loader.loader + '<\/script>\n</body>\n</html>\n';
+        return out;
+    });
 }
 // The text a summary holds directly, outside its badges, labels and buttons: the name of the feature or
 // scenario it heads.

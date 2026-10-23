@@ -37,7 +37,7 @@ public class FilterBarTests
     {
         var path = ReportGenerator.GenerateHtmlReport([], features ?? Bakery(), Start, Start.AddSeconds(5), null, fileName, "Test", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
-        return File.ReadAllText(path);
+        return ReportHtml.Read(path);
     }
 
     private static void InOrder(string text, params string[] parts)

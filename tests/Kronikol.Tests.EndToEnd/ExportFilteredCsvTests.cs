@@ -82,7 +82,7 @@ public class ExportFilteredCsvTests : PlaywrightTestBase
     [Fact]
     public async Task Each_row_holds_the_feature_and_scenario_names_alone()
     {
-        await Page.GotoAsync(GenerateCsvReport("CsvExport.html"));
+        await Page.GotoReportAsync(GenerateCsvReport("CsvExport.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         var lines = await ExportCsv();
@@ -99,7 +99,7 @@ public class ExportFilteredCsvTests : PlaywrightTestBase
     [Fact]
     public async Task A_filtered_export_lists_only_the_visible_scenarios()
     {
-        await Page.GotoAsync(GenerateCsvReport("CsvExportFiltered.html"));
+        await Page.GotoReportAsync(GenerateCsvReport("CsvExportFiltered.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await FillSearchBar("refund");
         await Page.WaitForFunctionAsync(

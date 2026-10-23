@@ -170,7 +170,7 @@ public class ReportEnrichmentTests
         };
 
         var path = ReportGenerator.GenerateTestRunReportData(Features(), Start, End, "Enrich_fields.yml", DataFormat.Yaml, trackedLogs: logs);
-        var yaml = File.ReadAllText(path);
+        var yaml = ReportHtml.Read(path);
 
         Assert.Contains("MetaType: Event", yaml);
         Assert.Contains("DependencyCategory: messaging", yaml);
@@ -183,7 +183,7 @@ public class ReportEnrichmentTests
     public void Json_schema_describes_the_new_interaction_fields()
     {
         var path = ReportGenerator.GenerateTestRunReportSchema("Enrich_schema.json", DataFormat.Json);
-        var props = JsonDocument.Parse(File.ReadAllText(path)).RootElement
+        var props = JsonDocument.Parse(ReportHtml.Read(path)).RootElement
             .GetProperty("$defs").GetProperty("httpInteraction").GetProperty("properties");
 
         foreach (var field in new[] { "metaType", "dependencyCategory", "callerDependencyCategory", "phase",
@@ -247,7 +247,7 @@ public class ReportEnrichmentTests
     public void Json_schema_describes_the_new_step_fields()
     {
         var path = ReportGenerator.GenerateTestRunReportSchema("Enrich_schema_steps.json", DataFormat.Json);
-        var props = JsonDocument.Parse(File.ReadAllText(path)).RootElement
+        var props = JsonDocument.Parse(ReportHtml.Read(path)).RootElement
             .GetProperty("$defs").GetProperty("step").GetProperty("properties");
 
         foreach (var field in new[] { "bypassReason", "docString", "docStringMediaType", "comments", "parameters", "textSegments" })
@@ -311,13 +311,13 @@ public class ReportEnrichmentTests
     ];
 
     private static JsonElement FirstStep(string path) =>
-        JsonDocument.Parse(File.ReadAllText(path)).RootElement
+        JsonDocument.Parse(ReportHtml.Read(path)).RootElement
             .GetProperty("features")[0].GetProperty("scenarios")[0].GetProperty("steps")[0];
 
     private static JsonElement[] InteractionsJson(RequestResponseLog[] logs, string fileName)
     {
         var path = ReportGenerator.GenerateTestRunReportData(Features(), Start, End, fileName, DataFormat.Json, trackedLogs: logs);
-        return JsonDocument.Parse(File.ReadAllText(path)).RootElement
+        return JsonDocument.Parse(ReportHtml.Read(path)).RootElement
             .GetProperty("features")[0].GetProperty("scenarios")[0].GetProperty("httpInteractions")
             .EnumerateArray().ToArray();
     }

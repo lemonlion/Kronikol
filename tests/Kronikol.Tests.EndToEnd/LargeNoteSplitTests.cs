@@ -15,7 +15,7 @@ public class LargeNoteSplitTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task SplitWithChunkedNotes_produces_closed_notes_in_all_fragments()
     {
-        await Page.GotoAsync(GenerateLargeNoteReport("LargeNoteClosedNotes.html"));
+        await Page.GotoReportAsync(GenerateLargeNoteReport("LargeNoteClosedNotes.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         var result = await Page.EvaluateAsync<string>("""
@@ -82,7 +82,7 @@ public class LargeNoteSplitTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Large_note_diagram_renders_all_fragments_without_syntax_error()
     {
-        await Page.GotoAsync(GenerateLargeNoteReport("LargeNoteRender.html"));
+        await Page.GotoReportAsync(GenerateLargeNoteReport("LargeNoteRender.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -116,7 +116,7 @@ public class LargeNoteSplitTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Intermediate_note_chunks_are_anchored_to_participant()
     {
-        await Page.GotoAsync(GenerateLargeNoteReport("LargeNoteAnchored.html"));
+        await Page.GotoReportAsync(GenerateLargeNoteReport("LargeNoteAnchored.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         // Build a source where the large note produces 3+ chunks,
@@ -205,7 +205,7 @@ public class LargeNoteSplitTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Anchor_participant_does_not_include_trailing_colon()
     {
-        await Page.GotoAsync(GenerateLargeNoteReport("LargeNoteColonAnchor.html"));
+        await Page.GotoReportAsync(GenerateLargeNoteReport("LargeNoteColonAnchor.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         var result = await Page.EvaluateAsync<string>("""

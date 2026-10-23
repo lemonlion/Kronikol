@@ -25,6 +25,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
+      # A report page is written compressed since 5.6.0, so its scenarios are found in the plain page
+      # kronikol decode writes from it (a page written before passes through as it is).
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+      - name: Install Kronikol.Tool
+        run: dotnet tool install -g Kronikol.Tool
       - name: The repository's homepage answers, the reports it links are green, and its deep links resolve
         shell: bash
         env:
@@ -53,7 +60,8 @@ jobs:
             report="${link%%#*}"
             sid="${link#*#sid-}"
             fetch -f --compressed -o report.html "${url%/}/$report" || { echo "::error::$report did not answer"; exit 1; }
-            grep -q "data-stable-id=\"$sid\"" report.html || { echo "::error::$link names a scenario the report does not have"; exit 1; }
+            kronikol decode report.html -o plain.html || { echo "::error::$report is not a report page kronikol decode reads"; exit 1; }
+            grep -q "data-stable-id=\"$sid\"" plain.html || { echo "::error::$link names a scenario the report does not have"; exit 1; }
             echo "$link: found"
             links=$((links + 1))
           done < <(grep -oE 'href="reports/[^"#]+/TestRunReport\.html#sid-[0-9a-f]+"' page.html | sed -E 's/^href="//; s/"$//')

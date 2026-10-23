@@ -215,7 +215,7 @@ public class IngestCommandTests : IDisposable
 
             var exit = IngestCommand.Run([captures, "--tests", Path.Combine(captures, "tests.ndjson"), "-o", output], @out, new StringWriter());
 
-            Assert.SkipWhen(File.ReadAllText(stale) != earlier, "this user writes through a read-only attribute (root), so the digest was replaced");
+            Assert.SkipWhen(ReportHtml.Read(stale) != earlier, "this user writes through a read-only attribute (root), so the digest was replaced");
             Assert.Equal(0, exit);
             var pointer = @out.ToString().Split('\n').Single(l => l.StartsWith("Kronikol: reports written to ", StringComparison.Ordinal));
             Assert.Contains("TestRunReport.html", pointer);
@@ -251,7 +251,15 @@ public class IngestCommandTests : IDisposable
 
         Assert.Equal(0, exit);
         Assert.True(File.Exists(Path.Combine(output, "TestRunReport.html")), "Stderr: " + err);
-        var html = File.ReadAllText(Path.Combine(output, "TestRunReport.html"));
+        var html = ReportHtml.Read(Path.Combine(output, "TestRunReport.html"));
+        // Written compressed (plans/HTML_COMPRESSION_PLAN.md R1, tests 1 and 7): no gzip in the page frame but the search
+        // index, and every diagram token resolves to its source.
+        var file = File.ReadAllText(Path.Combine(output, "TestRunReport.html"));
+        Assert.True(Kronikol.Reports.HtmlReportFile.IsCompressed(file));
+        var frames = Kronikol.Reports.CompressedPage.Read(file);
+        Assert.Single(System.Text.RegularExpressions.Regex.Matches(frames.Page, "H4sI[A-Za-z0-9+/]{20,}"));
+        Assert.True(frames.DiagramCount >= 1);
+        Assert.All(Enumerable.Range(0, frames.DiagramCount), n => Assert.StartsWith("@startuml", frames.Diagram(n), StringComparison.Ordinal));
         Assert.Contains("CLI ingest", html);
         Assert.Contains("cli › renders", html);
         Assert.Contains("web.ndjson", @out.ToString());
@@ -288,7 +296,7 @@ public class IngestCommandTests : IDisposable
         var exit = IngestCommand.Run([captures, "--tests", Path.Combine(captures, "tests.ndjson"), "-o", output, "--browser-render-workers", "0"], new StringWriter(), err);
 
         Assert.Equal(0, exit);
-        var html = File.ReadAllText(Path.Combine(output, "TestRunReport.html"));
+        var html = ReportHtml.Read(Path.Combine(output, "TestRunReport.html"));
         Assert.Contains("var WORKERS_REQUESTED = 0;", html);
         Assert.DoesNotContain("var WORKERS_REQUESTED = 4;", html);
     }
@@ -319,18 +327,18 @@ public class IngestCommandTests : IDisposable
         // carries the chosen value where its __NOTE_FORMAT_DEFAULT__ token stood.
         var yaml = Path.Combine(_dir, "out-yaml");
         Assert.Equal(0, IngestCommand.Run([captures, "--tests", tests, "-o", yaml, "--note-format", "yaml"], new StringWriter(), err));
-        var yamlHtml = File.ReadAllText(Path.Combine(yaml, "TestRunReport.html"));
+        var yamlHtml = ReportHtml.Read(Path.Combine(yaml, "TestRunReport.html"));
         Assert.Contains("window._noteFormatDefault = 'yaml'", yamlHtml);
         Assert.DoesNotContain("window._noteFormatDefault = 'json'", yamlHtml);
 
         var json = Path.Combine(_dir, "out-json");
         Assert.Equal(0, IngestCommand.Run([captures, "--tests", tests, "-o", json, "--note-format", "json"], new StringWriter(), err));
-        Assert.Contains("window._noteFormatDefault = 'json'", File.ReadAllText(Path.Combine(json, "TestRunReport.html")));
+        Assert.Contains("window._noteFormatDefault = 'json'", ReportHtml.Read(Path.Combine(json, "TestRunReport.html")));
 
         var unset = Path.Combine(_dir, "out-default");
         Assert.Equal(0, IngestCommand.Run([captures, "--tests", tests, "-o", unset], new StringWriter(), err));
         // Without the flag, ingest keeps the library's default: YAML from 4.0.0.
-        Assert.Contains("window._noteFormatDefault = 'yaml'", File.ReadAllText(Path.Combine(unset, "TestRunReport.html")));
+        Assert.Contains("window._noteFormatDefault = 'yaml'", ReportHtml.Read(Path.Combine(unset, "TestRunReport.html")));
 
         var usage = new StringWriter();
         IngestCommand.PrintUsage(usage);
@@ -365,7 +373,7 @@ public class IngestCommandTests : IDisposable
         {
             var output = Path.Combine(_dir, name);
             Assert.Equal(0, IngestCommand.Run([captures, "--tests", tests, "-o", output, .. flag], new StringWriter(), err));
-            return File.ReadAllText(Path.Combine(output, "TestRunReport.html"));
+            return ReportHtml.Read(Path.Combine(output, "TestRunReport.html"));
         }
         static string[] Buttons(string html) => System.Text.RegularExpressions.Regex
             .Matches(html, "data-toggle=\"headers\" data-shown=\"(true|false)\"").Select(m => m.Groups[1].Value).ToArray();
@@ -522,14 +530,14 @@ public class IngestCommandTests : IDisposable
         {
             var compressed = Path.Combine(_dir, folder);
             Assert.Equal(0, IngestCommand.Run([captures, "--tests", tests, "-o", compressed, "--data-file", "json", .. flag], new StringWriter(), err));
-            var compressedJson = File.ReadAllText(Path.Combine(compressed, "TestRunReport.json"));
+            var compressedJson = ReportHtml.Read(Path.Combine(compressed, "TestRunReport.json"));
             Assert.Contains("\"$z\"", compressedJson, StringComparison.Ordinal);
             Assert.Contains("\"formatVersion\": 2", compressedJson, StringComparison.Ordinal);
         }
 
         var plain = Path.Combine(_dir, "out-plain");
         Assert.Equal(0, IngestCommand.Run([captures, "--tests", tests, "-o", plain, "--data-file", "json", "--payloads", "plain"], new StringWriter(), err));
-        var plainJson = File.ReadAllText(Path.Combine(plain, "TestRunReport.json"));
+        var plainJson = ReportHtml.Read(Path.Combine(plain, "TestRunReport.json"));
         Assert.DoesNotContain("\"$z\"", plainJson, StringComparison.Ordinal);
         Assert.Contains("\"formatVersion\": 1", plainJson, StringComparison.Ordinal);
 
@@ -710,7 +718,7 @@ public class IngestCommandTests : IDisposable
 
         Assert.Equal(0, exit);
         Assert.Contains("into 2 scenario(s)", @out.ToString());
-        Assert.Contains("Traffic outside any test", File.ReadAllText(Path.Combine(output, "TestRunReport.html")));
+        Assert.Contains("Traffic outside any test", ReportHtml.Read(Path.Combine(output, "TestRunReport.html")));
         Assert.Contains("--fold-unknown", Usage());
         Assert.Contains("--chronological", Usage());
 
@@ -756,11 +764,11 @@ public class IngestCommandTests : IDisposable
 
         // Since 5.0.0 the HTML report lists it in its Diagnostics tab (plans/OPTION_C_PLAN.md S3); the data file carries
         // the diagnostic either way, and the labs page beside the report lists it, named by the pointer after the report.
-        var html = File.ReadAllText(Path.Combine(output, "TestRunReport.html"));
+        var html = ReportHtml.Read(Path.Combine(output, "TestRunReport.html"));
         Assert.Contains("id=\"tab-diagnostics\"", html);
         Assert.Contains(">Report diagnostics (", html);
         Assert.Contains("tap-di-redis: decoding disabled on 1 connection(s)", html);
-        var page = File.ReadAllText(Path.Combine(output, "TestRunReport.labs.html"));
+        var page = ReportHtml.Read(Path.Combine(output, "TestRunReport.labs.html"));
         Assert.Contains("<details class=\"report-diagnostics\" open>", page);
         Assert.Contains("tap-di-redis: decoding disabled on 1 connection(s)", page);
         Assert.True(printed.IndexOf("TestRunReport.labs.html", StringComparison.Ordinal) > printed.IndexOf("TestRunReport.html", StringComparison.Ordinal),
@@ -776,7 +784,7 @@ public class IngestCommandTests : IDisposable
             captures, "--tests", Path.Combine(captures, "tests.ndjson"), "-o", hidden, "--no-diagnostics-section",
             "--diagnostic", "CaptureDegraded:tap-di-redis: decoding disabled on 1 connection(s)",
         ], new StringWriter(), new StringWriter()));
-        var hiddenHtml = File.ReadAllText(Path.Combine(hidden, "TestRunReport.html"));
+        var hiddenHtml = ReportHtml.Read(Path.Combine(hidden, "TestRunReport.html"));
         Assert.DoesNotContain("report-diagnostic", hiddenHtml);
         Assert.DoesNotContain("tap-di-redis: decoding disabled on 1 connection(s)", hiddenHtml);
 
@@ -787,7 +795,7 @@ public class IngestCommandTests : IDisposable
             captures, "--tests", Path.Combine(captures, "tests.ndjson"), "-o", shown, "--diagnostics-section",
             "--diagnostic", "CaptureDegraded:tap-di-redis: decoding disabled on 1 connection(s)",
         ], new StringWriter(), new StringWriter()));
-        var shownHtml = File.ReadAllText(Path.Combine(shown, "TestRunReport.html"));
+        var shownHtml = ReportHtml.Read(Path.Combine(shown, "TestRunReport.html"));
         Assert.Contains(">Report diagnostics (", shownHtml);
         Assert.Contains("tap-di-redis: decoding disabled on 1 connection(s)", shownHtml);
 
@@ -1015,7 +1023,7 @@ public class IngestCommandTests : IDisposable
         }
 
         Assert.Contains("Spans: 16 span(s) from 1 file(s)", @out.ToString());
-        var html = File.ReadAllText(Path.Combine(output, "TestRunReport.html"));
+        var html = ReportHtml.Read(Path.Combine(output, "TestRunReport.html"));
         Assert.Contains("id=\"iflow-segments\"", html);
         Assert.Contains("Spans supplied to the ingest: 16 span(s).", console);
         Assert.DoesNotContain("InternalFlowSpanStore", console);
@@ -1084,7 +1092,7 @@ public class IngestCommandTests : IDisposable
     {
         var (captures, tests) = SpikeCapture("captures-torn-spans");
         var spans = Path.Combine(_dir, "torn-spans.jsonl");
-        File.WriteAllLines(spans, [File.ReadAllText(SpikeSpans).TrimEnd(), "{\"resourceSpans\":[{\"scopeSpans\""]);
+        File.WriteAllLines(spans, [ReportHtml.Read(SpikeSpans).TrimEnd(), "{\"resourceSpans\":[{\"scopeSpans\""]);
 
         var @out = new StringWriter();
         var err = new StringWriter();

@@ -44,11 +44,11 @@ public class CultureInvariantOutputTests
     ];
 
     private static string Data(string culture, DataFormat format) => CultureRun.Under(culture, () =>
-        File.ReadAllText(ReportGenerator.GenerateTestRunReportData(Features(), Start, End,
+        ReportHtml.Read(ReportGenerator.GenerateTestRunReportData(Features(), Start, End,
             $"Culture_{Guid.NewGuid():N}.{(format == DataFormat.Json ? "json" : format == DataFormat.Xml ? "xml" : "yml")}", format, null, null)));
 
     private static string Html(string culture) => CultureRun.Under(culture, () =>
-        File.ReadAllText(ReportGenerator.GenerateHtmlReport([], Features(), Start, End, null, $"Culture_{Guid.NewGuid():N}.html", "Culture", true,
+        ReportHtml.Read(ReportGenerator.GenerateHtmlReport([], Features(), Start, End, null, $"Culture_{Guid.NewGuid():N}.html", "Culture", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs)));
 
     // ─── The data files ────────────────────────────────────────
@@ -110,7 +110,7 @@ public class CultureInvariantOutputTests
         var features = TestRunReportSchemaContractTests.RichFeatures();
         var logs = TestRunReportSchemaContractTests.Logs();
         var extension = format == DataFormat.Json ? "json" : format == DataFormat.Xml ? "xml" : "yml";
-        string Write(string under) => CultureRun.Under(under, () => File.ReadAllText(ReportGenerator.GenerateTestRunReportData(features,
+        string Write(string under) => CultureRun.Under(under, () => ReportHtml.Read(ReportGenerator.GenerateTestRunReportData(features,
             TestRunReportSchemaContractTests.Start, TestRunReportSchemaContractTests.End, $"Culture_{Guid.NewGuid():N}.{extension}", format,
             TestRunReportSchemaContractTests.Diagrams(), logs, TestRunReportSchemaContractTests.Diagnostics(), suite: "culture",
             environment: RunEnvironment.Unrecorded)));

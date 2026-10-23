@@ -18,7 +18,7 @@ public class DefaultReportWithoutHistoryTests : PlaywrightTestBase
     private async Task Open(string reportFileName)
     {
         var (_, report) = HistoryReportHelper.GenerateWithLabsPage(TempDir, OutputDir, reportFileName);
-        await Page.GotoAsync(report);
+        await Page.GotoReportAsync(report);
         await Page.Locator("details.feature").First.WaitForAsync();
         await Page.EvaluateAsync("() => document.querySelectorAll('details.feature').forEach(d => d.setAttribute('open', ''))");
     }
@@ -69,7 +69,7 @@ public class DefaultReportWithoutHistoryTests : PlaywrightTestBase
         });
         var path = Path.Combine(TempDir, $"export_{Guid.NewGuid():N}.html");
         await download.SaveAsAsync(path);
-        var exported = await File.ReadAllTextAsync(path);
+        var exported = ReportFileText.Read(path);
 
         Assert.Contains("data-stable-id=\"", exported);
         // the features alone: no History section, no sparkline, no verdict. The head it copies is the report's, whose

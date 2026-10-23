@@ -34,7 +34,7 @@ public class InitAgentsIgnoreTests : IDisposable
         File.WriteAllText(Path.Combine(_dir, ".gitignore"), "[Bb]in/\nobj/\n");
         var exit = InitAgentsCommand.Run([_dir], new StringWriter(), new StringWriter());
         Assert.Equal(0, exit);
-        return File.ReadAllText(Path.Combine(_dir, ".ignore"));
+        return ReportHtml.Read(Path.Combine(_dir, ".ignore"));
     }
 
     // Read the way ripgrep reads the two files: its .ignore outranks .gitignore, which is the same as one list with the
@@ -126,6 +126,6 @@ public class InitAgentsIgnoreTests : IDisposable
         // committing build output, which is a far worse outcome than an unfindable report.
         Install();
 
-        Assert.False(File.ReadAllText(Path.Combine(_dir, ".gitignore")).Contains("Reports", StringComparison.Ordinal));
+        Assert.False(ReportHtml.Read(Path.Combine(_dir, ".gitignore")).Contains("Reports", StringComparison.Ordinal));
     }
 }

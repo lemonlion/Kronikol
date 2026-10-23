@@ -15,6 +15,12 @@ const reportDir = path.dirname(reportPath);
 const CDN_ENGINE_FILE = /https:\/\/cdn\.jsdelivr\.net\/(?:gh|npm)\/[^\s"'<>]*?\/(plantuml\.js|viz-global\.js)/g;
 
 let html = fs.readFileSync(reportPath, 'utf8').split('\r\n').join('\n');
+// A page written compressed (Kronikol 5.6.0 on) holds its scripts in a zstd frame, where the replacements below cannot
+// reach them, so the bench runs on the plain page kronikol decode writes from it.
+if (html.includes('<meta name="kronikol-page"')) {
+  try { html = require('child_process').execFileSync('kronikol', ['decode', reportPath], { encoding: 'utf8', maxBuffer: 1 << 30 }).split('\r\n').join('\n'); }
+  catch (e) { console.error('[bench] ' + reportPath + ' is a compressed page and kronikol decode failed (dotnet tool install -g Kronikol.Tool): ' + e.message); process.exit(2); }
+}
 html = html.replace(CDN_ENGINE_FILE, (m, file) => '/__engine/' + file);
 for (const [from, to] of (variant.replace || [])) {
   if (!html.includes(from)) { console.error('VARIANT REPLACEMENT NOT FOUND: ' + from.slice(0, 80)); process.exit(2); }

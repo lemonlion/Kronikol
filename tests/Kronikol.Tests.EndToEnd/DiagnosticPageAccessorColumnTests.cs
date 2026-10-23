@@ -91,7 +91,7 @@ public class DiagnosticPageAccessorColumnTests : PlaywrightTestBase
                 new ReportConfigurationOptions());
         }
 
-        await Page.GotoAsync(new Uri(Path.Combine(runDirectory, "DiagnosticReport.html")).AbsoluteUri);
+        await Page.GotoReportAsync(new Uri(Path.Combine(runDirectory, "DiagnosticReport.html")).AbsoluteUri);
         await Page.Locator("h2", new() { HasTextString = "Tracking Components" }).WaitForAsync();
     }
 

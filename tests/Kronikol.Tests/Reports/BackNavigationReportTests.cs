@@ -51,7 +51,7 @@ public class BackNavigationReportTests
             componentDiagramPlantUml: ComponentSource, groupParameterizedTests: groupParameterizedTests,
             toggleDefaults: toggles is null ? null
                 : ReportToggleDefaultsResolver.Resolve(new ReportConfigurationOptions { TestRunReportToggleDefaults = toggles }, specifications: false));
-        try { return File.ReadAllText(path); }
+        try { return ReportHtml.Read(path); }
         finally { File.Delete(path); }
     }
 

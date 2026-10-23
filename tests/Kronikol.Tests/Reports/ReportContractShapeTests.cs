@@ -35,7 +35,7 @@ public class ReportContractShapeTests
     private static JsonElement Json(string name)
     {
         var path = ReportGenerator.GenerateTestRunReportData(Features(), Start, End, name, DataFormat.Json);
-        return JsonDocument.Parse(File.ReadAllText(path)).RootElement.Clone();
+        return JsonDocument.Parse(ReportHtml.Read(path)).RootElement.Clone();
     }
 
     /// <summary>
@@ -140,7 +140,7 @@ public class ReportContractShapeTests
             [], features, Start, End, null, "Contract_ids.html", "Contract", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
 
-        var inData = JsonDocument.Parse(File.ReadAllText(jsonPath)).RootElement
+        var inData = JsonDocument.Parse(ReportHtml.Read(jsonPath)).RootElement
             .GetProperty("features").EnumerateArray()
             .SelectMany(f => f.GetProperty("scenarios").EnumerateArray())
             .Select(s => s.GetProperty("stableId").GetString())
@@ -149,7 +149,7 @@ public class ReportContractShapeTests
             .ToArray();
 
         var inHtml = System.Text.RegularExpressions.Regex
-            .Matches(File.ReadAllText(htmlPath), "data-stable-id=\"([0-9a-f]{16})\"")
+            .Matches(ReportHtml.Read(htmlPath), "data-stable-id=\"([0-9a-f]{16})\"")
             .Select(m => m.Groups[1].Value)
             .Distinct(StringComparer.Ordinal)
             .OrderBy(id => id, StringComparer.Ordinal)
@@ -181,7 +181,7 @@ public class ReportContractShapeTests
 
         var path = ReportGenerator.GenerateTestRunReportData(Features(), Start, End, "Contract_status.json",
             DataFormat.Json, trackedLogs: logs);
-        var root = JsonDocument.Parse(File.ReadAllText(path)).RootElement;
+        var root = JsonDocument.Parse(ReportHtml.Read(path)).RootElement;
 
         var interaction = root.GetProperty("features")[0].GetProperty("scenarios")[1]
             .GetProperty("httpInteractions")[0];
@@ -208,7 +208,7 @@ public class ReportContractShapeTests
 
         var path = ReportGenerator.GenerateTestRunReportData(Features(), Start, End, "Contract_status_text.json",
             DataFormat.Json, trackedLogs: logs);
-        var root = JsonDocument.Parse(File.ReadAllText(path)).RootElement;
+        var root = JsonDocument.Parse(ReportHtml.Read(path)).RootElement;
 
         var interaction = root.GetProperty("features")[0].GetProperty("scenarios")[1]
             .GetProperty("httpInteractions")[0];

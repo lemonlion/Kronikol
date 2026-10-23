@@ -2286,8 +2286,7 @@ public static class ReportGenerator
         if (!string.IsNullOrEmpty(componentDiagramPlantUml))
         {
             var compDiagramId = $"puml-{plantUmlBrowserCounter++}";
-            var compDiagramCompressed = InternalFlowHtmlGenerator.CompressToBase64(componentDiagramPlantUml);
-            diagramDataMap[compDiagramId] = compDiagramCompressed;
+            diagramDataMap[compDiagramId] = componentDiagramPlantUml;
             // Drawn by the page under BrowserJs, and by the report's renderer under the others (DrawEmbedded).
             var componentDiagramHtml = componentDiagramDrawn switch
             {
@@ -2603,8 +2602,7 @@ public static class ReportGenerator
                             if (isPlantUmlBrowser)
                             {
                                 var diagramId = $"puml-{plantUmlBrowserCounter++}";
-                                var compressed = InternalFlowHtmlGenerator.CompressToBase64(diagram.CodeBehind);
-                                diagramDataMap[diagramId] = compressed;
+                                diagramDataMap[diagramId] = diagram.CodeBehind;
                                 body.Append($"""
                                          <div class="plantuml-browser" id="{diagramId}" data-diagram-type="plantuml"></div>
                                          """);
@@ -2612,8 +2610,7 @@ public static class ReportGenerator
                             else if (isInlineSvg)
                             {
                                 var svgDiagramId = $"puml-svg-{plantUmlBrowserCounter++}";
-                                var sourceCompressed = InternalFlowHtmlGenerator.CompressToBase64(diagram.CodeBehind);
-                                diagramDataMap[svgDiagramId] = sourceCompressed;
+                                diagramDataMap[svgDiagramId] = diagram.CodeBehind;
                                 body.Append($"""
                                          <div class="plantuml-inline-svg" id="{svgDiagramId}" data-diagram-type="plantuml">{diagram.ImgSrc}</div>
                                          """);
@@ -2695,10 +2692,20 @@ public static class ReportGenerator
         body.Append("""<button class="back-to-top" id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Back to top" title="Back to the top of the report">↑</button>""");
 
         html += body;
+        // The page is written compressed (plans/HTML_COMPRESSION_PLAN.md 4.6): a diagram's place in #puml-data is a token,
+        // U+0001 and its number, and its source goes in the diagram sources' pieces in the tokens' order. The map holds each
+        // source raw, or in gzip where it came from a whole-test flow's activity diagram.
+        var diagramSources = new List<string>(diagramDataMap.Count);
         if (diagramDataMap.Count > 0)
         {
+            var tokens = new Dictionary<string, string>(diagramDataMap.Count, StringComparer.Ordinal);
+            foreach (var (id, source) in diagramDataMap)
+            {
+                tokens[id] = CompressedPage.Token(diagramSources.Count);
+                diagramSources.Add(CompressedPage.IsGzipBase64(source) ? InternalFlowHtmlGenerator.DecompressFromBase64(source) : source);
+            }
             html += "<script id=\"puml-data\" type=\"application/json\">";
-            html += System.Text.Json.JsonSerializer.Serialize(diagramDataMap);
+            html += System.Text.Json.JsonSerializer.Serialize(tokens);
             html += "</script>";
         }
         if (stepDeferral is { Map.Count: > 0 })
@@ -2717,7 +2724,10 @@ public static class ReportGenerator
                 """
         ;
 
-        return WriteFile(html, fileName);
+        return WriteFile(
+            CompressedPage.Build(CompressedPage.Raw(html), diagramSources,
+                new CompressedPage.LoaderParts(title, fileName, KronikolVersion, themeBootScript, faviconLink)),
+            fileName);
     }
 
     /// <summary>
@@ -2766,17 +2776,17 @@ public static class ReportGenerator
         if (!string.IsNullOrEmpty(activityHtml))
         {
             foreach (Match m in Regex.Matches(activityHtml, "data-plantuml-z=\"([^\"]+)\""))
-                pieces.Add(InternalFlowHtmlGenerator.DecompressFromBase64(m.Groups[1].Value));
+                pieces.Add(CompressedPage.ItemText(m.Groups[1].Value, attribute: true));
             foreach (Match m in Regex.Matches(activityHtml, "class=\"plantuml-browser[^\"]*\" id=\"([^\"]+)\""))
-                if (diagramDataMap.TryGetValue(m.Groups[1].Value, out var compressed))
-                    pieces.Add(InternalFlowHtmlGenerator.DecompressFromBase64(compressed));
+                if (diagramDataMap.TryGetValue(m.Groups[1].Value, out var source))
+                    pieces.Add(CompressedPage.ItemText(source, attribute: false));
         }
 
         if (!string.IsNullOrEmpty(flameHtml))
         {
             foreach (Match m in Regex.Matches(flameHtml, "data-flame-z=\"([^\"]+)\""))
             {
-                var json = InternalFlowHtmlGenerator.DecompressFromBase64(m.Groups[1].Value);
+                var json = CompressedPage.ItemText(m.Groups[1].Value, attribute: true);
                 var text = ExtractFlameSearchText(json);
                 if (text.Length > 0) pieces.Add(text);
             }
@@ -4070,15 +4080,13 @@ public static class ReportGenerator
             if (isPlantUmlBrowser)
             {
                 var diagramId = $"puml-{plantUmlBrowserCounter++}";
-                var compressed = InternalFlowHtmlGenerator.CompressToBase64(diagram.CodeBehind);
-                diagramDataMap[diagramId] = compressed;
+                diagramDataMap[diagramId] = diagram.CodeBehind;
                 body.Append($"<div class=\"plantuml-browser\" id=\"{diagramId}\" data-diagram-type=\"plantuml\"></div>");
             }
             else if (isInlineSvg)
             {
                 var svgDiagramId = $"puml-svg-{plantUmlBrowserCounter++}";
-                var sourceCompressed = InternalFlowHtmlGenerator.CompressToBase64(diagram.CodeBehind);
-                diagramDataMap[svgDiagramId] = sourceCompressed;
+                diagramDataMap[svgDiagramId] = diagram.CodeBehind;
                 body.Append($"<div class=\"plantuml-inline-svg\" id=\"{svgDiagramId}\" data-diagram-type=\"plantuml\">{diagram.ImgSrc}</div>");
             }
             else

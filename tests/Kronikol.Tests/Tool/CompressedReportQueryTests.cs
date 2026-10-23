@@ -73,8 +73,8 @@ public class CompressedReportQueryTests : IDisposable
     [Fact]
     public void The_fixture_holds_every_payload_the_verbs_read_compressed_in_one_copy_and_as_text_in_the_other()
     {
-        using var compressed = JsonDocument.Parse(File.ReadAllText(_compressed));
-        using var plain = JsonDocument.Parse(File.ReadAllText(_plain));
+        using var compressed = JsonDocument.Parse(ReportHtml.Read(_compressed));
+        using var plain = JsonDocument.Parse(ReportHtml.Read(_plain));
 
         Assert.Equal(2, compressed.RootElement.GetProperty("formatVersion").GetInt32());
         Assert.Equal(1, plain.RootElement.GetProperty("formatVersion").GetInt32());
@@ -135,7 +135,7 @@ public class CompressedReportQueryTests : IDisposable
     {
         var future = Path.Combine(_root, "future", "TestRunReport.json");
         Directory.CreateDirectory(Path.GetDirectoryName(future)!);
-        File.WriteAllText(future, File.ReadAllText(_compressed).Replace("\"formatVersion\": 2", "\"formatVersion\": 4", StringComparison.Ordinal));
+        File.WriteAllText(future, ReportHtml.Read(_compressed).Replace("\"formatVersion\": 2", "\"formatVersion\": 4", StringComparison.Ordinal));
 
         var error = new StringWriter();
         var exit = QueryCommand.Run(["summary", future], new StringWriter(), error);
@@ -159,7 +159,7 @@ public class CompressedReportQueryTests : IDisposable
         }));
 
         var output = Query(args).Replace(directory, "<dir>", StringComparison.Ordinal);
-        return (output, File.Exists(outFile) ? File.ReadAllText(outFile) : null);
+        return (output, File.Exists(outFile) ? ReportHtml.Read(outFile) : null);
     }
 
     private static string Query(IReadOnlyList<string> args)
@@ -219,7 +219,7 @@ public class CompressedReportQueryTests : IDisposable
         var plain = Write("short-plain", compress: false, requestBody: ShortRequestBody, statement: ShortStatement);
         var older = WrapFrom(plain, 512, Path.Combine(_root, "short-older"));
 
-        using (var document = JsonDocument.Parse(File.ReadAllText(older)))
+        using (var document = JsonDocument.Parse(ReportHtml.Read(older)))
         {
             var scenarios = document.RootElement.GetProperty("features")[0].GetProperty("scenarios");
             Assert.Equal(JsonValueKind.Object, scenarios[0].GetProperty("httpInteractions")[0].GetProperty("content").ValueKind);
@@ -244,7 +244,7 @@ public class CompressedReportQueryTests : IDisposable
     /// <summary>A copy of a plain report with every body and diagram of <paramref name="from"/> characters or more wrapped.</summary>
     private static string WrapFrom(string plainReport, int from, string directory)
     {
-        var report = JsonNode.Parse(File.ReadAllText(plainReport))!;
+        var report = JsonNode.Parse(ReportHtml.Read(plainReport))!;
         foreach (var scenario in report["features"]!.AsArray().SelectMany(f => f!["scenarios"]!.AsArray()))
         {
             foreach (var interaction in scenario!["httpInteractions"]?.AsArray() ?? [])

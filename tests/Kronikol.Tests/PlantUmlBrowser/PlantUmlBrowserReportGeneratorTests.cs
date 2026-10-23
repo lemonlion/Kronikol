@@ -37,7 +37,7 @@ public class PlantUmlBrowserReportGeneratorTests
             null, "PlantUmlBrowserScripts.html", "Test", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
 
-        var content = File.ReadAllText(html);
+        var content = ReportHtml.Read(html);
         Assert.Contains("cdn.jsdelivr.net/gh/lemonlion/plantuml-js-plantuml_limit_size_98304@v1.2026.10beta1-f44b054-teavm0.17.0-dev-2/plantuml.js", content);
         Assert.Contains("cdn.jsdelivr.net/gh/lemonlion/plantuml-js-plantuml_limit_size_98304@v1.2026.10beta1-f44b054-teavm0.17.0-dev-2/plantuml-wasm-bundle.js", content);
         Assert.Contains("cdn.jsdelivr.net/gh/lemonlion/plantuml-js-plantuml_limit_size_98304@v1.2026.10beta1-f44b054-teavm0.17.0-dev-2/viz-global.js", content);
@@ -52,7 +52,7 @@ public class PlantUmlBrowserReportGeneratorTests
             null, "PlantUmlBrowserObserver.html", "Test", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
 
-        var content = File.ReadAllText(html);
+        var content = ReportHtml.Read(html);
         Assert.Contains("IntersectionObserver", content);
     }
 
@@ -65,7 +65,7 @@ public class PlantUmlBrowserReportGeneratorTests
             null, "PlantUmlBrowserData.html", "Test", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
 
-        var content = File.ReadAllText(html);
+        var content = ReportHtml.Read(html);
         Assert.Contains("id=\"puml-data\"", content);
         Assert.Contains("plantuml-browser", content);
         // Diagram source is compressed in JSON script block, not in data-plantuml attribute
@@ -81,7 +81,7 @@ public class PlantUmlBrowserReportGeneratorTests
             null, "PlantUmlBrowserNoImg.html", "Test", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
 
-        var content = File.ReadAllText(html);
+        var content = ReportHtml.Read(html);
         Assert.DoesNotContain("<img src=\"http", content);
         Assert.DoesNotContain("<img loading=", content);
     }
@@ -95,7 +95,7 @@ public class PlantUmlBrowserReportGeneratorTests
             null, "PlantUmlBrowserRawLabel.html", "Test", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
 
-        var content = File.ReadAllText(html);
+        var content = ReportHtml.Read(html);
         Assert.Contains("id=\"puml-data\"", content);
         Assert.Contains("data-diagram-type=\"plantuml\"", content);
     }
@@ -128,7 +128,7 @@ public class PlantUmlBrowserReportGeneratorTests
             null, "PlantUmlBrowserIds.html", "Test", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
 
-        var content = File.ReadAllText(html);
+        var content = ReportHtml.Read(html);
         Assert.Contains("id=\"puml-0\"", content);
         Assert.Contains("id=\"puml-1\"", content);
     }
@@ -148,7 +148,7 @@ public class PlantUmlBrowserReportGeneratorTests
             null, "PlantUmlBrowserEncode.html", "Test", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
 
-        var content = File.ReadAllText(html);
+        var content = ReportHtml.Read(html);
         Assert.Contains("id=\"puml-data\"", content);
         // Raw XSS payload should not appear in data-plantuml (it's compressed in JSON block)
         Assert.DoesNotContain("data-plantuml=\"", content);
@@ -165,7 +165,7 @@ public class PlantUmlBrowserReportGeneratorTests
             null, "PlantUmlBrowserPlaceholder.html", "Test", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
 
-        var content = File.ReadAllText(html);
+        var content = ReportHtml.Read(html);
         Assert.Contains("class=\"plantuml-browser\"", content);
         var styles = DiagramContextMenu.GetInlineSvgStyles();
         Assert.Contains("Waiting for page", styles);
@@ -181,7 +181,7 @@ public class PlantUmlBrowserReportGeneratorTests
             null, "PlantUmlBrowserDCL.html", "Test", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
 
-        var content = File.ReadAllText(html);
+        var content = ReportHtml.Read(html);
         Assert.Contains("DOMContentLoaded", content);
     }
 
@@ -194,7 +194,7 @@ public class PlantUmlBrowserReportGeneratorTests
             null, "PlantUmlBrowserLoad.html", "Test", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
 
-        var content = File.ReadAllText(html);
+        var content = ReportHtml.Read(html);
         // The engine runs in Web Workers; window.plantumlLoad stays a no-op for anything outside the shim
         // that still calls it, and window.__kronikolRender exposes the render telemetry (mode, workers,
         // renders, cache hits).
@@ -213,7 +213,7 @@ public class PlantUmlBrowserReportGeneratorTests
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs,
             browserRenderWorkers: 0, browserRenderCacheMegabytes: 8, browserFragmentMaxHeight: 5000);
 
-        var content = File.ReadAllText(html);
+        var content = ReportHtml.Read(html);
         Assert.Contains("var WORKERS_REQUESTED = 0;", content);
         Assert.Contains("var CACHE_MEGABYTES = 8;", content);
         Assert.Contains("var _maxDiagramHeight = 5000;", content);
@@ -228,7 +228,7 @@ public class PlantUmlBrowserReportGeneratorTests
             null, "PlantUmlBrowserRender.html", "Test", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
 
-        var content = File.ReadAllText(html);
+        var content = ReportHtml.Read(html);
         Assert.Contains("window.plantuml.render", content);
     }
 
@@ -241,7 +241,7 @@ public class PlantUmlBrowserReportGeneratorTests
             null, "PlantUmlBrowserMargin.html", "Test", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
 
-        var content = File.ReadAllText(html);
+        var content = ReportHtml.Read(html);
         Assert.Contains("rootMargin: '200px'", content);
     }
 
@@ -254,7 +254,7 @@ public class PlantUmlBrowserReportGeneratorTests
             null, "PlantUmlBrowserGuard.html", "Test", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
 
-        var content = File.ReadAllText(html);
+        var content = ReportHtml.Read(html);
         Assert.Contains("dataset.queued", content);
         Assert.Contains("dataset.rendered", content);
         Assert.Contains("observer.unobserve(el)", content);
@@ -270,7 +270,7 @@ public class PlantUmlBrowserReportGeneratorTests
             lazyLoadImages: true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
 
-        var content = File.ReadAllText(html);
+        var content = ReportHtml.Read(html);
         Assert.DoesNotContain("loading=\"lazy\"", content);
     }
 
@@ -302,7 +302,7 @@ public class PlantUmlBrowserReportGeneratorTests
             null, "PlantUmlBrowserMulti.html", "Test", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
 
-        var content = File.ReadAllText(html);
+        var content = ReportHtml.Read(html);
         Assert.Contains("id=\"puml-0\"", content);
         Assert.Contains("id=\"puml-1\"", content);
         Assert.Contains("id=\"puml-2\"", content);
@@ -319,7 +319,7 @@ public class PlantUmlBrowserReportGeneratorTests
 
         // Against the markup only: the report always ships the scripts and stylesheets that would
         // drive a diagrams section, and one of those stylesheets names the heading in a comment.
-        var markup = Reports.ReportMarkup.Only(File.ReadAllText(html));
+        var markup = Reports.ReportMarkup.Only(ReportHtml.Read(html));
         Assert.DoesNotContain("data-plantuml-z=", markup);
         Assert.DoesNotContain("data-plantuml=", markup);
         Assert.DoesNotContain("id=\"puml-", markup);
@@ -335,7 +335,7 @@ public class PlantUmlBrowserReportGeneratorTests
             null, "PlantUmlBrowserNewlines.html", "Test", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
 
-        var content = File.ReadAllText(html);
+        var content = ReportHtml.Read(html);
         // Diagram source is now in a JSON script block. Take the first occurrence whose body actually
         // parses as the payload rather than the first textual match: a report also carries scripts that
         // *mention* this tag (the filtered-HTML export writes one), and matching one of those turns a

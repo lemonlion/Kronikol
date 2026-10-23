@@ -150,7 +150,7 @@ public class ZoomNoteInteractionTests : PlaywrightTestBase
     [Fact]
     public async Task Zoom_state_preserved_after_note_collapse_via_radio()
     {
-        await Page.GotoAsync(GenerateReport("ZoomPreservedAfterCollapse.html"));
+        await Page.GotoReportAsync(GenerateReport("ZoomPreservedAfterCollapse.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -170,7 +170,7 @@ public class ZoomNoteInteractionTests : PlaywrightTestBase
     [Fact]
     public async Task Zoom_state_preserved_after_truncation_change()
     {
-        await Page.GotoAsync(GenerateReport("ZoomPreservedAfterTruncation.html"));
+        await Page.GotoReportAsync(GenerateReport("ZoomPreservedAfterTruncation.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -189,7 +189,7 @@ public class ZoomNoteInteractionTests : PlaywrightTestBase
     [Fact]
     public async Task Zoom_state_preserved_after_headers_toggle()
     {
-        await Page.GotoAsync(GenerateReport("ZoomPreservedAfterHeaders.html"));
+        await Page.GotoReportAsync(GenerateReport("ZoomPreservedAfterHeaders.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -212,7 +212,7 @@ public class ZoomNoteInteractionTests : PlaywrightTestBase
     [Fact]
     public async Task Zoom_toggle_out_works_correctly_after_note_collapse()
     {
-        await Page.GotoAsync(GenerateReport("ZoomToggleAfterCollapse.html"));
+        await Page.GotoReportAsync(GenerateReport("ZoomToggleAfterCollapse.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -231,7 +231,7 @@ public class ZoomNoteInteractionTests : PlaywrightTestBase
     [Fact]
     public async Task Zoom_toggle_in_again_after_collapse_and_unzoom()
     {
-        await Page.GotoAsync(GenerateReport("ZoomToggleInAgain.html"));
+        await Page.GotoReportAsync(GenerateReport("ZoomToggleInAgain.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -261,7 +261,7 @@ public class ZoomNoteInteractionTests : PlaywrightTestBase
     [Fact]
     public async Task Note_collapse_button_works_while_zoomed()
     {
-        await Page.GotoAsync(GenerateReport("NoteCollapseWhileZoomed.html"));
+        await Page.GotoReportAsync(GenerateReport("NoteCollapseWhileZoomed.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -285,7 +285,7 @@ public class ZoomNoteInteractionTests : PlaywrightTestBase
     [Fact]
     public async Task Multiple_note_state_changes_while_zoomed_preserves_zoom()
     {
-        await Page.GotoAsync(GenerateReport("MultiNoteChangesZoomed.html"));
+        await Page.GotoReportAsync(GenerateReport("MultiNoteChangesZoomed.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -311,7 +311,7 @@ public class ZoomNoteInteractionTests : PlaywrightTestBase
     [Fact]
     public async Task Unzoomed_state_not_affected_by_note_collapse()
     {
-        await Page.GotoAsync(GenerateReport("UnzoomedNotAffected.html"));
+        await Page.GotoReportAsync(GenerateReport("UnzoomedNotAffected.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -328,7 +328,7 @@ public class ZoomNoteInteractionTests : PlaywrightTestBase
     [Fact]
     public async Task Zoom_in_works_after_unzoomed_collapse()
     {
-        await Page.GotoAsync(GenerateReport("ZoomInAfterCollapse.html"));
+        await Page.GotoReportAsync(GenerateReport("ZoomInAfterCollapse.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -356,7 +356,7 @@ public class ZoomNoteInteractionTests : PlaywrightTestBase
     [Fact]
     public async Task Rapid_zoom_toggle_produces_consistent_state()
     {
-        await Page.GotoAsync(GenerateReport("RapidZoomToggle.html"));
+        await Page.GotoReportAsync(GenerateReport("RapidZoomToggle.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -383,7 +383,7 @@ public class ZoomNoteInteractionTests : PlaywrightTestBase
     [Fact]
     public async Task Zoom_slider_value_correct_after_collapse_re_render()
     {
-        await Page.GotoAsync(GenerateReport("ZoomSliderAfterCollapse.html"));
+        await Page.GotoReportAsync(GenerateReport("ZoomSliderAfterCollapse.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -403,7 +403,7 @@ public class ZoomNoteInteractionTests : PlaywrightTestBase
     [Fact]
     public async Task Zoom_slider_at_min_when_unzoomed_after_collapse()
     {
-        await Page.GotoAsync(GenerateReport("ZoomSliderUnzoomedCollapse.html"));
+        await Page.GotoReportAsync(GenerateReport("ZoomSliderUnzoomedCollapse.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -426,7 +426,7 @@ public class ZoomNoteInteractionTests : PlaywrightTestBase
     [Fact]
     public async Task Report_level_truncation_change_preserves_zoom()
     {
-        await Page.GotoAsync(GenerateReport("ReportTruncationPreservesZoom.html"));
+        await Page.GotoReportAsync(GenerateReport("ReportTruncationPreservesZoom.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -446,7 +446,7 @@ public class ZoomNoteInteractionTests : PlaywrightTestBase
     [Fact]
     public async Task Report_level_headers_toggle_preserves_zoom()
     {
-        await Page.GotoAsync(GenerateReport("ReportHeadersPreservesZoom.html"));
+        await Page.GotoReportAsync(GenerateReport("ReportHeadersPreservesZoom.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();

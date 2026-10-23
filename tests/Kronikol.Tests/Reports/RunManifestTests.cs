@@ -93,7 +93,7 @@ public class RunManifestTests : IDisposable
 
         Assert.Equal(Path.Combine(_dir, "Run.json"), path);
         Assert.Equal("Run.json", RunManifest.FileName);
-        using var json = JsonDocument.Parse(File.ReadAllText(path));
+        using var json = JsonDocument.Parse(ReportHtml.Read(path));
         Assert.Equal(
             ["runManifestVersion", "run", "at", "suite", "scenarios", "failed", "partial", "kronikolVersion", "files", "attachments"],
             json.RootElement.EnumerateObject().Select(p => p.Name).ToArray());

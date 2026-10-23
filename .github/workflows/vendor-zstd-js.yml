@@ -1,0 +1,109 @@
+name: Vendor zstd decoders
+
+# The compressed report's fallback zstd decoders in src/Kronikol/Reports/ZstdDecoder (plans/HTML_COMPRESSION_PLAN.md
+# 4.8): libzstd's decoder in WebAssembly, from zstddec's npm release, and fzstd, from its own. The report's glue
+# (report-zstd-decoder.js) is Kronikol's and is not imported.
+# - On a pull request or a push that touches the copy or its import script: the copy must be exactly what the import
+#   makes of the releases its VERSION names, so a hand edit fails here.
+# - Once a month, and by hand: compare VERSION with each package's latest release; on a newer one, import it, run the
+#   decoder facts and open a pull request named for the releases (it ships as a patch). Only a published release is
+#   ever imported, and its tarball must match the integrity npm publishes for it. Opening the pull request needs
+#   "Allow GitHub Actions to create and approve pull requests" in the repository's Actions settings.
+# - The same run looks for security advisories on both packages and on facebook/zstd, whose decoder the Wasm module is,
+#   published after the copy was imported, and opens an issue for each one it has not opened before.
+
+on:
+  schedule:
+    - cron: "41 6 3 * *"
+  workflow_dispatch:
+  pull_request:
+    paths: ["src/Kronikol/Reports/ZstdDecoder/**", "tools/vendor-zstd-js/**"]
+  push:
+    branches: [main]
+    paths: ["src/Kronikol/Reports/ZstdDecoder/**", "tools/vendor-zstd-js/**"]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: The copy is its releases, changed by the import alone
+        run: python3 tools/vendor-zstd-js/vendor_zstd_js.py --check
+
+  sync:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Compare the copy with the latest releases
+        id: release
+        run: |
+          zstddec=$(npm view zstddec version)
+          fzstd=$(npm view fzstd version)
+          current_zstddec=$(sed -n 1p src/Kronikol/Reports/ZstdDecoder/VERSION | awk '{print $2}')
+          current_fzstd=$(sed -n 2p src/Kronikol/Reports/ZstdDecoder/VERSION | awk '{print $2}')
+          echo "zstddec=$zstddec" >> "$GITHUB_OUTPUT"
+          echo "fzstd=$fzstd" >> "$GITHUB_OUTPUT"
+          if [ "$zstddec" = "$current_zstddec" ] && [ "$fzstd" = "$current_fzstd" ]; then
+            echo "same=true" >> "$GITHUB_OUTPUT"
+            echo "The copy is zstddec $current_zstddec and fzstd $current_fzstd, the latest releases."
+          else
+            echo "same=false" >> "$GITHUB_OUTPUT"
+            echo "current=zstddec $current_zstddec, fzstd $current_fzstd" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Import the newer releases and run the decoder facts
+        if: steps.release.outputs.same == 'false'
+        run: |
+          python3 tools/vendor-zstd-js/vendor_zstd_js.py --zstddec "${{ steps.release.outputs.zstddec }}" --fzstd "${{ steps.release.outputs.fzstd }}"
+          dotnet test tests/Kronikol.Tests --filter "FullyQualifiedName~Kronikol.Tests.Reports.CompressedPage"
+
+      - name: Open a pull request for them
+        if: steps.release.outputs.same == 'false'
+        run: |
+          name="zstddec-${{ steps.release.outputs.zstddec }}-fzstd-${{ steps.release.outputs.fzstd }}"
+          branch="vendor-zstd-js/$name"
+          if git ls-remote --exit-code --heads origin "$branch" > /dev/null; then
+            echo "A pull request branch for $name exists already."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$branch"
+          git add src/Kronikol/Reports/ZstdDecoder
+          git commit -m "zstd decoders: zstddec ${{ steps.release.outputs.zstddec }} and fzstd ${{ steps.release.outputs.fzstd }}, imported from their npm releases by tools/vendor-zstd-js (no other change)"
+          git push origin "$branch"
+          gh pr create --head "$branch" --title "zstd decoders: zstddec ${{ steps.release.outputs.zstddec }}, fzstd ${{ steps.release.outputs.fzstd }}" \
+            --body "The compressed report's fallback decoders move from ${{ steps.release.outputs.current }} to zstddec ${{ steps.release.outputs.zstddec }} and fzstd ${{ steps.release.outputs.fzstd }}, imported by tools/vendor-zstd-js from the npm tarballs, each checked against the integrity npm publishes. The decoder facts passed in the run that opened this. Read the releases before merging; it ships in the next release as a patch, and the changelog entry names them."
+
+      - name: Look for advisories newer than the copy
+        run: |
+          imported=$(git log -1 --format=%cI -- src/Kronikol/Reports/ZstdDecoder/VERSION)
+          {
+            for package in zstddec fzstd; do
+              gh api -X GET /advisories -f ecosystem=npm -f affects=$package --paginate \
+                --jq '.[] | [.ghsa_id, .published_at, .summary, .html_url] | @tsv'
+            done
+            gh api /repos/facebook/zstd/security-advisories --paginate \
+              --jq '.[] | select(.state == "published") | [.ghsa_id, .published_at, .summary, .html_url] | @tsv' || true
+          } | while IFS=$'\t' read -r id published summary url; do
+            [ -z "$id" ] && continue
+            if [[ "$published" > "$imported" ]] && [ -z "$(gh issue list --state all --search "$id in:title" --json number --jq '.[].number')" ]; then
+              gh issue create --title "zstd decoder advisory $id: $summary" \
+                --body "$url was published on $published, after the decoders in src/Kronikol/Reports/ZstdDecoder were imported ($imported). Check whether their releases have the fix; a fix ships as a patch."
+            fi
+          done

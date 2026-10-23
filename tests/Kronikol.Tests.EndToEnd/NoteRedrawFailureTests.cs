@@ -18,7 +18,7 @@ public class NoteRedrawFailureTests : PlaywrightTestBase
 
     private async Task OpenTwoDiagramsAsync(string fileName)
     {
-        await Page.GotoAsync(LongPayloadReports.YamlLongerThanJson(TempDir, OutputDir, fileName, scenarios: 2));
+        await Page.GotoReportAsync(LongPayloadReports.YamlLongerThanJson(TempDir, OutputDir, fileName, scenarios: 2));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg(60000);

@@ -13,7 +13,7 @@ public class StepTableBarTests : DiagramNotePlaywrightBase
 
     private async Task OpenStepTableReport(string fileName)
     {
-        await Page.GotoAsync(GenerateReportWithStepTableBars(fileName));
+        await Page.GotoReportAsync(GenerateReportWithStepTableBars(fileName));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();

@@ -56,7 +56,7 @@ public class HistoryMaintenanceTests : IDisposable
         var added = Run("quarantine", "sid:aaaabbbbccccdddd", "--reason", "ticket 123", "--by", "me", "--until", "2026-12-31", "--history", Ledger);
         Assert.True(added.Exit == 0, added.Err);
         Assert.Contains("quarantined aaaabbbbccccdddd", added.Out);
-        var file = JsonDocument.Parse(File.ReadAllText(Path.Combine(_dir, ".kronikol", "quarantine.json"))).RootElement;
+        var file = JsonDocument.Parse(ReportHtml.Read(Path.Combine(_dir, ".kronikol", "quarantine.json"))).RootElement;
         var entry = Assert.Single(file.GetProperty("entries").EnumerateArray());
         Assert.Equal("ticket 123", entry.GetProperty("reason").GetString());
         Assert.Equal("2026-12-31", entry.GetProperty("until").GetString());

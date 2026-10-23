@@ -20,7 +20,7 @@ public class NoteYamlToggleTests : DiagramNotePlaywrightBase
 
     private async Task NavigateAndSetup(string fileName)
     {
-        await Page.GotoAsync(ReportTestHelper.GenerateReportWithJsonYamlNotes(TempDir, OutputDir, fileName));
+        await Page.GotoReportAsync(ReportTestHelper.GenerateReportWithJsonYamlNotes(TempDir, OutputDir, fileName));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -112,7 +112,7 @@ public class NoteYamlToggleTests : DiagramNotePlaywrightBase
         // so before 3.0.83 the whole note failed the eligibility gate and had no
         // toggle at all — and it must never be dropped to buy one, or the YAML view
         // shows two rows as if they were the whole result.
-        await Page.GotoAsync(ReportTestHelper.GenerateReportWithCappedRowsNote(
+        await Page.GotoReportAsync(ReportTestHelper.GenerateReportWithCappedRowsNote(
             TempDir, OutputDir, "YamlToggle_CappedRows.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
@@ -140,7 +140,7 @@ public class NoteYamlToggleTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Toggling_a_row_capped_note_back_to_json_restores_the_original_payload()
     {
-        await Page.GotoAsync(ReportTestHelper.GenerateReportWithCappedRowsNote(
+        await Page.GotoReportAsync(ReportTestHelper.GenerateReportWithCappedRowsNote(
             TempDir, OutputDir, "YamlToggle_CappedRowsRoundTrip.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
@@ -161,7 +161,7 @@ public class NoteYamlToggleTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Click_renders_crlf_note_as_multiline_yaml()
     {
-        await Page.GotoAsync(ReportTestHelper.GenerateReportWithCrlfJsonNote(
+        await Page.GotoReportAsync(ReportTestHelper.GenerateReportWithCrlfJsonNote(
             TempDir, OutputDir, "YamlToggle_CrlfToYaml.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
@@ -186,7 +186,7 @@ public class NoteYamlToggleTests : DiagramNotePlaywrightBase
         // a trailing-space SELECT line and an all-space closing-indentation
         // tail — the YAML view must strip both and unfold the block scalar
         // instead of falling back to the one-line quoted form.
-        await Page.GotoAsync(ReportTestHelper.GenerateReportWithBigQueryTrailingWhitespaceNote(
+        await Page.GotoReportAsync(ReportTestHelper.GenerateReportWithBigQueryTrailingWhitespaceNote(
             TempDir, OutputDir, "YamlToggle_BigQueryTrailingWs.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
@@ -313,7 +313,7 @@ public class NoteYamlToggleTests : DiagramNotePlaywrightBase
     {
         // The wide-database fixture has an eligible JSON note plus assertion
         // notes, step delimiters and a database participant in one diagram.
-        await Page.GotoAsync(GenerateWideDatabaseParticipantReport("YamlToggle_SurvivesAssertionsFilter.html"));
+        await Page.GotoReportAsync(GenerateWideDatabaseParticipantReport("YamlToggle_SurvivesAssertionsFilter.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -337,7 +337,7 @@ public class NoteYamlToggleTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Yaml_state_survives_databases_filter_toggle()
     {
-        await Page.GotoAsync(GenerateWideDatabaseParticipantReport("YamlToggle_SurvivesDatabasesFilter.html"));
+        await Page.GotoReportAsync(GenerateWideDatabaseParticipantReport("YamlToggle_SurvivesDatabasesFilter.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -365,7 +365,7 @@ public class NoteYamlToggleTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Yaml_view_that_unfolds_past_the_truncation_limit_becomes_a_long_note()
     {
-        await Page.GotoAsync(ReportTestHelper.GenerateReportWithLongSqlJsonNote(
+        await Page.GotoReportAsync(ReportTestHelper.GenerateReportWithLongSqlJsonNote(
             TempDir, OutputDir, "YamlToggle_LongSql.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
@@ -397,7 +397,7 @@ public class NoteYamlToggleTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task Toggle_works_on_a_fragment_split_diagram()
     {
-        await Page.GotoAsync(GenerateFragmentedDiagramReport("YamlToggle_Fragments.html"));
+        await Page.GotoReportAsync(GenerateFragmentedDiagramReport("YamlToggle_Fragments.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();

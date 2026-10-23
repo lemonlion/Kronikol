@@ -73,8 +73,8 @@ public class KrklWriterTests : IDisposable
         var json = Run("same-json", compress: false, testId: testId, compressPayloads: false, isolate: false);
         var krkl = Run("same-krkl", compress: true, testId: testId, compressPayloads: false, isolate: false);
 
-        var schema = JsonDocument.Parse(File.ReadAllText(Path.Combine(json, "TestRunReport.schema.json"))).RootElement;
-        var expected = SchemaWalk.Prune(JsonNode.Parse(File.ReadAllText(Path.Combine(json, "TestRunReport.json")))!, schema);
+        var schema = JsonDocument.Parse(ReportHtml.Read(Path.Combine(json, "TestRunReport.schema.json"))).RootElement;
+        var expected = SchemaWalk.Prune(JsonNode.Parse(ReportHtml.Read(Path.Combine(json, "TestRunReport.json")))!, schema);
         expected["formatVersion"] = 3;
         var text = Encoding.UTF8.GetString(Decode(File.ReadAllBytes(Path.Combine(krkl, "TestRunReport.krkl"))));
 
@@ -90,7 +90,7 @@ public class KrklWriterTests : IDisposable
     public void Every_key_the_schema_requires_is_written_where_it_stands_and_no_other_holds_nothing(bool mergeable)
     {
         var directory = Run(mergeable ? "required-mergeable" : "required", compress: true, mergeable: mergeable);
-        var schema = JsonDocument.Parse(File.ReadAllText(Path.Combine(directory, "TestRunReport.schema.json"))).RootElement;
+        var schema = JsonDocument.Parse(ReportHtml.Read(Path.Combine(directory, "TestRunReport.schema.json"))).RootElement;
         var root = JsonNode.Parse(Decode(File.ReadAllBytes(Path.Combine(directory, "TestRunReport.krkl"))))!;
 
         var (missing, empty) = SchemaWalk.Check(root, schema);
@@ -161,7 +161,7 @@ public class KrklWriterTests : IDisposable
             // Windows renames over no file another handle holds: this run's copy goes beside it, as a JSON file held the same
             // way does.
             Assert.Equal('{', (char)Decode(File.ReadAllBytes(fallback))[0]);
-            Assert.Equal("an earlier run", File.ReadAllText(target));
+            Assert.Equal("an earlier run", ReportHtml.Read(target));
             var manifest = RunManifest.TryRead(Path.Combine(directory, RunManifest.FileName));
             Assert.True(manifest is null || manifest.Files.Contains("TestRunReport2.krkl") && !manifest.Files.Contains("TestRunReport.krkl"),
                 "the manifest names the earlier run's file");

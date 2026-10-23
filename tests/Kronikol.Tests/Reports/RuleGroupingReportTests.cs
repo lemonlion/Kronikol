@@ -11,7 +11,7 @@ public class RuleGroupingReportTests
             DateTime.UtcNow, DateTime.UtcNow,
             null, "RuleGrouping.html", "Test", includeTestRunData: true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
-        return File.ReadAllText(path);
+        return ReportHtml.Read(path);
     }
 
     [Fact]

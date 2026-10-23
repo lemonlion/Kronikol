@@ -15,7 +15,7 @@ public class SplitDiagramZoomTests : PlaywrightTestBase
 
     private async Task OpenAsync(string fileName, bool headerNotes = false)
     {
-        await Page.GotoAsync(ReportTestHelper.GenerateReportWithWideDiagramInParts(TempDir, OutputDir, fileName, headerNotes));
+        await Page.GotoReportAsync(ReportTestHelper.GenerateReportWithWideDiagramInParts(TempDir, OutputDir, fileName, headerNotes));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await Page.WaitForFunctionAsync("""

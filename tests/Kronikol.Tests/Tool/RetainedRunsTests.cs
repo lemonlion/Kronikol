@@ -323,7 +323,7 @@ public class RetainedRunsTests : IDisposable
         // A retained run that DIFFERS: on main it is merged in as a shard, and a green report gains its failure (F6).
         var retained = Path.Combine(shard, "runs", "gh_8_1");
         Directory.CreateDirectory(retained);
-        File.WriteAllText(Path.Combine(retained, "TestRunReport.json"), File.ReadAllText(fixture).Replace("\"Passed\"", "\"Failed\"", StringComparison.Ordinal));
+        File.WriteAllText(Path.Combine(retained, "TestRunReport.json"), ReportHtml.Read(fixture).Replace("\"Passed\"", "\"Failed\"", StringComparison.Ordinal));
 
         var error = new StringWriter();
         var swept = MergeCommand.ResolveInputFiles([shard], error);

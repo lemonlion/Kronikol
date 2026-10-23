@@ -58,7 +58,7 @@ public class StepAlignmentTests : PlaywrightTestBase
 
     private async Task OpenAsync(IPage page, string fileName)
     {
-        await page.GotoAsync(GenerateAlignmentReport(fileName));
+        await page.GotoReportAsync(GenerateAlignmentReport(fileName));
         await page.Locator("details.feature").First.WaitForAsync();
         // every disclosure open, so each heading and step is laid out
         await page.EvaluateAsync("() => document.querySelectorAll('details').forEach(d => d.open = true)");

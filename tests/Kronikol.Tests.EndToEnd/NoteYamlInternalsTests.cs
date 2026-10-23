@@ -14,7 +14,7 @@ public class NoteYamlInternalsTests : DiagramNotePlaywrightBase
 
     private async Task NavigateToReport([System.Runtime.CompilerServices.CallerMemberName] string? testName = null)
     {
-        await Page.GotoAsync(GenerateReport($"YamlInternals_{testName}.html"));
+        await Page.GotoReportAsync(GenerateReport($"YamlInternals_{testName}.html"));
         await Page.WaitForFunctionAsync("() => !!window._noteFormatInternals",
             null, new() { Timeout = 10000, PollingInterval = 200 });
     }

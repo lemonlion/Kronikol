@@ -26,7 +26,7 @@ public class WebAssemblyOffRenderingTests : PlaywrightTestBase
     {
         var console = new List<string>();
         page.Console += (_, m) => { lock (console) console.Add(m.Type + ": " + m.Text); };
-        await page.GotoAsync(reportUri);
+        await page.GotoReportAsync(reportUri);
         await page.Locator("details.feature").First.WaitForAsync();
         // The component diagram's section is hidden until toggled; this renders every diagram in the report.
         await page.EvaluateAsync("() => window._renderDiagramsInContainer(document.body)");

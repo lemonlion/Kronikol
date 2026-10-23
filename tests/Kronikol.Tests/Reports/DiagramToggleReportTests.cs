@@ -85,7 +85,7 @@ public class DiagramToggleReportTests : IDisposable
             internalFlowTracking: wholeTestSegments is not null,
             wholeTestSegments: wholeTestSegments,
             wholeTestVisualization: visualization);
-        return File.ReadAllText(path);
+        return ReportHtml.Read(path);
     }
 
     [Fact]
@@ -309,7 +309,7 @@ public class DiagramToggleReportTests : IDisposable
             internalFlowTracking: true,
             wholeTestSegments: segments,
             wholeTestVisualization: WholeTestFlowVisualization.Both);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
 
         Assert.Contains("<span class=\"span-count-warning\">", content);
         Assert.Contains("150 spans", content);
@@ -335,7 +335,7 @@ public class DiagramToggleReportTests : IDisposable
             internalFlowTracking: true,
             wholeTestSegments: segments,
             wholeTestVisualization: WholeTestFlowVisualization.ActivityDiagram);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
 
         Assert.Contains("<summary class=\"h4\" title=\"The work inside the services, span by span, as an activity diagram\">Activity Diagrams<span class=\"span-count-warning\">(Warning: 150 spans.", content);
     }
@@ -362,7 +362,7 @@ public class DiagramToggleReportTests : IDisposable
             internalFlowTracking: true,
             wholeTestSegments: segments,
             wholeTestVisualization: WholeTestFlowVisualization.Both);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
 
         Assert.Contains("data-dtype=\"flame\" title=\"Where the time went inside the services, span by span, as nested bars\">Flame Chart</button><span class=\"span-count-warning\">(Warning: 150 spans.", content);
     }
@@ -391,7 +391,7 @@ public class DiagramToggleReportTests : IDisposable
             internalFlowTracking: true,
             wholeTestSegments: segments,
             wholeTestVisualization: WholeTestFlowVisualization.Both);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
 
         Assert.DoesNotContain("<span class=\"span-count-warning\"", content);
     }

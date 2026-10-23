@@ -89,7 +89,7 @@ public class HistoryOutputsTests : IDisposable
 
         var fragmentPath = Path.Combine(Reports("r1"), HistoryFormat.FragmentFileName);
         Assert.True(File.Exists(fragmentPath), "History.run.json was not written");
-        var fragment = HistoryFragment.Parse(File.ReadAllText(fragmentPath));
+        var fragment = HistoryFragment.Parse(ReportHtml.Read(fragmentPath));
         Assert.Equal("test:1:1", fragment.Run.Id);
         Assert.Equal("HistorySuite", fragment.Run.Suite);
         Assert.Equal("PP", fragment.Run.Results);
@@ -108,7 +108,7 @@ public class HistoryOutputsTests : IDisposable
         Run("r1", "test:1:1", Features(ExecutionResult.Passed));
         Run("r2", "test:2:1", Features(ExecutionResult.Failed));
 
-        var digest = File.ReadAllText(Path.Combine(Reports("r2"), "Failures.md"));
+        var digest = ReportHtml.Read(Path.Combine(Reports("r2"), "Failures.md"));
         Assert.Contains("**History:** 1 broke", digest);
         Assert.Contains("History: **broke**", digest);
         Assert.Contains("passed in test:1:1", digest);
@@ -121,7 +121,7 @@ public class HistoryOutputsTests : IDisposable
         Assert.Equal("PF", history.GetProperty("series").GetString());
         Assert.Contains("broke", history.GetProperty("verdicts").EnumerateArray().Select(v => v.GetString()));
 
-        var ctrf = JsonDocument.Parse(File.ReadAllText(Path.Combine(Reports("r2"), CtrfReportGenerator.FileName))).RootElement;
+        var ctrf = JsonDocument.Parse(ReportHtml.Read(Path.Combine(Reports("r2"), CtrfReportGenerator.FileName))).RootElement;
         var test = ctrf.GetProperty("results").GetProperty("tests").EnumerateArray().Single(t => t.GetProperty("status").GetString() == "failed");
         Assert.Equal("broke", test.GetProperty("extra").GetProperty("kronikolHistory").GetProperty("primary").GetString());
 
@@ -136,7 +136,7 @@ public class HistoryOutputsTests : IDisposable
             Run("r" + i, $"test:{i}:1", Features(results[i]));
         Run("last", "test:99:1", Features(ExecutionResult.Passed));
 
-        var ctrf = JsonDocument.Parse(File.ReadAllText(Path.Combine(Reports("last"), CtrfReportGenerator.FileName))).RootElement;
+        var ctrf = JsonDocument.Parse(ReportHtml.Read(Path.Combine(Reports("last"), CtrfReportGenerator.FileName))).RootElement;
         var pay = ctrf.GetProperty("results").GetProperty("tests").EnumerateArray().Single(t => t.GetProperty("name").GetString() == "Pay with an expired card");
 
         Assert.True(pay.GetProperty("flaky").GetBoolean());
@@ -152,7 +152,7 @@ public class HistoryOutputsTests : IDisposable
         Run("r2", "test:2:1", Features(ExecutionResult.Passed, refund: ExecutionResult.Failed));
         Run("r3", "test:3:1", Features(ExecutionResult.Failed, refund: ExecutionResult.Failed));
 
-        var digest = File.ReadAllText(Path.Combine(Reports("r3"), "Failures.md"));
+        var digest = ReportHtml.Read(Path.Combine(Reports("r3"), "Failures.md"));
         var broke = digest.IndexOf("History: **broke**", StringComparison.Ordinal);
         var failing = digest.IndexOf("History: **always-failing**", StringComparison.Ordinal);
         Assert.True(broke >= 0 && failing >= 0, "both verdicts should be in the digest");
@@ -216,7 +216,7 @@ public class HistoryOutputsTests : IDisposable
         Assert.Contains("99", entry.Message);
         Assert.True(File.Exists(Path.Combine(Reports("r1"), "Failures.md")));
         Assert.True(File.Exists(Path.Combine(Reports("r1"), HistoryFormat.FragmentFileName)), "the fragment is still written so nothing is lost");
-        Assert.Equal("{\"t\":\"header\",\"historyFormatVersion\":99,\"generator\":\"9.0.0\"}\n", File.ReadAllText(Ledger));
+        Assert.Equal("{\"t\":\"header\",\"historyFormatVersion\":99,\"generator\":\"9.0.0\"}\n", ReportHtml.Read(Ledger));
     }
 
     [Fact]
@@ -252,7 +252,7 @@ public class HistoryOutputsTests : IDisposable
             Run("r2", "test:2:1", one);
 
         Assert.Contains(collector.Entries, d => d.Kind == DiagnosticKind.HistoryPartialRun);
-        var fragment = HistoryFragment.Parse(File.ReadAllText(Path.Combine(Reports("r2"), HistoryFormat.FragmentFileName)));
+        var fragment = HistoryFragment.Parse(ReportHtml.Read(Path.Combine(Reports("r2"), HistoryFormat.FragmentFileName)));
         Assert.True(fragment.Run.Partial);
         Assert.True(HistoryLedgerReader.Read(Ledger, 50).Ledger!.Runs("HistorySuite")[^1].Partial);
     }
@@ -282,9 +282,9 @@ public class HistoryOutputsTests : IDisposable
 
         Assert.False(File.Exists(Path.Combine(Reports("r1"), HistoryFormat.FragmentFileName)));
         Assert.DoesNotContain(collector.Entries, d => d.Kind is DiagnosticKind.HistoryUnavailable or DiagnosticKind.HistoryPartialRun or DiagnosticKind.HistoryLedgerDamaged);
-        Assert.DoesNotContain("History", File.ReadAllText(Path.Combine(Reports("r1"), "Failures.md")));
-        Assert.DoesNotContain("\"history\"", File.ReadAllText(Path.Combine(Reports("r1"), "Failures.jsonl")));
-        Assert.DoesNotContain("kronikolHistory", File.ReadAllText(Path.Combine(Reports("r1"), CtrfReportGenerator.FileName)));
+        Assert.DoesNotContain("History", ReportHtml.Read(Path.Combine(Reports("r1"), "Failures.md")));
+        Assert.DoesNotContain("\"history\"", ReportHtml.Read(Path.Combine(Reports("r1"), "Failures.jsonl")));
+        Assert.DoesNotContain("kronikolHistory", ReportHtml.Read(Path.Combine(Reports("r1"), CtrfReportGenerator.FileName)));
     }
 
     [Fact]
@@ -295,21 +295,21 @@ public class HistoryOutputsTests : IDisposable
         Run("h2", "test:2:1", Features(ExecutionResult.Failed), AskForAll);
         Run("h3", "test:3:1", Features(ExecutionResult.Failed), o => { AskForAll(o); o.EmbedHistoryInReport = false; });
 
-        var second = File.ReadAllText(Path.Combine(Reports("h2"), "TestRunReport.html"));
+        var second = ReportHtml.Read(Path.Combine(Reports("h2"), "TestRunReport.html"));
         Assert.Contains("<details id=\"history-section\"", second);
         Assert.Contains("data-history-verdicts=\"broke\"", second);
         Assert.Contains("<span class=\"history-sparkline\"", second);
         // And the labs page beside it, which carries history whatever the report's opt-ins say.
-        var page = File.ReadAllText(Path.Combine(Reports("h2"), "TestRunReport.labs.html"));
+        var page = ReportHtml.Read(Path.Combine(Reports("h2"), "TestRunReport.labs.html"));
         Assert.Contains("<details id=\"history-section\"", page);
         Assert.Contains("<span class=\"history-verdict history-verdict-broke\"", page);
 
         // EmbedHistoryInReport is the master switch: nothing about history reaches the run's HTML, asked for or not.
-        var third = File.ReadAllText(Path.Combine(Reports("h3"), "TestRunReport.html"));
+        var third = ReportHtml.Read(Path.Combine(Reports("h3"), "TestRunReport.html"));
         Assert.DoesNotContain("history-", third);
         Assert.False(File.Exists(Path.Combine(Reports("h3"), "TestRunReport.labs.html")), "a page was written for history the run was told not to embed");
         // The ledger still saw the run: embedding is about the HTML, not about recording.
-        Assert.Contains("test:3:1", File.ReadAllText(Ledger));
+        Assert.Contains("test:3:1", ReportHtml.Read(Ledger));
     }
 
     [Fact]
@@ -323,17 +323,17 @@ public class HistoryOutputsTests : IDisposable
         // A run that broke a scenario has as much to say as history ever has. Since 5.0.0 a default report says it in
         // its History tab (plans/OPTION_C_PLAN.md S3), and nothing of it is in the features: no verdict attribute, no
         // sparkline (plans/HISTORY_AND_DIAGNOSTICS_MOVE_PLAN.md). The labs page beside the report carries both.
-        var byDefault = File.ReadAllText(Path.Combine(Reports("h2"), "TestRunReport.html"));
+        var byDefault = ReportHtml.Read(Path.Combine(Reports("h2"), "TestRunReport.html"));
         Assert.Contains("data-panel=\"history\" hidden><details id=\"history-section\" class=\"history-section\" open><summary class=\"h2\" tabindex=\"-1\" title=\"This run against the earlier runs on the same branch: what is failing, flaky, fixed, slower, new or gone\">History ", byDefault);
         Assert.DoesNotContain("data-history-verdicts=\"", byDefault);
         Assert.DoesNotContain("<span class=\"history-sparkline\"", byDefault);
-        Assert.Contains("<span class=\"history-verdict history-verdict-broke\"", File.ReadAllText(Path.Combine(Reports("h2"), "TestRunReport.labs.html")));
+        Assert.Contains("<span class=\"history-verdict history-verdict-broke\"", ReportHtml.Read(Path.Combine(Reports("h2"), "TestRunReport.labs.html")));
 
         // With the tab turned off, a report says none of it: the whole file, since the stylesheet and the scripts do
         // not name the classes either.
-        Assert.DoesNotContain("history-", File.ReadAllText(Path.Combine(Reports("h3"), "TestRunReport.html")));
+        Assert.DoesNotContain("history-", ReportHtml.Read(Path.Combine(Reports("h3"), "TestRunReport.html")));
 
-        var scenario = File.ReadAllText(Path.Combine(Reports("h4"), "TestRunReport.html"));
+        var scenario = ReportHtml.Read(Path.Combine(Reports("h4"), "TestRunReport.html"));
         // The fourth run of P, F, F, F: the scenario is failing, no longer newly broken.
         Assert.Contains("data-history-verdicts=\"failing\"", scenario);
         Assert.Contains("<span class=\"history-sparkline\"", scenario);
@@ -375,13 +375,13 @@ public class HistoryOutputsTests : IDisposable
         Run("own", "test:9:1", Features(ExecutionResult.Failed), o => o.GenerateTestRunReport = true);
         Run("against", "test:9:2", Features(ExecutionResult.Failed), o => { o.GenerateTestRunReport = true; o.HistoryBranch = "trunk"; });
 
-        var own = File.ReadAllText(Path.Combine(Reports("own"), "Failures.md"));
+        var own = ReportHtml.Read(Path.Combine(Reports("own"), "Failures.md"));
         Assert.DoesNotContain("**broke**", own);
 
-        var against = File.ReadAllText(Path.Combine(Reports("against"), "Failures.md"));
+        var against = ReportHtml.Read(Path.Combine(Reports("against"), "Failures.md"));
         Assert.Contains("**broke**", against);
         Assert.Contains("against 3 earlier runs on trunk", against);
-        Assert.Contains(@"<span class=""history-verdict history-verdict-broke""", File.ReadAllText(Path.Combine(Reports("against"), "TestRunReport.labs.html")));
+        Assert.Contains(@"<span class=""history-verdict history-verdict-broke""", ReportHtml.Read(Path.Combine(Reports("against"), "TestRunReport.labs.html")));
         // The run's own line still records under its own stream, so main's history stays main's.
         var ownLine = File.ReadAllLines(Ledger).Single(l => l.Contains(@"""id"":""test:9:2""", StringComparison.Ordinal));
         Assert.DoesNotContain(@"""branch"":""trunk""", ownLine);
@@ -395,13 +395,13 @@ public class HistoryOutputsTests : IDisposable
         // The compare reading is a line of the History section, so this run asks for the section.
         Run("cmp", "test:9:3", Features(ExecutionResult.Failed), o => { o.GenerateTestRunReport = true; o.ShowHistorySection = true; o.HistoryCompareBranch = "trunk"; });
 
-        var digest = File.ReadAllText(Path.Combine(Reports("cmp"), "Failures.md"));
+        var digest = ReportHtml.Read(Path.Combine(Reports("cmp"), "Failures.md"));
         Assert.Contains("on trunk: 1 broke (against 3 earlier runs on trunk)", digest);
-        var html = File.ReadAllText(Path.Combine(Reports("cmp"), "TestRunReport.html"));
+        var html = ReportHtml.Read(Path.Combine(Reports("cmp"), "TestRunReport.html"));
         Assert.Contains(@"class=""history-compare""", html);
         Assert.Contains("on <code>trunk</code>: 1 broke", html);
         // And on the labs page, with no option set for it.
-        var page = File.ReadAllText(Path.Combine(Reports("cmp"), "TestRunReport.labs.html"));
+        var page = ReportHtml.Read(Path.Combine(Reports("cmp"), "TestRunReport.labs.html"));
         Assert.Contains(@"class=""history-compare""", page);
         Assert.Contains("on <code>trunk</code>: 1 broke", page);
     }

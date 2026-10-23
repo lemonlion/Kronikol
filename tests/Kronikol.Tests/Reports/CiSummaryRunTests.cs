@@ -234,7 +234,7 @@ public class CiSummaryRunTests : IDisposable
     {
         var reports = Path.Combine(_root, "shop", "Reports");
         Run(reports, GitHub());
-        var section = File.ReadAllText(StepSummary);
+        var section = ReportHtml.Read(StepSummary);
         CopyDirectory(reports, Path.Combine(Download, "test-reports"));
 
         Assert.Contains($"test -d kronikol-{RunId} || gh run download {RunId} --repo acme/shop --dir kronikol-{RunId}\n", section);
@@ -262,7 +262,7 @@ public class CiSummaryRunTests : IDisposable
         var mergeExit = MergeCommand.Run([shards, "-o", Path.Combine(merged, "Combined.html")], mergeOutput, mergeError, GitHub());
         Assert.True(mergeExit == 0, mergeError.ToString());
 
-        var section = File.ReadAllText(StepSummary);
+        var section = ReportHtml.Read(StepSummary);
         CopyDirectory(merged, Path.Combine(Download, "merged-report"));
 
         var lines = QueryLines(section);
@@ -291,7 +291,7 @@ public class CiSummaryRunTests : IDisposable
         var checkout = Path.Combine(_root, "checkout", "Reports");
         var payments = Path.Combine(_root, "payments", "Reports");
         Run(checkout, GitHub(), suite: "Checkout");
-        var section = File.ReadAllText(StepSummary);
+        var section = ReportHtml.Read(StepSummary);
         Run(payments, GitHub(), suite: "Payments", failing: 2);
         CopyDirectory(checkout, Path.Combine(Download, "reports-checkout"));
         CopyDirectory(payments, Path.Combine(Download, "reports-payments"));
@@ -317,7 +317,7 @@ public class CiSummaryRunTests : IDisposable
         var command = pointer[(pointer.IndexOf("kronikol query failures ", StringComparison.Ordinal) + "kronikol query failures ".Length)..];
         Assert.Equal(data, command.Trim('"'));
         // The section's block is bash, which names the same file as bash reads it.
-        var sectionLine = QueryLines(File.ReadAllText(StepSummary)).Single(l => l.StartsWith("kronikol query failures ", StringComparison.Ordinal));
+        var sectionLine = QueryLines(ReportHtml.Read(StepSummary)).Single(l => l.StartsWith("kronikol query failures ", StringComparison.Ordinal));
         Assert.Equal(data, Assert.Single(Words(sectionLine["kronikol query failures ".Length..])));
         Assert.Contains(console.Split('\n'), l => l.StartsWith("::notice title=Kronikol::", StringComparison.Ordinal)
                                                   && l.Contains($"kronikol query failures {command}", StringComparison.Ordinal));
@@ -344,7 +344,7 @@ public class CiSummaryRunTests : IDisposable
         // A second process, as the next CI run is: one process rotates a folder once.
         RunRotation.ForgetForTests(reports);
         Run(reports, Keeping(RunId), o => o.HtmlTestRunReportFileName = "Checkout [linux]");
-        var section = File.ReadAllText(StepSummary);
+        var section = ReportHtml.Read(StepSummary);
         CopyDirectory(reports, Path.Combine(Download, "test-reports"));
 
         var lines = QueryLines(section);
@@ -376,7 +376,7 @@ public class CiSummaryRunTests : IDisposable
                 o.GenerateTestRunReportData = false;
         });
 
-        var section = File.ReadAllText(StepSummary);
+        var section = ReportHtml.Read(StepSummary);
         Assert.Contains("## Debug this run", section);
         Assert.DoesNotContain("kronikol query", section);
         Assert.DoesNotContain("kronikol query", console);
@@ -392,14 +392,14 @@ public class CiSummaryRunTests : IDisposable
         var reports = Path.Combine(_root, "green", "Reports");
         Run(reports, GitHub(), o => o.WriteCiSummary = true, ExecutionResult.Passed);
 
-        var markdown = File.ReadAllText(Path.Combine(reports, "CiSummary.md"));
+        var markdown = ReportHtml.Read(Path.Combine(reports, "CiSummary.md"));
         Assert.DoesNotContain("## Debug this run", markdown);
         Assert.DoesNotContain("AI agents", markdown);
         Assert.EndsWith(
             "\n## The report\n\n**People:** open `TestRunReport.html` in a browser to read the whole run, diagrams included. "
             + $"This job wrote it to `green/Reports`; it is in this run's [artifacts](https://github.com/acme/shop/actions/runs/{RunId}#artifacts) when the job uploads that folder.\n\n",
             markdown);
-        Assert.Equal(markdown, File.ReadAllText(StepSummary));
+        Assert.Equal(markdown, ReportHtml.Read(StepSummary));
     }
 
     [Fact]
@@ -408,7 +408,7 @@ public class CiSummaryRunTests : IDisposable
         var reports = Path.Combine(_root, "red", "Reports");
         Run(reports, GitHub(), o => o.WriteCiSummary = true);
 
-        var markdown = File.ReadAllText(Path.Combine(reports, "CiSummary.md"));
+        var markdown = ReportHtml.Read(Path.Combine(reports, "CiSummary.md"));
         var debug = markdown.IndexOf("\n## Debug this run\n\n**People:** open `TestRunReport.html`", StringComparison.Ordinal);
         Assert.True(debug > 0, markdown);
         Assert.Contains("\n\n**AI agents:** do not open `TestRunReport.krkl` or `TestRunReport.html` — ", markdown[debug..]);

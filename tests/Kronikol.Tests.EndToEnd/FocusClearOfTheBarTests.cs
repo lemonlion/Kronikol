@@ -67,7 +67,7 @@ public class FocusClearOfTheBarTests : PlaywrightTestBase
 
     private async Task OpenAsync(string url)
     {
-        await Page.GotoAsync(url);
+        await Page.GotoReportAsync(url);
         await Page.Locator("details.feature").First.WaitForAsync();
         await TwoAnimationFramesAsync(Page);
         await Page.EvaluateAsync(TrackFocus);
@@ -238,7 +238,7 @@ public class FocusClearOfTheBarTests : PlaywrightTestBase
     /// <summary>Shift+Tab from a scenario to the one above, whose heading is half under the pinned bar.</summary>
     private async Task ShiftTabUnderTheBarAsync(IPage page, string fileName)
     {
-        await page.GotoAsync(Generate(fileName));
+        await page.GotoReportAsync(Generate(fileName));
         await page.Locator("details.feature").First.WaitForAsync();
         await TwoAnimationFramesAsync(page);
         await page.EvaluateAsync(TrackFocus);

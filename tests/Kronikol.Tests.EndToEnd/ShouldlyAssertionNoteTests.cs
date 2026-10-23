@@ -97,7 +97,7 @@ public class ShouldlyAssertionNoteTests : DiagramNotePlaywrightBase
     public async Task A_method_call_argument_note_paints_its_value()
     {
         // #163: the expected value read before the call, where 4.14.6 painted 'null'() whatever the value.
-        await Page.GotoAsync(GenerateReport(
+        await Page.GotoReportAsync(GenerateReport(
             "actual.Colour.ToString().ShouldBe(expected.Colour.ToString())",
             "actual.Colour.ToString()\n    should be\n\"Blue\"\n    but was\n\"Red\"",
             new Expected(Colour.Blue), "MethodCallNote.html"));
@@ -114,7 +114,7 @@ public class ShouldlyAssertionNoteTests : DiagramNotePlaywrightBase
     {
         // From 4.16.0 the weave passes each argument's value under the argument's text, and the note paints that
         // value in place of the whole argument, where 4.14.8 painted the value read before the call.
-        await Page.GotoAsync(GenerateReport(
+        await Page.GotoReportAsync(GenerateReport(
             "actual.Colour.ToString().ShouldBe(expected.Colour.ToString())",
             "actual.Colour.ToString()\n    should be\n\"Blue\"\n    but was\n\"Red\"",
             ["expected", "expected.Colour.ToString()"], [new Expected(Colour.Blue), "Blue"], "ArgumentValueNote.html"));
@@ -133,7 +133,7 @@ public class ShouldlyAssertionNoteTests : DiagramNotePlaywrightBase
     [Fact]
     public async Task A_Shouldly_assertion_note_paints_its_sentence()
     {
-        await Page.GotoAsync(GenerateReport());
+        await Page.GotoReportAsync(GenerateReport());
         // What the SVG paints, one text run per word: the sentence, then Shouldly's message line by line.
         var words = await PaintedWords();
 

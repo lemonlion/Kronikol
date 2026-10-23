@@ -8,7 +8,7 @@ public class LoadingMessageTests : PlaywrightTestBase
     [Fact]
     public async Task Body_has_plantuml_ready_class_after_page_load()
     {
-        await Page.GotoAsync(GenerateReport("BodyPlantumlReady.html"));
+        await Page.GotoReportAsync(GenerateReport("BodyPlantumlReady.html"));
         await Page.WaitForFunctionAsync(
             "() => document.body.classList.contains('plantuml-ready')");
         var classes = await Page.Locator("body").GetAttributeAsync("class");
@@ -18,7 +18,7 @@ public class LoadingMessageTests : PlaywrightTestBase
     [Fact]
     public async Task Unrendered_diagram_shows_rendering_message_not_waiting()
     {
-        await Page.GotoAsync(GenerateReport("LoadingMsgRendering.html"));
+        await Page.GotoReportAsync(GenerateReport("LoadingMsgRendering.html"));
         await Page.WaitForFunctionAsync(
             "() => document.body.classList.contains('plantuml-ready')");
         await ExpandFirstScenarioWithDiagram();
@@ -44,7 +44,7 @@ public class LoadingMessageTests : PlaywrightTestBase
         // A split diagram's container is marked rendered as soon as its fragment divs exist, so the
         // placeholder has to live on each fragment until that fragment's SVG arrives — otherwise the
         // reader sees a blank box for the seconds the engine needs for the first fragment.
-        await Page.GotoAsync(GenerateReport("LoadingMsgFragment.html"));
+        await Page.GotoReportAsync(GenerateReport("LoadingMsgFragment.html"));
         await Page.WaitForFunctionAsync(
             "() => document.body.classList.contains('plantuml-ready')");
 

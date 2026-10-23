@@ -94,7 +94,7 @@ public class StableIdDeepLinkTests
             diagrams, features, DateTime.UtcNow, DateTime.UtcNow,
             null, $"StableIdLink_{Guid.NewGuid():N}.html", "Test", testRunReport,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
-        return File.ReadAllText(path);
+        return ReportHtml.Read(path);
     }
 
     private static string[] StableIdsIn(string html) =>
@@ -164,7 +164,7 @@ public class StableIdDeepLinkTests
         var written = ReportGenerator.GenerateTestRunReportData(
             features, DateTime.UtcNow, DateTime.UtcNow,
             $"StableIdLink_{Guid.NewGuid():N}.json", DataFormat.Json);
-        using var document = JsonDocument.Parse(File.ReadAllText(written));
+        using var document = JsonDocument.Parse(ReportHtml.Read(written));
         var fromData = document.RootElement.GetProperty("features").EnumerateArray()
             .SelectMany(f => f.GetProperty("scenarios").EnumerateArray())
             .Select(s => s.GetProperty("stableId").GetString()!)

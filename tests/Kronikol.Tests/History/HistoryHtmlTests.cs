@@ -78,7 +78,7 @@ public class HistoryHtmlTests : IDisposable
         var path = ReportGenerator.GenerateHtmlReport(diagrams, features, At.UtcDateTime.AddMinutes(-1), At.UtcDateTime, null,
             // The tests here are about what history renders, so they ask for the section a plain report leaves out.
             Path.Combine(_dir, name), "History HTML", true, suite: Suite, history: history, showHistorySection: true);
-        return File.ReadAllText(path);
+        return ReportHtml.Read(path);
     }
 
     /// <summary>The scenario element's opening tag and summary, for assertions about one scenario rather than the whole file.</summary>

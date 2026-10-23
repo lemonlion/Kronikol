@@ -55,7 +55,7 @@ public class ParameterizedGroupRenderTests
             maxParameterColumns: maxParameterColumns,
             titleizeParameterNames: titleizeParameterNames,
             trackedLogs: trackedLogs);
-        return File.ReadAllText(path);
+        return ReportHtml.Read(path);
     }
 
     [Fact]
@@ -1296,7 +1296,7 @@ public class ParameterizedGroupRenderTests
             showStepNumbers: showStepNumbers,
             separateBackgroundSteps: separateBackgroundSteps,
             collapseRepeatedStepKeywords: collapseRepeatedStepKeywords);
-        return File.ReadAllText(path);
+        return ReportHtml.Read(path);
     }
 
     [Fact]

@@ -50,7 +50,7 @@ public class FeaturesTabResponsivenessTests : PlaywrightTestBase
     private async Task OpenAsync(string report, int bars)
     {
         await Page.AddInitScriptAsync(BrowserRenderWorkerTests.BenchInitWithProbe);
-        await Page.GotoAsync(report, new() { Timeout = PageOpenTimeout });
+        await Page.GotoReportAsync(report, new() { Timeout = PageOpenTimeout });
         Assert.True(await Page.Locator("summary + .diagram-toggle").CountAsync() >= bars, "the scenarios have diagram tab bars");
         await SettleAsync();
     }

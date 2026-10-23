@@ -52,7 +52,7 @@ public class FormStateRestorationTests : IAsyncLifetime
 
     private async Task NavigateAndRender(string fileName)
     {
-        await _page.GotoAsync(ReportTestHelper.GenerateReportWithJsonYamlNotes(_tempDir, _outputDir, fileName));
+        await _page.GotoReportAsync(ReportTestHelper.GenerateReportWithJsonYamlNotes(_tempDir, _outputDir, fileName));
         await RenderAndWait();
     }
 
@@ -102,7 +102,7 @@ public class FormStateRestorationTests : IAsyncLifetime
         await SelectAndWaitForRerender(ScenarioNoteFormatSelect, "yaml");
         Assert.Contains("query: |-", await SvgText());
 
-        await _page.ReloadAsync();
+        await _page.ReloadReportAsync();
         await RenderAndWait();
 
         // The reloaded script rendered the notes as JSON; the dropdown must say so too
@@ -121,7 +121,7 @@ public class FormStateRestorationTests : IAsyncLifetime
         await PlaywrightTestBase.OpenScenarioSettingsAsync(_page);
         await SelectAndWaitForRerender(ScenarioTruncateSelect, "3");
 
-        await _page.ReloadAsync();
+        await _page.ReloadReportAsync();
         await RenderAndWait();
 
         Assert.Equal("40", await _page.EvaluateAsync<string>("() => String(window._truncateLines)"));

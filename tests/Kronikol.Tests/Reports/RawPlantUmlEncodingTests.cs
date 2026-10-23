@@ -38,7 +38,7 @@ public class RawPlantUmlEncodingTests
             DateTime.UtcNow, DateTime.UtcNow,
             null, "RawPumlEncoding.html", "Test", includeTestRunData: true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.Server);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
 
         Assert.Contains("raw-plantuml", content);
         Assert.DoesNotContain("<script>alert(1)</script>", content);
@@ -84,7 +84,7 @@ public class RawPlantUmlEncodingTests
             DateTime.UtcNow, DateTime.UtcNow,
             null, "RawPumlEncodingParam.html", "Test", includeTestRunData: true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.Server);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
 
         Assert.Contains("raw-plantuml", content);
         Assert.DoesNotContain("<script>alert(1)</script>", content);

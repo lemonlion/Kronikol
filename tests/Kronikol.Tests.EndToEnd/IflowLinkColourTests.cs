@@ -19,7 +19,7 @@ public class IflowLinkColourTests : PlaywrightTestBase
 
     private async Task OpenAndBind(InternalFlowHasDataBehavior behavior)
     {
-        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateIflowLinkColourPage(behavior)));
+        await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateIflowLinkColourPage(behavior)));
         await Page.WaitForFunctionAsync("() => typeof window._iflowBindLinks === 'function'", null,
             new() { Timeout = 10_000, PollingInterval = 200 });
         await Page.EvaluateAsync("src => window._iflowBindLinks(document.getElementById('diagram'), src)",
@@ -90,7 +90,7 @@ public class IflowLinkColourTests : PlaywrightTestBase
 
         var scripts = Kronikol.Reports.DiagramContextMenu.GetInternalFlowConfigScript(InternalFlowHasDataBehavior.ShowLinkOnHover)
             + $"<script>window.__iflowSegments = {{ 'iflow-{pairId}': {{ title: 'POST', content: '<p>flow</p>' }} }};</script>";
-        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateBrowserJsPage(scripts, ("d1", source))));
+        await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateBrowserJsPage(scripts, ("d1", source))));
         await Page.EvaluateAsync("() => window._renderDiagramsInContainer(document.body)");
         await Page.WaitForFunctionAsync("() => { const el = document.getElementById('d1'); return el && el.dataset.rendered === '1' && el.querySelector('svg'); }",
             null, new() { Timeout = 60_000, PollingInterval = 200 });
@@ -159,7 +159,7 @@ public class IflowLinkColourTests : PlaywrightTestBase
             + "<script>window.__iflowSegments = { " + segments + " };</script>"
             + $"<style>{Kronikol.Reports.DiagramContextMenu.GetInternalFlowPopupStyles()}</style>"
             + Kronikol.Reports.DiagramContextMenu.GetInternalFlowPopupScript();
-        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateBrowserJsPage(scripts, ("d1", source))));
+        await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateBrowserJsPage(scripts, ("d1", source))));
         await Page.EvaluateAsync("() => window._renderDiagramsInContainer(document.body)");
         await Page.WaitForFunctionAsync("() => { const el = document.getElementById('d1'); return el && el.dataset.rendered === '1' && el.querySelector('svg'); }",
             null, new() { Timeout = 60_000, PollingInterval = 200 });

@@ -44,7 +44,7 @@ public class LongStatementRenderingTests : PlaywrightTestBase
     [Fact]
     public async Task A_trace_with_a_very_long_url_renders_without_a_syntax_error()
     {
-        await Page.GotoAsync(ServePage(LongUrlReportHtml()));
+        await Page.GotoReportAsync(ServePage(LongUrlReportHtml()));
 
         await Page.WaitForFunctionAsync(
             "() => document.querySelector('#puml-1')?.getAttribute('data-rendered') === '1'",
@@ -77,7 +77,7 @@ public class LongStatementRenderingTests : PlaywrightTestBase
             </div></body></html>
             """;
 
-        await Page.GotoAsync(ServePage(html));
+        await Page.GotoReportAsync(ServePage(html));
         await Page.WaitForFunctionAsync(
             "() => document.querySelector('#puml-1')?.getAttribute('data-rendered') === '1'",
             null, new() { Timeout = 120000, PollingInterval = 200 });
@@ -109,7 +109,7 @@ public class LongStatementRenderingTests : PlaywrightTestBase
     /// </summary>
     private static async Task<(Rendered Sequence, Rendered Component)> RenderLongLinkedLabelReport(IPage page, string reportUri)
     {
-        await page.GotoAsync(reportUri);
+        await page.GotoReportAsync(reportUri);
         await page.Locator("details.feature").First.WaitForAsync();
         await page.EvaluateAsync("() => window._renderDiagramsInContainer(document.body)");
         await page.WaitForFunctionAsync(
@@ -182,7 +182,7 @@ public class LongStatementRenderingTests : PlaywrightTestBase
     [Fact]
     public async Task The_classifier_leaves_notes_comments_and_short_statements_alone()
     {
-        await Page.GotoAsync(ServePage("""
+        await Page.GotoReportAsync(ServePage("""
             <!DOCTYPE html><html><head><title>classifier</title>
             """ + DiagramContextMenu.GetPlantUmlBrowserRenderScript() + """
             </head><body></body></html>
@@ -240,7 +240,7 @@ public class LongStatementRenderingTests : PlaywrightTestBase
         var (reportUri, componentUri, caller, service) = run;
         (string, int)[] expected = [(caller, 1), (service, 1), ("66 calls across 1 tests", 1)];
 
-        await page.GotoAsync(reportUri);
+        await page.GotoReportAsync(reportUri);
         await page.Locator("details.feature").First.WaitForAsync();
         await page.EvaluateAsync("() => window._renderDiagramsInContainer(document.body)");
         await page.WaitForFunctionAsync(
@@ -249,7 +249,7 @@ public class LongStatementRenderingTests : PlaywrightTestBase
         Assert.Equal("worker", await page.EvaluateAsync<string>("() => window.__kronikolRender.mode"));
         await AssertDrawsAsADiagram(page.Locator("#component-diagram .plantuml-browser").First, expected);
 
-        await page.GotoAsync(componentUri);
+        await page.GotoReportAsync(componentUri);
         await page.WaitForFunctionAsync(
             "() => { const el = document.getElementById('comp-diagram'); return !!el && (!!el.querySelector('svg') || (el.textContent || '').trim().length > 0); }",
             null, new() { Timeout = 120_000, PollingInterval = 200 });
@@ -366,7 +366,7 @@ public class LongStatementRenderingTests : PlaywrightTestBase
         await using var browser = playwright is null ? null : await LaunchWithTheOptimizingCompilersOff(playwright);
         var page = browser is null ? Page : await OpenPageAsync(browser, new() { ViewportSize = new() { Width = 1920, Height = 1080 } });
 
-        await page.GotoAsync(DiagramPage(source, kind + (optimizingCompilersOff ? " no-opt" : "")));
+        await page.GotoReportAsync(DiagramPage(source, kind + (optimizingCompilersOff ? " no-opt" : "")));
         await page.WaitForFunctionAsync(
             "() => document.querySelector('#puml-1')?.getAttribute('data-rendered') === '1'",
             null, new() { Timeout = 120_000, PollingInterval = 200 });
@@ -380,7 +380,7 @@ public class LongStatementRenderingTests : PlaywrightTestBase
     {
         // The page names the line a failed diagram choked on. It knew two caps, a message's and a block opener's at
         // 1,471; it now takes every cap from PlantUmlStatementLimits.
-        await Page.GotoAsync(ServePage("""
+        await Page.GotoReportAsync(ServePage("""
             <!DOCTYPE html><html><head><title>classifier caps</title>
             """ + DiagramContextMenu.GetPlantUmlBrowserRenderScript() + """
             </head><body></body></html>
@@ -465,7 +465,7 @@ public class LongStatementRenderingTests : PlaywrightTestBase
         // and the JavaScript engine on the main thread writes its RangeError as text.
         var source = NestedGroupsDiagram();
 
-        await Page.GotoAsync(DiagramPage(source, $"stack overflow w{workers}", workers));
+        await Page.GotoReportAsync(DiagramPage(source, $"stack overflow w{workers}", workers));
         await Page.WaitForFunctionAsync(
             "() => document.querySelector('#puml-1')?.getAttribute('data-rendered') === '1'",
             null, new() { Timeout = 120_000, PollingInterval = 200 });
@@ -494,7 +494,7 @@ public class LongStatementRenderingTests : PlaywrightTestBase
             "stack-picture-engine.js");
         await using var _ = server;
 
-        await Page.GotoAsync(pageUrl);
+        await Page.GotoReportAsync(pageUrl);
         await Page.WaitForFunctionAsync(
             "() => document.querySelector('#puml-1')?.getAttribute('data-rendered') === '1'",
             null, new() { Timeout = 120_000, PollingInterval = 200 });
@@ -587,7 +587,7 @@ public class LongStatementRenderingTests : PlaywrightTestBase
         LoopbackFileServer? server = null;
         if (engine is not null) (server, url) = StubEngines.Serve(new Uri(url).LocalPath, engine, name + "-engine.js");
         await using var _ = server;
-        await page.GotoAsync(url);
+        await page.GotoReportAsync(url);
         await page.EvaluateAsync("() => window._iflowShowPopup('iflow-seg-1')");
         await page.WaitForFunctionAsync(
             $"() => document.querySelector('#{id}')?.dataset.rendered === '1'",
@@ -606,7 +606,7 @@ public class LongStatementRenderingTests : PlaywrightTestBase
         // its JavaScript build, which draws on the main thread, writes deep nesting's overflow as text.
         var source = NestedGroupsDiagram();
 
-        await Page.GotoAsync(DiagramPage(source, "stack overflow text", workers: 0));
+        await Page.GotoReportAsync(DiagramPage(source, "stack overflow text", workers: 0));
         await Page.WaitForFunctionAsync(
             "() => document.querySelector('#puml-1')?.getAttribute('data-rendered') === '1'",
             null, new() { Timeout = 120_000, PollingInterval = 200 });
@@ -622,7 +622,7 @@ public class LongStatementRenderingTests : PlaywrightTestBase
     [Fact]
     public async Task The_stack_detector_tells_the_engines_stack_failure_from_a_drawn_diagram()
     {
-        await Page.GotoAsync(ServePage("""
+        await Page.GotoReportAsync(ServePage("""
             <!DOCTYPE html><html><head><title>stack detector</title>
             """ + DiagramContextMenu.GetPlantUmlBrowserRenderScript() + """
             </head><body></body></html>
@@ -670,7 +670,7 @@ public class LongStatementRenderingTests : PlaywrightTestBase
         start += opener.Length;
         var classify = probe[start..probe.IndexOf("`;", start, StringComparison.Ordinal)];
 
-        await Page.GotoAsync(ServePage("<!DOCTYPE html><html><head><title>probe verdict</title></head><body></body></html>"));
+        await Page.GotoReportAsync(ServePage("<!DOCTYPE html><html><head><title>probe verdict</title></head><body></body></html>"));
         static string Picture(params string[] lines) =>
             "<svg xmlns=\"http://www.w3.org/2000/svg\"><g>" + string.Concat(lines.Select((l, i) => $"<text x=\"5\" y=\"{14 * (i + 1)}\">{l}</text>")) + "</g></svg>";
         const string version = "PlantUML version $version$ / $git.commit.id$ [Unknown compile time]";

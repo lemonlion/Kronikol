@@ -59,7 +59,7 @@ public class FlowStoredOnceMergeTests : IDisposable
         Assert.Equal(a[0], merged.GetProperty(a[1]).GetProperty("sameAs").GetString());
         Assert.Equal(b[0], merged.GetProperty(b[1]).GetProperty("sameAs").GetString());
         AssertEveryPointerResolves(merged);
-        AssertEveryPointerResolves(PageMap(File.ReadAllText(Path.Combine(_directory, "Combined.html"))));
+        AssertEveryPointerResolves(PageMap(ReportHtml.Read(Path.Combine(_directory, "Combined.html"))));
     }
 
     [Fact]
@@ -96,7 +96,7 @@ public class FlowStoredOnceMergeTests : IDisposable
             Assert.NotEqual(SegmentMapText.Resolve(merged, shard[0]).FlameData, SegmentMapText.Resolve(merged, shard[1]).FlameData);
         }
         AssertEveryPointerResolves(merged);
-        AssertEveryPointerResolves(PageMap(File.ReadAllText(Path.Combine(_directory, "Combined.html"))));
+        AssertEveryPointerResolves(PageMap(ReportHtml.Read(Path.Combine(_directory, "Combined.html"))));
     }
 
     // ─── Fixture ───────────────────────────────────────────────
@@ -147,7 +147,7 @@ public class FlowStoredOnceMergeTests : IDisposable
         var error = new StringWriter();
         var exit = MergeCommand.Run([_directory, "-o", Path.Combine(_directory, "Combined.html")], output, error);
         Assert.True(exit == 0, error.ToString());
-        using var combined = JsonDocument.Parse(File.ReadAllText(Path.Combine(_directory, "Combined.json")));
+        using var combined = JsonDocument.Parse(ReportHtml.Read(Path.Combine(_directory, "Combined.json")));
         return combined.RootElement.GetProperty("internalFlowSegments").Clone();
     }
 

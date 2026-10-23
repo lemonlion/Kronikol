@@ -319,7 +319,7 @@ public class QueryAttachmentListTests : IDisposable
         // the further-failures table: its ten artefacts were in no list meant for a person. The count is its own and every
         // step's, as Failures.jsonl lists them; with the hooks kept, every one of them is on a step.
         var report = Lane(lane);
-        var markdown = File.ReadAllText(Path.Combine(report, "Failures.md")).Replace("\r\n", "\n");
+        var markdown = ReportHtml.Read(Path.Combine(report, "Failures.md")).Replace("\r\n", "\n");
         var here = Regex.Match(markdown, @"kronikol query failures (\S+) +# this file, live").Groups[1].Value;
         FailureLines(Answer("failures", report), AttachmentFixture.BackgroundScenario, out var address);
         Assert.Equal(10, Digest(report)[address].Length);

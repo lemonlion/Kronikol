@@ -69,7 +69,7 @@ public class MergeReadsEveryTrackersMethodTests : IDisposable
 
         Assert.Equal(0, Merge().Exit);
 
-        Assert.Contains(label, File.ReadAllText(Path.Combine(_dir, "Combined.json")), StringComparison.Ordinal);
+        Assert.Contains(label, ReportHtml.Read(Path.Combine(_dir, "Combined.json")), StringComparison.Ordinal);
     }
 
     /// <summary>
@@ -85,7 +85,7 @@ public class MergeReadsEveryTrackersMethodTests : IDisposable
 
         Assert.Equal(0, Merge().Exit);
 
-        Assert.DoesNotContain("\"method\": \"CALL\"", File.ReadAllText(Path.Combine(_dir, "Combined.json")), StringComparison.Ordinal);
+        Assert.DoesNotContain("\"method\": \"CALL\"", ReportHtml.Read(Path.Combine(_dir, "Combined.json")), StringComparison.Ordinal);
     }
 
     /// <summary>A genuine HTTP verb still becomes an <c>HttpMethod</c>, not a lookalike string.</summary>
@@ -96,7 +96,7 @@ public class MergeReadsEveryTrackersMethodTests : IDisposable
 
         Assert.Equal(0, Merge().Exit);
 
-        var report = MergeableReportReader.Parse(File.ReadAllText(Path.Combine(_dir, "Combined.json")));
+        var report = MergeableReportReader.Parse(ReportHtml.Read(Path.Combine(_dir, "Combined.json")));
         var interaction = report.Interactions.First();
         Assert.IsType<HttpMethod>(interaction.Method.Value);
     }

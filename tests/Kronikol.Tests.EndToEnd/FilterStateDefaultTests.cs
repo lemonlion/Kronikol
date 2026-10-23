@@ -16,7 +16,7 @@ public class FilterStateDefaultTests : DiagramNotePlaywrightBase
     [InlineData("_assertionsVisible")]
     public async Task A_diagram_without_its_own_filter_state_keeps_the_reports_when_its_notes_change(string flag)
     {
-        await Page.GotoAsync(GenerateDatabaseStepNoteCollapseReport($"FilterStateDefault{flag}.html"));
+        await Page.GotoReportAsync(GenerateDatabaseStepNoteCollapseReport($"FilterStateDefault{flag}.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -55,7 +55,7 @@ public class FilterStateDefaultTests : DiagramNotePlaywrightBase
     [InlineData("_assertionsVisible", "assertions", "<<assertionNote>>")]
     public async Task A_diagram_without_its_own_filter_state_follows_the_reports_toggle(string flag, string toggle, string token)
     {
-        await Page.GotoAsync(GenerateDatabaseStepNoteCollapseReport($"FilterStateToggle{flag}.html"));
+        await Page.GotoReportAsync(GenerateDatabaseStepNoteCollapseReport($"FilterStateToggle{flag}.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();

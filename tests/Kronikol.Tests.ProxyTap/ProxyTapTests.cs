@@ -436,7 +436,7 @@ public class ProxyTapTests
             var json = File.ReadAllText(Path.Combine(dir, "TestRunReport.json"));
             Assert.DoesNotContain("never-on-disk", json);
             Assert.Contains("/sidekick", json);
-            var html = File.ReadAllText(Path.Combine(dir, "TestRunReport.html"));
+            var html = Kronikol.Reports.HtmlReportFile.ReadPlain(Path.Combine(dir, "TestRunReport.html"));
             Assert.Contains("overview renders", html);
             Assert.DoesNotContain("data-no-interactions", html);
         }

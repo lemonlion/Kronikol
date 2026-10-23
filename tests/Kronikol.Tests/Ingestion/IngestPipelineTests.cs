@@ -68,7 +68,7 @@ public class IngestPipelineTests : IDisposable
         Assert.Equal(Path.GetFullPath(output), result.ReportsDirectory);
         Assert.True(File.Exists(result.TestRunReportHtml));
 
-        var html = File.ReadAllText(result.TestRunReportHtml);
+        var html = ReportHtml.Read(result.TestRunReportHtml);
         Assert.Contains("overview › renders", html);
         Assert.Contains("overview.spec.ts", html);
         Assert.DoesNotContain("data-no-interactions", html); // the calls were attributed
@@ -105,7 +105,7 @@ public class IngestPipelineTests : IDisposable
         var feature = Assert.Single(result.Features);
         Assert.Equal("Captured", feature.DisplayName);
         Assert.Equal("Named by capturer", feature.Scenarios.Single().DisplayName);
-        Assert.Contains("Named by capturer", File.ReadAllText(result.TestRunReportHtml));
+        Assert.Contains("Named by capturer", ReportHtml.Read(result.TestRunReportHtml));
     }
 
     [Fact]
@@ -304,7 +304,7 @@ public class IngestPipelineTests : IDisposable
         var result = IngestPipeline.Run(new IngestRequest { TestsFile = tests, Options = options });
 
         Assert.True(result.Generated);
-        var html = File.ReadAllText(result.TestRunReportHtml);
+        var html = ReportHtml.Read(result.TestRunReportHtml);
         // The note is in the diagram, the marker is on the page, and the browser script refuses to
         // hand plantuml.js a diagram whose body the filters emptied.
         Assert.Contains("data-no-interactions=\"true\"", html);
@@ -412,7 +412,7 @@ public class IngestPipelineTests : IDisposable
         Assert.Contains("Expected 42, received 41", top.SubSteps![2].Comments!);
 
         // The report shows the Steps and Assertions toggles, as for in-process step/assertion tracking.
-        var html = File.ReadAllText(result.TestRunReportHtml);
+        var html = ReportHtml.Read(result.TestRunReportHtml);
         Assert.Contains("data-toggle=\"steps\"", html);
         Assert.Contains("data-toggle=\"assertions\"", html);
     }

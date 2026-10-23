@@ -106,7 +106,7 @@ public class IngestAttachmentTests : IDisposable
         Assert.All(scenario.Attachments!, a => Assert.StartsWith("attachments/", a.RelativePath));
         Assert.True(File.Exists(Path.Combine(result.ReportsDirectory, "attachments", "screenshot-end.png")));
 
-        var html = File.ReadAllText(result.TestRunReportHtml);
+        var html = ReportHtml.Read(result.TestRunReportHtml);
         Assert.Contains("<img class=\"attachment-image\" src=\"attachments/screenshot-end.png\"", html);
         Assert.Contains("<a class=\"step-attachment\" href=\"attachments/trace.zip\" title=\"Open trace.zip, a file this scenario attached\">trace.zip</a>", html);
     }
@@ -127,7 +127,7 @@ public class IngestAttachmentTests : IDisposable
             End(),
         ]);
 
-        var html = File.ReadAllText(result.TestRunReportHtml);
+        var html = ReportHtml.Read(result.TestRunReportHtml);
         Assert.Contains("src=\"attachments/screenshot-start\"", html);
         Assert.Contains("<a class=\"step-attachment\" href=\"attachments/report.png\" title=\"Open report.png, a file this scenario attached\">report.png</a>", html);
     }
@@ -201,7 +201,7 @@ public class IngestAttachmentTests : IDisposable
         // Untouched: a URL is not a path, and handing it to the path APIs would throw on Windows.
         Assert.Equal("http://localhost:5050/report/index.html#?testId=abc", attachment.RelativePath);
         Assert.False(Directory.Exists(Path.Combine(result.ReportsDirectory, "attachments")));
-        Assert.Contains("href=\"http://localhost:5050/report/index.html#?testId=abc\"", File.ReadAllText(result.TestRunReportHtml));
+        Assert.Contains("href=\"http://localhost:5050/report/index.html#?testId=abc\"", ReportHtml.Read(result.TestRunReportHtml));
     }
 
     [Fact]
@@ -281,15 +281,15 @@ public class IngestAttachmentTests : IDisposable
         var attachment = document.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0].GetProperty("attachments")[0];
         Assert.Equal("image/png", attachment.GetProperty("mediaType").GetString());
 
-        var schema = File.ReadAllText(Path.Combine(json.ReportsDirectory, "TestRunReport.schema.json"));
+        var schema = ReportHtml.Read(Path.Combine(json.ReportsDirectory, "TestRunReport.schema.json"));
         Assert.Contains("\"mediaType\"", schema);
 
         var xml = RunWithFormat("data-xml", records, DataFormat.Xml, schema: true);
-        Assert.Contains("<MediaType>image/png</MediaType>", File.ReadAllText(Path.Combine(xml.ReportsDirectory, "TestRunReport.xml")));
-        Assert.Contains("name=\"MediaType\"", File.ReadAllText(Path.Combine(xml.ReportsDirectory, "TestRunReport.schema.xsd")));
+        Assert.Contains("<MediaType>image/png</MediaType>", ReportHtml.Read(Path.Combine(xml.ReportsDirectory, "TestRunReport.xml")));
+        Assert.Contains("name=\"MediaType\"", ReportHtml.Read(Path.Combine(xml.ReportsDirectory, "TestRunReport.schema.xsd")));
 
         var yaml = RunWithFormat("data-yaml", records, DataFormat.Yaml);
-        Assert.Contains("MediaType: image/png", File.ReadAllText(Path.Combine(yaml.ReportsDirectory, "TestRunReport.yml")));
+        Assert.Contains("MediaType: image/png", ReportHtml.Read(Path.Combine(yaml.ReportsDirectory, "TestRunReport.yml")));
     }
 
     private IngestResult RunWithFormat(string subdirectory, IEnumerable<TestRunRecord> testRecords, DataFormat format, bool schema = false)

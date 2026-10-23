@@ -11,7 +11,7 @@ public class StepTextSegmentRenderingTests
             DateTime.UtcNow, DateTime.UtcNow,
             null, "TextSegments.html", "Test", includeTestRunData: true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
-        return File.ReadAllText(path);
+        return ReportHtml.Read(path);
     }
 
     private static Feature[] FeaturesWithStep(ScenarioStep step) =>

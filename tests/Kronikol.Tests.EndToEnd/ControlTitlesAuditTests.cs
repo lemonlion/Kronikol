@@ -317,7 +317,7 @@ public class ControlTitlesAuditTests : PlaywrightTestBase
     [Fact]
     public async Task Every_control_that_shows_has_a_title_and_a_name()
     {
-        await Page.GotoAsync(Write("ControlTitlesAudit.html"));
+        await Page.GotoReportAsync(Write("ControlTitlesAudit.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         var misses = new List<string>();
 
@@ -387,7 +387,7 @@ public class ControlTitlesAuditTests : PlaywrightTestBase
     [Fact]
     public async Task A_composite_steps_summary_says_how_many_steps_it_holds_once_it_is_pointed_at_or_focused()
     {
-        await Page.GotoAsync(Write("ControlTitlesAudit_Steps.html"));
+        await Page.GotoReportAsync(Write("ControlTitlesAudit_Steps.html"));
         await ExpandAllFeaturesAsync();
         await ExpandAllScenariosAsync();
         var two = CompositeSummary("the order is placed");
@@ -407,7 +407,7 @@ public class ControlTitlesAuditTests : PlaywrightTestBase
     [Fact]
     public async Task The_internal_flow_popup_titles_its_close_its_view_tabs_and_its_diagnostic_info()
     {
-        await Page.GotoAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage(includeToggle: true, includeEmptySegment: true)));
+        await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage(includeToggle: true, includeEmptySegment: true)));
 
         await Page.Locator("#trigger-seg-1").ClickAsync();
         var popup = Page.Locator(".iflow-popup");

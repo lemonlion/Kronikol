@@ -318,13 +318,13 @@ public class WidenedTestRunRecordTests
                 Options = options,
             });
 
-            Assert.Contains("A returning customer opens the overview.", File.ReadAllText(result.TestRunReportHtml));
+            Assert.Contains("A returning customer opens the overview.", ReportHtml.Read(result.TestRunReportHtml));
 
             using var document = System.Text.Json.JsonDocument.Parse(
                 ReportFile.ReadAny(Path.Combine(result.ReportsDirectory, "TestRunReport.json")));
             Assert.Equal("A returning customer opens the overview.",
                 document.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0].GetProperty("description").GetString());
-            Assert.Contains("\"description\"", File.ReadAllText(Path.Combine(result.ReportsDirectory, "TestRunReport.schema.json")));
+            Assert.Contains("\"description\"", ReportHtml.Read(Path.Combine(result.ReportsDirectory, "TestRunReport.schema.json")));
         }
         finally
         {

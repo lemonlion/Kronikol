@@ -503,7 +503,7 @@ public class ShowcaseReportTests : PlaywrightTestBase
             File.Delete(old);
 
         var reportUrl = GenerateShowcaseReport();
-        await Page.GotoAsync(reportUrl);
+        await Page.GotoReportAsync(reportUrl);
         await Page.Locator("details.feature").First.WaitForAsync();
         await Page.EvaluateAsync("document.documentElement.style.scrollBehavior='smooth';");
         await InjectFakeCursor();

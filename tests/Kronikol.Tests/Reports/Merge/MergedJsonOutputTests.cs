@@ -42,7 +42,7 @@ public class MergedJsonOutputTests : IDisposable
         Assert.Contains("Combined.json", output);
 
         // It is the mergeable superset, not the standard shape: that is what makes it re-mergeable.
-        var root = JsonDocument.Parse(File.ReadAllText(json)).RootElement;
+        var root = JsonDocument.Parse(ReportHtml.Read(json)).RootElement;
         Assert.Equal(1, root.GetProperty("mergeableFormatVersion").GetInt32());
         Assert.Equal(2, root.GetProperty("features").GetArrayLength());
     }
@@ -101,7 +101,7 @@ public class MergedJsonOutputTests : IDisposable
         var (exit, _, error) = Run(["--no-json", Out("Combined.json"), "-o", Path.Combine(second, "Again.html")]);
 
         Assert.True(exit == 0, error);
-        Assert.Contains("Adjust stock", File.ReadAllText(Path.Combine(second, "Again.html")));
+        Assert.Contains("Adjust stock", ReportHtml.Read(Path.Combine(second, "Again.html")));
     }
 
     // ─── What the merge must not lose or invent ────────────────
@@ -118,7 +118,7 @@ public class MergedJsonOutputTests : IDisposable
 
         Assert.Equal(0, Merge(Out("Combined.html")).Exit);
 
-        var root = JsonDocument.Parse(File.ReadAllText(Out("Combined.json"))).RootElement;
+        var root = JsonDocument.Parse(ReportHtml.Read(Out("Combined.json"))).RootElement;
         var diagnostics = root.GetProperty("diagnostics");
         Assert.Equal(1, diagnostics.GetArrayLength());
         Assert.Equal("ResultDefaulted", diagnostics[0].GetProperty("kind").GetString());
@@ -136,7 +136,7 @@ public class MergedJsonOutputTests : IDisposable
 
         Assert.Equal(0, Merge(Out("Combined.html")).Exit);
 
-        var root = JsonDocument.Parse(File.ReadAllText(Out("Combined.json"))).RootElement;
+        var root = JsonDocument.Parse(ReportHtml.Read(Out("Combined.json"))).RootElement;
         Assert.Equal("3.0.50", root.GetProperty("kronikolVersion").GetString());
     }
 
@@ -159,13 +159,13 @@ public class MergedJsonOutputTests : IDisposable
         WriteShard("runner1.json", "Orders", "r1s1", "Place order", ExecutionResult.Passed);
         WriteShard("runner2.json", "Inventory", "r2s1", "Adjust stock", ExecutionResult.Failed);
         var shard = Out("runner1.json");
-        var before = File.ReadAllText(shard);
+        var before = ReportHtml.Read(shard);
 
         var (exit, _, error) = Merge(Out("runner1.html"));
 
         Assert.Equal(2, exit);
         Assert.False(File.Exists(Out("runner1.html")), "A refused merge writes nothing at all.");
-        Assert.Equal(before, File.ReadAllText(shard));
+        Assert.Equal(before, ReportHtml.Read(shard));
         Assert.Contains("runner1.json", error);
     }
 
@@ -202,7 +202,7 @@ public class MergedJsonOutputTests : IDisposable
         // largest thing the standard report carries. Every shard now writes its interactions.
         WriteShardWithTraffic("runner1.json", "Orders", "r1s1", "Place order", "OrdersApi");
 
-        var scenario = JsonDocument.Parse(File.ReadAllText(Out("runner1.json")))
+        var scenario = JsonDocument.Parse(ReportHtml.Read(Out("runner1.json")))
             .RootElement.GetProperty("features")[0].GetProperty("scenarios")[0];
 
         var interactions = scenario.GetProperty("httpInteractions");
@@ -259,7 +259,7 @@ public class MergedJsonOutputTests : IDisposable
 
         Assert.Equal(0, Merge(Out("Combined.html")).Exit);
 
-        Assert.DoesNotContain("data-no-interactions", File.ReadAllText(Out("Combined.html")));
+        Assert.DoesNotContain("data-no-interactions", ReportHtml.Read(Out("Combined.html")));
     }
 
     [Fact]
@@ -276,7 +276,7 @@ public class MergedJsonOutputTests : IDisposable
 
         Assert.True(exit == 0, error);
         Assert.DoesNotContain("baseline", output);
-        Assert.Equal(1, JsonDocument.Parse(File.ReadAllText(Out("Combined.json")))
+        Assert.Equal(1, JsonDocument.Parse(ReportHtml.Read(Out("Combined.json")))
             .RootElement.GetProperty("features")[0].GetProperty("scenarios").GetArrayLength());
     }
 

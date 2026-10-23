@@ -25,7 +25,7 @@ public class IngestedBypassTests(PlaywrightFixture fixture) : PlaywrightTestBase
     [InlineData("tests", "issue-105-tests.ndjson", null)]
     public async Task The_issues_scenario_is_drawn_bypassed_with_its_reason(string name, string? tests, string? messages)
     {
-        await Page.GotoAsync(Ingest(name, tests, messages));
+        await Page.GotoReportAsync(Ingest(name, tests, messages));
         await ExpandFirstScenarioWithDiagram();
 
         var step = Page.Locator(".step", new() { HasTextString = "mock Gemini served the summary" }).First;
@@ -51,7 +51,7 @@ public class IngestedBypassTests(PlaywrightFixture fixture) : PlaywrightTestBase
     public async Task A_step_that_attached_kronikol_bypass_is_drawn_bypassed_with_its_reason()
     {
         // playwright-bdd 9.2.0 as published: the step attached kronikol-bypass and returned, and was reported PASSED.
-        await Page.GotoAsync(Ingest("attached", null, "playwright-bdd-9.2-bypass-messages.ndjson"));
+        await Page.GotoReportAsync(Ingest("attached", null, "playwright-bdd-9.2-bypass-messages.ndjson"));
         await ExpandFirstScenarioWithDiagram();
 
         var step = Page.Locator(".step", new() { HasTextString = "the local-only check attaches a bypass and returns" }).First;

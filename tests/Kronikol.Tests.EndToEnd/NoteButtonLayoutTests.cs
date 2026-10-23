@@ -52,7 +52,7 @@ public class NoteButtonLayoutTests : DiagramNotePlaywrightBase
             features, DateTime.UtcNow, DateTime.UtcNow, null, Path.Combine(TempDir, fileName), "Bakery", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs, toggleDefaults: toggles);
         File.Copy(path, Path.Combine(OutputDir, fileName), true);
-        await Page.GotoAsync(new Uri(path).AbsoluteUri);
+        await Page.GotoReportAsync(new Uri(path).AbsoluteUri);
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
@@ -176,7 +176,7 @@ public class NoteButtonLayoutTests : DiagramNotePlaywrightBase
     {
         // a wide SQL query, drawn by the emitter: it wraps at the set width, so it can widen, and it is not JSON, so its
         // format button stays hidden
-        await Page.GotoAsync(ReportTestHelper.GenerateReportWithWideSqlNote(TempDir, OutputDir, "NoteButtonsPacked.html"));
+        await Page.GotoReportAsync(ReportTestHelper.GenerateReportWithWideSqlNote(TempDir, OutputDir, "NoteButtonsPacked.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();

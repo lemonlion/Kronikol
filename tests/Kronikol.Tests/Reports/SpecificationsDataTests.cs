@@ -22,7 +22,7 @@ public class SpecificationsDataTests
         };
 
         var path = ReportGenerator.GenerateSpecificationsData(features, "SpecsData_yaml.yml", "Service Specifications", DataFormat.Yaml);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
 
         Assert.Contains("Title: Service Specifications", content);
         Assert.Contains("Features:", content);
@@ -54,7 +54,7 @@ public class SpecificationsDataTests
         };
 
         var path = ReportGenerator.GenerateSpecificationsData(features, "SpecsData_json.json", "Service Specs", DataFormat.Json);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
 
         var doc = JsonDocument.Parse(content);
         var root = doc.RootElement;
@@ -90,7 +90,7 @@ public class SpecificationsDataTests
         };
 
         var path = ReportGenerator.GenerateSpecificationsData(features, "SpecsData_xml.xml", "Specs", DataFormat.Xml);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
 
         var doc = XDocument.Parse(content);
         Assert.Equal("Specifications", doc.Root!.Name.LocalName);
@@ -111,7 +111,7 @@ public class SpecificationsDataTests
         };
 
         var path = ReportGenerator.GenerateSpecificationsData(features, "SpecsData_blank.json", "Specs", DataFormat.Json, generateBlankOnFailedTests: true);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
 
         Assert.Equal(string.Empty, content);
     }
@@ -148,7 +148,7 @@ public class SpecificationsDataTests
     public void GenerateSpecificationsData_yaml_emits_background_steps()
     {
         var path = ReportGenerator.GenerateSpecificationsData(FeatureWithBackground(), "SpecsData_bg.yml", "Specs", DataFormat.Yaml);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
 
         Assert.Contains("BackgroundSteps:", content);
         Assert.Contains("Given the ordering service is running", content);
@@ -162,7 +162,7 @@ public class SpecificationsDataTests
     public void GenerateSpecificationsData_json_emits_background_steps()
     {
         var path = ReportGenerator.GenerateSpecificationsData(FeatureWithBackground(), "SpecsData_bg.json", "Specs", DataFormat.Json);
-        var scenario = JsonDocument.Parse(File.ReadAllText(path))
+        var scenario = JsonDocument.Parse(ReportHtml.Read(path))
             .RootElement.GetProperty("features")[0].GetProperty("scenarios")[0];
 
         var background = scenario.GetProperty("backgroundSteps");
@@ -179,7 +179,7 @@ public class SpecificationsDataTests
     public void GenerateSpecificationsData_xml_emits_background_steps()
     {
         var path = ReportGenerator.GenerateSpecificationsData(FeatureWithBackground(), "SpecsData_bg.xml", "Specs", DataFormat.Xml);
-        var scenario = XDocument.Parse(File.ReadAllText(path)).Descendants("Scenario").Single();
+        var scenario = XDocument.Parse(ReportHtml.Read(path)).Descendants("Scenario").Single();
 
         var background = scenario.Element("BackgroundSteps")!.Elements("Step").Select(e => e.Value).ToArray();
         Assert.Equal(["Given the ordering service is running", "And the catalogue is loaded"], background);
@@ -207,14 +207,14 @@ public class SpecificationsDataTests
             }
         };
 
-        var yaml = File.ReadAllText(ReportGenerator.GenerateSpecificationsData(features, "SpecsData_nobg.yml", "Specs", DataFormat.Yaml));
+        var yaml = ReportHtml.Read(ReportGenerator.GenerateSpecificationsData(features, "SpecsData_nobg.yml", "Specs", DataFormat.Yaml));
         Assert.DoesNotContain("BackgroundSteps:", yaml);
 
-        var xml = XDocument.Parse(File.ReadAllText(
+        var xml = XDocument.Parse(ReportHtml.Read(
             ReportGenerator.GenerateSpecificationsData(features, "SpecsData_nobg.xml", "Specs", DataFormat.Xml)));
         Assert.Null(xml.Descendants("Scenario").Single().Element("BackgroundSteps"));
 
-        var json = JsonDocument.Parse(File.ReadAllText(
+        var json = JsonDocument.Parse(ReportHtml.Read(
             ReportGenerator.GenerateSpecificationsData(features, "SpecsData_nobg.json", "Specs", DataFormat.Json)));
         Assert.Equal(0, json.RootElement.GetProperty("features")[0].GetProperty("scenarios")[0]
             .GetProperty("backgroundSteps").GetArrayLength());

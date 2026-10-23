@@ -16,7 +16,7 @@ public class RunBandTests
         var path = ReportGenerator.GenerateHtmlReport(
             [], features, Start, Start.AddSeconds(5), null, fileName, "Test", includeTestRunData: true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs, ciMetadata: ci);
-        return File.ReadAllText(path);
+        return ReportHtml.Read(path);
     }
 
     private static Feature[] Features(params ExecutionResult[] results) =>

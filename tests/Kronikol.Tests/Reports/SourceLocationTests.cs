@@ -47,7 +47,7 @@ public class SourceLocationTests
     private static string Write(DataFormat format)
     {
         var extension = format switch { DataFormat.Json => "json", DataFormat.Xml => "xml", _ => "yml" };
-        return File.ReadAllText(ReportGenerator.GenerateTestRunReportData(
+        return ReportHtml.Read(ReportGenerator.GenerateTestRunReportData(
             Located(), DateTime.UtcNow, DateTime.UtcNow,
             $"SourceLoc_{Guid.NewGuid():N}.{extension}", format));
     }
@@ -80,7 +80,7 @@ public class SourceLocationTests
 
         var path = ReportGenerator.GenerateTestRunReportData(
             features, DateTime.UtcNow, DateTime.UtcNow, $"SourceLoc_{Guid.NewGuid():N}.json", DataFormat.Json);
-        using var document = JsonDocument.Parse(File.ReadAllText(path));
+        using var document = JsonDocument.Parse(ReportHtml.Read(path));
         var scenario = document.RootElement.GetProperty("features").EnumerateArray().Single()
             .GetProperty("scenarios").EnumerateArray().Single();
 

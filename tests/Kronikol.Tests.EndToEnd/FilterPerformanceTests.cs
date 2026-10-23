@@ -153,7 +153,7 @@ public class FilterPerformanceTests : PlaywrightTestBase
     {
         var dependencies = new[] { "OrderService", "PaymentGateway", "NotificationService", "CacheService", "AuditService" };
         var html = GenerateLargeReport(20, 5, dependencies);
-        await Page.GotoAsync(ServePage(html));
+        await Page.GotoReportAsync(ServePage(html));
         await Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
 
         await Page.EvaluateAsync("fc()");
@@ -175,7 +175,7 @@ public class FilterPerformanceTests : PlaywrightTestBase
     {
         var dependencies = new[] { "OrderService", "PaymentGateway", "NotificationService", "CacheService", "AuditService", "UserService", "InventoryService" };
         var html = GenerateLargeReport(20, 10, dependencies);
-        await Page.GotoAsync(ServePage(html));
+        await Page.GotoReportAsync(ServePage(html));
         await Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
 
         await Page.EvaluateAsync("fc()");
@@ -196,7 +196,7 @@ public class FilterPerformanceTests : PlaywrightTestBase
     {
         var dependencies = new[] { "OrderService", "PaymentGateway", "NotificationService", "CacheService", "AuditService" };
         var html = GenerateLargeReport(20, 5, dependencies);
-        await Page.GotoAsync(ServePage(html));
+        await Page.GotoReportAsync(ServePage(html));
         await Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
 
         await Page.EvaluateAsync("fc()");
@@ -218,7 +218,7 @@ public class FilterPerformanceTests : PlaywrightTestBase
     {
         var dependencies = new[] { "OrderService", "PaymentGateway" };
         var html = GenerateLargeReport(5, 5, dependencies);
-        await Page.GotoAsync(ServePage(html));
+        await Page.GotoReportAsync(ServePage(html));
         await Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
 
         await Page.Locator(".dependency-toggle[data-dependency='OrderService']").ClickAsync();

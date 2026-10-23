@@ -12,7 +12,7 @@ public class SearchDataAttributeTests
             DateTime.UtcNow, DateTime.UtcNow,
             null, "SearchDataAttr.html", "Test", includeTestRunData: true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
-        return File.ReadAllText(path);
+        return ReportHtml.Read(path);
     }
 
     private static string[] ExtractDataSearchValues(string html)
@@ -350,7 +350,7 @@ public class SearchDataAttributeTests
             DateTime.UtcNow, DateTime.UtcNow,
             null, "SearchNoPlantUml.html", "Test", includeTestRunData: true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
         var searchValues = ExtractDataSearchValues(content);
 
         var scenarioSearch = searchValues.FirstOrDefault(v => v.Contains("create order"));
@@ -406,7 +406,7 @@ public class SearchDataAttributeTests
             DateTime.UtcNow, DateTime.UtcNow,
             null, "SearchNoPlantUmlParam.html", "Test", includeTestRunData: true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
 
         var searchValues = ExtractDataSearchValues(content);
         foreach (var sv in searchValues)
@@ -456,7 +456,7 @@ public class SearchDataAttributeTests
             DateTime.UtcNow, DateTime.UtcNow,
             null, "SearchNoLoading.html", "Test", includeTestRunData: true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
 
         // Search bar should exist and NOT be disabled
         Assert.Contains("id=\"searchbar\"", content);
@@ -493,7 +493,7 @@ public class SearchDataAttributeTests
             DateTime.UtcNow, DateTime.UtcNow,
             null, "SearchParticipants.html", "Test", includeTestRunData: true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
         var searchValues = ExtractDataSearchValues(content);
 
         var scenarioSearch = searchValues.FirstOrDefault(v => v.Contains("create order"));
@@ -531,7 +531,7 @@ public class SearchDataAttributeTests
             DateTime.UtcNow, DateTime.UtcNow,
             null, "SearchUrls.html", "Test", includeTestRunData: true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
         var searchValues = ExtractDataSearchValues(content);
 
         var scenarioSearch = searchValues.FirstOrDefault(v => v.Contains("process payment"));
@@ -579,7 +579,7 @@ public class SearchDataAttributeTests
             DateTime.UtcNow, DateTime.UtcNow,
             null, "SearchParamDiagram.html", "Test", includeTestRunData: true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
-        var content = File.ReadAllText(path);
+        var content = ReportHtml.Read(path);
         var searchValues = ExtractDataSearchValues(content);
 
         var groupSearch = searchValues.FirstOrDefault(v => v.Contains("withdraw"));

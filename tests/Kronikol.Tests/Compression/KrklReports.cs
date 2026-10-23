@@ -107,7 +107,7 @@ internal static class KrklReports
     /// </summary>
     public static byte[] AsVersion3(string json, int formatVersion = 3, string? kronikolVersion = null, params string[] withoutKeys)
     {
-        var root = JsonNode.Parse(File.ReadAllText(json))!.AsObject();
+        var root = JsonNode.Parse(ReportHtml.Read(json))!.AsObject();
         Strip(root, withoutKeys);
         Prune(root);
         root["formatVersion"] = formatVersion;

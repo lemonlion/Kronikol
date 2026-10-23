@@ -14,7 +14,7 @@ public class DependencyColoringTests : PlaywrightTestBase
     [Fact]
     public async Task Sequence_diagram_renders_SVG_with_colored_arrows()
     {
-        await Page.GotoAsync(GenerateReport("DepColorArrows.html"));
+        await Page.GotoReportAsync(GenerateReport("DepColorArrows.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         var svg = (await WaitForDiagramSvg()).First;
@@ -31,7 +31,7 @@ public class DependencyColoringTests : PlaywrightTestBase
     [Fact]
     public async Task Component_diagram_is_hidden_by_default()
     {
-        await Page.GotoAsync(GenerateReportWithEmbeddedComponentDiagram("ComponentHiddenDefault.html"));
+        await Page.GotoReportAsync(GenerateReportWithEmbeddedComponentDiagram("ComponentHiddenDefault.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         // since 5.0.0 hidden as its tab's panel until the tab is chosen (plans/OPTION_C_PLAN.md S3)
@@ -45,7 +45,7 @@ public class DependencyColoringTests : PlaywrightTestBase
     [Fact]
     public async Task Component_diagram_tab_exists()
     {
-        await Page.GotoAsync(GenerateReportWithEmbeddedComponentDiagram("ComponentToggleBtn.html"));
+        await Page.GotoReportAsync(GenerateReportWithEmbeddedComponentDiagram("ComponentToggleBtn.html"));
 
         var tab = Page.Locator("#tab-components");
         await Expect(tab).ToBeVisibleAsync();
@@ -55,7 +55,7 @@ public class DependencyColoringTests : PlaywrightTestBase
     [Fact]
     public async Task Component_diagram_tab_not_present_without_diagram()
     {
-        await Page.GotoAsync(GenerateReport("NoComponentToggle.html"));
+        await Page.GotoReportAsync(GenerateReport("NoComponentToggle.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         Assert.Equal(0, await Page.Locator("#tab-components").CountAsync());
@@ -65,7 +65,7 @@ public class DependencyColoringTests : PlaywrightTestBase
     [Fact]
     public async Task Component_diagram_tab_shows_its_panel_and_another_tab_hides_it()
     {
-        await Page.GotoAsync(GenerateReportWithEmbeddedComponentDiagram("ComponentToggleShowHide.html"));
+        await Page.GotoReportAsync(GenerateReportWithEmbeddedComponentDiagram("ComponentToggleShowHide.html"));
         var panel = Page.Locator("#panel-components");
         await Expect(panel).ToBeHiddenAsync();
 
@@ -79,7 +79,7 @@ public class DependencyColoringTests : PlaywrightTestBase
     [Fact]
     public async Task Choosing_the_components_tab_hides_the_timeline()
     {
-        await Page.GotoAsync(GenerateReportWithEmbeddedComponentDiagram("ComponentRadioTimeline.html"));
+        await Page.GotoReportAsync(GenerateReportWithEmbeddedComponentDiagram("ComponentRadioTimeline.html"));
 
         await OpenReportTabAsync("timeline");
         await Expect(Page.Locator("#scenario-timeline")).ToBeVisibleAsync();
@@ -94,7 +94,7 @@ public class DependencyColoringTests : PlaywrightTestBase
     [Fact]
     public async Task Choosing_the_timeline_tab_hides_the_component_diagram()
     {
-        await Page.GotoAsync(GenerateReportWithEmbeddedComponentDiagram("TimelineRadioComponent.html"));
+        await Page.GotoReportAsync(GenerateReportWithEmbeddedComponentDiagram("TimelineRadioComponent.html"));
 
         await OpenReportTabAsync("components");
         await Expect(Page.Locator("#component-diagram")).ToBeVisibleAsync();
@@ -109,7 +109,7 @@ public class DependencyColoringTests : PlaywrightTestBase
     [Fact]
     public async Task The_components_tab_is_selected_while_its_panel_shows()
     {
-        await Page.GotoAsync(GenerateReportWithEmbeddedComponentDiagram("ComponentToggleActive.html"));
+        await Page.GotoReportAsync(GenerateReportWithEmbeddedComponentDiagram("ComponentToggleActive.html"));
         var tab = Page.Locator("#tab-components");
         await Expect(tab).ToHaveAttributeAsync("aria-selected", "false");
 
@@ -123,7 +123,7 @@ public class DependencyColoringTests : PlaywrightTestBase
     [Fact]
     public async Task Component_diagram_renders_SVG_after_toggle()
     {
-        await Page.GotoAsync(GenerateReportWithEmbeddedComponentDiagram("ComponentSvgToggle.html"));
+        await Page.GotoReportAsync(GenerateReportWithEmbeddedComponentDiagram("ComponentSvgToggle.html"));
 
         await OpenReportTabAsync("components");
 
@@ -137,7 +137,7 @@ public class DependencyColoringTests : PlaywrightTestBase
     [Fact]
     public async Task Report_without_component_diagram_has_no_section()
     {
-        await Page.GotoAsync(GenerateReport("NoComponentSection.html"));
+        await Page.GotoReportAsync(GenerateReport("NoComponentSection.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         var count = await Page.Locator(".component-diagram-section").CountAsync();

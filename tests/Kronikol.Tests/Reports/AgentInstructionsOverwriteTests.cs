@@ -75,7 +75,7 @@ public class AgentInstructionsOverwriteTests : IDisposable
         Assert.True(File.Exists(Path.Combine(_dir, dataFile)), $"the run wrote no {dataFile}");
         foreach (var agentFile in new[] { AgentInstructionsGenerator.ClaudeFileName, AgentInstructionsGenerator.AgentsFileName })
         {
-            var text = File.ReadAllText(Path.Combine(_dir, agentFile));
+            var text = ReportHtml.Read(Path.Combine(_dir, agentFile));
             Assert.Contains($"**Never open `{dataFile}`, `TestRunReport.html`, or a diagram.**", text, StringComparison.Ordinal);
             if (format != DataFormat.Json)
                 Assert.DoesNotContain("TestRunReport.json", text, StringComparison.Ordinal);
@@ -91,7 +91,7 @@ public class AgentInstructionsOverwriteTests : IDisposable
 
         Run();
 
-        var after = File.ReadAllText(path);
+        var after = ReportHtml.Read(path);
 
         // Kronikol's own instructions are there...
         Assert.Contains("kronikol query", after, StringComparison.Ordinal);
@@ -108,7 +108,7 @@ public class AgentInstructionsOverwriteTests : IDisposable
         Run();
         Run();
 
-        var after = File.ReadAllText(path);
+        var after = ReportHtml.Read(path);
 
         // Twice through, one block. Otherwise every run of the suite grows the file by a copy.
         var occurrences = after.Split("<!-- kronikol:begin -->").Length - 1;
@@ -127,7 +127,7 @@ public class AgentInstructionsOverwriteTests : IDisposable
         var agents = Path.Combine(_dir, "AGENTS.md");
         Assert.True(File.Exists(claude));
         Assert.True(File.Exists(agents));
-        Assert.Equal(File.ReadAllText(claude), File.ReadAllText(agents));
-        Assert.Contains("Failures.md", File.ReadAllText(claude), StringComparison.Ordinal);
+        Assert.Equal(ReportHtml.Read(claude), ReportHtml.Read(agents));
+        Assert.Contains("Failures.md", ReportHtml.Read(claude), StringComparison.Ordinal);
     }
 }

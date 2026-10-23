@@ -11,7 +11,7 @@ public class FeatureSummaryTableReportTests
             DateTime.UtcNow, DateTime.UtcNow,
             null, "SummaryTable.html", "Test", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
-        return File.ReadAllText(path);
+        return ReportHtml.Read(path);
     }
 
     [Fact]
