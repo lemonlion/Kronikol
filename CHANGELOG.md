@@ -4,6 +4,33 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.5.3] - 2026-10-23
+
+The patch part moves (5.5.2 to 5.5.3): two fixes to 5.5.1 and 5.5.2, found by reviewing them, with nothing new to call
+or configure.
+
+### Fixed
+
+- **A diagram whose box is not laid out gets no zoom slider until it shows, as before 5.5.1.** 5.5.1 reads a picture's
+  natural width from the width the engine writes on it, where it used to be measured, and a picture in a box with no
+  layout (a hidden panel, a scenario closed in Firefox, or one closed while its diagram was being drawn) measured 0. So
+  such a box counted as zoomable: its slider was made with a fit level of 1%, and the box kept that slider once shown,
+  as a box with a slider is not asked again. A diagram that fits got a slider that did nothing, and a wide one a slider
+  whose lower range did nothing. The note width control read the same width where it relies on 0 to fall back. The
+  width is now read only from a picture that has a box, and is 0 otherwise.
+- **A failure while placing a diagram's note buttons no longer stops the toggle or leaves the diagram being drawn.**
+  5.5.2 holds a diagram's drawing until its buttons are placed; when placing them threw, the drawing never ended, so
+  the diagram's note buttons did nothing and every later toggle waited 15 s for it, and the toggle's queue stopped with
+  the toggle pending for good (the queue also stopped before 5.5.1). The failure is now reported in the console and the
+  rest goes on, as after a diagram's first drawing.
+
+### Tests
+
+- `GradualZoomTests`: a box not laid out gets no slider and measures 0, and once shown its slider starts at its fit
+  level (red on 5.5.2: a slider, a natural width of 1,932 and a minimum of 1 where the fit level is 94).
+- `ReportToggleResponsivenessTests`: placing the buttons of the diagram on screen fails once during a toggle, and the
+  toggle still finishes and the drawing ends (red on 5.5.2: the toggle still pending after 30 s).
+
 ## [5.5.2] - 2026-10-23
 
 The patch part moves (5.5.1 to 5.5.2): a fix to 5.5.1, with nothing new to call or configure.

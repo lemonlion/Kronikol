@@ -1007,10 +1007,12 @@
     // The picture's width at its natural (unscaled) size. The engine writes it on the picture in pixels, and the page's
     // style sizes the picture by it, so it is read from there: drawing the picture at that size to measure it and back
     // laid out every word in it twice, about 40 ms on a long diagram, several times for each zoom slider (5.5.1). A
-    // width written in other units is measured as before.
+    // width written in other units is measured as before. A picture with no box (in a hidden panel, or a scenario closed
+    // in Firefox) measures 0, as it did when it was measured: a slider is made for a box only once it is laid out, and
+    // the note width control falls back (5.5.3: 5.5.1 gave such a box a slider at 1% that it kept once shown).
     function naturalWidthOf(svg) {
         var w = svg.width && svg.width.baseVal;
-        if (w && (w.unitType === 1 || w.unitType === 5) && w.value > 0) return w.value; // a number, or pixels
+        if (w && (w.unitType === 1 || w.unitType === 5) && w.value > 0) return svg.getClientRects().length ? w.value : 0; // a number, or pixels
         var saved = svg.style.maxWidth;
         var savedW = svg.style.width;
         svg.style.maxWidth = 'none';

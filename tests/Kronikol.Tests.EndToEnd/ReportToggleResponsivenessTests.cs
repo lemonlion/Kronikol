@@ -625,6 +625,44 @@ public class ReportToggleResponsivenessTests : PlaywrightTestBase
         Assert.False(r.GetProperty("drawing").GetBoolean(), "the drawing ends once the buttons are placed");
     }
 
+    // A diagram whose buttons fail to be placed after the paint is reported, and its drawing still ends and the toggle
+    // still finishes, as after a first drawing's hooks: 5.5.2 left it counted as being drawn for good, so its note buttons
+    // did nothing and every later toggle waited 15 s for it, and the toggle never finished (5.5.3).
+    [Fact]
+    public async Task A_toggle_finishes_and_ends_the_drawing_when_placing_the_note_buttons_fails()
+    {
+        await OpenAllDrawnAsync(Small.Value, 2);
+        await Page.EvaluateAsync("() => document.querySelector('.plantuml-browser[data-k-sequence]').scrollIntoView({ block: 'center' })");
+        await SettleAsync();
+        // once the diagram on screen waits for the paint, placing its buttons reads its notes' states, and that read fails
+        await Page.EvaluateAsync("""
+            () => {
+                var c = document.querySelector('.plantuml-browser[data-k-sequence]'), t = performance.now();
+                window.__failed = false;
+                (function frame() {
+                    requestAnimationFrame(function () {
+                        if (c._kPaintWaits > 0) {
+                            var steps = c._noteSteps;
+                            Object.defineProperty(c, '_noteSteps', { configurable: true, get: function () {
+                                window.__failed = true;
+                                Object.defineProperty(c, '_noteSteps', { configurable: true, writable: true, value: steps });
+                                throw new Error('placing the buttons failed');
+                            } });
+                        } else if (performance.now() - t < 60000) frame();
+                    });
+                })();
+                document.querySelector('.toolbar-row .toggle-btn[data-toggle="databases"]').click();
+            }
+            """);
+
+        await Page.WaitForFunctionAsync(
+            "() => !document.querySelector('.toggle-btn[data-toggle=\"databases\"][data-pending]')",
+            null, new() { Timeout = 30_000, PollingInterval = 200 });
+        Assert.True(await Page.EvaluateAsync<bool>("() => window.__failed"), "placing the buttons failed once");
+        Assert.False(await Page.EvaluateAsync<bool>("() => !!document.querySelector('.plantuml-browser[data-k-sequence]')._noteRendering"),
+            "the drawing ends though its buttons failed");
+    }
+
     [Fact]
     public async Task A_toggle_finishes_with_the_note_buttons_placed_on_a_page_that_paints_no_frame()
     {

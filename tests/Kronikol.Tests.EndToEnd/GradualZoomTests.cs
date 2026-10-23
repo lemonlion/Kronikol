@@ -122,6 +122,36 @@ public class GradualZoomTests : PlaywrightTestBase
         Assert.Equal(0, sliderCount);
     }
 
+    // A box that is not laid out (a hidden panel, a scenario closed in Firefox, one closed while its diagram was drawn)
+    // measures nothing, so it gets no slider and its natural width reads 0 until it shows, as when the width was measured.
+    // 5.5.1 read the width from the engine's attribute, so such a box was zoomable with a fit level of 1%, and kept that
+    // slider once shown, as a box with a slider is not asked again (5.5.3).
+    [Fact]
+    public async Task A_box_not_laid_out_gets_no_zoom_slider_until_it_shows()
+    {
+        await SetupWideDiagram("SliderNotLaidOut.html");
+
+        var result = await GetDiagramContainer().EvaluateAsync<string>("""
+            c => {
+                c.querySelectorAll('.diagram-zoom-controls').forEach(function (z) { z.remove(); });
+                var wrap = c.parentElement;
+                wrap.style.display = 'none';
+                window._addZoomButton(c);
+                var hidden = c.querySelectorAll('.diagram-zoom-controls').length + '|' + window._getDiagramNaturalWidth(c);
+                wrap.style.display = '';
+                window._addZoomButton(c);
+                var s = c.querySelector('.diagram-zoom-slider');
+                var svg = c.querySelector('svg');
+                var fit = Math.max(1, Math.min(100, Math.round(c.clientWidth / svg.width.baseVal.value * 100)));
+                return hidden + '|' + (s ? s.min : 'none') + '|' + fit;
+            }
+            """);
+
+        var parts = result.Split('|');
+        Assert.True(parts[0] == "0" && parts[1] == "0", $"A box not laid out should get no slider and measure 0 (slider count|natural width|min|fit): {result}");
+        Assert.True(parts[2] == parts[3], $"Shown again, its slider should start at its fit level (slider count|natural width|min|fit): {result}");
+    }
+
     [Fact]
     public async Task Zoom_slider_is_hidden_until_hover()
     {

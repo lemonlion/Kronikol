@@ -3438,14 +3438,18 @@
         }
     }
 
-    // The hover-only work after a drawing: the note buttons and hover areas, the assertion tooltips, the zoom slider.
+    // The hover-only work after a drawing: the note buttons and hover areas, the assertion tooltips, the zoom slider. A
+    // failure is reported and its caller goes on, as after a first drawing's hooks (5.5.3: a failure stopped the queue
+    // that called it, and from 5.5.2 left the diagram counted as being drawn for good, its note buttons doing nothing).
     function decorateNow(el) {
         el._kDecorate = false;
         unwatchNear(el);
         if (!el.isConnected) return;
-        makeNotesCollapsible(el);
-        addAssertionTooltips(el);
-        requestAnimationFrame(function() { if (window._addZoomButton) window._addZoomButton(el); });
+        try {
+            makeNotesCollapsible(el);
+            addAssertionTooltips(el);
+            requestAnimationFrame(function() { if (window._addZoomButton) window._addZoomButton(el); });
+        } catch (err) { console.error('Post-render hook error:', err); }
     }
 
     // The hover-only work for `el` now when it is near the screen, else as it comes near.
