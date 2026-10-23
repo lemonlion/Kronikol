@@ -1,0 +1,21 @@
+py -I json_blocks.py TestRunReport.html
+
+== iflow-segments: 594,477 bytes, top=dict len=2
+   dicts=1 lists=1 strings=3,258 (584,690 B, max 447,896) base64-like>=200B=1 (447,896 B) plantuml=0 (0 B) int=0 float=0 bool=0 null=0
+   keys: has=1, z=1
+== iflow-segments: 15,072 chars, NOT JSON (JSONDecodeError); first 40 chars class: other
+== component-diagram-model: 28,229 bytes, top=dict len=4
+   dicts=8 lists=10 strings=782 (12,643 B, max 43) base64-like>=200B=0 (0 B) plantuml=0 (0 B) int=3,354 float=0 bool=0 null=0
+   keys: scenarios=8, line=7, from=7, to=7, bare=7, direction=1, components=1, connections=1
+== puml-data: 14,466,636 bytes, top=dict len=1553
+   dicts=1 lists=0 strings=1,553 (13,341,648 B, max 388,808) base64-like>=200B=1,553 (13,341,648 B) plantuml=0 (0 B) int=0 float=0 bool=0 null=0
+   keys: puml-#=782, iflow-puml-whole-<uuid>=1 (one per whole-test flow diagram)
+== step-data: 275,348 bytes, top=dict len=359
+   dicts=1 lists=0 strings=359 (251,620 B, max 3,452) base64-like>=200B=359 (251,620 B) plantuml=0 (0 B) int=0 float=0 bool=0 null=0
+   keys: s#=359
+== kron-search-index: 1,035,322 bytes, top=str len=1035320
+   dicts=0 lists=0 strings=1 (1,035,320 B, max 1,035,320) base64-like>=200B=1 (1,035,320 B) plantuml=0 (0 B) int=0 float=0 bool=0 null=0
+
+Notes: the second "iflow-segments" match is the element's opening tag quoted inside a script, not a second block.
+The key list for puml-data is shortened here: the script printed twelve iflow-puml-whole keys with their digits
+replaced by '#'. Strings are counted after JSON decoding, so '+' counts as one byte (the page stores +).

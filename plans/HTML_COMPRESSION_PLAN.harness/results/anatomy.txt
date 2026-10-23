@@ -1,0 +1,91 @@
+py -I anatomy.py TestRunReport.html   (the 5.4.4 report of 2026-10-23, 1,553 diagrams)
+
+file bytes: 28,954,978  chars: 28,947,454  non-ascii bytes: 11,306
+
+== raw-text elements (bytes, count) ==
+  14,466,692       1  script#puml-data type=application/json
+   1,035,386       1  script#kron-search-index type=application/json
+     709,300      15  script#- type=-
+     594,538       1  script#iflow-segments type=application/json
+     275,404       1  script#step-data type=application/json
+     153,208       1  style#- type=-
+      28,299       1  script#component-diagram-model type=application/json
+      13,141       1  script#kronikol-components type=-
+       7,465       1  script#kronikol-timeline type=-
+       5,963       1  script#kronikol-focus type=-
+       5,398       1  script#kronikol-report-tabs type=-
+       3,306       1  script#kronikol-scenario-settings type=-
+       2,880       1  script#kronikol-run-band type=-
+       2,194       1  script#kronikol-theme-switch type=-
+         694       1  script#kronikol-theme-boot type=-
+         128       3  title#- type=-
+  17,303,996  total in raw-text elements
+
+== markup outside raw-text elements: 11,650,982 bytes ==
+text between tags: 1,280,030 bytes
+
+-- tags (bytes incl. attributes, start count) --
+   2,647,221     3,677  <details>
+   1,669,910     7,272  <button>
+   1,615,289    38,838  <span>
+   1,513,028    19,616  <div>
+   1,414,899     2,492  <tr>
+     402,837     1,540  <select>
+     277,328     9,241  <option>
+     222,801       518  <path>
+     168,761     3,677  <summary>
+     154,349     7,806  <td>
+      96,690       513  <a>
+      67,203     1,539  <optgroup>
+      45,218     2,566  <th>
+      38,036       522  <svg>
+      14,486       615  <table>
+       8,910       594  <thead>
+       8,910       594  <tbody>
+       2,243         1  <link>
+         634        45  <code>
+         565         2  <input>
+         356         2  <circle>
+         276         8  <polyline>
+         186         3  <meta>
+         154        14  <pre>
+          99        11  <dt>
+
+-- attributes (bytes incl. name, count) --
+   2,328,656       512  data-search
+   1,877,270    80,698  class
+   1,247,916       385  data-row-search
+   1,141,694    14,911  title
+     460,836       771  data-flame-z
+     245,506     5,553  onclick
+     208,694       518  d
+     170,066     3,873  id
+     106,300     9,241  value
+      91,578     3,086  aria-label
+      89,262     4,104  data-label
+      73,364     1,540  onchange
+      68,938     2,324  data-diagram-type
+      64,280     3,155  style
+      56,943     2,565  data-toggle
+      52,972     2,596  aria-pressed
+      51,797       512  data-scenario-name
+      51,188       514  href
+      47,196     2,565  data-shown
+      40,421       357  data-scenario-id
+      34,884     1,539  data-state
+      34,884     1,539  label
+      33,748       506  data-dependencies
+      32,760     1,512  aria-selected
+      31,407     1,653  data-param
+      30,148     1,293  data-duration-ms
+      29,298     1,542  autocomplete
+      29,116     1,506  data-dtype
+      27,506       809  data-stable-id
+      27,334     2,025  tabindex
+
+base64-like runs >= 400 chars: 1,642, 2,399,554 bytes, largest 1,035,320
+data: URIs by type: {'image/svg+xml': 5}
+version strings near the top: [('5.4.4', 1)]
+
+Note: the base64 count misses #puml-data and #step-data, whose strings System.Text.Json writes with '+' escaped as
++, which breaks the run; json-blocks.txt and split.txt count them.

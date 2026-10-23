@@ -1,0 +1,11 @@
+{
+  "name": "html-compression-plan-harness",
+  "private": true,
+  "description": "Browser timing and functional checks for plans/HTML_COMPRESSION_PLAN.md",
+  "dependencies": {
+    "brotli-dec-wasm": "2.3.2",
+    "fzstd": "0.1.1",
+    "playwright-core": "1.59.0",
+    "zstddec": "0.3.4"
+  }
+}

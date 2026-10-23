@@ -1,0 +1,31 @@
+fzstd 0.1.1 against its documented 2^25 (32 MiB) back-reference limit (2026-10-23, Node 25.9.0)
+
+== forced long match: 40 MiB random + a copy of its first 4 MiB (46,137,344 bytes)
+py -I fzstd_inputs.py out/fzlong
+  w23     46,138,414   (no match possible within an 8 MB window: the frame is the input's size)
+  w27ldm  41,944,461   (4,192,883 smaller: the 40 MiB match was used)
+  l22     41,944,371   (4,192,973 smaller: the 40 MiB match was used)
+node fzcheck.js out/fzlong
+  w23 decoded 46137344 IDENTICAL 33 ms
+  w27ldm decoded 46137344 IDENTICAL 42 ms
+  l22 decoded 46137344 IDENTICAL 38 ms
+node fzstream.js out/fzlong
+  w23 stream decoded 46137344 IDENTICAL
+  w27ldm stream decoded 46137344 IDENTICAL
+  l22 stream decoded 46137344 IDENTICAL
+
+== the diagram sources (split.py's puml.txt, 102,837,294 bytes)
+py -I fzstd_inputs.py out/fzcheck out/split/puml.txt
+  w23      3,483,511
+  w27ldm   3,347,280
+  l22      2,519,216
+node fzcheck.js out/fzcheck
+  w23 decoded 102837294 IDENTICAL 256 ms
+  w27ldm decoded 102837294 IDENTICAL 231 ms
+  l22 decoded 102837294 IDENTICAL 210 ms
+node fzstream.js out/fzcheck
+  w23 stream decoded 102837294 IDENTICAL
+  w27ldm stream decoded 102837294 IDENTICAL
+  l22 stream decoded 102837294 IDENTICAL
+
+So the README's caveat ("might fail" above 32 MB at the ultra levels) did not reproduce, one-shot or streaming.

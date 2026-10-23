@@ -1,0 +1,4 @@
+py -I search_index.py TestRunReport.html out/split/search.bin
+
+stored as in the page: 1035322 -> zstd -9 w23 777168
+raw binary index:      1346203 -> zstd -9 w23 719857

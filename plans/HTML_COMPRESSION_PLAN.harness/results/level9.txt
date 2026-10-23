@@ -1,0 +1,14 @@
+variant                       markup        puml       steps       iflow       flame      search         sum    secs
+-9 (w22 default)             567,571   3,634,578      29,300     279,762     108,000     719,857   5,339,068    0.44
+-9 w23                       561,100   3,483,511      29,300     279,762     108,000     719,857   5,181,530    0.42
+-9 w23 ldm                   570,864   3,496,614      31,121     282,198     111,232     719,823   5,211,852    0.52
+-9 w27 ldm                   567,972   3,347,280      31,121     282,198     111,232     719,823   5,059,626    0.55
+one frame -9 w23           5,142,334  0.41s
+one frame -9 w23 ldm       5,168,077  0.51s
+diagram chunks of  1 MB:   77 frames,    4,751,961 bytes
+diagram chunks of  2 MB:   44 frames,    4,354,482 bytes
+diagram chunks of  4 MB:   24 frames,    4,044,278 bytes
+diagram chunks of  8 MB:   12 frames,    3,781,262 bytes
+diagram chunks of 16 MB:    7 frames,    3,622,002 bytes
+per diagram +   112,640 B trained dict:    6,316,355 bytes (dict trained in 0.7s)
+per diagram + 1,000,000 B trained dict:    7,012,200 bytes (dict trained in 0.6s)

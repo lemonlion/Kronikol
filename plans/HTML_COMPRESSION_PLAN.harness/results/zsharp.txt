@@ -1,0 +1,15 @@
+dotnet run --file zsharp.cs -c Release -- markup.html puml.txt normalized.html
+(.NET SDK 10.0.300, ZstdSharp.Port 0.8.8 from NuGet: the code src/Kronikol/Compression/Zstd copies; level 9,
+window log 23, checksum on; three runs each)
+
+markup.html                  12,284,541 ->      561,100       160 ms (run 1)
+markup.html                  12,284,541 ->      561,100       100 ms (run 2)
+markup.html                  12,284,541 ->      561,100       111 ms (run 3)
+puml.txt                    102,837,294 ->    3,483,511       368 ms (run 1)
+puml.txt                    102,837,294 ->    3,483,511       348 ms (run 2)
+puml.txt                    102,837,294 ->    3,483,511       365 ms (run 3)
+normalized.html             136,399,362 ->    5,253,629       490 ms (run 1)
+normalized.html             136,399,362 ->    5,253,629       471 ms (run 2)
+normalized.html             136,399,362 ->    5,253,629       481 ms (run 3)
+
+The sizes equal libzstd 1.5.7's for the same settings (level9.txt: markup 561,100, puml 3,483,511).

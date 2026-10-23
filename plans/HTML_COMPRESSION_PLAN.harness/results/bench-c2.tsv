@@ -1,0 +1,25 @@
+browser	variant	run	decoder	shell	start	inflate	text	write	dcl2	load2	paint2	diagDone	paintDcl	fcp	wall	heapMB	details	src	errors
+chromium 147.0.7727.15	v0-probed	1	-	-	-	-	-	-	490	711	2586	-	2586	2568	2643	55+10	3677	ok 362920	0
+chromium	v0-probed	2	-	-	-	-	-	-	618	782	816	-	816	80	838	42+8	3677	ok 362920	0
+chromium	v0-probed	3	-	-	-	-	-	-	616	783	818	-	818	100	1403	42+8	3677	ok 362920	0
+chromium 147.0.7727.15	vC2-worker	1	fzstd	53	58	72	22	353	407	686	699	921	688	32	1444	34+112	3677	ok 362920	0
+chromium	vC2-worker	2	fzstd	55	59	72	22	349	409	683	697	922	685	40	1443	35+112	3677	ok 362920	0
+chromium	vC2-worker	3	fzstd	54	59	73	22	362	414	707	722	942	709	32	1479	34+112	3677	ok 362920	0
+firefox 148.0.2	v0-probed	1	-	-	-	-	-	-	888	1173	1195	-	1195	866	1308	-	3677	ok 362920	0
+firefox	v0-probed	2	-	-	-	-	-	-	729	1029	1118	-	1118	715	1248	-	3677	ok 362920	0
+firefox	v0-probed	3	-	-	-	-	-	-	684	974	1030	-	977	680	1207	-	3677	ok 362920	0
+firefox 148.0.2	vC2-worker	1	fzstd	109	138	72	18	487	1045	1329	1355	1580	1344	137	2106	-	3677	ok 362920	0
+firefox	vC2-worker	2	fzstd	82	107	71	18	591	1122	1410	1437	1652	1426	105	2178	-	3677	ok 362920	0
+firefox	vC2-worker	3	fzstd	99	120	74	19	537	1108	1405	1438	1676	1422	107	2229	-	3677	ok 362920	0
+firefox+zstd 148.0.2	v0-probed	1	-	-	-	-	-	-	889	1190	1263	-	1263	862	1306	-	3677	ok 362920	0
+firefox+zstd	v0-probed	2	-	-	-	-	-	-	699	966	1025	-	967	961	1229	-	3677	ok 362920	0
+firefox+zstd	v0-probed	3	-	-	-	-	-	-	649	911	973	-	973	640	1147	-	3677	ok 362920	0
+firefox+zstd 148.0.2	vC2-worker	1	native	79	107	46	19	527	1042	1332	1351	1591	1335	107	2166	-	3677	ok 362920	0
+firefox+zstd	vC2-worker	2	native	90	119	48	19	471	1030	1372	1391	1651	1372	118	2241	-	3677	ok 362920	0
+firefox+zstd	vC2-worker	3	native	87	111	50	19	525	1022	1369	1387	1643	1369	128	2184	-	3677	ok 362920	0
+webkit 26.4	v0-probed	1	-	-	-	-	-	-	727	26548	-	-	2483	1658	26724	-	3677	ok 362920	0
+webkit	v0-probed	2	-	-	-	-	-	-	838	37999	-	-	2631	1784	38188	-	3677	ok 362920	0
+webkit	v0-probed	3	-	-	-	-	-	-	798	26642	-	-	2857	2750	26657	-	3677	ok 362920	0
+webkit 26.4	vC2-worker	1	fzstd	55	78	66	16	977	478	29160	-	1898	1577	63	29173	-	3677	ok 362920	0
+webkit	vC2-worker	2	fzstd	52	64	65	16	970	448	25623	-	1893	1592	60	25636	-	3677	ok 362920	0
+webkit	vC2-worker	3	fzstd	49	73	65	16	981	452	36023	-	1973	1573	58	36038	-	3677	ok 362920	0

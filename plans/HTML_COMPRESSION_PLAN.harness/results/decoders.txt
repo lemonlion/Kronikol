@@ -1,0 +1,16 @@
+Fallback decoders a page would carry uncompressed (npm, 2026-10-23; sizes of the files as published, gzip -9 for scale)
+
+fzstd 0.1.1 (MIT, Arjun Barrett), pure JavaScript, decode only
+  umd/index.js                       8,394 bytes   (gzip 3,860)
+  no XXH64 code in the package: the frame checksum is not verified
+
+zstddec 0.3.4 (Wasm inside a JavaScript module, decode only)
+  dist/zstddec.mjs                  75,676 bytes
+  dist/zstddec-stream.mjs           84,751 bytes
+
+brotli-dec-wasm 2.3.2 (Wasm, decode only; carries brotli's built-in dictionary)
+  pkg/brotli_dec_wasm_bg.wasm      208,439 bytes   (gzip 98,684)
+  pkg/brotli_dec_wasm.js             9,355 bytes
+
+Speed of fzstd, from bench-variants.tsv (Chromium 147, warm): 5,250,566 bytes to 136 MB in 267 to 272 ms; the
+23.4 MB page frame of C in 67 to 76 ms. zstddec and brotli-dec-wasm were sized, not timed.

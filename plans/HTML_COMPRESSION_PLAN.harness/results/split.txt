@@ -1,0 +1,17 @@
+py -I split.py TestRunReport.html out/split
+
+page: 28,954,978 bytes
+class       items        stored   gzip inside           raw
+puml        1,553    14,413,414    10,004,703   102,832,638
+steps         359       272,583       188,390     3,097,565
+iflow           1       482,868       335,921     4,146,822
+search          1     1,035,322       776,489     1,346,203
+flame         771       448,500       335,591       963,831
+markup               12,284,541                  12,284,541   (page minus every blob value)
+blob values stored: 16,652,687  markup+blobs: 28,937,228 (page 28,954,978)
+normalized.html: 136,399,362 bytes
+
+"stored" is the value as the page writes it (base64, JSON-escaped where it sits in JSON); "gzip inside" the bytes
+the base64 carries; "raw" the decompressed content. The search index is binary; everything else is UTF-8 text.
+The output folder holds markup.html, puml.txt (sources joined by "\n\x1e\n"), steps.txt, iflow.txt, flame.txt,
+search.bin and normalized.html (every blob written back raw), the inputs of cbench.py and level9.py.

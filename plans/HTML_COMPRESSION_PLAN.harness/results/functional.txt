@@ -1,0 +1,16 @@
+node functional.js out/variants v0-probed,vC2-worker chromium,firefox
+
+chromium	v0-probed	deep-link hash=true inView=false scrollY=0	back hash=true sameDoc=true	diagram svg=true	search=unknown	errors=0
+chromium	vC2-worker	deep-link hash=true inView=false scrollY=0	back hash=true sameDoc=true	diagram svg=true	search=unknown	errors=0
+firefox	v0-probed	deep-link hash=true inView=false scrollY=0	back hash=true sameDoc=true	diagram svg=true	search=unknown	errors=0
+firefox	vC2-worker	deep-link hash=true inView=false scrollY=0	back hash=true sameDoc=true	diagram svg=true	search=unknown	errors=0
+
+deep-link: a fresh load of the page with "#<id>" for the sid- element 60% down the page; hash = the address keeps
+  it after the rebuild; inView/scrollY = where the page ended 1.5 s after it painted (the same in both pages, so not
+  caused by the rebuild; whether the harness picked an element the page scrolls to was not checked).
+back: location.hash set to that id, then history.back(); sameDoc = the loader's marks are unchanged (no second
+  decode).
+diagram: the first .plantuml-browser element opened and scrolled into view; svg = the page drew it with the engine
+  from jsDelivr (network on) within 60 s. For C2 this goes through the diagram token and the worker-decoded frame.
+search: window.__kronikolSearch.indexState. "unknown" in both: the index is loaded on first use, and no search ran,
+  so deep search was NOT exercised (see make_variants.py's known gap).
