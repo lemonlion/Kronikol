@@ -229,11 +229,13 @@ internal sealed class HttpOrigin : IDisposable
         foreach (var (name, value) in headers)
             head.Append(name).Append(": ").Append(value).Append("\r\n");
         head.Append("Content-Length: ").Append(payload.Length).Append("\r\nConnection: close\r\n\r\n");
+        // recorded before the reply goes out: git could read the reply and exit, and the test read the requests, before a
+        // record made after it (CI's Linux container missed a push's 403 so)
+        lock (_requests)
+            _requests.Add(new Request(method, target, status, payload.Length, who, authorizations));
         await stream.WriteAsync(Encoding.Latin1.GetBytes(head.ToString()));
         await stream.WriteAsync(payload);
         await stream.FlushAsync();
-        lock (_requests)
-            _requests.Add(new Request(method, target, status, payload.Length, who, authorizations));
     }
 
     private static string Reason(int status) => status switch
