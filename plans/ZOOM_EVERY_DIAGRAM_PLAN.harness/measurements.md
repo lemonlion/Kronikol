@@ -294,3 +294,83 @@ every drawing missing the cache, wall-clock from the first send to the last pict
 The lean outline is short of a part's gap as drawn in 7 of the 40 (the full one in 1), and all 40 still line up to 1 px:
 the row moves what a part needs. Its width over the widest part is the same, median 2.1% and max 16.0%. (The two runs
 were a few minutes apart, so compare each outline with its own "today".)
+
+## M11. Where a lined-up diagram's width comes from (probe/probe-excess.js, probe-idle.js, probe-notes-left.js)
+
+Asked by the owner on 2026-10-24: "Are we absolutely certain there's no way to improve on this 2-16% situation, maybe
+make it 2-7% (and I'm not talking about 'only doing it for some diagrams and not others')". The report as in M10
+(5.5.2's scripts), 1920 x 1000, its 40 diagrams in parts.
+
+**The floor.** Lined up, every part has the same gaps between its lifelines, so the parts stacked are one drawing of
+the whole diagram, and no row can make them narrower than the engine draws the diagram in one piece. Drawn whole (the
+39 diagrams of up to 8 parts; scenario 278's 15 parts are too tall to draw whole, M9):
+
+| The whole diagram over its widest part today | Diagrams |
+|---|---|
+| 0% | 24 |
+| 0.9 to 1.1% | 4 |
+| 3.9% | 1 |
+| 8.6 to 12.2% | 11 (scenarios 14, 37, 38, 47, 48, 49, 148 in two views, 153, 154, 287) |
+
+A diagram is as wide as its widest part unless its parts are wide in different places: the median is 0 and the most
+12.2%. Splitting a diagram gives each part only its own share of the width, so M10's comparison with the widest part
+measured what splitting saves as much as what lining up costs.
+
+**Where the rest of M10's 2.1% and 16% came from.** Split against the widest part into the left side (left of the first
+lifeline), the span (first lifeline to last) and the right side (right of the last), M10's lined-up drawings were 4,284
+px wider over the 40 diagrams: -98 px on the left, 2,736 px in the span and 1,647 px on the right. Against the whole
+diagram they were 46 px wider at the median (6 to 95): the row does not make the gaps it is sized for. Sized to the
+whole diagram's own gaps, the row over scenario 41's participants alone gives 706.4, 96.8, 377.3 and 711.8 px for
+692.1, 78.7, 368.0 and 710.8. M7's calibration (one underscore 1.0791 px over 32.0) was read from the first gap of the
+first diagram, and the gap a label starts from differs from one pair to the next. Drawn in a part, the row gives
+exactly what it gives over the participants alone (scenarios 41, 44, 80, 231 and 153). Two corrections, measured:
+
+| The row | Lined up, minus the whole | Lined up, over the widest part today | Parts' widest disagreement |
+|---|---|---|---|
+| M10's (a number as long as the diagram's last; labels from M7's calibration) | median 46 px (6 to 95) | median 2.1%, max 16.0% | 0.1 px |
+| Each kept message given its own number in the outline (`autonumber N` before it) | median 41 px (6 to 71) | median 2.1%, max 16.0% | 4.4 px |
+| Also the row drawn over the participants alone first, each label lengthened or shortened by its gap's error, up to three times, and a gap the participants alone make wide enough given no label | median 13 px (-16 to +29) | median 1.0%, max 12.2% | 17.0 px (in 24 of the 40 over 1 px) |
+
+The labels of one row are not independent: on one row (`&`) a label's room depends on its neighbours', so the
+correction does not settle to the pixel (scenario 153's labels settled 17 px short of its first gap). And with the row
+no longer wider than asked, the lean outline's own shortfalls show: M10's row had hidden them by its overshoot. A row
+that lines the parts up on one drawing and costs nothing over the floor needs both settled, which is R2's first step
+(plan Q7).
+
+**What makes the floor wide.** In the 11 diagrams over 7%, a part other than the widest has a wide reply note: on the
+last participant in scenarios 14, 47, 48, 153, 154 and 287 (the widest part's right side is 64 to 109 px, the other
+part's 328 to 361), on one in the middle in 37, 38 and 49, and a request's note in 148. A payload note sits in a
+column of its own: a request's note left of its arrow (beside the caller, for the test's own calls), a reply's note
+right of its arrow (beside the service that replies). Lined up, each column is as wide as its widest note in any part,
+and the columns add up.
+
+**Each source changed one way, the parts, the outline and the whole alike** (probe-excess.js, the corrected row;
+"today" is the widest part as drawn now):
+
+| Change | Lined up, over today | The whole, over today (the floor) | Height |
+|---|---|---|---|
+| None | median +1.0%, max +12.2% | median 0%, max 12.2% (11 over 7%) | the same |
+| A reply's note on the left of its arrow (`respleft`) | median -3.1%, max +3.9% | median -4.1%, max +3.0% (none over 7%) | the same |
+| A request's note on the right of its arrow (`reqright`; M10's row) | median -7.8%, max +19.9% | | the same |
+| Notes wrapped at 600 px for 800 (`wrap600`; M10's row) | median +2.0%, max +16.0% | | median +0.9%, max +13.2% |
+| A note under its message, across its two participants (`overspan`) | median -21.9%, max -1.7% | median -24.0%, max -13.8% | median +23.7%, max +29.0% |
+
+**A reply's note on the left, on every picture** (probe-notes-left.js; every laid-out sequence picture, whole diagrams
+and parts, 546 of the 552 with a reply note): 475 narrower and 58 wider; the width at the median -1.1% (p10 -18.0%,
+the most -41.7%; p90 +1.1%, the most +33.8%); the height the same; the level each is drawn at in its box at the median
++1.0% higher (p90 +4.8%, the most +17.9%), and lower for 20 pictures: by more than 5% for 4, by more than 10% for 3
+(scenario 288 from 80.9% to 68.6%, 291 from 80.0% to 68.1%, 149 from 100% to 87.8%, all whole diagrams); 201 pictures
+fit their box at 100%, 247 with the notes moved. So it takes the worst case off the diagrams in parts and puts one as
+large on three ordinary diagrams.
+
+**Left out: idle participants** (probe-idle.js). A part could leave out the participants it has no message for, so that
+its notes run on where their lifelines stand, the page drawing those lifelines in itself. Estimated from the gaps as
+drawn, it narrows 3 of the 40 (scenarios 1, 148 and 492) and none of the 11 above; not pursued.
+
+```
+PROBE_ROWFIX=0 PROBE_VARIANTS=reqright,respleft,wrap600 PLAYWRIGHT_CORE=... node probe/probe-excess.js <report> 1920 1000
+PROBE_TRUENUM=1 PROBE_ROWFIX=0 PROBE_VARIANTS=respleft,overspan PLAYWRIGHT_CORE=... node probe/probe-excess.js <report> 1920 1000
+PROBE_TRUENUM=1 PROBE_VARIANTS=respleft,overspan PLAYWRIGHT_CORE=... node probe/probe-excess.js <report> 1920 1000
+PLAYWRIGHT_CORE=... node probe/probe-idle.js <report> 1920 1000
+PLAYWRIGHT_CORE=... node probe/probe-notes-left.js <report> 1920 1000
+```

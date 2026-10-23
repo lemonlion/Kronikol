@@ -5,14 +5,15 @@
 that answer was measured against (M6, B4, Q7), then with what lining the parts up would cost and whether the parts pay
 at all (M7 to M10, the owner's questions of the same evening), and last with the owner's decisions and two more asks of
 that evening: the floor is 50% (Q1), R2 lines the parts up (Q7), a lined-up diagram starts at its fit level (Q8), the
-lines the page adds to draw a diagram never reach a source the reader copies or opens (Z12), and a diagram in parts
-acts as one diagram (Z13, Q10, Q11). Every `file:line` is at `origin/main` `b3898519` (5.5.2) under `src/Kronikol/`
+lines the page adds to draw a diagram never reach a source the reader copies or opens (Z12), and a diagram in parts acts
+as one diagram (Z13, Q10, Q11); then on 2026-10-24 with the owner's answers to Q10 and Q11 and their question whether
+lining up could cost less (M11, Q12). Every `file:line` is at `origin/main` `b3898519` (5.5.2) under `src/Kronikol/`
 unless it says otherwise; CM, CN, IS, RS and RC are `Reports/context-menu-script.js`,
-`Reports/collapsible-notes-script.js`, `Reports/inline-svg-styles.css`, `Reports/plantuml-browser-render-script.js`
-and `Reports/report-components-script.js`. 5.5.3 (`a3413569`) and 5.5.4 (`9b4d2d64`) came out while this was written:
-5.5.3 makes `naturalWidthOf` (CM L1011) read 0 for a picture with no box and wraps `decorateNow` (CN L3442) in a `try`,
-and 5.5.4 changes the deep search only; this plan keeps both and goes on top of them. The harness is
-`ZOOM_EVERY_DIAGRAM_PLAN.harness/` (Appendix A): the probes, and `measurements.md`, cited as M1 to M10.
+`Reports/collapsible-notes-script.js`, `Reports/inline-svg-styles.css`, `Reports/plantuml-browser-render-script.js` and
+`Reports/report-components-script.js`. 5.5.3 (`a3413569`) and 5.5.4 (`9b4d2d64`) came out while this was written: 5.5.3
+makes `naturalWidthOf` (CM L1011) read 0 for a picture with no box and wraps `decorateNow` (CN L3442) in a `try`, and
+5.5.4 changes the deep search only; this plan keeps both and goes on top of them. The harness is
+`ZOOM_EVERY_DIAGRAM_PLAN.harness/` (Appendix A): the probes, and `measurements.md`, cited as M1 to M11.
 
 ## 0. In short
 
@@ -49,11 +50,11 @@ and 5.5.4 changes the deep search only; this plan keeps both and goes on top of 
 - **What one scale per diagram costs (M6).** Parts that fit today are drawn smaller: 25 of 68 parts at 1920 (by 19.6
   points at the median) and 42 at 1366 (15.4, up to 52). A first drawing whose later part is wider than those above it
   shrinks the parts already shown once (2 diagrams at 1920, 6 at 1366). Resizing every part on each notch costs 191 ms
-  on the report's 15-part diagram against 14 ms for one part, so the parts near the window are resized at once and
-  the rest just after. And the participants still stand at different places in each part, which one scale does not
-  change; a row of hidden messages in each part, sized from a compact outline drawn first (it adds a median 20 ms against today), lines them up
-  on one drawing, measured on all 40 of the report's diagrams in parts (Q7, M7, M10). None
-  of these is a reason not to; the first two are the price of one text size.
+  on the report's 15-part diagram against 14 ms for one part, so the parts near the window are resized at once and the
+  rest just after. And the participants still stand at different places in each part, which one scale does not change; a
+  row of hidden messages in each part, sized from a compact outline drawn first (it adds a median 20 ms against today),
+  lines them up on one drawing, measured on all 40 of the report's diagrams in parts (Q7, M7, M10). None of these is a
+  reason not to; the first two are the price of one text size.
 - **Why diagrams stay in parts (M9).** Asked by the owner: drawn whole, the report's 15-part diagram (112,940 px) costs
   the engine 39 s, and its toggles did not finish within 2 minutes, against about 1 s to the new pictures and 2 s to
   done in parts on 5.5.2's scripts; an 8-part diagram costs 1.5 s whole against 0.4 s in parts; 2 parts cost about the
@@ -64,7 +65,9 @@ and 5.5.4 changes the deep search only; this plan keeps both and goes on top of 
   diagram (Q7); the owner took it on 2026-10-23, with a lined-up diagram starting at its fit level (Q8).
 - **Questions (section 8).** Q1 answered (50%); Q2 answered (one scale per diagram); Q3 wide diagrams below their fit;
   Q4 a level readout; Q5 Safari's pinch; Q6 the page zoom given up over diagrams; Q7 answered (R2 is in); Q8 answered
-  (start at the fit level); Q9 not taken; Q10 a PNG of a diagram too long for one canvas; Q11 the footbox at the seams.
+  (start at the fit level); Q9 not taken; Q10 answered (a PNG at the largest scale that fits, else the part clicked);
+  Q11 answered (one footbox, at the end); Q12 whether lining up could cost less (not without drawing every diagram
+  differently; recommended: R2 with its row exact).
 
 ## 1. The ask
 
@@ -205,9 +208,10 @@ All on the consumer report, written by 5.4.4 (`measurements.md` has the method a
   pan together: the container scrolls across (it already can, IS L9) and the parts get no scroll of their own. A click
   selects the diagram, not a part. This replaces 5.2.2's zoom per part, which came from every zoom going to the first
   part's picture; with one zoom, a zoom over any part still keeps that part's point under the pointer (Z6).
-  - On a first drawing the parts appear one by one (RS L1134 to L1142), so a part wider than every part above it
-    lowers the diagram's level and the parts already shown shrink once, the window scroll keeping the reader's place
-    (M6: 2 diagrams at 1920, 6 at 1366). A redraw shows its parts only once all are drawn (CN L2718 to L2727), so it never does.
+  - On a first drawing the parts appear one by one (RS L1134 to L1142), so a part wider than every part above it lowers
+    the diagram's level and the parts already shown shrink once, the window scroll keeping the reader's place (M6: 2
+    diagrams at 1920, 6 at 1366). A redraw shows its parts only once all are drawn (CN L2718 to L2727), so it never
+    does.
   - A notch resizes at once the parts within a window's height of the screen, and the rest in the frames after, one
     part a frame. A part above the window keeps the reader's place by the window scroll: its new height is its natural
     height times the level, known without a layout. Every part at once costs 191 ms on a 15-part diagram (M6).
@@ -319,10 +323,10 @@ part not yet drawn only. No C# changes: the report's markup stays as it is, and 
 ### 4.4 Performance
 
 On the consumer report a slider is made for the boxes that fit (217 at 1920 and 57 at 1366, counting parts, which Z8
-then gathers into one slider per diagram), in the same way as today: lazily as a
-box comes within 200 px of the screen, and after the paint for a redraw (5.5.1). The natural width is read from the
-picture's `width` (5.5.1); the padding adds one computed-style read per slider. The gate: `ReportToggleResponsivenessTests`'
-budgets unchanged, and the 5.5.1 toggle bench on the consumer report before and after, reported with R1.
+then gathers into one slider per diagram), in the same way as today: lazily as a box comes within 200 px of the screen,
+and after the paint for a redraw (5.5.1). The natural width is read from the picture's `width` (5.5.1); the padding adds
+one computed-style read per slider. The gate: `ReportToggleResponsivenessTests`' budgets unchanged, and the 5.5.1 toggle
+bench on the consumer report before and after, reported with R1.
 
 A diagram in parts zooms all its parts (Z8). Laid out at once, a notch costs 17 ms on a 3-part diagram, 62 ms on an
 8-part one and 191 ms on the report's 15-part one, against 4 to 14 ms for one part today (M6). Resized near the screen
@@ -340,8 +344,9 @@ by `transform`, which scales a picture without laying its text out again, at the
 - Zooming a long diagram no longer slides what is under the pointer down or up the page.
 - A long diagram drawn in parts reads at one text size from top to bottom, has one slider that stays in reach while
   the reader is inside it, and zooms and pans as one. Parts drawn at full size today can be drawn smaller, at the
-  level that lets the widest part fit. With R2, its participants also stand in the same places in every part, at a
-  further 2% of width at the median and up to 16% (M10).
+  level that lets the widest part fit. With R2, its participants also stand in the same places in every part, and the
+  diagram is as wide as it would be drawn whole: on the report no wider than its widest part for 24 of 39 diagrams, up
+  to 12.2% wider for 11 (M11).
 - A click anywhere on a diagram in parts rings the whole diagram, and copying or saving its picture gives the whole
   diagram (one too long for a PNG gives the part clicked, and its menu says so). It ends once, with the participants
   under its last message only, and each part keeps the participants' names at its top.
@@ -486,6 +491,9 @@ A new class, `LinedUpPartsTests`, on a fixture of three parts whose widest gaps 
 9. A lined-up diagram starts at its fit level, all of it in view (Q8, "start at fit").
 10. The stress case: the 5.5.1 toggle bench on a generated 15-part diagram within 5% of R1's (M10: +1% on the report's
     long diagrams).
+11. The row is exact: a lined-up diagram is no wider than the same diagram drawn whole, by at most 1 px a gap, on a
+    fixture whose pairs of participants start their labels from different gaps (M11; red on M10's row, 9 to 18 px a
+    gap wider).
 
 What R2's first step settles (Q7) gets a fact of its own: a gap wider than one label pushes, and participants declared
 with no `as`, in a `box` or by `create`.
@@ -539,17 +547,17 @@ written in `C:/Code/Kronikol-zoomall` (branch `plan/zoom-every-diagram`).
 
 ### 7.4 Acceptance
 
-On the consumer report, at 1920 x 1000 and 1366 x 768, with the harness's probes: every laid-out diagram has a slider once
-brought near the screen; scenario 1's three parts are drawn at one level, and Ctrl with the wheel over each is
-prevented and zooms all three; a diagram that fits shrinks to the floor and no further; one notch moves the point
-under the pointer no more than 2 px either way on a wide diagram, and down the page on a fitting one; a notch on
-scenario 278 (15 parts) paints within 50 ms; the slider is in the window anywhere inside a tall diagram; the toggle
-bench within 10% of R0's. The stress case is the feature holding scenarios 277 and 278 (M9): on 5.5.2 its toggles put
-the new pictures on screen in 0.7 to 1.1 s and finish in 1.9 to 2.5 s, with no task over 0.55 s, and no release of this
-plan may make them slower. Also for R1: a click on any part of scenario 1 rings the whole diagram, its SVG and PNG
-copies are the whole diagram, scenario 278's PNG items name the part, and no seam shows a footbox. For R2: every
-diagram in parts on the report lines up to 0.5 px on its one drawing, adding no more than M10's median 20 ms, and no
-source the menu gives holds the row.
+On the consumer report, at 1920 x 1000 and 1366 x 768, with the harness's probes: every laid-out diagram has a slider
+once brought near the screen; scenario 1's three parts are drawn at one level, and Ctrl with the wheel over each is
+prevented and zooms all three; a diagram that fits shrinks to the floor and no further; one notch moves the point under
+the pointer no more than 2 px either way on a wide diagram, and down the page on a fitting one; a notch on scenario 278
+(15 parts) paints within 50 ms; the slider is in the window anywhere inside a tall diagram; the toggle bench within 10%
+of R0's. The stress case is the feature holding scenarios 277 and 278 (M9): on 5.5.2 its toggles put the new pictures on
+screen in 0.7 to 1.1 s and finish in 1.9 to 2.5 s, with no task over 0.55 s, and no release of this plan may make them
+slower. Also for R1: a click on any part of scenario 1 rings the whole diagram, its SVG and PNG copies are the whole
+diagram, scenario 278's PNG items name the part, and no seam shows a footbox. For R2: every diagram in parts on the
+report lines up to 0.5 px on its one drawing, adding no more than M10's median 20 ms, is within 1 px a gap of its
+drawing whole (M11), and no source the menu gives holds the row.
 
 ## 8. Questions for the owner
 
@@ -583,24 +591,36 @@ source the menu gives holds the row.
      bar (M10's lean outline; keeping the three widest of each, notes whole, cost three times as long for no gain in
      lining up). It reads the outline's lifelines (as the role
      pass does, RS L1944 to L1949) and draws every part once with the row sized from its gaps. Nothing moves on screen.
-  2. The labels: an underscore pushes its gap 1.08 px, linearly to 1,974 px at 1,800 underscores (M7), read once per
-     page from a drawing of the participants alone. The row stops the numbering around it (`autonumber stop`, then the
-     part's own `autonumber`): numbered, its messages made the gaps of a part numbered from 38 wider by 7.5 px. The
-     outline numbers its rows from a number as long as the diagram's last.
+  2. The labels: an underscore pushes its gap 1.08 px, linearly to 1,974 px at 1,800 underscores (M7), but the gap a
+     label starts from differs from one pair of participants to the next, and on one row a label's room depends on its
+     neighbours' (M11): sized from one calibration, the row made most gaps 9 to 18 px wider than asked. So the page
+     draws the row over the participants alone first, a few milliseconds, and corrects each label by its gap's error,
+     and a gap the participants alone make wide enough gets no label. Corrected three times, the row still missed by up
+     to 17 px on the report: R2's first step makes it exact, by labels that do not share their room (each spanning from
+     the first participant, or each on its own line if that is the only way) or by more correcting drawings, whichever
+     costs less. The row stops the numbering around it (`autonumber stop`, then the part's own `autonumber`):
+     numbered, its messages made the gaps of a part numbered from 38 wider by 7.5 px. The outline gives each message it
+     keeps its own number (`autonumber N` before it).
   3. Once its parts are drawn, the page checks that their gaps agree; a diagram whose parts disagree is drawn again with
-     the row sized from its parts (M7's way, the second drawing M8 measured). None of the 40 needed it.
+     the row sized from its parts (M7's way, the second drawing M8 measured). With M10's row none of the 40 needed it,
+     as that row was wider than asked and hid where the lean outline falls short; with the corrected row the parts
+     disagreed by over 1 px in 24 of the 40 (M11). The first step also finds the outline that is never short (M10's
+     three widest of each kind, notes whole, fell short once), or keeps the lean one and counts the second drawings.
   4. A redraw (a toggle) draws the outline of its new source first, in the same way.
+
   What it costs against today (M10, the report's 40 diagrams in parts, each drawn both ways in turn): the outline
   (median 18 ms) holds back the parts, so a diagram in parts is drawn 20 ms later at the median (-19 to +118 ms): no
   difference that can be measured on the long ones (15 parts +1%, 8 parts +1%), +16 to +36% on a typical 2-part diagram
-  (64 to 80 ms at the least), +26% over all 40; each part 39 px taller; and the lined-up diagram wider than its widest
-  part today, by 2.1% at the median and up to 16%
-  (10 of the 40 over 12%), so its text is drawn that much smaller. That width is the price of lining up at all: a
-  diagram whose parts are wide in different gaps becomes as wide as all those gaps together. All 40 lined up to 0.1 px.
+  (64 to 80 ms at the least), +26% over all 40; and each part 39 px taller. And the lined-up diagram is as wide as the
+  same diagram drawn whole, which no row can beat, as its parts then share one set of gaps (M11): no wider than its
+  widest part today for 24 of the 39 diagrams that can be drawn whole, 0.9 to 3.9% wider for 5, and 8.6 to 12.2% wider
+  for 11, so their text is drawn that much smaller. Those 11 have a wide reply note in a part other than the widest,
+  where the widest part leaves its column narrow. M10 measured 2.1% at the median and up to 16%: the rest was the row,
+  wider than asked (M11).
   Measured before it and set aside (M8): drawing every part a second time (as long again as the first drawing, 1.1 s on
-  15 parts, with the parts moving into line on screen) and an outline of the whole diagram (31 s on 15 parts). What R2's first step settles: a gap wider than
-  about 1,970 px (2,000 underscores drew an error picture, so a wider character), and sources whose participants are
-  declared otherwise (no `as`, a `box`, one created partway with `create`).
+  15 parts, with the parts moving into line on screen) and an outline of the whole diagram (31 s on 15 parts). What R2's
+  first step settles: a gap wider than about 1,970 px (2,000 underscores drew an error picture, so a wider character),
+  and sources whose participants are declared otherwise (no `as`, a `box`, one created partway with `create`).
 - **Q3, wide diagrams below their fit level.** With Q1's floor a wide picture could also run from the lower of its fit
   level and the floor, which would show more of a tall wide diagram whole. Not asked; not in R1.
 - **Q4, a level readout** ("80%") beside the slider. Not asked; today the slider's title is "Zoom level".
@@ -611,38 +631,63 @@ source the menu gives holds the row.
   (or use the browser's menu, or Ctrl and + with no diagram selected). That is the consistency asked for; it is listed
   so it is a decision rather than a surprise.
 - **Q8, with R2, start a lined-up diagram at today's level? Answered: no, at its fit level** (the owner, 2026-10-23:
-  "'start at fit' is better"). Lining up makes a diagram wider than its widest part (up
-  to 16%, M10), so at its fit level its text is drawn up to 14% smaller, and the reader can zoom it back, every part at
-  once, up to the same 100% as today. The page could instead start it at the level its widest part would have had,
-  which costs no time (a zoom is the pictures' width, set once when they are drawn either way): its text is then
-  today's size, and the extra width, which lies between the participants, runs off the right edge, so the rightmost
-  participant and its notes start out of view. That breaks Z2's rule that a wide diagram starts at its fit level, all
-  of it in view. Recommended: keep the fit level, as for every other diagram. Asked by the owner as an idea; not in R2
-  unless chosen.
+  "'start at fit' is better"). Lining up makes a diagram as wide as it is drawn whole, up to 12.2% wider than its widest
+  part (M11), so at its fit level its text is drawn up to 11% smaller, and the reader can zoom it back, every part at
+  once, up to the same 100% as today. The page could instead start it at the level its widest part would have had, which
+  costs no time (a zoom is the pictures' width, set once when they are drawn either way): its text is then today's size,
+  and the extra width, which lies between the participants, runs off the right edge, so the rightmost participant and
+  its notes start out of view. That breaks Z2's rule that a wide diagram starts at its fit level, all of it in view.
+  Recommended: keep the fit level, as for every other diagram. Asked by the owner as an idea; not in R2 unless chosen.
 - **Q9, with R2, line up only where it is cheap?** Skip the row for a diagram that lining up would widen by more than a
-  set share (say 5%): on the report, 30 of the 40 diagrams in parts widen by 7.2% or less and 10 by 12 to 16% (M10).
-  Those 10 would keep today's text size and their sideways jumps, so diagrams would differ in whether they line up. Not
+  set share (say 5%): on the report, of the 39 diagrams in parts that can be drawn whole, 28 widen by 1.1% or less, 1
+  by 3.9% and 11 by 8.6 to 12.2% (M11). Those 11 would keep today's text size and their sideways jumps, so diagrams
+  would differ in whether they line up. Not
   recommended over Q8's fit level; listed with it as the other way to spend less width. Not taken: the owner chose
   the fit level (Q8) and did not take this, so every diagram in parts lines up.
-- **Q10, a PNG of a diagram too long for one canvas** (Z13). A browser draws a canvas of about 32,767 px a side at
-  most, and the PNG items draw at twice the natural size: on the report 4 of the 40 diagrams in parts are too tall
-  for that at twice and 3 at their own size (the longest 115,572 px). Recommended: the largest scale up to 2 that
-  fits, and for a diagram too long at its own size the part under the click, its PNG items saying which ("Copy part 3
-  of 15 as PNG"); its SVG items still give the whole diagram, which has no such limit. Set aside: drawing below its
-  own size (scenario 278 at 0.29, its text under 4 px, an outline only), and one PNG per part (a copy holds one image,
-  and a browser asks before several downloads). R1's first step measures the limit in each browser the E2E run
-  covers.
-- **Q11, the footbox at the seams** (Z13). Recommended: every part but the last is drawn with `hide footbox`, and every
-  part keeps its heads. Hiding the heads too would make the parts read on as one picture, but this plan found no
-  directive that hides them (drawn transparent, they would still take their place), and deep in a long diagram the
-  heads are the only names of the lifelines on screen; with R2 they also stand exactly over the lifelines of the part
-  above. Keeping a footbox on every part is today's look, and keeps a seam looking like the end of a diagram.
+- **Q10, a PNG of a diagram too long for one canvas: answered, as recommended** (Z13; the owner took every
+  recommendation on 2026-10-24). A browser draws a canvas of about 32,767 px a side at most, and the PNG items draw at
+  twice the natural size: on the report 4 of the 40 diagrams in parts are too tall for that at twice and 3 at their own
+  size (the longest 115,572 px). Recommended: the largest scale up to 2 that fits, and for a diagram too long at its own
+  size the part under the click, its PNG items saying which ("Copy part 3 of 15 as PNG"); its SVG items still give the
+  whole diagram, which has no such limit. Set aside: drawing below its own size (scenario 278 at 0.29, its text under 4
+  px, an outline only), and one PNG per part (a copy holds one image, and a browser asks before several downloads). R1's
+  first step measures the limit in each browser the E2E run covers.
+- **Q11, the footbox at the seams: answered, as recommended** (Z13; the owner, 2026-10-24). Recommended: every part but
+  the last is drawn with `hide footbox`, and every part keeps its heads. Hiding the heads too would make the parts read
+  on as one picture, but this plan found no directive that hides them (drawn transparent, they would still take their
+  place), and deep in a long diagram the heads are the only names of the lifelines on screen; with R2 they also stand
+  exactly over the lifelines of the part above. Keeping a footbox on every part is today's look, and keeps a seam
+  looking like the end of a diagram.
+- **Q12, narrower diagrams, so that lining up costs less** (the owner, 2026-10-24: "Are we absolutely certain there's
+  no way to improve on this 2-16% situation, maybe make it 2-7% (and I'm not talking about 'only doing it for some
+  diagrams and not others')"). Not without drawing the diagrams themselves differently. Lined up, the parts share one
+  set of gaps, so stacked they are one drawing of the whole diagram, and the engine draws none narrower (M11). M10's
+  2.1% and 16% were partly the row, wider than asked; made exact (Q7, step 2), R2 costs the floor: nothing at the
+  median, at most 12.2%, 11 of the 39 over 7%. Those 11 are wide because each payload note takes a column of its own,
+  a request's beside the caller and a reply's beside the service replying, and a part other than the widest holds a
+  wide reply note where the widest part leaves the column narrow. Measured, each applied to every diagram alike (M11):
+  - **A reply's note on the left of its arrow**, beside the caller for the test's own calls, so a call's two payloads
+    share one column: every lined-up diagram within 3.0% of today's widest part (4.1% narrower at the median), and 475
+    of the 546 pictures narrower. But 58 get wider, and three ordinary diagrams are drawn 12 to 15% smaller (scenario
+    288 at 68.6% for 80.9%): it moves the worst case onto other diagrams rather than removing it, and changes where
+    every reader finds a reply.
+  - **A note under its message**, across its two participants: every lined-up diagram at least 13.8% narrower than
+    today (24.0% at the median), and 23.7% taller at the median, up to 29%.
+  - Set aside: a request's note on the right of its arrow (up to 19.9% wider), notes wrapped at 600 px for 800 (no
+    narrower at the worst, up to 13.2% taller), and a part leaving out the participants it has no message for (3 of the
+    40 narrower, none of the 11).
+
+  Choosing for each diagram the side that draws it narrower would keep every lined-up diagram within 3% and draw none
+  wider than today, but a reader would find replies on one side in one diagram and on the other in the next, which this
+  plan's consistency rules out as it rules out Q9. Recommended: none of these to buy back the 11; R2 with its row exact,
+  so a diagram in parts is as wide as it would be drawn whole, like every other diagram in the report. Where reply notes
+  go is a choice about every diagram's look, worth making on its own merits if at all.
 
 ## Appendix A. Harness
 
 `ZOOM_EVERY_DIAGRAM_PLAN.harness/`:
 
-- `measurements.md`: M1 to M10, the method, the commands and every table.
+- `measurements.md`: M1 to M11, the method, the commands and every table.
 - `probe/probe-widths.js`: every drawn box of a report, its natural size, its box's width with and without padding.
 - `probe/analyse.js`: the tables of M1, M3 and M5 from its output.
 - `probe/probe-behaviour.js`: one scenario's boxes; the wheel kept or not, the text sizes, the move of the point under
@@ -659,6 +704,11 @@ source the menu gives holds the row.
 - `probe/probe-align.js`: one scenario's parts drawn again through the page's engine with a row of hidden messages;
   each part's lifelines and shapes with and without it, the labels' calibration, and with `PROBE_CAP=1` how far one
   label pushes its gap (M7).
+- `probe/probe-excess.js`: every diagram in parts as drawn, lined up and drawn whole, its extra width split into the
+  left side, the span and the right side, with the outline's own numbers (`PROBE_TRUENUM=1`), the corrected row (on
+  unless `PROBE_ROWFIX=0`) and each source changed one way (`PROBE_VARIANTS`) (M11).
+- `probe/probe-idle.js`: how wide a lined-up diagram would be if a part left out its idle participants (M11).
+- `probe/probe-notes-left.js`: every laid-out picture with each reply's note on the left of its arrow (M11).
 
 The consumer report is not in the repository. The probes take `PLAYWRIGHT_CORE`, the path of a `playwright-core`
 package (the measurements used `C:/Code/Kronikol4J/playwright/node_modules/playwright-core`), and launch through
