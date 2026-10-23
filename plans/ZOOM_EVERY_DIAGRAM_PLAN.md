@@ -670,7 +670,9 @@ drawing whole (M11), and no source the menu gives holds the row.
     share one column: every lined-up diagram within 3.0% of today's widest part (4.1% narrower at the median), and 475
     of the 546 pictures narrower. But 58 get wider, and three ordinary diagrams are drawn 12 to 15% smaller (scenario
     288 at 68.6% for 80.9%): it moves the worst case onto other diagrams rather than removing it, and changes where
-    every reader finds a reply.
+    every reader finds a reply. Asked by the owner whether the loss falls on diagrams that start at 100% and so have
+    room to spare: 4 of the 20 losses do; 16 fall on diagrams already zoomed out, while 315 others gain about 1% (M11).
+    Lining up itself spends room where there is room: a diagram that fits its box stays at 100% when it widens.
   - **A note under its message**, across its two participants: every lined-up diagram at least 13.8% narrower than
     today (24.0% at the median), and 23.7% taller at the median, up to 29%.
   - Set aside: a request's note on the right of its arrow (up to 19.9% wider), notes wrapped at 600 px for 800 (no

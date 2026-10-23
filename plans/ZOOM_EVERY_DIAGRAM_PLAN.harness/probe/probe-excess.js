@@ -290,6 +290,8 @@ const { launchInstalled } = require(path.join(__dirname, '..', '..', '..', 'tool
         `${pc(md(tall))} ${pc(mx(tall))} | ${mx(rs.map((r) => r.v[v].spread)).toFixed(1)}`);
     }
     console.log('per diagram, lined over today\'s widest: ' + variants.join(' / '));
+    console.log('per diagram, widths: the widest part today | the whole, ' + variants.join(' / '));
+    for (const r of ok) console.log(`${r.si} ${r.parts}: ${Math.round(r.v.base.widest.W)} | ` + variants.map((v) => (r.v[v] && r.v[v].whole && !r.v[v].whole.error ? Math.round(r.v[v].whole.W) : '-')).join(' / '));
     for (const r of ok) console.log(`${r.si} ${r.parts}: ` + variants.map((v) => (r.v[v] && !r.v[v].skip ? pc(r.v[v].lined.W / r.v.base.widest.W - 1) : '-')).join(' / '));
   } finally {
     await browser.close();

@@ -4,9 +4,10 @@ Taken 2026-10-23 on the owner's Windows 11 machine (device scale 1), headless Ch
 `C:/Code/Kronikol4J/playwright` (`PLAYWRIGHT_CORE` names it for the probes; `launchInstalled` as CLAUDE.md asks, a plain
 launch for this bundled build). The report is the consumer report the owner sent on 2026-10-23 for the 5.5.1 work
 (`TestRunReportWithSlowToggle.html`, a zip holding a 28,954,978-byte `TestRunReport.html` written by 5.4.4: 512
-scenarios, 1,552 diagram boxes). It is not in the repository; a scenario is cited by its index among
-`details.scenario`, counted from 0 as `probe-behaviour.js` takes it, never by name, and the parts of a diagram from 1. 5.5.1 to 5.5.3 changed none of the zoom rules measured here (5.5.1 reads the natural
-width from the picture's `width`, 5.5.3 reads 0 for a picture with no box).
+scenarios, 1,552 diagram boxes). It is not in the repository; a scenario is cited by its index among `details.scenario`,
+counted from 0 as `probe-behaviour.js` takes it, never by name, and the parts of a diagram from 1. 5.5.1 to 5.5.3
+changed none of the zoom rules measured here (5.5.1 reads the natural width from the picture's `width`, 5.5.3 reads 0
+for a picture with no box).
 
 The probes are in `probe/`:
 
@@ -45,9 +46,9 @@ Where wide and fitting boxes meet, in page order:
 | 1366 x 768 | 13 | 11 | 6 | 24 | 13 |
 
 So the owner's case ("one diagram after another, and the second has no zoom") is mostly one diagram drawn in parts: at
-1920 px 15 of its 24 diagrams in parts have a wide part beside a part that fits. Scenario 1 is one: parts of 2,254, 1,004
-and 1,716 px natural width in a 1,790 px box, drawn at 79%, 100% and 100%; at 1366 px (a 1,236 px box) at 54.8%, 100%
-and 72%. The text changes size from part to part of one diagram.
+1920 px 15 of its 24 diagrams in parts have a wide part beside a part that fits. Scenario 1 is one: parts of 2,254,
+1,004 and 1,716 px natural width in a 1,790 px box, drawn at 79%, 100% and 100%; at 1366 px (a 1,236 px box) at 54.8%,
+100% and 72%. The text changes size from part to part of one diagram.
 
 ## M2. What the wheel does over each (probe-behaviour.js, scenario 1)
 
@@ -158,10 +159,9 @@ A -[hidden]> B : <color:transparent>_____…</color>
 autonumber 38
 ```
 
-(The participants are written A to E here. `&` puts the four on one row under teoz; the part's own `autonumber` line comes
-back after the row.) Each label is
-sized so that its gap is at least the widest that gap is in any part (699.5, 78.7, 368.1 and 711.6 px), with the
-underscore's width read from drawings of the participants alone.
+(The participants are written A to E here. `&` puts the four on one row under teoz; the part's own `autonumber` line
+comes back after the row.) Each label is sized so that its gap is at least the widest that gap is in any part (699.5,
+78.7, 368.1 and 711.6 px), with the underscore's width read from drawings of the participants alone.
 
 | Part | Lifelines as drawn | Lifelines with the row (labels of 648, 8, 312 and 669 underscores) |
 |---|---|---|
@@ -362,6 +362,21 @@ the most -41.7%; p90 +1.1%, the most +33.8%); the height the same; the level eac
 (scenario 288 from 80.9% to 68.6%, 291 from 80.0% to 68.1%, 149 from 100% to 87.8%, all whole diagrams); 201 pictures
 fit their box at 100%, 247 with the notes moved. So it takes the worst case off the diagrams in parts and puts one as
 large on three ordinary diagrams.
+
+Asked by the owner the same day, whether the loss falls on diagrams that start at 100% and so have room to spare
+("Surely it's better if the size reduction is on the 'ordinary' diagrams which would be fully zoomed in to start, as
+opposed to the large diagrams that are zoomed out"): mostly not. Of the 201 pictures that start at 100%, 197 stay there
+and 4 are drawn smaller (2.4% at the median, 12.2% at the most, scenario 149). Of the 345 that start zoomed out (79.9%
+at the median), 315 are drawn larger (1.1% at the median, 17.9% at the most), 14 stay as they are and 16 are drawn
+smaller (2.9% at the median, 15.2% at the most): 16 of the 20 losses fall on diagrams already zoomed out, two of them
+from about 80% to 68%. The three largest are one case: the test's last call returns a large body (a CSV or JSON payload)
+from the service under test, whose note today sits beside that service, in a gap already as wide as the long labels of
+the calls that service makes; moved beside the caller, it widens the caller's column by about 400 px.
+
+Lining up itself does spend room where there is room: at 1920 the whole drawings of scenarios 37, 38 and 40 are 3.9 to
+9.2% wider than their widest parts and still fit their box at 100%. The 9 that are drawn smaller start at 68 to 100% and
+lose 5.5 to 10.9% of it (153 from 98.0% to 87.3%, 287 from 69.0% to 61.9%); with replies' notes on the left the same 9
+start at 67.0 to 100% (153 at 99.9%, 287 at 67.0%).
 
 **Left out: idle participants** (probe-idle.js). A part could leave out the participants it has no message for, so that
 its notes run on where their lifelines stand, the page drawing those lifelines in itself. Estimated from the gaps as

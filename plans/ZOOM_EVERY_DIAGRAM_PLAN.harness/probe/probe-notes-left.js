@@ -105,7 +105,18 @@ const { launchInstalled } = require(path.join(__dirname, '..', '..', '..', 'tool
     const fitOf = (w, c) => Math.min(1, c / w);
     const lower = ok.map((r) => ({ r, d: fitOf(r.wl, r.content) / fitOf(r.w, r.content) - 1 })).filter((x) => x.d < -0.005).sort((a, b) => a.d - b.d);
     console.log(`drawn smaller: ${lower.length}; by more than 5%: ${lower.filter((x) => x.d < -0.05).length}; by more than 10%: ${lower.filter((x) => x.d < -0.1).length}`);
-    lower.slice(0, 8).forEach((x) => console.log(`  scenario ${x.r.si}${x.r.inParts ? ' (a part)' : ''}: ${Math.round(x.r.w)} -> ${Math.round(x.r.wl)} px in a ${Math.round(x.r.content)} px box, level ${(100 * fitOf(x.r.w, x.r.content)).toFixed(1)}% -> ${(100 * fitOf(x.r.wl, x.r.content)).toFixed(1)}%`));
+    console.log(`  of those, starting at 100%: ${lower.filter((x) => x.r.w <= x.r.content).length}; starting below it: ${lower.filter((x) => x.r.w > x.r.content).length}`);
+    // where the changes land: pictures that start at 100% (they fit their box) against those that start zoomed out
+    for (const [name, rs] of [['starting at 100%', ok.filter((r) => r.w <= r.content)], ['starting zoomed out', ok.filter((r) => r.w > r.content)]]) {
+      const d = rs.map((r) => fitOf(r.wl, r.content) / fitOf(r.w, r.content) - 1).sort((x, y) => x - y);
+      const up = d.filter((x) => x > 0.005), down = d.filter((x) => x < -0.005);
+      const lv = rs.map((r) => fitOf(r.w, r.content)).sort((x, y) => x - y);
+      console.log(`${name}: ${rs.length} pictures (level today median ${(100 * lv[lv.length >> 1]).toFixed(1)}%); drawn larger ${up.length}` +
+        (up.length ? ` (median +${(100 * up[up.length >> 1]).toFixed(1)}%, the most +${(100 * up[up.length - 1]).toFixed(1)}%)` : '') +
+        `, smaller ${down.length}` + (down.length ? ` (median ${(100 * down[down.length >> 1]).toFixed(1)}%, the most ${(100 * down[0]).toFixed(1)}%)` : '') +
+        `, the same ${rs.length - up.length - down.length}`);
+    }
+    lower.forEach((x) => console.log(`  scenario ${x.r.si}${x.r.inParts ? ' (a part)' : ''}: ${Math.round(x.r.w)} -> ${Math.round(x.r.wl)} px in a ${Math.round(x.r.content)} px box, level ${(100 * fitOf(x.r.w, x.r.content)).toFixed(1)}% -> ${(100 * fitOf(x.r.wl, x.r.content)).toFixed(1)}%`));
   } finally {
     await browser.close();
   }
