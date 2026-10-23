@@ -197,7 +197,8 @@ public class OutlineRowKeySiteTests : IDisposable
 
         var timelineRow = Regex.Match(html, $"<div class=\"timeline-row[^\"]*\" data-sid=\"{TitleId(Suite)}\"[^>]*>.*?</div>", RegexOptions.Singleline);
         Assert.True(timelineRow.Success, "no timeline row joined by the title's id");
-        Assert.Contains($"<div class=\"timeline-label\" title=\"{Filled}\">{Filled}</div>", html);
+        // its name links to the row by the same id (5.5.0)
+        Assert.Contains($"<a class=\"timeline-label\" href=\"#sid-{TitleId(Suite)}\" title=\"{Filled}\">{Filled}</a>", html);
         Assert.DoesNotContain($"data-sid=\"{FilledId(Suite)}\"", html);
     }
 

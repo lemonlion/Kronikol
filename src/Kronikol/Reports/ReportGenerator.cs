@@ -2259,7 +2259,11 @@ public static class ReportGenerator
                     var timelineStableId = ScenarioStableId.For(suite, featureName, scenario);
                     var timelineWarmUpAttr = timelineWarmUpMs > 0 ? string.Create(CultureInfo.InvariantCulture, $" data-warmup-ms=\"{timelineWarmUpMs:F0}\"") : "";
                     timelineHtml.Append(CultureInfo.InvariantCulture, $"<div class=\"timeline-row{(scenario.Result == ExecutionResult.Failed ? " timeline-row-failed" : "")}\" data-sid=\"{timelineStableId}\" data-duration-ms=\"{durationMs:F0}\"{timelineWarmUpAttr}>");
-                    timelineHtml.Append($"<div class=\"timeline-label\" title=\"{System.Net.WebUtility.HtmlEncode(scenario.DisplayName)}\">{System.Net.WebUtility.HtmlEncode(scenario.DisplayName)}</div>");
+                    // The name links to the scenario by the same stable id (5.5.0, plans/BACK_BUTTON_NAVIGATION_PLAN.md Q7): the
+                    // navigation script takes the link as it takes the History tab's, so Back returns to the timeline where
+                    // the reader was, and a click with Ctrl or Shift opens the scenario in a new tab. The title keeps the
+                    // whole name where the label cuts it short.
+                    timelineHtml.Append($"<a class=\"timeline-label\" href=\"#sid-{timelineStableId}\" title=\"{System.Net.WebUtility.HtmlEncode(scenario.DisplayName)}\">{System.Net.WebUtility.HtmlEncode(scenario.DisplayName)}</a>");
                     if (timelineWarmUpMs > 0)
                     {
                         // The warm-up's share of the bar, shaded from its start: the bar is elapsed time, the share is what

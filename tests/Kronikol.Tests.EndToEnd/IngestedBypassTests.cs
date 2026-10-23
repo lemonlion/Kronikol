@@ -66,8 +66,11 @@ public class IngestedBypassTests(PlaywrightFixture fixture) : PlaywrightTestBase
         var box = await reason.BoundingBoxAsync();
         Assert.True(box is { Width: > 0, Height: > 0 }, "The bypass reason has no area on the page.");
 
-        // The attachment is consumed: no link to a kronikol-bypass file is drawn anywhere.
-        Assert.Equal(0, await Page.Locator("a", new() { HasTextString = "kronikol-bypass" }).CountAsync());
+        // The attachment is consumed: no link to a kronikol-bypass file is drawn anywhere. A link within the page is no
+        // file's: the scenario's name says kronikol-bypass, so its link button's address does, and from 5.5.0 its
+        // Timeline row's name, a link to it, does too.
+        Assert.Equal(0, await Page.Locator("a:not([href^='#'])", new() { HasTextString = "kronikol-bypass" }).CountAsync());
+        Assert.Equal(0, await Page.Locator("a[href*='kronikol-bypass']:not([href^='#'])").CountAsync());
     }
 
     /// <summary>Ingests the named fixtures into a report of their own; returns the page's address.</summary>

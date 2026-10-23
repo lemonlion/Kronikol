@@ -23,6 +23,9 @@ public class BackForwardPlacesTests : BackForwardTestBase
 
     private const string HistoryLinks = "#history-section a.history-link";
 
+    // each row's name on the Timeline tab, a link to its scenario since 5.5.0 (plan Q7)
+    private const string TimelineLinks = "#scenario-timeline a.timeline-label";
+
     // the owner's case, in each engine: the browsers differ in how they restore a position and when Back works (plan 7.5)
     [Theory]
     [InlineData("chromium")]
@@ -322,6 +325,88 @@ public class BackForwardPlacesTests : BackForwardTestBase
         await opened.WaitForURLAsync(u => u.EndsWith(clusterHref, StringComparison.Ordinal), new() { Timeout = 10000 });
         Assert.EndsWith(clusterHref, opened.Url);
         Assert.Equal(here, Page.Url);
+        await opened.CloseAsync();
+    }
+
+    // The owner's ask of 2026-10-23: a Timeline row's name opens its scenario, and Back returns to the timeline where the
+    // reader was. A long timeline, so that where the reader was is not the tab's top.
+    [Theory]
+    [InlineData("chromium")]
+    [InlineData("firefox")]
+    [InlineData("webkit")]
+    public Task P13_Back_from_the_scenario_a_Timeline_name_opened_shows_the_Timeline_where_the_reader_was(string engine) => InEngineAsync(engine, async page =>
+    {
+        await OpenAsync(page, ReportTestHelper.GenerateLongReport(TempDir, OutputDir, $"BackNav_P13_{engine}.html"));
+        // a real interaction first: Firefox's Back does nothing on a page that has had none (plan fact 2)
+        await page.Locator("h1").ClickAsync();
+        await ActAsync(page, () => page.Locator("#tab-timeline").ClickAsync());
+        var link = page.Locator(TimelineLinks).Nth(90);
+        await link.ScrollIntoViewIfNeededAsync();
+        await WheelAsync(page, 60);
+        var href = (await link.GetAttributeAsync("href"))!;
+        Assert.StartsWith("#sid-", href);
+        var linkSelector = $"{TimelineLinks}[href='{href}']";
+        var top = await TopAsync(page, linkSelector);
+        Assert.True(top > 150, $"the name is {top} px from the window's top: the timeline did not scroll");
+        var scenario = $"details.scenario[data-stable-id='{href["#sid-".Length..]}']";
+
+        await ActAsync(page, () => link.ClickAsync());
+        Assert.Equal("features", await SelectedTabAsync(page));
+        Assert.True(await IsOpenAsync(page, scenario), "the name opens its scenario");
+        Assert.True(await TitleOnScreenAsync(page, scenario), "the name shows its scenario");
+        Assert.Equal(href, await HashAsync(page));
+
+        await BackAsync(page);
+        await StillInTheReportAsync(page, "Back from the scenario a Timeline name opened");
+        Assert.Equal("timeline", await SelectedTabAsync(page));
+        Assert.Equal("#tab=timeline", await HashAsync(page));
+        Assert.InRange(await TopAsync(page, linkSelector) - top, -2, 2);
+        Assert.Equal("href=" + href, await FocusedAsync(page));
+
+        await ForwardAsync(page);
+        Assert.Equal("features", await SelectedTabAsync(page));
+        Assert.True(await IsOpenAsync(page, scenario));
+        Assert.True(await TitleOnScreenAsync(page, scenario), "Forward shows the scenario where the reader left it");
+    });
+
+    [Fact]
+    public async Task P14_Enter_on_a_Timeline_name_opens_its_scenario_and_Back_returns_the_focus_to_it()
+    {
+        await OpenAsync(EverySection("BackNav_P14.html"));
+        await ActAsync(() => Page.Locator("#tab-timeline").ClickAsync());
+        var link = Page.Locator(TimelineLinks).Nth(2);
+        var href = (await link.GetAttributeAsync("href"))!;
+        await link.FocusAsync();
+
+        await ActAsync(() => Page.Keyboard.PressAsync("Enter"));
+        Assert.Equal("features", await SelectedTabAsync());
+        Assert.Equal(href, await HashAsync());
+        Assert.True(await IsOpenAsync($"details.scenario[data-stable-id='{href["#sid-".Length..]}']"));
+
+        await BackAsync();
+        await StillInTheReportAsync("Back from the scenario Enter on a Timeline name opened");
+        Assert.Equal("timeline", await SelectedTabAsync());
+        Assert.Equal("href=" + href, await FocusedAsync());
+    }
+
+    [Theory]
+    [InlineData(KeyboardModifier.Control)]
+    [InlineData(KeyboardModifier.Shift)]
+    public async Task P15_Ctrl_or_Shift_click_on_a_Timeline_name_opens_the_scenario_in_a_new_page(KeyboardModifier modifier)
+    {
+        await OpenAsync(EverySection($"BackNav_P15_{modifier}.html"));
+        await ActAsync(() => Page.Locator("#tab-timeline").ClickAsync());
+        var link = Page.Locator(TimelineLinks).First;
+        var href = (await link.GetAttributeAsync("href"))!;
+        var here = Page.Url;
+
+        var opened = await Context.RunAndWaitForPageAsync(() => link.ClickAsync(new() { Modifiers = [modifier] }),
+            new() { Timeout = 10000 });
+        // a new tab starts at about:blank and goes on to the link
+        await opened.WaitForURLAsync(u => u.EndsWith(href, StringComparison.Ordinal), new() { Timeout = 10000 });
+        Assert.EndsWith(href, opened.Url);
+        Assert.Equal(here, Page.Url);
+        Assert.Equal("timeline", await SelectedTabAsync());
         await opened.CloseAsync();
     }
 }

@@ -166,7 +166,7 @@ public class NotATestReportTests : IDisposable
     {
         var html = Report("NotATest_Timeline.html", Features());
 
-        var labels = Regex.Matches(html, "<div class=\"timeline-label\" title=\"([^\"]*)\">").Select(m => m.Groups[1].Value).ToArray();
+        var labels = Regex.Matches(html, "<a class=\"timeline-label\" href=\"#sid-[0-9a-f]{16}\" title=\"([^\"]*)\">").Select(m => m.Groups[1].Value).ToArray();
         Assert.Equal(["Create order", "Reject order", "Logged only"], labels);
         // The tests' 500 ms, 1 s and 2 s: with the fold's 13 minutes and the start-up's 25 s, P50 was 2 s and P90 13 minutes.
         Assert.Contains("<div class=\"duration-filters\" data-p50=\"1000\" data-p90=\"2000\" data-p95=\"2000\" data-p99=\"2000\">", html);

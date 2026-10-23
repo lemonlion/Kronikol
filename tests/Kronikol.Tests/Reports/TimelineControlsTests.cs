@@ -176,6 +176,76 @@ public class TimelineControlsTests : IDisposable
     }
 
     [Fact]
+    public void Each_rows_name_is_a_link_to_its_scenario_by_stable_id()
+    {
+        var page = Page(EveryResult());
+
+        var rows = page.QuerySelectorAll("#scenario-timeline > .timeline-row").ToArray();
+        Assert.Equal(4, rows.Length);
+        foreach (var row in rows)
+        {
+            var label = Assert.Single(row.QuerySelectorAll(".timeline-label"));
+            var name = label.TextContent;
+            Assert.True(label.LocalName == "a", $"the name of {name} is a <{label.LocalName}>, not a link");
+            // the address every link to a scenario on the page writes, and the one the navigation script takes, so
+            // Back returns to the timeline (plans/BACK_BUTTON_NAVIGATION_PLAN.md Q7)
+            Assert.Equal("#sid-" + row.GetAttribute("data-sid"), label.GetAttribute("href"));
+            Assert.Null(label.GetAttribute("target"));
+            // the whole name where the label cuts it short
+            Assert.Equal(name, label.GetAttribute("title"));
+            var scenario = Assert.Single(page.QuerySelectorAll($"details.scenario[data-stable-id='{row.GetAttribute("data-sid")}']"));
+            Assert.Equal(name, scenario.QuerySelector(":scope > summary .copy-scenario-name")!.GetAttribute("data-scenario-name"));
+        }
+    }
+
+    [Fact]
+    public void An_examples_row_links_to_its_own_example()
+    {
+        var (features, logs) = WarmUpHtmlTests.Marked();
+        foreach (var (scenario, item) in features[0].Scenarios.Zip(new[] { "Widget", "Gadget", "Gizmo" }))
+        {
+            scenario.OutlineId = "Place an order";
+            scenario.ExampleValues = new Dictionary<string, string> { ["item"] = item };
+        }
+        var page = Page(features, logs);
+
+        var examples = page.QuerySelectorAll("details.scenario-parameterized tr[data-stable-id]")
+            .Select(r => "#sid-" + r.GetAttribute("data-stable-id")).Distinct().Order(StringComparer.Ordinal).ToArray();
+        Assert.Equal(3, examples.Length);
+        Assert.Equal(examples, page.QuerySelectorAll("#scenario-timeline > .timeline-row > a.timeline-label")
+            .Select(a => a.GetAttribute("href")).Order(StringComparer.Ordinal));
+    }
+
+    [Fact]
+    public void A_name_the_page_must_escape_is_escaped_in_its_link()
+    {
+        const string name = "Pay <card> & \"cash\"";
+        var html = Html([new() { DisplayName = "Escapes", Scenarios = [Timed("e", name, 1000)] }]);
+
+        Assert.Contains("title=\"Pay &lt;card&gt; &amp; &quot;cash&quot;\">Pay &lt;card&gt; &amp; &quot;cash&quot;</a>", html);
+        var label = Parse(html).QuerySelector("#scenario-timeline a.timeline-label")!;
+        Assert.Equal(name, label.TextContent);
+        Assert.Equal(name, label.GetAttribute("title"));
+    }
+
+    [Fact]
+    public void A_rows_link_reads_as_its_name_until_it_is_pointed_at_or_focused()
+    {
+        var css = Stylesheets.HtmlReportStyleSheet;
+
+        // at rest as the name was before it was a link: no underline, the label's own colour
+        Assert.Equal("none", CssRules.Value(css, ".timeline-label", "text-decoration"));
+        Assert.Equal("var(--kron-ink-soft)", CssRules.Value(css, ".timeline-label", "color"));
+        // pointed at, as the History tab's links are
+        Assert.Equal("var(--kron-accent)", CssRules.Value(css, ".timeline-label:hover", "color"));
+        Assert.Equal("underline", CssRules.Value(css, ".timeline-label:hover", "text-decoration"));
+        // focused from the keyboard, as the timeline's own buttons are
+        Assert.Equal("2px solid var(--kron-accent)", CssRules.Value(css, ".timeline-label:focus-visible", "outline"));
+        // a failed row's cross is no part of the underline
+        Assert.Equal("inline-block", CssRules.Value(css, ".timeline-row-failed .timeline-label::before", "display"));
+    }
+
+    [Fact]
     public void A_failed_scenarios_row_is_marked_failed()
     {
         var failed = Page(EveryResult()).QuerySelectorAll("#scenario-timeline > .timeline-row")

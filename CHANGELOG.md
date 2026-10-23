@@ -4,6 +4,47 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.5.0] - 2026-10-23
+
+The minor part moves (5.4.4 to 5.5.0): a new report feature, the Timeline tab's names as links to their scenarios. It
+is plans/BACK_BUTTON_NAVIGATION_PLAN.md's question 7, which the plan left out of 5.2.0 as a new feature and recommended
+after it, since a link then gets Back for free.
+
+### Added
+
+- **Each row's name on the Timeline tab is a link to its scenario.** It opens the Features tab's Full view at the
+  scenario, by the `#sid-<stableId>` address the History tab's links and `kronikol query` use, and the browser's Back
+  returns to the timeline scrolled where the reader was, with the name focused; Forward goes to the scenario again. A
+  click with Ctrl or Shift opens the scenario in a new tab or window, and Enter on a focused name follows it. Under Show
+  Full, the name of a scenario the filters hide opens the line that says so, with its button that clears them. An
+  examples row's name goes to its own row of the table.
+- The name reads as it did until it is pointed at: no underline and the label's colour at rest, the accent and an
+  underline under the pointer (as the History tab's links), and a focus ring from the keyboard. Its title still holds
+  the whole name where the row cuts it short.
+
+### Report output
+
+- A timeline row's label is an `<a class="timeline-label" href="#sid-…">` where it was a `<div>`, and `stylesheets.css`
+  has the two new rules and `text-decoration: none` on the label; the failed row's cross is an inline block, so the
+  underline does not run under it. Recorded in the Kronikol4J divergence ledger (not mirrored: the port's page has no
+  Timeline tab).
+
+### Tests
+
+- `TimelineControlsTests`: every row's name is a link to `#sid-` and the row's own stable id, with its name as text and
+  title, and resolves to one scenario of that name; an examples row's name links to its own example; a name with
+  `<`, `&` and `"` is escaped in the link; the link's rules (at rest, hover, focus, the cross). `NotATestReportTests` and
+  `OutlineRowKeySiteTests` pin the link where they pinned the `<div>`.
+- `BackForwardPlacesTests`: P13, in Chromium, Firefox and WebKit, a name far down a 180-row timeline opens its scenario
+  and Back returns to the Timeline tab with the name at the same height (within 2 px) and focused, then Forward shows the
+  scenario again; P14, Enter on a focused name, and Back returns the focus to it; P15, Ctrl or Shift click opens the
+  scenario in a new page and leaves this one on the timeline.
+- `TimelineTabTests`: the name as painted at rest, under the pointer and focused from the keyboard; under Full, the name
+  of a scenario the filters hide opens the filtered-out line, with the filters kept in the address.
+- `IngestedBypassTests`: its check that the consumed `kronikol-bypass` attachment draws no link counted every `<a>` whose
+  text said `kronikol-bypass`, and the scenario's own name says it, so its new Timeline link failed the check. It now
+  counts links that leave the page, by text or by address, which is what a link to the attachment's file would be.
+
 ## [5.4.4] - 2026-10-22
 
 The patch part moves (5.4.3 to 5.4.4): a bug fix, with nothing new to call or configure. It holds the two items of

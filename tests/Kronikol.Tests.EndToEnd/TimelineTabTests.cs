@@ -115,6 +115,63 @@ public class TimelineTabTests : PlaywrightTestBase
     // gracefully" (5 s, the one that failed), "Create order successfully" (2 s), "List orders returns paginated results"
     // (1 s), "Process payment" (500 ms) and "Refund payment" (100 ms, skipped). Nothing in it paid a warm-up.
 
+    private ILocator Label(string name) => Page.Locator("#scenario-timeline a.timeline-label", new() { HasTextString = name });
+
+    /// <summary>The label's underline, colour and outline as painted, and the accent token's colour.</summary>
+    private Task<string[]> LabelLookAsync(string name) => Label(name).EvaluateAsync<string[]>("""
+        el => {
+            const probe = document.createElement('div');
+            probe.style.setProperty('color', 'var(--kron-accent)');
+            document.body.appendChild(probe);
+            const accent = getComputedStyle(probe).color;
+            probe.remove();
+            const cs = getComputedStyle(el);
+            return [cs.textDecorationLine, cs.color, cs.outlineStyle + ' ' + cs.outlineWidth + ' ' + cs.outlineColor, accent];
+        }
+        """);
+
+    [Fact]
+    public async Task A_rows_name_reads_as_text_until_pointed_at_and_shows_its_focus()
+    {
+        await OpenAsync(GenerateReport("TimelineLinkLook.html"));
+        await OpenReportTabAsync("timeline");
+        const string name = "Process payment";
+
+        var rest = await LabelLookAsync(name);
+        Assert.Equal("none", rest[0]);
+        Assert.NotEqual(rest[3], rest[1]);
+
+        await Label(name).HoverAsync();
+        var hover = await LabelLookAsync(name);
+        Assert.Equal("underline", hover[0]);
+        Assert.Equal(hover[3], hover[1]);
+
+        // from the keyboard: the Tab key from the last of the timeline's buttons reaches the first row's name
+        await Page.Mouse.MoveAsync(0, 0);
+        await Page.Locator("#scenario-timeline .tl-seg-btn").Last.FocusAsync();
+        await Page.Keyboard.PressAsync("Tab");
+        var first = Page.Locator("#scenario-timeline a.timeline-label").First;
+        Assert.True(await first.EvaluateAsync<bool>("el => el === document.activeElement"), "Tab did not reach the first row's name");
+        var focus = await first.EvaluateAsync<string[]>("el => { const cs = getComputedStyle(el); return [cs.outlineStyle, cs.outlineWidth]; }");
+        Assert.Equal(["solid", "2px"], focus);
+    }
+
+    [Fact]
+    public async Task Under_Full_the_name_of_a_scenario_the_filters_hide_opens_the_line_that_says_so()
+    {
+        await OpenAsync(GenerateReport("TimelineLinkFilteredOut.html"));
+        await ShowOnlyAsync("Failed");
+        await OpenReportTabAsync("timeline");
+        await Segment("view", "full").ClickAsync();
+        var sid = (await Label("Process payment").EvaluateAsync<string>("a => a.closest('.timeline-row').getAttribute('data-sid')"));
+
+        await Label("Process payment").ClickAsync();
+
+        await Page.Locator("#panel-features").WaitForAsync(new() { State = WaitForSelectorState.Visible });
+        Assert.Equal("#sid-" + sid + "&status=Failed", await Page.EvaluateAsync<string>("() => location.hash"));
+        await Expect(Page.Locator(".filtered-out-note")).ToBeVisibleAsync();
+    }
+
     [Fact]
     public async Task The_note_ends_with_Clear_All_which_puts_every_row_back()
     {

@@ -676,6 +676,9 @@ Work proceeds on each recommendation unless the owner says otherwise.
    copy-name button is a new feature and not in this plan.
 7. **Timeline rows and Diagnostics entries as links to their scenarios.** Not in this plan (a new feature, 4.11).
    Recommendation: yes, after it, since every link then gets Back for free.
+   **Answered for the Timeline (owner, 2026-10-23), released as 5.5.0:** each row's name is an
+   `<a class="timeline-label" href="#sid-<stableId>">`, which the navigation script takes as it takes the History tab's
+   links, with no change to the script (`BackForwardPlacesTests` P13 to P15). The Diagnostics entries stay text.
 8. **The Navigation API.** Recommendation: **the History API only**, for every browser (fact 13). The Navigation API
    would be cleaner (one `navigate` event for links, Back and Forward), but it would need the History API beside it for
    Firefox ESR 115, Safari before 26.2 and sandboxed frames, and probably for Safari on `file://`, the report's most
