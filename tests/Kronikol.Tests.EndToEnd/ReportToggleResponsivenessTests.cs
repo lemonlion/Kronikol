@@ -48,6 +48,16 @@ public class ReportToggleResponsivenessTests : PlaywrightTestBase
             everyFilter: true);
     }, LazyThreadSafetyMode.ExecutionAndPublication);
 
+    // one scenario of forty calls: a sequence diagram of about eighty payload notes, drawn in parts, the shape of a
+    // consumer's diagram whose toggles took 1.5 to 2 s in 5.4.4
+    private static readonly Lazy<string> Long = new(() =>
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "kronikol-toggles-" + Guid.NewGuid().ToString("N")[..8]);
+        Directory.CreateDirectory(dir);
+        return DenseReportFixture.GenerateWithFlows(dir, OutputDir, "Dense_Toggles_Long.html", features: 1, scenariosPerFeature: 1,
+            callsPerScenario: 40, everyFilter: true, internalFlow: false);
+    }, LazyThreadSafetyMode.ExecutionAndPublication);
+
     /// <summary>Opens the report with every feature and scenario open and every diagram drawn, and lets it settle.</summary>
     private async Task OpenAllDrawnAsync(string? report = null, int diagrams = Diagrams)
     {
@@ -378,5 +388,261 @@ public class ReportToggleResponsivenessTests : PlaywrightTestBase
             "(from) => !Array.from(window.__intervals.values()).some(function (v) { return v.ms === 250 && v.at >= from; })",
             from, new() { Timeout = 5_000, PollingInterval = 200 });
         Assert.Equal(1, await Page.EvaluateAsync<int>("() => window._renderCompleteCount - window.__completed"));
+    }
+
+    /// <summary>
+    /// Opens the long diagram's scenario and leaves the reader at the top of the diagram, under the report's bar, which
+    /// floats there with its toggles; returns once the diagram is drawn with its note buttons and the page has settled.
+    /// </summary>
+    private async Task OpenLongUnderTheBarAsync()
+    {
+        await Page.AddInitScriptAsync(BrowserRenderWorkerTests.BenchInitWithProbe);
+        await Page.GotoAsync(Long.Value, new() { Timeout = PageOpenTimeout });
+        await Page.EvaluateAsync("""
+            () => {
+                document.querySelectorAll('details.feature, details.scenario').forEach(function (d) { d.open = true; });
+                document.querySelector('.plantuml-browser[data-diagram-type=plantuml]').scrollIntoView({ block: 'start' });
+            }
+            """);
+        await Page.WaitForFunctionAsync("""
+            () => {
+                var parts = document.querySelectorAll('.plantuml-browser[data-diagram-type=plantuml] > .puml-fragment');
+                return !window._plantumlRendering && parts.length > 1
+                    && Array.prototype.every.call(parts, function (p) { return !!p.querySelector('svg .note-hover-rect'); });
+            }
+            """, null, new() { Timeout = 300_000, PollingInterval = 200 });
+        var shape = await Page.EvaluateAsync<JsonElement>("""
+            () => {
+                var c = document.querySelector('.plantuml-browser[data-diagram-type=plantuml]');
+                var bar = document.querySelector('.toolbar-row.report-nav');
+                window.scrollTo(0, window.scrollY + c.getBoundingClientRect().top - bar.getBoundingClientRect().height - 20);
+                return { parts: c.querySelectorAll(':scope > .puml-fragment').length, notes: c.querySelectorAll('svg .note-hover-rect').length,
+                         words: c.querySelectorAll('svg text').length };
+            }
+            """);
+        _output.WriteLine($"diagram: {shape}");
+        Assert.True(shape.GetProperty("notes").GetInt32() >= 60, "the diagram holds the notes of forty calls");
+        await Page.WaitForFunctionAsync("() => document.querySelector('.toolbar-row.report-nav').classList.contains('k-floating')",
+            null, new() { Timeout = 10_000, PollingInterval = 200 });
+        await SettleAsync();
+    }
+
+    /// <summary>How long after a toggle the long diagram's new picture may take to be painted, before the contention scale.</summary>
+    private const double PaintBudgetMs = 300;
+
+    [Fact]
+    public async Task A_toggle_with_a_long_diagram_of_many_notes_on_screen_runs_no_long_task_and_paints_the_new_picture_first()
+    {
+        await OpenLongUnderTheBarAsync();
+
+        var results = new List<(string Action, double Worst, double Stretch, double Painted, bool ButtonsFirst)>();
+        // the four filters the fixture has (it records no assertions): each draws the diagram again, and back
+        foreach (var toggle in new[] { "databases", "steps", "setup", "events" })
+            foreach (var phase in new[] { "switched", "switched back" })
+            {
+                // the first frame that shows the diagram's new picture: whether its note buttons were placed before it,
+                // and when it had been painted (a task queued from the frame's callback runs after its paint)
+                var from = await Page.EvaluateAsync<double>($$"""
+                    () => {
+                        var c = document.querySelector('.plantuml-browser[data-diagram-type=plantuml]');
+                        c.querySelectorAll('svg').forEach(function (s) { s._before = true; });
+                        var t = performance.now();
+                        window.__painted = null;
+                        window.__buttonsFirst = null;
+                        (function frame() {
+                            requestAnimationFrame(function () {
+                                var s = c.querySelector('svg'), fresh = !!s && !s._before;
+                                if (fresh) window.__buttonsFirst = !!c.querySelector('svg .note-hover-rect');
+                                setTimeout(function () {
+                                    if (fresh) window.__painted = performance.now() - t;
+                                    else if (performance.now() - t < 60000) frame();
+                                }, 0);
+                            });
+                        })();
+                        document.querySelector('.toolbar-row .toggle-btn[data-toggle="{{toggle}}"]').click();
+                        return t;
+                    }
+                    """);
+                await Page.WaitForFunctionAsync(
+                    $"() => !document.querySelector('.toggle-btn[data-toggle=\"{toggle}\"][data-pending]')",
+                    null, new() { Timeout = 300_000, PollingInterval = 200 });
+                var (worst, stretch) = await WorstTaskSinceAsync(from);
+                var r = await Page.EvaluateAsync<JsonElement>("""
+                    () => ({ painted: window.__painted, buttonsFirst: window.__buttonsFirst,
+                             buttons: Array.prototype.every.call(document.querySelectorAll('.plantuml-browser[data-diagram-type=plantuml] > .puml-fragment'),
+                                 function (p) { return !!p.querySelector('svg .note-hover-rect'); }) })
+                    """);
+                var painted = r.GetProperty("painted").ValueKind == JsonValueKind.Number ? r.GetProperty("painted").GetDouble() : double.NaN;
+                var buttonsFirst = r.GetProperty("buttonsFirst").ValueKind != JsonValueKind.False;
+                _output.WriteLine($"{toggle} {phase}: longest task {worst:F0} ms, new picture painted after {painted:F0} ms" +
+                                  (buttonsFirst ? ", its note buttons placed before it" : ""));
+                // once the toggle is done, the diagram on screen has its buttons
+                Assert.True(r.GetProperty("buttons").GetBoolean(), $"{toggle} {phase}: every part has its note buttons once the toggle is done");
+                results.Add(($"{toggle} {phase}", worst, stretch, painted, buttonsFirst));
+            }
+
+        foreach (var (action, worst, stretch, painted, buttonsFirst) in results)
+        {
+            // the picture is painted first, and its note buttons follow: placing them took longer than drawing it
+            Assert.False(buttonsFirst, $"{action}: the note buttons were placed before the new picture was painted");
+            Assert.True(painted <= PaintBudgetMs * stretch,
+                $"{action}: the new picture was painted after {painted:F0} ms (budget {PaintBudgetMs * stretch:F0} ms at stretch {stretch:F2})");
+            AssertWithinBudget(action, worst, stretch);
+        }
+    }
+
+    [Fact]
+    public async Task Placing_the_note_buttons_of_a_long_diagram_reads_each_word_s_box_once_and_takes_one_layout()
+    {
+        await OpenLongUnderTheBarAsync();
+
+        // each part's buttons placed again, the boxes the page reads counted: the engine draws each word of a payload as an
+        // element of its own, so a part holds about two thousand
+        var r = await Page.EvaluateAsync<JsonElement>("""
+            () => {
+                var proto = SVGGraphicsElement.prototype, getBBox = proto.getBBox, reads = 0;
+                proto.getBBox = function () { reads++; return getBBox.apply(this, arguments); };
+                try {
+                    return Array.prototype.map.call(document.querySelectorAll('.plantuml-browser[data-diagram-type=plantuml] > .puml-fragment'), function (part) {
+                        var svg = part.querySelector('svg');
+                        reads = 0;
+                        var t = performance.now();
+                        window._makeNotesCollapsible(part);
+                        return { reads: reads, ms: performance.now() - t, drawn: svg.querySelectorAll('text, path, rect, line, polygon, ellipse').length,
+                                 notes: svg.querySelectorAll('.note-hover-rect').length };
+                    });
+                } finally {
+                    proto.getBBox = getBBox;
+                }
+            }
+            """);
+        var probe = await Page.EvaluateAsync<double[]>("() => window.__bench.probe");
+        var stretch = ContentionScale.Stretch(probe.ToList());
+        foreach (var part in r.EnumerateArray())
+        {
+            var reads = part.GetProperty("reads").GetInt32();
+            var drawn = part.GetProperty("drawn").GetInt32();
+            var ms = part.GetProperty("ms").GetDouble();
+            _output.WriteLine($"part of {part.GetProperty("notes").GetInt32()} notes and {drawn} drawn elements: {reads} boxes read in {ms:F0} ms");
+            if (part.GetProperty("notes").GetInt32() < 10) continue;
+            // until 5.5.1 each note read every word of the picture again (a note's box against every other word), and
+            // read its own boxes after the buttons of the note before it were written, so the browser laid the whole
+            // picture out again for each note
+            Assert.True(reads <= 3 * drawn, $"{reads} boxes read for a part of {drawn} drawn elements");
+            Assert.True(ms <= 100 * stretch, $"placing a part's note buttons took {ms:F0} ms (budget {100 * stretch:F0} ms at stretch {stretch:F2})");
+        }
+    }
+
+    [Fact]
+    public async Task A_toggle_makes_each_part_s_zoom_slider_without_drawing_the_part_at_its_natural_size()
+    {
+        await OpenLongUnderTheBarAsync();
+        await Page.EvaluateAsync("""
+            () => {
+                // a box narrower than the diagram's parts (about 600 px each), so each part is scaled down to fit it and
+                // gets a zoom slider when it is drawn again
+                document.querySelector('.plantuml-browser[data-diagram-type=plantuml]').style.width = '420px';
+                window.__natural = 0;
+                // a picture drawn at its natural size and back shows as a change of its style from max-width: none
+                new MutationObserver(function (records) {
+                    records.forEach(function (r) { if (r.target.tagName === 'svg' && /max-width:\s*none/.test(r.oldValue || '')) window.__natural++; });
+                }).observe(document.querySelector('.plantuml-browser[data-diagram-type=plantuml]'),
+                    { attributes: true, attributeFilter: ['style'], attributeOldValue: true, subtree: true });
+            }
+            """);
+
+        await ToggleAsync("databases");
+        // every part wider than its box has its slider again
+        await Page.WaitForFunctionAsync("""
+            () => Array.prototype.every.call(document.querySelectorAll('.plantuml-browser[data-diagram-type=plantuml] > .puml-fragment'),
+                function (p) { var svg = p.querySelector('svg'); return !!svg && (svg.width.baseVal.value <= p.clientWidth + 1 || !!p.querySelector(':scope > .diagram-zoom-controls')); })
+            """, null, new() { Timeout = 30_000, PollingInterval = 200 });
+
+        // each part fits its box, its slider starting at the level that fits it, worked out from the width the engine drew
+        // it at; measuring that width drew the part at its natural size and back, every word in it laid out twice
+        var r = await Page.EvaluateAsync<JsonElement>("""
+            () => ({
+                natural: window.__natural,
+                parts: Array.prototype.map.call(document.querySelectorAll('.plantuml-browser[data-diagram-type=plantuml] > .puml-fragment'), function (p) {
+                    var svg = p.querySelector('svg'), slider = p.querySelector(':scope > .diagram-zoom-controls .diagram-zoom-slider');
+                    return { slider: slider ? Number(slider.min) : null, fits: Math.round(p.clientWidth / svg.width.baseVal.value * 100),
+                             notes: svg.querySelectorAll('.note-hover-rect').length };
+                })
+            })
+            """);
+        _output.WriteLine($"{r}");
+        Assert.Equal(0, r.GetProperty("natural").GetInt32());
+        var zoomable = r.GetProperty("parts").EnumerateArray().Where(p => p.GetProperty("notes").GetInt32() >= 10).ToList();
+        Assert.NotEmpty(zoomable);
+        foreach (var part in zoomable)
+        {
+            Assert.Equal(JsonValueKind.Number, part.GetProperty("slider").ValueKind);
+            Assert.InRange(part.GetProperty("slider").GetInt32(), part.GetProperty("fits").GetInt32() - 1, part.GetProperty("fits").GetInt32() + 1);
+        }
+    }
+
+    [Fact]
+    public async Task A_toggle_gives_the_diagram_on_screen_its_note_buttons_by_the_time_it_is_done()
+    {
+        await OpenAllDrawnAsync(Small.Value, 2);
+        await Page.EvaluateAsync("() => document.querySelector('.plantuml-browser[data-k-sequence]').scrollIntoView({ block: 'center' })");
+        await SettleAsync();
+        // the first frame that shows its new picture, and whether its note buttons were placed before it
+        await Page.EvaluateAsync("""
+            () => {
+                var c = document.querySelector('.plantuml-browser[data-k-sequence]'), t = performance.now();
+                c.querySelector('svg')._before = true;
+                window.__buttonsFirst = null;
+                (function frame() {
+                    requestAnimationFrame(function () {
+                        var s = c.querySelector('svg');
+                        if (s && !s._before) window.__buttonsFirst = !!s.querySelector('.note-hover-rect');
+                        else if (performance.now() - t < 60000) frame();
+                    });
+                })();
+            }
+            """);
+
+        await ToggleAsync("databases");
+
+        // its new picture was painted before its buttons were placed (5.5.1), and they are in place once the toggle
+        // stops showing it is busy, with no pointer over it
+        var r = await Page.EvaluateAsync<JsonElement>("""
+            () => {
+                var svg = document.querySelector('.plantuml-browser[data-k-sequence] svg');
+                return { fresh: !svg._before, buttons: !!svg.querySelector('.note-hover-rect'), buttonsFirst: window.__buttonsFirst };
+            }
+            """);
+        Assert.True(r.GetProperty("fresh").GetBoolean(), "the diagram on screen was drawn again");
+        Assert.True(r.GetProperty("buttons").GetBoolean(), "the diagram on screen has its note buttons once the toggle is done");
+        Assert.Equal(JsonValueKind.False, r.GetProperty("buttonsFirst").ValueKind);
+    }
+
+    [Fact]
+    public async Task A_toggle_finishes_with_the_note_buttons_placed_on_a_page_that_paints_no_frame()
+    {
+        await OpenAllDrawnAsync(Small.Value, 2);
+        await Page.EvaluateAsync("() => document.querySelector('.plantuml-browser[data-k-sequence]').scrollIntoView({ block: 'center' })");
+        await SettleAsync();
+        // a renderer that produces no frame (a stalled headless one): no requestAnimationFrame callback ever runs, so the
+        // paint the diagram on screen waits for before its buttons never comes
+        await Page.EvaluateAsync("""
+            () => {
+                document.querySelector('.plantuml-browser[data-k-sequence] svg')._before = true;
+                window.requestAnimationFrame = function () { return 0; };
+                document.querySelector('.toolbar-row .toggle-btn[data-toggle="databases"]').click();
+            }
+            """);
+
+        await Page.WaitForFunctionAsync("() => !document.querySelector('.toggle-btn[data-toggle=\"databases\"][data-pending]')",
+            null, new() { Timeout = 15_000, PollingInterval = 200 });
+        var r = await Page.EvaluateAsync<JsonElement>("""
+            () => {
+                var svg = document.querySelector('.plantuml-browser[data-k-sequence] svg');
+                return { fresh: !svg._before, buttons: !!svg.querySelector('.note-hover-rect') };
+            }
+            """);
+        Assert.True(r.GetProperty("fresh").GetBoolean(), "the diagram on screen was drawn again");
+        Assert.True(r.GetProperty("buttons").GetBoolean(), "the diagram on screen has its note buttons");
     }
 }

@@ -1004,10 +1004,13 @@
 
     // ── Zoom Helpers ──
 
-    // Get the natural (unscaled) SVG width
-    function getNaturalWidth(container) {
-        var svg = getSvg(container);
-        if (!svg) return 0;
+    // The picture's width at its natural (unscaled) size. The engine writes it on the picture in pixels, and the page's
+    // style sizes the picture by it, so it is read from there: drawing the picture at that size to measure it and back
+    // laid out every word in it twice, about 40 ms on a long diagram, several times for each zoom slider (5.5.1). A
+    // width written in other units is measured as before.
+    function naturalWidthOf(svg) {
+        var w = svg.width && svg.width.baseVal;
+        if (w && (w.unitType === 1 || w.unitType === 5) && w.value > 0) return w.value; // a number, or pixels
         var saved = svg.style.maxWidth;
         var savedW = svg.style.width;
         svg.style.maxWidth = 'none';
@@ -1018,28 +1021,25 @@
         return naturalW;
     }
 
+    // Get the natural (unscaled) SVG width
+    function getNaturalWidth(container) {
+        var svg = getSvg(container);
+        if (!svg) return 0;
+        return naturalWidthOf(svg);
+    }
+
     // Check whether an SVG diagram is wider than its container (needs zoom)
     function isDiagramZoomable(container) {
         var svg = getSvg(container);
         if (!svg) return false;
-        var saved = svg.style.maxWidth;
-        svg.style.maxWidth = 'none';
-        var naturalW = svg.getBoundingClientRect().width;
-        svg.style.maxWidth = saved;
-        return naturalW > container.clientWidth + 1;
+        return naturalWidthOf(svg) > container.clientWidth + 1;
     }
 
     // Calculate the fit-to-width zoom percentage
     function getFitPercent(container) {
         var svg = getSvg(container);
         if (!svg) return 100;
-        var savedMax = svg.style.maxWidth;
-        var savedW = svg.style.width;
-        svg.style.maxWidth = 'none';
-        svg.style.width = '';
-        var naturalW = svg.getBoundingClientRect().width;
-        svg.style.maxWidth = savedMax;
-        svg.style.width = savedW;
+        var naturalW = naturalWidthOf(svg);
         if (naturalW <= 0) return 100;
         var pct = Math.round(container.clientWidth / naturalW * 100);
         return Math.max(1, Math.min(pct, 100));
@@ -1061,15 +1061,7 @@
         // Get container rect
         var cRect = container.getBoundingClientRect();
 
-        // Calculate natural width
-        var savedMax = svg.style.maxWidth;
-        var savedW = svg.style.width;
-        svg.style.maxWidth = 'none';
-        svg.style.width = '';
-        var naturalW = svg.getBoundingClientRect().width;
-        svg.style.maxWidth = savedMax;
-        svg.style.width = savedW;
-
+        var naturalW = naturalWidthOf(svg);
         var newWidth = naturalW * percent / 100;
         var oldWidth = svg.getBoundingClientRect().width;
 
@@ -1344,18 +1336,7 @@
     // `max-width: 100%` lifted. The note full-width control needs exactly this number to work out
     // how much slack a diagram has, and measuring it in two places would be two things to keep in
     // step, so the zoom code's measurement is the one both use.
-    window._getDiagramNaturalWidth = function(container) {
-        var svg = getSvg(container);
-        if (!svg) return 0;
-        var savedMax = svg.style.maxWidth;
-        var savedW = svg.style.width;
-        svg.style.maxWidth = 'none';
-        svg.style.width = '';
-        var naturalW = svg.getBoundingClientRect().width;
-        svg.style.maxWidth = savedMax;
-        svg.style.width = savedW;
-        return naturalW;
-    };
+    window._getDiagramNaturalWidth = getNaturalWidth;
 
     // Lazily add zoom buttons when diagram containers scroll into view.
     // A per-container MutationObserver waits for the SVG to render before

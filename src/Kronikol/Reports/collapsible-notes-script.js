@@ -271,6 +271,17 @@
         // bounding box but weren't collected in the forward scan. This
         // handles PlantUML Creole separators (..text..) which render text
         // and line elements BEFORE the note's path elements in DOM order.
+        // Each text's box is read once for every candidate: the engine draws a word to a <text>, so reading every text
+        // again for each note read thousands of boxes per note on a diagram with long payloads.
+        var textBoxes = new Map();
+        function textBox(t) {
+            var b = textBoxes.get(t);
+            if (b === undefined) {
+                try { b = t.getBBox(); } catch (e) { b = null; }
+                textBoxes.set(t, b);
+            }
+            return b;
+        }
         candidates.forEach(function(grp) {
             var nb = null;
             for (var nbi = 0; nbi < grp.paths.length; nbi++) {
@@ -291,13 +302,11 @@
             for (var oi = 0; oi < children.length; oi++) {
                 if (children[oi].tagName !== 'text') continue;
                 if (collected.has(children[oi])) continue;
-                try {
-                    var tb = children[oi].getBBox();
-                    if (tb.x >= nb.x - 2 && tb.x + tb.width <= nb.r + 2
-                        && tb.y >= nb.y - 2 && tb.y + tb.height <= nb.b + 2) {
-                        grp.texts.push(children[oi]);
-                    }
-                } catch(e) {}
+                var tb = textBox(children[oi]);
+                if (tb && tb.x >= nb.x - 2 && tb.x + tb.width <= nb.r + 2
+                    && tb.y >= nb.y - 2 && tb.y + tb.height <= nb.b + 2) {
+                    grp.texts.push(children[oi]);
+                }
             }
         });
 
@@ -1025,6 +1034,11 @@
             ? Math.min(noteGroups.length, sourceIndexMap.length)
             : Math.min(noteGroups.length, noteBlocks.length);
 
+        // Every note's box is read before any note's buttons are written: a write between two reads made the browser lay
+        // the whole picture out again for each note.
+        var noteBoxes = [];
+        for (var bi = 0; bi < loopCount; bi++) noteBoxes.push(getNoteBBox(noteGroups[bi]));
+
         for (var ni = 0; ni < loopCount; ni++) {
             (function(svgIdx, localIdx) {
                 var globalFilteredIdx = fragContinuationMap
@@ -1036,7 +1050,7 @@
                 // read one note: its index in the original source, which keys its state, and its block in the
                 // source it was drawn from.
                 grp.paths[0]._noteIndices = { original: globalIdx, drawn: localIdx };
-                var bbox = getNoteBBox(grp);
+                var bbox = noteBoxes[svgIdx];
                 var step = owner._noteSteps[globalIdx] || 0;
                 var rawContentLines = ownerNoteBlocks[globalIdx]
                     ? ownerNoteBlocks[globalIdx].contentLines
@@ -3442,7 +3456,8 @@
     }
 
     // After a redraw of `el` (the diagram, or one of its fragments) for the diagram `owner`: the internal-flow links
-    // and what shows at once, then the hover-only work now when it is near the screen, else as it comes near.
+    // and what shows at once, then the hover-only work once the picture is painted when it is near the screen, else as
+    // it comes near.
     function afterRedraw(el, owner, near) {
         if (window._iflowBindLinks) window._iflowBindLinks(el, owner._noteOriginalSource);
         // The card colours now, inside the slice that drew the picture, so the slice's time counts them: the role pass
@@ -3450,10 +3465,36 @@
         // a diagram's first drawing.
         var roles = window._diagramRoles;
         if (roles) Array.prototype.forEach.call(el.querySelectorAll('svg'), function(svg) { roles.tagRoles(svg); });
-        if (near || owner._refineNoteWidth || !nearWatch) { decorateNow(el); return; }
+        if (owner._refineNoteWidth || !nearWatch) { decorateNow(el); return; }
         if (el.classList.contains('diagram-natural-size') && window._restoreZoomState) window._restoreZoomState(el);
         el._kDecorate = true;
         watchNear(el);
+        // near the screen, it gets them as soon as the page has painted its new picture, before the queue goes on
+        if (near) paintWaiting.push(el);
+    }
+
+    // A diagram near the screen drawn again by the queue shows its new picture first, and gets its hover-only work after
+    // the paint (5.5.1): on a long diagram of many notes that work took longer than drawing it, and the page painted
+    // nothing until it was done. Each waiting diagram is done in a task of its own, then the queue takes its next turn,
+    // so no turn slips in before the paint either.
+    var paintWaiting = [];
+    function decorateAfterPaint(then) {
+        afterPaint(function step() {
+            var el = paintWaiting.shift();
+            if (el && el._kDecorate) decorateNow(el);
+            if (paintWaiting.length) setTimeout(step, 0);
+            else then();
+        });
+    }
+
+    // After the page's next paint: a frame's callback queues a task, which runs once that frame is painted. A page that
+    // paints no frame (a background tab, a stalled renderer) goes on after PAINT_WAIT_MS all the same.
+    var PAINT_WAIT_MS = 500;
+    function afterPaint(fn) {
+        var done = false;
+        function run() { if (!done) { done = true; fn(); } }
+        if (!document.hidden) requestAnimationFrame(function() { setTimeout(run, 0); });
+        setTimeout(run, document.hidden ? 0 : PAINT_WAIT_MS);
     }
 
     // A pointer reaching a diagram whose hover-only work is still waiting (before the observer has said it is near)
@@ -3530,6 +3571,8 @@
             if (sources.length) window.plantuml.prefetch(sources);
         }
         function processNext() {
+            // a diagram near the screen was just drawn again: its picture is painted and it is decorated first
+            if (paintWaiting.length) { decorateAfterPaint(processNext); return; }
             if (queue.length === 0) { window._renderCompleteCount = (window._renderCompleteCount || 0) + 1; if (onAllDone) onAllDone(); return; }
             // Wait for any in-flight initial render to complete before proceeding
             if (window._plantumlRendering) {

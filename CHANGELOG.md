@@ -4,6 +4,58 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.5.1] - 2026-10-23
+
+The patch part moves (5.5.0 to 5.5.1): performance work, with nothing new to call or configure.
+
+### Fixed
+
+- **The report's toggles answer at once with a long diagram on screen.** A consumer's report (written by 5.4.4) has a
+  scenario whose sequence diagram holds 88 payload notes, about 7,300 words, drawn in two parts; with the report's bar
+  floating above it, Assertions, Steps, Databases (back on) and Setup each took 1.1 to 1.5 s to show the diagram
+  changed, most of it one task of 0.9 to 1.1 s in which the page could not scroll or paint. 5.1.1's work did not reach
+  it: that was for many diagrams, and this is one diagram on screen, which a toggle draws again first and gives its note
+  buttons at once. Three changes, each held by a test (`ReportToggleResponsivenessTests`):
+  - Placing a note's buttons measured the note's every word, then wrote the buttons into the picture; the next note's
+    first measurement then had the browser lay the whole picture out again, so a diagram of 88 notes was laid out 88
+    times (1.1 s here). Every note is now measured before any button is written. Finding the notes also measured every
+    word of the picture once for each note, where once is enough.
+  - The note buttons, the assertion tooltips and the zoom slider of a diagram on screen were placed in the task that put
+    its new picture in the page, so the picture was painted only after them. The picture is now painted first, and they
+    follow in tasks of their own before the toggle's next diagram. As before they are in place by the time the toggle
+    stops showing it is busy, and a pointer that reaches the diagram first gets them at once.
+  - Each zoom slider measured the picture's natural width by drawing it at that size and back, which laid out every word
+    in it twice, several times per slider. The width is now read from the picture, where the diagram engine writes it in
+    pixels (a width in other units is still measured).
+
+  Measured on that report, each toggle switched and back twice: the diagram shows its new state within 73 to 258 ms (144
+  to 167 ms when its pictures come back from the page's cache), no task runs over 156 ms, and the toggle's long tasks
+  add up to 360 ms at most, where they took 1.05 to 1.40 s. The first change alone brought the diagram's new state to
+  within 384 to 640 ms.
+
+  Opening that scenario gains from the first change as well, since a diagram's first drawing places its note buttons the
+  same way: its diagram is drawn with its buttons within 0.45 to 0.51 s, where it took 1.26 to 1.35 s with a task of up
+  to 609 ms. A note's own button draws its diagram again and places them the same way too (not timed).
+
+### Tests
+
+- `ReportToggleResponsivenessTests`: a fixture of one scenario of 40 calls (a diagram of 85 notes and about 4,000 words,
+  drawn in 3 parts) with the bar floating over it. Each of four toggles, switched and back, runs no task over 200 ms and
+  paints the new picture within 300 ms, before the note buttons are placed (in 5.5.0: a 449 ms task, the picture painted
+  after 460 to 600 ms, the buttons first; now no task over 50 ms, painted after 63 to 163 ms); placing a part's buttons
+  reads at most three boxes per drawn element and takes under 100 ms (3,873 boxes for 2,581 elements in 24 ms); a toggle
+  makes each part's zoom slider without drawing the part at its natural size, its fit level worked out from the width
+  the engine drew it at. On the two-scenario fixture, the diagram on screen has its buttons once a toggle is done, and a
+  page that paints no frame (a stalled renderer) still finishes the toggle with them placed. Budgets scale by the run's
+  measured contention.
+- Proofs: the long-diagram toggle fact was written first and failed on 5.5.0's scripts (a 449 ms task, the new picture
+  painted after 460 to 600 ms, its buttons placed first). Eight mutations of the three changes were run against the five
+  new facts and seven are killed: measuring each note in turn, measuring every word for every note, placing the buttons
+  in the task that swaps the picture, a queue that does not wait for the paint, no fallback when no frame comes, and the
+  natural width measured or taken from the drawn width. The eighth, waiting for the paint with a plain zero-delay timer
+  in place of a frame callback, passes: Chromium paints a frame before such a timer after a redraw, so no test can tell
+  them apart there, and the frame callback makes the order certain in any browser.
+
 ## [5.5.0] - 2026-10-23
 
 The minor part moves (5.4.4 to 5.5.0): a new report feature, the Timeline tab's names as links to their scenarios. It
