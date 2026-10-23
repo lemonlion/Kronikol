@@ -13,6 +13,7 @@ jobs:
   release-build:
     name: Release Build (packable projects)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Free disk space
         run: |
@@ -46,6 +47,7 @@ jobs:
   test-as-root:
     name: Core Tests as root (Linux container)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     container: mcr.microsoft.com/dotnet/sdk:10.0
     steps:
       - uses: actions/checkout@v7
@@ -58,6 +60,9 @@ jobs:
   test:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os || 'ubuntu-latest' }}
+    # A job that hangs is cancelled after an hour, not GitHub's six (CI run 1214 waited six hours on a hung apt-get).
+    # The longest of 25 green runs' jobs took 26 minutes (E2E (Remainder)).
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -230,20 +235,44 @@ jobs:
       # The tests now reject that card outright; this is what makes them able to answer.
       - name: Install Graphviz
         if: matrix.needs-graphviz
+        timeout-minutes: 35
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq graphviz
+          # Bounded and retried as the Playwright step below explains.
+          for attempt in 1 2 3; do
+            sudo timeout --kill-after=30s 10m sh -c 'apt-get update -qq && apt-get install -y -qq graphviz' && break
+            [ "$attempt" = 3 ] && exit 1
+            echo "::warning::installing Graphviz failed or took over 10 minutes (attempt $attempt of 3); trying again"
+            sudo dpkg --configure -a
+          done
           dot -V
 
       - name: Restore dependencies
         if: matrix.restore-first
         run: dotnet restore ${{ matrix.restore-first }}
 
+      # apt-get has no deadline of its own. On 2026-10-22 the image's first mirror, azure.archive.ubuntu.com, slowed to
+      # 17 kB/s: one job's packages took 18 minutes, and in Playwright Adapter Tests apt-get update stopped reading and
+      # never failed, so the job ran until GitHub cancelled it at six hours (CI run 1214). Each attempt is now cut off
+      # after 10 minutes (the slowest of 250 green installs took 10) and tried three times; a package already fetched
+      # stays in apt's cache, so a slow mirror still gets there. install-deps runs as root under `sudo timeout`, so the
+      # deadline stops apt-get itself; --with-deps would run it through a sudo of Playwright's own, out of its reach.
       - name: Install Playwright browsers
         if: matrix.needs-playwright
+        timeout-minutes: 40
         run: |
           dotnet build ${{ matrix.projects }} --configuration Release
-          pwsh ${{ matrix.projects }}/bin/Release/net10.0/playwright.ps1 install chromium --with-deps
+          PLAYWRIGHT=${{ matrix.projects }}/bin/Release/net10.0/playwright.ps1
+          for attempt in 1 2 3; do
+            sudo timeout --kill-after=30s 10m pwsh "$PLAYWRIGHT" install-deps chromium && break
+            [ "$attempt" = 3 ] && exit 1
+            echo "::warning::installing Chromium's packages failed or took over 10 minutes (attempt $attempt of 3); trying again"
+            sudo dpkg --configure -a
+          done
+          for attempt in 1 2 3; do
+            timeout --kill-after=30s 10m pwsh "$PLAYWRIGHT" install chromium && break
+            [ "$attempt" = 3 ] && exit 1
+            echo "::warning::downloading Chromium failed or took over 10 minutes (attempt $attempt of 3); trying again"
+          done
 
       - name: Build & Test
         if: ${{ !matrix.mtp-run && !matrix.discover-remaining && !matrix.templates-build }}
