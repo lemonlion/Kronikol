@@ -1,0 +1,15 @@
+Step S0. node mem.js chromium v0-probed.html,vC2s-one.html,vC2s-p16.html,vC2s-p8.html, then firefox (2026-10-23,
+another session's test suites running). Every process the launched browser started, private bytes as Windows counts
+them (Win32_Process.PrivatePageCount), less the same browser on about:blank, in MB.
+up       = the report painted and, with one frame, the diagram frame decoded; then a GC (Chromium) and 4 s
+drawn    = the diagrams of the first six scenarios that have any drawn (25 pictures), then 3 s
+search   = after a deep search for "participant", which verifies every scenario
+settled  = 3 s later
+
+chromium	v0-probed.html	base 80 MB (5 procs)	up +1257	drawn(25) +1253	search(ready:512) +1595, settled +1325
+chromium	vC2s-one.html	base 80 MB (5 procs)	up +1332	drawn(25) +1398	search(ready:512) +1750, settled +1386
+chromium	vC2s-p16.html	base 80 MB (5 procs)	up +1246	drawn(25) +1324	search(ready:512) +1729, settled +1443
+chromium	vC2s-p8.html	base 77 MB (5 procs)	up +1242	drawn(25) +1316	search(ready:512) +1597, settled +1365
+firefox	v0-probed.html	base 415 MB (7 procs)	up +1979	drawn(25) +1687	search(ready:512) +1752, settled +1753
+firefox	vC2s-one.html	base 418 MB (7 procs)	up +1983	drawn(25) +1979	search(ready:512) +2126, settled +2114
+firefox	vC2s-p16.html	base 415 MB (7 procs)	up +1927	drawn(25) +1798	search(ready:512) +1864, settled +1855

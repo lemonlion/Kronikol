@@ -1,0 +1,15 @@
+node wk-search-probe.js v0-probed.html ; node wk-search-probe2.js v0-probed.html   (2026-10-23)
+
+Inside a Worker made from a blob: URL, on a file:// page (today's page, unchanged):
+webkit 26.4 (Windows)
+  typeof DecompressionStream, Response, Blob, atob: all "function"
+  new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).text():
+      ERR NotReadableError: The I/O read operation failed.
+  the same to an ArrayBuffer: ERR (same)
+  new Blob([bytes]).arrayBuffer(): ERR (same)
+  new Blob([bytes]).stream().getReader().read(): ERR (same)
+  a ReadableStream built from the bytes (start(c) { c.enqueue(bytes); c.close(); }) through DecompressionStream('gzip'): ok
+  the page's own deep search, 6 s after a query: indexState "loading" (later "error"), docs 0
+chromium 147
+  every read above: ok
+  the page's own deep search: indexState "ready", docs 781, a query verified 512 items

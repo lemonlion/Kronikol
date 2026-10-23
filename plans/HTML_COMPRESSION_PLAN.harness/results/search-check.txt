@@ -1,0 +1,22 @@
+node search-check.js v0-probed.html,vC2s-one.html,vC2s-p16.html,vC2s-p8.html chromium; then firefox,webkit (no p8)
+2026-10-23, while another session's suites loaded the machine, so the times are not comparable.
+
+Terms: 3 words found in exactly one diagram source and nowhere in the page's text, from diagrams at 10%, 50% and
+90% of #puml-data's order (with pieces they sit in different pieces), then 2 words found only in flame spans.
+d1 to d3 and f1, f2 stand for the words, which are not printed. Per term: scenarios shown / indexState / ms until the shown set held still for 1.5 s. sameTerms and sameResults
+compare with today's page (the first file) in the same engine. pieces = the page's piece decodes / pieces held.
+
+chromium	v0-probed.html	terms d=3 f=2	d1:1/ready/2385ms d2:1/ready/2103ms d3:1/ready/2380ms f1:1/ready/2388ms f2:1/ready/1862ms	back=true sameDoc=true		pieces=-	errors=0
+chromium	vC2s-one.html	terms d=3 f=2	d1:1/ready/4146ms d2:1/ready/2121ms d3:1/ready/2114ms f1:1/ready/2383ms f2:1/ready/1846ms	back=true sameDoc=true	sameTerms=true sameResults=true	pieces=1/1	errors=0
+chromium	vC2s-p16.html	terms d=3 f=2	d1:1/ready/2666ms d2:1/ready/2400ms d3:1/ready/2401ms f1:1/ready/2396ms f2:1/ready/1848ms	back=true sameDoc=true	sameTerms=true sameResults=true	pieces=7/2	errors=0
+chromium	vC2s-p8.html	terms d=3 f=2	d1:1/ready/2410ms d2:1/ready/2391ms d3:1/ready/2367ms f1:1/ready/2367ms f2:1/ready/1854ms	back=true sameDoc=true	sameTerms=true sameResults=true	pieces=14/2	errors=0
+firefox	v0-probed.html	terms d=3 f=2	d1:1/ready/6063ms d2:1/ready/2418ms d3:1/ready/2400ms f1:1/ready/2412ms f2:1/ready/1844ms	back=true sameDoc=true		pieces=-	errors=0
+firefox	vC2s-one.html	terms d=3 f=2	d1:1/ready/2739ms d2:1/ready/2167ms d3:1/ready/2106ms f1:1/ready/2390ms f2:1/ready/1853ms	back=true sameDoc=true	sameTerms=true sameResults=true	pieces=1/1	errors=0
+firefox	vC2s-p16.html	terms d=3 f=2	d1:1/ready/3063ms d2:1/ready/2389ms d3:1/ready/2424ms f1:1/ready/2398ms f2:1/ready/1900ms	back=true sameDoc=true	sameTerms=true sameResults=true	pieces=7/2	errors=0
+webkit	v0-probed.html	terms d=3 f=2	d1:0/error/7063ms d2:0/error/1704ms d3:0/error/1717ms f1:0/error/1568ms f2:0/error/1748ms	back=true sameDoc=true		pieces=-	errors=0
+webkit	vC2s-one.html	terms d=3 f=2	d1:512/loading/100074ms d2:0/error/2541ms d3:0/error/1837ms f1:0/error/1805ms f2:0/error/1809ms	back=true sameDoc=true	sameTerms=true sameResults=false	pieces=1/1	errors=0
+webkit	vC2s-p16.html	terms d=3 f=2	d1:0/error/3133ms d2:0/error/1553ms d3:0/error/1627ms f1:0/error/1580ms f2:0/error/1578ms	back=true sameDoc=true	sameTerms=true sameResults=true	pieces=7/2	errors=0
+
+
+WebKit: deep search ends in indexState "error" in today's page too, so compression is not the cause: in Playwright's
+WebKit 26.4 (Windows) every Blob read inside a worker fails (webkit-worker-blob.txt).

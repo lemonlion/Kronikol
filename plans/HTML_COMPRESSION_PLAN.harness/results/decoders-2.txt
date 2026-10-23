@@ -1,0 +1,24 @@
+fzstd issue #19, recreated: py -I fz19_inputs.py fz19 ; node fz19.js fz19 ; node fz19-nocopy.js fz19   (2026-10-23)
+#19 (open since 2025-12-26): streaming Decompress.push gives wrong output past about 128 KiB for "hello world "
+repeated 11,000 times, compressed by the zstd CLI. Recreated with libzstd 1.5.7 (Python) at level 3 (the CLI's
+default) and at level 9 with a 2^23 window, checksum on, for 10,000, 11,000, 12,000, 50,000 and 1,000,000 repeats:
+every case: oneshot=true pushAll=true push65536=true push4096=true push1000=true push1=true zstddec=true
+(the same with the streamed chunks kept without copying). Not reproduced; the reporter's own bytes were not available.
+
+fzstd against zstddec on this report's frames:
+py -I extract_frames.py c2s/vC2s-one.html frames ; node dec-compare.js frames/krn-z1.zst frames/krn-d0.zst
+Node 25.9.0, while another session's suites loaded the machine; the two decoders interleaved, 3 runs.
+krn-z1 (page frame)  in 1,717,323 out  23,444,308  same=true  fzstd 0.1.1 54/45/54 ms     zstddec 0.3.4 12/12/12 ms
+krn-d0 (diagrams)    in 3,482,260 out 102,832,638  same=true  fzstd 0.1.1 173/167/164 ms  zstddec 0.3.4 46/45/45 ms
+A bad checksum (the frame's last byte flipped): fzstd decodes the frame and does not notice; zstddec returns other
+bytes and does not throw (its decode() does not check ZSTD_decompress's return value).
+zstddec 0.3.4: MIT AND BSD-3-Clause; libzstd's decoder in Wasm; dist/zstddec.mjs is 75,676 bytes with the Wasm inline.
+
+In the browsers: node dec-browser.js frames   (main thread of a blank file:// page, Playwright's builds, after the
+other session's browser suites had finished; 5 runs each, the first dropped as a warm-up)
+chromium  page      in 1717323 out 23444308   same=true  fzstd ms 62/51/50/55     zstddec ms 15/12/13/12
+chromium  diagrams  in 3482260 out 102832638  same=true  fzstd ms 199/191/204/213 zstddec ms 48/46/46/48
+firefox   page      in 1717323 out 23444308   same=true  fzstd ms 67/51/51/52     zstddec ms 72/69/69/70
+firefox   diagrams  in 3482260 out 102832638  same=true  fzstd ms 210/197/214/200 zstddec ms 224/235/230/226
+webkit    page      in 1717323 out 23444308   same=true  fzstd ms 57/35/37/39     zstddec ms 17/16/19/17
+webkit    diagrams  in 3482260 out 102832638  same=true  fzstd ms 134/137/145/139 zstddec ms 56/58/52/62

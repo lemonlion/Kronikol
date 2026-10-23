@@ -1,0 +1,22 @@
+<!doctype html><html><head><meta charset="utf-8"><title>loader</title></head><body>
+<script>
+let krnTop = 1;
+var krnVar = 1;
+window.__prop = 'kept';
+window.addEventListener('message', function () { window.__msgSeen = (window.__msgSeen || 0) + 1; });
+window.__report = {
+  fromBase64: typeof Uint8Array.fromBase64 === 'function',
+  zstd: (function () { try { new DecompressionStream('zstd'); return true; } catch (e) { return false; } })(),
+  brotli: (function () { try { new DecompressionStream('brotli'); return true; } catch (e) { return false; } })()
+};
+setTimeout(function () {
+  var page = '<!doctype html><html><head><title>rebuilt</title><script>' +
+    'window.__errs = [];' +
+    'window.addEventListener("error", function (e) { window.__errs.push(String(e.message)); });' +
+    '<\/script><script>let krnTop = 2; window.__letRan = true;<\/script>' +
+    '<script>var krnVar = 2; window.__varRan = true;<\/script>' +
+    '<script>const krnOther = 3; window.__constRan = true;<\/script>' +
+    '</head><body><p id="p">rebuilt</p><script>window.postMessage("x", "*");<\/script></body></html>';
+  document.open(); document.write(page); document.close();
+}, 50);
+</script></body></html>

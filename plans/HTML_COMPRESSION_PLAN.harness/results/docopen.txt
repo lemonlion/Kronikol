@@ -1,0 +1,16 @@
+node docopen-check.js docopen/page.html ; node docopen-check2.js docopen/page2.html   (2026-10-23)
+The loader declares `let krnTop = 1` and `var krnVar = 1` at the top level, sets window.__prop, adds a window
+"message" listener, then rebuilds the document with document.open/write/close; the rebuilt page declares
+`let krnTop = 2`, `var krnVar = 2`, `const krnOther = 3` in three scripts and posts a message. page2 also adds a
+DOMContentLoaded and a load listener after document.open() and before write().
+
+chromium {"prop":"kept","report":{"fromBase64":true,"zstd":false,"brotli":false},"letRan":false,"varRan":true,"constRan":true,"errs":["Uncaught SyntaxError: Failed to execute 'write' on 'Document': Identifier 'krnTop' has already been declared"],"msgSeenByLoaderListener":0,"krnTopNow":1,"krnVarNow":2}
+firefox {"prop":"kept","report":{"fromBase64":true,"zstd":false,"brotli":true},"letRan":false,"varRan":true,"constRan":true,"errs":["SyntaxError: redeclaration of let krnTop"],"msgSeenByLoaderListener":0,"krnTopNow":1,"krnVarNow":2}
+webkit {"prop":"kept","report":{"fromBase64":true,"zstd":false,"brotli":false},"letRan":false,"varRan":true,"constRan":true,"errs":["Script error."],"msgSeenByLoaderListener":0,"krnTopNow":1,"krnVarNow":2}  pageerror: Can't create duplicate variable: 'krnTop'
+page2, all three engines: readyAfterOpen "dom-ok" (the listener added after open() fired on the rebuilt page's
+DOMContentLoaded with its DOM present), loadAfterOpen true.
+
+So: a top-level let/const/class in the loader outlives the rebuild and stops any report script that declares the same
+name (the whole script does not run); var and window properties carry over; listeners added before open() are
+erased; listeners added after open() serve the rebuilt page. Uint8Array.fromBase64 exists in all three builds;
+DecompressionStream('zstd') throws in all three; 'brotli' works only in Firefox 148.

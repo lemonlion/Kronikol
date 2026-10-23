@@ -35,6 +35,14 @@ fresh profile of either costs the Windows account a failed sign-in).
 | `search_index.py` | The search index inside a level 9 stream, as the page stores it and as raw binary |
 | `fzstd_inputs.py` | Frames for the two scripts below: one input at window 2^23, at 2^27 with long-distance matching, and at level 22; the input is a given file, or a synthetic one whose tail is only a match 40 MiB back |
 | `fzcheck.js`, `fzstream.js` | fzstd's one-shot `decompress` and its streaming `Decompress` over those frames, each compared with the input's SHA-256: the test of its documented 2^25 back-reference limit |
+| `make_c2s.py` | The audit's prototypes (section 3.12): C2 with section 4.4's search path, the diagram sources in one frame, in pieces of 16 MB or of 8 MB, decoded on demand with at most two kept |
+| `search-check.js` | Deep search in today's page against each prototype: words found only in one diagram source (from diagrams at 10%, 50% and 90%) or only in flame spans, the scenarios each finds, Back, page errors |
+| `mem.js` | Step S0: private bytes of every process of the browser, less `about:blank`, after the report is up, after diagrams are drawn and after a deep search |
+| `docopen-check.js`, `docopen-check2.js`, `docopen/` | What outlives `document.open`: global `let` and `var` names, window properties, listeners added before and after `open()` |
+| `wk-search-probe.js`, `wk-search-probe2.js` | Why deep search fails in WebKit: each way of reading bytes inside a `blob:` worker |
+| `fz19_inputs.py`, `fz19.js`, `fz19-nocopy.js` | fzstd's open issue #19 recreated: its recipe through every fzstd path and zstddec |
+| `extract_frames.py`, `dec-compare.js` | A prototype's frames to files, then fzstd against zstddec (libzstd in Wasm) on them: output, time, a bad checksum |
+| `dec-browser.js` | The same two decoders on the same frames inside each engine, on the main thread |
 
 ```bash
 py -I anatomy.py TestRunReport.html                      > results/anatomy.txt
@@ -52,6 +60,18 @@ py -I search_index.py TestRunReport.html out/split/search.bin > results/search-i
 py -I fzstd_inputs.py out/fzlong                         # the forced 40 MiB match
 py -I fzstd_inputs.py out/fzcheck out/split/puml.txt     # the diagram sources
 node fzcheck.js out/fzlong; node fzstream.js out/fzlong; node fzcheck.js out/fzcheck; node fzstream.js out/fzcheck
+# The audit (plan section 8), run while another session's test suites loaded the machine
+py -I make_c2s.py TestRunReport.html node_modules/fzstd/umd/index.js out/c2s
+node search-check.js out/variants/v0-probed.html,out/c2s/vC2s-one.html,out/c2s/vC2s-p16.html,out/c2s/vC2s-p8.html chromium
+node search-check.js out/variants/v0-probed.html,out/c2s/vC2s-one.html,out/c2s/vC2s-p16.html firefox,webkit  # results/search-check.txt
+node mem.js chromium out/variants/v0-probed.html,out/c2s/vC2s-one.html,out/c2s/vC2s-p16.html,out/c2s/vC2s-p8.html
+node mem.js firefox out/variants/v0-probed.html,out/c2s/vC2s-one.html,out/c2s/vC2s-p16.html  # results/memory.txt
+node docopen-check.js docopen/page.html; node docopen-check2.js docopen/page2.html          # results/docopen.txt
+node wk-search-probe.js out/variants/v0-probed.html; node wk-search-probe2.js out/variants/v0-probed.html  # results/webkit-worker-blob.txt
+py -I fz19_inputs.py out/fz19; node fz19.js out/fz19; node fz19-nocopy.js out/fz19         # results/decoders-2.txt
+py -I extract_frames.py out/c2s/vC2s-one.html out/frames
+node dec-compare.js out/frames/krn-z1.zst out/frames/krn-d0.zst                              # results/decoders-2.txt
+node dec-browser.js out/frames                                                                # results/decoders-2.txt
 ```
 
 `firefox+zstd` in `bench.js` is Firefox with `dom.compression_streams.zstd.enabled` set, so its loader takes the native
