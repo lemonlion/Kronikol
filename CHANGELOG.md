@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.5.2] - 2026-10-23
+
+The patch part moves (5.5.1 to 5.5.2): a fix to 5.5.1, with nothing new to call or configure.
+
+### Fixed
+
+- **A diagram drawn again by a report control counts as being drawn until its note buttons are placed.** 5.5.1 paints
+  the new picture of a diagram near the screen before placing its note buttons, but ended its drawing with the picture,
+  so whatever waited for the drawing to end found a picture without buttons for a frame: a note's button, another
+  control's queue, and tests. CI's Linux run of 5.5.1 failed five facts on it (`ContinuationNoteInteractivityTests`,
+  `ThreeFragmentContinuationTests`, `DiagramNoteSplitTests`), each of which switches the Details choice, waits for the
+  drawing to end and reads the buttons; they passed on Windows by timing. The drawing (the diagram's `_noteRendering`)
+  now ends once the last of its parts has its buttons, as it did before 5.5.1; the picture is still painted first.
+
+### Tests
+
+- `ReportToggleResponsivenessTests`: at the first frame that shows the diagram's new picture, it still counts as being
+  drawn, and it no longer does once its buttons are placed (red on 5.5.1's script; two mutations, the drawing ending
+  with the picture and never ending, are killed). The long-diagram toggle fact watched for that frame from a task, so a
+  frame could pass unwatched, and on the Linux runner it read the buttons from a later frame; it now asks for each frame
+  from inside the frame's own callback.
+
 ## [5.5.1] - 2026-10-23
 
 The patch part moves (5.5.0 to 5.5.1): performance work, with nothing new to call or configure.

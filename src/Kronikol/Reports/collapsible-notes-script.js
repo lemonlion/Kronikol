@@ -3469,8 +3469,15 @@
         if (el.classList.contains('diagram-natural-size') && window._restoreZoomState) window._restoreZoomState(el);
         el._kDecorate = true;
         watchNear(el);
-        // near the screen, it gets them as soon as the page has painted its new picture, before the queue goes on
-        if (near) paintWaiting.push(el);
+        // near the screen, it gets them as soon as the page has painted its new picture, before the queue goes on; and
+        // the diagram counts as being drawn until then, so what waits for its drawing to end (a note's button, another
+        // control's queue, a test) finds its buttons in place (5.5.2: 5.5.1 ended the drawing with the picture)
+        if (near) {
+            el._kPaintOwner = owner;
+            owner._kPaintWaits = (owner._kPaintWaits || 0) + 1;
+            owner._noteRendering = true;
+            paintWaiting.push(el);
+        }
     }
 
     // A diagram near the screen drawn again by the queue shows its new picture first, and gets its hover-only work after
@@ -3481,7 +3488,13 @@
     function decorateAfterPaint(then) {
         afterPaint(function step() {
             var el = paintWaiting.shift();
-            if (el && el._kDecorate) decorateNow(el);
+            if (el) {
+                if (el._kDecorate) decorateNow(el);
+                // its diagram's drawing ends with the last of its parts' buttons
+                var owner = el._kPaintOwner;
+                el._kPaintOwner = null;
+                if (owner && --owner._kPaintWaits <= 0) { owner._kPaintWaits = 0; owner._noteRendering = false; }
+            }
             if (paintWaiting.length) setTimeout(step, 0);
             else then();
         });

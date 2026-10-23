@@ -449,16 +449,15 @@ public class ReportToggleResponsivenessTests : PlaywrightTestBase
                         var t = performance.now();
                         window.__painted = null;
                         window.__buttonsFirst = null;
-                        (function frame() {
-                            requestAnimationFrame(function () {
-                                var s = c.querySelector('svg'), fresh = !!s && !s._before;
-                                if (fresh) window.__buttonsFirst = !!c.querySelector('svg .note-hover-rect');
-                                setTimeout(function () {
-                                    if (fresh) window.__painted = performance.now() - t;
-                                    else if (performance.now() - t < 60000) frame();
-                                }, 0);
-                            });
-                        })();
+                        // every frame watched, the next one asked for from inside the callback: asked for from a task, a
+                        // frame could pass unwatched (the Linux runner's did)
+                        requestAnimationFrame(function frame() {
+                            var s = c.querySelector('svg');
+                            if (s && !s._before) {
+                                window.__buttonsFirst = !!c.querySelector('svg .note-hover-rect');
+                                setTimeout(function () { window.__painted = performance.now() - t; }, 0);
+                            } else if (performance.now() - t < 60000) requestAnimationFrame(frame);
+                        });
                         document.querySelector('.toolbar-row .toggle-btn[data-toggle="{{toggle}}"]').click();
                         return t;
                     }
@@ -593,11 +592,14 @@ public class ReportToggleResponsivenessTests : PlaywrightTestBase
                 var c = document.querySelector('.plantuml-browser[data-k-sequence]'), t = performance.now();
                 c.querySelector('svg')._before = true;
                 window.__buttonsFirst = null;
+                window.__drawingAtPaint = null;
                 (function frame() {
                     requestAnimationFrame(function () {
                         var s = c.querySelector('svg');
-                        if (s && !s._before) window.__buttonsFirst = !!s.querySelector('.note-hover-rect');
-                        else if (performance.now() - t < 60000) frame();
+                        if (s && !s._before) {
+                            window.__buttonsFirst = !!s.querySelector('.note-hover-rect');
+                            window.__drawingAtPaint = c._noteRendering === true;
+                        } else if (performance.now() - t < 60000) frame();
                     });
                 })();
             }
@@ -610,12 +612,17 @@ public class ReportToggleResponsivenessTests : PlaywrightTestBase
         var r = await Page.EvaluateAsync<JsonElement>("""
             () => {
                 var svg = document.querySelector('.plantuml-browser[data-k-sequence] svg');
-                return { fresh: !svg._before, buttons: !!svg.querySelector('.note-hover-rect'), buttonsFirst: window.__buttonsFirst };
+                return { fresh: !svg._before, buttons: !!svg.querySelector('.note-hover-rect'), buttonsFirst: window.__buttonsFirst,
+                         drawingAtPaint: window.__drawingAtPaint, drawing: !!document.querySelector('.plantuml-browser[data-k-sequence]')._noteRendering };
             }
             """);
         Assert.True(r.GetProperty("fresh").GetBoolean(), "the diagram on screen was drawn again");
         Assert.True(r.GetProperty("buttons").GetBoolean(), "the diagram on screen has its note buttons once the toggle is done");
         Assert.Equal(JsonValueKind.False, r.GetProperty("buttonsFirst").ValueKind);
+        // until its buttons are placed it still counts as being drawn, so whatever waits for a drawing to end (a note's
+        // button, a later toggle, a test) finds them in place: 5.5.1 ended the drawing with the picture
+        Assert.Equal(JsonValueKind.True, r.GetProperty("drawingAtPaint").ValueKind);
+        Assert.False(r.GetProperty("drawing").GetBoolean(), "the drawing ends once the buttons are placed");
     }
 
     [Fact]
