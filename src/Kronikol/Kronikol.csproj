@@ -30,6 +30,13 @@
 		<InternalsVisibleTo Include="Kronikol.Tests.xUnit2" />
 		<InternalsVisibleTo Include="Kronikol.xUnit3" />
 		<InternalsVisibleTo Include="Kronikol.ReqNRoll.Core" />
+		<!-- WebApplicationFactoryExtensions.OneAtATime: each framework's CreateTestTrackingClient makes its client under the
+		     factory's lock, as the one here does -->
+		<InternalsVisibleTo Include="Kronikol.BDDfy.xUnit3" />
+		<InternalsVisibleTo Include="Kronikol.LightBDD.Core" />
+		<InternalsVisibleTo Include="Kronikol.MSTest" />
+		<InternalsVisibleTo Include="Kronikol.NUnit4" />
+		<InternalsVisibleTo Include="Kronikol.TUnit" />
 		<!-- ProcessDiagnostics: build interception records at setup that tiered compilation can end it -->
 		<InternalsVisibleTo Include="Kronikol.Extensions.Kafka.BuildInterception" />
 		<InternalsVisibleTo Include="Kronikol.Tests.Kafka.BuildInterception" />

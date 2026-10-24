@@ -341,9 +341,19 @@ public class LongPayloadScrollTests : PlaywrightTestBase
         var top = before.GetProperty("top").GetDouble();
         foreach (var (key, down) in new[] { ("ArrowDown", true), ("PageDown", true), ("End", true), ("ArrowUp", false), ("PageUp", false), ("Home", false) })
         {
+            // read at rest (the same top at two polls 200 ms apart): Chromium and Firefox scroll over several frames, and
+            // a key pressed while a scroll runs moves on from where that scroll will end, so after an End read halfway an
+            // ArrowUp comes to rest further down than the reading and the wait for it to go up never ends (CI run
+            // 40035956052)
+            await Page.EvaluateAsync("() => { window.__t10Last = undefined; }");
             await Page.Keyboard.PressAsync(key);
-            await Page.WaitForFunctionAsync($"(t) => {{ var s = window.__scroll.box({idx}).scrollTop; return {(down ? "s > t" : "s < t")}; }}", top,
-                new() { Timeout = 5000, PollingInterval = 200 });
+            await Page.WaitForFunctionAsync($$"""
+                (t) => {
+                    var s = window.__scroll.box({{idx}}).scrollTop, rest = window.__t10Last === s;
+                    window.__t10Last = s;
+                    return rest && {{(down ? "s > t" : "s < t")}};
+                }
+                """, top, new() { Timeout = 5000, PollingInterval = 200 });
             var now = await Page.EvaluateAsync<JsonElement>(state, idx);
             top = now.GetProperty("top").GetDouble();
             Assert.Equal(before.GetProperty("focused").GetInt32(), now.GetProperty("focused").GetInt32());

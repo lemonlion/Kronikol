@@ -63,8 +63,8 @@ public static class TestProjectRunner
         }
 
         // TUnit / Microsoft.Testing.Platform projects require "dotnet run" on .NET 10+. A "dotnet test" run writes a results
-        // file, read if the run fails: a test assembly's cleanup failure reaches the console as one line naming the
-        // exception's type, and the file carries its message and stack trace (TrxFailures).
+        // file, read if the run fails: a test assembly's cleanup failure reaches the quiet console as one line naming the
+        // exception's type, and the file's run output carries its message and stack trace (TrxFailures).
         var microsoftTestingPlatform = TestProjects.MicrosoftTestingPlatformProjects.Contains(projectName);
         var resultsFile = $"{projectName.Replace("Example.Api.Tests.Component.", "")}.{runLabel}.{Guid.NewGuid():N}.trx";
         var arguments = microsoftTestingPlatform

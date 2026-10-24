@@ -49,12 +49,15 @@ public static class GrpcWebApplicationFactoryExtensions
         where TEntryPoint : class
         where TClient : ClientBase
     {
-        options.HttpContextAccessor ??= factory.Services.GetService<IHttpContextAccessor>();
-
-        var handler = new GrpcResponseVersionHandler(factory.Server.CreateHandler());
-        var channel = GrpcChannel.ForAddress(factory.Server.BaseAddress, new GrpcChannelOptions
+        // the server under the factory's lock, as every client Kronikol makes from a factory: two tests reaching a
+        // factory's server first at once each started the application
+        var channel = global::Kronikol.WebApplicationFactoryExtensions.OneAtATime(factory, () =>
         {
-            HttpHandler = handler
+            options.HttpContextAccessor ??= factory.Services.GetService<IHttpContextAccessor>();
+            return GrpcChannel.ForAddress(factory.Server.BaseAddress, new GrpcChannelOptions
+            {
+                HttpHandler = new GrpcResponseVersionHandler(factory.Server.CreateHandler())
+            });
         });
         var invoker = channel.Intercept(new GrpcTrackingInterceptor(options, options.HttpContextAccessor));
         return (TClient)Activator.CreateInstance(typeof(TClient), invoker)!;
@@ -76,12 +79,15 @@ public static class GrpcWebApplicationFactoryExtensions
         where TEntryPoint : class
         where TClient : ClientBase
     {
-        options.HttpContextAccessor ??= factory.Services.GetService<IHttpContextAccessor>();
-
-        var handler = new GrpcResponseVersionHandler(factory.Server.CreateHandler());
-        var channel = GrpcChannel.ForAddress(factory.Server.BaseAddress, new GrpcChannelOptions
+        // the server under the factory's lock, as every client Kronikol makes from a factory: two tests reaching a
+        // factory's server first at once each started the application
+        var channel = global::Kronikol.WebApplicationFactoryExtensions.OneAtATime(factory, () =>
         {
-            HttpHandler = handler
+            options.HttpContextAccessor ??= factory.Services.GetService<IHttpContextAccessor>();
+            return GrpcChannel.ForAddress(factory.Server.BaseAddress, new GrpcChannelOptions
+            {
+                HttpHandler = new GrpcResponseVersionHandler(factory.Server.CreateHandler())
+            });
         });
         var invoker = channel.Intercept(new GrpcTrackingInterceptor(options, options.HttpContextAccessor));
         var client = (TClient)Activator.CreateInstance(typeof(TClient), invoker)!;

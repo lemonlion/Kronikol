@@ -4,6 +4,42 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.6.1] - 2026-10-24
+
+The patch part moves (5.6.0 to 5.6.1): a fix, with nothing new to call or configure.
+
+### Fixed
+
+- **Tests running in parallel can share one `WebApplicationFactory` and make their clients from it at the same
+  moment.** `CreateTestTrackingClient()` called `WebApplicationFactory.CreateDefaultClient()`, which starts the
+  application on first use and adds each client to a plain list, both with no lock. Made at once from many threads, as
+  a Reqnroll suite's features do in their `[BeforeScenario]` hooks, the first clients each started a copy of the
+  application (16 threads started it 16 times), and a client made at the same moment as another could be lost from the
+  list, never to be disposed, or leave a null in it, so the factory's `Dispose` threw `NullReferenceException`. That was
+  the "Test Assembly Cleanup Failure ... Xunit.Sdk.TestPipelineException" the ReqNRoll xUnit3 example's runs failed with
+  on CI, about one nested run in 1,500 (seen 2026-10-13, 2026-10-20 and 2026-10-24): its `[AfterTestRun]` hook disposes
+  the factory. Every client Kronikol makes from a factory is now made under a lock of the factory's own: the
+  `CreateTestTrackingClient()` of `Kronikol` and of each framework package (xUnit v2 and v3, NUnit, MSTest, TUnit,
+  LightBDD, BDDfy, Reqnroll), and `CreateTestTrackingGrpcClient()` and `CreateTestTrackingGrpcClientWithChannel()`,
+  which reach the factory's server the same way. A client made with the factory's own `CreateClient()` is outside it.
+
+### Tests
+
+- `WebApplicationFactoryClientsTests`: 16 threads make tracking clients from one factory at once, with and without
+  handlers of their own, and the application starts once, and every client is disposed with the factory (red before
+  the fix: the application started 16 times); a factory already started, 200 rounds of 16 clients at once, disposes
+  without throwing (red before in 4 runs of 5, with the `NullReferenceException` CI saw); and no client or server of a
+  factory is taken in `src/` outside the lock (red when one framework's `CreateTestTrackingClient()` calls the factory
+  directly).
+- The Integration lanes' `TrxFailures` reads a nested run's own output from its results file, less the adapter's
+  progress lines: a test assembly's cleanup failure has its message and stack trace there and on no test, so the
+  three failures above quoted the exception's type alone. Measured with an `[AfterTestRun]` hook made to throw;
+  `TrxFailuresTests` holds a file of that shape.
+- `LongPayloadScrollTests.T10` reads the box's scroll position once it is at rest. Chromium and Firefox scroll a box over
+  several frames, and a key pressed while a scroll runs moves on from where that scroll will end, so after an End read
+  halfway an ArrowUp came to rest further down than the reading and the wait for it to go up timed out (CI run
+  40035956052).
+
 ## [5.6.0] - 2026-10-24
 
 The minor part moves (5.5.4 to 5.6.0): `kronikol decode` reads a report page, and `HtmlReportFile` is new public API

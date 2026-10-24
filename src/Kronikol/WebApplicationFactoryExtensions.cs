@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,8 +21,11 @@ public static class WebApplicationFactoryExtensions
     /// <returns>An HTTP client with test-tracking middleware installed.</returns>
     public static HttpClient CreateTestTrackingClient<T>(this WebApplicationFactory<T> factory, TestTrackingMessageHandlerOptions options) where T : class
     {
-        options.HttpContextAccessor ??= factory.Services.GetService<IHttpContextAccessor>();
-        return factory.CreateDefaultClient(new TestTrackingMessageHandler(options));
+        return OneAtATime(factory, () =>
+        {
+            options.HttpContextAccessor ??= factory.Services.GetService<IHttpContextAccessor>();
+            return factory.CreateDefaultClient(new TestTrackingMessageHandler(options));
+        });
     }
 
     /// <summary>
@@ -35,10 +39,27 @@ public static class WebApplicationFactoryExtensions
     /// <returns>An HTTP client with test-tracking middleware and additional handlers installed.</returns>
     public static HttpClient CreateTestTrackingClient<T>(this WebApplicationFactory<T> factory, TestTrackingMessageHandlerOptions options, params DelegatingHandler[] additionalHandlers) where T : class
     {
-        options.HttpContextAccessor ??= factory.Services.GetService<IHttpContextAccessor>();
-        var handlers = new DelegatingHandler[additionalHandlers.Length + 1];
-        handlers[0] = new TestTrackingMessageHandler(options);
-        additionalHandlers.CopyTo(handlers, 1);
-        return factory.CreateDefaultClient(handlers);
+        return OneAtATime(factory, () =>
+        {
+            options.HttpContextAccessor ??= factory.Services.GetService<IHttpContextAccessor>();
+            var handlers = new DelegatingHandler[additionalHandlers.Length + 1];
+            handlers[0] = new TestTrackingMessageHandler(options);
+            additionalHandlers.CopyTo(handlers, 1);
+            return factory.CreateDefaultClient(handlers);
+        });
+    }
+
+    // A WebApplicationFactory starts its application on first use and keeps the clients it makes in a list, both with
+    // no lock. Tests running in parallel share one factory and make their clients at the same moment (a Reqnroll suite's
+    // features, each in a [BeforeScenario] hook), so each of the first clients started its own copy of the application,
+    // and a client could be lost from the list or leave a null in it, which made the factory's Dispose throw
+    // NullReferenceException. Everything here that makes a client or reaches the server does it under a lock of the
+    // factory's own, held as long as the factory lives.
+    private static readonly ConditionalWeakTable<object, object> FactoryLocks = new();
+
+    internal static TResult OneAtATime<TResult>(object factory, Func<TResult> make)
+    {
+        lock (FactoryLocks.GetValue(factory, _ => new object()))
+            return make();
     }
 }
