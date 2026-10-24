@@ -307,11 +307,15 @@ public class CompressedPageTests
     [InlineData(PlantUmlRendering.Local)]
     public void The_search_index_is_the_one_the_plain_page_held(PlantUmlRendering rendering)
     {
-        // The SHA-256 of the index's base64 for this corpus on 5.5.4, the last release that wrote the page plain: the
-        // index is built from the same text when the items are written raw.
+        // The SHA-256 of the index for this corpus on 5.5.4, the last release that wrote the page plain: the index is
+        // built from the same text when the items are written raw. The index decoded, since gzip's header records the
+        // platform that wrote it (a byte that differs between Windows and Linux).
         var plain = HtmlReportFile.ReadPlain(Generate($"CompressedPage_Index_{rendering}.html", rendering: rendering));
         var blob = SearchIndexReportTests.ExtractBlobBase64(plain)!;
-        Assert.Equal("24eca78098fc11b0bb2504e17a83389098fa61c20461ab96b3161a70bbed52ff", Convert.ToHexStringLower(SHA256.HashData(Encoding.ASCII.GetBytes(blob))));
+        using var gzip = new System.IO.Compression.GZipStream(new MemoryStream(Convert.FromBase64String(blob)), System.IO.Compression.CompressionMode.Decompress);
+        using var index = new MemoryStream();
+        gzip.CopyTo(index);
+        Assert.Equal("c607e1a1d746f7c6697b3364b480734bf03bd632dde1697da20752db4f343776", Convert.ToHexStringLower(SHA256.HashData(index.ToArray())));
     }
 
     [Fact]
