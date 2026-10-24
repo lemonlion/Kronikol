@@ -236,7 +236,7 @@ fixes four zoom bugs (R0), and a bug in how a long diagram is cut into parts.
   second) and `LinedUpPartsTests` (every lifeline at one place in every part, with a control drawn without lining up;
   the row draws nothing and adds only its height; numbers kept; no source a reader copies, opens or reads holds a line
   the page added; a redraw in parts lines up and one picture has no row; the second drawing from the parts' gaps; the
-  fit level; a toggle bench on 15 parts within 5%; the width of the diagram drawn whole to a pixel a gap; a `box`, no
+  fit level; a toggle bench on 17 parts within 5%; the width of the diagram drawn whole to a pixel a gap; a `box`, no
   `as`, `create` and a gap wider than 2,000 px). `SplitDiagramZoomTests` is rewritten for one zoom per diagram, and
   `GradualZoomTests` gains R0's four facts. Facts that pinned the old behaviour are turned round: a diagram that fits
   has a slider at 100 (`DiagramZoomTests`, `GradualZoomTests`), no part has a slider of its own

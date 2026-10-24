@@ -424,7 +424,7 @@ public class LinedUpPartsTests : PlaywrightTestBase
     // 1,190 ms. What a toggle waits for besides its own work (a collection, a frame between two of its tasks) only adds
     // time, so each way is held to the quicker half of its toggles of each kind.
     [Fact]
-    public async Task Lining_up_a_fifteen_part_diagram_costs_a_toggle_no_more_than_five_percent()
+    public async Task Lining_up_a_diagram_of_fifteen_parts_or_more_costs_a_toggle_no_more_than_five_percent()
     {
         await Page.AddInitScriptAsync(BrowserRenderWorkerTests.BenchInitWithProbe);
         var source = ReportTestHelper.PartsSource(735, new Dictionary<int, int> { [2] = 180 }, replyNotes: true);
@@ -433,6 +433,9 @@ public class LinedUpPartsTests : PlaywrightTestBase
         await Page.EvaluateAsync("() => { document.querySelector('details.feature').open = true; document.querySelector('details.scenario').open = true; window._renderDiagramsInContainer(document.body); }");
         await ZoomFacts.WaitForSliderAsync(Page, 0, timeoutMs: 180000);
         Assert.True(await Page.EvaluateAsync<bool>("() => !!document.querySelector(\"[data-diagram-type='plantuml']\")._lineUp"), "the diagram is lined up");
+        // sized as the consumer report's longest diagram, 15 parts there; drawn here in 17
+        var parts = (await ZoomFacts.ReadAsync(Page, 0)).Levels.Length;
+        Assert.True(parts >= 15, $"premise: the diagram is drawn in {parts} parts");
 
         // what the page does after a toggle (note buttons placed slice by slice, the far parts' hover work) ends before the
         // next one starts, so that no toggle pays for the one before it
