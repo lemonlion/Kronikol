@@ -389,3 +389,52 @@ PROBE_TRUENUM=1 PROBE_VARIANTS=respleft,overspan PLAYWRIGHT_CORE=... node probe/
 PLAYWRIGHT_CORE=... node probe/probe-idle.js <report> 1920 1000
 PLAYWRIGHT_CORE=... node probe/probe-notes-left.js <report> 1920 1000
 ```
+
+## M12. What PlantUML itself could do (probe/probe-newpage-cost.js, probe-teoz-scaling.js, a Java profile)
+
+Asked by the owner on 2026-10-24 ("are there any plantuml issues/prs we could raise that would help with this?"). Read
+at PlantUML master as of that day (`331a6e774` is the last change to `net.sourceforge.plantuml.real`), with the browser
+build Kronikol ships (5.5.2's scripts in the report, as M10) and the Java build `1.2026.9beta2` (`70cc513`).
+
+**Teoz already lines pages up.** A sequence diagram cut with `newpage` is laid out once, whole (the X line is solved
+in `SequenceDiagramFileMakerTeoz.createMainTile`), and each page is drawn from that layout, clipped to its stretch
+(`PlayingSpaceWithParticipants.drawU`): every page has the participants' heads at its top, a footbox at its bottom
+unless `hide footbox`, and the whole layout's width. The browser build always draws page 0
+(`PlantUMLBrowser.buildSvg` calls `getTextBlock(0, ...)`), and each page lays out the whole diagram:
+
+| Diagram | Parts as today (sent together) | `newpage` before each part, page 0 | Whole at once |
+|---|---|---|---|
+| Scenario 153 (2 parts, 78 messages) | 70 ms wall, widest 1,827 px | 92 ms, 2,050 px wide | 110 ms, 2,050 px wide |
+| Scenario 492 (8 parts, 464 messages) | 235 ms wall (1,293 ms of the workers') | 1,150 ms, 1,824 px wide | 1,334 ms, 1,824 px wide |
+
+Page 0 is exactly as wide as the whole diagram (lined up by the engine), but a page costs nearly the whole diagram's
+drawing: the layout and the walk over every tile, not the SVG, is the cost.
+
+**The layout grows faster than the diagram once messages carry notes** (probe-teoz-scaling.js: 5 participants, N
+request and reply pairs with short labels, with and without a 6-line note on each reply; each drawing misses the cache):
+
+| Pairs | Browser, teoz, no notes | Browser, teoz, notes | Browser, classic, notes | Java teoz, notes (less ~0.5 s JVM start) |
+|---|---|---|---|---|
+| 100 | 28 ms | 62 ms | 50 ms | ~0.1 s |
+| 200 | 48 ms | 178 ms | 168 ms | ~0.17 s |
+| 400 | 88 ms | 1,139 ms | 1,243 ms | ~0.57 s |
+| 800 | 186 ms | 21,940 ms | 21,368 ms | ~2.7 s |
+
+Without notes the time is linear (0.22 to 0.42 ms a pair); with them it is about four times as long for twice the
+pairs in Java and nineteen times in the browser build. A Java Flight Recorder profile of the 800-pair diagram puts
+67.5% of the samples in `real.AbstractReal.getCurrentValue`, under `real.RealDelta.getCurrentValueInternal`, which is
+`delegated.getCurrentValue() + diff`: a position defined from another one is recomputed through the whole chain on
+every read, nothing cached, and every link also registers its value on its line. `d087fc0c4` (2026-07-15, "migrate Teoz
+sequence diagrams to Real-based Y positioning") put every tile's vertical position on such a line, chained from the
+tile above it. Whether notes lengthen the chains or only read them more often is for the fix to establish; scenario
+278's 39 s whole (M9) is the same shape at Kronikol's scale.
+
+```
+PLAYWRIGHT_CORE=... node probe/probe-newpage-cost.js <report> 153,492 1
+PLAYWRIGHT_CORE=... node probe/probe-teoz-scaling.js <report> 50,100,200,400,800
+java -XX:StartFlightRecording=filename=notes800.jfr,dumponexit=true,settings=profile -jar plantuml.jar -tsvg notes-800.puml
+jfr print --events jdk.ExecutionSample --stack-depth 64 notes800.jfr
+```
+
+The made-up sources are written by probe-teoz-scaling.js's `source(n, teoz, notes)`; the Java run used the same text
+saved to files, less the comment line that makes each browser drawing miss the cache.

@@ -7,7 +7,8 @@ at all (M7 to M10, the owner's questions of the same evening), and last with the
 that evening: the floor is 50% (Q1), R2 lines the parts up (Q7), a lined-up diagram starts at its fit level (Q8), the
 lines the page adds to draw a diagram never reach a source the reader copies or opens (Z12), and a diagram in parts acts
 as one diagram (Z13, Q10, Q11); then on 2026-10-24 with the owner's answers to Q10 and Q11 and their question whether
-lining up could cost less (M11, Q12). Every `file:line` is at `origin/main` `b3898519` (5.5.2) under `src/Kronikol/`
+lining up could cost less (M11, Q12), which they then settled as recommended, and what PlantUML itself could
+change (M12, Q13). Every `file:line` is at `origin/main` `b3898519` (5.5.2) under `src/Kronikol/`
 unless it says otherwise; CM, CN, IS, RS and RC are `Reports/context-menu-script.js`,
 `Reports/collapsible-notes-script.js`, `Reports/inline-svg-styles.css`, `Reports/plantuml-browser-render-script.js` and
 `Reports/report-components-script.js`. 5.5.3 (`a3413569`) and 5.5.4 (`9b4d2d64`) came out while this was written: 5.5.3
@@ -66,8 +67,8 @@ makes `naturalWidthOf` (CM L1011) read 0 for a picture with no box and wraps `de
 - **Questions (section 8).** Q1 answered (50%); Q2 answered (one scale per diagram); Q3 wide diagrams below their fit;
   Q4 a level readout; Q5 Safari's pinch; Q6 the page zoom given up over diagrams; Q7 answered (R2 is in); Q8 answered
   (start at the fit level); Q9 not taken; Q10 answered (a PNG at the largest scale that fits, else the part clicked);
-  Q11 answered (one footbox, at the end); Q12 whether lining up could cost less (not without drawing every diagram
-  differently; recommended: R2 with its row exact).
+  Q11 answered (one footbox, at the end); Q12 answered (R2 with its row exact, no note moved); Q13 the PlantUML
+  changes that would help (not filed).
 
 ## 1. The ask
 
@@ -391,7 +392,9 @@ by `transform`, which scales a picture without laying its text out again, at the
 ## 6. Tests
 
 All test-first (CLAUDE.md): each new fact fails on the code before its release, and its failure line goes in the
-release's commit message.
+release's commit message. Since 5.6.0 a report page is a loader page: the E2E facts open a report through
+`GotoReportAsync` and the helpers beside it (`tests/Kronikol.Tests.EndToEnd/ReportPageExtensions.cs`) and read a
+page's text with `ReportFileText.Read` (5.6.0, `plans/HTML_COMPRESSION_PLAN.md` R1).
 
 ### 6.1 R0, red on 5.5.3
 
@@ -685,6 +688,37 @@ drawing whole (M11), and no source the menu gives holds the row.
   so a diagram in parts is as wide as it would be drawn whole, like every other diagram in the report. Where reply notes
   go is a choice about every diagram's look, worth making on its own merits if at all.
 
+  **Answered: R2 with its row exact, no note moved** (the owner, 2026-10-24: "ok, so I guess we should go with the
+  median 1% worst 12.2% thing then - that's what you recommend?"). The 1% was the row as corrected in M11; made exact,
+  as R2's first step does, it costs the floor, 0 at the median.
+- **Q13, PlantUML changes that would help** (the owner, 2026-10-24: "are there any plantuml issues/prs we could raise
+  that would help with this?"; M12). None is filed; each would go up from the owner's account. None changes the floor:
+  a lined-up diagram is as wide as the diagram drawn whole, which is PlantUML's layout of its content. In the order
+  recommended:
+  1. **A sequence diagram's layout grows faster than the diagram once its messages carry notes**, a bug report with a
+     reproducer, on its own or in #2834, where the maintainer took the last fixes from. 800 request and reply pairs
+     with a 6-line note on each reply take 21.9 s in the browser build against 1.1 s for 400, and 2.7 s against 0.6
+     s in Java; without notes, 800 pairs take 0.19 s. 67.5% of a Java profile is `AbstractReal.getCurrentValue`
+     under `RealDelta.getCurrentValueInternal`, which recomputes a position through its whole chain on every read;
+     `d087fc0c4` (2026-07-15) put teoz's vertical positions on that line. A fix there (a value cached until the line
+     moves, or a delta of a delta folded into one) is for the PR to choose and prove with identical SVG, as the
+     #2834 patches were. It is why Kronikol cuts long diagrams at all: scenario 278 takes 39 s whole against 1.3 s
+     in parts (M9).
+  2. **A spacing between two neighbouring participants that draws nothing**, a feature request. R2 holds a gap open
+     with a row of hidden messages, whose labels the engine keeps apart from each other on purpose
+     (`PlayingSpace.addParallelSiblingDisjointConstraints`), which is why the row needs correcting drawings (M11),
+     and which makes every part 39 px taller. A primitive that only sets a least distance would make the row exact
+     at once and take no height.
+  3. **The browser build drawing any page of a `newpage` diagram, all pages from one layout**, a feature request.
+     Teoz already lays a diagram cut with `newpage` out once and draws every page from it, each as wide as the
+     whole and with the participants' heads at its top (since #2104), so its pages line up by themselves; but
+     `render` and `renderToString` draw page 0 only, and each drawing lays out the whole diagram (page 0 of scenario
+     492's 8 costs 1,150 ms, the whole 1,334 ms). With 1 fixed and all pages drawn from one layout, Kronikol could
+     cut a long diagram with `newpage` and need neither R2's row nor its outline. Worth asking only after 1.
+  4. Small: `PlantUMLBrowser.buildSvg` compares a picture with `maxSvgSize` only after drawing it, so a diagram too
+     large is drawn in full before it is refused (scenario 278, M9); and an option for the source the picture
+     carries as `plantuml-src`, which Kronikol otherwise replaces itself (Z12).
+
 ## Appendix A. Harness
 
 `ZOOM_EVERY_DIAGRAM_PLAN.harness/`:
@@ -711,7 +745,10 @@ drawing whole (M11), and no source the menu gives holds the row.
   unless `PROBE_ROWFIX=0`) and each source changed one way (`PROBE_VARIANTS`) (M11).
 - `probe/probe-idle.js`: how wide a lined-up diagram would be if a part left out its idle participants (M11).
 - `probe/probe-notes-left.js`: every laid-out picture with each reply's note on the left of its arrow (M11).
+- `probe/probe-newpage-cost.js`: chosen diagrams in parts drawn as today, whole, and cut with `newpage` (M12).
+- `probe/probe-teoz-scaling.js`: made-up diagrams of growing length, with and without notes (M12).
 
-The consumer report is not in the repository. The probes take `PLAYWRIGHT_CORE`, the path of a `playwright-core`
+The consumer report is not in the repository; it was written by 5.4.4, before 5.6.0 made a report page a loader
+page, and the probes read a page of that kind. The probes take `PLAYWRIGHT_CORE`, the path of a `playwright-core`
 package (the measurements used `C:/Code/Kronikol4J/playwright/node_modules/playwright-core`), and launch through
 `tools/playwright/installed-browser.js`.
