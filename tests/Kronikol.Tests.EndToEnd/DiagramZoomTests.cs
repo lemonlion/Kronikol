@@ -24,7 +24,7 @@ public class DiagramZoomTests : PlaywrightTestBase
         await WaitForDiagramSvg();
 
         await Page.WaitForFunctionAsync(
-            "() => document.querySelectorAll('.diagram-zoom-slider').length > 0",
+            "() => !!document.querySelector('[data-diagram-type=plantuml]').querySelector(':scope > .diagram-zoom-controls .diagram-zoom-slider')",
             null, new() { Timeout = 10000, PollingInterval = 200 });
 
         var count = await Page.Locator(".diagram-zoom-slider").CountAsync();
@@ -40,10 +40,10 @@ public class DiagramZoomTests : PlaywrightTestBase
         await WaitForDiagramSvg();
 
         await Page.WaitForFunctionAsync(
-            "() => document.querySelectorAll('.diagram-zoom-controls').length > 0",
+            "() => !!document.querySelector('[data-diagram-type=plantuml]').querySelector(':scope > .diagram-zoom-controls')",
             null, new() { Timeout = 10000, PollingInterval = 200 });
 
-        var zoomControls = Page.Locator(".diagram-zoom-controls").First;
+        var zoomControls = GetDiagramContainer().Locator(":scope > .diagram-zoom-controls");
         var opacity = await GetComputedStyle(zoomControls, "opacity");
         Assert.Equal("0", opacity);
     }
@@ -57,7 +57,7 @@ public class DiagramZoomTests : PlaywrightTestBase
         await WaitForDiagramSvg();
 
         await Page.WaitForFunctionAsync(
-            "() => document.querySelectorAll('.diagram-zoom-controls').length > 0",
+            "() => !!document.querySelector('[data-diagram-type=plantuml]').querySelector(':scope > .diagram-zoom-controls')",
             null, new() { Timeout = 10000, PollingInterval = 200 });
 
         var container = GetDiagramContainer();
@@ -65,7 +65,7 @@ public class DiagramZoomTests : PlaywrightTestBase
 
         await Page.WaitForFunctionAsync("""
             () => {
-                var ctrl = document.querySelector('.diagram-zoom-controls');
+                var ctrl = document.querySelector('[data-diagram-type=plantuml]').querySelector(':scope > .diagram-zoom-controls');
                 return ctrl && window.getComputedStyle(ctrl).opacity !== '0';
             }
         """, null, new() { Timeout = 3000, PollingInterval = 200 });
@@ -80,14 +80,14 @@ public class DiagramZoomTests : PlaywrightTestBase
         await WaitForDiagramSvg();
 
         await Page.WaitForFunctionAsync(
-            "() => document.querySelectorAll('.diagram-zoom-slider').length > 0",
+            "() => !!document.querySelector('[data-diagram-type=plantuml]').querySelector(':scope > .diagram-zoom-controls .diagram-zoom-slider')",
             null, new() { Timeout = 10000, PollingInterval = 200 });
 
         var container = GetDiagramContainer();
 
         await Page.EvaluateAsync("""
             () => {
-                var slider = document.querySelector('.diagram-zoom-slider');
+                var slider = document.querySelector('[data-diagram-type=plantuml]').querySelector(':scope > .diagram-zoom-controls .diagram-zoom-slider');
                 slider.value = '100';
                 slider.dispatchEvent(new Event('input', { bubbles: true }));
             }
@@ -105,7 +105,7 @@ public class DiagramZoomTests : PlaywrightTestBase
         await WaitForDiagramSvg();
 
         await Page.WaitForFunctionAsync(
-            "() => document.querySelectorAll('.diagram-zoom-slider').length > 0",
+            "() => !!document.querySelector('[data-diagram-type=plantuml]').querySelector(':scope > .diagram-zoom-controls .diagram-zoom-slider')",
             null, new() { Timeout = 10000, PollingInterval = 200 });
 
         var container = GetDiagramContainer();
@@ -113,7 +113,7 @@ public class DiagramZoomTests : PlaywrightTestBase
         // Zoom in
         await Page.EvaluateAsync("""
             () => {
-                var slider = document.querySelector('.diagram-zoom-slider');
+                var slider = document.querySelector('[data-diagram-type=plantuml]').querySelector(':scope > .diagram-zoom-controls .diagram-zoom-slider');
                 slider.value = '100';
                 slider.dispatchEvent(new Event('input', { bubbles: true }));
             }
@@ -123,7 +123,7 @@ public class DiagramZoomTests : PlaywrightTestBase
         // Zoom back to min
         await Page.EvaluateAsync("""
             () => {
-                var slider = document.querySelector('.diagram-zoom-slider');
+                var slider = document.querySelector('[data-diagram-type=plantuml]').querySelector(':scope > .diagram-zoom-controls .diagram-zoom-slider');
                 slider.value = slider.min;
                 slider.dispatchEvent(new Event('input', { bubbles: true }));
             }
@@ -140,14 +140,14 @@ public class DiagramZoomTests : PlaywrightTestBase
         await WaitForDiagramSvg();
 
         await Page.WaitForFunctionAsync(
-            "() => document.querySelectorAll('.diagram-zoom-slider').length > 0",
+            "() => !!document.querySelector('[data-diagram-type=plantuml]').querySelector(':scope > .diagram-zoom-controls .diagram-zoom-slider')",
             null, new() { Timeout = 10000, PollingInterval = 200 });
 
         var container = GetDiagramContainer();
 
         await Page.EvaluateAsync("""
             () => {
-                var slider = document.querySelector('.diagram-zoom-slider');
+                var slider = document.querySelector('[data-diagram-type=plantuml]').querySelector(':scope > .diagram-zoom-controls .diagram-zoom-slider');
                 slider.value = '100';
                 slider.dispatchEvent(new Event('input', { bubbles: true }));
             }
@@ -168,7 +168,7 @@ public class DiagramZoomTests : PlaywrightTestBase
         await WaitForDiagramSvg();
 
         await Page.WaitForFunctionAsync(
-            "() => document.querySelectorAll('.diagram-zoom-slider').length > 0",
+            "() => !!document.querySelector('[data-diagram-type=plantuml]').querySelector(':scope > .diagram-zoom-controls .diagram-zoom-slider')",
             null, new() { Timeout = 10000, PollingInterval = 200 });
 
         var container = GetDiagramContainer();
@@ -176,7 +176,7 @@ public class DiagramZoomTests : PlaywrightTestBase
         // Zoom in then out via slider
         await Page.EvaluateAsync("""
             () => {
-                var slider = document.querySelector('.diagram-zoom-slider');
+                var slider = document.querySelector('[data-diagram-type=plantuml]').querySelector(':scope > .diagram-zoom-controls .diagram-zoom-slider');
                 slider.value = '100';
                 slider.dispatchEvent(new Event('input', { bubbles: true }));
                 slider.value = slider.min;
@@ -199,7 +199,7 @@ public class DiagramZoomTests : PlaywrightTestBase
         await WaitForDiagramSvg();
 
         await Page.WaitForFunctionAsync(
-            "() => document.querySelectorAll('.diagram-zoom-controls').length > 0",
+            "() => !!document.querySelector('[data-diagram-type=plantuml]').querySelector(':scope > .diagram-zoom-controls')",
             null, new() { Timeout = 10000, PollingInterval = 200 });
 
         var container = GetDiagramContainer();
@@ -213,21 +213,22 @@ public class DiagramZoomTests : PlaywrightTestBase
         await Expect(container).Not.ToHaveClassAsync(new System.Text.RegularExpressions.Regex("diagram-selected"));
     }
 
-    // ── Non-zoomable diagrams ──
+    // ── Diagrams that fit their box ──
 
+    // Until 5.7.0 a diagram that fit its box had no slider, and Ctrl with the wheel over it zoomed the whole page; it has
+    // one now, at 100%, and zooms out (plans/ZOOM_EVERY_DIAGRAM_PLAN.md R1).
     [Fact]
-    public async Task Non_zoomable_diagram_has_no_zoom_slider()
+    public async Task A_diagram_that_fits_has_a_zoom_slider_at_100()
     {
         await Page.GotoReportAsync(GenerateReport("NonZoomableNoSlider.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
+        await ZoomFacts.WaitForSliderAsync(Page, 0);
 
-        // Wait a bit for any zoom controls to potentially appear
-        await Page.WaitForTimeoutAsync(500);
-
-        var count = await Page.Locator(".diagram-zoom-slider").CountAsync();
-        Assert.Equal(0, count);
+        var slider = ZoomSliderOf(GetDiagramContainer());
+        Assert.Equal("100", await slider.InputValueAsync());
+        Assert.Equal("50", await slider.GetAttributeAsync("min"));
     }
 
 
@@ -266,7 +267,7 @@ public class DiagramZoomTests : PlaywrightTestBase
         await WaitForDiagramSvg();
 
         await Page.WaitForFunctionAsync(
-            "() => document.querySelectorAll('.diagram-zoom-slider').length > 0",
+            "() => !!document.querySelector('[data-diagram-type=plantuml]').querySelector(':scope > .diagram-zoom-controls .diagram-zoom-slider')",
             null, new() { Timeout = 10000, PollingInterval = 200 });
 
         var container = GetDiagramContainer();
@@ -298,7 +299,7 @@ public class DiagramZoomTests : PlaywrightTestBase
         await WaitForDiagramSvg();
 
         await Page.WaitForFunctionAsync(
-            "() => document.querySelectorAll('.diagram-zoom-slider').length > 0",
+            "() => !!document.querySelector('[data-diagram-type=plantuml]').querySelector(':scope > .diagram-zoom-controls .diagram-zoom-slider')",
             null, new() { Timeout = 10000, PollingInterval = 200 });
 
         // Collapse notes
@@ -316,7 +317,7 @@ public class DiagramZoomTests : PlaywrightTestBase
         // Zoom via slider
         await Page.EvaluateAsync("""
             () => {
-                var slider = document.querySelector('[data-diagram-type="plantuml"] .diagram-zoom-slider');
+                var slider = document.querySelector('[data-diagram-type=plantuml]').querySelector(':scope > .diagram-zoom-controls .diagram-zoom-slider');
                 slider.value = '100';
                 slider.dispatchEvent(new Event('input', { bubbles: true }));
             }

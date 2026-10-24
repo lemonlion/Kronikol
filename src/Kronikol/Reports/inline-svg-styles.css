@@ -36,9 +36,35 @@ body.plantuml-ready .plantuml-browser:not([data-rendered])::before,
 body.plantuml-ready .puml-fragment:not([data-rendered])::before {
     content: 'Rendering diagram\2026';
 }
+/* One placeholder for a diagram drawn in parts: the first part not yet drawn shows it, and the parts after it take no
+   room until they are drawn (5.7.0, plans/ZOOM_EVERY_DIAGRAM_PLAN.md Z13); a long diagram opened as a column of grey
+   boxes, one a part. */
+.puml-fragment:not([data-rendered]) ~ .puml-fragment:not([data-rendered]) {
+    display: none;
+}
 .diagram-selected {
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--kron-accent, #3b82f6) 50%, transparent);
     border-radius: 4px;
+}
+/* A zoomed diagram's grab cursor, and while it is dragged its grabbing cursor and no text selection, on the picture under
+   the pointer (5.7.0). Both properties are inherited: written on the box, each change restyled every element of every
+   part, 55 ms a change on a diagram of 17 parts, and a zoom on one changed the cursor. */
+.diagram-natural-size > svg:hover,
+.diagram-natural-size > .puml-fragment > svg:hover {
+    cursor: grab;
+}
+/* Zoomed in, a part is as wide as its picture, so that the box scrolls over its right padding as it does for a picture
+   drawn whole (5.7.0): a box counts its padding past its own children only, and a picture a few pixels wider than the
+   box's content grew into the padding with nothing to scroll, so the reader's place moved across. */
+.diagram-natural-size > .puml-fragment {
+    width: max-content;
+    min-width: 100%;
+}
+.diagram-panning > svg:hover,
+.diagram-panning > .puml-fragment > svg:hover {
+    cursor: grabbing;
+    user-select: none;
+    -webkit-user-select: none;
 }
 .diagram-zoom-controls {
     position: sticky;
@@ -54,9 +80,8 @@ body.plantuml-ready .puml-fragment:not([data-rendered])::before {
     height: 0;
     overflow: visible;
 }
-/* a part of a diagram drawn in parts has its own zoom (5.2.2) */
-[data-diagram-type]:hover > .diagram-zoom-controls,
-.puml-fragment:hover > .diagram-zoom-controls {
+/* a diagram drawn in parts has one zoom, on its container (5.7.0; from 5.2.2 each part had its own) */
+[data-diagram-type]:hover > .diagram-zoom-controls {
     opacity: 0.4;
     pointer-events: auto;
 }
@@ -64,6 +89,11 @@ body.plantuml-ready .puml-fragment:not([data-rendered])::before {
     opacity: 1 !important;
 }
 .diagram-selected > .diagram-zoom-controls {
+    opacity: 1;
+    pointer-events: auto;
+}
+/* Tab reaches a diagram's slider, and every drawn diagram has one since 5.7.0: it shows while it has the focus */
+.diagram-zoom-controls:focus-within {
     opacity: 1;
     pointer-events: auto;
 }

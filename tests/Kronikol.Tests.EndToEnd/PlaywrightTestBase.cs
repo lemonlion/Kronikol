@@ -362,6 +362,18 @@ public abstract class PlaywrightTestBase : IAsyncLifetime
         await page.Locator("#searchbar").DispatchEventAsync("keyup");
     }
 
+    /// <summary>
+    /// The zoom slider of the diagram <paramref name="box"/> (a <c>[data-diagram-type]</c> container). Since 5.7.0 every
+    /// drawn diagram has one (<c>plans/ZOOM_EVERY_DIAGRAM_PLAN.md</c>), so the page's first slider is not always the
+    /// slider of the diagram a test acts on: read it through the diagram.
+    /// </summary>
+    protected static ILocator ZoomSliderOf(ILocator box) =>
+        box.Locator(":scope > .diagram-zoom-controls .diagram-zoom-slider");
+
+    /// <summary>The script expression for the zoom slider of the page's first sequence diagram, for page functions.</summary>
+    protected const string FirstDiagramSliderJs =
+        "document.querySelector(\"[data-diagram-type='plantuml']\").querySelector(':scope > .diagram-zoom-controls .diagram-zoom-slider')";
+
     protected static ILocatorAssertions Expect(ILocator locator) =>
         Assertions.Expect(locator);
 

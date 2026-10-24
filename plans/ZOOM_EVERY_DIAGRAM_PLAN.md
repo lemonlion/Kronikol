@@ -1,6 +1,7 @@
 # ZOOM_EVERY_DIAGRAM_PLAN: every diagram zooms, and one that fits zooms out
 
-**Status: plan written, nothing implemented, NOT green-lit for implementation.** Written 2026-10-23 at the owner's ask
+**Status: executed as 5.7.0 on 2026-10-24** (the owner: "Can you implement the plan in full as a minor release"): R0, R1
+and R2 in one minor release; what the work changed from the plan is in section 9. Written 2026-10-23 at the owner's ask
 (section 1), and revised the same day with the owner's answer to Q2 (one scale for the parts of a diagram, Z8) and what
 that answer was measured against (M6, B4, Q7), then with what lining the parts up would cost and whether the parts pay
 at all (M7 to M10, the owner's questions of the same evening), and last with the owner's decisions and two more asks of
@@ -719,11 +720,78 @@ drawing whole (M11), and no source the menu gives holds the row.
      large is drawn in full before it is refused (scenario 278, M9); and an option for the source the picture
      carries as `plantuml-src`, which Kronikol otherwise replaces itself (Z12).
 
+## 9. Log
+
+- **2026-10-24, executed as 5.7.0.** The owner: "Can you implement the plan in full as a minor release". R0, R1 and R2
+  ship together as 5.7.0 instead of the three releases of 7.1, in a worktree of their own while another session
+  released 5.6.1 from `main` (rebased onto it before the full runs). What the work changed from the plan as written:
+  - **Z1, the internal-flow popup.** The popup draws its activity diagram itself, outside the render queue
+    (`internal-flow-popup-script.js`), so RS L1385's call to `addZoomButton` never reached it. It now asks for the
+    slider after it draws a picture (fact 11 of 6.2).
+  - **Z2, "wide"** is "its fit level, rounded, below 100": a picture a fraction of a pixel wider than its box got a
+    slider from 100 to 100.
+  - **Z6** also holds off the browser's own scroll anchoring (`overflow-anchor: none` on the root, from the change to
+    the frame after): it moved the page by the height a zoom changed above the screen, on top of the page's own scroll.
+  - **The cursor (Z5, Z11).** The grab cursor, and a drag's grabbing cursor and `user-select: none`, were written on the
+    zoomed box. With one box for every part, each change restyled every element of every part, as both properties are
+    inherited: 55 ms a change on fact 17's fixture (36,780 elements), paid by every first zoom step and every drag. They
+    are CSS rules on the picture under the pointer now (`inline-svg-styles.css`, the `diagram-panning` mark).
+  - **R2's row.** `<space:N>` labels replace the transparent underscores of Q7. A run of underscores is creole
+    underline (`__x__`), so 5q + r underscores draw q + r characters, and a label's width is not monotonic in their
+    number: that was M11's 17 px, which no correction could settle. `<space:N>` is N px exactly and draws nothing; a
+    hidden message holds its gap at N + c, with c measured once a page for each header (24 px on a plain teoz header,
+    32 px on the consumer report's). No correcting drawing is needed; the check of step 3 stays, and it never fired on
+    the consumer report (fact 8 forces it with a hook that halves the outline's gaps).
+  - **R2's outline** (step 1): for each kind of message, the one with the widest label and the one with the widest note,
+    notes cut, no step bar or note across, each message with its own number, and labels measured on the text a link
+    shows (a link's target is never drawn, and its varying length misranked labels by up to 13.5 px). Never short on the
+    40 diagrams in parts of the consumer report, where M10's lean outline fell short on 4 and three of each kind on 1.
+    Each part's header is skipped by the splitter's own rule (`parseDiagramStructure`).
+  - **Lifelines** are the vertical lines covering at least half as much as the one covering most: the role pass's rule,
+    a third of the picture's height, missed them on a short last part, whose heads and footbox take most of it.
+  - **A bug in the splitter, found by Q7's fact for a `box`:** `parseDiagramStructure` ended a diagram's header at a
+    `box` line, so every part after the first declared no participant and drew only those its own messages named, in
+    the order it met them, without the box. The header now takes `box` and `end box` lines.
+  - **Fact 17's budget.** On the consumer report's scenario 278 (15 parts of about 4,400 elements) a notch paints in 50
+    to 55 ms. The browser alone takes 33 to 42 ms to draw that one part at another size (its layout, pre-paint and
+    paint), and as long when the part is scaled by a `transform`, which lays SVG text out again just the same: 4.4's next
+    step was measured and gains nothing. M6's 4 to 14 ms a part was the layout alone. The fact holds a notch to 50 ms,
+    or to the browser's own cost of growing that part one level past its box, measured in the fact, with a quarter more
+    and 10 ms, whichever is more: 73 ms against 60 ms for the part alone on the fixture, every part at the new level
+    within 0.7 s.
+  - **Fact 10 of 6.3** times the toggles of one page, lining up switched off and on between them
+    (`window.__kronikolLineUp`) once every picture is in the page's cache, each toggle started once the last has
+    settled, and compares the quicker half of each kind (7 rounds of Collapsed and Truncated each way). Two pages timed
+    against each other passed one run and failed the next: the same toggle took 800 to 1,190 ms. Three runs of the fact
+    alone gave 1.00, 1.02 and 1.03 of the toggle without lining up, against 5% and two frames.
+  - **Fixtures.** The report sorts scenarios by name, so the parts fixture's second scenario is "Short diagram" (as
+    "After" it came first). Truncated is the report's default and cuts a note at 10 lines, so the facts that need
+    Truncated and Expanded to differ use notes longer than that (`PartsSource`'s `extraNoteFields`). A diagram drawn in
+    parts and drawn again in one piece is one part, not the box's own picture.
+  - **The mutation run** is `ZOOM_EVERY_DIAGRAM_PLAN.harness/mutate.js`: 6.4's list, with six of this release's own,
+    32 in all. Its first run killed 21 of 30; the nine that survived each fail a fact now. Fact 9 zooms out to 95, above
+    the fit level the picture gets, as a kept level below it changed nothing. "A redraw dropping out" as first written
+    (`_zoomState.of` reading no zoomed-out mark) changed nothing, as the box keeps its marks through every redraw; it
+    removes `levelFor`'s zoomed-out rule now. "autonumber stop left out" keeps every number (each part's own
+    `autonumber` comes after the row) and widens the row's gaps by their numbers, which fact 11 catches. The copy fact
+    holds the copied SVG to one `plantuml-src` in all, comments included (the engine writes one into every part). Q7's
+    fact has a note left of the first participant in a later part only, so a part's first lifeline differs. Three facts
+    are new: a zoomed-out diagram drawn again is at its level in the first frame showing its new picture; a diagram in
+    parts that is not lined up takes its level from its widest part, a later one; and a notch far down a diagram in parts
+    keeps the point under the pointer while the parts far above it grow. That last one failed on the code as written,
+    twice over: the window scrolls by whole pixels and each part resized a frame after the notch lost the remainder (5 px
+    down over 16 parts; `keepPlace` now hands it to the next part), and one level past the fit level the parts were wider
+    than the box's content but not its padding, which a box counts only past its own children, so nothing scrolled and
+    the point moved 6.1 px across (a zoomed-in part is now as wide as its picture, `inline-svg-styles.css`). It also
+    kills B3's mutation, which the 29 facts first named for it did not.
+
 ## Appendix A. Harness
 
 `ZOOM_EVERY_DIAGRAM_PLAN.harness/`:
 
 - `measurements.md`: M1 to M11, the method, the commands and every table.
+- `mutate.js`: the mutation run of 6.4 (node): each mutation applied to a page script of a worktree, the E2E project
+  built, the facts named for it run, the script put back; `--check` only finds each mutation's text.
 - `probe/probe-widths.js`: every drawn box of a report, its natural size, its box's width with and without padding.
 - `probe/analyse.js`: the tables of M1, M3 and M5 from its output.
 - `probe/probe-behaviour.js`: one scenario's boxes; the wheel kept or not, the text sizes, the move of the point under

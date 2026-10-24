@@ -857,22 +857,31 @@ public class DiagramContextMenuTests
     [Fact]
     public void ZoomToggle_sets_overflow_x_auto_when_zoomed()
     {
+        Assert.Contains("box.style.overflowX = zoomedIn ? 'auto' : ''", _script);
         Assert.Contains("container.style.overflowX = 'auto'", _script);
-        Assert.Contains("container.style.cursor = 'grab'", _script);
+        // the grab cursor is the picture's under the pointer, from the box's mark: written on the box, an inherited
+        // property, it restyled every element of every part, 55 ms a change on a diagram of 17 parts (5.7.0)
+        var css = DiagramContextMenu.GetInlineSvgStyles();
+        Assert.Contains(".diagram-natural-size > .puml-fragment > svg:hover", css);
+        Assert.Contains("cursor: grab;", css);
+        Assert.DoesNotContain("style.cursor", _script);
     }
 
     [Fact]
     public void ZoomToggle_clears_overflow_x_when_unzoomed()
     {
-        Assert.Contains("container.style.overflowX = ''", _script);
-        Assert.Contains("container.style.cursor = ''", _script);
+        Assert.Contains("box.style.overflowX = ''", _script);
+        Assert.Contains("box.classList.remove('diagram-natural-size')", _script);
     }
 
     [Fact]
     public void ZoomToggle_has_drag_to_pan_handlers()
     {
         // Must have mousedown/mousemove/mouseup for drag panning
-        Assert.Contains("cursor = 'grabbing'", _script);
+        // the grabbing cursor and no selection while dragged, on the picture under the pointer (5.7.0)
+        Assert.Contains("c.classList.add('diagram-panning')", _script);
+        Assert.Contains("dragContainer.classList.remove('diagram-panning')", _script);
+        Assert.Contains("cursor: grabbing;", DiagramContextMenu.GetInlineSvgStyles());
         Assert.Contains("scrollLeft = scrollL - (e.pageX - startX)", _script);
         Assert.Contains("window.scrollBy(0, startY - e.clientY)", _script);
     }
@@ -896,21 +905,27 @@ public class DiagramContextMenuTests
     }
 
     [Fact]
-    public void ZoomButton_not_added_when_diagram_fits_container()
+    public void ZoomButton_added_to_every_drawn_diagram_with_a_range_by_whether_it_fits()
     {
-        // addZoomButtons should check isDiagramZoomable before adding a button, and a diagram that cannot zoom gives
-        // back a zoom it was given (5.2.5)
-        Assert.Contains("function isDiagramZoomable(container)", _script);
-        Assert.Contains("if (!svg || !isDiagramZoomable(container)) {", _script);
-        Assert.Contains("if (container.clientWidth > 0) dropZoom(container);", _script);
+        // Until 5.7.0 addZoomButton checked isDiagramZoomable and gave a diagram that fit its box no button (giving back a
+        // zoom it was given, 5.2.5). Since 5.7.0 every drawn diagram has one (plans/ZOOM_EVERY_DIAGRAM_PLAN.md): a wide
+        // picture from its fit level, measured against the box's content, one that fits from the floor of 50%, starting at
+        // 100.
+        Assert.Contains("var ZOOM_OUT_FLOOR = 50;", _script);
+        Assert.Contains("var fitPct = Math.max(1, Math.min(100, Math.round(cw / width * 100)));", _script);
+        Assert.Contains("min: wide ? fitPct : ZOOM_OUT_FLOOR, start: wide ? fitPct : 100", _script);
+        Assert.Contains("function contentWidthOf(box)", _script);
+        Assert.DoesNotContain("isDiagramZoomable", _script);
     }
 
     [Fact]
-    public void ZoomControls_skipped_for_non_zoomable_diagrams()
+    public void ZoomControls_skipped_only_for_a_box_with_no_picture()
     {
-        // Zoom controls should check isDiagramZoomable
-        Assert.Contains("!isDiagramZoomable(container)", _script);
+        // Zoom controls used to be skipped for a diagram that fit its box (isDiagramZoomable); since 5.7.0 only a box with
+        // no picture has none, and one not laid out is asked again when it shows (5.5.3)
+        Assert.Contains("if (!picturesOf(container).length && !container.querySelector(':scope > .puml-fragment') && container.clientWidth > 0) {", _script);
         Assert.Contains("diagram-natural-size", _script);
+        Assert.Contains("diagram-zoomed-out", _script);
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -1252,8 +1267,10 @@ public class DiagramContextMenuTests
         // setNoteState (fragQueue) and processRenderQueue (fragList) both build the list of new fragments
         // and then render them one by one; prefetching the list first lets the workers render them in
         // parallel so the sequential loop is a series of cache hits.
-        Assert.Contains("window.plantuml.prefetch(fragQueue.map(function (f) { return f.source; }))", _notesScript);
-        Assert.Contains("window.plantuml.prefetch(fragList.map(function (f) { return f.source; }))", _notesScript);
+        // Each part is drawn from its engine text (5.7.0, plans/ZOOM_EVERY_DIAGRAM_PLAN.md Z12: a part's data-plantuml stays
+        // as written, the lines the page adds go only to the engine), so that is what is prefetched.
+        Assert.Contains("window.plantuml.prefetch(fragQueue.map(function (f) { return f.engine; }))", _notesScript);
+        Assert.Contains("window.plantuml.prefetch(fragList.map(function (f) { return f.engine; }))", _notesScript);
     }
 
     [Fact]
@@ -1267,7 +1284,8 @@ public class DiagramContextMenuTests
         var setNoteState = _notesScript.Substring(start, end - start);
         Assert.Contains("if (!item.el.querySelector('svg') && !(item.el.textContent || '').trim()) return;", setNoteState);
         Assert.Contains("window._describeEngineFailure(item.el, item.source)", setNoteState);
-        Assert.Contains("if (!failed && item.el.querySelector('svg')) _svgCache[item.source] = item.el.innerHTML;", setNoteState);
+        // cached under the engine text it was drawn from (5.7.0)
+        Assert.Contains("if (!failed && item.el.querySelector('svg')) _svgCache[item.engine] = item.el.innerHTML;", setNoteState);
         Assert.Contains("Render timed out for this fragment.", setNoteState);
     }
 
@@ -1297,7 +1315,8 @@ public class DiagramContextMenuTests
     public void OpenInNewTab_opens_the_tab_before_the_picture_is_drawn()
     {
         // a popup blocker lets through a tab opened while the click is handled; the PNG is drawn after the click
-        foreach (var item in new[] { "'Open as PNG image in new tab'", "'Open as PNG image (no transparency) in new tab'" })
+        // the label names the picture: 'as PNG', or the part of a diagram in parts too long for a canvas (5.7.0, Q10)
+        foreach (var item in new[] { "'Open ' + asPng + ' image in new tab'", "'Open ' + asPng + ' image (no transparency) in new tab'" })
         {
             var at = _script.IndexOf(item, StringComparison.Ordinal);
             Assert.True(at > 0, item);
@@ -1313,7 +1332,8 @@ public class DiagramContextMenuTests
     public void OpenInNewTab_writes_into_the_tab_and_opens_a_blob_url_only_where_no_tab_opened()
     {
         Assert.Contains("window.open('', '_blank')", _script);
-        Assert.Contains("openSvgInTab(serializeSvg(svg))", _script);
+        // the whole diagram for a diagram in parts, its own picture for one drawn whole (5.7.0, Z13)
+        Assert.Contains("openSvgInTab(serializeSvg(svgOf()))", _script);
         // the source the picture was composed from before a long payload's cap (5.4.0)
         Assert.Contains("openTextInTab(currentSource, typeLabel + ' source')", _script);
         Assert.Contains("openTextInTab(_fullNoteText, 'Box text')", _script);

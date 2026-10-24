@@ -326,6 +326,108 @@ public static class ReportTestHelper
     }
 
     /// <summary>
+    /// The owner's case for zooming every diagram (<c>plans/ZOOM_EVERY_DIAGRAM_PLAN.md</c>): the first scenario's
+    /// diagram is wider than the page ("Create order successfully", fourteen participants) and the second's fits it
+    /// ("Delete order fails gracefully", three).
+    /// </summary>
+    public static string GenerateReportWithWideThenFittingDiagram(string tempDir, string outputDir, string fileName)
+    {
+        var (features, _) = CreateTestData();
+        var diagrams = new[]
+        {
+            new DiagramAsCode("t1", "", WidePlantUmlSource),
+            new DiagramAsCode("t2", "", PlantUmlSource)
+        };
+
+        var path = ReportGenerator.GenerateHtmlReport(
+            diagrams, features,
+            DateTime.UtcNow, DateTime.UtcNow,
+            null, Path.Combine(tempDir, fileName), "Test Report", true,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs);
+
+        File.Copy(path, Path.Combine(outputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
+    }
+
+    /// <summary>
+    /// The participants of <see cref="PartsSource"/>: a caller, two services and a store, each of its own kind, so a
+    /// gap between two of them starts from a width of its own.
+    /// </summary>
+    public static readonly string[] PartsParticipants = ["c", "g", "s", "d"];
+
+    /// <summary>
+    /// A generated-looking sequence diagram (teoz, numbered) for the facts on a diagram drawn in parts: four participants
+    /// (<see cref="PartsParticipants"/>) and <paramref name="calls"/> calls with their replies, call k from participant
+    /// k % 3 to the next, labelled <c>callk</c> and <c>okk</c> (one word each: under <c>wrapWidth</c> the engine paints each
+    /// word of a label as a text of its own). <paramref name="wideCalls"/> gives call k (1-based) that many "w"s after its
+    /// label; <paramref name="replyNotes"/> puts a six-line note right of every reply, and <paramref name="extraNoteFields"/>
+    /// makes each that many lines longer (past the report's ten lines, Truncated and Expanded draw it differently).
+    /// </summary>
+    public static string PartsSource(int calls, IReadOnlyDictionary<int, int>? wideCalls = null, bool replyNotes = false,
+        int extraNoteFields = 0)
+    {
+        var sb = new System.Text.StringBuilder();
+        sb.Append("@startuml\n!pragma teoz true\nskinparam wrapWidth 800\nautonumber 1\n\n");
+        sb.Append("actor \"Client\" as c\nparticipant \"Gateway\" as g\nparticipant \"Service\" as s\ndatabase \"Store\" as d\n\n");
+        for (var k = 1; k <= calls; k++)
+        {
+            var from = PartsParticipants[k % 3];
+            var to = PartsParticipants[k % 3 + 1];
+            var wide = wideCalls != null && wideCalls.TryGetValue(k, out var n) ? " " + new string('w', n) : "";
+            sb.Append($"{from} -> {to} : call{k}{wide}\n");
+            sb.Append($"{to} --> {from} : ok{k}\n");
+            if (replyNotes)
+            {
+                sb.Append($"note right\n{{\n  \"call\": {k},\n  \"status\": \"ok\",\n  \"items\": [1, 2, 3],\n");
+                for (var f = 1; f <= extraNoteFields; f++) sb.Append($"  \"field{f}\": {f},\n");
+                sb.Append("  \"done\": true\n}\nend note\n");
+            }
+        }
+        sb.Append("@enduml");
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// One scenario ("Parts") whose diagram (<paramref name="source"/>, by default <see cref="PartsSource"/> of 30 calls)
+    /// the page draws in parts: the page's part height is set to <paramref name="partHeight"/> px, and it estimates 45 px a
+    /// message, so 900 px cuts the diagram every ten calls. A second scenario follows with a short diagram that
+    /// fits ("Short diagram", which the report lists after "Parts"), so the page has room below the diagram in parts.
+    /// </summary>
+    public static string GenerateReportWithDiagramInParts(string tempDir, string outputDir, string fileName,
+        string? source = null, int partHeight = 900)
+    {
+        var features = new[]
+        {
+            new Feature
+            {
+                DisplayName = "Parts Feature",
+                Scenarios =
+                [
+                    new Scenario { Id = "p1", DisplayName = "Parts", Result = ExecutionResult.Passed, Duration = TimeSpan.FromSeconds(1) },
+                    new Scenario { Id = "p2", DisplayName = "Short diagram", Result = ExecutionResult.Passed, Duration = TimeSpan.FromSeconds(1) }
+                ]
+            }
+        };
+        var diagrams = new[]
+        {
+            new DiagramAsCode("p1", "", source ?? PartsSource(30)),
+            new DiagramAsCode("p2", "", PlantUmlSource)
+        };
+
+        var path = ReportGenerator.GenerateHtmlReport(
+            diagrams, features,
+            DateTime.UtcNow, DateTime.UtcNow,
+            null, Path.Combine(tempDir, fileName), "Test Report", true,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs,
+            browserFragmentMaxHeight: partHeight);
+
+        File.Copy(path, Path.Combine(outputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
+    }
+
+    /// <summary>
     /// One scenario ("Several diagrams") whose diagram has two calls and one note: a header line, then a body of one
     /// word, "Accepted". Folded with the headers hidden, the note's preview is the whole of what it shows.
     /// </summary>

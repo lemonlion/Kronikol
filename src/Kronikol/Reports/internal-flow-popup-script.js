@@ -171,7 +171,11 @@
                                 mo.disconnect();
                                 el.dataset.rendered = '1';
                                 if (el.querySelector('svg') || (window._isStackOverflow && window._isStackOverflow(el.innerHTML))) {
-                                    if (window._describeEngineFailure) window._describeEngineFailure(el, source);
+                                    var failed = window._describeEngineFailure ? window._describeEngineFailure(el, source) : false;
+                                    // a zoom slider, as every drawn diagram has (5.7.0, plans/ZOOM_EVERY_DIAGRAM_PLAN.md Z1):
+                                    // the popup draws its diagram itself, not through the page's queue, which asks for one
+                                    if (!failed && el.querySelector('svg') && window._addZoomButton)
+                                        requestAnimationFrame(function() { window._addZoomButton(el); });
                                 } else if ((el.textContent || '').indexOf('RuntimeException') >= 0) {
                                     el.innerHTML = '<div class="iflow-render-error">' +
                                         '<strong>Activity diagram too large for browser rendering.</strong><br>' +

@@ -748,7 +748,9 @@
             var endumlIdx = lines.length - 1;
 
             // Find end of prefix: after last participant/actor/entity/database/queue/collections/boundary declaration
-            // and after autonumber, skinparam, !pragma, style blocks
+            // and after autonumber, skinparam, !pragma, style blocks. Participants declared in a box are declared with it:
+            // until 5.7.0 a box ended the prefix, so every part after the first declared no participant, and drew only
+            // those its own messages named, in the order it met them.
             var inStyle = false;
             var _styleOpen = '<' + 'style>';
             var _styleClose = '</' + 'style>';
@@ -764,7 +766,7 @@
                     trimmed.startsWith('entity ') || trimmed.startsWith('database ') ||
                     trimmed.startsWith('queue ') || trimmed.startsWith('collections ') ||
                     trimmed.startsWith('boundary ') || trimmed.startsWith('control ') ||
-                    trimmed.startsWith('!theme ')) {
+                    trimmed.startsWith('!theme ') || /^box\b/.test(trimmed) || /^end\s+box\b/.test(trimmed)) {
                     prefixEnd = i;
                 } else {
                     bodyStart = i;
@@ -1118,6 +1120,311 @@
         }
         window._splitWithChunkedNotes = splitWithChunkedNotes;
 
+        // ── A diagram drawn in parts is one diagram (plans/ZOOM_EVERY_DIAGRAM_PLAN.md Z12, Z13, 5.7.0) ──
+        // The lines the page adds to draw a diagram in parts go only to the engine: never into a part's data-plantuml,
+        // the diagram's source, or anything the search, the menu or a copied picture reads (Z12). Every part of a
+        // sequence diagram but the last is drawn without its footbox, the participants drawn again under its last
+        // message, so the diagram ends once (Q11); each part keeps its heads, which name the lifelines below them.
+        var _participantDeclRx = /^\s*(?:participant|actor|boundary|control|entity|database|collections|queue)\s/m;
+        function partEngineSources(fragments) {
+            if (fragments.length < 2 || !_participantDeclRx.test(fragments[0])) return fragments.slice();
+            return fragments.map(function(src, i) {
+                if (i === fragments.length - 1) return src;
+                return /^@startuml[^\n]*$/m.test(src) ? src.replace(/^(@startuml[^\n]*)$/m, '$1\nhide footbox') : 'hide footbox\n' + src;
+            });
+        }
+        window._partEngineSources = partEngineSources;
+
+        // ── A diagram in parts lined up (R2, plans/ZOOM_EVERY_DIAGRAM_PLAN.md Q7 and Q12, 5.7.0) ──
+        // The engine lays each part out on its own, so a participant stood at a different place in each part. PlantUML has
+        // no setting that places a participant, but a gap between two neighbours is the widest any message between them
+        // needs: one row of hidden messages after the participants, each labelled with a space exactly as wide as its gap
+        // has to be (<space:N> is N px wide and draws nothing), holds every part to the same gaps. The gaps come from an
+        // outline of the whole diagram drawn first: the participants and, for each kind of message, its widest label and
+        // its widest note. The row stops the numbering around it and goes only to the engine (Z12). Each part is then
+        // placed across by its first lifeline (part._kShift, which context-menu-script.js reads), and once every part is
+        // drawn the page checks that their gaps agree, drawing them again from their own gaps where they do not.
+        var _spacerDeclRx = /^\s*(?:actor|participant|database|collections|queue|entity|boundary|control)\s+("[^"]*"|[^\s"]+)(?:\s+as\s+(\S+))?/;
+        // The participants a part declares at its top, in order, and the line after which a row goes (after an `end box`).
+        function spacerParticipants(source) {
+            var lines = source.split('\n'), names = [], last = -1, i, m;
+            for (i = 0; i < lines.length; i++) if (_spacerDeclRx.test(lines[i]) || /^\s*box\b/i.test(lines[i])) break;
+            for (; i < lines.length; i++) {
+                m = lines[i].match(_spacerDeclRx);
+                if (m) { names.push(m[2] && m[2].charAt(0) !== '"' ? m[2] : m[1]); last = i; continue; }
+                if (/^\s*end\s+box\b/i.test(lines[i])) { last = i; continue; }
+                if (/^\s*(?:'.*|box\b.*)?$/i.test(lines[i])) continue;
+                break;
+            }
+            return { names: names, insertAfter: last };
+        }
+
+        // The row: a hidden message between each two neighbours, labelled with the space its gap needs past what the
+        // message takes anyway (c, measured once for the page's header). A gap the participants alone hold gets none.
+        function spacerRowLines(names, targets, c) {
+            var out = [];
+            for (var i = 0; i + 1 < names.length; i++) {
+                var n = Math.ceil(targets[i] - c - 0.005);
+                if (!(n > 0)) continue;
+                out.push((out.length ? '& ' : '') + names[i] + ' -[hidden]> ' + names[i + 1] + ' : <space:' + n + '>');
+            }
+            return out;
+        }
+
+        // A part's engine text with the row after its participants. A numbered part has its numbering stopped for the row
+        // and its own autonumber line written again after it, so every message keeps its number.
+        function withSpacerRow(source, rowLines) {
+            if (!rowLines || !rowLines.length) return source;
+            var lines = source.split('\n'), at = spacerParticipants(source).insertAfter, auto = null;
+            if (at < 0) return source;
+            for (var i = 0; i <= at; i++) {
+                if (/^\s*autonumber\b/.test(lines[i]) && !/^\s*autonumber\s+(?:stop|resume)\b/.test(lines[i])) auto = lines[i].trim();
+            }
+            var row = auto ? ['autonumber stop'].concat(rowLines, [auto]) : rowLines;
+            return lines.slice(0, at + 1).concat(row, lines.slice(at + 1)).join('\n');
+        }
+
+        // A sequence picture's lifelines, left to right, in its own units: the vertical lines that cover, at one place across,
+        // at least half as much as the one that covers most. (A third of the picture's height, the role pass's rule, misses
+        // them on a short last part, whose heads and footbox take most of its height.)
+        function lifelinesOf(svg) {
+            if (svg._kLifelines) return svg._kLifelines;
+            var cover = {}, most = 0, xs = [];
+            var lines = svg.getElementsByTagName('line');
+            for (var i = 0; i < lines.length; i++) {
+                var x1 = parseFloat(lines[i].getAttribute('x1')) || 0, x2 = parseFloat(lines[i].getAttribute('x2')) || 0;
+                var dy = Math.abs((parseFloat(lines[i].getAttribute('y2')) || 0) - (parseFloat(lines[i].getAttribute('y1')) || 0));
+                if (Math.abs(x1 - x2) >= 0.5 || dy <= 4) continue;
+                var x = Math.round(x1 * 1000) / 1000;
+                cover[x] = (cover[x] || 0) + dy;
+                most = Math.max(most, cover[x]);
+            }
+            for (var k in cover) if (cover[k] >= most / 2) xs.push(+k);
+            xs.sort(function(a, b) { return a - b; });
+            svg._kLifelines = xs;
+            return xs;
+        }
+        window._lifelinesOf = lifelinesOf;
+
+        // Widths to rank labels and notes by, as the engine draws them: a link shows its text (its target when it has
+        // none), a creole tag draws nothing, and a written \n breaks the line. A message's number is drawn in bold.
+        var _measure = null;
+        function textWidth(text, bold) {
+            if (!_measure) {
+                var plain = document.createElement('canvas').getContext('2d'), strong = document.createElement('canvas').getContext('2d');
+                _measure = plain && strong ? { plain: plain, bold: strong } : {};
+                if (plain && strong) { plain.font = '13px system-ui'; strong.font = 'bold 13px system-ui'; }
+            }
+            if (!_measure.plain) return String(text).length * 7;
+            return (bold ? _measure.bold : _measure.plain).measureText(String(text)).width;
+        }
+        function shownWidth(text) {
+            var shown = String(text).replace(/\[\[\s*([^\s\]{]*)(?:\{[^}]*\})?\s*([^\]]*)\]\]/g, function(m, target, label) { return label || target; });
+            var rows = shown.split('\\n'), w = 0;
+            for (var i = 0; i < rows.length; i++) w = Math.max(w, textWidth(rows[i].replace(/<[^>]+>/g, '')));
+            return w;
+        }
+
+        // A note cut to what can make it wide: its first line, its two widest lines and its table rows.
+        function cutNote(block) {
+            if (block.length <= 5) return block;
+            var body = block.slice(1, -1);
+            var widest = body.map(function(s, k) { return { k: k, w: shownWidth(s) }; })
+                .sort(function(a, b) { return b.w - a.w; }).slice(0, 2).map(function(o) { return o.k; });
+            return [block[0]].concat(body.filter(function(s, k) { return k === 0 || widest.indexOf(k) >= 0 || /^\s*\|/.test(s); }),
+                [block[block.length - 1]]);
+        }
+
+        // The outline of a diagram in parts: its participants and, for each kind of message (its two participants, its
+        // arrow and the side of the note on it), the message with the widest label and the one with the widest note, each
+        // note cut (cutNote), every other statement as written, and no step bar or note across, which never moves a
+        // lifeline. A message it keeps keeps its number, which the engine draws as part of its label.
+        var _outlineMessageRx = /^\s*([\w.]+)\s*(<?[-.]*(?:\[[^\]]*\])?[-.]*>?>?)\s*([\w.]+)\s*(?::(.*))?$/;
+        function outlineSource(fragments) {
+            var first = parseDiagramStructure(fragments[0]);
+            var headLines = first.lines.slice(0, first.bodyStart);
+            var numbered = headLines.some(function(l) { return /^\s*autonumber\s+\d+/.test(l); });
+            var units = [], number = 0;
+            fragments.forEach(function(fragment) {
+                // each part's prefix as the splitter wrote it, and its body; each part numbers on from its own autonumber
+                var parsed = parseDiagramStructure(fragment), lines = parsed.lines;
+                for (var h = 0; h < parsed.bodyStart; h++) { var a = /^\s*autonumber\s+(\d+)/.exec(lines[h]); if (a) number = +a[1]; }
+                for (var i = parsed.bodyStart; i < parsed.endumlIdx; i++) {
+                    var line = lines[i], t = line.trim();
+                    if (!t || t.charAt(0) === "'") continue;
+                    if (/^@enduml/.test(t)) break;
+                    if (isNoteStatement(t)) {
+                        var block = [line], isBlock = opensNoteBlock(t);
+                        if (isBlock) {
+                            while (++i < lines.length && !closesNoteBlock(lines[i].trim())) block.push(lines[i]);
+                            if (i < lines.length) block.push(lines[i]);
+                        }
+                        var header = t.replace(/<<[^>]*>>/g, '').replace(/\s+/g, ' ');
+                        if (/^[hr]?note across\b/i.test(header)) continue;
+                        var w = isBlock ? Math.max.apply(null, [0].concat(block.slice(1, -1).map(shownWidth))) : shownWidth(t.slice(t.indexOf(':') + 1));
+                        var side = (/^note (left|right)\s*$/i.exec(header) || [])[1], prev = units[units.length - 1];
+                        if (side && prev && prev.kind === 'msg' && !prev.note) { prev.note = block; prev.wNote = w; prev.side = side.toLowerCase(); }
+                        else units.push({ kind: 'note', key: 'note|' + header, lines: block, w: w });
+                        continue;
+                    }
+                    var m = _outlineMessageRx.exec(t);
+                    if (m && m[2].indexOf('-') >= 0) {
+                        units.push({ kind: 'msg', from: m[1], arrow: m[2].replace(/\[[^\]]*\]/, ''), to: m[3], lines: [line], num: number,
+                            w: shownWidth(m[4] || '') + (numbered ? textWidth(number, true) : 0) });
+                        number++;
+                        continue;
+                    }
+                    if (isArrowLine(t)) number++;
+                    units.push({ kind: 'other', lines: [line] });
+                }
+            });
+            var byKey = {}, keys = [], keep = {};
+            units.forEach(function(u, k) {
+                if (u.kind === 'msg') u.key = 'msg|' + u.from + '|' + u.arrow + '|' + u.to + '|' + (u.side || '');
+                if (!u.key) { keep[k] = true; return; }
+                if (!byKey[u.key]) { byKey[u.key] = []; keys.push(u.key); }
+                byKey[u.key].push(k);
+            });
+            keys.forEach(function(key) {
+                var widest = -1, noted = -1;
+                byKey[key].forEach(function(k) {
+                    if (widest < 0 || units[k].w > units[widest].w) widest = k;
+                    if (units[k].wNote > 0 && (noted < 0 || units[k].wNote > units[noted].wNote)) noted = k;
+                });
+                keep[widest] = true;
+                if (noted >= 0) keep[noted] = true;
+            });
+            var body = [];
+            units.forEach(function(u, k) {
+                if (!keep[k]) return;
+                if (u.kind === 'msg' && numbered) body.push('autonumber ' + u.num);
+                Array.prototype.push.apply(body, u.kind === 'note' ? cutNote(u.lines) : u.lines);
+                if (u.note) Array.prototype.push.apply(body, cutNote(u.note));
+            });
+            return headLines.concat(body, ['@enduml']).join('\n');
+        }
+
+        // Draws a source where nobody sees it, through the page's engine, and resolves with its picture (null when the
+        // engine draws none).
+        var _asideCount = 0;
+        function drawAside(source) {
+            return new Promise(function(resolve) {
+                var div = document.createElement('div'), done = false;
+                div.id = 'kronikol-aside-' + (++_asideCount);
+                div.setAttribute('aria-hidden', 'true');
+                div.style.cssText = 'position:absolute;left:-100000px;top:0;width:0;height:0;overflow:hidden;visibility:hidden;contain:strict';
+                document.body.appendChild(div);
+                var timer = setTimeout(function() { finish(true); }, 30000);
+                var mo = new MutationObserver(function() { finish(false); });
+                function finish(give) {
+                    if (done) return;
+                    var svg = div.querySelector('svg');
+                    if (!give && !svg && !(div.textContent || '').trim()) return;
+                    done = true;
+                    clearTimeout(timer);
+                    mo.disconnect();
+                    div.remove();
+                    resolve(svg || null);
+                }
+                mo.observe(div, { childList: true, subtree: true, characterData: true });
+                try {
+                    window.plantuml.render(source.split('\n'), div.id, { onError: function() { finish(true); return true; } });
+                } catch (e) {
+                    finish(true);
+                }
+                finish(false);
+            });
+        }
+
+        // How much wider than its label a hidden message makes its gap: a fixed amount for a header (margins, the arrow
+        // head, the message padding), measured once for each header the page's diagrams have.
+        var _calibrations = {};
+        function spacerAllowance(source, head) {
+            var lines = source.split('\n').slice(0, head.insertAfter + 1);
+            var key = lines.filter(function(l) { return !_spacerDeclRx.test(l) && !/^\s*(?:autonumber|box|end\s+box)\b/i.test(l); }).join('\n');
+            if (!_calibrations[key]) {
+                var probe = lines.concat(['autonumber stop', head.names[0] + ' -[hidden]> ' + head.names[1] + ' : <space:4000>', '||400||', '@enduml']);
+                _calibrations[key] = drawAside(probe.join('\n')).then(function(svg) {
+                    var xs = svg ? lifelinesOf(svg) : [];
+                    return xs.length >= 2 ? Math.round((xs[1] - xs[0] - 4000) * 100) / 100 : null;
+                });
+            }
+            return _calibrations[key];
+        }
+
+        // The lined-up drawing of a diagram's parts: the engine texts with the row in, and what the check and the placing
+        // need. Pass 1 is sized from the outline; pass 2 from the parts' own gaps.
+        function lineUpFrom(plain, names, targets, c, first, pass) {
+            var row = spacerRowLines(names, targets, c);
+            return { engine: plain.map(function(src) { return withSpacerRow(src, row); }), row: row, plain: plain, names: names,
+                targets: targets, c: c, first: first, pass: pass };
+        }
+
+        // Lines a diagram's parts up: null when it is not a sequence diagram in parts with two participants declared, or
+        // lining up is turned off (window.__kronikolLineUp === false, for the tests); else a promise of the drawing. What
+        // the outline gave is kept for a source drawn again (a toggle back, a prefetch), and only that, a few numbers: the
+        // parts' texts are built again each time, as a long diagram's run to megabytes. An outline the engine cannot draw
+        // leaves the parts as they are drawn without R2 (row null).
+        var _lineUps = new Map();
+        function lineUpParts(fragments) {
+            if (window.__kronikolLineUp === false || !fragments || fragments.length < 2 || !_participantDeclRx.test(fragments[0])) return null;
+            var head = spacerParticipants(fragments[0]);
+            if (head.names.length < 2) return null;
+            var key = fragments.join('\u0000'), outline = _lineUps.get(key);
+            if (!outline) {
+                // a test's hook: the outline's gaps scaled, so that the parts disagree once drawn (6.3 fact 8)
+                var scale = typeof window.__kronikolOutlineGapScale === 'number' ? window.__kronikolOutlineGapScale : 1;
+                outline = Promise.all([drawAside(outlineSource(fragments)), spacerAllowance(fragments[0], head)]).then(function(r) {
+                    var xs = r[0] ? lifelinesOf(r[0]) : [], c = r[1];
+                    if (xs.length < head.names.length || typeof c !== 'number') return null;
+                    xs = xs.slice(0, head.names.length);
+                    return { targets: xs.slice(1).map(function(x, i) { return (x - xs[i]) * scale; }), c: c, first: xs[0] };
+                }, function() { return null; });
+                _lineUps.set(key, outline);
+                if (_lineUps.size > 16) _lineUps.delete(_lineUps.keys().next().value);
+            }
+            return outline.then(function(o) {
+                var plain = partEngineSources(fragments);
+                return o ? lineUpFrom(plain, head.names, o.targets, o.c, o.first, 1) : { engine: plain, row: null };
+            });
+        }
+        window._lineUpParts = lineUpParts;
+
+        // Once every part is drawn: null when their gaps agree to a pixel (or this was the drawing from their own gaps),
+        // else the drawing again with each gap the widest the parts gave it.
+        function lineUpCheck(parts, lineUp) {
+            if (!lineUp || !lineUp.row || lineUp.pass > 1) return null;
+            var n = lineUp.names.length, all = [];
+            parts.forEach(function(p) {
+                var svg = p.querySelector(':scope > svg'), xs = svg ? lifelinesOf(svg) : [];
+                if (xs.length >= n) all.push(xs.slice(1, n).map(function(x, i) { return x - xs[i]; }));
+            });
+            if (all.length < 2) return null;
+            var widest = [], off = 0;
+            for (var g = 0; g < n - 1; g++) {
+                var hi = -Infinity, lo = Infinity;
+                for (var k = 0; k < all.length; k++) { hi = Math.max(hi, all[k][g]); lo = Math.min(lo, all[k][g]); }
+                widest.push(hi);
+                off = Math.max(off, hi - lo);
+            }
+            return off > 1 ? lineUpFrom(lineUp.plain, lineUp.names, widest, lineUp.c, lineUp.first, 2) : null;
+        }
+        window._lineUpCheck = lineUpCheck;
+
+        // Each drawn part placed so that its first lifeline stands under the others' (part._kShift, in the part's own
+        // units): the parts' gaps agree, and the room left of the first participant is what differs. The outline's first
+        // lifeline is the least, so parts drawn one by one seldom move across as the rest arrive.
+        function lineUpPlace(parts, lineUp) {
+            var firsts = parts.map(function(p) {
+                var svg = p.querySelector(':scope > svg'), xs = svg ? lifelinesOf(svg) : [];
+                return xs.length ? xs[0] : null;
+            });
+            var most = lineUp && typeof lineUp.first === 'number' ? lineUp.first : -Infinity;
+            firsts.forEach(function(x) { if (x !== null) most = Math.max(most, x); });
+            parts.forEach(function(p, k) { if (firsts[k] === null) delete p._kShift; else p._kShift = most - firsts[k]; });
+        }
+        window._lineUpPlace = lineUpPlace;
+
         // Render fragments into a container, creating child divs as needed
         function renderFragments(el, source) {
             var fragments = splitWithChunkedNotes(source);
@@ -1127,20 +1434,67 @@
             if (fragments.length <= 1) {
                 // Single fragment — render directly into container (existing behavior)
                 renderQueue.push({ el: el, source: fragments[0] || source, isFragment: false });
-            } else {
-                // Multiple fragments — create child divs
-                el.innerHTML = '';
-                el.dataset.rendered = '1';
-                for (var f = 0; f < fragments.length; f++) {
-                    var fragDiv = document.createElement('div');
-                    fragDiv.className = 'puml-fragment';
-                    fragDiv.id = el.id + '-frag-' + f;
-                    fragDiv.dataset.fragment = f;
-                    fragDiv.setAttribute('data-plantuml', fragments[f]);
-                    el.appendChild(fragDiv);
-                    renderQueue.push({ el: fragDiv, source: fragments[f], isFragment: true, parentEl: el });
-                }
+                processQueue();
+                return;
             }
+            // Multiple fragments — create child divs, each drawn from its engine text (Z12)
+            el.innerHTML = '';
+            el.dataset.rendered = '1';
+            var divs = [];
+            for (var f = 0; f < fragments.length; f++) {
+                var fragDiv = document.createElement('div');
+                fragDiv.className = 'puml-fragment';
+                fragDiv.id = el.id + '-frag-' + f;
+                fragDiv.dataset.fragment = f;
+                fragDiv.setAttribute('data-plantuml', fragments[f]);
+                el.appendChild(fragDiv);
+                divs.push(fragDiv);
+            }
+            queueParts(el, fragments, divs, false, null);
+        }
+
+        // Queues a diagram's parts, each drawn from its engine text (Z12): lined up once the outline gives the row (R2),
+        // else at once. Meanwhile the parts show their placeholder and the page counts as drawing, so the notes script's
+        // redraws wait for it. A part taken off the page meanwhile (the diagram drawn again) is left alone.
+        function queueParts(el, fragments, divs, front, extra) {
+            el._lineUp = null;
+            el._lineUpPending = 0;
+            function queue(lineUp, engine) {
+                if (!divs.every(function(d) { return d.parentNode === el; })) return;
+                el._lineUp = lineUp;
+                el._lineUpPending = lineUp ? divs.length : 0;
+                var items = divs.map(function(div, k) {
+                    var it = { el: div, source: fragments[k], engineSource: engine[k], isFragment: true, parentEl: el };
+                    if (extra) for (var name in extra) it[name] = extra[name];
+                    return it;
+                });
+                if (front) renderQueue.unshift.apply(renderQueue, items);
+                else Array.prototype.push.apply(renderQueue, items);
+                processQueue();
+            }
+            var lined = lineUpParts(fragments);
+            if (!lined) { queue(null, partEngineSources(fragments)); return; }
+            setInFlight(1);
+            lined.then(function(r) {
+                setInFlight(-1);
+                queue(r.row ? r : null, r.engine);
+            });
+        }
+
+        // A lined-up diagram's parts, each placed as it is drawn; once the last is drawn, parts whose gaps disagree are
+        // drawn again, in place, from their own gaps (once).
+        function partSettled(item) {
+            var c = item.parentEl;
+            if (!c || !c._lineUp || !(c._lineUpPending > 0) || --c._lineUpPending > 0) return;
+            var parts = Array.prototype.slice.call(c.querySelectorAll(':scope > .puml-fragment'));
+            var fix = lineUpCheck(parts, c._lineUp);
+            if (!fix || parts.length !== fix.engine.length) return;
+            c._lineUp = fix;
+            c._lineUpPending = parts.length;
+            renderQueue.unshift.apply(renderQueue, parts.map(function(p, k) {
+                return { el: p, source: p.getAttribute('data-plantuml'), engineSource: fix.engine[k], isFragment: true, parentEl: c,
+                    replaces: p.querySelector(':scope > svg') };
+            }));
             processQueue();
         }
 
@@ -1353,11 +1707,15 @@
         function processQueue() {
             if (inFlight >= maxParallel() || renderQueue.length === 0) return;
             var item = renderQueue.shift();
-            var lines = item.source.split('\n');
+            // a part is drawn from its engine text (Z12): its stored source, and every message about it, stay as written.
+            // Whether there is anything to draw is read from the stored source: the row of a lined-up part (R2) is drawn
+            // by no statement of the diagram's own.
+            var lines = (item.engineSource || item.source).split('\n');
             var queueDone = false;
-            if (!hasDrawableBody(lines)) {
+            if (!hasDrawableBody(item.source.split('\n'))) {
                 item.el.innerHTML = '<div class="no-interactions" data-nothing-to-draw="true">Nothing to draw with the current filters: this diagram holds only assertion notes or step bars. Turn on Assertions or Steps to see them.</div>';
                 item.el.dataset.rendered = '1';
+                partSettled(item);
                 processQueue();
                 return;
             }
@@ -1382,12 +1740,18 @@
                     if (window._installNoteScroll) window._installNoteScroll(item.isFragment && item.parentEl ? item.parentEl : item.el);
                     if (window._makeNotesCollapsible) window._makeNotesCollapsible(hookTarget);
                     if (window._addAssertionTooltips) window._addAssertionTooltips(hookTarget);
+                    // a lined-up part is placed before the diagram's zoom is measured again (R2)
+                    if (item.parentEl && item.parentEl._lineUp) lineUpPlace(Array.prototype.slice.call(item.parentEl.querySelectorAll(':scope > .puml-fragment')), item.parentEl._lineUp);
                     requestAnimationFrame(function() { if (window._addZoomButton) window._addZoomButton(hookTarget); });
                 } catch(hookErr) { console.error('Post-render hook error:', hookErr); }
                 setInFlight(-1);
+                partSettled(item);
                 processQueue();
             }
             var mo = new MutationObserver(function() {
+                // a part drawn again in place (R2's second drawing) is done when its new picture is in, not at the first
+                // change to the old one
+                if (item.replaces && item.el.querySelector(':scope > svg') === item.replaces) return;
                 mo.disconnect();
                 onQueueItemDone();
             });
@@ -1397,7 +1761,7 @@
             var qPoll = setInterval(function() {
                 qPollCount++;
                 if (queueDone) { clearInterval(qPoll); return; }
-                if (qPollCount > 240) { clearInterval(qPoll); mo.disconnect(); queueDone = true; setInFlight(-1); processQueue(); }
+                if (qPollCount > 240) { clearInterval(qPoll); mo.disconnect(); queueDone = true; setInFlight(-1); partSettled(item); processQueue(); }
             }, 250);
             // A failure — thrown synchronously by a main-thread engine, or reported asynchronously by a
             // worker through the shim's onError — takes one path: the too-large re-split retry, or the
@@ -1418,7 +1782,7 @@
                         if (smallerFrags.length > 1) {
                             item.el.innerHTML = '';
                             item.el.dataset.rendered = '1';
-                            var retriedParts = [];
+                            var retriedDivs = [];
                             for (var rf = 0; rf < smallerFrags.length; rf++) {
                                 var rDiv = document.createElement('div');
                                 rDiv.className = 'puml-fragment';
@@ -1426,11 +1790,11 @@
                                 rDiv.dataset.fragment = rf;
                                 rDiv.setAttribute('data-plantuml', smallerFrags[rf]);
                                 item.el.appendChild(rDiv);
-                                retriedParts.push({ el: rDiv, source: smallerFrags[rf], isFragment: true, parentEl: item.el, _retried: true });
+                                retriedDivs.push(rDiv);
                             }
                             // to the front of the queue in their order, the top part first, which is the one on the screen
-                            // (5.2.4: one unshift per part, in this loop, put them in reverse)
-                            renderQueue.unshift.apply(renderQueue, retriedParts);
+                            // (5.2.4: one unshift per part, in this loop, put them in reverse); lined up as a first drawing is
+                            queueParts(item.el, smallerFrags, retriedDivs, true, { _retried: true });
                             processQueue();
                             return true;
                         }
@@ -1446,6 +1810,7 @@
                     // that takes a worker down arrives here (plans/WASM_ENGINE_PLAN.md).
                     describeEngineFailure(item.el, item.source);
                 }
+                partSettled(item);
                 processQueue();
                 return true;
             }

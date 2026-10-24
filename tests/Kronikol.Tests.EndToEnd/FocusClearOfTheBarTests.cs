@@ -183,10 +183,17 @@ public class FocusClearOfTheBarTests : PlaywrightTestBase
         var (settings, link) = await StuckSettingsAsync("Focus_SettingsBand.html", linkUnder: 6);
         await FocusQuietlyAsync(settings.Locator(":scope > .scenario-settings-gear"));
 
+        // since 5.7.0 every drawn diagram has a zoom slider, which Tab reaches first, and shows while it has the focus
+        await Page.Keyboard.PressAsync("Tab");
+        await WaitPastTheWatchAsync(Page);
+        var slider = Scenario("01-1").Locator(".plantuml-browser > .diagram-zoom-controls .diagram-zoom-slider");
+        Assert.True(await HasFocusAsync(slider), "Tab went from the settings' gear to the diagram's zoom slider");
+        Assert.Equal("1", await slider.EvaluateAsync<string>("s => getComputedStyle(s.closest('.diagram-zoom-controls')).opacity"));
+
         await Page.Keyboard.PressAsync("Tab");
         await WaitPastTheWatchAsync(Page);
 
-        Assert.True(await HasFocusAsync(link), "Tab went from the settings' gear to the diagram's link");
+        Assert.True(await HasFocusAsync(link), "Tab went from the diagram's zoom slider to its link");
         var (sTop, sBottom) = await BoxAsync(settings);
         var (_, navBottom) = await BoxAsync(Bar);
         Assert.True(Math.Abs(sTop - navBottom) <= 1, $"the settings still stick under the bar ({sTop} against {navBottom})");

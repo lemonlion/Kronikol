@@ -2630,30 +2630,17 @@
         rerenderWithNoteStates(container, function() { container._noteFormats[noteIdx] = oldFormat; });
     }
 
-    // A diagram drawn again in parts: each new part takes the zoom and the selection of the part in its place before
-    // (5.2.2), the level and the place across the picture too (5.2.3), and a diagram drawn whole before gives its zoom to
-    // every part. zoomsBefore reads them while the old picture is still on the page (a part taken off it reads no
-    // scroll); carryPartZoom runs before the parts' hooks, which restore each part's picture from what it takes here.
-    function zoomsBefore(container, oldChildren) {
-        if (!window._zoomState) return null;
-        var oldParts = oldChildren.filter(function(c) { return c.classList && c.classList.contains('puml-fragment'); });
-        return { whole: !oldParts.length, states: (oldParts.length ? oldParts : [container]).map(window._zoomState.of) };
+    // A diagram drawn again in parts keeps its zoom, its level, its direction, its place across and its selection, on its
+    // container, as a diagram drawn whole does (5.7.0, plans/ZOOM_EVERY_DIAGRAM_PLAN.md Z8): zoomBefore reads it while the
+    // old picture is still on the page (a box taken off it reads no scroll), and zoomAfter gives it back once the new
+    // parts are in, before their hooks, which apply it in its own direction. From 5.2.2 each new part took the zoom of
+    // the part in its place.
+    function zoomBefore(container) {
+        return window._zoomState ? window._zoomState.of(container) : null;
     }
 
-    function carryPartZoom(container, before, newParts) {
-        if (!before) return;
-        for (var i = 0; i < newParts.length; i++) {
-            var state = before.whole ? before.states[0] : before.states[i];
-            if (!state) continue;
-            // the diagram's selection goes to its first part only
-            window._zoomState.give(newParts[i], { zoomed: state.zoomed, percent: state.percent, scrollLeft: state.scrollLeft,
-                selected: state.selected && (!before.whole || i === 0) });
-        }
-        // a selected part with no part in its place now (the diagram drawn again in fewer parts) gives its selection to
-        // the last part (5.2.5)
-        if (!before.whole && newParts.length && before.states.slice(newParts.length).some(function(s) { return s.selected; }))
-            window._zoomState.give(newParts[newParts.length - 1], { zoomed: false, selected: true });
-        if (before.whole) window._zoomState.drop(container);
+    function zoomAfter(container, zoom) {
+        if (zoom) window._zoomState.give(container, zoom);
     }
 
     // A diagram's picture written again in its box: the box keeps its zoom, the level and the place across the picture
@@ -2706,18 +2693,40 @@
                     fragDiv.setAttribute('data-plantuml', fragments[fi]);
                     fragDiv.style.display = 'none';
                     container.appendChild(fragDiv);
-                    fragQueue.push({ el: fragDiv, source: fragments[fi], isFragment: true, parentEl: container });
+                    fragQueue.push({ el: fragDiv, source: fragments[fi], engine: null, isFragment: true, parentEl: container });
                 }
-                // Let the render workers take every new fragment in parallel now; the sequential loop
-                // below then mostly serves cache hits (a toggle re-splits the diagram, and most
-                // fragments come out byte-identical to what is already on screen).
-                if (window.plantuml && window.plantuml.prefetch) window.plantuml.prefetch(fragQueue.map(function (f) { return f.source; }));
+                // each part drawn from its engine text, its stored source as written, and lined up once the outline gives
+                // the row (5.7.0, plantuml-browser-render-script.js)
+                var lineUp = null;
+                function beginFrags(lined) {
+                    lineUp = lined && lined.row ? lined : null;
+                    var engine = lined ? lined.engine : window._partEngineSources ? window._partEngineSources(fragments) : fragments;
+                    for (var ei = 0; ei < fragQueue.length; ei++) fragQueue[ei].engine = engine[ei];
+                    // Let the render workers take every new fragment in parallel now; the sequential loop
+                    // below then mostly serves cache hits (a toggle re-splits the diagram, and most
+                    // fragments come out byte-identical to what is already on screen).
+                    if (window.plantuml && window.plantuml.prefetch) window.plantuml.prefetch(fragQueue.map(function (f) { return f.engine; }));
+                    renderNextFrag();
+                }
                 // Process fragment render queue sequentially
                 var fragIdx = 0;
                 function renderNextFrag() {
                     if (fragIdx >= fragQueue.length) {
+                        // lined up: parts whose gaps disagree are drawn again from their own gaps, out of sight, then each
+                        // part is placed under the others
+                        var newEls = fragQueue.map(function(f) { return f.el; });
+                        var fix = lineUp && window._lineUpCheck ? window._lineUpCheck(newEls, lineUp) : null;
+                        if (fix) {
+                            lineUp = fix;
+                            for (var xi = 0; xi < fragQueue.length; xi++) { fragQueue[xi].engine = fix.engine[xi]; fragQueue[xi].el.innerHTML = ''; }
+                            fragIdx = 0;
+                            renderNextFrag();
+                            return;
+                        }
+                        if (lineUp && window._lineUpPlace) window._lineUpPlace(newEls, lineUp);
+                        container._lineUp = lineUp;
                         // All new fragments rendered — swap: remove old, show new
-                        var zooms = zoomsBefore(container, oldChildren);
+                        var zoom = zoomBefore(container);
                         for (var oi = 0; oi < oldChildren.length; oi++) {
                             if (oldChildren[oi].parentNode === container) container.removeChild(oldChildren[oi]);
                         }
@@ -2727,7 +2736,7 @@
                             newFrags[ni].classList.remove('puml-fragment-new');
                             newFrags[ni].id = container.id + '-frag-' + ni;
                         }
-                        carryPartZoom(container, zooms, newFrags);
+                        zoomAfter(container, zoom);
                         installNoteScroll(container, scroll, newSource);
                         if (fragQueue.every(function(f) { return f.el.querySelector('svg'); })) recordDrawn(container, newSource, scroll);
                         // Apply post-render hooks after fragments are visible (getBBox needs visible elements)
@@ -2746,8 +2755,8 @@
                     // Check SVG cache first. Yield between fragments: after a prefetch most fragments are
                     // synchronous cache hits, and swapping them all in one go is a single main-thread task
                     // as long as the sum of the innerHTML swaps (~½ s on a big diagram under load).
-                    if (_svgCache[item.source]) {
-                        item.el.innerHTML = _svgCache[item.source];
+                    if (_svgCache[item.engine]) {
+                        item.el.innerHTML = _svgCache[item.engine];
                         item.el.dataset.rendered = '1';
                         setTimeout(renderNextFrag, 0);
                         return;
@@ -2762,7 +2771,7 @@
                         // for browser rendering…", or the shim's "Render error: …"): describe it, and
                         // never cache a failure as a result.
                         var failed = window._describeEngineFailure ? window._describeEngineFailure(item.el, item.source) : false;
-                        if (!failed && item.el.querySelector('svg')) _svgCache[item.source] = item.el.innerHTML;
+                        if (!failed && item.el.querySelector('svg')) _svgCache[item.engine] = item.el.innerHTML;
                         item.el.dataset.rendered = '1';
                         window._plantumlRendering = false;
                         // A shim cache hit completes synchronously (the observer fires as a microtask, still
@@ -2790,7 +2799,7 @@
                         }
                     }, 250);
                     try {
-                        window.plantuml.render(item.source.split('\n'), item.el.id);
+                        window.plantuml.render(item.engine.split('\n'), item.el.id);
                     } catch(e) {
                         fmo.disconnect();
                         if (fPoll) clearInterval(fPoll);
@@ -2800,7 +2809,8 @@
                         renderNextFrag();
                     }
                 }
-                renderNextFrag();
+                var linedFrags = window._lineUpParts ? window._lineUpParts(fragments) : null;
+                if (linedFrags) linedFrags.then(beginFrags); else beginFrags(null);
                 return;
             }
         }
@@ -3470,7 +3480,10 @@
         var roles = window._diagramRoles;
         if (roles) Array.prototype.forEach.call(el.querySelectorAll('svg'), function(svg) { roles.tagRoles(svg); });
         if (owner._refineNoteWidth || !nearWatch) { decorateNow(el); return; }
-        if (el.classList.contains('diagram-natural-size') && window._restoreZoomState) window._restoreZoomState(el);
+        // the zoom is the diagram's, on its container, and given to every part at once: after the last part (5.7.0)
+        var zoomBox = el === owner || !el.nextElementSibling || !el.nextElementSibling.classList.contains('puml-fragment') ? owner : null;
+        if (zoomBox && (zoomBox.classList.contains('diagram-natural-size') || zoomBox.classList.contains('diagram-zoomed-out'))
+            && window._restoreZoomState) window._restoreZoomState(zoomBox);
         el._kDecorate = true;
         watchNear(el);
         // near the screen, it gets them as soon as the page has painted its new picture, before the queue goes on; and
@@ -3583,7 +3596,11 @@
                 var src = composeNoteSource(c, c._noteOriginalSource, parseNoteBlocks(c._noteOriginalSource));
                 if (pictureFrom(c, src) || _svgCache[src]) continue;
                 var parts = window._splitWithChunkedNotes ? window._splitWithChunkedNotes(src) : [src];
-                Array.prototype.push.apply(sources, parts.length > 1 ? parts : [src]);
+                // a diagram in parts lined up is drawn from its row's engine texts, known once its outline is drawn (the
+                // outline is kept, so its turn does not draw it again)
+                var lined = parts.length > 1 && window._lineUpParts ? window._lineUpParts(parts) : null;
+                if (lined) { lined.then(function(r) { window.plantuml.prefetch(r.engine); }); continue; }
+                Array.prototype.push.apply(sources, parts.length > 1 ? (window._partEngineSources ? window._partEngineSources(parts) : parts) : [src]);
             }
             if (sources.length) window.plantuml.prefetch(sources);
         }
@@ -3670,16 +3687,36 @@
                         fragDiv.setAttribute('data-plantuml', fragments[fi]);
                         fragDiv.style.display = 'none';
                         container.appendChild(fragDiv);
-                        fragList.push({ el: fragDiv, source: fragments[fi] });
+                        fragList.push({ el: fragDiv, source: fragments[fi], engine: null });
                     }
-                    // Render every new fragment in parallel on the workers; the loop below serves cache hits.
-                    if (window.plantuml && window.plantuml.prefetch) window.plantuml.prefetch(fragList.map(function (f) { return f.source; }));
-                    startAhead();
+                    // each part drawn from its engine text and lined up once the outline gives the row, as in
+                    // rerenderWithNoteStates
+                    var partsLineUp = null;
+                    function beginFragments(lined) {
+                        partsLineUp = lined && lined.row ? lined : null;
+                        var engine = lined ? lined.engine : window._partEngineSources ? window._partEngineSources(fragments) : fragments;
+                        for (var ei = 0; ei < fragList.length; ei++) fragList[ei].engine = engine[ei];
+                        // Render every new fragment in parallel on the workers; the loop below serves cache hits.
+                        if (window.plantuml && window.plantuml.prefetch) window.plantuml.prefetch(fragList.map(function (f) { return f.engine; }));
+                        startAhead();
+                        renderNextFragment();
+                    }
                     var fragI = 0;
                     function renderNextFragment() {
                         if (fragI >= fragList.length) {
+                            var newEls = fragList.map(function(f) { return f.el; });
+                            var fix = partsLineUp && window._lineUpCheck ? window._lineUpCheck(newEls, partsLineUp) : null;
+                            if (fix) {
+                                partsLineUp = fix;
+                                for (var xi = 0; xi < fragList.length; xi++) { fragList[xi].engine = fix.engine[xi]; fragList[xi].el.innerHTML = ''; }
+                                fragI = 0;
+                                renderNextFragment();
+                                return;
+                            }
+                            if (partsLineUp && window._lineUpPlace) window._lineUpPlace(newEls, partsLineUp);
+                            container._lineUp = partsLineUp;
                             // All new fragments rendered — swap: remove old, show new
-                            var zooms = zoomsBefore(container, oldChildren);
+                            var zoom = zoomBefore(container);
                             for (var oi = 0; oi < oldChildren.length; oi++) {
                                 if (oldChildren[oi].parentNode === container) container.removeChild(oldChildren[oi]);
                                 // a fragment drawn before whose hover-only work was still waiting goes with it
@@ -3695,7 +3732,7 @@
                                 newFrags[ni].classList.remove('puml-fragment-new');
                                 newFrags[ni].id = container.id + '-frag-' + ni;
                             }
-                            carryPartZoom(container, zooms, newFrags);
+                            zoomAfter(container, zoom);
                             installNoteScroll(container, scroll, newSource);
                             if (fragList.every(function(f) { return f.el.querySelector('svg'); })) recordDrawn(container, newSource, scroll);
                             // Apply post-render hooks after fragments are visible (getBBox needs visible elements)
@@ -3709,8 +3746,8 @@
                         var fItem = fragList[fragI++];
                         // Yield between cached fragments — see renderNextFrag: consecutive synchronous
                         // swaps in one task block the main thread for their sum.
-                        if (_svgCache[fItem.source]) {
-                            fItem.el.innerHTML = _svgCache[fItem.source];
+                        if (_svgCache[fItem.engine]) {
+                            fItem.el.innerHTML = _svgCache[fItem.engine];
                             fItem.el.dataset.rendered = '1';
                             setTimeout(renderNextFragment, 0);
                             return;
@@ -3733,7 +3770,7 @@
                             // The engine may have written a failure instead of an <svg> ("Diagram too large
                             // for browser rendering…"): describe it, and never cache a failure as a result.
                             var failed = window._describeEngineFailure ? window._describeEngineFailure(fItem.el, fItem.source) : false;
-                            if (!failed && fItem.el.querySelector('svg')) _svgCache[fItem.source] = fItem.el.innerHTML;
+                            if (!failed && fItem.el.querySelector('svg')) _svgCache[fItem.engine] = fItem.el.innerHTML;
                             fItem.el.dataset.rendered = '1';
                             window._plantumlRendering = false;
                             // A shim cache hit completes synchronously — yield between fragments.
@@ -3759,9 +3796,10 @@
                                 afterFrag();
                             }
                         }, 250);
-                        try { window.plantuml.render(fItem.source.split('\n'), fItem.el.id); } catch(e) { fmo.disconnect(); if (fPoll) clearInterval(fPoll); fItem.el.textContent = 'Render error: ' + ((e && e.message) ? e.message : String(e)); fItem.el.dataset.rendered = '1'; window._plantumlRendering = false; renderNextFragment(); }
+                        try { window.plantuml.render(fItem.engine.split('\n'), fItem.el.id); } catch(e) { fmo.disconnect(); if (fPoll) clearInterval(fPoll); fItem.el.textContent = 'Render error: ' + ((e && e.message) ? e.message : String(e)); fItem.el.dataset.rendered = '1'; window._plantumlRendering = false; renderNextFragment(); }
                     }
-                    renderNextFragment();
+                    var linedParts = window._lineUpParts ? window._lineUpParts(fragments) : null;
+                    if (linedParts) linedParts.then(beginFragments); else beginFragments(null);
                     return;
                 }
             }

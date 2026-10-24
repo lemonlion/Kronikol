@@ -52,8 +52,10 @@ public class ZoomKeptOnRedrawTests : PlaywrightTestBase
 
     private sealed record BoxState(string Box, int Slider, double Level, int ScrollLeft, bool Zoomed);
 
-    /// <summary>Each box that zooms (the diagram's parts, or the diagram): its slider, the level its picture is drawn at
-    /// (its width against its natural width, in percent), its scroll and whether it is marked zoomed.</summary>
+    /// <summary>Each picture of the diagram (its parts', or its own), with what the diagram's one zoom shows for it
+    /// (5.7.0, plans/ZOOM_EVERY_DIAGRAM_PLAN.md Z8: a diagram in parts has one slider, on its container): the diagram's
+    /// slider, the level the picture is drawn at (its width against its natural width, in percent), the diagram's
+    /// scroll and whether the diagram is marked zoomed.</summary>
     private async Task<BoxState[]> BoxesAsync()
     {
         var json = await Page.EvaluateAsync<string>("""
@@ -61,10 +63,10 @@ public class ZoomKeptOnRedrawTests : PlaywrightTestBase
                 var c = document.querySelector('[data-diagram-type="plantuml"]');
                 var parts = Array.from(c.querySelectorAll(':scope > .puml-fragment'));
                 return JSON.stringify((parts.length ? parts : [c]).map(b => {
-                    var svg = b.querySelector(':scope > svg'), s = b.querySelector(':scope > .diagram-zoom-controls .diagram-zoom-slider');
+                    var svg = b.querySelector(':scope > svg'), s = c.querySelector(':scope > .diagram-zoom-controls .diagram-zoom-slider');
                     return { Box: b === c ? 'diagram' : 'part ' + b.dataset.fragment, Slider: s ? parseInt(s.value) : -1,
-                        Level: svg.getBoundingClientRect().width / window._getDiagramNaturalWidth(b) * 100,
-                        ScrollLeft: Math.round(b.scrollLeft), Zoomed: b.classList.contains('diagram-natural-size') };
+                        Level: svg.getBoundingClientRect().width / svg.width.baseVal.value * 100,
+                        ScrollLeft: Math.round(c.scrollLeft), Zoomed: c.classList.contains('diagram-natural-size') };
                 }));
             }
             """);
@@ -82,7 +84,7 @@ public class ZoomKeptOnRedrawTests : PlaywrightTestBase
                 var c = document.querySelector('[data-diagram-type="plantuml"]');
                 if (document.contains(window.__before) || c._noteRendering) return false;
                 var parts = Array.from(c.querySelectorAll(':scope > .puml-fragment'));
-                return (parts.length ? parts : [c]).every(b => b.querySelector(':scope > svg') && b.querySelector(':scope > .diagram-zoom-controls'));
+                return (parts.length ? parts : [c]).every(b => b.querySelector(':scope > svg')) && !!c.querySelector(':scope > .diagram-zoom-controls');
             }
             """, null, new() { Timeout = 60000, PollingInterval = 200 });
         await TwoAnimationFramesAsync(Page);
@@ -119,7 +121,8 @@ public class ZoomKeptOnRedrawTests : PlaywrightTestBase
         AssertKept(boxes[0], level);
     }
 
-    // Expanded, the note makes the diagram tall enough to be drawn in parts: each part takes the diagram's zoom.
+    // Expanded, the note makes the diagram tall enough to be drawn in parts: each part is drawn at the diagram's zoom,
+    // which stays on the diagram (5.7.0; from 5.2.3 the zoom moved to the parts, each its own).
     [Fact]
     public async Task Expanding_a_note_that_has_the_diagram_drawn_in_parts_gives_each_part_the_diagrams_zoom()
     {
@@ -131,9 +134,8 @@ public class ZoomKeptOnRedrawTests : PlaywrightTestBase
         var boxes = await BoxesAsync();
         Assert.True(boxes.Length >= 2, $"the expanded note has the diagram drawn in parts ({boxes.Length})");
         Assert.All(boxes, b => AssertKept(b, level));
-        Assert.False(await Page.EvaluateAsync<bool>(
-            "() => document.querySelector('[data-diagram-type=\"plantuml\"]').classList.contains('diagram-natural-size')"),
-            "the zoom moved to the parts: the diagram itself is not marked zoomed");
+        Assert.Equal(0, await Page.EvaluateAsync<int>(
+            "() => document.querySelectorAll('[data-diagram-type=\"plantuml\"] .puml-fragment.diagram-natural-size, [data-diagram-type=\"plantuml\"] .puml-fragment > .diagram-zoom-controls').length"));
     }
 
     // A report control draws again the diagrams of closed scenarios too, and a box that is not laid out measures nothing:
@@ -229,7 +231,7 @@ public class ZoomKeptOnRedrawTests : PlaywrightTestBase
 
     // Three participants and a note too wide for the page: zoomed, then drawn again with the note folded to its preview,
     // the diagram fits its box and takes no zoom (5.2.5: 5.2.3 gave the new picture the zoom it could no longer have, and
-    // a drag over it panned it, so its text could not be selected). A part drawn again the same way goes the same road.
+    // a drag over it panned it, so its text could not be selected). Its slider stands at 100 (5.7.0: it had none).
     [Fact]
     public async Task A_diagram_drawn_again_to_fit_its_box_takes_no_zoom()
     {
@@ -251,22 +253,23 @@ public class ZoomKeptOnRedrawTests : PlaywrightTestBase
             () => {
                 var c = document.querySelector('[data-diagram-type="plantuml"]');
                 return JSON.stringify({ fits: c.querySelector(':scope > svg').getBoundingClientRect().width <= c.clientWidth,
-                    slider: !!c.querySelector(':scope > .diagram-zoom-controls'), zoomed: c.classList.contains('diagram-natural-size'),
+                    slider: (c.querySelector(':scope > .diagram-zoom-controls .diagram-zoom-slider') || { value: 'none' }).value, zoomed: c.classList.contains('diagram-natural-size'),
                     cursor: c.style.cursor, overflow: c.style.overflowX });
             }
             """));
         Assert.True(box.GetProperty("fits").GetBoolean(), "folded, the note leaves a diagram that fits its box");
-        Assert.False(box.GetProperty("slider").GetBoolean(), "a diagram that fits its box has no zoom slider");
+        Assert.Equal("100", box.GetProperty("slider").GetString()); // a diagram that fits has its slider at 100 since 5.7.0, none before
         Assert.False(box.GetProperty("zoomed").GetBoolean(), "a diagram that fits its box is not marked zoomed");
         Assert.Equal("", box.GetProperty("cursor").GetString());
         Assert.Equal("", box.GetProperty("overflow").GetString());
     }
 
-    // A diagram in parts goes back to one part (the Details choice from expanded to truncated): the selected last part is
-    // gone, and the selection goes to the part in its place (5.2.5: 5.2.3 left it on the part taken off the page, and
-    // Ctrl with + or - went nowhere).
+    // A diagram in parts goes back to one picture (the Details choice from expanded to truncated): a click on its last
+    // part selected the diagram, and the diagram stays selected (5.7.0: a click selected the part, and from 5.2.5 the
+    // selection went to the part in its place; 5.2.3 left it on the part taken off the page, and Ctrl with + or - went
+    // nowhere).
     [Fact]
-    public async Task The_selection_on_a_part_a_redraw_takes_away_goes_to_the_last_part_in_its_place()
+    public async Task The_selected_diagram_stays_selected_when_a_redraw_takes_its_parts_away()
     {
         await OpenAsync("ZoomKeptSelection.html", noteLines: 900);
         await RedrawAsync("() => window._setReportDetails('expanded')");
@@ -274,22 +277,22 @@ public class ZoomKeptOnRedrawTests : PlaywrightTestBase
         Assert.True(parts.Length >= 2, $"the expanded note has the diagram drawn in parts ({parts.Length})");
         var (x, y) = await PointInBoxAsync(parts.Length - 1);
         await Page.Mouse.ClickAsync(x, y);
-        Assert.True(await Page.EvaluateAsync<bool>(
-            "() => { var p = document.querySelectorAll('[data-diagram-type=\"plantuml\"] > .puml-fragment'); return p[p.length - 1].classList.contains('diagram-selected'); }"));
+        const string diagramSelected = """
+            () => {
+                var c = document.querySelector('[data-diagram-type="plantuml"]');
+                return c.classList.contains('diagram-selected') && document.querySelectorAll('.diagram-selected').length === 1;
+            }
+            """;
+        Assert.True(await Page.EvaluateAsync<bool>(diagramSelected), "a click on a part selects the diagram");
 
         // the Details choice, set as its control sets it without the click (a click outside a diagram unselects it)
         await RedrawAsync("() => window._setReportDetails('truncated')");
 
-        Assert.True(await Page.EvaluateAsync<bool>("""
-            () => {
-                var s = document.querySelector('.diagram-selected'), p = document.querySelectorAll('[data-diagram-type="plantuml"] > .puml-fragment');
-                return !!s && s === p[p.length - 1];
-            }
-            """), "the part in the selected part's place is selected");
+        Assert.True(await Page.EvaluateAsync<bool>(diagramSelected), "drawn again, the diagram is still selected");
         var before = (await BoxesAsync()).Last().Level;
         for (var i = 0; i < 3; i++) await Page.Keyboard.PressAsync("Control+=");
         await TwoAnimationFramesAsync(Page);
-        Assert.True((await BoxesAsync()).Last().Level > before + 1, "the keys zoom the selected part");
+        Assert.True((await BoxesAsync()).Last().Level > before + 1, "the keys zoom the selected diagram");
     }
 
     // A selected diagram taken off the page (a popup's closed, a part drawn again away): Ctrl with + or - zoomed the box

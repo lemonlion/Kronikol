@@ -4,6 +4,128 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.7.0] - 2026-10-24
+
+The minor part moves (5.6.1 to 5.7.0): every drawn diagram zooms, a diagram that fits its box zooms out, and a diagram
+drawn in parts acts as one diagram with its parts lined up. That is new behaviour of a report control and a new diagram
+feature (`plans/ZOOM_EVERY_DIAGRAM_PLAN.md` R0, R1 and R2, shipped as one release at the owner's ask). The release also
+fixes four zoom bugs (R0), and a bug in how a long diagram is cut into parts.
+
+### Added
+
+- **Every drawn diagram has a zoom slider.** Until 5.7.0 only a picture wider than its box had one. A picture wider
+  than its box's content runs from the level it is drawn at (its fit level) to 100% and starts at its fit level, as
+  before. A picture that fits runs from 50% to 100% and starts at 100%. The 50% floor is one constant, not an option.
+  Ctrl with the mouse wheel, or a trackpad pinch in Chromium and Firefox, over any drawn diagram zooms that diagram and
+  is kept from the browser, also at either end of its range. Ctrl and + or - zoom the selected diagram. A step is 5% of
+  the range, at least 1 point. A diagram zoomed out stands in the middle of its box at its natural size times the
+  level, with no scroll, no grab cursor and no pan, and its text can be selected. Drawn again, a diagram keeps a
+  zoomed-in level only while its new picture is still wider than its box, and a zoomed-out level only while it still
+  fits; otherwise it starts where a new diagram starts. The internal-flow popup's activity diagrams have a slider too.
+  Copy and Save as PNG or SVG of a zoomed-out diagram give its natural size, as for a zoomed-in one.
+- **A diagram drawn in parts is one diagram.** A diagram taller than `BrowserFragmentMaxHeight` is still drawn in parts,
+  one picture under the other, but:
+  - it has one slider and one level, on its box. It is wide when any part is wider than the box, and its fit level is
+    then the one that lets its widest part fit. Its parts zoom and pan together. A notch resizes the parts within a
+    window's height of the screen at once and the rest one a frame after, keeping the reader's place;
+  - a click on any part selects the whole diagram, and the ring goes round all of it;
+  - Copy, Save and Open as PNG or SVG give the whole diagram as one picture. Each part is placed as the page places it,
+    its ids are made its own, and the picture carries one `<?plantuml-src ...?>` with the diagram's own source, encoded
+    as PlantUML encodes one (none in a browser without `CompressionStream`). A PNG is drawn at the largest scale up to
+    2 that a browser's canvas holds. A diagram too long even at its own size gives the part under the click, and its
+    PNG items say so ("Copy part 3 of 15 as PNG"). Until every part is drawn the picture items are left out;
+  - every part but the last is drawn without its footbox (the participants drawn again under its last message), so
+    the diagram ends once, and each part keeps its heads;
+  - only the first part not yet drawn shows the "Rendering diagram" placeholder, and the parts after it take no room
+    until drawn. A 15-part diagram opened as a column of 15 grey boxes.
+- **The parts of a diagram stand in line.** The engine lays out each part on its own, so a participant stood at a
+  different place in each part. The page now draws an outline of the whole diagram first: its participants and, for
+  each kind of message, the one with the widest label and the one with the widest note. It then draws every part with
+  one row of hidden messages after the participants, each labelled with a space as wide as its gap needs
+  (`<space:N>`, which draws nothing), and places each part across by its first lifeline. The row stops the numbering
+  around it, so every message keeps its number. Once every part is drawn, the page checks that the parts' gaps agree to
+  a pixel and draws them again from their own gaps where they do not. Measured on the consumer report the plan used
+  (40 diagrams in parts): every gap within 0.98 px of its target, the parts agreeing to 0.00 px, each part 23 px
+  taller, and the outline drawn in 16 ms at the median (78 ms at most). A diagram lined up is as wide as the same
+  diagram drawn whole: no wider than its widest part for 24 of the 39 diagrams that can be drawn whole, and up to 12.2%
+  wider for 11, whose text is drawn that much smaller at their fit level.
+- The lines the page adds to draw a diagram in parts (`hide footbox`, the row) go only to the engine. The menu's Copy
+  and Open source items, a note's current text, the search and a copied picture's source all read the diagram as
+  written.
+
+### Changed
+
+- Over a drawn diagram, Ctrl with the wheel or a pinch no longer zooms the page. Elsewhere in the report, and through
+  the browser's own zoom (its menu, Ctrl and 0), the page zooms as before.
+- A diagram in parts is drawn at one level, so parts drawn at full size until 5.6.1 can be drawn smaller, at the level
+  that lets its widest part fit.
+- A zoomed diagram's grab cursor, and its grabbing cursor while dragged, show on the picture under the pointer. Written
+  on the diagram's box, both inherited properties restyled every element of every part on each change: 55 ms a change
+  on a diagram of 17 parts, which the first zoom step paid.
+
+### Fixed
+
+- **The fit is measured against the box's content width (B1).** It was measured against the whole box, its padding
+  included, so a picture a little wider than the content was drawn scaled down with no slider, and a wider picture's
+  slider started above the level the picture was drawn at.
+- **A zoom keeps the point under the pointer in place down the page (B2).** Only its place across was kept: zooming a
+  long diagram slid what was under the pointer up or down by the height the picture gained or lost above it. The
+  browser's own scroll anchoring is held off for the moment of the change, so the two never add up.
+- **A part's first zoom step keeps its place across (B3).** The box was given its scroll after the scroll was set, so the
+  first step lost it.
+- **The slider follows the window down a tall diagram (B4).** Its sticky style never took effect inside the box that
+  scrolls across, so in the middle of a long diagram the slider stayed at the diagram's top, out of reach. The slider
+  of the diagram under the pointer and of the selected one now moves down the box with the window, below the report's
+  bar.
+- **A diagram's zoom slider shows while it has the keyboard focus.** It showed only under the pointer or on a selected
+  diagram, but Tab reached it all the same, so a keyboard user's focus went to a control they could not see. Every drawn
+  diagram has a slider now, so Tab reaches one on every diagram, before the diagram's links.
+- **Participants declared in a `box` are declared in every part of a long diagram.** A `box` line ended the header the
+  splitter copies into each part, so every part after the first declared no participant, drew only the participants
+  its own messages named, in the order it met them, and lost the box.
+
+### Tests
+
+- New: `FittingDiagramZoomTests` (a diagram that fits: its slider, the wheel and keys at either end, zoomed out with no
+  pan and its text selectable, a zoomed-out level kept by every kind of redraw and dropped when the picture comes back
+  wide, the PNG at its natural size, the component diagram page, the internal-flow popup), `DiagramInPartsAsOneTests`
+  (one selection, the whole-diagram SVG with its parts' ids made their own and one source that decodes to the
+  diagram's, the PNG at twice its size and the part under the click for one too long, the footbox on the last part
+  only, one placeholder, highlighted text across parts), `PartsZoomDrawingTests` (a first drawing lowering the level
+  once, keeping the reader's place; a notch on 17 parts within its budget and every part at the new level within a
+  second) and `LinedUpPartsTests` (every lifeline at one place in every part, with a control drawn without lining up;
+  the row draws nothing and adds only its height; numbers kept; no source a reader copies, opens or reads holds a line
+  the page added; a redraw in parts lines up and one picture has no row; the second drawing from the parts' gaps; the
+  fit level; a toggle bench on 15 parts within 5%; the width of the diagram drawn whole to a pixel a gap; a `box`, no
+  `as`, `create` and a gap wider than 2,000 px). `SplitDiagramZoomTests` is rewritten for one zoom per diagram, and
+  `GradualZoomTests` gains R0's four facts. Facts that pinned the old behaviour are turned round: a diagram that fits
+  has a slider at 100 (`DiagramZoomTests`, `GradualZoomTests`), no part has a slider of its own
+  (`ZoomKeptOnRedrawTests`, `ReportToggleResponsivenessTests`), and every slider read is anchored to its diagram, since
+  every diagram has one now. `FocusClearOfTheBarTests`' Tab from a scenario's settings reaches the diagram's slider,
+  shown, before its link. `NoteWidthFitTests`' fact for a first part narrower than the widest turns lining up off, as
+  lined-up parts are as wide as each other (1,247 and 1,248 px).
+- Fact 17 holds a notch to 50 ms or to what the browser takes to draw the part under the pointer one level larger,
+  measured in the fact, with a quarter more and 10 ms, whichever is more. On the consumer report's 15-part diagram a
+  notch paints in 50 to 55 ms, where the browser alone takes 33 to 42 ms for that part (about 4,400 elements: its
+  layout, pre-paint and paint), and just as long when the part is scaled by a `transform`, so the plan's fallback gains
+  nothing. On the fixture: 73 ms against 60 ms for the part alone, and every part at the new level within 0.7 s.
+- The toggle bench (`LinedUpPartsTests` fact 10) times a 15-part diagram's toggles on one page, lining up switched off
+  and on between them once every picture is in the page's cache, and compares the quicker half of each kind: two pages
+  timed against each other passed one run and failed the next. Three runs of it alone gave 1.00, 1.02 and 1.03 of the
+  toggle without lining up.
+- A mutation run (`plans/ZOOM_EVERY_DIAGRAM_PLAN.harness/mutate.js`, 32 mutations of the page scripts and stylesheet)
+  requires a failing fact for each. Nine survived its first run, and each now fails a fact: a fact's fixture now
+  exercises the case (a zoomed-out level above the new fit level, a note left of the first participant in a later part
+  only), a copy is held to one source in all, a mutation named the wrong fact, one as written changed nothing (the box
+  keeps its marks through a redraw, so it now removes the rule that gives a zoomed-out level back), and three facts are
+  new: a zoomed-out diagram drawn again is at its level in the first frame that shows the new picture; a diagram in
+  parts that is not lined up (no participant declared) takes its level from its widest part, a later one; and a notch
+  far down a diagram in parts keeps the point under the pointer while the parts far above it grow, one a frame. That
+  last fact found two faults in the new zoom, fixed before release: the window scrolls by whole pixels, so each part
+  resized after a notch lost a fraction of a pixel of the reader's place, 5 px over a long diagram, and one level past
+  the fit level a picture wider than its box's content but not its padding left the box nothing to scroll, so the point
+  under the pointer moved 6 px across.
+
 ## [5.6.1] - 2026-10-24
 
 The patch part moves (5.6.0 to 5.6.1): a fix, with nothing new to call or configure.

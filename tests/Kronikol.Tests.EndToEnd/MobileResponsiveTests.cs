@@ -278,12 +278,13 @@ public class MobileResponsiveTests : PlaywrightTestBase
         await ExpandFirstScenarioWithDiagram();
         await WaitForDiagramSvg();
 
+        // since 5.7.0 a diagram that fits has a slider too (plans/ZOOM_EVERY_DIAGRAM_PLAN.md): it is there, and hidden
+        await Page.WaitForFunctionAsync(
+            "() => !!document.querySelector('[data-diagram-type=plantuml]').querySelector(':scope > .diagram-zoom-controls')",
+            null, new() { Timeout = 15000, PollingInterval = 200 });
         var zoomControls = Page.Locator(".diagram-zoom-controls");
-        if (await zoomControls.CountAsync() > 0)
-        {
-            var display = await GetComputedStyle(zoomControls.First, "display");
-            Assert.Equal("none", display);
-        }
+        for (var i = 0; i < await zoomControls.CountAsync(); i++)
+            Assert.Equal("none", await GetComputedStyle(zoomControls.Nth(i), "display"));
     }
 
     // ── Context menu is bottom-sheet on mobile ──

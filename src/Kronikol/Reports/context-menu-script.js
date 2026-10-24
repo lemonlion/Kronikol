@@ -19,14 +19,12 @@
         return null;
     }
 
-    // What a zoom acts on: the part under the pointer when the page draws a long diagram in parts (.puml-fragment, each
-    // its own picture inside the diagram's container), else the diagram's container. Each part zooms on its own; until
-    // 5.2.2 every zoom on a diagram in parts went to its container, and so to its first part's picture.
+    // What a click, a zoom and a pan act on: the diagram's container, for a long diagram the page draws in parts
+    // (.puml-fragment, each its own picture inside the container) as for one drawn whole. A diagram in parts is one
+    // diagram (plans/ZOOM_EVERY_DIAGRAM_PLAN.md Z8, Z13, 5.7.0): from 5.2.2 each part zoomed and was selected on its own,
+    // and until 5.2.2 every zoom on it went to its first part's picture.
     function zoomBoxOf(el) {
-        var container = findDiagramContainer(el);
-        if (!container) return null;
-        var part = el.closest ? el.closest('.puml-fragment') : null;
-        return part && container.contains(part) ? part : container;
+        return findDiagramContainer(el);
     }
 
     function ownSlider(box) {
@@ -99,6 +97,8 @@
 
     function lookClone(svg) {
         var clone = svg.cloneNode(true);
+        // the page's zoom and placing of the picture are not the picture's: a copy is at its natural size (Z9)
+        ['width', 'max-width', 'margin-left', 'margin-right'].forEach(function(p) { clone.style.removeProperty(p); });
         var from = svg.querySelectorAll('*'), to = clone.querySelectorAll('*');
         if (from.length !== to.length || !window.getComputedStyle) return { svg: withoutScrollBoxes(clone), ground: null };
         var root = document.documentElement, theme = root.getAttribute('data-theme');
@@ -205,15 +205,25 @@
         return '#ffffff';
     }
 
+    // A browser draws a canvas of at most 32,767 px a side and 268,435,456 px in all (Chromium; Firefox and Safari on a
+    // computer take at least as much). A PNG is drawn at twice the picture's natural size, or at the largest scale under
+    // that which fits (plans/ZOOM_EVERY_DIAGRAM_PLAN.md Q10, 5.7.0): until then a picture too large drew nothing.
+    var CANVAS_SIDE = 32767, CANVAS_AREA = 268435456;
+    function canvasScaleFor(w, h) {
+        if (!(w > 0 && h > 0)) return 2;
+        return Math.min(2, CANVAS_SIDE / w, CANVAS_SIDE / h, Math.sqrt(CANVAS_AREA / (w * h)));
+    }
+
+    // `svg` is a drawn picture, or the whole picture of a diagram in parts ({ svg, ground }, wholeSvg).
     function svgToCanvas(svg, callback) {
-        var svgData = serializeSvg(svg);
+        var svgData = serializeSvg(svg.svg || svg);
         var url = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
         var img = new Image();
-        var scale = 2;
         img.onload = function() {
+            var scale = canvasScaleFor(img.naturalWidth, img.naturalHeight);
             var canvas = document.createElement('canvas');
-            canvas.width = img.naturalWidth * scale;
-            canvas.height = img.naturalHeight * scale;
+            canvas.width = Math.floor(img.naturalWidth * scale);
+            canvas.height = Math.floor(img.naturalHeight * scale);
             var ctx = canvas.getContext('2d');
             ctx.scale(scale, scale);
             ctx.drawImage(img, 0, 0);
@@ -223,7 +233,8 @@
     }
 
     function svgToCanvasWithBg(svg, callback) {
-        var look = svg.isConnected ? lookClone(svg) : null;
+        var look = svg.svg ? svg : svg.isConnected ? lookClone(svg) : null;
+        if (svg.svg) svg = svg.svg;
         var bg = look && look.ground ? look.ground : getBackgroundColor(svg);
         var clone = look ? look.svg : svg.cloneNode(true);
         var vb = clone.getAttribute('viewBox');
@@ -245,17 +256,134 @@
         var svgData = serializeSvg(clone);
         var url = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
         var img = new Image();
-        var scale = 2;
         img.onload = function() {
+            var scale = canvasScaleFor(img.naturalWidth, img.naturalHeight);
             var canvas = document.createElement('canvas');
-            canvas.width = img.naturalWidth * scale;
-            canvas.height = img.naturalHeight * scale;
+            canvas.width = Math.floor(img.naturalWidth * scale);
+            canvas.height = Math.floor(img.naturalHeight * scale);
             var ctx = canvas.getContext('2d');
             ctx.scale(scale, scale);
             ctx.drawImage(img, 0, 0);
             callback(canvas);
         };
         img.src = url;
+    }
+
+    // A diagram's source as PlantUML encodes it into a picture's <?plantuml-src ...?>: raw deflate, then PlantUML's own 64
+    // characters. Null where the browser cannot compress (no CompressionStream): the picture is then copied with no source.
+    var PLANTUML_64 = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_';
+    function encodeSource(text) {
+        if (typeof CompressionStream !== 'function' || typeof ReadableStream !== 'function') return Promise.resolve(null);
+        try {
+            var bytes = new TextEncoder().encode(text);
+            var stream = new ReadableStream({ start: function(c) { c.enqueue(bytes); c.close(); } })
+                .pipeThrough(new CompressionStream('deflate-raw'));
+            return new Response(stream).arrayBuffer().then(function(buf) {
+                var b = new Uint8Array(buf), out = '';
+                for (var i = 0; i < b.length; i += 3) {
+                    var b1 = b[i], b2 = i + 1 < b.length ? b[i + 1] : 0, b3 = i + 2 < b.length ? b[i + 2] : 0;
+                    out += PLANTUML_64.charAt(b1 >> 2) + PLANTUML_64.charAt(((b1 & 3) << 4) | (b2 >> 4))
+                        + PLANTUML_64.charAt(((b2 & 15) << 2) | (b3 >> 6)) + PLANTUML_64.charAt(b3 & 63);
+                }
+                return out;
+            }, function() { return null; });
+        } catch (e) {
+            return Promise.resolve(null);
+        }
+    }
+
+    // A part's ids made its own: two parts' pictures can use the same id, and a reference within a part goes to its own.
+    function prefixIds(root, prefix) {
+        var ids = {};
+        [root].concat(Array.prototype.slice.call(root.querySelectorAll('[id]'))).forEach(function(e) {
+            if (!e.id) return;
+            ids[e.id] = prefix + e.id;
+            e.id = prefix + e.id;
+        });
+        Array.prototype.forEach.call(root.querySelectorAll('*'), function(e) {
+            for (var a = 0; a < e.attributes.length; a++) {
+                var at = e.attributes[a], v = at.value;
+                if (v.indexOf('#') < 0) continue;
+                var nv = v.replace(/url\(\s*['"]?#([^)'"\s]+)['"]?\s*\)/g, function(m, id) { return ids[id] ? 'url(#' + ids[id] + ')' : m; });
+                if (at.localName === 'href' && nv.charAt(0) === '#' && ids[nv.slice(1)]) nv = '#' + ids[nv.slice(1)];
+                if (nv !== v) at.value = nv;
+            }
+        });
+    }
+
+    // The engine writes the source it was given into each picture, drawn into the page as a comment; a part's holds the
+    // lines the page added to draw it (Z12)
+    function withoutSourceComments(root) {
+        var walker = document.createTreeWalker(root, NodeFilter.SHOW_COMMENT), found = [], c;
+        while ((c = walker.nextNode())) if (/^\?plantuml-src\b/.test(c.data)) found.push(c);
+        found.forEach(function(n) { n.parentNode.removeChild(n); });
+        return root;
+    }
+
+    // The size of a diagram in parts drawn whole at its natural size: its widest part as the parts stand, and every part's
+    // height together.
+    function wholeSizeOf(container) {
+        var w = 0, h = 0;
+        drawnPartsOf(container).forEach(function(part) {
+            var s = getSvg(part), vb = s.viewBox && s.viewBox.baseVal;
+            var pw = (s.width.baseVal && s.width.baseVal.value) || (vb && vb.width) || 0;
+            var ph = (s.height.baseVal && s.height.baseVal.value) || (vb && vb.height) || 0;
+            w = Math.max(w, pw + shiftOf(s));
+            h += ph;
+        });
+        return { w: w, h: h };
+    }
+
+    // One picture of a diagram in parts (Z13): every part's picture in order, at its natural size, each placed across as
+    // the page places it at full size (lined up by its shift, else in the middle), each part's ids its own, the parts'
+    // own sources left out and one for the diagram's own (`encoded`), as a diagram drawn whole carries.
+    function wholeSvg(container, encoded) {
+        var NS = 'http://www.w3.org/2000/svg';
+        var parts = drawnPartsOf(container), size = wholeSizeOf(container);
+        var lined = parts.some(function(p) { return typeof p._kShift === 'number'; });
+        var out = document.createElementNS(NS, 'svg'), y = 0, ground = null;
+        out.setAttribute('xmlns', NS);
+        out.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
+        parts.forEach(function(part, i) {
+            var svg = getSvg(part), look = lookClone(svg), clone = withoutSourceComments(look.svg);
+            if (!ground) ground = look.ground;
+            var vb = svg.viewBox && svg.viewBox.baseVal;
+            var w = (svg.width.baseVal && svg.width.baseVal.value) || (vb && vb.width) || 0;
+            var h = (svg.height.baseVal && svg.height.baseVal.value) || (vb && vb.height) || 0;
+            prefixIds(clone, 'p' + (i + 1) + '-');
+            // the page's zoom and placing, which a copy at the natural size does not carry
+            ['width', 'max-width', 'margin-left', 'margin-right', 'display', 'margin-inline'].forEach(function(p) { clone.style.removeProperty(p); });
+            clone.setAttribute('x', String(lined ? shiftOf(svg) : (size.w - w) / 2));
+            clone.setAttribute('y', String(y));
+            clone.setAttribute('width', String(w));
+            clone.setAttribute('height', String(h));
+            out.appendChild(clone);
+            y += h;
+        });
+        out.setAttribute('width', String(size.w));
+        out.setAttribute('height', String(y));
+        out.setAttribute('viewBox', '0 0 ' + size.w + ' ' + y);
+        if (encoded) out.insertBefore(document.createProcessingInstruction('plantuml-src', encoded), out.firstChild);
+        return { svg: out, ground: ground };
+    }
+
+    // What the picture items of the menu act on (Z13, Q10). A diagram drawn whole: its picture. A diagram in parts: the
+    // whole diagram, its source encoded as the menu opens so that an item copies at once; until every part is drawn the
+    // items are left out. One too long for a canvas even at its own size: its PNG items give the part under the click.
+    function pictureOf(container, svg) {
+        var all = container.querySelectorAll(':scope > .puml-fragment:not(.puml-fragment-new)');
+        if (!all.length) return { ready: true, svgOf: function() { return svg; }, pngOf: function() { return svg; }, asPng: 'as PNG' };
+        var drawn = drawnPartsOf(container), encoded = null;
+        if (drawn.length !== all.length) return { ready: false };
+        encodeSource(getSource(container)).then(function(e) { encoded = e; });
+        var size = wholeSizeOf(container), part = svg.closest ? svg.closest('.puml-fragment') : null;
+        var tooLong = canvasScaleFor(size.w, size.h) < 1 && part && container.contains(part);
+        return {
+            ready: true,
+            svgOf: function() { return wholeSvg(container, encoded).svg; },
+            pngOf: function() { return tooLong ? svg : wholeSvg(container, encoded); },
+            asPng: tooLong ? 'part ' + (Array.prototype.indexOf.call(all, part) + 1) + ' of ' + all.length + ' as PNG' : 'as PNG'
+        };
     }
 
     function htmlToCanvas(element, callback) {
@@ -783,18 +911,24 @@
 
         if (svg) {
             // Full SVG menu — grouped into submenus
+            // A diagram drawn in parts is one picture (plans/ZOOM_EVERY_DIAGRAM_PLAN.md Z13, 5.7.0): its picture items copy,
+            // save and open every part's picture as one, with one source, and are left out until every part is drawn, as
+            // for a box with no picture. Too long for a canvas even at its own size, its PNG items give the part under the
+            // click and say which (Q10). Until 5.7.0 they gave the part under the click.
+            var picture = pictureOf(container, svg);
+            var svgOf = picture.svgOf, pngOf = picture.pngOf, asPng = picture.asPng;
             // A PNG reaches the clipboard only where the page can copy an image (window.canCopyImagesToClipboard): not on a
             // report served over plain http from another machine. Copy as SVG is text, copied everywhere.
-            menu.appendChild(createSubMenu('Copy image', (window.canCopyImagesToClipboard ? [
-                createMenuItem('Copy as PNG', function() {
-                    svgToCanvas(svg, function(canvas) {
+            if (picture.ready) menu.appendChild(createSubMenu('Copy image', (window.canCopyImagesToClipboard ? [
+                createMenuItem('Copy ' + asPng, function() {
+                    svgToCanvas(pngOf(), function(canvas) {
                         canvas.toBlob(function(blob) {
                             navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
                         }, 'image/png');
                     });
                 }),
-                createMenuItem('Copy as PNG (no transparency)', function() {
-                    svgToCanvasWithBg(svg, function(canvas) {
+                createMenuItem('Copy ' + asPng + ' (no transparency)', function() {
+                    svgToCanvasWithBg(pngOf(), function(canvas) {
                         canvas.toBlob(function(blob) {
                             navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
                         }, 'image/png');
@@ -802,7 +936,7 @@
                 })
             ] : []).concat([
                 createMenuItem('Copy as SVG', function() {
-                    copyTextToClipboard(serializeSvg(svg));
+                    copyTextToClipboard(serializeSvg(svgOf()));
                 })
             ])));
             // The source the picture was composed from before a long payload's cap (5.4.0, Q4): the cap is how the page
@@ -826,9 +960,9 @@
                 }
             }
             menu.appendChild(createSeparator());
-            menu.appendChild(createSubMenu('Save image', [
-                createMenuItem('Save as PNG', function() {
-                    svgToCanvas(svg, function(canvas) {
+            if (picture.ready) menu.appendChild(createSubMenu('Save image', [
+                createMenuItem('Save ' + asPng, function() {
+                    svgToCanvas(pngOf(), function(canvas) {
                         canvas.toBlob(function(blob) {
                             var a = document.createElement('a');
                             a.href = URL.createObjectURL(blob);
@@ -838,8 +972,8 @@
                         }, 'image/png');
                     });
                 }),
-                createMenuItem('Save as PNG (no transparency)', function() {
-                    svgToCanvasWithBg(svg, function(canvas) {
+                createMenuItem('Save ' + asPng + ' (no transparency)', function() {
+                    svgToCanvasWithBg(pngOf(), function(canvas) {
                         canvas.toBlob(function(blob) {
                             var a = document.createElement('a');
                             a.href = URL.createObjectURL(blob);
@@ -850,7 +984,7 @@
                     });
                 }),
                 createMenuItem('Save as SVG', function() {
-                    var blob = new Blob([serializeSvg(svg)], { type: 'image/svg+xml' });
+                    var blob = new Blob([serializeSvg(svgOf())], { type: 'image/svg+xml' });
                     var a = document.createElement('a');
                     a.href = URL.createObjectURL(blob);
                     a.download = getDiagramFilename(container, 'svg');
@@ -858,17 +992,17 @@
                     URL.revokeObjectURL(a.href);
                 })
             ]));
-            menu.appendChild(createSubMenu('Open image in new tab', [
-                createMenuItem('Open as PNG image in new tab', function() {
+            if (picture.ready) menu.appendChild(createSubMenu('Open image in new tab', [
+                createMenuItem('Open ' + asPng + ' image in new tab', function() {
                     var tab = openTab();
-                    svgToCanvas(svg, function(canvas) { openPngInTab(tab, canvas); });
+                    svgToCanvas(pngOf(), function(canvas) { openPngInTab(tab, canvas); });
                 }),
-                createMenuItem('Open as PNG image (no transparency) in new tab', function() {
+                createMenuItem('Open ' + asPng + ' image (no transparency) in new tab', function() {
                     var tab = openTab();
-                    svgToCanvasWithBg(svg, function(canvas) { openPngInTab(tab, canvas); });
+                    svgToCanvasWithBg(pngOf(), function(canvas) { openPngInTab(tab, canvas); });
                 }),
                 createMenuItem('Open as SVG image in new tab', function() {
-                    openSvgInTab(serializeSvg(svg));
+                    openSvgInTab(serializeSvg(svgOf()));
                 })
             ]));
             if (source) {
@@ -974,6 +1108,7 @@
         }
         container.classList.add('diagram-selected');
         selectedDiagram = container;
+        followSoon();
     }
 
     function deselectDiagram() {
@@ -1004,6 +1139,13 @@
 
     // ── Zoom Helpers ──
 
+    // Every drawn diagram zooms (plans/ZOOM_EVERY_DIAGRAM_PLAN.md, 5.7.0). A picture wider than its box's content is
+    // "wide": its slider runs from the level that fits it to 100 and starts there. One no wider "fits": its slider runs
+    // from ZOOM_OUT_FLOOR to 100 and starts at 100. Until 5.7.0 only a wide picture had a slider, and Ctrl with the wheel
+    // over any other diagram was left to the browser, which zoomed the whole page.
+    // The floor is one constant, the owner's choice (Q1): text paints at 5.5 to 6.5 px there.
+    var ZOOM_OUT_FLOOR = 50;
+
     // The picture's width at its natural (unscaled) size. The engine writes it on the picture in pixels, and the page's
     // style sizes the picture by it, so it is read from there: drawing the picture at that size to measure it and back
     // laid out every word in it twice, about 40 ms on a long diagram, several times for each zoom slider (5.5.1). A
@@ -1023,195 +1165,354 @@
         return naturalW;
     }
 
-    // Get the natural (unscaled) SVG width
+    // A diagram the page draws in parts holds its parts as children; parts still being drawn by a redraw are hidden
+    // (.puml-fragment-new) and are not its parts until they replace the old ones: until then its pictures are the old
+    // parts, or the picture it was drawn whole in (5.2.5: asked meanwhile, it keeps its zoom for its new parts).
+    function hasParts(box) {
+        return !!box.querySelector(':scope > .puml-fragment:not(.puml-fragment-new)');
+    }
+
+    function drawnPartsOf(box) {
+        return Array.prototype.filter.call(box.querySelectorAll(':scope > .puml-fragment:not(.puml-fragment-new)'),
+            function(part) { return !!getSvg(part); });
+    }
+
+    // The pictures a box zooms: each drawn part's, in order, or its own.
+    function picturesOf(box) {
+        if (hasParts(box)) return drawnPartsOf(box).map(getSvg);
+        var svg = box.querySelector(':scope > svg');
+        return svg ? [svg] : [];
+    }
+
+    // Get the natural (unscaled) width of a box's picture: its widest part's, as the parts stand, for a diagram in parts
     function getNaturalWidth(container) {
+        var f = zoomFacts(container);
+        if (f) return f.width;
         var svg = getSvg(container);
-        if (!svg) return 0;
-        return naturalWidthOf(svg);
+        return svg ? naturalWidthOf(svg) : 0;
     }
 
-    // Check whether an SVG diagram is wider than its container (needs zoom)
-    function isDiagramZoomable(container) {
-        var svg = getSvg(container);
-        if (!svg) return false;
-        return naturalWidthOf(svg) > container.clientWidth + 1;
+    // The width a box draws its picture in: its own less its padding. A diagram's box has 1em of padding on each side
+    // (inline-svg-styles.css) and its picture is drawn no wider than what is left; until 5.7.0 the fit was measured
+    // against the whole box, so a picture a little wider than the content was drawn scaled down with no slider, and a
+    // wider one's slider started above the level it was drawn at (B1).
+    function contentWidthOf(box) {
+        var w = box.clientWidth;
+        if (!w) return 0;
+        var cs = window.getComputedStyle(box);
+        return w - (parseFloat(cs.paddingLeft) || 0) - (parseFloat(cs.paddingRight) || 0);
     }
 
-    // Calculate the fit-to-width zoom percentage
-    function getFitPercent(container) {
-        var svg = getSvg(container);
-        if (!svg) return 100;
-        var naturalW = naturalWidthOf(svg);
-        if (naturalW <= 0) return 100;
-        var pct = Math.round(container.clientWidth / naturalW * 100);
-        return Math.max(1, Math.min(pct, 100));
+    // How far right a lined-up part stands at full size, so that its lifelines are under the other parts'
+    // (plantuml-browser-render-script.js lines a diagram's parts up and gives each part its shift, 5.7.0).
+    function shiftOf(svg) {
+        var part = svg.parentElement;
+        return part && typeof part._kShift === 'number' ? part._kShift : 0;
+    }
+
+    // What the zoom rules read of a box, once per zoom: null when it has no picture, is not laid out, or a picture
+    // measures nothing. A diagram in parts is measured whole: its widest part, the parts placed as they stand (Z8).
+    function zoomFacts(box) {
+        var pics = picturesOf(box);
+        if (!pics.length) return null;
+        var cw = contentWidthOf(box);
+        if (cw <= 0) return null;
+        var naturals = [], width = 0;
+        for (var i = 0; i < pics.length; i++) {
+            var w = naturalWidthOf(pics[i]);
+            if (!(w > 0)) return null;
+            naturals.push(w);
+            width = Math.max(width, w + shiftOf(pics[i]));
+        }
+        var fitPct = Math.max(1, Math.min(100, Math.round(cw / width * 100)));
+        var wide = fitPct < 100;
+        return { pics: pics, naturals: naturals, parts: hasParts(box), cw: cw, width: width, wide: wide,
+            fit: wide ? cw / width : 1, fitPct: fitPct, min: wide ? fitPct : ZOOM_OUT_FLOOR, start: wide ? fitPct : 100 };
+    }
+
+    // The level a box shows when its slider is made or measured again: a level it was zoomed to is kept in its own
+    // direction only (Z7), moved into the new range: zoomed in, while its picture is still wide; zoomed out, while it
+    // still fits. Otherwise a wide picture starts at its fit level and one that fits at 100, so a diagram zoomed in and
+    // drawn again to fit comes back at full size (5.2.5), and one zoomed out and drawn again wider at its fit level.
+    function levelFor(box, f) {
+        var kept = box._zoomPercent;
+        if (kept && f.wide && box.classList.contains('diagram-natural-size')) return Math.max(f.min, Math.min(100, kept));
+        if (kept && !f.wide && box.classList.contains('diagram-zoomed-out')) return Math.max(f.min, Math.min(100, kept));
+        return f.start;
     }
 
     // Track last known cursor position per container
     document.addEventListener('mousemove', function(e) {
         var c = zoomBoxOf(e.target);
         if (c) { c._lastCursorX = e.clientX; c._lastCursorY = e.clientY; }
+        if (c !== hoveredBox) { hoveredBox = c; followSoon(); }
     });
 
-    // Apply zoom level (0-100) to a container, optionally preserving a point under cursor
+    // The browser keeps what is on screen in place when something above it changes size (scroll anchoring), except in
+    // Safari. A zoom keeps the reader's place itself (Z6), so the browser's own adjustment is held off from the change to
+    // the frame after, or the two would add up.
+    var anchoringHeld = 0;
+    function holdScrollAnchoring() {
+        var root = document.documentElement;
+        if (!anchoringHeld++) root.style.overflowAnchor = 'none';
+        requestAnimationFrame(function() {
+            setTimeout(function() { if (!--anchoringHeld) root.style.overflowAnchor = ''; }, 0);
+        });
+    }
+
+    // The reader's place before a zoom: the point of a picture under the pointer, as a fraction of the picture; with no
+    // pointer over the box, what is in the middle of the window (a picture's point, or the element there).
+    function placeBefore(box, pics, x, y) {
+        if (typeof x !== 'number' || typeof y !== 'number') {
+            x = window.innerWidth / 2;
+            y = window.innerHeight / 2;
+            var r0 = box.getBoundingClientRect();
+            if (r0.bottom < 0 || r0.top > window.innerHeight) {
+                // a box above the window moves what is on screen by the height it gains
+                return r0.bottom < 0 ? { el: box, bottom: r0.bottom } : null;
+            }
+        }
+        for (var i = 0; i < pics.length; i++) {
+            var r = pics[i].getBoundingClientRect();
+            if (y >= r.top && y <= r.bottom && r.width > 0 && r.height > 0)
+                return { svg: pics[i], fx: (x - r.left) / r.width, fy: (y - r.top) / r.height, x: x, y: y };
+        }
+        var el = document.elementFromPoint(x, y);
+        return el && !box.contains(el) ? { el: el, top: el.getBoundingClientRect().top } : null;
+    }
+
+    // Puts the reader's place back: down the page by the window's scroll, across by the box's while it scrolls.
+    // Returns what of the move down the page the window could not make: it scrolls by whole pixels, so the parts resized
+    // one a frame after a notch carry it from one to the next (carried), or the reader's place drifted by up to a pixel a
+    // part, 5 px over a long diagram.
+    function keepPlace(box, place, across, carried) {
+        if (!place) return 0;
+        var dx = 0, dy;
+        if (place.svg) {
+            var r = place.svg.getBoundingClientRect();
+            dx = r.left + place.fx * r.width - place.x;
+            dy = r.top + place.fy * r.height - place.y;
+        } else if (typeof place.bottom === 'number') {
+            dy = place.el.getBoundingClientRect().bottom - place.bottom;
+        } else {
+            dy = place.el.getBoundingClientRect().top - place.top;
+        }
+        if (across && Math.abs(dx) > 0.5) box.scrollLeft = Math.max(0, box.scrollLeft + dx);
+        dy += carried || 0;
+        if (Math.abs(dy) <= 0.5) return dy;
+        var was = window.scrollY;
+        window.scrollBy(0, dy);
+        return dy - (window.scrollY - was);
+    }
+
+    // The marks of a level: zoomed in past the fit level, the box scrolls across and pans (diagram-natural-size); zoomed
+    // out below 100, a picture that fits stands in the middle of its box with no scroll and no pan (diagram-zoomed-out, a
+    // mark with no style, Z5). The box is made to scroll before its scroll is set: a part's first step lost its place
+    // across when it was the other way round (B3).
+    function setZoomMarks(box, zoomedIn, zoomedOut) {
+        box.classList.toggle('diagram-natural-size', zoomedIn);
+        box.classList.toggle('diagram-zoomed-out', zoomedOut);
+        box.style.overflowX = zoomedIn ? 'auto' : '';
+        box.style.overflowY = '';
+    }
+
+    function sizeWhole(svg, natural, percent, scale, zoomedIn, zoomedOut) {
+        if (zoomedIn) {
+            svg.style.maxWidth = 'none';
+            svg.style.width = percent >= 100 ? '' : (natural * scale) + 'px';
+        } else if (zoomedOut) {
+            svg.style.maxWidth = '100%';
+            svg.style.width = (natural * scale) + 'px';
+        } else {
+            svg.style.maxWidth = '100%';
+            svg.style.width = '';
+        }
+    }
+
+    // A diagram in parts is drawn at one level (Z8). Lined up, each part stands at its shift, the parts together in the
+    // middle of the box; otherwise each part stands in the middle on its own. At the fit level the widest part is drawn a
+    // hair narrower than the box, so that rounding never gives the box a scrollbar.
+    function partSizer(f, scale, zoomedIn) {
+        var lined = f.pics.some(function(svg) { return svg.parentElement && typeof svg.parentElement._kShift === 'number'; });
+        if (f.wide && !zoomedIn) scale = Math.max(0, f.cw - 0.5) / f.width;
+        var left = Math.max(0, (f.cw - f.width * scale) / 2);
+        return function(i) {
+            var svg = f.pics[i];
+            if (!svg.isConnected) return;
+            svg.style.maxWidth = zoomedIn ? 'none' : '100%';
+            svg.style.width = (f.naturals[i] * scale) + 'px';
+            svg.style.marginLeft = lined ? (left + shiftOf(svg) * scale) + 'px' : '';
+            svg.style.marginRight = lined ? '0' : '';
+        };
+    }
+
+    // The parts within a window's height of the screen are resized at once and the rest one a frame after: every part
+    // at once cost 191 ms on a diagram of 15 parts (M6). A part resized later keeps the reader's place, and a new level
+    // given meanwhile takes over the parts still to do.
+    // Which parts are near is read before anything is written: read between the writes, every part laid out again.
+    function nearParts(pics) {
+        var h = window.innerHeight;
+        return pics.map(function(svg) {
+            var r = svg.parentElement.getBoundingClientRect();
+            return r.bottom >= -h && r.top <= 2 * h;
+        });
+    }
+
+    function sizeParts(box, f, scale, zoomedIn, near) {
+        var size = partSizer(f, scale, zoomedIn), rest = [];
+        near = near || nearParts(f.pics);
+        for (var i = 0; i < f.pics.length; i++) {
+            if (near[i]) size(i); else rest.push(i);
+        }
+        box._zoomPending = rest.length ? { size: size, rest: rest, pics: f.pics } : null;
+        function step() {
+            box._zoomFrame = 0;
+            var pending = box._zoomPending;
+            if (!pending || !box.isConnected) { box._zoomPending = null; return; }
+            var k = pending.rest.shift();
+            holdScrollAnchoring();
+            var place = placeBefore(box, pending.pics);
+            pending.size(k);
+            // what the window could not scroll, a fraction of a pixel, at most a pixel (at the page's end it could not
+            // scroll at all)
+            pending.carried = Math.max(-1, Math.min(1, keepPlace(box, place, false, pending.carried)));
+            if (pending.rest.length) box._zoomFrame = requestAnimationFrame(step);
+            else box._zoomPending = null;
+        }
+        // the far parts start the frame after the near ones are painted: their first one, laid out in the frame the near
+        // ones were painted in, held that paint back by its own layout
+        if (rest.length && !box._zoomFrame) box._zoomFrame = requestAnimationFrame(function() { box._zoomFrame = requestAnimationFrame(step); });
+    }
+
+    // Apply a zoom level (the slider's percent) to a box, keeping the reader's place: the point under the pointer when
+    // one is given (the wheel, and the keys and the slider, from the last pointer position over the box), else what is
+    // in the middle of the window (Z6). The point was kept across only until 5.7.0, and moved down the page as the
+    // picture's height changed with its width (B2).
     function applyZoomLevel(container, percent, cursorClientX, cursorClientY) {
-        var svg = getSvg(container);
-        if (!svg) return;
-        var fitPct = getFitPercent(container);
-        percent = Math.max(fitPct, Math.min(100, percent));
-
-        // Get container rect
-        var cRect = container.getBoundingClientRect();
-
-        var naturalW = naturalWidthOf(svg);
-        var newWidth = naturalW * percent / 100;
-        var oldWidth = svg.getBoundingClientRect().width;
-
-        // Calculate zoom-to-point scroll adjustment
-        var viewportX = 0, scrollLeftBefore = container.scrollLeft;
-        if (typeof cursorClientX === 'number' && oldWidth > 0) {
-            viewportX = cursorClientX - cRect.left;
-            var svgFraction = (viewportX + container.scrollLeft) / oldWidth;
-            var newScrollLeft = svgFraction * newWidth - viewportX;
-
-            // Apply the new width
-            if (percent >= 100) {
-                svg.style.maxWidth = 'none';
-                svg.style.width = '';
-            } else if (percent <= fitPct) {
-                svg.style.maxWidth = '100%';
-                svg.style.width = '';
-            } else {
-                svg.style.maxWidth = 'none';
-                svg.style.width = newWidth + 'px';
-            }
-
-            // Set scroll after width change
-            container.scrollLeft = Math.max(0, newScrollLeft);
-        } else {
-            if (percent >= 100) {
-                svg.style.maxWidth = 'none';
-                svg.style.width = '';
-            } else if (percent <= fitPct) {
-                svg.style.maxWidth = '100%';
-                svg.style.width = '';
-            } else {
-                svg.style.maxWidth = 'none';
-                svg.style.width = newWidth + 'px';
-            }
-        }
-
-        // Update container overflow. The level is kept on the box: a diagram drawn again gets a new picture and a new
-        // slider, and the box gives the level back to them (5.2.3).
-        var isZoomed = percent > fitPct;
-        container._zoomPercent = isZoomed ? percent : undefined;
-        if (isZoomed) {
-            container.style.overflowX = 'auto';
-            container.style.overflowY = '';
-            container.style.cursor = 'grab';
-            container.classList.add('diagram-natural-size');
-        } else {
-            container.style.overflowX = '';
-            container.style.overflowY = '';
-            container.style.cursor = '';
-            container.classList.remove('diagram-natural-size');
-        }
+        var f = zoomFacts(container);
+        if (!f) return;
+        percent = Math.max(f.min, Math.min(100, Math.round(percent)));
+        var zoomedIn = f.wide && percent > f.fitPct;
+        var zoomedOut = !f.wide && percent < 100;
+        var scale = f.wide && !zoomedIn ? f.fit : percent / 100;
+        holdScrollAnchoring();
+        var place = placeBefore(container, f.pics, cursorClientX, cursorClientY);
+        var near = f.parts ? nearParts(f.pics) : null;
+        setZoomMarks(container, zoomedIn, zoomedOut);
+        if (f.parts) sizeParts(container, f, scale, zoomedIn, near);
+        else sizeWhole(f.pics[0], f.naturals[0], percent, scale, zoomedIn, zoomedOut);
+        keepPlace(container, place, zoomedIn);
+        // The level is kept on the box, either way: a diagram drawn again gets a new picture and a new slider, and the
+        // box gives the level back to them (5.2.3)
+        container._zoomPercent = zoomedIn || zoomedOut ? percent : undefined;
         // the place the box is left at with this level: a zoom that moves no scroll fires no scroll event (5.2.5)
-        container._lastScrollLeft = isZoomed ? container.scrollLeft : undefined;
-
-        // Update slider
+        container._lastScrollLeft = zoomedIn ? container.scrollLeft : undefined;
         var slider = ownSlider(container);
         if (slider) slider.value = String(percent);
     }
 
-
-
     // ── Zoom Controls (slider) ──
 
-    function addZoomButton(container) {
-        // A diagram drawn in parts zooms part by part, and its container has no picture of its own: the scroll observer
-        // or a redraw asking for the container's zoom gives each drawn part its own, and takes back any the container
-        // was given before it was drawn in parts. Parts still being drawn are hidden until they replace the picture, and
-        // take its zoom then: asked meanwhile, the diagram keeps it (5.2.5).
-        var parts = container.querySelectorAll(':scope > .puml-fragment:not(.puml-fragment-new)');
-        if (parts.length) {
-            var stale = container.querySelector(':scope > .diagram-zoom-controls');
-            if (stale) stale.remove();
-            dropZoom(container);
-            parts.forEach(function(part) { if (getSvg(part)) addZoomButton(part); });
-            return;
-        }
-        if (container.querySelector(':scope > .diagram-zoom-controls')) return;
-        var svg = getSvg(container);
-        // A picture that fits its box, or none, has no zoom: given the zoom of the picture before it (drawn again
-        // narrower, or a part of a diagram zoomed whole), it gives it back, or a drag over it panned it and its text could
-        // not be selected (5.2.5). A box not laid out measures nothing, and is asked again when it is.
-        if (!svg || !isDiagramZoomable(container)) {
-            if (container.clientWidth > 0) dropZoom(container);
+    // One slider for every drawn diagram, for a diagram in parts on its container (Z1, Z8). Asked again (a part drawn,
+    // a redraw), the slider takes the new range: a later part wider than those above it lowers the diagram's level once,
+    // keeping the reader's place.
+    function addZoomButton(el) {
+        var container = el.classList && el.classList.contains('puml-fragment') ? findDiagramContainer(el.parentElement) || el : el;
+        Array.prototype.forEach.call(container.querySelectorAll(':scope > .puml-fragment > .diagram-zoom-controls'), function(c) { c.remove(); });
+        var f = zoomFacts(container);
+        var controls = container.querySelector(':scope > .diagram-zoom-controls');
+        if (!f) {
+            // No picture, no zoom: a box that has one but measures nothing (not laid out) keeps its zoom and is asked
+            // again when it shows (5.5.3)
+            if (!picturesOf(container).length && !container.querySelector(':scope > .puml-fragment') && container.clientWidth > 0) {
+                if (controls) controls.remove();
+                dropZoom(container);
+            }
             return;
         }
         container.style.position = 'relative';
-
-        var controls = document.createElement('div');
-        controls.className = 'diagram-zoom-controls';
-
-        var fitPct = getFitPercent(container);
-        var slider = document.createElement('input');
-        slider.type = 'range';
-        slider.className = 'diagram-zoom-slider';
-        slider.min = String(fitPct);
-        slider.max = '100';
-        slider.value = container.classList.contains('diagram-natural-size') ? '100' : String(fitPct);
-        slider.title = 'Zoom level';
-        slider.addEventListener('input', function(e) {
-            e.stopPropagation();
-            var pct = parseInt(slider.value);
-            var cx = container._lastCursorX;
-            var cy = container._lastCursorY;
-            applyZoomLevel(container, pct, cx, cy);
-        });
-        slider.addEventListener('click', function(e) { e.stopPropagation(); });
-        controls.appendChild(slider);
-
-        container.prepend(controls);
-
-        // Restore zoom state on the new SVG after re-render
-        restoreZoomState(container);
+        var slider = controls && controls.querySelector('.diagram-zoom-slider');
+        if (!slider) {
+            controls = document.createElement('div');
+            controls.className = 'diagram-zoom-controls';
+            slider = document.createElement('input');
+            slider.type = 'range';
+            slider.className = 'diagram-zoom-slider';
+            slider.max = '100';
+            slider.title = 'Zoom level';
+            slider.addEventListener('input', function(e) {
+                e.stopPropagation();
+                applyZoomLevel(container, parseInt(slider.value), container._lastCursorX, container._lastCursorY);
+            });
+            slider.addEventListener('click', function(e) { e.stopPropagation(); });
+            controls.appendChild(slider);
+            container.prepend(controls);
+        }
+        var level = levelFor(container, f);
+        slider.min = String(f.min);
+        slider.value = String(level);
+        // a box across the middle of the window keeps what the reader sees there as its level changes
+        var r = container.getBoundingClientRect(), y = window.innerHeight / 2;
+        var reading = r.top < y && r.bottom > y;
+        applyZoomLevel(container, level, reading ? r.left + r.width / 2 : undefined, reading ? y : undefined);
+        // the place across a redraw kept, once the box is laid out (5.2.3)
+        if (typeof container._zoomScrollLeft === 'number') {
+            if (container.classList.contains('diagram-natural-size')) {
+                container.scrollLeft = container._zoomScrollLeft;
+                container._lastScrollLeft = container.scrollLeft;
+            }
+            container._zoomScrollLeft = undefined;
+        }
+        followSoon();
     }
 
     function dropZoom(box) {
         box.classList.remove('diagram-natural-size');
+        box.classList.remove('diagram-zoomed-out');
+        box.classList.remove('diagram-panning');
         box.style.overflowX = '';
-        box.style.cursor = '';
         box._zoomPercent = undefined;
         box._zoomScrollLeft = undefined;
         box._lastScrollLeft = undefined;
+        box._zoomPending = null;
     }
 
     // Re-apply zoom inline styles after SVG re-render (innerHTML replacement destroys them): the level the box was zoomed
-    // to and its place across the picture (5.2.3), once the box is laid out. A box that measures nothing is drawn at
-    // full size until its zoom slider is made, which restores it again.
+    // to, in its own direction, and its place across the picture (5.2.3), once the box is laid out. A box that measures
+    // nothing is drawn at its natural style until its zoom slider is made, which restores it again.
     function restoreZoomState(container) {
-        var svg = getSvg(container);
-        if (!svg) return;
-        if (container.classList.contains('diagram-natural-size')) {
-            if (container._zoomPercent && container.clientWidth > 0) {
-                applyZoomLevel(container, container._zoomPercent);
-                if (typeof container._zoomScrollLeft === 'number') {
-                    container.scrollLeft = container._zoomScrollLeft;
-                    container._lastScrollLeft = container.scrollLeft;
-                }
-                container._zoomScrollLeft = undefined;
-                return;
-            }
-            svg.style.maxWidth = 'none';
+        if (!picturesOf(container).length) return;
+        if (zoomFacts(container)) { addZoomButton(container); return; }
+        var zoomedIn = container.classList.contains('diagram-natural-size');
+        picturesOf(container).forEach(function(svg) { svg.style.maxWidth = zoomedIn ? 'none' : '100%'; });
+        if (zoomedIn) {
             container.style.overflowX = 'auto';
             container.style.overflowY = '';
-            container.style.cursor = 'grab';
-        } else {
-            svg.style.maxWidth = '100%';
         }
     }
+
+    // ── The slider follows the window down its box (B4, Z10) ──
+    // The controls are sticky, but the box's horizontal scroll makes the box their scroll box, which never scrolls down:
+    // in the middle of a tall diagram the slider stayed at the diagram's top, out of reach (until 5.7.0). The controls of
+    // the box under the pointer and of the selected one are moved down the box with the window, below the report's bar.
+    var hoveredBox = null, followFrame = 0;
+    function placeControls(box) {
+        var controls = box.querySelector(':scope > .diagram-zoom-controls');
+        if (!controls) return;
+        var r = box.getBoundingClientRect();
+        var bar = parseFloat(window.getComputedStyle(document.documentElement).getPropertyValue('--kron-nav-h')) || 0;
+        var top = parseFloat(window.getComputedStyle(controls).top) || 0;
+        var down = Math.max(0, Math.min(bar + 8 - (r.top + top), r.height - 2 * top - 24));
+        controls.style.transform = down > 0 ? 'translateY(' + Math.round(down) + 'px)' : '';
+    }
+    function followSoon() {
+        if (followFrame) return;
+        followFrame = requestAnimationFrame(function() {
+            followFrame = 0;
+            [hoveredBox, selectedDiagram].forEach(function(b) { if (b && b.isConnected) placeControls(b); });
+        });
+    }
+    window.addEventListener('scroll', followSoon, { passive: true });
 
     // ── Keyboard Zoom (Ctrl+Plus / Ctrl+Minus) ──
 
@@ -1275,8 +1576,8 @@
             downY = e.clientY;
             moved = false;
             scrollL = c.scrollLeft;
-            c.style.cursor = 'grabbing';
-            c.style.userSelect = 'none';
+            // the grabbing cursor and no selection, on the picture under the pointer (inline-svg-styles.css)
+            c.classList.add('diagram-panning');
             e.preventDefault();
         });
         document.addEventListener('mousemove', function(e) {
@@ -1289,8 +1590,7 @@
         document.addEventListener('mouseup', function() {
             if (!dragging) return;
             dragging = false;
-            dragContainer.style.cursor = 'grab';
-            dragContainer.style.userSelect = '';
+            dragContainer.classList.remove('diagram-panning');
             if (!moved) return;
             // the click comes in this same task, after the mouseup; when none comes (released over another element), the
             // listener goes with the next task
@@ -1302,12 +1602,13 @@
     window._addZoomButton = addZoomButton;
     // the zoom a diagram drawn again keeps, for one whose zoom slider waits until it is near the screen (5.1.1)
     window._restoreZoomState = restoreZoomState;
-    // A box's zoom across a redraw (5.2.2, the level and the place 5.2.3): `of` reads it while the old picture is still
-    // on the page (a box taken off the page reads no scroll), `give` hands it to the box drawn in its place (the same
-    // box, a new part, or each part of a diagram now drawn in parts), and `drop` takes it off a box that no longer zooms.
-    // A box that is not laid out (not displayed, as in a hidden panel or a closed scenario in Firefox) reads its scroll as
-    // 0, so `of` reads such a box's place from where it was last left: a scroll it has not been given back yet, else the
-    // last scroll seen while it was zoomed.
+    // A box's zoom across a redraw (5.2.2, the level and the place 5.2.3, the direction 5.7.0): `of` reads it while the
+    // old picture is still on the page (a box taken off the page reads no scroll), `give` hands it to the box drawn in its
+    // place, and `drop` takes it off a box that no longer zooms. A diagram in parts keeps its zoom on its container, as a
+    // diagram drawn whole does (Z8), so a redraw from whole to parts or back keeps it as it is. A box that is not laid out
+    // (not displayed, as in a hidden panel or a closed scenario in Firefox) reads its scroll as 0, so `of` reads such a
+    // box's place from where it was last left: a scroll it has not been given back yet, else the last scroll seen while
+    // it was zoomed.
     document.addEventListener('scroll', function(e) {
         var box = e.target;
         if (box.classList && box.classList.contains('diagram-natural-size') && box.clientWidth > 0) box._lastScrollLeft = box.scrollLeft;
@@ -1315,19 +1616,25 @@
 
     window._zoomState = {
         of: function(box) {
-            // Not zoomed, a box has no level or place to keep, and nothing of its layout is read: every diagram a control
-            // draws again is asked, and a box read far from the screen lays its scenario out (5.2.5).
-            if (!box.classList.contains('diagram-natural-size')) return { zoomed: false, selected: selectedDiagram === box };
+            // Zoomed neither way, a box has no level or place to keep, and nothing of its layout is read: every diagram a
+            // control draws again is asked, and a box read far from the screen lays its scenario out (5.2.5).
+            var out = box.classList.contains('diagram-zoomed-out');
+            if (!box.classList.contains('diagram-natural-size'))
+                return out ? { zoomed: false, out: true, percent: box._zoomPercent, selected: selectedDiagram === box }
+                    : { zoomed: false, out: false, selected: selectedDiagram === box };
             var place = box.clientWidth > 0 ? box.scrollLeft
                 : typeof box._zoomScrollLeft === 'number' ? box._zoomScrollLeft : box._lastScrollLeft || 0;
-            return { zoomed: box.classList.contains('diagram-natural-size'), percent: box._zoomPercent,
-                scrollLeft: place, selected: selectedDiagram === box };
+            return { zoomed: true, out: false, percent: box._zoomPercent, scrollLeft: place, selected: selectedDiagram === box };
         },
+        // the mark is given as it was taken, and applied by the slider in its own direction only (Z7)
         give: function(box, state) {
             if (state.zoomed) {
                 box.classList.add('diagram-natural-size');
                 box._zoomPercent = state.percent;
                 box._zoomScrollLeft = state.scrollLeft;
+            } else if (state.out) {
+                box.classList.add('diagram-zoomed-out');
+                box._zoomPercent = state.percent;
             }
             if (state.selected) selectDiagram(box);
         },

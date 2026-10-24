@@ -20,11 +20,11 @@ public class ZoomNoteInteractionTests : PlaywrightTestBase
 
         var container = GetDiagramContainer();
         await Page.WaitForFunctionAsync(
-            "() => document.querySelector('[data-diagram-type=\"plantuml\"] .diagram-zoom-slider') !== null",
+            "() => document.querySelector('[data-diagram-type=plantuml]').querySelector(':scope > .diagram-zoom-controls .diagram-zoom-slider') !== null",
             null, new() { Timeout = 10000, PollingInterval = 200 });
         await Page.EvaluateAsync("""
             () => {
-                var slider = document.querySelector('[data-diagram-type="plantuml"] .diagram-zoom-slider');
+                var slider = document.querySelector('[data-diagram-type=plantuml]').querySelector(':scope > .diagram-zoom-controls .diagram-zoom-slider');
                 slider.value = '100';
                 slider.dispatchEvent(new Event('input', { bubbles: true }));
             }
@@ -112,12 +112,12 @@ public class ZoomNoteInteractionTests : PlaywrightTestBase
     private async Task ZoomOutViaSlider()
     {
         await Page.WaitForFunctionAsync(
-            "() => document.querySelector('[data-diagram-type=\"plantuml\"] .diagram-zoom-slider') !== null",
+            "() => document.querySelector('[data-diagram-type=plantuml]').querySelector(':scope > .diagram-zoom-controls .diagram-zoom-slider') !== null",
             null, new() { Timeout = 10000, PollingInterval = 200 });
 
         await Page.EvaluateAsync("""
             () => {
-                var slider = document.querySelector('[data-diagram-type="plantuml"] .diagram-zoom-slider');
+                var slider = document.querySelector('[data-diagram-type=plantuml]').querySelector(':scope > .diagram-zoom-controls .diagram-zoom-slider');
                 slider.value = slider.min;
                 slider.dispatchEvent(new Event('input', { bubbles: true }));
             }
@@ -247,7 +247,7 @@ public class ZoomNoteInteractionTests : PlaywrightTestBase
         // Zoom in again via slider
         await Page.EvaluateAsync("""
             () => {
-                var slider = document.querySelector('[data-diagram-type="plantuml"] .diagram-zoom-slider');
+                var slider = document.querySelector('[data-diagram-type=plantuml]').querySelector(':scope > .diagram-zoom-controls .diagram-zoom-slider');
                 slider.value = '100';
                 slider.dispatchEvent(new Event('input', { bubbles: true }));
             }
@@ -337,11 +337,11 @@ public class ZoomNoteInteractionTests : PlaywrightTestBase
         await WaitForReRender();
 
         await Page.WaitForFunctionAsync(
-            "() => document.querySelector('[data-diagram-type=\"plantuml\"] .diagram-zoom-slider') !== null",
+            "() => document.querySelector('[data-diagram-type=plantuml]').querySelector(':scope > .diagram-zoom-controls .diagram-zoom-slider') !== null",
             null, new() { Timeout = 10000, PollingInterval = 200 });
         await Page.EvaluateAsync("""
             () => {
-                var slider = document.querySelector('[data-diagram-type="plantuml"] .diagram-zoom-slider');
+                var slider = document.querySelector('[data-diagram-type=plantuml]').querySelector(':scope > .diagram-zoom-controls .diagram-zoom-slider');
                 slider.value = '100';
                 slider.dispatchEvent(new Event('input', { bubbles: true }));
             }
@@ -362,13 +362,13 @@ public class ZoomNoteInteractionTests : PlaywrightTestBase
         await WaitForDiagramSvg();
 
         await Page.WaitForFunctionAsync(
-            "() => document.querySelector('[data-diagram-type=\"plantuml\"] .diagram-zoom-slider') !== null",
+            "() => document.querySelector('[data-diagram-type=plantuml]').querySelector(':scope > .diagram-zoom-controls .diagram-zoom-slider') !== null",
             null, new() { Timeout = 10000, PollingInterval = 200 });
 
         // Toggle zoom state rapidly via slider (max, min, max, min -> ends unzoomed)
         await Page.EvaluateAsync("""
             () => {
-                var slider = document.querySelector('[data-diagram-type="plantuml"] .diagram-zoom-slider');
+                var slider = document.querySelector('[data-diagram-type=plantuml]').querySelector(':scope > .diagram-zoom-controls .diagram-zoom-slider');
                 for (var i = 0; i < 4; i++) {
                     slider.value = (i % 2 === 0) ? '100' : slider.min;
                     slider.dispatchEvent(new Event('input', { bubbles: true }));
@@ -393,10 +393,10 @@ public class ZoomNoteInteractionTests : PlaywrightTestBase
         await WaitForReRender();
 
         await Page.WaitForFunctionAsync(
-            "() => document.querySelector('[data-diagram-type=\"plantuml\"] .diagram-zoom-slider') !== null",
+            "() => document.querySelector('[data-diagram-type=plantuml]').querySelector(':scope > .diagram-zoom-controls .diagram-zoom-slider') !== null",
             null, new() { Timeout = 10000, PollingInterval = 200 });
         var sliderVal = await Page.EvaluateAsync<string>(
-            "() => document.querySelector('[data-diagram-type=\"plantuml\"] .diagram-zoom-slider').value");
+            "() => document.querySelector('[data-diagram-type=plantuml]').querySelector(':scope > .diagram-zoom-controls .diagram-zoom-slider').value");
         Assert.Equal("100", sliderVal); // Should still be at max
     }
 
@@ -412,12 +412,12 @@ public class ZoomNoteInteractionTests : PlaywrightTestBase
         await WaitForReRender();
 
         await Page.WaitForFunctionAsync(
-            "() => document.querySelector('[data-diagram-type=\"plantuml\"] .diagram-zoom-slider') !== null",
+            "() => document.querySelector('[data-diagram-type=plantuml]').querySelector(':scope > .diagram-zoom-controls .diagram-zoom-slider') !== null",
             null, new() { Timeout = 10000, PollingInterval = 200 });
         var sliderVal = await Page.EvaluateAsync<string>(
-            "() => document.querySelector('[data-diagram-type=\"plantuml\"] .diagram-zoom-slider').value");
+            "() => document.querySelector('[data-diagram-type=plantuml]').querySelector(':scope > .diagram-zoom-controls .diagram-zoom-slider').value");
         var sliderMin = await Page.EvaluateAsync<string>(
-            "() => document.querySelector('[data-diagram-type=\"plantuml\"] .diagram-zoom-slider').min");
+            "() => document.querySelector('[data-diagram-type=plantuml]').querySelector(':scope > .diagram-zoom-controls .diagram-zoom-slider').min");
         Assert.Equal(sliderMin, sliderVal); // Should be at min (fit-to-width)
     }
 

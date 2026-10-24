@@ -79,10 +79,13 @@ public class NoteWidthFitTests : PlaywrightTestBase
     }
 
     /// <summary>The first pass measures the diagram's first picture; a first part narrower than the widest part makes it
-    /// overshoot, and only the correction pass, measuring every part, brings the widest part back to the column.</summary>
+    /// overshoot, and only the correction pass, measuring every part, brings the widest part back to the column. Since
+    /// 5.7.0 the page lines a diagram's parts up, which makes them as wide as each other (1,247 and 1,248 px here), so the
+    /// case is a diagram it does not line up: lining up is turned off.</summary>
     [Fact]
     public async Task Payload_width_Wide_fits_a_diagram_drawn_in_parts_to_its_column()
     {
+        await Page.AddInitScriptAsync("window.__kronikolLineUp = false;");
         await OpenAsync("width-fit-parts-control.html", calls: 100, NoteWidthMode.Default, shortFirst: 70);
         var parts = await Page.EvaluateAsync<double[]>("""
             () => Array.from(document.querySelectorAll('[data-diagram-type="plantuml"] > .puml-fragment'))

@@ -554,14 +554,16 @@ public class ReportToggleResponsivenessTests : PlaywrightTestBase
         }
     }
 
+    // The diagram's one slider (since 5.7.0 a diagram in parts has one, on its container: plans/ZOOM_EVERY_DIAGRAM_PLAN.md
+    // Z8), made after a toggle from the widths the engine drew its parts at.
     [Fact]
-    public async Task A_toggle_makes_each_part_s_zoom_slider_without_drawing_the_part_at_its_natural_size()
+    public async Task A_toggle_makes_the_diagrams_zoom_slider_without_drawing_a_part_at_its_natural_size()
     {
         await OpenLongUnderTheBarAsync();
         await Page.EvaluateAsync("""
             () => {
                 // a box narrower than the diagram's parts (about 600 px each), so each part is scaled down to fit it and
-                // gets a zoom slider when it is drawn again
+                // the diagram gets a zoom slider when it is drawn again
                 document.querySelector('.plantuml-browser[data-diagram-type=plantuml]').style.width = '420px';
                 window.__natural = 0;
                 // a picture drawn at its natural size and back shows as a change of its style from max-width: none
@@ -573,33 +575,39 @@ public class ReportToggleResponsivenessTests : PlaywrightTestBase
             """);
 
         await ToggleAsync("databases");
-        // every part wider than its box has its slider again
+        // every part drawn, and the diagram's slider made again
         await Page.WaitForFunctionAsync("""
-            () => Array.prototype.every.call(document.querySelectorAll('.plantuml-browser[data-diagram-type=plantuml] > .puml-fragment'),
-                function (p) { var svg = p.querySelector('svg'); return !!svg && (svg.width.baseVal.value <= p.clientWidth + 1 || !!p.querySelector(':scope > .diagram-zoom-controls')); })
+            () => {
+                var c = document.querySelector('.plantuml-browser[data-diagram-type=plantuml]');
+                return Array.prototype.every.call(c.querySelectorAll(':scope > .puml-fragment'), function (p) { return !!p.querySelector('svg'); })
+                    && !!c.querySelector(':scope > .diagram-zoom-controls .diagram-zoom-slider');
+            }
             """, null, new() { Timeout = 30_000, PollingInterval = 200 });
+        await TwoAnimationFramesAsync(Page);
 
-        // each part fits its box, its slider starting at the level that fits it, worked out from the width the engine drew
-        // it at; measuring that width drew the part at its natural size and back, every word in it laid out twice
+        // every part is drawn at the level that fits the diagram's widest part, and the slider starts there, worked out
+        // from the widths the engine drew the parts at; measuring a width drew the part at its natural size and back,
+        // every word in it laid out twice
         var r = await Page.EvaluateAsync<JsonElement>("""
-            () => ({
-                natural: window.__natural,
-                parts: Array.prototype.map.call(document.querySelectorAll('.plantuml-browser[data-diagram-type=plantuml] > .puml-fragment'), function (p) {
-                    var svg = p.querySelector('svg'), slider = p.querySelector(':scope > .diagram-zoom-controls .diagram-zoom-slider');
-                    return { slider: slider ? Number(slider.min) : null, fits: Math.round(p.clientWidth / svg.width.baseVal.value * 100),
-                             notes: svg.querySelectorAll('.note-hover-rect').length };
-                })
-            })
+            () => {
+                var c = document.querySelector('.plantuml-browser[data-diagram-type=plantuml]');
+                var slider = c.querySelector(':scope > .diagram-zoom-controls .diagram-zoom-slider');
+                return {
+                    natural: window.__natural, slider: Number(slider.min), value: Number(slider.value),
+                    parts: Array.prototype.map.call(c.querySelectorAll(':scope > .puml-fragment'), function (p) {
+                        var svg = p.querySelector('svg');
+                        return { level: svg.getBoundingClientRect().width / svg.width.baseVal.value * 100, notes: svg.querySelectorAll('.note-hover-rect').length };
+                    })
+                };
+            }
             """);
         _output.WriteLine($"{r}");
         Assert.Equal(0, r.GetProperty("natural").GetInt32());
-        var zoomable = r.GetProperty("parts").EnumerateArray().Where(p => p.GetProperty("notes").GetInt32() >= 10).ToList();
-        Assert.NotEmpty(zoomable);
-        foreach (var part in zoomable)
-        {
-            Assert.Equal(JsonValueKind.Number, part.GetProperty("slider").ValueKind);
-            Assert.InRange(part.GetProperty("slider").GetInt32(), part.GetProperty("fits").GetInt32() - 1, part.GetProperty("fits").GetInt32() + 1);
-        }
+        var min = r.GetProperty("slider").GetInt32();
+        Assert.True(min < 100, $"the diagram is wider than its box: its slider starts at {min}");
+        Assert.Equal(min, r.GetProperty("value").GetInt32());
+        foreach (var part in r.GetProperty("parts").EnumerateArray())
+            Assert.InRange(part.GetProperty("level").GetDouble(), min - 1, min + 1);
     }
 
     [Fact]
