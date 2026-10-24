@@ -44,6 +44,7 @@ fresh profile of either costs the Windows account a failed sign-in).
 | `extract_frames.py`, `dec-compare.js` | A prototype's frames to files, then fzstd against zstddec (libzstd in Wasm) on them: output, time, a bad checksum |
 | `dec-browser.js` | The same two decoders on the same frames inside each engine, on the main thread |
 | `f2/` | Step F2: `probe.html`, a `blob:` worker that reads a `Blob` and gunzips a stream built from bytes; `run-playwright.js` opens it over `file://` and `http://` in Playwright's builds, `linux-webkit.sh` in the Linux ones on the podman runner, `run-safari.py` in Safari through safaridriver, and `probe-f2-safari.yml` is the workflow that ran the last two on a GitHub macOS runner |
+| `f1/` | Step F1: `f1-load.js` opens a page in one of Playwright's builds and records `DOMContentLoaded`, `load`, the render script's telemetry, a main-thread heartbeat, every request the page makes and Playwright's request events, online, offline once the page has committed, or with `OffscreenCanvas` deleted; `f1-jit.js`, `f1-oo.js` and `f1-measure.js` time a plain loop, object-heavy code and canvas `measureText` in all three engines; `one-cdn-script.html` and `static-cdn-script.html` load one script from jsDelivr; `linux-f1.sh` runs `f1-load.js` in Linux WebKit on the podman runner |
 
 ```bash
 py -I anatomy.py TestRunReport.html                      > results/anatomy.txt
@@ -77,6 +78,12 @@ node dec-browser.js out/frames                                                  
 node f2/run-playwright.js webkit,chromium
 wsl -d podman-machine-default -u root -- sh f2/linux-webkit.sh /mnt/c/<path to f2>
 # macOS: f2/probe-f2-safari.yml as .github/workflows/ on a temporary branch probe/f2-safari, with f2/ as probes/webkit-blob/
+# Step F1 (results/f1-load.txt)
+node f1/f1-load.js TestRunReport.html webkit; node f1/f1-load.js TestRunReport.html webkit offline
+node f1/f1-load.js TestRunReport.html chromium nooffscreen; node f1/f1-load.js TestRunReport.html firefox nooffscreen
+node f1/f1-load.js f1/one-cdn-script.html webkit; node f1/f1-load.js f1/static-cdn-script.html webkit
+node f1/f1-jit.js; node f1/f1-oo.js; node f1/f1-measure.js
+wsl -d podman-machine-default -u root -- sh f1/linux-f1.sh /mnt/c/<path to f1> /mnt/c/<plain.html> /mnt/c/<compressed.html>
 ```
 
 `firefox+zstd` in `bench.js` is Firefox with `dom.compression_streams.zstd.enabled` set, so its loader takes the native

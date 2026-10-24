@@ -3,7 +3,7 @@
 **Date:** 2026-10-23 · **Repo version:** 5.5.2 (`origin/main` at `2933b7a0`; line numbers are for that commit, and
 those the first draft cited are unchanged from `91d1afd7`, 5.5.1) · **Status: green-lit on 2026-10-23** ("Can you
 implement the plan in full, taking all your recommendations"): every recommendation of section 7 is taken. Audited the
-same day (section 8). F2 shipped as 5.5.4, R1 as 5.6.0.
+same day (section 8). F2 shipped as 5.5.4, R1 as 5.6.0, and F1 found the Windows WebKit build alone (no change).
 
 This plan was written at the owner's asks of 2026-10-23:
 - "Can we investigate options for getting the 29mb html report such as the one in
@@ -810,6 +810,19 @@ they are: a compressed page is no more readable than a plain one.
     comes on a compressed page, which draws the steps: the fact is kept for a plain page and a new one holds the
     compressed page's. `BrowserStallTests` sent the new class's contexts through the bounded helpers.
   - Results: the core suite passes 8,780 with 2 skipped, the full Playwright suite 1,643 with 28 skipped, ProxyTap's 200 with 4 skipped, xUnit2's 105 and the example Integration suite's 257. On the owner's 5.4.4 report the page goes from 28,954,978 bytes to 7,212,857, written in 1.1 s in a Release build, and decoding it gives back every item.
+- 2026-10-24 (kronikol-08): **F1 done: the Windows build alone, no change.** In Playwright's Windows WebKit 26.4 the
+  render script finds no `OffscreenCanvas` and draws on the main thread with the JavaScript engine, and that build runs
+  object-heavy JavaScript about 10 times slower than Chromium (`f1-oo.js`: 360 ms against 37, Firefox 94; a plain loop
+  31 against 20, so it has a JIT). The first two renders hold the main thread for 23 to 28 s from the moment the engine
+  is ready, and `load` comes when the thread is free, at 26 to 33 s. Not the network: the page asks for nothing but the
+  two engine scripts, which are in by 1.9 s; a page with one script from the same CDN fires `load` within 63 ms; offline
+  from the moment the page commits, the engine never runs and `load` comes at 2.6 s. Canvas `measureText` is only about
+  2 times slower, and Chromium and Firefox forced onto the main thread (`OffscreenCanvas` deleted) fire `load` at 0.8 s
+  and 1.8 s. Linux WebKit (Playwright 1.59.1's noble image, the podman runner) has `OffscreenCanvas` and draws in workers
+  with the Wasm engine: `load` at 2.8 s on the owner's report. Safari has had `OffscreenCanvas` since 16.4, so it takes
+  the worker route too. The compressed page also moves the file's own `load` to the loader page: 54 ms in the Windows
+  build, with the report complete at 2.3 s. As section 6 says for this outcome, this line and stop
+  (`HTML_COMPRESSION_PLAN.harness/f1/`, `results/f1-load.txt`). The plan is done: F2 in 5.5.4, R1 in 5.6.0, F1 here.
 
 ## Appendix A. Edit sites at `2933b7a0`
 

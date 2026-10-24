@@ -1,0 +1,41 @@
+Step F1: why WebKit fires `load` 26 to 38 s late (2026-10-24, Windows 11, Playwright 1.59.0's bundled builds:
+Chromium 147.0.7727.15, Firefox 148.0.2, WebKit 26.4; Linux: Playwright 1.59.1's noble image on the podman runner).
+Page: the owner's 5.4.4 report (28,954,978 bytes, 1,553 diagrams), opened from file://. Times in ms from navigation.
+
+f1-load.js, Windows WebKit, the plain page (method steps 1 and 2)
+  run  DOMContentLoaded  load    engine scripts (2, jsDelivr)   render route
+  1    4,044             32,318  requested 3,179, finished 5,014  main-thread, "OffscreenCanvas unavailable", js engine
+  2      763             28,375  requested 29, finished 1,632
+  3      817             29,015  requested 25, finished 1,859
+  4      978             33,182  the page asks for nothing else (fetch, XHR, workers, src and href traced): 108 asks,
+                                 106 of them in-page #iflow anchors
+  5      957             26,463  main thread blocked from 3,180 for 23,487 (a 100 ms heartbeat); pictures inserted 182..4,517
+  6        -             31,246  blocked from 3,246 for 28,030; engine ready at 3,316; 2 renders done by then
+
+Offline once the page has committed (step 3; WebKit refuses a file:// navigation offline)
+  DOMContentLoaded 918 / 861, load 2,576 / 2,621: the engine never runs, nothing is drawn, no long block.
+
+Not the network
+  one-cdn-script.html (a script from cdn.jsdelivr.net added by script, as the render script adds the engine):
+    WebKit load 63, Chromium 33.  static-cdn-script.html: WebKit 41, Chromium 29.
+
+The main-thread route in other engines (OffscreenCanvas deleted by an init script)
+  Chromium: load 765, no block over 600 ms, 1 render.  Firefox: load 1,770, one block of 1,666, 2 renders.
+
+Where the time goes in the Windows WebKit build
+  f1-jit.js, a plain loop (20,000,000 rounds):        Chromium 20, Firefox 78, WebKit 31 and 132 (two runs): a JIT.
+  f1-oo.js, classes, polymorphic calls, Map, strings: Chromium 37, Firefox 94, WebKit 360: about 10 times slower.
+  f1-measure.js, canvas measureText 5,000 calls:      Chromium 14-35, Firefox 22-34, WebKit 34-63: about 2 times.
+
+Linux WebKit (linux-f1.sh)
+  plain page:      DOMContentLoaded 1,391, load 2,828, complete 4,130; route "worker", Wasm engine (OffscreenCanvas there).
+  compressed page: the loader page's load 106; the report in place at 2,252 and complete at 2,263.
+
+The compressed page (5.6.0) in the Windows WebKit build
+  the loader page's DOMContentLoaded 53 and load 54; painted 78, decoded 133, written 1,151; the report complete 2,273.
+  It still draws on the main thread there, so the page then blocks as above, but the file's own load comes at once.
+
+Conclusion: the Windows build alone. It has no OffscreenCanvas, so the render script draws on the main thread with the
+JavaScript engine, and it runs that engine's object-heavy code about 10 times slower than Chromium, so the first two
+renders hold the main thread for 23 to 28 s and `load` waits for it. Linux WebKit draws in workers; Safari has had
+OffscreenCanvas since 16.4 and takes the worker route too. No change (plan section 6, F1's outcome).
