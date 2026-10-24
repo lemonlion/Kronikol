@@ -45,7 +45,8 @@ public static class DiagnosticReportGenerator
         RequestResponseLog[] logs,
         Feature[] features,
         ReportConfigurationOptions options,
-        int? suppliedSpans = null)
+        int? suppliedSpans = null,
+        IReadOnlyList<ITrackingComponent>? components = null)
     {
         var sb = new StringBuilder();
         sb.AppendLine("<!DOCTYPE html><html><head><meta charset=\"utf-8\"/>");
@@ -179,8 +180,9 @@ public static class DiagnosticReportGenerator
             sb.AppendLine("</table>");
         }
 
-        // Tracking components — grouped by ComponentName
-        var allComponents = TrackingComponentRegistry.GetRegisteredComponents();
+        // Tracking components — grouped by ComponentName; the registry's unless a caller gives its own (the tests: the
+        // registry is the process's, and a test elsewhere registers into it at any moment)
+        var allComponents = components ?? TrackingComponentRegistry.GetRegisteredComponents();
         if (allComponents.Count > 0)
         {
             sb.AppendLine("<h2>Tracking Components</h2>");

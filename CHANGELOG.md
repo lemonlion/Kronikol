@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.7.2] - 2026-10-24
+
+The patch part moves (5.7.1 to 5.7.2): internal work for the tests, with nothing new to call or configure and nothing a
+report shows changed.
+
+### Fixed
+
+- **Tests that looked for a tracking component's absence no longer read the process's registry.** A handler, a message
+  tracker or a SQL tracker registers itself when it is made, and the registry is the process's, so a test in another
+  collection, running at the same moment, could put a component it had not used yet on the page a test was reading:
+  5.7.1's first release run stopped at its tests on `DiagnosticReportGeneratorTests`'
+  `No_unused_component_hints_when_all_components_are_active`, which found "1 Component Type(s) Never Invoked" (a re-run
+  published it). The diagnostic page's internal `BuildHtml` takes the components to report on, the registry's by
+  default, and the facts that look for what is absent give theirs; two more facts of the same kind look only at their
+  own components (`ReportDiagnosticsTests`' `No_unused_component_warning_when_all_invoked` and
+  `TrackingComponentRegistryTests`' `Clear_RemovesAllComponents`).
+
+### Tests
+
+- `DiagnosticReportGeneratorTests`: given its components, the page reads those and not the registry (red before
+  `BuildHtml` used them).
+
 ## [5.7.1] - 2026-10-24
 
 The patch part moves (5.7.0 to 5.7.1): a fix, with nothing new to call or configure.

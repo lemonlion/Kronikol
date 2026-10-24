@@ -94,16 +94,34 @@ public class DiagnosticReportGeneratorTests : IDisposable
         Assert.Contains("does not work with Duende IdentityServer", html);
     }
 
+    // The registry is the process's, and a handler, a message tracker or a SQL tracker registers itself when it is made:
+    // a test in another collection makes one at any moment, and a test here that read the registry for what is absent
+    // found it there ("1 Component Type(s) Never Invoked", 5.7.1's first release run). Given its components, the page
+    // reads those alone, so the facts that look for what is absent give theirs.
     [Fact]
-    public void No_unused_component_hints_when_all_components_are_active()
+    public void Given_its_components_the_page_reads_those_and_not_the_registry()
     {
-        TrackingComponentRegistry.Register(
-            new StubComponent("SqlTrackingInterceptor (DB)", wasInvoked: true));
+        TrackingComponentRegistry.Register(new StubComponent("Elsewhere (Leaked)", wasInvoked: false));
 
         var html = DiagnosticReportGenerator.BuildHtml(
             [MakeLog("t1", RequestResponseType.Request, Guid.NewGuid())],
             [],
-            new ReportConfigurationOptions());
+            new ReportConfigurationOptions(),
+            components: [new StubComponent("SqlTrackingInterceptor (DB)", wasInvoked: true)]);
+
+        Assert.Contains("SqlTrackingInterceptor (DB)", html);
+        Assert.DoesNotContain("Elsewhere (Leaked)", html);
+        Assert.DoesNotContain("Never Invoked", html);
+    }
+
+    [Fact]
+    public void No_unused_component_hints_when_all_components_are_active()
+    {
+        var html = DiagnosticReportGenerator.BuildHtml(
+            [MakeLog("t1", RequestResponseType.Request, Guid.NewGuid())],
+            [],
+            new ReportConfigurationOptions(),
+            components: [new StubComponent("SqlTrackingInterceptor (DB)", wasInvoked: true)]);
 
         Assert.DoesNotContain("Never Invoked", html);
         Assert.DoesNotContain("ResolveDbContextOptions", html);
@@ -112,12 +130,11 @@ public class DiagnosticReportGeneratorTests : IDisposable
     [Fact]
     public void No_tracking_component_section_when_none_registered()
     {
-        TrackingComponentRegistry.Clear();
-
         var html = DiagnosticReportGenerator.BuildHtml(
             [MakeLog("t1", RequestResponseType.Request, Guid.NewGuid())],
             [],
-            new ReportConfigurationOptions());
+            new ReportConfigurationOptions(),
+            components: []);
 
         Assert.DoesNotContain("Tracking Components", html);
     }
@@ -414,13 +431,11 @@ public class DiagnosticReportGeneratorTests : IDisposable
     [Fact]
     public void No_never_invoked_warning_when_all_instances_active()
     {
-        TrackingComponentRegistry.Register(new StubComponent("Handler (Cosmos)", wasInvoked: true));
-        TrackingComponentRegistry.Register(new StubComponent("Handler (Cosmos)", wasInvoked: true));
-
         var html = DiagnosticReportGenerator.BuildHtml(
             [MakeLog("t1", RequestResponseType.Request, Guid.NewGuid())],
             [],
-            new ReportConfigurationOptions());
+            new ReportConfigurationOptions(),
+            components: [new StubComponent("Handler (Cosmos)", wasInvoked: true), new StubComponent("Handler (Cosmos)", wasInvoked: true)]);
 
         Assert.DoesNotContain("Never Invoked", html);
     }

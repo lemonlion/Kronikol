@@ -75,7 +75,9 @@ public class TrackingComponentRegistryTests : IDisposable
 
         TrackingComponentRegistry.Clear();
 
-        Assert.Empty(TrackingComponentRegistry.GetRegisteredComponents());
+        // the two it held are gone; the registry is the process's, and a test in another collection can register its
+        // own handler the moment after
+        Assert.DoesNotContain(TrackingComponentRegistry.GetRegisteredComponents(), c => c.ComponentName is "A" or "B");
     }
 
     private class StubTrackingComponent(string name, bool wasInvoked) : ITrackingComponent

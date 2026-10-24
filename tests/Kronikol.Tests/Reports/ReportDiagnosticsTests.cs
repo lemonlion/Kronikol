@@ -226,12 +226,14 @@ public class ReportDiagnosticsTests : IDisposable
     [Fact]
     public void No_unused_component_warning_when_all_invoked()
     {
-        TrackingComponentRegistry.Register(new StubComponent("Handler", wasInvoked: true));
+        TrackingComponentRegistry.Register(new StubComponent("Handler (All Invoked)", wasInvoked: true));
         var logs = new[] { MakeLog("t1", RequestResponseType.Request, Guid.NewGuid()) };
 
         var warnings = ReportDiagnostics.Analyse(logs, []);
 
-        Assert.DoesNotContain(warnings, w => w.Contains("never invoked"));
+        // its own component only: the registry is the process's, and a test in another collection registers a handler
+        // it has not used yet at any moment
+        Assert.DoesNotContain(warnings, w => w.Contains("never invoked") && w.Contains("Handler (All Invoked)"));
     }
 
     [Fact]
