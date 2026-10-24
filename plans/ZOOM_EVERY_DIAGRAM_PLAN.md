@@ -785,6 +785,16 @@ drawing whole (M11), and no source the menu gives holds the row.
     the point moved 6.1 px across (a zoomed-in part is now as wide as its picture, `inline-svg-styles.css`). It also
     kills B3's mutation, which the 29 facts first named for it did not.
 
+- **2026-10-24, 5.7.1.** CI's Linux runner failed two facts on 5.7.0. Fact 17's "every part within a second" cannot
+  be met where the browser takes 700 to 880 ms for one part alone: every part is now held to a second or to that cost
+  for each part, one and a half times over. And 5.1.0's fact for the order of a toggle's drawings found a fault: every
+  redraw makes the slider again (every drawn diagram has one since Z1), and `applyZoomLevel` held the browser's scroll
+  anchoring off (Z6) even when nothing changed size, so through a toggle it was off most of the time, and a reader's
+  jump down the page landed short by what the browser laid out late (content-visibility), 10,863 px on that fixture.
+  On this machine it showed only with the processor slowed six times (CDP), in 5 runs of 13, and never on 5.6.1's
+  scripts. The anchoring is held, and the place kept, only when a picture's or a part's width changes (`resizes`),
+  far parts included; two mutations of it join the harness, 34 in all.
+
 ## Appendix A. Harness
 
 `ZOOM_EVERY_DIAGRAM_PLAN.harness/`:

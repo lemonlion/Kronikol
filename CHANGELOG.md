@@ -4,6 +4,34 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.7.1] - 2026-10-24
+
+The patch part moves (5.7.0 to 5.7.1): a fix, with nothing new to call or configure.
+
+### Fixed
+
+- **A jump down the report while a toggle draws its diagrams again lands where it was aimed.** Every redraw makes the
+  diagram's zoom slider again, and since 5.7.0 every drawn diagram has one. Made again at the level its picture is
+  already drawn at, it held the browser's scroll anchoring off for a frame all the same, so through a toggle that drew
+  60 diagrams again it was off most of the time. A reader who jumped to a diagram far down the page landed short: the
+  browser lays the cards between out only once they come near (content-visibility), and moves the page on by the height
+  they gain, which it could not do with anchoring off. On CI's runner the jump landed 10,863 px short, and the diagram
+  jumped to was drawn 49th of 60 instead of next. A zoom now holds the anchoring off, and keeps the reader's place, only
+  when it changes the width a picture or a part is drawn at.
+
+### Tests
+
+- `FittingDiagramZoomTests` and `SplitDiagramZoomTests`: a slider made again at the level its picture or its parts are
+  drawn at leaves the scroll anchoring on and scrolls nothing (red on 5.7.0: `overflow-anchor: none`).
+  `PartsZoomDrawingTests`: on a diagram of 16 parts, the parts far from the window are gone over a frame each and none
+  of them holds the anchoring off. Two mutations of the change are caught. `ReportToggleResponsivenessTests`' fact for
+  the order of a toggle's drawings failed on CI's Linux runner on 5.7.0, and on this machine only with the browser's
+  processor slowed six times, in 5 runs of 13 (on 5.6.1's page scripts it passed so slowed); with the fix it passed 8
+  runs of 8.
+- `PartsZoomDrawingTests`' notch on a diagram of 17 parts holds every part to the new level within a second, or within
+  what the browser takes for each part alone, one and a half times over, whichever is more: CI's runner took 700 to
+  880 ms for one part alone, so a second could not be met there.
+
 ## [5.7.0] - 2026-10-24
 
 The minor part moves (5.6.1 to 5.7.0): every drawn diagram zooms, a diagram that fits its box zooms out, and a diagram

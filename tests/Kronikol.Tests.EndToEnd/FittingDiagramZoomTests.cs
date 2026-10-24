@@ -302,6 +302,28 @@ public class FittingDiagramZoomTests : PlaywrightTestBase
         }
     }
 
+    // A slider made again at the level its picture is drawn at (every redraw makes one, and every drawn diagram has one
+    // now) changes no size: the browser's scroll anchoring is left on and the page is not scrolled (SplitDiagramZoomTests
+    // has the same for a diagram in parts)
+    [Fact]
+    public async Task A_slider_made_again_at_the_level_its_picture_is_drawn_at_leaves_the_scroll_alone()
+    {
+        await OpenSourceAsync("FitsAnchoring.html", FittingWithNotes);
+        foreach (var level in new[] { 100, 70 })
+        {
+            await ZoomFacts.SetLevelAsync(Page, 0, level);
+            var r = await Page.EvaluateAsync<string>("""
+                () => new Promise(done => requestAnimationFrame(() => setTimeout(() => {
+                    const c = document.querySelector("[data-diagram-type='plantuml']");
+                    const y = scrollY;
+                    window._addZoomButton(c);
+                    done(document.documentElement.style.overflowAnchor + '|' + (scrollY - y));
+                }, 0)))
+                """);
+            Assert.True(r == "|0", $"at {level}, made again: overflow-anchor|scrolled = {r}");
+        }
+    }
+
     // 9
     [Fact]
     public async Task A_zoomed_out_diagram_drawn_again_wider_than_its_box_starts_at_its_fit_level()

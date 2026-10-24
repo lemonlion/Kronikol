@@ -135,6 +135,45 @@ public class PartsZoomDrawingTests : PlaywrightTestBase
         Assert.True(Math.Abs(across) <= 2, $"once every part was at the new level, the point under the pointer had moved {across:F1} px across");
     }
 
+    // A redraw makes the slider of a long diagram in parts again at the level its parts are drawn at: the parts far from
+    // the window are gone over one a frame after, and as none of them changes size, none holds the browser's scroll
+    // anchoring off or scrolls the page (SplitDiagramZoomTests has the near parts)
+    [Fact]
+    public async Task A_slider_made_again_on_a_long_diagram_in_parts_leaves_the_scroll_alone_while_its_far_parts_are_gone_over()
+    {
+        await Page.GotoReportAsync(ReportTestHelper.GenerateReportWithDiagramInParts(TempDir, OutputDir, "PartsFarAnchoring.html",
+            ReportTestHelper.PartsSource(160, new Dictionary<int, int> { [2] = 180 })));
+        await Page.Locator("details.feature").First.WaitForAsync();
+        await ExpandFirstScenarioWithDiagram();
+        await ZoomFacts.WaitForSliderAsync(Page, 0, timeoutMs: 120000);
+        await Page.WaitForFunctionAsync("""
+            () => {
+                const c = document.querySelector("[data-diagram-type='plantuml']");
+                const parts = Array.from(c.querySelectorAll(':scope > .puml-fragment'));
+                return !window._plantumlRendering && !c._lineUpPending && !c._zoomPending && parts.length > 1 && parts.every(p => p.querySelector(':scope > svg'));
+            }
+            """, null, new() { Timeout = 120000, PollingInterval = 200 });
+        var parts = (await ZoomFacts.ReadAsync(Page, 0)).Levels.Length;
+        await ZoomFacts.ScrollToPartAsync(Page, parts - 2);
+
+        var r = await Page.EvaluateAsync<string>("""
+            () => new Promise(done => {
+                const c = document.querySelector("[data-diagram-type='plantuml']");
+                const y = scrollY;
+                let held = 0, frames = 0;
+                window._addZoomButton(c);
+                const far = !!c._zoomPending;
+                const watch = () => {
+                    if (document.documentElement.style.overflowAnchor === 'none') held++;
+                    if (c._zoomPending && ++frames < 600) requestAnimationFrame(watch);
+                    else done(far + '|' + held + '|' + (scrollY - y));
+                };
+                watch();
+            })
+            """);
+        Assert.Equal("true|0|0", r);
+    }
+
     // 17. Fifteen parts as wide and long as the consumer report's longest diagram (M6: 1,750 x 112,940 px): resizing every
     // part at once cost 191 ms there, so a notch resizes the parts near the screen at once and the rest after. The notch
     // is held to the plan's 50 ms, or to what the browser itself takes to draw the part under the pointer one level
@@ -177,10 +216,13 @@ public class PartsZoomDrawingTests : PlaywrightTestBase
                 """, new object[] { (double)x, (double)y }));
         }
         var browserAlone = alone.OrderBy(t => t).ElementAt(1);
+        // the far parts are resized one a frame, each at about the browser's own cost of a part: a second in all on this
+        // machine, and that cost for every part on a slow one (CI's Linux runner took 700 to 880 ms for a part alone)
+        var everyBudget = Math.Max(1000, parts * browserAlone * 1.5);
         await Page.WaitForTimeoutAsync(500);
 
         var r = await Page.EvaluateAsync<JsonElement>("""
-            ([x, y]) => new Promise(done => {
+            ([x, y, cap]) => new Promise(done => {
                 const c = document.querySelector("[data-diagram-type='plantuml']");
                 const pics = Array.from(c.querySelectorAll(':scope > .puml-fragment > svg'));
                 const target = document.elementFromPoint(x, y);
@@ -194,12 +236,12 @@ public class PartsZoomDrawingTests : PlaywrightTestBase
                 const check = () => {
                     const all = pics.every(p => Math.abs(p.getBoundingClientRect().width / p.width.baseVal.value * 100 - level) <= 0.6);
                     if (all && painted !== null) done({ handler, painted, everyPart: performance.now() - t0, level, probe: window.__bench.probe });
-                    else if (performance.now() - t0 > 10000) done({ handler, painted, everyPart: -1, level, probe: window.__bench.probe });
+                    else if (performance.now() - t0 > cap) done({ handler, painted, everyPart: -1, level, probe: window.__bench.probe });
                     else requestAnimationFrame(check);
                 };
                 requestAnimationFrame(check);
             })
-            """, new object[] { (double)x, (double)y });
+            """, new object[] { (double)x, (double)y, Math.Max(10000, everyBudget * 5) });
 
         var stretch = ContentionScale.Stretch(r.GetProperty("probe").EnumerateArray().Select(p => p.GetDouble()).ToList());
         var painted = r.GetProperty("painted").GetDouble();
@@ -209,6 +251,7 @@ public class PartsZoomDrawingTests : PlaywrightTestBase
                           $"the part alone {string.Join("/", alone.Select(t => t.ToString("F0")))} ms, stretch {stretch:F2}");
         Assert.True(everyPart >= 0, "every part reaches the new level");
         Assert.True(painted <= budget, $"the notch was painted after {painted:F0} ms (budget {budget:F0} ms: the part alone took the browser {browserAlone:F0} ms, stretch {stretch:F2})");
-        Assert.True(everyPart <= 1000 * stretch, $"every part reached the new level after {everyPart:F0} ms (budget {1000 * stretch:F0} ms at stretch {stretch:F2})");
+        Assert.True(everyPart <= everyBudget * stretch,
+            $"every part reached the new level after {everyPart:F0} ms (budget {everyBudget * stretch:F0} ms: {parts} parts, the part alone {browserAlone:F0} ms, stretch {stretch:F2})");
     }
 }

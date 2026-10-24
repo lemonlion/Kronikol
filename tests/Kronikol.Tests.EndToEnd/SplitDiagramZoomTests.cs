@@ -104,6 +104,25 @@ public class SplitDiagramZoomTests : PlaywrightTestBase
         AssertOneLevel(s);
     }
 
+    // Every redraw makes a diagram's slider again, at the level its picture is drawn at, and a toggle redraws every
+    // diagram: that changes no size, so the page's scroll and the browser's scroll anchoring are left alone. Held off
+    // each time, a reader's jump during a toggle landed 10,863 px short on a report of 60 diagrams, where the browser
+    // would have moved it on by what it laid out late (content-visibility) (CI, 5.7.0's first run)
+    [Fact]
+    public async Task A_slider_made_again_at_the_level_its_parts_are_drawn_at_leaves_the_scroll_alone()
+    {
+        await OpenAsync("SplitZoomAnchoring.html");
+        var r = await Page.EvaluateAsync<string>("""
+            () => {
+                const c = document.querySelector("[data-diagram-type='plantuml']");
+                const y = scrollY;
+                window._addZoomButton(c);
+                return document.documentElement.style.overflowAnchor + '|' + (scrollY - y);
+            }
+            """);
+        Assert.Equal("|0", r);
+    }
+
     // 7 of section 6.2: one slider, starting at the smallest fit level of the parts, every part drawn at that level
     [Fact]
     public async Task A_diagram_in_parts_starts_at_its_fit_level_with_every_part_drawn_at_that_level()

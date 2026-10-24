@@ -1286,7 +1286,7 @@
     // one a frame after a notch carry it from one to the next (carried), or the reader's place drifted by up to a pixel a
     // part, 5 px over a long diagram.
     function keepPlace(box, place, across, carried) {
-        if (!place) return 0;
+        if (!place) return carried || 0;
         var dx = 0, dy;
         if (place.svg) {
             var r = place.svg.getBoundingClientRect();
@@ -1336,7 +1336,7 @@
         var lined = f.pics.some(function(svg) { return svg.parentElement && typeof svg.parentElement._kShift === 'number'; });
         if (f.wide && !zoomedIn) scale = Math.max(0, f.cw - 0.5) / f.width;
         var left = Math.max(0, (f.cw - f.width * scale) / 2);
-        return function(i) {
+        var size = function(i) {
             var svg = f.pics[i];
             if (!svg.isConnected) return;
             svg.style.maxWidth = zoomedIn ? 'none' : '100%';
@@ -1344,6 +1344,24 @@
             svg.style.marginLeft = lined ? (left + shiftOf(svg) * scale) + 'px' : '';
             svg.style.marginRight = lined ? '0' : '';
         };
+        size.width = function(i) { return f.naturals[i] * scale; };
+        return size;
+    }
+
+    // The width sizeWhole gives a picture drawn whole: neither way zoomed, it is drawn at its natural width, the box's
+    // content width at most.
+    function wholeWidth(f, percent, scale, zoomedIn, zoomedOut) {
+        if (zoomedIn) return percent >= 100 ? f.naturals[0] : f.naturals[0] * scale;
+        if (zoomedOut) return f.naturals[0] * scale;
+        return Math.min(f.naturals[0], f.cw);
+    }
+
+    // Whether a level changes the width (and so the height) a picture is drawn at. A slider made again at the level the
+    // picture is already drawn at, as every redraw makes it, changes neither, and the page's scroll and the browser's own
+    // scroll anchoring are then left alone: held off for every diagram a toggle drew again, they were off as a reader
+    // jumped down the report, and the jump landed short by the height the browser laid out late (content-visibility).
+    function resizes(pics, widthOf) {
+        return pics.some(function(svg, i) { return svg.isConnected && Math.abs(svg.getBoundingClientRect().width - widthOf(i)) > 0.5; });
     }
 
     // The parts within a window's height of the screen are resized at once and the rest one a frame after: every part
@@ -1358,8 +1376,8 @@
         });
     }
 
-    function sizeParts(box, f, scale, zoomedIn, near) {
-        var size = partSizer(f, scale, zoomedIn), rest = [];
+    function sizeParts(box, f, size, near) {
+        var rest = [];
         near = near || nearParts(f.pics);
         for (var i = 0; i < f.pics.length; i++) {
             if (near[i]) size(i); else rest.push(i);
@@ -1370,8 +1388,9 @@
             var pending = box._zoomPending;
             if (!pending || !box.isConnected) { box._zoomPending = null; return; }
             var k = pending.rest.shift();
-            holdScrollAnchoring();
-            var place = placeBefore(box, pending.pics);
+            var changes = resizes([pending.pics[k]], function() { return pending.size.width(k); });
+            if (changes) holdScrollAnchoring();
+            var place = changes ? placeBefore(box, pending.pics) : null;
             pending.size(k);
             // what the window could not scroll, a fraction of a pixel, at most a pixel (at the page's end it could not
             // scroll at all)
@@ -1395,11 +1414,13 @@
         var zoomedIn = f.wide && percent > f.fitPct;
         var zoomedOut = !f.wide && percent < 100;
         var scale = f.wide && !zoomedIn ? f.fit : percent / 100;
-        holdScrollAnchoring();
-        var place = placeBefore(container, f.pics, cursorClientX, cursorClientY);
+        var size = f.parts ? partSizer(f, scale, zoomedIn) : null;
+        var changes = resizes(f.pics, size ? size.width : function() { return wholeWidth(f, percent, scale, zoomedIn, zoomedOut); });
+        if (changes) holdScrollAnchoring();
+        var place = changes ? placeBefore(container, f.pics, cursorClientX, cursorClientY) : null;
         var near = f.parts ? nearParts(f.pics) : null;
         setZoomMarks(container, zoomedIn, zoomedOut);
-        if (f.parts) sizeParts(container, f, scale, zoomedIn, near);
+        if (f.parts) sizeParts(container, f, size, near);
         else sizeWhole(f.pics[0], f.naturals[0], percent, scale, zoomedIn, zoomedOut);
         keepPlace(container, place, zoomedIn);
         // The level is kept on the box, either way: a diagram drawn again gets a new picture and a new slider, and the
