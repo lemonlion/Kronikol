@@ -22,7 +22,8 @@ public static class TestPageGenerator
         bool includeEmptySegment = false,
         bool includeContextMenu = false,
         bool includeTwin = false,
-        string childSpanName = "SELECT * FROM Orders")
+        string childSpanName = "SELECT * FROM Orders",
+        InternalFlowTab startTab = InternalFlowTab.Activity)
     {
         using var activitySource = new ActivitySource("Kronikol.Tests.EndToEnd");
         using var listener = new ActivityListener
@@ -75,7 +76,8 @@ public static class TestPageGenerator
             segments, diagramStyle,
             showFlameChart: includeToggle,
             flameChartPosition: InternalFlowFlameChartPosition.BehindWithToggle,
-            noDataBehavior: includeEmptySegment ? InternalFlowNoDataBehavior.ShowMessage : InternalFlowNoDataBehavior.HideLink);
+            noDataBehavior: includeEmptySegment ? InternalFlowNoDataBehavior.ShowMessage : InternalFlowNoDataBehavior.HideLink,
+            startTab: startTab);
 
         var styles = DiagramContextMenu.GetInternalFlowPopupStyles();
         var popupScript = DiagramContextMenu.GetInternalFlowPopupScript();

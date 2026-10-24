@@ -135,11 +135,58 @@ public class PartsZoomDrawingTests : PlaywrightTestBase
         Assert.True(Math.Abs(across) <= 2, $"once every part was at the new level, the point under the pointer had moved {across:F1} px across");
     }
 
+    // 17, at once: the parts on screen are resized in the notch's own task, before anything is painted, and only the far
+    // ones wait a frame each; resized one a frame, a part beside the one under the pointer showed the old level a frame
+    // or more after it
+    [Fact]
+    public async Task A_notch_resizes_every_part_on_screen_in_its_own_task_not_only_the_part_under_the_pointer()
+    {
+        await Page.SetViewportSizeAsync(1280, 900);
+        await Page.GotoReportAsync(ReportTestHelper.GenerateReportWithDiagramInParts(TempDir, OutputDir, "PartsOnScreenAtOnce.html",
+            ReportTestHelper.PartsSource(40, new Dictionary<int, int> { [2] = 180 }), partHeight: 500));
+        await Page.Locator("details.feature").First.WaitForAsync();
+        await ExpandFirstScenarioWithDiagram();
+        await ZoomFacts.WaitForSliderAsync(Page, 0, timeoutMs: 120000);
+        await Page.WaitForFunctionAsync("""
+            () => {
+                const c = document.querySelector("[data-diagram-type='plantuml']");
+                const parts = Array.from(c.querySelectorAll(':scope > .puml-fragment'));
+                return !window._plantumlRendering && !c._lineUpPending && !c._zoomPending && parts.length > 1 && parts.every(p => p.querySelector(':scope > svg'));
+            }
+            """, null, new() { Timeout = 120000, PollingInterval = 200 });
+        var parts = (await ZoomFacts.ReadAsync(Page, 0)).Levels.Length;
+        Assert.True(parts >= 4, $"the diagram is drawn in {parts} parts");
+        var (x, y) = await ZoomFacts.PointInAsync(Page, 0, part: 1);
+
+        var r = await Page.EvaluateAsync<JsonElement>("""
+            ([x, y]) => {
+                const c = document.querySelector("[data-diagram-type='plantuml']");
+                const s = c.querySelector(':scope > .diagram-zoom-controls .diagram-zoom-slider');
+                const before = parseInt(s.value);
+                const target = document.elementFromPoint(x, y);
+                const under = target.closest('.puml-fragment').querySelector(':scope > svg');
+                const onScreen = Array.from(c.querySelectorAll(':scope > .puml-fragment > svg'))
+                    .filter(p => { const b = p.getBoundingClientRect(); return b.bottom > 0 && b.top < innerHeight; });
+                target.dispatchEvent(new WheelEvent('wheel', { bubbles: true, cancelable: true, ctrlKey: true, deltaY: -100, clientX: x, clientY: y }));
+                return { before, level: parseInt(s.value), under: onScreen.indexOf(under),
+                    levels: onScreen.map(p => p.getBoundingClientRect().width / p.width.baseVal.value * 100) };
+            }
+            """, new object[] { (double)x, (double)y });
+        var before = r.GetProperty("before").GetInt32();
+        var level = r.GetProperty("level").GetInt32();
+        var levels = r.GetProperty("levels").EnumerateArray().Select(l => l.GetDouble()).ToArray();
+        var shown = string.Join(", ", levels.Select(l => l.ToString("F2")));
+        Assert.True(level > before, $"premise: the notch zooms in, {before} -> {level}");
+        Assert.True(levels.Length >= 2 && r.GetProperty("under").GetInt32() >= 0,
+            $"premise: the part under the pointer and another are on screen ({levels.Length} on screen)");
+        Assert.True(levels.All(l => Math.Abs(l - level) <= 0.6), $"in the notch's own task the parts on screen were at {shown}, not {level}");
+    }
+
     // A redraw makes the slider of a long diagram in parts again at the level its parts are drawn at: the parts far from
-    // the window are gone over one a frame after, and as none of them changes size, none holds the browser's scroll
+    // the window keep their size, so none is resized, none holds the browser's scroll
     // anchoring off or scrolls the page (SplitDiagramZoomTests has the near parts)
     [Fact]
-    public async Task A_slider_made_again_on_a_long_diagram_in_parts_leaves_the_scroll_alone_while_its_far_parts_are_gone_over()
+    public async Task A_slider_made_again_on_a_long_diagram_in_parts_reads_no_far_part_and_leaves_the_scroll_alone()
     {
         await Page.GotoReportAsync(ReportTestHelper.GenerateReportWithDiagramInParts(TempDir, OutputDir, "PartsFarAnchoring.html",
             ReportTestHelper.PartsSource(160, new Dictionary<int, int> { [2] = 180 })));
@@ -156,22 +203,28 @@ public class PartsZoomDrawingTests : PlaywrightTestBase
         var parts = (await ZoomFacts.ReadAsync(Page, 0)).Levels.Length;
         await ZoomFacts.ScrollToPartAsync(Page, parts - 2);
 
+        // and as none of them changes, none of them is laid out to find that out: read one a frame, the far parts cost
+        // 181 ms of layout on every toggle of a long report (5.7.3)
         var r = await Page.EvaluateAsync<string>("""
             () => new Promise(done => {
                 const c = document.querySelector("[data-diagram-type='plantuml']");
-                const y = scrollY;
+                const y = scrollY, h = innerHeight;
+                const far = new Set(Array.from(c.querySelectorAll(':scope > .puml-fragment > svg'))
+                    .filter(p => { const b = p.parentElement.getBoundingClientRect(); return b.bottom < -h || b.top > 2 * h; }));
+                const read = Element.prototype.getBoundingClientRect;
+                let farReads = 0;
+                Element.prototype.getBoundingClientRect = function() { if (far.has(this)) farReads++; return read.call(this); };
                 let held = 0, frames = 0;
                 window._addZoomButton(c);
-                const far = !!c._zoomPending;
                 const watch = () => {
                     if (document.documentElement.style.overflowAnchor === 'none') held++;
-                    if (c._zoomPending && ++frames < 600) requestAnimationFrame(watch);
-                    else done(far + '|' + held + '|' + (scrollY - y));
+                    if (++frames < Math.max(30, far.size + 10)) requestAnimationFrame(watch);
+                    else { Element.prototype.getBoundingClientRect = read; done((far.size > 2) + '|' + farReads + '|' + held + '|' + (scrollY - y)); }
                 };
                 watch();
             })
             """);
-        Assert.Equal("true|0|0", r);
+        Assert.Equal("true|0|0|0", r);
     }
 
     // 17. Fifteen parts as wide and long as the consumer report's longest diagram (M6: 1,750 x 112,940 px): resizing every
@@ -182,7 +235,7 @@ public class PartsZoomDrawingTests : PlaywrightTestBase
     // paint and, past its box, a new scroll layer), the same whether resized by its width or scaled by a transform
     // (5.7.0, plans/ZOOM_EVERY_DIAGRAM_PLAN.md log).
     [Fact]
-    public async Task A_notch_on_a_fifteen_part_diagram_paints_quickly_and_every_part_reaches_the_new_level_within_a_second()
+    public async Task A_notch_on_a_diagram_of_fifteen_parts_or_more_paints_quickly_and_every_part_reaches_the_new_level_within_its_budget()
     {
         await Page.AddInitScriptAsync(BrowserRenderWorkerTests.BenchInitWithProbe);
         await Page.GotoReportAsync(ReportTestHelper.GenerateReportWithDiagramInParts(TempDir, OutputDir, "PartsNotchBudget.html",
@@ -191,7 +244,7 @@ public class PartsZoomDrawingTests : PlaywrightTestBase
         await ExpandFirstScenarioWithDiagram();
         await ZoomFacts.WaitForSliderAsync(Page, 0, timeoutMs: 180000);
         var parts = (await ZoomFacts.ReadAsync(Page, 0)).Levels.Length;
-        Assert.True(parts >= 14, $"the diagram is drawn in {parts} parts");
+        Assert.True(parts >= 15, $"the diagram is drawn in {parts} parts");
         var (x, y) = await ZoomFacts.PointInAsync(Page, 0, part: 7);
         await Page.WaitForTimeoutAsync(1000);
 

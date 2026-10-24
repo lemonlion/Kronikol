@@ -254,14 +254,25 @@ public class ZoomKeptOnRedrawTests : PlaywrightTestBase
                 var c = document.querySelector('[data-diagram-type="plantuml"]');
                 return JSON.stringify({ fits: c.querySelector(':scope > svg').getBoundingClientRect().width <= c.clientWidth,
                     slider: (c.querySelector(':scope > .diagram-zoom-controls .diagram-zoom-slider') || { value: 'none' }).value, zoomed: c.classList.contains('diagram-natural-size'),
-                    cursor: c.style.cursor, overflow: c.style.overflowX });
+                    overflow: c.style.overflowX });
             }
             """));
         Assert.True(box.GetProperty("fits").GetBoolean(), "folded, the note leaves a diagram that fits its box");
         Assert.Equal("100", box.GetProperty("slider").GetString()); // a diagram that fits has its slider at 100 since 5.7.0, none before
         Assert.False(box.GetProperty("zoomed").GetBoolean(), "a diagram that fits its box is not marked zoomed");
-        Assert.Equal("", box.GetProperty("cursor").GetString());
         Assert.Equal("", box.GetProperty("overflow").GetString());
+        // its picture, hovered, has no grab cursor (since 5.7.0 a style of the picture under the pointer of a diagram
+        // zoomed in; this read the box's own style until 5.7.3, which the page no longer writes)
+        var at = await Page.EvaluateAsync<double[]>("""
+            () => {
+                const svg = document.querySelector('[data-diagram-type="plantuml"] > svg');
+                svg.scrollIntoView({ block: 'center' });
+                const r = svg.getBoundingClientRect();
+                return [r.left + r.width / 2, r.top + r.height / 2];
+            }
+            """);
+        await Page.Mouse.MoveAsync((float)at[0], (float)at[1]);
+        Assert.NotEqual("grab", await Page.EvaluateAsync<string>("() => getComputedStyle(document.querySelector('[data-diagram-type=\"plantuml\"] > svg')).cursor"));
     }
 
     // A diagram in parts goes back to one picture (the Details choice from expanded to truncated): a click on its last

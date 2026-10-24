@@ -4,6 +4,96 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.7.3] - 2026-10-24
+
+The patch part moves (5.7.2 to 5.7.3): fixes and performance work, with nothing new to call or configure. An audit of
+`plans/ZOOM_EVERY_DIAGRAM_PLAN.md` against 5.7.0 to 5.7.2 found that every rule of the plan is in the code, and found
+the faults below: fourteen from those releases, and five older ones, two of which 5.7.0 made worse.
+
+### Fixed
+
+- **A toggle that draws a lined-up diagram in parts again shows its parts lined up in the first frame.** The new parts
+  were shown as the engine drew them, each at its own width, and lined up a frame later, so the diagram jumped. They
+  are now sized and placed at the diagram's level while still hidden. This also takes back most of what lining up
+  cost a toggle: on the consumer report's longest feature its toggles took 17% longer to finish than on 5.6.1 before
+  the fix, and take 9% longer after it (2,366 ms against 2,177 at the median of 36 switches; 945 ms against 916 to the
+  first picture), within the plan's 10%. What is left is the layout of parts as wide as the whole diagram.
+- **A slider made again at the level its parts are drawn at no longer goes over the parts far from the screen.**
+  Every redraw makes the slider again, and it read each far part's size, one a frame for the frames after the toggle,
+  to find nothing to change. A part whose style already holds the level is passed over unread, and the parts are laid
+  out once, as the redraw is.
+- **A diagram in parts at its fit level fits its box again after the window changes width.** Its parts kept the width
+  of the box they were sized in. The slider of a diagram near the screen is made again at once, and the rest as they
+  come near.
+- **Back to the fit level from a pan across, no frame shows the parts drawn off the box's left.** The box kept its
+  scroll across until its last far part was resized.
+- **Zooming the activity diagram in an internal-flow popup keeps the reader's place by scrolling the popup.** It
+  scrolled the report behind the popup.
+- **Zooming out in an internal-flow popup goes on zooming out.** The popup is as wide as what it holds, so it narrowed
+  with the picture, and the next notch took the picture for a wide one at its fit level and drew it whole again:
+  every other notch undid the zoom.
+- **The activity diagram of a popup opened on its flame chart gets its zoom slider once its tab is shown.** Drawn
+  while its tab was hidden, it measured nothing and had no slider, so Ctrl+wheel zoomed the whole page.
+- **A diagram in parts with a part that never draws has its picture items again.** A part with a render error, or too
+  large to draw, left the menu with no Copy, Save or Open picture items. They now act on the part under the click and
+  say so, for example "Copy part 1 of 3 as SVG", as before 5.7.0.
+- **A diagram in parts a hair wider than its box fits it, with no scrollbar.** Its fit level rounds to 100, and its
+  parts were drawn at their natural width, past the box; every redraw then held the browser's scroll anchoring off for
+  a width that never changed.
+- **A Ctrl+wheel notch with the pointer between two parts keeps what is below the pointer in place.** No picture was
+  under the pointer, so nothing kept the reader's place.
+- **Ctrl with a sideways wheel (a tilt wheel, a sideways swipe) is left to the browser.** It zoomed the diagram out.
+- **Ctrl and minus typed in a field, such as the search box, are left to the field.** They zoomed the selected
+  diagram.
+- **Parts whose messages are sent by a participant named like a keyword keep their numbers and line up.** The
+  generator camelizes a service called Queue or Database to `queue` or `database`, and a message such as
+  `queue -> billing` at the top of a diagram was taken for a declaration. It went into the header every part repeats,
+  so every part drew it again (since 3.0.43 at the latest), and since 5.7.0 a lined-up part's row went in after it,
+  numbering every message one lower.
+- **An outline the engine could not draw no longer turns lining up off for the rest of the session.** A failure, or
+  30 s gone on a slow first load, was kept as "no outline".
+- **A part drawn again that the engine finds too large shows the diagram's own source.** It showed the source the
+  engine was given, with the lines the page adds to line parts up.
+- **A diagram numbered from past 1 and cut at a note too long for one part keeps its numbers in every part** (since
+  3.0.43 at the latest). The second of a scenario's diagrams is numbered on from the first, and the parts after the
+  cut were numbered as if the diagram started at 1.
+- **A part the engine never answers is given up with a message and settled** (since 3.0.45). It was given up after
+  60 s with nothing said, and the page went on waiting for it.
+- **A participant declared partway through a diagram in parts is drawn as declared in every later part** (since 3.0.43
+  at the latest). A participant made with `create participant "Late" as l`, or declared after the first message, was
+  declared only in the part holding that line, so a later part drew one the engine made up, named `l`. Each later part
+  now declares it in its header, and it lines up with the others.
+- **A picture the server or the local Java engine drew keeps its shape when drawn narrower than its own width.** Its
+  `<svg>` says its height in pixels, with `preserveAspectRatio="none"`, and it kept that height and was squashed
+  across: at the fit level of a picture wider than its box before 5.7.0 too, and zoomed out since 5.7.0, when every
+  diagram that fits could be.
+
+### Tests
+
+- `ZoomRobustnessTests`, new, 17 facts, one for each fault above or more. Fourteen were red on 5.7.2's scripts; the
+  rest, written when their fault was found, were red on the code before its fix (the zoom out in a popup stopped at
+  91 of 85, a picture drawn by Java was 1180 x 300 at its fit level, where 1180 x 147.5 keeps its shape).
+- `PartsZoomDrawingTests`: a notch resizes every part on screen in its own task, not only the part under the pointer
+  (the mutation `plans/ZOOM_EVERY_DIAGRAM_PLAN.md` 6.4 asked for and the harness lacked); a slider made again at its
+  level reads no far part (red: 22 reads).
+- `LinedUpPartsTests`: the Q7 fact's participant made with `create` is in two parts, named as made and in line in
+  both (red: the later part drew `l`). Facts 4 and 5 check that the parts are lined up, the second page of fact 6
+  that it is not, and fact 7 that the engine's text decoded.
+- `FittingDiagramZoomTests`, `ZoomKeptOnRedrawTests`, `SplitDiagramZoomTests` and `DiagramInPartsAsOneTests`: the grab
+  cursor is read off the picture under a hovering pointer (the box's own style is empty either way); a zoom out is
+  checked to have taken effect; a notch over a part that fits beside a wide one, and a drag that leaves an unselected
+  diagram unselected, are new; the copy's parts are checked where they stand.
+- `ReportDiagnosticsTests` and `TrackingComponentRegistryTests`: two more facts that read what is absent from the
+  process's registry now read their own components, as 5.7.2 did for the diagnostic page (red while the new
+  parameter went unused).
+- The mutation run (`plans/ZOOM_EVERY_DIAGRAM_PLAN.harness/mutate.js`) has one mutation for each fix, 56 in all, and
+  each fails a fact. Its first run on this release's code killed 42 of 55: nine did not build (a test file was edited
+  while it ran) and four survived. The nine, run again, fail a fact. Three of the survivors fail one now that their
+  facts reach the case: a note cut across parts (which a payload's scroll box otherwise keeps from happening), the very
+  parts whose outline failed drawn again, and parts shifted to line up. The fourth held the popup's own scroll
+  anchoring off, which changed nothing, and that code is gone. The two added after, for the Java pictures and the
+  popup's zoom out, fail a fact.
+
 ## [5.7.2] - 2026-10-24
 
 The patch part moves (5.7.1 to 5.7.2): internal work for the tests, with nothing new to call or configure and nothing a

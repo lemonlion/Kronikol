@@ -143,7 +143,7 @@ internal static class ZoomFacts
 
     /// <summary>
     /// Where the point of a picture under (<paramref name="x"/>, <paramref name="y"/>) is now, read as a fraction of the
-    /// picture before and as screen pixels after: returns a token for <see cref="PointMovedAsync"/>.
+    /// picture before and as screen pixels after, kept in the page for <see cref="PointMovedAsync"/>.
     /// </summary>
     internal static Task MarkPointAsync(IPage page, float x, float y) => page.EvaluateAsync("""
         ([x, y]) => {

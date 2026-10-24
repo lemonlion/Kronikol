@@ -4,6 +4,12 @@
     max-width: 100%;
     height: auto;
 }
+/* A picture the server or the local Java engine drew says its width and height in pixels in its own style, with
+   preserveAspectRatio="none": its height follows its width all the same, or drawn narrower than its own width (a wide
+   one at its fit level, any one zoomed out) it kept its height and was squashed across (until 5.7.3). */
+.plantuml-inline-svg > svg {
+    height: auto !important;
+}
 .plantuml-inline-svg,
 .plantuml-browser {
     overflow-x: auto;

@@ -188,7 +188,51 @@ public class SplitDiagramZoomTests : PlaywrightTestBase
         var (across, down) = await ZoomFacts.PointMovedAsync(Page);
         Assert.True(Math.Abs(across) <= 2, $"the point under the pointer stays across: {across:F1} px");
         Assert.True(Math.Abs(down) <= 2, $"the point under the pointer stays down the page: {down:F1} px");
-        Assert.All(await ZoomFacts.WheelsPreventedAsync(Page), p => Assert.True(p));
+        var wheels = await ZoomFacts.WheelsPreventedAsync(Page);
+        Assert.NotEmpty(wheels);
+        Assert.All(wheels, p => Assert.True(p));
+    }
+
+    // 14 of section 6.2 as the plan words it, over a part that fits: lined up, a diagram's parts are as wide as each
+    // other, so the part that fits is on a diagram the page does not line up (no participant declared), whose first
+    // part is narrow and a later one wide
+    [Fact]
+    public async Task Ctrl_wheel_over_a_part_that_fits_zooms_every_part_and_keeps_the_point_under_the_pointer()
+    {
+        var sb = new System.Text.StringBuilder("@startuml\n!pragma teoz true\n");
+        for (var k = 1; k <= 30; k++)
+            sb.Append($"A -> B : call{k}{(k == 18 ? " " + new string('w', 260) : "")}\nB --> A : ok{k}\n");
+        sb.Append("@enduml");
+        await Page.GotoReportAsync(ReportTestHelper.GenerateReportWithDiagramInParts(TempDir, OutputDir, "SplitZoomFittingPart.html", sb.ToString()));
+        await Page.Locator("details.feature").First.WaitForAsync();
+        await ExpandFirstScenarioWithDiagram();
+        await WaitForPartsAsync();
+        var fits = await Page.EvaluateAsync<bool[]>("""
+            () => {
+                const c = document.querySelector("[data-diagram-type='plantuml']"), cs = getComputedStyle(c);
+                const content = c.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+                return Array.from(c.querySelectorAll(':scope > .puml-fragment > svg')).map(s => s.width.baseVal.value <= content);
+            }
+            """);
+        Assert.True(fits[0] && fits.Any(f => !f), $"premise: the first part fits its box and another does not: {string.Join(", ", fits)}");
+        var before = await StateAsync();
+        var (x, y) = await PointInPartAsync(0);
+        await ZoomFacts.MarkPointAsync(Page, x, y);
+        await ZoomFacts.WatchWheelAsync(Page);
+
+        await ZoomFacts.CtrlWheelAsync(Page, x, y, 3);
+        await WaitForPartsAsync();
+
+        var after = await StateAsync();
+        Assert.True(after.Slider > before.Slider, $"the slider follows: {before.Slider} -> {after.Slider}");
+        Assert.True(after.Widths.Zip(before.Widths, (a, b) => a > b + 1).All(g => g), "every part grows");
+        AssertOneLevel(after);
+        var (across, down) = await ZoomFacts.PointMovedAsync(Page);
+        Assert.True(Math.Abs(across) <= 2, $"the point under the pointer stays across: {across:F1} px");
+        Assert.True(Math.Abs(down) <= 2, $"the point under the pointer stays down the page: {down:F1} px");
+        var wheels = await ZoomFacts.WheelsPreventedAsync(Page);
+        Assert.NotEmpty(wheels);
+        Assert.All(wheels, p => Assert.True(p));
     }
 
     [Fact]
@@ -257,6 +301,28 @@ public class SplitDiagramZoomTests : PlaywrightTestBase
         var moved = before.Lefts.Zip(after.Lefts, (b, a) => b - a).ToArray();
         Assert.True(moved.Max() - moved.Min() <= 1, $"every part moves together: {string.Join(", ", moved.Select(m => m.ToString("F1")))}");
         Assert.True(after.Selected, "a drag is not a click: the diagram stays selected");
+    }
+
+    // 15 of section 6.2, its other half: a drag leaves a diagram that was not selected unselected
+    [Fact]
+    public async Task Dragging_the_zoomed_diagram_when_it_is_not_selected_pans_every_part_and_leaves_it_unselected()
+    {
+        await OpenAsync("SplitZoomPanUnselected.html");
+        await ZoomFacts.SetLevelAsync(Page, 0, 100);
+        var (x, y) = await PointInPartAsync(1);
+        var before = await StateAsync();
+        Assert.False(before.Selected, "premise: not selected");
+
+        await Page.Mouse.MoveAsync(x, y);
+        await Page.Mouse.DownAsync();
+        await Page.Mouse.MoveAsync(x - 200, y, new() { Steps = 5 });
+        await Page.Mouse.UpAsync();
+        await TwoAnimationFramesAsync(Page);
+
+        var after = await StateAsync();
+        Assert.True(after.ScrollLeft > before.ScrollLeft, $"the diagram pans: {before.ScrollLeft} -> {after.ScrollLeft}");
+        Assert.False(after.Selected, "a drag is not a click: the diagram stays unselected");
+        Assert.Equal(0, after.PartsSelected);
     }
 
     /// <summary>The cursor over each part's picture, in order.</summary>

@@ -370,10 +370,6 @@ public abstract class PlaywrightTestBase : IAsyncLifetime
     protected static ILocator ZoomSliderOf(ILocator box) =>
         box.Locator(":scope > .diagram-zoom-controls .diagram-zoom-slider");
 
-    /// <summary>The script expression for the zoom slider of the page's first sequence diagram, for page functions.</summary>
-    protected const string FirstDiagramSliderJs =
-        "document.querySelector(\"[data-diagram-type='plantuml']\").querySelector(':scope > .diagram-zoom-controls .diagram-zoom-slider')";
-
     protected static ILocatorAssertions Expect(ILocator locator) =>
         Assertions.Expect(locator);
 

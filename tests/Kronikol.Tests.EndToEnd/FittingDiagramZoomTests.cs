@@ -59,7 +59,9 @@ public class FittingDiagramZoomTests : PlaywrightTestBase
         Assert.True(after.Slider < 100, $"the slider follows: {after.Slider}");
         Assert.True(after.Out, "the diagram is marked zoomed out");
         Assert.True(Math.Abs(after.Centres[0]) <= 1, $"the picture stays in the middle of its box ({after.Centres[0]:F1} px off)");
-        Assert.All(await ZoomFacts.WheelsPreventedAsync(Page), p => Assert.True(p, "the page's zoom is not asked"));
+        var wheels = await ZoomFacts.WheelsPreventedAsync(Page);
+        Assert.NotEmpty(wheels);
+        Assert.All(wheels, p => Assert.True(p, "the page's zoom is not asked"));
     }
 
     // 3
@@ -112,7 +114,16 @@ public class FittingDiagramZoomTests : PlaywrightTestBase
         await ZoomFacts.SetLevelAsync(Page, Fits, 70);
         var d = await ZoomFacts.ReadAsync(Page, Fits);
         Assert.True(d.Out);
-        Assert.NotEqual("grab", d.Cursor);
+        // the grab cursor is the page's style for the picture under the pointer of a diagram zoomed in (5.7.0), so it is
+        // read there, hovered; the wide diagram zoomed in shows that the reading sees it (until 5.7.3 this read the box,
+        // which no rule styles, and could not fail)
+        await ZoomFacts.SetLevelAsync(Page, Wide, 100);
+        var (wx, wy) = await ZoomFacts.PointInAsync(Page, Wide);
+        await Page.Mouse.MoveAsync(wx, wy);
+        Assert.Equal("grab", await Page.EvaluateAsync<string>("() => getComputedStyle(document.querySelectorAll(\"[data-diagram-type='plantuml']\")[0].querySelector('svg')).cursor"));
+        var (fx, fy) = await ZoomFacts.PointInAsync(Page, Fits);
+        await Page.Mouse.MoveAsync(fx, fy);
+        Assert.NotEqual("grab", await Page.EvaluateAsync<string>("() => getComputedStyle(document.querySelectorAll(\"[data-diagram-type='plantuml']\")[1].querySelector('svg')).cursor"));
         Assert.True(d.ScrollWidth <= d.ClientWidth, $"no scroll: {d.ScrollWidth} against {d.ClientWidth}");
 
         // a drag across the first message's label
@@ -339,6 +350,8 @@ public class FittingDiagramZoomTests : PlaywrightTestBase
         Assert.Equal(50, folded.Min);
         // zoomed out a little, to a level above the fit level the picture will have: kept, the level would show
         await ZoomFacts.SetLevelAsync(Page, 0, 95);
+        var zoomedOut = await ZoomFacts.ReadAsync(Page, 0);
+        Assert.True(zoomedOut.Out && zoomedOut.Slider == 95, $"premise: zoomed out to 95, the slider at {zoomedOut.Slider}");
 
         await RedrawAsync("() => window._setReportDetails('truncated')");
 
@@ -459,6 +472,8 @@ public class FittingDiagramZoomTests : PlaywrightTestBase
             }
             """);
         await ZoomFacts.SetLevelAsync(Page, Fits, 60);
+        var zoomedOut = await ZoomFacts.ReadAsync(Page, Fits);
+        Assert.True(zoomedOut.Out && Math.Abs(zoomedOut.Levels[0] - 60) <= 1, $"premise: drawn at 60%, not {zoomedOut.Levels[0]:F1}%");
         await Page.EvaluateAsync("() => navigator.clipboard.writeText('nothing copied yet')");
 
         await Page.EvaluateAsync("""

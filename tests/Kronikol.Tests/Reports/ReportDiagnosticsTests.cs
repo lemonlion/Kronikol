@@ -236,12 +236,15 @@ public class ReportDiagnosticsTests : IDisposable
         Assert.DoesNotContain(warnings, w => w.Contains("never invoked") && w.Contains("Handler (All Invoked)"));
     }
 
+    // The two facts below give the diagnostics their components: the registry is the process's, and a test in another
+    // collection (WebApplicationFactoryClientsTests makes hundreds of handlers it never uses) can register one between
+    // this class's Clear and its read, which turned "none" into one and "2" into 3 (5.7.3).
     [Fact]
     public void No_unused_component_warning_when_no_components_registered()
     {
         var logs = new[] { MakeLog("t1", RequestResponseType.Request, Guid.NewGuid()) };
 
-        var warnings = ReportDiagnostics.Analyse(logs, []);
+        var warnings = ReportDiagnostics.Analyse(logs, [], false, true, null, components: []);
 
         Assert.DoesNotContain(warnings, w => w.Contains("never invoked"));
     }
@@ -249,15 +252,27 @@ public class ReportDiagnosticsTests : IDisposable
     [Fact]
     public void Unused_component_warning_lists_count()
     {
-        TrackingComponentRegistry.Clear();
-        TrackingComponentRegistry.Register(new StubComponent("A", wasInvoked: false));
-        TrackingComponentRegistry.Register(new StubComponent("B", wasInvoked: false));
-        TrackingComponentRegistry.Register(new StubComponent("C", wasInvoked: true));
+        var components = new ITrackingComponent[]
+        {
+            new StubComponent("A", wasInvoked: false), new StubComponent("B", wasInvoked: false), new StubComponent("C", wasInvoked: true)
+        };
         var logs = new[] { MakeLog("t1", RequestResponseType.Request, Guid.NewGuid()) };
 
-        var warnings = ReportDiagnostics.Analyse(logs, []);
+        var warnings = ReportDiagnostics.Analyse(logs, [], false, true, null, components);
 
         Assert.Contains(warnings, w => w.Contains("2 tracking component(s)") && w.Contains("A") && w.Contains("B"));
+    }
+
+    [Fact]
+    public void Given_its_components_the_diagnostics_read_those_and_not_the_registry()
+    {
+        TrackingComponentRegistry.Register(new StubComponent("Registered Elsewhere", wasInvoked: false));
+        var logs = new[] { MakeLog("t1", RequestResponseType.Request, Guid.NewGuid()) };
+
+        var warnings = ReportDiagnostics.Analyse(logs, [], false, true, null, [new StubComponent("Given", wasInvoked: false)]);
+
+        Assert.Contains(warnings, w => w.Contains("1 tracking component(s)") && w.Contains("Given"));
+        Assert.DoesNotContain(warnings, w => w.Contains("Registered Elsewhere"));
     }
 
     [Fact]

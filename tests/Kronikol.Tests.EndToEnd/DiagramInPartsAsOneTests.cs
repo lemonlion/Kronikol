@@ -91,11 +91,19 @@ public class DiagramInPartsAsOneTests : PlaywrightTestBase
                 const shared = nested.flatMap((s, k) => idsOf(s).filter(id => nested.some((o, j) => j !== k && idsOf(o).includes(id))));
                 const unique = !foreign.length && !shared.length && nested.every(s => idsOf(s).length > 0);
                 const twice = foreign.concat(shared).slice(0, 5).join(' ');
+                // each part in its own place: stacked one under the other, each its own height (5.7.3: which picture
+                // holds a text was checked, never where the picture stands)
+                const parts = Array.from(document.querySelectorAll("[data-diagram-type='plantuml'] > .puml-fragment > svg"));
+                const ys = nested.map(s => parseFloat(s.getAttribute('y'))), hs = nested.map(s => parseFloat(s.getAttribute('height')));
+                const stacked = nested.length === parts.length && nested.every((s, k) =>
+                    Math.abs(hs[k] - parts[k].height.baseVal.value) < 0.5 && Math.abs(ys[k] - hs.slice(0, k).reduce((a, b) => a + b, 0)) < 0.5);
                 return [String(parsed), String(nested.length), order, String(unique),
                     document.querySelector("[data-diagram-type='plantuml']").getAttribute('data-plantuml'),
-                    parsed ? '' : doc.querySelector('parsererror').textContent.slice(0, 300), twice];
+                    parsed ? '' : doc.querySelector('parsererror').textContent.slice(0, 300), twice,
+                    String(stacked), ys.join(',') + ' / ' + hs.join(',')];
             }
             """, svg);
+        Assert.True(r[7] == "true", $"each part stands under the one before it, at its own height: y / height {r[8]}");
 
         Assert.True(r[0] == "true", $"the copy parses as XML: {r[5]}");
         Assert.Equal("3", r[1]);

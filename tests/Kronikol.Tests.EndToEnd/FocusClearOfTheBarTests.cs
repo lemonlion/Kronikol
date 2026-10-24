@@ -186,7 +186,7 @@ public class FocusClearOfTheBarTests : PlaywrightTestBase
         // since 5.7.0 every drawn diagram has a zoom slider, which Tab reaches first, and shows while it has the focus
         await Page.Keyboard.PressAsync("Tab");
         await WaitPastTheWatchAsync(Page);
-        var slider = Scenario("01-1").Locator(".plantuml-browser > .diagram-zoom-controls .diagram-zoom-slider");
+        var slider = Scenario("01-1").Locator(".plantuml-browser > .diagram-zoom-controls .diagram-zoom-slider").First;
         Assert.True(await HasFocusAsync(slider), "Tab went from the settings' gear to the diagram's zoom slider");
         Assert.Equal("1", await slider.EvaluateAsync<string>("s => getComputedStyle(s.closest('.diagram-zoom-controls')).opacity"));
 

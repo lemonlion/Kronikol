@@ -177,12 +177,18 @@ public class LinedUpPartsTests : PlaywrightTestBase
             Assert.False(text.Contains(added, StringComparison.Ordinal), $"{what} holds no \"{added}\"");
     }
 
+    /// <summary>Whether the first diagram is lined up: drawn with the row (R2).</summary>
+    private Task<bool> LinedUpAsync() => Page.EvaluateAsync<bool>("""
+        () => { const c = document.querySelector("[data-diagram-type='plantuml']"); return !!(c._lineUp && c._lineUp.row); }
+        """);
+
     // 4
     [Fact]
     public async Task The_source_items_give_the_diagram_as_written_with_none_of_the_lines_the_page_added()
     {
         await Context.GrantPermissionsAsync(["clipboard-read", "clipboard-write"]);
         await OpenAsync("LinedUpSources.html");
+        Assert.True(await LinedUpAsync(), "premise: the diagram is lined up");
         // the report's notes start truncated; one of the second part's is expanded, so the full and current sources differ
         await ZoomFacts.ScrollToPartAsync(Page, 1);
         await Page.WaitForFunctionAsync(
@@ -231,6 +237,7 @@ public class LinedUpPartsTests : PlaywrightTestBase
     {
         await Context.GrantPermissionsAsync(["clipboard-read", "clipboard-write"]);
         await OpenAsync("LinedUpCopySvg.html");
+        Assert.True(await LinedUpAsync(), "premise: the diagram is lined up");
         await Page.EvaluateAsync("() => navigator.clipboard.writeText('nothing copied yet')");
 
         await ZoomFacts.MenuAsync(Page, 1, "Copy image", "Copy as SVG");
@@ -300,6 +307,7 @@ public class LinedUpPartsTests : PlaywrightTestBase
 
         await Page.AddInitScriptAsync("window.__kronikolLineUp = false;");
         await OpenAsync("LinedUpNoteTextPlain.html", LongNotesSource());
+        Assert.False(await LinedUpAsync(), "premise: this page does not line the diagram up");
         var plain = await SecondPartsNoteTextAsync();
 
         Assert.False(string.IsNullOrWhiteSpace(lined), "the note's current text is copied");
@@ -343,6 +351,8 @@ public class LinedUpPartsTests : PlaywrightTestBase
             """);
         var drawnFrom = await ZoomFacts.PlantUmlSourcesAsync(Page, whole);
         Assert.Single(drawnFrom);
+        // the engine is given the diagram's lines between @startuml and @enduml
+        Assert.StartsWith("!pragma teoz true", drawnFrom[0]);
         AssertNoAddedLine("the one picture's engine text", drawnFrom[0]);
     }
 
@@ -377,10 +387,12 @@ public class LinedUpPartsTests : PlaywrightTestBase
         Assert.True(d.ScrollWidth <= d.ClientWidth, $"no scroll across: {d.ScrollWidth} against {d.ClientWidth}");
         var inView = await Page.EvaluateAsync<bool>("""
             () => {
-                const c = document.querySelector("[data-diagram-type='plantuml']"), cr = c.getBoundingClientRect();
+                // inside the box's content, where a picture is drawn (B1), not only inside its padding
+                const c = document.querySelector("[data-diagram-type='plantuml']"), cr = c.getBoundingClientRect(), cs = getComputedStyle(c);
+                const left = cr.left + c.clientLeft + parseFloat(cs.paddingLeft), right = cr.left + c.clientLeft + c.clientWidth - parseFloat(cs.paddingRight);
                 return Array.from(c.querySelectorAll(':scope > .puml-fragment > svg')).every(s => {
                     const r = s.getBoundingClientRect();
-                    return r.left >= cr.left - 0.5 && r.right <= cr.right + 0.5;
+                    return r.left >= left - 0.5 && r.right <= right + 0.5;
                 });
             }
             """);
@@ -515,6 +527,8 @@ public class LinedUpPartsTests : PlaywrightTestBase
         for (var k = 2; k <= 30; k++)
         {
             if (k == 15) sb.Append("create participant \"Late\" as l\ng -> l : make\n");
+            // the made participant in a later part too
+            if (k == 27) sb.Append("g -> l : again\n");
             // room left of the first lifeline in a later part only: the page places each part by its first lifeline
             if (k == 24) sb.Append("note left of Client : a note left of the first participant " + new string('n', 40) + "\n");
             var (from, to) = (k % 3) switch { 0 => ("Client", "g"), 1 => ("g", "Service"), _ => ("Service", "d") };
@@ -557,5 +571,17 @@ public class LinedUpPartsTests : PlaywrightTestBase
             """);
         Assert.All(gaps, g => Assert.True(g > 2000, $"the first gap is held open in every part: {string.Join(", ", gaps.Select(x => x.ToString("F0")))}"));
         Assert.True(WorstOffset(parts, 4) <= 0.5, $"the declared participants line up: {Show(parts)}");
+        // the participant made partway (create) stands in line too, in every part that has it (5.7.3: not checked before)
+        var withLate = parts.Where(p => p.Length >= 5).ToArray();
+        Assert.True(withLate.Length >= 2, $"premise: the made participant is in two parts or more: {Show(parts)}");
+        // named as it was made in every part that has it: until 5.7.3 a part after the one that made it was not told of
+        // it, and the engine made one of its own, named by the alias (from 3.0.43 at the latest)
+        var named = await Page.EvaluateAsync<string[]>("""
+            () => Array.from(document.querySelector("[data-diagram-type='plantuml']").querySelectorAll(':scope > .puml-fragment > svg'))
+                .filter(svg => window._lifelinesOf(svg).length >= 5)
+                .map(svg => Array.from(svg.querySelectorAll('text')).map(t => t.textContent.trim()).filter(t => t === 'Late' || t === 'l').join('/'))
+            """);
+        Assert.All(named, n => Assert.True(n.Length > 0 && n.Split('/').All(t => t == "Late"), $"the made participant's heads, part by part: {string.Join(" | ", named)}"));
+        Assert.True(withLate.Select(p => p[4]).Max() - withLate.Select(p => p[4]).Min() <= 0.5, $"the made participant lines up: {Show(parts)}");
     }
 }

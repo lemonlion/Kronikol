@@ -232,6 +232,11 @@
                     var flame = container.querySelector('.iflow-view-flame');
                     if (main) main.style.display = view === 'main' ? '' : 'none';
                     if (flame) flame.style.display = view === 'flame' ? '' : 'none';
+                    // a diagram drawn while its tab was hidden (a popup opened on its flame chart) measured nothing and
+                    // got no zoom slider: it is asked again once shown (until 5.7.3 it never was)
+                    if (main && view === 'main' && window._addZoomButton) main.querySelectorAll('.plantuml-browser').forEach(function(el) {
+                        if (el.querySelector('svg')) window._addZoomButton(el);
+                    });
                 });
             });
         }

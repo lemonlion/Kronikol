@@ -2730,6 +2730,8 @@
                         for (var oi = 0; oi < oldChildren.length; oi++) {
                             if (oldChildren[oi].parentNode === container) container.removeChild(oldChildren[oi]);
                         }
+                        // sized and placed at the diagram's level while still hidden (5.7.3, context-menu-script.js)
+                        if (window._sizeHiddenParts) window._sizeHiddenParts(container, newEls);
                         var newFrags = container.querySelectorAll('.puml-fragment-new');
                         for (var ni = 0; ni < newFrags.length; ni++) {
                             newFrags[ni].style.display = '';
@@ -2799,7 +2801,7 @@
                         }
                     }, 250);
                     try {
-                        window.plantuml.render(item.engine.split('\n'), item.el.id);
+                        window.plantuml.render(item.engine.split('\n'), item.el.id, storedFailure(item.el, item.source));
                     } catch(e) {
                         fmo.disconnect();
                         if (fPoll) clearInterval(fPoll);
@@ -3404,7 +3406,8 @@
     //   - Or, simpler: open the diagram's context menu from the keyboard (the Menu key, or Shift+F10 on the focused
     //     container). Its note items copy and open a payload's text (context-menu-script.js); it would also need the
     //     note's own actions (expand, fold, format, width), its items focus and the arrow keys, and Escape already
-    //     closes it. Keyboard zoom (Ctrl and + or -) works only on a diagram selected by a click today.
+    //     closes it. Keyboard zoom (Ctrl and + or -) acts on a diagram selected by a click; since 5.7.0 every drawn
+    //     diagram's zoom slider is also reached by Tab, and its arrow keys zoom it.
     var NEAR_SCREENS = 0.5; // of the window's height, above and below it: about what the page lays out
     var REDRAW_SLICE_MS = 10;
 
@@ -3446,6 +3449,17 @@
             el._kNear = undefined;
             nearWatch.unobserve(el);
         }
+    }
+
+    // A part drawn again from its engine text that the engine finds too large shows the part as written (Z12): the
+    // render shim's own markup shows the text it was given, with the lines the page adds (the footbox line and the
+    // lining-up row), until 5.7.3. Any other failure is the shim's to write: its message holds no source.
+    function storedFailure(el, source) {
+        return { onError: function(message) {
+            if (!/too large/i.test(String(message == null ? '' : message)) || !window._tooLargeMarkup) return false;
+            el.innerHTML = window._tooLargeMarkup(source);
+            return true;
+        } };
     }
 
     // The hover-only work after a drawing: the note buttons and hover areas, the assertion tooltips, the zoom slider. A
@@ -3726,6 +3740,9 @@
                             // drawn in parts now, the diagram has no buttons of its own to wait for: its parts get theirs
                             container._kDecorate = false;
                             container._noteRendering = false;
+                            // sized and placed at the diagram's level while still hidden, so that the first frame shows
+                            // them so and no part is laid out again after the paint (5.7.3, context-menu-script.js)
+                            if (window._sizeHiddenParts) window._sizeHiddenParts(container, newEls);
                             var newFrags = container.querySelectorAll('.puml-fragment-new');
                             for (var ni = 0; ni < newFrags.length; ni++) {
                                 newFrags[ni].style.display = '';
@@ -3796,7 +3813,7 @@
                                 afterFrag();
                             }
                         }, 250);
-                        try { window.plantuml.render(fItem.engine.split('\n'), fItem.el.id); } catch(e) { fmo.disconnect(); if (fPoll) clearInterval(fPoll); fItem.el.textContent = 'Render error: ' + ((e && e.message) ? e.message : String(e)); fItem.el.dataset.rendered = '1'; window._plantumlRendering = false; renderNextFragment(); }
+                        try { window.plantuml.render(fItem.engine.split('\n'), fItem.el.id, storedFailure(fItem.el, fItem.source)); } catch(e) { fmo.disconnect(); if (fPoll) clearInterval(fPoll); fItem.el.textContent = 'Render error: ' + ((e && e.message) ? e.message : String(e)); fItem.el.dataset.rendered = '1'; window._plantumlRendering = false; renderNextFragment(); }
                     }
                     var linedParts = window._lineUpParts ? window._lineUpParts(fragments) : null;
                     if (linedParts) linedParts.then(beginFragments); else beginFragments(null);

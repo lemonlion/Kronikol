@@ -227,6 +227,8 @@
                 + '<details style="margin-top:0.5em"><summary title="The PlantUML source this diagram was drawn from">Raw PlantUML</summary><pre style="white-space:pre-wrap">'
                 + escapeMarkupText(source || '') + '</pre></details></div>';
         }
+        // for a part drawn again, whose failure is shown with the part's own source (collapsible-notes-script.js, Z12)
+        window._tooLargeMarkup = tooLargeMarkup;
         function writeFailure(target, source, message) {
             message = String(message == null ? '' : message);
             if (target.opts && typeof target.opts.onError === 'function') {
@@ -741,6 +743,12 @@
         // --- Client-side diagram splitting ---
 
         // Parse PlantUML source into prefix (header/participants), body lines, and find trace boundaries
+        // A participant's declaration: its keyword, then its name (quoted, or a word). A message from a participant whose
+        // alias is a keyword (the generator camelizes a service called Queue or Database to `queue` or `database`) starts
+        // with the keyword too, then an arrow: until 5.7.3 it was taken for a declaration, so the diagram's first message
+        // was in the header every part repeats, and a lined-up part's row went in after it.
+        var _declLineRx = /^\s*(?:participant|actor|boundary|control|entity|database|collections|queue)\s+(?:"|[^\s"\-<>.\/\\\[])/;
+
         function parseDiagramStructure(source) {
             var lines = source.split('\n');
             var prefixEnd = -1;
@@ -761,11 +769,7 @@
                 if (trimmed === _styleClose) { inStyle = false; prefixEnd = i; continue; }
                 if (inStyle) continue;
                 if (trimmed === '' || trimmed.startsWith('@startuml') || trimmed.startsWith('!pragma') ||
-                    trimmed.startsWith('skinparam') || trimmed.startsWith('autonumber') ||
-                    trimmed.startsWith('participant ') || trimmed.startsWith('actor ') ||
-                    trimmed.startsWith('entity ') || trimmed.startsWith('database ') ||
-                    trimmed.startsWith('queue ') || trimmed.startsWith('collections ') ||
-                    trimmed.startsWith('boundary ') || trimmed.startsWith('control ') ||
+                    trimmed.startsWith('skinparam') || trimmed.startsWith('autonumber') || _declLineRx.test(trimmed) ||
                     trimmed.startsWith('!theme ') || /^box\b/.test(trimmed) || /^end\s+box\b/.test(trimmed)) {
                     prefixEnd = i;
                 } else {
@@ -1061,6 +1065,39 @@
             return stack;
         }
 
+        // A participant declared partway (`create participant "Late" as l`, or declared after the first message) is
+        // declared only in the part that holds the line. Until 5.7.3 a part after that one was not told of it, and the
+        // engine made a participant of its own there, named by the alias (from 3.0.43 at the latest). Each later part is
+        // now given the declaration at the end of its header, without `create`: the participant is there from its top.
+        var _bodyDeclRx = new RegExp(_declLineRx.source.replace('^\\s*', '^\\s*(?:create\\s+)?'));
+        function declarationKey(line) {
+            var m = line.replace(/^\s*create\s+/, '').match(_spacerDeclRx);
+            return m ? (m[2] || m[1]) : null;
+        }
+        function carryDeclarations(fragments) {
+            if (!fragments || fragments.length < 2) return fragments;
+            var carried = [];
+            return fragments.map(function(src, f) {
+                var s = parseDiagramStructure(src), out = src;
+                if (f > 0 && carried.length) {
+                    var own = {};
+                    s.lines.slice(0, s.bodyStart).forEach(function(l) { var k = declarationKey(l); if (k) own[k] = true; });
+                    var add = carried.filter(function(d) { return !own[d.key]; }).map(function(d) { return d.line; });
+                    if (add.length) out = s.lines.slice(0, s.bodyStart).concat(add, s.lines.slice(s.bodyStart)).join('\n');
+                }
+                var inNote = false;
+                s.lines.slice(s.bodyStart, s.endumlIdx).forEach(function(l) {
+                    var t = l.trim();
+                    if (inNote) { if (closesNoteBlock(t)) inNote = false; return; }
+                    if (opensNoteBlock(t)) { inNote = true; return; }
+                    if (!_bodyDeclRx.test(l)) return;
+                    var k = declarationKey(l);
+                    if (k && !carried.some(function(d) { return d.key === k; })) carried.push({ key: k, line: l.replace(/^(\s*)create\s+/, '$1') });
+                });
+                return out;
+            });
+        }
+
         function splitWithChunkedNotes(source, maxHeight) {
             // First chunk any oversized notes
             var chunked = chunkLargeNotes(source, _maxNoteChars);
@@ -1095,8 +1132,11 @@
                     // Ensure it has @startuml/@enduml
                     if (!hasStart) {
                         var structure = parseDiagramStructure(source);
-                        // Count steps from previous fragments
-                        var prevSteps = 1;
+                        // Count steps from previous fragments, from the diagram's own first number, as splitDiagramSource
+                        // does: until 5.7.3 a diagram numbered from 7 (the second of a scenario's diagrams) had its parts
+                        // after a forced boundary numbered from 1
+                        var baseNumber = structure.prefix.match(/autonumber\s+(\d+)/);
+                        var prevSteps = baseNumber ? parseInt(baseNumber[1], 10) : 1;
                         for (var pf = 0; pf < allFragments.length; pf++) {
                             prevSteps += countArrows(allFragments[pf].split('\n'));
                         }
@@ -1113,10 +1153,10 @@
                         allFragments.push(heightFrags[hf]);
                     }
                 }
-                return allFragments;
+                return carryDeclarations(allFragments);
             }
             // No forced boundaries — just split by height
-            return splitDiagramSource(chunked, maxHeight);
+            return carryDeclarations(splitDiagramSource(chunked, maxHeight));
         }
         window._splitWithChunkedNotes = splitWithChunkedNotes;
 
@@ -1125,7 +1165,8 @@
         // the diagram's source, or anything the search, the menu or a copied picture reads (Z12). Every part of a
         // sequence diagram but the last is drawn without its footbox, the participants drawn again under its last
         // message, so the diagram ends once (Q11); each part keeps its heads, which name the lifelines below them.
-        var _participantDeclRx = /^\s*(?:participant|actor|boundary|control|entity|database|collections|queue)\s/m;
+        // a declaration on any line of a part, by the header's rule
+        var _participantDeclRx = new RegExp(_declLineRx.source, 'm');
         function partEngineSources(fragments) {
             if (fragments.length < 2 || !_participantDeclRx.test(fragments[0])) return fragments.slice();
             return fragments.map(function(src, i) {
@@ -1144,7 +1185,7 @@
         // its widest note. The row stops the numbering around it and goes only to the engine (Z12). Each part is then
         // placed across by its first lifeline (part._kShift, which context-menu-script.js reads), and once every part is
         // drawn the page checks that their gaps agree, drawing them again from their own gaps where they do not.
-        var _spacerDeclRx = /^\s*(?:actor|participant|database|collections|queue|entity|boundary|control)\s+("[^"]*"|[^\s"]+)(?:\s+as\s+(\S+))?/;
+        var _spacerDeclRx = /^\s*(?:actor|participant|database|collections|queue|entity|boundary|control)\s+("[^"]*"|[^\s"\-<>.\/\\\[][^\s"]*)(?:\s+as\s+(\S+))?/;
         // The participants a part declares at its top, in order, and the line after which a row goes (after an `end box`).
         function spacerParticipants(source) {
             var lines = source.split('\n'), names = [], last = -1, i, m;
@@ -1344,9 +1385,14 @@
             var key = lines.filter(function(l) { return !_spacerDeclRx.test(l) && !/^\s*(?:autonumber|box|end\s+box)\b/i.test(l); }).join('\n');
             if (!_calibrations[key]) {
                 var probe = lines.concat(['autonumber stop', head.names[0] + ' -[hidden]> ' + head.names[1] + ' : <space:4000>', '||400||', '@enduml']);
-                _calibrations[key] = drawAside(probe.join('\n')).then(function(svg) {
+                var measured = _calibrations[key] = drawAside(probe.join('\n')).then(function(svg) {
                     var xs = svg ? lifelinesOf(svg) : [];
-                    return xs.length >= 2 ? Math.round((xs[1] - xs[0] - 4000) * 100) / 100 : null;
+                    var c = xs.length >= 2 ? Math.round((xs[1] - xs[0] - 4000) * 100) / 100 : null;
+                    // a drawing that failed (or took longer than its wait, on a slow first load) is asked for again by the
+                    // next diagram: kept, it stopped every diagram with this header lining up until the page was loaded
+                    // again (5.7.3)
+                    if (c === null && _calibrations[key] === measured) delete _calibrations[key];
+                    return c;
                 });
             }
             return _calibrations[key];
@@ -1374,12 +1420,16 @@
             if (!outline) {
                 // a test's hook: the outline's gaps scaled, so that the parts disagree once drawn (6.3 fact 8)
                 var scale = typeof window.__kronikolOutlineGapScale === 'number' ? window.__kronikolOutlineGapScale : 1;
-                outline = Promise.all([drawAside(outlineSource(fragments)), spacerAllowance(fragments[0], head)]).then(function(r) {
+                var drawn = outline = Promise.all([drawAside(outlineSource(fragments)), spacerAllowance(fragments[0], head)]).then(function(r) {
                     var xs = r[0] ? lifelinesOf(r[0]) : [], c = r[1];
                     if (xs.length < head.names.length || typeof c !== 'number') return null;
                     xs = xs.slice(0, head.names.length);
                     return { targets: xs.slice(1).map(function(x, i) { return (x - xs[i]) * scale; }), c: c, first: xs[0] };
-                }, function() { return null; });
+                }, function() { return null; }).then(function(o) {
+                    // an outline that could not be drawn is drawn again the next time, as a calibration is (5.7.3)
+                    if (!o && _lineUps.get(key) === drawn) _lineUps.delete(key);
+                    return o;
+                });
                 _lineUps.set(key, outline);
                 if (_lineUps.size > 16) _lineUps.delete(_lineUps.keys().next().value);
             }
@@ -1756,12 +1806,20 @@
                 onQueueItemDone();
             });
             mo.observe(item.el, { childList: true, subtree: true });
-            // Timeout: if nothing has been produced within 60s, give this item up and continue
+            // Timeout: if nothing has been produced within 60s (window.__kronikolRenderWaitMs, for the tests), give this item
+            // up and continue. Given up, it says so and is settled, so that its "Rendering diagram..." goes and what waits
+            // for every part to be drawn or settled goes on (until 5.7.3 it showed "Rendering diagram..." for good).
             var qPollCount = 0;
+            var giveUpPolls = typeof window.__kronikolRenderWaitMs === 'number' ? Math.max(1, Math.ceil(window.__kronikolRenderWaitMs / 250)) : 240;
             var qPoll = setInterval(function() {
                 qPollCount++;
                 if (queueDone) { clearInterval(qPoll); return; }
-                if (qPollCount > 240) { clearInterval(qPoll); mo.disconnect(); queueDone = true; setInFlight(-1); partSettled(item); processQueue(); }
+                if (qPollCount > giveUpPolls) {
+                    clearInterval(qPoll); mo.disconnect(); queueDone = true;
+                    if (!item.el.querySelector('svg')) item.el.textContent = 'Render error: the engine gave no picture in ' + Math.round(giveUpPolls / 4) + ' s';
+                    item.el.dataset.rendered = '1';
+                    setInFlight(-1); partSettled(item); processQueue();
+                }
             }, 250);
             // A failure — thrown synchronously by a main-thread engine, or reported asynchronously by a
             // worker through the shim's onError — takes one path: the too-large re-split retry, or the

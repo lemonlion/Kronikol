@@ -898,7 +898,7 @@ public class DiagramContextMenuTests
     {
         // Zoom buttons are lazily added via IntersectionObserver so we avoid
         // forced reflows on page load. A per-container MutationObserver waits
-        // for the SVG to render before checking isDiagramZoomable.
+        // for the SVG to render before making the diagram's zoom slider (every drawn diagram has one since 5.7.0).
         Assert.Contains("new IntersectionObserver(", _script);
         Assert.Contains("addZoomButton(container)", _script);
         Assert.Contains("addEventListener('DOMContentLoaded', observeAll)", _script);

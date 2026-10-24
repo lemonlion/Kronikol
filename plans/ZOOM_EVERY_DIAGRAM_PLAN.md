@@ -795,13 +795,86 @@ drawing whole (M11), and no source the menu gives holds the row.
   scripts. The anchoring is held, and the place kept, only when a picture's or a part's width changes (`resizes`),
   far parts included; two mutations of it join the harness, 34 in all.
 
+- **2026-10-24, 5.7.3, the audit.** The owner: "Can you make the plan was implemented in full and that no bugs were
+  introduced as part of this session, and fix any bugs you find along the way." The plan was ticked off rule by rule
+  against 5.7.2's code and facts, and the code read for faults. Every rule is in the code. The execution had left
+  three things undone: 4.4's bench and 7.4's acceptance had never been run, and 6.4's list was one mutation short
+  (only the part under the pointer resized).
+  - **Acceptance (7.4)**, on the consumer report with 5.7.2's scripts (`probe/acceptance.js`, new), at 1920 x 1000 and
+    1366 x 768. All 508 laid-out diagrams have a slider, and no part has one of its own (334 wide and 174 that fit at
+    1920; 462 and 46 at 1366). The 24 diagrams in parts are each at one level, and lined up to 0.000 px by their
+    dashed lifelines; no stored source holds a line the page added; the floor is 50 (5 notches of 5 prevented).
+    Scenario 1's three parts: a wheel over any of them zooms all three, a click rings the box and not a part, and a
+    second click lets go; the footbox is drawn once; the copied SVG parses, holds all 5,560 texts of the parts and one
+    `plantuml-src`, and is as tall as the parts together. A notch keeps the point under the pointer to 0.43 px across
+    and 0.16 px down (scenario 10, wide) and 0.48 px down (scenario 33, which fits, zoomed out). Scenario 278's slider
+    stays in the window at every depth, and its PNG items say "part 2 of 15". A copy holds 64 ids twice within one
+    picture: the engine's own (a message's group and its `msgN`), as diagrams drawn whole hold 60, not the page's.
+  - **The bench (4.4)**: the toggles of the consumer report's longest feature (scenarios 277 and 278), three rounds
+    alternating, 36 switches a version. 5.7.2 took 17% longer than 5.6.1 to finish a switch, and 3% with lining up off
+    (`__kronikolLineUp = false`), and a profile put the cost after the parts were drawn, not in the outline: the new
+    parts were lined up only once shown, and each part's margin written then laid it out again in the frames after.
+    Sized while still hidden, 5.7.3 finishes a switch in 2,366 ms against 5.6.1's 2,177 (9%, inside the plan's 10%)
+    and reaches the first picture in 945 against 916. A second profile, of a switch drawn from the cache, found every
+    far part read once a frame after the toggle to find nothing to change (181 ms of forced layout); a part whose style
+    holds the level is now passed over unread, and a third profile shows that layout paid once, by the slider made
+    again, so the work is the same and the frames after a toggle are free of it. What is left over 5.6.1 is the layout
+    of parts as wide as the whole diagram.
+  - **Faults fixed**, each red first (`ZoomRobustnessTests`, and one fact in each of `PartsZoomDrawingTests`,
+    `LinedUpPartsTests` and `ReportDiagnosticsTests`). From 5.7.0 to 5.7.2: the first frame of a toggle (B2); far
+    parts read to find nothing to change; a diagram at its fit level after the window's width changes, near the screen
+    and far from it; back to the fit level from a pan across; the popup's zoom scrolling the report behind it, a zoom out
+    there undone every other notch (the popup is as wide as what it holds, so it narrowed with the picture, and the
+    picture then measured as a wide one), and its activity diagram with no slider when drawn on a hidden tab; no picture items while a part will never draw; a
+    diagram a hair wider than its box; a notch over the seam between two parts; Ctrl with a sideways wheel; Ctrl and
+    minus typed in a field; an outline the engine could not draw kept for the session; a part too large shown with
+    the engine's text (Z12). Older: a keyword-named sender at the top of a diagram (`queue -> billing`) taken for a
+    declaration, so every part drew that message again, and since 5.7.0 the row went in after it (3.0.43 at the
+    latest); parts after a cut at a long note numbered from 1 (3.0.43); a part the engine never answered never settled
+    (3.0.45); a participant declared partway drawn under its alias in later parts (3.0.43), found by the Q7 fact once
+    its fixture had the made participant in two parts; and a picture the server or the local Java engine drew, whose
+    root says its height in pixels with `preserveAspectRatio="none"`, squashed across when drawn narrower than its
+    width: at a wide one's fit level since inline SVG began, and zoomed out since 5.7.0.
+  - **Facts made stronger**: the cursor of fact 5 and of ZoomKeptOnRedrawTests is read off the picture under a hovering
+    pointer (the box's own style is empty either way); facts 9 and 12 check that the zoom out took effect; two facts join
+    SplitDiagramZoomTests, a notch over a part that fits beside a wide one (fact 14's parts, lined up, are all as wide)
+    and a drag that leaves an unselected diagram unselected; fact 20 checks where each part's picture
+    stands in the copy; LinedUpPartsTests' facts 4 and 5 check that the parts are lined up, the second page of fact 6
+    that it is not, and fact 7 that the engine's text decoded; the Q7 fact checks the made participant (named and in
+    line in every part that has it). Fact 17's name says what it holds (fifteen parts or more, a budget per part).
+  - **Narrowings, recorded**: `hide footbox` and lining up apply only to a diagram whose first part declares its
+    participants (a generated diagram always does; a split activity diagram keeps its footbox, as it should). A
+    participant made with `create` takes no gap from the row in the part that makes it, so where a later part's messages
+    to it need more room than its head, it stands that much apart there. A declaration carried into later parts is
+    written outside any `box` it stood in.
+  - **The mutation run**: 56 mutations, one for each fix, each failing a fact. 6.4's missing one (only the part under
+    the pointer resized) needed a fact of its own, every part on screen at the new level in the notch's own task
+    (`PartsZoomDrawingTests`), as fact 17 is met by a notch that paints less. The first run on this release's code
+    killed 42 of 55; nine did not build, a test file having been edited while it ran, and fail a fact when run again.
+    Four survived, each naming a fact that did not reach its case: the numbering fact's note was capped under the cut
+    by the payload's scroll box (the fact turns the box off, `PayloadScrollLines = 0`); the failed outline's fact drew
+    other parts next (it now draws the very parts again); the hair-wide fact's parts had no shift (it now draws Q7's
+    source, whose later part is shifted); and the popup fact read only the report behind the popup. Made to read the
+    point in the popup, that last fact found the zoom out undone every other notch. Its survivor, holding the popup's
+    own scroll anchoring off, changed nothing, and that code is gone: the browser anchors on the picture under the
+    pointer or on what is above it. A far part's check that it changes size (`resizes`) now guards only a part
+    restyled to its own width, which no fact draws, so its mutation gave way to one of the style check that passes a
+    part over unread.
+  - **Left as they are**: a picture item clicked before the menu has encoded the source (a few milliseconds) copies
+    without `plantuml-src`; Q10's canvas limits are not measured per browser; the whole-diagram copy's background in a
+    dark theme is not checked against a light one.
+
 ## Appendix A. Harness
 
 `ZOOM_EVERY_DIAGRAM_PLAN.harness/`:
 
 - `measurements.md`: M1 to M11, the method, the commands and every table.
 - `mutate.js`: the mutation run of 6.4 (node): each mutation applied to a page script of a worktree, the E2E project
-  built, the facts named for it run, the script put back; `--check` only finds each mutation's text.
+  built, the facts named for it run, the script put back; `--check` only finds each mutation's text. Edit no test
+  file while it runs: its builds compile them.
+- `probe/acceptance.js`: 7.4's acceptance, none of it timed, on a report with a worktree's scripts swapped in
+  (`patch-report.js`): every slider, one diagram in parts, the point under the pointer, a tall diagram (the 5.7.3
+  audit).
 - `probe/probe-widths.js`: every drawn box of a report, its natural size, its box's width with and without padding.
 - `probe/analyse.js`: the tables of M1, M3 and M5 from its output.
 - `probe/probe-behaviour.js`: one scenario's boxes; the wheel kept or not, the text sizes, the move of the point under

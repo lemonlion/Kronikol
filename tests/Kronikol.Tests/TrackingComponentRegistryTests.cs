@@ -47,10 +47,16 @@ public class TrackingComponentRegistryTests : IDisposable
     [Fact]
     public void GetUnusedComponents_ReturnsEmpty_WhenAllInvoked()
     {
-        TrackingComponentRegistry.Register(new StubTrackingComponent("A", wasInvoked: true));
-        TrackingComponentRegistry.Register(new StubTrackingComponent("B", wasInvoked: true));
+        var a = new StubTrackingComponent("A", wasInvoked: true);
+        var b = new StubTrackingComponent("B", wasInvoked: true);
+        TrackingComponentRegistry.Register(a);
+        TrackingComponentRegistry.Register(b);
 
-        Assert.Empty(TrackingComponentRegistry.GetUnusedComponents());
+        // its own components only: the registry is the process's, and a test in another collection registers a handler
+        // it has not used yet at any moment (5.7.3)
+        var unused = TrackingComponentRegistry.GetUnusedComponents();
+        Assert.DoesNotContain(a, unused);
+        Assert.DoesNotContain(b, unused);
     }
 
     [Fact]

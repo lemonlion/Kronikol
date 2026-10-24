@@ -25,9 +25,12 @@ public static class ReportDiagnostics
     /// <see cref="Analyse(RequestResponseLog[], Feature[], bool, bool)"/> for a report whose spans an ingest was handed:
     /// the span line counts <paramref name="suppliedSpans"/>, the spans the report drew from, where an in-process run's
     /// counts its span store (which an ingest neither reads nor writes). Null counts the store.
+    /// <paramref name="components"/> are the tracking components to report on, the registry's when null: the registry is
+    /// the process's, and a test that reads what is absent from it races with tests that make components meanwhile.
     /// </summary>
     internal static string[] Analyse(RequestResponseLog[] logs, Feature[] features,
-        bool includeSourceDiscovery, bool internalFlowTracking, int? suppliedSpans)
+        bool includeSourceDiscovery, bool internalFlowTracking, int? suppliedSpans,
+        IReadOnlyList<ITrackingComponent>? components = null)
     {
         if (logs.Length == 0 && features.Length == 0)
             return [];
@@ -98,7 +101,9 @@ public static class ReportDiagnostics
             }
         }
 
-        var unused = TrackingComponentRegistry.GetUnusedComponents();
+        var unused = components is null
+            ? TrackingComponentRegistry.GetUnusedComponents()
+            : components.Where(c => !c.WasInvoked).ToList();
         if (unused.Count > 0)
         {
             var names = string.Join(", ", unused.Select(c => c.ComponentName));
