@@ -56,7 +56,7 @@ Each test that uses tracked dependencies automatically produces a sequence diagr
 ## <a name="how-it-works"></a>How It Works [↑](#top)
 
 ```mermaid
-%%{init: {"flowchart": {"wrappingWidth": 320}}}%%
+%%{init: {"layout": "dagre", "flowchart": {"wrappingWidth": 320}}}%%
 flowchart TB
     subgraph during["During each test"]
         direction LR
