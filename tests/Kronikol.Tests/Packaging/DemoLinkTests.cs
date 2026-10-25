@@ -20,7 +20,8 @@ public class DemoLinkTests
         var lines = markdown.ReplaceLineEndings("\n").Split('\n');
         var title = Array.FindIndex(lines, line => line.StartsWith("# ", StringComparison.Ordinal));
         Assert.True(title >= 0, "no level-one title");
-        return lines.Skip(title + 1).First(line => line.Trim().Length > 0);
+        // a callout or quote above the opening line (the README's "> [!TIP]" for the AI prompt) is not the opening line
+        return lines.Skip(title + 1).First(line => line.Trim().Length > 0 && !line.TrimStart().StartsWith('>'));
     }
 
     [Theory]
