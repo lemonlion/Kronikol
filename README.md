@@ -45,49 +45,66 @@ Each test that uses tracked dependencies automatically produces a sequence diagr
 ## <a name="how-it-works"></a>How It Works [↑](#top)
 
 ```mermaid
+%%{init: {"flowchart": {"wrappingWidth": 320}}}%%
 flowchart TB
-    test["<b>Test code</b><br/>the caller"]
-    sut["<b>SUT</b><br/>your API"]
-
-    subgraph deps["Dependencies"]
-        direction TB
-        http["<b>HTTP</b><br/>services"]
-        cosmos[("<b>Cosmos DB</b>")]
-        sql[("<b>SQL</b><br/>EF Core")]
-        redis[("<b>Redis</b>")]
-        broker[["<b>Events</b><br/>any message bus"]]
-        proxy["<b>Any interface</b><br/>TrackingProxy"]
+    subgraph during["During each test"]
+        direction LR
+        test["<b>Test code</b>"]
+        t1{{"<b>①</b> Tracker"}}
+        sut["<b>Service Under Test</b><br/>(e.g. your API)"]
+        t2{{"<b>①</b> Trackers"}}
+        http["HTTP, gRPC and<br/>GraphQL APIs"]
+        db[("Database")]
+        cache[("External Cache")]
+        bus[["Message bus"]]
+        any["Any interface"]
+        test -->|HTTP, gRPC or GraphQL| t1 --> sut --> t2
+        t2 --> http & db & cache & bus & any
     end
 
-    logger["<b>RequestResponseLogger</b><br/>in-memory log"]
-    creator["<b>PlantUmlCreator</b><br/>sequence diagrams"]
-    report["<b>ReportGenerator</b><br/>HTML + YAML files"]
+    logger[("<b>② RequestResponseLogger</b><br/>Every tracked call,<br/>tagged with its test")]
+    report["<b>③ ReportGenerator</b>"]
 
-    test <-->|HTTP| sut
-    sut --> deps
-    deps ==>|every interaction is intercepted and logged| logger
-    logger ==> creator ==> report
+    subgraph outputs["What you get"]
+        direction TB
+        html["<b>Interactive HTML report</b><br/>Searchable, with collapsible<br/>steps and payloads"]
+        seq["<b>Sequence diagrams</b><br/>Every call in each test"]
+        act["<b>Activity and flame diagrams</b><br/>The flow inside your service"]
+        c4["<b>C4 component diagram</b><br/>Your service's architecture"]
+        timeline["<b>Scenario timelines</b><br/>Where the time goes"]
+        specs["<b>Specifications</b><br/>Living docs and<br/>AI-readable files"]
+        html ~~~ c4
+        seq ~~~ timeline
+        act ~~~ specs
+    end
+
+    during ==>|Trackers log each call| logger
+    logger ==>|At the end of the run| report
+    report ==> outputs
+
+    class test caller
+    class sut system
+    class http,db,cache,bus,any dep
+    class t1,t2 tracker
+    class logger,report stage
+    class html,seq,act,c4,timeline,specs out
+    style during fill:transparent,stroke:#94a3b8,stroke-dasharray:5 4
+    style outputs fill:transparent,stroke:#0891b2,stroke-dasharray:5 4
 
     classDef caller fill:#dbeafe,stroke:#2563eb,stroke-width:2px,color:#1e3a8a
     classDef system fill:#ede9fe,stroke:#7c3aed,stroke-width:2px,color:#4c1d95
     classDef dep fill:#fef3c7,stroke:#d97706,stroke-width:1.5px,color:#78350f
+    classDef tracker fill:#ffe4e6,stroke:#e11d48,stroke-width:2px,color:#881337
     classDef stage fill:#dcfce7,stroke:#16a34a,stroke-width:2px,color:#14532d
-
-    class test caller
-    class sut system
-    class http,cosmos,sql,redis,broker,proxy dep
-    class logger,creator,report stage
-
-    style deps fill:transparent,stroke:#d97706,stroke-width:1.5px,stroke-dasharray:5 4
-
-    linkStyle 2,3,4 stroke:#16a34a,stroke-width:2.5px
+    classDef out fill:#cffafe,stroke:#0891b2,stroke-width:1.5px,color:#164e63
 ```
 
 1. **Intercept** — Each type of dependency has a dedicated tracking mechanism that logs interactions to the same in-memory store:
 
     | Dependency | Tracking mechanism | How it works |
     |---|---|---|
-    | **HTTP** | `TestTrackingMessageHandler` | `DelegatingHandler` in the HTTP pipeline — logs method, URI, headers, body, status code |
+    | **HTTP** | `TestTrackingMessageHandler` | `DelegatingHandler` in the HTTP pipeline — logs method, URI, headers, body, status code, and names GraphQL queries and mutations from the body |
+    | **gRPC** | `GrpcTrackingInterceptor` | gRPC `Interceptor` on the client channel — logs unary and streaming calls with their service and method names |
     | **Azure Cosmos DB** | `CosmosTrackingMessageHandler` | `DelegatingHandler` injected via `CosmosClientOptions.HttpClientFactory` — classifies operations (Query, Create, Upsert, etc.) with configurable verbosity |
     | **SQL (EF Core)** | `SqlTrackingInterceptor` | `DbCommandInterceptor` — intercepts SQL commands from any relational provider (SQL Server, PostgreSQL, MySQL, SQLite, etc.) |
     | **Redis** | `RedisTrackingDatabase` | `DispatchProxy` wrapping `IDatabase` — tracks GET, SET, HSET, LPUSH, PUBLISH, etc. with cache hit/miss status |
@@ -98,9 +115,7 @@ flowchart TB
 
 2. **Collect** — All logged `RequestResponseLog` entries are held in the static `RequestResponseLogger`. Each entry captures the operation details, service names, and a trace ID to correlate requests across services.
 
-3. **Generate** — At the end of the test run, `PlantUmlCreator` groups logs by test ID and converts them into sequence diagram code. By default, diagrams render client-side in the browser, on Web Workers so rendering stays off the main thread (since 3.0.45); a PlantUML server or local rendering via IKVM are available as alternatives.
-
-4. **Report** — `ReportGenerator` combines the diagrams with test metadata (features, scenarios, results, BDD steps) to produce three output files: a YAML specification, an HTML specification with diagrams, and an HTML test run report.
+3. **Report** — At the end of the test run, `ReportGenerator` groups the logs by test ID, turns each test's calls into a sequence diagram, the flow inside your service into activity and flame diagrams, all the flows together into a C4 component diagram, and the timings into scenario timelines. It combines them with the test metadata (features, scenarios, results, BDD steps) into an interactive HTML test run report, searchable, with collapsible steps and payloads, alongside an HTML specification and a YAML specification. By default, diagrams render client-side in the browser, on Web Workers so rendering stays off the main thread (since 3.0.45); a PlantUML server or local rendering via IKVM are available as alternatives.
 
 ---
 
