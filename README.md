@@ -44,48 +44,43 @@ Each test that uses tracked dependencies automatically produces a sequence diagr
 
 ## <a name="how-it-works"></a>How It Works [↑](#top)
 
-```
-┌─────────────┐     HTTP      ┌─────────────┐     HTTP      ┌─────────────┐
-│  Test Code  │ ──────────►   │     SUT     │ ──────────►   │ Dependency  │
-│  (Caller)   │ ◄──────────   │  (Your API) │ ◄──────────   │  (Fakes)    │
-└─────────────┘               └──────┬──────┘               └─────────────┘
-                                     │
-                        ┌────────────┼────────────┐
-                        │            │            │
-                        ▼            ▼            ▼
-                  ┌──────────┐ ┌──────────┐ ┌──────────┐
-                  │ CosmosDB │ │  SQL DB  │ │  Redis   │
-                  │ (Fakes)  │ │ (Fakes)  │ │ (Fakes)  │
-                  └──────────┘ └──────────┘ └──────────┘
-                        │            │            │
-           ┌────────────┼────────────┼────────────┘
-           │            │            │
-           │   Event / Message       │   Method calls
-           │ ──────────────────►     │ ──────────────────►
-           │  ┌──────────────┐       │  ┌──────────────┐
-           │  │ Event broker │       │  │  Any service │
-           │  │   (Fakes)    │       │  │ (via Proxy)  │
-           │  └──────────────┘       │  └──────────────┘
-           │                         │
-           └─── All interactions are intercepted and logged ──┘
-                                     │
-                                     ▼
-                          ┌──────────────────────┐
-                          │ RequestResponseLogger│
-                          │  (in-memory log)     │
-                          └──────────┬───────────┘
-                                     │
-                                     ▼
-                          ┌──────────────────────┐
-                          │   PlantUmlCreator    │
-                          │ (generates diagrams) │
-                          └──────────┬───────────┘
-                                     │
-                                     ▼
-                          ┌──────────────────────┐
-                          │   ReportGenerator    │
-                          │  (HTML + YAML files) │
-                          └──────────────────────┘
+```mermaid
+flowchart TB
+    test["<b>Test code</b><br/>the caller"]
+    sut["<b>SUT</b><br/>your API"]
+
+    subgraph deps["Dependencies"]
+        direction TB
+        http["<b>HTTP</b><br/>services"]
+        cosmos[("<b>Cosmos DB</b>")]
+        sql[("<b>SQL</b><br/>EF Core")]
+        redis[("<b>Redis</b>")]
+        broker[["<b>Events</b><br/>any message bus"]]
+        proxy["<b>Any interface</b><br/>TrackingProxy"]
+    end
+
+    logger["<b>RequestResponseLogger</b><br/>in-memory log"]
+    creator["<b>PlantUmlCreator</b><br/>sequence diagrams"]
+    report["<b>ReportGenerator</b><br/>HTML + YAML files"]
+
+    test <-->|HTTP| sut
+    sut --> deps
+    deps ==>|every interaction is intercepted and logged| logger
+    logger ==> creator ==> report
+
+    classDef caller fill:#dbeafe,stroke:#2563eb,stroke-width:2px,color:#1e3a8a
+    classDef system fill:#ede9fe,stroke:#7c3aed,stroke-width:2px,color:#4c1d95
+    classDef dep fill:#fef3c7,stroke:#d97706,stroke-width:1.5px,color:#78350f
+    classDef stage fill:#dcfce7,stroke:#16a34a,stroke-width:2px,color:#14532d
+
+    class test caller
+    class sut system
+    class http,cosmos,sql,redis,broker,proxy dep
+    class logger,creator,report stage
+
+    style deps fill:transparent,stroke:#d97706,stroke-width:1.5px,stroke-dasharray:5 4
+
+    linkStyle 2,3,4 stroke:#16a34a,stroke-width:2.5px
 ```
 
 1. **Intercept** — Each type of dependency has a dedicated tracking mechanism that logs interactions to the same in-memory store:
