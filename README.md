@@ -13,9 +13,20 @@
 
 Automatically generates [rich interactive HTML reports](https://lemonlion.github.io/BreakfastProvider/) with PlantUML sequence, activity and component diagrams, with timeline visualizations from your integration/component test HTTP traffic (real or faked) and telemetry.
 
-Tracks interactions between your test caller, your Service Under Test (SUT), and its dependencies — including HTTP calls, Azure Cosmos DB operations, SQL queries (via EF Core), Redis commands, events/messages, and arbitrary method calls — then converts them into sequence diagrams embedded in searchable HTML reports and YAML specification files.  Method flow within the SUT itself is turned into activity diagrams.  And the combination is turned into flame diagrams.  All the flows combined are turned into a C4 Component Diagram for your service.  A Scenario Timeline diagram allows you to visually compare the execution time of your services.  A cross-run history ledger committed in your repository says, on every scenario, whether a failure is a regression, has been failing since a particular run, or flips - as a sparkline and verdict per scenario on the labs page beside the report, and a line in `Failures.md`; `ShowScenarioHistory` puts them in the report too, with `$flaky` in the search box.
+Kronikol tracks every call between your test, your Service Under Test and its dependencies, and turns them into:
 
-Input data sets (eg InlineData/MemberData/ClassData for xUnit, and equivalents in NUnit, TUnit & ReqNRoll & LightBDD) are automatically turned into dynamic clickable tables showing you the correct diagrams for each set of inputs.  Data is all collapsible, truncatable and toggleable at view time (including a hover toggle on diagram notes that flips JSON payloads into YAML so multi-line strings like SQL queries read with their real line breaks — plus JSON/YAML toolbar dropdowns that convert every note at once, report-wide or per scenario, and reports start in YAML from 4.0.0, with the `NotePayloadFormat` option / `kronikol ingest --note-format json` to start them in JSON), allowing you to see from higher level to lower level at the click of a button.  Background steps render inline with each scenario's own steps, in one combined step list.  Gherkin data tables and doc strings draw inside the diagram's step delimiter bars too (with a Scenario Outline's placeholders substituted per example row), so a step like "Given the following muffins exist" carries its data right where the flow shows it.  Also contains features for tracking your assertions from FluentAssertions/AwesomeAssertions/Shouldly/TUnit assertions and displaying them in the reports in plain english.  The report search box searches *everything* the report contains — request/response payloads, headers, SQL, diagram and flame-chart text — via a compact embedded full-text index, on top of the instant scenario-level search.  
+- **Sequence diagrams** for every test: HTTP, gRPC and GraphQL calls, database queries (Cosmos DB, SQL through EF Core and more), cache commands, events and messages, and calls to any interface.
+- **Activity and flame diagrams** of the flow inside your service, a **C4 component diagram** of the whole service, and **scenario timelines** that show where the time goes.
+- **Cross-run history**: a ledger kept in your repository says whether each failure is a regression, flaky, or failing since a particular run.
+- **Living documentation**: specifications in YAML, readable by people and by AI tools.
+
+In the report:
+
+- **Search everything**: payloads, headers, SQL and diagram text, not just scenario names.
+- **A table per data set**: InlineData, MemberData, TestCase and their equivalents in xUnit, NUnit, TUnit, ReqNRoll and LightBDD become clickable tables, each row showing the diagrams for its inputs.
+- **Detail on demand**: collapse, truncate and toggle what each diagram shows, and switch payloads between JSON and YAML so multi-line strings like SQL keep their line breaks.
+- **BDD steps in place**: Gherkin data tables and doc strings appear inside the diagram where their step runs.
+- **Assertions in plain English** from FluentAssertions, AwesomeAssertions, Shouldly and TUnit.
 
 ---
 
