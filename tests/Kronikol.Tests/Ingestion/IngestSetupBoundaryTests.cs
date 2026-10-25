@@ -19,6 +19,10 @@ public class IngestSetupBoundaryTests : IDisposable
     private static readonly DateTimeOffset T0 = new(2026, 9, 30, 10, 0, 0, TimeSpan.Zero);
     private const string Partition = "partition #F6F6F6 Setup";
 
+    // The partition's statement, at the start of a line: from 5.8.0 the look above every sequence diagram styles the
+    // partition, so the word alone is in every source.
+    private const string PartitionStatement = "\npartition ";
+
     public IngestSetupBoundaryTests()
     {
         Directory.CreateDirectory(_dir);
@@ -52,13 +56,13 @@ public class IngestSetupBoundaryTests : IDisposable
         Assert.Contains("Given a saved card", setup);
         Assert.DoesNotContain("/charges", setup);
         Assert.DoesNotContain("When the card is charged", setup);
-        Assert.Equal(1, Count(separated[charged], "partition"));
-        Assert.Equal(0, Count(separated[noSetup], "partition"));
+        Assert.Equal(1, Count(separated[charged], PartitionStatement));
+        Assert.Equal(0, Count(separated[noSetup], PartitionStatement));
 
         // Without SeparateSetup nothing is added, whether or not the phases were tagged: the diagrams are what they were.
         var plain = Ingest("steps-plain", calls, tests, separateSetup: false);
         var phased = Ingest("steps-phased", calls, tests, separateSetup: false, phaseFromSteps: true);
-        Assert.Equal(0, Count(plain[charged], "partition"));
+        Assert.Equal(0, Count(plain[charged], PartitionStatement));
         Assert.Equal(plain[charged], phased[charged]);
         Assert.Equal(plain[noSetup], phased[noSetup]);
 
@@ -96,11 +100,11 @@ public class IngestSetupBoundaryTests : IDisposable
 
         var plain = Ingest("phases-plain", phasedCalls, tests, separateSetup: false)[id];
         Assert.Contains("loop ×2", plain);
-        Assert.Equal(0, Count(plain, "partition"));
+        Assert.Equal(0, Count(plain, PartitionStatement));
         Assert.Equal(Ingest("unphased-plain", unphasedCalls, tests, separateSetup: false)[id], plain);
 
         // Unphased calls say nothing, so nothing is drawn even with the option on.
-        Assert.Equal(0, Count(Ingest("unphased-separated", unphasedCalls, tests, separateSetup: true)[id], "partition"));
+        Assert.Equal(0, Count(Ingest("unphased-separated", unphasedCalls, tests, separateSetup: true)[id], PartitionStatement));
     }
 
     [Fact]
@@ -114,7 +118,7 @@ public class IngestSetupBoundaryTests : IDisposable
         foreach (var phaseFromSteps in new[] { false, true })
         {
             var diagram = Ingest($"when-first-{phaseFromSteps}", calls, WhenThen(id, "declines a card"), separateSetup: true, phaseFromSteps)[id];
-            Assert.Equal(0, Count(diagram, "partition"));
+            Assert.Equal(0, Count(diagram, PartitionStatement));
         }
     }
 
@@ -147,7 +151,7 @@ public class IngestSetupBoundaryTests : IDisposable
 
         var diagram = Ingest("capture-wins", records, tests, separateSetup: true)[id];
 
-        Assert.Equal(1, Count(diagram, "partition"));
+        Assert.Equal(1, Count(diagram, PartitionStatement));
         var setup = PartitionOf(diagram);
         Assert.Contains("GET: /cards/1", setup);
         Assert.Contains("GET: /risk/1", setup);

@@ -1843,7 +1843,7 @@ public class PlantUmlCreatorTests
         };
         var plantUml = GetPlantUml(logs);
 
-        Assert.DoesNotContain("partition", plantUml);
+        Assert.DoesNotMatch(SetupPartitionLine, plantUml);
     }
 
     [Fact]
@@ -1856,7 +1856,7 @@ public class PlantUmlCreatorTests
         };
         var plantUml = GetPlantUml(logs, separateSetup: true);
 
-        Assert.DoesNotContain("partition", plantUml);
+        Assert.DoesNotMatch(SetupPartitionLine, plantUml);
     }
 
     [Fact]
@@ -1905,7 +1905,7 @@ public class PlantUmlCreatorTests
         };
         var plantUml = GetPlantUml(logs, separateSetup: false, highlightSetup: true);
 
-        Assert.DoesNotContain("partition", plantUml);
+        Assert.DoesNotMatch(SetupPartitionLine, plantUml);
     }
 
     [Fact]
@@ -2011,7 +2011,17 @@ public class PlantUmlCreatorTests
         };
         var plantUml = GetPlantUml(logs, separateSetup: true);
 
-        Assert.DoesNotContain("partition", plantUml);
+        Assert.DoesNotMatch(SetupPartitionLine, plantUml);
+    }
+
+    // The Setup partition's statement, a line that opens with the keyword, as the page's Setup filter reads it: from 5.8.0
+    // the look above every sequence diagram styles the partition, so the word alone is in every source.
+    private const string SetupPartitionLine = @"(?m)^partition\b";
+
+    private static int SetupPartitionIndex(string plantUml)
+    {
+        var statement = System.Text.RegularExpressions.Regex.Match(plantUml, SetupPartitionLine);
+        return statement.Success ? statement.Index : -1;
     }
 
     private static RequestResponseLog MakeActionStart(string testId = "test-1")
@@ -2052,7 +2062,7 @@ public class PlantUmlCreatorTests
         var plantUml = GetPlantUml(logs, separateSetup: true);
 
         var endMarker = Environment.NewLine + "end" + Environment.NewLine;
-        var partitionEnd = plantUml.IndexOf(endMarker, plantUml.IndexOf("partition"));
+        var partitionEnd = plantUml.IndexOf(endMarker, SetupPartitionIndex(plantUml));
         var hnote = plantUml.IndexOf("hnote across");
         var actionCall = plantUml.IndexOf("/api/action");
         Assert.True(partitionEnd < hnote, "Partition should close before the override hnote");
@@ -2077,7 +2087,7 @@ public class PlantUmlCreatorTests
         var plantUml = GetPlantUml(logs, separateSetup: true);
 
         var endMarker = Environment.NewLine + "end" + Environment.NewLine;
-        var partitionEnd = plantUml.IndexOf(endMarker, plantUml.IndexOf("partition"));
+        var partitionEnd = plantUml.IndexOf(endMarker, SetupPartitionIndex(plantUml));
         var hnote1 = plantUml.IndexOf("Test 1");
         var hnote2 = plantUml.IndexOf("Marker");
         Assert.True(partitionEnd < hnote1, "Partition should close before first override");
@@ -2174,7 +2184,7 @@ public class PlantUmlCreatorTests
         };
         var plantUml = GetPlantUml(logs, separateSetup: true);
 
-        Assert.DoesNotContain("partition", plantUml);
+        Assert.DoesNotMatch(SetupPartitionLine, plantUml);
         AssertBalancedPartitions(plantUml);
     }
 
@@ -2284,7 +2294,7 @@ public class PlantUmlCreatorTests
 
         Assert.Contains("!pragma teoz true", plantUml);
         var pragmaIndex = plantUml.IndexOf("!pragma teoz true");
-        var partitionIndex = plantUml.IndexOf("partition");
+        var partitionIndex = SetupPartitionIndex(plantUml);
         Assert.True(pragmaIndex < partitionIndex, "Teoz pragma must appear before partition");
     }
 
@@ -2302,12 +2312,12 @@ public class PlantUmlCreatorTests
         var plantUml = GetPlantUml(logs, separateSetup: true);
 
         // partition line uses teoz syntax (no braces)
-        var partitionLine = plantUml.Split('\n').First(l => l.Contains("partition"));
+        var partitionLine = plantUml.Split('\n').First(l => l.StartsWith("partition", StringComparison.Ordinal));
         Assert.Equal("partition #F6F6F6 Setup", partitionLine.TrimEnd());
 
         // "end" line comes before action content
         var endMarker = Environment.NewLine + "end" + Environment.NewLine;
-        var partitionOpen = plantUml.IndexOf("partition");
+        var partitionOpen = SetupPartitionIndex(plantUml);
         var endLine = plantUml.IndexOf(endMarker, partitionOpen);
         Assert.True(endLine > partitionOpen, "Partition must have an end keyword");
         Assert.True(endLine < plantUml.IndexOf("/api/action"), "Partition must close before action");
@@ -2380,7 +2390,7 @@ public class PlantUmlCreatorTests
         Assert.True(diagrams.Count > 1, "Should produce multiple diagrams");
 
         // First diagram should open the partition
-        Assert.Contains("partition", diagrams.First().PlainText);
+        Assert.Matches(SetupPartitionLine, diagrams.First().PlainText);
 
         // All diagrams must have balanced partitions
         foreach (var diagram in diagrams)
@@ -2388,7 +2398,7 @@ public class PlantUmlCreatorTests
 
         // The continuation diagram that still has setup-2 should also contain a partition
         var setup2Diagram = diagrams.First(d => d.PlainText.Contains("/api/setup-2"));
-        Assert.Contains("partition", setup2Diagram.PlainText);
+        Assert.Matches(SetupPartitionLine, setup2Diagram.PlainText);
     }
 
     [Fact]

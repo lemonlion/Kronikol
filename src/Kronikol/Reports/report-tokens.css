@@ -85,6 +85,11 @@
     --dg-step-edge: #c4cfdf;
     --dg-step-ink: #2f3b4f;
     --dg-step-table: #ffffff;
+    --dg-loop: #f4f7fb;
+    --dg-loop-edge: #cdd5e0;
+    --dg-loop-tab: #e9eef6;
+    --dg-setup: #f6f6f6;
+    --dg-setup-edge: #d5dbe4;
     --dg-flame-fill: 58% 93%;
     --dg-flame-edge: 42% 54%;
     --dg-flame-hover: 62% 87%;
@@ -197,6 +202,11 @@
     --dg-step-edge: #3b4a60;
     --dg-step-ink: #dbe3ee;
     --dg-step-table: #131a24;
+    --dg-loop: #1d2632;
+    --dg-loop-edge: #334052;
+    --dg-loop-tab: #253041;
+    --dg-setup: #1a212b;
+    --dg-setup-edge: #2c3646;
     --dg-flame-fill: 26% 21%;
     --dg-flame-edge: 48% 60%;
     --dg-flame-hover: 30% 27%;
@@ -297,6 +307,11 @@
         --dg-step-edge: #3b4a60;
         --dg-step-ink: #dbe3ee;
         --dg-step-table: #131a24;
+        --dg-loop: #1d2632;
+        --dg-loop-edge: #334052;
+        --dg-loop-tab: #253041;
+        --dg-setup: #1a212b;
+        --dg-setup-edge: #2c3646;
         --dg-flame-fill: 26% 21%;
         --dg-flame-edge: 48% 60%;
         --dg-flame-hover: 30% 27%;

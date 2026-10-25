@@ -436,8 +436,8 @@ public class IngestCommandTests : IDisposable
         Assert.Contains("/cards/1", setup);
         Assert.DoesNotContain("/charges", setup);
 
-        Assert.DoesNotContain("partition", Diagram("out-no-separate-setup"));
-        Assert.DoesNotContain("partition", Diagram("out-phase-from-steps-only", "--phase-from-steps"));
+        Assert.DoesNotMatch(@"(?m)^partition ", Diagram("out-no-separate-setup"));
+        Assert.DoesNotMatch(@"(?m)^partition ", Diagram("out-phase-from-steps-only", "--phase-from-steps"));
 
         var usage = new StringWriter();
         IngestCommand.PrintUsage(usage);

@@ -209,7 +209,7 @@ public static partial class PlantUmlCreator
             .Take(actionStartIndex)
             .Any(t => !t.IsOverrideStart && !t.IsOverrideEnd && !t.IsActionStart);
         var setupPartitionClosed = false;
-        var effectiveColor = setupHighlightColor ?? "#F6F6F6";
+        var effectiveColor = setupHighlightColor ?? DiagramLook.SetupFill;
         var partitionLine = highlightSetup ? $"partition {effectiveColor} Setup" : "partition Setup";
         var isInActionPhase = actionStartIndex < 0; // no IsActionStart marker → everything is action
 

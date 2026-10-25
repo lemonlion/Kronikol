@@ -54,7 +54,26 @@ public class DiagramLookTests
             "sequenceDiagram { actor, database, queue, collections, boundary, control, entity { Margin 0 10; LineThickness 1 } }\n" +
             "sequenceDiagram { lifeLine { LineStyle 0; LineThickness 1 } }\n" +
             "sequenceDiagram { note { LineThickness 1 } }\n" +
+            "sequenceDiagram { group { RoundCorner 16; LineThickness 1; LineColor #CDD5E0; BackgroundColor #F4F7FB; FontStyle plain } }\n" +
+            "sequenceDiagram { groupHeader { LineThickness 1; LineColor #CDD5E0; BackgroundColor #E9EEF6 } }\n" +
+            "sequenceDiagram { partition { RoundCorner 16; LineThickness 1; LineColor #D5DBE4 } }\n" +
             "</style>\n", source);
+    }
+
+    // A loop was a square frame in a 1.5 px black line, the heaviest line in the drawing, its condition in bold, and the
+    // Setup box a square frame (5.8.0): a loop is now a rounded light box with a thin light edge, its label's tab shaded
+    // and its condition in plain type, and the Setup box a rounded frame with a thin light edge. These are the light
+    // theme's colours, which a picture drawn away from the page keeps; the page gives each its theme's token.
+    [Fact]
+    public void A_loop_is_a_rounded_light_box_and_the_Setup_box_a_rounded_frame_with_a_light_edge()
+    {
+        var look = DiagramLook.ForSequence(null, systemUiFont: false);
+
+        Assert.Contains("sequenceDiagram { group { RoundCorner 16; LineThickness 1; LineColor #CDD5E0; BackgroundColor #F4F7FB; FontStyle plain } }\n", look);
+        Assert.Contains("sequenceDiagram { groupHeader { LineThickness 1; LineColor #CDD5E0; BackgroundColor #E9EEF6 } }\n", look);
+        Assert.Contains("sequenceDiagram { partition { RoundCorner 16; LineThickness 1; LineColor #D5DBE4 } }\n", look);
+        Assert.Equal(("#F4F7FB", "#CDD5E0", "#E9EEF6", "#D5DBE4", "#F6F6F6"),
+            (DiagramLook.LoopFill, DiagramLook.LoopEdge, DiagramLook.LoopTab, DiagramLook.SetupEdge, DiagramLook.SetupFill));
     }
 
     // The source's line readers go by how a line starts: the query tool's payload reader opens a note at "note " and the
@@ -87,6 +106,8 @@ public class DiagramLookTests
         Assert.DoesNotContain("defaultFontName", source);
         Assert.DoesNotContain("skinparam shadowing false", source);
         Assert.DoesNotContain("RoundCorner 12", source);
+        Assert.DoesNotContain("groupHeader", source);
+        Assert.DoesNotContain("partition {", source);
     }
 
     // An entity is drawn as a circle on a line; a service reads as a box, as the participants around it do.

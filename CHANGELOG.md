@@ -4,6 +4,39 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.8.0] - 2026-10-25
+
+The minor part moves (5.7.3 to 5.8.0): five new report theme tokens, `--dg-loop`, `--dg-loop-edge`, `--dg-loop-tab`,
+`--dg-setup` and `--dg-setup-edge`, are new public surface a custom theme or `CustomCss` can set. The release also
+changes how loops and the Setup box are drawn, and fixes the Setup box in the dark theme.
+
+### Changed
+
+- **A loop is a rounded light box.** A run of identical calls collapsed into `loop ×N` was drawn as a square frame in a
+  1.5 px black line, the heaviest line in the diagram, with its condition in bold. It is now a rounded box with a light
+  ground and a thin light edge, the tab that holds the word "loop" is shaded, and the condition is in plain type.
+- **The Setup box is a rounded frame with a thin light edge**, where it was a square frame in a dark line. Its default
+  shade is unchanged (`#F6F6F6`).
+- Both take the report theme's colours from the new tokens, light and dark. A picture drawn away from the page (a CI
+  summary, a server-drawn report) and a copy of a diagram keep the light theme's colours. A diagram drawn with your own
+  `PlantUmlTheme` keeps the theme's loops and the theme's Setup edge; the Setup box's default shade follows the report's
+  theme there too. Diagram sources written by an earlier version keep the old loop frame.
+- Every sequence diagram's source opens with three more style lines (`group`, `groupHeader` and `partition`, each
+  starting `sequenceDiagram {`), and the report's data files (`TestRunReport.json`, `.krkl`, the mergeable file, XML and
+  YAML) carry them. A tool that finds the Setup box by searching a source for the word `partition` should look for a
+  line that starts with it, as the report's own readers do.
+
+### Fixed
+
+- **The Setup box reads in the dark theme.** It stayed a near-white block on the dark page, and the call labels and the
+  "Setup" title in it, drawn in the dark theme's light ink, were close to invisible (about 1.1:1). It is now drawn in the
+  dark theme's own Setup shade. A Setup box in a colour set with `SetupHighlightColor` keeps that colour.
+
+### Tests
+
+- The report the compression fixtures were packed from is checked out with LF line endings on every platform
+  (`.gitattributes`). A Windows checkout wrote it with CRLF, so four compression tests failed there and only there.
+
 ## [5.7.3] - 2026-10-24
 
 The patch part moves (5.7.2 to 5.7.3): fixes and performance work, with nothing new to call or configure. An audit of

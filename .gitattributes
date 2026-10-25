@@ -32,3 +32,8 @@ history.jsonl merge=union text eol=lf
 # A playwright-bdd run's artefacts, which the tests compare byte for byte with the copies its Cucumber messages embed:
 # never converted, whatever a checkout's line-ending settings are.
 tests/Kronikol.Tests/TestData/Cucumber/playwright-bdd-9.2-attachments/** -text
+
+# The report the compression fixtures were made from (TestData/Compression/make-fixtures.py): the tests compare its
+# bytes with what libzstd, gzip and the .krkl writer packed from it, so it keeps the LF it was packed with. A Windows
+# checkout wrote it with CRLF and four tests failed there only.
+tests/Kronikol.Tests/TestData/Reports/failing-with-steps.mergeable.json text eol=lf

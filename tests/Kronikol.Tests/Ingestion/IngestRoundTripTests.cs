@@ -119,7 +119,7 @@ public class IngestRoundTripTests : IDisposable
         Assert.Contains("<<assertionNote>>", diagramA);
         Assert.Contains("cache warmed", diagramA);
         Assert.Contains("Row 3", diagramA);
-        Assert.Equal(separateSetup, diagramA.Contains("partition", StringComparison.Ordinal));
+        Assert.Equal(separateSetup, System.Text.RegularExpressions.Regex.IsMatch(diagramA, @"(?m)^partition "));
         Assert.Equal(diagramA, diagramB);
     }
 
@@ -166,7 +166,7 @@ public class IngestRoundTripTests : IDisposable
         }).Generated);
         var diagramB = ReportPayloadText.Of(Scenario(ingestDir, testId).GetProperty("diagrams")[0])!;
 
-        Assert.DoesNotContain("partition", diagramA, StringComparison.Ordinal);
+        Assert.DoesNotMatch(@"(?m)^partition ", diagramA);
         Assert.Equal(diagramA, diagramB);
     }
 

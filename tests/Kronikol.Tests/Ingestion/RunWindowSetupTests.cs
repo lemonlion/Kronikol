@@ -354,12 +354,12 @@ public class RunWindowSetupTests : IDisposable
         var separated = Diagram(Ingest("Separated", Capture(), BrowserTests(), StartUp, [Device], separateSetup: true));
         var plain = Diagram(Ingest("Unseparated", Capture(), BrowserTests(), StartUp, [Device]));
 
-        Assert.Equal(1, separated.Split("partition").Length - 1);
+        Assert.Single(System.Text.RegularExpressions.Regex.Matches(separated, @"(?m)^partition "));
         var partition = IngestSetupBoundaryTests.PartitionOf(separated);
         foreach (var seed in Enumerable.Range(0, 6))
             Assert.Contains($"seed={seed}", partition);
         Assert.Contains("health", partition);
-        Assert.DoesNotContain("partition", plain);
+        Assert.DoesNotMatch(@"(?m)^partition ", plain);
     }
 
     // ------------------------------------------------------------------------------------------

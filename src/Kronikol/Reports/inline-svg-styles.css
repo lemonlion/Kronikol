@@ -154,6 +154,15 @@ body.plantuml-ready .puml-fragment:not([data-rendered])::before {
 .plantuml-browser:where(:not(.iflow-diagram)) svg :is([style*="stroke:#0e7c86" i], [stroke="#0e7c86" i]) { stroke: var(--dg-db, #0e7c86) !important; }
 .plantuml-browser:where(:not(.iflow-diagram)) svg polygon[fill="#9b59b6" i] { fill: var(--dg-msg, #9b59b6); }
 .plantuml-browser:where(:not(.iflow-diagram)) svg :is([style*="stroke:#9b59b6" i], [stroke="#9b59b6" i]) { stroke: var(--dg-msg, #9b59b6) !important; }
+/* A loop's box and the Setup box (5.8.0): the light colours the diagram's look draws them in (DiagramLook), mapped to
+   the theme's tokens. The engine draws a loop's ground with an edge in the ground's own colour. A Setup box in a colour
+   the options name keeps its colour. */
+.plantuml-browser:where(:not(.iflow-diagram)) svg rect[fill="#f4f7fb" i] { fill: var(--dg-loop, #f4f7fb); }
+.plantuml-browser:where(:not(.iflow-diagram)) svg :is([style*="stroke:#f4f7fb" i], [stroke="#f4f7fb" i]) { stroke: var(--dg-loop, #f4f7fb) !important; }
+.plantuml-browser:where(:not(.iflow-diagram)) svg :is([style*="stroke:#cdd5e0" i], [stroke="#cdd5e0" i]) { stroke: var(--dg-loop-edge, #cdd5e0) !important; }
+.plantuml-browser:where(:not(.iflow-diagram)) svg :is(path, polygon)[fill="#e9eef6" i] { fill: var(--dg-loop-tab, #e9eef6); }
+.plantuml-browser:where(:not(.iflow-diagram)) svg rect[fill="#f6f6f6" i] { fill: var(--dg-setup, #f6f6f6); }
+.plantuml-browser:where(:not(.iflow-diagram)) svg :is([style*="stroke:#d5dbe4" i], [stroke="#d5dbe4" i]) { stroke: var(--dg-setup-edge, #d5dbe4) !important; }
 
 /* An activity diagram's own colours (a scenario's whole-test flow and the internal-flow popup), the component diagram's,
    and a sequence note's header line, mapped to the theme's tokens (5.0.0, plans/OPTION_C_PLAN.md S11); each falls back
