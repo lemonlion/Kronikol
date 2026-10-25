@@ -12,7 +12,7 @@ permissions:
 jobs:
   release-build:
     name: Release Build (packable projects)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - name: Free disk space
@@ -46,7 +46,7 @@ jobs:
   # python, so the facts that need them skip here and run in Core Tests.
   test-as-root:
     name: Core Tests as root (Linux container)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     container: mcr.microsoft.com/dotnet/sdk:10.0
     steps:
@@ -59,7 +59,7 @@ jobs:
 
   test:
     name: ${{ matrix.name }}
-    runs-on: ${{ matrix.os || 'ubuntu-latest' }}
+    runs-on: ${{ matrix.os || 'ubuntu-24.04' }}
     # A job that hangs is cancelled after an hour, not GitHub's six (CI run 1214 waited six hours on a hung apt-get).
     # The longest of 25 green runs' jobs took 26 minutes (E2E (Remainder)).
     timeout-minutes: 60

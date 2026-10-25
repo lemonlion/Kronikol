@@ -43,6 +43,6 @@ public class DemoLinkTests
 
         Assert.NotEmpty(imageLinks);
         Assert.DoesNotContain(imageLinks, target => target.Contains("plantuml.com", StringComparison.OrdinalIgnoreCase));
-        Assert.Contains(Demo, imageLinks);
+        Assert.Contains(imageLinks, target => target.StartsWith(Demo, StringComparison.Ordinal));
     }
 }

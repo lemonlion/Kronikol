@@ -22,7 +22,7 @@ permissions:
 
 jobs:
   homepage:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       # A report page is written compressed since 5.6.0, so its scenarios are found in the plain page
