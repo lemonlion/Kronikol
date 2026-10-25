@@ -7,11 +7,9 @@
 
 # <img src="icon.svg" width="32" height="32" alt="Kronikol icon" style="vertical-align: middle;"> Kronikol
 
-**[See a live report](https://lemonlion.github.io/BreakfastProvider/)** from a sample service's test run.
-
 **Install easily with this [AI Prompt](https://github.com/lemonlion/Kronikol/wiki/AI-Integration-Prompt)**
 
-Automatically generates [rich interactive HTML reports](https://lemonlion.github.io/BreakfastProvider/) with PlantUML sequence, activity and component diagrams, with timeline visualizations from your integration/component test HTTP traffic (real or faked) and telemetry.
+Automatically generates [rich interactive UI reports](https://lemonlion.github.io/BreakfastProvider/) with PlantUML sequence, activity and component diagrams, with timeline visualizations from your integration/component test HTTP traffic (real or faked) and telemetry.
 
 Kronikol tracks every call between your test, your Service Under Test and its dependencies, and turns them into:
 
