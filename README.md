@@ -61,20 +61,23 @@ flowchart TB
     subgraph during["During each test"]
         direction LR
         test["<b>Test code</b>"]
-        t1{{"<b>①</b> Tracker"}}
+        t1{{"Tracker"}}
         sut["<b>Service Under Test</b><br/>(e.g. your API)"]
-        t2{{"<b>①</b> Trackers"}}
+        t2{{"Trackers"}}
         http["HTTP, gRPC and<br/>GraphQL APIs"]
         db[("Database")]
         cache[("External Cache")]
         bus[["Message bus"]]
         any["Any interface"]
+        spans{{"Span listener<br/>Activity spans inside<br/>your service"}}
         test -->|HTTP, gRPC or GraphQL| t1 --> sut --> t2
         t2 --> http & db & cache & bus & any
+        sut -.->|Internal flow| spans
     end
 
-    logger[("<b>② RequestResponseLogger</b><br/>Every tracked call,<br/>tagged with its test")]
-    report["<b>③ ReportGenerator</b>"]
+    logger[("<b>RequestResponseLogger</b><br/>Every tracked call,<br/>tagged with its test")]
+    spanstore[("<b>InternalFlowSpanStore</b><br/>Every span,<br/>tagged with its test")]
+    report["<b>ReportGenerator</b>"]
     ledger[("<b>History ledger</b><br/>Every run's results,<br/>kept in your repository")]
 
     subgraph outputs["What you get"]
@@ -93,15 +96,17 @@ flowchart TB
     end
 
     during ==>|Trackers log each call| logger
+    during ==>|The listener<br/>logs each span| spanstore
     logger ==>|At the end of the run| report
+    spanstore ==> report
     report ==> outputs
     ledger <-.->|Past runs in,<br/>this run out| report
 
     class test caller
     class sut system
     class http,db,cache,bus,any dep
-    class t1,t2 tracker
-    class logger,report stage
+    class t1,t2,spans tracker
+    class logger,spanstore,report stage
     class ledger store
     class html,seq,act,c4,timeline,specs,history out
     style during fill:transparent,stroke:#94a3b8,stroke-dasharray:5 4
