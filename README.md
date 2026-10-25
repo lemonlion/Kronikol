@@ -32,9 +32,9 @@ Input data sets (eg InlineData/MemberData/ClassData for xUnit, and equivalents i
 
 ## <a name="example-output"></a>Example Output [↑](#top)
 
-**This is just a very simple static example, for a full, rich, interactive example, see the generated [BreakfastProvider diagrams](https://lemonlion.github.io/BreakfastProvider/) in the [BreakfastProvider](https://github.com/lemonlion/BreakfastProvider) project.** 
+**This is just a screenshot of a generated diagram - for a full, rich, interactive example, click on it to see the generated [BreakfastProvider diagrams](https://lemonlion.github.io/BreakfastProvider/) in the [BreakfastProvider](https://github.com/lemonlion/BreakfastProvider) project.** 
 
-[<img width="770" height="1017" alt="image" src="https://github.com/user-attachments/assets/43d48a00-ba37-4951-945c-dd75de64c2bb" />](https://lemonlion.github.io/BreakfastProvider/)
+[<img width="3532" height="5482" alt="exampleKronikol2" src="https://github.com/user-attachments/assets/d05b4324-264c-4103-80cb-513d4b435549" />](https://lemonlion.github.io/BreakfastProvider/reports/reqnroll/TestRunReport.html#scenario-a-valid-pancake-request-should-return-a-fresh-batch)
 
 Each test that uses tracked dependencies automatically produces a sequence diagram (with matching PlantUML) showing the full request/response flow between services.
 
