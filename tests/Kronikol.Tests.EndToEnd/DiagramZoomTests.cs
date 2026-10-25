@@ -286,8 +286,9 @@ public class DiagramZoomTests : PlaywrightTestBase
             }
         """, null, new() { Timeout = 15000, PollingInterval = 200 });
 
-        var after = await container.Locator(".diagram-zoom-slider").CountAsync();
-        Assert.Equal(1, after);
+        // The wait can pass on the slider from before the collapse redrew the diagram, so the count is read with a
+        // retrying assertion: a single read could land between the redraw removing the old controls and adding new ones.
+        await Expect(container.Locator(".diagram-zoom-slider")).ToHaveCountAsync(1, new() { Timeout = 15000 });
     }
 
     [Fact]

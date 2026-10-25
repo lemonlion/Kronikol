@@ -152,8 +152,10 @@ public class ZoomRobustnessTests : PlaywrightTestBase
         await TwoAnimationFramesAsync(Page);
         Assert.True((await LayoutAsync()).ScrollLeft > 100, "premise: panned across");
 
+        // The watch starts in the same task that moves the slider, so its first frame is the first one painted after the
+        // change: armed in one call and moved in the next, a frame could fall between them and record the pan itself.
         await Page.EvaluateAsync("""
-            () => {
+            (level) => {
                 const c = document.querySelector("[data-diagram-type='plantuml']");
                 window.__frames = [];
                 const watch = () => {
@@ -161,9 +163,12 @@ public class ZoomRobustnessTests : PlaywrightTestBase
                     if (window.__frames.length < 240 && (c._zoomPending || window.__frames.length < 3)) requestAnimationFrame(watch);
                 };
                 requestAnimationFrame(watch);
+                const s = c.querySelector(':scope > .diagram-zoom-controls .diagram-zoom-slider');
+                s.value = String(level);
+                s.dispatchEvent(new Event('input', { bubbles: true }));
             }
-            """);
-        await ZoomFacts.SetLevelAsync(Page, 0, fit.Min);
+            """, fit.Min);
+        await TwoAnimationFramesAsync(Page);
         await WaitForPartsAsync();
         var frames = await Page.EvaluateAsync<double[]>("() => window.__frames");
         Assert.True(frames.Length >= 3, $"frames watched: {frames.Length}");
