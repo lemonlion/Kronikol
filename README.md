@@ -61,15 +61,15 @@ flowchart TB
     subgraph during["During each test"]
         direction LR
         test["<b>Test code</b>"]
-        t1{{"Tracker"}}
+        t1(["Tracker"])
         sut["<b>Service Under Test</b><br/>(e.g. your API)"]
-        t2{{"Trackers"}}
+        t2(["Trackers"])
         http["HTTP, gRPC and<br/>GraphQL APIs"]
         db[("Database")]
         cache[("External Cache")]
         bus[["Message bus"]]
         any["Any interface"]
-        spans{{"Span listener<br/>Activity spans inside<br/>your service"}}
+        spans(["Span listener<br/>Activity spans inside<br/>your service"])
         test -->|"<span style='display:inline-block;padding:4px 8px'>HTTP, gRPC or GraphQL</span>"| t1 --> sut --> t2
         t2 --> http & db & cache & bus & any
         sut -.->|"<span style='display:inline-block;padding:4px 8px'>Internal flow</span>"| spans
