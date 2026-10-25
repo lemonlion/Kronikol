@@ -27,7 +27,7 @@ In the report:
 - **BDD steps in place**: Gherkin data tables and doc strings appear inside the diagram where their step runs.
 - **Assertions in plain English** from FluentAssertions, AwesomeAssertions, Shouldly and TUnit.
 
----
+
 
 ## Table of Contents
 
@@ -39,7 +39,7 @@ In the report:
 - [Supported Frameworks & NuGet Packages](#supported-frameworks)
 - [Documentation](#documentation)
 
----
+
 
 ## <a name="example-output"></a>Example Output [↑](#top)
 
@@ -49,9 +49,7 @@ In the report:
 
 Each test that uses tracked dependencies automatically produces a sequence diagram (with matching PlantUML) showing the full request/response flow between services.
 
-> **Tip:** You can visually separate the setup (arrange) phase from the action phase using the [`SeparateSetup`](https://github.com/lemonlion/Kronikol/wiki/Diagram-Customisation#setup-separation) flag.
 
----
 
 ## <a name="how-it-works"></a>How It Works [↑](#top)
 
@@ -123,13 +121,13 @@ flowchart TB
 
 See the [Tracking Dependencies](https://github.com/lemonlion/Kronikol/wiki/Tracking-Dependencies) wiki page for setup guides.
 
----
+
 
 ## <a name="installation"></a>Installation With AI Prompt [↑](#top)
 
 Installation now couldn't be easier using this [AI Prompt](https://github.com/lemonlion/Kronikol/wiki/AI-Integration-Prompt).  Full installation usually takes about an hour with a frontier model like Claude Opus 5.5.
 
----
+
 
 ## <a name="use-cases"></a>Use Cases [↑](#top)
 
@@ -233,7 +231,7 @@ Every command prints addresses rather than payloads, announces any truncation wi
 
 The agent skill that teaches this whole workflow installs itself. A project scaffolded from a `kronikol-*` template ships with `.claude/skills/kronikol-test-debugging/` and a `CLAUDE.md`/`AGENTS.md` block already in place; for a repository that came first, `kronikol init-agents .` adds the same three files and appends the block to both instruction files. It is safe to re-run — the block sits between markers and is replaced in place, so upgrading is the same command — and it leaves everything you wrote around it alone. The canonical copy is [`templates/skills/kronikol-test-debugging/`](templates/skills/kronikol-test-debugging) if you would rather copy it by hand. See [Querying Reports](https://github.com/lemonlion/Kronikol/wiki/Querying-Reports).
 
----
+
 
 ## <a name="deterministic-vs-ai"></a>Deterministic vs AI-Generated Diagrams [↑](#top)
 
@@ -248,12 +246,12 @@ Because Kronikol captures what actually happened at runtime, the output is a fai
 
 In short: use deterministic diagrams as the source of truth, and let AI tools build on top of that truth rather than trying to reconstruct it.
 
----
+
 
 ## <a name="supported-frameworks"></a>Supported Frameworks & NuGet Packages [↑](#top)
 
 | Framework | Package | Test Runner | NuGet |
-|---|---|---|---|
+|||||
 | **Core library** | `Kronikol` | — | [![NuGet Version](https://img.shields.io/nuget/v/Kronikol)](https://www.nuget.org/packages/Kronikol) |
 | **xUnit v3** | `Kronikol.xUnit3` | xUnit v3 | [![NuGet Version](https://img.shields.io/nuget/v/Kronikol.xUnit3)](https://www.nuget.org/packages/Kronikol.xUnit3) |
 | **xUnit v2** | `Kronikol.xUnit2` | xUnit v2 | [![NuGet Version](https://img.shields.io/nuget/v/Kronikol.xUnit2)](https://www.nuget.org/packages/Kronikol.xUnit2) |
@@ -272,7 +270,7 @@ In short: use deterministic diagrams as the source of truth, and let AI tools bu
 ### Extensions — Databases & Caches
 
 | Extension | Package | Description | NuGet |
-|---|---|---|---|
+|||||
 | **Atlas Data API** | `Kronikol.Extensions.AtlasDataApi` | Tracks MongoDB Atlas Data API HTTP operations (Find, Insert, Update, Delete, Aggregate) with configurable verbosity | [![NuGet Version](https://img.shields.io/nuget/v/Kronikol.Extensions.AtlasDataApi)](https://www.nuget.org/packages/Kronikol.Extensions.AtlasDataApi) |
 | **BigQuery** | `Kronikol.Extensions.BigQuery` | Tracks Google BigQuery operations with configurable verbosity | [![NuGet Version](https://img.shields.io/nuget/v/Kronikol.Extensions.BigQuery)](https://www.nuget.org/packages/Kronikol.Extensions.BigQuery) |
 | **Bigtable** | `Kronikol.Extensions.Bigtable` | Tracks Google Cloud Bigtable operations (ReadRows, MutateRow, CheckAndMutateRow, etc.) with configurable verbosity | [![NuGet Version](https://img.shields.io/nuget/v/Kronikol.Extensions.Bigtable)](https://www.nuget.org/packages/Kronikol.Extensions.Bigtable) |
@@ -298,7 +296,7 @@ In short: use deterministic diagrams as the source of truth, and let AI tools bu
 ### Extensions — Messaging & Events
 
 | Extension | Package | Description | NuGet |
-|---|---|---|---|
+|||||
 | **EventBridge** | `Kronikol.Extensions.EventBridge` | Tracks Amazon EventBridge operations (PutEvents, Rule management, EventBus) via the AWS SDK HTTP pipeline with configurable verbosity | [![NuGet Version](https://img.shields.io/nuget/v/Kronikol.Extensions.EventBridge)](https://www.nuget.org/packages/Kronikol.Extensions.EventBridge) |
 | **Event Hubs** | `Kronikol.Extensions.EventHubs` | Tracks Azure Event Hubs operations (Send, SendBatch, Receive, Process) with configurable verbosity | [![NuGet Version](https://img.shields.io/nuget/v/Kronikol.Extensions.EventHubs)](https://www.nuget.org/packages/Kronikol.Extensions.EventHubs) |
 | **Kafka** | `Kronikol.Extensions.Kafka` | Wraps `IProducer` and `IConsumer` to track Produce/Consume operations with configurable verbosity, the message's value as the body and W3C trace ids; `TrackProduce`/`TrackConsume` for a client of your own, and an opt-in span for each message's processing (`TraceMessageProcessing`) | [![NuGet Version](https://img.shields.io/nuget/v/Kronikol.Extensions.Kafka)](https://www.nuget.org/packages/Kronikol.Extensions.Kafka) |
@@ -313,7 +311,7 @@ In short: use deterministic diagrams as the source of truth, and let AI tools bu
 ### Extensions — Cloud Storage
 
 | Extension | Package | Description | NuGet |
-|---|---|---|---|
+|||||
 | **Blob Storage** | `Kronikol.Extensions.BlobStorage` | Tracks Azure Blob Storage operations with configurable verbosity | [![NuGet Version](https://img.shields.io/nuget/v/Kronikol.Extensions.BlobStorage)](https://www.nuget.org/packages/Kronikol.Extensions.BlobStorage) |
 | **Cloud Storage** | `Kronikol.Extensions.CloudStorage` | Tracks Google Cloud Storage operations (Upload, Download, Delete, List, Copy, Compose) with configurable verbosity | [![NuGet Version](https://img.shields.io/nuget/v/Kronikol.Extensions.CloudStorage)](https://www.nuget.org/packages/Kronikol.Extensions.CloudStorage) |
 | **S3** | `Kronikol.Extensions.S3` | Tracks Amazon S3 operations (Upload, Download, Delete, List, Copy, Multipart) with configurable verbosity | [![NuGet Version](https://img.shields.io/nuget/v/Kronikol.Extensions.S3)](https://www.nuget.org/packages/Kronikol.Extensions.S3) |
@@ -321,7 +319,7 @@ In short: use deterministic diagrams as the source of truth, and let AI tools bu
 ### Extensions — Application Frameworks & Tooling
 
 | Extension | Package | Description | NuGet |
-|---|---|---|---|
+|||||
 | **Assertion Tracking** | `Kronikol.AssertionTracking` | IL weaver that instruments FluentAssertions/AwesomeAssertions `.Should()`, Shouldly `ShouldBe()` and TUnit `Assert.That()` assertions with assertion tracking, preserving full C# semantics | [![NuGet Version](https://img.shields.io/nuget/v/Kronikol.AssertionTracking)](https://www.nuget.org/packages/Kronikol.AssertionTracking) |
 | **DispatchProxy** | `Kronikol.Extensions.DispatchProxy` | DI integration helpers for `TrackingProxy<T>` — provides `ReplaceWithTracked<T>()` for `IServiceCollection` | [![NuGet Version](https://img.shields.io/nuget/v/Kronikol.Extensions.DispatchProxy)](https://www.nuget.org/packages/Kronikol.Extensions.DispatchProxy) |
 | **gRPC** | `Kronikol.Extensions.Grpc` | Tracks gRPC unary, server-streaming, client-streaming, and duplex-streaming calls with service/method names | [![NuGet Version](https://img.shields.io/nuget/v/Kronikol.Extensions.Grpc)](https://www.nuget.org/packages/Kronikol.Extensions.Grpc) |
@@ -336,7 +334,7 @@ In short: use deterministic diagrams as the source of truth, and let AI tools bu
 
 From 5.0.0 every package targets **.NET 10.0** alone. From 1.23.X through 4.x they target **.NET 8.0**, **.NET 9.0** and **.NET 10.0** (multi-target).
 
----
+
 
 ## <a name="documentation"></a>Documentation [↑](#top)
 
