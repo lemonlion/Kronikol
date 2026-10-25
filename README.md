@@ -64,30 +64,35 @@ flowchart TB
 
     logger[("<b>② RequestResponseLogger</b><br/>Every tracked call,<br/>tagged with its test")]
     report["<b>③ ReportGenerator</b>"]
+    ledger[("<b>History ledger</b><br/>Every run's results,<br/>kept in your repository")]
 
     subgraph outputs["What you get"]
         direction TB
-        html["<b>Interactive HTML report</b><br/>Searchable, with collapsible<br/>steps and payloads"]
-        seq["<b>Sequence diagrams</b><br/>Every call in each test"]
-        act["<b>Activity and flame diagrams</b><br/>The flow inside your service"]
-        c4["<b>C4 component diagram</b><br/>Your service's architecture"]
-        timeline["<b>Scenario timelines</b><br/>Where the time goes"]
-        specs["<b>Specifications</b><br/>Living docs and<br/>AI-readable files"]
-        html ~~~ c4
-        seq ~~~ timeline
+        html["<b>Interactive<br/>HTML report</b><br/>Search and filter,<br/>zoom any diagram,<br/>toggle the detail,<br/>open every payload"]
+        seq["<b>Sequence<br/>diagrams</b><br/>Every call<br/>in each test"]
+        act["<b>Activity and<br/>flame diagrams</b><br/>The flow inside<br/>your service"]
+        c4["<b>C4 component<br/>diagram</b><br/>Your service's<br/>architecture"]
+        timeline["<b>Scenario<br/>timelines</b><br/>Where the<br/>time goes"]
+        specs["<b>Specifications</b><br/>Living docs,<br/>AI-readable files"]
+        history["<b>Cross-run<br/>history</b><br/>Regressions, flaky,<br/>failing since when"]
+        html ~~~ timeline
+        seq ~~~ history
         act ~~~ specs
+        c4 ~~~ specs
     end
 
     during ==>|Trackers log each call| logger
     logger ==>|At the end of the run| report
     report ==> outputs
+    ledger <-.->|Past runs in,<br/>this run out| report
 
     class test caller
     class sut system
     class http,db,cache,bus,any dep
     class t1,t2 tracker
     class logger,report stage
-    class html,seq,act,c4,timeline,specs out
+    class ledger store
+    class html,seq,act,c4,timeline,specs,history out
     style during fill:transparent,stroke:#94a3b8,stroke-dasharray:5 4
     style outputs fill:transparent,stroke:#0891b2,stroke-dasharray:5 4
 
@@ -97,6 +102,7 @@ flowchart TB
     classDef tracker fill:#ffe4e6,stroke:#e11d48,stroke-width:2px,color:#881337
     classDef stage fill:#dcfce7,stroke:#16a34a,stroke-width:2px,color:#14532d
     classDef out fill:#cffafe,stroke:#0891b2,stroke-width:1.5px,color:#164e63
+    classDef store fill:#e0e7ff,stroke:#4f46e5,stroke-width:2px,color:#312e81
 ```
 
 1. **Intercept** — Each type of dependency has a dedicated tracking mechanism that logs interactions to the same in-memory store:
@@ -115,7 +121,7 @@ flowchart TB
 
 2. **Collect** — All logged `RequestResponseLog` entries are held in the static `RequestResponseLogger`. Each entry captures the operation details, service names, and a trace ID to correlate requests across services.
 
-3. **Report** — At the end of the test run, `ReportGenerator` groups the logs by test ID, turns each test's calls into a sequence diagram, the flow inside your service into activity and flame diagrams, all the flows together into a C4 component diagram, and the timings into scenario timelines. It combines them with the test metadata (features, scenarios, results, BDD steps) into an interactive HTML test run report, searchable, with collapsible steps and payloads, alongside an HTML specification and a YAML specification. By default, diagrams render client-side in the browser, on Web Workers so rendering stays off the main thread (since 3.0.45); a PlantUML server or local rendering via IKVM are available as alternatives.
+3. **Report** — At the end of the test run, `ReportGenerator` groups the logs by test ID, turns each test's calls into a sequence diagram, the flow inside your service into activity and flame diagrams, all the flows together into a C4 component diagram, and the timings into scenario timelines. It combines them with the test metadata (features, scenarios, results, BDD steps) into an interactive HTML test run report, searchable, with collapsible steps and payloads, alongside an HTML specification and a YAML specification. It also reads the history ledger, a record of every earlier run kept in your repository, so the report's History tab can say whether each failure is a regression, flaky, or failing since a particular run, and then records this run in it. By default, diagrams render client-side in the browser, on Web Workers so rendering stays off the main thread (since 3.0.45); a PlantUML server or local rendering via IKVM are available as alternatives.
 
 ---
 
