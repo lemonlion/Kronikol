@@ -7,7 +7,8 @@
 
 # <img src="icon.svg" width="32" height="32" alt="Kronikol icon" style="vertical-align: middle;"> Kronikol
 
-**Install easily with this [AI Prompt](https://github.com/lemonlion/Kronikol/wiki/AI-Integration-Prompt)**
+> [!TIP]
+> **Install in your service today with this easy [AI Prompt](https://github.com/lemonlion/Kronikol/wiki/AI-Integration-Prompt)**
 
 Automatically generates [rich interactive UI reports](https://lemonlion.github.io/BreakfastProvider/) with PlantUML sequence, activity and component diagrams, with timeline visualizations from your integration/component test HTTP traffic (real or faked) and telemetry.
 
@@ -115,29 +116,13 @@ flowchart TB
     classDef store fill:#e0e7ff,stroke:#4f46e5,stroke-width:2px,color:#312e81
 ```
 
-1. **Intercept** — Each type of dependency has a dedicated tracking mechanism that logs interactions to the same in-memory store:
-
-    | Dependency | Tracking mechanism | How it works |
-    |---|---|---|
-    | **HTTP** | `TestTrackingMessageHandler` | `DelegatingHandler` in the HTTP pipeline — logs method, URI, headers, body, status code, and names GraphQL queries and mutations from the body |
-    | **gRPC** | `GrpcTrackingInterceptor` | gRPC `Interceptor` on the client channel — logs unary and streaming calls with their service and method names |
-    | **Azure Cosmos DB** | `CosmosTrackingMessageHandler` | `DelegatingHandler` injected via `CosmosClientOptions.HttpClientFactory` — classifies operations (Query, Create, Upsert, etc.) with configurable verbosity |
-    | **SQL (EF Core)** | `SqlTrackingInterceptor` | `DbCommandInterceptor` — intercepts SQL commands from any relational provider (SQL Server, PostgreSQL, MySQL, SQLite, etc.) |
-    | **Redis** | `RedisTrackingDatabase` | `DispatchProxy` wrapping `IDatabase` — tracks GET, SET, HSET, LPUSH, PUBLISH, etc. with cache hit/miss status |
-    | **Any interface** | `TrackingProxy<T>` | .NET `DispatchProxy` wrapping any interface — logs method calls, arguments, return values, and exceptions |
-    | **Events / messages** | `MessageTracker` | Manual logging — for Kafka, RabbitMQ, EventGrid, or any message bus |
-
-    See the [Tracking Dependencies](https://github.com/lemonlion/Kronikol/wiki/Tracking-Dependencies) wiki page for setup guides.
-
-2. **Collect** — All logged `RequestResponseLog` entries are held in the static `RequestResponseLogger`. Each entry captures the operation details, service names, and a trace ID to correlate requests across services.
-
-3. **Report** — At the end of the test run, `ReportGenerator` groups the logs by test ID, turns each test's calls into a sequence diagram, the flow inside your service into activity and flame diagrams, all the flows together into a C4 component diagram, and the timings into scenario timelines. It combines them with the test metadata (features, scenarios, results, BDD steps) into an interactive HTML test run report, searchable, with collapsible steps and payloads, alongside an HTML specification and a YAML specification. It also reads the history ledger, a record of every earlier run kept in your repository, so the report's History tab can say whether each failure is a regression, flaky, or failing since a particular run, and then records this run in it. By default, diagrams render client-side in the browser, on Web Workers so rendering stays off the main thread (since 3.0.45); a PlantUML server or local rendering via IKVM are available as alternatives.
+See the [Tracking Dependencies](https://github.com/lemonlion/Kronikol/wiki/Tracking-Dependencies) wiki page for setup guides.
 
 ---
 
 ## <a name="installation"></a>Installation With AI Prompt [↑](#top)
 
-Installation couldn't be easier now, using this [AI Prompt](https://github.com/lemonlion/Kronikol/wiki/AI-Integration-Prompt).  Full installation usually takes about an hour with a frontier model like Claude Opus 5.5.
+Installation now couldn't be easier using this [AI Prompt](https://github.com/lemonlion/Kronikol/wiki/AI-Integration-Prompt).  Full installation usually takes about an hour with a frontier model like Claude Opus 5.5.
 
 ---
 
