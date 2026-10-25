@@ -70,9 +70,9 @@ flowchart TB
         bus[["Message bus"]]
         any["Any interface"]
         spans{{"Span listener<br/>Activity spans inside<br/>your service"}}
-        test -->|HTTP, gRPC or GraphQL| t1 --> sut --> t2
+        test -->|"<span style='display:inline-block;padding:4px 8px'>HTTP, gRPC or GraphQL</span>"| t1 --> sut --> t2
         t2 --> http & db & cache & bus & any
-        sut -.->|Internal flow| spans
+        sut -.->|"<span style='display:inline-block;padding:4px 8px'>Internal flow</span>"| spans
     end
 
     logger[("<b>RequestResponseLogger</b><br/>Every tracked call,<br/>tagged with its test")]
@@ -95,12 +95,12 @@ flowchart TB
         c4 ~~~ specs
     end
 
-    during ==>|Trackers log each call| logger
-    during ==>|The listener<br/>logs each span| spanstore
-    logger ==>|At the end of the run| report
+    during ==>|"<span style='display:inline-block;padding:4px 8px'>Trackers log each call</span>"| logger
+    during ==>|"<span style='display:inline-block;padding:4px 8px'>The listener<br/>logs each span</span>"| spanstore
+    logger ==>|"<span style='display:inline-block;padding:4px 8px'>At the end of the run</span>"| report
     spanstore ==> report
     report ==> outputs
-    ledger <-.->|Past runs in,<br/>this run out| report
+    ledger <-.->|"<span style='display:inline-block;padding:4px 8px'>Past runs in,<br/>this run out</span>"| report
 
     class test caller
     class sut system
