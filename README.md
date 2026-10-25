@@ -9,7 +9,7 @@
 
 **[See a live report](https://lemonlion.github.io/BreakfastProvider/)** from a sample service's test run.
 
-*Formerly **TestTrackingDiagrams** — the same project, renamed in 3.0.0 (May 2026). The `TestTrackingDiagrams.*` NuGet packages are the old identity and are no longer updated; install `Kronikol.*`.*
+**Install easily with this [AI Prompt](https://github.com/lemonlion/Kronikol/wiki/AI-Integration-Prompt)**
 
 Automatically generates [rich interactive HTML reports](https://lemonlion.github.io/BreakfastProvider/) with PlantUML sequence, activity and component diagrams, with timeline visualizations from your integration/component test HTTP traffic (real or faked) and telemetry.
 
@@ -34,6 +34,7 @@ In the report:
 
 - [Example Output](#example-output)
 - [How It Works](#how-it-works)
+- [Installation With AI Prompt](#installation)
 - [Use Cases](#use-cases)
 - [Deterministic vs AI-Generated Diagrams](#deterministic-vs-ai)
 - [Supported Frameworks & NuGet Packages](#supported-frameworks)
@@ -133,6 +134,12 @@ flowchart TB
 2. **Collect** — All logged `RequestResponseLog` entries are held in the static `RequestResponseLogger`. Each entry captures the operation details, service names, and a trace ID to correlate requests across services.
 
 3. **Report** — At the end of the test run, `ReportGenerator` groups the logs by test ID, turns each test's calls into a sequence diagram, the flow inside your service into activity and flame diagrams, all the flows together into a C4 component diagram, and the timings into scenario timelines. It combines them with the test metadata (features, scenarios, results, BDD steps) into an interactive HTML test run report, searchable, with collapsible steps and payloads, alongside an HTML specification and a YAML specification. It also reads the history ledger, a record of every earlier run kept in your repository, so the report's History tab can say whether each failure is a regression, flaky, or failing since a particular run, and then records this run in it. By default, diagrams render client-side in the browser, on Web Workers so rendering stays off the main thread (since 3.0.45); a PlantUML server or local rendering via IKVM are available as alternatives.
+
+---
+
+## <a name="installation"></a>Installation With AI Prompt [↑](#top)
+
+Installation couldn't be easier now, using this [AI Prompt](https://github.com/lemonlion/Kronikol/wiki/AI-Integration-Prompt).  Full installation usually takes about an hour with a frontier model like Claude Opus 5.5.
 
 ---
 
