@@ -1,0 +1,55 @@
+[pg] SaveChanges insert, generated key: logged response = 0 rows
+[pg] SaveChanges 3 inserts in one batch: logged response = 0 rows
+[mstcp] SaveChanges insert, generated key: logged response = 0 rows
+[mstcp] SaveChanges 3 inserts in one batch: logged response = 0 rows
+[sqlite] SaveChanges insert, generated key: logged response = [{"Id":3}]
+[sqlite] SaveChanges 3 inserts in one batch: logged response = [{"Id":5}]
+
+provider | case                                   | no interceptor | with interceptor
+pg      | SaveChanges insert, generated key      | OK             | FAIL InvalidCastException: Unable to cast object of type 'Kronikol.Sql.TrackingDbDataReader' to type 'Npgsql.NpgsqlDataReader'.
+pg      | SaveChanges insert, sync               | OK             | FAIL InvalidCastException: Unable to cast object of type 'Kronikol.Sql.TrackingDbDataReader' to type 'Npgsql.NpgsqlDataReader'.
+pg      | SaveChanges update, nothing returned   | OK             | FAIL InvalidCastException: Unable to cast object of type 'Kronikol.Sql.TrackingDbDataReader' to type 'Npgsql.NpgsqlDataReader'.
+pg      | SaveChanges delete                     | OK             | FAIL InvalidCastException: Unable to cast object of type 'Kronikol.Sql.TrackingDbDataReader' to type 'Npgsql.NpgsqlDataReader'.
+pg      | SaveChanges 3 inserts in one batch     | OK             | FAIL InvalidCastException: Unable to cast object of type 'Kronikol.Sql.TrackingDbDataReader' to type 'Npgsql.NpgsqlDataReader'.
+pg      | Query int + string columns             | OK             | OK
+pg      | Query DateTimeOffset column            | OK             | FAIL InvalidCastException: Unable to cast object of type 'System.DateTime' to type 'System.DateTimeOffset'.
+pg      | Query DateOnly column                  | OK             | OK
+pg      | Query TimeOnly column                  | OK             | OK
+pg      | Query decimal + Guid columns           | OK             | OK
+pg      | Query whole entity, sync               | OK             | FAIL InvalidCastException: Unable to cast object of type 'System.DateTime' to type 'System.DateTimeOffset'.
+pg      | ExecuteUpdate (bulk)                   | OK             | OK
+pg      | SqlQuery<int> raw                      | OK             | OK
+pg      | Query int[] as List<int> (pg)          | OK             | FAIL InvalidCastException: Unable to cast object of type 'System.Int32[]' to type 'System.Collections.Generic.List`1[System.Int32]'.
+pg      | SaveChanges insert List<int> (pg)      | OK             | FAIL InvalidCastException: Unable to cast object of type 'Kronikol.Sql.TrackingDbDataReader' to type 'Npgsql.NpgsqlDataReader'.
+mstcp   | SaveChanges insert, generated key      | FAIL Win32Exception: The wait operation timed out. | FAIL Win32Exception: The wait operation timed out.
+mstcp   | SaveChanges insert, sync               | FAIL Win32Exception: The wait operation timed out. | FAIL Win32Exception: The wait operation timed out.
+mstcp   | SaveChanges update, nothing returned   | FAIL Win32Exception: The wait operation timed out. | FAIL Win32Exception: The wait operation timed out.
+mstcp   | SaveChanges delete                     | FAIL Win32Exception: The wait operation timed out. | FAIL Win32Exception: The wait operation timed out.
+mstcp   | SaveChanges 3 inserts in one batch     | FAIL Win32Exception: The wait operation timed out. | FAIL Win32Exception: The wait operation timed out.
+mstcp   | Query int + string columns             | FAIL Win32Exception: The wait operation timed out. | FAIL Win32Exception: The wait operation timed out.
+mstcp   | Query DateTimeOffset column            | FAIL Win32Exception: The wait operation timed out. | FAIL Win32Exception: The wait operation timed out.
+mstcp   | Query DateOnly column                  | FAIL Win32Exception: The wait operation timed out. | FAIL Win32Exception: The wait operation timed out.
+mstcp   | Query TimeOnly column                  | FAIL Win32Exception: The wait operation timed out. | FAIL Win32Exception: The wait operation timed out.
+mstcp   | Query decimal + Guid columns           | FAIL Win32Exception: The wait operation timed out. | FAIL Win32Exception: The wait operation timed out.
+mstcp   | Query whole entity, sync               | FAIL Win32Exception: The wait operation timed out. | FAIL Win32Exception: The wait operation timed out.
+mstcp   | ExecuteUpdate (bulk)                   | FAIL Win32Exception: The wait operation timed out. | FAIL Win32Exception: The wait operation timed out.
+mstcp   | SqlQuery<int> raw                      | FAIL Win32Exception: The wait operation timed out. | FAIL Win32Exception: The wait operation timed out.
+mstcp   | Query geography Point (mssql NTS)      | FAIL Win32Exception: The wait operation timed out. | FAIL Win32Exception: The wait operation timed out.
+mstcp   | Query hierarchyid (mssql)              | FAIL Win32Exception: The wait operation timed out. | FAIL Win32Exception: The wait operation timed out.
+sqlite  | SaveChanges insert, generated key      | OK             | OK
+sqlite  | SaveChanges insert, sync               | OK             | OK
+sqlite  | SaveChanges update, nothing returned   | OK             | OK
+sqlite  | SaveChanges delete                     | OK             | OK
+sqlite  | SaveChanges 3 inserts in one batch     | OK             | OK
+sqlite  | Query int + string columns             | OK             | OK
+sqlite  | Query DateTimeOffset column            | OK             | FAIL InvalidCastException: Unable to cast object of type 'System.String' to type 'System.DateTimeOffset'.
+sqlite  | Query DateOnly column                  | OK             | FAIL InvalidCastException: Unable to cast object of type 'System.String' to type 'System.DateOnly'.
+sqlite  | Query TimeOnly column                  | OK             | FAIL InvalidCastException: Unable to cast object of type 'System.String' to type 'System.TimeOnly'.
+sqlite  | Query decimal + Guid columns           | OK             | OK
+sqlite  | Query whole entity, sync               | OK             | FAIL InvalidCastException: Unable to cast object of type 'System.String' to type 'System.DateTimeOffset'.
+sqlite  | ExecuteUpdate (bulk)                   | OK             | OK
+sqlite  | SqlQuery<int> raw                      | OK             | OK
+dapper  | Dapper QueryAsync via TrackingSqlConnection | -              | FAIL UriFormatException: Invalid URI: The hostname could not be parsed.
+dapper  | Dapper QueryAsync via TrackingSqlConnection TCP | -              | FAIL Win32Exception: The wait operation timed out.
+dapper  | Dapper Query (buffered, sync) via TrackingSqlConnection TCP | -              | FAIL Win32Exception: The wait operation timed out.
+dapper  | Dapper QueryAsync via TrackingNpgsqlConnection | -              | FAIL InvalidOperationException: Invalid attempt to read from column ordinal '0'. With CommandBehavior.SequentialAccess, you may only read from column ordinal '1' or greater.

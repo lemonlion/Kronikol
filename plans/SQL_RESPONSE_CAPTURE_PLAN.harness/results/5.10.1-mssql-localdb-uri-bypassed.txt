@@ -1,0 +1,19 @@
+[mssql] SaveChanges insert, generated key: logged response = [{"Id":3}]
+[mssql] SaveChanges 3 inserts in one batch: logged response = [{"Id":3,"_Position":0},{"Id":4,"_Position":1},{"Id":5,"_Position":2}]
+
+provider | case                                   | no interceptor | with interceptor
+mssql   | SaveChanges insert, generated key      | OK             | OK
+mssql   | SaveChanges insert, sync               | OK             | OK
+mssql   | SaveChanges update, nothing returned   | OK             | OK
+mssql   | SaveChanges delete                     | OK             | OK
+mssql   | SaveChanges 3 inserts in one batch     | OK             | OK
+mssql   | Query int + string columns             | OK             | OK
+mssql   | Query DateTimeOffset column            | OK             | OK
+mssql   | Query DateOnly column                  | OK             | FAIL InvalidCastException: Unable to cast object of type 'System.DateTime' to type 'System.DateOnly'.
+mssql   | Query TimeOnly column                  | OK             | FAIL InvalidCastException: Unable to cast object of type 'System.TimeSpan' to type 'System.TimeOnly'.
+mssql   | Query decimal + Guid columns           | OK             | OK
+mssql   | Query whole entity, sync               | OK             | FAIL InvalidCastException: Unable to cast object of type 'System.DateTime' to type 'System.DateOnly'.
+mssql   | ExecuteUpdate (bulk)                   | OK             | OK
+mssql   | SqlQuery<int> raw                      | OK             | OK
+mssql   | Query geography Point (mssql NTS)      | OK             | FAIL SqlNullValueException: Data is Null. This method or property cannot be called on Null values.
+mssql   | Query hierarchyid (mssql)              | OK             | OK

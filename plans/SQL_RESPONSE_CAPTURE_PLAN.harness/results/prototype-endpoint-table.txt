@@ -1,0 +1,18 @@
+| `(localdb)\MSSQLLocalDB` | `sql://localdb-mssqllocaldb/k193/Orders` |
+| `.\SQLEXPRESS` | `sql://localhost-sqlexpress/k193/Orders` |
+| `localhost\SQLEXPRESS` | `sql://localhost-sqlexpress/k193/Orders` |
+| `myhost\inst,1433` | `sql://myhost-inst:1433/k193/Orders` |
+| `tcp:myserver,1433` | `sql://myserver:1433/k193/Orders` |
+| `np:\.\pipe\sql\query` | `sql://localhost-pipe-sql-query/k193/Orders` |
+| `myserver.database.windows.net,1433` | `sql://myserver.database.windows.net:1433/k193/Orders` |
+| `127.0.0.1,1433` | `sql://127.0.0.1:1433/k193/Orders` |
+| `tcp://localhost:55432` | `sql://localhost:55432/k193/Orders` |
+| `/var/run/postgresql` | `sql://var-run-postgresql/k193/Orders` |
+| `host1:5432,host2:5432` | `sql://host1:5432/k193/Orders` |
+| `spanner-emulator:9010` | `sql://spanner-emulator:9010/k193/Orders` |
+| `C:\data\app.db` | `sql://c-data-app.db/k193/Orders` |
+| `(empty)` | `sql://localhost/k193/Orders` |
+| `[::1]:5432` | `sql://1-5432/k193/Orders` |
+| `localhost:5432` | `sql://localhost:5432/k193/Orders` |
+| database `My Db` | Detailed `sql://localhost/My Db/Orders`, Summarised `sql://my-db/Orders` |
+| database `db#1` | Detailed `sql://localhost/db%231/Orders`, Summarised `sql://db-1/Orders` |

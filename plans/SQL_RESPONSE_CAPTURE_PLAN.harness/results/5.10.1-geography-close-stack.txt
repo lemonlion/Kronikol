@@ -1,0 +1,37 @@
+   at ValueGetter(Object)
+   at System.Text.Json.Serialization.Metadata.JsonPropertyInfo`1.GetMemberAndWriteJson(Object obj, WriteStack& state, Utf8JsonWriter writer)
+   at System.Text.Json.Serialization.Converters.ObjectDefaultConverter`1.OnTryWrite(Utf8JsonWriter writer, T value, JsonSerializerOptions options, WriteStack& state)
+   at System.Text.Json.Serialization.JsonConverter`1.TryWrite(Utf8JsonWriter writer, T& value, JsonSerializerOptions options, WriteStack& state)
+   at System.Text.Json.Serialization.Metadata.JsonPropertyInfo`1.GetMemberAndWriteJson(Object obj, WriteStack& state, Utf8JsonWriter writer)
+   at System.Text.Json.Serialization.Converters.ObjectDefaultConverter`1.OnTryWrite(Utf8JsonWriter writer, T value, JsonSerializerOptions options, WriteStack& state)
+   at System.Text.Json.Serialization.JsonConverter`1.TryWrite(Utf8JsonWriter writer, T& value, JsonSerializerOptions options, WriteStack& state)
+   at System.Text.Json.Serialization.JsonConverter`1.TryWriteAsObject(Utf8JsonWriter writer, Object value, JsonSerializerOptions options, WriteStack& state)
+   at System.Text.Json.Serialization.JsonConverter`1.TryWrite(Utf8JsonWriter writer, T& value, JsonSerializerOptions options, WriteStack& state)
+   at System.Text.Json.Serialization.Converters.DictionaryOfTKeyTValueConverter`3.OnWriteResume(Utf8JsonWriter writer, TCollection value, JsonSerializerOptions options, WriteStack& state)
+   at System.Text.Json.Serialization.JsonDictionaryConverter`3.OnTryWrite(Utf8JsonWriter writer, TDictionary dictionary, JsonSerializerOptions options, WriteStack& state)
+   at System.Text.Json.Serialization.JsonConverter`1.TryWrite(Utf8JsonWriter writer, T& value, JsonSerializerOptions options, WriteStack& state)
+   at System.Text.Json.Serialization.JsonConverter`1.TryWriteAsObject(Utf8JsonWriter writer, Object value, JsonSerializerOptions options, WriteStack& state)
+   at System.Text.Json.Serialization.JsonConverter`1.TryWrite(Utf8JsonWriter writer, T& value, JsonSerializerOptions options, WriteStack& state)
+   at System.Text.Json.Serialization.Converters.IEnumerableDefaultConverter`2.OnWriteResume(Utf8JsonWriter writer, TCollection value, JsonSerializerOptions options, WriteStack& state)
+   at System.Text.Json.Serialization.JsonCollectionConverter`2.OnTryWrite(Utf8JsonWriter writer, TCollection value, JsonSerializerOptions options, WriteStack& state)
+   at System.Text.Json.Serialization.JsonConverter`1.TryWrite(Utf8JsonWriter writer, T& value, JsonSerializerOptions options, WriteStack& state)
+   at System.Text.Json.Serialization.JsonConverter`1.WriteCore(Utf8JsonWriter writer, T& value, JsonSerializerOptions options, WriteStack& state)
+   at System.Text.Json.Serialization.Metadata.JsonTypeInfo`1.Serialize(Utf8JsonWriter writer, T& rootValue, Object rootValueBoxed)
+   at System.Text.Json.JsonSerializer.WriteString[TValue](TValue& value, JsonTypeInfo`1 jsonTypeInfo)
+   at System.Text.Json.JsonSerializer.Serialize[TValue](TValue value, JsonSerializerOptions options)
+   at Kronikol.Sql.SqlRowFormatter.Format(SqlResponseDetail detail, Int32 maxRows, Int64 totalRows, IReadOnlyList`1 capturedRows, String columnNames) in C:\Code\Kronikol-193\src\Kronikol\Sql\SqlRowFormatter.cs:line 78
+   at Kronikol.Sql.TrackingDbDataReader.FormatContent() in C:\Code\Kronikol-193\src\Kronikol\Sql\TrackingDbDataReader.cs:line 98
+   at Kronikol.Sql.TrackingDbDataReader.LogIfNotDone() in C:\Code\Kronikol-193\src\Kronikol\Sql\TrackingDbDataReader.cs:line 92
+   at Kronikol.Sql.TrackingDbDataReader.CloseAsync() in C:\Code\Kronikol-193\src\Kronikol\Sql\TrackingDbDataReader.cs:line 119
+   at Microsoft.EntityFrameworkCore.Storage.RelationalDataReader.CloseAsync()
+   at Microsoft.EntityFrameworkCore.Storage.RelationalDataReader.DisposeAsync()
+   at Microsoft.EntityFrameworkCore.Storage.RelationalDataReader.DisposeAsync()
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Program.<>c.<<<Main>$>b__0_42>d.MoveNext() in C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\851551fc-6773-4f77-89bc-c2dad8d41b0e\scratchpad\repro\Program.cs:line 72
+--- End of stack trace from previous location ---
+   at Program.<>c__DisplayClass0_0.<<<Main>$>g__Attempt|6>d.MoveNext() in C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\851551fc-6773-4f77-89bc-c2dad8d41b0e\scratchpad\repro\Program.cs:line 103
+--- End of stack trace from previous location ---
+   at Program.<>c__DisplayClass0_0.<<<Main>$>g__Attempt|6>d.MoveNext() in C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\851551fc-6773-4f77-89bc-c2dad8d41b0e\scratchpad\repro\Program.cs:line 104
+
+provider | case                                   | no interceptor | with interceptor
+mssql   | Query geography Point (mssql NTS)      | OK             | FAIL SqlNullValueException: Data is Null. This method or property cannot be called on Null values.

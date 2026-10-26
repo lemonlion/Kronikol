@@ -1,0 +1,21 @@
+Npgsql DataSource  = tcp://localhost:55432
+Sqlite DataSource  = C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\851551fc-6773-4f77-89bc-c2dad8d41b0e\scratchpad\repro\bin\Release\net10.0\k193.db
+SqlClient (localdb)= (localdb)\MSSQLLocalDB
+(localdb)\MSSQLLocalDB               Detailed/Raw: THROWS UriFormatException
+.\SQLEXPRESS                         Detailed/Raw: THROWS UriFormatException
+localhost\SQLEXPRESS                 Detailed/Raw: THROWS UriFormatException
+myhost\inst,1433                     Detailed/Raw: THROWS UriFormatException
+tcp:myserver,1433                    Detailed/Raw: THROWS UriFormatException
+np:\.\pipe\sql\query                 Detailed/Raw: THROWS UriFormatException
+myserver.database.windows.net,1433   Detailed/Raw: ok host='myserver.database.windows.net' path='/k193/Orders'
+tcp://localhost:5432                 Detailed/Raw: ok host='tcp' path='//localhost:5432/k193/Orders'
+/var/run/postgresql                  Detailed/Raw: ok host='' path='/var/run/postgresql/k193/Orders'
+host1:5432,host2:5432                Detailed/Raw: THROWS UriFormatException
+spanner-emulator:9010                Detailed/Raw: ok host='spanner-emulator' path='/k193/Orders'
+C:\data\app.db                       Detailed/Raw: ok host='' path='C:/data/app.db/k193/Orders'
+:memory:                             Detailed/Raw: THROWS UriFormatException
+[::1]:5432                           Detailed/Raw: ok host='[::1]' path='/k193/Orders'
+database 'k193': Summarised sql://{db}/Orders: ok host='k193' path='/Orders', Detailed: ok host='localhost' path='/k193/Orders'
+database 'My Db': Summarised sql://{db}/Orders: THROWS UriFormatException, Detailed: ok host='localhost' path='/My%20Db/Orders'
+database 'db#1': Summarised sql://{db}/Orders: ok host='db' path='/', Detailed: ok host='localhost' path='/db'
+database 'main': Summarised sql://{db}/Orders: ok host='main' path='/Orders', Detailed: ok host='localhost' path='/main/Orders'

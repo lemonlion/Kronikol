@@ -1,0 +1,45 @@
+pg      | SaveChanges insert, generated key      | OK             | FAIL InvalidCastException: Unable to cast object of type 'Kronikol.Sql.TrackingDbDataReader' to type 'Npgsql.NpgsqlDataReader'.
+pg      | SaveChanges insert, sync               | OK             | FAIL InvalidCastException: Unable to cast object of type 'Kronikol.Sql.TrackingDbDataReader' to type 'Npgsql.NpgsqlDataReader'.
+pg      | SaveChanges update, nothing returned   | OK             | FAIL InvalidCastException: Unable to cast object of type 'System.DateTime' to type 'System.DateTimeOffset'.
+pg      | SaveChanges delete                     | OK             | FAIL InvalidCastException: Unable to cast object of type 'Kronikol.Sql.TrackingDbDataReader' to type 'Npgsql.NpgsqlDataReader'.
+pg      | SaveChanges 3 inserts in one batch     | OK             | FAIL InvalidCastException: Unable to cast object of type 'Kronikol.Sql.TrackingDbDataReader' to type 'Npgsql.NpgsqlDataReader'.
+pg      | Query int + string columns             | OK             | OK
+pg      | Query DateTimeOffset column            | OK             | FAIL InvalidCastException: Unable to cast object of type 'System.DateTime' to type 'System.DateTimeOffset'.
+pg      | Query DateOnly column                  | OK             | OK
+pg      | Query TimeOnly column                  | OK             | OK
+pg      | Query decimal + Guid columns           | OK             | OK
+pg      | Query whole entity, sync               | OK             | FAIL InvalidCastException: Unable to cast object of type 'System.DateTime' to type 'System.DateTimeOffset'.
+pg      | ExecuteUpdate (bulk)                   | OK             | OK
+pg      | SqlQuery<int> raw                      | OK             | OK
+pg      | Query int[] as List<int> (pg)          | OK             | FAIL InvalidCastException: Unable to cast object of type 'System.Int32[]' to type 'System.Collections.Generic.List`1[System.Int32]'.
+pg      | SaveChanges insert List<int> (pg)      | OK             | FAIL InvalidCastException: Unable to cast object of type 'Kronikol.Sql.TrackingDbDataReader' to type 'Npgsql.NpgsqlDataReader'.
+mssql   | SaveChanges insert, generated key      | OK             | FAIL UriFormatException: Invalid URI: The hostname could not be parsed.
+mssql   | SaveChanges insert, sync               | OK             | FAIL UriFormatException: Invalid URI: The hostname could not be parsed.
+mssql   | SaveChanges update, nothing returned   | OK             | FAIL UriFormatException: Invalid URI: The hostname could not be parsed.
+mssql   | SaveChanges delete                     | OK             | FAIL UriFormatException: Invalid URI: The hostname could not be parsed.
+mssql   | SaveChanges 3 inserts in one batch     | OK             | FAIL UriFormatException: Invalid URI: The hostname could not be parsed.
+mssql   | Query int + string columns             | OK             | FAIL UriFormatException: Invalid URI: The hostname could not be parsed.
+mssql   | Query DateTimeOffset column            | OK             | FAIL UriFormatException: Invalid URI: The hostname could not be parsed.
+mssql   | Query DateOnly column                  | OK             | FAIL UriFormatException: Invalid URI: The hostname could not be parsed.
+mssql   | Query TimeOnly column                  | OK             | FAIL UriFormatException: Invalid URI: The hostname could not be parsed.
+mssql   | Query decimal + Guid columns           | OK             | FAIL UriFormatException: Invalid URI: The hostname could not be parsed.
+mssql   | Query whole entity, sync               | OK             | FAIL UriFormatException: Invalid URI: The hostname could not be parsed.
+mssql   | ExecuteUpdate (bulk)                   | OK             | FAIL UriFormatException: Invalid URI: The hostname could not be parsed.
+mssql   | SqlQuery<int> raw                      | OK             | FAIL UriFormatException: Invalid URI: The hostname could not be parsed.
+mssql   | Query geography Point (mssql NTS)      | OK             | FAIL UriFormatException: Invalid URI: The hostname could not be parsed.
+mssql   | Query hierarchyid (mssql)              | OK             | FAIL UriFormatException: Invalid URI: The hostname could not be parsed.
+sqlite  | SaveChanges insert, generated key      | OK             | OK
+sqlite  | SaveChanges insert, sync               | OK             | OK
+sqlite  | SaveChanges update, nothing returned   | OK             | FAIL InvalidCastException: Unable to cast object of type 'System.String' to type 'System.DateTimeOffset'.
+sqlite  | SaveChanges delete                     | OK             | OK
+sqlite  | SaveChanges 3 inserts in one batch     | OK             | OK
+sqlite  | Query int + string columns             | OK             | OK
+sqlite  | Query DateTimeOffset column            | OK             | FAIL InvalidCastException: Unable to cast object of type 'System.String' to type 'System.DateTimeOffset'.
+sqlite  | Query DateOnly column                  | OK             | FAIL InvalidCastException: Unable to cast object of type 'System.String' to type 'System.DateOnly'.
+sqlite  | Query TimeOnly column                  | OK             | FAIL InvalidCastException: Unable to cast object of type 'System.String' to type 'System.TimeOnly'.
+sqlite  | Query decimal + Guid columns           | OK             | OK
+sqlite  | Query whole entity, sync               | OK             | FAIL InvalidCastException: Unable to cast object of type 'System.String' to type 'System.DateTimeOffset'.
+sqlite  | ExecuteUpdate (bulk)                   | OK             | OK
+sqlite  | SqlQuery<int> raw                      | OK             | OK
+dapper  | Dapper QueryAsync via TrackingSqlConnection | -              | FAIL UriFormatException: Invalid URI: The hostname could not be parsed.
+dapper  | Dapper QueryAsync via TrackingNpgsqlConnection | -              | FAIL DataException: Error parsing column 0 (a=<null>)

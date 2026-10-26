@@ -1,0 +1,84 @@
+[pg] SaveChanges insert, generated key: logged response = 1 rows affected
+[pg] SaveChanges update, nothing returned: logged response = 1 rows affected
+[pg] SaveChanges 3 inserts in one batch: logged response = 3 rows affected
+[pg] Query int + string columns: logged response = [{"Id":1,"Name":"seed"},{"Id":2,"Name":"victim"}]
+[pg] Query DateTimeOffset column: logged response = [{"At":"2026-10-26T12:00:00Z"},{"At":"2026-10-26T12:00:00Z"}]
+[mssql] SaveChanges insert, generated key: logged response = (none)
+[prototype] untouched query ReadCount=2 onRow=False
+[mssql] SaveChanges update, nothing returned: logged response = (none)
+[prototype] untouched query ReadCount=2 onRow=False
+[mssql] SaveChanges 3 inserts in one batch: logged response = (none)
+[prototype] untouched query ReadCount=3 onRow=False
+[mssql] Query int + string columns: logged response = 2 rows (not captured: a column is read through the provider's own reader)
+[prototype] untouched query ReadCount=3 onRow=False
+[mssql] Query DateTimeOffset column: logged response = 2 rows (not captured: a column is read through the provider's own reader)
+[prototype] untouched query ReadCount=3 onRow=False
+[prototype] untouched query ReadCount=3 onRow=False
+[prototype] untouched query ReadCount=3 onRow=False
+[prototype] untouched query ReadCount=3 onRow=False
+[prototype] untouched query ReadCount=2 onRow=False
+[prototype] untouched query ReadCount=2 onRow=False
+[mssql] Query geography Point (mssql NTS): logged response = 1 rows (not captured: a column is read through the provider's own reader)
+[prototype] untouched query ReadCount=2 onRow=False
+[mssql] SaveChanges two tables, batch (mssql): logged response = (none)
+[prototype] untouched query ReadCount=2 onRow=False
+[mssql] FromSql two result sets (mssql): logged response = 1 rows (not captured: a column is read through the provider's own reader)
+[sqlite] SaveChanges insert, generated key: logged response = 1 rows affected
+[sqlite] SaveChanges update, nothing returned: logged response = 1 rows affected
+[sqlite] SaveChanges 3 inserts in one batch: logged response = 1 rows affected
+[sqlite] Query int + string columns: logged response = [{"Id":1,"Name":"seed"},{"Id":2,"Name":"victim"}]
+[sqlite] Query DateTimeOffset column: logged response = [{"At":"2026-10-26 12:00:00+00:00"},{"At":"2026-10-26 12:00:00+00:00"}]
+
+provider | case                                   | no interceptor | with interceptor
+pg      | SaveChanges insert, generated key      | OK             | OK
+pg      | SaveChanges insert, sync               | OK             | OK
+pg      | SaveChanges update, nothing returned   | OK             | OK
+pg      | SaveChanges delete                     | OK             | OK
+pg      | SaveChanges 3 inserts in one batch     | OK             | OK
+pg      | Query int + string columns             | OK             | OK
+pg      | Query DateTimeOffset column            | OK             | OK
+pg      | Query DateOnly column                  | OK             | OK
+pg      | Query TimeOnly column                  | OK             | OK
+pg      | Query decimal + Guid columns           | OK             | OK
+pg      | Query whole entity, sync               | OK             | OK
+pg      | ExecuteUpdate (bulk)                   | OK             | OK
+pg      | SqlQuery<int> raw                      | OK             | OK
+pg      | Query int[] as List<int> (pg)          | OK             | OK
+pg      | SaveChanges insert List<int> (pg)      | OK             | OK
+mssql   | SaveChanges insert, generated key      | OK             | OK
+mssql   | SaveChanges insert, sync               | OK             | OK
+mssql   | SaveChanges update, nothing returned   | OK             | OK
+mssql   | SaveChanges delete                     | OK             | OK
+mssql   | SaveChanges 3 inserts in one batch     | OK             | OK
+mssql   | Query int + string columns             | OK             | OK
+mssql   | Query DateTimeOffset column            | OK             | OK
+mssql   | Query DateOnly column                  | OK             | OK
+mssql   | Query TimeOnly column                  | OK             | OK
+mssql   | Query decimal + Guid columns           | OK             | OK
+mssql   | Query whole entity, sync               | OK             | OK
+mssql   | ExecuteUpdate (bulk)                   | OK             | OK
+mssql   | SqlQuery<int> raw                      | OK             | OK
+mssql   | Query geography Point (mssql NTS)      | OK             | OK
+mssql   | Query hierarchyid (mssql)              | OK             | OK
+mssql   | SaveChanges two tables, batch (mssql)  | OK             | OK
+mssql   | FromSql two result sets (mssql)        | OK             | OK
+sqlite  | SaveChanges insert, generated key      | OK             | OK
+sqlite  | SaveChanges insert, sync               | OK             | OK
+sqlite  | SaveChanges update, nothing returned   | OK             | OK
+sqlite  | SaveChanges delete                     | OK             | OK
+sqlite  | SaveChanges 3 inserts in one batch     | OK             | OK
+sqlite  | Query int + string columns             | OK             | OK
+sqlite  | Query DateTimeOffset column            | OK             | OK
+sqlite  | Query DateOnly column                  | OK             | OK
+sqlite  | Query TimeOnly column                  | OK             | OK
+sqlite  | Query decimal + Guid columns           | OK             | OK
+sqlite  | Query whole entity, sync               | OK             | OK
+sqlite  | ExecuteUpdate (bulk)                   | OK             | OK
+sqlite  | SqlQuery<int> raw                      | OK             | OK
+dapper  | Dapper QueryAsync via TrackingSqlConnection | -              | OK
+dapper  | Dapper QueryAsync via TrackingSqlConnection TCP | -              | FAIL Win32Exception: The wait operation timed out.
+dapper  | Dapper Query (buffered, sync) via TrackingSqlConnection TCP | -              | FAIL Win32Exception: The wait operation timed out.
+dapper  | Dapper QueryAsync via TrackingNpgsqlConnection | -              | OK
+ADO two result sets via TrackingNpgsqlConnection: app read [1, 2, x]
+  logged response = [{"a":1},{"a":2}]
+[{"b":"x"}]

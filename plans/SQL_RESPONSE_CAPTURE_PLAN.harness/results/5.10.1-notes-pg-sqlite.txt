@@ -1,0 +1,10 @@
+[pg] SaveChanges insert, generated key: logged response = 0 rows
+[pg] SaveChanges update, nothing returned: logged response = 0 rows
+[pg] SaveChanges 3 inserts in one batch: logged response = 0 rows
+[pg] Query int + string columns: logged response = [{"Id":1,"Name":"seed"},{"Id":2,"Name":"victim"}]
+[pg] Query DateTimeOffset column: logged response = [{"At":"2026-10-26T12:00:00Z"}]
+[sqlite] SaveChanges insert, generated key: logged response = [{"Id":3}]
+[sqlite] SaveChanges update, nothing returned: logged response = [{"1":1}]
+[sqlite] SaveChanges 3 inserts in one batch: logged response = [{"Id":5}]
+[sqlite] Query int + string columns: logged response = [{"Id":1,"Name":"seed"},{"Id":2,"Name":"victim"}]
+[sqlite] Query DateTimeOffset column: logged response = [{"At":"2026-10-26 12:00:00+00:00"}]

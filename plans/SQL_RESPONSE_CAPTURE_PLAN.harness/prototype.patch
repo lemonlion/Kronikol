@@ -1,0 +1,915 @@
+diff --git a/src/Kronikol.Extensions.EfCore.Relational/ProviderReaderMethods.cs b/src/Kronikol.Extensions.EfCore.Relational/ProviderReaderMethods.cs
+new file mode 100644
+index 00000000..3cbfaae9
+--- /dev/null
++++ b/src/Kronikol.Extensions.EfCore.Relational/ProviderReaderMethods.cs
+@@ -0,0 +1,66 @@
++using System.Data.Common;
++using System.Runtime.CompilerServices;
++using Microsoft.EntityFrameworkCore;
++using Microsoft.EntityFrameworkCore.Infrastructure;
++using Microsoft.EntityFrameworkCore.Metadata;
++using Microsoft.EntityFrameworkCore.Storage;
++
++namespace Kronikol.Extensions.EfCore.Relational;
++
++/// <summary>
++/// PROTOTYPE for plans/SQL_RESPONSE_CAPTURE_PLAN.md: whether every value a model's queries can read goes through a
++/// method of <see cref="DbDataReader"/> itself. EF Core's shaper casts the reader to the declaring type of a type
++/// mapping's <see cref="RelationalTypeMapping.GetDataReaderMethod()"/>, so a mapping read through
++/// <c>SqlDataReader.GetSqlBytes</c> (SQL Server NetTopologySuite) or <c>OracleDataReader.GetDateTimeOffset</c> fails
++/// on any reader that is not the provider's own.
++/// </summary>
++internal static class ProviderReaderMethods
++{
++    private static readonly ConditionalWeakTable<IModel, StrongBox<bool>> Verdicts = new();
++
++    // Types raw SQL commonly projects that no entity may map (SqlQuery<DateTimeOffset>), asked of the type mapping source.
++    private static readonly Type[] ProbedClrTypes = [typeof(DateTimeOffset), typeof(DateOnly), typeof(TimeOnly), typeof(TimeSpan)];
++
++    internal static bool ModelReadsOnlyThroughDbDataReader(DbContext context)
++    {
++        var model = context.Model;
++        if (Verdicts.TryGetValue(model, out var known)) return known.Value;
++
++        var safe = Compute(context, model);
++        Verdicts.AddOrUpdate(model, new StrongBox<bool>(safe));
++        return safe;
++    }
++
++    private static bool Compute(DbContext context, IModel model)
++    {
++        foreach (var entityType in model.GetEntityTypes())
++        {
++            foreach (var property in entityType.GetProperties())
++                if (!ReadThroughDbDataReader(property.FindRelationalTypeMapping())) return false;
++            foreach (var complex in entityType.GetComplexProperties())
++                if (!ComplexReadsThroughDbDataReader(complex.ComplexType)) return false;
++        }
++
++        var source = context.GetService<IRelationalTypeMappingSource>();
++        foreach (var clrType in ProbedClrTypes)
++            if (!ReadThroughDbDataReader(source.FindMapping(clrType))) return false;
++
++        return true;
++    }
++
++    private static bool ComplexReadsThroughDbDataReader(IComplexType complexType)
++    {
++        foreach (var property in complexType.GetProperties())
++            if (!ReadThroughDbDataReader(property.FindRelationalTypeMapping())) return false;
++        foreach (var nested in complexType.GetComplexProperties())
++            if (!ComplexReadsThroughDbDataReader(nested.ComplexType)) return false;
++        return true;
++    }
++
++    private static bool ReadThroughDbDataReader(RelationalTypeMapping? mapping)
++    {
++        if (mapping is null) return true;
++        var declaring = mapping.GetDataReaderMethod().DeclaringType;
++        return declaring is null || declaring.IsAssignableFrom(typeof(DbDataReader));
++    }
++}
+diff --git a/src/Kronikol.Extensions.EfCore.Relational/SqlTrackingInterceptor.cs b/src/Kronikol.Extensions.EfCore.Relational/SqlTrackingInterceptor.cs
+index e84f0136..4d2b3759 100644
+--- a/src/Kronikol.Extensions.EfCore.Relational/SqlTrackingInterceptor.cs
++++ b/src/Kronikol.Extensions.EfCore.Relational/SqlTrackingInterceptor.cs
+@@ -209,97 +209,204 @@ private void LogCommandFailed(DbCommand command, Exception exception)
+ 
+     public override void CommandFailed(DbCommand command, CommandErrorEventData eventData)
+     {
+-        LogCommandFailed(command, eventData.Exception);
++        Safe(() => LogCommandFailed(command, eventData.Exception));
+         base.CommandFailed(command, eventData);
+     }
+ 
+     public override Task CommandFailedAsync(DbCommand command, CommandErrorEventData eventData, CancellationToken cancellationToken = default)
+     {
+-        LogCommandFailed(command, eventData.Exception);
++        Safe(() => LogCommandFailed(command, eventData.Exception));
+         return base.CommandFailedAsync(command, eventData, cancellationToken);
+     }
+ 
+     public override InterceptionResult<DbDataReader> ReaderExecuting(DbCommand command, CommandEventData eventData, InterceptionResult<DbDataReader> result)
+     {
+-        LogCommandExecuting(command);
++        Safe(() => LogCommandExecuting(command));
+         return base.ReaderExecuting(command, eventData, result);
+     }
+ 
+     public override DbDataReader ReaderExecuted(DbCommand command, CommandExecutedEventData eventData, DbDataReader result)
++        => OnReaderExecuted(command, eventData, result);
++
++    // PROTOTYPE (plans/SQL_RESPONSE_CAPTURE_PLAN.md): the provider's reader is replaced only where nothing EF Core runs
++    // on it needs the provider's own type. SaveChanges is read by the provider's update pipeline (Npgsql casts every
++    // batch's reader), and a model with a column read through a provider reader method (SQL Server's spatial
++    // GetSqlBytes, Oracle's GetDateTimeOffset) has a shaper that casts. Those readers are left alone and their
++    // response is logged when EF Core closes them. Nothing here may throw into EF Core.
++    private DbDataReader OnReaderExecuted(DbCommand command, CommandExecutedEventData? eventData, DbDataReader result)
+     {
+-        if (_options.LogResponseContent)
++        try
+         {
+-            var wrapped = WrapReaderIfTracked(command, result);
+-            if (wrapped is not null)
+-                return base.ReaderExecuted(command, eventData, wrapped);
++            if (_options.LogResponseContent)
++            {
++                if (MayReplaceReader(eventData))
++                {
++                    var wrapped = WrapReaderIfTracked(command, result);
++                    if (wrapped is not null)
++                        return wrapped;
++                }
++                else
++                {
++                    _untouched[command] = eventData!.CommandSource == CommandSource.SaveChanges;
++                    return result;
++                }
++            }
++            LogCommandExecuted(command);
++        }
++        catch (Exception ex)
++        {
++            NotRecorded(ex);
++        }
++        return result;
++    }
++
++    private readonly ConcurrentDictionary<DbCommand, bool> _untouched = new();
++
++    private static bool MayReplaceReader(CommandExecutedEventData? eventData)
++    {
++        if (eventData is null) return true; // a direct call, as the interceptor's own tests make
++        if (eventData.CommandSource == CommandSource.SaveChanges) return false;
++        return eventData.Context is null || ProviderReaderMethods.ModelReadsOnlyThroughDbDataReader(eventData.Context);
++    }
++
++    public override InterceptionResult DataReaderClosing(DbCommand command, DataReaderClosingEventData eventData, InterceptionResult result)
++    {
++        LogUntouchedReader(command, eventData.DataReader, eventData.ReadCount, closed: false);
++        return result;
++    }
++
++    public override ValueTask<InterceptionResult> DataReaderClosingAsync(DbCommand command, DataReaderClosingEventData eventData, InterceptionResult result)
++    {
++        LogUntouchedReader(command, eventData.DataReader, eventData.ReadCount, closed: false);
++        return ValueTask.FromResult(result);
++    }
++
++    public override InterceptionResult DataReaderDisposing(DbCommand command, DataReaderDisposingEventData eventData, InterceptionResult result)
++    {
++        LogUntouchedReader(command, eventData.DataReader, eventData.ReadCount, closed: true);
++        return result;
++    }
++
++    private void LogUntouchedReader(DbCommand command, DbDataReader reader, int readCount, bool closed)
++    {
++        try
++        {
++            // SqlClient sets RecordsAffected only once the reader is closed, so SaveChanges is logged at Disposing; a
++            // query is logged at Closing, while the reader can still say whether it stands on a row.
++            if (!_untouched.TryGetValue(command, out var saveChanges) || (saveChanges && !closed)) return;
++            _untouched.TryRemove(command, out _);
++
++            string? content;
++            if (saveChanges)
++            {
++                var affected = reader.RecordsAffected;
++                content = affected >= 0 ? $"{affected.ToString(CultureInfo.InvariantCulture)} rows affected" : null;
++            }
++            else
++            {
++                // ReadCount counts the Read() that found no row too, so a reader still on a row has read one more.
++                var rows = readCount - (IsOnRow(reader) ? 0 : 1);
++                content = $"{Math.Max(0, rows).ToString(CultureInfo.InvariantCulture)} rows (not captured: a column is read through the provider's own reader)";
++                Console.WriteLine($"[prototype] untouched query ReadCount={readCount} onRow={IsOnRow(reader)}");
++            }
++            LogCommandExecutedWithContent(command, content);
++        }
++        catch (Exception ex)
++        {
++            NotRecorded(ex);
++        }
++    }
++
++    private static bool IsOnRow(DbDataReader reader)
++    {
++        try
++        {
++            if (reader.IsClosed || reader.FieldCount == 0) return false;
++            _ = reader.IsDBNull(0);
++            return true;
++        }
++        catch (Exception)
++        {
++            return false;
++        }
++    }
++
++    private void Safe(Action log)
++    {
++        try { log(); }
++        catch (Exception ex) { NotRecorded(ex); }
++    }
++
++    private void NotRecorded(Exception ex)
++    {
++        try
++        {
++            Kronikol.Reports.ProcessDiagnostics.RecordOnce(
++                $"sql-interceptor-failed:{_options.ServiceName}",
++                Kronikol.Reports.DiagnosticKind.CaptureDegraded,
++                $"SqlTrackingInterceptor ({_options.ServiceName}) could not record a command: {ex.GetType().Name}: {ex.Message}. " +
++                "The application's command was not affected.");
++        }
++        catch (Exception)
++        {
++            // Nothing a diagnostic can fail on may reach EF Core either.
+         }
+-        LogCommandExecuted(command);
+-        return base.ReaderExecuted(command, eventData, result);
+     }
+ 
+     public override InterceptionResult<int> NonQueryExecuting(DbCommand command, CommandEventData eventData, InterceptionResult<int> result)
+     {
+-        LogCommandExecuting(command);
++        Safe(() => LogCommandExecuting(command));
+         return base.NonQueryExecuting(command, eventData, result);
+     }
+ 
+     public override int NonQueryExecuted(DbCommand command, CommandExecutedEventData eventData, int result)
+     {
+-        LogCommandExecuted(command, result);
++        Safe(() => LogCommandExecuted(command, result));
+         return base.NonQueryExecuted(command, eventData, result);
+     }
+ 
+     public override InterceptionResult<object> ScalarExecuting(DbCommand command, CommandEventData eventData, InterceptionResult<object> result)
+     {
+-        LogCommandExecuting(command);
++        Safe(() => LogCommandExecuting(command));
+         return base.ScalarExecuting(command, eventData, result);
+     }
+ 
+     public override object? ScalarExecuted(DbCommand command, CommandExecutedEventData eventData, object? result)
+     {
+-        LogCommandExecutedWithContent(command, FormatScalar(result));
++        Safe(() => LogCommandExecutedWithContent(command, FormatScalar(result)));
+         return base.ScalarExecuted(command, eventData, result);
+     }
+ 
+     public override ValueTask<InterceptionResult<DbDataReader>> ReaderExecutingAsync(DbCommand command, CommandEventData eventData, InterceptionResult<DbDataReader> result, CancellationToken cancellationToken = default)
+     {
+-        LogCommandExecuting(command);
++        Safe(() => LogCommandExecuting(command));
+         return base.ReaderExecutingAsync(command, eventData, result, cancellationToken);
+     }
+ 
+     public override ValueTask<DbDataReader> ReaderExecutedAsync(DbCommand command, CommandExecutedEventData eventData, DbDataReader result, CancellationToken cancellationToken = default)
+-    {
+-        if (_options.LogResponseContent)
+-        {
+-            var wrapped = WrapReaderIfTracked(command, result);
+-            if (wrapped is not null)
+-                return base.ReaderExecutedAsync(command, eventData, wrapped, cancellationToken);
+-        }
+-        LogCommandExecuted(command);
+-        return base.ReaderExecutedAsync(command, eventData, result, cancellationToken);
+-    }
++        => ValueTask.FromResult(OnReaderExecuted(command, eventData, result));
+ 
+     public override ValueTask<InterceptionResult<int>> NonQueryExecutingAsync(DbCommand command, CommandEventData eventData, InterceptionResult<int> result, CancellationToken cancellationToken = default)
+     {
+-        LogCommandExecuting(command);
++        Safe(() => LogCommandExecuting(command));
+         return base.NonQueryExecutingAsync(command, eventData, result, cancellationToken);
+     }
+ 
+     public override ValueTask<int> NonQueryExecutedAsync(DbCommand command, CommandExecutedEventData eventData, int result, CancellationToken cancellationToken = default)
+     {
+-        LogCommandExecuted(command, result);
++        Safe(() => LogCommandExecuted(command, result));
+         return base.NonQueryExecutedAsync(command, eventData, result, cancellationToken);
+     }
+ 
+     public override ValueTask<InterceptionResult<object>> ScalarExecutingAsync(DbCommand command, CommandEventData eventData, InterceptionResult<object> result, CancellationToken cancellationToken = default)
+     {
+-        LogCommandExecuting(command);
++        Safe(() => LogCommandExecuting(command));
+         return base.ScalarExecutingAsync(command, eventData, result, cancellationToken);
+     }
+ 
+     public override ValueTask<object?> ScalarExecutedAsync(DbCommand command, CommandExecutedEventData eventData, object? result, CancellationToken cancellationToken = default)
+     {
+-        LogCommandExecutedWithContent(command, FormatScalar(result));
++        Safe(() => LogCommandExecutedWithContent(command, FormatScalar(result)));
+         return base.ScalarExecutedAsync(command, eventData, result, cancellationToken);
+     }
+ 
+@@ -312,21 +419,21 @@ public override ValueTask<InterceptionResult<object>> ScalarExecutingAsync(DbCom
+ 
+     private static Uri BuildUri(DbCommand command, SqlOperationInfo op, SqlTrackingVerbosity verbosity)
+     {
++        // PROTOTYPE: SqlEndpoint makes a host of any data source ("(localdb)\MSSQLLocalDB", "tcp://host:5432",
++        // "host,1433") and the address can no longer throw into the command.
+         var database = command.Connection?.Database ?? "unknown";
+-        // SQL Server uses comma notation for ports (e.g. "127.0.0.1,1433")
+-        // but Uri requires colon notation (e.g. "127.0.0.1:1433").
+-        var dataSource = (command.Connection?.DataSource ?? "localhost").Replace(',', ':');
++        var dataSource = SqlEndpoint.Host(command.Connection?.DataSource);
+ 
+-        return verbosity switch
++        return SqlEndpoint.Build(verbosity switch
+         {
+-            SqlTrackingVerbosity.Raw => new Uri($"sql://{dataSource}/{database}"),
++            SqlTrackingVerbosity.Raw => $"sql://{dataSource}/{SqlEndpoint.Segment(database)}",
+             SqlTrackingVerbosity.Summarised => op.TableName is not null
+-                ? new Uri($"sql://{database}/{op.TableName}")
+-                : new Uri($"sql://{database}"),
++                ? $"sql://{SqlEndpoint.Host(database)}/{op.TableName}"
++                : $"sql://{SqlEndpoint.Host(database)}",
+             _ => op.TableName is not null // Detailed
+-                ? new Uri($"sql://{dataSource}/{database}/{op.TableName}")
+-                : new Uri($"sql://{dataSource}/{database}"),
+-        };
++                ? $"sql://{dataSource}/{SqlEndpoint.Segment(database)}/{op.TableName}"
++                : $"sql://{dataSource}/{SqlEndpoint.Segment(database)}",
++        });
+     }
+ 
+     // ─── Phase variant helpers ──────────────────────────────────
+diff --git a/src/Kronikol.Extensions.Npgsql/TrackingNpgsqlCommand.cs b/src/Kronikol.Extensions.Npgsql/TrackingNpgsqlCommand.cs
+index db9fc300..69699265 100644
+--- a/src/Kronikol.Extensions.Npgsql/TrackingNpgsqlCommand.cs
++++ b/src/Kronikol.Extensions.Npgsql/TrackingNpgsqlCommand.cs
+@@ -85,7 +85,7 @@ protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior)
+         if (ids is not null)
+         {
+             if (_connection.Options.LogResponseContent)
+-                return WrapReader(result, ids.Value.TraceId, ids.Value.RequestResponseId);
++                return WrapReader(result, ids.Value.TraceId, ids.Value.RequestResponseId, behavior);
+             LogResponse(ids.Value.TraceId, ids.Value.RequestResponseId);
+         }
+         return result;
+@@ -108,7 +108,7 @@ protected override async Task<DbDataReader> ExecuteDbDataReaderAsync(
+         if (ids is not null)
+         {
+             if (_connection.Options.LogResponseContent)
+-                return WrapReader(result, ids.Value.TraceId, ids.Value.RequestResponseId);
++                return WrapReader(result, ids.Value.TraceId, ids.Value.RequestResponseId, behavior);
+             LogResponse(ids.Value.TraceId, ids.Value.RequestResponseId);
+         }
+         return result;
+@@ -213,12 +213,12 @@ private void LogResponseWithContent(Guid traceId, Guid requestResponseId, string
+         _connection.Tracker.DoLogResponse(traceId, requestResponseId, content);
+     }
+ 
+-    private TrackingDbDataReader WrapReader(DbDataReader inner, Guid traceId, Guid requestResponseId)
++    private TrackingDbDataReader WrapReader(DbDataReader inner, Guid traceId, Guid requestResponseId, CommandBehavior behavior)
+     {
+         var opts = _connection.Options;
+         return new TrackingDbDataReader(
+             inner, SqlResponseDetailResolver.Resolve(opts), opts.MaxResponseRows, opts.MaxValueDisplayLength,
+-            content => LogResponseWithContent(traceId, requestResponseId, content));
++            content => LogResponseWithContent(traceId, requestResponseId, content), behavior);
+     }
+ 
+     private string? FormatScalar(object? result)
+diff --git a/src/Kronikol.Extensions.SqlClient/TrackingSqlCommand.cs b/src/Kronikol.Extensions.SqlClient/TrackingSqlCommand.cs
+index b00c9a17..7a1e8f27 100644
+--- a/src/Kronikol.Extensions.SqlClient/TrackingSqlCommand.cs
++++ b/src/Kronikol.Extensions.SqlClient/TrackingSqlCommand.cs
+@@ -85,7 +85,7 @@ protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior)
+         if (ids is not null)
+         {
+             if (_connection.Options.LogResponseContent)
+-                return WrapReader(result, ids.Value.TraceId, ids.Value.RequestResponseId);
++                return WrapReader(result, ids.Value.TraceId, ids.Value.RequestResponseId, behavior);
+             LogResponse(ids.Value.TraceId, ids.Value.RequestResponseId);
+         }
+         return result;
+@@ -108,7 +108,7 @@ protected override async Task<DbDataReader> ExecuteDbDataReaderAsync(
+         if (ids is not null)
+         {
+             if (_connection.Options.LogResponseContent)
+-                return WrapReader(result, ids.Value.TraceId, ids.Value.RequestResponseId);
++                return WrapReader(result, ids.Value.TraceId, ids.Value.RequestResponseId, behavior);
+             LogResponse(ids.Value.TraceId, ids.Value.RequestResponseId);
+         }
+         return result;
+@@ -213,12 +213,12 @@ private void LogResponseWithContent(Guid traceId, Guid requestResponseId, string
+         _connection.Tracker.DoLogResponse(traceId, requestResponseId, content);
+     }
+ 
+-    private TrackingDbDataReader WrapReader(DbDataReader inner, Guid traceId, Guid requestResponseId)
++    private TrackingDbDataReader WrapReader(DbDataReader inner, Guid traceId, Guid requestResponseId, CommandBehavior behavior)
+     {
+         var opts = _connection.Options;
+         return new TrackingDbDataReader(
+             inner, SqlResponseDetailResolver.Resolve(opts), opts.MaxResponseRows, opts.MaxValueDisplayLength,
+-            content => LogResponseWithContent(traceId, requestResponseId, content));
++            content => LogResponseWithContent(traceId, requestResponseId, content), behavior);
+     }
+ 
+     private string? FormatScalar(object? result)
+diff --git a/src/Kronikol/Sql/SqlDiagnosticTracker.cs b/src/Kronikol/Sql/SqlDiagnosticTracker.cs
+index 17697949..1cf67c9d 100644
+--- a/src/Kronikol/Sql/SqlDiagnosticTracker.cs
++++ b/src/Kronikol/Sql/SqlDiagnosticTracker.cs
+@@ -367,23 +367,21 @@ protected internal void LogResponse(Guid traceId, Guid requestResponseId, string
+ 
+     private Uri BuildUri(string? dataSource, string? database, UnifiedSqlOperationInfo op, SqlTrackingVerbosityLevel verbosity)
+     {
+-        if (string.IsNullOrEmpty(database)) database = "unknown";
+-        if (string.IsNullOrEmpty(dataSource)) dataSource = "localhost";
+-        // SQL Server uses comma notation for ports — Uri requires colon
+-        dataSource = dataSource.Replace(',', ':');
+-
++        // PROTOTYPE: SqlEndpoint, as in the EF Core interceptor; the address can no longer throw into the command.
++        var db = SqlEndpoint.Segment(database);
++        var host = SqlEndpoint.Host(dataSource);
+         var scheme = _options.UriScheme;
+ 
+-        return verbosity switch
++        return SqlEndpoint.Build(verbosity switch
+         {
+-            SqlTrackingVerbosityLevel.Raw => new Uri($"{scheme}://{dataSource}/{database}"),
++            SqlTrackingVerbosityLevel.Raw => $"{scheme}://{host}/{db}",
+             SqlTrackingVerbosityLevel.Summarised => op.TableName is not null
+-                ? new Uri($"{scheme}:///{database}/{op.TableName}")
+-                : new Uri($"{scheme}:///{database}"),
++                ? $"{scheme}:///{db}/{op.TableName}"
++                : $"{scheme}:///{db}",
+             _ => op.TableName is not null
+-                ? new Uri($"{scheme}://{dataSource}/{database}/{op.TableName}")
+-                : new Uri($"{scheme}://{dataSource}/{database}")
+-        };
++                ? $"{scheme}://{host}/{db}/{op.TableName}"
++                : $"{scheme}://{host}/{db}"
++        }, scheme);
+     }
+ 
+     private string? BuildRequestContent(string? commandText, string? parameters, SqlTrackingVerbosityLevel verbosity)
+diff --git a/src/Kronikol/Sql/SqlEndpoint.cs b/src/Kronikol/Sql/SqlEndpoint.cs
+new file mode 100644
+index 00000000..bf318b30
+--- /dev/null
++++ b/src/Kronikol/Sql/SqlEndpoint.cs
+@@ -0,0 +1,67 @@
++using System.Text;
++using System.Text.RegularExpressions;
++
++namespace Kronikol.Sql;
++
++/// <summary>
++/// PROTOTYPE for plans/SQL_RESPONSE_CAPTURE_PLAN.md: the parts of a <c>sql://</c> address drawn for a command, made from
++/// whatever a connection reports as its data source, and an address built from them that never throws.
++/// </summary>
++internal static partial class SqlEndpoint
++{
++    /// <summary>
++    /// A host for the address: <c>host:port</c> for SQL Server's <c>host,port</c>, the first host of Npgsql's list,
++    /// without a <c>tcp:</c>, <c>np:</c> or <c>tcp://</c> prefix, and an instance name joined with a dash
++    /// (<c>(localdb)\MSSQLLocalDB</c> is <c>localdb-MSSQLLocalDB</c>).
++    /// </summary>
++    internal static string Host(string? dataSource)
++    {
++        var text = (dataSource ?? "").Trim();
++        if (text.Length == 0) return "localhost";
++
++        foreach (var prefix in (string[])["tcp://", "tcp:", "np:", "lpc:", "admin:"])
++            if (text.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) text = text[prefix.Length..];
++
++        var comma = text.IndexOf(',');
++        if (comma >= 0)
++        {
++            var after = text[(comma + 1)..].Trim();
++            text = after.Length > 0 && after.All(char.IsAsciiDigit) ? $"{text[..comma]}:{after}" : text[..comma];
++        }
++
++        string? port = null;
++        var portMatch = PortSuffix().Match(text);
++        if (portMatch.Success && !text.StartsWith('['))
++        {
++            port = portMatch.Groups[1].Value;
++            text = text[..portMatch.Index];
++        }
++
++        if (Uri.CheckHostName(text) == UriHostNameType.Unknown)
++        {
++            var host = new StringBuilder();
++            foreach (var part in text.Split('\\', '/'))
++            {
++                var name = part.Trim().Trim('(', ')');
++                if (name is "." or "local") name = "localhost";
++                var clean = Regex.Replace(name, "[^A-Za-z0-9.-]+", "-").Trim('-', '.');
++                if (clean.Length == 0) continue;
++                if (host.Length > 0) host.Append('-');
++                host.Append(clean);
++            }
++            text = host.Length > 0 && Uri.CheckHostName(host.ToString()) != UriHostNameType.Unknown ? host.ToString() : "localhost";
++        }
++
++        return port is null ? text : $"{text}:{port}";
++    }
++
++    /// <summary>A path segment (a database or table name) as written, escaped for the address.</summary>
++    internal static string Segment(string? name) => Uri.EscapeDataString(string.IsNullOrEmpty(name) ? "unknown" : name);
++
++    /// <summary>The address, or <c>{scheme}://localhost</c> if the text still does not parse.</summary>
++    internal static Uri Build(string text, string scheme = "sql") =>
++        Uri.TryCreate(text, UriKind.Absolute, out var uri) ? uri : new Uri($"{scheme}://localhost");
++
++    [GeneratedRegex(@":(\d+)$")]
++    private static partial Regex PortSuffix();
++}
+diff --git a/src/Kronikol/Sql/SqlRowFormatter.cs b/src/Kronikol/Sql/SqlRowFormatter.cs
+index a319a273..efeaa6a8 100644
+--- a/src/Kronikol/Sql/SqlRowFormatter.cs
++++ b/src/Kronikol/Sql/SqlRowFormatter.cs
+@@ -24,11 +24,34 @@ internal static object FormatCellValue(object value, int maxValueLen)
+         if (value is byte[] bytes)
+             return $"[bytes: {bytes.Length}]";
+ 
+-        var str = value.ToString() ?? "";
++        string str;
++        try { str = value.ToString() ?? ""; }
++        catch (Exception ex) { return $"({value.GetType().Name}: {ex.GetType().Name})"; }
+         if (str.Length > maxValueLen)
+             return $"{str[..maxValueLen]}... ({str.Length} chars)";
+ 
+-        return value;
++        // PROTOTYPE: only values System.Text.Json writes without reflecting over a provider's own type stay as they
++        // are; anything else is kept as its text, so writing the note can never throw (a geography value did).
++        return IsPlainJsonValue(value) ? value : str;
++    }
++
++    private static bool IsPlainJsonValue(object value) => value switch
++    {
++        string or bool or char or byte or sbyte or short or ushort or int or uint or long or ulong or float or double
++            or decimal or Guid or DateTime or DateTimeOffset or DateOnly or TimeOnly or TimeSpan => true,
++        Enum => true,
++        JsonElement or JsonDocument => true,
++        Array array => IsPlainElementType(array.GetType().GetElementType()),
++        System.Collections.IList list when list.GetType().IsGenericType => IsPlainElementType(list.GetType().GetGenericArguments()[0]),
++        _ => false,
++    };
++
++    private static bool IsPlainElementType(Type? type)
++    {
++        type = type is null ? null : Nullable.GetUnderlyingType(type) ?? type;
++        return type is not null && (type.IsPrimitive || type.IsEnum || type == typeof(string) || type == typeof(decimal)
++            || type == typeof(Guid) || type == typeof(DateTime) || type == typeof(DateTimeOffset) || type == typeof(DateOnly)
++            || type == typeof(TimeOnly) || type == typeof(TimeSpan));
+     }
+ 
+     /// <summary>
+diff --git a/src/Kronikol/Sql/TrackingDbDataReader.cs b/src/Kronikol/Sql/TrackingDbDataReader.cs
+index ab269ec6..5650806a 100644
+--- a/src/Kronikol/Sql/TrackingDbDataReader.cs
++++ b/src/Kronikol/Sql/TrackingDbDataReader.cs
+@@ -1,4 +1,6 @@
+ using System.Collections;
++using System.Collections.ObjectModel;
++using System.Data;
+ using System.Data.Common;
+ 
+ namespace Kronikol.Sql;
+@@ -7,16 +9,29 @@ namespace Kronikol.Sql;
+ /// Wraps a DbDataReader to capture row data as rows are consumed, then logs
+ /// the formatted content when the reader is closed or disposed.
+ /// </summary>
+-public sealed class TrackingDbDataReader : DbDataReader
++/// <remarks>
++/// PROTOTYPE for plans/SQL_RESPONSE_CAPTURE_PLAN.md: every virtual member is forwarded to the provider's reader, a
++/// row is captured ahead of the consumer only when the reader allows a column to be read twice, every result set is
++/// kept, and nothing the capture or the logging does can throw into the consumer's call.
++/// </remarks>
++public sealed class TrackingDbDataReader : DbDataReader, IDbColumnSchemaGenerator
+ {
+     private readonly DbDataReader _inner;
+     private readonly SqlResponseDetail _detail;
+     private readonly int _maxRows;
+     private readonly int _maxValueLen;
+     private readonly Action<string?> _onComplete;
+-    private readonly List<Dictionary<string, object?>> _capturedRows = [];
++    private readonly bool _sequential;
++    private readonly List<ResultSet> _sets = [new()];
++    private Dictionary<string, object?>? _lazyRow;
+     private bool _logged;
+-    private int _totalRowsRead;
++
++    private sealed class ResultSet
++    {
++        public readonly List<Dictionary<string, object?>> Rows = [];
++        public long TotalRows;
++        public string[]? ColumnNames;
++    }
+ 
+     public TrackingDbDataReader(
+         DbDataReader inner,
+@@ -24,63 +39,142 @@ public TrackingDbDataReader(
+         int maxRows,
+         int maxValueLen,
+         Action<string?> onComplete)
++        : this(inner, detail, maxRows, maxValueLen, onComplete, CommandBehavior.Default)
++    {
++    }
++
++    internal TrackingDbDataReader(
++        DbDataReader inner,
++        SqlResponseDetail detail,
++        int maxRows,
++        int maxValueLen,
++        Action<string?> onComplete,
++        CommandBehavior behavior)
+     {
+         _inner = inner;
+         _detail = detail;
+         _maxRows = Math.Max(0, maxRows);
+         _maxValueLen = maxValueLen;
+         _onComplete = onComplete;
++        _sequential = (behavior & CommandBehavior.SequentialAccess) != 0;
+     }
+ 
++    private ResultSet Current => _sets[^1];
++
+     // ─── Read + capture ─────────────────────────────────────
+ 
+     public override bool Read()
+     {
++        FinishLazyRow();
+         if (!_inner.Read())
+-        {
+-            LogIfNotDone();
+             return false;
+-        }
+ 
+-        _totalRowsRead++;
+-        CaptureCurrentRowIfNeeded();
++        OnRow();
+         return true;
+     }
+ 
+     public override async Task<bool> ReadAsync(CancellationToken cancellationToken)
+     {
++        FinishLazyRow();
+         if (!await _inner.ReadAsync(cancellationToken))
+-        {
+-            LogIfNotDone();
+             return false;
+-        }
+ 
+-        _totalRowsRead++;
+-        CaptureCurrentRowIfNeeded();
++        OnRow();
+         return true;
+     }
+ 
+-    private void CaptureCurrentRowIfNeeded()
++    public override bool NextResult()
++    {
++        FinishLazyRow();
++        var more = _inner.NextResult();
++        if (more) _sets.Add(new ResultSet());
++        return more;
++    }
++
++    public override async Task<bool> NextResultAsync(CancellationToken cancellationToken)
+     {
+-        if (_detail == SqlResponseDetail.RowCountOnly) return;
+-        if (_maxRows > 0 && _capturedRows.Count >= _maxRows) return;
+-        if (_maxRows == 0) return; // row count only when maxRows is 0
++        FinishLazyRow();
++        var more = await _inner.NextResultAsync(cancellationToken);
++        if (more) _sets.Add(new ResultSet());
++        return more;
++    }
++
++    private bool KeepsRows => _detail != SqlResponseDetail.RowCountOnly && _maxRows > 0;
+ 
+-        var row = new Dictionary<string, object?>();
+-        for (var i = 0; i < FieldCount; i++)
++    private void OnRow()
++    {
++        var set = Current;
++        set.TotalRows++;
++        try
+         {
+-            var name = GetName(i);
+-            if (IsDBNull(i))
++            set.ColumnNames ??= ReadColumnNames();
++            if (!KeepsRows || set.Rows.Count >= _maxRows) return;
++
++            if (_sequential)
+             {
+-                row[name] = null;
++                // A sequential reader gives each column once: record what the consumer reads, never read ahead of it.
++                _lazyRow = new Dictionary<string, object?>();
++                return;
+             }
+-            else
++
++            var row = new Dictionary<string, object?>();
++            for (var i = 0; i < _inner.FieldCount; i++)
++                row[_inner.GetName(i)] = CaptureCell(i);
++            set.Rows.Add(row);
++        }
++        catch (Exception)
++        {
++            // The capture is a copy for the report: whatever it fails on, the consumer's row is untouched.
++        }
++    }
++
++    private object? CaptureCell(int ordinal)
++    {
++        try
++        {
++            return _inner.IsDBNull(ordinal) ? null : SqlRowFormatter.FormatCellValue(_inner.GetValue(ordinal), _maxValueLen);
++        }
++        catch (Exception ex)
++        {
++            return $"(not readable as a value: {ex.GetType().Name})";
++        }
++    }
++
++    private T Recorded<T>(int ordinal, T value)
++    {
++        if (_lazyRow is not null)
++        {
++            try
++            {
++                _lazyRow[_inner.GetName(ordinal)] = value is null ? null : SqlRowFormatter.FormatCellValue(value, _maxValueLen);
++            }
++            catch (Exception)
+             {
+-                var value = GetValue(i);
+-                row[name] = SqlRowFormatter.FormatCellValue(value, _maxValueLen);
++                // Recording is for the report only.
+             }
+         }
+-        _capturedRows.Add(row);
++        return value;
++    }
++
++    private void FinishLazyRow()
++    {
++        if (_lazyRow is null) return;
++        Current.Rows.Add(_lazyRow);
++        _lazyRow = null;
++    }
++
++    private string[]? TryReadColumnNames()
++    {
++        try { return ReadColumnNames(); }
++        catch (Exception) { return null; }
++    }
++
++    private string[] ReadColumnNames()
++    {
++        var names = new string[_inner.FieldCount];
++        for (var i = 0; i < names.Length; i++)
++            names[i] = _inner.GetName(i);
++        return names;
+     }
+ 
+     // ─── Logging ────────────────────────────────────────────
+@@ -89,21 +183,30 @@ private void LogIfNotDone()
+     {
+         if (_logged) return;
+         _logged = true;
+-        _onComplete(FormatContent());
++        try
++        {
++            FinishLazyRow();
++            _onComplete(FormatContent());
++        }
++        catch (Exception)
++        {
++            // A response that cannot be written is left out of the report; the consumer's Close or Dispose goes on.
++        }
+     }
+ 
+     private string FormatContent()
+     {
+-        var columnNames = _detail is SqlResponseDetail.RowCountOnly ? null : GetColumnNames();
+-        return SqlRowFormatter.Format(_detail, _maxRows, _totalRowsRead, _capturedRows, columnNames);
++        var kept = _sets.Where((s, i) => i == 0 || s.TotalRows > 0 || s.ColumnNames is not null).ToList();
++        return string.Join("\n", kept.Select(Format));
+     }
+ 
+-    private string? GetColumnNames()
++    private string Format(ResultSet set)
+     {
+-        var names = new string[FieldCount];
+-        for (var i = 0; i < FieldCount; i++)
+-            names[i] = _inner.GetName(i);
+-        return SqlRowFormatter.FormatColumnNames(names);
++        var names = set.ColumnNames ?? (ReferenceEquals(set, Current) ? TryReadColumnNames() : null);
++        var columnNames = _detail is SqlResponseDetail.RowCountOnly || names is null
++            ? null
++            : SqlRowFormatter.FormatColumnNames(names);
++        return SqlRowFormatter.Format(_detail, _maxRows, set.TotalRows, set.Rows, columnNames);
+     }
+ 
+     // ─── Close / Dispose ────────────────────────────────────
+@@ -134,46 +237,76 @@ public override async ValueTask DisposeAsync()
+     {
+         LogIfNotDone();
+         await _inner.DisposeAsync();
+-        await base.DisposeAsync();
++        GC.SuppressFinalize(this);
+     }
+ 
+     // ─── Delegation ─────────────────────────────────────────
+ 
+     public override int FieldCount => _inner.FieldCount;
++    public override int VisibleFieldCount => _inner.VisibleFieldCount;
+     public override int RecordsAffected => _inner.RecordsAffected;
+     public override bool HasRows => _inner.HasRows;
+     public override bool IsClosed => _inner.IsClosed;
+     public override int Depth => _inner.Depth;
+ 
+-    public override object this[int ordinal] => _inner[ordinal];
+-    public override object this[string name] => _inner[name];
++    public override object this[int ordinal] => GetValue(ordinal);
++    public override object this[string name] => GetValue(_inner.GetOrdinal(name));
+ 
+     public override string GetName(int ordinal) => _inner.GetName(ordinal);
+     public override int GetOrdinal(string name) => _inner.GetOrdinal(name);
+-    public override object GetValue(int ordinal) => _inner.GetValue(ordinal);
+-    public override bool IsDBNull(int ordinal) => _inner.IsDBNull(ordinal);
++    public override object GetValue(int ordinal) => Recorded(ordinal, _inner.GetValue(ordinal));
++    public override bool IsDBNull(int ordinal)
++    {
++        var isNull = _inner.IsDBNull(ordinal);
++        if (isNull) Recorded<object?>(ordinal, null);
++        return isNull;
++    }
++    public override async Task<bool> IsDBNullAsync(int ordinal, CancellationToken cancellationToken)
++    {
++        var isNull = await _inner.IsDBNullAsync(ordinal, cancellationToken);
++        if (isNull) Recorded<object?>(ordinal, null);
++        return isNull;
++    }
+     public override Type GetFieldType(int ordinal) => _inner.GetFieldType(ordinal);
+     public override string GetDataTypeName(int ordinal) => _inner.GetDataTypeName(ordinal);
++    public override T GetFieldValue<T>(int ordinal) => Recorded(ordinal, _inner.GetFieldValue<T>(ordinal));
++    public override async Task<T> GetFieldValueAsync<T>(int ordinal, CancellationToken cancellationToken)
++        => Recorded(ordinal, await _inner.GetFieldValueAsync<T>(ordinal, cancellationToken));
+ 
+-    public override bool GetBoolean(int ordinal) => _inner.GetBoolean(ordinal);
+-    public override byte GetByte(int ordinal) => _inner.GetByte(ordinal);
++    public override bool GetBoolean(int ordinal) => Recorded(ordinal, _inner.GetBoolean(ordinal));
++    public override byte GetByte(int ordinal) => Recorded(ordinal, _inner.GetByte(ordinal));
+     public override long GetBytes(int ordinal, long dataOffset, byte[]? buffer, int bufferOffset, int length) =>
+         _inner.GetBytes(ordinal, dataOffset, buffer, bufferOffset, length);
+-    public override char GetChar(int ordinal) => _inner.GetChar(ordinal);
++    public override char GetChar(int ordinal) => Recorded(ordinal, _inner.GetChar(ordinal));
+     public override long GetChars(int ordinal, long dataOffset, char[]? buffer, int bufferOffset, int length) =>
+         _inner.GetChars(ordinal, dataOffset, buffer, bufferOffset, length);
+-    public override DateTime GetDateTime(int ordinal) => _inner.GetDateTime(ordinal);
+-    public override decimal GetDecimal(int ordinal) => _inner.GetDecimal(ordinal);
+-    public override double GetDouble(int ordinal) => _inner.GetDouble(ordinal);
+-    public override float GetFloat(int ordinal) => _inner.GetFloat(ordinal);
+-    public override Guid GetGuid(int ordinal) => _inner.GetGuid(ordinal);
+-    public override short GetInt16(int ordinal) => _inner.GetInt16(ordinal);
+-    public override int GetInt32(int ordinal) => _inner.GetInt32(ordinal);
+-    public override long GetInt64(int ordinal) => _inner.GetInt64(ordinal);
+-    public override string GetString(int ordinal) => _inner.GetString(ordinal);
+-    public override int GetValues(object[] values) => _inner.GetValues(values);
+-    public override bool NextResult() => _inner.NextResult();
+-    public override Task<bool> NextResultAsync(CancellationToken cancellationToken) => _inner.NextResultAsync(cancellationToken);
+-
+-    public override IEnumerator GetEnumerator() => _inner.GetEnumerator();
++    public override DateTime GetDateTime(int ordinal) => Recorded(ordinal, _inner.GetDateTime(ordinal));
++    public override decimal GetDecimal(int ordinal) => Recorded(ordinal, _inner.GetDecimal(ordinal));
++    public override double GetDouble(int ordinal) => Recorded(ordinal, _inner.GetDouble(ordinal));
++    public override float GetFloat(int ordinal) => Recorded(ordinal, _inner.GetFloat(ordinal));
++    public override Guid GetGuid(int ordinal) => Recorded(ordinal, _inner.GetGuid(ordinal));
++    public override short GetInt16(int ordinal) => Recorded(ordinal, _inner.GetInt16(ordinal));
++    public override int GetInt32(int ordinal) => Recorded(ordinal, _inner.GetInt32(ordinal));
++    public override long GetInt64(int ordinal) => Recorded(ordinal, _inner.GetInt64(ordinal));
++    public override string GetString(int ordinal) => Recorded(ordinal, _inner.GetString(ordinal));
++    public override int GetValues(object[] values)
++    {
++        var count = _inner.GetValues(values);
++        for (var i = 0; i < count; i++) Recorded(i, values[i] is DBNull ? null : values[i]);
++        return count;
++    }
++    public override Stream GetStream(int ordinal) => _inner.GetStream(ordinal);
++    public override TextReader GetTextReader(int ordinal) => _inner.GetTextReader(ordinal);
++    public override Type GetProviderSpecificFieldType(int ordinal) => _inner.GetProviderSpecificFieldType(ordinal);
++    public override object GetProviderSpecificValue(int ordinal) => _inner.GetProviderSpecificValue(ordinal);
++    public override int GetProviderSpecificValues(object[] values) => _inner.GetProviderSpecificValues(values);
++    public override DataTable? GetSchemaTable() => _inner.GetSchemaTable();
++    public override Task<DataTable?> GetSchemaTableAsync(CancellationToken cancellationToken = default) =>
++        _inner.GetSchemaTableAsync(cancellationToken);
++    public override Task<ReadOnlyCollection<DbColumn>> GetColumnSchemaAsync(CancellationToken cancellationToken = default) =>
++        _inner.GetColumnSchemaAsync(cancellationToken);
++    public ReadOnlyCollection<DbColumn> GetColumnSchema() => _inner.GetColumnSchema();
++    protected override DbDataReader GetDbDataReader(int ordinal) => _inner.GetData(ordinal);
++
++    public override IEnumerator GetEnumerator() => new DbEnumerator(this);
+ }
