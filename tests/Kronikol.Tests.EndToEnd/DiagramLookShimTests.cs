@@ -14,16 +14,10 @@ public class DiagramLookShimTests : DiagramNotePlaywrightBase
     public DiagramLookShimTests(PlaywrightFixture fixture) : base(fixture) { }
 
     // a one-line step bar, then a step bar carrying a table as a report before 5.0.0 wrote it, with a blank line under it
-    private const string Source = """
+    private const string Source = $$"""
         @startuml
         !pragma teoz true
-        <style>
-         .stepBody {
-             BackgroundColor black
-             FontColor white
-             LineColor white
-         }
-        </style>
+        {{Kronikol.PlantUml.StepBarPlantUml.BodyStyle}}
         actor "Caller" as caller
         participant "OrderService" as svc
         hnote across <<stepDelimiter>> #black:<color:white>Given the shop is open

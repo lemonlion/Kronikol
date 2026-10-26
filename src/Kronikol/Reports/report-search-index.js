@@ -67,7 +67,8 @@ function kronNormalizeForSearch(s, query) {
         });
     }
     s = s.replace(/[A-Z]/g, function(c) { return c.toLowerCase(); }); // 2. ASCII-only fold
-    s = s.replace(/<\/?(?:color|font|i|b|size|back)[^>]*>/g, '');  // 4. markup tags
+    s = s.replace(/<\/?(?:color|font|i|b|size|back)[^>]*>|<space:[0-9]+>|<\/?su[pb]>/g, ''); // 4. markup tags, a cell's (5.9.1)
+    s = s.replace(/\\\\n/g, '\n');                              // 5. a table cell's line break (5.9.1)
     s = s.replace(/\\n[ \t]*/g, '');                               // 5a. arrow-label literal \n escape
     return (s + '\n').replace(/[ \t]+/g, ' ');                     // 6. collapse spaces
 }
@@ -471,7 +472,7 @@ function kronSearchWorkerMain(self) {
 
     function chipEl() {
         if (state.chip) return state.chip;
-        // inside the search field, from its own edge, past the buttons after it (5.0.0, plans/OPTION_C_PLAN.md S7, D17)
+        // inside the filter field, from its own edge, past the buttons after it (5.0.0, plans/OPTION_C_PLAN.md S7, D17)
         var box = document.querySelector('.filter-search .search-field') || document.querySelector('.filter-search');
         if (!box) return null;
         var chip = document.createElement('span');
@@ -492,7 +493,7 @@ function kronSearchWorkerMain(self) {
         state.chipTimer = setTimeout(function() {
             var chip = chipEl();
             if (!chip) return;
-            chip.textContent = 'searching everything…';
+            chip.textContent = 'matching payloads & diagrams…';
             chip.classList.add('kron-deep-chip-working');
             chip.style.display = '';
         }, 200);

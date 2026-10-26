@@ -1364,6 +1364,41 @@ the port computes stable ids, so a kept id needs the same key there), and the st
 
 ## 9. Log
 
+**2026-10-26, R1 built.** What the build met that the plan did not say, each with the test that holds it:
+
+- **B3** measured 2 px above a cell's text and 3 below on a real teoz bar, where the probe read 3 and 3; the fact's
+  threshold is 1.5 above and 2.5 below. A doc string's lines each need their own `<space:8>`: the engine starts every
+  line after a cell's `\\n` at the cell's left edge, so without it the lines after the first lost their room and their
+  indentation against the first (`CellRoom`). The role pass runs only on a source with `!pragma teoz` in its first six
+  lines, so the role facts' fixtures are teoz sources.
+- **N1**'s NUnit4 fact was dropped: NUnit4's feature name is the fixture's display name, which a hand-built tree cannot
+  give an apostrophe. N1 to N5 are held on ReqNRoll, BDDfy, LightBDD and the merge reader.
+- **I3**: the emitter writes no Setup box for a setup of notes alone, so the location-comment fact's setup holds a
+  database's call as well, and hides Databases, Assertions and Steps. The engine draws the Setup box's title as two
+  texts. L2b (note bodies) shows only when a note the filter takes out holds an opener: read as one, it puts the blocks
+  before and after the filter out of step, and the pass then drops nothing. Two readings were found wrong beside E5 and
+  fixed with it: the C# guard read `note -> svc : …` (a service called Note) as a note, never capped, and the splitter
+  re-opened a parallel block at the top of a part with its `&`, which it now drops. The notes script reads statements
+  through the render script's one reading, `window._diagramStatements`.
+- **E7** measured: 120 services drew 168 diagrams; with the estimate reset, four. E6 re-opens the Setup box lazily only
+  for a split between traces; a split inside a trace (a long note cut across diagrams) still re-opens it at once, as the
+  rest of the trace follows.
+- **I2**: `tagShown` lives in the role pass (`window._diagramRoles.tagShown`), so the notes script's two swaps and the
+  render script's first drawing call one helper. A first drawing tags the whole diagram when a part lands, not the part
+  alone: the stylesheet hides the parts after one not yet drawn, so part 0 landing last shows the parts before it at once.
+  The far-scenario fact reaches its pictures through the Timeline tab: in Chromium a closed scenario's picture, and one
+  redrawn far down the Features tab, were tagged before any frame showed them, so neither case could fail; a report
+  control pressed while the Timeline tab is shown leaves the Features tab's pictures with no box, which is the case F3
+  fixes. The facts count only sequence pictures (`[data-k-sequence]`): an activity diagram gets no role pass.
+- **E2**'s fact waits for the address to carry the filters before it copies it: the navigation script writes the address
+  at most once in its `GAP`, so a run of clicks on one control reaches it a moment later. The restore was right.
+- Three facts carry other names than section 6 gives. E5's is `A_message_from_a_participant_called_group_is_capped_as_a_message`
+  (and one for `note`): a line is read by how it starts, so a message *from* the service was misread, and one *to* it
+  never was. W1 is held by `ControlTitlesTests.The_filter_box_says_what_each_of_its_controls_does`, re-pointed, which
+  pins the field's title and the `?` button's word for word. B2's and B3's normaliser guards are two vectors in
+  `tests/shared-vectors/search-index-vectors.json`, which `SearchNormalizerEquivalenceTests` and the page's normaliser
+  both run.
+
 **2026-10-26, green-lit.** The owner: "Implement the plan in full, make sure to not interfere with any other sessions",
 which takes the recommended answer of every question in section 8 (Q1 (a), Q2 (a), Q3 the words, Q4 no option, Q5 keep
 the ids, Q6 yes, Q7 (a), Q8 the struts, Q9 (a) at 13 px, Q10 yes, Q11 both cards, Q12 markup and CSS with the rename, Q13

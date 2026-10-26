@@ -56,6 +56,16 @@
       "expected": "test -> svc: post: /orders/ppppqqqq more\n"
     },
     {
+      "name": "step-bar-cell-markup",
+      "input": "hnote across <<stepDelimiter>><<stepBody>>: Given x\\n\\n|=<space:8><sup><U+200B></sup>Name<sub><U+200B></sub><space:8>|\\n|<space:8><sup><U+200B></sup>Blueberry Muffin<sub><U+200B></sub><space:8>|",
+      "expected": "hnote across <<stepdelimiter>><<stepbody>>: given x|=name||blueberry muffin|\n"
+    },
+    {
+      "name": "doc-string-cell-break",
+      "input": "|<space:8><sup><U+200B></sup>{<space:8>\\\\n<space:8>  \"muffin\": \"Blueberry\"<space:8>\\\\n<space:8>}<sub><U+200B></sub><space:8>|",
+      "expected": "|{\n \"muffin\": \"blueberry\"\n}|\n"
+    },
+    {
       "name": "note-chunk-rejoin-1b",
       "input": "note left\n<color:gray>[X-H=aaaaaaaa<U+200B>\n<color:gray>bbbbbbbb]\n\n{\n  \"blob\": \"AAAA<U+200B>\nBBBB\",\n  \"ok\": true\n}\nend note",
       "expected": "note left\n[x-h=aaaaaaaabbbbbbbb]\n\n{\n \"blob\": \"aaaabbbb\",\n \"ok\": true\n}\nend note\n"

@@ -205,6 +205,12 @@ public class CapturedTextEscapeTests
     // ── What the engines paint ──────────────────────────────────────────────
 
     /// <summary>A captured body holding every hazard this patch escapes, one per line.</summary>
+    // a step bar's table cell and its doc string's cell as 5.9.1 writes them (plans/REPORT_UI_FIXES_PLAN.md B2, B3)
+    private const string Open = "<space:8><sup><U+200B></sup>";
+    private const string Close = "<sub><U+200B></sub><space:8>";
+    private static string Cell(string text) => Open + text + Close;
+    private static string DocCell(string text) => "|" + Open + text + Close + "|";
+
     internal static readonly string[] HazardLines =
     [
         "'a', 'b'",
@@ -276,8 +282,8 @@ public class CapturedTextEscapeTests
     {
         var bar = StepBarPlantUml.Build("Given a doc string", docString: line);
 
-        // the doc string's line ends the bar: no blank line under it from 5.0.0 (plans/OPTION_C_PLAN.md R17.6)
-        Assert.EndsWith(@"\n\n" + expected, bar);
+        // the doc string's line ends the bar, in its cell: no blank line under it from 5.0.0 (plans/OPTION_C_PLAN.md R17.6)
+        Assert.EndsWith(@"\n\n" + DocCell(expected), bar);
     }
 
     [Theory]
@@ -289,7 +295,7 @@ public class CapturedTextEscapeTests
     {
         var bar = StepBarPlantUml.Build("Given a table", [new StepBarTable(null, [["Col"], [cell]])]);
 
-        Assert.Contains("| " + expected + " |", bar);
+        Assert.Contains(Cell(expected), bar);
     }
 
     /// <summary>A doc string holding every hazard a bar's body can meet, one per display line.</summary>
@@ -442,8 +448,8 @@ public class CapturedTextEscapeTests
         {
             Assert.Equal($"a{cp}b", PlantUmlCreator.EscapeLoaderMarkup($"a{c}b"));
             Assert.Equal($"GET: /a{cp}b", PlantUmlCreator.EscapeCapturedLabel($"GET: /a{c}b"));
-            Assert.EndsWith(@"\n\na" + cp + "b", StepBarPlantUml.Build("Given x", docString: $"a{c}b"));
-            Assert.Contains($"| a{cp}b |", StepBarPlantUml.Build("Given x", [new StepBarTable(null, [["Col"], [$"a{c}b"]])]));
+            Assert.EndsWith(@"\n\n" + DocCell("a" + cp + "b"), StepBarPlantUml.Build("Given x", docString: $"a{c}b"));
+            Assert.Contains(Cell($"a{cp}b"), StepBarPlantUml.Build("Given x", [new StepBarTable(null, [["Col"], [$"a{c}b"]])]));
         }
     }
 
@@ -451,8 +457,8 @@ public class CapturedTextEscapeTests
     public void A_captured_code_point_is_broken_in_every_one_line_escaper()
     {
         Assert.Equal("GET: /x<U+003C><U+200B>U+0041>", PlantUmlCreator.EscapeCapturedLabel("GET: /x<U+0041>"));
-        Assert.EndsWith(@"\n\n<U+003C><U+200B>U+0041>", StepBarPlantUml.Build("Given x", docString: "<U+0041>"));
-        Assert.Contains("| <U+003C><U+200B>U+0041> |", StepBarPlantUml.Build("Given x", [new StepBarTable(null, [["Col"], ["<U+0041>"]])]));
+        Assert.EndsWith(@"\n\n" + DocCell("<U+003C><U+200B>U+0041>"), StepBarPlantUml.Build("Given x", docString: "<U+0041>"));
+        Assert.Contains(Cell("<U+003C><U+200B>U+0041>"), StepBarPlantUml.Build("Given x", [new StepBarTable(null, [["Col"], ["<U+0041>"]])]));
     }
 
     [Fact]
@@ -460,8 +466,8 @@ public class CapturedTextEscapeTests
     {
         // The Java engine reads `\<` in a one-line statement as an escape, so the `\<U+200B>` a bar wrote since 3.0.78 painted
         // "U+200B>" for every backslash under Local and Server. Both as code points, the two draw a backslash on both engines.
-        Assert.EndsWith(@"\n\nC:<U+005C><U+200B>temp<U+005C><U+200B>new", StepBarPlantUml.Build("Given x", docString: @"C:\temp\new"));
-        Assert.Contains("| a<U+005C><U+200B>b |", StepBarPlantUml.Build("Given x", [new StepBarTable(null, [["Col"], [@"a\b"]])]));
+        Assert.EndsWith(@"\n\n" + DocCell("C:<U+005C><U+200B>temp<U+005C><U+200B>new"), StepBarPlantUml.Build("Given x", docString: @"C:\temp\new"));
+        Assert.Contains(Cell("a<U+005C><U+200B>b"), StepBarPlantUml.Build("Given x", [new StepBarTable(null, [["Col"], [@"a\b"]])]));
     }
 
     [Fact]

@@ -2738,6 +2738,9 @@
                             newFrags[ni].classList.remove('puml-fragment-new');
                             newFrags[ni].id = container.id + '-frag-' + ni;
                         }
+                        // coloured as they are shown, as the queue's swap colours its parts (afterRedraw): until 5.9.1 the
+                        // parts a note's own control drew were shown in the engine's colours for a frame (F1)
+                        for (var ti = 0; ti < newFrags.length; ti++) tagShown(newFrags[ti]);
                         zoomAfter(container, zoom);
                         installNoteScroll(container, scroll, newSource);
                         if (fragQueue.every(function(f) { return f.el.querySelector('svg'); })) recordDrawn(container, newSource, scroll);
@@ -3008,14 +3011,23 @@
     }
 
     // The calls to and from the participants declared as one of `kinds` (a regex alternation), with their
-    // declarations, the notes that follow a removed call or name such a participant, and its activations.
+    // declarations, the notes that follow a removed call or name such a participant, and its activations. A note's lines
+    // are never statements (E9, 5.9.1): a line of a kept note reading like such a participant's call, its activation or
+    // its declaration was taken out of the note, which the Setup filter stopped doing in 5.2.7.
     function stripParticipantCalls(source, kinds) {
-        // Find all the aliases of participants of those kinds
+        var S = window._diagramStatements;
+        var opensNote = S ? S.opensNote : function () { return false; };
+        var closesNote = S ? S.closesNote : function (t) { return /^end\s*[hr]?note$/i.test(t); };
+        var lines = source.split('\n');
+        // Find all the aliases of participants of those kinds, declared outside notes
         var aliases = [];
-        var declRe = new RegExp('^(?:' + kinds + ')\\s+"[^"]*"\\s+as\\s+(\\S+)', 'gm');
-        var m;
-        while ((m = declRe.exec(source)) !== null) {
-            aliases.push(m[1].replace(/\s.*$/, ''));
+        var declRe = new RegExp('^(?:' + kinds + ')\\s+"[^"]*"\\s+as\\s+(\\S+)');
+        var m, inBody = false;
+        for (var d = 0; d < lines.length; d++) {
+            var dt = lines[d].trim();
+            if (inBody) { if (closesNote(dt)) inBody = false; continue; }
+            if (opensNote(dt)) { inBody = true; continue; }
+            if ((m = declRe.exec(dt)) !== null) aliases.push(m[1].replace(/\s.*$/, ''));
         }
         if (aliases.length === 0) return source;
 
@@ -3049,7 +3061,6 @@
             return /^note\s*(?:<<[^>]*>>)*\s+(?:left|right)\s*$/.test(line);
         }
 
-        var lines = source.split('\n');
         var result = [];
         var i = 0;
         var lastRemovedArrow = false;
@@ -3076,10 +3087,10 @@
                     // Single-line note: "note left of alias: text"
                     i++;
                 } else {
-                    // Multi-line note: skip until "end note"
+                    // Multi-line note: skip to its end (`end note`, `endnote`, `end hnote` ...)
                     i++;
-                    while (i < lines.length && lines[i].trim() !== 'end note') i++;
-                    if (i < lines.length) i++; // skip "end note"
+                    while (i < lines.length && !closesNote(lines[i].trim())) i++;
+                    if (i < lines.length) i++; // skip the note's end
                 }
                 continue;
             }
@@ -3088,8 +3099,18 @@
             if (lastRemovedArrow && isPositionalNoteStart(trimmed)) {
                 // Multi-line positional note following a removed arrow
                 i++;
-                while (i < lines.length && lines[i].trim() !== 'end note') i++;
-                if (i < lines.length) i++; // skip "end note"
+                while (i < lines.length && !closesNote(lines[i].trim())) i++;
+                if (i < lines.length) i++; // skip the note's end
+                continue;
+            }
+
+            // A note that stays keeps its lines as they are, through its end
+            if (opensNote(trimmed)) {
+                lastRemovedArrow = false;
+                result.push(line);
+                i++;
+                while (i < lines.length && !closesNote(lines[i].trim())) result.push(lines[i++]);
+                if (i < lines.length) result.push(lines[i++]);
                 continue;
             }
 
@@ -3124,13 +3145,94 @@
     }
 
     // Every filter, in the one order every reader applies them, each with the diagram's state (filterShown): the setup
-    // first, as it is found by the When step bar the steps filter takes out.
+    // first, as it is found by the When step bar the steps filter takes out. A block the other four emptied goes with what
+    // it held (5.9.1, REPORT_UI_FIXES_PLAN I3: a loop of database calls was drawn as an empty loop), and a source they
+    // left as it was is returned as it came.
     function applyFilters(source, container) {
-        var s = applySetupFilter(source, filterShown(container, '_setupVisible'));
-        s = applyAssertionFilter(s, filterShown(container, '_assertionsVisible'));
+        var setup = applySetupFilter(source, filterShown(container, '_setupVisible'));
+        var s = applyAssertionFilter(setup, filterShown(container, '_assertionsVisible'));
         s = applyStepsFilter(s, filterShown(container, '_stepsVisible'));
         s = applyDatabasesFilter(s, filterShown(container, '_databasesVisible'));
-        return applyEventsFilter(s, filterShown(container, '_eventsVisible'));
+        s = applyEventsFilter(s, filterShown(container, '_eventsVisible'));
+        return s === setup ? s : dropEmptiedBlocks(setup, s);
+    }
+
+    // The blocks of a diagram's lines, in the order they open, each with the lines that make it (its opener, its `else`
+    // and `also` lines, its end) and whether it holds content: a message, a note of any kind, a `ref`, a divider, a delay,
+    // a spacer, a `destroy` or a `return`, or a block that is kept; in a `box`, a declaration. A comment (an assertion's
+    // location comment among them), an activation, `create`, `autonumber` and a blank line are none. A note's lines, a
+    // multi-line ref's, a style block's and a block comment's are no statements. With `was`, the blocks of the source
+    // before the filters: a block that holds nothing now and held something then is dropped, and a block whose only
+    // content was a dropped block holds nothing. Null when the two are out of step.
+    function readBlocks(lines, S, was) {
+        var blocks = [], stack = [];
+        var inNote = false, inRef = false, inStyle = false, inComment = false;
+        var DECL = /^(?:participant|actor|boundary|control|entity|database|collections|queue)\b/i;
+        var OTHER = /^(?:==|\.\.\.|\|\||destroy\b|return\b)/i;
+        function top() { return stack[stack.length - 1]; }
+        function holds() { if (stack.length) top().content = true; }
+        function close(n) {
+            var b = stack.pop();
+            b.lines.push(n);
+            b.closed = true;
+            if (!was) b.held = b.content || b.kids.length > 0;
+            else {
+                var then = was.blocks[b.k];
+                b.kept = b.content || b.kids.some(function (c) { return c.kept; }) || !then.closed || !then.held;
+                b.dropped = !b.kept;
+            }
+            if (stack.length) top().kids.push(b);
+        }
+        for (var n = 0; n < lines.length; n++) {
+            var t = lines[n].trim();
+            if (inComment) { if (t.indexOf("'/") >= 0) inComment = false; continue; }
+            if (inStyle) { if (/^<\/style>/i.test(t)) inStyle = false; continue; }
+            if (inNote) { if (S.closesNote(t)) inNote = false; continue; }
+            if (inRef) { if (/^end\s*ref$/i.test(t)) inRef = false; continue; }
+            if (!t || t.charAt(0) === "'") continue;
+            if (/^\/'/.test(t)) { inComment = t.indexOf("'/", 2) < 0; continue; }
+            if (/^<style\s*>/i.test(t)) { inStyle = !/<\/style>/i.test(t); continue; }
+            if (S.isMessage(t)) { holds(); continue; }
+            if (S.isNote(t)) { holds(); inNote = S.opensNote(t); continue; }
+            if (/^ref\b/i.test(t)) { holds(); inRef = t.indexOf(':') < 0; continue; }
+            var box = /^box\b/i.test(t);
+            if (box || S.opensBlock(t)) {
+                var b = { k: blocks.length, opener: t, box: box, lines: [n], content: false, kids: [], closed: false };
+                if (was && (b.k >= was.blocks.length || was.blocks[b.k].opener !== t)) return null;
+                blocks.push(b);
+                stack.push(b);
+                continue;
+            }
+            if (/^end\s*box$/i.test(t)) { if (stack.length && top().box) close(n); continue; }
+            if (/^(?:else|also)\b/i.test(t)) { if (stack.length && !top().box) top().lines.push(n); continue; }
+            if (S.endsBlock(t)) { if (stack.length && !top().box) close(n); continue; }
+            if (stack.length && top().box) { if (DECL.test(t)) holds(); continue; }
+            if (OTHER.test(t)) holds();
+        }
+        if (was && blocks.length !== was.blocks.length) return null;
+        return { blocks: blocks };
+    }
+
+    // The blocks the line filters emptied, taken out: `before` is the source they were given, `after` what they left.
+    // They take statements out and never a block's opener or end, so the k-th block of `after` is the k-th of `before`. A
+    // block goes when it holds nothing in `after` and held something in `before` (one written empty is the user's), with
+    // its `else` and `also` lines and its end; the lines in it that are no content (an activation, a comment) stay where
+    // they are. A block whose only content was a block that went goes too, which is how a Setup box holding only a loop of
+    // database calls goes with the loop.
+    function dropEmptiedBlocks(before, after) {
+        var S = window._diagramStatements;
+        if (!S) return after;
+        var was = readBlocks(before.split('\n'), S, null);
+        var lines = after.split('\n');
+        var now = readBlocks(lines, S, was);
+        if (!now) return after;
+        var drop = {}, any = false;
+        now.blocks.forEach(function (b) {
+            if (!b.dropped) return;
+            any = true;
+            b.lines.forEach(function (n) { drop[n] = true; });
+        });
+        return any ? lines.filter(function (l, n) { return !drop[n]; }).join('\n') : after;
     }
 
     // The setup filter (5.0.0, D38): a scenario's setup, taken out of its sequence diagram's source. The setup is the
@@ -3140,8 +3242,11 @@
     // it was. Note bodies are never read as statements.
     function stripSetup(source) {
         if (!source) return source;
+        // a block's opener and end read as the render script reads them, a message first (E5, 5.9.1): a call back from a
+        // participant called Group read as an opener, so the Setup frame never closed and the setup was left in
+        var S = window._diagramStatements;
+        if (!S) return source;
         var lines = source.split('\n');
-        var OPENS = /^(?:alt|opt|loop|par|break|critical|group|partition)\b/;
         var WHEN = /^hnote across <<stepDelimiter>>(?: #black:<color:white>|<<stepBody>>: )(?:<b>)?when\b/i;
         var CONTENT = /^(?:[A-Za-z0-9_]+\s*-|\[|note\b|hnote\b|rnote\b|==|\.\.\.|\|\|\||activate\b|deactivate\b|destroy\b|alt\b|opt\b|loop\b|par\b|break\b|critical\b|group\b|partition\b|end$|ref\b|delay\b)/;
         function noteStart(t) { return /^(?:note|hnote|rnote)\b/.test(t) && t.indexOf(':') < 0; }
@@ -3165,8 +3270,8 @@
             if (!/^partition\b.*\bSetup$/.test(stmts[k].t)) continue;
             d = 0;
             for (var j = k; j < stmts.length; j++) {
-                if (OPENS.test(stmts[j].t)) d++;
-                else if (stmts[j].t === 'end') d--;
+                if (S.opensBlock(stmts[j].t)) d++;
+                else if (S.endsBlock(stmts[j].t)) d--;
                 if (d === 0) break;
             }
             if (j >= stmts.length) return source;
@@ -3184,8 +3289,8 @@
             if (first < 0 || when <= first) return source;
             d = 0;
             for (k = first; k < when; k++) {
-                if (OPENS.test(stmts[k].t)) d++;
-                else if (stmts[k].t === 'end') { d--; if (d < 0) return source; }
+                if (S.opensBlock(stmts[k].t)) d++;
+                else if (S.endsBlock(stmts[k].t)) { d--; if (d < 0) return source; }
             }
             if (d !== 0) return source;
             for (var m = stmts[first].i; m < stmts[when].i; m++) drop[m] = true;
@@ -3294,11 +3399,19 @@
         return groups;
     }
 
-    // Add source-location tooltips to assertion note SVG groups
+    // The role pass on every picture under `el`, as it is shown (the render script's one helper, F1)
+    function tagShown(el) {
+        var roles = window._diagramRoles;
+        if (roles && roles.tagShown) roles.tagShown(el);
+    }
+
+    // Add source-location tooltips to assertion note SVG groups. The locations are read from the source the picture was
+    // drawn from, as a part's are (E14, 5.9.1): read from the source before the filters, a hidden setup's assertions
+    // left their lines first, and every tooltip after them named an earlier assertion's line.
     function addAssertionTooltips(container) {
         var svg = container.querySelector('svg');
         if (!svg) return;
-        var source = container._noteOriginalSource || container.getAttribute('data-plantuml');
+        var source = container.getAttribute('data-plantuml') || container._noteOriginalSource;
         if (!source) return;
         var locs = parseAssertionLocations(source);
         if (locs.length === 0) return;
@@ -3491,8 +3604,7 @@
         // The card colours now, inside the slice that drew the picture, so the slice's time counts them: the role pass
         // otherwise runs after the slice, on every picture it added. It runs before the notes' buttons are placed, as on
         // a diagram's first drawing.
-        var roles = window._diagramRoles;
-        if (roles) Array.prototype.forEach.call(el.querySelectorAll('svg'), function(svg) { roles.tagRoles(svg); });
+        tagShown(el);
         if (owner._refineNoteWidth || !nearWatch) { decorateNow(el); return; }
         // the zoom is the diagram's, on its container, and given to every part at once: after the last part (5.7.0)
         var zoomBox = el === owner || !el.nextElementSibling || !el.nextElementSibling.classList.contains('puml-fragment') ? owner : null;

@@ -577,7 +577,8 @@ public record ReportConfigurationOptions
     /// When <c>true</c>, maximal runs of consecutive identical calls within one test — same caller,
     /// service, method, path+query, GraphQL operation and status code — are collapsed into a single
     /// request/response pair wrapped in a PlantUML <c>loop ×N</c> fragment (with the min–max duration
-    /// when timestamps are available). Keeps poll/retry-heavy traffic legible. Default: <c>false</c>.
+    /// when timestamps are available). Keeps poll/retry-heavy traffic legible. When the report's Databases or Events
+    /// toggle hides a loop's calls, the loop goes with them (5.9.1; it was drawn as an empty loop). Default: <c>false</c>.
     /// </summary>
     public bool CollapseConsecutiveIdenticalCalls { get; set; }
 

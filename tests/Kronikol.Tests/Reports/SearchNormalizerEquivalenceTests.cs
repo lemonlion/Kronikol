@@ -28,8 +28,12 @@ public partial class SearchNormalizerEquivalenceTests
         return char.ConvertFromUtf32(codePoint);
     });
 
-    [GeneratedRegex("</?(?:color|font|i|b|size|back)[^>]*>")]
+    [GeneratedRegex("</?(?:color|font|i|b|size|back)[^>]*>|<space:[0-9]+>|</?su[pb]>")]
     private static partial Regex MarkupTag();
+
+    // rule 5 since 5.9.1: a table cell's line break
+    [GeneratedRegex(@"\\\\n")]
+    private static partial Regex CellBreak();
 
     [GeneratedRegex(@"\\n[ \t]*")]
     private static partial Regex ArrowLabelBreak();
@@ -75,6 +79,7 @@ public partial class SearchNormalizerEquivalenceTests
             if (chars[i] is >= 'A' and <= 'Z') chars[i] = (char)(chars[i] + 32);
         s = new string(chars);
         s = MarkupTag().Replace(s, "");
+        s = CellBreak().Replace(s, "\n");
         s = ArrowLabelBreak().Replace(s, "");
         return WhitespaceRun().Replace(s + "\n", " ");
     }

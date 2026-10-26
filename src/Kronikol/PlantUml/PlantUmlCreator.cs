@@ -450,7 +450,7 @@ public static partial class PlantUmlCreator
             var splitForSize = !clientSideSplitting
                 && (builder.EncodedDiagramExceedsMaxLength || builder.EstimatedHeightExceedsMax);
             if ((splitForWidth || splitForSize) && !builder.HasOpenLoop && trace != lastTrace)
-                builder.FinishAndStartNewDiagram();
+                builder.FinishAndStartNewDiagram(reopenSetupLater: true);
         }
 
         builder.CloseLoop();
@@ -1255,16 +1255,7 @@ public static partial class PlantUmlCreator
                 """.TrimStart());
 
         if (tracesForTest.Any(x => x.PlantUml is not null && x.PlantUml.Contains($"<<{StepBarPlantUml.BodyNoteClass}>>")))
-            parts.Add($$"""
-
-                <style>
-                 .{{StepBarPlantUml.BodyNoteClass}} {
-                     BackgroundColor black
-                     FontColor white
-                     LineColor white
-                 }
-                </style>
-                """.TrimStart());
+            parts.Add(StepBarPlantUml.BodyStyle);
 
         return string.Join("\n", parts);
     }
@@ -2179,14 +2170,24 @@ public static partial class PlantUmlCreator
             }
         }
 
-        public void FinishAndStartNewDiagram()
+        /// <summary>
+        /// Closes the diagram being built and starts the next with the blocks that were open. With
+        /// <paramref name="reopenSetupLater"/>, the split falls between two traces and the Setup box is left to be
+        /// re-opened by the next setup content, as it is first opened: re-opened at once, it was closed on nothing when
+        /// the next trace started the action, and the next diagram drew an empty Setup box (5.9.1, E6). A split inside a
+        /// trace (a long note cut across diagrams) re-opens it at once, as the rest of the trace follows.
+        /// </summary>
+        public void FinishAndStartNewDiagram(bool reopenSetupLater = false)
         {
-            var partitionToReopen = _openPartitionLine;
+            var partitionToReopen = reopenSetupLater && _openLoopLine == null ? null : _openPartitionLine;
             var loopToReopen = _openLoopLine;
             if (_openLoopLine != null)
                 AppendLine("end");
             if (_openPartitionLine != null)
                 AppendLine("end");
+            // both closed here, and set again below only when re-opened at once
+            _openLoopLine = null;
+            _openPartitionLine = null;
 
             AppendLine("@enduml");
             // Splitting is no width bound on its own: the prefix is built from the whole test's traces,
@@ -2200,7 +2201,10 @@ public static partial class PlantUmlCreator
             _cachedEncoded = null;
             _lengthAtLastEncode = 0;
             _estimatedHeight = 0;
+            // the participant row starts again with the participants (5.9.1, E7): kept, it was over the limit after the
+            // first width split, and every later trace was split off into a diagram of its own
             _currentParticipants.Clear();
+            _estimatedParticipantRowWidth = 0;
             _statementGuard.Reset();
             _results.Add(new PlantUmlResult(plainText, encodedPlantUml));
             _currentPrefix = CreatePlantUmlPrefix(tracesForTest, _stepNumber, plantUmlTheme,

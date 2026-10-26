@@ -50,7 +50,9 @@ public static class ParameterGrouper
             }
             else
             {
-                groups.Add(BuildGroup(ScenarioTitleResolver.FormatScenarioDisplayName(og.Key), members, maxColumns, diagramComparer));
+                // a Gherkin outline's title as written (5.9.1, N4); a test method's through the humaniser
+                var heading = members.Any(m => m.NameAsWritten) ? og.Key : ScenarioTitleResolver.FormatScenarioDisplayName(og.Key);
+                groups.Add(BuildGroup(heading, members, maxColumns, diagramComparer));
             }
             foreach (var m in members) consumed.Add(m.Id);
         }
@@ -59,6 +61,11 @@ public static class ParameterGrouper
         var remaining = scenarios.Where(s => !consumed.Contains(s.Id)).ToArray();
         if (!enabled)
             return (groups.ToArray(), remaining);
+
+        // a name a person wrote is the scenario's name, never a method's with its arguments in brackets (5.9.1, N5, E8:
+        // "Returns 404 (not found)" was a group headed "Returns 404" with an Arg 0 column)
+        ungrouped.AddRange(remaining.Where(s => s.NameAsWritten));
+        remaining = remaining.Where(s => !s.NameAsWritten).ToArray();
 
         var prefixGroups = remaining
             .Select(s => (Scenario: s, BaseName: ParameterParser.ExtractBaseName(s.DisplayName) ?? s.DisplayName))
@@ -111,7 +118,7 @@ public static class ParameterGrouper
     }
 
     private static bool HasParameters(Scenario[] members) =>
-        members.Any(m => m.ExampleValues is { Count: > 0 } || ParameterParser.Parse(m.DisplayName) is { Count: > 0 });
+        members.Any(m => m.ExampleValues is { Count: > 0 } || (!m.NameAsWritten && ParameterParser.Parse(m.DisplayName) is { Count: > 0 }));
 
     private static (string[] ParamNames, ParameterDisplayRule Rule) DetermineParamsAndRule(
         Scenario[] members, int maxColumns)

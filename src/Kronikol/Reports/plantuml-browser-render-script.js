@@ -594,7 +594,7 @@
             var target = { el: id ? document.getElementById(id) : null, id: id || null, opts: opts || null };
             // a sequence diagram's container is the role pass's to tag, with the kinds of the notes it draws: the
             // page's sequence sources open with the teoz pragma (5.0.0, plans/OPTION_C_PLAN.md S10, P23)
-            if (target.el && window._diagramRoles && window._diagramRoles.isSequence(lines)) {
+            if (target.el && !(opts && opts.aside) && window._diagramRoles && window._diagramRoles.isSequence(lines)) {
                 target.el.setAttribute('data-k-sequence', '1');
                 target.el._noteKinds = window._diagramRoles.noteKinds(lines);
             }
@@ -886,13 +886,34 @@
         }
 
         // `partition X`, `loop ×3 · 12–40 ms`, `alt …`, `opt …`, `group …`, `par …`, `critical …` — the
-        // block statements that are closed by a bare `end` and must be closed/re-opened when a diagram
-        // is split into height-bounded fragments (the server-side builder does the same).
-        // Until the statement-length check's pattern took its own name (_statementBlockRx), it replaced this one, and
-        // `else` and `also` were read as openers too: a fragment cut after an `else` closed its `alt` twice.
-        var _blockOpenerRx = /^(partition\s|loop\b|alt\b|opt\b|group\b|par\b|critical\b|break\b)/;
-        function isBlockOpener(trimmed) { return _blockOpenerRx.test(trimmed); }
+        // block statements that must be closed/re-opened when a diagram is split into height-bounded fragments (the
+        // server-side builder does the same). They are read as the engine reads them (CommandGrouping in the pinned
+        // engine's source, 5.9.1, REPORT_UI_FIXES_PLAN L2): the keyword in any case, `par2` too, after the `&` that starts
+        // a block alongside the statement before it, and a block is closed by `end` alone or followed by any text but box,
+        // note, hnote, rnote or ref, whose own blocks those close (`end group` closed nothing here until 5.9.1). Until the
+        // statement-length check's pattern took its own name (_statementBlockRx), it replaced this one, and `else` and
+        // `also` were read as openers too: a fragment cut after an `else` closed its `alt` twice.
+        var _blockOpenerRx = /^&?\s*(?:partition|loop|alt|opt|group|par2?|critical|break)\b/i;
+        var _blockEndRx = /^end(?:\s+(?!(?:box|note|hnote|rnote|ref)\b)\S.*)?$/i;
+        // A message: a participant, by its alias or quoted name, or a lost or found end (`[`, `]`, `?`), and at once its
+        // arrow. The engine tries a message before a block, so a participant whose alias is a block's keyword (a service
+        // called Group or Loop) writes a message, `group -> svc : …`, which until 5.9.1 was read as an opener (E5): the
+        // splitter closed it with a stray `end` and repeated the call in the next part. A block's label can hold an arrow
+        // (`group A -> B`), but no message's first word is followed by a space and more words before its arrow.
+        var _messageStatementRx = new RegExp('^&?\\s*(?:"[^"]*"|[^\\s"]*?)\\s*(?:' + _messageArrowRx.source + ')');
+        function isMessageStatement(trimmed) {
+            return trimmed.charAt(0) !== "'" && !isNoteStatement(trimmed) && _messageStatementRx.test(trimmed);
+        }
+        function isBlockOpener(trimmed) { return _blockOpenerRx.test(trimmed) && !isMessageStatement(trimmed); }
+        function isBlockEnd(trimmed) { return _blockEndRx.test(trimmed) && !isMessageStatement(trimmed); }
         window._isBlockOpener = isBlockOpener;
+        // The one reading of a sequence diagram's statements, for collapsible-notes-script.js's filters too (the Setup
+        // filter's frame, the calls the Databases and Events filters take out, the blocks they empty): a message before a
+        // block, a block's opener and end, a note and the end of its lines.
+        window._diagramStatements = {
+            isMessage: isMessageStatement, opensBlock: isBlockOpener, endsBlock: isBlockEnd,
+            isNote: isNoteStatement, opensNote: opensNoteBlock, closesNote: closesNoteBlock
+        };
 
         // Estimate height of a trace unit
         function estimateUnitHeight(unitLines) {
@@ -957,15 +978,7 @@
 
                 // Track block state through this unit. A note's lines are never a block, and neither is a
                 // one-line note (an assertion message reading `group by customer`, a captured `end`).
-                var inNoteTrack = false;
-                for (var li = 0; li < units[u].length; li++) {
-                    var t = units[u][li].trim();
-                    if (inNoteTrack) { if (closesNoteBlock(t)) inNoteTrack = false; continue; }
-                    if (opensNoteBlock(t)) { inNoteTrack = true; continue; }
-                    if (isNoteStatement(t)) continue;
-                    if (isBlockOpener(t)) openBlocks.push(units[u][li]);
-                    else if (t === 'end' && openBlocks.length > 0) openBlocks.pop();
-                }
+                scanOpenBlocks(units[u], openBlocks);
 
                 for (var li2 = 0; li2 < units[u].length; li2++) {
                     currentLines.push(units[u][li2]);
@@ -1100,17 +1113,22 @@
         }
 
         // Enhanced split that handles forced split boundaries from chunkLargeNotes
-        // Walk lines (skipping note bodies) and push block openers / pop on bare `end`, so a caller
-        // knows which blocks are still open at the end of a chunk of diagram text.
+        // Walk lines (skipping note bodies and style blocks) and push block openers / pop on a block's end, so a caller
+        // knows which blocks are still open at the end of a chunk of diagram text. A style block's `group {` line is a
+        // style's selector, not a block (E13: until 5.9.1 it was pushed, so the part was closed with a stray `end` and
+        // the next one opened with `group {`). A block opened alongside the statement before it (`& group …`) is
+        // re-opened at the top of a part with nothing before it, so it is kept without its `&`.
         function scanOpenBlocks(lines, stack) {
-            var inNote = false;
+            var inNote = false, inStyle = false;
             for (var i = 0; i < lines.length; i++) {
                 var t = lines[i].trim();
+                if (inStyle) { if (/^<\/style>/i.test(t)) inStyle = false; continue; }
                 if (inNote) { if (closesNoteBlock(t)) inNote = false; continue; }
+                if (/^<style\s*>/i.test(t)) { inStyle = !/<\/style>/i.test(t); continue; }
                 if (opensNoteBlock(t)) { inNote = true; continue; }
                 if (isNoteStatement(t)) continue;
-                if (isBlockOpener(t)) stack.push(lines[i]);
-                else if (t === 'end' && stack.length > 0) stack.pop();
+                if (isBlockOpener(t)) stack.push(lines[i].replace(/^(\s*)&\s*/, '$1'));
+                else if (isBlockEnd(t) && stack.length > 0) stack.pop();
             }
             return stack;
         }
@@ -1419,7 +1437,8 @@
                 }
                 mo.observe(div, { childList: true, subtree: true, characterData: true });
                 try {
-                    window.plantuml.render(source.split('\n'), div.id, { onError: function() { finish(true); return true; } });
+                    // drawn aside, for its measures: nobody sees it, so it gets no role pass (E15, 5.9.1)
+                    window.plantuml.render(source.split('\n'), div.id, { aside: true, onError: function() { finish(true); return true; } });
                 } catch (e) {
                     finish(true);
                 }
@@ -1626,7 +1645,7 @@
         // "Syntax Error?" with no hint at what was wrong. Naming the offending line here turns a
         // recurrence into a one-glance diagnosis.
         var _statementArrowRx = /<{1,2}[-=.]{1,2}(?:\[[^\]]*\])?[-=.]{0,2}|[-=.]{1,2}(?:\[[^\]]*\])?[-=.]{0,2}>{1,2}/;
-        var _statementBlockRx = /^(loop|alt|else|opt|group|par|critical|break|partition|also)\b/i;
+        var _statementBlockRx = /^&?\s*(?:loop|alt|else|opt|group|par2?|critical|break|partition|also)\b/i;
         // The other statements the engine walks once per character on its stack, which a render worker runs out of
         // well under the parse limits (plans/LONG_COMPONENT_EDGE_PLAN.md): a participant declared with a quoted name
         // and an alias, a component diagram's edge with its quoted label, an activity diagram's swimlane and action.
@@ -1660,7 +1679,8 @@
                         return { line: i + 1, kind: 'coloured note bar', length: t.length, limit: L.colouredNoteBar };
                     continue;
                 }
-                if (_statementBlockRx.test(t)) {
+                // a message first, as the engine reads one: a call from a participant called Group is no block label (E5)
+                if (!isMessageStatement(t) && _statementBlockRx.test(t)) {
                     if (t.length > L.blockLabel) return { line: i + 1, kind: 'block label', length: t.length, limit: L.blockLabel };
                     continue;
                 }
@@ -1825,6 +1845,9 @@
                 queueDone = true;
                 clearInterval(qPoll);
                 item.el.dataset.rendered = '1';
+                // shown by data-rendered, so coloured now, with the diagram's other parts: a part that landed before an
+                // earlier one was hidden until that one was drawn (inline-svg-styles.css), and shows now (F2, 5.9.1)
+                if (window._diagramRoles && window._diagramRoles.tagShown) window._diagramRoles.tagShown(item.parentEl || item.el);
                 var hookTarget = item.isFragment ? item.el : item.el;
                 var iflowSource = item.parentEl ? item.parentEl._fullSource || item.source : item.source;
                 try {
@@ -2460,19 +2483,39 @@
         var stepRules = !stepBands.length ? [] : shapes.filter(function(o) {
             return stepBands.indexOf(o) < 0 && !o.filled && /^(line|path|polyline|rect)$/.test(o.t) && stepBands.some(function(s) { return boxIn(o, s); });
         });
-        // a table drawn in a step bar: the box its rules enclose, with its header row down to the second horizontal rule
+        // The tables drawn in a step bar. A bar's rules are clustered by their rows, so a bar holding two tables (the weaver
+        // path's inputs and outputs) gets two, and the name line between them is no table's (5.9.1,
+        // plans/REPORT_UI_FIXES_PLAN.md B6, E10: one box took in both). A table's header row is its first row where every
+        // text in it is bold, as the engine draws a |= cell (B4): the rules alone cannot tell a header-only table (E11, which
+        // got no header) from a doc string's one-cell box, which has the same two horizontal rules and no bold text.
+        var isBold = function(t) { var w = (t.getAttribute('font-weight') || '').toLowerCase(); return w === 'bold' || parseInt(w, 10) >= 600; };
+        var hasInk = function(t) { return /[^\s\u200b]/.test(t.textContent || ''); };
         var stepTables = [];
         if (stepRules.length) stepBands.forEach(function(s) {
-            var x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity, ys = [];
-            stepRules.forEach(function(o) {
-                if (!boxIn(o, s)) return;
-                x0 = Math.min(x0, o.b.x); y0 = Math.min(y0, o.b.y); x1 = Math.max(x1, o.b.x + o.b.width); y1 = Math.max(y1, o.b.y + o.b.height);
-                if (o.b.height > 0.6 || o.b.width < 4) return;
-                var y = Math.round(o.b.y * 10) / 10;
-                if (ys.indexOf(y) < 0) ys.push(y);
+            var own = stepRules.filter(function(o) { return boxIn(o, s); }).sort(function(a, c) { return a.b.y - c.b.y; });
+            var groups = [];
+            own.forEach(function(o) {
+                var g = groups[groups.length - 1];
+                if (g && o.b.y <= g.bottom + 1) { g.rules.push(o); g.bottom = Math.max(g.bottom, o.b.y + o.b.height); }
+                else groups.push({ rules: [o], bottom: o.b.y + o.b.height });
             });
-            ys.sort(function(a, c) { return a - c; });
-            if (x1 > x0 && y1 > y0) stepTables.push({ s: s, x: x0, y: y0, w: x1 - x0, h: y1 - y0, headH: ys.length > 2 ? ys[1] - y0 : 0 });
+            groups.forEach(function(g) {
+                var x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity, ys = [], xs = [];
+                g.rules.forEach(function(o) {
+                    x0 = Math.min(x0, o.b.x); y0 = Math.min(y0, o.b.y); x1 = Math.max(x1, o.b.x + o.b.width); y1 = Math.max(y1, o.b.y + o.b.height);
+                    if (o.b.height <= 0.6 && o.b.width >= 4) { var y = Math.round(o.b.y * 10) / 10; if (ys.indexOf(y) < 0) ys.push(y); }
+                    else if (o.b.width <= 0.6 && o.b.height >= 4) { var x = Math.round(o.b.x * 10) / 10; if (xs.indexOf(x) < 0) xs.push(x); }
+                });
+                if (!(x1 > x0 && y1 > y0)) return;
+                ys.sort(function(a, c) { return a - c; });
+                xs.sort(function(a, c) { return a - c; });
+                // what is written in the table: a text by where its baseline starts, the struts' zero-width texts left out
+                var inside = bandTexts.filter(function(t) { var tx = num(t, 'x'), ty = num(t, 'y'); return tx >= x0 - 1 && tx <= x1 + 1 && ty > y0 && ty <= y1 + 1; });
+                var firstRow = ys.length >= 2 ? inside.filter(function(t) { return num(t, 'y') <= ys[1] + 1 && hasInk(t); }) : [];
+                var headed = firstRow.length > 0 && firstRow.every(isBold);
+                stepTables.push({ s: s, x: x0, y: y0, w: x1 - x0, h: y1 - y0, headH: headed ? ys[1] - y0 : 0, xs: xs,
+                    head: headed ? firstRow : [], body: inside.filter(function(t) { return !headed || firstRow.indexOf(t) < 0; }) });
+            });
         });
         // Every strip runs the drawing's full width. The engine draws a strip across the participants, or as wide as
         // its own text where that is wider, centred on the participants, so the strips stopped short of the notes
@@ -2582,11 +2625,19 @@
                 hd.setAttribute('height', fixed(tb.headH));
                 hd.setAttribute('class', 'k-step-table-head');
                 r.parentNode.insertBefore(hd, r.nextSibling);
-                bandTexts.forEach(function(t) {
-                    var ty = num(t, 'y');
-                    if (ty > tb.y && ty <= tb.y + tb.headH + 1) addClass(t, 'k-step-table-head-text');
+                // The header's texts centred in their columns, as the HTML table centres its th (5.9.1, B4): the engine
+                // draws a cell's text at its left whatever it is asked. The columns are the table's vertical rules, read
+                // before the stretch moved the table; the stretch moved the texts by as much, so the move is the same.
+                tb.head.forEach(function(t) {
+                    var tx = num(t, 'x'), tw = num(t, 'textLength') || t.getComputedTextLength(), left = -Infinity, right = Infinity;
+                    var sx = tx - (dxOf.get(tb.s.e) || 0);
+                    tb.xs.forEach(function(x) { if (x <= sx + 0.5 && x > left) left = x; if (x >= sx + tw - 0.5 && x < right) right = x; });
+                    if (isFinite(left) && isFinite(right)) moveX(t, function(x) { return x + ((left + right) / 2 - (sx + tw / 2)); });
+                    addClass(t, 'k-step-table-head-text');
                 });
             }
+            // the body's texts in the page's ink, as the HTML table's td (B5); a doc string's box is all body
+            tb.body.forEach(function(t) { addClass(t, 'k-step-table-text'); });
             counts.tables = (counts.tables || 0) + 1;
             // The bar's contents are lifted 1.5 units, so the space under the table matches the space above the title
             // (7 px above the title, 6 px under the table: the diagram is drawn scaled, so 1 unit could snap back to the
@@ -2614,11 +2665,25 @@
         return true;
     }
 
-    window._diagramRoles = { isSequence: isSequence, noteKinds: noteKinds, tagRoles: tagRoles };
+    // The role pass on every picture under `el`, called wherever a drawn picture is shown (5.9.1, REPORT_UI_FIXES_PLAN
+    // F1, F2): a picture shown before it was tagged painted a frame in the engine's colours, yellow square notes and
+    // narrow black bars, as a note's own redraw of a diagram in parts and a first drawing's part landing out of order did.
+    function tagShown(el) {
+        if (!el || !el.querySelectorAll) return;
+        var svgs = tag(el) === 'svg' ? [el] : el.querySelectorAll('svg');
+        Array.prototype.forEach.call(svgs, function(svg) { if (sequenceHost(svg)) tagRoles(svg); });
+    }
+
+    window._diagramRoles = { isSequence: isSequence, noteKinds: noteKinds, tagRoles: tagRoles, tagShown: tagShown };
     if (!window.MutationObserver) return;
-    // every picture the page draws or draws again is tagged as it arrives; one drawn hidden (a fragment of a long
-    // diagram, a closed scenario) is tagged when it comes into view
-    var waiting = window.IntersectionObserver ? new IntersectionObserver(function(entries) {
+    // Every picture the page draws or draws again is tagged as it arrives. One drawn with no box (a part drawn hidden, a
+    // closed scenario, a view behind another tab, a scenario far down the page that is not laid out) waits for a box,
+    // and is tagged in the frame it gets one: a ResizeObserver reports after layout and before that frame is painted,
+    // where the IntersectionObserver it waited on until 5.9.1 reported after the first frame showing it was painted, so
+    // that frame showed the engine's colours (F3). Only where there is no ResizeObserver does it wait for the window.
+    var waiting = window.ResizeObserver ? new ResizeObserver(function(entries) {
+        entries.forEach(function(e) { if (tagRoles(e.target)) waiting.unobserve(e.target); });
+    }) : window.IntersectionObserver ? new IntersectionObserver(function(entries) {
         entries.forEach(function(e) { if (e.isIntersecting && tagRoles(e.target)) waiting.unobserve(e.target); });
     }) : null;
     function visit(root) {

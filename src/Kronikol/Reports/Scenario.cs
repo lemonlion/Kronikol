@@ -105,6 +105,15 @@ public record Scenario
     public bool NotATest { get; set; }
 
     /// <summary>
+    /// True for a scenario whose name a person wrote and the report shows as written: a Gherkin scenario (the Reqnroll
+    /// lanes and the Cucumber ingest). Its outline's grouped heading is its title as written, not the method-name
+    /// humaniser's reading (#102: <c>UK</c> lower-cased, brackets as <c>[...]</c>), and a name ending in brackets is never
+    /// read as a parameterised test's (5.9.1, plans/REPORT_UI_FIXES_PLAN.md N4, N5, E8). The data files write it as
+    /// <c>nameAsWritten</c> (only where it is true), so a merge keeps it.
+    /// </summary>
+    internal bool NameAsWritten { get; set; }
+
+    /// <summary>
     /// True for an outline row whose name Kronikol filled from its <c>Examples:</c> values, so that its
     /// <see cref="DisplayName"/> is no longer the title it was keyed by: a Reqnroll row since #101, which 5.4.2 and
     /// earlier named by the outline's title. Its stable id, its place in a feature and its in-page anchor key on

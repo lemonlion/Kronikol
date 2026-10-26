@@ -1,3 +1,4 @@
+using Kronikol;
 using Kronikol.Reports;
 using Kronikol.Tracking;
 using NUnit.Framework;
@@ -24,6 +25,8 @@ internal static class TestContextEnumerableExtensions
                 return new Feature
                 {
                     DisplayName = firstScenarioForFeature.Test.DisplayName!.Titleize(),
+                    // the ids key on 5.9.0's name, which Titleize can now differ from (plans/REPORT_UI_FIXES_PLAN.md N3)
+                    StableIdName = StringCasing.TitleizeAsOf590(firstScenarioForFeature.Test.DisplayName!),
                     Endpoint = EndpointOf(firstScenarioForFeature.Test),
                     Tags = featureTags.Length > 0 ? featureTags : null,
                     Scenarios = scenariosForFeature

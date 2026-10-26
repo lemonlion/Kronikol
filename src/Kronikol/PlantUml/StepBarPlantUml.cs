@@ -52,6 +52,39 @@ internal static class StepBarPlantUml
     /// <summary>The stereotype class of the styled body form; <see cref="PlantUmlCreator"/> injects a matching style.</summary>
     internal const string BodyNoteClass = "stepBody";
 
+    /// <summary>
+    /// The style <see cref="PlantUmlCreator"/> injects into a source holding a styled bar: the bar black, its text and its
+    /// table rules white, and every line and table of it centred as a block (5.9.1, plans/REPORT_UI_FIXES_PLAN.md B1: the
+    /// engine's default is left, so a table sat under the left end of its label). The tests read this one copy.
+    /// </summary>
+    internal const string BodyStyle = $$"""
+        <style>
+         .{{BodyNoteClass}} {
+             BackgroundColor black
+             FontColor white
+             LineColor white
+             HorizontalAlignment center
+         }
+        </style>
+        """;
+
+    /// <summary>
+    /// What opens and closes every table cell's text (5.9.1, plans/REPORT_UI_FIXES_PLAN.md B3): the HTML step-param-table's
+    /// <c>padding: 3px 8px</c>, as 8 px of invisible space each side and a zero-width strut raised before the text and one
+    /// lowered after it, which the engine draws 3 px above and 3 px below the text (measured on the pinned engine, the
+    /// plan's M-I6 variant 3). The engine cannot centre a cell's text; the page centres the header row's (B4).
+    /// </summary>
+    internal const string CellOpen = "<space:8><sup><U+200B></sup>";
+
+    /// <inheritdoc cref="CellOpen"/>
+    internal const string CellClose = "<sub><U+200B></sub><space:8>";
+
+    /// <summary>
+    /// The side room every line of a cell gets: the engine starts each line after a cell's line break at the cell's left,
+    /// so a doc string's later lines lost the room the first had, and with it their indentation against the first.
+    /// </summary>
+    private const string CellRoom = "<space:8>";
+
     internal const string LegacyPrefix = "hnote across <<stepDelimiter>> #black:<color:white>";
     internal const string RichPrefix = $"hnote across <<stepDelimiter>><<{BodyNoteClass}>>: ";
 
@@ -103,11 +136,20 @@ internal static class StepBarPlantUml
             }
         }
 
+        // A doc string is one framed cell, so the centred bar keeps its lines' indentation, as the HTML step-docstring
+        // block does (5.9.1, plans/REPORT_UI_FIXES_PLAN.md B2: centred line by line, a JSON body lost its shape). Each line
+        // is wrapped and escaped as a body line, a pipe is written as a cell's is, and the pieces are joined with the
+        // cell's own line break after escaping, since EscapeInline rewrites every backslash. Not cut by TableCellBudget,
+        // which shares a row's width between cells side by side: the cell is alone in its row.
         if (!string.IsNullOrWhiteSpace(docString))
         {
             body.Add("");
-            foreach (var line in docString!.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n'))
-                body.AddRange(EscapeWrappedBodyLine(line));
+            var lines = docString!.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n')
+                .SelectMany(EscapeWrappedBodyLine)
+                .Select(line => line.Replace("|", "<U+007C>"))
+                .ToArray();
+            body.Add("|" + string.Join(CellBreak, lines.Select((line, i) =>
+                (i == 0 ? CellOpen : CellRoom) + line + (i == lines.Length - 1 ? CellClose : CellRoom))) + "|");
         }
 
         // A literal \n already in the text displays as a line break too — anything multi-line on
@@ -121,7 +163,13 @@ internal static class StepBarPlantUml
             content, PlantUmlStatementLimits.MaxNoteLineChars - RichPrefix.Length);
     }
 
-    /// <summary>One creole table row: <c>|= h1 |= h2 |</c> for the header, <c>| c1 | c2 |</c> for data.</summary>
+    /// <summary>A line break inside a table cell: the engine reads a doubled backslash and an n there as one.</summary>
+    internal const string CellBreak = @"\\n";
+
+    /// <summary>
+    /// One creole table row: <c>|=</c> before each header cell, <c>|</c> before each data cell, every cell's text between
+    /// <see cref="CellOpen"/> and <see cref="CellClose"/>.
+    /// </summary>
     private static string TableRow(string[] cells, bool header)
     {
         var sb = new StringBuilder();
@@ -130,7 +178,7 @@ internal static class StepBarPlantUml
         // is the sum of its cells.
         var budget = DiagramWidth.TableCellBudget(cells.Length);
         foreach (var cell in cells)
-            sb.Append(header ? "|= " : "| ").Append(EscapeCell(cell, budget)).Append(' ');
+            sb.Append(header ? "|=" : "|").Append(CellOpen).Append(EscapeCell(cell, budget)).Append(CellClose);
         return sb.Append('|').ToString();
     }
 

@@ -121,3 +121,18 @@ mutation is equivalent. Run them in a snapshot worktree, never on the release's 
 - H4b: the radios without `autocomplete="off"` (Firefox keeps Oldest first across a reload).
 - H3d: the hiding rule inside `:has()` (an engine without it shows both lists).
 - H5: `HistoryVerdicts.Runs` reversed in the model.
+
+## Runs
+
+**R1 (5.9.1, 2026-10-26).** Each run edited the release's own scripts in its worktree and put them back from a copy
+(not a snapshot worktree: the tree had nothing else in flight).
+
+- I2: F1 failed the note's own redraw (light and dark) and the Wide width; F2 failed the first drawing whose later part
+  lands first; F3 failed the view redrawn behind another and the far scenario; E15 failed the aside drawings. Each of
+  the seven `DiagramColourFrameTests` facts that hold a fix failed only on its own mutation, and all seven failed on
+  5.9.0's scripts for the reason section 6.2 gives; the report controls' fact, the control, passed throughout. F1b,
+  F3b and F5 were not run.
+- I3: nine mutations of L1 to L5 and E5 to E14, each failed a `FilteredBlocksTests` fact or a C# fact.
+- I6: B4b (the header told by the rules alone) failed the doc string's box fact.
+- E2 and E3: with the change taken out, the E2 fact failed on the first button's missing `aria-pressed` and the E3 fact
+  on the scenario skipped after a failure missing under Skipped.

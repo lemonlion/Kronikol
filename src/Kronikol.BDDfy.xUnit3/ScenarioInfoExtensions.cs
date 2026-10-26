@@ -77,6 +77,8 @@ internal static class ScenarioInfoExtensions
                 return new Feature
                 {
                     DisplayName = featureGroup.Key.Titleize(),
+                    // the ids key on 5.9.0's name, which Titleize can now differ from (plans/REPORT_UI_FIXES_PLAN.md N3)
+                    StableIdName = StringCasing.TitleizeAsOf590(featureGroup.Key),
                     Endpoint = endpoint,
                     Description = firstScenario.StoryDescription,
                     Scenarios = scenarios

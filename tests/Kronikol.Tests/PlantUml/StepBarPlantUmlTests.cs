@@ -14,12 +14,12 @@ namespace Kronikol.Tests.PlantUml;
 /// <item>a bar with no body content keeps the legacy one-line coloured form byte for byte —
 /// <c>hnote across &lt;&lt;stepDelimiter&gt;&gt; #black:&lt;color:white&gt;…</c>;</item>
 /// <item>a bar carrying a Gherkin data table, a doc string, or multi-line marker text switches to the
-/// styled form — <c>hnote across &lt;&lt;stepDelimiter&gt;&gt;&lt;&lt;stepBody&gt;&gt;: label\n\n|= … |\n</c>
-/// (each table/doc-string block padded with a blank display line above and below) —
+/// styled form, <c>hnote across &lt;&lt;stepDelimiter&gt;&gt;&lt;&lt;stepBody&gt;&gt;: label\n\n|= … |</c>
+/// (a blank display line above each table and above a doc string, which is a table of one cell from 5.9.1),
 /// whose colours come from the injected <c>.stepBody</c> style instead of inline tags, because the
 /// <c>&lt;color:white&gt;</c> prefix styles only the first display line (everything after a <c>\n</c>
-/// painted black-on-black) and inline colour tags put the statement under the ~1400-character
-/// coloured-bar crash cap while the tag-free form runs to the 16,000 note ceiling.</item>
+/// painted black-on-black) and inline colour tags hold the statement to the coloured bar's 600-character cap
+/// (<c>MaxColouredNoteBarChars</c>) while the tag-free form runs to the 16,000 note ceiling.</item>
 /// </list>
 /// Escaping is NOT creole-tilde based: measured on the shipped engine, <c>~|</c> inside a table row does
 /// not escape the pipe (the pipe still splits the cell and the tilde renders literally) and <c>~~</c>
@@ -35,6 +35,19 @@ public class StepBarPlantUmlTests
 {
     private const string LegacyPrefix = "hnote across <<stepDelimiter>> #black:<color:white>";
     private const string RichPrefix = "hnote across <<stepDelimiter>><<stepBody>>: ";
+
+    // A table cell as 5.9.1 writes it (plans/REPORT_UI_FIXES_PLAN.md B3): 8 px of room each side, and a zero-width strut
+    // raised before its text and one lowered after it, the HTML table's padding of 3px 8px. Written out here, not read from
+    // the emitter, so the facts pin the bytes.
+    private const string Open = "<space:8><sup><U+200B></sup>";
+    private const string Close = "<sub><U+200B></sub><space:8>";
+    // a line break inside a cell: a doubled backslash and an n
+    private const string CellBreak = @"\\n";
+    // every line of a doc string's cell has the side room, so the lines after the first keep their indentation against it
+    private const string LineBreak = "<space:8>" + CellBreak + "<space:8>";
+    private static string Head(params string[] cells) => string.Concat(cells.Select(c => "|=" + Open + c + Close)) + "|";
+    private static string Row(params string[] cells) => string.Concat(cells.Select(c => "|" + Open + c + Close)) + "|";
+    private static string Cell(string text) => Open + text + Close;
 
     private static string[][] Menu() =>
     [
@@ -62,7 +75,7 @@ public class StepBarPlantUmlTests
         const string escaped = "Given I have data [inputs: \"~<$inputs>\"] and Vec~<&str> ~<:rocket:>";
 
         Assert.Equal(LegacyPrefix + escaped, StepBarPlantUml.Build(label));
-        Assert.StartsWith(RichPrefix + escaped + @"\n\n|= name |= price |", StepBarPlantUml.Build(label, [new StepBarTable(null, Menu())]));
+        Assert.StartsWith(RichPrefix + escaped + @"\n\n" + Head("name", "price"), StepBarPlantUml.Build(label, [new StepBarTable(null, Menu())]));
     }
 
     [Fact]
@@ -98,7 +111,7 @@ public class StepBarPlantUmlTests
         var bar = StepBarPlantUml.Build("Given muffins", [new StepBarTable(null, Menu())]);
 
         Assert.Equal(
-            RichPrefix + @"Given muffins\n\n|= name |= price |\n| Blueberry | 3.50 |",
+            RichPrefix + @"Given muffins\n\n" + Head("name", "price") + @"\n" + Row("Blueberry", "3.50"),
             bar);
     }
 
@@ -108,7 +121,8 @@ public class StepBarPlantUmlTests
         var bar = StepBarPlantUml.Build("Given the request body", docString: "{ \"a\": 1,\r\n  \"b\": 2 }");
 
         Assert.Equal(
-            RichPrefix + "Given the request body\\n\\n{ \"a\": 1,\\n  \"b\": 2 }",
+            // a doc string is one framed cell, its lines broken inside it (B2)
+            RichPrefix + "Given the request body\\n\\n|" + Open + "{ \"a\": 1," + LineBreak + "  \"b\": 2 }" + Close + "|",
             bar);
     }
 
@@ -141,7 +155,7 @@ public class StepBarPlantUmlTests
     {
         var bar = StepBarPlantUml.Build("Given columns", [new StepBarTable(null, [["a", "b"]])]);
 
-        Assert.Equal(RichPrefix + @"Given columns\n\n|= a |= b |", bar);
+        Assert.Equal(RichPrefix + @"Given columns\n\n" + Head("a", "b"), bar);
     }
 
     [Fact]
@@ -150,7 +164,7 @@ public class StepBarPlantUmlTests
         var bar = StepBarPlantUml.Build("Given a payload\nwith detail",
             [new StepBarTable(null, [["a"], ["1"]])]);
 
-        Assert.Equal(RichPrefix + @"Given a payload\nwith detail\n\n|= a |\n| 1 |", bar);
+        Assert.Equal(RichPrefix + @"Given a payload\nwith detail\n\n" + Head("a") + @"\n" + Row("1"), bar);
     }
 
     // ── Escaping: measured against the real engine ──────────────
@@ -168,8 +182,8 @@ public class StepBarPlantUmlTests
             ["a<b", "plain"],
         ])]);
 
-        Assert.Contains("| a<U+007C>b | x<U+0026>y |", bar);
-        Assert.Contains("| a<U+003C>b | plain |", bar);
+        Assert.Contains(Row("a<U+007C>b", "x<U+0026>y"), bar);
+        Assert.Contains(Row("a<U+003C>b", "plain"), bar);
         Assert.DoesNotContain("~|", bar);
     }
 
@@ -189,9 +203,9 @@ public class StepBarPlantUmlTests
             ["c--d", "say \"\"hi\"\""],
         ])]);
 
-        Assert.Contains("| *<U+200B>*bold*<U+200B>* |", bar);
+        Assert.Contains(Cell("*<U+200B>*bold*<U+200B>*"), bar);
         Assert.Contains("http:/<U+200B>/a http:/<U+200B>/b", bar);
-        Assert.Contains("| c-<U+200B>-d |", bar);
+        Assert.Contains(Cell("c-<U+200B>-d"), bar);
         Assert.Contains("say \"<U+200B>\"hi\"<U+200B>\"", bar);
     }
 
@@ -200,7 +214,7 @@ public class StepBarPlantUmlTests
     {
         var bar = StepBarPlantUml.Build("Given runs", [new StepBarTable(null, [["h"], ["***"]])]);
 
-        Assert.Contains("| *<U+200B>*<U+200B>* |", bar);
+        Assert.Contains(Cell("*<U+200B>*<U+200B>*"), bar);
         Assert.DoesNotContain("**", bar[RichPrefix.Length..]);
     }
 
@@ -213,11 +227,12 @@ public class StepBarPlantUmlTests
         var bar = StepBarPlantUml.Build("Given a doc string",
             docString: "|= not a header |\n* not a bullet\n= not a heading\n-- not struck --\n# not a number");
 
-        Assert.Contains(@"\n<U+007C>= not a header |", bar);
-        Assert.Contains(@"\n<U+002A> not a bullet", bar);
-        Assert.Contains(@"\n<U+003D> not a heading", bar);
-        Assert.Contains(@"\n-<U+200B>- not struck -<U+200B>-", bar);
-        Assert.Contains(@"\n<U+0023> not a number", bar);
+        // the lines are a cell's from 5.9.1 (B2), so a pipe anywhere in them is written as a cell's is
+        Assert.Contains("|" + Open + "<U+007C>= not a header <U+007C>", bar);
+        Assert.Contains(LineBreak + "<U+002A> not a bullet", bar);
+        Assert.Contains(LineBreak + "<U+003D> not a heading", bar);
+        Assert.Contains(LineBreak + "-<U+200B>- not struck -<U+200B>-", bar);
+        Assert.Contains(LineBreak + "<U+0023> not a number", bar);
     }
 
     [Fact]
@@ -227,7 +242,7 @@ public class StepBarPlantUmlTests
         // pretty-printed payloads readable.
         var bar = StepBarPlantUml.Build("Given the body", docString: "{ \"outer\": {\n    \"inner\": true } }");
 
-        Assert.Contains("\\n    \"inner\": true } }", bar);
+        Assert.Contains(LineBreak + "    \"inner\": true } }", bar);
     }
 
     [Fact]
@@ -240,7 +255,7 @@ public class StepBarPlantUmlTests
         // followed by a zero-width space's draws on both engines.
         var bar = StepBarPlantUml.Build("Given paths", [new StepBarTable(null, [["h"], [@"C:\new\table"]])]);
 
-        Assert.Contains("| C:<U+005C><U+200B>new<U+005C><U+200B>table |", bar);
+        Assert.Contains(Cell("C:<U+005C><U+200B>new<U+005C><U+200B>table"), bar);
     }
 
     [Fact]
@@ -250,7 +265,25 @@ public class StepBarPlantUmlTests
         // newline would tear the row apart mid-table.
         var bar = StepBarPlantUml.Build("Given cells", [new StepBarTable(null, [["h"], ["a\r\nb"]])]);
 
-        Assert.Contains("| a b |", bar);
+        Assert.Contains(Cell("a b"), bar);
+    }
+
+    // B2: a doc string is one framed cell, so the centred bar keeps its lines' indentation: each line wrapped and escaped
+    // as a body line is, a pipe written as a cell's, the pieces joined with the cell's line break after escaping, and the
+    // cell never cut to a table cell's budget
+    [Fact]
+    public void A_doc_string_is_drawn_as_one_framed_cell()
+    {
+        var bar = StepBarPlantUml.Build("When it is sent",
+            docString: "{\n  \"a\": \"b|c\",\n  \"path\": \"C:\\tmp\"\n}\n" + new string('x', 300));
+        var body = bar[(RichPrefix + @"When it is sent\n\n").Length..];
+
+        Assert.StartsWith("|" + Open + "{" + LineBreak + "  \"a\": \"b<U+007C>c\",", body);
+        Assert.EndsWith(Close + "|", body);
+        // one display line: a single-backslash break anywhere in it would end the row
+        Assert.DoesNotContain(@"\n", body.Replace(CellBreak, ""));
+        Assert.Contains("C:<U+005C><U+200B>tmp", body);
+        Assert.Equal(300, body.Count(c => c == 'x'));
     }
 
     // ── Multiple tables (weaver-path tabular parameters) ────────
@@ -267,10 +300,10 @@ public class StepBarPlantUmlTests
             new StepBarTable("inputs", [["a"], ["1"]]),
             new StepBarTable("outputs", [["b"], ["2"]]),
         ]);
-        Assert.Contains(@"\n\ninputs:\n|= a |", two);
+        Assert.Contains(@"\n\ninputs:\n" + Head("a"), two);
         // Adjacent blocks keep a single blank line between them: the one before the next block.
-        Assert.Contains(@"| 1 |\n\noutputs:\n|= b |", two);
-        Assert.EndsWith(@"| 2 |", two);
+        Assert.Contains(Row("1") + @"\n\noutputs:\n" + Head("b"), two);
+        Assert.EndsWith(Row("2"), two);
     }
 
     // ── Caps ────────────────────────────────────────────────────
@@ -278,7 +311,7 @@ public class StepBarPlantUmlTests
     [Fact]
     public void The_styled_bar_is_capped_at_the_note_ceiling_not_the_coloured_bar_limit()
     {
-        // No inline colour tags → the ~1400-char coloured-bar crash cap does not apply; the statement
+        // No inline colour tags, so the coloured bar's 600-character cap does not apply; the statement
         // rides the 16,000 note ceiling instead (measured: no crash and no refusal at 15.9k chars).
         var rows = new List<string[]> { new[] { "key", "value" } };
         for (var i = 0; i < 400; i++)
@@ -298,7 +331,7 @@ public class StepBarPlantUmlTests
         var bar = InteractionRecord.StepDelimiterPlantUml("Given", "the muffins exist",
             table: Menu(), docString: null);
 
-        Assert.Equal(RichPrefix + @"Given the muffins exist\n\n|= name |= price |\n| Blueberry | 3.50 |", bar);
+        Assert.Equal(RichPrefix + @"Given the muffins exist\n\n" + Head("name", "price") + @"\n" + Row("Blueberry", "3.50"), bar);
 
         var unchanged = InteractionRecord.StepDelimiterPlantUml("Given", "the mock is armed");
         Assert.Equal(LegacyPrefix + "Given the mock is armed", unchanged);
@@ -315,7 +348,7 @@ public class StepBarPlantUmlTests
 
         Assert.NotNull(plantUml);
         Assert.Contains("<<stepBody>>", plantUml);
-        Assert.Contains("| Blueberry | 3.50 |", plantUml);
+        Assert.Contains(Row("Blueberry", "3.50"), plantUml);
     }
 
     [Fact]
@@ -344,7 +377,7 @@ public class StepBarPlantUmlTests
 
         Assert.Single(logs);
         Assert.Contains("<<stepBody>>", logs[0].PlantUml!);
-        Assert.Contains("| Blueberry | 3.50 |", logs[0].PlantUml!);
+        Assert.Contains(Row("Blueberry", "3.50"), logs[0].PlantUml!);
         StepCollector.ClearSteps(testId);
     }
 
@@ -363,8 +396,8 @@ public class StepBarPlantUmlTests
 
         Assert.Single(logs);
         Assert.Contains("<<stepBody>>", logs[0].PlantUml!);
-        Assert.Contains("|= name |= age |", logs[0].PlantUml!);
-        Assert.Contains("| Alice | 30 |", logs[0].PlantUml!);
+        Assert.Contains(Head("name", "age"), logs[0].PlantUml!);
+        Assert.Contains(Row("Alice", "30"), logs[0].PlantUml!);
         StepCollector.ClearSteps(testId);
     }
 
@@ -398,6 +431,8 @@ public class StepBarPlantUmlTests
         Assert.Contains("BackgroundColor black", diagram);
         Assert.Contains("FontColor white", diagram);
         Assert.Contains("LineColor white", diagram);
+        // every line and table of the bar centred as a block (5.9.1, plans/REPORT_UI_FIXES_PLAN.md B1)
+        Assert.Contains(".stepBody {\n     BackgroundColor black\n     FontColor white\n     LineColor white\n     HorizontalAlignment center\n }", diagram);
     }
 
     [Fact]

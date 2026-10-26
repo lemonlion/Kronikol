@@ -80,6 +80,27 @@
     }
     // the navigation script measures before it scrolls to a place as the page opens, which is before start runs
     window.kronikol_measure_bar = measure;
+
+    // The top of the window's free band for a target, with no gap: below the bar while it is pinned (the mark that holds
+    // its place has gone above the line it sticks at; at rest it covers nothing), and below a scenario's open settings
+    // stuck under it, for a target that comes after them. Keyboard focus keeps 12 px below it (report-focus-script.js,
+    // 5.0.0, plans/OPTION_C_PLAN.md D48) and the zoom slider 11 (context-menu-script.js); one rule for both from 5.9.1
+    // (plans/REPORT_UI_FIXES_PLAN.md S1, S2), where the slider had followed the bar alone.
+    window.kronikol_freeTop = function (t) {
+        var nav = bar();
+        if (!nav) return 0;
+        var mark = document.querySelector('.nav-mark'), line = parseFloat(getComputedStyle(nav).top) || 0;
+        var top = mark && mark.getBoundingClientRect().top < line - 0.5 ? nav.getBoundingClientRect().bottom : 0;
+        var open = document.querySelectorAll('.scenario-settings.is-open');
+        for (var i = 0; i < open.length; i++) {
+            var s = open[i];
+            if (s.contains(t) || !(s.compareDocumentPosition(t) & Node.DOCUMENT_POSITION_FOLLOWING)) continue;
+            if (getComputedStyle(s).position !== 'sticky') continue;
+            var r = s.getBoundingClientRect();
+            if (r.height && r.top <= top + 1 && r.bottom > top) top = r.bottom;
+        }
+        return top;
+    };
     function start() {
         measure();
         var nav = bar();

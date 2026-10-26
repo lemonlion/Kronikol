@@ -7,10 +7,10 @@ function reset_filters() {
     if (sb) { sb.value = ''; sb.classList.remove('kron-q-bad'); sb.removeAttribute('data-q-bad'); }
     for (var i = 0; i < c.items.length; i++) { c.items[i].sr = false; c.items[i].q = false; }
     // Clear status
-    document.querySelectorAll('.status-toggle.status-active').forEach(function(b) { b.classList.remove('status-active'); });
+    document.querySelectorAll('.status-toggle.status-active').forEach(function(b) { set_status_button(b, false); });
     for (var i = 0; i < c.items.length; i++) c.items[i].st = false;
     // Clear duration
-    document.querySelectorAll('.percentile-btn.percentile-active').forEach(function(b) { b.classList.remove('percentile-active'); });
+    document.querySelectorAll('.percentile-btn.percentile-active').forEach(function(b) { set_percentile_button(b, false); });
     var dur = document.getElementById('duration-threshold');
     if (dur) dur.value = '';
     var cw = document.getElementById('custom-duration-wrap');

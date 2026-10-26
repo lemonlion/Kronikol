@@ -1923,13 +1923,13 @@ public static class ReportGenerator
         body.Append($"""
                  <div class="filtering-box rows-folded" id="filtering-box">
                     <div class="filtering-box-header"><h2>Filtering</h2><div class="filtering-box-export"><span class="filter-readout" role="status" title="{FiltersLeaveShowing}">{readoutText}</span><button class="export-btn" onclick="clear_all_filters()" title="{clearTitle}">Clear All</button><button class="export-btn" onclick="export_html()" title="Download a copy of this report holding only the features the filters show">Export <span class="wide-only">Filtered </span>HTML</button><button class="export-btn" onclick="export_csv()" title="Download the scenarios the filters show as a CSV file: feature, scenario, status and duration in milliseconds">Export <span class="wide-only">Filtered </span>CSV</button>{FiltersClose}</div></div>
-                    <div class="filter-search"><span class="search-field"><input id="searchbar" autocomplete="off" placeholder="Search... (@tag, $status, dep:, duration:, &&, ||, !!)" onkeyup="search_scenarios()" title="{SearchTitle}" /></span><button type="button" class="search-help-toggle" onclick="toggle_search_help()" title="{SearchHelpTitle}">?</button>{MoreFilters(rowsTitle)}</div>
+                    <div class="filter-search"><span class="search-field"><input id="searchbar" autocomplete="off" placeholder="Filter... (@tag, $status, dep:, duration:, &&, ||, !!)" onkeyup="search_scenarios()" title="{SearchTitle}" /></span><button type="button" class="search-help-toggle" onclick="toggle_search_help()" title="{SearchHelpTitle}">?</button>{MoreFilters(rowsTitle)}</div>
                     <div class="mobile-filter-line"><button type="button" class="mobile-filter-toggle" aria-expanded="false" aria-controls="filter-rows" title="Show or hide the filters">Filters</button></div>
                     <div class="filters" id="filter-rows">
                     <div class="search-help-panel" style="display:none">
                     <table class="search-help-table">
                     <tr><th>Syntax</th><th>Meaning</th><th>Example</th></tr>
-                    <tr><td><code>word</code></td><td>Text search (feature name, scenario name, step text, tags, diagram source)</td><td><code>order</code></td></tr>
+                    <tr><td><code>word</code></td><td>Text to match (feature name, scenario name, step text, tags, diagram source)</td><td><code>order</code></td></tr>
                     <tr><td><code>"phrase"</code></td><td>Exact phrase match</td><td><code>"create order"</code></td></tr>
                     <tr><td><code>&&</code></td><td>AND — both sides must match</td><td><code>order && create</code></td></tr>
                     <tr><td><code>||</code></td><td>OR — either side must match</td><td><code>payment || order</code></td></tr>
@@ -1941,7 +1941,7 @@ public static class ReportGenerator
                     <tr><td><code>duration:&gt;2s</code></td><td>Scenarios by their own time: &gt;, &gt;=, &lt;, &lt;= or a range; ms, s or m; p50, p90, p95, p99 are this report's percentiles</td><td><code>duration:&gt;2s</code>, <code>duration:&lt;500ms</code>, <code>duration:&gt;p90</code>, <code>duration:1s..5s</code></td></tr>
                     <tr><td><code>is:happy</code></td><td>Happy paths</td><td><code>is:happy</code>, <code>!!is:happy</code></td></tr>
                     </table>
-                    <p class="search-help-note">Space-separated words use implicit AND. Press <kbd>/</kbd> to focus the search bar. Operators <code>&&</code> <code>||</code> <code>!!</code> activate advanced mode; without them, legacy tag expressions (<code>@a and @b or not @c</code>) are also supported. <code>dep:</code>, <code>duration:</code> and <code>is:</code> always narrow the search: they combine with the rest of it by AND, and can be negated with <code>!!</code> or <code>not</code>. Inside a group that <code>!!</code> or <code>not</code> negates, one is read as text, and the search bar is marked.</p>
+                    <p class="search-help-note">Space-separated words use implicit AND. Press <kbd>/</kbd> to focus the filter field. Operators <code>&&</code> <code>||</code> <code>!!</code> activate advanced mode; without them, legacy tag expressions (<code>@a and @b or not @c</code>) are also supported. <code>dep:</code>, <code>duration:</code> and <code>is:</code> always narrow the filter: they combine with the rest of it by AND, and can be negated with <code>!!</code> or <code>not</code>. Inside a group that <code>!!</code> or <code>not</code> negates, one is read as text, and the field is marked.</p>
                     </div>
                     <div class="filter-row">
                  """);
@@ -1960,7 +1960,7 @@ public static class ReportGenerator
             {
                 if (status == ExecutionResult.SkippedAfterFailure) continue;
                 var statusName = status.ToString();
-                body.Append($"""<button class="status-toggle" data-status="{statusName}" onclick="toggle_status(this)" title="{StatusToggleTitle(status)}">{statusName}</button>""");
+                body.Append($"""<button class="status-toggle" data-status="{statusName}" aria-pressed="false" onclick="toggle_status(this)" title="{StatusToggleTitle(status)}">{statusName}</button>""");
             }
             body.Append("</span></div>");
         }
@@ -1987,7 +1987,7 @@ public static class ReportGenerator
             var warm = warmUp.ScenarioMs.Count > 0;
             var notWarm = warm ? ", not counting first-call warm-up" : "";
             string Threshold(double ms, string share) => $"Scenarios taking {FormatDurationBadge(TimeSpan.FromMilliseconds(ms))} or more{notWarm} ({share})";
-            body.Append(CultureInfo.InvariantCulture, $"""<div class="duration-filters" data-p50="{p50Ms:F0}" data-p90="{p90Ms:F0}" data-p95="{p95Ms:F0}" data-p99="{p99Ms:F0}"><span class="duration-filters-label"{(warm ? " title=\"Each scenario's own time, without the first-call warm-up it paid\"" : "")}>Duration ≥</span><span class="fltr-controls"><button class="percentile-btn" data-threshold-ms="{p50Ms:F0}" onclick="set_percentile(this)" title="{Threshold(p50Ms, "the slowest half")}">P50 ({FormatDurationBadge(TimeSpan.FromMilliseconds(p50Ms))})</button><button class="percentile-btn" data-threshold-ms="{p90Ms:F0}" onclick="set_percentile(this)" title="{Threshold(p90Ms, "the slowest 10%")}">P90 ({FormatDurationBadge(TimeSpan.FromMilliseconds(p90Ms))})</button><button class="percentile-btn" data-threshold-ms="{p95Ms:F0}" onclick="set_percentile(this)" title="{Threshold(p95Ms, "the slowest 5%")}">P95 ({FormatDurationBadge(TimeSpan.FromMilliseconds(p95Ms))})</button><button class="percentile-btn" data-threshold-ms="{p99Ms:F0}" onclick="set_percentile(this)" title="{Threshold(p99Ms, "the slowest 1%")}">P99 ({FormatDurationBadge(TimeSpan.FromMilliseconds(p99Ms))})</button><button class="percentile-btn" data-custom="1" onclick="set_percentile(this)" title="Scenarios taking at least the seconds you enter{notWarm}">Custom</button><span id="custom-duration-wrap" style="display:none;align-items:center;gap:0.3em"><input id="duration-threshold" autocomplete="off" type="number" step="0.1" min="0" placeholder="seconds" onchange="filter_duration()" title="Seconds: scenarios taking at least this long{notWarm}" /><span class="duration-filters-unit">seconds</span></span></span></div>""");
+            body.Append(CultureInfo.InvariantCulture, $"""<div class="duration-filters" data-p50="{p50Ms:F0}" data-p90="{p90Ms:F0}" data-p95="{p95Ms:F0}" data-p99="{p99Ms:F0}"><span class="duration-filters-label"{(warm ? " title=\"Each scenario's own time, without the first-call warm-up it paid\"" : "")}>Duration ≥</span><span class="fltr-controls"><button class="percentile-btn" aria-pressed="false" data-threshold-ms="{p50Ms:F0}" onclick="set_percentile(this)" title="{Threshold(p50Ms, "the slowest half")}">P50 ({FormatDurationBadge(TimeSpan.FromMilliseconds(p50Ms))})</button><button class="percentile-btn" aria-pressed="false" data-threshold-ms="{p90Ms:F0}" onclick="set_percentile(this)" title="{Threshold(p90Ms, "the slowest 10%")}">P90 ({FormatDurationBadge(TimeSpan.FromMilliseconds(p90Ms))})</button><button class="percentile-btn" aria-pressed="false" data-threshold-ms="{p95Ms:F0}" onclick="set_percentile(this)" title="{Threshold(p95Ms, "the slowest 5%")}">P95 ({FormatDurationBadge(TimeSpan.FromMilliseconds(p95Ms))})</button><button class="percentile-btn" aria-pressed="false" data-threshold-ms="{p99Ms:F0}" onclick="set_percentile(this)" title="{Threshold(p99Ms, "the slowest 1%")}">P99 ({FormatDurationBadge(TimeSpan.FromMilliseconds(p99Ms))})</button><button class="percentile-btn" aria-pressed="false" data-custom="1" onclick="set_percentile(this)" title="Scenarios taking at least the seconds you enter{notWarm}">Custom</button><span id="custom-duration-wrap" style="display:none;align-items:center;gap:0.3em"><input id="duration-threshold" autocomplete="off" type="number" step="0.1" min="0" placeholder="seconds" onchange="filter_duration()" title="Seconds: scenarios taking at least this long{notWarm}" /><span class="duration-filters-unit">seconds</span></span></span></div>""");
         }
 
         // Happy paths: Show, Only or Hide, a face of the Tags row's Happy Path chip, so one filter underneath (D8)
@@ -2222,7 +2222,7 @@ public static class ReportGenerator
         {
             // the tests' times: a scenario that is not a test spans no test's time (plans/RUN_WINDOW_PLAN.md R1)
             var timelineScenarios = features
-                .SelectMany(f => f.Scenarios.Select(s => (Feature: f.DisplayName, Scenario: s)))
+                .SelectMany(f => f.Scenarios.Select(s => (Feature: f.DisplayName, Scenario: s, Key: ScenarioStableId.FeatureKey(f))))
                 .Where(x => x.Scenario.Duration.HasValue && !x.Scenario.NotATest)
                 .OrderByDescending(x => x.Scenario.Duration!.Value)
                 .ToArray();
@@ -2240,7 +2240,7 @@ public static class ReportGenerator
                     + (warmUp.ScenarioMs.Count > 0 ? " A striped start is the first-call warm-up the scenario paid; hover over the bar for its calls." : "")
                     + "\">&#x1F6C8;</span>" + TimelineControls(timelineWarmUp) + "</div>");
                 timelineHtml.Append(FilteredNote);
-                foreach (var (featureName, scenario) in timelineScenarios)
+                foreach (var (featureName, scenario, featureKey) in timelineScenarios)
                 {
                     var durationMs = scenario.Duration!.Value.TotalMilliseconds;
                     var widthPercent = maxDuration > 0 ? (durationMs / maxDuration * 100) : 0;
@@ -2256,7 +2256,7 @@ public static class ReportGenerator
                     // milliseconds as that element writes them (D27), so the page reads nothing back from a title or a
                     // name. Under data-sid: data-stable-id is the scenario element's own address, which a #sid- link
                     // resolves through. A failed scenario's row is marked, and the stylesheet opens its name with a cross.
-                    var timelineStableId = ScenarioStableId.For(suite, featureName, scenario);
+                    var timelineStableId = ScenarioStableId.For(suite, featureKey, scenario);
                     var timelineWarmUpAttr = timelineWarmUpMs > 0 ? string.Create(CultureInfo.InvariantCulture, $" data-warmup-ms=\"{timelineWarmUpMs:F0}\"") : "";
                     timelineHtml.Append(CultureInfo.InvariantCulture, $"<div class=\"timeline-row{(scenario.Result == ExecutionResult.Failed ? " timeline-row-failed" : "")}\" data-sid=\"{timelineStableId}\" data-duration-ms=\"{durationMs:F0}\"{timelineWarmUpAttr}>");
                     // The name links to the scenario by the same stable id (5.5.0, plans/BACK_BUTTON_NAVIGATION_PLAN.md Q7): the
@@ -2402,6 +2402,7 @@ public static class ReportGenerator
                         scenarioAnchorIds: scenarioAnchorIds,
                         takenAnchorIds: takenAnchorIds,
                         featureDisplayName: feature.DisplayName,
+                        featureKey: ScenarioStableId.FeatureKey(feature),
                         featureDescription: feature.Description,
                         featureEndpoint: feature.Endpoint,
                         featureTags: feature.Tags,
@@ -2496,7 +2497,7 @@ public static class ReportGenerator
                 // file, `kronikol query` and Failures.md all speak, and `#sid-<id>` resolves here.
                 // It goes BEFORE ` id=`: the cluster-link pins match `[^>]*id="([^"]+)"` greedily,
                 // and `data-stable-id="` ends in a word-boundary `id="` that would win that race.
-                var scenarioStableId = ScenarioStableId.For(suite, feature.DisplayName, scenario);
+                var scenarioStableId = ScenarioStableId.For(suite, feature, scenario);
                 var historyEntry = scenarioHistory is null ? null : HistoryHtml.Entry(scenarioHistory, historySlots!, scenarioStableId);
                 var historyAttr = historyEntry is null ? "" : HistoryHtml.VerdictAttribute(historyEntry);
                 var historyBadges = historyEntry is null ? "" : HistoryHtml.Sparkline(historyEntry) + HistoryHtml.Pill(historyEntry);
@@ -2985,7 +2986,7 @@ public static class ReportGenerator
         foreach (var feature in features)
             foreach (var scenario in feature.Scenarios)
                 if (used.Contains(scenario.Id) && placeOf.TryAdd(scenario.Id, stableIds.Count))
-                    stableIds.Add(ScenarioStableId.For(suite, feature.DisplayName, scenario));
+                    stableIds.Add(ScenarioStableId.For(suite, feature, scenario));
         var byConnection = diagram.Connections
             .Select(c => c.TestIds!.Where(placeOf.ContainsKey).Select(t => placeOf[t]).Distinct().OrderBy(i => i).ToArray())
             .ToArray();
@@ -3067,11 +3068,11 @@ public static class ReportGenerator
         Listed(FilterRows(features, hasDurations, hasDependencies, "Status"));
 
     /// <summary>
-    /// What Clear All clears (5.0.0, plans/OPTION_C_PLAN.md D49): the search, with the dep:, duration: and is: terms in it,
+    /// What Clear All clears (5.0.0, plans/OPTION_C_PLAN.md D49): the filter text, with the dep:, duration: and is: terms in it,
     /// and every row the box has, named as More filters names them.
     /// </summary>
     private static string ClearAllTitle(Feature[] features, bool hasDurations, bool hasDependencies) =>
-        "Clear every filter: the search with its dep:, duration: and is: terms, and the "
+        "Clear every filter: the filter text with its dep:, duration: and is: terms, and the "
         + Listed(FilterRows(features, hasDurations, hasDependencies, "statuses"));
 
     /// <summary>The rows the filter box has, in their order, the first named <paramref name="status"/>.</summary>
@@ -3106,14 +3107,17 @@ public static class ReportGenerator
     /// <summary>The title of both readouts, the box's and the bar's (D49).</summary>
     private const string FiltersLeaveShowing = "The scenarios and features the filters leave showing";
 
-    /// <summary>The search field's title (D49), written HTML-encoded as the attribute holds it.</summary>
-    private const string SearchTitle = "Search names, steps, tags and diagram text. Combine words with &amp;&amp; (and), || (or) and !! (not); @tag and $status pick by tag or status, dep:, duration: and is:happy by dependency, time and happy path; ? shows the syntax";
+    /// <summary>
+    /// The filter field's title (D49), written HTML-encoded as the attribute holds it. The field filters, as the rows do, so
+    /// from 5.9.1 its words say filter, never search (plans/REPORT_UI_FIXES_PLAN.md I9); its ids keep their names.
+    /// </summary>
+    private const string SearchTitle = "Filter by names, steps, tags and diagram text. Combine words with &amp;&amp; (and), || (or) and !! (not); @tag and $status pick by tag or status, dep:, duration: and is:happy by dependency, time and happy path; ? shows the syntax";
 
-    /// <summary>The search help button's title (D49), written HTML-encoded as the attribute holds it.</summary>
-    private const string SearchHelpTitle = "How to write a search: words, &quot;phrases&quot;, @tags, $statuses, dep:, duration:, is:happy, &amp;&amp;, ||, !! and parentheses";
+    /// <summary>The filter help button's title (D49), written HTML-encoded as the attribute holds it.</summary>
+    private const string SearchHelpTitle = "How to write a filter: words, &quot;phrases&quot;, @tags, $statuses, dep:, duration:, is:happy, &amp;&amp;, ||, !! and parentheses";
 
     /// <summary>
-    /// More filters, at the end of the search line (S7, D15): it opens the rows, and counts the filters on in them while
+    /// More filters, at the end of the filter field's line (S7, D15): it opens the rows, and counts the filters on in them while
     /// they are folded (report-filter-bar-script.js).
     /// </summary>
     private static string MoreFilters(string title) =>
@@ -3475,6 +3479,7 @@ public static class ReportGenerator
         Dictionary<string, string>? scenarioAnchorIds = null,
         HashSet<string>? takenAnchorIds = null,
         string? featureDisplayName = null,
+        string? featureKey = null,
         string? featureDescription = null,
         string? featureEndpoint = null,
         string[]? featureTags = null,
@@ -3505,7 +3510,7 @@ public static class ReportGenerator
             rowHistory = new Dictionary<string, ScenarioHistory>(StringComparer.Ordinal);
             foreach (var row in scenarios)
             {
-                var rowId = ScenarioStableId.For(suite, featureDisplayName ?? "", row);
+                var rowId = ScenarioStableId.For(suite, featureKey ?? featureDisplayName ?? "", row);
                 if (HistoryHtml.Entry(history, historySlots, rowId) is { } rowEntry)
                     rowHistory[row.Id] = rowEntry;
             }
@@ -3681,7 +3686,7 @@ public static class ReportGenerator
                 // too — deliberately without an `id`, which the grouped copy of the same row owns
                 // (Flat_table_rows_have_no_id_attribute). Duplicate data attributes are legal; the
                 // hash script picks whichever copy is displayed.
-                var flatRowStableId = ScenarioStableId.For(suite, featureDisplayName ?? "", s);
+                var flatRowStableId = ScenarioStableId.For(suite, featureKey ?? featureDisplayName ?? "", s);
                 body.Append($"<tr class=\"{rowStatusClass}{activeClass}\" data-row-idx=\"{ri}\"{RowHistoryAttr(s)} data-stable-id=\"{flatRowStableId}\"{rowSearchAttr} onclick=\"selectRow(this,'{prefix}')\">");
                 body.Append($"<td>{ri + 1}</td>");
 
@@ -3789,7 +3794,7 @@ public static class ReportGenerator
             // A row's slug is not its own: many outlines' rows share one display name, and a Reqnroll row whose name
             // was filled keys its slug on the outline's title as before (#101), so the stable id, which hashes the
             // example values, is the only handle `#sid-` can use.
-            var rowStableId = ScenarioStableId.For(suite, featureDisplayName ?? "", s);
+            var rowStableId = ScenarioStableId.For(suite, featureKey ?? featureDisplayName ?? "", s);
             body.Append($"<tr class=\"{rowStatusClass}{activeClass}\" data-row-idx=\"{ri}\"{RowHistoryAttr(s)} data-stable-id=\"{rowStableId}\" id=\"{rowAnchorId}\" data-scenario-id=\"{rowAnchorId}\"{rowSearchAttr} onclick=\"selectRow(this,'{prefix}')\">");
             body.Append($"<td>{ri + 1}</td>");
 
@@ -5354,7 +5359,7 @@ public static class ReportGenerator
     private static object[] BuildFeaturesJsonModel(Feature[] features, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, bool fullStepDetail = false, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, IReadOnlyDictionary<string, List<ScenarioAnnotation>>? annotations = null, string? suite = null, ReportPayloads? payloads = null, WarmUpResult? warmUp = null)
     {
         Func<ScenarioStep, object> stepMapper = fullStepDetail ? MapStepJsonFull : MapStepJson;
-        return features.OrderBy(f => f.DisplayName).Select(f => (object)new Dictionary<string, object?>
+        return features.OrderBy(f => f.DisplayName).Select(f => (object)WithStableIdName(f, new Dictionary<string, object?>
         {
             ["name"] = f.DisplayName,
             ["endpoint"] = f.Endpoint,
@@ -5366,7 +5371,7 @@ public static class ReportGenerator
                 var scenario = new Dictionary<string, object?>
                 {
                     ["id"] = s.Id,
-                    ["stableId"] = ScenarioStableId.For(suite, f.DisplayName, s),
+                    ["stableId"] = ScenarioStableId.For(suite, f, s),
                     ["name"] = s.DisplayName,
                     ["description"] = s.Description,
                     ["result"] = s.Result.ToString(),
@@ -5405,6 +5410,11 @@ public static class ReportGenerator
                 if (s.NotATest)
                     scenario = InsertAfter(scenario, "isHappyPath", "notATest", true);
 
+                // Beside name, and only on a scenario whose name is shown as written (5.9.1, plans/REPORT_UI_FIXES_PLAN.md N4,
+                // N5), so every other scenario's bytes stay as they were; a merge reads it back and groups as this run did.
+                if (s.NameAsWritten)
+                    scenario = InsertAfter(scenario, "name", "nameAsWritten", true);
+
                 // Beside outlineId, and only on an outline row whose name Kronikol filled (#101), so every other scenario's
                 // bytes stay as they were; a merge reads it back and keys the row's id on its outline's title, as this run did.
                 if (s.KeyedByOutline)
@@ -5426,8 +5436,13 @@ public static class ReportGenerator
 
                 return scenario;
             }).ToArray()
-        }).ToArray();
+        })).ToArray();
     }
+
+    // Beside name, and only on a feature whose ids key on another name (plans/REPORT_UI_FIXES_PLAN.md N3: the name 5.9.0
+    // showed and hashed), so every other feature's bytes stay as they were; a merge reads it back and computes the same ids.
+    private static Dictionary<string, object?> WithStableIdName(Feature f, Dictionary<string, object?> feature) =>
+        f.StableIdName is { } key && key != f.DisplayName ? InsertAfter(feature, "name", "stableIdName", key) : feature;
 
     /// <summary>
     /// Assembles the enriched "mergeable" report from in-process state captured during a test run:
@@ -5959,7 +5974,7 @@ public static class ReportGenerator
                                     var scenarioElements = new List<object?>
                                     {
                                         new XElement("Id", s.Id),
-                                        new XElement("StableId", ScenarioStableId.For(resolvedSuite, f.DisplayName, s)),
+                                        new XElement("StableId", ScenarioStableId.For(resolvedSuite, f, s)),
                                         new XElement("Name", s.DisplayName),
                                         s.Description != null ? new XElement("Description", s.Description) : null,
                                         new XElement("Result", s.Result.ToString()),
@@ -6251,7 +6266,7 @@ public static class ReportGenerator
             {
                 AppendYaml(yml, "      - Id: ", scenario.Id);
                 AppendYaml(yml, "        Name: ", scenario.DisplayName);
-                AppendYaml(yml, "        StableId: ", ScenarioStableId.For(resolvedSuite, feature.DisplayName, scenario));
+                AppendYaml(yml, "        StableId: ", ScenarioStableId.For(resolvedSuite, feature, scenario));
                 if (scenario.Description is not null)
                     AppendYaml(yml, "        Description: ", scenario.Description);
                 if (scenario.Attempt is not null)
@@ -7372,6 +7387,7 @@ public static class ReportGenerator
                         ["properties"] = new Dictionary<string, object?>
                         {
                             ["name"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "Feature display name: the test class, or the title after Feature: in Gherkin" },
+                            ["stableIdName"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "Present only where the feature's scenarios' stableIds are computed from another name than name: the name 5.9.0 showed and hashed, for a feature 5.9.1 shows as written or with its apostrophe kept, so its scenarios keep their ids. A merge computes ids from it" },
                             ["endpoint"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The endpoint or component the feature covers, when declared (an @endpoint: tag, or the adapter's attribute)" },
                             ["description"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Free text under the Feature: line, dedented" },
                             ["sourceFile"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Where the feature is written: a project-relative path with forward slashes, from the Gherkin document, or from the first sourceFile a tests NDJSON start record gives one of its scenarios. Null on the lanes that cannot supply one (unit-test adapters, a tests NDJSON without sourceFile). Features are grouped by display name, so two files sharing a Feature: title collapse into one entry and the first path seen wins.", ["examples"] = new[] { "Features/Cake.feature" } },
@@ -7395,6 +7411,7 @@ public static class ReportGenerator
                                         ["warmUpSeconds"] = new Dictionary<string, object?> { ["type"] = "number", ["minimum"] = 0, ["description"] = "Seconds of durationSeconds that the run's first-call warm-up took: the time the scenario's calls marked warmUp cover, each instant counted once, never more than durationSeconds. durationSeconds less this is the scenario's own time. Present only on a scenario that carries such a call." },
                                         ["endedAt"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["format"] = "date-time", ["description"] = "When the scenario finished (UTC), as the framework recorded it; null when the adapter did not record one. A call that inherited this scenario's context after this moment is background (see httpInteractions[].attributionSource = Expired)" },
                                         ["isHappyPath"] = new Dictionary<string, object?> { ["type"] = "boolean", ["description"] = "Marked as the happy path (an @happy-path tag or the adapter's attribute); the report lists happy paths first" },
+                                        ["nameAsWritten"] = new Dictionary<string, object?> { ["type"] = "boolean", ["description"] = "Present, and true, only on a scenario whose name a person wrote and the report shows as written (a Gherkin scenario): its outline's heading is its title as written, and a name ending in brackets is not read as a parameterised test's" },
                                         ["notATest"] = new Dictionary<string, object?> { ["type"] = "boolean", ["description"] = "Present, and true, only on a scenario that is not a test, such as an ingest's \"Traffic outside any test\": it is drawn like any scenario, the run's counts and times, the timeline, the CI summary, Failures.md, the CTRF report and the specifications leave it out, and the history records it as N. Its result says only that it was drawn" },
                                         ["errorMessage"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The failure message the framework reported, when the scenario failed" },
                                         ["errorStackTrace"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The stack trace the framework reported, when the scenario failed" },

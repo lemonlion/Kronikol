@@ -281,12 +281,13 @@ function advancedSearchEvaluate(ast, searchText, tags, status, verdicts) {
             // history verdicts, carried as their own set because a scenario is routinely both (a
             // flaky scenario's status is Passed). An execution-result name is always the status and
             // is never looked up as a verdict, so nothing existing can be shadowed.
-            if (status.toLowerCase() === ast.value) return true;
+            // a scenario skipped after a failure is skipped, as the summary counts it (E3, 5.9.1)
+            if (status.toLowerCase() === ast.value || (ast.value === 'skipped' && status === 'SkippedAfterFailure')) return true;
             if (ast.value === 'passed' || ast.value === 'failed' || ast.value === 'skipped' ||
                 ast.value === 'bypassed' || ast.value === 'skippedafterfailure') return false;
             return !!(verdicts && verdicts.has(ast.value));
 // kron:else
-//|            return status.toLowerCase() === ast.value;
+//|            return status.toLowerCase() === ast.value || (ast.value === 'skipped' && status === 'SkippedAfterFailure');
 // kron:/verdicts
         case 'and':
 // kron:verdicts

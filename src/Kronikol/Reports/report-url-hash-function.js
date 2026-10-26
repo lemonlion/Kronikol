@@ -208,7 +208,7 @@ function apply_url_hash(hash) {
             if (params.status) {
                 params.status.split(',').forEach(function(s) {
                     document.querySelectorAll('.status-toggle').forEach(function(btn) {
-                        if (btn.getAttribute('data-status') === s) btn.classList.add('status-active');
+                        if (btn.getAttribute('data-status') === s) set_status_button(btn, true);
                     });
                 });
                 filter_statuses();
@@ -251,7 +251,7 @@ function apply_url_hash(hash) {
         if (params.pctl) {
             document.querySelectorAll('.percentile-btn').forEach(function(b) {
                 if (b.textContent === params.pctl) {
-                    b.classList.add('percentile-active');
+                    set_percentile_button(b, true);
                     if (b.getAttribute('data-custom') === '1') {
                         var cw = document.getElementById('custom-duration-wrap');
                         if (cw) cw.style.display = 'inline-flex';

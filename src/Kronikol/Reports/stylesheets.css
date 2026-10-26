@@ -2085,8 +2085,13 @@
                 min-width: 100px;
                 max-width: 100px;
             }
-            /* where the Timeline's control groups wrap, their buttons start in one column (5.0.0, D27) */
-            .timeline-controls .tl-seg-label { min-width: 9.5em; }
+            /* the Timeline's control groups, and the Components tab's, each take the line, the label on a line of its own
+               above the buttons, which share the line equally (5.9.1, plans/REPORT_UI_FIXES_PLAN.md P2; from 5.0.0, D27, the
+               groups kept their content's width and their buttons started in one column) */
+            .timeline-controls { flex: 1 1 100%; flex-direction: column; flex-wrap: nowrap; gap: 10px; margin-left: 0; }
+            .timeline-controls .tl-seg { display: flex; flex-wrap: wrap; align-items: stretch; }
+            .timeline-controls .tl-seg-label { flex-basis: 100%; margin: 0 0 4px; }
+            .timeline-controls .tl-seg-btn { flex: 1 1 0; min-width: 0; text-align: center; }
 
             .param-test-table {
                 display: block;
@@ -2163,6 +2168,14 @@
             .features-tools .toolbar-right { padding: 0 14px 10px; }
 
             #searchbar { font-size: 16px; }
+
+            /* every filter control at the touch height, ANY / ALL and a row's Clear among them (5.0.0's #6; from 5.9.1 at
+               768 px and below, as the wiki says, where it stood in the 480 px block and left those three out:
+               plans/REPORT_UI_FIXES_PLAN.md E1, E19) */
+            .status-toggle, .percentile-btn, .happy-seg, .tag-toggle, .dependency-toggle, .tag-more,
+            .tag-mode-toggle, .dep-mode-toggle, .group-clear { min-height: 36px; }
+            /* an export button keeps the card's type and padding (5.0.0) and only grows to the touch height */
+            .export-btn { min-height: 36px; }
 }
 
         @media (max-width: 480px) {
@@ -2178,9 +2191,6 @@
                 flex-wrap: wrap;
                 gap: 0.3em;
             }
-
-            /* an export button keeps the card's type and padding (5.0.0) and only grows to the touch height */
-            .export-btn { min-height: 36px; }
 
             /* the Features tools in two rows: the views and the sort, then the fold groups and the gear; the spacer is
                the line break, its margin taking back the row gap it would add (5.0.0) */
@@ -2198,9 +2208,6 @@
 
             .diagram-toggle-btn { min-height: 34px; }
         
-            /* #6 Touch target size bump: every filter control */
-            .status-toggle, .percentile-btn, .happy-seg, .tag-toggle, .dependency-toggle, .tag-more { min-height: 36px; }
-
             /* #5 Long chip names are cut with an ellipsis inside the box */
             .tag-toggle, .dependency-toggle {
                 max-width: 100%;

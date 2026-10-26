@@ -474,9 +474,12 @@ public class FullPipelineParameterizedE2ETests : PlaywrightTestBase
         """);
 
         Assert.Contains("<<stepDelimiter>><<stepBody>>: Given a muffin recipe", all);
-        Assert.Contains("|= Flour |= Apples |= Cinnamon |", all);
-        Assert.Contains("| Plain Flour | Granny Smith | Ceylon |", all);
-        Assert.Contains("| Streusel | Light |", all);
+        // each cell padded as the emitter pads it (5.9.1, plans/REPORT_UI_FIXES_PLAN.md B3)
+        static string Row(string open, params string[] cells) =>
+            string.Concat(cells.Select(c => open + Kronikol.PlantUml.StepBarPlantUml.CellOpen + c + Kronikol.PlantUml.StepBarPlantUml.CellClose)) + "|";
+        Assert.Contains(Row("|=", "Flour", "Apples", "Cinnamon"), all);
+        Assert.Contains(Row("|", "Plain Flour", "Granny Smith", "Ceylon"), all);
+        Assert.Contains(Row("|", "Streusel", "Light"), all);
         Assert.DoesNotContain("<Flour>", all);
         Assert.Contains(".stepBody {", all);
         Assert.Contains("FontColor white", all);
@@ -521,6 +524,18 @@ public class FullPipelineParameterizedE2ETests : PlaywrightTestBase
         Assert.Contains("A batch of apple cinnamon muffins is baked for breakfast", labels);
         Assert.Contains("A batch of apple cinnamon muffins is baked for a picnic", labels);
         Assert.DoesNotContain(labels, l => l.Contains("<occasion>", StringComparison.Ordinal));
+    }
+
+    // 5.9.1 (plans/REPORT_UI_FIXES_PLAN.md N1): Features/MonthsSpecials.feature's title is the feature's heading as written,
+    // where the lane ran it through a class-name humaniser ("Month S Specials Via G RPC")
+    [Fact]
+    public async Task ReqNRoll_pipeline_shows_a_feature_title_as_written()
+    {
+        await NavigateToReport(Path.Combine(Path.GetDirectoryName(_pipeline.ReqNRollReportPath)!, "TestRunReport.html"));
+        var headings = await Page.EvaluateAsync<string[]>(
+            "() => Array.from(document.querySelectorAll('details.feature > summary')).map(s => s.textContent)");
+        Assert.Contains(headings, h => h.Contains("Month's specials via gRPC", StringComparison.Ordinal));
+        Assert.DoesNotContain(headings, h => h.Contains("Month S", StringComparison.Ordinal));
     }
 
     [Fact]

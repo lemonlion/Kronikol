@@ -4094,4 +4094,56 @@ public class PlantUmlCreatorTests
         Assert.Contains("<i>[binary content]</i>", plantUml);
         Assert.DoesNotContain("~<i>", plantUml);
     }
+
+    // ── 5.9.1 (plans/REPORT_UI_FIXES_PLAN.md E6, E7): what a split starts the next diagram with ──
+
+    // a call and its answer, paired as the trackers pair them
+    private static IEnumerable<RequestResponseLog> Pair(string caller, string service, string path, string? responseContent = null)
+    {
+        var trace = Guid.NewGuid();
+        var id = Guid.NewGuid();
+        yield return new RequestResponseLog("My Test", "test-1", HttpMethod.Get, null, new Uri("http://example.com" + path), [],
+            service, caller, RequestResponseType.Request, trace, id, false);
+        yield return new RequestResponseLog("My Test", "test-1", HttpMethod.Get, responseContent, new Uri("http://example.com" + path), [],
+            service, caller, RequestResponseType.Response, trace, id, false, HttpStatusCode.OK);
+    }
+
+    // E6: a diagram split after the setup's last call starts the next with the action, not with an empty Setup box: the
+    // split re-opened the box at once, and the action's start closed it on nothing
+    [Fact]
+    public void A_split_never_writes_an_empty_Setup_box()
+    {
+        var body = string.Join("\n", Enumerable.Range(0, 300).Select(i => $"{i}: {Guid.NewGuid()}"));
+        var logs = Pair("WebApp", "OrderService", "/api/setup", body)
+            .Append(MakeActionStart())
+            .Concat(Pair("WebApp", "OrderService", "/api/act"))
+            .ToList();
+
+        var diagrams = PlantUmlCreator.GetPlantUmlImageTagsPerTestId(logs, separateSetup: true)
+            .Single().PlantUmls.Select(p => p.PlainText).ToArray();
+
+        Assert.True(diagrams.Length >= 2, $"{diagrams.Length} diagram(s)");
+        foreach (var diagram in diagrams)
+        {
+            var lines = diagram.Split('\n').Select(l => l.Trim()).Where(l => l.Length > 0).ToArray();
+            for (var i = 0; i + 1 < lines.Length; i++)
+                Assert.False(lines[i].StartsWith("partition", StringComparison.Ordinal) && lines[i + 1] == "end",
+                    "a Setup box with nothing in it:\n" + diagram);
+        }
+        Assert.Single(diagrams, d => System.Text.RegularExpressions.Regex.IsMatch(d, SetupPartitionLine));
+    }
+
+    // E7: a test touching 120 services splits by width into as few diagrams as the width needs: the width estimate was
+    // never reset at a split, so after the first every call started a diagram of its own, a call's request and its
+    // answer drawn apart (about 160 diagrams)
+    [Fact]
+    public void A_wide_test_splits_into_as_few_diagrams_as_its_width_needs()
+    {
+        var logs = Enumerable.Range(1, 120).SelectMany(i => Pair("Test", $"Service{i:D3}", $"/api/{i}")).ToList();
+
+        var diagrams = PlantUmlCreator.GetPlantUmlImageTagsPerTestId(logs).Single().PlantUmls.ToArray();
+
+        // about forty services of 83 px each to a diagram of 3 400 px, the caller in every one: four diagrams (168 until 5.9.1)
+        Assert.InRange(diagrams.Length, 3, 4);
+    }
 }

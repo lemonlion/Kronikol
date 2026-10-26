@@ -148,7 +148,11 @@
     .gear-in-summary[aria-expanded="true"] { color: var(--kron-selected-ink); background: var(--kron-selected); border-color: var(--kron-selected-edge); }
 
     .diagram-options-bar { flex-direction: column; align-items: stretch; gap: 0; margin: 6px 0 12px; padding: 0 14px 12px; }
-    .toolbar-right { flex-direction: column; align-items: stretch; gap: 0; }
+    /* the report's sheet too: the desktop row's rule (stylesheets.css, .features-tools .toolbar-right) kept its zones at
+       their content's width and 6 px apart, and a page without tabs kept the sheet itself narrow (5.9.1,
+       plans/REPORT_UI_FIXES_PLAN.md P1) */
+    .toolbar-right, .features-tools .toolbar-right { flex-direction: column; align-items: stretch; gap: 0; }
+    .toolbar-row > .toolbar-right { align-self: stretch; }
     .details-radio, .diagram-flags {
         display: flex; flex-wrap: wrap; align-items: center; row-gap: 6px; margin: 0; padding: 10px 0;
         border-bottom: 1px solid var(--kron-divider-soft);

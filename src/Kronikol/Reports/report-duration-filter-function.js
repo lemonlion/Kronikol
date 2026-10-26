@@ -21,9 +21,14 @@ function filter_duration() {
     applyVisibility(c);
     update_url_hash();
 }
+// A Duration button chosen or not, in its class and in aria-pressed (E2, 5.9.1)
+function set_percentile_button(btn, on) {
+    btn.classList.toggle('percentile-active', on);
+    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+}
 function set_percentile(btn) {
     var wasActive = btn.classList.contains('percentile-active');
-    document.querySelectorAll('.percentile-btn').forEach(function(b) { b.classList.remove('percentile-active'); });
+    document.querySelectorAll('.percentile-btn').forEach(function(b) { set_percentile_button(b, false); });
     var input = document.getElementById('duration-threshold');
     var customWrap = document.getElementById('custom-duration-wrap');
     if (wasActive) {
@@ -33,12 +38,12 @@ function set_percentile(btn) {
     }
     var isCustom = btn.getAttribute('data-custom') === '1';
     if (isCustom) {
-        btn.classList.add('percentile-active');
+        set_percentile_button(btn, true);
         if (customWrap) customWrap.style.display = 'inline-flex';
         if (input) { input.focus(); if (input.value) filter_duration(); }
     } else {
         if (customWrap) customWrap.style.display = 'none';
-        btn.classList.add('percentile-active');
+        set_percentile_button(btn, true);
         var ms = parseFloat(btn.getAttribute('data-threshold-ms'));
         // The percentile itself, not rounded to a tenth of a second: a P50 of 30 ms read 0.0, which filters nothing, and a
         // P90 of 1,259 ms read 1.3, which hid the scenario it names.

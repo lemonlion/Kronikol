@@ -1,3 +1,4 @@
+using Kronikol.Reports;
 using Microsoft.Playwright;
 
 namespace Kronikol.Tests.EndToEnd;
@@ -617,4 +618,228 @@ public class MobileResponsiveTests : PlaywrightTestBase
 
     // ── The CI zone under the summary on a phone (5.0.0: the run band; the 4.x test's report had no CI, so it measured nothing) ──
     // covered by RunBandLayoutTests.On_a_narrow_page_the_ci_zone_moves_under_the_summary_and_back
+    // ── 5.9.1 (plans/REPORT_UI_FIXES_PLAN.md I7, E1, E19): the phone's sheets and controls use the width they are given ──
+
+    // each case sets its own viewport: the class opens at 375 by 812
+    private async Task OpenAtAsync(int width, string url)
+    {
+        await Page.SetViewportSizeAsync(width, 812);
+        await Page.GotoReportAsync(url);
+        await Page.Locator("details.feature").First.WaitForAsync();
+    }
+
+    // a box's own children (and the selects inside them) against the room the box gives them, as JSON: { inner, parts }
+    private const string AgainstTheirBox = """
+        (s, inside) => {
+            const cs = getComputedStyle(s);
+            const inner = s.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+            const parts = [...s.querySelectorAll(inside)].filter(e => e.getBoundingClientRect().width > 0)
+                .map(e => ({ name: (e.className || e.tagName).split(' ')[0], w: e.getBoundingClientRect().width,
+                    top: e.getBoundingClientRect().top, bottom: e.getBoundingClientRect().bottom }));
+            return JSON.stringify({ inner, parts });
+        }
+        """;
+
+    private sealed record Part(string Name, double W, double Top, double Bottom);
+    private sealed record Parts(double Inner, Part[] List);
+
+    private static async Task<Parts> MeasureAsync(ILocator box, string inside)
+    {
+        var json = await box.EvaluateAsync<string>(AgainstTheirBox, inside);
+        using var doc = System.Text.Json.JsonDocument.Parse(json);
+        var parts = doc.RootElement.GetProperty("parts").EnumerateArray()
+            .Select(p => new Part(p.GetProperty("name").GetString()!, p.GetProperty("w").GetDouble(), p.GetProperty("top").GetDouble(), p.GetProperty("bottom").GetDouble()))
+            .ToArray();
+        return new Parts(doc.RootElement.GetProperty("inner").GetDouble(), parts);
+    }
+
+    private static void AllAsWide(Parts measured, string what, int width)
+    {
+        Assert.NotEmpty(measured.List);
+        var narrow = measured.List.Where(p => Math.Abs(p.W - measured.Inner) > 1).Select(p => $"{p.Name} {p.W:F0}").ToArray();
+        Assert.True(narrow.Length == 0, $"{width} px: {what} gives {measured.Inner:F0} px, but " + string.Join(", ", narrow));
+    }
+
+    // E1, E19: every filter control at least 36 px tall at 768 px and below, as the wiki has said since 5.0.0; the rule
+    // stood in the 480 px block, and it left out ANY / ALL and a row's Clear
+    [Theory]
+    [InlineData(390)]
+    [InlineData(600)]
+    public async Task The_filter_controls_are_touch_sized_on_a_phone(int width)
+    {
+        await OpenAtAsync(width, GenerateReport($"MobileTouchSized{width}.html"));
+        await Page.Locator(".mobile-filter-toggle").ClickAsync();
+        await OpenFilterRowsAsync();
+        // a chip that is set shows its row's Clear
+        await Page.Locator(".filtering-box .tag-toggle").First.ClickAsync();
+        var heights = await Page.EvaluateAsync<string[]>("""
+            () => [...document.querySelectorAll('.filtering-box :is(.status-toggle, .percentile-btn, .happy-seg, .tag-toggle, .dependency-toggle, .tag-more, .tag-mode-toggle, .dep-mode-toggle, .group-clear)')]
+                .filter(b => b.getBoundingClientRect().height > 0)
+                .map(b => b.className.split(' ')[0] + ' ' + b.getBoundingClientRect().height.toFixed(1))
+            """);
+        Assert.Contains(heights, h => h.StartsWith("tag-mode-toggle ", StringComparison.Ordinal));
+        Assert.Contains(heights, h => h.StartsWith("group-clear ", StringComparison.Ordinal));
+        var low = heights.Where(h => double.Parse(h.Split(' ')[1], System.Globalization.CultureInfo.InvariantCulture) < 35.5).ToArray();
+        Assert.True(low.Length == 0, $"{width} px: under 36 px: " + string.Join(", ", low));
+    }
+
+    // P1: the report's display settings are a column of zones as wide as their sheet, its YAML and WRAP selects with them,
+    // as a scenario's settings are; a desktop rule kept them at their content's width (M-I7: 80 px in a 313 px sheet)
+    [Theory]
+    [InlineData(375)]
+    [InlineData(600)]
+    public async Task The_report_sheets_zones_and_selects_are_as_wide_as_the_sheet(int width)
+    {
+        await OpenAtAsync(width, GenerateReport($"MobileReportSheet{width}.html"));
+        await Page.Locator(".tools-gear").ClickAsync();
+        var sheet = Page.Locator(".features-tools .toolbar-right");
+        await Expect(sheet).ToBeVisibleAsync();
+        var measured = await MeasureAsync(sheet, ":scope > *, .note-format-select, .note-width-select");
+        Assert.Contains(measured.List, p => p.Name == "note-format-select");
+        AllAsWide(measured, "the report's sheet", width);
+    }
+
+    [Theory]
+    [InlineData(375)]
+    [InlineData(600)]
+    public async Task A_page_without_tabs_gives_its_settings_the_whole_line(int width)
+    {
+        await OpenAtAsync(width, Tabless($"MobileTablessSheet{width}.html"));
+        Assert.Equal(0, await Page.Locator(".report-tab").CountAsync());
+        var row = Page.Locator(".toolbar-row").First;
+        var line = await MeasureAsync(row, ":scope > .toolbar-right");
+        AllAsWide(line, "the toolbar row", width);
+        var measured = await MeasureAsync(Page.Locator("#display-settings"), ":scope > *, .note-format-select, .note-width-select");
+        Assert.Contains(measured.List, p => p.Name == "note-format-select");
+        AllAsWide(measured, "the page's settings", width);
+    }
+
+    // P1: the report's zones sit as close as a scenario's (the desktop row's 6 px row gap kept them apart)
+    [Fact]
+    public async Task The_report_sheet_spaces_its_zones_as_a_scenarios_sheet_does()
+    {
+        await OpenAtAsync(375, GenerateReport("MobileReportSheetGaps.html"));
+        await Page.Locator(".tools-gear").ClickAsync();
+        await Expect(Page.Locator(".features-tools .toolbar-right")).ToBeVisibleAsync();
+        await ExpandFirstScenarioWithDiagram();
+        var gear = Page.Locator(".gear-in-summary").First;
+        await gear.ClickAsync();
+        var report = await MeasureAsync(Page.Locator(".features-tools .toolbar-right"), ":scope > *");
+        var scenario = await MeasureAsync(Page.Locator(".scenario-settings.is-open .diagram-options-bar").First, ":scope > :is(.details-radio, .diagram-format, .diagram-flags)");
+        static double[] Gaps(Parts p) => p.List.Zip(p.List.Skip(1), (a, b) => Math.Round(b.Top - a.Bottom, 1)).ToArray();
+        Assert.True(report.List.Length >= 2 && scenario.List.Length >= 2, "two zones or more in each sheet");
+        Assert.Equal(Gaps(scenario).Distinct().Single(), Gaps(report).Distinct().Single(), 0.5);
+    }
+
+    // P2: on a phone the Timeline's control groups each take the line, the label above, the buttons sharing it equally
+    // (M-I7: groups at their content's width, Order's labels wrapping)
+    [Theory]
+    [InlineData(375)]
+    [InlineData(600)]
+    public async Task The_timelines_control_groups_span_the_line_and_share_it_between_their_buttons(int width)
+    {
+        await OpenAtAsync(width, GenerateReport($"MobileTimelineControls{width}.html"));
+        await Page.Locator("#tab-timeline").ClickAsync();
+        await SpanTheLineAsync(Page.Locator("#panel-timeline .timeline-controls"), width);
+    }
+
+    // P2 (Q10): the Components tab uses the Timeline's classes, so it takes the same look
+    [Theory]
+    [InlineData(375)]
+    [InlineData(600)]
+    public async Task The_components_controls_do_the_same(int width)
+    {
+        await OpenAtAsync(width, ComponentsReport($"MobileComponentControls{width}.html"));
+        await Page.Locator("#tab-components").ClickAsync();
+        await SpanTheLineAsync(Page.Locator("#component-diagram .timeline-controls"), width);
+    }
+
+    private async Task SpanTheLineAsync(ILocator controls, int width)
+    {
+        await Expect(controls).ToBeVisibleAsync();
+        var line = await controls.EvaluateAsync<double>("""
+            c => { const p = c.parentElement, cs = getComputedStyle(p); return p.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight); }
+            """);
+        var groups = await MeasureAsync(controls, ":scope > .tl-seg");
+        Assert.NotEmpty(groups.List);
+        Assert.True(Math.Abs(groups.Inner - line) <= 1, $"{width} px: the controls take {groups.Inner:F0} of the {line:F0} px line");
+        AllAsWide(groups, "the controls", width);
+        var shares = await controls.EvaluateAsync<string>("""
+            c => JSON.stringify([...c.querySelectorAll(':scope > .tl-seg')].map(g => {
+                const label = g.querySelector('.tl-seg-label').getBoundingClientRect();
+                const buttons = [...g.querySelectorAll('.tl-seg-btn')].map(b => b.getBoundingClientRect());
+                return { group: g.getAttribute('aria-label'), labelBottom: label.bottom, firstTop: Math.min(...buttons.map(b => b.top)),
+                    widths: buttons.map(b => b.width), lines: [...g.querySelectorAll('.tl-seg-btn')].map(b => {
+                        const r = document.createRange(); r.selectNodeContents(b);
+                        return new Set([...r.getClientRects()].filter(x => x.width > 0).map(x => Math.round(x.top))).size; }),
+                    used: buttons.reduce((s, b) => s + b.width, 0), width: g.getBoundingClientRect().width };
+            }))
+            """);
+        using var doc = System.Text.Json.JsonDocument.Parse(shares);
+        foreach (var g in doc.RootElement.EnumerateArray())
+        {
+            var name = g.GetProperty("group").GetString();
+            Assert.True(g.GetProperty("labelBottom").GetDouble() <= g.GetProperty("firstTop").GetDouble() + 0.5, $"{width} px: {name}'s label is not above its buttons");
+            var widths = g.GetProperty("widths").EnumerateArray().Select(w => w.GetDouble()).ToArray();
+            Assert.True(widths.Max() - widths.Min() <= 1, $"{width} px: {name}'s buttons are {string.Join("/", widths.Select(w => w.ToString("F0")))} px");
+            Assert.True(g.GetProperty("used").GetDouble() >= g.GetProperty("width").GetDouble() - 24, $"{width} px: {name}'s buttons leave the line half empty");
+            Assert.All(g.GetProperty("lines").EnumerateArray(), l => Assert.Equal(1, l.GetInt32()));
+        }
+    }
+
+    // the Components tab with its controls: calls the report tracked, written by the whole pipeline as ComponentsTabTests
+    // writes its run (one fixture at a time, from a fresh cache)
+    private string ComponentsReport(string fileName)
+    {
+        var tag = Guid.NewGuid().ToString("N")[..8];
+        var (shop, payments, orders) = ("Shop" + tag, "Payments" + tag, "Orders" + tag);
+        var reportsDir = Path.Combine(TempDir, "components-" + tag);
+        Directory.CreateDirectory(reportsDir);
+        var (pays, ships) = ("mr-pays-" + tag, "mr-ships-" + tag);
+        var names = new HashSet<string> { shop, payments, orders };
+        lock (ReportTestHelper.WholePipeline)
+        {
+            DefaultDiagramsFetcher.Reset();
+            Kronikol.Tracking.RequestResponseLogger.LogPair("Pays", pays, HttpMethod.Post, new Uri("http://payments/pay"), payments, shop, statusCode: System.Net.HttpStatusCode.OK);
+            Kronikol.Tracking.RequestResponseLogger.LogPair("Ships", ships, HttpMethod.Post, new Uri("http://orders/orders"), orders, shop, statusCode: System.Net.HttpStatusCode.Created);
+            ReportGenerator.CreateStandardReportsWithDiagrams(
+                [new Feature { DisplayName = "Shop", Scenarios = [
+                    new Scenario { Id = pays, DisplayName = "Pays", Result = ExecutionResult.Passed },
+                    new Scenario { Id = ships, DisplayName = "Ships", Result = ExecutionResult.Failed }] }],
+                DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow,
+                new ReportConfigurationOptions
+                {
+                    ReportsFolderPath = reportsDir,
+                    ComponentDiagramOptions = new Kronikol.ComponentDiagram.ComponentDiagramOptions { ParticipantFilter = names.Contains },
+                    GenerateSpecificationsReport = false,
+                    GenerateSpecificationsData = false,
+                });
+            DefaultDiagramsFetcher.Reset();
+        }
+        var report = Path.Combine(reportsDir, "TestRunReport.html");
+        File.Copy(report, Path.Combine(OutputDir, fileName), true);
+        return new Uri(report).AbsoluteUri;
+    }
+
+    // no durations, no component diagram, no history: a page with nothing beside its features has no tabs; one diagram with
+    // a payload, so the settings have their Format zone
+    private string Tabless(string fileName)
+    {
+        var features = new[]
+        {
+            new Feature
+            {
+                DisplayName = "Checkout",
+                Scenarios = [new Scenario { Id = "t1", DisplayName = "Pay", Result = ExecutionResult.Passed,
+                    Steps = [new ScenarioStep { Keyword = "Then", Text = "it pays", Status = ExecutionResult.Passed }] }]
+            }
+        };
+        var diagram = new DefaultDiagramsFetcher.DiagramAsCode("t1", "",
+            "@startuml\nactor \"Caller\" as caller\nparticipant \"Pay Service\" as pay\ncaller -> pay : POST /pay\nnote left\n{\"amount\": 3}\nend note\npay --> caller : OK\n@enduml");
+        var path = ReportGenerator.GenerateHtmlReport([diagram], features, DateTime.UtcNow, DateTime.UtcNow, null,
+            Path.Combine(TempDir, fileName), "Tabless Report", true, diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs);
+        File.Copy(path, Path.Combine(OutputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
+    }
 }

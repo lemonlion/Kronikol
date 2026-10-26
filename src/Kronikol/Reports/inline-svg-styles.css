@@ -133,7 +133,10 @@ body.plantuml-ready .puml-fragment:not([data-rendered])::before {
 .plantuml-browser svg .k-step-rule.k-step-rule { stroke: var(--kron-hairline) !important; }
 .plantuml-browser svg .k-step-table.k-step-table { fill: var(--dg-step-table) !important; stroke: none !important; }
 .plantuml-browser svg .k-step-table-head.k-step-table-head { fill: var(--kron-strip) !important; stroke: none !important; }
-.plantuml-browser svg .k-step-table-head-text.k-step-table-head-text { fill: var(--kron-ink-soft) !important; }
+.plantuml-browser svg .k-step-table-head-text.k-step-table-head-text { fill: var(--kron-ink-soft) !important; font-weight: 600 !important; }
+/* a table's body in the page's ink and its header at the HTML table's weight, as the step-param-table beside the diagram
+   (5.9.1, plans/REPORT_UI_FIXES_PLAN.md B5) */
+.plantuml-browser svg .k-step-table-text.k-step-table-text { fill: var(--kron-ink) !important; }
 
 /* A sequence diagram's own colours, mapped to the theme's tokens (5.0.0, plans/OPTION_C_PLAN.md S10): the engine's
    ground, ink and lines, the report's assertion strips and bars, and the dependency colours a call is drawn in (its line

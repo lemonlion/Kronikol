@@ -56,7 +56,8 @@ function normalizeForSearch(s) {
   s = rejoinMarkedBreaks(s);                                     // 1b. undo the generator's own note-body breaks
   s = decodeCreoleEscapes(s);                                    // 3. creole escapes and code points (before the fold since 3.30.1)
   s = s.replace(/[A-Z]/g, c => c.toLowerCase());                 // 2. ASCII-only fold
-  s = s.replace(/<\/?(?:color|font|i|b|size|back)[^>]*>/g, '');  // 4. markup tags
+  s = s.replace(/<\/?(?:color|font|i|b|size|back)[^>]*>|<space:[0-9]+>|<\/?su[pb]>/g, ''); // 4. markup tags, a step bar cell's (5.9.1)
+  s = s.replace(/\\\\n/g, '\n');                              // 5. a table cell's line break, a doubled backslash and an n (5.9.1)
   s = s.replace(/\\n[ \t]*/g, '');                               // 5a. arrow-label literal \n escape + indent
   return (s + '\n').replace(/[ \t]+/g, ' ');                     // 6. collapse spaces
 }

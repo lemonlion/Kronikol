@@ -546,6 +546,37 @@ public class ParameterGrouperTests
         Assert.Equal(0, first.ExamplesBlockIndex);
     }
 
+    // ─── Names shown as written (5.9.1, plans/REPORT_UI_FIXES_PLAN.md N4, N5, E8) ───
+
+    // N4 (#102): a Gherkin outline's grouped heading is its title as written, where the method-name humaniser lower-cased
+    // its acronyms and wrote its brackets as [...] ("A basket is weighed on the uk scale [<case>]")
+    [Fact]
+    public void A_gherkin_outlines_heading_is_shown_as_written()
+    {
+        const string title = "A basket is weighed on the UK scale (<case>)";
+        var s1 = MakeScenario("s1", "A basket is weighed on the UK scale (two apples)", outlineId: title, exampleValues: new() { ["case"] = "two apples" }) with { NameAsWritten = true };
+        var s2 = MakeScenario("s2", "A basket is weighed on the UK scale (one pear)", outlineId: title, exampleValues: new() { ["case"] = "one pear" }) with { NameAsWritten = true };
+
+        var (groups, _) = ParameterGrouper.Analyze([s1, s2]);
+
+        Assert.Equal(title, Assert.Single(groups).GroupDisplayName);
+    }
+
+    // N5, E8: a plain Gherkin scenario whose name ends in brackets is a scenario, not a parameterised group headed by the
+    // text before the bracket with an Arg 0 column; a test method's name keeps its reading
+    [Fact]
+    public void A_gherkin_scenario_ending_in_brackets_is_not_a_parameterised_group()
+    {
+        var gherkin = MakeScenario("g1", "Returns 404 (not found)") with { NameAsWritten = true };
+        var method = MakeScenario("m1", "Returns 500 (boom)");
+
+        var (groups, ungrouped) = ParameterGrouper.Analyze([gherkin, method]);
+
+        Assert.Contains(ungrouped, s => s.Id == "g1");
+        Assert.DoesNotContain(groups, g => g.Scenarios.Any(s => s.Id == "g1"));
+        Assert.Contains(groups, g => g.Scenarios.Any(s => s.Id == "m1"));
+    }
+
     private static Scenario MakeScenario(
         string id, string displayName,
         string? outlineId = null,

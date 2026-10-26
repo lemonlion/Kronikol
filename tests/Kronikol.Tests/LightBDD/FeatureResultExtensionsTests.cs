@@ -484,6 +484,9 @@ public class FeatureResultExtensionsTests
     [InlineData("AlternativeEvidenceScenarios", "Alternative Evidence Scenarios")]
     [InlineData("Alternative Evidence Scenarios", "Alternative Evidence Scenarios")]
     [InlineData("my_feature_name", "My Feature Name")]
+    // LightBDD has already given Customer_s_Orders its apostrophe, which is kept (5.9.1, plans/REPORT_UI_FIXES_PLAN.md
+    // N2; it was "Customer S Orders")
+    [InlineData("Customer's Orders", "Customer's Orders")]
     public void ToFeatures_titleizes_feature_display_name(string featureName, string expected)
     {
         var feature = new StubFeatureResult(featureName)
@@ -491,6 +494,17 @@ public class FeatureResultExtensionsTests
 
         var features = new[] { feature }.ToFeatures();
         Assert.Equal(expected, features[0].DisplayName);
+    }
+
+    // N3: a feature whose name Titleize now shows differently keeps the ids 5.9.0 gave its scenarios
+    [Theory]
+    [InlineData("Customer's Orders", "Customer S Orders")]
+    [InlineData("OrderService", "Order Service")]
+    public void A_feature_shown_as_written_keeps_its_scenarios_ids(string featureName, string shownBy590)
+    {
+        var feature = new[] { new StubFeatureResult(featureName).WithScenario(new StubExecutionResult("s1", "Test")) }.ToFeatures()[0];
+        var scenario = feature.Scenarios[0];
+        Assert.Equal(ScenarioStableId.For("suite", shownBy590, scenario), ScenarioStableId.For("suite", feature, scenario));
     }
 
     // ─── Parameter extraction from NameFormat ─────────────────────

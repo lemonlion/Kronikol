@@ -37,6 +37,8 @@ internal static class FeatureResultExtensions
                     return new Feature
                 {
                     DisplayName = f.Info.Name.ToString().Titleize(),
+                    // the ids key on 5.9.0's name, which Titleize can now differ from (plans/REPORT_UI_FIXES_PLAN.md N3)
+                    StableIdName = StringCasing.TitleizeAsOf590(f.Info.Name.ToString()),
                     Description = f.Info.Description,
                     Tags = featureTags.Length > 0 ? featureTags : null,
                     Scenarios = scenarios

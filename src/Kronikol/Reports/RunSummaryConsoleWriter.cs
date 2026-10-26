@@ -145,7 +145,7 @@ public static class RunSummaryConsoleWriter
                 if (scenario.Result != ExecutionResult.Failed)
                     continue;
                 failures.Add(new RunSummaryFailure(
-                    ScenarioStableId.For(suite, feature.DisplayName, scenario),
+                    ScenarioStableId.For(suite, feature, scenario),
                     feature.DisplayName,
                     scenario.DisplayName));
             }

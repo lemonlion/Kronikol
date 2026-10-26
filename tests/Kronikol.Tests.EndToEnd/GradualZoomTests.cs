@@ -703,4 +703,167 @@ public class GradualZoomTests : PlaywrightTestBase
         await TwoAnimationFramesAsync(Page);
         Assert.True(await Page.EvaluateAsync<bool>(inWindow), "selected and scrolled on, the slider is still in the window");
     }
+    // ── 5.9.1 (plans/REPORT_UI_FIXES_PLAN.md I5, S1 to S4, E18): the slider below whatever floats over its box ──
+
+    private const string Slider = "[data-diagram-type='plantuml'] > .diagram-zoom-controls .diagram-zoom-slider";
+
+    // the window 1,200 px into the tall diagram, the pointer over it, so its slider follows the window
+    private async Task<float[]> IntoTheDiagramAsync(bool hover = true)
+    {
+        var at = await Page.EvaluateAsync<float[]>("""
+            () => {
+                const c = document.querySelector("[data-diagram-type='plantuml']");
+                window.scrollBy(0, c.getBoundingClientRect().top + 1200);
+                const r = c.getBoundingClientRect();
+                return [r.left + 200, innerHeight / 2];
+            }
+            """);
+        await TwoAnimationFramesAsync(Page);
+        if (hover)
+        {
+            await Page.Mouse.MoveAsync(at[0], at[1]);
+            await Page.Mouse.MoveAsync(at[0] + 4, at[1] + 4);
+        }
+        await TwoAnimationFramesAsync(Page);
+        await TwoAnimationFramesAsync(Page);
+        return at;
+    }
+
+    // the bar is pinned: the mark that holds its place has gone above the line the bar sticks at
+    private Task<bool> BarPinnedAsync() => Page.EvaluateAsync<bool>("""
+        () => {
+            const nav = document.querySelector('.toolbar-row.report-nav'), mark = document.querySelector('.nav-mark');
+            return !!nav && !!mark && getComputedStyle(nav).position === 'sticky'
+                && mark.getBoundingClientRect().top < (parseFloat(getComputedStyle(nav).top) || 0) - 0.5;
+        }
+        """);
+
+    // Where the thumb is painted below an edge (the bar's bottom, or the open settings'), as the plan's probe reads it
+    // (harness probe/i5-thumb.js): a screenshot from the edge down past the slider, scanned in a canvas for the first row
+    // holding two strongly coloured pixels; the thumb is the one coloured thing there (the track is grey, the ground
+    // plain), and taller than the track. A thumb drawn across the edge shows from the edge's row, so it reads as 0. The
+    // slider is shown fully for the scan, so its colour is its own (a hovered box shows it at 0.4).
+    private async Task<double> ThumbGapBelowAsync(double edge)
+    {
+        var m = await Page.EvaluateAsync<double[]>("""
+            s => {
+                const input = document.querySelector(s);
+                input.closest('.diagram-zoom-controls').style.opacity = '1';
+                const r = input.getBoundingClientRect();
+                return [r.left, r.top, r.width, r.height];
+            }
+            """, Slider);
+        await TwoAnimationFramesAsync(Page);
+        var clipY = Math.Floor(edge);
+        var clip = new Clip { X = (float)Math.Floor(m[0] - 6), Y = (float)clipY, Width = (float)Math.Ceiling(m[2] + 12), Height = (float)Math.Max(8, Math.Ceiling(m[1] + m[3] + 12 - clipY)) };
+        var png = await Page.ScreenshotAsync(new() { Clip = clip });
+        var row = await Page.EvaluateAsync<double>("""
+            async ([b64, clipH]) => {
+                const img = new Image(); img.src = 'data:image/png;base64,' + b64; await img.decode();
+                const cv = document.createElement('canvas'); cv.width = img.width; cv.height = img.height;
+                const g = cv.getContext('2d'); g.drawImage(img, 0, 0);
+                const d = g.getImageData(0, 0, cv.width, cv.height).data;
+                for (let y = 0; y < cv.height; y++) {
+                    let n = 0;
+                    for (let x = 0; x < cv.width; x++) {
+                        const i = (y * cv.width + x) * 4;
+                        if (Math.max(d[i], d[i + 1], d[i + 2]) - Math.min(d[i], d[i + 1], d[i + 2]) > 60) n++;
+                    }
+                    if (n >= 2) return y * clipH / img.height;
+                }
+                return -1;
+            }
+            """, new object[] { Convert.ToBase64String(png), (double)clip.Height });
+        await Page.EvaluateAsync("s => { document.querySelector(s).closest('.diagram-zoom-controls').style.opacity = ''; }", Slider);
+        Assert.True(row >= 0, $"no pixel of the slider's thumb between the edge at {edge:F1} px and the slider's foot");
+        return clipY + row - edge;
+    }
+
+    // the thumb stands 4.5 px clear of the edge (M-I5, read at 2x); a 1x screenshot reads whole rows against an edge that
+    // can fall between them, so the facts ask for 3.5, which 5.8.0's 1.5 px (and a thumb inside the settings) fail
+    private const double ClearOfTheEdge = 3.5;
+
+    private Task<double> BottomOfAsync(string selector) =>
+        Page.EvaluateAsync<double>("s => document.querySelector(s).getBoundingClientRect().bottom", selector);
+
+    // S3: the painted thumb 4.5 px clear of the pinned bar, where 5.8.0 left 1.5 px (M-I5)
+    [Fact]
+    public async Task The_slider_stands_clear_of_the_pinned_bar()
+    {
+        await OpenTallWideAsync("SliderClearOfTheBar.html");
+        await IntoTheDiagramAsync();
+        Assert.True(await BarPinnedAsync(), "the premise: the report's bar is pinned");
+        var gap = await ThumbGapBelowAsync(await BottomOfAsync(".toolbar-row.report-nav"));
+        Assert.True(gap >= ClearOfTheEdge, $"the thumb is painted {gap:F1} px under the bar");
+    }
+
+    // S1: with This scenario's settings open and stuck under the bar, the slider stands under them by the same gap, on
+    // top where it is drawn, and a pointer walked up the diagram onto it keeps it (5.8.0 drew it across their top row,
+    // faded: M-I5)
+    [Fact]
+    public async Task With_the_settings_open_the_slider_stands_under_them_and_can_be_reached()
+    {
+        await OpenTallWideAsync("SliderUnderTheSettings.html");
+        await Page.Locator(".scenario-settings-gear").First.ClickAsync();
+        await Expect(Page.Locator(".scenario-settings.is-open").First).ToBeVisibleAsync();
+        var at = await IntoTheDiagramAsync();
+        var settings = await Page.EvaluateAsync<double[]>("""
+            () => { const s = document.querySelector('.scenario-settings.is-open'), r = s.getBoundingClientRect();
+                return [r.top, r.bottom, getComputedStyle(s).position === 'sticky' ? 1 : 0]; }
+            """);
+        Assert.True(settings[2] == 1 && settings[0] <= await BottomOfAsync(".toolbar-row.report-nav") + 1, "the premise: the settings stick under the bar");
+        var gap = await ThumbGapBelowAsync(settings[1]);
+        Assert.True(gap >= ClearOfTheEdge, $"the thumb is painted {gap:F1} px under the settings' bottom");
+
+        // walked up the diagram onto the slider, the pointer keeps it shown, and what is drawn at its centre is the slider
+        var target = await Page.EvaluateAsync<double[]>("s => { const r = document.querySelector(s).getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; }", Slider);
+        for (var y = at[1]; y > target[1]; y -= 20) await Page.Mouse.MoveAsync((float)target[0], y);
+        await Page.Mouse.MoveAsync((float)target[0], (float)target[1]);
+        await TwoAnimationFramesAsync(Page);
+        Assert.True(await Page.EvaluateAsync<bool>("""
+            ([s, x, y]) => { const e = document.elementFromPoint(x, y); return !!e && !!e.closest('.diagram-zoom-controls'); }
+            """, new object[] { Slider, target[0], target[1] }), "the slider is on top at its centre");
+        // shown fully under the pointer, once its 0.15 s fade has run
+        try
+        {
+            await Page.WaitForFunctionAsync("s => parseFloat(getComputedStyle(document.querySelector(s).closest('.diagram-zoom-controls')).opacity) > 0.99",
+                Slider, new() { PollingInterval = 200, Timeout = 3000 });
+        }
+        catch (TimeoutException) { Assert.Fail("the slider is not shown fully under the pointer"); }
+    }
+
+    // S4: opening the settings while the slider shows moves it below them, without a scroll or a move of the pointer
+    [Fact]
+    public async Task Opening_the_settings_moves_a_shown_slider_below_them()
+    {
+        await OpenTallWideAsync("SliderMovesWithTheSettings.html");
+        await IntoTheDiagramAsync();
+        // the gear has scrolled away with the section's head, so it is pressed from script, as a reader's click would
+        await Page.EvaluateAsync("() => document.querySelector('.scenario-settings-gear').click()");
+        await TwoAnimationFramesAsync(Page);
+        await TwoAnimationFramesAsync(Page);
+        var bottom = await BottomOfAsync(".scenario-settings.is-open");
+        Assert.True(bottom > await BottomOfAsync(".toolbar-row.report-nav") + 10, "the premise: the open settings stick under the bar");
+        var inputTop = await Page.EvaluateAsync<double>("s => document.querySelector(s).getBoundingClientRect().top", Slider);
+        Assert.True(inputTop >= bottom, $"the slider's box starts {inputTop - bottom:F1} px under the settings that opened over it");
+        var gap = await ThumbGapBelowAsync(bottom);
+        Assert.True(gap >= ClearOfTheEdge, $"the thumb is painted {gap:F1} px under the settings that opened over it");
+    }
+
+    // S4, E18: a slider the keyboard reached follows the window as a hovered or selected one does (until 5.9.1 it kept
+    // the place it was last given)
+    [Fact]
+    public async Task A_slider_reached_by_Tab_follows_the_window()
+    {
+        await OpenTallWideAsync("SliderFocusFollows.html");
+        await IntoTheDiagramAsync(hover: false);
+        await Page.Mouse.MoveAsync(2, 2);
+        await Page.Locator(Slider).First.FocusAsync();
+        await Page.EvaluateAsync("() => window.scrollBy(0, 900)");
+        await TwoAnimationFramesAsync(Page);
+        await TwoAnimationFramesAsync(Page);
+        var r = await Page.EvaluateAsync<double[]>("s => { const r = document.querySelector(s).getBoundingClientRect(); return [r.top, r.bottom, innerHeight]; }", Slider);
+        var bar = await BottomOfAsync(".toolbar-row.report-nav");
+        Assert.True(r[0] >= bar && r[1] <= r[2], $"the focused slider is at {r[0]:F0} to {r[1]:F0}, the window's free band {bar:F0} to {r[2]:F0}");
+    }
 }

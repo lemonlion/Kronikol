@@ -30,17 +30,21 @@ namespace Kronikol.Tests.Reports;
 /// 5.5.4 changed the search index script outside its fences (plans/HTML_COMPRESSION_PLAN.md F2): its worker builds the
 /// streams it gunzips from the bytes, where it read them out of a Blob, which WebKit refuses inside a worker. 5.6.0 changed
 /// it outside its fences too (plans/HTML_COMPRESSION_PLAN.md R1, 4.4): on a compressed page the worker reads a diagram's
-/// source from its piece of the page's zstd frames, and every other item as it is, where it gunzipped each.
+/// source from its piece of the page's zstd frames, and every other item as it is, where it gunzipped each. 5.9.1
+/// changed it outside its fences twice (plans/REPORT_UI_FIXES_PLAN.md): the chip it writes in the filter field says it is
+/// matching, not searching (I9), and its normaliser drops a step bar cell's markup and reads a cell's line break (B2, B3).
+/// The same release changed the advanced filter's status term in both variants (E3): `$skipped` keeps a scenario skipped
+/// after a failure, as the summary counts it.
 /// </summary>
 public class VerdictFencesTests
 {
     public static TheoryData<string, string, string> Pins => new()
     {
         // script, default variant (no verdicts), verdict variant
-        { "advanced-search.js", "bd95ec17e218564784d4868f54985392751c51772ed5ee593cb63fbb8f2c9d34", "f8e26b59e269fcebd3bfc36c251ac06264946049b46c8157cd24740a98fc0c7c" },
+        { "advanced-search.js", "fee7fc221659018a62f3beb8be6a789218c6cbe76243042ca959776d220eddd8", "c39ebdd2332b86bf66626b5a97b0ea539c669c3dcce062c769d9a9599c46cc29" },
         { "report-scenario-feature-map-helper.js", "d3d00e12dfb1ae86fce149860f5ffbe970a43af27dd8b80c0a39f3438a187202", "235ffa5649c597fa43429959c0eacc0d90f7bbcdb5f7a740b6636a5ecd076caa" },
         { "report-search-function.js", "dbdfcbe5ea893e6dd89a1412c8e5dd1ff423afc22dccc927ff686c1544e84daf", "e8a0c76ac338519d83d2f84163d29f1761deb1c5e9f2fba880fc0239925401ac" },
-        { "report-search-index.js", "a1cf2d89b91cfa441e97bd6976fe98af7d6fb239225925a3881210cdc152d380", "6b0afff5359560acdb2e9b9de83ead6cec0d8368cbeb68acf12855bbb9d1a3ef" },
+        { "report-search-index.js", "30b4733169691772602b552ac3d7104ac4f5a8ac090de6ee322e9f165c72ee91", "26248d206ec5ed68cf4a27c0956bcb3f072d4d36953d6bb17263698b69f75e88" },
     };
 
     private static string Sha256(string text) =>

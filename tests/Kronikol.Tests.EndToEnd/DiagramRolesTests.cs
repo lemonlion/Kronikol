@@ -14,7 +14,7 @@ public class DiagramRolesTests : DiagramNotePlaywrightBase
 {
     public DiagramRolesTests(PlaywrightFixture fixture) : base(fixture) { }
 
-    private const string Source = """
+    private const string Source = $$"""
         @startuml
         !pragma teoz true
         skinparam shadowing false
@@ -33,13 +33,7 @@ public class DiagramRolesTests : DiagramNotePlaywrightBase
              RoundCorner 10
          }
         </style>
-        <style>
-         .stepBody {
-             BackgroundColor black
-             FontColor white
-             LineColor white
-         }
-        </style>
+        {{Kronikol.PlantUml.StepBarPlantUml.BodyStyle}}
         actor "Caller" as caller
         participant "OrderService" as svc
         queue "Orders" as orders
@@ -387,4 +381,88 @@ public class DiagramRolesTests : DiagramNotePlaywrightBase
     private Task WaitForSvgAsync(string condition) => Page.WaitForFunctionAsync(
         "() => { const s = document.querySelector(\"[data-diagram-type='plantuml'] svg\"); return !!s && (" + condition + "); }",
         null, new() { Timeout = 15000, PollingInterval = 200 });
+    // ── 5.9.1 (plans/REPORT_UI_FIXES_PLAN.md B4, B6, E10, E11): one table, one ground; a header told by its bold text ──
+
+    // three bars from the emitter: two named tables, a header-only table and a doc string
+    private static string TablesSource()
+    {
+        var two = Kronikol.PlantUml.StepBarPlantUml.Build("Given two tables",
+            [new Kronikol.PlantUml.StepBarTable("inputs", [["a", "b"], ["1", "2"]]), new Kronikol.PlantUml.StepBarTable("outputs", [["c"], ["3"]])]);
+        var headerOnly = Kronikol.PlantUml.StepBarPlantUml.Build("Given a header only", [new Kronikol.PlantUml.StepBarTable(null, [["only", "header"]])]);
+        var doc = Kronikol.PlantUml.StepBarPlantUml.Build("When it is sent", docString: "{ \"muffin\": \"Blueberry\",\n  \"qty\": 2 }");
+        return "@startuml\n!pragma teoz true\n" + Kronikol.PlantUml.StepBarPlantUml.BodyStyle + "\nactor \"Caller\" as caller\nparticipant \"OrderService\" as svc\n"
+            + two + "\ncaller -> svc : POST /api/orders\n" + headerOnly + "\nsvc --> caller : 201 Created\n" + doc + "\ncaller -> svc : GET /api/orders\n@enduml";
+    }
+
+    // what the role pass drew in the bar whose text holds `label`: its grounds and header grounds, top to bottom, and the
+    // name lines and texts in it, in screen px
+    private const string GroundsOf = """
+        const bars = [...el.querySelectorAll('.k-step')];
+        const box = e => e.getBoundingClientRect();
+        const text = [...el.querySelectorAll('text')].find(t => t.textContent.includes(label));
+        const bar = bars.find(b => { const r = box(b), t = box(text); return t.top >= r.top - 1 && t.bottom <= r.bottom + 1; });
+        const rb = box(bar);
+        const inBar = e => { const r = box(e); return r.top >= rb.top - 1 && r.bottom <= rb.bottom + 1; };
+        const grounds = [...el.querySelectorAll('.k-step-table')].filter(inBar).map(box).sort((a, c) => a.top - c.top);
+        const heads = [...el.querySelectorAll('.k-step-table-head')].filter(inBar).map(box).sort((a, c) => a.top - c.top);
+        const named = name => { const t = [...el.querySelectorAll('text')].find(t => t.textContent.trim() === name); return t ? box(t) : null; };
+        return JSON.stringify({ grounds: grounds.map(g => [g.top, g.bottom, g.height]), heads: heads.map(h => [h.top, h.bottom, h.height]),
+            outputs: named('outputs:') ? [named('outputs:').top, named('outputs:').bottom] : null });
+        """;
+
+    private async Task<System.Text.Json.JsonElement> GroundsAsync(string label)
+    {
+        var json = await InSvgAsync<string>("const label = " + System.Text.Json.JsonSerializer.Serialize(label) + ";" + GroundsOf);
+        return System.Text.Json.JsonDocument.Parse(json).RootElement.Clone();
+    }
+
+    // B6, E10, E11: a bar holding two tables gets a ground and a shaded header for each, and the name line between them is
+    // on neither; a header-only table's one row is shaded (until 5.9.1 one ground took in both tables and their name line,
+    // only the first header was shaded, and a header-only table had none)
+    [Fact]
+    public async Task Two_tables_get_two_grounds_and_a_header_only_table_is_shaded()
+    {
+        await OpenAsync("RolesTwoTables.html", source: TablesSource());
+
+        var two = await GroundsAsync("Given two tables");
+        var grounds = two.GetProperty("grounds").EnumerateArray().Select(g => g.EnumerateArray().Select(v => v.GetDouble()).ToArray()).ToArray();
+        Assert.Equal(2, grounds.Length);
+        Assert.Equal(2, two.GetProperty("heads").GetArrayLength());
+        var outputs = two.GetProperty("outputs").EnumerateArray().Select(v => v.GetDouble()).ToArray();
+        Assert.True(outputs[0] >= grounds[0][1] - 0.5 && outputs[1] <= grounds[1][0] + 0.5,
+            $"the name line ({outputs[0]:F1} to {outputs[1]:F1}) is between the grounds, not on one ({grounds[0][1]:F1}, {grounds[1][0]:F1})");
+
+        var only = await GroundsAsync("Given a header only");
+        var ground = Assert.Single(only.GetProperty("grounds").EnumerateArray()).EnumerateArray().Select(v => v.GetDouble()).ToArray();
+        var head = Assert.Single(only.GetProperty("heads").EnumerateArray()).EnumerateArray().Select(v => v.GetDouble()).ToArray();
+        Assert.True(Math.Abs(head[2] - ground[2]) <= 1, $"the header-only table's shading is {head[2]:F1} px of its {ground[2]:F1}");
+    }
+
+    // B4, B6 with B2: a doc string's one-cell box gets its ground and no header, and its lines stay where the engine drew
+    // them: not centred, not re-weighted, the second still two spaces in (its rules alone read as a header-only table's)
+    [Fact]
+    public async Task A_doc_strings_box_gets_no_header_and_keeps_its_lines_in_place()
+    {
+        await OpenAsync("RolesDocBox.html", source: TablesSource());
+
+        var doc = await GroundsAsync("When it is sent");
+        Assert.Equal(1, doc.GetProperty("grounds").GetArrayLength());
+        Assert.Equal(0, doc.GetProperty("heads").GetArrayLength());
+        var r = await InSvgAsync<string>("""
+            const ts = [...el.querySelectorAll('text')];
+            const a = ts.find(t => t.textContent.includes('"muffin"')), b = ts.find(t => t.textContent.includes('"qty"'));
+            // where a line's first visible character starts, in the picture's units: its indentation can be spaces inside
+            // its text, which the text's box takes in
+            const at = t => t.getStartPositionOfChar(Math.max(0, t.textContent.search(/[^\s\u200b]/))).x;
+            return JSON.stringify({ head: [a, b].some(t => t.classList.contains('k-step-table-head-text')),
+                indent: at(b) - at(a), char: b.getComputedTextLength() / b.textContent.length,
+                weight: getComputedStyle(b).fontWeight });
+            """);
+        using var m = System.Text.Json.JsonDocument.Parse(r);
+        Assert.False(m.RootElement.GetProperty("head").GetBoolean(), "a doc string line is no header");
+        Assert.NotEqual("600", m.RootElement.GetProperty("weight").GetString());
+        var indent = m.RootElement.GetProperty("indent").GetDouble();
+        var ch = m.RootElement.GetProperty("char").GetDouble();
+        Assert.True(indent >= 1.5 * ch && indent <= 2.5 * ch, $"the indented line starts {indent:F1} px in, two characters being {2 * ch:F1}");
+    }
 }

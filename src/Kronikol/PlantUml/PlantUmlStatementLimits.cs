@@ -265,12 +265,14 @@ internal static class PlantUmlStatementLimits
 
         var cut = Math.Max(0, budget - TruncationMarker.Length);
 
-        // Never inside a code point escape, `<U+hhhh>` (at most ten characters): half of one paints as text.
+        // Never inside a code point escape, `<U+hhhh>` (at most ten characters), nor inside the markup a step bar's table
+        // cell carries from 5.9.1, `<space:8>`, `<sup>`, `</sup>`, `<sub>` and `</sub>` (plans/REPORT_UI_FIXES_PLAN.md B3):
+        // half of one paints as text.
         for (var p = cut - 1; p >= 0 && p >= cut - 10; p--)
         {
             if (label[p] == '>') break;
             if (label[p] != '<') continue;
-            if (label.AsSpan(p).StartsWith("<U+", StringComparison.Ordinal)) cut = p;
+            if (OpensCutSafeTag(label.AsSpan(p))) cut = p;
             break;
         }
 
@@ -286,8 +288,17 @@ internal static class PlantUmlStatementLimits
         if (trailingSlashes % 2 == 1)
             cut--;
 
+        // Nor between a table cell's line break, a doubled backslash, and its n (5.9.1, B2): the backslashes alone paint.
+        if (cut >= 2 && cut < label.Length && label[cut] == 'n' && label[cut - 1] == '\\' && label[cut - 2] == '\\')
+            cut -= 2;
+
         return string.Concat(label.AsSpan(0, cut), TruncationMarker);
     }
+
+    private static bool OpensCutSafeTag(ReadOnlySpan<char> at) =>
+        at.StartsWith("<U+", StringComparison.Ordinal) || at.StartsWith("<space:", StringComparison.Ordinal)
+        || at.StartsWith("<sup>", StringComparison.Ordinal) || at.StartsWith("</sup>", StringComparison.Ordinal)
+        || at.StartsWith("<sub>", StringComparison.Ordinal) || at.StartsWith("</sub>", StringComparison.Ordinal);
 
     /// <summary>
     /// Caps a whole physical statement, preserving whatever whitespace surrounded it — indentation, and
@@ -406,6 +417,13 @@ internal sealed partial class PlantUmlStatementGuard
         if (trimmed[0] is '!' or '@')
             return PlantUmlStatementKind.Directive;
 
+        // A message first, as the engine reads one (5.9.1, E5): a participant whose alias is a keyword (a service called
+        // Group, Loop or Note) writes `group -> svc : …`, which was read as a block's label and cut at its lower limit, or
+        // as a note and never cut.
+        var message = MessageStart().Match(trimmed);
+        if (message.Success)
+            return trimmed.IndexOf(':', message.Length) >= 0 ? PlantUmlStatementKind.Message : PlantUmlStatementKind.Other;
+
         if (NoteStart().IsMatch(trimmed))
         {
             if (!IsSingleLineNote(trimmed))
@@ -459,8 +477,18 @@ internal sealed partial class PlantUmlStatementGuard
     [GeneratedRegex(@"^end\s*[hrn]?note$", RegexOptions.IgnoreCase)]
     private static partial Regex NoteEnd();
 
-    [GeneratedRegex(@"^(loop|alt|else|opt|group|par|critical|break|partition|also)\b", RegexOptions.IgnoreCase)]
+    // A block's opener as the engine reads one: in any case, `par2` too, and after the `&` that starts it alongside the
+    // statement before it (CommandGrouping in the pinned engine's source).
+    [GeneratedRegex(@"^&?\s*(loop|alt|else|opt|group|par2?|critical|break|partition|also)\b", RegexOptions.IgnoreCase)]
     private static partial Regex BlockOpener();
+
+    /// <summary>
+    /// The start of a message: a participant, by its alias or quoted name, or a lost or found end (<c>[</c>, <c>]</c>,
+    /// <c>?</c>), and at once its arrow (the render script's <c>_messageStatementRx</c>). A block's label can hold an
+    /// arrow (<c>group A -&gt; B</c>), but no message's first word is followed by a space and more words before its arrow.
+    /// </summary>
+    [GeneratedRegex(@"^&?\s*(?:""[^""]*""|[^\s""]*?)\s*(?:<{1,2}[-=.]{1,2}(?:\[[^\]]*\])?[-=.]{0,2}|[-=.]{1,2}(?:\[[^\]]*\])?[-=.]{0,2}>{1,2})")]
+    private static partial Regex MessageStart();
 
     /// <summary>
     /// A PlantUML arrow: a run of <c>-</c>/<c>=</c>/<c>.</c> optionally carrying a <c>[#colour]</c> or

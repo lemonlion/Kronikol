@@ -40,7 +40,7 @@ internal static class SearchNormalizer
         s = DecodeCreoleEscapes(s);          // rule 3
         s = FoldAndCanonicalize(s);          // rule 2 (rule 1 is already applied)
         s = StripMarkupTags(s);              // rule 4
-        s = StripArrowLabelBreaks(s);        // rule 5a
+        s = StripArrowLabelBreaks(s);        // rules 5 (a table cell's line break, 5.9.1) and 5a
         return CollapseSpaces(s + "\n");     // rule 6
     }
 
@@ -150,12 +150,32 @@ internal static class SearchNormalizer
         var i = 0;
         while (i < n)
         {
-            if (s[i] == '<' && TryMatchTag(s, i, out var tagEnd)) { i = tagEnd; continue; }
+            if (s[i] == '<' && (TryMatchTag(s, i, out var tagEnd) || TryMatchCellTag(s, i, out tagEnd))) { i = tagEnd; continue; }
             sb.Append(s[i]);
             i++;
         }
         return sb.ToString();
     }
+
+    /// <summary>
+    /// Matches, whole, the markup a step bar's table cell carries from 5.9.1 (plans/REPORT_UI_FIXES_PLAN.md B3): the
+    /// reference regex <c>&lt;space:[0-9]+&gt;|&lt;/?su[pb]&gt;</c> at <paramref name="start"/> (which holds '&lt;').
+    /// </summary>
+    private static bool TryMatchCellTag(string s, int start, out int end)
+    {
+        end = 0;
+        var rest = s.AsSpan(start);
+        foreach (var tag in CellTags)
+            if (rest.StartsWith(tag, StringComparison.Ordinal)) { end = start + tag.Length; return true; }
+        if (!rest.StartsWith("<space:", StringComparison.Ordinal)) return false;
+        var j = start + "<space:".Length;
+        while (j < s.Length && s[j] is >= '0' and <= '9') j++;
+        if (j == start + "<space:".Length || j >= s.Length || s[j] != '>') return false;
+        end = j + 1;
+        return true;
+    }
+
+    private static readonly string[] CellTags = ["<sup>", "</sup>", "<sub>", "</sub>"];
 
     private static string StripArrowLabelBreaks(string s)
     {
@@ -165,6 +185,14 @@ internal static class SearchNormalizer
         var i = 0;
         while (i < n)
         {
+            // rule 5: a table cell's line break, a doubled backslash and an n, is a break (5.9.1, B2); 5a would take its
+            // second backslash and the n and leave the first glued to the next line
+            if (s[i] == '\\' && i + 2 < n && s[i + 1] == '\\' && s[i + 2] == 'n')
+            {
+                sb.Append('\n');
+                i += 3;
+                continue;
+            }
             if (s[i] == '\\' && i + 1 < n && s[i + 1] == 'n')
             {
                 i += 2;

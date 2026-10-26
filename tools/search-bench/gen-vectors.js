@@ -78,6 +78,10 @@ const normalizationInputs = [
   // reads a header in either form the same way, a chunked one included.
   ['header-ink-tag', 'note left\n<color:#686868>[Content-Type=application/json]\n<color:#686868>[X-H=aaaaaaaa<U+200B>\n<color:#686868>bbbbbbbb]\n\n{\n  "ok": true\n}\nend note'],
   ['arrow-label-5a', 'test -> svc: POST: /orders/pppp\\n        qqqq more'],
+  // 5.9.1: a step bar's table cell writes <space:8> and zero-width struts round its text, and a doc string's cell breaks
+  // its lines with a doubled backslash and an n; the index reads the text and the breaks, never the markup.
+  ['step-bar-cell-markup', 'hnote across <<stepDelimiter>><<stepBody>>: Given x\\n\\n|=<space:8><sup><U+200B></sup>Name<sub><U+200B></sub><space:8>|\\n|<space:8><sup><U+200B></sup>Blueberry Muffin<sub><U+200B></sub><space:8>|'],
+  ['doc-string-cell-break', '|<space:8><sup><U+200B></sup>{<space:8>\\\\n<space:8>  "muffin": "Blueberry"<space:8>\\\\n<space:8>}<sub><U+200B></sub><space:8>|'],
   // Rule 1b: the generator marks the breaks it writes into a note body, and only those are undone.
   ['note-chunk-rejoin-1b', 'note left\n<color:gray>[X-H=aaaaaaaa<U+200B>\n<color:gray>bbbbbbbb]\n\n{\n  "blob": "AAAA<U+200B>\nBBBB",\n  "ok": true\n}\nend note'],
   ['marked-break-rejoins', 'alpha<U+200B>\nbeta'],

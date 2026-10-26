@@ -456,6 +456,30 @@ public class PlantUmlStatementLengthTests
             }
     }
 
+    // 5.9.1 (plans/REPORT_UI_FIXES_PLAN.md B2, B3): a step bar's table cell carries <space:8>, <sup>, </sup>, <sub> and
+    // </sub>, and a doc string's cell breaks its lines with a doubled backslash and an n. A cut inside a tag paints its
+    // half as text, and one between the backslashes and the n paints a backslash: the cut steps back before either.
+    [Theory]
+    [InlineData("<space:8>")]
+    [InlineData("<sup>")]
+    [InlineData("</sup>")]
+    [InlineData("<sub>")]
+    [InlineData("</sub>")]
+    [InlineData(@"\\n")]
+    public void A_cut_never_lands_inside_a_space_sup_or_sub_tag_or_a_cells_break(string piece)
+    {
+        var before = new string('a', 40);
+        var text = before + piece + new string('b', 40);
+        for (var into = 1; into < piece.Length; into++)
+        {
+            var cut = PlantUmlStatementLimits.TruncateLabel(text, before.Length + into + PlantUmlStatementLimits.TruncationMarker.Length);
+            Assert.Equal(before + PlantUmlStatementLimits.TruncationMarker, cut);
+        }
+        // a cut at its end keeps it whole
+        Assert.Equal(before + piece + PlantUmlStatementLimits.TruncationMarker,
+            PlantUmlStatementLimits.TruncateLabel(text, before.Length + piece.Length + PlantUmlStatementLimits.TruncationMarker.Length));
+    }
+
     [Fact]
     public void A_value_chunked_for_a_note_is_chunked_between_whole_characters()
     {
@@ -1007,4 +1031,44 @@ public class PlantUmlStatementLengthTests
     private static readonly Regex KnownSequenceSetting = new(
         @"^(?:skinparam [\w<>.]+(?: .*)?|autonumber \d+|hide (?:footbox|unlinked)|end)$",
         RegexOptions.Compiled);
+
+    // ── 5.9.1 (plans/REPORT_UI_FIXES_PLAN.md E5): a message is read before a block or a note ──
+
+    // A participant whose alias is a keyword (a service called Group, Loop or Note) writes a message the engine draws as
+    // one, `group -> bob : …`: until 5.9.1 the guard read it as a block's label and cut it at the block's limit, or as a
+    // note and never cut it. A block is read as the engine reads one: in any case, `par2`, and after a `&`.
+    [Theory]
+    [InlineData("group -> bob: x", "Message")]
+    [InlineData("loop -[#438DD5]-> test: OK", "Message")]
+    [InlineData("note -> bob: x", "Message")]
+    [InlineData("& group -> bob: x", "Message")]
+    [InlineData("group A -> B: a label", "BlockOpener")]
+    [InlineData("GROUP audit", "BlockOpener")]
+    [InlineData("& group parallel", "BlockOpener")]
+    [InlineData("par2 lanes", "BlockOpener")]
+    [InlineData("note left of a: x -> y", "Note")]
+    public void A_message_is_read_before_a_block_or_a_note(string line, string kind) =>
+        Assert.Equal(kind, Classify(line).Single().Kind.ToString());
+
+    [Fact]
+    public void A_message_from_a_participant_called_group_is_capped_as_a_message()
+    {
+        // under the message limit and over the block label's: left whole, where it was cut at the block label's limit
+        var raw = "group -> bob: " + new string('m', 1500);
+        var diagram = Diagrams([Override(raw), OverrideEnd(), Request("http://example.com/api/orders")]).Single();
+
+        var message = diagram.Split('\n').Select(l => l.Trim()).First(l => l.StartsWith("group ->", StringComparison.Ordinal));
+        Assert.Equal(raw, message);
+    }
+
+    [Fact]
+    public void A_message_from_a_participant_called_note_is_capped_as_a_message()
+    {
+        var raw = "note -> bob: " + new string('m', 6000);
+        var diagram = Diagrams([Override(raw), OverrideEnd(), Request("http://example.com/api/orders")]).Single();
+
+        var message = diagram.Split('\n').Select(l => l.Trim()).First(l => l.StartsWith("note ->", StringComparison.Ordinal));
+        Assert.True(message.Length <= MaxMessage, $"{message.Length} chars");
+        Assert.EndsWith(PlantUmlStatementLimits.TruncationMarker, message);
+    }
 }

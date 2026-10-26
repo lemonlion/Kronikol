@@ -722,6 +722,8 @@ public static class CucumberFeatureSynthesizer
         {
             Id = scenarioId,
             DisplayName = displayName,
+            // a Gherkin name, shown as written (5.9.1, plans/REPORT_UI_FIXES_PLAN.md N4, N5)
+            NameAsWritten = true,
             Description = NullIfBlank(Dedent(node?.Node.Description)),
             IsHappyPath = ScenarioTags.Classify(ownTags).IsHappyPath,
             Result = worst,

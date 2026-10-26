@@ -241,7 +241,14 @@ public class ViewportSweepTests : IClassFixture<ClassicScrollbarBrowser>, IDispo
                 // The init script hides the filters on a phone; open them as a reader would, or the sweep
                 // measures nothing of them.
                 await page.Locator(".mobile-filter-toggle").ClickAsync();
+                // and the report's own settings, which its gear shows only here (5.9.1, plans/REPORT_UI_FIXES_PLAN.md E12:
+                // until then the sweep never measured the report's sheet at a phone's width)
+                var gear = page.Locator(".tools-gear");
+                if (await gear.CountAsync() > 0 && await gear.IsVisibleAsync()) await gear.ClickAsync();
             }
+            // the filter rows fold behind More filters on a desktop: open them at every width, or the Tags and
+            // Dependencies rows are never measured wider than a phone (5.9.1, plans/REPORT_UI_FIXES_PLAN.md E4)
+            await PlaywrightTestBase.OpenFilterRowsAsync(page);
             // Every scenario's settings start closed (5.0.0, plans/OPTION_C_PLAN.md S8): open each by the gear a
             // reader has at this width, the one on the diagrams' title on a phone
             await page.EvaluateAsync("w => document.querySelectorAll(w <= 768 ? '.gear-in-summary' : '.scenario-settings-gear').forEach(g => g.click())", width);

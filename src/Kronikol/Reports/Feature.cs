@@ -27,4 +27,13 @@ public record Feature
     /// <c>Feature:</c> title become one feature here and the first path seen wins.</para>
     /// </summary>
     public string? SourceFile { get; set; }
+
+    /// <summary>
+    /// The name the feature's scenarios' stable ids are computed from, where a lane records one: 5.9.0's titleized name
+    /// (<c>StringCasing.TitleizeAsOf590</c>) on a lane that titleizes a feature's name, so a feature 5.9.1 shows
+    /// differently (a Gherkin title as written, a word with an apostrophe kept) keeps its scenarios' ids and their
+    /// history (plans/REPORT_UI_FIXES_PLAN.md N3). Null where the ids key on <see cref="DisplayName"/>. The data files
+    /// write it as <c>stableIdName</c> (only where it differs from the name), so a merge computes the same ids.
+    /// </summary>
+    internal string? StableIdName { get; set; }
 }

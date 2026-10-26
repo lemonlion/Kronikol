@@ -4,6 +4,89 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.9.1] - 2026-10-26
+
+The patch part moves (5.9.0 to 5.9.1): every change is a fix, or a correction of what the report draws or says, and
+nothing is new for a consumer to call. The report's data files gain two keys a reader may meet, `stableIdName` and
+`nameAsWritten` (below), carried as 5.4.3 carried `#101`'s names. The release is the first half of
+`plans/REPORT_UI_FIXES_PLAN.md`; the filter chips' default and the History card's order come in the next minor.
+
+### Fixed
+
+- **A block goes with what it holds.** A loop of identical calls (`CollapseConsecutiveIdenticalCalls`), the Setup box,
+  and a `group`, `alt`, `opt`, `par`, `break`, `critical` or `box` of your own markup that the Databases, Events,
+  Assertions or Steps toggle emptied were drawn as empty boxes. They are now taken out with what they held. A block that
+  still holds a call, a note, a step bar or a block that stays is kept, every branch of an `alt` included, and a block
+  written empty stays as written. The drawing, the current source the diagram menu copies and the one it opens in the
+  editor tab all read the same filtered source.
+- **A participant whose alias is a keyword sends messages.** A service called Group, Loop or Note is aliased `group`,
+  `loop` or `note`, and its calls were read as the start of a block or a note: a diagram drawn in parts gained stray
+  `end` lines and repeated the call in its next part, the Setup toggle left the setup in, and the length guard cut the
+  message at the block label's limit (600 characters, where a message may run to 2,000) or, for `note`, never cut it. A
+  block's opener is read as the engine reads it, in any case, `par2` too, after a `&`, and closed by `end group` as by
+  `end`.
+- **A note's lines are never statements.** The Databases and Events toggles took out of a kept note a line that read
+  like a database's call, its activation or its declaration; and taking out a note ended by `endnote` or `end hnote`,
+  they took everything after it, up to the next `end note`, with it. A style block's `group {` line in a part cut at a
+  long note no longer opens a block.
+- **An assertion's tooltip names its own line** once the Setup toggle has taken earlier assertions out; it named the
+  line of an assertion no longer drawn.
+- **No frame shows a diagram in the engine's own colours.** A note's own button or double-click redrawing a diagram in
+  parts, a first drawing whose later part landed before an earlier one, the Wide payload width's second pass, and a
+  picture that got its box late (a Sequence view drawn behind another tab, a scenario far down the page) showed the
+  engine's yellow square notes and narrow black step bars for a frame, the last until the picture came into view. Each
+  is now coloured before the frame that shows it. The pictures drawn aside to line up a diagram's parts, which nobody
+  sees, are no longer coloured at all, which saves the main thread that work on every drawing.
+- **Names as written.** A Gherkin feature's title is shown as written in its `.feature` file (`Month's specials via
+  gRPC`, which read `Month S Specials Via G RPC`), and a scenario outline's grouped heading keeps the title as written,
+  as `OutlineId` always did (#102). A plain scenario whose name ends in brackets is no longer drawn as a parameterized
+  group with an `Arg 0` column. `Titleize` keeps a word with an apostrophe whole, with its first letter upper-cased
+  (`Month's`, `don't`), and no longer lower-cases an all-capitals word before a comma (`HTTP,`). No scenario's stable
+  id changes: ids are computed from the name as 5.9.0 wrote it, so history and links stay. Features are ordered by
+  name, so a feature shown with a new name can move on the page, in `Failures.md` and the CTRF report, and in
+  `kronikol query`'s `sN` addresses. The data files carry a
+  feature's 5.9.0 name as `stableIdName` where it differs from `name`, and `nameAsWritten` on a scenario whose name is
+  shown as written; `kronikol merge` reads both.
+- **The zoom slider stands clear of what floats above it**: below the report's bar and below a scenario's open settings
+  bar, where it could sit under the bar's edge or behind the settings. It follows the window for a slider reached by
+  Tab too, and moves when the settings open or the window is resized.
+- **Step bars are drawn like the step tables of a scenario's steps.** A bar centres its label and each table in it; a
+  table's header row is centred in its columns in semibold and its other rows start at the left in the page's ink; a
+  cell keeps 8 px either side of its text and room above and below; and a doc string is one framed cell whose lines
+  keep their indentation. A bar holding two tables gives each its own ground and shaded header, and a table of a header
+  alone has its header shaded.
+- **Phone widths.** The display settings sheet and a page without tabs give their zones and dropdowns the whole width,
+  the Timeline and Components controls span the line and share it between their buttons, and every filter control,
+  ANY/ALL and a row's Clear included, is 36 px tall at 768 px wide or less, as the wiki said: the rules held only to
+  480 px, and ANY/ALL and Clear were 28 px at any width.
+- **The filter box says filter.** Its text field hides the scenarios that do not match, as the rows do, and nothing on
+  the page searches. Its placeholder (`Filter...`), its title, its `?` help, Clear All's title and the chip of its deep
+  matches (`matching payloads & diagrams…`) say filter. Its id (`searchbar`), its address key (`q=`) and its functions
+  keep their names, so a stylesheet, a script or a saved link that names them works as before. The wiki's Search Syntax
+  page is Filter Syntax, at the same address.
+- **The Status and Duration buttons say whether they are chosen** (`aria-pressed`), as the chips do.
+- **A scenario skipped after a failure is filtered as skipped**, as the summary and the ring have counted it since
+  5.0.0: the Status filter showed it under Failed, and `$skipped` in the filter text missed it. `$skippedafterfailure`
+  still keeps those alone.
+- **A wide test splits into as few diagrams as its width needs.** The estimate of the participant row was never reset
+  at a split, so after the first width split every later call started a diagram of its own, a call's request and its
+  answer apart: a test touching 120 services drew 168 diagrams, and now draws four.
+- **A split never writes an empty Setup box.** A diagram split after the setup's last call (`SeparateSetup`, a long
+  diagram drawn by a PlantUML server or the local engine) started the next with a Setup box that the action's start
+  closed on nothing.
+- The wiki was wrong in places: the API reference listed `StringCasing` members that do not exist (`Underscore`,
+  `Dasherize`) and one that is internal (`Camelize`), and the ReqNRoll pages said an outline's heading keeps its title
+  as written, which is true from this release.
+
+### Tests
+
+- The viewport sweep opens the filter rows at every width and the report sheet at a phone's, which it had never
+  measured. The tests that drew a step bar with a hand copy of its style, or pinned its cells, read the emitter's own.
+- New facts hold each fix, each written first and run red on 5.9.0's code: the colour frames (`DiagramColourFrameTests`),
+  the blocks a filter empties (`FilteredBlocksTests`), the phone widths, the slider's place, the step bars' tables, the
+  names as written and the filter buttons' state. The rules behind I2 and I3 were broken one at a time, and each break
+  failed its own facts.
+
 ## [5.9.0] - 2026-10-26
 
 The minor part moves (5.8.0 to 5.9.0): the diagram menu has a new item, **Open in PlantUML editor**, a new

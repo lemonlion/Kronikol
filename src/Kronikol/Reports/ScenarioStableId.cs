@@ -68,4 +68,14 @@ public static class ScenarioStableId
     /// <summary>The stable id of a scenario the report holds: <see cref="Compute"/> over <see cref="KeyName"/>.</summary>
     internal static string For(string? suite, string featureName, Scenario scenario) =>
         Compute(suite, featureName, KeyName(scenario), scenario.OutlineId, scenario.ExampleValues);
+
+    /// <summary>
+    /// The name a feature's scenarios' ids key on: <see cref="Feature.StableIdName"/> where its lane recorded the name
+    /// 5.9.0 hashed (plans/REPORT_UI_FIXES_PLAN.md N3), else its display name.
+    /// </summary>
+    internal static string FeatureKey(Feature feature) => feature.StableIdName ?? feature.DisplayName;
+
+    /// <summary>The stable id of a scenario of <paramref name="feature"/>, keyed by <see cref="FeatureKey"/>.</summary>
+    internal static string For(string? suite, Feature feature, Scenario scenario) =>
+        For(suite, FeatureKey(feature), scenario);
 }

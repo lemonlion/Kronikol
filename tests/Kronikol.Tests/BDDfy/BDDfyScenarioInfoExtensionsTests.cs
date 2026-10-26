@@ -289,11 +289,24 @@ public class BDDfyScenarioInfoExtensionsTests
     [InlineData("OrderProcessing", "Order Processing")]
     [InlineData("Alternative Evidence Scenarios", "Alternative Evidence Scenarios")]
     [InlineData("my_feature_name", "My Feature Name")]
+    // a word with an apostrophe is kept (5.9.1, plans/REPORT_UI_FIXES_PLAN.md N2; it was "Month S Report")
+    [InlineData("Month's report", "Month's Report")]
     public void ToFeatures_titleizes_feature_display_name(string storyTitle, string expected)
     {
         var info = MakeScenario(storyTitle: storyTitle);
         var features = new[] { info }.ToFeatures();
         Assert.Equal(expected, features[0].DisplayName);
+    }
+
+    // N3: a story whose title Titleize now shows differently keeps the ids 5.9.0 gave its scenarios
+    [Theory]
+    [InlineData("Month's report", "Month S Report")]
+    [InlineData("OrderProcessing", "Order Processing")]
+    public void A_feature_shown_as_written_keeps_its_scenarios_ids(string storyTitle, string shownBy590)
+    {
+        var feature = new[] { MakeScenario(storyTitle: storyTitle) }.ToFeatures()[0];
+        var scenario = feature.Scenarios[0];
+        Assert.Equal(ScenarioStableId.For("suite", shownBy590, scenario), ScenarioStableId.For("suite", feature, scenario));
     }
 
     // ─── Deduplication uses bracket format ────────────────────────────────

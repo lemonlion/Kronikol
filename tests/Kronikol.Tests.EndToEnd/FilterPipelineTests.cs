@@ -387,4 +387,90 @@ public class FilterPipelineTests : PlaywrightTestBase
         Assert.DoesNotContain(lines, l => l.Contains("Create order") || l.Contains("Reject order"));
         Assert.Contains(lines, l => l.Contains("\"Refund\""));
     }
+
+    // ── 5.9.1 (plans/REPORT_UI_FIXES_PLAN.md E2, E3) ──
+
+    // E2: the Status and Duration buttons say whether they are chosen, as the chips do (their state was a class alone),
+    // through a click, another percentile chosen, Clear All and an address that chooses them
+    [Fact]
+    public async Task The_status_and_duration_buttons_say_whether_they_are_chosen()
+    {
+        await OpenAsync("Filters_Pressed.html");
+        var failed = Page.Locator(".filtering-box .status-toggle[data-status='Failed']");
+        var p50 = Page.Locator(".filtering-box .percentile-btn").First;
+        var custom = Page.Locator(".filtering-box .percentile-btn[data-custom='1']");
+        await Expect(failed).ToHaveAttributeAsync("aria-pressed", "false");
+        await Expect(p50).ToHaveAttributeAsync("aria-pressed", "false");
+        await Expect(custom).ToHaveAttributeAsync("aria-pressed", "false");
+
+        await failed.ClickAsync();
+        await Expect(failed).ToHaveAttributeAsync("aria-pressed", "true");
+        await p50.ClickAsync();
+        await Expect(p50).ToHaveAttributeAsync("aria-pressed", "true");
+        // choosing another percentile lets the first go
+        await custom.ClickAsync();
+        await Expect(custom).ToHaveAttributeAsync("aria-pressed", "true");
+        await Expect(p50).ToHaveAttributeAsync("aria-pressed", "false");
+        await custom.ClickAsync();
+        await Expect(custom).ToHaveAttributeAsync("aria-pressed", "false");
+
+        await p50.ClickAsync();
+        // the page writes the address at most so often (the navigation script's GAP), so a run of clicks on one control
+        // reaches it a moment later
+        await Page.WaitForFunctionAsync("() => location.hash.indexOf('status=Failed') >= 0 && location.hash.indexOf('pctl=P50') >= 0",
+            null, new() { PollingInterval = 200 });
+        var hash = await Page.EvaluateAsync<string>("() => location.hash");
+        await Page.Locator(".filtering-box-export .export-btn", new() { HasTextString = "Clear All" }).ClickAsync();
+        await Expect(failed).ToHaveAttributeAsync("aria-pressed", "false");
+        await Expect(p50).ToHaveAttributeAsync("aria-pressed", "false");
+
+        await OpenAsync("Filters_PressedAddress.html", hash);
+        await Expect(failed).ToHaveAttributeAsync("aria-pressed", "true");
+        await Expect(p50).ToHaveAttributeAsync("aria-pressed", "true");
+    }
+
+    // E3: a scenario skipped after a failure is filtered as skipped, as the summary and the ring have counted it since
+    // 5.0.0: the Status filter showed it under Failed, and `$skipped` in the filter text missed it
+    [Fact]
+    public async Task A_scenario_skipped_after_a_failure_is_filtered_as_skipped()
+    {
+        const string create = "scenario-create-order", refund = "scenario-refund-order", reject = "scenario-reject-order",
+            ship = "scenario-ship-order";
+        Feature[] features =
+        [
+            new()
+            {
+                DisplayName = "Orders",
+                Scenarios =
+                [
+                    Run("s1", "Create order", ExecutionResult.Passed, 100),
+                    Run("s2", "Reject order", ExecutionResult.Failed, 300),
+                    Run("s3", "Refund order", ExecutionResult.Skipped, 0),
+                    Run("s4", "Ship order", ExecutionResult.SkippedAfterFailure, 0)
+                ]
+            }
+        ];
+        var path = ReportGenerator.GenerateHtmlReport([new DefaultDiagramsFetcher.DiagramAsCode("s1", "", PaymentSource)],
+            features, DateTime.UtcNow, DateTime.UtcNow, null, Path.Combine(TempDir, "Filters_SkippedAfterFailure.html"), "Bakery", true,
+            diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
+        File.Copy(path, Path.Combine(OutputDir, "Filters_SkippedAfterFailure.html"), true);
+        await Page.GotoReportAsync(new Uri(path).AbsoluteUri);
+        await Page.Locator("details.feature").First.WaitForAsync();
+        await OpenFilterRowsAsync();
+
+        var skipped = Page.Locator(".filtering-box .status-toggle[data-status='Skipped']");
+        var failed = Page.Locator(".filtering-box .status-toggle[data-status='Failed']");
+        await skipped.ClickAsync();
+        Assert.Equal([refund, ship], await Shown());
+        await skipped.ClickAsync();
+        await failed.ClickAsync();
+        Assert.Equal([reject], await Shown());
+        await failed.ClickAsync();
+        Assert.Equal([create, refund, reject, ship], await Shown());
+
+        await FillSearchBar("$skipped");
+        await Page.WaitForFunctionAsync("id => document.getElementById(id).style.display === 'none'", create,
+            new() { Timeout = 10_000, PollingInterval = 200 });
+        Assert.Equal([refund, ship], await Shown());
+    }
 }

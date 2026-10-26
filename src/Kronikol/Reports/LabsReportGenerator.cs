@@ -110,7 +110,7 @@ internal static class LabsReportGenerator
             foreach (var scenario in scenarios)
             {
                 count++;
-                var stableId = ScenarioStableId.For(suite, feature.DisplayName, scenario);
+                var stableId = ScenarioStableId.For(suite, feature, scenario);
                 var entry = HistoryHtml.Entry(history, slots, stableId);
                 rows.Append("<tr class=\"labs-row\"><td>").Append(HistoryHtml.ScenarioLink(stableId, HtmlEncode(scenario.DisplayName), reportHref)).Append("</td>");
                 rows.Append("<td>").Append(entry is null ? "" : HistoryHtml.Sparkline(entry)).Append("</td>");

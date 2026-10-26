@@ -415,18 +415,39 @@ public class ReqNRollScenarioInfoExtensionsTests
         Assert.Equal("/c", features.Single(f => f.DisplayName == "Two").Endpoint);
     }
 
-    // ─── Feature name titleization ────────────────────────────────
+    // ─── Feature names as written (5.9.1, plans/REPORT_UI_FIXES_PLAN.md N1, N3) ────────────────
 
+    // A Gherkin feature heading is shown as written, as the Cucumber lane shows it: until 5.9.1 the title went through a
+    // class-name humaniser ("Month's reports via gRPC" was "Month S Reports Via G RPC")
     [Theory]
-    [InlineData("AlternativeEvidenceScenarios", "Alternative Evidence Scenarios")]
-    [InlineData("OrderProcessing", "Order Processing")]
-    [InlineData("Alternative Evidence Scenarios", "Alternative Evidence Scenarios")]
-    [InlineData("my_feature_name", "My Feature Name")]
-    public void ToFeatures_titleizes_feature_display_name(string featureTitle, string expected)
+    [InlineData("Month's reports")]
+    [InlineData("Month\u2019s reports")]
+    [InlineData("Order Status via gRPC")]
+    [InlineData("Order Cross-Field Validation")]
+    [InlineData("Orders: retry on 503")]
+    [InlineData("Pancakes \U0001F95E flip")]
+    [InlineData("OrderProcessing")]
+    public void A_gherkin_feature_title_is_shown_as_written(string featureTitle)
     {
         var info = MakeScenario(featureTitle: featureTitle);
         var features = new[] { info }.ToFeatures();
-        Assert.Equal(expected, features[0].DisplayName);
+        Assert.Equal(featureTitle, features[0].DisplayName);
+    }
+
+    // N3: the scenarios keep the ids 5.9.0 gave them, computed from the name 5.9.0 showed (M-I4's 5.9.0 column), so a
+    // feature shown as written keeps its links and its history
+    [Theory]
+    [InlineData("Order Status via gRPC", "Order Status Via G RPC")]
+    [InlineData("Month's reports", "Month S Reports")]
+    [InlineData("Month\u2019s reports", "Month S Reports")]
+    [InlineData("Order Cross-Field Validation", "Order Cross Field Validation")]
+    [InlineData("OrderProcessing", "Order Processing")]
+    public void A_feature_shown_as_written_keeps_its_scenarios_ids(string featureTitle, string shownBy590)
+    {
+        var info = MakeScenario(featureTitle: featureTitle);
+        var feature = new[] { info }.ToFeatures()[0];
+        var scenario = feature.Scenarios[0];
+        Assert.Equal(ScenarioStableId.For("suite", shownBy590, scenario), ScenarioStableId.For("suite", feature, scenario));
     }
 
     // ─── Assertion sub-steps mapping ────────────────────────────────

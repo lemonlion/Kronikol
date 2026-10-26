@@ -512,6 +512,37 @@ public class ReportToggleResponsivenessTests : PlaywrightTestBase
         }
     }
 
+    // 5.9.1 (plans/REPORT_UI_FIXES_PLAN.md I2, its cost): a note's own redraw of the long diagram colours its parts in the
+    // task that shows them (F1), as the queue's redraw has since 5.1.1; no task from the double-click to the last part
+    // shown runs over the budget. A guard, green before F1 too: it waits for every part drawn and its note buttons
+    // placed, not for the colours, which DiagramColourFrameTests holds (before F1 a part below the window was coloured
+    // only once it came into view)
+    [Fact]
+    public async Task A_notes_own_redraw_of_the_long_diagram_runs_no_long_task()
+    {
+        await OpenLongUnderTheBarAsync();
+
+        // JS dispatch: an SVG <text> would take a pointer's double-click
+        var from = await Page.EvaluateAsync<double>("""
+            () => {
+                var part = document.querySelector('.plantuml-browser[data-diagram-type=plantuml]').querySelectorAll(':scope > .puml-fragment')[1];
+                window.__before = part.querySelector('svg');
+                var t = performance.now();
+                part.querySelector('.note-hover-rect').dispatchEvent(new MouseEvent('dblclick', { bubbles: true, cancelable: true }));
+                return t;
+            }
+            """);
+        await Page.WaitForFunctionAsync("""
+            () => {
+                var c = document.querySelector('.plantuml-browser[data-diagram-type=plantuml]');
+                return !document.contains(window.__before) && !c._noteRendering && !window._plantumlRendering
+                    && Array.prototype.every.call(c.querySelectorAll(':scope > .puml-fragment'), function (p) { return !!p.querySelector('svg .note-hover-rect'); });
+            }
+            """, null, new() { Timeout = 300_000, PollingInterval = 200 });
+        var (worst, stretch) = await WorstTaskSinceAsync(from);
+        AssertWithinBudget("a note's own redraw", worst, stretch);
+    }
+
     [Fact]
     public async Task Placing_the_note_buttons_of_a_long_diagram_reads_each_word_s_box_once_and_takes_one_layout()
     {

@@ -373,7 +373,7 @@ public static class MergeableReportMerger
     /// suite when the shards disagree rather than picking one.
     /// </summary>
     private static string WhatItIs(string? suite, Feature feature, Scenario scenario) =>
-        ScenarioStableId.For(suite, feature.DisplayName, scenario);
+        ScenarioStableId.For(suite, feature, scenario);
 
     /// <summary>
     /// What a scenario is AND how its run went - the key that tells "the same run twice" from "two runs of

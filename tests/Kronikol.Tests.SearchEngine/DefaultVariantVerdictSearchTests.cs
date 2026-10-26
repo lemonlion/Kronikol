@@ -47,4 +47,13 @@ public class DefaultVariantVerdictSearchTests
         Assert.False(Match("$passed", "Failed"));
         Assert.True(Match("$failed || $flaky", "Failed"));
     }
+
+    // E3 (5.9.1): a scenario skipped after a failure is found by $skipped, as the summary counts it, in this variant too
+    [Fact]
+    public void A_scenario_skipped_after_a_failure_is_skipped()
+    {
+        Assert.True(Match("$skipped", "SkippedAfterFailure"));
+        Assert.True(Match("$skippedafterfailure", "SkippedAfterFailure"));
+        Assert.False(Match("$failed", "SkippedAfterFailure"));
+    }
 }

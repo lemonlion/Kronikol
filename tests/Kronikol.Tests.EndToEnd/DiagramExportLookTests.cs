@@ -14,16 +14,10 @@ public class DiagramExportLookTests : DiagramNotePlaywrightBase
 {
     public DiagramExportLookTests(PlaywrightFixture fixture) : base(fixture) { }
 
-    private const string Source = """
+    private const string Source = $$"""
         @startuml
         !pragma teoz true
-        <style>
-         .stepBody {
-             BackgroundColor black
-             FontColor white
-             LineColor white
-         }
-        </style>
+        {{Kronikol.PlantUml.StepBarPlantUml.BodyStyle}}
         actor "Caller" as caller
         participant "OrderService" as svc
         hnote across <<stepDelimiter>><<stepBody>>: Given the following muffins exist\n\n|= name |= price |\n| Blueberry | 3.50 |\n| Double Chocolate | 4.00 |

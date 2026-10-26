@@ -218,4 +218,14 @@ public class EvaluatorTests : JintTestBase
     }
 
     #endregion
+
+    // E3 (5.9.1): a scenario skipped after a failure is skipped, as the summary counts it; its own name still finds it alone
+    [Fact]
+    public void Status_skipped_matches_a_scenario_skipped_after_a_failure()
+    {
+        Assert.True(CallEvaluate(new AstStatus("skipped"), "some text", [], "SkippedAfterFailure"));
+        Assert.True(CallEvaluate(new AstStatus("skippedafterfailure"), "some text", [], "SkippedAfterFailure"));
+        Assert.False(CallEvaluate(new AstStatus("skippedafterfailure"), "some text", [], "Skipped"));
+        Assert.False(CallEvaluate(new AstStatus("failed"), "some text", [], "SkippedAfterFailure"));
+    }
 }

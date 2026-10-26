@@ -453,8 +453,13 @@ public class IngestPipelineTests : IDisposable
         // diagram carries the .stepBody style that colours them. Each bar ends at its last row, with no blank
         // line under it from 5.0.0 (plans/OPTION_C_PLAN.md R17.6): the source's own line break follows.
         var lines = diagram.ReplaceLineEndings("\n");
-        Assert.Contains(@"<<stepDelimiter>><<stepBody>>: Given the following muffins exist\n\n|= name |= price |\n| Blueberry | 3.50 |\n| Double Chocolate | 4.00 |" + "\n", lines);
-        Assert.Contains(@"<<stepDelimiter>><<stepBody>>: When the request body is\n\n{ ""muffin"": ""Blueberry"" }" + "\n", lines);
+        // each cell with the HTML table's room, and the doc string one framed cell (5.9.1, plans/REPORT_UI_FIXES_PLAN.md B2, B3)
+        const string open = "<space:8><sup><U+200B></sup>", close = "<sub><U+200B></sub><space:8>";
+        Assert.Contains(@"<<stepDelimiter>><<stepBody>>: Given the following muffins exist\n\n"
+            + "|=" + open + "name" + close + "|=" + open + "price" + close + "|" + @"\n"
+            + "|" + open + "Blueberry" + close + "|" + open + "3.50" + close + "|" + @"\n"
+            + "|" + open + "Double Chocolate" + close + "|" + open + "4.00" + close + "|" + "\n", lines);
+        Assert.Contains(@"<<stepDelimiter>><<stepBody>>: When the request body is\n\n|" + open + @"{ ""muffin"": ""Blueberry"" }" + close + "|" + "\n", lines);
         Assert.Contains(".stepBody {", diagram);
         Assert.Contains("FontColor white", diagram);
     }

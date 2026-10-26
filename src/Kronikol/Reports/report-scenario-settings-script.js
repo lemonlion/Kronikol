@@ -29,6 +29,8 @@
         var titleGear = section && section.querySelector(':scope > summary > .gear-in-summary');
         if (titleGear) titleGear.setAttribute('aria-expanded', open ? 'true' : 'false');
         if (open) adjacent(settings);
+        // the zoom slider of a diagram below follows the settings' new bottom (5.9.1, plans/REPORT_UI_FIXES_PLAN.md S4)
+        if (window.kronikol_followZoomSlider) window.kronikol_followZoomSlider();
     }
 
     document.addEventListener('click', function (e) {

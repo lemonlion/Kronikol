@@ -23,28 +23,16 @@
         return false;
     }
 
-    // The top of the window's free band: below the bar while it is pinned (the mark that holds its place has gone above
-    // the line it sticks at; at rest it covers nothing), and below a scenario's open settings stuck under it, for a
-    // control that comes after them.
-    function freeTop(t, nav) {
-        var mark = doc.querySelector('.nav-mark'), line = parseFloat(getComputedStyle(nav).top) || 0;
-        var top = mark && mark.getBoundingClientRect().top < line - 0.5 ? nav.getBoundingClientRect().bottom : 0;
-        var open = doc.querySelectorAll('.scenario-settings.is-open');
-        for (var i = 0; i < open.length; i++) {
-            var s = open[i];
-            if (s.contains(t) || !(s.compareDocumentPosition(t) & Node.DOCUMENT_POSITION_FOLLOWING)) continue;
-            if (getComputedStyle(s).position !== 'sticky') continue;
-            var r = s.getBoundingClientRect();
-            if (r.height && r.top <= top + 1 && r.bottom > top) top = r.bottom;
-        }
-        return top + GAP;
-    }
+    // The top of the window's free band, GAP below it: below the bar while it is pinned and below a scenario's open
+    // settings stuck under it, for a control that comes after them (report-tabs-script.js, which the zoom slider shares
+    // from 5.9.1)
+    function freeTop(t) { return window.kronikol_freeTop(t) + GAP; }
 
     function clear(t, nav) {
         if (doc.activeElement !== t || !sticks(nav) || stays(t, nav)) return;
         var r = t.getBoundingClientRect();
         if (!r.height) return;
-        var top = freeTop(t, nav), bottom = window.innerHeight - GAP;
+        var top = freeTop(t), bottom = window.innerHeight - GAP;
         // a control taller than the band that already shows in it is not hidden by the bar: bringing its top down moved a
         // whole scenario (round 17 item 20)
         if (r.height > bottom - top && r.bottom > top + 24 && r.top < bottom - 24) return;

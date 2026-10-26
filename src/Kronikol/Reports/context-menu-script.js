@@ -1634,25 +1634,45 @@
     // ── The slider follows the window down its box (B4, Z10) ──
     // The controls are sticky, but the box's horizontal scroll makes the box their scroll box, which never scrolls down:
     // in the middle of a tall diagram the slider stayed at the diagram's top, out of reach (until 5.7.0). The controls of
-    // the box under the pointer and of the selected one are moved down the box with the window, below the report's bar.
-    var hoveredBox = null, followFrame = 0;
+    // the box under the pointer, of the selected one and of a slider the keyboard reached are moved down the box with the
+    // window, below whatever floats over it: the report's bar while it is pinned, and a scenario's open settings stuck
+    // under the bar (report-tabs-script.js's kronikol_freeTop; until 5.9.1 the slider followed the bar alone and stood on
+    // the settings' top row, plans/REPORT_UI_FIXES_PLAN.md S1).
+    // The slider's line is 11 px below that edge: the painted thumb's half-height (6.9 px of its 14.5 in Chromium) and
+    // 4.5 px clear of the edge, where 5.7.0's bar + 8 px left 1.5 px (S3, measured in the plan's M-I5).
+    var SLIDER_LINE_BELOW = 11;
+    var hoveredBox = null, focusedBox = null, followFrame = 0;
     function placeControls(box) {
         var controls = box.querySelector(':scope > .diagram-zoom-controls');
         if (!controls) return;
         var r = box.getBoundingClientRect();
-        var bar = parseFloat(window.getComputedStyle(document.documentElement).getPropertyValue('--kron-nav-h')) || 0;
+        var free = window.kronikol_freeTop ? window.kronikol_freeTop(box)
+            : parseFloat(window.getComputedStyle(document.documentElement).getPropertyValue('--kron-nav-h')) || 0;
         var top = parseFloat(window.getComputedStyle(controls).top) || 0;
-        var down = Math.max(0, Math.min(bar + 8 - (r.top + top), r.height - 2 * top - 24));
+        var down = Math.max(0, Math.min(free + SLIDER_LINE_BELOW - (r.top + top), r.height - 2 * top - 24));
         controls.style.transform = down > 0 ? 'translateY(' + Math.round(down) + 'px)' : '';
     }
     function followSoon() {
         if (followFrame) return;
         followFrame = requestAnimationFrame(function() {
             followFrame = 0;
-            [hoveredBox, selectedDiagram].forEach(function(b) { if (b && b.isConnected) placeControls(b); });
+            [hoveredBox, selectedDiagram, focusedBox].forEach(function(b) { if (b && b.isConnected) placeControls(b); });
         });
     }
     window.addEventListener('scroll', followSoon, { passive: true });
+    // the settings opening, closing or wrapping onto another row move the free band's top (S4)
+    window.addEventListener('resize', followSoon);
+    window.kronikol_followZoomSlider = followSoon;
+    // a slider the keyboard reached follows the window as a hovered one does (S4, E18: until 5.9.1 it kept the place it
+    // was last given unless its box was also hovered or selected)
+    document.addEventListener('focusin', function(e) {
+        var c = e.target && e.target.closest ? e.target.closest('.diagram-zoom-controls') : null;
+        var box = c ? c.parentElement : null;
+        if (box !== focusedBox) { focusedBox = box; if (box) followSoon(); }
+    });
+    document.addEventListener('focusout', function(e) {
+        if (focusedBox && !(e.relatedTarget && focusedBox.contains(e.relatedTarget))) focusedBox = null;
+    });
 
     // The window changes width (resized, a docked panel, the page zoomed): a box's width decides its range and its fit
     // level, so every slider is made again, near the screen at once and the rest as they come near (until 5.7.3 a slider

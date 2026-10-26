@@ -120,6 +120,8 @@ public static class MergeableReportReader
             features.Add(new Feature
             {
                 DisplayName = GetString(fe, "name") ?? "",
+                // the name the run's ids were computed from, where it was not the name (plans/REPORT_UI_FIXES_PLAN.md N3)
+                StableIdName = GetString(fe, "stableIdName"),
                 Endpoint = GetString(fe, "endpoint"),
                 Description = GetString(fe, "description"),
                 SourceFile = GetString(fe, "sourceFile"),
@@ -249,6 +251,7 @@ public static class MergeableReportReader
         // The merge used to lose it: the merged report counted a shard's fold scenario as a passed test, and its
         // history called it passing against the ledger that recorded it as not a test (plans/RUN_WINDOW_PLAN.md R1, F7).
         NotATest = se.TryGetProperty("notATest", out var notATest) && notATest.ValueKind == JsonValueKind.True,
+        NameAsWritten = se.TryGetProperty("nameAsWritten", out var asWritten) && asWritten.ValueKind == JsonValueKind.True,
         // A Reqnroll outline row named from its values keys its id on its outline's title (#101); without the mark the
         // merge would hash the filled name and give the row an id its shard never wrote.
         KeyedByOutline = se.TryGetProperty("keyedByOutline", out var keyedByOutline) && keyedByOutline.ValueKind == JsonValueKind.True,

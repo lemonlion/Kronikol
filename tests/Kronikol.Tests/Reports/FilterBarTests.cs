@@ -97,7 +97,7 @@ public class FilterBarTests
             "<div class=\"nav-mark\" aria-hidden=\"true\"></div><div class=\"toolbar-row report-nav on-features\"><div class=\"nav-row\"><div class=\"report-tabs\" role=\"tablist\"",
             "</div><div class=\"nav-filters\" role=\"group\" aria-label=\"Filters\">"
             + "<span class=\"nav-readout\" aria-hidden=\"true\" title=\"The scenarios and features the filters leave showing\"><span class=\"nav-readout-long\">All 2 scenarios, 1 feature</span><span class=\"nav-readout-short\">All 2 scenarios</span></span>"
-            + "<button type=\"button\" class=\"nav-clear\" title=\"Clear every filter: the search with its dep:, duration: and is: terms, and the statuses, duration, happy paths and tags\" hidden>Clear All</button>"
+            + "<button type=\"button\" class=\"nav-clear\" title=\"Clear every filter: the filter text with its dep:, duration: and is: terms, and the statuses, duration, happy paths and tags\" hidden>Clear All</button>"
             + "<button type=\"button\" class=\"nav-filters-toggle\" aria-expanded=\"false\" aria-controls=\"filtering-box\" title=\"Show the filter box in this bar, so it stays in view as you scroll\"><svg ",
             "</svg><span>Filters</span></button></div></div>",
             "<div class=\"features-tools\">");

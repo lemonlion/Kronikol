@@ -1983,13 +1983,7 @@ public static class ReportTestHelper
 
         var source = $$"""
             @startuml
-            <style>
-             .stepBody {
-                 BackgroundColor black
-                 FontColor white
-                 LineColor white
-             }
-            </style>
+            {{Kronikol.PlantUml.StepBarPlantUml.BodyStyle}}
             actor "Caller" as caller
             participant "OrderService" as svc
 
@@ -4804,7 +4798,7 @@ public static class ReportTestHelper
         var t2 = Pair("t2", "POST", "/launch", """{"launch":"<:rocket:>"}""", System.Net.HttpStatusCode.OK, """{"ok":true}""");
         var lightBddBar = Kronikol.Ingestion.InteractionRecord.StepDelimiterPlantUml(
             "Given", "I have data [inputs: \"<$inputs>\"]", table: [["name"], ["Vec"]]);
-        t2 = t2.Replace("@enduml", "<style>\n .stepBody {\n     BackgroundColor black\n     FontColor white\n     LineColor white\n }\n</style>\n@enduml");
+        t2 = t2.Replace("@enduml", Kronikol.PlantUml.StepBarPlantUml.BodyStyle + "\n@enduml");
         t2 = System.Text.RegularExpressions.Regex.Replace(t2, @"\n(caller -)", "\n" + lightBddBar.Replace("$", "$$") + "\n$1", System.Text.RegularExpressions.RegexOptions.None, TimeSpan.FromSeconds(5));
 
         var diagrams = new[]

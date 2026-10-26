@@ -1,3 +1,4 @@
+using AngleSharp.Dom;
 using Kronikol.Reports;
 using Kronikol.Tracking;
 
@@ -198,7 +199,7 @@ public class FilterRowsTests
     {
         var html = Generate("FilterRows_Readout.html");
         Assert.Contains("<div class=\"filtering-box-export\"><span class=\"filter-readout\" role=\"status\" title=\"The scenarios and features the filters leave showing\">All 5 scenarios, 2 features</span>"
-            + "<button class=\"export-btn\" onclick=\"clear_all_filters()\" title=\"Clear every filter: the search with its dep:, duration: and is: terms, and the statuses, duration, happy paths, tags and dependencies\">Clear All</button>", html);
+            + "<button class=\"export-btn\" onclick=\"clear_all_filters()\" title=\"Clear every filter: the filter text with its dep:, duration: and is: terms, and the statuses, duration, happy paths, tags and dependencies\">Clear All</button>", html);
         Assert.Contains(" data-runs=\"2\"", html);
         Assert.Equal(1, System.Text.RegularExpressions.Regex.Count(html, " data-runs=\""));
 
@@ -215,14 +216,39 @@ public class FilterRowsTests
     }
 
     [Fact]
-    public void The_search_names_its_qualifiers_in_the_placeholder_and_the_help()
+    public void The_filter_text_names_its_qualifiers_in_the_placeholder_and_the_help()
     {
         var box = Box(Generate("FilterRows_Search.html"));
-        Assert.Contains("placeholder=\"Search... (@tag, $status, dep:, duration:, &&, ||, !!)\"", box);
+        Assert.Contains("placeholder=\"Filter... (@tag, $status, dep:, duration:, &&, ||, !!)\"", box);
         Assert.Contains("<tr><td><code>dep:name</code></td><td>Scenarios that call a dependency: part of its name is enough; commas for any of several</td>", box);
         Assert.Contains("<tr><td><code>duration:&gt;2s</code></td>", box);
         Assert.Contains("<tr><td><code>is:happy</code></td><td>Happy paths</td>", box);
-        Assert.Contains("<code>dep:</code>, <code>duration:</code> and <code>is:</code> always narrow the search: they combine with the rest of it by AND, and can be negated with <code>!!</code> or <code>not</code>. Inside a group that <code>!!</code> or <code>not</code> negates, one is read as text, and the search bar is marked.</p>", box);
+        Assert.Contains("<code>dep:</code>, <code>duration:</code> and <code>is:</code> always narrow the filter: they combine with the rest of it by AND, and can be negated with <code>!!</code> or <code>not</code>. Inside a group that <code>!!</code> or <code>not</code> negates, one is read as text, and the field is marked.</p>", box);
+    }
+
+    // 5.9.1 (plans/REPORT_UI_FIXES_PLAN.md I9, W1 and W4): the field hides what does not match, as the rows beside it do,
+    // so the words a reader sees in the box, and on the bar's copy of its Clear All, say filter
+    [Fact]
+    public void The_filter_box_never_calls_its_filtering_a_search()
+    {
+        foreach (var (name, includeTestRunData) in new[] { ("FilterRows_Words.html", true), ("FilterRows_WordsSpecifications.html", false) })
+        {
+            var html = Generate(name, includeTestRunData: includeTestRunData);
+            var page = new AngleSharp.Html.Parser.HtmlParser().ParseDocument(html);
+            var scopes = page.QuerySelectorAll("#filtering-box, .nav-filters").ToArray();
+            Assert.Contains(scopes, s => s.Id == "filtering-box");
+            var said = scopes.SelectMany(s => s.Descendants().Prepend(s))
+                .SelectMany(n => n is AngleSharp.Dom.IElement e
+                    ? new[] { e.GetAttribute("placeholder"), e.GetAttribute("title"), e.GetAttribute("aria-label") }
+                    : n.NodeType == AngleSharp.Dom.NodeType.Text ? new[] { n.TextContent } : [])
+                .Where(t => t is not null && t.Contains("search", StringComparison.OrdinalIgnoreCase))
+                .ToArray();
+            Assert.True(said.Length == 0, name + " calls the filtering a search: " + string.Join(" | ", said));
+
+            // the note the deep index writes into the field while it reads the payloads and diagrams
+            Assert.Contains("kron-deep-chip", html);
+            Assert.DoesNotContain("searching everything", html);
+        }
     }
 
     [Fact]

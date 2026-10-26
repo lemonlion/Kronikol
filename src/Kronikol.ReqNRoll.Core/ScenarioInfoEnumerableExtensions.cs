@@ -49,6 +49,8 @@ internal static class ScenarioInfoEnumerableExtensions
                             {
                                 Id = x.ScenarioId,
                                 DisplayName = displayName,
+                                // a Gherkin name, shown as written (5.9.1, plans/REPORT_UI_FIXES_PLAN.md N4, N5)
+                                NameAsWritten = true,
                                 KeyedByOutline = x.OutlineId is not null && !string.Equals(displayName, x.OutlineId, StringComparison.Ordinal),
                                 Description = GherkinText.NullIfBlank(GherkinText.Dedent(x.ScenarioDescription)),
                                 IsHappyPath = ScenarioTags.Classify(x.ScenarioTags).IsHappyPath,
@@ -79,7 +81,11 @@ internal static class ScenarioInfoEnumerableExtensions
 
                 return new Feature
                 {
-                    DisplayName = featureGroup.Key.Titleize(),
+                    // as written, as the Cucumber lane shows it (5.9.1, plans/REPORT_UI_FIXES_PLAN.md N1; until then a
+                    // class-name humaniser made "Month's reports via gRPC" "Month S Reports Via G RPC"), its scenarios
+                    // keeping the ids 5.9.0 computed from that name (N3)
+                    DisplayName = featureGroup.Key,
+                    StableIdName = StringCasing.TitleizeAsOf590(featureGroup.Key),
                     Endpoint = endpoint,
                     Description = GherkinText.NullIfBlank(GherkinText.Dedent(firstScenario.FeatureDescription)),
                     // Scenarios are grouped by feature title, so any member's path is the feature's -
