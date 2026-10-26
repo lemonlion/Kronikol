@@ -274,9 +274,12 @@ public class DiagramColourFrameTests : PlaywrightTestBase
         await Page.GotoReportAsync(Dense.Value, new() { Timeout = PageOpenTimeout });
         await Page.EvaluateAsync("() => document.querySelectorAll('details.feature, details.scenario').forEach(function (d) { d.open = true; })");
         await Page.EvaluateAsync("() => window._renderDiagramsInContainer(document.body)");
+        // every picture drawn; not every one coloured, since one the page has not laid out yet (a far feature under
+        // content-visibility) gets its role pass only when it gets a box, which is this fact's case (a CI run timed out
+        // here waiting for the colours, 5.10.1)
         await Page.WaitForFunctionAsync("""
             () => !window._plantumlRendering && Array.prototype.every.call(document.querySelectorAll('.diagram-view-seq .plantuml-browser'),
-                function (c) { return !!c.querySelector('svg[data-k-roles]'); })
+                function (c) { return !!c.querySelector('svg'); })
             """, null, new() { Timeout = 300_000, PollingInterval = 200 });
         await Page.Locator("#tab-timeline").ClickAsync();
         await Page.EvaluateAsync("() => document.querySelector('.toolbar-row .toggle-btn[data-toggle=\"databases\"]').click()");
