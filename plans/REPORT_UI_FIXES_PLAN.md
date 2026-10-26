@@ -1,12 +1,14 @@
-# REPORT_UI_FIXES_PLAN: eight report fixes, two of them new controls
+# REPORT_UI_FIXES_PLAN: nine report fixes, two of them new controls
 
-**Status: draft, not green-lit.** Written 2026-10-26 at the owner's ask (section 1). Every `file:line` is at `main`
+**Status: green-lit 2026-10-26, being built.** The owner: "Implement the plan in full", with the recommended answer taken
+for every question of section 8, and one more item, I9 (section 4.10): the filter box stops calling its filtering a
+search. Written 2026-10-26 at the owner's ask (section 1). Every `file:line` is at `main`
 `37428293` (5.9.0) unless it says otherwise. The probes of section 3 ran on reports written by 5.8.0 (`29e551f3`); 5.9.0
 added the diagram menu's PlantUML editor and changed nothing they measure.
 
 ## 0. In short
 
-Eight asks, each traced to its cause in the code and reproduced on a report Kronikol 5.8.0 wrote (section 3):
+Nine asks, each traced to its cause in the code; the first eight reproduced on a report Kronikol 5.8.0 wrote (section 3):
 
 | | Today, measured | Cause | The fix |
 |---|---|---|---|
@@ -18,6 +20,7 @@ Eight asks, each traced to its cause in the code and reproduced on a report Kron
 | **I6** step bars | a table sits 33 px left of its bar's centre; cells have no room | no alignment is set (the engine's default is left); cells get one space | `HorizontalAlignment center`; `<space:8>` and zero-width struts give exactly the HTML table's `padding: 3px 8px`; doc strings stay a framed block; the header centred by the page, as the HTML (4.6) |
 | **I7** phone | the report's YAML and WRAP selects 80 px wide in a 313 px sheet; the Timeline's buttons narrow | a desktop rule outranks the phone rule (`stylesheets.css:805-808`); no phone rule for the Timeline | one CSS rule each (4.7) |
 | **I8** trend | the rings wrap onto 9 rows at 1000 px, oldest first | the rings are a grid, the bars a scroller (`history-styles.css:147-195`) | one row that scrolls, like the bars; an **Order: Newest first / Oldest first** switch, newest first by default, in markup and CSS only (the labs page runs no script), measured working in Chromium, Firefox and WebKit (4.8) |
+| **I9** words | the filter box's text field says "Search... (@tag, ...)", its title "Search names, steps, ...", its help "How to write a search" | the field was named for 4.x's search bar (`ReportGenerator.cs:1926`, `:3110-3113`, `:1944`) | the words a reader sees say filter: the field, its title, its help, the readouts and the wiki; no identifier changes (4.10) |
 
 Twenty more defects were found on the way (section 5), each with its fix and its test. Among them: a service named
 "Group" or "Loop" breaks the diagram splitter and the Setup filter (shown), and a Gherkin scenario ending in brackets is
@@ -25,7 +28,7 @@ shown as a parameterised group with an "Arg 0" column (shown). Read in the code,
 split can write an empty Setup box, the width estimate is never reset (so a wide test splits into one diagram per call
 after its first split), and the filter rows' ANY/ALL buttons miss the phone's 36 px touch size.
 
-Releases (section 7): **R1, a patch** (I2 to I7 and the found defects), then **R2, a minor** (I1 and I8, each a new report
+Releases (section 7): **R1, a patch** (I2 to I7, I9 and the found defects), then **R2, a minor** (I1 and I8, each a new report
 control), after 5.9.0, which is on `main` now. The owner's choices are in section 8; the ones that shape the work most are Q1
 (what Happy paths' Hide does on a two-way row), Q3 (the switch's look: the words are recommended over the lines, which
 read as `=` and `≡`), Q5 (keeping the renamed features' ids), Q14 (two releases or one) and Q16 (whether R2's changed
@@ -66,7 +69,10 @@ The owner, 2026-10-26, verbatim:
 >   isn't enough room, just like 'TOTAL DURATION'. Also you should be able to toggle between oldest run first and
 >   newest run first, with newest run first being the default.
 
-The items are numbered I1 to I8 in that order below.
+The items are numbered I1 to I8 in that order below. With the green light the owner added a ninth, I9, verbatim:
+
+> Oh one other thing is to make sure the plan includes that we stop referring to filtering in the filter box asw
+> searching
 
 ## 2. What happens today
 
@@ -123,7 +129,7 @@ chip has.** The link (`report-url-hash-function.js:130-163`) writes `tags=` / `t
 (`reset_filters`, `report-export-function.js:3-31`); a row's Clear resets its chips, not its mode
 (`report-filter-chips-script.js:166-175`). Nothing is stored: `localStorage` holds the theme alone, which
 `PersistentFilterStateReportTests.Report_stores_nothing_but_the_theme` pins (`:37-49`). Export Filtered HTML has no
-filter box and reads only visibility (`report-export-function.js:119-146`), and the search can exclude on its own
+filter box and reads only visibility (`report-export-function.js:119-146`), and the filter text can exclude on its own
 (`!!`, `!!@tag`, `!!dep:x`), so two-state chips take no ability away.
 
 **Why three states.** The owner chose a tri-state component for Tags, Dependencies and Categories on 2026-08-31
@@ -337,7 +343,7 @@ It does not stop at apostrophes (traced by evaluating the same regexes, harness 
 
 On real data: 5 of BreakfastProvider's 67 `Feature:` titles are shown differently from how they are written (`Order
 Status via gRPC`, `Recipe Summary via gRPC`, `Stream Order Updates via gRPC`, `Order Cross-Field Validation`, `Reporting
-EventGrid Webhook`), and a search for `grpc` misses them, since the page indexes the feature name as shown
+EventGrid Webhook`), and filtering by `grpc` misses them, since the page indexes the feature name as shown
 (`ReportGenerator.cs:2460` for a plain scenario, `:3534` and `:3557` for a group).
 
 Other lanes titleize names a person wrote too, which the same fix family reaches: BDDfy's `[Story(Title = ...)]`
@@ -781,7 +787,7 @@ question in section 8 and is written as recommended.
   where the wiki and the page's one phone breakpoint say 768 px (E19, Q17).
 - **C12. Where.** The rows are the generator's (`ReportGenerator.cs:2002-2027`), so `TestRunReport.html`,
   `Specifications.html` and a merged report all get the switch. The filtered export has no filter box and reads only
-  visibility, so it needs nothing; the search's own `!!` exclusions are untouched.
+  visibility, so it needs nothing; the filter text's own `!!` exclusions are untouched.
 - **C13. No new option.** Nothing asks for a configured start state; `ReportToggleDefaults` would take a member
   (`TagChipWays`, `DependencyChipWays`) only if the owner wants one (Q4). The seeds go into the scripts the way the modes'
   do (`__TAG_WAYS_DEFAULT__`, `__DEP_WAYS_DEFAULT__`, `ReportGenerator.cs:1488-1502`), and the generator writes the
@@ -958,7 +964,7 @@ its three-way colours, the 36 px list), the violet theme's hover edges (`Constan
   (section 5, E10, E11); a doc string's box gets a ground and no header (B4).
 - **Guards that move with B2 and B3:** `TruncateLabel` must never cut inside `<space:...>`, `<sup>`, `</sup>`, `<sub>` or
   `</sub>` (it refuses only `<U+`, `PlantUmlStatementLimits.cs:268-275`), nor between a cell's `\\n` and its `n`. The
-  search's normaliser strips `<space:N>`, `<sup>`, `</sup>`, `<sub>` and `</sub>` from indexed text (it strips six tag
+  filter text's normaliser (`SearchNormalizer`) strips `<space:N>`, `<sup>`, `</sup>`, `<sub>` and `</sub>` from indexed text (it strips six tag
   names today, `Reports/SearchIndex/SearchNormalizer.cs:106-130`) and reads a cell's `\\n` as a break, where rule 5a
   (`SearchNormalizer.cs:43`, `report-search-index.js:71`) removes the `\n` and leaves the first backslash glued to the next
   line; `report-search-index.js:70-71` and the shared vectors move with it.
@@ -1017,6 +1023,32 @@ its three-way colours, the 36 px list), the violet theme's hover edges (`Constan
 | I6 | bar text and tables start at the left, cells tight | centred, cells with the HTML table's room, header centred |
 | I7 | the report's YAML and WRAP selects and the Timeline's buttons narrow on a phone | full width, as the scenario sheet's |
 | I8 | the rings wrap onto rows, oldest first | one row that scrolls, newest first, with a switch to oldest first |
+| I9 | the filter box's field says "Search...", and its title, help and readouts call its filtering a search | they say filter |
+
+### 4.10 I9, the filter box says filter
+
+The filter box's text field hides the scenarios that do not match it: it filters, as the rows beside it do, and nothing
+on the page searches. Its words date from 4.x's search bar. A dedicated search is planned (`plans/SEARCH_PLAN.md`), and
+the owner wants the two kept apart in words.
+
+- **W1. What a reader sees says filter.** The field's placeholder becomes "Filter... (@tag, $status, dep:, duration:, &&,
+  ||, !!)" (`ReportGenerator.cs:1926`); its title "Filter by names, steps, tags and diagram text. ..." (`SearchTitle`,
+  `:3110`), the rest of the sentence as today; the `?` button's "How to write a filter: ..." (`SearchHelpTitle`, `:3113`);
+  the help panel's rows and note ("Press / to focus the filter field", qualifiers that "narrow the filter", "the field
+  is marked", `:1929-1944`); and every other string the page shows that calls the field's filtering a search: the
+  readouts and live region, Clear All's title, the `/` key's description, the outline rows' highlighting, found at
+  execution by a grep of the page's scripts and the generator for user-visible "search".
+- **W2. No identifier changes.** `#searchbar`, `search_scenarios`, `toggle_search_help`, the `search-*` classes, the `q=`
+  key, `advanced-search.js`, `SearchNormalizer`, the deep index (`#kron-search-index`) and the test helper `FillSearchBar`
+  keep their names: a reader never sees them, a custom stylesheet or script and every saved link read them, and
+  `SEARCH_PLAN.md` keeps `#searchbar` as its hidden field. Their comments say "filter" where they describe the field.
+- **W3. The wiki.** The filter box's sections of `Generated-Reports.md` (`:98`, `:695`, `:705-731`, `:759`, `:965`, `:986`,
+  `:1134`, `:1193`, `:1229`) and `Search-Syntax.md` say filter. The page keeps its file name, which the changelog and other
+  pages link to, and its heading becomes "Filter Syntax", with a line saying it was "Search Syntax" up to 5.9.0. The
+  changelog's past entries stay as written.
+- **W4. Held by a test.** No text, placeholder, title or `aria-label` inside `.filtering-box` contains "search", in any
+  case. SEARCH_PLAN's builder and Search tab, when they come, are a search and live outside the box.
+- **Release:** R1. It corrects generated output and changes no identifier, option or member: a patch.
 
 ## 5. Bugs found on the way
 
@@ -1028,7 +1060,7 @@ alone, and its red test comes first.
 |---|---|---|---|---|---|
 | E1 | The ANY/ALL buttons and a row's Clear are 28 px on a phone, under the 36 px every other filter control gets | `stylesheets.css:2202` lists the chips, not `.tag-mode-toggle`, `.dep-mode-toggle`, `.group-clear` | read | add them (and the new switch) to the list | I1 |
 | E2 | The Status buttons and the Duration buttons carry their chosen state in a class only, no `aria-pressed` | `ReportGenerator.cs:1963`, `:1990`; `report-status-filter-function.js:1-4`; `report-duration-filter-function.js:24-26` | read | `aria-pressed` written and kept, as the chips do | I1 |
-| E3 | A scenario skipped after a failure shows under the Status filter's Failed, while the summary and the ring count it as Skipped (5.0.0) and `$skipped` in the search misses it | `report-status-filter-function.js:22`; `ReportGenerator.cs:1779-1781`; `advanced-search.js:284-286` | read | the filter and the search count it as Skipped, as the summary does (Q15) | I1 |
+| E3 | A scenario skipped after a failure shows under the Status filter's Failed, while the summary and the ring count it as Skipped (5.0.0) and `$skipped` in the filter text misses it | `report-status-filter-function.js:22`; `ReportGenerator.cs:1779-1781`; `advanced-search.js:284-286` | read | the filter and the search count it as Skipped, as the summary does (Q15) | I1 |
 | E4 | `ViewportSweepTests` opens the filter rows only at 768 px and below, so the Tags and Dependencies rows are never measured at a desktop width | `ViewportSweepTests.cs:230-253` | read | open More filters at every width | I1 |
 | E5 | A participant whose alias is a block keyword (a service named Group, Loop, Alt, Opt, Par, Break, Critical or Partition) is read as a block opener: the splitter adds stray `end`s and repeats earlier calls in later parts, the Setup filter silently leaves the setup in, and the C# guard caps the message at the 600-character block-label limit | RS:966, `scanOpenBlocks` RS:1112; CN:3144, :3168, :3187; `PlantUmlStatementLimits.cs:419-424`, `:462-463` | shown (node, the page's own functions; `item3-loops.md`) | test for an arrow before an opener everywhere, as `parseTraceUnits` does (RS:854) | I3 |
 | E6 | A C# split re-opens the Setup box eagerly, so when the next trace starts the action, the next diagram opens with an empty Setup box | `PlantUmlCreator.cs:2210-2214` with `:235-238`, `:266-272` | read | re-open lazily, before the next setup content, as the first opening does (`:286-287`) | I3 |
@@ -1223,13 +1255,21 @@ E2E `MobileResponsiveTests` at 375 and at 600 px, each case setting its own view
 | `The_labs_page_orders_the_cards_with_none_of_the_reports_scripts` | E2E `HistoryRingsTests` (beside 184-218) | H3 on the labs page; its script pins (`LabsReportTests.cs:114-124`, `LabsPageTests.cs:79-87`) unchanged | no switch |
 | the same two facts in Firefox and WebKit | E2E, an engine parameter as `BackForwardRestoreTests` has | `:has()` and the scroll start in each engine | no switch |
 
+### 6.9 I9
+
+| Fact | File | Holds | Red today because |
+|---|---|---|---|
+| `The_filter_box_never_calls_its_filtering_a_search` | unit `FilterRowsTests` | W1, W4: no text node, placeholder, `title` or `aria-label` inside `.filtering-box` contains "search" in any case, on a TestRunReport, a Specifications page and a page without tabs | "Search...", "Search names, ...", "How to write a search", the help note |
+| `The_filter_fields_title_and_help_say_filter` | unit `ControlTitlesTests` | W1: the field's title and the `?` button's, word for word | the search titles |
+| the placeholder and help-row pins (`FilterRowsTests.cs:57-62`, `:217-226`) and any E2E fact that reads the placeholder | unit, E2E | W1 | (re-pointed) |
+
 ## 7. Releases
 
 ### 7.1 Order and version
 
 | Release | Holds | Bump, and why | Number |
 |---|---|---|---|
-| R1 | I2 to I7 and every fix of section 5, E1 to E4 included (that table's "With" column names the item whose code and tests a fix shares, not its release); E1's line for the new switch comes with the switch in R2 | **patch**: every change is a fix or a correction of generated output; nothing new for a consumer to call. N3's recorded key (if Q5 keeps ids) is data-file plumbing on the #101 pattern, which shipped in patches (5.4.3, 5.4.4). | the patch after the newest release on `main` when it is pushed: 5.9.1 as things stand |
+| R1 | I2 to I7, I9 and every fix of section 5, E1 to E4 included (that table's "With" column names the item whose code and tests a fix shares, not its release); E1's line for the new switch comes with the switch in R2 | **patch**: every change is a fix or a correction of generated output; nothing new for a consumer to call. N3's recorded key (if Q5 keeps ids) is data-file plumbing on the #101 pattern, which shipped in patches (5.4.3, 5.4.4). | the patch after the newest release on `main` when it is pushed: 5.9.1 as things stand |
 | R2 | I1 and I8 | **minor**, subject to Q16: each is a new report control (CLAUDE.md: "a new report control ... is a minor bump"). I1 also changes what a chip click does by default, and H4 the order an unchanged project's History cards open in. Both live in the page's script and markup, generated report output that CLAUDE.md's judgement call says is "not on its own a major bump", and neither touches an option, a type or a member. But CLAUDE.md files under MAJOR "changing a default so that existing code behaves differently without being touched", and the owner calls I1 "the default of the filters"; 5.4.0 shipped a changed default in a minor as the owner's own exception, which its changelog records as such. So the reading is the owner's to confirm (Q16). The changelog calls both changes out. | the minor after R1: 5.10.0 as things stand |
 
 Q14 asks whether the owner would rather have one minor holding both. Numbers are claimed only when about to push
@@ -1245,9 +1285,12 @@ fixes.
 **SEARCH_PLAN.md** (kronikol-41, on `main` as `1d03279b`, a docs-only commit; a minor: a dedicated search, the filter box hidden by default, the rows always
 expanded, More filters gone) changes the filter box I1's switch sits in (`ReportGenerator.cs` about 1916-2030,
 `report-filter-bar-script.js`, `report-filter-chips-script.js`); whichever of R2 and that release ships second rebases
-onto the other. Where the two meet, as both plans record it (its section 7.4): both change `reset_filters` (its B6 closes
-what a single-match search opened, C8 here resets the ways), different lines of one function, and the second to ship
-keeps both and runs both plans' Clear All facts; its address keys and `tagstates` / `depstates` collide with nothing; its
+onto the other. Where the two meet, as both plans record it (its section 7.4): its B6 is withdrawn (Clear All and Back
+leaving open what a single-match search opened is 5.2.0's rule), so only C8 here changes `reset_filters`; its Search
+tab's Status, Tags and Dependencies facets drive the filter box's own controls (its Q17), and a facet's Exclude sets a
+chip red with `set_chip_state` and `filter_row`, as Happy paths' Hide does, so C4 makes the row three-way while the chip
+is red and the facet never calls the reader's switch (`set_ways`), which alone writes `tagstates`; I9 rewords the field
+its builder replaces (`ReportGenerator.cs:1926`, `:3110-3113`), whose ids it keeps; its address keys and `tagstates` / `depstates` collide with nothing; its
 Filters count (F6) reads the four chip state classes, which I1 neither adds to nor renames; its builder reads
 `TagChips.Count` inside the rows I1 rewrites (`ReportGenerator.cs:2008`, `:2022`) and reads `data-scenarios` if R2 ships
 first; its F5 shows every row whenever the box is open and gives `ViewportSweepTests` a "box open" state, which is E4's fix
@@ -1271,6 +1314,7 @@ of its own, applied after the release is published.
 | I5 | `PlantUML-Browser-Rendering.md:173` (the slider follows "below the report's bar") | |
 | I6 | the step bars' paragraph of `Generated-Reports.md` (found by grepping `stepBody` at execution) | |
 | I7 | `Generated-Reports.md:692-698` (already says what P1 makes true) | |
+| I9 | `Generated-Reports.md` (`:98`, `:695`, `:705-731`, `:759`, `:965`, `:986`, `:1134`, `:1193`, `:1229`); `Search-Syntax.md` (heading "Filter Syntax", file name kept, W3); `Home.md` and `_Sidebar.md` where they name the page | the generator's and scripts' comments that describe the field (W2) |
 | I8 | `Cross-Run-History.md:583-586`; `Generated-Reports.md:950-954` (and `:144` if the labs page changes); both say today that a window too long for its card scrolls and opens on the newest run, true of the bars alone (E20) | `HistoryHtml.cs` doc comments (244-250, 271-278) |
 
 Each release: `CHANGELOG.md` (which part of the version moved and why), every package's version, and a Kronikol4J
@@ -1314,11 +1358,17 @@ the port computes stable ids, so a kept id needs the same key there), and the st
 | Q12 | I8 | The switch as markup and CSS with each list written twice (the labs page runs no script), or a script on the report with the labs page fixed at newest first, or a visual-only reverse? And the titles then read "Pass rate" and "Total duration", since the switch says the order: a rename the ask did not make. | the first (M-I8 has its cost); and the rename |
 | Q13 | I8 | The per-scenario sparklines and series strings: keep them oldest first (shared with `Failures.md`, CTRF and the CLI, and labelled so)? | yes |
 | Q14 | all | Two releases (a patch of fixes, then a minor with the two controls), or one minor? | two: the fixes need not wait |
-| Q15 | E3 | Should the Status filter and the search count a scenario skipped after a failure as Skipped, as the summary does since 5.0.0? | yes |
+| Q15 | E3 | Should the Status filter and the filter text count a scenario skipped after a failure as Skipped, as the summary does since 5.0.0? | yes |
 | Q16 | I1, I8 | I1's two-way chips and H4's newest-first cards change what an unchanged project's report does. Ship them in a minor, as generated report output (CLAUDE.md's judgement call), or hold them for v6, since CLAUDE.md files a changed default under MAJOR and asks first? | a minor: both are the page's script and markup, no option, type or member changes, and the old ways stay one click away (the switch, the order radios) |
 | Q17 | E19 | The 36 px touch size for filter controls holds to 480 px in the CSS and to 768 px in the wiki. Which is meant? | 768 px: it is the page's one phone breakpoint, and a phone held sideways is a touch screen too |
 
 ## 9. Log
+
+**2026-10-26, green-lit.** The owner: "Implement the plan in full, make sure to not interfere with any other sessions",
+which takes the recommended answer of every question in section 8 (Q1 (a), Q2 (a), Q3 the words, Q4 no option, Q5 keep
+the ids, Q6 yes, Q7 (a), Q8 the struts, Q9 (a) at 13 px, Q10 yes, Q11 both cards, Q12 markup and CSS with the rename, Q13
+yes, Q14 two releases, Q15 yes, Q16 a minor, Q17 768 px), and added I9 (section 4.10). SEARCH_PLAN's revision of the
+same day withdrew its B6 and made its facets drive the chips (section 7.1).
 
 **2026-10-26, the draft reviewed.** An independent review read the draft against the code at 5.9.0 (about 150 citations
 re-opened, five wrong) and raised 25 findings, each checked again by hand before it changed anything here. 24 held; the
