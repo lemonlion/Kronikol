@@ -12,8 +12,8 @@ The patch part moves (5.10.0 to 5.10.1): one fix, nothing new to call.
 
 - **The zoom slider stands a pixel lower under the bar.** 5.9.1 put the slider's thumb at least 4 px under the report's
   bar and under a scenario's open settings (`plans/REPORT_UI_FIXES_PLAN.md` S3), but one CI run on Linux read the thumb
-  3 px under the bar, the bar's edge falling a pixel differently there. The slider's line is now 12 px below the edge,
-  where it was 11, so the gap is at least 4 px in that layout too.
+  3 px under the bar. The slider's line is now 12 px below the edge, where it was 11, a pixel more room in every layout
+  (Windows reads 5 px where it read 4).
 
 ## [5.10.0] - 2026-10-26
 
