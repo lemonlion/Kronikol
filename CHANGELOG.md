@@ -4,6 +4,39 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.10.0] - 2026-10-26
+
+The minor part moves (5.9.1 to 5.10.0): two new report controls, each filter row's 2-WAY / 3-WAY switch and the History
+cards' order, and with them two changed defaults the owner chose: a filter chip is two-way, and the History cards open
+newest first. Neither touches an option, a type or a member; both are generated report output, and the owner confirmed
+the minor reading (`plans/REPORT_UI_FIXES_PLAN.md` Q16). The release is the second half of that plan.
+
+### Added
+
+- **A 2-WAY / 3-WAY switch on the Tags and Dependencies rows**, after each row's ANY / ALL. A row starts two-way: a click
+  on a chip shows only its scenarios, a second shows every scenario again, and no click leaves a chip's scenarios out. On
+  a three-way row a chip goes off, has, has not and off, as every chip did from 5.0.0 to 5.9.1, and Alt+click or a
+  right-click leaves its scenarios out at once; on a two-way row Alt+click is a click and a right-click opens the
+  browser's menu. Each row's ways are its own. A left-out (red) chip shows only on a three-way row: a link with `tagx=`,
+  `depx=` or `hpx=1`, and Happy paths' Hide, turn the row three-way while the chip is red, and the row is two-way again
+  once it goes. Turning a row two-way takes every red chip of it off (Happy paths back to Show). The switch's text says
+  the row's ways and is its name; its title and each chip's title say what a click does in the row's ways. The link
+  carries a switch the reader turned on as `tagstates=3` or `depstates=3`, a flip is one step Back, and Clear All makes
+  both rows two-way, where a row's Clear keeps its ways. Every link a report wrote from 5.0.0 to 5.9.1 opens as it did.
+  The switch is on the run's report, the Specifications page and a merged report, and is 36 px tall on a phone.
+- **The History cards in one order, newest first by default.** An Order control above the Pass rate and Total duration
+  cards, Newest first or Oldest first, turns both. The rings keep to one line that scrolls inside the card, as the bars
+  do, and each card opens on the newest run in either order. The cards are markup and CSS, so the labs page, which runs
+  no script but the theme's, orders them too; nothing keeps the order, so a page opens newest first. The cards' titles
+  are Pass rate and Total duration, the control saying the order.
+
+### Changed
+
+- A chip's title gains its count as `data-scenarios`, from which the page rebuilds the title when its row's ways change.
+  A test that read a chip's title reads "Click: only these. Click again: off." on a two-way row.
+- Each History card writes its runs twice, newest first and oldest first, each list named by its order (`aria-label`).
+  The run model (`HistoryVerdicts.Runs`), the per-scenario sparklines and the series strings stay oldest first.
+
 ## [5.9.1] - 2026-10-26
 
 The patch part moves (5.9.0 to 5.9.1): every change is a fix, or a correction of what the report draws or says, and

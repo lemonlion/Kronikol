@@ -23,6 +23,9 @@ function reset_filters() {
     set_mode_button(document.querySelector('.tag-mode-toggle'), _tagMode);
     _depMode = _depModeDefault;
     set_mode_button(document.querySelector('.dep-mode-toggle'), _depMode);
+    // and each row's ways (5.10.0), which the rows' Clear keeps; sync_group_clears below shows them
+    _chipWays.tag = _tagWaysDefault;
+    _chipWays.dependency = _depWaysDefault;
     for (var i = 0; i < c.items.length; i++) { c.items[i].tag = false; c.items[i].dep = false; }
     sync_happy_paths();
     sync_group_clears();

@@ -31,7 +31,8 @@ public class ControlTitlesTests : IDisposable
     private const string InTheReport = "every sequence diagram in the report";
     private const string InTheScenario = "this scenario's sequence diagrams";
     private const string Showing = "The scenarios and features the filters leave showing";
-    private const string ChipClicks = "Click: only these. Click again: leave them out. Once more: off. Alt+click or right-click leaves them out at once.";
+    // what a click on a chip does in a two-way row, the rows' start from 5.10.0 (plans/REPORT_UI_FIXES_PLAN.md C9)
+    private const string ChipClicks = "Click: only these. Click again: off.";
     private const string HistoryWords = "This run against the earlier runs on the same branch: what is failing, flaky, fixed, slower, new or gone";
     private const string DiagnosticsWords = "What Kronikol noticed while building this report, such as calls it could not put under a scenario";
 

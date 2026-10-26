@@ -148,6 +148,8 @@ function url_hash_filters() {
     list('deps', chip_values('dependency', 'in'));
     list('depx', chip_values('dependency', 'out'));
     if (_depMode !== _depModeDefault) parts.push('depmode=' + _depMode);
+    // the reader's own ways switch, off its default; a row three-way for a chip it leaves out says so by depx= alone
+    if (_chipWays.dependency !== _depWaysDefault) parts.push('depstates=' + _chipWays.dependency);
     var happy = find_chip('tag', HAPPY_PATH_TAG), happyState = happy ? chip_state(happy) : 'off';
     if (happyState === 'in') parts.push('hp=1');
     if (happyState === 'out') parts.push('hpx=1');
@@ -155,6 +157,7 @@ function url_hash_filters() {
     names('tags', chip_values('tag', 'in').filter(notHappy));
     names('tagx', chip_values('tag', 'out').filter(notHappy));
     if (_tagMode !== _tagModeDefault) parts.push('tagmode=' + _tagMode);
+    if (_chipWays.tag !== _tagWaysDefault) parts.push('tagstates=' + _chipWays.tag);
     var dur = document.getElementById('duration-threshold');
     if (dur && dur.value) parts.push('dur=' + dur.value);
     var activeP = document.querySelector('.percentile-btn.percentile-active');
@@ -238,6 +241,12 @@ function apply_url_hash(hash) {
             });
             return true;
         };
+        // the reader's own ways switches (5.10.0), before the chips: a chip left out makes its row three-way either way
+        step(function() {
+            if (params.tagstates === '2' || params.tagstates === '3') _chipWays.tag = params.tagstates;
+            if (params.depstates === '2' || params.depstates === '3') _chipWays.dependency = params.depstates;
+            sync_ways();
+        });
         step(function() {
             var deps = chips('dependency', split(params.deps), 'in') | chips('dependency', split(params.depx), 'out');
             if (deps || params.depmode) filter_dependencies();

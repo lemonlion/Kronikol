@@ -143,16 +143,72 @@
             text-transform: uppercase;
             color: var(--kron-label);
         }
-        /* rings: a few runs spread across the card, more in rows, oldest first */
+        /* the order of both cards' runs (5.10.0): two radios drawn as one segmented control above the cards. Each card
+           writes its runs newest first and oldest first, and shows the list its radio picks; an engine without :has()
+           shows the newest-first lists alone */
+        .history-order {
+            flex: 1 0 100%;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .history-order-label {
+            margin-right: 8px;
+            color: var(--kron-label);
+            font-size: var(--kron-fs-label);
+            font-weight: 600;
+            letter-spacing: var(--kron-label-track);
+            text-transform: uppercase;
+        }
+        .history-order label {
+            position: relative;
+            margin: 0 0 0 -1px;
+            padding: 4px 10px;
+            border: 1px solid var(--kron-control-border);
+            background: var(--kron-card);
+            color: var(--kron-ink-soft);
+            font: var(--kron-fs-control)/16px var(--kron-font);
+            cursor: pointer;
+        }
+        .history-order label:first-of-type { margin-left: 0; border-radius: 6px 0 0 6px; }
+        .history-order label:last-of-type { border-radius: 0 6px 6px 0; }
+        .history-order label:hover { background: var(--kron-hover); }
+        .history-order label:has(input:checked) {
+            z-index: 1;
+            border-color: var(--kron-selected-edge);
+            background: var(--kron-selected);
+            color: var(--kron-selected-ink);
+            font-weight: 600;
+        }
+        .history-order label:has(input:focus-visible) { outline: 2px solid var(--kron-accent); outline-offset: 1px; }
+        .history-order input {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            margin: 0;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .history-order-oldest-first { display: none; }
+        .history-charts:has(.history-order input[value="oldest"]:checked) .history-order-oldest-first { display: block; }
+        .history-charts:has(.history-order input[value="oldest"]:checked) .history-order-newest-first { display: none; }
+        /* rings: one line, as the bars, that scrolls inside the card when the runs outgrow it; a few runs spread across it */
+        .history-rings-scroll {
+            overflow-x: auto;
+            overflow-y: hidden;
+        }
         .history-rings {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(56px, 1fr));
+            direction: ltr;
+            display: flex;
             gap: 10px;
-            justify-items: center;
+            width: max-content;
+            min-width: 100%;
             align-items: center;
         }
         .history-ring {
-            width: 56px;
+            flex: 1 0 56px;
+            display: flex;
+            justify-content: center;
             height: 56px;
         }
         .history-ring svg {
@@ -171,12 +227,13 @@
         }
         .history-ring-failed .ring-rate { fill: var(--kron-fail-ink); }
         /* bars: a column wide enough for its time; a row of more runs than the card holds scrolls inside it and opens on the
-           newest run, as the scroller runs right to left (so it starts at its right end) and the row inside it left to right */
+           newest run: newest first, the scroller starts at its left end; oldest first, it runs right to left (so it starts at
+           its right end) and the row inside it left to right */
         .history-bars-scroll {
             overflow-x: auto;
             overflow-y: hidden;
-            direction: rtl;
         }
+        .history-rings-scroll.history-order-oldest-first, .history-bars-scroll.history-order-oldest-first { direction: rtl; }
         .history-bars {
             direction: ltr;
             display: flex;

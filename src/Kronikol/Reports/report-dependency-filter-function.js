@@ -7,8 +7,9 @@ function toggle_dep_mode(btn) {
     set_mode_button(btn, _depMode);
     filter_dependencies();
 }
-// The dependencies' chips are tri-state (5.0.0, plans/OPTION_C_PLAN.md S6, D10; report-filter-chips-script.js): ANY or
-// ALL of the chosen, none of those left out, and No dependencies for the scenarios whose diagrams name none.
+// The dependencies' chips (5.0.0, plans/OPTION_C_PLAN.md S6, D10; report-filter-chips-script.js), two-way unless the row is
+// three-way (5.10.0): ANY or ALL of the chosen, none of those left out, and No dependencies for the scenarios whose diagrams
+// name none.
 function filter_dependencies() {
     var c = fc(), sets = chip_sets('dependency');
     for (var i = 0; i < c.items.length; i++) c.items[i].dep = !chip_match(c.items[i].deps, sets, _depMode === 'AND');

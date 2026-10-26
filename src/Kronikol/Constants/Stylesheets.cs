@@ -139,7 +139,8 @@ public class Stylesheets
                 .status-toggle:hover,
                 .tag-more:hover,
                 .export-btn:hover, .fold-btn:hover, .percentile-btn:hover, .details-radio-btn:hover,
-                .scenario-diagram-controls-toggle:hover, .tag-mode-toggle:hover, .dep-mode-toggle:hover {
+                .scenario-diagram-controls-toggle:hover, .tag-mode-toggle:hover, .dep-mode-toggle:hover,
+                .tag-ways-toggle:hover, .dep-ways-toggle:hover {
                     border-color: var(--violet-edge);
                 }
                 .iflow-rel-list li:hover { border-color: var(--violet-solid); }
@@ -149,7 +150,8 @@ public class Stylesheets
                 .dependency-toggle.dependency-active,
                 .status-toggle.status-active,
                 .percentile-btn.percentile-active,
-                .details-radio-btn.details-active {
+                .details-radio-btn.details-active,
+                .tag-ways-toggle[data-ways="3"], .dep-ways-toggle[data-ways="3"] {
                     background: var(--violet-solid);
                     color: var(--kron-on-solid);
                     border-color: var(--violet-solid);

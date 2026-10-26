@@ -174,6 +174,9 @@ public class ToggleDefaultsMarkupTests
             Assert.DoesNotContain(token, content);
         Assert.DoesNotContain("__DEP_MODE_DEFAULT__", content);
         Assert.DoesNotContain("__CAT_MODE_DEFAULT__", content);
+        // the rows' ways (5.10.0, plans/REPORT_UI_FIXES_PLAN.md C13)
+        Assert.DoesNotContain("__TAG_WAYS_DEFAULT__", content);
+        Assert.DoesNotContain("__DEP_WAYS_DEFAULT__", content);
     }
 
     [Fact]

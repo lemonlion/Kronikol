@@ -152,6 +152,9 @@ public class TagFilterTests : PlaywrightTestBase
     public async Task A_feature_s_tag_filters_every_one_of_its_scenarios()
     {
         await OpenAsync("Tags_FeatureTag.html");
+        // the second click leaves the tag's scenarios out on a three-way row (5.10.0: a row starts two-way)
+        await Page.Locator(".filtering-box .tag-ways-toggle").ClickAsync();
+        await Expect(Page.Locator(".filtering-box .tag-ways-toggle")).ToHaveTextAsync("3-WAY");
         await Expect(Tag("checkout")).ToHaveAttributeAsync("data-tag", "checkout");
         await Tag("checkout").ClickAsync();
         Assert.Equal([Pay, Refuse], await Shown());

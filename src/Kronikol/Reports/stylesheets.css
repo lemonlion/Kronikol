@@ -538,12 +538,16 @@
         .tag-more { border-style: dashed; color: var(--kron-accent); }
         .tag-toggle[hidden], .tag-more[hidden] { display: none; }
 
-        /* a row's ANY / ALL switch is a mode, not a filter: a small square button before the chips */
-        .tag-mode-toggle, .dep-mode-toggle {
+        /* a row's ANY / ALL switch is a mode, not a filter: a small square button before the chips, and its 2-WAY / 3-WAY
+           switch after it (5.10.0), in the chosen chips' colours while three-way */
+        .tag-mode-toggle, .dep-mode-toggle, .tag-ways-toggle, .dep-ways-toggle {
             margin-right: 2px; padding: 6px 9px 4px; border: 1px solid var(--kron-control-border); border-radius: 6px;
             background: var(--kron-field); color: var(--kron-ink-quiet); font: 600 11px/16px var(--kron-font); letter-spacing: 0.03em; cursor: pointer;
         }
-        .tag-mode-toggle:hover, .dep-mode-toggle:hover { background: var(--kron-hover); }
+        .tag-mode-toggle:hover, .dep-mode-toggle:hover, .tag-ways-toggle:hover, .dep-ways-toggle:hover { background: var(--kron-hover); }
+        .tag-ways-toggle[data-ways="3"], .dep-ways-toggle[data-ways="3"] {
+            border-color: var(--kron-selected-edge); background: var(--kron-selected); color: var(--kron-selected-ink);
+        }
 
         /* a row's Clear: a text action in the accent after its last chip, there only while one of them is set */
         .group-clear {
@@ -555,6 +559,7 @@
 
         .status-toggle:focus-visible, .percentile-btn:focus-visible, .happy-seg:focus-visible, .tag-toggle:focus-visible,
         .dependency-toggle:focus-visible, .tag-mode-toggle:focus-visible, .dep-mode-toggle:focus-visible,
+        .tag-ways-toggle:focus-visible, .dep-ways-toggle:focus-visible,
         .tag-more:focus-visible, .group-clear:focus-visible { outline: 2px solid var(--kron-accent); outline-offset: 1px; }
 
         /* what the filters leave showing, on the FILTERING line left of Clear All, set apart from the actions by a rule */
@@ -2173,7 +2178,7 @@
                768 px and below, as the wiki says, where it stood in the 480 px block and left those three out:
                plans/REPORT_UI_FIXES_PLAN.md E1, E19) */
             .status-toggle, .percentile-btn, .happy-seg, .tag-toggle, .dependency-toggle, .tag-more,
-            .tag-mode-toggle, .dep-mode-toggle, .group-clear { min-height: 36px; }
+            .tag-mode-toggle, .dep-mode-toggle, .tag-ways-toggle, .dep-ways-toggle, .group-clear { min-height: 36px; }
             /* an export button keeps the card's type and padding (5.0.0) and only grows to the touch height */
             .export-btn { min-height: 36px; }
 }

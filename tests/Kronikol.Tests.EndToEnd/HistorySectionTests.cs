@@ -40,7 +40,8 @@ public class HistorySectionTests : PlaywrightTestBase
         Assert.Contains(headings, h => h.StartsWith("Flaky", StringComparison.Ordinal));
         // the two charts: a ring per run and a bar per run since 5.0.0, where 4.x drew bars in two stretched svgs (S11)
         await Expect(section.Locator(".history-chart")).ToHaveCountAsync(2);
-        await Expect(section.Locator(".history-rings > .history-ring")).ToHaveCountAsync(7);
+        // the list shown, newest first (5.10.0: each card writes its runs in both orders)
+        await Expect(section.Locator(".history-order-newest-first .history-rings > .history-ring")).ToHaveCountAsync(7);
     }
 
     [Fact]
@@ -72,7 +73,8 @@ public class HistorySectionTests : PlaywrightTestBase
         var section = Page.Locator("#history-section");
         await section.WaitForAsync();
 
-        var titles = await Page.EvaluateAsync<string[]>("() => Array.from(document.querySelectorAll('#history-section .history-chart [role=listitem]')).map(t => t.getAttribute('title'))");
+        // the lists shown, newest first (5.10.0: each card writes its runs in both orders)
+        var titles = await Page.EvaluateAsync<string[]>("() => Array.from(document.querySelectorAll('#history-section .history-chart .history-order-newest-first [role=listitem]')).map(t => t.getAttribute('title'))");
         var degraded = titles.Where(t => t.Contains("degraded")).ToArray();
         Assert.Equal(2, degraded.Length);
         Assert.All(degraded, title => Assert.StartsWith("e2e:4:1 ", title));

@@ -136,3 +136,15 @@ mutation is equivalent. Run them in a snapshot worktree, never on the release's 
 - I6: B4b (the header told by the rules alone) failed the doc string's box fact.
 - E2 and E3: with the change taken out, the E2 fact failed on the first button's missing `aria-pressed` and the E3 fact
   on the scenario skipped after a failure missing under Skipped.
+
+**R2 (5.10.0, 2026-10-26)**, in the release's worktree, each script put back from git after its run:
+
+- C2 failed the two-way default and the Alt+click fact; C4a the four rows of the link theory, Hide's three-way, turning
+  three-way off with Hide on, Clear All's ways and the reader's own switch; C5 the switch's way back, each row's own ways
+  and turning three-way off with Hide on; C6 the plain right-click and each row's own ways; C7a (the ways written for a
+  red chip) the link theory, the reader's own switch and both Back guards; C7b the reader's own switch; C8a both Clear
+  All facts; C9a the titles fact.
+- H3a (every scroller right to left) failed the fifty-run fact in Chromium, Firefox and WebKit; H3d (the oldest-first
+  lists not hidden) the fifty-run, order and reload facts and the stylesheet fact; H4b (no `autocomplete="off"`) the
+  markup fact, and the reload fact once it ran on the labs page.
+- Not run: C3, C4b, C4c, C5b, C5c, C6b, C7c, C8b, C9b, C9c, C12, C1, C11, H2, H3b, H3c, H4, H5.

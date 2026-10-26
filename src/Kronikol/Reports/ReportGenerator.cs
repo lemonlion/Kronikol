@@ -1487,7 +1487,9 @@ public static class ReportGenerator
 
         // The Tags row's start mode, which the chip script and the row's switch both carry (plans/TAGS_PLAN.md §4.11).
         var tagModeText = toggles.TagFilterMode == FilterCombinationMode.And ? "AND" : "OR";
-        var filterChipsScript = LoadResource("report-filter-chips-script.js").Replace("__TAG_MODE_DEFAULT__", tagModeText);
+        // and each row's ways, two-way (5.10.0, plans/REPORT_UI_FIXES_PLAN.md C13): the script and the row's switch both carry them
+        var filterChipsScript = LoadResource("report-filter-chips-script.js").Replace("__TAG_MODE_DEFAULT__", tagModeText)
+            .Replace("__TAG_WAYS_DEFAULT__", ChipWaysDefault).Replace("__DEP_WAYS_DEFAULT__", ChipWaysDefault);
         var filterBarScript = LoadResource("report-filter-bar-script.js");
         var searchFunction = LoadScript("report-search-function.js", drawsVerdicts);
 
@@ -1948,9 +1950,10 @@ public static class ReportGenerator
 
         // The filter rows (5.0.0, plans/OPTION_C_PLAN.md S6, D6 to D12, D19): labels without colons and each row's controls
         // in a span.fltr-controls; Status, Duration and Happy paths share the first row; then Tags and Dependencies, each
-        // a row of tri-state chips (off, has, has not) with an ANY / ALL switch, a chip for the scenarios with none, and a
-        // Clear (report-filter-chips-script.js). A chip's title counts the scenarios it picks out and says what a click
-        // does (D49). A category is a tag (plans/TAGS_PLAN.md §4.8).
+        // a row of chips with an ANY / ALL switch, a 2-WAY / 3-WAY switch (5.10.0: a chip is on or off unless its row is
+        // three-way, when it goes off, has, has not), a chip for the scenarios with none, and a Clear
+        // (report-filter-chips-script.js). A chip's title counts the scenarios it picks out and says what a click does in
+        // the row's ways (D49). A category is a tag (plans/TAGS_PLAN.md §4.8).
         var runs = features.SelectMany(f => f.Scenarios).ToArray();
         var tagChips = TagChips.For(features);
         // Status filter toggles
@@ -2004,6 +2007,7 @@ public static class ReportGenerator
         {
             body.Append("""<div class="tag-filters"><span class="tag-filters-label">Tags</span><span class="fltr-controls">""");
             body.Append(FilterModeToggle("tag-mode-toggle", tagModeText, "ANY: scenarios with any of the chosen tags. ALL: scenarios with every one of them. Click to switch."));
+            body.Append(FilterWaysToggle("tag-ways-toggle", ChipWaysDefault));
             foreach (var tag in tagNames)
                 body.Append(FilterChip("tag", tag, tag, tagChips.Count(tag), more: tagChips.Hidden.Contains(tag)));
             var untagged = tagChips.Untagged;
@@ -2018,6 +2022,7 @@ public static class ReportGenerator
         {
             body.Append("""<div class="dependency-filters"><span class="dependency-filters-label">Dependencies</span><span class="fltr-controls">""");
             body.Append(FilterModeToggle("dep-mode-toggle", depModeText, "ANY: scenarios that call any of the chosen dependencies. ALL: scenarios that call every one of them. Click to switch."));
+            body.Append(FilterWaysToggle("dep-ways-toggle", ChipWaysDefault));
             foreach (var dep in allDependencies.OrderBy(d => d))
                 body.Append(FilterChip("dependency", dep, dep, runs.Count(sc => scenarioDependencies.TryGetValue(sc.Id, out var ds) && ds.Contains(dep))));
             var noDependencies = runs.Count(sc => !scenarioDependencies.TryGetValue(sc.Id, out var ds) || ds.Count == 0);
@@ -3020,16 +3025,41 @@ public static class ReportGenerator
     }
 
     /// <summary>
-    /// A tri-state filter chip (5.0.0, plans/OPTION_C_PLAN.md S6): off, then has, which takes the row's active class as in
-    /// 4.x, then has not, its exclude class (report-filter-chips-script.js cycles them). The chip for the scenarios with
-    /// none carries <c>data-none</c> and a reserved value, which the link writes. Its title counts the scenarios it picks out,
-    /// then says what a click does (D49): the count was the whole title, and the preview's instructions never showed.
+    /// A filter chip (5.0.0, plans/OPTION_C_PLAN.md S6): off, then has, which takes the row's active class as in 4.x, and on
+    /// a three-way row has not, its exclude class (report-filter-chips-script.js cycles them; a row starts two-way from
+    /// 5.10.0, plans/REPORT_UI_FIXES_PLAN.md I1). The chip for the scenarios with none carries <c>data-none</c> and a
+    /// reserved value, which the link writes. Its title counts the scenarios it picks out, then says what a click does in
+    /// the row's start ways (D49); the count is <c>data-scenarios</c> too, from which the script rebuilds the title when the
+    /// row's ways change.
     /// </summary>
     private static string FilterChip(string family, string value, string label, int scenarios, bool none = false, bool more = false) =>
-        $"<button type=\"button\" class=\"{family}-toggle{(none ? $" {family}-none" : "")}\" data-{family}=\"{System.Net.WebUtility.HtmlEncode(value)}\"{(none ? " data-none=\"1\"" : "")}{(more ? " data-more=\"1\" hidden" : "")} aria-pressed=\"false\" title=\"{ScenarioCount(scenarios)}. {ChipClicks}\">{System.Net.WebUtility.HtmlEncode(label)}</button>";
+        string.Create(CultureInfo.InvariantCulture,
+            $"<button type=\"button\" class=\"{family}-toggle{(none ? $" {family}-none" : "")}\" data-{family}=\"{System.Net.WebUtility.HtmlEncode(value)}\"{(none ? " data-none=\"1\"" : "")}{(more ? " data-more=\"1\" hidden" : "")} data-scenarios=\"{scenarios}\" aria-pressed=\"false\" title=\"{ScenarioCount(scenarios)}. {ChipClicksIn(ChipWaysDefault)}\">{System.Net.WebUtility.HtmlEncode(label)}</button>");
 
-    /// <summary>What a click on a filter chip does, after its count (D49; report-filter-chips-script.js cycles it).</summary>
-    private const string ChipClicks = "Click: only these. Click again: leave them out. Once more: off. Alt+click or right-click leaves them out at once.";
+    /// <summary>A filter row's start ways: two-way, a chip on or off (5.10.0, plans/REPORT_UI_FIXES_PLAN.md C2, C13).</summary>
+    private const string ChipWaysDefault = "2";
+
+    /// <summary>
+    /// What a click on a filter chip does in its row's ways, after its count (D49); report-filter-chips-script.js writes the
+    /// same words when a row's ways change.
+    /// </summary>
+    private static string ChipClicksIn(string ways) => ways == "3"
+        ? "Click: only these. Click again: leave them out. Once more: off. Alt+click or right-click leaves them out at once."
+        : "Click: only these. Click again: off.";
+
+    /// <summary>
+    /// A filter row's ways switch, after its ANY / ALL (5.10.0, plans/REPORT_UI_FIXES_PLAN.md C1, C9, C10): its text says
+    /// the row's ways, 2-WAY or 3-WAY, and is its name, so it has no aria-label and no aria-pressed, as ANY / ALL has
+    /// neither; its title names the ways and what a click on it does. report-filter-chips-script.js writes the same words.
+    /// </summary>
+    private static string FilterWaysToggle(string cssClass, string ways) =>
+        $"<button type=\"button\" class=\"{cssClass}\" data-ways=\"{ways}\" title=\"{(ways == "3" ? ThreeWaysTitle : TwoWaysTitle)}\">{ways}-WAY</button>";
+
+    private const string TwoWaysTitle = "Two-way chips: a click shows only a chip's scenarios, a second click shows every scenario again. "
+        + "Click for three-way chips, where the second click leaves the chip's scenarios out (red) and a third shows them again.";
+
+    private const string ThreeWaysTitle = "Three-way chips: a click shows only a chip's scenarios, a second leaves them out (red), a third shows "
+        + "every scenario again. Click for two-way chips.";
 
     private static string ScenarioCount(int n) => n == 1 ? "1 scenario" : string.Create(CultureInfo.InvariantCulture, $"{n} scenarios");
 

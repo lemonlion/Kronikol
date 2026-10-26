@@ -300,6 +300,27 @@ public partial class StylesheetRulesTests
         }
     }
 
+    // 5.10.0 (plans/REPORT_UI_FIXES_PLAN.md H3): an engine without :has() shows the newest-first lists alone, never both
+    // orders: the rule hiding the oldest-first lists stands outside any :has(), and every rule that shows them, or hides the
+    // newest-first ones, inside one
+    [Fact]
+    public void The_oldest_first_lists_are_hidden_unless_a_has_rule_shows_them()
+    {
+        // each rule that sets display, with the lists it names
+        var rules = System.Text.RegularExpressions.Regex.Matches(Stylesheets.HistoryStyleSheet, @"(?<sel>[^{}]+)\{(?<body>[^{}]*)\}")
+            .Select(m => (Sel: m.Groups["sel"].Value, Display: System.Text.RegularExpressions.Regex.Match(m.Groups["body"].Value, @"(?<![-\w])display:\s*([\w-]+)")))
+            .Where(r => r.Display.Success)
+            .Select(r => (r.Sel, Hides: r.Display.Groups[1].Value == "none", Has: r.Sel.Contains(":has(", StringComparison.Ordinal)))
+            .ToArray();
+        var oldest = rules.Where(r => r.Sel.Contains("history-order-oldest-first", StringComparison.Ordinal)).ToArray();
+        Assert.Contains(oldest, r => r.Hides && !r.Has);
+        Assert.Contains(oldest, r => !r.Hides && r.Has);
+        Assert.All(oldest.Where(r => !r.Hides), r => Assert.True(r.Has, $"shows the oldest-first lists outside :has(): {r.Sel.Trim()}"));
+        var newest = rules.Where(r => r.Sel.Contains("history-order-newest-first", StringComparison.Ordinal) && r.Hides).ToArray();
+        Assert.NotEmpty(newest);
+        Assert.All(newest, r => Assert.True(r.Has, $"hides the newest-first lists outside :has(): {r.Sel.Trim()}"));
+    }
+
     [Fact]
     public void The_violet_theme_grounds_the_tags_switch_as_it_does_the_dependencies_switch()
     {
@@ -312,12 +333,27 @@ public partial class StylesheetRulesTests
         Assert.Equal(CssRules.Value(Violet, ".dep-mode-toggle:hover", "border-color"), CssRules.Value(Violet, ".tag-mode-toggle:hover", "border-color"));
     }
 
+    // 5.10.0 (plans/REPORT_UI_FIXES_PLAN.md C10): each row's ways switch takes ANY / ALL's ground and hover edge in the
+    // violet theme, and a three-way switch the chosen look of its chips
+    [Fact]
+    public void The_violet_theme_grounds_the_ways_switch_as_it_does_ANY_ALL()
+    {
+        foreach (var ways in new[] { ".tag-ways-toggle", ".dep-ways-toggle" })
+        {
+            Assert.Equal(CssRules.Value(Violet, ".tag-mode-toggle", "background"), CssRules.Value(Violet, ways, "background"));
+            Assert.NotNull(CssRules.Value(Violet, ways + ":hover", "border-color"));
+            Assert.Equal(CssRules.Value(Violet, ".tag-mode-toggle:hover", "border-color"), CssRules.Value(Violet, ways + ":hover", "border-color"));
+            Assert.Equal(CssRules.Value(Violet, ".tag-toggle.tag-active", "background"), CssRules.Value(Violet, ways + "[data-ways=\"3\"]", "background"));
+        }
+    }
+
     // the hovers whose edge the theme sets; their tint is the base sheet's, read from --kron-hover, which the theme sets
     private static readonly string[] HoverEdges =
     [
         ".happy-seg:hover", ".tag-toggle:hover", ".tag-more:hover", ".dependency-toggle:hover", ".status-toggle:hover",
         ".export-btn:hover", ".fold-btn:hover", ".percentile-btn:hover", ".details-radio-btn:hover",
         ".scenario-diagram-controls-toggle:hover", ".tag-mode-toggle:hover", ".dep-mode-toggle:hover",
+        ".tag-ways-toggle:hover", ".dep-ways-toggle:hover",
     ];
 
     // 5.0.0: the Scenario Timeline toggle is a tab (plans/OPTION_C_PLAN.md S3), so the theme has no timeline-toggle rule
@@ -326,6 +362,7 @@ public partial class StylesheetRulesTests
         ".happy-seg[aria-pressed=\"true\"]", ".tag-toggle.tag-active", ".dependency-toggle.dependency-active", ".status-toggle.status-active",
         ".percentile-btn.percentile-active", ".details-radio-btn.details-active",
         ".iflow-toggle-active", ".iflow-toggle-active:hover", ".diagram-toggle-active", ".diagram-toggle-active:hover",
+        ".tag-ways-toggle[data-ways=\"3\"]", ".dep-ways-toggle[data-ways=\"3\"]",
     ];
 
     [Fact]

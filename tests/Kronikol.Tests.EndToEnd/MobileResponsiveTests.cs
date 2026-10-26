@@ -673,11 +673,13 @@ public class MobileResponsiveTests : PlaywrightTestBase
         // a chip that is set shows its row's Clear
         await Page.Locator(".filtering-box .tag-toggle").First.ClickAsync();
         var heights = await Page.EvaluateAsync<string[]>("""
-            () => [...document.querySelectorAll('.filtering-box :is(.status-toggle, .percentile-btn, .happy-seg, .tag-toggle, .dependency-toggle, .tag-more, .tag-mode-toggle, .dep-mode-toggle, .group-clear)')]
+            () => [...document.querySelectorAll('.filtering-box :is(.status-toggle, .percentile-btn, .happy-seg, .tag-toggle, .dependency-toggle, .tag-more, .tag-mode-toggle, .dep-mode-toggle, .tag-ways-toggle, .dep-ways-toggle, .group-clear)')]
                 .filter(b => b.getBoundingClientRect().height > 0)
                 .map(b => b.className.split(' ')[0] + ' ' + b.getBoundingClientRect().height.toFixed(1))
             """);
         Assert.Contains(heights, h => h.StartsWith("tag-mode-toggle ", StringComparison.Ordinal));
+        // and each row's ways switch (5.10.0, C11)
+        Assert.Contains(heights, h => h.StartsWith("tag-ways-toggle ", StringComparison.Ordinal));
         Assert.Contains(heights, h => h.StartsWith("group-clear ", StringComparison.Ordinal));
         var low = heights.Where(h => double.Parse(h.Split(' ')[1], System.Globalization.CultureInfo.InvariantCulture) < 35.5).ToArray();
         Assert.True(low.Length == 0, $"{width} px: under 36 px: " + string.Join(", ", low));

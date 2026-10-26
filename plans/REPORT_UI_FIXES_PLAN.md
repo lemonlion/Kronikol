@@ -1364,6 +1364,23 @@ the port computes stable ids, so a kept id needs the same key there), and the st
 
 ## 9. Log
 
+**2026-10-26, R2 built.** What the build met that the plan did not say:
+
+- **H4**'s reload fact runs on the labs page. On the report Firefox kept Newest first across a reload with or without
+  `autocomplete="off"`: the report's file holds its page compressed and a script draws it (checked: the file has no
+  `history-order` radio in it), and Firefox restores only a form the parser built;
+  a probe the same day showed a plain radio on a parsed page keeping Oldest first across a reload and one with
+  `autocomplete="off"` not. With the mutation H4b (the attribute taken off) the labs fact fails, where the report's did not.
+- **C9**: the History order's two radios carry titles, on the radio and on its label, as the title audit wants of every
+  control (`ControlTitlesTests.No_control_the_generator_writes_is_left_without_a_title` found them bare).
+- **C10**: the violet theme paints a three-way switch as it paints a chosen chip (its active list), and its hover edge
+  stands before every active state, as `StylesheetRulesTests` holds.
+- **H3**: the order control is styled in `history-styles.css` after the Timeline's segments, not with their class, so the
+  cards carry their own look wherever they are drawn. The two orders' lists are each wrapped in a scroller of their own
+  (`history-order-newest-first`, `history-order-oldest-first`); the oldest-first scrollers run right to left.
+- **C13**: one value seeds both rows' ways (`ChipWaysDefault`, "2"), as no option sets either.
+- Mutations run: C2, C4a, C5, C6, C7a, C7b, C8a, C9a, H3a, H3d and H4b each failed a fact (the harness's `mutations.md`).
+
 **2026-10-26, R1 built.** What the build met that the plan did not say, each with the test that holds it:
 
 - **B3** measured 2 px above a cell's text and 3 below on a real teoz bar, where the probe read 3 and 3; the fact's

@@ -163,9 +163,10 @@ public class HistoryHtmlTests : IDisposable
 
         Assert.Contains("this run is degraded: its passing scenarios took 3.0× their usual, so no scenario is read slower in it", section);
         // Both charts say so for the run, in the tooltips of its ring and its bar (5.0.0, plans/OPTION_C_PLAN.md S11, where
-        // 4.x had a title element in each chart's svg); no healthy run's does.
-        Assert.Equal(2, Regex.Matches(section, "title=\"test:9:1 [^\"]* · degraded 3\\.0×\"").Count);
-        Assert.Equal(2, Regex.Matches(section, "degraded \\d").Count);
+        // 4.x had a title element in each chart's svg); no healthy run's does. Each card writes its runs in both orders
+        // (5.10.0), so each tooltip is there twice.
+        Assert.Equal(4, Regex.Matches(section, "title=\"test:9:1 [^\"]* · degraded 3\\.0×\"").Count);
+        Assert.Equal(4, Regex.Matches(section, "degraded \\d").Count);
     }
 
     [Fact]
@@ -183,8 +184,9 @@ public class HistoryHtmlTests : IDisposable
         Assert.Contains("Checkout &rsaquo; Pay by card", section.Value);
         Assert.Contains("class=\"history-chart\"", section.Value);
         Assert.Contains("Pass rate", section.Value);
-        // a ring per run since 5.0.0, where 4.x drew a bar in a stretched svg (plans/OPTION_C_PLAN.md S11)
-        Assert.Equal(4, Regex.Matches(section.Value, "<div class=\"history-ring[ \"]").Count); // three prior runs and this one
+        // a ring per run since 5.0.0, where 4.x drew a bar in a stretched svg (plans/OPTION_C_PLAN.md S11), in each of the
+        // card's two orders since 5.10.0
+        Assert.Equal(8, Regex.Matches(section.Value, "<div class=\"history-ring[ \"]").Count); // three prior runs and this one, twice
         // The section is not inside a feature: the export copies features only and leaves the aggregate behind on
         // purpose. Since 5.0.0 it is the History tab's panel, after the features (plans/OPTION_C_PLAN.md S3).
         var panel = html.IndexOf("<div class=\"report-panel\" id=\"panel-history\"", StringComparison.Ordinal);

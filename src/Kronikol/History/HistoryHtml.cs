@@ -177,6 +177,7 @@ internal static class HistoryHtml
         if (history.Runs.Count >= 2)
         {
             sb.Append("<div class=\"history-charts\">");
+            sb.Append(OrderControl);
             sb.Append(PassRateChart(history.Runs));
             if (history.Runs.Any(r => r.DurationMs is not null))
                 sb.Append(DurationChart(history.Runs));
@@ -242,26 +243,54 @@ internal static class HistoryHtml
     }
 
     /// <summary>
-    /// The pass rate, a ring per run, oldest first (5.0.0, plans/OPTION_C_PLAN.md S11; the owner's round 17 item 29): the
+    /// The order of both cards' runs (5.10.0, plans/REPORT_UI_FIXES_PLAN.md I8): two radios, Newest first checked as written,
+    /// which the stylesheet reads with :has() to show one of each card's two lists, so the labs page, which runs no script
+    /// but the theme's, orders them too. Nothing keeps the order, and autocomplete="off" keeps Firefox from restoring Oldest
+    /// first on a reload.
+    /// </summary>
+    private const string OrderControl =
+        "<div class=\"history-order\" role=\"radiogroup\" aria-label=\"Order of the runs\"><span class=\"history-order-label\">Order</span>"
+        + "<label title=\"" + NewestTitle + "\"><input type=\"radio\" name=\"history-order\" value=\"newest\" checked autocomplete=\"off\" title=\"" + NewestTitle + "\">Newest first</label>"
+        + "<label title=\"" + OldestTitle + "\"><input type=\"radio\" name=\"history-order\" value=\"oldest\" autocomplete=\"off\" title=\"" + OldestTitle + "\">Oldest first</label></div>";
+
+    // what each radio does, on the radio and on its label, which is what a pointer rests on
+    private const string NewestTitle = "Show both cards' runs newest first, this run at the start";
+    private const string OldestTitle = "Show both cards' runs oldest first, this run at the end";
+
+    /// <summary>
+    /// A card's runs in both orders, newest first and then oldest first (5.10.0): each list is written in its order, so the
+    /// order read is the order shown, and the stylesheet shows the one its radio picks.
+    /// </summary>
+    private static IEnumerable<(string Order, IEnumerable<RunPoint> Runs)> Orders(IReadOnlyList<RunPoint> runs) =>
+        [("newest", runs.Reverse()), ("oldest", runs)];
+
+    /// <summary>
+    /// The pass rate, a ring per run (5.0.0, plans/OPTION_C_PLAN.md S11; the owner's round 17 item 29): the
     /// ring the run band draws (<see cref="Reports.ReportGenerator.RingSvg"/>), a pass arc and a fail arc over a track that
     /// shows what neither counts, with the rate inside, which reads 100% only when every scenario of the run passed. A ring is
     /// marked when its run failed (<c>history-ring-failed</c>) and when it was partial (<c>history-run-partial</c>), and
-    /// carries its run's tooltip, as the 4.x bar did. Markup, not script: the labs page, which runs none, draws it too.
+    /// carries its run's tooltip, as the 4.x bar did. Markup, not script: the labs page, which runs none, draws it too. The
+    /// rings keep to one line that scrolls inside the card, as the bars do, each list opening on the newest run (5.10.0).
     /// </summary>
     private static string PassRateChart(IReadOnlyList<RunPoint> runs)
     {
-        const string title = "Pass rate, oldest run first";
+        const string title = "Pass rate";
         var sb = new StringBuilder();
         sb.Append("<div class=\"history-chart\"><div class=\"history-chart-title\">").Append(title).Append("</div>");
-        sb.Append("<div class=\"history-rings\" role=\"list\" aria-label=\"").Append(title).Append("\">");
-        foreach (var run in runs)
+        foreach (var (order, list) in Orders(runs))
         {
-            sb.Append("<div class=\"history-ring").Append(run.Failed > 0 ? " history-ring-failed" : "").Append(run.Partial ? " history-run-partial" : "")
-                .Append("\" role=\"listitem\" title=\"").Append(HtmlEncode(PassRateTooltip(run))).Append("\">")
-                .Append(Reports.ReportGenerator.RingSvg(run.Passed, run.Failed, 0, 0, run.Total, track: true, arcTitles: false))
-                .Append("</div>");
+            sb.Append("<div class=\"history-rings-scroll history-order-").Append(order).Append("-first\"><div class=\"history-rings\" role=\"list\" aria-label=\"")
+                .Append(title).Append(", ").Append(order).Append(" run first\">");
+            foreach (var run in list)
+            {
+                sb.Append("<div class=\"history-ring").Append(run.Failed > 0 ? " history-ring-failed" : "").Append(run.Partial ? " history-run-partial" : "")
+                    .Append("\" role=\"listitem\" title=\"").Append(HtmlEncode(PassRateTooltip(run))).Append("\">")
+                    .Append(Reports.ReportGenerator.RingSvg(run.Passed, run.Failed, 0, 0, run.Total, track: true, arcTitles: false))
+                    .Append("</div>");
+            }
+            sb.Append("</div></div>");
         }
-        sb.Append("</div></div>");
+        sb.Append("</div>");
         return sb.ToString();
     }
 
@@ -269,36 +298,45 @@ internal static class HistoryHtml
         $"{r.RunId} · {r.At.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture)}{(r.Commit is { } c ? " · " + (c.Length > 7 ? c[..7] : c) : "")} · {r.Passed.ToString(CultureInfo.InvariantCulture)} passed, {r.Failed.ToString(CultureInfo.InvariantCulture)} failed of {r.Total.ToString(CultureInfo.InvariantCulture)}{(r.Partial ? " · partial" : "")}{DegradedTail(r)}";
 
     /// <summary>
-    /// Total duration, a bar per run, oldest first (5.0.0; the owner's round 17 item 30): bars drawn as HTML, so each carries
+    /// Total duration, a bar per run (5.0.0; the owner's round 17 item 30): bars drawn as HTML, so each carries
     /// its time unstretched, written as the run band writes a duration (<see cref="Reports.ReportGenerator.FormatDuration"/>:
     /// "850ms", "44s", "2m 26s", "1h 5m"), in the middle of its bar, or just above a bar under <see cref="ShortBarPercent"/>
     /// of the chart's height. A run with no recorded duration keeps its column and its tooltip but has no bar. A column is
     /// wide enough for its time, and a row of more runs than its card holds scrolls inside the card, opening on the newest
-    /// (history-styles.css).
+    /// in either order (history-styles.css).
     /// </summary>
     private static string DurationChart(IReadOnlyList<RunPoint> runs)
     {
-        const string title = "Total duration, oldest run first";
+        const string title = "Total duration";
         var max = runs.Max(r => r.DurationMs ?? 0);
         var sb = new StringBuilder();
         sb.Append("<div class=\"history-chart\"><div class=\"history-chart-title\">").Append(title).Append("</div>");
-        sb.Append("<div class=\"history-bars-scroll\"><div class=\"history-bars\" role=\"list\" aria-label=\"").Append(title).Append("\">");
-        foreach (var run in runs)
+        foreach (var (order, list) in Orders(runs))
         {
-            sb.Append("<div class=\"history-col").Append(run.Partial ? " history-run-partial" : "")
-                .Append("\" role=\"listitem\" title=\"").Append(HtmlEncode(DurationTooltip(run))).Append("\">");
-            if (run.DurationMs is { } ms)
-            {
-                var height = max <= 0 ? MinBarPercent : Math.Clamp(100.0 * ms / max, MinBarPercent, 100.0);
-                sb.Append("<div class=\"history-bar").Append(height < ShortBarPercent ? " history-bar-short" : "")
-                    .Append("\" style=\"height:").Append(height.ToString("0.#", CultureInfo.InvariantCulture)).Append("%\">")
-                    .Append("<span class=\"history-time\">").Append(Reports.ReportGenerator.FormatDuration(TimeSpan.FromMilliseconds(ms)))
-                    .Append("</span></div>");
-            }
-            sb.Append("</div>");
+            sb.Append("<div class=\"history-bars-scroll history-order-").Append(order).Append("-first\"><div class=\"history-bars\" role=\"list\" aria-label=\"")
+                .Append(title).Append(", ").Append(order).Append(" run first\">");
+            foreach (var run in list)
+                DurationColumn(sb, run, max);
+            sb.Append("</div></div>");
         }
-        sb.Append("</div></div></div>");
+        sb.Append("</div>");
         return sb.ToString();
+    }
+
+    /// <summary>A run's column of the duration card: its tooltip, and its bar with its time where the run has a duration.</summary>
+    private static void DurationColumn(StringBuilder sb, RunPoint run, long max)
+    {
+        sb.Append("<div class=\"history-col").Append(run.Partial ? " history-run-partial" : "")
+            .Append("\" role=\"listitem\" title=\"").Append(HtmlEncode(DurationTooltip(run))).Append("\">");
+        if (run.DurationMs is { } ms)
+        {
+            var height = max <= 0 ? MinBarPercent : Math.Clamp(100.0 * ms / max, MinBarPercent, 100.0);
+            sb.Append("<div class=\"history-bar").Append(height < ShortBarPercent ? " history-bar-short" : "")
+                .Append("\" style=\"height:").Append(height.ToString("0.#", CultureInfo.InvariantCulture)).Append("%\">")
+                .Append("<span class=\"history-time\">").Append(Reports.ReportGenerator.FormatDuration(TimeSpan.FromMilliseconds(ms)))
+                .Append("</span></div>");
+        }
+        sb.Append("</div>");
     }
 
     private static string DurationTooltip(RunPoint r) =>

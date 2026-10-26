@@ -48,15 +48,59 @@ public class HistoryRingsMarkupTests : IDisposable
     private const string ColumnPattern = "<div class=\"(history-col[^\"]*)\" role=\"listitem\" title=\"([^\"]*)\">"
         + "(?:<div class=\"(history-bar[^\"]*)\" style=\"height:([^%\"]*)%\"><span class=\"history-time\">([^<]*)</span></div>)?</div>";
 
+    /// <summary>
+    /// A card's list of its runs oldest first, read by its name: from 5.10.0 each card writes its runs newest first and then
+    /// oldest first (plans/REPORT_UI_FIXES_PLAN.md H3), and the facts that read the run order read the oldest-first list.
+    /// </summary>
+    private static string OldestFirst(string html, string card)
+    {
+        var start = html.IndexOf($"aria-label=\"{card}, oldest run first\">", StringComparison.Ordinal);
+        Assert.True(start >= 0, $"no oldest-first list of the {card} card");
+        var end = html.IndexOf("role=\"list\"", start + 1, StringComparison.Ordinal);
+        return end < 0 ? html[start..] : html[start..end];
+    }
+
     /// <summary>Each ring in run order, read from the section with its entities decoded.</summary>
     private static Ring[] Rings(string html) =>
-        Regex.Matches(WebUtility.HtmlDecode(html), RingPattern, RegexOptions.Singleline)
+        Regex.Matches(WebUtility.HtmlDecode(OldestFirst(html, "Pass rate")), RingPattern, RegexOptions.Singleline)
             .Select(m => new Ring(m.Groups[1].Value, m.Groups[2].Value, m.Groups[3].Value)).ToArray();
 
     /// <summary>Each bar's column in run order: its tooltip, and its bar's class, height and time (empty where it has no bar).</summary>
     private static Column[] Columns(string html) =>
-        Regex.Matches(WebUtility.HtmlDecode(html), ColumnPattern)
+        Regex.Matches(WebUtility.HtmlDecode(OldestFirst(html, "Total duration")), ColumnPattern)
             .Select(m => new Column(m.Groups[1].Value, m.Groups[2].Value, m.Groups[3].Value, m.Groups[4].Value, m.Groups[5].Value)).ToArray();
+
+    // 5.10.0 (plans/REPORT_UI_FIXES_PLAN.md H1, H3, H4): one order control above both cards, Newest first checked as
+    // written and kept from the browser's form restore; each card writes its runs twice, newest first and then oldest
+    // first, each list named by its order; the cards' titles leave the order to the control
+    [Fact]
+    public void Each_card_writes_its_runs_in_both_orders_newest_first_shown()
+    {
+        var html = Section(Run(1, 3, 1, 4, durationMs: 290), Run(2, 4, 0, 4, durationMs: 310), Run(3, 4, 0, 4, durationMs: 300));
+        var page = new AngleSharp.Html.Parser.HtmlParser().ParseDocument(html);
+
+        var radios = page.QuerySelectorAll(".history-charts > .history-order input[type=radio]");
+        Assert.Equal(["newest", "oldest"], radios.Select(r => r.GetAttribute("value")).ToArray());
+        Assert.True(radios[0].HasAttribute("checked"));
+        Assert.False(radios[1].HasAttribute("checked"));
+        Assert.All(radios, r =>
+        {
+            Assert.Equal("off", r.GetAttribute("autocomplete"));
+            Assert.Equal("history-order", r.GetAttribute("name"));
+        });
+        Assert.Equal(["Newest first", "Oldest first"], page.QuerySelectorAll(".history-order label").Select(l => l.TextContent.Trim()).ToArray());
+        Assert.Equal(["Pass rate", "Total duration"], page.QuerySelectorAll(".history-chart-title").Select(t => t.TextContent).ToArray());
+
+        var lists = page.QuerySelectorAll("[role=list]");
+        Assert.Equal(["Pass rate, newest run first", "Pass rate, oldest run first", "Total duration, newest run first", "Total duration, oldest run first"],
+            lists.Select(l => l.GetAttribute("aria-label")).ToArray());
+        string Runs(AngleSharp.Dom.IElement list) =>
+            string.Join(",", list.QuerySelectorAll("[role=listitem]").Select(i => i.GetAttribute("title")!.Split(' ')[0]));
+        Assert.Equal(["t:3:1,t:2:1,t:1:1", "t:1:1,t:2:1,t:3:1", "t:3:1,t:2:1,t:1:1", "t:1:1,t:2:1,t:3:1"], lists.Select(Runs).ToArray());
+        // each list in a scroller of its order's, the one the stylesheet shows for its radio
+        Assert.Equal(["history-order-newest-first", "history-order-oldest-first", "history-order-newest-first", "history-order-oldest-first"],
+            lists.Select(l => l.ParentElement!.ClassList.First(c => c.StartsWith("history-order-", StringComparison.Ordinal))).ToArray());
+    }
 
     [Fact]
     public void Each_run_has_one_ring_and_one_bar_in_run_order_each_with_its_runs_4x_tooltip()
@@ -175,8 +219,9 @@ public class HistoryRingsMarkupTests : IDisposable
         Assert.DoesNotContain("<rect", html);
         Assert.DoesNotContain("preserveAspectRatio", html);
         Assert.Equal(2, Regex.Matches(html, "<div class=\"history-chart\"><div class=\"history-chart-title\">").Count);
-        Assert.Contains(">Pass rate, oldest run first</div>", html);
-        Assert.Contains(">Total duration, oldest run first</div>", html);
+        // the titles leave the order to the control above the cards (5.10.0)
+        Assert.Contains("<div class=\"history-chart-title\">Pass rate</div>", html);
+        Assert.Contains("<div class=\"history-chart-title\">Total duration</div>", html);
     }
 
     [Theory]

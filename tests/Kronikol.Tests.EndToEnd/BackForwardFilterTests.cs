@@ -1,3 +1,4 @@
+using Kronikol.Reports;
 using Microsoft.Playwright;
 
 namespace Kronikol.Tests.EndToEnd;
@@ -73,19 +74,97 @@ public class BackForwardFilterTests : BackForwardTestBase
     public async Task F3_A_chip_cycled_through_its_states_is_one_entry_and_another_chip_a_second()
     {
         await OpenLongAsync("BackNav_F3.html");
+        // the cycle is a three-way row's (5.10.0): the switch is an entry of its own
+        await Page.Locator(".filtering-box .tag-ways-toggle").ClickAsync();
+        Assert.Equal("#tagstates=3", await HashSoonAsync("#tagstates=3"));
         var length = await HistoryLengthAsync();
 
         await Chip("area-03").ClickAsync();
         await Chip("area-03").ClickAsync();
-        Assert.Equal("#tagx=area-03", await HashSoonAsync("#tagx=area-03"));
+        Assert.Equal("#tagx=area-03&tagstates=3", await HashSoonAsync("#tagx=area-03&tagstates=3"));
         Assert.Equal(length + 1, await HistoryLengthAsync());
 
         await Chip("area-05").ClickAsync();
-        Assert.Equal("#tags=area-05&tagx=area-03", await HashSoonAsync("#tags=area-05&tagx=area-03"));
+        Assert.Equal("#tags=area-05&tagx=area-03&tagstates=3", await HashSoonAsync("#tags=area-05&tagx=area-03&tagstates=3"));
         Assert.Equal(length + 2, await HistoryLengthAsync());
 
         await BackAsync();
         await StillInTheReportAsync("Back after the second chip");
+        Assert.Equal("off", await ChipStateAsync("area-05"));
+        Assert.Equal("out", await ChipStateAsync("area-03"));
+    }
+
+    // ── 5.10.0 (plans/REPORT_UI_FIXES_PLAN.md I1, C7): the rows' ways switches and Back ──
+
+    // a small report with a happy path, for Happy paths' Hide and Show
+    private string GenerateHappyReport(string fileName)
+    {
+        Feature[] features =
+        [
+            new()
+            {
+                DisplayName = "Orders",
+                Scenarios =
+                [
+                    new() { Id = "h1", DisplayName = "Create order", Result = ExecutionResult.Passed, IsHappyPath = true, Tags = ["api"] },
+                    new() { Id = "h2", DisplayName = "Reject order", Result = ExecutionResult.Failed, ErrorMessage = "boom", Tags = ["api"] },
+                    new() { Id = "h3", DisplayName = "Refund", Result = ExecutionResult.Passed, Tags = ["smoke"] }
+                ]
+            }
+        ];
+        var path = ReportGenerator.GenerateHtmlReport([], features, DateTime.UtcNow, DateTime.UtcNow, null,
+            Path.Combine(TempDir, fileName), "Bakery", true, diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
+        File.Copy(path, Path.Combine(OutputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
+    }
+
+    // a flip of a row's switch is a control of its own: one entry, which Back turns back
+    [Fact]
+    public async Task A_switch_flip_is_one_step_back()
+    {
+        await OpenLongAsync("BackNav_Ways.html");
+        var ways = Page.Locator(".filtering-box .tag-ways-toggle");
+        var length = await HistoryLengthAsync();
+        await ways.ClickAsync();
+        Assert.Equal("#tagstates=3", await HashSoonAsync("#tagstates=3"));
+        Assert.Equal(length + 1, await HistoryLengthAsync());
+
+        await BackAsync();
+        await StillInTheReportAsync("Back after the switch");
+        await Expect(ways).ToHaveTextAsync("2-WAY");
+        await ForwardAsync();
+        await StillInTheReportAsync("Forward after the switch");
+        await Expect(ways).ToHaveTextAsync("3-WAY");
+    }
+
+    // a guard: Happy paths' Hide and then Show are one entry, as in 5.2.0, though Hide makes the Tags row three-way (C4):
+    // a row's ways are never written for a left-out chip
+    [Fact]
+    public async Task Hide_then_Show_is_one_step_back_as_in_5_2_0()
+    {
+        await OpenAsync(GenerateHappyReport("BackNav_HideShow.html"));
+        await OpenFilterRowsAsync();
+        var length = await HistoryLengthAsync();
+        await Page.Locator(".happy-seg[data-hp='out']").ClickAsync();
+        Assert.Equal("#hpx=1", await HashSoonAsync("#hpx=1"));
+        await Page.Locator(".happy-seg[data-hp='off']").ClickAsync();
+        Assert.Equal("", await HashSoonAsync(""));
+        Assert.Equal(length + 1, await HistoryLengthAsync());
+    }
+
+    // a guard: the first chip change after a link that left a chip out (one 5.0.0 to 5.9.0 wrote) is one entry, as it was
+    [Fact]
+    public async Task The_first_chip_change_after_an_old_link_is_one_step_back()
+    {
+        await OpenAsync(GenerateLongReport("BackNav_OldLink.html"), "#tagx=area-03");
+        await OpenFilterRowsAsync();
+        var length = await HistoryLengthAsync();
+        await Chip("area-05").ClickAsync();
+        Assert.Equal("#tags=area-05&tagx=area-03", await HashSoonAsync("#tags=area-05&tagx=area-03"));
+        Assert.Equal(length + 1, await HistoryLengthAsync());
+
+        await BackAsync();
+        await StillInTheReportAsync("Back after the first chip");
         Assert.Equal("off", await ChipStateAsync("area-05"));
         Assert.Equal("out", await ChipStateAsync("area-03"));
     }

@@ -208,7 +208,7 @@ public class TagsMarkupTests
         Assert.Equal(hidden, row.Where(c => c.Hidden).Select(c => c.Tag));
         // after Untagged, before the row's Clear
         Assert.Contains(string.Create(CultureInfo.InvariantCulture,
-            $"data-none=\"1\" aria-pressed=\"false\" title=\"1 scenario. Click: only these. Click again: leave them out. Once more: off. Alt+click or right-click leaves them out at once.\">Untagged</button><button type=\"button\" class=\"tag-more\" data-shown=\"{shown}\" aria-expanded=\"false\" title=\"Show the other 5 tags. The row starts with the {shown} tags the most scenarios carry.\">5 more</button><button type=\"button\" class=\"group-clear\""),
+            $"data-none=\"1\" data-scenarios=\"1\" aria-pressed=\"false\" title=\"1 scenario. Click: only these. Click again: off.\">Untagged</button><button type=\"button\" class=\"tag-more\" data-shown=\"{shown}\" aria-expanded=\"false\" title=\"Show the other 5 tags. The row starts with the {shown} tags the most scenarios carry.\">5 more</button><button type=\"button\" class=\"group-clear\""),
             html);
     }
 

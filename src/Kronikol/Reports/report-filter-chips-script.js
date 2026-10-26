@@ -1,11 +1,26 @@
 // The filter rows' chips (5.0.0, plans/OPTION_C_PLAN.md S6, D8 to D12). A tag or dependency chip goes off, then has,
-// which is its row's active class as in 4.x, then has not, its row's exclude class; Alt+click and right-click
-// go straight to has not. A row's ANY / ALL switch combines the chips it requires (a chip it leaves out always means
-// none of them), a chip with data-none stands for the scenarios with none, and the row's Clear shows while one of its
-// chips is set. Happy paths is the Happy Path chip under another face: Show, Only or Hide. A category is one more tag
-// (plans/TAGS_PLAN.md §4.8), and the Tags row's start mode is the report's TagFilterMode.
+// which is its row's active class as in 4.x, and on a three-way row then has not, its row's exclude class, where
+// Alt+click and right-click go straight to has not. A row's ANY / ALL switch combines the chips it requires (a chip it
+// leaves out always means none of them), a chip with data-none stands for the scenarios with none, and the row's Clear
+// shows while one of its chips is set. Happy paths is the Happy Path chip under another face: Show, Only or Hide. A
+// category is one more tag (plans/TAGS_PLAN.md §4.8), and the Tags row's start mode is the report's TagFilterMode.
 var _tagModeDefault = '__TAG_MODE_DEFAULT__';
 var _tagMode = _tagModeDefault;
+// A row is two-way, its chips on or off, unless it is three-way (5.10.0, plans/REPORT_UI_FIXES_PLAN.md I1): while its own
+// switch says so (the reader's, which the link writes as tagstates= or depstates=), or while one of its chips leaves its
+// scenarios out (a link's tagx=, depx= or hpx=1, Happy paths' Hide), so a red chip only ever shows on a three-way row.
+var _tagWaysDefault = '__TAG_WAYS_DEFAULT__', _depWaysDefault = '__DEP_WAYS_DEFAULT__';
+var _chipWays = { tag: _tagWaysDefault, dependency: _depWaysDefault };
+var CHIP_WAYS_TOGGLES = { tag: 'tag-ways-toggle', dependency: 'dep-ways-toggle' };
+// the generator's words (ReportGenerator.ChipClicksIn, TwoWaysTitle, ThreeWaysTitle)
+var CHIP_CLICKS = {
+    2: 'Click: only these. Click again: off.',
+    3: 'Click: only these. Click again: leave them out. Once more: off. Alt+click or right-click leaves them out at once.'
+};
+var CHIP_WAYS_TITLES = {
+    2: "Two-way chips: a click shows only a chip's scenarios, a second click shows every scenario again. Click for three-way chips, where the second click leaves the chip's scenarios out (red) and a third shows them again.",
+    3: "Three-way chips: a click shows only a chip's scenarios, a second leaves them out (red), a third shows every scenario again. Click for two-way chips."
+};
 var FILTER_CHIP_ROWS = {
     tag: { active: 'tag-active', exclude: 'tag-exclude' },
     dependency: { active: 'dependency-active', exclude: 'dependency-exclude' }
@@ -129,18 +144,54 @@ function sync_happy_paths() {
         b.setAttribute('aria-pressed', b.getAttribute('data-hp') === state ? 'true' : 'false');
     });
 }
+// A row's Clear shows while one of its chips is set, and its ways switch says the row's ways: both follow the chips
 function sync_group_clears() {
     for (var f in FILTER_CHIP_ROWS) {
         var row = document.querySelector('.filtering-box .' + f + '-filters .group-clear');
         if (row) row.hidden = !filter_chips(f).some(function (b) { return chip_state(b) !== 'off'; });
     }
+    sync_ways();
 }
-// off, has, has not, off; toward has not, has not then off
+function row_ways(family) {
+    if (_chipWays[family] === '3') return 3;
+    return filter_chips(family).some(function (b) { return chip_state(b) === 'out'; }) ? 3 : 2;
+}
+// the switch says its row's ways, and the row's chips what a click does in them; a chip's title is rebuilt from its count
+// (data-scenarios), never parsed
+function sync_ways() {
+    for (var family in CHIP_WAYS_TOGGLES) {
+        var btn = document.querySelector('.filtering-box .' + CHIP_WAYS_TOGGLES[family]);
+        if (!btn) continue;
+        var ways = String(row_ways(family));
+        if (btn.getAttribute('data-ways') === ways) continue;
+        btn.setAttribute('data-ways', ways);
+        btn.textContent = ways + '-WAY';
+        btn.title = CHIP_WAYS_TITLES[ways];
+        filter_chips(family).forEach(function (b) {
+            var n = +b.getAttribute('data-scenarios');
+            b.title = (n === 1 ? '1 scenario' : n + ' scenarios') + '. ' + CHIP_CLICKS[ways];
+        });
+    }
+}
+// The switch: a three-way row turns two-way, its own ways and every chip that leaves its scenarios out (Happy paths' Hide
+// with them, back to Show); a two-way row turns three-way and keeps its chips as they are
+function toggle_ways(family) {
+    if (row_ways(family) === 3) {
+        _chipWays[family] = '2';
+        filter_chips(family).forEach(function (b) { if (chip_state(b) === 'out') set_chip_state(b, 'off'); });
+    } else {
+        _chipWays[family] = '3';
+    }
+    filter_row(family);
+}
+// a three-way row: off, has, has not, off, and toward has not (Alt+click, a right-click) has not then off; a two-way row:
+// on and off, whatever the keys (5.10.0)
 function cycle_chip(chip, toExclude) {
-    var s = chip_state(chip);
-    var next = toExclude ? (s === 'out' ? 'off' : 'out') : (s === 'off' ? 'in' : s === 'in' ? 'out' : 'off');
+    var family = chip_family(chip), s = chip_state(chip), next;
+    if (row_ways(family) === 2) next = s === 'off' ? 'in' : 'off';
+    else next = toExclude ? (s === 'out' ? 'off' : 'out') : (s === 'off' ? 'in' : s === 'in' ? 'out' : 'off');
     set_chip_state(chip, next);
-    filter_row(chip_family(chip));
+    filter_row(family);
 }
 (function () {
     var CHIPS = '.filtering-box .tag-toggle, .filtering-box .dependency-toggle';
@@ -157,6 +208,8 @@ function cycle_chip(chip, toExclude) {
             if (happy) { set_chip_state(happy, seg.getAttribute('data-hp')); filter_tags(); }
             return;
         }
+        var ways = t.closest('.filtering-box .tag-ways-toggle, .filtering-box .dep-ways-toggle');
+        if (ways) { toggle_ways(ways.classList.contains('tag-ways-toggle') ? 'tag' : 'dependency'); return; }
         var mode = t.closest('.filtering-box .tag-mode-toggle, .filtering-box .dep-mode-toggle');
         if (mode) {
             if (mode.classList.contains('tag-mode-toggle')) toggle_tag_mode(mode);
@@ -174,10 +227,11 @@ function cycle_chip(chip, toExclude) {
             if (first) first.focus();
         }
     });
-    // right-click on a chip is the chip's: has not, in place of the browser's menu
+    // right-click on a chip of a three-way row is the chip's: has not, in place of the browser's menu; on a two-way row it
+    // is the browser's own (5.10.0)
     document.addEventListener('contextmenu', function (e) {
         var chip = e.target && e.target.closest ? e.target.closest(CHIPS) : null;
-        if (!chip) return;
+        if (!chip || row_ways(chip_family(chip)) !== 3) return;
         e.preventDefault();
         cycle_chip(chip, true);
     });
