@@ -1,0 +1,125 @@
+{
+ "engine": "firefox",
+ "version": "148.0.2",
+ "drawnInSec": 3.565,
+ "ids": {
+  "muffin": "puml-1",
+  "openapi": "puml-172"
+ },
+ "globalPBefore": "undefined",
+ "m-json": {
+  "scale": 0.7135,
+  "text": "\"Some_Fresh_Milk\"",
+  "Rn": 1,
+  "R": {
+   "l": -8.8,
+   "r": -14.3,
+   "t": -2.5,
+   "b": -1
+  },
+  "X": {
+   "l": 0,
+   "r": 0.8,
+   "t": -2.5,
+   "b": 2.5
+  },
+  "S": {
+   "l": 0,
+   "r": 0.8,
+   "t": -2.5,
+   "b": 2.5
+  },
+  "hlPixels": 207,
+  "hlVsInk": {
+   "l": 0,
+   "r": 1,
+   "t": -3,
+   "b": 2
+  }
+ },
+ "m-cross": {
+  "scale": 0.7135,
+  "text": "\"milk\":",
+  "Rn": 4,
+  "R": {
+   "l": -0.7,
+   "r": -7.6,
+   "t": -3.5,
+   "b": 3.5
+  },
+  "X": {
+   "l": -0.7,
+   "r": 0.1,
+   "t": -2.5,
+   "b": 2.5
+  },
+  "S": null,
+  "hlPixels": 545,
+  "hlVsInk": {
+   "l": -1,
+   "r": 0,
+   "t": -3,
+   "b": 2
+  }
+ },
+ "o-zwsp": {
+  "scale": 1,
+  "text": "chars):​​",
+  "Rn": 1,
+  "R": {
+   "l": -0.8,
+   "r": -0.7,
+   "t": -4.4,
+   "b": 0.6
+  },
+  "X": {
+   "l": -0.8,
+   "r": -0.7,
+   "t": -4.4,
+   "b": 0.6
+  },
+  "S": {
+   "l": -0.8,
+   "r": -0.7,
+   "t": -4.4,
+   "b": 0.6
+  },
+  "hlPixels": 371,
+  "hlVsInk": {
+   "l": 0,
+   "r": 0,
+   "t": -4,
+   "b": 1
+  }
+ },
+ "o-box": {
+  "scale": 1,
+  "text": null,
+  "Rn": 1,
+  "R": {
+   "l": -1.2,
+   "r": 0,
+   "t": -4.4,
+   "b": -0.4
+  },
+  "X": null,
+  "S": null,
+  "hlPixels": 1631,
+  "hlVsInk": {
+   "l": -1,
+   "r": 0,
+   "t": -4,
+   "b": 0
+  }
+ },
+ "deep-mark": {
+  "inBox": true,
+  "inWindow": true,
+  "offCenterPx": 71.5
+ },
+ "deep-range": {
+  "inBox": true,
+  "inWindow": true,
+  "offCenterPx": 0.5
+ }
+}

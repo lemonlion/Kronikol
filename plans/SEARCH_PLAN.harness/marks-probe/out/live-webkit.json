@@ -1,0 +1,110 @@
+{
+ "engine": "webkit",
+ "version": "26.4",
+ "drawnInSec": 4.507,
+ "ids": {
+  "muffin": "puml-1",
+  "openapi": "puml-172"
+ },
+ "globalPBefore": "undefined",
+ "m-json": {
+  "scale": 0.7475,
+  "text": "\"Some_Fresh_Milk\"",
+  "Rn": 1,
+  "R": {
+   "l": -0.6,
+   "r": -0.9,
+   "t": -167.4,
+   "b": -163.4
+  },
+  "X": {
+   "l": -0.1,
+   "r": -0.5,
+   "t": -2.2,
+   "b": 1.8
+  },
+  "S": {
+   "l": -0.1,
+   "r": -0.5,
+   "t": -2.2,
+   "b": 1.8
+  },
+  "hlPixels": 0,
+  "hlVsInk": null
+ },
+ "m-cross": {
+  "scale": 0.7475,
+  "text": "\"milk\":",
+  "Rn": 4,
+  "R": {
+   "l": -556,
+   "r": 0.7,
+   "t": -167.4,
+   "b": 1.8
+  },
+  "X": {
+   "l": 0,
+   "r": 0,
+   "t": -2.2,
+   "b": 1.8
+  },
+  "S": null,
+  "hlPixels": 0,
+  "hlVsInk": null
+ },
+ "o-zwsp": {
+  "scale": 1,
+  "text": "chars):​​",
+  "Rn": 1,
+  "R": {
+   "l": 0,
+   "r": 0,
+   "t": -928.4,
+   "b": -926.4
+  },
+  "X": {
+   "l": -0.5,
+   "r": 0.4,
+   "t": -2.4,
+   "b": -0.4
+  },
+  "S": {
+   "l": -0.5,
+   "r": 0.4,
+   "t": -2.4,
+   "b": -0.4
+  },
+  "hlPixels": 0,
+  "hlVsInk": null
+ },
+ "o-box": {
+  "scale": 1,
+  "text": null,
+  "Rn": 1,
+  "R": {
+   "l": -1,
+   "r": 0,
+   "t": -3.4,
+   "b": -0.4
+  },
+  "X": null,
+  "S": null,
+  "hlPixels": 1367,
+  "hlVsInk": {
+   "l": 0,
+   "r": 0,
+   "t": -3,
+   "b": 0
+  }
+ },
+ "deep-mark": {
+  "inBox": true,
+  "inWindow": true,
+  "offCenterPx": 72
+ },
+ "deep-range": {
+  "inBox": true,
+  "inWindow": true,
+  "offCenterPx": 0
+ }
+}

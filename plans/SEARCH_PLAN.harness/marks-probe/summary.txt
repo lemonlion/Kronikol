@@ -1,0 +1,73 @@
+== a: custom highlight API, which properties paint (pixels that turned the colour) ==
+chromium  svg text             paints: bg 
+chromium  foreignObject html   paints: bg,color,deco,shadow 
+chromium  html control         paints: bg,color,deco,shadow 
+firefox   svg text             paints: bg,color,deco 
+firefox   foreignObject html   paints: bg,color,deco 
+firefox   html control         paints: bg,color,deco 
+webkit    svg text             paints: nothing 
+webkit    foreignObject html   paints: bg,color,deco,wts 
+webkit    html control         paints: bg,color,deco 
+
+== b/c: rect accuracy vs the ink (ok/total, worst horizontal and vertical error px) ==
+plain svg text               chromium  R 36/36 h2.3 v11.4 | X 36/36 h2.3 v11.4 | S 36/36 h2.3 v11.4
+plain svg text               firefox   R 9/35 h78.8 v11.4 bad[26] | X 36/36 h1.9 v11.4 | S 36/36 h1.9 v11.4
+plain svg text               webkit    R 0/36 h2.3 v2097.9 bad[36] | X 33/36 h1.9 v1751.9 bad[Ztf:m-json Ztf:o-zwsp Zanc:o-zwsp] | S 33/36 h1.9 v1751.9 bad[Ztf:m-json Ztf:o-zwsp Zanc:o-zwsp]
+textLength spacing           chromium  R 24/24 h2.4 v9.0 | X 24/24 h2.4 v9.0 | S 14/24 h15.3 v9.0 bad[10]
+textLength spacing           firefox   R 0/24 h475.0 v9.0 bad[24] | X 24/24 h2.1 v9.0 | S 14/24 h15.3 v9.0 bad[10]
+textLength spacing           webkit    R 0/24 h77.0 v401.0 bad[24] | X 9/24 h77.2 v6.0 bad[15] | S 9/24 h60.1 v6.0 bad[15]
+textLength spacingAndGlyphs  chromium  R 0/12 h75.8 v9.0 bad[12] | X 12/12 h2.8 v9.0 | S 12/12 h2.8 v9.0
+textLength spacingAndGlyphs  firefox   R 0/12 h614.8 v9.0 bad[12] | X 12/12 h2.7 v9.0 | S 2/12 h18.6 v9.0 bad[10]
+textLength spacingAndGlyphs  webkit    R 0/12 h77.0 v282.0 bad[12] | X 12/12 h0.8 v6.0 | S 12/12 h0.8 v6.0
+across 3 <text>              chromium  R 6/6 h1.6 v6.5 | X 6/6 h1.6 v6.5
+across 3 <text>              firefox   R 0/6 h36.6 v7.5 bad[Z0:m-cross Zin:m-cross Zout:m-cross Ztf:m-cross Zvb:m-cross Zanc:m-cross] | X 6/6 h1.6 v6.5
+across 3 <text>              webkit    R 0/6 h1220.0 v380.0 bad[Z0:m-cross Zin:m-cross Zout:m-cross Ztf:m-cross Zvb:m-cross Zanc:m-cross] | X 5/6 h1.6 v20.1 bad[Ztf:m-cross]
+foreignObject html           chromium  R 6/6 h2.8 v8.9
+foreignObject html           firefox   R 6/6 h1.6 v9.0
+foreignObject html           webkit    R 3/3 h1.2 v3.9
+html control                 chromium  R 2/2 h1.3 v4.0
+html control                 firefox   R 2/2 h0.9 v4.0
+html control                 webkit    R 2/2 h1.0 v3.5
+
+== tspan split moved the ink? (Z0, whole text red via tspans vs via style) ==
+chromium  m-step{"l":0,"r":6,"t":-2,"b":0}
+firefox   none
+webkit    s1{"l":0,"r":-51,"t":0,"b":0} s2{"l":0,"r":-50,"t":0,"b":0} s3{"l":0,"r":9,"t":0,"b":0} s4{"l":0,"r":9,"t":0,"b":0} s5{"l":0,"r":-1,"t":0,"b":0} s6{"l":0,"r":3,"t":0,"b":0}
+
+== d: deep match in the box ==
+chromium  Z0/mark:ok(hl 451) Z0/range:ok(hl 451) Z0/range-naive:ok(hl 451) Zout/mark:ok(hl 112) Zout/range:ok(hl 112) Zout/range-naive:MISS Ztf/mark:ok(hl 1009) Ztf/range:ok(hl 1009) Ztf/range-naive:MISS Zanc/mark:ok(hl 258) Zanc/range:ok(hl 258) Zanc/range-naive:MISS
+firefox   Z0/mark:ok(hl 473) Z0/range:ok(hl 473) Z0/range-naive:ok(hl 473) Zout/mark:ok(hl 103) Zout/range:ok(hl 103) Zout/range-naive:MISS Ztf/mark:ok(hl 1033) Ztf/range:ok(hl 1033) Ztf/range-naive:MISS Zanc/mark:ok(hl 253) Zanc/range:ok(hl 253) Zanc/range-naive:MISS
+webkit    Z0/mark:ok(hl 454) Z0/range:ok(hl 454) Z0/range-naive:ok(hl 454) Zout/mark:MISS Zout/range:ok(hl 0) Zout/range-naive:MISS Ztf/mark:ok(hl 992) Ztf/range:ok(hl 992) Ztf/range-naive:MISS Zanc/mark:ok(hl 251) Zanc/range:ok(hl 227) Zanc/range-naive:MISS
+
+== e: overlay centre offset from the ink after each change (px) ==
+chromium  m-json  Z0: svg 1 html 1 | scroll: svg 1 html 1 | Zin: svg 1 html 764 | Zout: svg 1 html 50 | Ztf: svg 1 html 307 | Zvb: svg 2 html 1236 | Zanc: svg 1 html 1 | ZinPan: svg 1 html 1
+chromium  s1      Z0: svg 1 html 1 | scroll: svg 1 html 1 | Zin: svg 1 html 124 | Zout: svg 0 html 104 | Ztf: svg 1 html 72 | Zvb: svg 2 html 273 | Zanc: svg 1 html 1 | ZinPan: svg 1 html 1
+chromium  o-zwsp  Z0: svg 1 html 1 | scroll: svg 1 html 1 | Zin: svg 1 html 633 | Zout: svg 1 html 525 | Ztf: svg 2 html 528 | Zvb: svg 2 html 244 | Zanc: svg 1 html 1 | ZinPan: svg 2 html 2
+chromium  o-box   Z0: svg 2 html 2 | scroll: svg 2 html 2 | Zin: svg 3 html 211 | Zout: svg 2 html 125 | Ztf: svg 4 html 237 | Zvb: svg 4 html 556 | Zanc: svg 2 html 2 | boxScroll: svg 32 html 32 | ZinPan: svg 3 html 3
+firefox   m-json  Z0: svg 1 html 12 | scroll: svg 1 html 12 | Zin: svg 1 html 776 | Zout: svg 1 html 49 | Ztf: svg 1 html 319 | Zvb: svg 2 html 1238 | Zanc: svg 1 html 9 | ZinPan: svg 1 html 49
+firefox   s1      Z0: svg 1 html 96 | scroll: svg 1 html 96 | Zin: svg 1 html 220 | Zout: svg 0 html 27 | Ztf: svg 1 html 28 | Zvb: svg 2 html 177 | Zanc: svg 1 html 72 | ZinPan: svg 1 html 254
+firefox   o-zwsp  Z0: svg 1 html 1 | scroll: svg 1 html 1 | Zin: svg 1 html 633 | Zout: svg 1 html 525 | Ztf: svg 2 html 528 | Zvb: svg 2 html 244 | Zanc: svg 1 html 1 | ZinPan: svg 2 html 1
+firefox   o-box   Z0: svg 2 html 2 | scroll: svg 2 html 2 | Zin: svg 4 html 211 | Zout: svg 2 html 125 | Ztf: svg 4 html 236 | Zvb: svg 5 html 556 | Zanc: svg 1 html 1 | boxScroll: svg 32 html 32 | ZinPan: svg 4 html 4
+webkit    m-json  Z0: svg 1 html 167 | scroll: svg 1 html 168 | Zin: svg 1 html 762 | Zout: svg 0 html 117 | Ztf: svg 0 html 306 | Zvb: svg 0 html 1402 | Zanc: svg 0 html 126 | ZinPan: svg 0 html 376
+webkit    s1      Z0: svg 34 html 48 | scroll: svg 34 html 48 | Zin: svg 55 html 180 | Zout: svg 17 html 88 | Ztf: svg 51 html 76 | Zvb: svg 68 html 203 | Zanc: svg 26 html 36 | ZinPan: svg 55 html 77
+webkit    o-zwsp  Z0: svg 1 html 1048 | scroll: svg 1 html 1048 | Zin: svg 2 html 1680 | Zout: svg 1 html 521 | Ztf: svg 2 html 1575 | Zvb: svg 2 html 802 | Zanc: svg 1 html 786 | ZinPan: svg 1 html 1676
+webkit    o-box   Z0: svg 1 html 1 | scroll: svg 1 html 1 | Zin: svg ? html ? | Zout: svg ? html ? | Ztf: svg 2 html 234 | Zvb: svg ? html ? | Zanc: svg 1 html 1 | boxScroll: svg 33 html 33 | ZinPan: svg ? html ?
+
+== f: timing (ms) ==
+chromium   50 matches: search 0.1 layout 3.25 | Range rects warm/cold 0.085 3.345 | extentOfChar 0.146 3.555 | substring 0.105 3.545 | rects per text 5.49 | one multiply layer 0.89 | highlight 2 frames 33.3 idle 33.5
+chromium  312 matches: search 0.3 layout 3.525 | Range rects warm/cold 0.418 3.87 | extentOfChar 0.804 3.985 | substring 0.611 3.915 | rects per text 24.24 | one multiply layer 2.83 | highlight 2 frames 33.7 idle 32.9
+chromium   box {"search":0,"matches":50,"R_first":6.399999976158142,"R_warm":2.005}
+firefox    50 matches: search 0 layout 4.5 | Range rects warm/cold 0.08 4.35 | extentOfChar 0.09 4.75 | substring 0.03 4.4 | rects per text 8.29 | one multiply layer 1 | highlight 2 frames 60 idle 60
+firefox   312 matches: search 0 layout 4.15 | Range rects warm/cold 0.48 5.15 | extentOfChar 0.37 5 | substring 0.19 4.9 | rects per text 111.57 | one multiply layer 3.43 | highlight 2 frames 46 idle 60
+firefox    box {"search":2,"matches":50,"R_first":4,"R_warm":0.05}
+webkit     50 matches: search 0 layout 10.85 | Range rects warm/cold 0.26 5.5 | extentOfChar 0.12 5.5 | substring 0.08 5.55 | rects per text 14.57 | one multiply layer 3.86 | highlight 2 frames 31 idle 45
+webkit    312 matches: search 0 layout 5.15 | Range rects warm/cold 1.71 7.2 | extentOfChar 0.73 7.25 | substring 0.36 6.55 | rects per text 260.86 | one multiply layer 151.86 | highlight 2 frames 32 idle 50
+webkit     box {"search":1,"matches":50,"R_first":16,"R_warm":11.15}
+
+NOTE on WebKit textLength rows above: the ink truth splits the <text> into <tspan>s, and WebKit lays a
+textLength <text> out differently once split (see "tspan split moved the ink"), so the WebKit numbers for
+s1-s6 (and the phase-e WebKit s1 overlay row) are not valid. check-span.js measures the same thing without
+tspans (getExtentOfChar(0..n-1) against the whole text painted red):
+  Chromium, Firefox: within 1 px for every textLength / lengthAdjust case.
+  WebKit: within 1 px for lengthAdjust=spacing (s1, s3, s5, s6); spacingAndGlyphs wrong (s2 ends 49 px short, s4 20 px long).
+  312 rects, all extents read first, then inserted (per <text> or one layer): 1.4-3 ms in all three engines.
