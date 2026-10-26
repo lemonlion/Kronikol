@@ -66,6 +66,8 @@ public static class DiagramContextMenu
         // JSON-escaping gives a JavaScript string literal; the default encoder also escapes `<`, so the
         // inlined worker source can never contain a literal `</script>`.
         var hostLiteral = System.Text.Json.JsonSerializer.Serialize(hostSource);
+        // The editor tab's page (plans/PLANTUML_EDITOR_TAB_PLAN.md), inlined the same way.
+        var editorPageLiteral = System.Text.Json.JsonSerializer.Serialize(LoadResource("plantuml-editor-tab.html"));
         return WithDecompressHelper(LoadResource("plantuml-browser-render-script.js"))
             .Replace("__BROWSER_RENDER_WORKERS__", Math.Max(0, browserRenderWorkers).ToString(System.Globalization.CultureInfo.InvariantCulture))
             .Replace("__BROWSER_RENDER_CACHE_MB__", Math.Max(0, browserRenderCacheMegabytes).ToString(System.Globalization.CultureInfo.InvariantCulture))
@@ -75,6 +77,7 @@ public static class DiagramContextMenu
             .Replace("__PLANTUML_WASM_ENGINE_INTEGRITY__", TrackingDefaults.PlantUmlWasmEngineIntegrity)
             .Replace("__PLANTUML_VIZ_INTEGRITY__", TrackingDefaults.VizGlobalJsIntegrity)
             .Replace("__PLANTUML_WORKER_HOST_SOURCE__", hostLiteral)
+            .Replace("__PLANTUML_EDITOR_PAGE__", editorPageLiteral)
             .Replace("__PLANTUML_ON_DEMAND__", onDemand ? "true" : "false")
             .Replace("__PLANTUML_STATEMENT_LIMITS__", StatementLimitsLiteral);
     }

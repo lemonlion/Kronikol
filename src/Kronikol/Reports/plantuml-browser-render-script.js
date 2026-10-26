@@ -73,6 +73,11 @@
         var WORKERS_REQUESTED = __BROWSER_RENDER_WORKERS__;
         var CACHE_MEGABYTES = __BROWSER_RENDER_CACHE_MB__;
         var WORKER_HOST_SOURCE = __PLANTUML_WORKER_HOST_SOURCE__;
+        // The diagram menu's PlantUML editor (plans/PLANTUML_EDITOR_TAB_PLAN.md): the page written into its tab, and the cap
+        // its worker draws at. The menu hands out a diagram's whole source, which the page draws only in parts of about
+        // 12,000 px, and twenty parts are about 240,000 px: 20 x 98304.
+        var EDITOR_PAGE_SOURCE = __PLANTUML_EDITOR_PAGE__;
+        var EDITOR_MAX_SVG_SIZE = 1966080;
         var CACHE_LIMIT = Math.max(0, CACHE_MEGABYTES) * 1024 * 1024;
         var hardware = (typeof navigator !== 'undefined' && navigator.hardwareConcurrency) || 2;
         var targetWorkers = WORKERS_REQUESTED > 0 ? Math.max(1, Math.min(WORKERS_REQUESTED, hardware)) : 0;
@@ -402,34 +407,45 @@
                 });
             });
         }
-        function acquireEngine() {
-            var tf = now();
+        // The script a render worker runs: the worker host, Graphviz and the engine the page draws with, each file fetched
+        // under its hash. Resolves { text, esm }, or { refused } when the engine's bytes did not match; rejects when the
+        // files could not be fetched. The page's workers and the editor tab's worker are built from the same text.
+        function buildWorkerSource() {
             // Graphviz only where WebAssembly compiles: undefined stands for "not fetched", null for "refused".
             var vizFetch = WEBASSEMBLY_PROBLEM === null ? fetchVerified(VIZ_URL, VIZ_INTEGRITY, 'vizIntegrity') : Promise.resolve(undefined);
-            Promise.all([vizFetch, fetchVerified(ENGINE_URL, ENGINE_INTEGRITY, 'engineIntegrity')]).then(function (parts) {
-                telemetry.engineFetchMs = Math.round(now() - tf);
-                if (mode === 'main-thread') return;
+            return Promise.all([vizFetch, fetchVerified(ENGINE_URL, ENGINE_INTEGRITY, 'engineIntegrity')]).then(function (parts) {
                 var viz = parts[0], engine = parts[1];
-                if (engine === null) {
-                    // No fallback: the script tags would fetch the same bytes and fail the same check.
-                    engineFailed(new Error(integrityMessage(ENGINE_FILE, ENGINE_URL, ENGINE_INTEGRITY)));
-                    return;
-                }
+                if (engine === null) return { refused: new Error(integrityMessage(ENGINE_FILE, ENGINE_URL, ENGINE_INTEGRITY)) };
                 if (viz === null) vizMissing(integrityMessage('viz-global.js', VIZ_URL, VIZ_INTEGRITY));
                 // An ES-module engine build (the npm @plantuml/core line) ends in `export { X as render,
                 // Y as renderToString }`; a classic worker cannot evaluate that, so expose the exports instead.
+                var esm = false;
                 var tail = engine.slice(-300);
                 var em = /export\s*\{\s*([A-Za-z_$][\w$]*)\s+as\s+render\s*,\s*([A-Za-z_$][\w$]*)\s+as\s+renderToString\s*\}\s*;?\s*$/.exec(tail);
                 if (em) {
-                    esmMode = true;
+                    esm = true;
                     engine = engine.slice(0, engine.length - tail.length + em.index) + 'self.__plantumlExports = { render: ' + em[1] + ', renderToString: ' + em[2] + ' };\n';
                 }
                 // Graphviz is only used for non-sequence diagrams: a failure there, or a refused file, must
                 // not take the sequence diagrams down with it.
-                var src = WORKER_HOST_SOURCE
+                var text = WORKER_HOST_SOURCE
                     + (viz == null ? '' : '\n;try {\n' + viz + '\n} catch (e) { console.error("Kronikol: viz-global failed: " + e); }\n')
                     + ';(function () {\n' + engine + '\n})();\n';
-                blobUrl = URL.createObjectURL(new Blob([src], { type: 'application/javascript' }));
+                return { text: text, esm: esm };
+            });
+        }
+        function acquireEngine() {
+            var tf = now();
+            buildWorkerSource().then(function (built) {
+                telemetry.engineFetchMs = Math.round(now() - tf);
+                if (mode === 'main-thread') return;
+                if (built.refused) {
+                    // No fallback: the script tags would fetch the same bytes and fail the same check.
+                    engineFailed(built.refused);
+                    return;
+                }
+                esmMode = built.esm;
+                blobUrl = URL.createObjectURL(new Blob([built.text], { type: 'application/javascript' }));
                 mode = 'worker'; telemetry.mode = 'worker';
                 startWorker();
             }).catch(function (e) {
@@ -611,8 +627,42 @@
             }
             pumpWorkers();
         }
+        // The diagram menu's PlantUML editor (plans/PLANTUML_EDITOR_TAB_PLAN.md): writes the editor page into a tab the menu
+        // opened in the click and hands it the source, the page's colours, the report's way of cutting a diagram into
+        // parts, and the engine: the text of the page's own render worker, from which the tab starts a worker of its own,
+        // so it keeps drawing once the report is closed.
+        var EDITOR_TOKENS = ['ground', 'card', 'ink', 'muted', 'hairline', 'accent', 'on-accent', 'hover', 'fail', 'field', 'font', 'mono'];
+        function shimOpenEditor(tab, source, opts) {
+            var root = document.documentElement, style = getComputedStyle(root), tokens = {};
+            for (var i = 0; i < EDITOR_TOKENS.length; i++) tokens[EDITOR_TOKENS[i]] = style.getPropertyValue('--kron-' + EDITOR_TOKENS[i]).trim();
+            var dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            tab.document.open();
+            tab.document.write(EDITOR_PAGE_SOURCE);
+            tab.document.close();
+            tab.__kronikolEditorStart({
+                source: String(source == null ? '' : source),
+                title: (opts && opts.title) || 'PlantUML editor',
+                tokens: tokens,
+                theme: root.getAttribute('data-theme') || (dark ? 'dark' : 'light'),
+                maxSvgSize: EDITOR_MAX_SVG_SIZE,
+                split: typeof window._splitWithChunkedNotes === 'function'
+                    ? function (s) { return window._splitWithChunkedNotes(s).slice(); } : null,
+                engine: function () {
+                    var unavailable = canUseWorkers();
+                    if (unavailable) return Promise.reject(new Error(unavailable));
+                    if (engineError) return Promise.reject(new Error(engineError.message || String(engineError)));
+                    return buildWorkerSource().then(function (built) {
+                        if (built.refused) throw built.refused;
+                        return { text: built.text, esm: built.esm, engine: telemetry.engine };
+                    }, function (e) {
+                        throw new Error('the engine could not be fetched' + (e && e.message ? ': ' + e.message : ''));
+                    });
+                }
+            });
+        }
         var shim = {
             render: shimRender,
+            openEditor: shimOpenEditor,
             prefetch: shimPrefetch,
             get maxParallel() { return (mode === 'main-thread' || targetWorkers === 0) ? 1 : targetWorkers; },
             cacheStats: function () { return { entries: cache.size, bytes: cacheBytes, limit: CACHE_LIMIT, hits: telemetry.cacheHits }; },

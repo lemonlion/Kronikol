@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.9.0] - 2026-10-26
+
+The minor part moves (5.8.0 to 5.9.0): the diagram menu has a new item, **Open in PlantUML editor**, a new
+report control. Nothing existing changes behaviour.
+
+### Added
+
+- **Open in PlantUML editor.** A diagram's menu opens its source in a tab that draws it as one picture. The page draws a
+  long diagram in parts (`BrowserFragmentMaxHeight`, 12,000 px of estimated height each), while the source the menu
+  hands out is the whole diagram, which can be twenty parts and about 158,000 px long, and other renderers stop well
+  short of that (Java PlantUML crops a PNG at 4,096 px by default, and the
+  browser build's playground draws at 8,192). The tab draws with the report's pinned engine, checked against the same
+  hashes, in a worker of its own at 20 times the report's size limit (1,966,080 px). It has the source beside the
+  picture: an edit draws it again after a pause in typing, or on Render (Ctrl+Enter) for a source over 200,000
+  characters; Parts draws it the way the report does; the picture saves as PNG (at the largest scale a browser's canvas
+  holds) or SVG, and the source as a `.puml` file. It takes the report's theme and colours, keeps drawing once the
+  report is closed, and asks before an edited source is lost. Offline with nothing cached, or wherever the engine cannot
+  run, it still opens with the source and says why it cannot draw it. When a note toggle changed the diagram, the item
+  is a submenu with the full source and the current one. **Open source in new tab** is unchanged.
+- The render worker takes its size limit from its `init` message. The report's own workers still draw at 98,304 px.
+
 ## [5.8.0] - 2026-10-25
 
 The minor part moves (5.7.3 to 5.8.0): five new report theme tokens, `--dg-loop`, `--dg-loop-edge`, `--dg-loop-tab`,

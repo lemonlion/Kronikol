@@ -470,6 +470,14 @@
             escapeTabText(text) + '</pre>', '#ffffff');
     }
 
+    // The editor's tab is opened in the click too; the shim writes the page into it. Where no tab opens, the source is
+    // shown as text, as the source item shows it.
+    function openEditorTab(text) {
+        var tab = openTab();
+        if (!tab) { openTextInTab(text, 'PlantUML source'); return; }
+        window.plantuml.openEditor(tab, text, { title: 'PlantUML editor' });
+    }
+
     function createMenuItem(label, action) {
         var item = document.createElement('div');
         item.textContent = label;
@@ -1030,6 +1038,19 @@
                     menu.appendChild(createMenuItem('Open ' + typeLabel + ' source in new tab', function() {
                         openTextInTab(currentSource, typeLabel + ' source');
                     }));
+                }
+                // The PlantUML editor (plans/PLANTUML_EDITOR_TAB_PLAN.md): the whole source drawn as one diagram, which the
+                // page draws only in parts, and other renderers refuse past their size limits. Offered where the page
+                // carries the engine shim that opens it.
+                if (window.plantuml && typeof window.plantuml.openEditor === 'function') {
+                    if (origSource2 !== currentSource) {
+                        menu.appendChild(createSubMenu('Open in PlantUML editor', [
+                            createMenuItem('Open full PlantUML in editor', function() { openEditorTab(origSource2); }),
+                            createMenuItem('Open current PlantUML in editor', function() { openEditorTab(currentSource); })
+                        ]));
+                    } else {
+                        menu.appendChild(createMenuItem('Open in PlantUML editor', function() { openEditorTab(currentSource); }));
+                    }
                 }
             }
             if (clickedNoteIdx >= 0 && _fullNoteText) {

@@ -1024,8 +1024,41 @@ public class DiagramContextMenuTests
         // 8192px, far below what Kronikol reports produce, so every ES-module render call site must
         // pass the 98304px limit as the maxSvgSize render option instead. Dropping one of these
         // silently reintroduces "Diagram too large" on big-but-legitimate diagrams.
-        Assert.Contains("maxSvgSize: 98304", DiagramContextMenu.GetPlantUmlWorkerHostScript());
+        // The worker host's cap is the report's unless its init message raises it (the editor tab's worker does).
+        Assert.Contains("var maxSvgSize = 98304;", DiagramContextMenu.GetPlantUmlWorkerHostScript());
+        Assert.Contains("maxSvgSize: maxSvgSize", DiagramContextMenu.GetPlantUmlWorkerHostScript());
         Assert.Contains("maxSvgSize: 98304", _plantUmlScript);
+    }
+
+    [Fact]
+    public void Editor_page_is_inlined_as_a_JavaScript_string_that_cannot_close_the_script_tag()
+    {
+        // plans/PLANTUML_EDITOR_TAB_PLAN.md: the tab's page is one resource, carried in the render script the way the
+        // worker host is, so a report holds it only where it holds the engine shim.
+        Assert.Contains("var EDITOR_PAGE_SOURCE = \"", _plantUmlScript);
+        Assert.Contains("kronikol-editor", _plantUmlScript);
+        Assert.DoesNotContain("__PLANTUML_EDITOR_PAGE__", _plantUmlScript);
+        var opens = System.Text.RegularExpressions.Regex.Matches(_plantUmlScript, "<script").Count;
+        var closes = System.Text.RegularExpressions.Regex.Matches(_plantUmlScript, "</script>").Count;
+        Assert.Equal(3, opens);
+        Assert.Equal(opens, closes);
+    }
+
+    [Fact]
+    public void The_editor_tab_draws_at_twenty_times_the_report_cap()
+    {
+        // The report draws a diagram in parts of about 12,000 px; the menu hands out the whole source, which can be twenty
+        // parts long, so the tab's worker is started with 20 x 98304.
+        Assert.Contains("var EDITOR_MAX_SVG_SIZE = 1966080;", _plantUmlScript);
+        Assert.Contains("openEditor: shimOpenEditor", _plantUmlScript);
+    }
+
+    [Fact]
+    public void The_menu_offers_the_editor_only_where_the_shim_can_open_it()
+    {
+        var menu = DiagramContextMenu.GetContextMenuScript();
+        Assert.Contains("'Open in PlantUML editor'", menu);
+        Assert.Contains("typeof window.plantuml.openEditor === 'function'", menu);
     }
 
     /// <summary>One function of the render shim, from its declaration to the next one at the same depth.</summary>
@@ -1052,9 +1085,11 @@ public class DiagramContextMenuTests
         Assert.DoesNotContain("__PLANTUML_", _plantUmlScript);
 
         Assert.Contains("fetch(url, { integrity: integrity })", ShimFunction("fetchVerified"));
-        var acquire = ShimFunction("acquireEngine");
-        Assert.Contains("fetchVerified(VIZ_URL, VIZ_INTEGRITY, 'vizIntegrity')", acquire);
-        Assert.Contains("fetchVerified(ENGINE_URL, ENGINE_INTEGRITY, 'engineIntegrity')", acquire);
+        // the files are fetched where the worker script is built, which the page's workers and the editor tab's share
+        Assert.Contains("buildWorkerSource().then(", ShimFunction("acquireEngine"));
+        var build = ShimFunction("buildWorkerSource");
+        Assert.Contains("fetchVerified(VIZ_URL, VIZ_INTEGRITY, 'vizIntegrity')", build);
+        Assert.Contains("fetchVerified(ENGINE_URL, ENGINE_INTEGRITY, 'engineIntegrity')", build);
         var addScript = ShimFunction("addScript");
         Assert.Contains("s.integrity = integrity;", addScript);
         Assert.Contains("s.crossOrigin = 'anonymous';", addScript);
@@ -1162,7 +1197,7 @@ public class DiagramContextMenuTests
         Assert.Equal("\"refused by the page's policy\"", NodeProbe.Run(
             "globalThis.WebAssembly = { Module: function () { throw new Error(\"refused by the page's policy\"); } };\n" + probe + report));
 
-        Assert.Contains("WEBASSEMBLY_PROBLEM === null ? fetchVerified(VIZ_URL, VIZ_INTEGRITY, 'vizIntegrity')", ShimFunction("acquireEngine"));
+        Assert.Contains("WEBASSEMBLY_PROBLEM === null ? fetchVerified(VIZ_URL, VIZ_INTEGRITY, 'vizIntegrity')", ShimFunction("buildWorkerSource"));
         Assert.Contains("if (WEBASSEMBLY_PROBLEM === null) addScript(VIZ_URL, VIZ_INTEGRITY)", ShimFunction("loadEngineScripts"));
     }
 

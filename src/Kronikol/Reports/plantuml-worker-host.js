@@ -21,7 +21,7 @@
 //                                                 new URL("viz-global.js", document.baseURI), a blob:
 //                                                 base throws
 //
-// Protocol  in : {type:'init', esm?}  {type:'render', seq, id, lines}
+// Protocol  in : {type:'init', esm?, maxSvgSize?}  {type:'render', seq, id, lines}
 //           out: {type:'ready'}  {type:'done', seq, id, svg, ms}  {type:'error', seq, id, message}
 //                {type:'fatal', message}
 // One render at a time (TeaVM keeps global state); renders queue inside the worker. A render completes
@@ -204,6 +204,10 @@
     var busy = false;
     var ready = false;
     var initialised = false;
+    // Stock engine builds refuse diagrams past 8192px by default; the report's limit is 98304px. The init message may
+    // raise it: the editor tab draws a diagram's whole source, which the report draws only in parts of about 12,000 px
+    // (plans/PLANTUML_EDITOR_TAB_PLAN.md).
+    var maxSvgSize = 98304;
 
     function loadEngine(esm) {
         // The engine is chatty on console.log (timings, "createDiagram ok", …); errors still surface.
@@ -212,8 +216,7 @@
             // ES-module build: the page rewrote its trailing `export {…}` into self.__plantumlExports.
             var ex = self.__plantumlExports;
             if (!ex || typeof ex.render !== 'function') return Promise.reject(new Error('ESM engine exports missing'));
-            // Stock engine builds refuse diagrams past 8192px by default; Kronikol's limit is 98304px.
-            self.plantuml = { render: function (lines, id) { return ex.render(lines, id, { maxSvgSize: 98304 }); } };
+            self.plantuml = { render: function (lines, id) { return ex.render(lines, id, { maxSvgSize: maxSvgSize }); } };
             // The Wasm engine's bundle says when its module is ready, or why it cannot load (5.0.0): the worker answers
             // 'ready' only then, and a module that does not load is the worker's 'fatal', so the page can draw with the
             // JavaScript engine instead.
@@ -283,6 +286,7 @@
         if (m.type === 'init') {
             if (initialised) return;
             initialised = true;
+            if (typeof m.maxSvgSize === 'number' && isFinite(m.maxSvgSize) && m.maxSvgSize > 0) maxSvgSize = m.maxSvgSize;
             loadEngine(!!m.esm).then(function () { ready = true; self.postMessage({ type: 'ready' }); next(); })
                 .catch(function (e) { self.postMessage({ type: 'fatal', message: String(e && e.stack || e) }); });
         } else if (m.type === 'render') {

@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PlantUML editor</title>
+<style>
+/* The diagram menu's PlantUML editor (plans/PLANTUML_EDITOR_TAB_PLAN.md). Written into a tab the report opened; the
+   report hands it its theme's colours, the source, and the engine, and the tab draws with a worker of its own. */
+:root {
+    --ground: #ebeef4; --card: #fff; --ink: #242b36; --muted: #5b6474; --hairline: #d3d9e3; --accent: #2559c7;
+    --on-accent: #fff; --hover: #edf1f8; --fail: #c62828; --field: #fff;
+    --font: -apple-system, 'Segoe UI', Roboto, sans-serif; --mono: ui-monospace, Consolas, 'Cascadia Mono', monospace;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--ground); color: var(--ink); font: 13px/1.45 var(--font); display: flex; flex-direction: column; }
+.kronikol-editor-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; padding: 8px 16px;
+    background: var(--card); border-bottom: 1px solid var(--hairline); }
+.kronikol-editor-bar h1 { font-size: 14px; margin: 0 8px 0 0; font-weight: 600; }
+.kronikol-editor-bar button { font: inherit; color: var(--ink); background: var(--field); border: 1px solid var(--hairline);
+    border-radius: 4px; padding: 4px 10px; cursor: pointer; }
+.kronikol-editor-bar button:hover:not(:disabled) { background: var(--hover); }
+.kronikol-editor-bar button:disabled { opacity: .5; cursor: default; }
+.kronikol-editor-bar button.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.kronikol-editor-bar button[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+#status { flex: 1 1 220px; color: var(--muted); min-width: 0; overflow-wrap: anywhere; }
+body[data-state="failed"] #status, body[data-state="no-engine"] #status { color: var(--fail); }
+main { flex: 1; display: flex; min-height: 0; }
+#src { flex: 0 0 38%; min-width: 0; margin: 0; padding: 12px; border: 0; border-right: 1px solid var(--hairline); resize: none;
+    background: var(--field); color: var(--ink); font: 12.5px/1.5 var(--mono); white-space: pre; tab-size: 4; }
+#pic { flex: 1; min-width: 0; overflow: auto; padding: 16px; }
+#pic .paper { display: inline-block; background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0, 0, 0, .15); }
+#pic .paper + .paper { display: block; width: max-content; margin-top: 12px; }
+#pic.fit svg { max-width: 100%; height: auto; }
+#pic .message { color: var(--fail); white-space: pre-wrap; font-family: var(--mono); }
+@media (max-width: 768px) {
+    main { flex-direction: column; }
+    #src { flex: 0 0 40%; border-right: 0; border-bottom: 1px solid var(--hairline); }
+}
+</style>
+</head>
+<body class="kronikol-editor" data-state="starting">
+<div class="kronikol-editor-bar">
+    <h1>PlantUML editor</h1>
+    <button type="button" id="render" class="primary" title="Draw the source (Ctrl+Enter)">Render</button>
+    <button type="button" id="whole" aria-pressed="true" title="Draw the source as one diagram">Whole</button>
+    <button type="button" id="parts" aria-pressed="false" title="Draw the source in parts, as the report does">Parts</button>
+    <button type="button" id="fit" aria-pressed="false" title="Fit the picture to the width of the pane">Fit width</button>
+    <button type="button" id="copy">Copy source</button>
+    <button type="button" id="save-puml">Save .puml</button>
+    <button type="button" id="save-svg" disabled>Save SVG</button>
+    <button type="button" id="save-png" disabled>Save PNG</button>
+    <span id="status" role="status" aria-live="polite">Starting the engine…</span>
+</div>
+<main>
+    <textarea id="src" spellcheck="false" aria-label="PlantUML source"></textarea>
+    <div id="pic" aria-label="Diagram"></div>
+</main>
+<script>
+(function () {
+    // A source this long is drawn only when asked (Render or Ctrl+Enter). Measured on the consumer's diagrams
+    // (plans/PLANTUML_EDITOR_TAB_PLAN.md section 4): 147,000 characters (ten parts) draw whole in 0.7 s on the Wasm engine
+    // and 1.2 s on the JavaScript one, 346,000 (21 parts) in 1.4 s and 2.5 s; past about twelve parts a redraw after every
+    // pause in typing would leave the tab drawing more than the user types.
+    var AUTO_RENDER_CHARS = 200000;
+    var AUTO_RENDER_DELAY_MS = 700;
+    // The largest canvas the browsers draw: about 32,767 px a side and 268 million pixels in all.
+    var CANVAS_SIDE = 32767, CANVAS_AREA = 268435456;
+
+    var src = document.getElementById('src');
+    var pic = document.getElementById('pic');
+    var statusEl = document.getElementById('status');
+    var buttons = {};
+    ['render', 'whole', 'parts', 'fit', 'copy', 'save-puml', 'save-svg', 'save-png'].forEach(function (id) { buttons[id] = document.getElementById(id); });
+
+    var api = null, original = '';
+    var workerText = null, esm = false, worker = null, blobUrl = null, ready = false;
+    var seq = 0, wanted = null, inFlight = 0, timer = null, debounce = null, startedAt = 0;
+    var view = 'whole', lastSvg = null;
+
+    function setState(state, text) {
+        document.body.setAttribute('data-state', state);
+        statusEl.textContent = text;
+    }
+    function seconds(ms) { return (ms / 1000).toFixed(ms < 10000 ? 1 : 0) + ' s'; }
+
+    // --- the engine --------------------------------------------------------------------------
+    function startWorker() {
+        ready = false;
+        if (!blobUrl) blobUrl = URL.createObjectURL(new Blob([workerText], { type: 'application/javascript' }));
+        worker = new Worker(blobUrl);
+        worker.onmessage = function (ev) { onMessage(ev.data || {}); };
+        worker.onerror = function (ev) {
+            ev.preventDefault();
+            stopWorker();
+            failed('The PlantUML engine crashed drawing this diagram: ' + (ev.message || 'worker error') + '.');
+        };
+        worker.postMessage({ type: 'init', esm: esm, maxSvgSize: api.maxSvgSize });
+    }
+    function stopWorker() {
+        if (worker) { try { worker.terminate(); } catch (e) { /* best effort */ } }
+        worker = null; ready = false; inFlight = 0;
+    }
+    function onMessage(m) {
+        if (m.type === 'ready') { ready = true; if (wanted) send(); return; }
+        if (m.type === 'fatal') { stopWorker(); noEngine(String(m.message).split('\n')[0]); return; }
+        if (!wanted) return;
+        var job = wanted.jobs[m.seq];
+        if (!job) return;
+        delete wanted.jobs[m.seq];
+        inFlight--;
+        if (m.type === 'done') job.svg = m.svg; else job.error = String(m.message);
+        job.ms = m.ms || 0;
+        if (inFlight === 0) finish(wanted);
+    }
+
+    // --- drawing -----------------------------------------------------------------------------
+    function sourcesFor(text) {
+        if (view === 'whole') return [text];
+        var parts = null;
+        try { parts = api.split(text); } catch (e) { parts = null; }
+        return parts && parts.length ? parts : null;
+    }
+    function render() {
+        clearTimeout(debounce);
+        if (!api) return;
+        if (!workerText) { if (document.body.getAttribute('data-state') !== 'no-engine') setState('starting', 'Starting the engine…'); return; }
+        var text = src.value;
+        var sources = sourcesFor(text);
+        if (!sources) { failed('The parts come from the report, which is no longer open: draw the whole diagram.'); return; }
+        // A render still running for an older source is abandoned: its worker goes, and another starts.
+        if (inFlight > 0) stopWorker();
+        wanted = { sources: sources, jobs: {}, results: [] };
+        startedAt = Date.now();
+        tick();
+        clearInterval(timer);
+        timer = setInterval(tick, 500);
+        if (!worker) startWorker();
+        else if (ready) send();
+    }
+    function tick() {
+        var n = wanted ? wanted.sources.length : 1;
+        setState('drawing', 'Drawing ' + (n > 1 ? n + ' parts' : 'the diagram') + '… ' + seconds(Date.now() - startedAt));
+    }
+    function send() {
+        var w = wanted;
+        inFlight = 0;
+        for (var i = 0; i < w.sources.length; i++) {
+            var s = ++seq, job = { index: i };
+            w.jobs[s] = job; w.results[i] = job; inFlight++;
+            worker.postMessage({ type: 'render', seq: s, id: 'e' + s, lines: w.sources[i].split(/\r?\n/) });
+        }
+    }
+    function sizeOf(svgEl) {
+        var w = parseFloat(svgEl.getAttribute('width')), h = parseFloat(svgEl.getAttribute('height'));
+        if (!(w > 0 && h > 0) && svgEl.viewBox && svgEl.viewBox.baseVal) { w = svgEl.viewBox.baseVal.width; h = svgEl.viewBox.baseVal.height; }
+        return { w: Math.round(w) || 0, h: Math.round(h) || 0 };
+    }
+    function finish(w) {
+        clearInterval(timer);
+        var ms = Date.now() - startedAt;
+        pic.textContent = '';
+        var errors = [];
+        for (var i = 0; i < w.results.length; i++) {
+            var r = w.results[i], paper = document.createElement('div');
+            paper.className = 'paper';
+            if (r.svg && r.svg.indexOf('<svg') >= 0) paper.innerHTML = r.svg;
+            else {
+                var text = r.error || (r.svg || '').replace(/<[^>]*>/g, ' ').trim() || 'the engine drew nothing';
+                errors.push((w.results.length > 1 ? 'Part ' + (i + 1) + ': ' : '') + text);
+                paper.className = 'paper message';
+                paper.style.padding = '12px';
+                paper.textContent = text;
+            }
+            pic.appendChild(paper);
+        }
+        var svgs = pic.querySelectorAll('.paper > svg');
+        lastSvg = view === 'whole' && svgs.length === 1 ? svgs[0] : null;
+        buttons['save-svg'].disabled = buttons['save-png'].disabled = !lastSvg;
+        var title = view === 'whole' ? 'Save the picture' : 'Saving is for the whole diagram';
+        buttons['save-svg'].title = buttons['save-png'].title = title;
+        if (errors.length) {
+            failed(errors.join('\n') + (view === 'whole' ? '\nThe Parts button draws it the way the report does.' : ''), true);
+            return;
+        }
+        var size = lastSvg ? sizeOf(lastSvg) : null;
+        setState('drawn', 'Drawn in ' + seconds(ms) + (size ? ' · ' + size.w.toLocaleString('en') + ' × ' + size.h.toLocaleString('en') + ' px'
+            : ' · ' + svgs.length + ' parts'));
+    }
+    function failed(message, keepPicture) {
+        clearInterval(timer);
+        if (!keepPicture) { pic.innerHTML = '<div class="message"></div>'; pic.firstChild.textContent = message; }
+        setState('failed', message.split('\n')[0]);
+    }
+    function noEngine(reason) {
+        clearInterval(timer);
+        workerText = null;
+        buttons.render.disabled = buttons.whole.disabled = buttons.parts.disabled = true;
+        setState('no-engine', 'The PlantUML engine is not available here (' + reason + '). The source is shown as text: copy or save it.');
+    }
+
+    // --- saving ------------------------------------------------------------------------------
+    function download(blob, name) {
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = name;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+    }
+    // The SVG as XML, as the report's menu writes it (context-menu-script.js, 5.4.1): the engine's <?plantuml-src ...?>
+    // is held by the page as a comment, and an encoded source can hold "--", which no XML comment may, so such a comment
+    // is written back as the instruction it was; and a C0 control, U+FFFE or U+FFFF in the text is not XML either.
+    function xmlComments(node) {
+        var walker = document.createTreeWalker(node, NodeFilter.SHOW_COMMENT), bad = [], comment;
+        while ((comment = walker.nextNode())) if (comment.data.indexOf('--') >= 0 || /-$/.test(comment.data)) bad.push(comment);
+        bad.forEach(function (c) {
+            var pi = /^\?([A-Za-z_][\w.-]*)\s+([\s\S]*?)\??$/.exec(c.data), instruction = null;
+            if (pi && pi[2].indexOf('?>') < 0) {
+                try { instruction = document.createProcessingInstruction(pi[1], pi[2]); } catch (e) { instruction = null; }
+            }
+            if (instruction) c.parentNode.replaceChild(instruction, c);
+            else c.parentNode.removeChild(c);
+        });
+        return node;
+    }
+    function svgMarkup() {
+        var clone = lastSvg.cloneNode(true);
+        clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+        return new XMLSerializer().serializeToString(xmlComments(clone)).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]/g, function (c) {
+            var code = c.charCodeAt(0);
+            return code < 0x20 ? String.fromCharCode(0x2400 + code) : '\uFFFD';
+        });
+    }
+    // The largest scale, up to 1, at which a canvas holds the picture.
+    function canvasScale(w, h) {
+        return Math.min(1, CANVAS_SIDE / w, CANVAS_SIDE / h, Math.sqrt(CANVAS_AREA / (w * h)));
+    }
+    function savePng() {
+        var size = sizeOf(lastSvg), scale = canvasScale(size.w, size.h);
+        var img = new Image();
+        var url = URL.createObjectURL(new Blob([svgMarkup()], { type: 'image/svg+xml' }));
+        img.onload = function () {
+            var c = document.createElement('canvas');
+            c.width = Math.max(1, Math.floor(size.w * scale)); c.height = Math.max(1, Math.floor(size.h * scale));
+            var g = c.getContext('2d');
+            g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height);
+            g.drawImage(img, 0, 0, c.width, c.height);
+            URL.revokeObjectURL(url);
+            c.toBlob(function (blob) {
+                if (!blob) { setState('failed', 'The browser could not make a PNG this large: save the SVG instead.'); return; }
+                download(blob, 'diagram.png');
+                if (scale < 1) setState('drawn', 'Saved the PNG at ' + Math.round(scale * 100) + '%: the largest a canvas holds here.');
+            }, 'image/png');
+        };
+        img.onerror = function () { URL.revokeObjectURL(url); setState('failed', 'The picture could not be drawn onto a canvas: save the SVG instead.'); };
+        img.src = url;
+    }
+    function copySource() {
+        var text = src.value;
+        function fallback() {
+            src.focus(); src.select();
+            var ok = false;
+            try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+            statusEl.textContent = ok ? 'Copied the source.' : 'Select the source and copy it with Ctrl+C.';
+        }
+        if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(function () { statusEl.textContent = 'Copied the source.'; }, fallback);
+        else fallback();
+    }
+
+    // --- wiring ------------------------------------------------------------------------------
+    function setView(v) {
+        view = v;
+        buttons.whole.setAttribute('aria-pressed', String(v === 'whole'));
+        buttons.parts.setAttribute('aria-pressed', String(v === 'parts'));
+        render();
+    }
+    buttons.render.onclick = render;
+    buttons.whole.onclick = function () { setView('whole'); };
+    buttons.parts.onclick = function () { setView('parts'); };
+    buttons.fit.onclick = function () {
+        var on = !pic.classList.contains('fit');
+        pic.classList.toggle('fit', on);
+        buttons.fit.setAttribute('aria-pressed', String(on));
+    };
+    buttons.copy.onclick = copySource;
+    buttons['save-puml'].onclick = function () { download(new Blob([src.value], { type: 'text/plain;charset=utf-8' }), 'diagram.puml'); };
+    buttons['save-svg'].onclick = function () { if (lastSvg) download(new Blob([svgMarkup()], { type: 'image/svg+xml' }), 'diagram.svg'); };
+    buttons['save-png'].onclick = function () { if (lastSvg) savePng(); };
+    src.addEventListener('input', function () {
+        clearTimeout(debounce);
+        if (!workerText) return;
+        if (src.value.length < AUTO_RENDER_CHARS) debounce = setTimeout(render, AUTO_RENDER_DELAY_MS);
+        else setState('stale', 'Edited: press Render (Ctrl+Enter) to draw it again.');
+    });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); render(); }
+    });
+    // A written tab is blank after a reload: an edited source is not left without asking.
+    window.addEventListener('beforeunload', function (e) {
+        if (api && src.value !== original) { e.preventDefault(); e.returnValue = ''; }
+    });
+
+    // The report calls this once the page is written.
+    window.__kronikolEditorStart = function (handle) {
+        api = handle;
+        original = api.source;
+        src.value = api.source;
+        if (api.title) document.title = api.title;
+        var root = document.documentElement;
+        Object.keys(api.tokens || {}).forEach(function (k) { if (api.tokens[k]) root.style.setProperty('--' + k, api.tokens[k]); });
+        if (api.theme) root.setAttribute('data-theme', api.theme);
+        buttons.parts.disabled = typeof api.split !== 'function';
+        if (typeof Worker !== 'function' || typeof Blob !== 'function' || !window.URL || !URL.createObjectURL) { noEngine('this browser has no Web Workers'); return; }
+        api.engine().then(function (w) {
+            workerText = w.text; esm = !!w.esm;
+            render();
+        }, function (e) { noEngine(e && e.message ? e.message : String(e)); });
+    };
+})();
+</script>
+</body>
+</html>

@@ -253,4 +253,86 @@ public class PlantUmlWorkerHostTests
         Assert.Equal("function", g.GetProperty("HTMLElement").GetString());
         Assert.Equal("function", g.GetProperty("onmessage").GetString());
     }
+
+    // The cap the engine is handed, per init message: a fake ES-module engine records the options of each render.
+    // The editor tab (plans/PLANTUML_EDITOR_TAB_PLAN.md) draws a diagram's whole source, which the report only ever
+    // draws in parts, so it starts its worker with a larger cap than the report's.
+    private const string CapDriver = """
+        const vm = require('vm'), fs = require('fs');
+        const src = fs.readFileSync(process.argv[2], 'utf8');
+        function capFor(init) {
+            return new Promise(function (resolve) {
+                const sandbox = {
+                    OffscreenCanvas: function () { return { getContext: function () { return { measureText: function (t) { return { width: t.length * 7 }; } }; } }; },
+                    console: { log: function () {}, error: function () {} }, setTimeout: setTimeout, clearTimeout: clearTimeout,
+                    performance: { now: function () { return Date.now(); } },
+                    location: { href: 'blob:null/0f7c2a5e' }
+                };
+                sandbox.self = sandbox;
+                sandbox.postMessage = function (m) {
+                    if (m.type === 'ready') sandbox.onmessage({ data: { type: 'render', seq: 1, id: 'k1', lines: ['@startuml', 'a -> b', '@enduml'] } });
+                    if (m.type === 'done' || m.type === 'error' || m.type === 'fatal') resolve(sandbox.__cap === undefined ? null : sandbox.__cap);
+                };
+                vm.createContext(sandbox);
+                vm.runInContext(src, sandbox);
+                sandbox.__plantumlExports = {
+                    render: function (lines, id, opts) {
+                        sandbox.__cap = opts ? opts.maxSvgSize : undefined;
+                        sandbox.document.getElementById(id).appendChild(sandbox.document.createElementNS('http://www.w3.org/2000/svg', 'svg'));
+                    },
+                    renderToString: function () { return ''; }
+                };
+                sandbox.onmessage({ data: init });
+            });
+        }
+        Promise.all([
+            capFor({ type: 'init', esm: true, maxSvgSize: 1966080 }),
+            capFor({ type: 'init', esm: true }),
+            capFor({ type: 'init', esm: true, maxSvgSize: 0 }),
+            capFor({ type: 'init', esm: true, maxSvgSize: -5 }),
+            capFor({ type: 'init', esm: true, maxSvgSize: 'big' }),
+            capFor({ type: 'init', esm: true, maxSvgSize: 1.5e400 })
+        ]).then(function (caps) { process.stdout.write(JSON.stringify({ caps: caps })); });
+        """;
+
+    private static readonly Lazy<JsonElement> CapResult = new(() =>
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "kronikol-worker-host-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        try
+        {
+            var hostPath = Path.Combine(dir, "plantuml-worker-host.js");
+            File.WriteAllText(hostPath, DiagramContextMenu.GetPlantUmlWorkerHostScript());
+            return JsonDocument.Parse(NodeProbe.Run(CapDriver, hostPath)).RootElement.Clone();
+        }
+        finally
+        {
+            try { Directory.Delete(dir, true); } catch { /* best effort */ }
+        }
+    });
+
+    private static double?[] Caps()
+    {
+        Assert.SkipWhen(!NodeProbe.IsAvailable, "Node.js not available on PATH");
+        return CapResult.Value.GetProperty("caps").EnumerateArray()
+            .Select(c => c.ValueKind == JsonValueKind.Null ? (double?)null : c.GetDouble()).ToArray();
+    }
+
+    [Fact]
+    public void The_size_cap_comes_from_the_init_message()
+    {
+        Assert.Equal(1966080, Caps()[0]);
+    }
+
+    [Fact]
+    public void Without_a_cap_in_the_init_message_the_report_cap_is_kept()
+    {
+        Assert.Equal(98304, Caps()[1]);
+    }
+
+    [Fact]
+    public void A_cap_that_is_not_a_finite_positive_number_keeps_the_report_cap()
+    {
+        Assert.Equal([98304d, 98304d, 98304d, 98304d], Caps().Skip(2).Select(c => c ?? -1).ToArray());
+    }
 }
