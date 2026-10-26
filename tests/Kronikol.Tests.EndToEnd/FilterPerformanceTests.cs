@@ -1,172 +1,107 @@
-using System.Text;
 using Kronikol.Reports;
 
 namespace Kronikol.Tests.EndToEnd;
 
+/// <summary>
+/// How long the dependency filter takes on a report of many scenarios. The timings run the scripts a report ships, on a
+/// generated report (SEARCH_PLAN B17): until then this class built a page of its own carrying its own fc() and
+/// filter_dependencies, which hid with a dep-hidden class the shipped scripts no longer use, so it timed code the report
+/// does not run. A dependency chip is clicked as a reader clicks it, and the filter hides a scenario with an inline
+/// display:none (report-scenario-feature-map-helper.js applyVisibility).
+/// </summary>
 [Collection(PlaywrightCollections.Search)]
 public class FilterPerformanceTests : PlaywrightTestBase
 {
     public FilterPerformanceTests(PlaywrightFixture fixture) : base(fixture) { }
 
-    private static string GenerateLargeReport(int featureCount, int scenariosPerFeature, string[] dependencies)
+    // Each function the timings run, by the script that ships it
+    private static readonly (string Resource, string Function)[] Timed =
+    [
+        ("report-dependency-filter-function.js", "filter_dependencies"),
+        ("report-scenario-feature-map-helper.js", "fc"),
+        ("report-scenario-feature-map-helper.js", "applyVisibility"),
+        ("report-scenario-feature-map-helper.js", "filter_readout")
+    ];
+
+    // A report of featureCount closed features of scenariosPerFeature scenarios each, the first of each a happy path.
+    // A scenario's dependencies are the participants its diagram names, each of the given ones with a chance of 0.4 and
+    // the first where none is drawn, with a seeded draw so every run times the same report.
+    private string GenerateLargeReport(string fileName, int featureCount, int scenariosPerFeature, string[] dependencies)
     {
-        var sb = new StringBuilder();
-        sb.Append($$"""
-            <!DOCTYPE html>
-            <html>
-            <head>
-            <style>{{Stylesheets.HtmlReportStyleSheet}}</style>
-            <script>
-            var _filterCache;
-            function fc() {
-                if (_filterCache) return _filterCache;
-                var scenarios = document.getElementsByClassName('scenario');
-                var features = document.getElementsByClassName('feature');
-                var items = [];
-                var fMap = new Map();
-                for (var fi = 0; fi < features.length; fi++) {
-                    var sc = features[fi].getElementsByClassName('scenario');
-                    var arr = [];
-                    for (var si = 0; si < sc.length; si++) {
-                        var s = sc[si];
-                        var raw = s.getAttribute('data-dependencies') || '';
-                        var d = raw ? new Set(raw.split(',')) : new Set();
-                        var item = { el: s, deps: d, status: s.getAttribute('data-status') || '', isHappy: s.classList.contains('happy-path'), f: features[fi] };
-                        items.push(item);
-                        arr.push(item);
-                        fMap.set(s, features[fi]);
-                    }
-                }
-                _filterCache = { items: items, features: features, scenarios: scenarios, fMap: fMap };
-                return _filterCache;
-            }
-
-            function toggle_dependency(btn) {
-                btn.classList.toggle('dependency-active');
-                filter_dependencies();
-            }
-
-            function filter_dependencies() {
-                var c = fc();
-                var activeSet = new Set();
-                document.querySelectorAll('.dependency-toggle.dependency-active').forEach(function(b) {
-                    activeSet.add(b.getAttribute('data-dependency'));
-                });
-
-                for (var i = 0; i < c.items.length; i++) {
-                    c.items[i].el.classList.remove('dep-hidden');
-                }
-                for (var i = 0; i < c.features.length; i++) {
-                    var f = c.features[i];
-                    f.classList.remove('dep-hidden');
-                    if (f.classList.contains('dep-opened')) {
-                        f.removeAttribute('open');
-                        f.classList.remove('dep-opened');
-                    }
-                }
-
-                if (activeSet.size === 0) return;
-
-                var activeArr = Array.from(activeSet);
-                var featureVisibleCounts = new Map();
-                var totalVisible = 0;
-                for (var i = 0; i < c.features.length; i++) featureVisibleCounts.set(c.features[i], 0);
-
-                for (var i = 0; i < c.items.length; i++) {
-                    var d = c.items[i];
-                    var matchesAll = d.deps.size > 0;
-                    if (matchesAll) {
-                        for (var j = 0; j < activeArr.length; j++) {
-                            if (!d.deps.has(activeArr[j])) { matchesAll = false; break; }
-                        }
-                    }
-                    if (!matchesAll) {
-                        d.el.classList.add('dep-hidden');
-                    } else if (!d.el.classList.contains('search-hidden') && !d.el.classList.contains('status-hidden') && !d.el.classList.contains('hp-hidden')) {
-                        featureVisibleCounts.set(d.f, (featureVisibleCounts.get(d.f) || 0) + 1);
-                        totalVisible++;
-                    }
-                }
-
-                var shouldOpen = totalVisible <= 10;
-                for (var i = 0; i < c.features.length; i++) {
-                    var f = c.features[i];
-                    if ((featureVisibleCounts.get(f) || 0) === 0) {
-                        f.classList.add('dep-hidden');
-                    } else if (shouldOpen && !f.hasAttribute('open')) {
-                        f.setAttribute('open', '');
-                        f.classList.add('dep-opened');
-                    }
-                }
-            }
-            </script>
-            </head>
-            <body>
-            <h1>Performance Test Report</h1>
-            <div class="filters">
-            <div class="dependency-filters"><span class="dependency-filters-label">Dependencies:</span>
-            """);
-
-        foreach (var dep in dependencies)
-            sb.Append($"""<button class="dependency-toggle" data-dependency="{dep}" onclick="toggle_dependency(this)">{dep}</button>""");
-        sb.Append("</div></div><div id=\"report-content\">");
-
-        var svgTemplate = """
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" width="800" height="400">
-            <rect width="800" height="400" fill="#fefefe"/>
-            <line x1="200" y1="80" x2="200" y2="380" stroke="#888" stroke-dasharray="5"/>
-            <text x="200" y="60" text-anchor="middle" font-size="12">Caller</text>
-            <text x="400" y="60" text-anchor="middle" font-size="12">Service</text>
-            </svg>
-            """;
-
         var rng = new Random(42);
+        var diagrams = new List<DefaultDiagramsFetcher.DiagramAsCode>();
+        var features = new Feature[featureCount];
         for (var fi = 0; fi < featureCount; fi++)
         {
-            sb.Append($"""<details class="feature"><summary class="h2">Feature {fi + 1}</summary>""");
+            var scenarios = new Scenario[scenariosPerFeature];
             for (var si = 0; si < scenariosPerFeature; si++)
             {
-                var scenarioDeps = new List<string>();
-                for (var di = 0; di < dependencies.Length; di++)
-                    if (rng.NextDouble() < 0.4) scenarioDeps.Add(dependencies[di]);
+                var scenarioDeps = dependencies.Where(_ => rng.NextDouble() < 0.4).ToList();
                 if (scenarioDeps.Count == 0) scenarioDeps.Add(dependencies[0]);
-
-                sb.Append($"""
-                    <details class="scenario{(si == 0 ? " happy-path" : "")}" data-dependencies="{string.Join(",", scenarioDeps)}" data-status="Passed">
-                    <summary class="h3">Scenario {fi + 1}.{si + 1}</summary>
-                    <details class="example-diagrams" open>
-                    <summary class="h4">Sequence Diagrams</summary>
-                    <div class="plantuml-inline-svg" data-diagram-type="plantuml">{svgTemplate}</div>
-                    </details>
-                    </details>
-                    """);
+                var id = $"f{fi + 1}s{si + 1}";
+                scenarios[si] = new Scenario
+                {
+                    Id = id, DisplayName = $"Scenario {fi + 1}.{si + 1}", IsHappyPath = si == 0, Result = ExecutionResult.Passed
+                };
+                diagrams.Add(new(id, "", "@startuml\n"
+                    + string.Concat(scenarioDeps.Select((dep, i) => $"participant \"{dep}\" as p{i}\n"))
+                    + "p0 -> p0 : call\n@enduml"));
             }
-            sb.Append("</details>");
+            features[fi] = new Feature { DisplayName = $"Feature {fi + 1}", Scenarios = scenarios };
         }
 
-        sb.Append("</div></body></html>");
-        return sb.ToString();
+        var path = ReportGenerator.GenerateHtmlReport(
+            [.. diagrams], features,
+            DateTime.UtcNow, DateTime.UtcNow,
+            null, Path.Combine(TempDir, fileName), "Performance Test Report", true,
+            diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
+        File.Copy(path, Path.Combine(OutputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
+    }
+
+    private async Task OpenAsync(string url)
+    {
+        await Page.GotoReportAsync(url);
+        await Page.Locator("details.feature").First.WaitForAsync();
+        // fc() builds the filters' list of the page's scenarios once and keeps it: built before the timing, so a click
+        // times the filter alone
+        await Page.EvaluateAsync("fc()");
+    }
+
+    // Clicks a dependency's chip as a reader does and returns the milliseconds the click took: the filter runs in it
+    private Task<long> TimeChipClickAsync(string dependency) => Page.EvaluateAsync<long>("""
+        dep => {
+            var chip = document.querySelector('.filtering-box .dependency-toggle[data-dependency="' + dep + '"]');
+            var t0 = performance.now(); chip.click(); return Math.round(performance.now() - t0);
+        }
+        """, dependency);
+
+    private Task<int> HiddenScenarioCountAsync() => Page.EvaluateAsync<int>(
+        "() => Array.from(document.querySelectorAll('#report-content details.scenario')).filter(s => s.style.display === 'none').length");
+
+    // The timings run the scripts a report ships (SEARCH_PLAN B17): each function the page holds is the shipped one, its
+    // text read from the resource as the generator loads it for a report without history
+    [Fact]
+    public async Task The_filter_timings_run_the_shipped_scripts()
+    {
+        await OpenAsync(GenerateLargeReport("FilterPerf_Shipped.html", 2, 2, ["OrderService", "PaymentGateway"]));
+        foreach (var (resource, function) in Timed)
+        {
+            var shipped = await Page.EvaluateAsync<string>("([source, name]) => new Function(source + '\\nreturn ' + name + '.toString();')()",
+                new object[] { ReportGenerator.LoadScript(resource, verdicts: false), function });
+            Assert.Equal(shipped, await Page.EvaluateAsync<string?>("name => typeof window[name] === 'function' ? window[name].toString() : null", function));
+        }
     }
 
     [Fact]
     public async Task DependencyFilter_CompletesWithin1Second_With100Scenarios()
     {
         var dependencies = new[] { "OrderService", "PaymentGateway", "NotificationService", "CacheService", "AuditService" };
-        var html = GenerateLargeReport(20, 5, dependencies);
-        await Page.GotoReportAsync(ServePage(html));
-        await Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
+        await OpenAsync(GenerateLargeReport("FilterPerf_100.html", 20, 5, dependencies));
 
-        await Page.EvaluateAsync("fc()");
+        var ms = await TimeChipClickAsync("OrderService");
 
-        var ms = await Page.EvaluateAsync<long>("""
-            () => {
-                var btn = document.querySelector('.dependency-toggle[data-dependency="OrderService"]');
-                var t0 = performance.now(); btn.click(); return Math.round(performance.now() - t0);
-            }
-        """);
-
-        var hiddenCount = await Page.Locator(".scenario.dep-hidden").CountAsync();
-        Assert.True(hiddenCount > 0);
+        Assert.True(await HiddenScenarioCountAsync() > 0);
         Assert.True(ms < 1000, $"Dependency filter took {ms}ms, expected <1000ms");
     }
 
@@ -174,42 +109,27 @@ public class FilterPerformanceTests : PlaywrightTestBase
     public async Task DependencyFilter_CompletesWithin1Second_With200Scenarios()
     {
         var dependencies = new[] { "OrderService", "PaymentGateway", "NotificationService", "CacheService", "AuditService", "UserService", "InventoryService" };
-        var html = GenerateLargeReport(20, 10, dependencies);
-        await Page.GotoReportAsync(ServePage(html));
-        await Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
+        await OpenAsync(GenerateLargeReport("FilterPerf_200.html", 20, 10, dependencies));
 
-        await Page.EvaluateAsync("fc()");
+        var ms = await TimeChipClickAsync("OrderService");
 
-        var ms = await Page.EvaluateAsync<long>("""
-            () => {
-                var btn = document.querySelector('.dependency-toggle[data-dependency="OrderService"]');
-                var t0 = performance.now(); btn.click(); return Math.round(performance.now() - t0);
-            }
-        """);
-
-        Assert.True(await Page.Locator(".scenario.dep-hidden").CountAsync() > 0);
+        Assert.True(await HiddenScenarioCountAsync() > 0);
         Assert.True(ms < 1000, $"Dependency filter with 200 scenarios took {ms}ms, expected <1000ms");
     }
 
+    // A chip of a two-way row, as every row starts since 5.10.0, goes off, has and off again (report-filter-chips-script.js):
+    // the click timed is the one that turns the filter off
     [Fact]
     public async Task DependencyFilter_ToggleOffCompletesWithin1Second()
     {
         var dependencies = new[] { "OrderService", "PaymentGateway", "NotificationService", "CacheService", "AuditService" };
-        var html = GenerateLargeReport(20, 5, dependencies);
-        await Page.GotoReportAsync(ServePage(html));
-        await Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
+        await OpenAsync(GenerateLargeReport("FilterPerf_Off.html", 20, 5, dependencies));
+        await TimeChipClickAsync("OrderService");
+        Assert.True(await HiddenScenarioCountAsync() > 0);
 
-        await Page.EvaluateAsync("fc()");
-        await Page.EvaluateAsync("document.querySelector('.dependency-toggle[data-dependency=\"OrderService\"]').click()");
+        var ms = await TimeChipClickAsync("OrderService");
 
-        var ms = await Page.EvaluateAsync<long>("""
-            () => {
-                var btn = document.querySelector('.dependency-toggle[data-dependency="OrderService"]');
-                var t0 = performance.now(); btn.click(); return Math.round(performance.now() - t0);
-            }
-        """);
-
-        Assert.Equal(0, await Page.Locator(".scenario.dep-hidden").CountAsync());
+        Assert.Equal(0, await HiddenScenarioCountAsync());
         Assert.True(ms < 1000, $"Dependency filter toggle-off took {ms}ms, expected <1000ms");
     }
 
@@ -217,16 +137,22 @@ public class FilterPerformanceTests : PlaywrightTestBase
     public async Task DependencyFilter_FeaturesContracted_WhenMoreThan10Matches()
     {
         var dependencies = new[] { "OrderService", "PaymentGateway" };
-        var html = GenerateLargeReport(5, 5, dependencies);
-        await Page.GotoReportAsync(ServePage(html));
-        await Page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
+        await OpenAsync(GenerateLargeReport("FilterPerf_Contracted.html", 5, 5, dependencies));
+        await OpenFilterRowsAsync();
 
-        await Page.Locator(".dependency-toggle[data-dependency='OrderService']").ClickAsync();
+        await Page.Locator(".filtering-box .dependency-toggle[data-dependency='OrderService']").First.ClickAsync();
 
-        var openedCount = await Page.Locator(".feature[open]:not(.dep-hidden)").CountAsync();
-        var visibleCount = await Page.Locator(".feature:not(.dep-hidden)").CountAsync();
+        var shown = await Page.EvaluateAsync<int>(
+            "() => Array.from(document.querySelectorAll('#report-content details.scenario')).filter(s => s.style.display !== 'none').length");
+        var features = await Page.EvaluateAsync<int[]>("""
+            () => {
+                var shown = Array.from(document.querySelectorAll('#report-content details.feature')).filter(f => f.style.display !== 'none');
+                return [shown.length, shown.filter(f => f.open).length];
+            }
+            """);
 
-        Assert.True(visibleCount > 0);
-        Assert.Equal(0, openedCount);
+        Assert.True(shown > 10, $"{shown} scenarios call OrderService");
+        Assert.True(features[0] > 0);
+        Assert.Equal(0, features[1]);
     }
 }

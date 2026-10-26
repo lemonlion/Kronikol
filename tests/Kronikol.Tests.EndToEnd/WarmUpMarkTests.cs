@@ -229,7 +229,7 @@ public class WarmUpMarkTests : PlaywrightTestBase
 
         // Export Filtered CSV writes wall time.
         var csv = await Page.RunAndWaitForDownloadAsync(async () =>
-            await Page.Locator("button.export-btn", new() { HasTextString = "Export Filtered CSV" }).ClickAsync());
+            await PressBoxExportAsync(Page, "Export Filtered CSV"));
         var csvPath = Path.Combine(TempDir, $"warm-up_{Guid.NewGuid():N}.csv");
         await csv.SaveAsAsync(csvPath);
         var row = Assert.Single((await File.ReadAllTextAsync(csvPath)).Split('\n'),
@@ -238,7 +238,7 @@ public class WarmUpMarkTests : PlaywrightTestBase
 
         // Export Filtered HTML keeps the marker, its tooltip and the rule that mutes it.
         var html = await Page.RunAndWaitForDownloadAsync(async () =>
-            await Page.Locator("button.export-btn", new() { HasTextString = "Export Filtered HTML" }).ClickAsync());
+            await PressBoxExportAsync(Page, "Export Filtered HTML"));
         var htmlPath = Path.Combine(TempDir, $"warm-up_{Guid.NewGuid():N}.html");
         await html.SaveAsAsync(htmlPath);
         await Page.GotoReportAsync(new Uri(htmlPath).AbsoluteUri);

@@ -53,6 +53,11 @@
     --kron-warn: #8a5a17;
     --kron-warn-soft: #fbf3e7;
     --kron-warn-edge: #ecd3ae;
+    /* a search match marked where it is drawn (plans/SEARCH_PLAN.md 4.6.5): its ground and its edge. The edge reads at 3:1
+       and more on a payload's card, an event's, a step bar and the card, and every ink a marked word is drawn in at 4.5:1
+       on the ground, in every block (SearchMarksTests) */
+    --kron-mark: #fff1a8;
+    --kron-mark-edge: #9a6700;
     --kron-skip: #5b6170;
     --kron-skip-soft: #eef0f3;
     --kron-bypass: #285fba;
@@ -170,6 +175,8 @@
     --kron-warn: #e5b066;
     --kron-warn-soft: #2d2415;
     --kron-warn-edge: #66502a;
+    --kron-mark: #4a3800;
+    --kron-mark-edge: #d29922;
     --kron-skip: #a9b1be;
     --kron-skip-soft: #262e39;
     --kron-bypass: #8ab1f6;
@@ -275,6 +282,8 @@
         --kron-warn: #e5b066;
         --kron-warn-soft: #2d2415;
         --kron-warn-edge: #66502a;
+        --kron-mark: #4a3800;
+        --kron-mark-edge: #d29922;
         --kron-skip: #a9b1be;
         --kron-skip-soft: #262e39;
         --kron-bypass: #8ab1f6;

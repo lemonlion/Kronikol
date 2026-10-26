@@ -76,14 +76,21 @@ public class ReportTabsTests
     {
         var html = Generate("Tabs_All.html", Features(), diagnostics: TwoDiagnostics);
 
-        // the tabs share the bar's top row with its filters (S7, D24), after the mark where the bar pins
-        Assert.Contains("<div class=\"nav-mark\" aria-hidden=\"true\"></div><div class=\"toolbar-row report-nav on-features\"><div class=\"nav-row\"><div class=\"report-tabs\" role=\"tablist\" aria-label=\"Report sections\" data-start-tab=\"features\">"
+        // the tabs share the bar's top row with its filters (S7, D24), after the mark where the bar pins and the filter box
+        // at the bar's top (plans/SEARCH_PLAN.md F2)
+        Assert.Contains("<div class=\"nav-mark\" aria-hidden=\"true\"></div><div class=\"toolbar-row report-nav on-features\"><div class=\"filtering-box\" id=\"filtering-box\"", html);
+        Assert.Contains("<div class=\"nav-row\"><div class=\"report-tabs\" role=\"tablist\" aria-label=\"Report sections\" data-start-tab=\"features\">"
                         + Tab("features", "Features", true, "<span class=\"tab-n\">2</span>")
                         + Tab("timeline", "Timeline", false)
                         + Tab("components", "Components", false)
                         + Tab("diagnostics", "Diagnostics", false, "<span class=\"tab-n\">2</span>")
-                        + "</div><div class=\"nav-filters\"", html);
+                        + SearchTabStart, html);
+        Assert.Contains(SearchTabEnd + "</div><div class=\"nav-filters\"", html);
     }
+
+    // the Search tab, last in the row and hidden until a search is applied (plans/SEARCH_PLAN.md 4.5.1)
+    private const string SearchTabStart = "<button class=\"report-tab\" id=\"tab-search\" role=\"tab\" aria-controls=\"panel-search\" aria-selected=\"false\" tabindex=\"-1\" data-tab=\"search\"";
+    private const string SearchTabEnd = "Search<span class=\"tab-n\">0</span></button>";
 
     [Fact]
     public void Each_section_is_in_its_own_panel_after_the_bar_and_only_the_features_panel_shows()
@@ -143,33 +150,40 @@ public class ReportTabsTests
         var html = Generate($"Tabs_Start_{timeline}_{component}.html", Features(),
             toggles: new ReportToggleDefaults { ScenarioTimelineVisible = timeline, ComponentDiagramVisible = component });
 
-        Assert.Contains("<div class=\"toolbar-row report-nav\"><div class=\"nav-row\"><div class=\"report-tabs\"", html);
+        Assert.Contains("<div class=\"toolbar-row report-nav\"><div class=\"filtering-box\" id=\"filtering-box\"", html);
+        Assert.Contains("<div class=\"nav-row\"><div class=\"report-tabs\"", html);
         Assert.Contains(Tab("features", "Features", false, "<span class=\"tab-n\">2</span>"), html);
         Assert.Contains(Tab(expected, expected == "timeline" ? "Timeline" : "Components", true), html);
         Assert.Contains(Panel("features", false), html);
         Assert.Contains(Panel(expected, true), html);
     }
 
+    // F-j (plans/SEARCH_PLAN.md F7, Q10): until then a page with nothing beside its features had no tabs and no bar
     [Fact]
-    public void A_page_with_nothing_beside_its_features_has_no_tabs()
+    public void A_page_with_only_its_features_has_the_bar_with_Features_and_Filters()
     {
         var html = Generate("Tabs_None.html", Features(durations: false), component: null);
 
-        Assert.DoesNotContain("class=\"report-tabs\"", html);
-        Assert.DoesNotContain("<div class=\"toolbar-row report-nav", html);
-        Assert.Contains("<div class=\"toolbar-row\">", html);
-        // no tab names the panel, so it is no tab panel either; its views, the table and the cards, are (S4)
-        // the empty state first (S7)
-        Assert.Contains("<div class=\"report-panels\"><div class=\"report-panel\" id=\"panel-features\" data-panel=\"features\"><div class=\"filters-empty\" hidden><span>No scenarios match the filters.</span><button type=\"button\" class=\"filters-empty-clear\" title=\"Clear every filter\">Clear All</button></div><div class=\"features-panel\">"
+        Assert.Contains("<div class=\"report-tabs\" role=\"tablist\" aria-label=\"Report sections\" data-start-tab=\"features\">"
+                        + Tab("features", "Features", true, "<span class=\"tab-n\">2</span>") + SearchTabStart, html);
+        Assert.Contains(SearchTabEnd + "</div><div class=\"nav-filters\"", html);
+        Assert.Contains("<button type=\"button\" class=\"nav-filters-toggle\"", html);
+        // the panel is the Features tab's, the empty state first (S7), then its views, the table and the cards (S4)
+        Assert.Contains("<div class=\"report-panels\">" + Panel("features", true) + "<div class=\"filters-empty\" hidden><span>No scenarios match the filters.</span><button type=\"button\" class=\"filters-empty-clear\" title=\"Clear every filter\">Clear All</button></div><div class=\"features-panel\">"
             + "<div class=\"features-table-view\" id=\"features-table-view\" role=\"tabpanel\" aria-labelledby=\"view-summary\" hidden>", html);
     }
 
     [Fact]
-    public void The_specifications_report_keeps_its_one_view()
+    public void The_specifications_report_has_the_bar_with_its_one_tab()
     {
         var html = Generate("Tabs_Specs.html", Features(durations: false), includeTestRunData: false, component: null);
 
-        Assert.DoesNotContain("class=\"report-tabs\"", html);
+        // the one tab that shows: the Search tab is written hidden, and shows while a search is applied (plans/SEARCH_PLAN.md 4.5.1)
+        var tabs = System.Text.RegularExpressions.Regex.Matches(html, "<button class=\"report-tab\"[^>]*>").Select(m => m.Value).ToArray();
+        Assert.Single(tabs, t => !t.EndsWith(" hidden>", StringComparison.Ordinal));
+        Assert.Single(tabs, t => t.Contains("data-tab=\"search\"", StringComparison.Ordinal) && t.EndsWith(" hidden>", StringComparison.Ordinal));
+        Assert.Contains("data-tab=\"features\"", html);
+        Assert.Contains("<button type=\"button\" class=\"nav-filters-toggle\"", html);
     }
 
     [Fact]

@@ -580,35 +580,35 @@ public class ShowcaseReportTests : PlaywrightTestBase
             await CaptureFrames("07_param_row_failed", 60, 33);
         }
 
-        // ── Scene 8: Search ──
+        // ── Scene 8: Search, in the query builder the title line's search button opens, run to the Search tab ──
         await ScrollToTop();
         await Task.Delay(200);
-        await MoveCursorTo("#searchbar");
-        await Page.Locator("#searchbar").FillAsync("");
+        await MoveCursorTo("#search-button");
+        await Page.Locator("#search-button").ClickAsync();
         await HideCursor();
 
-        var query = "$failed && order";
+        var query = "status:failed && order";
         for (var i = 0; i < query.Length; i++)
         {
-            await Page.Locator("#searchbar").PressSequentiallyAsync(query[i].ToString(), new() { Delay = 0 });
+            await Page.Locator("#search-input").PressSequentiallyAsync(query[i].ToString(), new() { Delay = 0 });
             await Task.Delay(80);
             if (_frameNumber % 2 == 0) await CaptureFrame("08_search_typing");
         }
+        await Page.Locator("#search-input").PressAsync("Enter");
         await Task.Delay(500);
         await CaptureFrames("08_search_result", 48, 33);
         await ShowCursor();
 
         // ── Scene 9: OR search ──
         await HideCursor();
-        await Page.Locator("#searchbar").FillAsync("payment || auth");
-        await Page.Locator("#searchbar").DispatchEventAsync("keyup");
+        await FillSearchBar("payment || auth", toSearchTab: true);
         await Task.Delay(500);
         await CaptureFrames("09_search_or", 36, 33);
         await ShowCursor();
 
         // ── Scene 10: Tag filter toggle (the fixture's categories are tags, plans/TAGS_PLAN.md §4.8) ──
-        await Page.Locator("#searchbar").FillAsync("");
-        await Page.Locator("#searchbar").DispatchEventAsync("keyup");
+        await Page.Locator("#search-clear").ClickAsync();
+        await OpenFilterRowsAsync();
         await Task.Delay(300);
 
         var catCount = await Page.Locator(".filtering-box .tag-toggle").CountAsync();
@@ -677,17 +677,14 @@ public class ShowcaseReportTests : PlaywrightTestBase
             await Task.Delay(300);
         }
 
-        // ── Scene 13: Search help panel ──
-        var helpToggle = Page.Locator(".search-help-toggle");
-        if (await helpToggle.CountAsync() > 0)
-        {
-            await ScrollTo(".search-help-toggle");
-            await JsClick(".search-help-toggle");
-            await Task.Delay(400);
-            await CaptureFrames("13_search_help", 48, 33);
-            await JsClick(".search-help-toggle");
-            await Task.Delay(200);
-        }
+        // ── Scene 13: the search's syntax tips, in the query builder ──
+        await ScrollToTop();
+        await Page.Locator("#search-button").ClickAsync();
+        await Page.Locator(".search-tips-toggle").ClickAsync();
+        await Task.Delay(400);
+        await CaptureFrames("13_search_help", 48, 33);
+        await Page.Keyboard.PressAsync("Escape");
+        await Task.Delay(200);
 
         // ── Final ──
         await ScrollToTop();

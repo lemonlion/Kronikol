@@ -70,15 +70,16 @@ public class FocusScriptTests : IDisposable
         Assert.Contains("'.scenario-settings.is-open'", scripts[0].TextContent);
     }
 
+    // every page with the filter box has the bar since plans/SEARCH_PLAN.md F7, and so the focus script: until then a page
+    // with nothing beside its features, the Specifications report among them, had neither
     [Theory]
     [InlineData("nothing beside its features", true)]
     [InlineData("the specifications report", false)]
-    public void A_page_without_the_report_bar_has_no_focus_script(string which, bool includeTestRunData)
+    public void A_page_with_only_its_features_has_the_bar_and_the_focus_script(string which, bool includeTestRunData)
     {
         var page = Generate($"Focus_Script_None_{includeTestRunData}.html", durations: false, component: null, includeTestRunData);
 
-        Assert.Null(page.QuerySelector("div.toolbar-row.report-nav"));
-        Assert.True(page.QuerySelector("script#kronikol-focus") is null, $"{which} has no focus script");
-        Assert.DoesNotContain(page.QuerySelectorAll("script"), s => s.TextContent.Contains("e.key !== 'Tab'", StringComparison.Ordinal));
+        Assert.NotNull(page.QuerySelector("div.toolbar-row.report-nav"));
+        Assert.True(page.QuerySelector("script#kronikol-focus") is not null, $"{which} has the focus script");
     }
 }

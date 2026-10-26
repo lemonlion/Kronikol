@@ -97,24 +97,9 @@
         return text ? text.replace(/\u200b/g, '') : text;
     }
 
+    // One rule with the deep search, whose results name a note by the index this gives it (report-search-index.js)
     function parseNoteBlocks(source) {
-        if (!source) return [];
-        var lines = source.split('\n');
-        var notes = [];
-        for (var i = 0; i < lines.length; i++) {
-            var trimmed = lines[i].trim();
-            if (/^note(?:<<[^>]*>>)*\s+(left|right)/.test(trimmed)) {
-                var start = i;
-                i++;
-                var contentLines = [];
-                while (i < lines.length && lines[i].trim() !== 'end note') {
-                    contentLines.push(lines[i]);
-                    i++;
-                }
-                notes.push({ start: start, end: i, contentLines: contentLines });
-            }
-        }
-        return notes;
+        return kronParseNoteBlocks(source);
     }
 
     // Whether text that starts with { is one JSON object, or the start of one cut short: its first brace opens an object
@@ -1144,16 +1129,20 @@
     // before the retry can set it again. The flag, the width and the redraw are the diagram's, not
     // a part's (a diagram drawn in parts decorates each part), and a pass due while a drawing is in
     // flight waits for it to end: a report's first drawing decorates a diagram before its own
-    // drawing stops counting (5.2.4).
+    // drawing stops counting (5.2.4). So does one due while the diagram waits for a redraw of its
+    // own, whose picture is the one to measure (SEARCH_PLAN: a note's width is drawn by the queue).
     var REFINE_WAIT_MS = 100, REFINE_WAIT_TRIES = 1200;
+    function refineWaits(owner) {
+        return owner._noteRendering || window._plantumlRendering || owner._kQueued > 0 || owner._kBatched > 0;
+    }
     function refineNoteWidth(owner) {
         if (!owner._refineNoteWidth) return;
-        if (owner._noteRendering || window._plantumlRendering) {
+        if (refineWaits(owner)) {
             if (!owner._refineWaiting) {
                 owner._refineWaiting = 0;
                 (function wait() {
                     if (!owner._refineNoteWidth || ++owner._refineWaiting > REFINE_WAIT_TRIES) { owner._refineWaiting = 0; return; }
-                    if (owner._noteRendering || window._plantumlRendering) { setTimeout(wait, REFINE_WAIT_MS); return; }
+                    if (refineWaits(owner)) { setTimeout(wait, REFINE_WAIT_MS); return; }
                     owner._refineWaiting = 0;
                     refineNoteWidth(owner);
                 })();
@@ -1176,7 +1165,7 @@
                     owner._refinePrevious = { px: px, drawn: refDrawn };
                     owner._refineNoteWidth = true;
                 }
-                rerenderWithNoteStates(owner, function() { owner._refinePrevious = null; owner._refineNoteWidth = false; });
+                redrawNote(owner, function() { owner._refinePrevious = null; owner._refineNoteWidth = false; });
             }
         }
     }
@@ -1912,6 +1901,11 @@
         var scenario = el && el.closest ? el.closest('details.scenario') : null;
         return scenario && scenario[flag] !== undefined ? !!scenario[flag] : !!window[flag];
     }
+    // Payloads ('expanded', 'truncated' or 'collapsed') the same way: the scenario's gear's choice, else the report's (B12).
+    function scenarioDetails(el) {
+        var scenario = el && el.closest ? el.closest('details.scenario') : null;
+        return (scenario && scenario._detailsChoice) || window._detailsDefault;
+    }
 
     // ── A long payload scrolls in its box (5.4.0, plans/LONG_NOTE_SCROLL_PLAN.md) ──────────────────────────────────
     // A payload whose body would draw more than window._payloadScrollLines lines (0: never) is drawn that many lines
@@ -2273,15 +2267,21 @@
     }
 
     // The box: left where the note's text starts, right 4 px inside its body, top at the first body row's top, bottom at
-    // the `...` row's bottom. The rows it hides keep their geometry under visibility: hidden.
+    // the `...` row's bottom. The rows it hides keep their geometry under visibility: hidden. A text that paints nothing
+    // says nothing of where the text is: WebKit gives one a box at 0,0 (a line's carriage return, which the engine draws as
+    // a text of its own where the source's lines end in CRLF), and until SEARCH_PLAN the box started at the picture's left.
+    function inkBox(t) {
+        try { var b = t.getBBox(); return b.width || b.height ? b : null; } catch (e) { return null; }
+    }
     function scrollBoxPlace(grp, rows) {
         var top = Infinity, bottom = -Infinity, left = Infinity, right = -Infinity, area = -1;
         grp.texts.forEach(function(t) {
             if (isClearInk(t)) return;
-            try { left = Math.min(left, t.getBBox().x); } catch (e) {}
+            var b = inkBox(t);
+            if (b) left = Math.min(left, b.x);
         });
-        rows[0].texts.forEach(function(t) { try { top = Math.min(top, t.getBBox().y); } catch (e) {} });
-        rows[rows.length - 1].texts.forEach(function(t) { try { var b = t.getBBox(); bottom = Math.max(bottom, b.y + b.height); } catch (e) {} });
+        rows[0].texts.forEach(function(t) { var b = inkBox(t); if (b) top = Math.min(top, b.y); });
+        rows[rows.length - 1].texts.forEach(function(t) { var b = inkBox(t); if (b) bottom = Math.max(bottom, b.y + b.height); });
         grp.paths.forEach(function(p) {
             try { var b = p.getBBox(); if (b.width * b.height > area) { area = b.width * b.height; right = b.x + b.width; } } catch (e) {}
         });
@@ -2327,7 +2327,41 @@
         if (kept[originalIdx]) box.scrollTop = kept[originalIdx];
         box.addEventListener('scroll', function() { kept[originalIdx] = box.scrollTop; }, { passive: true });
         grp._noteScrollFrame = frame;
+        followScale(frame);
         return frame;
+    }
+
+    // ── WebKit and a box in a scaled picture (SEARCH_PLAN B16) ──
+    // WebKit paints a scrolling box in a <foreignObject> at the size and place of the picture's own units, whatever size the
+    // picture is drawn at (a zoom, or a wide diagram shrunk to fit, which is the default), while it reports the box where
+    // it should be: the box spilled out of its card over the rest of the diagram, and a check of its geometry passed. There
+    // the box is drawn at the picture's scale and place by a CSS transform of its own, read from the picture's matrix, and
+    // again whenever the picture changes size; the wheel scrolls it where it is painted. Measured in WebKit 26.4 on Windows;
+    // Safari not checked. Chromium and Firefox paint the box where it is and are left alone.
+    var BOX_SCALED_BY_HAND = typeof navigator !== 'undefined' && /AppleWebKit/.test(navigator.userAgent || '')
+        && !/Chrome|Chromium|Edg\//.test(navigator.userAgent || '');
+    var _boxScaleWatch = null;
+    function placeBoxByHand(frame) {
+        var box = frame.firstChild, m = frame.getCTM ? frame.getCTM() : null;
+        if (!box || !box.style || !m) return;
+        var x = parseFloat(frame.getAttribute('x')) || 0, y = parseFloat(frame.getAttribute('y')) || 0;
+        var plain = Math.abs(m.a - 1) < 1e-4 && Math.abs(m.d - 1) < 1e-4 && Math.abs(m.e) < 1e-3 && Math.abs(m.f) < 1e-3 && !m.b && !m.c;
+        box.style.transformOrigin = plain ? '' : '0 0';
+        box.style.transform = plain ? '' : 'translate(' + (m.a * x + m.e - x) + 'px,' + (m.d * y + m.f - y) + 'px) scale(' + m.a + ',' + m.d + ')';
+        box._kScaled = !plain;
+    }
+    function followScale(frame) {
+        if (!BOX_SCALED_BY_HAND) return;
+        placeBoxByHand(frame);
+        var svg = frame.ownerSVGElement;
+        if (!svg || svg._kBoxesFollow) return;
+        svg._kBoxesFollow = true;
+        if (typeof ResizeObserver !== 'undefined') {
+            if (!_boxScaleWatch) _boxScaleWatch = new ResizeObserver(function(entries) {
+                entries.forEach(function(e) { Array.prototype.forEach.call(e.target.querySelectorAll('.note-scroll-frame'), placeBoxByHand); });
+            });
+            _boxScaleWatch.observe(svg);
+        }
     }
 
     // Whether a box's text wraps: its laid-out height against its lines (a capped note's clear rows count as source lines
@@ -2375,7 +2409,10 @@
     function composeNoteSource(container, origSource, noteBlocks) {
         var withFormats = applyNoteFormats(origSource, container._noteFormats, container._noteYamlLines);
         var withAppearance = applyNoteAppearance(withFormats, container);
-        var built = buildSourceWithNoteStates(withAppearance, container._noteSteps, noteBlocks,
+        // A folded note previews the lines it shows: its YAML when it is shown as YAML, where until SEARCH_PLAN (B13) the
+        // preview was cut from the JSON of the original source.
+        var shownBlocks = withFormats === origSource ? noteBlocks : parseNoteBlocks(withFormats);
+        var built = buildSourceWithNoteStates(withAppearance, container._noteSteps, shownBlocks,
             !!container._headersHidden, container._truncateLines);
         var capped = capLongNotes(container, built, window._payloadScrollLines);
         var drawn = applyFilters(capped.source, container);
@@ -2459,9 +2496,8 @@
     // Flips one note between default and full width. Structurally the same operation as an
     // expand/truncate or a JSON/YAML flip: set per-note state, rebuild the source, re-render.
     function setNoteWidth(container, noteIdx, mode, measuredNoteWidth) {
-        if (container._noteRendering || window._plantumlRendering) return;
         if (!container._noteWidths) container._noteWidths = {};
-        if (noteWidthOf(container, noteIdx) === mode) return;
+        if (noteWidthOf(container, noteIdx) === mode) return null;
         var oldMode = container._noteWidths[noteIdx];
         var oldPx = container._noteWidthPx;
         if (mode === 'full') container._noteWidthPx = computeNoteWidthTarget(container, measuredNoteWidth);
@@ -2469,7 +2505,7 @@
         // One correction pass after the render: widening a left note also moves the arrow labels
         // over the shifted lifelines, so the relation is not exactly linear.
         container._refineNoteWidth = mode === 'full';
-        rerenderWithNoteStates(container, function() {
+        return redrawNote(container, function() {
             container._noteWidths[noteIdx] = oldMode;
             container._noteWidthPx = oldPx;
             container._refineNoteWidth = false;
@@ -2590,10 +2626,12 @@
     }
     // What a note's buttons follow that its drawn source may not carry: a folded note shows its preview whatever the
     // headers, its format and the line limit, and its buttons (whether a + opens it, its tooltip, what a + opens to)
-    // follow all three (5.2.5).
+    // follow all three (5.2.5). And its step: a note's own buttons draw through the queue too (SEARCH_PLAN), and a note
+    // cut at the line limit and drawn whole can draw one source.
     function buttonsStateOf(container) {
         var hh = container._headersHidden !== undefined ? container._headersHidden : window._headersHidden;
-        return (hh ? 'h' : 's') + '|' + container._truncateLines + '|' + JSON.stringify(container._noteFormats || {});
+        return (hh ? 'h' : 's') + '|' + container._truncateLines + '|' + JSON.stringify(container._noteFormats || {})
+            + '|' + JSON.stringify(container._noteSteps || {});
     }
     function pictureFrom(container, source) {
         return container._drawnSource === source && !!container._drawnSvg && container.querySelector('svg') === container._drawnSvg;
@@ -2609,25 +2647,35 @@
         recordDrawn(el, source, first ? first.scroll : null);
     };
 
+    // A note's step (0 folded, 1 cut at the line limit, 2 whole), set and drawn: its buttons' way, and openNote's. Returns
+    // the redraw's promise (kept with false when the drawing failed and the step went back), or null when the note was so.
     function setNoteState(container, noteIdx, targetStep) {
-        if (container._noteRendering || window._plantumlRendering) return;
         if (!container._noteSteps) container._noteSteps = {};
-        if (container._noteSteps[noteIdx] === targetStep) return;
+        if (container._noteSteps[noteIdx] === targetStep) return null;
         var oldStep = container._noteSteps[noteIdx];
         container._noteSteps[noteIdx] = targetStep;
-        rerenderWithNoteStates(container, function() { container._noteSteps[noteIdx] = oldStep; });
+        return redrawNote(container, function() { container._noteSteps[noteIdx] = oldStep; });
     }
 
     // Flips a note between its JSON and YAML display format. Structurally the
     // same operation as an expand/truncate: flip per-note state → rebuild
     // source → re-render through the shared helper.
     function setNoteFormat(container, noteIdx, format) {
-        if (container._noteRendering || window._plantumlRendering) return;
         if (!container._noteFormats) container._noteFormats = {};
-        if ((container._noteFormats[noteIdx] || 'json') === format) return;
+        if ((container._noteFormats[noteIdx] || 'json') === format) return null;
         var oldFormat = container._noteFormats[noteIdx];
         container._noteFormats[noteIdx] = format;
-        rerenderWithNoteStates(container, function() { container._noteFormats[noteIdx] = oldFormat; });
+        return redrawNote(container, function() { container._noteFormats[noteIdx] = oldFormat; });
+    }
+
+    // A note's state, changed at once where anything reads it, is drawn by the render queue once the task that changed it
+    // is done, with whatever else the task changed (redrawLater): the queue waits for a drawing in flight, where until
+    // SEARCH_PLAN a note's own redraw did nothing while any diagram drew, which one often is while the page scrolls, and a
+    // press of a note's button was lost. `restore` gives the state back if the drawing fails, as the picture before stays.
+    function redrawNote(container, restore) {
+        return redrawLater([{ container: container }], null, restore).then(function(batch) {
+            return !batch.failed(container);
+        });
     }
 
     // A diagram drawn again in parts keeps its zoom, its level, its direction, its place across and its selection, on its
@@ -2658,266 +2706,16 @@
         else container.setAttribute('data-plantuml', source);
     }
 
-    // Shared rebuild + re-render path for per-note state changes (step or
-    // format). restoreState reverts the state mutation if the render fails.
-    function rerenderWithNoteStates(container, restoreState) {
-        var origSource = container._noteOriginalSource;
-        if (!origSource) { restoreState(); return; }
-        var noteBlocks = parseNoteBlocks(origSource);
-        var newSource = composeNoteSource(container, origSource, noteBlocks);
-        var scroll = container._noteScrollPending;
-        // given back with the picture a failed redraw keeps
-        var drawnBefore = container.getAttribute('data-plantuml');
-
-        container.setAttribute('data-plantuml', newSource);
-
-        // Re-split and render as fragments if needed
-        if (window._splitWithChunkedNotes) {
-            var fragments = window._splitWithChunkedNotes(newSource);
-            if (fragments.length > 1 || container.querySelector('.puml-fragment')) {
-                // Multiple fragments or was previously fragmented — re-render all fragments
-                container._fragments = fragments;
-                // Preserve container height to prevent layout shift during re-render
-                container.style.minHeight = container.offsetHeight + 'px';
-                // Keep old children visible until new fragments are rendered
-                var oldChildren = Array.from(container.children);
-                container.dataset.rendered = '1';
-                container._noteRendering = true;
-                window._plantumlRendering = true;
-                var fragQueue = [];
-                for (var fi = 0; fi < fragments.length; fi++) {
-                    var fragDiv = document.createElement('div');
-                    fragDiv.className = 'puml-fragment puml-fragment-new';
-                    fragDiv.id = container.id + '-frag-n-' + fi;
-                    fragDiv.dataset.fragment = fi;
-                    fragDiv.setAttribute('data-plantuml', fragments[fi]);
-                    fragDiv.style.display = 'none';
-                    container.appendChild(fragDiv);
-                    fragQueue.push({ el: fragDiv, source: fragments[fi], engine: null, isFragment: true, parentEl: container });
-                }
-                // each part drawn from its engine text, its stored source as written, and lined up once the outline gives
-                // the row (5.7.0, plantuml-browser-render-script.js)
-                var lineUp = null;
-                function beginFrags(lined) {
-                    lineUp = lined && lined.row ? lined : null;
-                    var engine = lined ? lined.engine : window._partEngineSources ? window._partEngineSources(fragments) : fragments;
-                    for (var ei = 0; ei < fragQueue.length; ei++) fragQueue[ei].engine = engine[ei];
-                    // Let the render workers take every new fragment in parallel now; the sequential loop
-                    // below then mostly serves cache hits (a toggle re-splits the diagram, and most
-                    // fragments come out byte-identical to what is already on screen).
-                    if (window.plantuml && window.plantuml.prefetch) window.plantuml.prefetch(fragQueue.map(function (f) { return f.engine; }));
-                    renderNextFrag();
-                }
-                // Process fragment render queue sequentially
-                var fragIdx = 0;
-                function renderNextFrag() {
-                    if (fragIdx >= fragQueue.length) {
-                        // lined up: parts whose gaps disagree are drawn again from their own gaps, out of sight, then each
-                        // part is placed under the others
-                        var newEls = fragQueue.map(function(f) { return f.el; });
-                        var fix = lineUp && window._lineUpCheck ? window._lineUpCheck(newEls, lineUp) : null;
-                        if (fix) {
-                            lineUp = fix;
-                            for (var xi = 0; xi < fragQueue.length; xi++) { fragQueue[xi].engine = fix.engine[xi]; fragQueue[xi].el.innerHTML = ''; }
-                            fragIdx = 0;
-                            renderNextFrag();
-                            return;
-                        }
-                        if (lineUp && window._lineUpPlace) window._lineUpPlace(newEls, lineUp);
-                        container._lineUp = lineUp;
-                        // All new fragments rendered — swap: remove old, show new
-                        var zoom = zoomBefore(container);
-                        for (var oi = 0; oi < oldChildren.length; oi++) {
-                            if (oldChildren[oi].parentNode === container) container.removeChild(oldChildren[oi]);
-                        }
-                        // sized and placed at the diagram's level while still hidden (5.7.3, context-menu-script.js)
-                        if (window._sizeHiddenParts) window._sizeHiddenParts(container, newEls);
-                        var newFrags = container.querySelectorAll('.puml-fragment-new');
-                        for (var ni = 0; ni < newFrags.length; ni++) {
-                            newFrags[ni].style.display = '';
-                            newFrags[ni].classList.remove('puml-fragment-new');
-                            newFrags[ni].id = container.id + '-frag-' + ni;
-                        }
-                        // coloured as they are shown, as the queue's swap colours its parts (afterRedraw): until 5.9.1 the
-                        // parts a note's own control drew were shown in the engine's colours for a frame (F1)
-                        for (var ti = 0; ti < newFrags.length; ti++) tagShown(newFrags[ti]);
-                        zoomAfter(container, zoom);
-                        installNoteScroll(container, scroll, newSource);
-                        if (fragQueue.every(function(f) { return f.el.querySelector('svg'); })) recordDrawn(container, newSource, scroll);
-                        // Apply post-render hooks after fragments are visible (getBBox needs visible elements)
-                        for (var pi = 0; pi < fragQueue.length; pi++) {
-                            if (window._iflowBindLinks) window._iflowBindLinks(fragQueue[pi].el, origSource);
-                            makeNotesCollapsible(fragQueue[pi].el);
-                            addAssertionTooltips(fragQueue[pi].el);
-                            (function(el) { requestAnimationFrame(function() { if (window._addZoomButton) window._addZoomButton(el); }); })(fragQueue[pi].el);
-                        }
-                        container._noteRendering = false;
-                        window._plantumlRendering = false;
-                        container.style.minHeight = '';
-                        return;
-                    }
-                    var item = fragQueue[fragIdx++];
-                    // Check SVG cache first. Yield between fragments: after a prefetch most fragments are
-                    // synchronous cache hits, and swapping them all in one go is a single main-thread task
-                    // as long as the sum of the innerHTML swaps (~½ s on a big diagram under load).
-                    if (_svgCache[item.engine]) {
-                        item.el.innerHTML = _svgCache[item.engine];
-                        item.el.dataset.rendered = '1';
-                        setTimeout(renderNextFrag, 0);
-                        return;
-                    }
-                    var fDone = false;
-                    var fPoll = null;
-                    function afterFragRender() {
-                        if (fDone) return;
-                        fDone = true;
-                        if (fPoll) clearInterval(fPoll);
-                        // The engine may have written a failure instead of an <svg> ("Diagram too large
-                        // for browser rendering…", or the shim's "Render error: …"): describe it, and
-                        // never cache a failure as a result.
-                        var failed = window._describeEngineFailure ? window._describeEngineFailure(item.el, item.source) : false;
-                        if (!failed && item.el.querySelector('svg')) _svgCache[item.engine] = item.el.innerHTML;
-                        item.el.dataset.rendered = '1';
-                        window._plantumlRendering = false;
-                        // A shim cache hit completes synchronously (the observer fires as a microtask, still
-                        // inside this task) — yield so consecutive hits become separate tasks.
-                        setTimeout(renderNextFrag, 0);
-                    }
-                    window._plantumlRendering = true;
-                    var fmo = new MutationObserver(function() {
-                        // Any output — an <svg>, or text for a failure — completes the fragment; waiting for
-                        // an <svg> alone left _noteRendering stuck on a too-large fragment.
-                        if (!item.el.querySelector('svg') && !(item.el.textContent || '').trim()) return;
-                        fmo.disconnect();
-                        afterFragRender();
-                    });
-                    fmo.observe(item.el, { childList: true, subtree: true });
-                    var fPollCount = 0;
-                    fPoll = setInterval(function() {
-                        fPollCount++;
-                        if (fDone) { clearInterval(fPoll); return; }
-                        if (item.el.querySelector('svg') || (item.el.textContent || '').trim()) { clearInterval(fPoll); fmo.disconnect(); afterFragRender(); return; }
-                        if (fPollCount > 240) { // 60 s without any output: give this fragment up, keep the toggle moving
-                            clearInterval(fPoll); fmo.disconnect();
-                            item.el.textContent = 'Render timed out for this fragment.';
-                            afterFragRender();
-                        }
-                    }, 250);
-                    try {
-                        window.plantuml.render(item.engine.split('\n'), item.el.id, storedFailure(item.el, item.source));
-                    } catch(e) {
-                        fmo.disconnect();
-                        if (fPoll) clearInterval(fPoll);
-                        item.el.textContent = 'Render error: ' + ((e && e.message) ? e.message : String(e));
-                        item.el.dataset.rendered = '1';
-                        window._plantumlRendering = false;
-                        renderNextFrag();
-                    }
-                }
-                var linedFrags = window._lineUpParts ? window._lineUpParts(fragments) : null;
-                if (linedFrags) linedFrags.then(beginFrags); else beginFrags(null);
-                return;
-            }
-        }
-
-        // Single diagram (no splitting needed) — existing behavior
-        // Check SVG cache — skip plantuml.js re-render if we have a cached result
-        if (_svgCache[newSource]) {
-            swapPicture(container, _svgCache[newSource]);
-            installNoteScroll(container, scroll, newSource);
-            recordDrawn(container, newSource, scroll);
-            if (window._iflowBindLinks) window._iflowBindLinks(container, origSource);
-            makeNotesCollapsible(container);
-            addAssertionTooltips(container);
-            requestAnimationFrame(function() { if (window._addZoomButton) window._addZoomButton(container); });
-            return;
-        }
-
-        container._noteRendering = true;
-        window._plantumlRendering = true;
-        // Preserve container height to prevent layout shift during re-render
-        container.style.minHeight = container.offsetHeight + 'px';
-
-        // Render into a temporary child div to keep old SVG visible until new one is ready
-        // Use unique ID per render to prevent TeaVM global state leaking between sequential renders
-        window._renderTmpCounter = (window._renderTmpCounter || 0) + 1;
-        var renderTarget = document.createElement('div');
-        renderTarget.id = container.id + '-render-tmp-' + window._renderTmpCounter;
-        renderTarget.style.display = 'none';
-        container.appendChild(renderTarget);
-
-        var done = false;
-        function afterRender() {
-            if (done) return;
-            done = true;
-            // The engine may have answered with a failure, in text or drawn as a picture (its stack overflow): describe
-            // it, and never cache a failure as a result, as the report's controls and a diagram drawn in parts do (5.2.4).
-            var failed = window._describeEngineFailure ? window._describeEngineFailure(renderTarget, newSource) : false;
-            var drewSvg = !!renderTarget.querySelector('svg');
-            // Swap: remove old content, show new SVG
-            var newSvg = renderTarget.innerHTML;
-            swapPicture(container, newSvg);
-            installNoteScroll(container, scroll, newSource);
-            if (!failed && drewSvg) { _svgCache[newSource] = newSvg; recordDrawn(container, newSource, scroll); }
-            container._noteRendering = false;
-            window._plantumlRendering = false;
-            container.style.minHeight = '';
-            if (window._iflowBindLinks) window._iflowBindLinks(container, origSource);
-            makeNotesCollapsible(container);
-            addAssertionTooltips(container);
-            requestAnimationFrame(function() { if (window._addZoomButton) window._addZoomButton(container); });
-        }
-
-        var mo = new MutationObserver(function(mutations) {
-            // An <svg>, or the engine's failure in text, ends the drawing. Waiting for an <svg> alone held every note
-            // button on the page until the poll below gave up, 30 s later (5.2.4).
-            if (!renderTarget.querySelector('svg') && !(renderTarget.textContent || '').trim()) return;
-            mo.disconnect();
-            afterRender();
-        });
-        mo.observe(renderTarget, { childList: true, subtree: true });
-
-        try {
-            window.plantuml.render(newSource.split('\n'), renderTarget.id);
-        } catch(e) {
-            // done, so the poll below stops at once: left running, it gave the state back again 30 s later (5.2.5)
-            done = true;
-            mo.disconnect();
-            if (renderTarget.parentNode) renderTarget.parentNode.removeChild(renderTarget);
-            container._noteRendering = false;
-            window._plantumlRendering = false;
-            container.style.minHeight = '';
-            // Render failed — restore previous state and sync buttons
-            keepDrawnSource(container, drawnBefore);
-            restoreState();
-            makeNotesCollapsible(container);
-            addAssertionTooltips(container);
-        }
-
-        var pollCount = 0;
-        var poll = setInterval(function() {
-            pollCount++;
-            if (done) { clearInterval(poll); return; }
-            var svg = renderTarget.querySelector('svg');
-            if (svg ? !svg.querySelector('.note-toggle-icon') : (renderTarget.textContent || '').trim()) {
-                clearInterval(poll);
-                mo.disconnect();
-                afterRender();
-            }
-            if (pollCount > 120) {
-                clearInterval(poll);
-                mo.disconnect();
-                if (renderTarget.parentNode) renderTarget.parentNode.removeChild(renderTarget);
-                container._noteRendering = false;
-                window._plantumlRendering = false;
-                container.style.minHeight = '';
-                // Render timed out — restore previous state and sync buttons
-                keepDrawnSource(container, drawnBefore);
-                restoreState();
-                makeNotesCollapsible(container);
-                addAssertionTooltips(container);
-            }
-        }, 250);
+    // A drawing the engine refused or never answered: the picture before stays with its source, and a note's state given
+    // to it goes back to what that picture shows, its buttons with it (a note's redraw did so before it went through the
+    // queue).
+    function drawingFailed(item, drawnBefore) {
+        item.failed = true;
+        keepDrawnSource(item.container, drawnBefore);
+        if (!item.restore || !item.restore.length) return;
+        for (var r = item.restore.length - 1; r >= 0; r--) item.restore[r]();
+        makeNotesCollapsible(item.container);
+        addAssertionTooltips(item.container);
     }
 
     window._makeNotesCollapsible = makeNotesCollapsible;
@@ -3432,6 +3230,10 @@
     window._preProcessSource = function(el, source) {
         // what this drawing is composed with, for its picture when the drawing ends (firstDrawing)
         el._noteScrollFirst = null;
+        // from here a note is opened by drawing the diagram again, no longer seeded for this drawing (openNote)
+        el._kPreProcessed = true;
+        var seed = el._noteSeed;
+        el._noteSeed = null;
         // The component diagram renders its source untouched — filters never apply to it
         if (isComponentDiagramContainer(el)) return source;
         // The filters apply before note-block parsing, each with the state the diagram is drawn in
@@ -3448,7 +3250,10 @@
         if (origNoteBlocks.length === 0 && renderSource === source) return source;
         el._noteOriginalSource = source;
         if (origNoteBlocks.length === 0) return renderSource;
-        var state = window._detailsDefault;
+        // Payloads and Headers as the scenario's gear left them, else as the report's, as the filters above: until
+        // SEARCH_PLAN (B12) a diagram drawn after the gear (another example row, one far down the page) took the report's
+        var state = scenarioDetails(el);
+        el._headersHidden = scenarioChoice(el, '_headersHidden');
         // Apply the note-format preference BEFORE the step loop, so isLongNote
         // counts the ACTIVE format's lines and the built source carries the
         // swapped YAML payloads — a container decompressed after a bulk YAML
@@ -3466,6 +3271,9 @@
             // after the first render is what actually fits it to the container.
             el._refineNoteWidth = true;
         }
+        // a note opened before its diagram was drawn (openNote): its format and width over the diagram's, before the
+        // steps, which count the lines it shows
+        if (seed && seedNoteLooks(el, seed, origNoteBlocks)) el._refineNoteWidth = true;
         var anyYaml = false;
         if (el._noteFormats) {
             for (var fk in el._noteFormats) {
@@ -3481,12 +3289,13 @@
             var targetStep;
             var activeLines = activeNoteContentLines(el, i, origNoteBlocks[i].contentLines);
             if (state === 'expanded') { targetStep = 2; }
-            else if (state === 'truncated') { targetStep = isLongNote(activeLines, el._truncateLines, window._headersHidden) ? 1 : 2; }
+            else if (state === 'truncated') { targetStep = isLongNote(activeLines, el._truncateLines, el._headersHidden) ? 1 : 2; }
             else { targetStep = 0; }
             el._noteSteps[i] = targetStep;
         }
-        el._headersHidden = window._headersHidden;
-        if (state !== 'expanded' || window._headersHidden || anyYaml) {
+        // and its step, over the one the loop above gave every note, so the diagram is drawn once, already so
+        if (seed) seedNoteSteps(el, seed, origNoteBlocks);
+        if (state !== 'expanded' || el._headersHidden || anyYaml || seed) {
             return firstDrawing(el, composeNoteSource(el, source, origNoteBlocks));
         }
         if (containerHasAppearance(el)) return firstDrawing(el, composeNoteSource(el, source, origNoteBlocks));
@@ -3765,6 +3574,8 @@
             var origNoteBlocks = parseNoteBlocks(container._noteOriginalSource);
             var newSource = composeNoteSource(container, container._noteOriginalSource, origNoteBlocks);
             var scroll = container._noteScrollPending;
+            // given back with the picture a failed drawing keeps (drawingFailed)
+            var drawnBefore = container.getAttribute('data-plantuml');
             container.setAttribute('data-plantuml', newSource);
             // the picture on the page was drawn from this very source: drawing it again would draw it again
             if (drawnFrom(container, newSource, scroll)) {
@@ -3815,8 +3626,8 @@
                         container.appendChild(fragDiv);
                         fragList.push({ el: fragDiv, source: fragments[fi], engine: null });
                     }
-                    // each part drawn from its engine text and lined up once the outline gives the row, as in
-                    // rerenderWithNoteStates
+                    // each part drawn from its engine text, its stored source as written, and lined up once the outline
+                    // gives the row (5.7.0, plantuml-browser-render-script.js)
                     var partsLineUp = null;
                     function beginFragments(lined) {
                         partsLineUp = lined && lined.row ? lined : null;
@@ -3873,8 +3684,10 @@
                             return;
                         }
                         var fItem = fragList[fragI++];
-                        // Yield between cached fragments — see renderNextFrag: consecutive synchronous
-                        // swaps in one task block the main thread for their sum.
+                        // Yield between cached fragments: after the prefetch most fragments are synchronous cache
+                        // hits (a toggle re-splits the diagram, and most come out as they were), and swapping them
+                        // all in one task blocks the main thread for their sum (about half a second on a big diagram
+                        // under load).
                         if (_svgCache[fItem.engine]) {
                             fItem.el.innerHTML = _svgCache[fItem.engine];
                             fItem.el.dataset.rendered = '1';
@@ -3900,6 +3713,7 @@
                             // for browser rendering…"): describe it, and never cache a failure as a result.
                             var failed = window._describeEngineFailure ? window._describeEngineFailure(fItem.el, fItem.source) : false;
                             if (!failed && fItem.el.querySelector('svg')) _svgCache[fItem.engine] = fItem.el.innerHTML;
+                            else item.failed = true;
                             fItem.el.dataset.rendered = '1';
                             window._plantumlRendering = false;
                             // A shim cache hit completes synchronously — yield between fragments.
@@ -3925,7 +3739,7 @@
                                 afterFrag();
                             }
                         }, 250);
-                        try { window.plantuml.render(fItem.engine.split('\n'), fItem.el.id, storedFailure(fItem.el, fItem.source)); } catch(e) { fmo.disconnect(); if (fPoll) clearInterval(fPoll); fItem.el.textContent = 'Render error: ' + ((e && e.message) ? e.message : String(e)); fItem.el.dataset.rendered = '1'; window._plantumlRendering = false; renderNextFragment(); }
+                        try { window.plantuml.render(fItem.engine.split('\n'), fItem.el.id, storedFailure(fItem.el, fItem.source)); } catch(e) { fmo.disconnect(); if (fPoll) clearInterval(fPoll); fItem.el.textContent = 'Render error: ' + ((e && e.message) ? e.message : String(e)); fItem.el.dataset.rendered = '1'; window._plantumlRendering = false; item.failed = true; renderNextFragment(); }
                     }
                     var linedParts = window._lineUpParts ? window._lineUpParts(fragments) : null;
                     if (linedParts) linedParts.then(beginFragments); else beginFragments(null);
@@ -3964,6 +3778,7 @@
                 swapPicture(container, newSvg);
                 installNoteScroll(container, scroll, newSource);
                 if (!failed && renderTarget.querySelector('svg')) { _svgCache[newSource] = newSvg; recordDrawn(container, newSource, scroll); }
+                else item.failed = true;
                 container._noteRendering = false;
                 window._plantumlRendering = false;
                 container.style.minHeight = '';
@@ -3978,14 +3793,14 @@
                 afterRender();
             });
             mo.observe(renderTarget, { childList: true, subtree: true });
-            try { window.plantuml.render(newSource.split('\n'), renderTarget.id); startAhead(); } catch(e) { mo.disconnect(); if (renderTarget.parentNode) renderTarget.parentNode.removeChild(renderTarget); container._noteRendering = false; window._plantumlRendering = false; container.style.minHeight = ''; done = true; settled(item); processNext(); }
+            try { window.plantuml.render(newSource.split('\n'), renderTarget.id); startAhead(); } catch(e) { mo.disconnect(); if (renderTarget.parentNode) renderTarget.parentNode.removeChild(renderTarget); container._noteRendering = false; window._plantumlRendering = false; container.style.minHeight = ''; done = true; drawingFailed(item, drawnBefore); settled(item); processNext(); }
             var pollCount = 0;
             var poll = setInterval(function() {
                 pollCount++;
                 if (done) { clearInterval(poll); return; }
                 var svg = renderTarget.querySelector('svg');
                 if (svg && !svg.querySelector('.note-toggle-icon')) { clearInterval(poll); mo.disconnect(); afterRender(); }
-                if (pollCount > 120) { clearInterval(poll); mo.disconnect(); if (renderTarget.parentNode) renderTarget.parentNode.removeChild(renderTarget); container._noteRendering = false; window._plantumlRendering = false; container.style.minHeight = ''; done = true; settled(item); processNext(); }
+                if (pollCount > 120) { clearInterval(poll); mo.disconnect(); if (renderTarget.parentNode) renderTarget.parentNode.removeChild(renderTarget); container._noteRendering = false; window._plantumlRendering = false; container.style.minHeight = ''; done = true; drawingFailed(item, drawnBefore); settled(item); processNext(); }
             }, 250);
         }
         processNext();
@@ -4103,7 +3918,7 @@
         });
     }
 
-    // Scenario-level: expand/truncate/collapse details
+    // Scenario-level: expand/truncate/collapse details (the gear's Payloads, through show)
     window._setAllNotes = function(btn, targetState) {
         var scenario = btn.closest('details.scenario');
         if (!scenario) return;
@@ -4116,17 +3931,16 @@
                 containers.forEach(function(c) { c._truncateLines = scenarioLines; });
             }
         }
-        syncRadioButtons(scenario, targetState);
-        var containers = scenario.querySelectorAll('[data-plantuml]');
-        renderWithPending(buildDetailsQueue(containers, targetState), scenario.querySelectorAll('.details-radio-btn[data-state="' + targetState + '"]'));
+        show(scenario, { payloads: targetState });
     };
 
     // Report-level: expand/truncate/collapse details for all scenarios
     window._setReportDetails = function(targetState) {
         window._detailsDefault = targetState;
         syncRadioButtons(document.querySelector('.toolbar-right'), targetState);
-        // Reset all scenario-level radio buttons too
+        // Reset all scenario-level radio buttons too, and the scenarios' own choices: the report's holds everywhere
         document.querySelectorAll('details.scenario').forEach(function(sc) {
+            sc._detailsChoice = undefined;
             syncRadioButtons(sc, targetState);
         });
         // When switching to truncated at report level, sync container truncate lines from global
@@ -4157,25 +3971,19 @@
         var containers = document.querySelectorAll('[data-plantuml]');
         // Force re-render all containers as truncated (even if already truncated — line count changed)
         renderWithPending(buildDetailsQueue(containers, 'truncated', true), document.querySelectorAll('.truncate-lines-select, .details-radio-btn[data-state="truncated"]'));
-        // Update report + scenario radio buttons to truncated state
+        // Update report + scenario radio buttons to truncated state, which the scenarios' own choices follow
         syncRadioButtons(document.querySelector('.toolbar-right'), 'truncated');
         document.querySelectorAll('details.scenario').forEach(function(sc) {
+            sc._detailsChoice = undefined;
             syncRadioButtons(sc, 'truncated');
         });
     };
 
-    // Change truncation line count (scenario-level)
+    // Change truncation line count (scenario-level, through show)
     window._setScenarioTruncateLines = function(sel) {
         var scenario = sel.closest('details.scenario');
         if (!scenario) return;
-        var scenarioLines = parseInt(sel.value, 10) || window._truncateLinesDefault;
-        // Store per-container — include not-yet-decompressed elements
-        var allDiagrams = scenario.querySelectorAll('[data-diagram-type="plantuml"]');
-        allDiagrams.forEach(function(c) { c._truncateLines = scenarioLines; });
-        // Only re-render containers that have been decompressed (have data-plantuml)
-        var containers = scenario.querySelectorAll('[data-plantuml]');
-        renderWithPending(buildDetailsQueue(containers, 'truncated', true), scenario.querySelectorAll('.truncate-lines-select, .details-radio-btn[data-state="truncated"]'));
-        syncRadioButtons(scenario, 'truncated');
+        show(scenario, { lines: parseInt(sel.value, 10) || window._truncateLinesDefault });
     };
 
     // A toggle says its word alone (5.0.0): whether it is on is its state, aria-pressed, never its label, which stays
@@ -4194,21 +4002,20 @@
         var shown = btn.getAttribute('data-shown') !== 'true';
         window._headersHidden = !shown;
         syncToggleBtn(document.querySelector('.toolbar-right'), 'headers', shown);
+        // every scenario's own choice gives way to the report's, as the filters' do
         document.querySelectorAll('details.scenario').forEach(function(sc) {
+            sc._headersHidden = undefined;
             syncToggleBtn(sc, 'headers', shown);
         });
         var containers = document.querySelectorAll('[data-plantuml]');
         renderWithPending(buildHeadersQueue(containers, !shown), document.querySelectorAll('.toggle-btn[data-toggle="headers"]'));
     };
 
-    // Scenario-level: toggle headers for one scenario
+    // Scenario-level: toggle headers for one scenario (through show)
     window._toggleScenarioHeaders = function(btn) {
-        var shown = btn.getAttribute('data-shown') !== 'true';
         var scenario = btn.closest('details.scenario');
         if (!scenario) return;
-        syncToggleBtn(scenario, 'headers', shown);
-        var containers = scenario.querySelectorAll('[data-plantuml]');
-        renderWithPending(buildHeadersQueue(containers, !shown), scenario.querySelectorAll('.toggle-btn[data-toggle="headers"]'));
+        show(scenario, { headers: btn.getAttribute('data-shown') !== 'true' });
     };
 
     // One queue builder for every diagram filter (5.0.0): the five differ only in the flag they set.
@@ -4246,13 +4053,11 @@
     }
 
     function toggleScenarioFilter(name, flag, btn) {
-        var shown = btn.getAttribute('data-shown') !== 'true';
         var scenario = btn.closest('details.scenario');
         if (!scenario) return;
-        scenario[flag] = shown;
-        syncToggleBtn(scenario, name, shown);
-        renderWithPending(buildFilterQueue(scenario.querySelectorAll('[data-plantuml]'), flag, shown),
-            scenario.querySelectorAll('.toggle-btn[data-toggle="' + name + '"]'));
+        var states = {};
+        states[name] = btn.getAttribute('data-shown') !== 'true';
+        show(scenario, states);
     }
 
     // The report's and each scenario's toggles for assertion notes, step bars, database calls, event calls and setup
@@ -4323,12 +4128,7 @@
     window._setScenarioNoteWidth = function(sel) {
         var scenario = sel.closest('details.scenario');
         if (!scenario) return;
-        var mode = sel.value === 'full' ? 'full' : 'default';
-        scenario.querySelectorAll('[data-diagram-type="plantuml"]').forEach(function(c) { c._noteWidthPreference = mode; });
-        renderWithPending(
-            buildNoteAppearanceQueue(scenario.querySelectorAll('[data-plantuml]'),
-                function(c) { c._refineNoteWidth = mode === 'full'; return setAllNoteWidths(c, mode); }),
-            scenario.querySelectorAll('.note-width-select'));
+        show(scenario, { width: sel.value === 'full' ? 'full' : 'default' });
     };
 
     // Report-level: set the note payload format for all scenarios
@@ -4349,16 +4149,422 @@
         renderWithPending(buildNoteFormatQueue(containers, format), document.querySelectorAll('.note-format-select'));
     };
 
-    // Scenario-level: set the note payload format for one scenario
+    // Scenario-level: set the note payload format for one scenario (through show)
     window._setScenarioNoteFormat = function(sel) {
         var scenario = sel.closest('details.scenario');
         if (!scenario) return;
-        var format = sel.value === 'yaml' ? 'yaml' : 'json';
-        scenario.querySelectorAll('[data-diagram-type="plantuml"]').forEach(function(c) {
-            c._noteFormatPreference = format;
+        show(scenario, { format: sel.value === 'yaml' ? 'yaml' : 'json' });
+    };
+
+    // ── The page's diagram API: window.kronikol_diagrams (plans/SEARCH_PLAN.md 4.6.5) ─────────────────────────────────────
+    // What a scenario's gear, a note's buttons and the way to a search's match do to a diagram, given a name and a promise:
+    // whenDrawn, a promise kept once a diagram is drawn for the view it is in; show, a scenario's own toggle states set
+    // and its drawn diagrams drawn again once; openNote, a note put in a state through the render queue, or seeded for a
+    // diagram's first drawing; findNote and findMessage, the drawn note and message a place in the source names. The gear
+    // and the note buttons go through them, so there is one way to do each.
+
+    // ── One redraw for what one task changes ──
+    // A state is changed at once, where anything reads it; the diagrams it changes are drawn again together once the task
+    // that changed them is done, in one queue run, so what show and openNote change in one task is one redraw. A diagram
+    // waiting here counts as being drawn (whenDrawn), and the controls that asked show as busy from the click on, as
+    // renderWithPending's do. The promise is kept once the queue has drawn them, with the batch, which says whether a
+    // diagram's drawing failed.
+    var redrawBatch = null;
+    function redrawLater(items, pending, restore) {
+        var batch = redrawBatch;
+        if (!batch) {
+            batch = redrawBatch = { items: [], pending: [], waiting: [], failed: function(c) {
+                return batch.items.some(function(item) { return item.container === c && !!item.failed; });
+            } };
+            Promise.resolve().then(function() { flushRedraws(batch); });
+        }
+        items.forEach(function(add) {
+            var item = null;
+            for (var i = 0; i < batch.items.length && !item; i++) if (batch.items[i].container === add.container) item = batch.items[i];
+            if (!item) {
+                item = { container: add.container, restore: [] };
+                batch.items.push(item);
+                add.container._kBatched = (add.container._kBatched || 0) + 1;
+            }
+            if (restore) item.restore.push(restore);
         });
-        var containers = scenario.querySelectorAll('[data-plantuml]');
-        renderWithPending(buildNoteFormatQueue(containers, format), scenario.querySelectorAll('.note-format-select'));
+        if (pending) {
+            var controls = Array.prototype.slice.call(pending);
+            setPending(controls, true);
+            Array.prototype.push.apply(batch.pending, controls);
+        }
+        return new Promise(function(resolve) { batch.waiting.push(function() { resolve(batch); }); });
+    }
+    function flushRedraws(batch) {
+        if (redrawBatch === batch) redrawBatch = null;
+        batch.items.forEach(function(item) { item.container._kBatched--; });
+        // a copy: the queue takes its items out as it draws them, and the batch is asked afterwards which of them failed
+        processRenderQueue(batch.items.slice(), function() {
+            setPending(batch.pending, false);
+            batch.waiting.forEach(function(keep) { keep(); });
+        });
+    }
+
+    // ── show(scenario, states) ──
+    // A scenario's own toggle states, the ones its gear shows, never the report's: { databases, events, assertions, steps,
+    // setup, headers } true or false (shown or hidden), payloads ('expanded', 'truncated' or 'collapsed'), lines (the line
+    // limit, which picks Truncated), format ('json' or 'yaml') and width ('default' or 'full'). Each is recorded on the
+    // scenario, where its diagrams drawn later read it, shown in its gear, and its drawn diagrams are drawn again, all of
+    // them once. The promise is kept, once they are drawn, with the names of the states that were not so already.
+    var SCENARIO_FILTERS = { assertions: '_assertionsVisible', steps: '_stepsVisible', databases: '_databasesVisible',
+        events: '_eventsVisible', setup: '_setupVisible' };
+    function gearValue(scenario, cls, otherwise) {
+        var sel = scenario.querySelector('.' + cls);
+        return sel ? sel.value : String(otherwise);
+    }
+    function show(scenario, states) {
+        states = states || {};
+        if (!scenario || !scenario.querySelectorAll) return Promise.resolve([]);
+        var drawn = scenario.querySelectorAll('[data-plantuml]');
+        var every = scenario.querySelectorAll('[data-diagram-type="plantuml"]');
+        var changed = [], queue = [], pending = [];
+        function take(items, controls) {
+            Array.prototype.push.apply(queue, items);
+            Array.prototype.push.apply(pending, Array.prototype.slice.call(controls));
+        }
+        // the format and the width first: whether a note is longer than its limit counts the lines it shows
+        var format = states.format === 'yaml' || states.format === 'json' ? states.format : null;
+        if (format) {
+            if (gearValue(scenario, 'note-format-select', window._noteFormatDefault) !== format) changed.push('format');
+            every.forEach(function(c) { c._noteFormatPreference = format; });
+            scenario.querySelectorAll('.note-format-select').forEach(function(s) { s.value = format; });
+            take(buildNoteFormatQueue(drawn, format), scenario.querySelectorAll('.note-format-select'));
+        }
+        var width = states.width === 'full' || states.width === 'default' ? states.width : null;
+        if (width) {
+            if (gearValue(scenario, 'note-width-select', window._noteWidthDefault) !== width) changed.push('width');
+            every.forEach(function(c) { c._noteWidthPreference = width; });
+            scenario.querySelectorAll('.note-width-select').forEach(function(s) { s.value = width; });
+            take(buildNoteAppearanceQueue(drawn, function(c) { c._refineNoteWidth = width === 'full'; return setAllNoteWidths(c, width); }),
+                scenario.querySelectorAll('.note-width-select'));
+        }
+        if (states.headers !== undefined) {
+            var headers = !!states.headers;
+            if (scenarioChoice(scenario, '_headersHidden') === headers) changed.push('headers');
+            scenario._headersHidden = !headers;
+            syncToggleBtn(scenario, 'headers', headers);
+            take(buildHeadersQueue(drawn, !headers), scenario.querySelectorAll('.toggle-btn[data-toggle="headers"]'));
+        }
+        Object.keys(SCENARIO_FILTERS).forEach(function(name) {
+            if (states[name] === undefined) return;
+            var flag = SCENARIO_FILTERS[name], on = !!states[name];
+            if (scenarioChoice(scenario, flag) !== on) changed.push(name);
+            scenario[flag] = on;
+            syncToggleBtn(scenario, name, on);
+            take(buildFilterQueue(drawn, flag, on), scenario.querySelectorAll('.toggle-btn[data-toggle="' + name + '"]'));
+        });
+        // the line limit is Truncated's, so it picks Truncated, and draws every diagram again at the new limit
+        var scenarioLines = parseInt(states.lines, 10) > 0 ? parseInt(states.lines, 10) : 0;
+        if (scenarioLines) {
+            if (gearValue(scenario, 'truncate-lines-select', window._truncateLines) !== String(scenarioLines)) changed.push('lines');
+            every.forEach(function(c) { c._truncateLines = scenarioLines; });
+            scenario.querySelectorAll('.truncate-lines-select').forEach(function(s) { s.value = String(scenarioLines); });
+        }
+        var payloads = ['expanded', 'truncated', 'collapsed'].indexOf(states.payloads) >= 0 ? states.payloads
+            : scenarioLines ? 'truncated' : null;
+        if (payloads) {
+            if (scenarioDetails(scenario) !== payloads) changed.push('payloads');
+            scenario._detailsChoice = payloads;
+            syncRadioButtons(scenario, payloads);
+            take(buildDetailsQueue(drawn, payloads, payloads === 'truncated' && !!scenarioLines),
+                scenario.querySelectorAll(scenarioLines ? '.truncate-lines-select, .details-radio-btn[data-state="truncated"]'
+                    : '.details-radio-btn[data-state="' + payloads + '"]'));
+        }
+        return redrawLater(queue, pending).then(function() { return changed; });
+    }
+
+    // ── whenDrawn(host, { timeout, signal }) ──
+    // A promise kept with true once a diagram is drawn for the view it is in: a sequence diagram once it and every part of
+    // it are drawn and no drawing of it is waiting or in flight, a flame view once its bars are; with false once it is
+    // taken off the page, after the timeout (60 s unless given) or when the signal aborts. It draws nothing: a diagram is
+    // drawn as it comes near the window, so it is kept only for a diagram brought near. Not svg[data-k-roles], which the
+    // role pass sets on a sequence diagram alone, and only once it is laid out. A diagram with a wide note is drawn again
+    // once painted, by the pass that fits it to its column (refineNoteWidth), which waits for the drawing to end first
+    // (_refineWaiting): it is drawn once that pass has drawn it.
+    function ownerOf(el) {
+        return el && el.classList && el.classList.contains('puml-fragment') && el.parentElement ? el.parentElement : el;
+    }
+    function isDrawn(el) {
+        if (el.classList.contains('iflow-flame') || el.classList.contains('iflow-sequential-tests')
+            || el.getAttribute('data-diagram-type') === 'flamechart') return el.dataset.flameRendered === '1' && el.childElementCount > 0;
+        // drawn when the report was written
+        if (el.classList.contains('plantuml-inline-svg')) return true;
+        if (el.dataset.rendered !== '1' || el._noteRendering || el._kQueued > 0 || el._kBatched > 0 || el._lineUpPending > 0
+            || el._refineWaiting > 0) return false;
+        var parts = el.querySelectorAll(':scope > .puml-fragment');
+        for (var i = 0; i < parts.length; i++) {
+            if (parts[i].dataset.rendered !== '1' || parts[i].classList.contains('puml-fragment-new')) return false;
+        }
+        return true;
+    }
+    var drawnWaiters = [], drawnTick = 0;
+    function checkDrawn() {
+        drawnTick = 0;
+        var now = Date.now();
+        drawnWaiters = drawnWaiters.filter(function(w) {
+            var v = !w.el.isConnected ? false : isDrawn(w.el) ? true : now >= w.until || (w.signal && w.signal.aborted) ? false : null;
+            if (v === null) return true;
+            w.keep(v);
+            return false;
+        });
+        if (drawnWaiters.length) drawnTick = setTimeout(checkDrawn, 50);
+    }
+    function whenDrawn(host, options) {
+        options = options || {};
+        var el = ownerOf(host);
+        if (!el || !el.classList) return Promise.resolve(false);
+        var timeout = typeof options.timeout === 'number' ? options.timeout : 60000;
+        return new Promise(function(keep) {
+            drawnWaiters.push({ el: el, until: Date.now() + timeout, signal: options.signal, keep: keep });
+            if (!drawnTick) drawnTick = setTimeout(checkDrawn, 0);
+        });
+    }
+
+    // ── openNote(host, i, { state, format, width }) ──
+    // Note i, by its index in the original source (the index _noteIndices.original holds), put in a state: 'collapsed',
+    // 'truncated' (drawn whole when it is no longer than its limit, as its buttons do) or 'expanded'; shown as 'json' or
+    // 'yaml'; at the 'default' or the 'full' width. Through the render queue, which waits for drawings in flight; with
+    // whatever else this task changes in one redraw. For a diagram not drawn yet the state is seeded for its first drawing,
+    // which would otherwise give every note the report's state, so the diagram is drawn once. The promise is kept with true
+    // once the note is drawn so (or seeded), with false for a note the diagram does not have, a YAML view its payload has
+    // not, or a drawing that failed.
+    function noteStepFor(owner, i, state, rawLines) {
+        if (state === 'collapsed') return 0;
+        if (state === 'expanded') return 2;
+        return isLongNote(activeNoteContentLines(owner, i, rawLines), owner._truncateLines, owner._headersHidden) ? 1 : 2;
+    }
+    function openNote(host, i, options) {
+        options = options || {};
+        var owner = ownerOf(host);
+        i = typeof i === 'number' ? i : parseInt(i, 10);
+        if (!owner || !owner.classList || !(i >= 0) || isComponentDiagramContainer(owner)) return Promise.resolve(false);
+        if (!owner._kPreProcessed) {
+            var seed = owner._noteSeed || (owner._noteSeed = {}), s = seed[i] || (seed[i] = {});
+            if (options.state) s.state = options.state;
+            if (options.format) s.format = options.format;
+            if (options.width) s.width = options.width;
+            return Promise.resolve(true);
+        }
+        var source = owner._noteOriginalSource;
+        var block = source ? parseNoteBlocks(source)[i] : null;
+        if (!block) return Promise.resolve(false);
+        if (options.format === 'yaml' && !(ensureNoteFormatEligible(owner, i, block.contentLines) && ensureNoteYamlLines(owner, i)))
+            return Promise.resolve(false);
+        // each changes the state at once and adds the diagram to this task's redraw: the format first, as the step counts
+        // the lines the note shows
+        var waits = [];
+        if (options.format === 'yaml' || options.format === 'json') waits.push(setNoteFormat(owner, i, options.format));
+        if (options.width === 'full' || options.width === 'default') {
+            var g = findNote(owner, i);
+            waits.push(setNoteWidth(owner, i, options.width, g ? getNoteBBox(g).width : 0));
+        }
+        if (options.state === 'collapsed' || options.state === 'truncated' || options.state === 'expanded')
+            waits.push(setNoteState(owner, i, noteStepFor(owner, i, options.state, block.contentLines)));
+        return Promise.all(waits).then(function(drawn) {
+            return drawn.every(function(v) { return v !== false; });
+        });
+    }
+    // A seed's format and width, at the first drawing before its steps; true when a note was widened, for the pass that
+    // fits its width once the diagram is drawn.
+    function seedNoteLooks(el, seed, blocks) {
+        var widened = false;
+        for (var k in seed) {
+            var i = +k, f = seed[k].format, w = seed[k].width;
+            if (!blocks[i]) continue;
+            if (f === 'json' || (f === 'yaml' && ensureNoteFormatEligible(el, i, blocks[i].contentLines) && ensureNoteYamlLines(el, i))) {
+                if (!el._noteFormats) el._noteFormats = {};
+                el._noteFormats[i] = f;
+            }
+            if (w === 'full' || w === 'default') {
+                if (!el._noteWidths) el._noteWidths = {};
+                if (w === 'full' && !el._noteWidthPx) el._noteWidthPx = computeNoteWidthTarget(el, 0);
+                el._noteWidths[i] = w;
+                widened = widened || w === 'full';
+            }
+        }
+        return widened;
+    }
+    function seedNoteSteps(el, seed, blocks) {
+        for (var k in seed) {
+            var i = +k, state = seed[k].state;
+            if (blocks[i] && (state === 'collapsed' || state === 'truncated' || state === 'expanded'))
+                el._noteSteps[i] = noteStepFor(el, i, state, blocks[i].contentLines);
+        }
+    }
+
+    // ── findNote(host, i) ──
+    // The note drawn for note i of the original source, in whichever part holds it: the note's group as _findNoteGroups
+    // gives it ({ paths, texts }), with its svg, its part (the diagram itself when it is drawn whole) and its chunks, every
+    // part's piece of a note the page cut across parts. Null for a note not drawn (its call filtered out). A part whose
+    // buttons wait for it to come near is decorated first: the decoration is what gives a drawn note its index.
+    function drawnParts(owner) {
+        var parts = owner.querySelectorAll(':scope > .puml-fragment:not(.puml-fragment-new)');
+        return parts.length ? Array.prototype.slice.call(parts) : [owner];
+    }
+    function findNote(host, i) {
+        var owner = ownerOf(host);
+        if (!owner || !owner.querySelectorAll) return null;
+        i = typeof i === 'number' ? i : parseInt(i, 10);
+        var found = null, chunks = [];
+        drawnParts(owner).forEach(function(part) {
+            if (part._kDecorate) decorateNow(part);
+            var svg = part.querySelector(':scope > svg');
+            if (!svg) return;
+            findNoteGroups(svg).forEach(function(g) {
+                var ix = g.paths[0] && g.paths[0]._noteIndices;
+                if (!ix || ix.original !== i) return;
+                g.svg = svg;
+                g.part = part;
+                chunks.push(g);
+                if (!found) found = g;
+            });
+        });
+        if (found) found.chunks = chunks;
+        return found;
+    }
+
+    // ── findMessage(host, label, n) ──
+    // The drawn message (its g.message) of the n-th statement of the diagram's original source whose label reads as
+    // `label`'s: a statement (whose label is taken) or the label itself. Counted in the original source, so a statement
+    // keeps its n whatever the filters leave out; null for one they leave out, and for n past the last. The filters are
+    // run over the original with each such statement marked, to see which of them are drawn, and the drawn ones are
+    // counted part by part in the parts' sources, then found among each part's messages in source-line order, by the
+    // label they draw. No map of lines through the source's transforms is kept: the note states touch only notes, the
+    // filters only drop lines, and the parts take the lines in order. Read once the diagram is drawn (whenDrawn).
+    var STATEMENT_MARK = '\u0000';
+    function eachStatement(source, fn) {
+        var lines = source.split('\n'), inNote = false, inStyle = false;
+        for (var i = 0; i < lines.length; i++) {
+            var t = lines[i].trim();
+            if (inStyle) { if (/^<\/style>/.test(t)) inStyle = false; continue; }
+            if (inNote) { if (/^end ?(?:note|hnote|rnote)$/.test(t) || t === 'endnote') inNote = false; continue; }
+            if (/^<style\s*>/.test(t)) { inStyle = !/<\/style>/.test(t); continue; }
+            if (/^(?:note|hnote|rnote)\b/.test(t) && t.indexOf(':') < 0) { inNote = true; continue; }
+            fn(t, i, lines);
+        }
+        return lines;
+    }
+    // A message as drawn: its texts without white space, the number autonumber draws before its label left out.
+    function drawnReading(g, numbered) {
+        var texts = g.getElementsByTagName('text'), out = '';
+        for (var k = 0; k < texts.length; k++) {
+            if (k === 0 && numbered && texts[k].parentNode === g && /^\s*\d+\s*$/.test(texts[k].textContent)) continue;
+            out += texts[k].textContent;
+        }
+        return out.replace(/[\s​]+/g, '');
+    }
+    function findMessage(host, label, n) {
+        var owner = ownerOf(host);
+        if (!owner || !owner.querySelectorAll) return null;
+        n = n > 0 ? Math.floor(n) : 0;
+        var asStatement = labelOf(label);
+        var reading = asStatement !== null ? asStatement : readLabel(label == null ? '' : String(label));
+        var source = owner._noteOriginalSource || owner.getAttribute('data-plantuml');
+        if (!reading || !source) return null;
+        var marks = [];
+        var lines = eachStatement(source, function(t, i) { if (labelOf(t) === reading) marks.push(i); });
+        if (n >= marks.length) return null;
+        // marked after a space, which every filter's reading of a call's end takes as its end
+        var marked = lines.slice();
+        marks.forEach(function(at, k) { marked[at] = lines[at] + ' ' + STATEMENT_MARK + k + STATEMENT_MARK; });
+        var kept = applyFilters(marked.join('\n'), owner);
+        var before = 0;
+        for (var k = 0; k < n; k++) if (kept.indexOf(STATEMENT_MARK + k + STATEMENT_MARK) >= 0) before++;
+        if (kept.indexOf(STATEMENT_MARK + n + STATEMENT_MARK) < 0) return null;
+        var parts = drawnParts(owner);
+        for (var p = 0; p < parts.length; p++) {
+            var partSource = parts[p].getAttribute('data-plantuml') || '', count = 0;
+            eachStatement(partSource, function(t) { if (labelOf(t) === reading) count++; });
+            if (before >= count) { before -= count; continue; }
+            var svg = parts[p].querySelector(':scope > svg');
+            if (!svg) return null;
+            var numbered = /^\s*autonumber\b(?!\s+(?:stop|off)\b)/m.test(partSource);
+            var drawn = Array.prototype.filter.call(svg.querySelectorAll('g.message'), function(g) { return g.childElementCount > 0; });
+            var lineOf = function(g) { var v = parseInt(g.getAttribute('data-source-line'), 10); return v >= 0 ? v : -1; };
+            var ordered = drawn.every(function(g) { return lineOf(g) >= 0; })
+                ? drawn.map(function(g, k) { return { g: g, k: k }; })
+                    .sort(function(a, b) { return (lineOf(a.g) - lineOf(b.g)) || (a.k - b.k); }).map(function(m) { return m.g; })
+                : drawn;
+            var same = ordered.filter(function(g) { return drawnReading(g, numbered) === reading; });
+            return same[before] || null;
+        }
+        return null;
+    }
+
+    // ── hiddenBy(host, line) ──
+    // The toggles of a scenario's gear whose filter leaves line `line` (from 0) of the diagram's original source out of
+    // the picture, as show names them (databases, events, assertions, steps, setup); none when every filter keeps it. The
+    // filters only drop lines, so the lines one keeps are found in order in what it gives back.
+    function hiddenBy(host, line) {
+        var owner = ownerOf(host);
+        var source = owner && (owner._noteOriginalSource || owner.getAttribute('data-plantuml'));
+        if (!source || !(line >= 0)) return [];
+        var lines = source.split('\n');
+        if (line >= lines.length) return [];
+        var out = [];
+        [['databases', stripDatabaseCalls], ['events', stripEventCalls], ['assertions', stripAssertionNotes],
+            ['steps', stripStepDelimiters], ['setup', stripSetup]].forEach(function(f) {
+            var kept = f[1](source).split('\n'), k = 0, gone = true;
+            for (var i = 0; i <= line; i++) {
+                if (k < kept.length && kept[k] === lines[i]) { k++; if (i === line) gone = false; }
+            }
+            if (gone) out.push(f[0]);
+        });
+        return out;
+    }
+    // ── labelOf(statement) ──
+    // How a message statement's label reads once the engine has drawn it, which findMessage compares: a link as its text
+    // (its target when it has none), a code point as its character, a creole escape as what it escapes, a tag, an
+    // emphasis mark and a written line break as nothing, and no white space, as the engine draws each word and each
+    // space as a text of its own. '' for a message with no label; null for a line that is no message (a note's line, a
+    // declaration, a block, a step bar, a comment).
+    var MESSAGE_STATEMENT = /^&?\s*(?:"[^"]*"|[\w.@]+|\[|\])\s*(?:[ox]?<{1,2}[-.=]{1,2}(?:\[[^\]]*\])?[-.=]{0,2}[>\\\/]{0,2}[ox]?|[-.=]{1,2}(?:\[[^\]]*\])?[-.=]{0,2}(?:>{1,2}|[\\\/]{1,2})[ox]?)\s*(?:"[^"]*"|[\w.@]+|\[|\])\s*(?:\+\+|--|\*\*|!!)?\s*(?::(.*))?$/;
+    var LABEL_PIECE = /\[\[([^\]]*)\]\]|~([\/*_\-"\[<#=])|<U\+([0-9A-Fa-f]{4,6})>|<\/?[A-Za-z][^<>]*>|\*\*|\/\/|""|__|--|~~|\\n/g;
+    var LINK_PIECE = /~([\/*_\-"\[<#=])|<U\+([0-9A-Fa-f]{4,6})>|<\/?[A-Za-z][^<>]*>|\\n/g;
+    function codePointText(m, hex) {
+        var cp = parseInt(hex, 16);
+        if (cp === 0x200b) return '';
+        if ((cp >= 0xd800 && cp <= 0xdfff) || cp > 0x10ffff) return m;
+        return String.fromCodePoint(cp);
+    }
+    // a link's text is drawn as written: its escapes and code points read, and no emphasis (a URL's // is no italics)
+    function readLink(inner) {
+        var m = /^\s*([^\s{]*)(?:\{[^}]*\})?\s*([\s\S]*)$/.exec(inner);
+        var shown = m ? (m[2] || m[1]) : inner;
+        return shown.replace(LINK_PIECE, function(p, escaped, hex) {
+            if (escaped !== undefined) return escaped;
+            if (hex !== undefined) return codePointText(p, hex);
+            return '';
+        });
+    }
+    function readLabel(label) {
+        return String(label).replace(LABEL_PIECE, function(p, link, escaped, hex) {
+            if (link !== undefined) return readLink(link);
+            if (escaped !== undefined) return escaped;
+            if (hex !== undefined) return codePointText(p, hex);
+            return '';
+        }).replace(/[\s​]+/g, '');
+    }
+    function labelOf(statement) {
+        var t = String(statement == null ? '' : statement).trim();
+        if (!t || t.charAt(0) === "'") return null;
+        var m = MESSAGE_STATEMENT.exec(t);
+        return m ? readLabel(m[1] || '') : null;
+    }
+
+    window.kronikol_diagrams = {
+        whenDrawn: whenDrawn,
+        show: show,
+        openNote: openNote,
+        findNote: findNote,
+        findMessage: findMessage,
+        hiddenBy: hiddenBy,
+        labelOf: labelOf
     };
 })();
 </script>

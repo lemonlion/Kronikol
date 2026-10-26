@@ -52,6 +52,232 @@ public class SearchIndexJintTests : IDisposable
         }
     }
 
+    // SEARCH_PLAN 4.6.3 (W3): the display text runs the same passes without the ASCII fold, the later passes matching
+    // any case, so it is the search text but for the case of ASCII letters, and a range found in one is the same range
+    // in the other
+    [Fact]
+    public void Display_text_folds_to_the_search_text_for_every_vector()
+    {
+        using var vectors = LoadVectors();
+        foreach (var v in vectors.RootElement.GetProperty("normalization").EnumerateArray())
+        {
+            var name = v.GetProperty("name").GetString();
+            var input = v.GetProperty("input").GetString()!;
+            var expected = v.GetProperty("expected").GetString()!;
+            var display = _engine.Invoke("kronNormalizeForDisplay", input).AsString();
+            Assert.True(AsciiFold(display) == expected, $"the display text of vector '{name}' does not fold to its search text: {display}");
+        }
+    }
+
+    [Theory]
+    [InlineData("Hello WORLD MixedCase", "Hello WORLD MixedCase\n")]
+    [InlineData("<COLOR:red>Flour</COLOR> and <b>Oats</B>", "Flour and Oats\n")]
+    [InlineData("POST: /A\\N  B", "POST: /AB\n")]
+    [InlineData("<U+0045>ND <U+0065>nd", "END end\n")]
+    [InlineData("X ~*Bold~*", "X *Bold*\n")]
+    [InlineData("Alpha<U+200B><U+200B>\nBeta", "Alpha Beta\n")]
+    public void Display_text_keeps_the_case_the_search_text_folds(string input, string display)
+    {
+        Assert.Equal(display, _engine.Invoke("kronNormalizeForDisplay", input).AsString());
+    }
+
+    [Fact]
+    public void A_query_s_display_text_keeps_its_tildes_as_its_search_text_does()
+    {
+        Assert.Equal("\"~\" ~/X ~*\n", _engine.Invoke("kronNormalizeForDisplay", "\"~\" ~/X ~*", true).AsString());
+    }
+
+    // SEARCH_PLAN 4.6.5 (H26): the same passes, keeping where each run of the text came from: what a pass writes in place
+    // of a match maps to the whole match, a character a pass keeps to itself
+    [Fact]
+    public void kronNormalizeWithMap_is_the_search_text_and_maps_each_character_back()
+    {
+        using var vectors = LoadVectors();
+        foreach (var v in vectors.RootElement.GetProperty("normalization").EnumerateArray())
+        {
+            var name = v.GetProperty("name").GetString()!;
+            var input = v.GetProperty("input").GetString()!;
+            var (text, runs) = WithMap(input);
+            Assert.True(v.GetProperty("expected").GetString() == text, $"the mapped text of vector '{name}' is not its search text: {text}");
+            AssertRunsTile(name, input, text, runs);
+        }
+
+        // a code point to its letter, an escape to what it escapes, a tab and a marked break to a space
+        Assert.Equal("<U+0045>", Behind("<U+0045>ND NOTE", 0, 1));
+        Assert.Equal("~*", Behind("a ~*b", 2, 3));
+        Assert.Equal("\t", Behind("a\tb", 1, 2));
+        Assert.Equal("<U+200B><U+200B>\n", Behind("alpha<U+200B><U+200B>\nbeta", 5, 6));
+
+        // across passes: a decoded < that opens a tag, and a decoded backslash before an n
+        Assert.Equal("flour\n", WithMap("<U+003C>color:red>flour").Text);
+        Assert.Equal("flour", Behind("<U+003C>color:red>flour", 0, 5));
+        Assert.Equal("get: /ab\n", WithMap("GET: /a<U+005C>nb").Text);
+        Assert.Equal("GET: /a", Behind("GET: /a<U+005C>nb", 0, 7));
+        Assert.Equal("b", Behind("GET: /a<U+005C>nb", 7, 8));
+    }
+
+    [Fact]
+    public void A_character_a_pass_keeps_maps_to_itself_and_the_end_of_the_text_to_the_end_of_the_input()
+    {
+        // of two spaces the first is kept and the second goes; the newline the last pass adds came from nowhere
+        Assert.Equal(" ", Behind("a  b", 1, 2));
+        Assert.Equal("a  b", Behind("a  b", 0, 3));
+        Assert.Equal("", Behind("a  b", 3, 4));
+        // 1b writes back the character it reads before the marker
+        Assert.Equal("a", Behind("a<U+200B>\nb", 0, 1));
+        Assert.Equal("b", Behind("a<U+200B>\nb", 1, 2));
+        // a decoded character outside the BMP is two units of the text from one code point
+        Assert.Equal("<U+1F600>", Behind("x<U+1F600>y", 1, 3));
+        Assert.Equal("", WithMap("").Text.TrimEnd('\n'));
+    }
+
+    // A place inside what a pass takes out goes where it was taken out: a line's start inside a tag that runs over two lines,
+    // and one inside a run of spaces after the space the run keeps
+    [Fact]
+    public void A_place_inside_what_a_pass_takes_out_moves_to_where_it_was_taken_out()
+    {
+        _engine.SetValue("__in", "a <b\nc> flour\nd");
+        var piece = JsonDocument.Parse(_engine.Evaluate("JSON.stringify(kronCorpusPiece(__in))").AsString()).RootElement;
+        Assert.Equal("a flour\nd\n", piece.GetProperty("text").GetString());
+        Assert.Equal([0, 2, 8], piece.GetProperty("rows").EnumerateArray().Select(r => r.GetInt32()));
+
+        _engine.SetValue("__in", "a   b");
+        // "a b": the place after the space kept, inside the two that go, and before b are all before b
+        Assert.Equal("[0,2,2,2]", _engine.Evaluate("JSON.stringify(kronNormalizeRun(__in, false, [0, 2, 3, 4], false, false).bounds)").AsString());
+    }
+
+    // The shipped normaliser is the reference's on any text, not only on the vectors (the passes became one list); and the
+    // display and the mapped texts with it
+    [Fact]
+    public void The_shipped_normaliser_reads_any_text_as_the_reference_does()
+    {
+        LoadReference();
+        _engine.SetValue("__texts", RandomTexts(2000));
+        var mismatch = _engine.Evaluate("""
+            (function () {
+                for (var i = 0; i < __texts.length; i++) {
+                    var s = __texts[i];
+                    if (kronNormalizeForSearch(s) !== __reference(s)) return JSON.stringify(s);
+                }
+                return '';
+            })()
+            """).AsString();
+        Assert.True(mismatch == "", $"the shipped normaliser and the reference differ on {mismatch}");
+    }
+
+    [Fact]
+    public void Display_text_and_the_map_read_any_text_as_the_reference_does()
+    {
+        LoadReference();
+        _engine.SetValue("__texts", RandomTexts(2000));
+        var mismatch = _engine.Evaluate("""
+            (function () {
+                function fold(t) { return t.replace(/[A-Z]/g, function (c) { return c.toLowerCase(); }); }
+                for (var i = 0; i < __texts.length; i++) {
+                    var s = __texts[i], ref = __reference(s);
+                    if (fold(kronNormalizeForDisplay(s)) !== ref) return 'display ' + JSON.stringify(s);
+                    if (kronNormalizeWithMap(s).text !== ref) return 'map ' + JSON.stringify(s);
+                }
+                return '';
+            })()
+            """).AsString();
+        Assert.True(mismatch == "", $"differs from the reference: {mismatch}");
+    }
+
+    // A piece's lines are found after its line breaks while the passes keep them all, and followed through the passes from
+    // the first that does not (a marked break, a tag over two lines, a decoded line break): either way each line starts
+    // where following every line's start through every pass puts it; and the letters the fold lowered are the capitals of
+    // the display text
+    [Fact]
+    public void A_piece_s_lines_and_letters_are_where_the_passes_put_them()
+    {
+        LoadReference();
+        _engine.SetValue("__texts", RandomTexts(2000));
+        var result = _engine.Evaluate("""
+            (function () {
+                var kept = 0, moved = 0;
+                for (var i = 0; i < __texts.length; i++) {
+                    var s = __texts[i], piece = kronCorpusPiece(s), starts = [0], capitals = [];
+                    for (var at = s.indexOf('\n'); at >= 0; at = s.indexOf('\n', at + 1)) starts.push(at + 1);
+                    var followed = kronNormalizeRun(s, false, starts, false, false).bounds, display = kronNormalizeForDisplay(s);
+                    for (var c = 0; c < display.length; c++) if (display.charCodeAt(c) >= 65 && display.charCodeAt(c) <= 90) capitals.push(c);
+                    if (piece.text !== __reference(s)) return 'text ' + JSON.stringify(s);
+                    if (JSON.stringify(piece.rows) !== JSON.stringify(followed)) return 'rows ' + JSON.stringify(s);
+                    if (JSON.stringify(piece.cases) !== JSON.stringify(capitals)) return 'letters ' + JSON.stringify(s);
+                    if (piece.text.split('\n').length - 2 === starts.length - 1) kept++; else moved++;
+                }
+                return kept + ' ' + moved;
+            })()
+            """).AsString();
+        var counts = result.Split(' ');
+        Assert.True(counts.Length == 2, $"differs on {result}");
+        // both ways were taken
+        Assert.True(int.Parse(counts[0]) > 0 && int.Parse(counts[1]) > 0, $"line breaks kept in {counts[0]} texts and moved in {counts[1]}");
+    }
+
+    private void LoadReference()
+    {
+        var path = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "tools", "search-bench", "normalize.js");
+        _engine.Execute("var module = { exports: {} };\n" + File.ReadAllText(path) + "\nvar __reference = module.exports.normalizeForSearch;");
+    }
+
+    // Texts made of what the passes act on, in any order: code points (a marker, a letter, a <, a backslash, a newline, one
+    // outside the BMP, one that is no character), escapes, the marked breaks, tags in either case, literal \n escapes,
+    // spaces and tabs, CR and LF, and letters of both cases inside and outside ASCII
+    private static string[] RandomTexts(int count)
+    {
+        string[] pieces =
+        [
+            "a", "B", "z", "Q", "é", "İ", "K", " ", "  ", "\t", "\n", "\r\n", "\r", "~", "~*", "~/", "~<", "~\"",
+            "<U+200B>", "<U+200B><U+200B>", "<U+0041>", "<U+0045>", "<U+003C>", "<U+005C>", "<U+000A>", "<U+1F600>",
+            "<U+D800>", "<u+0041>", "<b>", "</b>", "<B>", "<color:red>", "<COLOR:#123456>", "</color>", "<i>",
+            "<font color=x>", "<size:3>", "<back:red>", "\\n", "\\N", "\\n  ", "-", "\"", "#", "=", "[", ">", "<", ":"
+        ];
+        var random = new Random(4636);
+        return Enumerable.Range(0, count)
+            .Select(_ => string.Concat(Enumerable.Range(0, random.Next(1, 40)).Select(_ => pieces[random.Next(pieces.Length)])))
+            .ToArray();
+    }
+
+    private static string AsciiFold(string s) => string.Concat(s.Select(c => c is >= 'A' and <= 'Z' ? (char)(c + 32) : c));
+
+    private (string Text, int[] Runs) WithMap(string input)
+    {
+        _engine.SetValue("__in", input);
+        var mapped = JsonDocument.Parse(_engine.Evaluate("JSON.stringify(kronNormalizeWithMap(__in))").AsString()).RootElement;
+        return (mapped.GetProperty("text").GetString()!, mapped.GetProperty("runs").EnumerateArray().Select(r => r.GetInt32()).ToArray());
+    }
+
+    // the input behind the text from `from` to `to`
+    private string Behind(string input, int from, int to)
+    {
+        _engine.SetValue("__in", input);
+        var range = JsonDocument.Parse(_engine.Evaluate($"JSON.stringify(kronMapBack(kronNormalizeWithMap(__in).runs, {from}, {to}))").AsString()).RootElement;
+        var start = range[0].GetInt32();
+        return input.Substring(start, range[1].GetInt32() - start);
+    }
+
+    // the runs cover the text in order from its start to its end, and what they came from goes forward through the input
+    private static void AssertRunsTile(string name, string input, string text, int[] runs)
+    {
+        Assert.True(runs.Length % 4 == 0, $"vector '{name}': runs come in fours");
+        var at = 0;
+        var inAt = 0;
+        for (var k = 0; k < runs.Length; k += 4)
+        {
+            int oS = runs[k], oE = runs[k + 1], iS = runs[k + 2], iE = runs[k + 3];
+            Assert.True(oS == at && oE > oS, $"vector '{name}': run {k / 4} is [{oS}, {oE}) after {at}");
+            Assert.True(iS >= inAt && iE >= iS && iE <= input.Length, $"vector '{name}': run {k / 4} came from [{iS}, {iE}) after {inAt}");
+            if (oE - oS == iE - iS)
+                for (var j = 0; j < oE - oS; j++)
+                    if (char.IsAsciiLetterOrDigit(input[iS + j]))
+                        Assert.True(char.ToLowerInvariant(input[iS + j]) == text[oS + j], $"vector '{name}': {text[oS + j]} at {oS + j} is not {input[iS + j]} folded");
+            at = oE;
+            inAt = iE;
+        }
+        Assert.True(at == text.Length, $"vector '{name}': the runs end at {at} of {text.Length}");
+    }
+
     [Fact]
     public void Shipped_trigram_buckets_match_every_vector()
     {
@@ -116,6 +342,25 @@ public class SearchIndexJintTests : IDisposable
             var count = (int)_engine.Evaluate("kronCandidateDocsForQuery(_ix, _q).length").AsNumber();
             Assert.Equal(3, count);
         }
+    }
+
+    // SEARCH_PLAN 4.4: tag: and status: are tags and statuses to the index too, never text to find, and a - before them
+    // is a negation; only the text beside them narrows the candidates
+    [Theory]
+    [InlineData("tag:sometag", new[] { 0, 1, 2 })]
+    [InlineData("status:failed", new[] { 0, 1, 2 })]
+    [InlineData("-tag:first", new[] { 0, 1, 2 })]
+    [InlineData("-status:passed || entirely", new[] { 0, 1, 2 })]
+    [InlineData("first tag:x", new[] { 0 })]
+    [InlineData("entirely && -status:passed", new[] { 2 })]
+    public void Shipped_candidates_never_prune_by_a_tag_or_status_qualifier(string query, int[] expectedDocs)
+    {
+        LoadSerializationVectorIndex();
+        _engine.SetValue("_q", query);
+        var arr = _engine.Evaluate("kronCandidateDocsForQuery(_ix, _q)").AsArray();
+        var actual = new List<int>();
+        for (uint i = 0; i < arr.Length; i++) actual.Add((int)arr[i].AsNumber());
+        Assert.Equal(expectedDocs, actual);
     }
 
     [Fact]

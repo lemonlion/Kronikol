@@ -55,9 +55,10 @@ public class RunBandLayoutTests : PlaywrightTestBase
         var ci = await Page.Locator(".run-ci").BoundingBoxAsync();
         Assert.True(ci!.X > summary!.X + summary.Width, "the CI zone is to the right of the summary");
         Assert.True(Math.Abs(ci.Y - summary.Y) < 1, $"the zones share a row: {summary.Y} and {ci.Y}");
+        // the filters are the bar's since plans/SEARCH_PLAN.md F2: the bar, which holds the box at its top, comes after the band
         var band = await Page.Locator(".run-band").BoundingBoxAsync();
-        var box = await Page.Locator("#filtering-box").BoundingBoxAsync();
-        Assert.True(box!.Y >= band!.Y + band.Height, "the filter box is on the row after the band");
+        var bar = await Page.Locator(".toolbar-row.report-nav").BoundingBoxAsync();
+        Assert.True(bar!.Y >= band!.Y + band.Height, "the bar is on the row after the band");
     }
 
     [Fact]
@@ -103,8 +104,9 @@ public class RunBandLayoutTests : PlaywrightTestBase
             new() { PollingInterval = 200, Timeout = 5000 });
     }
 
-    /// <summary>D5: the filter box on its own row is a card like the band, its title a label, and its export buttons
-    /// text buttons that take the hover tint, in both themes.</summary>
+    /// <summary>D5: the filter box is a card like the band, its title a label, and its export buttons text buttons that
+    /// take the hover tint, in both themes. Since plans/SEARCH_PLAN.md F2 the box opens at the top of the bar, so the card
+    /// is the bar's and the box lies on it without a ground of its own.</summary>
     [Theory]
     [InlineData("light")]
     [InlineData("dark")]
@@ -112,28 +114,35 @@ public class RunBandLayoutTests : PlaywrightTestBase
     {
         await Context.AddInitScriptAsync($"try {{ localStorage.setItem('kronikol.theme', '{theme}'); }} catch (e) {{ }}");
         await Page.GotoReportAsync(GenerateBandReport($"Band_FilterCard_{theme}.html"));
+        // the box shows once the bar's Filters opens it (plans/SEARCH_PLAN.md F3)
+        await Page.Locator(".nav-filters-toggle").ClickAsync();
         await Page.Locator("#filtering-box").WaitForAsync();
 
         var styles = await Page.EvaluateAsync<string[]>(
             """
             () => {
                 const token = (name, prop) => { const p = document.createElement('div'); p.style.setProperty(prop, `var(${name})`); document.body.appendChild(p); const v = getComputedStyle(p).getPropertyValue(prop); p.remove(); return v; };
-                const box = getComputedStyle(document.querySelector('#filtering-box')), band = getComputedStyle(document.querySelector('.run-band'));
+                const box = getComputedStyle(document.querySelector('.toolbar-row.report-nav')), band = getComputedStyle(document.querySelector('.run-band'));
+                const own = getComputedStyle(document.querySelector('#filtering-box'));
                 const title = getComputedStyle(document.querySelector('.filtering-box-header h2'));
                 const button = getComputedStyle(document.querySelector('.filtering-box-export .export-btn'));
                 return [box.backgroundColor, token('--kron-card', 'background-color'), box.borderTopColor, token('--kron-hairline', 'border-top-color'),
                         box.borderTopLeftRadius, band.borderTopLeftRadius, box.boxShadow, band.boxShadow,
-                        title.textTransform, title.color, token('--kron-muted', 'color'), button.backgroundColor, button.borderTopColor];
+                        title.textTransform, title.color, token('--kron-muted', 'color'), button.backgroundColor, button.borderTopColor,
+                        own.backgroundColor, own.borderTopWidth];
             }
             """);
         Assert.Equal(styles[1], styles[0]);
         Assert.Equal(styles[3], styles[2]);
         Assert.Equal(styles[5], styles[4]);
-        Assert.Equal(styles[7], styles[6]);
+        // on a desktop the bar runs on into its panel (5.0.0), the two one container, so it casts no shadow of its own
+        Assert.Equal("none", styles[6]);
         Assert.Equal("uppercase", styles[8]);
         Assert.Equal(styles[10], styles[9]);
         Assert.Equal("rgba(0, 0, 0, 0)", styles[11]);
         Assert.Equal("rgba(0, 0, 0, 0)", styles[12]);
+        Assert.Equal("rgba(0, 0, 0, 0)", styles[13]);
+        Assert.Equal("0px", styles[14]);
     }
 
     [Theory]

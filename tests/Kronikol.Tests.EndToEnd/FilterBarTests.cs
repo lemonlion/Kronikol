@@ -47,7 +47,6 @@ public class FilterBarTests : PlaywrightTestBase
         await TwoAnimationFramesAsync(Page);
     }
 
-    private ILocator More => Page.Locator(".filtering-box .more-filters");
     private ILocator Box => Page.Locator("#filtering-box");
     private ILocator Toggle => Page.Locator(".nav-filters-toggle");
 
@@ -74,67 +73,70 @@ public class FilterBarTests : PlaywrightTestBase
         await Page.WaitForFunctionAsync("() => document.querySelector('.report-nav').classList.contains('k-floating')", null, new() { PollingInterval = 200 });
     }
 
+    // plans/SEARCH_PLAN.md F4, F5: the box has no fold and no More filters; the bar's Filters shows and hides it whole
     [Fact]
-    public async Task More_filters_opens_and_folds_the_rows_on_a_desktop()
+    public async Task Filters_opens_and_hides_the_box_on_a_desktop()
     {
         await OpenAsync("FilterBar_Fold.html");
         var passed = Page.Locator(".status-toggle[data-status='Passed']");
-        await Expect(passed).ToBeHiddenAsync();
-        await Expect(More).ToHaveAttributeAsync("aria-expanded", "false");
+        await Expect(Box).ToBeHiddenAsync();
+        await Expect(Page.Locator(".filtering-box .more-filters")).ToHaveCountAsync(0);
+        await Expect(Toggle).ToHaveAttributeAsync("aria-expanded", "false");
+        await Expect(Toggle).ToHaveAttributeAsync("title", "Show the filters");
 
-        await More.ClickAsync();
+        await Toggle.ClickAsync();
         await Expect(passed).ToBeVisibleAsync();
-        await Expect(More).ToHaveAttributeAsync("aria-expanded", "true");
-        await Expect(More).ToHaveAttributeAsync("title", "Fold the filters away");
+        await Expect(Page.Locator(".duration-filters")).ToBeVisibleAsync();
+        await Expect(Toggle).ToHaveAttributeAsync("aria-expanded", "true");
+        await Expect(Toggle).ToHaveAttributeAsync("title", "Hide the filters");
 
-        await More.ClickAsync();
-        await Expect(passed).ToBeHiddenAsync();
-        await Expect(More).ToHaveAttributeAsync("aria-expanded", "false");
+        await Toggle.ClickAsync();
+        await Expect(Box).ToBeHiddenAsync();
+        await Expect(Toggle).ToHaveAttributeAsync("aria-expanded", "false");
     }
 
+    // F6: Filters counts the filters on, the box open or not, and Clear All takes the count away
     [Fact]
-    public async Task Folded_More_filters_counts_the_filters_on_in_its_rows()
+    public async Task Filters_counts_the_filters_on_as_they_change_and_Clear_All_empties_it()
     {
         await OpenAsync("FilterBar_Count.html", "#status=Passed&tags=smoke");
-        var count = Page.Locator(".more-filters-count");
+        // the bar's Filters; the Search tab's foot has a Filters of its own, with its own count (plans/SEARCH_PLAN.md 4.5)
+        var count = Page.Locator(".nav-filters-toggle .filters-count");
         await Expect(count).ToHaveTextAsync("2");
-        await Expect(count).ToBeVisibleAsync();
-        await Expect(More).ToHaveAttributeAsync("aria-label", "More filters, 2 on");
-        await Expect(More).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("\\bhas-on\\b"));
-        await Expect(More).ToHaveAttributeAsync("title", "2 filters here are on: show them");
+        await Expect(Toggle).ToHaveAttributeAsync("aria-label", "Filters, 2 on");
 
-        // open, the count goes; a filter set and the rows folded again, it counts that one too
-        await More.ClickAsync();
-        await Expect(count).ToBeHiddenAsync();
+        await Toggle.ClickAsync();
         await Page.Locator(".status-toggle[data-status='Failed']").ClickAsync();
-        await More.ClickAsync();
         await Expect(count).ToHaveTextAsync("3");
+        await Expect(Toggle).ToHaveAttributeAsync("aria-label", "Filters, 3 on");
 
-        // Clear All from the header: nothing is on
         await Page.Locator(".filtering-box-export .export-btn", new() { HasTextString = "Clear All" }).ClickAsync();
         await Expect(count).ToBeHiddenAsync();
-        await Expect(More).ToHaveAttributeAsync("aria-label", "More filters");
-        await Expect(More).ToHaveAttributeAsync("title", "Status, duration, happy paths, tags and dependencies");
+        await Expect(Toggle).ToHaveAttributeAsync("aria-label", "Filters");
     }
 
+    // 4.3.5: the search's help is the query builder's tips; the box keeps no help of its own
     [Fact]
-    public async Task The_search_help_opens_while_the_rows_are_folded()
+    public async Task The_search_help_is_the_builder_s_tips_and_not_in_the_box()
     {
         await OpenAsync("FilterBar_Help.html");
-        await Page.Locator(".search-help-toggle").ClickAsync();
-        await Expect(Page.Locator(".search-help-panel")).ToBeVisibleAsync();
-        await Expect(Page.Locator(".status-toggle").First).ToBeHiddenAsync();
-        await Page.Locator(".search-help-toggle").ClickAsync();
-        await Expect(Page.Locator(".search-help-panel")).ToBeHiddenAsync();
+        await Expect(Page.Locator(".filtering-box .search-help-toggle, .filtering-box .search-help-panel")).ToHaveCountAsync(0);
+
+        await Page.Locator("#search-button").ClickAsync();
+        await Page.Locator(".search-tips-toggle").ClickAsync();
+        await Expect(Page.Locator("#search-tips")).ToBeVisibleAsync();
+        await Expect(Box).ToBeHiddenAsync();
     }
 
+    // F3, F5: a phone has the bar's Filters on its line under the tabs, and no Filters button of the box's own
     [Fact]
-    public async Task A_phone_keeps_its_Filters_toggle_and_has_no_More_filters()
+    public async Task A_phone_has_the_bar_s_Filters_and_no_toggle_of_the_box_s_own()
     {
         await OpenAsync("FilterBar_Phone.html", width: 390, height: 844);
-        await Expect(More).ToBeHiddenAsync();
-        await Expect(Page.Locator(".nav-filters")).ToBeHiddenAsync();
-        await Page.Locator(".mobile-filter-toggle").ClickAsync();
+        await Expect(Page.Locator(".mobile-filter-toggle, .filtering-box .more-filters")).ToHaveCountAsync(0);
+        await Expect(Page.Locator(".nav-filters")).ToBeVisibleAsync();
+
+        await Toggle.ClickAsync();
         await Expect(Page.Locator(".status-toggle").First).ToBeVisibleAsync();
     }
 
@@ -146,8 +148,7 @@ public class FilterBarTests : PlaywrightTestBase
         await Expect(longReadout).ToHaveTextAsync("All 30 scenarios, 3 features");
         await Expect(Page.Locator(".nav-clear")).ToBeHiddenAsync();
 
-        await Page.Locator("#searchbar").FillAsync("@smoke");
-        await Page.Locator("#searchbar").DispatchEventAsync("keyup");
+        await FillSearchBar("@smoke");
         await Expect(longReadout).ToHaveTextAsync("Filtered 9 of 30 scenarios, 3 of 3 features");
         await Expect(Page.Locator(".nav-readout-short")).ToHaveTextAsync("Filtered 9 of 30");
         await Expect(Toggle).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("\\bis-active\\b"));
@@ -158,52 +159,46 @@ public class FilterBarTests : PlaywrightTestBase
         await Expect(Page.Locator(".nav-clear")).ToBeHiddenAsync();
     }
 
+    // F2, F4: the box is written at the bar's top and goes with it; opened on a floating bar, what was being read stays
+    // where it was, the focus goes to the box, and Escape closes it and gives the focus back to Filters
     [Fact]
-    public async Task Filters_shows_while_the_bar_floats_and_takes_the_box_into_it()
+    public async Task Filters_on_a_floating_bar_opens_the_box_in_it_and_Escape_gives_the_focus_back()
     {
         await OpenAsync("FilterBar_Ride.html");
-        await Expect(Toggle).ToBeHiddenAsync();
-
         await ScrollPastTheBar();
         await Expect(Toggle).ToBeVisibleAsync();
         // what is just below the bar, which opening and closing keep where it is
         const string below = "() => { const r = document.querySelector('.report-nav').getBoundingClientRect(); const e = document.elementFromPoint(r.left + r.width / 2, r.bottom + 8); return e ? Math.round(e.getBoundingClientRect().top - r.bottom) + ' ' + (e.id || e.className) : ''; }";
         var reading = await Settled(below);
+
         await Toggle.ClickAsync();
         await Expect(Page.Locator(".report-nav > #filtering-box")).ToHaveCountAsync(1);
+        await Expect(Box).ToBeVisibleAsync();
         await Expect(Toggle).ToHaveAttributeAsync("aria-expanded", "true");
-        Assert.Equal(reading, await Settled(below));
-        await Expect(Page.Locator(".report-nav")).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("\\bhas-filters\\b"));
-        await Expect(Page.Locator("#searchbar")).ToBeFocusedAsync();
+        await Expect(Box).ToBeFocusedAsync();
         await Expect(Page.Locator(".filters-close")).ToBeVisibleAsync();
 
-        // Esc puts it back above the bar, and focus on Filters
         await Page.Keyboard.PressAsync("Escape");
-        await Expect(Page.Locator(".report-nav > #filtering-box")).ToHaveCountAsync(0);
-        Assert.True(await Page.EvaluateAsync<bool>("() => !!(document.getElementById('filtering-box').compareDocumentPosition(document.querySelector('.report-nav')) & Node.DOCUMENT_POSITION_FOLLOWING)"));
+        await Expect(Box).ToBeHiddenAsync();
         await Expect(Toggle).ToBeFocusedAsync();
-        await Expect(Page.Locator(".filters-close")).ToBeHiddenAsync();
-        // the bar still floats over what was being read (the preview corrected once, which left it at rest, the box above)
         Assert.Equal(reading, await Settled(below));
-
-        // and the close does too
-        await Toggle.ClickAsync();
-        await Page.Locator(".filters-close").ClickAsync();
-        await Expect(Page.Locator(".report-nav > #filtering-box")).ToHaveCountAsync(0);
-        await Expect(Toggle).ToHaveAttributeAsync("aria-expanded", "false");
     }
 
+    // F3: Filters shows at rest too, and the box opened on a floating bar stays open as the bar comes to rest
     [Fact]
-    public async Task The_box_goes_back_when_the_bar_comes_to_rest()
+    public async Task Filters_shows_at_rest_and_the_box_stays_open_as_the_bar_comes_to_rest()
     {
         await OpenAsync("FilterBar_Rest.html");
+        await Expect(Toggle).ToBeVisibleAsync();
         await ScrollPastTheBar();
         await Toggle.ClickAsync();
-        await Expect(Page.Locator(".report-nav > #filtering-box")).ToHaveCountAsync(1);
+        await Expect(Box).ToBeVisibleAsync();
 
         await Page.EvaluateAsync("() => window.scrollTo(0, 0)");
-        await Expect(Page.Locator(".report-nav > #filtering-box")).ToHaveCountAsync(0);
-        await Expect(Toggle).ToBeHiddenAsync();
+        await Page.WaitForFunctionAsync("() => !document.querySelector('.report-nav').classList.contains('k-floating')", null, new() { PollingInterval = 200 });
+        await Expect(Box).ToBeVisibleAsync();
+        await Expect(Toggle).ToBeVisibleAsync();
+        await Expect(Toggle).ToHaveAttributeAsync("aria-expanded", "true");
     }
 
     [Fact]
@@ -213,27 +208,28 @@ public class FilterBarTests : PlaywrightTestBase
         var empty = Page.Locator(".filters-empty");
         await Expect(empty).ToBeHiddenAsync();
 
-        await Page.Locator("#searchbar").FillAsync("nothing-matches-this");
-        await Page.Locator("#searchbar").DispatchEventAsync("keyup");
+        await FillSearchBar("nothing-matches-this");
         await Expect(empty).ToBeVisibleAsync();
         await Expect(empty).ToContainTextAsync("No scenarios match the filters.");
 
+        // Clear All, and the focus goes to the search, which is the search button since the search left the box (4.2)
         await Page.Locator(".filters-empty-clear").ClickAsync();
         await Expect(empty).ToBeHiddenAsync();
         await Expect(Page.Locator("#searchbar")).ToHaveValueAsync("");
-        await Expect(Page.Locator("#searchbar")).ToBeFocusedAsync();
+        await Expect(Page.Locator("#search-button")).ToBeFocusedAsync();
     }
 
-    // A page with nothing beside its features has no report bar (here a run without durations, as the Specifications
-    // report is where no scenario recorded one), and its empty state answered the filters only through the bar, so it
-    // never showed (S14, found by the review of the wiki's 5.0.0 pages)
+    // A page with nothing beside its features (here a run without durations, as the Specifications report is where no
+    // scenario recorded one) had no report bar, and its empty state answered the filters only through the bar, so it never
+    // showed (S14, found by the review of the wiki's 5.0.0 pages); since plans/SEARCH_PLAN.md F7 it has the bar too
     [Fact]
-    public async Task On_a_page_without_the_bar_no_scenario_left_still_shows_the_empty_state()
+    public async Task On_a_page_of_features_alone_no_scenario_left_still_shows_the_empty_state()
     {
         await Page.SetViewportSizeAsync(1400, 700);
         await Page.GotoReportAsync(Generate("FilterBar_Empty_NoBar.html", durations: false));
         await Page.Locator("details.feature").First.WaitForAsync();
-        await Expect(Page.Locator(".toolbar-row.report-nav")).ToHaveCountAsync(0);
+        // since plans/SEARCH_PLAN.md F7 such a page has the bar too, with its Features tab and Filters
+        await Expect(Page.Locator(".toolbar-row.report-nav")).ToHaveCountAsync(1);
         var empty = Page.Locator(".filters-empty");
         await Expect(empty).ToBeHiddenAsync();
 
@@ -244,7 +240,7 @@ public class FilterBarTests : PlaywrightTestBase
         await Page.Locator(".filters-empty-clear").ClickAsync();
         await Expect(empty).ToBeHiddenAsync();
         await Expect(Page.Locator("#searchbar")).ToHaveValueAsync("");
-        await Expect(Page.Locator("#searchbar")).ToBeFocusedAsync();
+        await Expect(Page.Locator("#search-button")).ToBeFocusedAsync();
     }
 
     // the report reads the filters from the link before the filter bar's script starts, so a link that leaves no scenario
@@ -252,12 +248,12 @@ public class FilterBarTests : PlaywrightTestBase
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public async Task A_link_whose_filters_leave_no_scenario_opens_on_the_empty_state(bool bar)
+    public async Task A_link_whose_filters_leave_no_scenario_opens_on_the_empty_state(bool durations)
     {
         await Page.SetViewportSizeAsync(1400, 700);
-        await Page.GotoReportAsync(Generate(bar ? "FilterBar_Empty_Link.html" : "FilterBar_Empty_Link_NoBar.html", durations: bar) + "#q=nothing-matches-this");
+        await Page.GotoReportAsync(Generate(durations ? "FilterBar_Empty_Link.html" : "FilterBar_Empty_Link_NoBar.html", durations: durations) + "#q=nothing-matches-this");
         await Expect(Page.Locator("#searchbar")).ToHaveValueAsync("nothing-matches-this");
-        await Expect(Page.Locator(".toolbar-row.report-nav")).ToHaveCountAsync(bar ? 1 : 0);
+        await Expect(Page.Locator(".toolbar-row.report-nav")).ToHaveCountAsync(1);
         await Expect(Page.Locator(".filters-empty")).ToBeVisibleAsync();
         await Expect(Page.Locator(".filter-readout")).ToContainTextAsync("0 of 30 scenarios");
     }
@@ -278,7 +274,7 @@ public class FilterBarTests : PlaywrightTestBase
     public async Task Duration_and_Happy_paths_join_the_Status_line_only_when_they_fit_whole()
     {
         await OpenAsync("FilterBar_Pairs.html");
-        await More.ClickAsync();
+        await Toggle.ClickAsync();
         var row = Page.Locator(".filter-row");
         await Expect(row).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("\\bpair-fits\\b"));
         await Expect(row).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("\\btrio-fits\\b"));
@@ -308,7 +304,7 @@ public class FilterBarTests : PlaywrightTestBase
         var page = await OpenPageAsync(firefox!, new BrowserNewPageOptions { ViewportSize = new() { Width = 1400, Height = 700 } });
         await page.GotoReportAsync(Generate("FilterBar_Firefox_Status.html"));
         await page.Locator("details.feature").First.WaitForAsync();
-        await page.Locator(".filtering-box .more-filters").ClickAsync();
+        await page.Locator(".nav-filters-toggle").ClickAsync();
         await Expect(page.Locator(".filter-row")).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("\\bpair-fits\\b"));
         await TwoAnimationFramesAsync(page);
 
@@ -356,13 +352,15 @@ public class FilterBarTests : PlaywrightTestBase
         await Expect(Page.Locator(".nav-readout")).ToBeHiddenAsync();
     }
 
+    // 4.5.7: the chip that sat inside the search field went with the field; deep search says where it is on the Search
+    // tab, whose bar runs only while it reads, and the page keeps no chip
     [Fact]
-    public async Task The_deep_search_chip_sits_inside_the_search_field()
+    public async Task Deep_search_says_where_it_is_on_the_Search_tab_and_no_chip_is_left()
     {
         await OpenAsync("FilterBar_Chip.html");
-        await Page.Locator("#searchbar").FillAsync("zebra");
-        await Page.Locator("#searchbar").DispatchEventAsync("keyup");
-        await Page.WaitForFunctionAsync("() => !!document.querySelector('.kron-deep-chip')", null, new() { PollingInterval = 200 });
-        Assert.True(await Page.EvaluateAsync<bool>("() => document.querySelector('.kron-deep-chip').parentElement.classList.contains('search-field')"));
+        await FillSearchBar("zebra", toSearchTab: true);
+        await Page.WaitForFunctionAsync("() => window.__kronikolSearch.deep === 'done'", null, new() { PollingInterval = 200 });
+        await Expect(Page.Locator(".kron-deep-chip")).ToHaveCountAsync(0);
+        await Expect(Page.Locator("#panel-search .search-progress")).ToBeHiddenAsync();
     }
 }

@@ -38,8 +38,14 @@ public class NoteAppearanceScriptTests
     {
         Assert.DoesNotContain("note(?:<<\\w+>>)?", _script);
         Assert.DoesNotContain("(?:<<[^>]*>>)?", _script);
-        Assert.Equal(4, CountOf(_script, "/^note(?:<<[^>]*>>)*\\s+(left|right)/"));
+        Assert.Equal(3, CountOf(_script, "/^note(?:<<[^>]*>>)*\\s+(left|right)/"));
         Assert.Contains("/^note\\s*(?:<<[^>]*>>)*\\s+(?:left|right)\\s*$/", _script);
+        // The fourth reads the note blocks for the page and the deep search both (plans/SEARCH_PLAN.md 4.6.5):
+        // parseNoteBlocks hands its source to the search index script's kronParseNoteBlocks.
+        var search = ReportGenerator.LoadScript("report-search-index.js", verdicts: false);
+        Assert.DoesNotContain("note(?:<<\\w+>>)?", search);
+        Assert.DoesNotContain("(?:<<[^>]*>>)?", search);
+        Assert.Equal(1, CountOf(search, "/^note(?:<<[^>]*>>)*\\s+(left|right)/"));
     }
 
     /// <summary>
@@ -74,7 +80,8 @@ public class NoteAppearanceScriptTests
     {
         Assert.Contains("function setNoteWidth(container, noteIdx, mode", _script);
         Assert.DoesNotContain("setNoteFont", _script);
-        Assert.Contains("rerenderWithNoteStates(container", _script);
+        // drawn through the render queue with the other note states since SEARCH_PLAN (4.6.5)
+        Assert.Contains("return redrawNote(container, function() {", _script);
     }
 
     [Fact]
@@ -133,7 +140,7 @@ public class NoteAppearanceScriptTests
         Assert.True(idx >= 0);
         var end = _script.IndexOf("\n    }\n", idx, StringComparison.Ordinal);
         var body = _script[idx..end];
-        var redraw = body.IndexOf("rerenderWithNoteStates(owner", StringComparison.Ordinal);
+        var redraw = body.IndexOf("redrawNote(owner", StringComparison.Ordinal);
         var cleared = body.IndexOf("owner._refineNoteWidth = false;", StringComparison.Ordinal);
         var recordRead = body.IndexOf("var previous = owner._refinePrevious;", StringComparison.Ordinal);
         var recordCleared = body.IndexOf("owner._refinePrevious = null;", StringComparison.Ordinal);

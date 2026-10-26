@@ -173,7 +173,8 @@ public class TagsMarkupTests
     public void A_report_whose_only_tags_are_a_feature_s_names_tags_in_the_filter_rows_title()
     {
         var html = Generate("Tags_FeatureOnlyTitle.html", new Feature { DisplayName = "Shop", Tags = ["checkout"], Scenarios = [Run("s1", "Pay")] });
-        Assert.Contains("aria-controls=\"filter-rows\" aria-expanded=\"false\" title=\"Status, duration and tags\"", html);
+        // named in Clear All's title, which lists the rows the box has (More filters' title did until plans/SEARCH_PLAN.md F5)
+        Assert.Matches("onclick=\"clear_all_filters[(][)]\" title=\"Clear every filter: [^\"]* tags\"", html);
         Assert.Contains("<div class=\"tag-filters\">", html);
     }
 

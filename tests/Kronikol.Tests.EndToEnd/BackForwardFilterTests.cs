@@ -60,7 +60,12 @@ public class BackForwardFilterTests : BackForwardTestBase
         await OpenLongAsync("BackNav_F2.html");
         var length = await HistoryLengthAsync();
 
-        await Page.Locator("#searchbar").PressSequentiallyAsync("Scenario 07", new() { Delay = 40 });
+        // typed into the query builder, a draft the address never sees, then applied to the list on screen: the builder's
+        // own entry becomes the search's, so the search is one entry (plans/SEARCH_PLAN.md 4.3, 4.9)
+        await Page.Locator("#search-button").ClickAsync();
+        await Page.Locator("#search-input").PressSequentiallyAsync("Scenario 07", new() { Delay = 40 });
+        Assert.Equal("", await HashAsync());
+        await Page.Locator("#search-suggestions .search-option-filter").First.ClickAsync();
         Assert.Equal("#q=Scenario%2007", await HashSoonAsync("#q=Scenario%2007"));
         Assert.Equal(length + 1, await HistoryLengthAsync());
 
@@ -178,7 +183,8 @@ public class BackForwardFilterTests : BackForwardTestBase
         var filtered = await HashSoonAsync("#status=Failed&tags=area-02");
         Assert.Equal("#status=Failed&tags=area-02", filtered);
 
-        await Page.Locator(".nav-clear").ClickAsync();
+        // the box's own Clear All, the box being open (the bar's copy steps aside while it is)
+        await Page.Locator(".filtering-box-export .export-btn", new() { HasTextString = "Clear All" }).ClickAsync();
         Assert.Equal("", await HashSoonAsync(""));
 
         await BackAsync();
@@ -297,7 +303,6 @@ public class BackForwardFilterTests : BackForwardTestBase
         Assert.False(await feature.EvaluateAsync<bool>("d => d.open"));
 
         await FillSearchBar("Scenario 04.2");
-        await Page.Locator("#searchbar").PressAsync("Enter");
         await Expect(scenario).ToBeVisibleAsync();
         Assert.True(await scenario.EvaluateAsync<bool>("d => d.open"));
 

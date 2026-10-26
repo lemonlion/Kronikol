@@ -13,6 +13,7 @@ public class Stylesheets
     private static readonly Lazy<string> ReportDiagnosticsStyleSheetLazy = new(() => Load("report-diagnostics-styles.css"));
     private static readonly Lazy<string> LabsStyleSheetLazy = new(() => Load("labs-styles.css"));
     private static readonly Lazy<string> WarmUpStyleSheetLazy = new(() => Load("warm-up-styles.css"));
+    private static readonly Lazy<string> SearchStyleSheetLazy = new(() => Load("search-styles.css"));
 
     private static string Load(string fileName)
     {
@@ -49,6 +50,11 @@ public class Stylesheets
     /// <summary>The rules of the first-call warm-up's marks: the muted text in a duration badge and the shaded share of a
     /// timeline bar (plans/WARM_UP_PLAN.md R2). Carried only by a page that draws a mark.</summary>
     internal static string WarmUpStyleSheet => WarmUpStyleSheetLazy.Value;
+
+    /// <summary>The rules of the search (plans/SEARCH_PLAN.md 4.2 to 4.6): the button on the title line, the query
+    /// builder, the Search tab and the marks of a match, in the report's tokens only. Carried by every page with the
+    /// search.</summary>
+    internal static string SearchStyleSheet => SearchStyleSheetLazy.Value;
 
     /// <summary>The violet theme, the default <see cref="ReportConfigurationOptions.HtmlSpecificationsCustomStyleSheet"/>
     /// (5.0.0, plans/OPTION_C_PLAN.md S13): it sets the report's colour tokens again, light and dark, in the blocks the
@@ -121,10 +127,7 @@ public class Stylesheets
                     }
                 }
 
-                .feature, .features-table-view, .filtering-box { background-color: var(--violet-card); }
-                @media (max-width: 768px) {
-                    .filter-search { background: var(--violet-card); }
-                }
+                .feature, .features-table-view, .filtering-box, .report-nav > .filtering-box { background-color: var(--violet-card); }
                 .sub-steps { border-left-color: var(--violet-rail); }
                 .attachment-image { border-color: var(--violet-rail); }
                 .attachment-image-name { color: var(--kron-selected-ink); }

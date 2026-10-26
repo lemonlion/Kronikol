@@ -82,8 +82,8 @@ public class MobileResponsiveTests : PlaywrightTestBase
         await Page.GotoReportAsync(GenerateReport("MobileFilters.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
-        // Expand the collapsed filter section first
-        await Page.Locator(".mobile-filter-toggle").ClickAsync();
+        // the box opens with the bar's Filters (plans/SEARCH_PLAN.md F3), which a phone has on its line under the tabs
+        await Page.Locator(".nav-filters-toggle").ClickAsync();
 
         var filterRow = Page.Locator(".filter-row");
         await filterRow.WaitForAsync(new() { Timeout = 5000 });
@@ -111,6 +111,7 @@ public class MobileResponsiveTests : PlaywrightTestBase
     public async Task Filtering_box_takes_full_width_on_mobile()
     {
         await Page.GotoReportAsync(GenerateReport("MobileFilterBox.html"));
+        await Page.Locator(".nav-filters-toggle").ClickAsync();
         var filterBox = Page.Locator(".filtering-box");
         await filterBox.WaitForAsync(new() { Timeout = 5000 });
 
@@ -326,7 +327,7 @@ public class MobileResponsiveTests : PlaywrightTestBase
         Assert.True(paddingPx >= 10, $"Menu item padding too small for touch: {padding}");
     }
 
-    // ── #2 Collapsible filter section ──
+    // ── #2 The filter box, hidden until the bar's Filters opens it (plans/SEARCH_PLAN.md F3, F5) ──
 
     [Fact]
     public async Task Filters_collapsed_by_default_on_mobile()
@@ -334,14 +335,9 @@ public class MobileResponsiveTests : PlaywrightTestBase
         await Page.GotoReportAsync(GenerateReport("MobileFiltersCollapse1.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
-        // The .mobile-filter-toggle should be visible
-        var toggle = Page.Locator(".mobile-filter-toggle");
-        await Expect(toggle).ToBeVisibleAsync();
-
-        // The .filters div should be hidden
-        var filtersVisible = await Page.EvaluateAsync<bool>(
-            "() => { var f = document.querySelector('.filters'); return f && getComputedStyle(f).display !== 'none'; }");
-        Assert.False(filtersVisible, "Filters should be collapsed by default on mobile");
+        await Expect(Page.Locator(".nav-filters-toggle")).ToBeVisibleAsync();
+        await Expect(Page.Locator(".mobile-filter-toggle")).ToHaveCountAsync(0);
+        await Expect(Page.Locator("#filtering-box")).ToBeHiddenAsync();
     }
 
     [Fact]
@@ -349,33 +345,41 @@ public class MobileResponsiveTests : PlaywrightTestBase
     {
         await Page.GotoReportAsync(GenerateReport("MobileFiltersCollapse2.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
+        var toggle = Page.Locator(".nav-filters-toggle");
 
-        var toggle = Page.Locator(".mobile-filter-toggle");
-
-        // Click to expand
         await toggle.ClickAsync();
-        var expanded = await Page.EvaluateAsync<bool>(
-            "() => { var f = document.querySelector('.filters'); return f && getComputedStyle(f).display !== 'none'; }");
-        Assert.True(expanded, "Filters should be visible after toggling open");
+        await Expect(Page.Locator("#filtering-box")).ToBeVisibleAsync();
+        await Expect(Page.Locator(".status-toggle").First).ToBeVisibleAsync();
 
-        // Click to collapse
         await toggle.ClickAsync();
-        var collapsed = await Page.EvaluateAsync<bool>(
-            "() => { var f = document.querySelector('.filters'); return f && getComputedStyle(f).display === 'none'; }");
-        Assert.True(collapsed, "Filters should be hidden after toggling closed");
+        await Expect(Page.Locator("#filtering-box")).ToBeHiddenAsync();
     }
 
-    // ── #7 Sticky search bar ──
+    // ── #7 The search in reach: the title line's button, and down the page the floating one (B15) ──
 
     [Fact]
-    public async Task Search_bar_is_sticky_on_mobile()
+    public async Task On_a_phone_the_way_to_search_stays_in_reach_down_the_page()
     {
         await Page.GotoReportAsync(GenerateReport("MobileStickySearch.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
+        await Expect(Page.Locator("#search-button")).ToBeVisibleAsync();
+        await Expect(Page.Locator("#search-fab")).ToBeHiddenAsync();
 
-        var position = await Page.EvaluateAsync<string>(
-            "() => getComputedStyle(document.querySelector('.filter-search')).position");
-        Assert.Equal("sticky", position);
+        // the features open so the page runs far past the title line
+        await Page.EvaluateAsync("() => document.querySelectorAll('details').forEach(d => d.open = true)");
+        await Page.EvaluateAsync("() => window.scrollTo(0, Math.min(3000, document.documentElement.scrollHeight - window.innerHeight))");
+        await TwoAnimationFramesAsync(Page);
+        Assert.True(await Page.EvaluateAsync<double>("() => window.scrollY") > 600, "the page is too short to leave the title line behind");
+
+        var fab = Page.Locator("#search-fab");
+        await Expect(fab).ToBeVisibleAsync();
+        var box = (await fab.BoundingBoxAsync())!;
+        var size = Page.ViewportSize!;
+        Assert.True(box.Y >= 0 && box.Y + box.Height <= size.Height && box.X >= 0 && box.X + box.Width <= size.Width, "the floating search button is outside the window");
+
+        await fab.ClickAsync();
+        await Page.WaitForFunctionAsync("() => document.getElementById('search-dialog').open", null, new() { PollingInterval = 200 });
+        await Expect(Page.Locator(".search-foot-filters")).ToBeVisibleAsync();
     }
 
     // ── #10 Back-to-top FAB ──
@@ -558,8 +562,8 @@ public class MobileResponsiveTests : PlaywrightTestBase
         await Page.GotoReportAsync(GenerateReport("MobileDepTruncate.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
-        // Expand filters first
-        var toggle = Page.Locator(".mobile-filter-toggle");
+        // the box opens with the bar's Filters
+        var toggle = Page.Locator(".nav-filters-toggle");
         await toggle.ClickAsync();
 
         var overflow = await Page.EvaluateAsync<string>(
@@ -668,7 +672,7 @@ public class MobileResponsiveTests : PlaywrightTestBase
     public async Task The_filter_controls_are_touch_sized_on_a_phone(int width)
     {
         await OpenAtAsync(width, GenerateReport($"MobileTouchSized{width}.html"));
-        await Page.Locator(".mobile-filter-toggle").ClickAsync();
+        // the bar's Filters opens the box at every width (plans/SEARCH_PLAN.md F3, F5)
         await OpenFilterRowsAsync();
         // a chip that is set shows its row's Clear
         await Page.Locator(".filtering-box .tag-toggle").First.ClickAsync();
@@ -701,17 +705,19 @@ public class MobileResponsiveTests : PlaywrightTestBase
         AllAsWide(measured, "the report's sheet", width);
     }
 
+    // a page of features alone has the bar with its Features tab since plans/SEARCH_PLAN.md F7, where 5.9.1 measured the
+    // toolbar row it had in its place: its settings are the report's sheet behind the gear, as wide as on any other page
     [Theory]
     [InlineData(375)]
     [InlineData(600)]
-    public async Task A_page_without_tabs_gives_its_settings_the_whole_line(int width)
+    public async Task A_page_of_features_alone_gives_its_settings_the_whole_sheet(int width)
     {
         await OpenAtAsync(width, Tabless($"MobileTablessSheet{width}.html"));
-        Assert.Equal(0, await Page.Locator(".report-tab").CountAsync());
-        var row = Page.Locator(".toolbar-row").First;
-        var line = await MeasureAsync(row, ":scope > .toolbar-right");
-        AllAsWide(line, "the toolbar row", width);
-        var measured = await MeasureAsync(Page.Locator("#display-settings"), ":scope > *, .note-format-select, .note-width-select");
+        Assert.Equal(["features"], await Page.Locator(".report-tabs > .report-tab:not([hidden])").EvaluateAllAsync<string[]>("ts => ts.map(t => t.dataset.tab)"));
+        await Page.Locator(".tools-gear").ClickAsync();
+        var sheet = Page.Locator(".features-tools .toolbar-right");
+        await Expect(sheet).ToBeVisibleAsync();
+        var measured = await MeasureAsync(sheet, ":scope > *, .note-format-select, .note-width-select");
         Assert.Contains(measured.List, p => p.Name == "note-format-select");
         AllAsWide(measured, "the page's settings", width);
     }

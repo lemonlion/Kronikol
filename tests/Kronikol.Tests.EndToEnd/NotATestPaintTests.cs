@@ -159,7 +159,7 @@ public class NotATestPaintTests : PlaywrightTestBase
         ]);
         var failed = Page.Locator(".status-toggle[data-status='Failed']").First;
         var passed = Page.Locator(".status-toggle[data-status='Passed']").First;
-        await Page.Locator(".more-filters").ClickAsync();
+        await OpenFilterRowsAsync();
         await Expect(failed).ToBeVisibleAsync();
 
         await failed.ClickAsync();
@@ -231,7 +231,7 @@ public class NotATestPaintTests : PlaywrightTestBase
         // P50 of the tests' 500 ms, 1 s and 2 s is 1 s: the fold's 13 minutes made it 2 s, and showed the fold.
         var p50 = Page.Locator("button.percentile-btn", new() { HasTextString = "P50" });
         await Expect(p50).ToHaveAttributeAsync("data-threshold-ms", "1000");
-        await Page.Locator(".more-filters").ClickAsync();
+        await OpenFilterRowsAsync();
         await p50.ClickAsync();
         await Page.WaitForFunctionAsync("() => document.querySelector('.filter-readout').classList.contains('is-filtered')", null, new() { PollingInterval = 200 });
 
@@ -243,6 +243,8 @@ public class NotATestPaintTests : PlaywrightTestBase
     {
         await OpenAsync("NotATest_Csv.html");
 
+        // the export is the box's, which the bar's Filters opens (plans/SEARCH_PLAN.md F3)
+        await OpenFilterRowsAsync();
         var download = await Page.RunAndWaitForDownloadAsync(async () =>
             await Page.Locator("button.export-btn", new() { HasTextString = "Export Filtered CSV" }).ClickAsync());
         var path = Path.Combine(TempDir, $"not-a-test_{Guid.NewGuid():N}.csv");

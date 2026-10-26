@@ -270,6 +270,28 @@ public class NoteYamlToggleTests : DiagramNotePlaywrightBase
         Assert.Contains("query: |-", text);
     }
 
+    /// <summary>
+    /// SEARCH_PLAN B13: a folded payload shows its first words, cut to one line, and while the note showed YAML they were
+    /// cut from its JSON (<c>getNotePreview</c> read the source's lines).
+    /// </summary>
+    [Fact]
+    public async Task A_collapsed_YAML_note_previews_its_YAML()
+    {
+        await Page.GotoReportAsync(ReportTestHelper.GenerateReportWithJsonYamlNotes(TempDir, OutputDir, "YamlToggle_CollapsedPreview.html",
+            Kronikol.Reports.NotePayloadFormat.Yaml));
+        await Page.Locator("details.feature").First.WaitForAsync();
+        await ExpandFirstScenarioWithDiagram();
+        await WaitForDiagramSvg();
+        await WaitForNoteElements();
+        Assert.Contains("query: |-", await GetNormalizedSvgText());
+
+        await ClickNoteButton("[data-note-btn='minus']");
+
+        var lines = await GetPaintedSvgLines();
+        Assert.Contains(lines, l => l.StartsWith("id: 9007199254740993", StringComparison.Ordinal));
+        Assert.DoesNotContain(lines, l => l.Contains("\"id\"", StringComparison.Ordinal));
+    }
+
     [Fact]
     public async Task Yaml_state_survives_header_hide_toggle()
     {

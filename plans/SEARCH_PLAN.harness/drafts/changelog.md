@@ -36,7 +36,7 @@ opens it. No option's default changes; what a report shows when it opens does, w
   they were; the address keeps the match (`hit=`), so Forward, a reload or a shared link go back to it.
 - **New forms in the query**: `tag:name` (as `@name`), `status:failed` (as `$failed`), `feature:text` (the scenarios
   whose feature's name holds it), and `-` before any qualifier to exclude it (`-tag:slow`, `-status:passed`,
-  `-dep:payment`). Every documented query means what it meant, but `$failed` (Fixed).
+  `-dep:payment`). Every documented query means what it meant.
 - Two theme tokens, `--kron-mark` and `--kron-mark-edge`, the colours of a marked match, which a custom theme or
   `CustomCss` can set.
 - The address keeps the Search tab, what it shows, where it matched, its sort and page, and the match a result went to:
@@ -66,8 +66,6 @@ opens it. No option's default changes; what a report shows when it opens does, w
   and deep search the rest.
 - The instant search never read a call's path while internal-flow tracking was on, which is the default, and read a long
   path only to its first 100 characters. `data-search`, `data-row-search` and the search index of such reports change.
-- `$failed` missed a scenario skipped after a failure, which the Failed button shows; `$status`, `status:` and the Status
-  facet now count it as the Status buttons do.
 - Emptying the search left the outline rows it had marked, and the row it had selected.
 - `/` swallowed the key on an exported page, and put the focus behind an open lightbox.
 - Back and Forward could return to an arrow of another diagram once a diagram above it had been drawn.
@@ -76,6 +74,10 @@ opens it. No option's default changes; what a report shows when it opens does, w
 - On a phone, the search scrolled away with the filter box.
 - WebKit drew a long note's scroll box outside its card while the diagram was zoomed or shrunk to fit.
 - `NotePayloadFormat`'s summary called JSON the default; the default has been YAML since 4.0.0.
+- On a large report, a tab change, a search and a filter change were slower than they need be: the filter controls were
+  looked for across the whole page, a dozen times a change, and a tab change laid the page out again for each part
+  that measures itself. On a report of 2,000 scenarios a tab change from the Features tab went from about {140} ms to
+  about {85}, and Enter to its results lost about {100} ms.
 
 ### Tests
 

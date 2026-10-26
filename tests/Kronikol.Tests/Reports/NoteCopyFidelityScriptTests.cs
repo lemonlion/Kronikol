@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Kronikol.PlantUml;
 using Kronikol.Reports;
 
@@ -78,14 +79,50 @@ public class NoteCopyFidelityScriptTests
         // worker source. A helper left off the list does not exist inside the worker, the first
         // normalization throws, and deep search simply never returns — no error, just a timeout.
         // That is exactly what happened when rule 1b landed.
+        // Since plans/SEARCH_PLAN.md 4.6.3 rule 1b is a pass of kronNormalizerPasses, the one list every normaliser runs.
         var search = LoadEmbedded("report-search-index.js");
-        var roster = search[search.IndexOf("var fns = [", StringComparison.Ordinal)..];
-        roster = roster[..roster.IndexOf("];", StringComparison.Ordinal)];
+        var roster = Roster(search);
 
-        Assert.Contains("kronRejoinMarkedBreaks", roster);
-        Assert.Contains("kronEndsWithOwnMarker", roster);
-        // And the markers are literals inside those functions: a module-scope var would not travel.
+        Assert.Contains("kronNormalizerPasses", roster);
+        var passes = Regex.Match(search, @"^function kronNormalizerPasses\(.*?^\}", RegexOptions.Singleline | RegexOptions.Multiline).Value;
+        Assert.Contains("<U\\+200B>(?:<U\\+200B>)?", passes);
+        // And the markers are literals inside that function: a module-scope var would not travel.
         Assert.DoesNotContain("var KRON_JOIN_MARKER", search);
+    }
+
+    [Fact]
+    public void The_worker_roster_holds_the_new_functions()
+    {
+        // plans/SEARCH_PLAN.md 4.6.2 to 4.6.5: the pieces of a scenario's text, the kinds a match hit, the lines asked
+        // for and the places they name are worked out in the worker, by pure functions it can only hold if listed
+        var roster = Roster(LoadEmbedded("report-search-index.js"));
+        foreach (var name in new[]
+                 {
+                     "kronNormalizerPasses", "kronNormalizeRun", "kronNormalizeForDisplay", "kronNormalizeWithMap", "kronMapBack",
+                     "kronParseNoteBlocks", "kronDiagramStatements", "kronPositiveTerms", "kronCorpusPiece", "kronItemKinds",
+                     "kronLineAround", "kronItemSnippets"
+                 })
+            Assert.Contains(name, roster);
+    }
+
+    [Fact]
+    public void The_page_and_the_worker_read_note_blocks_by_one_rule()
+    {
+        // A snippet names a note by its index in the original source, which the note menu reads too (_noteIndices): the
+        // page's parseNoteBlocks hands the source to the worker's rule, so the two cannot count differently.
+        var search = LoadEmbedded("report-search-index.js");
+        Assert.Contains("function kronParseNoteBlocks(source, lines) {", search);
+        Assert.Contains(@"/^note(?:<<[^>]*>>)*\s+(left|right)/", search);
+        var parse = Regex.Match(_notes, @"function parseNoteBlocks\(source\) \{.*?\n    \}", RegexOptions.Singleline).Value;
+        Assert.Contains("return kronParseNoteBlocks(source);", parse);
+        Assert.DoesNotContain("(left|right)", parse);
+    }
+
+    private static string[] Roster(string search)
+    {
+        var list = search[(search.IndexOf("var fns = [", StringComparison.Ordinal) + "var fns = [".Length)..];
+        list = list[..list.IndexOf("];", StringComparison.Ordinal)];
+        return Regex.Matches(list, @"\b\w+\b").Select(m => m.Value).ToArray();
     }
 
     private static string LoadEmbedded(string name)

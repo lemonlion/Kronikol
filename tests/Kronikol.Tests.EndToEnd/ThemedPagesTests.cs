@@ -123,6 +123,7 @@ public class ThemedPagesTests : PlaywrightTestBase
         await Page.Mouse.MoveAsync(0, 0);
         await Expect(Page.Locator("body")).ToHaveCSSAsync("background-color", ground);
         await Expect(Page.Locator("details.feature").First).ToHaveCSSAsync("background-color", card);
+        // the box sits at the bar's top since plans/SEARCH_PLAN.md F2, and keeps its violet there
         await Expect(Page.Locator(".filtering-box").First).ToHaveCSSAsync("background-color", card);
         await Expect(show).ToHaveCSSAsync("background-color", chosen);
         await Expect(show).ToHaveCSSAsync("color", White);
@@ -148,24 +149,26 @@ public class ThemedPagesTests : PlaywrightTestBase
         await Expect(chosen).ToHaveCSSAsync("color", White);
     }
 
-    /// <summary>The theme sets the report's selected tokens, so a control 4.x's rules never named, More filters open, is
-    /// violet too. (A report tab hovered takes its hover token: ToolbarStylingTests' header hovers.)</summary>
+    /// <summary>The theme sets the report's selected tokens, so a control 4.x's rules never named, the bar's Filters open
+    /// (More filters until plans/SEARCH_PLAN.md F5), is violet too. (A report tab hovered takes its hover token:
+    /// ToolbarStylingTests' header hovers.)</summary>
     [Fact]
     public async Task The_violet_reaches_the_controls_its_4x_rules_never_named()
     {
         await OpenVioletRunReportAsync("ThemedReach.html");
 
         await OpenFilterRowsAsync();
-        var more = Page.Locator(".more-filters").First;
-        await Expect(more).ToHaveAttributeAsync("aria-expanded", "true");
+        var filters = Page.Locator(".nav-filters-toggle").First;
+        await Expect(filters).ToHaveAttributeAsync("aria-expanded", "true");
         await Page.Mouse.MoveAsync(0, 0);
-        await Expect(more).ToHaveCSSAsync("background-color", "rgb(196, 181, 253)");
-        await Expect(more).ToHaveCSSAsync("color", "rgb(91, 33, 182)");
+        await Expect(filters).ToHaveCSSAsync("background-color", "rgb(196, 181, 253)");
+        await Expect(filters).ToHaveCSSAsync("color", "rgb(91, 33, 182)");
     }
 
-    /// <summary>The search help in the default theme and the violet, light and dark: its panel on the strip under the
-    /// page's ink and its code in chips, each readable, where the default theme drew a light panel under the dark theme's
-    /// light ink and the violet a dark panel under the light theme's dark ink.</summary>
+    /// <summary>The search help in the default theme and the violet, light and dark: its text on its ground in the page's
+    /// ink and its code in chips, each readable, where the default theme drew a light panel under the dark theme's light ink
+    /// and the violet a dark panel under the light theme's dark ink. Since plans/SEARCH_PLAN.md 4.3.5 the help is the query
+    /// builder's tips, on the builder's card.</summary>
     [Theory]
     [InlineData(false, "light")]
     [InlineData(false, "dark")]
@@ -178,14 +181,15 @@ public class ThemedPagesTests : PlaywrightTestBase
             stylesheet: violet ? Stylesheets.VioletThemeStyleSheet : null));
         await Page.Locator("details.feature").First.WaitForAsync();
 
-        await Page.Locator(".search-help-toggle").First.ClickAsync();
-        var panel = Page.Locator(".search-help-panel").First;
+        await Page.Locator("#search-button").ClickAsync();
+        await Page.Locator(".search-tips-toggle").ClickAsync();
+        var panel = Page.Locator("#search-tips");
         await Expect(panel).ToBeVisibleAsync();
         var r = await panel.EvaluateAsync<string[]>($$"""
             panel => {
                 {{Token}}
-                const code = panel.querySelector('.search-help-table code');
-                return [getComputedStyle(panel).backgroundColor, tok('--kron-strip'), getComputedStyle(panel).color, tok('--kron-ink'),
+                const card = panel.closest('.search-panel'), cell = panel.querySelector('.search-tips-table td'), code = panel.querySelector('.search-tips-table code');
+                return [getComputedStyle(card).backgroundColor, tok('--kron-card'), getComputedStyle(cell).color, tok('--kron-ink'),
                         getComputedStyle(code).backgroundColor, tok('--kron-code-bg'), getComputedStyle(code).color];
             }
             """);

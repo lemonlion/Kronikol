@@ -6,9 +6,10 @@
 // view, filters and layer, then its scroll position and the control that had the focus. What only adjusts the place
 // (opening a section, the sort, the display settings) adds none, and Back does not undo it.
 //
-// The address is the place: #[<anchor>&][tab=<key>&][view=<view>&]<the filters>, each key left out when reading the
-// address without it gives the same place, so the place the page opens on is the bare file name and #sid-<id> stays
-// #sid-<id>. The entry keeps for itself what an address should not carry: the scroll position, the focus and an open
+// The address is the place: #[<anchor>&][tab=<key>&][view=<view>&][the Search tab's type=, in=, s=, o=, p=&][hit=<match>&]
+// <the filters>, each key left out when reading the address without it gives the same place, so the place the page opens
+// on is the bare file name and #sid-<id> stays #sid-<id>. The Search tab's keys and hit= are GitHub's names for a results
+// page's type, place, sort, order and page, and the match a result's line leads to (plans/SEARCH_PLAN.md 4.9). The entry keeps for itself what an address should not carry: the scroll position, the focus and an open
 // layer, as one object under history.state.kronikol. The script names no tab: the tabs, the views and the place the page
 // opens on are read from the page.
 (function () {
@@ -46,18 +47,33 @@
 
     function decode(v) { try { return decodeURIComponent(v); } catch (e) { return v; } }
     // an address's parts: the anchor (always first), tab=, view=, and the filters as they are written
+    var SEARCH_KEYS = ['type', 'in', 's', 'o', 'p'];
     function read(hash) {
         var segments = hash ? hash.split('&') : [], anchor = segments.length && url_anchor_of(segments[0]) ? segments[0] : null;
-        var tab = null, view = null, filters = [];
+        var tab = null, view = null, filters = [], search = {}, hit = null;
         for (var i = anchor ? 1 : 0; i < segments.length; i++) {
             var s = segments[i];
             if (!s) continue;
-            if (s.indexOf('tab=') === 0) tab = decode(s.substring(4));
-            else if (s.indexOf('view=') === 0) view = decode(s.substring(5));
+            var eq = s.indexOf('='), k = eq > 0 ? s.substring(0, eq) : null;
+            if (k === 'tab') tab = decode(s.substring(4));
+            else if (k === 'view') view = decode(s.substring(5));
+            else if (k === 'hit') hit = decode(s.substring(4));
+            else if (k && SEARCH_KEYS.indexOf(k) >= 0) search[k] = decode(s.substring(eq + 1));
             // a filter is a key and its value; a bare word (#top, a diagram link's #iflow-<id>) is no part of the place
-            else if (s.indexOf('=') > 0) filters.push(s);
+            else if (eq > 0) filters.push(s);
         }
-        return { anchor: anchor, tab: tab, view: view, filters: filters.join('&') };
+        return { anchor: anchor, tab: tab, view: view, filters: filters.join('&'), search: search, hit: hit };
+    }
+    // the Search tab shows only while a search is applied: tab=search with no q= is the Features tab (4.5.1)
+    function hasQuery(filters) { return /(^|&)q=[^&]/.test(filters || ''); }
+    function searchKeysOf(search) {
+        var out = {};
+        SEARCH_KEYS.forEach(function (k) { if (search && search[k]) out[k] = String(search[k]); });
+        return out;
+    }
+    function sameSearch(a, b) {
+        a = searchKeysOf(a); b = searchKeysOf(b);
+        return SEARCH_KEYS.every(function (k) { return (a[k] || '') === (b[k] || ''); });
     }
     function onCards(place) {
         var cards = cardsTab();
@@ -66,10 +82,13 @@
     // The place an address names. The tab is tab= where it names a tab of this page, else the cards' tab for an address
     // that names a scenario, else the tab the page opens on; the view likewise.
     function placeOf(a) {
-        var cards = cardsTab(), place = { tab: null, view: null, anchor: a.anchor };
-        if (tabList()) place.tab = a.tab && tabButton(a.tab) ? a.tab : a.anchor && cards ? cards : startTab();
+        var cards = cardsTab(), place = { tab: null, view: null, anchor: a.anchor, search: null, hit: null };
+        var tab = a.tab === 'search' && !hasQuery(a.filters) ? null : a.tab;
+        if (tabList()) place.tab = tab && tabButton(tab) ? tab : a.anchor && cards ? cards : startTab();
+        if (place.tab === 'search') place.search = searchKeysOf(a.search);
         if (viewSwitch()) place.view = a.view === 'full' || a.view === 'summary' ? a.view : a.anchor ? 'full' : startView();
         if (!onCards(place)) place.anchor = null;
+        if (place.anchor && a.hit) place.hit = a.hit;
         return place;
     }
     // The address of a place: a key that says what reading the address without it would give is left out. The anchor
@@ -79,11 +98,24 @@
         if (anchor) parts.push(anchor);
         if (tabList() && place.tab && place.tab !== (anchor && cards ? cards : startTab())) parts.push('tab=' + encodeURIComponent(place.tab));
         if (viewSwitch() && place.view && place.view !== (anchor ? 'full' : startView())) parts.push('view=' + place.view);
+        if (place.tab === 'search' && place.search) {
+            var keys = searchKeysOf(place.search);
+            SEARCH_KEYS.forEach(function (k) { if (keys[k]) parts.push(k + '=' + encodeURIComponent(keys[k])); });
+        }
+        if (anchor && place.hit) parts.push('hit=' + encodeURIComponent(place.hit));
         if (filters) parts.push(filters);
         return parts.join('&');
     }
     function filtersNow() { return typeof url_hash_filters === 'function' ? url_hash_filters().join('&') : ''; }
-    function placeNow() { return { tab: selectedTab(), view: selectedView(), anchor: url_anchor_of(hashNow()) }; }
+    // the Search tab's own keys come from its script, the match from the address
+    function searchNow() {
+        var r = window.kronikol_search_results;
+        return r && r.state ? searchKeysOf(r.state()) : {};
+    }
+    function placeNow() {
+        var tab = selectedTab(), a = read(hashNow());
+        return { tab: tab, view: selectedView(), anchor: url_anchor_of(hashNow()), search: tab === 'search' ? searchNow() : null, hit: a.anchor ? a.hit : null };
+    }
     function placeKey(place) { return place.tab === cardsTab() || !place.tab ? (place.tab || '') + '/' + (place.view || '') : place.tab; }
 
     // ---- elements by address (an id, else a stable id, a timeline row or a link's target, with its index) ----
@@ -91,6 +123,10 @@
     function esc(v) { return window.CSS && CSS.escape ? CSS.escape(v) : String(v).replace(/["\\]/g, '\\$&'); }
     function address(el) {
         if (!el || el.nodeType !== 1 || el === doc.body || el === root) return null;
+        // Inside a drawn diagram the engine's ids (msg5, part2-head) are the same in every diagram, so the ith #part2-head
+        // of the page was another diagram's once one was drawn above it, and Back landed there (SEARCH_PLAN B10): the
+        // diagram's own box, or its part, is the address, its top kept where it stood against the bar
+        if (el.closest && el.closest('[data-diagram-type] svg')) return null;
         var sel = null;
         if (el.id) sel = '#' + esc(el.id);
         else if (el.hasAttribute('data-stable-id')) return { sid: el.getAttribute('data-stable-id') };
@@ -440,8 +476,16 @@
 
     // ---- arriving: one way for a click, a Back or Forward, a fragment typed into the address bar, and the load ----
 
-    var arrivals = 0;
-    function arrived() { root.setAttribute('data-kron-nav', String(++arrivals)); }
+    var arrivals = 0, afterArrival = [], arriving = 0;
+    // what waits for the arrival under way to finish, its focus and status line put on the page: the search's own focus
+    // and words go after these, which would otherwise take the focus back and empty the status line (SEARCH_PLAN 4.6.5)
+    function arrived() {
+        if (arriving > 0) arriving--;
+        root.setAttribute('data-kron-nav', String(++arrivals));
+        var waiting = afterArrival;
+        afterArrival = [];
+        waiting.forEach(function (fn) { try { fn(); } catch (e) { } });
+    }
     // A tab that was pressed to leave a place hands the focus to the tab now selected in its list: the focus stays on
     // the selected tab, as the APG's tabs pattern has it
     function selectedOf(el) {
@@ -458,6 +502,9 @@
     // o.entry is the entry arrived at, with what it saved
     function arrive(o) {
         stopSettling();
+        // the way to a match stops on any arrival: Back, Forward, a link followed (plans/SEARCH_PLAN.md 4.6.5)
+        if (window.kronikol_hit && window.kronikol_hit.stop) window.kronikol_hit.stop();
+        arriving++;
         if (typeof drop_filtered_out_note === 'function') drop_filtered_out_note();
         var a = read(hashNow()), from = o.from || { tab: selectedTab(), view: selectedView(), anchor: null };
         var to = o.to || placeOf(a), entry = o.entry || null, change = o.change || {}, going = o.how === 'go';
@@ -475,17 +522,22 @@
             return;
         }
 
-        // 2. the tab and the view
-        if (to.tab && to.tab !== selectedTab() && typeof window.kronikol_activate_tab === 'function') window.kronikol_activate_tab(to.tab);
-        if (to.view && to.view !== selectedView() && typeof window.kronikol_set_features_view === 'function') window.kronikol_set_features_view(to.view);
-
-        // 3. the filters, exactly as the address has them, where they differ from the page's
+        // 2. the tab and the view, and 3. the filters, exactly as the address has them, where they differ from the page's;
+        // for the Search tab the filters first, since it shows only once its query is applied (plans/SEARCH_PLAN.md 4.9:
+        // the tab first would show it hidden and empty)
         var filtersChanged = false;
-        if (!going && a.filters !== filtersNow() && typeof apply_url_hash === 'function') {
+        function putFilters() {
+            if (going || a.filters === filtersNow() || typeof apply_url_hash !== 'function') return;
             applying++;
             try { apply_url_hash(a.filters); } catch (e) { } finally { applying--; }
             filtersChanged = true;
         }
+        if (to.tab === 'search') putFilters();
+        if (to.tab && to.tab !== selectedTab() && typeof window.kronikol_activate_tab === 'function') window.kronikol_activate_tab(to.tab);
+        if (to.view && to.view !== selectedView() && typeof window.kronikol_set_features_view === 'function') window.kronikol_set_features_view(to.view);
+        if (to.tab !== 'search') putFilters();
+        if (to.tab === 'search' && window.kronikol_search_results && window.kronikol_search_results.show)
+            window.kronikol_search_results.show(to.search || {}, o.how);
 
         // 4. the scroll position: where the reader was, else what the arrival is for
         var shown = null, finish = function () {
@@ -510,6 +562,9 @@
             if (to.anchor && typeof mark_failure === 'function') { var s = scenarioOf(to.anchor); if (s) mark_failure(s); }
             here = hashNow();
             arrived();
+            // 7. a match the address names (hit=): the rest of the way to it, after this arrival's own focus and status
+            // line, which would otherwise take the focus back and empty the line (SEARCH_PLAN 4.6.5)
+            if (to.anchor && to.hit && window.kronikol_hit && window.kronikol_hit.follow) window.kronikol_hit.follow(scenarioOf(to.anchor), to.hit, o.how);
         };
         if (!going && saved && saved.scroll) {
             // what the address's scenario opened is open again before the position is put back: a reload, or a return
@@ -536,12 +591,23 @@
     // current one: the same place again, or the next change of a run, rules 1, 3 and 7), then arrive. Only in answer to
     // the reader: an entry a page adds on its own is one the Back button skips (plan fact 9).
     // change: { tab, view, anchor, row, failure }; how: { key } names a run (a run of arrow keys on the tabs), { from } the
-    // control used, where the browser did not focus it
+    // control used, where the browser did not focus it, { replace } changes the place without an entry (the Search tab
+    // going when the search is cleared, in the clear's own entry), { apply } puts filters on the page that the arrival carries (a
+    // search run from the builder, the query a jump clears: SEARCH_PLAN 4.3.6, 4.9), so they are part of this one entry,
+    // and { layer } names a layer whose own entry this place takes when it is the current one (the builder's)
     function go(change, how) {
         start();
         how = how || {};
-        var from = placeNow(), to = { tab: from.tab, view: from.view, anchor: from.anchor }, cards = cardsTab();
+        var filtersBefore = filtersNow();
+        if (how.apply) {
+            applying++;
+            try { how.apply(); } finally { applying--; }
+        }
+        var moved = filtersNow() !== filtersBefore;
+        var from = placeNow(), to = { tab: from.tab, view: from.view, anchor: from.anchor, search: from.search, hit: null }, cards = cardsTab();
         if (change.tab && tabList()) to.tab = change.tab;
+        if (to.tab === 'search') to.search = change.search !== undefined ? searchKeysOf(change.search) : change.tab === 'search' && from.tab !== 'search' ? {} : from.search;
+        else to.search = null;
         if (change.view && viewSwitch()) to.view = change.view;
         if (change.anchor || change.row) {
             if (tabList() && cards) to.tab = cards;
@@ -549,11 +615,24 @@
             to.anchor = change.anchor || null;
         }
         if (!onCards(to)) to.anchor = null;
-        var same = to.tab === from.tab && to.view === from.view && to.anchor === from.anchor;
-        if (same && !change.anchor && !change.row && !change.failure) return false;
+        // a match a result's line leads to goes with its scenario (4.6.5); any other change leaves it
+        if (to.anchor && change.hit) to.hit = change.hit;
+        var same = to.tab === from.tab && to.view === from.view && to.anchor === from.anchor && sameSearch(to.search, from.search)
+            && (to.hit || null) === (from.hit || null);
+        var layerOwn = !!(how.layer && current && current.layer && current.layer.kind === how.layer);
+        if (same && !change.anchor && !change.row && !change.failure && !moved && !layerOwn) return false;
         var hash = addressOf(to, filtersNow());
         stopSettling();
-        if (same || (how.key && live && current.key === how.key)) {
+        if (layerOwn) {
+            // the layer's own entry becomes this place: Back from it goes to where the layer was opened from
+            var own = entryOf(moved && same ? 'filter' : 'place', how.key);
+            if (write(false, own, hash)) { current = own; here = hash; }
+            else replaceSoon(hash);
+        } else if (moved && same) {
+            // the place stays and the filters change: one entry, as one filter control's change is (rule 3)
+            save(how.from);
+            add(entryOf('filter', how.key), hash);
+        } else if (same || how.replace || (how.key && live && current.key === how.key)) {
             leave();
             places[placeKey(from)] = { scroll: current.scroll, focus: current.focus };
             current.scroll = current.focus = null;
@@ -623,8 +702,9 @@
         var anchor = url_anchor_of(a.getAttribute('href'));
         if (!anchor) return;
         e.preventDefault();
-        // the link is the control the reader used, though Safari does not focus a link it clicks: Back returns to it
-        go({ anchor: anchor }, { from: a });
+        // the link is the control the reader used, though Safari does not focus a link it clicks: Back returns to it; a
+        // search result's line names the match it leads to (data-hit, SEARCH_PLAN 4.6.5)
+        go({ anchor: anchor, hit: a.getAttribute('data-hit') || null }, { from: a });
     }, true);
 
     // A fragment navigation (an address typed into the bar, a link the page does not take, an entry another script
@@ -702,5 +782,11 @@
         write(false, current, hashNow());
     }
 
-    window.kronikol_nav = { start: start, go: go, wrote: wrote, layer: layer, address: address, find: find, hash: hashNow };
+    // the status line and the arrival hook, for the search (SEARCH_PLAN 4.6.5): what waits for the arrival under way runs
+    // once it has finished, or at once when none is under way
+    function after(fn) {
+        if (arriving > 0) afterArrival.push(fn);
+        else fn();
+    }
+    window.kronikol_nav = { start: start, go: go, wrote: wrote, layer: layer, address: address, find: find, hash: hashNow, say: say, after: after };
 })();

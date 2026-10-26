@@ -7,6 +7,22 @@
 (function () {
     function bar() { return document.querySelector('.toolbar-row.report-nav'); }
     function tabs() { return Array.prototype.slice.call(document.querySelectorAll('.report-tabs > .report-tab')); }
+    // the tabs the reader can reach: the Search tab is hidden while no search is applied (plans/SEARCH_PLAN.md 4.5.1)
+    function shownTabs() { return tabs().filter(function (t) { return !t.hidden; }); }
+    // A tab made current is brought into its row, which scrolls sideways on a phone with its scrollbar hidden: the Search
+    // tab, last in the row, becomes current from the builder, not from a tap, and would be current out of sight (R29).
+    // Its scrollLeft, not scrollIntoView, which can move the page too. Measured in the next frame: read in the click, the row's
+    // width laid the whole page out with the panel just shown, then again for the frame (30 to 70 ms on 2,000 scenarios).
+    function intoRow(tab) {
+        requestAnimationFrame(function () { intoRowNow(tab); });
+    }
+    function intoRowNow(tab) {
+        var row = tab && tab.parentNode;
+        if (!row || row.scrollWidth <= row.clientWidth + 1) return;
+        var r = row.getBoundingClientRect(), t = tab.getBoundingClientRect();
+        if (t.left < r.left) row.scrollLeft -= r.left - t.left + 8;
+        else if (t.right > r.right) row.scrollLeft += t.right - r.right + 8;
+    }
     function panel(key) { return document.getElementById('panel-' + key); }
 
     function activate(key) {
@@ -17,13 +33,18 @@
             if (p) p.hidden = !on;
             tab.setAttribute('aria-selected', on ? 'true' : 'false');
             tab.tabIndex = on ? 0 : -1;
+            if (on) intoRow(tab);
         });
         var nav = bar();
         if (nav) nav.classList.toggle('on-features', key === 'features');
         // a diagram in a panel that was hidden is drawn when the panel shows (the engine is not fetched for a hidden tab),
         // and only one that shows: the Features tab holds every scenario's diagrams, most of them in closed scenarios
         if (typeof window._renderDiagramsInContainer === 'function') window._renderDiagramsInContainer(target, true);
-        window.dispatchEvent(new Event('resize'));
+        // what measures itself as the window's size changes (the bar's height, the filter bar's fit, a scenario's settings,
+        // the diagrams' zoom) does so in the next frame, with the frame's own layout: in the click, each read laid the page
+        // out again with the panel just shown, 25 to 55 ms a layout on 2,000 scenarios (plans/SEARCH_PLAN.md 4.12). A jump
+        // to a place measures the bar before it scrolls (jump_into_view).
+        requestAnimationFrame(function () { window.dispatchEvent(new Event('resize')); });
     }
     window.kronikol_activate_tab = activate;
 
@@ -38,7 +59,8 @@
     }
     // the arrow keys between scenarios take the reader to them: the Features tab, and its Full view, as one place
     function toFeatures() {
-        if (!selected() || selected() === 'features') return;
+        // on the Search tab they scroll the page, as on any page of results (plans/SEARCH_PLAN.md 4.8, R23)
+        if (!selected() || selected() === 'features' || selected() === 'search') return;
         if (window.kronikol_nav) window.kronikol_nav.go({ tab: 'features', view: 'full' });
         else activate('features');
     }
@@ -55,7 +77,7 @@
     document.addEventListener('keydown', function (e) {
         var tab = e.target && e.target.closest ? e.target.closest('.report-tabs > .report-tab') : null;
         if (tab) {
-            var all = tabs(), i = all.indexOf(tab), j = -1;
+            var all = shownTabs(), i = all.indexOf(tab), j = -1;
             if (e.key === 'ArrowRight') j = (i + 1) % all.length;
             else if (e.key === 'ArrowLeft') j = (i - 1 + all.length) % all.length;
             else if (e.key === 'Home') j = 0;

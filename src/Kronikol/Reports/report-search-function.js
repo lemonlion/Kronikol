@@ -3,9 +3,6 @@ var searchTimeoutId;
 function toggle_search_help() {
     var panel = document.querySelector('.search-help-panel');
     if (panel) panel.style.display = panel.style.display === 'none' ? '' : 'none';
-    // the help opens on its own while More filters folds the rows around it (5.0.0, plans/OPTION_C_PLAN.md S7, D15)
-    var box = document.querySelector('.filtering-box');
-    if (box && panel) box.classList.toggle('help-open', panel.style.display !== 'none');
 }
 
 // A single search match is revealed fully: the scenario opens along with every section
@@ -31,6 +28,31 @@ function revealSingleMatch(el) {
 function close_opened_by_search() {
     _openedBySearch.forEach(function(d) { d.removeAttribute('open'); });
     _openedBySearch = [];
+}
+
+// The outline rows the search chose, each with the row the reader had (SEARCH_PLAN B5): emptying the search takes its
+// marks off the rows and puts back a row it chose, as it closes only what it opened. A row the reader chose since is the
+// reader's and stays. Until then the empty search returned before this clean-up, so the rows stayed marked and chosen.
+var _rowsChosenBySearch = [];
+function choose_search_row(row) {
+    if (row.classList.contains('row-active')) return;
+    var table = row.closest('table');
+    var chosen = null;
+    for (var i = 0; i < _rowsChosenBySearch.length; i++)
+        if (_rowsChosenBySearch[i].table === table) chosen = _rowsChosenBySearch[i];
+    if (!chosen) {
+        chosen = { table: table, was: table ? table.querySelector('tbody tr.row-active') : null };
+        _rowsChosenBySearch.push(chosen);
+    }
+    chosen.row = row;
+    row.click();
+}
+function clear_search_rows() {
+    document.querySelectorAll('tr.row-search-match').forEach(function(r) { r.classList.remove('row-search-match'); });
+    _rowsChosenBySearch.forEach(function(c) {
+        if (c.was && c.row.classList.contains('row-active') && !c.was.classList.contains('row-active')) c.was.click();
+    });
+    _rowsChosenBySearch = [];
 }
 
 function search_scenarios() {
@@ -69,7 +91,10 @@ if (typeof document !== 'undefined') {
 // only narrows: it combines with the rest of the search, and with the others, by AND. Only these keys, and never inside
 // quotes, so a search for "status: 400" or "milk:" is still text. The qualifiers are taken out before the search runs,
 // so the search, its deep search of the diagrams and the link see the rest, and a flag of their own hides a scenario.
-var SEARCH_QUALIFIER = /(^|[\s(])(!!\s*|not\s+)?(dep|dependency|duration|is):("[^"]*"|[^\s()"]+)/gi;
+// feature:pancake is a scenario of a feature whose name holds "pancake" (quotes and commas as dep:), and a - right
+// before any qualifier negates it as !! does, -dep:payment as GitHub's search writes it (SEARCH_PLAN 4.4); tag: and
+// status: are words of the advanced search, as @ and $ are (advanced-search.js), and stay in the rest.
+var SEARCH_QUALIFIER = /(^|[\s(])(!!\s*|not\s+|-)?(dep|dependency|duration|is|feature):("[^"]*"|[^\s()"]+)/gi;
 var DURATION_UNIT = { ms: 1, s: 1000, m: 60000, min: 60000 };
 // a name's letters and digits, in every alphabet: until 5.2.7 only a to z and 0 to 9 were kept, so dep:Ödeme matched
 // Deme Service and a name in other letters (支付) was no name at all
@@ -99,6 +124,18 @@ function qualifier_ms(v, percentiles) {
 function qualifier_own_ms(d) {
     if (!d.el.hasAttribute('data-duration-ms')) return null;
     return parseFloat(d.el.getAttribute('data-duration-ms')) - parseFloat(d.el.getAttribute('data-warmup-ms') || '0');
+}
+// a feature's name as feature: compares it: its spaces one each, without case (SEARCH_PLAN 4.4)
+function qualifier_feature_text(s) { return String(s).replace(/\s+/g, ' ').trim().toLowerCase(); }
+// a scenario's feature's name, as its card's summary shows it: the summary's own text, not the endpoint and the tags
+// drawn after it; read once, and kept on the scenario's item
+function qualifier_feature_name(d) {
+    if (d.featureName === undefined) {
+        var summary = d.f ? d.f.querySelector('summary') : null, name = '';
+        for (var n = summary ? summary.firstChild : null; n; n = n.nextSibling) if (n.nodeType === 3) name += n.nodeValue;
+        d.featureName = qualifier_feature_text(name);
+    }
+    return d.featureName;
 }
 // one qualifier as a test of a scenario; null when it cannot be read, and it stays text
 function search_qualifier(key, value, negated, percentiles) {
@@ -133,14 +170,23 @@ function search_qualifier(key, value, negated, percentiles) {
     } else if (key === 'is') {
         if (!/^happy(-?paths?)?$/.test(value.toLowerCase())) return null;
         test = function (d) { return !!d.isHappy; };
+    } else if (key === 'feature') {
+        var parts = value.split(',').map(qualifier_feature_text).filter(Boolean);
+        if (!parts.length) return null;
+        test = function (d) {
+            var name = qualifier_feature_name(d);
+            return parts.some(function (p) { return name.indexOf(p) >= 0; });
+        };
     }
     if (!test) return null;
     return negated ? function (d) { return !test(d); } : test;
 }
 // the search, split into its qualifiers and the rest; an operator a qualifier leaves dangling goes with it, a legacy and
-// or or among them (@smoke and dep:x left @smoke and, which matched nothing, until 5.2.7)
-function split_search_qualifiers(input) {
-    var quals = [], bad = [], percentiles = {};
+// or or among them (@smoke and dep:x left @smoke and, which matched nothing, until 5.2.7). A tag: or status: in the rest
+// that cannot be read is named with the others, and a status name that is neither an execution result nor one of
+// statuses, the names the report's scenarios carry beside them, is read as the text it was (SEARCH_PLAN 4.4)
+function split_search_qualifiers(input, statuses) {
+    var quals = [], bad = [], inGroup = [], percentiles = {};
     var box = document.querySelector('.duration-filters');
     if (box) ['p50', 'p90', 'p95', 'p99'].forEach(function (k) { var v = parseFloat(box.getAttribute('data-' + k)); if (!isNaN(v)) percentiles[k] = v; });
     SEARCH_QUALIFIER.lastIndex = 0;
@@ -148,7 +194,8 @@ function split_search_qualifiers(input) {
         var place = qualifier_place(input, offset + lead.length);
         if (place === 'quoted') return all;
         var q = place === 'top' ? search_qualifier(key, value, !!negated, percentiles) : null;
-        if (!q) { bad.push(all.slice(lead.length).trim()); return all; }
+        // one inside a group that !! or not negates is text whatever its value, and is named so
+        if (!q) { var item = all.slice(lead.length).trim(); bad.push(item); if (place === 'negated') inGroup.push(item); return all; }
         quals.push(q);
         return lead + ' ';
     });
@@ -162,13 +209,25 @@ function split_search_qualifiers(input) {
         }
         rest = rest.replace(/\s+/g, ' ').trim();
     }
-    return { quals: quals, rest: rest, bad: bad };
+    var read = searchTokenQualifiers(rest, statuses || []);
+    return { quals: quals, rest: read.text, bad: bad.concat(read.bad), inGroup: inGroup };
+}
+// the names status: reads besides the execution results (SEARCH_PLAN 4.4)
+function search_status_names(c) {
+    var names = [];
+// kron:verdicts
+    // the history verdicts this report's scenarios carry: status:flaky as $flaky
+    c.items.forEach(function (item) {
+        if (item.verdicts) item.verdicts.forEach(function (v) { if (names.indexOf(v) < 0) names.push(v); });
+    });
+// kron:/verdicts
+    return names;
 }
 
 function run_search_scenarios() {
     var c = fc();
     var bar = document.getElementById('searchbar');
-    var parts = split_search_qualifiers(bar.value);
+    var parts = split_search_qualifiers(bar.value, search_status_names(c));
     for (var qi = 0; qi < c.items.length; qi++) {
         var qItem = c.items[qi];
         qItem.q = parts.quals.length > 0 && !parts.quals.every(function (test) { return test(qItem); });
@@ -176,6 +235,8 @@ function run_search_scenarios() {
     // a qualifier that cannot be read stays text, and the bar says so
     bar.classList.toggle('kron-q-bad', parts.bad.length > 0);
     if (parts.bad.length) bar.setAttribute('data-q-bad', parts.bad.join(' ')); else bar.removeAttribute('data-q-bad');
+    // the same, an item to a qualifier (a quoted value keeps its spaces), for the Search tab's warning
+    bar.kronQBad = parts.bad.map(function (t) { return { text: t, inGroup: parts.inGroup.indexOf(t) >= 0 }; });
     let input = parts.rest;
     input = input.toLowerCase().trim();
 
@@ -186,6 +247,7 @@ function run_search_scenarios() {
                 c.items[i].sr = false;
             }
             close_opened_by_search();
+            clear_search_rows();
             applyVisibility(c);
             update_url_hash();
             if (window._kronDeepReset) window._kronDeepReset();
@@ -244,9 +306,7 @@ function run_search_scenarios() {
                         if (allMatch && !firstMatchRow) { firstMatchRow = rows[ri]; }
                         rows[ri].classList.toggle('row-search-match', allMatch);
                     }
-                    if (firstMatchRow && !firstMatchRow.classList.contains('row-active')) {
-                        firstMatchRow.click();
-                    }
+                    if (firstMatchRow) choose_search_row(firstMatchRow);
                 });
             } else {
                 document.querySelectorAll('tr.row-search-match').forEach(function(r) { r.classList.remove('row-search-match'); });
@@ -269,6 +329,7 @@ function run_search_scenarios() {
             c.items[i].sr = false;
         }
         close_opened_by_search();
+        clear_search_rows();
         applyVisibility(c);
         update_url_hash();
         if (window._kronDeepReset) window._kronDeepReset();
@@ -325,9 +386,7 @@ function run_search_scenarios() {
                 if (allMatch && !firstMatchRow) { firstMatchRow = rows[ri]; }
                 rows[ri].classList.toggle('row-search-match', allMatch);
             }
-            if (firstMatchRow && !firstMatchRow.classList.contains('row-active')) {
-                firstMatchRow.click();
-            }
+            if (firstMatchRow) choose_search_row(firstMatchRow);
         });
     } else {
         document.querySelectorAll('tr.row-search-match').forEach(function(r) { r.classList.remove('row-search-match'); });

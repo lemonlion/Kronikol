@@ -117,7 +117,7 @@ public class NotATestReportTests : IDisposable
     {
         var html = Report("NotATest_Readout.html", Features());
 
-        Assert.Contains("<span class=\"filter-readout\" role=\"status\" title=\"The scenarios and features the filters leave showing\">All 3 scenarios, 2 features</span>", html);
+        Assert.Contains("<span class=\"filter-readout\" aria-hidden=\"true\" title=\"The scenarios and features the filters leave showing\">All 3 scenarios, 2 features</span>", html);
         Assert.Contains("<span class=\"nav-readout-short\">All 3 scenarios</span>", html);
     }
 

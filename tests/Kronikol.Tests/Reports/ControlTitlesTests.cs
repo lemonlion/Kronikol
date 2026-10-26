@@ -37,7 +37,8 @@ public class ControlTitlesTests : IDisposable
     private const string DiagnosticsWords = "What Kronikol noticed while building this report, such as calls it could not put under a scenario";
 
     /// <summary>Every control the audits look at: a button, a link, a summary, a select, an input, a tab.</summary>
-    internal const string Controls = "button, a[href], summary, select, input, [role=tab], [role=button]";
+    // a hidden input is no control: the applied search is one (plans/SEARCH_PLAN.md 4.2)
+    internal const string Controls = "button, a[href], summary, select, input:not([type=hidden]), [role=tab], [role=button]";
 
     /// <summary>
     /// The headings whose own text names what they hold, which carry no title: a feature's card, a rule's, an outline's
@@ -345,11 +346,18 @@ public class ControlTitlesTests : IDisposable
         Assert.Equal("Download a copy of this report holding only the features the filters show", TitleOf(box, ".export-btn[onclick='export_html()']"));
         Assert.Equal("Download the scenarios the filters show as a CSV file: feature, scenario, status and duration in milliseconds",
             TitleOf(box, ".export-btn[onclick='export_csv()']"));
-        Assert.Equal("Filter by names, steps, tags and diagram text. Combine words with && (and), || (or) and !! (not); @tag and $status pick by tag or status, "
-                     + "dep:, duration: and is:happy by dependency, time and happy path; ? shows the syntax", TitleOf(box, "#searchbar"));
-        Assert.Equal("How to write a filter: words, \"phrases\", @tags, $statuses, dep:, duration:, is:happy, &&, ||, !! and parentheses",
-            TitleOf(box, ".search-help-toggle"));
-        Assert.Equal("Show or hide the filters", TitleOf(page, ".mobile-filter-toggle"));
+        // the search left the box for the title line's button and its builder (plans/SEARCH_PLAN.md 4.2, 4.3), whose tips
+        // are its help
+        Assert.Null(box.QuerySelector("#searchbar:not([type='hidden']), .search-help-toggle"));
+        Assert.Equal("Search this report, or jump to a scenario or a feature (/)", TitleOf(page, "#search-button"));
+        Assert.Equal("Clear the search; the filters stay as they are", TitleOf(page, "#search-clear"));
+        Assert.Equal("How to write a search: the forms, and what each search reads", TitleOf(page, ".search-tips-toggle"));
+        // Filters opens and closes the box at every width, and the box's close hides it (plans/SEARCH_PLAN.md F4); the phone's
+        // own Filters button went with F5
+        Assert.Equal("Show the filters", TitleOf(page, ".nav-filters-toggle"));
+        Assert.Equal("Hide the filters (Esc)", TitleOf(box, ".filters-close"));
+        Assert.Equal("Clear the search; the other filters stay as they are", TitleOf(box, ".box-search-clear"));
+        Assert.Null(page.QuerySelector(".mobile-filter-toggle"));
         Assert.Equal(
             [
                 "Passed: Show only the scenarios that passed; pick more statuses to show them together",
@@ -365,10 +373,10 @@ public class ControlTitlesTests : IDisposable
     }
 
     [Fact]
-    public void Clear_All_names_the_filter_text_and_every_row_the_box_has_in_the_box_and_in_the_bar()
+    public void Clear_All_names_the_search_and_every_row_the_box_has_in_the_box_and_in_the_bar()
     {
         var (page, _) = Everything();
-        const string everything = "Clear every filter: the filter text with its dep:, duration: and is: terms, and the statuses, duration, happy paths, tags and dependencies";
+        const string everything = "Clear every filter: the search with its tag:, status:, feature:, dep:, duration: and is: terms, and the statuses, duration, happy paths, tags and dependencies";
 
         Assert.Equal(everything, TitleOf(page, "#filtering-box .export-btn[onclick='clear_all_filters()']"));
         Assert.Equal(everything, TitleOf(page, ".nav-filters .nav-clear"));
@@ -376,13 +384,13 @@ public class ControlTitlesTests : IDisposable
         // a run with times and nothing else to filter by: no happy path, no tag or category, no call
         var timed = Parse(Write("ControlTitles_Timed.html",
             [new Feature { DisplayName = "F", Scenarios = [new Scenario { Id = "x", DisplayName = "X", Result = ExecutionResult.Passed, Duration = TimeSpan.FromMilliseconds(5) }] }], []));
-        Assert.Equal("Clear every filter: the filter text with its dep:, duration: and is: terms, and the statuses and duration",
+        Assert.Equal("Clear every filter: the search with its tag:, status:, feature:, dep:, duration: and is: terms, and the statuses and duration",
             TitleOf(timed, "#filtering-box .export-btn[onclick='clear_all_filters()']"));
 
         // and one with statuses alone
         var bare = Parse(Write("ControlTitles_Bare.html",
             [new Feature { DisplayName = "F", Scenarios = [new Scenario { Id = "x", DisplayName = "X", Result = ExecutionResult.Passed }] }], []));
-        Assert.Equal("Clear every filter: the filter text with its dep:, duration: and is: terms, and the statuses",
+        Assert.Equal("Clear every filter: the search with its tag:, status:, feature:, dep:, duration: and is: terms, and the statuses",
             TitleOf(bare, "#filtering-box .export-btn[onclick='clear_all_filters()']"));
     }
 

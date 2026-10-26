@@ -35,7 +35,8 @@ public class NoteFormatToggleScriptTests
         Assert.True(compose.IndexOf("applyNoteFormats(", StringComparison.Ordinal)
             < compose.IndexOf("buildSourceWithNoteStates(", StringComparison.Ordinal),
             "formats must be applied before the source is built");
-        Assert.Contains("rerenderWithNoteStates", _script);
+        // a note's own redraw is the render queue's since SEARCH_PLAN (4.6.5), which composes through it too
+        Assert.Contains("redrawNote(container", _script);
         Assert.Contains("composeNoteSource(container, origSource, noteBlocks)", _script);
     }
 

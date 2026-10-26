@@ -61,10 +61,7 @@ public class TagRowVolumeTests : PlaywrightTestBase
             {
                 await Page.GotoReportAsync(Generate(tags));
                 await Page.Locator("details.feature").First.WaitForAsync();
-                // a phone keeps the filter box behind its own Filters toggle
-                var phoneToggle = Page.Locator(".mobile-filter-toggle");
-                if (await phoneToggle.IsVisibleAsync())
-                    await phoneToggle.ClickAsync();
+                // the box opens with the bar's Filters at every width (plans/SEARCH_PLAN.md F3)
                 await OpenFilterRowsAsync();
                 var row = await Page.EvaluateAsync<double[]>(
                     "() => { const r = document.querySelector('.tag-filters'); if (!r) return [0, 0]; const b = r.getBoundingClientRect(); return [b.height, r.querySelectorAll('.tag-toggle').length]; }");

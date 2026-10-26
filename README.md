@@ -21,7 +21,7 @@ Kronikol tracks every call between your test, your Service Under Test and its de
 
 In the report:
 
-- **Search everything**: payloads, headers, SQL and diagram text, not just scenario names.
+- **Search everything**: payloads, headers, SQL and diagram text, not just scenario names. Results show the line where each one matched, and a click goes straight to it in its diagram or step.
 - **A table per data set**: InlineData, MemberData, TestCase and their equivalents in xUnit, NUnit, TUnit, ReqNRoll and LightBDD become clickable tables, each row showing the diagrams for its inputs.
 - **Detail on demand**: collapse, truncate and toggle what each diagram shows, and switch payloads between JSON and YAML so multi-line strings like SQL keep their line breaks.
 - **BDD steps in place**: Gherkin data tables and doc strings appear inside the diagram where their step runs.

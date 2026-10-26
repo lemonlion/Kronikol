@@ -196,7 +196,7 @@ public class AttachmentRenderingTests : PlaywrightTestBase
             null, new() { PollingInterval = 200, Timeout = 10_000 });
 
         var download = await Page.RunAndWaitForDownloadAsync(async () =>
-            await Page.Locator("button.export-btn", new() { HasTextString = "Export Filtered HTML" }).ClickAsync());
+            await PressBoxExportAsync(Page, "Export Filtered HTML"));
         var exported = Path.Combine(TempDir, $"export_{Guid.NewGuid():N}.html");
         await download.SaveAsAsync(exported);
         await Page.GotoReportAsync(new Uri(exported).AbsoluteUri);

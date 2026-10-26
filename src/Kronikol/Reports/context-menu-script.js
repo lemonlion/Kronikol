@@ -88,9 +88,10 @@
     // put back in the same task, so the page paints nothing in between, and its own picture is left as it is.
     var PAINTED = /^(path|rect|line|polygon|polyline|circle|ellipse|text|tspan)$/i;
     // A copied picture is plain SVG (5.4.0): a long payload's scroll box is left out and the rows the engine drew under it
-    // are shown, the note's first lines and its `...`, so the copy opens anywhere and reads like a truncated note.
+    // are shown, the note's first lines and its `...`, so the copy opens anywhere and reads like a truncated note. A
+    // search's marks on the picture are the page's, not the diagram's, and are left out too (plans/SEARCH_PLAN.md 4.6.5).
     function withoutScrollBoxes(clone) {
-        clone.querySelectorAll('.note-scroll-frame').forEach(function(f) { f.remove(); });
+        clone.querySelectorAll('.note-scroll-frame, .kron-mark-svg').forEach(function(f) { f.remove(); });
         clone.querySelectorAll('.note-scroll-under').forEach(function(t) { t.classList.remove('note-scroll-under'); });
         return clone;
     }

@@ -30,7 +30,11 @@ function chip_family(b) {
     for (var f in FILTER_CHIP_ROWS) if (b.classList.contains(f + '-toggle')) return f;
     return null;
 }
-function filter_chips(family) { return Array.prototype.slice.call(document.querySelectorAll('.filtering-box .' + family + '-toggle')); }
+// The filter box, where every filter control lives, or the page where there is none: its controls are looked for inside it,
+// not across the page, which on 2,000 scenarios took 3 to 5 ms a walk, and a search or a tab change asks a dozen times
+// (plans/SEARCH_PLAN.md 4.12)
+function filter_box_root() { return document.getElementById('filtering-box') || document; }
+function filter_chips(family) { return Array.prototype.slice.call(filter_box_root().querySelectorAll('.' + family + '-toggle')); }
 // A tag is one tag whatever the case of its ASCII letters, as ScenarioTags.Comparer reads tags, and its chip carries the
 // first spelling met: until 5.2.7 a link that spelled it another way (a 4.x report's fast beside Fast) chose no chip
 function ascii_fold(s) { return String(s).replace(/[A-Z]/g, function (c) { return c.toLowerCase(); }); }
@@ -140,7 +144,7 @@ function toggle_tag_mode(btn) {
 // Happy paths shows the Happy Path chip's state
 function sync_happy_paths() {
     var chip = find_chip('tag', HAPPY_PATH_TAG), state = chip ? chip_state(chip) : 'off';
-    document.querySelectorAll('.filtering-box .happy-seg').forEach(function (b) {
+    filter_box_root().querySelectorAll('.happy-seg').forEach(function (b) {
         b.setAttribute('aria-pressed', b.getAttribute('data-hp') === state ? 'true' : 'false');
     });
 }

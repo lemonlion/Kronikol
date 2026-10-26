@@ -53,7 +53,7 @@ public partial class ThemedPagesHtmlTests : IDisposable
             DateTime.UtcNow, DateTime.UtcNow,
             null, Path.Combine(_dir, "ThemedPages_Report.html"), "Test", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
-        var button = Parse(ReportHtml.Read(path)).QuerySelector("div.title-line > button.theme-toggle");
+        var button = Parse(ReportHtml.Read(path)).QuerySelector("div.title-line > .title-actions > button.theme-toggle");
         Assert.True(button is not null, "the run report has no theme switch on its title line");
         return button!.OuterHtml;
     }
@@ -224,24 +224,23 @@ public partial class ThemedPagesHtmlTests : IDisposable
 
     // ── the search help ──
 
+    // the syntax tips, which the query builder holds since the search left the box (plans/SEARCH_PLAN.md 4.3.5)
     [Fact]
     public void The_search_help_is_drawn_in_the_tokens_and_the_violet_leaves_it_to_them()
     {
-        var css = Stylesheets.HtmlReportStyleSheet;
-        string[] parts = [".search-help-toggle", ".search-help-toggle:hover", ".search-help-panel", ".search-help-table th",
-            ".search-help-table td", ".search-help-table code", ".search-help-note", ".search-help-note kbd"];
+        var css = Stylesheets.SearchStyleSheet;
+        string[] parts = [".search-tips-toggle", ".search-tips-toggle:hover", ".search-tips", ".search-tips-table th",
+            ".search-tips-table td", ".search-tips code", ".search-tips-note", ".search-tips kbd"];
 
         foreach (var selector in parts)
         {
             var rules = CssRules.For(css, selector);
-            Assert.True(rules.Count > 0, $"stylesheets.css has no {selector} rule");
+            Assert.True(rules.Count > 0, $"search-styles.css has no {selector} rule");
             foreach (var (property, value) in rules.SelectMany(r => r.Declarations))
                 Assert.False(Literal().IsMatch(value), $"{selector} {{ {property}: {value} }} is a colour of its own, the same in both themes");
         }
-        Assert.Equal("var(--kron-strip)", CssRules.Value(css, ".search-help-panel", "background"));
-        Assert.Equal("1px solid var(--kron-strip-edge)", CssRules.Value(css, ".search-help-panel", "border"));
-        Assert.Equal("var(--kron-code-bg)", CssRules.Value(css, ".search-help-table code", "background"));
-        Assert.Equal("var(--kron-hover)", CssRules.Value(css, ".search-help-toggle:hover", "background"));
-        Assert.DoesNotContain(CssRules.Parse(Violet), r => r.Selectors.Any(s => s.StartsWith(".search-help", StringComparison.Ordinal)));
+        Assert.Equal("var(--kron-code-bg)", CssRules.Value(css, ".search-tips code", "background"));
+        Assert.DoesNotContain(CssRules.Parse(Stylesheets.HtmlReportStyleSheet), r => r.Selectors.Any(s => s.StartsWith(".search-help", StringComparison.Ordinal)));
+        Assert.DoesNotContain(CssRules.Parse(Violet), r => r.Selectors.Any(s => s.StartsWith(".search-", StringComparison.Ordinal)));
     }
 }

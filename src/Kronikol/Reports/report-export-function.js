@@ -117,6 +117,12 @@ function export_undrawn(feature) {
     copy.querySelectorAll('.sub-steps[data-drawing]').forEach(function (el) {
         el.removeAttribute('data-drawing');
     });
+    // A search's marks are this page's, not the report's (plans/SEARCH_PLAN.md 4.6.5): the copy goes without them, the
+    // rects in a picture it keeps as drawn and an HTML place's outline.
+    copy.querySelectorAll('.kron-mark-svg').forEach(function (el) { el.parentNode.removeChild(el); });
+    copy.querySelectorAll('.kron-mark-place').forEach(function (el) { el.classList.remove('kron-mark-place', 'kron-mark-arrive'); });
+    // and so is the line under a diagram's view tabs saying what was turned on to show a match
+    copy.querySelectorAll('.search-turned-on').forEach(function (el) { el.parentNode.removeChild(el); });
     return copy.outerHTML;
 }
 function export_html() {

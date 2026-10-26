@@ -1,6 +1,6 @@
 # SEARCH_PLAN: a dedicated search modelled on GitHub's, and the filters behind the bar's Filters button
 
-**Status: DRAFT, nothing implemented, not green-lit.** Written 2026-10-26 by kronikol-41 at the owner's ask (section 1).
+**Status: EXECUTED as 5.11.0 (2026-10-26).** The owner said "implement the plan in full"; every question took its recommended answer. What was measured against the plan is in `PLANS_STATUS.md`'s row and the harness's `proofs/` and `checks/`. Written 2026-10-26 by kronikol-41 at the owner's ask (section 1).
 Every `file:line` is at `main` `37428293` (5.9.0) under `src/Kronikol/Reports/` unless it says otherwise (the first draft read
 `29e551f3`, 5.8.0; 5.9.0 changed none of the code files it cited, and moved CHANGELOG and `Kronikol.csproj` lines, given here
 at 5.9.0); wiki lines are at `Kronikol.wiki` `1f7944e`. Short
@@ -53,8 +53,8 @@ dependency chip cycles on a click (section 7.4).
      the search and Filters from anywhere down it); the Search tab's Status, Tags and Dependencies are the box's own
      controls, so there is one set of filters; the rows are always open (More filters, its fold and the
      phone's own Filters button go); the box opens at the top of the bar, where 5.0.0's box already rides (4.7).
-  6. **Nothing that works today stops**: every query written today means what it meant (but `$failed`, which also finds a
-     scenario skipped after a failure, B4), and narrows the Features list,
+  6. **Nothing that works today stops**: every query written today means what it meant (but `$skipped`, which also finds a
+     scenario skipped after a failure since 5.9.1's E3, which B4 follows), and narrows the Features list,
      the timeline, the components and both exports as it does now (Q1); a `q=` link opens what it opened; the index, its
      vectors and the theme-only storage rule are untouched (4.9, 4.10).
 - **Found on the way (section 5).** Fifteen defects in the search, the keys and the diagrams around them (B1 to B16, B6
@@ -541,8 +541,8 @@ typing (GitHub's; Q3 has the other answer).
 
 **Kept, with the same meaning:** everything `Search-Syntax.md` documents: words, `"phrases"`, `&&`, `||`, `!!`, `not`,
 parentheses, `@tag`, `@"two words"`, `$status` and the history verdicts, `dep:` and `dependency:`, `duration:`,
-`is:happy`, and the legacy tag expressions. Every `q=` written by any release means what it meant, but for B4: `$failed`
-also finds a scenario skipped after a failure, as the Failed button does.
+`is:happy`, and the legacy tag expressions. Every `q=` written by any release means what it meant, but for 5.9.1's E3, which
+B4 follows: `$skipped` also finds a scenario skipped after a failure, as the Skipped button does.
 
 **Added** (each a new form a reader can write, so part of the minor):
 
@@ -1075,7 +1075,7 @@ the code loads.
 
 ### 4.14 What does not change
 
-The query's meaning and every `q=` link (but B4's `$failed`); the index's format, its vectors, its three normalizers and
+The query's meaning and every `q=` link (but `$skipped`, which 5.9.1's E3 changed and B4 follows); the index's format, its vectors, its three normalizers and
 its pins (`SearchIndexReportTests`, `CompressedPageTests.cs:305-319`); `data-search` (but the paths B11 adds); the theme-only storage rule; the six-flag
 visibility combiner (FMH:64-90) and `kron-filter-change`; the exports' content; the filter rows' controls and their
 behaviour (the chips' click cycle is the sibling plan's, 7.4); Back and Forward's rules; the labs page.
@@ -1091,7 +1091,7 @@ B14 at `37428293`, 5.9.0, found by the deep dives of 4.6.5) and is fixed by the 
 | B1 | **Enter runs every search twice.** Enter's `keydown` runs it at once (`flush_search`), then the same key's `keyup` reaches `onkeyup="search_scenarios()"` and runs it again 300 ms later: a second readout, and a second deep query that cancels the first, while the second instant pass sets every scenario's `sr` again from the instant matches alone (RSF:213, 296), so the results only deep search found vanish until the second deep query brings them back. (The address is not written twice, `wrote()` seeing it unchanged, NAV:275, 600, and the first matching outline row is not clicked twice, RSF:247, 328.) | RSF:36-61, RG:1926 | The builder runs a search on Enter only, once (4.3.6) |
 | B2 | **A query pasted with the mouse or the context menu, or dropped, waits until the field loses focus**, as does text from an input method that sends no `keyup`: the field listens for `keyup` and `change`, never `input` (a paste with Ctrl+V does run, by its keys' `keyup`) | RSF:51-61, RG:1926 | The builder listens for `input` (4.3.2) |
 | B3 | **The help says the instant search reads "diagram source"** ("Text search (feature name, scenario name, step text, tags, diagram source)"); it reads the participants' names and the URLs of HTTP calls (`ParticipantRegex`, `UrlRegex`), the URLs only while internal-flow tracking is off (B11), and the rest of a diagram only deep search reads. The wiki says the same | RG:1932, 7103-7131; wiki `Search-Syntax.md:11` | The tips say which part each search reads (4.3.5); the wiki line is corrected |
-| B4 | **A scenario skipped after a failure is counted three ways**: as skipped by the run band, as failed by the Status buttons, and as neither by `$status`, so `$failed` and `$skipped` both miss a scenario the Failed button shows | RG:1781; `report-status-filter-function.js:22`; AS:284 | `status:` and `$status`, and the Search tab's Status facet, follow the Status buttons (Q11) |
+| B4 | **A scenario skipped after a failure is counted three ways**: as skipped by the run band, as failed by the Status buttons, and as neither by `$status`, so `$failed` and `$skipped` both miss a scenario the Failed button shows | RG:1781; `report-status-filter-function.js:22`; AS:284 | `status:` and `$status`, and the Search tab's Status facet, follow the Status buttons (Q11). 5.9.1 (plans/REPORT_UI_FIXES_PLAN.md E3, Q15) moved the buttons to count it as skipped, as the run band does, and `$skipped` with them, so B4 now asks only that the builder's counts and the Status facet do the same |
 | B5 | **Emptying the search leaves the outline rows it marked** (`row-search-match`) **and the row it selected**: the empty-query path returns before the clean-up | RSF:267-276 (clean-up at 252, 333) | The empty path clears them |
 | B6 | *Withdrawn after review.* Clear All, and Back to a page with no search, leave open what a single-match search opened (`reset_filters` never calls `close_opened_by_search`). This is 5.2.0's recorded rule, not an oversight: "Every filter back to where the page starts … without closing a scenario: Clear All, and an address put on the page exactly" (EXP:1-2; BACK_BUTTON_NAVIGATION_PLAN.md:285, S8) | EXP:1-31 | None: kept as it is |
 | B7 | **`/` swallows the key where there is no search field** (an exported page: `preventDefault` comes before the look-up), and **puts the focus behind an open lightbox or flow popup** | KN:17-21 | `/` acts only where it opens the builder (4.8) |
@@ -1126,7 +1126,7 @@ on the bundled browsers; Jint classes in `tests/Kronikol.Tests.SearchEngine` run
 | B1 | `Enter_runs_one_search` (a counter wrapped round `run_search_scenarios` from the test; the report's search input, whichever it is) | E2E `SearchBuilderTests` | the counter reads 2 |
 | B2 | `A_query_put_in_without_a_keyup_is_read_without_leaving_the_field` (text inserted with `InsertTextAsync`, as a mouse paste, a drop or an input method puts it) | E2E `SearchBuilderTests` | nothing happens until blur |
 | B3 | `The_syntax_tips_say_what_the_instant_search_reads` | unit `SearchTipsMarkupTests` | the help says "diagram source" |
-| B4 | `Status_failed_finds_a_scenario_skipped_after_a_failure` (Jint and E2E) | Jint `SearchQueryFormsTests`, E2E `SearchResultsTests` | `$failed` misses it |
+| B4 | `Status_skipped_finds_a_scenario_skipped_after_a_failure` (Jint and E2E; renamed from `Status_failed_…` when 5.9.1's E3 moved the Status buttons) | Jint `SearchQueryFormsTests`, E2E `AdvancedSearchTests` | `$skipped` misses it on 5.9.0 |
 | B5 | `Emptying_the_search_unmarks_its_outline_rows` | E2E `SearchResultsTests` | the rows keep `row-search-match` |
 | B7 | `Slash_is_left_to_the_browser_on_an_exported_page`, `Slash_does_nothing_under_a_lightbox` | E2E `SearchBuilderTests` | the default is prevented; the focus moves behind the lightbox |
 | B8 | the 37 facts of `SearchFunctionTests`, sorted: the pure ones on the shipped scripts, the DOM ones on a real page, those asserting dropped behaviour deleted with their reasons | Jint `ShippedSearchFunctionTests`, E2E `SearchFunctionPageTests` | (a sorting: each kept fact runs the page's code; one mutation per family, 6.4) |
@@ -1189,7 +1189,7 @@ on the bundled browsers; Jint classes in `tests/Kronikol.Tests.SearchEngine` run
 | L5 | `Minus_before_a_word_is_text` | Jint | guard |
 | L6 | `Feature_colon_keeps_the_scenarios_whose_feature_name_holds_it` (and commas) | `SearchQualifierPlacementTests` | `feature:` is text |
 | L7 | `New_forms_inside_quotes_are_text` | Jint | guard (`"tag:x"` is text today and stays text) |
-| L8 | `Every_documented_query_finds_what_it_found_before` (a table of the wiki's examples and their results over the rich fixture, captured on 5.9.0 and pinned; B4's `$failed` excepted, its change being intended) | Jint `SearchCompatibilityTests` | guard |
+| L8 | `Every_documented_query_finds_what_it_found_before` (a table of the wiki's examples and their results over the rich fixture, captured on 5.9.0 and pinned; `$skipped` excepted, 5.9.1's E3 having changed it) | Jint `SearchCompatibilityTests` | guard |
 | L9 | `searchQuerySpans_cuts_keys_values_operators_and_unreadable_qualifiers` | Jint `SearchQuerySpansTests` | no function |
 | L10 | `The_worker_reads_the_new_forms_as_the_page_does` | Jint `VerdictDeepSearchTests` | the worker reads them as text |
 
@@ -1542,7 +1542,7 @@ Recommended answers first; work proceeds on each recommendation unless the owner
 | Q8 | **GitHub's `AND`/`OR`/`NOT` words and `/regex/`?** | neither | capital `AND`, `OR`, `NOT` as operators (the query's case kept to the tokenizer); regex read without the index | 4.4: the words are everyday step text; regex reads every payload |
 | Q9 | **Counts on the facets?** | yes, muted | names only, as GitHub | the report knows them at no cost and its chips already carry them |
 | Q10 | **The bar on a page with only its features?** | yes, with the one tab | no bar: Filters in the Features tools, and the Search tab nowhere | F7: Filters and the Search tab need the bar, and one rule for every page is simpler than two |
-| Q11 | **A scenario skipped after a failure, for `status:`?** | failed, as the Status buttons count it | its own name only, as `$status` today; or skipped, as the run band counts it | B4: the search and the filter it stands beside must agree |
+| Q11 | **A scenario skipped after a failure, for `status:`?** | as the Status buttons count it: failed on 5.9.0, skipped since 5.9.1 (E3) | its own name only, as `$status` today; or skipped, as the run band counts it | B4: the search and the filter it stands beside must agree |
 | Q12 | **S0, the prototype, before building?** | yes | build straight from the plan | the 5.0.0 redesign's rounds, and the design memory: screens on the real report settle what a plan cannot |
 | Q13 | **A ROADMAP row?** | none, as feature plans since 5.0.0 | a stage-1 row | precedent (LONG_NOTE_SCROLL_PLAN, HTML_COMPRESSION_PLAN Q12) |
 | Q14 | **Kronikol4J?** | the ledger entry only | port it | the port's page is 3.0.43's |

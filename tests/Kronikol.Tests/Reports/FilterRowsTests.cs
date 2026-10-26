@@ -57,9 +57,10 @@ public class FilterRowsTests
 
     private static string Box(string html)
     {
-        var start = html.IndexOf("<div class=\"filtering-box rows-folded\" id=\"filtering-box\">", StringComparison.Ordinal);
+        // written at the top of the bar since plans/SEARCH_PLAN.md F2, so the bar's tab row follows it
+        var start = html.IndexOf("<div class=\"filtering-box\" id=\"filtering-box\"", StringComparison.Ordinal);
         Assert.True(start >= 0, "the filter box is missing");
-        return html[start..html.IndexOf("<div class=\"toolbar-row", start, StringComparison.Ordinal)];
+        return html[start..html.IndexOf("<div class=\"nav-row\">", start, StringComparison.Ordinal)];
     }
 
     private static void InOrder(string text, params string[] parts)
@@ -224,13 +225,13 @@ public class FilterRowsTests
     public void The_readout_says_what_the_filters_leave_showing_counting_runs_and_a_parameterized_scenario_carries_its_runs()
     {
         var html = Generate("FilterRows_Readout.html");
-        Assert.Contains("<div class=\"filtering-box-export\"><span class=\"filter-readout\" role=\"status\" title=\"The scenarios and features the filters leave showing\">All 5 scenarios, 2 features</span>"
-            + "<button class=\"export-btn\" onclick=\"clear_all_filters()\" title=\"Clear every filter: the filter text with its dep:, duration: and is: terms, and the statuses, duration, happy paths, tags and dependencies\">Clear All</button>", html);
+        Assert.Contains("<div class=\"filtering-box-export\"><span class=\"filter-readout\" aria-hidden=\"true\" title=\"The scenarios and features the filters leave showing\">All 5 scenarios, 2 features</span>"
+            + "<button class=\"export-btn\" onclick=\"clear_all_filters()\" title=\"Clear every filter: the search with its tag:, status:, feature:, dep:, duration: and is: terms, and the statuses, duration, happy paths, tags and dependencies\">Clear All</button>", html);
         Assert.Contains(" data-runs=\"2\"", html);
         Assert.Equal(1, System.Text.RegularExpressions.Regex.Count(html, " data-runs=\""));
 
         var one = Generate("FilterRows_ReadoutOne.html", [new Feature { DisplayName = "F", Scenarios = [Run("x", "X", ExecutionResult.Passed, 5)] }]);
-        Assert.Contains("<span class=\"filter-readout\" role=\"status\" title=\"The scenarios and features the filters leave showing\">All 1 scenario, 1 feature</span>", one);
+        Assert.Contains("<span class=\"filter-readout\" aria-hidden=\"true\" title=\"The scenarios and features the filters leave showing\">All 1 scenario, 1 feature</span>", one);
     }
 
     [Fact]
@@ -241,21 +242,24 @@ public class FilterRowsTests
         Assert.Contains("<button class=\"export-btn\" onclick=\"export_csv()\" title=\"Download the scenarios the filters show as a CSV file: feature, scenario, status and duration in milliseconds\">Export <span class=\"wide-only\">Filtered </span>CSV</button>", box);
     }
 
+    // the search's help is the query builder's tips since the search left the box (plans/SEARCH_PLAN.md 4.3.5)
     [Fact]
-    public void The_filter_text_names_its_qualifiers_in_the_placeholder_and_the_help()
+    public void The_search_names_its_qualifiers_in_its_tips()
     {
-        var box = Box(Generate("FilterRows_Search.html"));
-        Assert.Contains("placeholder=\"Filter... (@tag, $status, dep:, duration:, &&, ||, !!)\"", box);
-        Assert.Contains("<tr><td><code>dep:name</code></td><td>Scenarios that call a dependency: part of its name is enough; commas for any of several</td>", box);
-        Assert.Contains("<tr><td><code>duration:&gt;2s</code></td>", box);
-        Assert.Contains("<tr><td><code>is:happy</code></td><td>Happy paths</td>", box);
-        Assert.Contains("<code>dep:</code>, <code>duration:</code> and <code>is:</code> always narrow the filter: they combine with the rest of it by AND, and can be negated with <code>!!</code> or <code>not</code>. Inside a group that <code>!!</code> or <code>not</code> negates, one is read as text, and the field is marked.</p>", box);
+        var html = Generate("FilterRows_Search.html");
+        var tips = html[html.IndexOf("<div id=\"search-tips\" class=\"search-tips\" hidden>", StringComparison.Ordinal)..];
+        Assert.DoesNotContain("placeholder=\"Search... (@tag", html);
+        Assert.Contains("<tr><td><code>dep:name</code></td><td>A dependency the scenario calls: part of its name is enough; commas for any of several</td>", tips);
+        Assert.Contains("<tr><td><code>duration:&gt;2s</code></td>", tips);
+        Assert.Contains("<tr><td><code>is:happy</code></td><td>Happy paths</td>", tips);
+        Assert.Contains("<code>feature:</code>, <code>dep:</code>, <code>duration:</code> and <code>is:</code> always narrow the search: they combine with the rest of it by AND, and can be left out with <code>-</code>, <code>!!</code> or <code>not</code>. Inside a group that <code>!!</code> or <code>not</code> negates, one is read as text, and the search says so.</p>", tips);
     }
 
-    // 5.9.1 (plans/REPORT_UI_FIXES_PLAN.md I9, W1 and W4): the field hides what does not match, as the rows beside it do,
-    // so the words a reader sees in the box, and on the bar's copy of its Clear All, say filter
+    // 5.9.1 (plans/REPORT_UI_FIXES_PLAN.md I9, W1 and W4): what filters in the box says filter, never search. The box's own
+    // field went with plans/SEARCH_PLAN.md F1, so the one search it names is the search the query builder applied: the line
+    // that shows it (F10) and Clear All, which clears it with the rows
     [Fact]
-    public void The_filter_box_never_calls_its_filtering_a_search()
+    public void The_filter_box_calls_only_the_applied_search_a_search()
     {
         foreach (var (name, includeTestRunData) in new[] { ("FilterRows_Words.html", true), ("FilterRows_WordsSpecifications.html", false) })
         {
@@ -269,10 +273,19 @@ public class FilterRowsTests
                     : n.NodeType == AngleSharp.Dom.NodeType.Text ? new[] { n.TextContent } : [])
                 .Where(t => t is not null && t.Contains("search", StringComparison.OrdinalIgnoreCase))
                 .ToArray();
-            Assert.True(said.Length == 0, name + " calls the filtering a search: " + string.Join(" | ", said));
+            string[] applied =
+            [
+                "Search", "Clear the search", "Clear the search; the other filters stay as they are",
+            ];
+            Assert.True(said.All(t => applied.Contains(t) || t!.StartsWith("Clear every filter: the search with its tag:", StringComparison.Ordinal)),
+                name + " calls the filtering a search: " + string.Join(" | ", said.Where(t => !applied.Contains(t))));
+            Assert.Equal(["Search", "Clear the search", "Clear the search; the other filters stay as they are"],
+                page.QuerySelectorAll("#filtering-box .box-search .box-search-label, #filtering-box .box-search .box-search-clear")
+                    .SelectMany(e => new[] { e.GetAttribute("aria-label"), e.GetAttribute("title"), e.ClassList.Contains("box-search-label") ? e.TextContent : null })
+                    .Where(t => t is not null));
 
-            // the note the deep index writes into the field while it reads the payloads and diagrams
-            Assert.Contains("kron-deep-chip", html);
+            // the deep index tells the Search tab how far it has read (4.5.7); the field's chip went with the field
+            Assert.DoesNotContain("kron-deep-chip", html);
             Assert.DoesNotContain("searching everything", html);
         }
     }

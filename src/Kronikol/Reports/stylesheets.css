@@ -213,6 +213,27 @@
             color: var(--kron-muted);
         }
 
+        /* the box is hidden until the bar's Filters opens it (plans/SEARCH_PLAN.md F1, F4): it takes the focus as it opens,
+           ringed only when the keyboard opened it */
+        .filtering-box[hidden] { display: none; }
+        .filtering-box:focus { outline: none; }
+        .filtering-box:focus-visible { outline: 2px solid var(--kron-accent); outline-offset: -2px; }
+        /* the applied search, said in the box with a clear of its own (F10) */
+        .box-search {
+            display: flex; align-items: center; gap: 8px; min-width: 0; margin: 0 0 10px; padding: 4px 4px 4px 10px;
+            border: 1px solid var(--kron-selected-edge); border-radius: 8px; background: var(--kron-selected); color: var(--kron-selected-ink);
+            font-size: var(--kron-fs-control); line-height: 20px;
+        }
+        .box-search[hidden] { display: none; }
+        .box-search-label { flex: none; font-weight: 600; }
+        .box-search-query { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--kron-mono); }
+        .box-search-clear {
+            flex: none; display: inline-grid; place-items: center; width: 24px; height: 24px; padding: 0; border: 0; border-radius: 6px;
+            background: none; color: inherit; cursor: pointer;
+        }
+        .box-search-clear:hover { background: var(--kron-hover); }
+        .box-search-clear:focus-visible { outline: 2px solid var(--kron-accent); outline-offset: 1px; }
+
         .filtering-box-header {
             display: flex;
             flex-wrap: wrap;
@@ -238,163 +259,12 @@
             gap: 0;
         }
 
-        .filter-search {
-            width: 100%;
-            display: flex;
-            gap: 0.4em;
-            align-items: center;
-            position: relative;
-        }
-
-        #searchbar {
-            padding: 0.5em;
-            border-radius: 0.5em;
-            width: 100%;
-            box-sizing: border-box;
-            border: 1px solid var(--kron-select-border);
-            background: var(--kron-field);
-            color: var(--kron-ink);
-            font-family: var(--kron-font);
-            font-size: var(--kron-fs-body);
-        }
-
-        #searchbar:disabled {
-            background: var(--kron-strip);
-            cursor: not-allowed;
-        }
-        #searchbar::placeholder { color: var(--kron-faint); opacity: 1; }
-        #searchbar:focus { background: var(--kron-card); border-color: var(--kron-accent); outline: 2px solid var(--kron-accent); outline-offset: 1px; box-shadow: none; }
-        /* a dep:, duration: or is: qualifier the search could not read stays in it as text, and the field says so (S6) */
-        #searchbar.kron-q-bad { border-color: var(--kron-warn); }
-        /* More filters (5.0.0, S7, D15): a control the height of the search field, at the end of its line, selected while the
-           rows are open; while they are folded it counts the filters on in them. On a desktop the rows start folded, and the
-           search help opens on its own; on a phone the box's own Filters toggle folds them. */
-        .search-field { position: relative; display: flex; flex: 1 1 auto; min-width: 0; }
-        .more-filters {
-            flex: none; align-self: stretch; display: inline-flex; align-items: center; gap: 6px; padding: 0 12px;
-            border: 1px solid var(--kron-select-border); border-radius: 8px; background: var(--kron-card); color: var(--kron-ink-soft);
-            font: 400 var(--kron-fs-control)/16px var(--kron-font); white-space: nowrap; cursor: pointer;
-        }
-        .more-filters:hover { background: var(--kron-hover); }
-        .more-filters[aria-expanded="true"] { background: var(--kron-selected); border-color: var(--kron-selected-edge); color: var(--kron-selected-ink); }
-        .more-filters.has-on { border-color: var(--kron-selected-edge); color: var(--kron-selected-ink); }
-        .more-filters:focus-visible { outline: 2px solid var(--kron-accent); outline-offset: 1px; }
-        .more-filters svg { transition: transform .15s ease; }
-        .more-filters[aria-expanded="true"] svg { transform: rotate(180deg); }
-        .more-filters-count {
-            display: inline-block; min-width: 18px; padding: 0 5px; box-sizing: border-box; border-radius: 999px;
-            background: var(--kron-accent); color: var(--kron-on-accent); font-size: var(--kron-fs-label); font-weight: 600;
-            line-height: 18px; text-align: center; font-variant-numeric: tabular-nums;
-        }
-        .more-filters-count[hidden] { display: none; }
-        /* the rows fold with one class at every width: More filters sets it on a desktop, the Filters button on a phone */
-        .filtering-box.rows-folded:not(.help-open) > .filters { display: none; }
-        .filtering-box.rows-folded.help-open > .filters > :not(.search-help-panel) { display: none; }
-        @media (max-width: 768px) { .more-filters { display: none; } }
-        @media (prefers-reduced-motion: reduce) { .more-filters svg { transition: none; } }
-        /* the deep search's chip sits inside the field, from its own right edge (D17) */
-        .search-field .kron-deep-chip { right: 8px; }
 
         /* Duration beside Status when both runs fit whole, and Happy paths beside them when all three do, as
            report-filter-bar-script.js measures them (D18); otherwise each keeps a line of its own */
         .filter-row.pair-fits { column-gap: 28px; }
         .filter-row.pair-fits > .duration-filters, .filter-row.trio-fits > .happy-filters { flex-basis: auto; }
         .filter-row.pair-fits .duration-filters-label, .filter-row.trio-fits .happy-filters-label { flex-basis: auto; width: auto; }
-
-        /* Deep-search status chip ("+N more found in payloads & diagrams") */
-        .kron-deep-chip {
-            position: absolute;
-            right: 3em;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 0.75em;
-            padding: 0.15em 0.6em;
-            border-radius: 1em;
-            background: var(--kron-hover);
-            color: var(--kron-muted);
-            border: 1px solid var(--kron-hairline);
-            line-height: 1.4;
-            white-space: nowrap;
-            pointer-events: none;
-        }
-
-        .kron-deep-chip-working {
-            animation: kron-deep-pulse 1.2s ease-in-out infinite;
-        }
-
-        @keyframes kron-deep-pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.45; }
-        }
-
-        /* The search help, on the theme's tokens (5.0.0, plans/OPTION_C_PLAN.md S13), where its 4.x greys drew a light
-           panel under the dark theme's light ink: the preview's colours (c-extra.css 44-47, c-round5.css 166-169), but
-           for the code, which keeps its chip */
-        .search-help-toggle {
-            flex-shrink: 0;
-            width: 1.6em;
-            height: 1.6em;
-            border-radius: 50%;
-            border: 1px solid var(--kron-control-border);
-            background: transparent;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 0.9em;
-            line-height: 1;
-            color: var(--kron-muted);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .search-help-toggle:hover {
-            background: var(--kron-hover);
-            color: var(--kron-ink);
-        }
-
-        .search-help-panel {
-            margin-top: 0.5em;
-            padding: 0.8em 1em;
-            border: 1px solid var(--kron-strip-edge);
-            border-radius: 0.5em;
-            background: var(--kron-strip);
-            font-size: 0.85em;
-            line-height: 1.6;
-            overflow-x: auto;
-        }
-        .search-help-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 0.5em;
-        }
-        .search-help-table th {
-            text-align: left;
-            border-bottom: 1px solid var(--kron-hairline);
-            padding: 0.3em 0.6em;
-            font-size: 0.9em;
-        }
-        .search-help-table td {
-            padding: 0.25em 0.6em;
-            border-bottom: 1px solid var(--kron-hairline-soft);
-        }
-        .search-help-table code {
-            background: var(--kron-code-bg);
-            padding: 0.1em 0.3em;
-            border-radius: 3px;
-            font-size: 0.95em;
-        }
-        .search-help-note {
-            margin: 0.4em 0 0;
-            color: var(--kron-muted);
-            font-size: 0.9em;
-        }
-        .search-help-note kbd {
-            background: var(--kron-code-bg);
-            border: 1px solid var(--kron-control-border);
-            border-radius: 3px;
-            padding: 0.1em 0.4em;
-            font-size: 0.9em;
-            color: var(--kron-ink);
-        }
 
         .filter-row {
             display: flex;
@@ -886,13 +756,26 @@
             border-radius: 6px; background: var(--kron-field); color: var(--kron-ink-soft); font: 400 var(--kron-fs-control)/16px var(--kron-font); cursor: pointer;
         }
         .nav-filters-toggle:hover { background: var(--kron-hover); }
+        /* the filters on, counted on Filters (plans/SEARCH_PLAN.md F6), in More filters' pill until then */
+        .nav-filters-toggle.has-on { border-color: var(--kron-selected-edge); color: var(--kron-selected-ink); }
+        .filters-count {
+            display: inline-block; min-width: 18px; padding: 0 5px; box-sizing: border-box; border-radius: 999px;
+            background: var(--kron-accent); color: var(--kron-on-accent); font-size: var(--kron-fs-label); font-weight: 600;
+            line-height: 18px; text-align: center; font-variant-numeric: tabular-nums;
+        }
+        .filters-count[hidden] { display: none; }
+        /* the bar's status element: what the filters leave showing, for a screen reader only, never display:none (F8) */
+        .nav-status {
+            position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden;
+            clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
+        }
         .nav-filters-toggle.is-active { border-color: var(--kron-selected-edge); color: var(--kron-selected-ink); }
         .nav-filters-toggle[aria-expanded="true"] { background: var(--kron-selected); border-color: var(--kron-selected-edge); color: var(--kron-selected-ink); font-weight: 600; }
         .nav-clear:focus-visible, .nav-filters-toggle:focus-visible, .filters-close:focus-visible, .filters-empty-clear:focus-visible { outline: 2px solid var(--kron-accent); outline-offset: 1px; }
-        /* while the box is in the bar its own header carries the readout and Clear All */
+        /* while the box shows its own header carries the readout and Clear All */
         .nav-filters.riding .nav-readout, .nav-filters.riding .nav-clear { display: none; }
-        /* the box in the bar: the bar's top section, scrolling inside past its cap; the list under it keeps a window's height,
-           so a short result cannot pull the pinned bar back down */
+        /* the box in the bar: the bar's top section, scrolling inside past its cap while pinned; the list under it keeps a
+           window's height, so a short result cannot pull the pinned bar back down */
         .report-nav > .filtering-box { margin: 0; border: 0; border-bottom: 1px solid var(--kron-hairline-soft); border-radius: 0; box-shadow: none; background: transparent; overflow-y: auto; }
         .report-nav.has-filters ~ .report-panels { min-height: 100vh; }
         .filters-close {
@@ -925,13 +808,23 @@
         .filtered-out-clear:focus-visible { outline: 2px solid var(--kron-accent); outline-offset: 1px; }
         .nav-mark { height: 0; }
         @media (min-width: 768.02px) {
-            /* Filters only while the bar floats: at rest the box is in view above it. Pinned, the bar squares its corners and
-               casts its shadow (D25). */
-            .toolbar-row.report-nav:not(.k-floating) .nav-filters-toggle { display: none; }
+            /* Pinned, the bar squares its corners and casts its shadow (D25). Filters shows at rest too (plans/SEARCH_PLAN.md
+               F3): until then it showed only while the bar floated, the box being in view above the bar at rest. */
             .toolbar-row.report-nav.is-pinned { border-radius: 0; box-shadow: 0 2px 8px var(--kron-shadow); }
         }
-        /* on a phone the bar scrolls away and the box has its own Filters toggle */
-        @media (max-width: 768px) { .nav-filters { display: none; } }
+        /* On a phone the bar stays in the page, and Filters, with the readout and Clear All, takes a line of its own under
+           the tabs (F3), where the readout rode the box's own Filters line until then */
+        @media (max-width: 768px) {
+            .nav-row { flex-wrap: wrap; row-gap: 0; padding-right: 0; }
+            .nav-filters {
+                flex: 1 1 100%; min-width: 0; justify-content: flex-end; gap: 8px; padding: 6px 12px 8px;
+                border-top: 1px solid var(--kron-hairline-soft);
+            }
+            .nav-filters .nav-readout { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+            .nav-filters .nav-readout-long { display: none; }
+            .nav-filters .nav-readout-short { display: inline; }
+            .nav-filters-toggle { order: -1; }
+        }
         @media (min-width: 768.02px) {
             .toolbar-row.report-nav { margin-bottom: 0; border-radius: 12px 12px 0 0; box-shadow: none; }
             .toolbar-row.report-nav ~ .report-panels {
@@ -1983,37 +1876,6 @@
             color: var(--kron-prop-val);
         }
 
-        /* #2 The phone's Filters button, on a line of its own that the readout rides there (no line on a desktop) */
-        .mobile-filter-line { display: none; }
-        .mobile-filter-toggle {
-            display: inline-flex;
-            flex: none;
-            align-items: center;
-            gap: 0.5em;
-            padding: 0.4em 0;
-            border: 0;
-            background: none;
-            color: var(--kron-label);
-            font: inherit;
-            font-size: var(--kron-fs-label);
-            font-weight: 600;
-            letter-spacing: var(--kron-label-track);
-            text-transform: uppercase;
-            cursor: pointer;
-            user-select: none;
-        }
-        .mobile-filter-toggle:focus-visible { outline: 2px solid var(--kron-accent); outline-offset: 1px; }
-        .mobile-filter-toggle::before {
-            content: '▸';
-            font-size: 0.8em;
-            transition: transform 0.15s ease;
-        }
-        .mobile-filter-toggle[aria-expanded="true"]::before {
-            transform: rotate(90deg);
-        }
-        .mobile-filter-line > .filter-readout {
-            min-width: 0; margin: 0; padding: 0; border: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-        }
 
         /* #10 Back-to-top FAB */
         .back-to-top {
@@ -2051,25 +1913,8 @@
                 box-sizing: border-box;
             }
 
-            /* #7 Sticky search bar on mobile */
-            .filter-search {
-                position: sticky;
-                top: 0;
-                z-index: 100;
-                background: var(--kron-card);
-                padding: 0.4em 0;
-            }
-
             .filter-row {
                 flex-direction: column;
-            }
-
-            /* #2 the Filters button's line, with the readout at its right */
-            .mobile-filter-line {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 12px;
             }
 
             .toolbar-row {
@@ -2122,10 +1967,6 @@
 
 
 
-            .search-help-panel {
-                font-size: 0.8em;
-            }
-
             .filtering-box-header {
                 flex-direction: column;
                 align-items: flex-start;
@@ -2171,8 +2012,6 @@
             .tools-open .tools-gear { background: var(--kron-selected); color: var(--kron-selected-ink); border-color: var(--kron-selected-edge); }
             .report-nav:not(.tools-open) .features-tools .toolbar-right { display: none; }
             .features-tools .toolbar-right { padding: 0 14px 10px; }
-
-            #searchbar { font-size: 16px; }
 
             /* every filter control at the touch height, ANY / ALL and a row's Clear among them (5.0.0's #6; from 5.9.1 at
                768 px and below, as the wiki says, where it stood in the 480 px block and left those three out:

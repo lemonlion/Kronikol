@@ -79,15 +79,17 @@ public class ReportSectionWidthTests : PlaywrightTestBase
     }
 
     /// <summary>The table ran past the filtering box and scrolled the page by up to 82 px, from 1170 to
-    /// 1260 px.</summary>
+    /// 1260 px. Since plans/SEARCH_PLAN.md 4.3.5 the help is the query builder's tips, which scroll inside the builder.</summary>
     [Fact]
     public async Task The_search_help_table_scrolls_inside_its_panel_when_the_filtering_box_is_narrower()
     {
         await Open(1180, textSpacing: true);
-        await HoldFilteringBox(220);
-        await Page.Locator(".search-help-toggle").First.ClickAsync();
-        var panel = Page.Locator(".search-help-panel").First;
+        await Page.Locator("#search-button").ClickAsync();
+        await Page.Locator(".search-tips-toggle").ClickAsync();
+        var panel = Page.Locator("#search-tips");
         await Expect(panel).ToBeVisibleAsync();
+        // the builder held narrower than its table
+        await Page.EvaluateAsync("() => { const p = document.querySelector('.search-panel'); p.style.width = '220px'; }");
 
         await Expect(panel).ToHaveCSSAsync("overflow-x", "auto");
         var widths = await panel.EvaluateAsync<double[]>("p => [p.scrollWidth, p.clientWidth]");
@@ -102,8 +104,9 @@ public class ReportSectionWidthTests : PlaywrightTestBase
     {
         await Open(1161, textSpacing: true);
         // Since 5.0.0 a filtering box under 430 px drops the word Filtered (OPTION_C_PLAN S6), and Export HTML fits a
-        // 140 px box whole, so the box is held narrower than that.
+        // 140 px box whole, so the box is held narrower than that, and open (plans/SEARCH_PLAN.md F3)
         await HoldFilteringBox(100);
+        await OpenFilterRowsAsync();
         var button = Page.Locator("button.export-btn", new() { HasTextString = "Export Filtered HTML" });
         Assert.True(await button.Locator(".wide-only").EvaluateAsync<bool>("s => getComputedStyle(s).display === 'none'"));
 

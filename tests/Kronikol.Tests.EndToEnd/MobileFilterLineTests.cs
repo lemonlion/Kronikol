@@ -4,10 +4,11 @@ using Microsoft.Playwright;
 namespace Kronikol.Tests.EndToEnd;
 
 /// <summary>
-/// The phone's Filters line (5.0.0, plans/OPTION_C_PLAN.md S12): on a phone the filter rows fold under a Filters button on
-/// a line of its own, which the readout rides; the button folds them with More filters' class, so the rows stay as they
-/// were when the window crosses the phone breakpoint either way; the keyboard reaches it; the search help opens while the
-/// rows are folded; and in the dark theme the sticky search line has the filter box's own ground.
+/// The phone's Filters line. From 5.0.0 (plans/OPTION_C_PLAN.md S12) the filter rows folded under a Filters button of the
+/// box's own on a phone, on a line the readout rode; since plans/SEARCH_PLAN.md F3 and F5 the box is hidden at every width
+/// until the bar's Filters opens it, and on a phone the bar's Filters and its readout take a line of their own under the
+/// tabs (F-n). The box keeps its state across the phone breakpoint either way, the keyboard reaches Filters, the search's
+/// tips open in the builder's sheet, and the dark theme gives the phone's search box the theme switch's ground.
 /// </summary>
 [Collection(PlaywrightCollections.Reports)]
 public class MobileFilterLineTests : PlaywrightTestBase
@@ -40,26 +41,29 @@ public class MobileFilterLineTests : PlaywrightTestBase
         await TwoAnimationFramesAsync(Page);
     }
 
-    private ILocator Filters => Page.Locator(".mobile-filter-toggle");
-    private ILocator More => Page.Locator(".filtering-box .more-filters");
-    private ILocator Rows => Page.Locator("#filter-rows .filter-row").First;
-    private ILocator Readout => Page.Locator(".filtering-box .filter-readout");
+    private ILocator Filters => Page.Locator(".nav-filters-toggle");
+    private ILocator Box => Page.Locator("#filtering-box");
+    private ILocator Readout => Page.Locator(".nav-readout");
 
-    // where the readout is: on the Filters line, right before Clear All, or anywhere else
-    private Task<string> ReadoutPlaceAsync() => Readout.EvaluateAsync<string>("""
-        r => r.parentElement.classList.contains('mobile-filter-line') ? 'line'
-            : r.nextElementSibling && /clear_all_filters/.test(r.nextElementSibling.getAttribute('onclick') || '') ? 'before Clear All'
-            : 'elsewhere'
+    // whether the bar's Filters group is on a line of its own under the tabs, or on the tabs' own line
+    private Task<string> FiltersLineAsync() => Page.EvaluateAsync<string>("""
+        () => {
+            const tabs = document.querySelector('.report-tabs').getBoundingClientRect();
+            const group = document.querySelector('.nav-filters').getBoundingClientRect();
+            return group.top >= tabs.bottom - 1 ? 'under the tabs' : 'beside the tabs';
+        }
         """);
 
+    // F-n
     [Fact]
-    public async Task On_a_phone_the_readout_rides_the_Filters_line_and_keeps_counting()
+    public async Task On_a_phone_Filters_and_the_readout_share_a_line_under_the_tabs()
     {
         await OpenAsync("MobileFilterLine_Readout.html", 400);
 
-        Assert.Equal("line", await ReadoutPlaceAsync());
+        Assert.Equal("under the tabs", await FiltersLineAsync());
+        await Expect(Readout).ToBeVisibleAsync();
         var middles = await Page.EvaluateAsync<double[]>("""
-            () => ['.mobile-filter-toggle', '.filtering-box .filter-readout'].map(s => {
+            () => ['.nav-filters-toggle', '.nav-readout'].map(s => {
                 const r = document.querySelector(s).getBoundingClientRect();
                 return r.top + r.height / 2;
             })
@@ -67,108 +71,111 @@ public class MobileFilterLineTests : PlaywrightTestBase
         Assert.True(Math.Abs(middles[0] - middles[1]) <= 2, $"the readout's middle is at {middles[1]}, the button's at {middles[0]}");
 
         await FillSearchBar("Scenario 1.2");
-        await Expect(Readout).ToContainTextAsync("Filtered");
-        Assert.Equal("line", await ReadoutPlaceAsync());
+        await Expect(Page.Locator(".nav-readout-long, .nav-readout-short").First).ToContainTextAsync("Filtered");
+        Assert.Equal("under the tabs", await FiltersLineAsync());
     }
 
     [Fact]
-    public async Task On_a_wider_window_the_readout_is_before_Clear_All_and_it_follows_the_width()
+    public async Task Across_the_phone_breakpoint_the_Filters_group_moves_between_the_tabs_line_and_its_own()
     {
         await OpenAsync("MobileFilterLine_Width.html", 1280);
-        Assert.Equal("before Clear All", await ReadoutPlaceAsync());
-        await Expect(Page.Locator(".mobile-filter-line")).ToBeHiddenAsync();
+        Assert.Equal("beside the tabs", await FiltersLineAsync());
 
         await Page.SetViewportSizeAsync(400, 800);
-        await Page.WaitForFunctionAsync("() => document.querySelector('.filtering-box .filter-readout').parentElement.classList.contains('mobile-filter-line')",
-            null, new() { PollingInterval = 200 });
+        await TwoAnimationFramesAsync(Page);
+        Assert.Equal("under the tabs", await FiltersLineAsync());
 
         await Page.SetViewportSizeAsync(1280, 800);
-        await Page.WaitForFunctionAsync("() => !document.querySelector('.filtering-box .filter-readout').parentElement.classList.contains('mobile-filter-line')",
-            null, new() { PollingInterval = 200 });
-        Assert.Equal("before Clear All", await ReadoutPlaceAsync());
+        await TwoAnimationFramesAsync(Page);
+        Assert.Equal("beside the tabs", await FiltersLineAsync());
     }
 
     [Fact]
-    public async Task The_keyboard_reaches_the_Filters_button_and_opens_and_folds_the_rows()
+    public async Task The_keyboard_reaches_Filters_and_opens_and_hides_the_box()
     {
         await OpenAsync("MobileFilterLine_Keys.html", 400);
-        await Page.Locator(".search-help-toggle").FocusAsync();
+        await Page.Locator("#tab-features").FocusAsync();
 
-        await Page.Keyboard.PressAsync("Tab");
-        Assert.True(await Filters.EvaluateAsync<bool>("b => document.activeElement === b"), "Tab from the search help went to the Filters button");
+        for (var i = 0; i < 6 && !await Filters.EvaluateAsync<bool>("b => document.activeElement === b"); i++)
+            await Page.Keyboard.PressAsync("Tab");
+        Assert.True(await Filters.EvaluateAsync<bool>("b => document.activeElement === b"), "Tab from the tabs never reached Filters");
         await Expect(Filters).ToHaveAttributeAsync("aria-expanded", "false");
-        await Expect(Rows).ToBeHiddenAsync();
+        await Expect(Box).ToBeHiddenAsync();
 
         await Page.Keyboard.PressAsync("Enter");
         await Expect(Filters).ToHaveAttributeAsync("aria-expanded", "true");
-        await Expect(Rows).ToBeVisibleAsync();
+        await Expect(Box).ToBeVisibleAsync();
 
+        await Page.Keyboard.PressAsync("Escape");
+        await Expect(Box).ToBeHiddenAsync();
+        await Expect(Filters).ToBeFocusedAsync();
         await Page.Keyboard.PressAsync("Space");
-        await Expect(Filters).ToHaveAttributeAsync("aria-expanded", "false");
-        await Expect(Rows).ToBeHiddenAsync();
+        await Expect(Box).ToBeVisibleAsync();
     }
 
     [Fact]
-    public async Task On_a_phone_the_search_help_opens_while_the_rows_are_folded()
+    public async Task On_a_phone_the_search_tips_open_in_the_builder_s_sheet()
     {
         await OpenAsync("MobileFilterLine_Help.html", 400);
-        await Page.Locator(".search-help-toggle").ClickAsync();
+        await Page.Locator("#search-button").ClickAsync();
+        await Page.WaitForFunctionAsync("() => document.getElementById('search-dialog').open", null, new() { PollingInterval = 200 });
+        Assert.True(await Page.EvaluateAsync<bool>("() => document.getElementById('search-dialog').classList.contains('is-sheet')"));
 
-        await Expect(Page.Locator(".search-help-panel")).ToBeVisibleAsync();
-        await Expect(Rows).ToBeHiddenAsync();
-        await Expect(Filters).ToHaveAttributeAsync("aria-expanded", "false");
+        await Page.Locator(".search-tips-toggle").ClickAsync();
+        await Expect(Page.Locator("#search-tips")).ToBeVisibleAsync();
+        await Expect(Box).ToBeHiddenAsync();
     }
 
     [Fact]
-    public async Task Rows_opened_on_a_phone_stay_open_on_a_wider_window_and_rows_folded_there_stay_folded_on_a_phone()
+    public async Task The_box_opened_on_a_phone_stays_open_on_a_wider_window_and_hidden_there_stays_hidden_on_a_phone()
     {
         await OpenAsync("MobileFilterLine_Across.html", 400);
         await Filters.ClickAsync();
-        await Expect(Rows).ToBeVisibleAsync();
+        await Expect(Box).ToBeVisibleAsync();
 
         await Page.SetViewportSizeAsync(1280, 800);
-        await Expect(Rows).ToBeVisibleAsync();
-        await Expect(More).ToHaveAttributeAsync("aria-expanded", "true");
+        await Expect(Box).ToBeVisibleAsync();
+        await Expect(Filters).ToHaveAttributeAsync("aria-expanded", "true");
 
-        await More.ClickAsync();
-        await Expect(Rows).ToBeHiddenAsync();
+        await Filters.ClickAsync();
+        await Expect(Box).ToBeHiddenAsync();
         await Page.SetViewportSizeAsync(400, 800);
-        await Expect(Rows).ToBeHiddenAsync();
+        await Expect(Box).ToBeHiddenAsync();
         await Expect(Filters).ToHaveAttributeAsync("aria-expanded", "false");
     }
 
     [Fact]
-    public async Task A_page_opened_wide_then_narrowed_folds_its_rows_under_Filters_which_opens_them()
+    public async Task A_page_opened_wide_then_narrowed_opens_its_box_with_Filters()
     {
         await OpenAsync("MobileFilterLine_Narrowed.html", 1280);
         await Page.SetViewportSizeAsync(400, 800);
 
         await Expect(Filters).ToBeVisibleAsync();
-        await Expect(Rows).ToBeHiddenAsync();
+        await Expect(Box).ToBeHiddenAsync();
         await Filters.ClickAsync();
-        await Expect(Rows).ToBeVisibleAsync();
-        await Expect(Filters).ToHaveAttributeAsync("aria-expanded", "true");
+        await Expect(Box).ToBeVisibleAsync();
+        await Expect(Page.Locator(".status-toggle").First).ToBeVisibleAsync();
     }
 
     [Fact]
-    public async Task A_page_opened_on_a_phone_then_widened_opens_its_rows_with_More_filters()
+    public async Task A_page_opened_on_a_phone_then_widened_opens_its_box_with_Filters()
     {
         await OpenAsync("MobileFilterLine_Widened.html", 400);
         await Page.SetViewportSizeAsync(1280, 800);
 
-        await More.ClickAsync();
-        await Expect(Rows).ToBeVisibleAsync();
-        await Expect(More).ToHaveAttributeAsync("aria-expanded", "true");
+        await Filters.ClickAsync();
+        await Expect(Box).ToBeVisibleAsync();
+        await Expect(Filters).ToHaveAttributeAsync("aria-expanded", "true");
     }
 
     [Fact]
-    public async Task In_the_dark_theme_the_phones_sticky_search_line_has_the_filter_boxs_ground()
+    public async Task In_the_dark_theme_the_phone_s_search_box_has_the_theme_switch_s_ground()
     {
         await Page.EmulateMediaAsync(new() { ColorScheme = ColorScheme.Dark });
         await OpenAsync("MobileFilterLine_Dark.html", 400);
 
         var grounds = await Page.EvaluateAsync<string[]>(
-            "() => ['.filter-search', '.filtering-box'].map(s => getComputedStyle(document.querySelector(s)).backgroundColor)");
+            "() => ['.search-box', '.theme-toggle'].map(s => getComputedStyle(document.querySelector(s)).backgroundColor)");
         Assert.Equal(grounds[1], grounds[0]);
         Assert.NotEqual("rgb(224, 224, 224)", grounds[0]);
     }

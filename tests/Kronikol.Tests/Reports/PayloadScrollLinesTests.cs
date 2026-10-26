@@ -146,12 +146,14 @@ public class PayloadScrollLinesTests
     }
 
     /// <summary>The records go with the picture: every swap of a diagram's picture installs them before it is decorated,
-    /// and the first drawing does so in the render script.</summary>
+    /// and the first drawing does so in the render script. Every redraw is the render queue's since SEARCH_PLAN (4.6.5),
+    /// a note's own as well, so its four swaps are all there are: a picture kept with new records, parts, and a whole
+    /// diagram drawn or taken from the cache.</summary>
     [Fact]
     public void Every_picture_swap_installs_the_records_it_was_drawn_with()
     {
         var notes = DiagramContextMenu.GetCollapsibleNotesScript();
-        Assert.Equal(7, Regex.Matches(notes, @"installNoteScroll\(container, scroll, newSource\);").Count);
+        Assert.Equal(4, Regex.Matches(notes, @"installNoteScroll\(container, scroll, newSource\);").Count);
         var render = DiagramContextMenu.GetPlantUmlBrowserRenderScript();
         var install = render.IndexOf("window._installNoteScroll(", StringComparison.Ordinal);
         var decorate = render.IndexOf("window._makeNotesCollapsible(hookTarget)", StringComparison.Ordinal);

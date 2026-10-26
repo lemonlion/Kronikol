@@ -128,18 +128,18 @@ public partial class StylesheetRulesTests
     [GeneratedRegex(@"(min|max)-width:\s*([\d.]+)px")]
     private static partial Regex WidthBound();
 
-    /// <summary>More filters' count is text on the accent: in every block of the token sheet (light, the dark one the
-    /// switch sets, and the dark one the system's setting gives a page with no pick) its ink and its ground, resolved
-    /// through the tokens as the cascade does, read at AA (4.5:1). The dark accent is a light blue, so white on it
-    /// read at 2.4:1.</summary>
+    /// <summary>The count of the filters on is text on the accent, on Filters since plans/SEARCH_PLAN.md F6 (on More
+    /// filters until then): in every block of the token sheet (light, the dark one the switch sets, and the dark one the
+    /// system's setting gives a page with no pick) its ink and its ground, resolved through the tokens as the cascade
+    /// does, read at AA (4.5:1). The dark accent is a light blue, so white on it read at 2.4:1.</summary>
     [Theory]
     [InlineData(":root[data-theme=\"dark\"]", null)]
     [InlineData(":root:not([data-theme])", "(prefers-color-scheme: dark)")]
     [InlineData(":root", null)]
-    public void The_more_filters_count_reads_at_AA_in_every_theme(string block, string? media)
+    public void The_filters_count_reads_at_AA_in_every_theme(string block, string? media)
     {
-        var ink = TokenValue(block, media, CssRules.Value(Base, ".more-filters-count", "color"));
-        var ground = TokenValue(block, media, CssRules.Value(Base, ".more-filters-count", "background"));
+        var ink = TokenValue(block, media, CssRules.Value(Base, ".filters-count", "color"));
+        var ground = TokenValue(block, media, CssRules.Value(Base, ".filters-count", "background"));
 
         var ratio = Contrast(ink, ground);
         Assert.True(ratio >= 4.5, $"{block}: the count is {ink} on {ground}, {ratio.ToString("0.00", CultureInfo.InvariantCulture)}:1");
@@ -207,28 +207,47 @@ public partial class StylesheetRulesTests
         Assert.Matches(@"\.dependency-filters-label\s*\{[^}]*\bwidth:\s*auto", narrow);
     }
 
+    // plans/SEARCH_PLAN.md F1, F5: the box is shown and hidden whole, its hidden attribute kept by a rule of its own over
+    // the box's display, and its rows never fold (More filters and the phone's Filters folded them until then)
     [Fact]
-    public void The_filter_rows_fold_with_one_class_at_every_width()
+    public void The_box_hides_with_its_hidden_attribute_and_its_rows_never_fold()
     {
-        Assert.Equal("none", CssRules.Value(Base, ".filtering-box.rows-folded:not(.help-open) > .filters", "display"));
-        Assert.Equal("none", CssRules.Value(Base, ".filtering-box.rows-folded.help-open > .filters > :not(.search-help-panel)", "display"));
-        Assert.Null(CssRules.Value(Base, ".filtering-box.rows-folded:not(.help-open) > .filters", "display", "(min-width: 768.02px)"));
+        Assert.Equal("none", CssRules.Value(Base, ".filtering-box[hidden]", "display"));
+        Assert.DoesNotContain("rows-folded", Base);
+        Assert.DoesNotContain(".more-filters", Base);
+        Assert.DoesNotContain(".mobile-filter", Base);
     }
 
-    /// <summary>The phone's Filters button and its sticky search line take their colours from the tokens (they were
-    /// rgb(100, 100, 100) and rgb(224, 224, 224) in every theme): the search line the filter box's own ground, and the
-    /// button the rows' label ink, which reads at AA on that ground in every block of the token sheet.</summary>
+    // F3: Filters shows at every width, at rest and pinned: no rule hides it or its group
+    [Fact]
+    public void No_rule_hides_Filters_or_its_group()
+    {
+        foreach (var media in new string?[] { null, "(min-width: 768.02px)", "(max-width: 768px)" })
+        {
+            Assert.Null(CssRules.Value(Base, ".toolbar-row.report-nav:not(.k-floating) .nav-filters-toggle", "display", media));
+            Assert.NotEqual("none", CssRules.Value(Base, ".nav-filters", "display", media));
+        }
+    }
+
+    /// <summary>Filters, the way to the box at every width since plans/SEARCH_PLAN.md F3 (the phone had a Filters button of
+    /// its own in the box until then), reads at AA on its ground in every block of the token sheet. The phone's sticky search
+    /// line went with the search, which left the box for the title line (4.2): on a phone its button is the magnifier
+    /// alone, in the selected colours while a search is applied, at 3:1 at least, as a graphic must be (WCAG 1.4.11).</summary>
     [Theory]
     [InlineData(":root[data-theme=\"dark\"]", null)]
     [InlineData(":root:not([data-theme])", "(prefers-color-scheme: dark)")]
     [InlineData(":root", null)]
-    public void The_phone_Filters_button_and_search_line_read_in_every_theme(string block, string? media)
+    public void The_phone_search_and_Filters_read_in_every_theme(string block, string? media)
     {
-        var box = CssRules.Value(Base, ".filtering-box", "background");
-        Assert.Equal(box, CssRules.Value(Base, ".filter-search", "background", "(max-width: 768px)"));
+        Assert.Null(CssRules.Value(Base, ".filter-search", "background", "(max-width: 768px)"));
+        var search = Stylesheets.SearchStyleSheet;
+        var icon = TokenValue(block, media, CssRules.Value(search, ".search-box.has-query .search-icon", "color", "(max-width: 768px)"));
+        var under = TokenValue(block, media, CssRules.Value(search, ".search-box.has-query", "background", "(max-width: 768px)"));
+        var iconRatio = Contrast(icon, under);
+        Assert.True(iconRatio >= 3, $"{block}: the phone's search icon is {icon} on {under}, {iconRatio.ToString("0.00", CultureInfo.InvariantCulture)}:1");
 
-        var ink = TokenValue(block, media, CssRules.Value(Base, ".mobile-filter-toggle", "color"));
-        var ground = TokenValue(block, media, box);
+        var ink = TokenValue(block, media, CssRules.Value(Base, ".nav-filters-toggle", "color"));
+        var ground = TokenValue(block, media, CssRules.Value(Base, ".nav-filters-toggle", "background"));
         var ratio = Contrast(ink, ground);
         Assert.True(ratio >= 4.5, $"{block}: the Filters button is {ink} on {ground}, {ratio.ToString("0.00", CultureInfo.InvariantCulture)}:1");
     }
@@ -468,9 +487,14 @@ public partial class StylesheetRulesTests
     [InlineData(".features-summary-table-wrapper")]
     [InlineData(".example-image")]
     [InlineData(".raw-plantuml pre")]
-    [InlineData(".search-help-panel")]
     public void A_table_or_block_wider_than_its_holder_scrolls_inside_it(string selector) =>
         Assert.Equal("auto", CssRules.Value(Base, selector, "overflow-x"));
+
+    /// <summary>The syntax tips, in the query builder since the search left the box (plans/SEARCH_PLAN.md 4.3.5), scroll
+    /// inside it, as the box's help panel did.</summary>
+    [Fact]
+    public void The_search_tips_scroll_inside_the_builder() =>
+        Assert.Equal("auto", CssRules.Value(Stylesheets.SearchStyleSheet, ".search-tips", "overflow"));
 
     /// <summary>The image keeps its 320 by 240 px cap (border outside it) and fills at most its link, whose
     /// width the cap now bounds together with its step: a percentage cap on the image itself would size

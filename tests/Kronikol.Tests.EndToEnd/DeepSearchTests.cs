@@ -141,17 +141,34 @@ public class DeepSearchTests : PlaywrightTestBase
             null, new() { Timeout = timeoutMs, PollingInterval = 200 });
     }
 
-    private async Task WaitForChipText(string contains, int timeoutMs = 15000)
+    // What deep search said as it ended: how many results it added and took away. Until plans/SEARCH_PLAN.md 4.5.7 a chip in
+    // the search field said it ("+1 more found in payloads & diagrams", "results refined (+0/−1)", "no additional
+    // matches"); the field went with the search's move to the title line, and the script tells it as a kron-deep event and
+    // in window.__kronikolSearch, which the Search tab's bar and counts read.
+    private async Task WaitForDeepDone(int added, int removed, int timeoutMs = 15000)
     {
         await Page.WaitForFunctionAsync(
-            $"() => {{ var c = document.querySelector('.kron-deep-chip'); return c && c.style.display !== 'none' && c.textContent.includes('{contains}'); }}",
+            $"() => window.__kronikolSearch.deep === 'done' && !!window.__kronikolSearch.lastQuery"
+            + $" && window.__kronikolSearch.lastQuery.added === {added} && window.__kronikolSearch.lastQuery.removed === {removed}",
             null, new() { Timeout = timeoutMs, PollingInterval = 200 });
+    }
+
+    private async Task WaitForDeepAdded(int timeoutMs = 15000)
+    {
+        await Page.WaitForFunctionAsync(
+            "() => window.__kronikolSearch.deep === 'done' && !!window.__kronikolSearch.lastQuery && window.__kronikolSearch.lastQuery.added > 0",
+            null, new() { Timeout = timeoutMs, PollingInterval = 200 });
+    }
+
+    private async Task WaitForDeepIdle(int timeoutMs = 15000)
+    {
+        await Page.WaitForFunctionAsync("() => window.__kronikolSearch.deep === 'idle'", null, new() { Timeout = timeoutMs, PollingInterval = 200 });
     }
 
     // ── deep-only surfaces become findable ──
 
     [Fact]
-    public async Task Payload_only_text_is_found_and_chip_reports_the_addition()
+    public async Task Payload_only_text_is_found_and_deep_search_reports_the_addition()
     {
         await Page.GotoReportAsync(GenerateDeepReport("DeepSearchPayload.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
@@ -162,7 +179,7 @@ public class DeepSearchTests : PlaywrightTestBase
                 .filter(s => getComputedStyle(s).display !== 'none')[0].id
         """);
         Assert.Equal("scenario-create-order-successfully", search);
-        await WaitForChipText("+1 more found in payloads & diagrams");
+        await WaitForDeepDone(1, 0);
     }
 
     [Fact]
@@ -194,7 +211,7 @@ public class DeepSearchTests : PlaywrightTestBase
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await SearchAndWaitForVisible(MessageNeedle, 1);
-        await WaitForChipText("more found");
+        await WaitForDeepAdded();
     }
 
     // The search worker reads the index and each diagram's source out of gzip. In WebKit (the Windows build of
@@ -288,7 +305,7 @@ public class DeepSearchTests : PlaywrightTestBase
     // ── deep is authoritative: negation can remove shallow results ──
 
     [Fact]
-    public async Task Negated_payload_term_removes_a_shallow_match_and_chip_says_refined()
+    public async Task Negated_payload_term_removes_a_shallow_match_and_deep_search_says_refined()
     {
         await Page.GotoReportAsync(GenerateDeepReport("DeepSearchNegation.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
@@ -303,7 +320,7 @@ public class DeepSearchTests : PlaywrightTestBase
                 return vis.length === 1 && vis[0].id === 'scenario-list-orders-quietly';
             }
         """, null, new() { Timeout = 15000, PollingInterval = 200 });
-        await WaitForChipText("results refined (+0/−1)");
+        await WaitForDeepDone(0, 1);
     }
 
     [Fact]
@@ -389,7 +406,7 @@ public class DeepSearchTests : PlaywrightTestBase
 
         // …but the search box still finds it, via the index + the rendered failure <pre>
         await SearchAndWaitForVisible("zqxstacktrace77", 1);
-        await WaitForChipText("+1 more found");
+        await WaitForDeepDone(1, 0);
     }
 
     [Fact]
@@ -407,7 +424,7 @@ public class DeepSearchTests : PlaywrightTestBase
     // ── a broken index must fail loudly, not wedge ──
 
     [Fact]
-    public async Task Corrupt_index_blob_surfaces_error_and_never_wedges_the_chip()
+    public async Task Corrupt_index_blob_surfaces_error_and_never_wedges_deep_search()
     {
         var url = GenerateDeepReport("DeepSearchCorruptBlob.html");
         var path = new Uri(url).LocalPath;
@@ -425,14 +442,12 @@ public class DeepSearchTests : PlaywrightTestBase
         await Page.Locator("details.feature").First.WaitForAsync();
 
         // deep-eligible query triggers init; the failure must surface as indexState 'error'
-        // with the chip hidden (an unhandled worker rejection would leave it pulsing forever)
+        // with deep search idle again (an unhandled worker rejection would leave it working forever)
         await FillSearchBar(PayloadNeedle);
         await Page.WaitForFunctionAsync(
             "() => window.__kronikolSearch.indexState === 'error'",
             null, new() { Timeout = 15000, PollingInterval = 200 });
-        await Page.WaitForFunctionAsync(
-            "() => { var c = document.querySelector('.kron-deep-chip'); return !c || c.style.display === 'none'; }",
-            null, new() { Timeout = 5000, PollingInterval = 200 });
+        await WaitForDeepIdle(5000);
 
         // shallow search is unaffected
         await SearchAndWaitForVisible("successfully", 1);
@@ -466,47 +481,76 @@ public class DeepSearchTests : PlaywrightTestBase
         await SearchAndWaitForVisible(PayloadNeedle, 1);
     }
 
-    // ── chip states ──
+    // ── what deep search says ──
 
     [Fact]
-    public async Task Chip_reports_no_additional_matches_when_deep_adds_nothing()
+    public async Task Deep_search_reports_no_additional_matches_when_it_adds_nothing()
     {
         await Page.GotoReportAsync(GenerateDeepReport("DeepSearchChipZero.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await SearchAndWaitForVisible("successfully", 1);
-        await WaitForChipText("no additional matches");
+        await WaitForDeepDone(0, 0);
     }
 
     [Fact]
-    public async Task Chip_is_hidden_for_metadata_only_queries()
+    public async Task Deep_search_stays_idle_for_metadata_only_queries()
     {
         await Page.GotoReportAsync(GenerateDeepReport("DeepSearchChipHidden.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await FillSearchBar(PayloadNeedle);
-        await WaitForChipText("more found");
+        await WaitForDeepAdded();
 
         await FillSearchBar("$passed");
-        await Page.WaitForFunctionAsync(
-            "() => { var c = document.querySelector('.kron-deep-chip'); return !c || c.style.display === 'none'; }",
-            null, new() { Timeout = 15000, PollingInterval = 200 });
+        await WaitForDeepIdle();
     }
 
     [Fact]
-    public async Task Clear_all_filters_resets_deep_state_and_chip()
+    public async Task Clear_all_filters_resets_deep_state()
     {
         await Page.GotoReportAsync(GenerateDeepReport("DeepSearchClearAll.html"));
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await SearchAndWaitForVisible(PayloadNeedle, 1);
-        await WaitForChipText("more found");
+        await WaitForDeepAdded();
 
         await Page.EvaluateAsync("() => clear_all_filters()");
-        await Page.WaitForFunctionAsync(
-            "() => { var c = document.querySelector('.kron-deep-chip'); return !c || c.style.display === 'none'; }",
-            null, new() { Timeout = 5000, PollingInterval = 200 });
+        await WaitForDeepIdle(5000);
         Assert.Equal(3, await GetVisibleScenarioCount());
+    }
+
+    // R22 (plans/SEARCH_PLAN.md 4.5.7): on the Search tab the results deep search adds join after the instant ones, so a
+    // page being read changes at its end, though by the sort chosen (Name) the deep one would come first; the next sort puts
+    // every result in its place. The bar along the results runs only while deep search reads.
+    [Fact]
+    public async Task Deep_results_join_after_the_instant_ones_of_their_strength_while_the_bar_runs()
+    {
+        await Page.GotoReportAsync(GenerateDeepReport("DeepSearchJoin.html"));
+        await Page.Locator("details.feature").First.WaitForAsync();
+        await Page.EvaluateAsync(@"() => {
+            window.__barWhile = [];
+            new MutationObserver(() => {
+                const bar = document.querySelector('#panel-search .search-progress');
+                if (bar && !bar.hidden) window.__barWhile.push(window.__kronikolSearch.deep);
+            }).observe(document.getElementById('panel-search'), { subtree: true, attributes: true, attributeFilter: ['hidden'] });
+        }");
+        await FillSearchBar("quietly", toSearchTab: true);
+        await Page.WaitForFunctionAsync("() => !document.getElementById('panel-search').hidden", null, new() { PollingInterval = 200 });
+        await Page.Locator("#panel-search .search-sort-select").SelectOptionAsync("name");
+
+        await FillSearchBar($"zqxdesc-listing || {PayloadNeedle}", toSearchTab: true);
+        await WaitForDeepDone(1, 0);
+        await TwoAnimationFramesAsync(Page);
+
+        var titles = "() => Array.from(document.querySelectorAll('#panel-search .search-result-title')).map(a => a.textContent)";
+        Assert.Equal(["List orders quietly", "Create order successfully"], await Page.EvaluateAsync<string[]>(titles));
+        Assert.True(await Page.Locator("#panel-search .search-progress").IsHiddenAsync());
+        Assert.All(await Page.EvaluateAsync<string[]>("() => window.__barWhile"), state => Assert.Contains(state, new[] { "working", "batch" }));
+
+        await Page.Locator("#panel-search .search-sort-select").SelectOptionAsync("order");
+        await TwoAnimationFramesAsync(Page);
+        Assert.Equal(["Create order successfully", "List orders quietly"], await Page.EvaluateAsync<string[]>(titles));
     }
 
     // ── URL hash restore re-runs deep ──
@@ -526,7 +570,7 @@ public class DeepSearchTests : PlaywrightTestBase
     // ── opt-out behaves like today ──
 
     [Fact]
-    public async Task Opt_out_report_has_no_index_no_chip_and_shallow_search_still_works()
+    public async Task Opt_out_report_has_no_index_and_shallow_search_still_works()
     {
         await Page.GotoReportAsync(GenerateDeepReport("DeepSearchOptOut.html", fullSearchIndex: false));
         await Page.Locator("details.feature").First.WaitForAsync();
@@ -537,8 +581,7 @@ public class DeepSearchTests : PlaywrightTestBase
         await FillSearchBar(PayloadNeedle);
         await Page.WaitForTimeoutAsync(1200);               // debounce + would-be deep window
         Assert.Equal(0, await GetVisibleScenarioCount());   // deep-only needle stays unfindable
-        Assert.False(await Page.EvaluateAsync<bool>(
-            "() => { var c = document.querySelector('.kron-deep-chip'); return !!c && c.style.display !== 'none'; }"));
+        Assert.Equal("idle", await Page.EvaluateAsync<string>("() => window.__kronikolSearch.deep"));
     }
 
     // ── the puml-data (not data-plantuml) invariant ──
@@ -577,7 +620,7 @@ public class DeepSearchTests : PlaywrightTestBase
         await Page.Locator("details.feature").First.WaitForAsync();
 
         await SearchAndWaitForVisible(PayloadNeedle, 1);
-        await WaitForChipText("more found");
+        await WaitForDeepAdded();
 
         var state = await Page.EvaluateAsync<string>("() => window.__kronikolSearch.indexState");
         Assert.Equal("ready", state);

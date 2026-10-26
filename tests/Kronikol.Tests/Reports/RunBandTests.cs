@@ -111,13 +111,17 @@ public class RunBandTests
     }
 
     [Fact]
-    public void The_filter_box_follows_the_band_on_its_own_row_with_the_ids_the_bar_points_at()
+    public void The_bar_follows_the_band_with_the_filter_box_at_its_top_and_the_ids_Filters_points_at()
     {
         var html = GenerateReport("RunBand_FilterRow.html", Features(ExecutionResult.Passed), GitHub);
 
+        // the box sits at the top of the bar, hidden until Filters opens it (plans/SEARCH_PLAN.md F1, F2); until then it
+        // had a row of its own between the band and the bar
         var end = html.IndexOf("</section>", html.IndexOf("<section class=\"run-band\"", StringComparison.Ordinal), StringComparison.Ordinal);
-        Assert.StartsWith("<div class=\"filtering-box rows-folded\" id=\"filtering-box\">", html[(end + "</section>".Length)..].TrimStart()); // folded under More filters (S7)
+        Assert.StartsWith("<div class=\"nav-mark\" aria-hidden=\"true\"></div><div class=\"toolbar-row report-nav on-features\"><div class=\"filtering-box\" id=\"filtering-box\"",
+            html[(end + "</section>".Length)..].TrimStart());
         Assert.Contains("<div class=\"filters\" id=\"filter-rows\">", html);
+        Assert.Contains("aria-controls=\"filtering-box\"", html);
     }
 
     /// <summary>D4: whether the CI zone shares the ring's row is decided by a script, on the zones' measured widths,

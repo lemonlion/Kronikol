@@ -161,10 +161,11 @@ public class BackForwardRestoreTests : BackForwardTestBase
     }
 
     [Fact]
-    public async Task R6_Without_tabs_a_chip_and_a_link_button_go_back_as_they_do_with_them()
+    public async Task R6_With_the_Features_tab_alone_a_chip_and_a_link_button_go_back_as_they_do_with_more_tabs()
     {
+        // a page of features alone had no tabs until plans/SEARCH_PLAN.md F7; it has the bar with its Features tab now
         await OpenAsync(Tabless("BackNav_R6.html"));
-        Assert.Equal(0, await Page.Locator(".report-tabs").CountAsync());
+        Assert.Equal(1, await Page.Locator(".report-tabs > .report-tab:not([hidden])").CountAsync());
         await OpenFilterRowsAsync();
         await Page.Locator(".filtering-box .tag-toggle[data-tag='odd']").ClickAsync();
         Assert.Equal("#tags=odd", await HashSoonAsync("#tags=odd"));
@@ -345,10 +346,13 @@ public class BackForwardRestoreTests : BackForwardTestBase
             var frame = page.Frames.First(f => f != page.MainFrame);
             await frame.Locator("details.feature").First.WaitForAsync(new() { Timeout = 60000 });
             await frame.WaitForFunctionAsync("() => !!document.documentElement.getAttribute('data-kron-nav')", null, new() { PollingInterval = 200, Timeout = 30000 });
-            await frame.Locator(".filtering-box .more-filters").ClickAsync();
+            // the box opens with the bar's Filters, and the search is the query builder's (plans/SEARCH_PLAN.md F3, 4.3):
+            // its row that filters the list on screen applies the query there
+            await frame.Locator(".nav-filters-toggle").ClickAsync();
             await frame.Locator(".status-toggle[data-status='Failed']").ClickAsync();
-            await frame.Locator("#searchbar").FillAsync("Scenario 02.1");
-            await frame.Locator("#searchbar").PressAsync("Enter");
+            await frame.Locator("#search-button").ClickAsync();
+            await frame.Locator("#search-input").FillAsync("Scenario 02.1");
+            await frame.Locator("#search-suggestions .search-option-filter").First.ClickAsync();
 
             var opened = frame.Locator("details.scenario", new() { HasTextString = "Scenario 02.1" }).First;
             await frame.WaitForFunctionAsync("() => [...document.querySelectorAll('details.scenario')].some(s => s.open && s.textContent.includes('Scenario 02.1'))",
@@ -390,7 +394,7 @@ public class BackForwardRestoreTests : BackForwardTestBase
             var errors = new List<string>();
             page.PageError += (_, e) => errors.Add(e);
             await OpenAsync(page, GenerateLongReport("BackNav_R13.html"));
-            await page.Locator(".filtering-box .more-filters").ClickAsync();
+            await page.Locator(".nav-filters-toggle").ClickAsync();
             var chip = page.Locator(".filtering-box .tag-toggle[data-tag='area-03']");
             // one click, then 150 in one task: a burst no reader's clicks reach in Playwright's time, past WebKit's limit
             // unless the page writes within its budget, and the address then holds the chip's last state (151 clicks: in)
@@ -452,13 +456,81 @@ public class BackForwardRestoreTests : BackForwardTestBase
     public async Task R14_The_search_writes_at_once_on_Enter_so_Back_right_after_it_undoes_the_search()
     {
         await OpenAsync(GenerateLongReport("BackNav_R14.html"));
-        await Page.Locator("#searchbar").PressSequentiallyAsync("Scenario 07");
-        await Page.Locator("#searchbar").PressAsync("Enter");
+        // typed into the query builder and run with Enter, which takes the builder's own entry (plans/SEARCH_PLAN.md 4.3)
+        await Page.Locator("#search-button").ClickAsync();
+        await Page.Locator("#search-input").PressSequentiallyAsync("Scenario 07");
+        await Page.Locator("#search-input").PressAsync("Enter");
+        await Page.WaitForFunctionAsync("() => location.hash.indexOf('q=Scenario') >= 0", null, new() { PollingInterval = 200 });
 
         await BackAsync();
         await StillInTheReportAsync("Back right after Enter");
         Assert.Equal("", await Page.Locator("#searchbar").InputValueAsync());
         Assert.Equal("", await HashAsync());
+    }
+
+    /// <summary>
+    /// Two scenarios whose diagrams have one structure, so the engine gives their elements the same ids, after a scenario
+    /// with no diagram (the page draws the first scenario's diagrams as it opens, and orders scenarios by name). The service
+    /// has a name long enough for its participant's head to reach across the middle of the window.
+    /// </summary>
+    private string TwoDiagramsOfOneShape(string fileName)
+    {
+        var service = "The orders service that answers every question about an order " + new string('·', 40);
+        DiagramApiReports.Scenario Ordered(string id, string name, int at) => new(id, name,
+            [.. Enumerable.Range(0, 6).SelectMany(k => DiagramApiReports.Call(id, at + k, "GET", $"/api/orders/{k}", DiagramApiReports.Body(id + k, 3), service))]);
+        return DiagramApiReports.Write(TempDir, OutputDir, fileName,
+            [new("first", "1 No diagram", []), Ordered("above", "2 Diagram above", 0), Ordered("below", "3 Diagram below", 5)]);
+    }
+
+    /// <summary>
+    /// SEARCH_PLAN B10: the place under the bar was saved as an element's id and its index among the page's elements of
+    /// that id, and a drawn diagram's elements carry the engine's ids, the same in every diagram (<c>part2-head</c>), so a
+    /// diagram drawn above the place since put that index on another diagram, and Back landed there.
+    /// </summary>
+    [Fact]
+    public async Task Back_returns_to_the_diagram_it_left_after_a_diagram_above_it_draws()
+    {
+        var url = TwoDiagramsOfOneShape("BackNav_B10.html");
+        await OpenAsync(url);
+        var below = Page.Locator("details.scenario", new() { HasTextString = "Diagram below" }).First;
+        var sid = (await below.GetAttributeAsync("data-stable-id"))!;
+        await OpenAsync(url, "#sid-" + sid);
+        await Page.WaitForFunctionAsync(
+            "sid => { const s = document.querySelector(`details.scenario[data-stable-id='${sid}']`), c = s && s.querySelector('.plantuml-browser');"
+            + " return !!c && !!c.querySelector('svg g.participant-head') && !c._noteRendering && !window._plantumlRendering; }",
+            sid, new() { PollingInterval = 200, Timeout = 60000 });
+        var above = Page.Locator("details.scenario", new() { HasTextString = "Diagram above" }).First;
+        Assert.False(await above.EvaluateAsync<bool>("s => !!s.querySelector('.plantuml-browser svg')"), "premise: the diagram above is not drawn");
+
+        // the head of the second participant of the diagram below just under the bar, across the middle of the window
+        var head = below.Locator(".plantuml-browser svg g.participant-head").Nth(1);
+        await head.EvaluateAsync("""
+            h => {
+                const bar = document.querySelector('.toolbar-row.report-nav').getBoundingClientRect().bottom;
+                window.scrollBy(0, h.getBoundingClientRect().top - bar + 5);
+            }
+            """);
+        await WaitForScrollToSettleAsync();
+        var under = await head.EvaluateAsync<string>("""
+            h => {
+                const bar = document.querySelector('.toolbar-row.report-nav').getBoundingClientRect().bottom;
+                const hit = document.elementFromPoint(innerWidth / 2, bar + 2), r = h.getBoundingClientRect();
+                return hit && h.contains(hit) ? 'the head' : (hit ? hit.localName + '.' + (hit.getAttribute('class') || '') : 'nothing')
+                    + ' at ' + Math.round(innerWidth / 2) + ',' + Math.round(bar + 2) + '; the head at ' + [r.left, r.top, r.right, r.bottom].map(Math.round).join(',');
+            }
+            """);
+        Assert.True(under == "the head", "premise: the participant's head is the element under the bar in the middle of the window: " + under);
+        var top = await head.EvaluateAsync<double>("h => h.getBoundingClientRect().top");
+
+        await ActAsync(() => Page.Locator("#tab-timeline").ClickAsync());
+        // while the reader is on another tab, the scenario above is opened and its diagram drawn
+        await above.EvaluateAsync("s => { s.open = true; window._renderDiagramsInContainer(s); }");
+        await above.Locator(".plantuml-browser svg g.participant-head").Nth(1).WaitForAsync(new() { State = WaitForSelectorState.Attached, Timeout = 60000 });
+        await BackAsync();
+
+        await StillInTheReportAsync("Back after the diagram above was drawn");
+        Assert.Equal("features", await SelectedTabAsync());
+        Assert.InRange(await head.EvaluateAsync<double>("h => h.getBoundingClientRect().top") - top, -2, 2);
     }
 
     [Theory]

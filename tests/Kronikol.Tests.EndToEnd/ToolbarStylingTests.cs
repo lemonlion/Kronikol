@@ -297,7 +297,8 @@ public class ToolbarStylingTests : PlaywrightTestBase
             stylesheet: violet ? Stylesheets.VioletThemeStyleSheet : null));
         await page.Locator("details.feature").First.WaitForAsync();
 
-        await page.Locator(".mobile-filter-toggle").TapAsync();
+        // the box opens with the bar's Filters, on a phone as at every width (plans/SEARCH_PLAN.md F3)
+        await page.Locator(".nav-filters-toggle").TapAsync();
         var happyPath = page.Locator(".filtering-box .happy-seg[data-hp='in']").First;
         await happyPath.TapAsync();
 

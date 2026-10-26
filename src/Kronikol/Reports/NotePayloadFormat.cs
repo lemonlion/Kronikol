@@ -7,9 +7,9 @@ namespace Kronikol.Reports;
 /// </summary>
 public enum NotePayloadFormat
 {
-    /// <summary>Note payloads start in their original JSON form (the default).</summary>
+    /// <summary>Note payloads start in their original JSON form, as they did by default through 3.x.</summary>
     Json,
 
-    /// <summary>Eligible JSON note payloads start in the derived YAML view.</summary>
+    /// <summary>Eligible JSON note payloads start in the derived YAML view (the default), as they have since 4.0.0.</summary>
     Yaml
 }

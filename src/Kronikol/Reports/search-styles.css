@@ -1,0 +1,440 @@
+
+        /* The search (plans/SEARCH_PLAN.md 4.2 to 4.6), laid out after GitHub's in the report's own tokens. */
+
+        /* the title line's right-hand group: the search, then the theme switch, 8 px apart (GitHub's header gap) */
+        .title-actions { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+
+        /* The search box (4.2): GitHub's 12rem to 24rem, the theme switch's height, edge, corners, ground and shadow, so the
+           two read as one group. A button fills it; the clear sits beside the button inside it once a search is applied. */
+        .search-box {
+            position: relative; flex: 0 1 384px; min-width: 192px; height: 34px; box-sizing: border-box; display: flex; align-items: center;
+            border: 1px solid var(--kron-hairline); border-radius: 8px; background: var(--kron-card); box-shadow: var(--kron-card-shadow);
+        }
+        .search-box:hover { background: var(--kron-hover); }
+        .search-button {
+            flex: 1 1 auto; min-width: 0; height: 100%; display: flex; align-items: center; gap: 8px; padding: 0 10px; border: 0;
+            border-radius: 7px; background: none; color: var(--kron-faint); font: 400 var(--kron-fs-body)/20px var(--kron-font);
+            text-align: left; cursor: pointer;
+        }
+        .search-button:focus-visible { outline: 2px solid var(--kron-accent); outline-offset: 2px; }
+        .search-icon, .clear-icon {
+            flex: none; width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round;
+        }
+        .search-button .search-icon { color: var(--kron-ink-soft); }
+        .search-button-hint { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--kron-faint); }
+        .search-button-hint[hidden], .search-button-query[hidden] { display: none; }
+        .search-button-hint kbd, .search-tips kbd {
+            display: inline-block; min-width: 16px; box-sizing: border-box; padding: 0 4px; border: 1px solid var(--kron-control-border);
+            border-radius: 3px; background: var(--kron-code-bg); color: var(--kron-muted); font: 400 var(--kron-fs-meta)/14px var(--kron-font);
+            text-align: center; vertical-align: 1px;
+        }
+        .search-button-query { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--kron-ink); }
+        .search-clear {
+            position: relative; flex: none; display: inline-grid; place-items: center; width: 24px; height: 24px; margin: 0 4px 0 9px; padding: 0;
+            border: 0; border-radius: 6px; background: none; color: var(--kron-muted); cursor: pointer;
+        }
+        .search-clear[hidden] { display: none; }
+        /* GitHub's trailing action, after a hairline */
+        .search-clear::before { content: ""; position: absolute; left: -5px; top: 4px; width: 1px; height: 16px; background: var(--kron-hairline-soft); }
+        .search-clear:hover { background: var(--kron-hover); color: var(--kron-ink); }
+        .search-clear:focus-visible { outline: 2px solid var(--kron-accent); outline-offset: 1px; }
+
+        /* a query's parts, as the builder colours them (4.3.2): a key plain, a value in the selected colours, an operator in
+           the report's own purple, a qualifier that cannot be read in the warning colour; nothing that changes a width, so
+           the mirror lies exactly under the input's text */
+        .q-key { color: var(--kron-ink); }
+        .q-value { color: var(--kron-selected-ink); background: var(--kron-selected); border-radius: 3px; }
+        .q-op { color: var(--kron-prop-key); }
+        .q-bad { color: var(--kron-warn); }
+
+        /* The query builder (4.3.1): the dialog fills the window as its own backdrop, since older engines give ::backdrop no
+           custom properties; the panel inside it grows from the search box by 14 px, or is a sheet from the top on a phone. */
+        .search-dialog {
+            position: fixed; inset: 0; width: 100%; height: 100%; max-width: none; max-height: none; margin: 0; padding: 0; border: 0;
+            background: var(--kron-overlay); color: var(--kron-ink); overflow: hidden;
+        }
+        .search-dialog:not([open]) { display: none; }
+        .search-dialog::backdrop { background: transparent; }
+        .search-panel {
+            position: absolute; display: flex; flex-direction: column; box-sizing: border-box; min-height: 0;
+            background: var(--kron-card); border: 1px solid var(--kron-hairline); border-radius: 12px; box-shadow: 0 12px 32px var(--kron-overlay);
+            color: var(--kron-ink); overflow: hidden; animation: kron-search-in 0.2s cubic-bezier(0.3, 0.8, 0.6, 1);
+        }
+        @keyframes kron-search-in { from { opacity: 0; transform: translateY(-8px); } }
+        @media (prefers-reduced-motion: reduce) { .search-panel { animation: none; } }
+        .search-dialog.is-sheet .search-panel { left: 0; top: 0; width: 100%; max-height: 80vh; max-height: 80dvh; border-top: 0; border-radius: 0 0 12px 12px; }
+        .search-visually-hidden {
+            position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden;
+            clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
+        }
+
+        /* the input (4.3.2): today's search field's look, the magnifier 10 px in; its text drawn by the mirror under it */
+        .search-input-row {
+            flex: none; display: flex; align-items: center; gap: 8px; height: 34px; box-sizing: border-box; margin: 12px; padding: 0 4px 0 10px;
+            border: 1px solid var(--kron-select-border); border-radius: 8px; background: var(--kron-field);
+        }
+        .search-input-row:focus-within { background: var(--kron-card); border-color: var(--kron-accent); outline: 2px solid var(--kron-accent); outline-offset: 1px; }
+        .search-input-row.has-bad { border-color: var(--kron-warn); }
+        .search-input-row .search-icon { color: var(--kron-ink-soft); }
+        .search-input-wrap { position: relative; flex: 1 1 auto; min-width: 0; height: 100%; }
+        #search-input {
+            position: relative; z-index: 1; width: 100%; height: 100%; box-sizing: border-box; margin: 0; padding: 0; border: 0; outline: none;
+            background: transparent; color: var(--kron-ink); caret-color: var(--kron-ink); font: 400 var(--kron-fs-body)/20px var(--kron-font);
+            letter-spacing: normal;
+        }
+        #search-input::placeholder { color: var(--kron-faint); opacity: 1; }
+        .search-input-wrap.is-coloured #search-input { color: transparent; }
+        .search-mirror {
+            position: absolute; inset: 0; display: flex; align-items: center; overflow: hidden; white-space: pre; pointer-events: none;
+            font: 400 var(--kron-fs-body)/20px var(--kron-font); letter-spacing: normal; color: var(--kron-ink);
+        }
+        .search-input-wrap:not(.is-coloured) .search-mirror { visibility: hidden; }
+        .search-input-clear {
+            flex: none; display: inline-grid; place-items: center; width: 24px; height: 24px; padding: 0; border: 0; border-radius: 6px;
+            background: none; color: var(--kron-muted); cursor: pointer;
+        }
+        .search-input-clear[hidden] { display: none; }
+        .search-input-clear:hover { background: var(--kron-hover); color: var(--kron-ink); }
+        .search-input-clear:focus-visible { outline: 2px solid var(--kron-accent); outline-offset: 1px; }
+
+        /* the suggestions (4.3.3): GitHub's rows, the active one tinted with the accent bar outside its left edge; the group
+           headings in the report's section-label look */
+        .search-suggestions { flex: 1 1 auto; min-height: 0; max-height: 680px; overflow-y: auto; margin: 0; padding: 0 0 8px; list-style: none; }
+        .search-suggestions[hidden] { display: none; }
+        .search-group-heading {
+            padding: 10px 16px 4px; font-size: var(--kron-fs-label); font-weight: 600; line-height: 16px; letter-spacing: var(--kron-label-track);
+            text-transform: uppercase; color: var(--kron-label);
+        }
+        .search-option {
+            position: relative; display: flex; align-items: center; gap: 8px; min-height: 34px; box-sizing: border-box; margin: 0 8px;
+            padding: 6px 8px; border-radius: 6px; cursor: pointer; font-size: var(--kron-fs-body); line-height: 20px; color: var(--kron-ink);
+        }
+        .search-option[aria-selected="true"] { background: var(--kron-hover); }
+        .search-option[aria-selected="true"]::before {
+            content: ""; position: absolute; left: -8px; top: calc(50% - 12px); width: 4px; height: 24px; border-radius: 6px; background: var(--kron-accent);
+        }
+        .search-option-icon { flex: none; width: 16px; height: 16px; background: var(--kron-ink-soft); }
+        .search-option-icon[class*="status-"] { width: 10px; height: 10px; margin: 3px; border-radius: 50%; }
+        .search-option-icon.status-passed { background: var(--kron-pass); }
+        .search-option-icon.status-failed { background: var(--kron-fail); }
+        .search-option-icon.status-skipped { background: var(--kron-skip); }
+        .search-option-icon.status-bypassed { background: var(--kron-bypass); }
+        .search-option-search .search-option-icon, .search-option-scope .search-option-icon, .search-option-filter .search-option-icon {
+            -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='7' cy='7' r='4.6' fill='none' stroke='%23000' stroke-width='1.4'/%3E%3Cpath d='M10.4 10.4l3.6 3.6' stroke='%23000' stroke-width='1.4' stroke-linecap='round'/%3E%3C/svg%3E") center / 16px no-repeat;
+            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='7' cy='7' r='4.6' fill='none' stroke='%23000' stroke-width='1.4'/%3E%3Cpath d='M10.4 10.4l3.6 3.6' stroke='%23000' stroke-width='1.4' stroke-linecap='round'/%3E%3C/svg%3E") center / 16px no-repeat;
+        }
+        .search-option-recent .search-option-icon {
+            -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='5.8' fill='none' stroke='%23000' stroke-width='1.4'/%3E%3Cpath d='M8 4.8V8l2.2 1.4' fill='none' stroke='%23000' stroke-width='1.4' stroke-linecap='round'/%3E%3C/svg%3E") center / 16px no-repeat;
+            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='5.8' fill='none' stroke='%23000' stroke-width='1.4'/%3E%3Cpath d='M8 4.8V8l2.2 1.4' fill='none' stroke='%23000' stroke-width='1.4' stroke-linecap='round'/%3E%3C/svg%3E") center / 16px no-repeat;
+        }
+        .search-option-feature .search-option-icon {
+            -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M2.5 4.5h11M2.5 8h11M2.5 11.5h7' stroke='%23000' stroke-width='1.4' stroke-linecap='round'/%3E%3C/svg%3E") center / 16px no-repeat;
+            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M2.5 4.5h11M2.5 8h11M2.5 11.5h7' stroke='%23000' stroke-width='1.4' stroke-linecap='round'/%3E%3C/svg%3E") center / 16px no-repeat;
+        }
+        .search-option-key .search-option-icon, .search-option-value .search-option-icon {
+            -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M2.5 3h11l-4.25 5v4.25l-2.5 1.25V8z' fill='none' stroke='%23000' stroke-width='1.4' stroke-linejoin='round'/%3E%3C/svg%3E") center / 16px no-repeat;
+            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M2.5 3h11l-4.25 5v4.25l-2.5 1.25V8z' fill='none' stroke='%23000' stroke-width='1.4' stroke-linejoin='round'/%3E%3C/svg%3E") center / 16px no-repeat;
+        }
+        .search-option-label { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .search-option-label b { font-weight: 600; }
+        .search-option-detail {
+            flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--kron-muted); font-size: var(--kron-fs-meta);
+        }
+        .search-option-hint { flex: none; margin-left: auto; padding-left: 8px; color: var(--kron-muted); font-size: var(--kron-fs-meta); }
+
+        /* the syntax tips (4.3.5), in the dialog in place of the suggestions */
+        .search-tips { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 0 16px 12px; font-size: var(--kron-fs-meta); line-height: 1.6; }
+        .search-tips[hidden] { display: none; }
+        .search-tips-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+        .search-tips-table th {
+            padding: 4px 8px; border-bottom: 1px solid var(--kron-hairline); text-align: left; font-size: var(--kron-fs-label); font-weight: 600;
+            letter-spacing: var(--kron-label-track); text-transform: uppercase; color: var(--kron-label);
+        }
+        .search-tips-table td { padding: 4px 8px; border-bottom: 1px solid var(--kron-hairline-soft); vertical-align: top; }
+        .search-tips code { padding: 0 4px; border-radius: 3px; background: var(--kron-code-bg); font-family: var(--kron-mono); white-space: nowrap; }
+        .search-tips-note { margin: 4px 0 0; color: var(--kron-muted); }
+
+        /* the foot: Search syntax tips, GitHub's accent link, over a hairline; on a phone, Filters with its count (Q7) */
+        .search-foot {
+            flex: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 16px;
+            border-top: 1px solid var(--kron-hairline-soft);
+        }
+        .search-tips-toggle {
+            padding: 2px 0; border: 0; background: none; color: var(--kron-accent); font: 400 var(--kron-fs-meta)/16px var(--kron-font); cursor: pointer;
+        }
+        .search-tips-toggle:hover { text-decoration: underline; }
+        .search-tips-toggle:focus-visible, .search-foot-filters:focus-visible { outline: 2px solid var(--kron-accent); outline-offset: 1px; }
+        .search-foot-filters {
+            display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border: 1px solid var(--kron-control-border);
+            border-radius: 6px; background: var(--kron-field); color: var(--kron-ink-soft); font: 400 var(--kron-fs-control)/16px var(--kron-font); cursor: pointer;
+        }
+        .search-foot-filters[hidden] { display: none; }
+
+        /* the phone's floating search button (4.2, Q7, B15), above back-to-top once the title line is out of view */
+        .search-fab {
+            position: fixed; left: 18px; bottom: 68px; z-index: 1000; display: inline-grid; place-items: center; width: 44px; height: 44px; padding: 0;
+            border: 1px solid var(--kron-hairline); border-radius: 999px; background: var(--kron-card); color: var(--kron-ink-soft);
+            box-shadow: 0 4px 12px var(--kron-shadow); cursor: pointer;
+        }
+        .search-fab[hidden] { display: none; }
+        .search-fab .search-icon { width: 18px; height: 18px; }
+        .search-fab.has-query { border-color: var(--kron-selected-edge); background: var(--kron-selected); color: var(--kron-selected-ink); }
+        .search-fab:focus-visible { outline: 2px solid var(--kron-accent); outline-offset: 2px; }
+
+        /* on a phone (the report's one breakpoint, G4): the box is the switch's square, the magnifier alone, in the selected
+           colours while a search is applied; the clear lives in the builder */
+        @media (max-width: 768px) {
+            .title-actions { flex: none; }
+            .search-box { flex: none; width: 34px; min-width: 0; }
+            .search-button { justify-content: center; padding: 0; }
+            .search-button-hint, .search-button-query, .search-clear, .search-clear[hidden] { display: none; }
+            .search-box.has-query { border-color: var(--kron-selected-edge); background: var(--kron-selected); }
+            .search-box.has-query .search-icon { color: var(--kron-selected-ink); }
+            #search-input { font-size: 16px; }
+            .search-mirror { font-size: 16px; }
+        }
+
+        /* The Search tab (4.5): GitHub's results page in the report's look. From 768.02 px a sidebar beside the results,
+           24 px apart, the sidebar a card that sticks under the bar and scrolls by itself when taller than the window. */
+        .search-results { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; align-items: start; margin: 14px 0; }
+        .search-sidebar {
+            display: none; box-sizing: border-box; padding: 8px 0; border: 1px solid var(--kron-hairline); border-radius: 12px;
+            background: var(--kron-card); box-shadow: var(--kron-card-shadow);
+        }
+        @media (min-width: 768.02px) {
+            .search-results { grid-template-columns: clamp(240px, 25%, 296px) minmax(0, 1fr); }
+            .search-sidebar {
+                display: block; position: sticky; top: calc(var(--kron-nav-h, 0px) + 12px);
+                max-height: calc(100vh - var(--kron-nav-h, 0px) - 24px); overflow: auto;
+            }
+        }
+        .search-side-heading {
+            margin: 12px 16px 4px; color: var(--kron-label); font: 600 var(--kron-fs-label)/16px var(--kron-font);
+            letter-spacing: 0.04em; text-transform: uppercase;
+        }
+        .search-side-heading:first-child { margin-top: 4px; }
+        .search-side-list { margin: 0; padding: 0; list-style: none; }
+        .search-side-row { position: relative; display: flex; align-items: center; margin: 0 8px; }
+        .search-side-link {
+            flex: 1 1 auto; min-width: 0; min-height: 32px; box-sizing: border-box; display: flex; align-items: center; gap: 8px;
+            padding: 6px 8px; border: 0; border-radius: 6px; background: none; color: var(--kron-ink);
+            font: 400 var(--kron-fs-body)/20px var(--kron-font); text-align: left; text-decoration: none; cursor: pointer;
+        }
+        .search-side-link:hover { background: var(--kron-hover); }
+        .search-side-link:focus-visible { outline: 2px solid var(--kron-accent); outline-offset: -2px; }
+        /* the current type, or a facet that is on: the builder's active-row marker (G14) */
+        .search-side-row.is-current .search-side-link { background: var(--kron-hover); font-weight: 600; }
+        .search-side-row.is-current::before {
+            content: ""; position: absolute; left: -8px; top: 50%; width: 4px; height: 24px; margin-top: -12px;
+            border-radius: 6px; background: var(--kron-accent);
+        }
+        .search-side-name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .search-side-count { flex: none; color: var(--kron-muted); font-size: var(--kron-fs-meta); }
+        .search-side-pill {
+            flex: none; min-width: 20px; height: 20px; box-sizing: border-box; padding: 0 6px; border-radius: 999px;
+            background: var(--kron-hover); color: var(--kron-ink-soft); font: 600 var(--kron-fs-label)/20px var(--kron-font); text-align: center;
+        }
+        .search-side-row.is-current .search-side-pill { background: var(--kron-card); }
+        .search-visually-hidden {
+            position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+        }
+        .search-side-dot { flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--kron-dot); }
+        .search-side-dot.status-passed { background: var(--kron-pass); }
+        .search-side-dot.status-failed { background: var(--kron-fail); }
+        .search-side-dot.status-skipped { background: var(--kron-skip); }
+        .search-side-dot.status-bypassed { background: var(--kron-bypass); }
+        .search-side-icon {
+            flex: none; width: 16px; height: 16px; background: var(--kron-ink-soft);
+            -webkit-mask: var(--search-side-icon) center / 16px 16px no-repeat; mask: var(--search-side-icon) center / 16px 16px no-repeat;
+        }
+        .search-side-icon-scenario { --search-side-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.4' stroke-linecap='round'%3E%3Cpath d='M5.5 4h8M5.5 8h8M5.5 12h8M2.5 4h.01M2.5 8h.01M2.5 12h.01'/%3E%3C/svg%3E"); }
+        .search-side-icon-feature { --search-side-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.4' stroke-linejoin='round'%3E%3Cpath d='M1.75 3.5h4.5l1.5 1.5h6.5v8.25h-12.5z'/%3E%3C/svg%3E"); }
+        .search-side-icon-plus { --search-side-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.4' stroke-linecap='round'%3E%3Ccircle cx='8' cy='8' r='6.25'/%3E%3Cpath d='M8 5v6M5 8h6'/%3E%3C/svg%3E"); }
+        .search-side-icon-info { --search-side-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.4' stroke-linecap='round'%3E%3Ccircle cx='8' cy='8' r='6.25'/%3E%3Cpath d='M8 7.25v4M8 4.75h.01'/%3E%3C/svg%3E"); }
+        /* Exclude, on hover or focus of its row (G28) */
+        .search-side-exclude {
+            position: absolute; right: 4px; top: 50%; width: 24px; height: 24px; margin-top: -12px; padding: 0; border: 0; border-radius: 6px;
+            background: var(--kron-card); color: var(--kron-muted); font: 400 16px/24px var(--kron-font); cursor: pointer; opacity: 0;
+        }
+        .search-side-row:hover .search-side-exclude, .search-side-row:focus-within .search-side-exclude { opacity: 1; }
+        .search-side-exclude:hover { background: var(--kron-hover); color: var(--kron-fail); }
+        .search-side-exclude:focus-visible { opacity: 1; outline: 2px solid var(--kron-accent); outline-offset: -2px; }
+
+        /* the results column; a 3 px bar runs along its top while deep search reads (4.5.7) */
+        .search-main { position: relative; min-width: 0; }
+        .search-progress {
+            position: absolute; left: 0; right: 0; top: -8px; height: 3px; border-radius: 3px; overflow: hidden;
+            background: linear-gradient(90deg, transparent 0, var(--kron-accent) 20%, var(--kron-accent) 40%, transparent 60%) 0 0 / 250% 100% no-repeat;
+            animation: kron-search-progress 1.1s linear infinite;
+        }
+        .search-progress[hidden] { display: none; }
+        @keyframes kron-search-progress { from { background-position: 100% 0; } to { background-position: -150% 0; } }
+        @media (prefers-reduced-motion: reduce) { .search-progress { animation: none; background: var(--kron-accent); opacity: 0.6; } }
+
+        .search-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }
+        .search-count { margin: 0; color: var(--kron-ink); font: 500 var(--kron-fs-feature)/24px var(--kron-font); }
+        .search-count:focus { outline: none; }
+        .search-count:focus-visible { outline: 2px solid var(--kron-accent); outline-offset: 2px; }
+        .search-time { color: var(--kron-muted); font-size: var(--kron-fs-meta); }
+        .search-head-tools { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+        .search-sort { display: inline-flex; align-items: center; gap: 6px; color: var(--kron-muted); font-size: var(--kron-fs-meta); }
+        .search-sort-select {
+            height: 28px; padding: 0 8px; border: 1px solid var(--kron-control-border); border-radius: 6px; background: var(--kron-card);
+            color: var(--kron-ink); font: 400 var(--kron-fs-control)/20px var(--kron-font);
+        }
+        .search-sort-select:focus-visible { outline: 2px solid var(--kron-accent); outline-offset: 1px; }
+        .search-kebab-wrap { position: relative; display: inline-flex; }
+        .search-kebab, .search-type-switch {
+            height: 28px; min-width: 28px; padding: 0 8px; border: 1px solid var(--kron-control-border); border-radius: 6px; background: var(--kron-card);
+            color: var(--kron-ink-soft); font: 400 var(--kron-fs-control)/20px var(--kron-font); cursor: pointer;
+        }
+        .search-kebab { padding: 0; }
+        .search-kebab:hover, .search-type-switch:hover { background: var(--kron-hover); }
+        .search-kebab:focus-visible, .search-type-switch:focus-visible { outline: 2px solid var(--kron-accent); outline-offset: 1px; }
+        .search-menu {
+            position: absolute; right: 0; top: calc(100% + 4px); z-index: 20; min-width: 224px; margin: 0; padding: 6px; list-style: none;
+            border: 1px solid var(--kron-hairline); border-radius: 12px; background: var(--kron-card); box-shadow: 0 8px 24px var(--kron-shadow);
+        }
+        .search-menu[hidden] { display: none; }
+        .search-menu-item {
+            display: block; width: 100%; padding: 6px 8px; border: 0; border-radius: 6px; background: none; color: var(--kron-ink);
+            font: 400 var(--kron-fs-body)/20px var(--kron-font); text-align: left; cursor: pointer;
+        }
+        .search-menu-item:hover, .search-menu-item:focus-visible { background: var(--kron-hover); outline: none; }
+        .search-phone-row { display: none; }
+
+        /* a qualifier that could not be read, searched as text (G40) */
+        .search-warning {
+            margin: 0 0 12px; padding: 8px 12px; border: 1px solid var(--kron-warn-edge); border-radius: 6px;
+            background: var(--kron-warn-soft); color: var(--kron-warn); font-size: var(--kron-fs-control); line-height: 1.5;
+        }
+        .search-warning[hidden], .search-filtered-note[hidden], .search-pages[hidden] { display: none; }
+        .search-warning code { font-family: var(--kron-mono); font-weight: 600; }
+        /* the box's filters hide some of the query's matches: the timeline's note (4.5.11) */
+        .search-filtered-note {
+            margin: 0 0 12px; padding: 7px 10px; border: 1px solid var(--kron-warn-edge); border-radius: 6px;
+            background: var(--kron-warn-soft); color: var(--kron-warn); font-size: 12.5px; font-weight: 700; line-height: 1.4;
+        }
+        .search-filtered-clear {
+            margin-left: 8px; padding: 0 7px; border: 1px solid var(--kron-warn-edge); border-radius: 5px;
+            background: var(--kron-card); color: var(--kron-warn); font: inherit; font-weight: 600; cursor: pointer;
+        }
+        .search-filtered-clear:hover { background: var(--kron-hover); }
+        .search-filtered-clear:focus-visible { outline: 2px solid var(--kron-accent); outline-offset: 1px; }
+
+        /* a result: the feature card's look (4.5.5) */
+        .search-list { display: flex; flex-direction: column; gap: 14px; }
+        .search-result {
+            box-sizing: border-box; padding: 12px 16px; border: 1px solid var(--kron-hairline); border-radius: 12px;
+            background: var(--kron-card); box-shadow: var(--kron-card-shadow); scroll-margin-top: calc(var(--kron-nav-h, 0px) + 12px);
+        }
+        .search-result:focus { outline: none; }
+        .search-result:focus-visible { outline: 2px solid var(--kron-accent); outline-offset: 2px; }
+        .search-result-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 6px; }
+        .search-result-glyph { flex: none; width: 1em; font-weight: 700; text-align: center; color: var(--kron-dot); }
+        .search-result-glyph.status-passed { color: var(--kron-pass); }
+        .search-result-glyph.status-failed { color: var(--kron-fail); }
+        .search-result-glyph.status-skipped { color: var(--kron-skip); }
+        .search-result-glyph.status-bypassed { color: var(--kron-bypass); }
+        .search-result-feature { color: var(--kron-muted); font-size: var(--kron-fs-feature); text-decoration: none; }
+        .search-result-feature:hover { text-decoration: underline; }
+        .search-result-sep { color: var(--kron-muted); }
+        .search-result-title { color: var(--kron-accent); font: 600 var(--kron-fs-feature)/24px var(--kron-font); text-decoration: none; }
+        .search-result-title:hover { text-decoration: underline; }
+        .search-result-title b, .search-feature-row b { font-weight: 700; }
+        .search-result-title:focus-visible, .search-result-feature:focus-visible, .search-line:focus-visible, .search-feature-row:focus-visible {
+            outline: 2px solid var(--kron-accent); outline-offset: 2px; border-radius: 4px;
+        }
+        .search-result-time { margin-left: auto; color: var(--kron-muted); font-size: var(--kron-fs-meta); white-space: nowrap; }
+        .search-result-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 6px; color: var(--kron-muted); font-size: var(--kron-fs-meta); }
+        .search-result-meta-item + .search-result-meta-item::before, .search-result-tag + .search-result-meta-item::before { content: "\00b7"; margin-right: 6px; }
+        .search-result-tag {
+            display: inline-flex; align-items: center; height: 20px; padding: 0 8px; border-radius: 999px;
+            background: var(--kron-selected); color: var(--kron-selected-ink); font-size: var(--kron-fs-label); font-weight: 500;
+        }
+
+        /* where it matched: up to three lines, each a kind label and the line (4.5.5) */
+        .search-lines { margin-top: 10px; border: 1px solid var(--kron-hairline-soft); border-radius: 8px; background: var(--kron-strip); overflow: hidden; }
+        .search-line {
+            display: grid; grid-template-columns: 80px minmax(0, 1fr); gap: 8px; padding: 6px 10px; color: var(--kron-ink);
+            font-size: var(--kron-fs-control); line-height: 20px; text-decoration: none;
+        }
+        .search-line + .search-line { border-top: 1px solid var(--kron-hairline-soft); }
+        .search-line:hover { background: var(--kron-hover); }
+        .search-line-kind { color: var(--kron-label); font: 600 var(--kron-fs-label)/20px var(--kron-font); letter-spacing: 0.04em; text-transform: uppercase; }
+        .search-line-text { min-width: 0; overflow-wrap: anywhere; }
+        .search-line-text.is-mono { font-family: var(--kron-mono); font-size: 12px; }
+        .search-line-text b { font-weight: 700; }
+        .search-mark { padding: 0 1px; border-radius: 2px; background: var(--kron-mark); box-shadow: inset 0 -2px 0 var(--kron-mark-edge); color: inherit; }
+        .search-lines-more {
+            display: block; width: 100%; padding: 6px 10px; border: 0; border-top: 1px dashed var(--kron-hairline); background: none;
+            color: var(--kron-muted); font: 400 var(--kron-fs-meta)/18px var(--kron-font); text-align: left; cursor: pointer;
+        }
+        .search-lines-more:hover { color: var(--kron-ink); background: var(--kron-hover); }
+        .search-lines-more:focus-visible { outline: 2px solid var(--kron-accent); outline-offset: -2px; }
+        .search-feature .search-lines-more { margin-top: 8px; border: 1px dashed var(--kron-hairline); border-radius: 6px; }
+        .search-feature-rows { margin: 8px 0 0; padding: 0; list-style: none; }
+        .search-feature-rows li { display: flex; align-items: baseline; gap: 6px; padding: 3px 0; }
+        .search-feature-row { color: var(--kron-ink); text-decoration: none; }
+        .search-feature-row:hover { text-decoration: underline; }
+
+        /* nothing found (4.5.8) */
+        .search-nothing { padding: 32px 24px; text-align: center; }
+        .search-nothing-art { width: 64px; height: 64px; fill: none; stroke: var(--kron-dot); stroke-width: 4; stroke-linecap: round; }
+        .search-nothing-title { margin: 12px 0 4px; color: var(--kron-ink); font: 600 var(--kron-fs-feature)/24px var(--kron-font); }
+        .search-nothing-other { margin: 0 0 12px; color: var(--kron-muted); }
+        .search-nothing-link { padding: 0; border: 0; background: none; color: var(--kron-accent); font: inherit; text-decoration: underline; cursor: pointer; }
+        .search-nothing-link:focus-visible { outline: 2px solid var(--kron-accent); outline-offset: 2px; }
+        .search-nothing-tip { max-width: 480px; margin: 8px auto; text-align: left; }
+        .search-nothing-tip > summary { color: var(--kron-ink); font-weight: 600; cursor: pointer; }
+        .search-nothing-tip p { margin: 6px 0 0 18px; color: var(--kron-muted); }
+
+        /* pages (4.5.6) */
+        .search-pages { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 4px; margin: 20px 0 8px; }
+        .search-page {
+            min-width: 32px; height: 32px; padding: 0 8px; border: 1px solid transparent; border-radius: 6px; background: none;
+            color: var(--kron-ink); font: 400 var(--kron-fs-body)/30px var(--kron-font); cursor: pointer;
+        }
+        .search-page:hover:not(:disabled):not([aria-current]) { border-color: var(--kron-hairline); }
+        .search-page[aria-current="page"] { background: var(--kron-accent); color: var(--kron-on-accent); font-weight: 600; }
+        .search-page:disabled { color: var(--kron-faint); cursor: default; }
+        .search-page:focus-visible { outline: 2px solid var(--kron-accent); outline-offset: 1px; }
+        .search-page-gap { min-width: 24px; color: var(--kron-muted); text-align: center; }
+        .search-protip { margin: 8px 0 0; color: var(--kron-muted); font-size: var(--kron-fs-meta); text-align: center; }
+        .search-protip kbd {
+            display: inline-block; min-width: 16px; padding: 0 4px; border: 1px solid var(--kron-control-border); border-radius: 3px;
+            background: var(--kron-code-bg); font: 400 var(--kron-fs-meta)/14px var(--kron-font); text-align: center;
+        }
+
+        /* on a phone (4.5.9): one column, the type switcher and the kebab over the results, a line's label above it */
+        @media (max-width: 768px) {
+            .search-sort { display: none; }
+            .search-phone-row { position: relative; display: flex; align-items: center; gap: 8px; margin: 0 0 10px; }
+            .search-phone-row .search-menu { left: 0; right: auto; }
+            .search-phone-row .search-kebab-wrap { margin-left: auto; }
+            .search-phone-row .search-kebab-wrap .search-menu { left: auto; right: 0; }
+            .search-line { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+            .search-result { padding: 12px; }
+        }
+
+        /* The marks (4.6.5): where a match is drawn, its place outlined in the accent, pulsing twice as the reader arrives,
+           and its words marked in --kron-mark with a --kron-mark-edge underline, the occurrence the line named outlined in
+           the edge instead. In a drawn diagram the marks are rects behind the words (report-search-marks-script.js), their
+           strokes 2 px at any zoom; in the page's HTML they are the CSS Custom Highlight API's, which leaves the text as it is
+           and draws no outline, so the occurrence named has a line over it as well as under. */
+        .kron-mark-place { outline: 2px solid var(--kron-accent); outline-offset: 2px; }
+        /* a long note's scroll box: inside its edge, as its frame clips what lies outside it, and over the box's own :focus */
+        div.note-scroll.kron-mark-place { outline: 2px solid var(--kron-accent); outline-offset: -2px; }
+        .kron-mark-place.kron-mark-arrive { animation: kron-mark-pulse .4s ease-in-out 2; }
+        @keyframes kron-mark-pulse { 50% { outline-width: 4px; } }
+        svg rect.kron-mark-place { fill: none; stroke: var(--kron-accent); stroke-width: 2px; outline: none; }
+        svg rect.kron-mark-place.kron-mark-arrive { animation: kron-mark-pulse-svg .4s ease-in-out 2; }
+        @keyframes kron-mark-pulse-svg { 50% { stroke-width: 4px; } }
+        svg .kron-mark-ground { fill: var(--kron-mark); stroke: none; }
+        svg .kron-mark-ground.kron-mark-current { stroke: var(--kron-mark-edge); stroke-width: 2px; }
+        svg .kron-mark-edge { fill: none; stroke: var(--kron-mark-edge); stroke-width: 2px; }
+        ::highlight(kron-mark) { background-color: var(--kron-mark); text-decoration: underline 2px var(--kron-mark-edge); }
+        ::highlight(kron-mark-current) { background-color: var(--kron-mark); text-decoration: underline overline 2px var(--kron-mark-edge); }
+        @media (prefers-reduced-motion: reduce) {
+            .kron-mark-place.kron-mark-arrive, svg rect.kron-mark-place.kron-mark-arrive { animation: none; }
+        }

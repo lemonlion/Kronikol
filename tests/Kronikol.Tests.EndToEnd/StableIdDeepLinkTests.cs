@@ -192,8 +192,9 @@ public class StableIdDeepLinkTests : PlaywrightTestBase
             null, new() { PollingInterval = 200 });
 
         // Clear All wipes the whole fragment today, link and all. Clearing filters is not the same
-        // act as leaving the scenario somebody navigated to.
-        await Page.Locator("button.export-btn", new() { HasTextString = "Clear All" }).First.ClickAsync();
+        // act as leaving the scenario somebody navigated to. (The report bar's Clear All: from 5.11.0 the filter box,
+        // with its own, is hidden until Filters opens it.)
+        await Page.Locator("button.nav-clear").ClickAsync();
         await Page.WaitForFunctionAsync("() => window.location.hash.indexOf('status=') < 0",
             null, new() { PollingInterval = 200 });
 

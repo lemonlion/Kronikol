@@ -1555,6 +1555,13 @@ public static class ReportGenerator
         // Back and Forward as the report's navigation (5.2.0, plans/BACK_BUTTON_NAVIGATION_PLAN.md): the one script that
         // writes the session history, in every page these scripts run in
         var navigationScript = LoadResource("report-navigation-script.js");
+        // the search button and the query builder (plans/SEARCH_PLAN.md 4.2, 4.3)
+        var searchUiScript = LoadResource("report-search-ui-script.js");
+        // the Search tab (4.5)
+        var searchResultsScript = LoadResource("report-search-results-script.js");
+        var searchHitScript = LoadResource("report-search-hit-script.js");
+        // the marks a match is shown with where it is drawn (4.6.5)
+        var searchMarksScript = LoadResource("report-search-marks-script.js");
 
         // Keyboard navigation
         var keyboardNavigationFunction = LoadResource("report-keyboard-navigation-function.js");
@@ -1571,6 +1578,7 @@ public static class ReportGenerator
         // set the tokens.
         var combinedStylesheet = Stylesheets.ReportTokensStyleSheet
                                  + Stylesheets.HtmlReportStyleSheet
+                                 + Stylesheets.SearchStyleSheet
                                  + (history is not null && (showHistorySection || drawsVerdicts) ? Stylesheets.HistoryStyleSheet : "")
                                  + (includeTestRunData && showReportDiagnostics && diagnostics is { Count: > 0 } ? Stylesheets.ReportDiagnosticsStyleSheet : "")
                                  + (warmUp.ScenarioMs.Count > 0 ? Stylesheets.WarmUpStyleSheet : "")
@@ -1680,16 +1688,13 @@ public static class ReportGenerator
         // panel of its own (the Scenario Timeline, the Component Diagram, History, Report diagnostics) is a tab of the
         // bar, and the features, with the failure clusters and the background calls at their top (Q4), are the Features
         // tab; the clusters show over the cards, never over the Summary view's table (5.1.0). A page with nothing beside
-        // its features has no tabs, and so no bar.
+        // its features has the bar too, with that one tab (plans/SEARCH_PLAN.md F7, Q10): Filters and the Search tab live
+        // in it. Until then such a page had no tabs, and so no bar, and no Filters outside the box.
         var hasComponentTab = !string.IsNullOrEmpty(componentDiagramPlantUml);
         var hasHistoryTab = history is not null && showHistorySection;
         var hasDiagnosticsTab = includeTestRunData && showReportDiagnostics && diagnostics is { Count: > 0 };
-        var useTabs = hasDurations || hasComponentTab || hasHistoryTab || hasDiagnosticsTab;
-        // focus the keyboard moves is never left under the pinned bar (5.0.0, plans/OPTION_C_PLAN.md S12, D48), in a page
-        // that has the bar
-        var focusScript = useTabs
-            ? "<script id=\"kronikol-focus\">" + LoadResource("report-focus-script.js") + "</script>"
-            : "";
+        // focus the keyboard moves is never left under the pinned bar (5.0.0, plans/OPTION_C_PLAN.md S12, D48)
+        var focusScript = "<script id=\"kronikol-focus\">" + LoadResource("report-focus-script.js") + "</script>";
 
         var customCssBlock = customCss is not null ? $"<style>{customCss}</style>" : "";
         var faviconLink = $"<link rel=\"icon\" href=\"{customFaviconBase64 ?? Constants.DefaultFavicon.DataUri}\">";
@@ -1758,6 +1763,10 @@ public static class ReportGenerator
                             <script id="kronikol-run-band">{{runBandScript}}</script>
                             <script id="kronikol-report-tabs">{{reportTabsScript}}</script>
                             {{scenarioSettingsScript}}{{timelineScript}}{{componentsScript}}{{focusScript}}
+                            <script id="kronikol-search-ui">{{searchUiScript}}</script>
+                            <script id="kronikol-search-results">{{searchResultsScript}}</script>
+                            <script id="kronikol-search-hit">{{searchHitScript}}</script>
+                            <script id="kronikol-search-marks">{{searchMarksScript}}</script>
                         </head>
                         <body>
                     """;
@@ -1765,7 +1774,11 @@ public static class ReportGenerator
         var body = new StringBuilder();
         if (customLogoHtml is not null)
             body.Append($"<div class=\"custom-logo\">{customLogoHtml}</div>");
-        body.Append($"<div class=\"title-line\"><h1>{System.Net.WebUtility.HtmlEncode(title)}</h1>{ThemeSwitchButton}</div>");
+        // The title line: the title, then the search, then the theme switch, as GitHub's search is the leftmost of its
+        // header's right-hand controls (plans/SEARCH_PLAN.md 4.2, A3); the query builder the search opens, and the button
+        // that reaches it from anywhere down a phone's page (Q7)
+        body.Append($"<div class=\"title-line\"><h1>{System.Net.WebUtility.HtmlEncode(title)}</h1><div class=\"title-actions\">{SearchBox}{ThemeSwitchButton}</div></div>");
+        body.Append(SearchDialog).Append(SearchFab);
 
         // The features table, the Features tab's Summary view (S4), and the column its duration group starts at.
         var featureTable = new StringBuilder();
@@ -1914,37 +1927,22 @@ public static class ReportGenerator
         // What the filters leave showing (5.0.0, plans/OPTION_C_PLAN.md S5, D14), beside Clear All: written here for the
         // page as it opens, and kept by the filters (report-scenario-feature-map-helper.js), counting the scenarios as
         // the run counts them. The exports drop "Filtered" where there is no room for it (D13).
-        // More filters (S7, D15) names the rows the box has, in their order
-        var rowsTitle = FilterRowsTitle(features, hasDurations, allDependencies.Count > 0);
-        // Clear All's title names what it clears, the same rows (D49)
+        // Clear All's title names what it clears, the rows the box has (D49)
         var clearTitle = ClearAllTitle(features, hasDurations, allDependencies.Count > 0);
         // Counted as the band counts: tests, and the features that hold one (report-scenario-feature-map-helper.js agrees).
         var testCount = features.Sum(f => f.Scenarios.Count(s => !s.NotATest));
         var testFeatures = features.Count(HoldsATest);
         var readoutText = $"All {ScenarioCount(testCount)}, {(testFeatures == 1 ? "1 feature" : string.Create(CultureInfo.InvariantCulture, $"{testFeatures} features"))}";
+        // The box is written at the top of the bar, hidden, with every row showing (plans/SEARCH_PLAN.md F1, F2, F5): the
+        // bar's Filters opens and closes it there, at rest and pinned. Until then it sat on a row of its own above the bar,
+        // its rows folded under More filters, and Filters took it into the bar only while the bar floated. Its readout is
+        // seen, not heard: the bar's own status element announces the filters, the box open or not (F8).
+        var boxStart = body.Length;
         body.Append($"""
-                 <div class="filtering-box rows-folded" id="filtering-box">
-                    <div class="filtering-box-header"><h2>Filtering</h2><div class="filtering-box-export"><span class="filter-readout" role="status" title="{FiltersLeaveShowing}">{readoutText}</span><button class="export-btn" onclick="clear_all_filters()" title="{clearTitle}">Clear All</button><button class="export-btn" onclick="export_html()" title="Download a copy of this report holding only the features the filters show">Export <span class="wide-only">Filtered </span>HTML</button><button class="export-btn" onclick="export_csv()" title="Download the scenarios the filters show as a CSV file: feature, scenario, status and duration in milliseconds">Export <span class="wide-only">Filtered </span>CSV</button>{FiltersClose}</div></div>
-                    <div class="filter-search"><span class="search-field"><input id="searchbar" autocomplete="off" placeholder="Filter... (@tag, $status, dep:, duration:, &&, ||, !!)" onkeyup="search_scenarios()" title="{SearchTitle}" /></span><button type="button" class="search-help-toggle" onclick="toggle_search_help()" title="{SearchHelpTitle}">?</button>{MoreFilters(rowsTitle)}</div>
-                    <div class="mobile-filter-line"><button type="button" class="mobile-filter-toggle" aria-expanded="false" aria-controls="filter-rows" title="Show or hide the filters">Filters</button></div>
+                 <div class="filtering-box" id="filtering-box" role="region" aria-label="Filters" tabindex="-1" hidden>
+                    <div class="filtering-box-header"><h2>Filtering</h2><div class="filtering-box-export"><span class="filter-readout" aria-hidden="true" title="{FiltersLeaveShowing}">{readoutText}</span><button class="export-btn" onclick="clear_all_filters()" title="{clearTitle}">Clear All</button><button class="export-btn" onclick="export_html()" title="Download a copy of this report holding only the features the filters show">Export <span class="wide-only">Filtered </span>HTML</button><button class="export-btn" onclick="export_csv()" title="Download the scenarios the filters show as a CSV file: feature, scenario, status and duration in milliseconds">Export <span class="wide-only">Filtered </span>CSV</button>{FiltersClose}</div></div>
+                    {BoxSearch}
                     <div class="filters" id="filter-rows">
-                    <div class="search-help-panel" style="display:none">
-                    <table class="search-help-table">
-                    <tr><th>Syntax</th><th>Meaning</th><th>Example</th></tr>
-                    <tr><td><code>word</code></td><td>Text to match (feature name, scenario name, step text, tags, diagram source)</td><td><code>order</code></td></tr>
-                    <tr><td><code>"phrase"</code></td><td>Exact phrase match</td><td><code>"create order"</code></td></tr>
-                    <tr><td><code>&&</code></td><td>AND — both sides must match</td><td><code>order && create</code></td></tr>
-                    <tr><td><code>||</code></td><td>OR — either side must match</td><td><code>payment || order</code></td></tr>
-                    <tr><td><code>!!</code></td><td>NOT — excludes matches</td><td><code>order && !!delete</code></td></tr>
-                    <tr><td><code>( )</code></td><td>Parentheses — group expressions</td><td><code>(a || b) && c</code></td></tr>
-                    <tr><td><code>@tag</code></td><td>Filter by tag (a feature's tags count for its scenarios); quotes for a tag with spaces</td><td><code>@smoke && @api</code>, <code>@"Happy Path"</code></td></tr>
-                    <tr><td><code>$status</code></td><td>Filter by status</td><td><code>$failed</code>, <code>$passed</code>, <code>$skipped</code></td></tr>
-                    <tr><td><code>dep:name</code></td><td>Scenarios that call a dependency: part of its name is enough; commas for any of several</td><td><code>dep:payment</code>, <code>dep:"order service"</code>, <code>dep:payment,order</code></td></tr>
-                    <tr><td><code>duration:&gt;2s</code></td><td>Scenarios by their own time: &gt;, &gt;=, &lt;, &lt;= or a range; ms, s or m; p50, p90, p95, p99 are this report's percentiles</td><td><code>duration:&gt;2s</code>, <code>duration:&lt;500ms</code>, <code>duration:&gt;p90</code>, <code>duration:1s..5s</code></td></tr>
-                    <tr><td><code>is:happy</code></td><td>Happy paths</td><td><code>is:happy</code>, <code>!!is:happy</code></td></tr>
-                    </table>
-                    <p class="search-help-note">Space-separated words use implicit AND. Press <kbd>/</kbd> to focus the filter field. Operators <code>&&</code> <code>||</code> <code>!!</code> activate advanced mode; without them, legacy tag expressions (<code>@a and @b or not @c</code>) are also supported. <code>dep:</code>, <code>duration:</code> and <code>is:</code> always narrow the filter: they combine with the rest of it by AND, and can be negated with <code>!!</code> or <code>not</code>. Inside a group that <code>!!</code> or <code>not</code> negates, one is read as text, and the field is marked.</p>
-                    </div>
                     <div class="filter-row">
                  """);
 
@@ -2033,6 +2031,9 @@ public static class ReportGenerator
 
         body.Append("</div>"); // close filters
         body.Append("</div>"); // close filtering-box
+        // taken out of the page's flow here and written at the top of the bar, below
+        var filteringBox = body.ToString(boxStart, body.Length - boxStart);
+        body.Length = boxStart;
 
         // The tab the page opens on (the tabs are worked out above the head, which loads the focus script only where the
         // bar is): a panel configured visible; when both are, the timeline, which exists in both reports (Q2).
@@ -2045,10 +2046,11 @@ public static class ReportGenerator
 
         // Toolbar row: the tabs, then expand buttons left, Details/Headers right
         var tableMode = summaryStart ? " features-table-mode" : "";
-        // The bar pins below a mark that says where (D25), and carries the filters on its top row, right of the tabs (D24)
-        if (useTabs) body.Append("""<div class="nav-mark" aria-hidden="true"></div>""");
-        body.Append(useTabs ? $"""<div class="toolbar-row report-nav{(startTab == "features" ? " on-features" : "")}{tableMode}">""" : $"""<div class="toolbar-row{tableMode}">""");
-        if (useTabs)
+        // The bar pins below a mark that says where (D25), carries the filter box at its top (plans/SEARCH_PLAN.md F2) and
+        // the filters on its top row, right of the tabs (D24)
+        body.Append("""<div class="nav-mark" aria-hidden="true"></div>""");
+        body.Append($"""<div class="toolbar-row report-nav{(startTab == "features" ? " on-features" : "")}{tableMode}">""");
+        body.Append(filteringBox);
         {
             // where the page opens, for the navigation script: the scripts change the selected tab before the page settles
             body.Append($"""<div class="nav-row"><div class="report-tabs" role="tablist" aria-label="Report sections" data-start-tab="{startTab}">""");
@@ -2058,22 +2060,27 @@ public static class ReportGenerator
             if (hasComponentTab) body.Append(ReportTab("components", "Components", "The services, databases and queues the scenarios called, drawn as one diagram", startTab));
             if (hasHistoryTab) body.Append(ReportTab("history", "History", HistoryHtml.Description, startTab));
             if (hasDiagnosticsTab) body.Append(ReportTab("diagnostics", "Diagnostics", DiagnosticsDescription, startTab, diagnostics!.Count));
+            // the Search tab, last, hidden until a search is applied (plans/SEARCH_PLAN.md 4.5.1)
+            body.Append(SearchTab);
             body.Append("</div>");
             body.Append(NavFilters(readoutText, ScenarioCount(testCount), clearTitle)).Append("</div>");
+            // what the filters leave showing, said to a screen reader whether the box is open or not and however short
+            // the bar's row is (plans/SEARCH_PLAN.md F8): visually hidden, never display:none
+            body.Append($"""<div class="nav-status" role="status">{readoutText}</div>""");
         }
         // The Features tools (5.0.0, plans/OPTION_C_PLAN.md S4, D21, D22, D35): the Full and Summary views as tabs when
         // the page has the features table; expand and collapse for features and for scenarios, each a pair of icon
         // buttons dimmed while it has nothing to do (the seeded start says which, report-features-tools-script.js keeps
         // it true); the sort; and on a phone the gear that shows the display settings. On a page with tabs they are the
         // Features tab's, in a strip under the tabs that the other tabs hide.
-        if (useTabs) body.Append("""<div class="features-tools">""");
-        body.Append($"""<div class="toolbar-left{(useTabs ? " features-tools-line" : "")}">""");
+        body.Append("""<div class="features-tools">""");
+        body.Append("""<div class="toolbar-left features-tools-line">""");
         if (hasFeatureTable) body.Append(FeaturesViewSwitch(summaryStart));
         body.Append(FoldGroup("features", features.Length, toggles.FeaturesExpanded));
         body.Append(FoldGroup("scenarios", features.Sum(f => f.Scenarios.Length), toggles.ScenariosExpanded));
         body.Append("""<span class="tools-spacer"></span>""");
         if (hasFeatureTable) body.Append(FeaturesSortGroup(durationCol));
-        if (useTabs && isPlantUmlBrowser) body.Append(ToolsGear);
+        if (isPlantUmlBrowser) body.Append(ToolsGear);
         body.Append("</div>");
         body.Append("""<div class="toolbar-right" id="display-settings">""");
         if (isPlantUmlBrowser)
@@ -2098,13 +2105,13 @@ public static class ReportGenerator
             body.Append("</span>");
         }
         body.Append("</div>");
-        if (useTabs) body.Append("</div>"); // the features tools
+        body.Append("</div>"); // the features tools
         body.Append("</div>");
 
         // The panels: the Features tab's first; the others are written after the features (below) from HTML built where
-        // the sections were, so the diagrams keep their ids. Without tabs the features' panel has no tab to name it.
+        // the sections were, so the diagrams keep their ids.
         body.Append("<div class=\"report-panels\">");
-        body.Append(useTabs ? ReportPanel("features", startTab) : """<div class="report-panel" id="panel-features" data-panel="features">""");
+        body.Append(ReportPanel("features", startTab));
         body.Append(FiltersEmpty);
 
         var plantUmlBrowserCounter = 0;
@@ -2462,22 +2469,27 @@ public static class ReportGenerator
                 // Deep link anchor ID
                 var anchorId = scenarioAnchorIds[scenario.Id];
 
-                // Pre-build searchable text: feature context + scenario name + error info + step text + diagram sources + tags
-                var searchParts = new List<string> { feature.DisplayName, scenario.DisplayName };
-                if (feature.Description is not null) searchParts.Add(feature.Description);
-                if (feature.Endpoint is not null) searchParts.Add(feature.Endpoint);
-                if (!string.IsNullOrWhiteSpace(scenario.Description)) searchParts.Add(scenario.Description);
-                if (scenario.Rule is not null) searchParts.Add(scenario.Rule);
-                searchParts.AddRange(ScenarioTags.Effective(feature, scenario));
+                // Pre-build searchable text: feature context + scenario name + error info + step text + diagram sources + tags,
+                // each section marked with its kind (plans/SEARCH_PLAN.md 4.6.1)
+                var searchParts = new List<string>();
+                var searchKinds = new SearchKinds(searchParts);
+                searchKinds.Next('f'); searchParts.Add(feature.DisplayName);
+                searchKinds.Next('n'); searchParts.Add(scenario.DisplayName);
+                searchKinds.Next('d'); if (feature.Description is not null) searchParts.Add(feature.Description);
+                searchKinds.Next('p'); if (feature.Endpoint is not null) searchParts.Add(feature.Endpoint);
+                searchKinds.Next('d'); if (!string.IsNullOrWhiteSpace(scenario.Description)) searchParts.Add(scenario.Description);
+                searchKinds.Next('r'); if (scenario.Rule is not null) searchParts.Add(scenario.Rule);
+                searchKinds.Next('t'); searchParts.AddRange(ScenarioTags.Effective(feature, scenario));
                 if (TagChips.RetryText(scenario) is { } retried) searchParts.Add(retried);
-                if (failed && scenario.ErrorMessage is not null) searchParts.Add(scenario.ErrorMessage);
-                CollectStepText(scenario.BackgroundSteps, searchParts);
+                searchKinds.Next('e'); if (failed && scenario.ErrorMessage is not null) searchParts.Add(scenario.ErrorMessage);
+                searchKinds.Next('s'); CollectStepText(scenario.BackgroundSteps, searchParts);
                 CollectStepText(scenario.Steps, searchParts);
+                searchKinds.Next('g');
                 if (scenarioDiagramSearchTerms.TryGetValue(scenario.Id, out var diagramTerms) && diagramTerms.Count > 0)
                     searchParts.AddRange(diagramTerms);
-                AddExampleValueSearchParts(scenario, searchParts);
+                searchKinds.Next('x'); AddExampleValueSearchParts(scenario, searchParts);
                 var searchText = string.Join(" ", searchParts).ToLowerInvariant();
-                var searchAttr = $" data-search=\"{System.Net.WebUtility.HtmlEncode(searchText)}\"";
+                var searchAttr = $" data-search=\"{System.Net.WebUtility.HtmlEncode(searchText)}\" data-search-kinds=\"{searchKinds}\"";
                 searchIndexPieces?[scenario.Id].Add(searchText);
 
                 // Its effective tags in their chips' spellings (plans/TAGS_PLAN.md §4.9), which the chips, @tag and the
@@ -2686,6 +2698,7 @@ public static class ReportGenerator
         if (componentHtml.Length > 0) body.Append(ReportPanel("components", startTab)).Append(componentHtml).Append("</div>");
         if (historyHtml.Length > 0) body.Append(ReportPanel("history", startTab)).Append(historyHtml).Append("</div>");
         if (diagnosticsHtml.Length > 0) body.Append(ReportPanel("diagnostics", startTab)).Append(diagnosticsHtml).Append("</div>");
+        body.Append(SearchPanel);
         body.Append("</div>"); // the panels
 
         // Jump-to-failure button (only when there are failures)
@@ -2814,6 +2827,50 @@ public static class ReportGenerator
             foreach (var marker in markers.EnumerateArray())
                 parts.Add(marker[1].GetString() ?? "");
         return string.Join("\n", parts);
+    }
+
+    /// <summary>
+    /// Where each kind of part starts in a scenario's search text (plans/SEARCH_PLAN.md 4.6.1): a letter and an offset per
+    /// run of one kind (f the feature's name, n a name, d a description, p the endpoint, r the rule, t the tags, e the error,
+    /// s the steps, g the diagrams' participants and call paths, x the examples), written as <c>data-search-kinds</c>
+    /// beside <c>data-search</c>, whose text is unchanged. The offsets are counted as the page reads the attribute: the
+    /// encoder keeps a CR and the HTML parser makes CRLF and a lone CR one LF, so each CRLF before a part moves it one back;
+    /// lower-casing leaves the length as it is (<see cref="string.ToLowerInvariant()"/> maps one UTF-16 unit to one).
+    /// </summary>
+    private sealed class SearchKinds(List<string> parts)
+    {
+        private readonly List<(char Kind, int From)> _marks = [];
+
+        /// <summary>The parts added from here on are of <paramref name="kind"/>.</summary>
+        public void Next(char kind) => _marks.Add((kind, parts.Count));
+
+        public override string ToString()
+        {
+            var starts = new int[parts.Count + 1];
+            for (var i = 0; i < parts.Count; i++)
+                starts[i + 1] = starts[i] + ParsedLength(parts[i]) + 1;
+            var runs = new StringBuilder();
+            var last = '\0';
+            for (var m = 0; m < _marks.Count; m++)
+            {
+                var (kind, from) = _marks[m];
+                var to = m + 1 < _marks.Count ? _marks[m + 1].From : parts.Count;
+                if (to <= from || kind == last) continue;
+                if (runs.Length > 0) runs.Append(' ');
+                runs.Append(kind).Append(starts[from].ToString(CultureInfo.InvariantCulture));
+                last = kind;
+            }
+            return runs.ToString();
+        }
+
+        // the part's length once the parser has read it: CRLF and a lone CR are one LF
+        private static int ParsedLength(string part)
+        {
+            var length = part.Length;
+            for (var i = 0; i + 1 < part.Length; i++)
+                if (part[i] == '\r' && part[i + 1] == '\n') length--;
+            return length;
+        }
     }
 
     /// <summary>
@@ -3091,18 +3148,13 @@ public static class ReportGenerator
         $"<button type=\"button\" class=\"group-clear\" title=\"Clear the {noun} filters\" hidden>Clear</button>";
 
     /// <summary>
-    /// The rows More filters folds away (S7, D15), named in their order for its title: Status always, then Duration,
-    /// Happy paths, Tags and Dependencies where the box has them.
-    /// </summary>
-    private static string FilterRowsTitle(Feature[] features, bool hasDurations, bool hasDependencies) =>
-        Listed(FilterRows(features, hasDurations, hasDependencies, "Status"));
-
-    /// <summary>
-    /// What Clear All clears (5.0.0, plans/OPTION_C_PLAN.md D49): the filter text, with the dep:, duration: and is: terms in it,
-    /// and every row the box has, named as More filters names them.
+    /// What Clear All clears (5.0.0, plans/OPTION_C_PLAN.md D49): the search, with the qualifiers in it (5.11.0 adds tag:,
+    /// status: and feature: to dep:, duration: and is:),
+    /// and every row the box has, in their order: Status always, then Duration, Happy paths, Tags and Dependencies where the
+    /// box has them.
     /// </summary>
     private static string ClearAllTitle(Feature[] features, bool hasDurations, bool hasDependencies) =>
-        "Clear every filter: the filter text with its dep:, duration: and is: terms, and the "
+        "Clear every filter: the search with its tag:, status:, feature:, dep:, duration: and is: terms, and the "
         + Listed(FilterRows(features, hasDurations, hasDependencies, "statuses"));
 
     /// <summary>The rows the filter box has, in their order, the first named <paramref name="status"/>.</summary>
@@ -3138,32 +3190,107 @@ public static class ReportGenerator
     private const string FiltersLeaveShowing = "The scenarios and features the filters leave showing";
 
     /// <summary>
-    /// The filter field's title (D49), written HTML-encoded as the attribute holds it. The field filters, as the rows do, so
-    /// from 5.9.1 its words say filter, never search (plans/REPORT_UI_FIXES_PLAN.md I9); its ids keep their names.
+    /// The search on the title line (plans/SEARCH_PLAN.md 4.2): GitHub's button drawn as a text box, "Type / to search",
+    /// which opens the query builder; once a search is applied it shows the query (report-search-ui-script.js), and its
+    /// clear, beside it in the box since a button cannot hold a button, empties the query and nothing else. The applied
+    /// query itself stays where every script reads it, the hidden #searchbar (4.1).
     /// </summary>
-    private const string SearchTitle = "Filter by names, steps, tags and diagram text. Combine words with &amp;&amp; (and), || (or) and !! (not); @tag and $status pick by tag or status, dep:, duration: and is:happy by dependency, time and happy path; ? shows the syntax";
+    internal const string SearchBox =
+        """<span class="search-box"><button type="button" class="search-button" id="search-button" aria-haspopup="dialog" aria-expanded="false" aria-controls="search-dialog" aria-keyshortcuts="/" aria-label="Search or jump to, type / to search" title="Search this report, or jump to a scenario or a feature (/)">"""
+        + SearchIcon + """<span class="search-button-hint">Type <kbd aria-hidden="true">/</kbd> to search</span><span class="search-button-query" hidden></span></button>"""
+        + """<button type="button" class="search-clear" id="search-clear" aria-label="Clear the search" title="Clear the search; the filters stay as they are" hidden>"""
+        + ClearIcon + """</button><input type="hidden" id="searchbar" autocomplete="off" /></span>""";
 
-    /// <summary>The filter help button's title (D49), written HTML-encoded as the attribute holds it.</summary>
-    private const string SearchHelpTitle = "How to write a filter: words, &quot;phrases&quot;, @tags, $statuses, dep:, duration:, is:happy, &amp;&amp;, ||, !! and parentheses";
+    private const string SearchIcon =
+        """<svg class="search-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="7" cy="7" r="4.6"/><path d="M10.4 10.4l3.6 3.6"/></svg>""";
+
+    private const string ClearIcon =
+        """<svg class="clear-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="6.2"/><path d="M5.8 5.8l4.4 4.4M10.2 5.8l-4.4 4.4"/></svg>""";
 
     /// <summary>
-    /// More filters, at the end of the filter field's line (S7, D15): it opens the rows, and counts the filters on in them while
-    /// they are folded (report-filter-bar-script.js).
+    /// The query builder (plans/SEARCH_PLAN.md 4.3): a native dialog over the page, its panel placed by the script on the
+    /// search box (a sheet from the top on a phone); a combobox over a listbox of suggestions, a polite live region that
+    /// counts them, and the syntax tips at its foot, in the page since a report is often read offline (G18). The tips say
+    /// which parts of a scenario each search reads (B3: the help said the instant search read "diagram source").
     /// </summary>
-    private static string MoreFilters(string title) =>
-        $"""<button type="button" class="more-filters" aria-controls="filter-rows" aria-expanded="false" title="{title}"><span class="more-filters-label">More filters</span><span class="more-filters-count" hidden></span><svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true" focusable="false"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>""";
+    internal const string SearchDialog =
+        """<dialog id="search-dialog" class="search-dialog" aria-labelledby="search-dialog-title"><div class="search-panel">"""
+        + """<h2 id="search-dialog-title" class="search-visually-hidden">Search this report</h2>"""
+        + """<div class="search-input-row">""" + SearchIcon
+        + """<span id="search-input-label" class="search-visually-hidden">Search</span><div class="search-input-wrap"><div class="search-mirror" aria-hidden="true"></div>"""
+        + """<input id="search-input" type="text" role="combobox" aria-expanded="false" aria-controls="search-suggestions" aria-autocomplete="list" aria-labelledby="search-input-label" spellcheck="false" autocomplete="off" placeholder="Search or jump to…" title="Words to find, and tag:, status:, feature:, dep:, duration: or is:happy to narrow them; Enter searches" /></div>"""
+        + """<button type="button" class="search-input-clear" aria-label="Clear" title="Clear what is typed" hidden>""" + ClearIcon + """</button></div>"""
+        + """<ul id="search-suggestions" class="search-suggestions" role="listbox" aria-label="Suggestions"></ul>"""
+        + """<div id="search-tips" class="search-tips" hidden>""" + SearchTips + """</div>"""
+        + """<div class="search-live search-visually-hidden" role="status" aria-live="polite" aria-atomic="true"></div>"""
+        + """<div class="search-foot"><button type="button" class="search-tips-toggle" aria-expanded="false" aria-controls="search-tips" title="How to write a search: the forms, and what each search reads">Search syntax tips</button>"""
+        + """<button type="button" class="search-foot-filters" title="Close the search and open the filters" hidden><span>Filters</span><span class="filters-count" aria-hidden="true" hidden></span></button></div>"""
+        + """</div></dialog>""";
+
+    /// <summary>The Search tab (plans/SEARCH_PLAN.md 4.5.1): last in the bar, a magnifier before its name and its count of
+    /// results after it, hidden until a search is applied (report-search-results-script.js shows it).</summary>
+    private const string SearchTab =
+        """<button class="report-tab" id="tab-search" role="tab" aria-controls="panel-search" aria-selected="false" tabindex="-1" data-tab="search" title="The scenarios the search matched, with the lines where each one matched" hidden>"""
+        + SearchIcon + """Search<span class="tab-n">0</span></button>""";
 
     /// <summary>
-    /// The report bar's filters (S7, D24): a copy of the readout, long and short, which the box's readout announces for
-    /// it; Clear All while anything is filtered, titled with what it clears (<paramref name="clearTitle"/>, D49); and
-    /// Filters, which takes the box into the bar while the bar floats.
+    /// The Search tab's panel (plans/SEARCH_PLAN.md 4.5): GitHub's results page in the report's look, a sidebar beside the
+    /// results from 768.02 px, one column below; report-search-results-script.js fills the frame.
+    /// </summary>
+    private const string SearchPanel =
+        """<div class="report-panel" id="panel-search" role="tabpanel" aria-labelledby="tab-search" data-panel="search" hidden><div class="search-results">"""
+        + """<aside class="search-sidebar" aria-label="Refine the results"></aside>"""
+        + """<section class="search-main" aria-labelledby="search-count"><div class="search-progress" hidden></div><div class="search-phone-row"></div>"""
+        + """<div class="search-head"><h2 id="search-count" class="search-count" tabindex="-1"></h2><span class="search-time"></span><span class="search-head-tools"></span></div>"""
+        + """<div class="search-warning" hidden></div><div class="search-filtered-note" hidden></div><div class="search-list"></div>"""
+        + """<nav class="search-pages" aria-label="Pagination"></nav><p class="search-protip">Press <kbd>/</kbd> to search again and change the query.</p>"""
+        + """</section></div></div>""";
+
+    /// <summary>The syntax tips (plans/SEARCH_PLAN.md 4.3.5): the forms of 4.4 first, the older forms beside them, then what
+    /// the instant search reads and what only deep search reads.</summary>
+    private const string SearchTips =
+        """<table class="search-tips-table"><thead><tr><th>Write</th><th>To find</th><th>For example</th></tr></thead><tbody>"""
+        + """<tr><td><code>word</code></td><td>Scenarios holding every word</td><td><code>pancake flour</code></td></tr>"""
+        + """<tr><td><code>"phrase"</code></td><td>The words together, as written</td><td><code>"create order"</code></td></tr>"""
+        + """<tr><td><code>tag:name</code> <code>@tag</code></td><td>A tag the scenario or its feature has; quotes for a tag with spaces</td><td><code>tag:smoke</code>, <code>tag:"Happy Path"</code>, <code>@smoke</code></td></tr>"""
+        + """<tr><td><code>status:failed</code> <code>$status</code></td><td>Passed, failed, skipped or bypassed, or a history verdict; a scenario skipped after a failure counts as skipped</td><td><code>status:failed</code>, <code>$passed</code></td></tr>"""
+        + """<tr><td><code>feature:name</code></td><td>Part of the feature's name; commas for any of several</td><td><code>feature:pancakes</code>, <code>feature:"order service"</code></td></tr>"""
+        + """<tr><td><code>dep:name</code></td><td>A dependency the scenario calls: part of its name is enough; commas for any of several</td><td><code>dep:payment</code>, <code>dep:payment,order</code></td></tr>"""
+        + """<tr><td><code>duration:&gt;2s</code></td><td>The scenario's own time: &gt;, &gt;=, &lt;, &lt;= or a range; ms, s or m; p50, p90, p95, p99 are this report's percentiles</td><td><code>duration:&gt;p90</code>, <code>duration:1s..5s</code></td></tr>"""
+        + """<tr><td><code>is:happy</code></td><td>Happy paths</td><td><code>is:happy</code></td></tr>"""
+        + """<tr><td><code>-key:value</code></td><td>Leaves those out, as <code>!!</code> before it does</td><td><code>-tag:slow</code>, <code>-status:passed</code></td></tr>"""
+        + """<tr><td><code>&amp;&amp;</code> <code>||</code> <code>!!</code> <code>( )</code></td><td>And, or, not, and grouping</td><td><code>(payment || order) &amp;&amp; !!refund</code></td></tr>"""
+        + """</tbody></table>"""
+        + """<p class="search-tips-note"><code>feature:</code>, <code>dep:</code>, <code>duration:</code> and <code>is:</code> always narrow the search: they combine with the rest of it by AND, and can be left out with <code>-</code>, <code>!!</code> or <code>not</code>. Inside a group that <code>!!</code> or <code>not</code> negates, one is read as text, and the search says so.</p>"""
+        + """<p class="search-tips-note">At once, the search reads names, descriptions, tags, steps, example values, error messages, the services a scenario calls and the paths of its HTTP calls. Once a word has three letters it also reads payloads, headers, SQL, whole diagrams and stack traces, which can take a moment on a large report. Without <code>&amp;&amp;</code>, <code>||</code> or <code>!!</code>, tag expressions such as <code>@a and @b or not @c</code> work too. Press <kbd>/</kbd> to search from anywhere in the report.</p>""";
+
+    /// <summary>The button that reaches the search from anywhere down a phone's page (plans/SEARCH_PLAN.md 4.2, Q7, B15):
+    /// the bar stays in the page on a phone, so once the title line is out of view this floats above back-to-top.</summary>
+    internal const string SearchFab =
+        """<button type="button" class="search-fab" id="search-fab" aria-haspopup="dialog" aria-controls="search-dialog" aria-label="Search or jump to" title="Search this report, or jump to a scenario or a feature (/)" hidden>"""
+        + SearchIcon + """</button>""";
+
+    /// <summary>
+    /// The box's line for the applied search (plans/SEARCH_PLAN.md F10): the search is the filter most often on, and once
+    /// its field left the box nothing in it said so. Hidden while no search is applied; its clear clears the search alone
+    /// (report-filter-bar-script.js), where Clear All clears it with the rest.
+    /// </summary>
+    private const string BoxSearch =
+        """<div class="box-search" hidden><span class="box-search-label">Search</span><span class="box-search-query"></span><button type="button" class="box-search-clear" aria-label="Clear the search" title="Clear the search; the other filters stay as they are"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button></div>""";
+
+
+    /// <summary>
+    /// The report bar's filters (S7, D24): a copy of the readout, long and short, seen and not heard (the bar's status
+    /// element says it, plans/SEARCH_PLAN.md F8); Clear All while anything is filtered, titled with what it clears
+    /// (<paramref name="clearTitle"/>, D49); and Filters, always shown, which opens and closes the box at the top of the
+    /// bar and counts the filters on (F3, F4, F6).
     /// </summary>
     private static string NavFilters(string readout, string scenarios, string clearTitle) =>
-        $"""<div class="nav-filters" role="group" aria-label="Filters"><span class="nav-readout" aria-hidden="true" title="{FiltersLeaveShowing}"><span class="nav-readout-long">{readout}</span><span class="nav-readout-short">All {scenarios}</span></span><button type="button" class="nav-clear" title="{clearTitle}" hidden>Clear All</button><button type="button" class="nav-filters-toggle" aria-expanded="false" aria-controls="filtering-box" title="Show the filter box in this bar, so it stays in view as you scroll"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false"><path d="M2.5 3h11l-4.25 5v4.25l-2.5 1.25V8z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg><span>Filters</span></button></div>""";
+        $"""<div class="nav-filters" role="group" aria-label="Filters"><span class="nav-readout" aria-hidden="true" title="{FiltersLeaveShowing}"><span class="nav-readout-long">{readout}</span><span class="nav-readout-short">All {scenarios}</span></span><button type="button" class="nav-clear" title="{clearTitle}" hidden>Clear All</button><button type="button" class="nav-filters-toggle" aria-expanded="false" aria-controls="filtering-box" aria-label="Filters" title="Show the filters"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false"><path d="M2.5 3h11l-4.25 5v4.25l-2.5 1.25V8z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg><span>Filters</span><span class="filters-count" aria-hidden="true" hidden></span></button></div>""";
 
-    /// <summary>The box's close while it rides in the bar (S7, D24), hidden until then.</summary>
+    /// <summary>The box's close (S7, D24), always shown since the box is shown and hidden in its place (plans/SEARCH_PLAN.md F4).</summary>
     private const string FiltersClose =
-        """<button type="button" class="filters-close" aria-label="Take the filters out of the bar" title="Put the filter box back above the bar (Esc)" hidden><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>""";
+        """<button type="button" class="filters-close" aria-label="Hide the filters" title="Hide the filters (Esc)"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>""";
 
     /// <summary>What the Features panel says when the filters leave no scenario, with the way back (S7, D24).</summary>
     private const string FiltersEmpty =
@@ -3564,24 +3691,28 @@ public static class ReportGenerator
             : scenarios.Any(s => s.Result == ExecutionResult.Bypassed) ? ExecutionResult.Bypassed
             : ExecutionResult.Passed;
 
-        // Build search text
-        var searchParts = new List<string> { group.GroupDisplayName };
-        if (featureDisplayName is not null) searchParts.Add(featureDisplayName);
-        if (featureDescription is not null) searchParts.Add(featureDescription);
-        if (featureEndpoint is not null) searchParts.Add(featureEndpoint);
-        if (featureTags is { Length: > 0 }) searchParts.AddRange(featureTags);
+        // Build search text, each section marked with its kind (plans/SEARCH_PLAN.md 4.6.1)
+        var searchParts = new List<string>();
+        var searchKinds = new SearchKinds(searchParts);
+        searchKinds.Next('n'); searchParts.Add(group.GroupDisplayName);
+        searchKinds.Next('f'); if (featureDisplayName is not null) searchParts.Add(featureDisplayName);
+        searchKinds.Next('d'); if (featureDescription is not null) searchParts.Add(featureDescription);
+        searchKinds.Next('p'); if (featureEndpoint is not null) searchParts.Add(featureEndpoint);
+        searchKinds.Next('t'); if (featureTags is { Length: > 0 }) searchParts.AddRange(featureTags);
         foreach (var s in scenarios)
         {
-            searchParts.Add(s.DisplayName);
-            if (!string.IsNullOrWhiteSpace(s.Description)) searchParts.Add(s.Description);
-            if (s.Rule is not null) searchParts.Add(s.Rule);
-            searchParts.AddRange(ScenarioTags.OwnOf(s));
+            searchKinds.Next('n'); searchParts.Add(s.DisplayName);
+            searchKinds.Next('d'); if (!string.IsNullOrWhiteSpace(s.Description)) searchParts.Add(s.Description);
+            searchKinds.Next('r'); if (s.Rule is not null) searchParts.Add(s.Rule);
+            searchKinds.Next('t'); searchParts.AddRange(ScenarioTags.OwnOf(s));
             if (TagChips.RetryText(s) is { } retried) searchParts.Add(retried);
-            if (s.ErrorMessage is not null) searchParts.Add(s.ErrorMessage);
-            CollectStepText(s.BackgroundSteps, searchParts);
+            searchKinds.Next('e'); if (s.ErrorMessage is not null) searchParts.Add(s.ErrorMessage);
+            searchKinds.Next('s'); CollectStepText(s.BackgroundSteps, searchParts);
             CollectStepText(s.Steps, searchParts);
+            searchKinds.Next('g');
             if (scenarioDiagramSearchTerms.TryGetValue(s.Id, out var diagramTerms) && diagramTerms.Count > 0)
                 searchParts.AddRange(diagramTerms);
+            searchKinds.Next('x');
             if (hasBlockStructure)
             {
                 if (!string.IsNullOrEmpty(s.ExamplesBlockName)) searchParts.Add(s.ExamplesBlockName);
@@ -3590,7 +3721,7 @@ public static class ReportGenerator
             AddExampleValueSearchParts(s, searchParts);
         }
         var groupSearchText = string.Join(" ", searchParts).ToLowerInvariant();
-        var searchAttr = $" data-search=\"{System.Net.WebUtility.HtmlEncode(groupSearchText)}\"";
+        var searchAttr = $" data-search=\"{System.Net.WebUtility.HtmlEncode(groupSearchText)}\" data-search-kinds=\"{searchKinds}\"";
         // Each member scenario is a deep-search doc; the group <details> is the element whose
         // data-search the client verify pass reads, so the group text is part of every member's corpus.
         if (searchIndexPieces is not null)
@@ -7154,6 +7285,15 @@ public static class ReportGenerator
         @":\s*(?:GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS|CONNECT|TRACE):\s*(\S+)",
         System.Text.RegularExpressions.RegexOptions.Compiled);
 
+    // A call's label inside its internal-flow link, [[#iflow-ID GET: /path]] (PlantUmlCreator, internal-flow tracking on,
+    // the default), and the break and indent PlantUmlCreator joins a long path's chunks with for display. The instant
+    // search reads the label without the link and the path whole (SEARCH_PLAN B11): until then the link put the method
+    // out of UrlRegex's reach, so a linked call's path was never read, and a chunked one was read to its first chunk.
+    private static readonly System.Text.RegularExpressions.Regex LinkedLabelRegex = new(
+        @"\[\[#\S+\s+(.*?)\]\]",
+        System.Text.RegularExpressions.RegexOptions.Compiled);
+    private const string PathDisplayBreak = "\\n        ";
+
     internal static HashSet<string> ExtractDiagramSearchTerms(string codeBehind)
     {
         var terms = new HashSet<string>();
@@ -7167,7 +7307,8 @@ public static class ReportGenerator
             if (participantMatch.Success)
                 terms.Add(participantMatch.Groups[1].Value);
 
-            var urlMatch = UrlRegex.Match(trimmed);
+            var label = LinkedLabelRegex.Replace(trimmed, "$1").Replace(PathDisplayBreak, "", StringComparison.Ordinal);
+            var urlMatch = UrlRegex.Match(label);
             if (urlMatch.Success)
                 terms.Add(urlMatch.Groups[1].Value);
         }

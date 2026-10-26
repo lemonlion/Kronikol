@@ -393,10 +393,13 @@ public class ZoomKeptOnRedrawTests : PlaywrightTestBase
         Assert.All(boxes, b => AssertKept(b, level));
     }
 
-    // Zoomed, scrolled, then back to its fit and zoomed again without a scroll: the place it was left at is its left
-    // edge, not the place it had before it went back to its fit (5.2.5; 5.2.3 kept the old one for a box not laid out).
+    // Zoomed, scrolled, then back to its fit and zoomed again without a scroll: the place it was left at is the one the
+    // zoom gave it, not the place it had before it went back to its fit (5.2.5; 5.2.3 kept the old one for a box not laid
+    // out). The zoom gives it its left edge, or, with the window's middle on the picture, the place that keeps that point
+    // still (5.7.0, plans/ZOOM_EVERY_DIAGRAM_PLAN.md Z6): which of the two depends on where the page lays the diagram,
+    // and since 5.11.0, the filter box no longer above the report bar, the diagram is under the window's middle.
     [Fact]
-    public async Task A_diagram_zoomed_again_without_a_scroll_keeps_its_left_edge_when_drawn_again_while_not_displayed()
+    public async Task A_diagram_zoomed_again_without_a_scroll_keeps_the_place_the_zoom_gave_it_when_drawn_again_while_not_displayed()
     {
         await OpenAsync("ZoomKeptRezoomed.html", noteLines: 30, headerLine: true);
         var level = await ZoomPartwayAsync();
@@ -416,7 +419,8 @@ public class ZoomKeptOnRedrawTests : PlaywrightTestBase
             }
             """);
         await TwoAnimationFramesAsync(Page);
-        Assert.Equal(0, (await BoxesAsync())[0].ScrollLeft);
+        var given = (await BoxesAsync())[0].ScrollLeft;
+        Assert.NotEqual(ScrolledTo, given);
         await Page.EvaluateAsync("() => { document.querySelector('details.scenario').style.display = 'none'; }");
 
         await Page.EvaluateAsync("() => { window.__before = document.querySelector('[data-diagram-type=\"plantuml\"] svg'); }");
@@ -437,7 +441,7 @@ public class ZoomKeptOnRedrawTests : PlaywrightTestBase
         var box = (await BoxesAsync()).Single();
         Assert.True(box.Zoomed);
         Assert.Equal(level, box.Slider);
-        Assert.Equal(0, box.ScrollLeft);
+        Assert.Equal(given, box.ScrollLeft);
     }
 
     [Fact]

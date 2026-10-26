@@ -72,7 +72,7 @@ public class ExportFilteredCsvTests : PlaywrightTestBase
     {
         var download = await Page.RunAndWaitForDownloadAsync(async () =>
         {
-            await Page.Locator("button.export-btn", new() { HasTextString = "Export Filtered CSV" }).ClickAsync();
+            await PressBoxExportAsync(Page, "Export Filtered CSV");
         });
         var path = Path.Combine(TempDir, $"export_{Guid.NewGuid():N}.csv");
         await download.SaveAsAsync(path);

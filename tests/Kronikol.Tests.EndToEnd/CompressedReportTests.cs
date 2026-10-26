@@ -227,7 +227,7 @@ public class CompressedReportTests(PlaywrightFixture fixture) : PlaywrightTestBa
     {
         await Page.GotoReportAsync(Generate("Compressed_Export.html"));
         var download = await Page.RunAndWaitForDownloadAsync(async () =>
-            await Page.Locator("button.export-btn", new() { HasTextString = "Export Filtered HTML" }).ClickAsync());
+            await PressBoxExportAsync(Page, "Export Filtered HTML"));
         var path = Path.Combine(TempDir, "Compressed_Exported.html");
         await download.SaveAsAsync(path);
         File.Copy(path, Path.Combine(OutputDir, "Compressed_Exported.html"), true);
@@ -259,7 +259,7 @@ public class CompressedReportTests(PlaywrightFixture fixture) : PlaywrightTestBa
         await Page.AddInitScriptAsync("delete window.CompressionStream;");
         await Page.GotoReportAsync(Generate("Compressed_ExportStored.html"));
         var download = await Page.RunAndWaitForDownloadAsync(async () =>
-            await Page.Locator("button.export-btn", new() { HasTextString = "Export Filtered HTML" }).ClickAsync());
+            await PressBoxExportAsync(Page, "Export Filtered HTML"));
         var path = Path.Combine(TempDir, "Compressed_ExportedStored.html");
         await download.SaveAsAsync(path);
 

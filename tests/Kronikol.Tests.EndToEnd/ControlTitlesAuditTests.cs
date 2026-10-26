@@ -343,15 +343,31 @@ public class ControlTitlesAuditTests : PlaywrightTestBase
         await Page.WaitForFunctionAsync("() => document.getElementById('back-to-top').style.display === 'block'", null, new() { PollingInterval = 200 });
         misses.AddRange(await AuditAsync("scrolled to the end"));
 
-        // the bar floating, with the box taken into it
+        // the bar floating with the box in it, which stays open since the first state (plans/SEARCH_PLAN.md F-g)
         await Page.EvaluateAsync("() => window.scrollTo(0, document.querySelector('.nav-mark').getBoundingClientRect().top + window.scrollY + 300)");
         await Page.WaitForFunctionAsync("() => document.querySelector('.report-nav').classList.contains('k-floating')", null, new() { PollingInterval = 200 });
-        await Page.Locator(".nav-filters-toggle").ClickAsync();
+        if (await Page.Locator("#filtering-box").IsHiddenAsync()) await Page.Locator(".nav-filters-toggle").ClickAsync();
         await Expect(Page.Locator(".filters-close")).ToBeVisibleAsync();
         misses.AddRange(await AuditAsync("the box in the bar"));
         await Page.Locator(".filters-close").ClickAsync();
         await Expect(Page.Locator(".filters-close")).ToBeHiddenAsync();
         await Page.EvaluateAsync("() => window.scrollTo(0, 0)");
+
+        // the query builder: its input, its suggestions and its tips (plans/SEARCH_PLAN.md 4.3)
+        await Page.Locator("#search-button").ClickAsync();
+        await Page.Locator("#search-input").FillAsync("order");
+        await Expect(Page.Locator("#search-suggestions [role=option]").First).ToBeVisibleAsync();
+        misses.AddRange(await AuditAsync("the query builder"));
+        await Page.Locator(".search-tips-toggle").ClickAsync();
+        misses.AddRange(await AuditAsync("the query builder's tips"));
+        await Page.Keyboard.PressAsync("Escape");
+
+        // the Search tab: its sidebar, its results, their lines and its pages (4.5)
+        await FillSearchBar("order", toSearchTab: true);
+        await Expect(Page.Locator("#panel-search .search-result").First).ToBeVisibleAsync();
+        misses.AddRange(await AuditAsync("the Search tab"));
+        await Page.Locator("#search-clear").ClickAsync();
+        await Expect(Page.Locator("#tab-search")).ToBeHiddenAsync();
 
         // no scenario left: the empty state and the bar's Clear All
         await FillSearchBar("nothing-matches-this");

@@ -35,16 +35,31 @@ namespace Kronikol.Tests.Reports;
 /// matching, not searching (I9), and its normaliser drops a step bar cell's markup and reads a cell's line break (B2, B3).
 /// The same release changed the advanced filter's status term in both variants (E3): `$skipped` keeps a scenario skipped
 /// after a failure, as the summary counts it.
+/// source from its piece of the page's zstd frames, and every other item as it is, where it gunzipped each.
+/// plans/SEARCH_PLAN.md changed the search function outside its fences: emptying the search takes its marks off an
+/// outline's rows and puts back a row it chose (B5), and the help no longer sets the box's help-open class, the rows
+/// never folding (F5). It changed the search index script outside its fences too (4.5.7): the chip that said inside the
+/// search field where deep search was went with the field, and the script tells it as a <c>kron-deep</c> event, which the
+/// Search tab's bar and counts say.
+/// plans/SEARCH_PLAN.md 4.4 changed <c>advanced-search.js</c> and the search function outside their fences:
+/// <c>tag:</c>, <c>status:</c> and a <c>-</c> before them are tokens of the advanced search, a query is cut into spans
+/// for the query builder (B4 follows 5.9.1's E3 above, so <c>status:skipped</c> finds a scenario skipped after a failure), and
+/// the search function reads <c>feature:</c> and a <c>-</c> before any qualifier and names a <c>tag:</c> or
+/// <c>status:</c> it cannot read. They added one fenced block, to the search function: the verdicts a report's scenarios
+/// carry, which <c>status:</c> reads beside the execution results; the fenced lines that were there are unchanged.
+/// plans/SEARCH_PLAN.md 4.6.2 to 4.6.5 changed the search index script outside its fences: its normaliser's passes are one
+/// list the search text, the display text and the map back to the input are made from, and its worker keeps each piece of
+/// a scenario's text with the places in it, reports the kinds a match hit and answers the lines asked for a result shown.
 /// </summary>
 public class VerdictFencesTests
 {
     public static TheoryData<string, string, string> Pins => new()
     {
         // script, default variant (no verdicts), verdict variant
-        { "advanced-search.js", "fee7fc221659018a62f3beb8be6a789218c6cbe76243042ca959776d220eddd8", "c39ebdd2332b86bf66626b5a97b0ea539c669c3dcce062c769d9a9599c46cc29" },
+        { "advanced-search.js", "1543f8d6b072935b1b5a7f4838a4f6a3315a2b3c689026b3f099a116e55c0fb2", "e15cf8d1c84cb2cd0fc4c44bd3e237ca1dd37398d3028b0f813a1409e11a51a7" },
         { "report-scenario-feature-map-helper.js", "d3d00e12dfb1ae86fce149860f5ffbe970a43af27dd8b80c0a39f3438a187202", "235ffa5649c597fa43429959c0eacc0d90f7bbcdb5f7a740b6636a5ecd076caa" },
-        { "report-search-function.js", "dbdfcbe5ea893e6dd89a1412c8e5dd1ff423afc22dccc927ff686c1544e84daf", "e8a0c76ac338519d83d2f84163d29f1761deb1c5e9f2fba880fc0239925401ac" },
-        { "report-search-index.js", "30b4733169691772602b552ac3d7104ac4f5a8ac090de6ee322e9f165c72ee91", "26248d206ec5ed68cf4a27c0956bcb3f072d4d36953d6bb17263698b69f75e88" },
+        { "report-search-function.js", "78a829b878ae60f7d4330d049d507130437cf09a533d90504fe8425ce10dd82c", "471a1bb0f21db191ef0b95b3f972ebdfae2964414a78aa08dc8d53097e52a7fe" },
+        { "report-search-index.js", "e4392829d4628a16d01d4ca4580f3ac50cf08d1e48bd11fed8bbb83d24ee9e1c", "3ac67899fe659bf7d879a8e515959f1883ca740463fb1cdb1115aca9d3e7db3c" },
     };
 
     private static string Sha256(string text) =>

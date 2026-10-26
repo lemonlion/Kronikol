@@ -28,7 +28,7 @@ function set_percentile_button(btn, on) {
 }
 function set_percentile(btn) {
     var wasActive = btn.classList.contains('percentile-active');
-    document.querySelectorAll('.percentile-btn').forEach(function(b) { set_percentile_button(b, false); });
+    filter_box_root().querySelectorAll('.percentile-btn').forEach(function(b) { set_percentile_button(b, false); });
     var input = document.getElementById('duration-threshold');
     var customWrap = document.getElementById('custom-duration-wrap');
     if (wasActive) {

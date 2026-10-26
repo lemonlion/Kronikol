@@ -20,7 +20,10 @@ public class ScenarioTruncateAndCollapsibleNotesTests
         // Old approach: temporarily override window._truncateLines, restore in callback
         // New approach: set container._truncateLines on each container
 
-        var fnBody = ExtractFunctionBody(_script, "_setScenarioTruncateLines");
+        // Since SEARCH_PLAN (4.6.5) the gear's line count goes through show, which sets a scenario's states.
+
+        Assert.Contains("show(scenario, { lines: ", ExtractFunctionBody(_script, "_setScenarioTruncateLines"));
+        var fnBody = ExtractFunctionBody(_script, "show");
 
         // Should store per-container
         Assert.Contains("_truncateLines = scenarioLines", fnBody);
@@ -187,8 +190,10 @@ public class ScenarioTruncateAndCollapsibleNotesTests
         var fnBody = ExtractFunctionBody(_script, "_preProcessSource");
         // Since 3.0.66 the counted lines are the note's ACTIVE-format lines
         // (YAML when a format preference/default applies); the pin here is
-        // that headersHidden still reaches isLongNote at pre-process time.
-        Assert.Matches(@"isLongNote\(activeLines,\s*el\._truncateLines,\s*window\._headersHidden\)", fnBody);
+        // that headersHidden still reaches isLongNote at pre-process time:
+        // since SEARCH_PLAN (B12) the scenario's own choice, else the report's.
+        Assert.Contains("el._headersHidden = scenarioChoice(el, '_headersHidden')", fnBody);
+        Assert.Matches(@"isLongNote\(activeLines,\s*el\._truncateLines,\s*el\._headersHidden\)", fnBody);
         Assert.Contains("activeNoteContentLines(el, i, origNoteBlocks[i].contentLines)", fnBody);
     }
 

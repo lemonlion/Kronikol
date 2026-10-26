@@ -1431,6 +1431,200 @@ public class LongPayloadScrollTests : PlaywrightTestBase
     }
 
     /// <summary>
+    /// SEARCH_PLAN B16: WebKit paints a scrolling box in a <c>&lt;foreignObject&gt;</c> at the size and place of the SVG's
+    /// own units, whatever the SVG is drawn at, while it reports the box where it should be: a diagram zoomed out, or a wide
+    /// one shrunk to fit (the default), showed its long payloads' boxes at full size, spilling out of their cards over the
+    /// rest of the diagram, and a fact on the box's geometry passed. So the fact reads pixels: the window around the card
+    /// with the box shown and with it hidden must differ only inside the card. A local leg (CI installs Chromium only).
+    /// </summary>
+    [Fact]
+    public Task A_scaled_diagram_s_scroll_box_is_painted_inside_its_card() => InEngineAsync("webkit", async page =>
+    {
+        await page.SetViewportSizeAsync(900, 1000);
+        await page.GotoReportAsync(LongPayloadReports.ScrollMix(TempDir, OutputDir, "scroll-b16.html", Expanded(), false));
+        await page.Locator("details.feature").First.WaitForAsync();
+        await FoldAllAsync(page, "features", expand: true);
+        await FoldAllAsync(page, "scenarios", expand: true);
+        await page.EvaluateAsync("() => window._renderDiagramsInContainer(document.body)");
+        await page.EvaluateAsync(Helpers);
+        await page.WaitForFunctionAsync("() => window.__scroll && window.__scroll.settled()", null, new() { Timeout = 90000, PollingInterval = 200 });
+        await page.WaitForFunctionAsync("() => !!window.__scroll.container().querySelector(':scope > .diagram-zoom-controls .diagram-zoom-slider')",
+            null, new() { Timeout = 15000, PollingInterval = 200 });
+        // the diagram at half its size
+        await page.EvaluateAsync("""
+            () => {
+                var s = window.__scroll.container().querySelector(':scope > .diagram-zoom-controls .diagram-zoom-slider');
+                s.value = String(Math.max(parseInt(s.min), 50));
+                s.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+            """);
+        await TwoAnimationFramesAsync(page);
+        var scale = await page.EvaluateAsync<double>("""
+            () => {
+                var svg = window.__scroll.svgs()[0], vb = svg.viewBox && svg.viewBox.baseVal;
+                return svg.getBoundingClientRect().width / (vb && vb.width ? vb.width : parseFloat(svg.getAttribute('width')));
+            }
+            """);
+        Assert.True(scale < 0.75, $"premise: the diagram is drawn at {scale:F2} of its size");
+
+        var idx = await page.EvaluateAsync<int>("() => window.__scroll.noteIndex('r150')");
+        await page.EvaluateAsync($"() => window.__scroll.group({idx}).paths[0].scrollIntoView({{ block: 'center' }})");
+        await page.WaitForFunctionAsync($"() => !!window.__scroll.box({idx})", null, new() { Timeout = 15000, PollingInterval = 200 });
+        await TwoAnimationFramesAsync(page);
+
+        var card = await page.EvaluateAsync<double[]>($$"""
+            () => {
+                var g = window.__scroll.group({{idx}});
+                var r = g.paths.map(p => p.getBoundingClientRect()).reduce((a, b) => a.width * a.height > b.width * b.height ? a : b);
+                return [r.left, r.top, r.right, r.bottom];
+            }
+            """);
+        var x = Math.Max(0, card[0] - 150);
+        var y = Math.Max(0, card[1] - 150);
+        var clip = new Clip { X = (float)x, Y = (float)y, Width = (float)(Math.Min(900, card[2] + 150) - x), Height = (float)(Math.Min(1000, card[3] + 150) - y) };
+        var shown = Convert.ToBase64String(await page.ScreenshotAsync(new() { Clip = clip }));
+        await page.EvaluateAsync($"() => {{ window.__scroll.frame({idx}).style.visibility = 'hidden'; }}");
+        await TwoAnimationFramesAsync(page);
+        var hidden = Convert.ToBase64String(await page.ScreenshotAsync(new() { Clip = clip }));
+
+        var counts = await page.EvaluateAsync<int[]>("""
+            async ([a, b, card, clip]) => {
+                const bitmap = async (s) => {
+                    const bin = atob(s), u = new Uint8Array(bin.length);
+                    for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+                    return createImageBitmap(new Blob([u], { type: 'image/png' }));
+                };
+                const ia = await bitmap(a), ib = await bitmap(b), w = ia.width, h = ia.height;
+                const pixels = (img) => {
+                    const c = document.createElement('canvas'); c.width = w; c.height = h;
+                    const x = c.getContext('2d'); x.drawImage(img, 0, 0); return x.getImageData(0, 0, w, h).data;
+                };
+                const da = pixels(ia), db = pixels(ib);
+                let inside = 0, outside = 0;
+                for (let py = 0; py < h; py++) for (let px = 0; px < w; px++) {
+                    const i = (py * w + px) * 4;
+                    if (Math.abs(da[i] - db[i]) + Math.abs(da[i + 1] - db[i + 1]) + Math.abs(da[i + 2] - db[i + 2]) < 60) continue;
+                    const cx = clip[0] + px * clip[2] / w, cy = clip[1] + py * clip[3] / h;
+                    if (cx >= card[0] - 3 && cx <= card[2] + 3 && cy >= card[1] - 3 && cy <= card[3] + 3) inside++; else outside++;
+                }
+                return [inside, outside];
+            }
+            """, new object[] { shown, hidden, card, new[] { x, y, (double)clip.Width, (double)clip.Height } });
+
+        // its text in the card, and nothing of it outside: drawn unscaled, a box deep in the diagram lands far below its card
+        Assert.True(counts[0] > 50, $"the box painted {counts[0]} pixels in its card");
+        Assert.True(counts[1] == 0, $"the box painted {counts[1]} pixels outside its card");
+    });
+
+    /// <summary>The ScrollMix report in WebKit at 900 x 1000, its diagram drawn at half its size, and the r150 payload's box
+    /// made: the box's note index, and the middle of the frame, where the box is painted, with the page's scroll.</summary>
+    private async Task<(int Idx, double X, double Y, double ScrollY)> HalfSizeBoxAsync(IPage page, string fileName)
+    {
+        await page.SetViewportSizeAsync(900, 1000);
+        await page.GotoReportAsync(LongPayloadReports.ScrollMix(TempDir, OutputDir, fileName, Expanded(), false));
+        await page.Locator("details.feature").First.WaitForAsync();
+        await FoldAllAsync(page, "features", expand: true);
+        await FoldAllAsync(page, "scenarios", expand: true);
+        await page.EvaluateAsync("() => window._renderDiagramsInContainer(document.body)");
+        await page.EvaluateAsync(Helpers);
+        await page.WaitForFunctionAsync("() => window.__scroll && window.__scroll.settled()", null, new() { Timeout = 90000, PollingInterval = 200 });
+        await page.WaitForFunctionAsync("() => !!window.__scroll.container().querySelector(':scope > .diagram-zoom-controls .diagram-zoom-slider')",
+            null, new() { Timeout = 15000, PollingInterval = 200 });
+        await page.EvaluateAsync("""
+            () => {
+                var s = window.__scroll.container().querySelector(':scope > .diagram-zoom-controls .diagram-zoom-slider');
+                s.value = String(Math.max(parseInt(s.min), 50));
+                s.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+            """);
+        await TwoAnimationFramesAsync(page);
+        var idx = await page.EvaluateAsync<int>("() => window.__scroll.noteIndex('r150')");
+        await page.EvaluateAsync($"() => window.__scroll.group({idx}).paths[0].scrollIntoView({{ block: 'center' }})");
+        await page.WaitForFunctionAsync($"() => !!window.__scroll.box({idx})", null, new() { Timeout = 15000, PollingInterval = 200 });
+        await TwoAnimationFramesAsync(page);
+        var at = await page.EvaluateAsync<double[]>($"() => {{ var r = window.__scroll.frame({idx}).getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2, window.scrollY]; }}");
+        Assert.Equal(0, await page.EvaluateAsync<double>($"() => window.__scroll.box({idx}).scrollTop"));
+        return (idx, at[0], at[1], at[2]);
+    }
+
+    /// <summary>
+    /// A guard on B16's work-round: the box drawn at the picture's scale by a transform of its own still takes the wheel
+    /// where it is painted, and the page stays where it was. (WebKit's elementFromPoint finds the note under the box there,
+    /// scaled or not; the wheel, a click and the keys reach the box all the same.)
+    /// </summary>
+    [Fact]
+    public Task A_wheel_over_a_scaled_diagram_s_scroll_box_scrolls_the_box() => InEngineAsync("webkit", async page =>
+    {
+        var (idx, x, y, scrollY) = await HalfSizeBoxAsync(page, "scroll-b16-wheel.html");
+
+        await page.Mouse.MoveAsync((float)x, (float)y);
+        await page.Mouse.WheelAsync(0, 120);
+        await page.WaitForFunctionAsync($"() => window.__scroll.box({idx}).scrollTop > 0 || window.scrollY !== {scrollY.ToString(System.Globalization.CultureInfo.InvariantCulture)}",
+            null, new() { Timeout = 5000, PollingInterval = 200 });
+        await TwoAnimationFramesAsync(page);
+
+        Assert.True(await page.EvaluateAsync<double>($"() => window.__scroll.box({idx}).scrollTop") > 0, "the box did not scroll");
+        Assert.Equal(scrollY, await page.EvaluateAsync<double>("() => window.scrollY"), 0.5);
+    });
+
+    /// <summary>
+    /// A guard on B16's work-round: the box drawn at the picture's scale by a transform of its own takes the pointer where
+    /// it is painted. A double-click there is the box's (a word of it), never the note's own double-click, which folds the
+    /// note; a click gives the box the keys, which scroll it.
+    /// </summary>
+    [Fact]
+    public Task A_scaled_diagram_s_scroll_box_takes_a_click_and_the_keys_in_WebKit() => InEngineAsync("webkit", async page =>
+    {
+        var (idx, x, y, scrollY) = await HalfSizeBoxAsync(page, "scroll-b16-click.html");
+        var picture = "window.__scroll.group(" + idx + ").paths[0].ownerSVGElement";
+        await page.EvaluateAsync($"() => {{ window.__picture = {picture}; window.__step = window.__scroll.container()._noteSteps[{idx}]; }}");
+
+        await page.Mouse.DblClickAsync((float)x, (float)y);
+        await page.WaitForTimeoutAsync(600);
+        Assert.True(await page.EvaluateAsync<bool>($"() => window.__scroll.container()._noteSteps[{idx}] === window.__step && !!window.__scroll.box({idx})"),
+            "a double-click on the box changed its note: step " + await page.EvaluateAsync<string>($"() => String(window.__scroll.container()._noteSteps[{idx}])"));
+
+        await page.Mouse.ClickAsync((float)x, (float)y);
+        Assert.True(await page.EvaluateAsync<bool>($"() => document.activeElement === window.__scroll.box({idx})"), "the click did not give the box the keys");
+        await page.Keyboard.PressAsync("PageDown");
+        await page.WaitForFunctionAsync($"() => window.__scroll.box({idx}).scrollTop > 0 || window.scrollY !== {scrollY.ToString(System.Globalization.CultureInfo.InvariantCulture)}",
+            null, new() { Timeout = 5000, PollingInterval = 200 });
+        Assert.True(await page.EvaluateAsync<double>($"() => window.__scroll.box({idx}).scrollTop") > 0, "the keys did not scroll the box");
+    });
+
+    /// <summary>
+    /// Found on the way to B16: WebKit gives a <c>&lt;text&gt;</c> that paints nothing (a line's carriage return, which the
+    /// engine draws as a text of its own where the generator writes CRLF) a box at 0,0, and the box was placed from the
+    /// leftmost of its note's texts, so it started at the picture's left edge, outside its card. Read as geometry, which
+    /// WebKit reports for the frame where the box belongs: the frame lies inside the card.
+    /// </summary>
+    [Fact]
+    public Task A_scroll_box_lies_inside_its_card_in_WebKit() => InEngineAsync("webkit", async page =>
+    {
+        await page.SetViewportSizeAsync(900, 1000);
+        await page.GotoReportAsync(LongPayloadReports.ScrollMix(TempDir, OutputDir, "scroll-inside-card.html", Expanded(), false));
+        await page.Locator("details.feature").First.WaitForAsync();
+        await FoldAllAsync(page, "features", expand: true);
+        await FoldAllAsync(page, "scenarios", expand: true);
+        await page.EvaluateAsync("() => window._renderDiagramsInContainer(document.body)");
+        await page.EvaluateAsync(Helpers);
+        await page.WaitForFunctionAsync("() => window.__scroll && window.__scroll.settled()", null, new() { Timeout = 90000, PollingInterval = 200 });
+
+        var idx = await page.EvaluateAsync<int>("() => window.__scroll.noteIndex('r150')");
+        await page.EvaluateAsync($"() => window.__scroll.group({idx}).paths[0].scrollIntoView({{ block: 'center' }})");
+        await page.WaitForFunctionAsync($"() => !!window.__scroll.box({idx})", null, new() { Timeout = 15000, PollingInterval = 200 });
+
+        var placed = await page.EvaluateAsync<double[]>($$"""
+            () => {
+                var g = window.__scroll.group({{idx}}), f = window.__scroll.frame({{idx}}).getBoundingClientRect();
+                var c = g.paths.map(p => p.getBoundingClientRect()).reduce((a, b) => a.width * a.height > b.width * b.height ? a : b);
+                return [f.left - c.left, c.right - f.right, f.top - c.top, c.bottom - f.bottom];
+            }
+            """);
+        Assert.True(placed.All(d => d >= -1), "the box reaches out of its card by " + string.Join(", ", placed.Select(d => Math.Round(d, 1))) + " px (left, right, top, bottom)");
+    });
+
+    /// <summary>
     /// The token's pieces in the form <paramref name="crlf"/> picks, whichever this platform's generator wrote: LF line
     /// ends with each piece in its own tags, or CRLF line ends with the pieces, joined by bare LFs, in one pair.
     /// </summary>

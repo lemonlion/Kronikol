@@ -683,29 +683,33 @@ public class WikiGifTests : PlaywrightTestBase
         await NavigateToReport();
         await ScrollToTop(); await Hold(1);
 
+        // the search button opens the query builder; a query typed there runs to the Search tab (plans/SEARCH_PLAN.md 4.3)
         async Task SearchAndShow(string query)
         {
-            await Page.Locator("#searchbar").FillAsync("");
-            await Page.Locator("#searchbar").DispatchEventAsync("keyup");
+            await Page.Locator("#search-button").ClickAsync();
             await Hold(0.5);
             await HideCursor();
-            await TypeSlowly("#searchbar", query);
+            await Page.Locator("#search-input").FillAsync("");
+            await TypeSlowly("#search-input", query);
+            await Hold(1);
+            await Page.Locator("#search-input").PressAsync("Enter");
             await Hold(1.5);
-            await ScrollTo("details.feature"); await Hold(1);
+            await ScrollTo("#panel-search .search-result"); await Hold(1);
             await ScrollToTop(); await Hold(0.5);
             await ShowCursor();
         }
 
         await SearchAndShow("order");
-        await SearchAndShow("@tag:Smoke");
-        await SearchAndShow("$status:failed");
+        await SearchAndShow("tag:Smoke");
+        await SearchAndShow("status:failed");
         await SearchAndShow("payment && stripe");
         await SearchAndShow("stock || inventory");
 
-        await JsClick(".search-help-toggle"); await Hold(2);
+        await Page.Locator("#search-button").ClickAsync();
+        await JsClick(".search-tips-toggle"); await Hold(2);
+        await Page.Keyboard.PressAsync("Escape");
 
-        await Page.Locator("#searchbar").FillAsync("");
-        await Page.Locator("#searchbar").DispatchEventAsync("keyup");
+        await Page.Locator("#search-clear").ClickAsync();
         await Hold(1);
 
         StitchGif("whats-new-feature02-search.gif");

@@ -34,13 +34,15 @@ public class ReportTabsTests : PlaywrightTestBase
     {
         await OpenAsync("Tabs_Click.html");
         Assert.Equal(["features"], await ShownPanelsAsync());
+        // the tabs that show: the Search tab, last, shows once a search is applied (plans/SEARCH_PLAN.md 4.5.1)
         Assert.Equal(["Features", "Timeline", "Components", "History", "Diagnostics"],
-            (await Page.Locator(".report-tab").AllTextContentsAsync()).Select(t => new string(t.TakeWhile(char.IsLetter).ToArray())).ToArray());
+            (await Page.Locator(".report-tab:not([hidden])").AllTextContentsAsync()).Select(t => new string(t.TakeWhile(char.IsLetter).ToArray())).ToArray());
+        Assert.True(await Page.Locator("#tab-search").IsHiddenAsync());
 
         await Page.Locator("#tab-history").ClickAsync();
         Assert.Equal(["history"], await ShownPanelsAsync());
         Assert.Equal("history", await SelectedTabAsync());
-        Assert.Equal(["-1", "-1", "-1", "0", "-1"], await Page.EvaluateAsync<string[]>("() => Array.from(document.querySelectorAll('.report-tab')).map(t => t.getAttribute('tabindex'))"));
+        Assert.Equal(["-1", "-1", "-1", "0", "-1"], await Page.EvaluateAsync<string[]>("() => Array.from(document.querySelectorAll('.report-tab:not([hidden])')).map(t => t.getAttribute('tabindex'))"));
         Assert.False(await Page.Locator(".toolbar-row.report-nav").EvaluateAsync<bool>("b => b.classList.contains('on-features')"));
         await Expect(Page.Locator(".features-tools")).ToBeHiddenAsync();
 
@@ -69,8 +71,27 @@ public class ReportTabsTests : PlaywrightTestBase
         Assert.Equal(["features"], await ShownPanelsAsync());
     }
 
+    // R33 (plans/SEARCH_PLAN.md 4.5.1): the Search tab, last in the row, is hidden while no search is applied, and the keys
+    // pass over it as they pass over a tab that is not there
+    [Fact]
+    public async Task Right_from_the_last_shown_tab_skips_the_hidden_Search_tab()
+    {
+        await OpenAsync("Tabs_SkipSearch.html");
+        // written, and hidden (a tab that is not there reads as hidden too)
+        Assert.Equal(1, await Page.Locator("#tab-search").CountAsync());
+        Assert.True(await Page.Locator("#tab-search").IsHiddenAsync());
+        await Page.Locator("#tab-features").FocusAsync();
+
+        await Page.Keyboard.PressAsync("End");
+        Assert.Equal("diagnostics", await SelectedTabAsync());
+        await Page.Keyboard.PressAsync("ArrowRight");
+        Assert.Equal("features", await SelectedTabAsync());
+        await Page.Keyboard.PressAsync("ArrowLeft");
+        Assert.Equal("diagnostics", await SelectedTabAsync());
+    }
+
     // a tab keeps its arrow keys, and / goes to the search from it as from anywhere else: from 5.2.0 to 5.2.6 the guard
-    // that leaves a tab its keys took / as well
+    // that leaves a tab its keys took / as well. Since plans/SEARCH_PLAN.md 4.3 / opens the query builder.
     [Fact]
     public async Task Slash_on_a_tab_goes_to_the_search()
     {
@@ -79,8 +100,8 @@ public class ReportTabsTests : PlaywrightTestBase
 
         await Page.Keyboard.PressAsync("/");
 
-        await Expect(Page.Locator("#searchbar")).ToBeFocusedAsync();
-        await Expect(Page.Locator("#searchbar")).ToHaveValueAsync("");
+        await Expect(Page.Locator("#search-input")).ToBeFocusedAsync();
+        await Expect(Page.Locator("#search-input")).ToHaveValueAsync("");
     }
 
     [Fact]

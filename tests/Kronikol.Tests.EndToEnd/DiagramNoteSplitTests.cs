@@ -257,11 +257,17 @@ public class DiagramNoteSplitTests : DiagramNotePlaywrightBase
         """);
         Assert.False(string.IsNullOrEmpty(svgBefore));
 
+        // Double-clicked where the reader sees it. A note's own redraw goes through the render queue (SEARCH_PLAN), which
+        // gives a diagram its buttons back once the new picture is painted, and one far from the window as it comes near
+        // (5.5.1): this diagram starts 570 px below the window, where no reader double-clicks it.
         await Page.EvaluateAsync("""
             (() => {
                 var c = document.getElementById('puml-2');
                 var hr = c ? c.querySelector('.note-hover-rect') : null;
-                if (hr) hr.dispatchEvent(new MouseEvent('dblclick', {bubbles:true, cancelable:true}));
+                if (hr) {
+                    hr.scrollIntoView({ block: 'center' });
+                    hr.dispatchEvent(new MouseEvent('dblclick', {bubbles:true, cancelable:true}));
+                }
             })()
         """);
 
@@ -269,9 +275,9 @@ public class DiagramNoteSplitTests : DiagramNotePlaywrightBase
             (prev) => {
                 var c = document.getElementById('puml-2');
                 var svg = c ? c.querySelector('svg') : null;
-                return svg && svg.outerHTML !== prev;
+                return svg && svg.outerHTML !== prev && !c._noteRendering && !window._plantumlRendering;
             }
-        """, svgBefore, new() { Timeout = 15000 });
+        """, svgBefore, new() { Timeout = 15000, PollingInterval = 200 });
 
         var hasButtons = await Page.EvaluateAsync<bool>("""
             (() => {

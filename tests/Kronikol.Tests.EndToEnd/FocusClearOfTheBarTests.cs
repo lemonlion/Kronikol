@@ -423,36 +423,41 @@ public class FocusClearOfTheBarTests : PlaywrightTestBase
         Assert.Equal(y, await ScrollYAsync(Page));
     }
 
+    // the controls above the bar at rest are the title line's since the search left the box for it (plans/SEARCH_PLAN.md
+    // 4.2): from the search button Tab goes to the theme switch, and the page stays where it is
     [Fact]
     public async Task Tab_to_a_control_above_the_bar_at_rest_leaves_the_page_where_it_is()
     {
         await OpenAsync(Generate("Focus_Rest.html"));
-        await Page.EvaluateAsync("() => window.scrollTo(0, 60)");
+        // scrolled, but not so far that the theme switch comes within the focus script's 12 px of the window's top: then it
+        // would rightly bring the switch down (report-focus-script.js, GAP)
+        var y = await Page.EvaluateAsync<int>(
+            "() => Math.max(1, Math.floor(document.querySelector('.theme-toggle').getBoundingClientRect().top + window.scrollY) - 14)");
+        await Page.EvaluateAsync("y => window.scrollTo(0, y)", y);
         await TwoAnimationFramesAsync(Page);
-        Assert.Equal(60, await ScrollYAsync(Page));
+        Assert.Equal(y, await ScrollYAsync(Page));
         Assert.True(await Page.EvaluateAsync<bool>("() => document.querySelector('.nav-mark').getBoundingClientRect().top > 0"), "the bar is at rest");
-        await FocusQuietlyAsync(Page.Locator("#searchbar"));
+        await FocusQuietlyAsync(Page.Locator("#search-button"));
 
         await Page.Keyboard.PressAsync("Tab");
         await WaitPastTheWatchAsync(Page);
 
-        Assert.True(await Page.EvaluateAsync<bool>(
-            "() => document.getElementById('filtering-box').contains(document.activeElement) && document.activeElement.id !== 'searchbar'"),
-            "Tab went to the filter box's next control");
+        Assert.True(await Page.EvaluateAsync<bool>("() => document.activeElement.classList.contains('theme-toggle')"), "Tab went to the theme switch");
         var top = await Page.EvaluateAsync<double>("() => document.activeElement.getBoundingClientRect().top");
         var (navTop, _) = await BoxAsync(Bar);
         Assert.True(top < navTop, $"the control at {top} is above the bar at {navTop}");
-        Assert.Equal(60, await ScrollYAsync(Page));
+        Assert.Equal(y, await ScrollYAsync(Page));
     }
 
     [Fact]
     public async Task Shift_Tab_to_the_search_cut_by_the_top_of_the_window_while_the_bar_rests_brings_it_12_px_in()
     {
         await OpenAsync(Generate("Focus_RestTop.html"));
-        var search = Page.Locator("#searchbar");
+        // the search is the title line's button since plans/SEARCH_PLAN.md 4.2, and the theme switch the control after it
+        var search = Page.Locator("#search-button");
         await PlaceAsync(Page, search, -10);
         Assert.True(await Page.EvaluateAsync<bool>("() => document.querySelector('.nav-mark').getBoundingClientRect().top > 0"), "the bar is at rest");
-        await FocusQuietlyAsync(Page.Locator("#filtering-box .search-help-toggle"));
+        await FocusQuietlyAsync(Page.Locator(".theme-toggle"));
 
         await Page.Keyboard.PressAsync("Shift+Tab");
         await WaitPastTheWatchAsync(Page);

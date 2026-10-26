@@ -17,7 +17,8 @@ public class PartsZoomDrawingTests : PlaywrightTestBase
 
     // 16. The page lines a diagram's parts up from an outline drawn first, so its parts are as wide as each other from
     // their first drawing (R2); the test turns that off to stand for a diagram whose outline fell short. The second part
-    // is held back 1.5 s, so the reader is on the first when it comes.
+    // is held back until the test lets it go, once the reader is on the first and its width watched: held for a fixed
+    // 1.5 s, it came before the watching began whenever the first part took longer than that to draw, on a busy machine.
     [Fact]
     public async Task A_first_drawing_whose_second_part_is_wider_lowers_the_first_parts_level_once_and_keeps_the_readers_place()
     {
@@ -32,7 +33,7 @@ public class PartsZoomDrawingTests : PlaywrightTestBase
                         if (v && typeof v.render === 'function' && !v.__held) {
                             const render = v.render.bind(v);
                             v.render = function (lines, id, opts) {
-                                if (/-frag-1$/.test(id)) { setTimeout(() => render(lines, id, opts), 1500); return; }
+                                if (/-frag-1$/.test(id)) { window.__releasePart = () => render(lines, id, opts); return; }
                                 return render(lines, id, opts);
                             };
                             v.__held = true;
@@ -74,6 +75,10 @@ public class PartsZoomDrawingTests : PlaywrightTestBase
             """);
         await ZoomFacts.MarkPointAsync(Page, at[0], at[1]);
 
+        // the second part comes now, its width watched and the reader on the first (the diagram's slider waits for it)
+        Assert.Equal(1, await Page.EvaluateAsync<int>("() => document.querySelectorAll(\"[data-diagram-type='plantuml'] > .puml-fragment > svg\").length"));
+        await Page.WaitForFunctionAsync("() => typeof window.__releasePart === 'function'", null, new() { Timeout = 30000, PollingInterval = 200 });
+        await Page.EvaluateAsync("() => window.__releasePart()");
         await ZoomFacts.WaitForSliderAsync(Page, 0);
         await Page.WaitForFunctionAsync("() => document.querySelectorAll(\"[data-diagram-type='plantuml'] > .puml-fragment > svg\").length === 2",
             null, new() { Timeout = 30000, PollingInterval = 200 });

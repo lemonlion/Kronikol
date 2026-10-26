@@ -236,24 +236,19 @@ public class ViewportSweepTests : IClassFixture<ClassicScrollbarBrowser>, IDispo
                 null, new() { Timeout = 30000, PollingInterval = 200 });
             await page.EvaluateAsync("() => document.querySelectorAll('details').forEach(d => d.open = true)");
             if (injectedCss is not null) await page.AddStyleTagAsync(new() { Content = injectedCss });
+            // The filter box is hidden at every width until the bar's Filters opens it, with every row showing
+            // (plans/SEARCH_PLAN.md F3); open it as a reader would, or the sweep measures nothing of it.
+            await PlaywrightTestBase.OpenFilterRowsAsync(page);
             if (width <= 768)
             {
-                // The init script hides the filters on a phone; open them as a reader would, or the sweep
-                // measures nothing of them.
-                await page.Locator(".mobile-filter-toggle").ClickAsync();
                 // and the report's own settings, which its gear shows only here (5.9.1, plans/REPORT_UI_FIXES_PLAN.md E12:
                 // until then the sweep never measured the report's sheet at a phone's width)
                 var gear = page.Locator(".tools-gear");
                 if (await gear.CountAsync() > 0 && await gear.IsVisibleAsync()) await gear.ClickAsync();
             }
-            // the filter rows fold behind More filters on a desktop: open them at every width, or the Tags and
-            // Dependencies rows are never measured wider than a phone (5.9.1, plans/REPORT_UI_FIXES_PLAN.md E4)
-            await PlaywrightTestBase.OpenFilterRowsAsync(page);
             // Every scenario's settings start closed (5.0.0, plans/OPTION_C_PLAN.md S8): open each by the gear a
             // reader has at this width, the one on the diagrams' title on a phone
             await page.EvaluateAsync("w => document.querySelectorAll(w <= 768 ? '.gear-in-summary' : '.scenario-settings-gear').forEach(g => g.click())", width);
-            // The search help starts closed on every load; a reader opens it.
-            await page.Locator(".search-help-toggle").First.ClickAsync();
             // Since 5.0.0 the sections are tabs, one panel shown at a time (plans/OPTION_C_PLAN.md S3); the sweep shows
             // them all at once, as 4.x drew them, so every panel's content is measured at every width.
             await page.EvaluateAsync("() => document.querySelectorAll('.report-panel[hidden]').forEach(p => { p.hidden = false; })");
@@ -338,14 +333,15 @@ public class ViewportSweepTests : IClassFixture<ClassicScrollbarBrowser>, IDispo
             }
 
             // 5 and 6. The run band on a run report (5.0.0, plans/OPTION_C_PLAN.md S2; 4.x checked the header row):
-            //    the filtering box on a row of its own under the band and as wide; no CI label wraps; and the CI zone
-            //    beside the summary unless the band marks it below, then under it.
+            //    the bar, which holds the filter box at its top since plans/SEARCH_PLAN.md F2, on a row of its own under
+            //    the band and as wide; no CI label wraps; and the CI zone beside the summary unless the band marks it below,
+            //    then under it.
             if (runReport) {
-                const band = document.querySelector('.run-band');
-                const b = box.getBoundingClientRect(), r = band.getBoundingClientRect();
-                if (b.top < r.bottom - 1) problems.push('the filtering box is not on a row of its own under the run band');
+                const band = document.querySelector('.run-band'), bar = document.querySelector('.toolbar-row.report-nav');
+                const b = bar.getBoundingClientRect(), r = band.getBoundingClientRect();
+                if (b.top < r.bottom - 1) problems.push('the bar is not on a row of its own under the run band');
                 if (Math.abs(b.width - r.width) > 1)
-                    problems.push(`the filtering box is ${Math.round(b.width)} px wide, not the run band's ${Math.round(r.width)}`);
+                    problems.push(`the bar is ${Math.round(b.width)} px wide, not the run band's ${Math.round(r.width)}`);
                 const ci = band.querySelector('.run-ci');
                 if (ci) {
                     for (const dt of ci.querySelectorAll('dt'))

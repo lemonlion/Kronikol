@@ -221,6 +221,108 @@ public class ScenarioSettingsTests : PlaywrightTestBase
         Assert.True(await lines.IsVisibleAsync());
     }
 
+    /// <summary>
+    /// SEARCH_PLAN B12: the gear's Payloads and Headers redrew the scenario's diagrams drawn already, and a diagram drawn
+    /// after them (another example row, a view not shown yet, one far down the page) took the report's choices on its
+    /// first draw, where its five filters took the scenario's. An outline of two rows, each with a diagram of its own: the
+    /// second row's is drawn only when that row is chosen. A scenario with no diagram comes first, by name, as the page
+    /// draws the first scenario's diagrams, every row's, as it opens.
+    /// </summary>
+    [Fact]
+    public async Task A_scenario_s_Payloads_and_Headers_reach_its_diagrams_drawn_later()
+    {
+        DiagramApiReports.Scenario Row(string tier, int at) => new(tier, "2 Discount applies",
+            [.. DiagramApiReports.Call(tier, at, "GET", "/api/discounts/" + tier, DiagramApiReports.Body(tier, 14))], Outline: "2 discount", Row: tier);
+        await Page.GotoReportAsync(DiagramApiReports.Write(TempDir, OutputDir, "ScenarioSettings_LaterRow.html",
+            [new("first", "1 No diagram", []), Row("gold", 0), Row("silver", 5)]));
+        await Page.Locator("details.feature").First.WaitForAsync();
+        await ExpandFirstScenarioWithDiagram();
+        var group = Page.Locator("details.scenario-parameterized").First;
+        const string drawn = """
+            id => {
+                const box = document.getElementById(id), c = box && box.querySelector('.plantuml-browser');
+                return !!c && c.dataset.rendered === '1' && !!c.querySelector(':scope > svg .note-hover-rect') && !c._noteRendering && !window._plantumlRendering;
+            }
+            """;
+        var prefix = await group.EvaluateAsync<string>("g => g.querySelector('[id$=\"-diagram-0\"]').id.replace(/-diagram-0$/, '')");
+        await Page.WaitForFunctionAsync(drawn, prefix + "-diagram-0", new() { Timeout = 60000, PollingInterval = 200 });
+        Assert.Equal(0, await Page.Locator($"#{prefix}-diagram-1 .plantuml-browser svg").CountAsync());
+
+        await OpenScenarioSettingsAsync(group);
+        await Bar.Locator(".details-radio-btn[data-state='expanded']").ClickAsync();
+        await Page.WaitForFunctionAsync("() => !document.querySelector('.details-pending')", null, new() { PollingInterval = 200 });
+        await Bar.Locator(".toggle-btn[data-toggle='headers']").ClickAsync();
+        await Page.WaitForFunctionAsync("() => !document.querySelector('.details-pending')", null, new() { PollingInterval = 200 });
+
+        await group.Locator("tr[data-row-idx='1']:visible").First.ClickAsync();
+        await Page.WaitForFunctionAsync(drawn, prefix + "-diagram-1", new() { Timeout = 60000, PollingInterval = 200 });
+
+        // the painted texts: a folded note's title, its tooltip, would hold its headers whatever is drawn
+        var text = await Page.EvaluateAsync<string>("id => Array.from(document.querySelectorAll('#' + id + ' .plantuml-browser svg text')).map(t => t.textContent).join('').replace(/[\\s\\u200b]+/g, '')", prefix + "-diagram-1");
+        Assert.Contains("Content-Type=application/json", text);
+        Assert.Contains("silver_14", text);
+    }
+
+    /// <summary>
+    /// B12's counterpart: the report's Payloads and Headers hold everywhere, as its filters do, so each takes over the
+    /// scenarios' own choices, and a diagram a scenario draws later takes the report's again. The gear's Collapsed and
+    /// Headers on, then the report's Expanded, and its Headers shown and hidden again: the second row's diagram, drawn
+    /// after, shows its note whole, the 14 lines of its body, and without its headers. Not the other way round: a folded
+    /// note paints no headers whichever choice holds, so a scenario's Headers kept would go unseen.
+    /// </summary>
+    [Fact]
+    public async Task The_report_s_Payloads_and_Headers_take_over_a_scenario_s_own_for_its_diagrams_drawn_later()
+    {
+        DiagramApiReports.Scenario Row(string tier, int at) => new(tier, "2 Discount applies",
+            [.. DiagramApiReports.Call(tier, at, "GET", "/api/discounts/" + tier, DiagramApiReports.Body(tier, 14))], Outline: "2 discount", Row: tier);
+        await Page.GotoReportAsync(DiagramApiReports.Write(TempDir, OutputDir, "ScenarioSettings_ReportTakesOver.html",
+            [new("first", "1 No diagram", []), Row("gold", 0), Row("silver", 5)]));
+        await Page.Locator("details.feature").First.WaitForAsync();
+        await ExpandFirstScenarioWithDiagram();
+        var group = Page.Locator("details.scenario-parameterized").First;
+        const string drawn = """
+            id => {
+                const box = document.getElementById(id), c = box && box.querySelector('.plantuml-browser');
+                return !!c && c.dataset.rendered === '1' && !!c.querySelector(':scope > svg .note-hover-rect') && !c._noteRendering && !window._plantumlRendering;
+            }
+            """;
+        var prefix = await group.EvaluateAsync<string>("g => g.querySelector('[id$=\"-diagram-0\"]').id.replace(/-diagram-0$/, '')");
+        await Page.WaitForFunctionAsync(drawn, prefix + "-diagram-0", new() { Timeout = 60000, PollingInterval = 200 });
+        Assert.Equal(0, await Page.Locator($"#{prefix}-diagram-1 .plantuml-browser svg").CountAsync());
+
+        await OpenScenarioSettingsAsync(group);
+        await Bar.Locator(".details-radio-btn[data-state='collapsed']").ClickAsync();
+        await Page.WaitForFunctionAsync("() => !document.querySelector('.details-pending')", null, new() { PollingInterval = 200 });
+        await Bar.Locator(".toggle-btn[data-toggle='headers']").ClickAsync();
+        await Page.WaitForFunctionAsync("() => !document.querySelector('.details-pending')", null, new() { PollingInterval = 200 });
+        await Page.EvaluateAsync("""
+            () => {
+                window._setReportDetails('expanded');
+                var headers = document.querySelector('.toolbar-right .toggle-btn[data-toggle="headers"]');
+                window._toggleHeaders(headers);
+                window._toggleHeaders(headers);
+            }
+            """);
+        await Page.WaitForFunctionAsync("() => !document.querySelector('.details-pending')", null, new() { PollingInterval = 200 });
+
+        await group.Locator("tr[data-row-idx='1']:visible").First.ClickAsync();
+        await Page.WaitForFunctionAsync(drawn, prefix + "-diagram-1", new() { Timeout = 60000, PollingInterval = 200 });
+
+        var read = await Page.EvaluateAsync<string>("""
+            id => {
+                const c = document.querySelector('#' + id + ' .plantuml-browser'), svg = c.querySelector(':scope > svg');
+                const source = c._noteOriginalSource || c.getAttribute('data-plantuml');
+                const idx = window._parseNoteBlocks(source).findIndex(b => b.contentLines.some(l => l.indexOf('silver_01') >= 0));
+                const note = window._findNoteGroups(svg).find(g => { const ix = window._noteIndicesOf(g); return ix && ix.original === idx; });
+                // the painted texts: a folded note's title, its tooltip, holds its headers whatever is drawn
+                const painted = Array.from(svg.querySelectorAll('text')).map(t => t.textContent).join('');
+                return (note ? window._paintedNoteRowCount(note) + ' rows' : 'no note') + ', '
+                    + (painted.replace(/[\s​]+/g, '').indexOf('Content-Type') >= 0 ? 'headers' : 'no headers');
+            }
+            """, prefix + "-diagram-1");
+        Assert.Equal("14 rows, no headers", read);
+    }
+
     // until 5.0.0, Enter folded the scenario the arrow keys had picked, wherever the keyboard's focus was, and the
     // button that had it did nothing
     [Fact]

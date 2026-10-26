@@ -92,6 +92,75 @@ public class SearchQualifierPlacementTests : IDisposable
         Assert.Equal(calls, _engine.Invoke("__first", input, "Payment Service").AsBoolean());
     }
 
+    // L4 (SEARCH_PLAN 4.4): a - right before a qualifier negates it as !! does, as GitHub's search writes it; a - that
+    // does not touch the key, or one inside a word, is text
+    [Theory]
+    [InlineData("-dep:payment", 1, "")]
+    [InlineData("-dependency:payment", 1, "")]
+    [InlineData("-feature:audit", 1, "")]
+    [InlineData("-is:happy", 1, "")]
+    [InlineData("-duration:>2s", 1, "")]
+    [InlineData("order -dep:payment", 1, "order")]
+    [InlineData("(-dep:payment) && order", 1, "order")]
+    [InlineData("- dep:payment", 1, "-")]
+    [InlineData("a-dep:payment", 0, "a-dep:payment")]
+    public void Minus_before_a_qualifier_is_part_of_it(string input, int quals, string rest)
+    {
+        Assert.Equal((quals, rest, ""), Split(input));
+    }
+
+    [Theory]
+    [InlineData("-dep:payment", false)]
+    [InlineData("(-dep:payment)", false)]
+    [InlineData("- dep:payment", true)]
+    public void Minus_before_a_qualifier_excludes_it(string input, bool calls)
+    {
+        Assert.Equal(calls, _engine.Invoke("__first", input, "Payment Service").AsBoolean());
+    }
+
+    [Fact]
+    public void A_minus_qualifier_inside_a_negated_group_stays_text_and_marks_the_search()
+    {
+        Assert.Equal((0, "!!(-dep:payment)", "-dep:payment"), Split("!!(-dep:payment)"));
+    }
+
+    // L6 (SEARCH_PLAN 4.4): feature: keeps the scenarios of a feature whose name holds the text, any of several with
+    // commas, compared without case; the name its card's summary shows, never the endpoint or the tags drawn after it.
+    // Read through the page's search (SearchPage), whose features carry a summary as the generator writes one.
+    [Theory]
+    [InlineData("feature:pancake", "S9,S10,S11")]
+    [InlineData("feature:PANCAKES", "S9,S10,S11")]
+    [InlineData("Feature:Creation", "S9,S10,S11")]
+    [InlineData("feature:\"Payment Feature\"", "S5,S6,S7,S8")]
+    [InlineData("feature:\"pancakes  creation\"", "S9,S10,S11")]
+    [InlineData("feature:feature", "S1,S2,S3,S4,S5,S6,S7,S8")]
+    [InlineData("feature:order,pancake", "S1,S2,S3,S4,S9,S10,S11")]
+    [InlineData("feature:\"order feature,payment\"", "S1,S2,S3,S4,S5,S6,S7,S8")]
+    [InlineData("feature:api", "")]
+    [InlineData("feature:orders", "")]
+    [InlineData("feature:kitchen", "")]
+    [InlineData("feature:order $passed", "S1,S3")]
+    [InlineData("feature:payment && tag:ui", "S5,S8")]
+    [InlineData("feature:payment dep:audit", "S8")]
+    [InlineData("!!feature:order", "S5,S6,S7,S8,S9,S10,S11")]
+    [InlineData("not feature:order", "S5,S6,S7,S8,S9,S10,S11")]
+    public void Feature_colon_keeps_the_scenarios_whose_feature_name_holds_it(string query, string ids)
+    {
+        using var page = SearchFixture.Page();
+        var outcome = page.Search(query);
+        Assert.Equal(SearchFixture.Named(ids), outcome.Kept);
+        Assert.False(outcome.Bad, $"{query} marked the field: {outcome.BadText}");
+    }
+
+    [Theory]
+    [InlineData("feature:\"\"")]
+    [InlineData("feature:,")]
+    [InlineData("feature:\" , \"")]
+    public void A_feature_qualifier_with_no_name_cannot_be_read(string input)
+    {
+        Assert.Equal((0, input, input), Split(input));
+    }
+
     // duration:"" threw from the split, and the search did nothing at all
     [Fact]
     public void An_empty_duration_is_a_qualifier_that_cannot_be_read()

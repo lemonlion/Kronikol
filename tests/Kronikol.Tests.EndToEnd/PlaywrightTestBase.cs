@@ -113,18 +113,29 @@ public abstract class PlaywrightTestBase : IAsyncLifetime
     }
 
     /// <summary>
-    /// Opens the filter box's rows, which More filters folds away on a desktop since 5.0.0 (plans/OPTION_C_PLAN.md S7,
-    /// D15), so a test can use a row's control there. Nothing to do where they already show: on a phone, whose box has
-    /// its own Filters toggle, or once they are open.
+    /// Opens the filter box, so a test can use a row's control there: since plans/SEARCH_PLAN.md F1 the box is hidden until
+    /// the bar's Filters opens it, with every row showing (until then More filters folded the rows away on a desktop).
+    /// Nothing to do once it is open, or on a page that has no box.
     /// </summary>
     internal static async Task OpenFilterRowsAsync(IPage page)
     {
-        var more = page.Locator(".filtering-box.rows-folded .more-filters");
-        if (await more.CountAsync() > 0 && await more.IsVisibleAsync())
-            await more.ClickAsync();
+        var box = page.Locator("#filtering-box");
+        if (await box.CountAsync() == 0 || await box.IsVisibleAsync()) return;
+        await page.Locator(".nav-filters-toggle").ClickAsync();
+        await page.WaitForFunctionAsync("() => !document.getElementById('filtering-box').hidden", null, new() { PollingInterval = 200 });
     }
 
     protected Task OpenFilterRowsAsync() => OpenFilterRowsAsync(Page);
+
+    /// <summary>
+    /// Presses one of the filter box's exports, "Export Filtered HTML" or "Export Filtered CSV": the box is hidden until
+    /// the bar's Filters opens it since plans/SEARCH_PLAN.md F3, so it is opened first, as a reader would.
+    /// </summary>
+    internal static async Task PressBoxExportAsync(IPage page, string name)
+    {
+        await OpenFilterRowsAsync(page);
+        await page.Locator("button.export-btn", new() { HasTextString = name }).ClickAsync();
+    }
 
     /// <summary>
     /// Opens a scenario's settings (5.0.0, plans/OPTION_C_PLAN.md S8): its payload controls sit in an options bar
@@ -353,13 +364,28 @@ public abstract class PlaywrightTestBase : IAsyncLifetime
         }
     }
 
-    protected Task FillSearchBar(string query) => FillSearchBar(Page, query);
+    protected Task FillSearchBar(string query, bool toSearchTab = false) => FillSearchBar(Page, query, toSearchTab);
 
-    /// <summary>Types <paramref name="query"/> into <paramref name="page"/>'s search bar, which searches on keyup.</summary>
-    protected static async Task FillSearchBar(IPage page, string query)
+    /// <summary>
+    /// Searches <paramref name="page"/> for <paramref name="query"/> as a reader does since plans/SEARCH_PLAN.md 4.3: opens
+    /// the query builder, types the query into its input, and chooses its row that filters the tab on screen, so the caller
+    /// stays on its tab and a test that reads the Features list keeps its meaning (until then the search was a field in the
+    /// filter box, searching on keyup). With <paramref name="toSearchTab"/> it presses Enter, which runs the search to the
+    /// Search tab. An empty query clears the applied one. The applied query is read back from <c>#searchbar</c>.
+    /// </summary>
+    protected static async Task FillSearchBar(IPage page, string query, bool toSearchTab = false)
     {
-        await page.Locator("#searchbar").FillAsync(query);
-        await page.Locator("#searchbar").DispatchEventAsync("keyup");
+        await page.WaitForFunctionAsync("() => !!window.kronikol_search", null, new() { PollingInterval = 200 });
+        if (!await page.EvaluateAsync<bool>("() => document.getElementById('search-dialog').open"))
+            await page.EvaluateAsync("() => window.kronikol_search.open()");
+        var input = page.Locator("#search-input");
+        await input.FillAsync(query);
+        var filterRow = page.Locator("#search-suggestions .search-option-filter");
+        if (!toSearchTab && query.Trim().Length > 0 && await filterRow.CountAsync() > 0)
+            await filterRow.First.ClickAsync();
+        else
+            await input.PressAsync("Enter");
+        await page.WaitForFunctionAsync("() => !document.getElementById('search-dialog').open", null, new() { PollingInterval = 200 });
     }
 
     /// <summary>

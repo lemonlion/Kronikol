@@ -13,11 +13,14 @@ function pick(scenario) {
 document.addEventListener('keydown', function(e) {
     // a field keeps its keys: until 5.0.0 a dropdown's arrow keys moved between scenarios instead of changing its value
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
-    // / goes to the search from anywhere but a field, a tab too (from 5.2.0 to 5.2.6 the tab list's guard took it)
+    // / opens the search from anywhere but a field, a tab too (from 5.2.0 to 5.2.6 the tab list's guard took it), and
+    // only where it opens it (plans/SEARCH_PLAN.md 4.8, B7): on an exported page, which has no search, or with a lightbox,
+    // a flow popup or the search itself open, the key is the browser's. Until then it was taken everywhere, and put the
+    // focus in the search field behind an open lightbox.
     if (e.key === '/') {
+        if (!window.kronikol_search || !window.kronikol_search.canOpen()) return;
         e.preventDefault();
-        var sb = document.getElementById('searchbar');
-        if (sb) sb.focus();
+        window.kronikol_search.open();
         return;
     }
     // a tab list keeps its other keys: Up and Down on a report tab moved a scenario inside the hidden Features panel
@@ -25,6 +28,9 @@ document.addEventListener('keydown', function(e) {
     if (e.target.closest && e.target.closest('[role="tablist"]')) return;
     // so does a payload's scroll box: its arrow keys, Page Up and Down, Home and End scroll it (5.4.0)
     if (e.target.closest && e.target.closest('.note-scroll')) return;
+    // and the Search tab, whose results the arrow keys scroll as any page's (plans/SEARCH_PLAN.md 4.8, R23)
+    var searchPanel = document.getElementById('panel-search');
+    if (searchPanel && !searchPanel.hidden) return;
     var scenarios = Array.from(document.querySelectorAll('details.scenario')).filter(function(s) { return s.style.display !== 'none'; });
     if (scenarios.length === 0) return;
     var focused = document.querySelector('.scenario-focused');

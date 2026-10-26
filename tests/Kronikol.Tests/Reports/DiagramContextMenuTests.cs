@@ -682,16 +682,18 @@ public class DiagramContextMenuTests
     [Fact]
     public void SetNoteState_uses_svg_cache()
     {
-        // setNoteState (and setNoteFormat) render through the shared
-        // rerenderWithNoteStates helper, which owns the cache check
-        var funcBody = GetFunction("rerenderWithNoteStates");
+        // setNoteState (and setNoteFormat and setNoteWidth) draw through the render queue since SEARCH_PLAN (4.6.5),
+        // which owns the cache check
+        Assert.Contains("redrawNote(", GetFunction("setNoteState"));
+        Assert.Contains("redrawLater(", GetFunction("redrawNote"));
+        var funcBody = GetFunction("processRenderQueue");
         Assert.Contains("_svgCache[newSource]", funcBody);
     }
 
     [Fact]
     public void SetNoteState_caches_rendered_svg()
     {
-        var funcBody = GetFunction("rerenderWithNoteStates");
+        var funcBody = GetFunction("processRenderQueue");
         Assert.Contains("_svgCache[newSource] = newSvg", funcBody);
     }
 
@@ -745,15 +747,18 @@ public class DiagramContextMenuTests
         var funcBody = GetFunction("_setScenarioTruncateLines");
         // Scenario-level should NOT sync all dropdowns — only report-level does. It may still reach
         // for its own scenario's dropdown (to mark it pending while the re-render runs), so what
-        // matters is that it never queries the document for them.
+        // matters is that it never queries the document for them. Since SEARCH_PLAN (4.6.5) the gear sets
+        // its scenario's states through show, which holds to the scenario as well.
         Assert.DoesNotContain("document.querySelectorAll('.truncate-lines-select", funcBody);
+        Assert.Contains("show(scenario, { lines: ", funcBody);
+        Assert.DoesNotContain("document.querySelectorAll(", GetFunction("show"));
     }
 
     [Fact]
     public void SetScenarioTruncateLines_stores_per_container_truncate_lines()
     {
-        var funcBody = GetFunction("_setScenarioTruncateLines");
-        // Should store the value on each container rather than temporarily overriding global
+        // Should store the value on each container rather than temporarily overriding global: show does, for the gear
+        var funcBody = GetFunction("show");
         Assert.Contains("c._truncateLines = scenarioLines", funcBody);
         Assert.DoesNotContain("var prev = window._truncateLines", funcBody);
     }
@@ -761,8 +766,8 @@ public class DiagramContextMenuTests
     [Fact]
     public void SetScenarioTruncateLines_passes_force_true()
     {
-        var funcBody = GetFunction("_setScenarioTruncateLines");
-        Assert.Contains("'truncated', true", funcBody);
+        // a new line limit draws every diagram again, already Truncated or not
+        Assert.Contains("buildDetailsQueue(drawn, payloads, payloads === 'truncated' && !!scenarioLines)", GetFunction("show"));
     }
 
     // ─── SVG cache global ───────────────────────────────────
@@ -1299,29 +1304,30 @@ public class DiagramContextMenuTests
     [Fact]
     public void Note_toggle_paths_prefetch_their_new_fragments_in_parallel()
     {
-        // setNoteState (fragQueue) and processRenderQueue (fragList) both build the list of new fragments
-        // and then render them one by one; prefetching the list first lets the workers render them in
-        // parallel so the sequential loop is a series of cache hits.
+        // processRenderQueue (fragList) builds the list of new fragments and then renders them one by one; prefetching
+        // the list first lets the workers render them in parallel so the sequential loop is a series of cache hits. A
+        // note's own buttons draw through it too since SEARCH_PLAN (4.6.5), where they had a loop of their own (fragQueue).
         // Each part is drawn from its engine text (5.7.0, plans/ZOOM_EVERY_DIAGRAM_PLAN.md Z12: a part's data-plantuml stays
         // as written, the lines the page adds go only to the engine), so that is what is prefetched.
-        Assert.Contains("window.plantuml.prefetch(fragQueue.map(function (f) { return f.engine; }))", _notesScript);
         Assert.Contains("window.plantuml.prefetch(fragList.map(function (f) { return f.engine; }))", _notesScript);
+        Assert.DoesNotContain("fragQueue", _notesScript);
     }
 
     [Fact]
     public void SetNoteState_fragment_render_completes_on_engine_text_and_never_caches_a_failure()
     {
-        // processRenderQueue already treated any engine output (svg OR failure text) as completion and
-        // refused to cache a failure; setNoteState's fragment loop waited for an <svg> only, so a
-        // too-large fragment (text, no svg) or a shim error left _noteRendering stuck forever.
-        var start = _notesScript.IndexOf("function setNoteState(");
-        var end = _notesScript.IndexOf("function processRenderQueue(");
-        var setNoteState = _notesScript.Substring(start, end - start);
-        Assert.Contains("if (!item.el.querySelector('svg') && !(item.el.textContent || '').trim()) return;", setNoteState);
-        Assert.Contains("window._describeEngineFailure(item.el, item.source)", setNoteState);
+        // processRenderQueue treats any engine output (svg OR failure text) as completion and refuses to cache a failure;
+        // setNoteState's own fragment loop once waited for an <svg> only, so a too-large fragment (text, no svg) or a shim
+        // error left _noteRendering stuck forever. Since SEARCH_PLAN (4.6.5) a note's state is drawn by the queue itself.
+        Assert.Contains("redrawNote(container, function() { container._noteSteps[noteIdx] = oldStep; })", GetFunction("setNoteState"));
+        var start = _notesScript.IndexOf("function processRenderQueue(");
+        var end = _notesScript.IndexOf("function buildDetailsQueue(");
+        var queue = _notesScript.Substring(start, end - start);
+        Assert.Contains("if (!fItem.el.querySelector('svg') && !(fItem.el.textContent || '').trim()) return;", queue);
+        Assert.Contains("window._describeEngineFailure(fItem.el, fItem.source)", queue);
         // cached under the engine text it was drawn from (5.7.0)
-        Assert.Contains("if (!failed && item.el.querySelector('svg')) _svgCache[item.engine] = item.el.innerHTML;", setNoteState);
-        Assert.Contains("Render timed out for this fragment.", setNoteState);
+        Assert.Contains("if (!failed && fItem.el.querySelector('svg')) _svgCache[fItem.engine] = fItem.el.innerHTML;", queue);
+        Assert.Contains("Render timed out for this fragment.", queue);
     }
 
     // ═══════════════════════════════════════════════════════════

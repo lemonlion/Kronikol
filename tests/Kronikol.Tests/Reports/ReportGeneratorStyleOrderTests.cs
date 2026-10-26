@@ -85,14 +85,15 @@ public class ReportGeneratorStyleOrderTests : IDisposable
     }
 
     /// <summary>The custom sheet used to share a line with the base sheet, and the newline that line
-    /// ended is kept, so a report without a custom sheet keeps its bytes (plan §3.3).</summary>
+    /// ended is kept, so a report without a custom sheet keeps its bytes (plan §3.3). Since the search's sheet
+    /// (plans/SEARCH_PLAN.md) follows the base sheet on every page, the newline ends the line the two share.</summary>
     [Theory]
     [InlineData(null)]
     [InlineData("")]
     public void Without_a_custom_sheet_the_base_sheet_is_followed_by_the_newline_it_always_was(string? stylesheet)
     {
         var html = Generate(stylesheet, internalFlowTracking: true);
-        var baseEnd = EndOf(html, Stylesheets.HtmlReportStyleSheet);
+        var baseEnd = EndOf(html, Stylesheets.HtmlReportStyleSheet + Stylesheets.SearchStyleSheet);
         var next = html.IndexOf(DiagramContextMenu.GetStyles(), baseEnd, StringComparison.Ordinal);
         Assert.Matches(@"^\n\r?\n *$", html[baseEnd..next]);
         Assert.DoesNotContain(Theme, html);

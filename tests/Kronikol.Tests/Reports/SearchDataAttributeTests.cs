@@ -1,5 +1,7 @@
 using System.Text.RegularExpressions;
+using Kronikol.PlantUml;
 using Kronikol.Reports;
+using Kronikol.Tracking;
 
 namespace Kronikol.Tests.Reports;
 
@@ -634,6 +636,44 @@ public class SearchDataAttributeTests
         Assert.Contains("/api/orders", terms);
         Assert.Contains("/api/payments/charge", terms);
         Assert.Contains("/api/sessions/abc123", terms);
+    }
+
+    // SEARCH_PLAN B11: with internal-flow tracking on, the default, a call's label is written inside its link,
+    // [[#iflow-ID GET: /path]], and a long path is cut into chunks joined by a PlantUML break and spaces for display.
+    // Until then the instant search read neither: the link put the method out of UrlRegex's reach, and a chunked path
+    // was read to its first chunk with the break on its end.
+    [Fact]
+    public void A_linked_call_s_path_is_in_data_search()
+    {
+        var pairId = Guid.NewGuid();
+        var request = new RequestResponseLog("Search orders", "linked-1", HttpMethod.Get, null, new Uri("http://orders.internal/api/orders/search"), [],
+            "OrderService", "Api", RequestResponseType.Request, Guid.NewGuid(), pairId, TrackingIgnore: false);
+        var response = request with { Type = RequestResponseType.Response, Content = "{ \"orders\": [] }", StatusCode = System.Net.HttpStatusCode.OK };
+        var source = PlantUmlCreator.GetPlantUmlImageTagsPerTestId([request, response], internalFlowTracking: true)
+            .Single().PlantUmls.First().PlainText;
+        Assert.Contains($"[[#iflow-{pairId} GET: /api/orders/search]]", source);
+
+        var terms = ReportGenerator.ExtractDiagramSearchTerms(source);
+
+        Assert.Contains("/api/orders/search", terms);
+        Assert.DoesNotContain(terms, t => t.Contains("]]"));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void A_chunked_path_is_read_whole(bool linked)
+    {
+        var url = "http://orders.internal/api/orders/search?" + string.Join("&", Enumerable.Range(0, 7).Select(i => $"filter{i}=value{i}"));
+        var request = new RequestResponseLog("Search orders", "chunked-1", HttpMethod.Get, null, new Uri(url), [],
+            "OrderService", "Api", RequestResponseType.Request, Guid.NewGuid(), Guid.NewGuid(), TrackingIgnore: false);
+        var source = PlantUmlCreator.GetPlantUmlImageTagsPerTestId([request], internalFlowTracking: linked)
+            .Single().PlantUmls.First().PlainText;
+        Assert.Contains("\\n        ", source);
+
+        var terms = ReportGenerator.ExtractDiagramSearchTerms(source);
+
+        Assert.Contains(new Uri(url).PathAndQuery, terms);
     }
 
     [Fact]

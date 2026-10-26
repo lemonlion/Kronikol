@@ -12,7 +12,7 @@ function toggle_status(btn) {
 function filter_statuses() {
     var c = fc();
     var activeSet = new Set();
-    document.querySelectorAll('.status-toggle.status-active').forEach(function(b) {
+    filter_box_root().querySelectorAll('.status-toggle.status-active').forEach(function(b) {
         activeSet.add(b.getAttribute('data-status'));
     });
 

@@ -24,7 +24,7 @@ public class HistoryExportTests : PlaywrightTestBase
 
         var download = await Page.RunAndWaitForDownloadAsync(async () =>
         {
-            await Page.Locator("button.export-btn", new() { HasTextString = "Export Filtered HTML" }).ClickAsync();
+            await PressBoxExportAsync(Page, "Export Filtered HTML");
         });
         var path = Path.Combine(TempDir, $"export_{Guid.NewGuid():N}.html");
         await download.SaveAsAsync(path);

@@ -93,7 +93,9 @@ public class ReportThemeTests
     {
         var html = GenerateReport("Theme_TitleLine.html", "Checkout <run>");
 
-        Assert.Contains("<div class=\"title-line\"><h1>Checkout &lt;run&gt;</h1><button type=\"button\" class=\"theme-toggle\" "
+        // the switch last on the line, after the search (plans/SEARCH_PLAN.md 4.2)
+        Assert.Contains("<div class=\"title-line\"><h1>Checkout &lt;run&gt;</h1><div class=\"title-actions\">" + ReportGenerator.SearchBox
+                        + "<button type=\"button\" class=\"theme-toggle\" "
                         + "aria-label=\"Dark theme\" aria-pressed=\"false\" title=\"Switch to the dark theme\">", html);
         Assert.Contains("<svg class=\"theme-icon theme-moon\" viewBox=\"0 0 24 24\" aria-hidden=\"true\">", html);
         Assert.Contains("<svg class=\"theme-icon theme-sun\" viewBox=\"0 0 24 24\" aria-hidden=\"true\">", html);

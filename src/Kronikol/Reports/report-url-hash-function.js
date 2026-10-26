@@ -115,18 +115,24 @@ function jump_into_view(target, block) {
     // among, but those shrink in the frames after it, which moves the target wherever the browser does
     // not anchor the scroll (Safari 26 and older have no scroll anchoring; Safari 27 turns it on), so the
     // jump is re-aimed while that settles.
-    // A target that grows downward, a diagram drawn inside it, does not move its top and is left alone.
-    var frames = 10, aimed;
+    // A target that grows downward, a diagram drawn inside it, does not move its top and is left alone. A later aim, the
+    // way to a search's match going on from the scenario to its words (plans/SEARCH_PLAN.md 4.6.5), stops an earlier one,
+    // which would otherwise pull the page back.
+    var frames = 10, aimed, mine = ++_jump_aims;
+    // the bar's height for the scroll margins, which a tab just shown measures only in its next frame
+    if (typeof window.kronikol_measure_bar === 'function') window.kronikol_measure_bar();
     function aim() {
         target.scrollIntoView({ behavior: 'instant', block: block });
         aimed = target.getBoundingClientRect().top;
     }
     aim();
     requestAnimationFrame(function settle() {
+        if (mine !== _jump_aims) return;
         if (Math.abs(target.getBoundingClientRect().top - aimed) > 1) aim();
         if (--frames > 0) requestAnimationFrame(settle);
     });
 }
+var _jump_aims = 0;
 // The page's link carries every filter (5.0.0, plans/OPTION_C_PLAN.md S5, Q5: hash v2). Each 4.x parameter keeps its
 // meaning, so a link copied from a 4.x report opens the same view (but for one with deps= and no depmode=: it meant
 // AND, and now means OR, the filter's default): deps= is the chosen dependencies and depmode= their
@@ -141,7 +147,7 @@ function url_hash_filters() {
     var search = document.getElementById('searchbar');
     if (search && search.value) parts.push('q=' + encodeURIComponent(search.value));
     var statuses = [];
-    document.querySelectorAll('.status-toggle.status-active').forEach(function(b) { statuses.push(b.getAttribute('data-status')); });
+    filter_box_root().querySelectorAll('.status-toggle.status-active').forEach(function(b) { statuses.push(b.getAttribute('data-status')); });
     if (statuses.length > 0) parts.push('status=' + statuses.join(','));
     function list(key, values) { if (values.length > 0) parts.push(key + '=' + encodeURIComponent(values.join(','))); }
     function names(key, values) { if (values.length > 0) parts.push(key + '=' + values.map(encodeURIComponent).join(',')); }
@@ -160,7 +166,7 @@ function url_hash_filters() {
     if (_chipWays.tag !== _tagWaysDefault) parts.push('tagstates=' + _chipWays.tag);
     var dur = document.getElementById('duration-threshold');
     if (dur && dur.value) parts.push('dur=' + dur.value);
-    var activeP = document.querySelector('.percentile-btn.percentile-active');
+    var activeP = filter_box_root().querySelector('.percentile-btn.percentile-active');
     if (activeP) parts.push('pctl=' + encodeURIComponent(activeP.textContent));
     return parts;
 }
@@ -210,7 +216,7 @@ function apply_url_hash(hash) {
         step(function() {
             if (params.status) {
                 params.status.split(',').forEach(function(s) {
-                    document.querySelectorAll('.status-toggle').forEach(function(btn) {
+                    filter_box_root().querySelectorAll('.status-toggle').forEach(function(btn) {
                         if (btn.getAttribute('data-status') === s) set_status_button(btn, true);
                     });
                 });
@@ -222,12 +228,12 @@ function apply_url_hash(hash) {
         // value can differ from this report's own start mode). A 4.x link's catmode= sets the tags' mode when it has no tagmode=.
         if (params.depmode === 'OR' || params.depmode === 'AND') {
             _depMode = params.depmode;
-            set_mode_button(document.querySelector('.dep-mode-toggle'), _depMode);
+            set_mode_button(filter_box_root().querySelector('.dep-mode-toggle'), _depMode);
         }
         var tagMode = params.tagmode !== undefined ? params.tagmode : params.catmode;
         if (tagMode === 'AND' || tagMode === 'OR') {
             _tagMode = tagMode;
-            set_mode_button(document.querySelector('.tag-mode-toggle'), _tagMode);
+            set_mode_button(filter_box_root().querySelector('.tag-mode-toggle'), _tagMode);
         }
         // a 4.x report drew the participant of a diagram with no call as a dependency: a link that chose it means none, and a
         // 4.x link's Uncategorized chip is the Untagged one
@@ -258,7 +264,7 @@ function apply_url_hash(hash) {
             if (tags || tagMode) filter_tags();
         });
         if (params.pctl) {
-            document.querySelectorAll('.percentile-btn').forEach(function(b) {
+            filter_box_root().querySelectorAll('.percentile-btn').forEach(function(b) {
                 if (b.textContent === params.pctl) {
                     set_percentile_button(b, true);
                     if (b.getAttribute('data-custom') === '1') {
