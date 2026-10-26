@@ -1,0 +1,198 @@
+{
+  "files": {
+    "light": "light-3a3d2c708970e4e8.css",
+    "dark": "dark-c9dacb4ec19616db.css"
+  },
+  "primitives": "primer-primitives-02e066689466a8cd.css",
+  "tokens": {
+    "fgColor-default": {
+      "light": "#1f2328",
+      "dark": "#f0f6fc"
+    },
+    "fgColor-muted": {
+      "light": "#59636e",
+      "dark": "#9198a1"
+    },
+    "fgColor-accent": {
+      "light": "#0969da",
+      "dark": "#4493f8"
+    },
+    "fgColor-onEmphasis": {
+      "light": "#fff",
+      "dark": "#fff"
+    },
+    "bgColor-default": {
+      "light": "#fff",
+      "dark": "#0d1117"
+    },
+    "bgColor-muted": {
+      "light": "#f6f8fa",
+      "dark": "#151b23"
+    },
+    "bgColor-inset": {
+      "light": "var(--bgColor-muted)",
+      "dark": "#010409"
+    },
+    "bgColor-accent-muted": {
+      "light": "#ddf4ff",
+      "dark": "#388bfd1a"
+    },
+    "bgColor-accent-emphasis": {
+      "light": "#0969da",
+      "dark": "#1f6feb"
+    },
+    "bgColor-neutral-muted": {
+      "light": "#818b981f",
+      "dark": "#656c7633"
+    },
+    "bgColor-attention-muted": {
+      "light": "#fff8c5",
+      "dark": "#bb800926"
+    },
+    "borderColor-default": {
+      "light": "#d1d9e0",
+      "dark": "#3d444d"
+    },
+    "borderColor-muted": {
+      "light": "#d1d9e0b3",
+      "dark": "#3d444db3"
+    },
+    "borderColor-accent-emphasis": {
+      "light": "#0969da",
+      "dark": "#1f6feb"
+    },
+    "control-transparent-bgColor-hover": {
+      "light": "#818b981a",
+      "dark": "#656c7633"
+    },
+    "control-transparent-bgColor-active": {
+      "light": "#818b9826",
+      "dark": "#656c7640"
+    },
+    "control-transparent-bgColor-selected": {
+      "light": "#818b9826",
+      "dark": "#656c7633"
+    },
+    "control-borderColor-rest": {
+      "light": "var(--borderColor-default)",
+      "dark": "var(--borderColor-default)"
+    },
+    "button-default-borderColor-rest": {
+      "light": "var(--control-borderColor-rest)",
+      "dark": "var(--control-borderColor-rest)"
+    },
+    "button-default-bgColor-rest": {
+      "light": "var(--control-bgColor-rest)",
+      "dark": "var(--control-bgColor-rest)"
+    },
+    "focus-outlineColor": {
+      "light": "var(--focus-outline-color)",
+      "dark": "var(--focus-outline-color)"
+    },
+    "overlay-backdrop-bgColor": {
+      "light": "#c8d1da66",
+      "dark": "#21283066"
+    },
+    "overlay-bgColor": {
+      "light": "#fff",
+      "dark": "#010409"
+    },
+    "overlay-borderColor": {
+      "light": "#d1d9e080",
+      "dark": "var(--borderColor-muted)"
+    },
+    "highlight-neutral-bgColor": {
+      "light": "#fff8c5",
+      "dark": "#d2992266"
+    },
+    "color-search-keyword-hl": {
+      "light": null,
+      "dark": null
+    },
+    "color-prettylights-syntax-entity": {
+      "light": "var(--prettylights-syntax-entity)",
+      "dark": "var(--prettylights-syntax-entity)"
+    },
+    "color-prettylights-syntax-constant": {
+      "light": "var(--prettylights-syntax-constant)",
+      "dark": "var(--prettylights-syntax-constant)"
+    },
+    "counter-bgColor-muted": {
+      "light": "var(--bgColor-neutral-muted)",
+      "dark": "var(--bgColor-neutral-muted)"
+    },
+    "label-blue-bgColor-rest": {
+      "light": "#d1f0ff",
+      "dark": "#001a47"
+    },
+    "shadow-floating-small": {
+      "light": "0 0 0 1px #d1d9e040, 0 6px 12px -3px #25292e0a, 0 6px 18px 0 #25292e1f",
+      "dark": "0 0 0 1px #3d444d, 0 6px 12px -3px #01040966, 0 6px 18px 0 #01040966"
+    },
+    "shadow-floating-large": {
+      "light": "0 0 0 1px #d1d9e000, 0 40px 80px 0 #25292e3d",
+      "dark": "0 0 0 1px #3d444d, 0 24px 48px 0 #010409"
+    },
+    "shadow-floating-xlarge": {
+      "light": "0 0 0 1px #d1d9e000, 0 56px 112px 0 #25292e52",
+      "dark": "0 0 0 1px #3d444d, 0 32px 64px 0 #010409"
+    },
+    "shadow-resting-small": {
+      "light": "0 1px 1px 0 #1f23280a, 0 1px 2px 0 #1f232808",
+      "dark": "0 1px 1px 0 #01040999, 0 1px 3px 0 #01040999"
+    },
+    "fgColor-success": {
+      "light": "#1a7f37",
+      "dark": "#3fb950"
+    },
+    "fgColor-done": {
+      "light": "#8250df",
+      "dark": "#ab7df8"
+    },
+    "bgColor-success-emphasis": {
+      "light": "#1f883d",
+      "dark": "#238636"
+    },
+    "headerSearch-borderColor": {
+      "light": "#818b98",
+      "dark": "#2a313c"
+    },
+    "headerSearch-bgColor": {
+      "light": "#25292e",
+      "dark": "#0d1117"
+    },
+    "header-bgColor": {
+      "light": "#25292e",
+      "dark": "#151b23f2"
+    },
+    "fgColor-disabled": {
+      "light": "#818b98",
+      "dark": "#656c76"
+    },
+    "borderRadius-small": ".1875rem",
+    "borderRadius-medium": ".375rem",
+    "borderRadius-large": ".75rem",
+    "borderRadius-full": "624.938rem",
+    "control-medium-size": "2rem",
+    "control-small-size": "1.75rem",
+    "control-xsmall-size": "1.5rem",
+    "control-medium-paddingInline-normal": ".75rem",
+    "control-medium-paddingInline-condensed": ".5rem",
+    "control-medium-paddingBlock": ".375rem",
+    "text-body-size-medium": "var(--base-text-size-sm)",
+    "text-body-size-small": "var(--base-text-size-xs)",
+    "text-caption-size": "var(--base-text-size-xs)",
+    "base-text-weight-semibold": "600",
+    "fontStack-system": "\"Mona Sans VF\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Noto Sans Backtick Fix\", \"Noto Sans\", Helvetica, Arial, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\"",
+    "fontStack-monospace": "ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace",
+    "text-title-size-small": "var(--base-text-size-md)",
+    "stack-gap-condensed": ".5rem",
+    "controlStack-medium-gap-auto": ".75rem",
+    "overlay-width-large": "40rem",
+    "overlay-width-xlarge": "60rem",
+    "overlay-width-medium": "30rem",
+    "overlay-borderRadius": ".375rem",
+    "overlay-padding-normal": "1rem",
+    "overlay-offset": ".25rem"
+  }
+}

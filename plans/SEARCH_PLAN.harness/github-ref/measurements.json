@@ -1,0 +1,2461 @@
+{
+  "meta": {
+    "measuredOn": "2026-10-26",
+    "browser": "Playwright 1.61 bundled Chromium 149 (headless), deviceScaleFactor 1, logged out, en-US",
+    "note": "All \"measured\" numbers come from getBoundingClientRect/getComputedStyle in that browser. Values marked css: come from GitHub production CSS on github.githubassets.com (fetched 2026-10-26). Archived values come from Wayback Machine captures rendered with live GitHub hosts blocked.",
+    "githubPageLoads": "about 20 page loads + their XHRs, spaced seconds apart",
+    "cssSources": [
+      "https://github.githubassets.com/assets/global-58d1122073b19732.css",
+      "https://github.githubassets.com/assets/primer-38ae573fa780d76a.css",
+      "https://github.githubassets.com/assets/primer-react-css.dc074e1b2708fdd8.module.css",
+      "https://github.githubassets.com/assets/blackbird-search.27cfa19c462af0ec.module.css",
+      "https://github.githubassets.com/assets/light-3a3d2c708970e4e8.css",
+      "https://github.githubassets.com/assets/dark-c9dacb4ec19616db.css",
+      "https://github.githubassets.com/assets/primer-primitives-02e066689466a8cd.css"
+    ],
+    "archives": [
+      "https://web.archive.org/web/20250528143500/https://github.com/microsoft/playwright",
+      "https://web.archive.org/web/20260301075926/https://github.com/microsoft/playwright",
+      "https://web.archive.org/web/20250628003312/https://github.com/search?q=react&type=repositories"
+    ]
+  },
+  "headerLoggedOut": {
+    "390": {
+      "headerHeight": 64,
+      "headerBg": "#000000",
+      "searchTrigger": {
+        "inHamburgerMenu": true,
+        "x": 28,
+        "y": 424,
+        "w": 334,
+        "h": 32,
+        "radius": "6px",
+        "border": "1px solid #262c28",
+        "bg": "#00000003",
+        "label": {
+          "text": "Search",
+          "fontSize": "14px",
+          "color": "#ffffff"
+        },
+        "kbd": {
+          "text": "/",
+          "w": 24.27,
+          "h": 20,
+          "fontSize": "11px",
+          "fontFamily": "\"Mona Sans Mono\", monospace",
+          "radius": "4px",
+          "border": "1px solid #353d37",
+          "padding": "4px 8px",
+          "boxShadow": "#191f1b 0px -1px 0px 0px inset"
+        },
+        "menuButton": "Toggle navigation (hamburger, left)"
+      },
+      "otherControlsLeftToRight": [
+        "Toggle navigation @x16 30x30",
+        "Homepage @x179 32x32",
+        "Sign in @x263 71x32",
+        "(icon: Appearance settings) @x342 32x32"
+      ]
+    },
+    "768": {
+      "headerHeight": 64,
+      "headerBg": "#000000",
+      "searchTrigger": {
+        "inHamburgerMenu": true,
+        "x": 28,
+        "y": 424,
+        "w": 712,
+        "h": 32,
+        "radius": "6px",
+        "border": "1px solid #262c28",
+        "bg": "#00000003",
+        "label": {
+          "text": "Search",
+          "fontSize": "14px",
+          "color": "#ffffff"
+        },
+        "kbd": {
+          "text": "/",
+          "w": 24.27,
+          "h": 20,
+          "fontSize": "11px",
+          "fontFamily": "\"Mona Sans Mono\", monospace",
+          "radius": "4px",
+          "border": "1px solid #353d37",
+          "padding": "4px 8px",
+          "boxShadow": "#191f1b 0px -1px 0px 0px inset"
+        },
+        "menuButton": "Toggle navigation (hamburger, left)"
+      },
+      "otherControlsLeftToRight": [
+        "Toggle navigation @x24 30x30",
+        "Homepage @x368 32x32",
+        "Sign in @x633 71x32",
+        "(icon: Appearance settings) @x712 32x32"
+      ]
+    },
+    "1012": {
+      "headerHeight": 72,
+      "headerBg": "#000000",
+      "searchTrigger": {
+        "x": 735.16,
+        "y": 20,
+        "w": 42,
+        "h": 32,
+        "radius": "6px",
+        "border": "1px solid #262c28",
+        "bg": "#00000003",
+        "color": "#ffffff",
+        "padding": "1px 12px",
+        "content": "magnifier octicon only (label \"Search\" and kbd \"/\" display:none)",
+        "ariaLabel": "Search or jump to, type / to search",
+        "ariaHaspopup": "dialog"
+      },
+      "otherControlsLeftToRight": [
+        "Homepage @x32 32x32",
+        "Platform @x80 101x40",
+        "Solutions @x181 106x40",
+        "Resources @x286 111x40",
+        "Open Source @x397 132x40",
+        "Enterprise @x529 111x40",
+        "Pricing @x640 68x40",
+        "Search or jump to, type / to search @x735 42x32",
+        "Sign in @x785 71x32",
+        "Sign up @x864 76x32",
+        "(icon: Appearance settings) @x948 32x32"
+      ]
+    },
+    "1280": {
+      "headerHeight": 72,
+      "headerBg": "#000000",
+      "searchTrigger": {
+        "x": 1003.16,
+        "y": 20,
+        "w": 42,
+        "h": 32,
+        "radius": "6px",
+        "border": "1px solid #262c28",
+        "bg": "#00000003",
+        "color": "#ffffff",
+        "padding": "1px 12px",
+        "content": "magnifier octicon only (label \"Search\" and kbd \"/\" display:none)",
+        "ariaLabel": "Search or jump to, type / to search",
+        "ariaHaspopup": "dialog"
+      },
+      "otherControlsLeftToRight": [
+        "Homepage @x32 32x32",
+        "Platform @x80 101x40",
+        "Solutions @x181 106x40",
+        "Resources @x286 111x40",
+        "Open Source @x397 132x40",
+        "Enterprise @x529 111x40",
+        "Pricing @x640 68x40",
+        "Search or jump to, type / to search @x1003 42x32",
+        "Sign in @x1053 71x32",
+        "Sign up @x1132 76x32",
+        "(icon: Appearance settings) @x1216 32x32"
+      ]
+    },
+    "1440": {
+      "headerHeight": 72,
+      "searchTrigger": {
+        "x": 1005.16,
+        "y": 20,
+        "w": 200,
+        "h": 32,
+        "radius": "6px",
+        "border": "1px solid #262c28",
+        "bg": "#00000003",
+        "padding": "1px 12px",
+        "icon": "magnifier display:none at >=1400px",
+        "label": {
+          "text": "Search",
+          "fontSize": "14px",
+          "fontWeight": "500",
+          "color": "#ffffff"
+        },
+        "kbd": {
+          "text": "/",
+          "w": 24.27,
+          "h": 20,
+          "fontSize": "11px",
+          "fontFamily": "\"Mona Sans Mono\", monospace",
+          "radius": "4px",
+          "border": "1px solid #353d37",
+          "padding": "4px 8px",
+          "boxShadow": "#191f1b 0px -1px 0px 0px inset",
+          "margin": "0px 0px 0px 106.312px"
+        }
+      }
+    },
+    "dark1280": {
+      "headerBg": "#000000",
+      "trigger": {
+        "bg": "#00000003",
+        "border": "1px solid #262c28",
+        "color": "#ffffff"
+      },
+      "note": "The logged-out marketing header is black (#000000) in both schemes."
+    }
+  },
+  "loggedInAppHeaderFromCss": {
+    "source": "css: global-58d1122073b19732.css",
+    "bar": "AppHeader bg var(--bgColor-inset) (light #f6f8fa, dark #010409); inset bottom 1px borderColor-default; globalBar padding 16px, gap 12px => 64px tall bar",
+    "logo": "32x32, radius full",
+    "searchRegular": "flex:auto; min-width 12rem (192px); max-width 24rem (384px); right-aligned (justify-content:flex-end)",
+    "searchButton": "border 1px --button-default-borderColor-rest (#d1d9e0 light); padding 5px 31px; transparent bg; placeholder fgColor-muted, line-height 20px; leading magnifier 16x16 at top 8px left 8px, fgColor-muted",
+    "kbd": "16x16, 12px, border 1px solid fgColor-muted, radius 3px, transparent bg, display inline-grid",
+    "trailingAction": "24x24 at top 4px right 4px, radius 3px, preceded by a 1px x 16px divider (borderColor-default)",
+    "breakpoint": "width <= 1011.98px: the regular box is hidden and the narrow icon button shows; when expanded the search becomes position:absolute; top:0; left:0; width:100% over the bar",
+    "actions": "gap 8px; a 1px x 20px divider before the action group; actions and Copilot group hidden at width <= 767.98px",
+    "iconButtons": "32x32, border 1px button-default-borderColor-rest, radius 6px, fgColor-muted; unread dot 8x8 fgColor-accent at top-right with a 2px ring of the header bg",
+    "overlay": ".search-suggestions: top -14px; left -14px; width calc(100% + 26px); padding-top 12px; radius 12px; max-height 80vh; z-index 35. .dark-backdrop: overlay-backdrop-bgColor, z-index 32"
+  },
+  "quickSearchLoggedOut": {
+    "what": "Logged-out \"Quick search\" dialog (React, Primer Dialog), live on github.com 2026-10-26",
+    "byWidth": {
+      "390": {
+        "dialog": {
+          "x": 0,
+          "y": 0,
+          "w": 390,
+          "h": 272.5
+        },
+        "radius": "0px 0px 12px 12px",
+        "anchorVars": "--qs-anchor-top: 440px; --qs-anchor-left: 16px; --qs-anchor-width: 334px; --qs-align-offset-x: -9px; --qs-align-inset-right: 15px; --qs-align-offset-y: -13px;",
+        "input": {
+          "tag": "span",
+          "cls": "input__Qi-Grz TextInput-wrapper prc-components-TextInputWrapper-Hpdqi prc-components-TextInputBaseWrapper-wY-n0",
+          "text": "",
+          "x": 12,
+          "y": 12,
+          "w": 366,
+          "h": 32,
+          "display": "inline-flex",
+          "visibility": "visible",
+          "fontFamily": "\"Mona Sans VF\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Noto Sans Backtick Fix\", \"Noto Sans\", Helvetica, Arial, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\"",
+          "fontSize": "14px",
+          "fontWeight": "400",
+          "lineHeight": "20px",
+          "color": "#1f2328",
+          "bg": "#ffffff",
+          "border": "1px solid #0969da",
+          "borderBottom": "1px solid #0969da",
+          "borderLeft": "1px solid #0969da",
+          "radius": "6px",
+          "padding": "0px 0px 0px 8px",
+          "margin": "0px",
+          "gap": "normal",
+          "boxShadow": "#1f23280a 0px 1px 0px 0px inset",
+          "outline": "#0969da solid 2px",
+          "textDecoration": "none"
+        },
+        "note": "top sheet: inset 0 0 auto, no top radius, max-height 80dvh (CSS @media (width <= 1011px))"
+      },
+      "768": {
+        "dialog": {
+          "x": 0,
+          "y": 0,
+          "w": 768,
+          "h": 272.5
+        },
+        "radius": "0px 0px 12px 12px",
+        "anchorVars": "--qs-anchor-top: 440px; --qs-anchor-left: 16px; --qs-anchor-width: 712px; --qs-align-offset-x: -9px; --qs-align-inset-right: 15px; --qs-align-offset-y: -13px;",
+        "input": {
+          "tag": "span",
+          "cls": "input__Qi-Grz TextInput-wrapper prc-components-TextInputWrapper-Hpdqi prc-components-TextInputBaseWrapper-wY-n0",
+          "text": "",
+          "x": 12,
+          "y": 12,
+          "w": 744,
+          "h": 32,
+          "display": "inline-flex",
+          "visibility": "visible",
+          "fontFamily": "\"Mona Sans VF\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Noto Sans Backtick Fix\", \"Noto Sans\", Helvetica, Arial, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\"",
+          "fontSize": "14px",
+          "fontWeight": "400",
+          "lineHeight": "20px",
+          "color": "#1f2328",
+          "bg": "#ffffff",
+          "border": "1px solid #0969da",
+          "borderBottom": "1px solid #0969da",
+          "borderLeft": "1px solid #0969da",
+          "radius": "6px",
+          "padding": "0px 0px 0px 8px",
+          "margin": "0px",
+          "gap": "normal",
+          "boxShadow": "#1f23280a 0px 1px 0px 0px inset",
+          "outline": "#0969da solid 2px",
+          "textDecoration": "none"
+        },
+        "note": "top sheet: inset 0 0 auto, no top radius, max-height 80dvh (CSS @media (width <= 1011px))"
+      },
+      "1012": {
+        "dialog": {
+          "x": 312.16,
+          "y": 7,
+          "w": 480,
+          "h": 272.5
+        },
+        "anchorVars": "--qs-anchor-top: 20px; --qs-anchor-left: 735.15625px; --qs-anchor-width: 42px; --qs-align-offset-x: -9px; --qs-align-inset-right: 15px; --qs-align-offset-y: -13px;",
+        "triggerBox": {
+          "x": 735.16,
+          "y": 20,
+          "w": 42,
+          "h": 32
+        }
+      },
+      "1280": {
+        "dialog": {
+          "x": 580.16,
+          "y": 7,
+          "w": 480,
+          "h": 272.5
+        },
+        "anchorVars": "--qs-anchor-top: 20px; --qs-anchor-left: 1003.15625px; --qs-anchor-width: 42px; --qs-align-offset-x: -9px; --qs-align-inset-right: 15px; --qs-align-offset-y: -13px;",
+        "triggerBox": {
+          "x": 1003.16,
+          "y": 20,
+          "w": 42,
+          "h": 32
+        }
+      },
+      "1440": {
+        "dialog": {
+          "x": 740.16,
+          "y": 7,
+          "w": 480,
+          "h": 272.5
+        },
+        "anchorVars": "--qs-anchor-top: 20px; --qs-anchor-left: 1005.15625px; --qs-anchor-width: 200px; --qs-align-offset-x: -9px; --qs-align-inset-right: 15px; --qs-align-offset-y: -13px;",
+        "triggerBox": {
+          "x": 1005.16,
+          "y": 20,
+          "w": 200,
+          "h": 32
+        }
+      }
+    },
+    "light": {
+      "dialog": {
+        "radius": "12px",
+        "bg": "#ffffff",
+        "boxShadow": "#d1d9e040 0px 0px 0px 1px, #25292e0a 0px 6px 12px -3px, #25292e1f 0px 6px 18px 0px",
+        "animation": {
+          "name": "quickSearchPanelIn__7A2EpM",
+          "dur": "0.2s",
+          "timing": "cubic-bezier(0.3, 0.8, 0.6, 1)",
+          "transform": "none"
+        },
+        "dataAttrs": [
+          "data-position-narrow=center",
+          "data-position-regular=center",
+          "data-width=xlarge",
+          "data-height=auto",
+          "data-has-footer=",
+          "data-footer-button-layout=wrap",
+          "data-component=Dialog",
+          "data-focus-trap=active"
+        ]
+      },
+      "backdrop": {
+        "cls": "prc-Dialog-Backdrop-5Nt2U",
+        "bg": "#c8d1da66",
+        "anim": "prc-Dialog-dialog-backdrop-appear-tCG2K 0.2s",
+        "pos": "fixed",
+        "inset": "0px 0px 0px 0px",
+        "w": 1280,
+        "h": 900,
+        "backdropFilter": "none"
+      },
+      "searchContainerPadding": "12px",
+      "inputWrapper": {
+        "w": 456,
+        "h": 32,
+        "fontSize": "14px",
+        "fontWeight": "400",
+        "lineHeight": "20px",
+        "color": "#1f2328",
+        "bg": "#ffffff",
+        "border": "1px solid #0969da",
+        "radius": "6px",
+        "padding": "0px 0px 0px 8px",
+        "outline": "#0969da solid 2px",
+        "boxShadow": "#1f23280a 0px 1px 0px 0px inset"
+      },
+      "input": {
+        "fontSize": "14px",
+        "lineHeight": "20px",
+        "textColor": "#00000000 (transparent: the overlay draws the text)",
+        "placeholder": "#59636e",
+        "aria": [
+          "aria-label=Search or jump to",
+          "role=combobox",
+          "aria-haspopup=listbox",
+          "aria-expanded=true",
+          "aria-controls=_r_1_",
+          "aria-autocomplete=list",
+          "aria-describedby=_r_5_"
+        ]
+      },
+      "leadingIcon": {
+        "w": 16,
+        "color": "#59636e",
+        "marginRight": "8px"
+      },
+      "overlay": {
+        "box": {
+          "x": 625.16,
+          "y": 19,
+          "w": 382,
+          "h": 32
+        },
+        "css": "left: 1+8+16+8 = 33px; right: 1+8+4+24+4 = 41px; pointer-events:none; white-space:pre; font-size 14px"
+      },
+      "overlayTokens": {
+        "qualifierKey": {
+          "color": "#1f2328",
+          "note": "plain text, no class"
+        },
+        "filterValue": {
+          "color": "#0969da",
+          "bg": "#ddf4ff",
+          "radius": "3px"
+        },
+        "operatorNOT_OR_minus": {
+          "color": "#6639ba"
+        },
+        "regex": {
+          "color": "#0969da"
+        },
+        "quotedString": {
+          "color": "#1f2328",
+          "note": "plain"
+        }
+      },
+      "list": {
+        "padding": "0px 0px 8px",
+        "aria": [
+          "role=listbox",
+          "aria-label=Search suggestions",
+          "aria-busy=false"
+        ]
+      },
+      "groupHeading": {
+        "w": 40.47,
+        "h": 18,
+        "fontSize": "12px",
+        "fontWeight": "600",
+        "lineHeight": "18px",
+        "color": "#59636e",
+        "bg": "#00000000",
+        "border": "0px none #59636e",
+        "radius": "0px",
+        "padding": "0px"
+      },
+      "option": {
+        "li": {
+          "h": 33.5,
+          "margin": "0px 8px",
+          "radius": "6px"
+        },
+        "content": {
+          "padding": "6px 8px",
+          "display": "grid"
+        },
+        "leadingIcon": {
+          "w": 16,
+          "color": "#59636e",
+          "marginRight": "0px 8px 0px 0px"
+        },
+        "label": {
+          "fontSize": "14px",
+          "color": "#1f2328"
+        },
+        "trailing": {
+          "text": "Jump to",
+          "fontSize": "12px",
+          "color": "#59636e",
+          "shownOn": "every item, not only the active one"
+        }
+      },
+      "activeOption": {
+        "liBg": "#818b9826",
+        "marker": "::after 4px wide, height 100%-8px, left -8px, top 4px, radius 6px, #0969da (Primer ActionList [data-is-active-descendant])",
+        "label": "semibold in screenshot qb-empty-active-item-1280-light.png",
+        "ariaSelected": "true"
+      },
+      "footer": {
+        "w": 480,
+        "h": 44.5,
+        "fontSize": "12px",
+        "fontWeight": "400",
+        "lineHeight": "19.5px",
+        "color": "#1f2328",
+        "bg": "#00000000",
+        "border": "1px solid #d1d9e0b3",
+        "radius": "0px",
+        "padding": "12px 16px"
+      },
+      "footerLink": {
+        "text": "Search syntax tips",
+        "fontSize": "12px",
+        "color": "#0969da",
+        "href": "https://docs.github.com/en/search-github/github-code-search/understanding-github-code-search-syntax"
+      }
+    },
+    "dark": {
+      "dialog": {
+        "bg": "#010409",
+        "boxShadow": "#3d444d 0px 0px 0px 1px, #01040966 0px 6px 12px -3px, #01040966 0px 6px 18px 0px"
+      },
+      "backdrop": "#21283066",
+      "inputWrapper": {
+        "bg": "#0d1117",
+        "border": "1px solid #1f6feb",
+        "outline": "#1f6feb solid 2px"
+      },
+      "placeholder": "#9198a1",
+      "groupHeading": "#9198a1",
+      "label": "#f0f6fc",
+      "trailing": "#9198a1",
+      "footerBorder": "1px solid #3d444db3",
+      "footerLink": "#4493f8",
+      "overlayTokens": [
+        {
+          "text": "microsoft/playwright",
+          "cls": "filterValue__G5FBa6",
+          "color": "#4493f8",
+          "bg": "#388bfd1a"
+        },
+        {
+          "text": "typescript",
+          "cls": "filterValue__G5FBa6",
+          "color": "#4493f8",
+          "bg": "#388bfd1a"
+        }
+      ]
+    },
+    "keyboard": {
+      "slashOpens": true,
+      "sOpens": true,
+      "arrowSequence": [
+        "ArrowDown -> _r_1q_-option-explore-github-actions",
+        "ArrowDown -> _r_1q_-option-explore-blog",
+        "ArrowUp -> _r_1q_-option-explore-github-actions",
+        "End -> _r_1q_-option-explore-github-actions",
+        "Home -> _r_1q_-option-explore-github-actions",
+        "ArrowUp -> _r_1q_-option-explore-github-actions"
+      ],
+      "focusStaysInInput": true,
+      "homeEndMoveCaretNotSelection": true,
+      "noWrapAtTop": true,
+      "tabOrderFromInput": [
+        "CI/CD\nExplore CI/CD\nJump to [A option]",
+        "Search syntax tips [A ]",
+        "Search or jump to [INPUT combobox]",
+        "CI/CD\nExplore CI/CD\nJump to [A option]"
+      ],
+      "escapeClosesAndReturnsFocusTo": "Search or jump to, type / to search",
+      "enterSubmits": "https://github.com/search?q=playwright+is%3Aopen&type=repositories"
+    },
+    "typedStates": {
+      "lan": {
+        "suggestions": [],
+        "ariaExpanded": "aria-expanded=false",
+        "overlayHtml": "<span>lan</span>",
+        "dialogHeight": 108.5
+      },
+      "language:": {
+        "suggestions": [],
+        "ariaExpanded": "aria-expanded=false",
+        "overlayHtml": "<span>language:</span>",
+        "dialogHeight": 108.5
+      },
+      "language:py": {
+        "suggestions": [],
+        "ariaExpanded": "aria-expanded=false",
+        "overlayHtml": "<span>language:</span><span class=\"filterValue__G5FBa6\">py</span>",
+        "dialogHeight": 108.5
+      },
+      "is:": {
+        "suggestions": [],
+        "ariaExpanded": "aria-expanded=false",
+        "overlayHtml": "<span>is:</span>",
+        "dialogHeight": 108.5
+      },
+      "repo:": {
+        "suggestions": [],
+        "ariaExpanded": "aria-expanded=false",
+        "overlayHtml": "<span>repo:</span>",
+        "dialogHeight": 108.5
+      },
+      "playwright": {
+        "suggestions": [],
+        "ariaExpanded": "aria-expanded=false",
+        "overlayHtml": "<span>playwright</span>",
+        "dialogHeight": 108.5
+      },
+      "repo:microsoft/playwright language:typescript NOT test path:*.ts": {
+        "suggestions": [],
+        "ariaExpanded": "aria-expanded=false",
+        "overlayHtml": "<span>repo:</span><span class=\"filterValue__G5FBa6\">microsoft/playwright</span><span> language:</span><span class=\"filterValue__G5FBa6\">typescript</span><span> </span><span class=\"entity__gEHqG3\">NOT</span><span> test path:</span><span class=\"filterValue__G5FBa6\">*.ts</span>",
+        "dialogHeight": 108.5
+      },
+      "org:github (lang:go OR lang:rust) \"exact phrase\" /regex.*/ -is:fork": {
+        "suggestions": [],
+        "ariaExpanded": "aria-expanded=false",
+        "overlayHtml": "<span>org:</span><span class=\"filterValue__G5FBa6\">github</span><span> (lang:</span><span class=\"filterValue__G5FBa6\">go</span><span> </span><span class=\"entity__gEHqG3\">OR</span><span> lang:</span><span class=\"filterValue__G5FBa6\">rust</span><span>) \"exact phrase\" </span><span class=\"constant__kPG4kL\">/regex.*/</span><span> </span><span class=\"entity__gEHqG3\">-</span><span>is:</span><span class=\"filterValue__G5FBa6\">fork</span>",
+        "dialogHeight": 108.5
+      }
+    },
+    "emptyState": {
+      "group": "Explore",
+      "items": [
+        "GitHub Actions | Jump to",
+        "Blog | Jump to",
+        "CI/CD | Jump to",
+        "Code review | Jump to"
+      ],
+      "dialogHeight": 272.5
+    },
+    "liveRegion": "none found with text in the logged-out quick search"
+  },
+  "queryBuilderArchived": {
+    "what": "Catalyst <qbsearch-input>/<query-builder> (the component of the logged-in header), rendered from the Wayback Machine copy of github.com/microsoft/playwright captured 2026-03-01; no github.com requests",
+    "headerButton1280": {
+      "x": 1009.86,
+      "y": 21,
+      "w": 30,
+      "h": 30,
+      "radius": "6px",
+      "container": {
+        "x": 1008.86,
+        "y": 20,
+        "w": 32,
+        "h": 32,
+        "bg": "#25292e",
+        "border": "1px solid #818b98",
+        "radius": "6px"
+      }
+    },
+    "container": {
+      "x": 80,
+      "y": 6,
+      "w": 1120,
+      "h": 143.75,
+      "radius": "12px",
+      "border": "1px solid #d1d9e0",
+      "bg": "#ffffff",
+      "boxShadow": "#d1d9e0 0px 0px 0px 1px, #25292e3d 0px 40px 80px 0px",
+      "padding": "12px 0px 0px"
+    },
+    "backdrop": {
+      "bg": "#c8d1da66"
+    },
+    "styledInput": {
+      "x": 93,
+      "y": 19,
+      "w": 1094,
+      "h": 32,
+      "radius": "6px",
+      "margin": "0px 12px"
+    },
+    "input": {
+      "textColor": "#00000000",
+      "caret": "rgb(31, 35, 40)",
+      "aria": [
+        "role=combobox",
+        "aria-expanded=true",
+        "aria-describedby=validation-3080b941-6f43-4783-b0a9-873c06834623",
+        "aria-controls=query-builder-test-results",
+        "aria-autocomplete=list",
+        "aria-haspopup=listbox"
+      ]
+    },
+    "liveRegionExamples": {
+      "lan": "3 suggestions.",
+      "language:": "7 suggestions.",
+      "language:py": "4 suggestions.",
+      "is:": "4 suggestions.",
+      "repo:": "1 suggestion.",
+      "playwright": "3 suggestions.",
+      "repo:microsoft/playwright language:typescript NOT test path:*.ts": "1 suggestion.",
+      "org:github (lang:go OR lang:rust) \"exact phrase\" /regex.*/ -is:fork": "1 suggestion.",
+      "foo (bar": "3 suggestions.",
+      "path:/src/ /unclosed": "3 suggestions."
+    },
+    "typedStates": {
+      "lan": {
+        "items": [
+          "lan Search all of GitHub",
+          "repo:microsoft/playwright lan Search in this repository",
+          "org:microsoft lan Search in this organization"
+        ],
+        "styled": "<span>lan</span>",
+        "containerH": 213.25
+      },
+      "language:": {
+        "items": [
+          "C++ Autocomplete",
+          "Go Autocomplete",
+          "Java Autocomplete",
+          "JavaScript Autocomplete",
+          "PHP Autocomplete",
+          "Python Autocomplete",
+          "Ruby Autocomplete"
+        ],
+        "styled": "<span>language:</span>",
+        "containerH": 387.75
+      },
+      "language:py": {
+        "items": [
+          "Python Autocomplete",
+          "Papyrus Autocomplete",
+          "Ren'Py Autocomplete",
+          "Jupyter Notebook Autocomplete"
+        ],
+        "styled": "<span>language:</span><span class=\"qb-filter-value\">py</span>",
+        "containerH": 283.5
+      },
+      "is:": {
+        "items": [
+          "public Autocomplete",
+          "private Autocomplete",
+          "issue Autocomplete",
+          "pr Autocomplete"
+        ],
+        "styled": "<span>is:</span>",
+        "containerH": 283.5
+      },
+      "repo:": {
+        "items": [
+          "repo: Search all of GitHub"
+        ],
+        "styled": "<span>repo:</span>",
+        "containerH": 143.75
+      },
+      "playwright": {
+        "items": [
+          "playwright Search all of GitHub",
+          "repo:microsoft/playwright playwright Search in this repository",
+          "org:microsoft playwright Search in this organization"
+        ],
+        "styled": "<span>playwright</span>",
+        "containerH": 213.25
+      },
+      "repo:microsoft/playwright language:typescript NOT test path:*.ts": {
+        "items": [
+          "repo:microsoft/playwright language:typescript NOT test path:*.ts Search all of GitHub"
+        ],
+        "styled": "<span>repo:</span><span class=\"qb-filter-value\">microsoft/playwright</span><span> language:</span><span class=\"qb-filter-value\">typescript</span><span> </span><span class=\"qb-entity\">NOT</span><span> test path:</span><span class=\"qb-filter-value\">*.ts</span>",
+        "containerH": 143.75
+      },
+      "org:github (lang:go OR lang:rust) \"exact phrase\" /regex.*/ -is:fork": {
+        "items": [
+          "fork Autocomplete"
+        ],
+        "styled": "<span>org:</span><span class=\"qb-filter-value\">github</span><span> (lang:</span><span class=\"qb-filter-value\">go</span><span> </span><span class=\"qb-entity\">OR</span><span> lang:</span><span class=\"qb-filter-value\">rust</span><span>) \"exact phrase\" </span><span class=\"qb-constant\">/regex.*/</span><span> </span><span class=\"qb-entity\">-</span><span>is:</span><span class=\"qb-filter-value\">fork</span>",
+        "containerH": 179.25
+      },
+      "foo (bar": {
+        "items": [
+          "foo (bar Search all of GitHub",
+          "repo:microsoft/playwright foo (bar Search in this repository",
+          "org:microsoft foo (bar Search in this organization"
+        ],
+        "styled": "<span>foo (bar</span>",
+        "containerH": 213.25
+      },
+      "path:/src/ /unclosed": {
+        "items": [
+          "/unclosed Search all of GitHub",
+          "repo:microsoft/playwright /unclosed Search in this repository",
+          "org:microsoft /unclosed Search in this organization"
+        ],
+        "styled": "<span>path:</span><span class=\"qb-filter-value\">/src/</span><span> /unclosed</span>",
+        "containerH": 213.25
+      }
+    },
+    "overlayTokensLight": {
+      "qb-filter-value": {
+        "color": "#0969da",
+        "bg": "#ddf4ff",
+        "radius": "3px"
+      },
+      "qb-entity": {
+        "color": "#6639ba"
+      },
+      "qb-constant": {
+        "color": "#0550ae"
+      }
+    },
+    "overlayTokensDark": {
+      "qb-filter-value": {
+        "color": "#4493f8",
+        "bg": "#388bfd1a"
+      },
+      "qb-entity": {
+        "color": "#d2a8ff"
+      },
+      "container": {
+        "bg": "#0d1117",
+        "border": "1px solid #3d444d",
+        "boxShadow": "#3d444d 0px 0px 0px 1px, #010409 0px 24px 48px 0px"
+      },
+      "backdrop": "#21283066"
+    },
+    "activeItem": {
+      "bg": "#818b9826",
+      "marker": "::after 4x24px at left -4px, borderColor-accent-emphasis, radius 6px (primer css .ActionListItem[aria-selected=true]:after)"
+    },
+    "advancedFacetOwnerClick_20250628": {
+      "inputValue": "react owner:",
+      "caret": 12,
+      "focused": true,
+      "opened": true,
+      "suggestions": [
+        "react owner: Search all of GitHub"
+      ]
+    },
+    "resultsPageHeaderShowsQuery_20250628": {
+      "qbsearchInitialValue": "react",
+      "buttonTextHtml": "<span>react</span>",
+      "searchBox1280": {
+        "x": 720.86,
+        "y": 20,
+        "w": 320,
+        "h": 32,
+        "bg": "#25292e",
+        "border": "1px solid #818b98",
+        "radius": "6px"
+      }
+    }
+  },
+  "resultsPage": {
+    "layoutByWidth": {
+      "390": {
+        "headerH": 64,
+        "sidebarPane": "hidden (Filter button + bottom-sheet dialog)",
+        "contentPadding": "16px",
+        "mainColumn": {
+          "x": 16,
+          "w": 358
+        },
+        "rightColumn": "hidden",
+        "resultCard": {
+          "w": 358,
+          "h": 253,
+          "padding": "16px",
+          "border": "1px solid #d1d9e0",
+          "radius": "6px"
+        },
+        "gapBetweenCards": 16,
+        "sortButton": "hidden",
+        "filterButton": {
+          "x": 272.61,
+          "y": 80,
+          "w": 65.39,
+          "h": 28
+        },
+        "typeSwitcher": {
+          "x": 50.77,
+          "y": 80,
+          "w": 145.19,
+          "h": 28
+        },
+        "noHorizontalScroll": true
+      },
+      "768": {
+        "headerH": 64,
+        "sidebarPane": {
+          "x": 0,
+          "w": 257,
+          "divider": "1px #d1d9e0"
+        },
+        "contentPadding": "16px 24px",
+        "mainColumn": {
+          "x": 282,
+          "w": 462
+        },
+        "rightColumn": "hidden",
+        "resultCard": {
+          "w": 462,
+          "h": 184,
+          "padding": "16px",
+          "border": "1px solid #d1d9e0",
+          "radius": "6px"
+        },
+        "gapBetweenCards": 16,
+        "sortButton": {
+          "x": 568.16,
+          "y": 80,
+          "w": 139.84,
+          "h": 28
+        },
+        "filterButton": "hidden",
+        "typeSwitcher": "hidden",
+        "noHorizontalScroll": true
+      },
+      "1012": {
+        "headerH": 72,
+        "sidebarPane": {
+          "x": 0,
+          "w": 296,
+          "divider": "1px #d1d9e0"
+        },
+        "contentPadding": "16px 24px",
+        "mainColumn": {
+          "x": 321,
+          "w": 383
+        },
+        "rightColumn": {
+          "x": 728,
+          "w": 260,
+          "margin": "24px 0px 0px 24px"
+        },
+        "resultCard": {
+          "w": 383,
+          "h": 214,
+          "padding": "16px",
+          "border": "1px solid #d1d9e0",
+          "radius": "6px"
+        },
+        "gapBetweenCards": 16,
+        "sortButton": {
+          "x": 528.16,
+          "y": 88,
+          "w": 139.84,
+          "h": 28
+        },
+        "filterButton": "hidden",
+        "typeSwitcher": "hidden",
+        "noHorizontalScroll": true
+      },
+      "1280": {
+        "headerH": 72,
+        "sidebarPane": {
+          "x": 0,
+          "w": 296,
+          "divider": "1px #d1d9e0"
+        },
+        "contentPadding": "16px 24px",
+        "mainColumn": {
+          "x": 321,
+          "w": 571
+        },
+        "rightColumn": {
+          "x": 916,
+          "w": 340,
+          "margin": "24px 0px 0px 24px"
+        },
+        "resultCard": {
+          "w": 571,
+          "h": 163,
+          "padding": "16px",
+          "border": "1px solid #d1d9e0",
+          "radius": "6px"
+        },
+        "gapBetweenCards": 16,
+        "sortButton": {
+          "x": 716.16,
+          "y": 88,
+          "w": 139.84,
+          "h": 28
+        },
+        "filterButton": "hidden",
+        "typeSwitcher": "hidden",
+        "noHorizontalScroll": true
+      },
+      "1440": {
+        "sidebarPane": 296,
+        "mainColumn": 731,
+        "columns": [
+          {
+            "x": 321,
+            "w": 731
+          },
+          {
+            "x": 1076,
+            "w": 340
+          }
+        ]
+      }
+    },
+    "light1280": {
+      "body": {
+        "bg": "#ffffff",
+        "fg": "#1f2328",
+        "font": "\"Mona Sans VF\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Noto Sans Backtick Fix\", \"Noto Sans\", Helvetica, Arial, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\"",
+        "size": "14px"
+      },
+      "filtersTitle": {
+        "w": 296,
+        "h": 48,
+        "fontSize": "16px",
+        "fontWeight": "600",
+        "lineHeight": "24px",
+        "color": "#1f2328",
+        "bg": "#00000000",
+        "border": "0px none #1f2328",
+        "radius": "0px",
+        "padding": "16px 16px 8px"
+      },
+      "navItemCurrent": {
+        "h": 32,
+        "liMargin": "0px 8px",
+        "radius": "6px",
+        "contentPadding": "6px 8px",
+        "labelSize": "14px",
+        "labelWeight": "600",
+        "labelColor": "#25292e",
+        "iconColor": "#59636e",
+        "liBg": "#818b9826",
+        "marker": {
+          "content": "\"\"",
+          "position": "absolute",
+          "w": "4px",
+          "h": "24px",
+          "top": "4px",
+          "left": "-8px",
+          "bg": "#0969da",
+          "radius": "6px",
+          "display": "block"
+        },
+        "counter": {
+          "text": "171k",
+          "h": 20,
+          "fontSize": "12px",
+          "fontWeight": "600",
+          "color": "#1f2328",
+          "bg": "#818b981f",
+          "radius": "20px",
+          "padding": "0px 8px"
+        }
+      },
+      "navItem": {
+        "h": 32,
+        "liMargin": "0px 8px",
+        "radius": "6px",
+        "contentPadding": "6px 8px",
+        "labelSize": "14px",
+        "labelWeight": "400",
+        "labelColor": "#1f2328",
+        "iconColor": "#59636e",
+        "liBg": "#ffffff00",
+        "marker": null,
+        "counter": {
+          "text": "542k",
+          "h": 20,
+          "fontSize": "12px",
+          "fontWeight": "600",
+          "color": "#1f2328",
+          "bg": "#818b981f",
+          "radius": "20px",
+          "padding": "0px 8px"
+        }
+      },
+      "navItemHoverBg": {
+        "tag": "li",
+        "cls": "prc-ActionList-ActionListItem-So4vC",
+        "text": "Issues 542k (542k) results",
+        "x": 16,
+        "y": 196,
+        "w": 264,
+        "h": 32,
+        "display": "list-item",
+        "visibility": "visible",
+        "fontFamily": "\"Mona Sans VF\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Noto Sans Backtick Fix\", \"Noto Sans\", Helvetica, Arial, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\"",
+        "fontSize": "14px",
+        "fontWeight": "400",
+        "lineHeight": "21px",
+        "color": "#1f2328",
+        "bg": "#818b981a",
+        "border": "0px none #1f2328",
+        "borderBottom": "0px none #1f2328",
+        "borderLeft": "0px none #1f2328",
+        "radius": "6px",
+        "padding": "0px",
+        "margin": "0px 8px",
+        "gap": "normal",
+        "boxShadow": "#ffffff00 0px 0px 0px 1px inset",
+        "outline": "#00000000 solid 1px",
+        "textDecoration": "none"
+      },
+      "groupHeading": {
+        "w": 58.41,
+        "h": 18,
+        "fontSize": "12px",
+        "fontWeight": "600",
+        "lineHeight": "18px",
+        "color": "#59636e",
+        "bg": "#00000000",
+        "border": "0px none #59636e",
+        "radius": "0px",
+        "padding": "0px"
+      },
+      "languageItem": {
+        "h": 32,
+        "dot": {
+          "w": "10px",
+          "h": "10px",
+          "bg": "#3178c6",
+          "radius": "8px",
+          "before": null,
+          "inline": "background-color:#3178c6"
+        },
+        "dotBox": {
+          "x": 24,
+          "y": 414,
+          "w": 10,
+          "h": 10
+        }
+      },
+      "divider": {
+        "h": 1,
+        "bg": "#d1d9e0b3",
+        "margin": "8px"
+      },
+      "advancedSearchLink": {
+        "w": 264,
+        "h": 32,
+        "fontSize": "14px",
+        "fontWeight": "400",
+        "lineHeight": "21px",
+        "color": "#25292e",
+        "bg": "#00000000",
+        "border": "0px none #25292e",
+        "radius": "6px",
+        "padding": "6px 8px"
+      },
+      "facetTexts": [
+        "Code ... (...) results",
+        "Repositories 171k (171k) results",
+        "Issues 542k (542k) results",
+        "Pull requests 3.9M (3.9M) results",
+        "Discussions 6.4k (6.4k) results",
+        "Users 5.2k (5.2k) results",
+        "More",
+        "TypeScript",
+        "JavaScript",
+        "Python",
+        "HTML",
+        "Java",
+        "C#",
+        "Shell",
+        "Dockerfile",
+        "CSS",
+        "Go",
+        "More languages...",
+        "Owner",
+        "Size",
+        "Number of followers",
+        "Number of forks",
+        "Number of stars",
+        "Date created",
+        "Date pushed",
+        "Topic",
+        "License",
+        "Archived",
+        "Public",
+        "Private",
+        "Advanced search"
+      ],
+      "countHeader": [
+        {
+          "text": "171k results (154 ms)",
+          "fontSize": "16px",
+          "fontWeight": "500"
+        },
+        {
+          "text": "171k results",
+          "fontSize": "16px",
+          "fontWeight": "500"
+        }
+      ],
+      "timingNote": "\"(154 ms)\" is a muted smaller span after the count (see screenshot)",
+      "sortButton": {
+        "w": 139.84,
+        "h": 28,
+        "fontSize": "12px",
+        "fontWeight": "500",
+        "lineHeight": "18px",
+        "color": "#25292e",
+        "bg": "#f6f8fa",
+        "border": "1px solid #d1d9e0",
+        "radius": "6px",
+        "padding": "0px 8px",
+        "boxShadow": "#1f23280a 0px 1px 0px 0px"
+      },
+      "columnOptionsButton": {
+        "w": 28,
+        "h": 28,
+        "fontSize": "12px",
+        "fontWeight": "500",
+        "lineHeight": "18px",
+        "color": "#59636e",
+        "bg": "#f6f8fa",
+        "border": "1px solid #d1d9e0",
+        "radius": "6px",
+        "padding": "0px 8px"
+      },
+      "repoCard": {
+        "card": {
+          "w": 571,
+          "h": 163,
+          "fontSize": "14px",
+          "fontWeight": "400",
+          "lineHeight": "21px",
+          "color": "#1f2328",
+          "bg": "#00000000",
+          "border": "1px solid #d1d9e0",
+          "radius": "6px",
+          "padding": "16px"
+        },
+        "avatar": {
+          "w": 20,
+          "h": 20,
+          "radius": "4px",
+          "boxShadow": "#1f232826 0px 0px 0px 1px"
+        },
+        "titleLink": {
+          "w": 156.8,
+          "h": 24,
+          "fontSize": "16px",
+          "fontWeight": "500",
+          "lineHeight": "24px",
+          "color": "#0969da",
+          "bg": "#00000000",
+          "border": "0px none #0969da",
+          "radius": "0px",
+          "padding": "0px",
+          "textDecoration": "none"
+        },
+        "titleMatchEm": {
+          "fontWeight": "700",
+          "color": "#0969da",
+          "bg": "#00000000"
+        },
+        "descMatchEm": {
+          "fontWeight": "600",
+          "color": "#1f2328",
+          "bg": "#00000000"
+        },
+        "description": {
+          "fontSize": "14px",
+          "lineHeight": "21px",
+          "color": "#1f2328"
+        },
+        "topicLabel": {
+          "w": 64.38,
+          "h": 22,
+          "fontSize": "12px",
+          "fontWeight": "500",
+          "lineHeight": "22px",
+          "color": "#0969da",
+          "bg": "#ddf4ff",
+          "border": "0px none #0969da",
+          "radius": "24px",
+          "padding": "0px 10px"
+        },
+        "topicList": {
+          "gap": "8px",
+          "margin": "8px 0px 4px"
+        },
+        "metaRow": {
+          "margin": "4px 0px 0px",
+          "item": {
+            "w": 72.89,
+            "h": 18,
+            "fontSize": "12px",
+            "fontWeight": "400",
+            "lineHeight": "18px",
+            "color": "#59636e",
+            "bg": "#00000000",
+            "border": "0px none #59636e",
+            "radius": "0px",
+            "padding": "0px"
+          },
+          "languageDot": {
+            "x": 338,
+            "y": 262.5,
+            "w": 10,
+            "h": 10
+          },
+          "separator": "·"
+        },
+        "starButton": {
+          "w": 59.23,
+          "h": 28,
+          "fontSize": "12px",
+          "fontWeight": "500",
+          "lineHeight": "18px",
+          "color": "#25292e",
+          "bg": "#f6f8fa",
+          "border": "1px solid #d1d9e0",
+          "radius": "6px",
+          "padding": "0px 8px",
+          "boxShadow": "#1f23280a 0px 1px 0px 0px"
+        }
+      },
+      "titleHover": {
+        "color": "#0969da",
+        "textDecoration": "underline"
+      },
+      "pagination": [
+        {
+          "text": "Previous",
+          "w": 82.2,
+          "h": 32,
+          "color": "#818b98",
+          "bg": "#00000000",
+          "radius": "6px",
+          "padding": "8px 6px",
+          "ariaCurrent": null,
+          "ariaLabel": null,
+          "ariaDisabled": "true"
+        },
+        {
+          "text": "1",
+          "w": 32,
+          "h": 32,
+          "color": "#ffffff",
+          "bg": "#0969da",
+          "radius": "6px",
+          "padding": "8px 6px",
+          "ariaCurrent": "page",
+          "ariaLabel": "Page 1",
+          "ariaDisabled": null
+        },
+        {
+          "text": "2",
+          "w": 32,
+          "h": 32,
+          "color": "#1f2328",
+          "bg": "#00000000",
+          "radius": "6px",
+          "padding": "8px 6px",
+          "ariaCurrent": null,
+          "ariaLabel": "Page 2",
+          "ariaDisabled": null
+        },
+        {
+          "text": "3",
+          "w": 32,
+          "h": 32,
+          "color": "#1f2328",
+          "bg": "#00000000",
+          "radius": "6px",
+          "padding": "8px 6px",
+          "ariaCurrent": null,
+          "ariaLabel": "Page 3",
+          "ariaDisabled": null
+        },
+        {
+          "text": "4",
+          "w": 32,
+          "h": 32,
+          "color": "#1f2328",
+          "bg": "#00000000",
+          "radius": "6px",
+          "padding": "8px 6px",
+          "ariaCurrent": null,
+          "ariaLabel": "Page 4",
+          "ariaDisabled": null
+        },
+        {
+          "text": "5",
+          "w": 32,
+          "h": 32,
+          "color": "#1f2328",
+          "bg": "#00000000",
+          "radius": "6px",
+          "padding": "8px 6px",
+          "ariaCurrent": null,
+          "ariaLabel": "Page 5",
+          "ariaDisabled": null
+        },
+        {
+          "text": "6",
+          "w": 32,
+          "h": 32,
+          "color": "#1f2328",
+          "bg": "#00000000",
+          "radius": "6px",
+          "padding": "8px 6px",
+          "ariaCurrent": null,
+          "ariaLabel": "Page 6",
+          "ariaDisabled": null
+        },
+        {
+          "text": "7",
+          "w": 32,
+          "h": 32,
+          "color": "#1f2328",
+          "bg": "#00000000",
+          "radius": "6px",
+          "padding": "8px 6px",
+          "ariaCurrent": null,
+          "ariaLabel": "Page 7...",
+          "ariaDisabled": null
+        },
+        {
+          "text": "…",
+          "w": 32,
+          "h": 32,
+          "color": "#818b98",
+          "bg": "#00000000",
+          "radius": "6px",
+          "padding": "8px 6px",
+          "ariaCurrent": null,
+          "ariaLabel": null,
+          "ariaDisabled": null
+        },
+        {
+          "text": "100",
+          "w": 34.64,
+          "h": 32,
+          "color": "#1f2328",
+          "bg": "#00000000",
+          "radius": "6px",
+          "padding": "8px 6px",
+          "ariaCurrent": null,
+          "ariaLabel": "Page 100",
+          "ariaDisabled": null
+        },
+        {
+          "text": "Next",
+          "w": 58.97,
+          "h": 32,
+          "color": "#0969da",
+          "bg": "#00000000",
+          "radius": "6px",
+          "padding": "8px 6px",
+          "ariaCurrent": null,
+          "ariaLabel": "Next Page",
+          "ariaDisabled": null
+        }
+      ]
+    },
+    "dark1280": {
+      "body": "#0d1117",
+      "verticalDivider": "#3d444d",
+      "text": "#f0f6fc",
+      "muted": "#9198a1",
+      "navCurrentBg": "#656c7633",
+      "navMarker": "#1f6feb",
+      "counterBg": "#656c7633",
+      "cardBorder": "1px solid #3d444d",
+      "titleLink": "#4493f8",
+      "titleEm": "#4493f8",
+      "topic": {
+        "color": "#4493f8",
+        "bg": "#388bfd1a"
+      },
+      "meta": "#9198a1",
+      "button": {
+        "bg": "#212830",
+        "border": "1px solid #3d444d",
+        "color": "#f0f6fc"
+      },
+      "pageCurrent": {
+        "bg": "#1f6feb",
+        "color": "#ffffff"
+      },
+      "pageNext": "#4493f8",
+      "pagePrevDisabled": "#656c76"
+    },
+    "issueCard": [
+      {
+        "text": "GwFra/teignmouth_cafe_s",
+        "tag": "span",
+        "fs": "12px",
+        "fw": "500",
+        "color": "#59636e",
+        "w": 140.83,
+        "h": 16,
+        "radius": "0px"
+      },
+      {
+        "text": "",
+        "tag": "svg",
+        "fs": "16px",
+        "fw": "500",
+        "color": "#1a7f37",
+        "w": 16,
+        "h": 16,
+        "radius": "0px"
+      },
+      {
+        "text": "tests",
+        "tag": "span",
+        "fs": "16px",
+        "fw": "500",
+        "color": "#0969da",
+        "w": 119.36,
+        "h": 21,
+        "radius": "0px"
+      },
+      {
+        "text": "playwright",
+        "tag": "em",
+        "fs": "16px",
+        "fw": "700",
+        "color": "#0969da",
+        "w": 81.19,
+        "h": 21,
+        "radius": "0px"
+      },
+      {
+        "text": "- bit more reassurance on these prs going in\n  - o",
+        "tag": "span",
+        "fs": "14px",
+        "fw": "400",
+        "color": "#1f2328",
+        "w": 509.72,
+        "h": 40,
+        "radius": "0px"
+      },
+      {
+        "text": "GwFra",
+        "tag": "li",
+        "fs": "12px",
+        "fw": "400",
+        "color": "#59636e",
+        "w": 57.05,
+        "h": 18,
+        "radius": "0px"
+      },
+      {
+        "text": "",
+        "tag": "img",
+        "fs": "12px",
+        "fw": "400",
+        "color": "#59636e",
+        "w": 16,
+        "h": 16,
+        "radius": "4px"
+      },
+      {
+        "text": "·",
+        "tag": "span",
+        "fs": "14px",
+        "fw": "400",
+        "color": "#59636e",
+        "w": 3.05,
+        "h": 21,
+        "radius": "0px"
+      },
+      {
+        "text": "15 hours ago",
+        "tag": "span",
+        "fs": "12px",
+        "fw": "400",
+        "color": "#59636e",
+        "w": 69.59,
+        "h": 16,
+        "radius": "0px"
+      },
+      {
+        "text": "# 41",
+        "tag": "a",
+        "fs": "12px",
+        "fw": "400",
+        "color": "#59636e",
+        "w": 20.03,
+        "h": 18,
+        "radius": "0px"
+      }
+    ],
+    "issueCardDark": [
+      {
+        "text": "GwFra/teignmouth_cafe_s",
+        "tag": "span",
+        "color": "#9198a1"
+      },
+      {
+        "text": "",
+        "tag": "svg",
+        "color": "#3fb950"
+      },
+      {
+        "text": "tests",
+        "tag": "span",
+        "color": "#4493f8"
+      },
+      {
+        "text": "playwright",
+        "tag": "em",
+        "color": "#4493f8"
+      },
+      {
+        "text": "- bit more reassurance on these prs going in\n  - o",
+        "tag": "span",
+        "color": "#f0f6fc"
+      },
+      {
+        "text": "GwFra",
+        "tag": "li",
+        "color": "#9198a1"
+      },
+      {
+        "text": "",
+        "tag": "img",
+        "color": "#9198a1"
+      },
+      {
+        "text": "·",
+        "tag": "span",
+        "color": "#9198a1"
+      },
+      {
+        "text": "15 hours ago",
+        "tag": "span",
+        "color": "#9198a1"
+      },
+      {
+        "text": "# 41",
+        "tag": "a",
+        "color": "#9198a1"
+      }
+    ],
+    "issueLabel": {
+      "text": "bug",
+      "fontSize": "12px",
+      "fontWeight": "500",
+      "color": "#1f2328",
+      "bg": "#00000000",
+      "border": "1px solid #d1d9e0",
+      "radius": "9999.01px",
+      "padding": "0px 6px",
+      "h": 20
+    },
+    "userCard": [
+      {
+        "text": "",
+        "tag": "img",
+        "fs": "14px",
+        "fw": "400",
+        "color": "#1f2328",
+        "w": 40,
+        "h": 40,
+        "radius": "50%"
+      },
+      {
+        "text": "Playwright Community (Archived/Unofficial)",
+        "tag": "span",
+        "fs": "16px",
+        "fw": "500",
+        "color": "#0969da",
+        "w": 320.59,
+        "h": 21,
+        "radius": "0px"
+      },
+      {
+        "text": "playwright-unofficial-community-archive",
+        "tag": "span",
+        "fs": "16px",
+        "fw": "300",
+        "color": "#59636e",
+        "w": 268.09,
+        "h": 21,
+        "radius": "0px"
+      },
+      {
+        "text": "This organization is no longer maintained or suppo",
+        "tag": "span",
+        "fs": "14px",
+        "fw": "400",
+        "color": "#1f2328",
+        "w": 453.23,
+        "h": 40,
+        "radius": "0px"
+      },
+      {
+        "text": "Follow",
+        "tag": "a",
+        "fs": "12px",
+        "fw": "500",
+        "color": "#25292e",
+        "w": 53.72,
+        "h": 28,
+        "radius": "6px"
+      },
+      {
+        "text": "Follow",
+        "tag": "span",
+        "fs": "12px",
+        "fw": "500",
+        "color": "#25292e",
+        "w": 35.72,
+        "h": 19.5,
+        "radius": "0px"
+      }
+    ],
+    "sortOptions": {
+      "repositories": [
+        "Best match",
+        "Most stars",
+        "Fewest stars",
+        "Most forks",
+        "Fewest forks",
+        "Recently updated",
+        "Least recently updated"
+      ],
+      "issues": [
+        "Best match",
+        "Most commented",
+        "Least commented",
+        "Newest",
+        "Oldest",
+        "Recently updated",
+        "Least recently updated"
+      ],
+      "users": [
+        "Best match",
+        "Most followers",
+        "Fewest followers",
+        "Most recently joined",
+        "Least recently joined",
+        "Most repositories",
+        "Fewest repositories"
+      ],
+      "menuRole": "menu",
+      "itemRole": "menuitemradio",
+      "itemHeight": 32,
+      "menuWidth": 256
+    },
+    "columnOptionsMenu": [
+      "View search docs",
+      "Advanced search"
+    ],
+    "typesUnderMore": [
+      "Code ... (...) results",
+      "Repositories 171k (171k) results",
+      "Issues 542k (542k) results",
+      "Pull requests 3.9M (3.9M) results",
+      "Discussions 6.4k (6.4k) results",
+      "Users 5.2k (5.2k) results",
+      "Commits 4.1M (4.1M) results",
+      "Packages 1.1k (1.1k) results",
+      "Wikis 11.7k (11.7k) results",
+      "Topics 260 (260) results",
+      "Marketplace 67 (67) results"
+    ],
+    "facetsByType": {
+      "repositories": [
+        "Code ... (...) results",
+        "Repositories 171k (171k) results",
+        "Issues 542k (542k) results",
+        "Pull requests 3.9M (3.9M) results",
+        "Discussions 6.4k (6.4k) results",
+        "Users 5.2k (5.2k) results",
+        "More",
+        "TypeScript",
+        "JavaScript",
+        "Python",
+        "HTML",
+        "Java",
+        "C#",
+        "Shell",
+        "Dockerfile",
+        "CSS",
+        "Go",
+        "More languages...",
+        "Owner",
+        "Size",
+        "Number of followers",
+        "Number of forks",
+        "Number of stars",
+        "Date created",
+        "Date pushed",
+        "Topic",
+        "License",
+        "Archived",
+        "Public",
+        "Private",
+        "Advanced search"
+      ],
+      "issues": [
+        "Code ... (...) results",
+        "Repositories 171k (171k) results",
+        "Issues 542k (542k) results",
+        "Pull requests 3.9M (3.9M) results",
+        "Discussions 6.4k (6.4k) results",
+        "Users 5.2k (5.2k) results",
+        "More",
+        "State",
+        "Open",
+        "Closed",
+        "Advanced",
+        "Owner",
+        "State",
+        "Close reason",
+        "Has linked pull request",
+        "Author",
+        "Assignee",
+        "Mentioned user",
+        "Mentioned team",
+        "Commenter",
+        "Involved user",
+        "Label",
+        "Milestone",
+        "Number of comments",
+        "Number of interactions",
+        "Advanced search"
+      ],
+      "users": [
+        "Code ... (...) results",
+        "Repositories 171k (171k) results",
+        "Issues 542k (542k) results",
+        "Pull requests 3.9M (3.9M) results",
+        "Discussions 6.4k (6.4k) results",
+        "Users 5.2k (5.2k) results",
+        "More",
+        "Languages",
+        "HTML",
+        "JavaScript",
+        "Java",
+        "Python",
+        "TypeScript",
+        "CSS",
+        "C#",
+        "Jupyter Notebook",
+        "PHP",
+        "Ruby",
+        "More languages...",
+        "Advanced",
+        "Organization",
+        "Full name",
+        "Number of repositories",
+        "Number of followers",
+        "Location",
+        "Language",
+        "Creation date",
+        "Sponsorable",
+        "Advanced search"
+      ]
+    },
+    "urlParams": {
+      "sortNewestIssues": "https://github.com/search?q=playwright&type=issues&s=created&o=desc",
+      "page2": "https://github.com/search?q=playwright&type=users&p=2",
+      "pageCap": "pagination shows 1..7 … 100 (10 results per page)",
+      "enterFromQuickSearch": "https://github.com/search?q=playwright+is%3Aopen&type=repositories"
+    },
+    "emptyState": {
+      "text": "0 results\n (137 ms)\n0 results\nSort by: Best match\nYour search did not match any repositories\n\nYou could try one of the tips below.\n\nSearch across an organization\nSaved searches\n\nYou could try an advanced search.",
+      "withOtherTypes": "0 results\n (49 ms)\n0 results\nSort by: Best match\nYour search did not match any repositories\n\nHowever we found 8.1M pull requests and 1.9M issues that matched your search query. Alternatively try one of the tips below.\n\nSearch across an organization\nSaved searches\n\nYou could try an advanced search."
+    },
+    "emptyStateMeasured": {
+      "container": {
+        "x": 321,
+        "y": 88,
+        "w": 935,
+        "h": 599
+      },
+      "rows": [
+        {
+          "text": "0 results",
+          "tag": "span",
+          "fs": "16px",
+          "fw": "500",
+          "lh": "24px",
+          "color": "#1f2328",
+          "w": 60.66,
+          "h": 24
+        },
+        {
+          "text": "( 137 ms )",
+          "tag": "span",
+          "fs": "12px",
+          "fw": "400",
+          "lh": "18px",
+          "color": "#59636e",
+          "w": 48.69,
+          "h": 18
+        },
+        {
+          "text": "0 results",
+          "tag": "h2",
+          "fs": "24px",
+          "fw": "600",
+          "lh": "36px",
+          "color": "#1f2328",
+          "w": 1,
+          "h": 1
+        },
+        {
+          "text": "",
+          "tag": "img",
+          "fs": "14px",
+          "fw": "400",
+          "lh": "21px",
+          "color": "#1f2328",
+          "w": 217,
+          "h": 134.53
+        },
+        {
+          "text": "Your search did not match any repositories",
+          "tag": "h3",
+          "fs": "20px",
+          "fw": "600",
+          "lh": "30px",
+          "color": "#1f2328",
+          "w": 387.05,
+          "h": 30
+        },
+        {
+          "text": "You could try one of the tips below.",
+          "tag": "p",
+          "fs": "14px",
+          "fw": "400",
+          "lh": "21px",
+          "color": "#59636e",
+          "w": 387.05,
+          "h": 21
+        },
+        {
+          "text": "Search across an organization",
+          "tag": "span",
+          "fs": "14px",
+          "fw": "500",
+          "lh": "21px",
+          "color": "#1f2328",
+          "w": 450,
+          "h": 21
+        },
+        {
+          "text": "",
+          "tag": "svg",
+          "fs": "14px",
+          "fw": "400",
+          "lh": "21px",
+          "color": "#1f2328",
+          "w": 16,
+          "h": 16
+        },
+        {
+          "text": "You could try an .",
+          "tag": "p",
+          "fs": "12px",
+          "fw": "400",
+          "lh": "18px",
+          "color": "#1f2328",
+          "w": 500,
+          "h": 18
+        },
+        {
+          "text": "advanced search",
+          "tag": "a",
+          "fs": "12px",
+          "fw": "400",
+          "lh": "18px",
+          "color": "#0969da",
+          "w": 87.97,
+          "h": 16
+        }
+      ]
+    },
+    "countLine": {
+      "count": "16px / 500 / #1f2328 (\"171k results\")",
+      "timing": "12px / 400 / #59636e (\"(154 ms)\"; seconds when >= 1000 ms per the JS)",
+      "srHeading": "h2#search-results-count.sr-only tabindex=-1 data-react-autofocus"
+    },
+    "invalidQueries": {
+      "unbalancedParen": {
+        "q": "?q=playwright (stars:>10&type=repositories",
+        "text": "0 results\n (49 ms)\n0 results\nSort by: Best match\nYour search did not match any repositories\n\nHowever we found 8.1M pull requests and 1.9M issues that matched your search query. Alternatively try one of the tips below.\n\nSearch across an organization\nSaved searches\n\nYou could try an advanced search.",
+        "flash": [
+          "You signed in with another tab or window. Reload to refresh your session.\n        You signed out in another tab or window. Reload to refresh your session.\n        You switched accounts on another tab or window. Reload to refresh your session.\n\n      \n    \n\nDismiss alert",
+          "You signed in with another tab or window. Reload to refresh your session.",
+          "You signed out in another tab or window. Reload to refresh your session.",
+          "You switched accounts on another tab or window. Reload to refresh your session.",
+          "You can’t perform that action at this time."
+        ]
+      },
+      "badRangeAndDate": {
+        "q": "?q=playwright stars:>>abc created:2024-13-45&type=repositories",
+        "text": "0 results\n (8 ms)\n0 results\nSort by: Best match\nYour search did not match any repositories\n\nHowever we found 4.1M commits and 11.7k wikis that matched your search query. Alternatively try one of the tips below.\n\nSearch across an organization\nSaved searches\n\nYou could try an advanced search.",
+        "flash": [
+          "You signed in with another tab or window. Reload to refresh your session.\n        You signed out in another tab or window. Reload to refresh your session.\n        You switched accounts on another tab or window. Reload to refresh your session.\n\n      \n    \n\nDismiss alert",
+          "You signed in with another tab or window. Reload to refresh your session.",
+          "You signed out in another tab or window. Reload to refresh your session.",
+          "You switched accounts on another tab or window. Reload to refresh your session.",
+          "You can’t perform that action at this time."
+        ]
+      },
+      "note": "non-code search reports no syntax error, only 0 results"
+    },
+    "codeSearchLoggedOut": "Sign in to search code on GitHub\nBefore you can access our code search functionality please sign in or create a free account.\nSign in\nSign up",
+    "loading": {
+      "progressBar": {
+        "cls": "turbo-progress-bar",
+        "box": {
+          "x": 0,
+          "y": 0,
+          "width": 145.8379364013672,
+          "height": 3,
+          "top": 0,
+          "right": 145.8379364013672,
+          "bottom": 3,
+          "left": 0
+        },
+        "bg": "#0076ff",
+        "transition": "transform 0.3s cubic-bezier(0.3, 0.8, 0.6, 1), opacity 0.15s cubic-bezier(0.7, 0.1, 0.75, 0.9) 0.15s"
+      },
+      "skeletonMain": [
+        {
+          "tag": "div",
+          "cls": "base__B9KgMd header__vly12b",
+          "dc": null,
+          "x": 321,
+          "y": 104,
+          "w": 190,
+          "h": 10,
+          "bg": "#818b981f",
+          "radius": "3px",
+          "anim": "shine__6IfVh0 1.5s infinite",
+          "bgImage": "none",
+          "opacity": "0.706696"
+        },
+        {
+          "tag": "div",
+          "cls": "base__B9KgMd itemIcon__u6Derj",
+          "dc": null,
+          "x": 321,
+          "y": 130,
+          "w": 16,
+          "h": 16,
+          "bg": "#818b981f",
+          "radius": "6px",
+          "anim": "shine__6IfVh0 1.5s infinite",
+          "bgImage": "none",
+          "opacity": "0.706696"
+        },
+        {
+          "tag": "div",
+          "cls": "base__B9KgMd itemTitle__0f4ABR",
+          "dc": null,
+          "x": 345,
+          "y": 132,
+          "w": 431,
+          "h": 12,
+          "bg": "#818b981f",
+          "radius": "6px",
+          "anim": "shine__6IfVh0 1.5s infinite",
+          "bgImage": "none",
+          "opacity": "0.706696"
+        },
+        {
+          "tag": "div",
+          "cls": "base__B9KgMd itemBody__RfvjK9",
+          "dc": null,
+          "x": 321,
+          "y": 158,
+          "w": 935,
+          "h": 200,
+          "bg": "#818b981f",
+          "radius": "3px",
+          "anim": "shine__6IfVh0 1.5s infinite",
+          "bgImage": "none",
+          "opacity": "0.706696"
+        }
+      ],
+      "skeletonPane": [
+        {
+          "tag": "div",
+          "cls": "base__B9KgMd groupHeader__w4h5tx",
+          "dc": null,
+          "x": 20,
+          "y": 368,
+          "w": 80,
+          "h": 10,
+          "bg": "#818b981f",
+          "radius": "3px",
+          "anim": "shine__6IfVh0 1.5s infinite",
+          "bgImage": "none",
+          "opacity": "0.706696"
+        },
+        {
+          "tag": "div",
+          "cls": "base__B9KgMd itemIcon__FDuIUV",
+          "dc": null,
+          "x": 20,
+          "y": 394,
+          "w": 16,
+          "h": 16,
+          "bg": "#818b981f",
+          "radius": "6px",
+          "anim": "shine__6IfVh0 1.5s infinite",
+          "bgImage": "none",
+          "opacity": "0.706696"
+        }
+      ],
+      "ariaBusy": [],
+      "liveRegion": [],
+      "navMarkerMovesImmediately": true
+    },
+    "filterDrawer390": {
+      "x": 0,
+      "y": 64,
+      "w": 390,
+      "h": 836,
+      "radius": "12px 12px 0px 0px",
+      "animation": "prc-Dialog-Overlay--motion-slideUp-tPElO 0.25s",
+      "backdrop": "#c8d1da66",
+      "title": "Filters",
+      "attrs": [
+        "aria-labelledby=_r_1_",
+        "aria-describedby=_r_2_",
+        "aria-modal=true",
+        "data-position-narrow=bottom",
+        "data-position-wide=center",
+        "data-width=xlarge",
+        "data-height=auto",
+        "data-component=Dialog",
+        "data-focus-trap=active"
+      ],
+      "groups": [
+        "Languages",
+        "TypeScript",
+        "JavaScript",
+        "Python",
+        "HTML",
+        "Java",
+        "C#",
+        "Shell",
+        "Dockerfile",
+        "CSS",
+        "Go",
+        "More languages...",
+        "Advanced",
+        "Owner",
+        "Size",
+        "Number of followers",
+        "Number of forks",
+        "Number of stars",
+        "Date created",
+        "Date pushed",
+        "Topic",
+        "License",
+        "Archived",
+        "Public",
+        "Private"
+      ]
+    },
+    "typeSwitcherMenu390": {
+      "box": {
+        "x": 50.77,
+        "y": 112,
+        "w": 256,
+        "h": 368
+      },
+      "items": [
+        "Code ... (...) results",
+        "Repositories 171k (171k) results",
+        "Issues 542k (542k) results",
+        "Pull requests 3.9M (3.9M) results",
+        "Discussions 6.4k (6.4k) results",
+        "Users 5.2k (5.2k) results",
+        "Commits 4.1M (4.1M) results",
+        "Packages 1.1k (1.1k) results",
+        "Wikis 11.7k (11.7k) results",
+        "Topics 260 (260) results",
+        "Marketplace 67 (67) results"
+      ]
+    }
+  },
+  "tokens": {
+    "fgColor-default": {
+      "light": "#1f2328",
+      "dark": "#f0f6fc"
+    },
+    "fgColor-muted": {
+      "light": "#59636e",
+      "dark": "#9198a1"
+    },
+    "fgColor-accent": {
+      "light": "#0969da",
+      "dark": "#4493f8"
+    },
+    "fgColor-onEmphasis": {
+      "light": "#fff",
+      "dark": "#fff"
+    },
+    "bgColor-default": {
+      "light": "#fff",
+      "dark": "#0d1117"
+    },
+    "bgColor-muted": {
+      "light": "#f6f8fa",
+      "dark": "#151b23"
+    },
+    "bgColor-inset": {
+      "light": "var(--bgColor-muted)",
+      "dark": "#010409"
+    },
+    "bgColor-accent-muted": {
+      "light": "#ddf4ff",
+      "dark": "#388bfd1a"
+    },
+    "bgColor-accent-emphasis": {
+      "light": "#0969da",
+      "dark": "#1f6feb"
+    },
+    "bgColor-neutral-muted": {
+      "light": "#818b981f",
+      "dark": "#656c7633"
+    },
+    "bgColor-attention-muted": {
+      "light": "#fff8c5",
+      "dark": "#bb800926"
+    },
+    "borderColor-default": {
+      "light": "#d1d9e0",
+      "dark": "#3d444d"
+    },
+    "borderColor-muted": {
+      "light": "#d1d9e0b3",
+      "dark": "#3d444db3"
+    },
+    "borderColor-accent-emphasis": {
+      "light": "#0969da",
+      "dark": "#1f6feb"
+    },
+    "control-transparent-bgColor-hover": {
+      "light": "#818b981a",
+      "dark": "#656c7633"
+    },
+    "control-transparent-bgColor-active": {
+      "light": "#818b9826",
+      "dark": "#656c7640"
+    },
+    "control-transparent-bgColor-selected": {
+      "light": "#818b9826",
+      "dark": "#656c7633"
+    },
+    "control-borderColor-rest": {
+      "light": "var(--borderColor-default)",
+      "dark": "var(--borderColor-default)"
+    },
+    "button-default-borderColor-rest": {
+      "light": "var(--control-borderColor-rest)",
+      "dark": "var(--control-borderColor-rest)"
+    },
+    "button-default-bgColor-rest": {
+      "light": "var(--control-bgColor-rest)",
+      "dark": "var(--control-bgColor-rest)"
+    },
+    "focus-outlineColor": {
+      "light": "var(--focus-outline-color)",
+      "dark": "var(--focus-outline-color)"
+    },
+    "overlay-backdrop-bgColor": {
+      "light": "#c8d1da66",
+      "dark": "#21283066"
+    },
+    "overlay-bgColor": {
+      "light": "#fff",
+      "dark": "#010409"
+    },
+    "overlay-borderColor": {
+      "light": "#d1d9e080",
+      "dark": "var(--borderColor-muted)"
+    },
+    "highlight-neutral-bgColor": {
+      "light": "#fff8c5",
+      "dark": "#d2992266"
+    },
+    "color-search-keyword-hl": {
+      "light": null,
+      "dark": null
+    },
+    "color-prettylights-syntax-entity": {
+      "light": "var(--prettylights-syntax-entity)",
+      "dark": "var(--prettylights-syntax-entity)"
+    },
+    "color-prettylights-syntax-constant": {
+      "light": "var(--prettylights-syntax-constant)",
+      "dark": "var(--prettylights-syntax-constant)"
+    },
+    "counter-bgColor-muted": {
+      "light": "var(--bgColor-neutral-muted)",
+      "dark": "var(--bgColor-neutral-muted)"
+    },
+    "label-blue-bgColor-rest": {
+      "light": "#d1f0ff",
+      "dark": "#001a47"
+    },
+    "shadow-floating-small": {
+      "light": "0 0 0 1px #d1d9e040, 0 6px 12px -3px #25292e0a, 0 6px 18px 0 #25292e1f",
+      "dark": "0 0 0 1px #3d444d, 0 6px 12px -3px #01040966, 0 6px 18px 0 #01040966"
+    },
+    "shadow-floating-large": {
+      "light": "0 0 0 1px #d1d9e000, 0 40px 80px 0 #25292e3d",
+      "dark": "0 0 0 1px #3d444d, 0 24px 48px 0 #010409"
+    },
+    "shadow-floating-xlarge": {
+      "light": "0 0 0 1px #d1d9e000, 0 56px 112px 0 #25292e52",
+      "dark": "0 0 0 1px #3d444d, 0 32px 64px 0 #010409"
+    },
+    "shadow-resting-small": {
+      "light": "0 1px 1px 0 #1f23280a, 0 1px 2px 0 #1f232808",
+      "dark": "0 1px 1px 0 #01040999, 0 1px 3px 0 #01040999"
+    },
+    "fgColor-success": {
+      "light": "#1a7f37",
+      "dark": "#3fb950"
+    },
+    "fgColor-done": {
+      "light": "#8250df",
+      "dark": "#ab7df8"
+    },
+    "bgColor-success-emphasis": {
+      "light": "#1f883d",
+      "dark": "#238636"
+    },
+    "headerSearch-borderColor": {
+      "light": "#818b98",
+      "dark": "#2a313c"
+    },
+    "headerSearch-bgColor": {
+      "light": "#25292e",
+      "dark": "#0d1117"
+    },
+    "header-bgColor": {
+      "light": "#25292e",
+      "dark": "#151b23f2"
+    },
+    "fgColor-disabled": {
+      "light": "#818b98",
+      "dark": "#656c76"
+    },
+    "borderRadius-small": ".1875rem",
+    "borderRadius-medium": ".375rem",
+    "borderRadius-large": ".75rem",
+    "borderRadius-full": "624.938rem",
+    "control-medium-size": "2rem",
+    "control-small-size": "1.75rem",
+    "control-xsmall-size": "1.5rem",
+    "control-medium-paddingInline-normal": ".75rem",
+    "control-medium-paddingInline-condensed": ".5rem",
+    "control-medium-paddingBlock": ".375rem",
+    "text-body-size-medium": "var(--base-text-size-sm)",
+    "text-body-size-small": "var(--base-text-size-xs)",
+    "text-caption-size": "var(--base-text-size-xs)",
+    "base-text-weight-semibold": "600",
+    "fontStack-system": "\"Mona Sans VF\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Noto Sans Backtick Fix\", \"Noto Sans\", Helvetica, Arial, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\"",
+    "fontStack-monospace": "ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace",
+    "text-title-size-small": "var(--base-text-size-md)",
+    "stack-gap-condensed": ".5rem",
+    "controlStack-medium-gap-auto": ".75rem",
+    "overlay-width-large": "40rem",
+    "overlay-width-xlarge": "60rem",
+    "overlay-width-medium": "30rem",
+    "overlay-borderRadius": ".375rem",
+    "overlay-padding-normal": "1rem",
+    "overlay-offset": ".25rem"
+  },
+  "loggedOutNoOps": {
+    "advancedFacetClick": "Clicking Owner / Number of stars / Date created in the Advanced group did nothing visible logged out on 2026-10-26 (no dialog, URL unchanged): the facet code calls appendQuery on a header search input that the 2026 logged-out header no longer has. The same click on the 2025-06-28 archive opened the query builder with \"react owner:\" and the caret at the end.",
+    "moreLanguagesClick": "No visible effect logged out; the code maps it to appendQuery \"language:\" (js/blackbird-search-2f99523020e26693.js)",
+    "quickSearchSuggestionsWhenTyping": "none: list empties and aria-expanded=false for every typed query",
+    "quickSearchPrefill": "empty on the results page even with q=playwright; Enter from the issues page went to type=repositories"
+  },
+  "screenshots": [
+    "advanced-owner-click-noop-loggedout-1280-light.png",
+    "advanced-stars-click-noop-loggedout-1280-light.png",
+    "code-search-loggedout-1280-light.png",
+    "column-options-menu-1280-light.png",
+    "empty-state-repos-1280-light.png",
+    "filter-drawer-390-light.png",
+    "header-loggedout-1012-light.png",
+    "header-loggedout-1280-dark.png",
+    "header-loggedout-1280-light.png",
+    "header-loggedout-1440-light.png",
+    "header-loggedout-390-light.png",
+    "header-loggedout-768-light.png",
+    "header-menu-open-390-light.png",
+    "header-menu-open-768-light.png",
+    "home-loggedout-1280-forced-dark.png",
+    "invalid-query-paren-1280-light.png",
+    "invalid-query-range-1280-light.png",
+    "loading-state-issues-1280-light.png",
+    "loading-state-users-1280-light.png",
+    "loading-state-users-later-1280-light.png",
+    "more-languages-click-noop-loggedout-1280-light.png",
+    "pagination-1280-light.png",
+    "qb-empty-1012-light.png",
+    "qb-empty-1280-dark.png",
+    "qb-empty-1280-light.png",
+    "qb-empty-1440-light.png",
+    "qb-empty-390-light.png",
+    "qb-empty-768-light.png",
+    "qb-empty-active-item-1280-light.png",
+    "qb-typed-enter-before-1440-light.png",
+    "qb-typed-is-1280-light.png",
+    "qb-typed-lan-1280-light.png",
+    "qb-typed-language-1280-light.png",
+    "qb-typed-language_py-1280-light.png",
+    "qb-typed-org_github_lang_go_OR_lang_rus-1280-light.png",
+    "qb-typed-playwright-1280-light.png",
+    "qb-typed-playwright-active-1280-light.png",
+    "qb-typed-qualifiers-1280-dark.png",
+    "qb-typed-repo-1280-light.png",
+    "qb-typed-repo_microsoft_playwright_lang-1280-light.png",
+    "results-after-enter-1440-light.png",
+    "results-issues-1280-dark.png",
+    "results-issues-1280-light.png",
+    "results-issues-label-1440-light.png",
+    "results-repos-1012-light.png",
+    "results-repos-1280-dark.png",
+    "results-repos-1280-light.png",
+    "results-repos-390-light.png",
+    "results-repos-768-light.png",
+    "results-repos-fullpage-1280-light.png",
+    "results-users-1280-light.png",
+    "sidebar-more-types-1280-light.png",
+    "sort-menu-1280-light.png",
+    "type-switcher-menu-390-light.png",
+    "wayback-20250528-header-qbsearch-1012-light.png",
+    "wayback-20250528-header-qbsearch-1280-light.png",
+    "wayback-20250528-header-qbsearch-390-light.png",
+    "wayback-20250528-header-qbsearch-768-light.png",
+    "wayback-20250528-qb-empty-1280-light.png",
+    "wayback-20250528-qb-typed-foo_bar-1280-light.png",
+    "wayback-20250528-qb-typed-is-1280-light.png",
+    "wayback-20250528-qb-typed-lan-1280-light.png",
+    "wayback-20250528-qb-typed-lan-active-1280-light.png",
+    "wayback-20250528-qb-typed-language-1280-light.png",
+    "wayback-20250528-qb-typed-language_py-1280-light.png",
+    "wayback-20250528-qb-typed-org_github_lang_go_OR_lang_rus-1280-light.png",
+    "wayback-20250528-qb-typed-path_src_unclosed-1280-light.png",
+    "wayback-20250528-qb-typed-playwright-1280-light.png",
+    "wayback-20250528-qb-typed-playwright-active-1280-light.png",
+    "wayback-20250528-qb-typed-qualifiers-1280-dark.png",
+    "wayback-20250528-qb-typed-repo-1280-light.png",
+    "wayback-20250528-qb-typed-repo_microsoft_playwright_lang-1280-light.png",
+    "wayback-20250628-advanced-owner-click-1280-light.png",
+    "wayback-20250628-qb-open-on-results-1280-light.png",
+    "wayback-20250628-results-1280-light.png",
+    "wayback-20250628-results-header-1280-light.png",
+    "wayback-20260301-header-qbsearch-1012-light.png",
+    "wayback-20260301-header-qbsearch-1280-light.png",
+    "wayback-20260301-header-qbsearch-390-light.png",
+    "wayback-20260301-header-qbsearch-768-light.png",
+    "wayback-20260301-qb-empty-1280-light.png",
+    "wayback-20260301-qb-typed-foo_bar-1280-light.png",
+    "wayback-20260301-qb-typed-is-1280-light.png",
+    "wayback-20260301-qb-typed-lan-1280-light.png",
+    "wayback-20260301-qb-typed-lan-active-1280-light.png",
+    "wayback-20260301-qb-typed-language-1280-light.png",
+    "wayback-20260301-qb-typed-language_py-1280-light.png",
+    "wayback-20260301-qb-typed-org_github_lang_go_OR_lang_rus-1280-light.png",
+    "wayback-20260301-qb-typed-path_src_unclosed-1280-light.png",
+    "wayback-20260301-qb-typed-playwright-1280-light.png",
+    "wayback-20260301-qb-typed-playwright-active-1280-light.png",
+    "wayback-20260301-qb-typed-qualifiers-1280-dark.png",
+    "wayback-20260301-qb-typed-repo-1280-light.png",
+    "wayback-20260301-qb-typed-repo_microsoft_playwright_lang-1280-light.png"
+  ]
+}
