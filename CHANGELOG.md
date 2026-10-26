@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.10.1] - 2026-10-26
+
+The patch part moves (5.10.0 to 5.10.1): one fix, nothing new to call.
+
+### Fixed
+
+- **The zoom slider stands a pixel lower under the bar.** 5.9.1 put the slider's thumb at least 4 px under the report's
+  bar and under a scenario's open settings (`plans/REPORT_UI_FIXES_PLAN.md` S3), but one CI run on Linux read the thumb
+  3 px under the bar, the bar's edge falling a pixel differently there. The slider's line is now 12 px below the edge,
+  where it was 11, so the gap is at least 4 px in that layout too.
+
 ## [5.10.0] - 2026-10-26
 
 The minor part moves (5.9.1 to 5.10.0): two new report controls, each filter row's 2-WAY / 3-WAY switch and the History

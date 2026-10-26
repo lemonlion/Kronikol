@@ -1638,9 +1638,11 @@
     // window, below whatever floats over it: the report's bar while it is pinned, and a scenario's open settings stuck
     // under the bar (report-tabs-script.js's kronikol_freeTop; until 5.9.1 the slider followed the bar alone and stood on
     // the settings' top row, plans/REPORT_UI_FIXES_PLAN.md S1).
-    // The slider's line is 11 px below that edge: the painted thumb's half-height (6.9 px of its 14.5 in Chromium) and
-    // 4.5 px clear of the edge, where 5.7.0's bar + 8 px left 1.5 px (S3, measured in the plan's M-I5).
-    var SLIDER_LINE_BELOW = 11;
+    // The slider's line is 12 px below that edge: the painted thumb's half-height (6.9 px of its 14.5 in Chromium) and
+    // 4.5 px clear of the edge, where 5.7.0's bar + 8 px left 1.5 px (S3, measured in the plan's M-I5), and a pixel more
+    // (5.10.1): at 11 px one CI run on Linux read the thumb 3.0 px clear of the bar, where Windows and the other runs read
+    // 4.0, so the plan's least gap of 4 px was not kept in every layout.
+    var SLIDER_LINE_BELOW = 12;
     var hoveredBox = null, focusedBox = null, followFrame = 0;
     function placeControls(box) {
         var controls = box.querySelector(':scope > .diagram-zoom-controls');
