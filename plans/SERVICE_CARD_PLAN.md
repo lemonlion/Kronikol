@@ -1,7 +1,7 @@
 # The service card: one call graph, and `service.json` from any run (#191)
 
 **Date:** 2026-10-26 · **Repo version:** written against 5.11.0 (`origin/main` at `44bcc62a`); every Kronikol line cited is
-at that commit · **Status:** ❌ plan written, nothing implemented, **NOT green-lit**. Written at the owner's request of
+at that commit, and what 5.13.0 (`2b74a2e4`) changed since is noted where it touches this plan · **Status:** ❌ plan written, nothing implemented, **NOT green-lit**. Written at the owner's request of
 2026-10-26: analyse #191 critically, then plan a fix for the underlying problem, which may not be the fix the issue
 proposes.
 
@@ -12,8 +12,9 @@ Two sibling plans were written the same day, by agreement, so that the three iss
 - `CALL_OPERATION_AND_ORIGIN_PLAN.md` (#192, session kronikol-bf): the one key that says what operation a call is
   (built on `InteractionShape`), `origin`, `cause`, and the `--group-by` dimensions.
 
-This plan cites them for those rules and does not restate them. Section 4.0 has the split. At the time of writing both
-live in their sessions' worktrees (`C:/Code/Kronikol-190`, `C:/Code/Kronikol-192`), not on `main`.
+This plan cites them for those rules and does not restate them. Section 4.0 has the split. `PARTY_IDENTITY_PLAN.md`
+has been on `main` since 5.13.0 (`2b74a2e4`), which shipped its R0; `CALL_OPERATION_AND_ORIGIN_PLAN.md` lives in its
+session's worktree (`C:/Code/Kronikol-192`), not on `main`.
 
 Evidence labels:
 
@@ -69,7 +70,8 @@ Evidence labels:
      call order in 79.1%, the run's set of distinct operations in 2.9%, its edges in 0.4%. Counts, errors, example
      addresses, run ids, commits and the data file's SHA-256 change from run to run. Only presence (which edges, which
      operations, which statuses) is stable enough to promise bytes for.
-  4. **The templating rule already exists.** `InteractionShape.Template`, version 6, folds GUIDs, hex ids, ULIDs,
+  4. **The templating rule already exists.** `InteractionShape.Template`, version 6 here (7 since 5.13.0, for a change in
+     what the HTTP handler records, not in the templating), folds GUIDs, hex ids, ULIDs,
      cache-key bytes, timestamps and numbers, keeps query keys and drops their values, applies the consumer's
      `HistoryShapeTemplates` first, and gives statement-shaped calls (SQL, Cosmos DB, MongoDB) their templated
      statement head. History and the warm-up already compare calls by it. `/orders/123` becomes `/orders/{n}`, not
@@ -276,12 +278,13 @@ edges.
 | Concern | Owner | What this plan needs from it |
 |---|---|---|
 | `ServiceId`, each party's id, kind (`test`, `underTest`, `real`, `double`, `unknown`) and `kindSource` (`declared`, `observed`, `inferred`); the `serviceId` and `parties` blocks in the data file, written only when something is declared; the inference of the test client and the subject; the per-call `testDouble` mark (its R2) | #190, `PARTY_IDENTITY_PLAN.md`: the resolver §5.1, inference §5.4, the data file block §5.5, `Run.json` §5.8, the mark §5.10, what this plan may rely on §5.12 | The resolver in core (`src/Kronikol/Parties/`, shared by the card, the run's writer, `merge` and `query`) as a pure function of what any report holds, so a card from an old report agrees with one written at run end; the card runs it itself when the block is absent (§5.12). Inferred rows say `inferred`. Rows for every caller and every callee, and no row set that implies completeness (§5.5) |
-| The operation key (one function on `InteractionShape`, query keys dropped for the edge key, the GraphQL operation joining it, version 7); `origin` (the caller's role) and `cause` (`test`, `request`, `background`, `unknown`, from `attributionSource`, else nesting); the consumer's templating rules written into the data file; `--group-by caller,origin,route` | #192, `CALL_OPERATION_AND_ORIGIN_PLAN.md`: the key 4.1 (`CallOperation.Of`, with query keys off for the card), GraphQL 4.2, `origin` 4.3 (with the seeding limit), the `shapeTemplates` block 4.5, `cause` its section 9 Q4 | All of them pure functions of what a report holds, in core. `cause` recommended to the owner with this plan's reason (F3) |
+| The operation key (one function on `InteractionShape`, query keys dropped for the edge key, the GraphQL operation joining it, version 8, as 5.13.0 took 7); `origin` (the caller's role) and `cause` (`test`, `request`, `background`, `unknown`, from `attributionSource`, else nesting); the consumer's templating rules written into the data file; `--group-by caller,origin,route` | #192, `CALL_OPERATION_AND_ORIGIN_PLAN.md`: the key 4.1 (`CallOperation.Of`, with query keys off for the card), GraphQL 4.2, `origin` 4.3 (with the seeding limit), the `shapeTemplates` block 4.5, `cause` its section 9 Q4 | All of them pure functions of what a report holds, in core. `cause` recommended to the owner with this plan's reason (F3) |
 | The call graph (parties, edges, operations, per-call parent, origin, cause and effective phase); `service.json`, its schema, its stability and its `capture` block; `kronikol card`; the run-end file and `Run.json`'s key | this plan | |
 
-The order, as `PARTY_IDENTITY_PLAN.md` §6 sets it for all three: #190 R0 (a patch), #190 R1 (the resolver, the
-declarations and the block), #192 (whose `origin` reads #190's roles), then R1 here. #190's R2 (`testDouble`) can land
-before or after this plan's releases; its fields reach the card as additive keys.
+The order, as `PARTY_IDENTITY_PLAN.md` §6 sets it for all three: #190 R0 (released as 5.13.0, a minor once the owner
+chose history's bridge), #190 R1 (the resolver, the declarations and the block), #192 (whose `origin` reads #190's
+roles), then R1 here. #190's R2 (`testDouble`) can land before or after this plan's releases; its fields reach the card
+as additive keys.
 
 ### 4.1 Principles
 
@@ -350,7 +353,7 @@ below; numbers and statuses are written invariant; the text is UTF-8, LF, no BOM
     "examples": [ { "op": "1f0c6e2a9b4d7e31", "address": "s0/i8" } ]
   },
   "behaviour": {
-    "rules": { "operationKey": 7, "templateRules": null, "inference": 1 },
+    "rules": { "operationKey": 8, "templateRules": null, "inference": 1 },
     "subject": { "name": "Dessert Provider", "id": null, "source": "inferred" },
     "parties": [
       { "name": "Caller", "id": null, "kind": "test", "kindSource": "inferred", "categories": [] },
@@ -393,7 +396,7 @@ edge.)
 
 | Member | Holds | Sorted by |
 |---|---|---|
-| `rules` | the operation key's version, the hash of the consumer's templating rules (null for none), the inference rule's version: a card made under other rules is not comparable, as history already says of shapes | |
+| `rules` | the operation key's version, the hash of the consumer's templating rules (null for none), the inference rule's version: two cards made under different rules are not compared by their hash (below) | |
 | `subject` | name, id, `source` (`declared` or `inferred`) (#190) | |
 | `parties` | name, id, kind, `kindSource` and `note` as #190's resolver gives them (§5.1), and the set of categories seen. A party some of whose calls carry #190's `testDouble` mark keeps its kind (§5.10); how many of its calls were marked is a count, so `doubleCalls` goes to `run` | name |
 | `edges` | from, to, protocol, and the operations | from, to, protocol |
@@ -426,6 +429,18 @@ index changes more often: a scenario's call set changed in 12.4% of pairs. The f
 likely cause, "a consumer's work landing in whichever scenario is running" (`InteractionShape.cs:271-272`), but how much
 of the 12.4% it explains is not measured. Whether background calls belong in a scenario's `ops` is Q6, measured before
 R1.
+
+**What moves `behaviourHash` with no change of behaviour**, and how a reader tells it apart:
+
+- A move of the card's own rules (the operation key, the consumer's templating rules, the inference) changes `rules`
+  too. `kronikol card` rebuilds the older card under the newer rules from its report, while the report is kept.
+- A capturer naming a party anew changes no rule of the card's, and the card cannot see it. 5.13.0 (#190 R0) is one:
+  a call to an unmapped remote host is named by its host, `pricing.example.com:443`, where it was `localhost:443`, so
+  the card of a suite that makes such calls moves once across that upgrade. A card rebuilt from a report written
+  before 5.13.0 keeps `localhost:443`, the name that report recorded, and does not guess the new one from the call's
+  address: what tells the fallback's name apart is not in the report (`PARTY_IDENTITY_PLAN.md` §6, R0, says the same
+  of history). Declarations match a name exactly (§5.2), so one made for the new name does not reach that party, and
+  `unresolved` lists it.
 
 ### 4.4 `kronikol card`
 
@@ -517,6 +532,8 @@ Every fact goes through a public entry point (`kronikol card` through the tool's
 2. One writer: for a run made in the tests, `kronikol card` on its data file gives the same `behaviour` as the graph
    built from the run's own logs (R2 makes this the run-end file).
 3. Usage: no report, an unreadable file, `-o` to a directory that does not exist; exit codes 2, 1, 1.
+4. A report written before 5.13.0 whose call to a remote host was named `localhost:443` by the fallback: the card keeps
+   `localhost:443`, and a party declared under the host's name leaves it in `unresolved` (4.3).
 
 ### 5.4 The run end (R2)
 
@@ -640,6 +657,11 @@ run-end file in the first release, R1 and R2 merge into one minor.
   documents and GraphQL operations (179 operations on `xunit-in-memory`, cited in 0). Two sentences here said more than
   was measured and were cut back: the spread of background calls between frameworks is not section 2.4's change between
   runs, and the cause of the scenario index's churn is named by the code, not measured (both now point at Q6).
+- 2026-10-27: rebased onto 5.13.0 (`2b74a2e4`), which released #190's R0 as a minor and put `PARTY_IDENTITY_PLAN.md`
+  on `main`. The sections of it cited here were checked against the committed file and are unchanged. Corrected: R0 is
+  a minor, not a patch (4.0); the fingerprint version is 7 since R0, so #192's key moves it to 8 (4.0, the example's
+  `rules`). Added: what moves `behaviourHash` with no change of behaviour, R0's rename among them (4.3), and a test
+  that a card keeps the name its report recorded (5.3.4).
 
 ## Appendix A. Edit sites at `44bcc62a`
 

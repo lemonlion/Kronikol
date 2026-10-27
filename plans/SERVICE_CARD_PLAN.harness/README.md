@@ -43,6 +43,6 @@ checkout. Python's `-I` ignores `PYTHONIOENCODING`; `-X utf8` is what lets it pr
 
 Measured by the sessions writing the sibling plans, on the same decoded files, and cited as PEER:
 
-- kronikol-67 (#190): `parties.py`, `infer.py`, `hosts.py`, in its session scratchpad; they move into
-  `PARTY_IDENTITY_PLAN.harness/` with that plan.
+- kronikol-67 (#190): `parties.py`, `infer.py`, `hosts.py` and `cases.py`, committed with that plan in
+  `PARTY_IDENTITY_PLAN.harness/bp-reports/` (5.13.0).
 - kronikol-bf (#192): the call-identity rules and the GraphQL counts, in `CALL_OPERATION_AND_ORIGIN_PLAN.harness/`.
