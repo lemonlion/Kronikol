@@ -1,0 +1,11 @@
+# cases.py, re-run 2026-10-27 with the store list taken from DependencyPalette: the infer.py rule on shapes BreakfastProvider does not have
+ok   Jest recipe: Fastify inbound, MSW outbound: test='Test' subject=['Service']; wanted test='Test' subject=['Service']
+MISS in-process subject: the test calls the code, which calls out: test='Test' subject=['Pricing Engine']; wanted test='(none: Test is the subject)' subject=[]
+ok   an ingested UI test: a user acts on the web app, which calls the API: test='User' subject=['web']; wanted test='User' subject=['web']
+ok   two services under test, both driven by the test: test='Caller' subject=['Gateway', 'Orders API']; wanted test='Caller' subject=['Gateway', 'Orders API']
+ok   the service's trackers left at the default caller name: test='Caller' subject=['Breakfast Provider']; wanted test='Caller' subject=['Breakfast Provider']
+ok   the test seeds a store through a client of its own: test='Caller' subject=['Orders API']; wanted test='Caller' subject=['Orders API']
+ok   the test calls only stores: test='Caller' subject=[]; wanted test='Caller' subject=[]
+ok   a consumer test: only a broker calls the service: test='(none)' subject=[]; wanted test='(none)' subject=[]
+ok   two test clients with different caller names: test='Admin Client, Caller' subject=['Orders API']; wanted test='Admin Client, Caller' subject=['Orders API']
+ok   a scheduler, not the test, also calls the service: test='Caller' subject=['Orders API']; wanted test='Caller' subject=['Orders API']

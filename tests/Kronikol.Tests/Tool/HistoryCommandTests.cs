@@ -54,6 +54,37 @@ public class HistoryCommandTests : IDisposable
     // ─── record ────────────────────────────────────────────────
 
     [Fact]
+    public void Record_keeps_a_fragments_bridge_only_while_the_ledger_window_holds_its_rule()
+    {
+        // #190 R0: a fragment bridges every rule Kronikol keeps, since it cannot know the ledger it is folded into.
+        var roster = Roster("Suite", "a1");
+        var bridgeShapes = HistoryShapes.Create(["Caller>localhost:443 GET /v1/prices 200"]);
+        var bridged = RunLine(roster, "gh:2:1", "P") with
+        {
+            ShapeVersion = InteractionShape.Version,
+            Bridge = new Dictionary<string, HistoryBridge>
+            {
+                ["6"] = new() { ShapeSet = ["bbbbbbbb"], ShapeOrdered = ["bbbbbbbb"], ShapesHash = bridgeShapes.Hash, CallSets = [[0]], Shapes = bridgeShapes }
+            }
+        };
+
+        HistoryLedgerWriter.Append(Ledger, roster, RunLine(roster, "gh:1:1", "P") with { ShapeVersion = 6 }, "test");
+        var (_, error, exit) = Run(null, "record", WriteFragment("old", roster, bridged), "--history", Ledger);
+
+        Assert.True(exit == 0, error);
+        Assert.Equal(["6"], HistoryLedgerReader.Read(Ledger, 50).Ledger!.Runs("Suite")[^1].Bridge!.Keys);
+        Assert.Empty(HistoryLedgerReader.Verify(Ledger));
+
+        var other = Path.Combine(_dir, "other", "history.jsonl");
+        HistoryLedgerWriter.Append(other, roster, RunLine(roster, "gh:1:1", "P") with { ShapeVersion = InteractionShape.Version }, "test");
+        (_, error, exit) = Run(null, "record", WriteFragment("new", roster, bridged), "--history", other);
+
+        Assert.True(exit == 0, error);
+        Assert.Null(HistoryLedgerReader.Read(other, 50).Ledger!.Runs("Suite")[^1].Bridge);
+        Assert.Empty(HistoryLedgerReader.Verify(other));
+    }
+
+    [Fact]
     public void Record_says_when_the_shards_of_a_run_were_fingerprinted_under_different_rules()
     {
         // The fold rebuilds the run line field by field, and took the rule from the first shard that had

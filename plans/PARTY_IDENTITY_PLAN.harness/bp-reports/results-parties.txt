@@ -1,0 +1,137 @@
+# parties.py on BreakfastProvider CI run 40290999167 (Kronikol 5.4.1), decoded with kronikol decode built from 44bcc62a
+=== xunit-in-memory-report.json  suite=xunit-in-memory  calls=1409
+callers: {'Caller': 451, 'Breakfast Provider': 841, 'Kafka Broker': 42, 'Azure Event Hub': 39, 'Google Cloud Pub/Sub': 36}
+names that only ever call (never called): ['Azure Event Hub', 'Caller']
+edges (caller > service : calls | callerCategory/serviceCategory | attributionSource | phase):
+  Caller > Breakfast Provider : 451 | None/None, None/gRPC | TestContextx451 | Unknownx445, Setupx5, Actionx1
+  Breakfast Provider > CosmosDB : 280 | None/CosmosDB | RequestHeaderx203, TestContextx74, DocumentOwnerx3 | Unknownx280
+  Breakfast Provider > Reporting Database (SQL Server) : 189 | None/SQL | RequestHeaderx189 | Unknownx189
+  Breakfast Provider > Google Cloud Pub/Sub : 68 | None/MessageQueue | RequestHeaderx68 | Unknownx68
+  Breakfast Provider > Cow Service : 49 | None/None | RequestHeaderx49 | Unknownx49
+  Kafka Broker > Breakfast Provider : 42 | MessageQueue/ | RequestHeaderx40, TestContextx2 | Unknownx42
+  Breakfast Provider > Notification Service (gRPC) : 41 | None/gRPC | RequestHeaderx38, TestContextx3 | Unknownx41
+  Breakfast Provider > Kafka Broker : 40 | None/MessageQueue | RequestHeaderx40 | Unknownx40
+  Breakfast Provider > Kitchen Service : 40 | None/None | RequestHeaderx38, Scopex2 | Unknownx40
+  Azure Event Hub > Breakfast Provider : 39 | MessageQueue/ | RequestHeaderx39 | Unknownx39
+  Google Cloud Pub/Sub > Breakfast Provider : 36 | MessageQueue/ | RequestHeaderx35, TestContextx1 | Unknownx36
+  Breakfast Provider > Event Grid : 33 | None/MessageQueue | RequestHeaderx33 | Unknownx33
+  Breakfast Provider > Breakfast Database (SQL Server) : 31 | None/SQL | RequestHeaderx31 | Unknownx31
+  Breakfast Provider > MongoDB : 16 | None/MongoDB | RequestHeaderx15, TestContextx1 | Unknownx16
+  Breakfast Provider > ClickHouse : 12 | None/ClickHouse | RequestHeaderx11, TestContextx1 | Unknownx12
+  Breakfast Provider > Spanner : 12 | None/Spanner | RequestHeaderx12 | Unknownx12
+  Breakfast Provider > BigQuery : 11 | None/BigQuery | RequestHeaderx10, TestContextx1 | Unknownx11
+  Breakfast Provider > Supplier Service : 10 | None/None | RequestHeaderx9, Scopex1 | Unknownx10
+  Breakfast Provider > Goat Service : 9 | None/None | RequestHeaderx9 | Unknownx9
+endpoints behind each service name:
+  BigQuery: https://bigquery.googleapis.com x11
+  Breakfast Database (SQL Server): sql:// x31
+  Breakfast Provider: http://localhost x442, kafka:// x42, eventhub:// x39, pubsub:// x36, grpc:// x9
+  ClickHouse: clickhouse://localhost x12
+  CosmosDB: https://localhost:9999 x280
+  Cow Service: http://localhost:5141 x49
+  Event Grid: eventgrid://topics x33
+  Goat Service: http://localhost:5142 x9
+  Google Cloud Pub/Sub: pubsub:// x68
+  Kafka Broker: kafka:// x40
+  Kitchen Service: http://localhost:5144 x40
+  MongoDB: mongodb:// x16
+  Notification Service (gRPC): grpc:// x41
+  Reporting Database (SQL Server): sql:// x189
+  Spanner: spanner:// x12
+  Supplier Service: http://localhost:5143 x10
+capturedBy: {None: 1409}
+
+=== xunit-in-docker-report.json  suite=xunit-in-docker  calls=1297
+callers: {'Caller': 450, 'Breakfast Provider': 844, 'Google Cloud Pub/Sub': 1, 'Kafka Broker': 2}
+names that only ever call (never called): ['Caller']
+edges (caller > service : calls | callerCategory/serviceCategory | attributionSource | phase):
+  Caller > Breakfast Provider : 450 | None/None, None/gRPC | TestContextx450 | Unknownx444, Setupx5, Actionx1
+  Breakfast Provider > CosmosDB : 353 | None/CosmosDB | RequestHeaderx203, TestContextx147, DocumentOwnerx3 | Unknownx353
+  Breakfast Provider > Reporting Database (SQL Server) : 75 | None/SQL | RequestHeaderx75 | Unknownx75
+  Breakfast Provider > Google Cloud Pub/Sub : 68 | None/MessageQueue | RequestHeaderx68 | Unknownx68
+  Breakfast Provider > Cow Service : 49 | None/None | RequestHeaderx49 | Unknownx49
+  Breakfast Provider > Notification Service (gRPC) : 41 | None/gRPC | RequestHeaderx38, TestContextx3 | Unknownx41
+  Breakfast Provider > Kafka Broker : 40 | None/MessageQueue | RequestHeaderx40 | Unknownx40
+  Breakfast Provider > Kitchen Service : 40 | None/None | RequestHeaderx38, Scopex2 | Unknownx40
+  Breakfast Provider > Azure Event Hub : 39 | None/MessageQueue | RequestHeaderx39 | Unknownx39
+  Breakfast Provider > Event Grid : 33 | None/MessageQueue | RequestHeaderx33 | Unknownx33
+  Breakfast Provider > Breakfast Database (SQL Server) : 31 | None/SQL | RequestHeaderx31 | Unknownx31
+  Breakfast Provider > ClickHouse : 17 | None/ClickHouse | RequestHeaderx16, TestContextx1 | Unknownx17
+  Breakfast Provider > MongoDB : 16 | None/MongoDB | RequestHeaderx15, TestContextx1 | Unknownx16
+  Breakfast Provider > Spanner : 12 | None/Spanner | RequestHeaderx12 | Unknownx12
+  Breakfast Provider > BigQuery : 11 | None/BigQuery | RequestHeaderx10, TestContextx1 | Unknownx11
+  Breakfast Provider > Supplier Service : 10 | None/None | RequestHeaderx9, Scopex1 | Unknownx10
+  Breakfast Provider > Goat Service : 9 | None/None | RequestHeaderx9 | Unknownx9
+  Kafka Broker > Breakfast Provider : 2 | MessageQueue/ | TestContextx2 | Unknownx2
+  Google Cloud Pub/Sub > Breakfast Provider : 1 | MessageQueue/ | TestContextx1 | Unknownx1
+endpoints behind each service name:
+  Azure Event Hub: eventhub:// x39
+  BigQuery: http://localhost:9050 x11
+  Breakfast Database (SQL Server): sql://localhost:1433 x31
+  Breakfast Provider: http://localhost x441, grpc:// x9, kafka:// x2, pubsub:// x1
+  ClickHouse: clickhouse://localhost x17
+  CosmosDB: https://localhost:8081 x353
+  Cow Service: http://localhost:5031 x49
+  Event Grid: eventgrid://topics x33
+  Goat Service: http://localhost:5032 x9
+  Google Cloud Pub/Sub: pubsub:// x68
+  Kafka Broker: kafka:// x40
+  Kitchen Service: http://localhost:5034 x40
+  MongoDB: mongodb:// x16
+  Notification Service (gRPC): grpc:// x41
+  Reporting Database (SQL Server): sql://localhost:1433 x75
+  Spanner: spanner:// x12
+  Supplier Service: http://localhost:5033 x10
+capturedBy: {None: 1297}
+
+=== xunit-external-sut-report.json  suite=xunit-external-sut  calls=378
+callers: {'Caller': 378}
+names that only ever call (never called): ['Caller']
+edges (caller > service : calls | callerCategory/serviceCategory | attributionSource | phase):
+  Caller > Breakfast Provider : 378 | None/None | TestContextx378 | Unknownx372, Setupx5, Actionx1
+endpoints behind each service name:
+  Breakfast Provider: http://localhost:5080 x378
+capturedBy: {None: 378}
+
+=== reqnroll-in-memory-report.json  suite=reqnroll-in-memory  calls=1353
+callers: {'Caller': 443, 'Breakfast Provider': 799, 'Kafka Broker': 40, 'Azure Event Hub': 37, 'Google Cloud Pub/Sub': 34}
+names that only ever call (never called): ['Azure Event Hub', 'Caller']
+edges (caller > service : calls | callerCategory/serviceCategory | attributionSource | phase):
+  Caller > Breakfast Provider : 443 | None/None, None/gRPC | TestContextx443 | Setupx227, Actionx216
+  Breakfast Provider > CosmosDB : 257 | None/CosmosDB | RequestHeaderx198, TestContextx56, DocumentOwnerx3 | Unknownx207, Setupx38, Actionx12
+  Breakfast Provider > Reporting Database (SQL Server) : 181 | None/SQL | RequestHeaderx181 | Unknownx181
+  Breakfast Provider > Google Cloud Pub/Sub : 65 | None/MessageQueue | RequestHeaderx65 | Unknownx65
+  Breakfast Provider > Cow Service : 47 | None/None | RequestHeaderx47 | Unknownx47
+  Breakfast Provider > Notification Service (gRPC) : 40 | None/gRPC | RequestHeaderx37, TestContextx3 | Unknownx37, Actionx3
+  Kafka Broker > Breakfast Provider : 40 | MessageQueue/ | RequestHeaderx38, TestContextx2 | Unknownx38, Actionx2
+  Breakfast Provider > Kitchen Service : 39 | None/None | RequestHeaderx37, Scopex2 | Unknownx37, Actionx2
+  Breakfast Provider > Kafka Broker : 38 | None/MessageQueue | RequestHeaderx38 | Unknownx38
+  Azure Event Hub > Breakfast Provider : 37 | MessageQueue/ | RequestHeaderx37 | Unknownx37
+  Google Cloud Pub/Sub > Breakfast Provider : 34 | MessageQueue/ | RequestHeaderx33, TestContextx1 | Unknownx33, Actionx1
+  Breakfast Provider > Event Grid : 32 | None/MessageQueue | RequestHeaderx32 | Unknownx32
+  Breakfast Provider > Breakfast Database (SQL Server) : 31 | None/SQL | RequestHeaderx31 | Unknownx31
+  Breakfast Provider > MongoDB : 16 | None/MongoDB | RequestHeaderx15, TestContextx1 | Unknownx15, Actionx1
+  Breakfast Provider > ClickHouse : 12 | None/ClickHouse | RequestHeaderx11, TestContextx1 | Unknownx11, Actionx1
+  Breakfast Provider > Spanner : 12 | None/Spanner | RequestHeaderx12 | Unknownx12
+  Breakfast Provider > BigQuery : 11 | None/BigQuery | RequestHeaderx10, TestContextx1 | Unknownx10, Actionx1
+  Breakfast Provider > Goat Service : 9 | None/None | RequestHeaderx9 | Unknownx9
+  Breakfast Provider > Supplier Service : 9 | None/None | RequestHeaderx8, Scopex1 | Unknownx8, Actionx1
+endpoints behind each service name:
+  BigQuery: https://bigquery.googleapis.com x11
+  Breakfast Database (SQL Server): sql:// x31
+  Breakfast Provider: http://localhost x434, kafka:// x40, eventhub:// x37, pubsub:// x34, grpc:// x9
+  ClickHouse: clickhouse://localhost x12
+  CosmosDB: https://localhost:9999 x257
+  Cow Service: http://localhost:5171 x47
+  Event Grid: eventgrid://topics x32
+  Goat Service: http://localhost:5172 x9
+  Google Cloud Pub/Sub: pubsub:// x65
+  Kafka Broker: kafka:// x38
+  Kitchen Service: http://localhost:5174 x39
+  MongoDB: mongodb:// x16
+  Notification Service (gRPC): grpc:// x40
+  Reporting Database (SQL Server): sql:// x181
+  Spanner: spanner:// x12
+  Supplier Service: http://localhost:5173 x9
+capturedBy: {None: 1353}
+

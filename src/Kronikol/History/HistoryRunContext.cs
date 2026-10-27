@@ -11,8 +11,9 @@ namespace Kronikol.History;
 public sealed class HistoryRunContext
 {
     private HistoryRunContext(HistoryLocation location, HistoryRoster roster, HistoryRun run, HistoryShapes? shapes, HistoryVerdicts? verdicts, HistoryLedger? ledger,
-        bool writeLedger, string generator, HistoryQuarantineList? quarantine, HistoryAliases? aliases)
+        bool writeLedger, string generator, HistoryQuarantineList? quarantine, HistoryAliases? aliases, HistoryRun ledgerRun)
     {
+        _ledgerRun = ledgerRun;
         Shapes = shapes;
         Location = location;
         Roster = roster;
@@ -83,7 +84,8 @@ public sealed class HistoryRunContext
                 Shapes = options.HistoryShapes,
                 ErrorKeys = options.HistoryErrorKeys,
                 Partial = options.HistoryPartialRun,
-                ShapeRules = shapeRules
+                ShapeRules = shapeRules,
+                Bridges = true
             };
             var (roster, run, shapes) = HistoryRunBuilder.Build(features, logs, suite, ci, at, build,
                 string.IsNullOrWhiteSpace(options.HistoryRunId) ? null : options.HistoryRunId.Trim());
@@ -164,7 +166,10 @@ public sealed class HistoryRunContext
             // A ledger that could not be read is not appended to either: the writer would refuse or time
             // out for the same reason, and one diagnostic says it.
             var writeLedger = options.WriteHistoryLedger ?? (location.Source is HistoryLocationSource.Option or HistoryLocationSource.Environment || ci is null);
-            return new HistoryRunContext(location, roster, run, shapes, verdicts, ledger, writeLedger && location.Path is not null && ledger is not null, generator, quarantine, aliases);
+            // The ledger's line keeps only the bridges its window can use; the fragment keeps every kept rule's, since
+            // `history record` folds it into a ledger this run did not read (#190 R0).
+            var ledgerRun = ledger is null ? run : HistoryBridges.ForWindow(run, BridgeWindow(ledger, run, verdicts, Math.Max(options.HistoryWindow, 1)));
+            return new HistoryRunContext(location, roster, run, shapes, verdicts, ledger, writeLedger && location.Path is not null && ledger is not null, generator, quarantine, aliases, ledgerRun);
         }
         catch (Exception exception)
         {
@@ -172,6 +177,13 @@ public sealed class HistoryRunContext
             return null;
         }
     }
+
+    /// <summary>The runs a later reading of this run's line compares it with: its own stream's window, and the streams it was read against.</summary>
+    private static IEnumerable<HistoryRun> BridgeWindow(HistoryLedger ledger, HistoryRun run, HistoryVerdicts? verdicts, int window) =>
+        new[] { run.Stream, verdicts?.Stream, verdicts?.Compare?.Stream }.OfType<string>().Distinct(StringComparer.Ordinal)
+            .SelectMany(stream => ledger.PriorRuns(run.Suite, stream, run.Id, window));
+
+    private readonly HistoryRun _ledgerRun;
 
     private static T? TryLoad<T>(Func<T> load, string what) where T : class
     {
@@ -210,11 +222,11 @@ public sealed class HistoryRunContext
         try
         {
             var key = (Path.GetFullPath(path), Run.Suite, Run.Id);
-            var result = HistoryLedgerWriter.Append(path, Roster, Run, Generator, shapes: Shapes);
+            var result = HistoryLedgerWriter.Append(path, Roster, _ledgerRun, Generator, shapes: Shapes);
             // Somebody else's line under this run's id: an earlier attempt of this run, and this one goes
             // over it. The writer still refuses when that line is not older than this run.
             if (result.Outcome == HistoryAppendOutcome.Duplicate && !AppendedHere.ContainsKey(key))
-                result = HistoryLedgerWriter.Amend(path, Roster, Run, Generator, shapes: Shapes);
+                result = HistoryLedgerWriter.Amend(path, Roster, _ledgerRun, Generator, shapes: Shapes);
             switch (result.Outcome)
             {
                 case HistoryAppendOutcome.Appended:

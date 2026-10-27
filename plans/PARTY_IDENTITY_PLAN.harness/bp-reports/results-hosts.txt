@@ -1,0 +1,5 @@
+# hosts.py, same reports
+xunit-in-memory-report.json: 16 callee names; no host 7 ['Breakfast Database (SQL Server)', 'Google Cloud Pub/Sub', 'Kafka Broker', 'MongoDB', 'Notification Service (gRPC)', 'Reporting Database (SQL Server)', 'Spanner']; placeholder host 1 ['Event Grid']; a real host 8
+xunit-in-docker-report.json: 17 callee names; no host 6 ['Azure Event Hub', 'Google Cloud Pub/Sub', 'Kafka Broker', 'MongoDB', 'Notification Service (gRPC)', 'Spanner']; placeholder host 1 ['Event Grid']; a real host 10
+xunit-external-sut-report.json: 1 callee names; no host 0 []; placeholder host 0 []; a real host 1
+reqnroll-in-memory-report.json: 16 callee names; no host 7 ['Breakfast Database (SQL Server)', 'Google Cloud Pub/Sub', 'Kafka Broker', 'MongoDB', 'Notification Service (gRPC)', 'Reporting Database (SQL Server)', 'Spanner']; placeholder host 1 ['Event Grid']; a real host 8

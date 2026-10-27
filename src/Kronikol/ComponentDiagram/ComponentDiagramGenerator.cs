@@ -492,7 +492,8 @@ public static partial class ComponentDiagramGenerator
     /// most <see cref="MaxNameLineChars"/> characters. Unchanged — byte for byte — for every name short enough to fit,
     /// which is all of them in practice.
     /// </summary>
-    private static string WrapName(string name) => Wrap(PlantUml.PlantUmlStatementLimits.CapName(name), MaxNameLineChars);
+    private static string WrapName(string name) =>
+        PlantUml.PlantUmlCreator.EscapeNameLines(Wrap(PlantUml.PlantUmlStatementLimits.CapName(name), MaxNameLineChars));
 
     /// <summary>
     /// Wraps each of <paramref name="text"/>'s existing display lines to <paramref name="budget"/>

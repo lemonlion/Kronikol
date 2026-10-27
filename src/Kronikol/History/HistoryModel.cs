@@ -254,6 +254,14 @@ public sealed record HistoryRun
     /// <summary>The distinct <c>caller&gt;service</c> pairs the run captured, sorted — the new-dependency signal (§4).</summary>
     public IReadOnlyList<string>? Deps { get; init; }
 
+    /// <summary>
+    /// The run's fingerprints under the rules other runs in its window were made by, keyed by the rule
+    /// (<see cref="HistoryBridge.RuleOf(HistoryRun)"/>): what lets a run be compared with runs fingerprinted before a
+    /// change of rule, rather than reading no behaviour verdict across it (#190 R0, plans/CALL_OPERATION_AND_ORIGIN_PLAN.md
+    /// §4.8). Null, the usual case, when every run in the window was made by the run's own rule.
+    /// </summary>
+    public IReadOnlyDictionary<string, HistoryBridge>? Bridge { get; init; }
+
     /// <summary>The branch stream this run belongs to: its branch, or <c>local</c> when it has none.</summary>
     public string Stream => Branch is { Length: > 0 } branch ? branch : LocalStream;
 
@@ -287,6 +295,50 @@ public sealed record HistoryRun
         if (Errors is null || position < 0 || position >= Errors.Count || Errors[position] is not { } key)
             return null;
         return ErrorText.TryGetValue(key, out var text) ? text : null;
+    }
+}
+
+/// <summary>
+/// One run's fingerprints as an earlier rule makes them from the same calls (<see cref="HistoryRun.Bridge"/>). A member
+/// left null holds what the run's own member holds: a rule that changes nothing in this run is an empty entry, and
+/// only a run whose calls the change touched carries arrays of its own.
+/// </summary>
+public sealed record HistoryBridge
+{
+    /// <summary>The order-insensitive fingerprint per position under the rule; null when it is the run's own.</summary>
+    public IReadOnlyList<string>? ShapeSet { get; init; }
+
+    /// <summary>The ordered fingerprint per position under the rule; null when it is the run's own.</summary>
+    public IReadOnlyList<string>? ShapeOrdered { get; init; }
+
+    /// <summary>The shapes line the call sets index into, under the rule; null with <see cref="CallSets"/> when they are the run's own.</summary>
+    public string? ShapesHash { get; init; }
+
+    /// <summary>Per position, the calls under the rule as indices into the <see cref="ShapesHash"/> line; null when they are the run's own.</summary>
+    public IReadOnlyList<IReadOnlyList<int>>? CallSets { get; init; }
+
+    /// <summary>The <c>caller&gt;service</c> pairs the rule names otherwise, as recorded now mapped to as the rule names them; null when none.</summary>
+    public IReadOnlyDictionary<string, string>? Deps { get; init; }
+
+    /// <summary>
+    /// The calls <see cref="ShapesHash"/> names, while the bridge is in the memory of the run that made it: a writer
+    /// writes them as a shapes line of their own. Never part of the run line; null on a bridge read from a ledger, where
+    /// the shapes line is found by its hash.
+    /// </summary>
+    public HistoryShapes? Shapes { get; init; }
+
+    /// <summary>Whether every member is the run's own: the rule changes nothing in this run.</summary>
+    public bool IsEmpty => ShapeSet is null && ShapeOrdered is null && ShapesHash is null && CallSets is null && Deps is null;
+
+    /// <summary>The key a bridge is held under for a rule: its built-in version, and the hash of the consumer's rules after a <c>+</c> when there are any.</summary>
+    public static string RuleKey(int? version, string? shapeRules) =>
+        (version ?? 1).ToString(System.Globalization.CultureInfo.InvariantCulture) + (shapeRules is { Length: > 0 } hash ? "+" + hash : "");
+
+    /// <summary>The rule a run's own fingerprints were made by, as a bridge key.</summary>
+    public static string RuleOf(HistoryRun run)
+    {
+        ArgumentNullException.ThrowIfNull(run);
+        return RuleKey(run.ShapeVersion, run.ShapeRules);
     }
 }
 

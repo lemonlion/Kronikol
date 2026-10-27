@@ -152,7 +152,7 @@ public static class HistoryLedgerWriter
                     return new HistoryAppendResult(HistoryAppendOutcome.Duplicate, $"run {run.Id} of suite {run.Suite ?? "(null)"} is already in the ledger", attempts);
 
                 var combined = HistoryFold.Attempts([
-                    new HistoryFragment(HistoryFormat.Version, existingRoster, existing, existing.ShapesHash is { } hash ? ledger.Shapes(hash) : null),
+                    new HistoryFragment(HistoryFormat.Version, existingRoster, HistoryBridges.WithShapes(existing, ledger.Shapes), existing.ShapesHash is { } hash ? ledger.Shapes(hash) : null),
                     new HistoryFragment(HistoryFormat.Version, roster, run, shapes)
                 ]);
                 // The earlier attempt judged whether the run was partial against the ledger; the retry is a
@@ -170,6 +170,9 @@ public static class HistoryLedgerWriter
                             builder.Append(HistoryJson.RosterLine(combined.Roster)).Append('\n');
                         if (combined.Shapes is { } combinedShapes && ledger.Shapes(combinedShapes.Hash) is null)
                             builder.Append(HistoryJson.ShapesLine(combinedShapes)).Append('\n');
+                        foreach (var bridgeShapes in HistoryJson.BridgeShapes(amended))
+                            if (ledger.Shapes(bridgeShapes.Hash) is null && !string.Equals(bridgeShapes.Hash, combined.Shapes?.Hash, StringComparison.Ordinal))
+                                builder.Append(HistoryJson.ShapesLine(bridgeShapes)).Append('\n');
                         builder.Append(HistoryJson.RunLine(combined.Shapes is null ? amended with { ShapesHash = null, CallSets = null } : amended)).Append('\n');
                         continue;
                     }
@@ -221,6 +224,7 @@ public static class HistoryLedgerWriter
 
             var rosterPresent = false;
             var shapesPresent = shapes is null;
+            var presentShapes = new HashSet<string>(StringComparer.Ordinal);
             foreach (var raw in lines)
             {
                 var line = raw.TrimEnd('\r');
@@ -228,6 +232,8 @@ public static class HistoryLedgerWriter
                 var (kind, id, suite, suiteIsNull) = HistoryJson.Peek(line);
                 if (kind == HistoryLineKind.Roster && string.Equals(id, roster.Hash, StringComparison.Ordinal))
                     rosterPresent = true;
+                if (kind == HistoryLineKind.Shapes && id is not null)
+                    presentShapes.Add(id);
                 if (kind == HistoryLineKind.Shapes && shapes is not null && string.Equals(id, shapes.Hash, StringComparison.Ordinal))
                     shapesPresent = true;
                 if (kind == HistoryLineKind.Run && string.Equals(id, run.Id, StringComparison.Ordinal)
@@ -244,17 +250,38 @@ public static class HistoryLedgerWriter
                 builder.Append(HistoryJson.RosterLine(roster)).Append('\n');
             if (!shapesPresent)
                 builder.Append(HistoryJson.ShapesLine(shapes!)).Append('\n');
-            builder.Append(HistoryJson.RunLine(run)).Append('\n');
+            if (shapes is not null)
+                presentShapes.Add(shapes.Hash);
+            builder.Append(BridgeShapesLines(run, presentShapes));
+            builder.Append(HistoryJson.RunLine(HistoryBridges.WithoutMissingShapes(run, presentShapes))).Append('\n');
             Write(stream, builder.ToString());
             return new HistoryAppendResult(HistoryAppendOutcome.Appended, null, attempts);
         }
 
         builder.Append(HistoryJson.RosterLine(roster)).Append('\n');
+        var written = new HashSet<string>(StringComparer.Ordinal);
         if (shapes is not null)
+        {
             builder.Append(HistoryJson.ShapesLine(shapes)).Append('\n');
-        builder.Append(HistoryJson.RunLine(run)).Append('\n');
+            written.Add(shapes.Hash);
+        }
+        builder.Append(BridgeShapesLines(run, written));
+        builder.Append(HistoryJson.RunLine(HistoryBridges.WithoutMissingShapes(run, written))).Append('\n');
         Write(stream, builder.ToString());
         return new HistoryAppendResult(HistoryAppendOutcome.Appended, null, attempts);
+    }
+
+    /// <summary>
+    /// The shapes lines a run's bridges name and the file lacks (<paramref name="present"/>), each once; written in front
+    /// of the run, as its own are. Adds what it writes to <paramref name="present"/>.
+    /// </summary>
+    private static string BridgeShapesLines(HistoryRun run, HashSet<string> present)
+    {
+        var builder = new StringBuilder();
+        foreach (var bridgeShapes in HistoryJson.BridgeShapes(run))
+            if (present.Add(bridgeShapes.Hash))
+                builder.Append(HistoryJson.ShapesLine(bridgeShapes)).Append('\n');
+        return builder.ToString();
     }
 
     private static bool SameSuite(string? peeked, bool peekedNull, string? suite) =>
@@ -333,7 +360,9 @@ public static class HistoryLedgerWriter
             var referenced = kept.Select(k => k.Run.RosterHash).ToHashSet(StringComparer.Ordinal);
             var rosters = all.Ledger.Rosters.Where(r => referenced.Contains(r.Hash)).ToArray();
             var rostersDropped = all.Ledger.Rosters.Count - rosters.Length;
-            var referencedShapes = kept.Select(k => k.Run.ShapesHash).Where(h => h is not null).ToHashSet(StringComparer.Ordinal);
+            var referencedShapes = kept.Select(k => k.Run.ShapesHash)
+                .Concat(kept.SelectMany(k => k.Run.Bridge?.Values.Select(b => b.ShapesHash) ?? []))
+                .Where(h => h is not null).ToHashSet(StringComparer.Ordinal);
             var shapesLines = all.Ledger.AllShapes.Where(s => referencedShapes.Contains(s.Hash)).OrderBy(s => s.Hash, StringComparer.Ordinal).ToArray();
             var shapesDropped = all.Ledger.AllShapes.Count - shapesLines.Length;
 
@@ -425,6 +454,9 @@ public static class HistoryFold
         var cells = new List<(char Result, int? Attempt, int? Duration, int? Calls, string? ShapeSet, string? ShapeOrdered, IReadOnlyList<string>? CallLines, string? Error)>();
         var deps = new SortedSet<string>(StringComparer.Ordinal);
         var anyDeps = false;
+        // The rules every attempt bridges, and each position as its attempt's bridge made it (#190 R0).
+        var bridgeRules = HistoryBridges.CommonRules(oldestFirst.Select(a => a.Run));
+        var bridgeCells = bridgeRules.ToDictionary(r => r, _ => new List<HistoryBridges.Cell>(), StringComparer.Ordinal);
 
         foreach (var attempt in oldestFirst)
         {
@@ -447,12 +479,16 @@ public static class HistoryFold
                         Item2 = (earlier.Attempt ?? 1) + (cell.Item2 ?? 1),
                         Item8 = cell.Item8 ?? earlier.Error
                     };
+                    foreach (var rule in bridgeRules)
+                        bridgeCells[rule][at] = HistoryBridges.CellAt(run, run.Bridge![rule], i, lines);
                 }
                 else
                 {
                     positions[(roster.Ids[i], roster.Slots[i])] = entries.Count;
                     entries.Add(entry);
                     cells.Add(cell);
+                    foreach (var rule in bridgeRules)
+                        bridgeCells[rule].Add(HistoryBridges.CellAt(run, run.Bridge![rule], i, lines));
                 }
                 i++;
             }
@@ -508,6 +544,13 @@ public static class HistoryFold
             ErrorText = errorText,
             Deps = anyDeps ? deps.ToArray() : null
         };
+        if (bridgeRules.Count > 0 && line.ShapeSet is { } lineSet && line.ShapeOrdered is { } lineOrdered)
+            line = line with
+            {
+                Bridge = bridgeRules.ToDictionary(r => r,
+                    r => HistoryBridges.Entry(bridgeCells[r], lineSet, lineOrdered, HistoryBridges.MergedDeps(oldestFirst.Select(a => a.Run.Bridge![r]))),
+                    StringComparer.Ordinal)
+            };
         return new HistoryFragment(oldestFirst.Max(a => a.Version), combined, line, combinedShapes);
     }
 
@@ -539,6 +582,9 @@ public static class HistoryFold
         var anyShapes = false;
         var anyErrors = false;
         bool? partial = null;
+        // The rules every shard bridges, and each position as its shard's bridge made it (#190 R0).
+        var bridgeRules = HistoryBridges.CommonRules(shards.Select(s => s.Run));
+        var bridgeCells = bridgeRules.ToDictionary(r => r, _ => new List<HistoryBridges.Cell>(), StringComparer.Ordinal);
 
         foreach (var shard in shards)
         {
@@ -557,6 +603,8 @@ public static class HistoryFold
                 callLines.Add(run.CallSetAt(i) is { } set && shard.Shapes is { } shardShapes
                     ? set.Select(shardShapes.At).Where(line => line is not null).Select(line => line!).ToArray()
                     : []);
+                foreach (var rule in bridgeRules)
+                    bridgeCells[rule].Add(HistoryBridges.CellAt(run, run.Bridge![rule], i, callLines[^1]));
 
                 var text = run.ErrorAt(i);
                 if (text is null)
@@ -633,6 +681,14 @@ public static class HistoryFold
             ErrorText = errorText,
             Deps = deps.Count > 0 || shards.Any(s => s.Run.Deps is not null) ? deps.ToArray() : null
         };
+        // Shards made by different rules keep no fingerprints above, and so no bridges.
+        if (bridgeRules.Count > 0 && run2.ShapeSet is { } foldedSet && run2.ShapeOrdered is { } foldedOrdered)
+            run2 = run2 with
+            {
+                Bridge = bridgeRules.ToDictionary(r => r,
+                    r => HistoryBridges.Entry(bridgeCells[r], foldedSet, foldedOrdered, HistoryBridges.MergedDeps(shards.Select(s => s.Run.Bridge![r]))),
+                    StringComparer.Ordinal)
+            };
         return new HistoryFoldedRun(folded, run2, foldedShapes) { Note = note };
     }
 }

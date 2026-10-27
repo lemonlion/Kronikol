@@ -25,6 +25,14 @@ public record RequestResponseLog(
     string? DependencyCategory = null,
     string? CallerDependencyCategory = null)
 {
+    /// <summary>
+    /// Whether <see cref="ServiceName"/> is the HTTP handler's fallback for a remote host, <c>{host}:{port}</c>, which
+    /// before #190 was <c>localhost:{port}</c>. History's rule 6 reads the call under that name, so a run can be compared
+    /// with runs fingerprinted before the change (<see cref="Kronikol.History.InteractionShape"/>).
+    /// Set by the handler alone and never written out.
+    /// </summary>
+    internal bool NamedByRemoteHostFallback { get; init; }
+
     public bool NoteOnRight { get; set; }
     public bool IsOverrideStart { get; set; }
     public bool IsOverrideEnd { get; set; }
@@ -116,9 +124,10 @@ public record RequestResponseLog(
     public bool IsUserAction { get; set; }
 
     /// <summary>
-    /// Which capture path produced this entry — <c>wire</c> (a proxy/TCP tap that decoded the protocol) or
-    /// <c>span</c> (an OpenTelemetry receiver). Optional; used by
-    /// <c>Kronikol.Ingestion.InteractionMerger</c> to fold the two views of one call into a single arrow.
+    /// Which capture path produced this entry, when the capturer says: <c>span</c> from Kronikol's OpenTelemetry
+    /// receiver, <c>wire</c> from an external capturer that decoded the protocol, and <c>wire + span</c> once
+    /// <c>Kronikol.Ingestion.InteractionMerger</c> has folded the two views of one call into a single arrow. Kronikol's own
+    /// taps leave it unset; the merge works out which side a record is from its span id and its body.
     /// </summary>
     public string? CapturedBy { get; set; }
 

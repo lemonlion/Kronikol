@@ -86,10 +86,25 @@ public static class HistoryJson
                 writer.WritePropertyName("shapes");
                 WriteShapes(writer, shapes);
             }
+            // A bridge's calls go beside the run as the run's own do: record writes each as a shapes line.
+            var bridgeShapes = BridgeShapes(run).ToArray();
+            if (bridgeShapes.Length > 0)
+            {
+                writer.WritePropertyName("bridgeShapes");
+                writer.WriteStartArray();
+                foreach (var bridgeShapesLine in bridgeShapes)
+                    WriteShapes(writer, bridgeShapesLine);
+                writer.WriteEndArray();
+            }
             writer.WriteEndObject();
         }
         return Encoding.UTF8.GetString(buffer.WrittenSpan).Replace("\r\n", "\n", StringComparison.Ordinal) + "\n";
     }
+
+    /// <summary>The calls a run's bridges name and still hold in memory, one list per distinct hash, in hash order.</summary>
+    internal static IEnumerable<HistoryShapes> BridgeShapes(HistoryRun run) =>
+        (run.Bridge?.Values ?? []).Select(b => b.Shapes).OfType<HistoryShapes>()
+            .DistinctBy(s => s.Hash, StringComparer.Ordinal).OrderBy(s => s.Hash, StringComparer.Ordinal);
 
     private static void WriteRoster(Utf8JsonWriter writer, HistoryRoster roster)
     {
@@ -201,6 +216,47 @@ public static class HistoryJson
 
         if (run.Deps is { } deps) WriteStrings(writer, "deps", deps);
 
+        if (run.Bridge is { Count: > 0 } bridge)
+        {
+            writer.WritePropertyName("bridge");
+            writer.WriteStartObject();
+            foreach (var (rule, entry) in bridge.OrderBy(p => p.Key, StringComparer.Ordinal))
+            {
+                writer.WritePropertyName(rule);
+                WriteBridge(writer, entry);
+            }
+            writer.WriteEndObject();
+        }
+
+        writer.WriteEndObject();
+    }
+
+    private static void WriteBridge(Utf8JsonWriter writer, HistoryBridge bridge)
+    {
+        writer.WriteStartObject();
+        if (bridge.ShapeSet is { } set) WriteStrings(writer, "set", set);
+        if (bridge.ShapeOrdered is { } ordered) WriteStrings(writer, "ordered", ordered);
+        if (bridge.ShapesHash is { } shapesHash) writer.WriteString("shapes", shapesHash);
+        if (bridge.CallSets is { } callSets)
+        {
+            writer.WritePropertyName("callSets");
+            writer.WriteStartArray();
+            foreach (var callSet in callSets)
+            {
+                writer.WriteStartArray();
+                foreach (var index in callSet) writer.WriteNumberValue(index);
+                writer.WriteEndArray();
+            }
+            writer.WriteEndArray();
+        }
+        if (bridge.Deps is { Count: > 0 } deps)
+        {
+            writer.WritePropertyName("deps");
+            writer.WriteStartObject();
+            foreach (var pair in deps.OrderBy(p => p.Key, StringComparer.Ordinal))
+                writer.WriteString(pair.Key, pair.Value);
+            writer.WriteEndObject();
+        }
         writer.WriteEndObject();
     }
 
@@ -349,6 +405,20 @@ public static class HistoryJson
             var shapes = root.TryGetProperty("shapes", out var shapesElement) && shapesElement.ValueKind == JsonValueKind.Object
                 ? ParseElement(shapesElement).Shapes ?? throw new FormatException("The fragment's shapes are not a shapes line.")
                 : null;
+            if (run.Bridge is { Count: > 0 } && root.TryGetProperty("bridgeShapes", out var bridgeShapesElement) && bridgeShapesElement.ValueKind == JsonValueKind.Array)
+            {
+                // The bridges' calls, which the run line names by hash, are held on the bridges again as they were when
+                // the run made them.
+                var byHash = bridgeShapesElement.EnumerateArray().Where(e => e.ValueKind == JsonValueKind.Object)
+                    .Select(e => ParseElement(e).Shapes).OfType<HistoryShapes>()
+                    .GroupBy(s => s.Hash, StringComparer.Ordinal).ToDictionary(g => g.Key, g => g.First(), StringComparer.Ordinal);
+                run = run with
+                {
+                    Bridge = run.Bridge.ToDictionary(p => p.Key,
+                        p => p.Value.ShapesHash is { } hash && byHash.TryGetValue(hash, out var held) ? p.Value with { Shapes = held } : p.Value,
+                        StringComparer.Ordinal)
+                };
+            }
             return new HistoryFragment(version, roster, run, shapes);
         }
         catch (JsonException exception)
@@ -463,12 +533,44 @@ public static class HistoryJson
             ErrorText = errorText,
             Deps = Strings(element, "deps"),
             ShapesHash = OptionalString(element, "shapes"),
-            CallSets = element.TryGetProperty("callSets", out var callSets) && callSets.ValueKind == JsonValueKind.Array
-                ? callSets.EnumerateArray().Select(set => (IReadOnlyList<int>)(set.ValueKind == JsonValueKind.Array
-                    ? set.EnumerateArray().Where(i => i.ValueKind == JsonValueKind.Number).Select(i => i.GetInt32()).ToArray()
-                    : [])).ToArray()
-                : null
+            CallSets = CallSetsOf(element, "callSets"),
+            Bridge = element.TryGetProperty("bridge", out var bridge) && bridge.ValueKind == JsonValueKind.Object ? ParseBridges(bridge) : null
         };
+    }
+
+    private static IReadOnlyList<IReadOnlyList<int>>? CallSetsOf(JsonElement element, string name) =>
+        element.TryGetProperty(name, out var callSets) && callSets.ValueKind == JsonValueKind.Array
+            ? callSets.EnumerateArray().Select(set => (IReadOnlyList<int>)(set.ValueKind == JsonValueKind.Array
+                ? set.EnumerateArray().Where(i => i.ValueKind == JsonValueKind.Number).Select(i => i.GetInt32()).ToArray()
+                : [])).ToArray()
+            : null;
+
+    /// <summary>A run line's bridges; an entry that is not an object is skipped, as a line's other members are.</summary>
+    private static Dictionary<string, HistoryBridge> ParseBridges(JsonElement element)
+    {
+        var bridges = new Dictionary<string, HistoryBridge>(StringComparer.Ordinal);
+        foreach (var rule in element.EnumerateObject())
+        {
+            if (rule.Value.ValueKind != JsonValueKind.Object) continue;
+            var entry = rule.Value;
+            Dictionary<string, string>? deps = null;
+            if (entry.TryGetProperty("deps", out var depsElement) && depsElement.ValueKind == JsonValueKind.Object)
+            {
+                deps = new Dictionary<string, string>(StringComparer.Ordinal);
+                foreach (var pair in depsElement.EnumerateObject())
+                    if (pair.Value.ValueKind == JsonValueKind.String)
+                        deps[pair.Name] = pair.Value.GetString()!;
+            }
+            bridges[rule.Name] = new HistoryBridge
+            {
+                ShapeSet = Strings(entry, "set"),
+                ShapeOrdered = Strings(entry, "ordered"),
+                ShapesHash = OptionalString(entry, "shapes"),
+                CallSets = CallSetsOf(entry, "callSets"),
+                Deps = deps is { Count: > 0 } ? deps : null
+            };
+        }
+        return bridges;
     }
 
     private static string RequiredString(JsonElement element, string name) =>

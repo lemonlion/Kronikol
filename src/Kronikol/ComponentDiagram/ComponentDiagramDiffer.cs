@@ -153,7 +153,8 @@ public static partial class ComponentDiagramDiffer
         foreach (var participant in allParticipants)
         {
             var alias = SanitizeAlias(participant);
-            var shown = PlantUml.PlantUmlStatementLimits.CapName(participant);
+            // Escaped as the diagram's own names are (PlantUmlCreator.EscapeNameLines): drawn as written, quote and all.
+            var shown = PlantUml.PlantUmlCreator.EscapeNameLines(PlantUml.PlantUmlStatementLimits.CapName(participant));
 
             if (useC4)
             {

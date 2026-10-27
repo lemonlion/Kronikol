@@ -6,8 +6,9 @@ namespace Kronikol.Constants;
 public static class TrackingDefaults
 {
     /// <summary>
-    /// Default display name for the calling service in diagrams when no explicit name is configured.
-    /// Used as the default value of <c>CallerName</c> on all tracking options classes.
+    /// Default display name for the calling service in diagrams when no explicit name is configured: the default of
+    /// <c>CallerName</c> on the in-process trackers' options. The taps have their own (ProxyTap and TcpTap require one;
+    /// the OTLP tap reads each span's service name), and Playwright's header says <c>Browser</c>.
     /// </summary>
     public const string CallerName = "Caller";
 

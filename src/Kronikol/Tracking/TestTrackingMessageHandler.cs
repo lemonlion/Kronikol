@@ -22,7 +22,7 @@ namespace Kronikol.Tracking;
 public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
 {
     private readonly string? _fixedServiceName;
-    private readonly Func<int, string> _getServiceNameFromPortTranslator;
+    private readonly Dictionary<int, string> _portsToServiceNames;
     private readonly Dictionary<string, string> _clientNamesToServiceNames;
     private readonly string? _clientName;
     private readonly string? _callerName;
@@ -43,7 +43,7 @@ public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
     public TestTrackingMessageHandler(TestTrackingMessageHandlerOptions options, IHttpContextAccessor? httpContextAccessor = null, string? clientName = null)
     {
         _fixedServiceName = options.FixedNameForReceivingService;
-        _getServiceNameFromPortTranslator = GetPortTranslator(options.PortsToServiceNames);
+        _portsToServiceNames = options.PortsToServiceNames;
         _clientNamesToServiceNames = options.ClientNamesToServiceNames;
         _clientName = clientName;
         _currentTestInfoFetcher = options.CurrentTestInfoFetcher;
@@ -64,20 +64,28 @@ public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
     public int InvocationCount => _invocationCount;
     public bool HasHttpContextAccessor => _httpContextAccessor is not null;
 
-    private static Func<int, string> GetPortTranslator(Dictionary<int, string> serviceNamesForEachPort)
+    /// <summary>
+    /// The name of a party nothing maps. A loopback address is this machine, so it keeps <c>localhost:{port}</c> and one
+    /// stub reached two ways stays one party; any other host keeps its name as <see cref="Uri.Host"/> gives it, with the
+    /// port, so two remote APIs on one port are two parties and neither is called localhost (#190). A request with no
+    /// host keeps the localhost name. <c>RemoteHost</c> says the host's name was kept, which history's earlier rule read
+    /// as <c>localhost:{port}</c> (<see cref="RequestResponseLog.NamedByRemoteHostFallback"/>).
+    /// </summary>
+    internal static (string Name, bool RemoteHost) FallbackName(Uri uri)
     {
-        return port => serviceNamesForEachPort.TryGetValue(port, out var serviceName) ? serviceName : $"localhost:{port}";
+        var port = uri.Port.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        return uri.IsLoopback || string.IsNullOrEmpty(uri.Host) ? ("localhost:" + port, false) : (uri.Host + ":" + port, true);
     }
 
-    private string ResolveServiceName(int port)
+    private (string Name, bool RemoteHost) ResolveServiceName(Uri uri)
     {
         // 1. FixedNameForReceivingService (highest priority)
         if (_fixedServiceName is not null)
-            return _fixedServiceName;
+            return (_fixedServiceName, false);
 
         // 2. Client name mapping — exact match (set via constructor clientName parameter)
         if (_clientName is not null && _clientNamesToServiceNames.TryGetValue(_clientName, out var mapped))
-            return mapped;
+            return (mapped, false);
 
         // 3. Client name mapping — suffix/contains match (for Refit/generated client names)
         //    Steps: strip assembly qualification, try EndsWith with boundary, then Contains fallback
@@ -95,22 +103,22 @@ public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
                 if (effectiveName.Length > kvp.Key.Length
                     && effectiveName.EndsWith(kvp.Key.AsSpan(), StringComparison.Ordinal)
                     && !char.IsLetterOrDigit(effectiveName[effectiveName.Length - kvp.Key.Length - 1]))
-                    return kvp.Value;
+                    return (kvp.Value, false);
 
                 // 3b. Contains fallback — only for assembly-qualified names (Refit v9)
                 //     to avoid false positives on simple names like "Client" matching "MyBetterClient"
                 if (isAssemblyQualified
                     && effectiveName.Length > kvp.Key.Length
                     && effectiveName.Contains(kvp.Key.AsSpan(), StringComparison.Ordinal))
-                    return kvp.Value;
+                    return (kvp.Value, false);
             }
 
             // Record unmatched client name for diagnostic reporting
             UnmatchedClientNameRegistry.Record(_clientName);
         }
 
-        // 4. Port-based mapping or fallback to localhost:port
-        return _getServiceNameFromPortTranslator(port);
+        // 4. Port-based mapping, by the port alone whatever the host, or the fallback
+        return _portsToServiceNames.TryGetValue(uri.Port, out var byPort) ? (byPort, false) : FallbackName(uri);
     }
 
     protected override HttpResponseMessage Send(HttpRequestMessage request, CancellationToken cancellationToken)
@@ -236,7 +244,7 @@ public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
         AddIfAbsent(request, TestTrackingHttpHeaders.CurrentTestIdHeader, TrackingHeaderValue.Encode(currentTestInfo.Id));
         AddIfAbsent(request, TestTrackingHttpHeaders.CallerNameHeader, TrackingHeaderValue.Encode(_callerName));
 
-        var serviceName = ResolveServiceName(request.RequestUri!.Port);
+        var (serviceName, namedByRemoteHostFallback) = ResolveServiceName(request.RequestUri!);
 
         if (!hasCurrentTestNameHeader)
             InjectImplicitActionStartIfNeeded(currentTestInfo);
@@ -268,7 +276,8 @@ public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
             ActivitySpanId = activitySpanId,
             ActivityTraceId = activityTraceId,
             Phase = currentPhase,
-            AttributionSource = currentTestInfo.Source
+            AttributionSource = currentTestInfo.Source,
+            NamedByRemoteHostFallback = namedByRemoteHostFallback
         });
 
         // The span the transport starts for the call begins after the request is logged, under the span current here; the
@@ -306,7 +315,8 @@ public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
                 ActivitySpanId = TransportSpan(request, carriedTraceParent, activityTraceId) ?? activitySpanId,
                 ActivityTraceId = activityTraceId,
                 Phase = currentPhase,
-                AttributionSource = currentTestInfo.Source
+                AttributionSource = currentTestInfo.Source,
+                NamedByRemoteHostFallback = namedByRemoteHostFallback
             });
             throw;
         }
@@ -333,7 +343,8 @@ public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
             ActivitySpanId = TransportSpan(request, carriedTraceParent, activityTraceId) ?? activitySpanId,
             ActivityTraceId = activityTraceId,
             Phase = currentPhase,
-            AttributionSource = currentTestInfo.Source
+            AttributionSource = currentTestInfo.Source,
+            NamedByRemoteHostFallback = namedByRemoteHostFallback
         });
 
         return response;

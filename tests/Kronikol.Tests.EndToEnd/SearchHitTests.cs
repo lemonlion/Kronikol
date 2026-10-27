@@ -943,17 +943,39 @@ public partial class SearchHitTests : PlaywrightTestBase
     [Fact]
     public async Task A_diagram_marked_before_its_picture_is_drawn_is_marked_once_it_is()
     {
+        // The page starts drawing its first scenario's diagrams as soon as it is parsed (the render script's preload), and
+        // this report's one diagram is there: marked once the page had loaded, the mark raced that drawing, and under a
+        // full suite's load it lost (5.13.0's full run: 310 texts already drawn). A listener that runs before the page's
+        // own marks it before any drawing can start. The report is a compressed page, whose loader puts the report in
+        // place with document.open, write and close, and document.open erases every listener added before it; the first
+        // write comes after it and before the report's own scripts run, so the listener is added there.
+        await Page.AddInitScriptAsync("""
+            (() => {
+                var done = false;
+                function early() {
+                    if (done || !document.querySelector('[data-diagram-type="plantuml"]')) return;
+                    done = true;
+                    try {
+                        document.querySelectorAll('details.feature, details.scenario').forEach(d => { d.open = true; });
+                        var host = document.querySelector('[data-diagram-type="plantuml"]');
+                        var drawn = host.querySelectorAll('svg text').length;
+                        var a = window.kronikol_marks.mark(host, ['flour'], 0);
+                        window.__early = [String(drawn), String(a ? a.count : -1), String(host.classList.contains('kron-mark-place'))];
+                    } catch (e) {
+                        window.__early = ['the early mark threw: ' + e, '', ''];
+                    }
+                }
+                var write = Document.prototype.write;
+                Document.prototype.write = function () {
+                    if (this === document) document.addEventListener('DOMContentLoaded', early);
+                    return write.apply(this, arguments);
+                };
+                document.addEventListener('DOMContentLoaded', early);
+            })();
+            """);
         await Page.GotoReportAsync(WriteReport(TempDir, OutputDir, "marks-early.html", withLedger: false));
         await Page.Locator("details.feature").First.WaitForAsync();
-        var early = await Page.EvaluateAsync<string[]>("""
-            () => {
-                document.querySelectorAll('details.feature, details.scenario').forEach(d => { d.open = true; });
-                var host = document.querySelector('[data-diagram-type="plantuml"]');
-                var drawn = host.querySelectorAll('svg text').length;
-                var a = window.kronikol_marks.mark(host, ['flour'], 0);
-                return [String(drawn), String(a ? a.count : -1), String(host.classList.contains('kron-mark-place'))];
-            }
-            """);
+        var early = await Page.EvaluateAsync<string[]>("() => window.__early");
         Assert.True(early[0] == "0", "premise: the picture is not drawn yet (" + early[0] + " texts)");
         Assert.Equal("0", early[1]);
         Assert.Equal("True", early[2], ignoreCase: true);

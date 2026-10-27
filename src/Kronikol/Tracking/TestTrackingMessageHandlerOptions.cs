@@ -6,7 +6,11 @@ namespace Kronikol.Tracking;
 /// </summary>
 public record TestTrackingMessageHandlerOptions
 {
-    /// <summary>Maps port numbers to human-readable service names for diagram participants.</summary>
+    /// <summary>
+    /// Maps port numbers to human-readable service names for diagram participants, whatever the host. A call no map names
+    /// is named by its host and port (<c>pricing.example.com:443</c>), or <c>localhost:{port}</c> when the host is this
+    /// machine (any loopback address).
+    /// </summary>
     public Dictionary<int, string> PortsToServiceNames { get; set; } = new();
 
     /// <summary>
@@ -19,7 +23,10 @@ public record TestTrackingMessageHandlerOptions
     /// </summary>
     public Dictionary<string, string> ClientNamesToServiceNames { get; set; } = new();
 
-    /// <summary>When set, uses this fixed name for the receiving service instead of inferring from the port.</summary>
+    /// <summary>
+    /// When set, every call this handler tracks records this name as its receiving service, in place of
+    /// <see cref="ClientNamesToServiceNames"/>, <see cref="PortsToServiceNames"/> and the name made from the host and port.
+    /// </summary>
     public string? FixedNameForReceivingService { get; set; }
 
     /// <summary>Display name of the calling service in diagrams. Default: <c>"Caller"</c>.</summary>

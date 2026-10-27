@@ -1,0 +1,9 @@
+# infer.py on BreakfastProvider CI run 40290999167 (Kronikol 5.4.1), decoded with kronikol decode built from 44bcc62a; re-run 2026-10-27 with the store list taken from DependencyPalette (unchanged)
+xunit-in-memory-report.json: test=['Caller'] subject=['Breakfast Provider']
+    1 pure caller(s): Caller (TestContext 451/451); unknown: ['Azure Event Hub', 'BigQuery', 'Breakfast Database (SQL Server)', 'ClickHouse', 'CosmosDB', 'Cow Service', 'Event Grid', 'Goat Service', 'Google Cloud Pub/Sub', 'Kafka Broker', 'Kitchen Service', 'MongoDB', 'Notification Service (gRPC)', 'Reporting Database (SQL Server)', 'Spanner', 'Supplier Service']
+xunit-in-docker-report.json: test=['Caller'] subject=['Breakfast Provider']
+    1 pure caller(s): Caller (TestContext 450/450); unknown: ['Azure Event Hub', 'BigQuery', 'Breakfast Database (SQL Server)', 'ClickHouse', 'CosmosDB', 'Cow Service', 'Event Grid', 'Goat Service', 'Google Cloud Pub/Sub', 'Kafka Broker', 'Kitchen Service', 'MongoDB', 'Notification Service (gRPC)', 'Reporting Database (SQL Server)', 'Spanner', 'Supplier Service']
+xunit-external-sut-report.json: test=['Caller'] subject=['Breakfast Provider']
+    1 pure caller(s): Caller (TestContext 378/378); unknown: []
+reqnroll-in-memory-report.json: test=['Caller'] subject=['Breakfast Provider']
+    1 pure caller(s): Caller (TestContext 443/443); unknown: ['Azure Event Hub', 'BigQuery', 'Breakfast Database (SQL Server)', 'ClickHouse', 'CosmosDB', 'Cow Service', 'Event Grid', 'Goat Service', 'Google Cloud Pub/Sub', 'Kafka Broker', 'Kitchen Service', 'MongoDB', 'Notification Service (gRPC)', 'Reporting Database (SQL Server)', 'Spanner', 'Supplier Service']

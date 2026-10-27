@@ -258,7 +258,7 @@ public static class DiagnosticReportGenerator
         if (unmatchedNames.Count > 0)
         {
             sb.AppendLine("<h2 class=\"warn\">⚠ Unmatched HTTP Client Names</h2>");
-            sb.AppendLine("<p>These <code>clientName</code> values were passed to <code>TestTrackingMessageHandler</code> but did not match any key in <code>ClientNamesToServiceNames</code>. The handler fell back to port-based mapping.</p>");
+            sb.AppendLine("<p>These <code>clientName</code> values were passed to <code>TestTrackingMessageHandler</code> but did not match any key in <code>ClientNamesToServiceNames</code>. The handler fell back to <code>PortsToServiceNames</code>, and then to the call's host and port (<code>localhost:{port}</code> for this machine).</p>");
             sb.AppendLine("<table><tr><th>Client Name</th><th>Requests</th></tr>");
             foreach (var (clientName, requestCount) in unmatchedNames)
                 sb.AppendLine($"<tr><td>{Escape(clientName)}</td><td>{requestCount}</td></tr>");

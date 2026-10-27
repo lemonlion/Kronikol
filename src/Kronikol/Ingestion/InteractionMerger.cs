@@ -28,7 +28,7 @@ namespace Kronikol.Ingestion;
 /// </remarks>
 public static class InteractionMerger
 {
-    /// <summary><see cref="InteractionRecord.CapturedBy"/> value for a capturer that decoded the wire protocol (a proxy or TCP tap).</summary>
+    /// <summary><see cref="InteractionRecord.CapturedBy"/> value for a capturer that decoded the wire protocol. An external capturer may write it; Kronikol's own proxy and TCP taps leave the field unset.</summary>
     public const string WireSource = "wire";
 
     /// <summary><see cref="InteractionRecord.CapturedBy"/> value for a capturer that read OpenTelemetry spans.</summary>

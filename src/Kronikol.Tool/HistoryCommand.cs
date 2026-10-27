@@ -349,6 +349,10 @@ internal static partial class HistoryCommand
                 line = line with { Partial = HistoryAnalyzer.IsPartial(roster, previous, 0.10) };
             }
 
+            // A fragment bridges every rule Kronikol keeps; the ledger's line keeps only those its window holds (#190 R0).
+            if (line.Bridge is { Count: > 0 } && HistoryLedgerReader.Read(ledger, DefaultWindow).Ledger is { } read)
+                line = HistoryBridges.ForWindow(line, read.PriorRuns(line.Suite, line.Stream, line.Id, DefaultWindow));
+
             var result = HistoryLedgerWriter.Append(ledger, roster, line, Commands.Version, shapes: shapes);
             var label = $"{run.Id}  {run.Suite ?? "(no suite)"}  {Scenarios(line)}"
                         + (run.Shards > 1 ? $" from {run.Shards} shards" : "")

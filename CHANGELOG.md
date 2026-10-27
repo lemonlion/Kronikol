@@ -4,6 +4,58 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.13.0] - 2026-10-27
+
+The minor part moves (5.12.1 to 5.13.0): history's ledger line gains a member, `bridge`, read through a new
+public type, `HistoryBridge`, and `HistoryRun.Bridge`. Everything else is a fix (#190).
+
+### Fixed
+
+- **A call to an unmapped remote host is named by its host.** `TestTrackingMessageHandler` names the service a call
+  went to by its fixed name, its named client or `PortsToServiceNames`, and when none of them names it, it named it
+  `localhost:{port}` whatever host the call went to. Calls to `https://pricing.example.com` and
+  `https://auth.example.com` were one participant, `localhost:443`, in every diagram, and the report could not tell
+  them apart. Such a call is now named by its host and port, `pricing.example.com:443`, with the host as .NET's
+  `Uri.Host` gives it: lower case, an IPv6 address in brackets without its zone, a Unicode name as written.
+  - A call to this machine (`localhost`, `127.0.0.1`, `[::1]`) keeps `localhost:{port}`, so a stub reached two ways
+    stays one participant, and a suite whose unmapped calls all go to local stubs sees no change.
+  - `PortsToServiceNames` is still looked up first, by the port alone, so a mapping still names every host on its port.
+  - What moves once, on a suite that calls unmapped remote hosts: `query diff` across the upgrade lists
+    `localhost:443` as no longer tracked and the new names as new; `diff --body` cannot pair those calls across the
+    upgrade; `dep:localhost` stops matching them; and a `ServiceTypeOverrides` key such as `localhost:443` stops
+    matching. History does not move (see Added).
+- **A participant's name draws as written.** A name was wrapped but not escaped, so PlantUML read creole in it:
+  `xn--e1afmkfd.xn--p1ai:443` drew as `xn`, a struck-through `e1afmkfd.xn` and `p1ai:443`, and a name holding two
+  `--`, `**`, `//`, `__` or `~~` was restyled the same way. A name holding a `"` turned the whole sequence diagram into
+  PlantUML's Syntax Error picture. Each drawn line of a name is now escaped as a note's line is, and a quote is written
+  as `<U+0022>`, in the sequence diagram, the component diagram and the component diff. A name with nothing creole
+  acts on draws as before.
+- Documentation that described what the code does not do:
+  - `ReportConfigurationOptions.FixedNameForReceivingService` titles the report. It names no call's receiving
+    service; `TestTrackingMessageHandlerOptions.FixedNameForReceivingService` does.
+  - `CapturedBy`, in the code and in the data file's schema: no Kronikol capturer writes `wire`. Merge works out which
+    view a record is, and an external capturer may write `wire` itself.
+  - `MessageTrackerOptions.ServiceName` names the tracker in diagnostics only, not the destination.
+  - `TrackingDefaults.CallerName` is the in-process trackers' default, not every capturer's.
+  - The diagnostic page's unmatched client names say what the handler falls back to.
+
+### Added
+
+- **History reads across a change to how calls are fingerprinted.** History fingerprints each scenario's calls, and
+  the callee's name is part of the fingerprint. Until now a change to the fingerprint rule (`InteractionShape.Version`)
+  restarted every scenario's window, in every suite, renamed or not: the first run under a new rule had nothing to
+  compare with. The rule moves from 6 to 7 with the names above, and each run made in process now also writes, on its
+  ledger line, a `bridge`: its fingerprints under the rule before, which named an unmapped remote host
+  `localhost:{port}`. A run under 7 compares with a run under 6 through it, so the move reads as no change, no quiet
+  run and no new dependency, while a real change across it still reads as changed and names the call.
+  - A suite with nothing renamed writes `"bridge":{"6":{}}`, and only while runs under rule 6 are in its window.
+  - Across the move, runs compare as rule 6 saw them: two remote hosts on one port that rule 6 called one party
+    still compare as one, and a new host on the port of a renamed one is not a new dependency on the first run
+    across, though its scenario reads changed and names the call.
+  - Prune, compact, amend and both folds (shards and attempts) keep the bridge, `history verify` checks it as it checks
+    a run's own fingerprints, and `history record` keeps only the rules its ledger's window holds. A run rebuilt from a
+    report (`kronikol merge --history`) writes none, as a report does not say which names the fallback gave.
+
 ## [5.12.1] - 2026-10-27
 
 The patch part moves (5.12.0 to 5.12.1): one fix, nothing new to call.

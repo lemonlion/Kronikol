@@ -451,7 +451,12 @@ public record ReportConfigurationOptions
     /// <summary>Number of days to retain CI artifacts. Default: <c>1</c>.</summary>
     public int CiArtifactRetentionDays { get; set; } = 1;
 
-    /// <summary>When set, all tracked requests use this name as the receiving service instead of inferring from the port.</summary>
+    /// <summary>
+    /// The service the report is about, used to title it (<c>{name} - Test Run Report</c>) when neither
+    /// <see cref="TestRunReportTitle"/> nor the component diagram's title is set. It names no call's receiving service:
+    /// that is <see cref="Kronikol.Tracking.TestTrackingMessageHandlerOptions.FixedNameForReceivingService"/>, on the
+    /// handler that tracks the calls.
+    /// </summary>
     public string? FixedNameForReceivingService { get; set; }
 
     /// <summary>When <c>true</c>, step numbers are shown in the specifications report. Default: <c>true</c>.</summary>

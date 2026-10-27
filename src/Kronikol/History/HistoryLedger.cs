@@ -567,9 +567,39 @@ public static class HistoryLedgerReader
                 foreach (var key in errors.Where(k => k is not null && !run.ErrorText.ContainsKey(k)).Distinct())
                     findings.Add($"line {line}: run {run.Id} references error key {key} with no text");
             }
+            foreach (var (rule, bridge) in run.Bridge ?? new Dictionary<string, HistoryBridge>())
+                VerifyBridge(findings, line, run, rule, bridge, roster.Count, shapes);
         }
 
         return findings;
+    }
+
+    /// <summary>A bridge's checks (#190 R0): its arrays the roster's length, and the shapes line it names present and indexed within.</summary>
+    private static void VerifyBridge(List<string> findings, int line, HistoryRun run, string rule, HistoryBridge bridge, int rosterCount, Dictionary<string, HistoryShapes> shapes)
+    {
+        var where = $"line {line}: run {run.Id}'s bridge for rule {rule}";
+        if (HistoryBridges.VersionOf(rule) is null)
+            findings.Add($"{where} is not keyed by a rule");
+        if (bridge.ShapeSet is { } set && set.Count != rosterCount)
+            findings.Add($"{where} has {set.Count} shapes against a roster of {rosterCount}");
+        if (bridge.ShapeOrdered is { } ordered && ordered.Count != rosterCount)
+            findings.Add($"{where} has {ordered.Count} ordered shapes against a roster of {rosterCount}");
+        if (bridge.ShapesHash is { } hash)
+        {
+            if (!shapes.TryGetValue(hash, out var referenced))
+                findings.Add($"{where} references shapes {hash}, which is not in the file");
+            if (bridge.CallSets is { } callSets)
+            {
+                if (callSets.Count != rosterCount)
+                    findings.Add($"{where} has {callSets.Count} call sets against a roster of {rosterCount}");
+                if (referenced is not null && callSets.Any(callSet => callSet.Any(index => index < 0 || index >= referenced.Count)))
+                    findings.Add($"{where} indexes past the {referenced.Count} calls of shapes {hash}");
+            }
+        }
+        else if (bridge.CallSets is not null)
+        {
+            findings.Add($"{where} carries call sets but names no shapes line");
+        }
     }
 }
 

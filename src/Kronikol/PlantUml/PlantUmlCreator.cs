@@ -1434,7 +1434,28 @@ public static partial class PlantUmlCreator
     /// fit, which is all of them in practice.
     /// </summary>
     private static string WrapParticipantName(string name) =>
-        DiagramWidth.Wrap(PlantUmlStatementLimits.CapName(name), DiagramWidth.MaxNameLineChars);
+        EscapeNameLines(DiagramWidth.Wrap(PlantUmlStatementLimits.CapName(name), DiagramWidth.MaxNameLineChars));
+
+    /// <summary>
+    /// A participant's drawn lines, each escaped as a note's line is (<see cref="EscapeCreoleMarkup"/>). Creole reads a
+    /// doubled marker that has a partner on its line as a style, so a name holding two of them (a punycode host's
+    /// <c>--</c>, a <c>__</c>) lost both and drew the text between them struck through or restyled (#190). Escaped after
+    /// the wrap, so no break falls inside an escape; a name with nothing creole acts on is unchanged.
+    /// </summary>
+    internal static string EscapeNameLines(string wrapped) =>
+        string.IsNullOrEmpty(wrapped) ? wrapped
+            : string.Join(DiagramWidth.EscapedBreak, wrapped.Split(DiagramWidth.EscapedBreak).Select(EscapeNameLine));
+
+    /// <summary>
+    /// One drawn line of a name. A name is drawn between quotes, where a quote of its own ends it, and the whole diagram
+    /// was a Syntax Error picture for a name holding one. So a quote is written as its code point, which both engines
+    /// paint as the character; the escaper's own <c>~"</c> (it stops a doubled quote reading as monospace) needs no
+    /// tilde then, and every literal <c>~</c> leaves the escaper as a code point, so no other <c>~"</c> exists.
+    /// </summary>
+    private static string EscapeNameLine(string line) =>
+        EscapeCreoleMarkup(line)
+            .Replace("~\"", CodePoint('"'), StringComparison.Ordinal)
+            .Replace("\"", CodePoint('"'), StringComparison.Ordinal);
 
     [GeneratedRegex(@"[^a-zA-Z0-9_]")]
     private static partial Regex SanitizeAliasRegex();

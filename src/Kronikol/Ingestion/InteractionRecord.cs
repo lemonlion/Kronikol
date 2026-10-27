@@ -217,10 +217,10 @@ public sealed record InteractionRecord
     [JsonPropertyName("trackingIgnore")] public bool? TrackingIgnore { get; init; }
 
     /// <summary>
-    /// Which capture path produced this record — <c>wire</c> (a proxy/TCP tap that decoded the protocol),
-    /// <c>span</c> (an OpenTelemetry receiver), or <c>wire + span</c> once
-    /// <see cref="InteractionMerger"/> has folded both views of the same call together. Optional: the merge
-    /// falls back to inferring the source from the presence of a span id and a body.
+    /// Which capture path produced this record, when the capturer says: <c>wire</c> (a capturer that decoded the
+    /// protocol), <c>span</c> (an OpenTelemetry receiver), or <c>wire + span</c> once <see cref="InteractionMerger"/> has
+    /// folded both views of the same call together. Optional, and Kronikol's own taps do not set it: the merge infers the
+    /// source from the presence of a span id and a body.
     /// </summary>
     [JsonPropertyName("capturedBy")] public string? CapturedBy { get; init; }
 

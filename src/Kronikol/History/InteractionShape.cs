@@ -47,9 +47,20 @@ public static partial class InteractionShape
     /// as a request did: the command without the driver's fields in place of the bare filter, so every MongoDB call's
     /// statement head moved (#168 R2). 6: 4.20.5 - a document's booleans (<c>{b}</c>), the sign of its numbers and how
     /// many scalars a list of them holds are data too, so a test that generates its data does not write a new shape
-    /// whenever a flag flips (#168 audit).
+    /// whenever a flag flips (#168 audit). 7: #190 R0 - no rule changed, but what the HTTP handler records did: a call
+    /// nothing maps is named by its remote host and port, where 6 recorded <c>localhost:{port}</c> for every host.
+    /// <para>From 6 on, a released rule is kept as a function of the raw call (<see cref="KeptVersions"/>): while the
+    /// window holds runs fingerprinted under one, each run also fingerprints its own calls under it, its
+    /// <see cref="HistoryRun.Bridge"/>, so a move costs no quiet run (plans/CALL_OPERATION_AND_ORIGIN_PLAN.md §4.8, built
+    /// for #190). A window holding runs under 5 or earlier compares from the next run, as before.</para>
     /// </summary>
-    public const int Version = 6;
+    public const int Version = 7;
+
+    /// <summary>
+    /// The released rules a run can fingerprint its own calls under (<see cref="Calls(IEnumerable{RequestResponseLog}, HistoryShapeRules, int)"/>),
+    /// the current one last. A rule is kept from 6 on: what 6 recorded is a function of what 7 records.
+    /// </summary>
+    internal static IReadOnlyList<int> KeptVersions { get; } = [6, Version];
 
     /// <summary>How much of a statement's first line is templated, and how much of the templated head is kept.</summary>
     private const int HeadRaw = 2000;
@@ -206,9 +217,18 @@ public static partial class InteractionShape
     public static IReadOnlyList<ShapeCall> Calls(IEnumerable<RequestResponseLog?> logs) => Calls(logs, null);
 
     /// <summary><see cref="Calls(IEnumerable{RequestResponseLog})"/> with the consumer's templating rules applied before the built-in ones.</summary>
-    public static IReadOnlyList<ShapeCall> Calls(IEnumerable<RequestResponseLog?> logs, HistoryShapeRules? rules)
+    public static IReadOnlyList<ShapeCall> Calls(IEnumerable<RequestResponseLog?> logs, HistoryShapeRules? rules) => Calls(logs, rules, Version);
+
+    /// <summary>
+    /// The calls as a released rule recorded them (<see cref="KeptVersions"/>): under 6, a callee the HTTP handler named
+    /// by its remote host (<see cref="RequestResponseLog.NamedByRemoteHostFallback"/>) is <c>localhost:{port}</c>, as it
+    /// was then. Every other call is the same under both.
+    /// </summary>
+    internal static IReadOnlyList<ShapeCall> Calls(IEnumerable<RequestResponseLog?> logs, HistoryShapeRules? rules, int version)
     {
         ArgumentNullException.ThrowIfNull(logs);
+        if (!KeptVersions.Contains(version))
+            throw new ArgumentOutOfRangeException(nameof(version), version, "only a kept rule can be applied to a call");
 
         var responses = new Dictionary<Guid, RequestResponseLog>();
         var requests = new List<RequestResponseLog>();
@@ -228,10 +248,16 @@ public static partial class InteractionShape
             responses.TryGetValue(request.RequestResponseId, out var response);
             var (code, text) = InteractionStatus.Split(response?.StatusCode);
             var status = code?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? text;
-            calls.Add(new ShapeCall(request.CallerName, request.ServiceName, MethodOf(request), Target(request, rules), status));
+            calls.Add(new ShapeCall(request.CallerName, ServiceNameUnder(request, version), MethodOf(request), Target(request, rules), status));
         }
         return calls;
     }
+
+    /// <summary>The callee's name as <paramref name="version"/> recorded it.</summary>
+    private static string ServiceNameUnder(RequestResponseLog log, int version) =>
+        version < 7 && log.NamedByRemoteHostFallback && log.Uri.IsAbsoluteUri
+            ? "localhost:" + log.Uri.Port.ToString(System.Globalization.CultureInfo.InvariantCulture)
+            : log.ServiceName;
 
     private static string MethodOf(RequestResponseLog log) => log.Method.Value switch
     {
@@ -287,6 +313,25 @@ public static partial class InteractionShape
                 pairs.Add(log.CallerName + ">" + log.ServiceName);
         }
         return pairs.ToArray();
+    }
+
+    /// <summary>
+    /// The <c>caller&gt;service</c> pairs a released rule recorded differently from the current one: each pair as it is
+    /// recorded now, mapped to the pair <paramref name="version"/> recorded. Empty when the rule renames nothing here.
+    /// </summary>
+    internal static IReadOnlyDictionary<string, string> RenamedDependencies(IEnumerable<RequestResponseLog?> logs, int version)
+    {
+        ArgumentNullException.ThrowIfNull(logs);
+        var renamed = new SortedDictionary<string, string>(StringComparer.Ordinal);
+        foreach (var log in logs)
+        {
+            if (log is null || log.TrackingIgnore || log.IsDiagramMarker || string.IsNullOrEmpty(log.CallerName) || string.IsNullOrEmpty(log.ServiceName))
+                continue;
+            var then = ServiceNameUnder(log, version);
+            if (!string.Equals(then, log.ServiceName, StringComparison.Ordinal))
+                renamed[log.CallerName + ">" + log.ServiceName] = log.CallerName + ">" + then;
+        }
+        return renamed;
     }
 
     /// <summary>The first eight hex of SHA-256 over <paramref name="text"/> — the ledger's short hash.</summary>

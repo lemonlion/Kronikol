@@ -90,7 +90,7 @@ public static partial class HistoryAnalyzer
         for (var i = 0; i < roster.Count; i++)
         {
             currentIds.Add((roster.Ids[i], roster.Slots[i]));
-            scenarios.Add(AnalyseScenario(i, roster, current, prior, priorPositions, priorShapes, shapes, speeds, options, quarantine, aliases, today, partial, paces));
+            scenarios.Add(AnalyseScenario(i, roster, current, prior, priorPositions, priorShapes, shapes, speeds, options, quarantine, aliases, today, partial, paces, ledger.Shapes));
         }
 
         // Absent: in the previous full run of the stream, not in this one, and this one not partial. The
@@ -138,8 +138,7 @@ public static partial class HistoryAnalyzer
         var runs = prior.Select((r, i) => RunPointOf(r) with { Pace = paces.Of(i), Degraded = paces.Degraded(i) }).ToList();
         runs.Add(RunPointOf(current) with { Partial = partial, Pace = paces.Of(prior.Count), Degraded = paces.Degraded(prior.Count) });
 
-        var priorDeps = new HashSet<string>(prior.SelectMany(r => r.Deps ?? []), StringComparer.Ordinal);
-        var newDeps = prior.Count == 0 ? [] : (current.Deps ?? []).Where(d => !priorDeps.Contains(d)).OrderBy(d => d, StringComparer.Ordinal).ToArray();
+        var newDeps = prior.Count == 0 ? [] : NewDependencies(prior, current);
 
         var coldStart = prior.Count < options.MinRuns;
         return new HistoryVerdicts
@@ -164,6 +163,41 @@ public static partial class HistoryAnalyzer
             FirstSeen = counts.GetValueOrDefault(HistoryVerdictKind.New),
             Compare = null
         };
+    }
+
+    /// <summary>
+    /// The current run's pairs that no prior run made. A pair a change of rule renamed is not new: two runs are compared
+    /// under one rule, through the bridge either of them wrote (#190 R0). Each prior run's pairs are compared with the
+    /// current run's as the prior run's rule named them, through the current run's bridge for it; and a prior run that
+    /// bridges the current run's rule (a run an older tool wrote after a bridged one) gives its pairs as that rule named
+    /// them. A run neither bridges is compared with the pairs as they are, as before.
+    /// </summary>
+    private static string[] NewDependencies(List<HistoryRun> prior, HistoryRun current)
+    {
+        var version = current.ShapeVersion ?? 0;
+        var byVersion = prior.GroupBy(r => r.ShapeVersion ?? 0)
+            .Select(g => (Version: g.Key, Seen: new HashSet<string>(g.SelectMany(r => r.Deps ?? []), StringComparer.Ordinal)))
+            .ToArray();
+        var bridgedToCurrent = new HashSet<string>(
+            prior.Where(r => (r.ShapeVersion ?? 0) != version && Bridges(r, version)).SelectMany(r => (r.Deps ?? []).Select(d => PairUnder(r, version, d))),
+            StringComparer.Ordinal);
+        return (current.Deps ?? [])
+            .Where(d => !bridgedToCurrent.Contains(d) && !byVersion.Any(v => v.Seen.Contains(PairUnder(current, v.Version, d))))
+            .OrderBy(d => d, StringComparer.Ordinal)
+            .ToArray();
+    }
+
+    private static bool Bridges(HistoryRun run, int version) => run.Bridge?.Keys.Any(rule => HistoryBridges.VersionOf(rule) == version) == true;
+
+    /// <summary>A pair of <paramref name="run"/> as <paramref name="version"/> named it: through the run's bridge for that version, else as it is.</summary>
+    private static string PairUnder(HistoryRun run, int version, string pair)
+    {
+        if (version == (run.ShapeVersion ?? 0) || run.Bridge is null)
+            return pair;
+        foreach (var (rule, bridge) in run.Bridge)
+            if (HistoryBridges.VersionOf(rule) == version)
+                return bridge.Deps is { } renamed && renamed.TryGetValue(pair, out var then) ? then : pair;
+        return pair;
     }
 
     /// <summary>
@@ -241,7 +275,7 @@ public static partial class HistoryAnalyzer
 
     private static ScenarioHistory AnalyseScenario(int position, HistoryRoster roster, HistoryRun current, List<HistoryRun> prior, Dictionary<(string Id, int Slot), int>?[] priorPositions,
         HistoryShapes?[] priorShapes, HistoryShapes? currentShapes, RunSpeeds speeds, HistoryAnalysisOptions options, HistoryQuarantineList? quarantine, HistoryAliases? aliases, DateOnly today,
-        bool currentIsPartial, RunPaces paces)
+        bool currentIsPartial, RunPaces paces, Func<string, HistoryShapes?> shapesOf)
     {
         var id = roster.Ids[position];
         var slot = roster.Slots[position];
@@ -280,17 +314,66 @@ public static partial class HistoryAnalyzer
             currentIsPartial,
             paces.TimesUsual(usual, prior.Count, current.DurationAt(position), current.ResultAt(position)), paces.Degraded(prior.Count), ShapeRules: current.ShapeRules).WithOverUsual(options);
 
-        // The calls a point made, spelled out: asked for the points a changed set is named from, and no
-        // others. Spelling out every point of every scenario was a third of the analysis (#91). By
+        // Where a point was read from: its run, its position there and the shapes its call sets index into. By
         // reference, because a point is a record and two readings can be equal field for field.
-        IReadOnlyList<string>? CallSetOf(HistoryPoint point)
+        var pointIndex = new Dictionary<HistoryPoint, int>(ReferenceEqualityComparer.Instance);
+        for (var i = 0; i < points.Count; i++)
+            pointIndex[points[i]] = i;
+        (HistoryRun Run, int At, HistoryShapes? Shapes)? SourceOf(HistoryPoint point)
         {
             if (ReferenceEquals(point, currentPoint))
-                return Resolve(current.CallSetAt(position), currentShapes);
-            var index = points.FindIndex(p => ReferenceEquals(p, point));
-            if (index < 0) return null;
+                return (current, position, currentShapes);
+            if (!pointIndex.TryGetValue(point, out var index)) return null;
             var (r, at) = sources[index];
-            return Resolve(prior[r].CallSetAt(at), priorShapes[r]);
+            return (prior[r], at, priorShapes[r]);
+        }
+
+        // The calls a point made, spelled out: asked for the points a changed set is named from, and no
+        // others. Spelling out every point of every scenario was a third of the analysis (#91).
+        IReadOnlyList<string>? CallSetOf(HistoryPoint point) =>
+            SourceOf(point) is { } source ? Resolve(source.Run.CallSetAt(source.At), source.Shapes) : null;
+
+        // Two points compare only under one rule: their own when they share it, else through the bridge one of them
+        // wrote for the other's (#190 R0, plans/CALL_OPERATION_AND_ORIGIN_PLAN.md §4.8). A pair neither bridges is
+        // not compared, as every pair across a change of rule was not before.
+        HistoryBridge? BridgeOf(HistoryPoint point, string rule) =>
+            SourceOf(point)?.Run.Bridge is { } bridges && bridges.TryGetValue(rule, out var bridge) ? bridge : null;
+        string? Under(HistoryPoint point, HistoryBridge bridge, bool ordered)
+        {
+            var list = ordered ? bridge.ShapeOrdered : bridge.ShapeSet;
+            if (list is null) return ordered ? point.ShapeOrdered : point.ShapeSet;
+            var at = SourceOf(point)?.At ?? -1;
+            return at >= 0 && at < list.Count ? list[at] : null;
+        }
+        (string? A, string? B)? UnderOneRule(HistoryPoint a, HistoryPoint b, bool ordered)
+        {
+            string? Own(HistoryPoint p) => ordered ? p.ShapeOrdered : p.ShapeSet;
+            var ruleA = HistoryBridge.RuleKey(a.ShapeVersion, a.ShapeRules);
+            var ruleB = HistoryBridge.RuleKey(b.ShapeVersion, b.ShapeRules);
+            if (string.Equals(ruleA, ruleB, StringComparison.Ordinal)) return (Own(a), Own(b));
+            if (BridgeOf(b, ruleA) is { } bridgeOfB) return (Own(a), Under(b, bridgeOfB, ordered));
+            if (BridgeOf(a, ruleB) is { } bridgeOfA) return (Under(a, bridgeOfA, ordered), Own(b));
+            return null;
+        }
+        bool Comparable(HistoryPoint a, HistoryPoint b) => UnderOneRule(a, b, ordered: false) is not null;
+        bool SameSet(HistoryPoint a, HistoryPoint b) => UnderOneRule(a, b, ordered: false) is { } sets && string.Equals(sets.A, sets.B, StringComparison.Ordinal);
+        bool SameOrder(HistoryPoint a, HistoryPoint b) => UnderOneRule(a, b, ordered: true) is { } orders && string.Equals(orders.A, orders.B, StringComparison.Ordinal);
+        // The calls two points made, under the rule they are compared by.
+        IReadOnlyList<string>? CallSetUnder(HistoryPoint point, HistoryBridge bridge)
+        {
+            if (bridge.CallSets is null) return CallSetOf(point);
+            if (SourceOf(point) is not { } source) return null;
+            var shapes = bridge.Shapes ?? (bridge.ShapesHash is { } hash ? shapesOf(hash) : null);
+            return Resolve(source.At >= 0 && source.At < bridge.CallSets.Count ? bridge.CallSets[source.At] : null, shapes);
+        }
+        (IReadOnlyList<string>? A, IReadOnlyList<string>? B) CallSetsUnderOneRule(HistoryPoint a, HistoryPoint b)
+        {
+            var ruleA = HistoryBridge.RuleKey(a.ShapeVersion, a.ShapeRules);
+            var ruleB = HistoryBridge.RuleKey(b.ShapeVersion, b.ShapeRules);
+            if (string.Equals(ruleA, ruleB, StringComparison.Ordinal)) return (CallSetOf(a), CallSetOf(b));
+            if (BridgeOf(b, ruleA) is { } bridgeOfB) return (CallSetOf(a), CallSetUnder(b, bridgeOfB));
+            if (BridgeOf(a, ruleB) is { } bridgeOfA) return (CallSetUnder(a, bridgeOfA), CallSetOf(b));
+            return (null, null);
         }
         var all = points.Append(currentPoint).ToList();
 
@@ -485,27 +568,33 @@ public static partial class HistoryAnalyzer
         }
 
         // ── Behaviour ───────────────────────────────────────
-        // A fingerprint is comparable only with one the same templating rule made: across a change of
-        // rule there is no verdict, and the reader is told, rather than every scenario changing once.
-        // The rule is the pair: the version of the built-in rules and the hash of the consumer's
-        // (HistoryShapeTemplates). An edit to either costs one quiet run.
-        bool SameRule(HistoryPoint p) => (p.ShapeVersion ?? 1) == (currentPoint.ShapeVersion ?? 1) && string.Equals(p.ShapeRules, currentPoint.ShapeRules, StringComparison.Ordinal);
+        // A fingerprint is comparable only under one templating rule: the version of the built-in rules and the hash
+        // of the consumer's (HistoryShapeTemplates). Across a change of rule a run is compared through its bridge
+        // (UnderOneRule above), and a point no bridge reaches gets no verdict, and the reader is told, rather than every
+        // scenario changing once.
         // Filtered once, upstream of everything that reads it: the previous shaped point, the unstable
         // count, the alternating memory and the count stretch. Taking partial runs out of the memory alone
         // leaves the previous shaped point partial, and the first full run after a partial one then reads
         // behaviour-changed against a run the partial diagnostic says it is not compared against.
         var shapedByAnyRule = comparable.Where(p => p.ShapeSet is { Length: > 0 }).ToList();
-        var shaped = shapedByAnyRule.Where(SameRule).ToList();
+        var shaped = shapedByAnyRule.Where(p => Comparable(p, currentPoint)).ToList();
         var previousShaped = shaped.Count > 0 ? shaped[^1] : null;
-        if (currentPoint.ShapeSet is { Length: > 0 } && shapedByAnyRule.Count > 0 && !SameRule(shapedByAnyRule[^1]))
+        if (currentPoint.ShapeSet is { Length: > 0 } && shapedByAnyRule.Count > 0 && !Comparable(shapedByAnyRule[^1], currentPoint))
             evidence.Add($"the calls in {shapedByAnyRule[^1].RunId} were fingerprinted by an earlier rule; behaviour is compared from the next run");
         if (currentPoint.ShapeSet is { Length: > 0 } && previousShaped is not null)
         {
+            // A pair of earlier runs is compared through the bridge one of them wrote, and a pair neither bridges is
+            // not counted.
             var changes = 0;
+            var pairs = 0;
             for (var i = 1; i < shaped.Count; i++)
-                if (!string.Equals(shaped[i].ShapeSet, shaped[i - 1].ShapeSet, StringComparison.Ordinal)) changes++;
-            var unstable = shaped.Count >= options.MinRuns && changes > (shaped.Count - 1) / 2.0;
-            var changed = !string.Equals(currentPoint.ShapeSet, previousShaped.ShapeSet, StringComparison.Ordinal);
+            {
+                if (!Comparable(shaped[i], shaped[i - 1])) continue;
+                pairs++;
+                if (!SameSet(shaped[i], shaped[i - 1])) changes++;
+            }
+            var unstable = shaped.Count >= options.MinRuns && changes > pairs / 2.0;
+            var changed = !SameSet(currentPoint, previousShaped);
 
             // Alternating: the scenario is back on a set it held within the last AlternatingRuns passing
             // runs, and a different set was held in between. Two states, both its own (a warm cache or a
@@ -516,25 +605,30 @@ public static partial class HistoryAnalyzer
             // failure left is not a state.
             var memory = shaped.Where(p => p.Result == HistoryFormat.Passed).TakeLast(options.AlternatingRuns).ToList();
             var earliest = currentResult == HistoryFormat.Passed
-                ? memory.FindIndex(p => string.Equals(p.ShapeSet, currentPoint.ShapeSet, StringComparison.Ordinal))
+                ? memory.FindIndex(p => SameSet(p, currentPoint))
                 : -1;
-            var alternating = earliest >= 0 && memory.Skip(earliest + 1).Any(p => !string.Equals(p.ShapeSet, currentPoint.ShapeSet, StringComparison.Ordinal));
+            var alternating = earliest >= 0 && memory.Skip(earliest + 1).Any(p => !SameSet(p, currentPoint));
 
             if (alternating)
             {
                 verdicts.Add(HistoryVerdictKind.Alternating);
-                var distinct = memory.Select(p => p.ShapeSet).Distinct(StringComparer.Ordinal).Count();
-                var held = memory.Count(p => string.Equals(p.ShapeSet, currentPoint.ShapeSet, StringComparison.Ordinal));
+                // The sets the memory held, each counted once however its run's rule spelled it.
+                var distinctHeld = new List<HistoryPoint>();
+                foreach (var held in memory)
+                    if (!distinctHeld.Any(d => SameSet(d, held)))
+                        distinctHeld.Add(held);
+                var distinct = distinctHeld.Count;
+                var heldNow = memory.Count(p => SameSet(p, currentPoint));
                 var named = "";
-                if (changed && CallSetOf(currentPoint) is { } nowSet && CallSetOf(previousShaped) is { } beforeSet)
+                if (changed && CallSetsUnderOneRule(currentPoint, previousShaped) is ({ } nowSet, { } beforeSet))
                 {
                     newCalls = nowSet.Except(beforeSet, StringComparer.Ordinal).ToArray();
                     goneCalls = beforeSet.Except(nowSet, StringComparer.Ordinal).ToArray();
                     named = NamedCalls("new", newCalls) + NamedCalls("gone", goneCalls);
                 }
-                else if (!changed && CallSetOf(currentPoint) is { } sameSet
-                         && memory.LastOrDefault(p => !string.Equals(p.ShapeSet, currentPoint.ShapeSet, StringComparison.Ordinal)) is { } other
-                         && CallSetOf(other) is { } otherSet)
+                else if (!changed
+                         && memory.LastOrDefault(p => !SameSet(p, currentPoint)) is { } other
+                         && CallSetsUnderOneRule(currentPoint, other) is ({ } sameSet, { } otherSet))
                 {
                     // The previous run held this set too, so the diff against it is empty and the evidence
                     // named no call. The state it alternates WITH is what the reader is after: the most
@@ -543,12 +637,12 @@ public static partial class HistoryAnalyzer
                             + NamedCalls("new there", otherSet.Except(sameSet, StringComparer.Ordinal).ToArray())
                             + NamedCalls("gone there", sameSet.Except(otherSet, StringComparer.Ordinal).ToArray());
                 }
-                evidence.Add($"alternating between {distinct.ToString(CultureInfo.InvariantCulture)} sets of calls over the last {memory.Count.ToString(CultureInfo.InvariantCulture)} runs: this set in {held.ToString(CultureInfo.InvariantCulture)} of them{named}");
+                evidence.Add($"alternating between {distinct.ToString(CultureInfo.InvariantCulture)} sets of calls over the last {memory.Count.ToString(CultureInfo.InvariantCulture)} runs: this set in {heldNow.ToString(CultureInfo.InvariantCulture)} of them{named}");
             }
             else if (unstable)
             {
                 verdicts.Add(HistoryVerdictKind.UnstableShape);
-                evidence.Add($"the set of calls changed in {changes.ToString(CultureInfo.InvariantCulture)} of the last {(shaped.Count - 1).ToString(CultureInfo.InvariantCulture)} run pairs; behaviour verdicts are suppressed");
+                evidence.Add($"the set of calls changed in {changes.ToString(CultureInfo.InvariantCulture)} of the last {pairs.ToString(CultureInfo.InvariantCulture)} run pairs; behaviour verdicts are suppressed");
             }
             else if (changed)
             {
@@ -561,7 +655,7 @@ public static partial class HistoryAnalyzer
                         : $"the same number of calls as {previousShaped.RunId}{(currentPoint.Calls is { } n ? " (" + n.ToString(CultureInfo.InvariantCulture) + ")" : "")}, a different set";
                     // Named when both runs recorded their call lists: what appeared and what disappeared, by
                     // its templated line. A count alone sends the reader to two reports to find the call.
-                    if (CallSetOf(currentPoint) is { } now && CallSetOf(previousShaped) is { } before)
+                    if (CallSetsUnderOneRule(currentPoint, previousShaped) is ({ } now, { } before))
                     {
                         newCalls = now.Except(before, StringComparer.Ordinal).ToArray();
                         goneCalls = before.Except(now, StringComparer.Ordinal).ToArray();
@@ -586,7 +680,7 @@ public static partial class HistoryAnalyzer
                 var held = 0;
                 while (held < options.CountRuns - 1 && held < counted.Count
                        && counted[^(held + 1)].Calls == now
-                       && string.Equals(counted[^(held + 1)].ShapeSet, currentPoint.ShapeSet, StringComparison.Ordinal))
+                       && SameSet(counted[^(held + 1)], currentPoint))
                     held++;
                 var stretch = counted.Take(counted.Count - held).ToList();
                 if (stretch.Count > 0 && stretch[^1].Calls is { } before && before != now)
@@ -598,7 +692,7 @@ public static partial class HistoryAnalyzer
                     var to = held == 0 ? $"to {nowText} now" : $"to {nowText} in {heldRuns} and now";
                     var constant = stretch.Count >= options.MinRuns && stretch.All(p => p.Calls == before);
                     // A count that changed with the set was reported then, as a different set of calls.
-                    var countOnly = string.Equals(stretch[^1].ShapeSet, currentPoint.ShapeSet, StringComparison.Ordinal);
+                    var countOnly = SameSet(stretch[^1], currentPoint);
                     if (!countOnly)
                     {
                         // Nothing to add: the set change said it.
@@ -629,7 +723,7 @@ public static partial class HistoryAnalyzer
                 }
             }
             else if (options.ReportReordered && currentPoint.ShapeOrdered is { Length: > 0 } && previousShaped.ShapeOrdered is { Length: > 0 }
-                     && !string.Equals(currentPoint.ShapeOrdered, previousShaped.ShapeOrdered, StringComparison.Ordinal))
+                     && !SameOrder(currentPoint, previousShaped))
             {
                 verdicts.Add(HistoryVerdictKind.Reordered);
                 evidence.Add($"the same calls as {previousShaped.RunId} in a different order");

@@ -296,8 +296,31 @@ public class InteractionShapeTests
         // Fingerprints are only comparable when the same rule made them; the version rides on the run line so
         // the analyzer can tell, and it moves when the rule does. 5: a MongoDB request note became the command without
         // the driver's fields (#168 R2), so every MongoDB call's statement head moved. 6: a document's booleans, signs
-        // and list lengths are data too (the #168 audit).
-        Assert.Equal(6, InteractionShape.Version);
+        // and list lengths are data too (the #168 audit). 7: a remote host the HTTP handler names by its fallback keeps
+        // its name, where 6 recorded localhost (#190 R0); 6 is kept, so a run bridges it.
+        Assert.Equal(7, InteractionShape.Version);
+        Assert.Equal([6, 7], InteractionShape.KeptVersions);
+    }
+
+    [Fact]
+    public void Rule_6_reads_a_host_the_fallback_named_as_localhost_and_nothing_else()
+    {
+        RequestResponseLog Log(string service, bool fallback, RequestResponseType type, Guid id) =>
+            new("t", "t1", HttpMethod.Get, null, new Uri("https://pricing.example.com:8443/v1/prices"), [], service, "Caller", type, Guid.NewGuid(), id, TrackingIgnore: false)
+                { NamedByRemoteHostFallback = fallback };
+        var named = Guid.NewGuid();
+        var mapped = Guid.NewGuid();
+        RequestResponseLog[] logs =
+        [
+            Log("pricing.example.com:8443", true, RequestResponseType.Request, named), Log("pricing.example.com:8443", true, RequestResponseType.Response, named),
+            Log("Pricing", false, RequestResponseType.Request, mapped), Log("Pricing", false, RequestResponseType.Response, mapped)
+        ];
+
+        Assert.Equal(["localhost:8443", "Pricing"], InteractionShape.Calls(logs, null, 6).Select(c => c.Service));
+        Assert.Equal(["pricing.example.com:8443", "Pricing"], InteractionShape.Calls(logs, null, 7).Select(c => c.Service));
+        Assert.Equal(new Dictionary<string, string> { ["Caller>pricing.example.com:8443"] = "Caller>localhost:8443" }, InteractionShape.RenamedDependencies(logs, 6));
+        Assert.Empty(InteractionShape.RenamedDependencies(logs, 7));
+        Assert.Throws<ArgumentOutOfRangeException>(() => InteractionShape.Calls(logs, null, 5));
     }
 
     [Fact]

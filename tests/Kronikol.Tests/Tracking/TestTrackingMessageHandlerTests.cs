@@ -280,6 +280,93 @@ public class TestTrackingMessageHandlerTests : IDisposable
         Assert.Equal("localhost:7777", requestLog.ServiceName);
     }
 
+    // #190 R0: the fallback named every unmapped host localhost:{port}, so two remote APIs on one port were one
+    // party, and a remote one was called localhost. A loopback address is this machine and keeps that name.
+    private async Task<RequestResponseLog[]> SendUnmapped(params string[] urls)
+    {
+        var options = new TestTrackingMessageHandlerOptions
+        {
+            PortsToServiceNames = new Dictionary<int, string> { { 9999, "Other" } },
+            CallerName = "Caller",
+            CurrentTestInfoFetcher = () => ("Test", _testId),
+        };
+        using var invoker = CreateInvoker(options);
+        foreach (var url in urls)
+            await invoker.SendAsync(new HttpRequestMessage(HttpMethod.Get, url), CancellationToken.None);
+        return GetLogsFromThisTest().Where(l => l.Type == RequestResponseType.Request).ToArray();
+    }
+
+    [Fact]
+    public async Task Names_an_unmapped_remote_host_by_its_host_and_port()
+    {
+        var logs = await SendUnmapped("https://pricing.example.com/v1/prices");
+
+        Assert.Equal("pricing.example.com:443", Assert.Single(logs).ServiceName);
+    }
+
+    [Fact]
+    public async Task Two_unmapped_hosts_on_one_port_are_two_parties()
+    {
+        var logs = await SendUnmapped("https://pricing.example.com/v1/prices", "https://api.openai.example/v1/chat");
+
+        Assert.Equal(["pricing.example.com:443", "api.openai.example:443"], logs.Select(l => l.ServiceName));
+    }
+
+    [Fact]
+    public async Task A_loopback_address_keeps_the_localhost_name()
+    {
+        var logs = await SendUnmapped("http://127.0.0.1:54987/stub", "http://[::1]:5000/stub", "http://LOCALHOST:5001/stub");
+
+        Assert.Equal(["localhost:54987", "localhost:5000", "localhost:5001"], logs.Select(l => l.ServiceName));
+    }
+
+    [Theory]
+    [InlineData("http://API.Example.COM:8080/x", "api.example.com:8080")]
+    [InlineData("http://[fe80::1%25eth0]:8080/x", "[fe80::1]:8080")]
+    [InlineData("http://bücher.example/x", "bücher.example:80")]
+    [InlineData("http://localhost.:5000/x", "localhost.:5000")]
+    public async Task Names_a_host_as_Uri_gives_it(string url, string expected)
+    {
+        var logs = await SendUnmapped(url);
+
+        Assert.Equal(expected, Assert.Single(logs).ServiceName);
+    }
+
+    [Fact]
+    public async Task Only_a_remote_host_the_fallback_names_is_marked_for_history()
+    {
+        // History's rule 6 reads such a call as localhost:{port}, as 5.12.1 recorded it; the mark says which calls.
+        var logs = await SendUnmapped("https://pricing.example.com/v1/prices", "http://127.0.0.1:54987/stub");
+        Assert.Equal([true, false], logs.Select(l => l.NamedByRemoteHostFallback));
+        Assert.True(GetLogsFromThisTest().Single(l => l.Type == RequestResponseType.Response && l.ServiceName == "pricing.example.com:443").NamedByRemoteHostFallback);
+
+        var mapped = new TestTrackingMessageHandlerOptions
+        {
+            PortsToServiceNames = new Dictionary<int, string> { { 443, "Pricing" } },
+            CallerName = "Caller",
+            CurrentTestInfoFetcher = () => ("Test", _testId),
+        };
+        using var invoker = CreateInvoker(mapped);
+        await invoker.SendAsync(new HttpRequestMessage(HttpMethod.Get, "https://pricing.example.com/v1/quotes"), CancellationToken.None);
+        Assert.False(GetLogsFromThisTest().Single(l => l.Type == RequestResponseType.Request && l.ServiceName == "Pricing").NamedByRemoteHostFallback);
+    }
+
+    [Fact]
+    public async Task The_port_map_still_names_a_remote_host()
+    {
+        var options = new TestTrackingMessageHandlerOptions
+        {
+            PortsToServiceNames = new Dictionary<int, string> { { 5141, "Cow Service" } },
+            CallerName = "Caller",
+            CurrentTestInfoFetcher = () => ("Test", _testId),
+        };
+        using var invoker = CreateInvoker(options);
+
+        await invoker.SendAsync(new HttpRequestMessage(HttpMethod.Get, "http://pricing.internal:5141/x"), CancellationToken.None);
+
+        Assert.Equal("Cow Service", GetLogsFromThisTest().First(l => l.Type == RequestResponseType.Request).ServiceName);
+    }
+
     [Fact]
     public async Task Uses_client_name_to_service_name_mapping_when_client_name_provided()
     {

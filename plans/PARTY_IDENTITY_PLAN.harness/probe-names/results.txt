@@ -1,0 +1,9 @@
+# probe.cs, run 2026-10-26T23:46Z on Windows 11 26200, .NET SDK 10.0.300, Kronikol worktree at 44bcc62a (5.11.0)
+unmapped remote host, https                https://pricing.example.com/v1/prices      -> service "localhost:443", caller "Caller"
+a second remote host on the same port      https://api.openai.example/v1/chat         -> service "localhost:443", caller "Caller"
+unmapped loopback, dynamic port            http://localhost:54321/stub                -> service "localhost:54321", caller "Caller"
+unmapped loopback, another run's port      http://127.0.0.1:54987/stub                -> service "localhost:54987", caller "Caller"
+port mapped, host differs                  http://pricing.internal:5141/x             -> service "Cow Service", caller "Caller"
+same port mapped, other host               http://other.internal:5141/x               -> service "Cow Service", caller "Caller"
+client name unmapped                       https://pricing.example.com/v1/prices      -> service "localhost:443", caller "Caller"
+CallerName left at its default             http://localhost:5000/x                    -> service "Breakfast Provider", caller "Caller"

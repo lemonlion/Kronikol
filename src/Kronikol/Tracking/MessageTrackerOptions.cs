@@ -10,8 +10,8 @@ namespace Kronikol.Tracking;
 public record MessageTrackerOptions
 {
     /// <summary>
-    /// The participant name shown in diagrams for the messaging service when used as
-    /// the <c>destinationName</c> default. Also used in <see cref="MessageTracker.ComponentName"/>.
+    /// Names the tracker in diagnostics (<see cref="MessageTracker.ComponentName"/>). It names no participant: each
+    /// call's destination is the <c>destinationName</c> (or <c>consumerName</c>) passed with it.
     /// </summary>
     public string ServiceName { get; set; } = "MessageBus";
 

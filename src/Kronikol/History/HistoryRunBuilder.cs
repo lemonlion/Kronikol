@@ -26,6 +26,14 @@ public sealed record HistoryBuildOptions
 
     /// <summary>The consumer's templating rules, applied before the built-in ones (<see cref="ReportConfigurationOptions.HistoryShapeTemplates"/>); null for none.</summary>
     public HistoryShapeRules? ShapeRules { get; init; }
+
+    /// <summary>
+    /// Whether the run bridges the earlier rules Kronikol keeps (<see cref="HistoryRun.Bridge"/>, #190 R0): only for calls
+    /// as this process captured or ingested them. A bridge says what an earlier rule recorded for each call, and calls
+    /// read back from a report have lost what tells it (<see cref="Tracking.RequestResponseLog.NamedByRemoteHostFallback"/>),
+    /// so a run rebuilt from one bridges nothing and reads no verdict across a change, as before.
+    /// </summary>
+    internal bool Bridges { get; init; }
 }
 
 /// <summary>
@@ -123,6 +131,17 @@ public static class HistoryRunBuilder
             callSets = callLines.Select(lines => (IReadOnlyList<int>)lines.Select(line => index[line]).OrderBy(i => i).ToArray()).ToArray();
         }
 
+        // The run under every earlier rule Kronikol keeps, so a run in the window made by one is compared with these
+        // rather than read across with no verdict (#190 R0). A fragment does not know its window, so every kept rule
+        // is bridged here; a ledger append keeps only those its window holds (HistoryBridges.ForWindow).
+        Dictionary<string, HistoryBridge>? bridge = null;
+        if (logsByTest is not null && options.Bridges)
+        {
+            bridge = new Dictionary<string, HistoryBridge>(StringComparer.Ordinal);
+            foreach (var version in InteractionShape.KeptVersions.Where(v => v != InteractionShape.Version))
+                bridge[HistoryBridge.RuleKey(version, options.ShapeRules?.Hash)] = BridgeUnder(version, scenarios, logsByTest, logs, options, shapeSet, shapeOrdered);
+        }
+
         var run = new HistoryRun
         {
             Id = runId ?? RunId(ci, at),
@@ -147,9 +166,44 @@ public static class HistoryRunBuilder
             CallSets = callSets,
             Errors = errors,
             ErrorText = errorText,
-            Deps = InteractionShape.Dependencies(logs)
+            Deps = InteractionShape.Dependencies(logs),
+            Bridge = bridge
         };
         return new HistoryBuildResult(roster, run, shapes);
+    }
+
+    /// <summary>The run's fingerprints, calls and dependency pairs under an earlier kept rule; an empty entry when the rule changes none of them.</summary>
+    private static HistoryBridge BridgeUnder(int version, (Feature Feature, Scenario Scenario)[] scenarios, Dictionary<string, RequestResponseLog?[]> logsByTest,
+        IReadOnlyList<RequestResponseLog?> logs, HistoryBuildOptions options, string[] ownSet, string[] ownOrdered)
+    {
+        var set = new string[scenarios.Length];
+        var ordered = new string[scenarios.Length];
+        var lines = new string[scenarios.Length][];
+        var differs = false;
+        for (var i = 0; i < scenarios.Length; i++)
+        {
+            var own = logsByTest.TryGetValue(scenarios[i].Scenario.Id, out var list) ? list : [];
+            var calls = InteractionShape.Calls(own, options.ShapeRules, version);
+            (set[i], ordered[i], _) = InteractionShape.Fingerprint(calls);
+            lines[i] = calls.Select(c => c.ToString()).Distinct(StringComparer.Ordinal).ToArray();
+            differs |= !string.Equals(set[i], ownSet[i], StringComparison.Ordinal) || !string.Equals(ordered[i], ownOrdered[i], StringComparison.Ordinal);
+        }
+
+        var renamed = InteractionShape.RenamedDependencies(logs, version);
+        var entry = new HistoryBridge { Deps = renamed.Count > 0 ? renamed : null };
+        if (!differs)
+            return entry;
+
+        var shapes = HistoryShapes.Create(lines.SelectMany(l => l));
+        var index = shapes.Calls.Select((line, position) => (line, position)).ToDictionary(p => p.line, p => p.position, StringComparer.Ordinal);
+        return entry with
+        {
+            ShapeSet = set,
+            ShapeOrdered = ordered,
+            ShapesHash = shapes.Hash,
+            CallSets = lines.Select(l => (IReadOnlyList<int>)l.Select(line => index[line]).OrderBy(i => i).ToArray()).ToArray(),
+            Shapes = shapes
+        };
     }
 
     private static string? Source(Scenario scenario) =>
