@@ -26,7 +26,8 @@ Evidence labels:
   - the three Example.Api component reports (5.8.0), copied into `inputs/examples-5.8.0/`.
 - **READ** means Kronikol's source at `44bcc62a`.
 - **PEER** means measured or read by a sibling plan's session; the script is named where there is one.
-- **ISSUE** means the issue's own numbers, not measured again: the three reports it used are not on this machine.
+- **ISSUE** means the issue's own numbers, not measured again: the three reports it used are not on this machine
+  (searched on 2026-10-27, A3).
 - **INFERRED** means reasoned from two facts above and stated by neither.
 
 ## 0. Summary
@@ -508,6 +509,10 @@ No Playwright: nothing here changes the HTML report.
   data file, and the external-SUT lane says `notRecorded`.
 - On two runs of one lane of the same commit (a re-run of CI or of the lane locally): `behaviourHash` equal, or the
   difference is one of the operations section 2.4 names.
+- On the two ingested runs of A3 (a Jest-shaped NDJSON run and a Cucumber Messages run): the card is written, phases
+  are all Action on the Jest-shaped one and `effectivePhases` says so. Where the stream names the service as the caller
+  of its own calls, `origin` separates them from the test's; where it names the test for every call, the card says so
+  through `capture.subjectCalls: "notRecorded"` rather than listing the service's dependencies as the test's.
 - Run cold, the indexer's question: from `Run.json` and `service.json` alone, list BreakfastProvider's dependencies
   used while serving requests, and those used only in the background. Compared by hand with `flow` on five scenarios.
 
@@ -581,7 +586,7 @@ run-end file in the first release, R1 and R2 merge into one minor.
 |---|---|---|---|
 | A1 | BreakfastProvider's lanes are representative of in-process .NET suites | RUN on one consumer | The rates in 2.4 move; the design does not, since it promises nothing for counts |
 | A2 | The service's calls outside any received call are seeding in suites that seed through the container | INFERRED from 2.2; not observed on BreakfastProvider | `cause` still says what is known; 5.2.4's second fixture pins what the card prints |
-| A3 | The three reports in the issue behave like BreakfastProvider's lanes | ISSUE, not on this machine | The acceptance in 5.5 is re-run on them by the owner |
+| A3 | The three reports in the issue behave like BreakfastProvider's lanes | ISSUE. Searched for on 2026-10-27 and not found: the user folders, every drive (C: is the only one), every session's scratchpad, and `C:/Code` outside Kronikol's worktrees | R1's acceptance adds two runs built to the issue's other stacks with `kronikol ingest`: a Jest-shaped one (one synthetic `Run:` step, every call Action, MSW-style doubles answering in 1 to 2 ms) and a Cucumber Messages one. Both are built in R1's tests from hand-written NDJSON, as #184's repro was, and pinned like the BreakfastProvider lanes |
 | A4 | #192's key and cause, and #190's inference, are pure functions of what a report holds | PEER, agreed by message | R1 waits, or the card gets a field that differs between run end and backfill; 5.3.2 catches it |
 | A5 | `ReportScanner` can give the card every field it needs, `attributionSource` included | READ: it does not read `attributionSource` today (PEER) | R1 adds it to the scan, as #192 needs too |
 | A6 | 16 hex of SHA-256 is enough for an operation id | INFERRED: about 200 operations a run | A collision would merge two operations; a fact over the corpus checks there is none |
