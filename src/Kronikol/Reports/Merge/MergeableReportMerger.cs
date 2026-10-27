@@ -21,6 +21,11 @@ public static class MergeableReportMerger
         var (kept, duplicateDiagnostics) = DropWhatWasAlreadySupplied(reports);
         reports = kept;
 
+        var interactions = reports.SelectMany(r => r.Interactions).ToArray();
+        var serviceId = reports.Select(r => r.ServiceId).Distinct(StringComparer.Ordinal).Count() == 1 ? reports[0].ServiceId : null;
+        var partyDiagnostics = new List<DiagnosticEntry>();
+        var parties = MergeParties(reports, interactions, serviceId, partyDiagnostics);
+
         return new MergeableReport
         {
             KronikolVersion = reports[0].KronikolVersion,
@@ -56,15 +61,76 @@ public static class MergeableReportMerger
             // The traffic simply concatenates - no dedup here, because a request and its response
             // deliberately share one RequestResponseId. A scenario the merge was given twice has already
             // lost its second copy's traffic above, which is the only duplication there ever was.
-            Interactions = reports.SelectMany(r => r.Interactions).ToArray(),
+            Interactions = interactions,
+            // Kept only when every shard has the same one, a shard without one included, as Suite is (#190).
+            ServiceId = serviceId,
+            Parties = parties,
             PayloadsCompressed = reports.Any(r => r.PayloadsCompressed),
             FileCompressed = reports.Any(r => r.FileCompressed),
             StepPaths = MergeByScenario(reports.Select(r => r.StepPaths)),
             // Each shard's own marks, carried: never recomputed over the merged calls (plans/WARM_UP_PLAN.md 4.3).
             WarmUp = MergeWarmUp(reports.Select(r => r.WarmUp)),
             Annotations = MergeByScenario(reports.Select(r => r.Annotations)),
-            Diagnostics = [.. reports.SelectMany(r => r.Diagnostics), .. duplicateDiagnostics, .. DisagreementDiagnostics(reports)]
+            Diagnostics = [.. reports.SelectMany(r => r.Diagnostics), .. duplicateDiagnostics, .. DisagreementDiagnostics(reports), .. partyDiagnostics]
         };
+    }
+
+    /// <summary>
+    /// The shards' parties blocks as one (#190, plans/PARTY_IDENTITY_PLAN.md §5.6), or null when no shard declared
+    /// anything. A field the shards that list a party agree on is kept; one they disagree on is left out, and a kind
+    /// they disagree on is unknown, each said by a <see cref="DiagnosticKind.PartyDisagreement"/> naming the shards. What
+    /// a shard declared or observed stays so; what it inferred is inferred again over the merged calls.
+    /// </summary>
+    private static IReadOnlyList<Kronikol.Parties.Party>? MergeParties(IReadOnlyList<MergeableReport> reports, Tracking.RequestResponseLog[] interactions, string? serviceId, List<DiagnosticEntry> diagnostics)
+    {
+        var declaring = reports.Select((report, i) => (Report: report, Number: i + 1)).Where(x => x.Report.Parties is not null).ToList();
+        if (declaring.Count == 0)
+            return null;
+
+        var calls = Kronikol.Parties.PartiesReport.CallsOf(interactions).ToList();
+        var named = new HashSet<string>(calls.SelectMany(c => new[] { c.Caller, c.Service }), StringComparer.Ordinal);
+        var descriptors = new List<Kronikol.Parties.PartyDescriptor>();
+        var observed = new List<Kronikol.Parties.TestClientObservation>();
+        var unknown = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var name in declaring.SelectMany(x => x.Report.Parties!).Select(p => p.Name).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal))
+        {
+            if (!named.Contains(name))
+                continue;
+            var rows = declaring.SelectMany(x => x.Report.Parties!.Where(p => p.Name == name).Select(p => (x.Number, Row: p))).ToList();
+
+            string? Agreed(string field, Func<Kronikol.Parties.Party, string?> value)
+            {
+                var said = rows.Where(r => value(r.Row) is not null).GroupBy(r => value(r.Row)!, StringComparer.Ordinal).ToList();
+                if (said.Count <= 1)
+                    return said.Count == 1 ? said[0].Key : null;
+                diagnostics.Add(new DiagnosticEntry(DiagnosticKind.PartyDisagreement,
+                    $"Merged reports do not agree on the {field} of \"{name}\", so the merged report leaves it out: "
+                    + string.Join("; ", said.Select(g => $"{(g.Count() == 1 ? "report" : "reports")} {string.Join(", ", g.Select(r => r.Number))} say \"{g.Key}\"")) + "."));
+                return null;
+            }
+
+            var id = Agreed("id", p => p.Id);
+            var note = Agreed("note", p => p.Note);
+            var known = rows.Where(r => r.Row.KindSource is Kronikol.Parties.PartyKindSource.Declared or Kronikol.Parties.PartyKindSource.Observed).ToList();
+            var kind = known.Count == 0 ? null : Agreed("kind", p => known.Any(r => ReferenceEquals(r.Row, p)) ? Kronikol.Parties.PartiesReport.KindName(p.Kind) : null);
+            if (known.Count > 0 && kind is null)
+                unknown.Add(name);
+
+            Kronikol.Parties.PartyKind? declaredKind = null;
+            if (kind is not null && Kronikol.Parties.PartiesFile.TryParseKind(kind, out var parsedKind))
+            {
+                if (known.All(r => r.Row.KindSource == Kronikol.Parties.PartyKindSource.Observed) && parsedKind is Kronikol.Parties.PartyKind.Test or Kronikol.Parties.PartyKind.UnderTest)
+                    observed.Add(parsedKind == Kronikol.Parties.PartyKind.Test ? new(name, [], null) : new("", [name], null));
+                else
+                    declaredKind = parsedKind;
+            }
+            if (id is not null || note is not null || declaredKind is not null)
+                descriptors.Add(new Kronikol.Parties.PartyDescriptor(name) { Id = id, Kind = declaredKind, Note = note });
+        }
+
+        // The shards said what their own checks found; the merged table is resolved again only for its rows.
+        var table = Kronikol.Parties.PartyResolver.Resolve(calls, new Kronikol.Parties.PartyDeclarations(serviceId, descriptors, [], []), new Kronikol.Parties.PartyObservations(observed));
+        return table.Parties.Select(p => unknown.Contains(p.Name) ? p with { Kind = Kronikol.Parties.PartyKind.Unknown, KindSource = null } : p).ToList();
     }
 
     /// <summary>The shards' warm-up marks, unioned: a call's id is a Guid and a scenario's is unique once

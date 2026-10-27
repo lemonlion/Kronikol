@@ -24,9 +24,13 @@ public static class WebApplicationFactoryExtensions
         return OneAtATime(factory, () =>
         {
             options.HttpContextAccessor ??= factory.Services.GetService<IHttpContextAccessor>();
-            return factory.CreateDefaultClient(new TestTrackingMessageHandler(options));
+            return factory.CreateDefaultClient(TestClientHandler<T>(options));
         });
     }
+
+    /// <summary>The test client's handler, registered as the test's (#190, O1): its caller is the test, and whom it calls the service under test.</summary>
+    internal static TestTrackingMessageHandler TestClientHandler<T>(TestTrackingMessageHandlerOptions options) where T : class =>
+        new(options) { TestClient = Parties.TestClientRegistry.Register(options.CallerName, typeof(T).Assembly.GetName().Name) };
 
     /// <summary>
     /// Creates an <see cref="HttpClient"/> that records all outgoing requests and responses,
@@ -43,7 +47,7 @@ public static class WebApplicationFactoryExtensions
         {
             options.HttpContextAccessor ??= factory.Services.GetService<IHttpContextAccessor>();
             var handlers = new DelegatingHandler[additionalHandlers.Length + 1];
-            handlers[0] = new TestTrackingMessageHandler(options);
+            handlers[0] = TestClientHandler<T>(options);
             additionalHandlers.CopyTo(handlers, 1);
             return factory.CreateDefaultClient(handlers);
         });

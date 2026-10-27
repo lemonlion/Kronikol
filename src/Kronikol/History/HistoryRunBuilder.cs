@@ -34,6 +34,9 @@ public sealed record HistoryBuildOptions
     /// so a run rebuilt from one bridges nothing and reads no verdict across a change, as before.
     /// </summary>
     internal bool Bridges { get; init; }
+
+    /// <summary>The service the run is about (<see cref="ReportConfigurationOptions.ServiceId"/>, #190), written on the run line when set.</summary>
+    public string? ServiceId { get; init; }
 }
 
 /// <summary>
@@ -167,7 +170,8 @@ public static class HistoryRunBuilder
             Errors = errors,
             ErrorText = errorText,
             Deps = InteractionShape.Dependencies(logs),
-            Bridge = bridge
+            Bridge = bridge,
+            ServiceId = string.IsNullOrWhiteSpace(options.ServiceId) ? null : options.ServiceId.Trim()
         };
         return new HistoryBuildResult(roster, run, shapes);
     }

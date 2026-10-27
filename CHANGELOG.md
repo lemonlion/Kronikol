@@ -4,6 +4,58 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.14.0] - 2026-10-27
+
+The minor part moves (5.13.0 to 5.14.0): new options (`ServiceId`, `Parties`, `PartiesFilePath`), new public types
+(`PartyDescriptor`, `PartyKind`, `PartyKindSource`, `Party`), new members (`HistoryRun.ServiceId`,
+`HistoryBuildOptions.ServiceId`, `RunManifest.ServiceId`, `CtrfEnvironment.AppName`, `MergeableReport.ServiceId` and
+`Parties`, and a `CtrfReportGenerator.Generate` overload that takes the service id), seven new `DiagnosticKind` values
+and a new query verb, `parties` (#190).
+
+### Added
+
+- **Who each party is.** A run can say which service it tests and what each party it called was: the test, the
+  service under test, the real thing or a test double.
+  - `ReportConfigurationOptions.ServiceId` names the service the run is about, and `ReportConfigurationOptions.Parties`
+    declares parties by the name the calls carry, each with any of `Id`, `Kind` (`Test`, `UnderTest`, `Real`, `Double`
+    or `Unknown`) and `Note`.
+  - The same rows can live in `.kronikol/parties.json` at the repository root, found as history's ledger is, or at the
+    path `KRONIKOL_PARTIES` or `PartiesFilePath` names. A suite's options win over the file field by field, so a shared
+    file can hold the ids and each lane its kinds.
+  - A tracking client built from a `WebApplicationFactory` (`CreateTestTrackingClient`, in every framework's
+    extensions) is the test's own: its caller is the test and whom it calls the service under test, both `observed`.
+  - What nothing declares or observes is inferred from the calls: the caller no service calls is the test, and what
+    it calls, other than a database, a cache, a queue, storage or an AI service, is the service under test. Anything
+    else is `unknown`.
+  - A declared name matches a call's name exactly. A near miss (case or surrounding space), a declared name no call
+    carries, two declarations that disagree, a service's calls carrying the test's name (a tracker left at the test's
+    `CallerName`) and a parties file that cannot be read are each a diagnostic, on a run that declares something.
+- **The report carries the table, only when the run declared something.** `serviceId` and `parties` in the data file,
+  before `features` in the JSON and the `.krkl`, last in the mergeable file, and as `ServiceId` and `Parties` in the XML
+  and YAML, with one row per name the report's calls carry. Each row has `name` and `kind`, and `id`, `kindSource`
+  (`declared`, `observed` or `inferred`) and `note` when it has them. The JSON schema and the XSD describe both. A run
+  that declares nothing writes the same bytes as before.
+- **`kronikol query parties`**: one row per party with its kind, how the kind is known, the calls it made and received,
+  and its id and note; `--kind double` lists the stand-ins. On a report that declares nothing it prints the table
+  inferred from the calls, says so, and prints the checks as notes. On a report that declares its parties, `services`
+  gains `id` and `kind` columns and `summary` a `service:` line and `run.serviceId`.
+- **A declared double is drawn as one.** Its participant carries «test double» in the sequence diagrams and the
+  component diagram, and keeps its dependency colour. Nothing is drawn differently until a double is declared.
+- **The service id travels with the run**: `serviceId` on the history ledger's run line, in `Run.json`, in
+  `Failures.jsonl`'s header, and as CTRF's `environment.appName` from the run and from `kronikol ctrf`, on CI and off
+  it, each only when declared.
+- **`kronikol merge` joins the shards' tables.** What the shards agree on is kept. A field they disagree on is left
+  out, a kind they disagree on is `unknown`, and a `PartyDisagreement` diagnostic names which shard said what.
+  `serviceId` is kept only when every shard has the same one.
+
+### Notes
+
+- The run line's `serviceId` is an optional member that every released Kronikol skips, so the ledger's version does
+  not move. An older tool that rewrites the ledger (`history prune`, `compact`, `amend`) drops it from the lines it
+  writes; the next run writes its own.
+- An older `kronikol merge` drops the block and reads the new diagnostic kinds as `Other`, which raises a banner. Move
+  the tool with the library.
+
 ## [5.13.0] - 2026-10-27
 
 The minor part moves (5.12.1 to 5.13.0): history's ledger line gains a member, `bridge`, read through a new

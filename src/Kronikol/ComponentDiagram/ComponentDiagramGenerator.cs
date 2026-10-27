@@ -275,30 +275,32 @@ public static partial class ComponentDiagramGenerator
             var depType = serviceTypes.GetValueOrDefault(participant, DependencyType.HttpApi);
 
             var name = WrapName(participant);
+            // A participant the run declares a test double says so (#190, Q11).
+            var doubleLine = Parties.DiagramParties.IsDeclaredDouble(participant) ? "\\n<size:10>«test double»</size>" : "";
 
             if (useC4)
             {
                 // The C4 macros apply the bold through the style rather than through creole, so a name
                 // broken across lines needs no marker of its own here.
                 if (isPureCaller)
-                    sb.AppendLine($"Person({alias}, \"{name}\")");
+                    sb.AppendLine($"Person({alias}, \"{name}{doubleLine}\")");
                 else
-                    sb.AppendLine(GetC4SystemDeclaration(depType, alias, name));
+                    sb.AppendLine(GetC4SystemDeclaration(depType, alias, name + doubleLine));
             }
             else
             {
                 var bold = BoldPerLine(name);
                 if (isPureCaller)
                 {
-                    sb.AppendLine($"rectangle \"{bold}\\n<size:10>[Person]</size>\" as {alias} <<person>>");
+                    sb.AppendLine($"rectangle \"{bold}\\n<size:10>[Person]</size>{doubleLine}\" as {alias} <<person>>");
                 }
                 else
                 {
                     var shape = GetComponentShape(depType);
                     if (shape == "rectangle")
-                        sb.AppendLine($"rectangle \"{bold}\\n<size:10>[Software System]</size>\" as {alias} <<system>>");
+                        sb.AppendLine($"rectangle \"{bold}\\n<size:10>[Software System]</size>{doubleLine}\" as {alias} <<system>>");
                     else
-                        sb.AppendLine($"{shape} \"{name}\" as {alias}");
+                        sb.AppendLine($"{shape} \"{name}\" as {alias}{Parties.DiagramParties.StereotypeOf(participant)}");
                 }
             }
         }

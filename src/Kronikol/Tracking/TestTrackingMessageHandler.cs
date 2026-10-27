@@ -40,6 +40,9 @@ public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
     private int _invocationCount;
     private bool _listenerStarted;
 
+    /// <summary>The test client <c>CreateTestTrackingClient</c> built this handler for, which records whom it called (#190, O1).</summary>
+    internal Kronikol.Parties.TestClientRecord? TestClient { get; init; }
+
     public TestTrackingMessageHandler(TestTrackingMessageHandlerOptions options, IHttpContextAccessor? httpContextAccessor = null, string? clientName = null)
     {
         _fixedServiceName = options.FixedNameForReceivingService;
@@ -245,6 +248,7 @@ public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
         AddIfAbsent(request, TestTrackingHttpHeaders.CallerNameHeader, TrackingHeaderValue.Encode(_callerName));
 
         var (serviceName, namedByRemoteHostFallback) = ResolveServiceName(request.RequestUri!);
+        TestClient?.Saw(serviceName);
 
         if (!hasCurrentTestNameHeader)
             InjectImplicitActionStartIfNeeded(currentTestInfo);

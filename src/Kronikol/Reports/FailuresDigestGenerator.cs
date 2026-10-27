@@ -151,7 +151,7 @@ public static class FailuresDigestGenerator
     internal static FailuresDigest Generate(Feature[] features, RequestResponseLog[]? trackedLogs, string? htmlFileName,
         string kronikolVersion, bool queryScript, IReadOnlyList<DiagnosticEntry>? diagnostics = null, string? suite = null,
         IReadOnlyDictionary<string, List<string?>>? stepPaths = null, HistoryVerdicts? history = null,
-        FailuresDigestEarlierAttempt? earlierAttempt = null, string? dataFileName = null)
+        FailuresDigestEarlierAttempt? earlierAttempt = null, string? dataFileName = null, string? serviceId = null)
     {
         ArgumentNullException.ThrowIfNull(features);
 
@@ -184,7 +184,7 @@ public static class FailuresDigestGenerator
 
         return new FailuresDigest(
             BuildMarkdown(entries, tests.Length, tests.Count(x => x.Scenario.Result == ExecutionResult.Passed), kronikolVersion, diagnostics, unparameterisedSql, history, earlierAttempt, queryScript, dataFileName),
-            BuildJsonl(entries, tests.Length, kronikolVersion, suite));
+            BuildJsonl(entries, tests.Length, kronikolVersion, suite, serviceId));
     }
 
     // ─── Model ─────────────────────────────────────────────────
@@ -915,7 +915,7 @@ public static class FailuresDigestGenerator
 
     // ─── JSONL ─────────────────────────────────────────────────
 
-    private static string BuildJsonl(IReadOnlyList<Entry> entries, int scenarioCount, string kronikolVersion, string? suite)
+    private static string BuildJsonl(IReadOnlyList<Entry> entries, int scenarioCount, string kronikolVersion, string? suite, string? serviceId)
     {
         var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
         var lines = new StringBuilder();
@@ -937,6 +937,9 @@ public static class FailuresDigestGenerator
             ["scenarios"] = scenarioCount,
             ["failures"] = entries.Count
         };
+        // Only when the run declared it (#190), so a script reading failures from several services' runs can tell them apart.
+        if (serviceId is not null)
+            header["serviceId"] = serviceId;
         lines.Append(JsonSerializer.Serialize(header, options)).Append('\n');
 
         foreach (var entry in entries)

@@ -32,6 +32,7 @@ public class KrklQueryTests : IDisposable
     public static TheoryData<string> Invocations => new()
     {
         "summary", "summary --json", "scenarios", "scenarios --json", "scenarios --failed", "services", "services --json",
+        "parties", "parties --json", "parties --kind test",
         "sizes --json", "failures", "failures --json", "repro", "repro s1", "steps s0", "steps s0 --json", "steps s0/1",
         "attachments s0", "attachments s0 --json", "assertions", "assertions s1", "flow s0", "flow s0 --json", "annotations s0", "values --path $.qty", "values s0 --path $.item",
         "interactions", "interactions --json", "interactions s0", "interactions --group-by service", "interactions --group-by service --sort bytes --json",

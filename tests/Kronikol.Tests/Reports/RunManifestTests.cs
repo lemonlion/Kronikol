@@ -103,6 +103,21 @@ public class RunManifestTests : IDisposable
         Assert.Equal("attachments/checkout_failure.png", json.RootElement.GetProperty("attachments")[0].GetString());
     }
 
+    // #190 R1: the service the run was about, after the ten members and only when the run declared one.
+    [Fact]
+    public void A_declared_service_id_is_written_after_the_ten_members_and_reads_back()
+    {
+        var path = (Sample() with { ServiceId = "breakfast-provider" }).Write(_dir);
+
+        using (var json = JsonDocument.Parse(ReportHtml.Read(path)))
+        {
+            Assert.Equal(11, json.RootElement.EnumerateObject().Count());
+            Assert.Equal("serviceId", json.RootElement.EnumerateObject().Last().Name);
+        }
+        Assert.Equal("breakfast-provider", RunManifest.TryRead(path)!.ServiceId);
+        Assert.Null(RunManifest.TryRead(Sample().Write(Directory.CreateDirectory(Path.Combine(_dir, "plain")).FullName))!.ServiceId);
+    }
+
     [Fact]
     public void A_manifest_reads_back_as_it_was_written()
     {

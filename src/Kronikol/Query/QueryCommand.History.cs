@@ -625,7 +625,8 @@ internal static class ReportHistory
             ShapeOrdered = null,
             Errors = errors,
             ErrorText = errorText,
-            Deps = deps.ToArray()
+            Deps = deps.ToArray(),
+            ServiceId = index.ServiceId
         };
         return true;
     }

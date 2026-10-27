@@ -61,12 +61,23 @@ public static partial class QueryCommand
                 }
                 : null
         };
-        writer.Data("run", notATest > 0 ? QueryWriter.WithMember(run, "notATest", notATest) : run);
+        object runData = notATest > 0 ? QueryWriter.WithMember(run, "notATest", notATest) : run;
+        // Only on a report that declares its parties (#190): every other report's summary is as it was.
+        if (index.HasParties && index.ServiceId is { } serviceId)
+            runData = QueryWriter.WithMember(runData, "serviceId", serviceId);
+        writer.Data("run", runData);
 
         writer.Line($"{Path.GetFileName(index.Path)}  {QueryWriter.Size((int)Math.Min(index.FileLength, int.MaxValue))}"
                     + (index.Snapshot is null ? "" : $" on disk, {QueryWriter.Size((int)Math.Min(index.JsonLength, int.MaxValue))} as JSON")
                     + (index.KronikolVersion is { } v ? $"  Kronikol {v}" : ""));
         writer.Line($"{index.StartTime} → {index.EndTime}");
+        if (index.HasParties)
+        {
+            var subjects = index.Parties.Where(p => p.Kind == "underTest").Select(p => p.Name).ToList();
+            writer.Line($"service: {index.ServiceId ?? "no id declared"}"
+                        + (subjects.Count > 0 ? $"  under test: {string.Join(", ", subjects)}" : "")
+                        + "  (parties lists every party)");
+        }
         // Only when there was a CI to read: a line saying "None" on every local run is noise, and the
         // budget is spent on answers. This is the line that tells two downloaded artifacts apart.
         if (index.OnCi)
@@ -386,7 +397,11 @@ public static partial class QueryCommand
             _ => stats.Values.OrderByDescending(s => s.Calls).ToList()
         };
 
-        writer.Line($"{"service",-24} {"calls",5} {"errors",6} {"bytes",9} {"p50",8} {"max",8}  statuses");
+        // A report that declares its parties (#190) says each service's id and kind, before statuses, which stays last
+        // because it is the one column of variable width. Every other report's rows are as they were.
+        var partyOf = index.HasParties ? PartyLookup(index) : null;
+        writer.Line($"{"service",-24} {"calls",5} {"errors",6} {"bytes",9} {"p50",8} {"max",8}  "
+                    + (partyOf is null ? "" : $"{"id",-20} {"kind",-10} ") + "statuses");
 
         // Paged like every other listing rather than printed whole: it used to hand-roll its loop and its
         // footer, which is how it came to be the one listing that could overflow the budget with nothing
@@ -396,20 +411,28 @@ public static partial class QueryCommand
             {
                 writer.Line($"{QueryWriter.OneLine(entry.Name, 24),-24} {entry.Calls,5} {entry.Errors,6} "
                             + $"{QueryWriter.Size(entry.Bytes),9} {QueryWriter.Duration(entry.Median()),8} {QueryWriter.Duration(entry.MaxMs),8}  "
+                            + (partyOf is null ? "" : PartyColumns(partyOf, entry.Name))
                             + entry.StatusSummary());
                 statusesCut |= entry.StatusesCut;
             },
             options.RerunArgs(),
-            entry => new
+            entry =>
             {
-                service = entry.Name,
-                calls = entry.Calls,
-                errors = entry.Errors,
-                bytes = entry.Bytes,
-                medianMs = entry.Median(),
-                maxMs = entry.MaxMs,
-                totalMs = entry.TotalMs,
-                statuses = entry.Statuses
+                object item = new
+                {
+                    service = entry.Name,
+                    calls = entry.Calls,
+                    errors = entry.Errors,
+                    bytes = entry.Bytes,
+                    medianMs = entry.Median(),
+                    maxMs = entry.MaxMs,
+                    totalMs = entry.TotalMs,
+                    statuses = entry.Statuses
+                };
+                if (partyOf is null)
+                    return item;
+                partyOf.TryGetValue(entry.Name, out var party);
+                return QueryWriter.WithMember(QueryWriter.WithMember(item, "id", party?.Id), "kind", party?.Kind ?? "unknown");
             },
             $"{ordered.Count} services · a service missing here was never called");
 
@@ -417,6 +440,127 @@ public static partial class QueryCommand
         if (statusesCut && !writer.Json)
             writer.Note($"+N more: past its {MaxStatusesShown} commonest, `services --json` lists every status of a service");
 
+        return 0;
+    }
+
+    /// <summary>A report's declared parties by name, ignoring case, as <c>services</c> groups its rows.</summary>
+    private static Dictionary<string, ReportPartyEntry> PartyLookup(ReportIndex index)
+    {
+        var lookup = new Dictionary<string, ReportPartyEntry>(StringComparer.OrdinalIgnoreCase);
+        foreach (var party in index.Parties)
+            lookup.TryAdd(party.Name, party);
+        return lookup;
+    }
+
+    private static string PartyColumns(Dictionary<string, ReportPartyEntry> lookup, string service) =>
+        lookup.TryGetValue(service, out var party)
+            ? $"{QueryWriter.OneLine(party.Id ?? "-", 20),-20} {party.Kind ?? "unknown",-10} "
+            : $"{"-",-20} {"unknown",-10} ";
+
+    /// <summary>
+    /// <c>parties</c> (#190): every party, callers included, with its kind, how the kind is known, its id, the calls it
+    /// made and received, and its note. A report that declares its parties is read as written; on any other the table is
+    /// inferred from the calls, as the run's own writer would have, and the checks a declaring run reports as diagnostics
+    /// are printed as notes. Calls no scenario owns are not in the index, so they are not counted.
+    /// </summary>
+    private static int Parties(ReportIndex index, QueryOptions options, QueryWriter writer, TextWriter error)
+    {
+        var scope = index.Scenarios.AsEnumerable();
+        if (options.Positional.Count > 0)
+        {
+            if (!Address.TryParse(options.Positional[0], out var address) || address.Kind != AddressKind.Scenario)
+            {
+                error.WriteLine($"Not a scenario address: {options.Positional[0]} (expected s3)");
+                return 2;
+            }
+            if (index.Scenario(address.Scenario) is not { } scenario)
+            {
+                error.WriteLine($"No scenario {address} — the report has {index.Scenarios.Count}.");
+                return 2;
+            }
+            scope = [scenario];
+        }
+
+        Kronikol.Parties.PartyKind? only = null;
+        if (options.Kind is { } kindText)
+        {
+            if (!Kronikol.Parties.PartiesFile.TryParseKind(kindText, out var parsed))
+            {
+                error.WriteLine($"Not a party kind: {kindText} (expected test, underTest, real, double or unknown)");
+                return 2;
+            }
+            only = parsed;
+        }
+
+        static bool IsRequest(InteractionEntry i) => i.Type.Equals("Request", StringComparison.OrdinalIgnoreCase) && i.ServiceName.Length > 0 && i.CallerName.Length > 0;
+        var made = new Dictionary<string, int>(StringComparer.Ordinal);
+        var received = new Dictionary<string, int>(StringComparer.Ordinal);
+        foreach (var interaction in scope.SelectMany(s => s.Interactions).Where(IsRequest))
+        {
+            made[interaction.CallerName] = made.GetValueOrDefault(interaction.CallerName) + 1;
+            received[interaction.ServiceName] = received.GetValueOrDefault(interaction.ServiceName) + 1;
+        }
+
+        IReadOnlyList<Kronikol.Parties.Party> table;
+        if (index.HasParties)
+        {
+            table = index.Parties.Select(p =>
+            {
+                var kind = p.Kind is { } k && Kronikol.Parties.PartiesFile.TryParseKind(k, out var parsed) ? parsed : Kronikol.Parties.PartyKind.Unknown;
+                Kronikol.Parties.PartyKindSource? source = Kronikol.Parties.PartiesReport.TryParseSource(p.KindSource, out var how) ? how : null;
+                return new Kronikol.Parties.Party(p.Name, p.Id, kind, kind == Kronikol.Parties.PartyKind.Unknown ? null : source, p.Note);
+            }).ToList();
+        }
+        else
+        {
+            var calls = index.Scenarios.SelectMany(s => s.Interactions).Where(IsRequest)
+                .Select(i => new Kronikol.Parties.PartyCall(i.CallerName, i.ServiceName, i.DependencyCategory, i.CallerDependencyCategory, i.AttributionSource));
+            var inferred = Kronikol.Parties.PartyResolver.Resolve(calls, Kronikol.Parties.PartyDeclarations.None, Kronikol.Parties.PartyObservations.None);
+            table = inferred.Parties;
+            foreach (var note in inferred.Notes)
+                writer.Note(note.Message);
+        }
+
+        var rows = table.Where(p => made.ContainsKey(p.Name) || received.ContainsKey(p.Name))
+            .Where(p => only is null || p.Kind == only)
+            .ToList();
+
+        if (options.Count)
+        {
+            writer.Count(rows.Count);
+            return 0;
+        }
+
+        var unknown = rows.Count(p => p.Kind == Kronikol.Parties.PartyKind.Unknown);
+        var footer = (unknown > 0 ? $"{unknown} parties of unknown kind: declare them in Parties or .kronikol/parties.json" : $"{rows.Count} parties")
+                     + (index.HasParties ? "" : " · the report declares nothing, so this table is inferred from the calls");
+        if (rows.Count == 0)
+        {
+            writer.Note(only is null ? "no parties: nothing was captured for this scope" : $"no parties of kind {Kronikol.Parties.PartiesReport.KindName(only.Value)}");
+            writer.Footer(footer);
+            return 0;
+        }
+
+        writer.Line($"{"party",-24} {"kind",-10} {"how",-9} {"made",5} {"received",8}  id · note");
+        writer.Page(rows, options.Offset, options.PageSize(200, writer, "parties"), "parties", party =>
+            {
+                var tail = string.Join(" · ", new[] { party.Id, party.Note }.Where(t => t is not null));
+                writer.Line($"{QueryWriter.OneLine(party.Name, 24),-24} {Kronikol.Parties.PartiesReport.KindName(party.Kind),-10} "
+                            + $"{(party.KindSource is { } how ? Kronikol.Parties.PartiesReport.SourceName(how) : "-"),-9} "
+                            + $"{made.GetValueOrDefault(party.Name),5} {received.GetValueOrDefault(party.Name),8}  {QueryWriter.OneLine(tail, 80)}".TrimEnd());
+            },
+            options.RerunArgs(),
+            party => new
+            {
+                party = party.Name,
+                id = party.Id,
+                kind = Kronikol.Parties.PartiesReport.KindName(party.Kind),
+                kindSource = party.KindSource is { } how ? Kronikol.Parties.PartiesReport.SourceName(how) : null,
+                callsMade = made.GetValueOrDefault(party.Name),
+                callsReceived = received.GetValueOrDefault(party.Name),
+                note = party.Note
+            },
+            footer);
         return 0;
     }
 

@@ -130,6 +130,45 @@ public enum DiagnosticKind
     /// project would compile a <c>query.cs</c> written there, so none is. The run is otherwise unaffected.
     /// </summary>
     OptionNotApplied,
+
+    /// <summary>
+    /// Two declarations of one party disagree at one level (<see cref="ReportConfigurationOptions.Parties"/>, or the
+    /// parties file, where a name listed twice is one), and the later is used; or
+    /// <see cref="ReportConfigurationOptions.ServiceId"/> differs from the id declared for the subject's row, and
+    /// <c>ServiceId</c> is used (#190). Written only by a run that declares something.
+    /// </summary>
+    PartyDeclarationConflict,
+
+    /// <summary>
+    /// A declared party's name matches no call, but matches one when case or surrounding white space is ignored. Names
+    /// match exactly, so the declaration was not applied; the message names both (#190).
+    /// </summary>
+    PartyNameNearMiss,
+
+    /// <summary>
+    /// <see cref="ReportConfigurationOptions.Parties"/> names parties no call of the run carries. A run of only some of the
+    /// tests can cause it. The parties file's unseen names are not listed: a shared file names parties most suites never call (#190).
+    /// </summary>
+    DeclaredPartyNotSeen,
+
+    /// <summary>
+    /// Calls a service made while serving a request the test sent carry the test's own name as their caller: the
+    /// service's trackers were left at the test's name (each tracker's <c>CallerName</c>, <c>"Caller"</c> by default),
+    /// and one name cannot be two parties (#190).
+    /// </summary>
+    TestPartyNameInsideHost,
+
+    /// <summary>Shards a merge joined disagree about a party's id, kind or note; the field is left out and the kind is <c>unknown</c> (#190).</summary>
+    PartyDisagreement,
+
+    /// <summary>
+    /// The parties file could not be used: it does not parse, cannot be read, or declares a <c>partiesFormatVersion</c>
+    /// newer than this build reads. Nothing in it was applied, and the run is otherwise unaffected (#190).
+    /// </summary>
+    PartiesFileUnusable,
+
+    /// <summary>A declared party's field could not be read, such as a kind that is not one of the five, or a row with no name; that field or row was left out (#190).</summary>
+    PartyDeclarationInvalid,
 }
 
 /// <summary>

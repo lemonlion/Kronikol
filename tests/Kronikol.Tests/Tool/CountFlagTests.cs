@@ -32,6 +32,7 @@ public class CountFlagTests : IDisposable
         ("summary", []),
         ("scenarios", []),
         ("services", []),
+        ("parties", []),
         ("failures", []),
         ("repro", []),
         ("attachments", ["s0"]),

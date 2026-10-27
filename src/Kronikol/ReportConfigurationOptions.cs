@@ -50,6 +50,34 @@ public record ReportConfigurationOptions
     /// </summary>
     public string? SuiteName { get; set; }
 
+    /// <summary>
+    /// The id of the service the tests are about, such as its catalogue name (<c>breakfast-provider</c>), so a reader
+    /// can join this run's report with other services' (#190). The subject's row in the report's parties table takes it,
+    /// whether that row was declared, observed or inferred, and it goes on the history ledger's run line,
+    /// <c>Run.json</c>, <c>Failures.jsonl</c>'s header and the CTRF document's <c>environment.appName</c>.
+    ///
+    /// <para>Default: <c>null</c>. Setting it, or <see cref="Parties"/>, or a parties file, writes <c>serviceId</c> and
+    /// <c>parties</c> into the data file; a run that declares nothing keeps its bytes.</para>
+    /// </summary>
+    public string? ServiceId { get; set; }
+
+    /// <summary>
+    /// What this run declares about its parties (#190): for each participant by name, its id, its kind
+    /// (<see cref="Kronikol.Parties.PartyKind"/>: the test, the service under test, real, or a test double) and a note,
+    /// each member optional. A declaration here beats the parties file's, field by field, which beats what Kronikol
+    /// observed or inferred. Names match the calls exactly; a near miss and a name no call carries are diagnostics.
+    /// <code>options.Parties.Add(new("Cow Service") { Kind = PartyKind.Double, Note = "WireMock stub" });</code>
+    /// </summary>
+    public IList<Kronikol.Parties.PartyDescriptor> Parties { get; set; } = [];
+
+    /// <summary>
+    /// The parties file: the parties a repository's suites share, as JSON
+    /// (<c>{ "partiesFormatVersion": 1, "parties": [ { "name", "id", "kind", "note" } ] }</c>). When null, it is
+    /// <c>KRONIKOL_PARTIES</c>, then <c>.kronikol/parties.json</c> at the repository above the run if it exists. A
+    /// relative path is taken against that repository. A file that cannot be used is a diagnostic, never a failed run.
+    /// </summary>
+    public string? PartiesFilePath { get; set; }
+
     /// <summary>Title displayed at the top of the specifications report. Default: <c>"Service Specifications"</c>.</summary>
     public string SpecificationsTitle { get; set; } = "Service Specifications";
 

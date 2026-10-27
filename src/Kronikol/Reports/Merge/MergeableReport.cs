@@ -65,6 +65,12 @@ public sealed record MergeableReport
     /// </remarks>
     public RunEnvironment? Environment { get; init; }
 
+    /// <summary>The run's declared service id (#190), or null when it declared none.</summary>
+    public string? ServiceId { get; init; }
+
+    /// <summary>The run's parties block (#190) as written, or null when the run declared nothing and so wrote none.</summary>
+    public IReadOnlyList<Kronikol.Parties.Party>? Parties { get; init; }
+
     /// <summary>
     /// Every captured interaction in the contained run, keyed to its scenario by
     /// <see cref="RequestResponseLog.TestId"/>. Empty for a file written before 3.1.0, which carried

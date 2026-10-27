@@ -27,7 +27,7 @@ public class TestRunReportSchemaContractTests
         // The .krkl decoded as well as the JSON (plans/REPORT_FORMAT_PLAN.md section 5, R4 item 4).
         var reportPath = ReportGenerator.GenerateTestRunReportData(RichFeatures(), Start, End,
             $"SchemaContract_{suffix}.{(compressedFile ? "krkl" : "json")}", DataFormat.Json, Diagrams(), Logs(), Diagnostics(),
-            fullStepDetail: true, ciMetadata: null, suite: null, environment: null, attribution: null, compressedFile: compressedFile);
+            fullStepDetail: true, ciMetadata: null, suite: null, environment: null, attribution: null, compressedFile: compressedFile, parties: Parties());
         var schemaPath = ReportGenerator.GenerateTestRunReportSchema($"SchemaContract_{suffix}.schema.json", DataFormat.Json);
 
         using var report = JsonDocument.Parse(ReportFile.Read(reportPath));
@@ -288,6 +288,11 @@ public class TestRunReportSchemaContractTests
             ]
         }
     ];
+
+    /// <summary>A declared table over <see cref="Logs"/>: every member of the parties block is in it, so the closed schema is held to each (#190).</summary>
+    internal static Kronikol.Parties.PartyTable Parties() => Kronikol.Parties.PartyResolver.Resolve(Kronikol.Parties.PartiesReport.CallsOf(Logs()),
+        new Kronikol.Parties.PartyDeclarations("contract-service", [new Kronikol.Parties.PartyDescriptor("orders") { Id = "orders-api", Kind = Kronikol.Parties.PartyKind.Double, Note = "WireMock stub" }], [], []),
+        Kronikol.Parties.PartyObservations.None);
 
     internal static DiagramAsCode[] Diagrams() => [new DiagramAsCode(TestId, "", "@startuml\nA -> B\n@enduml")];
 

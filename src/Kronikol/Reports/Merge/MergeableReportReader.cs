@@ -150,6 +150,8 @@ public static class MergeableReportReader
             WholeTestVisualization = ReadEnum(GetString(root, "wholeTestVisualization"), WholeTestFlowVisualization.None),
             CiMetadata = ReadCiMetadata(root),
             Environment = ReadEnvironment(root),
+            ServiceId = GetString(root, "serviceId"),
+            Parties = ReadParties(root),
             Interactions = interactions.ToArray(),
             StepPaths = stepPaths,
             WarmUp = warmUpCalls.Count == 0 && warmUpScenarios.Count == 0 ? WarmUpResult.None : new WarmUpResult(warmUpCalls, warmUpScenarios),
@@ -672,6 +674,23 @@ public static class MergeableReportReader
             DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal, out var value)
             ? value
             : null;
+
+    /// <summary>The run's parties block (#190), or null when it has none. A row without a name, or with a kind none of the five, keeps what it can.</summary>
+    private static IReadOnlyList<Kronikol.Parties.Party>? ReadParties(JsonElement root)
+    {
+        if (!root.TryGetProperty("parties", out var parties) || parties.ValueKind != JsonValueKind.Array)
+            return null;
+        var rows = new List<Kronikol.Parties.Party>();
+        foreach (var row in parties.EnumerateArray())
+        {
+            if (row.ValueKind != JsonValueKind.Object || GetString(row, "name") is not { Length: > 0 } name)
+                continue;
+            var kind = GetString(row, "kind") is { } written && Kronikol.Parties.PartiesFile.TryParseKind(written, out var parsed) ? parsed : Kronikol.Parties.PartyKind.Unknown;
+            Kronikol.Parties.PartyKindSource? source = kind != Kronikol.Parties.PartyKind.Unknown && Kronikol.Parties.PartiesReport.TryParseSource(GetString(row, "kindSource"), out var how) ? how : null;
+            rows.Add(new Kronikol.Parties.Party(name, GetString(row, "id"), source is null ? Kronikol.Parties.PartyKind.Unknown : kind, source, GetString(row, "note")));
+        }
+        return rows;
+    }
 
     /// <summary>
     /// The shard's <c>environment</c>, or null when it has none - which is every shard written before

@@ -85,7 +85,8 @@ public sealed class HistoryRunContext
                 ErrorKeys = options.HistoryErrorKeys,
                 Partial = options.HistoryPartialRun,
                 ShapeRules = shapeRules,
-                Bridges = true
+                Bridges = true,
+                ServiceId = options.ServiceId
             };
             var (roster, run, shapes) = HistoryRunBuilder.Build(features, logs, suite, ci, at, build,
                 string.IsNullOrWhiteSpace(options.HistoryRunId) ? null : options.HistoryRunId.Trim());

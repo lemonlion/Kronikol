@@ -61,7 +61,8 @@ belongs to both and means different things — a scenario name on `scenarios`, a
 | `--limit N` | cap rows. The verbs that list rows |
 | `--count` | print how many matched, and nothing else. Every verb that counts something — not `http`, `body`, `note`, `diagram`, `steps`, `compare` |
 | `--out FILE` | write the answer to a file instead of the terminal; prints one line. Lifts the byte budget — a file is not a context window. `http`, `body`, `note` and `diagram` write the payload; every other verb writes what it would have printed |
-| `--json` | one envelope instead of text, on `summary`, `scenarios`, `failures`, `repro`, `attachments`, `services`, `sizes`, `interactions`, `assertions`, `diff`, `history`. **Not for reading in a terminal** — the same answer costs about twice the tokens. It is for scripts |
+| `--json` | one envelope instead of text, on `summary`, `scenarios`, `failures`, `repro`, `attachments`, `services`, `parties`, `sizes`, `interactions`, `assertions`, `diff`, `history`. **Not for reading in a terminal** — the same answer costs about twice the tokens. It is for scripts |
+| `--kind KIND` | only the parties of this kind: `test`, `underTest`, `real`, `double` or `unknown`, ignoring case; anything else exits 2. `parties` only (5.14.0) |
 | `--history FILE` | the cross-run ledger `history` reads, instead of `$KRONIKOL_HISTORY` or the `.kronikol/history.jsonl` above the report. `history` only |
 | `--flaky`, `--new`, `--failing`, `--regressed`, `--changed` | which verdicts `history` lists; several combine as OR. `history` only |
 | `--branch NAME`, `--compare-branch NAME` | the branch stream `history` reads against, and a second one to read the same run against. `history` only |
@@ -134,6 +135,17 @@ and a line under the table says `services --json` lists every status.
 
 **This is the only command that answers a negative question.** A service that is not in the table was
 never called — no payload needed to establish that.
+
+### `parties <report> [s3] [--kind double]`
+Who each party is (5.14.0): one row per name the calls carry, with its kind (`test`, `underTest`, `real`,
+`double` or `unknown`), how that kind is known (`declared` in the run's options or `.kronikol/parties.json`,
+`observed` from a test client Kronikol built, `inferred` from the calls), the calls it made and received, and its
+id and note. A report that declares its parties prints the table it wrote; one that declares nothing gets the table
+inferred from its calls, and the footer says so. The checks a declaring run records as diagnostics (a name that
+differs only by case, a test's name on a service's calls) are printed as notes here instead. `--json`: one item per
+party with `party`, `id`, `kind`, `kindSource`, `callsMade`, `callsReceived` and `note`.
+
+Ask it before reading a call as the real service's answer: a `double` answered in the service's place.
 
 ### `sizes <report>`
 What fills the report file, for a report that outgrew a limit (GitHub's 100 MiB per file, an artifact quota):

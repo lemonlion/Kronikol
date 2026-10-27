@@ -65,6 +65,7 @@ internal static class VerbTable
         new("--tag", "TAG", "Only scenarios with a tag holding TAG, in any case; a feature's tags are each of its scenarios', and a happy path has Happy Path, as the report's Tags row shows."),
         new("--label", "TAG", "The same as --tag, by its name before 5.0.0."),
         new("--service", "TEXT", "Only calls whose service name contains TEXT."),
+        new("--kind", "KIND", "Only parties of this kind: test, underTest, real, double or unknown."),
         new("--status", "STATUS", "Only calls with this status: a code (500), a name (InternalServerError) or a class (5xx)."),
         new("--method", "METHOD", "Only calls with this HTTP method or tracker label."),
         new("--grep", "TEXT", "A substring filter: on scenarios the scenario name, on interactions and values the URI."),
@@ -140,6 +141,12 @@ internal static class VerbTable
             ["<report>", "<report> s3"],
             ["--sort", "--count", "--offset", "--limit", "--json"], Json: true,
             ["  services     <report> [s3] [--sort duration]  per service: calls, status mix, errors, bytes, timings"]),
+
+        new("parties", "Overview",
+            "Who each party is: the test, the service under test, real or a test double, its id, how its kind is known, and its calls.",
+            ["<report>", "<report> s3"],
+            ["--kind", "--count", "--offset", "--limit", "--json"], Json: true,
+            ["  parties      <report> [s3] [--kind double]   who each party is: kind and how it is known, id, calls made and received"]),
 
         new("sizes", "Overview",
             "What fills the report file: its bytes by part, stored and decoded, and the scenarios that hold the most.",

@@ -108,6 +108,7 @@ matters.
 | "how do I re-run just this test?" | `repro` — the `dotnet test --filter` line per failure, read from the frame it was thrown in; `failures` prints the same line under each failure |
 | "the number on screen is wrong" | `grep "<value>" --number` (matches `4,173.00` and `4173` alike, emits paths; `--tolerance 0.5` or `--tolerance 1%` widens the match) → `http <addr> --path $...` → `compare s<failing> s<passing>` |
 | "did it even call X?" | `services` — absence is the answer; no payload needed |
+| "was that the real service or a stub?" | `parties`: each party's kind (`test`, `underTest`, `real`, `double`), how it is known, its id and its calls; `--kind double` lists the stand-ins |
 | "which service/step had the most errors?" | `interactions --group-by service,status --sort errors` (dimensions incl. `step`, `path`, `capturedBy`): one bucket table, aggregation instead of paging |
 | "which assertions failed?" | `assertions --failed` (add `s3` to scope): flat list with resolved values, messages and `file:line` |
 | "what did X return?" | `interactions s3 --service X` → `http s3/iN --keys` → `--path` |

@@ -38,7 +38,7 @@ public class CtrfCommandTests : IDisposable
     }
 
     /// <summary>A real run, written to disk with the CTRF output switched on so both writers can be compared.</summary>
-    private void WriteRun(bool json = false)
+    private void WriteRun(bool json = false, string? serviceId = null)
     {
         var testId = "ctrf-" + Guid.NewGuid().ToString("N");
         RequestResponseLogger.LogPair("Pay with an expired card", testId, HttpMethod.Post, new Uri("http://payments/charge"), "payments", "Test");
@@ -80,7 +80,8 @@ public class CtrfCommandTests : IDisposable
             GenerateComponentDiagram = false,
             GenerateSpecificationsReport = false,
             GenerateSpecificationsData = false,
-            GenerateCtrfReport = true
+            GenerateCtrfReport = true,
+            ServiceId = serviceId
         };
         // A fact about what a 4.x writer wrote asks for its file, TestRunReport.json; 5.0.0 writes the .krkl.
         if (json)
@@ -121,6 +122,30 @@ public class CtrfCommandTests : IDisposable
 
         Assert.Equal(0, exit);
         Assert.Equal(ReportHtml.Read(Path.Combine(_directory, "ctrf-report.json")), output.TrimEnd('\r', '\n'));
+    }
+
+    // #190 R1, Q16: the declared service is CTRF's environment.appName, from both writers, on CI and off it.
+    [Fact]
+    public void A_declared_service_is_the_documents_app_name_from_both_writers()
+    {
+        WriteRun(serviceId: "checkout-api");
+
+        var (output, _, exit) = Run(Report);
+
+        Assert.Equal(0, exit);
+        var written = ReportHtml.Read(Path.Combine(_directory, "ctrf-report.json"));
+        Assert.Equal(written, output.TrimEnd('\r', '\n'));
+        using var document = JsonDocument.Parse(written);
+        Assert.Equal("checkout-api", document.RootElement.GetProperty("results").GetProperty("environment").GetProperty("appName").GetString());
+    }
+
+    [Fact]
+    public void A_run_that_declares_no_service_names_no_app()
+    {
+        WriteRun();
+
+        Assert.DoesNotContain("appName", Run(Report).Out);
+        Assert.DoesNotContain("appName", ReportHtml.Read(Path.Combine(_directory, "ctrf-report.json")));
     }
 
     [Fact]

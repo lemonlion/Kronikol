@@ -262,6 +262,12 @@ public sealed record HistoryRun
     /// </summary>
     public IReadOnlyDictionary<string, HistoryBridge>? Bridge { get; init; }
 
+    /// <summary>
+    /// The service the run was about (<see cref="ReportConfigurationOptions.ServiceId"/>, #190), or null when the run did not
+    /// declare one. Not part of the stream's key; a fold of shards keeps it only when every shard has the same one.
+    /// </summary>
+    public string? ServiceId { get; init; }
+
     /// <summary>The branch stream this run belongs to: its branch, or <c>local</c> when it has none.</summary>
     public string Stream => Branch is { Length: > 0 } branch ? branch : LocalStream;
 

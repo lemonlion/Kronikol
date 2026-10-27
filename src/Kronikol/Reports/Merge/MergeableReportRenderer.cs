@@ -244,7 +244,9 @@ public static class MergeableReportRenderer
             environment: report.Environment ?? RunEnvironment.Unrecorded,
             compressPayloads: compressPayloads,
             // The shards' own marks, never recomputed over the merged calls.
-            warmUp: report.WarmUp);
+            warmUp: report.WarmUp,
+            // The shards' parties, merged (#190); none when no shard declared anything.
+            parties: report.Parties is { } rows ? new Kronikol.Parties.PartyTable(rows, report.ServiceId, Declared: true, []) : null);
     }
 
     /// <summary>

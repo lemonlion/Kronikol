@@ -82,6 +82,15 @@ internal sealed class ReportIndex : IDisposable
     public List<ScenarioEntry> Scenarios { get; } = [];
     public List<ReportDiagnosticEntry> Diagnostics { get; } = [];
 
+    /// <summary>The run's declared service id (#190), or null when the report declares none.</summary>
+    public string? ServiceId { get; set; }
+
+    /// <summary>The report carries the parties block (#190): the run declared something. Its rows are <see cref="Parties"/>.</summary>
+    public bool HasParties { get; set; }
+
+    /// <summary>The parties block's rows as written, sorted by name; empty when the report has no block.</summary>
+    public List<ReportPartyEntry> Parties { get; } = [];
+
     /// <summary>Every distinct body in the file, keyed by its <c>b:</c> address.</summary>
     public Dictionary<string, BodyEntry> Bodies { get; } = [];
 
@@ -330,6 +339,12 @@ internal sealed class InteractionEntry
     public string? Phase { get; set; }
     public string? MetaType { get; set; }
     public string? DependencyCategory { get; set; }
+
+    /// <summary>The caller's category (<c>User</c>, <c>MessageQueue</c>), which the party inference reads (#190).</summary>
+    public string? CallerDependencyCategory { get; set; }
+
+    /// <summary>How the call got its scenario (<c>TestContext</c>, <c>RequestHeader</c>), which the party inference reads (#190).</summary>
+    public string? AttributionSource { get; set; }
     public string? ActivityTraceId { get; set; }
     public string? ActivitySpanId { get; set; }
     public string? CapturedBy { get; set; }
@@ -422,6 +437,16 @@ internal sealed class AttachmentEntry
 /// <see cref="Kronikol.Reports.DiagnosticEntry"/>, the record the run writes it from: the engine lives in the
 /// same assembly, and one simple name for both made every file that uses the two namespaces ambiguous.
 /// </summary>
+/// <summary>One row of a report's parties block (#190), as written.</summary>
+internal sealed class ReportPartyEntry
+{
+    public string Name { get; set; } = "";
+    public string? Id { get; set; }
+    public string? Kind { get; set; }
+    public string? KindSource { get; set; }
+    public string? Note { get; set; }
+}
+
 internal sealed class ReportDiagnosticEntry
 {
     public string Kind { get; set; } = "";

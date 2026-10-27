@@ -205,6 +205,7 @@ internal static class ReportScanner
         private AnnotationEntry? _annotation;
         private AttachmentEntry? _attachment;
         private ReportDiagnosticEntry? _diagnostic;
+        private ReportPartyEntry? _party;
         private string _featureName = "";
         private string[] _featureTags = [];
         private readonly List<string> _pendingFeatureTags = [];
@@ -339,6 +340,8 @@ internal static class ReportScanner
                 // sees these on every report and an uninterned name allocates per document.
                 "ciMetadata", "environment", "provider", "buildNumber", "branch", "commitSha",
                 "pipelineUrl", "repository", "runId", "runAttempt", "os", "runtime",
+                // Who each party is (#190).
+                "serviceId", "parties", "kindSource", "note", "callerDependencyCategory", "attributionSource",
                 // A compressed payload's keys (#85).
                 "$h", "$n", "$z",
             ];
@@ -452,6 +455,15 @@ internal static class ReportScanner
             {
                 _diagnostic = new ReportDiagnosticEntry();
             }
+            // The root's parties block alone (#190): its rows are no report data, at any other depth or name.
+            else if (_path.Count == 2 && _path[1] == "parties")
+            {
+                index.HasParties = true;
+            }
+            else if (_path.Count == 3 && At("parties", "#"))
+            {
+                _party = new ReportPartyEntry();
+            }
             else if (InStepArray())
             {
                 var step = new StepEntry();
@@ -515,6 +527,12 @@ internal static class ReportScanner
                 if (_diagnostic is not null)
                     index.Diagnostics.Add(_diagnostic);
                 _diagnostic = null;
+            }
+            else if (_path.Count == 3 && At("parties", "#"))
+            {
+                if (_party is { Name.Length: > 0 })
+                    index.Parties.Add(_party);
+                _party = null;
             }
             else if (InStepArray() && _stepStack.Count > 0)
             {
@@ -629,6 +647,7 @@ internal static class ReportScanner
                         return;
                     case "kronikolVersion": index.KronikolVersion = reader.GetString(); return;
                     case "suite": index.Suite = reader.TokenType == JsonTokenType.String ? reader.GetString() : null; return;
+                    case "serviceId": index.ServiceId = reader.TokenType == JsonTokenType.String ? reader.GetString() : null; return;
                     case "startTime": index.StartTime = reader.GetString(); return;
                     case "endTime": index.EndTime = reader.GetString(); return;
                     case "mergeableFormatVersion":
@@ -666,6 +685,20 @@ internal static class ReportScanner
                     case "os": index.EnvironmentOs = reader.GetString(); return;
                     case "runtime": index.EnvironmentRuntime = reader.GetString(); return;
                 }
+            }
+
+            if (_party is not null && _path.Count == 3)
+            {
+                var text = reader.TokenType == JsonTokenType.String ? reader.GetString() : null;
+                switch (key)
+                {
+                    case "name": _party.Name = text ?? ""; return;
+                    case "id": _party.Id = text; return;
+                    case "kind": _party.Kind = text; return;
+                    case "kindSource": _party.KindSource = text; return;
+                    case "note": _party.Note = text; return;
+                }
+                return;
             }
 
             if (_diagnostic is not null)
@@ -798,6 +831,8 @@ internal static class ReportScanner
                 case "phase": interaction.Phase = Meaningful(reader.GetString(), "Unknown"); break;
                 case "metaType": interaction.MetaType = Meaningful(reader.GetString(), "Default"); break;
                 case "dependencyCategory": interaction.DependencyCategory = reader.GetString(); break;
+                case "callerDependencyCategory": interaction.CallerDependencyCategory = reader.TokenType == JsonTokenType.String ? reader.GetString() : null; break;
+                case "attributionSource": interaction.AttributionSource = reader.TokenType == JsonTokenType.String ? reader.GetString() : null; break;
                 case "activityTraceId": interaction.ActivityTraceId = reader.GetString(); break;
                 case "activitySpanId": interaction.ActivitySpanId = reader.GetString(); break;
                 case "capturedBy": interaction.CapturedBy = reader.GetString(); break;

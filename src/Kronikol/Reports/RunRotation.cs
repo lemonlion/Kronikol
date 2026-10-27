@@ -500,6 +500,7 @@ internal static class RunRotation
         DateTimeOffset? at = null;
         string? suite = null;
         string? version = null;
+        string? serviceId = null;
         int? scenarios = null;
         int? failed = null;
         bool? partial = null;
@@ -544,6 +545,7 @@ internal static class RunRotation
                     failed = failureCount;
                     suite ??= header.RootElement.TryGetProperty("suite", out var s) && s.ValueKind == JsonValueKind.String ? s.GetString() : null;
                     version = header.RootElement.TryGetProperty("kronikolVersion", out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() : null;
+                    serviceId = header.RootElement.TryGetProperty("serviceId", out var id) && id.ValueKind == JsonValueKind.String ? id.GetString() : null;
                 }
             }
             catch (Exception exception) when (exception is JsonException or IOException or UnauthorizedAccessException or InvalidOperationException)
@@ -567,7 +569,8 @@ internal static class RunRotation
             Partial = partial,
             KronikolVersion = version,
             Files = files.Order(StringComparer.Ordinal).ToArray(),
-            Attachments = []
+            Attachments = [],
+            ServiceId = serviceId
         });
     }
 

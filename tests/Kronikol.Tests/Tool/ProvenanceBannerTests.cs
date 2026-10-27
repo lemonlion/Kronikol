@@ -69,6 +69,26 @@ public class ProvenanceBannerTests : IDisposable
     }
 
     /// <summary>
+    /// What the party checks find (#190) changes no answer: a declaration that went wrong leaves a party's kind unknown,
+    /// which the answer already says. So none is a header, and <c>summary</c> still lists each.
+    /// </summary>
+    [Theory]
+    [InlineData(nameof(DiagnosticKind.PartyDeclarationConflict))]
+    [InlineData(nameof(DiagnosticKind.PartyNameNearMiss))]
+    [InlineData(nameof(DiagnosticKind.DeclaredPartyNotSeen))]
+    [InlineData(nameof(DiagnosticKind.TestPartyNameInsideHost))]
+    [InlineData(nameof(DiagnosticKind.PartyDisagreement))]
+    [InlineData(nameof(DiagnosticKind.PartiesFileUnusable))]
+    [InlineData(nameof(DiagnosticKind.PartyDeclarationInvalid))]
+    public void A_party_check_is_not_a_header(string kind)
+    {
+        var report = ReportWith((kind, "the parties file names \"Cow Service\" twice"));
+
+        Assert.DoesNotContain("!", Run("services", report), StringComparison.Ordinal);
+        Assert.Contains(kind, Run("summary", report), StringComparison.Ordinal);
+    }
+
+    /// <summary>
     /// A malformed-line diagnostic is recorded once per line, so a capture file that went wrong early can
     /// produce thousands. Printed one per entry they are not a header, they are the answer.
     /// </summary>

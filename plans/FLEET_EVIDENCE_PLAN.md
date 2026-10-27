@@ -158,6 +158,15 @@ Each is what the architecture would get wrong without a change, or what it gets 
 
 ### 4.1 S1: the two contract fields
 
+> **Built by `PARTY_IDENTITY_PLAN.md` (#190) as 5.14.0 (2026-10-27), which supersedes this section's details.** What
+> shipped differs from it here: a row carries `name` and `kind` and, when known, `id`, `kindSource` and `note`, with no
+> `category`, which the calls carry; a kind nothing declares is observed (the tracking client made from a
+> `WebApplicationFactory` is the test's) or inferred from the calls, `kindSource` saying which, and is otherwise
+> `unknown`; the service under test is not taken from `FixedNameForReceivingService`; a repository can keep the ids
+> in `.kronikol/parties.json`; the table has a verb of its own, `kronikol query parties`, and `services` gains `id` and
+> `kind` only on a report that declares something; there is no `graph` verb (S2). Read that plan for what was built.
+> This section stays as the ask.
+
 **`ReportConfigurationOptions.ServiceId`** (`string?`, default `null`): the canonical, stable identity of
 the service under test, lower-case, the string every other service uses for it (`orders-api`). Distinct
 from `SuiteName` (the test project) and from `TestRunReportTitle` (display). Written to the report's

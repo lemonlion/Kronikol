@@ -86,10 +86,13 @@ public sealed record CtrfEnvironment
     /// <summary>Which try of <see cref="RunId"/> this is — <c>extra.runAttempt</c>.</summary>
     public string? RunAttempt { get; init; }
 
+    /// <summary>The service the run was about: <see cref="ReportConfigurationOptions.ServiceId"/> when the run declared it (#190).</summary>
+    public string? AppName { get; init; }
+
     /// <summary>Nothing is known, so the block would be an empty object claiming to describe a build.</summary>
     public bool IsEmpty =>
         BuildName is null && BuildNumber is null && BuildUrl is null && RepositoryName is null
-        && Commit is null && BranchName is null && RunId is null && RunAttempt is null;
+        && Commit is null && BranchName is null && RunId is null && RunAttempt is null && AppName is null;
 
     /// <summary>The detected CI metadata as an environment block, or null off CI.</summary>
     public static CtrfEnvironment? From(CiMetadata? metadata)
@@ -153,7 +156,15 @@ public static class CtrfReportGenerator
 
     /// <summary>The CTRF document for a completed run.</summary>
     public static string Generate(Feature[] features, DateTime startRunTime, DateTime endRunTime,
-        CiMetadata? ciMetadata, string kronikolVersion, string? suite = null, HistoryVerdicts? history = null)
+        CiMetadata? ciMetadata, string kronikolVersion, string? suite = null, HistoryVerdicts? history = null) =>
+        Generate(features, startRunTime, endRunTime, ciMetadata, kronikolVersion, suite, history, serviceId: null);
+
+    /// <summary>
+    /// The run's CTRF document, naming the service it was about as <c>environment.appName</c> when
+    /// <paramref name="serviceId"/> is set (#190), on CI or off it.
+    /// </summary>
+    public static string Generate(Feature[] features, DateTime startRunTime, DateTime endRunTime,
+        CiMetadata? ciMetadata, string kronikolVersion, string? suite, HistoryVerdicts? history, string? serviceId)
     {
         ArgumentNullException.ThrowIfNull(features);
 
@@ -202,7 +213,10 @@ public static class CtrfReportGenerator
             }
         }
 
-        return Build(tests, startRunTime, endRunTime, CtrfEnvironment.From(ciMetadata), kronikolVersion);
+        var environment = CtrfEnvironment.From(ciMetadata);
+        if (!string.IsNullOrWhiteSpace(serviceId))
+            environment = (environment ?? new CtrfEnvironment()) with { AppName = serviceId };
+        return Build(tests, startRunTime, endRunTime, environment, kronikolVersion);
     }
 
     /// <summary>
@@ -298,6 +312,7 @@ public static class CtrfReportGenerator
     private static Dictionary<string, object?> MapEnvironment(CtrfEnvironment environment)
     {
         var mapped = new Dictionary<string, object?>();
+        Set(mapped, "appName", environment.AppName);
         Set(mapped, "buildName", environment.BuildName);
         Set(mapped, "buildNumber", environment.BuildNumber);
         Set(mapped, "buildUrl", environment.BuildUrl);

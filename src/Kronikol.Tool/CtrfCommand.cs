@@ -165,11 +165,14 @@ internal static class CtrfCommand
     /// </summary>
     private static CtrfEnvironment? Environment(ReportIndex index)
     {
+        // The declared service (#190) is said on CI and off it, as the run's own document says it.
+        var appName = string.IsNullOrWhiteSpace(index.ServiceId) ? null : index.ServiceId;
         if (!index.OnCi)
-            return null;
+            return appName is null ? null : new CtrfEnvironment { AppName = appName };
 
         var environment = new CtrfEnvironment
         {
+            AppName = appName,
             BuildName = index.CiProvider,
             BuildNumber = index.CiBuildNumber,
             BuildUrl = index.CiPipelineUrl,

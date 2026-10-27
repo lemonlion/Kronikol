@@ -75,6 +75,9 @@ public sealed record RunManifest
     /// <summary>The attachment copies this run made, as the report links to them: <c>attachments/&lt;name&gt;</c>.</summary>
     public IReadOnlyList<string> Attachments { get; init; } = [];
 
+    /// <summary>The service the run was about (<see cref="ReportConfigurationOptions.ServiceId"/>, #190); written after the ten members, and only when set.</summary>
+    public string? ServiceId { get; init; }
+
     /// <summary>The file's text: the ten members in a fixed order, so two runs that wrote the same things write the same bytes.</summary>
     public string ToJson()
     {
@@ -95,6 +98,8 @@ public sealed record RunManifest
             writer.WriteString("kronikolVersion", KronikolVersion);
             WriteNames(writer, "files", Files);
             WriteNames(writer, "attachments", Attachments);
+            if (ServiceId is { } serviceId)
+                writer.WriteString("serviceId", serviceId);
             writer.WriteEndObject();
         }
         return Encoding.UTF8.GetString(buffer.WrittenSpan).ReplaceLineEndings("\n") + "\n";
@@ -183,7 +188,8 @@ public sealed record RunManifest
             Partial = root.TryGetProperty("partial", out var partial) && partial.ValueKind is JsonValueKind.True or JsonValueKind.False ? partial.GetBoolean() : null,
             KronikolVersion = Text(root, "kronikolVersion"),
             Files = files,
-            Attachments = attachments
+            Attachments = attachments,
+            ServiceId = Text(root, "serviceId")
         };
     }
 

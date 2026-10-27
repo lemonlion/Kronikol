@@ -261,6 +261,7 @@ public static partial class QueryCommand
             "attachments" => Attachments(index, options, writer, error),
             "assertions" => Assertions(index, options, writer, error),
             "services" => Services(index, options, writer, error),
+            "parties" => Parties(index, options, writer, error),
             "sizes" => Sizes(index, options, writer, error),
             "flow" => Flow(index, options, writer, error),
             "interactions" => Interactions(index, options, writer, error),

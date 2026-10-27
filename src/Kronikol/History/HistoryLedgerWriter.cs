@@ -542,7 +542,8 @@ public static class HistoryFold
             CallSets = index is null ? null : cells.Select(c => (IReadOnlyList<int>)(c.CallLines ?? []).Select(l => index[l]).OrderBy(n => n).ToArray()).ToArray(),
             Errors = oldestFirst.Any(a => a.Run.Errors is not null) ? cells.Select(c => KeyOf(c.Error)).ToArray() : null,
             ErrorText = errorText,
-            Deps = anyDeps ? deps.ToArray() : null
+            Deps = anyDeps ? deps.ToArray() : null,
+            ServiceId = SharedServiceId(oldestFirst.Select(a => a.Run))
         };
         if (bridgeRules.Count > 0 && line.ShapeSet is { } lineSet && line.ShapeOrdered is { } lineOrdered)
             line = line with
@@ -679,7 +680,8 @@ public static class HistoryFold
             CallSets = callSets,
             Errors = anyErrors ? errors : null,
             ErrorText = errorText,
-            Deps = deps.Count > 0 || shards.Any(s => s.Run.Deps is not null) ? deps.ToArray() : null
+            Deps = deps.Count > 0 || shards.Any(s => s.Run.Deps is not null) ? deps.ToArray() : null,
+            ServiceId = SharedServiceId(shards.Select(s => s.Run))
         };
         // Shards made by different rules keep no fingerprints above, and so no bridges.
         if (bridgeRules.Count > 0 && run2.ShapeSet is { } foldedSet && run2.ShapeOrdered is { } foldedOrdered)
@@ -690,6 +692,13 @@ public static class HistoryFold
                     StringComparer.Ordinal)
             };
         return new HistoryFoldedRun(folded, run2, foldedShapes) { Note = note };
+    }
+
+    /// <summary>The service id every run being folded has, a run without one included, as merge keeps <c>suite</c>; else none (#190).</summary>
+    private static string? SharedServiceId(IEnumerable<HistoryRun> runs)
+    {
+        var ids = runs.Select(r => r.ServiceId).Distinct(StringComparer.Ordinal).ToList();
+        return ids.Count == 1 ? ids[0] : null;
     }
 }
 

@@ -228,6 +228,8 @@ public static class HistoryJson
             writer.WriteEndObject();
         }
 
+        if (run.ServiceId is { } serviceId) writer.WriteString("serviceId", serviceId);
+
         writer.WriteEndObject();
     }
 
@@ -534,7 +536,8 @@ public static class HistoryJson
             Deps = Strings(element, "deps"),
             ShapesHash = OptionalString(element, "shapes"),
             CallSets = CallSetsOf(element, "callSets"),
-            Bridge = element.TryGetProperty("bridge", out var bridge) && bridge.ValueKind == JsonValueKind.Object ? ParseBridges(bridge) : null
+            Bridge = element.TryGetProperty("bridge", out var bridge) && bridge.ValueKind == JsonValueKind.Object ? ParseBridges(bridge) : null,
+            ServiceId = element.TryGetProperty("serviceId", out var serviceId) && serviceId.ValueKind == JsonValueKind.String ? serviceId.GetString() : null
         };
     }
 

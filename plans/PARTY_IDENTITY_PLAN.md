@@ -1243,6 +1243,32 @@ Agreed by message on 2026-10-26:
     shapes line went unseen. Checking the other direction, a run an older tool appends after a bridged run, found that
     `NewDependencies` read only the current run's bridge. It now reads the bridge either run wrote, as the design says,
     with a fact that was red first.
+- 2026-10-27, kronikol-67, executing R1:
+  - The facts of 7.2, each beside the code it holds: the resolver's precedence and checks, the parties file's
+    discovery, the block in the four forms and the mergeable file, the schema and the XSD (the contract fixture
+    declares a party), the test client observation through a real `WebApplicationFactory`, merge, the verb and its
+    registration in every guard list, the run line at each of its five sites (a ledger mixing lines loads whole at
+    version 1, and `history doctor` says "none damaged"), `Run.json`, the digest's header, CTRF from both producers,
+    the diagnostics on a declaring run only, none a banner.
+  - 29 mutations of the resolver, the file, the block, merge, history, the outputs, the verb and the drawing, in a
+    worktree of their own, all caught in the end. Two survived the first pass because their facts were too loose: the
+    near miss was tried only with spaces around the name, so a match that ignored case went unseen; and the
+    field-by-field fact had only the options give the kind, so an options row read as declaring `unknown` went unseen.
+    Both facts were widened, and the mutants then failed them.
+  - Q11's stereotype, as the owner chose: an ambient scope (`DiagramParties`) holds the declared doubles while the
+    run's diagrams are drawn, so no public drawing method gains a parameter. The sequence diagram writes
+    `<<test double>>` after the alias and before the colour, and the page's own parse of a declaration
+    (`DECLARED`) now allows it, so the participant keeps its dependency colour; the component diagram's rectangles keep
+    their styling stereotypes and carry «test double» as a line of their label.
+  - One fault of my own, found by the whole-pipeline diagnostics fact: the table was resolved over every call the
+    process logged, including calls whose test id names no scenario, which the report leaves out. In a real suite an
+    untracked test's calls would have named parties the report never shows. It is now resolved over the calls the
+    report carries, a scenario's or the background's, with a fact that was red first.
+  - Two decisions within the plan's lines: an import of a CTRF document reads no `appName` into `serviceId` (5.8 names
+    the imports as carrying none); and the `parties` verb counts a scenario's calls only, as `services` does, so a
+    background call is not counted on a report that declares nothing.
+  - The verb's text output was checked on a real report written by the release build (`impl/parties-demo/`), which is
+    also where the wiki's examples come from; a row with no id and no note ended in two spaces, now trimmed.
 
 ---
 

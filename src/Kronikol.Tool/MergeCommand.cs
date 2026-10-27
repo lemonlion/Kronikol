@@ -215,7 +215,7 @@ internal static class MergeCommand
         }
 
         var (roster, run) = History.HistoryRunBuilder.Build(merged.Features, merged.Interactions, merged.Suite, merged.CiMetadata,
-            new DateTimeOffset(merged.EndTime.ToUniversalTime()), new History.HistoryBuildOptions());
+            new DateTimeOffset(merged.EndTime.ToUniversalTime()), new History.HistoryBuildOptions { ServiceId = merged.ServiceId });
         History.HistoryQuarantineList? quarantine = null;
         History.HistoryAliases? aliases = null;
         try
