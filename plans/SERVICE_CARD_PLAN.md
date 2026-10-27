@@ -73,8 +73,9 @@ Evidence labels:
      cache-key bytes, timestamps and numbers, keeps query keys and drops their values, applies the consumer's
      `HistoryShapeTemplates` first, and gives statement-shaped calls (SQL, Cosmos DB, MongoDB) their templated
      statement head. History and the warm-up already compare calls by it. `/orders/123` becomes `/orders/{n}`, not
-     `/orders/{id}`. On BreakfastProvider it leaves 175 operations where raw paths make 207 buckets (RUN). #192 owns
-     the one shared key built on it.
+     `/orders/{id}`. On BreakfastProvider it leaves 175 operations where raw paths make 207 buckets (RUN); #192's
+     revised key gives 179 on the same lane, since it also splits SQL batches behind a `SET` prologue, query bodies
+     sent as documents, and GraphQL operations (PEER). #192 owns the one shared key built on it.
   5. **Most parties have no path, and many have no host.** Most of BreakfastProvider's 18 parties are databases and
      brokers. On its in-memory lanes 7 of 16 called parties have no host in any call's URI (both SQL Server databases,
      Pub/Sub, Kafka, MongoDB, the gRPC notification service, Spanner) and Event Grid has only the placeholder
@@ -182,8 +183,11 @@ agrees on all four lanes. Results are in `results/card-prototype.txt`.
 | Jest ingest stand-in | 2 | 8 | 4 | 3 | 5 (5) | 4 | 4 | 0 | 0 |
 
 On the five in-memory lanes, five test frameworks driving the same service, the calls inside a received call are 755
-every time, and the calls outside any vary from 56 to 90: the Cosmos DB housekeeping repeats once per host start, so
-how often a framework starts the host moves it. That is section 2.4's count noise inside one run's numbers. The test's
+every time, and the calls outside any vary from 56 to 90 between frameworks: the Cosmos DB metadata reads repeat per
+host start (11 to 22 each), and the frameworks start the host a different number of times. Across every in-process lane
+measured, the docker ones included, the range is 56 to 159 (PEER: `xunit-in-docker` gives 159). These are differences
+between frameworks in one CI run; whether background calls also cause section 2.4's changes between runs of one suite
+is not measured (Q6). The test's
 own phases are recorded on the Gherkin-style lanes (LightBDD: Setup 234, Action 199) and not on xUnit, NUnit and TUnit
 (445 of 451 unknown). The Jest stand-in carries no `attributionSource` and no phase on any of its 8 calls, but its
 records nest: the service's 4 calls sit inside the test's (`results/card-prototype-stand-ins.txt`). The prototype has
@@ -418,8 +422,10 @@ Operation ids instead of positions keep a change local: a new operation adds one
 
 So the file as a whole changes on every run, as `Run.json` does, and `behaviour` changes only when the behaviour does.
 On BreakfastProvider's history that is about 3% of re-runs of the same code for the operation set (2.4). The scenario
-index changes more often: a scenario's call set changed in 12.4% of pairs, and part of that is background work landing
-in whichever scenario was running. Whether background calls belong in a scenario's `ops` is Q6, measured before R1.
+index changes more often: a scenario's call set changed in 12.4% of pairs. The fingerprint's own comment names a
+likely cause, "a consumer's work landing in whichever scenario is running" (`InteractionShape.cs:271-272`), but how much
+of the 12.4% it explains is not measured. Whether background calls belong in a scenario's `ops` is Q6, measured before
+R1.
 
 ### 4.4 `kronikol card`
 
@@ -630,6 +636,10 @@ run-end file in the first release, R1 and R2 merge into one minor.
   card prototype (2.3, `results/card-prototype-stand-ins.txt`): four more in-memory lanes, 755 calls inside received
   calls on every one, and a Jest ingest that nests with no `attributionSource`. Kronikol4J's merged reports hold no
   calls (F11): `capture.calls` added, Q7 and the acceptance updated.
+- 2026-10-27: after #192's revision. Its key now also splits SQL batches behind a `SET` prologue, query bodies sent as
+  documents and GraphQL operations (179 operations on `xunit-in-memory`, cited in 0). Two sentences here said more than
+  was measured and were cut back: the spread of background calls between frameworks is not section 2.4's change between
+  runs, and the cause of the scenario index's churn is named by the code, not measured (both now point at Q6).
 
 ## Appendix A. Edit sites at `44bcc62a`
 
