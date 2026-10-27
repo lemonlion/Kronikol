@@ -4,6 +4,69 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.11.1] - 2026-10-27
+
+The patch part moves (5.11.0 to 5.11.1): fixes to SQL capture, nothing new to call. Several fixes change what a report
+shows, which the Changed section sets out. `plans/SQL_RESPONSE_CAPTURE_PLAN.md` has the analysis, the measurements and
+the harness.
+
+### Fixed
+
+- **Npgsql SaveChanges no longer fails under the EF Core interceptor (#193).** `SqlTrackingInterceptor` handed EF Core
+  a `TrackingDbDataReader` in place of the provider's reader, and Npgsql's update pipeline casts the reader of every
+  SaveChanges batch to `NpgsqlDataReader`, so every insert, update and delete failed with an `InvalidCastException`.
+  The interceptor now replaces the reader of a SaveChanges batch only on the providers whose update pipelines read it
+  through `DbDataReader` alone (SQL Server, SQLite, Pomelo and Oracle's MySQL providers, Firebird, Oracle). On any
+  other provider EF Core keeps its reader, and the response says how many rows the batch changed.
+- **Values the provider converts reach the application (#197).** `TrackingDbDataReader` answered
+  `GetFieldValue<T>` with a cast of `GetValue`, so a query of a `DateTimeOffset` or a `List<int>` on Npgsql, a
+  `DateOnly` or `TimeOnly` on SQL Server, or a `DateTimeOffset`, `DateOnly`, `TimeOnly` or `TimeSpan` on SQLite failed.
+  Every member of the reader now goes to the provider's reader: `GetFieldValue<T>` and its async form,
+  `IsDBNullAsync`, `GetStream`, `GetTextReader`, the schema members (`GetSchemaTable`, `GetColumnSchema`, which threw),
+  the provider-specific members and `VisibleFieldCount`.
+- **A query that reads a SQL Server spatial column no longer fails.** EF Core casts the reader to `SqlDataReader` to
+  read a NetTopologySuite column, and Oracle's provider casts it for `DateTimeOffset`. A context whose model reads any
+  value through a provider's own reader method now keeps the provider's reader for every query, and the run's
+  diagnostics say so once, naming the property and the method.
+- **Dapper's queries through the ADO.NET wrappers no longer fail on SqlClient and Npgsql.** Dapper opens every query
+  reader with `CommandBehavior.SequentialAccess`, and the wrapper read each row before Dapper did. A sequential reader
+  is now recorded as the application reads it, never ahead of it.
+- **A data source that is not a host no longer fails the command.** The trackers put the connection's data source into
+  the arrow's address as it was, so on LocalDB (`(localdb)\MSSQLLocalDB`), a named instance, a `tcp:` prefix or a host
+  list every command failed with a `UriFormatException`, under the interceptor, the shared ADO.NET tracker and Dapper's
+  wrapper. Each data source now gives a host (the table is in the plan, section 4.1 (f)).
+- **Recording a command can no longer fail it.** A failure while the interceptor, a wrapper or a tracker records a
+  command is caught: the command goes on, and the run's diagnostics name what was not recorded, as the MongoDB
+  subscriber has done since 4.19.6. A failed statement throws its own error, where a failure to record it could replace
+  that error. A negative `MaxValueDisplayLength` cut a scalar's text with a negative range and threw into
+  `ExecuteScalar`; it now cuts at nothing.
+- **A cell holding a provider's own type is written as its text.** A geography, a range or a network address was
+  written by reflecting over its properties when the reader closed, and a property that threw (a null `SqlGeography`)
+  failed the application's own `Dispose`.
+- **Every result set of a command is kept.** The note was written when the first result set ended, so later sets were
+  lost.
+- The documentation of `LogResponseContent` (on `SqlTrackingInterceptorOptions`, `SqlTrackingOptionsBase` and
+  `DapperTrackingOptions`) said a response arrow is empty when it is off; the arrow is drawn, without the rows or the
+  scalar, and a command that changed rows still says how many, except at Summarised verbosity.
+
+### Changed
+
+- **Every Npgsql arrow drawn by the EF Core interceptor has a new address.** Npgsql reports its data source as
+  `tcp://host:port`, which drew a host called `tcp`: `sql://tcp//localhost:5432/shop/Orders` is now
+  `sql://localhost:5432/shop/Orders`.
+- **An Npgsql SaveChanges response says `N rows affected`**, where it failed before. A provider that is not on the list
+  above gets the same.
+- **A query on a context with a value read through a provider's own reader method** (SQL Server spatial, Oracle
+  `DateTimeOffset`) **says `N rows`**, where it showed the rows when no such column was read, and failed when one was.
+  SaveChanges on such a context keeps the provider's reader too, since EF Core reads generated values the same way:
+  its response says how many rows it changed, and on SQL Server, whose batches run with `SET NOCOUNT ON` and so report
+  no count, it has no note where it showed the returned keys.
+- **A command with several result sets has one note per set**, each on its own line.
+- **A cell holding a provider's own type shows its text**, where it showed its properties as JSON.
+- The arrow of a connection that cannot name its data source is drawn against `localhost` by the EF Core interceptor.
+
+Nothing here changes how a report is drawn, so Kronikol4J's byte parity is unaffected.
+
 ## [5.11.0] - 2026-10-26
 
 The minor part moves (5.10.1 to 5.11.0): a search of the report's own, built after GitHub's, with new controls (a search

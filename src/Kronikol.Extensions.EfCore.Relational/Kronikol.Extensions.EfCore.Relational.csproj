@@ -16,4 +16,9 @@
     <ProjectReference Include="..\Kronikol\Kronikol.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- ProviderReaderMethods and the update pipeline allow-list are pinned on their own -->
+    <InternalsVisibleTo Include="Kronikol.Tests.EfCore.Relational" />
+  </ItemGroup>
+
 </Project>

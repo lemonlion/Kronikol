@@ -42,6 +42,20 @@ public abstract class SqlDiagnosticTracker : ITrackingComponent
     /// <param name="parameters">Optional parameter string for Raw verbosity.</param>
     protected void LogCommandStart(string? commandText, string? dataSource, string? database, Guid executionId, string? parameters = null)
     {
+        try
+        {
+            CommandStarted(commandText, dataSource, database, executionId, parameters);
+        }
+        catch (Exception ex)
+        {
+            // A command whose request could not be logged is dropped whole: its end finds nothing pending.
+            _pendingCommands.TryRemove(executionId, out _);
+            NotRecorded(ex);
+        }
+    }
+
+    private void CommandStarted(string? commandText, string? dataSource, string? database, Guid executionId, string? parameters)
+    {
         Interlocked.Increment(ref _invocationCount);
 
         if (!PhaseConfiguration.ShouldTrack(_options.TrackDuringSetup, _options.TrackDuringAction))
@@ -103,6 +117,18 @@ public abstract class SqlDiagnosticTracker : ITrackingComponent
     /// Call when a SQL command completes (success or failure).
     /// </summary>
     protected void LogCommandEnd(Guid executionId, int? rowsAffected = null, Exception? exception = null)
+    {
+        try
+        {
+            CommandEnded(executionId, rowsAffected, exception);
+        }
+        catch (Exception ex)
+        {
+            NotRecorded(ex);
+        }
+    }
+
+    private void CommandEnded(Guid executionId, int? rowsAffected, Exception? exception)
     {
         if (!_pendingCommands.TryRemove(executionId, out var ids))
             return;
@@ -190,6 +216,21 @@ public abstract class SqlDiagnosticTracker : ITrackingComponent
     private (Guid TraceId, Guid RequestResponseId)? LogRequestCore(string? commandText, string? dataSource, string? database,
         System.Data.CommandType commandType, Func<SqlTrackingVerbosityLevel, string?> contentFor, DateTimeOffset? timestamp)
     {
+        try
+        {
+            return RequestLogged(commandText, dataSource, database, commandType, contentFor, timestamp);
+        }
+        catch (Exception ex)
+        {
+            // No ids, so the wrapper logs no response for a request that is not there.
+            NotRecorded(ex);
+            return null;
+        }
+    }
+
+    private (Guid TraceId, Guid RequestResponseId)? RequestLogged(string? commandText, string? dataSource, string? database,
+        System.Data.CommandType commandType, Func<SqlTrackingVerbosityLevel, string?> contentFor, DateTimeOffset? timestamp)
+    {
         Interlocked.Increment(ref _invocationCount);
 
         if (!PhaseConfiguration.ShouldTrack(_options.TrackDuringSetup, _options.TrackDuringAction))
@@ -250,6 +291,18 @@ public abstract class SqlDiagnosticTracker : ITrackingComponent
     }
 
     protected internal void LogResponse(Guid traceId, Guid requestResponseId, int? rowsAffected = null, Exception? exception = null)
+    {
+        try
+        {
+            ResponseLogged(traceId, requestResponseId, rowsAffected, exception);
+        }
+        catch (Exception ex)
+        {
+            NotRecorded(ex);
+        }
+    }
+
+    private void ResponseLogged(Guid traceId, Guid requestResponseId, int? rowsAffected, Exception? exception)
     {
         if (!PhaseConfiguration.ShouldTrack(_options.TrackDuringSetup, _options.TrackDuringAction))
             return;
@@ -313,6 +366,18 @@ public abstract class SqlDiagnosticTracker : ITrackingComponent
     /// </summary>
     protected internal void LogResponse(Guid traceId, Guid requestResponseId, string? content, Exception? exception = null)
     {
+        try
+        {
+            ResponseLoggedWithContent(traceId, requestResponseId, content, exception);
+        }
+        catch (Exception ex)
+        {
+            NotRecorded(ex);
+        }
+    }
+
+    private void ResponseLoggedWithContent(Guid traceId, Guid requestResponseId, string? content, Exception? exception)
+    {
         if (!PhaseConfiguration.ShouldTrack(_options.TrackDuringSetup, _options.TrackDuringAction))
             return;
 
@@ -367,24 +432,24 @@ public abstract class SqlDiagnosticTracker : ITrackingComponent
 
     private Uri BuildUri(string? dataSource, string? database, UnifiedSqlOperationInfo op, SqlTrackingVerbosityLevel verbosity)
     {
-        if (string.IsNullOrEmpty(database)) database = "unknown";
-        if (string.IsNullOrEmpty(dataSource)) dataSource = "localhost";
-        // SQL Server uses comma notation for ports — Uri requires colon
-        dataSource = dataSource.Replace(',', ':');
-
+        // SqlEndpoint makes a host of any data source: "host,1433", "(localdb)\MSSQLLocalDB", "tcp:host", a host list.
+        var db = SqlEndpoint.Segment(database);
+        var host = SqlEndpoint.Host(dataSource);
         var scheme = _options.UriScheme;
 
-        return verbosity switch
+        return SqlEndpoint.Build(verbosity switch
         {
-            SqlTrackingVerbosityLevel.Raw => new Uri($"{scheme}://{dataSource}/{database}"),
+            SqlTrackingVerbosityLevel.Raw => $"{scheme}://{host}/{db}",
             SqlTrackingVerbosityLevel.Summarised => op.TableName is not null
-                ? new Uri($"{scheme}:///{database}/{op.TableName}")
-                : new Uri($"{scheme}:///{database}"),
+                ? $"{scheme}:///{db}/{op.TableName}"
+                : $"{scheme}:///{db}",
             _ => op.TableName is not null
-                ? new Uri($"{scheme}://{dataSource}/{database}/{op.TableName}")
-                : new Uri($"{scheme}://{dataSource}/{database}")
-        };
+                ? $"{scheme}://{host}/{db}/{op.TableName}"
+                : $"{scheme}://{host}/{db}"
+        }, scheme);
     }
+
+    private void NotRecorded(Exception ex) => SqlCaptureFailure.Record(ComponentName, ex);
 
     private string? BuildRequestContent(string? commandText, string? parameters, SqlTrackingVerbosityLevel verbosity)
     {

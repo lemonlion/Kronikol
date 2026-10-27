@@ -85,7 +85,7 @@ public class TrackingSqliteCommand : DbCommand
         if (ids is not null)
         {
             if (_connection.Options.LogResponseContent)
-                return WrapReader(result, ids.Value.TraceId, ids.Value.RequestResponseId);
+                return WrapReader(result, ids.Value.TraceId, ids.Value.RequestResponseId, behavior);
             LogResponse(ids.Value.TraceId, ids.Value.RequestResponseId);
         }
         return result;
@@ -108,7 +108,7 @@ public class TrackingSqliteCommand : DbCommand
         if (ids is not null)
         {
             if (_connection.Options.LogResponseContent)
-                return WrapReader(result, ids.Value.TraceId, ids.Value.RequestResponseId);
+                return WrapReader(result, ids.Value.TraceId, ids.Value.RequestResponseId, behavior);
             LogResponse(ids.Value.TraceId, ids.Value.RequestResponseId);
         }
         return result;
@@ -213,22 +213,20 @@ public class TrackingSqliteCommand : DbCommand
         _connection.Tracker.DoLogResponse(traceId, requestResponseId, content);
     }
 
-    private TrackingDbDataReader WrapReader(DbDataReader inner, Guid traceId, Guid requestResponseId)
+    // The caller's behavior goes with the reader: under SequentialAccess (Dapper's every query) a row is recorded as
+    // the caller reads it, since reading it first made the caller's own read throw on SqlClient and Npgsql.
+    private TrackingDbDataReader WrapReader(DbDataReader inner, Guid traceId, Guid requestResponseId, CommandBehavior behavior)
     {
         var opts = _connection.Options;
         return new TrackingDbDataReader(
             inner, SqlResponseDetailResolver.Resolve(opts), opts.MaxResponseRows, opts.MaxValueDisplayLength,
-            content => LogResponseWithContent(traceId, requestResponseId, content));
+            content => LogResponseWithContent(traceId, requestResponseId, content), behavior);
     }
 
-    private string? FormatScalar(object? result)
-    {
-        if (!_connection.Options.LogResponseContent) return null;
-        if (result is null or DBNull) return "null";
-        var str = SqlRowFormatter.ValueText(result);
-        var maxLen = _connection.Options.MaxValueDisplayLength;
-        return str.Length > maxLen ? $"{str[..maxLen]}... ({str.Length} chars)" : str;
-    }
+    private string? FormatScalar(object? result) =>
+        _connection.Options.LogResponseContent
+            ? SqlRowFormatter.ScalarText(result, _connection.Options.MaxValueDisplayLength)
+            : null;
 
     private string? BuildParameterString()
     {

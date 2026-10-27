@@ -12,6 +12,8 @@
     <PackageReference Include="xunit.v3" Version="3.2.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.*" />
+    <!-- Dapper itself, for what it does with a reader: every query reader opened with SequentialAccess -->
+    <PackageReference Include="Dapper" Version="2.1.66" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Kronikol.Extensions.Dapper\Kronikol.Extensions.Dapper.csproj" />

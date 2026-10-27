@@ -1,8 +1,9 @@
 # SQL response capture plan (#193, #197)
 
 **Status:** written 2026-10-26 at 5.10.1 (`c37042e2`) by kronikol-d0, at the owner's ask to analyse #193 critically
-and plan a fix for the underlying problem. A draft, **not green-lit**: nothing is implemented, and the questions in
-section 9 are open. The prototype in the harness exists only to measure the design.
+and plan a fix for the underlying problem. **Executed as 5.11.1** (2026-10-27) at the owner's word, "implement the plan
+in full", with every recommended answer of section 9 taken; the log (section 10) says what was done and measured. The
+prototype in the harness measured the design; `results/5.11.1-all.txt` is the implementation's own run.
 
 **Issues:** [#193](https://github.com/lemonlion/Kronikol/issues/193), "EF Core: `SqlTrackingInterceptor` hands
 Npgsql's SaveChanges a `TrackingDbDataReader`, so every insert, update and delete that returns a row fails", and
@@ -532,3 +533,24 @@ at Closing, and SQL Server reports -1 at both. The choice rests on SqlClient's d
     of the eight SQL suites pass.
   - The endpoint table caught three misses in the prototype's own helper (IPv6, paths, pipes), now in 4.1 (f) and
     fact 6.
+- 2026-10-26 and 27, kronikol-d0, executing the plan at the owner's word ("implement the plan in full"), every
+  recommended answer of section 9 taken (Q1 E, Q2 keep the four, Q3 a line per set, Q4 the explicit
+  `IDbColumnSchemaGenerator` as a patch, Q5 the table, Q7 the fixtures, Q9 close #197 with R1). Q6 had no
+  recommendation, so no issue was filed; F4 and F6 are in the release notes. Q8, R2 and a comment on efcore.pg#1113
+  stay out.
+  - Built test first: the core reader, formatter, address and tracker facts, Dapper through the strict sequential fake,
+    the interceptor's in-process facts on SQLite, and the server facts on PostgreSQL 17 (podman) and LocalDB.
+  - Facts 13 and 15 run on SQLite, not a server: a test seam (`ProviderNameOf`) names another provider for SaveChanges,
+    and a column mapped to `SqliteDataReader.GetString` makes EF Core's shaper cast the reader exactly as SQL Server's
+    spatial columns do, so the model verdict and the untouched counts are pinned on every lane.
+  - Found on the way and fixed: a negative `MaxValueDisplayLength` threw into `ExecuteScalar` on every wrapper and the
+    interceptor (the scalar formatter is now one helper), the scalar was formatted outside any guard, and Dapper's
+    wrapper logged through code of its own that nothing guarded.
+  - The mutations of 6.3 all turn a fact red, 11 runs in all: the `GetFieldValue<T>` forwarding, the eager capture and
+    the address rules were each mutated twice, once under EF Core or Dapper and once under the unit facts.
+  - The harness, re-run on the implementation, gives 49 of 49 (`results/5.11.1-all.txt`). On SQL Server its one
+    context has a geography column, so every command on it keeps SqlDataReader: queries say `N rows`, and SaveChanges
+    has no note, since SQL Server reports no count under `SET NOCOUNT ON`.
+  - Tried and dropped: logging a query at `DataReaderDisposing` when `DataReaderClosing` never reached the interceptor.
+    A probe showed that when an earlier interceptor's Closing throws, EF Core calls neither hook here, so the fallback
+    could never run.

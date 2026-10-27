@@ -41,7 +41,8 @@ public record SqlTrackingOptionsBase
     /// <summary>
     /// Whether to include response content in diagrams. Default: <c>true</c>.
     /// When <c>true</c>, response arrows show payload data (row counts, column names, etc.) at all verbosity levels.
-    /// When <c>false</c>, response arrows are empty (previous behaviour).
+    /// When <c>false</c>, a query's or a scalar's response arrow has no note, and a command that changed rows still
+    /// says how many, except at Summarised verbosity.
     /// </summary>
     public bool LogResponseContent { get; set; } = true;
 

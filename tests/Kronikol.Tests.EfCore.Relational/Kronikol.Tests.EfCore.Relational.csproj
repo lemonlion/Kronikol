@@ -13,6 +13,14 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.*" Condition="'$(TargetFramework)' == 'net10.0'" />
     <!-- A relational provider, so a command that fails runs through EF Core's own CommandFailed path -->
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.*" Condition="'$(TargetFramework)' == 'net10.0'" />
+    <!-- Providers whose own code needs their own reader (plans/SQL_RESPONSE_CAPTURE_PLAN.md F1, F2): Npgsql's update
+         pipeline casts it, and SQL Server's spatial columns are read through SqlDataReader.GetSqlBytes -->
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.1" Condition="'$(TargetFramework)' == 'net10.0'" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.*" Condition="'$(TargetFramework)' == 'net10.0'" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer.NetTopologySuite" Version="10.*" Condition="'$(TargetFramework)' == 'net10.0'" />
+    <!-- The servers those facts run against when no connection string names one, the version the other Testcontainers references pin -->
+    <PackageReference Include="Testcontainers.PostgreSql" Version="4.8.1" />
+    <PackageReference Include="Testcontainers.MsSql" Version="4.8.1" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.*" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.5.1" />
     <PackageReference Include="xunit.v3" Version="3.2.2" />

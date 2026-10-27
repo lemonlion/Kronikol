@@ -93,7 +93,7 @@ public class TrackingDbCommand : DbCommand
         if (ids is not null)
         {
             if (_options.LogResponseContent)
-                return WrapReader(result, ids.Value.TraceId, ids.Value.RequestResponseId);
+                return WrapReader(result, ids.Value.TraceId, ids.Value.RequestResponseId, behavior);
             LogResponse(ids.Value.TraceId, ids.Value.RequestResponseId);
         }
         return result;
@@ -116,7 +116,7 @@ public class TrackingDbCommand : DbCommand
         if (ids is not null)
         {
             if (_options.LogResponseContent)
-                return WrapReader(result, ids.Value.TraceId, ids.Value.RequestResponseId);
+                return WrapReader(result, ids.Value.TraceId, ids.Value.RequestResponseId, behavior);
             LogResponse(ids.Value.TraceId, ids.Value.RequestResponseId);
         }
         return result;
@@ -200,7 +200,19 @@ public class TrackingDbCommand : DbCommand
     internal (Guid TraceId, Guid RequestResponseId)? LogRequest()
     {
         _connection.IncrementInvocationCount();
+        try
+        {
+            return RequestLogged();
+        }
+        catch (Exception ex)
+        {
+            NotRecorded(ex);
+            return null;
+        }
+    }
 
+    private (Guid TraceId, Guid RequestResponseId)? RequestLogged()
+    {
         if (!PhaseConfiguration.ShouldTrack(_options.TrackDuringSetup, _options.TrackDuringAction))
             return null;
         var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
@@ -258,6 +270,18 @@ public class TrackingDbCommand : DbCommand
 
     internal void LogResponse(Guid traceId, Guid requestResponseId, int? rowsAffected = null, Exception? exception = null)
     {
+        try
+        {
+            ResponseLogged(traceId, requestResponseId, rowsAffected, exception);
+        }
+        catch (Exception ex)
+        {
+            NotRecorded(ex);
+        }
+    }
+
+    private void ResponseLogged(Guid traceId, Guid requestResponseId, int? rowsAffected, Exception? exception)
+    {
         var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
 
         var op = DapperOperationClassifier.Classify(CommandText, CommandType);
@@ -309,6 +333,18 @@ public class TrackingDbCommand : DbCommand
 
     private void LogResponseWithContent(Guid traceId, Guid requestResponseId, string? content)
     {
+        try
+        {
+            ResponseLoggedWithContent(traceId, requestResponseId, content);
+        }
+        catch (Exception ex)
+        {
+            NotRecorded(ex);
+        }
+    }
+
+    private void ResponseLoggedWithContent(Guid traceId, Guid requestResponseId, string? content)
+    {
         var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
 
         var op = DapperOperationClassifier.Classify(CommandText, CommandType);
@@ -354,7 +390,9 @@ public class TrackingDbCommand : DbCommand
             }));
     }
 
-    private TrackingDbDataReader WrapReader(DbDataReader inner, Guid traceId, Guid requestResponseId)
+    // The caller's behavior goes with the reader: under SequentialAccess (Dapper's every query) a row is recorded as
+    // the caller reads it, since reading it first made the caller's own read throw on SqlClient and Npgsql.
+    private TrackingDbDataReader WrapReader(DbDataReader inner, Guid traceId, Guid requestResponseId, CommandBehavior behavior)
     {
         var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(
             _options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
@@ -362,18 +400,15 @@ public class TrackingDbCommand : DbCommand
             _options.ResponseDetail, effectiveVerbosity == DapperTrackingVerbosity.Summarised);
         return new TrackingDbDataReader(
             inner, detail, _options.MaxResponseRows, _options.MaxValueDisplayLength,
-            content => LogResponseWithContent(traceId, requestResponseId, content));
+            content => LogResponseWithContent(traceId, requestResponseId, content), behavior);
     }
 
-    private string? FormatScalar(object? result)
-    {
-        if (!_options.LogResponseContent) return null;
-        if (result is null or DBNull) return "null";
-        var str = SqlRowFormatter.ValueText(result);
-        return str.Length > _options.MaxValueDisplayLength
-            ? $"{str[.._options.MaxValueDisplayLength]}... ({str.Length} chars)"
-            : str;
-    }
+    private string? FormatScalar(object? result) =>
+        _options.LogResponseContent ? SqlRowFormatter.ScalarText(result, _options.MaxValueDisplayLength) : null;
+
+    // The wrapper runs inside the application's own call, so whatever recording a command fails on is caught: the
+    // command goes on, and the run's diagnostics name what was not recorded.
+    private void NotRecorded(Exception ex) => SqlCaptureFailure.Record(_connection.ComponentName, ex);
 
     private Uri BuildUri(DapperOperationInfo op, DapperTrackingVerbosity verbosity)
     {
@@ -383,17 +418,24 @@ public class TrackingDbCommand : DbCommand
         if (string.IsNullOrEmpty(database)) database = "unknown";
         if (string.IsNullOrEmpty(dataSource)) dataSource = "localhost";
 
+        // Raw puts the data source where the host goes, which "(localdb)\MSSQLLocalDB", "host,1433" or a host list is
+        // not: SqlEndpoint makes it one. The other forms put it in the path, as written, and fall back the same way.
         return verbosity switch
         {
-            DapperTrackingVerbosity.Raw => new Uri($"sql://{dataSource}/{database}"),
+            DapperTrackingVerbosity.Raw => SqlEndpoint.Build($"sql://{SqlEndpoint.Host(dataSource)}/{SqlEndpoint.Segment(database)}"),
             DapperTrackingVerbosity.Summarised => op.TableName is not null
-                ? new Uri($"sql:///{database}/{op.TableName}")
-                : new Uri($"sql:///{database}"),
+                ? PathAddress($"sql:///{database}/{op.TableName}", $"sql:///{SqlEndpoint.Segment(database)}/{op.TableName}")
+                : PathAddress($"sql:///{database}", $"sql:///{SqlEndpoint.Segment(database)}"),
             _ => op.TableName is not null
-                ? new Uri($"sql:///{dataSource}/{database}/{op.TableName}")
-                : new Uri($"sql:///{dataSource}/{database}")
+                ? PathAddress($"sql:///{dataSource}/{database}/{op.TableName}",
+                    $"sql:///{SqlEndpoint.Host(dataSource)}/{SqlEndpoint.Segment(database)}/{op.TableName}")
+                : PathAddress($"sql:///{dataSource}/{database}",
+                    $"sql:///{SqlEndpoint.Host(dataSource)}/{SqlEndpoint.Segment(database)}")
         };
     }
+
+    private static Uri PathAddress(string asWritten, string escaped) =>
+        Uri.TryCreate(asWritten, UriKind.Absolute, out var uri) ? uri : SqlEndpoint.Build(escaped);
 
     private string? BuildParameterizedContent()
     {

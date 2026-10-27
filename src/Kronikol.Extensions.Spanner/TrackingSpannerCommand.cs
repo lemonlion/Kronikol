@@ -91,7 +91,7 @@ public class TrackingSpannerCommand : DbCommand
         if (ids is not null)
         {
             if (_options.LogResponseContent)
-                return WrapReader(result, ids.Value.TraceId, ids.Value.RequestResponseId);
+                return WrapReader(result, ids.Value.TraceId, ids.Value.RequestResponseId, behavior);
             LogResponse(ids.Value.TraceId, ids.Value.RequestResponseId);
         }
         return result;
@@ -114,7 +114,7 @@ public class TrackingSpannerCommand : DbCommand
         if (ids is not null)
         {
             if (_options.LogResponseContent)
-                return WrapReader(result, ids.Value.TraceId, ids.Value.RequestResponseId);
+                return WrapReader(result, ids.Value.TraceId, ids.Value.RequestResponseId, behavior);
             LogResponse(ids.Value.TraceId, ids.Value.RequestResponseId);
         }
         return result;
@@ -234,21 +234,18 @@ public class TrackingSpannerCommand : DbCommand
         _connection.Tracker.LogResponse(op, requestResponseId, traceId, content);
     }
 
-    private TrackingDbDataReader WrapReader(DbDataReader inner, Guid traceId, Guid requestResponseId)
+    // The caller's behavior goes with the reader: under SequentialAccess (Dapper's every query) a row is recorded as
+    // the caller reads it, since reading it first made the caller's own read throw on SqlClient and Npgsql.
+    private TrackingDbDataReader WrapReader(DbDataReader inner, Guid traceId, Guid requestResponseId, CommandBehavior behavior)
     {
         var detail = (SqlResponseDetail)(int)_options.ResolveResponseDetail();
         return new TrackingDbDataReader(
             inner, detail, _options.MaxResponseRows, 500,
-            content => LogResponseWithContent(traceId, requestResponseId, content));
+            content => LogResponseWithContent(traceId, requestResponseId, content), behavior);
     }
 
-    private string? FormatScalar(object? result)
-    {
-        if (!_options.LogResponseContent) return null;
-        if (result is null or DBNull) return "null";
-        var str = SqlRowFormatter.ValueText(result);
-        return str.Length > 500 ? $"{str[..500]}... ({str.Length} chars)" : str;
-    }
+    private string? FormatScalar(object? result) =>
+        _options.LogResponseContent ? SqlRowFormatter.ScalarText(result, 500) : null;
 
     private string? BuildParameterizedContent()
     {

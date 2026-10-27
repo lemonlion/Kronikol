@@ -30,8 +30,11 @@ public record SqlTrackingInterceptorOptions
     public bool TrackDuringAction { get; set; } = true;
 
     /// <summary>
-    /// Whether to include response content in diagrams. Default: true.
-    /// When false, response arrows are empty (previous behaviour).
+    /// Whether a response's note shows what the command returned: the rows a query read, up to
+    /// <see cref="MaxResponseRows"/>, or a scalar's value. Default: true. When false, a query's or a scalar's response
+    /// arrow has no note, and a command that changed rows still says how many, except at Summarised verbosity.
+    /// A context whose queries read some value through the provider's own reader keeps that reader, and each query's
+    /// note gives its row count (see the run's diagnostics).
     /// </summary>
     public bool LogResponseContent { get; set; } = true;
 
