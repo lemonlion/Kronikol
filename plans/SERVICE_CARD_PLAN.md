@@ -397,7 +397,7 @@ edge.)
 | Member | Holds | Sorted by |
 |---|---|---|
 | `rules` | the operation key's version, the hash of the consumer's templating rules (null for none), the inference rule's version: two cards made under different rules are not compared by their hash (below) | |
-| `subject` | name, id, `source` (`declared` or `inferred`) (#190) | |
+| `subject` | #190's subject row, as 5.14.0 chooses it: the `underTest` party that received the most calls, then by name (`PartyResolver.cs:98-99` at `8d7d1e1d`); its name, id and `source` (`declared`, `observed` or `inferred`). Another `underTest` party, which the inference keeps when it makes calls and takes a quarter of the test's calls, stays in `parties`, and `exposes` is the subject's alone | |
 | `parties` | name, id, kind, `kindSource` and `note` as #190's resolver gives them (§5.1), and the set of categories seen. A party some of whose calls carry #190's `testDouble` mark keeps its kind (§5.10); how many of its calls were marked is a count, so `doubleCalls` goes to `run` | name |
 | `edges` | from, to, protocol, and the operations | from, to, protocol |
 | an operation | `op` (the first 16 hex of SHA-256 over from, to, protocol, method and target, joined by U+001F), method, target, `graphqlOperation` (#192 §4.2, which names an anonymous operation by its root fields, `query { orderSummaries }`: all 8 of BreakfastProvider's GraphQL POSTs are anonymous, and `TryExtractLabel` reads each as `query`, PEER), and the sets of statuses, origins, causes and effective phases | method, target |
@@ -662,6 +662,12 @@ run-end file in the first release, R1 and R2 merge into one minor.
   a minor, not a patch (4.0); the fingerprint version is 7 since R0, so #192's key moves it to 8 (4.0, the example's
   `rules`). Added: what moves `behaviourHash` with no change of behaviour, R0's rename among them (4.3), and a test
   that a card keeps the name its report recorded (5.3.4).
+- 2026-10-27: rebased onto 5.14.0 (`8d7d1e1d`), which released #190's R1: the resolver in `src/Kronikol/Parties/`
+  (internal: `PartiesReport.Resolve`, `PartyResolver.Resolve`), the block (`serviceId`, and `parties` rows with `name`
+  and `kind` always and `id`, `kindSource` and `note` when known), `serviceId` in `Run.json` and on the run line, and
+  `kronikol query parties`. The card can rely on all of it as 4.0 and 4.3 say. Corrected: a subject's `source` can be
+  `observed` (a tracking client made from a `WebApplicationFactory`), and as R1 can mark more than one party
+  `underTest`, the card's `subject` is R1's subject row (4.3).
 
 ## Appendix A. Edit sites at `44bcc62a`
 
