@@ -178,9 +178,10 @@ public partial class SearchResultsTests
         Assert.Equal(colours[1], colours[0]);
     }
 
-    // R7
+    // R7, 5.12.0: a status row narrows the search, as GitHub's sidebar does, and leaves the box's Status as it was (the
+    // owner: a search is no filter)
     [Fact]
-    public async Task A_status_row_presses_the_box_s_status_button_and_the_box_shows_it_on()
+    public async Task A_status_row_narrows_the_search_and_leaves_the_box_alone()
     {
         await OpenBakeryAsync("Tab_R7.html");
         await SearchAsync("pancake");
@@ -189,17 +190,18 @@ public partial class SearchResultsTests
 
         await ClickSideAsync("Failed");
         Assert.Equal("1 result", await CountAsync());
-        Assert.True(await Page.EvaluateAsync<bool>("() => document.querySelector('#filtering-box .status-toggle[data-status=\"Failed\"]').classList.contains('status-active')"));
+        Assert.Equal("pancake status:failed", await Page.EvaluateAsync<string>("() => search_query()"));
         Assert.True(await SideCurrentAsync("Failed"));
+        Assert.False(await Page.EvaluateAsync<bool>("() => document.querySelector('#filtering-box .status-toggle[data-status=\"Failed\"]').classList.contains('status-active')"));
 
         await ClickSideAsync("Failed");
         Assert.Equal("3 results", await CountAsync());
-        Assert.False(await Page.EvaluateAsync<bool>("() => document.querySelector('#filtering-box .status-toggle[data-status=\"Failed\"]').classList.contains('status-active')"));
+        Assert.Equal("pancake", await Page.EvaluateAsync<string>("() => search_query()"));
     }
 
-    // R8
+    // R8, 5.12.0: Exclude writes -tag: into the search; the box's chip stays off
     [Fact]
-    public async Task Exclude_sets_the_chip_to_exclude()
+    public async Task Exclude_leaves_them_out_of_the_search()
     {
         await OpenBakeryAsync("Tab_R8.html");
         await SearchAsync("pancake");
@@ -208,7 +210,8 @@ public partial class SearchResultsTests
         await Page.Locator("#panel-search .search-side-exclude[aria-label='Exclude smoke']").ClickAsync();
         await TwoAnimationFramesAsync(Page);
 
-        Assert.Equal("out", await Page.EvaluateAsync<string>("() => chip_state(find_chip('tag', 'smoke'))"));
+        Assert.Equal("pancake -tag:smoke", await Page.EvaluateAsync<string>("() => search_query()"));
+        Assert.Equal("off", await Page.EvaluateAsync<string>("() => chip_state(find_chip('tag', 'smoke'))"));
         Assert.Equal("1 result", await CountAsync());
         Assert.Equal(["Pancakes without flour are rejected"], await TitlesAsync());
     }
@@ -442,26 +445,23 @@ public partial class SearchResultsTests
             await Page.Locator("#panel-search .search-warning").TextContentAsync());
     }
 
-    // R20
+    // R20, 5.12.0: the search reads every scenario whatever the filters hide (the owner, 2026-10-27), so no note counts
+    // what they hide
     [Fact]
-    public async Task The_box_s_filters_narrow_the_results_and_the_note_counts_what_they_hide()
+    public async Task The_box_s_filters_leave_the_results_whole()
     {
         await OpenBakeryAsync("Tab_R20.html");
         await SearchAsync("pancake");
         Assert.Equal("3 results", await CountAsync());
 
+        await Page.Locator(".report-tabs > .report-tab[data-tab='features']").ClickAsync();
         await OpenFilterRowsAsync();
         await Page.Locator("#filtering-box .status-toggle[data-status='Failed']").ClickAsync();
-        await TwoAnimationFramesAsync(Page);
+        await Page.Locator("#tab-search").ClickAsync();
+        await ResultsShownAsync();
 
-        Assert.Equal("1 result", await CountAsync());
-        var note = Page.Locator("#panel-search .search-filtered-note");
-        Assert.Equal("Filtered: the filters hide 2 of this search’s results.Clear", await note.TextContentAsync());
-
-        await note.Locator(".search-filtered-clear").ClickAsync();
-        await TwoAnimationFramesAsync(Page);
         Assert.Equal("3 results", await CountAsync());
-        Assert.Equal("pancake", await Page.EvaluateAsync<string>("() => document.getElementById('searchbar').value"));
+        Assert.Equal(0, await Page.Locator("#panel-search .search-filtered-note").CountAsync());
     }
 
     // R21
@@ -507,23 +507,19 @@ public partial class SearchResultsTests
         Assert.Equal("search", await SelectedTabAsync());
     }
 
-    // R25
+    // R25, 5.12.0: a row is on exactly while the query names it, however the qualifier got there, and a click on it takes it
+    // out (until then a row was the box's chip, read when the sidebar was drawn, so it could stick)
     [Fact]
-    public async Task The_sidebar_and_the_box_never_disagree()
+    public async Task A_sidebar_row_is_on_while_the_query_names_it()
     {
         await OpenBakeryAsync("Tab_R25.html");
-        await SearchAsync("pancake");
+        await SearchAsync("pancake tag:menu");
+        Assert.True(await SideCurrentAsync("menu"));
+        Assert.Equal("off", await Page.EvaluateAsync<string>("() => chip_state(find_chip('tag', 'menu'))"));
 
         await ClickSideAsync("menu");
-        Assert.Equal("in", await Page.EvaluateAsync<string>("() => chip_state(find_chip('tag', 'menu'))"));
-        Assert.True(await SideCurrentAsync("menu"));
-
-        // the chip changed in the box, the facet follows
-        await OpenFilterRowsAsync();
-        await Page.Locator("#filtering-box .tag-toggle[data-tag='menu']").ClickAsync();
-        await TwoAnimationFramesAsync(Page);
-        var state = await Page.EvaluateAsync<string>("() => chip_state(find_chip('tag', 'menu'))");
-        Assert.Equal(state != "off", await SideCurrentAsync("menu"));
+        Assert.Equal("pancake", await Page.EvaluateAsync<string>("() => search_query()"));
+        Assert.False(await SideCurrentAsync("menu"));
     }
 
     // R26
@@ -558,11 +554,13 @@ public partial class SearchResultsTests
         Assert.Equal("3 results", await CountAsync());
     }
 
-    // R31
-    [Fact]
-    public async Task A_reload_of_tab_search_with_q_shows_the_results_once_filtered()
+    // R31: a reload of the Search tab shows its results once; q= is a 5.11.0 link's search, read as search= (5.12.0)
+    [Theory]
+    [InlineData("#tab=search&search=pancake")]
+    [InlineData("#tab=search&q=pancake")]
+    public async Task A_reload_of_tab_search_shows_the_results_once(string hash)
     {
-        await OpenBakeryAsync("Tab_R31.html", hash: "#tab=search&q=pancake");
+        await OpenBakeryAsync($"Tab_R31_{hash.Length}.html", hash: hash);
         await ResultsShownAsync();
 
         Assert.Equal("search", await SelectedTabAsync());

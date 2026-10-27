@@ -80,7 +80,7 @@ public class SearchButtonTests : PlaywrightTestBase
     [Fact]
     public async Task An_applied_query_shows_in_the_search_box_with_its_values_coloured()
     {
-        await OpenAsync("SearchButton_Query.html", hash: "#q=pancake%20status%3Afailed");
+        await OpenAsync("SearchButton_Query.html", hash: "#search=pancake%20status%3Afailed");
 
         var query = Page.Locator("#search-button .search-button-query");
         await Expect(query).ToBeVisibleAsync();
@@ -100,17 +100,17 @@ public class SearchButtonTests : PlaywrightTestBase
     [Fact]
     public async Task Clear_empties_the_query_and_nothing_else_in_one_entry()
     {
-        await OpenAsync("SearchButton_Clear.html", hash: "#status=Passed&q=toast");
+        await OpenAsync("SearchButton_Clear.html", hash: "#status=Passed&search=toast");
         var length = await Page.EvaluateAsync<int>("() => history.length");
 
         await Page.Locator("#search-clear").ClickAsync();
 
-        await Expect(Page.Locator("#searchbar")).ToHaveValueAsync("");
-        await Page.WaitForFunctionAsync("() => !location.hash.includes('q=') && location.hash.includes('status=Passed')", null, new() { PollingInterval = 200 });
+        Assert.Equal("", await Page.EvaluateAsync<string>("() => search_query()"));
+        await Page.WaitForFunctionAsync("() => !location.hash.includes('search=') && location.hash.includes('status=Passed')", null, new() { PollingInterval = 200 });
         Assert.Equal(length + 1, await Page.EvaluateAsync<int>("() => history.length"));
         await Expect(Page.Locator("#search-clear")).ToBeHiddenAsync();
         await Expect(Page.Locator("#search-button")).ToBeFocusedAsync();
         await Page.GoBackAsync();
-        await Page.WaitForFunctionAsync("() => document.getElementById('searchbar').value === 'toast'", null, new() { PollingInterval = 200 });
+        await Page.WaitForFunctionAsync("() => search_query() === 'toast'", null, new() { PollingInterval = 200 });
     }
 }

@@ -50,6 +50,11 @@ namespace Kronikol.Tests.Reports;
 /// plans/SEARCH_PLAN.md 4.6.2 to 4.6.5 changed the search index script outside its fences: its normaliser's passes are one
 /// list the search text, the display text and the map back to the input are made from, and its worker keeps each piece of
 /// a scenario's text with the places in it, reports the kinds a match hit and answers the lines asked for a result shown.
+/// 5.12.0 changed three of them outside their fences, to keep the search apart from the filter field (the owner: a search
+/// is no filter): the search function reads a query into flags with one matcher that the field's run and the search's
+/// own run share, each keeping flags of its own; the search index script runs a deep pass for each of the two queries;
+/// and the feature map helper gives every scenario the search's flags and shows or hides the scenarios by a test it is
+/// handed, which the Search tab's exports use.
 /// </summary>
 public class VerdictFencesTests
 {
@@ -57,9 +62,9 @@ public class VerdictFencesTests
     {
         // script, default variant (no verdicts), verdict variant
         { "advanced-search.js", "1543f8d6b072935b1b5a7f4838a4f6a3315a2b3c689026b3f099a116e55c0fb2", "e15cf8d1c84cb2cd0fc4c44bd3e237ca1dd37398d3028b0f813a1409e11a51a7" },
-        { "report-scenario-feature-map-helper.js", "d3d00e12dfb1ae86fce149860f5ffbe970a43af27dd8b80c0a39f3438a187202", "235ffa5649c597fa43429959c0eacc0d90f7bbcdb5f7a740b6636a5ecd076caa" },
-        { "report-search-function.js", "78a829b878ae60f7d4330d049d507130437cf09a533d90504fe8425ce10dd82c", "471a1bb0f21db191ef0b95b3f972ebdfae2964414a78aa08dc8d53097e52a7fe" },
-        { "report-search-index.js", "e4392829d4628a16d01d4ca4580f3ac50cf08d1e48bd11fed8bbb83d24ee9e1c", "3ac67899fe659bf7d879a8e515959f1883ca740463fb1cdb1115aca9d3e7db3c" },
+        { "report-scenario-feature-map-helper.js", "1fabc946b6ce384a3c0192f482831af92667c8a571c94271c17d039f823c5da2", "094f7e44413e058c7cdf5974a7484626e0af4be7cc150d6f8aa875fd953a0342" },
+        { "report-search-function.js", "ca606c27299739f1eb55e6e95d27101f5a776211e71bdb179e13b93bef539614", "8a5d3099d562dd314d8881d42ed83e5ff3bb2cb77e2362bc213a401c859599c3" },
+        { "report-search-index.js", "f5ee023813b98316c2ccd5b4648694a99f0d5fe6c76ec947c5e071989327e927", "3c308633251e41fd5f8a3adb4f59cf64220b71b957dbeae31d1baeaddf797e42" },
     };
 
     private static string Sha256(string text) =>

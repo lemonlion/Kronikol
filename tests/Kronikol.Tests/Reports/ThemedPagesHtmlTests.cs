@@ -224,7 +224,7 @@ public partial class ThemedPagesHtmlTests : IDisposable
 
     // ── the search help ──
 
-    // the syntax tips, which the query builder holds since the search left the box (plans/SEARCH_PLAN.md 4.3.5)
+    // the syntax tips, which the query builder holds (plans/SEARCH_PLAN.md 4.3.5), and the filter field's ? (5.12.0)
     [Fact]
     public void The_search_help_is_drawn_in_the_tokens_and_the_violet_leaves_it_to_them()
     {
@@ -240,7 +240,16 @@ public partial class ThemedPagesHtmlTests : IDisposable
                 Assert.False(Literal().IsMatch(value), $"{selector} {{ {property}: {value} }} is a colour of its own, the same in both themes");
         }
         Assert.Equal("var(--kron-code-bg)", CssRules.Value(css, ".search-tips code", "background"));
-        Assert.DoesNotContain(CssRules.Parse(Stylesheets.HtmlReportStyleSheet), r => r.Selectors.Any(s => s.StartsWith(".search-help", StringComparison.Ordinal)));
+        // the filter field's ?, back in the box in 5.12.0, shows the same forms, styled in the report's own stylesheet
+        string[] field = [".search-help-toggle", ".search-help-toggle:hover", ".search-help-panel", ".search-help-panel th",
+            ".search-help-panel td", ".search-help-panel code", ".search-help-note"];
+        foreach (var selector in field)
+        {
+            var rules = CssRules.For(Stylesheets.HtmlReportStyleSheet, selector);
+            Assert.True(rules.Count > 0, $"stylesheets.css has no {selector} rule");
+            foreach (var (property, value) in rules.SelectMany(r => r.Declarations))
+                Assert.False(Literal().IsMatch(value), $"{selector} {{ {property}: {value} }} is a colour of its own, the same in both themes");
+        }
         Assert.DoesNotContain(CssRules.Parse(Violet), r => r.Selectors.Any(s => s.StartsWith(".search-", StringComparison.Ordinal)));
     }
 }

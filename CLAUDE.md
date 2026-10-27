@@ -63,7 +63,7 @@ When writing or modifying Playwright end-to-end tests in `tests/Kronikol.Tests.E
   - Note hover: `dispatchEvent(new MouseEvent('mouseenter', ...))` (not `mouseover`)
   - Note double-click: `dispatchEvent(new MouseEvent('dblclick', ...))` to avoid `<text>` element pointer interception
 - **Strict mode** — always use `.First` or `.Nth(n)` when selectors may match multiple elements (per-diagram buttons, nested summaries, report+scenario level controls).
-- **Search** — use the `FillSearchBar()` helper, which opens the query builder (`window.kronikol_search.open()`), fills `#search-input` and chooses the row that filters the tab on screen (pass `toSearchTab: true` to press Enter and land on the Search tab). The applied query is the hidden `#searchbar`; never fill it directly.
+- **Filter and search** — two things. To filter the Features list, use the `FillSearchBar()` helper: it opens the filter box where it is closed, fills the filter field `#searchbar` (which filters on `input`), presses Enter and closes the box again. To search, pass `toSearchTab: true`: it opens the query builder (`window.kronikol_search.open()`), fills `#search-input` and presses Enter, landing on the Search tab. The search's query is `search_query()`, never `#searchbar`.
 
 ## Installed Chrome or Edge: never on a fresh profile
 

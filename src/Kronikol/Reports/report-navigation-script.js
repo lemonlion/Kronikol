@@ -62,10 +62,14 @@
             // a filter is a key and its value; a bare word (#top, a diagram link's #iflow-<id>) is no part of the place
             else if (eq > 0) filters.push(s);
         }
+        // a 5.11.0 link to the Search tab, or to a match it listed (hit=), carried its search as q=, the key the search
+        // shared with the filter field then: it is read as search= (5.12.0), and q= is the filter field's again
+        if ((tab === 'search' || hit) && !filters.some(function (f) { return f.indexOf('search=') === 0; }))
+            filters = filters.map(function (f) { return f.indexOf('q=') === 0 ? 'search=' + f.substring(2) : f; });
         return { anchor: anchor, tab: tab, view: view, filters: filters.join('&'), search: search, hit: hit };
     }
-    // the Search tab shows only while a search is applied: tab=search with no q= is the Features tab (4.5.1)
-    function hasQuery(filters) { return /(^|&)q=[^&]/.test(filters || ''); }
+    // the Search tab shows only while a search is applied: tab=search with no search= is the Features tab (4.5.1)
+    function hasQuery(filters) { return /(^|&)search=[^&]/.test(filters || ''); }
     function searchKeysOf(search) {
         var out = {};
         SEARCH_KEYS.forEach(function (k) { if (search && search[k]) out[k] = String(search[k]); });
@@ -563,8 +567,17 @@
             here = hashNow();
             arrived();
             // 7. a match the address names (hit=): the rest of the way to it, after this arrival's own focus and status
-            // line, which would otherwise take the focus back and empty the line (SEARCH_PLAN 4.6.5)
-            if (to.anchor && to.hit && window.kronikol_hit && window.kronikol_hit.follow) window.kronikol_hit.follow(scenarioOf(to.anchor), to.hit, o.how);
+            // line, which would otherwise take the focus back and empty the line (SEARCH_PLAN 4.6.5). In a scenario the
+            // filters hide, the way waits for the note's button to show it (5.12.0: the search reads every scenario, and
+            // until then the way opened, marked and took the focus beside the note)
+            if (to.anchor && to.hit && window.kronikol_hit && window.kronikol_hit.follow) {
+                var hitIn = scenarioOf(to.anchor);
+                if (!(hitIn && typeof filtered_out === 'function' && filtered_out(hitIn))) window.kronikol_hit.follow(hitIn, to.hit, o.how);
+                else if (shown && shown.classList && shown.classList.contains('filtered-out-note')) {
+                    var showIt = shown.querySelector('button');
+                    if (showIt) showIt.addEventListener('click', function () { window.kronikol_hit.follow(scenarioOf(to.anchor), to.hit, 'click'); });
+                }
+            }
         };
         if (!going && saved && saved.scroll) {
             // what the address's scenario opened is open again before the position is put back: a reload, or a return

@@ -24,7 +24,7 @@
 
     // the search's positive words, as the Search tab reads them (report-search-results-script.js)
     function terms() {
-        var f = doc.getElementById('searchbar'), q = f ? f.value.trim() : '';
+        var q = typeof search_query === 'function' ? search_query() : '';
         var rest = typeof split_search_qualifiers === 'function' ? split_search_qualifiers(q).rest : q;
         var out = [], re = /"([^"]*)"|(\S+)/g, m, negate = false;
         var tagWords = q.indexOf('@') >= 0 && !(typeof isAdvancedSearch === 'function' && isAdvancedSearch(q));

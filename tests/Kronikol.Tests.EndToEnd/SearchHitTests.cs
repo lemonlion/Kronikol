@@ -339,7 +339,7 @@ public partial class SearchHitTests : PlaywrightTestBase
         // another search takes them away
         await MarkNoteAsync("\"flour\":", ["flour"]);
         Assert.Equal(3, await GroundsAsync());
-        await FillSearchBar("pancake");
+        await FillSearchBar("pancake", toSearchTab: true);
         await Page.WaitForFunctionAsync("() => window.__marks.grounds().length === 0", null, new() { Timeout = 10000, PollingInterval = 200 });
     }
 

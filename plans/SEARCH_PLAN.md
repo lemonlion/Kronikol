@@ -1,6 +1,16 @@
 # SEARCH_PLAN: a dedicated search modelled on GitHub's, and the filters behind the bar's Filters button
 
 **Status: EXECUTED as 5.11.0 (2026-10-26).** The owner said "implement the plan in full"; every question took its recommended answer. What was measured against the plan is in `PLANS_STATUS.md`'s row and the harness's `proofs/` and `checks/`. Written 2026-10-26 by kronikol-41 at the owner's ask (section 1).
+
+**Corrected as 5.12.0 (2026-10-27).** Two of the recommended answers were never the owner's, and 5.11.0 shipped them: Q1
+(the results are what the Features list shows, one query for the search and the filter) and Q17 (one set of filters, the
+Search tab's sidebar being the filter box's buttons). The owner: "Search is such a different concept to filtering ...
+Search - get a list of results on a search result page and then when you click on that result it takes you to the
+result. Filter - filter the main list down to a subset." 5.12.0 holds them apart: the search has a query of its own
+(`search=`, `search_query()`), reads every scenario whatever the filters hide and hides nothing; its sidebar writes
+`status:`, `tag:` and `dep:` into the search; the filters are out of sight while the Search tab shows; the builder's
+filtering row and phone Filters button are gone. F1's removal of the filter field is reversed too: the field is back in
+the box, hidden with it until Filters opens it. Sections 4.1, 4.3.3, 4.5 and 4.9 below describe 5.11.0.
 Every `file:line` is at `main` `37428293` (5.9.0) under `src/Kronikol/Reports/` unless it says otherwise (the first draft read
 `29e551f3`, 5.8.0; 5.9.0 changed none of the code files it cited, and moved CHANGELOG and `Kronikol.csproj` lines, given here
 at 5.9.0); wiki lines are at `Kronikol.wiki` `1f7944e`. Short

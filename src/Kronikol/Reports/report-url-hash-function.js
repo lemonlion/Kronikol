@@ -142,8 +142,14 @@ var _jump_aims = 0;
 // tags' names are percent-encoded one by one and joined with commas, so a comma inside a name stays in it. A chip for
 // the scenarios with none is written by its reserved value (__none__, __untagged__), and a 4.x link's
 // __uncategorized__ is read as __untagged__.
+//
+// The search's own query rides with them as search= (5.12.0), though it filters nothing: q= is the filter field's, as it
+// was until 5.11.0, and a 5.11.0 link's q= on the Search tab, which was its search, is read as search= (the navigation
+// script's read).
 function url_hash_filters() {
     var parts = [];
+    var searched = typeof search_query === 'function' ? search_query() : '';
+    if (searched) parts.push('search=' + encodeURIComponent(searched));
     var search = document.getElementById('searchbar');
     if (search && search.value) parts.push('q=' + encodeURIComponent(search.value));
     var statuses = [];
@@ -207,11 +213,16 @@ function apply_url_hash(hash) {
         // reset_filters clears the flags only: the release below shows what they leave, whether or not the address names a
         // filter (an address with none, reached by Back, runs no filter function to do it)
         step(function() { applyVisibility(fc()); });
+        var searchKey = params.search || '';
         step(function() {
             if (params.q) {
                 var sb = document.getElementById('searchbar');
                 if (sb) { sb.value = params.q; run_search_scenarios(); }
             }
+        });
+        // the search's own query, put back or taken away: it is no filter, so reset_filters leaves it
+        step(function() {
+            if (typeof run_search_query === 'function' && searchKey !== search_query()) run_search_query(searchKey);
         });
         step(function() {
             if (params.status) {

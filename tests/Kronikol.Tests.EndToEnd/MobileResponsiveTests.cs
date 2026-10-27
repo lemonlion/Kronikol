@@ -379,7 +379,8 @@ public class MobileResponsiveTests : PlaywrightTestBase
 
         await fab.ClickAsync();
         await Page.WaitForFunctionAsync("() => document.getElementById('search-dialog').open", null, new() { PollingInterval = 200 });
-        await Expect(Page.Locator(".search-foot-filters")).ToBeVisibleAsync();
+        // the builder searches; the filters are the bar's (5.12.0 took its Filters away: a search is no filter)
+        await Expect(Page.Locator("#search-dialog .search-foot-filters")).ToHaveCountAsync(0);
     }
 
     // ── #10 Back-to-top FAB ──

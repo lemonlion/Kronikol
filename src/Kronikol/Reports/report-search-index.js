@@ -700,7 +700,8 @@ function kronItemSnippets(entry, terms, max) {
 // browser storage by design).
 function kronSearchWorkerMain(self) {
     var ix = null, items = null, pumlMap = null, docToItem = null;
-    var latestGen = 0;
+    // the newest query of each deep search: the filter field's (f) and the search's (s), read one of each at a time
+    var latest = { f: 0, s: 0 };
     var pendingQueries = [];
     var ready = false;
     var corpusCache = new Map(); // itemIndex -> normalized corpus string (LRU by re-insertion)
@@ -839,7 +840,7 @@ function kronSearchWorkerMain(self) {
         return entry;
     }
     async function runQuery(msg) {
-        var gen = msg.gen;
+        var gen = msg.gen, ch = msg.ch || 'f';
         var t0 = Date.now();
         var input = msg.input;
         var deepInput = kronNormalizeQueryText(input);
@@ -856,7 +857,7 @@ function kronSearchWorkerMain(self) {
         var terms = kronPositiveTerms(input, deepInput);
         var matches = [], kinds = [];
         for (var c = 0; c < candItems.length; c++) {
-            if (latestGen !== gen) return; // superseded — stop wasting work
+            if (latest[ch] !== gen) return; // superseded — stop wasting work
             var idx = candItems[c];
             var entry = await corpusForItem(idx), corpus = entry.text;
             var item = items[idx];
@@ -870,12 +871,12 @@ function kronSearchWorkerMain(self) {
                 kinds.push(kronItemKinds(entry, terms));
                 // a batch as each hundredth match joins, never again for the candidates after it that do not match
                 if (matches.length % BATCH_SIZE === 0)
-                    self.postMessage({ type: 'result', gen: gen, done: false, matches: matches.slice(), terms: terms, kinds: kinds.slice() });
+                    self.postMessage({ type: 'result', ch: ch, gen: gen, done: false, matches: matches.slice(), terms: terms, kinds: kinds.slice() });
             }
         }
-        if (latestGen !== gen) return;
+        if (latest[ch] !== gen) return;
         self.postMessage({
-            type: 'result', gen: gen, done: true, matches: matches, terms: terms, kinds: kinds,
+            type: 'result', ch: ch, gen: gen, done: true, matches: matches, terms: terms, kinds: kinds,
             stats: { candidates: candDocs.length, candidateItems: candItems.length, verified: matches.length, ms: Date.now() - t0 }
         });
     }
@@ -884,10 +885,10 @@ function kronSearchWorkerMain(self) {
     // lines } (kronItemSnippets). A request a newer query has overtaken, before it is read or while it is, is answered
     // { type: 'snippets', gen, id, stale: true } and nothing more, as a query stops then; one that fails, with its error.
     async function runSnippets(msg) {
-        var gen = msg.gen, answers = [], max = msg.max > 0 ? msg.max : 3;
+        var gen = msg.gen, ch = msg.ch || 'f', answers = [], max = msg.max > 0 ? msg.max : 3;
         try {
             var terms = kronPositiveTerms(msg.input, kronNormalizeQueryText(msg.input));
-            for (var a = 0; a < msg.items.length && latestGen === gen; a++) {
+            for (var a = 0; a < msg.items.length && latest[ch] === gen; a++) {
                 var idx = msg.items[a];
                 if (!items[idx]) { answers.push({ item: idx, count: 0, hits: 0, lines: [] }); continue; }
                 var entry = await corpusForItem(idx);
@@ -898,7 +899,7 @@ function kronSearchWorkerMain(self) {
             self.postMessage({ type: 'snippets', gen: gen, id: msg.id, error: '' + err });
             return;
         }
-        if (latestGen !== gen) self.postMessage({ type: 'snippets', gen: gen, id: msg.id, stale: true });
+        if (latest[ch] !== gen) self.postMessage({ type: 'snippets', gen: gen, id: msg.id, stale: true });
         else self.postMessage({ type: 'snippets', gen: gen, id: msg.id, answers: answers });
     }
     self.onmessage = function(e) {
@@ -921,11 +922,11 @@ function kronSearchWorkerMain(self) {
             var q = pendingQueries; pendingQueries = [];
             for (var i = 0; i < q.length; i++) (q[i].type === 'snippets' ? runSnippets : runQuery)(q[i]);
         } else if (msg.type === 'query') {
-            latestGen = msg.gen;
+            latest[msg.ch || 'f'] = msg.gen;
             if (!ready) { pendingQueries.push(msg); return; }
             runQuery(msg);
         } else if (msg.type === 'snippets') {
-            if (msg.gen !== latestGen) { self.postMessage({ type: 'snippets', gen: msg.gen, id: msg.id, stale: true }); return; }
+            if (msg.gen !== latest[msg.ch || 'f']) { self.postMessage({ type: 'snippets', gen: msg.gen, id: msg.id, stale: true }); return; }
             if (!ready) { pendingQueries.push(msg); return; }
             runSnippets(msg);
         }
@@ -937,38 +938,89 @@ function kronSearchWorkerMain(self) {
     if (typeof window === 'undefined' || typeof document === 'undefined') return; // worker/Jint context
 
     var state = {
-        gen: 0,
         worker: null,
         initStarted: false,
         ready: false,
-        shallowHidden: null,   // sr snapshot after the shallow pass, for the +N/-M chip counts
-        canRemove: false,      // negated query — final deep results may hide shallow matches
-        deepState: 'idle',     // what the last kron-deep event said
-        posted: -1,            // the gen of the last query the worker was handed, and its input
-        input: null,
-        terms: [],             // its positive terms, and what they hit in each scenario it matched (item index -> kinds)
-        kinds: {},
-        asks: 0,               // the snippets requests the worker has not answered, by id
-        pending: {}
+        gens: 0,               // the last query number given, to either deep search
+        asks: 0                // the last snippets request number
     };
+    // Two deep searches, each of its own query (the owner, 2026-10-27: a search is not a filter): the filter field's (f),
+    // whose results show and hide scenarios through their sr flag and whose chip inside the field says where it is, as
+    // until 5.11.0; and the search's (s), whose results are the Search tab's, through the xs flag, told as kron-deep events.
+    function channel(name, flag) {
+        return {
+            name: name,
+            flag: flag,
+            gen: 0,
+            shallowHidden: null,   // the flag after the shallow pass, for the +N/-M counts
+            canRemove: false,      // negated query — final deep results may hide shallow matches
+            deepState: 'idle',     // what it last said
+            posted: -1,            // the gen of the last query the worker was handed, and its input
+            input: null,
+            terms: [],             // its positive terms, and what they hit in each scenario it matched (item index -> kinds)
+            kinds: {},
+            pending: {}            // the snippets requests the worker has not answered, by id
+        };
+    }
+    var chans = { f: channel('f', 'sr'), s: channel('s', 'xs') };
 
     window.__kronikolSearch = { indexState: 'unknown', docs: 0, buckets: 0, lastQuery: null, deep: 'idle' };
 
     function indexScript() { return document.getElementById('kron-search-index'); }
 
-    // Where the deep search is, told as a kron-deep event on the document (plans/SEARCH_PLAN.md 4.5.7): 'working' as it
-    // starts reading, 'batch' as results join, 'done' with how many it added and took away, 'idle' when it has nothing to
-    // read. The Search tab's bar and counts say it, in place of the chip the search field held until the field went.
-    function tell(name, detail) {
+    // Where a deep search is: 'working' as it starts reading, 'batch' as results join, 'done' with how many it added and
+    // took away, 'idle' when it has nothing to read. The search's is a kron-deep event on the document (plans/SEARCH_PLAN.md
+    // 4.5.7), which the Search tab's bar and counts say; the filter field's is the chip in the field. Either one's is
+    // __kronikolSearch.deep.
+    function tell(ch, name, detail) {
         detail = detail || {};
         detail.state = name;
-        state.deepState = name;
+        ch.deepState = name;
         window.__kronikolSearch.deep = name;
-        try { document.dispatchEvent(new CustomEvent('kron-deep', { detail: detail })); } catch (e) { }
+        if (ch.name === 's') {
+            try { document.dispatchEvent(new CustomEvent('kron-deep', { detail: detail })); } catch (e) { }
+            return;
+        }
+        chipSays(name, detail);
     }
-    function hideChip() { if (state.deepState !== 'idle') tell('idle'); }
-    function showChipWorkingSoon() { tell('working'); }
-    function showChipDone(added, removed) { tell('done', { added: added, removed: removed }); }
+    function idle(ch) { if (ch.deepState !== 'idle') tell(ch, 'idle'); }
+
+    // The filter field's chip (5.0.0, plans/OPTION_C_PLAN.md S7, D17; back with the field in 5.12.0): inside the field, from
+    // its own edge, made the first time it has something to say
+    var chip = null, chipTimer = null;
+    function chipEl() {
+        if (chip && chip.isConnected) return chip;
+        var box = document.querySelector('.filter-search .search-field');
+        if (!box) return null;
+        chip = document.createElement('span');
+        chip.className = 'kron-deep-chip';
+        chip.style.display = 'none';
+        box.appendChild(chip);
+        return chip;
+    }
+    function chipSays(name, detail) {
+        if (name === 'batch') return;
+        if (chipTimer) { clearTimeout(chipTimer); chipTimer = null; }
+        var c = chipEl();
+        if (!c) return;
+        if (name === 'working') {
+            // 0.2s delay, same pattern as the report's pending spinner — fast queries never flash it
+            chipTimer = setTimeout(function() {
+                chipTimer = null;
+                c.textContent = 'matching payloads & diagrams…';
+                c.classList.add('kron-deep-chip-working');
+                c.style.display = '';
+            }, 200);
+            return;
+        }
+        c.classList.remove('kron-deep-chip-working');
+        if (name === 'idle') { c.style.display = 'none'; return; }
+        var added = detail.added || 0, removed = detail.removed || 0;
+        if (removed > 0) c.textContent = 'results refined (+' + added + '/−' + removed + ')';
+        else if (added > 0) c.textContent = '+' + added + ' more found in payloads & diagrams';
+        else c.textContent = 'no additional matches';
+        c.style.display = '';
+    }
 
     function collectItemMeta() {
         var c = fc();
@@ -1077,21 +1129,15 @@ function kronSearchWorkerMain(self) {
             } else if (msg.type === 'result') {
                 onDeepResult(msg);
             } else if (msg.type === 'snippets') {
-                var ask = state.pending[msg.id];
+                var ask = chans.s.pending[msg.id];
                 if (!ask) return;
-                delete state.pending[msg.id];
-                ask(msg.answers && msg.gen === state.gen ? withElements(msg.answers) : null);
+                delete chans.s.pending[msg.id];
+                ask(msg.answers && msg.gen === chans.s.gen ? withElements(msg.answers) : null);
             } else if (msg.type === 'fatal') {
-                window.__kronikolSearch.indexState = 'error';
-                hideChip();
-                settleAsks();
+                failed();
             }
         };
-        state.worker.onerror = function() {
-            window.__kronikolSearch.indexState = 'error';
-            hideChip();
-            settleAsks();
-        };
+        state.worker.onerror = failed;
         state.worker.postMessage({
             type: 'init',
             indexB64: indexB64,
@@ -1104,36 +1150,50 @@ function kronSearchWorkerMain(self) {
         });
     }
 
+    // the index cannot be read: neither deep search has anything more to say, and the lines asked for are answered with nothing
+    function failed() {
+        window.__kronikolSearch.indexState = 'error';
+        idle(chans.f);
+        idle(chans.s);
+        settleAsks(chans.f);
+        settleAsks(chans.s);
+    }
+
     function onDeepResult(msg) {
-        if (msg.gen !== state.gen) return; // stale — a newer query superseded it
-        var c = fc();
+        var ch = chans[msg.ch];
+        if (!ch || msg.gen !== ch.gen) return; // stale — a newer query superseded it
+        var c = fc(), flag = ch.flag;
         var matched = new Set(msg.matches);
         var changed = false;
         // what each match's positive terms hit (plans/SEARCH_PLAN.md 4.6.2), read through _kronDeepKinds
-        state.terms = msg.terms || [];
-        if (msg.kinds) for (var k = 0; k < msg.matches.length; k++) state.kinds[msg.matches[k]] = msg.kinds[k];
+        ch.terms = msg.terms || [];
+        if (msg.kinds) for (var k = 0; k < msg.matches.length; k++) ch.kinds[msg.matches[k]] = msg.kinds[k];
         if (!msg.done) {
             // progressive reveal: batches only ADD results (document order); the authoritative
             // set (which may also remove) lands with the final message
             for (var i = 0; i < c.items.length; i++) {
-                if (matched.has(i) && c.items[i].sr) { c.items[i].sr = false; changed = true; }
+                if (matched.has(i) && c.items[i][flag]) { c.items[i][flag] = false; changed = true; }
             }
-            if (changed) { applyVisibility(c); tell('batch'); }
+            if (changed) {
+                // the filter field's results show on the page; the search's are the Search tab's alone
+                if (ch.name === 'f') applyVisibility(c);
+                tell(ch, 'batch');
+            }
             return;
         }
         var added = 0, removed = 0;
         for (var j = 0; j < c.items.length; j++) {
             // Authoritative (may hide a shallow match) only for negated queries; positive
             // queries are add-only — see kronQueryCanRemove.
-            var newSr = state.canRemove ? !matched.has(j) : (c.items[j].sr && !matched.has(j));
-            if (c.items[j].sr !== newSr) { c.items[j].sr = newSr; changed = true; }
-            if (state.shallowHidden) {
-                if (state.shallowHidden[j] && !newSr) added++;
-                if (!state.shallowHidden[j] && newSr) removed++;
+            var newSr = ch.canRemove ? !matched.has(j) : (c.items[j][flag] && !matched.has(j));
+            if (c.items[j][flag] !== newSr) { c.items[j][flag] = newSr; changed = true; }
+            if (ch.shallowHidden) {
+                if (ch.shallowHidden[j] && !newSr) added++;
+                if (!ch.shallowHidden[j] && newSr) removed++;
             }
         }
-        if (changed) applyVisibility(c);
-        showChipDone(added, removed);
+        if (changed && ch.name === 'f') applyVisibility(c);
+        tell(ch, 'done', { added: added, removed: removed });
         window.__kronikolSearch.lastQuery = {
             candidates: msg.stats.candidates,
             candidateItems: msg.stats.candidateItems,
@@ -1145,43 +1205,48 @@ function kronSearchWorkerMain(self) {
     }
 
     // A new query, or none: what the last one hit goes, and the lines asked for it are answered with nothing.
-    function forget() {
-        state.gen++;
-        state.terms = [];
-        state.kinds = {};
-        settleAsks();
+    function forget(ch) {
+        ch.gen = ++state.gens;
+        ch.terms = [];
+        ch.kinds = {};
+        settleAsks(ch);
     }
-    function settleAsks() {
-        var pending = state.pending;
-        state.pending = {};
+    function settleAsks(ch) {
+        var pending = ch.pending;
+        ch.pending = {};
         for (var id in pending) pending[id](null);
     }
 
-    // Called by run_search_scenarios after every shallow pass (input already lowercased+trimmed).
-    window._kronDeepQuery = function(input) {
-        forget();
+    function deepQuery(ch, input) {
+        forget(ch);
         if (!indexScript()) return;
-        if (!kronIsDeepEligible(input)) { hideChip(); return; }
+        if (!kronIsDeepEligible(input)) { idle(ch); return; }
         ensureInit();
         if (window.__kronikolSearch.indexState === 'absent'
             || window.__kronikolSearch.indexState === 'unsupported'
             || window.__kronikolSearch.indexState === 'error') return;
         var c = fc();
         var shallowHidden = new Array(c.items.length);
-        for (var i = 0; i < c.items.length; i++) shallowHidden[i] = c.items[i].sr;
-        state.shallowHidden = shallowHidden;
-        state.canRemove = kronQueryCanRemove(input);
-        showChipWorkingSoon();
-        state.posted = state.gen;
-        state.input = input;
-        state.worker.postMessage({ type: 'query', gen: state.gen, input: input });
-    };
+        for (var i = 0; i < c.items.length; i++) shallowHidden[i] = c.items[i][ch.flag];
+        ch.shallowHidden = shallowHidden;
+        ch.canRemove = kronQueryCanRemove(input);
+        tell(ch, 'working');
+        ch.posted = ch.gen;
+        ch.input = input;
+        state.worker.postMessage({ type: 'query', ch: ch.name, gen: ch.gen, input: input });
+    }
+    function deepReset(ch) {
+        forget(ch);
+        ch.shallowHidden = null;
+        idle(ch);
+    }
 
-    window._kronDeepReset = function() {
-        forget();
-        state.shallowHidden = null;
-        hideChip();
-    };
+    // Called by run_search_scenarios after every shallow pass (input already lowercased+trimmed).
+    window._kronDeepQuery = function(input) { deepQuery(chans.f, input); };
+    window._kronDeepReset = function() { deepReset(chans.f); };
+    // and by run_search_query, for the search's own
+    window._kronDeepSearch = function(input) { deepQuery(chans.s, input); };
+    window._kronDeepSearchReset = function() { deepReset(chans.s); };
 
     function itemIndex(x) {
         var items = fc().items;
@@ -1197,7 +1262,7 @@ function kronSearchWorkerMain(self) {
     // They grow as the kron-deep 'batch' and 'done' events tell.
     window._kronDeepKinds = function(i) {
         var at = itemIndex(i);
-        return at >= 0 && state.kinds[at] ? { terms: state.terms, kinds: state.kinds[at] } : null;
+        return at >= 0 && chans.s.kinds[at] ? { terms: chans.s.terms, kinds: chans.s.kinds[at] } : null;
     };
 
     // The lines where the deep search matched, for the results on the page shown (plans/SEARCH_PLAN.md 4.6.2):
@@ -1215,13 +1280,14 @@ function kronSearchWorkerMain(self) {
     // first hit with "…" where it is cut; marks the [start, end] in text of each hit. The promise holds null when there
     // is nothing to ask (no index, no deep search run for the query in effect) and when a newer query overtakes it.
     window._kronDeepSnippets = function(list, max) {
-        if (!state.worker || state.posted !== state.gen) return Promise.resolve(null);
+        var ch = chans.s;
+        if (!state.worker || ch.posted !== ch.gen) return Promise.resolve(null);
         var asked = [];
         (list || []).forEach(function(x) { var at = itemIndex(x); if (at >= 0) asked.push(at); });
         var id = ++state.asks;
         return new Promise(function(resolve) {
-            state.pending[id] = resolve;
-            state.worker.postMessage({ type: 'snippets', gen: state.gen, id: id, input: state.input, items: asked, max: max || 3 });
+            ch.pending[id] = resolve;
+            state.worker.postMessage({ type: 'snippets', ch: 's', gen: ch.gen, id: id, input: ch.input, items: asked, max: max || 3 });
         });
     };
 

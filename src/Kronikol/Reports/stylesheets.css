@@ -218,21 +218,126 @@
         .filtering-box[hidden] { display: none; }
         .filtering-box:focus { outline: none; }
         .filtering-box:focus-visible { outline: 2px solid var(--kron-accent); outline-offset: -2px; }
-        /* the applied search, said in the box with a clear of its own (F10) */
-        .box-search {
-            display: flex; align-items: center; gap: 8px; min-width: 0; margin: 0 0 10px; padding: 4px 4px 4px 10px;
-            border: 1px solid var(--kron-selected-edge); border-radius: 8px; background: var(--kron-selected); color: var(--kron-selected-ink);
-            font-size: var(--kron-fs-control); line-height: 20px;
+        /* the filter field, back in the box in 5.12.0 as it was until 5.10.1, with its ? and the deep search's chip inside it */
+        .filter-search {
+            width: 100%;
+            display: flex;
+            gap: 0.4em;
+            align-items: center;
+            position: relative;
+            margin: 0 0 10px;
         }
-        .box-search[hidden] { display: none; }
-        .box-search-label { flex: none; font-weight: 600; }
-        .box-search-query { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--kron-mono); }
-        .box-search-clear {
-            flex: none; display: inline-grid; place-items: center; width: 24px; height: 24px; padding: 0; border: 0; border-radius: 6px;
-            background: none; color: inherit; cursor: pointer;
+
+        #searchbar {
+            padding: 0.5em;
+            border-radius: 0.5em;
+            width: 100%;
+            box-sizing: border-box;
+            border: 1px solid var(--kron-select-border);
+            background: var(--kron-field);
+            color: var(--kron-ink);
+            font-family: var(--kron-font);
+            font-size: var(--kron-fs-body);
         }
-        .box-search-clear:hover { background: var(--kron-hover); }
-        .box-search-clear:focus-visible { outline: 2px solid var(--kron-accent); outline-offset: 1px; }
+
+        #searchbar:disabled {
+            background: var(--kron-strip);
+            cursor: not-allowed;
+        }
+        #searchbar::placeholder { color: var(--kron-faint); opacity: 1; }
+        #searchbar:focus { background: var(--kron-card); border-color: var(--kron-accent); outline: 2px solid var(--kron-accent); outline-offset: 1px; box-shadow: none; }
+        /* a dep:, duration: or is: qualifier the filter could not read stays in it as text, and the field says so (S6) */
+        #searchbar.kron-q-bad { border-color: var(--kron-warn); }
+        .search-field { position: relative; display: flex; flex: 1 1 auto; min-width: 0; }
+        .kron-deep-chip {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.75em;
+            padding: 0.15em 0.6em;
+            border-radius: 1em;
+            background: var(--kron-hover);
+            color: var(--kron-muted);
+            border: 1px solid var(--kron-hairline);
+            line-height: 1.4;
+            white-space: nowrap;
+            pointer-events: none;
+        }
+
+        .kron-deep-chip-working {
+            animation: kron-deep-pulse 1.2s ease-in-out infinite;
+        }
+
+        @keyframes kron-deep-pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.45; }
+        }
+        .search-help-toggle {
+            flex-shrink: 0;
+            width: 1.6em;
+            height: 1.6em;
+            border-radius: 50%;
+            border: 1px solid var(--kron-control-border);
+            background: transparent;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.9em;
+            line-height: 1;
+            color: var(--kron-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .search-help-toggle:hover {
+            background: var(--kron-hover);
+            color: var(--kron-ink);
+        }
+
+        .search-help-panel {
+            margin: 0 0 10px;
+            padding: 0.8em 1em;
+            border: 1px solid var(--kron-strip-edge);
+            border-radius: 0.5em;
+            background: var(--kron-strip);
+            font-size: 0.85em;
+            line-height: 1.6;
+            overflow-x: auto;
+        }
+        .search-help-panel table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 0.5em;
+        }
+        .search-help-panel th {
+            text-align: left;
+            border-bottom: 1px solid var(--kron-hairline);
+            padding: 0.3em 0.6em;
+            font-size: 0.9em;
+        }
+        .search-help-panel td {
+            padding: 0.25em 0.6em;
+            border-bottom: 1px solid var(--kron-hairline-soft);
+        }
+        .search-help-panel code {
+            background: var(--kron-code-bg);
+            padding: 0.1em 0.3em;
+            border-radius: 3px;
+            font-size: 0.95em;
+        }
+        .search-help-note {
+            margin: 0.4em 0 0;
+            color: var(--kron-muted);
+            font-size: 0.9em;
+        }
+        @media (max-width: 768px) {
+            /* 16 px, so a phone does not zoom the page in as the field takes the focus */
+            #searchbar { font-size: 16px; }
+            .search-help-panel { font-size: .8em; }
+        }
+        /* the filters are out of sight while the Search tab shows (5.12.0, the owner: beside the results they only confuse):
+           the box, Filters, the readout and Clear All, as they were when another tab shows (report-search-results-script.js) */
+        html.kron-search-shown .report-nav .nav-filters, html.kron-search-shown #filtering-box { display: none; }
 
         .filtering-box-header {
             display: flex;
@@ -449,13 +554,15 @@
         @container (max-width: 520px) {
             .status-filters > .fltr-controls, .duration-filters > .fltr-controls, .happy-filters > .fltr-controls { display: grid; flex: 1 1 0; gap: 6px; }
             .status-filters > .fltr-controls { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-            .duration-filters > .fltr-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            /* the duration buttons two to a line where both labels fit whole, else one to a line: a label never breaks
+               inside its button (5.12.0: in a font as wide as Linux's, half the row was narrower than "P50 (400ms)") */
+            .duration-filters > .fltr-controls { display: flex; flex-wrap: wrap; }
+            .duration-filters > .fltr-controls > .percentile-btn { flex: 1 1 calc(50% - 3px); white-space: nowrap; }
             .happy-filters > .fltr-controls { grid-template-columns: repeat(3, minmax(0, 1fr)); }
             .filter-row > .status-filters { flex: 1 1 100%; flex-wrap: wrap; }
             .status-toggle, .percentile-btn, .happy-seg, .status-toggle:first-of-type, .percentile-btn:first-of-type, .happy-seg:first-of-type,
             .status-toggle:last-of-type, .percentile-btn:last-of-type, .happy-seg:last-of-type { margin: 0; border-radius: 6px; text-align: center; }
             .status-toggle { padding-left: 4px; padding-right: 4px; }
-            .percentile-btn:last-of-type { grid-column: 1 / -1; }
         }
         @container (max-width: 430px) {
             .status-filters, .duration-filters, .happy-filters, .tag-filters, .dependency-filters { flex-wrap: wrap; }
@@ -777,7 +884,7 @@
         /* the box in the bar: the bar's top section, scrolling inside past its cap while pinned; the list under it keeps a
            window's height, so a short result cannot pull the pinned bar back down */
         .report-nav > .filtering-box { margin: 0; border: 0; border-bottom: 1px solid var(--kron-hairline-soft); border-radius: 0; box-shadow: none; background: transparent; overflow-y: auto; }
-        .report-nav.has-filters ~ .report-panels { min-height: 100vh; }
+        html:not(.kron-search-shown) .report-nav.has-filters ~ .report-panels { min-height: 100vh; }
         .filters-close {
             display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; margin-left: 4px; border: 0;
             border-radius: 6px; background: none; color: var(--kron-muted); cursor: pointer;

@@ -55,22 +55,20 @@ public class BackForwardFilterTests : BackForwardTestBase
     }
 
     [Fact]
-    public async Task F2_A_word_typed_in_the_search_is_one_entry()
+    public async Task F2_A_word_typed_in_the_filter_field_is_one_entry()
     {
         await OpenLongAsync("BackNav_F2.html");
+        await OpenFilterRowsAsync();
         var length = await HistoryLengthAsync();
 
-        // typed into the query builder, a draft the address never sees, then applied to the list on screen: the builder's
-        // own entry becomes the search's, so the search is one entry (plans/SEARCH_PLAN.md 4.3, 4.9)
-        await Page.Locator("#search-button").ClickAsync();
-        await Page.Locator("#search-input").PressSequentiallyAsync("Scenario 07", new() { Delay = 40 });
-        Assert.Equal("", await HashAsync());
-        await Page.Locator("#search-suggestions .search-option-filter").First.ClickAsync();
+        // the field filters as it is typed, one entry for the word and not one a letter (5.2.0; the field is back in the
+        // box in 5.12.0)
+        await Page.Locator("#filtering-box #searchbar").PressSequentiallyAsync("Scenario 07", new() { Delay = 40 });
         Assert.Equal("#q=Scenario%2007", await HashSoonAsync("#q=Scenario%2007"));
         Assert.Equal(length + 1, await HistoryLengthAsync());
 
         await BackAsync();
-        await StillInTheReportAsync("Back after a search");
+        await StillInTheReportAsync("Back after a filter");
         Assert.Equal("", await Page.Locator("#searchbar").InputValueAsync());
         Assert.Equal(0, await HiddenScenariosAsync());
     }

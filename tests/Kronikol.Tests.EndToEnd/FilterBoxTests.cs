@@ -11,7 +11,7 @@ namespace Kronikol.Tests.EndToEnd;
 /// filters on; the box stays open when the bar comes to rest; what was being read stays put; a pinned box takes at most
 /// 60% of the window; a page with only its features has the bar; the filters are announced from the bar's own status
 /// element; a link's filters open with the box closed; the rows lay out by measure; the exports are unchanged; and the
-/// box shows the applied search with a clear of its own.
+/// box holds the filter field, hidden with it until Filters opens it.
 /// </summary>
 [Collection(PlaywrightCollections.Reports)]
 public class FilterBoxTests : PlaywrightTestBase
@@ -51,6 +51,8 @@ public class FilterBoxTests : PlaywrightTestBase
 
     private ILocator Box => Page.Locator("#filtering-box");
     private ILocator Toggle => Page.Locator(".nav-filters-toggle");
+    private ILocator Field => Page.Locator("#filtering-box #searchbar");
+    private ILocator NavStatus => Page.Locator(".report-nav .nav-status[role='status']");
 
     private async Task<string> Settled(string script)
     {
@@ -293,22 +295,134 @@ public class FilterBoxTests : PlaywrightTestBase
         await Expect(Page.Locator("#filtering-box .export-btn[onclick='export_html()']")).ToBeVisibleAsync();
     }
 
-    // F-p
-    [Fact]
-    public async Task The_box_shows_the_applied_search_and_its_clear_clears_only_the_search()
+    // 5.12.0 (the owner, 2026-10-27: "the filter bar should be completely visible INSIDE the filtering section, but the
+    // filtering section should be hidden on load"): the field is back in the box, wholly in view once Filters opens it
+    [Theory]
+    [InlineData(1400)]
+    [InlineData(390)]
+    public async Task The_filter_field_is_in_the_box_and_wholly_in_view_once_Filters_opens_it(int width)
     {
-        await OpenAsync("FilterBox_Search.html");
+        await OpenAsync($"FilterBox_Field{width}.html", width: width);
+        Assert.False(await Shows("#filtering-box #searchbar"));
+
         await Toggle.ClickAsync();
-        await Page.Locator("#filtering-box .status-toggle[data-status='Passed']").ClickAsync();
-        await Page.EvaluateAsync("() => { document.getElementById('searchbar').value = 'scenario 1.'; run_search_scenarios(); }");
 
-        var line = Page.Locator("#filtering-box .box-search");
-        await Expect(line).ToBeVisibleAsync();
-        await Expect(line).ToContainTextAsync("scenario 1.");
+        await Expect(Field).ToBeVisibleAsync();
+        await Expect(Field).ToHaveAttributeAsync("placeholder", new Regex(@"^Filter\.\.\."));
+        Assert.True(await Field.EvaluateAsync<bool>("""
+            e => { const r = e.getBoundingClientRect(), b = document.getElementById('filtering-box').getBoundingClientRect();
+                   return e.type === 'text' && r.width >= 160 && r.left >= b.left && r.right <= b.right && r.left >= 0 && r.right <= window.innerWidth
+                       && document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2) === e; }
+            """));
+    }
 
-        await line.Locator(".box-search-clear").ClickAsync();
-        await Expect(Page.Locator("#searchbar")).ToHaveValueAsync("");
-        await Expect(line).ToBeHiddenAsync();
-        await Expect(Page.Locator("#filtering-box .status-toggle[data-status='Passed']")).ToHaveClassAsync(new Regex("\\bstatus-active\\b"));
+    // as 5.10.1 did: typed, the field filters the Features list where it is, no Enter, no Search tab
+    [Fact]
+    public async Task The_filter_field_filters_as_it_is_typed()
+    {
+        await OpenAsync("FilterBox_FieldTyped.html");
+        await Toggle.ClickAsync();
+        await Field.ClickAsync();
+
+        await Page.Keyboard.TypeAsync("@smoke");
+
+        await Expect(NavStatus).ToHaveTextAsync(new Regex("^Filtered 9 of 30 scenarios"));
+        await Expect(Page.Locator(".report-tabs > .report-tab[data-tab='features']")).ToHaveAttributeAsync("aria-selected", "true");
+        Assert.False(await Page.EvaluateAsync<bool>("() => document.getElementById('search-dialog').open"));
+        await Expect(Field).ToBeFocusedAsync();
+        // the field's text is a filter on, so Filters counts it, the box being mostly closed
+        await Expect(Toggle).ToHaveAttributeAsync("aria-label", "Filters, 1 on");
+    }
+
+    // B2 for the field: text put in with no key (a paste with the mouse, a drop, an input method) filters at once
+    [Fact]
+    public async Task Text_put_in_the_filter_field_with_no_key_filters_without_leaving_it()
+    {
+        await OpenAsync("FilterBox_FieldInsert.html");
+        await Toggle.ClickAsync();
+        await Field.FocusAsync();
+
+        await Page.Keyboard.InsertTextAsync("@smoke");
+
+        await Expect(NavStatus).ToHaveTextAsync(new Regex("^Filtered 9 of 30 scenarios"));
+        await Expect(Field).ToBeFocusedAsync();
+    }
+
+    // B1 for the field: Enter filters once (until 5.11.0 its keydown ran the filter and its keyup again)
+    [Fact]
+    public async Task Enter_in_the_filter_field_filters_once()
+    {
+        await OpenAsync("FilterBox_FieldEnter.html");
+        await Toggle.ClickAsync();
+        await Page.EvaluateAsync("() => { window.__runs = 0; const run = window.run_search_scenarios; window.run_search_scenarios = function () { window.__runs++; return run.apply(this, arguments); }; }");
+
+        // keys typed, as a reader types them: Enter runs at once what the last key would have run 300 ms later, and a field
+        // that ran on keyup (5.10.1) ran it again on Enter's own keyup (review: FillAsync types no key, so the fact could
+        // not see it). The count starts at the last key, after the run the keys before it brought
+        await Field.ClickAsync();
+        await Field.PressSequentiallyAsync("toas");
+        await Page.WaitForTimeoutAsync(600);
+        await Page.EvaluateAsync("() => { window.__runs = 0; }");
+        await Field.PressSequentiallyAsync("t");
+        await Field.PressAsync("Enter");
+        await Page.WaitForTimeoutAsync(600);
+
+        Assert.Equal(1, await Page.EvaluateAsync<int>("() => window.__runs"));
+    }
+
+    // 5.12.0 (review): the field's ? opens its syntax at the top of the box, and a pinned box is capped again, as when it
+    // opens: until then the syntax took a pinned bar past 60% of the window, with the rows under it out of reach
+    [Fact]
+    public async Task The_field_s_syntax_opened_in_a_pinned_box_keeps_the_bar_within_60_percent_of_the_window()
+    {
+        await OpenAsync("FilterBox_HelpCap.html");
+        await ScrollPastTheBar();
+        await Toggle.ClickAsync();
+        await TwoAnimationFramesAsync(Page);
+        Assert.Equal("", await Box.EvaluateAsync<string>("b => b.style.maxHeight"));
+
+        await Page.Locator("#filtering-box .search-help-toggle").ClickAsync();
+        await Expect(Page.Locator("#filtering-box .search-help-panel")).ToBeVisibleAsync();
+        await TwoAnimationFramesAsync(Page);
+
+        var bar = await Page.EvaluateAsync<double>("() => document.querySelector('.report-nav').getBoundingClientRect().height");
+        var window = await Page.EvaluateAsync<double>("() => window.innerHeight");
+        Assert.True(bar <= window * 0.6 + 1, $"the pinned bar is {bar} px tall in a {window} px window");
+        Assert.True(await Box.EvaluateAsync<bool>("b => b.scrollHeight > b.clientHeight + 1"));
+    }
+
+    [Fact]
+    public async Task The_question_mark_beside_the_field_shows_and_hides_the_syntax()
+    {
+        await OpenAsync("FilterBox_FieldHelp.html");
+        await Toggle.ClickAsync();
+        var help = Page.Locator("#filtering-box .search-help-panel");
+        var toggle = Page.Locator("#filtering-box .search-help-toggle");
+
+        await toggle.ClickAsync();
+        await Expect(help).ToBeVisibleAsync();
+        await Expect(help).ToContainTextAsync("tag:name");
+        await Expect(help).ToContainTextAsync("dep:name");
+
+        await toggle.ClickAsync();
+        await Expect(help).ToBeHiddenAsync();
+    }
+
+    // Clear All empties the field with the rest of the filters, and a search applied stays as it was
+    [Fact]
+    public async Task Clear_All_empties_the_field_and_leaves_the_search()
+    {
+        await OpenAsync("FilterBox_FieldClear.html");
+        await FillSearchBar("tag:smoke", toSearchTab: true);
+        await Page.Locator(".report-tabs > .report-tab[data-tab='features']").ClickAsync();
+        await Toggle.ClickAsync();
+        await Field.FillAsync("Scenario 1.");
+        await Expect(NavStatus).ToHaveTextAsync(new Regex("^Filtered"));
+
+        await Page.Locator("#filtering-box .export-btn[onclick='clear_all_filters()']").ClickAsync();
+
+        await Expect(Field).ToHaveValueAsync("");
+        await Expect(NavStatus).ToHaveTextAsync("All 30 scenarios, 3 features");
+        await Expect(Page.Locator(".search-button-query")).ToHaveTextAsync("tag:smoke");
     }
 }

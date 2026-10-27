@@ -54,7 +54,7 @@ public class SearchResultsPhoneTests : PlaywrightTestBase
 
     // R24
     [Fact]
-    public async Task On_a_phone_the_type_switcher_and_the_bar_s_Filters_replace_the_sidebar()
+    public async Task On_a_phone_the_type_switcher_replaces_the_sidebar_and_the_filters_are_out_of_sight()
     {
         await OpenAsync("Phone_R24.html");
         await SearchAsync("toast");
@@ -64,8 +64,9 @@ public class SearchResultsPhoneTests : PlaywrightTestBase
         var switcher = Page.Locator("#panel-search .search-phone-row .search-type-switch");
         Assert.Equal("Scenarios 12", await switcher.TextContentAsync());
         Assert.Equal(1, await Page.Locator("#panel-search .search-phone-row .search-kebab").CountAsync());
-        // the facets are the box's own controls, which the bar's Filters opens: no sheet of the Search tab's own
-        Assert.True(await Page.Locator(".nav-filters-toggle").IsVisibleAsync());
+        // the builder narrows the search on a phone; the filters are out of sight while the Search tab shows (5.12.0, the
+        // owner: a search is no filter), and the tab has no sheet of its own
+        Assert.True(await Page.Locator(".nav-filters-toggle").IsHiddenAsync());
         Assert.Equal(0, await Page.Locator("#panel-search [role=dialog], #panel-search dialog").CountAsync());
 
         await switcher.ClickAsync();

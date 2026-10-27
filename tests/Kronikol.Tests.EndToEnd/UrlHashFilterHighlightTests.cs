@@ -110,11 +110,11 @@ public class UrlHashFilterHighlightTests : PlaywrightTestBase
         var url = GenerateAndServeReport("UrlHashSearchRestore.html");
         await Page.GotoReportAsync(url + "#q=" + Uri.EscapeDataString("Create order"));
 
-        // the applied query is the hidden field the search button shows (plans/SEARCH_PLAN.md 4.2), and the box's line
+        // q= is the filter field's, put back in the field in the box (5.12.0, as until 5.10.1); the search stays as it was
         await Expect(Page.Locator("#searchbar")).ToHaveValueAsync("Create order");
-        await Expect(Page.Locator("#search-button .search-button-query")).ToHaveTextAsync("Create order");
+        await Expect(Page.Locator("#search-button .search-button-query")).ToBeHiddenAsync();
         await OpenFilterRowsAsync();
-        await Expect(Page.Locator(".box-search-query")).ToHaveTextAsync("Create order");
+        await Expect(Page.Locator("#filtering-box #searchbar")).ToBeVisibleAsync();
     }
 
     [Fact]

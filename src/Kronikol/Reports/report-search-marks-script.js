@@ -464,10 +464,7 @@
 
     var active = null;
 
-    function appliedQuery() {
-        var bar = doc.getElementById('searchbar');
-        return bar ? bar.value.trim() : '';
-    }
+    function appliedQuery() { return typeof search_query === 'function' ? search_query() : ''; }
     function rendered(e) { return !!e && e.isConnected && e.getClientRects().length > 0; }
     function layerOpen() {
         var all = window.kronikol_layers || {};
@@ -741,10 +738,10 @@
     window.addEventListener('popstate', moved);
     window.addEventListener('hashchange', moved);
 
-    // A search run with another query takes them off. The search function is wrapped as the Search tab's script wraps it: a
-    // search that shows the same scenarios sends no kron-filter-change.
+    // A search run with another query takes them off. The search's run is wrapped as the Search tab's script wraps it: a
+    // search shows and hides nothing, so no kron-filter-change says it ran.
     function watchSearch() {
-        var run = window.run_search_scenarios;
+        var run = window.run_search_query;
         if (typeof run !== 'function' || run.kronMarks) return;
         var wrapped = function () {
             var out = run.apply(this, arguments);
@@ -752,7 +749,7 @@
             return out;
         };
         wrapped.kronMarks = true;
-        window.run_search_scenarios = wrapped;
+        window.run_search_query = wrapped;
     }
     if (doc.readyState === 'loading') doc.addEventListener('DOMContentLoaded', watchSearch);
     else watchSearch();

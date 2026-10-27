@@ -1,11 +1,12 @@
 // The Search tab (plans/SEARCH_PLAN.md 4.5), GitHub's results page in the report's look. It shows while a search is
 // applied: on the left SHOW (Scenarios or Features), MATCHED IN (Names, Steps, Diagrams, Errors), then STATUS, TAGS and
-// DEPENDENCIES, which are the filter box's own controls laid out as facets (Q17: one set of filters), then ADVANCED; on
-// the right the count and the time, the sort, a kebab, and a card per result with the lines where it matched, ten a page.
-// The results are what the Features list shows: the scenarios the query matches that the box's filters leave showing
-// (Q1). The deep search's results join after the instant ones while a page is being read, and a thin bar runs along the
-// top while it reads (4.5.7). The tab's own state is its address's type=, in=, s=, o= and p= (4.9), kept by the
-// navigation script, which hands it over on every arrival.
+// DEPENDENCIES, which narrow the search by writing status:, tag: and dep: into its query, then ADVANCED; on the right the
+// count and the time, the sort, a kebab, and a card per result with the lines where it matched, ten a page. A search is
+// no filter (the owner, 2026-10-27): the results are every scenario the search's own query matches (search_query), whatever
+// the filters hide, the Features list is never narrowed by it, and the filters are out of sight while the tab shows. The
+// deep search's results join after the instant ones while a page is being read, and a thin bar runs along the top while
+// it reads (4.5.7). The tab's own state is its address's type=, in=, s=, o= and p= (4.9), kept by the navigation script,
+// which hands it over on every arrival.
 (function () {
     var doc = document;
     function $(s, r) { return (r || doc).querySelector(s); }
@@ -17,7 +18,7 @@
         return e;
     }
     var phone = window.matchMedia ? window.matchMedia('(max-width: 768px)') : { matches: false };
-    var tab, panel, side, main, head, count, timeEl, tools, warning, filteredNote, listEl, pages, progress, phoneRow;
+    var tab, panel, side, main, head, count, timeEl, tools, warning, listEl, pages, progress, phoneRow;
     var state = { type: '', in: '', s: '', o: '', p: '' };
     var runFrom = 'features';            // the tab the search was run from: the one to go back to when it is cleared (R2)
     var instant = null;                  // the items the instant pass matched, at the search's run
@@ -41,8 +42,7 @@
         { key: 'duration:desc', label: 'Longest first' }, { key: 'duration:asc', label: 'Shortest first' }, { key: 'status', label: 'Failed first' }
     ];
 
-    function field() { return doc.getElementById('searchbar'); }
-    function applied() { var f = field(); return f ? f.value.trim() : ''; }
+    function applied() { return typeof search_query === 'function' ? search_query() : ''; }
     function selectedTab() { var t = $('.report-tabs > .report-tab[aria-selected="true"]'); return t ? t.getAttribute('data-tab') : null; }
     function showing() { return !!panel && !panel.hidden; }
 
@@ -96,16 +96,12 @@
 
     // ---- the results ----
 
-    function flagsOff(i, but) {
-        return !i.sr && !i.q && (but === 'tag' || !i.tag) && (but === 'dep' || !i.dep) && (but === 'st' || !i.st) && !i.dur;
-    }
     function compute() {
         var c = typeof fc === 'function' ? fc() : null, q = applied(), ts = terms(q);
-        var all = c ? c.items : [], results = [], hiddenByBox = 0;
+        var all = c ? c.items : [], results = [];
         all.forEach(function (i, order) {
-            var matched = !i.sr && !i.q;
-            if (!matched) return;
-            if (i.tag || i.dep || i.st || i.dur) { hiddenByBox++; return; }
+            // the search's own flags: it reads every scenario, whatever the filters hide
+            if (i.xs || i.xq) return;
             var hits = hitsOf(i, ts), places = {}, score = 0;
             hits.forEach(function (h) { places[KIND_PLACE[h.kind] || 'names'] = true; });
             // what the deep search's terms hit besides (4.6.2): a diagram's source, the failure's text, the flow; `order`
@@ -129,7 +125,7 @@
             if (deep && !dk) places.diagrams = true;
             results.push({ item: i, order: order, hits: hits, places: places, score: score, deep: deep, instant: !instant || instant.has(i) });
         });
-        return { all: results, hiddenByBox: hiddenByBox, terms: ts };
+        return { all: results, terms: ts };
     }
     // a scenario skipped after a failure is skipped, as the Status buttons count it since 5.9.1 (B4, E3)
     function statusOf(i) { return i.status === 'SkippedAfterFailure' ? 'Skipped' : i.status; }
@@ -225,16 +221,6 @@
         renderHead(r, results);
         renderPhoneRow(r);
         renderWarning();
-        filteredNote.hidden = !r.hiddenByBox;
-        if (r.hiddenByBox) {
-            filteredNote.textContent = '';
-            filteredNote.appendChild(el('span', null, 'Filtered: the filters hide ' + r.hiddenByBox + ' of this search’s results.'));
-            var clear = el('button', 'search-filtered-clear', 'Clear');
-            clear.type = 'button';
-            clear.title = 'Clear the filters; the search stays';
-            clear.addEventListener('click', clearBoxFilters);
-            filteredNote.appendChild(clear);
-        }
         listEl.textContent = '';
         var shownList = features ? byFeature(sorted(results)) : sorted(results);
         var page = Math.max(1, parseInt(state.p, 10) || 1), last = Math.max(1, Math.ceil(shownList.length / PER_PAGE));
@@ -303,10 +289,10 @@
                 act: function () { setState({ in: on ? '' : p[0], p: '' }); focusCount(); } }));
         });
         side.appendChild(places);
-        // STATUS, TAGS, DEPENDENCIES: the filter box's own controls, counted over the search's matches (Q17, Q9)
+        // STATUS, TAGS, DEPENDENCIES: the search narrowed, each counted over its results (Q9)
         facetStatus(r);
-        facetChips(r, 'tag', 'Tags', 'tag', 'More tags…');
-        facetChips(r, 'dependency', 'Dependencies', 'dep', 'More dependencies…');
+        facetNames(r, 'tag', 'Tags', 'More tags…');
+        facetNames(r, 'dep', 'Dependencies', 'More dependencies…');
         // ADVANCED: a key written into the search, the builder open at its values (G29)
         side.appendChild(sideHeading('Advanced'));
         var adv = el('ul', 'search-side-list');
@@ -321,51 +307,174 @@
         adv.appendChild(sideRow({ name: 'Search syntax tips', icon: 'info', title: 'How to write a search', act: function () { if (window.kronikol_search) window.kronikol_search.open({ tips: true }); } }));
         side.appendChild(adv);
     }
+    // ---- STATUS, TAGS and DEPENDENCIES: the search narrowed, as GitHub's sidebar narrows it ----
+
+    // A row writes its qualifier into the search's query and a second click takes it out, so a row is on exactly while
+    // the query names it (the owner, 2026-10-27; until then a row was the filter box's own button, read when the sidebar
+    // was drawn, and a click that left the results as they were left it showing what it had been). The filters are not
+    // touched.
+
+    // A row stands for a qualifier that narrows the whole search, and a click puts one in or takes one out with the rest
+    // of the query kept whole (5.12.0, after a review: a row was written after the query as text, so status:failed put
+    // after toast || waffle narrowed waffle alone, one put after a legacy @smoke or @api searched for the word or, and
+    // pancake && tag:menu without its tag was pancake &&, which matched nothing).
+
+    // the spans of the query (advanced-search.js's searchQuerySpans), each with the depth of brackets it stands in, and
+    // whether an or stands outside every bracket: || or a legacy tag expression's or, which binds looser than a space
+    function spansOf(q) {
+        var sp = typeof searchQuerySpans === 'function' ? searchQuerySpans(q, {}) : [], depth = 0, or = false;
+        sp.forEach(function (s) {
+            var t = s.kind === 'operator' ? q.substring(s.start, s.end).trim().toLowerCase() : '';
+            if (t === ')') depth = Math.max(0, depth - 1);
+            s.depth = depth;
+            if (t === '(') depth++;
+            else if (!depth && (t === '||' || t === 'or')) or = true;
+        });
+        return { spans: sp, or: or };
+    }
+    // the query's qualifiers as written, each { key, value, neg, start, end, whole }: key as searchQuerySpans names it
+    // (tag for tag: and @, status for status: and $, dep), value without its quotes, neg when a -, !! or not before it
+    // leaves those out, start and end its place in the query, the -, !! or not with it. whole when it narrows the whole
+    // search, which a row stands for: a dep: the search reads wherever it is, as the search keeps only the scenarios that
+    // pass each one; a tag: or status: outside every bracket of a query with no or outside one, as both are read inside
+    // the boolean expression
+    function qualifiersOf(q) {
+        var out = [], read = spansOf(q), sp = read.spans;
+        for (var k = 0; k < sp.length; k++) {
+            var v = sp[k + 1];
+            if (sp[k].kind !== 'key' || !v || (v.kind !== 'value' && v.kind !== 'unreadable')) continue;
+            var b = k - 1;
+            while (b >= 0 && sp[b].kind === 'text' && !q.substring(sp[b].start, sp[b].end).trim()) b--;
+            var op = b >= 0 && sp[b].kind === 'operator' ? q.substring(sp[b].start, sp[b].end).trim().toLowerCase() : '';
+            var neg = op === '-' || op === '!!' || op === 'not', text = q.substring(v.start, v.end);
+            out.push({ key: sp[k].key, value: text.charAt(0) === '"' ? text.slice(1, -1) : text, neg: neg, start: neg ? sp[b].start : sp[k].start, end: v.end,
+                whole: v.kind === 'value' && (sp[k].key === 'dep' || (sp[k].depth === 0 && !read.or)) });
+        }
+        return out;
+    }
+    // where the query has key:value narrowing the whole search: 'in', 'out' when it leaves those out, else 'off'
+    function rowState(q, key, value) {
+        var v = value.toLowerCase(), st = 'off';
+        qualifiersOf(q).forEach(function (x) { if (x.whole && x.key === key && x.value.toLowerCase() === v) st = x.neg ? 'out' : 'in'; });
+        return st;
+    }
+    // the query without each qualifier of key that a row stands for and pick(x) chooses: an operator each leaves dangling
+    // goes with it, as the search's own reading closes them up (split_search_qualifiers), and a bracket round the whole
+    // query, which a row put there, comes off
+    function without(q, key, pick) {
+        var gone = qualifiersOf(q).filter(function (x) { return x.whole && x.key === key && pick(x); });
+        if (!gone.length) return q.trim();
+        for (var k = gone.length - 1; k >= 0; k--) {
+            var a = gone[k].start, b = gone[k].end;
+            if (q.charAt(b) === ' ') b++;
+            else if (a > 0 && q.charAt(a - 1) === ' ') a--;
+            q = q.slice(0, a) + q.slice(b);
+        }
+        for (var n = 0, prev = null; n < 6 && prev !== q; n++) {
+            prev = q;
+            q = q.replace(/(&&|\|\||\band\b|\bor\b)\s*(?:&&|\|\||\band\b|\bor\b)/gi, '$1')
+                .replace(/\(\s*(&&|\|\||\band\b|\bor\b)/gi, '(').replace(/(&&|\|\||\band\b|\bor\b)\s*\)/gi, ')')
+                .replace(/\(\s*\)/g, ' ').replace(/^\s*(?:&&|\|\||\band\b|\bor\b)/i, '')
+                .replace(/(?:&&|\|\||\band\b|\bor\b)\s*$/i, '').replace(/!!\s*(?=$|&&|\|\||\))/g, '');
+        }
+        q = q.trim();
+        return wrapped(q) ? q.slice(1, -1).trim() : q;
+    }
+    // a query that is one bracketed group, whose first bracket closes at its end
+    function wrapped(q) {
+        if (q.charAt(0) !== '(' || q.charAt(q.length - 1) !== ')') return false;
+        var sp = spansOf(q).spans;
+        for (var k = 0; k < sp.length; k++) {
+            if (sp[k].kind === 'operator' && sp[k].depth === 0 && q.substring(sp[k].start, sp[k].end).trim() === ')') return sp[k].end === q.length;
+        }
+        return false;
+    }
+    // a legacy tag expression in the advanced search's operators: a tag: or status: put beside it makes the whole query
+    // advanced, where and, or and not are words
+    function advancedForm(q) {
+        if (typeof isAdvancedSearch !== 'function' || isAdvancedSearch(q)) return q;
+        var out = '', at = 0;
+        spansOf(q).spans.forEach(function (s) {
+            if (s.kind !== 'operator') return;
+            var t = q.substring(s.start, s.end), to = { and: '&&', or: '||', not: '!!' }[t.trim().toLowerCase()];
+            if (!to) return;
+            out += q.substring(at, s.start) + t.replace(/\S+/, to);
+            at = s.end;
+        });
+        return out + q.substring(at);
+    }
+    // a value as the query writes it: in quotes where a space, a quote, a bracket, a comma or an operator would end it
+    function written(v) { return /^[^\s"(),&|!]+$/.test(v) && v.charAt(0) !== '-' ? v : '"' + v.replace(/"/g, '') + '"'; }
+    // the execution results, one at a time in the search; a history verdict (status:flaky) is not one of them
+    var RESULTS = ['passed', 'failed', 'skipped', 'bypassed'];
+    // key:value put in ('in'), left out ('out') or taken out ('off'); a result is one at a time, so another the search
+    // narrowed to goes as one goes in. A tag: or status: is read inside the boolean expression, so a query with an or
+    // outside every bracket goes in one first
+    function narrowTo(key, value, to) {
+        var v = value.toLowerCase();
+        var q = without(applied(), key, function (x) {
+            var w = x.value.toLowerCase();
+            return w === v || (key === 'status' && to === 'in' && !x.neg && RESULTS.indexOf(w) >= 0);
+        });
+        if (to !== 'off') {
+            if (key !== 'dep') { q = advancedForm(q); if (spansOf(q).or) q = '(' + q + ')'; }
+            q = (q ? q + ' ' : '') + (to === 'out' ? '-' : '') + key + ':' + written(key === 'status' ? v : value);
+        }
+        // the search run again with its new query, one entry, on its first page
+        var keys = { type: state.type, 'in': state.in, s: state.s, o: state.o, p: '' };
+        var go = function () { run_search_query(q); };
+        if (window.kronikol_nav) window.kronikol_nav.go({ tab: 'search', search: keys }, { apply: go });
+        else { go(); state = keys; render(); }
+        focusCount();
+    }
     function facetStatus(r) {
-        var c = typeof fc === 'function' ? fc() : null;
-        if (!c) return;
-        var counts = {};
-        c.items.forEach(function (i) { if (flagsOff(i, 'st')) { var s = statusOf(i); counts[s] = (counts[s] || 0) + 1; } });
+        var q = applied(), counts = {};
+        r.all.forEach(function (x) { var s = statusOf(x.item); counts[s] = (counts[s] || 0) + 1; });
         var rows = el('ul', 'search-side-list');
         ['Passed', 'Failed', 'Skipped', 'Bypassed'].forEach(function (s) {
-            var btn = $('#filtering-box .status-toggle[data-status="' + s + '"]');
-            if (!btn) return;
-            var on = btn.classList.contains('status-active');
-            if (!counts[s] && !on) return;
-            rows.appendChild(sideRow({ name: s, dot: s, count: counts[s] || 0, pressed: true, current: on,
-                title: on ? 'Show every status again' : 'Only the ' + s.toLowerCase() + ' scenarios, as the filter box’s ' + s + ' does',
-                act: function () { btn.click(); } }));
+            var st = rowState(q, 'status', s), low = s.toLowerCase();
+            if (!counts[s] && st === 'off') return;
+            rows.appendChild(sideRow({ name: s, dot: s, count: counts[s] || 0, pressed: true, current: st !== 'off',
+                title: st === 'in' ? 'Take status:' + low + ' out of the search' : st === 'out' ? 'Stop leaving the ' + low + ' scenarios out of the search' : 'Narrow the search to the ' + low + ' scenarios (status:' + low + ')',
+                act: function () { narrowTo('status', s, st === 'off' ? 'in' : 'off'); } }));
         });
         if (rows.children.length) { side.appendChild(sideHeading('Status')); side.appendChild(rows); }
     }
-    function facetChips(r, family, title, flag, moreText) {
-        if (typeof filter_chips !== 'function' || typeof set_chip_state !== 'function') return;
-        var c = fc(), counts = {};
-        c.items.forEach(function (i) {
-            if (!flagsOff(i, flag)) return;
-            if (family === 'tag') tag_names(i.el).forEach(function (t) { counts[t] = (counts[t] || 0) + 1; });
-            else i.deps.forEach(function (d) { counts[d] = (counts[d] || 0) + 1; });
+    // the tags or the dependencies the results carry, most first, and any the query names besides
+    function facetNames(r, key, title, moreText) {
+        var q = applied(), counts = {};
+        r.all.forEach(function (x) {
+            if (key === 'tag') tag_names(x.item.el).forEach(function (t) { counts[t] = (counts[t] || 0) + 1; });
+            else x.item.deps.forEach(function (d) { counts[d] = (counts[d] || 0) + 1; });
         });
-        var chips = filter_chips(family).filter(function (b) { return !b.hasAttribute('data-none'); });
-        var rows = chips.map(function (b) {
-            var name = b.getAttribute('data-' + family), st = chip_state(b);
-            return { b: b, name: name, n: counts[name] || 0, st: st };
-        }).filter(function (x) { return x.n > 0 || x.st !== 'off'; });
+        var names = Object.keys(counts);
+        qualifiersOf(q).forEach(function (x) {
+            var v = x.value.toLowerCase();
+            if (x.whole && x.key === key && !names.some(function (n) { return n.toLowerCase() === v; })) names.push(x.value);
+        });
+        // a dependency's row counts what its click keeps: dep: matches a name inside a name, as Orders does Orders Archive
+        // (5.12.0: until then a row counted its own name, and its click kept more than it said)
+        if (key === 'dep' && typeof qualifier_name === 'function') names.forEach(function (name) {
+            var w = qualifier_name(name);
+            if (w) counts[name] = r.all.filter(function (x) { return Array.from(x.item.deps || []).some(function (d) { return qualifier_name(d).indexOf(w) >= 0; }); }).length;
+        });
+        var rows = names.map(function (name) { return { name: name, n: counts[name] || 0, st: rowState(q, key, name) }; });
         if (!rows.length) return;
-        rows.sort(function (a, b) { return b.n - a.n || (a.name < b.name ? -1 : a.name > b.name ? 1 : 0); });
+        rows.sort(function (a, b) { return (b.st !== 'off') - (a.st !== 'off') || b.n - a.n || (a.name < b.name ? -1 : a.name > b.name ? 1 : 0); });
         side.appendChild(sideHeading(title));
         var list = el('ul', 'search-side-list');
-        var top = moreOpen[family] ? rows : rows.slice(0, 10);
+        var top = moreOpen[key] ? rows : rows.slice(0, 10);
         top.forEach(function (x) {
+            var term = key + ':' + written(x.name);
             list.appendChild(sideRow({ name: x.name, count: x.n, pressed: true, current: x.st !== 'off',
-                title: x.st === 'in' ? 'Show every scenario again' : x.st === 'out' ? 'Stop leaving these out' : 'Only the scenarios with ' + x.name,
-                act: function () { set_chip_state(x.b, x.st === 'off' ? 'in' : 'off'); filter_row(family); },
-                // Exclude: the chip set to leave them out, as Happy paths' Hide sets its chip (G28)
-                exclude: x.st === 'out' ? null : function () { set_chip_state(x.b, 'out'); filter_row(family); } }));
+                title: x.st === 'in' ? 'Take ' + term + ' out of the search' : x.st === 'out' ? 'Stop leaving these out of the search' : 'Narrow the search to the scenarios with ' + x.name + ' (' + term + ')',
+                act: function () { narrowTo(key, x.name, x.st === 'off' ? 'in' : 'off'); },
+                // Exclude: -key:value, which leaves them out of the search (G28)
+                exclude: x.st === 'out' ? null : function () { narrowTo(key, x.name, 'out'); } }));
         });
         if (rows.length > 10) {
-            list.appendChild(sideRow({ name: moreOpen[family] ? 'Fewer' : moreText, icon: 'plus', title: moreOpen[family] ? 'Show the ten most frequent' : 'Show every one',
-                act: function () { moreOpen[family] = !moreOpen[family]; render(); } }));
+            list.appendChild(sideRow({ name: moreOpen[key] ? 'Fewer' : moreText, icon: 'plus', title: moreOpen[key] ? 'Show the ten most frequent' : 'Show every one',
+                act: function () { moreOpen[key] = !moreOpen[key]; render(); } }));
         }
         side.appendChild(list);
     }
@@ -374,8 +483,7 @@
         phoneRow.textContent = '';
         // the kebab sits in the head beside the sort, and on a phone, where the sort goes, beside the type switcher
         if (!phone.matches) { if (kebabWrap && kebabWrap.parentNode !== tools) tools.appendChild(kebabWrap); return; }
-        // a type switcher in place of the sidebar, GitHub's narrow page; the facets are the box's own controls, opened by
-        // the bar's Filters, so there is no second sheet (4.5.9)
+        // a type switcher in place of the sidebar, GitHub's narrow page (4.5.9); the builder narrows the search there
         var current = state.type === 'features' ? 'Features' : state.in ? PLACES.filter(function (p) { return p[0] === state.in; })[0][1] : 'Scenarios';
         var n = state.type === 'features' ? byFeature(placeFilter(r.all)).length : placeFilter(r.all).length;
         var b = el('button', 'search-type-switch', current + ' ' + n);
@@ -449,8 +557,8 @@
             menu.appendChild(li);
         }
         item('Search syntax tips', 'How to write a search', function () { if (window.kronikol_search) window.kronikol_search.open({ tips: true }); });
-        item('Export results as HTML', 'Download a copy of this report holding only the results', function () { export_html(); });
-        item('Export results as CSV', 'Download the results as a CSV file: feature, scenario, status and duration in milliseconds', function () { export_csv(); });
+        item('Export results as HTML', 'Download a copy of this report holding only the results', function () { export_search('html'); });
+        item('Export results as CSV', 'Download the results as a CSV file: feature, scenario, status and duration in milliseconds', function () { export_search('csv'); });
         kebab.addEventListener('click', function () { menu.hidden = !menu.hidden; kebab.setAttribute('aria-expanded', String(!menu.hidden)); });
         kebabWrap = el('span', 'search-kebab-wrap');
         kebabWrap.appendChild(kebab);
@@ -470,13 +578,10 @@
     };
     var IN_GROUP = 'a qualifier inside a group that !! or not negates cannot narrow the search';
     function renderWarning() {
-        var f = field(), bad = f ? (f.getAttribute('data-q-bad') || '') : '';
-        warning.hidden = !bad;
+        // each a quoted value whole, and its place
+        var items = typeof search_query_bad === 'function' ? search_query_bad() : [];
+        warning.hidden = !items.length;
         warning.textContent = '';
-        if (!bad) return;
-        // the search's own items, a quoted value whole, and each one's place; the attribute alone where the page has not
-        // run the search since it changed
-        var items = f.kronQBad && f.kronQBad.length ? f.kronQBad : bad.split(' ').filter(Boolean).map(function (t) { return { text: t }; });
         items.forEach(function (b) {
             var key = (/(\w+):/.exec(b.text) || [])[1] || '';
             var why = b.inGroup ? IN_GROUP : WHY[key.toLowerCase()];
@@ -796,29 +901,12 @@
         }
         tip('Search payloads and diagrams', el('p', null, 'Once a word has three letters the search also reads requests, responses, SQL and stack traces.'));
         tip('Narrow with qualifiers', el('p', null, 'status:failed, tag:smoke and dep:payment narrow the search; -tag:slow leaves those out.'));
-        if (r.hiddenByBox) {
-            var body = el('p', null, 'The filters hide ' + plural(r.hiddenByBox, 'result') + '. ');
-            var b = el('button', 'search-filtered-clear', 'Clear filters');
-            b.type = 'button';
-            b.title = 'Clear the filters; the search stays';
-            b.addEventListener('click', clearBoxFilters);
-            body.appendChild(b);
-            tip('The filters hide ' + plural(r.hiddenByBox, 'result'), body);
-        }
         var tips = el('button', 'search-nothing-link', 'Search syntax tips');
         tips.type = 'button';
         tips.addEventListener('click', function () { if (window.kronikol_search) window.kronikol_search.open({ tips: true }); });
         box.appendChild(tips);
         return box;
     }
-    // the box's filters cleared, the search left as it is: one change, one entry (4.5.11)
-    function clearBoxFilters() {
-        var q = applied(), f = field();
-        var apply = function () { clear_all_filters(); if (f) { f.value = q; run_search_scenarios(); } };
-        if (window.kronikol_nav) window.kronikol_nav.go({}, { apply: apply });
-        else apply();
-    }
-
     // ---- pages (4.5.6) ----
 
     function renderPages(page, last) {
@@ -858,9 +946,9 @@
     // ---- the search's run and the deep search's progress ----
 
     function watchRuns() {
-        var run = window.run_search_scenarios;
+        var run = window.run_search_query;
         if (typeof run !== 'function') return;
-        window.run_search_scenarios = function () {
+        window.run_search_query = function () {
             // the tab on screen as a search is applied is the one a cleared search goes back to (4.5.1); the builder
             // applies before the navigation script moves to the Search tab
             var from = selectedTab();
@@ -875,7 +963,7 @@
             var out = run.apply(this, arguments);
             instantMs = performance.now() - started;
             var c = typeof fc === 'function' ? fc() : null;
-            instant = new Set(c ? c.items.filter(function (i) { return !i.sr && !i.q; }) : []);
+            instant = new Set(c ? c.items.filter(function (i) { return !i.xs && !i.xq; }) : []);
             // the tab shows at once, so the navigation script can make it current and bring it into its row (paintTab
             // hides it once the search is gone)
             if (tab && applied()) tab.hidden = false;
@@ -920,13 +1008,16 @@
         timeEl = $('.search-time', panel);
         tools = $('.search-head-tools', panel);
         warning = $('.search-warning', panel);
-        filteredNote = $('.search-filtered-note', panel);
         listEl = $('.search-list', panel);
         pages = $('.search-pages', panel);
         progress = $('.search-progress', panel);
         phoneRow = $('.search-phone-row', panel);
         watchRuns();
-        doc.addEventListener('kron-filter-change', queue);
+        // the filters are out of sight while the tab is the one chosen (the owner, 2026-10-27: beside the results they
+        // only confuse): the box, Filters, the readout and Clear All, as they were again when another tab is
+        var marking = function () { doc.documentElement.classList.toggle('kron-search-shown', tab.getAttribute('aria-selected') === 'true'); };
+        new MutationObserver(marking).observe(tab, { attributes: true, attributeFilter: ['aria-selected'] });
+        marking();
         // a menu shuts when the reader clicks anywhere else, or presses Escape in it, which gives its button the focus
         function shut(m, focus) {
             var b = m.previousElementSibling;

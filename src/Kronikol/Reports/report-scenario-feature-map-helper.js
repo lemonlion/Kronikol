@@ -22,9 +22,9 @@ function fc() {
 // kron:verdicts
             // The cross-run history verdicts, when the run had a ledger: what `$flaky` and `$broke` read.
             var hv = s.getAttribute('data-history-verdicts') || '';
-            var item = { el: s, deps: d, status: s.getAttribute('data-status') || '', verdicts: hv ? new Set(hv.split(',')) : null, isHappy: s.classList.contains('happy-path'), f: features[fi], searchText: s.getAttribute('data-search') || '', runs: n, tag: false, dep: false, st: false, sr: false, dur: false, q: false };
+            var item = { el: s, deps: d, status: s.getAttribute('data-status') || '', verdicts: hv ? new Set(hv.split(',')) : null, isHappy: s.classList.contains('happy-path'), f: features[fi], searchText: s.getAttribute('data-search') || '', runs: n, tag: false, dep: false, st: false, sr: false, dur: false, q: false, xq: false, xs: false };
 // kron:else
-//|            var item = { el: s, deps: d, status: s.getAttribute('data-status') || '', isHappy: s.classList.contains('happy-path'), f: features[fi], searchText: s.getAttribute('data-search') || '', runs: n, tag: false, dep: false, st: false, sr: false, dur: false, q: false };
+//|            var item = { el: s, deps: d, status: s.getAttribute('data-status') || '', isHappy: s.classList.contains('happy-path'), f: features[fi], searchText: s.getAttribute('data-search') || '', runs: n, tag: false, dep: false, st: false, sr: false, dur: false, q: false, xq: false, xs: false };
 // kron:/verdicts
             items.push(item);
             fMap.set(s, features[fi]);
@@ -48,8 +48,9 @@ function search_tags(el) {
     tag_names(el).forEach(function (t) { tags.add(t.trim().toLowerCase()); });
     return tags;
 }
-// Every filter has a flag of its own on each scenario: the tags (with Happy paths), dependencies, status, the search,
-// duration and the search's qualifiers. A scenario shows while no flag hides it, a rule or a feature while one of its
+// Every filter has a flag of its own on each scenario: the tags (with Happy paths), dependencies, status, the filter
+// field, duration and the field's qualifiers. The search's own flags (xq, xs: report-search-function.js's
+// run_search_query) are no filter's and never hide a scenario. A scenario shows while no flag hides it, a rule or a feature while one of its
 // scenarios shows. While an address's filters are put on together (apply_url_hash), the scenarios are shown or hidden
 // once, at the end: each filter's own pass would tell the timeline and the components of every step on the way.
 var _visibilityHold = 0, _visibilityHeld = null;
@@ -63,10 +64,15 @@ function release_visibility() {
 }
 function applyVisibility(c) {
     if (_visibilityHold > 0) { _visibilityHeld = c; return; }
+    show_items(c, function (d) { return d.tag || d.dep || d.st || d.sr || d.dur || d.q; });
+    filter_readout(c);
+}
+// Each scenario shown or hidden as hidden(item) says, then each rule and feature by whether a scenario of it shows: the
+// filters' flags as above, or for the Search tab's exports the search's own (report-export-function.js's export_search)
+function show_items(c, hidden) {
     for (var i = 0; i < c.items.length; i++) {
         var d = c.items[i];
-        var hidden = d.tag || d.dep || d.st || d.sr || d.dur || d.q;
-        d.el.style.display = hidden ? 'none' : '';
+        d.el.style.display = hidden(d) ? 'none' : '';
     }
     var rules = document.getElementsByClassName('rule');
     for (var i = 0; i < rules.length; i++) {
@@ -86,7 +92,6 @@ function applyVisibility(c) {
         }
         f.style.display = hasVisible ? '' : 'none';
     }
-    filter_readout(c);
 }
 // What the filters leave showing (5.0.0, plans/OPTION_C_PLAN.md S5, D14): the readout beside Clear All, and a
 // `kron-filter-change` event on the document, { shown, total } in runs, whenever the scenarios shown change.

@@ -380,7 +380,7 @@ public sealed class SearchSnippetTests : IDisposable
         page.SetValue("__diagram", Diagram);
         page.SetValue("__failure", Failure);
         page.SetValue("__index", Convert.ToBase64String(AllOnesIndex(2)));
-        page.Execute("__buildPage(); window._kronDeepQuery('flour');");
+        page.Execute("__buildPage(); window._kronDeepSearch('flour');");
         Assert.Equal("ready", page.Evaluate("window.__kronikolSearch.indexState").AsString());
         Assert.Equal("{\"terms\":[\"flour\"],\"kinds\":[\"ng\"]}", page.Evaluate("JSON.stringify(window._kronDeepKinds(0))").AsString());
         Assert.Equal("{\"terms\":[\"flour\"],\"kinds\":[\"e\"]}", page.Evaluate("JSON.stringify(window._kronDeepKinds(__scenarios[1]))").AsString());
@@ -395,13 +395,38 @@ public sealed class SearchSnippetTests : IDisposable
 
         // a request a newer query overtakes holds null at once, while the worker has not read either, and so does one with
         // no deep search in effect
-        page.Execute("var __stale = 'unset'; __hold = true; window._kronDeepSnippets([0], 2).then(function (a) { __stale = a; }); window._kronDeepQuery('kitchen');");
+        page.Execute("var __stale = 'unset'; __hold = true; window._kronDeepSnippets([0], 2).then(function (a) { __stale = a; }); window._kronDeepSearch('kitchen');");
         Assert.True(page.Evaluate("__stale === null").AsBoolean());
         page.Execute("__release();");
         Assert.Equal("{\"terms\":[\"kitchen\"],\"kinds\":[\"g\"]}", page.Evaluate("JSON.stringify(window._kronDeepKinds(0))").AsString());
-        page.Execute("var __none = 'unset'; window._kronDeepReset(); window._kronDeepSnippets([0], 2).then(function (a) { __none = a; });");
+        page.Execute("var __none = 'unset'; window._kronDeepSearchReset(); window._kronDeepSnippets([0], 2).then(function (a) { __none = a; });");
         Assert.True(page.Evaluate("__none === null").AsBoolean());
         Assert.True(page.Evaluate("window._kronDeepKinds(0) === null").AsBoolean());
+    }
+
+    // 5.12.0: the filter field's deep pass and the search's, posted together, are both read. Each query is the newest of its
+    // own kind (until then one newer query of either stopped the other's), and each answer lands on flags of its own: the
+    // filter's on sr, which shows and hides, the search's on xs, which hides nothing
+    [Fact]
+    public void The_filter_s_deep_pass_and_the_search_s_are_both_read()
+    {
+        using var page = new Engine();
+        page.Execute(PageStub);
+        page.Execute(StreamStubs);
+        foreach (var script in new[] { "advanced-search.js", "report-scenario-feature-map-helper.js", "report-search-function.js", "report-search-index.js" })
+            page.Execute(LoadEmbedded(script));
+        page.SetValue("__diagram", Diagram);
+        page.SetValue("__failure", Failure);
+        page.SetValue("__index", Convert.ToBase64String(AllOnesIndex(2)));
+        page.Execute("__buildPage(); window._kronDeepSearch('flour');");
+        Assert.Equal("ready", page.Evaluate("window.__kronikolSearch.indexState").AsString());
+
+        // as after a shallow pass that matched nothing, for each: both queries posted before the worker reads either
+        page.Execute("fc().items.forEach(function (i) { i.sr = true; i.xs = true; }); __hold = true; window._kronDeepQuery('flour'); window._kronDeepSearch('grams'); __release();");
+
+        Assert.Equal("false,false", page.Evaluate("fc().items.map(function (i) { return i.sr; }).join(',')").AsString());
+        Assert.Equal("false,true", page.Evaluate("fc().items.map(function (i) { return i.xs; }).join(',')").AsString());
+        Assert.Equal("{\"terms\":[\"grams\"],\"kinds\":[\"g\"]}", page.Evaluate("JSON.stringify(window._kronDeepKinds(0))").AsString());
     }
 
     // A page of two scenarios as the generator writes them, with what the deep search reads of it: the index and the

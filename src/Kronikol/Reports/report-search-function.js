@@ -224,41 +224,32 @@ function search_status_names(c) {
     return names;
 }
 
-function run_search_scenarios() {
-    var c = fc();
-    var bar = document.getElementById('searchbar');
-    var parts = split_search_qualifiers(bar.value, search_status_names(c));
-    for (var qi = 0; qi < c.items.length; qi++) {
+// What a query leaves out, scenario by scenario, read the one way the filter field and the search both read it (5.12.0):
+// its qualifiers apart, each a test of its own (q), then the advanced search of the rest, or the legacy one where the
+// advanced cannot read it (sr). Nothing on the page changes. Returns { q, sr, bad, inGroup, input, empty, count, single,
+// words }: q and sr in fc().items' order; input the rest as the deep search reads it; empty when the rest holds nothing
+// to search for, so the qualifiers alone decide; single the scenario matched when there is one; words what the rows of a
+// parameterized scenario are matched with.
+function search_query_flags(c, value) {
+    var parts = split_search_qualifiers(value || '', search_status_names(c));
+    var n = c.items.length, q = new Array(n), sr = new Array(n);
+    for (var qi = 0; qi < n; qi++) {
         var qItem = c.items[qi];
-        qItem.q = parts.quals.length > 0 && !parts.quals.every(function (test) { return test(qItem); });
+        q[qi] = parts.quals.length > 0 && !parts.quals.every(function (test) { return test(qItem); });
+        sr[qi] = false;
     }
-    // a qualifier that cannot be read stays text, and the bar says so
-    bar.classList.toggle('kron-q-bad', parts.bad.length > 0);
-    if (parts.bad.length) bar.setAttribute('data-q-bad', parts.bad.join(' ')); else bar.removeAttribute('data-q-bad');
-    // the same, an item to a qualifier (a quoted value keeps its spaces), for the Search tab's warning
-    bar.kronQBad = parts.bad.map(function (t) { return { text: t, inGroup: parts.inGroup.indexOf(t) >= 0 }; });
-    let input = parts.rest;
-    input = input.toLowerCase().trim();
+    var out = { q: q, sr: sr, bad: parts.bad, inGroup: parts.inGroup, input: parts.rest.toLowerCase().trim(), empty: false, count: 0, single: null, words: [] };
+    let input = out.input;
 
     // Advanced search path: when input contains &&, ||, or !!
     if (isAdvancedSearch(input)) {
         if (input.length === 0) {
-            for (let i = 0; i < c.items.length; i++) {
-                c.items[i].sr = false;
-            }
-            close_opened_by_search();
-            clear_search_rows();
-            applyVisibility(c);
-            update_url_hash();
-            if (window._kronDeepReset) window._kronDeepReset();
-            return;
+            out.empty = true;
+            return out;
         }
 
         let advancedFailed = false;
-        let matchCount = 0;
-        let singleMatch = null;
-        let advSearchTokens = [];
-        for (let i = 0; i < c.items.length; i++) {
+        for (let i = 0; i < n; i++) {
             let item = c.items[i];
             // what the Tags row filters on, Happy Path with it (plans/TAGS_PLAN.md §4.8), compared without case
             let tags = search_tags(item.el);
@@ -272,74 +263,35 @@ function run_search_scenarios() {
                 advancedFailed = true;
                 break;
             }
-            item.sr = !result;
+            sr[i] = !result;
             if (result) {
-                matchCount++;
-                singleMatch = item.el;
+                out.count++;
+                out.single = item.el;
             }
         }
 
         if (!advancedFailed) {
-            applyVisibility(c);
-            update_url_hash();
-
-            if (matchCount === 1 && singleMatch) {
-                revealSingleMatch(singleMatch);
-            }
-
-            // Parameterized group row highlighting for advanced search
-            let tokens = advancedSearchTokenise(input);
-            advSearchTokens = tokens.filter(function(t) { return t.type === 'text' || t.type === 'phrase'; }).map(function(t) { return t.value; });
-            if (advSearchTokens.length > 0) {
-                document.querySelectorAll('details.scenario-parameterized').forEach(function(group) {
-                    if (group.style.display === 'none') return;
-                    var rows = group.querySelectorAll('tr[data-row-search]');
-                    var firstMatchRow = null;
-                    for (var ri = 0; ri < rows.length; ri++) {
-                        var tbl = rows[ri].closest('table');
-                        if (tbl && tbl.style.display === 'none') { rows[ri].classList.remove('row-search-match'); continue; }
-                        var rowText = rows[ri].getAttribute('data-row-search') || '';
-                        var allMatch = true;
-                        for (var j = 0; j < advSearchTokens.length; j++) {
-                            if (!rowText.includes(advSearchTokens[j])) { allMatch = false; break; }
-                        }
-                        if (allMatch && !firstMatchRow) { firstMatchRow = rows[ri]; }
-                        rows[ri].classList.toggle('row-search-match', allMatch);
-                    }
-                    if (firstMatchRow) choose_search_row(firstMatchRow);
-                });
-            } else {
-                document.querySelectorAll('tr.row-search-match').forEach(function(r) { r.classList.remove('row-search-match'); });
-            }
-            if (window._kronDeepQuery) window._kronDeepQuery(input);
-            return;
+            out.words = advancedSearchTokenise(input).filter(function(t) { return t.type === 'text' || t.type === 'phrase'; }).map(function(t) { return t.value; });
+            return out;
         }
         // If advancedFailed, fall through to legacy path
+        out.count = 0;
+        out.single = null;
     }
 
     // Legacy search path
     let split = splitLegacyTagExpression(input);
     let tagExpr = split.tagExpr;
-    let textInput = split.textInput;
-
-    let searchTokens = parseSearchTokensIncludingQuotes(textInput);
+    let searchTokens = parseSearchTokensIncludingQuotes(split.textInput);
 
     if (searchTokens.length === 0 && !tagExpr) {
-        for (let i = 0; i < c.items.length; i++) {
-            c.items[i].sr = false;
-        }
-        close_opened_by_search();
-        clear_search_rows();
-        applyVisibility(c);
-        update_url_hash();
-        if (window._kronDeepReset) window._kronDeepReset();
-        return;
+        for (let i = 0; i < n; i++) sr[i] = false;
+        out.empty = true;
+        return out;
     }
 
     // Match at the scenario level
-    let matchCount = 0;
-    let singleMatch = null;
-    for (let i = 0; i < c.items.length; i++) {
+    for (let i = 0; i < n; i++) {
         let textMatch = true;
         if (searchTokens.length > 0) {
             let text = c.items[i].searchText;
@@ -354,45 +306,105 @@ function run_search_scenarios() {
         if (tagExpr) {
             tagMatch = evaluateTagExpression(tagExpr, search_tags(c.items[i].el));
         }
-        c.items[i].sr = !(textMatch && tagMatch);
+        sr[i] = !(textMatch && tagMatch);
         if (textMatch && tagMatch) {
-            matchCount++;
-            singleMatch = c.items[i].el;
+            out.count++;
+            out.single = c.items[i].el;
         }
     }
+    out.words = searchTokens;
+    return out;
+}
 
+// For parameterized groups: highlight matching row(s) based on per-row search data, the first chosen; with no words,
+// no row is marked
+function highlight_search_rows(words) {
+    if (words.length === 0) {
+        document.querySelectorAll('tr.row-search-match').forEach(function(r) { r.classList.remove('row-search-match'); });
+        return;
+    }
+    document.querySelectorAll('details.scenario-parameterized').forEach(function(group) {
+        if (group.style.display === 'none') return;
+        var rows = group.querySelectorAll('tr[data-row-search]');
+        var firstMatchRow = null;
+        for (var ri = 0; ri < rows.length; ri++) {
+            var tbl = rows[ri].closest('table');
+            if (tbl && tbl.style.display === 'none') { rows[ri].classList.remove('row-search-match'); continue; }
+            var rowText = rows[ri].getAttribute('data-row-search') || '';
+            var allMatch = true;
+            for (var j = 0; j < words.length; j++) {
+                if (!rowText.includes(words[j])) { allMatch = false; break; }
+            }
+            if (allMatch && !firstMatchRow) { firstMatchRow = rows[ri]; }
+            rows[ri].classList.toggle('row-search-match', allMatch);
+        }
+        if (firstMatchRow) choose_search_row(firstMatchRow);
+    });
+}
+
+// The filter field's run (#searchbar): the query's flags put on the scenarios, which show or hide by them with the other
+// filters' (applyVisibility), the address written, a single match opened, the rows of a parameterized scenario marked and
+// the deep search handed the rest. A run first stops a timer still waiting to run it (a word typed, then Back or Clear
+// All), which would run it again with the results of the instant pass alone.
+function run_search_scenarios() {
+    if (searchTimeoutId) {
+        clearTimeout(searchTimeoutId);
+        searchTimeoutId = null;
+    }
+    var c = fc();
+    var bar = document.getElementById('searchbar');
+    var r = search_query_flags(c, bar ? bar.value : '');
+    for (var i = 0; i < c.items.length; i++) {
+        c.items[i].q = r.q[i];
+        c.items[i].sr = r.sr[i];
+    }
+    // a qualifier that cannot be read stays text, and the field says so
+    if (bar) {
+        bar.classList.toggle('kron-q-bad', r.bad.length > 0);
+        if (r.bad.length) bar.setAttribute('data-q-bad', r.bad.join(' ')); else bar.removeAttribute('data-q-bad');
+    }
+    if (r.empty) {
+        close_opened_by_search();
+        clear_search_rows();
+        applyVisibility(c);
+        update_url_hash();
+        if (window._kronDeepReset) window._kronDeepReset();
+        return;
+    }
     applyVisibility(c);
     update_url_hash();
-
     // Single match: expand scenario with diagrams
-    if (matchCount === 1 && singleMatch) {
-        revealSingleMatch(singleMatch);
+    if (r.count === 1 && r.single) {
+        revealSingleMatch(r.single);
     }
+    highlight_search_rows(r.words);
+    if (window._kronDeepQuery) window._kronDeepQuery(r.input);
+}
 
-    // For parameterized groups: highlight matching row(s) based on per-row search data
-    if (searchTokens.length > 0) {
-        document.querySelectorAll('details.scenario-parameterized').forEach(function(group) {
-            if (group.style.display === 'none') return;
-            var rows = group.querySelectorAll('tr[data-row-search]');
-            var firstMatchRow = null;
-            for (var ri = 0; ri < rows.length; ri++) {
-                var tbl = rows[ri].closest('table');
-                if (tbl && tbl.style.display === 'none') { rows[ri].classList.remove('row-search-match'); continue; }
-                var rowText = rows[ri].getAttribute('data-row-search') || '';
-                var allMatch = true;
-                for (var j = 0; j < searchTokens.length; j++) {
-                    if (!rowText.includes(searchTokens[j])) { allMatch = false; break; }
-                }
-                if (allMatch && !firstMatchRow) { firstMatchRow = rows[ri]; }
-                rows[ri].classList.toggle('row-search-match', allMatch);
-            }
-            if (firstMatchRow) choose_search_row(firstMatchRow);
-        });
-    } else {
-        document.querySelectorAll('tr.row-search-match').forEach(function(r) { r.classList.remove('row-search-match'); });
+// The search's own query (the owner, 2026-10-27: a search gives a page of results, and a result picked goes to it; a
+// filter narrows the Features list). It is read as the filter field's is, into flags of its own on each scenario (xq,
+// xs) that the Search tab, its marks and its hits read; nothing on the page shows, hides or opens by it. The address
+// carries it as search= (report-url-hash-function.js). run_search_query(value) applies value; with none it runs the
+// query again.
+var _searchQuery = '', _searchQueryBad = [];
+function search_query() { return _searchQuery; }
+// the qualifiers of the search that cannot be read, each { text, inGroup }, for the Search tab's warning
+function search_query_bad() { return _searchQueryBad; }
+function run_search_query(value) {
+    if (value !== undefined) _searchQuery = value === null ? '' : String(value).trim();
+    var c = fc();
+    var r = search_query_flags(c, _searchQuery);
+    for (var i = 0; i < c.items.length; i++) {
+        c.items[i].xq = r.q[i];
+        c.items[i].xs = r.sr[i];
     }
-
-    if (window._kronDeepQuery) window._kronDeepQuery(input);
+    _searchQueryBad = r.bad.map(function (t) { return { text: t, inGroup: r.inGroup.indexOf(t) >= 0 }; });
+    update_url_hash();
+    if (r.empty) {
+        if (window._kronDeepSearchReset) window._kronDeepSearchReset();
+        return;
+    }
+    if (window._kronDeepSearch) window._kronDeepSearch(r.input);
 }
 
 // A legacy query's words, where @"a tag" is one word for a tag with spaces (plans/TAGS_PLAN.md §4.8), and a bracket

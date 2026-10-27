@@ -129,6 +129,15 @@ public class ViewportSweepTests : IClassFixture<ClassicScrollbarBrowser>, IDispo
     public Task Run_report_with_every_section_fits_every_width_under_wcag_text_spacing() =>
         Sweep(ReportTestHelper.GenerateReportWithEverySection(_tempDir, OutputDir, "SweepEverySectionSpaced.html"), runReport: true, TextSpacing);
 
+    /// <summary>The same in a font as wide as Linux's: CI's Ubuntu draws the page in DejaVu Sans, wider than Windows'
+    /// Segoe UI, and from 5.11.0 the filter box, its rows showing at every width, sits in the report bar. At 320 px each
+    /// duration button had half the row, and "P50 (400ms)" broke its label in two there (5.11.0 CI). Verdana stands for
+    /// DejaVu Sans where it is missing: both come from Bitstream Vera's metrics.</summary>
+    [Fact]
+    public Task Run_report_with_every_section_fits_every_width_under_wcag_text_spacing_in_a_wide_font() =>
+        Sweep(ReportTestHelper.GenerateReportWithEverySection(_tempDir, OutputDir, "SweepEverySectionSpacedWide.html"), runReport: true,
+            TextSpacing + "*{font-family:Verdana,'DejaVu Sans',sans-serif !important}");
+
     /// <summary>The labs page beside a report (plans/HISTORY_AND_DIAGNOSTICS_MOVE_PLAN.md section 7.3), from the same
     /// history and diagnostics as the every-section report: a long scenario name in a history link, a long branch in
     /// the History section's meta line, and a diagnostic message holding a long path. It has no toolbar or filtering

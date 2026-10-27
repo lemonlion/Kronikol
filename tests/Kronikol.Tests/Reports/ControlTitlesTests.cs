@@ -346,9 +346,10 @@ public class ControlTitlesTests : IDisposable
         Assert.Equal("Download a copy of this report holding only the features the filters show", TitleOf(box, ".export-btn[onclick='export_html()']"));
         Assert.Equal("Download the scenarios the filters show as a CSV file: feature, scenario, status and duration in milliseconds",
             TitleOf(box, ".export-btn[onclick='export_csv()']"));
-        // the search left the box for the title line's button and its builder (plans/SEARCH_PLAN.md 4.2, 4.3), whose tips
-        // are its help
-        Assert.Null(box.QuerySelector("#searchbar:not([type='hidden']), .search-help-toggle"));
+        // the filter field and its ?, back in the box in 5.12.0; the search is the title line's button and its builder
+        // (plans/SEARCH_PLAN.md 4.2, 4.3), whose tips are its help
+        Assert.StartsWith("Filter the scenarios by the words in their names", TitleOf(box, "#searchbar"));
+        Assert.StartsWith("How to write a filter:", TitleOf(box, ".search-help-toggle"));
         Assert.Equal("Search this report, or jump to a scenario or a feature (/)", TitleOf(page, "#search-button"));
         Assert.Equal("Clear the search; the filters stay as they are", TitleOf(page, "#search-clear"));
         Assert.Equal("How to write a search: the forms, and what each search reads", TitleOf(page, ".search-tips-toggle"));
@@ -356,7 +357,6 @@ public class ControlTitlesTests : IDisposable
         // own Filters button went with F5
         Assert.Equal("Show the filters", TitleOf(page, ".nav-filters-toggle"));
         Assert.Equal("Hide the filters (Esc)", TitleOf(box, ".filters-close"));
-        Assert.Equal("Clear the search; the other filters stay as they are", TitleOf(box, ".box-search-clear"));
         Assert.Null(page.QuerySelector(".mobile-filter-toggle"));
         Assert.Equal(
             [
@@ -376,7 +376,7 @@ public class ControlTitlesTests : IDisposable
     public void Clear_All_names_the_search_and_every_row_the_box_has_in_the_box_and_in_the_bar()
     {
         var (page, _) = Everything();
-        const string everything = "Clear every filter: the search with its tag:, status:, feature:, dep:, duration: and is: terms, and the statuses, duration, happy paths, tags and dependencies";
+        const string everything = "Clear every filter: the filter text with its tag:, status:, feature:, dep:, duration: and is: terms, and the statuses, duration, happy paths, tags and dependencies";
 
         Assert.Equal(everything, TitleOf(page, "#filtering-box .export-btn[onclick='clear_all_filters()']"));
         Assert.Equal(everything, TitleOf(page, ".nav-filters .nav-clear"));
@@ -384,13 +384,13 @@ public class ControlTitlesTests : IDisposable
         // a run with times and nothing else to filter by: no happy path, no tag or category, no call
         var timed = Parse(Write("ControlTitles_Timed.html",
             [new Feature { DisplayName = "F", Scenarios = [new Scenario { Id = "x", DisplayName = "X", Result = ExecutionResult.Passed, Duration = TimeSpan.FromMilliseconds(5) }] }], []));
-        Assert.Equal("Clear every filter: the search with its tag:, status:, feature:, dep:, duration: and is: terms, and the statuses and duration",
+        Assert.Equal("Clear every filter: the filter text with its tag:, status:, feature:, dep:, duration: and is: terms, and the statuses and duration",
             TitleOf(timed, "#filtering-box .export-btn[onclick='clear_all_filters()']"));
 
         // and one with statuses alone
         var bare = Parse(Write("ControlTitles_Bare.html",
             [new Feature { DisplayName = "F", Scenarios = [new Scenario { Id = "x", DisplayName = "X", Result = ExecutionResult.Passed }] }], []));
-        Assert.Equal("Clear every filter: the search with its tag:, status:, feature:, dep:, duration: and is: terms, and the statuses",
+        Assert.Equal("Clear every filter: the filter text with its tag:, status:, feature:, dep:, duration: and is: terms, and the statuses",
             TitleOf(bare, "#filtering-box .export-btn[onclick='clear_all_filters()']"));
     }
 

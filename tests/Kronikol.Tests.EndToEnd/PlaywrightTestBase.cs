@@ -367,25 +367,32 @@ public abstract class PlaywrightTestBase : IAsyncLifetime
     protected Task FillSearchBar(string query, bool toSearchTab = false) => FillSearchBar(Page, query, toSearchTab);
 
     /// <summary>
-    /// Searches <paramref name="page"/> for <paramref name="query"/> as a reader does since plans/SEARCH_PLAN.md 4.3: opens
-    /// the query builder, types the query into its input, and chooses its row that filters the tab on screen, so the caller
-    /// stays on its tab and a test that reads the Features list keeps its meaning (until then the search was a field in the
-    /// filter box, searching on keyup). With <paramref name="toSearchTab"/> it presses Enter, which runs the search to the
-    /// Search tab. An empty query clears the applied one. The applied query is read back from <c>#searchbar</c>.
+    /// Filters <paramref name="page"/> by <paramref name="query"/> as a reader does: opens the filter box where it is closed,
+    /// types the query into its field (which filters as it is typed), presses Enter, which runs it at once, and closes the
+    /// box again where it opened it. With <paramref name="toSearchTab"/> it searches instead, since a search is no filter
+    /// (5.12.0): it opens the query builder, types the query and presses Enter, which runs the search to the Search tab; an
+    /// empty query there takes the search away. The filter's query is read back from <c>#searchbar</c>, the search's from
+    /// <c>search_query()</c>.
     /// </summary>
     protected static async Task FillSearchBar(IPage page, string query, bool toSearchTab = false)
     {
-        await page.WaitForFunctionAsync("() => !!window.kronikol_search", null, new() { PollingInterval = 200 });
-        if (!await page.EvaluateAsync<bool>("() => document.getElementById('search-dialog').open"))
-            await page.EvaluateAsync("() => window.kronikol_search.open()");
-        var input = page.Locator("#search-input");
-        await input.FillAsync(query);
-        var filterRow = page.Locator("#search-suggestions .search-option-filter");
-        if (!toSearchTab && query.Trim().Length > 0 && await filterRow.CountAsync() > 0)
-            await filterRow.First.ClickAsync();
-        else
+        if (toSearchTab)
+        {
+            await page.WaitForFunctionAsync("() => !!window.kronikol_search", null, new() { PollingInterval = 200 });
+            if (!await page.EvaluateAsync<bool>("() => document.getElementById('search-dialog').open"))
+                await page.EvaluateAsync("() => window.kronikol_search.open()");
+            var input = page.Locator("#search-input");
+            await input.FillAsync(query);
             await input.PressAsync("Enter");
-        await page.WaitForFunctionAsync("() => !document.getElementById('search-dialog').open", null, new() { PollingInterval = 200 });
+            await page.WaitForFunctionAsync("() => !document.getElementById('search-dialog').open", null, new() { PollingInterval = 200 });
+            return;
+        }
+        var wasClosed = await page.EvaluateAsync<bool>("() => { const b = document.getElementById('filtering-box'); return !!b && b.hidden; }");
+        if (wasClosed) await OpenFilterRowsAsync(page);
+        var field = page.Locator("#filtering-box #searchbar");
+        await field.FillAsync(query);
+        await field.PressAsync("Enter");
+        if (wasClosed) await page.Locator("#filtering-box .filters-close").ClickAsync();
     }
 
     /// <summary>

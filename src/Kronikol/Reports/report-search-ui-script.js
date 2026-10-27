@@ -2,16 +2,17 @@
 // The button, drawn as a text box, says "Type / to search" and, once a search is applied, shows the query with its values
 // coloured and a clear beside it. The builder is a native dialog over the page, a layer of the session history (Back
 // closes it): it opens holding the applied query, all of it selected, and suggests as the reader types: the search
-// itself, the feature the reader is in, a row that filters the tab on screen, scenarios and features to jump to, the keys
-// and their values with how many scenarios carry each, and the searches run on this page. Enter runs the search, once.
-// The applied query stays in #searchbar, now a hidden field, so every script that reads or writes it keeps working (4.1);
-// a draft lives in the builder's input only, so a filter changed while it is open never writes a draft to the address.
+// itself, the feature the reader is in, scenarios and features to jump to, the keys and their values with how many
+// scenarios carry each, and the searches run on this page. Enter runs the search, once, to the Search tab. The search is
+// no filter (the owner, 2026-10-27): its query is its own (report-search-function.js's search_query and run_search_query),
+// the filter field in the filter box has another, and nothing here filters the page. A draft lives in the builder's
+// input only, so a filter changed while it is open never writes a draft to the address.
 (function () {
     var doc = document;
     function $(s, r) { return (r || doc).querySelector(s); }
     function $$(s, r) { return Array.prototype.slice.call((r || doc).querySelectorAll(s)); }
     var phone = window.matchMedia ? window.matchMedia('(max-width: 768px)') : { matches: false };
-    var box, button, hint, shown, clear, field, dialog, panel, input, mirror, wrap, inputClear, list, live, tips, tipsToggle, footFilters, fab;
+    var box, button, hint, shown, clear, dialog, panel, input, mirror, wrap, inputClear, list, live, tips, tipsToggle, fab;
     var recent = [];          // the searches run on this page, newest first, in memory only (Q5): the report stores the theme alone
     var options = [];         // the rows on show, in order
     var active = -1;
@@ -56,7 +57,7 @@
 
     // ---- the applied query, on the button (4.2) ----
 
-    function applied() { return field ? field.value.trim() : ''; }
+    function applied() { return typeof search_query === 'function' ? search_query() : ''; }
     var IDLE_NAME = 'Search or jump to, type / to search';
     function paintButton() {
         if (!button) return;
@@ -88,12 +89,6 @@
     function statusOf(s) {
         var st = s.getAttribute('data-status') || '';
         return st === 'SkippedAfterFailure' ? 'Skipped' : st;
-    }
-    function itemOf(s) {
-        var c = typeof fc === 'function' ? fc() : null;
-        if (!c) return null;
-        for (var i = 0; i < c.items.length; i++) if (c.items[i].el === s) return c.items[i];
-        return null;
     }
     function hidden(s) { return s.style.display === 'none' || !!(s.closest('details.feature') && s.closest('details.feature').style.display === 'none'); }
     function scenarios() { return $$('details.scenario'); }
@@ -131,11 +126,6 @@
         }
         return null;
     }
-    function selectedTab() {
-        var t = $('.report-tabs > .report-tab[aria-selected="true"]');
-        return t ? t.getAttribute('data-tab') : 'features';
-    }
-    var FILTERS_TAB = { features: 'the Features list', timeline: 'the timeline', components: 'the components' };
 
     // ---- the suggestions (4.3.3) ----
 
@@ -212,16 +202,13 @@
             return groups;
         }
 
-        // the search itself, then the feature the reader is in, then the tab on screen
+        // the search itself, then the feature the reader is in
         var top = [optionFor('search', draft, '', 'Search', 'Search', function () { runSearch(draft); })];
         var feature = catalogNow().feature;
         if (feature) {
             var scoped = 'feature:' + quoteValue(featureName(feature)) + ' ' + draft;
             top.push(optionFor('scope', scoped, '', 'Search in this feature', 'Search', function () { runSearch(scoped); }));
         }
-        var tab = selectedTab();
-        if (tab !== 'search' && FILTERS_TAB[tab])
-            top.push(optionFor('filter', 'Filter ' + FILTERS_TAB[tab] + ': ' + draft, '', 'Filter', 'Filter', function () { runSearch(draft, { stay: true }); }));
         groups.push({ name: '', rows: top });
 
         if (keyed) {
@@ -425,7 +412,7 @@
             mirror.textContent = '';
             return;
         }
-        colour(mirror, v, input.selectionStart === input.selectionEnd ? input.selectionStart : undefined);
+        colour(mirrorLine(), v, input.selectionStart === input.selectionEnd ? input.selectionStart : undefined);
         // a qualifier the report cannot read turns the field's edge amber too, as kron-q-bad did on the box's field
         if (wrap.parentNode) wrap.parentNode.classList.toggle('has-bad', !!mirror.querySelector('.q-bad'));
         // the input's scroll read in the next frame, with the frame's own layout: read here, it laid out the page under the
@@ -433,6 +420,19 @@
         syncMirror();
         wrap.classList.add('is-coloured');
         inputClear.hidden = !v;
+    }
+    // the copy's text in one inline box (5.12.0): as children of the copy's own flex box, the coloured parts and the text
+    // between them were flex items each, and a space alone between two of them was dropped, so the word after
+    // dep:Clickhouse sat against the value
+    function mirrorLine() {
+        var line = mirror.firstChild;
+        if (!line || line.nodeType !== 1 || line.className !== 'search-mirror-line') {
+            mirror.textContent = '';
+            line = doc.createElement('span');
+            line.className = 'search-mirror-line';
+            mirror.appendChild(line);
+        }
+        return line;
     }
     var syncing = false;
     function syncMirror() {
@@ -472,35 +472,28 @@
         recent.unshift(q);
         if (recent.length > 5) recent.length = 5;
     }
-    function apply(q) { return function () { field.value = q; run_search_scenarios(); }; }
-    // Enter, or the search row: the draft goes into #searchbar and the search runs once, as one entry that takes the
-    // builder's own (it is a layer). The filter row stays on the tab on screen; the search's own goes to the Search tab
-    // where the page has one.
-    function runSearch(q, o) {
-        o = o || {};
+    function apply(q) { return function () { run_search_query(q); }; }
+    // Enter, or the search row: the search runs once, as one entry that takes the builder's own (it is a layer), and goes
+    // to the Search tab where the page has one; an empty query takes the search away
+    function runSearch(q) {
         q = (q || '').trim();
         remember(q);
         hide();
-        var toSearch = !o.stay && q && !!$('.report-tabs > .report-tab[data-tab="search"]');
+        var toSearch = q && !!$('.report-tabs > .report-tab[data-tab="search"]');
         if (window.kronikol_nav) window.kronikol_nav.go(toSearch ? { tab: 'search' } : {}, { apply: apply(q), layer: 'search' });
         else apply(q)();
         if (toSearch && window.kronikol_search_results && window.kronikol_search_results.focusCount) window.kronikol_search_results.focusCount();
         else button.focus({ preventScroll: true });
         paintButton();
     }
-    // a scenario to jump to: the Features tab, the scenario opened, one entry, the applied query left as it was; when the
-    // query alone hides it, the jump clears the query in the same entry and the status line says so; when the box's
+    // a scenario to jump to: the Features tab, the scenario opened, one entry, the search left as it was; when the
     // filters hide it, the jump lands on the note for a hidden scenario, as any link to one does
     function jump(s) {
-        var item = itemOf(s), q = applied();
-        var onlyQuery = !!(q && item && (item.sr || item.q) && !item.tag && !item.dep && !item.st && !item.dur);
         var anchor = s.getAttribute('data-stable-id') ? 'sid-' + s.getAttribute('data-stable-id') : s.id;
         hide();
         var nav = window.kronikol_nav;
         if (!nav || !anchor) { s.open = true; s.scrollIntoView(); return; }
-        nav.go({ anchor: anchor }, onlyQuery ? { apply: apply(''), layer: 'search' } : { layer: 'search' });
-        paintButton();
-        if (onlyQuery && nav.say && nav.after) nav.after(function () { nav.say('Scenario ' + scenarioName(s) + '. The search was cleared to show it.'); });
+        nav.go({ anchor: anchor }, { layer: 'search' });
     }
     function jumpToFeature(f) {
         var first = $('details.scenario', f);
@@ -541,7 +534,6 @@
             try { dialog.showModal(); } catch (e) { dialog.setAttribute('open', ''); }
         }
         button.setAttribute('aria-expanded', 'true');
-        footFilters.hidden = !phone.matches;
         place();
         var q = o.text !== undefined ? o.text : applied();
         input.value = q;
@@ -615,8 +607,7 @@
     function start() {
         box = $('.title-line .search-box');
         dialog = $('#search-dialog');
-        field = doc.getElementById('searchbar');
-        if (!box || !dialog || !field) return;
+        if (!box || !dialog || typeof run_search_query !== 'function') return;
         button = $('#search-button', box);
         hint = $('.search-button-hint', button);
         shown = $('.search-button-query', button);
@@ -630,7 +621,6 @@
         live = $('.search-live', dialog);
         tips = $('#search-tips', dialog);
         tipsToggle = $('.search-tips-toggle', dialog);
-        footFilters = $('.search-foot-filters', dialog);
         fab = doc.getElementById('search-fab');
         started = true;
 
@@ -657,25 +647,27 @@
         });
         inputClear.addEventListener('click', function () { input.value = ''; changed(); input.focus(); });
         tipsToggle.addEventListener('click', function () { showTips(tips.hidden); });
-        footFilters.addEventListener('click', function () {
-            dismiss();
-            var nav = window.kronikol_nav;
-            function openBox() {
-                var toggle = $('.nav-filters-toggle'), boxEl = doc.getElementById('filtering-box');
-                if (toggle && boxEl && boxEl.hidden) toggle.click();
-                var bar = $('.toolbar-row.report-nav');
-                if (bar) bar.scrollIntoView({ block: 'start' });
-            }
-            if (nav && nav.after) nav.after(openBox); else openBox();
-        });
         // the dialog's own Esc and a click on its backdrop, which is the dialog itself
         dialog.addEventListener('cancel', function (e) { e.preventDefault(); dismiss(); });
         dialog.addEventListener('click', function (e) { if (e.target === dialog) dismiss(); });
         dialog.addEventListener('keydown', function (e) { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); dismiss(); } });
         window.addEventListener('resize', function () { if (isOpen()) place(); });
-        doc.addEventListener('kron-filter-change', paintButton);
         watchTitle();
+        watchRuns();
         paintButton();
+    }
+    // the button shows the search's query: every run of it, by the builder, the button's clear, the Search tab's sidebar or
+    // an address put back, repaints it
+    function watchRuns() {
+        var run = window.run_search_query;
+        if (typeof run !== 'function' || run.kronButton) return;
+        var wrapped = function () {
+            var out = run.apply(this, arguments);
+            paintButton();
+            return out;
+        };
+        wrapped.kronButton = true;
+        window.run_search_query = wrapped;
     }
 
     window.kronikol_layers = window.kronikol_layers || {};

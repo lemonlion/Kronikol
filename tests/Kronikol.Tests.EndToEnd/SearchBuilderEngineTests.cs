@@ -40,6 +40,8 @@ public class SearchBuilderEngineTests : PlaywrightTestBase
         await page.WaitForFunctionAsync("() => !document.getElementById('panel-search').hidden && document.getElementById('search-count').textContent === '12 results'",
             null, new() { PollingInterval = 200 });
         Assert.False(await page.EvaluateAsync<bool>("() => document.getElementById('search-dialog').open"));
-        Assert.Equal("toast", await page.EvaluateAsync<string>("() => document.getElementById('searchbar').value"));
+        // the search's own query, the filter field left as it was (5.12.0: 5.11.0 put the search in the field)
+        Assert.Equal("toast", await page.EvaluateAsync<string>("() => search_query()"));
+        Assert.Equal("", await page.EvaluateAsync<string>("() => document.getElementById('searchbar').value"));
     }
 }

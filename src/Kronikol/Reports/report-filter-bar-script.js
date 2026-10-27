@@ -53,23 +53,17 @@
     function remeasure() { needs = null; queue(); }
 
     // ---- the filters on, counted on Filters (F6), as More filters counted them until SEARCH_PLAN ----
-    // each status, each tag or dependency chip set either way, and one for the duration threshold, a percentile or a
-    // custom value: read from the controls, never from the readout
+    // each status, each tag or dependency chip set either way, one for the duration threshold, a percentile or a
+    // custom value, and one for the filter field's text (5.12.0: the field is back in the box, which is mostly closed):
+    // read from the controls, never from the readout
     function filtersOn() {
         var n = box.querySelectorAll('.status-toggle.status-active, .tag-toggle.tag-active, .tag-toggle.tag-exclude, '
             + '.dependency-toggle.dependency-active, .dependency-toggle.dependency-exclude').length;
         var dur = $('#duration-threshold', box);
         if ($('.percentile-btn.percentile-active', box) || (dur && dur.value)) n += 1;
+        var field = $('#searchbar', box);
+        if (field && field.value.trim()) n += 1;
         return n;
-    }
-
-    // ---- the applied search, shown in the box (F10) ----
-    function boxSearch() {
-        var line = $('.box-search', box), field = doc.getElementById('searchbar');
-        if (!line || !field) return;
-        var q = field.value.trim();
-        line.hidden = !q;
-        $('.box-search-query', line).textContent = q;
     }
 
     // ---- the bar (D24, D25) ----
@@ -247,6 +241,18 @@
             requestAnimationFrame(function () { ticking = false; scrolled(); });
         }, { passive: true });
         window.addEventListener('resize', function () { fit(); capBox(); scrolled(); });
+        // the filter field's ? opens its syntax at the top of the box: a pinned box is capped again (5.12.0)
+        var help = $('.search-help-panel', box);
+        if (help) new MutationObserver(function () { capBox(); }).observe(help, { attributes: true, attributeFilter: ['style'] });
+        // the Search tab puts the bar's filters out of sight (report-search-results-script.js): back in sight, the row is
+        // fitted again, as the window may have changed while they were away
+        var searchShown = doc.documentElement.classList.contains('kron-search-shown');
+        new MutationObserver(function () {
+            var now = doc.documentElement.classList.contains('kron-search-shown');
+            if (now === searchShown) return;
+            searchShown = now;
+            if (!now) fit();
+        }).observe(doc.documentElement, { attributes: true, attributeFilter: ['class'] });
         hooks.sync();
         hooks.paint();
         scrolled();
@@ -261,10 +267,11 @@
         if (!readout) return;
         empty.hidden = !(readout.classList.contains('is-filtered') && readout.hasAttribute('data-none-shown'));
     }
-    // the way back from a cleared filter is the search: its button, where a reader starts again (SEARCH_PLAN 4.1), else
-    // the field while the search has one in the page
-    function focusSearch() {
-        var to = doc.getElementById('search-button') || doc.getElementById('searchbar');
+    // the way back from a cleared filter is the filter field, where a reader filters again, as until 5.11.0, else Filters
+    // while the box is closed (5.12.0: 5.11.0 sent it to the search, which then held the filter's text)
+    function focusFilter() {
+        var field = doc.getElementById('searchbar'), toggle = $('.nav-filters-toggle');
+        var to = field && field.getClientRects().length ? field : toggle;
         if (to && to.getClientRects().length) to.focus({ preventScroll: true });
     }
 
@@ -275,8 +282,8 @@
         empty = $('.filters-empty');
         if (empty) $('.filters-empty-clear', empty).addEventListener('click', function () {
             clear_all_filters();
-            // the empty state goes with the filters it reported, and focus with it: to the search
-            focusSearch();
+            // the empty state goes with the filters it reported, and focus with it: to the filter field
+            focusFilter();
         });
         // the note a tab that follows the filters writes while they leave scenarios out ends with the same way back
         // (5.1.0), and focus goes the same way, the note going with the filters it reported
@@ -284,21 +291,10 @@
             var clear = e.target && e.target.closest ? e.target.closest('.filtered-note-clear') : null;
             if (!clear) return;
             clear_all_filters();
-            focusSearch();
-        });
-        // the box's clear of the search clears the search alone: one change of one control, one entry (F10)
-        var searchClear = $('.box-search-clear', box);
-        if (searchClear) searchClear.addEventListener('click', function () {
-            var field = doc.getElementById('searchbar');
-            if (!field) return;
-            field.value = '';
-            run_search_scenarios();
-            var f = $('.status-toggle', box);
-            if (f) f.focus({ preventScroll: true });
+            focusFilter();
         });
         // a link's filters were read before this started
         emptyState();
-        boxSearch();
         if (nav) bar();
         relayout();
         window.addEventListener('resize', remeasure);
@@ -313,8 +309,8 @@
         }
         if (doc.fonts && doc.fonts.ready) doc.fonts.ready.then(remeasure);
     }
-    // what the filters leave showing changes the empty state, the bar's copy, the count and the box's search line
-    doc.addEventListener('kron-filter-change', function () { if (!box) return; emptyState(); boxSearch(); hooks.sync(); hooks.paint(); });
+    // what the filters leave showing changes the empty state, the bar's copy and the count
+    doc.addEventListener('kron-filter-change', function () { if (!box) return; emptyState(); hooks.sync(); hooks.paint(); });
     // after the report's own start, which reads the filters from the link
     if (doc.readyState === 'loading') doc.addEventListener('DOMContentLoaded', function () { setTimeout(start, 0); });
     else setTimeout(start, 0);

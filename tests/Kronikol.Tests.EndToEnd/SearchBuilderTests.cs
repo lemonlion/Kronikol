@@ -143,14 +143,14 @@ public class SearchBuilderTests : PlaywrightTestBase
     [Fact]
     public async Task Jumping_opens_the_scenario_and_leaves_the_applied_query()
     {
-        await OpenAsync("Builder_JumpGo.html", hash: "#q=pancake");
+        await OpenAsync("Builder_JumpGo.html", hash: "#search=pancake");
         await OpenBuilderAsync();
         await Input.FillAsync("toppings");
         await Options.Filter(new() { HasText = "Pancake toppings are listed" }).First.ClickAsync();
 
         await Page.WaitForFunctionAsync("() => !document.getElementById('search-dialog').open", null, new() { PollingInterval = 200 });
         Assert.True(await Page.EvaluateAsync<bool>("() => document.getElementById('scenario-p3') ? document.getElementById('scenario-p3').open : [...document.querySelectorAll('details.scenario')].some(s => s.open && s.textContent.includes('Pancake toppings'))"));
-        await Expect(Page.Locator("#searchbar")).ToHaveValueAsync("pancake");
+        Assert.Equal("pancake", await Page.EvaluateAsync<string>("() => search_query()"));
     }
 
     // QB7
@@ -184,10 +184,11 @@ public class SearchBuilderTests : PlaywrightTestBase
         await Page.Keyboard.PressAsync("Enter");
 
         await Page.WaitForFunctionAsync("() => !document.getElementById('search-dialog').open", null, new() { PollingInterval = 200 });
-        await Expect(Page.Locator("#searchbar")).ToHaveValueAsync("waffle");
+        Assert.Equal("waffle", await Page.EvaluateAsync<string>("() => search_query()"));
+        await Expect(Page.Locator("#searchbar")).ToHaveValueAsync("");
         await Expect(Page.Locator(".report-tab[data-tab='search']")).ToHaveAttributeAsync("aria-selected", "true");
         Assert.Equal(length + 1, await Page.EvaluateAsync<int>("() => history.length"));
-        Assert.Contains("q=waffle", await Page.EvaluateAsync<string>("() => location.hash"));
+        Assert.Contains("search=waffle", await Page.EvaluateAsync<string>("() => location.hash"));
     }
 
     // B1
@@ -195,19 +196,11 @@ public class SearchBuilderTests : PlaywrightTestBase
     public async Task Enter_runs_one_search()
     {
         await OpenAsync("Builder_EnterOnce.html");
-        await Page.EvaluateAsync("() => { window.__runs = 0; const run = window.run_search_scenarios; window.run_search_scenarios = function () { window.__runs++; return run.apply(this, arguments); }; }");
+        // the search's own run (5.12.0); the filter field's Enter is FilterBoxTests' Enter_in_the_filter_field_filters_once
+        await Page.EvaluateAsync("() => { window.__runs = 0; const run = window.run_search_query; window.run_search_query = function () { window.__runs++; return run.apply(this, arguments); }; }");
 
-        // the report's search input, whichever it is: the builder's, or before it the box's field
-        if (await Page.Locator("#search-button").CountAsync() > 0)
-        {
-            await OpenBuilderAsync();
-            await Input.FillAsync("toast");
-        }
-        else
-        {
-            await OpenFilterRowsAsync();
-            await Page.Locator("#searchbar").FillAsync("toast");
-        }
+        await OpenBuilderAsync();
+        await Input.FillAsync("toast");
         await Page.Keyboard.PressAsync("Enter");
         await Page.WaitForTimeoutAsync(600);
 
@@ -262,6 +255,38 @@ public class SearchBuilderTests : PlaywrightTestBase
         Assert.Contains("q-bad=abc", spans);
         Assert.True(await Page.EvaluateAsync<bool>("() => document.querySelector('.search-input-row').classList.contains('has-bad')"));
         Assert.True(await Page.EvaluateAsync<bool>("() => document.querySelector('.search-input-wrap').classList.contains('is-coloured')"));
+    }
+
+    // 5.12.0: the coloured copy over the input draws each word where the input has it, every space kept. Laid out as a flex
+    // box, the copy dropped the space after a coloured part, so the word after dep:Clickhouse sat against the value
+    [Theory]
+    [InlineData("dep:Clickhouse foo", "foo")]
+    [InlineData("toast && status:failed waffle", "waffle")]
+    [InlineData("tag:smoke -tag:slow pancake", "pancake")]
+    public async Task The_coloured_draft_draws_each_word_where_the_input_has_it(string draft, string last)
+    {
+        await OpenAsync($"Builder_Spaces{draft.Length}.html");
+        await OpenBuilderAsync();
+        await Input.FillAsync(draft);
+        await Expect(Page.Locator(".search-input-wrap")).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("\\bis-coloured\\b"));
+
+        // the input's own place for the last word, measured in its font, less the copy's
+        var off = await Page.EvaluateAsync<double>("""
+            ([draft, last]) => {
+                const input = document.getElementById('search-input'), mirror = document.querySelector('.search-mirror');
+                const cs = getComputedStyle(input), ctx = document.createElement('canvas').getContext('2d');
+                ctx.font = cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily;
+                const want = ctx.measureText(draft.slice(0, draft.lastIndexOf(last))).width;
+                const walk = document.createTreeWalker(mirror, NodeFilter.SHOW_TEXT);
+                let node = null;
+                for (let n = walk.nextNode(); n; n = walk.nextNode()) if (n.nodeValue.endsWith(last)) node = n;
+                const r = document.createRange();
+                r.setStart(node, node.nodeValue.length - last.length);
+                r.setEnd(node, node.nodeValue.length);
+                return r.getBoundingClientRect().left - mirror.getBoundingClientRect().left + mirror.scrollLeft - want;
+            }
+            """, new object[] { draft, last });
+        Assert.InRange(off, -1, 1);
     }
 
     // B7: an exported page has no search to open, so / is the browser's (its quick find in Firefox), not swallowed
@@ -344,13 +369,13 @@ public class SearchBuilderTests : PlaywrightTestBase
     [Fact]
     public async Task Escape_closes_the_builder_drops_the_draft_and_focuses_the_search_box()
     {
-        await OpenAsync("Builder_Escape.html", hash: "#q=toast");
+        await OpenAsync("Builder_Escape.html", hash: "#search=toast");
         await OpenBuilderAsync();
         await Input.FillAsync("waffle");
         await Page.Keyboard.PressAsync("Escape");
 
         await Page.WaitForFunctionAsync("() => !document.getElementById('search-dialog').open", null, new() { PollingInterval = 200 });
-        await Expect(Page.Locator("#searchbar")).ToHaveValueAsync("toast");
+        Assert.Equal("toast", await Page.EvaluateAsync<string>("() => search_query()"));
         await Expect(Page.Locator("#search-button")).ToBeFocusedAsync();
         await OpenBuilderAsync();
         await Expect(Input).ToHaveValueAsync("toast");
@@ -415,10 +440,10 @@ public class SearchBuilderTests : PlaywrightTestBase
         await OpenBuilderAsync();
         await Input.FillAsync("toast");
         await Page.Keyboard.PressAsync("Enter");
-        await Page.WaitForFunctionAsync("() => location.hash.includes('q=toast')", null, new() { PollingInterval = 200 });
+        await Page.WaitForFunctionAsync("() => location.hash.includes('search=toast')", null, new() { PollingInterval = 200 });
         // the search took the builder's entry: Back leaves the search, and does not reopen the builder
         await Page.GoBackAsync();
-        await Page.WaitForFunctionAsync("() => !location.hash.includes('q=')", null, new() { PollingInterval = 200 });
+        await Page.WaitForFunctionAsync("() => !location.hash.includes('search=')", null, new() { PollingInterval = 200 });
         Assert.False(await BuilderOpen());
     }
 
@@ -428,8 +453,8 @@ public class SearchBuilderTests : PlaywrightTestBase
     {
         await OpenAsync("Builder_Recent.html");
         var before = await Page.EvaluateAsync<string>("() => JSON.stringify(Object.keys(localStorage).concat(Object.keys(sessionStorage)).sort())");
-        await FillSearchBar("toast");
-        await FillSearchBar("waffle");
+        await FillSearchBar("toast", toSearchTab: true);
+        await FillSearchBar("waffle", toSearchTab: true);
         await OpenBuilderAsync();
         await Input.FillAsync("");
 
@@ -483,35 +508,18 @@ public class SearchBuilderTests : PlaywrightTestBase
         Assert.Equal("rgba(0, 0, 0, 0)", await Input.EvaluateAsync<string>("e => getComputedStyle(e).color"));
     }
 
-    // QB23
-    [Theory]
-    [InlineData("features")]
-    [InlineData("timeline")]
-    public async Task The_filter_row_applies_the_query_and_stays_on_the_tab(string tab)
-    {
-        await OpenAsync($"Builder_FilterRow_{tab}.html");
-        await OpenReportTabAsync(tab);
-        await OpenBuilderAsync();
-        await Input.FillAsync("toast");
-        await Options.Filter(new() { HasTextRegex = new Regex("^Filter the ") }).First.ClickAsync();
-
-        await Page.WaitForFunctionAsync("() => location.hash.includes('q=toast')", null, new() { PollingInterval = 200 });
-        Assert.Equal(tab, await Page.EvaluateAsync<string>("() => document.querySelector('.report-tab[aria-selected=true]').dataset.tab"));
-        await Expect(Page.Locator("#search-button")).ToBeFocusedAsync();
-    }
-
-    // QB24
+    // QB24, 5.12.0: a jump leaves the search as it is, since a search hides nothing (the owner: a search is no filter);
+    // one the box's filters hide lands on the note for a hidden scenario
     [Fact]
-    public async Task Jump_to_a_scenario_only_the_query_hides_clears_the_query_and_says_so()
+    public async Task A_jump_leaves_the_search_and_one_the_filters_hide_lands_on_their_note()
     {
-        await OpenAsync("Builder_JumpHidden.html", hash: "#q=toast");
+        await OpenAsync("Builder_JumpHidden.html", hash: "#search=toast");
         await OpenBuilderAsync();
         await Input.FillAsync("waffle is made");
         await Options.Filter(new() { HasText = "A waffle is made" }).First.ClickAsync();
 
-        await Expect(Page.Locator("#searchbar")).ToHaveValueAsync("");
         await Page.WaitForFunctionAsync("() => [...document.querySelectorAll('details.scenario')].some(s => s.open && s.textContent.includes('A waffle is made') && s.style.display !== 'none')", null, new() { PollingInterval = 200 });
-        await Expect(Page.Locator(".kron-nav-status")).ToContainTextAsync("search was cleared");
+        Assert.Equal("toast", await Page.EvaluateAsync<string>("() => search_query()"));
 
         // one the box's filters hide lands on the note for a hidden scenario
         await OpenAsync("Builder_JumpFiltered.html", hash: "#status=Failed");
@@ -525,7 +533,7 @@ public class SearchBuilderTests : PlaywrightTestBase
     [Fact]
     public async Task The_builder_opens_holding_the_applied_query_selected()
     {
-        await OpenAsync("Builder_Holds.html", hash: "#q=toast");
+        await OpenAsync("Builder_Holds.html", hash: "#search=toast");
         await OpenBuilderAsync();
 
         await Expect(Input).ToHaveValueAsync("toast");

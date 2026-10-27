@@ -346,13 +346,11 @@ public class BackForwardRestoreTests : BackForwardTestBase
             var frame = page.Frames.First(f => f != page.MainFrame);
             await frame.Locator("details.feature").First.WaitForAsync(new() { Timeout = 60000 });
             await frame.WaitForFunctionAsync("() => !!document.documentElement.getAttribute('data-kron-nav')", null, new() { PollingInterval = 200, Timeout = 30000 });
-            // the box opens with the bar's Filters, and the search is the query builder's (plans/SEARCH_PLAN.md F3, 4.3):
-            // its row that filters the list on screen applies the query there
+            // the box opens with the bar's Filters (plans/SEARCH_PLAN.md F3), and its field filters the list
             await frame.Locator(".nav-filters-toggle").ClickAsync();
             await frame.Locator(".status-toggle[data-status='Failed']").ClickAsync();
-            await frame.Locator("#search-button").ClickAsync();
-            await frame.Locator("#search-input").FillAsync("Scenario 02.1");
-            await frame.Locator("#search-suggestions .search-option-filter").First.ClickAsync();
+            await frame.Locator("#filtering-box #searchbar").FillAsync("Scenario 02.1");
+            await frame.Locator("#filtering-box #searchbar").PressAsync("Enter");
 
             var opened = frame.Locator("details.scenario", new() { HasTextString = "Scenario 02.1" }).First;
             await frame.WaitForFunctionAsync("() => [...document.querySelectorAll('details.scenario')].some(s => s.open && s.textContent.includes('Scenario 02.1'))",
@@ -460,6 +458,22 @@ public class BackForwardRestoreTests : BackForwardTestBase
         await Page.Locator("#search-button").ClickAsync();
         await Page.Locator("#search-input").PressSequentiallyAsync("Scenario 07");
         await Page.Locator("#search-input").PressAsync("Enter");
+        await Page.WaitForFunctionAsync("() => location.hash.indexOf('search=Scenario') >= 0", null, new() { PollingInterval = 200 });
+
+        await BackAsync();
+        await StillInTheReportAsync("Back right after Enter");
+        Assert.Equal("", await Page.EvaluateAsync<string>("() => search_query()"));
+        Assert.Equal("", await HashAsync());
+    }
+
+    [Fact]
+    public async Task R14_The_filter_field_writes_at_once_on_Enter_so_Back_right_after_it_undoes_the_filter()
+    {
+        await OpenAsync(GenerateLongReport("BackNav_R14_Field.html"));
+        await OpenFilterRowsAsync();
+        // the field waits 300 ms after a key and Enter runs it at once (5.2.0); the field is back in the box in 5.12.0
+        await Page.Locator("#filtering-box #searchbar").PressSequentiallyAsync("Scenario 07");
+        await Page.Locator("#filtering-box #searchbar").PressAsync("Enter");
         await Page.WaitForFunctionAsync("() => location.hash.indexOf('q=Scenario') >= 0", null, new() { PollingInterval = 200 });
 
         await BackAsync();

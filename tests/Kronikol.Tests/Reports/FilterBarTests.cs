@@ -87,7 +87,7 @@ public class FilterBarTests
             "<div class=\"nav-row\"><div class=\"report-tabs\" role=\"tablist\"",
             "</div><div class=\"nav-filters\" role=\"group\" aria-label=\"Filters\">"
             + "<span class=\"nav-readout\" aria-hidden=\"true\" title=\"The scenarios and features the filters leave showing\"><span class=\"nav-readout-long\">All 2 scenarios, 1 feature</span><span class=\"nav-readout-short\">All 2 scenarios</span></span>"
-            + "<button type=\"button\" class=\"nav-clear\" title=\"Clear every filter: the search with its tag:, status:, feature:, dep:, duration: and is: terms, and the statuses, duration, happy paths and tags\" hidden>Clear All</button>"
+            + "<button type=\"button\" class=\"nav-clear\" title=\"Clear every filter: the filter text with its tag:, status:, feature:, dep:, duration: and is: terms, and the statuses, duration, happy paths and tags\" hidden>Clear All</button>"
             + "<button type=\"button\" class=\"nav-filters-toggle\" aria-expanded=\"false\" aria-controls=\"filtering-box\" aria-label=\"Filters\" title=\"Show the filters\"><svg ",
             "</svg><span>Filters</span><span class=\"filters-count\" aria-hidden=\"true\" hidden></span></button></div></div>",
             "<div class=\"nav-status\" role=\"status\">All 2 scenarios, 1 feature</div>",
@@ -116,7 +116,7 @@ public class FilterBarTests
             "onclick=\"export_csv()\" title=\"Download the scenarios the filters show as a CSV file: feature, scenario, status and duration in milliseconds\">",
             "<button type=\"button\" class=\"filters-close\" aria-label=\"Hide the filters\" title=\"Hide the filters (Esc)\"><svg ",
             "</svg></button></div></div>",
-            "<div class=\"box-search\" hidden>");
+            "<div class=\"filter-search\"><span class=\"search-field\"><input id=\"searchbar\" ");
     }
 
     [Fact]

@@ -70,19 +70,24 @@ public class SearchButtonMarkupTests
         Assert.Equal("Clear the search; the filters stay as they are", page.QuerySelector("#search-clear")!.GetAttribute("title"));
     }
 
-    // 4.1: the applied query stays where every script reads it, a hidden field now; the box keeps no search line
+    // 5.12.0 (the owner: a search is no filter): the filter field is back in the box with its ? and its syntax, as until
+    // 5.10.1, and filters on input (B1, B2); the search keeps its query to itself, with no field in the page
     [Fact]
-    public void The_applied_query_is_a_hidden_field_and_the_box_has_no_search_line()
+    public void The_filter_field_is_in_the_box_and_the_search_keeps_no_field()
     {
-        var page = Parse(Generate("SearchButton_Hidden.html"));
+        var page = Parse(Generate("SearchButton_Field.html"));
 
         var field = page.QuerySelector("#searchbar")!;
-        Assert.Equal("hidden", field.GetAttribute("type"));
+        Assert.Same(field, page.QuerySelector("#filtering-box .filter-search > .search-field > #searchbar"));
+        Assert.Null(field.GetAttribute("type"));
         Assert.Equal("off", field.GetAttribute("autocomplete"));
-        Assert.Null(page.QuerySelector("#filtering-box #searchbar"));
-        Assert.Null(page.QuerySelector("#filtering-box .filter-search"));
-        Assert.Null(page.QuerySelector("#filtering-box .search-help-toggle"));
-        Assert.Null(page.QuerySelector(".search-help-panel"));
+        Assert.Equal("search_scenarios()", field.GetAttribute("oninput"));
+        Assert.Null(field.GetAttribute("onkeyup"));
+        Assert.StartsWith("Filter...", field.GetAttribute("placeholder"));
+        Assert.Null(page.QuerySelector(".search-box input"));
+        Assert.NotNull(page.QuerySelector("#filtering-box .filter-search > .search-help-toggle"));
+        Assert.NotNull(page.QuerySelector("#filter-rows > .search-help-panel[style='display:none'] > table.search-tips-table"));
+        Assert.Null(page.QuerySelector(".box-search"));
     }
 
     // 4.3.1, 4.3.2, 4.3.4: a native dialog, labelled; its input a combobox over a listbox; a polite live region

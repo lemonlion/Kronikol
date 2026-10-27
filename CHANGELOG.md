@@ -4,6 +4,98 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.12.0] - 2026-10-27
+
+The minor part moves (5.11.1 to 5.12.0): the filter field is a report control again, and the search has an address
+key of its own, `search=`. Everything else is a fix.
+
+### Changed
+
+- **A search no longer filters.** 5.11.0 ran the search through the filter: its query was the filter's, so a result
+  picked on the Search tab left the Features tab reading "Filtered 27 of 782 scenarios", and the Search tab's sidebar
+  was the filter box's own buttons. A search and a filter are now two things:
+  - The search reads every scenario, whatever the filters hide, and lists what it found on the Search tab. A result
+    picked goes to its scenario, with the Features list as the filters leave it; a result the filters hide lands on the
+    note that says so, as any link to a hidden scenario does, and the way to the match waits for the note's button,
+    which shows the scenario and then the match.
+  - The Search tab's Status, Tags and Dependencies narrow the search, as GitHub's sidebar does: a click writes
+    `status:`, `tag:` or `dep:` into the search's query, a second click takes it out, and × leaves them out (`-tag:`,
+    `-dep:`). A row narrows the whole query, whatever operators it holds: a query with `||` outside its brackets goes
+    in brackets first, a legacy tag expression's `and`, `or` and `not` become `&&`, `||` and `!!`, and an operator a
+    row would leave dangling goes with it, so a second click puts the query back. A row is on while its qualifier
+    narrows the whole search, and a dependency's row counts what its click keeps, as `dep:` also matches a name inside
+    a longer one. The filter box is not touched.
+  - While the Search tab shows, the filter box, Filters, the readout and Clear All are out of sight. They come back as
+    they were on any other tab.
+  - The search's query goes in the address as `search=`. `q=` is the filter field's again, as it was until 5.11.0. A
+    5.11.0 link to the Search tab, or to a match it listed, whose `q=` was the search, still opens as that search.
+  - The Search tab's two exports hold its results, whatever the filters show.
+  - A jump from the query builder to a scenario leaves the search as it is. Until now it cleared the search when the
+    search alone hid the scenario.
+
+### Added
+
+- **The filter field is back in the filter box**, as it was until 5.10.1. The box is still hidden when the page opens;
+  once Filters opens it, the field filters the Features list as it is typed, its **?** shows the syntax at the top of
+  the box (a pinned bar still takes at most 60% of the window, and the box scrolls inside), and the deep search's note
+  sits inside it. It runs on input, so a paste or a drop filters at once and Enter runs it once (5.10.1 ran it twice on
+  Enter). Filters counts its text as one filter on, and Clear All empties it and leaves the search. Clear All in the
+  "No scenarios match" note puts the focus back in the field, or on Filters while the box is closed (5.11.0 put it on
+  the search button).
+- `search=`, the search's own address key (above).
+
+### Removed
+
+- The query builder's row that filtered the tab on screen with the draft, and on a phone its Filters button: both were
+  filter controls inside the search.
+- The filter box's line for the applied search (5.11.0), with its own clear: the field shows the filter's query, and
+  the search's query is not the box's.
+- The Search tab's note counting the results the filters hid, with its Clear: the filters no longer hide results.
+
+### Fixed
+
+- On the Search tab, while the filter box was open, a short list of results had a window's height of blank page under
+  it: the list under an open box keeps that height so a short result cannot pull a pinned bar back down, and the box
+  is out of sight there.
+- The Search tab's sidebar rows could stick on or off. Each row stood for the filter box's button as it was when the
+  sidebar was drawn, and a click that left the results unchanged redrew nothing, so the next click read the old state.
+  A row is now on exactly while the search's query names it.
+- In the query builder, a word typed after a coloured value, as `foo` in `dep:Clickhouse foo`, sat against the value.
+  The coloured copy laid over the input is a flex box, which dropped the space between two of its parts; the copy's
+  text is now one inline line inside it.
+- The magnifier before the Search tab's name sat 2.5 px above the name's middle and touched its S. It is level with the
+  name, 6 px before it.
+- On a phone, with the page's text spaced out (WCAG text spacing) or drawn in a wide font such as DejaVu Sans, the
+  default on Linux, the duration filter's buttons broke their labels in two inside the button: "P50 (400ms)" took two
+  lines, as each button had half the row however wide its label was. They now go two to a line where both labels fit
+  whole, and one to a line where they do not. CI found it on Linux for 5.11.0, where the filter box, with every row
+  showing, moved into the report bar.
+
+### Tests
+
+- `SearchApartTests` (new) holds the two apart: the search leaves the Features list whole, a result picked goes to it,
+  the field leaves the search alone, the search reads every scenario, a result the filters hide lands on their note,
+  the filters are out of sight on the Search tab, each sidebar row narrows the search and a second click takes it out
+  (twice over, so a row that sticks fails), the builder has no filtering row, the address keeps `search=` and `q=`
+  apart, a 5.11.0 link still opens its search, the Search tab's export holds its results, and the tab's magnifier sits
+  level with its name. `FilterBoxTests` adds the field's facts: in the box and wholly in view at 1400 and 390 px,
+  filtering as typed, text put in with no key, Enter once, its **?**, and Clear All leaving the search.
+  `SearchBuilderTests` checks that the coloured copy draws each word where the input has it.
+- `SearchApartTests` also holds the sidebar with operators: a row narrows `tag:smoke || status:failed` and a legacy
+  `@smoke or @api` and a second click puts each back, a row beside `&&` or after `!!` comes out whole, and a
+  dependency's row counts what its click keeps; and the way to a match the filters hide waits for the note's button,
+  a 5.11.0 link to a match opens as its search, and the Search tab has no blank page under its results.
+  `FilterBoxTests` adds the field's syntax in a pinned box, and its Enter fact now types its keys, as a field that ran
+  on keyup ran twice only for keys typed. `FilterBarTests` checks where Clear All puts the focus, and
+  `SearchBuilderEngineTests` (Firefox and WebKit) reads the search's own query.
+- The facts that pinned 5.11.0's coupling now pin the separation: the sidebar rows write qualifiers (`SearchTabTests`
+  R7, R8, R20, R25, R31), the search button and the builder read `search=` (`SearchButtonTests`, `SearchBuilderTests`
+  QB24, QB25), the word typed in the field is one entry again (`BackForwardFilterTests` F2), and the deep chip is back
+  in the field (`FilterBarTests`).
+- `ViewportSweepTests` also sweeps the report with every section under WCAG text spacing in a font as wide as Linux's
+  (Verdana, or DejaVu Sans where it is installed), so the fault shows on Windows too: it failed at 320 and 340 px before
+  the fix.
+
 ## [5.11.1] - 2026-10-27
 
 The patch part moves (5.11.0 to 5.11.1): fixes to SQL capture, nothing new to call. Several fixes change what a report
@@ -66,6 +158,7 @@ the harness.
 - The arrow of a connection that cannot name its data source is drawn against `localhost` by the EF Core interceptor.
 
 Nothing here changes how a report is drawn, so Kronikol4J's byte parity is unaffected.
+
 
 ## [5.11.0] - 2026-10-26
 

@@ -153,6 +153,17 @@ function export_html() {
     }
     export_download(html);
 }
+// The Search tab's exports (5.12.0): its results, whatever the filters show. The page is shown as the search leaves it
+// for the copy alone, then as the filters leave it again, before it paints.
+function export_search(kind) {
+    var c = fc();
+    show_items(c, function (d) { return d.xq || d.xs; });
+    try {
+        if (kind === 'csv') export_csv(); else export_html();
+    } finally {
+        applyVisibility(c);
+    }
+}
 function export_download(html) {
     var blob = new Blob([html], { type: 'text/html' });
     var a = document.createElement('a');

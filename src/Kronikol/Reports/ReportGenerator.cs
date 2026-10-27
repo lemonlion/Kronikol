@@ -1941,8 +1941,9 @@ public static class ReportGenerator
         body.Append($"""
                  <div class="filtering-box" id="filtering-box" role="region" aria-label="Filters" tabindex="-1" hidden>
                     <div class="filtering-box-header"><h2>Filtering</h2><div class="filtering-box-export"><span class="filter-readout" aria-hidden="true" title="{FiltersLeaveShowing}">{readoutText}</span><button class="export-btn" onclick="clear_all_filters()" title="{clearTitle}">Clear All</button><button class="export-btn" onclick="export_html()" title="Download a copy of this report holding only the features the filters show">Export <span class="wide-only">Filtered </span>HTML</button><button class="export-btn" onclick="export_csv()" title="Download the scenarios the filters show as a CSV file: feature, scenario, status and duration in milliseconds">Export <span class="wide-only">Filtered </span>CSV</button>{FiltersClose}</div></div>
-                    {BoxSearch}
+                    {FilterField}
                     <div class="filters" id="filter-rows">
+                    {FilterHelp}
                     <div class="filter-row">
                  """);
 
@@ -3148,13 +3149,13 @@ public static class ReportGenerator
         $"<button type=\"button\" class=\"group-clear\" title=\"Clear the {noun} filters\" hidden>Clear</button>";
 
     /// <summary>
-    /// What Clear All clears (5.0.0, plans/OPTION_C_PLAN.md D49): the search, with the qualifiers in it (5.11.0 adds tag:,
-    /// status: and feature: to dep:, duration: and is:),
-    /// and every row the box has, in their order: Status always, then Duration, Happy paths, Tags and Dependencies where the
-    /// box has them.
+    /// What Clear All clears (5.0.0, plans/OPTION_C_PLAN.md D49): the filter field's text, with the qualifiers in it (5.11.0
+    /// adds tag:, status: and feature: to dep:, duration: and is:), and every row the box has, in their order: Status
+    /// always, then Duration, Happy paths, Tags and Dependencies where the box has them. The search is no filter and stays
+    /// (5.12.0).
     /// </summary>
     private static string ClearAllTitle(Feature[] features, bool hasDurations, bool hasDependencies) =>
-        "Clear every filter: the search with its tag:, status:, feature:, dep:, duration: and is: terms, and the "
+        "Clear every filter: the filter text with its tag:, status:, feature:, dep:, duration: and is: terms, and the "
         + Listed(FilterRows(features, hasDurations, hasDependencies, "statuses"));
 
     /// <summary>The rows the filter box has, in their order, the first named <paramref name="status"/>.</summary>
@@ -3192,14 +3193,15 @@ public static class ReportGenerator
     /// <summary>
     /// The search on the title line (plans/SEARCH_PLAN.md 4.2): GitHub's button drawn as a text box, "Type / to search",
     /// which opens the query builder; once a search is applied it shows the query (report-search-ui-script.js), and its
-    /// clear, beside it in the box since a button cannot hold a button, empties the query and nothing else. The applied
-    /// query itself stays where every script reads it, the hidden #searchbar (4.1).
+    /// clear, beside it in the box since a button cannot hold a button, empties the query and nothing else. The search's
+    /// query is its own (report-search-function.js's search_query), never the filter field's #searchbar: a search is no
+    /// filter (the owner, 2026-10-27).
     /// </summary>
     internal const string SearchBox =
         """<span class="search-box"><button type="button" class="search-button" id="search-button" aria-haspopup="dialog" aria-expanded="false" aria-controls="search-dialog" aria-keyshortcuts="/" aria-label="Search or jump to, type / to search" title="Search this report, or jump to a scenario or a feature (/)">"""
         + SearchIcon + """<span class="search-button-hint">Type <kbd aria-hidden="true">/</kbd> to search</span><span class="search-button-query" hidden></span></button>"""
         + """<button type="button" class="search-clear" id="search-clear" aria-label="Clear the search" title="Clear the search; the filters stay as they are" hidden>"""
-        + ClearIcon + """</button><input type="hidden" id="searchbar" autocomplete="off" /></span>""";
+        + ClearIcon + """</button></span>""";
 
     private const string SearchIcon =
         """<svg class="search-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="7" cy="7" r="4.6"/><path d="M10.4 10.4l3.6 3.6"/></svg>""";
@@ -3223,8 +3225,7 @@ public static class ReportGenerator
         + """<ul id="search-suggestions" class="search-suggestions" role="listbox" aria-label="Suggestions"></ul>"""
         + """<div id="search-tips" class="search-tips" hidden>""" + SearchTips + """</div>"""
         + """<div class="search-live search-visually-hidden" role="status" aria-live="polite" aria-atomic="true"></div>"""
-        + """<div class="search-foot"><button type="button" class="search-tips-toggle" aria-expanded="false" aria-controls="search-tips" title="How to write a search: the forms, and what each search reads">Search syntax tips</button>"""
-        + """<button type="button" class="search-foot-filters" title="Close the search and open the filters" hidden><span>Filters</span><span class="filters-count" aria-hidden="true" hidden></span></button></div>"""
+        + """<div class="search-foot"><button type="button" class="search-tips-toggle" aria-expanded="false" aria-controls="search-tips" title="How to write a search: the forms, and what each search reads">Search syntax tips</button></div>"""
         + """</div></dialog>""";
 
     /// <summary>The Search tab (plans/SEARCH_PLAN.md 4.5.1): last in the bar, a magnifier before its name and its count of
@@ -3242,13 +3243,19 @@ public static class ReportGenerator
         + """<aside class="search-sidebar" aria-label="Refine the results"></aside>"""
         + """<section class="search-main" aria-labelledby="search-count"><div class="search-progress" hidden></div><div class="search-phone-row"></div>"""
         + """<div class="search-head"><h2 id="search-count" class="search-count" tabindex="-1"></h2><span class="search-time"></span><span class="search-head-tools"></span></div>"""
-        + """<div class="search-warning" hidden></div><div class="search-filtered-note" hidden></div><div class="search-list"></div>"""
+        + """<div class="search-warning" hidden></div><div class="search-list"></div>"""
         + """<nav class="search-pages" aria-label="Pagination"></nav><p class="search-protip">Press <kbd>/</kbd> to search again and change the query.</p>"""
         + """</section></div></div>""";
 
     /// <summary>The syntax tips (plans/SEARCH_PLAN.md 4.3.5): the forms of 4.4 first, the older forms beside them, then what
     /// the instant search reads and what only deep search reads.</summary>
-    private const string SearchTips =
+    private const string SearchTips = QueryForms
+        + """<p class="search-tips-note"><code>feature:</code>, <code>dep:</code>, <code>duration:</code> and <code>is:</code> always narrow the search: they combine with the rest of it by AND, and can be left out with <code>-</code>, <code>!!</code> or <code>not</code>. Inside a group that <code>!!</code> or <code>not</code> negates, one is read as text, and the search says so.</p>"""
+        + """<p class="search-tips-note">At once, the search reads names, descriptions, tags, steps, example values, error messages, the services a scenario calls and the paths of its HTTP calls. Once a word has three letters it also reads payloads, headers, SQL, whole diagrams and stack traces, which can take a moment on a large report. Without <code>&amp;&amp;</code>, <code>||</code> or <code>!!</code>, tag expressions such as <code>@a and @b or not @c</code> work too. Press <kbd>/</kbd> to search from anywhere in the report.</p>""";
+
+    /// <summary>The forms a query is written in, the same for the search and the filter field (plans/SEARCH_PLAN.md 4.4):
+    /// the table the builder's tips and the field's ? both show.</summary>
+    private const string QueryForms =
         """<table class="search-tips-table"><thead><tr><th>Write</th><th>To find</th><th>For example</th></tr></thead><tbody>"""
         + """<tr><td><code>word</code></td><td>Scenarios holding every word</td><td><code>pancake flour</code></td></tr>"""
         + """<tr><td><code>"phrase"</code></td><td>The words together, as written</td><td><code>"create order"</code></td></tr>"""
@@ -3260,9 +3267,7 @@ public static class ReportGenerator
         + """<tr><td><code>is:happy</code></td><td>Happy paths</td><td><code>is:happy</code></td></tr>"""
         + """<tr><td><code>-key:value</code></td><td>Leaves those out, as <code>!!</code> before it does</td><td><code>-tag:slow</code>, <code>-status:passed</code></td></tr>"""
         + """<tr><td><code>&amp;&amp;</code> <code>||</code> <code>!!</code> <code>( )</code></td><td>And, or, not, and grouping</td><td><code>(payment || order) &amp;&amp; !!refund</code></td></tr>"""
-        + """</tbody></table>"""
-        + """<p class="search-tips-note"><code>feature:</code>, <code>dep:</code>, <code>duration:</code> and <code>is:</code> always narrow the search: they combine with the rest of it by AND, and can be left out with <code>-</code>, <code>!!</code> or <code>not</code>. Inside a group that <code>!!</code> or <code>not</code> negates, one is read as text, and the search says so.</p>"""
-        + """<p class="search-tips-note">At once, the search reads names, descriptions, tags, steps, example values, error messages, the services a scenario calls and the paths of its HTTP calls. Once a word has three letters it also reads payloads, headers, SQL, whole diagrams and stack traces, which can take a moment on a large report. Without <code>&amp;&amp;</code>, <code>||</code> or <code>!!</code>, tag expressions such as <code>@a and @b or not @c</code> work too. Press <kbd>/</kbd> to search from anywhere in the report.</p>""";
+        + """</tbody></table>""";
 
     /// <summary>The button that reaches the search from anywhere down a phone's page (plans/SEARCH_PLAN.md 4.2, Q7, B15):
     /// the bar stays in the page on a phone, so once the title line is out of view this floats above back-to-top.</summary>
@@ -3271,13 +3276,22 @@ public static class ReportGenerator
         + SearchIcon + """</button>""";
 
     /// <summary>
-    /// The box's line for the applied search (plans/SEARCH_PLAN.md F10): the search is the filter most often on, and once
-    /// its field left the box nothing in it said so. Hidden while no search is applied; its clear clears the search alone
-    /// (report-filter-bar-script.js), where Clear All clears it with the rest.
+    /// The filter field (5.0.0 to 5.10.1, back in 5.12.0 at the owner's word: the filter section hidden when the page opens,
+    /// its field in it as before). It filters the Features list as it is typed: report-search-function.js's search_scenarios
+    /// runs on input, so a paste or a drop is read at once, and Enter runs it once (B1, B2). The ? beside it shows the
+    /// syntax, and the deep search's chip sits inside it. Its query is the filter's own; the search on the title line has
+    /// another.
     /// </summary>
-    private const string BoxSearch =
-        """<div class="box-search" hidden><span class="box-search-label">Search</span><span class="box-search-query"></span><button type="button" class="box-search-clear" aria-label="Clear the search" title="Clear the search; the other filters stay as they are"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button></div>""";
+    private const string FilterField =
+        """<div class="filter-search"><span class="search-field"><input id="searchbar" autocomplete="off" placeholder="Filter... (@tag, $status, dep:, duration:, &&, ||, !!)" oninput="search_scenarios()" title="Filter the scenarios by the words in their names, descriptions, tags, steps and errors, and, once a word has three letters, their payloads, SQL and diagrams. Combine words with &amp;&amp; (and), || (or) and !! (not); tag:, status:, feature:, dep:, duration: and is:happy narrow by tag, status, feature, dependency, time and happy path; ? shows the syntax" /></span>"""
+        + """<button type="button" class="search-help-toggle" onclick="toggle_search_help()" title="How to write a filter: words, &quot;phrases&quot;, tag:, status:, feature:, dep:, duration:, is:happy, &amp;&amp;, ||, !! and parentheses">?</button></div>""";
 
+    /// <summary>The filter field's syntax, shown and hidden by its ?: the forms the search's tips show, and what the filter
+    /// reads.</summary>
+    private const string FilterHelp =
+        """<div class="search-help-panel" style="display:none">""" + QueryForms
+        + """<p class="search-help-note"><code>feature:</code>, <code>dep:</code>, <code>duration:</code> and <code>is:</code> always narrow the filter: they combine with the rest of it by AND, and can be left out with <code>-</code>, <code>!!</code> or <code>not</code>. Inside a group that <code>!!</code> or <code>not</code> negates, one is read as text, and the field's edge turns amber.</p>"""
+        + """<p class="search-help-note">At once, the filter reads names, descriptions, tags, steps, example values, error messages, the services a scenario calls and the paths of its HTTP calls. Once a word has three letters it also reads payloads, headers, SQL, whole diagrams and stack traces, which can take a moment on a large report; the note inside the field says when that is done. Without <code>&amp;&amp;</code>, <code>||</code> or <code>!!</code>, tag expressions such as <code>@a and @b or not @c</code> work too.</p></div>""";
 
     /// <summary>
     /// The report bar's filters (S7, D24): a copy of the readout, long and short, seen and not heard (the bar's status

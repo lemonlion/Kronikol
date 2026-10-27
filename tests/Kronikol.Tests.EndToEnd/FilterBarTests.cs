@@ -117,10 +117,12 @@ public class FilterBarTests : PlaywrightTestBase
 
     // 4.3.5: the search's help is the query builder's tips; the box keeps no help of its own
     [Fact]
-    public async Task The_search_help_is_the_builder_s_tips_and_not_in_the_box()
+    public async Task The_search_s_help_is_the_builder_s_tips_and_the_filter_field_s_is_its_own()
     {
         await OpenAsync("FilterBar_Help.html");
-        await Expect(Page.Locator(".filtering-box .search-help-toggle, .filtering-box .search-help-panel")).ToHaveCountAsync(0);
+        // the filter field's ?, in the box with the field (5.12.0); the search's tips are the builder's
+        await Expect(Page.Locator(".filtering-box .filter-search .search-help-toggle")).ToHaveCountAsync(1);
+        await Expect(Page.Locator(".filtering-box .search-help-panel")).ToHaveCountAsync(1);
 
         await Page.Locator("#search-button").ClickAsync();
         await Page.Locator(".search-tips-toggle").ClickAsync();
@@ -202,21 +204,24 @@ public class FilterBarTests : PlaywrightTestBase
     }
 
     [Fact]
-    public async Task No_scenario_left_shows_the_empty_state_whose_Clear_All_returns_to_the_search()
+    public async Task No_scenario_left_shows_the_empty_state_whose_Clear_All_returns_to_the_filter_field()
     {
         await OpenAsync("FilterBar_Empty.html");
         var empty = Page.Locator(".filters-empty");
         await Expect(empty).ToBeHiddenAsync();
 
-        await FillSearchBar("nothing-matches-this");
+        // typed in the open box's field
+        await Page.Locator(".nav-filters-toggle").ClickAsync();
+        await Page.Locator("#filtering-box #searchbar").FillAsync("nothing-matches-this");
         await Expect(empty).ToBeVisibleAsync();
         await Expect(empty).ToContainTextAsync("No scenarios match the filters.");
 
-        // Clear All, and the focus goes to the search, which is the search button since the search left the box (4.2)
+        // Clear All, and the focus goes back to the filter field, as until 5.11.0 (5.12.0: 5.11.0 sent it to the search,
+        // which then held the filter's text)
         await Page.Locator(".filters-empty-clear").ClickAsync();
         await Expect(empty).ToBeHiddenAsync();
         await Expect(Page.Locator("#searchbar")).ToHaveValueAsync("");
-        await Expect(Page.Locator("#search-button")).ToBeFocusedAsync();
+        await Expect(Page.Locator("#filtering-box #searchbar")).ToBeFocusedAsync();
     }
 
     // A page with nothing beside its features (here a run without durations, as the Specifications report is where no
@@ -237,10 +242,11 @@ public class FilterBarTests : PlaywrightTestBase
         await Expect(empty).ToBeVisibleAsync();
         await Expect(empty).ToContainTextAsync("No scenarios match the filters.");
 
+        // with the box closed again, to Filters, which opens it (5.12.0)
         await Page.Locator(".filters-empty-clear").ClickAsync();
         await Expect(empty).ToBeHiddenAsync();
         await Expect(Page.Locator("#searchbar")).ToHaveValueAsync("");
-        await Expect(Page.Locator("#search-button")).ToBeFocusedAsync();
+        await Expect(Page.Locator(".nav-filters-toggle")).ToBeFocusedAsync();
     }
 
     // the report reads the filters from the link before the filter bar's script starts, so a link that leaves no scenario
@@ -352,15 +358,26 @@ public class FilterBarTests : PlaywrightTestBase
         await Expect(Page.Locator(".nav-readout")).ToBeHiddenAsync();
     }
 
-    // 4.5.7: the chip that sat inside the search field went with the field; deep search says where it is on the Search
-    // tab, whose bar runs only while it reads, and the page keeps no chip
+    // 5.12.0: the filter field is back, and its deep pass says where it is in the chip inside the field, as until 5.11.0
     [Fact]
-    public async Task Deep_search_says_where_it_is_on_the_Search_tab_and_no_chip_is_left()
+    public async Task The_deep_search_chip_sits_inside_the_filter_field()
     {
         await OpenAsync("FilterBar_Chip.html");
+        await OpenFilterRowsAsync();
+        await Page.Locator("#filtering-box #searchbar").FillAsync("zebra");
+        await Page.WaitForFunctionAsync("() => { const c = document.querySelector('.kron-deep-chip'); return !!c && c.style.display !== 'none'; }", null, new() { PollingInterval = 200 });
+        Assert.True(await Page.EvaluateAsync<bool>("() => document.querySelector('.kron-deep-chip').parentElement.classList.contains('search-field')"));
+    }
+
+    // 4.5.7: a search's deep pass says where it is on the Search tab, whose bar runs only while it reads; the filter field's
+    // chip is the filter's, and a search shows none
+    [Fact]
+    public async Task Deep_search_says_where_it_is_on_the_Search_tab_and_shows_no_chip()
+    {
+        await OpenAsync("FilterBar_SearchDeep.html");
         await FillSearchBar("zebra", toSearchTab: true);
         await Page.WaitForFunctionAsync("() => window.__kronikolSearch.deep === 'done'", null, new() { PollingInterval = 200 });
-        await Expect(Page.Locator(".kron-deep-chip")).ToHaveCountAsync(0);
+        await Expect(Page.Locator(".kron-deep-chip:visible")).ToHaveCountAsync(0);
         await Expect(Page.Locator("#panel-search .search-progress")).ToBeHiddenAsync();
     }
 }

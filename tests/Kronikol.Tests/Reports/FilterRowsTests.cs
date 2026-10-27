@@ -226,7 +226,7 @@ public class FilterRowsTests
     {
         var html = Generate("FilterRows_Readout.html");
         Assert.Contains("<div class=\"filtering-box-export\"><span class=\"filter-readout\" aria-hidden=\"true\" title=\"The scenarios and features the filters leave showing\">All 5 scenarios, 2 features</span>"
-            + "<button class=\"export-btn\" onclick=\"clear_all_filters()\" title=\"Clear every filter: the search with its tag:, status:, feature:, dep:, duration: and is: terms, and the statuses, duration, happy paths, tags and dependencies\">Clear All</button>", html);
+            + "<button class=\"export-btn\" onclick=\"clear_all_filters()\" title=\"Clear every filter: the filter text with its tag:, status:, feature:, dep:, duration: and is: terms, and the statuses, duration, happy paths, tags and dependencies\">Clear All</button>", html);
         Assert.Contains(" data-runs=\"2\"", html);
         Assert.Equal(1, System.Text.RegularExpressions.Regex.Count(html, " data-runs=\""));
 
@@ -255,11 +255,11 @@ public class FilterRowsTests
         Assert.Contains("<code>feature:</code>, <code>dep:</code>, <code>duration:</code> and <code>is:</code> always narrow the search: they combine with the rest of it by AND, and can be left out with <code>-</code>, <code>!!</code> or <code>not</code>. Inside a group that <code>!!</code> or <code>not</code> negates, one is read as text, and the search says so.</p>", tips);
     }
 
-    // 5.9.1 (plans/REPORT_UI_FIXES_PLAN.md I9, W1 and W4): what filters in the box says filter, never search. The box's own
-    // field went with plans/SEARCH_PLAN.md F1, so the one search it names is the search the query builder applied: the line
-    // that shows it (F10) and Clear All, which clears it with the rows
+    // 5.9.1 (plans/REPORT_UI_FIXES_PLAN.md I9, W1 and W4): what filters in the box says filter, never search; and since
+    // 5.12.0, with the search apart from the filters (the owner: a search is no filter), nothing in the box or in the bar's
+    // filters names the search at all
     [Fact]
-    public void The_filter_box_calls_only_the_applied_search_a_search()
+    public void The_filter_box_never_says_search()
     {
         foreach (var (name, includeTestRunData) in new[] { ("FilterRows_Words.html", true), ("FilterRows_WordsSpecifications.html", false) })
         {
@@ -273,19 +273,10 @@ public class FilterRowsTests
                     : n.NodeType == AngleSharp.Dom.NodeType.Text ? new[] { n.TextContent } : [])
                 .Where(t => t is not null && t.Contains("search", StringComparison.OrdinalIgnoreCase))
                 .ToArray();
-            string[] applied =
-            [
-                "Search", "Clear the search", "Clear the search; the other filters stay as they are",
-            ];
-            Assert.True(said.All(t => applied.Contains(t) || t!.StartsWith("Clear every filter: the search with its tag:", StringComparison.Ordinal)),
-                name + " calls the filtering a search: " + string.Join(" | ", said.Where(t => !applied.Contains(t))));
-            Assert.Equal(["Search", "Clear the search", "Clear the search; the other filters stay as they are"],
-                page.QuerySelectorAll("#filtering-box .box-search .box-search-label, #filtering-box .box-search .box-search-clear")
-                    .SelectMany(e => new[] { e.GetAttribute("aria-label"), e.GetAttribute("title"), e.ClassList.Contains("box-search-label") ? e.TextContent : null })
-                    .Where(t => t is not null));
+            Assert.True(said.Length == 0, name + " calls the filtering a search: " + string.Join(" | ", said));
 
-            // the deep index tells the Search tab how far it has read (4.5.7); the field's chip went with the field
-            Assert.DoesNotContain("kron-deep-chip", html);
+            // the field's deep pass says where it is in the chip inside the field, as until 5.10.1
+            Assert.Contains("kron-deep-chip", html);
             Assert.DoesNotContain("searching everything", html);
         }
     }
