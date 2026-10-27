@@ -23,7 +23,10 @@ Evidence labels:
     files (`xunit-in-memory`, `reqnroll-in-memory`, `xunit-external-sut`, `reqnroll-in-docker`), fetched with
     `gh run download` and decoded with `kronikol decode`;
   - its history ledger, `history.jsonl` on its `kronikol-history` branch: 1,599 run lines from 18 suites;
-  - the three Example.Api component reports (5.8.0), copied into `inputs/examples-5.8.0/`.
+  - the three Example.Api component reports (5.8.0), copied into `inputs/examples-5.8.0/`;
+  - stand-ins kronikol-bf made on 2026-10-27 for the stacks the issue was measured on (A3): the same CI run's
+    `nunit`, `tunit`, `lightbdd` and `bddfy` in-memory lanes, and a Jest ingest (5.11.0, from
+    `INGEST_FIDELITY_PLAN.harness/otel-jest` through the wiki's recipe), kept in its plan's harness.
 - **READ** means Kronikol's source at `44bcc62a`.
 - **PEER** means measured or read by a sibling plan's session; the script is named where there is one.
 - **ISSUE** means the issue's own numbers, not measured again: the three reports it used are not on this machine
@@ -48,8 +51,8 @@ Evidence labels:
     (READ), so a call the test makes through the service's own clients carries the service's name. The query engine
     already works out which call each call ran inside (`CallNesting`), but only to indent `flow`.
   - A report never says what it could not see. On BreakfastProvider's external-SUT lanes none of the service's own
-    calls are captured (RUN: one edge, `Caller>Breakfast Provider`). A summary of such a run lists a service with no
-    dependencies, and that reads as a fact.
+    calls are captured (RUN: one edge, `Caller>Breakfast Provider`), and a merged Kronikol4J report holds no calls at
+    all (PEER, F11). A summary of such a run lists a service with no dependencies, and that reads as a fact.
 - **What the measurements change in the issue's design.**
   1. **The service's own calls are not one thing.** On three lanes, 755, 731 and 665 of them ran inside a call the
      service received; 86, 68 and 151 ran outside any. On BreakfastProvider the second group is background work: the
@@ -172,6 +175,19 @@ agrees on all four lanes. Results are in `results/card-prototype.txt`.
 | `reqnroll-in-memory` | 214 | 1,353 | 18 | 20 | 175 (206) | 443 | 731 | 68 | 111 |
 | `reqnroll-in-docker` | 214 | 1,261 | 18 | 20 | 164 (194) | 442 | 665 | 151 | 3 |
 | `xunit-external-sut` | 212 | 378 | 2 | 1 | 72 (98) | 378 | 0 | 0 | 0 |
+| `nunit-in-memory` | 212 | 1,409 | 18 | 20 | 175 (207) | 451 | 755 | 86 | 117 |
+| `tunit-in-memory` | 212 | 1,413 | 18 | 20 | 176 (208) | 451 | 755 | 90 | 117 |
+| `lightbdd-in-memory` | 187 | 1,379 | 18 | 20 | 175 (207) | 451 | 755 | 56 | 117 |
+| `bddfy-in-memory` | 212 | 1,409 | 18 | 20 | 175 (207) | 451 | 755 | 86 | 117 |
+| Jest ingest stand-in | 2 | 8 | 4 | 3 | 5 (5) | 4 | 4 | 0 | 0 |
+
+On the five in-memory lanes, five test frameworks driving the same service, the calls inside a received call are 755
+every time, and the calls outside any vary from 56 to 90: the Cosmos DB housekeeping repeats once per host start, so
+how often a framework starts the host moves it. That is section 2.4's count noise inside one run's numbers. The test's
+own phases are recorded on the Gherkin-style lanes (LightBDD: Setup 234, Action 199) and not on xUnit, NUnit and TUnit
+(445 of 451 unknown). The Jest stand-in carries no `attributionSource` and no phase on any of its 8 calls, but its
+records nest: the service's 4 calls sit inside the test's (`results/card-prototype-stand-ins.txt`). The prototype has
+no GraphQL rule, so its 5 operations count the stand-in's two GraphQL operations as one; #192's 4.2 splits them.
 
 The service's calls outside any received call, commonest first: Cosmos DB metadata reads (`Other` on `/`,
 `/dbs/BreakfastDb` and `/colls/orders`, 15 to 21 each), the outbox poller's query (`SELECT VALUE root FROM root WHERE
@@ -190,6 +206,8 @@ The card's behaviour (the prototype's shape, close to 4.3's), in bytes, indented
 | `reqnroll-in-docker` | 118,201 / 67,065 | 58,349 / 29,788 | 35,133 / 19,978 |
 | `xunit-external-sut` | 78,753 / 51,626 | 21,070 / 9,092 | 11,058 / 4,843 |
 | Example.Api Reqnroll (10 scenarios) | 4,424 / 2,482 | 2,214 / 1,023 | 1,399 / 682 |
+| the other four in-memory lanes | 129,153 to 130,377 / 73,872 to 77,061 | 61,969 to 62,387 / 31,979 to 32,131 | 37,773 to 37,952 / 21,683 to 21,777 |
+| Jest ingest stand-in (2 scenarios) | 2,383 / 1,175 | 1,923 / 896 | 1,238 / 606 |
 
 ### 2.4 What a summary would keep from one run to the next
 
@@ -242,7 +260,7 @@ edges.
 | F8 | A run can miss whole sides of the graph: the external-SUT lanes record none of the service's calls | RUN | A `capture` block states it; absence is "not recorded", never "none" |
 | F9 | A party's kind is per run (a fake on one lane, an emulator on another, a fake answering for the production host); its id is per codebase | PEER | The card's kinds describe the run, and say how each was known (`kindSource`, #190) |
 | F10 | The card is tens of KB, not 8 | RUN (2.3) | Fine for an indexer; `Service.md`, a model's first read, stays FLEET S4's and keeps its budget |
-| F11 | Kronikol4J writes its own reports | READ | The tool verb is how a Java run gets a card until the port writes one; a divergence-ledger line at R2 |
+| F11 | Kronikol4J writes its own reports, and their calls do not always reach the data file: its fragment format has no interactions (calls survive only as diagrams), so a merged Kronikol4J report holds no calls; a standalone run writes them only with `kronikol.report.dataFormats=json` (0.1.24) | READ; PEER (#192's 3.9, which tried to make a Java stand-in) | `kronikol card` gives a Java suite a card only from a standalone run with that setting. On a merged run the card is written and says `capture.calls: "notRecorded"`, never an empty graph as a fact. Fragments that carry calls are a Kronikol4J change (Q7). A divergence-ledger line at R2 |
 | F12 | `sid:` addresses a scenario, never a call; `sN/iM` depends on order | READ (`Address.cs:46-52`), RUN (2.4) | An example address belongs to the run part |
 | F13 | The test framework is recorded nowhere | RUN, READ | `run.framework` is null until a capturer writes it (Q12) |
 | F14 | `FixedNameForReceivingService` names the title only | PEER, READ | The subject comes from #190's `ServiceId` or inference, never from this option |
@@ -359,7 +377,7 @@ below; numbers and statuses are written invariant; the text is UTF-8, LF, no BOM
         "tags": [], "source": { "file": "Features/Cake.feature", "line": 13 }, "ops": ["1f0c6e2a9b4d7e31", "7a93…"] }
     ],
     "unresolved": ["Caller", "Cow Service", "Dessert Provider", "Event broker"],
-    "capture": { "subjectCalls": "recorded", "emptyTargets": [], "degraded": [] }
+    "capture": { "calls": "recorded", "subjectCalls": "recorded", "emptyTargets": [], "degraded": [] }
   }
 }
 ```
@@ -380,7 +398,7 @@ edge.)
 | `messages` | `op`, direction, party, topic | party, topic, direction |
 | `scenarios` | `sid`, feature, scenario, tags, source (`file`, `line`) or null, the `op`s it touched. Rows sharing a `sid` are one row | `sid` |
 | `unresolved` | party names with no id | name |
-| `capture` | `subjectCalls` (`recorded`, or `notRecorded` when no call made by the subject is in the run), `emptyTargets` (the `op`s whose target the capture left empty), `degraded` (the kinds of degraded-capture diagnostics the report carries) | |
+| `capture` | `calls` (`recorded`, or `notRecorded` when the data file holds no call at all, as a merged Kronikol4J report does, F11), `subjectCalls` (`recorded`, or `notRecorded` when no call made by the subject is in the run), `emptyTargets` (the `op`s whose target the capture left empty), `degraded` (the kinds of degraded-capture diagnostics the report carries) | |
 
 Operation ids instead of positions keep a change local: a new operation adds one id and moves no other reference.
 
@@ -477,8 +495,9 @@ Every fact goes through a public entry point (`kronikol card` through the tool's
    with two operations, `/orders/123` and `/orders/456`. Expect: each party's kind; the seeding with origin `test`;
    the subject's calls with origin `subject`; two GraphQL operations; one operation `/orders/{n}`. Then the same
    fixture seeding through the subject's client: the seeding has origin `subject` and a cause other than `request`.
-5. **Not recorded is not none**: an external-SUT shaped run gives `capture.subjectCalls: "notRecorded"`; a Kafka call
-   at `Summarised` verbosity lands in `emptyTargets`.
+5. **Not recorded is not none**: an external-SUT shaped run gives `capture.subjectCalls: "notRecorded"`; a data file
+   with scenarios and no calls, the shape of a merged Kronikol4J report (F11), gives `capture.calls: "notRecorded"`; a
+   Kafka call at `Summarised` verbosity lands in `emptyTargets`.
 6. **Null, never guessed**: `framework` null; `source` null on a scenario with none; `id` null and `kindSource`
    `inferred` on a report without declarations.
 7. **Schema**: every card written by the facts above validates; the closed-contract fact.
@@ -509,10 +528,12 @@ No Playwright: nothing here changes the HTML report.
   data file, and the external-SUT lane says `notRecorded`.
 - On two runs of one lane of the same commit (a re-run of CI or of the lane locally): `behaviourHash` equal, or the
   difference is one of the operations section 2.4 names.
-- On the two ingested runs of A3 (a Jest-shaped NDJSON run and a Cucumber Messages run): the card is written, phases
-  are all Action on the Jest-shaped one and `effectivePhases` says so. Where the stream names the service as the caller
-  of its own calls, `origin` separates them from the test's; where it names the test for every call, the card says so
-  through `capture.subjectCalls: "notRecorded"` rather than listing the service's dependencies as the test's.
+- On the ingested runs of A3, kronikol-bf's Jest stand-in and a Cucumber Messages run built in R1's tests: the card is
+  written. `effectivePhases` reports what was recorded: unknown throughout on the stand-in, which records no phase, and
+  Action throughout on a run recorded as the issue's Jest report was. Where the stream names the service as the caller
+  of its own calls, as the stand-in does, `origin` separates them from the test's; where it names the test for every
+  call, the card says so through `capture.subjectCalls: "notRecorded"` rather than listing the service's dependencies
+  as the test's.
 - Run cold, the indexer's question: from `Run.json` and `service.json` alone, list BreakfastProvider's dependencies
   used while serving requests, and those used only in the background. Compared by hand with `flow` on five scenarios.
 
@@ -571,7 +592,7 @@ run-end file in the first release, R1 and R2 merge into one minor.
 | Q4 | Counts in the card at all | Yes, in `run`. They are the issue's ask and cost the stable part nothing there |
 | Q5 | `cause` on the card (#192 asks it too, its section 9 Q4, with this card as its second reason) | Yes. Without it the card cannot say whether a dependency is used while serving requests or only in the background, and seeding through the service's own clients reads as the service's |
 | Q6 | Background calls in a scenario's `ops` | Measure first: the share of the scenario index's churn that background calls cause, on two runs of one lane. Leave them out if it is most of it; the operation stays on its edge either way |
-| Q7 | Kronikol4J: port the writer, or `kronikol card` in Java CI | The tool, until a port asks. One implementation keeps one format |
+| Q7 | Kronikol4J: port the writer, or `kronikol card` in Java CI | The tool, until a port asks: one implementation keeps one format. It needs the Java run's calls in its data file (F11), so a merged Kronikol4J run gets a card only once its fragments carry interactions; recommend that as a Kronikol4J issue of its own, raised when the card ships |
 | Q8 | Fix phase at capture (carry it in the identity header) | Not here. Nesting repairs it for every reader of the graph. A capture fix changes the wire and every port; a separate issue if wanted |
 | Q9 | A `query graph` verb now | Not in this plan. Cheap once the graph exists; ask when an agent needs it (FLEET S2) |
 | Q10 | Move the component diagram, `services` and history onto the graph | No: each changes output. The card pins the diagram's edges; the others stay as they are until a defect makes the move worth a pin change |
@@ -586,7 +607,7 @@ run-end file in the first release, R1 and R2 merge into one minor.
 |---|---|---|---|
 | A1 | BreakfastProvider's lanes are representative of in-process .NET suites | RUN on one consumer | The rates in 2.4 move; the design does not, since it promises nothing for counts |
 | A2 | The service's calls outside any received call are seeding in suites that seed through the container | INFERRED from 2.2; not observed on BreakfastProvider | `cause` still says what is known; 5.2.4's second fixture pins what the card prints |
-| A3 | The three reports in the issue behave like BreakfastProvider's lanes | ISSUE. Searched for on 2026-10-27 and not found: the user folders, every drive (C: is the only one), every session's scratchpad, and `C:/Code` outside Kronikol's worktrees | R1's acceptance adds two runs built to the issue's other stacks with `kronikol ingest`: a Jest-shaped one (one synthetic `Run:` step, every call Action, MSW-style doubles answering in 1 to 2 ms) and a Cucumber Messages one. Both are built in R1's tests from hand-written NDJSON, as #184's repro was, and pinned like the BreakfastProvider lanes |
+| A3 | The three reports in the issue behave like BreakfastProvider's lanes | ISSUE. Searched for on 2026-10-27 and not found: every file under `C:/Users/cex` (PEER, the list in #192's session scratchpad, `found-reports-profile.txt`), C: (the only drive), `C:/Code` outside Kronikol's worktrees; the session transcripts show the issues were written on another machine. Stand-ins measured instead (2.3): four more BreakfastProvider lanes and a Jest ingest (RUN on PEER-made inputs). A Kronikol4J stand-in could not be made with calls (F11) | R1's acceptance adds, in its own tests, a Jest-shaped run as the issue describes it (one synthetic `Run:` step, every call Action, MSW-style doubles answering in 1 to 2 ms) and a Cucumber Messages run, both from hand-written NDJSON through `kronikol ingest` as #184's repro was, and pins them like the BreakfastProvider lanes |
 | A4 | #192's key and cause, and #190's inference, are pure functions of what a report holds | PEER, agreed by message | R1 waits, or the card gets a field that differs between run end and backfill; 5.3.2 catches it |
 | A5 | `ReportScanner` can give the card every field it needs, `attributionSource` included | READ: it does not read `attributionSource` today (PEER) | R1 adds it to the scan, as #192 needs too |
 | A6 | 16 hex of SHA-256 is enough for an operation id | INFERRED: about 200 operations a run | A collision would merge two operations; a fact over the corpus checks there is none |
@@ -605,6 +626,10 @@ run-end file in the first release, R1 and R2 merge into one minor.
   GraphQL rule for anonymous operations (all 8 of BreakfastProvider's GraphQL POSTs are anonymous), and the field
   renamed `effectivePhases` so it is not read as the recorded phase `--phase` filters. Its measurement that
   `attributionSource` alone gives the same split as nesting on both in-memory lanes is cited in 2.3.
+- 2026-10-27: the issue's three reports searched for and not found (A3); kronikol-bf's stand-ins measured with the
+  card prototype (2.3, `results/card-prototype-stand-ins.txt`): four more in-memory lanes, 755 calls inside received
+  calls on every one, and a Jest ingest that nests with no `attributionSource`. Kronikol4J's merged reports hold no
+  calls (F11): `capture.calls` added, Q7 and the acceptance updated.
 
 ## Appendix A. Edit sites at `44bcc62a`
 

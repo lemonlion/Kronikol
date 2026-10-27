@@ -1,0 +1,72 @@
+== nunit-in-memory
+InteractionShape.Version 6; scenarios 212; requests 1409
+test client(s): Caller; subject: Breakfast Provider
+parties: 18; edges: 20; operations: 175 (service+method+raw path buckets: 207)
+calls by origin: other 117, subject 755, subject-unprompted 86, test 451
+calls by origin/phase: other/unknown 117, subject-unprompted/unknown 86, subject/unknown 755, test/action 1, test/setup 5, test/unknown 445
+subject calls outside any inbound call, by phase: unknown 86
+    21  CosmosDB Other /
+    21  CosmosDB Other /colls/orders
+    21  CosmosDB Other /dbs/BreakfastDb
+     5  CosmosDB Other /colls/orders {"query":"{v}"}
+     5  CosmosDB Query /colls/orders SELECT VALUE root FROM root WHERE true
+     3  CosmosDB Replace /colls/orders/docs/{id} {"id":"{v}","partitionKey":"{v}","_etag":"{v}","EventType":"{v}","Destination":"{v}","Payload":"{v}","Status":"{v}","Cre
+     3  Notification Service (gRPC) SendOrderConfirmation /notifications.NotificationGrpc/SendOrderConfirmation
+     1  BigQuery Insert /breakfast_analytics/table/recipe_costs {"rows":[{"insertId":"{v}","json":{"calculation_id":"{v}","recipe_name":"{v}","ingredients":"{v}","total_cost":{n}.{n},"
+card bytes (indented / compact): full 130265 / 75284; no scenarios 61969 / 31979; no counts, no scenarios 37773 / 21683
+== tunit-in-memory
+InteractionShape.Version 6; scenarios 212; requests 1413
+test client(s): Caller; subject: Breakfast Provider
+parties: 18; edges: 20; operations: 176 (service+method+raw path buckets: 208)
+calls by origin: other 117, subject 755, subject-unprompted 90, test 451
+calls by origin/phase: other/unknown 117, subject-unprompted/unknown 90, subject/unknown 755, test/action 1, test/setup 5, test/unknown 445
+subject calls outside any inbound call, by phase: unknown 90
+    22  CosmosDB Other /
+    22  CosmosDB Other /colls/orders
+    22  CosmosDB Other /dbs/BreakfastDb
+     5  CosmosDB Other /colls/orders {"query":"{v}"}
+     5  CosmosDB Query /colls/orders SELECT VALUE root FROM root WHERE true
+     3  CosmosDB Replace /colls/orders/docs/{id} {"id":"{v}","partitionKey":"{v}","_etag":"{v}","EventType":"{v}","Destination":"{v}","Payload":"{v}","Status":"{v}","Cre
+     3  Notification Service (gRPC) SendOrderConfirmation /notifications.NotificationGrpc/SendOrderConfirmation
+     1  BigQuery Insert /breakfast_analytics/table/recipe_costs {"rows":[{"insertId":"{v}","json":{"calculation_id":"{v}","recipe_name":"{v}","ingredients":"{v}","total_cost":{n}.{n},"
+card bytes (indented / compact): full 129972 / 74787; no scenarios 62285 / 32131; no counts, no scenarios 37952 / 21777
+== lightbdd-in-memory
+InteractionShape.Version 6; scenarios 187; requests 1379
+test client(s): Caller; subject: Breakfast Provider
+parties: 18; edges: 20; operations: 175 (service+method+raw path buckets: 207)
+calls by origin: other 117, subject 755, subject-unprompted 56, test 451
+calls by origin/phase: other/unknown 117, subject-unprompted/unknown 56, subject/unknown 755, test/action 199, test/setup 234, test/unknown 18
+subject calls outside any inbound call, by phase: unknown 56
+    11  CosmosDB Other /
+    11  CosmosDB Other /colls/orders
+    11  CosmosDB Other /dbs/BreakfastDb
+     5  CosmosDB Other /colls/orders {"query":"{v}"}
+     5  CosmosDB Query /colls/orders SELECT VALUE root FROM root WHERE true
+     3  CosmosDB Replace /colls/orders/docs/{id} {"id":"{v}","partitionKey":"{v}","_etag":"{v}","EventType":"{v}","Destination":"{v}","Payload":"{v}","Status":"{v}","Cre
+     3  Notification Service (gRPC) SendOrderConfirmation /notifications.NotificationGrpc/SendOrderConfirmation
+     1  BigQuery Insert /breakfast_analytics/table/recipe_costs {"rows":[{"insertId":"{v}","json":{"calculation_id":"{v}","recipe_name":"{v}","ingredients":"{v}","total_cost":{n}.{n},"
+card bytes (indented / compact): full 130377 / 77061; no scenarios 62380 / 32105; no counts, no scenarios 37773 / 21683
+== bddfy-in-memory
+InteractionShape.Version 6; scenarios 212; requests 1409
+test client(s): Caller; subject: Breakfast Provider
+parties: 18; edges: 20; operations: 175 (service+method+raw path buckets: 207)
+calls by origin: other 117, subject 755, subject-unprompted 86, test 451
+calls by origin/phase: other/action 3, other/unknown 114, subject-unprompted/action 19, subject-unprompted/setup 34, subject-unprompted/unknown 33, subject/unknown 755, test/action 217, test/setup 234
+subject calls outside any inbound call, by phase: action 19, setup 34, unknown 33
+    21  CosmosDB Other /
+    21  CosmosDB Other /colls/orders
+    21  CosmosDB Other /dbs/BreakfastDb
+     5  CosmosDB Other /colls/orders {"query":"{v}"}
+     5  CosmosDB Query /colls/orders SELECT VALUE root FROM root WHERE true
+     3  CosmosDB Replace /colls/orders/docs/{id} {"id":"{v}","partitionKey":"{v}","_etag":"{v}","EventType":"{v}","Destination":"{v}","Payload":"{v}","Status":"{v}","Cre
+     3  Notification Service (gRPC) SendOrderConfirmation /notifications.NotificationGrpc/SendOrderConfirmation
+     1  BigQuery Insert /breakfast_analytics/table/recipe_costs {"rows":[{"insertId":"{v}","json":{"calculation_id":"{v}","recipe_name":"{v}","ingredients":"{v}","total_cost":{n}.{n},"
+card bytes (indented / compact): full 129153 / 73872; no scenarios 62387 / 32097; no counts, no scenarios 37773 / 21683
+== jest-ingest
+InteractionShape.Version 6; scenarios 2; requests 8
+test client(s): Test; subject: Payments GraphQL
+parties: 4; edges: 3; operations: 5 (service+method+raw path buckets: 5)
+calls by origin: subject 4, test 4
+calls by origin/phase: subject/unknown 4, test/unknown 4
+subject calls outside any inbound call, by phase: 
+card bytes (indented / compact): full 2383 / 1175; no scenarios 1923 / 896; no counts, no scenarios 1238 / 606

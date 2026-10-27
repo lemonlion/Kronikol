@@ -12,6 +12,7 @@ from `44bcc62a`.
 | `inputs/examples-5.8.0/` | The three Example.Api component reports (`TestRunReport.krkl` and `Run.json`), written by 5.8.0 |
 | `results/ledger-stability-breakfastprovider.txt` | `ledger_stability.py` over BreakfastProvider's ledger |
 | `results/card-prototype.txt` | `card-prototype.cs` over four BreakfastProvider lanes and the Example.Api Reqnroll report |
+| `results/card-prototype-stand-ins.txt` | `card-prototype.cs` over kronikol-bf's stand-ins: the `nunit`, `tunit`, `lightbdd` and `bddfy` in-memory lanes of the same CI run, and a Jest ingest made with 5.11.0 (kept in `CALL_OPERATION_AND_ORIGIN_PLAN.harness/stand-ins/`) |
 
 ## What is not here, and how to get it again
 
