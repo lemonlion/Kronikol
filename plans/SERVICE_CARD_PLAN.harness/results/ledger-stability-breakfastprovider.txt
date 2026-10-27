@@ -1,0 +1,16 @@
+run lines: 1599; same-commit consecutive pairs compared: 1005 over 18 suites
+passed-in-both scenario slots compared: 197644
+  slots whose counts   differ:    774  (0.39%)
+  slots whose set      differ:    316  (0.16%)
+  slots whose ordered  differ:   3346  (1.69%)
+  run pairs where any deps     differ:    4 of 1005  (0.4%)
+  run pairs where any counts   differ:  378 of 1005  (37.6%)
+  run pairs where any set      differ:  125 of 1005  (12.4%)
+  run pairs where any ordered  differ:  795 of 1005  (79.1%)
+  size of a count change (|delta| -> slots): {1: 259, 2: 228, 3: 36, 4: 45, 5: 28, 6: 37, 7: 9, 8: 21, 9: 5, 10: 39, 11: 5, 12: 3}
+  pairs per suite: {'bddfy-external-sut': 55, 'bddfy-in-docker': 57, 'bddfy-in-memory': 56, 'lightbdd-external-sut': 56, 'lightbdd-in-docker': 56, 'lightbdd-in-memory': 56, 'nunit-external-sut': 56, 'nunit-in-docker': 56, 'nunit-in-memory': 56, 'reqnroll-external-sut': 56, 'reqnroll-in-docker': 56, 'reqnroll-in-memory': 56, 'tunit-external-sut': 56, 'tunit-in-docker': 56, 'tunit-in-memory': 56, 'xunit-external-sut': 55, 'xunit-in-docker': 55, 'xunit-in-memory': 55}
+run level (pairs with a shapes table on both lines): 933
+  run pairs whose distinct calls+status differ:   34 of 933  (3.6%)
+  run pairs whose distinct operations   differ:   27 of 933  (2.9%)
+  run pairs whose distinct edges        differ:    4 of 933  (0.4%)
+  mean distinct operations per run: 123.5; mean distinct edges: 13.0

@@ -1,0 +1,64 @@
+== xunit-in-memory
+InteractionShape.Version 6; scenarios 212; requests 1409
+test client(s): Caller; subject: Breakfast Provider
+parties: 18; edges: 20; operations: 175 (service+method+raw path buckets: 207)
+calls by origin: other 117, subject 755, subject-unprompted 86, test 451
+calls by origin/phase: other/unknown 117, subject-unprompted/unknown 86, subject/unknown 755, test/action 1, test/setup 5, test/unknown 445
+subject calls outside any inbound call, by phase: unknown 86
+    21  CosmosDB Other /
+    21  CosmosDB Other /colls/orders
+    21  CosmosDB Other /dbs/BreakfastDb
+     5  CosmosDB Other /colls/orders {"query":"{v}"}
+     5  CosmosDB Query /colls/orders SELECT VALUE root FROM root WHERE true
+     3  CosmosDB Replace /colls/orders/docs/{id} {"id":"{v}","partitionKey":"{v}","_etag":"{v}","EventType":"{v}","Destination":"{v}","Payload":"{v}","Status":"{v}","Cre
+     3  Notification Service (gRPC) SendOrderConfirmation /notifications.NotificationGrpc/SendOrderConfirmation
+     1  BigQuery Insert /breakfast_analytics/table/recipe_costs {"rows":[{"insertId":"{v}","json":{"calculation_id":"{v}","recipe_name":"{v}","ingredients":"{v}","total_cost":{n}.{n},"
+card bytes (indented / compact): full 132762 / 77781; no scenarios 61969 / 31979; no counts, no scenarios 37773 / 21683
+== reqnroll-in-memory
+InteractionShape.Version 6; scenarios 214; requests 1353
+test client(s): Caller; subject: Breakfast Provider
+parties: 18; edges: 20; operations: 175 (service+method+raw path buckets: 206)
+calls by origin: other 111, subject 731, subject-unprompted 68, test 443
+calls by origin/phase: other/action 3, other/unknown 108, subject-unprompted/action 21, subject-unprompted/setup 38, subject-unprompted/unknown 9, subject/unknown 731, test/action 216, test/setup 227
+subject calls outside any inbound call, by phase: action 21, setup 38, unknown 9
+    15  CosmosDB Other /
+    15  CosmosDB Other /colls/orders
+    15  CosmosDB Other /dbs/BreakfastDb
+     5  CosmosDB Other /colls/orders {"query":"{v}"}
+     5  CosmosDB Query /colls/orders SELECT VALUE root FROM root WHERE true
+     3  CosmosDB Replace /colls/orders/docs/{id} {"id":"{v}","partitionKey":"{v}","_etag":"{v}","EventType":"{v}","Destination":"{v}","Payload":"{v}","Status":"{v}","Cre
+     3  Notification Service (gRPC) SendOrderConfirmation /notifications.NotificationGrpc/SendOrderConfirmation
+     1  BigQuery Insert /breakfast_analytics/table/recipe_costs {"rows":[{"insertId":"{v}","json":{"calculation_id":"{v}","recipe_name":"{v}","ingredients":"{v}","total_cost":{n}.{n},"
+card bytes (indented / compact): full 125067 / 70129; no scenarios 62560 / 32165; no counts, no scenarios 37773 / 21683
+== xunit-external-sut
+InteractionShape.Version 6; scenarios 212; requests 378
+test client(s): Caller; subject: Breakfast Provider
+parties: 2; edges: 1; operations: 72 (service+method+raw path buckets: 98)
+calls by origin: test 378
+calls by origin/phase: test/action 1, test/setup 5, test/unknown 372
+subject calls outside any inbound call, by phase: 
+card bytes (indented / compact): full 78753 / 51626; no scenarios 21070 / 9092; no counts, no scenarios 11058 / 4843
+== reqnroll-in-docker
+InteractionShape.Version 6; scenarios 214; requests 1261
+test client(s): Caller; subject: Breakfast Provider
+parties: 18; edges: 20; operations: 164 (service+method+raw path buckets: 194)
+calls by origin: other 3, subject 665, subject-unprompted 151, test 442
+calls by origin/phase: other/action 3, subject-unprompted/action 19, subject-unprompted/setup 126, subject-unprompted/unknown 6, subject/unknown 665, test/action 215, test/setup 227
+subject calls outside any inbound call, by phase: action 19, setup 126, unknown 6
+    54  CosmosDB Other /colls/orders {"query":"{v}"}
+    54  CosmosDB Query /colls/orders SELECT VALUE root FROM root WHERE true
+    15  CosmosDB Other /colls/orders
+    15  CosmosDB Other /dbs/BreakfastDb
+     3  CosmosDB Replace /colls/orders/docs/{id} {"id":"{v}","partitionKey":"{v}","_etag":"{v}","eventType":"{v}","destination":"{v}","payload":"{v}","status":"{v}","cre
+     3  Notification Service (gRPC) SendOrderConfirmation /notifications.NotificationGrpc/SendOrderConfirmation
+     1  BigQuery Insert /breakfast_analytics/table/recipe_costs {"rows":[{"insertId":"{v}","json":{"calculation_id":"{v}","recipe_name":"{v}","ingredients":"{v}","total_cost":{n}.{n},"
+     1  ClickHouse INSERT INTO service_times /kitchen_analytics/service_times INSERT INTO service_times (service_id, order_id, item_type, wait_seconds, served_at) VALUES ({serviceId:String}, {orderI
+card bytes (indented / compact): full 118201 / 67065; no scenarios 58349 / 29788; no counts, no scenarios 35133 / 19978
+== example-reqnroll
+InteractionShape.Version 6; scenarios 10; requests 23
+test client(s): Caller; subject: Dessert Provider
+parties: 4; edges: 3; operations: 6 (service+method+raw path buckets: 6)
+calls by origin: subject 7, test 16
+calls by origin/phase: subject/unknown 7, test/action 4, test/setup 12
+subject calls outside any inbound call, by phase: 
+card bytes (indented / compact): full 4424 / 2482; no scenarios 2214 / 1023; no counts, no scenarios 1399 / 682

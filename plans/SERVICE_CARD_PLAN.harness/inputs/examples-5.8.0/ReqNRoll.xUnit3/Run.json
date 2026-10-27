@@ -1,0 +1,20 @@
+{
+  "runManifestVersion": 1,
+  "run": "local:20261025T202804Z:00c4406a",
+  "at": "2026-10-25T20:28:04Z",
+  "suite": "Example.Api.Tests.Component.ReqNRoll.xUnit3",
+  "scenarios": 10,
+  "failed": 0,
+  "partial": null,
+  "kronikolVersion": "5.8.0\u002Befb9ce9debf632bb88767eb2431885e7d515349e",
+  "files": [
+    "ComponentDiagram.html",
+    "Failures.jsonl",
+    "Failures.md",
+    "Specifications.html",
+    "Specifications.yml",
+    "TestRunReport.html",
+    "TestRunReport.krkl"
+  ],
+  "attachments": []
+}
