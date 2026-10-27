@@ -213,7 +213,8 @@
         }
         .search-side-heading:first-child { margin-top: 4px; }
         .search-side-list { margin: 0; padding: 0; list-style: none; }
-        .search-side-row { position: relative; display: flex; align-items: center; margin: 0 8px; }
+        /* every row keeps a slot at its end for Exclude, so the counts stand in one column */
+        .search-side-row { position: relative; display: flex; align-items: center; margin: 0 8px; padding-right: 28px; }
         .search-side-link {
             flex: 1 1 auto; min-width: 0; min-height: 32px; box-sizing: border-box; display: flex; align-items: center; gap: 8px;
             padding: 6px 8px; border: 0; border-radius: 6px; background: none; color: var(--kron-ink);
@@ -250,12 +251,15 @@
         .search-side-icon-feature { --search-side-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.4' stroke-linejoin='round'%3E%3Cpath d='M1.75 3.5h4.5l1.5 1.5h6.5v8.25h-12.5z'/%3E%3C/svg%3E"); }
         .search-side-icon-plus { --search-side-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.4' stroke-linecap='round'%3E%3Ccircle cx='8' cy='8' r='6.25'/%3E%3Cpath d='M8 5v6M5 8h6'/%3E%3C/svg%3E"); }
         .search-side-icon-info { --search-side-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.4' stroke-linecap='round'%3E%3Ccircle cx='8' cy='8' r='6.25'/%3E%3Cpath d='M8 7.25v4M8 4.75h.01'/%3E%3C/svg%3E"); }
-        /* Exclude, on hover or focus of its row (G28) */
+        /* Exclude (G28), in its row's slot, beside the row's own control and never over it, seen and clickable while its row
+           is hovered or holds the focus, and always where nothing hovers (5.12.1: until then it stood over the count at
+           opacity 0, and took every click there) */
         .search-side-exclude {
-            position: absolute; right: 4px; top: 50%; width: 24px; height: 24px; margin-top: -12px; padding: 0; border: 0; border-radius: 6px;
-            background: var(--kron-card); color: var(--kron-muted); font: 400 16px/24px var(--kron-font); cursor: pointer; opacity: 0;
+            position: absolute; right: 0; top: 50%; width: 24px; height: 24px; margin-top: -12px; padding: 0; border: 0; border-radius: 6px;
+            background: var(--kron-card); color: var(--kron-muted); font: 400 16px/24px var(--kron-font); cursor: pointer; opacity: 0; pointer-events: none;
         }
-        .search-side-row:hover .search-side-exclude, .search-side-row:focus-within .search-side-exclude { opacity: 1; }
+        .search-side-row:hover .search-side-exclude, .search-side-row:focus-within .search-side-exclude { opacity: 1; pointer-events: auto; }
+        @media (hover: none) { .search-side-exclude { opacity: 1; pointer-events: auto; } }
         .search-side-exclude:hover { background: var(--kron-hover); color: var(--kron-fail); }
         .search-side-exclude:focus-visible { opacity: 1; outline: 2px solid var(--kron-accent); outline-offset: -2px; }
 

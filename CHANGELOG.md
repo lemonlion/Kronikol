@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.12.1] - 2026-10-27
+
+The patch part moves (5.12.0 to 5.12.1): one fix, nothing new to call.
+
+### Fixed
+
+- **A click on a Search tab row's count no longer leaves its scenarios out.** Each row of the Search tab's Tags and
+  Dependencies had its Exclude button (×) over the row's count, unseen until the row was hovered but clickable all the
+  while. A click on the count wrote `-tag:` or `-dep:` where it meant to narrow the search to them, and on a row that
+  was on it replaced the row's `dep:` with `-dep:`, so the search left out the very scenarios it had narrowed to: narrowed
+  to two dependencies, one of them clicked off on its count left no results. A row is now one control wherever it is
+  clicked. Its × stands beside the count in a slot of its own, takes a click only while its row is hovered or holds the
+  focus, and shows at all times on a screen that cannot hover, where until now it was never seen and took every tap on
+  the count. A row that is on, or leaves its scenarios out, has no ×: a click anywhere on it takes it out.
+
+### Changed
+
+- Every row of the Search tab's sidebar keeps that slot, so the counts stand 28 px further in, in one column.
+
 ## [5.12.0] - 2026-10-27
 
 The minor part moves (5.11.1 to 5.12.0): the filter field is a report control again, and the search has an address

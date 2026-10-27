@@ -469,8 +469,10 @@
             list.appendChild(sideRow({ name: x.name, count: x.n, pressed: true, current: x.st !== 'off',
                 title: x.st === 'in' ? 'Take ' + term + ' out of the search' : x.st === 'out' ? 'Stop leaving these out of the search' : 'Narrow the search to the scenarios with ' + x.name + ' (' + term + ')',
                 act: function () { narrowTo(key, x.name, x.st === 'off' ? 'in' : 'off'); },
-                // Exclude: -key:value, which leaves them out of the search (G28)
-                exclude: x.st === 'out' ? null : function () { narrowTo(key, x.name, 'out'); } }));
+                // Exclude: -key:value, which leaves them out of the search (G28), on a row that is off; a row that is on, or
+                // leaves them out, is taken out by a click anywhere on it (5.12.1: until then a row that was on had one,
+                // which turned it into a row leaving out the very scenarios the search had narrowed to)
+                exclude: x.st === 'off' ? function () { narrowTo(key, x.name, 'out'); } : null }));
         });
         if (rows.length > 10) {
             list.appendChild(sideRow({ name: moreOpen[key] ? 'Fewer' : moreText, icon: 'plus', title: moreOpen[key] ? 'Show the ten most frequent' : 'Show every one',

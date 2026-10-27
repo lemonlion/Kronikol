@@ -11,6 +11,12 @@ result. Filter - filter the main list down to a subset." 5.12.0 holds them apart
 `status:`, `tag:` and `dep:` into the search; the filters are out of sight while the Search tab shows; the builder's
 filtering row and phone Filters button are gone. F1's removal of the filter field is reversed too: the field is back in
 the box, hidden with it until Filters opens it. Sections 4.1, 4.3.3, 4.5 and 4.9 below describe 5.11.0.
+
+**Fixed as 5.12.1 (2026-10-27).** G28's Exclude, as 4.5.3 built it, stood over its row's count at opacity 0 and took
+every click there, and a row that was on had one too: a click on a count left the scenarios out where the reader meant to
+narrow to them, and an on row clicked off there turned `dep:x` into `-dep:x` (the owner: unclicking a dependency set the
+results to zero). Exclude is now an off row's alone, in a slot every row keeps beside its count, taking a click only while
+its row is hovered or holds the focus, and shown at all times where nothing hovers.
 Every `file:line` is at `main` `37428293` (5.9.0) under `src/Kronikol/Reports/` unless it says otherwise (the first draft read
 `29e551f3`, 5.8.0; 5.9.0 changed none of the code files it cited, and moved CHANGELOG and `Kronikol.csproj` lines, given here
 at 5.9.0); wiki lines are at `Kronikol.wiki` `1f7944e`. Short

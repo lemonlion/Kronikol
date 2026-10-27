@@ -16,16 +16,20 @@ namespace Kronikol.Tests.EndToEnd;
 [Collection(PlaywrightCollections.Reports)]
 public class SearchApartTests : PlaywrightTestBase
 {
-    public SearchApartTests(PlaywrightFixture fixture) : base(fixture) { }
+    private readonly PlaywrightFixture _fixture;
+
+    public SearchApartTests(PlaywrightFixture fixture) : base(fixture) => _fixture = fixture;
 
     private const string PaymentSource = "@startuml\nactor \"Caller\" as caller\nparticipant \"Payment Service\" as pay\ncaller -> pay : POST /pay\n@enduml";
     private const string StoreSource = "@startuml\nactor \"Caller\" as caller\nparticipant \"Clickhouse\" as ch\ncaller -> ch : INSERT\n@enduml";
     private const string ArchiveSource = "@startuml\nactor \"Caller\" as caller\nparticipant \"Payment Service Archive\" as arc\ncaller -> arc : GET /old\n@enduml";
 
+    private const string PaymentAndStoreSource = "@startuml\nactor \"Caller\" as caller\nparticipant \"Payment Service\" as pay\nparticipant \"Clickhouse\" as ch\ncaller -> pay : POST /pay\npay -> ch : INSERT\n@enduml";
+
     // thirty scenarios in three features: every third tagged smoke, Scenario 2.5 failed; the even ones call Payment
     // Service, 3 and 7 call Clickhouse. With more, 4 and 8 are tagged api too, and 9 calls Payment Service Archive, a
-    // name with Payment Service inside it
-    private string Generate(string fileName, bool more = false)
+    // name with Payment Service inside it. With both, 6 and 10 call Clickhouse as well as Payment Service
+    private string Generate(string fileName, bool more = false, bool both = false)
     {
         var diagrams = new List<DefaultDiagramsFetcher.DiagramAsCode>();
         var features = Enumerable.Range(1, 3).Select(f => new Feature
@@ -34,7 +38,8 @@ public class SearchApartTests : PlaywrightTestBase
             Scenarios = Enumerable.Range(1, 10).Select(i =>
             {
                 var id = $"f{f}s{i}";
-                if (i % 2 == 0) diagrams.Add(new DefaultDiagramsFetcher.DiagramAsCode(id, "", PaymentSource));
+                if (both && i is 6 or 10) diagrams.Add(new DefaultDiagramsFetcher.DiagramAsCode(id, "", PaymentAndStoreSource));
+                else if (i % 2 == 0) diagrams.Add(new DefaultDiagramsFetcher.DiagramAsCode(id, "", PaymentSource));
                 else if (i is 3 or 7) diagrams.Add(new DefaultDiagramsFetcher.DiagramAsCode(id, "", StoreSource));
                 else if (more && i == 9) diagrams.Add(new DefaultDiagramsFetcher.DiagramAsCode(id, "", ArchiveSource));
                 return new Scenario
@@ -59,10 +64,10 @@ public class SearchApartTests : PlaywrightTestBase
         return tags.Count > 0 ? [.. tags] : null;
     }
 
-    private async Task OpenAsync(string fileName, string hash = "", bool more = false)
+    private async Task OpenAsync(string fileName, string hash = "", bool more = false, bool both = false)
     {
         await Page.SetViewportSizeAsync(1400, 800);
-        await Page.GotoReportAsync(Generate(fileName, more) + hash);
+        await Page.GotoReportAsync(Generate(fileName, more, both) + hash);
         await Page.Locator("details.feature").First.WaitForAsync(new() { State = WaitForSelectorState.Attached });
         await TwoAnimationFramesAsync(Page);
     }
@@ -290,7 +295,8 @@ public class SearchApartTests : PlaywrightTestBase
         await Expect(Count).ToHaveTextAsync("21");
 
         await Expect(Row("smoke")).ToHaveAttributeAsync("title", "Stop leaving these out of the search");
-        await Expect(Page.Locator(".search-side-row").Filter(new() { Has = Row("smoke") }).Locator(".search-side-exclude")).ToHaveCountAsync(0);
+        await Expect(SideRow("smoke")).ToHaveCountAsync(1);
+        await Expect(SideRow("smoke").Locator(".search-side-exclude")).ToHaveCountAsync(0);
     }
 
     // 5.12.0 (review): a status row is one result at a time, and a history verdict is no result: Passed put in beside
@@ -321,6 +327,123 @@ public class SearchApartTests : PlaywrightTestBase
         await Expect(Row("Payment Service").Locator(".search-side-count")).ToHaveTextAsync("18");
         await Row("Payment Service").ClickAsync();
         await Expect(Count).ToHaveTextAsync("18");
+    }
+
+    // the sidebar's row, its Exclude with it, whose own control is Row(name). The name is found inside the row: an inner
+    // locator is read from the row down, so Row(name), which starts at .search-sidebar, matches nothing in it
+    private ILocator SideRow(string name) => Page.Locator(".search-sidebar .search-side-row")
+        .Filter(new() { Has = Page.Locator(".search-side-name", new() { HasTextRegex = new Regex("^" + Regex.Escape(name) + "$") }) });
+
+    // a reader's click where a row's count is drawn: the pointer moved there, then pressed, as Playwright's click on the
+    // row does not, aiming at its middle. The deep search has answered first, as it draws the sidebar again when it does
+    private async Task ClickCountAsync(string name)
+    {
+        await SidebarSettledAsync();
+        var box = await Row(name).Locator(".search-side-count").BoundingBoxAsync();
+        Assert.NotNull(box);
+        await Page.Mouse.ClickAsync(box.X + box.Width / 2, box.Y + box.Height / 2);
+    }
+
+    private async Task SidebarSettledAsync()
+    {
+        await Page.WaitForFunctionAsync("() => !window.__kronikolSearch || window.__kronikolSearch.deep !== 'working'", null, new() { PollingInterval = 200 });
+        await TwoAnimationFramesAsync(Page);
+    }
+
+    // 5.12.1: a row is one control wherever it is clicked. Until then its Exclude stood over the row's count, unseen until
+    // the row was hovered and clickable all the while, so a click on the count left the scenarios out where it meant to
+    // narrow the search to them
+    [Theory]
+    [InlineData("Clickhouse", "dep:Clickhouse", "6")]
+    [InlineData("smoke", "tag:smoke", "9")]
+    public async Task A_click_on_a_row_s_count_narrows_the_search_and_a_second_takes_it_out(string row, string written, string count)
+    {
+        await OpenAsync($"Apart_CountClick_{row}.html");
+        await FillSearchBar("Scenario", toSearchTab: true);
+        await Expect(Count).ToHaveTextAsync("30");
+
+        for (var round = 0; round < 2; round++)
+        {
+            await ClickCountAsync(row);
+            await Expect(Query).ToHaveTextAsync("Scenario " + written);
+            await Expect(Count).ToHaveTextAsync(count);
+
+            await ClickCountAsync(row);
+            await Expect(Query).ToHaveTextAsync("Scenario");
+            await Expect(Count).ToHaveTextAsync("30");
+        }
+    }
+
+    // 5.12.1: a row that is on has no Exclude, so a click anywhere on it takes it out. Until then its Exclude turned it into
+    // a row leaving them out: here, narrowed to two dependencies and one clicked off on its count, the search left out the
+    // very scenarios it had narrowed to, and nothing was left (the owner, 2026-10-27)
+    [Fact]
+    public async Task A_row_that_is_on_has_no_Exclude_and_a_click_on_its_count_takes_it_out()
+    {
+        await OpenAsync("Apart_OnRow.html", both: true);
+        await FillSearchBar("Scenario", toSearchTab: true);
+        await Row("Payment Service").ClickAsync();
+        await Row("Clickhouse").ClickAsync();
+        await Expect(Query).ToHaveTextAsync("Scenario dep:\"Payment Service\" dep:Clickhouse");
+        await Expect(Count).ToHaveTextAsync("6");
+
+        await Row("Payment Service").HoverAsync();
+        await Expect(SideRow("Payment Service")).ToHaveCountAsync(1);
+        await Expect(SideRow("Payment Service").Locator(".search-side-exclude")).ToHaveCountAsync(0);
+        await ClickCountAsync("Payment Service");
+
+        await Expect(Query).ToHaveTextAsync("Scenario dep:Clickhouse");
+        await Expect(Count).ToHaveTextAsync("12");
+    }
+
+    // 5.12.1: Exclude stands beside its row's control, where nothing of the row is drawn, and takes no click until its
+    // row is hovered (until then it stood over the count, at opacity 0, and took every click there)
+    [Fact]
+    public async Task Exclude_stands_beside_its_row_and_takes_no_click_until_the_row_is_hovered()
+    {
+        await OpenAsync("Apart_ExcludePlace.html");
+        await FillSearchBar("Scenario", toSearchTab: true);
+        await SidebarSettledAsync();
+        await Page.Mouse.MoveAsync(0, 0);
+        var exclude = SideRow("Clickhouse").Locator(".search-side-exclude");
+        await Expect(exclude).ToHaveCountAsync(1);
+
+        Assert.False(await exclude.EvaluateAsync<bool>("x => { const r = x.getBoundingClientRect(); return document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2) === x; }"));
+
+        await Row("Clickhouse").HoverAsync();
+        var link = await Row("Clickhouse").BoundingBoxAsync();
+        var box = await exclude.BoundingBoxAsync();
+        Assert.NotNull(link);
+        Assert.NotNull(box);
+        Assert.True(box.X >= link.X + link.Width, $"Exclude at {box.X} stands over the row, which ends at {link.X + link.Width}");
+        Assert.True(await exclude.EvaluateAsync<bool>("x => { const r = x.getBoundingClientRect(); return document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2) === x; }"));
+    }
+
+    // 5.12.1: where nothing hovers, a touch screen, a row that is off shows its Exclude, and a tap on it leaves the
+    // scenarios out: shown only on hover, it could never be reached there
+    [Fact]
+    public async Task On_a_touch_screen_a_row_s_Exclude_shows_and_a_tap_takes_it()
+    {
+        await using var touch = await OpenContextAsync(_fixture.Browser, new BrowserNewContextOptions
+        {
+            ViewportSize = new ViewportSize { Width = 1024, Height = 800 },
+            HasTouch = true
+        });
+        var page = await OpenPageAsync(touch);
+        await page.GotoReportAsync(Generate("Apart_TouchExclude.html"));
+        await page.Locator("details.feature").First.WaitForAsync(new() { State = WaitForSelectorState.Attached });
+        Assert.True(await page.EvaluateAsync<bool>("() => matchMedia('(hover: none)').matches"),
+            "the context hovers; without (hover: none) this fact proves nothing");
+        await FillSearchBar(page, "Scenario", toSearchTab: true);
+        await page.WaitForFunctionAsync("() => !window.__kronikolSearch || window.__kronikolSearch.deep !== 'working'", null, new() { PollingInterval = 200 });
+        var exclude = page.Locator(".search-sidebar .search-side-row")
+            .Filter(new() { Has = page.Locator(".search-side-name", new() { HasTextRegex = new Regex("^Clickhouse$") }) })
+            .Locator(".search-side-exclude");
+
+        await Expect(exclude).ToHaveCSSAsync("opacity", "1");
+        await exclude.TapAsync();
+
+        await Expect(page.Locator(".search-button-query")).ToHaveTextAsync("Scenario -dep:Clickhouse");
     }
 
     // 5.12.0 (review): a result the filters hide shows their note and none of the way to its match, which waits for the
