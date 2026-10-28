@@ -158,6 +158,10 @@ public static partial class QueryCommand
 
         if (options.Count)
         {
+            // A count over the default targets is not a count over the report (#182): headers and notes are left out, and a
+            // bare 0 read as proof that a credential in a header was absent. Said where --count says its caveats, on stderr.
+            if (options.In is null)
+                NoteSink(options, writer, error)($"! not searched: {string.Join(", ", GrepTargets.Except(targets))} (--in {string.Join(",", GrepTargets)} widens it)");
             writer.Count(hits.Count);
             return 0;
         }

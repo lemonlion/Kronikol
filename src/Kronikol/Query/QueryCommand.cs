@@ -440,7 +440,8 @@ public static partial class QueryCommand
                      .GroupBy(d => d.Kind, StringComparer.Ordinal))
         {
             var message = QueryWriter.OneLine(group.First().Message, 160);
-            yield return group.Count() == 1 ? message : $"{message} (×{group.Count()})";
+            // One line a kind, and where the others are (#183): the first message stood for all of them.
+            yield return group.Count() == 1 ? message : $"{message} (×{group.Count()}; summary --json lists all {group.Count()})";
         }
 
         // The flag means "the superset format a runner writes for kronikol merge", not "the result of a

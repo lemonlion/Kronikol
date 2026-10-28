@@ -206,13 +206,25 @@ public static partial class QueryCommand
             writer.Line();
             writer.Line($"Diagnostics ({index.Diagnostics.Count}):");
             foreach (var group in index.Diagnostics.GroupBy(d => d.Kind))
-                writer.Line($"  {group.Key} ×{group.Count()}  {QueryWriter.OneLine(group.First().Message, 90)}");
+                writer.Line($"  {group.Key} ×{group.Count()}  {QueryWriter.OneLine(group.First().Message, 90)}"
+                            + (group.Count() > 1 ? $"  (summary --json lists all {group.Count()})" : ""));
 
+            // One group per kind, as the text prints, and every diagnostic of the kind in `entries` (#183): a host that
+            // checks its capture needs each degraded tap, and the first message stood for all of them. A diagnostic
+            // names its scenario by the id its producer gave it, so each carries that id and the scenario's address.
+            var byId = index.Scenarios.Where(s => s.Id.Length > 0).GroupBy(s => s.Id, StringComparer.Ordinal)
+                .ToDictionary(g => g.Key, g => g.Count() == 1 ? g.First().Address : null, StringComparer.Ordinal);
             writer.Data("diagnostics", index.Diagnostics.GroupBy(d => d.Kind).Select(g => new
             {
                 kind = g.Key,
                 count = g.Count(),
-                message = g.First().Message
+                message = g.First().Message,
+                entries = g.Select(d => new
+                {
+                    message = d.Message,
+                    id = d.ScenarioId,
+                    scenario = d.ScenarioId is { } id && byId.TryGetValue(id, out var address) ? address : null
+                })
             }));
         }
 
