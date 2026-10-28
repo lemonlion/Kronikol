@@ -2347,8 +2347,7 @@
     // SequenceDiagramParticipantColors writes a participant's dependency colour there (database "Stock" as stock #0E7C86):
     // such a participant keeps it, and one drawn in the engine's colour or a PlantUML theme's takes the report theme's.
     // Until 5.2.7 every filled participant took the theme's, and the option drew no colour at all.
-    // A declared test double (#190) carries <<test double>> after its alias, before the colour.
-    var DECLARED = /^(?:actor|participant|database|queue|collections|boundary|control|entity)\s+(?:"(?:[^"\\]|\\.)*"|\S+)(?:\s+as\s+\S+)?(?:\s+<<[^>]*>>)?\s+(#[0-9A-Za-z]+)\s*$/;
+    var DECLARED = /^(?:actor|participant|database|queue|collections|boundary|control|entity)\s+(?:"(?:[^"\\]|\\.)*"|\S+)(?:\s+as\s+\S+)?\s+(#[0-9A-Za-z]+)\s*$/;
     var namedPaint = null;
     function hexOf(colour) {
         if (/^#[0-9a-f]{6}$/i.test(colour)) return colour.toLowerCase();

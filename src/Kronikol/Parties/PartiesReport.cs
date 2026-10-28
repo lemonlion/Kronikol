@@ -26,25 +26,6 @@ internal static class PartiesReport
     }
 
     /// <summary>
-    /// The names the run declares test doubles (options over the parties file, name by name), for the diagrams'
-    /// stereotype (#190, Q11); null when it declares none, which draws nothing new.
-    /// </summary>
-    internal static IReadOnlySet<string>? DeclaredDoubles(ReportConfigurationOptions options, string reportsDirectory,
-        Func<string, string?>? getEnv = null, string? baseDirectory = null)
-    {
-        var kinds = new Dictionary<string, PartyKind>(StringComparer.Ordinal);
-        if (Locate(options, reportsDirectory, getEnv, baseDirectory) is { } path)
-            foreach (var row in PartiesFile.Read(path).Rows)
-                if (row.Kind is { } kind && !string.IsNullOrWhiteSpace(row.Name))
-                    kinds[row.Name] = kind;
-        foreach (var row in options.Parties ?? [])
-            if (row?.Kind is { } kind && !string.IsNullOrWhiteSpace(row.Name))
-                kinds[row.Name] = kind;
-        var doubles = kinds.Where(p => p.Value == PartyKind.Double).Select(p => p.Key).ToHashSet(StringComparer.Ordinal);
-        return doubles.Count == 0 ? null : doubles;
-    }
-
-    /// <summary>
     /// The run's parties file. <paramref name="baseDirectory"/> is where it is looked for first, then above the reports
     /// directory: an ingest passes the directory it runs in, as it does for the history ledger, and a test run its own
     /// base directory.

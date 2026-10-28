@@ -1128,7 +1128,9 @@ Agreed by message on 2026-10-26:
 - Q3, Q4, Q5, Q6, Q7, Q9, Q10, Q13, Q14, Q15, Q16: as recommended.
 - Q8: yes, R3.
 - Q11: **yes**, against the recommendation: a declared double carries a stereotype on its participant, in the sequence
-  and component diagrams (5.13).
+  and component diagrams (5.13). **Reversed 2026-10-28** by the owner after 5.16.1: the diagrams draw the name alone,
+  the kind stays in the data file and `kronikol query parties`. Shipped as 5.16.2, which removes `DiagramParties` and
+  takes the page's `DECLARED` back to 5.13.0's.
 - Q12: mirror R0 in Kronikol4J; R1's block there only when asked.
 
 1. **Placement (D23).** The issue was filed while designing the owner's own indexer.

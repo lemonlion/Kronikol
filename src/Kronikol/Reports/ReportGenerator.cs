@@ -341,8 +341,6 @@ public static class ReportGenerator
             MaxArrowsPerDiagram = options.MaxArrowsPerDiagram,
             Logs = runLogs
         };
-        // A participant the run declares a test double carries <<test double>> in every diagram the run draws (#190, Q11).
-        using var declaredDoubles = DiagramParties.Declare(PartiesReport.DeclaredDoubles(options, CurrentReportsDirectory, getEnv, historyBaseDirectory));
         var diagrams = DefaultDiagramsFetcher.GetDiagramsFetcher(fetcherOptions)();
 
         var internalFlowDataScript = "";

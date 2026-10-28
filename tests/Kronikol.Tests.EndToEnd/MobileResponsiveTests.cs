@@ -365,9 +365,12 @@ public class MobileResponsiveTests : PlaywrightTestBase
         await Expect(Page.Locator("#search-button")).ToBeVisibleAsync();
         await Expect(Page.Locator("#search-fab")).ToBeHiddenAsync();
 
-        // the features open so the page runs far past the title line
+        // the features open so the page runs far past the title line; the opened content can lay out after one scroll
+        // (a full suite under load scrolled a page still too short), so the scroll is made again until the page is long
         await Page.EvaluateAsync("() => document.querySelectorAll('details').forEach(d => d.open = true)");
-        await Page.EvaluateAsync("() => window.scrollTo(0, Math.min(3000, document.documentElement.scrollHeight - window.innerHeight))");
+        await Page.WaitForFunctionAsync(
+            "() => { window.scrollTo(0, Math.min(3000, document.documentElement.scrollHeight - window.innerHeight)); return window.scrollY > 600; }",
+            null, new() { Timeout = 15000, PollingInterval = 200 });
         await TwoAnimationFramesAsync(Page);
         Assert.True(await Page.EvaluateAsync<double>("() => window.scrollY") > 600, "the page is too short to leave the title line behind");
 

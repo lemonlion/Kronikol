@@ -1340,7 +1340,6 @@ public static partial class PlantUmlCreator
                     .Append(WrapParticipantName(pureCaller))
                     .Append("\" as ")
                     .Append(pureCallerAlias)
-                    .Append(Parties.DiagramParties.StereotypeOf(pureCaller))
                     .AppendLine(pureCallerColor);
             }
             else
@@ -1348,8 +1347,7 @@ public static partial class PlantUmlCreator
                 sb.Append("actor \"")
                     .Append(WrapParticipantName(pureCaller))
                     .Append("\" as ")
-                    .Append(pureCallerAlias)
-                    .AppendLine(Parties.DiagramParties.StereotypeOf(pureCaller));
+                    .AppendLine(pureCallerAlias);
             }
             actorDefined = true;
         }
@@ -1392,7 +1390,6 @@ public static partial class PlantUmlCreator
                         .Append(WrapParticipantName(trace.CallerName))
                         .Append("\" as ")
                         .Append(callerShortName)
-                        .Append(Parties.DiagramParties.StereotypeOf(trace.CallerName))
                         .AppendLine(callerColorSuffix);
                 }
                 else
@@ -1402,8 +1399,7 @@ public static partial class PlantUmlCreator
                         .Append(" \"")
                         .Append(WrapParticipantName(trace.CallerName))
                         .Append("\" as ")
-                        .Append(callerShortName)
-                        .AppendLine(Parties.DiagramParties.StereotypeOf(trace.CallerName));
+                        .AppendLine(callerShortName);
                 }
             }
 
@@ -1421,7 +1417,6 @@ public static partial class PlantUmlCreator
                     .Append(WrapParticipantName(trace.ServiceName))
                     .Append("\" as ")
                     .Append(serviceShortName)
-                    .Append(Parties.DiagramParties.StereotypeOf(trace.ServiceName))
                     .AppendLine(colorSuffix);
             }
         }

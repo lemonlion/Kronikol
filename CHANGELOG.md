@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.16.2] - 2026-10-28
+
+The patch part moves (5.16.1 to 5.16.2): a change to what the diagrams draw, nothing new to call. It reverses part of
+5.14.0 at the owner's word, as its entry says.
+
+### Changed
+
+- **A declared test double is drawn by its name alone.** From 5.14.0 a party the run declared a double (`Parties`, or
+  the parties file) carried «test double» on its participant in the sequence diagrams and the component diagram. It is
+  drawn as a run that declares nothing draws it now, in every diagram the run draws. What the party is stays where it
+  was: the data file's `parties` block and `kronikol query parties` still give its kind, `double`, and its note.
+  The page's reading of a participant's dependency colour is 5.13.0's again, as no declaration carries a stereotype.
+
 ## [5.16.1] - 2026-10-28
 
 The patch part moves (5.16.0 to 5.16.1): fixes, nothing new to call. Each changes what a phase with a verbosity of its own
