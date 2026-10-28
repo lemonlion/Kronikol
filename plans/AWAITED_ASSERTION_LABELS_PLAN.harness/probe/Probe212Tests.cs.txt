@@ -1,0 +1,1164 @@
+using System.Reflection;
+using System.Text;
+using Kronikol.AssertionTracking;
+using Kronikol.Tracking;
+using Mono.Cecil;
+using Mono.Cecil.Cil;
+using Mono.Cecil.Rocks;
+using Opt = Microsoft.CodeAnalysis.OptimizationLevel;
+
+namespace Kronikol.Tests.AssertionTracking;
+
+/// <summary>
+/// TEMPORARY probe for #212 (plans/AWAITED_ASSERTION_LABELS_PLAN.md), kept in the plan's harness as
+/// probe/Probe212Tests.cs.txt: weaves each awaited assertion shape in Debug and in Release and writes what it finds into
+/// the harness's probe folder. It asserts nothing.
+/// </summary>
+public class Probe212Tests
+{
+    private sealed record Shape(string Id, string Title, string Usings, string Body, string[]? Entries = null, bool TUnit = false)
+    {
+        /// <summary>A whole fixture of its own (an issue's reproduction), in place of the shared template.</summary>
+        public string? FullSource { get; init; }
+
+        public string TypeName { get; init; } = "Probe";
+    }
+
+    /// <summary>The shapes the second pass builds with a real SDK (<c>dotnet build</c>), as the issues' suites were built.</summary>
+    private static readonly string[] SdkShapes = ["S1", "S2", "S3", "S4", "S14a", "S14b", "S14c", "S14d", "S14e", "S14g", "S14k", "S14l", "S14m", "S14n", "S14o", "S15a", "S16a", "S16b", "R211", "R212"];
+
+    private const string Sdk = "10.0.300";
+
+    private static readonly string[] MessageEntries = ["MessageMatches", "MessageDiffers"];
+
+    // #211's reproduction as the issue gives it, without xUnit ([Fact], its usings, [assembly: TestTracking]).
+    private const string Repro211 = """
+        using System;
+        using System.Threading.Tasks;
+        using Kronikol.Tracking;
+        using Shouldly;
+
+        [assembly: TrackAssertions]
+
+        namespace WeaveRepro;
+
+        public class ReproTests
+        {
+            private readonly Client _client = new();
+
+            public async Task ThrowAsync_is_the_first_await()
+            {
+                var request = new Request { Id = string.Empty };
+
+                var exception = await Should.ThrowAsync<InvalidOperationException>(
+                    async () => await _client.CallAsync(request)
+                );
+
+                exception.Message.ShouldBe("expected");   // NullReferenceException in Release
+            }
+
+            public async Task Unassigned_ThrowAsync_is_the_first_await()
+            {
+                var request = new Request { Id = string.Empty };
+
+                await Should.ThrowAsync<InvalidOperationException>(() => _client.CallAsync(request));   // NullReferenceException in Release
+            }
+
+            public async Task Another_await_comes_first()
+            {
+                await Task.Yield();
+                var request = new Request { Id = string.Empty };
+
+                var exception = await Should.ThrowAsync<InvalidOperationException>(
+                    async () => await _client.CallAsync(request)
+                );
+
+                exception.Message.ShouldBe("expected");   // passes
+            }
+        }
+
+        public sealed class Request
+        {
+            public string Id { get; init; } = "";
+        }
+
+        public sealed class Client
+        {
+            public async Task<string> CallAsync(Request request)
+            {
+                await Task.Yield();
+                throw new InvalidOperationException("expected");
+            }
+        }
+
+        """;
+
+    // #212's reproduction as the issue gives it, without xUnit.
+    private const string Repro212 = """
+        using System;
+        using System.Threading.Tasks;
+        using Kronikol.Tracking;
+        using Shouldly;
+
+        [assembly: TrackAssertions]
+
+        namespace LabelRepro;
+
+        public class LabelTests
+        {
+            private readonly OrdersClient _client = new();
+
+            public async Task Awaited_ThrowAsync()
+            {
+                await Task.Yield();
+                var request = new OrderRequest { Id = "missing" };
+
+                await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request));
+            }
+
+            public async Task Assigned_ThrowAsync()
+            {
+                await Task.Yield();
+                var request = new OrderRequest { Id = "missing" };
+
+                var exception = await Should.ThrowAsync<InvalidOperationException>(async () => await _client.GetOrderAsync(request));
+
+                exception.Message.ShouldBe("not found");
+            }
+
+            public async Task ThrowAsync_returned_by_a_helper()
+            {
+                var exception = await GetOrderShouldFail("missing");
+
+                exception.Message.ShouldBe("not found");
+            }
+
+            public async Task NotThrowAsync()
+            {
+                await Task.Yield();
+
+                await Should.NotThrowAsync(() => _client.GetOrderAsync(new OrderRequest { Id = "known" }));
+            }
+
+            public void Throw()
+            {
+                var request = new OrderRequest { Id = "missing" };
+
+                Should.Throw<InvalidOperationException>(() => _client.GetOrder(request));
+            }
+
+            private async Task<InvalidOperationException> GetOrderShouldFail(string id)
+            {
+                await Task.Yield();
+                return await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(new OrderRequest { Id = id }));
+            }
+        }
+
+        public sealed class OrderRequest
+        {
+            public string Id { get; init; } = "";
+        }
+
+        public sealed class OrdersClient
+        {
+            public async Task<string> GetOrderAsync(OrderRequest request)
+            {
+                await Task.Yield();
+                return request.Id == "known" ? "order" : throw new InvalidOperationException("not found");
+            }
+
+            public string GetOrder(OrderRequest request) =>
+                request.Id == "known" ? "order" : throw new InvalidOperationException("not found");
+        }
+
+        """;
+
+    private const string ShouldlyUsing = "using Shouldly;";
+    private const string FluentUsing = "using FluentAssertions;";
+    private const string TUnitUsing = "using TUnit.Assertions;\nusing TUnit.Assertions.Extensions;";
+
+    private static readonly string[] PassFail = ["AssertionPasses", "AssertionFails"];
+
+    private static readonly Shape[] Shapes =
+    [
+        new("S1", "await Should.ThrowAsync<T>(() => _client.GetOrderAsync(request));", ShouldlyUsing, """
+            public async Task Run()
+            {
+                await Task.Yield();
+                var request = new OrderRequest { Id = "missing" };
+                await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request));
+            }
+            """),
+        new("S2", "var exception = await Should.ThrowAsync<T>(async () => await _client.GetOrderAsync(request)); then exception.Message.ShouldBe", ShouldlyUsing, """
+            public async Task Run()
+            {
+                await Task.Yield();
+                var request = new OrderRequest { Id = "missing" };
+                var exception = await Should.ThrowAsync<InvalidOperationException>(async () => await _client.GetOrderAsync(request));
+                exception.Message.ShouldBe("not found");
+            }
+            """),
+        new("S3", "var e = await Should.ThrowAsync<T>(() => _client.GetOrderAsync(request)); (a lambda that returns the task)", ShouldlyUsing, """
+            public async Task Run()
+            {
+                await Task.Yield();
+                var request = new OrderRequest { Id = "missing" };
+                var e = await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request));
+                e.Message.ShouldBe("not found");
+            }
+            """),
+        new("S4", "return await Should.ThrowAsync<T>(...) in a private async helper the test awaits", ShouldlyUsing, """
+            public async Task Run()
+            {
+                var e = await GetOrderShouldFail("missing");
+                e.Message.ShouldBe("not found");
+            }
+
+            private async Task<InvalidOperationException> GetOrderShouldFail(string id)
+            {
+                await Task.Yield();
+                return await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(new OrderRequest { Id = id }));
+            }
+            """),
+        new("S5", "InvalidOperationException e = await Should.ThrowAsync<T>(...); (explicit type)", ShouldlyUsing, """
+            public async Task Run()
+            {
+                await Task.Yield();
+                var request = new OrderRequest { Id = "missing" };
+                InvalidOperationException e = await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request));
+                e.Message.ShouldBe("not found");
+            }
+            """),
+        new("S6", "Exception e; e = await Should.ThrowAsync<T>(...); (plain assignment to a local)", ShouldlyUsing, """
+            public async Task Run()
+            {
+                await Task.Yield();
+                var request = new OrderRequest { Id = "missing" };
+                Exception e;
+                e = await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request));
+                e.Message.ShouldBe("not found");
+            }
+            """),
+        new("S6b", "_e = await Should.ThrowAsync<T>(...); (assignment to an instance field)", ShouldlyUsing, """
+            private Exception? _e;
+
+            public async Task Run()
+            {
+                await Task.Yield();
+                var request = new OrderRequest { Id = "missing" };
+                _e = await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request));
+                _e.Message.ShouldBe("not found");
+            }
+            """),
+        new("S7", "_ = await Should.ThrowAsync<T>(...); (discard)", ShouldlyUsing, """
+            public async Task Run()
+            {
+                await Task.Yield();
+                var request = new OrderRequest { Id = "missing" };
+                _ = await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request));
+            }
+            """),
+        new("S8", "var e = await Should.ThrowAsync<T>(...).ConfigureAwait(false);", ShouldlyUsing, """
+            public async Task Run()
+            {
+                await Task.Yield();
+                var request = new OrderRequest { Id = "missing" };
+                var e = await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request)).ConfigureAwait(false);
+                e.Message.ShouldBe("not found");
+            }
+            """),
+        new("S9", "var e = Should.Throw<T>(() => _client.GetOrder(request)); (sync, assigned)", ShouldlyUsing, """
+            public void Run()
+            {
+                var request = new OrderRequest { Id = "missing" };
+                var e = Should.Throw<InvalidOperationException>(() => _client.GetOrder(request));
+                e.Message.ShouldBe("not found");
+            }
+            """),
+        new("S9b", "return Should.Throw<T>(...) from a sync helper", ShouldlyUsing, """
+            public void Run()
+            {
+                var e = GetOrderShouldFail("missing");
+                e.Message.ShouldBe("not found");
+            }
+
+            private InvalidOperationException GetOrderShouldFail(string id)
+            {
+                return Should.Throw<InvalidOperationException>(() => _client.GetOrder(new OrderRequest { Id = id }));
+            }
+            """),
+        new("S10", "await Should.NotThrowAsync(() => _client.GetOrderAsync(new OrderRequest { Id = \"known\" }));", ShouldlyUsing, """
+            public async Task Run()
+            {
+                await Task.Yield();
+
+                await Should.NotThrowAsync(() => _client.GetOrderAsync(new OrderRequest { Id = "known" }));
+            }
+            """),
+        new("S10b", "var v = await Should.NotThrowAsync(() => _client.GetOrderAsync(known)); (asked for: the Func<Task<T>> overload that returns T)", ShouldlyUsing, """
+            public async Task Run()
+            {
+                await Task.Yield();
+                var known = new OrderRequest { Id = "known" };
+                var v = await Should.NotThrowAsync(() => _client.GetOrderAsync(known));
+            }
+            """),
+        new("S10c", "var v = Should.NotThrow(() => _client.GetOrderAsync(known)); (Shouldly 4.3.0's only T-returning NotThrow over a Func<Task<T>>: sync)", ShouldlyUsing, """
+            public async Task Run()
+            {
+                await Task.Yield();
+                var known = new OrderRequest { Id = "known" };
+                var v = Should.NotThrow(() => _client.GetOrderAsync(known));
+                v.ShouldBe("order");
+            }
+            """),
+        new("S11", "var e = await Should.ThrowAsync<T>(...); read after a later await (hoisted in Release too)", ShouldlyUsing, """
+            public async Task Run()
+            {
+                await Task.Yield();
+                var request = new OrderRequest { Id = "missing" };
+                var e = await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request));
+                await Task.Yield();
+                e.Message.ShouldBe("not found");
+            }
+            """),
+        new("S12a", "FluentAssertions: var a = await act.Should().ThrowAsync<T>();", FluentUsing, """
+            public async Task Run()
+            {
+                await Task.Yield();
+                var request = new OrderRequest { Id = "missing" };
+                Func<Task> act = () => _client.GetOrderAsync(request);
+                var a = await act.Should().ThrowAsync<InvalidOperationException>();
+                a.Which.Message.Should().Be("not found");
+            }
+            """),
+        new("S12b", "FluentAssertions: (await act.Should().ThrowAsync<T>()).Which.Message.Should().Be(\"not found\");", FluentUsing, """
+            public async Task Run()
+            {
+                await Task.Yield();
+                var request = new OrderRequest { Id = "missing" };
+                Func<Task> act = () => _client.GetOrderAsync(request);
+                (await act.Should().ThrowAsync<InvalidOperationException>()).Which.Message.Should().Be("not found");
+            }
+            """),
+        new("S13", "TUnit: var v = await Assert.That(x).IsNotNull();", TUnitUsing, """
+            public async Task Run()
+            {
+                await Task.Yield();
+                string? x = "value";
+                var v = await Assert.That(x).IsNotNull();
+                await Assert.That(v).IsEqualTo("value");
+            }
+            """, TUnit: true),
+        new("S14a", "#211: S2 (assigned, async lambda) with no await before it", ShouldlyUsing, """
+            public async Task Run()
+            {
+                var request = new OrderRequest { Id = "missing" };
+                var exception = await Should.ThrowAsync<InvalidOperationException>(async () => await _client.GetOrderAsync(request));
+                exception.Message.ShouldBe("not found");
+            }
+            """),
+        new("S14b", "#211: S1 (unassigned, lambda returns the task) with no await before it", ShouldlyUsing, """
+            public async Task Run()
+            {
+                var request = new OrderRequest { Id = "missing" };
+                await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request));
+            }
+            """),
+        new("S14c", "#211: S3 (assigned, lambda returns the task) with no await before it", ShouldlyUsing, """
+            public async Task Run()
+            {
+                var request = new OrderRequest { Id = "missing" };
+                var e = await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request));
+                e.Message.ShouldBe("not found");
+            }
+            """),
+        new("S14d", "#211 control: no await before it, a lambda that captures no local (only this)", ShouldlyUsing, """
+            public async Task Run()
+            {
+                await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(new OrderRequest { Id = "missing" }));
+            }
+            """),
+        new("S14e", "#211 probe: an await comes first, but the captured local is declared in an inner block after it", ShouldlyUsing, """
+            public async Task Run()
+            {
+                await Task.Yield();
+                {
+                    var request = new OrderRequest { Id = "missing" };
+                    await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request));
+                }
+            }
+            """),
+        new("S14f", "#211 mechanism: the captured local is also read by a call before the first await (closure kept in a MoveNext local?)", ShouldlyUsing, """
+            public async Task Run()
+            {
+                var request = new OrderRequest { Id = "missing" };
+                GC.KeepAlive(request);
+                await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request));
+            }
+            """),
+        new("S14g", "#211 mechanism: a branch reads the captured local before the first await; unassigned", ShouldlyUsing, """
+            public async Task Run()
+            {
+                var request = new OrderRequest { Id = "missing" };
+                if (request.Id.Length == 0)
+                    throw new InvalidOperationException("empty");
+                await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request));
+            }
+            """),
+        new("S14h", "#211 mechanism: a branch reads the captured local before the first await; assigned, async lambda (#211's first test)", ShouldlyUsing, """
+            public async Task Run()
+            {
+                var request = new OrderRequest { Id = "missing" };
+                if (request.Id.Length == 0)
+                    throw new InvalidOperationException("empty");
+                var exception = await Should.ThrowAsync<InvalidOperationException>(async () => await _client.GetOrderAsync(request));
+                exception.Message.ShouldBe("not found");
+            }
+            """),
+        new("S14i", "#211 mechanism, control: as S14g with an await before it all", ShouldlyUsing, """
+            public async Task Run()
+            {
+                await Task.Yield();
+                var request = new OrderRequest { Id = "missing" };
+                if (request.Id.Length == 0)
+                    throw new InvalidOperationException("empty");
+                await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request));
+            }
+            """),
+        new("S14j", "#211 mechanism: as S14g, but NotThrowAsync over a client that returns", ShouldlyUsing, """
+            public async Task Run()
+            {
+                var request = new OrderRequest { Id = "known" };
+                if (request.Id.Length == 0)
+                    throw new InvalidOperationException("empty");
+                await Should.NotThrowAsync(() => _client.GetOrderAsync(request));
+            }
+            """),
+        new("S14k", "#211 mechanism: the captured local read twice in the statement (lambda and custom message), first await", ShouldlyUsing, """
+            public async Task Run()
+            {
+                var request = new OrderRequest { Id = "missing" };
+                await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request), "request " + request.Id);
+            }
+            """),
+        new("S14l", "#211 mechanism: a using declaration before the first await (a try must start on an empty stack)", ShouldlyUsing, """
+            public async Task Run()
+            {
+                var request = new OrderRequest { Id = "missing" };
+                using var scope = new System.IO.MemoryStream();
+                await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request));
+            }
+            """),
+        new("S14m", "#211 mechanism, control: S14l with an await before it all", ShouldlyUsing, """
+            public async Task Run()
+            {
+                await Task.Yield();
+                var request = new OrderRequest { Id = "missing" };
+                using var scope = new System.IO.MemoryStream();
+                await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request));
+            }
+            """),
+        new("S14n", "#211 mechanism: S14l assigned, async lambda, then the result read (#211's first test)", ShouldlyUsing, """
+            public async Task Run()
+            {
+                var request = new OrderRequest { Id = "missing" };
+                using var scope = new System.IO.MemoryStream();
+                var exception = await Should.ThrowAsync<InvalidOperationException>(async () => await _client.GetOrderAsync(request));
+                exception.Message.ShouldBe("not found");
+            }
+            """),
+        new("S14o", "#211 mechanism: S14l with NotThrowAsync over a client that returns", ShouldlyUsing, """
+            public async Task Run()
+            {
+                var request = new OrderRequest { Id = "known" };
+                using var scope = new System.IO.MemoryStream();
+                await Should.NotThrowAsync(() => _client.GetOrderAsync(request));
+            }
+            """),
+        new("S15a", "non-async helper, expression-bodied: Task<T> Fails(r) => Should.ThrowAsync<T>(...); the test awaits it", ShouldlyUsing, """
+            public async Task AssertionPasses()
+            {
+                var e = await Fails(new OrderRequest { Id = "missing" });
+                e.Message.ShouldBe("not found");
+            }
+
+            public async Task AssertionFails()
+            {
+                await Fails(new OrderRequest { Id = "known" });
+            }
+
+            private Task<InvalidOperationException> Fails(OrderRequest r) => Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(r));
+            """, PassFail),
+        new("S15b", "non-async helper, block body: { return Should.ThrowAsync<T>(...); }; the test awaits it", ShouldlyUsing, """
+            public async Task AssertionPasses()
+            {
+                var e = await Fails(new OrderRequest { Id = "missing" });
+                e.Message.ShouldBe("not found");
+            }
+
+            public async Task AssertionFails()
+            {
+                await Fails(new OrderRequest { Id = "known" });
+            }
+
+            private Task<InvalidOperationException> Fails(OrderRequest r)
+            {
+                return Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(r));
+            }
+            """, PassFail),
+        new("S15c", "non-async helper, expression-bodied: Task Ok(r) => Should.NotThrowAsync(...); the test awaits it", ShouldlyUsing, """
+            public async Task AssertionPasses()
+            {
+                await Ok(new OrderRequest { Id = "known" });
+            }
+
+            public async Task AssertionFails()
+            {
+                await Ok(new OrderRequest { Id = "missing" });
+            }
+
+            private Task Ok(OrderRequest r) => Should.NotThrowAsync(() => _client.GetOrderAsync(r));
+            """, PassFail),
+        new("S15d", "non-async helper, block body: { return Should.NotThrowAsync(...); }; the test awaits it", ShouldlyUsing, """
+            public async Task AssertionPasses()
+            {
+                await Ok(new OrderRequest { Id = "known" });
+            }
+
+            public async Task AssertionFails()
+            {
+                await Ok(new OrderRequest { Id = "missing" });
+            }
+
+            private Task Ok(OrderRequest r)
+            {
+                return Should.NotThrowAsync(() => _client.GetOrderAsync(r));
+            }
+            """, PassFail),
+        new("S16a", "FluentAssertions: (await act.Should().ThrowAsync<T>()).Which.Message.Should().Be(...), the trailing Be passing, then failing", FluentUsing, """
+            public async Task MessageMatches()
+            {
+                await Task.Yield();
+                var request = new OrderRequest { Id = "missing" };
+                Func<Task> act = () => _client.GetOrderAsync(request);
+                (await act.Should().ThrowAsync<InvalidOperationException>()).Which.Message.Should().Be("not found");
+            }
+
+            public async Task MessageDiffers()
+            {
+                await Task.Yield();
+                var request = new OrderRequest { Id = "missing" };
+                Func<Task> act = () => _client.GetOrderAsync(request);
+                (await act.Should().ThrowAsync<InvalidOperationException>()).Which.Message.Should().Be("other");
+            }
+            """, MessageEntries),
+        new("S16b", "Shouldly: (await Should.ThrowAsync<T>(...)).Message.ShouldBe(...), the trailing ShouldBe passing, then failing", ShouldlyUsing, """
+            public async Task MessageMatches()
+            {
+                await Task.Yield();
+                var request = new OrderRequest { Id = "missing" };
+                (await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request))).Message.ShouldBe("not found");
+            }
+
+            public async Task MessageDiffers()
+            {
+                await Task.Yield();
+                var request = new OrderRequest { Id = "missing" };
+                (await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request))).Message.ShouldBe("other");
+            }
+            """, MessageEntries),
+        new("R211", "#211's reproduction, verbatim but for xUnit", "", "",
+            ["ThrowAsync_is_the_first_await", "Unassigned_ThrowAsync_is_the_first_await", "Another_await_comes_first"])
+        {
+            FullSource = Repro211,
+            TypeName = "WeaveRepro.ReproTests",
+        },
+        new("R212", "#212's reproduction, verbatim but for xUnit", "", "",
+            ["Awaited_ThrowAsync", "Assigned_ThrowAsync", "ThrowAsync_returned_by_a_helper", "NotThrowAsync", "Throw"])
+        {
+            FullSource = Repro212,
+            TypeName = "LabelRepro.LabelTests",
+        },
+    ];
+
+    private static readonly string Harness = FindHarness();
+    private static readonly DefaultAssemblyResolver Resolver = NewResolver();
+
+    private static readonly MethodInfo FindStatements =
+        typeof(AssertionWeaver).GetMethod("FindAssertionStatements", BindingFlags.NonPublic | BindingFlags.Instance)!;
+    private static readonly MethodInfo PlanStackMethod =
+        typeof(AssertionWeaver).GetMethod("PlanStack", BindingFlags.NonPublic | BindingFlags.Static)!;
+    private static readonly MethodInfo AwaitedRangeMethod =
+        typeof(AssertionWeaver).GetMethod("AwaitedRange", BindingFlags.NonPublic | BindingFlags.Static)!;
+
+    private static readonly Dictionary<string, int> TrackArguments = new()
+    {
+        ["AssertionPassed"] = 3,
+        ["AssertionPassedWithValues"] = 5,
+        ["AssertionFailed"] = 5,
+        ["AssertionFailedWithValues"] = 7,
+    };
+
+    [Fact]
+    public void Probe()
+    {
+        File.WriteAllText(Path.Combine(Harness, "shouldly-async-overloads.txt"), ShouldlyOverloads());
+        var summary = new StringBuilder();
+        summary.AppendLine($"## Pass 1: every shape, built by TestAssemblyBuilder.Build (Roslyn's API, Microsoft.CodeAnalysis.CSharp {Informational(typeof(Microsoft.CodeAnalysis.CSharp.CSharpCompilation).Assembly)})");
+        summary.AppendLine();
+        Header(summary);
+        foreach (var optimization in new[] { Opt.Debug, Opt.Release })
+            RunPass(Shapes, optimization, null, $"results-{optimization.ToString().ToLowerInvariant()}.txt", summary);
+
+        summary.AppendLine();
+        summary.AppendLine($"## Pass 2: the shapes #211 and #212 report, built by `dotnet build` with SDK {Sdk} (its compiler: Roslyn {SdkRoslyn()}), as the issues' suites were");
+        summary.AppendLine();
+        Header(summary);
+        var sdkShapes = Shapes.Where(s => SdkShapes.Contains(s.Id)).ToArray();
+        foreach (var optimization in new[] { Opt.Debug, Opt.Release })
+            RunPass(sdkShapes, optimization, Sdk, $"results-sdk-{optimization.ToString().ToLowerInvariant()}.txt", summary);
+        File.WriteAllText(Path.Combine(Harness, "summary.txt"), summary.ToString());
+    }
+
+    private static void Header(StringBuilder summary)
+    {
+        summary.AppendLine("| shape | config | entry | woven | unwoven reason | notes drawn | woven run threw | unwoven run threw |");
+        summary.AppendLine("|---|---|---|---|---|---|---|---|");
+    }
+
+    private static void RunPass(Shape[] shapes, Opt optimization, string? sdk, string file, StringBuilder summary)
+    {
+        var results = new StringBuilder();
+        results.AppendLine($"# Probe212, {optimization}, built by {(sdk == null ? "TestAssemblyBuilder.Build (Roslyn's API)" : $"dotnet build with SDK {sdk}")}");
+        results.AppendLine($"Kronikol {Informational(typeof(Track).Assembly)}, Kronikol.AssertionTracking {Informational(typeof(AssertionWeaver).Assembly)}, " +
+                           $"compiler {(sdk == null ? "Roslyn " + Informational(typeof(Microsoft.CodeAnalysis.CSharp.CSharpCompilation).Assembly) : $"SDK {sdk}'s Roslyn {SdkRoslyn()}")}, " +
+                           $"Shouldly {Informational(typeof(Shouldly.Should).Assembly)}, FluentAssertions {Informational(typeof(FluentAssertions.AssertionExtensions).Assembly)}, " +
+                           $"TUnit.Assertions {Informational(typeof(TUnit.Assertions.Assert).Assembly)}, runtime {Environment.Version}");
+        foreach (var shape in shapes)
+        {
+            try
+            {
+                Measure(shape, optimization, sdk, results, summary);
+            }
+            catch (Exception ex)
+            {
+                results.AppendLine($"!! probe error: {ex}");
+            }
+        }
+        File.WriteAllText(Path.Combine(Harness, file), results.ToString());
+    }
+
+    private static void Measure(Shape shape, Opt optimization, string? sdk, StringBuilder results, StringBuilder summary)
+    {
+        var config = optimization.ToString();
+        var tag = sdk == null ? config : "sdk." + config;
+        var name = $"Probe212_{shape.Id}_{(sdk == null ? "" : "sdk_")}{config}";
+        var source = Source(shape);
+        string[] extra = shape.TUnit ? [typeof(TUnit.Assertions.Assert).Assembly.Location] : [];
+        var entries = shape.Entries ?? ["Run"];
+        results.AppendLine();
+        results.AppendLine($"## {shape.Id} [{config}{(sdk == null ? "" : ", SDK " + sdk)}] {shape.Title}");
+        File.WriteAllText(Path.Combine(Harness, "il", $"{shape.Id}.source.txt"), Numbered(source));
+
+        string path;
+        try
+        {
+            path = sdk == null
+                ? TestAssemblyBuilder.Build(name, source, optimization, Microsoft.CodeAnalysis.Emit.DebugInformationFormat.PortablePdb, extra)
+                : TestAssemblyBuilder.BuildWithSdk(name, source, sdk, "net10.0", config);
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or FileNotFoundException)
+        {
+            results.AppendLine("compile: FAILED: " + ex.Message.ReplaceLineEndings(" | "));
+            summary.AppendLine($"| {shape.Id} | {config} | | | did not compile: {Cut(ex.Message.ReplaceLineEndings(" ").Replace("|", "/"), 160)} | | | |");
+            return;
+        }
+        var lines = File.ReadAllLines(Path.ChangeExtension(path, ".cs"));
+        results.AppendLine($"source: il/{shape.Id}.source.txt; IL: il/{shape.Id}.{tag}.unwoven.il.txt and il/{shape.Id}.{tag}.woven.il.txt");
+
+        // Every SDK build is an assembly named WeaverFixture: its unwoven copy is kept beside it, and each run loads its
+        // assembly into a load context of its own.
+        string? plainPath = null;
+        var plainError = "";
+        if (sdk != null)
+        {
+            plainPath = Path.Combine(Path.GetDirectoryName(path)!, name + "_plain.dll");
+            File.Copy(path, plainPath, overwrite: true);
+            File.Copy(Path.ChangeExtension(path, ".pdb"), Path.ChangeExtension(plainPath, ".pdb"), overwrite: true);
+        }
+
+        // 1. The original IL, and the weaver's own reading of each statement in it: FindAssertionStatements as the weave
+        //    calls it, then SimplifyMacros, StackAnalysis and PlanStack as WrapAssertions calls them.
+        var unwovenDump = new StringBuilder();
+        var plan = new StringBuilder();
+        using (var module = Read(path))
+        {
+            var types = module.GetTypes().Where(t => IsUnder(t, shape.TypeName)).ToList();
+            foreach (var type in types)
+                DumpType(type, unwovenDump, lines);
+
+            var weaver = new AssertionWeaver();
+            foreach (var type in types)
+            {
+                foreach (var method in type.Methods.Where(m => m.HasBody).ToList())
+                {
+                    var statements = (List<AssertionStatement>)FindStatements.Invoke(weaver, [method, new WeaveResult()])!;
+                    if (statements.Count == 0)
+                        continue;
+                    var excerpts = statements.ToDictionary(s => s, s => Excerpt(method, s, lines));
+                    method.Body.SimplifyMacros();
+                    var analysis = StackAnalysis.Analyze(method.Body);
+                    foreach (var st in statements)
+                    {
+                        var sp = st.SequencePoint;
+                        plan.AppendLine($"  {type.Name}::{method.Name} L{sp.StartLine}:{sp.StartColumn}-L{sp.EndLine}:{sp.EndColumn}  awaited={st.IsAwaited}  GetResult={(st.GetResultInstruction is { } gr ? $"IL_{gr.Offset:x4} {Operand(gr)}" : "none")}  stack analysis consistent={analysis.Consistent}");
+                        plan.AppendLine($"    SourceText: \"{st.SourceText}\"");
+                        plan.AppendLine($"    statement IL_{st.FirstInstruction.Offset:x4} {st.FirstInstruction.OpCode} .. IL_{st.LastInstruction.Offset:x4} {st.LastInstruction.OpCode} {Operand(st.LastInstruction)}");
+                        foreach (var cv in st.CapturedVariables)
+                            plan.AppendLine($"    captured value {Describe(cv, method)}");
+                        if (st.CapturedVariables.Count == 0)
+                            plan.AppendLine("    captured value: none");
+                        PlanOf(method, st, analysis, plan);
+                        if (excerpts[st] is { } excerpt)
+                        {
+                            plan.AppendLine("    original IL from the statement's GetAwaiter to the next visible sequence point:");
+                            plan.Append(excerpt);
+                        }
+                    }
+                }
+            }
+        }
+        File.WriteAllText(Path.Combine(Harness, "il", $"{shape.Id}.{tag}.unwoven.il.txt"), unwovenDump.ToString());
+
+        // 2. The weave itself, and what it added that ILVerify rejects.
+        var before = File.ReadAllBytes(path);
+        var weave = new AssertionWeaver().Weave(path, Path.ChangeExtension(path, ".pdb"));
+        var added = WovenIl.NewErrors(before, File.ReadAllBytes(path), path);
+
+        // 3. The woven IL: each Track call's expression (the ldstr the weave passes) and each woven try region.
+        var tracked = new List<(string Where, string Call, int Line, string Text)>();
+        var wovenDump = new StringBuilder();
+        var regions = new StringBuilder();
+        using (var module = Read(path))
+        {
+            foreach (var type in module.GetTypes().Where(t => IsUnder(t, shape.TypeName)))
+            {
+                DumpType(type, wovenDump, lines);
+                foreach (var method in type.Methods.Where(m => m.HasBody))
+                {
+                    foreach (var i in method.Body.Instructions.Where(IsTrackCall))
+                    {
+                        var call = (MethodReference)i.Operand;
+                        var at = i;
+                        for (var k = 0; k < TrackArguments[call.Name] && at != null; k++)
+                            at = at.Previous;
+                        var text = at?.OpCode == OpCodes.Ldstr ? (string)at.Operand : "?";
+                        tracked.Add(($"{type.Name}::{method.Name}", call.Name, IntOf(i.Previous), text));
+                    }
+
+                    var points = Points(method);
+                    foreach (var h in method.Body.ExceptionHandlers.Where(h => h.HandlerType == ExceptionHandlerType.Catch && Between(h.HandlerStart, h.HandlerEnd).Any(IsTrackCall)))
+                    {
+                        regions.AppendLine($"  {type.Name}::{method.Name} woven try IL_{h.TryStart.Offset:x4}, catch IL_{h.HandlerStart.Offset:x4}, end IL_{h.HandlerEnd?.Offset:x4}:");
+                        foreach (var i in Between(h.TryStart, h.HandlerEnd))
+                            regions.AppendLine("  " + Line(i, points, null, lines));
+                        if (h.HandlerEnd is { } end)
+                            regions.AppendLine("  " + Line(end, points, null, lines) + "   <- after the catch");
+                    }
+                }
+            }
+        }
+        File.WriteAllText(Path.Combine(Harness, "il", $"{shape.Id}.{tag}.woven.il.txt"), wovenDump.ToString());
+
+        results.AppendLine($"weave: WeavedCount={weave.WeavedCount} MethodCount={weave.MethodCount}{(weave.SkipReason is { } skip ? " SkipReason=" + skip : "")}");
+        foreach (var u in weave.Unwoven)
+            results.AppendLine($"  Unwoven: {u}");
+        foreach (var d in weave.DiagMessages)
+            results.AppendLine($"  Diag: {d}");
+        results.AppendLine(added.Count == 0 ? "  ILVerify: no error the weave added" : "  ILVerify errors the weave added:\n    " + string.Join("\n    ", added));
+        results.AppendLine("statements, as the weaver's FindAssertionStatements and PlanStack read the original module:");
+        results.Append(plan);
+        results.AppendLine("Track calls in the woven IL (the expression is the ldstr the weave passes):");
+        foreach (var group in tracked.GroupBy(t => (t.Where, t.Line, t.Text)))
+        {
+            var formatted = AssertionExpressionFormatter.Format(group.Key.Text);
+            results.AppendLine($"  {group.Key.Where} line {group.Key.Line}: {string.Join(" + ", group.Select(t => t.Call))}");
+            results.AppendLine($"    expression: \"{group.Key.Text}\"");
+            results.AppendLine($"    Format(expression) = \"{formatted}\"");
+            results.AppendLine($"    label as Track.LogAssertion writes it (StepText.CapitaliseIfEnabled) = \"{Kronikol.Reports.StepText.CapitaliseIfEnabled(formatted)}\"");
+            var core = Core(group.Key.Text);
+            if (core != group.Key.Text)
+                results.AppendLine($"    what-if, the prefix cut by hand (not what the code does): Format(\"{core}\") = \"{AssertionExpressionFormatter.Format(core)}\"");
+        }
+        if (tracked.Count == 0)
+            results.AppendLine("  none");
+        results.AppendLine("woven try regions (every catch whose handler calls Track):");
+        results.Append(regions.Length > 0 ? regions.ToString() : "  none\n");
+
+        // 4. The runs: the woven build, then the same source left unwoven (built again under its own name for the
+        //    suite's builder, the copy kept before the weave for an SDK build).
+        if (sdk == null)
+        {
+            try
+            {
+                plainPath = TestAssemblyBuilder.Build(name + "_plain", source, optimization, Microsoft.CodeAnalysis.Emit.DebugInformationFormat.PortablePdb, extra);
+            }
+            catch (Exception ex)
+            {
+                plainError = "probe error " + ex.Message;
+            }
+        }
+        foreach (var entry in entries)
+        {
+            var (thrown, notes) = sdk == null ? WovenRun.Run(path, shape.TypeName, entry) : RunIsolated(path, shape.TypeName, entry);
+            Exception? plainThrown = null;
+            if (plainPath != null)
+                plainThrown = (sdk == null ? WovenRun.Run(plainPath, shape.TypeName, entry) : RunIsolated(plainPath, shape.TypeName, entry)).Thrown;
+
+            results.AppendLine($"run {entry}, woven: threw {Describe(thrown)}");
+            foreach (var n in notes)
+                results.AppendLine($"  note {(n.Passed ? "✓" : "✗")} \"{n.Label}\" ({n.Label.Length} chars){(n.Message is { } m ? ", message: " + m.ReplaceLineEndings("\\n") : "")}, source {n.Source}");
+            if (notes.Length == 0)
+                results.AppendLine("  no note drawn");
+            results.AppendLine($"run {entry}, unwoven build: threw {(plainPath == null ? plainError : Describe(plainThrown))}");
+
+            summary.AppendLine($"| {shape.Id} | {config} | {entry} | {weave.WeavedCount} | {string.Join("; ", weave.Unwoven.Select(ShortReason))} | " +
+                               $"{string.Join("<br>", notes.Select(n => (n.Passed ? "✓ " : "✗ ") + n.Label.Replace("|", "/")))} | {Brief(thrown)} | {(plainPath == null ? plainError : Brief(plainThrown))} |");
+        }
+    }
+
+    /// <summary><see cref="WovenRun.Run"/> in a collectible load context of its own: every SDK build is named
+    /// WeaverFixture, which the default context loads once.</summary>
+    private static (Exception? Thrown, WovenRun.Note[] Notes) RunIsolated(string path, string typeName, string methodName)
+    {
+        var context = new System.Runtime.Loader.AssemblyLoadContext($"{Path.GetFileNameWithoutExtension(path)}_{Guid.NewGuid():N}", isCollectible: true);
+        try
+        {
+            var type = context.LoadFromAssemblyPath(path).GetType(typeName)!;
+            var method = type.GetMethod(methodName)!;
+            var instance = method.IsStatic ? null : Activator.CreateInstance(type);
+            var testId = $"{methodName}_{Guid.NewGuid():N}";
+            Exception? thrown;
+            using (TestIdentityScope.Begin(testId, testId))
+            {
+                thrown = Record.Exception(() =>
+                {
+                    if (method.Invoke(instance, null) is Task task)
+                        task.GetAwaiter().GetResult();
+                });
+            }
+            if (thrown is TargetInvocationException { InnerException: { } inner })
+                thrown = inner;
+            return (thrown, WovenRun.NotesFor(testId));
+        }
+        finally
+        {
+            context.Unload();
+        }
+    }
+
+    private static string SdkRoslyn()
+    {
+        var compiler = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "dotnet", "sdk", Sdk,
+            "Roslyn", "bincore", "Microsoft.CodeAnalysis.CSharp.dll");
+        return File.Exists(compiler) ? System.Diagnostics.FileVersionInfo.GetVersionInfo(compiler).ProductVersion ?? "?" : "? (not found at " + compiler + ")";
+    }
+
+    private static string Cut(string text, int max) => text.Length <= max ? text : text[..max] + "...";
+
+    private static void PlanOf(MethodDefinition method, AssertionStatement st, StackAnalysis analysis, StringBuilder sb)
+    {
+        var args = new object?[] { method, st, analysis, null, null };
+        var reason = (string?)PlanStackMethod.Invoke(null, args);
+        var entry = (StackAnalysis.Slot[])args[3]!;
+        var exit = (StackAnalysis.Slot[])args[4]!;
+        sb.AppendLine($"    PlanStack: {(reason == null ? "woven" : "REFUSED: " + reason)}; entry=[{Slots(entry)}] exit=[{Slots(exit)}]");
+        if (!st.IsAwaited || st.GetResultInstruction == null)
+            return;
+        var (start, end) = ((Instruction, Instruction))AwaitedRangeMethod.Invoke(null, [st.GetResultInstruction])!;
+        sb.AppendLine($"    AwaitedRange: IL_{start.Offset:x4} {start.OpCode} {Operand(start)} .. IL_{end.Offset:x4} {end.OpCode} {Operand(end)}; then IL_{end.Next?.Offset:x4} {end.Next?.OpCode} {Operand(end.Next)}");
+        var stack = analysis.StackBefore(start);
+        sb.AppendLine("    stack before the range's start: " + (stack == null
+            ? "unreached"
+            : stack.Length == 0
+                ? "empty"
+                : string.Join(", ", stack.Select(s => $"{Short(s.Type)} pushed by {(s.Producer is { } p ? $"IL_{p.Offset:x4} {p.OpCode} {Operand(p)}" : "(paths joined)")}"))));
+    }
+
+    /// <summary>How the awaited wrap (WrapAwaitedAssertion L3192-3215) loads a captured value at the merge point.</summary>
+    private static string Describe(CapturedVariable cv, MethodDefinition method)
+    {
+        if (cv.ClosureField != null && cv.ClosureLocalIndex >= 0)
+            return $"'{cv.Name}': ldloc V_{cv.ClosureLocalIndex} (a local of {method.DeclaringType.Name}::{method.Name}, {Short(method.Body.Variables[cv.ClosureLocalIndex].VariableType)}); ldfld {cv.ClosureField.Name}";
+        if (cv.ClosureField != null && cv.StateField != null)
+            return $"'{cv.Name}': ldarg.0; ldfld {cv.StateField.Name} ({Short(cv.StateField.FieldType)}); ldfld {cv.ClosureField.Name}";
+        if (cv.StateField != null)
+            return $"'{cv.Name}': ldarg.0; ldfld {cv.StateField.Name}";
+        if (cv.ParameterIndex >= 0)
+            return $"'{cv.Name}': ldarg {cv.ParameterIndex}";
+        return $"'{cv.Name}': ldloc V_{cv.LocalIndex}";
+    }
+
+    /// <summary>The original IL from the statement's last GetAwaiter to the next visible sequence point after GetResult.</summary>
+    private static string? Excerpt(MethodDefinition method, AssertionStatement st, string[] lines)
+    {
+        var points = Points(method);
+        Instruction? getAwaiter = null;
+        for (var i = st.FirstInstruction; i != null; i = i.Next)
+        {
+            if (i != st.FirstInstruction && points.TryGetValue(i.Offset, out var p) && !p.IsHidden)
+                break;
+            if (IsCall(i, "GetAwaiter"))
+                getAwaiter = i;
+        }
+        if (getAwaiter == null)
+            return null;
+
+        var analysis = SafeAnalyze(method);
+        var sb = new StringBuilder();
+        var seenGetResult = false;
+        var count = 0;
+        for (var i = getAwaiter; i != null && count++ < 120; i = i.Next)
+        {
+            var visible = points.TryGetValue(i.Offset, out var p) && !p.IsHidden;
+            if (visible && i != getAwaiter && seenGetResult)
+            {
+                sb.AppendLine("    " + Line(i, points, analysis, lines) + "   <- next visible sequence point");
+                break;
+            }
+            sb.AppendLine("    " + Line(i, points, analysis, lines));
+            if (IsCall(i, "GetResult"))
+                seenGetResult = true;
+        }
+        return sb.ToString();
+    }
+
+    private static void DumpType(TypeDefinition type, StringBuilder sb, string[] lines)
+    {
+        sb.AppendLine($"### type {type.FullName}");
+        foreach (var f in type.Fields)
+            sb.AppendLine($"  field {Short(f.FieldType)} {f.Name}");
+        foreach (var m in type.Methods.Where(m => m.HasBody && m.Name is not ".ctor" and not ".cctor" and not "SetStateMachine"))
+        {
+            sb.AppendLine($"#### {type.FullName}::{m.Name}");
+            foreach (var v in m.Body.Variables)
+                sb.AppendLine($"  local V_{v.Index} {Short(v.VariableType)}{(m.DebugInformation.TryGetName(v, out var n) ? $" \"{n}\"" : "")}");
+            foreach (var h in m.Body.ExceptionHandlers)
+                sb.AppendLine($"  handler {h.HandlerType} {Short(h.CatchType)} try IL_{h.TryStart.Offset:x4}..IL_{h.TryEnd?.Offset:x4} handler IL_{h.HandlerStart.Offset:x4}..IL_{h.HandlerEnd?.Offset:x4}");
+            var points = Points(m);
+            var analysis = SafeAnalyze(m);
+            foreach (var i in m.Body.Instructions)
+                sb.AppendLine(Line(i, points, analysis, lines));
+        }
+    }
+
+    private static string Line(Instruction i, Dictionary<int, SequencePoint> points, StackAnalysis? analysis, string[] lines)
+    {
+        points.TryGetValue(i.Offset, out var p);
+        var mark = p == null ? "" : p.IsHidden ? "SP hidden" : $"SP L{p.StartLine}:{p.StartColumn}-L{p.EndLine}:{p.EndColumn}";
+        var stack = analysis == null
+            ? ""
+            : analysis.StackBefore(i) is { } s
+                ? $"  stack[{s.Length}]{(s.Length > 0 ? " " + string.Join(", ", s.Select(x => Short(x.Type))) : "")}"
+                : "  stack[unreached]";
+        var text = $"{mark,-24} IL_{i.Offset:x4}: {i.OpCode.Name,-14} {Operand(i),-72}{stack}";
+        if (p is { IsHidden: false } && p.StartLine >= 1 && p.StartLine <= lines.Length)
+            text += $"   // {lines[p.StartLine - 1].Trim()}";
+        return text;
+    }
+
+    private static string Operand(Instruction? i) => i?.Operand switch
+    {
+        null => "",
+        Instruction t => $"IL_{t.Offset:x4}",
+        Instruction[] ts => string.Join(",", ts.Select(t => $"IL_{t.Offset:x4}")),
+        GenericInstanceMethod gm => $"{Short(gm.DeclaringType)}::{gm.Name}<{string.Join(",", gm.GenericArguments.Select(Short))}>",
+        MethodReference mr => $"{Short(mr.DeclaringType)}::{mr.Name}",
+        FieldReference fr => $"{Short(fr.DeclaringType)}::{fr.Name}",
+        VariableDefinition v => $"V_{v.Index}",
+        ParameterDefinition pd => pd.Name,
+        string s => "\"" + s.ReplaceLineEndings("\\n") + "\"",
+        TypeReference t => Short(t),
+        _ => i.Operand.ToString() ?? "",
+    };
+
+    private static string Short(TypeReference? t) => t == null
+        ? "?"
+        : t.FullName.Replace("System.Threading.Tasks.", "").Replace("System.Runtime.CompilerServices.", "").Replace("System.", "");
+
+    private static string Slots(StackAnalysis.Slot[] slots) => string.Join(", ", slots.Select(s => Short(s.Type)));
+
+    private static Dictionary<int, SequencePoint> Points(MethodDefinition method) =>
+        method.DebugInformation.SequencePoints.GroupBy(p => p.Offset).ToDictionary(g => g.Key, g => g.First());
+
+    private static StackAnalysis? SafeAnalyze(MethodDefinition method)
+    {
+        try
+        {
+            return StackAnalysis.Analyze(method.Body);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static IEnumerable<Instruction> Between(Instruction start, Instruction? end)
+    {
+        for (var i = start; i != null && i != end; i = i.Next)
+            yield return i;
+    }
+
+    private static bool IsUnder(TypeDefinition type, string root) =>
+        type.FullName == root || type.FullName.StartsWith(root + "/", StringComparison.Ordinal);
+
+    private static bool IsCall(Instruction i, string name) =>
+        (i.OpCode == OpCodes.Call || i.OpCode == OpCodes.Callvirt) && i.Operand is MethodReference mr && mr.Name == name;
+
+    private static bool IsTrackCall(Instruction i) =>
+        i.OpCode == OpCodes.Call && i.Operand is MethodReference mr &&
+        mr.DeclaringType.FullName == "Kronikol.Tracking.Track" && TrackArguments.ContainsKey(mr.Name);
+
+    private static int IntOf(Instruction? i) => i == null ? -1 : i.OpCode.Code switch
+    {
+        Code.Ldc_I4 => (int)i.Operand,
+        Code.Ldc_I4_S => (sbyte)i.Operand,
+        Code.Ldc_I4_0 => 0,
+        Code.Ldc_I4_1 => 1,
+        Code.Ldc_I4_2 => 2,
+        Code.Ldc_I4_3 => 3,
+        Code.Ldc_I4_4 => 4,
+        Code.Ldc_I4_5 => 5,
+        Code.Ldc_I4_6 => 6,
+        Code.Ldc_I4_7 => 7,
+        Code.Ldc_I4_8 => 8,
+        _ => -1,
+    };
+
+    /// <summary>The statement with a leading <c>return</c>, an assignment and an <c>await</c> cut off by hand.</summary>
+    private static string Core(string text)
+    {
+        var t = text;
+        if (t.StartsWith("return ", StringComparison.Ordinal))
+            t = t["return ".Length..];
+        var eq = t.IndexOf(" = ", StringComparison.Ordinal);
+        var paren = t.IndexOf('(');
+        if (eq > 0 && (paren < 0 || eq < paren))
+            t = t[(eq + 3)..];
+        if (t.StartsWith("await ", StringComparison.Ordinal))
+            t = t["await ".Length..];
+        return t;
+    }
+
+    private static string Describe(Exception? ex)
+    {
+        if (ex == null)
+            return "nothing";
+        var frames = (ex.StackTrace ?? "").ReplaceLineEndings("\n").Split('\n')
+            .Where(l => l.Contains(" in ", StringComparison.Ordinal) || l.Contains("Probe", StringComparison.Ordinal) || l.Contains("---", StringComparison.Ordinal))
+            .Take(8)
+            .Select(l => "\n      " + l.Trim());
+        return $"{ex.GetType().FullName}: {ex.Message.ReplaceLineEndings("\\n")}{string.Concat(frames)}";
+    }
+
+    private static string Brief(Exception? ex) => ex == null ? "no" : ex.GetType().Name;
+
+    private static string ShortReason(string unwoven)
+    {
+        var at = unwoven.IndexOf(", line ", StringComparison.Ordinal);
+        return at < 0 ? unwoven : unwoven[(at + 2)..];
+    }
+
+    private static string Numbered(string source)
+    {
+        var all = source.ReplaceLineEndings("\n").Split('\n');
+        return string.Join("\n", all.Select((l, n) => $"{n + 1,3}: {l}")) + "\n";
+    }
+
+    private static string Indent(string body) =>
+        string.Join("\n", body.ReplaceLineEndings("\n").Split('\n').Select(l => l.Length == 0 ? l : "    " + l));
+
+    private static string Source(Shape shape) => shape.FullSource ?? $$"""
+        #nullable enable
+        using System;
+        using System.Threading.Tasks;
+        using Kronikol.Tracking;
+        {{shape.Usings}}
+
+        [assembly: TrackAssertions]
+
+        public sealed class OrderRequest
+        {
+            public string Id { get; init; } = "";
+        }
+
+        public sealed class OrdersClient
+        {
+            public async Task<string> GetOrderAsync(OrderRequest request)
+            {
+                await Task.Yield();
+                return request.Id == "known" ? "order" : throw new InvalidOperationException("not found");
+            }
+
+            public string GetOrder(OrderRequest request) =>
+                request.Id == "known" ? "order" : throw new InvalidOperationException("not found");
+        }
+
+        public class Probe
+        {
+            private readonly OrdersClient _client = new();
+
+        {{Indent(shape.Body)}}
+        }
+
+        """;
+
+    private static string ShouldlyOverloads()
+    {
+        var assembly = typeof(Shouldly.Should).Assembly;
+        var found = new SortedSet<string>(StringComparer.Ordinal);
+        foreach (var type in assembly.GetExportedTypes())
+        {
+            foreach (var m in type.GetMethods(BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly))
+            {
+                if (!m.Name.Contains("NotThrow", StringComparison.Ordinal) && !m.Name.Contains("ThrowAsync", StringComparison.Ordinal))
+                    continue;
+                var generic = m.IsGenericMethodDefinition ? "<" + string.Join(",", m.GetGenericArguments().Select(a => a.Name)) + ">" : "";
+                found.Add($"  {type.Name}.{m.Name}{generic}({string.Join(", ", m.GetParameters().Select(p => $"{p.ParameterType} {p.Name}"))}) -> {m.ReturnType}");
+            }
+        }
+        return $"Shouldly {Informational(assembly)} ({assembly.Location}): every public static method whose name has NotThrow or ThrowAsync\n" +
+               string.Join("\n", found) + "\n";
+    }
+
+    private static string Informational(Assembly assembly) =>
+        assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? assembly.GetName().Version?.ToString() ?? "?";
+
+    private static ModuleDefinition Read(string path) =>
+        ModuleDefinition.ReadModule(new MemoryStream(File.ReadAllBytes(path)), new ReaderParameters
+        {
+            ReadingMode = ReadingMode.Immediate,
+            ReadSymbols = true,
+            SymbolReaderProvider = new PortablePdbReaderProvider(),
+            SymbolStream = new MemoryStream(File.ReadAllBytes(Path.ChangeExtension(path, ".pdb"))),
+            AssemblyResolver = Resolver,
+        });
+
+    private static DefaultAssemblyResolver NewResolver()
+    {
+        var resolver = new DefaultAssemblyResolver();
+        resolver.AddSearchDirectory(AppContext.BaseDirectory);
+        return resolver;
+    }
+
+    private static string FindHarness()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir != null && !File.Exists(Path.Combine(dir.FullName, "Kronikol.sln")))
+            dir = dir.Parent;
+        var root = Path.Combine(dir!.FullName, "plans", "AWAITED_ASSERTION_LABELS_PLAN.harness", "probe");
+        Directory.CreateDirectory(Path.Combine(root, "il"));
+        return root;
+    }
+}

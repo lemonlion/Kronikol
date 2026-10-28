@@ -1,0 +1,57 @@
+Which build messages each MSBuild logger shows (#212, F2 and Q2). Measured 2026-10-27, Windows 11, SDKs 8.0.421, 9.0.314
+and 10.0.300 (each pinned by a global.json with rollForward disable), on a class library (net8.0) whose target
+AfterTargets="Build" raises the messages below. Every count is the number of output lines carrying the text, after ANSI
+codes were stripped. The three SDKs gave identical results, so one table stands for all three.
+
+Run 1: <Message Importance="High">, <Message Importance="Normal">, <Warning Code="PROBE001"> (the last with -p:ProbeWarn=true)
+
+  dotnet build --no-restore -tl:off                 high=1 normal=0 warning=0
+  dotnet build --no-restore -tl:on                  high=0 normal=0 warning=0
+  dotnet build --no-restore -tl:on -v:n             high=0 normal=0 warning=0
+  dotnet build --no-restore -tl:on -p:ProbeWarn=true high=0 normal=0 warning=1
+
+Run 2: <Message Importance="High">, <Message Importance="High" Code="PROBE002" File="C:\x\Tests.cs">,
+       <Message Importance="High" IsCritical="true">
+
+  -tl:off                          high=1 highWithCode=1 critical=1
+  -tl:off -v:q                     high=0 highWithCode=0 critical=0
+  -tl:on                           high=0 highWithCode=0 critical=0
+  -tl:on -v:d                      high=1 highWithCode=1 critical=1
+  -tl:on -tlp:verbosity=detailed   high=1 highWithCode=1 critical=1
+
+Run 3: <Warning Code="PROBE001"> alone, built with -tl:off (exit code, then lines reading "warning PROBE001" / "error PROBE001";
+       each diagnostic prints twice, once in place and once in the summary)
+
+  (no property)                                              exit=0 warning=2 error=0
+  -p:TreatWarningsAsErrors=true                              exit=0 warning=2 error=0
+  -p:MSBuildTreatWarningsAsErrors=true                       exit=1 warning=0 error=2
+  -p:WarningsAsErrors=PROBE001                               exit=1 warning=0 error=2
+  -p:TreatWarningsAsErrors=true -p:NoWarn=PROBE001           exit=0 warning=0 error=0
+  -p:TreatWarningsAsErrors=true -p:MSBuildWarningsAsMessages=PROBE001  exit=0 warning=0 error=0
+
+Run 4 (added 2026-10-28, for the cells runs 1 to 3 left open): <Message Importance="High" IsCritical="true"> and
+       <Warning Code="PROBE001">, the same three SDKs, identical results
+
+  -tl:on -v:n                      critical=0 warning=1
+  -tl:on -v:d                      critical=1 warning=1
+
+Reading:
+- The console logger (-tl:off, which a build with no terminal uses, as on CI) shows a high-importance or critical message
+  at minimal verbosity and hides it at quiet.
+- The terminal logger (-tl:on, the default in an interactive terminal since .NET 9) hides high-importance, coded and
+  critical messages at minimal and normal verbosity, and shows them only at detailed. It shows warnings.
+- A task's warning turns into an error under MSBuildTreatWarningsAsErrors or a WarningsAsErrors naming its code, not under
+  TreatWarningsAsErrors alone. NoWarn and MSBuildWarningsAsMessages silence it.
+
+The project of run 1 (runs 2 and 3 replace the target's body with the messages named):
+
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+  </PropertyGroup>
+  <Target Name="ProbeMessages" AfterTargets="Build">
+    <Message Importance="High" Text="PROBE-HIGH line 27: the stack is not empty where the awaited result is read" />
+    <Message Importance="Normal" Text="PROBE-NORMAL normal importance" />
+    <Warning Code="PROBE001" Text="PROBE-WARNING a warning" Condition="'$(ProbeWarn)'=='true'" />
+  </Target>
+</Project>

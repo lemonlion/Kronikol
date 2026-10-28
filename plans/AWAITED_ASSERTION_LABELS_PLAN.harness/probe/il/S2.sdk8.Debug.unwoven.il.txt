@@ -1,0 +1,301 @@
+### type Probe
+  field OrdersClient _client
+#### Probe::Run
+  local V_0 Probe/<Run>d__1
+                         IL_0000: newobj         Probe/<Run>d__1::.ctor                                                    stack[0]
+                         IL_0005: stloc.0                                                                                  stack[1] Probe/<Run>d__1
+                         IL_0006: ldloc.0                                                                                  stack[0]
+                         IL_0007: call           AsyncTaskMethodBuilder::Create                                            stack[1] Probe/<Run>d__1
+                         IL_000c: stfld          Probe/<Run>d__1::<>t__builder                                             stack[2] Probe/<Run>d__1, AsyncTaskMethodBuilder
+                         IL_0011: ldloc.0                                                                                  stack[0]
+                         IL_0012: ldarg.0                                                                                  stack[1] Probe/<Run>d__1
+                         IL_0013: stfld          Probe/<Run>d__1::<>4__this                                                stack[2] Probe/<Run>d__1, Probe
+                         IL_0018: ldloc.0                                                                                  stack[0]
+                         IL_0019: ldc.i4.m1                                                                                stack[1] Probe/<Run>d__1
+                         IL_001a: stfld          Probe/<Run>d__1::<>1__state                                               stack[2] Probe/<Run>d__1, Int32
+                         IL_001f: ldloc.0                                                                                  stack[0]
+                         IL_0020: ldflda         Probe/<Run>d__1::<>t__builder                                             stack[1] Probe/<Run>d__1
+                         IL_0025: ldloca.s       V_0                                                                       stack[1] AsyncTaskMethodBuilder&
+                         IL_0027: call           AsyncTaskMethodBuilder::Start<Probe/<Run>d__1>                            stack[2] AsyncTaskMethodBuilder&, Probe/<Run>d__1&
+                         IL_002c: ldloc.0                                                                                  stack[0]
+                         IL_002d: ldflda         Probe/<Run>d__1::<>t__builder                                             stack[1] Probe/<Run>d__1
+                         IL_0032: call           AsyncTaskMethodBuilder::get_Task                                          stack[1] AsyncTaskMethodBuilder&
+                         IL_0037: ret                                                                                      stack[1] Task
+### type Probe/<>c__DisplayClass1_0
+  field Probe <>4__this
+  field OrderRequest request
+#### Probe/<>c__DisplayClass1_0::<Run>b__0
+  local V_0 Probe/<>c__DisplayClass1_0/<<Run>b__0>d
+                         IL_0000: newobj         Probe/<>c__DisplayClass1_0/<<Run>b__0>d::.ctor                            stack[0]
+                         IL_0005: stloc.0                                                                                  stack[1] Probe/<>c__DisplayClass1_0/<<Run>b__0>d
+                         IL_0006: ldloc.0                                                                                  stack[0]
+                         IL_0007: call           AsyncTaskMethodBuilder::Create                                            stack[1] Probe/<>c__DisplayClass1_0/<<Run>b__0>d
+                         IL_000c: stfld          Probe/<>c__DisplayClass1_0/<<Run>b__0>d::<>t__builder                     stack[2] Probe/<>c__DisplayClass1_0/<<Run>b__0>d, AsyncTaskMethodBuilder
+                         IL_0011: ldloc.0                                                                                  stack[0]
+                         IL_0012: ldarg.0                                                                                  stack[1] Probe/<>c__DisplayClass1_0/<<Run>b__0>d
+                         IL_0013: stfld          Probe/<>c__DisplayClass1_0/<<Run>b__0>d::<>4__this                        stack[2] Probe/<>c__DisplayClass1_0/<<Run>b__0>d, Probe/<>c__DisplayClass1_0
+                         IL_0018: ldloc.0                                                                                  stack[0]
+                         IL_0019: ldc.i4.m1                                                                                stack[1] Probe/<>c__DisplayClass1_0/<<Run>b__0>d
+                         IL_001a: stfld          Probe/<>c__DisplayClass1_0/<<Run>b__0>d::<>1__state                       stack[2] Probe/<>c__DisplayClass1_0/<<Run>b__0>d, Int32
+                         IL_001f: ldloc.0                                                                                  stack[0]
+                         IL_0020: ldflda         Probe/<>c__DisplayClass1_0/<<Run>b__0>d::<>t__builder                     stack[1] Probe/<>c__DisplayClass1_0/<<Run>b__0>d
+                         IL_0025: ldloca.s       V_0                                                                       stack[1] AsyncTaskMethodBuilder&
+                         IL_0027: call           AsyncTaskMethodBuilder::Start<Probe/<>c__DisplayClass1_0/<<Run>b__0>d>    stack[2] AsyncTaskMethodBuilder&, Probe/<>c__DisplayClass1_0/<<Run>b__0>d&
+                         IL_002c: ldloc.0                                                                                  stack[0]
+                         IL_002d: ldflda         Probe/<>c__DisplayClass1_0/<<Run>b__0>d::<>t__builder                     stack[1] Probe/<>c__DisplayClass1_0/<<Run>b__0>d
+                         IL_0032: call           AsyncTaskMethodBuilder::get_Task                                          stack[1] AsyncTaskMethodBuilder&
+                         IL_0037: ret                                                                                      stack[1] Task
+### type Probe/<>c__DisplayClass1_0/<<Run>b__0>d
+  field Int32 <>1__state
+  field AsyncTaskMethodBuilder <>t__builder
+  field Probe/<>c__DisplayClass1_0 <>4__this
+  field TaskAwaiter`1<String> <>u__1
+#### Probe/<>c__DisplayClass1_0/<<Run>b__0>d::MoveNext
+  local V_0 Int32
+  local V_1 TaskAwaiter`1<String>
+  local V_2 Probe/<>c__DisplayClass1_0/<<Run>b__0>d
+  local V_3 Exception
+  handler Catch Exception try IL_0007..IL_0087 handler IL_0087..IL_009f
+SP hidden                IL_0000: ldarg.0                                                                                  stack[0]
+                         IL_0001: ldfld          Probe/<>c__DisplayClass1_0/<<Run>b__0>d::<>1__state                       stack[1] Probe/<>c__DisplayClass1_0/<<Run>b__0>d
+                         IL_0006: stloc.0                                                                                  stack[1] Int32
+SP hidden                IL_0007: ldloc.0                                                                                  stack[0]
+                         IL_0008: brfalse.s      IL_000c                                                                   stack[1] Int32
+                         IL_000a: br.s           IL_000e                                                                   stack[0]
+                         IL_000c: br.s           IL_0061                                                                   stack[0]
+SP L34:88-L34:124        IL_000e: ldarg.0                                                                                  stack[0]   // var exception = await Should.ThrowAsync<InvalidOperationException>(async () => await _client.GetOrderAsync(request));
+                         IL_000f: ldfld          Probe/<>c__DisplayClass1_0/<<Run>b__0>d::<>4__this                        stack[1] Probe/<>c__DisplayClass1_0/<<Run>b__0>d
+                         IL_0014: ldfld          Probe/<>c__DisplayClass1_0::<>4__this                                     stack[1] Probe/<>c__DisplayClass1_0
+                         IL_0019: ldfld          Probe::_client                                                            stack[1] Probe
+                         IL_001e: ldarg.0                                                                                  stack[1] OrdersClient
+                         IL_001f: ldfld          Probe/<>c__DisplayClass1_0/<<Run>b__0>d::<>4__this                        stack[2] OrdersClient, Probe/<>c__DisplayClass1_0/<<Run>b__0>d
+                         IL_0024: ldfld          Probe/<>c__DisplayClass1_0::request                                       stack[2] OrdersClient, Probe/<>c__DisplayClass1_0
+                         IL_0029: callvirt       OrdersClient::GetOrderAsync                                               stack[2] OrdersClient, OrderRequest
+                         IL_002e: callvirt       Task`1<String>::GetAwaiter                                                stack[1] Task`1<String>
+                         IL_0033: stloc.1                                                                                  stack[1] TaskAwaiter`1<String>
+SP hidden                IL_0034: ldloca.s       V_1                                                                       stack[0]
+                         IL_0036: call           TaskAwaiter`1<String>::get_IsCompleted                                    stack[1] TaskAwaiter`1<String>&
+                         IL_003b: brtrue.s       IL_007d                                                                   stack[1] Boolean
+                         IL_003d: ldarg.0                                                                                  stack[0]
+                         IL_003e: ldc.i4.0                                                                                 stack[1] Probe/<>c__DisplayClass1_0/<<Run>b__0>d
+                         IL_003f: dup                                                                                      stack[2] Probe/<>c__DisplayClass1_0/<<Run>b__0>d, Int32
+                         IL_0040: stloc.0                                                                                  stack[3] Probe/<>c__DisplayClass1_0/<<Run>b__0>d, Int32, Int32
+                         IL_0041: stfld          Probe/<>c__DisplayClass1_0/<<Run>b__0>d::<>1__state                       stack[2] Probe/<>c__DisplayClass1_0/<<Run>b__0>d, Int32
+                         IL_0046: ldarg.0                                                                                  stack[0]
+                         IL_0047: ldloc.1                                                                                  stack[1] Probe/<>c__DisplayClass1_0/<<Run>b__0>d
+                         IL_0048: stfld          Probe/<>c__DisplayClass1_0/<<Run>b__0>d::<>u__1                           stack[2] Probe/<>c__DisplayClass1_0/<<Run>b__0>d, TaskAwaiter`1<String>
+                         IL_004d: ldarg.0                                                                                  stack[0]
+                         IL_004e: stloc.2                                                                                  stack[1] Probe/<>c__DisplayClass1_0/<<Run>b__0>d
+                         IL_004f: ldarg.0                                                                                  stack[0]
+                         IL_0050: ldflda         Probe/<>c__DisplayClass1_0/<<Run>b__0>d::<>t__builder                     stack[1] Probe/<>c__DisplayClass1_0/<<Run>b__0>d
+                         IL_0055: ldloca.s       V_1                                                                       stack[1] AsyncTaskMethodBuilder&
+                         IL_0057: ldloca.s       V_2                                                                       stack[2] AsyncTaskMethodBuilder&, TaskAwaiter`1<String>&
+                         IL_0059: call           AsyncTaskMethodBuilder::AwaitUnsafeOnCompleted<TaskAwaiter`1<String>,Probe/<>c__DisplayClass1_0/<<Run>b__0>d>  stack[3] AsyncTaskMethodBuilder&, TaskAwaiter`1<String>&, Probe/<>c__DisplayClass1_0/<<Run>b__0>d&
+                         IL_005e: nop                                                                                      stack[0]
+                         IL_005f: leave.s        IL_00b3                                                                   stack[0]
+                         IL_0061: ldarg.0                                                                                  stack[0]
+                         IL_0062: ldfld          Probe/<>c__DisplayClass1_0/<<Run>b__0>d::<>u__1                           stack[1] Probe/<>c__DisplayClass1_0/<<Run>b__0>d
+                         IL_0067: stloc.1                                                                                  stack[1] TaskAwaiter`1<String>
+                         IL_0068: ldarg.0                                                                                  stack[0]
+                         IL_0069: ldflda         Probe/<>c__DisplayClass1_0/<<Run>b__0>d::<>u__1                           stack[1] Probe/<>c__DisplayClass1_0/<<Run>b__0>d
+                         IL_006e: initobj        TaskAwaiter`1<String>                                                     stack[1] TaskAwaiter`1<String>&
+                         IL_0074: ldarg.0                                                                                  stack[0]
+                         IL_0075: ldc.i4.m1                                                                                stack[1] Probe/<>c__DisplayClass1_0/<<Run>b__0>d
+                         IL_0076: dup                                                                                      stack[2] Probe/<>c__DisplayClass1_0/<<Run>b__0>d, Int32
+                         IL_0077: stloc.0                                                                                  stack[3] Probe/<>c__DisplayClass1_0/<<Run>b__0>d, Int32, Int32
+                         IL_0078: stfld          Probe/<>c__DisplayClass1_0/<<Run>b__0>d::<>1__state                       stack[2] Probe/<>c__DisplayClass1_0/<<Run>b__0>d, Int32
+                         IL_007d: ldloca.s       V_1                                                                       stack[0]
+                         IL_007f: call           TaskAwaiter`1<String>::GetResult                                          stack[1] TaskAwaiter`1<String>&
+                         IL_0084: pop                                                                                      stack[1] String
+                         IL_0085: leave.s        IL_009f                                                                   stack[0]
+SP hidden                IL_0087: stloc.3                                                                                  stack[1] Exception
+                         IL_0088: ldarg.0                                                                                  stack[0]
+                         IL_0089: ldc.i4.s       -2                                                                        stack[1] Probe/<>c__DisplayClass1_0/<<Run>b__0>d
+                         IL_008b: stfld          Probe/<>c__DisplayClass1_0/<<Run>b__0>d::<>1__state                       stack[2] Probe/<>c__DisplayClass1_0/<<Run>b__0>d, Int32
+                         IL_0090: ldarg.0                                                                                  stack[0]
+                         IL_0091: ldflda         Probe/<>c__DisplayClass1_0/<<Run>b__0>d::<>t__builder                     stack[1] Probe/<>c__DisplayClass1_0/<<Run>b__0>d
+                         IL_0096: ldloc.3                                                                                  stack[1] AsyncTaskMethodBuilder&
+                         IL_0097: call           AsyncTaskMethodBuilder::SetException                                      stack[2] AsyncTaskMethodBuilder&, Exception
+                         IL_009c: nop                                                                                      stack[0]
+                         IL_009d: leave.s        IL_00b3                                                                   stack[0]
+SP hidden                IL_009f: ldarg.0                                                                                  stack[0]
+                         IL_00a0: ldc.i4.s       -2                                                                        stack[1] Probe/<>c__DisplayClass1_0/<<Run>b__0>d
+                         IL_00a2: stfld          Probe/<>c__DisplayClass1_0/<<Run>b__0>d::<>1__state                       stack[2] Probe/<>c__DisplayClass1_0/<<Run>b__0>d, Int32
+                         IL_00a7: ldarg.0                                                                                  stack[0]
+                         IL_00a8: ldflda         Probe/<>c__DisplayClass1_0/<<Run>b__0>d::<>t__builder                     stack[1] Probe/<>c__DisplayClass1_0/<<Run>b__0>d
+                         IL_00ad: call           AsyncTaskMethodBuilder::SetResult                                         stack[1] AsyncTaskMethodBuilder&
+                         IL_00b2: nop                                                                                      stack[0]
+                         IL_00b3: ret                                                                                      stack[0]
+### type Probe/<Run>d__1
+  field Int32 <>1__state
+  field AsyncTaskMethodBuilder <>t__builder
+  field Probe <>4__this
+  field Probe/<>c__DisplayClass1_0 <>8__1
+  field InvalidOperationException <exception>5__2
+  field InvalidOperationException <>s__3
+  field YieldAwaitable/YieldAwaiter <>u__1
+  field TaskAwaiter`1<InvalidOperationException> <>u__2
+#### Probe/<Run>d__1::MoveNext
+  local V_0 Int32
+  local V_1 YieldAwaitable/YieldAwaiter
+  local V_2 YieldAwaitable
+  local V_3 Probe/<Run>d__1
+  local V_4 TaskAwaiter`1<InvalidOperationException>
+  local V_5 Exception
+  handler Catch Exception try IL_0007..IL_0159 handler IL_0159..IL_0181
+SP hidden                IL_0000: ldarg.0                                                                                  stack[0]
+                         IL_0001: ldfld          Probe/<Run>d__1::<>1__state                                               stack[1] Probe/<Run>d__1
+                         IL_0006: stloc.0                                                                                  stack[1] Int32
+SP hidden                IL_0007: ldloc.0                                                                                  stack[0]
+                         IL_0008: brfalse.s      IL_0012                                                                   stack[1] Int32
+                         IL_000a: br.s           IL_000c                                                                   stack[0]
+                         IL_000c: ldloc.0                                                                                  stack[0]
+                         IL_000d: ldc.i4.1                                                                                 stack[1] Int32
+                         IL_000e: beq.s          IL_0014                                                                   stack[2] Int32, Int32
+                         IL_0010: br.s           IL_0019                                                                   stack[0]
+                         IL_0012: br.s           IL_0074                                                                   stack[0]
+                         IL_0014: br             IL_0103                                                                   stack[0]
+SP hidden                IL_0019: ldarg.0                                                                                  stack[0]
+                         IL_001a: newobj         Probe/<>c__DisplayClass1_0::.ctor                                         stack[1] Probe/<Run>d__1
+                         IL_001f: stfld          Probe/<Run>d__1::<>8__1                                                   stack[2] Probe/<Run>d__1, Probe/<>c__DisplayClass1_0
+                         IL_0024: ldarg.0                                                                                  stack[0]
+                         IL_0025: ldfld          Probe/<Run>d__1::<>8__1                                                   stack[1] Probe/<Run>d__1
+                         IL_002a: ldarg.0                                                                                  stack[1] Probe/<>c__DisplayClass1_0
+                         IL_002b: ldfld          Probe/<Run>d__1::<>4__this                                                stack[2] Probe/<>c__DisplayClass1_0, Probe/<Run>d__1
+                         IL_0030: stfld          Probe/<>c__DisplayClass1_0::<>4__this                                     stack[2] Probe/<>c__DisplayClass1_0, Probe
+SP L31:5-L31:6           IL_0035: nop                                                                                      stack[0]   // {
+SP L32:9-L32:28          IL_0036: call           Task::Yield                                                               stack[0]   // await Task.Yield();
+                         IL_003b: stloc.2                                                                                  stack[1] YieldAwaitable
+                         IL_003c: ldloca.s       V_2                                                                       stack[0]
+                         IL_003e: call           YieldAwaitable::GetAwaiter                                                stack[1] YieldAwaitable&
+                         IL_0043: stloc.1                                                                                  stack[1] YieldAwaitable/YieldAwaiter
+SP hidden                IL_0044: ldloca.s       V_1                                                                       stack[0]
+                         IL_0046: call           YieldAwaitable/YieldAwaiter::get_IsCompleted                              stack[1] YieldAwaitable/YieldAwaiter&
+                         IL_004b: brtrue.s       IL_0090                                                                   stack[1] Boolean
+                         IL_004d: ldarg.0                                                                                  stack[0]
+                         IL_004e: ldc.i4.0                                                                                 stack[1] Probe/<Run>d__1
+                         IL_004f: dup                                                                                      stack[2] Probe/<Run>d__1, Int32
+                         IL_0050: stloc.0                                                                                  stack[3] Probe/<Run>d__1, Int32, Int32
+                         IL_0051: stfld          Probe/<Run>d__1::<>1__state                                               stack[2] Probe/<Run>d__1, Int32
+                         IL_0056: ldarg.0                                                                                  stack[0]
+                         IL_0057: ldloc.1                                                                                  stack[1] Probe/<Run>d__1
+                         IL_0058: stfld          Probe/<Run>d__1::<>u__1                                                   stack[2] Probe/<Run>d__1, YieldAwaitable/YieldAwaiter
+                         IL_005d: ldarg.0                                                                                  stack[0]
+                         IL_005e: stloc.3                                                                                  stack[1] Probe/<Run>d__1
+                         IL_005f: ldarg.0                                                                                  stack[0]
+                         IL_0060: ldflda         Probe/<Run>d__1::<>t__builder                                             stack[1] Probe/<Run>d__1
+                         IL_0065: ldloca.s       V_1                                                                       stack[1] AsyncTaskMethodBuilder&
+                         IL_0067: ldloca.s       V_3                                                                       stack[2] AsyncTaskMethodBuilder&, YieldAwaitable/YieldAwaiter&
+                         IL_0069: call           AsyncTaskMethodBuilder::AwaitUnsafeOnCompleted<YieldAwaitable/YieldAwaiter,Probe/<Run>d__1>  stack[3] AsyncTaskMethodBuilder&, YieldAwaitable/YieldAwaiter&, Probe/<Run>d__1&
+                         IL_006e: nop                                                                                      stack[0]
+                         IL_006f: leave          IL_01a3                                                                   stack[0]
+                         IL_0074: ldarg.0                                                                                  stack[0]
+                         IL_0075: ldfld          Probe/<Run>d__1::<>u__1                                                   stack[1] Probe/<Run>d__1
+                         IL_007a: stloc.1                                                                                  stack[1] YieldAwaitable/YieldAwaiter
+                         IL_007b: ldarg.0                                                                                  stack[0]
+                         IL_007c: ldflda         Probe/<Run>d__1::<>u__1                                                   stack[1] Probe/<Run>d__1
+                         IL_0081: initobj        YieldAwaitable/YieldAwaiter                                               stack[1] YieldAwaitable/YieldAwaiter&
+                         IL_0087: ldarg.0                                                                                  stack[0]
+                         IL_0088: ldc.i4.m1                                                                                stack[1] Probe/<Run>d__1
+                         IL_0089: dup                                                                                      stack[2] Probe/<Run>d__1, Int32
+                         IL_008a: stloc.0                                                                                  stack[3] Probe/<Run>d__1, Int32, Int32
+                         IL_008b: stfld          Probe/<Run>d__1::<>1__state                                               stack[2] Probe/<Run>d__1, Int32
+                         IL_0090: ldloca.s       V_1                                                                       stack[0]
+                         IL_0092: call           YieldAwaitable/YieldAwaiter::GetResult                                    stack[1] YieldAwaitable/YieldAwaiter&
+                         IL_0097: nop                                                                                      stack[0]
+SP L33:9-L33:59          IL_0098: ldarg.0                                                                                  stack[0]   // var request = new OrderRequest { Id = "missing" };
+                         IL_0099: ldfld          Probe/<Run>d__1::<>8__1                                                   stack[1] Probe/<Run>d__1
+                         IL_009e: newobj         OrderRequest::.ctor                                                       stack[1] Probe/<>c__DisplayClass1_0
+                         IL_00a3: dup                                                                                      stack[2] Probe/<>c__DisplayClass1_0, OrderRequest
+                         IL_00a4: ldstr          "missing"                                                                 stack[3] Probe/<>c__DisplayClass1_0, OrderRequest, OrderRequest
+                         IL_00a9: callvirt       OrderRequest::set_Id                                                      stack[4] Probe/<>c__DisplayClass1_0, OrderRequest, OrderRequest, String
+                         IL_00ae: nop                                                                                      stack[2] Probe/<>c__DisplayClass1_0, OrderRequest
+                         IL_00af: stfld          Probe/<>c__DisplayClass1_0::request                                       stack[2] Probe/<>c__DisplayClass1_0, OrderRequest
+SP L34:9-L34:126         IL_00b4: ldarg.0                                                                                  stack[0]   // var exception = await Should.ThrowAsync<InvalidOperationException>(async () => await _client.GetOrderAsync(request));
+                         IL_00b5: ldfld          Probe/<Run>d__1::<>8__1                                                   stack[1] Probe/<Run>d__1
+                         IL_00ba: ldftn          Probe/<>c__DisplayClass1_0::<Run>b__0                                     stack[1] Probe/<>c__DisplayClass1_0
+                         IL_00c0: newobj         Func`1<Task>::.ctor                                                       stack[2] Probe/<>c__DisplayClass1_0, IntPtr
+                         IL_00c5: ldnull                                                                                   stack[1] Func`1<Task>
+                         IL_00c6: call           Shouldly.Should::ThrowAsync<InvalidOperationException>                    stack[2] Func`1<Task>, <null>
+                         IL_00cb: callvirt       Task`1<InvalidOperationException>::GetAwaiter                             stack[1] Task`1<InvalidOperationException>
+                         IL_00d0: stloc.s        V_4                                                                       stack[1] TaskAwaiter`1<InvalidOperationException>
+SP hidden                IL_00d2: ldloca.s       V_4                                                                       stack[0]
+                         IL_00d4: call           TaskAwaiter`1<InvalidOperationException>::get_IsCompleted                 stack[1] TaskAwaiter`1<InvalidOperationException>&
+                         IL_00d9: brtrue.s       IL_0120                                                                   stack[1] Boolean
+                         IL_00db: ldarg.0                                                                                  stack[0]
+                         IL_00dc: ldc.i4.1                                                                                 stack[1] Probe/<Run>d__1
+                         IL_00dd: dup                                                                                      stack[2] Probe/<Run>d__1, Int32
+                         IL_00de: stloc.0                                                                                  stack[3] Probe/<Run>d__1, Int32, Int32
+                         IL_00df: stfld          Probe/<Run>d__1::<>1__state                                               stack[2] Probe/<Run>d__1, Int32
+                         IL_00e4: ldarg.0                                                                                  stack[0]
+                         IL_00e5: ldloc.s        V_4                                                                       stack[1] Probe/<Run>d__1
+                         IL_00e7: stfld          Probe/<Run>d__1::<>u__2                                                   stack[2] Probe/<Run>d__1, TaskAwaiter`1<InvalidOperationException>
+                         IL_00ec: ldarg.0                                                                                  stack[0]
+                         IL_00ed: stloc.3                                                                                  stack[1] Probe/<Run>d__1
+                         IL_00ee: ldarg.0                                                                                  stack[0]
+                         IL_00ef: ldflda         Probe/<Run>d__1::<>t__builder                                             stack[1] Probe/<Run>d__1
+                         IL_00f4: ldloca.s       V_4                                                                       stack[1] AsyncTaskMethodBuilder&
+                         IL_00f6: ldloca.s       V_3                                                                       stack[2] AsyncTaskMethodBuilder&, TaskAwaiter`1<InvalidOperationException>&
+                         IL_00f8: call           AsyncTaskMethodBuilder::AwaitUnsafeOnCompleted<TaskAwaiter`1<InvalidOperationException>,Probe/<Run>d__1>  stack[3] AsyncTaskMethodBuilder&, TaskAwaiter`1<InvalidOperationException>&, Probe/<Run>d__1&
+                         IL_00fd: nop                                                                                      stack[0]
+                         IL_00fe: leave          IL_01a3                                                                   stack[0]
+                         IL_0103: ldarg.0                                                                                  stack[0]
+                         IL_0104: ldfld          Probe/<Run>d__1::<>u__2                                                   stack[1] Probe/<Run>d__1
+                         IL_0109: stloc.s        V_4                                                                       stack[1] TaskAwaiter`1<InvalidOperationException>
+                         IL_010b: ldarg.0                                                                                  stack[0]
+                         IL_010c: ldflda         Probe/<Run>d__1::<>u__2                                                   stack[1] Probe/<Run>d__1
+                         IL_0111: initobj        TaskAwaiter`1<InvalidOperationException>                                  stack[1] TaskAwaiter`1<InvalidOperationException>&
+                         IL_0117: ldarg.0                                                                                  stack[0]
+                         IL_0118: ldc.i4.m1                                                                                stack[1] Probe/<Run>d__1
+                         IL_0119: dup                                                                                      stack[2] Probe/<Run>d__1, Int32
+                         IL_011a: stloc.0                                                                                  stack[3] Probe/<Run>d__1, Int32, Int32
+                         IL_011b: stfld          Probe/<Run>d__1::<>1__state                                               stack[2] Probe/<Run>d__1, Int32
+                         IL_0120: ldarg.0                                                                                  stack[0]
+                         IL_0121: ldloca.s       V_4                                                                       stack[1] Probe/<Run>d__1
+                         IL_0123: call           TaskAwaiter`1<InvalidOperationException>::GetResult                       stack[2] Probe/<Run>d__1, TaskAwaiter`1<InvalidOperationException>&
+                         IL_0128: stfld          Probe/<Run>d__1::<>s__3                                                   stack[2] Probe/<Run>d__1, InvalidOperationException
+                         IL_012d: ldarg.0                                                                                  stack[0]
+                         IL_012e: ldarg.0                                                                                  stack[1] Probe/<Run>d__1
+                         IL_012f: ldfld          Probe/<Run>d__1::<>s__3                                                   stack[2] Probe/<Run>d__1, Probe/<Run>d__1
+                         IL_0134: stfld          Probe/<Run>d__1::<exception>5__2                                          stack[2] Probe/<Run>d__1, InvalidOperationException
+                         IL_0139: ldarg.0                                                                                  stack[0]
+                         IL_013a: ldnull                                                                                   stack[1] Probe/<Run>d__1
+                         IL_013b: stfld          Probe/<Run>d__1::<>s__3                                                   stack[2] Probe/<Run>d__1, <null>
+SP L35:9-L35:49          IL_0140: ldarg.0                                                                                  stack[0]   // exception.Message.ShouldBe("not found");
+                         IL_0141: ldfld          Probe/<Run>d__1::<exception>5__2                                          stack[1] Probe/<Run>d__1
+                         IL_0146: callvirt       Exception::get_Message                                                    stack[1] InvalidOperationException
+                         IL_014b: ldstr          "not found"                                                               stack[1] String
+                         IL_0150: ldnull                                                                                   stack[2] String, String
+                         IL_0151: call           Shouldly.ShouldBeStringTestExtensions::ShouldBe                           stack[3] String, String, <null>
+                         IL_0156: nop                                                                                      stack[0]
+                         IL_0157: leave.s        IL_0181                                                                   stack[0]
+SP hidden                IL_0159: stloc.s        V_5                                                                       stack[1] Exception
+                         IL_015b: ldarg.0                                                                                  stack[0]
+                         IL_015c: ldc.i4.s       -2                                                                        stack[1] Probe/<Run>d__1
+                         IL_015e: stfld          Probe/<Run>d__1::<>1__state                                               stack[2] Probe/<Run>d__1, Int32
+                         IL_0163: ldarg.0                                                                                  stack[0]
+                         IL_0164: ldnull                                                                                   stack[1] Probe/<Run>d__1
+                         IL_0165: stfld          Probe/<Run>d__1::<>8__1                                                   stack[2] Probe/<Run>d__1, <null>
+                         IL_016a: ldarg.0                                                                                  stack[0]
+                         IL_016b: ldnull                                                                                   stack[1] Probe/<Run>d__1
+                         IL_016c: stfld          Probe/<Run>d__1::<exception>5__2                                          stack[2] Probe/<Run>d__1, <null>
+                         IL_0171: ldarg.0                                                                                  stack[0]
+                         IL_0172: ldflda         Probe/<Run>d__1::<>t__builder                                             stack[1] Probe/<Run>d__1
+                         IL_0177: ldloc.s        V_5                                                                       stack[1] AsyncTaskMethodBuilder&
+                         IL_0179: call           AsyncTaskMethodBuilder::SetException                                      stack[2] AsyncTaskMethodBuilder&, Exception
+                         IL_017e: nop                                                                                      stack[0]
+                         IL_017f: leave.s        IL_01a3                                                                   stack[0]
+SP L36:5-L36:6           IL_0181: ldarg.0                                                                                  stack[0]   // }
+                         IL_0182: ldc.i4.s       -2                                                                        stack[1] Probe/<Run>d__1
+                         IL_0184: stfld          Probe/<Run>d__1::<>1__state                                               stack[2] Probe/<Run>d__1, Int32
+SP hidden                IL_0189: ldarg.0                                                                                  stack[0]
+                         IL_018a: ldnull                                                                                   stack[1] Probe/<Run>d__1
+                         IL_018b: stfld          Probe/<Run>d__1::<>8__1                                                   stack[2] Probe/<Run>d__1, <null>
+                         IL_0190: ldarg.0                                                                                  stack[0]
+                         IL_0191: ldnull                                                                                   stack[1] Probe/<Run>d__1
+                         IL_0192: stfld          Probe/<Run>d__1::<exception>5__2                                          stack[2] Probe/<Run>d__1, <null>
+                         IL_0197: ldarg.0                                                                                  stack[0]
+                         IL_0198: ldflda         Probe/<Run>d__1::<>t__builder                                             stack[1] Probe/<Run>d__1
+                         IL_019d: call           AsyncTaskMethodBuilder::SetResult                                         stack[1] AsyncTaskMethodBuilder&
+                         IL_01a2: nop                                                                                      stack[0]
+                         IL_01a3: ret                                                                                      stack[0]

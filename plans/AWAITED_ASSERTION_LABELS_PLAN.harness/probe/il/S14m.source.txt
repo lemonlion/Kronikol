@@ -1,0 +1,38 @@
+  1: #nullable enable
+  2: using System;
+  3: using System.Threading.Tasks;
+  4: using Kronikol.Tracking;
+  5: using Shouldly;
+  6: 
+  7: [assembly: TrackAssertions]
+  8: 
+  9: public sealed class OrderRequest
+ 10: {
+ 11:     public string Id { get; init; } = "";
+ 12: }
+ 13: 
+ 14: public sealed class OrdersClient
+ 15: {
+ 16:     public async Task<string> GetOrderAsync(OrderRequest request)
+ 17:     {
+ 18:         await Task.Yield();
+ 19:         return request.Id == "known" ? "order" : throw new InvalidOperationException("not found");
+ 20:     }
+ 21: 
+ 22:     public string GetOrder(OrderRequest request) =>
+ 23:         request.Id == "known" ? "order" : throw new InvalidOperationException("not found");
+ 24: }
+ 25: 
+ 26: public class Probe
+ 27: {
+ 28:     private readonly OrdersClient _client = new();
+ 29: 
+ 30:     public async Task Run()
+ 31:     {
+ 32:         await Task.Yield();
+ 33:         var request = new OrderRequest { Id = "missing" };
+ 34:         using var scope = new System.IO.MemoryStream();
+ 35:         await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request));
+ 36:     }
+ 37: }
+ 38: 

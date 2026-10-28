@@ -1,0 +1,678 @@
+# Probe212b, Debug, built by TestAssemblyBuilder.BuildWithSdk, SDK 10.0.0 (rollForward latestFeature), net10.0
+Kronikol 5.12.0+1ee6373a8fe16e85706f9b6e63c309c9fae2e815, Kronikol.AssertionTracking 5.12.0+1ee6373a8fe16e85706f9b6e63c309c9fae2e815, compiler see each shape's build line, Shouldly 4.3.0+cb48f40b4d6087ce9fb1983041fce8a725436cb1, FluentAssertions 8.9.0+1ba808c972709ed2ac982eab1bab4597601be767, AwesomeAssertions 9.4.0+b5dfd72cc1ca6a9f328a3162ac6f9086a33f24a4, TUnit.Assertions 1.73.5+Branch.main.Sha.47057285f3d51b378fd5ebbf7af53b786a80dbc6.47057285f3d51b378fd5ebbf7af53b786a80dbc6, xunit.v3.assert 3.2.2+728c1dce01, runtime 10.0.11
+IL dumps are written to C:\Users\cex\AppData\Local\Temp\Probe212b-il; the harness keeps only the ones the report cites, in probe/il/.
+
+## S2 [Debug, SDK 10.0.0 net10.0] var exception = await Should.ThrowAsync<T>(async () => await _client.GetOrderAsync(request)); then exception.Message.ShouldBe
+build: SDK 10.0.300 (dotnet --version in the build directory), its compiler Roslyn 5.6.0-2.26230.102+caa81fa4971f74880cdab61990cb1b11420939ec, net10.0
+source: S2.source.txt; IL: S2.sdk10.Debug.unwoven.il.txt and S2.sdk10.Debug.woven.il.txt
+weave: WeavedCount=1 MethodCount=1
+  Unwoven: Probe/<Run>d__1.MoveNext, line 34: the stack is not empty where the awaited result is read
+  ILVerify: no error the weave added
+assertion entry points (IsAssertionEntryPoint) in the original IL, and the sequence point each falls under (the weave groups instructions by sequence point, hidden ones included, and only a visible one's group is a statement):
+  <Run>d__1::MoveNext IL_00c6 call Shouldly.Should::ThrowAsync<InvalidOperationException> is under the visible sequence point L34:9-L34:126
+  <Run>d__1::MoveNext IL_0151 call Shouldly.ShouldBeStringTestExtensions::ShouldBe is under the visible sequence point L35:9-L35:49
+statements, as the weaver's FindAssertionStatements and PlanStack read the original module:
+  <Run>d__1::MoveNext L34:9-L34:126  awaited=True  GetResult=IL_0123 TaskAwaiter`1<InvalidOperationException>::GetResult  stack analysis consistent=True
+    SourceText: "var exception = await Should.ThrowAsync<InvalidOperationException>(async () => await _client.GetOrderAsync(request))"
+    statement IL_00b4 ldarg .. IL_00d0 stloc V_4
+    captured value 'request': ldarg.0; ldfld <>8__1 (Probe/<>c__DisplayClass1_0); ldfld request
+    PlanStack: REFUSED: the stack is not empty where the awaited result is read; entry=[] exit=[]
+    AwaitedRange: IL_0121 ldloca V_4 .. IL_0123 call TaskAwaiter`1<InvalidOperationException>::GetResult; then IL_0128 stfld Probe/<Run>d__1::<>s__3
+    stack before the range's start: [1] Probe/<Run>d__1 (pushed by IL_0120 ldarg this)
+    original IL from the statement's GetAwaiter to the next visible sequence point:
+                             IL_00cb: callvirt       Task`1<InvalidOperationException>::GetAwaiter                             stack[1] Task`1<InvalidOperationException>
+                             IL_00d0: stloc.s        V_4                                                                       stack[1] TaskAwaiter`1<InvalidOperationException>
+    SP hidden                IL_00d2: ldloca.s       V_4                                                                       stack[0]
+                             IL_00d4: call           TaskAwaiter`1<InvalidOperationException>::get_IsCompleted                 stack[1] TaskAwaiter`1<InvalidOperationException>&
+                             IL_00d9: brtrue.s       IL_0120                                                                   stack[1] Boolean
+                             IL_00db: ldarg.0                                                                                  stack[0]
+                             IL_00dc: ldc.i4.1                                                                                 stack[1] Probe/<Run>d__1
+                             IL_00dd: dup                                                                                      stack[2] Probe/<Run>d__1, Int32
+                             IL_00de: stloc.0                                                                                  stack[3] Probe/<Run>d__1, Int32, Int32
+                             IL_00df: stfld          Probe/<Run>d__1::<>1__state                                               stack[2] Probe/<Run>d__1, Int32
+                             IL_00e4: ldarg.0                                                                                  stack[0]
+                             IL_00e5: ldloc.s        V_4                                                                       stack[1] Probe/<Run>d__1
+                             IL_00e7: stfld          Probe/<Run>d__1::<>u__2                                                   stack[2] Probe/<Run>d__1, TaskAwaiter`1<InvalidOperationException>
+                             IL_00ec: ldarg.0                                                                                  stack[0]
+                             IL_00ed: stloc.3                                                                                  stack[1] Probe/<Run>d__1
+                             IL_00ee: ldarg.0                                                                                  stack[0]
+                             IL_00ef: ldflda         Probe/<Run>d__1::<>t__builder                                             stack[1] Probe/<Run>d__1
+                             IL_00f4: ldloca.s       V_4                                                                       stack[1] AsyncTaskMethodBuilder&
+                             IL_00f6: ldloca.s       V_3                                                                       stack[2] AsyncTaskMethodBuilder&, TaskAwaiter`1<InvalidOperationException>&
+                             IL_00f8: call           AsyncTaskMethodBuilder::AwaitUnsafeOnCompleted<TaskAwaiter`1<InvalidOperationException>,Probe/<Run>d__1>  stack[3] AsyncTaskMethodBuilder&, TaskAwaiter`1<InvalidOperationException>&, Probe/<Run>d__1&
+                             IL_00fd: nop                                                                                      stack[0]
+                             IL_00fe: leave          IL_01a3                                                                   stack[0]
+                             IL_0103: ldarg.0                                                                                  stack[0]
+                             IL_0104: ldfld          Probe/<Run>d__1::<>u__2                                                   stack[1] Probe/<Run>d__1
+                             IL_0109: stloc.s        V_4                                                                       stack[1] TaskAwaiter`1<InvalidOperationException>
+                             IL_010b: ldarg.0                                                                                  stack[0]
+                             IL_010c: ldflda         Probe/<Run>d__1::<>u__2                                                   stack[1] Probe/<Run>d__1
+                             IL_0111: initobj        TaskAwaiter`1<InvalidOperationException>                                  stack[1] TaskAwaiter`1<InvalidOperationException>&
+                             IL_0117: ldarg.0                                                                                  stack[0]
+                             IL_0118: ldc.i4.m1                                                                                stack[1] Probe/<Run>d__1
+                             IL_0119: dup                                                                                      stack[2] Probe/<Run>d__1, Int32
+                             IL_011a: stloc.0                                                                                  stack[3] Probe/<Run>d__1, Int32, Int32
+                             IL_011b: stfld          Probe/<Run>d__1::<>1__state                                               stack[2] Probe/<Run>d__1, Int32
+                             IL_0120: ldarg.0                                                                                  stack[0]
+                             IL_0121: ldloca.s       V_4                                                                       stack[1] Probe/<Run>d__1
+                             IL_0123: call           TaskAwaiter`1<InvalidOperationException>::GetResult                       stack[2] Probe/<Run>d__1, TaskAwaiter`1<InvalidOperationException>&
+                             IL_0128: stfld          Probe/<Run>d__1::<>s__3                                                   stack[2] Probe/<Run>d__1, InvalidOperationException
+                             IL_012d: ldarg.0                                                                                  stack[0]
+                             IL_012e: ldarg.0                                                                                  stack[1] Probe/<Run>d__1
+                             IL_012f: ldfld          Probe/<Run>d__1::<>s__3                                                   stack[2] Probe/<Run>d__1, Probe/<Run>d__1
+                             IL_0134: stfld          Probe/<Run>d__1::<exception>5__2                                          stack[2] Probe/<Run>d__1, InvalidOperationException
+                             IL_0139: ldarg.0                                                                                  stack[0]
+                             IL_013a: ldnull                                                                                   stack[1] Probe/<Run>d__1
+                             IL_013b: stfld          Probe/<Run>d__1::<>s__3                                                   stack[2] Probe/<Run>d__1, <null>
+    SP L35:9-L35:49          IL_0140: ldarg.0                                                                                  stack[0]   // exception.Message.ShouldBe("not found");   <- next visible sequence point
+  <Run>d__1::MoveNext L35:9-L35:49  awaited=False  GetResult=none  stack analysis consistent=True
+    SourceText: "exception.Message.ShouldBe("not found")"
+    statement IL_0140 ldarg .. IL_0156 nop 
+    captured value: none
+    PlanStack: woven; entry=[] exit=[]
+every await in the original IL (merge point = the IsCompleted brtrue's target; stacks from StackAnalysis after SimplifyMacros):
+  <<Run>b__0>d::MoveNext await at L34 "var exception = await Should.ThrowAsync<InvalidOperationException>(async () => await _client.GetOrderAsync(request));": GetAwaiter IL_002e Task`1<String>::GetAwaiter; IsCompleted brtrue IL_003b -> merge point IL_007d ldloca V_1
+    stack at the merge point: empty
+    awaiter load before GetResult: IL_007d ldloca V_1; stack before it: empty
+    GetResult IL_007f TaskAwaiter`1<String>::GetResult; then IL_0084 pop 
+  <Run>d__1::MoveNext await at L32 "await Task.Yield();": GetAwaiter IL_003e YieldAwaitable::GetAwaiter; IsCompleted brtrue IL_004b -> merge point IL_0090 ldloca V_1
+    stack at the merge point: empty
+    awaiter load before GetResult: IL_0090 ldloca V_1; stack before it: empty
+    GetResult IL_0092 YieldAwaitable/YieldAwaiter::GetResult; then IL_0097 nop 
+  <Run>d__1::MoveNext await at L34 "var exception = await Should.ThrowAsync<InvalidOperationException>(async () => await _client.GetOrderAsync(request));": GetAwaiter IL_00cb Task`1<InvalidOperationException>::GetAwaiter; IsCompleted brtrue IL_00d9 -> merge point IL_0120 ldarg this
+    stack at the merge point: empty
+    awaiter load before GetResult: IL_0121 ldloca V_4; stack before it: [1] Probe/<Run>d__1 (pushed by IL_0120 ldarg this)
+    GetResult IL_0123 TaskAwaiter`1<InvalidOperationException>::GetResult; then IL_0128 stfld Probe/<Run>d__1::<>s__3
+the plan's 4.1 a and c range for each awaited statement (merge point to the statement's end):
+  <Run>d__1::MoveNext L34: merge point IL_0120 ldarg this; next visible sequence point at IL_0140
+    literal 4.1 c range IL_0120 .. IL_013b stfld Probe/<Run>d__1::<>s__3: awaits inside 0; stack after: empty; EntersPartWay = False; ret inside: none
+    the statement's own range (cut before the first handler after the merge point) IL_0120 .. IL_013b stfld Probe/<Run>d__1::<>s__3: awaits inside 0; stack after: empty; EntersPartWay = False; ret inside: none
+      entered from outside: nothing
+Track calls in the woven IL (the expression is the ldstr the weave passes):
+  <Run>d__1::MoveNext line 35: AssertionPassed + AssertionFailed
+    expression: "exception.Message.ShouldBe("not found")"
+    Format(expression) = "Exception message should be "not found""
+    label as Track.LogAssertion writes it (StepText.CapitaliseIfEnabled) = "Exception message should be "not found""
+woven try regions (every catch whose handler calls Track):
+  <Run>d__1::MoveNext woven try IL_0140, catch IL_016b, end IL_0187:
+  SP L35:9-L35:49          IL_0140: nop                                                                                       // exception.Message.ShouldBe("not found");
+                           IL_0141: ldarg.0                                                                                
+                           IL_0142: ldfld          Probe/<Run>d__1::<exception>5__2                                        
+                           IL_0147: callvirt       Exception::get_Message                                                  
+                           IL_014c: ldstr          "not found"                                                             
+                           IL_0151: ldnull                                                                                 
+                           IL_0152: call           Shouldly.ShouldBeStringTestExtensions::ShouldBe                         
+                           IL_0157: nop                                                                                    
+                           IL_0158: ldstr          "exception.Message.ShouldBe("not found")"                               
+                           IL_015d: ldstr          "C:\Users\cex\AppData\Local\Temp\KRONIKOL_WeaverTests\2af8d8d5\Probe212b_S2_sdk10_Debug.cs"
+                           IL_0162: ldc.i4.s       35                                                                      
+                           IL_0164: call           Kronikol.Tracking.Track::AssertionPassed                                
+                           IL_0169: leave.s        IL_0187                                                                 
+                           IL_016b: stloc.s        V_6                                                                     
+                           IL_016d: ldstr          "exception.Message.ShouldBe("not found")"                               
+                           IL_0172: ldloc.s        V_6                                                                     
+                           IL_0174: callvirt       Exception::get_Message                                                  
+                           IL_0179: ldstr          "C:\Users\cex\AppData\Local\Temp\KRONIKOL_WeaverTests\2af8d8d5\Probe212b_S2_sdk10_Debug.cs"
+                           IL_017e: ldc.i4.s       35                                                                      
+                           IL_0180: call           Kronikol.Tracking.Track::AssertionFailed                                
+                           IL_0185: rethrow                                                                                
+                           IL_0187: nop                                                                                       <- after the catch
+run Run, woven: threw nothing
+  note ✓ "Exception message should be "not found"" (39 chars), source Probe212b_S2_sdk10_Debug.cs:L35
+run Run, unwoven build: threw nothing
+
+## S4 [Debug, SDK 10.0.0 net10.0] return await Should.ThrowAsync<T>(...) in a private async helper the test awaits
+build: SDK 10.0.300 (dotnet --version in the build directory), its compiler Roslyn 5.6.0-2.26230.102+caa81fa4971f74880cdab61990cb1b11420939ec, net10.0
+source: S4.source.txt; IL: S4.sdk10.Debug.unwoven.il.txt and S4.sdk10.Debug.woven.il.txt
+weave: WeavedCount=1 MethodCount=1
+  Unwoven: Probe/<GetOrderShouldFail>d__2.MoveNext, line 39: the stack is not empty where the awaited result is read
+  ILVerify: no error the weave added
+assertion entry points (IsAssertionEntryPoint) in the original IL, and the sequence point each falls under (the weave groups instructions by sequence point, hidden ones included, and only a visible one's group is a statement):
+  <GetOrderShouldFail>d__2::MoveNext IL_00bc call Shouldly.Should::ThrowAsync<InvalidOperationException> is under the visible sequence point L39:9-L39:126
+  <Run>d__1::MoveNext IL_00a2 call Shouldly.ShouldBeStringTestExtensions::ShouldBe is under the visible sequence point L33:9-L33:41
+statements, as the weaver's FindAssertionStatements and PlanStack read the original module:
+  <GetOrderShouldFail>d__2::MoveNext L39:9-L39:126  awaited=True  GetResult=IL_0117 TaskAwaiter`1<InvalidOperationException>::GetResult  stack analysis consistent=True
+    SourceText: "return await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(new OrderRequest { Id = id }))"
+    statement IL_00aa ldarg .. IL_00c6 stloc V_5
+    captured value 'id': ldarg.0; ldfld <>8__1 (Probe/<>c__DisplayClass2_0); ldfld id
+    captured value '_client': ldarg.0; ldfld <>4__this (Probe); ldfld _client
+    PlanStack: REFUSED: the stack is not empty where the awaited result is read; entry=[] exit=[]
+    AwaitedRange: IL_0115 ldloca V_5 .. IL_0117 call TaskAwaiter`1<InvalidOperationException>::GetResult; then IL_011c stfld Probe/<GetOrderShouldFail>d__2::<>s__2
+    stack before the range's start: [1] Probe/<GetOrderShouldFail>d__2 (pushed by IL_0114 ldarg this)
+    original IL from the statement's GetAwaiter to the next visible sequence point:
+                             IL_00c1: callvirt       Task`1<InvalidOperationException>::GetAwaiter                             stack[1] Task`1<InvalidOperationException>
+                             IL_00c6: stloc.s        V_5                                                                       stack[1] TaskAwaiter`1<InvalidOperationException>
+    SP hidden                IL_00c8: ldloca.s       V_5                                                                       stack[0]
+                             IL_00ca: call           TaskAwaiter`1<InvalidOperationException>::get_IsCompleted                 stack[1] TaskAwaiter`1<InvalidOperationException>&
+                             IL_00cf: brtrue.s       IL_0114                                                                   stack[1] Boolean
+                             IL_00d1: ldarg.0                                                                                  stack[0]
+                             IL_00d2: ldc.i4.1                                                                                 stack[1] Probe/<GetOrderShouldFail>d__2
+                             IL_00d3: dup                                                                                      stack[2] Probe/<GetOrderShouldFail>d__2, Int32
+                             IL_00d4: stloc.0                                                                                  stack[3] Probe/<GetOrderShouldFail>d__2, Int32, Int32
+                             IL_00d5: stfld          Probe/<GetOrderShouldFail>d__2::<>1__state                                stack[2] Probe/<GetOrderShouldFail>d__2, Int32
+                             IL_00da: ldarg.0                                                                                  stack[0]
+                             IL_00db: ldloc.s        V_5                                                                       stack[1] Probe/<GetOrderShouldFail>d__2
+                             IL_00dd: stfld          Probe/<GetOrderShouldFail>d__2::<>u__2                                    stack[2] Probe/<GetOrderShouldFail>d__2, TaskAwaiter`1<InvalidOperationException>
+                             IL_00e2: ldarg.0                                                                                  stack[0]
+                             IL_00e3: stloc.s        V_4                                                                       stack[1] Probe/<GetOrderShouldFail>d__2
+                             IL_00e5: ldarg.0                                                                                  stack[0]
+                             IL_00e6: ldflda         Probe/<GetOrderShouldFail>d__2::<>t__builder                              stack[1] Probe/<GetOrderShouldFail>d__2
+                             IL_00eb: ldloca.s       V_5                                                                       stack[1] AsyncTaskMethodBuilder`1<InvalidOperationException>&
+                             IL_00ed: ldloca.s       V_4                                                                       stack[2] AsyncTaskMethodBuilder`1<InvalidOperationException>&, TaskAwaiter`1<InvalidOperationException>&
+                             IL_00ef: call           AsyncTaskMethodBuilder`1<InvalidOperationException>::AwaitUnsafeOnCompleted<TaskAwaiter`1<InvalidOperationException>,Probe/<GetOrderShouldFail>d__2>  stack[3] AsyncTaskMethodBuilder`1<InvalidOperationException>&, TaskAwaiter`1<InvalidOperationException>&, Probe/<GetOrderShouldFail>d__2&
+                             IL_00f4: nop                                                                                      stack[0]
+                             IL_00f5: leave.s        IL_0167                                                                   stack[0]
+                             IL_00f7: ldarg.0                                                                                  stack[0]
+                             IL_00f8: ldfld          Probe/<GetOrderShouldFail>d__2::<>u__2                                    stack[1] Probe/<GetOrderShouldFail>d__2
+                             IL_00fd: stloc.s        V_5                                                                       stack[1] TaskAwaiter`1<InvalidOperationException>
+                             IL_00ff: ldarg.0                                                                                  stack[0]
+                             IL_0100: ldflda         Probe/<GetOrderShouldFail>d__2::<>u__2                                    stack[1] Probe/<GetOrderShouldFail>d__2
+                             IL_0105: initobj        TaskAwaiter`1<InvalidOperationException>                                  stack[1] TaskAwaiter`1<InvalidOperationException>&
+                             IL_010b: ldarg.0                                                                                  stack[0]
+                             IL_010c: ldc.i4.m1                                                                                stack[1] Probe/<GetOrderShouldFail>d__2
+                             IL_010d: dup                                                                                      stack[2] Probe/<GetOrderShouldFail>d__2, Int32
+                             IL_010e: stloc.0                                                                                  stack[3] Probe/<GetOrderShouldFail>d__2, Int32, Int32
+                             IL_010f: stfld          Probe/<GetOrderShouldFail>d__2::<>1__state                                stack[2] Probe/<GetOrderShouldFail>d__2, Int32
+                             IL_0114: ldarg.0                                                                                  stack[0]
+                             IL_0115: ldloca.s       V_5                                                                       stack[1] Probe/<GetOrderShouldFail>d__2
+                             IL_0117: call           TaskAwaiter`1<InvalidOperationException>::GetResult                       stack[2] Probe/<GetOrderShouldFail>d__2, TaskAwaiter`1<InvalidOperationException>&
+                             IL_011c: stfld          Probe/<GetOrderShouldFail>d__2::<>s__2                                    stack[2] Probe/<GetOrderShouldFail>d__2, InvalidOperationException
+                             IL_0121: ldarg.0                                                                                  stack[0]
+                             IL_0122: ldfld          Probe/<GetOrderShouldFail>d__2::<>s__2                                    stack[1] Probe/<GetOrderShouldFail>d__2
+                             IL_0127: stloc.1                                                                                  stack[1] InvalidOperationException
+                             IL_0128: leave.s        IL_014b                                                                   stack[0]
+    SP hidden                IL_012a: stloc.s        V_6                                                                       stack[1] Exception
+                             IL_012c: ldarg.0                                                                                  stack[0]
+                             IL_012d: ldc.i4.s       -2                                                                        stack[1] Probe/<GetOrderShouldFail>d__2
+                             IL_012f: stfld          Probe/<GetOrderShouldFail>d__2::<>1__state                                stack[2] Probe/<GetOrderShouldFail>d__2, Int32
+                             IL_0134: ldarg.0                                                                                  stack[0]
+                             IL_0135: ldnull                                                                                   stack[1] Probe/<GetOrderShouldFail>d__2
+                             IL_0136: stfld          Probe/<GetOrderShouldFail>d__2::<>8__1                                    stack[2] Probe/<GetOrderShouldFail>d__2, <null>
+                             IL_013b: ldarg.0                                                                                  stack[0]
+                             IL_013c: ldflda         Probe/<GetOrderShouldFail>d__2::<>t__builder                              stack[1] Probe/<GetOrderShouldFail>d__2
+                             IL_0141: ldloc.s        V_6                                                                       stack[1] AsyncTaskMethodBuilder`1<InvalidOperationException>&
+                             IL_0143: call           AsyncTaskMethodBuilder`1<InvalidOperationException>::SetException         stack[2] AsyncTaskMethodBuilder`1<InvalidOperationException>&, Exception
+                             IL_0148: nop                                                                                      stack[0]
+                             IL_0149: leave.s        IL_0167                                                                   stack[0]
+    SP L40:5-L40:6           IL_014b: ldarg.0                                                                                  stack[0]   // }   <- next visible sequence point
+  <Run>d__1::MoveNext L33:9-L33:41  awaited=False  GetResult=none  stack analysis consistent=True
+    SourceText: "e.Message.ShouldBe("not found")"
+    statement IL_0091 ldarg .. IL_00a7 nop 
+    captured value: none
+    PlanStack: woven; entry=[] exit=[]
+every await in the original IL (merge point = the IsCompleted brtrue's target; stacks from StackAnalysis after SimplifyMacros):
+  <GetOrderShouldFail>d__2::MoveNext await at L38 "await Task.Yield();": GetAwaiter IL_004f YieldAwaitable::GetAwaiter; IsCompleted brtrue IL_005c -> merge point IL_00a2 ldloca V_2
+    stack at the merge point: empty
+    awaiter load before GetResult: IL_00a2 ldloca V_2; stack before it: empty
+    GetResult IL_00a4 YieldAwaitable/YieldAwaiter::GetResult; then IL_00a9 nop 
+  <GetOrderShouldFail>d__2::MoveNext await at L39 "return await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(new OrderRequest { Id = id }));": GetAwaiter IL_00c1 Task`1<InvalidOperationException>::GetAwaiter; IsCompleted brtrue IL_00cf -> merge point IL_0114 ldarg this
+    stack at the merge point: empty
+    awaiter load before GetResult: IL_0115 ldloca V_5; stack before it: [1] Probe/<GetOrderShouldFail>d__2 (pushed by IL_0114 ldarg this)
+    GetResult IL_0117 TaskAwaiter`1<InvalidOperationException>::GetResult; then IL_011c stfld Probe/<GetOrderShouldFail>d__2::<>s__2
+  <Run>d__1::MoveNext await at L32 "var e = await GetOrderShouldFail("missing");": GetAwaiter IL_001f Task`1<InvalidOperationException>::GetAwaiter; IsCompleted brtrue IL_002c -> merge point IL_0071 ldarg this
+    stack at the merge point: empty
+    awaiter load before GetResult: IL_0072 ldloca V_1; stack before it: [1] Probe/<Run>d__1 (pushed by IL_0071 ldarg this)
+    GetResult IL_0074 TaskAwaiter`1<InvalidOperationException>::GetResult; then IL_0079 stfld Probe/<Run>d__1::<>s__2
+the plan's 4.1 a and c range for each awaited statement (merge point to the statement's end):
+  <GetOrderShouldFail>d__2::MoveNext L39: merge point IL_0114 ldarg this; next visible sequence point at IL_014b
+    literal 4.1 c range IL_0114 .. IL_0148 nop : awaits inside 0; stack after: empty; EntersPartWay = True; ret inside: none
+      entered from outside: a Catch handler starts inside, at IL_012a
+    the statement's own range (cut before the first handler after the merge point) IL_0114 .. IL_0127 stloc V_1: awaits inside 0; stack after: empty; EntersPartWay = False; ret inside: none
+      entered from outside: nothing
+Track calls in the woven IL (the expression is the ldstr the weave passes):
+  <Run>d__1::MoveNext line 33: AssertionPassed + AssertionFailed
+    expression: "e.Message.ShouldBe("not found")"
+    Format(expression) = "E message should be "not found""
+    label as Track.LogAssertion writes it (StepText.CapitaliseIfEnabled) = "E message should be "not found""
+woven try regions (every catch whose handler calls Track):
+  <Run>d__1::MoveNext woven try IL_0091, catch IL_00bc, end IL_00d8:
+  SP L33:9-L33:41          IL_0091: nop                                                                                       // e.Message.ShouldBe("not found");
+                           IL_0092: ldarg.0                                                                                
+                           IL_0093: ldfld          Probe/<Run>d__1::<e>5__1                                                
+                           IL_0098: callvirt       Exception::get_Message                                                  
+                           IL_009d: ldstr          "not found"                                                             
+                           IL_00a2: ldnull                                                                                 
+                           IL_00a3: call           Shouldly.ShouldBeStringTestExtensions::ShouldBe                         
+                           IL_00a8: nop                                                                                    
+                           IL_00a9: ldstr          "e.Message.ShouldBe("not found")"                                       
+                           IL_00ae: ldstr          "C:\Users\cex\AppData\Local\Temp\KRONIKOL_WeaverTests\2af8d8d5\Probe212b_S4_sdk10_Debug.cs"
+                           IL_00b3: ldc.i4.s       33                                                                      
+                           IL_00b5: call           Kronikol.Tracking.Track::AssertionPassed                                
+                           IL_00ba: leave.s        IL_00d8                                                                 
+                           IL_00bc: stloc.s        V_4                                                                     
+                           IL_00be: ldstr          "e.Message.ShouldBe("not found")"                                       
+                           IL_00c3: ldloc.s        V_4                                                                     
+                           IL_00c5: callvirt       Exception::get_Message                                                  
+                           IL_00ca: ldstr          "C:\Users\cex\AppData\Local\Temp\KRONIKOL_WeaverTests\2af8d8d5\Probe212b_S4_sdk10_Debug.cs"
+                           IL_00cf: ldc.i4.s       33                                                                      
+                           IL_00d1: call           Kronikol.Tracking.Track::AssertionFailed                                
+                           IL_00d6: rethrow                                                                                
+                           IL_00d8: nop                                                                                       <- after the catch
+run Run, woven: threw nothing
+  note ✓ "E message should be "not found"" (31 chars), source Probe212b_S4_sdk10_Debug.cs:L33
+run Run, unwoven build: threw nothing
+
+## S7 [Debug, SDK 10.0.0 net10.0] _ = await Should.ThrowAsync<T>(...); (discard)
+build: SDK 10.0.300 (dotnet --version in the build directory), its compiler Roslyn 5.6.0-2.26230.102+caa81fa4971f74880cdab61990cb1b11420939ec, net10.0
+source: S7.source.txt; IL: S7.sdk10.Debug.unwoven.il.txt and S7.sdk10.Debug.woven.il.txt
+weave: WeavedCount=0 MethodCount=0
+  Unwoven: Probe/<Run>d__1.MoveNext, line 34: the stack is not empty where the awaited result is read
+  ILVerify: no error the weave added
+assertion entry points (IsAssertionEntryPoint) in the original IL, and the sequence point each falls under (the weave groups instructions by sequence point, hidden ones included, and only a visible one's group is a statement):
+  <Run>d__1::MoveNext IL_00c6 call Shouldly.Should::ThrowAsync<InvalidOperationException> is under the visible sequence point L34:9-L34:102
+statements, as the weaver's FindAssertionStatements and PlanStack read the original module:
+  <Run>d__1::MoveNext L34:9-L34:102  awaited=True  GetResult=IL_0120 TaskAwaiter`1<InvalidOperationException>::GetResult  stack analysis consistent=True
+    SourceText: "_ = await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request))"
+    statement IL_00b4 ldarg .. IL_00d0 stloc V_4
+    captured value 'request': ldarg.0; ldfld <>8__1 (Probe/<>c__DisplayClass1_0); ldfld request
+    captured value '_client': ldarg.0; ldfld <>4__this (Probe); ldfld _client
+    PlanStack: REFUSED: the stack is not empty where the awaited result is read; entry=[] exit=[]
+    AwaitedRange: IL_011e ldloca V_4 .. IL_0120 call TaskAwaiter`1<InvalidOperationException>::GetResult; then IL_0125 stfld Probe/<Run>d__1::<>s__2
+    stack before the range's start: [1] Probe/<Run>d__1 (pushed by IL_011d ldarg this)
+    original IL from the statement's GetAwaiter to the next visible sequence point:
+                             IL_00cb: callvirt       Task`1<InvalidOperationException>::GetAwaiter                             stack[1] Task`1<InvalidOperationException>
+                             IL_00d0: stloc.s        V_4                                                                       stack[1] TaskAwaiter`1<InvalidOperationException>
+    SP hidden                IL_00d2: ldloca.s       V_4                                                                       stack[0]
+                             IL_00d4: call           TaskAwaiter`1<InvalidOperationException>::get_IsCompleted                 stack[1] TaskAwaiter`1<InvalidOperationException>&
+                             IL_00d9: brtrue.s       IL_011d                                                                   stack[1] Boolean
+                             IL_00db: ldarg.0                                                                                  stack[0]
+                             IL_00dc: ldc.i4.1                                                                                 stack[1] Probe/<Run>d__1
+                             IL_00dd: dup                                                                                      stack[2] Probe/<Run>d__1, Int32
+                             IL_00de: stloc.0                                                                                  stack[3] Probe/<Run>d__1, Int32, Int32
+                             IL_00df: stfld          Probe/<Run>d__1::<>1__state                                               stack[2] Probe/<Run>d__1, Int32
+                             IL_00e4: ldarg.0                                                                                  stack[0]
+                             IL_00e5: ldloc.s        V_4                                                                       stack[1] Probe/<Run>d__1
+                             IL_00e7: stfld          Probe/<Run>d__1::<>u__2                                                   stack[2] Probe/<Run>d__1, TaskAwaiter`1<InvalidOperationException>
+                             IL_00ec: ldarg.0                                                                                  stack[0]
+                             IL_00ed: stloc.3                                                                                  stack[1] Probe/<Run>d__1
+                             IL_00ee: ldarg.0                                                                                  stack[0]
+                             IL_00ef: ldflda         Probe/<Run>d__1::<>t__builder                                             stack[1] Probe/<Run>d__1
+                             IL_00f4: ldloca.s       V_4                                                                       stack[1] AsyncTaskMethodBuilder&
+                             IL_00f6: ldloca.s       V_3                                                                       stack[2] AsyncTaskMethodBuilder&, TaskAwaiter`1<InvalidOperationException>&
+                             IL_00f8: call           AsyncTaskMethodBuilder::AwaitUnsafeOnCompleted<TaskAwaiter`1<InvalidOperationException>,Probe/<Run>d__1>  stack[3] AsyncTaskMethodBuilder&, TaskAwaiter`1<InvalidOperationException>&, Probe/<Run>d__1&
+                             IL_00fd: nop                                                                                      stack[0]
+                             IL_00fe: leave.s        IL_0176                                                                   stack[0]
+                             IL_0100: ldarg.0                                                                                  stack[0]
+                             IL_0101: ldfld          Probe/<Run>d__1::<>u__2                                                   stack[1] Probe/<Run>d__1
+                             IL_0106: stloc.s        V_4                                                                       stack[1] TaskAwaiter`1<InvalidOperationException>
+                             IL_0108: ldarg.0                                                                                  stack[0]
+                             IL_0109: ldflda         Probe/<Run>d__1::<>u__2                                                   stack[1] Probe/<Run>d__1
+                             IL_010e: initobj        TaskAwaiter`1<InvalidOperationException>                                  stack[1] TaskAwaiter`1<InvalidOperationException>&
+                             IL_0114: ldarg.0                                                                                  stack[0]
+                             IL_0115: ldc.i4.m1                                                                                stack[1] Probe/<Run>d__1
+                             IL_0116: dup                                                                                      stack[2] Probe/<Run>d__1, Int32
+                             IL_0117: stloc.0                                                                                  stack[3] Probe/<Run>d__1, Int32, Int32
+                             IL_0118: stfld          Probe/<Run>d__1::<>1__state                                               stack[2] Probe/<Run>d__1, Int32
+                             IL_011d: ldarg.0                                                                                  stack[0]
+                             IL_011e: ldloca.s       V_4                                                                       stack[1] Probe/<Run>d__1
+                             IL_0120: call           TaskAwaiter`1<InvalidOperationException>::GetResult                       stack[2] Probe/<Run>d__1, TaskAwaiter`1<InvalidOperationException>&
+                             IL_0125: stfld          Probe/<Run>d__1::<>s__2                                                   stack[2] Probe/<Run>d__1, InvalidOperationException
+                             IL_012a: ldarg.0                                                                                  stack[0]
+                             IL_012b: ldfld          Probe/<Run>d__1::<>s__2                                                   stack[1] Probe/<Run>d__1
+                             IL_0130: pop                                                                                      stack[1] InvalidOperationException
+                             IL_0131: ldarg.0                                                                                  stack[0]
+                             IL_0132: ldnull                                                                                   stack[1] Probe/<Run>d__1
+                             IL_0133: stfld          Probe/<Run>d__1::<>s__2                                                   stack[2] Probe/<Run>d__1, <null>
+                             IL_0138: leave.s        IL_015b                                                                   stack[0]
+    SP hidden                IL_013a: stloc.s        V_5                                                                       stack[1] Exception
+                             IL_013c: ldarg.0                                                                                  stack[0]
+                             IL_013d: ldc.i4.s       -2                                                                        stack[1] Probe/<Run>d__1
+                             IL_013f: stfld          Probe/<Run>d__1::<>1__state                                               stack[2] Probe/<Run>d__1, Int32
+                             IL_0144: ldarg.0                                                                                  stack[0]
+                             IL_0145: ldnull                                                                                   stack[1] Probe/<Run>d__1
+                             IL_0146: stfld          Probe/<Run>d__1::<>8__1                                                   stack[2] Probe/<Run>d__1, <null>
+                             IL_014b: ldarg.0                                                                                  stack[0]
+                             IL_014c: ldflda         Probe/<Run>d__1::<>t__builder                                             stack[1] Probe/<Run>d__1
+                             IL_0151: ldloc.s        V_5                                                                       stack[1] AsyncTaskMethodBuilder&
+                             IL_0153: call           AsyncTaskMethodBuilder::SetException                                      stack[2] AsyncTaskMethodBuilder&, Exception
+                             IL_0158: nop                                                                                      stack[0]
+                             IL_0159: leave.s        IL_0176                                                                   stack[0]
+    SP L35:5-L35:6           IL_015b: ldarg.0                                                                                  stack[0]   // }   <- next visible sequence point
+every await in the original IL (merge point = the IsCompleted brtrue's target; stacks from StackAnalysis after SimplifyMacros):
+  <Run>d__1::MoveNext await at L32 "await Task.Yield();": GetAwaiter IL_003e YieldAwaitable::GetAwaiter; IsCompleted brtrue IL_004b -> merge point IL_0090 ldloca V_1
+    stack at the merge point: empty
+    awaiter load before GetResult: IL_0090 ldloca V_1; stack before it: empty
+    GetResult IL_0092 YieldAwaitable/YieldAwaiter::GetResult; then IL_0097 nop 
+  <Run>d__1::MoveNext await at L34 "_ = await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request));": GetAwaiter IL_00cb Task`1<InvalidOperationException>::GetAwaiter; IsCompleted brtrue IL_00d9 -> merge point IL_011d ldarg this
+    stack at the merge point: empty
+    awaiter load before GetResult: IL_011e ldloca V_4; stack before it: [1] Probe/<Run>d__1 (pushed by IL_011d ldarg this)
+    GetResult IL_0120 TaskAwaiter`1<InvalidOperationException>::GetResult; then IL_0125 stfld Probe/<Run>d__1::<>s__2
+the plan's 4.1 a and c range for each awaited statement (merge point to the statement's end):
+  <Run>d__1::MoveNext L34: merge point IL_011d ldarg this; next visible sequence point at IL_015b
+    literal 4.1 c range IL_011d .. IL_0158 nop : awaits inside 0; stack after: empty; EntersPartWay = True; ret inside: none
+      entered from outside: a Catch handler starts inside, at IL_013a
+    the statement's own range (cut before the first handler after the merge point) IL_011d .. IL_0133 stfld Probe/<Run>d__1::<>s__2: awaits inside 0; stack after: empty; EntersPartWay = False; ret inside: none
+      entered from outside: nothing
+Track calls in the woven IL (the expression is the ldstr the weave passes):
+  none
+woven try regions (every catch whose handler calls Track):
+  none
+run Run, woven: threw nothing
+  no note drawn
+run Run, unwoven build: threw nothing
+
+## S8 [Debug, SDK 10.0.0 net10.0] var e = await Should.ThrowAsync<T>(...).ConfigureAwait(false);
+build: SDK 10.0.300 (dotnet --version in the build directory), its compiler Roslyn 5.6.0-2.26230.102+caa81fa4971f74880cdab61990cb1b11420939ec, net10.0
+source: S8.source.txt; IL: S8.sdk10.Debug.unwoven.il.txt and S8.sdk10.Debug.woven.il.txt
+weave: WeavedCount=1 MethodCount=1
+  Unwoven: Probe/<Run>d__1.MoveNext, line 34: the stack is not empty where the awaited result is read
+  ILVerify: no error the weave added
+assertion entry points (IsAssertionEntryPoint) in the original IL, and the sequence point each falls under (the weave groups instructions by sequence point, hidden ones included, and only a visible one's group is a statement):
+  <Run>d__1::MoveNext IL_00c6 call Shouldly.Should::ThrowAsync<InvalidOperationException> is under the visible sequence point L34:9-L34:128
+  <Run>d__1::MoveNext IL_015b call Shouldly.ShouldBeStringTestExtensions::ShouldBe is under the visible sequence point L35:9-L35:41
+statements, as the weaver's FindAssertionStatements and PlanStack read the original module:
+  <Run>d__1::MoveNext L34:9-L34:128  awaited=True  GetResult=IL_012d ConfiguredTaskAwaitable`1/ConfiguredTaskAwaiter<InvalidOperationException>::GetResult  stack analysis consistent=True
+    SourceText: "var e = await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request)).ConfigureAwait(false)"
+    statement IL_00b4 ldarg .. IL_00da stloc V_4
+    captured value 'request': ldarg.0; ldfld <>8__1 (Probe/<>c__DisplayClass1_0); ldfld request
+    captured value '_client': ldarg.0; ldfld <>4__this (Probe); ldfld _client
+    PlanStack: REFUSED: the stack is not empty where the awaited result is read; entry=[] exit=[]
+    AwaitedRange: IL_012b ldloca V_4 .. IL_012d call ConfiguredTaskAwaitable`1/ConfiguredTaskAwaiter<InvalidOperationException>::GetResult; then IL_0132 stfld Probe/<Run>d__1::<>s__3
+    stack before the range's start: [1] Probe/<Run>d__1 (pushed by IL_012a ldarg this)
+    original IL from the statement's GetAwaiter to the next visible sequence point:
+                             IL_00d5: call           ConfiguredTaskAwaitable`1<InvalidOperationException>::GetAwaiter          stack[1] ConfiguredTaskAwaitable`1<InvalidOperationException>&
+                             IL_00da: stloc.s        V_4                                                                       stack[1] ConfiguredTaskAwaitable`1/ConfiguredTaskAwaiter<InvalidOperationException>
+    SP hidden                IL_00dc: ldloca.s       V_4                                                                       stack[0]
+                             IL_00de: call           ConfiguredTaskAwaitable`1/ConfiguredTaskAwaiter<InvalidOperationException>::get_IsCompleted  stack[1] ConfiguredTaskAwaitable`1/ConfiguredTaskAwaiter<InvalidOperationException>&
+                             IL_00e3: brtrue.s       IL_012a                                                                   stack[1] Boolean
+                             IL_00e5: ldarg.0                                                                                  stack[0]
+                             IL_00e6: ldc.i4.1                                                                                 stack[1] Probe/<Run>d__1
+                             IL_00e7: dup                                                                                      stack[2] Probe/<Run>d__1, Int32
+                             IL_00e8: stloc.0                                                                                  stack[3] Probe/<Run>d__1, Int32, Int32
+                             IL_00e9: stfld          Probe/<Run>d__1::<>1__state                                               stack[2] Probe/<Run>d__1, Int32
+                             IL_00ee: ldarg.0                                                                                  stack[0]
+                             IL_00ef: ldloc.s        V_4                                                                       stack[1] Probe/<Run>d__1
+                             IL_00f1: stfld          Probe/<Run>d__1::<>u__2                                                   stack[2] Probe/<Run>d__1, ConfiguredTaskAwaitable`1/ConfiguredTaskAwaiter<InvalidOperationException>
+                             IL_00f6: ldarg.0                                                                                  stack[0]
+                             IL_00f7: stloc.3                                                                                  stack[1] Probe/<Run>d__1
+                             IL_00f8: ldarg.0                                                                                  stack[0]
+                             IL_00f9: ldflda         Probe/<Run>d__1::<>t__builder                                             stack[1] Probe/<Run>d__1
+                             IL_00fe: ldloca.s       V_4                                                                       stack[1] AsyncTaskMethodBuilder&
+                             IL_0100: ldloca.s       V_3                                                                       stack[2] AsyncTaskMethodBuilder&, ConfiguredTaskAwaitable`1/ConfiguredTaskAwaiter<InvalidOperationException>&
+                             IL_0102: call           AsyncTaskMethodBuilder::AwaitUnsafeOnCompleted<ConfiguredTaskAwaitable`1/ConfiguredTaskAwaiter<InvalidOperationException>,Probe/<Run>d__1>  stack[3] AsyncTaskMethodBuilder&, ConfiguredTaskAwaitable`1/ConfiguredTaskAwaiter<InvalidOperationException>&, Probe/<Run>d__1&
+                             IL_0107: nop                                                                                      stack[0]
+                             IL_0108: leave          IL_01ad                                                                   stack[0]
+                             IL_010d: ldarg.0                                                                                  stack[0]
+                             IL_010e: ldfld          Probe/<Run>d__1::<>u__2                                                   stack[1] Probe/<Run>d__1
+                             IL_0113: stloc.s        V_4                                                                       stack[1] ConfiguredTaskAwaitable`1/ConfiguredTaskAwaiter<InvalidOperationException>
+                             IL_0115: ldarg.0                                                                                  stack[0]
+                             IL_0116: ldflda         Probe/<Run>d__1::<>u__2                                                   stack[1] Probe/<Run>d__1
+                             IL_011b: initobj        ConfiguredTaskAwaitable`1/ConfiguredTaskAwaiter<InvalidOperationException>  stack[1] ConfiguredTaskAwaitable`1/ConfiguredTaskAwaiter<InvalidOperationException>&
+                             IL_0121: ldarg.0                                                                                  stack[0]
+                             IL_0122: ldc.i4.m1                                                                                stack[1] Probe/<Run>d__1
+                             IL_0123: dup                                                                                      stack[2] Probe/<Run>d__1, Int32
+                             IL_0124: stloc.0                                                                                  stack[3] Probe/<Run>d__1, Int32, Int32
+                             IL_0125: stfld          Probe/<Run>d__1::<>1__state                                               stack[2] Probe/<Run>d__1, Int32
+                             IL_012a: ldarg.0                                                                                  stack[0]
+                             IL_012b: ldloca.s       V_4                                                                       stack[1] Probe/<Run>d__1
+                             IL_012d: call           ConfiguredTaskAwaitable`1/ConfiguredTaskAwaiter<InvalidOperationException>::GetResult  stack[2] Probe/<Run>d__1, ConfiguredTaskAwaitable`1/ConfiguredTaskAwaiter<InvalidOperationException>&
+                             IL_0132: stfld          Probe/<Run>d__1::<>s__3                                                   stack[2] Probe/<Run>d__1, InvalidOperationException
+                             IL_0137: ldarg.0                                                                                  stack[0]
+                             IL_0138: ldarg.0                                                                                  stack[1] Probe/<Run>d__1
+                             IL_0139: ldfld          Probe/<Run>d__1::<>s__3                                                   stack[2] Probe/<Run>d__1, Probe/<Run>d__1
+                             IL_013e: stfld          Probe/<Run>d__1::<e>5__2                                                  stack[2] Probe/<Run>d__1, InvalidOperationException
+                             IL_0143: ldarg.0                                                                                  stack[0]
+                             IL_0144: ldnull                                                                                   stack[1] Probe/<Run>d__1
+                             IL_0145: stfld          Probe/<Run>d__1::<>s__3                                                   stack[2] Probe/<Run>d__1, <null>
+    SP L35:9-L35:41          IL_014a: ldarg.0                                                                                  stack[0]   // e.Message.ShouldBe("not found");   <- next visible sequence point
+  <Run>d__1::MoveNext L35:9-L35:41  awaited=False  GetResult=none  stack analysis consistent=True
+    SourceText: "e.Message.ShouldBe("not found")"
+    statement IL_014a ldarg .. IL_0160 nop 
+    captured value: none
+    PlanStack: woven; entry=[] exit=[]
+every await in the original IL (merge point = the IsCompleted brtrue's target; stacks from StackAnalysis after SimplifyMacros):
+  <Run>d__1::MoveNext await at L32 "await Task.Yield();": GetAwaiter IL_003e YieldAwaitable::GetAwaiter; IsCompleted brtrue IL_004b -> merge point IL_0090 ldloca V_1
+    stack at the merge point: empty
+    awaiter load before GetResult: IL_0090 ldloca V_1; stack before it: empty
+    GetResult IL_0092 YieldAwaitable/YieldAwaiter::GetResult; then IL_0097 nop 
+  <Run>d__1::MoveNext await at L34 "var e = await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request)).ConfigureAwait(false);": GetAwaiter IL_00d5 ConfiguredTaskAwaitable`1<InvalidOperationException>::GetAwaiter; IsCompleted brtrue IL_00e3 -> merge point IL_012a ldarg this
+    stack at the merge point: empty
+    awaiter load before GetResult: IL_012b ldloca V_4; stack before it: [1] Probe/<Run>d__1 (pushed by IL_012a ldarg this)
+    GetResult IL_012d ConfiguredTaskAwaitable`1/ConfiguredTaskAwaiter<InvalidOperationException>::GetResult; then IL_0132 stfld Probe/<Run>d__1::<>s__3
+the plan's 4.1 a and c range for each awaited statement (merge point to the statement's end):
+  <Run>d__1::MoveNext L34: merge point IL_012a ldarg this; next visible sequence point at IL_014a
+    literal 4.1 c range IL_012a .. IL_0145 stfld Probe/<Run>d__1::<>s__3: awaits inside 0; stack after: empty; EntersPartWay = False; ret inside: none
+    the statement's own range (cut before the first handler after the merge point) IL_012a .. IL_0145 stfld Probe/<Run>d__1::<>s__3: awaits inside 0; stack after: empty; EntersPartWay = False; ret inside: none
+      entered from outside: nothing
+Track calls in the woven IL (the expression is the ldstr the weave passes):
+  <Run>d__1::MoveNext line 35: AssertionPassed + AssertionFailed
+    expression: "e.Message.ShouldBe("not found")"
+    Format(expression) = "E message should be "not found""
+    label as Track.LogAssertion writes it (StepText.CapitaliseIfEnabled) = "E message should be "not found""
+woven try regions (every catch whose handler calls Track):
+  <Run>d__1::MoveNext woven try IL_014a, catch IL_0175, end IL_0191:
+  SP L35:9-L35:41          IL_014a: nop                                                                                       // e.Message.ShouldBe("not found");
+                           IL_014b: ldarg.0                                                                                
+                           IL_014c: ldfld          Probe/<Run>d__1::<e>5__2                                                
+                           IL_0151: callvirt       Exception::get_Message                                                  
+                           IL_0156: ldstr          "not found"                                                             
+                           IL_015b: ldnull                                                                                 
+                           IL_015c: call           Shouldly.ShouldBeStringTestExtensions::ShouldBe                         
+                           IL_0161: nop                                                                                    
+                           IL_0162: ldstr          "e.Message.ShouldBe("not found")"                                       
+                           IL_0167: ldstr          "C:\Users\cex\AppData\Local\Temp\KRONIKOL_WeaverTests\2af8d8d5\Probe212b_S8_sdk10_Debug.cs"
+                           IL_016c: ldc.i4.s       35                                                                      
+                           IL_016e: call           Kronikol.Tracking.Track::AssertionPassed                                
+                           IL_0173: leave.s        IL_0191                                                                 
+                           IL_0175: stloc.s        V_7                                                                     
+                           IL_0177: ldstr          "e.Message.ShouldBe("not found")"                                       
+                           IL_017c: ldloc.s        V_7                                                                     
+                           IL_017e: callvirt       Exception::get_Message                                                  
+                           IL_0183: ldstr          "C:\Users\cex\AppData\Local\Temp\KRONIKOL_WeaverTests\2af8d8d5\Probe212b_S8_sdk10_Debug.cs"
+                           IL_0188: ldc.i4.s       35                                                                      
+                           IL_018a: call           Kronikol.Tracking.Track::AssertionFailed                                
+                           IL_018f: rethrow                                                                                
+                           IL_0191: nop                                                                                       <- after the catch
+run Run, woven: threw nothing
+  note ✓ "E message should be "not found"" (31 chars), source Probe212b_S8_sdk10_Debug.cs:L35
+run Run, unwoven build: threw nothing
+
+## S16a [Debug, SDK 10.0.0 net10.0] FluentAssertions: (await act.Should().ThrowAsync<T>()).Which.Message.Should().Be(...), the trailing Be passing, then failing
+build: SDK 10.0.300 (dotnet --version in the build directory), its compiler Roslyn 5.6.0-2.26230.102+caa81fa4971f74880cdab61990cb1b11420939ec, net10.0
+source: S16a.source.txt; IL: S16a.sdk10.Debug.unwoven.il.txt and S16a.sdk10.Debug.woven.il.txt
+weave: WeavedCount=0 MethodCount=0
+  Unwoven: Probe/<MessageDiffers>d__2.MoveNext, line 43: the stack is not empty where the awaited result is read
+  Unwoven: Probe/<MessageMatches>d__1.MoveNext, line 35: the stack is not empty where the awaited result is read
+  ILVerify: no error the weave added
+assertion entry points (IsAssertionEntryPoint) in the original IL, and the sequence point each falls under (the weave groups instructions by sequence point, hidden ones included, and only a visible one's group is a statement):
+  <MessageDiffers>d__2::MoveNext IL_00d1 call FluentAssertions.AssertionExtensions::Should is under the visible sequence point L43:9-L43:105
+  <MessageDiffers>d__2::MoveNext IL_0157 call FluentAssertions.AssertionExtensions::Should is under a HIDDEN sequence point (not a statement the weave reads); the last visible one before it is L43 "(await act.Should().ThrowAsync<InvalidOperationException>()).Which.Message.Should().Be("other");"
+  <MessageMatches>d__1::MoveNext IL_00d1 call FluentAssertions.AssertionExtensions::Should is under the visible sequence point L35:9-L35:109
+  <MessageMatches>d__1::MoveNext IL_0157 call FluentAssertions.AssertionExtensions::Should is under a HIDDEN sequence point (not a statement the weave reads); the last visible one before it is L35 "(await act.Should().ThrowAsync<InvalidOperationException>()).Which.Message.Should().Be("not found");"
+statements, as the weaver's FindAssertionStatements and PlanStack read the original module:
+  <MessageDiffers>d__2::MoveNext L43:9-L43:105  awaited=True  GetResult=IL_013d TaskAwaiter`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>>::GetResult  stack analysis consistent=True
+    SourceText: "(await act.Should().ThrowAsync<InvalidOperationException>()).Which.Message.Should().Be("other")"
+    statement IL_00cb ldarg .. IL_00ea stloc V_4
+    captured value: none
+    PlanStack: REFUSED: the stack is not empty where the awaited result is read; entry=[] exit=[]
+    AwaitedRange: IL_013b ldloca V_4 .. IL_013d call TaskAwaiter`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>>::GetResult; then IL_0142 stfld Probe/<MessageDiffers>d__2::<>s__3
+    stack before the range's start: [1] Probe/<MessageDiffers>d__2 (pushed by IL_013a ldarg this)
+    original IL from the statement's GetAwaiter to the next visible sequence point:
+                             IL_00e5: callvirt       Task`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>>::GetAwaiter  stack[1] Task`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>>
+                             IL_00ea: stloc.s        V_4                                                                       stack[1] TaskAwaiter`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>>
+    SP hidden                IL_00ec: ldloca.s       V_4                                                                       stack[0]
+                             IL_00ee: call           TaskAwaiter`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>>::get_IsCompleted  stack[1] TaskAwaiter`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>>&
+                             IL_00f3: brtrue.s       IL_013a                                                                   stack[1] Boolean
+                             IL_00f5: ldarg.0                                                                                  stack[0]
+                             IL_00f6: ldc.i4.1                                                                                 stack[1] Probe/<MessageDiffers>d__2
+                             IL_00f7: dup                                                                                      stack[2] Probe/<MessageDiffers>d__2, Int32
+                             IL_00f8: stloc.0                                                                                  stack[3] Probe/<MessageDiffers>d__2, Int32, Int32
+                             IL_00f9: stfld          Probe/<MessageDiffers>d__2::<>1__state                                    stack[2] Probe/<MessageDiffers>d__2, Int32
+                             IL_00fe: ldarg.0                                                                                  stack[0]
+                             IL_00ff: ldloc.s        V_4                                                                       stack[1] Probe/<MessageDiffers>d__2
+                             IL_0101: stfld          Probe/<MessageDiffers>d__2::<>u__2                                        stack[2] Probe/<MessageDiffers>d__2, TaskAwaiter`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>>
+                             IL_0106: ldarg.0                                                                                  stack[0]
+                             IL_0107: stloc.3                                                                                  stack[1] Probe/<MessageDiffers>d__2
+                             IL_0108: ldarg.0                                                                                  stack[0]
+                             IL_0109: ldflda         Probe/<MessageDiffers>d__2::<>t__builder                                  stack[1] Probe/<MessageDiffers>d__2
+                             IL_010e: ldloca.s       V_4                                                                       stack[1] AsyncTaskMethodBuilder&
+                             IL_0110: ldloca.s       V_3                                                                       stack[2] AsyncTaskMethodBuilder&, TaskAwaiter`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>>&
+                             IL_0112: call           AsyncTaskMethodBuilder::AwaitUnsafeOnCompleted<TaskAwaiter`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>>,Probe/<MessageDiffers>d__2>  stack[3] AsyncTaskMethodBuilder&, TaskAwaiter`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>>&, Probe/<MessageDiffers>d__2&
+                             IL_0117: nop                                                                                      stack[0]
+                             IL_0118: leave          IL_01c4                                                                   stack[0]
+                             IL_011d: ldarg.0                                                                                  stack[0]
+                             IL_011e: ldfld          Probe/<MessageDiffers>d__2::<>u__2                                        stack[1] Probe/<MessageDiffers>d__2
+                             IL_0123: stloc.s        V_4                                                                       stack[1] TaskAwaiter`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>>
+                             IL_0125: ldarg.0                                                                                  stack[0]
+                             IL_0126: ldflda         Probe/<MessageDiffers>d__2::<>u__2                                        stack[1] Probe/<MessageDiffers>d__2
+                             IL_012b: initobj        TaskAwaiter`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>>  stack[1] TaskAwaiter`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>>&
+                             IL_0131: ldarg.0                                                                                  stack[0]
+                             IL_0132: ldc.i4.m1                                                                                stack[1] Probe/<MessageDiffers>d__2
+                             IL_0133: dup                                                                                      stack[2] Probe/<MessageDiffers>d__2, Int32
+                             IL_0134: stloc.0                                                                                  stack[3] Probe/<MessageDiffers>d__2, Int32, Int32
+                             IL_0135: stfld          Probe/<MessageDiffers>d__2::<>1__state                                    stack[2] Probe/<MessageDiffers>d__2, Int32
+                             IL_013a: ldarg.0                                                                                  stack[0]
+                             IL_013b: ldloca.s       V_4                                                                       stack[1] Probe/<MessageDiffers>d__2
+                             IL_013d: call           TaskAwaiter`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>>::GetResult  stack[2] Probe/<MessageDiffers>d__2, TaskAwaiter`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>>&
+                             IL_0142: stfld          Probe/<MessageDiffers>d__2::<>s__3                                        stack[2] Probe/<MessageDiffers>d__2, FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>
+                             IL_0147: ldarg.0                                                                                  stack[0]
+                             IL_0148: ldfld          Probe/<MessageDiffers>d__2::<>s__3                                        stack[1] Probe/<MessageDiffers>d__2
+                             IL_014d: callvirt       FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>::get_Which  stack[1] FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>
+                             IL_0152: callvirt       Exception::get_Message                                                    stack[1] InvalidOperationException
+                             IL_0157: call           FluentAssertions.AssertionExtensions::Should                              stack[1] String
+                             IL_015c: ldstr          "other"                                                                   stack[1] FluentAssertions.Primitives.StringAssertions
+                             IL_0161: ldstr          ""                                                                        stack[2] FluentAssertions.Primitives.StringAssertions, String
+                             IL_0166: call           Array::Empty<Object>                                                      stack[3] FluentAssertions.Primitives.StringAssertions, String, String
+                             IL_016b: callvirt       FluentAssertions.Primitives.StringAssertions`1<FluentAssertions.Primitives.StringAssertions>::Be  stack[4] FluentAssertions.Primitives.StringAssertions, String, String, Object[]
+                             IL_0170: pop                                                                                      stack[1] FluentAssertions.AndConstraint`1<FluentAssertions.Primitives.StringAssertions>
+                             IL_0171: ldarg.0                                                                                  stack[0]
+                             IL_0172: ldnull                                                                                   stack[1] Probe/<MessageDiffers>d__2
+                             IL_0173: stfld          Probe/<MessageDiffers>d__2::<>s__3                                        stack[2] Probe/<MessageDiffers>d__2, <null>
+                             IL_0178: leave.s        IL_01a2                                                                   stack[0]
+    SP hidden                IL_017a: stloc.s        V_5                                                                       stack[1] Exception
+                             IL_017c: ldarg.0                                                                                  stack[0]
+                             IL_017d: ldc.i4.s       -2                                                                        stack[1] Probe/<MessageDiffers>d__2
+                             IL_017f: stfld          Probe/<MessageDiffers>d__2::<>1__state                                    stack[2] Probe/<MessageDiffers>d__2, Int32
+                             IL_0184: ldarg.0                                                                                  stack[0]
+                             IL_0185: ldnull                                                                                   stack[1] Probe/<MessageDiffers>d__2
+                             IL_0186: stfld          Probe/<MessageDiffers>d__2::<>8__1                                        stack[2] Probe/<MessageDiffers>d__2, <null>
+                             IL_018b: ldarg.0                                                                                  stack[0]
+                             IL_018c: ldnull                                                                                   stack[1] Probe/<MessageDiffers>d__2
+                             IL_018d: stfld          Probe/<MessageDiffers>d__2::<act>5__2                                     stack[2] Probe/<MessageDiffers>d__2, <null>
+                             IL_0192: ldarg.0                                                                                  stack[0]
+                             IL_0193: ldflda         Probe/<MessageDiffers>d__2::<>t__builder                                  stack[1] Probe/<MessageDiffers>d__2
+                             IL_0198: ldloc.s        V_5                                                                       stack[1] AsyncTaskMethodBuilder&
+                             IL_019a: call           AsyncTaskMethodBuilder::SetException                                      stack[2] AsyncTaskMethodBuilder&, Exception
+                             IL_019f: nop                                                                                      stack[0]
+                             IL_01a0: leave.s        IL_01c4                                                                   stack[0]
+    SP L44:5-L44:6           IL_01a2: ldarg.0                                                                                  stack[0]   // }   <- next visible sequence point
+  <MessageMatches>d__1::MoveNext L35:9-L35:109  awaited=True  GetResult=IL_013d TaskAwaiter`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>>::GetResult  stack analysis consistent=True
+    SourceText: "(await act.Should().ThrowAsync<InvalidOperationException>()).Which.Message.Should().Be("not found")"
+    statement IL_00cb ldarg .. IL_00ea stloc V_4
+    captured value: none
+    PlanStack: REFUSED: the stack is not empty where the awaited result is read; entry=[] exit=[]
+    AwaitedRange: IL_013b ldloca V_4 .. IL_013d call TaskAwaiter`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>>::GetResult; then IL_0142 stfld Probe/<MessageMatches>d__1::<>s__3
+    stack before the range's start: [1] Probe/<MessageMatches>d__1 (pushed by IL_013a ldarg this)
+    original IL from the statement's GetAwaiter to the next visible sequence point:
+                             IL_00e5: callvirt       Task`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>>::GetAwaiter  stack[1] Task`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>>
+                             IL_00ea: stloc.s        V_4                                                                       stack[1] TaskAwaiter`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>>
+    SP hidden                IL_00ec: ldloca.s       V_4                                                                       stack[0]
+                             IL_00ee: call           TaskAwaiter`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>>::get_IsCompleted  stack[1] TaskAwaiter`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>>&
+                             IL_00f3: brtrue.s       IL_013a                                                                   stack[1] Boolean
+                             IL_00f5: ldarg.0                                                                                  stack[0]
+                             IL_00f6: ldc.i4.1                                                                                 stack[1] Probe/<MessageMatches>d__1
+                             IL_00f7: dup                                                                                      stack[2] Probe/<MessageMatches>d__1, Int32
+                             IL_00f8: stloc.0                                                                                  stack[3] Probe/<MessageMatches>d__1, Int32, Int32
+                             IL_00f9: stfld          Probe/<MessageMatches>d__1::<>1__state                                    stack[2] Probe/<MessageMatches>d__1, Int32
+                             IL_00fe: ldarg.0                                                                                  stack[0]
+                             IL_00ff: ldloc.s        V_4                                                                       stack[1] Probe/<MessageMatches>d__1
+                             IL_0101: stfld          Probe/<MessageMatches>d__1::<>u__2                                        stack[2] Probe/<MessageMatches>d__1, TaskAwaiter`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>>
+                             IL_0106: ldarg.0                                                                                  stack[0]
+                             IL_0107: stloc.3                                                                                  stack[1] Probe/<MessageMatches>d__1
+                             IL_0108: ldarg.0                                                                                  stack[0]
+                             IL_0109: ldflda         Probe/<MessageMatches>d__1::<>t__builder                                  stack[1] Probe/<MessageMatches>d__1
+                             IL_010e: ldloca.s       V_4                                                                       stack[1] AsyncTaskMethodBuilder&
+                             IL_0110: ldloca.s       V_3                                                                       stack[2] AsyncTaskMethodBuilder&, TaskAwaiter`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>>&
+                             IL_0112: call           AsyncTaskMethodBuilder::AwaitUnsafeOnCompleted<TaskAwaiter`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>>,Probe/<MessageMatches>d__1>  stack[3] AsyncTaskMethodBuilder&, TaskAwaiter`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>>&, Probe/<MessageMatches>d__1&
+                             IL_0117: nop                                                                                      stack[0]
+                             IL_0118: leave          IL_01c4                                                                   stack[0]
+                             IL_011d: ldarg.0                                                                                  stack[0]
+                             IL_011e: ldfld          Probe/<MessageMatches>d__1::<>u__2                                        stack[1] Probe/<MessageMatches>d__1
+                             IL_0123: stloc.s        V_4                                                                       stack[1] TaskAwaiter`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>>
+                             IL_0125: ldarg.0                                                                                  stack[0]
+                             IL_0126: ldflda         Probe/<MessageMatches>d__1::<>u__2                                        stack[1] Probe/<MessageMatches>d__1
+                             IL_012b: initobj        TaskAwaiter`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>>  stack[1] TaskAwaiter`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>>&
+                             IL_0131: ldarg.0                                                                                  stack[0]
+                             IL_0132: ldc.i4.m1                                                                                stack[1] Probe/<MessageMatches>d__1
+                             IL_0133: dup                                                                                      stack[2] Probe/<MessageMatches>d__1, Int32
+                             IL_0134: stloc.0                                                                                  stack[3] Probe/<MessageMatches>d__1, Int32, Int32
+                             IL_0135: stfld          Probe/<MessageMatches>d__1::<>1__state                                    stack[2] Probe/<MessageMatches>d__1, Int32
+                             IL_013a: ldarg.0                                                                                  stack[0]
+                             IL_013b: ldloca.s       V_4                                                                       stack[1] Probe/<MessageMatches>d__1
+                             IL_013d: call           TaskAwaiter`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>>::GetResult  stack[2] Probe/<MessageMatches>d__1, TaskAwaiter`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>>&
+                             IL_0142: stfld          Probe/<MessageMatches>d__1::<>s__3                                        stack[2] Probe/<MessageMatches>d__1, FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>
+                             IL_0147: ldarg.0                                                                                  stack[0]
+                             IL_0148: ldfld          Probe/<MessageMatches>d__1::<>s__3                                        stack[1] Probe/<MessageMatches>d__1
+                             IL_014d: callvirt       FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>::get_Which  stack[1] FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>
+                             IL_0152: callvirt       Exception::get_Message                                                    stack[1] InvalidOperationException
+                             IL_0157: call           FluentAssertions.AssertionExtensions::Should                              stack[1] String
+                             IL_015c: ldstr          "not found"                                                               stack[1] FluentAssertions.Primitives.StringAssertions
+                             IL_0161: ldstr          ""                                                                        stack[2] FluentAssertions.Primitives.StringAssertions, String
+                             IL_0166: call           Array::Empty<Object>                                                      stack[3] FluentAssertions.Primitives.StringAssertions, String, String
+                             IL_016b: callvirt       FluentAssertions.Primitives.StringAssertions`1<FluentAssertions.Primitives.StringAssertions>::Be  stack[4] FluentAssertions.Primitives.StringAssertions, String, String, Object[]
+                             IL_0170: pop                                                                                      stack[1] FluentAssertions.AndConstraint`1<FluentAssertions.Primitives.StringAssertions>
+                             IL_0171: ldarg.0                                                                                  stack[0]
+                             IL_0172: ldnull                                                                                   stack[1] Probe/<MessageMatches>d__1
+                             IL_0173: stfld          Probe/<MessageMatches>d__1::<>s__3                                        stack[2] Probe/<MessageMatches>d__1, <null>
+                             IL_0178: leave.s        IL_01a2                                                                   stack[0]
+    SP hidden                IL_017a: stloc.s        V_5                                                                       stack[1] Exception
+                             IL_017c: ldarg.0                                                                                  stack[0]
+                             IL_017d: ldc.i4.s       -2                                                                        stack[1] Probe/<MessageMatches>d__1
+                             IL_017f: stfld          Probe/<MessageMatches>d__1::<>1__state                                    stack[2] Probe/<MessageMatches>d__1, Int32
+                             IL_0184: ldarg.0                                                                                  stack[0]
+                             IL_0185: ldnull                                                                                   stack[1] Probe/<MessageMatches>d__1
+                             IL_0186: stfld          Probe/<MessageMatches>d__1::<>8__1                                        stack[2] Probe/<MessageMatches>d__1, <null>
+                             IL_018b: ldarg.0                                                                                  stack[0]
+                             IL_018c: ldnull                                                                                   stack[1] Probe/<MessageMatches>d__1
+                             IL_018d: stfld          Probe/<MessageMatches>d__1::<act>5__2                                     stack[2] Probe/<MessageMatches>d__1, <null>
+                             IL_0192: ldarg.0                                                                                  stack[0]
+                             IL_0193: ldflda         Probe/<MessageMatches>d__1::<>t__builder                                  stack[1] Probe/<MessageMatches>d__1
+                             IL_0198: ldloc.s        V_5                                                                       stack[1] AsyncTaskMethodBuilder&
+                             IL_019a: call           AsyncTaskMethodBuilder::SetException                                      stack[2] AsyncTaskMethodBuilder&, Exception
+                             IL_019f: nop                                                                                      stack[0]
+                             IL_01a0: leave.s        IL_01c4                                                                   stack[0]
+    SP L36:5-L36:6           IL_01a2: ldarg.0                                                                                  stack[0]   // }   <- next visible sequence point
+every await in the original IL (merge point = the IsCompleted brtrue's target; stacks from StackAnalysis after SimplifyMacros):
+  <MessageDiffers>d__2::MoveNext await at L40 "await Task.Yield();": GetAwaiter IL_003e YieldAwaitable::GetAwaiter; IsCompleted brtrue IL_004b -> merge point IL_0090 ldloca V_1
+    stack at the merge point: empty
+    awaiter load before GetResult: IL_0090 ldloca V_1; stack before it: empty
+    GetResult IL_0092 YieldAwaitable/YieldAwaiter::GetResult; then IL_0097 nop 
+  <MessageDiffers>d__2::MoveNext await at L43 "(await act.Should().ThrowAsync<InvalidOperationException>()).Which.Message.Should().Be("other");": GetAwaiter IL_00e5 Task`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>>::GetAwaiter; IsCompleted brtrue IL_00f3 -> merge point IL_013a ldarg this
+    stack at the merge point: empty
+    awaiter load before GetResult: IL_013b ldloca V_4; stack before it: [1] Probe/<MessageDiffers>d__2 (pushed by IL_013a ldarg this)
+    GetResult IL_013d TaskAwaiter`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>>::GetResult; then IL_0142 stfld Probe/<MessageDiffers>d__2::<>s__3
+  <MessageMatches>d__1::MoveNext await at L32 "await Task.Yield();": GetAwaiter IL_003e YieldAwaitable::GetAwaiter; IsCompleted brtrue IL_004b -> merge point IL_0090 ldloca V_1
+    stack at the merge point: empty
+    awaiter load before GetResult: IL_0090 ldloca V_1; stack before it: empty
+    GetResult IL_0092 YieldAwaitable/YieldAwaiter::GetResult; then IL_0097 nop 
+  <MessageMatches>d__1::MoveNext await at L35 "(await act.Should().ThrowAsync<InvalidOperationException>()).Which.Message.Should().Be("not found");": GetAwaiter IL_00e5 Task`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>>::GetAwaiter; IsCompleted brtrue IL_00f3 -> merge point IL_013a ldarg this
+    stack at the merge point: empty
+    awaiter load before GetResult: IL_013b ldloca V_4; stack before it: [1] Probe/<MessageMatches>d__1 (pushed by IL_013a ldarg this)
+    GetResult IL_013d TaskAwaiter`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>>::GetResult; then IL_0142 stfld Probe/<MessageMatches>d__1::<>s__3
+the plan's 4.1 a and c range for each awaited statement (merge point to the statement's end):
+  <MessageDiffers>d__2::MoveNext L43: merge point IL_013a ldarg this; next visible sequence point at IL_01a2
+    literal 4.1 c range IL_013a .. IL_019f nop : awaits inside 0; stack after: empty; EntersPartWay = True; ret inside: none
+      entered from outside: a Catch handler starts inside, at IL_017a
+    the statement's own range (cut before the first handler after the merge point) IL_013a .. IL_0173 stfld Probe/<MessageDiffers>d__2::<>s__3: awaits inside 0; stack after: empty; EntersPartWay = False; ret inside: none
+      entered from outside: nothing
+  <MessageMatches>d__1::MoveNext L35: merge point IL_013a ldarg this; next visible sequence point at IL_01a2
+    literal 4.1 c range IL_013a .. IL_019f nop : awaits inside 0; stack after: empty; EntersPartWay = True; ret inside: none
+      entered from outside: a Catch handler starts inside, at IL_017a
+    the statement's own range (cut before the first handler after the merge point) IL_013a .. IL_0173 stfld Probe/<MessageMatches>d__1::<>s__3: awaits inside 0; stack after: empty; EntersPartWay = False; ret inside: none
+      entered from outside: nothing
+Track calls in the woven IL (the expression is the ldstr the weave passes):
+  none
+woven try regions (every catch whose handler calls Track):
+  none
+run MessageMatches, woven: threw nothing
+  no note drawn
+run MessageMatches, unwoven build: threw nothing
+run MessageDiffers, woven: threw TUnit.Assertions.Exceptions.AssertionException: Expected string to be a match with the expectation, but it differs at index 0:\n   ↓ (actual)\n  "not found"\n  "other"\n   ↑ (expected)
+      at Probe.MessageDiffers()
+      at Kronikol.Tests.AssertionTracking.Probe212bTests.<>c__DisplayClass34_0.<RunIsolated>b__0() in C:\Code\Kronikol-212\tests\Kronikol.Tests.AssertionTracking\Probe212bTests.cs:line 984
+      at Xunit.Record.Exception(Action testCode) in /_/src/xunit.v3.core/Record.cs:line 30
+  no note drawn
+run MessageDiffers, unwoven build: threw TUnit.Assertions.Exceptions.AssertionException: Expected string to be a match with the expectation, but it differs at index 0:\n   ↓ (actual)\n  "not found"\n  "other"\n   ↑ (expected)
+      at Probe.MessageDiffers()
+      at Kronikol.Tests.AssertionTracking.Probe212bTests.<>c__DisplayClass34_0.<RunIsolated>b__0() in C:\Code\Kronikol-212\tests\Kronikol.Tests.AssertionTracking\Probe212bTests.cs:line 984
+      at Xunit.Record.Exception(Action testCode) in /_/src/xunit.v3.core/Record.cs:line 30

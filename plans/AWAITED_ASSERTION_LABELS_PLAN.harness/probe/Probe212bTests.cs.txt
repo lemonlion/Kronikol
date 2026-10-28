@@ -1,0 +1,1363 @@
+using System.Diagnostics;
+using System.Reflection;
+using System.Text;
+using Kronikol.AssertionTracking;
+using Kronikol.Tracking;
+using Mono.Cecil;
+using Mono.Cecil.Cil;
+using Mono.Cecil.Rocks;
+using Opt = Microsoft.CodeAnalysis.OptimizationLevel;
+
+namespace Kronikol.Tests.AssertionTracking;
+
+/// <summary>
+/// TEMPORARY second probe for #212 (plans/AWAITED_ASSERTION_LABELS_PLAN.md), kept in the plan's harness as
+/// probe/Probe212bTests.cs.txt: the statement shapes the first probe (Probe212Tests.cs.txt) did not measure, each
+/// built in Debug and in Release, woven, and run where its assertion holds and where it fails; then five of the first
+/// probe's shapes built by SDKs 8, 9 and 10. For every await it records the merge point (the IsCompleted brtrue's
+/// target) and the stack there and before the awaiter's load, and for every awaited assertion statement whether a
+/// range from its merge point to its end is entered part-way (the plan's 4.1 a and c). It asserts nothing.
+/// </summary>
+public class Probe212bTests
+{
+    private sealed record Shape(string Id, string Title, string Usings, string Body, string[]? Entries = null, bool TUnit = false)
+    {
+        /// <summary>Built from the first probe's fixture template, so its sources and line numbers are the first probe's.</summary>
+        public bool FirstProbe { get; init; }
+
+        /// <summary>A library the weave does not recognise, run once to show it (not one of the measured shapes).</summary>
+        public bool Control { get; init; }
+
+        public string TypeName { get; init; } = "Probe";
+    }
+
+    private sealed record Sdk(string Version, string Tfm, string Tag);
+
+    private static readonly Sdk[] Sdks = [new("8.0.0", "net8.0", "sdk8"), new("9.0.0", "net9.0", "sdk9"), new("10.0.0", "net10.0", "sdk10")];
+
+    private const string ShouldlyUsing = "using Shouldly;";
+    private const string FluentUsing = "using FluentAssertions;";
+    private const string AwesomeUsing = "using AwesomeAssertions;";
+    private const string TUnitUsing = "using TUnit.Assertions;\nusing TUnit.Assertions.Extensions;";
+
+    private static readonly string[] PassFail = ["AssertionPasses", "AssertionFails"];
+    private static readonly string[] MessageEntries = ["MessageMatches", "MessageDiffers"];
+
+    private static readonly Shape[] Shapes =
+    [
+        new("S17a", "Shouldly, awaited subject, synchronous assertion: (await _client.GetNameAsync()).ShouldBe(\"order\");", ShouldlyUsing, """
+            public async Task AssertionPasses()
+            {
+                await Task.Yield();
+                (await _client.GetNameAsync()).ShouldBe("order");
+            }
+
+            public async Task AssertionFails()
+            {
+                await Task.Yield();
+                (await _client.GetNameAsync()).ShouldBe("other");
+            }
+            """, PassFail),
+        new("S17b", "FluentAssertions, awaited subject, synchronous assertion: (await _client.GetNameAsync()).Should().Be(\"order\");", FluentUsing, """
+            public async Task AssertionPasses()
+            {
+                await Task.Yield();
+                (await _client.GetNameAsync()).Should().Be("order");
+            }
+
+            public async Task AssertionFails()
+            {
+                await Task.Yield();
+                (await _client.GetNameAsync()).Should().Be("other");
+            }
+            """, PassFail),
+        new("S17c", "TUnit, awaited subject inside an awaited assertion: await Assert.That(await _client.GetNameAsync()).IsEqualTo(\"order\");", TUnitUsing, """
+            public async Task AssertionPasses()
+            {
+                await Task.Yield();
+                await Assert.That(await _client.GetNameAsync()).IsEqualTo("order");
+            }
+
+            public async Task AssertionFails()
+            {
+                await Task.Yield();
+                await Assert.That(await _client.GetNameAsync()).IsEqualTo("other");
+            }
+            """, PassFail, TUnit: true),
+        new("S18a", "TUnit, awaited assertion whose result is used: var e = await Assert.That(() => _client.GetOrderAsync(r)).Throws<T>(); then e used", TUnitUsing, """
+            public async Task AssertionPasses()
+            {
+                await Task.Yield();
+                var r = new OrderRequest { Id = "missing" };
+                var e = await Assert.That(() => _client.GetOrderAsync(r)).Throws<InvalidOperationException>();
+                await Assert.That(e.Message).IsEqualTo("not found");
+            }
+
+            public async Task AssertionFails()
+            {
+                await Task.Yield();
+                var r = new OrderRequest { Id = "known" };
+                var e = await Assert.That(() => _client.GetOrderAsync(r)).Throws<InvalidOperationException>();
+                await Assert.That(e.Message).IsEqualTo("not found");
+            }
+            """, PassFail, TUnit: true),
+        new("S18c", "AwesomeAssertions: var a = await act.Should().ThrowAsync<T>(); then a used", AwesomeUsing, """
+            public async Task AssertionPasses()
+            {
+                await Task.Yield();
+                var r = new OrderRequest { Id = "missing" };
+                Func<Task> act = () => _client.GetOrderAsync(r);
+                var a = await act.Should().ThrowAsync<InvalidOperationException>();
+                a.Which.Message.Should().Be("not found");
+            }
+
+            public async Task AssertionFails()
+            {
+                await Task.Yield();
+                var r = new OrderRequest { Id = "known" };
+                Func<Task> act = () => _client.GetOrderAsync(r);
+                var a = await act.Should().ThrowAsync<InvalidOperationException>();
+                a.Which.Message.Should().Be("not found");
+            }
+            """, PassFail),
+        new("S19a", "FluentAssertions helper returning the un-awaited task: Task<ExceptionAssertions<T>> Fails(Func<Task> act) => act.Should().ThrowAsync<T>(); the test does await Fails(...)", FluentUsing + "\nusing FluentAssertions.Specialized;", """
+            public async Task AssertionPasses()
+            {
+                await Fails(() => _client.GetOrderAsync(new OrderRequest { Id = "missing" }));
+            }
+
+            public async Task AssertionFails()
+            {
+                await Fails(() => _client.GetOrderAsync(new OrderRequest { Id = "known" }));
+            }
+
+            private Task<ExceptionAssertions<InvalidOperationException>> Fails(Func<Task> act) => act.Should().ThrowAsync<InvalidOperationException>();
+            """, PassFail),
+        new("S19b", "TUnit helper returning the un-awaited assertion object Assert.That(x).IsEqualTo(y) makes (StringEqualsAssertion); the test awaits it", TUnitUsing + "\nusing TUnit.Assertions.Conditions;", """
+            public async Task AssertionPasses()
+            {
+                var name = await _client.GetNameAsync();
+                await IsOrder(name);
+            }
+
+            public async Task AssertionFails()
+            {
+                await Task.Yield();
+                await IsOrder("other");
+            }
+
+            private static StringEqualsAssertion IsOrder(string name) => Assert.That(name).IsEqualTo("order");
+            """, PassFail, TUnit: true),
+        new("S19c", "Shouldly stored task: var t = Should.ThrowAsync<T>(() => _client.GetOrderAsync(r)); await t;", ShouldlyUsing, """
+            public async Task AssertionPasses()
+            {
+                await Task.Yield();
+                var r = new OrderRequest { Id = "missing" };
+                var t = Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(r));
+                await t;
+            }
+
+            public async Task AssertionFails()
+            {
+                await Task.Yield();
+                var r = new OrderRequest { Id = "known" };
+                var t = Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(r));
+                await t;
+            }
+            """, PassFail),
+        new("S19d", "expression-bodied test method returning the assertion's task: public Task Test() => Should.ThrowAsync<T>(() => _client.GetOrderAsync(r)); run by awaiting the returned task", ShouldlyUsing, """
+            private readonly OrderRequest _missing = new() { Id = "missing" };
+            private readonly OrderRequest _known = new() { Id = "known" };
+
+            public Task AssertionPasses() => Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(_missing));
+
+            public Task AssertionFails() => Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(_known));
+            """, PassFail),
+        new("S20", "a second await after the assertion's merge point in the same statement: (await Should.ThrowAsync<T>(...)).Message.ShouldBe(await _client.GetExpectedMessageAsync());", ShouldlyUsing, """
+            public async Task AssertionPasses()
+            {
+                await Task.Yield();
+                var r = new OrderRequest { Id = "missing" };
+                (await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(r))).Message.ShouldBe(await _client.GetExpectedMessageAsync());
+            }
+
+            public async Task ThrowFails()
+            {
+                await Task.Yield();
+                var r = new OrderRequest { Id = "known" };
+                (await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(r))).Message.ShouldBe(await _client.GetExpectedMessageAsync());
+            }
+
+            public async Task MessageDiffers()
+            {
+                await Task.Yield();
+                var r = new OrderRequest { Id = "missing" };
+                _client.ExpectedMessage = "other";
+                (await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(r))).Message.ShouldBe(await _client.GetExpectedMessageAsync());
+            }
+            """, ["AssertionPasses", "ThrowFails", "MessageDiffers"]),
+        new("S21a", "statement text across lines: var e = / await Should.ThrowAsync<T>( / () => _client.GetOrderAsync(r));", ShouldlyUsing, """
+            public async Task AssertionPasses()
+            {
+                await Task.Yield();
+                var r = new OrderRequest { Id = "missing" };
+                var e =
+                    await Should.ThrowAsync<InvalidOperationException>(
+                        () => _client.GetOrderAsync(r));
+                e.Message.ShouldBe("not found");
+            }
+
+            public async Task AssertionFails()
+            {
+                await Task.Yield();
+                var r = new OrderRequest { Id = "known" };
+                var e =
+                    await Should.ThrowAsync<InvalidOperationException>(
+                        () => _client.GetOrderAsync(r));
+                e.Message.ShouldBe("not found");
+            }
+            """, PassFail),
+        new("S21b", "the bare await across lines: await Should.ThrowAsync<T>( / () => _client.GetOrderAsync(r));", ShouldlyUsing, """
+            public async Task AssertionPasses()
+            {
+                await Task.Yield();
+                var r = new OrderRequest { Id = "missing" };
+                await Should.ThrowAsync<InvalidOperationException>(
+                    () => _client.GetOrderAsync(r));
+            }
+
+            public async Task AssertionFails()
+            {
+                await Task.Yield();
+                var r = new OrderRequest { Id = "known" };
+                await Should.ThrowAsync<InvalidOperationException>(
+                    () => _client.GetOrderAsync(r));
+            }
+            """, PassFail),
+        new("S22a", "FluentAssertions scope: using (new AssertionScope()) { await act.Should().ThrowAsync<T>(); }, act not throwing in the failing run", FluentUsing + "\nusing FluentAssertions.Execution;", """
+            public async Task AssertionPasses()
+            {
+                await Task.Yield();
+                Func<Task> act = () => _client.GetOrderAsync(new OrderRequest { Id = "missing" });
+                using (new AssertionScope())
+                {
+                    await act.Should().ThrowAsync<InvalidOperationException>();
+                }
+            }
+
+            public async Task AssertionFails()
+            {
+                await Task.Yield();
+                Func<Task> act = () => _client.GetOrderAsync(new OrderRequest { Id = "known" });
+                using (new AssertionScope())
+                {
+                    await act.Should().ThrowAsync<InvalidOperationException>();
+                }
+            }
+            """, PassFail),
+        new("S22b", "TUnit scope: using (Assert.Multiple()) { await Assert.That(1).IsEqualTo(2); }", TUnitUsing, """
+            public async Task AssertionPasses()
+            {
+                await Task.Yield();
+                using (Assert.Multiple())
+                {
+                    await Assert.That(1).IsEqualTo(1);
+                }
+            }
+
+            public async Task AssertionFails()
+            {
+                await Task.Yield();
+                using (Assert.Multiple())
+                {
+                    await Assert.That(1).IsEqualTo(2);
+                }
+            }
+            """, PassFail, TUnit: true),
+        new("S23", "awaited assertion consumed by a non-assertion call: Console.WriteLine((await Should.ThrowAsync<T>(...)).Message);", ShouldlyUsing, """
+            public async Task AssertionPasses()
+            {
+                await Task.Yield();
+                var r = new OrderRequest { Id = "missing" };
+                Console.WriteLine((await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(r))).Message);
+            }
+
+            public async Task AssertionFails()
+            {
+                await Task.Yield();
+                var r = new OrderRequest { Id = "known" };
+                Console.WriteLine((await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(r))).Message);
+            }
+            """, PassFail),
+
+        // Controls: xUnit's Assert is referencable (xunit.v3.assert comes with xunit.v3) but not an assertion the weave
+        // recognises; a Shouldly statement keeps the assembly woven, so the weave's own reading of the xUnit lines shows.
+        new("S17d", "CONTROL (dropped shape): xUnit Assert.Equal(\"order\", await _client.GetNameAsync());", ShouldlyUsing + "\nusing Xunit;", """
+            public async Task AssertionPasses()
+            {
+                await Task.Yield();
+                Assert.Equal("order", await _client.GetNameAsync());
+            }
+
+            public async Task AssertionFails()
+            {
+                await Task.Yield();
+                Assert.Equal("other", await _client.GetNameAsync());
+            }
+
+            public void Anchor() => 1.ShouldBe(1);
+            """, PassFail) { Control = true },
+        new("S18b", "CONTROL (dropped shape): xUnit var e = await Assert.ThrowsAsync<T>(() => _client.GetOrderAsync(r));", ShouldlyUsing + "\nusing Xunit;", """
+            public async Task AssertionPasses()
+            {
+                await Task.Yield();
+                var r = new OrderRequest { Id = "missing" };
+                var e = await Assert.ThrowsAsync<InvalidOperationException>(() => _client.GetOrderAsync(r));
+                GC.KeepAlive(e);
+            }
+
+            public async Task AssertionFails()
+            {
+                await Task.Yield();
+                var r = new OrderRequest { Id = "known" };
+                var e = await Assert.ThrowsAsync<InvalidOperationException>(() => _client.GetOrderAsync(r));
+                GC.KeepAlive(e);
+            }
+
+            public void Anchor() => 1.ShouldBe(1);
+            """, PassFail) { Control = true },
+    ];
+
+    // The first probe's S2, S4, S7, S8 and S16a, verbatim (Probe212Tests.cs.txt), built with its template.
+    private static readonly Shape[] FirstProbeShapes =
+    [
+        new("S2", "var exception = await Should.ThrowAsync<T>(async () => await _client.GetOrderAsync(request)); then exception.Message.ShouldBe", ShouldlyUsing, """
+            public async Task Run()
+            {
+                await Task.Yield();
+                var request = new OrderRequest { Id = "missing" };
+                var exception = await Should.ThrowAsync<InvalidOperationException>(async () => await _client.GetOrderAsync(request));
+                exception.Message.ShouldBe("not found");
+            }
+            """) { FirstProbe = true },
+        new("S4", "return await Should.ThrowAsync<T>(...) in a private async helper the test awaits", ShouldlyUsing, """
+            public async Task Run()
+            {
+                var e = await GetOrderShouldFail("missing");
+                e.Message.ShouldBe("not found");
+            }
+
+            private async Task<InvalidOperationException> GetOrderShouldFail(string id)
+            {
+                await Task.Yield();
+                return await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(new OrderRequest { Id = id }));
+            }
+            """) { FirstProbe = true },
+        new("S7", "_ = await Should.ThrowAsync<T>(...); (discard)", ShouldlyUsing, """
+            public async Task Run()
+            {
+                await Task.Yield();
+                var request = new OrderRequest { Id = "missing" };
+                _ = await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request));
+            }
+            """) { FirstProbe = true },
+        new("S8", "var e = await Should.ThrowAsync<T>(...).ConfigureAwait(false);", ShouldlyUsing, """
+            public async Task Run()
+            {
+                await Task.Yield();
+                var request = new OrderRequest { Id = "missing" };
+                var e = await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request)).ConfigureAwait(false);
+                e.Message.ShouldBe("not found");
+            }
+            """) { FirstProbe = true },
+        new("S16a", "FluentAssertions: (await act.Should().ThrowAsync<T>()).Which.Message.Should().Be(...), the trailing Be passing, then failing", FluentUsing, """
+            public async Task MessageMatches()
+            {
+                await Task.Yield();
+                var request = new OrderRequest { Id = "missing" };
+                Func<Task> act = () => _client.GetOrderAsync(request);
+                (await act.Should().ThrowAsync<InvalidOperationException>()).Which.Message.Should().Be("not found");
+            }
+
+            public async Task MessageDiffers()
+            {
+                await Task.Yield();
+                var request = new OrderRequest { Id = "missing" };
+                Func<Task> act = () => _client.GetOrderAsync(request);
+                (await act.Should().ThrowAsync<InvalidOperationException>()).Which.Message.Should().Be("other");
+            }
+            """, MessageEntries) { FirstProbe = true },
+    ];
+
+    private static readonly string Harness = FindHarness();
+    private static readonly string IlDir = NewIlDir();
+    private static readonly DefaultAssemblyResolver Resolver = NewResolver();
+
+    private static readonly MethodInfo FindStatements =
+        typeof(AssertionWeaver).GetMethod("FindAssertionStatements", BindingFlags.NonPublic | BindingFlags.Instance)!;
+    private static readonly MethodInfo PlanStackMethod =
+        typeof(AssertionWeaver).GetMethod("PlanStack", BindingFlags.NonPublic | BindingFlags.Static)!;
+    private static readonly MethodInfo AwaitedRangeMethod =
+        typeof(AssertionWeaver).GetMethod("AwaitedRange", BindingFlags.NonPublic | BindingFlags.Static)!;
+    private static readonly MethodInfo EntersPartWayMethod =
+        typeof(AssertionWeaver).GetMethod("EntersPartWay", BindingFlags.NonPublic | BindingFlags.Static)!;
+    private static readonly MethodInfo EntryPointMethod =
+        typeof(AssertionWeaver).GetMethod("IsAssertionEntryPoint", BindingFlags.NonPublic | BindingFlags.Static)!;
+
+    private static readonly Dictionary<string, int> TrackArguments = new()
+    {
+        ["AssertionPassed"] = 3,
+        ["AssertionPassedWithValues"] = 5,
+        ["AssertionFailed"] = 5,
+        ["AssertionFailedWithValues"] = 7,
+    };
+
+    private sealed class Summary
+    {
+        public readonly List<string> Runs = [];
+        public readonly List<string> Labels = [];
+        public readonly List<string> Awaits = [];
+        public readonly List<string> Ranges = [];
+        public readonly List<string> Builds = [];
+        public int AwaitCount;
+        public readonly List<string> NonEmptyMerges = [];
+        public readonly List<string> MergeNotAtLoad = [];
+    }
+
+    private static readonly Dictionary<string, string> SdkUsed = new();
+
+    [Fact]
+    public void Probe()
+    {
+        var summary = new Summary();
+        var watch = Stopwatch.StartNew();
+
+        foreach (var optimization in new[] { Opt.Debug, Opt.Release })
+            RunPass(Shapes, optimization, null, $"results-212b-{optimization.ToString().ToLowerInvariant()}.txt", summary);
+
+        foreach (var sdk in Sdks)
+            foreach (var optimization in new[] { Opt.Debug, Opt.Release })
+                RunPass(FirstProbeShapes, optimization, sdk, $"results-212b-{sdk.Tag}-{optimization.ToString().ToLowerInvariant()}.txt", summary);
+
+        var text = new StringBuilder();
+        text.AppendLine("# Probe212b summary");
+        text.AppendLine();
+        text.AppendLine($"Kronikol {Informational(typeof(Track).Assembly)}, Kronikol.AssertionTracking {Informational(typeof(AssertionWeaver).Assembly)}; " +
+                        $"Shouldly {Informational(typeof(Shouldly.Should).Assembly)}, FluentAssertions {Informational(typeof(FluentAssertions.AssertionExtensions).Assembly)}, " +
+                        $"AwesomeAssertions {Informational(typeof(AwesomeAssertions.AssertionExtensions).Assembly)}, TUnit.Assertions {Informational(typeof(TUnit.Assertions.Assert).Assembly)}, " +
+                        $"xunit.v3.assert {Informational(typeof(Xunit.Assert).Assembly)}; runtime {Environment.Version}; {watch.Elapsed.TotalSeconds:F0} s.");
+        text.AppendLine();
+        text.AppendLine("Builds: suite = TestAssemblyBuilder.Build (Roslyn's API, Microsoft.CodeAnalysis.CSharp " +
+                        $"{Informational(typeof(Microsoft.CodeAnalysis.CSharp.CSharpCompilation).Assembly)}); sdkN = TestAssemblyBuilder.BuildWithSdk, `dotnet build` of Fixtures/WeaverFixture.csproj:");
+        foreach (var b in summary.Builds.Distinct())
+            text.AppendLine("- " + b);
+        text.AppendLine();
+        text.AppendLine("Shapes S17a to S23 (and the controls S17d, S18b) are built with the new fixture template (a client with GetNameAsync, GetOrderAsync, GetExpectedMessageAsync); " +
+                        "S2, S4, S7, S8 and S16a with the first probe's template, so their line numbers are the first probe's.");
+        text.AppendLine();
+        text.AppendLine("## A. Outcomes: per shape, build, configuration and run");
+        text.AppendLine();
+        text.AppendLine("| shape | build | config | entry | woven | unwoven reasons | ILVerify | notes drawn (line) | woven run threw | unwoven run threw |");
+        text.AppendLine("|---|---|---|---|---|---|---|---|---|---|");
+        foreach (var r in summary.Runs)
+            text.AppendLine(r);
+        text.AppendLine();
+        text.AppendLine("## B. The text the weave passed to Track (the ldstr before each Track call), and Format's reading of it");
+        text.AppendLine();
+        text.AppendLine("The last column is a what-if, not what the code does: Format of the text with a leading return, assignment and await cut by hand (the first probe's Core).");
+        text.AppendLine();
+        text.AppendLine("| shape | build | config | method, line | raw text (\\n escaped) | Format(raw text) | what-if: Format(head cut) |");
+        text.AppendLine("|---|---|---|---|---|---|---|");
+        foreach (var r in summary.Labels)
+            text.AppendLine(r);
+        text.AppendLine();
+        text.AppendLine("## C. Every await in the unwoven IL: the merge point (the IsCompleted brtrue's target) and the stack there and before the awaiter's load");
+        text.AppendLine();
+        text.AppendLine("Stacks are StackAnalysis.StackBefore on the unwoven method after SimplifyMacros, as WrapAssertions reads it; bottom first, each slot with the instruction that pushed it.");
+        text.AppendLine();
+        text.AppendLine("| shape | build | config | method | await at line | awaiter | merge point | stack at the merge point | awaiter load | stack before the awaiter load | after GetResult |");
+        text.AppendLine("|---|---|---|---|---|---|---|---|---|---|---|");
+        foreach (var r in summary.Awaits)
+            text.AppendLine(r);
+        text.AppendLine();
+        text.AppendLine("## D. The plan's 4.1 a and c range for each awaited assertion statement the weave finds, from the merge point to the statement's end");
+        text.AppendLine();
+        text.AppendLine("The range end here is the statement's own: the last instruction before the next visible sequence point or before the first exception handler (try or handler start) after the merge point, whichever is first, a trailing leave or ret trimmed. " +
+                        "The last column is 4.1 c read literally (to the next visible sequence point only), which for a block's last statement runs on through the compiler's own catch or finally. EntersPartWay is the weave's own check (AssertionWeaver.EntersPartWay).");
+        text.AppendLine();
+        text.AppendLine("| shape | build | config | method, line | merge point | range end | awaits inside the range | stack after the range | EntersPartWay | entered from outside | ret inside | 4.1 c read literally |");
+        text.AppendLine("|---|---|---|---|---|---|---|---|---|---|---|---|");
+        foreach (var r in summary.Ranges)
+            text.AppendLine(r);
+        text.AppendLine();
+        text.AppendLine("## E. Is the merge point stack-empty?");
+        text.AppendLine();
+        text.AppendLine($"{summary.AwaitCount} awaits read across every shape, build and configuration (table C). Merge points with a value on the stack: {summary.NonEmptyMerges.Count}.");
+        foreach (var m in summary.NonEmptyMerges)
+            text.AppendLine("- " + m);
+        text.AppendLine($"Merge points that are not the awaiter's load (something runs between the merge point and the awaiter's load): {summary.MergeNotAtLoad.Count}.");
+        foreach (var m in summary.MergeNotAtLoad)
+            text.AppendLine("- " + m);
+        File.WriteAllText(Path.Combine(Harness, "summary-212b.txt"), text.ToString());
+    }
+
+    private static void RunPass(Shape[] shapes, Opt optimization, Sdk? sdk, string file, Summary summary)
+    {
+        var results = new StringBuilder();
+        results.AppendLine($"# Probe212b, {optimization}, built by {(sdk == null ? "TestAssemblyBuilder.Build (Roslyn's API)" : $"TestAssemblyBuilder.BuildWithSdk, SDK {sdk.Version} (rollForward latestFeature), {sdk.Tfm}")}");
+        results.AppendLine($"Kronikol {Informational(typeof(Track).Assembly)}, Kronikol.AssertionTracking {Informational(typeof(AssertionWeaver).Assembly)}, " +
+                           $"compiler {(sdk == null ? "Roslyn " + Informational(typeof(Microsoft.CodeAnalysis.CSharp.CSharpCompilation).Assembly) : "see each shape's build line")}, " +
+                           $"Shouldly {Informational(typeof(Shouldly.Should).Assembly)}, FluentAssertions {Informational(typeof(FluentAssertions.AssertionExtensions).Assembly)}, " +
+                           $"AwesomeAssertions {Informational(typeof(AwesomeAssertions.AssertionExtensions).Assembly)}, " +
+                           $"TUnit.Assertions {Informational(typeof(TUnit.Assertions.Assert).Assembly)}, xunit.v3.assert {Informational(typeof(Xunit.Assert).Assembly)}, runtime {Environment.Version}");
+        results.AppendLine($"IL dumps are written to {IlDir}; the harness keeps only the ones the report cites, in probe/il/.");
+        foreach (var shape in shapes)
+        {
+            try
+            {
+                Measure(shape, optimization, sdk, results, summary);
+            }
+            catch (Exception ex)
+            {
+                results.AppendLine($"!! probe error: {ex}");
+                summary.Runs.Add($"| {shape.Id} | {sdk?.Tag ?? "suite"} | {optimization} | | | probe error: {Cut(ex.Message.ReplaceLineEndings(" ").Replace("|", "/"), 160)} | | | | |");
+            }
+        }
+        File.WriteAllText(Path.Combine(Harness, file), results.ToString());
+    }
+
+    private static void Measure(Shape shape, Opt optimization, Sdk? sdk, StringBuilder results, Summary summary)
+    {
+        var config = optimization.ToString();
+        var build = sdk?.Tag ?? "suite";
+        var tag = sdk == null ? config : sdk.Tag + "." + config;
+        var name = $"Probe212b_{shape.Id}_{(sdk == null ? "" : sdk.Tag + "_")}{config}";
+        var source = Source(shape);
+        string[] extra = shape.TUnit ? [typeof(TUnit.Assertions.Assert).Assembly.Location] : [];
+        var entries = shape.Entries ?? ["Run"];
+        results.AppendLine();
+        results.AppendLine($"## {shape.Id} [{config}, {(sdk == null ? "suite builder" : "SDK " + sdk.Version + " " + sdk.Tfm)}] {shape.Title}");
+        File.WriteAllText(Path.Combine(IlDir, $"{shape.Id}.source.txt"), Numbered(source));
+
+        string path;
+        try
+        {
+            path = sdk == null
+                ? TestAssemblyBuilder.Build(name, source, optimization, Microsoft.CodeAnalysis.Emit.DebugInformationFormat.PortablePdb, extra)
+                : TestAssemblyBuilder.BuildWithSdk(name, source, sdk.Version, sdk.Tfm, config);
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or FileNotFoundException)
+        {
+            results.AppendLine("compile: FAILED: " + ex.Message.ReplaceLineEndings(" | "));
+            summary.Runs.Add($"| {shape.Id} | {build} | {config} | | | did not compile: {Cut(ex.Message.ReplaceLineEndings(" ").Replace("|", "/"), 200)} | | | | |");
+            return;
+        }
+        if (sdk != null)
+        {
+            var used = SdkOf(sdk, Path.Combine(Path.GetDirectoryName(path)!, name + "_build"));
+            results.AppendLine("build: " + used);
+            summary.Builds.Add($"{sdk.Tag}: SDK {sdk.Version} pinned in global.json, {used}");
+        }
+        var lines = File.ReadAllLines(Path.ChangeExtension(path, ".cs"));
+        results.AppendLine($"source: {shape.Id}.source.txt; IL: {shape.Id}.{tag}.unwoven.il.txt and {shape.Id}.{tag}.woven.il.txt");
+
+        string? plainPath = null;
+        var plainError = "";
+        if (sdk != null)
+        {
+            plainPath = Path.Combine(Path.GetDirectoryName(path)!, name + "_plain.dll");
+            File.Copy(path, plainPath, overwrite: true);
+            File.Copy(Path.ChangeExtension(path, ".pdb"), Path.ChangeExtension(plainPath, ".pdb"), overwrite: true);
+        }
+
+        // 1. The original IL, and the weaver's own reading of it.
+        var unwovenDump = new StringBuilder();
+        var plan = new StringBuilder();
+        var entryPoints = new StringBuilder();
+        var awaits = new StringBuilder();
+        var ranges = new StringBuilder();
+        using (var module = Read(path))
+        {
+            var types = module.GetTypes().Where(t => IsUnder(t, shape.TypeName)).ToList();
+            foreach (var type in types)
+                DumpType(type, unwovenDump, lines);
+
+            var weaver = new AssertionWeaver();
+            foreach (var type in types)
+            {
+                foreach (var method in type.Methods.Where(m => m.HasBody).ToList())
+                {
+                    EntryPoints(method, entryPoints, lines);
+                    var statements = (List<AssertionStatement>)FindStatements.Invoke(weaver, [method, new WeaveResult()])!;
+                    var excerpts = statements.ToDictionary(s => s, s => Excerpt(method, s, lines));
+                    method.Body.SimplifyMacros();
+                    var analysis = StackAnalysis.Analyze(method.Body);
+                    foreach (var st in statements)
+                    {
+                        var sp = st.SequencePoint;
+                        plan.AppendLine($"  {type.Name}::{method.Name} L{sp.StartLine}:{sp.StartColumn}-L{sp.EndLine}:{sp.EndColumn}  awaited={st.IsAwaited}  GetResult={(st.GetResultInstruction is { } gr ? $"IL_{gr.Offset:x4} {Operand(gr)}" : "none")}  stack analysis consistent={analysis.Consistent}");
+                        plan.AppendLine($"    SourceText: \"{Esc(st.SourceText)}\"");
+                        plan.AppendLine($"    statement IL_{st.FirstInstruction.Offset:x4} {st.FirstInstruction.OpCode} .. IL_{st.LastInstruction.Offset:x4} {st.LastInstruction.OpCode} {Operand(st.LastInstruction)}");
+                        foreach (var cv in st.CapturedVariables)
+                            plan.AppendLine($"    captured value {Describe(cv, method)}");
+                        if (st.CapturedVariables.Count == 0)
+                            plan.AppendLine("    captured value: none");
+                        PlanOf(method, st, analysis, plan);
+                        if (excerpts[st] is { } excerpt)
+                        {
+                            plan.AppendLine("    original IL from the statement's GetAwaiter to the next visible sequence point:");
+                            plan.Append(excerpt);
+                        }
+                        if (st.IsAwaited && st.GetResultInstruction != null)
+                            RangeOf(method, st, analysis, ranges, summary, shape, build, config);
+                    }
+                    Awaits(method, analysis, lines, awaits, summary, shape, build, config);
+                }
+            }
+        }
+        File.WriteAllText(Path.Combine(IlDir, $"{shape.Id}.{tag}.unwoven.il.txt"), unwovenDump.ToString());
+
+        // 2. The weave itself, and what it added that ILVerify rejects.
+        var before = File.ReadAllBytes(path);
+        var weave = new AssertionWeaver().Weave(path, Path.ChangeExtension(path, ".pdb"));
+        var added = WovenIl.NewErrors(before, File.ReadAllBytes(path), path);
+
+        // 3. The woven IL: each Track call's expression (the ldstr the weave passes) and each woven try region.
+        var tracked = new List<(string Where, string Call, int Line, string Text)>();
+        var wovenDump = new StringBuilder();
+        var regions = new StringBuilder();
+        using (var module = Read(path))
+        {
+            foreach (var type in module.GetTypes().Where(t => IsUnder(t, shape.TypeName)))
+            {
+                DumpType(type, wovenDump, lines);
+                foreach (var method in type.Methods.Where(m => m.HasBody))
+                {
+                    foreach (var i in method.Body.Instructions.Where(IsTrackCall))
+                    {
+                        var call = (MethodReference)i.Operand;
+                        var at = i;
+                        for (var k = 0; k < TrackArguments[call.Name] && at != null; k++)
+                            at = at.Previous;
+                        var text = at?.OpCode == OpCodes.Ldstr ? (string)at.Operand : "?";
+                        tracked.Add(($"{type.Name}::{method.Name}", call.Name, IntOf(i.Previous), text));
+                    }
+
+                    var points = Points(method);
+                    foreach (var h in method.Body.ExceptionHandlers.Where(h => h.HandlerType == ExceptionHandlerType.Catch && Between(h.HandlerStart, h.HandlerEnd).Any(IsTrackCall)))
+                    {
+                        regions.AppendLine($"  {type.Name}::{method.Name} woven try IL_{h.TryStart.Offset:x4}, catch IL_{h.HandlerStart.Offset:x4}, end IL_{h.HandlerEnd?.Offset:x4}:");
+                        foreach (var i in Between(h.TryStart, h.HandlerEnd))
+                            regions.AppendLine("  " + Line(i, points, null, lines));
+                        if (h.HandlerEnd is { } end)
+                            regions.AppendLine("  " + Line(end, points, null, lines) + "   <- after the catch");
+                    }
+                }
+            }
+        }
+        File.WriteAllText(Path.Combine(IlDir, $"{shape.Id}.{tag}.woven.il.txt"), wovenDump.ToString());
+
+        results.AppendLine($"weave: WeavedCount={weave.WeavedCount} MethodCount={weave.MethodCount}{(weave.SkipReason is { } skip ? " SkipReason=" + skip : "")}");
+        foreach (var u in weave.Unwoven)
+            results.AppendLine($"  Unwoven: {u}");
+        foreach (var d in weave.DiagMessages)
+            results.AppendLine($"  Diag: {d}");
+        results.AppendLine(added.Count == 0 ? "  ILVerify: no error the weave added" : "  ILVerify errors the weave added:\n    " + string.Join("\n    ", added));
+        results.AppendLine("assertion entry points (IsAssertionEntryPoint) in the original IL, and the sequence point each falls under (the weave groups instructions by sequence point, hidden ones included, and only a visible one's group is a statement):");
+        results.Append(entryPoints.Length > 0 ? entryPoints.ToString() : "  none\n");
+        results.AppendLine("statements, as the weaver's FindAssertionStatements and PlanStack read the original module:");
+        results.Append(plan.Length > 0 ? plan.ToString() : "  none\n");
+        results.AppendLine("every await in the original IL (merge point = the IsCompleted brtrue's target; stacks from StackAnalysis after SimplifyMacros):");
+        results.Append(awaits.Length > 0 ? awaits.ToString() : "  none\n");
+        results.AppendLine("the plan's 4.1 a and c range for each awaited statement (merge point to the statement's end):");
+        results.Append(ranges.Length > 0 ? ranges.ToString() : "  none\n");
+        results.AppendLine("Track calls in the woven IL (the expression is the ldstr the weave passes):");
+        foreach (var group in tracked.GroupBy(t => (t.Where, t.Line, t.Text)))
+        {
+            var formatted = AssertionExpressionFormatter.Format(group.Key.Text);
+            results.AppendLine($"  {group.Key.Where} line {group.Key.Line}: {string.Join(" + ", group.Select(t => t.Call))}");
+            results.AppendLine($"    expression: \"{Esc(group.Key.Text)}\"");
+            results.AppendLine($"    Format(expression) = \"{Esc(formatted)}\"");
+            results.AppendLine($"    label as Track.LogAssertion writes it (StepText.CapitaliseIfEnabled) = \"{Esc(Kronikol.Reports.StepText.CapitaliseIfEnabled(formatted) ?? formatted)}\"");
+            var core = Core(group.Key.Text);
+            var whatIf = core != group.Key.Text ? AssertionExpressionFormatter.Format(core) : null;
+            if (whatIf != null)
+                results.AppendLine($"    what-if, the head cut by hand as the first probe's Core does (not what the code does): Format(\"{Esc(core)}\") = \"{Esc(whatIf)}\"");
+            summary.Labels.Add($"| {shape.Id} | {build} | {config} | {group.Key.Where.Replace("|", "/")} L{group.Key.Line} | `{Esc(group.Key.Text).Replace("|", "/")}` | {Esc(formatted).Replace("|", "/")} | {(whatIf == null ? "" : Esc(whatIf).Replace("|", "/"))} |");
+        }
+        if (tracked.Count == 0)
+            results.AppendLine("  none");
+        results.AppendLine("woven try regions (every catch whose handler calls Track):");
+        results.Append(regions.Length > 0 ? regions.ToString() : "  none\n");
+
+        // 4. The runs: the woven build, then the same source left unwoven.
+        if (sdk == null)
+        {
+            try
+            {
+                plainPath = TestAssemblyBuilder.Build(name + "_plain", source, optimization, Microsoft.CodeAnalysis.Emit.DebugInformationFormat.PortablePdb, extra);
+            }
+            catch (Exception ex)
+            {
+                plainError = "probe error " + ex.Message;
+            }
+        }
+        var unwovenReasons = string.Join("; ", weave.Unwoven.Select(ShortReason));
+        var verify = added.Count == 0 ? "clean" : $"{added.Count} new: {Cut(string.Join("; ", added).Replace("|", "/"), 160)}";
+        foreach (var entry in entries)
+        {
+            var (thrown, notes) = sdk == null ? WovenRun.Run(path, shape.TypeName, entry) : RunIsolated(path, shape.TypeName, entry);
+            Exception? plainThrown = null;
+            if (plainPath != null)
+                plainThrown = (sdk == null ? WovenRun.Run(plainPath, shape.TypeName, entry) : RunIsolated(plainPath, shape.TypeName, entry)).Thrown;
+
+            results.AppendLine($"run {entry}, woven: threw {Describe(thrown)}");
+            foreach (var n in notes)
+            {
+                results.AppendLine($"  note {(n.Passed ? "✓" : "✗")} \"{n.Label}\" ({n.Label.Length} chars){(n.Message is { } m ? ", next lines: " + m.ReplaceLineEndings("\\n") : "")}, source {n.Source}");
+                var (label, message) = Whole(n);
+                if (label != n.Label)
+                    results.AppendLine($"    the note's label with its wrapped lines rejoined (DiagramWidth's join markers): \"{label}\"; failure message: {(message == null ? "none" : "\"" + message.ReplaceLineEndings("\\n") + "\"")}");
+            }
+            if (notes.Length == 0)
+                results.AppendLine("  no note drawn");
+            results.AppendLine($"run {entry}, unwoven build: threw {(plainPath == null ? plainError : Describe(plainThrown))}");
+
+            var drawn = notes.Length == 0
+                ? "(none)"
+                : string.Join("<br>", notes.Select(n =>
+                {
+                    var (label, message) = Whole(n);
+                    return $"{(n.Passed ? "✓" : "✗")} {label.Replace("|", "/")} ({LineOf(n.Source)}){(message is { } m ? ": " + Cut(m.ReplaceLineEndings(" ").Replace("|", "/"), 90) : "")}";
+                }));
+            summary.Runs.Add($"| {shape.Id}{(shape.Control ? " (control)" : "")} | {build} | {config} | {entry} | {weave.WeavedCount} | {unwovenReasons} | {verify} | {drawn} | {Brief(thrown)} | {(plainPath == null ? plainError : Brief(plainThrown))} |");
+        }
+    }
+
+    /// <summary>Each call the weave counts as an assertion entry point, and the sequence point it falls under.</summary>
+    private static void EntryPoints(MethodDefinition method, StringBuilder sb, string[] lines)
+    {
+        var points = method.DebugInformation.SequencePoints.OrderBy(p => p.Offset).ToList();
+        foreach (var i in method.Body.Instructions)
+        {
+            if ((i.OpCode != OpCodes.Call && i.OpCode != OpCodes.Callvirt) || i.Operand is not MethodReference mr)
+                continue;
+            if (!(bool)EntryPointMethod.Invoke(null, [mr])!)
+                continue;
+            var sp = points.LastOrDefault(p => p.Offset <= i.Offset);
+            var where = sp == null ? "no sequence point" : sp.IsHidden ? "a HIDDEN sequence point (not a statement the weave reads)" : $"the visible sequence point L{sp.StartLine}:{sp.StartColumn}-L{sp.EndLine}:{sp.EndColumn}";
+            var lastVisible = points.LastOrDefault(p => !p.IsHidden && p.Offset <= i.Offset);
+            sb.AppendLine($"  {method.DeclaringType.Name}::{method.Name} IL_{i.Offset:x4} {i.OpCode} {Operand(i)} is under {where}" +
+                          (sp is { IsHidden: true } && lastVisible != null ? $"; the last visible one before it is L{lastVisible.StartLine} \"{SourceLine(lines, lastVisible.StartLine)}\"" : ""));
+        }
+    }
+
+    /// <summary>Every await in the method: its merge point, and the stack there and before the awaiter's load.</summary>
+    private static void Awaits(MethodDefinition method, StackAnalysis analysis, string[] lines, StringBuilder sb, Summary summary, Shape shape, string build, string config)
+    {
+        var visible = method.DebugInformation.SequencePoints.Where(p => !p.IsHidden).OrderBy(p => p.Offset).ToList();
+        foreach (var br in method.Body.Instructions.Where(i => (i.OpCode == OpCodes.Brtrue || i.OpCode == OpCodes.Brtrue_S) && i.Previous is { } p && IsCall(p, "get_IsCompleted")).ToList())
+        {
+            var merge = (Instruction)br.Operand;
+            Instruction? getAwaiter = null;
+            var n = 0;
+            for (var i = br.Previous; i != null && n < 16; i = i.Previous, n++)
+            {
+                if (IsCall(i, "GetAwaiter"))
+                {
+                    getAwaiter = i;
+                    break;
+                }
+            }
+            Instruction? getResult = null;
+            n = 0;
+            for (var i = merge; i != null && n < 16; i = i.Next, n++)
+            {
+                if (IsCall(i, "GetResult"))
+                {
+                    getResult = i;
+                    break;
+                }
+            }
+            var load = getResult?.Previous;
+            var sp = visible.LastOrDefault(p => p.Offset <= (getAwaiter ?? br).Offset);
+            var line = sp == null ? "?" : $"L{sp.StartLine}";
+            var awaiter = getResult?.Operand is MethodReference gr ? Short(gr.DeclaringType) : "? (no GetResult within 16 instructions)";
+            var mergeStack = analysis.StackBefore(merge);
+            var loadStack = load == null ? null : analysis.StackBefore(load);
+            var after = getResult?.Next;
+            summary.AwaitCount++;
+            var id = $"{shape.Id} {build} {config} {method.DeclaringType.Name}::{method.Name} await at {line} (merge IL_{merge.Offset:x4} {merge.OpCode})";
+            if (mergeStack == null || mergeStack.Length > 0)
+                summary.NonEmptyMerges.Add($"{id}: {StackText(mergeStack)}");
+            if (load != merge)
+                summary.MergeNotAtLoad.Add($"{id}: merge IL_{merge.Offset:x4} {merge.OpCode} {Operand(merge)}, awaiter load IL_{load?.Offset:x4} {load?.OpCode}; stack before the load: {StackText(loadStack)}");
+
+            sb.AppendLine($"  {method.DeclaringType.Name}::{method.Name} await at {line} \"{(sp == null ? "" : SourceLine(lines, sp.StartLine))}\": " +
+                          $"GetAwaiter {(getAwaiter == null ? "?" : $"IL_{getAwaiter.Offset:x4} {Operand(getAwaiter)}")}; IsCompleted brtrue IL_{br.Offset:x4} -> merge point IL_{merge.Offset:x4} {merge.OpCode} {Operand(merge)}");
+            sb.AppendLine($"    stack at the merge point: {StackText(mergeStack)}");
+            sb.AppendLine($"    awaiter load before GetResult: {(load == null ? "?" : $"IL_{load.Offset:x4} {load.OpCode} {Operand(load)}")}; stack before it: {StackText(loadStack)}");
+            sb.AppendLine($"    GetResult {(getResult == null ? "?" : $"IL_{getResult.Offset:x4} {Operand(getResult)}")}; then {(after == null ? "?" : $"IL_{after.Offset:x4} {after.OpCode} {Operand(after)}")}");
+            summary.Awaits.Add($"| {shape.Id} | {build} | {config} | {method.DeclaringType.Name.Replace("|", "/")}::{method.Name} | {line} | {awaiter} | IL_{merge.Offset:x4} {merge.OpCode} {Operand(merge).Replace("|", "/")} | {StackText(mergeStack).Replace("|", "/")} | " +
+                               $"{(load == null ? "?" : $"IL_{load.Offset:x4} {load.OpCode} {Operand(load)}".Replace("|", "/"))} | {StackText(loadStack).Replace("|", "/")} | {(after == null ? "?" : $"{after.OpCode} {Operand(after)}".Replace("|", "/"))} |");
+        }
+    }
+
+    /// <summary>
+    /// The plan's 4.1 a and c range for an awaited statement: from its merge point (as FindGetResultInstruction finds it:
+    /// the IsCompleted brtrue after the last GetAwaiter of the statement's sequence point group) to the statement's end,
+    /// read two ways. Literally, as 4.1 c words it: the last instruction before the next visible sequence point. For a
+    /// block's last statement that runs on through the compiler's own catch or finally (hidden sequence points), so the
+    /// second reading also stops before the first exception handler that starts after the merge point. Each with a
+    /// trailing leave or ret trimmed as FindAssertionStatements trims. For each: whether a branch or handler from outside
+    /// lands inside it after its first instruction (the weave's own EntersPartWay), and which.
+    /// </summary>
+    private static void RangeOf(MethodDefinition method, AssertionStatement st, StackAnalysis analysis, StringBuilder sb, Summary summary, Shape shape, string build, string config)
+    {
+        var where = $"{method.DeclaringType.Name}::{method.Name} L{st.SequencePoint.StartLine}";
+        var merge = MergePointOf(method, st);
+        if (merge == null)
+        {
+            sb.AppendLine($"  {where}: no merge point found");
+            summary.Ranges.Add($"| {shape.Id} | {build} | {config} | {where.Replace("|", "/")} | none found | | | | | | | |");
+            return;
+        }
+
+        var nextVisible = method.DebugInformation.SequencePoints.Where(p => !p.IsHidden && p.Offset > merge.Offset).OrderBy(p => p.Offset).FirstOrDefault();
+        var stop = nextVisible == null ? null : method.Body.Instructions.FirstOrDefault(i => i.Offset == nextVisible.Offset);
+        var literalEnd = Trim(stop?.Previous ?? method.Body.Instructions.Last(), merge);
+        var literal = RangeFacts(method, merge, literalEnd, analysis);
+
+        var handlerStarts = method.Body.ExceptionHandlers
+            .SelectMany(h => new[] { h.TryStart, h.HandlerStart })
+            .Where(i => i != null && i.Offset > merge.Offset)
+            .Select(i => i.Offset)
+            .ToList();
+        var cut = literalEnd;
+        if (handlerStarts.Count > 0 && handlerStarts.Min() <= literalEnd.Offset)
+        {
+            var first = method.Body.Instructions.First(i => i.Offset == handlerStarts.Min());
+            cut = Trim(first.Previous!, merge);
+        }
+        var statement = cut == literalEnd ? literal : RangeFacts(method, merge, cut, analysis);
+
+        sb.AppendLine($"  {where}: merge point IL_{merge.Offset:x4} {merge.OpCode} {Operand(merge)}; next visible sequence point at IL_{stop?.Offset:x4}");
+        sb.AppendLine($"    literal 4.1 c range IL_{merge.Offset:x4} .. IL_{literalEnd.Offset:x4} {literalEnd.OpCode} {Operand(literalEnd)}: awaits inside {literal.Awaits}; stack after: {literal.Exit}; EntersPartWay = {literal.Enters}; ret inside: {literal.Rets}");
+        foreach (var e in literal.Entering)
+            sb.AppendLine($"      entered from outside: {e}");
+        sb.AppendLine($"    the statement's own range (cut before the first handler after the merge point) IL_{merge.Offset:x4} .. IL_{cut.Offset:x4} {cut.OpCode} {Operand(cut)}: awaits inside {statement.Awaits}; stack after: {statement.Exit}; EntersPartWay = {statement.Enters}; ret inside: {statement.Rets}");
+        foreach (var e in statement.Entering)
+            sb.AppendLine($"      entered from outside: {e}");
+        if (statement.Entering.Count == 0)
+            sb.AppendLine("      entered from outside: nothing");
+        summary.Ranges.Add($"| {shape.Id} | {build} | {config} | {where.Replace("|", "/")} | IL_{merge.Offset:x4} {merge.OpCode} {Operand(merge).Replace("|", "/")} | " +
+                           $"IL_{cut.Offset:x4} {cut.OpCode} {Operand(cut).Replace("|", "/")} | {statement.Awaits} | {statement.Exit.Replace("|", "/")} | {statement.Enters} | " +
+                           $"{(statement.Entering.Count == 0 ? "nothing" : string.Join("; ", statement.Entering).Replace("|", "/"))} | {statement.Rets} | " +
+                           $"{(literalEnd == cut ? "same range" : $"to IL_{literalEnd.Offset:x4}: EntersPartWay = {literal.Enters} ({string.Join("; ", literal.Entering).Replace("|", "/")})")} |");
+    }
+
+    private sealed record Facts(int Awaits, string Exit, bool Enters, List<string> Entering, string Rets);
+
+    private static Instruction Trim(Instruction end, Instruction merge)
+    {
+        while (end != merge && (end.OpCode == OpCodes.Leave || end.OpCode == OpCodes.Leave_S || end.OpCode == OpCodes.Ret))
+            end = end.Previous;
+        return end;
+    }
+
+    private static Facts RangeFacts(MethodDefinition method, Instruction merge, Instruction end, StackAnalysis analysis)
+    {
+        var range = new List<Instruction>();
+        for (var i = merge; i != null; i = i.Next)
+        {
+            range.Add(i);
+            if (i == end)
+                break;
+        }
+        var inside = new HashSet<Instruction>(range);
+        inside.Remove(merge);
+        var points = method.DebugInformation.SequencePoints.OrderBy(p => p.Offset).ToList();
+        string At(Instruction i)
+        {
+            var sp = points.LastOrDefault(p => p.Offset <= i.Offset);
+            return sp == null ? "before any sequence point" : sp.IsHidden ? "under a hidden sequence point" : $"under L{sp.StartLine}";
+        }
+        var entering = new List<string>();
+        foreach (var i in method.Body.Instructions)
+        {
+            if (i == merge || inside.Contains(i))
+                continue;
+            if (i.Operand is Instruction target && inside.Contains(target))
+                entering.Add($"IL_{i.Offset:x4} {i.OpCode} ({At(i)}) -> IL_{target.Offset:x4} {target.OpCode} {Operand(target)}");
+            else if (i.Operand is Instruction[] targets)
+                foreach (var tt in targets.Where(inside.Contains))
+                    entering.Add($"IL_{i.Offset:x4} {i.OpCode} case ({At(i)}) -> IL_{tt.Offset:x4} {tt.OpCode} {Operand(tt)}");
+        }
+        foreach (var h in method.Body.ExceptionHandlers)
+        {
+            if (inside.Contains(h.TryStart))
+                entering.Add($"a {h.HandlerType} handler's try starts inside, at IL_{h.TryStart.Offset:x4}");
+            if (inside.Contains(h.HandlerStart))
+                entering.Add($"a {h.HandlerType} handler starts inside, at IL_{h.HandlerStart.Offset:x4}");
+        }
+        var enters = (bool)EntersPartWayMethod.Invoke(null, [method, merge, end])!;
+        var awaits = range.Count(i => (i.OpCode == OpCodes.Brtrue || i.OpCode == OpCodes.Brtrue_S) && i.Previous is { } p && IsCall(p, "get_IsCompleted"));
+        var rets = range.Where(i => i.OpCode == OpCodes.Ret).Select(i => $"IL_{i.Offset:x4}").ToList();
+        var exit = end.Next == null ? null : analysis.StackBefore(end.Next);
+        return new Facts(awaits, StackText(exit), enters, entering, rets.Count == 0 ? "none" : string.Join(", ", rets));
+    }
+
+    /// <summary>The merge point FindGetResultInstruction reads: the target of the IsCompleted brtrue after the last
+    /// GetAwaiter in the statement's sequence point group.</summary>
+    private static Instruction? MergePointOf(MethodDefinition method, AssertionStatement st)
+    {
+        var offsets = method.DebugInformation.SequencePoints.Select(p => p.Offset).ToHashSet();
+        var group = new List<Instruction>();
+        for (var i = st.FirstInstruction; i != null; i = i.Next)
+        {
+            if (i != st.FirstInstruction && offsets.Contains(i.Offset))
+                break;
+            group.Add(i);
+        }
+        var getAwaiter = group.LastOrDefault(i => IsCall(i, "GetAwaiter"));
+        Instruction? merge = null;
+        var n = 0;
+        for (var i = getAwaiter?.Next; i != null && n < 30; i = i.Next, n++)
+        {
+            if ((i.OpCode == OpCodes.Brtrue || i.OpCode == OpCodes.Brtrue_S) && i.Previous is { } p && IsCall(p, "get_IsCompleted") && i.Operand is Instruction t)
+            {
+                merge = t;
+                break;
+            }
+        }
+        return merge;
+    }
+
+    private static string StackText(StackAnalysis.Slot[]? stack) => stack == null
+        ? "unreached"
+        : stack.Length == 0
+            ? "empty"
+            : $"[{stack.Length}] " + string.Join(", ", stack.Select(s => $"{Short(s.Type)} (pushed by {(s.Producer is { } p ? $"IL_{p.Offset:x4} {p.OpCode} {Operand(p)}" : "joined paths")})"));
+
+    private static string SdkOf(Sdk sdk, string buildDir)
+    {
+        if (SdkUsed.TryGetValue(sdk.Tag, out var known))
+            return known;
+        var psi = new ProcessStartInfo("dotnet", "--version")
+        {
+            WorkingDirectory = buildDir,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+        };
+        foreach (var envVar in new[] { "MSBuildSDKsPath", "MSBUILD_EXE_PATH", "MSBuildExtensionsPath" })
+            psi.Environment.Remove(envVar);
+        var process = Process.Start(psi)!;
+        var version = process.StandardOutput.ReadToEnd().Trim();
+        process.WaitForExit();
+        var compiler = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "dotnet", "sdk", version,
+            "Roslyn", "bincore", "Microsoft.CodeAnalysis.CSharp.dll");
+        var roslyn = File.Exists(compiler) ? FileVersionInfo.GetVersionInfo(compiler).ProductVersion ?? "?" : "? (not found at " + compiler + ")";
+        var text = $"SDK {version} (dotnet --version in the build directory), its compiler Roslyn {roslyn}, {sdk.Tfm}";
+        SdkUsed[sdk.Tag] = text;
+        return text;
+    }
+
+    /// <summary><see cref="WovenRun.Run"/> in a collectible load context of its own: every SDK build is named
+    /// WeaverFixture, which the default context loads once.</summary>
+    private static (Exception? Thrown, WovenRun.Note[] Notes) RunIsolated(string path, string typeName, string methodName)
+    {
+        var context = new System.Runtime.Loader.AssemblyLoadContext($"{Path.GetFileNameWithoutExtension(path)}_{Guid.NewGuid():N}", isCollectible: true);
+        try
+        {
+            var type = context.LoadFromAssemblyPath(path).GetType(typeName)!;
+            var method = type.GetMethod(methodName)!;
+            var instance = method.IsStatic ? null : Activator.CreateInstance(type);
+            var testId = $"{methodName}_{Guid.NewGuid():N}";
+            Exception? thrown;
+            using (TestIdentityScope.Begin(testId, testId))
+            {
+                thrown = Record.Exception(() =>
+                {
+                    if (method.Invoke(instance, null) is Task task)
+                        task.GetAwaiter().GetResult();
+                });
+            }
+            if (thrown is TargetInvocationException { InnerException: { } inner })
+                thrown = inner;
+            return (thrown, WovenRun.NotesFor(testId));
+        }
+        finally
+        {
+            context.Unload();
+        }
+    }
+
+    private static string Cut(string text, int max) => text.Length <= max ? text : text[..max] + "...";
+
+    private static string Esc(string text) => text.Replace("\r", "\\r").Replace("\n", "\\n");
+
+    private static string LineOf(string? source) =>
+        source == null ? "no source" : source.LastIndexOf(":L", StringComparison.Ordinal) is var at and >= 0 ? source[(at + 1)..] : source;
+
+    private const string JoinMarker = "<U+200B>";
+
+    /// <summary>
+    /// A note's label and failure message as written: <see cref="WovenRun.Note"/> takes the note's first line as its
+    /// label and the rest as its message, but a long label is wrapped (Kronikol.PlantUml.DiagramWidth.WrapBlockNoteBody),
+    /// each break marked at the line's end: two join markers for a break at a space, one for a cut inside a word. The
+    /// breaks are undone as DiagramWidth.RejoinMarkedLines does, and the label is the first line after that.
+    /// </summary>
+    private static (string Label, string? Message) Whole(WovenRun.Note note)
+    {
+        var lines = (note.Label + (note.Message is { } m ? "\n" + m : "")).Split('\n');
+        var text = new StringBuilder();
+        for (var i = 0; i < lines.Length; i++)
+        {
+            var line = lines[i];
+            var last = i == lines.Length - 1;
+            if (!last && line.EndsWith(JoinMarker + JoinMarker, StringComparison.Ordinal))
+                text.Append(line, 0, line.Length - 2 * JoinMarker.Length).Append(' ');
+            else if (!last && line.EndsWith(JoinMarker, StringComparison.Ordinal))
+                text.Append(line, 0, line.Length - JoinMarker.Length);
+            else
+                text.Append(line).Append(last ? "" : "\n");
+        }
+        var whole = text.ToString();
+        var at = whole.IndexOf('\n');
+        return at < 0 ? (whole, null) : (whole[..at], whole[(at + 1)..]);
+    }
+
+    /// <summary>The statement with a leading <c>return</c>, an assignment and an <c>await</c> cut off by hand (the first
+    /// probe's Core, verbatim).</summary>
+    private static string Core(string text)
+    {
+        var t = text;
+        if (t.StartsWith("return ", StringComparison.Ordinal))
+            t = t["return ".Length..];
+        var eq = t.IndexOf(" = ", StringComparison.Ordinal);
+        var paren = t.IndexOf('(');
+        if (eq > 0 && (paren < 0 || eq < paren))
+            t = t[(eq + 3)..];
+        if (t.StartsWith("await ", StringComparison.Ordinal))
+            t = t["await ".Length..];
+        return t;
+    }
+
+    private static string SourceLine(string[] lines, int line) =>
+        line >= 1 && line <= lines.Length ? lines[line - 1].Trim() : "";
+
+    private static void PlanOf(MethodDefinition method, AssertionStatement st, StackAnalysis analysis, StringBuilder sb)
+    {
+        var args = new object?[] { method, st, analysis, null, null };
+        var reason = (string?)PlanStackMethod.Invoke(null, args);
+        var entry = (StackAnalysis.Slot[])args[3]!;
+        var exit = (StackAnalysis.Slot[])args[4]!;
+        sb.AppendLine($"    PlanStack: {(reason == null ? "woven" : "REFUSED: " + reason)}; entry=[{Slots(entry)}] exit=[{Slots(exit)}]");
+        if (!st.IsAwaited || st.GetResultInstruction == null)
+            return;
+        var (start, end) = ((Instruction, Instruction))AwaitedRangeMethod.Invoke(null, [st.GetResultInstruction])!;
+        sb.AppendLine($"    AwaitedRange: IL_{start.Offset:x4} {start.OpCode} {Operand(start)} .. IL_{end.Offset:x4} {end.OpCode} {Operand(end)}; then IL_{end.Next?.Offset:x4} {end.Next?.OpCode} {Operand(end.Next)}");
+        sb.AppendLine("    stack before the range's start: " + StackText(analysis.StackBefore(start)));
+    }
+
+    /// <summary>How the awaited wrap loads a captured value at the merge point.</summary>
+    private static string Describe(CapturedVariable cv, MethodDefinition method)
+    {
+        if (cv.ClosureField != null && cv.ClosureLocalIndex >= 0)
+            return $"'{cv.Name}': ldloc V_{cv.ClosureLocalIndex} (a local of {method.DeclaringType.Name}::{method.Name}, {Short(method.Body.Variables[cv.ClosureLocalIndex].VariableType)}); ldfld {cv.ClosureField.Name}";
+        if (cv.ClosureField != null && cv.StateField != null)
+            return $"'{cv.Name}': ldarg.0; ldfld {cv.StateField.Name} ({Short(cv.StateField.FieldType)}); ldfld {cv.ClosureField.Name}";
+        if (cv.StateField != null)
+            return $"'{cv.Name}': ldarg.0; ldfld {cv.StateField.Name}";
+        if (cv.ParameterIndex >= 0)
+            return $"'{cv.Name}': ldarg {cv.ParameterIndex}";
+        return $"'{cv.Name}': ldloc V_{cv.LocalIndex}";
+    }
+
+    /// <summary>The original IL from the statement's last GetAwaiter to the next visible sequence point after GetResult.</summary>
+    private static string? Excerpt(MethodDefinition method, AssertionStatement st, string[] lines)
+    {
+        var points = Points(method);
+        Instruction? getAwaiter = null;
+        for (var i = st.FirstInstruction; i != null; i = i.Next)
+        {
+            if (i != st.FirstInstruction && points.TryGetValue(i.Offset, out var p) && !p.IsHidden)
+                break;
+            if (IsCall(i, "GetAwaiter"))
+                getAwaiter = i;
+        }
+        if (getAwaiter == null)
+            return null;
+
+        var analysis = SafeAnalyze(method);
+        var sb = new StringBuilder();
+        var seenGetResult = false;
+        var count = 0;
+        for (var i = getAwaiter; i != null && count++ < 160; i = i.Next)
+        {
+            var visible = points.TryGetValue(i.Offset, out var p) && !p.IsHidden;
+            if (visible && i != getAwaiter && seenGetResult)
+            {
+                sb.AppendLine("    " + Line(i, points, analysis, lines) + "   <- next visible sequence point");
+                break;
+            }
+            sb.AppendLine("    " + Line(i, points, analysis, lines));
+            if (IsCall(i, "GetResult"))
+                seenGetResult = true;
+        }
+        return sb.ToString();
+    }
+
+    private static void DumpType(TypeDefinition type, StringBuilder sb, string[] lines)
+    {
+        sb.AppendLine($"### type {type.FullName}");
+        foreach (var f in type.Fields)
+            sb.AppendLine($"  field {Short(f.FieldType)} {f.Name}");
+        foreach (var m in type.Methods.Where(m => m.HasBody && m.Name is not ".ctor" and not ".cctor" and not "SetStateMachine"))
+        {
+            sb.AppendLine($"#### {type.FullName}::{m.Name}");
+            foreach (var v in m.Body.Variables)
+                sb.AppendLine($"  local V_{v.Index} {Short(v.VariableType)}{(m.DebugInformation.TryGetName(v, out var n) ? $" \"{n}\"" : "")}");
+            foreach (var h in m.Body.ExceptionHandlers)
+                sb.AppendLine($"  handler {h.HandlerType} {Short(h.CatchType)} try IL_{h.TryStart.Offset:x4}..IL_{h.TryEnd?.Offset:x4} handler IL_{h.HandlerStart.Offset:x4}..IL_{h.HandlerEnd?.Offset:x4}");
+            var points = Points(m);
+            var analysis = SafeAnalyze(m);
+            foreach (var i in m.Body.Instructions)
+                sb.AppendLine(Line(i, points, analysis, lines));
+        }
+    }
+
+    private static string Line(Instruction i, Dictionary<int, SequencePoint> points, StackAnalysis? analysis, string[] lines)
+    {
+        points.TryGetValue(i.Offset, out var p);
+        var mark = p == null ? "" : p.IsHidden ? "SP hidden" : $"SP L{p.StartLine}:{p.StartColumn}-L{p.EndLine}:{p.EndColumn}";
+        var stack = analysis == null
+            ? ""
+            : analysis.StackBefore(i) is { } s
+                ? $"  stack[{s.Length}]{(s.Length > 0 ? " " + string.Join(", ", s.Select(x => Short(x.Type))) : "")}"
+                : "  stack[unreached]";
+        var text = $"{mark,-24} IL_{i.Offset:x4}: {i.OpCode.Name,-14} {Operand(i),-72}{stack}";
+        if (p is { IsHidden: false } && p.StartLine >= 1 && p.StartLine <= lines.Length)
+            text += $"   // {lines[p.StartLine - 1].Trim()}";
+        return text;
+    }
+
+    private static string Operand(Instruction? i) => i?.Operand switch
+    {
+        null => "",
+        Instruction t => $"IL_{t.Offset:x4}",
+        Instruction[] ts => string.Join(",", ts.Select(t => $"IL_{t.Offset:x4}")),
+        GenericInstanceMethod gm => $"{Short(gm.DeclaringType)}::{gm.Name}<{string.Join(",", gm.GenericArguments.Select(Short))}>",
+        MethodReference mr => $"{Short(mr.DeclaringType)}::{mr.Name}",
+        FieldReference fr => $"{Short(fr.DeclaringType)}::{fr.Name}",
+        VariableDefinition v => $"V_{v.Index}",
+        ParameterDefinition pd => pd.Index < 0 || string.IsNullOrEmpty(pd.Name) ? "this" : pd.Name,
+        string s => "\"" + s.ReplaceLineEndings("\\n") + "\"",
+        TypeReference t => Short(t),
+        _ => i.Operand.ToString() ?? "",
+    };
+
+    private static string Short(TypeReference? t) => t == null
+        ? "?"
+        : t.FullName.Replace("System.Threading.Tasks.", "").Replace("System.Runtime.CompilerServices.", "").Replace("System.", "");
+
+    private static string Slots(StackAnalysis.Slot[] slots) => string.Join(", ", slots.Select(s => Short(s.Type)));
+
+    private static Dictionary<int, SequencePoint> Points(MethodDefinition method) =>
+        method.DebugInformation.SequencePoints.GroupBy(p => p.Offset).ToDictionary(g => g.Key, g => g.First());
+
+    private static StackAnalysis? SafeAnalyze(MethodDefinition method)
+    {
+        try
+        {
+            return StackAnalysis.Analyze(method.Body);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static IEnumerable<Instruction> Between(Instruction start, Instruction? end)
+    {
+        for (var i = start; i != null && i != end; i = i.Next)
+            yield return i;
+    }
+
+    private static bool IsUnder(TypeDefinition type, string root) =>
+        type.FullName == root || type.FullName.StartsWith(root + "/", StringComparison.Ordinal);
+
+    private static bool IsCall(Instruction i, string name) =>
+        (i.OpCode == OpCodes.Call || i.OpCode == OpCodes.Callvirt) && i.Operand is MethodReference mr && mr.Name == name;
+
+    private static bool IsTrackCall(Instruction i) =>
+        i.OpCode == OpCodes.Call && i.Operand is MethodReference mr &&
+        mr.DeclaringType.FullName == "Kronikol.Tracking.Track" && TrackArguments.ContainsKey(mr.Name);
+
+    private static int IntOf(Instruction? i) => i == null ? -1 : i.OpCode.Code switch
+    {
+        Code.Ldc_I4 => (int)i.Operand,
+        Code.Ldc_I4_S => (sbyte)i.Operand,
+        Code.Ldc_I4_0 => 0,
+        Code.Ldc_I4_1 => 1,
+        Code.Ldc_I4_2 => 2,
+        Code.Ldc_I4_3 => 3,
+        Code.Ldc_I4_4 => 4,
+        Code.Ldc_I4_5 => 5,
+        Code.Ldc_I4_6 => 6,
+        Code.Ldc_I4_7 => 7,
+        Code.Ldc_I4_8 => 8,
+        _ => -1,
+    };
+
+    private static string Describe(Exception? ex)
+    {
+        if (ex == null)
+            return "nothing";
+        var frames = (ex.StackTrace ?? "").ReplaceLineEndings("\n").Split('\n')
+            .Where(l => l.Contains(" in ", StringComparison.Ordinal) || l.Contains("Probe", StringComparison.Ordinal) || l.Contains("---", StringComparison.Ordinal))
+            .Take(8)
+            .Select(l => "\n      " + l.Trim());
+        return $"{ex.GetType().FullName}: {ex.Message.ReplaceLineEndings("\\n")}{string.Concat(frames)}";
+    }
+
+    private static string Brief(Exception? ex) => ex == null ? "no" : ex.GetType().Name;
+
+    private static string ShortReason(string unwoven)
+    {
+        var at = unwoven.IndexOf(", line ", StringComparison.Ordinal);
+        return (at < 0 ? unwoven : unwoven[(at + 2)..]).Replace("|", "/");
+    }
+
+    private static string Numbered(string source)
+    {
+        var all = source.ReplaceLineEndings("\n").Split('\n');
+        return string.Join("\n", all.Select((l, n) => $"{n + 1,3}: {l}")) + "\n";
+    }
+
+    private static string Indent(string body) =>
+        string.Join("\n", body.ReplaceLineEndings("\n").Split('\n').Select(l => l.Length == 0 ? l : "    " + l));
+
+    private static string Source(Shape shape) => shape.FirstProbe ? FirstProbeSource(shape) : $$"""
+        #nullable enable
+        using System;
+        using System.Threading.Tasks;
+        using Kronikol.Tracking;
+        {{shape.Usings}}
+
+        [assembly: TrackAssertions]
+
+        public sealed class OrderRequest
+        {
+            public string Id { get; init; } = "";
+        }
+
+        public sealed class OrdersClient
+        {
+            public string ExpectedMessage { get; set; } = "not found";
+
+            public async Task<string> GetNameAsync()
+            {
+                await Task.Yield();
+                return "order";
+            }
+
+            public async Task<string> GetOrderAsync(OrderRequest request)
+            {
+                await Task.Yield();
+                return request.Id == "known" ? "order" : throw new InvalidOperationException("not found");
+            }
+
+            public async Task<string> GetExpectedMessageAsync()
+            {
+                await Task.Yield();
+                return ExpectedMessage;
+            }
+        }
+
+        public class Probe
+        {
+            private readonly OrdersClient _client = new();
+
+        {{Indent(shape.Body)}}
+        }
+
+        """;
+
+    // The first probe's template, verbatim (Probe212Tests.cs.txt, Source).
+    private static string FirstProbeSource(Shape shape) => $$"""
+        #nullable enable
+        using System;
+        using System.Threading.Tasks;
+        using Kronikol.Tracking;
+        {{shape.Usings}}
+
+        [assembly: TrackAssertions]
+
+        public sealed class OrderRequest
+        {
+            public string Id { get; init; } = "";
+        }
+
+        public sealed class OrdersClient
+        {
+            public async Task<string> GetOrderAsync(OrderRequest request)
+            {
+                await Task.Yield();
+                return request.Id == "known" ? "order" : throw new InvalidOperationException("not found");
+            }
+
+            public string GetOrder(OrderRequest request) =>
+                request.Id == "known" ? "order" : throw new InvalidOperationException("not found");
+        }
+
+        public class Probe
+        {
+            private readonly OrdersClient _client = new();
+
+        {{Indent(shape.Body)}}
+        }
+
+        """;
+
+    private static string Informational(Assembly assembly) =>
+        assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? assembly.GetName().Version?.ToString() ?? "?";
+
+    private static ModuleDefinition Read(string path) =>
+        ModuleDefinition.ReadModule(new MemoryStream(File.ReadAllBytes(path)), new ReaderParameters
+        {
+            ReadingMode = ReadingMode.Immediate,
+            ReadSymbols = true,
+            SymbolReaderProvider = new PortablePdbReaderProvider(),
+            SymbolStream = new MemoryStream(File.ReadAllBytes(Path.ChangeExtension(path, ".pdb"))),
+            AssemblyResolver = Resolver,
+        });
+
+    private static DefaultAssemblyResolver NewResolver()
+    {
+        var resolver = new DefaultAssemblyResolver();
+        resolver.AddSearchDirectory(AppContext.BaseDirectory);
+        return resolver;
+    }
+
+    private static string FindHarness()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir != null && !File.Exists(Path.Combine(dir.FullName, "Kronikol.sln")))
+            dir = dir.Parent;
+        var root = Path.Combine(dir!.FullName, "plans", "AWAITED_ASSERTION_LABELS_PLAN.harness", "probe");
+        Directory.CreateDirectory(root);
+        return root;
+    }
+
+    private static string NewIlDir()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "Probe212b-il");
+        if (Directory.Exists(dir))
+            Directory.Delete(dir, recursive: true);
+        Directory.CreateDirectory(dir);
+        return dir;
+    }
+}

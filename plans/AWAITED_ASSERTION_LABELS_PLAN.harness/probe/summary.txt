@@ -1,0 +1,173 @@
+## Pass 1: every shape, built by TestAssemblyBuilder.Build (Roslyn's API, Microsoft.CodeAnalysis.CSharp 5.3.0-2.26078.5+16f9bd284cd49604ac82998bfe778a8eb16d4347)
+
+| shape | config | entry | woven | unwoven reason | notes drawn | woven run threw | unwoven run threw |
+|---|---|---|---|---|---|---|---|
+| S1 | Debug | Run | 1 |  | ✓ Should throw InvalidOperationException | no | no |
+| S2 | Debug | Run | 1 | line 34: the stack is not empty where the awaited result is read | ✓ Exception message should be "not found" | no | no |
+| S3 | Debug | Run | 1 | line 34: the stack is not empty where the awaited result is read | ✓ E message should be "not found" | no | no |
+| S4 | Debug | Run | 1 | line 39: the stack is not empty where the awaited result is read | ✓ E message should be "not found" | no | no |
+| S5 | Debug | Run | 1 | line 34: the stack is not empty where the awaited result is read | ✓ E message should be "not found" | no | no |
+| S6 | Debug | Run | 1 | line 35: the stack is not empty where the awaited result is read | ✓ E message should be "not found" | no | no |
+| S6b | Debug | Run | 1 | line 36: the stack is not empty where the awaited result is read | ✓ E message should be "not found" | no | no |
+| S7 | Debug | Run | 0 | line 34: the stack is not empty where the awaited result is read |  | no | no |
+| S8 | Debug | Run | 1 | line 34: the stack is not empty where the awaited result is read | ✓ E message should be "not found" | no | no |
+| S9 | Debug | Run | 2 |  | ✓ Should throw InvalidOperationException<br>✓ E message should be "not found" | no | no |
+| S9b | Debug | Run | 2 |  | ✓ E message should be "not found" | no | no |
+| S10 | Debug | Run | 1 |  | ✓ Should not throw | no | no |
+| S10b | Debug | | | did not compile: Compilation failed for 'Probe212_S10b_Debug': Cannot assign void to an implicitly-typed variable | | | |
+| S10c | Debug | Run | 2 |  | ✓ Should not throw<br>✓ V should be "order" | no | no |
+| S11 | Debug | Run | 1 | line 34: the stack is not empty where the awaited result is read | ✓ E message should be "not found" | no | no |
+| S12a | Debug | Run | 1 | line 35: the stack is not empty where the awaited result is read | ✓ A which message should be "not found" | no | no |
+| S12b | Debug | Run | 0 | line 35: the stack is not empty where the awaited result is read |  | no | no |
+| S13 | Debug | Run | 1 | line 35: the stack is not empty where the awaited result is read | ✓ V is equal to "value" | no | no |
+| S14a | Debug | Run | 1 | line 33: the stack is not empty where the awaited result is read | ✓ Exception message should be "not found" | no | no |
+| S14b | Debug | Run | 1 |  | ✓ Should throw InvalidOperationException | no | no |
+| S14c | Debug | Run | 1 | line 33: the stack is not empty where the awaited result is read | ✓ E message should be "not found" | no | no |
+| S14d | Debug | Run | 1 |  | ✓ Should throw InvalidOperationException | no | no |
+| S14e | Debug | Run | 1 |  | ✓ Should throw InvalidOperationException | no | no |
+| S14f | Debug | Run | 1 |  | ✓ Should throw InvalidOperationException | no | no |
+| S14g | Debug | Run | 1 |  | ✓ Should throw InvalidOperationException | no | no |
+| S14h | Debug | Run | 1 | line 35: the stack is not empty where the awaited result is read | ✓ Exception message should be "not found" | no | no |
+| S14i | Debug | Run | 1 |  | ✓ Should throw InvalidOperationException | no | no |
+| S14j | Debug | Run | 1 |  | ✓ Should not throw | no | no |
+| S14k | Debug | Run | 1 |  | ✓ Should throw InvalidOperationException | no | no |
+| S14l | Debug | Run | 1 |  | ✓ Should throw InvalidOperationException | no | no |
+| S14m | Debug | Run | 1 |  | ✓ Should throw InvalidOperationException | no | no |
+| S14n | Debug | Run | 1 | line 34: the stack is not empty where the awaited result is read | ✓ Exception message should be "not found" | no | no |
+| S14o | Debug | Run | 1 |  | ✓ Should not throw | no | no |
+| S15a | Debug | AssertionPasses | 2 |  | ✓ Should throw InvalidOperationException<br>✓ E message should be "not found" | no | no |
+| S15a | Debug | AssertionFails | 2 |  | ✓ Should throw InvalidOperationException | ShouldAssertException | ShouldAssertException |
+| S15b | Debug | AssertionPasses | 2 |  | ✓ E message should be "not found" | no | no |
+| S15b | Debug | AssertionFails | 2 |  |  | ShouldAssertException | ShouldAssertException |
+| S15c | Debug | AssertionPasses | 1 |  | ✓ Should not throw | no | no |
+| S15c | Debug | AssertionFails | 1 |  | ✓ Should not throw | ShouldAssertException | ShouldAssertException |
+| S15d | Debug | AssertionPasses | 1 |  |  | no | no |
+| S15d | Debug | AssertionFails | 1 |  |  | ShouldAssertException | ShouldAssertException |
+| S16a | Debug | MessageMatches | 0 | line 43: the stack is not empty where the awaited result is read; line 35: the stack is not empty where the awaited result is read |  | no | no |
+| S16a | Debug | MessageDiffers | 0 | line 43: the stack is not empty where the awaited result is read; line 35: the stack is not empty where the awaited result is read |  | AssertionException | AssertionException |
+| S16b | Debug | MessageMatches | 0 | line 41: the stack is not empty where the awaited result is read; line 34: the stack is not empty where the awaited result is read |  | no | no |
+| S16b | Debug | MessageDiffers | 0 | line 41: the stack is not empty where the awaited result is read; line 34: the stack is not empty where the awaited result is read |  | ShouldAssertException | ShouldAssertException |
+| R211 | Debug | ThrowAsync_is_the_first_await | 3 | line 37: the stack is not empty where the awaited result is read; line 18: the stack is not empty where the awaited result is read | ✓ Exception message should be "expected" | no | no |
+| R211 | Debug | Unassigned_ThrowAsync_is_the_first_await | 3 | line 37: the stack is not empty where the awaited result is read; line 18: the stack is not empty where the awaited result is read | ✓ Should throw InvalidOperationException | no | no |
+| R211 | Debug | Another_await_comes_first | 3 | line 37: the stack is not empty where the awaited result is read; line 18: the stack is not empty where the awaited result is read | ✓ Exception message should be "expected" | no | no |
+| R212 | Debug | Awaited_ThrowAsync | 5 | line 27: the stack is not empty where the awaited result is read; line 56: the stack is not empty where the awaited result is read | ✓ Should throw InvalidOperationException | no | no |
+| R212 | Debug | Assigned_ThrowAsync | 5 | line 27: the stack is not empty where the awaited result is read; line 56: the stack is not empty where the awaited result is read | ✓ Exception message should be "not found" | no | no |
+| R212 | Debug | ThrowAsync_returned_by_a_helper | 5 | line 27: the stack is not empty where the awaited result is read; line 56: the stack is not empty where the awaited result is read | ✓ Exception message should be "not found" | no | no |
+| R212 | Debug | NotThrowAsync | 5 | line 27: the stack is not empty where the awaited result is read; line 56: the stack is not empty where the awaited result is read | ✓ Should not throw | no | no |
+| R212 | Debug | Throw | 5 | line 27: the stack is not empty where the awaited result is read; line 56: the stack is not empty where the awaited result is read | ✓ Should throw InvalidOperationException | no | no |
+| S1 | Release | Run | 1 |  | ✓ Should throw InvalidOperationException | no | no |
+| S2 | Release | Run | 2 |  | ✓ Await Should.ThrowAsync<InvalidOperationException>(async () => await _client.GetOrderAsync(request))<br>✓ Exception message should be "not found" | no | no |
+| S3 | Release | Run | 2 |  | ✓ Await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request))<br>✓ E message should be "not found" | no | no |
+| S4 | Release | Run | 2 |  | ✓ Return await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(new OrderRequest { Id<U+200B><U+200B><br>✓ E message should be "not found" | no | no |
+| S5 | Release | Run | 2 |  | ✓ InvalidOperationException e = await Should.ThrowAsync<InvalidOperationException>(() =><U+200B><U+200B><br>✓ E message should be "not found" | no | no |
+| S6 | Release | Run | 2 |  | ✓ E = await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request))<br>✓ E message should be "not found" | no | no |
+| S6b | Release | Run | 2 |  | ✓ _e = await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request))<br>✓ E message should be "not found" | no | no |
+| S7 | Release | Run | 1 |  | ✓ _ = await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request)) | no | no |
+| S8 | Release | Run | 2 |  | ✓ Await Should.ThrowAsync<InvalidOperationException>(() =><U+200B><U+200B><br>✓ E message should be "not found" | no | no |
+| S9 | Release | Run | 2 |  | ✓ Should throw InvalidOperationException<br>✓ E message should be "not found" | no | no |
+| S9b | Release | Run | 2 |  | ✓ Return Should.Throw<InvalidOperationException>(() => _client.GetOrder(new OrderRequest { Id = id }))<br>✓ E message should be "not found" | no | no |
+| S10 | Release | Run | 1 |  | ✓ Should not throw | no | no |
+| S10b | Release | | | did not compile: Compilation failed for 'Probe212_S10b_Release': Cannot assign void to an implicitly-typed variable | | | |
+| S10c | Release | Run | 2 |  | ✓ Should not throw<br>✓ V should be "order" | no | no |
+| S11 | Release | Run | 2 |  | ✓ Await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request))<br>✓ E message should be "not found" | no | no |
+| S12a | Release | Run | 2 |  | ✓ Await act should throw async <InvalidOperationException><br>✓ A which message should be "not found" | no | no |
+| S12b | Release | Run | 1 |  | ✓ (await act should throw async <InvalidOperationException> | no | no |
+| S13 | Release | Run | 2 |  | ✓ Await Assert.That(x).IsNotNull()<br>✓ V is equal to "value" | no | no |
+| S14a | Release | Run | 2 |  | ✓ Await Should.ThrowAsync<InvalidOperationException>(async () => await _client.GetOrderAsync(request))<br>✓ Exception message should be "not found" | no | no |
+| S14b | Release | Run | 1 |  | ✓ Should throw InvalidOperationException | no | no |
+| S14c | Release | Run | 2 |  | ✓ Await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request))<br>✓ E message should be "not found" | no | no |
+| S14d | Release | Run | 1 |  | ✓ Should throw InvalidOperationException | no | no |
+| S14e | Release | Run | 1 |  | ✓ Should throw InvalidOperationException | no | no |
+| S14f | Release | Run | 1 |  | ✓ Should throw InvalidOperationException | no | no |
+| S14g | Release | Run | 1 |  | ✓ Should throw InvalidOperationException | no | no |
+| S14h | Release | Run | 2 |  | ✓ Await Should.ThrowAsync<InvalidOperationException>(async () => await _client.GetOrderAsync(request))<br>✓ Exception message should be "not found" | no | no |
+| S14i | Release | Run | 1 |  | ✓ Should throw InvalidOperationException | no | no |
+| S14j | Release | Run | 1 |  | ✓ Should not throw | no | no |
+| S14k | Release | Run | 1 |  | ✗ Should throw InvalidOperationException | NullReferenceException | no |
+| S14l | Release | Run | 1 |  | ✗ Should throw InvalidOperationException | NullReferenceException | no |
+| S14m | Release | Run | 1 |  | ✓ Should throw InvalidOperationException | no | no |
+| S14n | Release | Run | 2 |  | ✗ Await Should.ThrowAsync<InvalidOperationException>(async () => await _client.GetOrderAsync(request)) | NullReferenceException | no |
+| S14o | Release | Run | 1 |  | ✗ Should not throw | NullReferenceException | no |
+| S15a | Release | AssertionPasses | 2 |  | ✓ Should throw InvalidOperationException<br>✓ E message should be "not found" | no | no |
+| S15a | Release | AssertionFails | 2 |  | ✓ Should throw InvalidOperationException | ShouldAssertException | ShouldAssertException |
+| S15b | Release | AssertionPasses | 2 |  | ✓ Return Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(r))<br>✓ E message should be "not found" | no | no |
+| S15b | Release | AssertionFails | 2 |  | ✓ Return Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(r)) | ShouldAssertException | ShouldAssertException |
+| S15c | Release | AssertionPasses | 1 |  | ✓ Should not throw | no | no |
+| S15c | Release | AssertionFails | 1 |  | ✓ Should not throw | ShouldAssertException | ShouldAssertException |
+| S15d | Release | AssertionPasses | 1 |  | ✓ Return Should.NotThrowAsync(() => _client.GetOrderAsync(r)) | no | no |
+| S15d | Release | AssertionFails | 1 |  | ✓ Return Should.NotThrowAsync(() => _client.GetOrderAsync(r)) | ShouldAssertException | ShouldAssertException |
+| S16a | Release | MessageMatches | 2 |  | ✓ (await act should throw async <InvalidOperationException> | no | no |
+| S16a | Release | MessageDiffers | 2 |  | ✓ (await act should throw async <InvalidOperationException> | AssertionException | AssertionException |
+| S16b | Release | MessageMatches | 2 |  | ✓ (await  should throw async< invalid operation exception>(() => _client get order async(request))) message<U+200B><U+200B> | no | no |
+| S16b | Release | MessageDiffers | 2 |  | ✓ (await  should throw async< invalid operation exception>(() => _client get order async(request))) message<U+200B><U+200B> | ShouldAssertException | ShouldAssertException |
+| R211 | Release | ThrowAsync_is_the_first_await | 5 |  | ✓ Await Should.ThrowAsync<InvalidOperationException>( async () => await _client.CallAsync(request) )<br>✓ Exception message should be "expected" | no | no |
+| R211 | Release | Unassigned_ThrowAsync_is_the_first_await | 5 |  | ✓ Should throw InvalidOperationException | no | no |
+| R211 | Release | Another_await_comes_first | 5 |  | ✓ Await Should.ThrowAsync<InvalidOperationException>( async () => await _client.CallAsync(request) )<br>✓ Exception message should be "expected" | no | no |
+| R212 | Release | Awaited_ThrowAsync | 7 |  | ✓ Should throw InvalidOperationException | no | no |
+| R212 | Release | Assigned_ThrowAsync | 7 |  | ✓ Await Should.ThrowAsync<InvalidOperationException>(async () => await _client.GetOrderAsync(request))<br>✓ Exception message should be "not found" | no | no |
+| R212 | Release | ThrowAsync_returned_by_a_helper | 7 |  | ✓ Return await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(new OrderRequest { Id<U+200B><U+200B><br>✓ Exception message should be "not found" | no | no |
+| R212 | Release | NotThrowAsync | 7 |  | ✓ Should not throw | no | no |
+| R212 | Release | Throw | 7 |  | ✓ Should throw InvalidOperationException | no | no |
+
+## Pass 2: the shapes #211 and #212 report, built by `dotnet build` with SDK 10.0.300 (its compiler: Roslyn 5.6.0-2.26230.102+caa81fa4971f74880cdab61990cb1b11420939ec), as the issues' suites were
+
+| shape | config | entry | woven | unwoven reason | notes drawn | woven run threw | unwoven run threw |
+|---|---|---|---|---|---|---|---|
+| S1 | Debug | Run | 1 |  | ✓ Should throw InvalidOperationException | no | no |
+| S2 | Debug | Run | 1 | line 34: the stack is not empty where the awaited result is read | ✓ Exception message should be "not found" | no | no |
+| S3 | Debug | Run | 1 | line 34: the stack is not empty where the awaited result is read | ✓ E message should be "not found" | no | no |
+| S4 | Debug | Run | 1 | line 39: the stack is not empty where the awaited result is read | ✓ E message should be "not found" | no | no |
+| S14a | Debug | Run | 1 | line 33: the stack is not empty where the awaited result is read | ✓ Exception message should be "not found" | no | no |
+| S14b | Debug | Run | 1 |  | ✓ Should throw InvalidOperationException | no | no |
+| S14c | Debug | Run | 1 | line 33: the stack is not empty where the awaited result is read | ✓ E message should be "not found" | no | no |
+| S14d | Debug | Run | 1 |  | ✓ Should throw InvalidOperationException | no | no |
+| S14e | Debug | Run | 1 |  | ✓ Should throw InvalidOperationException | no | no |
+| S14g | Debug | Run | 1 |  | ✓ Should throw InvalidOperationException | no | no |
+| S14k | Debug | Run | 1 |  | ✓ Should throw InvalidOperationException | no | no |
+| S14l | Debug | Run | 1 |  | ✓ Should throw InvalidOperationException | no | no |
+| S14m | Debug | Run | 1 |  | ✓ Should throw InvalidOperationException | no | no |
+| S14n | Debug | Run | 1 | line 34: the stack is not empty where the awaited result is read | ✓ Exception message should be "not found" | no | no |
+| S14o | Debug | Run | 1 |  | ✓ Should not throw | no | no |
+| S15a | Debug | AssertionPasses | 2 |  | ✓ Should throw InvalidOperationException<br>✓ E message should be "not found" | no | no |
+| S15a | Debug | AssertionFails | 2 |  | ✓ Should throw InvalidOperationException | ShouldAssertException | ShouldAssertException |
+| S16a | Debug | MessageMatches | 0 | line 43: the stack is not empty where the awaited result is read; line 35: the stack is not empty where the awaited result is read |  | no | no |
+| S16a | Debug | MessageDiffers | 0 | line 43: the stack is not empty where the awaited result is read; line 35: the stack is not empty where the awaited result is read |  | AssertionException | AssertionException |
+| S16b | Debug | MessageMatches | 0 | line 41: the stack is not empty where the awaited result is read; line 34: the stack is not empty where the awaited result is read |  | no | no |
+| S16b | Debug | MessageDiffers | 0 | line 41: the stack is not empty where the awaited result is read; line 34: the stack is not empty where the awaited result is read |  | ShouldAssertException | ShouldAssertException |
+| R211 | Debug | ThrowAsync_is_the_first_await | 3 | line 37: the stack is not empty where the awaited result is read; line 18: the stack is not empty where the awaited result is read | ✓ Exception message should be "expected" | no | no |
+| R211 | Debug | Unassigned_ThrowAsync_is_the_first_await | 3 | line 37: the stack is not empty where the awaited result is read; line 18: the stack is not empty where the awaited result is read | ✓ Should throw InvalidOperationException | no | no |
+| R211 | Debug | Another_await_comes_first | 3 | line 37: the stack is not empty where the awaited result is read; line 18: the stack is not empty where the awaited result is read | ✓ Exception message should be "expected" | no | no |
+| R212 | Debug | Awaited_ThrowAsync | 5 | line 27: the stack is not empty where the awaited result is read; line 56: the stack is not empty where the awaited result is read | ✓ Should throw InvalidOperationException | no | no |
+| R212 | Debug | Assigned_ThrowAsync | 5 | line 27: the stack is not empty where the awaited result is read; line 56: the stack is not empty where the awaited result is read | ✓ Exception message should be "not found" | no | no |
+| R212 | Debug | ThrowAsync_returned_by_a_helper | 5 | line 27: the stack is not empty where the awaited result is read; line 56: the stack is not empty where the awaited result is read | ✓ Exception message should be "not found" | no | no |
+| R212 | Debug | NotThrowAsync | 5 | line 27: the stack is not empty where the awaited result is read; line 56: the stack is not empty where the awaited result is read | ✓ Should not throw | no | no |
+| R212 | Debug | Throw | 5 | line 27: the stack is not empty where the awaited result is read; line 56: the stack is not empty where the awaited result is read | ✓ Should throw InvalidOperationException | no | no |
+| S1 | Release | Run | 1 |  | ✓ Should throw InvalidOperationException | no | no |
+| S2 | Release | Run | 2 |  | ✓ Await Should.ThrowAsync<InvalidOperationException>(async () => await _client.GetOrderAsync(request))<br>✓ Exception message should be "not found" | no | no |
+| S3 | Release | Run | 2 |  | ✓ Await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request))<br>✓ E message should be "not found" | no | no |
+| S4 | Release | Run | 2 |  | ✓ Return await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(new OrderRequest { Id<U+200B><U+200B><br>✓ E message should be "not found" | no | no |
+| S14a | Release | Run | 2 |  | ✓ Await Should.ThrowAsync<InvalidOperationException>(async () => await _client.GetOrderAsync(request))<br>✓ Exception message should be "not found" | no | no |
+| S14b | Release | Run | 1 |  | ✓ Should throw InvalidOperationException | no | no |
+| S14c | Release | Run | 2 |  | ✓ Await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request))<br>✓ E message should be "not found" | no | no |
+| S14d | Release | Run | 1 |  | ✓ Should throw InvalidOperationException | no | no |
+| S14e | Release | Run | 1 |  | ✓ Should throw InvalidOperationException | no | no |
+| S14g | Release | Run | 1 |  | ✓ Should throw InvalidOperationException | no | no |
+| S14k | Release | Run | 1 |  | ✗ Should throw InvalidOperationException | NullReferenceException | no |
+| S14l | Release | Run | 1 |  | ✗ Should throw InvalidOperationException | NullReferenceException | no |
+| S14m | Release | Run | 1 |  | ✓ Should throw InvalidOperationException | no | no |
+| S14n | Release | Run | 2 |  | ✗ Await Should.ThrowAsync<InvalidOperationException>(async () => await _client.GetOrderAsync(request)) | NullReferenceException | no |
+| S14o | Release | Run | 1 |  | ✗ Should not throw | NullReferenceException | no |
+| S15a | Release | AssertionPasses | 2 |  | ✓ Should throw InvalidOperationException<br>✓ E message should be "not found" | no | no |
+| S15a | Release | AssertionFails | 2 |  | ✓ Should throw InvalidOperationException | ShouldAssertException | ShouldAssertException |
+| S16a | Release | MessageMatches | 2 |  | ✓ (await act should throw async <InvalidOperationException> | no | no |
+| S16a | Release | MessageDiffers | 2 |  | ✓ (await act should throw async <InvalidOperationException> | AssertionException | AssertionException |
+| S16b | Release | MessageMatches | 2 |  | ✓ (await  should throw async< invalid operation exception>(() => _client get order async(request))) message<U+200B><U+200B> | no | no |
+| S16b | Release | MessageDiffers | 2 |  | ✓ (await  should throw async< invalid operation exception>(() => _client get order async(request))) message<U+200B><U+200B> | ShouldAssertException | ShouldAssertException |
+| R211 | Release | ThrowAsync_is_the_first_await | 5 |  | ✓ Await Should.ThrowAsync<InvalidOperationException>( async () => await _client.CallAsync(request) )<br>✓ Exception message should be "expected" | no | no |
+| R211 | Release | Unassigned_ThrowAsync_is_the_first_await | 5 |  | ✓ Should throw InvalidOperationException | no | no |
+| R211 | Release | Another_await_comes_first | 5 |  | ✓ Await Should.ThrowAsync<InvalidOperationException>( async () => await _client.CallAsync(request) )<br>✓ Exception message should be "expected" | no | no |
+| R212 | Release | Awaited_ThrowAsync | 7 |  | ✓ Should throw InvalidOperationException | no | no |
+| R212 | Release | Assigned_ThrowAsync | 7 |  | ✓ Await Should.ThrowAsync<InvalidOperationException>(async () => await _client.GetOrderAsync(request))<br>✓ Exception message should be "not found" | no | no |
+| R212 | Release | ThrowAsync_returned_by_a_helper | 7 |  | ✓ Return await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(new OrderRequest { Id<U+200B><U+200B><br>✓ Exception message should be "not found" | no | no |
+| R212 | Release | NotThrowAsync | 7 |  | ✓ Should not throw | no | no |
+| R212 | Release | Throw | 7 |  | ✓ Should throw InvalidOperationException | no | no |

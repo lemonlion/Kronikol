@@ -1,0 +1,10 @@
+dotnet run --file probe.cs (SDK 10.0.300, Windows 11), 2026-10-27:
+
+note: failed ArgumentException
+awaiter resumed: ArgumentException same object=True
+note: passed
+awaiter resumed: result same object=True
+note: passed
+completed input -> proxy.IsCompleted immediately=True
+note: canceled
+awaiter resumed: TaskCanceledException

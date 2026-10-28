@@ -1,0 +1,63 @@
+  1: #nullable enable
+  2: using System;
+  3: using System.Threading.Tasks;
+  4: using Kronikol.Tracking;
+  5: using Shouldly;
+  6: 
+  7: [assembly: TrackAssertions]
+  8: 
+  9: public sealed class OrderRequest
+ 10: {
+ 11:     public string Id { get; init; } = "";
+ 12: }
+ 13: 
+ 14: public sealed class OrdersClient
+ 15: {
+ 16:     public string ExpectedMessage { get; set; } = "not found";
+ 17: 
+ 18:     public async Task<string> GetNameAsync()
+ 19:     {
+ 20:         await Task.Yield();
+ 21:         return "order";
+ 22:     }
+ 23: 
+ 24:     public async Task<string> GetOrderAsync(OrderRequest request)
+ 25:     {
+ 26:         await Task.Yield();
+ 27:         return request.Id == "known" ? "order" : throw new InvalidOperationException("not found");
+ 28:     }
+ 29: 
+ 30:     public async Task<string> GetExpectedMessageAsync()
+ 31:     {
+ 32:         await Task.Yield();
+ 33:         return ExpectedMessage;
+ 34:     }
+ 35: }
+ 36: 
+ 37: public class Probe
+ 38: {
+ 39:     private readonly OrdersClient _client = new();
+ 40: 
+ 41:     public async Task AssertionPasses()
+ 42:     {
+ 43:         await Task.Yield();
+ 44:         var r = new OrderRequest { Id = "missing" };
+ 45:         (await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(r))).Message.ShouldBe(await _client.GetExpectedMessageAsync());
+ 46:     }
+ 47: 
+ 48:     public async Task ThrowFails()
+ 49:     {
+ 50:         await Task.Yield();
+ 51:         var r = new OrderRequest { Id = "known" };
+ 52:         (await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(r))).Message.ShouldBe(await _client.GetExpectedMessageAsync());
+ 53:     }
+ 54: 
+ 55:     public async Task MessageDiffers()
+ 56:     {
+ 57:         await Task.Yield();
+ 58:         var r = new OrderRequest { Id = "missing" };
+ 59:         _client.ExpectedMessage = "other";
+ 60:         (await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(r))).Message.ShouldBe(await _client.GetExpectedMessageAsync());
+ 61:     }
+ 62: }
+ 63: 

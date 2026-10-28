@@ -1,0 +1,580 @@
+# Probe212b summary
+
+Kronikol 5.12.0+1ee6373a8fe16e85706f9b6e63c309c9fae2e815, Kronikol.AssertionTracking 5.12.0+1ee6373a8fe16e85706f9b6e63c309c9fae2e815; Shouldly 4.3.0+cb48f40b4d6087ce9fb1983041fce8a725436cb1, FluentAssertions 8.9.0+1ba808c972709ed2ac982eab1bab4597601be767, AwesomeAssertions 9.4.0+b5dfd72cc1ca6a9f328a3162ac6f9086a33f24a4, TUnit.Assertions 1.73.5+Branch.main.Sha.47057285f3d51b378fd5ebbf7af53b786a80dbc6.47057285f3d51b378fd5ebbf7af53b786a80dbc6, xunit.v3.assert 3.2.2+728c1dce01; runtime 10.0.11; 515 s.
+
+Builds: suite = TestAssemblyBuilder.Build (Roslyn's API, Microsoft.CodeAnalysis.CSharp 5.3.0-2.26078.5+16f9bd284cd49604ac82998bfe778a8eb16d4347); sdkN = TestAssemblyBuilder.BuildWithSdk, `dotnet build` of Fixtures/WeaverFixture.csproj:
+- sdk8: SDK 8.0.0 pinned in global.json, SDK 8.0.421 (dotnet --version in the build directory), its compiler Roslyn 4.11.0-3.25569.22+3fb752d448006a3144a60ccf181d745e555422f9, net8.0
+- sdk9: SDK 9.0.0 pinned in global.json, SDK 9.0.314 (dotnet --version in the build directory), its compiler Roslyn 4.14.0-3.26064.1+450493a9b4ec6337bced0120e97cb76f4ed783db, net9.0
+- sdk10: SDK 10.0.0 pinned in global.json, SDK 10.0.300 (dotnet --version in the build directory), its compiler Roslyn 5.6.0-2.26230.102+caa81fa4971f74880cdab61990cb1b11420939ec, net10.0
+
+Shapes S17a to S23 (and the controls S17d, S18b) are built with the new fixture template (a client with GetNameAsync, GetOrderAsync, GetExpectedMessageAsync); S2, S4, S7, S8 and S16a with the first probe's template, so their line numbers are the first probe's.
+
+## A. Outcomes: per shape, build, configuration and run
+
+| shape | build | config | entry | woven | unwoven reasons | ILVerify | notes drawn (line) | woven run threw | unwoven run threw |
+|---|---|---|---|---|---|---|---|---|---|
+| S17a | suite | Debug | AssertionPasses | 0 |  | clean | (none) | no | no |
+| S17a | suite | Debug | AssertionFails | 0 |  | clean | (none) | ShouldAssertException | ShouldAssertException |
+| S17b | suite | Debug | AssertionPasses | 0 |  | clean | (none) | no | no |
+| S17b | suite | Debug | AssertionFails | 0 |  | clean | (none) | AssertionException | AssertionException |
+| S17c | suite | Debug | AssertionPasses | 0 |  | clean | (none) | no | no |
+| S17c | suite | Debug | AssertionFails | 0 |  | clean | (none) | AssertionException | AssertionException |
+| S18a | suite | Debug | AssertionPasses | 2 | line 54: the stack is not empty where the awaited result is read; line 46: the stack is not empty where the awaited result is read | clean | ✓ E message is equal to "not found" (L47) | no | no |
+| S18a | suite | Debug | AssertionFails | 2 | line 54: the stack is not empty where the awaited result is read; line 46: the stack is not empty where the awaited result is read | clean | (none) | AssertionException | AssertionException |
+| S18c | suite | Debug | AssertionPasses | 2 | line 55: the stack is not empty where the awaited result is read; line 46: the stack is not empty where the awaited result is read | clean | ✓ A which message should be "not found" (L47) | no | no |
+| S18c | suite | Debug | AssertionFails | 2 | line 55: the stack is not empty where the awaited result is read; line 46: the stack is not empty where the awaited result is read | clean | (none) | AssertionException | AssertionException |
+| S19a | suite | Debug | AssertionPasses | 1 |  | clean | ✓ Act should throw async <InvalidOperationException> (L52) | no | no |
+| S19a | suite | Debug | AssertionFails | 1 |  | clean | ✓ Act should throw async <InvalidOperationException> (L52) | AssertionException | AssertionException |
+| S19b | suite | Debug | AssertionPasses | 1 |  | clean | ✓ Name is equal to "order" (L55) | no | no |
+| S19b | suite | Debug | AssertionFails | 1 |  | clean | ✓ Name is equal to "order" (L55) | AssertionException | AssertionException |
+| S19c | suite | Debug | AssertionPasses | 2 |  | clean | ✓ Should throw InvalidOperationException (L45) | no | no |
+| S19c | suite | Debug | AssertionFails | 2 |  | clean | ✓ Should throw InvalidOperationException (L53) | ShouldAssertException | ShouldAssertException |
+| S19d | suite | Debug | AssertionPasses | 2 |  | clean | ✓ Should throw InvalidOperationException (L44) | no | no |
+| S19d | suite | Debug | AssertionFails | 2 |  | clean | ✓ Should throw InvalidOperationException (L46) | ShouldAssertException | ShouldAssertException |
+| S20 | suite | Debug | AssertionPasses | 0 | line 45: the stack is not empty where the awaited result is read; line 60: the stack is not empty where the awaited result is read; line 52: the stack is not empty where the awaited result is read | clean | (none) | no | no |
+| S20 | suite | Debug | ThrowFails | 0 | line 45: the stack is not empty where the awaited result is read; line 60: the stack is not empty where the awaited result is read; line 52: the stack is not empty where the awaited result is read | clean | (none) | ShouldAssertException | ShouldAssertException |
+| S20 | suite | Debug | MessageDiffers | 0 | line 45: the stack is not empty where the awaited result is read; line 60: the stack is not empty where the awaited result is read; line 52: the stack is not empty where the awaited result is read | clean | (none) | ShouldAssertException | ShouldAssertException |
+| S21a | suite | Debug | AssertionPasses | 2 | line 55: the stack is not empty where the awaited result is read; line 45: the stack is not empty where the awaited result is read | clean | ✓ E message should be "not found" (L48) | no | no |
+| S21a | suite | Debug | AssertionFails | 2 | line 55: the stack is not empty where the awaited result is read; line 45: the stack is not empty where the awaited result is read | clean | (none) | ShouldAssertException | ShouldAssertException |
+| S21b | suite | Debug | AssertionPasses | 2 |  | clean | ✓ Should throw InvalidOperationException (L45) | no | no |
+| S21b | suite | Debug | AssertionFails | 2 |  | clean | ✗ Should throw InvalidOperationException (L53): Task `) => _client.GetOrderAsync(r`     should throw System.InvalidOperationException     ... | ShouldAssertException | ShouldAssertException |
+| S22a | suite | Debug | AssertionPasses | 2 |  | clean | ✓ Act should throw async <InvalidOperationException> (L48) | no | no |
+| S22a | suite | Debug | AssertionFails | 2 |  | clean | ✗ Act should throw async <InvalidOperationException> (L58): Expected a <System.InvalidOperationException> to be thrown, but no exception was thrown. | AssertionException | AssertionException |
+| S22b | suite | Debug | AssertionPasses | 2 |  | clean | ✓ 1 is equal to 1 (L47) | no | no |
+| S22b | suite | Debug | AssertionFails | 2 |  | clean | ✗ 1 is equal to 2 (L56): Expected to be 2 but found 1  at Assert.That(1).IsEqualTo(2) | AssertionException | AssertionException |
+| S23 | suite | Debug | AssertionPasses | 0 | line 52: the stack is not empty where the awaited result is read; line 45: the stack is not empty where the awaited result is read | clean | (none) | no | no |
+| S23 | suite | Debug | AssertionFails | 0 | line 52: the stack is not empty where the awaited result is read; line 45: the stack is not empty where the awaited result is read | clean | (none) | ShouldAssertException | ShouldAssertException |
+| S17d (control) | suite | Debug | AssertionPasses | 1 |  | clean | (none) | no | no |
+| S17d (control) | suite | Debug | AssertionFails | 1 |  | clean | (none) | EqualException | EqualException |
+| S18b (control) | suite | Debug | AssertionPasses | 1 |  | clean | (none) | no | no |
+| S18b (control) | suite | Debug | AssertionFails | 1 |  | clean | (none) | ThrowsException | ThrowsException |
+| S17a | suite | Release | AssertionPasses | 0 |  | clean | (none) | no | no |
+| S17a | suite | Release | AssertionFails | 0 |  | clean | (none) | ShouldAssertException | ShouldAssertException |
+| S17b | suite | Release | AssertionPasses | 0 |  | clean | (none) | no | no |
+| S17b | suite | Release | AssertionFails | 0 |  | clean | (none) | AssertionException | AssertionException |
+| S17c | suite | Release | AssertionPasses | 0 |  | clean | (none) | no | no |
+| S17c | suite | Release | AssertionFails | 0 |  | clean | (none) | AssertionException | AssertionException |
+| S18a | suite | Release | AssertionPasses | 4 |  | clean | ✓ Await Assert.That(() => _client.GetOrderAsync(r)).Throws<InvalidOperationException>() (L46)<br>✓ E message is equal to "not found" (L47) | no | no |
+| S18a | suite | Release | AssertionFails | 4 |  | clean | ✗ Await Assert.That(() => _client.GetOrderAsync(r)).Throws<InvalidOperationException>() (L54): Expected to throw InvalidOperationException but no exception was thrown  at Assert.That(()... | AssertionException | AssertionException |
+| S18c | suite | Release | AssertionPasses | 4 |  | clean | ✓ Await act should throw async <InvalidOperationException> (L46)<br>✓ A which message should be "not found" (L47) | no | no |
+| S18c | suite | Release | AssertionFails | 4 |  | clean | ✗ Await act should throw async <InvalidOperationException> (L55): Expected a <System.InvalidOperationException> to be thrown, but no exception was thrown. | AssertionException | AssertionException |
+| S19a | suite | Release | AssertionPasses | 1 |  | clean | ✓ Act should throw async <InvalidOperationException> (L52) | no | no |
+| S19a | suite | Release | AssertionFails | 1 |  | clean | ✓ Act should throw async <InvalidOperationException> (L52) | AssertionException | AssertionException |
+| S19b | suite | Release | AssertionPasses | 1 |  | clean | ✓ Name is equal to "order" (L55) | no | no |
+| S19b | suite | Release | AssertionFails | 1 |  | clean | ✓ Name is equal to "order" (L55) | AssertionException | AssertionException |
+| S19c | suite | Release | AssertionPasses | 2 |  | clean | ✓ Should throw InvalidOperationException (L45) | no | no |
+| S19c | suite | Release | AssertionFails | 2 |  | clean | ✓ Should throw InvalidOperationException (L53) | ShouldAssertException | ShouldAssertException |
+| S19d | suite | Release | AssertionPasses | 2 |  | clean | ✓ Should throw InvalidOperationException (L44) | no | no |
+| S19d | suite | Release | AssertionFails | 2 |  | clean | ✓ Should throw InvalidOperationException (L46) | ShouldAssertException | ShouldAssertException |
+| S20 | suite | Release | AssertionPasses | 3 |  | clean | ✓ (await  should throw async< invalid operation exception>(() => _client get order async(r))) message should be await _client.GetExpectedMessageAsync() (L45) | no | no |
+| S20 | suite | Release | ThrowFails | 3 |  | clean | ✗ (await  should throw async< invalid operation exception>(() => _client get order async(r))) message should be await _client.GetExpectedMessageAsync() (L52): Task `_client.GetOrderAsync(r)`     should throw System.InvalidOperationException     but ... | ShouldAssertException | ShouldAssertException |
+| S20 | suite | Release | MessageDiffers | 3 |  | clean | ✓ (await  should throw async< invalid operation exception>(() => _client get order async(r))) message should be await _client.GetExpectedMessageAsync() (L60) | ShouldAssertException | ShouldAssertException |
+| S21a | suite | Release | AssertionPasses | 4 |  | clean | ✓ Await Should.ThrowAsync<InvalidOperationException>( () => _client.GetOrderAsync(r)) (L45)<br>✓ E message should be "not found" (L48) | no | no |
+| S21a | suite | Release | AssertionFails | 4 |  | clean | ✗ Await Should.ThrowAsync<InvalidOperationException>( () => _client.GetOrderAsync(r)) (L55): Task `) => _client.GetOrderAsync(r`     should throw System.InvalidOperationException     ... | ShouldAssertException | ShouldAssertException |
+| S21b | suite | Release | AssertionPasses | 2 |  | clean | ✓ Should throw InvalidOperationException (L45) | no | no |
+| S21b | suite | Release | AssertionFails | 2 |  | clean | ✗ Should throw InvalidOperationException (L53): Task `) => _client.GetOrderAsync(r`     should throw System.InvalidOperationException     ... | ShouldAssertException | ShouldAssertException |
+| S22a | suite | Release | AssertionPasses | 2 |  | clean | ✓ Act should throw async <InvalidOperationException> (L48) | no | no |
+| S22a | suite | Release | AssertionFails | 2 |  | clean | ✗ Act should throw async <InvalidOperationException> (L58): Expected a <System.InvalidOperationException> to be thrown, but no exception was thrown. | AssertionException | AssertionException |
+| S22b | suite | Release | AssertionPasses | 2 |  | clean | ✓ 1 is equal to 1 (L47) | no | no |
+| S22b | suite | Release | AssertionFails | 2 |  | clean | ✗ 1 is equal to 2 (L56): Expected to be 2 but found 1  at Assert.That(1).IsEqualTo(2) | AssertionException | AssertionException |
+| S23 | suite | Release | AssertionPasses | 2 |  | clean | ✓ Console.WriteLine((await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(r))).Message) (L45) | no | no |
+| S23 | suite | Release | AssertionFails | 2 |  | clean | ✗ Console.WriteLine((await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(r))).Message) (L52): Task `_client.GetOrderAsync(r)`     should throw System.InvalidOperationException     but ... | ShouldAssertException | ShouldAssertException |
+| S17d (control) | suite | Release | AssertionPasses | 1 |  | clean | (none) | no | no |
+| S17d (control) | suite | Release | AssertionFails | 1 |  | clean | (none) | EqualException | EqualException |
+| S18b (control) | suite | Release | AssertionPasses | 1 |  | clean | (none) | no | no |
+| S18b (control) | suite | Release | AssertionFails | 1 |  | clean | (none) | ThrowsException | ThrowsException |
+| S2 | sdk8 | Debug | Run | 1 | line 34: the stack is not empty where the awaited result is read | clean | ✓ Exception message should be "not found" (L35) | no | no |
+| S4 | sdk8 | Debug | Run | 1 | line 39: the stack is not empty where the awaited result is read | clean | ✓ E message should be "not found" (L33) | no | no |
+| S7 | sdk8 | Debug | Run | 0 | line 34: the stack is not empty where the awaited result is read | clean | (none) | no | no |
+| S8 | sdk8 | Debug | Run | 1 | line 34: the stack is not empty where the awaited result is read | clean | ✓ E message should be "not found" (L35) | no | no |
+| S16a | sdk8 | Debug | MessageMatches | 0 | line 43: the stack is not empty where the awaited result is read; line 35: the stack is not empty where the awaited result is read | clean | (none) | no | no |
+| S16a | sdk8 | Debug | MessageDiffers | 0 | line 43: the stack is not empty where the awaited result is read; line 35: the stack is not empty where the awaited result is read | clean | (none) | AssertionException | AssertionException |
+| S2 | sdk8 | Release | Run | 2 |  | clean | ✓ Await Should.ThrowAsync<InvalidOperationException>(async () => await _client.GetOrderAsync(request)) (L34)<br>✓ Exception message should be "not found" (L35) | no | no |
+| S4 | sdk8 | Release | Run | 2 |  | clean | ✓ Return await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(new OrderRequest { Id = id })) (L39)<br>✓ E message should be "not found" (L33) | no | no |
+| S7 | sdk8 | Release | Run | 1 |  | clean | ✓ _ = await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request)) (L34) | no | no |
+| S8 | sdk8 | Release | Run | 2 |  | clean | ✓ Await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request)).ConfigureAwait(false) (L34)<br>✓ E message should be "not found" (L35) | no | no |
+| S16a | sdk8 | Release | MessageMatches | 2 |  | clean | ✓ (await act should throw async <InvalidOperationException> (L35) | no | no |
+| S16a | sdk8 | Release | MessageDiffers | 2 |  | clean | ✓ (await act should throw async <InvalidOperationException> (L43) | AssertionException | AssertionException |
+| S2 | sdk9 | Debug | Run | 1 | line 34: the stack is not empty where the awaited result is read | clean | ✓ Exception message should be "not found" (L35) | no | no |
+| S4 | sdk9 | Debug | Run | 1 | line 39: the stack is not empty where the awaited result is read | clean | ✓ E message should be "not found" (L33) | no | no |
+| S7 | sdk9 | Debug | Run | 0 | line 34: the stack is not empty where the awaited result is read | clean | (none) | no | no |
+| S8 | sdk9 | Debug | Run | 1 | line 34: the stack is not empty where the awaited result is read | clean | ✓ E message should be "not found" (L35) | no | no |
+| S16a | sdk9 | Debug | MessageMatches | 0 | line 43: the stack is not empty where the awaited result is read; line 35: the stack is not empty where the awaited result is read | clean | (none) | no | no |
+| S16a | sdk9 | Debug | MessageDiffers | 0 | line 43: the stack is not empty where the awaited result is read; line 35: the stack is not empty where the awaited result is read | clean | (none) | AssertionException | AssertionException |
+| S2 | sdk9 | Release | Run | 2 |  | clean | ✓ Await Should.ThrowAsync<InvalidOperationException>(async () => await _client.GetOrderAsync(request)) (L34)<br>✓ Exception message should be "not found" (L35) | no | no |
+| S4 | sdk9 | Release | Run | 2 |  | clean | ✓ Return await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(new OrderRequest { Id = id })) (L39)<br>✓ E message should be "not found" (L33) | no | no |
+| S7 | sdk9 | Release | Run | 1 |  | clean | ✓ _ = await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request)) (L34) | no | no |
+| S8 | sdk9 | Release | Run | 2 |  | clean | ✓ Await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request)).ConfigureAwait(false) (L34)<br>✓ E message should be "not found" (L35) | no | no |
+| S16a | sdk9 | Release | MessageMatches | 2 |  | clean | ✓ (await act should throw async <InvalidOperationException> (L35) | no | no |
+| S16a | sdk9 | Release | MessageDiffers | 2 |  | clean | ✓ (await act should throw async <InvalidOperationException> (L43) | AssertionException | AssertionException |
+| S2 | sdk10 | Debug | Run | 1 | line 34: the stack is not empty where the awaited result is read | clean | ✓ Exception message should be "not found" (L35) | no | no |
+| S4 | sdk10 | Debug | Run | 1 | line 39: the stack is not empty where the awaited result is read | clean | ✓ E message should be "not found" (L33) | no | no |
+| S7 | sdk10 | Debug | Run | 0 | line 34: the stack is not empty where the awaited result is read | clean | (none) | no | no |
+| S8 | sdk10 | Debug | Run | 1 | line 34: the stack is not empty where the awaited result is read | clean | ✓ E message should be "not found" (L35) | no | no |
+| S16a | sdk10 | Debug | MessageMatches | 0 | line 43: the stack is not empty where the awaited result is read; line 35: the stack is not empty where the awaited result is read | clean | (none) | no | no |
+| S16a | sdk10 | Debug | MessageDiffers | 0 | line 43: the stack is not empty where the awaited result is read; line 35: the stack is not empty where the awaited result is read | clean | (none) | AssertionException | AssertionException |
+| S2 | sdk10 | Release | Run | 2 |  | clean | ✓ Await Should.ThrowAsync<InvalidOperationException>(async () => await _client.GetOrderAsync(request)) (L34)<br>✓ Exception message should be "not found" (L35) | no | no |
+| S4 | sdk10 | Release | Run | 2 |  | clean | ✓ Return await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(new OrderRequest { Id = id })) (L39)<br>✓ E message should be "not found" (L33) | no | no |
+| S7 | sdk10 | Release | Run | 1 |  | clean | ✓ _ = await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request)) (L34) | no | no |
+| S8 | sdk10 | Release | Run | 2 |  | clean | ✓ Await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request)).ConfigureAwait(false) (L34)<br>✓ E message should be "not found" (L35) | no | no |
+| S16a | sdk10 | Release | MessageMatches | 2 |  | clean | ✓ (await act should throw async <InvalidOperationException> (L35) | no | no |
+| S16a | sdk10 | Release | MessageDiffers | 2 |  | clean | ✓ (await act should throw async <InvalidOperationException> (L43) | AssertionException | AssertionException |
+
+## B. The text the weave passed to Track (the ldstr before each Track call), and Format's reading of it
+
+The last column is a what-if, not what the code does: Format of the text with a leading return, assignment and await cut by hand (the first probe's Core).
+
+| shape | build | config | method, line | raw text (\n escaped) | Format(raw text) | what-if: Format(head cut) |
+|---|---|---|---|---|---|---|
+| S18a | suite | Debug | <AssertionFails>d__2::MoveNext L55 | `await Assert.That(e.Message).IsEqualTo("not found")` | E message is equal to "not found" | E message is equal to "not found" |
+| S18a | suite | Debug | <AssertionPasses>d__1::MoveNext L47 | `await Assert.That(e.Message).IsEqualTo("not found")` | E message is equal to "not found" | E message is equal to "not found" |
+| S18c | suite | Debug | <AssertionFails>d__2::MoveNext L56 | `a.Which.Message.Should().Be("not found")` | A which message should be "not found" |  |
+| S18c | suite | Debug | <AssertionPasses>d__1::MoveNext L47 | `a.Which.Message.Should().Be("not found")` | A which message should be "not found" |  |
+| S19a | suite | Debug | Probe::Fails L52 | `act.Should().ThrowAsync<InvalidOperationException>()` | Act should throw async <InvalidOperationException> |  |
+| S19b | suite | Debug | Probe::IsOrder L55 | `Assert.That(name).IsEqualTo("order")` | Name is equal to "order" |  |
+| S19c | suite | Debug | <AssertionFails>d__2::MoveNext L53 | `var t = Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(r))` | Should throw InvalidOperationException | Should throw InvalidOperationException |
+| S19c | suite | Debug | <AssertionPasses>d__1::MoveNext L45 | `var t = Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(r))` | Should throw InvalidOperationException | Should throw InvalidOperationException |
+| S19d | suite | Debug | Probe::AssertionPasses L44 | `Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(_missing))` | Should throw InvalidOperationException |  |
+| S19d | suite | Debug | Probe::AssertionFails L46 | `Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(_known))` | Should throw InvalidOperationException |  |
+| S21a | suite | Debug | <AssertionFails>d__2::MoveNext L58 | `e.Message.ShouldBe("not found")` | E message should be "not found" |  |
+| S21a | suite | Debug | <AssertionPasses>d__1::MoveNext L48 | `e.Message.ShouldBe("not found")` | E message should be "not found" |  |
+| S21b | suite | Debug | <AssertionFails>d__2::MoveNext L53 | `await Should.ThrowAsync<InvalidOperationException>( () => _client.GetOrderAsync(r))` | Should throw InvalidOperationException | Should throw InvalidOperationException |
+| S21b | suite | Debug | <AssertionPasses>d__1::MoveNext L45 | `await Should.ThrowAsync<InvalidOperationException>( () => _client.GetOrderAsync(r))` | Should throw InvalidOperationException | Should throw InvalidOperationException |
+| S22a | suite | Debug | <AssertionFails>d__2::MoveNext L58 | `await act.Should().ThrowAsync<InvalidOperationException>()` | Act should throw async <InvalidOperationException> | Act should throw async <InvalidOperationException> |
+| S22a | suite | Debug | <AssertionPasses>d__1::MoveNext L48 | `await act.Should().ThrowAsync<InvalidOperationException>()` | Act should throw async <InvalidOperationException> | Act should throw async <InvalidOperationException> |
+| S22b | suite | Debug | <AssertionFails>d__2::MoveNext L56 | `await Assert.That(1).IsEqualTo(2)` | 1 is equal to 2 | 1 is equal to 2 |
+| S22b | suite | Debug | <AssertionPasses>d__1::MoveNext L47 | `await Assert.That(1).IsEqualTo(1)` | 1 is equal to 1 | 1 is equal to 1 |
+| S17d | suite | Debug | Probe::Anchor L54 | `1.ShouldBe(1)` | 1 should be 1 |  |
+| S18b | suite | Debug | Probe::Anchor L58 | `1.ShouldBe(1)` | 1 should be 1 |  |
+| S18a | suite | Release | <AssertionFails>d__2::MoveNext L54 | `var e = await Assert.That(() => _client.GetOrderAsync(r)).Throws<InvalidOperationException>()` | await Assert.That(() => _client.GetOrderAsync(r)).Throws<InvalidOperationException>() | () => _client get order async(r) throws <InvalidOperationException> |
+| S18a | suite | Release | <AssertionFails>d__2::MoveNext L55 | `await Assert.That(e.Message).IsEqualTo("not found")` | E message is equal to "not found" | E message is equal to "not found" |
+| S18a | suite | Release | <AssertionPasses>d__1::MoveNext L46 | `var e = await Assert.That(() => _client.GetOrderAsync(r)).Throws<InvalidOperationException>()` | await Assert.That(() => _client.GetOrderAsync(r)).Throws<InvalidOperationException>() | () => _client get order async(r) throws <InvalidOperationException> |
+| S18a | suite | Release | <AssertionPasses>d__1::MoveNext L47 | `await Assert.That(e.Message).IsEqualTo("not found")` | E message is equal to "not found" | E message is equal to "not found" |
+| S18c | suite | Release | <AssertionFails>d__2::MoveNext L55 | `var a = await act.Should().ThrowAsync<InvalidOperationException>()` | Await act should throw async <InvalidOperationException> | Act should throw async <InvalidOperationException> |
+| S18c | suite | Release | <AssertionFails>d__2::MoveNext L56 | `a.Which.Message.Should().Be("not found")` | A which message should be "not found" |  |
+| S18c | suite | Release | <AssertionPasses>d__1::MoveNext L46 | `var a = await act.Should().ThrowAsync<InvalidOperationException>()` | Await act should throw async <InvalidOperationException> | Act should throw async <InvalidOperationException> |
+| S18c | suite | Release | <AssertionPasses>d__1::MoveNext L47 | `a.Which.Message.Should().Be("not found")` | A which message should be "not found" |  |
+| S19a | suite | Release | Probe::Fails L52 | `act.Should().ThrowAsync<InvalidOperationException>()` | Act should throw async <InvalidOperationException> |  |
+| S19b | suite | Release | Probe::IsOrder L55 | `Assert.That(name).IsEqualTo("order")` | Name is equal to "order" |  |
+| S19c | suite | Release | <AssertionFails>d__2::MoveNext L53 | `var t = Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(r))` | Should throw InvalidOperationException | Should throw InvalidOperationException |
+| S19c | suite | Release | <AssertionPasses>d__1::MoveNext L45 | `var t = Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(r))` | Should throw InvalidOperationException | Should throw InvalidOperationException |
+| S19d | suite | Release | Probe::AssertionPasses L44 | `Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(_missing))` | Should throw InvalidOperationException |  |
+| S19d | suite | Release | Probe::AssertionFails L46 | `Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(_known))` | Should throw InvalidOperationException |  |
+| S20 | suite | Release | <AssertionPasses>d__1::MoveNext L45 | `(await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(r))).Message.ShouldBe(await _client.GetExpectedMessageAsync())` | (await  should throw async< invalid operation exception>(() => _client get order async(r))) message should be await _client.GetExpectedMessageAsync() |  |
+| S20 | suite | Release | <MessageDiffers>d__3::MoveNext L60 | `(await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(r))).Message.ShouldBe(await _client.GetExpectedMessageAsync())` | (await  should throw async< invalid operation exception>(() => _client get order async(r))) message should be await _client.GetExpectedMessageAsync() |  |
+| S20 | suite | Release | <ThrowFails>d__2::MoveNext L52 | `(await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(r))).Message.ShouldBe(await _client.GetExpectedMessageAsync())` | (await  should throw async< invalid operation exception>(() => _client get order async(r))) message should be await _client.GetExpectedMessageAsync() |  |
+| S21a | suite | Release | <AssertionFails>d__2::MoveNext L55 | `var e = await Should.ThrowAsync<InvalidOperationException>( () => _client.GetOrderAsync(r))` | await Should.ThrowAsync<InvalidOperationException>( () => _client.GetOrderAsync(r)) | Should throw InvalidOperationException |
+| S21a | suite | Release | <AssertionFails>d__2::MoveNext L58 | `e.Message.ShouldBe("not found")` | E message should be "not found" |  |
+| S21a | suite | Release | <AssertionPasses>d__1::MoveNext L45 | `var e = await Should.ThrowAsync<InvalidOperationException>( () => _client.GetOrderAsync(r))` | await Should.ThrowAsync<InvalidOperationException>( () => _client.GetOrderAsync(r)) | Should throw InvalidOperationException |
+| S21a | suite | Release | <AssertionPasses>d__1::MoveNext L48 | `e.Message.ShouldBe("not found")` | E message should be "not found" |  |
+| S21b | suite | Release | <AssertionFails>d__2::MoveNext L53 | `await Should.ThrowAsync<InvalidOperationException>( () => _client.GetOrderAsync(r))` | Should throw InvalidOperationException | Should throw InvalidOperationException |
+| S21b | suite | Release | <AssertionPasses>d__1::MoveNext L45 | `await Should.ThrowAsync<InvalidOperationException>( () => _client.GetOrderAsync(r))` | Should throw InvalidOperationException | Should throw InvalidOperationException |
+| S22a | suite | Release | <AssertionFails>d__2::MoveNext L58 | `await act.Should().ThrowAsync<InvalidOperationException>()` | Act should throw async <InvalidOperationException> | Act should throw async <InvalidOperationException> |
+| S22a | suite | Release | <AssertionPasses>d__1::MoveNext L48 | `await act.Should().ThrowAsync<InvalidOperationException>()` | Act should throw async <InvalidOperationException> | Act should throw async <InvalidOperationException> |
+| S22b | suite | Release | <AssertionFails>d__2::MoveNext L56 | `await Assert.That(1).IsEqualTo(2)` | 1 is equal to 2 | 1 is equal to 2 |
+| S22b | suite | Release | <AssertionPasses>d__1::MoveNext L47 | `await Assert.That(1).IsEqualTo(1)` | 1 is equal to 1 | 1 is equal to 1 |
+| S23 | suite | Release | <AssertionFails>d__2::MoveNext L52 | `Console.WriteLine((await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(r))).Message)` | Console.WriteLine((await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(r))).Message) |  |
+| S23 | suite | Release | <AssertionPasses>d__1::MoveNext L45 | `Console.WriteLine((await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(r))).Message)` | Console.WriteLine((await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(r))).Message) |  |
+| S17d | suite | Release | Probe::Anchor L54 | `1.ShouldBe(1)` | 1 should be 1 |  |
+| S18b | suite | Release | Probe::Anchor L58 | `1.ShouldBe(1)` | 1 should be 1 |  |
+| S2 | sdk8 | Debug | <Run>d__1::MoveNext L35 | `exception.Message.ShouldBe("not found")` | Exception message should be "not found" |  |
+| S4 | sdk8 | Debug | <Run>d__1::MoveNext L33 | `e.Message.ShouldBe("not found")` | E message should be "not found" |  |
+| S8 | sdk8 | Debug | <Run>d__1::MoveNext L35 | `e.Message.ShouldBe("not found")` | E message should be "not found" |  |
+| S2 | sdk8 | Release | <Run>d__1::MoveNext L34 | `var exception = await Should.ThrowAsync<InvalidOperationException>(async () => await _client.GetOrderAsync(request))` | await Should.ThrowAsync<InvalidOperationException>(async () => await _client.GetOrderAsync(request)) | Should throw InvalidOperationException |
+| S2 | sdk8 | Release | <Run>d__1::MoveNext L35 | `exception.Message.ShouldBe("not found")` | Exception message should be "not found" |  |
+| S4 | sdk8 | Release | <GetOrderShouldFail>d__2::MoveNext L39 | `return await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(new OrderRequest { Id = id }))` | return await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(new OrderRequest { Id = id })) | Should throw InvalidOperationException |
+| S4 | sdk8 | Release | <Run>d__1::MoveNext L33 | `e.Message.ShouldBe("not found")` | E message should be "not found" |  |
+| S7 | sdk8 | Release | <Run>d__1::MoveNext L34 | `_ = await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request))` | _ = await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request)) | Should throw InvalidOperationException |
+| S8 | sdk8 | Release | <Run>d__1::MoveNext L34 | `var e = await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request)).ConfigureAwait(false)` | await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request)).ConfigureAwait(false) | Should throw InvalidOperationException false |
+| S8 | sdk8 | Release | <Run>d__1::MoveNext L35 | `e.Message.ShouldBe("not found")` | E message should be "not found" |  |
+| S16a | sdk8 | Release | <MessageDiffers>d__2::MoveNext L43 | `(await act.Should().ThrowAsync<InvalidOperationException>()).Which.Message.Should().Be("other")` | (await act should throw async <InvalidOperationException> |  |
+| S16a | sdk8 | Release | <MessageMatches>d__1::MoveNext L35 | `(await act.Should().ThrowAsync<InvalidOperationException>()).Which.Message.Should().Be("not found")` | (await act should throw async <InvalidOperationException> |  |
+| S2 | sdk9 | Debug | <Run>d__1::MoveNext L35 | `exception.Message.ShouldBe("not found")` | Exception message should be "not found" |  |
+| S4 | sdk9 | Debug | <Run>d__1::MoveNext L33 | `e.Message.ShouldBe("not found")` | E message should be "not found" |  |
+| S8 | sdk9 | Debug | <Run>d__1::MoveNext L35 | `e.Message.ShouldBe("not found")` | E message should be "not found" |  |
+| S2 | sdk9 | Release | <Run>d__1::MoveNext L34 | `var exception = await Should.ThrowAsync<InvalidOperationException>(async () => await _client.GetOrderAsync(request))` | await Should.ThrowAsync<InvalidOperationException>(async () => await _client.GetOrderAsync(request)) | Should throw InvalidOperationException |
+| S2 | sdk9 | Release | <Run>d__1::MoveNext L35 | `exception.Message.ShouldBe("not found")` | Exception message should be "not found" |  |
+| S4 | sdk9 | Release | <GetOrderShouldFail>d__2::MoveNext L39 | `return await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(new OrderRequest { Id = id }))` | return await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(new OrderRequest { Id = id })) | Should throw InvalidOperationException |
+| S4 | sdk9 | Release | <Run>d__1::MoveNext L33 | `e.Message.ShouldBe("not found")` | E message should be "not found" |  |
+| S7 | sdk9 | Release | <Run>d__1::MoveNext L34 | `_ = await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request))` | _ = await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request)) | Should throw InvalidOperationException |
+| S8 | sdk9 | Release | <Run>d__1::MoveNext L34 | `var e = await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request)).ConfigureAwait(false)` | await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request)).ConfigureAwait(false) | Should throw InvalidOperationException false |
+| S8 | sdk9 | Release | <Run>d__1::MoveNext L35 | `e.Message.ShouldBe("not found")` | E message should be "not found" |  |
+| S16a | sdk9 | Release | <MessageDiffers>d__2::MoveNext L43 | `(await act.Should().ThrowAsync<InvalidOperationException>()).Which.Message.Should().Be("other")` | (await act should throw async <InvalidOperationException> |  |
+| S16a | sdk9 | Release | <MessageMatches>d__1::MoveNext L35 | `(await act.Should().ThrowAsync<InvalidOperationException>()).Which.Message.Should().Be("not found")` | (await act should throw async <InvalidOperationException> |  |
+| S2 | sdk10 | Debug | <Run>d__1::MoveNext L35 | `exception.Message.ShouldBe("not found")` | Exception message should be "not found" |  |
+| S4 | sdk10 | Debug | <Run>d__1::MoveNext L33 | `e.Message.ShouldBe("not found")` | E message should be "not found" |  |
+| S8 | sdk10 | Debug | <Run>d__1::MoveNext L35 | `e.Message.ShouldBe("not found")` | E message should be "not found" |  |
+| S2 | sdk10 | Release | <Run>d__1::MoveNext L34 | `var exception = await Should.ThrowAsync<InvalidOperationException>(async () => await _client.GetOrderAsync(request))` | await Should.ThrowAsync<InvalidOperationException>(async () => await _client.GetOrderAsync(request)) | Should throw InvalidOperationException |
+| S2 | sdk10 | Release | <Run>d__1::MoveNext L35 | `exception.Message.ShouldBe("not found")` | Exception message should be "not found" |  |
+| S4 | sdk10 | Release | <GetOrderShouldFail>d__2::MoveNext L39 | `return await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(new OrderRequest { Id = id }))` | return await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(new OrderRequest { Id = id })) | Should throw InvalidOperationException |
+| S4 | sdk10 | Release | <Run>d__1::MoveNext L33 | `e.Message.ShouldBe("not found")` | E message should be "not found" |  |
+| S7 | sdk10 | Release | <Run>d__1::MoveNext L34 | `_ = await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request))` | _ = await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request)) | Should throw InvalidOperationException |
+| S8 | sdk10 | Release | <Run>d__1::MoveNext L34 | `var e = await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request)).ConfigureAwait(false)` | await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request)).ConfigureAwait(false) | Should throw InvalidOperationException false |
+| S8 | sdk10 | Release | <Run>d__1::MoveNext L35 | `e.Message.ShouldBe("not found")` | E message should be "not found" |  |
+| S16a | sdk10 | Release | <MessageDiffers>d__2::MoveNext L43 | `(await act.Should().ThrowAsync<InvalidOperationException>()).Which.Message.Should().Be("other")` | (await act should throw async <InvalidOperationException> |  |
+| S16a | sdk10 | Release | <MessageMatches>d__1::MoveNext L35 | `(await act.Should().ThrowAsync<InvalidOperationException>()).Which.Message.Should().Be("not found")` | (await act should throw async <InvalidOperationException> |  |
+
+## C. Every await in the unwoven IL: the merge point (the IsCompleted brtrue's target) and the stack there and before the awaiter's load
+
+Stacks are StackAnalysis.StackBefore on the unwoven method after SimplifyMacros, as WrapAssertions reads it; bottom first, each slot with the instruction that pushed it.
+
+| shape | build | config | method | await at line | awaiter | merge point | stack at the merge point | awaiter load | stack before the awaiter load | after GetResult |
+|---|---|---|---|---|---|---|---|---|---|---|
+| S17a | suite | Debug | <AssertionFails>d__2::MoveNext | L49 | YieldAwaitable/YieldAwaiter | IL_0074 ldloca V_1 | empty | IL_0074 ldloca V_1 | empty | nop  |
+| S17a | suite | Debug | <AssertionFails>d__2::MoveNext | L50 | TaskAwaiter`1<String> | IL_00de ldarg this | empty | IL_00df ldloca V_4 | [1] Probe/<AssertionFails>d__2 (pushed by IL_00de ldarg this) | stfld Probe/<AssertionFails>d__2::<>s__1 |
+| S17a | suite | Debug | <AssertionPasses>d__1::MoveNext | L43 | YieldAwaitable/YieldAwaiter | IL_0074 ldloca V_1 | empty | IL_0074 ldloca V_1 | empty | nop  |
+| S17a | suite | Debug | <AssertionPasses>d__1::MoveNext | L44 | TaskAwaiter`1<String> | IL_00de ldarg this | empty | IL_00df ldloca V_4 | [1] Probe/<AssertionPasses>d__1 (pushed by IL_00de ldarg this) | stfld Probe/<AssertionPasses>d__1::<>s__1 |
+| S17b | suite | Debug | <AssertionFails>d__2::MoveNext | L49 | YieldAwaitable/YieldAwaiter | IL_0074 ldloca V_1 | empty | IL_0074 ldloca V_1 | empty | nop  |
+| S17b | suite | Debug | <AssertionFails>d__2::MoveNext | L50 | TaskAwaiter`1<String> | IL_00e1 ldarg this | empty | IL_00e2 ldloca V_4 | [1] Probe/<AssertionFails>d__2 (pushed by IL_00e1 ldarg this) | stfld Probe/<AssertionFails>d__2::<>s__1 |
+| S17b | suite | Debug | <AssertionPasses>d__1::MoveNext | L43 | YieldAwaitable/YieldAwaiter | IL_0074 ldloca V_1 | empty | IL_0074 ldloca V_1 | empty | nop  |
+| S17b | suite | Debug | <AssertionPasses>d__1::MoveNext | L44 | TaskAwaiter`1<String> | IL_00e1 ldarg this | empty | IL_00e2 ldloca V_4 | [1] Probe/<AssertionPasses>d__1 (pushed by IL_00e1 ldarg this) | stfld Probe/<AssertionPasses>d__1::<>s__1 |
+| S17c | suite | Debug | <AssertionFails>d__2::MoveNext | L50 | YieldAwaitable/YieldAwaiter | IL_0082 ldloca V_1 | empty | IL_0082 ldloca V_1 | empty | nop  |
+| S17c | suite | Debug | <AssertionFails>d__2::MoveNext | L51 | TaskAwaiter`1<String> | IL_00ef ldarg this | empty | IL_00f0 ldloca V_4 | [1] Probe/<AssertionFails>d__2 (pushed by IL_00ef ldarg this) | stfld Probe/<AssertionFails>d__2::<>s__1 |
+| S17c | suite | Debug | <AssertionFails>d__2::MoveNext | L51 | TaskAwaiter`1<String> | IL_0172 ldloca V_5 | empty | IL_0172 ldloca V_5 | empty | pop  |
+| S17c | suite | Debug | <AssertionPasses>d__1::MoveNext | L44 | YieldAwaitable/YieldAwaiter | IL_0082 ldloca V_1 | empty | IL_0082 ldloca V_1 | empty | nop  |
+| S17c | suite | Debug | <AssertionPasses>d__1::MoveNext | L45 | TaskAwaiter`1<String> | IL_00ef ldarg this | empty | IL_00f0 ldloca V_4 | [1] Probe/<AssertionPasses>d__1 (pushed by IL_00ef ldarg this) | stfld Probe/<AssertionPasses>d__1::<>s__1 |
+| S17c | suite | Debug | <AssertionPasses>d__1::MoveNext | L45 | TaskAwaiter`1<String> | IL_0172 ldloca V_5 | empty | IL_0172 ldloca V_5 | empty | pop  |
+| S18a | suite | Debug | <AssertionFails>d__2::MoveNext | L52 | YieldAwaitable/YieldAwaiter | IL_009e ldloca V_1 | empty | IL_009e ldloca V_1 | empty | nop  |
+| S18a | suite | Debug | <AssertionFails>d__2::MoveNext | L54 | TaskAwaiter`1<InvalidOperationException> | IL_0137 ldarg this | empty | IL_0138 ldloca V_4 | [1] Probe/<AssertionFails>d__2 (pushed by IL_0137 ldarg this) | stfld Probe/<AssertionFails>d__2::<>s__3 |
+| S18a | suite | Debug | <AssertionFails>d__2::MoveNext | L55 | TaskAwaiter`1<String> | IL_01d2 ldloca V_5 | empty | IL_01d2 ldloca V_5 | empty | pop  |
+| S18a | suite | Debug | <AssertionPasses>d__1::MoveNext | L44 | YieldAwaitable/YieldAwaiter | IL_009e ldloca V_1 | empty | IL_009e ldloca V_1 | empty | nop  |
+| S18a | suite | Debug | <AssertionPasses>d__1::MoveNext | L46 | TaskAwaiter`1<InvalidOperationException> | IL_0137 ldarg this | empty | IL_0138 ldloca V_4 | [1] Probe/<AssertionPasses>d__1 (pushed by IL_0137 ldarg this) | stfld Probe/<AssertionPasses>d__1::<>s__3 |
+| S18a | suite | Debug | <AssertionPasses>d__1::MoveNext | L47 | TaskAwaiter`1<String> | IL_01d2 ldloca V_5 | empty | IL_01d2 ldloca V_5 | empty | pop  |
+| S18c | suite | Debug | <AssertionFails>d__2::MoveNext | L52 | YieldAwaitable/YieldAwaiter | IL_0090 ldloca V_1 | empty | IL_0090 ldloca V_1 | empty | nop  |
+| S18c | suite | Debug | <AssertionFails>d__2::MoveNext | L55 | TaskAwaiter`1<AwesomeAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>> | IL_013a ldarg this | empty | IL_013b ldloca V_4 | [1] Probe/<AssertionFails>d__2 (pushed by IL_013a ldarg this) | stfld Probe/<AssertionFails>d__2::<>s__4 |
+| S18c | suite | Debug | <AssertionPasses>d__1::MoveNext | L43 | YieldAwaitable/YieldAwaiter | IL_0090 ldloca V_1 | empty | IL_0090 ldloca V_1 | empty | nop  |
+| S18c | suite | Debug | <AssertionPasses>d__1::MoveNext | L46 | TaskAwaiter`1<AwesomeAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>> | IL_013a ldarg this | empty | IL_013b ldloca V_4 | [1] Probe/<AssertionPasses>d__1 (pushed by IL_013a ldarg this) | stfld Probe/<AssertionPasses>d__1::<>s__4 |
+| S19a | suite | Debug | <AssertionFails>d__2::MoveNext | L49 | TaskAwaiter`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>> | IL_007a ldloca V_1 | empty | IL_007a ldloca V_1 | empty | pop  |
+| S19a | suite | Debug | <AssertionPasses>d__1::MoveNext | L44 | TaskAwaiter`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>> | IL_007a ldloca V_1 | empty | IL_007a ldloca V_1 | empty | pop  |
+| S19b | suite | Debug | <AssertionFails>d__2::MoveNext | L51 | YieldAwaitable/YieldAwaiter | IL_0074 ldloca V_1 | empty | IL_0074 ldloca V_1 | empty | nop  |
+| S19b | suite | Debug | <AssertionFails>d__2::MoveNext | L52 | TaskAwaiter`1<String> | IL_00d8 ldloca V_4 | empty | IL_00d8 ldloca V_4 | empty | pop  |
+| S19b | suite | Debug | <AssertionPasses>d__1::MoveNext | L45 | TaskAwaiter`1<String> | IL_007c ldarg this | empty | IL_007d ldloca V_1 | [1] Probe/<AssertionPasses>d__1 (pushed by IL_007c ldarg this) | stfld Probe/<AssertionPasses>d__1::<>s__2 |
+| S19b | suite | Debug | <AssertionPasses>d__1::MoveNext | L46 | TaskAwaiter`1<String> | IL_00f6 ldloca V_3 | empty | IL_00f6 ldloca V_3 | empty | pop  |
+| S19c | suite | Debug | <AssertionFails>d__2::MoveNext | L51 | YieldAwaitable/YieldAwaiter | IL_0090 ldloca V_1 | empty | IL_0090 ldloca V_1 | empty | nop  |
+| S19c | suite | Debug | <AssertionFails>d__2::MoveNext | L54 | TaskAwaiter`1<InvalidOperationException> | IL_0129 ldloca V_4 | empty | IL_0129 ldloca V_4 | empty | pop  |
+| S19c | suite | Debug | <AssertionPasses>d__1::MoveNext | L43 | YieldAwaitable/YieldAwaiter | IL_0090 ldloca V_1 | empty | IL_0090 ldloca V_1 | empty | nop  |
+| S19c | suite | Debug | <AssertionPasses>d__1::MoveNext | L46 | TaskAwaiter`1<InvalidOperationException> | IL_0129 ldloca V_4 | empty | IL_0129 ldloca V_4 | empty | pop  |
+| S20 | suite | Debug | <AssertionPasses>d__1::MoveNext | L43 | YieldAwaitable/YieldAwaiter | IL_009e ldloca V_1 | empty | IL_009e ldloca V_1 | empty | nop  |
+| S20 | suite | Debug | <AssertionPasses>d__1::MoveNext | L45 | TaskAwaiter`1<InvalidOperationException> | IL_012e ldarg this | empty | IL_012f ldloca V_4 | [1] Probe/<AssertionPasses>d__1 (pushed by IL_012e ldarg this) | stfld Probe/<AssertionPasses>d__1::<>s__2 |
+| S20 | suite | Debug | <AssertionPasses>d__1::MoveNext | L45 | TaskAwaiter`1<String> | IL_01b1 ldarg this | empty | IL_01b2 ldloca V_5 | [1] Probe/<AssertionPasses>d__1 (pushed by IL_01b1 ldarg this) | stfld Probe/<AssertionPasses>d__1::<>s__4 |
+| S20 | suite | Debug | <MessageDiffers>d__3::MoveNext | L57 | YieldAwaitable/YieldAwaiter | IL_009e ldloca V_1 | empty | IL_009e ldloca V_1 | empty | nop  |
+| S20 | suite | Debug | <MessageDiffers>d__3::MoveNext | L60 | TaskAwaiter`1<InvalidOperationException> | IL_0144 ldarg this | empty | IL_0145 ldloca V_4 | [1] Probe/<MessageDiffers>d__3 (pushed by IL_0144 ldarg this) | stfld Probe/<MessageDiffers>d__3::<>s__2 |
+| S20 | suite | Debug | <MessageDiffers>d__3::MoveNext | L60 | TaskAwaiter`1<String> | IL_01c7 ldarg this | empty | IL_01c8 ldloca V_5 | [1] Probe/<MessageDiffers>d__3 (pushed by IL_01c7 ldarg this) | stfld Probe/<MessageDiffers>d__3::<>s__4 |
+| S20 | suite | Debug | <ThrowFails>d__2::MoveNext | L50 | YieldAwaitable/YieldAwaiter | IL_009e ldloca V_1 | empty | IL_009e ldloca V_1 | empty | nop  |
+| S20 | suite | Debug | <ThrowFails>d__2::MoveNext | L52 | TaskAwaiter`1<InvalidOperationException> | IL_012e ldarg this | empty | IL_012f ldloca V_4 | [1] Probe/<ThrowFails>d__2 (pushed by IL_012e ldarg this) | stfld Probe/<ThrowFails>d__2::<>s__2 |
+| S20 | suite | Debug | <ThrowFails>d__2::MoveNext | L52 | TaskAwaiter`1<String> | IL_01b1 ldarg this | empty | IL_01b2 ldloca V_5 | [1] Probe/<ThrowFails>d__2 (pushed by IL_01b1 ldarg this) | stfld Probe/<ThrowFails>d__2::<>s__4 |
+| S21a | suite | Debug | <AssertionFails>d__2::MoveNext | L53 | YieldAwaitable/YieldAwaiter | IL_0090 ldloca V_1 | empty | IL_0090 ldloca V_1 | empty | nop  |
+| S21a | suite | Debug | <AssertionFails>d__2::MoveNext | L55 | TaskAwaiter`1<InvalidOperationException> | IL_0120 ldarg this | empty | IL_0121 ldloca V_4 | [1] Probe/<AssertionFails>d__2 (pushed by IL_0120 ldarg this) | stfld Probe/<AssertionFails>d__2::<>s__3 |
+| S21a | suite | Debug | <AssertionPasses>d__1::MoveNext | L43 | YieldAwaitable/YieldAwaiter | IL_0090 ldloca V_1 | empty | IL_0090 ldloca V_1 | empty | nop  |
+| S21a | suite | Debug | <AssertionPasses>d__1::MoveNext | L45 | TaskAwaiter`1<InvalidOperationException> | IL_0120 ldarg this | empty | IL_0121 ldloca V_4 | [1] Probe/<AssertionPasses>d__1 (pushed by IL_0120 ldarg this) | stfld Probe/<AssertionPasses>d__1::<>s__3 |
+| S21b | suite | Debug | <AssertionFails>d__2::MoveNext | L51 | YieldAwaitable/YieldAwaiter | IL_0090 ldloca V_1 | empty | IL_0090 ldloca V_1 | empty | nop  |
+| S21b | suite | Debug | <AssertionFails>d__2::MoveNext | L53 | TaskAwaiter`1<InvalidOperationException> | IL_011d ldloca V_4 | empty | IL_011d ldloca V_4 | empty | pop  |
+| S21b | suite | Debug | <AssertionPasses>d__1::MoveNext | L43 | YieldAwaitable/YieldAwaiter | IL_0090 ldloca V_1 | empty | IL_0090 ldloca V_1 | empty | nop  |
+| S21b | suite | Debug | <AssertionPasses>d__1::MoveNext | L45 | TaskAwaiter`1<InvalidOperationException> | IL_011d ldloca V_4 | empty | IL_011d ldloca V_4 | empty | pop  |
+| S22a | suite | Debug | <AssertionFails>d__2::MoveNext | L54 | YieldAwaitable/YieldAwaiter | IL_0074 ldloca V_1 | empty | IL_0074 ldloca V_1 | empty | nop  |
+| S22a | suite | Debug | <AssertionFails>d__2::MoveNext | L58 | TaskAwaiter`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>> | IL_0117 ldloca V_4 | empty | IL_0117 ldloca V_4 | empty | pop  |
+| S22a | suite | Debug | <AssertionPasses>d__1::MoveNext | L44 | YieldAwaitable/YieldAwaiter | IL_0074 ldloca V_1 | empty | IL_0074 ldloca V_1 | empty | nop  |
+| S22a | suite | Debug | <AssertionPasses>d__1::MoveNext | L48 | TaskAwaiter`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>> | IL_0117 ldloca V_4 | empty | IL_0117 ldloca V_4 | empty | pop  |
+| S22b | suite | Debug | <AssertionFails>d__2::MoveNext | L53 | YieldAwaitable/YieldAwaiter | IL_0071 ldloca V_1 | empty | IL_0071 ldloca V_1 | empty | nop  |
+| S22b | suite | Debug | <AssertionFails>d__2::MoveNext | L56 | TaskAwaiter`1<Int32> | IL_00f6 ldloca V_4 | empty | IL_00f6 ldloca V_4 | empty | pop  |
+| S22b | suite | Debug | <AssertionPasses>d__1::MoveNext | L44 | YieldAwaitable/YieldAwaiter | IL_0071 ldloca V_1 | empty | IL_0071 ldloca V_1 | empty | nop  |
+| S22b | suite | Debug | <AssertionPasses>d__1::MoveNext | L47 | TaskAwaiter`1<Int32> | IL_00f6 ldloca V_4 | empty | IL_00f6 ldloca V_4 | empty | pop  |
+| S23 | suite | Debug | <AssertionFails>d__2::MoveNext | L50 | YieldAwaitable/YieldAwaiter | IL_0090 ldloca V_1 | empty | IL_0090 ldloca V_1 | empty | nop  |
+| S23 | suite | Debug | <AssertionFails>d__2::MoveNext | L52 | TaskAwaiter`1<InvalidOperationException> | IL_0120 ldarg this | empty | IL_0121 ldloca V_4 | [1] Probe/<AssertionFails>d__2 (pushed by IL_0120 ldarg this) | stfld Probe/<AssertionFails>d__2::<>s__2 |
+| S23 | suite | Debug | <AssertionPasses>d__1::MoveNext | L43 | YieldAwaitable/YieldAwaiter | IL_0090 ldloca V_1 | empty | IL_0090 ldloca V_1 | empty | nop  |
+| S23 | suite | Debug | <AssertionPasses>d__1::MoveNext | L45 | TaskAwaiter`1<InvalidOperationException> | IL_0120 ldarg this | empty | IL_0121 ldloca V_4 | [1] Probe/<AssertionPasses>d__1 (pushed by IL_0120 ldarg this) | stfld Probe/<AssertionPasses>d__1::<>s__2 |
+| S17d | suite | Debug | <AssertionFails>d__2::MoveNext | L50 | YieldAwaitable/YieldAwaiter | IL_0074 ldloca V_1 | empty | IL_0074 ldloca V_1 | empty | nop  |
+| S17d | suite | Debug | <AssertionFails>d__2::MoveNext | L51 | TaskAwaiter`1<String> | IL_00de ldarg this | empty | IL_00df ldloca V_4 | [1] Probe/<AssertionFails>d__2 (pushed by IL_00de ldarg this) | stfld Probe/<AssertionFails>d__2::<>s__1 |
+| S17d | suite | Debug | <AssertionPasses>d__1::MoveNext | L44 | YieldAwaitable/YieldAwaiter | IL_0074 ldloca V_1 | empty | IL_0074 ldloca V_1 | empty | nop  |
+| S17d | suite | Debug | <AssertionPasses>d__1::MoveNext | L45 | TaskAwaiter`1<String> | IL_00de ldarg this | empty | IL_00df ldloca V_4 | [1] Probe/<AssertionPasses>d__1 (pushed by IL_00de ldarg this) | stfld Probe/<AssertionPasses>d__1::<>s__1 |
+| S18b | suite | Debug | <AssertionFails>d__2::MoveNext | L52 | YieldAwaitable/YieldAwaiter | IL_0090 ldloca V_1 | empty | IL_0090 ldloca V_1 | empty | nop  |
+| S18b | suite | Debug | <AssertionFails>d__2::MoveNext | L54 | TaskAwaiter`1<InvalidOperationException> | IL_011f ldarg this | empty | IL_0120 ldloca V_4 | [1] Probe/<AssertionFails>d__2 (pushed by IL_011f ldarg this) | stfld Probe/<AssertionFails>d__2::<>s__3 |
+| S18b | suite | Debug | <AssertionPasses>d__1::MoveNext | L44 | YieldAwaitable/YieldAwaiter | IL_0090 ldloca V_1 | empty | IL_0090 ldloca V_1 | empty | nop  |
+| S18b | suite | Debug | <AssertionPasses>d__1::MoveNext | L46 | TaskAwaiter`1<InvalidOperationException> | IL_011f ldarg this | empty | IL_0120 ldloca V_4 | [1] Probe/<AssertionPasses>d__1 (pushed by IL_011f ldarg this) | stfld Probe/<AssertionPasses>d__1::<>s__3 |
+| S17a | suite | Release | <AssertionFails>d__2::MoveNext | L49 | YieldAwaitable/YieldAwaiter | IL_006e ldloca V_2 | empty | IL_006e ldloca V_2 | empty | ldloc V_1 |
+| S17a | suite | Release | <AssertionFails>d__2::MoveNext | L50 | TaskAwaiter`1<String> | IL_00ce ldloca V_4 | empty | IL_00ce ldloca V_4 | empty | ldstr "other" |
+| S17a | suite | Release | <AssertionPasses>d__1::MoveNext | L43 | YieldAwaitable/YieldAwaiter | IL_006e ldloca V_2 | empty | IL_006e ldloca V_2 | empty | ldloc V_1 |
+| S17a | suite | Release | <AssertionPasses>d__1::MoveNext | L44 | TaskAwaiter`1<String> | IL_00ce ldloca V_4 | empty | IL_00ce ldloca V_4 | empty | ldstr "order" |
+| S17b | suite | Release | <AssertionFails>d__2::MoveNext | L49 | YieldAwaitable/YieldAwaiter | IL_006e ldloca V_2 | empty | IL_006e ldloca V_2 | empty | ldloc V_1 |
+| S17b | suite | Release | <AssertionFails>d__2::MoveNext | L50 | TaskAwaiter`1<String> | IL_00ce ldloca V_4 | empty | IL_00ce ldloca V_4 | empty | call FluentAssertions.AssertionExtensions::Should |
+| S17b | suite | Release | <AssertionPasses>d__1::MoveNext | L43 | YieldAwaitable/YieldAwaiter | IL_006e ldloca V_2 | empty | IL_006e ldloca V_2 | empty | ldloc V_1 |
+| S17b | suite | Release | <AssertionPasses>d__1::MoveNext | L44 | TaskAwaiter`1<String> | IL_00ce ldloca V_4 | empty | IL_00ce ldloca V_4 | empty | call FluentAssertions.AssertionExtensions::Should |
+| S17c | suite | Release | <AssertionFails>d__2::MoveNext | L50 | YieldAwaitable/YieldAwaiter | IL_0076 ldloca V_2 | empty | IL_0076 ldloca V_2 | empty | ldloc V_1 |
+| S17c | suite | Release | <AssertionFails>d__2::MoveNext | L51 | TaskAwaiter`1<String> | IL_00d9 ldloca V_4 | empty | IL_00d9 ldloca V_4 | empty | call TUnit.Assertions.StringValue::op_Implicit |
+| S17c | suite | Release | <AssertionFails>d__2::MoveNext | L51 | TaskAwaiter`1<String> | IL_014c ldloca V_4 | empty | IL_014c ldloca V_4 | empty | pop  |
+| S17c | suite | Release | <AssertionPasses>d__1::MoveNext | L44 | YieldAwaitable/YieldAwaiter | IL_0076 ldloca V_2 | empty | IL_0076 ldloca V_2 | empty | ldloc V_1 |
+| S17c | suite | Release | <AssertionPasses>d__1::MoveNext | L45 | TaskAwaiter`1<String> | IL_00d9 ldloca V_4 | empty | IL_00d9 ldloca V_4 | empty | call TUnit.Assertions.StringValue::op_Implicit |
+| S17c | suite | Release | <AssertionPasses>d__1::MoveNext | L45 | TaskAwaiter`1<String> | IL_014c ldloca V_4 | empty | IL_014c ldloca V_4 | empty | pop  |
+| S18a | suite | Release | <AssertionFails>d__2::MoveNext | L52 | YieldAwaitable/YieldAwaiter | IL_008b ldloca V_1 | empty | IL_008b ldloca V_1 | empty | ldarg this |
+| S18a | suite | Release | <AssertionFails>d__2::MoveNext | L54 | TaskAwaiter`1<InvalidOperationException> | IL_011b ldloca V_3 | empty | IL_011b ldloca V_3 | empty | callvirt Exception::get_Message |
+| S18a | suite | Release | <AssertionFails>d__2::MoveNext | L55 | TaskAwaiter`1<String> | IL_0193 ldloca V_4 | empty | IL_0193 ldloca V_4 | empty | pop  |
+| S18a | suite | Release | <AssertionPasses>d__1::MoveNext | L44 | YieldAwaitable/YieldAwaiter | IL_008b ldloca V_1 | empty | IL_008b ldloca V_1 | empty | ldarg this |
+| S18a | suite | Release | <AssertionPasses>d__1::MoveNext | L46 | TaskAwaiter`1<InvalidOperationException> | IL_011b ldloca V_3 | empty | IL_011b ldloca V_3 | empty | callvirt Exception::get_Message |
+| S18a | suite | Release | <AssertionPasses>d__1::MoveNext | L47 | TaskAwaiter`1<String> | IL_0193 ldloca V_4 | empty | IL_0193 ldloca V_4 | empty | pop  |
+| S18c | suite | Release | <AssertionFails>d__2::MoveNext | L52 | YieldAwaitable/YieldAwaiter | IL_0083 ldloca V_1 | empty | IL_0083 ldloca V_1 | empty | ldarg this |
+| S18c | suite | Release | <AssertionFails>d__2::MoveNext | L55 | TaskAwaiter`1<AwesomeAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>> | IL_0118 ldloca V_3 | empty | IL_0118 ldloca V_3 | empty | callvirt AwesomeAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>::get_Which |
+| S18c | suite | Release | <AssertionPasses>d__1::MoveNext | L43 | YieldAwaitable/YieldAwaiter | IL_0083 ldloca V_1 | empty | IL_0083 ldloca V_1 | empty | ldarg this |
+| S18c | suite | Release | <AssertionPasses>d__1::MoveNext | L46 | TaskAwaiter`1<AwesomeAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>> | IL_0118 ldloca V_3 | empty | IL_0118 ldloca V_3 | empty | callvirt AwesomeAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>::get_Which |
+| S19a | suite | Release | <AssertionFails>d__2::MoveNext | L49 | TaskAwaiter`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>> | IL_006e ldloca V_2 | empty | IL_006e ldloca V_2 | empty | pop  |
+| S19a | suite | Release | <AssertionPasses>d__1::MoveNext | L44 | TaskAwaiter`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>> | IL_006e ldloca V_2 | empty | IL_006e ldloca V_2 | empty | pop  |
+| S19b | suite | Release | <AssertionFails>d__2::MoveNext | L51 | YieldAwaitable/YieldAwaiter | IL_0067 ldloca V_1 | empty | IL_0067 ldloca V_1 | empty | ldstr "other" |
+| S19b | suite | Release | <AssertionFails>d__2::MoveNext | L52 | TaskAwaiter`1<String> | IL_00c3 ldloca V_3 | empty | IL_00c3 ldloca V_3 | empty | pop  |
+| S19b | suite | Release | <AssertionPasses>d__1::MoveNext | L45 | TaskAwaiter`1<String> | IL_0071 ldloca V_2 | empty | IL_0071 ldloca V_2 | empty | call Probe::IsOrder |
+| S19b | suite | Release | <AssertionPasses>d__1::MoveNext | L46 | TaskAwaiter`1<String> | IL_00c8 ldloca V_2 | empty | IL_00c8 ldloca V_2 | empty | pop  |
+| S19c | suite | Release | <AssertionFails>d__2::MoveNext | L51 | YieldAwaitable/YieldAwaiter | IL_0083 ldloca V_1 | empty | IL_0083 ldloca V_1 | empty | ldarg this |
+| S19c | suite | Release | <AssertionFails>d__2::MoveNext | L54 | TaskAwaiter`1<InvalidOperationException> | IL_0107 ldloca V_3 | empty | IL_0107 ldloca V_3 | empty | pop  |
+| S19c | suite | Release | <AssertionPasses>d__1::MoveNext | L43 | YieldAwaitable/YieldAwaiter | IL_0083 ldloca V_1 | empty | IL_0083 ldloca V_1 | empty | ldarg this |
+| S19c | suite | Release | <AssertionPasses>d__1::MoveNext | L46 | TaskAwaiter`1<InvalidOperationException> | IL_0107 ldloca V_3 | empty | IL_0107 ldloca V_3 | empty | pop  |
+| S20 | suite | Release | <AssertionPasses>d__1::MoveNext | L43 | YieldAwaitable/YieldAwaiter | IL_0092 ldloca V_2 | empty | IL_0092 ldloca V_2 | empty | ldarg this |
+| S20 | suite | Release | <AssertionPasses>d__1::MoveNext | L45 | TaskAwaiter`1<InvalidOperationException> | IL_011c ldloca V_6 | empty | IL_011c ldloca V_6 | empty | stloc V_4 |
+| S20 | suite | Release | <AssertionPasses>d__1::MoveNext | L45 | TaskAwaiter`1<String> | IL_018b ldloca V_7 | empty | IL_018b ldloca V_7 | empty | stloc V_5 |
+| S20 | suite | Release | <MessageDiffers>d__3::MoveNext | L57 | YieldAwaitable/YieldAwaiter | IL_0092 ldloca V_2 | empty | IL_0092 ldloca V_2 | empty | ldarg this |
+| S20 | suite | Release | <MessageDiffers>d__3::MoveNext | L60 | TaskAwaiter`1<InvalidOperationException> | IL_012c ldloca V_6 | empty | IL_012c ldloca V_6 | empty | stloc V_4 |
+| S20 | suite | Release | <MessageDiffers>d__3::MoveNext | L60 | TaskAwaiter`1<String> | IL_019b ldloca V_7 | empty | IL_019b ldloca V_7 | empty | stloc V_5 |
+| S20 | suite | Release | <ThrowFails>d__2::MoveNext | L50 | YieldAwaitable/YieldAwaiter | IL_0092 ldloca V_2 | empty | IL_0092 ldloca V_2 | empty | ldarg this |
+| S20 | suite | Release | <ThrowFails>d__2::MoveNext | L52 | TaskAwaiter`1<InvalidOperationException> | IL_011c ldloca V_6 | empty | IL_011c ldloca V_6 | empty | stloc V_4 |
+| S20 | suite | Release | <ThrowFails>d__2::MoveNext | L52 | TaskAwaiter`1<String> | IL_018b ldloca V_7 | empty | IL_018b ldloca V_7 | empty | stloc V_5 |
+| S21a | suite | Release | <AssertionFails>d__2::MoveNext | L53 | YieldAwaitable/YieldAwaiter | IL_0083 ldloca V_1 | empty | IL_0083 ldloca V_1 | empty | ldarg this |
+| S21a | suite | Release | <AssertionFails>d__2::MoveNext | L55 | TaskAwaiter`1<InvalidOperationException> | IL_0107 ldloca V_3 | empty | IL_0107 ldloca V_3 | empty | callvirt Exception::get_Message |
+| S21a | suite | Release | <AssertionPasses>d__1::MoveNext | L43 | YieldAwaitable/YieldAwaiter | IL_0083 ldloca V_1 | empty | IL_0083 ldloca V_1 | empty | ldarg this |
+| S21a | suite | Release | <AssertionPasses>d__1::MoveNext | L45 | TaskAwaiter`1<InvalidOperationException> | IL_0107 ldloca V_3 | empty | IL_0107 ldloca V_3 | empty | callvirt Exception::get_Message |
+| S21b | suite | Release | <AssertionFails>d__2::MoveNext | L51 | YieldAwaitable/YieldAwaiter | IL_0083 ldloca V_1 | empty | IL_0083 ldloca V_1 | empty | ldarg this |
+| S21b | suite | Release | <AssertionFails>d__2::MoveNext | L53 | TaskAwaiter`1<InvalidOperationException> | IL_0107 ldloca V_3 | empty | IL_0107 ldloca V_3 | empty | pop  |
+| S21b | suite | Release | <AssertionPasses>d__1::MoveNext | L43 | YieldAwaitable/YieldAwaiter | IL_0083 ldloca V_1 | empty | IL_0083 ldloca V_1 | empty | ldarg this |
+| S21b | suite | Release | <AssertionPasses>d__1::MoveNext | L45 | TaskAwaiter`1<InvalidOperationException> | IL_0107 ldloca V_3 | empty | IL_0107 ldloca V_3 | empty | pop  |
+| S22a | suite | Release | <AssertionFails>d__2::MoveNext | L54 | YieldAwaitable/YieldAwaiter | IL_006c ldloca V_3 | empty | IL_006c ldloca V_3 | empty | ldloc V_1 |
+| S22a | suite | Release | <AssertionFails>d__2::MoveNext | L58 | TaskAwaiter`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>> | IL_00f3 ldloca V_5 | empty | IL_00f3 ldloca V_5 | empty | pop  |
+| S22a | suite | Release | <AssertionPasses>d__1::MoveNext | L44 | YieldAwaitable/YieldAwaiter | IL_006c ldloca V_3 | empty | IL_006c ldloca V_3 | empty | ldloc V_1 |
+| S22a | suite | Release | <AssertionPasses>d__1::MoveNext | L48 | TaskAwaiter`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>> | IL_00f3 ldloca V_5 | empty | IL_00f3 ldloca V_5 | empty | pop  |
+| S22b | suite | Release | <AssertionFails>d__2::MoveNext | L53 | YieldAwaitable/YieldAwaiter | IL_0064 ldloca V_1 | empty | IL_0064 ldloca V_1 | empty | ldarg this |
+| S22b | suite | Release | <AssertionFails>d__2::MoveNext | L56 | TaskAwaiter`1<Int32> | IL_00dc ldloca V_3 | empty | IL_00dc ldloca V_3 | empty | pop  |
+| S22b | suite | Release | <AssertionPasses>d__1::MoveNext | L44 | YieldAwaitable/YieldAwaiter | IL_0064 ldloca V_1 | empty | IL_0064 ldloca V_1 | empty | ldarg this |
+| S22b | suite | Release | <AssertionPasses>d__1::MoveNext | L47 | TaskAwaiter`1<Int32> | IL_00dc ldloca V_3 | empty | IL_00dc ldloca V_3 | empty | pop  |
+| S23 | suite | Release | <AssertionFails>d__2::MoveNext | L50 | YieldAwaitable/YieldAwaiter | IL_0083 ldloca V_1 | empty | IL_0083 ldloca V_1 | empty | ldarg this |
+| S23 | suite | Release | <AssertionFails>d__2::MoveNext | L52 | TaskAwaiter`1<InvalidOperationException> | IL_0107 ldloca V_3 | empty | IL_0107 ldloca V_3 | empty | callvirt Exception::get_Message |
+| S23 | suite | Release | <AssertionPasses>d__1::MoveNext | L43 | YieldAwaitable/YieldAwaiter | IL_0083 ldloca V_1 | empty | IL_0083 ldloca V_1 | empty | ldarg this |
+| S23 | suite | Release | <AssertionPasses>d__1::MoveNext | L45 | TaskAwaiter`1<InvalidOperationException> | IL_0107 ldloca V_3 | empty | IL_0107 ldloca V_3 | empty | callvirt Exception::get_Message |
+| S17d | suite | Release | <AssertionFails>d__2::MoveNext | L50 | YieldAwaitable/YieldAwaiter | IL_006e ldloca V_2 | empty | IL_006e ldloca V_2 | empty | ldloc V_1 |
+| S17d | suite | Release | <AssertionFails>d__2::MoveNext | L51 | TaskAwaiter`1<String> | IL_00ce ldloca V_5 | empty | IL_00ce ldloca V_5 | empty | stloc V_4 |
+| S17d | suite | Release | <AssertionPasses>d__1::MoveNext | L44 | YieldAwaitable/YieldAwaiter | IL_006e ldloca V_2 | empty | IL_006e ldloca V_2 | empty | ldloc V_1 |
+| S17d | suite | Release | <AssertionPasses>d__1::MoveNext | L45 | TaskAwaiter`1<String> | IL_00ce ldloca V_5 | empty | IL_00ce ldloca V_5 | empty | stloc V_4 |
+| S18b | suite | Release | <AssertionFails>d__2::MoveNext | L52 | YieldAwaitable/YieldAwaiter | IL_0083 ldloca V_1 | empty | IL_0083 ldloca V_1 | empty | ldarg this |
+| S18b | suite | Release | <AssertionFails>d__2::MoveNext | L54 | TaskAwaiter`1<InvalidOperationException> | IL_0106 ldloca V_3 | empty | IL_0106 ldloca V_3 | empty | call GC::KeepAlive |
+| S18b | suite | Release | <AssertionPasses>d__1::MoveNext | L44 | YieldAwaitable/YieldAwaiter | IL_0083 ldloca V_1 | empty | IL_0083 ldloca V_1 | empty | ldarg this |
+| S18b | suite | Release | <AssertionPasses>d__1::MoveNext | L46 | TaskAwaiter`1<InvalidOperationException> | IL_0106 ldloca V_3 | empty | IL_0106 ldloca V_3 | empty | call GC::KeepAlive |
+| S2 | sdk8 | Debug | <<Run>b__0>d::MoveNext | L34 | TaskAwaiter`1<String> | IL_007d ldloca V_1 | empty | IL_007d ldloca V_1 | empty | pop  |
+| S2 | sdk8 | Debug | <Run>d__1::MoveNext | L32 | YieldAwaitable/YieldAwaiter | IL_0090 ldloca V_1 | empty | IL_0090 ldloca V_1 | empty | nop  |
+| S2 | sdk8 | Debug | <Run>d__1::MoveNext | L34 | TaskAwaiter`1<InvalidOperationException> | IL_0120 ldarg this | empty | IL_0121 ldloca V_4 | [1] Probe/<Run>d__1 (pushed by IL_0120 ldarg this) | stfld Probe/<Run>d__1::<>s__3 |
+| S4 | sdk8 | Debug | <GetOrderShouldFail>d__2::MoveNext | L38 | YieldAwaitable/YieldAwaiter | IL_00a2 ldloca V_2 | empty | IL_00a2 ldloca V_2 | empty | nop  |
+| S4 | sdk8 | Debug | <GetOrderShouldFail>d__2::MoveNext | L39 | TaskAwaiter`1<InvalidOperationException> | IL_0114 ldarg this | empty | IL_0115 ldloca V_5 | [1] Probe/<GetOrderShouldFail>d__2 (pushed by IL_0114 ldarg this) | stfld Probe/<GetOrderShouldFail>d__2::<>s__2 |
+| S4 | sdk8 | Debug | <Run>d__1::MoveNext | L32 | TaskAwaiter`1<InvalidOperationException> | IL_0071 ldarg this | empty | IL_0072 ldloca V_1 | [1] Probe/<Run>d__1 (pushed by IL_0071 ldarg this) | stfld Probe/<Run>d__1::<>s__2 |
+| S7 | sdk8 | Debug | <Run>d__1::MoveNext | L32 | YieldAwaitable/YieldAwaiter | IL_0090 ldloca V_1 | empty | IL_0090 ldloca V_1 | empty | nop  |
+| S7 | sdk8 | Debug | <Run>d__1::MoveNext | L34 | TaskAwaiter`1<InvalidOperationException> | IL_011d ldarg this | empty | IL_011e ldloca V_4 | [1] Probe/<Run>d__1 (pushed by IL_011d ldarg this) | stfld Probe/<Run>d__1::<>s__2 |
+| S8 | sdk8 | Debug | <Run>d__1::MoveNext | L32 | YieldAwaitable/YieldAwaiter | IL_0090 ldloca V_1 | empty | IL_0090 ldloca V_1 | empty | nop  |
+| S8 | sdk8 | Debug | <Run>d__1::MoveNext | L34 | ConfiguredTaskAwaitable`1/ConfiguredTaskAwaiter<InvalidOperationException> | IL_012a ldarg this | empty | IL_012b ldloca V_4 | [1] Probe/<Run>d__1 (pushed by IL_012a ldarg this) | stfld Probe/<Run>d__1::<>s__3 |
+| S16a | sdk8 | Debug | <MessageDiffers>d__2::MoveNext | L40 | YieldAwaitable/YieldAwaiter | IL_0090 ldloca V_1 | empty | IL_0090 ldloca V_1 | empty | nop  |
+| S16a | sdk8 | Debug | <MessageDiffers>d__2::MoveNext | L43 | TaskAwaiter`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>> | IL_013a ldarg this | empty | IL_013b ldloca V_4 | [1] Probe/<MessageDiffers>d__2 (pushed by IL_013a ldarg this) | stfld Probe/<MessageDiffers>d__2::<>s__3 |
+| S16a | sdk8 | Debug | <MessageMatches>d__1::MoveNext | L32 | YieldAwaitable/YieldAwaiter | IL_0090 ldloca V_1 | empty | IL_0090 ldloca V_1 | empty | nop  |
+| S16a | sdk8 | Debug | <MessageMatches>d__1::MoveNext | L35 | TaskAwaiter`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>> | IL_013a ldarg this | empty | IL_013b ldloca V_4 | [1] Probe/<MessageMatches>d__1 (pushed by IL_013a ldarg this) | stfld Probe/<MessageMatches>d__1::<>s__3 |
+| S2 | sdk8 | Release | <<Run>b__0>d::MoveNext | L34 | TaskAwaiter`1<String> | IL_0072 ldloca V_2 | empty | IL_0072 ldloca V_2 | empty | pop  |
+| S2 | sdk8 | Release | <Run>d__1::MoveNext | L32 | YieldAwaitable/YieldAwaiter | IL_0083 ldloca V_1 | empty | IL_0083 ldloca V_1 | empty | ldarg this |
+| S2 | sdk8 | Release | <Run>d__1::MoveNext | L34 | TaskAwaiter`1<InvalidOperationException> | IL_0107 ldloca V_3 | empty | IL_0107 ldloca V_3 | empty | callvirt Exception::get_Message |
+| S4 | sdk8 | Release | <GetOrderShouldFail>d__2::MoveNext | L38 | YieldAwaitable/YieldAwaiter | IL_0094 ldloca V_2 | empty | IL_0094 ldloca V_2 | empty | ldarg this |
+| S4 | sdk8 | Release | <GetOrderShouldFail>d__2::MoveNext | L39 | TaskAwaiter`1<InvalidOperationException> | IL_0100 ldloca V_4 | empty | IL_0100 ldloca V_4 | empty | stloc V_1 |
+| S4 | sdk8 | Release | <Run>d__1::MoveNext | L32 | TaskAwaiter`1<InvalidOperationException> | IL_0067 ldloca V_2 | empty | IL_0067 ldloca V_2 | empty | callvirt Exception::get_Message |
+| S7 | sdk8 | Release | <Run>d__1::MoveNext | L32 | YieldAwaitable/YieldAwaiter | IL_0083 ldloca V_1 | empty | IL_0083 ldloca V_1 | empty | ldarg this |
+| S7 | sdk8 | Release | <Run>d__1::MoveNext | L34 | TaskAwaiter`1<InvalidOperationException> | IL_0107 ldloca V_3 | empty | IL_0107 ldloca V_3 | empty | pop  |
+| S8 | sdk8 | Release | <Run>d__1::MoveNext | L32 | YieldAwaitable/YieldAwaiter | IL_0083 ldloca V_1 | empty | IL_0083 ldloca V_1 | empty | ldarg this |
+| S8 | sdk8 | Release | <Run>d__1::MoveNext | L34 | ConfiguredTaskAwaitable`1/ConfiguredTaskAwaiter<InvalidOperationException> | IL_0111 ldloca V_3 | empty | IL_0111 ldloca V_3 | empty | callvirt Exception::get_Message |
+| S16a | sdk8 | Release | <MessageDiffers>d__2::MoveNext | L40 | YieldAwaitable/YieldAwaiter | IL_0083 ldloca V_1 | empty | IL_0083 ldloca V_1 | empty | ldarg this |
+| S16a | sdk8 | Release | <MessageDiffers>d__2::MoveNext | L43 | TaskAwaiter`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>> | IL_0118 ldloca V_3 | empty | IL_0118 ldloca V_3 | empty | callvirt FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>::get_Which |
+| S16a | sdk8 | Release | <MessageMatches>d__1::MoveNext | L32 | YieldAwaitable/YieldAwaiter | IL_0083 ldloca V_1 | empty | IL_0083 ldloca V_1 | empty | ldarg this |
+| S16a | sdk8 | Release | <MessageMatches>d__1::MoveNext | L35 | TaskAwaiter`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>> | IL_0118 ldloca V_3 | empty | IL_0118 ldloca V_3 | empty | callvirt FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>::get_Which |
+| S2 | sdk9 | Debug | <<Run>b__0>d::MoveNext | L34 | TaskAwaiter`1<String> | IL_007d ldloca V_1 | empty | IL_007d ldloca V_1 | empty | pop  |
+| S2 | sdk9 | Debug | <Run>d__1::MoveNext | L32 | YieldAwaitable/YieldAwaiter | IL_0090 ldloca V_1 | empty | IL_0090 ldloca V_1 | empty | nop  |
+| S2 | sdk9 | Debug | <Run>d__1::MoveNext | L34 | TaskAwaiter`1<InvalidOperationException> | IL_0120 ldarg this | empty | IL_0121 ldloca V_4 | [1] Probe/<Run>d__1 (pushed by IL_0120 ldarg this) | stfld Probe/<Run>d__1::<>s__3 |
+| S4 | sdk9 | Debug | <GetOrderShouldFail>d__2::MoveNext | L38 | YieldAwaitable/YieldAwaiter | IL_00a2 ldloca V_2 | empty | IL_00a2 ldloca V_2 | empty | nop  |
+| S4 | sdk9 | Debug | <GetOrderShouldFail>d__2::MoveNext | L39 | TaskAwaiter`1<InvalidOperationException> | IL_0114 ldarg this | empty | IL_0115 ldloca V_5 | [1] Probe/<GetOrderShouldFail>d__2 (pushed by IL_0114 ldarg this) | stfld Probe/<GetOrderShouldFail>d__2::<>s__2 |
+| S4 | sdk9 | Debug | <Run>d__1::MoveNext | L32 | TaskAwaiter`1<InvalidOperationException> | IL_0071 ldarg this | empty | IL_0072 ldloca V_1 | [1] Probe/<Run>d__1 (pushed by IL_0071 ldarg this) | stfld Probe/<Run>d__1::<>s__2 |
+| S7 | sdk9 | Debug | <Run>d__1::MoveNext | L32 | YieldAwaitable/YieldAwaiter | IL_0090 ldloca V_1 | empty | IL_0090 ldloca V_1 | empty | nop  |
+| S7 | sdk9 | Debug | <Run>d__1::MoveNext | L34 | TaskAwaiter`1<InvalidOperationException> | IL_011d ldarg this | empty | IL_011e ldloca V_4 | [1] Probe/<Run>d__1 (pushed by IL_011d ldarg this) | stfld Probe/<Run>d__1::<>s__2 |
+| S8 | sdk9 | Debug | <Run>d__1::MoveNext | L32 | YieldAwaitable/YieldAwaiter | IL_0090 ldloca V_1 | empty | IL_0090 ldloca V_1 | empty | nop  |
+| S8 | sdk9 | Debug | <Run>d__1::MoveNext | L34 | ConfiguredTaskAwaitable`1/ConfiguredTaskAwaiter<InvalidOperationException> | IL_012a ldarg this | empty | IL_012b ldloca V_4 | [1] Probe/<Run>d__1 (pushed by IL_012a ldarg this) | stfld Probe/<Run>d__1::<>s__3 |
+| S16a | sdk9 | Debug | <MessageDiffers>d__2::MoveNext | L40 | YieldAwaitable/YieldAwaiter | IL_0090 ldloca V_1 | empty | IL_0090 ldloca V_1 | empty | nop  |
+| S16a | sdk9 | Debug | <MessageDiffers>d__2::MoveNext | L43 | TaskAwaiter`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>> | IL_013a ldarg this | empty | IL_013b ldloca V_4 | [1] Probe/<MessageDiffers>d__2 (pushed by IL_013a ldarg this) | stfld Probe/<MessageDiffers>d__2::<>s__3 |
+| S16a | sdk9 | Debug | <MessageMatches>d__1::MoveNext | L32 | YieldAwaitable/YieldAwaiter | IL_0090 ldloca V_1 | empty | IL_0090 ldloca V_1 | empty | nop  |
+| S16a | sdk9 | Debug | <MessageMatches>d__1::MoveNext | L35 | TaskAwaiter`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>> | IL_013a ldarg this | empty | IL_013b ldloca V_4 | [1] Probe/<MessageMatches>d__1 (pushed by IL_013a ldarg this) | stfld Probe/<MessageMatches>d__1::<>s__3 |
+| S2 | sdk9 | Release | <<Run>b__0>d::MoveNext | L34 | TaskAwaiter`1<String> | IL_0072 ldloca V_2 | empty | IL_0072 ldloca V_2 | empty | pop  |
+| S2 | sdk9 | Release | <Run>d__1::MoveNext | L32 | YieldAwaitable/YieldAwaiter | IL_0083 ldloca V_1 | empty | IL_0083 ldloca V_1 | empty | ldarg this |
+| S2 | sdk9 | Release | <Run>d__1::MoveNext | L34 | TaskAwaiter`1<InvalidOperationException> | IL_0107 ldloca V_3 | empty | IL_0107 ldloca V_3 | empty | callvirt Exception::get_Message |
+| S4 | sdk9 | Release | <GetOrderShouldFail>d__2::MoveNext | L38 | YieldAwaitable/YieldAwaiter | IL_0094 ldloca V_2 | empty | IL_0094 ldloca V_2 | empty | ldarg this |
+| S4 | sdk9 | Release | <GetOrderShouldFail>d__2::MoveNext | L39 | TaskAwaiter`1<InvalidOperationException> | IL_0100 ldloca V_4 | empty | IL_0100 ldloca V_4 | empty | stloc V_1 |
+| S4 | sdk9 | Release | <Run>d__1::MoveNext | L32 | TaskAwaiter`1<InvalidOperationException> | IL_0067 ldloca V_2 | empty | IL_0067 ldloca V_2 | empty | callvirt Exception::get_Message |
+| S7 | sdk9 | Release | <Run>d__1::MoveNext | L32 | YieldAwaitable/YieldAwaiter | IL_0083 ldloca V_1 | empty | IL_0083 ldloca V_1 | empty | ldarg this |
+| S7 | sdk9 | Release | <Run>d__1::MoveNext | L34 | TaskAwaiter`1<InvalidOperationException> | IL_0107 ldloca V_3 | empty | IL_0107 ldloca V_3 | empty | pop  |
+| S8 | sdk9 | Release | <Run>d__1::MoveNext | L32 | YieldAwaitable/YieldAwaiter | IL_0083 ldloca V_1 | empty | IL_0083 ldloca V_1 | empty | ldarg this |
+| S8 | sdk9 | Release | <Run>d__1::MoveNext | L34 | ConfiguredTaskAwaitable`1/ConfiguredTaskAwaiter<InvalidOperationException> | IL_0111 ldloca V_3 | empty | IL_0111 ldloca V_3 | empty | callvirt Exception::get_Message |
+| S16a | sdk9 | Release | <MessageDiffers>d__2::MoveNext | L40 | YieldAwaitable/YieldAwaiter | IL_0083 ldloca V_1 | empty | IL_0083 ldloca V_1 | empty | ldarg this |
+| S16a | sdk9 | Release | <MessageDiffers>d__2::MoveNext | L43 | TaskAwaiter`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>> | IL_0118 ldloca V_3 | empty | IL_0118 ldloca V_3 | empty | callvirt FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>::get_Which |
+| S16a | sdk9 | Release | <MessageMatches>d__1::MoveNext | L32 | YieldAwaitable/YieldAwaiter | IL_0083 ldloca V_1 | empty | IL_0083 ldloca V_1 | empty | ldarg this |
+| S16a | sdk9 | Release | <MessageMatches>d__1::MoveNext | L35 | TaskAwaiter`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>> | IL_0118 ldloca V_3 | empty | IL_0118 ldloca V_3 | empty | callvirt FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>::get_Which |
+| S2 | sdk10 | Debug | <<Run>b__0>d::MoveNext | L34 | TaskAwaiter`1<String> | IL_007d ldloca V_1 | empty | IL_007d ldloca V_1 | empty | pop  |
+| S2 | sdk10 | Debug | <Run>d__1::MoveNext | L32 | YieldAwaitable/YieldAwaiter | IL_0090 ldloca V_1 | empty | IL_0090 ldloca V_1 | empty | nop  |
+| S2 | sdk10 | Debug | <Run>d__1::MoveNext | L34 | TaskAwaiter`1<InvalidOperationException> | IL_0120 ldarg this | empty | IL_0121 ldloca V_4 | [1] Probe/<Run>d__1 (pushed by IL_0120 ldarg this) | stfld Probe/<Run>d__1::<>s__3 |
+| S4 | sdk10 | Debug | <GetOrderShouldFail>d__2::MoveNext | L38 | YieldAwaitable/YieldAwaiter | IL_00a2 ldloca V_2 | empty | IL_00a2 ldloca V_2 | empty | nop  |
+| S4 | sdk10 | Debug | <GetOrderShouldFail>d__2::MoveNext | L39 | TaskAwaiter`1<InvalidOperationException> | IL_0114 ldarg this | empty | IL_0115 ldloca V_5 | [1] Probe/<GetOrderShouldFail>d__2 (pushed by IL_0114 ldarg this) | stfld Probe/<GetOrderShouldFail>d__2::<>s__2 |
+| S4 | sdk10 | Debug | <Run>d__1::MoveNext | L32 | TaskAwaiter`1<InvalidOperationException> | IL_0071 ldarg this | empty | IL_0072 ldloca V_1 | [1] Probe/<Run>d__1 (pushed by IL_0071 ldarg this) | stfld Probe/<Run>d__1::<>s__2 |
+| S7 | sdk10 | Debug | <Run>d__1::MoveNext | L32 | YieldAwaitable/YieldAwaiter | IL_0090 ldloca V_1 | empty | IL_0090 ldloca V_1 | empty | nop  |
+| S7 | sdk10 | Debug | <Run>d__1::MoveNext | L34 | TaskAwaiter`1<InvalidOperationException> | IL_011d ldarg this | empty | IL_011e ldloca V_4 | [1] Probe/<Run>d__1 (pushed by IL_011d ldarg this) | stfld Probe/<Run>d__1::<>s__2 |
+| S8 | sdk10 | Debug | <Run>d__1::MoveNext | L32 | YieldAwaitable/YieldAwaiter | IL_0090 ldloca V_1 | empty | IL_0090 ldloca V_1 | empty | nop  |
+| S8 | sdk10 | Debug | <Run>d__1::MoveNext | L34 | ConfiguredTaskAwaitable`1/ConfiguredTaskAwaiter<InvalidOperationException> | IL_012a ldarg this | empty | IL_012b ldloca V_4 | [1] Probe/<Run>d__1 (pushed by IL_012a ldarg this) | stfld Probe/<Run>d__1::<>s__3 |
+| S16a | sdk10 | Debug | <MessageDiffers>d__2::MoveNext | L40 | YieldAwaitable/YieldAwaiter | IL_0090 ldloca V_1 | empty | IL_0090 ldloca V_1 | empty | nop  |
+| S16a | sdk10 | Debug | <MessageDiffers>d__2::MoveNext | L43 | TaskAwaiter`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>> | IL_013a ldarg this | empty | IL_013b ldloca V_4 | [1] Probe/<MessageDiffers>d__2 (pushed by IL_013a ldarg this) | stfld Probe/<MessageDiffers>d__2::<>s__3 |
+| S16a | sdk10 | Debug | <MessageMatches>d__1::MoveNext | L32 | YieldAwaitable/YieldAwaiter | IL_0090 ldloca V_1 | empty | IL_0090 ldloca V_1 | empty | nop  |
+| S16a | sdk10 | Debug | <MessageMatches>d__1::MoveNext | L35 | TaskAwaiter`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>> | IL_013a ldarg this | empty | IL_013b ldloca V_4 | [1] Probe/<MessageMatches>d__1 (pushed by IL_013a ldarg this) | stfld Probe/<MessageMatches>d__1::<>s__3 |
+| S2 | sdk10 | Release | <<Run>b__0>d::MoveNext | L34 | TaskAwaiter`1<String> | IL_0072 ldloca V_2 | empty | IL_0072 ldloca V_2 | empty | pop  |
+| S2 | sdk10 | Release | <Run>d__1::MoveNext | L32 | YieldAwaitable/YieldAwaiter | IL_0083 ldloca V_1 | empty | IL_0083 ldloca V_1 | empty | ldarg this |
+| S2 | sdk10 | Release | <Run>d__1::MoveNext | L34 | TaskAwaiter`1<InvalidOperationException> | IL_0107 ldloca V_3 | empty | IL_0107 ldloca V_3 | empty | callvirt Exception::get_Message |
+| S4 | sdk10 | Release | <GetOrderShouldFail>d__2::MoveNext | L38 | YieldAwaitable/YieldAwaiter | IL_0094 ldloca V_2 | empty | IL_0094 ldloca V_2 | empty | ldarg this |
+| S4 | sdk10 | Release | <GetOrderShouldFail>d__2::MoveNext | L39 | TaskAwaiter`1<InvalidOperationException> | IL_0100 ldloca V_4 | empty | IL_0100 ldloca V_4 | empty | stloc V_1 |
+| S4 | sdk10 | Release | <Run>d__1::MoveNext | L32 | TaskAwaiter`1<InvalidOperationException> | IL_0067 ldloca V_2 | empty | IL_0067 ldloca V_2 | empty | callvirt Exception::get_Message |
+| S7 | sdk10 | Release | <Run>d__1::MoveNext | L32 | YieldAwaitable/YieldAwaiter | IL_0083 ldloca V_1 | empty | IL_0083 ldloca V_1 | empty | ldarg this |
+| S7 | sdk10 | Release | <Run>d__1::MoveNext | L34 | TaskAwaiter`1<InvalidOperationException> | IL_0107 ldloca V_3 | empty | IL_0107 ldloca V_3 | empty | pop  |
+| S8 | sdk10 | Release | <Run>d__1::MoveNext | L32 | YieldAwaitable/YieldAwaiter | IL_0083 ldloca V_1 | empty | IL_0083 ldloca V_1 | empty | ldarg this |
+| S8 | sdk10 | Release | <Run>d__1::MoveNext | L34 | ConfiguredTaskAwaitable`1/ConfiguredTaskAwaiter<InvalidOperationException> | IL_0111 ldloca V_3 | empty | IL_0111 ldloca V_3 | empty | callvirt Exception::get_Message |
+| S16a | sdk10 | Release | <MessageDiffers>d__2::MoveNext | L40 | YieldAwaitable/YieldAwaiter | IL_0083 ldloca V_1 | empty | IL_0083 ldloca V_1 | empty | ldarg this |
+| S16a | sdk10 | Release | <MessageDiffers>d__2::MoveNext | L43 | TaskAwaiter`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>> | IL_0118 ldloca V_3 | empty | IL_0118 ldloca V_3 | empty | callvirt FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>::get_Which |
+| S16a | sdk10 | Release | <MessageMatches>d__1::MoveNext | L32 | YieldAwaitable/YieldAwaiter | IL_0083 ldloca V_1 | empty | IL_0083 ldloca V_1 | empty | ldarg this |
+| S16a | sdk10 | Release | <MessageMatches>d__1::MoveNext | L35 | TaskAwaiter`1<FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>> | IL_0118 ldloca V_3 | empty | IL_0118 ldloca V_3 | empty | callvirt FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>::get_Which |
+
+## D. The plan's 4.1 a and c range for each awaited assertion statement the weave finds, from the merge point to the statement's end
+
+The range end here is the statement's own: the last instruction before the next visible sequence point or before the first exception handler (try or handler start) after the merge point, whichever is first, a trailing leave or ret trimmed. The last column is 4.1 c read literally (to the next visible sequence point only), which for a block's last statement runs on through the compiler's own catch or finally. EntersPartWay is the weave's own check (AssertionWeaver.EntersPartWay).
+
+| shape | build | config | method, line | merge point | range end | awaits inside the range | stack after the range | EntersPartWay | entered from outside | ret inside | 4.1 c read literally |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| S18a | suite | Debug | <AssertionFails>d__2::MoveNext L54 | IL_0137 ldarg this | IL_0152 stfld Probe/<AssertionFails>d__2::<>s__3 | 0 | empty | False | nothing | none | same range |
+| S18a | suite | Debug | <AssertionFails>d__2::MoveNext L55 | IL_01d2 ldloca V_5 | IL_01d9 pop  | 0 | empty | False | nothing | none | to IL_0201: EntersPartWay = True (a Catch handler starts inside, at IL_01dc) |
+| S18a | suite | Debug | <AssertionPasses>d__1::MoveNext L46 | IL_0137 ldarg this | IL_0152 stfld Probe/<AssertionPasses>d__1::<>s__3 | 0 | empty | False | nothing | none | same range |
+| S18a | suite | Debug | <AssertionPasses>d__1::MoveNext L47 | IL_01d2 ldloca V_5 | IL_01d9 pop  | 0 | empty | False | nothing | none | to IL_0201: EntersPartWay = True (a Catch handler starts inside, at IL_01dc) |
+| S18c | suite | Debug | <AssertionFails>d__2::MoveNext L55 | IL_013a ldarg this | IL_0155 stfld Probe/<AssertionFails>d__2::<>s__4 | 0 | empty | False | nothing | none | same range |
+| S18c | suite | Debug | <AssertionPasses>d__1::MoveNext L46 | IL_013a ldarg this | IL_0155 stfld Probe/<AssertionPasses>d__1::<>s__4 | 0 | empty | False | nothing | none | same range |
+| S20 | suite | Debug | <AssertionPasses>d__1::MoveNext L45 | IL_012e ldarg this | IL_01e1 stfld Probe/<AssertionPasses>d__1::<>s__4 | 1 | empty | True | IL_0022 br (under a hidden sequence point) -> IL_0194 ldarg this | none | to IL_0206: EntersPartWay = True (IL_0022 br (under a hidden sequence point) -> IL_0194 ldarg this; a Catch handler starts inside, at IL_01e8) |
+| S20 | suite | Debug | <MessageDiffers>d__3::MoveNext L60 | IL_0144 ldarg this | IL_01f7 stfld Probe/<MessageDiffers>d__3::<>s__4 | 1 | empty | True | IL_0022 br (under a hidden sequence point) -> IL_01aa ldarg this | none | to IL_021c: EntersPartWay = True (IL_0022 br (under a hidden sequence point) -> IL_01aa ldarg this; a Catch handler starts inside, at IL_01fe) |
+| S20 | suite | Debug | <ThrowFails>d__2::MoveNext L52 | IL_012e ldarg this | IL_01e1 stfld Probe/<ThrowFails>d__2::<>s__4 | 1 | empty | True | IL_0022 br (under a hidden sequence point) -> IL_0194 ldarg this | none | to IL_0206: EntersPartWay = True (IL_0022 br (under a hidden sequence point) -> IL_0194 ldarg this; a Catch handler starts inside, at IL_01e8) |
+| S21a | suite | Debug | <AssertionFails>d__2::MoveNext L55 | IL_0120 ldarg this | IL_013b stfld Probe/<AssertionFails>d__2::<>s__3 | 0 | empty | False | nothing | none | same range |
+| S21a | suite | Debug | <AssertionPasses>d__1::MoveNext L45 | IL_0120 ldarg this | IL_013b stfld Probe/<AssertionPasses>d__1::<>s__3 | 0 | empty | False | nothing | none | same range |
+| S21b | suite | Debug | <AssertionFails>d__2::MoveNext L53 | IL_011d ldloca V_4 | IL_0124 pop  | 0 | empty | False | nothing | none | to IL_0145: EntersPartWay = True (a Catch handler starts inside, at IL_0127) |
+| S21b | suite | Debug | <AssertionPasses>d__1::MoveNext L45 | IL_011d ldloca V_4 | IL_0124 pop  | 0 | empty | False | nothing | none | to IL_0145: EntersPartWay = True (a Catch handler starts inside, at IL_0127) |
+| S22a | suite | Debug | <AssertionFails>d__2::MoveNext L58 | IL_0117 ldloca V_4 | IL_011e pop  | 0 | empty | False | nothing | none | same range |
+| S22a | suite | Debug | <AssertionPasses>d__1::MoveNext L48 | IL_0117 ldloca V_4 | IL_011e pop  | 0 | empty | False | nothing | none | same range |
+| S22b | suite | Debug | <AssertionFails>d__2::MoveNext L56 | IL_00f6 ldloca V_4 | IL_00fd pop  | 0 | empty | False | nothing | none | same range |
+| S22b | suite | Debug | <AssertionPasses>d__1::MoveNext L47 | IL_00f6 ldloca V_4 | IL_00fd pop  | 0 | empty | False | nothing | none | same range |
+| S23 | suite | Debug | <AssertionFails>d__2::MoveNext L52 | IL_0120 ldarg this | IL_0140 stfld Probe/<AssertionFails>d__2::<>s__2 | 0 | empty | False | nothing | none | to IL_0165: EntersPartWay = True (a Catch handler starts inside, at IL_0147) |
+| S23 | suite | Debug | <AssertionPasses>d__1::MoveNext L45 | IL_0120 ldarg this | IL_0140 stfld Probe/<AssertionPasses>d__1::<>s__2 | 0 | empty | False | nothing | none | to IL_0165: EntersPartWay = True (a Catch handler starts inside, at IL_0147) |
+| S18a | suite | Release | <AssertionFails>d__2::MoveNext L54 | IL_011b ldloca V_3 | IL_011d call TaskAwaiter`1<InvalidOperationException>::GetResult | 0 | [1] InvalidOperationException (pushed by IL_011d call TaskAwaiter`1<InvalidOperationException>::GetResult) | False | nothing | none | same range |
+| S18a | suite | Release | <AssertionFails>d__2::MoveNext L55 | IL_0193 ldloca V_4 | IL_019a pop  | 0 | empty | False | nothing | none | to IL_01b6: EntersPartWay = True (a Catch handler starts inside, at IL_019d) |
+| S18a | suite | Release | <AssertionPasses>d__1::MoveNext L46 | IL_011b ldloca V_3 | IL_011d call TaskAwaiter`1<InvalidOperationException>::GetResult | 0 | [1] InvalidOperationException (pushed by IL_011d call TaskAwaiter`1<InvalidOperationException>::GetResult) | False | nothing | none | same range |
+| S18a | suite | Release | <AssertionPasses>d__1::MoveNext L47 | IL_0193 ldloca V_4 | IL_019a pop  | 0 | empty | False | nothing | none | to IL_01b6: EntersPartWay = True (a Catch handler starts inside, at IL_019d) |
+| S18c | suite | Release | <AssertionFails>d__2::MoveNext L55 | IL_0118 ldloca V_3 | IL_011a call TaskAwaiter`1<AwesomeAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>>::GetResult | 0 | [1] AwesomeAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException> (pushed by IL_011a call TaskAwaiter`1<AwesomeAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>>::GetResult) | False | nothing | none | same range |
+| S18c | suite | Release | <AssertionPasses>d__1::MoveNext L46 | IL_0118 ldloca V_3 | IL_011a call TaskAwaiter`1<AwesomeAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>>::GetResult | 0 | [1] AwesomeAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException> (pushed by IL_011a call TaskAwaiter`1<AwesomeAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>>::GetResult) | False | nothing | none | same range |
+| S20 | suite | Release | <AssertionPasses>d__1::MoveNext L45 | IL_011c ldloca V_6 | IL_01a4 stfld Probe/<AssertionPasses>d__1::<>7__wrap1 | 1 | empty | True | IL_000f switch case (under a hidden sequence point) -> IL_016e ldarg this | none | to IL_01c4: EntersPartWay = True (IL_000f switch case (under a hidden sequence point) -> IL_016e ldarg this; a Catch handler starts inside, at IL_01ab) |
+| S20 | suite | Release | <MessageDiffers>d__3::MoveNext L60 | IL_012c ldloca V_6 | IL_01b4 stfld Probe/<MessageDiffers>d__3::<>7__wrap1 | 1 | empty | True | IL_000f switch case (under a hidden sequence point) -> IL_017e ldarg this | none | to IL_01d4: EntersPartWay = True (IL_000f switch case (under a hidden sequence point) -> IL_017e ldarg this; a Catch handler starts inside, at IL_01bb) |
+| S20 | suite | Release | <ThrowFails>d__2::MoveNext L52 | IL_011c ldloca V_6 | IL_01a4 stfld Probe/<ThrowFails>d__2::<>7__wrap1 | 1 | empty | True | IL_000f switch case (under a hidden sequence point) -> IL_016e ldarg this | none | to IL_01c4: EntersPartWay = True (IL_000f switch case (under a hidden sequence point) -> IL_016e ldarg this; a Catch handler starts inside, at IL_01ab) |
+| S21a | suite | Release | <AssertionFails>d__2::MoveNext L55 | IL_0107 ldloca V_3 | IL_0109 call TaskAwaiter`1<InvalidOperationException>::GetResult | 0 | [1] InvalidOperationException (pushed by IL_0109 call TaskAwaiter`1<InvalidOperationException>::GetResult) | False | nothing | none | same range |
+| S21a | suite | Release | <AssertionPasses>d__1::MoveNext L45 | IL_0107 ldloca V_3 | IL_0109 call TaskAwaiter`1<InvalidOperationException>::GetResult | 0 | [1] InvalidOperationException (pushed by IL_0109 call TaskAwaiter`1<InvalidOperationException>::GetResult) | False | nothing | none | same range |
+| S21b | suite | Release | <AssertionFails>d__2::MoveNext L53 | IL_0107 ldloca V_3 | IL_010e pop  | 0 | empty | False | nothing | none | to IL_012a: EntersPartWay = True (a Catch handler starts inside, at IL_0111) |
+| S21b | suite | Release | <AssertionPasses>d__1::MoveNext L45 | IL_0107 ldloca V_3 | IL_010e pop  | 0 | empty | False | nothing | none | to IL_012a: EntersPartWay = True (a Catch handler starts inside, at IL_0111) |
+| S22a | suite | Release | <AssertionFails>d__2::MoveNext L58 | IL_00f3 ldloca V_5 | IL_00fa pop  | 0 | empty | False | nothing | none | same range |
+| S22a | suite | Release | <AssertionPasses>d__1::MoveNext L48 | IL_00f3 ldloca V_5 | IL_00fa pop  | 0 | empty | False | nothing | none | same range |
+| S22b | suite | Release | <AssertionFails>d__2::MoveNext L56 | IL_00dc ldloca V_3 | IL_00e3 pop  | 0 | empty | False | nothing | none | same range |
+| S22b | suite | Release | <AssertionPasses>d__1::MoveNext L47 | IL_00dc ldloca V_3 | IL_00e3 pop  | 0 | empty | False | nothing | none | same range |
+| S23 | suite | Release | <AssertionFails>d__2::MoveNext L52 | IL_0107 ldloca V_3 | IL_0113 call Console::WriteLine | 0 | empty | False | nothing | none | to IL_0133: EntersPartWay = True (a Catch handler starts inside, at IL_011a) |
+| S23 | suite | Release | <AssertionPasses>d__1::MoveNext L45 | IL_0107 ldloca V_3 | IL_0113 call Console::WriteLine | 0 | empty | False | nothing | none | to IL_0133: EntersPartWay = True (a Catch handler starts inside, at IL_011a) |
+| S2 | sdk8 | Debug | <Run>d__1::MoveNext L34 | IL_0120 ldarg this | IL_013b stfld Probe/<Run>d__1::<>s__3 | 0 | empty | False | nothing | none | same range |
+| S4 | sdk8 | Debug | <GetOrderShouldFail>d__2::MoveNext L39 | IL_0114 ldarg this | IL_0127 stloc V_1 | 0 | empty | False | nothing | none | to IL_0148: EntersPartWay = True (a Catch handler starts inside, at IL_012a) |
+| S7 | sdk8 | Debug | <Run>d__1::MoveNext L34 | IL_011d ldarg this | IL_0133 stfld Probe/<Run>d__1::<>s__2 | 0 | empty | False | nothing | none | to IL_0158: EntersPartWay = True (a Catch handler starts inside, at IL_013a) |
+| S8 | sdk8 | Debug | <Run>d__1::MoveNext L34 | IL_012a ldarg this | IL_0145 stfld Probe/<Run>d__1::<>s__3 | 0 | empty | False | nothing | none | same range |
+| S16a | sdk8 | Debug | <MessageDiffers>d__2::MoveNext L43 | IL_013a ldarg this | IL_0173 stfld Probe/<MessageDiffers>d__2::<>s__3 | 0 | empty | False | nothing | none | to IL_019f: EntersPartWay = True (a Catch handler starts inside, at IL_017a) |
+| S16a | sdk8 | Debug | <MessageMatches>d__1::MoveNext L35 | IL_013a ldarg this | IL_0173 stfld Probe/<MessageMatches>d__1::<>s__3 | 0 | empty | False | nothing | none | to IL_019f: EntersPartWay = True (a Catch handler starts inside, at IL_017a) |
+| S2 | sdk8 | Release | <Run>d__1::MoveNext L34 | IL_0107 ldloca V_3 | IL_0109 call TaskAwaiter`1<InvalidOperationException>::GetResult | 0 | [1] InvalidOperationException (pushed by IL_0109 call TaskAwaiter`1<InvalidOperationException>::GetResult) | False | nothing | none | same range |
+| S4 | sdk8 | Release | <GetOrderShouldFail>d__2::MoveNext L39 | IL_0100 ldloca V_4 | IL_0107 stloc V_1 | 0 | empty | False | nothing | none | to IL_0123: EntersPartWay = True (a Catch handler starts inside, at IL_010a) |
+| S7 | sdk8 | Release | <Run>d__1::MoveNext L34 | IL_0107 ldloca V_3 | IL_010e pop  | 0 | empty | False | nothing | none | to IL_012a: EntersPartWay = True (a Catch handler starts inside, at IL_0111) |
+| S8 | sdk8 | Release | <Run>d__1::MoveNext L34 | IL_0111 ldloca V_3 | IL_0113 call ConfiguredTaskAwaitable`1/ConfiguredTaskAwaiter<InvalidOperationException>::GetResult | 0 | [1] InvalidOperationException (pushed by IL_0113 call ConfiguredTaskAwaitable`1/ConfiguredTaskAwaiter<InvalidOperationException>::GetResult) | False | nothing | none | same range |
+| S16a | sdk8 | Release | <MessageDiffers>d__2::MoveNext L43 | IL_0118 ldloca V_3 | IL_0142 pop  | 0 | empty | False | nothing | none | to IL_015e: EntersPartWay = True (a Catch handler starts inside, at IL_0145) |
+| S16a | sdk8 | Release | <MessageMatches>d__1::MoveNext L35 | IL_0118 ldloca V_3 | IL_0142 pop  | 0 | empty | False | nothing | none | to IL_015e: EntersPartWay = True (a Catch handler starts inside, at IL_0145) |
+| S2 | sdk9 | Debug | <Run>d__1::MoveNext L34 | IL_0120 ldarg this | IL_013b stfld Probe/<Run>d__1::<>s__3 | 0 | empty | False | nothing | none | same range |
+| S4 | sdk9 | Debug | <GetOrderShouldFail>d__2::MoveNext L39 | IL_0114 ldarg this | IL_0127 stloc V_1 | 0 | empty | False | nothing | none | to IL_0148: EntersPartWay = True (a Catch handler starts inside, at IL_012a) |
+| S7 | sdk9 | Debug | <Run>d__1::MoveNext L34 | IL_011d ldarg this | IL_0133 stfld Probe/<Run>d__1::<>s__2 | 0 | empty | False | nothing | none | to IL_0158: EntersPartWay = True (a Catch handler starts inside, at IL_013a) |
+| S8 | sdk9 | Debug | <Run>d__1::MoveNext L34 | IL_012a ldarg this | IL_0145 stfld Probe/<Run>d__1::<>s__3 | 0 | empty | False | nothing | none | same range |
+| S16a | sdk9 | Debug | <MessageDiffers>d__2::MoveNext L43 | IL_013a ldarg this | IL_0173 stfld Probe/<MessageDiffers>d__2::<>s__3 | 0 | empty | False | nothing | none | to IL_019f: EntersPartWay = True (a Catch handler starts inside, at IL_017a) |
+| S16a | sdk9 | Debug | <MessageMatches>d__1::MoveNext L35 | IL_013a ldarg this | IL_0173 stfld Probe/<MessageMatches>d__1::<>s__3 | 0 | empty | False | nothing | none | to IL_019f: EntersPartWay = True (a Catch handler starts inside, at IL_017a) |
+| S2 | sdk9 | Release | <Run>d__1::MoveNext L34 | IL_0107 ldloca V_3 | IL_0109 call TaskAwaiter`1<InvalidOperationException>::GetResult | 0 | [1] InvalidOperationException (pushed by IL_0109 call TaskAwaiter`1<InvalidOperationException>::GetResult) | False | nothing | none | same range |
+| S4 | sdk9 | Release | <GetOrderShouldFail>d__2::MoveNext L39 | IL_0100 ldloca V_4 | IL_0107 stloc V_1 | 0 | empty | False | nothing | none | to IL_0123: EntersPartWay = True (a Catch handler starts inside, at IL_010a) |
+| S7 | sdk9 | Release | <Run>d__1::MoveNext L34 | IL_0107 ldloca V_3 | IL_010e pop  | 0 | empty | False | nothing | none | to IL_012a: EntersPartWay = True (a Catch handler starts inside, at IL_0111) |
+| S8 | sdk9 | Release | <Run>d__1::MoveNext L34 | IL_0111 ldloca V_3 | IL_0113 call ConfiguredTaskAwaitable`1/ConfiguredTaskAwaiter<InvalidOperationException>::GetResult | 0 | [1] InvalidOperationException (pushed by IL_0113 call ConfiguredTaskAwaitable`1/ConfiguredTaskAwaiter<InvalidOperationException>::GetResult) | False | nothing | none | same range |
+| S16a | sdk9 | Release | <MessageDiffers>d__2::MoveNext L43 | IL_0118 ldloca V_3 | IL_0142 pop  | 0 | empty | False | nothing | none | to IL_015e: EntersPartWay = True (a Catch handler starts inside, at IL_0145) |
+| S16a | sdk9 | Release | <MessageMatches>d__1::MoveNext L35 | IL_0118 ldloca V_3 | IL_0142 pop  | 0 | empty | False | nothing | none | to IL_015e: EntersPartWay = True (a Catch handler starts inside, at IL_0145) |
+| S2 | sdk10 | Debug | <Run>d__1::MoveNext L34 | IL_0120 ldarg this | IL_013b stfld Probe/<Run>d__1::<>s__3 | 0 | empty | False | nothing | none | same range |
+| S4 | sdk10 | Debug | <GetOrderShouldFail>d__2::MoveNext L39 | IL_0114 ldarg this | IL_0127 stloc V_1 | 0 | empty | False | nothing | none | to IL_0148: EntersPartWay = True (a Catch handler starts inside, at IL_012a) |
+| S7 | sdk10 | Debug | <Run>d__1::MoveNext L34 | IL_011d ldarg this | IL_0133 stfld Probe/<Run>d__1::<>s__2 | 0 | empty | False | nothing | none | to IL_0158: EntersPartWay = True (a Catch handler starts inside, at IL_013a) |
+| S8 | sdk10 | Debug | <Run>d__1::MoveNext L34 | IL_012a ldarg this | IL_0145 stfld Probe/<Run>d__1::<>s__3 | 0 | empty | False | nothing | none | same range |
+| S16a | sdk10 | Debug | <MessageDiffers>d__2::MoveNext L43 | IL_013a ldarg this | IL_0173 stfld Probe/<MessageDiffers>d__2::<>s__3 | 0 | empty | False | nothing | none | to IL_019f: EntersPartWay = True (a Catch handler starts inside, at IL_017a) |
+| S16a | sdk10 | Debug | <MessageMatches>d__1::MoveNext L35 | IL_013a ldarg this | IL_0173 stfld Probe/<MessageMatches>d__1::<>s__3 | 0 | empty | False | nothing | none | to IL_019f: EntersPartWay = True (a Catch handler starts inside, at IL_017a) |
+| S2 | sdk10 | Release | <Run>d__1::MoveNext L34 | IL_0107 ldloca V_3 | IL_0109 call TaskAwaiter`1<InvalidOperationException>::GetResult | 0 | [1] InvalidOperationException (pushed by IL_0109 call TaskAwaiter`1<InvalidOperationException>::GetResult) | False | nothing | none | same range |
+| S4 | sdk10 | Release | <GetOrderShouldFail>d__2::MoveNext L39 | IL_0100 ldloca V_4 | IL_0107 stloc V_1 | 0 | empty | False | nothing | none | to IL_0123: EntersPartWay = True (a Catch handler starts inside, at IL_010a) |
+| S7 | sdk10 | Release | <Run>d__1::MoveNext L34 | IL_0107 ldloca V_3 | IL_010e pop  | 0 | empty | False | nothing | none | to IL_012a: EntersPartWay = True (a Catch handler starts inside, at IL_0111) |
+| S8 | sdk10 | Release | <Run>d__1::MoveNext L34 | IL_0111 ldloca V_3 | IL_0113 call ConfiguredTaskAwaitable`1/ConfiguredTaskAwaiter<InvalidOperationException>::GetResult | 0 | [1] InvalidOperationException (pushed by IL_0113 call ConfiguredTaskAwaitable`1/ConfiguredTaskAwaiter<InvalidOperationException>::GetResult) | False | nothing | none | same range |
+| S16a | sdk10 | Release | <MessageDiffers>d__2::MoveNext L43 | IL_0118 ldloca V_3 | IL_0142 pop  | 0 | empty | False | nothing | none | to IL_015e: EntersPartWay = True (a Catch handler starts inside, at IL_0145) |
+| S16a | sdk10 | Release | <MessageMatches>d__1::MoveNext L35 | IL_0118 ldloca V_3 | IL_0142 pop  | 0 | empty | False | nothing | none | to IL_015e: EntersPartWay = True (a Catch handler starts inside, at IL_0145) |
+
+## E. Is the merge point stack-empty?
+
+226 awaits read across every shape, build and configuration (table C). Merge points with a value on the stack: 0.
+Merge points that are not the awaiter's load (something runs between the merge point and the awaiter's load): 46.
+- S17a suite Debug <AssertionFails>d__2::MoveNext await at L50 (merge IL_00de ldarg): merge IL_00de ldarg this, awaiter load IL_00df ldloca; stack before the load: [1] Probe/<AssertionFails>d__2 (pushed by IL_00de ldarg this)
+- S17a suite Debug <AssertionPasses>d__1::MoveNext await at L44 (merge IL_00de ldarg): merge IL_00de ldarg this, awaiter load IL_00df ldloca; stack before the load: [1] Probe/<AssertionPasses>d__1 (pushed by IL_00de ldarg this)
+- S17b suite Debug <AssertionFails>d__2::MoveNext await at L50 (merge IL_00e1 ldarg): merge IL_00e1 ldarg this, awaiter load IL_00e2 ldloca; stack before the load: [1] Probe/<AssertionFails>d__2 (pushed by IL_00e1 ldarg this)
+- S17b suite Debug <AssertionPasses>d__1::MoveNext await at L44 (merge IL_00e1 ldarg): merge IL_00e1 ldarg this, awaiter load IL_00e2 ldloca; stack before the load: [1] Probe/<AssertionPasses>d__1 (pushed by IL_00e1 ldarg this)
+- S17c suite Debug <AssertionFails>d__2::MoveNext await at L51 (merge IL_00ef ldarg): merge IL_00ef ldarg this, awaiter load IL_00f0 ldloca; stack before the load: [1] Probe/<AssertionFails>d__2 (pushed by IL_00ef ldarg this)
+- S17c suite Debug <AssertionPasses>d__1::MoveNext await at L45 (merge IL_00ef ldarg): merge IL_00ef ldarg this, awaiter load IL_00f0 ldloca; stack before the load: [1] Probe/<AssertionPasses>d__1 (pushed by IL_00ef ldarg this)
+- S18a suite Debug <AssertionFails>d__2::MoveNext await at L54 (merge IL_0137 ldarg): merge IL_0137 ldarg this, awaiter load IL_0138 ldloca; stack before the load: [1] Probe/<AssertionFails>d__2 (pushed by IL_0137 ldarg this)
+- S18a suite Debug <AssertionPasses>d__1::MoveNext await at L46 (merge IL_0137 ldarg): merge IL_0137 ldarg this, awaiter load IL_0138 ldloca; stack before the load: [1] Probe/<AssertionPasses>d__1 (pushed by IL_0137 ldarg this)
+- S18c suite Debug <AssertionFails>d__2::MoveNext await at L55 (merge IL_013a ldarg): merge IL_013a ldarg this, awaiter load IL_013b ldloca; stack before the load: [1] Probe/<AssertionFails>d__2 (pushed by IL_013a ldarg this)
+- S18c suite Debug <AssertionPasses>d__1::MoveNext await at L46 (merge IL_013a ldarg): merge IL_013a ldarg this, awaiter load IL_013b ldloca; stack before the load: [1] Probe/<AssertionPasses>d__1 (pushed by IL_013a ldarg this)
+- S19b suite Debug <AssertionPasses>d__1::MoveNext await at L45 (merge IL_007c ldarg): merge IL_007c ldarg this, awaiter load IL_007d ldloca; stack before the load: [1] Probe/<AssertionPasses>d__1 (pushed by IL_007c ldarg this)
+- S20 suite Debug <AssertionPasses>d__1::MoveNext await at L45 (merge IL_012e ldarg): merge IL_012e ldarg this, awaiter load IL_012f ldloca; stack before the load: [1] Probe/<AssertionPasses>d__1 (pushed by IL_012e ldarg this)
+- S20 suite Debug <AssertionPasses>d__1::MoveNext await at L45 (merge IL_01b1 ldarg): merge IL_01b1 ldarg this, awaiter load IL_01b2 ldloca; stack before the load: [1] Probe/<AssertionPasses>d__1 (pushed by IL_01b1 ldarg this)
+- S20 suite Debug <MessageDiffers>d__3::MoveNext await at L60 (merge IL_0144 ldarg): merge IL_0144 ldarg this, awaiter load IL_0145 ldloca; stack before the load: [1] Probe/<MessageDiffers>d__3 (pushed by IL_0144 ldarg this)
+- S20 suite Debug <MessageDiffers>d__3::MoveNext await at L60 (merge IL_01c7 ldarg): merge IL_01c7 ldarg this, awaiter load IL_01c8 ldloca; stack before the load: [1] Probe/<MessageDiffers>d__3 (pushed by IL_01c7 ldarg this)
+- S20 suite Debug <ThrowFails>d__2::MoveNext await at L52 (merge IL_012e ldarg): merge IL_012e ldarg this, awaiter load IL_012f ldloca; stack before the load: [1] Probe/<ThrowFails>d__2 (pushed by IL_012e ldarg this)
+- S20 suite Debug <ThrowFails>d__2::MoveNext await at L52 (merge IL_01b1 ldarg): merge IL_01b1 ldarg this, awaiter load IL_01b2 ldloca; stack before the load: [1] Probe/<ThrowFails>d__2 (pushed by IL_01b1 ldarg this)
+- S21a suite Debug <AssertionFails>d__2::MoveNext await at L55 (merge IL_0120 ldarg): merge IL_0120 ldarg this, awaiter load IL_0121 ldloca; stack before the load: [1] Probe/<AssertionFails>d__2 (pushed by IL_0120 ldarg this)
+- S21a suite Debug <AssertionPasses>d__1::MoveNext await at L45 (merge IL_0120 ldarg): merge IL_0120 ldarg this, awaiter load IL_0121 ldloca; stack before the load: [1] Probe/<AssertionPasses>d__1 (pushed by IL_0120 ldarg this)
+- S23 suite Debug <AssertionFails>d__2::MoveNext await at L52 (merge IL_0120 ldarg): merge IL_0120 ldarg this, awaiter load IL_0121 ldloca; stack before the load: [1] Probe/<AssertionFails>d__2 (pushed by IL_0120 ldarg this)
+- S23 suite Debug <AssertionPasses>d__1::MoveNext await at L45 (merge IL_0120 ldarg): merge IL_0120 ldarg this, awaiter load IL_0121 ldloca; stack before the load: [1] Probe/<AssertionPasses>d__1 (pushed by IL_0120 ldarg this)
+- S17d suite Debug <AssertionFails>d__2::MoveNext await at L51 (merge IL_00de ldarg): merge IL_00de ldarg this, awaiter load IL_00df ldloca; stack before the load: [1] Probe/<AssertionFails>d__2 (pushed by IL_00de ldarg this)
+- S17d suite Debug <AssertionPasses>d__1::MoveNext await at L45 (merge IL_00de ldarg): merge IL_00de ldarg this, awaiter load IL_00df ldloca; stack before the load: [1] Probe/<AssertionPasses>d__1 (pushed by IL_00de ldarg this)
+- S18b suite Debug <AssertionFails>d__2::MoveNext await at L54 (merge IL_011f ldarg): merge IL_011f ldarg this, awaiter load IL_0120 ldloca; stack before the load: [1] Probe/<AssertionFails>d__2 (pushed by IL_011f ldarg this)
+- S18b suite Debug <AssertionPasses>d__1::MoveNext await at L46 (merge IL_011f ldarg): merge IL_011f ldarg this, awaiter load IL_0120 ldloca; stack before the load: [1] Probe/<AssertionPasses>d__1 (pushed by IL_011f ldarg this)
+- S2 sdk8 Debug <Run>d__1::MoveNext await at L34 (merge IL_0120 ldarg): merge IL_0120 ldarg this, awaiter load IL_0121 ldloca; stack before the load: [1] Probe/<Run>d__1 (pushed by IL_0120 ldarg this)
+- S4 sdk8 Debug <GetOrderShouldFail>d__2::MoveNext await at L39 (merge IL_0114 ldarg): merge IL_0114 ldarg this, awaiter load IL_0115 ldloca; stack before the load: [1] Probe/<GetOrderShouldFail>d__2 (pushed by IL_0114 ldarg this)
+- S4 sdk8 Debug <Run>d__1::MoveNext await at L32 (merge IL_0071 ldarg): merge IL_0071 ldarg this, awaiter load IL_0072 ldloca; stack before the load: [1] Probe/<Run>d__1 (pushed by IL_0071 ldarg this)
+- S7 sdk8 Debug <Run>d__1::MoveNext await at L34 (merge IL_011d ldarg): merge IL_011d ldarg this, awaiter load IL_011e ldloca; stack before the load: [1] Probe/<Run>d__1 (pushed by IL_011d ldarg this)
+- S8 sdk8 Debug <Run>d__1::MoveNext await at L34 (merge IL_012a ldarg): merge IL_012a ldarg this, awaiter load IL_012b ldloca; stack before the load: [1] Probe/<Run>d__1 (pushed by IL_012a ldarg this)
+- S16a sdk8 Debug <MessageDiffers>d__2::MoveNext await at L43 (merge IL_013a ldarg): merge IL_013a ldarg this, awaiter load IL_013b ldloca; stack before the load: [1] Probe/<MessageDiffers>d__2 (pushed by IL_013a ldarg this)
+- S16a sdk8 Debug <MessageMatches>d__1::MoveNext await at L35 (merge IL_013a ldarg): merge IL_013a ldarg this, awaiter load IL_013b ldloca; stack before the load: [1] Probe/<MessageMatches>d__1 (pushed by IL_013a ldarg this)
+- S2 sdk9 Debug <Run>d__1::MoveNext await at L34 (merge IL_0120 ldarg): merge IL_0120 ldarg this, awaiter load IL_0121 ldloca; stack before the load: [1] Probe/<Run>d__1 (pushed by IL_0120 ldarg this)
+- S4 sdk9 Debug <GetOrderShouldFail>d__2::MoveNext await at L39 (merge IL_0114 ldarg): merge IL_0114 ldarg this, awaiter load IL_0115 ldloca; stack before the load: [1] Probe/<GetOrderShouldFail>d__2 (pushed by IL_0114 ldarg this)
+- S4 sdk9 Debug <Run>d__1::MoveNext await at L32 (merge IL_0071 ldarg): merge IL_0071 ldarg this, awaiter load IL_0072 ldloca; stack before the load: [1] Probe/<Run>d__1 (pushed by IL_0071 ldarg this)
+- S7 sdk9 Debug <Run>d__1::MoveNext await at L34 (merge IL_011d ldarg): merge IL_011d ldarg this, awaiter load IL_011e ldloca; stack before the load: [1] Probe/<Run>d__1 (pushed by IL_011d ldarg this)
+- S8 sdk9 Debug <Run>d__1::MoveNext await at L34 (merge IL_012a ldarg): merge IL_012a ldarg this, awaiter load IL_012b ldloca; stack before the load: [1] Probe/<Run>d__1 (pushed by IL_012a ldarg this)
+- S16a sdk9 Debug <MessageDiffers>d__2::MoveNext await at L43 (merge IL_013a ldarg): merge IL_013a ldarg this, awaiter load IL_013b ldloca; stack before the load: [1] Probe/<MessageDiffers>d__2 (pushed by IL_013a ldarg this)
+- S16a sdk9 Debug <MessageMatches>d__1::MoveNext await at L35 (merge IL_013a ldarg): merge IL_013a ldarg this, awaiter load IL_013b ldloca; stack before the load: [1] Probe/<MessageMatches>d__1 (pushed by IL_013a ldarg this)
+- S2 sdk10 Debug <Run>d__1::MoveNext await at L34 (merge IL_0120 ldarg): merge IL_0120 ldarg this, awaiter load IL_0121 ldloca; stack before the load: [1] Probe/<Run>d__1 (pushed by IL_0120 ldarg this)
+- S4 sdk10 Debug <GetOrderShouldFail>d__2::MoveNext await at L39 (merge IL_0114 ldarg): merge IL_0114 ldarg this, awaiter load IL_0115 ldloca; stack before the load: [1] Probe/<GetOrderShouldFail>d__2 (pushed by IL_0114 ldarg this)
+- S4 sdk10 Debug <Run>d__1::MoveNext await at L32 (merge IL_0071 ldarg): merge IL_0071 ldarg this, awaiter load IL_0072 ldloca; stack before the load: [1] Probe/<Run>d__1 (pushed by IL_0071 ldarg this)
+- S7 sdk10 Debug <Run>d__1::MoveNext await at L34 (merge IL_011d ldarg): merge IL_011d ldarg this, awaiter load IL_011e ldloca; stack before the load: [1] Probe/<Run>d__1 (pushed by IL_011d ldarg this)
+- S8 sdk10 Debug <Run>d__1::MoveNext await at L34 (merge IL_012a ldarg): merge IL_012a ldarg this, awaiter load IL_012b ldloca; stack before the load: [1] Probe/<Run>d__1 (pushed by IL_012a ldarg this)
+- S16a sdk10 Debug <MessageDiffers>d__2::MoveNext await at L43 (merge IL_013a ldarg): merge IL_013a ldarg this, awaiter load IL_013b ldloca; stack before the load: [1] Probe/<MessageDiffers>d__2 (pushed by IL_013a ldarg this)
+- S16a sdk10 Debug <MessageMatches>d__1::MoveNext await at L35 (merge IL_013a ldarg): merge IL_013a ldarg this, awaiter load IL_013b ldloca; stack before the load: [1] Probe/<MessageMatches>d__1 (pushed by IL_013a ldarg this)

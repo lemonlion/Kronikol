@@ -1,0 +1,76 @@
+  1: using System;
+  2: using System.Threading.Tasks;
+  3: using Kronikol.Tracking;
+  4: using Shouldly;
+  5: 
+  6: [assembly: TrackAssertions]
+  7: 
+  8: namespace LabelRepro;
+  9: 
+ 10: public class LabelTests
+ 11: {
+ 12:     private readonly OrdersClient _client = new();
+ 13: 
+ 14:     public async Task Awaited_ThrowAsync()
+ 15:     {
+ 16:         await Task.Yield();
+ 17:         var request = new OrderRequest { Id = "missing" };
+ 18: 
+ 19:         await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request));
+ 20:     }
+ 21: 
+ 22:     public async Task Assigned_ThrowAsync()
+ 23:     {
+ 24:         await Task.Yield();
+ 25:         var request = new OrderRequest { Id = "missing" };
+ 26: 
+ 27:         var exception = await Should.ThrowAsync<InvalidOperationException>(async () => await _client.GetOrderAsync(request));
+ 28: 
+ 29:         exception.Message.ShouldBe("not found");
+ 30:     }
+ 31: 
+ 32:     public async Task ThrowAsync_returned_by_a_helper()
+ 33:     {
+ 34:         var exception = await GetOrderShouldFail("missing");
+ 35: 
+ 36:         exception.Message.ShouldBe("not found");
+ 37:     }
+ 38: 
+ 39:     public async Task NotThrowAsync()
+ 40:     {
+ 41:         await Task.Yield();
+ 42: 
+ 43:         await Should.NotThrowAsync(() => _client.GetOrderAsync(new OrderRequest { Id = "known" }));
+ 44:     }
+ 45: 
+ 46:     public void Throw()
+ 47:     {
+ 48:         var request = new OrderRequest { Id = "missing" };
+ 49: 
+ 50:         Should.Throw<InvalidOperationException>(() => _client.GetOrder(request));
+ 51:     }
+ 52: 
+ 53:     private async Task<InvalidOperationException> GetOrderShouldFail(string id)
+ 54:     {
+ 55:         await Task.Yield();
+ 56:         return await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(new OrderRequest { Id = id }));
+ 57:     }
+ 58: }
+ 59: 
+ 60: public sealed class OrderRequest
+ 61: {
+ 62:     public string Id { get; init; } = "";
+ 63: }
+ 64: 
+ 65: public sealed class OrdersClient
+ 66: {
+ 67:     public async Task<string> GetOrderAsync(OrderRequest request)
+ 68:     {
+ 69:         await Task.Yield();
+ 70:         return request.Id == "known" ? "order" : throw new InvalidOperationException("not found");
+ 71:     }
+ 72: 
+ 73:     public string GetOrder(OrderRequest request) =>
+ 74:         request.Id == "known" ? "order" : throw new InvalidOperationException("not found");
+ 75: }
+ 76: 

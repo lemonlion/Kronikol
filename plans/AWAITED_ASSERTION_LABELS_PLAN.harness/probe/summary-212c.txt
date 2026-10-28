@@ -1,0 +1,673 @@
+# Probe212c summary: plain Release against Release+debug-plus (and S24 in Debug too)
+
+Kronikol 5.12.0+1ee6373a8fe16e85706f9b6e63c309c9fae2e815, Kronikol.AssertionTracking 5.12.0+1ee6373a8fe16e85706f9b6e63c309c9fae2e815, Shouldly 4.3.0+cb48f40b4d6087ce9fb1983041fce8a725436cb1, FluentAssertions 8.9.0+1ba808c972709ed2ac982eab1bab4597601be767, TUnit.Assertions 1.73.5+Branch.main.Sha.47057285f3d51b378fd5ebbf7af53b786a80dbc6.47057285f3d51b378fd5ebbf7af53b786a80dbc6, runtime 10.0.11; SDK 10.0.300's compiler Roslyn 5.6.0-2.26230.102+caa81fa4971f74880cdab61990cb1b11420939ec; 256 s.
+
+Every fixture is built by `dotnet build` of Fixtures/WeaverFixture.csproj (copied, with TUnit.Assertions 1.73.5 added for S13, S17c and S18a), SDK 10.0.300 pinned by a global.json, net10.0, in a project directory of its own: plain = `-c Release`; debug-plus = `-c Release -p:DebugSymbols=true`, which is what xunit.core 2.9.3's build/xunit.core.props does to every xUnit v2 suite; S24 also `-c Debug`. S1 to S16b and R212 are the first probe's sources, S17a to S23 the second probe's, verbatim; S24a and S24c are new (the second probe's template with a [ShouldlyMethods] type of the fixture's own).
+
+## 0. The compiler's switches, from each build's own output
+
+- Release (plain: dotnet build -c Release): csc /debug- /debug:portable /optimize+ (`Probe212c_confirm_release`, -v:d)
+- Release+debug-plus (dotnet build -c Release -p:DebugSymbols=true): csc /debug+ /debug:portable /optimize+ (`Probe212c_confirm_debugplus`, -v:d)
+- every plain build's csc line (-v:n): /debug- /debug:portable /optimize+
+- every debug-plus build's csc line (-v:n): /debug+ /debug:portable /optimize+
+- every Debug build's csc line (-v:n, S24 only): /debug+ /debug:portable /optimize-
+
+## A. Weave and runs, side by side (S24 is in section G)
+
+Threw is `woven run / unwoven build`. Notes are `✓/✗ label (line)` and, for ✗, the failure message.
+
+| shape | entry | build | woven | unwoven reasons | ILVerify (weave-added errors) | notes drawn | threw | same as plain |
+|---|---|---|---|---|---|---|---|---|
+| S1 | Run | plain | 1 |  | clean | ✓ Should throw InvalidOperationException (L34) | no / no | |
+| S1 | Run | debug-plus | 1 |  | clean | ✓ Should throw InvalidOperationException (L34) | no / no | same |
+| S2 | Run | plain | 2 |  | clean | ✓ Await Should.ThrowAsync<InvalidOperationException>(async () => await _client.GetOrderAsync(request)) (L34)<br>✓ Exception message should be "not found" (L35) | no / no | |
+| S2 | Run | debug-plus | 2 |  | clean | ✓ Await Should.ThrowAsync<InvalidOperationException>(async () => await _client.GetOrderAsync(request)) (L34)<br>✓ Exception message should be "not found" (L35) | no / no | same |
+| S3 | Run | plain | 2 |  | clean | ✓ Await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request)) (L34)<br>✓ E message should be "not found" (L35) | no / no | |
+| S3 | Run | debug-plus | 2 |  | clean | ✓ Await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request)) (L34)<br>✓ E message should be "not found" (L35) | no / no | same |
+| S4 | Run | plain | 2 |  | clean | ✓ Return await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(new OrderRequest { Id = id })) (L39)<br>✓ E message should be "not found" (L33) | no / no | |
+| S4 | Run | debug-plus | 2 |  | clean | ✓ Return await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(new OrderRequest { Id = id })) (L39)<br>✓ E message should be "not found" (L33) | no / no | same |
+| S5 | Run | plain | 2 |  | clean | ✓ InvalidOperationException e = await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request)) (L34)<br>✓ E message should be "not found" (L35) | no / no | |
+| S5 | Run | debug-plus | 2 |  | clean | ✓ InvalidOperationException e = await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request)) (L34)<br>✓ E message should be "not found" (L35) | no / no | same |
+| S6 | Run | plain | 2 |  | clean | ✓ E = await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request)) (L35)<br>✓ E message should be "not found" (L36) | no / no | |
+| S6 | Run | debug-plus | 2 |  | clean | ✓ E = await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request)) (L35)<br>✓ E message should be "not found" (L36) | no / no | same |
+| S6b | Run | plain | 2 |  | clean | ✓ _e = await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request)) (L36)<br>✓ E message should be "not found" (L37) | no / no | |
+| S6b | Run | debug-plus | 2 |  | clean | ✓ _e = await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request)) (L36)<br>✓ E message should be "not found" (L37) | no / no | same |
+| S7 | Run | plain | 1 |  | clean | ✓ _ = await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request)) (L34) | no / no | |
+| S7 | Run | debug-plus | 1 |  | clean | ✓ _ = await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request)) (L34) | no / no | same |
+| S8 | Run | plain | 2 |  | clean | ✓ Await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request)).ConfigureAwait(false) (L34)<br>✓ E message should be "not found" (L35) | no / no | |
+| S8 | Run | debug-plus | 2 |  | clean | ✓ Await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request)).ConfigureAwait(false) (L34)<br>✓ E message should be "not found" (L35) | no / no | same |
+| S9 | Run | plain | 2 |  | 1 new: Probe.Run: StackUnexpected: Unexpected type on the stack. (Offset 78, Fou... | ✓ Should throw InvalidOperationException (L33)<br>✓ E message should be "not found" (L34) | no / no | |
+| S9 | Run | debug-plus | 2 |  | clean | ✓ Should throw InvalidOperationException (L33)<br>✓ E message should be "not found" (L34) | no / no | **DIFFERS** |
+| S9b | Run | plain | 2 |  | 1 new: Probe.GetOrderShouldFail: StackUnexpected: Unexpected type on the stack. ... | ✓ Return Should.Throw<InvalidOperationException>(() => _client.GetOrder(new OrderRequest { Id = id })) (L38)<br>✓ E message should be "not found" (L33) | no / no | |
+| S9b | Run | debug-plus | 2 |  | clean | ✓ Return Should.Throw<InvalidOperationException>(() => _client.GetOrder(new OrderRequest { Id = id })) (L38)<br>✓ E message should be "not found" (L33) | no / no | **DIFFERS** |
+| S11 | Run | plain | 2 |  | clean | ✓ Await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request)) (L34)<br>✓ E message should be "not found" (L36) | no / no | |
+| S11 | Run | debug-plus | 2 |  | clean | ✓ Await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request)) (L34)<br>✓ E message should be "not found" (L36) | no / no | same |
+| S12a | Run | plain | 2 |  | clean | ✓ Await act should throw async <InvalidOperationException> (L35)<br>✓ A which message should be "not found" (L36) | no / no | |
+| S12a | Run | debug-plus | 2 |  | clean | ✓ Await act should throw async <InvalidOperationException> (L35)<br>✓ A which message should be "not found" (L36) | no / no | same |
+| S13 | Run | plain | 2 |  | clean | ✓ Await Assert.That(x).IsNotNull() (L35)<br>✓ V is equal to "value" (L36) | no / no | |
+| S13 | Run | debug-plus | 2 |  | clean | ✓ Await Assert.That(x).IsNotNull() (L35)<br>✓ V is equal to "value" (L36) | no / no | same |
+| S15a | AssertionPasses | plain | 2 |  | 1 new: Probe.Fails: StackUnexpected: Unexpected type on the stack. (Offset 63, F... | ✓ Should throw InvalidOperationException (L41)<br>✓ E message should be "not found" (L33) | no / no | |
+| S15a | AssertionPasses | debug-plus | 2 |  | clean | ✓ Should throw InvalidOperationException (L41)<br>✓ E message should be "not found" (L33) | no / no | **DIFFERS** |
+| S15a | AssertionFails | plain | 2 |  | 1 new: Probe.Fails: StackUnexpected: Unexpected type on the stack. (Offset 63, F... | ✓ Should throw InvalidOperationException (L41) | ShouldAssertException / ShouldAssertException | |
+| S15a | AssertionFails | debug-plus | 2 |  | clean | ✓ Should throw InvalidOperationException (L41) | ShouldAssertException / ShouldAssertException | **DIFFERS** |
+| S15b | AssertionPasses | plain | 2 |  | 1 new: Probe.Fails: StackUnexpected: Unexpected type on the stack. (Offset 63, F... | ✓ Return Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(r)) (L43)<br>✓ E message should be "not found" (L33) | no / no | |
+| S15b | AssertionPasses | debug-plus | 2 |  | clean | ✓ Return Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(r)) (L43)<br>✓ E message should be "not found" (L33) | no / no | **DIFFERS** |
+| S15b | AssertionFails | plain | 2 |  | 1 new: Probe.Fails: StackUnexpected: Unexpected type on the stack. (Offset 63, F... | ✓ Return Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(r)) (L43) | ShouldAssertException / ShouldAssertException | |
+| S15b | AssertionFails | debug-plus | 2 |  | clean | ✓ Return Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(r)) (L43) | ShouldAssertException / ShouldAssertException | **DIFFERS** |
+| S16a | MessageMatches | plain | 2 |  | clean | ✓ (await act should throw async <InvalidOperationException> (L35) | no / no | |
+| S16a | MessageMatches | debug-plus | 2 |  | clean | ✓ (await act should throw async <InvalidOperationException> (L35) | no / no | same |
+| S16a | MessageDiffers | plain | 2 |  | clean | ✓ (await act should throw async <InvalidOperationException> (L43) | AssertionException / AssertionException | |
+| S16a | MessageDiffers | debug-plus | 2 |  | clean | ✓ (await act should throw async <InvalidOperationException> (L43) | AssertionException / AssertionException | same |
+| S16b | MessageMatches | plain | 2 |  | clean | ✓ (await  should throw async< invalid operation exception>(() => _client get order async(request))) message should be "not found" (L34) | no / no | |
+| S16b | MessageMatches | debug-plus | 2 |  | clean | ✓ (await  should throw async< invalid operation exception>(() => _client get order async(request))) message should be "not found" (L34) | no / no | same |
+| S16b | MessageDiffers | plain | 2 |  | clean | ✓ (await  should throw async< invalid operation exception>(() => _client get order async(request))) message should be "other" (L41) | ShouldAssertException / ShouldAssertException | |
+| S16b | MessageDiffers | debug-plus | 2 |  | clean | ✓ (await  should throw async< invalid operation exception>(() => _client get order async(request))) message should be "other" (L41) | ShouldAssertException / ShouldAssertException | same |
+| S17a | AssertionPasses | plain | 0 |  | clean | (none) | no / no | |
+| S17a | AssertionPasses | debug-plus | 0 |  | clean | (none) | no / no | same |
+| S17a | AssertionFails | plain | 0 |  | clean | (none) | ShouldAssertException / ShouldAssertException | |
+| S17a | AssertionFails | debug-plus | 0 |  | clean | (none) | ShouldAssertException / ShouldAssertException | same |
+| S17c | AssertionPasses | plain | 0 |  | clean | (none) | no / no | |
+| S17c | AssertionPasses | debug-plus | 0 |  | clean | (none) | no / no | same |
+| S17c | AssertionFails | plain | 0 |  | clean | (none) | AssertionException / AssertionException | |
+| S17c | AssertionFails | debug-plus | 0 |  | clean | (none) | AssertionException / AssertionException | same |
+| S18a | AssertionPasses | plain | 4 |  | clean | ✓ Await Assert.That(() => _client.GetOrderAsync(r)).Throws<InvalidOperationException>() (L46)<br>✓ E message is equal to "not found" (L47) | no / no | |
+| S18a | AssertionPasses | debug-plus | 4 |  | clean | ✓ Await Assert.That(() => _client.GetOrderAsync(r)).Throws<InvalidOperationException>() (L46)<br>✓ E message is equal to "not found" (L47) | no / no | same |
+| S18a | AssertionFails | plain | 4 |  | clean | ✗ Await Assert.That(() => _client.GetOrderAsync(r)).Throws<InvalidOperationException>() (L54): Expected to throw InvalidOperationException but no exception was thrown  at Asse... | AssertionException / AssertionException | |
+| S18a | AssertionFails | debug-plus | 4 |  | clean | ✗ Await Assert.That(() => _client.GetOrderAsync(r)).Throws<InvalidOperationException>() (L54): Expected to throw InvalidOperationException but no exception was thrown  at Asse... | AssertionException / AssertionException | same |
+| S20 | AssertionPasses | plain | 3 |  | clean | ✓ (await  should throw async< invalid operation exception>(() => _client get order async(r))) message should be await _client.GetExpectedMessageAsync() (L45) | no / no | |
+| S20 | AssertionPasses | debug-plus | 3 |  | clean | ✓ (await  should throw async< invalid operation exception>(() => _client get order async(r))) message should be await _client.GetExpectedMessageAsync() (L45) | no / no | same |
+| S20 | ThrowFails | plain | 3 |  | clean | ✗ (await  should throw async< invalid operation exception>(() => _client get order async(r))) message should be await _client.GetExpectedMessageAsync() (L52): Task     should throw System.InvalidOperationException     but did not | ShouldAssertException / ShouldAssertException | |
+| S20 | ThrowFails | debug-plus | 3 |  | clean | ✗ (await  should throw async< invalid operation exception>(() => _client get order async(r))) message should be await _client.GetExpectedMessageAsync() (L52): Task     should throw System.InvalidOperationException     but did not | ShouldAssertException / ShouldAssertException | same |
+| S20 | MessageDiffers | plain | 3 |  | clean | ✓ (await  should throw async< invalid operation exception>(() => _client get order async(r))) message should be await _client.GetExpectedMessageAsync() (L60) | ShouldAssertException / ShouldAssertException | |
+| S20 | MessageDiffers | debug-plus | 3 |  | clean | ✓ (await  should throw async< invalid operation exception>(() => _client get order async(r))) message should be await _client.GetExpectedMessageAsync() (L60) | ShouldAssertException / ShouldAssertException | same |
+| S21a | AssertionPasses | plain | 4 |  | clean | ✓ Await Should.ThrowAsync<InvalidOperationException>( () => _client.GetOrderAsync(r)) (L45)<br>✓ E message should be "not found" (L48) | no / no | |
+| S21a | AssertionPasses | debug-plus | 4 |  | clean | ✓ Await Should.ThrowAsync<InvalidOperationException>( () => _client.GetOrderAsync(r)) (L45)<br>✓ E message should be "not found" (L48) | no / no | same |
+| S21a | AssertionFails | plain | 4 |  | clean | ✗ Await Should.ThrowAsync<InvalidOperationException>( () => _client.GetOrderAsync(r)) (L55): Task     should throw System.InvalidOperationException     but did not | ShouldAssertException / ShouldAssertException | |
+| S21a | AssertionFails | debug-plus | 4 |  | clean | ✗ Await Should.ThrowAsync<InvalidOperationException>( () => _client.GetOrderAsync(r)) (L55): Task     should throw System.InvalidOperationException     but did not | ShouldAssertException / ShouldAssertException | same |
+| S23 | AssertionPasses | plain | 2 |  | clean | ✓ Console.WriteLine((await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(r))).Message) (L45) | no / no | |
+| S23 | AssertionPasses | debug-plus | 2 |  | clean | ✓ Console.WriteLine((await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(r))).Message) (L45) | no / no | same |
+| S23 | AssertionFails | plain | 2 |  | clean | ✗ Console.WriteLine((await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(r))).Message) (L52): Task     should throw System.InvalidOperationException     but did not | ShouldAssertException / ShouldAssertException | |
+| S23 | AssertionFails | debug-plus | 2 |  | clean | ✗ Console.WriteLine((await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(r))).Message) (L52): Task     should throw System.InvalidOperationException     but did not | ShouldAssertException / ShouldAssertException | same |
+| R212 | Awaited_ThrowAsync | plain | 7 |  | 1 new: LabelRepro.LabelTests.Throw: StackUnexpected: Unexpected type on the stac... | ✓ Should throw InvalidOperationException (L19) | no / no | |
+| R212 | Awaited_ThrowAsync | debug-plus | 7 |  | clean | ✓ Should throw InvalidOperationException (L19) | no / no | **DIFFERS** |
+| R212 | Assigned_ThrowAsync | plain | 7 |  | 1 new: LabelRepro.LabelTests.Throw: StackUnexpected: Unexpected type on the stac... | ✓ Await Should.ThrowAsync<InvalidOperationException>(async () => await _client.GetOrderAsync(request)) (L27)<br>✓ Exception message should be "not found" (L29) | no / no | |
+| R212 | Assigned_ThrowAsync | debug-plus | 7 |  | clean | ✓ Await Should.ThrowAsync<InvalidOperationException>(async () => await _client.GetOrderAsync(request)) (L27)<br>✓ Exception message should be "not found" (L29) | no / no | **DIFFERS** |
+| R212 | ThrowAsync_returned_by_a_helper | plain | 7 |  | 1 new: LabelRepro.LabelTests.Throw: StackUnexpected: Unexpected type on the stac... | ✓ Return await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(new OrderRequest { Id = id })) (L56)<br>✓ Exception message should be "not found" (L36) | no / no | |
+| R212 | ThrowAsync_returned_by_a_helper | debug-plus | 7 |  | clean | ✓ Return await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(new OrderRequest { Id = id })) (L56)<br>✓ Exception message should be "not found" (L36) | no / no | **DIFFERS** |
+| R212 | NotThrowAsync | plain | 7 |  | 1 new: LabelRepro.LabelTests.Throw: StackUnexpected: Unexpected type on the stac... | ✓ Should not throw (L43) | no / no | |
+| R212 | NotThrowAsync | debug-plus | 7 |  | clean | ✓ Should not throw (L43) | no / no | **DIFFERS** |
+| R212 | Throw | plain | 7 |  | 1 new: LabelRepro.LabelTests.Throw: StackUnexpected: Unexpected type on the stac... | ✓ Should throw InvalidOperationException (L50) | no / no | |
+| R212 | Throw | debug-plus | 7 |  | clean | ✓ Should throw InvalidOperationException (L50) | no / no | **DIFFERS** |
+
+## B. Labels: the text the weave passed to Track, and Format's reading of it
+
+| shape | method, line | plain: raw → Format | debug-plus | same |
+|---|---|---|---|---|
+| S1 | <Run>d__1::MoveNext L34 | `await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request))` → "Should throw InvalidOperationException" | as plain | same |
+| S2 | <Run>d__1::MoveNext L34 | `var exception = await Should.ThrowAsync<InvalidOperationException>(async () => await _client.GetOrderAsync(request))` → "await Should.ThrowAsync<InvalidOperationException>(async () => await _client.GetOrderAsync(request))" | as plain | same |
+| S2 | <Run>d__1::MoveNext L35 | `exception.Message.ShouldBe("not found")` → "Exception message should be "not found"" | as plain | same |
+| S3 | <Run>d__1::MoveNext L34 | `var e = await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request))` → "await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request))" | as plain | same |
+| S3 | <Run>d__1::MoveNext L35 | `e.Message.ShouldBe("not found")` → "E message should be "not found"" | as plain | same |
+| S4 | <GetOrderShouldFail>d__2::MoveNext L39 | `return await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(new OrderRequest { Id = id }))` → "return await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(new OrderRequest { Id = id }))" | as plain | same |
+| S4 | <Run>d__1::MoveNext L33 | `e.Message.ShouldBe("not found")` → "E message should be "not found"" | as plain | same |
+| S5 | <Run>d__1::MoveNext L34 | `InvalidOperationException e = await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request))` → "InvalidOperationException e = await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request))" | as plain | same |
+| S5 | <Run>d__1::MoveNext L35 | `e.Message.ShouldBe("not found")` → "E message should be "not found"" | as plain | same |
+| S6 | <Run>d__1::MoveNext L35 | `e = await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request))` → "e = await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request))" | as plain | same |
+| S6 | <Run>d__1::MoveNext L36 | `e.Message.ShouldBe("not found")` → "E message should be "not found"" | as plain | same |
+| S6b | <Run>d__2::MoveNext L36 | `_e = await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request))` → "_e = await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request))" | as plain | same |
+| S6b | <Run>d__2::MoveNext L37 | `_e.Message.ShouldBe("not found")` → "E message should be "not found"" | as plain | same |
+| S7 | <Run>d__1::MoveNext L34 | `_ = await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request))` → "_ = await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request))" | as plain | same |
+| S8 | <Run>d__1::MoveNext L34 | `var e = await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request)).ConfigureAwait(false)` → "await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request)).ConfigureAwait(false)" | as plain | same |
+| S8 | <Run>d__1::MoveNext L35 | `e.Message.ShouldBe("not found")` → "E message should be "not found"" | as plain | same |
+| S9 | Probe::Run L33 | `var e = Should.Throw<InvalidOperationException>(() => _client.GetOrder(request))` → "Should throw InvalidOperationException" | as plain | same |
+| S9 | Probe::Run L34 | `e.Message.ShouldBe("not found")` → "E message should be "not found"" | as plain | same |
+| S9b | Probe::GetOrderShouldFail L38 | `return Should.Throw<InvalidOperationException>(() => _client.GetOrder(new OrderRequest { Id = id }))` → "return Should.Throw<InvalidOperationException>(() => _client.GetOrder(new OrderRequest { Id = id }))" | as plain | same |
+| S9b | Probe::Run L33 | `e.Message.ShouldBe("not found")` → "E message should be "not found"" | as plain | same |
+| S11 | <Run>d__1::MoveNext L34 | `var e = await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request))` → "await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request))" | as plain | same |
+| S11 | <Run>d__1::MoveNext L36 | `e.Message.ShouldBe("not found")` → "E message should be "not found"" | as plain | same |
+| S12a | <Run>d__1::MoveNext L35 | `var a = await act.Should().ThrowAsync<InvalidOperationException>()` → "Await act should throw async <InvalidOperationException>" | as plain | same |
+| S12a | <Run>d__1::MoveNext L36 | `a.Which.Message.Should().Be("not found")` → "A which message should be "not found"" | as plain | same |
+| S13 | <Run>d__1::MoveNext L35 | `var v = await Assert.That(x).IsNotNull()` → "await Assert.That(x).IsNotNull()" | as plain | same |
+| S13 | <Run>d__1::MoveNext L36 | `await Assert.That(v).IsEqualTo("value")` → "V is equal to "value"" | as plain | same |
+| S15a | <AssertionPasses>d__1::MoveNext L33 | `e.Message.ShouldBe("not found")` → "E message should be "not found"" | as plain | same |
+| S15a | Probe::Fails L41 | `Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(r))` → "Should throw InvalidOperationException" | as plain | same |
+| S15b | <AssertionPasses>d__1::MoveNext L33 | `e.Message.ShouldBe("not found")` → "E message should be "not found"" | as plain | same |
+| S15b | Probe::Fails L43 | `return Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(r))` → "return Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(r))" | as plain | same |
+| S16a | <MessageDiffers>d__2::MoveNext L43 | `(await act.Should().ThrowAsync<InvalidOperationException>()).Which.Message.Should().Be("other")` → "(await act should throw async <InvalidOperationException>" | as plain | same |
+| S16a | <MessageMatches>d__1::MoveNext L35 | `(await act.Should().ThrowAsync<InvalidOperationException>()).Which.Message.Should().Be("not found")` → "(await act should throw async <InvalidOperationException>" | as plain | same |
+| S16b | <MessageDiffers>d__2::MoveNext L41 | `(await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request))).Message.ShouldBe("other")` → "(await  should throw async< invalid operation exception>(() => _client get order async(request))) message should be "other"" | as plain | same |
+| S16b | <MessageMatches>d__1::MoveNext L34 | `(await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request))).Message.ShouldBe("not found")` → "(await  should throw async< invalid operation exception>(() => _client get order async(request))) message should be "not found"" | as plain | same |
+| S18a | <AssertionFails>d__2::MoveNext L54 | `var e = await Assert.That(() => _client.GetOrderAsync(r)).Throws<InvalidOperationException>()` → "await Assert.That(() => _client.GetOrderAsync(r)).Throws<InvalidOperationException>()" | as plain | same |
+| S18a | <AssertionFails>d__2::MoveNext L55 | `await Assert.That(e.Message).IsEqualTo("not found")` → "E message is equal to "not found"" | as plain | same |
+| S18a | <AssertionPasses>d__1::MoveNext L46 | `var e = await Assert.That(() => _client.GetOrderAsync(r)).Throws<InvalidOperationException>()` → "await Assert.That(() => _client.GetOrderAsync(r)).Throws<InvalidOperationException>()" | as plain | same |
+| S18a | <AssertionPasses>d__1::MoveNext L47 | `await Assert.That(e.Message).IsEqualTo("not found")` → "E message is equal to "not found"" | as plain | same |
+| S20 | <AssertionPasses>d__1::MoveNext L45 | `(await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(r))).Message.ShouldBe(await _client.GetExpectedMessageAsync())` → "(await  should throw async< invalid operation exception>(() => _client get order async(r))) message should be await _client.GetExpectedMessageAsync()" | as plain | same |
+| S20 | <MessageDiffers>d__3::MoveNext L60 | `(await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(r))).Message.ShouldBe(await _client.GetExpectedMessageAsync())` → "(await  should throw async< invalid operation exception>(() => _client get order async(r))) message should be await _client.GetExpectedMessageAsync()" | as plain | same |
+| S20 | <ThrowFails>d__2::MoveNext L52 | `(await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(r))).Message.ShouldBe(await _client.GetExpectedMessageAsync())` → "(await  should throw async< invalid operation exception>(() => _client get order async(r))) message should be await _client.GetExpectedMessageAsync()" | as plain | same |
+| S21a | <AssertionFails>d__2::MoveNext L55 | `var e = await Should.ThrowAsync<InvalidOperationException>( () => _client.GetOrderAsync(r))` → "await Should.ThrowAsync<InvalidOperationException>( () => _client.GetOrderAsync(r))" | as plain | same |
+| S21a | <AssertionFails>d__2::MoveNext L58 | `e.Message.ShouldBe("not found")` → "E message should be "not found"" | as plain | same |
+| S21a | <AssertionPasses>d__1::MoveNext L45 | `var e = await Should.ThrowAsync<InvalidOperationException>( () => _client.GetOrderAsync(r))` → "await Should.ThrowAsync<InvalidOperationException>( () => _client.GetOrderAsync(r))" | as plain | same |
+| S21a | <AssertionPasses>d__1::MoveNext L48 | `e.Message.ShouldBe("not found")` → "E message should be "not found"" | as plain | same |
+| S23 | <AssertionFails>d__2::MoveNext L52 | `Console.WriteLine((await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(r))).Message)` → "Console.WriteLine((await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(r))).Message)" | as plain | same |
+| S23 | <AssertionPasses>d__1::MoveNext L45 | `Console.WriteLine((await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(r))).Message)` → "Console.WriteLine((await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(r))).Message)" | as plain | same |
+| R212 | <Assigned_ThrowAsync>d__2::MoveNext L27 | `var exception = await Should.ThrowAsync<InvalidOperationException>(async () => await _client.GetOrderAsync(request))` → "await Should.ThrowAsync<InvalidOperationException>(async () => await _client.GetOrderAsync(request))" | as plain | same |
+| R212 | <Assigned_ThrowAsync>d__2::MoveNext L29 | `exception.Message.ShouldBe("not found")` → "Exception message should be "not found"" | as plain | same |
+| R212 | <Awaited_ThrowAsync>d__1::MoveNext L19 | `await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(request))` → "Should throw InvalidOperationException" | as plain | same |
+| R212 | <GetOrderShouldFail>d__6::MoveNext L56 | `return await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(new OrderRequest { Id = id }))` → "return await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(new OrderRequest { Id = id }))" | as plain | same |
+| R212 | <NotThrowAsync>d__4::MoveNext L43 | `await Should.NotThrowAsync(() => _client.GetOrderAsync(new OrderRequest { Id = "known" }))` → "Should not throw" | as plain | same |
+| R212 | <ThrowAsync_returned_by_a_helper>d__3::MoveNext L36 | `exception.Message.ShouldBe("not found")` → "Exception message should be "not found"" | as plain | same |
+| R212 | LabelTests::Throw L50 | `Should.Throw<InvalidOperationException>(() => _client.GetOrder(request))` → "Should throw InvalidOperationException" | as plain | same |
+
+## C. Statements: the weave's path for each visible statement that calls an assertion (as FindAssertionStatements takes it), PlanStack's verdict, the stacks it reads, and where AwaitedRange ends
+
+| shape | statement | what | plain | debug-plus | same |
+|---|---|---|---|---|---|
+| S1 | <Run>d__1::MoveNext L34 | path | awaited assertion (IsGetAwaiterOnAssertionResult true, GetResult found) | as plain | same |
+| S1 | <Run>d__1::MoveNext L34 | PlanStack verdict | awaited, woven | as plain | same |
+| S1 | <Run>d__1::MoveNext L34 | entry, exit | entry=[] exit=[] | as plain | same |
+| S1 | <Run>d__1::MoveNext L34 | AwaitedRange | ldloca .. pop, then leave IL_0131 | as plain | same |
+| S2 | <Run>d__1::MoveNext L34 | path | awaited assertion (IsGetAwaiterOnAssertionResult true, GetResult found) | as plain | same |
+| S2 | <Run>d__1::MoveNext L35 | path | synchronous statement | as plain | same |
+| S2 | <Run>d__1::MoveNext L34 | PlanStack verdict | awaited, woven | as plain | same |
+| S2 | <Run>d__1::MoveNext L35 | PlanStack verdict | sync, woven | as plain | same |
+| S2 | <Run>d__1::MoveNext L34 | entry, exit | entry=[] exit=[InvalidOperationException] | as plain | same |
+| S2 | <Run>d__1::MoveNext L35 | entry, exit | entry=[InvalidOperationException] exit=[] | entry=[] exit=[] | **DIFFERS** |
+| S2 | <Run>d__1::MoveNext L34 | AwaitedRange | ldloca .. call, then callvirt Exception::get_Message | ldloca .. call, then stloc V_4 | **DIFFERS** |
+| S3 | <Run>d__1::MoveNext L34 | path | awaited assertion (IsGetAwaiterOnAssertionResult true, GetResult found) | as plain | same |
+| S3 | <Run>d__1::MoveNext L35 | path | synchronous statement | as plain | same |
+| S3 | <Run>d__1::MoveNext L34 | PlanStack verdict | awaited, woven | as plain | same |
+| S3 | <Run>d__1::MoveNext L35 | PlanStack verdict | sync, woven | as plain | same |
+| S3 | <Run>d__1::MoveNext L34 | entry, exit | entry=[] exit=[InvalidOperationException] | as plain | same |
+| S3 | <Run>d__1::MoveNext L35 | entry, exit | entry=[InvalidOperationException] exit=[] | entry=[] exit=[] | **DIFFERS** |
+| S3 | <Run>d__1::MoveNext L34 | AwaitedRange | ldloca .. call, then callvirt Exception::get_Message | ldloca .. call, then stloc V_4 | **DIFFERS** |
+| S4 | <GetOrderShouldFail>d__2::MoveNext L39 | path | awaited assertion (IsGetAwaiterOnAssertionResult true, GetResult found) | as plain | same |
+| S4 | <Run>d__1::MoveNext L33 | path | synchronous statement | as plain | same |
+| S4 | <GetOrderShouldFail>d__2::MoveNext L39 | PlanStack verdict | awaited, woven | as plain | same |
+| S4 | <Run>d__1::MoveNext L33 | PlanStack verdict | sync, woven | as plain | same |
+| S4 | <GetOrderShouldFail>d__2::MoveNext L39 | entry, exit | entry=[] exit=[InvalidOperationException] | as plain | same |
+| S4 | <Run>d__1::MoveNext L33 | entry, exit | entry=[InvalidOperationException] exit=[] | entry=[] exit=[] | **DIFFERS** |
+| S4 | <GetOrderShouldFail>d__2::MoveNext L39 | AwaitedRange | ldloca .. call, then stloc V_1 | as plain | same |
+| S5 | <Run>d__1::MoveNext L34 | path | awaited assertion (IsGetAwaiterOnAssertionResult true, GetResult found) | as plain | same |
+| S5 | <Run>d__1::MoveNext L35 | path | synchronous statement | as plain | same |
+| S5 | <Run>d__1::MoveNext L34 | PlanStack verdict | awaited, woven | as plain | same |
+| S5 | <Run>d__1::MoveNext L35 | PlanStack verdict | sync, woven | as plain | same |
+| S5 | <Run>d__1::MoveNext L34 | entry, exit | entry=[] exit=[InvalidOperationException] | as plain | same |
+| S5 | <Run>d__1::MoveNext L35 | entry, exit | entry=[InvalidOperationException] exit=[] | entry=[] exit=[] | **DIFFERS** |
+| S5 | <Run>d__1::MoveNext L34 | AwaitedRange | ldloca .. call, then callvirt Exception::get_Message | ldloca .. call, then stloc V_4 | **DIFFERS** |
+| S6 | <Run>d__1::MoveNext L35 | path | awaited assertion (IsGetAwaiterOnAssertionResult true, GetResult found) | as plain | same |
+| S6 | <Run>d__1::MoveNext L36 | path | synchronous statement | as plain | same |
+| S6 | <Run>d__1::MoveNext L35 | PlanStack verdict | awaited, woven | as plain | same |
+| S6 | <Run>d__1::MoveNext L36 | PlanStack verdict | sync, woven | as plain | same |
+| S6 | <Run>d__1::MoveNext L35 | entry, exit | entry=[] exit=[InvalidOperationException] | as plain | same |
+| S6 | <Run>d__1::MoveNext L36 | entry, exit | entry=[InvalidOperationException] exit=[] | entry=[] exit=[] | **DIFFERS** |
+| S6 | <Run>d__1::MoveNext L35 | AwaitedRange | ldloca .. call, then callvirt Exception::get_Message | ldloca .. call, then stloc V_4 | **DIFFERS** |
+| S6b | <Run>d__2::MoveNext L36 | path | awaited assertion (IsGetAwaiterOnAssertionResult true, GetResult found) | as plain | same |
+| S6b | <Run>d__2::MoveNext L37 | path | synchronous statement | as plain | same |
+| S6b | <Run>d__2::MoveNext L36 | PlanStack verdict | awaited, woven | as plain | same |
+| S6b | <Run>d__2::MoveNext L37 | PlanStack verdict | sync, woven | as plain | same |
+| S6b | <Run>d__2::MoveNext L36 | entry, exit | entry=[] exit=[InvalidOperationException] | as plain | same |
+| S6b | <Run>d__2::MoveNext L37 | entry, exit | entry=[] exit=[] | as plain | same |
+| S6b | <Run>d__2::MoveNext L36 | AwaitedRange | ldloca .. call, then stloc V_4 | as plain | same |
+| S7 | <Run>d__1::MoveNext L34 | path | awaited assertion (IsGetAwaiterOnAssertionResult true, GetResult found) | as plain | same |
+| S7 | <Run>d__1::MoveNext L34 | PlanStack verdict | awaited, woven | as plain | same |
+| S7 | <Run>d__1::MoveNext L34 | entry, exit | entry=[] exit=[] | entry=[] exit=[InvalidOperationException] | **DIFFERS** |
+| S7 | <Run>d__1::MoveNext L34 | AwaitedRange | ldloca .. pop, then leave IL_0131 | ldloca .. call, then stloc V_3 | **DIFFERS** |
+| S8 | <Run>d__1::MoveNext L34 | path | awaited assertion (IsGetAwaiterOnAssertionResult true, GetResult found) | as plain | same |
+| S8 | <Run>d__1::MoveNext L35 | path | synchronous statement | as plain | same |
+| S8 | <Run>d__1::MoveNext L34 | PlanStack verdict | awaited, woven | as plain | same |
+| S8 | <Run>d__1::MoveNext L35 | PlanStack verdict | sync, woven | as plain | same |
+| S8 | <Run>d__1::MoveNext L34 | entry, exit | entry=[] exit=[InvalidOperationException] | as plain | same |
+| S8 | <Run>d__1::MoveNext L35 | entry, exit | entry=[InvalidOperationException] exit=[] | entry=[] exit=[] | **DIFFERS** |
+| S8 | <Run>d__1::MoveNext L34 | AwaitedRange | ldloca .. call, then callvirt Exception::get_Message | ldloca .. call, then stloc V_4 | **DIFFERS** |
+| S9 | Probe::Run L33 | path | synchronous statement | as plain | same |
+| S9 | Probe::Run L34 | path | synchronous statement | as plain | same |
+| S9 | Probe::Run L33 | PlanStack verdict | sync, woven | as plain | same |
+| S9 | Probe::Run L34 | PlanStack verdict | sync, woven | as plain | same |
+| S9 | Probe::Run L33 | entry, exit | entry=[Probe/<>c__DisplayClass1_0] exit=[InvalidOperationException] | entry=[] exit=[] | **DIFFERS** |
+| S9 | Probe::Run L34 | entry, exit | entry=[InvalidOperationException] exit=[] | entry=[] exit=[] | **DIFFERS** |
+| S9b | Probe::GetOrderShouldFail L38 | path | synchronous statement | as plain | same |
+| S9b | Probe::Run L33 | path | synchronous statement | as plain | same |
+| S9b | Probe::GetOrderShouldFail L38 | PlanStack verdict | sync, woven | as plain | same |
+| S9b | Probe::Run L33 | PlanStack verdict | sync, woven | as plain | same |
+| S9b | Probe::GetOrderShouldFail L38 | entry, exit | entry=[Probe/<>c__DisplayClass2_0] exit=[InvalidOperationException] | entry=[] exit=[InvalidOperationException] | **DIFFERS** |
+| S9b | Probe::Run L33 | entry, exit | entry=[InvalidOperationException] exit=[] | entry=[] exit=[] | **DIFFERS** |
+| S11 | <Run>d__1::MoveNext L34 | path | awaited assertion (IsGetAwaiterOnAssertionResult true, GetResult found) | as plain | same |
+| S11 | <Run>d__1::MoveNext L36 | path | synchronous statement | as plain | same |
+| S11 | <Run>d__1::MoveNext L34 | PlanStack verdict | awaited, woven | as plain | same |
+| S11 | <Run>d__1::MoveNext L36 | PlanStack verdict | sync, woven | as plain | same |
+| S11 | <Run>d__1::MoveNext L34 | entry, exit | entry=[] exit=[InvalidOperationException] | as plain | same |
+| S11 | <Run>d__1::MoveNext L36 | entry, exit | entry=[] exit=[] | as plain | same |
+| S11 | <Run>d__1::MoveNext L34 | AwaitedRange | ldloca .. call, then stloc V_3 | as plain | same |
+| S12a | <Run>d__1::MoveNext L35 | path | awaited assertion (IsGetAwaiterOnAssertionResult true, GetResult found) | as plain | same |
+| S12a | <Run>d__1::MoveNext L36 | path | synchronous statement | as plain | same |
+| S12a | <Run>d__1::MoveNext L35 | PlanStack verdict | awaited, woven | as plain | same |
+| S12a | <Run>d__1::MoveNext L36 | PlanStack verdict | sync, woven | as plain | same |
+| S12a | <Run>d__1::MoveNext L35 | entry, exit | entry=[] exit=[FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>] | as plain | same |
+| S12a | <Run>d__1::MoveNext L36 | entry, exit | entry=[FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>] exit=[] | entry=[] exit=[] | **DIFFERS** |
+| S12a | <Run>d__1::MoveNext L35 | AwaitedRange | ldloca .. call, then callvirt FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>::get_Which | ldloca .. call, then stloc V_5 | **DIFFERS** |
+| S13 | <Run>d__1::MoveNext L35 | path | awaited assertion (IsGetAwaiterOnAssertionResult true, GetResult found) | as plain | same |
+| S13 | <Run>d__1::MoveNext L36 | path | awaited assertion (IsGetAwaiterOnAssertionResult true, GetResult found) | as plain | same |
+| S13 | <Run>d__1::MoveNext L35 | PlanStack verdict | awaited, woven | as plain | same |
+| S13 | <Run>d__1::MoveNext L36 | PlanStack verdict | awaited, woven | as plain | same |
+| S13 | <Run>d__1::MoveNext L35 | entry, exit | entry=[] exit=[String] | as plain | same |
+| S13 | <Run>d__1::MoveNext L36 | entry, exit | entry=[] exit=[] | as plain | same |
+| S13 | <Run>d__1::MoveNext L35 | AwaitedRange | ldloca .. call, then call TUnit.Assertions.StringValue::op_Implicit | ldloca .. call, then stloc V_5 | **DIFFERS** |
+| S13 | <Run>d__1::MoveNext L36 | AwaitedRange | ldloca .. pop, then leave IL_0170 | as plain | same |
+| S15a | <AssertionPasses>d__1::MoveNext L33 | path | synchronous statement | as plain | same |
+| S15a | Probe::Fails L41 | path | synchronous statement | as plain | same |
+| S15a | <AssertionPasses>d__1::MoveNext L33 | PlanStack verdict | sync, woven | as plain | same |
+| S15a | Probe::Fails L41 | PlanStack verdict | sync, woven | as plain | same |
+| S15a | <AssertionPasses>d__1::MoveNext L33 | entry, exit | entry=[InvalidOperationException] exit=[] | entry=[] exit=[] | **DIFFERS** |
+| S15a | Probe::Fails L41 | entry, exit | entry=[Probe/<>c__DisplayClass3_0] exit=[Task`1<InvalidOperationException>] | entry=[] exit=[Task`1<InvalidOperationException>] | **DIFFERS** |
+| S15b | <AssertionPasses>d__1::MoveNext L33 | path | synchronous statement | as plain | same |
+| S15b | Probe::Fails L43 | path | synchronous statement | as plain | same |
+| S15b | <AssertionPasses>d__1::MoveNext L33 | PlanStack verdict | sync, woven | as plain | same |
+| S15b | Probe::Fails L43 | PlanStack verdict | sync, woven | as plain | same |
+| S15b | <AssertionPasses>d__1::MoveNext L33 | entry, exit | entry=[InvalidOperationException] exit=[] | entry=[] exit=[] | **DIFFERS** |
+| S15b | Probe::Fails L43 | entry, exit | entry=[Probe/<>c__DisplayClass3_0] exit=[Task`1<InvalidOperationException>] | entry=[] exit=[Task`1<InvalidOperationException>] | **DIFFERS** |
+| S16a | <MessageDiffers>d__2::MoveNext L43 | path | awaited assertion (IsGetAwaiterOnAssertionResult true, GetResult found) | as plain | same |
+| S16a | <MessageDiffers>d__2::MoveNext L43 (hidden part) | path | the call sits under a hidden sequence point after an await: in no statement | as plain | same |
+| S16a | <MessageMatches>d__1::MoveNext L35 | path | awaited assertion (IsGetAwaiterOnAssertionResult true, GetResult found) | as plain | same |
+| S16a | <MessageMatches>d__1::MoveNext L35 (hidden part) | path | the call sits under a hidden sequence point after an await: in no statement | as plain | same |
+| S16a | <MessageDiffers>d__2::MoveNext L43 | PlanStack verdict | awaited, woven | as plain | same |
+| S16a | <MessageMatches>d__1::MoveNext L35 | PlanStack verdict | awaited, woven | as plain | same |
+| S16a | <MessageDiffers>d__2::MoveNext L43 | entry, exit | entry=[] exit=[FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>] | as plain | same |
+| S16a | <MessageMatches>d__1::MoveNext L35 | entry, exit | entry=[] exit=[FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>] | as plain | same |
+| S16a | <MessageDiffers>d__2::MoveNext L43 | AwaitedRange | ldloca .. call, then callvirt FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>::get_Which | ldloca .. call, then stloc V_4 | **DIFFERS** |
+| S16a | <MessageMatches>d__1::MoveNext L35 | AwaitedRange | ldloca .. call, then callvirt FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>::get_Which | ldloca .. call, then stloc V_4 | **DIFFERS** |
+| S16b | <MessageDiffers>d__2::MoveNext L41 | path | awaited assertion (IsGetAwaiterOnAssertionResult true, GetResult found) | as plain | same |
+| S16b | <MessageDiffers>d__2::MoveNext L41 (hidden part) | path | the call sits under a hidden sequence point after an await: in no statement | as plain | same |
+| S16b | <MessageMatches>d__1::MoveNext L34 | path | awaited assertion (IsGetAwaiterOnAssertionResult true, GetResult found) | as plain | same |
+| S16b | <MessageMatches>d__1::MoveNext L34 (hidden part) | path | the call sits under a hidden sequence point after an await: in no statement | as plain | same |
+| S16b | <MessageDiffers>d__2::MoveNext L41 | PlanStack verdict | awaited, woven | as plain | same |
+| S16b | <MessageMatches>d__1::MoveNext L34 | PlanStack verdict | awaited, woven | as plain | same |
+| S16b | <MessageDiffers>d__2::MoveNext L41 | entry, exit | entry=[] exit=[InvalidOperationException] | as plain | same |
+| S16b | <MessageMatches>d__1::MoveNext L34 | entry, exit | entry=[] exit=[InvalidOperationException] | as plain | same |
+| S16b | <MessageDiffers>d__2::MoveNext L41 | AwaitedRange | ldloca .. call, then callvirt Exception::get_Message | ldloca .. call, then stloc V_3 | **DIFFERS** |
+| S16b | <MessageMatches>d__1::MoveNext L34 | AwaitedRange | ldloca .. call, then callvirt Exception::get_Message | ldloca .. call, then stloc V_3 | **DIFFERS** |
+| S17a | <AssertionFails>d__2::MoveNext L50 (hidden part) | path | the call sits under a hidden sequence point after an await: in no statement | as plain | same |
+| S17a | <AssertionPasses>d__1::MoveNext L44 (hidden part) | path | the call sits under a hidden sequence point after an await: in no statement | as plain | same |
+| S17c | <AssertionFails>d__2::MoveNext L51 (hidden part) | path | the call sits under a hidden sequence point after an await: in no statement | as plain | same |
+| S17c | <AssertionPasses>d__1::MoveNext L45 (hidden part) | path | the call sits under a hidden sequence point after an await: in no statement | as plain | same |
+| S18a | <AssertionFails>d__2::MoveNext L54 | path | awaited assertion (IsGetAwaiterOnAssertionResult true, GetResult found) | as plain | same |
+| S18a | <AssertionFails>d__2::MoveNext L55 | path | awaited assertion (IsGetAwaiterOnAssertionResult true, GetResult found) | as plain | same |
+| S18a | <AssertionPasses>d__1::MoveNext L46 | path | awaited assertion (IsGetAwaiterOnAssertionResult true, GetResult found) | as plain | same |
+| S18a | <AssertionPasses>d__1::MoveNext L47 | path | awaited assertion (IsGetAwaiterOnAssertionResult true, GetResult found) | as plain | same |
+| S18a | <AssertionFails>d__2::MoveNext L54 | PlanStack verdict | awaited, woven | as plain | same |
+| S18a | <AssertionFails>d__2::MoveNext L55 | PlanStack verdict | awaited, woven | as plain | same |
+| S18a | <AssertionPasses>d__1::MoveNext L46 | PlanStack verdict | awaited, woven | as plain | same |
+| S18a | <AssertionPasses>d__1::MoveNext L47 | PlanStack verdict | awaited, woven | as plain | same |
+| S18a | <AssertionFails>d__2::MoveNext L54 | entry, exit | entry=[] exit=[InvalidOperationException] | as plain | same |
+| S18a | <AssertionFails>d__2::MoveNext L55 | entry, exit | entry=[] exit=[] | as plain | same |
+| S18a | <AssertionPasses>d__1::MoveNext L46 | entry, exit | entry=[] exit=[InvalidOperationException] | as plain | same |
+| S18a | <AssertionPasses>d__1::MoveNext L47 | entry, exit | entry=[] exit=[] | as plain | same |
+| S18a | <AssertionFails>d__2::MoveNext L54 | AwaitedRange | ldloca .. call, then callvirt Exception::get_Message | ldloca .. call, then stloc V_4 | **DIFFERS** |
+| S18a | <AssertionFails>d__2::MoveNext L55 | AwaitedRange | ldloca .. pop, then leave IL_01bd | as plain | same |
+| S18a | <AssertionPasses>d__1::MoveNext L46 | AwaitedRange | ldloca .. call, then callvirt Exception::get_Message | ldloca .. call, then stloc V_4 | **DIFFERS** |
+| S18a | <AssertionPasses>d__1::MoveNext L47 | AwaitedRange | ldloca .. pop, then leave IL_01bd | as plain | same |
+| S20 | <AssertionPasses>d__1::MoveNext L45 | path | awaited assertion (IsGetAwaiterOnAssertionResult true, GetResult found) | as plain | same |
+| S20 | <AssertionPasses>d__1::MoveNext L45 (hidden part) | path | the call sits under a hidden sequence point after an await: in no statement | as plain | same |
+| S20 | <MessageDiffers>d__3::MoveNext L60 | path | awaited assertion (IsGetAwaiterOnAssertionResult true, GetResult found) | as plain | same |
+| S20 | <MessageDiffers>d__3::MoveNext L60 (hidden part) | path | the call sits under a hidden sequence point after an await: in no statement | as plain | same |
+| S20 | <ThrowFails>d__2::MoveNext L52 | path | awaited assertion (IsGetAwaiterOnAssertionResult true, GetResult found) | as plain | same |
+| S20 | <ThrowFails>d__2::MoveNext L52 (hidden part) | path | the call sits under a hidden sequence point after an await: in no statement | as plain | same |
+| S20 | <AssertionPasses>d__1::MoveNext L45 | PlanStack verdict | awaited, woven | as plain | same |
+| S20 | <MessageDiffers>d__3::MoveNext L60 | PlanStack verdict | awaited, woven | as plain | same |
+| S20 | <ThrowFails>d__2::MoveNext L52 | PlanStack verdict | awaited, woven | as plain | same |
+| S20 | <AssertionPasses>d__1::MoveNext L45 | entry, exit | entry=[] exit=[InvalidOperationException] | as plain | same |
+| S20 | <MessageDiffers>d__3::MoveNext L60 | entry, exit | entry=[] exit=[InvalidOperationException] | as plain | same |
+| S20 | <ThrowFails>d__2::MoveNext L52 | entry, exit | entry=[] exit=[InvalidOperationException] | as plain | same |
+| S20 | <AssertionPasses>d__1::MoveNext L45 | AwaitedRange | ldloca .. call, then stloc V_4 | as plain | same |
+| S20 | <MessageDiffers>d__3::MoveNext L60 | AwaitedRange | ldloca .. call, then stloc V_4 | as plain | same |
+| S20 | <ThrowFails>d__2::MoveNext L52 | AwaitedRange | ldloca .. call, then stloc V_4 | as plain | same |
+| S21a | <AssertionFails>d__2::MoveNext L55 | path | awaited assertion (IsGetAwaiterOnAssertionResult true, GetResult found) | as plain | same |
+| S21a | <AssertionFails>d__2::MoveNext L58 | path | synchronous statement | as plain | same |
+| S21a | <AssertionPasses>d__1::MoveNext L45 | path | awaited assertion (IsGetAwaiterOnAssertionResult true, GetResult found) | as plain | same |
+| S21a | <AssertionPasses>d__1::MoveNext L48 | path | synchronous statement | as plain | same |
+| S21a | <AssertionFails>d__2::MoveNext L55 | PlanStack verdict | awaited, woven | as plain | same |
+| S21a | <AssertionFails>d__2::MoveNext L58 | PlanStack verdict | sync, woven | as plain | same |
+| S21a | <AssertionPasses>d__1::MoveNext L45 | PlanStack verdict | awaited, woven | as plain | same |
+| S21a | <AssertionPasses>d__1::MoveNext L48 | PlanStack verdict | sync, woven | as plain | same |
+| S21a | <AssertionFails>d__2::MoveNext L55 | entry, exit | entry=[] exit=[InvalidOperationException] | as plain | same |
+| S21a | <AssertionFails>d__2::MoveNext L58 | entry, exit | entry=[InvalidOperationException] exit=[] | entry=[] exit=[] | **DIFFERS** |
+| S21a | <AssertionPasses>d__1::MoveNext L45 | entry, exit | entry=[] exit=[InvalidOperationException] | as plain | same |
+| S21a | <AssertionPasses>d__1::MoveNext L48 | entry, exit | entry=[InvalidOperationException] exit=[] | entry=[] exit=[] | **DIFFERS** |
+| S21a | <AssertionFails>d__2::MoveNext L55 | AwaitedRange | ldloca .. call, then callvirt Exception::get_Message | ldloca .. call, then stloc V_4 | **DIFFERS** |
+| S21a | <AssertionPasses>d__1::MoveNext L45 | AwaitedRange | ldloca .. call, then callvirt Exception::get_Message | ldloca .. call, then stloc V_4 | **DIFFERS** |
+| S23 | <AssertionFails>d__2::MoveNext L52 | path | awaited assertion (IsGetAwaiterOnAssertionResult true, GetResult found) | as plain | same |
+| S23 | <AssertionPasses>d__1::MoveNext L45 | path | awaited assertion (IsGetAwaiterOnAssertionResult true, GetResult found) | as plain | same |
+| S23 | <AssertionFails>d__2::MoveNext L52 | PlanStack verdict | awaited, woven | as plain | same |
+| S23 | <AssertionPasses>d__1::MoveNext L45 | PlanStack verdict | awaited, woven | as plain | same |
+| S23 | <AssertionFails>d__2::MoveNext L52 | entry, exit | entry=[] exit=[InvalidOperationException] | as plain | same |
+| S23 | <AssertionPasses>d__1::MoveNext L45 | entry, exit | entry=[] exit=[InvalidOperationException] | as plain | same |
+| S23 | <AssertionFails>d__2::MoveNext L52 | AwaitedRange | ldloca .. call, then callvirt Exception::get_Message | ldloca .. call, then stloc V_3 | **DIFFERS** |
+| S23 | <AssertionPasses>d__1::MoveNext L45 | AwaitedRange | ldloca .. call, then callvirt Exception::get_Message | ldloca .. call, then stloc V_3 | **DIFFERS** |
+| R212 | <Assigned_ThrowAsync>d__2::MoveNext L27 | path | awaited assertion (IsGetAwaiterOnAssertionResult true, GetResult found) | as plain | same |
+| R212 | <Assigned_ThrowAsync>d__2::MoveNext L29 | path | synchronous statement | as plain | same |
+| R212 | <Awaited_ThrowAsync>d__1::MoveNext L19 | path | awaited assertion (IsGetAwaiterOnAssertionResult true, GetResult found) | as plain | same |
+| R212 | <GetOrderShouldFail>d__6::MoveNext L56 | path | awaited assertion (IsGetAwaiterOnAssertionResult true, GetResult found) | as plain | same |
+| R212 | <NotThrowAsync>d__4::MoveNext L43 | path | awaited assertion (IsGetAwaiterOnAssertionResult true, GetResult found) | as plain | same |
+| R212 | <ThrowAsync_returned_by_a_helper>d__3::MoveNext L36 | path | synchronous statement | as plain | same |
+| R212 | LabelTests::Throw L50 | path | synchronous statement | as plain | same |
+| R212 | <Assigned_ThrowAsync>d__2::MoveNext L27 | PlanStack verdict | awaited, woven | as plain | same |
+| R212 | <Assigned_ThrowAsync>d__2::MoveNext L29 | PlanStack verdict | sync, woven | as plain | same |
+| R212 | <Awaited_ThrowAsync>d__1::MoveNext L19 | PlanStack verdict | awaited, woven | as plain | same |
+| R212 | <GetOrderShouldFail>d__6::MoveNext L56 | PlanStack verdict | awaited, woven | as plain | same |
+| R212 | <NotThrowAsync>d__4::MoveNext L43 | PlanStack verdict | awaited, woven | as plain | same |
+| R212 | <ThrowAsync_returned_by_a_helper>d__3::MoveNext L36 | PlanStack verdict | sync, woven | as plain | same |
+| R212 | LabelTests::Throw L50 | PlanStack verdict | sync, woven | as plain | same |
+| R212 | <Assigned_ThrowAsync>d__2::MoveNext L27 | entry, exit | entry=[] exit=[InvalidOperationException] | as plain | same |
+| R212 | <Assigned_ThrowAsync>d__2::MoveNext L29 | entry, exit | entry=[InvalidOperationException] exit=[] | entry=[] exit=[] | **DIFFERS** |
+| R212 | <Awaited_ThrowAsync>d__1::MoveNext L19 | entry, exit | entry=[] exit=[] | as plain | same |
+| R212 | <GetOrderShouldFail>d__6::MoveNext L56 | entry, exit | entry=[] exit=[InvalidOperationException] | as plain | same |
+| R212 | <NotThrowAsync>d__4::MoveNext L43 | entry, exit | entry=[] exit=[] | as plain | same |
+| R212 | <ThrowAsync_returned_by_a_helper>d__3::MoveNext L36 | entry, exit | entry=[InvalidOperationException] exit=[] | entry=[] exit=[] | **DIFFERS** |
+| R212 | LabelTests::Throw L50 | entry, exit | entry=[LabelRepro.LabelTests/<>c__DisplayClass5_0] exit=[] | entry=[] exit=[] | **DIFFERS** |
+| R212 | <Assigned_ThrowAsync>d__2::MoveNext L27 | AwaitedRange | ldloca .. call, then callvirt Exception::get_Message | ldloca .. call, then stloc V_4 | **DIFFERS** |
+| R212 | <Awaited_ThrowAsync>d__1::MoveNext L19 | AwaitedRange | ldloca .. pop, then leave IL_0131 | as plain | same |
+| R212 | <GetOrderShouldFail>d__6::MoveNext L56 | AwaitedRange | ldloca .. call, then stloc V_1 | as plain | same |
+| R212 | <NotThrowAsync>d__4::MoveNext L43 | AwaitedRange | ldloca .. call, then leave IL_00f7 | as plain | same |
+
+## D. Every await in the unwoven IL: the merge point (the IsCompleted brtrue's target) and the stack there and before the awaiter's load; then what takes GetResult's value
+
+Compared with IL offsets and local numbers left out (each build numbers its own).
+
+| shape | await | what | plain | debug-plus | same |
+|---|---|---|---|---|---|
+| S1 | <Run>d__1::MoveNext await#1 L32 | merge point and stacks | merge ldloca V_1, stack empty; awaiter load ldloca V_1, stack before it empty | as plain | same |
+| S1 | <Run>d__1::MoveNext await#2 L34 | merge point and stacks | merge ldloca V_3, stack empty; awaiter load ldloca V_3, stack before it empty | as plain | same |
+| S1 | <Run>d__1::MoveNext await#1 L32 | after GetResult | ldarg this (starts the next statement: the value crosses into it on the stack) | as plain | same |
+| S1 | <Run>d__1::MoveNext await#2 L34 | after GetResult | pop | as plain | same |
+| S2 | <<Run>b__0>d::MoveNext await#1 L34 | merge point and stacks | merge ldloca V_2, stack empty; awaiter load ldloca V_2, stack before it empty | as plain | same |
+| S2 | <Run>d__1::MoveNext await#1 L32 | merge point and stacks | merge ldloca V_1, stack empty; awaiter load ldloca V_1, stack before it empty | as plain | same |
+| S2 | <Run>d__1::MoveNext await#2 L34 | merge point and stacks | merge ldloca V_3, stack empty; awaiter load ldloca V_3, stack before it empty | as plain | same |
+| S2 | <<Run>b__0>d::MoveNext await#1 L34 | after GetResult | pop | as plain | same |
+| S2 | <Run>d__1::MoveNext await#1 L32 | after GetResult | ldarg this (starts the next statement: the value crosses into it on the stack) | as plain | same |
+| S2 | <Run>d__1::MoveNext await#2 L34 | after GetResult | callvirt Exception::get_Message (starts the next statement: the value crosses into it on the stack) | stloc V_4 | **DIFFERS** |
+| S3 | <Run>d__1::MoveNext await#1 L32 | merge point and stacks | merge ldloca V_1, stack empty; awaiter load ldloca V_1, stack before it empty | as plain | same |
+| S3 | <Run>d__1::MoveNext await#2 L34 | merge point and stacks | merge ldloca V_3, stack empty; awaiter load ldloca V_3, stack before it empty | as plain | same |
+| S3 | <Run>d__1::MoveNext await#1 L32 | after GetResult | ldarg this (starts the next statement: the value crosses into it on the stack) | as plain | same |
+| S3 | <Run>d__1::MoveNext await#2 L34 | after GetResult | callvirt Exception::get_Message (starts the next statement: the value crosses into it on the stack) | stloc V_4 | **DIFFERS** |
+| S4 | <GetOrderShouldFail>d__2::MoveNext await#1 L38 | merge point and stacks | merge ldloca V_2, stack empty; awaiter load ldloca V_2, stack before it empty | as plain | same |
+| S4 | <GetOrderShouldFail>d__2::MoveNext await#2 L39 | merge point and stacks | merge ldloca V_4, stack empty; awaiter load ldloca V_4, stack before it empty | as plain | same |
+| S4 | <Run>d__1::MoveNext await#1 L32 | merge point and stacks | merge ldloca V_2, stack empty; awaiter load ldloca V_2, stack before it empty | as plain | same |
+| S4 | <GetOrderShouldFail>d__2::MoveNext await#1 L38 | after GetResult | ldarg this (starts the next statement: the value crosses into it on the stack) | as plain | same |
+| S4 | <GetOrderShouldFail>d__2::MoveNext await#2 L39 | after GetResult | stloc V_1 | as plain | same |
+| S4 | <Run>d__1::MoveNext await#1 L32 | after GetResult | callvirt Exception::get_Message (starts the next statement: the value crosses into it on the stack) | stloc V_3 | **DIFFERS** |
+| S5 | <Run>d__1::MoveNext await#1 L32 | merge point and stacks | merge ldloca V_1, stack empty; awaiter load ldloca V_1, stack before it empty | as plain | same |
+| S5 | <Run>d__1::MoveNext await#2 L34 | merge point and stacks | merge ldloca V_3, stack empty; awaiter load ldloca V_3, stack before it empty | as plain | same |
+| S5 | <Run>d__1::MoveNext await#1 L32 | after GetResult | ldarg this (starts the next statement: the value crosses into it on the stack) | as plain | same |
+| S5 | <Run>d__1::MoveNext await#2 L34 | after GetResult | callvirt Exception::get_Message (starts the next statement: the value crosses into it on the stack) | stloc V_4 | **DIFFERS** |
+| S6 | <Run>d__1::MoveNext await#1 L32 | merge point and stacks | merge ldloca V_1, stack empty; awaiter load ldloca V_1, stack before it empty | as plain | same |
+| S6 | <Run>d__1::MoveNext await#2 L35 | merge point and stacks | merge ldloca V_3, stack empty; awaiter load ldloca V_3, stack before it empty | as plain | same |
+| S6 | <Run>d__1::MoveNext await#1 L32 | after GetResult | ldarg this (starts the next statement: the value crosses into it on the stack) | as plain | same |
+| S6 | <Run>d__1::MoveNext await#2 L35 | after GetResult | callvirt Exception::get_Message (starts the next statement: the value crosses into it on the stack) | stloc V_4 | **DIFFERS** |
+| S6b | <Run>d__2::MoveNext await#1 L34 | merge point and stacks | merge ldloca V_2, stack empty; awaiter load ldloca V_2, stack before it empty | as plain | same |
+| S6b | <Run>d__2::MoveNext await#2 L36 | merge point and stacks | merge ldloca V_5, stack empty; awaiter load ldloca V_5, stack before it empty | as plain | same |
+| S6b | <Run>d__2::MoveNext await#1 L34 | after GetResult | ldarg this (starts the next statement: the value crosses into it on the stack) | as plain | same |
+| S6b | <Run>d__2::MoveNext await#2 L36 | after GetResult | stloc V_4 | as plain | same |
+| S7 | <Run>d__1::MoveNext await#1 L32 | merge point and stacks | merge ldloca V_1, stack empty; awaiter load ldloca V_1, stack before it empty | as plain | same |
+| S7 | <Run>d__1::MoveNext await#2 L34 | merge point and stacks | merge ldloca V_3, stack empty; awaiter load ldloca V_3, stack before it empty | as plain | same |
+| S7 | <Run>d__1::MoveNext await#1 L32 | after GetResult | ldarg this (starts the next statement: the value crosses into it on the stack) | as plain | same |
+| S7 | <Run>d__1::MoveNext await#2 L34 | after GetResult | pop | stloc V_3 | **DIFFERS** |
+| S8 | <Run>d__1::MoveNext await#1 L32 | merge point and stacks | merge ldloca V_1, stack empty; awaiter load ldloca V_1, stack before it empty | as plain | same |
+| S8 | <Run>d__1::MoveNext await#2 L34 | merge point and stacks | merge ldloca V_3, stack empty; awaiter load ldloca V_3, stack before it empty | as plain | same |
+| S8 | <Run>d__1::MoveNext await#1 L32 | after GetResult | ldarg this (starts the next statement: the value crosses into it on the stack) | as plain | same |
+| S8 | <Run>d__1::MoveNext await#2 L34 | after GetResult | callvirt Exception::get_Message (starts the next statement: the value crosses into it on the stack) | stloc V_4 | **DIFFERS** |
+| S11 | <Run>d__1::MoveNext await#1 L32 | merge point and stacks | merge ldloca V_1, stack empty; awaiter load ldloca V_1, stack before it empty | as plain | same |
+| S11 | <Run>d__1::MoveNext await#2 L34 | merge point and stacks | merge ldloca V_4, stack empty; awaiter load ldloca V_4, stack before it empty | as plain | same |
+| S11 | <Run>d__1::MoveNext await#3 L35 | merge point and stacks | merge ldloca V_1, stack empty; awaiter load ldloca V_1, stack before it empty | as plain | same |
+| S11 | <Run>d__1::MoveNext await#1 L32 | after GetResult | ldarg this (starts the next statement: the value crosses into it on the stack) | as plain | same |
+| S11 | <Run>d__1::MoveNext await#2 L34 | after GetResult | stloc V_3 | as plain | same |
+| S11 | <Run>d__1::MoveNext await#3 L35 | after GetResult | ldarg this (starts the next statement: the value crosses into it on the stack) | as plain | same |
+| S12a | <Run>d__1::MoveNext await#1 L32 | merge point and stacks | merge ldloca V_1, stack empty; awaiter load ldloca V_1, stack before it empty | as plain | same |
+| S12a | <Run>d__1::MoveNext await#2 L35 | merge point and stacks | merge ldloca V_3, stack empty; awaiter load ldloca V_3, stack before it empty | as plain | same |
+| S12a | <Run>d__1::MoveNext await#1 L32 | after GetResult | ldarg this (starts the next statement: the value crosses into it on the stack) | as plain | same |
+| S12a | <Run>d__1::MoveNext await#2 L35 | after GetResult | callvirt FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>::get_Which (starts the next statement: the value crosses into it on the stack) | stloc V_5 | **DIFFERS** |
+| S13 | <Run>d__1::MoveNext await#1 L33 | merge point and stacks | merge ldloca V_1, stack empty; awaiter load ldloca V_1, stack before it empty | as plain | same |
+| S13 | <Run>d__1::MoveNext await#2 L35 | merge point and stacks | merge ldloca V_3, stack empty; awaiter load ldloca V_3, stack before it empty | as plain | same |
+| S13 | <Run>d__1::MoveNext await#3 L36 | merge point and stacks | merge ldloca V_3, stack empty; awaiter load ldloca V_3, stack before it empty | as plain | same |
+| S13 | <Run>d__1::MoveNext await#1 L33 | after GetResult | ldstr "value" (starts the next statement: the value crosses into it on the stack) | as plain | same |
+| S13 | <Run>d__1::MoveNext await#2 L35 | after GetResult | call TUnit.Assertions.StringValue::op_Implicit (starts the next statement: the value crosses into it on the stack) | stloc V_5 | **DIFFERS** |
+| S13 | <Run>d__1::MoveNext await#3 L36 | after GetResult | pop | as plain | same |
+| S15a | <AssertionFails>d__2::MoveNext await#1 L38 | merge point and stacks | merge ldloca V_2, stack empty; awaiter load ldloca V_2, stack before it empty | as plain | same |
+| S15a | <AssertionPasses>d__1::MoveNext await#1 L32 | merge point and stacks | merge ldloca V_2, stack empty; awaiter load ldloca V_2, stack before it empty | as plain | same |
+| S15a | <AssertionFails>d__2::MoveNext await#1 L38 | after GetResult | pop | as plain | same |
+| S15a | <AssertionPasses>d__1::MoveNext await#1 L32 | after GetResult | callvirt Exception::get_Message (starts the next statement: the value crosses into it on the stack) | stloc V_3 | **DIFFERS** |
+| S15b | <AssertionFails>d__2::MoveNext await#1 L38 | merge point and stacks | merge ldloca V_2, stack empty; awaiter load ldloca V_2, stack before it empty | as plain | same |
+| S15b | <AssertionPasses>d__1::MoveNext await#1 L32 | merge point and stacks | merge ldloca V_2, stack empty; awaiter load ldloca V_2, stack before it empty | as plain | same |
+| S15b | <AssertionFails>d__2::MoveNext await#1 L38 | after GetResult | pop | as plain | same |
+| S15b | <AssertionPasses>d__1::MoveNext await#1 L32 | after GetResult | callvirt Exception::get_Message (starts the next statement: the value crosses into it on the stack) | stloc V_3 | **DIFFERS** |
+| S16a | <MessageDiffers>d__2::MoveNext await#1 L40 | merge point and stacks | merge ldloca V_1, stack empty; awaiter load ldloca V_1, stack before it empty | as plain | same |
+| S16a | <MessageDiffers>d__2::MoveNext await#2 L43 | merge point and stacks | merge ldloca V_3, stack empty; awaiter load ldloca V_3, stack before it empty | as plain | same |
+| S16a | <MessageMatches>d__1::MoveNext await#1 L32 | merge point and stacks | merge ldloca V_1, stack empty; awaiter load ldloca V_1, stack before it empty | as plain | same |
+| S16a | <MessageMatches>d__1::MoveNext await#2 L35 | merge point and stacks | merge ldloca V_3, stack empty; awaiter load ldloca V_3, stack before it empty | as plain | same |
+| S16a | <MessageDiffers>d__2::MoveNext await#1 L40 | after GetResult | ldarg this (starts the next statement: the value crosses into it on the stack) | as plain | same |
+| S16a | <MessageDiffers>d__2::MoveNext await#2 L43 | after GetResult | callvirt FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>::get_Which | stloc V_4 | **DIFFERS** |
+| S16a | <MessageMatches>d__1::MoveNext await#1 L32 | after GetResult | ldarg this (starts the next statement: the value crosses into it on the stack) | as plain | same |
+| S16a | <MessageMatches>d__1::MoveNext await#2 L35 | after GetResult | callvirt FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>::get_Which | stloc V_4 | **DIFFERS** |
+| S16b | <MessageDiffers>d__2::MoveNext await#1 L39 | merge point and stacks | merge ldloca V_1, stack empty; awaiter load ldloca V_1, stack before it empty | as plain | same |
+| S16b | <MessageDiffers>d__2::MoveNext await#2 L41 | merge point and stacks | merge ldloca V_3, stack empty; awaiter load ldloca V_3, stack before it empty | as plain | same |
+| S16b | <MessageMatches>d__1::MoveNext await#1 L32 | merge point and stacks | merge ldloca V_1, stack empty; awaiter load ldloca V_1, stack before it empty | as plain | same |
+| S16b | <MessageMatches>d__1::MoveNext await#2 L34 | merge point and stacks | merge ldloca V_3, stack empty; awaiter load ldloca V_3, stack before it empty | as plain | same |
+| S16b | <MessageDiffers>d__2::MoveNext await#1 L39 | after GetResult | ldarg this (starts the next statement: the value crosses into it on the stack) | as plain | same |
+| S16b | <MessageDiffers>d__2::MoveNext await#2 L41 | after GetResult | callvirt Exception::get_Message | stloc V_3 | **DIFFERS** |
+| S16b | <MessageMatches>d__1::MoveNext await#1 L32 | after GetResult | ldarg this (starts the next statement: the value crosses into it on the stack) | as plain | same |
+| S16b | <MessageMatches>d__1::MoveNext await#2 L34 | after GetResult | callvirt Exception::get_Message | stloc V_3 | **DIFFERS** |
+| S17a | <AssertionFails>d__2::MoveNext await#1 L49 | merge point and stacks | merge ldloca V_2, stack empty; awaiter load ldloca V_2, stack before it empty | as plain | same |
+| S17a | <AssertionFails>d__2::MoveNext await#2 L50 | merge point and stacks | merge ldloca V_4, stack empty; awaiter load ldloca V_4, stack before it empty | as plain | same |
+| S17a | <AssertionPasses>d__1::MoveNext await#1 L43 | merge point and stacks | merge ldloca V_2, stack empty; awaiter load ldloca V_2, stack before it empty | as plain | same |
+| S17a | <AssertionPasses>d__1::MoveNext await#2 L44 | merge point and stacks | merge ldloca V_4, stack empty; awaiter load ldloca V_4, stack before it empty | as plain | same |
+| S17a | <AssertionFails>d__2::MoveNext await#1 L49 | after GetResult | ldloc V_1 (starts the next statement: the value crosses into it on the stack) | as plain | same |
+| S17a | <AssertionFails>d__2::MoveNext await#2 L50 | after GetResult | ldstr "other" | stloc V_4 | **DIFFERS** |
+| S17a | <AssertionPasses>d__1::MoveNext await#1 L43 | after GetResult | ldloc V_1 (starts the next statement: the value crosses into it on the stack) | as plain | same |
+| S17a | <AssertionPasses>d__1::MoveNext await#2 L44 | after GetResult | ldstr "order" | stloc V_4 | **DIFFERS** |
+| S17c | <AssertionFails>d__2::MoveNext await#1 L50 | merge point and stacks | merge ldloca V_2, stack empty; awaiter load ldloca V_2, stack before it empty | as plain | same |
+| S17c | <AssertionFails>d__2::MoveNext await#2 L51 | merge point and stacks | merge ldloca V_4, stack empty; awaiter load ldloca V_4, stack before it empty | as plain | same |
+| S17c | <AssertionFails>d__2::MoveNext await#3 L51 | merge point and stacks | merge ldloca V_4, stack empty; awaiter load ldloca V_4, stack before it empty | as plain | same |
+| S17c | <AssertionPasses>d__1::MoveNext await#1 L44 | merge point and stacks | merge ldloca V_2, stack empty; awaiter load ldloca V_2, stack before it empty | as plain | same |
+| S17c | <AssertionPasses>d__1::MoveNext await#2 L45 | merge point and stacks | merge ldloca V_4, stack empty; awaiter load ldloca V_4, stack before it empty | as plain | same |
+| S17c | <AssertionPasses>d__1::MoveNext await#3 L45 | merge point and stacks | merge ldloca V_4, stack empty; awaiter load ldloca V_4, stack before it empty | as plain | same |
+| S17c | <AssertionFails>d__2::MoveNext await#1 L50 | after GetResult | ldloc V_1 (starts the next statement: the value crosses into it on the stack) | as plain | same |
+| S17c | <AssertionFails>d__2::MoveNext await#2 L51 | after GetResult | call TUnit.Assertions.StringValue::op_Implicit | stloc V_4 | **DIFFERS** |
+| S17c | <AssertionFails>d__2::MoveNext await#3 L51 | after GetResult | pop | as plain | same |
+| S17c | <AssertionPasses>d__1::MoveNext await#1 L44 | after GetResult | ldloc V_1 (starts the next statement: the value crosses into it on the stack) | as plain | same |
+| S17c | <AssertionPasses>d__1::MoveNext await#2 L45 | after GetResult | call TUnit.Assertions.StringValue::op_Implicit | stloc V_4 | **DIFFERS** |
+| S17c | <AssertionPasses>d__1::MoveNext await#3 L45 | after GetResult | pop | as plain | same |
+| S18a | <AssertionFails>d__2::MoveNext await#1 L52 | merge point and stacks | merge ldloca V_1, stack empty; awaiter load ldloca V_1, stack before it empty | as plain | same |
+| S18a | <AssertionFails>d__2::MoveNext await#2 L54 | merge point and stacks | merge ldloca V_3, stack empty; awaiter load ldloca V_3, stack before it empty | as plain | same |
+| S18a | <AssertionFails>d__2::MoveNext await#3 L55 | merge point and stacks | merge ldloca V_4, stack empty; awaiter load ldloca V_4, stack before it empty | as plain | same |
+| S18a | <AssertionPasses>d__1::MoveNext await#1 L44 | merge point and stacks | merge ldloca V_1, stack empty; awaiter load ldloca V_1, stack before it empty | as plain | same |
+| S18a | <AssertionPasses>d__1::MoveNext await#2 L46 | merge point and stacks | merge ldloca V_3, stack empty; awaiter load ldloca V_3, stack before it empty | as plain | same |
+| S18a | <AssertionPasses>d__1::MoveNext await#3 L47 | merge point and stacks | merge ldloca V_4, stack empty; awaiter load ldloca V_4, stack before it empty | as plain | same |
+| S18a | <AssertionFails>d__2::MoveNext await#1 L52 | after GetResult | ldarg this (starts the next statement: the value crosses into it on the stack) | as plain | same |
+| S18a | <AssertionFails>d__2::MoveNext await#2 L54 | after GetResult | callvirt Exception::get_Message (starts the next statement: the value crosses into it on the stack) | stloc V_4 | **DIFFERS** |
+| S18a | <AssertionFails>d__2::MoveNext await#3 L55 | after GetResult | pop | as plain | same |
+| S18a | <AssertionPasses>d__1::MoveNext await#1 L44 | after GetResult | ldarg this (starts the next statement: the value crosses into it on the stack) | as plain | same |
+| S18a | <AssertionPasses>d__1::MoveNext await#2 L46 | after GetResult | callvirt Exception::get_Message (starts the next statement: the value crosses into it on the stack) | stloc V_4 | **DIFFERS** |
+| S18a | <AssertionPasses>d__1::MoveNext await#3 L47 | after GetResult | pop | as plain | same |
+| S20 | <AssertionPasses>d__1::MoveNext await#1 L43 | merge point and stacks | merge ldloca V_2, stack empty; awaiter load ldloca V_2, stack before it empty | as plain | same |
+| S20 | <AssertionPasses>d__1::MoveNext await#2 L45 | merge point and stacks | merge ldloca V_6, stack empty; awaiter load ldloca V_6, stack before it empty | as plain | same |
+| S20 | <AssertionPasses>d__1::MoveNext await#3 L45 | merge point and stacks | merge ldloca V_7, stack empty; awaiter load ldloca V_7, stack before it empty | as plain | same |
+| S20 | <MessageDiffers>d__3::MoveNext await#1 L57 | merge point and stacks | merge ldloca V_2, stack empty; awaiter load ldloca V_2, stack before it empty | as plain | same |
+| S20 | <MessageDiffers>d__3::MoveNext await#2 L60 | merge point and stacks | merge ldloca V_6, stack empty; awaiter load ldloca V_6, stack before it empty | as plain | same |
+| S20 | <MessageDiffers>d__3::MoveNext await#3 L60 | merge point and stacks | merge ldloca V_7, stack empty; awaiter load ldloca V_7, stack before it empty | as plain | same |
+| S20 | <ThrowFails>d__2::MoveNext await#1 L50 | merge point and stacks | merge ldloca V_2, stack empty; awaiter load ldloca V_2, stack before it empty | as plain | same |
+| S20 | <ThrowFails>d__2::MoveNext await#2 L52 | merge point and stacks | merge ldloca V_6, stack empty; awaiter load ldloca V_6, stack before it empty | as plain | same |
+| S20 | <ThrowFails>d__2::MoveNext await#3 L52 | merge point and stacks | merge ldloca V_7, stack empty; awaiter load ldloca V_7, stack before it empty | as plain | same |
+| S20 | <AssertionPasses>d__1::MoveNext await#1 L43 | after GetResult | ldarg this (starts the next statement: the value crosses into it on the stack) | as plain | same |
+| S20 | <AssertionPasses>d__1::MoveNext await#2 L45 | after GetResult | stloc V_4 | as plain | same |
+| S20 | <AssertionPasses>d__1::MoveNext await#3 L45 | after GetResult | stloc V_5 | as plain | same |
+| S20 | <MessageDiffers>d__3::MoveNext await#1 L57 | after GetResult | ldarg this (starts the next statement: the value crosses into it on the stack) | as plain | same |
+| S20 | <MessageDiffers>d__3::MoveNext await#2 L60 | after GetResult | stloc V_4 | as plain | same |
+| S20 | <MessageDiffers>d__3::MoveNext await#3 L60 | after GetResult | stloc V_5 | as plain | same |
+| S20 | <ThrowFails>d__2::MoveNext await#1 L50 | after GetResult | ldarg this (starts the next statement: the value crosses into it on the stack) | as plain | same |
+| S20 | <ThrowFails>d__2::MoveNext await#2 L52 | after GetResult | stloc V_4 | as plain | same |
+| S20 | <ThrowFails>d__2::MoveNext await#3 L52 | after GetResult | stloc V_5 | as plain | same |
+| S21a | <AssertionFails>d__2::MoveNext await#1 L53 | merge point and stacks | merge ldloca V_1, stack empty; awaiter load ldloca V_1, stack before it empty | as plain | same |
+| S21a | <AssertionFails>d__2::MoveNext await#2 L55 | merge point and stacks | merge ldloca V_3, stack empty; awaiter load ldloca V_3, stack before it empty | as plain | same |
+| S21a | <AssertionPasses>d__1::MoveNext await#1 L43 | merge point and stacks | merge ldloca V_1, stack empty; awaiter load ldloca V_1, stack before it empty | as plain | same |
+| S21a | <AssertionPasses>d__1::MoveNext await#2 L45 | merge point and stacks | merge ldloca V_3, stack empty; awaiter load ldloca V_3, stack before it empty | as plain | same |
+| S21a | <AssertionFails>d__2::MoveNext await#1 L53 | after GetResult | ldarg this (starts the next statement: the value crosses into it on the stack) | as plain | same |
+| S21a | <AssertionFails>d__2::MoveNext await#2 L55 | after GetResult | callvirt Exception::get_Message (starts the next statement: the value crosses into it on the stack) | stloc V_4 | **DIFFERS** |
+| S21a | <AssertionPasses>d__1::MoveNext await#1 L43 | after GetResult | ldarg this (starts the next statement: the value crosses into it on the stack) | as plain | same |
+| S21a | <AssertionPasses>d__1::MoveNext await#2 L45 | after GetResult | callvirt Exception::get_Message (starts the next statement: the value crosses into it on the stack) | stloc V_4 | **DIFFERS** |
+| S23 | <AssertionFails>d__2::MoveNext await#1 L50 | merge point and stacks | merge ldloca V_1, stack empty; awaiter load ldloca V_1, stack before it empty | as plain | same |
+| S23 | <AssertionFails>d__2::MoveNext await#2 L52 | merge point and stacks | merge ldloca V_3, stack empty; awaiter load ldloca V_3, stack before it empty | as plain | same |
+| S23 | <AssertionPasses>d__1::MoveNext await#1 L43 | merge point and stacks | merge ldloca V_1, stack empty; awaiter load ldloca V_1, stack before it empty | as plain | same |
+| S23 | <AssertionPasses>d__1::MoveNext await#2 L45 | merge point and stacks | merge ldloca V_3, stack empty; awaiter load ldloca V_3, stack before it empty | as plain | same |
+| S23 | <AssertionFails>d__2::MoveNext await#1 L50 | after GetResult | ldarg this (starts the next statement: the value crosses into it on the stack) | as plain | same |
+| S23 | <AssertionFails>d__2::MoveNext await#2 L52 | after GetResult | callvirt Exception::get_Message | stloc V_3 | **DIFFERS** |
+| S23 | <AssertionPasses>d__1::MoveNext await#1 L43 | after GetResult | ldarg this (starts the next statement: the value crosses into it on the stack) | as plain | same |
+| S23 | <AssertionPasses>d__1::MoveNext await#2 L45 | after GetResult | callvirt Exception::get_Message | stloc V_3 | **DIFFERS** |
+| R212 | <<Assigned_ThrowAsync>b__0>d::MoveNext await#1 L27 | merge point and stacks | merge ldloca V_2, stack empty; awaiter load ldloca V_2, stack before it empty | as plain | same |
+| R212 | <Assigned_ThrowAsync>d__2::MoveNext await#1 L24 | merge point and stacks | merge ldloca V_1, stack empty; awaiter load ldloca V_1, stack before it empty | as plain | same |
+| R212 | <Assigned_ThrowAsync>d__2::MoveNext await#2 L27 | merge point and stacks | merge ldloca V_3, stack empty; awaiter load ldloca V_3, stack before it empty | as plain | same |
+| R212 | <Awaited_ThrowAsync>d__1::MoveNext await#1 L16 | merge point and stacks | merge ldloca V_1, stack empty; awaiter load ldloca V_1, stack before it empty | as plain | same |
+| R212 | <Awaited_ThrowAsync>d__1::MoveNext await#2 L19 | merge point and stacks | merge ldloca V_3, stack empty; awaiter load ldloca V_3, stack before it empty | as plain | same |
+| R212 | <GetOrderShouldFail>d__6::MoveNext await#1 L55 | merge point and stacks | merge ldloca V_2, stack empty; awaiter load ldloca V_2, stack before it empty | as plain | same |
+| R212 | <GetOrderShouldFail>d__6::MoveNext await#2 L56 | merge point and stacks | merge ldloca V_4, stack empty; awaiter load ldloca V_4, stack before it empty | as plain | same |
+| R212 | <NotThrowAsync>d__4::MoveNext await#1 L41 | merge point and stacks | merge ldloca V_2, stack empty; awaiter load ldloca V_2, stack before it empty | as plain | same |
+| R212 | <NotThrowAsync>d__4::MoveNext await#2 L43 | merge point and stacks | merge ldloca V_4, stack empty; awaiter load ldloca V_4, stack before it empty | as plain | same |
+| R212 | <ThrowAsync_returned_by_a_helper>d__3::MoveNext await#1 L34 | merge point and stacks | merge ldloca V_2, stack empty; awaiter load ldloca V_2, stack before it empty | as plain | same |
+| R212 | <<Assigned_ThrowAsync>b__0>d::MoveNext await#1 L27 | after GetResult | pop | as plain | same |
+| R212 | <Assigned_ThrowAsync>d__2::MoveNext await#1 L24 | after GetResult | ldarg this (starts the next statement: the value crosses into it on the stack) | as plain | same |
+| R212 | <Assigned_ThrowAsync>d__2::MoveNext await#2 L27 | after GetResult | callvirt Exception::get_Message (starts the next statement: the value crosses into it on the stack) | stloc V_4 | **DIFFERS** |
+| R212 | <Awaited_ThrowAsync>d__1::MoveNext await#1 L16 | after GetResult | ldarg this (starts the next statement: the value crosses into it on the stack) | as plain | same |
+| R212 | <Awaited_ThrowAsync>d__1::MoveNext await#2 L19 | after GetResult | pop | as plain | same |
+| R212 | <GetOrderShouldFail>d__6::MoveNext await#1 L55 | after GetResult | ldarg this (starts the next statement: the value crosses into it on the stack) | as plain | same |
+| R212 | <GetOrderShouldFail>d__6::MoveNext await#2 L56 | after GetResult | stloc V_1 | as plain | same |
+| R212 | <NotThrowAsync>d__4::MoveNext await#1 L41 | after GetResult | ldloc V_1 (starts the next statement: the value crosses into it on the stack) | as plain | same |
+| R212 | <NotThrowAsync>d__4::MoveNext await#2 L43 | after GetResult | leave IL_00f7 | as plain | same |
+| R212 | <ThrowAsync_returned_by_a_helper>d__3::MoveNext await#1 L34 | after GetResult | callvirt Exception::get_Message (starts the next statement: the value crosses into it on the stack) | stloc V_3 | **DIFFERS** |
+
+## E. Every difference between the two builds, by kind (tables A to D)
+
+### build: 0
+
+### weave decision: 0
+
+### note: 0
+
+### test outcome: 0
+
+### label: 0
+
+### merge point: 0
+
+### GetResult's value: 27
+- S2 <Run>d__1::MoveNext await#2 L34 (after GetResult): plain: callvirt Exception::get_Message (starts the next statement: the value crosses into it on the stack); debug-plus: stloc V_4
+- S3 <Run>d__1::MoveNext await#2 L34 (after GetResult): plain: callvirt Exception::get_Message (starts the next statement: the value crosses into it on the stack); debug-plus: stloc V_4
+- S4 <Run>d__1::MoveNext await#1 L32 (after GetResult): plain: callvirt Exception::get_Message (starts the next statement: the value crosses into it on the stack); debug-plus: stloc V_3
+- S5 <Run>d__1::MoveNext await#2 L34 (after GetResult): plain: callvirt Exception::get_Message (starts the next statement: the value crosses into it on the stack); debug-plus: stloc V_4
+- S6 <Run>d__1::MoveNext await#2 L35 (after GetResult): plain: callvirt Exception::get_Message (starts the next statement: the value crosses into it on the stack); debug-plus: stloc V_4
+- S7 <Run>d__1::MoveNext await#2 L34 (after GetResult): plain: pop; debug-plus: stloc V_3
+- S8 <Run>d__1::MoveNext await#2 L34 (after GetResult): plain: callvirt Exception::get_Message (starts the next statement: the value crosses into it on the stack); debug-plus: stloc V_4
+- S12a <Run>d__1::MoveNext await#2 L35 (after GetResult): plain: callvirt FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>::get_Which (starts the next statement: the value crosses into it on the stack); debug-plus: stloc V_5
+- S13 <Run>d__1::MoveNext await#2 L35 (after GetResult): plain: call TUnit.Assertions.StringValue::op_Implicit (starts the next statement: the value crosses into it on the stack); debug-plus: stloc V_5
+- S15a <AssertionPasses>d__1::MoveNext await#1 L32 (after GetResult): plain: callvirt Exception::get_Message (starts the next statement: the value crosses into it on the stack); debug-plus: stloc V_3
+- S15b <AssertionPasses>d__1::MoveNext await#1 L32 (after GetResult): plain: callvirt Exception::get_Message (starts the next statement: the value crosses into it on the stack); debug-plus: stloc V_3
+- S16a <MessageDiffers>d__2::MoveNext await#2 L43 (after GetResult): plain: callvirt FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>::get_Which; debug-plus: stloc V_4
+- S16a <MessageMatches>d__1::MoveNext await#2 L35 (after GetResult): plain: callvirt FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>::get_Which; debug-plus: stloc V_4
+- S16b <MessageDiffers>d__2::MoveNext await#2 L41 (after GetResult): plain: callvirt Exception::get_Message; debug-plus: stloc V_3
+- S16b <MessageMatches>d__1::MoveNext await#2 L34 (after GetResult): plain: callvirt Exception::get_Message; debug-plus: stloc V_3
+- S17a <AssertionFails>d__2::MoveNext await#2 L50 (after GetResult): plain: ldstr "other"; debug-plus: stloc V_4
+- S17a <AssertionPasses>d__1::MoveNext await#2 L44 (after GetResult): plain: ldstr "order"; debug-plus: stloc V_4
+- S17c <AssertionFails>d__2::MoveNext await#2 L51 (after GetResult): plain: call TUnit.Assertions.StringValue::op_Implicit; debug-plus: stloc V_4
+- S17c <AssertionPasses>d__1::MoveNext await#2 L45 (after GetResult): plain: call TUnit.Assertions.StringValue::op_Implicit; debug-plus: stloc V_4
+- S18a <AssertionFails>d__2::MoveNext await#2 L54 (after GetResult): plain: callvirt Exception::get_Message (starts the next statement: the value crosses into it on the stack); debug-plus: stloc V_4
+- S18a <AssertionPasses>d__1::MoveNext await#2 L46 (after GetResult): plain: callvirt Exception::get_Message (starts the next statement: the value crosses into it on the stack); debug-plus: stloc V_4
+- S21a <AssertionFails>d__2::MoveNext await#2 L55 (after GetResult): plain: callvirt Exception::get_Message (starts the next statement: the value crosses into it on the stack); debug-plus: stloc V_4
+- S21a <AssertionPasses>d__1::MoveNext await#2 L45 (after GetResult): plain: callvirt Exception::get_Message (starts the next statement: the value crosses into it on the stack); debug-plus: stloc V_4
+- S23 <AssertionFails>d__2::MoveNext await#2 L52 (after GetResult): plain: callvirt Exception::get_Message; debug-plus: stloc V_3
+- S23 <AssertionPasses>d__1::MoveNext await#2 L45 (after GetResult): plain: callvirt Exception::get_Message; debug-plus: stloc V_3
+- R212 <Assigned_ThrowAsync>d__2::MoveNext await#2 L27 (after GetResult): plain: callvirt Exception::get_Message (starts the next statement: the value crosses into it on the stack); debug-plus: stloc V_4
+- R212 <ThrowAsync_returned_by_a_helper>d__3::MoveNext await#1 L34 (after GetResult): plain: callvirt Exception::get_Message (starts the next statement: the value crosses into it on the stack); debug-plus: stloc V_3
+
+### PlanStack's stacks: 21
+- S2 <Run>d__1::MoveNext L35 (entry, exit): plain: entry=[InvalidOperationException] exit=[]; debug-plus: entry=[] exit=[]
+- S3 <Run>d__1::MoveNext L35 (entry, exit): plain: entry=[InvalidOperationException] exit=[]; debug-plus: entry=[] exit=[]
+- S4 <Run>d__1::MoveNext L33 (entry, exit): plain: entry=[InvalidOperationException] exit=[]; debug-plus: entry=[] exit=[]
+- S5 <Run>d__1::MoveNext L35 (entry, exit): plain: entry=[InvalidOperationException] exit=[]; debug-plus: entry=[] exit=[]
+- S6 <Run>d__1::MoveNext L36 (entry, exit): plain: entry=[InvalidOperationException] exit=[]; debug-plus: entry=[] exit=[]
+- S7 <Run>d__1::MoveNext L34 (entry, exit): plain: entry=[] exit=[]; debug-plus: entry=[] exit=[InvalidOperationException]
+- S8 <Run>d__1::MoveNext L35 (entry, exit): plain: entry=[InvalidOperationException] exit=[]; debug-plus: entry=[] exit=[]
+- S9 Probe::Run L33 (entry, exit): plain: entry=[Probe/<>c__DisplayClass1_0] exit=[InvalidOperationException]; debug-plus: entry=[] exit=[]
+- S9 Probe::Run L34 (entry, exit): plain: entry=[InvalidOperationException] exit=[]; debug-plus: entry=[] exit=[]
+- S9b Probe::GetOrderShouldFail L38 (entry, exit): plain: entry=[Probe/<>c__DisplayClass2_0] exit=[InvalidOperationException]; debug-plus: entry=[] exit=[InvalidOperationException]
+- S9b Probe::Run L33 (entry, exit): plain: entry=[InvalidOperationException] exit=[]; debug-plus: entry=[] exit=[]
+- S12a <Run>d__1::MoveNext L36 (entry, exit): plain: entry=[FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>] exit=[]; debug-plus: entry=[] exit=[]
+- S15a <AssertionPasses>d__1::MoveNext L33 (entry, exit): plain: entry=[InvalidOperationException] exit=[]; debug-plus: entry=[] exit=[]
+- S15a Probe::Fails L41 (entry, exit): plain: entry=[Probe/<>c__DisplayClass3_0] exit=[Task`1<InvalidOperationException>]; debug-plus: entry=[] exit=[Task`1<InvalidOperationException>]
+- S15b <AssertionPasses>d__1::MoveNext L33 (entry, exit): plain: entry=[InvalidOperationException] exit=[]; debug-plus: entry=[] exit=[]
+- S15b Probe::Fails L43 (entry, exit): plain: entry=[Probe/<>c__DisplayClass3_0] exit=[Task`1<InvalidOperationException>]; debug-plus: entry=[] exit=[Task`1<InvalidOperationException>]
+- S21a <AssertionFails>d__2::MoveNext L58 (entry, exit): plain: entry=[InvalidOperationException] exit=[]; debug-plus: entry=[] exit=[]
+- S21a <AssertionPasses>d__1::MoveNext L48 (entry, exit): plain: entry=[InvalidOperationException] exit=[]; debug-plus: entry=[] exit=[]
+- R212 <Assigned_ThrowAsync>d__2::MoveNext L29 (entry, exit): plain: entry=[InvalidOperationException] exit=[]; debug-plus: entry=[] exit=[]
+- R212 <ThrowAsync_returned_by_a_helper>d__3::MoveNext L36 (entry, exit): plain: entry=[InvalidOperationException] exit=[]; debug-plus: entry=[] exit=[]
+- R212 LabelTests::Throw L50 (entry, exit): plain: entry=[LabelRepro.LabelTests/<>c__DisplayClass5_0] exit=[]; debug-plus: entry=[] exit=[]
+
+### where AwaitedRange ends: 19
+- S2 <Run>d__1::MoveNext L34 (AwaitedRange): plain: ldloca .. call, then callvirt Exception::get_Message; debug-plus: ldloca .. call, then stloc V_4
+- S3 <Run>d__1::MoveNext L34 (AwaitedRange): plain: ldloca .. call, then callvirt Exception::get_Message; debug-plus: ldloca .. call, then stloc V_4
+- S5 <Run>d__1::MoveNext L34 (AwaitedRange): plain: ldloca .. call, then callvirt Exception::get_Message; debug-plus: ldloca .. call, then stloc V_4
+- S6 <Run>d__1::MoveNext L35 (AwaitedRange): plain: ldloca .. call, then callvirt Exception::get_Message; debug-plus: ldloca .. call, then stloc V_4
+- S7 <Run>d__1::MoveNext L34 (AwaitedRange): plain: ldloca .. pop, then leave IL_0131; debug-plus: ldloca .. call, then stloc V_3
+- S8 <Run>d__1::MoveNext L34 (AwaitedRange): plain: ldloca .. call, then callvirt Exception::get_Message; debug-plus: ldloca .. call, then stloc V_4
+- S12a <Run>d__1::MoveNext L35 (AwaitedRange): plain: ldloca .. call, then callvirt FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>::get_Which; debug-plus: ldloca .. call, then stloc V_5
+- S13 <Run>d__1::MoveNext L35 (AwaitedRange): plain: ldloca .. call, then call TUnit.Assertions.StringValue::op_Implicit; debug-plus: ldloca .. call, then stloc V_5
+- S16a <MessageDiffers>d__2::MoveNext L43 (AwaitedRange): plain: ldloca .. call, then callvirt FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>::get_Which; debug-plus: ldloca .. call, then stloc V_4
+- S16a <MessageMatches>d__1::MoveNext L35 (AwaitedRange): plain: ldloca .. call, then callvirt FluentAssertions.Specialized.ExceptionAssertions`1<InvalidOperationException>::get_Which; debug-plus: ldloca .. call, then stloc V_4
+- S16b <MessageDiffers>d__2::MoveNext L41 (AwaitedRange): plain: ldloca .. call, then callvirt Exception::get_Message; debug-plus: ldloca .. call, then stloc V_3
+- S16b <MessageMatches>d__1::MoveNext L34 (AwaitedRange): plain: ldloca .. call, then callvirt Exception::get_Message; debug-plus: ldloca .. call, then stloc V_3
+- S18a <AssertionFails>d__2::MoveNext L54 (AwaitedRange): plain: ldloca .. call, then callvirt Exception::get_Message; debug-plus: ldloca .. call, then stloc V_4
+- S18a <AssertionPasses>d__1::MoveNext L46 (AwaitedRange): plain: ldloca .. call, then callvirt Exception::get_Message; debug-plus: ldloca .. call, then stloc V_4
+- S21a <AssertionFails>d__2::MoveNext L55 (AwaitedRange): plain: ldloca .. call, then callvirt Exception::get_Message; debug-plus: ldloca .. call, then stloc V_4
+- S21a <AssertionPasses>d__1::MoveNext L45 (AwaitedRange): plain: ldloca .. call, then callvirt Exception::get_Message; debug-plus: ldloca .. call, then stloc V_4
+- S23 <AssertionFails>d__2::MoveNext L52 (AwaitedRange): plain: ldloca .. call, then callvirt Exception::get_Message; debug-plus: ldloca .. call, then stloc V_3
+- S23 <AssertionPasses>d__1::MoveNext L45 (AwaitedRange): plain: ldloca .. call, then callvirt Exception::get_Message; debug-plus: ldloca .. call, then stloc V_3
+- R212 <Assigned_ThrowAsync>d__2::MoveNext L27 (AwaitedRange): plain: ldloca .. call, then callvirt Exception::get_Message; debug-plus: ldloca .. call, then stloc V_4
+
+### ILVerify: 5
+- S9: plain 1 new: Probe.Run: StackUnexpected: Unexpected type on the stack. (Offset 78, Found ref '[WeaverFixture]Probe', Expected ref '[WeaverFixture]Probe+<>c__DisplayClass1_0'); debug-plus clean
+- S9b: plain 1 new: Probe.GetOrderShouldFail: StackUnexpected: Unexpected type on the stack. (Offset 63, Found ref '[WeaverFixture]Probe', Expected ref '[WeaverFixture]Probe+<>c__DisplayClass2_0'); debug-plus clean
+- S15a: plain 1 new: Probe.Fails: StackUnexpected: Unexpected type on the stack. (Offset 63, Found ref '[WeaverFixture]Probe', Expected ref '[WeaverFixture]Probe+<>c__DisplayClass3_0'); debug-plus clean
+- S15b: plain 1 new: Probe.Fails: StackUnexpected: Unexpected type on the stack. (Offset 63, Found ref '[WeaverFixture]Probe', Expected ref '[WeaverFixture]Probe+<>c__DisplayClass3_0'); debug-plus clean
+- R212: plain 1 new: LabelRepro.LabelTests.Throw: StackUnexpected: Unexpected type on the stack. (Offset 78, Found ref '[WeaverFixture]LabelRepro.LabelTests', Expected ref '[WeaverFixture]LabelRepro.LabelTests+<>c__DisplayClass5_0'); debug-plus clean
+
+## F. Answers, read off the tables
+
+(1) Differences: weave decisions (paths, PlanStack verdicts, woven counts, Unwoven) 0, notes 0, test outcomes 0, labels 0, merge point instruction and stacks 0; what takes GetResult's value 27, PlanStack's entry and exit stacks 21, where AwaitedRange ends 19, ILVerify 5 (section E lists each).
+(2) plain: 91 awaits; merge points with a value on the stack: 0; merge points at an ldarg (a spill, as in Debug): 0.
+(2) debug-plus: 91 awaits; merge points with a value on the stack: 0; merge points at an ldarg (a spill, as in Debug): 0.
+(2) Debug (S24 only): 8 awaits; merge points with a value on the stack: 0; merge points at an ldarg (a spill, as in Debug): 0.
+(3) What takes GetResult's value at the awaited assertion of S2, S8, S18a and S21a, and the stack PlanStack reads after it:
+    S2 <Run>d__1::MoveNext await#2 L34: plain: callvirt Exception::get_Message (starts the next statement: the value crosses into it on the stack); debug-plus: stloc V_4; PlanStack plain entry=[] exit=[InvalidOperationException], debug-plus entry=[] exit=[InvalidOperationException]
+    S8 <Run>d__1::MoveNext await#2 L34: plain: callvirt Exception::get_Message (starts the next statement: the value crosses into it on the stack); debug-plus: stloc V_4; PlanStack plain entry=[] exit=[InvalidOperationException], debug-plus entry=[] exit=[InvalidOperationException]
+    S18a <AssertionFails>d__2::MoveNext await#2 L54: plain: callvirt Exception::get_Message (starts the next statement: the value crosses into it on the stack); debug-plus: stloc V_4; PlanStack plain entry=[] exit=[InvalidOperationException], debug-plus entry=[] exit=[InvalidOperationException]
+    S18a <AssertionFails>d__2::MoveNext await#3 L55: plain: pop; debug-plus: pop; PlanStack plain entry=[] exit=[], debug-plus entry=[] exit=[]
+    S18a <AssertionPasses>d__1::MoveNext await#2 L46: plain: callvirt Exception::get_Message (starts the next statement: the value crosses into it on the stack); debug-plus: stloc V_4; PlanStack plain entry=[] exit=[InvalidOperationException], debug-plus entry=[] exit=[InvalidOperationException]
+    S18a <AssertionPasses>d__1::MoveNext await#3 L47: plain: pop; debug-plus: pop; PlanStack plain entry=[] exit=[], debug-plus entry=[] exit=[]
+    S21a <AssertionFails>d__2::MoveNext await#2 L55: plain: callvirt Exception::get_Message (starts the next statement: the value crosses into it on the stack); debug-plus: stloc V_4; PlanStack plain entry=[] exit=[InvalidOperationException], debug-plus entry=[] exit=[InvalidOperationException]
+    S21a <AssertionPasses>d__1::MoveNext await#2 L45: plain: callvirt Exception::get_Message (starts the next statement: the value crosses into it on the stack); debug-plus: stloc V_4; PlanStack plain entry=[] exit=[InvalidOperationException], debug-plus entry=[] exit=[InvalidOperationException]
+
+## G. S24: a suite's own async Shouldly assertion, a method of a type the fixture marks [ShouldlyMethods], in Debug, plain Release and debug-plus
+
+Predicted by a code reading: skipped silently, since IsGetAwaiterOnAssertionResult (AssertionWeaver.cs L784) asks IsAssertionLibraryType (namespaces only, L856-863) while IsShouldlyMethod (L887-891) accepts the suite's own marked type, so the statement takes the 'Argument-await: skip' path (L717-721).
+
+| shape | build | csc | the weave's path for the statement | statements found there | woven | in WeaveResult.Unwoven | entry | notes drawn | threw (woven / unwoven) |
+|---|---|---|---|---|---|---|---|---|---|
+| S24a | Debug | /debug+ /debug:portable /optimize- | <AssertionFails>d__2::MoveNext L50: ARGUMENT-AWAIT SKIP (L717-721): IsGetAwaiterOnAssertionResult is false, so FindAssertionStatements drops the statement: no wrap, no Unwoven entry; <AssertionPasses>d__1::MoveNext L44: ARGUMENT-AWAIT SKIP (L717-721): IsGetAwaiterOnAssertionResult is false, so FindAssertionStatements drops the statement: no wrap, no Unwoven entry | none | 0 | no (empty) | AssertionPasses | (none) | no / no |
+| S24a | Debug | /debug+ /debug:portable /optimize- | <AssertionFails>d__2::MoveNext L50: ARGUMENT-AWAIT SKIP (L717-721): IsGetAwaiterOnAssertionResult is false, so FindAssertionStatements drops the statement: no wrap, no Unwoven entry; <AssertionPasses>d__1::MoveNext L44: ARGUMENT-AWAIT SKIP (L717-721): IsGetAwaiterOnAssertionResult is false, so FindAssertionStatements drops the statement: no wrap, no Unwoven entry | none | 0 | no (empty) | AssertionFails | (none) | ShouldAssertException / ShouldAssertException |
+| S24a | plain | /debug- /debug:portable /optimize+ | <AssertionFails>d__2::MoveNext L50: ARGUMENT-AWAIT SKIP (L717-721): IsGetAwaiterOnAssertionResult is false, so FindAssertionStatements drops the statement: no wrap, no Unwoven entry; <AssertionPasses>d__1::MoveNext L44: ARGUMENT-AWAIT SKIP (L717-721): IsGetAwaiterOnAssertionResult is false, so FindAssertionStatements drops the statement: no wrap, no Unwoven entry | none | 0 | no (empty) | AssertionPasses | (none) | no / no |
+| S24a | plain | /debug- /debug:portable /optimize+ | <AssertionFails>d__2::MoveNext L50: ARGUMENT-AWAIT SKIP (L717-721): IsGetAwaiterOnAssertionResult is false, so FindAssertionStatements drops the statement: no wrap, no Unwoven entry; <AssertionPasses>d__1::MoveNext L44: ARGUMENT-AWAIT SKIP (L717-721): IsGetAwaiterOnAssertionResult is false, so FindAssertionStatements drops the statement: no wrap, no Unwoven entry | none | 0 | no (empty) | AssertionFails | (none) | ShouldAssertException / ShouldAssertException |
+| S24a | debug-plus | /debug+ /debug:portable /optimize+ | <AssertionFails>d__2::MoveNext L50: ARGUMENT-AWAIT SKIP (L717-721): IsGetAwaiterOnAssertionResult is false, so FindAssertionStatements drops the statement: no wrap, no Unwoven entry; <AssertionPasses>d__1::MoveNext L44: ARGUMENT-AWAIT SKIP (L717-721): IsGetAwaiterOnAssertionResult is false, so FindAssertionStatements drops the statement: no wrap, no Unwoven entry | none | 0 | no (empty) | AssertionPasses | (none) | no / no |
+| S24a | debug-plus | /debug+ /debug:portable /optimize+ | <AssertionFails>d__2::MoveNext L50: ARGUMENT-AWAIT SKIP (L717-721): IsGetAwaiterOnAssertionResult is false, so FindAssertionStatements drops the statement: no wrap, no Unwoven entry; <AssertionPasses>d__1::MoveNext L44: ARGUMENT-AWAIT SKIP (L717-721): IsGetAwaiterOnAssertionResult is false, so FindAssertionStatements drops the statement: no wrap, no Unwoven entry | none | 0 | no (empty) | AssertionFails | (none) | ShouldAssertException / ShouldAssertException |
+| S24c | Debug | /debug+ /debug:portable /optimize- | <AssertionFails>d__2::MoveNext L52: ARGUMENT-AWAIT SKIP (L717-721): IsGetAwaiterOnAssertionResult is false, so FindAssertionStatements drops the statement: no wrap, no Unwoven entry; <AssertionPasses>d__1::MoveNext L45: ARGUMENT-AWAIT SKIP (L717-721): IsGetAwaiterOnAssertionResult is false, so FindAssertionStatements drops the statement: no wrap, no Unwoven entry | none | 0 | no (empty) | AssertionPasses | (none) | no / no |
+| S24c | Debug | /debug+ /debug:portable /optimize- | <AssertionFails>d__2::MoveNext L52: ARGUMENT-AWAIT SKIP (L717-721): IsGetAwaiterOnAssertionResult is false, so FindAssertionStatements drops the statement: no wrap, no Unwoven entry; <AssertionPasses>d__1::MoveNext L45: ARGUMENT-AWAIT SKIP (L717-721): IsGetAwaiterOnAssertionResult is false, so FindAssertionStatements drops the statement: no wrap, no Unwoven entry | none | 0 | no (empty) | AssertionFails | (none) | ShouldAssertException / ShouldAssertException |
+| S24c | plain | /debug- /debug:portable /optimize+ | <AssertionFails>d__2::MoveNext L52: ARGUMENT-AWAIT SKIP (L717-721): IsGetAwaiterOnAssertionResult is false, so FindAssertionStatements drops the statement: no wrap, no Unwoven entry; <AssertionPasses>d__1::MoveNext L45: ARGUMENT-AWAIT SKIP (L717-721): IsGetAwaiterOnAssertionResult is false, so FindAssertionStatements drops the statement: no wrap, no Unwoven entry | none | 0 | no (empty) | AssertionPasses | (none) | no / no |
+| S24c | plain | /debug- /debug:portable /optimize+ | <AssertionFails>d__2::MoveNext L52: ARGUMENT-AWAIT SKIP (L717-721): IsGetAwaiterOnAssertionResult is false, so FindAssertionStatements drops the statement: no wrap, no Unwoven entry; <AssertionPasses>d__1::MoveNext L45: ARGUMENT-AWAIT SKIP (L717-721): IsGetAwaiterOnAssertionResult is false, so FindAssertionStatements drops the statement: no wrap, no Unwoven entry | none | 0 | no (empty) | AssertionFails | (none) | ShouldAssertException / ShouldAssertException |
+| S24c | debug-plus | /debug+ /debug:portable /optimize+ | <AssertionFails>d__2::MoveNext L52: ARGUMENT-AWAIT SKIP (L717-721): IsGetAwaiterOnAssertionResult is false, so FindAssertionStatements drops the statement: no wrap, no Unwoven entry; <AssertionPasses>d__1::MoveNext L45: ARGUMENT-AWAIT SKIP (L717-721): IsGetAwaiterOnAssertionResult is false, so FindAssertionStatements drops the statement: no wrap, no Unwoven entry | none | 0 | no (empty) | AssertionPasses | (none) | no / no |
+| S24c | debug-plus | /debug+ /debug:portable /optimize+ | <AssertionFails>d__2::MoveNext L52: ARGUMENT-AWAIT SKIP (L717-721): IsGetAwaiterOnAssertionResult is false, so FindAssertionStatements drops the statement: no wrap, no Unwoven entry; <AssertionPasses>d__1::MoveNext L45: ARGUMENT-AWAIT SKIP (L717-721): IsGetAwaiterOnAssertionResult is false, so FindAssertionStatements drops the statement: no wrap, no Unwoven entry | none | 0 | no (empty) | AssertionFails | (none) | ShouldAssertException / ShouldAssertException |
+
+The measurement confirms the prediction in all three builds: each S24 statement takes the argument-await skip, so no statement is found, nothing is woven, WeaveResult.Unwoven stays empty, and neither the passing nor the failing run draws a note.

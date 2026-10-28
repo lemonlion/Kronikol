@@ -1,0 +1,43 @@
+using System;
+using System.Threading.Tasks;
+
+static class Program
+{
+    static readonly System.Collections.Generic.List<string> Log = new();
+
+    static Task<T> Observe<T>(Task<T> task) =>
+        task.ContinueWith(t =>
+        {
+            Log.Add(t.IsFaulted ? "note: failed " + t.Exception!.InnerException!.GetType().Name
+                  : t.IsCanceled ? "note: canceled" : "note: passed");
+            return t;
+        }, System.Threading.CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default).Unwrap();
+
+    static async Task<InvalidOperationException> ThrowsLater(bool fail)
+    {
+        await Task.Yield();
+        if (fail) throw new ArgumentException("assertion failed");
+        return new InvalidOperationException("x");
+    }
+
+    static async Task Main()
+    {
+        // 1. failing task: same exception object, note before the awaiter resumes
+        Exception? original = null;
+        var inner = ThrowsLater(true);
+        _ = inner.ContinueWith(t => original = t.Exception!.InnerException, TaskContinuationOptions.ExecuteSynchronously);
+        try { await Observe(inner); } catch (Exception e) { Log.Add("awaiter resumed: " + e.GetType().Name + " same object=" + ReferenceEquals(e, original ?? inner.Exception!.InnerException)); }
+        // 2. passing task: result object kept
+        var ok = ThrowsLater(false);
+        var r = await Observe(ok);
+        Log.Add("awaiter resumed: result same object=" + ReferenceEquals(r, ok.Result));
+        // 3. already-completed task: proxy completes synchronously
+        var done = Task.FromResult(new InvalidOperationException("done"));
+        var proxy = Observe(done);
+        Log.Add("completed input -> proxy.IsCompleted immediately=" + proxy.IsCompleted);
+        // 4. canceled task
+        var canceled = Task.FromCanceled<InvalidOperationException>(new System.Threading.CancellationToken(true));
+        try { await Observe(canceled); } catch (OperationCanceledException e) { Log.Add("awaiter resumed: " + e.GetType().Name); }
+        Console.WriteLine(string.Join(Environment.NewLine, Log));
+    }
+}

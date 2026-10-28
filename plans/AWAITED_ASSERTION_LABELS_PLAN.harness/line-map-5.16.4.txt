@@ -1,0 +1,31 @@
+Where this plan's code citations (at 1ee6373a, 5.12.0) are at f33ed3e9 (5.16.4, after #210's R1 5.16.3 = 186d0ebc and R2
+5.16.4 = f33ed3e9). Made 2026-10-28 from `git diff -U0 1ee6373a f33ed3e9` per file: an old line maps past every hunk
+before it; "changed inside" means a hunk falls within the cited range.
+
+src/Kronikol.AssertionTracking/AssertionWeaver.cs (12 hunks; no cited range changed inside)
+  469-891 unchanged: 469; 477-484; 486-496; 561-744 (FindAssertionStatements); 663-667; 683-689; 691-722; 713-715;
+  717-721; 734-737; 753-791 (IsGetAwaiterOnAssertionResult); 784; 798-854 (FindGetResultInstruction); 816-835;
+  856-863 (IsAssertionLibraryType); 871 (IsAssertionEntryPoint); 887-891 (IsShouldlyMethod)
+  from 1737 on, +97:
+  1737->1834; 1745->1842; 1799->1896; 1807->1904; 1873->1970 (DetectCapturedVariables' branches)
+  2443->2540; 2477->2574; 2505-2556->2602-2653 (PlanStack); 2521->2618; 2527->2624; 2538-2539->2635-2636
+  2606-2621->2703-2718 (AwaitedRange)
+  2940-3007->3037-3104; 3093-3096->3190-3193; 3103-3113->3200-3210 (WrapSingleAssertion's retargets)
+  3124-3380->3221-3477 (WrapAwaitedAssertion); 3135-3149->3232-3246; 3147->3244 (the AwaitedRange call)
+  3159-3223->3256-3320 (the values arrays); 3225-3244->3322-3341 (the brtrue retarget); 3255-3274->3352-3371 (the pass)
+  3295-3303->3392-3400 (the exit spill); 3314-3375->3411-3472 (the catch); 3468->3565 (WeaveResult.Unwoven)
+
+src/Kronikol/Tracking/AssertionExpressionFormatter.cs (53 hunks)
+  25-45 -> 24-49, changed inside: Format now drops comments (WithoutComments, #210 F12) and a lambda head, async
+  included, with block bodies (LambdaHead, #210 F16) first, then strips "await " and then "var name = " exactly as at
+  5.12.0. F3 holds: the order and the list are unchanged; 4.1 d's rule replaces those two strips, after #210's steps.
+
+src/Kronikol/Tracking/Track.cs (1 hunk)
+  307-311 unchanged; 363-370 -> 365-372; 372 -> 374. Line 357 changed: the label is now also creole-escaped
+  (PlantUmlCreator.EscapeCreoleMarkup, #210 Q9); nothing in this plan depends on it.
+
+tests/Kronikol.Tests/Tracking/AssertionExpressionFormatterTests.cs (8 hunks)
+  345-346 -> 347-348; 354-357 -> 356-359
+
+Unchanged at f33ed3e9: src/Kronikol.AssertionTracking/WeaveAssertionsTask.cs, the weaver's other test files (#210 adds
+tests/Kronikol.Tests.AssertionTracking/ConstantArgumentWeaveTests.cs).

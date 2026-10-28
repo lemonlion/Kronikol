@@ -1,0 +1,39 @@
+  1: #nullable enable
+  2: using System;
+  3: using System.Threading.Tasks;
+  4: using Kronikol.Tracking;
+  5: using TUnit.Assertions;
+  6: using TUnit.Assertions.Extensions;
+  7: 
+  8: [assembly: TrackAssertions]
+  9: 
+ 10: public sealed class OrderRequest
+ 11: {
+ 12:     public string Id { get; init; } = "";
+ 13: }
+ 14: 
+ 15: public sealed class OrdersClient
+ 16: {
+ 17:     public async Task<string> GetOrderAsync(OrderRequest request)
+ 18:     {
+ 19:         await Task.Yield();
+ 20:         return request.Id == "known" ? "order" : throw new InvalidOperationException("not found");
+ 21:     }
+ 22: 
+ 23:     public string GetOrder(OrderRequest request) =>
+ 24:         request.Id == "known" ? "order" : throw new InvalidOperationException("not found");
+ 25: }
+ 26: 
+ 27: public class Probe
+ 28: {
+ 29:     private readonly OrdersClient _client = new();
+ 30: 
+ 31:     public async Task Run()
+ 32:     {
+ 33:         await Task.Yield();
+ 34:         string? x = "value";
+ 35:         var v = await Assert.That(x).IsNotNull();
+ 36:         await Assert.That(v).IsEqualTo("value");
+ 37:     }
+ 38: }
+ 39: 

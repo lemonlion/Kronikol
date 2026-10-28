@@ -1,0 +1,270 @@
+### type Probe
+  field OrdersClient _client
+#### Probe::AssertionPasses
+  local V_0 Probe/<AssertionPasses>d__1
+                         IL_0000: ldloca.s       V_0                                                                       stack[0]
+                         IL_0002: call           AsyncTaskMethodBuilder::Create                                            stack[1] Probe/<AssertionPasses>d__1&
+                         IL_0007: stfld          Probe/<AssertionPasses>d__1::<>t__builder                                 stack[2] Probe/<AssertionPasses>d__1&, AsyncTaskMethodBuilder
+                         IL_000c: ldloca.s       V_0                                                                       stack[0]
+                         IL_000e: ldarg.0                                                                                  stack[1] Probe/<AssertionPasses>d__1&
+                         IL_000f: stfld          Probe/<AssertionPasses>d__1::<>4__this                                    stack[2] Probe/<AssertionPasses>d__1&, Probe
+                         IL_0014: ldloca.s       V_0                                                                       stack[0]
+                         IL_0016: ldc.i4.m1                                                                                stack[1] Probe/<AssertionPasses>d__1&
+                         IL_0017: stfld          Probe/<AssertionPasses>d__1::<>1__state                                   stack[2] Probe/<AssertionPasses>d__1&, Int32
+                         IL_001c: ldloca.s       V_0                                                                       stack[0]
+                         IL_001e: ldflda         Probe/<AssertionPasses>d__1::<>t__builder                                 stack[1] Probe/<AssertionPasses>d__1&
+                         IL_0023: ldloca.s       V_0                                                                       stack[1] AsyncTaskMethodBuilder&
+                         IL_0025: call           AsyncTaskMethodBuilder::Start<Probe/<AssertionPasses>d__1>                stack[2] AsyncTaskMethodBuilder&, Probe/<AssertionPasses>d__1&
+                         IL_002a: ldloca.s       V_0                                                                       stack[0]
+                         IL_002c: ldflda         Probe/<AssertionPasses>d__1::<>t__builder                                 stack[1] Probe/<AssertionPasses>d__1&
+                         IL_0031: call           AsyncTaskMethodBuilder::get_Task                                          stack[1] AsyncTaskMethodBuilder&
+                         IL_0036: ret                                                                                      stack[1] Task
+#### Probe::AssertionFails
+  local V_0 Probe/<AssertionFails>d__2
+                         IL_0000: ldloca.s       V_0                                                                       stack[0]
+                         IL_0002: call           AsyncTaskMethodBuilder::Create                                            stack[1] Probe/<AssertionFails>d__2&
+                         IL_0007: stfld          Probe/<AssertionFails>d__2::<>t__builder                                  stack[2] Probe/<AssertionFails>d__2&, AsyncTaskMethodBuilder
+                         IL_000c: ldloca.s       V_0                                                                       stack[0]
+                         IL_000e: ldarg.0                                                                                  stack[1] Probe/<AssertionFails>d__2&
+                         IL_000f: stfld          Probe/<AssertionFails>d__2::<>4__this                                     stack[2] Probe/<AssertionFails>d__2&, Probe
+                         IL_0014: ldloca.s       V_0                                                                       stack[0]
+                         IL_0016: ldc.i4.m1                                                                                stack[1] Probe/<AssertionFails>d__2&
+                         IL_0017: stfld          Probe/<AssertionFails>d__2::<>1__state                                    stack[2] Probe/<AssertionFails>d__2&, Int32
+                         IL_001c: ldloca.s       V_0                                                                       stack[0]
+                         IL_001e: ldflda         Probe/<AssertionFails>d__2::<>t__builder                                  stack[1] Probe/<AssertionFails>d__2&
+                         IL_0023: ldloca.s       V_0                                                                       stack[1] AsyncTaskMethodBuilder&
+                         IL_0025: call           AsyncTaskMethodBuilder::Start<Probe/<AssertionFails>d__2>                 stack[2] AsyncTaskMethodBuilder&, Probe/<AssertionFails>d__2&
+                         IL_002a: ldloca.s       V_0                                                                       stack[0]
+                         IL_002c: ldflda         Probe/<AssertionFails>d__2::<>t__builder                                  stack[1] Probe/<AssertionFails>d__2&
+                         IL_0031: call           AsyncTaskMethodBuilder::get_Task                                          stack[1] AsyncTaskMethodBuilder&
+                         IL_0036: ret                                                                                      stack[1] Task
+### type Probe/<AssertionFails>d__2
+  field Int32 <>1__state
+  field AsyncTaskMethodBuilder <>t__builder
+  field Probe <>4__this
+  field YieldAwaitable/YieldAwaiter <>u__1
+  field TaskAwaiter`1<String> <>u__2
+#### Probe/<AssertionFails>d__2::MoveNext
+  local V_0 Int32
+  local V_1 Probe
+  local V_2 YieldAwaitable/YieldAwaiter
+  local V_3 YieldAwaitable
+  local V_4 TaskAwaiter`1<String>
+  local V_5 Exception
+  handler Catch Exception try IL_000e..IL_00e2 handler IL_00e2..IL_00fb
+SP hidden                IL_0000: ldarg.0                                                                                  stack[0]
+                         IL_0001: ldfld          Probe/<AssertionFails>d__2::<>1__state                                    stack[1] Probe/<AssertionFails>d__2&
+                         IL_0006: stloc.0                                                                                  stack[1] Int32
+                         IL_0007: ldarg.0                                                                                  stack[0]
+                         IL_0008: ldfld          Probe/<AssertionFails>d__2::<>4__this                                     stack[1] Probe/<AssertionFails>d__2&
+                         IL_000d: stloc.1                                                                                  stack[1] Probe
+SP hidden                IL_000e: ldloc.0                                                                                  stack[0]
+                         IL_000f: brfalse.s      IL_0052                                                                   stack[1] Int32
+                         IL_0011: ldloc.0                                                                                  stack[0]
+                         IL_0012: ldc.i4.1                                                                                 stack[1] Int32
+                         IL_0013: beq            IL_00b1                                                                   stack[2] Int32, Int32
+SP L49:9-L49:28          IL_0018: call           Task::Yield                                                               stack[0]   // await Task.Yield();
+                         IL_001d: stloc.3                                                                                  stack[1] YieldAwaitable
+                         IL_001e: ldloca.s       V_3                                                                       stack[0]
+                         IL_0020: call           YieldAwaitable::GetAwaiter                                                stack[1] YieldAwaitable&
+                         IL_0025: stloc.2                                                                                  stack[1] YieldAwaitable/YieldAwaiter
+SP hidden                IL_0026: ldloca.s       V_2                                                                       stack[0]
+                         IL_0028: call           YieldAwaitable/YieldAwaiter::get_IsCompleted                              stack[1] YieldAwaitable/YieldAwaiter&
+                         IL_002d: brtrue.s       IL_006e                                                                   stack[1] Boolean
+                         IL_002f: ldarg.0                                                                                  stack[0]
+                         IL_0030: ldc.i4.0                                                                                 stack[1] Probe/<AssertionFails>d__2&
+                         IL_0031: dup                                                                                      stack[2] Probe/<AssertionFails>d__2&, Int32
+                         IL_0032: stloc.0                                                                                  stack[3] Probe/<AssertionFails>d__2&, Int32, Int32
+                         IL_0033: stfld          Probe/<AssertionFails>d__2::<>1__state                                    stack[2] Probe/<AssertionFails>d__2&, Int32
+                         IL_0038: ldarg.0                                                                                  stack[0]
+                         IL_0039: ldloc.2                                                                                  stack[1] Probe/<AssertionFails>d__2&
+                         IL_003a: stfld          Probe/<AssertionFails>d__2::<>u__1                                        stack[2] Probe/<AssertionFails>d__2&, YieldAwaitable/YieldAwaiter
+                         IL_003f: ldarg.0                                                                                  stack[0]
+                         IL_0040: ldflda         Probe/<AssertionFails>d__2::<>t__builder                                  stack[1] Probe/<AssertionFails>d__2&
+                         IL_0045: ldloca.s       V_2                                                                       stack[1] AsyncTaskMethodBuilder&
+                         IL_0047: ldarg.0                                                                                  stack[2] AsyncTaskMethodBuilder&, YieldAwaitable/YieldAwaiter&
+                         IL_0048: call           AsyncTaskMethodBuilder::AwaitUnsafeOnCompleted<YieldAwaitable/YieldAwaiter,Probe/<AssertionFails>d__2>  stack[3] AsyncTaskMethodBuilder&, YieldAwaitable/YieldAwaiter&, Probe/<AssertionFails>d__2&
+                         IL_004d: leave          IL_010e                                                                   stack[0]
+                         IL_0052: ldarg.0                                                                                  stack[0]
+                         IL_0053: ldfld          Probe/<AssertionFails>d__2::<>u__1                                        stack[1] Probe/<AssertionFails>d__2&
+                         IL_0058: stloc.2                                                                                  stack[1] YieldAwaitable/YieldAwaiter
+                         IL_0059: ldarg.0                                                                                  stack[0]
+                         IL_005a: ldflda         Probe/<AssertionFails>d__2::<>u__1                                        stack[1] Probe/<AssertionFails>d__2&
+                         IL_005f: initobj        YieldAwaitable/YieldAwaiter                                               stack[1] YieldAwaitable/YieldAwaiter&
+                         IL_0065: ldarg.0                                                                                  stack[0]
+                         IL_0066: ldc.i4.m1                                                                                stack[1] Probe/<AssertionFails>d__2&
+                         IL_0067: dup                                                                                      stack[2] Probe/<AssertionFails>d__2&, Int32
+                         IL_0068: stloc.0                                                                                  stack[3] Probe/<AssertionFails>d__2&, Int32, Int32
+                         IL_0069: stfld          Probe/<AssertionFails>d__2::<>1__state                                    stack[2] Probe/<AssertionFails>d__2&, Int32
+                         IL_006e: ldloca.s       V_2                                                                       stack[0]
+                         IL_0070: call           YieldAwaitable/YieldAwaiter::GetResult                                    stack[1] YieldAwaitable/YieldAwaiter&
+SP L50:9-L50:58          IL_0075: ldloc.1                                                                                  stack[0]   // (await _client.GetNameAsync()).ShouldBe("other");
+                         IL_0076: ldfld          Probe::_client                                                            stack[1] Probe
+                         IL_007b: callvirt       OrdersClient::GetNameAsync                                                stack[1] OrdersClient
+                         IL_0080: callvirt       Task`1<String>::GetAwaiter                                                stack[1] Task`1<String>
+                         IL_0085: stloc.s        V_4                                                                       stack[1] TaskAwaiter`1<String>
+SP hidden                IL_0087: ldloca.s       V_4                                                                       stack[0]
+                         IL_0089: call           TaskAwaiter`1<String>::get_IsCompleted                                    stack[1] TaskAwaiter`1<String>&
+                         IL_008e: brtrue.s       IL_00ce                                                                   stack[1] Boolean
+                         IL_0090: ldarg.0                                                                                  stack[0]
+                         IL_0091: ldc.i4.1                                                                                 stack[1] Probe/<AssertionFails>d__2&
+                         IL_0092: dup                                                                                      stack[2] Probe/<AssertionFails>d__2&, Int32
+                         IL_0093: stloc.0                                                                                  stack[3] Probe/<AssertionFails>d__2&, Int32, Int32
+                         IL_0094: stfld          Probe/<AssertionFails>d__2::<>1__state                                    stack[2] Probe/<AssertionFails>d__2&, Int32
+                         IL_0099: ldarg.0                                                                                  stack[0]
+                         IL_009a: ldloc.s        V_4                                                                       stack[1] Probe/<AssertionFails>d__2&
+                         IL_009c: stfld          Probe/<AssertionFails>d__2::<>u__2                                        stack[2] Probe/<AssertionFails>d__2&, TaskAwaiter`1<String>
+                         IL_00a1: ldarg.0                                                                                  stack[0]
+                         IL_00a2: ldflda         Probe/<AssertionFails>d__2::<>t__builder                                  stack[1] Probe/<AssertionFails>d__2&
+                         IL_00a7: ldloca.s       V_4                                                                       stack[1] AsyncTaskMethodBuilder&
+                         IL_00a9: ldarg.0                                                                                  stack[2] AsyncTaskMethodBuilder&, TaskAwaiter`1<String>&
+                         IL_00aa: call           AsyncTaskMethodBuilder::AwaitUnsafeOnCompleted<TaskAwaiter`1<String>,Probe/<AssertionFails>d__2>  stack[3] AsyncTaskMethodBuilder&, TaskAwaiter`1<String>&, Probe/<AssertionFails>d__2&
+                         IL_00af: leave.s        IL_010e                                                                   stack[0]
+                         IL_00b1: ldarg.0                                                                                  stack[0]
+                         IL_00b2: ldfld          Probe/<AssertionFails>d__2::<>u__2                                        stack[1] Probe/<AssertionFails>d__2&
+                         IL_00b7: stloc.s        V_4                                                                       stack[1] TaskAwaiter`1<String>
+                         IL_00b9: ldarg.0                                                                                  stack[0]
+                         IL_00ba: ldflda         Probe/<AssertionFails>d__2::<>u__2                                        stack[1] Probe/<AssertionFails>d__2&
+                         IL_00bf: initobj        TaskAwaiter`1<String>                                                     stack[1] TaskAwaiter`1<String>&
+                         IL_00c5: ldarg.0                                                                                  stack[0]
+                         IL_00c6: ldc.i4.m1                                                                                stack[1] Probe/<AssertionFails>d__2&
+                         IL_00c7: dup                                                                                      stack[2] Probe/<AssertionFails>d__2&, Int32
+                         IL_00c8: stloc.0                                                                                  stack[3] Probe/<AssertionFails>d__2&, Int32, Int32
+                         IL_00c9: stfld          Probe/<AssertionFails>d__2::<>1__state                                    stack[2] Probe/<AssertionFails>d__2&, Int32
+                         IL_00ce: ldloca.s       V_4                                                                       stack[0]
+                         IL_00d0: call           TaskAwaiter`1<String>::GetResult                                          stack[1] TaskAwaiter`1<String>&
+                         IL_00d5: ldstr          "other"                                                                   stack[1] String
+                         IL_00da: ldnull                                                                                   stack[2] String, String
+                         IL_00db: call           Shouldly.ShouldBeStringTestExtensions::ShouldBe                           stack[3] String, String, <null>
+                         IL_00e0: leave.s        IL_00fb                                                                   stack[0]
+SP hidden                IL_00e2: stloc.s        V_5                                                                       stack[1] Exception
+                         IL_00e4: ldarg.0                                                                                  stack[0]
+                         IL_00e5: ldc.i4.s       -2                                                                        stack[1] Probe/<AssertionFails>d__2&
+                         IL_00e7: stfld          Probe/<AssertionFails>d__2::<>1__state                                    stack[2] Probe/<AssertionFails>d__2&, Int32
+                         IL_00ec: ldarg.0                                                                                  stack[0]
+                         IL_00ed: ldflda         Probe/<AssertionFails>d__2::<>t__builder                                  stack[1] Probe/<AssertionFails>d__2&
+                         IL_00f2: ldloc.s        V_5                                                                       stack[1] AsyncTaskMethodBuilder&
+                         IL_00f4: call           AsyncTaskMethodBuilder::SetException                                      stack[2] AsyncTaskMethodBuilder&, Exception
+                         IL_00f9: leave.s        IL_010e                                                                   stack[0]
+SP L51:5-L51:6           IL_00fb: ldarg.0                                                                                  stack[0]   // }
+                         IL_00fc: ldc.i4.s       -2                                                                        stack[1] Probe/<AssertionFails>d__2&
+                         IL_00fe: stfld          Probe/<AssertionFails>d__2::<>1__state                                    stack[2] Probe/<AssertionFails>d__2&, Int32
+SP hidden                IL_0103: ldarg.0                                                                                  stack[0]
+                         IL_0104: ldflda         Probe/<AssertionFails>d__2::<>t__builder                                  stack[1] Probe/<AssertionFails>d__2&
+                         IL_0109: call           AsyncTaskMethodBuilder::SetResult                                         stack[1] AsyncTaskMethodBuilder&
+                         IL_010e: ret                                                                                      stack[0]
+### type Probe/<AssertionPasses>d__1
+  field Int32 <>1__state
+  field AsyncTaskMethodBuilder <>t__builder
+  field Probe <>4__this
+  field YieldAwaitable/YieldAwaiter <>u__1
+  field TaskAwaiter`1<String> <>u__2
+#### Probe/<AssertionPasses>d__1::MoveNext
+  local V_0 Int32
+  local V_1 Probe
+  local V_2 YieldAwaitable/YieldAwaiter
+  local V_3 YieldAwaitable
+  local V_4 TaskAwaiter`1<String>
+  local V_5 Exception
+  handler Catch Exception try IL_000e..IL_00e2 handler IL_00e2..IL_00fb
+SP hidden                IL_0000: ldarg.0                                                                                  stack[0]
+                         IL_0001: ldfld          Probe/<AssertionPasses>d__1::<>1__state                                   stack[1] Probe/<AssertionPasses>d__1&
+                         IL_0006: stloc.0                                                                                  stack[1] Int32
+                         IL_0007: ldarg.0                                                                                  stack[0]
+                         IL_0008: ldfld          Probe/<AssertionPasses>d__1::<>4__this                                    stack[1] Probe/<AssertionPasses>d__1&
+                         IL_000d: stloc.1                                                                                  stack[1] Probe
+SP hidden                IL_000e: ldloc.0                                                                                  stack[0]
+                         IL_000f: brfalse.s      IL_0052                                                                   stack[1] Int32
+                         IL_0011: ldloc.0                                                                                  stack[0]
+                         IL_0012: ldc.i4.1                                                                                 stack[1] Int32
+                         IL_0013: beq            IL_00b1                                                                   stack[2] Int32, Int32
+SP L43:9-L43:28          IL_0018: call           Task::Yield                                                               stack[0]   // await Task.Yield();
+                         IL_001d: stloc.3                                                                                  stack[1] YieldAwaitable
+                         IL_001e: ldloca.s       V_3                                                                       stack[0]
+                         IL_0020: call           YieldAwaitable::GetAwaiter                                                stack[1] YieldAwaitable&
+                         IL_0025: stloc.2                                                                                  stack[1] YieldAwaitable/YieldAwaiter
+SP hidden                IL_0026: ldloca.s       V_2                                                                       stack[0]
+                         IL_0028: call           YieldAwaitable/YieldAwaiter::get_IsCompleted                              stack[1] YieldAwaitable/YieldAwaiter&
+                         IL_002d: brtrue.s       IL_006e                                                                   stack[1] Boolean
+                         IL_002f: ldarg.0                                                                                  stack[0]
+                         IL_0030: ldc.i4.0                                                                                 stack[1] Probe/<AssertionPasses>d__1&
+                         IL_0031: dup                                                                                      stack[2] Probe/<AssertionPasses>d__1&, Int32
+                         IL_0032: stloc.0                                                                                  stack[3] Probe/<AssertionPasses>d__1&, Int32, Int32
+                         IL_0033: stfld          Probe/<AssertionPasses>d__1::<>1__state                                   stack[2] Probe/<AssertionPasses>d__1&, Int32
+                         IL_0038: ldarg.0                                                                                  stack[0]
+                         IL_0039: ldloc.2                                                                                  stack[1] Probe/<AssertionPasses>d__1&
+                         IL_003a: stfld          Probe/<AssertionPasses>d__1::<>u__1                                       stack[2] Probe/<AssertionPasses>d__1&, YieldAwaitable/YieldAwaiter
+                         IL_003f: ldarg.0                                                                                  stack[0]
+                         IL_0040: ldflda         Probe/<AssertionPasses>d__1::<>t__builder                                 stack[1] Probe/<AssertionPasses>d__1&
+                         IL_0045: ldloca.s       V_2                                                                       stack[1] AsyncTaskMethodBuilder&
+                         IL_0047: ldarg.0                                                                                  stack[2] AsyncTaskMethodBuilder&, YieldAwaitable/YieldAwaiter&
+                         IL_0048: call           AsyncTaskMethodBuilder::AwaitUnsafeOnCompleted<YieldAwaitable/YieldAwaiter,Probe/<AssertionPasses>d__1>  stack[3] AsyncTaskMethodBuilder&, YieldAwaitable/YieldAwaiter&, Probe/<AssertionPasses>d__1&
+                         IL_004d: leave          IL_010e                                                                   stack[0]
+                         IL_0052: ldarg.0                                                                                  stack[0]
+                         IL_0053: ldfld          Probe/<AssertionPasses>d__1::<>u__1                                       stack[1] Probe/<AssertionPasses>d__1&
+                         IL_0058: stloc.2                                                                                  stack[1] YieldAwaitable/YieldAwaiter
+                         IL_0059: ldarg.0                                                                                  stack[0]
+                         IL_005a: ldflda         Probe/<AssertionPasses>d__1::<>u__1                                       stack[1] Probe/<AssertionPasses>d__1&
+                         IL_005f: initobj        YieldAwaitable/YieldAwaiter                                               stack[1] YieldAwaitable/YieldAwaiter&
+                         IL_0065: ldarg.0                                                                                  stack[0]
+                         IL_0066: ldc.i4.m1                                                                                stack[1] Probe/<AssertionPasses>d__1&
+                         IL_0067: dup                                                                                      stack[2] Probe/<AssertionPasses>d__1&, Int32
+                         IL_0068: stloc.0                                                                                  stack[3] Probe/<AssertionPasses>d__1&, Int32, Int32
+                         IL_0069: stfld          Probe/<AssertionPasses>d__1::<>1__state                                   stack[2] Probe/<AssertionPasses>d__1&, Int32
+                         IL_006e: ldloca.s       V_2                                                                       stack[0]
+                         IL_0070: call           YieldAwaitable/YieldAwaiter::GetResult                                    stack[1] YieldAwaitable/YieldAwaiter&
+SP L44:9-L44:58          IL_0075: ldloc.1                                                                                  stack[0]   // (await _client.GetNameAsync()).ShouldBe("order");
+                         IL_0076: ldfld          Probe::_client                                                            stack[1] Probe
+                         IL_007b: callvirt       OrdersClient::GetNameAsync                                                stack[1] OrdersClient
+                         IL_0080: callvirt       Task`1<String>::GetAwaiter                                                stack[1] Task`1<String>
+                         IL_0085: stloc.s        V_4                                                                       stack[1] TaskAwaiter`1<String>
+SP hidden                IL_0087: ldloca.s       V_4                                                                       stack[0]
+                         IL_0089: call           TaskAwaiter`1<String>::get_IsCompleted                                    stack[1] TaskAwaiter`1<String>&
+                         IL_008e: brtrue.s       IL_00ce                                                                   stack[1] Boolean
+                         IL_0090: ldarg.0                                                                                  stack[0]
+                         IL_0091: ldc.i4.1                                                                                 stack[1] Probe/<AssertionPasses>d__1&
+                         IL_0092: dup                                                                                      stack[2] Probe/<AssertionPasses>d__1&, Int32
+                         IL_0093: stloc.0                                                                                  stack[3] Probe/<AssertionPasses>d__1&, Int32, Int32
+                         IL_0094: stfld          Probe/<AssertionPasses>d__1::<>1__state                                   stack[2] Probe/<AssertionPasses>d__1&, Int32
+                         IL_0099: ldarg.0                                                                                  stack[0]
+                         IL_009a: ldloc.s        V_4                                                                       stack[1] Probe/<AssertionPasses>d__1&
+                         IL_009c: stfld          Probe/<AssertionPasses>d__1::<>u__2                                       stack[2] Probe/<AssertionPasses>d__1&, TaskAwaiter`1<String>
+                         IL_00a1: ldarg.0                                                                                  stack[0]
+                         IL_00a2: ldflda         Probe/<AssertionPasses>d__1::<>t__builder                                 stack[1] Probe/<AssertionPasses>d__1&
+                         IL_00a7: ldloca.s       V_4                                                                       stack[1] AsyncTaskMethodBuilder&
+                         IL_00a9: ldarg.0                                                                                  stack[2] AsyncTaskMethodBuilder&, TaskAwaiter`1<String>&
+                         IL_00aa: call           AsyncTaskMethodBuilder::AwaitUnsafeOnCompleted<TaskAwaiter`1<String>,Probe/<AssertionPasses>d__1>  stack[3] AsyncTaskMethodBuilder&, TaskAwaiter`1<String>&, Probe/<AssertionPasses>d__1&
+                         IL_00af: leave.s        IL_010e                                                                   stack[0]
+                         IL_00b1: ldarg.0                                                                                  stack[0]
+                         IL_00b2: ldfld          Probe/<AssertionPasses>d__1::<>u__2                                       stack[1] Probe/<AssertionPasses>d__1&
+                         IL_00b7: stloc.s        V_4                                                                       stack[1] TaskAwaiter`1<String>
+                         IL_00b9: ldarg.0                                                                                  stack[0]
+                         IL_00ba: ldflda         Probe/<AssertionPasses>d__1::<>u__2                                       stack[1] Probe/<AssertionPasses>d__1&
+                         IL_00bf: initobj        TaskAwaiter`1<String>                                                     stack[1] TaskAwaiter`1<String>&
+                         IL_00c5: ldarg.0                                                                                  stack[0]
+                         IL_00c6: ldc.i4.m1                                                                                stack[1] Probe/<AssertionPasses>d__1&
+                         IL_00c7: dup                                                                                      stack[2] Probe/<AssertionPasses>d__1&, Int32
+                         IL_00c8: stloc.0                                                                                  stack[3] Probe/<AssertionPasses>d__1&, Int32, Int32
+                         IL_00c9: stfld          Probe/<AssertionPasses>d__1::<>1__state                                   stack[2] Probe/<AssertionPasses>d__1&, Int32
+                         IL_00ce: ldloca.s       V_4                                                                       stack[0]
+                         IL_00d0: call           TaskAwaiter`1<String>::GetResult                                          stack[1] TaskAwaiter`1<String>&
+                         IL_00d5: ldstr          "order"                                                                   stack[1] String
+                         IL_00da: ldnull                                                                                   stack[2] String, String
+                         IL_00db: call           Shouldly.ShouldBeStringTestExtensions::ShouldBe                           stack[3] String, String, <null>
+                         IL_00e0: leave.s        IL_00fb                                                                   stack[0]
+SP hidden                IL_00e2: stloc.s        V_5                                                                       stack[1] Exception
+                         IL_00e4: ldarg.0                                                                                  stack[0]
+                         IL_00e5: ldc.i4.s       -2                                                                        stack[1] Probe/<AssertionPasses>d__1&
+                         IL_00e7: stfld          Probe/<AssertionPasses>d__1::<>1__state                                   stack[2] Probe/<AssertionPasses>d__1&, Int32
+                         IL_00ec: ldarg.0                                                                                  stack[0]
+                         IL_00ed: ldflda         Probe/<AssertionPasses>d__1::<>t__builder                                 stack[1] Probe/<AssertionPasses>d__1&
+                         IL_00f2: ldloc.s        V_5                                                                       stack[1] AsyncTaskMethodBuilder&
+                         IL_00f4: call           AsyncTaskMethodBuilder::SetException                                      stack[2] AsyncTaskMethodBuilder&, Exception
+                         IL_00f9: leave.s        IL_010e                                                                   stack[0]
+SP L45:5-L45:6           IL_00fb: ldarg.0                                                                                  stack[0]   // }
+                         IL_00fc: ldc.i4.s       -2                                                                        stack[1] Probe/<AssertionPasses>d__1&
+                         IL_00fe: stfld          Probe/<AssertionPasses>d__1::<>1__state                                   stack[2] Probe/<AssertionPasses>d__1&, Int32
+SP hidden                IL_0103: ldarg.0                                                                                  stack[0]
+                         IL_0104: ldflda         Probe/<AssertionPasses>d__1::<>t__builder                                 stack[1] Probe/<AssertionPasses>d__1&
+                         IL_0109: call           AsyncTaskMethodBuilder::SetResult                                         stack[1] AsyncTaskMethodBuilder&
+                         IL_010e: ret                                                                                      stack[0]

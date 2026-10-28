@@ -1,0 +1,33 @@
+Shouldly 4.3.0+cb48f40b4d6087ce9fb1983041fce8a725436cb1 (C:\Code\Kronikol-212\tests\Kronikol.Tests.AssertionTracking\bin\Debug\net10.0\Shouldly.dll): every public static method whose name has NotThrow or ThrowAsync
+  Should.NotThrow(System.Action action, System.String customMessage) -> System.Void
+  Should.NotThrow(System.Func`1[System.Threading.Tasks.Task] action, System.String customMessage) -> System.Void
+  Should.NotThrow(System.Func`1[System.Threading.Tasks.Task] action, System.TimeSpan timeoutAfter, System.String customMessage) -> System.Void
+  Should.NotThrow(System.Threading.Tasks.Task action, System.String customMessage) -> System.Void
+  Should.NotThrow(System.Threading.Tasks.Task action, System.TimeSpan timeoutAfter, System.String customMessage) -> System.Void
+  Should.NotThrow<T>(System.Func`1[System.Threading.Tasks.Task`1[T]] action, System.String customMessage) -> T
+  Should.NotThrow<T>(System.Func`1[System.Threading.Tasks.Task`1[T]] action, System.TimeSpan timeoutAfter, System.String customMessage) -> T
+  Should.NotThrow<T>(System.Func`1[T] action, System.String customMessage) -> T
+  Should.NotThrow<T>(System.Threading.Tasks.Task`1[T] action, System.String customMessage) -> T
+  Should.NotThrow<T>(System.Threading.Tasks.Task`1[T] action, System.TimeSpan timeoutAfter, System.String customMessage) -> T
+  Should.NotThrowAsync(System.Func`1[System.Threading.Tasks.Task] actual, System.String customMessage) -> System.Threading.Tasks.Task
+  Should.NotThrowAsync(System.Threading.Tasks.Task task, System.String customMessage) -> System.Threading.Tasks.Task
+  Should.ThrowAsync(System.Func`1[System.Threading.Tasks.Task] actual, System.Type exceptionType, System.String customMessage) -> System.Threading.Tasks.Task`1[System.Exception]
+  Should.ThrowAsync(System.Threading.Tasks.Task task, System.Type exceptionType, System.String customMessage) -> System.Threading.Tasks.Task`1[System.Exception]
+  Should.ThrowAsync<TException>(System.Func`1[System.Threading.Tasks.Task] actual, System.String customMessage) -> System.Threading.Tasks.Task`1[TException]
+  Should.ThrowAsync<TException>(System.Threading.Tasks.Task task, System.String customMessage) -> System.Threading.Tasks.Task`1[TException]
+  ShouldNotThrowTaskAsyncExtensions.ShouldNotThrowAsync(System.Func`1[System.Threading.Tasks.Task] actual, System.String customMessage) -> System.Threading.Tasks.Task
+  ShouldNotThrowTaskAsyncExtensions.ShouldNotThrowAsync(System.Threading.Tasks.Task task, System.String customMessage) -> System.Threading.Tasks.Task
+  ShouldThrowAsyncExtensions.ShouldThrowAsync(System.Func`1[System.Threading.Tasks.Task] actual, System.Type exceptionType, System.String customMessage) -> System.Threading.Tasks.Task`1[System.Exception]
+  ShouldThrowAsyncExtensions.ShouldThrowAsync(System.Threading.Tasks.Task task, System.Type exceptionType, System.String customMessage) -> System.Threading.Tasks.Task`1[System.Exception]
+  ShouldThrowAsyncExtensions.ShouldThrowAsync<TException>(System.Func`1[System.Threading.Tasks.Task] actual, System.String customMessage) -> System.Threading.Tasks.Task`1[TException]
+  ShouldThrowAsyncExtensions.ShouldThrowAsync<TException>(System.Threading.Tasks.Task task, System.String customMessage) -> System.Threading.Tasks.Task`1[TException]
+  ShouldThrowExtensions.ShouldNotThrow(System.Action action, System.String customMessage) -> System.Void
+  ShouldThrowExtensions.ShouldNotThrow<T>(System.Func`1[T] action, System.String customMessage) -> T
+  ShouldThrowTaskExtensions.ShouldNotThrow(System.Func`1[System.Threading.Tasks.Task] action, System.String customMessage) -> System.Void
+  ShouldThrowTaskExtensions.ShouldNotThrow(System.Func`1[System.Threading.Tasks.Task] action, System.TimeSpan timeoutAfter, System.String customMessage) -> System.Void
+  ShouldThrowTaskExtensions.ShouldNotThrow(System.Threading.Tasks.Task action, System.String customMessage) -> System.Void
+  ShouldThrowTaskExtensions.ShouldNotThrow(System.Threading.Tasks.Task action, System.TimeSpan timeoutAfter, System.String customMessage) -> System.Void
+  ShouldThrowTaskExtensions.ShouldNotThrow<T>(System.Func`1[System.Threading.Tasks.Task`1[T]] action, System.String customMessage) -> T
+  ShouldThrowTaskExtensions.ShouldNotThrow<T>(System.Func`1[System.Threading.Tasks.Task`1[T]] action, System.TimeSpan timeoutAfter, System.String customMessage) -> T
+  ShouldThrowTaskExtensions.ShouldNotThrow<T>(System.Threading.Tasks.Task`1[T] action, System.String customMessage) -> T
+  ShouldThrowTaskExtensions.ShouldNotThrow<T>(System.Threading.Tasks.Task`1[T] action, System.TimeSpan timeoutAfter, System.String customMessage) -> T

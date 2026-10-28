@@ -1,0 +1,54 @@
+  1: #nullable enable
+  2: using System;
+  3: using System.Threading.Tasks;
+  4: using Kronikol.Tracking;
+  5: using TUnit.Assertions;
+  6: using TUnit.Assertions.Extensions;
+  7: 
+  8: [assembly: TrackAssertions]
+  9: 
+ 10: public sealed class OrderRequest
+ 11: {
+ 12:     public string Id { get; init; } = "";
+ 13: }
+ 14: 
+ 15: public sealed class OrdersClient
+ 16: {
+ 17:     public string ExpectedMessage { get; set; } = "not found";
+ 18: 
+ 19:     public async Task<string> GetNameAsync()
+ 20:     {
+ 21:         await Task.Yield();
+ 22:         return "order";
+ 23:     }
+ 24: 
+ 25:     public async Task<string> GetOrderAsync(OrderRequest request)
+ 26:     {
+ 27:         await Task.Yield();
+ 28:         return request.Id == "known" ? "order" : throw new InvalidOperationException("not found");
+ 29:     }
+ 30: 
+ 31:     public async Task<string> GetExpectedMessageAsync()
+ 32:     {
+ 33:         await Task.Yield();
+ 34:         return ExpectedMessage;
+ 35:     }
+ 36: }
+ 37: 
+ 38: public class Probe
+ 39: {
+ 40:     private readonly OrdersClient _client = new();
+ 41: 
+ 42:     public async Task AssertionPasses()
+ 43:     {
+ 44:         await Task.Yield();
+ 45:         await Assert.That(await _client.GetNameAsync()).IsEqualTo("order");
+ 46:     }
+ 47: 
+ 48:     public async Task AssertionFails()
+ 49:     {
+ 50:         await Task.Yield();
+ 51:         await Assert.That(await _client.GetNameAsync()).IsEqualTo("other");
+ 52:     }
+ 53: }
+ 54: 

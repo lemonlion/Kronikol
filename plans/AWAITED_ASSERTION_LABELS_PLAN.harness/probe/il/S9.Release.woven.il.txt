@@ -1,0 +1,108 @@
+### type Probe
+  field OrdersClient _client
+#### Probe::Run
+  local V_0 InvalidOperationException
+  local V_1 Exception
+  local V_2 Probe/<>c__DisplayClass1_0
+  local V_3 String[]
+  local V_4 Object[]
+  local V_5 InvalidOperationException
+  local V_6 Exception
+  handler Catch Exception try IL_0023..IL_0083 handler IL_0083..IL_00a2
+  handler Catch Exception try IL_00a6..IL_00cb handler IL_00cb..IL_00e5
+SP hidden                IL_0000: newobj         Probe/<>c__DisplayClass1_0::.ctor                                         stack[0]
+                         IL_0005: dup                                                                                      stack[1] Probe/<>c__DisplayClass1_0
+                         IL_0006: ldarg.0                                                                                  stack[2] Probe/<>c__DisplayClass1_0, Probe/<>c__DisplayClass1_0
+                         IL_0007: stfld          Probe/<>c__DisplayClass1_0::<>4__this                                     stack[3] Probe/<>c__DisplayClass1_0, Probe/<>c__DisplayClass1_0, Probe
+SP L32:9-L32:59          IL_000c: dup                                                                                      stack[1] Probe/<>c__DisplayClass1_0   // var request = new OrderRequest { Id = "missing" };
+                         IL_000d: newobj         OrderRequest::.ctor                                                       stack[2] Probe/<>c__DisplayClass1_0, Probe/<>c__DisplayClass1_0
+                         IL_0012: dup                                                                                      stack[3] Probe/<>c__DisplayClass1_0, Probe/<>c__DisplayClass1_0, OrderRequest
+                         IL_0013: ldstr          "missing"                                                                 stack[4] Probe/<>c__DisplayClass1_0, Probe/<>c__DisplayClass1_0, OrderRequest, OrderRequest
+                         IL_0018: callvirt       OrderRequest::set_Id                                                      stack[5] Probe/<>c__DisplayClass1_0, Probe/<>c__DisplayClass1_0, OrderRequest, OrderRequest, String
+                         IL_001d: stfld          Probe/<>c__DisplayClass1_0::request                                       stack[3] Probe/<>c__DisplayClass1_0, Probe/<>c__DisplayClass1_0, OrderRequest
+SP L33:9-L33:90          IL_0022: stloc.2                                                                                  stack[1] Probe/<>c__DisplayClass1_0   // var e = Should.Throw<InvalidOperationException>(() => _client.GetOrder(request));
+                         IL_0023: nop                                                                                      stack[0]
+                         IL_0024: ldloc.2                                                                                  stack[0]
+                         IL_0025: ldc.i4.2                                                                                 stack[1] Probe/<>c__DisplayClass1_0
+                         IL_0026: newarr         String                                                                    stack[2] Probe/<>c__DisplayClass1_0, Int32
+                         IL_002b: dup                                                                                      stack[2] Probe/<>c__DisplayClass1_0, String[]
+                         IL_002c: ldc.i4.0                                                                                 stack[3] Probe/<>c__DisplayClass1_0, String[], String[]
+                         IL_002d: ldstr          "_client"                                                                 stack[4] Probe/<>c__DisplayClass1_0, String[], String[], Int32
+                         IL_0032: stelem.ref                                                                               stack[5] Probe/<>c__DisplayClass1_0, String[], String[], Int32, String
+                         IL_0033: dup                                                                                      stack[2] Probe/<>c__DisplayClass1_0, String[]
+                         IL_0034: ldc.i4.1                                                                                 stack[3] Probe/<>c__DisplayClass1_0, String[], String[]
+                         IL_0035: ldstr          "request"                                                                 stack[4] Probe/<>c__DisplayClass1_0, String[], String[], Int32
+                         IL_003a: stelem.ref                                                                               stack[5] Probe/<>c__DisplayClass1_0, String[], String[], Int32, String
+                         IL_003b: stloc.3                                                                                  stack[2] Probe/<>c__DisplayClass1_0, String[]
+                         IL_003c: ldc.i4.2                                                                                 stack[1] Probe/<>c__DisplayClass1_0
+                         IL_003d: newarr         Object                                                                    stack[2] Probe/<>c__DisplayClass1_0, Int32
+                         IL_0042: dup                                                                                      stack[2] Probe/<>c__DisplayClass1_0, Object[]
+                         IL_0043: ldc.i4.0                                                                                 stack[3] Probe/<>c__DisplayClass1_0, Object[], Object[]
+                         IL_0044: ldarg.0                                                                                  stack[4] Probe/<>c__DisplayClass1_0, Object[], Object[], Int32
+                         IL_0045: ldfld          Probe::_client                                                            stack[5] Probe/<>c__DisplayClass1_0, Object[], Object[], Int32, Probe
+                         IL_004a: stelem.ref                                                                               stack[5] Probe/<>c__DisplayClass1_0, Object[], Object[], Int32, OrdersClient
+                         IL_004b: dup                                                                                      stack[2] Probe/<>c__DisplayClass1_0, Object[]
+                         IL_004c: ldc.i4.1                                                                                 stack[3] Probe/<>c__DisplayClass1_0, Object[], Object[]
+                         IL_004d: ldarg.0                                                                                  stack[4] Probe/<>c__DisplayClass1_0, Object[], Object[], Int32
+                         IL_004e: ldfld          Probe/<>c__DisplayClass1_0::request                                       stack[5] Probe/<>c__DisplayClass1_0, Object[], Object[], Int32, Probe
+                         IL_0053: stelem.ref                                                                               stack[5] Probe/<>c__DisplayClass1_0, Object[], Object[], Int32, OrderRequest
+                         IL_0054: stloc.s        V_4                                                                       stack[2] Probe/<>c__DisplayClass1_0, Object[]
+                         IL_0056: ldftn          Probe/<>c__DisplayClass1_0::<Run>b__0                                     stack[1] Probe/<>c__DisplayClass1_0
+                         IL_005c: newobj         Func`1<Object>::.ctor                                                     stack[2] Probe/<>c__DisplayClass1_0, IntPtr
+                         IL_0061: ldnull                                                                                   stack[1] Func`1<Object>
+                         IL_0062: call           Shouldly.Should::Throw<InvalidOperationException>                         stack[2] Func`1<Object>, <null>
+                         IL_0067: ldstr          "var e = Should.Throw<InvalidOperationException>(() => _client.GetOrder(request))"  stack[1] InvalidOperationException
+                         IL_006c: ldloc.3                                                                                  stack[2] InvalidOperationException, String
+                         IL_006d: ldloc.s        V_4                                                                       stack[3] InvalidOperationException, String, String[]
+                         IL_006f: ldstr          "C:\Users\cex\AppData\Local\Temp\KRONIKOL_WeaverTests\aee1a3f2\Probe212_S9_Release.cs"  stack[4] InvalidOperationException, String, String[], Object[]
+                         IL_0074: ldc.i4.s       33                                                                        stack[5] InvalidOperationException, String, String[], Object[], String
+                         IL_0076: call           Kronikol.Tracking.Track::AssertionPassedWithValues                        stack[6] InvalidOperationException, String, String[], Object[], String, Int32
+                         IL_007b: stloc.s        V_5                                                                       stack[1] InvalidOperationException
+                         IL_007d: leave.s        IL_00a2                                                                   stack[0]
+                         IL_007f: stloc.s        V_5                                                                       stack[unreached]
+                         IL_0081: leave.s        IL_00a2                                                                   stack[unreached]
+                         IL_0083: stloc.s        V_6                                                                       stack[1] Exception
+                         IL_0085: ldstr          "var e = Should.Throw<InvalidOperationException>(() => _client.GetOrder(request))"  stack[0]
+                         IL_008a: ldloc.s        V_6                                                                       stack[1] String
+                         IL_008c: callvirt       Exception::get_Message                                                    stack[2] String, Exception
+                         IL_0091: ldloc.3                                                                                  stack[2] String, String
+                         IL_0092: ldloc.s        V_4                                                                       stack[3] String, String, String[]
+                         IL_0094: ldstr          "C:\Users\cex\AppData\Local\Temp\KRONIKOL_WeaverTests\aee1a3f2\Probe212_S9_Release.cs"  stack[4] String, String, String[], Object[]
+                         IL_0099: ldc.i4.s       33                                                                        stack[5] String, String, String[], Object[], String
+                         IL_009b: call           Kronikol.Tracking.Track::AssertionFailedWithValues                        stack[6] String, String, String[], Object[], String, Int32
+                         IL_00a0: rethrow                                                                                  stack[0]
+                         IL_00a2: nop                                                                                      stack[0]
+                         IL_00a3: ldloc.s        V_5                                                                       stack[0]
+SP L34:9-L34:41          IL_00a5: stloc.0                                                                                  stack[1] InvalidOperationException   // e.Message.ShouldBe("not found");
+                         IL_00a6: nop                                                                                      stack[0]
+                         IL_00a7: ldloc.0                                                                                  stack[0]
+                         IL_00a8: callvirt       Exception::get_Message                                                    stack[1] InvalidOperationException
+                         IL_00ad: ldstr          "not found"                                                               stack[1] String
+                         IL_00b2: ldnull                                                                                   stack[2] String, String
+                         IL_00b3: call           Shouldly.ShouldBeStringTestExtensions::ShouldBe                           stack[3] String, String, <null>
+                         IL_00b8: ldstr          "e.Message.ShouldBe("not found")"                                         stack[0]
+                         IL_00bd: ldstr          "C:\Users\cex\AppData\Local\Temp\KRONIKOL_WeaverTests\aee1a3f2\Probe212_S9_Release.cs"  stack[1] String
+                         IL_00c2: ldc.i4.s       34                                                                        stack[2] String, String
+                         IL_00c4: call           Kronikol.Tracking.Track::AssertionPassed                                  stack[3] String, String, Int32
+                         IL_00c9: leave.s        IL_00e5                                                                   stack[0]
+                         IL_00cb: stloc.1                                                                                  stack[1] Exception
+                         IL_00cc: ldstr          "e.Message.ShouldBe("not found")"                                         stack[0]
+                         IL_00d1: ldloc.1                                                                                  stack[1] String
+                         IL_00d2: callvirt       Exception::get_Message                                                    stack[2] String, Exception
+                         IL_00d7: ldstr          "C:\Users\cex\AppData\Local\Temp\KRONIKOL_WeaverTests\aee1a3f2\Probe212_S9_Release.cs"  stack[2] String, String
+                         IL_00dc: ldc.i4.s       34                                                                        stack[3] String, String, String
+                         IL_00de: call           Kronikol.Tracking.Track::AssertionFailed                                  stack[4] String, String, String, Int32
+                         IL_00e3: rethrow                                                                                  stack[0]
+                         IL_00e5: nop                                                                                      stack[0]
+SP L35:5-L35:6           IL_00e6: ret                                                                                      stack[0]   // }
+### type Probe/<>c__DisplayClass1_0
+  field Probe <>4__this
+  field OrderRequest request
+#### Probe/<>c__DisplayClass1_0::<Run>b__0
+SP L33:63-L33:88         IL_0000: ldarg.0                                                                                  stack[0]   // var e = Should.Throw<InvalidOperationException>(() => _client.GetOrder(request));
+                         IL_0001: ldfld          Probe/<>c__DisplayClass1_0::<>4__this                                     stack[1] Probe/<>c__DisplayClass1_0
+                         IL_0006: ldfld          Probe::_client                                                            stack[1] Probe
+                         IL_000b: ldarg.0                                                                                  stack[1] OrdersClient
+                         IL_000c: ldfld          Probe/<>c__DisplayClass1_0::request                                       stack[2] OrdersClient, Probe/<>c__DisplayClass1_0
+                         IL_0011: callvirt       OrdersClient::GetOrder                                                    stack[2] OrdersClient, OrderRequest
+                         IL_0016: ret                                                                                      stack[1] String
