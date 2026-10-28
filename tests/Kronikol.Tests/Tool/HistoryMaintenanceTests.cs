@@ -285,6 +285,40 @@ public class HistoryMaintenanceTests : IDisposable
     }
 
     [Fact]
+    public void Import_keeps_a_fragments_bridge_only_while_the_ledger_window_holds_its_rule()
+    {
+        // A fragment bridges every rule Kronikol keeps (#190 R0): record kept the ones the ledger's window holds, and until
+        // #192 R1 import wrote them all.
+        var directory = Path.Combine(_dir, "bridged-run");
+        Directory.CreateDirectory(directory);
+        File.WriteAllText(Path.Combine(directory, "TestRunReport.json"), """
+            {
+              "kronikolVersion": "5.16.1", "formatVersion": 1, "suite": "Suite",
+              "startTime": "2026-08-01T10:00:00Z", "endTime": "2026-08-01T10:05:00Z",
+              "ciMetadata": { "provider": "GitHubActions", "branch": "main", "commitSha": "abc", "runId": "500", "runAttempt": "1" },
+              "features": [ { "name": "Checkout", "labels": [], "scenarios": [
+                { "id": "t0", "stableId": "aaaabbbbccccdddd", "name": "Pay", "result": "Passed", "durationSeconds": 1.5, "labels": [], "categories": [], "steps": [], "httpInteractions": [] }
+              ] } ]
+            }
+            """);
+        var roster = HistoryRoster.Create("Suite", [new HistoryRosterEntry("aaaabbbbccccdddd", "Pay", "Checkout", null)]);
+        var run = new HistoryRun
+        {
+            Id = "gh:500:1", Suite = "Suite", Partial = false, At = new DateTimeOffset(2026, 8, 1, 10, 5, 0, TimeSpan.Zero),
+            Branch = "main", Commit = "abc", Provider = "GitHubActions", Url = null, Shards = 1, RosterHash = roster.Hash,
+            Results = "P", Attempts = "-", Durations = [1500], Calls = [1], ShapeSet = ["aaaaaaaa"], ShapeOrdered = ["aaaaaaaa"],
+            Errors = null, ErrorText = new Dictionary<string, string>(), Deps = ["Test>orders"], ShapeVersion = InteractionShape.Version,
+            Bridge = new Dictionary<string, HistoryBridge> { ["6"] = new() { ShapeSet = ["bbbbbbbb"], ShapeOrdered = ["bbbbbbbb"] } }
+        };
+        File.WriteAllText(Path.Combine(directory, HistoryFormat.FragmentFileName), HistoryFragment.Write(roster, run, "5.16.1"));
+
+        var (_, error, exit) = Run("import", directory, "--history", Ledger);
+
+        Assert.True(exit == 0, error);
+        Assert.Null(Assert.Single(HistoryLedgerReader.Read(Ledger, 50).Ledger!.Runs("Suite")).Bridge);
+    }
+
+    [Fact]
     public void Import_reads_ctrf_documents_and_keys_them_the_same_way_the_run_would()
     {
         var directory = Path.Combine(_dir, "ctrf");

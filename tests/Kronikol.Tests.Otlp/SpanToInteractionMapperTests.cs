@@ -1,6 +1,7 @@
 using Kronikol.Constants;
 using Kronikol.Extensions.Otlp;
 using Kronikol.Ingestion;
+using Kronikol.Tests.History;
 
 namespace Kronikol.Tests.Otlp;
 
@@ -19,6 +20,17 @@ public class SpanToInteractionMapperTests
     private static OtlpSpan Single(string json) => Assert.Single(OtlpTraceReader.ReadJson(OtlpGoldens.Utf8(json)));
 
     [Fact]
+    public void Every_change_to_a_recorded_call_line_moves_the_version()
+    {
+        // The history guard (plans/CALL_OPERATION_AND_ORIGIN_PLAN.md 4.8): what this tracker records for one fixed call, as the
+        // call line history fingerprints, pinned under the rule it was pinned with (HistoryGuard).
+        var (request, response) = SpanToInteractionMapper.Map(Single(OtlpGoldens.MongoFindOldSemconv), Options())!.ToLogs();
+
+        HistoryGuard.Pin([request, response], 8,
+            "data-insights>mongo Find ← Trial /data-insights-Development/Trial OK");
+    }
+
+    [Fact]
     public void Maps_a_mongo_find_span_with_deprecated_semconv_to_the_same_label_the_mongodb_extension_uses()
     {
         var mapped = SpanToInteractionMapper.Map(Single(OtlpGoldens.MongoFindOldSemconv), Options());
@@ -35,6 +47,66 @@ public class SpanToInteractionMapperTests
         Assert.Null(mapped.RequestContent); // the vendor package captures no command text
         Assert.Equal("OK", mapped.StatusCode);
         Assert.Equal(12, mapped.DurationMs);
+    }
+
+    /// <summary>The ioredis golden span with its db attributes replaced by <paramref name="attributes"/>.</summary>
+    private static OtlpSpan WithAttributes(string attributes) => Single(OtlpGoldens.RedisGetIoredis
+        .Replace("""{ "key": "db.system", "value": { "stringValue": "redis" } },""", attributes)
+        .Replace("""{ "key": "db.statement", "value": { "stringValue": "get insights:trials:2026-08-22" } },""", "")
+        .Replace("""{ "key": "db.redis.database_index", "value": { "intValue": "0" } },""", ""));
+
+    [Theory]
+    [InlineData("""{ "key": "messaging.system", "value": { "stringValue": "aws_sqs" } }, { "key": "messaging.destination.name", "value": { "stringValue": "orders" } },""", "aws-sqs://localhost/orders")]
+    [InlineData("""{ "key": "messaging.system", "value": { "stringValue": "gcp_pubsub" } }, { "key": "messaging.destination.name", "value": { "stringValue": "orders" } },""", "gcp-pubsub://localhost/orders")]
+    [InlineData("""{ "key": "rpc.system", "value": { "stringValue": "dotnet_wcf" } }, { "key": "rpc.service", "value": { "stringValue": "Orders" } }, { "key": "rpc.method", "value": { "stringValue": "Get" } },""", "dotnet-wcf://localhost:6399/Orders/Get")]
+    [InlineData("""{ "key": "db.system", "value": { "stringValue": "other_sql" } }, { "key": "db.name", "value": { "stringValue": "app" } },""", "other-sql://localhost:6399/app")]
+    public void A_system_name_with_an_underscore_makes_a_scheme_a_uri_can_hold(string attributes, string uri)
+    {
+        // Semantic-convention names hold underscores (aws_sqs, gcp_pubsub, dotnet_wcf, other_sql), which no URI scheme may:
+        // until #192 R1 every such call was drawn at http://unknown/, its destination lost. The old address is kept for
+        // history's rules 6 and 7.
+        var options = Options();
+        options.CaptureKinds.Add(OtlpCaptureKinds.Messaging);
+        options.CaptureKinds.Add(OtlpCaptureKinds.Rpc);
+        var mapped = SpanToInteractionMapper.Map(WithAttributes(attributes), options);
+
+        Assert.NotNull(mapped);
+        Assert.Equal(uri, mapped!.Uri);
+        var (request, _) = mapped.ToLogs();
+        Assert.Equal(uri, request.Uri.ToString());
+        Assert.Equal("http://unknown/", request.RecordedBefore8!.Uri.ToString());
+        Assert.Equal(request.Method.Value, request.RecordedBefore8.Method.Value);
+    }
+
+    [Theory]
+    [InlineData("""{ "key": "messaging.system", "value": { "stringValue": "aws_sqs" } }, { "key": "messaging.destination.name", "value": { "stringValue": "orders" } },""", "aws-sqs://localhost/orders")]
+    [InlineData("""{ "key": "messaging.system", "value": { "stringValue": "gcp_pubsub" } }, { "key": "messaging.destination.name", "value": { "stringValue": "orders" } },""", "gcp-pubsub://localhost/orders")]
+    [InlineData("""{ "key": "rpc.system", "value": { "stringValue": "dotnet_wcf" } }, { "key": "rpc.service", "value": { "stringValue": "Orders" } }, { "key": "rpc.method", "value": { "stringValue": "Get" } },""", "dotnet-wcf://localhost:6399/Orders/Get")]
+    [InlineData("""{ "key": "db.system", "value": { "stringValue": "other_sql" } }, { "key": "db.name", "value": { "stringValue": "app" } },""", "other-sql://localhost:6399/app")]
+    public void A_span_written_as_records_is_ingested_with_the_address_its_rules_6_and_7_read(string attributes, string uri)
+    {
+        // The records carry the address as 5.16.1 wrote it where that one does not parse, and the ingest mends it as it
+        // mends any: the call reads as the in-process log does, and history's rules 6 and 7 read it where 5.16.1's ingest
+        // did, as the path of http://unknown/. Written mended, nothing kept the old reading, and the first run after the
+        // upgrade read changed against every run before it.
+        var options = Options();
+        options.CaptureKinds.Add(OtlpCaptureKinds.Messaging);
+        options.CaptureKinds.Add(OtlpCaptureKinds.Rpc);
+        var mapped = SpanToInteractionMapper.Map(WithAttributes(attributes), options)!;
+
+        var (request, _) = mapped.ToRecords();
+        var log = InteractionRecord.FromJson(request.ToJson()).ToLog();
+
+        Assert.Equal(uri, log.Uri.ToString());
+        Assert.Equal("http://unknown/" + mapped.UriBefore8, log.RecordedBefore8!.Uri.ToString());
+    }
+
+    [Fact]
+    public void A_scheme_that_was_valid_keeps_no_old_address()
+    {
+        var mapped = SpanToInteractionMapper.Map(Single(OtlpGoldens.RedisGetIoredis), Options());
+
+        Assert.Null(mapped!.ToLogs().Request.RecordedBefore8);
     }
 
     [Fact]

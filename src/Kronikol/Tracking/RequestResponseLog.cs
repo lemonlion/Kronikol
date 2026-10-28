@@ -33,6 +33,15 @@ public record RequestResponseLog(
     /// </summary>
     internal bool NamedByRemoteHostFallback { get; init; }
 
+    /// <summary>
+    /// The call as its tracker recorded it before #192 R1 changed how it records it, when that differs: a SQL Server
+    /// batch opening with two SET statements, which the classifier read as neither a statement nor a table. History's
+    /// rules 6 and 7 read its method and URI from here, and no call at all when the tracker did not record it then, so a
+    /// run still compares with runs fingerprinted under them (<see cref="Kronikol.History.InteractionShape"/>). Null for
+    /// every call recorded as before. Set by the trackers alone and never written out.
+    /// </summary>
+    internal RecordedBefore? RecordedBefore8 { get; init; }
+
     public bool NoteOnRight { get; set; }
     public bool IsOverrideStart { get; set; }
     public bool IsOverrideEnd { get; set; }
@@ -147,6 +156,13 @@ public record RequestResponseLog(
     /// </summary>
     public string? TestDouble { get; set; }
 };
+
+/// <summary>A call as its tracker recorded it before a change to how it records it: its method and URI, or no call at all.</summary>
+internal sealed record RecordedBefore(OneOf<HttpMethod, string> Method, Uri Uri, bool Absent = false)
+{
+    /// <summary>A call the tracker did not record then.</summary>
+    public static RecordedBefore NotRecorded { get; } = new("", new Uri("about:blank"), Absent: true);
+}
 
 /// <summary>
 /// Pre-computed rendering fields for a specific test phase (Setup or Action).

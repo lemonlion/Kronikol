@@ -30,18 +30,20 @@ public static partial class QueryCommand
 
         // A run named by --run can be anywhere in the ledger: every run is read, and the analysis applies
         // the window behind the run chosen.
-        var read = HistoryLedgerReader.Read(ledgerPath, options.Run is null ? options.HistoryWindowOrDefault : 0);
+        var read = HistoryLedgerReader.Read(ledgerPath, options.HistoryReadWindow);
         if (read.Ledger is not { } ledger)
         {
             error.WriteLine(read.Message ?? $"the ledger at {ledgerPath} could not be read");
             return 1;
         }
 
-        if (!ReportHistory.TryBuild(index, options.SuiteOverride, error, out var roster, out var run, out var fromFragment, out var shapes))
+        if (!ReportHistory.TryBuild(index, options.SuiteOverride, error, out var roster, out var run, out var fromFragment, out var shapes, out var rawCalls))
             return 2;
 
         if (!fromFragment)
-            ReportHistory.AdoptOwnLine(ref ledger, ledgerPath, options.Run is null ? options.HistoryWindowOrDefault : 0, roster, ref run, ref shapes, ref fromFragment);
+            ReportHistory.AdoptOwnLine(ref ledger, ledgerPath, options.HistoryReadWindow, roster, ref run, ref shapes, ref fromFragment);
+        var bridgeAnalysis = ReportHistory.AnalysisOptions(options, getEnv);
+        run = ReportHistory.BridgedToWindow(run, rawCalls, ledger, [bridgeAnalysis.Branch, bridgeAnalysis.CompareBranch], bridgeAnalysis.Window);
 
         // Under --count the text answer is one bare number, so the caveats go to stderr - the same rule
         // WriteProvenance applies to the provenance notes.
@@ -121,7 +123,7 @@ public static partial class QueryCommand
             return 2;
         }
 
-        var read = HistoryLedgerReader.Read(ledgerPath, options.Run is null ? options.HistoryWindowOrDefault : 0);
+        var read = HistoryLedgerReader.Read(ledgerPath, options.HistoryReadWindow);
         if (read.Ledger is not { } ledger)
         {
             error.WriteLine(read.Message ?? $"the ledger at {ledgerPath} could not be read");
@@ -467,10 +469,11 @@ internal static class ReportHistory
             var read = HistoryLedgerReader.Read(path, 50, new HistoryLockBudget(Attempts: 20, MaxDelayMilliseconds: 10));
             if (read.Outcome != HistoryReadOutcome.Read || read.Ledger is not { } ledger || ledger.IsEmpty)
                 return null;
-            if (!TryBuild(index, null, TextWriter.Null, out var roster, out var run, out var fromFragment, out var shapes))
+            if (!TryBuild(index, null, TextWriter.Null, out var roster, out var run, out var fromFragment, out var shapes, out var rawCalls))
                 return null;
             if (!fromFragment)
                 AdoptOwnLine(ref ledger, path, 50, roster, ref run, ref shapes, ref fromFragment);
+            run = BridgedToWindow(run, rawCalls, ledger, [], new HistoryAnalysisOptions().Window);
             HistoryQuarantineList? quarantine = null;
             HistoryAliases? aliases = null;
             try { quarantine = HistoryQuarantineList.Load(HistoryQuarantineList.PathBeside(path)); } catch (Exception e) when (IsBenign(e)) { }
@@ -527,11 +530,21 @@ internal static class ReportHistory
     /// null when the run was rebuilt from the report.
     /// </summary>
     public static bool TryBuild(ReportIndex index, string? suiteOverride, TextWriter error, out HistoryRoster roster, out HistoryRun run, out bool fromFragment, out HistoryShapes? shapes)
+        => TryBuild(index, suiteOverride, error, out roster, out run, out fromFragment, out shapes, out _);
+
+    /// <summary>
+    /// <see cref="TryBuild(ReportIndex, string?, TextWriter, out HistoryRoster, out HistoryRun, out bool, out HistoryShapes?)"/>
+    /// with the fragment's raw calls (#192 R1, Q18), which <see cref="BridgedToWindow"/> bridges the ledger's earlier
+    /// patterns from; null for a run rebuilt from the report, or a fragment from before R1.
+    /// </summary>
+    public static bool TryBuild(ReportIndex index, string? suiteOverride, TextWriter error, out HistoryRoster roster, out HistoryRun run, out bool fromFragment,
+        out HistoryShapes? shapes, out HistoryRawCalls? rawCalls)
     {
         roster = null!;
         run = null!;
         fromFragment = false;
         shapes = null;
+        rawCalls = null;
 
         var ids = index.Scenarios.Select(s => s.StableId).ToArray();
         if (ids.Any(string.IsNullOrEmpty))
@@ -554,6 +567,7 @@ internal static class ReportHistory
                     roster = fragment.Roster;
                     run = fragment.Run;
                     shapes = fragment.Shapes;
+                    rawCalls = fragment.RawCalls;
                     fromFragment = true;
                     return true;
                 }
@@ -630,6 +644,14 @@ internal static class ReportHistory
         };
         return true;
     }
+
+    /// <summary>
+    /// <paramref name="run"/> bridged to the consumer's earlier patterns <paramref name="ledger"/>'s window was
+    /// fingerprinted under, from the fragment's raw calls, as <c>history record</c> bridges them: a run that only wrote its
+    /// fragment could not know them (#192 R1, Q18). The run as it is without raw calls.
+    /// </summary>
+    public static HistoryRun BridgedToWindow(HistoryRun run, HistoryRawCalls? rawCalls, HistoryLedger ledger, IEnumerable<string?> streams, int window) =>
+        rawCalls is null ? run : HistoryBridges.WithWindowRules(run, rawCalls, HistoryBridges.WindowRules(ledger, run, streams, window));
 
     /// <summary>
     /// A report read without its fragment gets a run id minted HERE, and a local id is salted by the

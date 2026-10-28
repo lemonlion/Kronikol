@@ -64,13 +64,18 @@ public class SqlTrackingInterceptorFaultTests : IDisposable
     }
 
     [Fact]
-    public void A_database_name_drawn_as_the_host_is_made_a_host()
+    public void A_database_name_is_a_path_segment_and_was_made_a_host_before_8()
     {
+        // Until #192 R1 Summarised drew the database where a host goes, made a host (5.11.1: "My Db" failed the call);
+        // it is now the path's first segment, escaped as every SQL tracker escapes it, and the old address is kept for
+        // history's rules 6 and 7.
         var interceptor = Interceptor(SqlTrackingVerbosity.Summarised);
 
         interceptor.LogCommandExecuting(new StubDbCommand("SELECT * FROM Orders", database: "My Db"));
 
-        Assert.Equal("sql://my-db/Orders", Assert.Single(Logs()).Uri.ToString());
+        var log = Assert.Single(Logs());
+        Assert.Equal("sql:///My%20Db/Orders", log.Uri.AbsoluteUri);
+        Assert.Equal("sql://my-db/Orders", log.RecordedBefore8!.Uri.ToString());
     }
 
     private sealed class LostConnection() : StubDbConnection("TestDb", "unused")

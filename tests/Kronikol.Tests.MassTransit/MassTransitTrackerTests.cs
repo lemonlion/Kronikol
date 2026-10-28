@@ -1,5 +1,6 @@
 using Kronikol.Extensions.MassTransit;
 using Kronikol.Tracking;
+using Kronikol.Tests.History;
 
 namespace Kronikol.Tests.MassTransit;
 
@@ -28,6 +29,19 @@ public class MassTransitTrackerTests
     private record TestMessage(string OrderId, decimal Amount);
 
     // ─── LogSend ─────────────────────────────────────────────
+
+    [Fact]
+    public void Every_change_to_a_recorded_call_line_moves_the_version()
+    {
+        // The history guard (plans/CALL_OPERATION_AND_ORIGIN_PLAN.md 4.8): what this tracker records for one fixed call, as the
+        // call line history fingerprints, pinned under the rule it was pinned with (HistoryGuard).
+        var tracker = new MassTransitTracker(MakeOptions(MassTransitTrackingVerbosity.Detailed));
+        var op = new MassTransitOperationInfo(MassTransitOperation.Send, "OrderCreated", new Uri("rabbitmq://localhost/orders"));
+        tracker.LogSend(op, new TestMessage("ORD-1", 99.99m));
+
+        HistoryGuard.Pin(GetLogsFromThisTest(), 8,
+            "TestCaller>MassTransit Send OrderCreated /orders -");
+    }
 
     [Fact]
     public void LogSend_Logs_request_and_response()

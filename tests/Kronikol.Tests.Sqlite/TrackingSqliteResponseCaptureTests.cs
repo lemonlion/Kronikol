@@ -3,6 +3,7 @@ using Kronikol.Extensions.Sqlite;
 using Kronikol.Sql;
 using Kronikol.Tracking;
 using Xunit;
+using Kronikol.Tests.History;
 
 namespace Kronikol.Tests.Sqlite;
 
@@ -59,6 +60,21 @@ public class TrackingSqliteResponseCaptureTests : IDisposable
             case "ExecuteReaderAsync": await (await cmd.ExecuteReaderAsync()).DisposeAsync(); break;
             default: throw new ArgumentOutOfRangeException(nameof(path), path, null);
         }
+    }
+
+    [Fact]
+    public void Every_change_to_a_recorded_call_line_moves_the_version()
+    {
+        // The history guard (plans/CALL_OPERATION_AND_ORIGIN_PLAN.md 4.8): what this tracker records for one fixed call, as the
+        // call line history fingerprints, pinned under the rule it was pinned with (HistoryGuard).
+        using (var cmd = _tracking.CreateCommand())
+        {
+            cmd.CommandText = "SELECT COUNT(*) FROM breakfasts";
+            cmd.ExecuteScalar();
+        }
+
+        HistoryGuard.Pin(GetLogsForTest(), 8,
+            "Caller>SQLite SELECT FROM breakfasts /main/breakfasts SELECT COUNT(*) FROM breakfasts OK");
     }
 
     [Theory]

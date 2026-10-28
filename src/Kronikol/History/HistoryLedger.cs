@@ -16,7 +16,11 @@ namespace Kronikol.History;
 /// <param name="DamagedLines">Lines that could not be parsed and were skipped.</param>
 /// <param name="Elapsed">How long the read took.</param>
 /// <param name="ShapesKept">The shapes lines kept.</param>
-public sealed record HistoryStats(int LinesScanned, int LinesParsed, int RunsKept, int RostersKept, int DamagedLines, TimeSpan Elapsed, int ShapesKept = 0);
+public sealed record HistoryStats(int LinesScanned, int LinesParsed, int RunsKept, int RostersKept, int DamagedLines, TimeSpan Elapsed, int ShapesKept = 0)
+{
+    /// <summary>Lines of a kind this build does not know, a newer Kronikol's, read past and never counted as damage (#192 R1).</summary>
+    public int OtherLines { get; init; }
+}
 
 /// <summary>
 /// A ledger in memory: every roster, the last <c>window</c> runs of each suite in append order, and the
@@ -56,6 +60,9 @@ public sealed class HistoryLedger
     /// <summary>The writer that created the file.</summary>
     public string? Generator { get; }
 
+    /// <summary>The lines of a kind this build does not know, as read, for a rewrite to write back (#192 R1).</summary>
+    internal IReadOnlyList<string> OtherLines { get; init; } = [];
+
     /// <summary>What the read cost.</summary>
     public HistoryStats Stats { get; }
 
@@ -64,6 +71,9 @@ public sealed class HistoryLedger
     /// observable beside <see cref="HistoryStats.LinesParsed"/>: a test run reading its own stream leaves it at 0.
     /// </summary>
     internal int LinesParsedOnDemand { get; private set; }
+
+    /// <summary>Counts the re-reads of a ledger's source made in the flow that set it, for the facts that hold a read to one.</summary>
+    internal static readonly AsyncLocal<System.Runtime.CompilerServices.StrongBox<int>?> ReloadCounter = new();
 
     /// <summary>The suites with at least one run in the window. A null suite is keyed as the empty string.</summary>
     public IReadOnlyList<string?> Suites => _runs.Keys.Select(k => k.Length == 0 ? null : k).ToArray();
@@ -156,6 +166,8 @@ public sealed class HistoryLedger
     /// <summary>A suite's run lines by their place among its runs, from the source read again; null when it cannot be.</summary>
     private string?[]? Reload(string suiteKey)
     {
+        if (ReloadCounter.Value is { } counter)
+            Interlocked.Increment(ref counter.Value);
         if (_reload?.Invoke() is not { } raw)
             return null;
 
@@ -337,6 +349,7 @@ public static class HistoryLedgerReader
         var scanned = 0;
         var parsed = 0;
         var damaged = 0;
+        var others = new List<string>();
 
         foreach (var raw in lines)
         {
@@ -390,6 +403,10 @@ public static class HistoryLedgerReader
                         queue.Dequeue();
                     break;
 
+                case HistoryLineKind.Other:
+                    others.Add(line);
+                    break;
+
                 default:
                     damaged++;
                     break;
@@ -417,8 +434,8 @@ public static class HistoryLedgerReader
         }
 
         watch.Stop();
-        var stats = new HistoryStats(scanned, parsed, runs.Values.Sum(r => r.Count), rosters.Count, damaged, watch.Elapsed, shapes.Count);
-        return new HistoryReadResult(new HistoryLedger(version, generator, rosters, runs, stats, shapes, index, reload), HistoryReadOutcome.Read, null);
+        var stats = new HistoryStats(scanned, parsed, runs.Values.Sum(r => r.Count), rosters.Count, damaged, watch.Elapsed, shapes.Count) { OtherLines = others.Count };
+        return new HistoryReadResult(new HistoryLedger(version, generator, rosters, runs, stats, shapes, index, reload) { OtherLines = others }, HistoryReadOutcome.Read, null);
     }
 
     private static HistoryLine? TryParse(string line, ref int parsed, ref int damaged)
@@ -584,6 +601,8 @@ public static class HistoryLedgerReader
             findings.Add($"{where} has {set.Count} shapes against a roster of {rosterCount}");
         if (bridge.ShapeOrdered is { } ordered && ordered.Count != rosterCount)
             findings.Add($"{where} has {ordered.Count} ordered shapes against a roster of {rosterCount}");
+        if (bridge.Calls is { } calls && calls.Count != rosterCount)
+            findings.Add($"{where} has {calls.Count} call counts against a roster of {rosterCount}");
         if (bridge.ShapesHash is { } hash)
         {
             if (!shapes.TryGetValue(hash, out var referenced))

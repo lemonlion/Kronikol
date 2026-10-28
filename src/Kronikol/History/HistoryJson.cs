@@ -19,6 +19,11 @@ public static class HistoryJson
 
     private static readonly JsonWriterOptions FragmentOptions = new() { Indented = true };
 
+    // A fragment's raw calls are SQL first lines and paths as written: the default encoder wrote every quote, angle bracket
+    // and plus sign as six bytes, which grew the largest fragments measured by a third again. The file is never embedded in
+    // a page, and this encoder is as deterministic as the other.
+    private static readonly JsonWriterOptions RawCallOptions = new() { Indented = false, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
+
     private const string DateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'";
 
     /// <summary>The header line, without a terminator.</summary>
@@ -67,7 +72,11 @@ public static class HistoryJson
     }
 
     /// <summary>A fragment document, indented.</summary>
-    public static string Fragment(HistoryRoster roster, HistoryRun run, string generator, HistoryShapes? shapes = null)
+    public static string Fragment(HistoryRoster roster, HistoryRun run, string generator, HistoryShapes? shapes = null) =>
+        Fragment(roster, run, generator, shapes, rawCalls: null);
+
+    /// <summary>A fragment document, indented, with the run's calls before any rule (<see cref="HistoryRawCalls"/>).</summary>
+    internal static string Fragment(HistoryRoster roster, HistoryRun run, string generator, HistoryShapes? shapes, HistoryRawCalls? rawCalls)
     {
         ArgumentNullException.ThrowIfNull(roster);
         ArgumentNullException.ThrowIfNull(run);
@@ -96,9 +105,100 @@ public static class HistoryJson
                     WriteShapes(writer, bridgeShapesLine);
                 writer.WriteEndArray();
             }
+            // The run's calls before any rule, for history record to fingerprint under the window's earlier patterns
+            // (#192 R1, Q18): a member an older reader passes over, since it reads a fragment's members by name. One call,
+            // and one position's order, per line.
+            if (rawCalls is not null)
+            {
+                writer.WritePropertyName("rawCalls");
+                writer.WriteStartObject();
+                writer.WritePropertyName("calls");
+                writer.WriteStartArray();
+                foreach (var call in rawCalls.Calls)
+                    writer.WriteRawValue(RawCall(call), skipInputValidation: true);
+                writer.WriteEndArray();
+                writer.WritePropertyName("order");
+                writer.WriteStartArray();
+                foreach (var order in rawCalls.Order)
+                    writer.WriteRawValue("[" + string.Join(",", order.Select(i => i.ToString(CultureInfo.InvariantCulture))) + "]", skipInputValidation: true);
+                writer.WriteEndArray();
+                writer.WriteEndObject();
+            }
             writer.WriteEndObject();
         }
         return Encoding.UTF8.GetString(buffer.WrittenSpan).Replace("\r\n", "\n", StringComparison.Ordinal) + "\n";
+    }
+
+    private static string RawCall(HistoryRawCall call)
+    {
+        var buffer = new ArrayBufferWriter<byte>();
+        using (var writer = new Utf8JsonWriter(buffer, RawCallOptions))
+        {
+            writer.WriteStartObject();
+            writer.WriteString("caller", call.Caller);
+            writer.WriteString("service", call.Service);
+            writer.WriteString("method", call.Method);
+            writer.WriteString("path", call.Path);
+            if (call.Operation is not null) writer.WriteString("operation", call.Operation);
+            if (call.Head is not null) writer.WriteString("head", call.Head);
+            if (call.Status is not null) writer.WriteString("status", call.Status);
+            if (call.Service6 is not null) writer.WriteString("service6", call.Service6);
+            if (call.Method7 is not null) writer.WriteString("method7", call.Method7);
+            if (call.Path7 is not null) writer.WriteString("path7", call.Path7);
+            if (call.Head7 is not null) writer.WriteString("head7", call.Head7);
+            if (call.Absent7) writer.WriteBoolean("absent7", true);
+            writer.WriteEndObject();
+        }
+        return Encoding.UTF8.GetString(buffer.WrittenSpan);
+    }
+
+    /// <summary>
+    /// A fragment's raw calls, or null when it carries none or they do not read: the run is recorded without them, as a
+    /// fragment from before #192 R1 is, rather than not at all.
+    /// </summary>
+    private static HistoryRawCalls? ParseRawCalls(JsonElement root, int positions)
+    {
+        if (!root.TryGetProperty("rawCalls", out var element) || element.ValueKind != JsonValueKind.Object
+            || !element.TryGetProperty("calls", out var callsElement) || callsElement.ValueKind != JsonValueKind.Array
+            || !element.TryGetProperty("order", out var orderElement) || orderElement.ValueKind != JsonValueKind.Array
+            || orderElement.GetArrayLength() != positions)
+            return null;
+
+        var calls = new List<HistoryRawCall>();
+        foreach (var call in callsElement.EnumerateArray())
+        {
+            if (call.ValueKind != JsonValueKind.Object
+                || Text(call, "caller") is not { } caller || Text(call, "service") is not { } service
+                || Text(call, "method") is not { } method || Text(call, "path") is not { } path)
+                return null;
+            calls.Add(new HistoryRawCall(caller, service, method, path, Text(call, "operation"), Text(call, "head"), Text(call, "status"))
+            {
+                Service6 = Text(call, "service6"),
+                Method7 = Text(call, "method7"),
+                Path7 = Text(call, "path7"),
+                Head7 = Text(call, "head7"),
+                Absent7 = call.TryGetProperty("absent7", out var absent) && absent.ValueKind == JsonValueKind.True
+            });
+        }
+
+        var order = new List<IReadOnlyList<int>>();
+        foreach (var position in orderElement.EnumerateArray())
+        {
+            if (position.ValueKind != JsonValueKind.Array)
+                return null;
+            var indices = new List<int>();
+            foreach (var index in position.EnumerateArray())
+            {
+                if (index.ValueKind != JsonValueKind.Number || !index.TryGetInt32(out var at) || at < 0 || at >= calls.Count)
+                    return null;
+                indices.Add(at);
+            }
+            order.Add(indices);
+        }
+        return new HistoryRawCalls(calls, order);
+
+        static string? Text(JsonElement element, string name) =>
+            element.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.String ? value.GetString() : null;
     }
 
     /// <summary>The calls a run's bridges name and still hold in memory, one list per distinct hash, in hash order.</summary>
@@ -153,6 +253,7 @@ public static class HistoryJson
         WriteNullable(writer, "commit", run.Commit);
         WriteNullable(writer, "provider", run.Provider);
         WriteNullable(writer, "url", run.Url);
+        if (run.Generator is { Length: > 0 } generator) writer.WriteString("generator", generator);
         writer.WriteNumber("shards", run.Shards);
         writer.WriteString("roster", run.RosterHash);
         writer.WriteString("results", run.Results);
@@ -182,6 +283,19 @@ public static class HistoryJson
         if (run.ShapeOrdered is { } shapeOrdered) WriteStrings(writer, "shapeOrdered", shapeOrdered);
         if (run.ShapeVersion is { } shapeVersion) writer.WriteNumber("shapeVersion", shapeVersion);
         if (run.ShapeRules is { Length: > 0 } shapeRules) writer.WriteString("shapeRules", shapeRules);
+        if (run.ShapeTemplates is { Count: > 0 } templates)
+        {
+            writer.WritePropertyName("shapeTemplates");
+            writer.WriteStartArray();
+            foreach (var template in templates)
+            {
+                writer.WriteStartObject();
+                writer.WriteString("pattern", template.Pattern);
+                writer.WriteString("placeholder", template.Placeholder);
+                writer.WriteEndObject();
+            }
+            writer.WriteEndArray();
+        }
         if (run.ShapesHash is { } shapesHash) writer.WriteString("shapes", shapesHash);
         if (run.CallSets is { } callSets)
         {
@@ -228,10 +342,36 @@ public static class HistoryJson
             writer.WriteEndObject();
         }
 
+        if (run.Aliases is { Count: > 0 } aliases)
+        {
+            writer.WritePropertyName("aliases");
+            writer.WriteStartObject();
+            foreach (var pair in aliases.OrderBy(p => p.Key, StringComparer.Ordinal))
+                writer.WriteString(pair.Key, pair.Value);
+            writer.WriteEndObject();
+        }
+
         if (run.ServiceId is { } serviceId) writer.WriteString("serviceId", serviceId);
+
+        // A newer writer's members, written again by this writer rather than copied: one read from a fragment, which is
+        // written indented, spans lines as it was read, and a run line is one line, ASCII-escaped.
+        foreach (var (name, json) in run.Unknown ?? [])
+        {
+            writer.WritePropertyName(name);
+            using var member = JsonDocument.Parse(json);
+            member.RootElement.WriteTo(writer);
+        }
 
         writer.WriteEndObject();
     }
+
+    /// <summary>The run line's members this build writes; any other is a newer writer's and is carried through.</summary>
+    private static readonly HashSet<string> RunMembers = new(StringComparer.Ordinal)
+    {
+        "t", "id", "suite", "partial", "at", "branch", "commit", "provider", "url", "generator", "shards", "roster", "results",
+        "attempts", "durations", "calls", "shapeSet", "shapeOrdered", "shapeVersion", "shapeRules", "shapeTemplates", "shapes",
+        "callSets", "errors", "errorText", "deps", "bridge", "aliases", "serviceId"
+    };
 
     private static void WriteBridge(Utf8JsonWriter writer, HistoryBridge bridge)
     {
@@ -258,6 +398,13 @@ public static class HistoryJson
             foreach (var pair in deps.OrderBy(p => p.Key, StringComparer.Ordinal))
                 writer.WriteString(pair.Key, pair.Value);
             writer.WriteEndObject();
+        }
+        if (bridge.Calls is { } calls)
+        {
+            writer.WritePropertyName("calls");
+            writer.WriteStartArray();
+            foreach (var count in calls) writer.WriteNumberValue(count);
+            writer.WriteEndArray();
         }
         writer.WriteEndObject();
     }
@@ -339,15 +486,25 @@ public static class HistoryJson
                 switch (name)
                 {
                     case "t":
+                        // A kind this build does not know is a newer writer's line, read past; a "t" that is no string
+                        // makes no ledger line (until #192 R1 it threw out of the read).
+                        if (reader.TokenType != JsonTokenType.String)
+                            return (null, null, null, false, null);
                         kind = reader.GetString() switch
                         {
                             "header" => HistoryLineKind.Header,
                             "roster" => HistoryLineKind.Roster,
                             "run" => HistoryLineKind.Run,
                             "shapes" => HistoryLineKind.Shapes,
-                            _ => null
+                            _ => HistoryLineKind.Other
                         };
-                        if (kind is null) return (null, null, null, false, null);
+                        if (kind == HistoryLineKind.Other)
+                        {
+                            // Read to its end, as nothing parses it later: torn, it is damage, as a torn line of a known
+                            // kind is when it is parsed, and not a newer writer's line to keep for good.
+                            while (reader.Read()) { }
+                            return (kind, null, null, false, null);
+                        }
                         break;
                     case "id":
                         id = reader.TokenType == JsonTokenType.String ? reader.GetString() : null;
@@ -421,7 +578,11 @@ public static class HistoryJson
                         StringComparer.Ordinal)
                 };
             }
-            return new HistoryFragment(version, roster, run, shapes);
+            return new HistoryFragment(version, roster, run, shapes)
+            {
+                Generator = root.TryGetProperty("generator", out var generator) && generator.ValueKind == JsonValueKind.String ? generator.GetString() : null,
+                RawCalls = ParseRawCalls(root, roster.Ids.Count)
+            };
         }
         catch (JsonException exception)
         {
@@ -442,7 +603,8 @@ public static class HistoryJson
             "roster" => new HistoryLine(HistoryLineKind.Roster, Roster: ParseRoster(element)),
             "run" => new HistoryLine(HistoryLineKind.Run, Run: ParseRun(element)),
             "shapes" => new HistoryLine(HistoryLineKind.Shapes, Shapes: new HistoryShapes { Hash = RequiredString(element, "hash"), Calls = Strings(element, "calls") ?? [] }),
-            var other => throw new FormatException($"Unknown ledger line kind \"{other}\".")
+            // A newer writer's kind: read past, and kept as it is by a rewrite (#192 R1).
+            _ => new HistoryLine(HistoryLineKind.Other)
         };
     }
 
@@ -537,8 +699,41 @@ public static class HistoryJson
             ShapesHash = OptionalString(element, "shapes"),
             CallSets = CallSetsOf(element, "callSets"),
             Bridge = element.TryGetProperty("bridge", out var bridge) && bridge.ValueKind == JsonValueKind.Object ? ParseBridges(bridge) : null,
-            ServiceId = element.TryGetProperty("serviceId", out var serviceId) && serviceId.ValueKind == JsonValueKind.String ? serviceId.GetString() : null
+            ServiceId = element.TryGetProperty("serviceId", out var serviceId) && serviceId.ValueKind == JsonValueKind.String ? serviceId.GetString() : null,
+            Generator = OptionalString(element, "generator"),
+            ShapeTemplates = element.TryGetProperty("shapeTemplates", out var templates) && templates.ValueKind == JsonValueKind.Array
+                ? templates.EnumerateArray()
+                    .Where(t => t.ValueKind == JsonValueKind.Object)
+                    .Select(t => new HistoryShapeTemplate(OptionalString(t, "pattern") ?? "", OptionalString(t, "placeholder") ?? ""))
+                    .ToArray()
+                : null,
+            Aliases = element.TryGetProperty("aliases", out var aliases) && aliases.ValueKind == JsonValueKind.Object ? AliasesOf(aliases) : null,
+            Unknown = UnknownMembers(element, RunMembers)
         };
+    }
+
+    /// <summary>
+    /// A run line's aliases, old id to new; null when none. A name given twice is read once, its later value, as a JSON
+    /// reader reads one; a member that is no string, or whose name or value is empty, maps nothing.
+    /// </summary>
+    private static IReadOnlyDictionary<string, string>? AliasesOf(JsonElement aliases)
+    {
+        Dictionary<string, string>? read = null;
+        foreach (var alias in aliases.EnumerateObject())
+            if (alias.Value.ValueKind == JsonValueKind.String && !string.IsNullOrWhiteSpace(alias.Name) && alias.Value.GetString() is { } to
+                && !string.IsNullOrWhiteSpace(to))
+                (read ??= new Dictionary<string, string>(StringComparer.Ordinal))[alias.Name] = to;
+        return read;
+    }
+
+    /// <summary>The members of <paramref name="element"/> outside <paramref name="known"/>, as raw JSON; null when there are none.</summary>
+    private static IReadOnlyList<KeyValuePair<string, string>>? UnknownMembers(JsonElement element, HashSet<string> known)
+    {
+        List<KeyValuePair<string, string>>? unknown = null;
+        foreach (var member in element.EnumerateObject())
+            if (!known.Contains(member.Name))
+                (unknown ??= []).Add(new KeyValuePair<string, string>(member.Name, member.Value.GetRawText()));
+        return unknown;
     }
 
     private static IReadOnlyList<IReadOnlyList<int>>? CallSetsOf(JsonElement element, string name) =>
@@ -570,10 +765,25 @@ public static class HistoryJson
                 ShapeOrdered = Strings(entry, "ordered"),
                 ShapesHash = OptionalString(entry, "shapes"),
                 CallSets = CallSetsOf(entry, "callSets"),
-                Deps = deps is { Count: > 0 } ? deps : null
+                Deps = deps is { Count: > 0 } ? deps : null,
+                Calls = entry.TryGetProperty("calls", out var callsElement) && callsElement.ValueKind == JsonValueKind.Array ? CountsOf(callsElement) : null
             };
         }
         return bridges;
+    }
+
+    /// <summary>
+    /// A bridge's call counts, one per position; null when any entry is no whole number, since leaving that one out would
+    /// read every count after it at the position before.
+    /// </summary>
+    private static IReadOnlyList<int>? CountsOf(JsonElement calls)
+    {
+        var counts = new int[calls.GetArrayLength()];
+        var i = 0;
+        foreach (var count in calls.EnumerateArray())
+            if (count.ValueKind != JsonValueKind.Number || !count.TryGetInt32(out counts[i++]))
+                return null;
+        return counts;
     }
 
     private static string RequiredString(JsonElement element, string name) =>

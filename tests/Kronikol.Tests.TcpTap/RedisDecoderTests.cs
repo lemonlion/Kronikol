@@ -5,6 +5,7 @@ using Kronikol.Extensions.TcpTap;
 using Kronikol.Extensions.TcpTap.Protocols;
 using Kronikol.Reports;
 using Kronikol.Tracking;
+using Kronikol.Tests.History;
 
 namespace Kronikol.Tests.TcpTap;
 
@@ -13,6 +14,19 @@ public class RedisDecoderTests
     private static string Method(RequestResponseLog log) => log.Method.Value?.ToString() ?? "";
 
     private static string Status(RequestResponseLog log) => log.StatusCode?.Value?.ToString() ?? "";
+
+    [Fact]
+    public void Every_change_to_a_recorded_call_line_moves_the_version()
+    {
+        // The history guard (plans/CALL_OPERATION_AND_ORIGIN_PLAN.md 4.8): what this tracker records for one fixed call, as the
+        // call line history fingerprints, pinned under the rule it was pinned with (HistoryGuard).
+        using var harness = DecoderHarness.Redis();
+        harness.ClientToServer(Resp.Command("GET", "user:42"));
+        harness.ServerToClient(Resp.Bulk("{\"name\":\"Ada\"}"));
+
+        HistoryGuard.Pin(harness.Sink.Logs, 8,
+            "svc>redis Get /db0/user:{n} OK");
+    }
 
     [Fact]
     public void AGetThatFindsTheKeyIsAHit()

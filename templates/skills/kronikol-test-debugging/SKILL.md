@@ -232,6 +232,11 @@ matters.
     `! the alias file beside the ledger could not be read and was ignored` (`history`) —
     `.kronikol/quarantine.json` or `aliases.json` is malformed; the verdicts are computed without it.
   - `! history is per scenario` (`history`) — a step address was given; the answer is the scenario's.
+  - `! a fragment newer than this tool, folded as this tool reads it: N written by Kronikol X, this is Kronikol.Tool Y`
+    (`history record`) — the run was recorded by a newer Kronikol than the tool folding it, usually because the
+    History action's folder still names an older tool in its `VERSION` file. The run is recorded and every member
+    the tool does not know is kept as it was, but its fingerprints are folded by the older tool's rules. Install
+    the newer tool before reading anything into the next run's behaviour verdicts.
   - `! this report has no stableIds` (`diff`) — both runs were written before 3.0.47, so they are
     **matched by position**. A scenario added or removed anywhere shifts everything after it and the
     diff is noise. When only ONE side lacks ids, or both have ids and none agree while the scenario

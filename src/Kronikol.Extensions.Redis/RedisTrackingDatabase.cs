@@ -17,12 +17,26 @@ public class RedisTrackingDatabase : DispatchProxy
         var proxy = Create<IDatabase, RedisTrackingDatabase>();
         var trackingDb = (RedisTrackingDatabase)(object)proxy;
         trackingDb._inner = inner;
-        trackingDb._tracker = new RedisTracker(
-            options,
-            inner.Multiplexer?.GetEndPoints()?.FirstOrDefault()?.ToString() ?? "localhost",
-            options.HttpContextAccessor);
+        var endpoint = inner.Multiplexer?.GetEndPoints()?.FirstOrDefault();
+        var name = EndpointName(endpoint);
+        var before = endpoint?.ToString() ?? "localhost";
+        trackingDb._tracker = new RedisTracker(options, name, options.HttpContextAccessor)
+        {
+            EndpointBefore8 = string.Equals(before, name, StringComparison.Ordinal) ? null : before
+        };
         return proxy;
     }
+
+    /// <summary>
+    /// The server a connection reached, as <c>host:port</c>. <see cref="DnsEndPoint.ToString"/> puts the address family
+    /// first (<c>Unspecified/localhost:6379</c>), which until #192 R1 stood where the host goes in every Raw address.
+    /// </summary>
+    internal static string EndpointName(System.Net.EndPoint? endpoint) => endpoint switch
+    {
+        null => "localhost",
+        System.Net.DnsEndPoint dns => dns.Port == 0 ? dns.Host : $"{dns.Host}:{dns.Port.ToString(System.Globalization.CultureInfo.InvariantCulture)}",
+        var other => other.ToString() ?? "localhost"
+    };
 
     protected override object? Invoke(MethodInfo? targetMethod, object?[]? args)
     {

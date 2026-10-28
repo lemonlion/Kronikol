@@ -64,9 +64,13 @@ public class RedisTrackingConnectionMultiplexerTests
 
 public class StubConnectionMultiplexer : DispatchProxy
 {
-    public static IConnectionMultiplexer CreateProxy()
+    private System.Net.EndPoint[] _endPoints = [];
+
+    public static IConnectionMultiplexer CreateProxy(params System.Net.EndPoint[] endPoints)
     {
-        return Create<IConnectionMultiplexer, StubConnectionMultiplexer>();
+        var proxy = Create<IConnectionMultiplexer, StubConnectionMultiplexer>();
+        ((StubConnectionMultiplexer)(object)proxy)._endPoints = endPoints;
+        return proxy;
     }
 
     protected override object? Invoke(MethodInfo? targetMethod, object?[]? args)
@@ -83,7 +87,7 @@ public class StubConnectionMultiplexer : DispatchProxy
             return "localhost:6379";
 
         if (targetMethod.Name == "GetEndPoints")
-            return Array.Empty<System.Net.EndPoint>();
+            return _endPoints;
 
         var returnType = targetMethod.ReturnType;
         if (returnType == typeof(void)) return null;

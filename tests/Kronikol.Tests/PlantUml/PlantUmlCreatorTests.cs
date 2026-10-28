@@ -228,8 +228,10 @@ public class PlantUmlCreatorTests
     }
 
     [Fact]
-    public void GraphQL_anonymous_query_appends_query_label_to_arrow()
+    public void GraphQL_anonymous_query_appends_its_root_fields_to_arrow()
     {
+        // Until 5.16.1 the label was "(query)" for every anonymous operation; the owner chose on 2026-10-28 that it names
+        // the root fields, as the operation key does (CALL_OPERATION_AND_ORIGIN_PLAN.md Q13).
         var graphqlContent = """{"query":"{ user { name } }"}""";
         var logs = new[]
         {
@@ -237,7 +239,7 @@ public class PlantUmlCreatorTests
         };
         var plantUml = GetPlantUml(logs);
 
-        Assert.Contains($"POST: /graphql\\n(query){Nl}", plantUml);
+        Assert.Contains($"POST: /graphql\\n(query {{ user }}){Nl}", plantUml);
     }
 
     [Fact]

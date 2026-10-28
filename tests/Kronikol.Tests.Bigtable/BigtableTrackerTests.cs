@@ -1,6 +1,7 @@
 using Kronikol.Extensions.Bigtable;
 using Kronikol.Tests.Tracking;
 using Kronikol.Tracking;
+using Kronikol.Tests.History;
 
 namespace Kronikol.Tests.Bigtable;
 
@@ -27,6 +28,20 @@ public class BigtableTrackerTests
     };
 
     // ─── LogRequest ─────────────────────────────────────────
+
+    [Fact]
+    public void Every_change_to_a_recorded_call_line_moves_the_version()
+    {
+        // The history guard (plans/CALL_OPERATION_AND_ORIGIN_PLAN.md 4.8): what this tracker records for one fixed call, as the
+        // call line history fingerprints, pinned under the rule it was pinned with (HistoryGuard).
+        var tracker = new BigtableTracker(MakeOptions());
+        var op = new BigtableOperationInfo(BigtableOperation.ReadRows, "projects/p/instances/i/tables/my-table");
+        var (reqId, traceId) = tracker.LogRequest(op, null);
+        tracker.LogResponse(op, reqId, traceId, "5 rows");
+
+        HistoryGuard.Pin(GetLogsFromThisTest(), 8,
+            "TestCaller>Bigtable ReadRows ← my-table /my-table -");
+    }
 
     [Fact]
     public void LogRequest_Logs_request_entry()

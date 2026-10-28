@@ -297,9 +297,11 @@ public class InteractionShapeTests
         // the analyzer can tell, and it moves when the rule does. 5: a MongoDB request note became the command without
         // the driver's fields (#168 R2), so every MongoDB call's statement head moved. 6: a document's booleans, signs
         // and list lengths are data too (the #168 audit). 7: a remote host the HTTP handler names by its fallback keeps
-        // its name, where 6 recorded localhost (#190 R0); 6 is kept, so a run bridges it.
-        Assert.Equal(7, InteractionShape.Version);
-        Assert.Equal([6, 7], InteractionShape.KeptVersions);
+        // its name, where 6 recorded localhost (#190 R0); 6 is kept, so a run bridges it. 8: the operation key (#192 R1):
+        // the path as the data file writes it, an entity in the authority, a GraphQL operation, a statement past its SET
+        // prologue; 6 and 7 are kept.
+        Assert.Equal(8, InteractionShape.Version);
+        Assert.Equal([6, 7, 8], InteractionShape.KeptVersions);
     }
 
     [Fact]
@@ -321,6 +323,30 @@ public class InteractionShapeTests
         Assert.Equal(new Dictionary<string, string> { ["Caller>pricing.example.com:8443"] = "Caller>localhost:8443" }, InteractionShape.RenamedDependencies(logs, 6));
         Assert.Empty(InteractionShape.RenamedDependencies(logs, 7));
         Assert.Throws<ArgumentOutOfRangeException>(() => InteractionShape.Calls(logs, null, 5));
+    }
+
+    [Fact]
+    public void Rules_6_and_7_read_a_call_as_its_tracker_recorded_it_before_8()
+    {
+        // #192 R1 classifies a SQL Server batch past both of its SET statements; 5.16.1 read it as Other with no table,
+        // and at Summarised did not record it. The tracker keeps the old record on the call, so rules 6 and 7 still
+        // read it as it was, and only rule 8 reads the statement.
+        const string batch = "SET IMPLICIT_TRANSACTIONS OFF;\r\nSET NOCOUNT ON;\r\nINSERT INTO [Orders] ([Status]) VALUES (@p0);";
+        RequestResponseLog Log(RequestResponseType type, Guid id, RecordedBefore? before) =>
+            new("t", "t1", "INSERT INTO Orders", type == RequestResponseType.Request ? batch : null, new Uri("sqlserver://db/app/Orders"), [], "Database", "Caller", type,
+                Guid.NewGuid(), id, TrackingIgnore: false, DependencyCategory: Kronikol.Constants.DependencyCategories.SqlServer) { RecordedBefore8 = before };
+        var (detailed, summarised) = (Guid.NewGuid(), Guid.NewGuid());
+        RequestResponseLog[] logs =
+        [
+            Log(RequestResponseType.Request, detailed, new RecordedBefore("Other", new Uri("sqlserver://db/app"))), Log(RequestResponseType.Response, detailed, null),
+            Log(RequestResponseType.Request, summarised, RecordedBefore.NotRecorded), Log(RequestResponseType.Response, summarised, null)
+        ];
+
+        Assert.Equal(["Caller>Database Other /app SET IMPLICIT_TRANSACTIONS OFF; -"], InteractionShape.Calls(logs, null, 7).Select(c => c.ToString()));
+        Assert.Equal(InteractionShape.Calls(logs, null, 7), InteractionShape.Calls(logs, null, 6));
+        Assert.Equal(
+            ["Caller>Database INSERT INTO Orders /app/Orders INSERT INTO [Orders] ([Status]) VALUES (@p0); -", "Caller>Database INSERT INTO Orders /app/Orders INSERT INTO [Orders] ([Status]) VALUES (@p0); -"],
+            InteractionShape.Calls(logs, null, 8).Select(c => c.ToString()));
     }
 
     [Fact]

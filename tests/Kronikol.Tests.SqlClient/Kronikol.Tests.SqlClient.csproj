@@ -17,4 +17,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Kronikol.Extensions.SqlClient\Kronikol.Extensions.SqlClient.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Kronikol.Tests\History\HistoryGuard.cs" Link="HistoryGuard.cs" />
+  </ItemGroup>
+
 </Project>

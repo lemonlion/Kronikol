@@ -25,4 +25,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Kronikol.Extensions.MongoDB\Kronikol.Extensions.MongoDB.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Kronikol.Tests\History\HistoryGuard.cs" Link="HistoryGuard.cs" />
+  </ItemGroup>
+
 </Project>

@@ -2,6 +2,7 @@ using System.Data;
 using Kronikol.Tests.Dapper.Fakes;
 using Kronikol.Tests.Tracking;
 using Kronikol.Tracking;
+using Kronikol.Tests.History;
 
 namespace Kronikol.Tests.Dapper;
 
@@ -36,6 +37,19 @@ public class TrackingDbCommandTests : IDisposable
     }
 
     // A command built directly, not through its connection, reads the request through the options' accessor too.
+    [Fact]
+    public void Every_change_to_a_recorded_call_line_moves_the_version()
+    {
+        // The history guard (plans/CALL_OPERATION_AND_ORIGIN_PLAN.md 4.8): what this tracker records for one fixed call, as the
+        // call line history fingerprints, pinned under the rule it was pinned with (HistoryGuard).
+        _options.Verbosity = DapperTrackingVerbosity.Detailed;
+        using var cmd = CreateCommand("SELECT * FROM Users WHERE Id = 1");
+        cmd.ExecuteReader();
+
+        HistoryGuard.Pin(GetLogsForTest(), 8,
+            "TestCaller>TestDB SELECT FROM Users /localhost/TestDb/Users SELECT * FROM Users WHERE Id = {n} -");
+    }
+
     [Fact]
     public void A_command_built_directly_reads_HttpContextAccessor_from_options()
     {
@@ -199,6 +213,25 @@ public class TrackingDbCommandTests : IDisposable
 
         var logs = GetLogsForTest();
         Assert.Equal(2, logs.Length);
+    }
+
+    [Fact]
+    public void A_batch_opening_with_two_set_statements_names_its_statement_and_keeps_its_old_record()
+    {
+        // #192 R1: the classifier strips every SET statement a batch opens with; 5.16.1 stripped the first alone and read
+        // the batch as Other with no table. History's rules 6 and 7 read the old record (RequestResponseLog.RecordedBefore8).
+        using var cmd = CreateCommand("SET IMPLICIT_TRANSACTIONS OFF;\r\nSET NOCOUNT ON;\r\nINSERT INTO Users (Name) VALUES (@p0);");
+        cmd.ExecuteNonQuery();
+
+        var request = GetLogsForTest().First(l => l.Type == RequestResponseType.Request);
+        Assert.Contains("Users", request.Uri.ToString(), StringComparison.Ordinal);
+        var before = Assert.IsType<RecordedBefore>(request.RecordedBefore8);
+        Assert.False(before.Absent);
+        Assert.DoesNotContain("Users", before.Uri.ToString(), StringComparison.Ordinal);
+
+        using var select = CreateCommand("SET NOCOUNT ON;\r\nSELECT * FROM Users");
+        select.ExecuteNonQuery();
+        Assert.Null(GetLogsForTest().Last(l => l.Type == RequestResponseType.Request).RecordedBefore8);
     }
 
     [Fact]

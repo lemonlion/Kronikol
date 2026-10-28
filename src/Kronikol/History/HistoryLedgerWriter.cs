@@ -380,8 +380,9 @@ public static class HistoryLedgerWriter
             var shapesLines = all.Ledger.AllShapes.Where(s => referencedShapes.Contains(s.Hash)).OrderBy(s => s.Hash, StringComparer.Ordinal).ToArray();
             var shapesDropped = all.Ledger.AllShapes.Count - shapesLines.Length;
 
+            // The header names the Kronikol that made the ledger, which a rewrite by a later tool keeps (#192 R1).
             var builder = new StringBuilder();
-            builder.Append(HistoryJson.HeaderLine(generator)).Append('\n');
+            builder.Append(HistoryJson.HeaderLine(all.Ledger.Generator is { Length: > 0 } made ? made : generator)).Append('\n');
             foreach (var roster in rosters.OrderBy(r => order.GetValueOrDefault((r.Suite, "roster:" + r.Hash), int.MaxValue)))
                 builder.Append(HistoryJson.RosterLine(roster)).Append('\n');
             foreach (var shapesLine in shapesLines)
@@ -393,6 +394,9 @@ public static class HistoryLedgerWriter
                     : run;
                 builder.Append(HistoryJson.RunLine(line)).Append('\n');
             }
+            // A newer Kronikol's lines, as they were (#192 R1).
+            foreach (var other in all.Ledger.OtherLines)
+                builder.Append(other).Append('\n');
 
             stream.SetLength(0);
             Write(stream, builder.ToString());
@@ -468,8 +472,10 @@ public static class HistoryFold
         var cells = new List<(char Result, int? Attempt, int? Duration, int? Calls, string? ShapeSet, string? ShapeOrdered, IReadOnlyList<string>? CallLines, string? Error)>();
         var deps = new SortedSet<string>(StringComparer.Ordinal);
         var anyDeps = false;
-        // The rules every attempt bridges, and each position as its attempt's bridge made it (#190 R0).
-        var bridgeRules = HistoryBridges.CommonRules(oldestFirst.Select(a => a.Run));
+        // The rule the line claims, one every attempt reaches (an attempt on an older package is reached through the
+        // newer one's bridge, #192 R1), the rules it bridges besides, and each position as its attempt made it under each.
+        var foldRule = HistoryBridges.FoldRule(oldestFirst.Select(a => a.Run));
+        var bridgeRules = foldRule is null ? [] : HistoryBridges.FoldBridges(oldestFirst.Select(a => a.Run), foldRule);
         var bridgeCells = bridgeRules.ToDictionary(r => r, _ => new List<HistoryBridges.Cell>(), StringComparer.Ordinal);
 
         foreach (var attempt in oldestFirst)
@@ -482,7 +488,8 @@ public static class HistoryFold
                 var lines = run.CallSetAt(i) is { } set && attempt.Shapes is { } shapes
                     ? set.Select(shapes.At).Where(line => line is not null).Select(line => line!).ToArray()
                     : null;
-                var cell = (run.ResultAt(i), run.AttemptAt(i), run.DurationAt(i), run.CallsAt(i), run.ShapeSetAt(i), run.ShapeOrderedAt(i), (IReadOnlyList<string>?)lines, run.ErrorAt(i));
+                var under = foldRule is null || run.ShapeSet is null ? new HistoryBridges.Cell(run.ShapeSetAt(i), run.ShapeOrderedAt(i), lines) : HistoryBridges.CellUnder(run, foldRule, i, lines);
+                var cell = (run.ResultAt(i), run.AttemptAt(i), run.DurationAt(i), under.Calls ?? run.CallsAt(i), under.Set, under.Ordered, under.Lines, run.ErrorAt(i));
                 if (positions.TryGetValue((roster.Ids[i], roster.Slots[i]), out var at))
                 {
                     // Run again: the later attempt is the verdict, the count says it took more than one, and
@@ -494,7 +501,7 @@ public static class HistoryFold
                         Item8 = cell.Item8 ?? earlier.Error
                     };
                     foreach (var rule in bridgeRules)
-                        bridgeCells[rule][at] = HistoryBridges.CellAt(run, run.Bridge![rule], i, lines);
+                        bridgeCells[rule][at] = HistoryBridges.CellUnder(run, rule, i, lines);
                 }
                 else
                 {
@@ -502,14 +509,14 @@ public static class HistoryFold
                     entries.Add(entry);
                     cells.Add(cell);
                     foreach (var rule in bridgeRules)
-                        bridgeCells[rule].Add(HistoryBridges.CellAt(run, run.Bridge![rule], i, lines));
+                        bridgeCells[rule].Add(HistoryBridges.CellUnder(run, rule, i, lines));
                 }
                 i++;
             }
             if (run.Deps is { } attemptDeps)
             {
                 anyDeps = true;
-                foreach (var dep in attemptDeps) deps.Add(dep);
+                foreach (var dep in attemptDeps) deps.Add(foldRule is null ? dep : HistoryBridges.PairUnder(run, foldRule, dep));
             }
         }
 
@@ -551,19 +558,25 @@ public static class HistoryFold
             Calls = oldestFirst.Any(a => a.Run.Calls is not null) ? cells.Select(c => c.Calls ?? 0).ToArray() : null,
             ShapeSet = oldestFirst.Any(a => a.Run.ShapeSet is not null) ? cells.Select(c => c.ShapeSet ?? "").ToArray() : null,
             ShapeOrdered = oldestFirst.Any(a => a.Run.ShapeSet is not null) ? cells.Select(c => c.ShapeOrdered ?? "").ToArray() : null,
-            ShapeVersion = oldestFirst.Select(a => a.Run.ShapeVersion).FirstOrDefault(v => v is not null),
+            ShapeVersion = foldRule is null ? oldestFirst.Select(a => a.Run.ShapeVersion).FirstOrDefault(v => v is not null) : HistoryBridges.Parts(foldRule).Version,
+            // The consumer's rules ride with the fingerprints they made (3.9: until #192 R1 a retried run dropped them).
+            ShapeRules = foldRule is null ? oldestFirst.Select(a => a.Run.ShapeRules).FirstOrDefault(r => r is not null) : HistoryBridges.Parts(foldRule).ShapeRules,
             ShapesHash = combinedShapes?.Hash,
             CallSets = index is null ? null : cells.Select(c => (IReadOnlyList<int>)(c.CallLines ?? []).Select(l => index[l]).OrderBy(n => n).ToArray()).ToArray(),
             Errors = oldestFirst.Any(a => a.Run.Errors is not null) ? cells.Select(c => KeyOf(c.Error)).ToArray() : null,
             ErrorText = errorText,
             Deps = anyDeps ? deps.ToArray() : null,
-            ServiceId = SharedServiceId(oldestFirst.Select(a => a.Run))
+            ServiceId = SharedServiceId(oldestFirst.Select(a => a.Run)),
+            Generator = NewestGenerator(oldestFirst.Select(a => a.Run)),
+            ShapeTemplates = TemplatesOf(foldRule, oldestFirst.Select(a => a.Run)),
+            Aliases = AliasesOf(oldestFirst.Select(a => a.Run)),
+            Unknown = UnknownOf(oldestFirst.Select(a => a.Run))
         };
         if (bridgeRules.Count > 0 && line.ShapeSet is { } lineSet && line.ShapeOrdered is { } lineOrdered)
             line = line with
             {
                 Bridge = bridgeRules.ToDictionary(r => r,
-                    r => HistoryBridges.Entry(bridgeCells[r], lineSet, lineOrdered, HistoryBridges.MergedDeps(oldestFirst.Select(a => a.Run.Bridge![r]))),
+                    r => HistoryBridges.Entry(bridgeCells[r], lineSet, lineOrdered, HistoryBridges.FoldDeps(oldestFirst.Select(a => a.Run), foldRule!, r), line.Calls),
                     StringComparer.Ordinal)
             };
         return new HistoryFragment(oldestFirst.Max(a => a.Version), combined, line, combinedShapes);
@@ -597,8 +610,10 @@ public static class HistoryFold
         var anyShapes = false;
         var anyErrors = false;
         bool? partial = null;
-        // The rules every shard bridges, and each position as its shard's bridge made it (#190 R0).
-        var bridgeRules = HistoryBridges.CommonRules(shards.Select(s => s.Run));
+        // The rule the line claims, one every shard reaches (a shard on an older package is reached through the newer
+        // shards' bridges, #192 R1), the rules it bridges besides, and each position as its shard made it under each.
+        var foldRule = HistoryBridges.FoldRule(shards.Select(s => s.Run));
+        var bridgeRules = foldRule is null ? [] : HistoryBridges.FoldBridges(shards.Select(s => s.Run), foldRule);
         var bridgeCells = bridgeRules.ToDictionary(r => r, _ => new List<HistoryBridges.Cell>(), StringComparer.Ordinal);
 
         foreach (var shard in shards)
@@ -612,14 +627,16 @@ public static class HistoryFold
             for (var i = 0; i < roster.Count; i++)
             {
                 durations.Add(run.DurationAt(i));
-                calls.Add(run.CallsAt(i) ?? 0);
-                shapeSet.Add(run.ShapeSetAt(i) ?? "");
-                shapeOrdered.Add(run.ShapeOrderedAt(i) ?? "");
-                callLines.Add(run.CallSetAt(i) is { } set && shard.Shapes is { } shardShapes
+                IReadOnlyList<string> own = run.CallSetAt(i) is { } set && shard.Shapes is { } shardShapes
                     ? set.Select(shardShapes.At).Where(line => line is not null).Select(line => line!).ToArray()
-                    : []);
+                    : [];
+                var under = foldRule is null || run.ShapeSet is null ? new HistoryBridges.Cell(run.ShapeSetAt(i), run.ShapeOrderedAt(i), own) : HistoryBridges.CellUnder(run, foldRule, i, own);
+                calls.Add(under.Calls ?? run.CallsAt(i) ?? 0);
+                shapeSet.Add(under.Set ?? "");
+                shapeOrdered.Add(under.Ordered ?? "");
+                callLines.Add(under.Lines ?? []);
                 foreach (var rule in bridgeRules)
-                    bridgeCells[rule].Add(HistoryBridges.CellAt(run, run.Bridge![rule], i, callLines[^1]));
+                    bridgeCells[rule].Add(HistoryBridges.CellUnder(run, rule, i, own));
 
                 var text = run.ErrorAt(i);
                 if (text is null)
@@ -644,19 +661,20 @@ public static class HistoryFold
             anyCallSets |= run.CallSets is not null;
             anyErrors |= run.Errors is not null;
             if (run.Deps is { } shardDeps)
-                foreach (var dep in shardDeps) deps.Add(dep);
+                foreach (var dep in shardDeps) deps.Add(foldRule is null ? dep : HistoryBridges.PairUnder(run, foldRule, dep));
             // An explicit partial on any shard makes the whole run partial; undecided shards stay so and
             // the append resolves the run against the ledger.
             if (run.Partial == true) partial = true;
         }
 
         // A fingerprint is comparable only with one the same rule made, and the rule is the pair of the
-        // built-in version and the consumer's rules. Shards that disagree (one job configured differently,
-        // one on an older package) cannot fold into a line that claims one rule: the fingerprints are
-        // blanked, which costs the run its behaviour verdicts and nothing else, and the fold says so.
+        // built-in version and the consumer's rules. Shards that reach no rule in common (one job configured
+        // differently) cannot fold into a line that claims one rule: the fingerprints are blanked, which costs
+        // the run its behaviour verdicts and nothing else, and the fold says so. A shard on an older package is
+        // reached through a newer shard's bridge, and folds (#192 R1).
         string? note = null;
         var shapedShards = shards.Where(s => s.Run.ShapeSet is not null).ToList();
-        if (shapedShards.Select(s => (s.Run.ShapeVersion ?? 1, s.Run.ShapeRules)).Distinct().Count() > 1)
+        if (foldRule is null && shapedShards.Select(s => (s.Run.ShapeVersion ?? 1, s.Run.ShapeRules)).Distinct().Count() > 1)
         {
             note = $"the shards of {shards[0].Run.Id} were fingerprinted under different templating rules ({string.Join(", ", shapedShards.Select(s => $"v{s.Run.ShapeVersion ?? 1}{(s.Run.ShapeRules is { } h ? "+" + h : "")}").Distinct())}); their fingerprints are not comparable, so none are recorded for this run and it reads no behaviour verdict. Give every shard the same HistoryShapeTemplates and the same Kronikol version.";
             anyShapes = false;
@@ -688,24 +706,63 @@ public static class HistoryFold
             Calls = anyCalls ? calls : null,
             ShapeSet = anyShapes ? shapeSet : null,
             ShapeOrdered = anyShapes ? shapeOrdered : null,
-            ShapeVersion = anyShapes ? shards.Select(s => s.Run.ShapeVersion).FirstOrDefault(v => v is not null) : null,
-            ShapeRules = anyShapes ? shapedShards.Select(s => s.Run.ShapeRules).FirstOrDefault() : null,
+            ShapeVersion = !anyShapes ? null : foldRule is null ? shards.Select(s => s.Run.ShapeVersion).FirstOrDefault(v => v is not null) : HistoryBridges.Parts(foldRule).Version,
+            ShapeRules = !anyShapes ? null : foldRule is null ? shapedShards.Select(s => s.Run.ShapeRules).FirstOrDefault() : HistoryBridges.Parts(foldRule).ShapeRules,
             ShapesHash = foldedShapes?.Hash,
             CallSets = callSets,
             Errors = anyErrors ? errors : null,
             ErrorText = errorText,
             Deps = deps.Count > 0 || shards.Any(s => s.Run.Deps is not null) ? deps.ToArray() : null,
-            ServiceId = SharedServiceId(shards.Select(s => s.Run))
+            ServiceId = SharedServiceId(shards.Select(s => s.Run)),
+            Generator = NewestGenerator(shards.Select(s => s.Run)),
+            ShapeTemplates = anyShapes ? TemplatesOf(foldRule, shapedShards.Select(s => s.Run)) : null,
+            Aliases = AliasesOf(shards.Select(s => s.Run)),
+            Unknown = UnknownOf(shards.Select(s => s.Run))
         };
         // Shards made by different rules keep no fingerprints above, and so no bridges.
         if (bridgeRules.Count > 0 && run2.ShapeSet is { } foldedSet && run2.ShapeOrdered is { } foldedOrdered)
             run2 = run2 with
             {
                 Bridge = bridgeRules.ToDictionary(r => r,
-                    r => HistoryBridges.Entry(bridgeCells[r], foldedSet, foldedOrdered, HistoryBridges.MergedDeps(shards.Select(s => s.Run.Bridge![r]))),
+                    r => HistoryBridges.Entry(bridgeCells[r], foldedSet, foldedOrdered, HistoryBridges.FoldDeps(shards.Select(s => s.Run), foldRule!, r), run2.Calls),
                     StringComparer.Ordinal)
             };
         return new HistoryFoldedRun(folded, run2, foldedShapes) { Note = note };
+    }
+
+    /// <summary>The Kronikol that recorded the newest of the lines being folded, as a run line names it (#192 R1).</summary>
+    private static string? NewestGenerator(IEnumerable<HistoryRun> runs) =>
+        runs.Where(r => r.Generator is not null).OrderBy(r => r.At).LastOrDefault()?.Generator;
+
+    /// <summary>
+    /// The consumer's patterns of the rule the fold records (<paramref name="foldRule"/>), from a line made under it; with
+    /// no fold rule, the first line's that has any.
+    /// </summary>
+    private static IReadOnlyList<HistoryShapeTemplate>? TemplatesOf(string? foldRule, IEnumerable<HistoryRun> runs) =>
+        (foldRule is null
+            ? runs.FirstOrDefault(r => r.ShapeTemplates is not null)
+            : runs.FirstOrDefault(r => r.ShapeTemplates is not null && string.Equals(HistoryBridge.RuleOf(r), foldRule, StringComparison.Ordinal)))
+        ?.ShapeTemplates;
+
+    /// <summary>Every alias the runs being folded wrote (<see cref="HistoryRun.Aliases"/>, Q15); null when none did.</summary>
+    private static IReadOnlyDictionary<string, string>? AliasesOf(IEnumerable<HistoryRun> runs)
+    {
+        Dictionary<string, string>? aliases = null;
+        foreach (var run in runs)
+            foreach (var pair in run.Aliases ?? new Dictionary<string, string>())
+                (aliases ??= new Dictionary<string, string>(StringComparer.Ordinal))[pair.Key] = pair.Value;
+        return aliases;
+    }
+
+    /// <summary>The members a newer writer added to any of the lines being folded, each as the first line holding it had it (#192 R1).</summary>
+    private static IReadOnlyList<KeyValuePair<string, string>>? UnknownOf(IEnumerable<HistoryRun> runs)
+    {
+        var members = new List<KeyValuePair<string, string>>();
+        foreach (var run in runs)
+            foreach (var member in run.Unknown ?? [])
+                if (!members.Exists(m => string.Equals(m.Key, member.Key, StringComparison.Ordinal)))
+                    members.Add(member);
+        return members.Count > 0 ? members : null;
     }
 
     /// <summary>The service id every run being folded has, a run without one included, as merge keeps <c>suite</c>; else none (#190).</summary>

@@ -14,9 +14,14 @@ public static partial class UnifiedSqlClassifier
     [GeneratedRegex(@"^\s*@\{[^}]*\}\s*", RegexOptions.Compiled)]
     private static partial Regex SpannerHintRegex();
 
-    // Strips SET statements before real DML (e.g. SET NOCOUNT ON;\n)
-    [GeneratedRegex(@"^\s*SET\s[^;]*;\s*", RegexOptions.IgnoreCase | RegexOptions.Compiled)]
+    // Strips the SET statements before real DML (SET NOCOUNT ON;\n), every one of them: EF Core opens a SQL Server batch
+    // with two (SET IMPLICIT_TRANSACTIONS OFF; SET NOCOUNT ON;).
+    [GeneratedRegex(@"^(?:\s*SET\s[^;]*;)+\s*", RegexOptions.IgnoreCase | RegexOptions.Compiled)]
     private static partial Regex SetPrefixRegex();
+
+    // The first SET statement alone, as the classifier stripped until #192 R1: kept for ClassifiedBefore8.
+    [GeneratedRegex(@"^\s*SET\s[^;]*;\s*", RegexOptions.IgnoreCase | RegexOptions.Compiled)]
+    private static partial Regex OneSetPrefixRegex();
 
     // Strips CTEs: WITH name AS (...) — handles nested parentheses
     [GeneratedRegex(@"^\s*WITH\s+.+?\)\s+(?=SELECT|INSERT|UPDATE|DELETE|MERGE)", RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.Compiled)]
@@ -163,7 +168,28 @@ public static partial class UnifiedSqlClassifier
         return sb.ToString();
     }
 
-    public static UnifiedSqlOperationInfo Classify(string? commandText, CommandType commandType = CommandType.Text)
+    public static UnifiedSqlOperationInfo Classify(string? commandText, CommandType commandType = CommandType.Text) =>
+        Classify(commandText, commandType, SetPrefixRegex());
+
+    /// <summary>
+    /// How the classifier read <paramref name="commandText"/> until #192 R1, which stripped the first of the SET statements
+    /// a batch opens with and no more, when that differs from how it reads it now: null for every statement but one
+    /// that opens with two or more. A tracker records it on the call (<see cref="Tracking.RequestResponseLog.RecordedBefore8"/>),
+    /// so history's rules 6 and 7 read the call as 5.16.1 recorded it.
+    /// </summary>
+    internal static (UnifiedSqlOperationInfo Info, string? RawKeyword)? ClassifiedBefore8(string? commandText, CommandType commandType = CommandType.Text)
+    {
+        if (commandType == CommandType.StoredProcedure || commandText is null || commandText.IndexOf("SET", StringComparison.OrdinalIgnoreCase) < 0)
+            return null;
+        var before = Classify(commandText, commandType, OneSetPrefixRegex());
+        var now = Classify(commandText, commandType);
+        var rawBefore = RawKeyword(commandText, OneSetPrefixRegex());
+        return before.Operation == now.Operation && before.TableName == now.TableName && rawBefore == GetRawKeyword(commandText)
+            ? null
+            : (before, rawBefore);
+    }
+
+    private static UnifiedSqlOperationInfo Classify(string? commandText, CommandType commandType, Regex setPrefix)
     {
         if (commandType == CommandType.StoredProcedure)
         {
@@ -183,7 +209,7 @@ public static partial class UnifiedSqlClassifier
 
         // Strip prefixes: Spanner hints, SET statements, CTEs
         sql = SpannerHintRegex().Replace(sql, "");
-        sql = SetPrefixRegex().Replace(sql, "");
+        sql = setPrefix.Replace(sql, "");
         sql = CtePrefixRegex().Replace(sql, "");
 
         var keywordMatch = FirstKeywordRegex().Match(sql);
@@ -274,14 +300,16 @@ public static partial class UnifiedSqlClassifier
     /// <summary>
     /// Gets the raw SQL keyword from command text (for Raw verbosity arrow labels).
     /// </summary>
-    public static string? GetRawKeyword(string? commandText)
+    public static string? GetRawKeyword(string? commandText) => RawKeyword(commandText, SetPrefixRegex());
+
+    private static string? RawKeyword(string? commandText, Regex setPrefix)
     {
         if (string.IsNullOrWhiteSpace(commandText))
             return null;
 
         var sql = commandText;
         sql = SpannerHintRegex().Replace(sql, "");
-        sql = SetPrefixRegex().Replace(sql, "");
+        sql = setPrefix.Replace(sql, "");
         sql = CtePrefixRegex().Replace(sql, "");
 
         var match = FirstKeywordRegex().Match(sql);

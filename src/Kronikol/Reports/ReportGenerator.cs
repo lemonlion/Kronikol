@@ -266,7 +266,11 @@ public static class ReportGenerator
         var background = BackgroundAttribution.Summarise(runLogs, features);
         // The calls the run's first-call warm-up slowed down (plans/WARM_UP_PLAN.md), found once for every output, with the
         // consumer's shape templates when set (Q12).
-        var warmUp = WarmUpCalls.Find(features, runLogs, HistoryShapeRules.Create(options.HistoryShapeTemplates));
+        var shapeRules = HistoryShapeRules.Create(options.HistoryShapeTemplates);
+        var warmUp = WarmUpCalls.Find(features, runLogs, shapeRules);
+        // The background calls table's rows, keyed now with the same rules, so every use of them is over before their
+        // problems are said (below, once).
+        var backgroundPaths = BackgroundCallPaths(background, shapeRules);
         foreach (var group in background.AfterScenarioEnd)
             ReportDiagnosticsScope.Record(DiagnosticKind.BackgroundCalls,
                 $"{group.Calls} call{(group.Calls == 1 ? "" : "s")} arrived after '{group.ScenarioName}' ended and are listed as background calls",
@@ -387,7 +391,11 @@ public static class ReportGenerator
         // and it is null only when history is switched off.
         var runEndedAt = new DateTimeOffset(endRunTime.ToUniversalTime());
         var history = HistoryRunContext.Create(features, dataLogs, suite, ciMetadata, runEndedAt,
-            options, CurrentReportsDirectory, KronikolVersion, getEnv, historyBaseDirectory);
+            options, CurrentReportsDirectory, KronikolVersion, options.HistoryShapes ? shapeRules : null, getEnv, historyBaseDirectory);
+        // The consumer's expressions: one that does not compile, or that timed out on some text, was skipped, and is said
+        // here, once for the warm-up marks, the background calls table and history, rather than thrown.
+        foreach (var problem in shapeRules?.Problems ?? [])
+            ReportDiagnosticsScope.Record(DiagnosticKind.HistoryShapeTemplate, problem);
 
         var specsDataExtension = GetDataFormatExtension(options.SpecificationsDataFormat);
         var testRunDataExtension = DataFileExtension(options);
@@ -541,7 +549,7 @@ public static class ReportGenerator
 
         if (options.GenerateTestRunReport)
         {
-            Add($"{options.HtmlTestRunReportFileName}.html", () => GenerateHtmlReportCore(diagrams, features, startRunTime, endRunTime, UserStylesheets(null, options), $"{options.HtmlTestRunReportFileName}.html", GetTestRunReportTitle(options), true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScript, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, ciMetadata: ciMetadata, showStepNumbers: options.TestRunReportShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, componentDiagramPlantUml: ShouldEmbedComponentDiagram(options) ? componentDiagramPlantUml : null, componentDiagramDrawn: componentDiagramDrawn, componentDiagram: ShouldEmbedComponentDiagram(options) ? componentDiagram : null, showNoInteractionsMarker: options.ShowNoInteractionsMarker, diagnostics: reportDiagnostics, background: background, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat, fullSearchIndex: options.FullSearchIndex, searchIndexCache: searchIndexCache, toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: false), suite: suite, history: options.EmbedHistoryInReport && (options.ShowScenarioHistory || options.ShowHistorySection) ? history?.Verdicts : null, showHistorySection: options.ShowHistorySection, showReportDiagnostics: options.ShowReportDiagnosticsSection, renderCollapsedSubStepsOnExpand: options.RenderCollapsedSubStepsOnExpand, showScenarioHistory: options.ShowScenarioHistory, warmUp: warmUp));
+            Add($"{options.HtmlTestRunReportFileName}.html", () => GenerateHtmlReportCore(diagrams, features, startRunTime, endRunTime, UserStylesheets(null, options), $"{options.HtmlTestRunReportFileName}.html", GetTestRunReportTitle(options), true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScript, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, ciMetadata: ciMetadata, showStepNumbers: options.TestRunReportShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, componentDiagramPlantUml: ShouldEmbedComponentDiagram(options) ? componentDiagramPlantUml : null, componentDiagramDrawn: componentDiagramDrawn, componentDiagram: ShouldEmbedComponentDiagram(options) ? componentDiagram : null, showNoInteractionsMarker: options.ShowNoInteractionsMarker, diagnostics: reportDiagnostics, background: background, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat, fullSearchIndex: options.FullSearchIndex, searchIndexCache: searchIndexCache, toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: false), suite: suite, history: options.EmbedHistoryInReport && (options.ShowScenarioHistory || options.ShowHistorySection) ? history?.Verdicts : null, showHistorySection: options.ShowHistorySection, showReportDiagnostics: options.ShowReportDiagnosticsSection, renderCollapsedSubStepsOnExpand: options.RenderCollapsedSubStepsOnExpand, showScenarioHistory: options.ShowScenarioHistory, warmUp: warmUp, backgroundPaths: backgroundPaths));
         }
 
         if (options.GenerateSpecificationsData)
@@ -1450,7 +1458,8 @@ public static class ReportGenerator
         ComponentDiagramReportGenerator.DrawnDiagram? componentDiagramDrawn = null,
         bool showScenarioHistory = false,
         WarmUpResult? warmUp = null,
-        EmbeddedComponentDiagram? componentDiagram = null)
+        EmbeddedComponentDiagram? componentDiagram = null,
+        IReadOnlyDictionary<Guid, string>? backgroundPaths = null)
     {
         // The Specifications page describes the tests, so a scenario that is not a test is not in it.
         if (!includeTestRunData)
@@ -2227,7 +2236,7 @@ public static class ReportGenerator
         var diagnosticsHtml = hasDiagnosticsTab ? RenderReportDiagnostics(diagnostics!, open: true, inTab: true) : "";
 
         if (includeTestRunData && background is { Calls: > 0 })
-            body.Append(RenderBackgroundCalls(background));
+            body.Append(RenderBackgroundCalls(background, backgroundPaths));
 
         // Cross-run history (plans/CROSS_RUN_HISTORY_PLAN.md §8.1): the section sits beside the timeline,
         // and the per-scenario entries are looked up by stable id as the scenarios render below. Null
@@ -5139,12 +5148,30 @@ public static class ReportGenerator
     }
 
     /// <summary>
+    /// What the background calls table names each call, by <see cref="RequestResponseLog.RequestResponseId"/>: its
+    /// operation key (<see cref="CallOperation"/>, with the consumer's <paramref name="rules"/>), so a poller's sweep of
+    /// one order after another is one row. A response carries what came back, not what was asked (a statement's rows),
+    /// so a pair is keyed by its request.
+    /// </summary>
+    internal static IReadOnlyDictionary<Guid, string> BackgroundCallPaths(BackgroundCalls background, HistoryShapeRules? rules)
+    {
+        var paths = new Dictionary<Guid, string>();
+        foreach (var log in background.Interactions.Where(l => l.Type == RequestResponseType.Request).Concat(background.Interactions))
+            if (!paths.ContainsKey(log.RequestResponseId))
+                paths[log.RequestResponseId] = log.Uri is null ? ""
+                    : CallOperation.Of(MethodText(log.Method), log.Uri.ToString(), log.DependencyCategory,
+                        log.Type == RequestResponseType.Request ? log.Content : null, rules, queryKeys: false);
+        return paths;
+    }
+
+    /// <summary>
     /// The <c>Background calls</c> section: interactions captured under a scenario's identity after the
     /// scenario had ended (<see cref="BackgroundAttribution"/>), grouped by the scenario they were taken
-    /// from and the call they made. Renders nothing when the run had none, so a report without the section
-    /// is a report without background calls.
+    /// from and the call they made, named as <paramref name="paths"/> names it (<see cref="BackgroundCallPaths"/>, keyed
+    /// with the built-in rules alone when not given). Renders nothing when the run had none, so a report without the
+    /// section is a report without background calls.
     /// </summary>
-    internal static string RenderBackgroundCalls(BackgroundCalls background)
+    internal static string RenderBackgroundCalls(BackgroundCalls background, IReadOnlyDictionary<Guid, string>? paths = null)
     {
         if (background.Calls == 0)
             return string.Empty;
@@ -5153,13 +5180,14 @@ public static class ReportGenerator
         foreach (var group in background.AfterScenarioEnd)
             names[group.ScenarioId] = group.ScenarioName;
 
+        paths ??= BackgroundCallPaths(background, rules: null);
         var rows = background.Interactions
             .Where(l => !l.IsDiagramMarker)
             .GroupBy(l => (
                 Scenario: l.ExpiredFromTestId is { Length: > 0 } from ? names.GetValueOrDefault(from, from) : "(no scenario)",
                 l.ServiceName,
                 Method: MethodText(l.Method) ?? "",
-                Path: l.Uri is null ? "" : l.Uri.IsAbsoluteUri ? l.Uri.AbsolutePath : l.Uri.ToString()))
+                Path: paths.GetValueOrDefault(l.RequestResponseId, "")))
             .Select(g => (g.Key, Calls: g.Select(l => l.RequestResponseId).Distinct().Count(), LastAt: g.Max(l => l.Timestamp)))
             .OrderBy(r => r.Key.Scenario, StringComparer.Ordinal)
             .ThenBy(r => r.Key.ServiceName, StringComparer.Ordinal)

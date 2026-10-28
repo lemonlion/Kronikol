@@ -4,6 +4,123 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.17.0] - 2026-10-28
+
+The minor part moves (5.16.5 to 5.17.0): new public members (`HistoryRun.Generator`, `HistoryRun.ShapeTemplates`,
+`HistoryRun.Aliases`, `HistoryBridge.Calls`, `HistoryFragment.Generator`, `HistoryLineKind.Other`,
+`HistoryStats.OtherLines`), new members on the ledger's run lines and in `History.run.json`, and what a history
+fingerprint compares, the warm-up marks and a relationship's endpoint breakdown key on. History's fingerprint rule moves
+from 7 to 8 and is bridged, so the upgrade costs no quiet run. plans/CALL_OPERATION_AND_ORIGIN_PLAN.md R1 (#192).
+
+### Added
+- **One operation key for a call (#192).** History's fingerprints, the first-call warm-up marks, a relationship's
+  endpoint breakdown and the background calls table read a call through one rule: the path as the data file
+  writes it (unescaped: `/a b/` where the request had `%20`), with an entity a tracker writes where a host would go
+  kept as the first segment (a Service Bus queue or topic, an S3 bucket, an EventBridge bus, a Redis database); a
+  GraphQL request's operation (`/graphql query GetUser`, an anonymous one by its sorted root fields, `batch` for an
+  array of requests), read from a POST's body or a GET's query string; a statement's head past a prologue of `SET`
+  statements, and a document's query string rather than the document; `{bin}` for bytes written raw. Two GraphQL
+  operations on one endpoint are two shapes, and warm-up judges each against its own baseline.
+- **A GraphQL arrow names its operation as a server reads it.** An anonymous operation draws with its root fields
+  (`query { orderSummaries }`, where it read `query`), a GET with the operation in its query string, and a persisted
+  query sent by its hash, or Apollo's retry that registers it, by its `operationName`. Two anonymous queries with
+  different root fields in a row draw as two arrows, where they collapsed into one, and a note formats as GraphQL a
+  body the reader names. One reader serves the arrows, the collapse, the note formatter and the operation key: the
+  body's top level read as JSON and its query parsed as a GraphQL document.
+- **A rule change costs no quiet run.** History's rule is 8; rules 6 and 7 are kept as functions of the raw call, so a
+  run also fingerprints its calls under them while its window holds runs made by them (`bridge` on its run line), and
+  compares through that. The SQL, EF Core, Dapper, Redis, OTLP and ingest trackers mark a call they now record
+  otherwise with what they recorded before, so rules 6 and 7 read it exactly; a call they did not record then is no
+  call under those rules.
+- **An edit of `HistoryShapeTemplates` costs no quiet run.** A run line records the consumer's patterns beside their
+  hash (`shapeTemplates`), and a run fingerprints its calls under every earlier set of patterns its window holds as
+  well. In the History action's flow the run only writes its fragment, so `History.run.json` carries the run's calls
+  before any rule (`rawCalls`: each distinct call once, and each scenario's calls as indices into them), and
+  `kronikol history record`, `import`, `gate` and `query history` bridge the window's patterns from it. Measured on
+  BreakfastProvider's lanes, the member adds 15% to 76% to a fragment (18 KB to 147 KB; 2 KB to 20 KB gzipped), most
+  of it the first lines of SQL statements; the ledger holds none of it, and a tool older than 5.17.0 passes over it.
+- **Counts are bridged.** A bridge holds each position's call count where its rule counts otherwise, and the analyzer
+  compares counts under one rule, as it compares sets: a call one rule records and the other did not is no change in
+  the count across a move.
+- **The run line names the Kronikol that recorded it** (`generator`), and **Kronikol's own scenario aliases** ride on
+  it (`aliases`): when Kronikol changes what a scenario's id is computed from, the run writes the ids the earlier rule
+  gave, and the analyzer, `record` and `import` read them as they read `aliases.json`. No id changes in this release.
+- **`kronikol history record` says when a fragment is newer than the tool:** `! a fragment newer than this tool,
+  folded as this tool reads it: N written by Kronikol X, this is Kronikol.Tool Y`, with what to install. The History
+  action installs the tool its folder's `VERSION` file names, which a package upgrade does not move.
+- **`kronikol history doctor`** counts the lines of a kind this Kronikol does not know, which every writer now keeps.
+- **A `HistoryShapeTemplates` pattern that holds a `%XX` escape is a diagnostic** naming what the path holds instead:
+  the rules see the data file's unescaped string, as the engine does.
+
+### Changed
+- A consumer's rules see a path unescaped, as written to the data file, where they saw it escaped.
+- EF Core's Summarised address keeps the database as a path segment (`sql:///OrdersDb/Users`), where it put it in the
+  authority; Redis at Raw names a `DnsEndPoint` by its host and port, where it read `Unspecified`; an OTLP span whose
+  `db.system` or messaging system holds an underscore maps to a scheme a URI can hold, where it became
+  `http://unknown/`, and the ingest mends such a scheme the same way.
+- A relationship's `EndpointBreakdown` (`ComponentFlowSegmentBuilder.ComputeRelationshipStats`) keys an endpoint as
+  history keys a call: ids and numbers folded, where only GUIDs were, and a GraphQL request by its operation. The
+  background calls table lists paths through the operation key.
+- Kronikol4J writes no history, no warm-up marks and no endpoint breakdown, so the key does not reach it; its
+  divergence ledger records the GraphQL arrow labels, the collapse and the SQL classifier's `SET` rule, which the port
+  does not share.
+
+### Fixed
+- **`GraphQlOperationDetector.TryExtractLabel` misread seven kinds of body.** A variable or an input object holding a
+  key named `query` before the query gave no label (now `query Search`, `mutation Save`), and so did a persisted query
+  sent by its hash (`GetUser`) and a document opening with a fragment definition or a `#` comment (`query Q`); a name
+  on the line after its keyword gave `query` (`query GetUser`); two operations with `operationName` naming the second,
+  a mutation, gave `query B` (`mutation B`); and a POST to a search API whose `query` member holds a search document
+  gave `query` (no label). An anonymous operation still reads `query` through it.
+- **An SQL batch opening with two `SET` statements is classified by its statement.** EF Core's SQL Server SaveChanges
+  batch (`SET IMPLICIT_TRANSACTIONS OFF; SET NOCOUNT ON; INSERT ...`) was `Other` with no table.
+- **An EventBridge bus given by its ARN** threw from the tracking handler into the consumer's `PutEvents`; it is named
+  by the part after `:event-bus/`.
+- **`HistoryReordered` reported nothing since 3.15.0:** every run counts its calls, and the count's branch took every
+  such run before the reorder's. It reports a reorder of the same calls, as many of them.
+- **A rename made the next run partial.** The analyzer applied `aliases.json` to each scenario's history but not to
+  its partial check, so renaming more than a tenth of a suite read the next run as partial, whose durations are not
+  compared; `import` read it the same way.
+- **A retried run kept no consumer rules,** so every run that needed a retry read as made under another rule.
+- **A fold of shards or attempts made under different rules** recorded the run without fingerprints; it records them
+  under a rule every shard reaches, the older one's through the newer shard's bridge. A shard with `HistoryShapes` off
+  folds beside the others with its scenarios unfingerprinted, where it cost the whole run its fingerprints.
+- **`kronikol query history` after `history record` read the ledger twice.** The report's own run is the ledger's
+  newest line, so the read held one run fewer than the analysis needs and the whole ledger was read again for it
+  (1,127 ms against 310 ms on BreakfastProvider's ledger); it reads one run more.
+- **`--group-by service` split names that differ only in case,** where `services` folds them; it folds them too.
+- **A ledger line of a kind this Kronikol does not know** was counted as damaged, and a non-string kind threw; it is
+  read past and kept. `prune` and `compact` kept neither such lines nor the header's writer, and the folds dropped run
+  members they did not know; every writer carries them through.
+- **`kronikol history import`** wrote every bridge a fragment carried, where `record` keeps those the window needs;
+  `record`'s window on a pull request includes its target stream.
+- **A merged shard's scenario with no name and no result** was listed as a blank in the defaulted-result diagnostic;
+  it is named by its id.
+
+### Tests
+- The history guard: one capture per tracker in each tracker's project, pinned as the call line it makes
+  (`Every_change_to_a_recorded_call_line_moves_the_version`, through the shared `HistoryGuard`), and every kept rule's
+  lines of one capture of each form in the core project (`ShapeGuardTests`). A change to what a tracker records fails
+  its build unless it moves the rule and declares a bridge.
+- The kept rules were checked against the release that made them: `ShapeGuardTests`' 42 captures, read by 5.16.4
+  from each capture as its trackers recorded it and by 5.17.0 from the raw call, give byte-identical lines under rules
+  6 and 7, without patterns and with nine (plans/CALL_OPERATION_AND_ORIGIN_PLAN.harness/kept-rules).
+- An independent review of this release's own code before it shipped found six defects, each now pinned by a fact: a
+  newer writer's member carried from an indented fragment split its run line; a fold beside a run without
+  fingerprints threw; the patterns bridged were the suite's last lines' rather than each compared stream's window, so a
+  stream crowded out by another's runs still took a quiet run; the ingest made a scheme of text before a `://` in a
+  query; a span written as records lost its rule 6 and 7 reading; and hand-edited aliases, counts or a torn line of a
+  newer kind threw or misread.
+- `HistoryMoveReplayTests` replays the move: a ledger recorded under rules 6 and 7 and continued under 8 gives the
+  verdicts the same runs give under 8 throughout, except for the one GraphQL rename rule 8 sees at the move.
+- `ProxyTapTests`' correlation header fact reads the second call's log by its path: a response is logged once its body
+  has been copied, so under load the first call's could land after the second's and the fact read the wrong one.
+- Checks: the core suite (11,013 passed, 2 skipped); the history guard in all 35 tracker test projects; the full
+  suites of the 14 tracker projects whose capture or classifier this release changes (2,043 passed, and OTLP, ProxyTap
+  and TcpTap again after the review's fixes); the background calls section in Playwright (2 facts, the new one failing
+  with the table's paths read raw); rules 6 and 7 against 5.16.4 (byte-identical on 42 captures, with patterns and
+  without); the fragment's growth measured on six reports.
+
 ## [5.16.5] - 2026-10-28
 
 The patch part moves (5.16.4 to 5.16.5): fixes, nothing new to call. Titles read as their tests write them, and every

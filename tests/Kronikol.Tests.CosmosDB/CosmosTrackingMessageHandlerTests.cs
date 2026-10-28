@@ -1,6 +1,7 @@
 using System.Net;
 using Kronikol.Extensions.CosmosDB;
 using Kronikol.Tracking;
+using Kronikol.Tests.History;
 
 namespace Kronikol.Tests.CosmosDB;
 
@@ -107,6 +108,20 @@ public class CosmosTrackingMessageHandlerTests : IDisposable
     }
 
     // ─── Basic logging ─────────────────────────────────────────
+
+    [Fact]
+    public async Task Every_change_to_a_recorded_call_line_moves_the_version()
+    {
+        // The history guard (plans/CALL_OPERATION_AND_ORIGIN_PLAN.md 4.8): what this tracker records for one fixed call, as the
+        // call line history fingerprints, pinned under the rule it was pinned with (HistoryGuard).
+        using var invoker = CreateInvoker(MakeOptions());
+        await invoker.SendAsync(MakeCreateRequest(), CancellationToken.None);
+        await invoker.SendAsync(MakeQueryRequest(), CancellationToken.None);
+
+        HistoryGuard.Pin(GetLogsFromThisTest(), 8,
+            "TestCaller>CosmosDB Create /colls/orders {\"id\":\"{v}\",\"total\":{n}.{n}} 200",
+            "TestCaller>CosmosDB Query /colls/orders SELECT * FROM c WHERE c.status = '{s}' 200");
+    }
 
     [Fact]
     public async Task Logs_request_and_response_for_each_call()

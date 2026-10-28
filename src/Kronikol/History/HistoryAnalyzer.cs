@@ -73,12 +73,17 @@ public static partial class HistoryAnalyzer
         // line, oldest first. The line may already be there, and on a later read of the same report there
         // are runs after it: those are not its history (#95).
         var prior = ledger.PriorRuns(current.Suite, stream, current.Id, options.Window).ToList();
+        // The aliases Kronikol wrote when it changed what an id is computed from are read as the file's are (Q15): those
+        // of the runs this stream's window holds, which reach past the suite's last lines when another stream crowds it.
+        aliases = HistoryAliases.With(aliases, prior.Append(current));
 
         var priorRosters = prior.Select(r => ledger.Roster(r.RosterHash)).ToArray();
         var priorPositions = PositionsOf(priorRosters);
         var priorShapes = prior.Select(r => r.ShapesHash is { } hash ? ledger.Shapes(hash) : null).ToArray();
         var previousFull = LastFull(prior, priorRosters);
-        var partial = current.Partial ?? IsPartial(roster, TestsOf(previousFull.Roster, previousFull.Run), options.PartialThreshold);
+        // The previous roster as its ids now are: a rename, or a change to what an id is computed from, misses no scenario.
+        var previousTests = TestsOf(previousFull.Roster, previousFull.Run);
+        var partial = current.Partial ?? IsPartial(roster, previousTests is not null && aliases is not null ? aliases.Apply(previousTests) : previousTests, options.PartialThreshold);
 
         // A partial run's speed is the median of whichever scenarios its filter left, so a full run is not
         // read against it: measured, the same scenarios' bars stood at 1.88x in a filtered run from the mix
@@ -356,6 +361,16 @@ public static partial class HistoryAnalyzer
             return null;
         }
         bool Comparable(HistoryPoint a, HistoryPoint b) => UnderOneRule(a, b, ordered: false) is not null;
+        // A point's count under a rule: its own under its own rule, else its bridge's, which holds counts only where the rule
+        // counts otherwise (#192 R1); null when the point reaches no such rule.
+        int? CountUnder(HistoryPoint point, string rule)
+        {
+            if (string.Equals(HistoryBridge.RuleKey(point.ShapeVersion, point.ShapeRules), rule, StringComparison.Ordinal)) return point.Calls;
+            if (BridgeOf(point, rule) is not { } bridge) return null;
+            if (bridge.Calls is null) return point.Calls;
+            var at = SourceOf(point)?.At ?? -1;
+            return at >= 0 && at < bridge.Calls.Count ? bridge.Calls[at] : null;
+        }
         bool SameSet(HistoryPoint a, HistoryPoint b) => UnderOneRule(a, b, ordered: false) is { } sets && string.Equals(sets.A, sets.B, StringComparison.Ordinal);
         bool SameOrder(HistoryPoint a, HistoryPoint b) => UnderOneRule(a, b, ordered: true) is { } orders && string.Equals(orders.A, orders.B, StringComparison.Ordinal);
         // The calls two points made, under the rule they are compared by.
@@ -596,6 +611,23 @@ public static partial class HistoryAnalyzer
             var unstable = shaped.Count >= options.MinRuns && changes > pairs / 2.0;
             var changed = !SameSet(currentPoint, previousShaped);
 
+            // Counts compare under one rule, as sets do (#192 R1): a call one rule records and another does not changes the
+            // count across a move, not what the scenario does. The current run's rule when every counted run reaches it, else
+            // the earliest rule of a counted run that every one reaches, through its own rule or a bridge; as they are when
+            // none does.
+            // Looked for only when a counted run was made under another rule: the analysis is bounded per scenario.
+            string? countRule = null;
+            foreach (var point in shaped)
+                if (point.Calls is not null && (point.ShapeVersion != currentPoint.ShapeVersion || !string.Equals(point.ShapeRules, currentPoint.ShapeRules, StringComparison.Ordinal)))
+                {
+                    var countedPoints = shaped.Where(p => p.Calls is not null).Append(currentPoint).ToList();
+                    countRule = countedPoints.Select(p => HistoryBridge.RuleKey(p.ShapeVersion, p.ShapeRules)).Reverse().Take(1)
+                        .Concat(countedPoints.Select(p => HistoryBridge.RuleKey(p.ShapeVersion, p.ShapeRules)))
+                        .FirstOrDefault(rule => countedPoints.All(p => CountUnder(p, rule) is not null));
+                    break;
+                }
+            int? CountOf(HistoryPoint point) => countRule is null ? point.Calls : CountUnder(point, countRule);
+
             // Alternating: the scenario is back on a set it held within the last AlternatingRuns passing
             // runs, and a different set was held in between. Two states, both its own (a warm cache or a
             // cold one), and which one a run sees depends on ordering: the first sighting of each was a
@@ -650,9 +682,9 @@ public static partial class HistoryAnalyzer
                 if (currentResult == previousResult)
                 {
                     verdicts.Add(HistoryVerdictKind.BehaviourChanged);
-                    var callsText = currentPoint.Calls is { } c && previousShaped.Calls is { } pc && c != pc
+                    var callsText = CountOf(currentPoint) is { } c && CountOf(previousShaped) is { } pc && c != pc
                         ? $"calls {pc.ToString(CultureInfo.InvariantCulture)} in {previousShaped.RunId} to {c.ToString(CultureInfo.InvariantCulture)} now"
-                        : $"the same number of calls as {previousShaped.RunId}{(currentPoint.Calls is { } n ? " (" + n.ToString(CultureInfo.InvariantCulture) + ")" : "")}, a different set";
+                        : $"the same number of calls as {previousShaped.RunId}{(CountOf(currentPoint) is { } n ? " (" + n.ToString(CultureInfo.InvariantCulture) + ")" : "")}, a different set";
                     // Named when both runs recorded their call lists: what appeared and what disappeared, by
                     // its templated line. A count alone sends the reader to two reports to find the call.
                     if (CallSetsUnderOneRule(currentPoint, previousShaped) is ({ } now, { } before))
@@ -663,7 +695,7 @@ public static partial class HistoryAnalyzer
                     evidence.Add($"same status, different calls: {callsText}{NamedCalls("new", newCalls)}{NamedCalls("gone", goneCalls)}{OnlyIdsDiffer(newCalls, goneCalls)}");
                 }
             }
-            else if (currentPoint.Calls is { } now && previousShaped.Calls is not null && currentResult == previousShaped.Result)
+            else if (CountOf(currentPoint) is { } now && CountOf(previousShaped) is not null && currentResult == previousShaped.Result)
             {
                 // The same calls, made a different number of times. "3, 3, 3, then 5" is an N+1 regression
                 // the set cannot see; "7, 8, 7, then 9" is a retry against a throttled emulator or a
@@ -673,24 +705,24 @@ public static partial class HistoryAnalyzer
                 // holds (measured on a consumer's ledger: ten of thirteen), so the new count must be held
                 // for CountRuns runs before it is behaviour: the run that shows it reads it out, the run
                 // that confirms it is the verdict, and the evidence names both.
-                var counted = shaped.Where(p => p.Calls is not null).ToList();
+                var counted = countRule is null ? shaped.Where(static p => p.Calls is not null).ToList() : shaped.Where(p => CountOf(p) is not null).ToList();
                 // The latest prior runs that already hold this run's count with this run's set: the change
                 // being confirmed, at most CountRuns - 1 of them. What comes before them is the stretch the
                 // count must have been constant over.
                 var held = 0;
                 while (held < options.CountRuns - 1 && held < counted.Count
-                       && counted[^(held + 1)].Calls == now
+                       && CountOf(counted[^(held + 1)]) == now
                        && SameSet(counted[^(held + 1)], currentPoint))
                     held++;
                 var stretch = counted.Take(counted.Count - held).ToList();
-                if (stretch.Count > 0 && stretch[^1].Calls is { } before && before != now)
+                if (stretch.Count > 0 && CountOf(stretch[^1]) is { } before && before != now)
                 {
                     var heldRuns = string.Join(", ", counted.Skip(counted.Count - held).Select(p => p.RunId));
                     var nowText = now.ToString(CultureInfo.InvariantCulture);
                     var beforeText = before.ToString(CultureInfo.InvariantCulture);
                     var from = $"calls {beforeText} in {stretch[^1].RunId}";
                     var to = held == 0 ? $"to {nowText} now" : $"to {nowText} in {heldRuns} and now";
-                    var constant = stretch.Count >= options.MinRuns && stretch.All(p => p.Calls == before);
+                    var constant = stretch.Count >= options.MinRuns && stretch.All(p => CountOf(p) == before);
                     // A count that changed with the set was reported then, as a different set of calls.
                     var countOnly = SameSet(stretch[^1], currentPoint);
                     if (!countOnly)
@@ -712,7 +744,7 @@ public static partial class HistoryAnalyzer
                     {
                         evidence.Add($"{from} {to}; a count verdict needs {options.MinRuns.ToString(CultureInfo.InvariantCulture)} runs with the count constant");
                     }
-                    else if (held == 0 && stretch.Count > 1 && stretch.Take(stretch.Count - 1).All(p => p.Calls == now))
+                    else if (held == 0 && stretch.Count > 1 && stretch.Take(stretch.Count - 1).All(p => CountOf(p) == now))
                     {
                         evidence.Add($"{from} {to}; back to the count held over the {(stretch.Count - 1).ToString(CultureInfo.InvariantCulture)} runs before it");
                     }
@@ -722,8 +754,11 @@ public static partial class HistoryAnalyzer
                     }
                 }
             }
-            else if (options.ReportReordered && currentPoint.ShapeOrdered is { Length: > 0 } && previousShaped.ShapeOrdered is { Length: > 0 }
-                     && !SameOrder(currentPoint, previousShaped))
+
+            // The same calls, as many of them, in another order. Read whether or not the runs counted their calls: the branch
+            // above takes every run that did, which is every run since 3.15.0, so until #192 R1 a reorder was never reported.
+            if (!alternating && !unstable && !changed && options.ReportReordered && currentPoint.ShapeOrdered is { Length: > 0 } && previousShaped.ShapeOrdered is { Length: > 0 }
+                && CountOf(currentPoint) == CountOf(previousShaped) && !SameOrder(currentPoint, previousShaped))
             {
                 verdicts.Add(HistoryVerdictKind.Reordered);
                 evidence.Add($"the same calls as {previousShaped.RunId} in a different order");

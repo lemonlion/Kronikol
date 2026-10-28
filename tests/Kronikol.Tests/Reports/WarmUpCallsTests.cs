@@ -442,6 +442,45 @@ public class WarmUpCallsTests
     }
 
     [Fact]
+    public void Warm_up_judges_each_graphql_operation_against_its_own_baseline()
+    {
+        // One endpoint, two operations: until #192 R1 both were "POST /graphql", so a slow first query read as a warm-up
+        // against the quick mutations after it.
+        const string menu = """{"query":"query GetMenu { menu { items } }"}""";
+        const string order = """{"query":"mutation PlaceOrder { placeOrder { id } }"}""";
+        var run = new Run().Scenario("s1");
+        run.Call("s1", 0, 600, uri: "http://orders/graphql", content: menu);
+        for (var i = 1; i <= 3; i++)
+            run.Call("s1", 600 + i * 100, 5, uri: "http://orders/graphql", content: order);
+
+        Assert.Empty(run.Find().Calls);
+
+        var warm = new Run().Scenario("s1");
+        var first = warm.Call("s1", 0, 600, uri: "http://orders/graphql", content: menu);
+        warm.Call("s1", 700, 5, uri: "http://orders/graphql", content: order);
+        warm.Call("s1", 800, 5, uri: "http://orders/graphql", content: menu);
+
+        var mark = Assert.Single(warm.Find().Calls);
+        Assert.Equal(first, mark.Key);
+        Assert.Equal("POST /graphql query GetMenu", mark.Value.Shape);
+        Assert.Equal(1, mark.Value.BaselineCalls);
+    }
+
+    [Fact]
+    public void A_statement_after_a_set_prologue_is_shaped_by_the_statement()
+    {
+        // EF Core opens every SQL Server batch with SET statements, so every SaveChanges was one shape.
+        const string insert = "SET IMPLICIT_TRANSACTIONS OFF;\r\nSET NOCOUNT ON;\r\nINSERT INTO [Orders] ([Status]) VALUES (@p0);";
+        const string update = "SET IMPLICIT_TRANSACTIONS OFF;\r\nSET NOCOUNT ON;\r\nUPDATE [Orders] SET [Status] = @p0 WHERE [Id] = @p1;";
+        var run = new Run().Scenario("s1");
+        run.Call("s1", 0, 600, method: "Insert", uri: "sql:///app/Orders", service: "db", category: DependencyCategories.SqlServer, content: insert);
+        for (var i = 1; i <= 3; i++)
+            run.Call("s1", 600 + i * 100, 5, method: "Insert", uri: "sql:///app/Orders", service: "db", category: DependencyCategories.SqlServer, content: update);
+
+        Assert.Empty(run.Find().Calls);
+    }
+
+    [Fact]
     public void The_consumers_shape_templates_join_ids_the_built_in_ones_do_not_know()
     {
         var rules = HistoryShapeRules.Create([new HistoryShapeTemplate(@"order-[a-z]+", "{order}")]);

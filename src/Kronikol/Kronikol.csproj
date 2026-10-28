@@ -48,6 +48,10 @@
 		<InternalsVisibleTo Include="Kronikol.Extensions.Sqlite" />
 		<InternalsVisibleTo Include="Kronikol.Extensions.Dapper" />
 		<InternalsVisibleTo Include="Kronikol.Extensions.EfCore.Relational" />
+		<InternalsVisibleTo Include="Kronikol.Extensions.Redis" />
+		<InternalsVisibleTo Include="Kronikol.Extensions.Otlp" />
+		<InternalsVisibleTo Include="Kronikol.Tests.Otlp" />
+		<InternalsVisibleTo Include="Kronikol.Tests.Redis" />
 		<InternalsVisibleTo Include="Kronikol.Extensions.ClickHouse" />
 		<InternalsVisibleTo Include="Kronikol.Extensions.Spanner" />
 		<!-- InternalFlowActivityListener: the Kafka trackers start it, as the HTTP handler and gRPC interceptor do -->

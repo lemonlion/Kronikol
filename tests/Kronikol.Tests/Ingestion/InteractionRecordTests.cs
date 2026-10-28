@@ -2,12 +2,25 @@ using System.Net;
 using Kronikol.Constants;
 using Kronikol.Ingestion;
 using Kronikol.Tracking;
+using Kronikol.Tests.History;
 
 namespace Kronikol.Tests.Ingestion;
 
 [Collection("DiagramsFetcher")]
 public class InteractionRecordTests
 {
+    [Fact]
+    public void Every_change_to_a_recorded_call_line_moves_the_version()
+    {
+        // The history guard (plans/CALL_OPERATION_AND_ORIGIN_PLAN.md 4.8): what this tracker records for one fixed call, as the
+        // call line history fingerprints, pinned under the rule it was pinned with (HistoryGuard). An ingested call, read back as the ingest reads it.
+        var request = InteractionRecord.FromJson("""{"type":"Request","method":"POST","uri":"http://localhost:8081/sidekick?x=1","serviceName":"graphql","callerName":"web","testId":"t","requestResponseId":"5c0c4d43-8f5e-4d8e-9b8e-7b1e2f7b6a01","content":"{\"query\":\"{ me }\"}"}""").ToLog();
+        var response = InteractionRecord.FromJson("""{"type":"Response","method":"POST","uri":"http://localhost:8081/sidekick?x=1","serviceName":"graphql","callerName":"web","testId":"t","requestResponseId":"5c0c4d43-8f5e-4d8e-9b8e-7b1e2f7b6a01","statusCode":"201"}""").ToLog();
+
+        HistoryGuard.Pin([request, response], 8,
+            "web>graphql POST /sidekick?x query { me } 201");
+    }
+
     [Fact]
     public void Ingested_step_bars_and_assertion_notes_escape_loader_markup()
     {
@@ -164,6 +177,36 @@ public class InteractionRecordTests
 
         Assert.NotEqual(first.ToLog().RequestResponseId, second.ToLog().RequestResponseId);
         Assert.Equal((first with { RequestResponseId = null }).ToLog().RequestResponseId, first.ToLog().RequestResponseId);
+    }
+
+    [Theory]
+    [InlineData("aws_sqs://broker/orders", "aws-sqs://broker/orders")]
+    [InlineData("other_sql://db:5432/app", "other-sql://db:5432/app")]
+    public void A_scheme_with_an_underscore_is_read_as_the_address_it_names(string written, string read)
+    {
+        // An OpenTelemetry system name holds underscores, which no URI scheme may: until #192 R1 such an address was kept
+        // as the path of http://unknown/, the call's destination read as a path segment. The old address is kept for
+        // history's rules 6 and 7 (RequestResponseLog.RecordedBefore8).
+        var log = InteractionRecord.FromJson($$"""{"type":"Request","uri":"{{written}}","serviceName":"S","callerName":"C","testId":"t","method":"Send"}""").ToLog();
+
+        Assert.Equal(read, log.Uri.ToString());
+        Assert.Equal("http://unknown/" + written, log.RecordedBefore8!.Uri.ToString());
+        Assert.Null(InteractionRecord.FromJson("""{"type":"Request","uri":"/api/x","serviceName":"S","callerName":"C","testId":"t","method":"GET"}""").ToLog().RecordedBefore8);
+    }
+
+    [Theory]
+    [InlineData("callback?u=https://app/x")]
+    [InlineData("hooks/order#see=http://docs/a")]
+    [InlineData("a b://c/d")]
+    public void An_address_whose_text_before_its_scheme_mark_is_no_scheme_is_read_as_before(string written)
+    {
+        // Only a scheme is mended: a relative address with an absolute one in its query or fragment, or text a scheme
+        // cannot hold beside its underscores, is the path of http://unknown/ as it was, where its text was made a scheme
+        // (callback?u=https://app/x read as callback-u-https://app/x, host app).
+        var log = InteractionRecord.FromJson($$"""{"type":"Request","uri":"{{written}}","serviceName":"S","callerName":"C","testId":"t","method":"GET"}""").ToLog();
+
+        Assert.Equal("unknown", log.Uri.Host);
+        Assert.Null(log.RecordedBefore8);
     }
 
     [Fact]

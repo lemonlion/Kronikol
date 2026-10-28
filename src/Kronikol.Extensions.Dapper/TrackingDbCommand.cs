@@ -251,7 +251,8 @@ public class TrackingDbCommand : DbCommand
             DependencyCategory: DependencyCategories.SQL)
         {
             AttributionSource = testInfo.Value.Source,
-            Phase = TestPhaseContext.Current
+            Phase = TestPhaseContext.Current,
+            RecordedBefore8 = Before8(effectiveVerbosity)
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v =>
             {
@@ -418,6 +419,23 @@ public class TrackingDbCommand : DbCommand
     // The wrapper runs inside the application's own call, so whatever recording a command fails on is caught: the
     // command goes on, and the run's diagnostics name what was not recorded.
     private void NotRecorded(Exception ex) => SqlCaptureFailure.Record(_connection.ComponentName, ex);
+
+    /// <summary>
+    /// The call as 5.16.1 recorded it, when that differs, for history's rules 6 and 7 (<see cref="RequestResponseLog.RecordedBefore8"/>):
+    /// a batch opening with two SET statements was classified by neither, so it was <c>Other</c> with no table, and was
+    /// not recorded where <c>Other</c> is excluded.
+    /// </summary>
+    private RecordedBefore? Before8(DapperTrackingVerbosity verbosity)
+    {
+        if (DapperOperationClassifier.ClassifiedBefore8(CommandText, CommandType) is not { } before)
+            return null;
+        if (_options.ExcludedOperations.Contains(before.Info.Operation))
+            return RecordedBefore.NotRecorded;
+        OneOf<System.Net.Http.HttpMethod, string> method = verbosity == DapperTrackingVerbosity.Raw
+            ? before.RawKeyword ?? "SQL"
+            : DapperOperationClassifier.GetDiagramLabel(before.Info, verbosity);
+        return new RecordedBefore(method, BuildUri(before.Info, verbosity));
+    }
 
     private Uri BuildUri(DapperOperationInfo op, DapperTrackingVerbosity verbosity)
     {

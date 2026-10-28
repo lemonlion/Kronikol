@@ -10,6 +10,7 @@ using Kronikol.Reports;
 using Kronikol.Tracking;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Kronikol.Tests.History;
 
 namespace Kronikol.Tests.ProxyTap;
 
@@ -118,6 +119,26 @@ public class ProxyTapTests
     }
 
     [Fact]
+    public async Task Every_change_to_a_recorded_call_line_moves_the_version()
+    {
+        // The history guard (plans/CALL_OPERATION_AND_ORIGIN_PLAN.md 4.8): what this tracker records for one fixed call, as the
+        // call line history fingerprints, pinned under the rule it was pinned with (HistoryGuard).
+        await using var upstream = new StubUpstream(JsonOk);
+        var sink = new ListSink();
+        await using var tap = new Kronikol.Extensions.ProxyTap.ProxyTap(Options(upstream, sink));
+        await tap.StartAsync();
+        using var client = new HttpClient();
+        using var request = Request(HttpMethod.Post, tap.ListenUri, "/sidekick?op=1", """{"query":"query Overview { overview }"}""",
+            (TestTrackingHttpHeaders.CurrentTestNameHeader, "overview renders"),
+            (TestTrackingHttpHeaders.CurrentTestIdHeader, Guid.NewGuid().ToString("N")));
+        using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+        await tap.DisposeAsync();
+
+        HistoryGuard.Pin(sink.Logs, 8,
+            "web>graphql POST /sidekick?op query Overview 200");
+    }
+
+    [Fact]
     public async Task Forwards_byte_for_byte_and_records_a_request_response_pair_attributed_by_headers()
     {
         await using var upstream = new StubUpstream(JsonOk);
@@ -202,7 +223,9 @@ public class ProxyTapTests
         Assert.Equal("upstream-caller", second[TestTrackingHttpHeaders.CallerNameHeader]);
         Assert.Equal(traceId.ToString(), second[TestTrackingHttpHeaders.TraceIdHeader]);
         await tap.DisposeAsync();
-        Assert.Equal(traceId, sink.Logs.Last().TraceId);
+        // The second call's log, by its path: a response is logged once its body has been copied, so under load the first
+        // call's can land after the second's, and the sink's last log was then the first call's.
+        Assert.Equal(traceId, sink.Logs.Last(l => l.Uri.AbsolutePath == "/b").TraceId);
     }
 
     [Fact]

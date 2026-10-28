@@ -12,6 +12,7 @@ public class StubDatabase : DispatchProxy
     public long NextIncrementResult { get; set; } = 1;
     public double? NextDoubleResult { get; set; }
     public bool NextBoolResult { get; set; } = true;
+    public IConnectionMultiplexer? Multiplexer { get; set; }
 
     public static IDatabase CreateProxy(Action<StubDatabase>? configure = null)
     {
@@ -30,7 +31,7 @@ public class StubDatabase : DispatchProxy
 
         // Properties
         if (name == "get_Database") return DatabaseNumber;
-        if (name == "get_Multiplexer") return null;
+        if (name == "get_Multiplexer") return Multiplexer;
 
         // Return type-based default responses
         var returnType = targetMethod.ReturnType;

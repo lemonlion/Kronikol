@@ -1,6 +1,7 @@
 using Kronikol.Extensions.Spanner;
 using Kronikol.Tests.Tracking;
 using Kronikol.Tracking;
+using Kronikol.Tests.History;
 
 namespace Kronikol.Tests.Spanner;
 
@@ -27,6 +28,20 @@ public class SpannerTrackerTests
     };
 
     // ─── LogRequest ─────────────────────────────────────────
+
+    [Fact]
+    public void Every_change_to_a_recorded_call_line_moves_the_version()
+    {
+        // The history guard (plans/CALL_OPERATION_AND_ORIGIN_PLAN.md 4.8): what this tracker records for one fixed call, as the
+        // call line history fingerprints, pinned under the rule it was pinned with (HistoryGuard).
+        var tracker = new SpannerTracker(MakeOptions());
+        var op = new SpannerOperationInfo(SpannerOperation.Query, "Users");
+        var (reqId, traceId) = tracker.LogRequest(op, "SELECT * FROM Users WHERE Id = 3");
+        tracker.LogResponse(op, reqId, traceId, "2 rows returned");
+
+        HistoryGuard.Pin(GetLogsFromThisTest(), 8,
+            "TestCaller>Spanner SELECT FROM Users /Users SELECT * FROM Users WHERE Id = {n} -");
+    }
 
     [Fact]
     public void LogRequest_Logs_request_entry()

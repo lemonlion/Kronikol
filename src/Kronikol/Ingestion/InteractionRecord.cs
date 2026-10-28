@@ -323,9 +323,10 @@ public sealed record InteractionRecord
         var phase = ResolvedPhase;
         var metaType = ParseMember(MetaType, RequestResponseMetaType.Default);
 
-        var uri = System.Uri.TryCreate(Uri, UriKind.Absolute, out var absolute)
-            ? absolute
-            : new Uri("http://unknown" + (Uri.StartsWith('/') ? Uri : "/" + Uri));
+        // A scheme holding what no scheme may (an OpenTelemetry system name's underscore, aws_sqs) is read with hyphens in
+        // its place. Until #192 R1 the address was kept as the path of http://unknown/, which history's rules 6 and 7 read.
+        var mended = System.Uri.TryCreate(Uri, UriKind.Absolute, out var absolute) ? null : SchemeMended(Uri);
+        var uri = absolute ?? mended ?? Unknown(Uri);
 
         return new RequestResponseLog(
             testNameOverride ?? TestName ?? TestIdentityScope.UnknownTestName,
@@ -356,7 +357,24 @@ public sealed record InteractionRecord
             DurationMs = DurationMs,
             Error = string.IsNullOrWhiteSpace(Error) ? null : Error,
             TestDouble = string.IsNullOrWhiteSpace(TestDouble) ? null : TestDouble,
+            RecordedBefore8 = mended is null ? null : new RecordedBefore(ParseMethod(Method), Unknown(Uri)),
         };
+    }
+
+    /// <summary>A relative address, or one that does not parse, as the path of <c>http://unknown/</c>.</summary>
+    private static Uri Unknown(string uri) => new("http://unknown" + (uri.StartsWith('/') ? uri : "/" + uri));
+
+    /// <summary>
+    /// <paramref name="uri"/> with the underscores of its scheme as hyphens (<c>aws_sqs://</c> to <c>aws-sqs://</c>), or
+    /// null when what stands before its <c>://</c> is not a scheme but for its underscores (a relative address holding an
+    /// absolute one in its query, say) or the address still does not parse.
+    /// </summary>
+    private static Uri? SchemeMended(string uri)
+    {
+        var colon = uri.IndexOf("://", StringComparison.Ordinal);
+        if (colon <= 0 || !char.IsAsciiLetter(uri[0]) || !uri[..colon].All(c => char.IsAsciiLetterOrDigit(c) || c is '+' or '-' or '.' or '_'))
+            return null;
+        return System.Uri.TryCreate(uri[..colon].Replace('_', '-') + uri[colon..], UriKind.Absolute, out var mended) ? mended : null;
     }
 
     private static string? LowerHexOrNull(string? id) => string.IsNullOrWhiteSpace(id) ? null : id.Trim().ToLowerInvariant();

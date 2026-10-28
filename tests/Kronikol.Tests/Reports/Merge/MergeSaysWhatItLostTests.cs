@@ -107,6 +107,20 @@ public class MergeSaysWhatItLostTests
     }
 
     [Fact]
+    public void A_defaulted_scenario_with_no_name_is_named_by_its_id()
+    {
+        // The reader reads a missing name as "", so the fallback to the id never applied and the message listed a blank.
+        var report = MergeableReportReader.Parse("""
+            { "mergeableFormatVersion": 1, "kronikolVersion": "3.5.1",
+              "startTime": "2026-01-01T10:00:00Z", "endTime": "2026-01-01T10:01:00Z",
+              "features": [ { "name": "Orders", "scenarios": [ { "id": "s-unnamed-7" } ] } ] }
+            """);
+
+        var entry = Assert.Single(report.Diagnostics, d => d.Kind == DiagnosticKind.ResultDefaulted);
+        Assert.Contains("First: s-unnamed-7.", entry.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void A_shard_that_states_its_results_says_nothing()
     {
         var report = MergeableReportReader.Parse("""

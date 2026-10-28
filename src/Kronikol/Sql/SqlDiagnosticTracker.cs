@@ -1,3 +1,4 @@
+using System.Data;
 using System.Globalization;
 using System.Collections.Concurrent;
 using System.Data.Common;
@@ -104,7 +105,8 @@ public abstract class SqlDiagnosticTracker : ITrackingComponent
             DependencyCategory: _options.DependencyCategory)
         {
             AttributionSource = testInfo.Value.Source,
-            Phase = TestPhaseContext.Current
+            Phase = TestPhaseContext.Current,
+            RecordedBefore8 = Before8(commandText, CommandType.Text, dataSource, database, effectiveVerbosity)
         };
 
         log.AttachVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
@@ -279,7 +281,8 @@ public abstract class SqlDiagnosticTracker : ITrackingComponent
         {
             AttributionSource = testInfo.Value.Source,
             Phase = TestPhaseContext.Current,
-            Timestamp = timestamp
+            Timestamp = timestamp,
+            RecordedBefore8 = Before8(commandText, commandType, dataSource, database, effectiveVerbosity)
         };
 
         log.AttachVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
@@ -471,6 +474,24 @@ public abstract class SqlDiagnosticTracker : ITrackingComponent
     }
 
     private void NotRecorded(Exception ex) => SqlCaptureFailure.Record(ComponentName, ex);
+
+    /// <summary>
+    /// The call as 5.16.1 recorded it, when that differs, for history's rules 6 and 7 (<see cref="RequestResponseLog.RecordedBefore8"/>):
+    /// a batch opening with two SET statements was classified by neither, so it was <c>Other</c> with no table, and was
+    /// not recorded at Summarised or where <c>Other</c> is excluded.
+    /// </summary>
+    private RecordedBefore? Before8(string? commandText, CommandType commandType, string? dataSource, string? database, SqlTrackingVerbosityLevel verbosity)
+    {
+        if (UnifiedSqlClassifier.ClassifiedBefore8(commandText, commandType) is not { } before)
+            return null;
+        if ((verbosity == SqlTrackingVerbosityLevel.Summarised && before.Info.Operation == UnifiedSqlOperation.Other)
+            || _options.ExcludedOperations.Contains(before.Info.Operation))
+            return RecordedBefore.NotRecorded;
+        OneOf<HttpMethod, string> method = verbosity == SqlTrackingVerbosityLevel.Raw
+            ? before.RawKeyword ?? "SQL"
+            : UnifiedSqlClassifier.GetDiagramLabel(before.Info, verbosity);
+        return new RecordedBefore(method, BuildUri(dataSource, database, before.Info, verbosity));
+    }
 
     private string? BuildRequestContent(string? commandText, string? parameters, SqlTrackingVerbosityLevel verbosity)
     {

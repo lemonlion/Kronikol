@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Kronikol.Extensions.Grpc;
 using Kronikol.InternalFlow;
 using Kronikol.Tracking;
+using Kronikol.Tests.History;
 
 namespace Kronikol.Tests.Grpc;
 
@@ -53,6 +54,26 @@ public class GrpcTrackingInterceptorTests
     }
 
     // ─── AsyncUnaryCall logging ────────────────────────────
+
+    [Fact]
+    public async Task Every_change_to_a_recorded_call_line_moves_the_version()
+    {
+        // The history guard (plans/CALL_OPERATION_AND_ORIGIN_PLAN.md 4.8): what this tracker records for one fixed call, as the
+        // call line history fingerprints, pinned under the rule it was pinned with (HistoryGuard).
+        var interceptor = new GrpcTrackingInterceptor(MakeOptions());
+        var call = interceptor.AsyncUnaryCall(
+            "Hello", CreateContext(),
+            (req, ctx) => new AsyncUnaryCall<string>(
+                Task.FromResult("World"),
+                Task.FromResult(new Metadata()),
+                () => new Status(StatusCode.OK, ""),
+                () => new Metadata(),
+                () => { }));
+        await call.ResponseAsync;
+
+        HistoryGuard.Pin(GetLogsFromThisTest(), 8,
+            "TestCaller>GrpcService SayHello /greet.Greeter/SayHello 200");
+    }
 
     [Fact]
     public async Task AsyncUnaryCall_Logs_request_and_response()

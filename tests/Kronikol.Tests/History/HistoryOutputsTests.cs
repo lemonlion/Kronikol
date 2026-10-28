@@ -242,6 +242,25 @@ public class HistoryOutputsTests : IDisposable
     }
 
     [Fact]
+    public void A_bad_templating_rule_is_said_once_with_history_off_too()
+    {
+        // The warm-up marks and the background calls table use the rules whether or not history is on (the test projects
+        // set KRONIKOL_HISTORY=off, so no ledger is resolved here), and one instance serves them all: said once.
+        var collector = new ReportDiagnosticsCollector();
+
+        using (ReportDiagnosticsScope.Begin(collector))
+            Run("r1", "test:1:1", Features(ExecutionResult.Passed), options =>
+            {
+                options.HistoryFilePath = null;
+                options.HistoryShapeTemplates.Add(new HistoryShapeTemplate("(unclosed", "{x}"));
+            });
+
+        var entry = Assert.Single(collector.Entries, d => d.Kind == DiagnosticKind.HistoryShapeTemplate);
+        Assert.Contains("(unclosed", entry.Message);
+        Assert.False(File.Exists(Ledger));
+    }
+
+    [Fact]
     public void A_filtered_run_is_recorded_as_partial_with_a_diagnostic()
     {
         Run("r1", "test:1:1", Features(ExecutionResult.Passed));

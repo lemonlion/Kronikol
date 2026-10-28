@@ -1,6 +1,7 @@
 using StackExchange.Redis;
 using Kronikol.Extensions.Redis;
 using Kronikol.Tracking;
+using Kronikol.Tests.History;
 
 namespace Kronikol.Tests.Redis;
 
@@ -56,6 +57,19 @@ public class RedisTrackingDatabaseProxyTests : IDisposable
     };
 
     public void Dispose() { }
+
+    [Fact]
+    public void Every_change_to_a_recorded_call_line_moves_the_version()
+    {
+        // The history guard (plans/CALL_OPERATION_AND_ORIGIN_PLAN.md 4.8): what this tracker records for one fixed call, as the
+        // call line history fingerprints, pinned under the rule it was pinned with (HistoryGuard).
+        var stub = StubDatabase.CreateProxy(s => s.NextStringGetResult = "John");
+        var db = stub.WithRedisTestTracking(MakeOptions());
+        db.StringGet("user:123");
+
+        HistoryGuard.Pin(GetLogsFromThisTest(), 8,
+            "TestCaller>Redis Get /db0/user:{n} OK");
+    }
 
     [Fact]
     public void StringGet_Hit_Tracks_Request_And_Response_With_HitLabel()

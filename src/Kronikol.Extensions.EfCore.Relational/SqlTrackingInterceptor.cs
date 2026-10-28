@@ -90,7 +90,8 @@ public class SqlTrackingInterceptor : DbCommandInterceptor, ITrackingComponent
         )
         {
             AttributionSource = testInfo.Value.Source,
-            Phase = TestPhaseContext.Current
+            Phase = TestPhaseContext.Current,
+            RecordedBefore8 = Before8(command, sqlOp, effectiveVerbosity)
         };
 
         log.AttachVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
@@ -452,7 +453,9 @@ public class SqlTrackingInterceptor : DbCommandInterceptor, ITrackingComponent
 
     // SqlEndpoint makes a host of any data source ("(localdb)\MSSQLLocalDB", Npgsql's "tcp://host:5432", "host,1433"),
     // which until 5.11.1 went into the address as it was: on LocalDB every command failed with a UriFormatException.
-    // A connection that cannot name its data source or database is drawn against localhost and "unknown".
+    // A connection that cannot name its data source or database is drawn against localhost and "unknown". At Summarised
+    // the database is the first segment of the path, as every other SQL tracker writes it; until #192 R1 it stood where
+    // a host goes, lower-cased (UriBefore8).
     private static Uri BuildUri(DbCommand command, SqlOperationInfo op, SqlTrackingVerbosity verbosity)
     {
         var database = Named(() => command.Connection?.Database) ?? "unknown";
@@ -462,8 +465,8 @@ public class SqlTrackingInterceptor : DbCommandInterceptor, ITrackingComponent
         {
             SqlTrackingVerbosity.Raw => $"sql://{host}/{SqlEndpoint.Segment(database)}",
             SqlTrackingVerbosity.Summarised => op.TableName is not null
-                ? $"sql://{SqlEndpoint.Host(database)}/{op.TableName}"
-                : $"sql://{SqlEndpoint.Host(database)}",
+                ? $"sql:///{SqlEndpoint.Segment(database)}/{op.TableName}"
+                : $"sql:///{SqlEndpoint.Segment(database)}",
             _ => op.TableName is not null // Detailed
                 ? $"sql://{host}/{SqlEndpoint.Segment(database)}/{op.TableName}"
                 : $"sql://{host}/{SqlEndpoint.Segment(database)}",
@@ -480,6 +483,35 @@ public class SqlTrackingInterceptor : DbCommandInterceptor, ITrackingComponent
         {
             return null;
         }
+    }
+
+    /// <summary>
+    /// The call as 5.16.1 recorded it, when that differs, for history's rules 6 and 7 (<see cref="RequestResponseLog.RecordedBefore8"/>):
+    /// a SaveChanges batch opening with two SET statements was classified by neither, so it was <c>Other</c> with no
+    /// table, and at Summarised not recorded.
+    /// </summary>
+    private static RecordedBefore? Before8(DbCommand command, SqlOperationInfo now, SqlTrackingVerbosity verbosity)
+    {
+        var before = SqlOperationClassifier.ClassifiedBefore8(command.CommandText, command.CommandType);
+        // At Summarised every address moved, the database from where a host goes into the path.
+        if (before is null && verbosity != SqlTrackingVerbosity.Summarised)
+            return null;
+        var op = before?.Info ?? now;
+        if (verbosity == SqlTrackingVerbosity.Summarised && op.Operation == SqlOperation.Other)
+            return RecordedBefore.NotRecorded;
+        OneOf<HttpMethod, string> method = verbosity == SqlTrackingVerbosity.Raw
+            ? before?.RawKeyword ?? "SQL"
+            : SqlOperationClassifier.GetDiagramLabel(op, verbosity)!;
+        return new RecordedBefore(method, UriBefore8(command, op, verbosity));
+    }
+
+    /// <summary>The address as 5.16.1 wrote it: at Summarised the database where a host goes.</summary>
+    private static Uri UriBefore8(DbCommand command, SqlOperationInfo op, SqlTrackingVerbosity verbosity)
+    {
+        if (verbosity != SqlTrackingVerbosity.Summarised)
+            return BuildUri(command, op, verbosity);
+        var database = SqlEndpoint.Host(Named(() => command.Connection?.Database) ?? "unknown");
+        return SqlEndpoint.Build(op.TableName is not null ? $"sql://{database}/{op.TableName}" : $"sql://{database}");
     }
 
     // ─── Phase variant helpers ──────────────────────────────────

@@ -1,5 +1,6 @@
 using Kronikol.Extensions.Elasticsearch;
 using Kronikol.Tracking;
+using Kronikol.Tests.History;
 
 namespace Kronikol.Tests.Elasticsearch;
 
@@ -42,6 +43,18 @@ public class ElasticsearchTrackingCallbackHandlerTests
     }
 
     // ─── Logging ────────────────────────────────────────────────
+
+    [Fact]
+    public void Every_change_to_a_recorded_call_line_moves_the_version()
+    {
+        // The history guard (plans/CALL_OPERATION_AND_ORIGIN_PLAN.md 4.8): what this tracker records for one fixed call, as the
+        // call line history fingerprints, pinned under the rule it was pinned with (HistoryGuard).
+        var handler = new ElasticsearchTrackingCallbackHandler(MakeOptions());
+        CallHandler(handler, method: "POST", path: "/orders/_search");
+
+        HistoryGuard.Pin(GetLogsFromThisTest(), 8,
+            "TestCaller>Elasticsearch Search → orders /orders 200");
+    }
 
     [Fact]
     public void HandleApiCallDetails_logs_request_and_response()

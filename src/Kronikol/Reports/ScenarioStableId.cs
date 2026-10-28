@@ -102,6 +102,15 @@ public static class ScenarioStableId
     /// <summary>The stable id of a scenario of <paramref name="feature"/>, keyed by <see cref="FeatureKey"/>.</summary>
     internal static string For(string? suite, Feature feature, Scenario scenario) =>
         For(suite, FeatureKey(feature), scenario);
+
+    /// <summary>
+    /// The ways earlier releases computed an id that this one no longer does, each kept while a run made by it can still be
+    /// in a history window: a run writes the ids they give its scenarios beside its own (<see cref="History.HistoryRun.Aliases"/>),
+    /// so a change to what an id is computed from does not cut a scenario's history (#192 R1, Q15), and the old computation
+    /// is not kept forever, as a frozen key (<see cref="Feature.StableIdName"/>, <see cref="Scenario.KeyedByOutline"/>) is.
+    /// Empty: no id has changed since.
+    /// </summary>
+    internal static IReadOnlyList<Func<string?, Feature, Scenario, string>> EarlierRules { get; } = [];
 }
 
 /// <summary>

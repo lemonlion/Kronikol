@@ -244,6 +244,26 @@ public sealed record HistoryRun
     /// </summary>
     public string? ShapeRules { get; init; }
 
+    /// <summary>
+    /// The consumer's templating rules <see cref="ShapeRules"/> is the hash of, as configured (#192 R1): recorded on
+    /// every line that has rules, so a later run can fingerprint its own calls under them and bridge an edit of them,
+    /// and so a pruned ledger keeps them. Null when there were none, and on a line from before R1.
+    /// </summary>
+    public IReadOnlyList<HistoryShapeTemplate>? ShapeTemplates { get; init; }
+
+    /// <summary>
+    /// The Kronikol that recorded the run, its version (#192 R1): the package a run in process ran on, or the one that
+    /// wrote the fragment <c>history record</c> folded. Null on a line from before R1.
+    /// </summary>
+    public string? Generator { get; init; }
+
+    /// <summary>
+    /// The members of the line this build does not know, a newer writer's, as raw JSON in the order read: every writer
+    /// that writes the line again writes them back (#192 R1), so an older tool folding, pruning or compacting a ledger
+    /// loses nothing a newer one recorded.
+    /// </summary>
+    internal IReadOnlyList<KeyValuePair<string, string>>? Unknown { get; init; }
+
     /// <summary>The hash of the <see cref="HistoryShapes"/> line <see cref="CallSets"/> index into; null when no call lists are recorded.</summary>
     public string? ShapesHash { get; init; }
 
@@ -276,6 +296,14 @@ public sealed record HistoryRun
     /// declare one. Not part of the stream's key; a fold of shards keeps it only when every shard has the same one.
     /// </summary>
     public string? ServiceId { get; init; }
+
+    /// <summary>
+    /// The ids the run's scenarios had under an earlier way Kronikol computed them, the old id to the id the roster holds,
+    /// written while Kronikol keeps that way; null when every id is computed as it was (#192 R1, Q15). Readers apply them as
+    /// they apply the alias file beside the ledger, so a change to what an id is computed from does not cut a scenario's
+    /// history, and the earlier way is kept only while runs made under it can be in a window.
+    /// </summary>
+    public IReadOnlyDictionary<string, string>? Aliases { get; init; }
 
     /// <summary>The branch stream this run belongs to: its branch, or <c>local</c> when it has none.</summary>
     public string Stream => Branch is { Length: > 0 } branch ? branch : LocalStream;
@@ -336,6 +364,13 @@ public sealed record HistoryBridge
     public IReadOnlyDictionary<string, string>? Deps { get; init; }
 
     /// <summary>
+    /// Per position, how many calls the rule records, when that differs from the run's own count somewhere; null when it
+    /// is the run's own. Rule 7 left out calls its trackers did not record that rule 8 records (#192 R1), so a count is
+    /// compared under one rule, as a fingerprint is.
+    /// </summary>
+    public IReadOnlyList<int>? Calls { get; init; }
+
+    /// <summary>
     /// The calls <see cref="ShapesHash"/> names, while the bridge is in the memory of the run that made it: a writer
     /// writes them as a shapes line of their own. Never part of the run line; null on a bridge read from a ledger, where
     /// the shapes line is found by its hash.
@@ -343,7 +378,7 @@ public sealed record HistoryBridge
     public HistoryShapes? Shapes { get; init; }
 
     /// <summary>Whether every member is the run's own: the rule changes nothing in this run.</summary>
-    public bool IsEmpty => ShapeSet is null && ShapeOrdered is null && ShapesHash is null && CallSets is null && Deps is null;
+    public bool IsEmpty => ShapeSet is null && ShapeOrdered is null && ShapesHash is null && CallSets is null && Deps is null && Calls is null;
 
     /// <summary>The key a bridge is held under for a rule: its built-in version, and the hash of the consumer's rules after a <c>+</c> when there are any.</summary>
     public static string RuleKey(int? version, string? shapeRules) =>
@@ -370,7 +405,13 @@ public enum HistoryLineKind
     Run,
 
     /// <summary>A shapes declaration: the distinct calls a run's positions index into.</summary>
-    Shapes
+    Shapes,
+
+    /// <summary>
+    /// A line of a kind this build does not know, a newer Kronikol's: read past, never counted as damage, and written
+    /// back as it was by every writer that rewrites the ledger (#192 R1).
+    /// </summary>
+    Other
 }
 
 /// <summary>One parsed ledger line.</summary>
@@ -398,6 +439,22 @@ public sealed record HistoryFragment(int Version, HistoryRoster Roster, HistoryR
     public static string Write(HistoryRoster roster, HistoryRun run, string generator, HistoryShapes? shapes = null) =>
         HistoryJson.Fragment(roster, run, generator, shapes);
 
+    /// <summary>The fragment with the run's calls before any rule, which <c>history record</c> bridges the window's patterns from (Q18).</summary>
+    internal static string Write(HistoryRoster roster, HistoryRun run, string generator, HistoryShapes? shapes, HistoryRawCalls? rawCalls) =>
+        HistoryJson.Fragment(roster, run, generator, shapes, rawCalls);
+
     /// <summary>Parses a fragment; throws <see cref="FormatException"/> when it is not one.</summary>
     public static HistoryFragment Parse(string json) => HistoryJson.ParseFragment(json);
+
+    /// <summary>
+    /// The Kronikol that wrote the fragment, its version, as the fragment names it; null for a fragment that names none.
+    /// <c>history record</c> takes it for a run line that does not name its own (a fragment from before #192 R1).
+    /// </summary>
+    public string? Generator { get; init; }
+
+    /// <summary>
+    /// The run's calls before any rule, by roster position (#192 R1, Q18); null on a fragment from before R1. Read by
+    /// <c>history record</c> alone, and never written to the ledger.
+    /// </summary>
+    internal HistoryRawCalls? RawCalls { get; init; }
 }

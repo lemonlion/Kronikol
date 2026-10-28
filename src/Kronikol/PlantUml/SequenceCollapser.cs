@@ -125,7 +125,8 @@ public static class SequenceCollapser
     /// <summary>The identity used to decide whether two pairs are "the same call".</summary>
     public static string KeyFor(RequestResponseLog request, RequestResponseLog? response)
     {
-        var graphQl = GraphQlOperationDetector.TryExtractLabel(request.Content);
+        // The operation as the arrow names it: two anonymous queries with different root fields are two calls.
+        var graphQl = GraphQlOperationReader.FromBody(request.Content)?.Label;
         var status = response?.StatusCode?.Value?.ToString();
         return string.Join("",
             request.CallerName,

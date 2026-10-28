@@ -1,4 +1,3 @@
-using System.Text.RegularExpressions;
 using Kronikol.Constants;
 using Kronikol.History;
 using Kronikol.Tracking;
@@ -48,7 +47,7 @@ internal sealed record WarmUpResult(IReadOnlyDictionary<Guid, WarmUpMark> Calls,
 /// templated head: the spec does not model it, since no test-made call in its corpus is statement-shaped, and
 /// <c>Statements_with_different_heads_on_one_connection_are_two_shapes</c> holds it instead.
 /// </summary>
-internal static partial class WarmUpCalls
+internal static class WarmUpCalls
 {
     /// <summary>How many times the later calls' median a first call takes to be a warm-up (Q9: a constant).</summary>
     internal const double Ratio = 10;
@@ -239,34 +238,16 @@ internal static partial class WarmUpCalls
     }
 
     /// <summary>
-    /// 4.1 step 2, after the method: the templated path, without the query string or the fragment, so neither splits a
-    /// shape; a statement-shaped dependency, whose URI names the connection, adds its templated statement head.
+    /// 4.1 step 2, after the method: the call's operation key without the query string, so a query does not split a
+    /// shape (<see cref="CallOperation"/>, the key history and the component diagram use too): the templated path, a
+    /// statement-shaped dependency's templated statement head and a GraphQL request's operation.
     /// </summary>
-    private static string TargetOf(RequestResponseLog request, HistoryShapeRules? rules)
-    {
-        var path = InteractionShape.Template(PathOf(request.Uri.ToString()), rules);
-        return DependencyCategories.IsStatementShaped(request.DependencyCategory) && !string.IsNullOrWhiteSpace(request.Content)
-            ? path + " " + InteractionShape.StatementHead(request.Content, rules)
-            : path;
-    }
-
-    /// <summary>The path of the URI the data file writes: an absolute URI loses its scheme and authority, and any URI
-    /// its query and fragment. warmup.py's <c>path_of</c>.</summary>
-    internal static string PathOf(string uri)
-    {
-        var match = SchemeAndAuthority().Match(uri);
-        var rest = match.Success ? match.Groups["rest"].Value : uri;
-        var cut = rest.IndexOfAny(['?', '#']);
-        var path = cut >= 0 ? rest[..cut] : rest;
-        return path.Length == 0 ? "/" : path;
-    }
+    private static string TargetOf(RequestResponseLog request, HistoryShapeRules? rules) =>
+        CallOperation.Of(MethodOf(request), request.Uri.ToString(), request.DependencyCategory, request.Content, rules, queryKeys: false);
 
     private static string MethodOf(RequestResponseLog log) => log.Method.Value switch
     {
         HttpMethod method => method.Method,
         var other => other?.ToString() ?? ""
     };
-
-    [GeneratedRegex(@"^[a-zA-Z][a-zA-Z0-9+.\-]*://[^/?#]*(?<rest>.*)$")]
-    private static partial Regex SchemeAndAuthority();
 }

@@ -360,7 +360,9 @@ public static partial class PlantUmlCreator
 
                     var requestLabel = $"{effectiveMethod.Value}: {pathAndQuery}";
 
-                    var graphQlLabel = GraphQlOperationDetector.TryExtractLabel(effectiveContent);
+                    // An anonymous operation is named by its root fields (Q13), and a GET by its query string.
+                    var graphQlLabel = (GraphQlOperationReader.FromBody(effectiveContent)
+                        ?? (string.IsNullOrEmpty(effectiveContent) ? GraphQlOperationReader.FromQueryString(effectiveUri.OriginalString) : null))?.Label;
                     if (graphQlLabel is not null)
                         requestLabel = $"{requestLabel}\\n({graphQlLabel})";
 

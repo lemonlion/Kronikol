@@ -135,6 +135,13 @@ internal sealed class QueryOptions
     public int HistoryWindowOrDefault => Window ?? 50;
 
     /// <summary>
+    /// How many of a suite's newest runs a read of the ledger keeps: the run read and the window before it, so the
+    /// analysis finds every run it compares in what was read (until #192 R1 the window alone, and the run one past it
+    /// was looked for in the whole ledger, read again); every run when <c>--run</c> names one.
+    /// </summary>
+    public int HistoryReadWindow => Run is null ? HistoryWindowOrDefault + 1 : 0;
+
+    /// <summary>
     /// <c>--run ID</c>: the run to read instead of the newest - a run id, a substring only one id has,
     /// <c>last-failed</c> or <c>previous</c>. On every verb it opens a run retained under
     /// <c>&lt;reports&gt;/runs/</c>; on <c>history</c> a run that is not retained is read from the ledger,

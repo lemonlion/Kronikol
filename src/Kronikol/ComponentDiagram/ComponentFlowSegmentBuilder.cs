@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using System.Net;
-using System.Text.RegularExpressions;
+using Kronikol.History;
 using Kronikol.InternalFlow;
 using Kronikol.Tracking;
 
@@ -233,9 +233,10 @@ public static class ComponentFlowSegmentBuilder
                     ResponseP95Bytes: responseSizes.Length > 0 ? Percentile(responseSizes.OrderBy(x => x).ToArray(), 95) : 0);
             }
 
-            // Endpoint breakdown
+            // Endpoint breakdown, keyed as history keys a call (CallOperation): ids folded, a GraphQL operation and a
+            // statement's head named, the query string dropped.
             var endpointGroups = callDurations
-                .GroupBy(c => (Method: c.Request.Method.Value?.ToString() ?? "Unknown", Path: NormalizePathGuids(c.Request.Uri.AbsolutePath)))
+                .GroupBy(c => (Method: c.Request.Method.Value?.ToString() ?? "Unknown", Path: EndpointOf(c.Request)))
                 .Select(g =>
                 {
                     var epDurations = g.Select(c => c.DurationMs).OrderBy(d => d).ToArray();
@@ -707,12 +708,8 @@ public static class ComponentFlowSegmentBuilder
         return (longest.Length, longest.Path.ToArray());
     }
 
-    private static readonly Regex GuidPattern = new(
-        @"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}",
-        RegexOptions.Compiled);
-
-    internal static string NormalizePathGuids(string path) =>
-        GuidPattern.Replace(path, "{guid}");
+    private static string EndpointOf(RequestResponseLog request) =>
+        CallOperation.Of(request.Method.Value?.ToString(), request.Uri.ToString(), request.DependencyCategory, request.Content, rules: null, queryKeys: false);
 
     internal static string SanitizeKey(string name) =>
         name.Replace(" ", "_").Replace("/", "_").Replace("\\", "_");

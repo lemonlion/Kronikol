@@ -831,13 +831,19 @@ public record ReportConfigurationOptions
     /// <code>options.HistoryShapeTemplates.Add(new(@"(?&lt;=app:_report_)\d+-\w+", "{tenant-period}"));</code>
     /// The evidence of a <c>behaviour-changed</c> verdict says when the calls differ only in what looks like
     /// an id, which is the sign that a rule is missing, and <c>kronikol query history s3 --calls</c> prints
-    /// what the templater made of a scenario's calls. The rules have a hash, recorded on the run line as
-    /// <c>shapeRules</c>, and fingerprints made under different rules are never compared: editing a rule
-    /// costs one quiet run. A pattern that does not compile, or that runs past 250 ms on some text, is
-    /// skipped and reported as a <see cref="Reports.DiagnosticKind.HistoryShapeTemplate"/> diagnostic; it
-    /// never fails the run. Every shard of a sharded run must be given the same rules. The same rules fold the
-    /// ids in the shapes the first-call warm-up is judged by (<c>warmUp</c> in the data files): without one, a
-    /// path whose ids no built-in rule knows is a new shape on every call, and its first call is never marked.
+    /// what the templater made of a scenario's calls. A rule sees the path as the data file writes it, unescaped
+    /// (<c>/a b/</c> where the request had <c>%20</c>), and a pattern that holds a <c>%XX</c> escape is reported
+    /// as a diagnostic naming what to match instead (5.17.0). The rules have a hash, recorded on the run line as
+    /// <c>shapeRules</c>, and since 5.17.0 their patterns too (<c>shapeTemplates</c>): a run fingerprints its
+    /// calls under every earlier set of patterns its history window holds as well, and is compared through
+    /// that, so editing or removing a rule costs no quiet run, in process or through <c>kronikol history
+    /// record</c> (the fragment carries the run's calls before any rule for it). Only an edit away from rules
+    /// last used before 5.17.0, whose lines recorded no patterns, costs one. A pattern that does not compile,
+    /// or that runs past 250 ms on some text, is skipped and reported as a
+    /// <see cref="Reports.DiagnosticKind.HistoryShapeTemplate"/> diagnostic; it never fails the run. A fold of
+    /// shards given different rules keeps its fingerprints under a rule every shard reaches. The same rules fold
+    /// the ids in the shapes the first-call warm-up is judged by (<c>warmUp</c> in the data files): without one,
+    /// a path whose ids no built-in rule knows is a new shape on every call, and its first call is never marked.
     /// Default: none.
     /// </summary>
     public IList<History.HistoryShapeTemplate> HistoryShapeTemplates { get; set; } = [];

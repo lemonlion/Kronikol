@@ -99,6 +99,7 @@ public static class SpanToInteractionMapper
 
         string method;
         string uri;
+        string? before = null;
         switch (system)
         {
             case "redis" or "valkey":
@@ -134,13 +135,28 @@ public static class SpanToInteractionMapper
                 var authority = host is null ? "" : port is null ? host : $"{host}:{port}";
                 var scheme = SchemeFor(system);
                 uri = db is null ? $"{scheme}://{authority}/" : $"{scheme}://{authority}/{Escape(db)}";
+                before = db is null ? $"{SchemeBefore8For(system)}://{authority}/" : $"{SchemeBefore8For(system)}://{authority}/{Escape(db)}";
                 break;
             }
         }
 
         var serviceName = ResolveDependencyName(span, options, host, port, system);
-        return Build(span, options, method, uri, serviceName, statement, category);
+        return Build(span, options, method, uri, serviceName, statement, category) with { UriBefore8 = Before8(before, uri) };
     }
+
+    /// <summary>
+    /// A scheme a URI can hold, from a semantic-convention system name: lower case, with the underscores and dots of
+    /// <c>aws_sqs</c>, <c>dotnet_wcf</c> or <c>gcp.bigquery</c> as hyphens. Until #192 R1 an underscore was kept, the
+    /// address did not parse, and the call was drawn at <c>http://unknown/</c>.
+    /// </summary>
+    internal static string Scheme(string system)
+    {
+        var scheme = new string(system.ToLowerInvariant().Select(c => c is >= 'a' and <= 'z' or >= '0' and <= '9' or '+' or '-' ? c : '-').ToArray());
+        return scheme.Length == 0 ? "unknown" : char.IsAsciiLetterLower(scheme[0]) ? scheme : "x-" + scheme;
+    }
+
+    /// <summary>The address 5.16.1 wrote, when it differs from <paramref name="uri"/>: what history's rules 6 and 7 read.</summary>
+    private static string? Before8(string? before, string uri) => before is null || string.Equals(before, uri, StringComparison.Ordinal) ? null : before;
 
     private static string HitMissSuffix(OtlpSpan span)
     {
@@ -251,6 +267,15 @@ public static class SpanToInteractionMapper
         "mysql" or "mariadb" => "mysql",
         "mssql" or "microsoft.sql_server" or "sqlserver" => "mssql",
         "bigquery" or "gcp.bigquery" => "bigquery",
+        _ => Scheme(system),
+    };
+
+    private static string SchemeBefore8For(string system) => system switch
+    {
+        "postgresql" or "postgres" => "postgresql",
+        "mysql" or "mariadb" => "mysql",
+        "mssql" or "microsoft.sql_server" or "sqlserver" => "mssql",
+        "bigquery" or "gcp.bigquery" => "bigquery",
         _ => system.Replace('.', '-'),
     };
 
@@ -319,10 +344,11 @@ public static class SpanToInteractionMapper
                         ?? (span.Kind == OtlpSpanKind.Consumer ? "receive" : "publish");
         var (host, port) = Peer(span);
         var method = $"{Capitalise(operation)} {destination}";
-        var uri = $"{system.ToLowerInvariant()}://{(host ?? "broker")}/{Escape(destination)}";
+        var uri = $"{Scheme(system)}://{(host ?? "broker")}/{Escape(destination)}";
+        var before = $"{system.ToLowerInvariant()}://{(host ?? "broker")}/{Escape(destination)}";
         var service = ResolveDependencyName(span, options, host, port, system);
         var body = Cap(span.Attribute("messaging.message.body.size", "messaging.message.id"), options.ContentCapBytes);
-        return Build(span, options, method, uri, service, body, DependencyCategories.MessageQueue);
+        return Build(span, options, method, uri, service, body, DependencyCategories.MessageQueue) with { UriBefore8 = Before8(before, uri) };
     }
 
     private static MappedSpan MapRpc(OtlpSpan span, OtlpTapOptions options, string system)
@@ -332,10 +358,11 @@ public static class SpanToInteractionMapper
         var (host, port) = Peer(span);
         var label = string.IsNullOrEmpty(service) ? method : $"{service}/{method}";
         var authority = host is null ? "unknown" : port is null ? host : $"{host}:{port}";
-        var uri = $"{system.ToLowerInvariant()}://{authority}/{label.TrimStart('/')}";
+        var uri = $"{Scheme(system)}://{authority}/{label.TrimStart('/')}";
+        var before = $"{system.ToLowerInvariant()}://{authority}/{label.TrimStart('/')}";
         var participant = ResolveDependencyName(span, options, host, port, system);
         var category = system.Equals("grpc", StringComparison.OrdinalIgnoreCase) ? DependencyCategories.Grpc : null;
-        return Build(span, options, label, uri, participant, requestContent: null, category);
+        return Build(span, options, label, uri, participant, requestContent: null, category) with { UriBefore8 = Before8(before, uri) };
     }
 
     // ------------------------------------------------------------------ shared

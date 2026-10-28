@@ -7,6 +7,7 @@ using Kronikol.Sql;
 using Kronikol.Tracking;
 using global::MySqlConnector;
 using Xunit;
+using Kronikol.Tests.History;
 
 namespace Kronikol.Tests.MySqlConnector;
 
@@ -55,6 +56,22 @@ public class TrackingMySqlCommandResponseDetailTests : IDisposable
             case "ExecuteReaderAsync": await (await cmd.ExecuteReaderAsync()).DisposeAsync(); break;
             default: throw new ArgumentOutOfRangeException(nameof(path), path, null);
         }
+    }
+
+    [Fact]
+    public void Every_change_to_a_recorded_call_line_moves_the_version()
+    {
+        // The history guard (plans/CALL_OPERATION_AND_ORIGIN_PLAN.md 4.8): what this tracker records for one fixed call, as the
+        // call line history fingerprints, pinned under the rule it was pinned with (HistoryGuard).
+        using var cmd = new TrackingMySqlCommand(new RowReaderFakeDbCommand(), _trackingConnection);
+        cmd.CommandText = "SELECT id, name FROM breakfasts";
+        using (var reader = cmd.ExecuteReader())
+        {
+            while (reader.Read()) { }
+        }
+
+        HistoryGuard.Pin(GetLogsForTest(), 8,
+            "Caller>MySQL SELECT FROM breakfasts /analytics/breakfasts SELECT id, name FROM breakfasts OK");
     }
 
     [Theory]

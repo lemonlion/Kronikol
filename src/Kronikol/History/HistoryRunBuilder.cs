@@ -35,6 +35,16 @@ public sealed record HistoryBuildOptions
     /// </summary>
     internal bool Bridges { get; init; }
 
+    /// <summary>
+    /// The consumer's patterns the runs of the window were fingerprinted under, each as compiled from a run line that
+    /// recorded them (null for runs made under none): a run bridges each, so an edit of them is compared through it
+    /// rather than read across with no verdict (#192 R1). Read from the ledger before the run is built.
+    /// </summary>
+    internal IReadOnlyList<HistoryShapeRules?>? WindowRules { get; init; }
+
+    /// <summary>The earlier ways of computing a scenario's id the run writes aliases for; <see cref="ScenarioStableId.EarlierRules"/> when null.</summary>
+    internal IReadOnlyList<Func<string?, Feature, Scenario, string>>? EarlierIds { get; init; }
+
     /// <summary>The service the run is about (<see cref="ReportConfigurationOptions.ServiceId"/>, #190), written on the run line when set.</summary>
     public string? ServiceId { get; init; }
 }
@@ -72,6 +82,13 @@ public static class HistoryRunBuilder
             Source(pair.Scenario))).ToArray();
         var roster = HistoryRoster.Create(suite, entries);
 
+        // The ids an earlier way of computing them gives these scenarios, where they differ (Q15).
+        Dictionary<string, string>? aliases = null;
+        foreach (var earlier in options.EarlierIds ?? ScenarioStableId.EarlierRules)
+            for (var i = 0; i < scenarios.Length; i++)
+                if (earlier(suite, scenarios[i].Feature, scenarios[i].Scenario) is { Length: > 0 } old && !string.Equals(old, entries[i].StableId, StringComparison.Ordinal))
+                    (aliases ??= new Dictionary<string, string>(StringComparer.Ordinal))[old] = entries[i].StableId;
+
         var results = new char[scenarios.Length];
         var attempts = new char[scenarios.Length];
         var durations = new int?[scenarios.Length];
@@ -79,6 +96,7 @@ public static class HistoryRunBuilder
         var shapeSet = new string[scenarios.Length];
         var shapeOrdered = new string[scenarios.Length];
         var callLines = new string[scenarios.Length][];
+        var rawCalls = new IReadOnlyList<HistoryRawCall>[scenarios.Length];
         var errors = new string?[scenarios.Length];
         var errorText = new Dictionary<string, string>(StringComparer.Ordinal);
         var errorKeys = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -99,7 +117,8 @@ public static class HistoryRunBuilder
             if (logsByTest is not null)
             {
                 var own = logsByTest.TryGetValue(scenario.Id, out var list) ? list : [];
-                var scenarioCalls = InteractionShape.Calls(own, options.ShapeRules);
+                rawCalls[i] = InteractionShape.RawCalls(own);
+                var scenarioCalls = InteractionShape.Calls(rawCalls[i], options.ShapeRules, InteractionShape.Version);
                 var (set, ordered, count) = InteractionShape.Fingerprint(scenarioCalls);
                 shapeSet[i] = set;
                 shapeOrdered[i] = ordered;
@@ -137,12 +156,23 @@ public static class HistoryRunBuilder
         // The run under every earlier rule Kronikol keeps, so a run in the window made by one is compared with these
         // rather than read across with no verdict (#190 R0). A fragment does not know its window, so every kept rule
         // is bridged here; a ledger append keeps only those its window holds (HistoryBridges.ForWindow).
+        // And under the consumer's earlier patterns the window holds, at every kept version, so an edit of them costs no
+        // quiet run either (#192 R1).
         Dictionary<string, HistoryBridge>? bridge = null;
         if (logsByTest is not null && options.Bridges)
         {
             bridge = new Dictionary<string, HistoryBridge>(StringComparer.Ordinal);
-            foreach (var version in InteractionShape.KeptVersions.Where(v => v != InteractionShape.Version))
-                bridge[HistoryBridge.RuleKey(version, options.ShapeRules?.Hash)] = BridgeUnder(version, scenarios, logsByTest, logs, options, shapeSet, shapeOrdered);
+            var patterns = new List<HistoryShapeRules?> { options.ShapeRules };
+            foreach (var earlier in options.WindowRules ?? [])
+                if (!patterns.Exists(p => string.Equals(p?.Hash, earlier?.Hash, StringComparison.Ordinal)))
+                    patterns.Add(earlier);
+            foreach (var version in InteractionShape.KeptVersions)
+                foreach (var rules in patterns)
+                {
+                    var key = HistoryBridge.RuleKey(version, rules?.Hash);
+                    if (key != HistoryBridge.RuleKey(InteractionShape.Version, options.ShapeRules?.Hash))
+                        bridge[key] = HistoryBridges.Under(version, rules, rawCalls, InteractionShape.RenamedDependencies(logs, version), shapeSet, shapeOrdered, calls);
+                }
         }
 
         var run = new HistoryRun
@@ -165,49 +195,18 @@ public static class HistoryRunBuilder
             ShapeOrdered = options.Shapes ? shapeOrdered : null,
             ShapeVersion = options.Shapes ? InteractionShape.Version : null,
             ShapeRules = options.Shapes ? options.ShapeRules?.Hash : null,
+            ShapeTemplates = options.Shapes ? options.ShapeRules?.Templates : null,
             ShapesHash = shapes?.Hash,
             CallSets = callSets,
             Errors = errors,
             ErrorText = errorText,
             Deps = InteractionShape.Dependencies(logs),
             Bridge = bridge,
+            Aliases = aliases,
             ServiceId = string.IsNullOrWhiteSpace(options.ServiceId) ? null : options.ServiceId.Trim()
         };
-        return new HistoryBuildResult(roster, run, shapes);
-    }
-
-    /// <summary>The run's fingerprints, calls and dependency pairs under an earlier kept rule; an empty entry when the rule changes none of them.</summary>
-    private static HistoryBridge BridgeUnder(int version, (Feature Feature, Scenario Scenario)[] scenarios, Dictionary<string, RequestResponseLog?[]> logsByTest,
-        IReadOnlyList<RequestResponseLog?> logs, HistoryBuildOptions options, string[] ownSet, string[] ownOrdered)
-    {
-        var set = new string[scenarios.Length];
-        var ordered = new string[scenarios.Length];
-        var lines = new string[scenarios.Length][];
-        var differs = false;
-        for (var i = 0; i < scenarios.Length; i++)
-        {
-            var own = logsByTest.TryGetValue(scenarios[i].Scenario.Id, out var list) ? list : [];
-            var calls = InteractionShape.Calls(own, options.ShapeRules, version);
-            (set[i], ordered[i], _) = InteractionShape.Fingerprint(calls);
-            lines[i] = calls.Select(c => c.ToString()).Distinct(StringComparer.Ordinal).ToArray();
-            differs |= !string.Equals(set[i], ownSet[i], StringComparison.Ordinal) || !string.Equals(ordered[i], ownOrdered[i], StringComparison.Ordinal);
-        }
-
-        var renamed = InteractionShape.RenamedDependencies(logs, version);
-        var entry = new HistoryBridge { Deps = renamed.Count > 0 ? renamed : null };
-        if (!differs)
-            return entry;
-
-        var shapes = HistoryShapes.Create(lines.SelectMany(l => l));
-        var index = shapes.Calls.Select((line, position) => (line, position)).ToDictionary(p => p.line, p => p.position, StringComparer.Ordinal);
-        return entry with
-        {
-            ShapeSet = set,
-            ShapeOrdered = ordered,
-            ShapesHash = shapes.Hash,
-            CallSets = lines.Select(l => (IReadOnlyList<int>)l.Select(line => index[line]).OrderBy(i => i).ToArray()).ToArray(),
-            Shapes = shapes
-        };
+        // The raw calls ride in the fragment alone, for history record to bridge the window's patterns from (Q18).
+        return new HistoryBuildResult(roster, run, shapes) { RawCalls = logsByTest is null ? null : HistoryRawCalls.Create(rawCalls) };
     }
 
     private static string? Source(Scenario scenario) =>
@@ -254,6 +253,9 @@ public static class HistoryRunBuilder
 /// <summary>What a run builds: its roster, its line, and the shapes list its call sets index into (null when shapes are switched off).</summary>
 public sealed record HistoryBuildResult(HistoryRoster Roster, HistoryRun Run, HistoryShapes? Shapes)
 {
+    /// <summary>The run's calls before any rule, by roster position (<see cref="HistoryRawCalls"/>); null when no fingerprints were recorded.</summary>
+    internal HistoryRawCalls? RawCalls { get; init; }
+
     /// <summary>The pair a caller that has no use for the shapes takes.</summary>
     public void Deconstruct(out HistoryRoster roster, out HistoryRun run)
     {

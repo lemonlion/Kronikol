@@ -1,6 +1,7 @@
 using Kronikol.Extensions.PubSub;
 using Kronikol.Tests.Tracking;
 using Kronikol.Tracking;
+using Kronikol.Tests.History;
 
 namespace Kronikol.Tests.PubSub;
 
@@ -27,6 +28,20 @@ public class PubSubTrackerTests
     };
 
     // ─── HttpContextAccessor ────────────────────────────────
+
+    [Fact]
+    public void Every_change_to_a_recorded_call_line_moves_the_version()
+    {
+        // The history guard (plans/CALL_OPERATION_AND_ORIGIN_PLAN.md 4.8): what this tracker records for one fixed call, as the
+        // call line history fingerprints, pinned under the rule it was pinned with (HistoryGuard).
+        var tracker = new PubSubTracker(MakeOptions());
+        var op = new PubSubOperationInfo(PubSubOperation.Publish, "projects/p/topics/my-topic", null, 1);
+        var (reqId, traceId) = tracker.LogRequest(op, "hello");
+        tracker.LogResponse(op, reqId, traceId, "MessageId: abc");
+
+        HistoryGuard.Pin(GetLogsFromThisTest(), 8,
+            "TestCaller>PubSub Publish → my-topic /my-topic -");
+    }
 
     [Fact]
     public void Tracker_reads_HttpContextAccessor_from_options_when_not_passed_directly()

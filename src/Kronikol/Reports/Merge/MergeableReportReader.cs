@@ -107,7 +107,7 @@ public static class MergeableReportReader
                     warmUpScenarios[scenario.Id] = warmUpSeconds * 1000;
 
                 if (!DeclaresAResult(se))
-                    defaultedResults.Add(scenario.DisplayName ?? scenario.Id);
+                    defaultedResults.Add(scenario.DisplayName.Length > 0 ? scenario.DisplayName : scenario.Id);
 
                 if (se.TryGetProperty("diagrams", out var diags) && diags.ValueKind == JsonValueKind.Array)
                     foreach (var d in diags.EnumerateArray())

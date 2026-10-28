@@ -38,4 +38,8 @@
     <Compile Include="..\Kronikol.Tests\LoopbackPort.cs" Link="LoopbackPort.cs" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\Kronikol.Tests\History\HistoryGuard.cs" Link="HistoryGuard.cs" />
+  </ItemGroup>
+
 </Project>

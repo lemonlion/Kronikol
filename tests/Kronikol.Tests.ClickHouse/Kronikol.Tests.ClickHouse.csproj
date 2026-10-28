@@ -25,4 +25,8 @@
     <ProjectReference Include="..\..\src\Kronikol.Extensions.ClickHouse.Driver\Kronikol.Extensions.ClickHouse.Driver.csproj" />
     <ProjectReference Include="..\..\src\Kronikol.Extensions.ClickHouse.Octonica\Kronikol.Extensions.ClickHouse.Octonica.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Kronikol.Tests\History\HistoryGuard.cs" Link="HistoryGuard.cs" />
+  </ItemGroup>
+
 </Project>

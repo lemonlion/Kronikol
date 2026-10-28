@@ -155,6 +155,28 @@ public sealed class HistoryAliases
     public static string PathBeside(string ledgerPath) =>
         Path.Combine(Path.GetDirectoryName(Path.GetFullPath(ledgerPath)) ?? ".", HistoryFormat.AliasesFileName);
 
+    /// <summary>
+    /// <paramref name="file"/>'s aliases and those Kronikol wrote on <paramref name="runs"/>' lines when it changed what an
+    /// id is computed from (<see cref="HistoryRun.Aliases"/>, Q15), the file's winning where both map one id; the file's
+    /// alone when no line has any, and null when neither has.
+    /// </summary>
+    internal static HistoryAliases? With(HistoryAliases? file, IEnumerable<HistoryRun> runs)
+    {
+        HistoryAliases? merged = null;
+        foreach (var run in runs)
+            foreach (var pair in run.Aliases ?? new Dictionary<string, string>())
+                (merged ??= new HistoryAliases()).Add(pair.Key, pair.Value);
+        if (merged is null)
+            return file;
+        foreach (var pair in file?.Mappings ?? new Dictionary<string, string>())
+            merged.Add(pair.Key, pair.Value);
+        return merged;
+    }
+
+    /// <summary><paramref name="roster"/> with each id it holds read as the id it now is.</summary>
+    internal HistoryRoster Apply(HistoryRoster roster) =>
+        _newOf.Count == 0 ? roster : HistoryRoster.Create(roster.Suite, roster.Entries().Select(e => e with { StableId = Current(e.StableId) }).ToArray());
+
     /// <summary>Loads the aliases at <paramref name="path"/>; an absent file is no aliases.</summary>
     public static HistoryAliases Load(string path)
     {

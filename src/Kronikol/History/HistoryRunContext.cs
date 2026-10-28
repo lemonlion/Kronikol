@@ -11,9 +11,10 @@ namespace Kronikol.History;
 public sealed class HistoryRunContext
 {
     private HistoryRunContext(HistoryLocation location, HistoryRoster roster, HistoryRun run, HistoryShapes? shapes, HistoryVerdicts? verdicts, HistoryLedger? ledger,
-        bool writeLedger, string generator, HistoryQuarantineList? quarantine, HistoryAliases? aliases, HistoryRun ledgerRun)
+        bool writeLedger, string generator, HistoryQuarantineList? quarantine, HistoryAliases? aliases, HistoryRun ledgerRun, HistoryRawCalls? rawCalls)
     {
         _ledgerRun = ledgerRun;
+        _rawCalls = rawCalls;
         Shapes = shapes;
         Location = location;
         Roster = roster;
@@ -57,7 +58,10 @@ public sealed class HistoryRunContext
     public HistoryAliases? Aliases { get; }
 
     /// <summary>The fragment for this run — the shard unit <c>kronikol history record</c> folds.</summary>
-    public string Fragment() => HistoryFragment.Write(Roster, Run, Generator, Shapes);
+    public string Fragment() => HistoryFragment.Write(Roster, Run, Generator, Shapes, _rawCalls);
+
+    // The run's calls before any rule, which the fragment alone carries (#192 R1, Q18).
+    private readonly HistoryRawCalls? _rawCalls;
 
     /// <summary>
     /// Builds the context for a run: resolves the ledger, reads it, builds the run, analyses it, and
@@ -66,6 +70,25 @@ public sealed class HistoryRunContext
     /// </summary>
     public static HistoryRunContext? Create(Feature[] features, RequestResponseLog?[] logs, string? suite, CiMetadata? ci, DateTimeOffset at,
         ReportConfigurationOptions options, string reportsDirectory, string generator, Func<string, string?>? getEnv = null, string? baseDirectory = null)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        var rules = options.HistoryShapes ? HistoryShapeRules.Create(options.HistoryShapeTemplates) : null;
+        var context = Create(features, logs, suite, ci, at, options, reportsDirectory, generator, rules, getEnv, baseDirectory);
+        // The expressions are the consumer's: one that does not compile or that timed out was skipped, and is said here
+        // rather than thrown.
+        if (context is not null)
+            foreach (var problem in rules?.Problems ?? [])
+                ReportDiagnosticsScope.Record(DiagnosticKind.HistoryShapeTemplate, problem);
+        return context;
+    }
+
+    /// <summary>
+    /// <see cref="Create(Feature[], RequestResponseLog?[], string?, CiMetadata?, DateTimeOffset, ReportConfigurationOptions, string, string, Func{string, string?}?, string?)"/>
+    /// with the run's templating rules, the one instance the warm-up marks and the background calls table use too, null
+    /// when history keeps no shapes. Their problems are the caller's to say, once for every use.
+    /// </summary>
+    internal static HistoryRunContext? Create(Feature[] features, RequestResponseLog?[] logs, string? suite, CiMetadata? ci, DateTimeOffset at,
+        ReportConfigurationOptions options, string reportsDirectory, string generator, HistoryShapeRules? shapeRules, Func<string, string?>? getEnv, string? baseDirectory)
     {
         ArgumentNullException.ThrowIfNull(features);
         ArgumentNullException.ThrowIfNull(options);
@@ -77,7 +100,38 @@ public sealed class HistoryRunContext
             if (location.Source == HistoryLocationSource.Disabled)
                 return null;
 
-            var shapeRules = options.HistoryShapes ? HistoryShapeRules.Create(options.HistoryShapeTemplates) : null;
+            // The ledger is read before the run is built: the run bridges the consumer's earlier patterns its window holds,
+            // which only the ledger records (#192 R1).
+            HistoryLedger? ledger = null;
+            if (location.Path is { } readPath)
+            {
+                var read = HistoryLedgerReader.Read(readPath, Math.Max(options.HistoryWindow, 1));
+                switch (read.Outcome)
+                {
+                    case HistoryReadOutcome.Read:
+                    case HistoryReadOutcome.Missing:
+                        ledger = read.Ledger;
+                        break;
+                    default:
+                        ReportDiagnosticsScope.Record(DiagnosticKind.HistoryUnavailable, read.Message ?? $"the ledger at {readPath} could not be read");
+                        break;
+                }
+
+                if (ledger is { Stats.DamagedLines: > 0 })
+                    ReportDiagnosticsScope.Record(DiagnosticKind.HistoryLedgerDamaged,
+                        $"{ledger.Stats.DamagedLines} line(s) of the ledger at {readPath} could not be parsed and were skipped; run kronikol history verify");
+            }
+
+            // A pull request's runs form their own stream, and the question a pull request asks is what changed against
+            // the branch it targets: that is the default stream on a pull request build. A push, a schedule and a run off
+            // CI read their own.
+            var branch = options.HistoryBranch is null ? CiMetadataDetector.PullRequestTarget(env)
+                : string.IsNullOrWhiteSpace(options.HistoryBranch) ? null : options.HistoryBranch.Trim();
+            var compareBranch = string.IsNullOrWhiteSpace(options.HistoryCompareBranch) ? null : options.HistoryCompareBranch.Trim();
+            // Held to the read's own floor: a window of 0 means "all" to the analysis, and since a stream is read back on
+            // demand (#95) that would be every run it ever had, parsed at the end of every test run.
+            var window = Math.Max(options.HistoryWindow, 1);
+
             var build = new HistoryBuildOptions
             {
                 Durations = options.HistoryDurations,
@@ -88,47 +142,31 @@ public sealed class HistoryRunContext
                 Bridges = true,
                 ServiceId = options.ServiceId
             };
-            var (roster, run, shapes) = HistoryRunBuilder.Build(features, logs, suite, ci, at, build,
+            var built = HistoryRunBuilder.Build(features, logs, suite, ci, at, build,
                 string.IsNullOrWhiteSpace(options.HistoryRunId) ? null : options.HistoryRunId.Trim());
+            var (roster, run, shapes) = built;
+            // The consumer's earlier patterns the runs this line is read against were fingerprinted under, bridged from its
+            // raw calls as `history record` bridges a fragment's (#192 R1): the windows of its own stream and of the streams
+            // its verdicts read, each as far back as the analysis reads it.
+            if (options.HistoryShapes && ledger is not null)
+                run = HistoryBridges.WithWindowRules(run, built.RawCalls, HistoryBridges.WindowRules(ledger, run, [branch, compareBranch], window));
+            // The Kronikol that recorded the run (#192 R1), so a change that shipped without moving the rule can be read
+            // for what it was afterwards.
+            run = run with { Generator = generator };
 
-            // The expressions are the consumer's: one that does not compile or that timed out was skipped,
-            // and is said here rather than thrown.
-            foreach (var problem in shapeRules?.Problems ?? [])
-                ReportDiagnosticsScope.Record(DiagnosticKind.HistoryShapeTemplate, problem);
-
-            HistoryLedger? ledger = null;
             HistoryVerdicts? verdicts = null;
             HistoryQuarantineList? quarantine = null;
             HistoryAliases? aliases = null;
 
             if (location.Path is { } path)
             {
-                var read = HistoryLedgerReader.Read(path, Math.Max(options.HistoryWindow, 1));
-                switch (read.Outcome)
-                {
-                    case HistoryReadOutcome.Read:
-                    case HistoryReadOutcome.Missing:
-                        ledger = read.Ledger;
-                        break;
-                    default:
-                        ReportDiagnosticsScope.Record(DiagnosticKind.HistoryUnavailable, read.Message ?? $"the ledger at {path} could not be read");
-                        break;
-                }
-
-                if (ledger is { Stats.DamagedLines: > 0 })
-                    ReportDiagnosticsScope.Record(DiagnosticKind.HistoryLedgerDamaged,
-                        $"{ledger.Stats.DamagedLines} line(s) of the ledger at {path} could not be parsed and were skipped; run kronikol history verify");
-
                 if (ledger is not null)
                 {
                     quarantine = TryLoad(() => HistoryQuarantineList.Load(HistoryQuarantineList.PathBeside(path)), "quarantine list");
                     aliases = TryLoad(() => HistoryAliases.Load(HistoryAliases.PathBeside(path)), "alias file");
                     verdicts = HistoryAnalyzer.Analyse(ledger, roster, run, new HistoryAnalysisOptions
                     {
-                        // Held to the read's own floor: a window of 0 means "all" to the analysis, and since a
-                        // stream is read back on demand (#95) that would be every run it ever had, parsed at the
-                        // end of every test run.
-                        Window = Math.Max(options.HistoryWindow, 1),
+                        Window = window,
                         MinRuns = options.HistoryMinRuns,
                         FlakyRate = options.HistoryFlakyRate,
                         SlowerBy = options.HistorySlowerBy,
@@ -138,12 +176,8 @@ public sealed class HistoryRunContext
                         DegradedBy = options.HistoryDegradedBy,
                         PartialThreshold = options.HistoryPartialThreshold,
                         ReportReordered = options.HistoryReordered,
-                        // A pull request's runs form their own stream, and the question a pull request asks is
-                        // what changed against the branch it targets: that is the default stream on a pull
-                        // request build. A push, a schedule and a run off CI read their own.
-                        Branch = options.HistoryBranch is null ? CiMetadataDetector.PullRequestTarget(env)
-                            : string.IsNullOrWhiteSpace(options.HistoryBranch) ? null : options.HistoryBranch.Trim(),
-                        CompareBranch = string.IsNullOrWhiteSpace(options.HistoryCompareBranch) ? null : options.HistoryCompareBranch.Trim()
+                        Branch = branch,
+                        CompareBranch = compareBranch
                     }, quarantine, aliases, shapes: shapes);
 
                     if (verdicts.Partial)
@@ -169,8 +203,9 @@ public sealed class HistoryRunContext
             var writeLedger = options.WriteHistoryLedger ?? (location.Source is HistoryLocationSource.Option or HistoryLocationSource.Environment || ci is null);
             // The ledger's line keeps only the bridges its window can use; the fragment keeps every kept rule's, since
             // `history record` folds it into a ledger this run did not read (#190 R0).
-            var ledgerRun = ledger is null ? run : HistoryBridges.ForWindow(run, BridgeWindow(ledger, run, verdicts, Math.Max(options.HistoryWindow, 1)));
-            return new HistoryRunContext(location, roster, run, shapes, verdicts, ledger, writeLedger && location.Path is not null && ledger is not null, generator, quarantine, aliases, ledgerRun);
+            var ledgerRun = ledger is null ? run : HistoryBridges.ForWindow(run, BridgeWindow(ledger, run, verdicts, window));
+            return new HistoryRunContext(location, roster, run, shapes, verdicts, ledger, writeLedger && location.Path is not null && ledger is not null, generator, quarantine, aliases, ledgerRun,
+                built.RawCalls);
         }
         catch (Exception exception)
         {

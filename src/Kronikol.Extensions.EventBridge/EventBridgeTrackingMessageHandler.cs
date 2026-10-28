@@ -186,9 +186,17 @@ public class EventBridgeTrackingMessageHandler : DelegatingHandler, ITrackingCom
             .ToArray();
     }
 
+    // A bus may be given by its ARN (arn:aws:events:{region}:{account}:event-bus/{name}), whose colons read as a port where
+    // a host goes: until #192 R1 every such call threw UriFormatException out of the consumer's own PutEvents. The bus is
+    // named by its name, and a name no address can hold goes in the path rather than fail the call.
     private static Uri BuildCleanUri(EventBridgeOperationInfo op)
     {
         var busName = op.EventBusName ?? "default";
-        return new Uri($"eventbridge://{busName}/");
+        var arnName = busName.IndexOf(":event-bus/", StringComparison.Ordinal);
+        if (busName.StartsWith("arn:", StringComparison.Ordinal) && arnName >= 0)
+            busName = busName[(arnName + ":event-bus/".Length)..];
+        return Uri.TryCreate($"eventbridge://{busName}/", UriKind.Absolute, out var uri)
+            ? uri
+            : new Uri($"eventbridge:///{Uri.EscapeDataString(busName)}/");
     }
 }

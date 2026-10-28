@@ -1061,6 +1061,44 @@ public class QueryCommandTests : IDisposable
     // ─── The #168 audit (after 4.20.2) ──────────────
 
     /// <summary>Thirty totals of 600 and one decimal, which an ordering against a number cannot compare.</summary>
+    /// <summary>One service named two ways by its callers (F7), calling one path written two ways.</summary>
+    private string CaseReport()
+    {
+        var start = new DateTimeOffset(2026, 1, 1, 10, 0, 0, TimeSpan.Zero);
+        return Write("Case.json", BuildFeatures(false),
+        [
+            .. Pair("t0", "Orders API", HttpMethod.Get, "http://orders/orders/1", "", HttpStatusCode.OK, start),
+            .. Pair("t0", "orders api", HttpMethod.Get, "http://orders/Orders/1", "", HttpStatusCode.OK, start.AddSeconds(1)),
+            .. Pair("t0", "Orders API", HttpMethod.Get, "http://orders/orders/1", "", HttpStatusCode.OK, start.AddSeconds(2)),
+        ]);
+    }
+
+    [Fact]
+    public void Services_and_group_by_service_agree_row_by_row()
+    {
+        // F7 (Q14): `services` folds names that differ only in case, and --group-by service now does too, the row named
+        // as the first call names it; until #192 R1 it split them, so the two verbs counted one service differently.
+        var report = CaseReport();
+
+        var services = Run("services", report);
+        var grouped = Run("interactions", report, "--group-by", "service");
+
+        Assert.Contains("Orders API", services);
+        Assert.DoesNotContain("orders api", services);
+        var row = Assert.Single(grouped.Split('\n'), l => l.StartsWith("Orders API", StringComparison.OrdinalIgnoreCase));
+        Assert.StartsWith("Orders API", row, StringComparison.Ordinal);
+        Assert.Matches(@"^Orders API\s+3\s", row);
+    }
+
+    [Fact]
+    public void Path_still_splits_names_that_differ_in_case()
+    {
+        var grouped = Run("interactions", CaseReport(), "--group-by", "path");
+
+        Assert.Contains(grouped.Split('\n'), l => l.StartsWith("/orders/1 ", StringComparison.Ordinal));
+        Assert.Contains(grouped.Split('\n'), l => l.StartsWith("/Orders/1 ", StringComparison.Ordinal));
+    }
+
     private string ManyTotalsReport()
     {
         var start = new DateTimeOffset(2026, 1, 1, 10, 0, 0, TimeSpan.Zero);

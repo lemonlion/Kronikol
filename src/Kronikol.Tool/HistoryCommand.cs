@@ -241,6 +241,18 @@ internal static partial class HistoryCommand
 
     // ─── record ────────────────────────────────────────────────
 
+    /// <summary>Whether <paramref name="generator"/> names a Kronikol newer than this tool.</summary>
+    private static bool NewerThanTool(string? generator) => VersionOf(generator) is { } version && VersionOf(Commands.Version) is { } tool && version > tool;
+
+    /// <summary>The numbered part of a Kronikol version (<c>5.17.0</c> of <c>5.17.0-beta.1+abc</c>), or null.</summary>
+    private static Version? VersionOf(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+            return null;
+        var end = text.IndexOfAny(['-', '+', ' ']);
+        return Version.TryParse(end < 0 ? text : text[..end], out var version) ? version : null;
+    }
+
     /// <summary>
     /// Folds every <c>History.run.json</c> under the inputs into the ledger: one line per run, eight shards
     /// of one run becoming one line, a run already recorded left alone. The fragments are read in path
@@ -290,6 +302,32 @@ internal static partial class HistoryCommand
             return 1;
         }
 
+        // A run line names the Kronikol that recorded it (#192 R1); a fragment from before then names it on itself alone.
+        fragments = fragments.Select(f => f.Fragment.Run.Generator is null && f.Fragment.Generator is { Length: > 0 } wrote
+            ? (f.Path, f.Fragment with { Run = f.Fragment.Run with { Generator = wrote } })
+            : f).ToList();
+
+        // The consumer's earlier patterns are in the ledger alone, so a run that only wrote a fragment bridged none of them:
+        // each is bridged here from the fragment's raw calls, before the fold, which folds them as any bridge (Q18), from
+        // the windows the run's line is read against: its own stream's, and on a pull request its target's.
+        if (fragments.Any(f => f.Fragment.RawCalls is not null) && HistoryLedgerReader.Read(ledger, DefaultWindow).Ledger is { } windowLedger)
+        {
+            var target = CiMetadataDetector.PullRequestTarget(getEnv);
+            fragments = fragments.Select(f => f.Fragment.RawCalls is null
+                ? f
+                : (f.Path, f.Fragment with
+                {
+                    Run = HistoryBridges.WithWindowRules(f.Fragment.Run, f.Fragment.RawCalls,
+                        HistoryBridges.WindowRules(windowLedger, f.Fragment.Run, [target], DefaultWindow))
+                })).ToList();
+        }
+
+        // A newer Kronikol's fragment folds, its members carried as they were, but by this tool's rules: the History action
+        // installs the tool its folder's VERSION file names, which a package upgrade does not move.
+        var newest = fragments.Select(f => f.Fragment.Run.Generator).Where(g => NewerThanTool(g)).OrderBy(g => VersionOf(g)).LastOrDefault();
+        if (newest is not null)
+            error.WriteLine($"! a fragment newer than this tool, folded as this tool reads it: {fragments.Count(f => NewerThanTool(f.Fragment.Run.Generator))} written by Kronikol {newest}, this is Kronikol.Tool {Commands.Version}. Install Kronikol.Tool {newest}, or move the History action folder's VERSION file to it.");
+
         // Attempts before shards: fragments in ONE reports directory that share a run id - the newest on
         // top, earlier ones retained under runs/ - are the same scenarios run again, and become one
         // fragment. What is left is one fragment per directory, and those fold as shards as before.
@@ -306,6 +344,9 @@ internal static partial class HistoryCommand
             var (roster, run, shapes) = foldedRun;
             var line = run;
             var previous = LastFullRoster(ledger, run.Suite);
+            // The ids Kronikol itself changed, which the line names (Q15): no rename to suggest, and no scenario missing.
+            if (previous is not null && HistoryAliases.With(null, [line]) is { } own)
+                previous = own.Apply(previous);
 
             // A scenario whose id changed but whose feature and name did not is a rename, not a deletion
             // plus an addition; saying so is what keeps its history attached (§7.4). Suggested by
@@ -349,9 +390,13 @@ internal static partial class HistoryCommand
                 line = line with { Partial = HistoryAnalyzer.IsPartial(roster, previous, 0.10) };
             }
 
-            // A fragment bridges every rule Kronikol keeps; the ledger's line keeps only those its window holds (#190 R0).
+            // A fragment bridges every rule Kronikol keeps; the ledger's line keeps only those its window holds (#190 R0):
+            // its own stream's, and on a pull request its target's, which it is read against, as a run in process keeps
+            // (#192 R1; until then a pull request's first run kept no bridge its target needed).
             if (line.Bridge is { Count: > 0 } && HistoryLedgerReader.Read(ledger, DefaultWindow).Ledger is { } read)
-                line = HistoryBridges.ForWindow(line, read.PriorRuns(line.Suite, line.Stream, line.Id, DefaultWindow));
+                line = HistoryBridges.ForWindow(line, new[] { line.Stream, CiMetadataDetector.PullRequestTarget(getEnv) }
+                    .OfType<string>().Distinct(StringComparer.Ordinal)
+                    .SelectMany(stream => read.PriorRuns(line.Suite, stream, line.Id, DefaultWindow)));
 
             var result = HistoryLedgerWriter.Append(ledger, roster, line, Commands.Version, shapes: shapes);
             var label = $"{run.Id}  {run.Suite ?? "(no suite)"}  {Scenarios(line)}"
@@ -488,8 +533,7 @@ internal static partial class HistoryCommand
             .Any(segment => segment.StartsWith(ReportFolders.IncomingPrefix, StringComparison.OrdinalIgnoreCase));
 
     /// <summary>The previous roster with every aliased id replaced by its current one, so a rename is not a missing scenario.</summary>
-    private static HistoryRoster WithAliases(HistoryRoster previous, HistoryAliases aliases) =>
-        HistoryRoster.Create(previous.Suite, previous.Entries().Select(e => e with { StableId = aliases.Current(e.StableId) }).ToArray());
+    private static HistoryRoster WithAliases(HistoryRoster previous, HistoryAliases aliases) => aliases.Apply(previous);
 
     private static HistoryRoster? LastFullRoster(string ledger, string? suite)
     {

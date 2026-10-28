@@ -44,14 +44,24 @@ public sealed record MappedSpan(
     public double DurationMs => (End - Start).TotalMilliseconds;
 
     /// <summary>
+    /// The address 5.16.1 wrote for the call, when it differs from <see cref="Uri"/> (a system name holding an
+    /// underscore made a scheme no URI may hold): its log keeps it for history's rules 6 and 7
+    /// (<see cref="RequestResponseLog.RecordedBefore8"/>).
+    /// </summary>
+    internal string? UriBefore8 { get; init; }
+
+    /// <summary>
     /// The <see cref="InteractionRecord"/> pair for this call: request at <see cref="Start"/>, response at
     /// <see cref="End"/>, both stamped <c>capturedBy: span</c> so the ingest-time merge
     /// (<see cref="InteractionMerger"/>) can tell them from a wire capture of the same call.
     /// </summary>
     public (InteractionRecord Request, InteractionRecord Response) ToRecords(string? phase = null)
     {
+        // The address as 5.16.1 wrote it where that one does not parse: the ingest mends its scheme as it mends any
+        // record's, so the call reads as this span's log does, and keeps the old reading for history's rules 6 and 7.
+        var uri = UriBefore8 is { } before && !System.Uri.TryCreate(before, UriKind.Absolute, out _) ? before : Uri;
         var (request, response) = InteractionRecord.Pair(
-            TestId, TestName, Method, Uri, ServiceName, CallerName,
+            TestId, TestName, Method, uri, ServiceName, CallerName,
             requestContent: RequestContent,
             responseContent: ResponseContent,
             statusCode: StatusCode,
@@ -90,6 +100,10 @@ public sealed record MappedSpan(
             ActivitySpanId = SpanId,
             Phase = phase,
             CapturedBy = InteractionMerger.SpanSource,
+            RecordedBefore8 = UriBefore8 is { } before
+                ? new RecordedBefore(InteractionRecord.ParseMethod(Method),
+                    System.Uri.TryCreate(before, UriKind.Absolute, out var then) ? then : new Uri("http://unknown/"))
+                : null,
         };
 
         var response = new RequestResponseLog(

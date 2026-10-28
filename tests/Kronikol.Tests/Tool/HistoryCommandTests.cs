@@ -54,6 +54,26 @@ public class HistoryCommandTests : IDisposable
     // ─── record ────────────────────────────────────────────────
 
     [Fact]
+    public void Record_reads_a_changed_id_rule_as_neither_a_rename_nor_a_partial_run()
+    {
+        // Kronikol's own aliases (#192 R1, Q15): a change to what an id is computed from writes the old ids on the run's line,
+        // so record suggests no rename for them and does not read the run as missing every scenario.
+        HistoryRoster Named(params string[] ids) =>
+            HistoryRoster.Create("Suite", ids.Select((id, i) => new HistoryRosterEntry(id, "Pay " + i, "Checkout", null)).ToArray());
+        var before = Named("0ld1", "0ld2");
+        for (var n = 1; n <= 3; n++)
+            Assert.Equal(0, Run(null, "record", WriteFragment("before" + n, before, RunLine(before, $"gh:{n}:1", "PP")), "--history", Ledger).Exit);
+        var after = Named("new1", "new2");
+        var line = RunLine(after, "gh:4:1", "PP") with { Aliases = new Dictionary<string, string> { ["0ld1"] = "new1", ["0ld2"] = "new2" } };
+
+        var (output, error, exit) = Run(null, "record", WriteFragment("after", after, line), "--history", Ledger);
+
+        Assert.True(exit == 0, error);
+        Assert.DoesNotContain("look renamed", output, StringComparison.Ordinal);
+        Assert.False(HistoryLedgerReader.Read(Ledger, 50).Ledger!.LatestRun("Suite")!.Partial);
+    }
+
+    [Fact]
     public void Record_keeps_a_fragments_bridge_only_while_the_ledger_window_holds_its_rule()
     {
         // #190 R0: a fragment bridges every rule Kronikol keeps, since it cannot know the ledger it is folded into.
@@ -82,6 +102,59 @@ public class HistoryCommandTests : IDisposable
         Assert.True(exit == 0, error);
         Assert.Null(HistoryLedgerReader.Read(other, 50).Ledger!.Runs("Suite")[^1].Bridge);
         Assert.Empty(HistoryLedgerReader.Verify(other));
+    }
+
+    [Fact]
+    public void Record_names_the_kronikol_that_wrote_a_fragment_on_its_line()
+    {
+        // #192 R1: a run line names the Kronikol that recorded it. A fragment written before R1 has no such member on its
+        // run, only the fragment's own generator, which the line takes.
+        var roster = Roster("Suite", "a1");
+
+        var (_, error, exit) = Run(null, "record", WriteFragment("older", roster, RunLine(roster, "gh:1:1", "P")), "--history", Ledger);
+
+        Assert.True(exit == 0, error);
+        Assert.Equal("3.9.0", HistoryLedgerReader.Read(Ledger, 50).Ledger!.LatestRun("Suite")!.Generator);
+    }
+
+    [Fact]
+    public void Record_warns_when_a_fragment_is_newer_than_the_tool()
+    {
+        // The History action installs the tool its folder's VERSION file names: a consumer who upgrades the package and not
+        // the folder folds a newer Kronikol's fragment with an older tool.
+        var roster = Roster("Suite", "a1");
+        var directory = Path.Combine(_dir, "newer");
+        Directory.CreateDirectory(directory);
+        File.WriteAllText(Path.Combine(directory, HistoryFormat.FragmentFileName), HistoryFragment.Write(roster, RunLine(roster, "gh:1:1", "P"), "99.0.0"));
+
+        var (output, error, exit) = Run(null, "record", directory, "--history", Ledger);
+
+        Assert.True(exit == 0, error);
+        Assert.Contains("recorded", output, StringComparison.Ordinal);
+        Assert.Contains("! a fragment newer than this tool, folded as this tool reads it: 1 written by Kronikol 99.0.0", error, StringComparison.Ordinal);
+        Assert.DoesNotContain("newer than this tool", Run(null, "record", WriteFragment("same", roster, RunLine(roster, "gh:2:1", "P")), "--history", Ledger).Err, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Record_keeps_the_bridges_a_pull_requests_target_needs()
+    {
+        // 3.9 (BUG 3 of the plan's map): record kept the bridges of its run's own stream's window alone, where a run made
+        // in process keeps those of the streams it is read against too. A pull request's first run has no stream of its
+        // own yet, and its target's runs are under rule 6.
+        var roster = Roster("Suite", "a1");
+        HistoryLedgerWriter.Append(Ledger, roster, RunLine(roster, "gh:1:1", "P") with { ShapeVersion = 6 }, "test");
+        var bridged = RunLine(roster, "gh:2:1", "P") with
+        {
+            Branch = "feature/menu",
+            ShapeVersion = InteractionShape.Version,
+            Bridge = new Dictionary<string, HistoryBridge> { ["6"] = new() { ShapeSet = ["bbbbbbbb"], ShapeOrdered = ["bbbbbbbb"] } }
+        };
+        Func<string, string?> pullRequest = name => name switch { "GITHUB_ACTIONS" => "true", "GITHUB_BASE_REF" => "main", _ => null };
+
+        var (_, error, exit) = Run(pullRequest, "record", WriteFragment("pr", roster, bridged), "--history", Ledger);
+
+        Assert.True(exit == 0, error);
+        Assert.Equal(["6"], HistoryLedgerReader.Read(Ledger, 50).Ledger!.Runs("Suite")[^1].Bridge!.Keys);
     }
 
     [Fact]

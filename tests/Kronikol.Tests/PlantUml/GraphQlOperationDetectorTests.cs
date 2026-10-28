@@ -956,52 +956,6 @@ public class GraphQlOperationDetectorTests
     }
 
     // ════════════════════════════════════════════════════════════
-    //  IsAtTopLevel INTERNAL METHOD
-    // ════════════════════════════════════════════════════════════
-
-    [Theory]
-    [InlineData("""{"key":""", 1, true)]    // position of "key" after {
-    [InlineData("""{"a":{"key":""", 6, false)]  // "key" is inside nested object (after {"a":{)
-    public void IsAtTopLevel_correctly_tracks_depth(string content, int position, bool expected)
-    {
-        Assert.Equal(expected, GraphQlOperationDetector.IsAtTopLevel(content, position));
-    }
-
-    [Fact]
-    public void IsAtTopLevel_handles_escaped_braces_in_strings()
-    {
-        // The { inside the string value should not affect depth
-        var content = """{"template":"Hello {name}!","key":""";
-        var keyPos = content.IndexOf("\"key\"");
-        Assert.True(GraphQlOperationDetector.IsAtTopLevel(content, keyPos));
-    }
-
-    [Fact]
-    public void IsAtTopLevel_handles_escaped_quotes_in_strings()
-    {
-        // Escaped quotes inside strings should be skipped correctly
-        var content = """{"name":"She said \"hello\"","key":""";
-        var keyPos = content.IndexOf("\"key\"");
-        Assert.True(GraphQlOperationDetector.IsAtTopLevel(content, keyPos));
-    }
-
-    [Fact]
-    public void IsAtTopLevel_handles_nested_then_top_level()
-    {
-        var content = """{"nested":{"inner":"value"},"key":""";
-        var keyPos = content.IndexOf("\"key\"");
-        Assert.True(GraphQlOperationDetector.IsAtTopLevel(content, keyPos));
-    }
-
-    [Fact]
-    public void IsAtTopLevel_deep_nesting()
-    {
-        var content = """{"a":{"b":{"c":{"key":""";
-        var keyPos = content.LastIndexOf("\"key\"");
-        Assert.False(GraphQlOperationDetector.IsAtTopLevel(content, keyPos));
-    }
-
-    // ════════════════════════════════════════════════════════════
     //  BATCH / ARRAY GRAPHQL REQUESTS
     // ════════════════════════════════════════════════════════════
 

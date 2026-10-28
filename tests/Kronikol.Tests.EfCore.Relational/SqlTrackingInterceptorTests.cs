@@ -2,6 +2,7 @@ using System.Data;
 using System.Data.Common;
 using Kronikol.Extensions.EfCore.Relational;
 using Kronikol.Tracking;
+using Kronikol.Tests.History;
 
 namespace Kronikol.Tests.EfCore.Relational;
 
@@ -55,6 +56,20 @@ public class SqlTrackingInterceptorTests : IDisposable
     }
 
     // ─── Basic logging ─────────────────────────────────────────
+
+    [Fact]
+    public void Every_change_to_a_recorded_call_line_moves_the_version()
+    {
+        // The history guard (plans/CALL_OPERATION_AND_ORIGIN_PLAN.md 4.8): what this tracker records for one fixed call, as the
+        // call line history fingerprints, pinned under the rule it was pinned with (HistoryGuard).
+        var interceptor = new SqlTrackingInterceptor(MakeOptions(SqlTrackingVerbosity.Detailed));
+        var command = MakeSelectCommand("OrdersDb", "sql-server.local");
+        interceptor.LogCommandExecuting(command);
+        interceptor.LogCommandExecuted(command);
+
+        HistoryGuard.Pin(GetLogsFromThisTest(), 8,
+            "TestCaller>Database Select /OrdersDb/Users SELECT [u].[Id] FROM [dbo].[Users] AS [u] OK");
+    }
 
     [Fact]
     public void LogCommandExecuting_And_LogCommandExecuted_Logs_request_and_response()
@@ -222,7 +237,11 @@ public class SqlTrackingInterceptorTests : IDisposable
         interceptor.LogCommandExecuting(command);
 
         var log = GetLogsFromThisTest().First(l => l.Type == RequestResponseType.Request);
-        Assert.Equal("sql://ordersdb/Users", log.Uri.ToString());
+        // The database in the path, as every other SQL tracker writes it at Summarised, where until #192 R1 it stood
+        // where a host goes (sql://ordersdb/Users), lower-cased by Uri and dropped by the operation key with the host.
+        Assert.Equal("sql:///OrdersDb/Users", log.Uri.ToString());
+        Assert.Equal("sql://ordersdb/Users", Assert.IsType<RecordedBefore>(log.RecordedBefore8).Uri.ToString());
+        Assert.Equal(log.Method.Value, log.RecordedBefore8.Method.Value);
     }
 
     [Fact]

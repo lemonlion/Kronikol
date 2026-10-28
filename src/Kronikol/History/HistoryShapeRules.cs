@@ -6,7 +6,7 @@ namespace Kronikol.History;
 /// One consumer templating rule (<see cref="ReportConfigurationOptions.HistoryShapeTemplates"/>): what in a
 /// call's path or statement head is variable in THIS application, and what to write in its place.
 /// </summary>
-/// <param name="Pattern">A .NET regular expression, matched culture-invariantly against the path (before its query string) and against a statement head.</param>
+/// <param name="Pattern">A .NET regular expression, matched culture-invariantly against the path (before its query string) as the data file writes it, unescaped, and against a statement head.</param>
 /// <param name="Placeholder">
 /// What replaces each match. Conventionally a name in braces, <c>{report-key}</c>; it is a replacement
 /// pattern, so <c>$1</c> keeps a group of the match (<c>key-$1-{rest}</c>).
@@ -27,7 +27,7 @@ public sealed record HistoryShapeTemplate(string Pattern, string Placeholder);
 /// is comparable only with one the same rules made: editing a rule costs one quiet run instead of
 /// calling every scenario changed once.</para>
 /// </summary>
-public sealed class HistoryShapeRules
+public sealed partial class HistoryShapeRules
 {
     /// <summary>How long one rule may spend on one text before it is skipped for it.</summary>
     public static readonly TimeSpan DefaultTimeout = TimeSpan.FromMilliseconds(250);
@@ -41,6 +41,7 @@ public sealed class HistoryShapeRules
     {
         // The hash is over what was configured, compiled or not: it names the configuration.
         Hash = InteractionShape.Hash8(string.Join("\n", templates.Select(t => t.Pattern + "\u001f" + t.Placeholder)));
+        Templates = [.. templates];
 
         var rules = new List<(Regex, string, string)>(templates.Count);
         foreach (var template in templates)
@@ -52,10 +53,32 @@ public sealed class HistoryShapeRules
             catch (ArgumentException exception)
             {
                 _problems.Add($"the HistoryShapeTemplates pattern {template.Pattern} does not compile and was skipped: {exception.Message}");
+                continue;
             }
+            if (UnescapedRun(template.Pattern) is { } run)
+                _problems.Add($"the HistoryShapeTemplates pattern {template.Pattern} holds the escape {run.Escape}, which a path no longer holds: the rules see the path as the data file writes it, where {run.Escape} is written as '{run.Text}', so match that instead");
         }
         _rules = [.. rules];
     }
+
+    /// <summary>
+    /// The first run of <c>%XX</c> escapes in a pattern that the data file's string writes as the text it stands for
+    /// (<c>%20</c> as a space, <c>%C3%A9</c> as <c>é</c>), or null. Asked of <see cref="Uri"/> itself, which writes that
+    /// string: a reserved character's escape (<c>%2F</c>, <c>%25</c>) and a control character's stay as written.
+    /// </summary>
+    private static (string Escape, string Text)? UnescapedRun(string pattern)
+    {
+        foreach (Match match in EscapeRun().Matches(pattern))
+        {
+            var written = new Uri("http://localhost/" + match.Value).ToString();
+            if (!written.EndsWith(match.Value, StringComparison.OrdinalIgnoreCase))
+                return (match.Value, written["http://localhost/".Length..]);
+        }
+        return null;
+    }
+
+    [GeneratedRegex("(?:%[0-9A-Fa-f]{2})+", RegexOptions.CultureInvariant)]
+    private static partial Regex EscapeRun();
 
     /// <summary>The rules compiled, or null when there are none.</summary>
     /// <param name="templates">The rules, in the order they apply.</param>
@@ -68,6 +91,9 @@ public sealed class HistoryShapeRules
 
     /// <summary>The first eight hex of SHA-256 over the configured rules, in order: what the run line records as <c>shapeRules</c>.</summary>
     public string Hash { get; }
+
+    /// <summary>The rules as configured, in order, compiled or not: what the run line records beside <see cref="Hash"/>.</summary>
+    internal IReadOnlyList<HistoryShapeTemplate> Templates { get; }
 
     /// <summary>What went wrong with a rule, each said once: a pattern that does not compile, a rule that timed out.</summary>
     public IReadOnlyList<string> Problems

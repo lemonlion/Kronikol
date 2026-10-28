@@ -39,7 +39,7 @@ public class BackgroundCallsSectionTests : PlaywrightTestBase
         ];
     }
 
-    private string GenerateBackgroundReport(string fileName)
+    private string GenerateBackgroundReport(string fileName, params string[] latePaths)
     {
         Feature[] features =
         [
@@ -49,7 +49,10 @@ public class BackgroundCallsSectionTests : PlaywrightTestBase
                 Scenarios = [new Scenario { Id = "bg-1", DisplayName = "Pay by card", Result = ExecutionResult.Passed, EndedAt = Ended }]
             }
         ];
-        var logs = BackgroundAttribution.Expire(features, [.. Pair("bg-1", Ended.AddSeconds(-2), "/api/orders"), .. Pair("bg-1", Ended.AddSeconds(30), "/api/orders/sweep")]);
+        if (latePaths.Length == 0)
+            latePaths = ["/api/orders/sweep"];
+        var logs = BackgroundAttribution.Expire(features,
+            [.. Pair("bg-1", Ended.AddSeconds(-2), "/api/orders"), .. latePaths.SelectMany((late, i) => Pair("bg-1", Ended.AddSeconds(30 + i), late))]);
         var background = BackgroundAttribution.Summarise(logs, features);
         var diagrams = new[] { new DiagramAsCode("bg-1", "", PlantUmlSource) };
 
@@ -85,5 +88,24 @@ public class BackgroundCallsSectionTests : PlaywrightTestBase
         Assert.Equal(1, await rows.CountAsync());
         var cells = await rows.First.Locator("td").AllInnerTextsAsync();
         Assert.Equal(["Pay by card", "orders", "GET", "/api/orders/sweep", "1", "2026-01-01T10:00:30.020Z"], cells);
+    }
+
+    [Fact]
+    public async Task Calls_that_differ_only_by_an_id_are_one_row_with_the_path_history_reads()
+    {
+        // The table reads a path through the operation key history fingerprints by (#192 R1): an id is folded, so a sweep
+        // over two orders is one row of two calls, not two rows of one.
+        var url = GenerateBackgroundReport("background-calls-folded.html", "/api/orders/1001/sweep", "/api/orders/1002/sweep");
+
+        await Page.GotoReportAsync(url);
+        var section = Page.Locator("details.background-calls");
+        await section.WaitForAsync();
+        await section.Locator("summary").ClickAsync();
+
+        await Page.WaitForFunctionAsync("() => document.querySelector('details.background-calls').open", null, new() { PollingInterval = 200 });
+        var rows = section.Locator("table.background-calls-table tbody tr");
+        Assert.Equal(1, await rows.CountAsync());
+        var cells = await rows.First.Locator("td").AllInnerTextsAsync();
+        Assert.Equal(["Pay by card", "orders", "GET", "/api/orders/{n}/sweep", "2", "2026-01-01T10:00:31.020Z"], cells);
     }
 }

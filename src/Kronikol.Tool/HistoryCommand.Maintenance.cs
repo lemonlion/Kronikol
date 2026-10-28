@@ -83,8 +83,9 @@ internal static partial class HistoryCommand
             return 1;
         }
 
-        if (!ReportHistory.TryBuild(index, args.Suite, error, out var roster, out var run, out var fromFragment, out var shapes))
+        if (!ReportHistory.TryBuild(index, args.Suite, error, out var roster, out var run, out var fromFragment, out var shapes, out var rawCalls))
             return 2;
+        run = ReportHistory.BridgedToWindow(run, rawCalls, ledger, [args.Branch ?? CiMetadataDetector.PullRequestTarget(getEnv)], args.Window ?? DefaultWindow);
 
         var quarantine = LoadQuarantineOrNull(ledgerPath);
         var aliases = LoadAliasesOrNull(ledgerPath);
@@ -354,6 +355,9 @@ internal static partial class HistoryCommand
         Line(ledger.Stats.DamagedLines == 0, ledger.Stats.DamagedLines == 0
             ? $"{ledger.Stats.LinesScanned} lines, none damaged"
             : $"{ledger.Stats.DamagedLines} damaged line(s) of {ledger.Stats.LinesScanned} - kronikol history verify names them, compact rewrites without them");
+        // A newer Kronikol's kind of line is no damage: read past, and kept by prune and compact (#192 R1).
+        if (ledger.Stats.OtherLines > 0)
+            Line(true, $"{ledger.Stats.OtherLines.ToString(CultureInfo.InvariantCulture)} line{(ledger.Stats.OtherLines == 1 ? "" : "s")} of a kind this Kronikol does not know, a newer one's, read past and kept");
         var suites = ledger.Suites;
         var runs = suites.Sum(s => ledger.Runs(s).Count);
         Line(true, $"{suites.Count} suite{(suites.Count == 1 ? "" : "s")}, {runs} runs, {ledger.Rosters.Count} rosters");
@@ -445,14 +449,14 @@ internal static partial class HistoryCommand
         if (ledgerPath is null)
             return 2;
 
-        var runs = new List<(HistoryRoster Roster, HistoryRun Run, HistoryShapes? Shapes)>();
+        var runs = new List<(HistoryRoster Roster, HistoryRun Run, HistoryShapes? Shapes, HistoryRawCalls? RawCalls)>();
         var failed = 0;
         foreach (var input in args.Inputs)
         {
             try
             {
-                if (args.FromCtrf) runs.AddRange(ImportCtrf(input, args, error).Select(p => (p.Item1, p.Item2, (HistoryShapes?)null)));
-                else if (args.FromAllure) runs.AddRange(ImportAllure(input, args, error).Select(p => (p.Item1, p.Item2, (HistoryShapes?)null)));
+                if (args.FromCtrf) runs.AddRange(ImportCtrf(input, args, error).Select(p => (p.Item1, p.Item2, (HistoryShapes?)null, (HistoryRawCalls?)null)));
+                else if (args.FromAllure) runs.AddRange(ImportAllure(input, args, error).Select(p => (p.Item1, p.Item2, (HistoryShapes?)null, (HistoryRawCalls?)null)));
                 else runs.AddRange(ImportKronikol(input, args, error));
             }
             catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException or FormatException)
@@ -472,9 +476,18 @@ internal static partial class HistoryCommand
 
         var imported = 0;
         var duplicates = 0;
-        foreach (var (roster, run, shapes) in runs.OrderBy(r => r.Run.At))
+        foreach (var (roster, run, shapes, rawCalls) in runs.OrderBy(r => r.Run.At))
         {
-            var line = run.Partial is null ? run with { Partial = HistoryAnalyzer.IsPartial(roster, LastFullRoster(ledgerPath, run.Suite), 0.10) } : run;
+            // The previous roster as its ids now are, through the alias file and the ids Kronikol itself changed (Q15).
+            var previous = LastFullRoster(ledgerPath, run.Suite);
+            if (previous is not null && HistoryAliases.With(LoadAliasesOrNull(ledgerPath), [run]) is { } known)
+                previous = known.Apply(previous);
+            var line = run.Partial is null ? run with { Partial = HistoryAnalyzer.IsPartial(roster, previous, 0.10) } : run;
+            // A fragment bridges every rule Kronikol keeps, and here the consumer's earlier patterns from its raw calls; the
+            // ledger's line keeps only those its window holds, as record's does (#192 R1). The ledger as it stands, since
+            // the runs imported before this one are in its window.
+            if ((line.Bridge is { Count: > 0 } || rawCalls is not null) && HistoryLedgerReader.Read(ledgerPath, DefaultWindow).Ledger is { } read)
+                line = HistoryBridges.ForWindow(ReportHistory.BridgedToWindow(line, rawCalls, read, [], DefaultWindow), read.PriorRuns(line.Suite, line.Stream, line.Id, DefaultWindow));
             var result = HistoryLedgerWriter.Append(ledgerPath, roster, line, Commands.Version, shapes: shapes);
             var label = $"{run.Id}  {run.Suite ?? "(no suite)"}  {Scenarios(line)}  {run.At.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture)}";
             switch (result.Outcome)
@@ -490,7 +503,7 @@ internal static partial class HistoryCommand
         return failed > 0 ? 1 : 0;
     }
 
-    private static IEnumerable<(HistoryRoster, HistoryRun, HistoryShapes?)> ImportKronikol(string input, Args args, TextWriter error)
+    private static IEnumerable<(HistoryRoster, HistoryRun, HistoryShapes?, HistoryRawCalls?)> ImportKronikol(string input, Args args, TextWriter error)
     {
         var full = Path.GetFullPath(input);
         var files = File.Exists(full)
@@ -504,9 +517,9 @@ internal static partial class HistoryCommand
             if (LoadReport(file, error) is not { } index)
                 continue;
             using var loaded = index;
-            if (!ReportHistory.TryBuild(index, args.Suite, error, out var roster, out var run, out _, out var shapes))
+            if (!ReportHistory.TryBuild(index, args.Suite, error, out var roster, out var run, out _, out var shapes, out var rawCalls))
                 continue;
-            yield return (roster, run with { Branch = args.Branch ?? run.Branch, Id = args.RunId ?? run.Id }, shapes);
+            yield return (roster, run with { Branch = args.Branch ?? run.Branch, Id = args.RunId ?? run.Id }, shapes, rawCalls);
         }
     }
 

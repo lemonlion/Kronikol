@@ -851,16 +851,6 @@ public class RelationshipStatsTests
     // GUID Normalization
     // ═══════════════════════════════════════════════════════════
 
-    [Theory]
-    [InlineData("/api/orders", "/api/orders")]
-    [InlineData("/transaction/1272dfb0-bde7-41ba-8c6e-db504bfdef81", "/transaction/{guid}")]
-    [InlineData("/api/v1/1272dfb0-bde7-41ba-8c6e-db504bfdef81/items/5df8b10d-885f-4e98-bc32-fa0e76be83e1", "/api/v1/{guid}/items/{guid}")]
-    [InlineData("/UPPER/AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE", "/UPPER/{guid}")]
-    public void NormalizePathGuids_replaces_guids(string input, string expected)
-    {
-        Assert.Equal(expected, ComponentFlowSegmentBuilder.NormalizePathGuids(input));
-    }
-
     [Fact]
     public void ComputeRelationshipStats_merges_endpoints_differing_only_by_guid()
     {
@@ -884,7 +874,34 @@ public class RelationshipStatsTests
 
         var stats = result.Values.Single();
         Assert.Single(stats.EndpointBreakdown);
-        Assert.Equal("/api/orders/{guid}", stats.EndpointBreakdown[0].Path);
+        // {id} since #192 R1, where it was {guid}: the endpoints are keyed as history keys a call.
+        Assert.Equal("/api/orders/{id}", stats.EndpointBreakdown[0].Path);
         Assert.Equal(3, stats.EndpointBreakdown[0].CallCount);
+    }
+
+    [Fact]
+    public void The_component_diagrams_endpoints_fold_ids_as_history_does()
+    {
+        // The operation key (CallOperation): numbers fold as GUIDs did, and a GraphQL endpoint lists its operations.
+        var logs = new List<RequestResponseLog>();
+        void Call(int i, string method, string uri, string? content = null)
+        {
+            var (req, res) = MakeRequestResponsePair(testId: $"test-{i}", method: method, uri: uri, requestContent: content,
+                requestTime: BaseTime.AddSeconds(i), responseTime: BaseTime.AddSeconds(i).AddMilliseconds(50));
+            logs.Add(req);
+            logs.Add(res);
+        }
+        Call(0, "GET", "http://sut/api/orders/1001");
+        Call(1, "GET", "http://sut/api/orders/1002?expand=lines");
+        Call(2, "POST", "http://sut/graphql", """{"query":"query GetMenu { menu { items } }"}""");
+        Call(3, "POST", "http://sut/graphql", """{"query":"mutation PlaceOrder { placeOrder { id } }"}""");
+        Call(4, "POST", "http://sut/graphql", """{"query":"query GetMenu { menu { items } }"}""");
+
+        var logsArray = logs.ToArray();
+        var stats = ComponentFlowSegmentBuilder.ComputeRelationshipStats(ComponentDiagramGenerator.ExtractRelationships(logsArray), logsArray).Values.Single();
+
+        Assert.Equal(
+            ["GET /api/orders/{n} 2", "POST /graphql mutation PlaceOrder 1", "POST /graphql query GetMenu 2"],
+            stats.EndpointBreakdown.Select(e => $"{e.Method} {e.Path} {e.CallCount}").Order(StringComparer.Ordinal));
     }
 }

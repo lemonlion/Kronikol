@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Kronikol.Constants;
 using Kronikol.Tracking;
+using Kronikol.Tests.History;
 
 namespace Kronikol.Tests.Tracking;
 
@@ -79,6 +80,18 @@ public class TestTrackingMessageHandlerTests : IDisposable
     }
 
     // ─── Basic request/response logging ─────────────────────────
+
+    [Fact]
+    public async Task Every_change_to_a_recorded_call_line_moves_the_version()
+    {
+        // The history guard (plans/CALL_OPERATION_AND_ORIGIN_PLAN.md 4.8): what this tracker records for one fixed call, as the
+        // call line history fingerprints, pinned under the rule it was pinned with (HistoryGuard).
+        using var invoker = CreateInvoker(DefaultOptions());
+        await invoker.SendAsync(new HttpRequestMessage(HttpMethod.Post, "http://target-service:5000/api/items/42?expand=1"), CancellationToken.None);
+
+        HistoryGuard.Pin(GetLogsFromThisTest(), 8,
+            "TestCaller>TargetService POST /api/items/{n}?expand 200");
+    }
 
     [Fact]
     public async Task Logs_both_a_request_and_a_response_for_each_call()

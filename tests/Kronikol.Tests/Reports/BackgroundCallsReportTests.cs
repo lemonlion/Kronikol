@@ -202,6 +202,46 @@ public class BackgroundCallsReportTests : IDisposable
     }
 
     [Fact]
+    public void The_html_table_folds_calls_that_differ_only_by_an_id_into_one_row()
+    {
+        // Keyed as history keys a call (CallOperation, Q8): a poller sweeping order after order was a row per order.
+        var features = Features("bg-9", Ended);
+        var logs = BackgroundAttribution.Expire(features,
+            [.. Pair("bg-9", Ended.AddSeconds(-2)), .. Pair("bg-9", Ended.AddSeconds(30), "/api/orders/1001/sweep"), .. Pair("bg-9", Ended.AddSeconds(31), "/api/orders/1002/sweep")]);
+
+        var html = ReportHtml.Read(ReportGenerator.GenerateHtmlReport([], features, DateTime.UtcNow, DateTime.UtcNow, null,
+            $"Background_{Guid.NewGuid():N}.html", "Run", true, background: BackgroundAttribution.Summarise(logs, features)));
+
+        Assert.Contains("<td>Pay by card</td><td>orders</td><td>GET</td><td>/api/orders/{n}/sweep</td><td>2</td><td>2026-01-01T10:00:31.020Z</td>", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("/api/orders/1001/sweep", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void The_html_table_keys_a_statement_by_its_request_not_its_rows()
+    {
+        // A statement's response carries its rows, not the statement: each pair is one row, keyed by its request.
+        var features = Features("bg-10", Ended);
+        RequestResponseLog[] Statement(DateTimeOffset at, string sql)
+        {
+            var (pair, trace) = (Guid.NewGuid(), Guid.NewGuid());
+            return
+            [
+                new("Pay by card", "bg-10", "Select", sql, new Uri("sql:///app/Orders"), [], "db", "orders", RequestResponseType.Request, trace, pair, false,
+                    DependencyCategory: Kronikol.Constants.DependencyCategories.SQL) { Timestamp = at, AttributionSource = AttributionSource.TestContext },
+                new("Pay by card", "bg-10", "Select", """[{"Id":1}]""", new Uri("sql:///app/Orders"), [], "db", "orders", RequestResponseType.Response, trace, pair, false,
+                    DependencyCategory: Kronikol.Constants.DependencyCategories.SQL) { Timestamp = at.AddMilliseconds(3), AttributionSource = AttributionSource.TestContext }
+            ];
+        }
+        var logs = BackgroundAttribution.Expire(features,
+            [.. Pair("bg-10", Ended.AddSeconds(-2)), .. Statement(Ended.AddSeconds(30), "SELECT * FROM Orders WHERE Id = 7"), .. Statement(Ended.AddSeconds(31), "SELECT * FROM Orders WHERE Id = 8")]);
+
+        var html = ReportHtml.Read(ReportGenerator.GenerateHtmlReport([], features, DateTime.UtcNow, DateTime.UtcNow, null,
+            $"Background_{Guid.NewGuid():N}.html", "Run", true, background: BackgroundAttribution.Summarise(logs, features)));
+
+        Assert.Contains("<td>Pay by card</td><td>db</td><td>Select</td><td>/app/Orders SELECT * FROM Orders WHERE Id = {n}</td><td>2</td>", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void The_html_heading_counts_the_calls_no_scenario_made_when_they_are_kept()
     {
         // With CaptureBackground on, a detached hosted service's calls sit in the same table under
@@ -284,5 +324,30 @@ public class BackgroundCallsReportTests : IDisposable
         var html = ReportHtml.Read(Path.Combine(_dir, "TestRunReport.html"));
         Assert.Contains("<details class=\"background-calls\">", html, StringComparison.Ordinal);
         Assert.Contains("<td>/api/orders/sweep</td>", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void The_standard_flow_folds_the_background_table_with_the_consumers_shape_templates()
+    {
+        var testId = "bg-rules-" + Guid.NewGuid().ToString("N");
+        var ended = DateTimeOffset.UtcNow.AddMinutes(-1);
+        foreach (var log in Pair(testId, ended.AddSeconds(-5)))
+            RequestResponseLogger.Log(log);
+        foreach (var batch in new[] { "alpha", "beta" })
+            RequestResponseLogger.LogPair("Pay by card", testId, HttpMethod.Get, new Uri($"http://orders/api/rules-sweep/batch-{batch}"), "orders", "Test",
+                source: AttributionSource.TestContext);
+
+        ReportGenerator.CreateStandardReportsWithDiagrams(Features(testId, ended), ended.AddMinutes(-1).UtcDateTime, DateTime.UtcNow, new ReportConfigurationOptions
+        {
+            ReportsFolderPath = _dir,
+            InternalFlowTracking = false,
+            GenerateComponentDiagram = false,
+            GenerateSpecificationsReport = false,
+            GenerateSpecificationsData = false,
+            HistoryShapeTemplates = [new Kronikol.History.HistoryShapeTemplate("batch-[a-z]+", "{batch}")]
+        });
+
+        var html = ReportHtml.Read(Path.Combine(_dir, "TestRunReport.html"));
+        Assert.Contains("<td>/api/rules-sweep/{batch}</td><td>2</td>", html, StringComparison.Ordinal);
     }
 }

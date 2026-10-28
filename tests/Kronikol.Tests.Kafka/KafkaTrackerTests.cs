@@ -1,6 +1,7 @@
 using Kronikol.Extensions.Kafka;
 using Kronikol.Tests.Tracking;
 using Kronikol.Tracking;
+using Kronikol.Tests.History;
 
 namespace Kronikol.Tests.Kafka;
 
@@ -29,6 +30,19 @@ public class KafkaTrackerTests
     };
 
     // ─── LogProduce ─────────────────────────────────────────
+
+    [Fact]
+    public void Every_change_to_a_recorded_call_line_moves_the_version()
+    {
+        // The history guard (plans/CALL_OPERATION_AND_ORIGIN_PLAN.md 4.8): what this tracker records for one fixed call, as the
+        // call line history fingerprints, pinned under the rule it was pinned with (HistoryGuard).
+        var tracker = new KafkaTracker(MakeOptions(KafkaTrackingVerbosity.Detailed));
+        var op = new KafkaOperationInfo(KafkaOperation.ProduceAsync, "orders-topic");
+        tracker.LogProduce(op, "hello");
+
+        HistoryGuard.Pin(GetLogsFromThisTest(), 8,
+            "TestCaller>Kafka Produce → orders-topic /orders-topic -");
+    }
 
     [Fact]
     public void LogProduce_Logs_request_and_response()

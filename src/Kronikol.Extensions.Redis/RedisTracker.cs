@@ -23,6 +23,12 @@ public class RedisTracker : ITrackingComponent
         TrackingComponentRegistry.Register(this);
     }
 
+    /// <summary>
+    /// The endpoint's name as 5.16.1 wrote it, when that differs (<see cref="RedisTrackingDatabase.EndpointName"/>): a Raw
+    /// call keeps its old address for history's rules 6 and 7 (<see cref="RequestResponseLog.RecordedBefore8"/>).
+    /// </summary>
+    internal string? EndpointBefore8 { get; init; }
+
     public string ComponentName => $"RedisTracker ({_options.ServiceName})";
     public bool WasInvoked => _invocationCount > 0;
     public int InvocationCount => _invocationCount;
@@ -76,7 +82,10 @@ public class RedisTracker : ITrackingComponent
         )
         {
             AttributionSource = testInfo.Value.Source,
-            Phase = TestPhaseContext.Current
+            Phase = TestPhaseContext.Current,
+            RecordedBefore8 = effectiveVerbosity == RedisTrackingVerbosity.Raw && EndpointBefore8 is { } before
+                ? new RecordedBefore(method, BuildUri(before, key, db))
+                : null
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v =>
             {
@@ -148,13 +157,14 @@ public class RedisTracker : ITrackingComponent
             }));
     }
 
+    private static Uri BuildUri(string endpoint, string? key, int db) =>
+        key is not null ? new Uri($"redis://{endpoint}/{db}/{key}") : new Uri($"redis://{endpoint}/{db}");
+
     private Uri BuildUri(string? key, int db, RedisTrackingVerbosity verbosity)
     {
         return verbosity switch
         {
-            RedisTrackingVerbosity.Raw => key is not null
-                ? new Uri($"redis://{_endpoint}/{db}/{key}")
-                : new Uri($"redis://{_endpoint}/{db}"),
+            RedisTrackingVerbosity.Raw => BuildUri(_endpoint, key, db),
             RedisTrackingVerbosity.Detailed => key is not null
                 ? new Uri($"redis://db{db}/{key}")
                 : new Uri($"redis://db{db}/"),

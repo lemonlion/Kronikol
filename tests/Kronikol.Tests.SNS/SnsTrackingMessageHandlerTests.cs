@@ -1,6 +1,7 @@
 using System.Net;
 using Kronikol.Extensions.SNS;
 using Kronikol.Tracking;
+using Kronikol.Tests.History;
 
 namespace Kronikol.Tests.SNS;
 
@@ -87,6 +88,18 @@ public class SnsTrackingMessageHandlerTests : IDisposable
     }
 
     // ─── Basic logging ─────────────────────────────────────────
+
+    [Fact]
+    public async Task Every_change_to_a_recorded_call_line_moves_the_version()
+    {
+        // The history guard (plans/CALL_OPERATION_AND_ORIGIN_PLAN.md 4.8): what this tracker records for one fixed call, as the
+        // call line history fingerprints, pinned under the rule it was pinned with (HistoryGuard).
+        using var invoker = CreateInvoker(MakeOptions());
+        await invoker.SendAsync(MakePublishRequest(), CancellationToken.None);
+
+        HistoryGuard.Pin(GetLogsFromThisTest(), 8,
+            "TestCaller>SNS Publish /my-topic 200");
+    }
 
     [Fact]
     public async Task Logs_request_and_response_for_each_call()

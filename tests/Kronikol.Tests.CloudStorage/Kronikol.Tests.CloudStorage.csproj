@@ -15,4 +15,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Kronikol.Extensions.CloudStorage\Kronikol.Extensions.CloudStorage.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Kronikol.Tests\History\HistoryGuard.cs" Link="HistoryGuard.cs" />
+  </ItemGroup>
+
 </Project>

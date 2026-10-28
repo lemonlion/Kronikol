@@ -49,18 +49,23 @@ public static partial class InteractionShape
     /// many scalars a list of them holds are data too, so a test that generates its data does not write a new shape
     /// whenever a flag flips (#168 audit). 7: #190 R0 - no rule changed, but what the HTTP handler records did: a call
     /// nothing maps is named by its remote host and port, where 6 recorded <c>localhost:{port}</c> for every host.
+    /// 8: #192 R1 - one operation key behind history, the warm-up marks and the component diagram
+    /// (<see cref="CallOperation"/>): the path as the data file writes it, unescaped, with an entity a tracker writes in
+    /// the authority kept (a Service Bus queue, an S3 bucket); <c>{bin}</c> for bytes written raw; the consumer's rules
+    /// applied to that string; a GraphQL request's operation; and a statement's head past a <c>SET</c> prologue, or a
+    /// document's query string rather than the document.
     /// <para>From 6 on, a released rule is kept as a function of the raw call (<see cref="KeptVersions"/>): while the
     /// window holds runs fingerprinted under one, each run also fingerprints its own calls under it, its
     /// <see cref="HistoryRun.Bridge"/>, so a move costs no quiet run (plans/CALL_OPERATION_AND_ORIGIN_PLAN.md §4.8, built
     /// for #190). A window holding runs under 5 or earlier compares from the next run, as before.</para>
     /// </summary>
-    public const int Version = 7;
+    public const int Version = 8;
 
     /// <summary>
     /// The released rules a run can fingerprint its own calls under (<see cref="Calls(IEnumerable{RequestResponseLog}, HistoryShapeRules, int)"/>),
-    /// the current one last. A rule is kept from 6 on: what 6 recorded is a function of what 7 records.
+    /// the current one last. A rule is kept from 6 on: what each recorded is a function of what the current one records.
     /// </summary>
-    internal static IReadOnlyList<int> KeptVersions { get; } = [6, Version];
+    internal static IReadOnlyList<int> KeptVersions { get; } = [6, 7, Version];
 
     /// <summary>How much of a statement's first line is templated, and how much of the templated head is kept.</summary>
     private const int HeadRaw = 2000;
@@ -81,6 +86,11 @@ public static partial class InteractionShape
     // because a hash's leading bytes are printable about a third of the time and vary as the rest do.
     [GeneratedRegex(@"(?<=^|[/\-_:.])[^/\-_:.]*(?:%EF%BF%BD|%[01][0-9A-Fa-f])[^/]*", Options)]
     private static partial Regex BinaryPattern();
+
+    // The same, for a path whose bytes are written as themselves: the data file's string unescapes a control character
+    // and keeps U+FFFD as the character, where the escaped path had %0C and %EF%BF%BD.
+    [GeneratedRegex(@"(?<=^|[/\-_:.])[^/\-_:.]*(?:%EF%BF%BD|%[01][0-9A-Fa-f]|[\u0000-\u001F\uFFFD])[^/]*", Options)]
+    private static partial Regex RawBinaryPattern();
 
     // Timestamps: an ISO-8601 date, optionally with a time, fraction and zone.
     [GeneratedRegex(@"(?<![0-9A-Za-z])\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2})?)?(?![0-9A-Za-z])", Options)]
@@ -110,7 +120,14 @@ public static partial class InteractionShape
     /// (<see cref="ReportConfigurationOptions.HistoryShapeTemplates"/>): the built-in rules then see what
     /// those left. The query string is not offered to them; its values are dropped whatever they hold.
     /// </summary>
-    public static string Template(string text, HistoryShapeRules? rules)
+    public static string Template(string text, HistoryShapeRules? rules) => Template(text, rules, rawBytes: true);
+
+    /// <summary>
+    /// <see cref="Template(string, HistoryShapeRules?)"/>, with <paramref name="rawBytes"/> saying whether bytes written
+    /// as themselves are <c>{bin}</c> as well as their escapes: the data file's string unescapes them, the escaped path
+    /// rules 6 and 7 read did not.
+    /// </summary>
+    internal static string Template(string text, HistoryShapeRules? rules, bool rawBytes)
     {
         if (string.IsNullOrEmpty(text))
             return "";
@@ -119,7 +136,8 @@ public static partial class InteractionShape
         var path = query < 0 ? text : text[..query];
         if (rules is not null)
             path = rules.Apply(path);
-        var templated = NumberPattern().Replace(TimestampPattern().Replace(IdPattern().Replace(BinaryPattern().Replace(path, "{bin}"), "{id}"), "{ts}"), "{n}");
+        var binary = rawBytes ? RawBinaryPattern() : BinaryPattern();
+        var templated = NumberPattern().Replace(TimestampPattern().Replace(IdPattern().Replace(binary.Replace(path, "{bin}"), "{id}"), "{ts}"), "{n}");
 
         if (query < 0)
             return templated;
@@ -222,13 +240,51 @@ public static partial class InteractionShape
     /// <summary>
     /// The calls as a released rule recorded them (<see cref="KeptVersions"/>): under 6, a callee the HTTP handler named
     /// by its remote host (<see cref="RequestResponseLog.NamedByRemoteHostFallback"/>) is <c>localhost:{port}</c>, as it
-    /// was then. Every other call is the same under both.
+    /// was then; under 6 and 7, a call reads as its tracker recorded it before 8 (<see cref="RequestResponseLog.RecordedBefore8"/>),
+    /// or is no call, and its target is the escaped path rather than the operation key.
     /// </summary>
-    internal static IReadOnlyList<ShapeCall> Calls(IEnumerable<RequestResponseLog?> logs, HistoryShapeRules? rules, int version)
+    internal static IReadOnlyList<ShapeCall> Calls(IEnumerable<RequestResponseLog?> logs, HistoryShapeRules? rules, int version) =>
+        Calls(RawCalls(logs), rules, version);
+
+    /// <summary>
+    /// The calls of <see cref="Calls(IEnumerable{RequestResponseLog}, HistoryShapeRules, int)"/> as a rule takes them in,
+    /// before any rule (<see cref="HistoryRawCall"/>): what a fragment carries, so <c>history record</c> fingerprints a
+    /// run under rules the run did not know.
+    /// </summary>
+    internal static IReadOnlyList<ShapeCall> Calls(IReadOnlyList<HistoryRawCall> calls, HistoryShapeRules? rules, int version)
     {
-        ArgumentNullException.ThrowIfNull(logs);
+        ArgumentNullException.ThrowIfNull(calls);
         if (!KeptVersions.Contains(version))
             throw new ArgumentOutOfRangeException(nameof(version), version, "only a kept rule can be applied to a call");
+
+        var shaped = new List<ShapeCall>(calls.Count);
+        foreach (var call in calls)
+        {
+            if (version >= 8)
+            {
+                shaped.Add(new ShapeCall(call.Caller, call.Service, call.Method, CallOperation.Key((call.Path, call.Head, call.Operation), rules), call.Status));
+                continue;
+            }
+
+            // Under 6 and 7, the call as its tracker recorded it then, or none, and the escaped path and the statement's
+            // own first line rather than the operation key.
+            if (call.Absent7)
+                continue;
+            var target = Template(call.Path7 ?? call.Path, rules, rawBytes: false);
+            if ((call.Head7 ?? call.Head) is { } head)
+                target += " " + StatementHead(head, rules);
+            shaped.Add(new ShapeCall(call.Caller, version < 7 ? call.Service6 ?? call.Service : call.Service, call.Method7 ?? call.Method, target, call.Status));
+        }
+        return shaped;
+    }
+
+    /// <summary>
+    /// The calls in a log stream before any rule (<see cref="HistoryRawCall"/>), in request order, each paired with its
+    /// response by <see cref="RequestResponseLog.RequestResponseId"/>. Markers and ignored records are not calls.
+    /// </summary>
+    internal static IReadOnlyList<HistoryRawCall> RawCalls(IEnumerable<RequestResponseLog?> logs)
+    {
+        ArgumentNullException.ThrowIfNull(logs);
 
         var responses = new Dictionary<Guid, RequestResponseLog>();
         var requests = new List<RequestResponseLog>();
@@ -242,13 +298,37 @@ public static partial class InteractionShape
                 requests.Add(log);
         }
 
-        var calls = new List<ShapeCall>(requests.Count);
+        var calls = new List<HistoryRawCall>(requests.Count);
         foreach (var request in requests)
         {
             responses.TryGetValue(request.RequestResponseId, out var response);
             var (code, text) = InteractionStatus.Split(response?.StatusCode);
             var status = code?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? text;
-            calls.Add(new ShapeCall(request.CallerName, ServiceNameUnder(request, version), MethodOf(request), Target(request, rules), status));
+            var method = MethodOf(request);
+            var (path, head, operation) = CallOperation.Untemplated(method, request.Uri.ToString(), request.DependencyCategory, request.Content, queryKeys: true);
+            var call = new HistoryRawCall(request.CallerName, request.ServiceName, method, path, operation, head, status);
+
+            // Rules 6 and 7 read a call as its tracker recorded it before 8 (RequestResponseLog.RecordedBefore8), or no
+            // call, with its escaped path and its statement's own first line; 6 named a host by its address localhost.
+            var service6 = ServiceNameUnder(request, 6);
+            if (request.RecordedBefore8 is { Absent: true })
+            {
+                call = call with { Absent7 = true };
+            }
+            else
+            {
+                var uri = request.RecordedBefore8?.Uri ?? request.Uri;
+                var path7 = uri.IsAbsoluteUri ? uri.PathAndQuery : uri.OriginalString;
+                var method7 = request.RecordedBefore8 is { } before ? MethodOf(before.Method) : method;
+                var head7 = head is null ? null : StatementLine(request.Content!);
+                call = call with
+                {
+                    Method7 = method7 == method ? null : method7,
+                    Path7 = path7 == path ? null : path7,
+                    Head7 = head7 == head ? null : head7
+                };
+            }
+            calls.Add(service6 == request.ServiceName ? call : call with { Service6 = service6 });
         }
         return calls;
     }
@@ -259,25 +339,13 @@ public static partial class InteractionShape
             ? "localhost:" + log.Uri.Port.ToString(System.Globalization.CultureInfo.InvariantCulture)
             : log.ServiceName;
 
-    private static string MethodOf(RequestResponseLog log) => log.Method.Value switch
+    private static string MethodOf(RequestResponseLog log) => MethodOf(log.Method);
+
+    private static string MethodOf(OneOf<HttpMethod, string> method) => method.Value switch
     {
-        HttpMethod method => method.Method,
+        HttpMethod http => http.Method,
         var other => other?.ToString() ?? ""
     };
-
-    /// <summary>
-    /// What identifies the call: the templated path and query, plus — for a statement-shaped dependency,
-    /// whose URI is the same connection for every statement — the templated first line of the statement.
-    /// </summary>
-    private static string Target(RequestResponseLog log, HistoryShapeRules? rules)
-    {
-        var path = log.Uri.IsAbsoluteUri ? log.Uri.PathAndQuery : log.Uri.OriginalString;
-        var templated = Template(path, rules);
-        if (!DependencyCategories.IsStatementShaped(log.DependencyCategory) || string.IsNullOrWhiteSpace(log.Content))
-            return templated;
-
-        return templated + " " + StatementHead(log.Content, rules);
-    }
 
     /// <summary>
     /// The templated first line of a statement, cut to a length a shape can carry: what tells one statement on a
@@ -286,7 +354,13 @@ public static partial class InteractionShape
     internal static string StatementHead(string content, HistoryShapeRules? rules) =>
         // Templated before it is cut: cut first, an id straddling the limit kept its first characters, and
         // a scenario writing a fresh id read as behaviour-changed on every run.
-        FailureText.Truncate(TemplateStatement(FailureText.Truncate(FailureText.FirstLine(content), HeadRaw), rules), HeadLength);
+        FailureText.Truncate(TemplateStatement(StatementLine(content), rules), HeadLength);
+
+    /// <summary>
+    /// The part of a statement <see cref="StatementHead"/> templates: its first line, cut. Read again it is unchanged,
+    /// so a fragment carries this rather than the statement (<see cref="HistoryRawCall.Head"/>).
+    /// </summary>
+    internal static string StatementLine(string content) => FailureText.Truncate(FailureText.FirstLine(content), HeadRaw);
 
     /// <summary>The two fingerprints and the call count for a scenario's calls.</summary>
     public static (string ShapeSet, string ShapeOrdered, int Calls) Fingerprint(IReadOnlyList<ShapeCall> calls)

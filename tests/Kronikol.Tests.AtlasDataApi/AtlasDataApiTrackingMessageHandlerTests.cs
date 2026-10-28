@@ -1,6 +1,7 @@
 using System.Net;
 using Kronikol.Extensions.AtlasDataApi;
 using Kronikol.Tracking;
+using Kronikol.Tests.History;
 
 namespace Kronikol.Tests.AtlasDataApi;
 
@@ -12,6 +13,23 @@ public class AtlasDataApiTrackingMessageHandlerTests
         => RequestResponseLogger.RequestAndResponseLogs.Where(l => l.TestId == _testId).ToArray();
 
     // ── Basic tracking ──
+
+    [Fact]
+    public async Task Every_change_to_a_recorded_call_line_moves_the_version()
+    {
+        // The history guard (plans/CALL_OPERATION_AND_ORIGIN_PLAN.md 4.8): what this tracker records for one fixed call, as the
+        // call line history fingerprints, pinned under the rule it was pinned with (HistoryGuard).
+        var inner = new FakeInnerHandler(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("{}") });
+        using var handler = new AtlasDataApiTrackingMessageHandler(CreateOptions(), inner);
+        using var client = new HttpClient(handler);
+        var request = new HttpRequestMessage(HttpMethod.Post, "https://data.mongodb-api.com/app/myapp/endpoint/data/v1/action/insertOne");
+        request.Content = new StringContent("""{"dataSource":"C","database":"orders_db","collection":"orders","document":{"name":"x"}}""",
+            System.Text.Encoding.UTF8, "application/json");
+        await client.SendAsync(request, TestContext.Current.CancellationToken);
+
+        HistoryGuard.Pin(GetLogsForTest(), 8,
+            "Caller>AtlasDataApi InsertOne → orders /orders_db/orders {\"dataSource\":\"{v}\",\"database\":\"{v}\",\"collection\":\"{v}\",\"document\":{\"name\":\"{v}\"}} 200");
+    }
 
     [Fact]
     public async Task SendAsync_TracksRequest_AndResponse()

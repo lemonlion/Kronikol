@@ -234,6 +234,45 @@ public class UnifiedSqlClassifierTests
     }
 
     [Fact]
+    public void An_sql_batch_with_two_set_statements_is_classified_by_its_statement()
+    {
+        // EF Core opens every SQL Server SaveChanges batch with two SET statements; until #192 R1 only the first was
+        // stripped, so each batch classified as Other with no table, and at Summarised was not recorded at all.
+        const string insert = "SET IMPLICIT_TRANSACTIONS OFF;\r\nSET NOCOUNT ON;\r\nINSERT INTO [Orders] ([Status]) OUTPUT INSERTED.[Id] VALUES (@p0);";
+        const string update = "SET IMPLICIT_TRANSACTIONS OFF;\r\nSET NOCOUNT ON;\r\nUPDATE [Orders] SET [Status] = @p0 WHERE [Id] = @p1;";
+
+        var classified = UnifiedSqlClassifier.Classify(insert);
+        Assert.Equal(UnifiedSqlOperation.Insert, classified.Operation);
+        Assert.Equal("Orders", classified.TableName);
+        Assert.Equal(UnifiedSqlOperation.Update, UnifiedSqlClassifier.Classify(update).Operation);
+        Assert.Equal("INSERT", UnifiedSqlClassifier.GetRawKeyword(insert));
+    }
+
+    [Fact]
+    public void A_statement_of_set_lines_alone_is_other()
+    {
+        Assert.Equal(UnifiedSqlOperation.Other, UnifiedSqlClassifier.Classify("SET NOCOUNT ON;\r\nSET XACT_ABORT ON;").Operation);
+        Assert.Null(UnifiedSqlClassifier.GetRawKeyword("SET NOCOUNT ON;\r\nSET XACT_ABORT ON;"));
+    }
+
+    [Fact]
+    public void The_classification_before_8_is_kept_for_a_batch_it_read_otherwise()
+    {
+        // History's rules 6 and 7 read a call as 5.16.1 recorded it, so the one-SET reading is kept for the statements
+        // it read otherwise, and only for those.
+        const string insert = "SET IMPLICIT_TRANSACTIONS OFF;\r\nSET NOCOUNT ON;\r\nINSERT INTO [Orders] ([Status]) VALUES (@p0);";
+
+        var before = UnifiedSqlClassifier.ClassifiedBefore8(insert);
+        Assert.NotNull(before);
+        Assert.Equal(UnifiedSqlOperation.Other, before.Value.Info.Operation);
+        Assert.Null(before.Value.Info.TableName);
+        Assert.Null(before.Value.RawKeyword);
+        Assert.Null(UnifiedSqlClassifier.ClassifiedBefore8("SET NOCOUNT ON;\nSELECT * FROM Users"));
+        Assert.Null(UnifiedSqlClassifier.ClassifiedBefore8("SELECT * FROM Users"));
+        Assert.Null(UnifiedSqlClassifier.ClassifiedBefore8("SET NOCOUNT ON;\r\nSET XACT_ABORT ON;"));
+    }
+
+    [Fact]
     public void Spanner_hint_is_stripped()
     {
         var result = UnifiedSqlClassifier.Classify("@{PDML_MAX_PARALLELISM=10} SELECT * FROM Users");

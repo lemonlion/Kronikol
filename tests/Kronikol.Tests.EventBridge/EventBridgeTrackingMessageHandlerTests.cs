@@ -1,6 +1,7 @@
 using System.Net;
 using Kronikol.Extensions.EventBridge;
 using Kronikol.Tracking;
+using Kronikol.Tests.History;
 
 namespace Kronikol.Tests.EventBridge;
 
@@ -100,6 +101,18 @@ public class EventBridgeTrackingMessageHandlerTests : IDisposable
     }
 
     // ─── Basic logging ─────────────────────────────────────────
+
+    [Fact]
+    public async Task Every_change_to_a_recorded_call_line_moves_the_version()
+    {
+        // The history guard (plans/CALL_OPERATION_AND_ORIGIN_PLAN.md 4.8): what this tracker records for one fixed call, as the
+        // call line history fingerprints, pinned under the rule it was pinned with (HistoryGuard).
+        using var invoker = CreateInvoker(MakeOptions());
+        await invoker.SendAsync(MakePutEventsRequest(), CancellationToken.None);
+
+        HistoryGuard.Pin(GetLogsFromThisTest(), 8,
+            "TestCaller>EventBridge PutEvents [OrderCreated] /default/ 200");
+    }
 
     [Fact]
     public async Task Logs_request_and_response_for_each_call()
@@ -226,6 +239,27 @@ public class EventBridgeTrackingMessageHandlerTests : IDisposable
 
         var log = GetLogsFromThisTest().First(l => l.Type == RequestResponseType.Request);
         Assert.Equal("PutRule my-rule", log.Method.Value?.ToString());
+    }
+
+    [Theory]
+    [InlineData("arn:aws:events:us-east-1:123456789012:event-bus/orders-bus", "eventbridge://orders-bus/")]
+    [InlineData("orders-bus", "eventbridge://orders-bus/")]
+    [InlineData("orders_bus", "eventbridge://orders_bus/")]
+    [InlineData("aws.partner/example.com/123", "eventbridge://aws.partner/example.com/123/")]
+    public async Task A_bus_given_by_its_arn_is_named_by_its_name_and_the_call_goes_through(string bus, string uri)
+    {
+        // An ARN's colons read as a port where a host goes: until #192 R1 every such PutEvents threw UriFormatException out
+        // of the consumer's own call, at Detailed and Summarised.
+        foreach (var verbosity in new[] { EventBridgeTrackingVerbosity.Detailed, EventBridgeTrackingVerbosity.Summarised })
+        {
+            using var invoker = CreateInvoker(MakeOptions(verbosity));
+
+            using var response = await invoker.SendAsync(MakePutEventsRequest(bus), CancellationToken.None);
+
+            Assert.NotNull(response);
+            var log = GetLogsFromThisTest().Last(l => l.Type == RequestResponseType.Request);
+            Assert.Equal(uri, log.Uri.ToString());
+        }
     }
 
     [Fact]

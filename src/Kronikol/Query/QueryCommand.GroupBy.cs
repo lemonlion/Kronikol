@@ -36,7 +36,9 @@ public static partial class QueryCommand
         foreach (var (scenario, request, response) in matches)
         {
             var values = dims.Select(d => DimensionValue(d, request, response)).ToArray();
-            var key = string.Join('\x1f', values);
+            // A service is one service whatever case its callers name it in, as `services` counts it (OrdinalIgnoreCase, so
+            // the invariant upper case), the row named as its first call names it; every other value is kept as written.
+            var key = string.Join('\x1f', values.Select((v, i) => dims[i].Equals("service", StringComparison.OrdinalIgnoreCase) ? v.ToUpperInvariant() : v));
             if (!buckets.TryGetValue(key, out var bucket))
                 buckets[key] = bucket = new GroupBucket(values);
             bucket.Calls++;

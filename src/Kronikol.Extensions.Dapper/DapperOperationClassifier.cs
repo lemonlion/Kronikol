@@ -27,9 +27,18 @@ public static class DapperOperationClassifier
         [UnifiedSqlOperation.Rollback] = DapperOperation.Rollback,
     };
 
-    public static DapperOperationInfo Classify(string? commandText, CommandType commandType = CommandType.Text)
+    public static DapperOperationInfo Classify(string? commandText, CommandType commandType = CommandType.Text) =>
+        From(UnifiedSqlClassifier.Classify(commandText, commandType), commandType);
+
+    /// <summary>
+    /// How <see cref="Classify"/> read <paramref name="commandText"/> until #192 R1, when that differs from how it reads
+    /// it now (<see cref="UnifiedSqlClassifier.ClassifiedBefore8"/>): a batch opening with two SET statements.
+    /// </summary>
+    internal static (DapperOperationInfo Info, string? RawKeyword)? ClassifiedBefore8(string? commandText, CommandType commandType = CommandType.Text) =>
+        UnifiedSqlClassifier.ClassifiedBefore8(commandText, commandType) is { } before ? (From(before.Info, commandType), before.RawKeyword) : null;
+
+    private static DapperOperationInfo From(UnifiedSqlOperationInfo unified, CommandType commandType)
     {
-        var unified = UnifiedSqlClassifier.Classify(commandText, commandType);
         var op = OperationMap.GetValueOrDefault(unified.Operation, DapperOperation.Other);
         // Dapper convention: StoredProcedure has null table name (proc name goes in CommandText)
         var tableName = op == DapperOperation.StoredProcedure && commandType == CommandType.StoredProcedure

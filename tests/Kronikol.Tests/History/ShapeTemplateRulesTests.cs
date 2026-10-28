@@ -62,6 +62,33 @@ public class ShapeTemplateRulesTests
     }
 
     [Fact]
+    public void A_pattern_holding_an_escape_the_path_no_longer_holds_is_said_and_still_applies()
+    {
+        // Q17: since #192 R1 the rules see the path as the data file writes it, which unescapes %20 and a whole UTF-8
+        // sequence; a pattern written against the escaped path no longer matches there, and nothing else would say so.
+        var rules = HistoryShapeRules.Create([new HistoryShapeTemplate(@"report%20\d+", "{report}"), new HistoryShapeTemplate("caf%C3%A9-[a-z]+", "{cafe}")]);
+
+        Assert.NotNull(rules);
+        Assert.Equal(2, rules.Problems.Count);
+        Assert.Contains("report%20\\d+", rules.Problems[0], StringComparison.Ordinal);
+        Assert.Contains("%20", rules.Problems[0], StringComparison.Ordinal);
+        Assert.Contains("' '", rules.Problems[0], StringComparison.Ordinal);
+        Assert.Contains("'é'", rules.Problems[1], StringComparison.Ordinal);
+        // Said, not skipped: a statement head may still hold the escape as written.
+        Assert.Equal("SELECT * FROM {report}", InteractionShape.TemplateStatement("SELECT * FROM report%2042", rules));
+    }
+
+    [Fact]
+    public void A_pattern_holding_an_escape_the_path_keeps_is_not_said()
+    {
+        // The data file's string keeps a reserved character's escape (%2F, %3F, %25) and a control character's.
+        var rules = HistoryShapeRules.Create([new HistoryShapeTemplate("a%2Fb", "{ab}"), new HistoryShapeTemplate("key-%0C", "{k}"), new HistoryShapeTemplate("50%25", "{p}"), new HistoryShapeTemplate("%[0-9A-F]{2}", "{e}")]);
+
+        Assert.NotNull(rules);
+        Assert.Empty(rules.Problems);
+    }
+
+    [Fact]
     public void A_rule_that_times_out_is_skipped_for_that_text_and_said_once()
     {
         // The regexes are the consumer's. One that backtracks for ever must cost a rule, never a test run.

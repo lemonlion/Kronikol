@@ -677,6 +677,20 @@ public class HistoryAnalyzerTests
     }
 
     [Fact]
+    public void Reordered_calls_are_reported_when_the_runs_count_their_calls()
+    {
+        // Every run has counted its calls since 3.15.0, and the count branch took every such run, so until #192 R1 the
+        // reorder the option asks for was never reported.
+        var roster = Roster(Ids);
+        var ledger = Ledger(Enumerable.Range(1, 3).Select(i => (roster, Run(roster, i, "PPP", shapes: ["s1", "s2", "s3"], ordered: ["o1", "o2", "o3"], calls: [3, 3, 3]))));
+        var current = Run(roster, 9, "PPP", shapes: ["s1", "s2", "s3"], ordered: ["o9", "o2", "o3"], calls: [3, 3, 3]);
+
+        var asked = First(Analyse(ledger, roster, current, new HistoryAnalysisOptions { ReportReordered = true }));
+
+        Assert.Equal(HistoryVerdictKind.Reordered, asked.Primary);
+    }
+
+    [Fact]
     public void A_new_dependency_pair_is_reported_at_run_level()
     {
         var roster = Roster(Ids);
