@@ -4,6 +4,39 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.16.0] - 2026-10-28
+
+The minor part moves (5.15.1 to 5.16.0): the tracking handler gains a capability, marking a call a stub handler
+answered as a test double's answer (#190 R3, `plans/PARTY_IDENTITY_PLAN.md` 5.11). No public type or member changes.
+
+### Added
+
+- **`TestTrackingMessageHandler` marks a call the end of its chain answered when that is no transport.** When the
+  handler at the end of the chain, past every delegating handler, is a stub of your own, a fake or a mock library's
+  handler (`MockHttpMessageHandler`), it answered in the service's place, and both halves of the call carry its type
+  name as `testDouble` (5.15.0). A service every call to which is so answered is a `double`, `observed`, in the parties
+  table and `kronikol query parties`, with nothing declared. A transport carries the call to the service and marks
+  nothing: `SocketsHttpHandler`, `HttpClientHandler` and any handler built on it, `WinHttpHandler`, the Android, Apple
+  and browser handlers, and TestServer's, which is the service under test answering in process. Not seen: an
+  interceptor in the middle of the chain that answers and passes the rest on, and a stub on a socket (WireMock); and
+  nothing is ever read from a port.
+
+### Fixed
+
+- **`kronikol query parties` lists a party called only outside every scenario.** A run resolves its parties over the
+  calls in the report's root `background` block as well as the scenarios', so its `parties` block names a party only
+  the background called (an outbox writer's store, a warm-up's dependency), but the verb read the scenarios' calls
+  only and left that party out, of the table and of `--kind`; a report that declares nothing missed it too (since
+  5.14.0). At run scope the verb now reads the background's calls as well, counting them in each party's calls made
+  and received and in `doubleCalls`; an address still scopes it to one scenario's calls, and every other verb reads
+  what it read before.
+- `RunManifest.ToJson`'s summary now says it writes `serviceId` after its ten members when set.
+
+**Behaviour change:** a suite whose tracked clients end in a stub handler now writes `testDouble` on those calls in
+every form of the data file, so a report pinned byte for byte gains the member there. A transport of your own at the
+end of the chain reads as a double; a party declared `Real` keeps its kind, and the report records a
+`PartyDeclarationConflict` saying the declaration and the marks disagree.
+
 ## [5.15.1] - 2026-10-28
 
 The patch part moves (5.15.0 to 5.15.1): four fixes and four option descriptions corrected, nothing new to call. Two of

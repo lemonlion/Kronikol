@@ -259,6 +259,7 @@ public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
         var trackingIgnore = requestHeaders.Any(x => string.Equals(x.Key, TestTrackingHttpHeaders.Ignore, StringComparison.OrdinalIgnoreCase))
                              || !PhaseConfiguration.ShouldTrack(_trackDuringSetup, _trackDuringAction);
         var currentPhase = TestPhaseContext.Current;
+        var testDouble = AnsweringTestDouble();
 
         RequestResponseLogger.Log(new RequestResponseLog(
             currentTestInfo.Name,
@@ -281,7 +282,8 @@ public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
             ActivityTraceId = activityTraceId,
             Phase = currentPhase,
             AttributionSource = currentTestInfo.Source,
-            NamedByRemoteHostFallback = namedByRemoteHostFallback
+            NamedByRemoteHostFallback = namedByRemoteHostFallback,
+            TestDouble = testDouble
         });
 
         // The span the transport starts for the call begins after the request is logged, under the span current here; the
@@ -320,7 +322,8 @@ public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
                 ActivityTraceId = activityTraceId,
                 Phase = currentPhase,
                 AttributionSource = currentTestInfo.Source,
-                NamedByRemoteHostFallback = namedByRemoteHostFallback
+                NamedByRemoteHostFallback = namedByRemoteHostFallback,
+                TestDouble = testDouble
             });
             throw;
         }
@@ -348,7 +351,8 @@ public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
             ActivityTraceId = activityTraceId,
             Phase = currentPhase,
             AttributionSource = currentTestInfo.Source,
-            NamedByRemoteHostFallback = namedByRemoteHostFallback
+            NamedByRemoteHostFallback = namedByRemoteHostFallback,
+            TestDouble = testDouble
         });
 
         return response;
@@ -399,13 +403,43 @@ public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
     /// Whether the transport at the end of this handler's chain injects the trace context itself: SocketsHttpHandler,
     /// and HttpClientHandler on top of it, run the framework's DiagnosticsHandler.
     /// </summary>
-    private bool TransportPropagatesTraceContext()
+    private bool TransportPropagatesTraceContext() => EndOfChain() is SocketsHttpHandler or HttpClientHandler;
+
+    /// <summary>The handler at the end of this handler's chain, past every delegating handler: what answers the call.</summary>
+    private HttpMessageHandler? EndOfChain()
     {
         HttpMessageHandler? handler = InnerHandler;
         while (handler is DelegatingHandler delegating)
             handler = delegating.InnerHandler;
-        return handler is SocketsHttpHandler or HttpClientHandler;
+        return handler;
     }
+
+    /// <summary>
+    /// What answered in the service's place (#190): the type name of the handler at the end of the chain when it is no
+    /// transport, so a stub, a fake or a mock library's handler. A transport carries the call to the service: the socket
+    /// handler, the client handler and any handler built on it, a platform's handler, and TestServer's, which is the
+    /// service under test answering in process. An interceptor in the middle of the chain and a stub on a socket
+    /// (WireMock) are not seen, and nothing is read from a port.
+    /// </summary>
+    private string? AnsweringTestDouble() => EndOfChain() switch
+    {
+        null or SocketsHttpHandler or HttpClientHandler => null,
+        var handler when Transports.Contains(handler.GetType().FullName ?? "") => null,
+        var handler => handler.GetType().Name,
+    };
+
+    // Named rather than referenced: TestServer's handler is internal to Microsoft.AspNetCore.TestHost, and the platform
+    // handlers live in assemblies a test project seldom loads.
+    private static readonly HashSet<string> Transports = new(StringComparer.Ordinal)
+    {
+        "Microsoft.AspNetCore.TestHost.ClientHandler",
+        "System.Net.Http.WinHttpHandler",
+        "System.Net.Http.BrowserHttpHandler",
+        "System.Net.Http.NSUrlSessionHandler",
+        "System.Net.Http.CFNetworkHandler",
+        "Foundation.NSUrlSessionHandler",
+        "Xamarin.Android.Net.AndroidMessageHandler",
+    };
 
     private static void AddIfAbsent(HttpRequestMessage request, string name, string? value)
     {

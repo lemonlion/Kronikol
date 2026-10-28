@@ -80,6 +80,12 @@ internal sealed class ReportIndex : IDisposable
     public bool OnCi => CiProvider is not null and not "None";
 
     public List<ScenarioEntry> Scenarios { get; } = [];
+
+    /// <summary>
+    /// The calls of the root <c>background</c> block, made outside every scenario (5.16.0). Only the parties verb reads
+    /// them, as the run resolved its parties over them; every other verb reads a scenario's calls.
+    /// </summary>
+    public List<InteractionEntry> BackgroundInteractions { get; } = [];
     public List<ReportDiagnosticEntry> Diagnostics { get; } = [];
 
     /// <summary>The run's declared service id (#190), or null when the report declares none.</summary>
@@ -435,11 +441,6 @@ internal sealed class AttachmentEntry
     }
 }
 
-/// <summary>
-/// One entry of the report's <c>diagnostics</c> array, as the index reads it. Not
-/// <see cref="Kronikol.Reports.DiagnosticEntry"/>, the record the run writes it from: the engine lives in the
-/// same assembly, and one simple name for both made every file that uses the two namespaces ambiguous.
-/// </summary>
 /// <summary>One row of a report's parties block (#190), as written.</summary>
 internal sealed class ReportPartyEntry
 {
@@ -450,6 +451,11 @@ internal sealed class ReportPartyEntry
     public string? Note { get; set; }
 }
 
+/// <summary>
+/// One entry of the report's <c>diagnostics</c> array, as the index reads it. Not
+/// <see cref="Kronikol.Reports.DiagnosticEntry"/>, the record the run writes it from: the engine lives in the
+/// same assembly, and one simple name for both made every file that uses the two namespaces ambiguous.
+/// </summary>
 internal sealed class ReportDiagnosticEntry
 {
     public string Kind { get; set; } = "";

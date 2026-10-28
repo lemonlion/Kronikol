@@ -212,6 +212,7 @@ internal static class ReportScanner
         private string? _featureSourceFile;
         private int _scenarioOrdinal;
         private int _interactionOrdinal;
+        private int _backgroundOrdinal;
         private Wrapper? _wrapper;
 
         /// <summary>
@@ -342,6 +343,7 @@ internal static class ReportScanner
                 "pipelineUrl", "repository", "runId", "runAttempt", "os", "runtime",
                 // Who each party is (#190).
                 "serviceId", "parties", "kindSource", "note", "callerDependencyCategory", "attributionSource",
+                "background", "interactions",
                 // A compressed payload's keys (#85).
                 "$h", "$n", "$z",
             ];
@@ -421,6 +423,9 @@ internal static class ReportScanner
         private bool At(string a, string b, string c) =>
             _path.Count >= 3 && Matches(_path[^3], a) && Matches(_path[^2], b) && Matches(_path[^1], c);
 
+        /// <summary>Inside one call of the root <c>background.interactions</c> array, and not deeper.</summary>
+        private bool InBackgroundCall() => _path.Count == 4 && At("background", "interactions", "#");
+
         // ─── Entity lifecycle ──────────────────────────────────
 
         private void Enter()
@@ -441,6 +446,11 @@ internal static class ReportScanner
             else if (At("httpInteractions", "#"))
             {
                 _interaction = new InteractionEntry { Ordinal = _interactionOrdinal++ };
+            }
+            // A call made outside every scenario, in the root background block: the parties verb reads them (5.16.0).
+            else if (InBackgroundCall())
+            {
+                _interaction = new InteractionEntry { Ordinal = _backgroundOrdinal++ };
             }
             else if (At("annotations", "#"))
             {
@@ -503,6 +513,12 @@ internal static class ReportScanner
                     _scenario.Interactions.Add(_interaction);
                     RecordBody(_interaction, _scenario);
                 }
+                _interaction = null;
+            }
+            else if (InBackgroundCall())
+            {
+                if (_interaction is not null)
+                    index.BackgroundInteractions.Add(_interaction);
                 _interaction = null;
             }
             else if (At("annotations", "#"))
@@ -801,7 +817,7 @@ internal static class ReportScanner
 
             // Only the call's own members from here, as a scenario's since 4.16.3: an object under a call, such as a
             // testDouble a capturer wrote as one, has members of its own, and a serviceName there renamed the call (#190).
-            if (!At("httpInteractions", "#"))
+            if (!At("httpInteractions", "#") && !InBackgroundCall())
                 return;
 
             switch (key)

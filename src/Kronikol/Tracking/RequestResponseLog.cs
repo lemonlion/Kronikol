@@ -142,7 +142,8 @@ public record RequestResponseLog(
     /// <summary>
     /// What answered the call in its service's place, when the capturer saw a test double answer it: <c>MSW</c>,
     /// <c>WireMock</c>, a handler's type name (#190). Null is unknown, never real: a capturer sets it only when it saw
-    /// the double, and a call it did not mark may have been answered by either.
+    /// the double, and a call it did not mark may have been answered by either. The tracking handler sets it to the
+    /// type name of the handler at the end of its chain when that handler is no transport, a stub's or a mock library's.
     /// </summary>
     public string? TestDouble { get; set; }
 };

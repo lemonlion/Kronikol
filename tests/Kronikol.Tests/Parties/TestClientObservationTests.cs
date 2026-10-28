@@ -14,6 +14,8 @@ namespace Kronikol.Tests.Parties;
 /// under test, both observed rather than guessed. A handler made by hand says nothing. The registry is one for the
 /// process, so each fact names its parties uniquely and never clears it.
 /// </summary>
+// Reads the process-global request log back (#190 R3), so it runs beside the ingests that clear it.
+[Collection("DiagramsFetcher")]
 public class TestClientObservationTests
 {
     private static string Unique(string name) => $"{name} {Guid.NewGuid():N}"[..(name.Length + 9)];
@@ -60,6 +62,26 @@ public class TestClientObservationTests
         await client.GetStringAsync("/");
 
         Assert.Equal([app], Observed(caller)?.Callees);
+    }
+
+    // #190 R3: TestServer's handler is the service under test answering in process, never a test double.
+    [Fact]
+    public async Task A_call_the_test_server_answered_is_not_marked_as_a_test_double()
+    {
+        var testId = "test-server-" + Guid.NewGuid().ToString("N");
+        using var factory = new ObservedAppFactory();
+        using var client = factory.CreateTestTrackingClient(new TestTrackingMessageHandlerOptions
+        {
+            CallerName = Unique("Caller"),
+            FixedNameForReceivingService = Unique("Observed App"),
+            CurrentTestInfoFetcher = () => ("Not a double", testId),
+        });
+
+        await client.GetAsync("/");
+
+        var logs = RequestResponseLogger.RequestAndResponseLogs.Where(l => l.TestId == testId).ToArray();
+        Assert.Equal(2, logs.Length);
+        Assert.All(logs, l => Assert.Null(l.TestDouble));
     }
 
     [Fact]

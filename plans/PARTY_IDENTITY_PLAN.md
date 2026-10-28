@@ -1288,6 +1288,29 @@ Agreed by message on 2026-10-26:
   - Six of the mutants had no fact to fail until one was written for each, each passing on the code and failing on its
     mutant: a blank mark, a parties file among the inputs, the mergeable reader, the `Pair` overload, the XML
     validated against the XSD, and a host MSW answered every time (the verb's inferred path).
+- 2026-10-27, kronikol-67, executing R3:
+  - The facts of 5.11: a stub at the end of the chain marks both halves with its type's name, past delegating handlers,
+    and a send that threw in it too; the socket handler, the client handler and a handler built on it mark nothing (a
+    server on this machine answers, so the call leaves nothing); TestServer's handler marks nothing; and a service only
+    a stub answered is a `double`, `observed`, with nothing declared. Each marking fact was red before the code.
+  - The transports are the socket handler, the client handler and anything built on it, `WinHttpHandler`, the
+    Android, Apple and browser handlers, and TestServer's, named rather than referenced (TestServer's is internal).
+    A transport of a suite's own at the end of the chain reads as a double; the wiki says so, and that declaring the
+    party `Real` keeps its kind and records the conflict.
+  - The class of the observation facts joined the `DiagramsFetcher` collection: its new fact reads the request log back,
+    and `ProcessGlobalStoreTests` caught it running beside the ingests that clear that log.
+  - Three faults of R1 that an audit of the #191 plan against 5.14.0 found, each fixed with a fact red first where code
+    changed: the `parties` verb read the scenarios' calls only while the run resolves its table over the background's
+    calls too, so a party only the background called was in the block and missing from the verb, and from `--kind`.
+    R1's log above called counting a scenario's calls only a decision; it was a fault, since the verb then hid rows the
+    run wrote. The verb now reads the background's calls at run scope (an address still scopes to one scenario), and
+    every other verb is unchanged. The other two were doc comments: `RunManifest.ToJson`'s count of its members, and
+    the index's summary of its diagnostics row, which sat above the parties row.
+  - The index reads a background call's names, kinds and mark, which the verb needs, and its body only when stored as
+    text: a compressed body (8,192 characters or more in a version-2 file) is not read, since `RecordBody` and the
+    compressed-content wrapper serve the scenarios' calls. Nothing in this plan reads those bodies; #191's R1, whose
+    card does, takes that on (kronikol-ed's verification of this release).
+  - 12 of 12 mutations caught.
 
 ---
 

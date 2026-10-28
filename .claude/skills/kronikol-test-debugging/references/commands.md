@@ -137,7 +137,7 @@ and a line under the table says `services --json` lists every status.
 never called — no payload needed to establish that.
 
 ### `parties <report> [s3] [--kind double]`
-Who each party is (5.14.0): one row per name the calls carry, with its kind (`test`, `underTest`, `real`,
+Who each party is (5.14.0): one row per name the calls carry (at run scope the background's calls too, 5.16.0), with its kind (`test`, `underTest`, `real`,
 `double` or `unknown`), how that kind is known (`declared` in the run's options or `.kronikol/parties.json`,
 `observed` from a test client Kronikol built or from calls every one of which a capturer marked as a test double's
 answer, `inferred` from the calls), the calls it made and received, and its

@@ -1,7 +1,9 @@
+using System.Net;
 using System.Text.Json;
 using Kronikol.Parties;
 using Kronikol.Query;
 using Kronikol.Reports;
+using Kronikol.Tracking;
 
 namespace Kronikol.Tests.Parties;
 
@@ -19,11 +21,78 @@ public class PartiesQueryTests : IDisposable
         try { Directory.Delete(_dir, recursive: true); } catch (IOException) { } catch (UnauthorizedAccessException) { }
     }
 
-    private string Report(PartyTable? parties)
+    private string Report(PartyTable? parties) => Report(parties, PartiesBlockTests.Logs());
+
+    private string Report(PartyTable? parties, RequestResponseLog[] logs)
     {
         var path = Path.Combine(_dir, $"Parties_{Guid.NewGuid():N}.json");
         return ReportGenerator.GenerateTestRunReportData(PartiesBlockTests.Features(), PartiesBlockTests.Start, PartiesBlockTests.Start.AddMinutes(1), path, DataFormat.Json,
-            null, PartiesBlockTests.Logs(), null, fullStepDetail: true, ciMetadata: null, suite: null, environment: null, attribution: null, parties: parties);
+            null, logs, null, fullStepDetail: true, ciMetadata: null, suite: null, environment: null, attribution: null, parties: parties);
+    }
+
+    /// <summary>The fixture's calls, and one Breakfast Provider made to Outbox Store outside every scenario: a background call.</summary>
+    private static RequestResponseLog[] WithBackgroundCall()
+    {
+        var (trace, pair, id) = (Guid.NewGuid(), Guid.NewGuid(), TestIdentityScope.UnknownTestId);
+        var uri = new Uri("http://localhost:5002/outbox");
+        return
+        [
+            .. PartiesBlockTests.Logs(),
+            new RequestResponseLog(id, id, HttpMethod.Post, null, uri, [], "Outbox Store", "Breakfast Provider", RequestResponseType.Request, trace, pair, false) { Timestamp = DateTimeOffset.UtcNow },
+            new RequestResponseLog(id, id, HttpMethod.Post, null, uri, [], "Outbox Store", "Breakfast Provider", RequestResponseType.Response, trace, pair, false, HttpStatusCode.OK) { Timestamp = DateTimeOffset.UtcNow }
+        ];
+    }
+
+    // The run resolves its parties over the background's calls too, so its block names a party only the background called;
+    // the verb read the scenarios' calls only and left that party out (until 5.16.0: kronikol-ed's audit of 5.14.0).
+    [Fact]
+    public void A_party_called_only_in_the_background_is_listed_from_the_block_with_its_calls()
+    {
+        var logs = WithBackgroundCall();
+        var declared = PartyResolver.Resolve(PartiesReport.CallsOf(logs),
+            new PartyDeclarations(null, [new PartyDescriptor("Outbox Store") { Id = "outbox-db", Kind = PartyKind.Real }], [], []), PartyObservations.None);
+        var path = Report(declared, logs);
+
+        var (text, _, exit) = Query("parties", path, "--kind", "real");
+        Assert.Equal(0, exit);
+        Assert.Contains(Lines(text), l => l.StartsWith("Outbox Store") && l.Contains("real") && l.Contains("outbox-db"));
+
+        var items = Items(Query("parties", path, "--json").Out);
+        var outbox = items.Single(i => i.GetProperty("party").GetString() == "Outbox Store");
+        Assert.Equal((0, 1), (outbox.GetProperty("callsMade").GetInt32(), outbox.GetProperty("callsReceived").GetInt32()));
+        Assert.Equal(2, items.Single(i => i.GetProperty("party").GetString() == "Breakfast Provider").GetProperty("callsMade").GetInt32());
+    }
+
+    [Fact]
+    public void A_report_that_declares_nothing_infers_over_the_background_calls_too()
+    {
+        var path = Report(null, WithBackgroundCall());
+
+        var items = Items(Query("parties", path, "--json").Out);
+
+        var outbox = items.Single(i => i.GetProperty("party").GetString() == "Outbox Store");
+        Assert.Equal(1, outbox.GetProperty("callsReceived").GetInt32());
+    }
+
+    // An address scopes the verb to one scenario's calls, which the background's are not.
+    [Fact]
+    public void A_scenario_address_leaves_the_background_calls_out()
+    {
+        var path = Report(null, WithBackgroundCall());
+
+        var items = Items(Query("parties", path, "s0", "--json").Out);
+
+        Assert.DoesNotContain(items, i => i.GetProperty("party").GetString() == "Outbox Store");
+        Assert.Equal(1, items.Single(i => i.GetProperty("party").GetString() == "Breakfast Provider").GetProperty("callsMade").GetInt32());
+    }
+
+    // Every other verb still reads the scenarios' calls only: services counts what the scenarios called.
+    [Fact]
+    public void Services_still_counts_the_scenarios_calls_only()
+    {
+        var path = Report(null, WithBackgroundCall());
+
+        Assert.DoesNotContain("Outbox Store", Query("services", path).Out);
     }
 
     private static (string Out, string Err, int Exit) Query(params string[] args)

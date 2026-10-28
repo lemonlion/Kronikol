@@ -497,7 +497,10 @@ public static partial class QueryCommand
         var received = new Dictionary<string, int>(StringComparer.Ordinal);
         // The calls a test double answered, as their capturers saw (#190, R2): counted here, the row keeps its members.
         var doubled = new Dictionary<string, int>(StringComparer.Ordinal);
-        foreach (var interaction in scope.SelectMany(s => s.Interactions).Where(IsRequest))
+        // The run's calls outside every scenario belong to its parties too: the run resolved its table over them, so a party
+        // only the background called is in the block (5.16.0). An address scopes to one scenario's calls, which they are not.
+        var background = options.Positional.Count == 0 ? index.BackgroundInteractions : [];
+        foreach (var interaction in scope.SelectMany(s => s.Interactions).Concat(background).Where(IsRequest))
         {
             made[interaction.CallerName] = made.GetValueOrDefault(interaction.CallerName) + 1;
             received[interaction.ServiceName] = received.GetValueOrDefault(interaction.ServiceName) + 1;
@@ -517,7 +520,7 @@ public static partial class QueryCommand
         }
         else
         {
-            var calls = index.Scenarios.SelectMany(s => s.Interactions).Where(IsRequest)
+            var calls = index.Scenarios.SelectMany(s => s.Interactions).Concat(index.BackgroundInteractions).Where(IsRequest)
                 .Select(i => new Kronikol.Parties.PartyCall(i.CallerName, i.ServiceName, i.DependencyCategory, i.CallerDependencyCategory, i.AttributionSource, i.TestDouble));
             var inferred = Kronikol.Parties.PartyResolver.Resolve(calls, Kronikol.Parties.PartyDeclarations.None, Kronikol.Parties.PartyObservations.None);
             table = inferred.Parties;

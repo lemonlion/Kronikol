@@ -78,7 +78,7 @@ public sealed record RunManifest
     /// <summary>The service the run was about (<see cref="ReportConfigurationOptions.ServiceId"/>, #190); written after the ten members, and only when set.</summary>
     public string? ServiceId { get; init; }
 
-    /// <summary>The file's text: the ten members in a fixed order, so two runs that wrote the same things write the same bytes.</summary>
+    /// <summary>The file's text: the ten members in a fixed order, and <c>serviceId</c> after them when set, so two runs that wrote the same things write the same bytes.</summary>
     public string ToJson()
     {
         var buffer = new ArrayBufferWriter<byte>();
