@@ -35,6 +35,9 @@ internal sealed class QueryOptions
 
     /// <summary><c>--kind</c>: the parties of one kind (#190).</summary>
     public string? Kind { get; private set; }
+
+    /// <summary><c>--phase</c>: the calls made in one phase of a test, <c>setup</c>, <c>action</c> or <c>unknown</c> (#192).</summary>
+    public string? Phase { get; private set; }
     public string? Method { get; private set; }
     public string? Grep { get; private set; }
     public string? Step { get; private set; }
@@ -187,7 +190,7 @@ internal sealed class QueryOptions
         "--headers", "--body", "--keys", "--values", "--group", "--stats", "--request", "--both",
         "--number", "--baseline", "--baseline-run", "--describe", "--history", "--flaky", "--new", "--failing", "--regressed",
         "--changed", "--branch", "--compare-branch", "--min-runs", "--alternating-runs", "--count-runs", "--degraded-by", "--calls", "--suite",
-        "--run", "--sid", "--window", "--kind"
+        "--run", "--sid", "--window", "--kind", "--phase"
     ];
 
     /// <summary>
@@ -280,6 +283,7 @@ internal sealed class QueryOptions
                 case "--service": if (Next(arg) is not { } service) return null; options.Service = service; break;
                 case "--status": if (Next(arg) is not { } status) return null; options.Status = status; break;
                 case "--kind": if (Next(arg) is not { } kind) return null; options.Kind = kind; break;
+                case "--phase": if (Next(arg) is not { } phase) return null; options.Phase = phase; break;
                 case "--method": if (Next(arg) is not { } method) return null; options.Method = method; break;
                 case "--grep": if (Next(arg) is not { } grep) return null; options.Grep = grep; break;
                 case "--step": if (Next(arg) is not { } step) return null; options.Step = step; break;
@@ -483,6 +487,7 @@ internal sealed class QueryOptions
         if (Service is not null) Flag("--service", Service);
         if (Status is not null) Flag("--status", Status);
         if (Kind is not null) Flag("--kind", Kind);
+        if (Phase is not null) Flag("--phase", Phase);
         if (Method is not null) Flag("--method", Method);
         if (Grep is not null) Flag("--grep", Grep);
         if (Result is not null) Flag("--result", Result);

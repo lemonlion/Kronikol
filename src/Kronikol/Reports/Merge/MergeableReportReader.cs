@@ -154,6 +154,7 @@ public static class MergeableReportReader
             Environment = ReadEnvironment(root),
             ServiceId = GetString(root, "serviceId"),
             Parties = ReadParties(root),
+            ShapeTemplates = ReadShapeTemplates(root),
             Interactions = interactions.ToArray(),
             StepPaths = stepPaths,
             WarmUp = warmUpCalls.Count == 0 && warmUpScenarios.Count == 0 ? WarmUpResult.None : new WarmUpResult(warmUpCalls, warmUpScenarios),
@@ -685,6 +686,18 @@ public static class MergeableReportReader
             DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal, out var value)
             ? value
             : null;
+
+    /// <summary>The run's templating rules (#192), as the query engine reads them: a rule without a pattern is no rule, a missing placeholder an empty one.</summary>
+    private static IReadOnlyList<History.HistoryShapeTemplate>? ReadShapeTemplates(JsonElement root)
+    {
+        if (!root.TryGetProperty("shapeTemplates", out var block) || block.ValueKind != JsonValueKind.Array)
+            return null;
+        var rules = block.EnumerateArray()
+            .Where(t => t.ValueKind == JsonValueKind.Object && GetString(t, "pattern") is { Length: > 0 })
+            .Select(t => new History.HistoryShapeTemplate(GetString(t, "pattern")!, GetString(t, "placeholder") ?? ""))
+            .ToList();
+        return rules.Count == 0 ? null : rules;
+    }
 
     /// <summary>The run's parties block (#190), or null when it has none. A row without a name, or with a kind none of the five, keeps what it can.</summary>
     private static IReadOnlyList<Kronikol.Parties.Party>? ReadParties(JsonElement root)

@@ -224,6 +224,19 @@ public static partial class QueryCommand
     }
 
     /// <summary>
+    /// Refuses a <c>--phase</c> no call can have, as <see cref="SortIsValid"/> refuses an ordering: a misspelt phase
+    /// would match nothing and read as a run without such calls (#192).
+    /// </summary>
+    internal static bool PhaseIsValid(QueryOptions options, TextWriter error)
+    {
+        if (options.Phase is not { } phase || phase.ToLowerInvariant() is "setup" or "action" or "unknown")
+            return true;
+
+        error.WriteLine($"Not a phase: {phase} (expected setup, action or unknown)");
+        return false;
+    }
+
+    /// <summary>
     /// Whether a captured status is a failure. Delegates to <see cref="Kronikol.Reports.InteractionStatus"/>,
     /// which is where the rule moved when the failures digest started asking the same question: a digest
     /// that called a cache <c>Miss</c> an error while <c>query services</c> did not would be two surfaces

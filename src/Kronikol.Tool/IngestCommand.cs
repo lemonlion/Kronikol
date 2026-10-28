@@ -70,6 +70,9 @@ internal static class IngestCommand
         string? serviceId = null;
         string? partiesFile = null;
         string? suite = null;
+        // The run's HistoryShapeTemplates (#192 R2, Q7), from a file: a regular expression on a command line is a quoting hazard.
+        string? shapeTemplatesFile = null;
+        IReadOnlyList<Kronikol.History.HistoryShapeTemplate>? shapeTemplates = null;
 
         for (var i = 0; i < args.Count; i++)
         {
@@ -322,6 +325,10 @@ internal static class IngestCommand
                     if (++i >= args.Count) { error.WriteLine("Missing value for " + arg); return 2; }
                     partiesFile = args[i];
                     break;
+                case "--shape-templates":
+                    if (++i >= args.Count) { error.WriteLine("Missing value for " + arg); return 2; }
+                    shapeTemplatesFile = args[i];
+                    break;
                 case "--suite":
                     if (++i >= args.Count) { error.WriteLine("Missing value for " + arg); return 2; }
                     if (string.IsNullOrWhiteSpace(args[i])) { error.WriteLine("--suite must not be blank"); return 2; }
@@ -382,6 +389,24 @@ internal static class IngestCommand
                 return 1;
             }
             partiesFile = partiesFull;
+        }
+
+        if (shapeTemplatesFile is not null)
+        {
+            var templatesFull = Path.GetFullPath(shapeTemplatesFile);
+            if (!File.Exists(templatesFull))
+            {
+                error.WriteLine($"Shape templates file not found: {shapeTemplatesFile}");
+                return 1;
+            }
+            if (ReadShapeTemplates(templatesFull) is not { } read)
+            {
+                error.WriteLine($"{shapeTemplatesFile} is not a list of rules. A shape templates file holds them as a report's shapeTemplates block does: "
+                                + "[{ \"pattern\": ..., \"placeholder\": ... }], each pattern a .NET regular expression and each placeholder what replaces its matches.");
+                return 2;
+            }
+            shapeTemplatesFile = templatesFull;
+            shapeTemplates = read;
         }
 
         var files = CliInputs.Resolve(inputs, InteractionPatterns, error);
@@ -520,6 +545,10 @@ internal static class IngestCommand
         if (partiesFile is not null)
             files.Remove(partiesFile); // a parties file inside an input directory is not an interaction capture
         options.PartiesFilePath = partiesFile;
+        if (shapeTemplatesFile is not null)
+            files.Remove(shapeTemplatesFile); // nor is a rules file named among the inputs
+        if (shapeTemplates is not null)
+            options.HistoryShapeTemplates = [.. shapeTemplates];
 
         if (attachmentsBase is not null && !Directory.Exists(attachmentsBase))
         {
@@ -796,6 +825,40 @@ internal static class IngestCommand
         }
     }
 
+    /// <summary>
+    /// The rules of a <c>--shape-templates</c> file (#192 R2), or null when it is not a list of them: an array of objects,
+    /// each with a string <c>pattern</c> and, as a report's block may leave out, a string <c>placeholder</c>.
+    /// </summary>
+    internal static IReadOnlyList<Kronikol.History.HistoryShapeTemplate>? ReadShapeTemplates(string path)
+    {
+        try
+        {
+            using var document = System.Text.Json.JsonDocument.Parse(File.ReadAllText(path));
+            if (document.RootElement.ValueKind != System.Text.Json.JsonValueKind.Array)
+                return null;
+            var rules = new List<Kronikol.History.HistoryShapeTemplate>();
+            foreach (var rule in document.RootElement.EnumerateArray())
+            {
+                if (rule.ValueKind != System.Text.Json.JsonValueKind.Object
+                    || !rule.TryGetProperty("pattern", out var pattern) || pattern.ValueKind != System.Text.Json.JsonValueKind.String)
+                    return null;
+                var placeholder = "";
+                if (rule.TryGetProperty("placeholder", out var written))
+                {
+                    if (written.ValueKind != System.Text.Json.JsonValueKind.String)
+                        return null;
+                    placeholder = written.GetString()!;
+                }
+                rules.Add(new Kronikol.History.HistoryShapeTemplate(pattern.GetString()!, placeholder));
+            }
+            return rules;
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            return null;
+        }
+    }
+
     public static void PrintUsage(TextWriter w)
     {
         w.WriteLine("Usage: kronikol ingest <inputs...> [--tests <file>] [-o <dir>] [--render <mode>] [-t <title>] [options]");
@@ -816,6 +879,9 @@ internal static class IngestCommand
         w.WriteLine("  --service-id <id>        The service the run is about: the report's serviceId (5.15.0).");
         w.WriteLine("  --parties <file>         A parties file (partiesFormatVersion 1) saying who each party is; without it,");
         w.WriteLine("                           .kronikol/parties.json above the directory the ingest runs in, or $KRONIKOL_PARTIES.");
+        w.WriteLine("  --shape-templates <file> The run's HistoryShapeTemplates, as JSON in the shape of a report's shapeTemplates");
+        w.WriteLine("                           block: [{ \"pattern\": ..., \"placeholder\": ... }]. History's fingerprints and the");
+        w.WriteLine("                           query's route read a call's path through them.");
         w.WriteLine("  --feature <name>         Feature name for tests without one (default: Ingested).");
         w.WriteLine("  --collapse | --no-collapse   Collapse consecutive identical calls into a loop fragment (default: on).");
         w.WriteLine("  --collapse-threshold <n> Minimum run length to collapse (default: 2).");

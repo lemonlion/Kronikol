@@ -97,6 +97,12 @@ internal sealed class ReportIndex : IDisposable
     /// <summary>The parties block's rows as written, sorted by name; empty when the report has no block.</summary>
     public List<ReportPartyEntry> Parties { get; } = [];
 
+    /// <summary>
+    /// The run's HistoryShapeTemplates as the file records them (#192), in order; empty when the file has no block, which
+    /// from 5.19.0 means the run had no rules and before it means the file cannot say (<see cref="KronikolVersion"/>).
+    /// </summary>
+    public List<History.HistoryShapeTemplate> ShapeTemplates { get; } = [];
+
     /// <summary>Every distinct body in the file, keyed by its <c>b:</c> address.</summary>
     public Dictionary<string, BodyEntry> Bodies { get; } = [];
 
@@ -119,6 +125,12 @@ internal sealed class ReportIndex : IDisposable
     /// not static, so parallel test runs cannot race it.
     /// </summary>
     public int PayloadOpens { get; set; }
+
+    /// <summary>
+    /// How many bodies a command read out of the file, each distinct body once (<see cref="BodyCache.Raw"/>): what tells a
+    /// command that reads a few bodies from one that reads them all, since the one handle it opens is opened either way.
+    /// </summary>
+    public int BodyReads { get; set; }
 
     /// <summary>The mergeable format version, when the file declares one. An unknown value is fatal, not ignored.</summary>
     public int? MergeableFormatVersion { get; set; }

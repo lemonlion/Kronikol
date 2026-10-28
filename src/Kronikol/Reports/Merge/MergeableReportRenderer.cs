@@ -246,7 +246,9 @@ public static class MergeableReportRenderer
             // The shards' own marks, never recomputed over the merged calls.
             warmUp: report.WarmUp,
             // The shards' parties, merged (#190); none when no shard declared anything.
-            parties: report.Parties is { } rows ? new Kronikol.Parties.PartyTable(rows, report.ServiceId, Declared: true, []) : null);
+            parties: report.Parties is { } rows ? new Kronikol.Parties.PartyTable(rows, report.ServiceId, Declared: true, []) : null,
+            // The shards' rules, when they agree (#192): a query of the merged file templates routes as their runs did.
+            shapeTemplates: report.ShapeTemplates);
     }
 
     /// <summary>

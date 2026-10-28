@@ -1,3 +1,5 @@
+using Kronikol.Constants;
+using Kronikol.History;
 
 namespace Kronikol.Query;
 
@@ -5,18 +7,24 @@ namespace Kronikol.Query;
 /// <c>interactions --group-by</c> — generic bucketing over the index: any combination of dimensions, a
 /// count/error/timing/bodies/bytes summary per bucket. <c>services</c> stays as the curated view and the only
 /// answerer of negative questions; this is the general form. Index-only unless combined with
-/// <c>--where</c>.
+/// <c>--where</c>, or grouped by <c>route</c>, which reads the request body of a POST or a statement-shaped call (#192).
 /// </summary>
 public static partial class QueryCommand
 {
     /// <summary>The dimensions <c>interactions --group-by</c> accepts. Internal so SkillDriftTests can pin
     /// the help text and the skill's reference to the one list the tool actually validates against.</summary>
     internal static readonly string[] GroupByDimensions =
-        ["service", "method", "status", "path", "step", "phase", "category", "kind", "capturedBy"];
+        ["service", "caller", "method", "status", "path", "route", "step", "phase", "category", "kind", "capturedBy"];
 
-    private static int GroupedInteractions(List<(ScenarioEntry Scenario, InteractionEntry Request, InteractionEntry? Response)> matches,
+    /// <summary>The first release whose reports carry their run's HistoryShapeTemplates (#192): an earlier report cannot say whether its run had rules.</summary>
+    internal static readonly Version FirstVersionWithShapeTemplates = new(5, 19, 0);
+
+    /// <summary>How much of a route a text row shows; the JSON key carries all of it.</summary>
+    private const int RouteWidth = 80;
+
+    private static int GroupedInteractions(ReportIndex index, BodyCache cache, List<(ScenarioEntry Scenario, InteractionEntry Request, InteractionEntry? Response)> matches,
         QueryOptions options, QueryWriter writer, TextWriter error, ScenarioEntry? only,
-        IReadOnlyList<WhereClause>? clauses = null, int unevaluable = 0, int capped = 0)
+        IReadOnlyList<WhereClause>? clauses = null, int unevaluable = 0)
     {
         var dims = options.GroupBy!.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         foreach (var dim in dims)
@@ -31,14 +39,24 @@ public static partial class QueryCommand
             error.WriteLine("--group-by takes a comma list of dimensions: " + string.Join(", ", GroupByDimensions));
             return 2;
         }
+        // A bucket's JSON key is an object of its dimensions, which holds each once: a repeat threw there.
+        if (dims.GroupBy(d => d, StringComparer.OrdinalIgnoreCase).FirstOrDefault(g => g.Count() > 1) is { } twice)
+        {
+            error.WriteLine($"--group-by: {twice.Key} is named twice; each dimension is one column of a bucket, so name it once.");
+            return 2;
+        }
 
+        // A route is the call's operation key, read as the run read it: under the rules its report recorded, and from the
+        // request body only where the key is in it, a statement's head or a POST that may be GraphQL (plan 4.4).
+        var routes = dims.Contains("route", StringComparer.OrdinalIgnoreCase) ? new RouteReader(index, cache) : null;
         var buckets = new Dictionary<string, GroupBucket>(StringComparer.Ordinal);
         foreach (var (scenario, request, response) in matches)
         {
-            var values = dims.Select(d => DimensionValue(d, request, response)).ToArray();
+            var values = dims.Select(d => d.Equals("route", StringComparison.OrdinalIgnoreCase) ? routes!.Of(request) : DimensionValue(d, request, response)).ToArray();
             // A service is one service whatever case its callers name it in, as `services` counts it (OrdinalIgnoreCase, so
-            // the invariant upper case), the row named as its first call names it; every other value is kept as written.
-            var key = string.Join('\x1f', values.Select((v, i) => dims[i].Equals("service", StringComparison.OrdinalIgnoreCase) ? v.ToUpperInvariant() : v));
+            // the invariant upper case), the row named as its first call names it, and a caller likewise, since a caller is
+            // a service named by the other end of the call (#192); every other value is kept as written.
+            var key = string.Join('\x1f', values.Select((v, i) => IsServiceName(dims[i]) ? v.ToUpperInvariant() : v));
             if (!buckets.TryGetValue(key, out var bucket))
                 buckets[key] = bucket = new GroupBucket(values);
             bucket.Calls++;
@@ -51,6 +69,10 @@ public static partial class QueryCommand
             // As `services` counts a service's bytes: each body's length as the index records it, decoded (#116).
             bucket.Bytes += request.BodyLength + (response?.BodyLength ?? 0);
         }
+
+        // Under --count the answer is one token, so the caveats go to stderr, as every other note's do.
+        routes?.Note(options.Count && !options.Json ? error.WriteLine : writer.Note);
+        var capped = cache.CappedReads;
 
         if (options.Count)
         {
@@ -75,12 +97,14 @@ public static partial class QueryCommand
         if (only is null && dims.Contains("step", StringComparer.OrdinalIgnoreCase))
             writer.Note("! step \"2\" spans scenarios — the same path is a different step in each; scope with s3 for one scenario's steps");
 
-        var widths = dims.Select((d, i) => Math.Max(d.Length, ordered.Count == 0 ? 0 : ordered.Max(b => b.Values[i].Length)) + 2).ToArray();
+        // A route is cut in text as the listing cuts a call's summary: 47 of one lane's 160 routes ran past 100 characters.
+        string Cell(int i, string value) => dims[i].Equals("route", StringComparison.OrdinalIgnoreCase) ? QueryWriter.OneLine(value, RouteWidth) : value;
+        var widths = dims.Select((d, i) => Math.Max(d.Length, ordered.Count == 0 ? 0 : ordered.Max(b => Cell(i, b.Values[i]).Length)) + 2).ToArray();
         writer.Line(string.Concat(dims.Select((d, i) => d.PadRight(widths[i]))) + $"{"calls",5} {"errors",6} {"median",8} {"max",8} {"bodies",6} {"bytes",9}");
 
         writer.Page(ordered, options.Offset, options.PageSize(200, writer, "buckets"), "buckets", bucket =>
         {
-            var cells = string.Concat(bucket.Values.Select((v, i) => v.PadRight(widths[i])));
+            var cells = string.Concat(bucket.Values.Select((v, i) => Cell(i, v).PadRight(widths[i])));
             writer.Line($"{cells}{bucket.Calls,5} {bucket.Errors,6} {QueryWriter.Duration(bucket.Median()),8} {QueryWriter.Duration(bucket.Max()),8} {bucket.Bodies.Count,6} "
                         + $"{QueryWriter.Size((int)Math.Min(bucket.Bytes, int.MaxValue)),9}");
         }, options.RerunArgs(), bucket => new
@@ -102,10 +126,14 @@ public static partial class QueryCommand
         return 0;
     }
 
+    private static bool IsServiceName(string dimension) =>
+        dimension.Equals("service", StringComparison.OrdinalIgnoreCase) || dimension.Equals("caller", StringComparison.OrdinalIgnoreCase);
+
     private static string DimensionValue(string dimension, InteractionEntry request, InteractionEntry? response) =>
         dimension.ToLowerInvariant() switch
         {
             "service" => request.ServiceName,
+            "caller" => request.CallerName.Length > 0 ? request.CallerName : "-",
             "method" => request.Method ?? "-",
             "status" => StatusOf(response).Text ?? "-",
             "path" => UriPath(request.Uri),
@@ -116,12 +144,56 @@ public static partial class QueryCommand
             _ => request.MetaType ?? "Default" // kind
         };
 
+    // The `path` dimension: the URI's path as recorded, ids and all; `route` is the call's operation, templated.
     private static string UriPath(string uri)
     {
         if (System.Uri.TryCreate(uri, UriKind.Absolute, out var parsed))
             return parsed.AbsolutePath;
         var question = uri.IndexOf('?');
         return question < 0 ? uri : uri[..question];
+    }
+
+    /// <summary>
+    /// The <c>route</c> of each call, for one command: <see cref="CallOperation.Of"/> without the query's keys, under the
+    /// rules the report recorded (read so that a pattern that times out is dropped for the rest of the command), with a
+    /// request body read only for a statement-shaped call or a POST, once per distinct body through the command's cache.
+    /// </summary>
+    private sealed class RouteReader(ReportIndex index, BodyCache cache)
+    {
+        private readonly HistoryShapeRules? _rules = HistoryShapeRules.ForReading(index.ShapeTemplates);
+        private readonly Dictionary<string, string> _routes = new(StringComparer.Ordinal);
+
+        public string Of(InteractionEntry request)
+        {
+            var needsBody = DependencyCategories.IsStatementShaped(request.DependencyCategory)
+                            || string.Equals(request.Method, "POST", StringComparison.OrdinalIgnoreCase);
+            var hash = needsBody ? request.BodyHash : null;
+            var key = string.Join('\x1f', request.Method, request.Uri, request.DependencyCategory, hash);
+            if (_routes.TryGetValue(key, out var route))
+                return route;
+            var content = hash is null ? null : cache.Raw(hash);
+            return _routes[key] = CallOperation.Of(request.Method, request.Uri, request.DependencyCategory, content, _rules, queryKeys: false);
+        }
+
+        /// <summary>
+        /// Says once what the routes could not use: a report without the block, written before it or by Kronikol4J, whose
+        /// writer records none and whose version is its own, cannot say whether its run had rules; and a recorded rule that
+        /// did not compile or timed out is named, as a run names it. A report that holds the block has its rules applied,
+        /// whichever version wrote it.
+        /// </summary>
+        public void Note(Action<string> note)
+        {
+            if (index.ShapeTemplates.Count == 0 && Predates(index.KronikolVersion))
+                note("route: built-in templating only; this report cannot say whether its run had HistoryShapeTemplates");
+            foreach (var problem in _rules?.Problems ?? [])
+                note("route: " + problem);
+        }
+
+        private static bool Predates(string? kronikolVersion)
+        {
+            var numbers = (kronikolVersion ?? "").Split('-', '+')[0];
+            return !Version.TryParse(numbers, out var version) || version < FirstVersionWithShapeTemplates;
+        }
     }
 
     private sealed class GroupBucket(string[] values)

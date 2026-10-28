@@ -27,7 +27,8 @@ public class TestRunReportSchemaContractTests
         // The .krkl decoded as well as the JSON (plans/REPORT_FORMAT_PLAN.md section 5, R4 item 4).
         var reportPath = ReportGenerator.GenerateTestRunReportData(RichFeatures(), Start, End,
             $"SchemaContract_{suffix}.{(compressedFile ? "krkl" : "json")}", DataFormat.Json, Diagrams(), Logs(), Diagnostics(),
-            fullStepDetail: true, ciMetadata: null, suite: null, environment: null, attribution: null, compressedFile: compressedFile, parties: Parties());
+            fullStepDetail: true, ciMetadata: null, suite: null, environment: null, attribution: null, compressedFile: compressedFile, parties: Parties(),
+            shapeTemplates: [new(@"(?<=/cache/)\w+-\d+", "{key}")]);
         var schemaPath = ReportGenerator.GenerateTestRunReportSchema($"SchemaContract_{suffix}.schema.json", DataFormat.Json);
 
         using var report = JsonDocument.Parse(ReportFile.Read(reportPath));

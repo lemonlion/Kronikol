@@ -36,9 +36,12 @@ public sealed partial class HistoryShapeRules
     private readonly List<string> _problems = [];
     private readonly HashSet<string> _timedOut = new(StringComparer.Ordinal);
     private readonly object _gate = new();
+    private readonly bool _dropOnTimeout;
+    private readonly bool[] _dropped;
 
-    private HistoryShapeRules(IReadOnlyList<HistoryShapeTemplate> templates, TimeSpan timeout)
+    private HistoryShapeRules(IReadOnlyList<HistoryShapeTemplate> templates, TimeSpan timeout, bool dropOnTimeout = false)
     {
+        _dropOnTimeout = dropOnTimeout;
         // The hash is over what was configured, compiled or not: it names the configuration.
         Hash = InteractionShape.Hash8(string.Join("\n", templates.Select(t => t.Pattern + "\u001f" + t.Placeholder)));
         Templates = [.. templates];
@@ -59,6 +62,7 @@ public sealed partial class HistoryShapeRules
                 _problems.Add($"the HistoryShapeTemplates pattern {template.Pattern} holds the escape {run.Escape}, which a path no longer holds: the rules see the path as the data file writes it, where {run.Escape} is written as '{run.Text}', so match that instead");
         }
         _rules = [.. rules];
+        _dropped = new bool[_rules.Length];
     }
 
     /// <summary>
@@ -89,6 +93,17 @@ public sealed partial class HistoryShapeRules
         return list.Length == 0 ? null : new HistoryShapeRules(list, timeout ?? DefaultTimeout);
     }
 
+    /// <summary>
+    /// The rules a report recorded, for a reader of the report (the query engine's <c>route</c>, #192): a pattern that times
+    /// out is dropped for the rest of the reader's command, where a run skips it for the one text. A run can afford a
+    /// pattern near its limit; a query of a report cannot, since such a pattern over thousands of paths takes minutes.
+    /// </summary>
+    internal static HistoryShapeRules? ForReading(IEnumerable<HistoryShapeTemplate>? templates, TimeSpan? timeout = null)
+    {
+        var list = templates?.Where(t => t is not null && !string.IsNullOrEmpty(t.Pattern)).ToArray() ?? [];
+        return list.Length == 0 ? null : new HistoryShapeRules(list, timeout ?? DefaultTimeout, dropOnTimeout: true);
+    }
+
     /// <summary>The first eight hex of SHA-256 over the configured rules, in order: what the run line records as <c>shapeRules</c>.</summary>
     public string Hash { get; }
 
@@ -104,8 +119,11 @@ public sealed partial class HistoryShapeRules
     /// <summary>The text with every rule applied, in order.</summary>
     internal string Apply(string text)
     {
-        foreach (var (expression, placeholder, pattern) in _rules)
+        for (var i = 0; i < _rules.Length; i++)
         {
+            if (Volatile.Read(ref _dropped[i]))
+                continue;
+            var (expression, placeholder, pattern) = _rules[i];
             try
             {
                 text = expression.Replace(text, placeholder);
@@ -113,8 +131,14 @@ public sealed partial class HistoryShapeRules
             catch (RegexMatchTimeoutException)
             {
                 lock (_gate)
+                {
+                    if (_dropOnTimeout)
+                        Volatile.Write(ref _dropped[i], true);
                     if (_timedOut.Add(pattern))
-                        _problems.Add($"the HistoryShapeTemplates pattern {pattern} timed out after {expression.MatchTimeout.TotalMilliseconds:0} ms and was skipped for the text it timed out on; a pattern that backtracks is usually one nested quantifier away from not doing so");
+                        _problems.Add($"the HistoryShapeTemplates pattern {pattern} timed out after {expression.MatchTimeout.TotalMilliseconds:0} ms and was skipped for "
+                                      + (_dropOnTimeout ? "the rest of this command" : "the text it timed out on")
+                                      + "; a pattern that backtracks is usually one nested quantifier away from not doing so");
+                }
             }
         }
         return text;

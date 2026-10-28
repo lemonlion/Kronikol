@@ -171,9 +171,17 @@ public static partial class QueryCommand
             return 2;
         }
 
-        var pairing = CallPairing.Pair(oldScenario, oldInteraction, match);
+        // Each report's calls under the rules both runs recorded, or the built-in rules alone where they differ (#192 R2).
+        var (oldKeys, newKeys) = CallPairing.CallKeys.Of(left, right);
+        using var oldKeysOwned = oldKeys;
+        using var newKeysOwned = newKeys;
+        var pairing = CallPairing.Pair(oldScenario, oldInteraction, match, oldKeys, newKeys);
         if (pairing.Partner is not { } newInteraction)
+        {
+            foreach (var problem in oldKeys.Problems)
+                error.WriteLine("pairing: " + problem);
             return RefuseUnpaired(right, leftLabel, rightLabel, oldScenario, oldInteraction, match, pairing, error);
+        }
 
         var newAddress = newInteraction.Address(match);
         if (newInteraction.BodyHash is not { } newHash)
@@ -191,6 +199,9 @@ public static partial class QueryCommand
             note("! this report has no stableIds (written before 3.0.47) — scenarios matched by position");
         if (scenarioNote is not null)
             note(scenarioNote);
+        // A rule the pairing could not apply, named once, as a run and route name it; both sides share the one set.
+        foreach (var problem in oldKeys.Problems)
+            note("pairing: " + problem);
         var keyText = CallPairing.Describe(oldInteraction, pairing.OnShape ? pairing.Shape : pairing.Target);
         if (pairing.OnShape)
             note($"! no call in {rightLabel} {match.Address} has that URI; matched on its shape {pairing.Shape} (the URIs differ in what looks like an id)");

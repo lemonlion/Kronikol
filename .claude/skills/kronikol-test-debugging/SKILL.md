@@ -109,7 +109,8 @@ matters.
 | "the number on screen is wrong" | `grep "<value>" --number` (matches `4,173.00` and `4173` alike, emits paths; `--tolerance 0.5` or `--tolerance 1%` widens the match) → `http <addr> --path $...` → `compare s<failing> s<passing>` |
 | "did it even call X?" | `services` — absence is the answer; no payload needed |
 | "was that the real service or a stub?" | `parties`: each party's kind (`test`, `underTest`, `real`, `double`), how it is known, its id and its calls; `--kind double` lists the stand-ins |
-| "which service/step had the most errors?" | `interactions --group-by service,status --sort errors` (dimensions incl. `step`, `path`, `capturedBy`): one bucket table, aggregation instead of paging |
+| "which service/step had the most errors?" | `interactions --group-by service,status --sort errors` (dimensions incl. `step`, `path`, `route`, `caller`, `capturedBy`): one bucket table, aggregation instead of paging |
+| "did the test make that call, or the service?" / "which operations does X serve?" | `interactions --group-by caller,service`: the test's own calls, its seeding among them, carry the test client's caller name → `interactions --service X --group-by route`: ids templated (`/orders/{n}`), a GraphQL endpoint split by operation, under the rules the run recorded; `--phase setup` keeps the setup calls |
 | "which assertions failed?" | `assertions --failed` (add `s3` to scope): flat list with resolved values, messages and `file:line` |
 | "what did X return?" | `interactions s3 --service X` → `http s3/iN --keys` → `--path` |
 | "what values did X ever return?" | `values --path '$.field' --service X` — distinct values, counted, with addresses |

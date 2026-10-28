@@ -4,6 +4,100 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.19.0] - 2026-10-28
+
+The minor part moves (5.18.0 to 5.19.0): new public surface for #192 R2. `kronikol query interactions --group-by` gains
+the `caller` and `route` dimensions, `interactions` and `values` gain `--phase`, `interactions --json` rows gain
+`caller`; the data files gain the `shapeTemplates` block, with an optional `shapeTemplates` parameter on
+`ReportGenerator.GenerateTestRunReportData` and `MergeableReport.ShapeTemplates`; `kronikol ingest` gains
+`--shape-templates`. A run that sets no `HistoryShapeTemplates` writes the same bytes as before.
+
+### Added
+
+- **Who made a call, and what it was (#192).** `kronikol query interactions --group-by` gains `caller`, the service
+  that made the call as its record names it, so `--group-by caller,service` tells the test's own calls, its seeding
+  of a database among them, from the subject's calls to the same dependency; and `route`, the call's operation as
+  history keys it: the path without its scheme, host and query, ids templated (`/orders/{n}`), an entity a tracker
+  writes where a host would go kept as the first segment, then a statement's head or a GraphQL request's operation
+  (`/graphql query GetUser`, an anonymous one by its root fields). `--group-by caller,route` is the edge list the issue
+  asked for: one endpoint's operations apart, one operation's ids together. A `caller` value folds names that differ
+  only in case, as `service` does. A route is cut at 80 characters in text, and the `--json` key holds all of it.
+  `route` reads the request body of a POST or of a statement-shaped call, each distinct body once over the command's
+  one handle, and no other body; every other dimension stays index-only.
+- **`--phase setup|action|unknown`** on `interactions` and `values`: the calls made in one phase of their test,
+  `unknown` for a call recorded without one, in any case; any other value exits 2, and the `next:` line carries it.
+- **`caller` on `interactions --json` rows**, after `service` (#184), null when the record names nobody.
+- **The run's templating rules, in the report.** The data files, JSON, `.krkl`, XML, YAML and the mergeable file,
+  record the run's `HistoryShapeTemplates` as `shapeTemplates`, in order, each a `pattern` and a `placeholder`, only
+  when the run has rules (a null rule or an empty pattern, which no run applies, is left out), and the JSON schema and
+  the XSD declare it. A query of the report keys a call as the run's
+  history did: `route` applies them before the built-in rules, drops a pattern for the rest of the command at its
+  first timeout (250 ms, where a run skips it for the one text), and names a pattern that does not compile. A report
+  written before 5.19.0 cannot say whether its run had rules, so `route` templates it by the built-in rules and says
+  so, once: `route: built-in templating only; this report cannot say whether its run had HistoryShapeTemplates`, as
+  it does for a Kronikol4J report, whose writer records none; a report that holds the block has its rules applied
+  whichever version wrote it. Under `--count` the notes go to stderr, and the answer stays one token.
+- **`kronikol merge` keeps the rules** when every shard records the same ones (`MergeableReport.ShapeTemplates`), and
+  otherwise writes none, with a diagnostic naming which reports record which rules.
+- **`kronikol ingest --shape-templates FILE`** (the plan's Q7): an ingested run's `HistoryShapeTemplates`, from a JSON
+  file in the shape of the report's block, `[{ "pattern": ..., "placeholder": ... }]`, since a regular expression on a
+  command line is a quoting hazard in every shell. They shape the run's history fingerprints and warm-up marks and are
+  written into its report. A file that is not there exits 1, and one that is not a list of rules exits 2 naming the
+  shape.
+
+### Changed
+
+- **Call pairing reads a call by its operation.** `diff --body` across runs and `compare` pair a call by its service,
+  method, path and query and, new, its GraphQL operation or a statement's head with the built-in rules' placeholders;
+  then by its shape, now the operation key under the rules both reports recorded, or the built-in rules alone where
+  they recorded different ones, where it was the templated path under none. Two GraphQL calls to one endpoint, and two
+  statements on one table, pair by what they asked rather than by their order, and a key the consumer's rule names
+  pairs across runs of the same rules. A request's body is read for a POST or a statement only, never a response's,
+  through one handle per report, opened only when one is needed, and a recorded rule the pairing could not apply is
+  named (`pairing: the HistoryShapeTemplates pattern ...`).
+
+### Fixed
+
+- **`kronikol merge --history` read the merged run under no rules** against runs recorded under the consumer's, so
+  its behaviour verdicts compared fingerprints made under different rules, and it bridged no edit of the patterns,
+  which `query history` has done since 5.17.0. It now fingerprints the merged run under the shards' rules and bridges
+  it to the patterns the window was recorded under, as `query history` does.
+- **`kronikol merge --history` read the ledger twice** once the shards' run was recorded: the read kept the newest 50
+  runs, the run's own line among them, and the analysis compares the 50 before it, so it read the whole ledger again
+  for the oldest. It keeps one run more, as `query history` has since 5.17.0.
+- **`interactions --group-by` with a dimension named twice threw under `--json`**, whose bucket key is an object of
+  the dimensions; it now exits 2 naming the repeat, in text and in JSON.
+
+### Documentation
+
+- The wiki's Querying Reports page gives the `caller` and `route` dimensions, `--phase` and the JSON rows' `caller`;
+  Generated Reports the `shapeTemplates` block; Merging Parallel Reports how a merge keeps the rules and what
+  `--history` reads; Ingesting External Captures `--shape-templates`; Cross-Run History, Report Configuration and the
+  API reference that the report carries the rules; Phase-Aware Tracking `--phase`. The skill, both copies, names the
+  dimensions and the filter, with a recipe for telling the test's calls from the subject's.
+
+### Tests
+
+- New facts: `QueryCallerRouteTests` (the caller and route dimensions, case folding, the JSON rows, `--phase` with its
+  refusal and its `next:` line, the recorded rules, the note on an older report and the silence on a newer one, a
+  pattern dropped at its first timeout and one that does not compile, the bodies `route` reads, counted on the index,
+  and the cut), `ShapeTemplatesBlockTests` (the block only with rules, in every format read back by that format's
+  parser, the XSD, the run's call sites, the mergeable shard, the index, a rule given no placeholder),
+  `MergeShapeTemplatesTests` (kept, dropped and named, none, `--history` under the shards' rules, bridged, and the
+  ledger read once), `IngestShapeTemplatesTests`, two `DiffBodyPairingTests` facts (GraphQL calls by operation, a
+  report's recorded rules) and a `DescribeTests` fact for `--phase`; the schema contract's report now writes the block.
+  Mutations of the merge's read window, its bridge and its rules, and of the run's call site, each turn a fact red.
+- An independent review of the built code before release found seven defects in it, each fixed test first: `route`'s
+  notes broke `--count`'s one token; a null rule list or a null rule lost the run its data file, and an empty pattern
+  was recorded; a rule edit between two runs stopped `diff --body` pairing on the shape; a response recorded without its
+  request had its rows read as its statement; diff and compare skipped a failing rule in silence; the note on an older
+  report was said of one that holds the block; and two statements on one table paired by position. Each fix has a
+  mutation that turns its fact red, and the fact for the dimension named twice is the review's too.
+- Checks: the core suite (11,117 passed, 2 skipped), the Release build of `release.slnf`, and each of the plan's R2
+  mutations turning a fact red: the query's keys kept in `route`, GET and PUT bodies read for it, the recorded rules
+  skipped, a timed-out pattern kept, and the block written for an empty list. No example lane or Playwright run: no
+  example sets `HistoryShapeTemplates`, and nothing in the HTML report changes.
+
 ## [5.18.0] - 2026-10-28
 
 The minor part moves (5.17.0 to 5.18.0): a new configuration option, `ReportConfigurationOptions.TitleWords` (#139 R2),

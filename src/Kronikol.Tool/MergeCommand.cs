@@ -206,7 +206,10 @@ internal static class MergeCommand
             return null;
         }
 
-        var read = History.HistoryLedgerReader.Read(full, 50);
+        // The analysis's window and the run before it, as query history reads (#192 R1): the merged run is the ledger's
+        // newest line once its shards are recorded, and a read of the window alone sent the analysis back for one more.
+        var window = new History.HistoryAnalysisOptions().Window;
+        var read = History.HistoryLedgerReader.Read(full, window + 1);
         if (read.Ledger is not { } ledger)
         {
             error.WriteLine(read.Message);
@@ -214,8 +217,8 @@ internal static class MergeCommand
             return null;
         }
 
-        var (roster, run) = History.HistoryRunBuilder.Build(merged.Features, merged.Interactions, merged.Suite, merged.CiMetadata,
-            new DateTimeOffset(merged.EndTime.ToUniversalTime()), new History.HistoryBuildOptions { ServiceId = merged.ServiceId });
+        var branch = CiMetadataDetector.PullRequestTarget(getEnvironmentVariable);
+        var (roster, run) = HistoryRunOf(merged, ledger, [branch], window);
         History.HistoryQuarantineList? quarantine = null;
         History.HistoryAliases? aliases = null;
         try
@@ -232,8 +235,23 @@ internal static class MergeCommand
         // A pull request build reads against the branch it targets, as the shards' own runs did.
         return History.HistoryAnalyzer.Analyse(ledger, roster, run, new History.HistoryAnalysisOptions
         {
-            Branch = CiMetadataDetector.PullRequestTarget(getEnvironmentVariable)
+            Branch = branch
         }, quarantine, aliases);
+    }
+
+    /// <summary>
+    /// The merged run as the history analysis reads it (#192 R2, plan 3.9): built with the rules the shards recorded, where
+    /// it was built under none against runs recorded under them, and, given a ledger, bridged to the patterns the window
+    /// of <paramref name="streams"/> was recorded under, as query history bridges a run it rebuilds from a report.
+    /// </summary>
+    internal static (History.HistoryRoster Roster, History.HistoryRun Run) HistoryRunOf(MergeableReport merged, History.HistoryLedger? ledger = null,
+        IEnumerable<string?>? streams = null, int window = 0)
+    {
+        var built = History.HistoryRunBuilder.Build(merged.Features, merged.Interactions, merged.Suite, merged.CiMetadata,
+            new DateTimeOffset(merged.EndTime.ToUniversalTime()),
+            new History.HistoryBuildOptions { ServiceId = merged.ServiceId, ShapeRules = History.HistoryShapeRules.Create(merged.ShapeTemplates) });
+        var run = ledger is null ? built.Run : Kronikol.Query.ReportHistory.BridgedToWindow(built.Run, built.RawCalls, ledger, streams ?? [], window);
+        return (built.Roster, run);
     }
 
     /// <summary>

@@ -30,7 +30,12 @@ internal sealed class BodyCache(ReportIndex index) : IDisposable
     {
         if (_raw.TryGetValue(hash, out var cached))
             return cached;
-        var content = index.Bodies.TryGetValue(hash, out var entry) ? PayloadReader.Read(_stream, entry.First) : null;
+        string? content = null;
+        if (index.Bodies.TryGetValue(hash, out var entry))
+        {
+            index.BodyReads++;
+            content = PayloadReader.Read(_stream, entry.First);
+        }
         return _raw[hash] = content;
     }
 

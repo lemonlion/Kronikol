@@ -575,7 +575,7 @@ public static class ReportGenerator
                 Add($"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", () =>
                 {
                     var model = BuildRunMergeableModel(features, startRunTime, endRunTime, diagrams, dataLogs, perBoundarySegments, wholeTestSegments, ciMetadata, options, reportDiagnostics, suite, environment, attribution.Value, suppliedSpans?.Count, warmUp,
-                        compressPayloads: !compressed && options.CompressTestRunReportPayloads, parties: parties);
+                        compressPayloads: !compressed && options.CompressTestRunReportPayloads, parties: parties, shapeTemplates: RunsTemplates(options));
                     if (compressed)
                         WriteCompressedReport(model, $"{options.HtmlTestRunReportFileName}.{testRunDataExtension}");
                     else
@@ -585,7 +585,7 @@ public static class ReportGenerator
             else
             {
                 Add($"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", () => GenerateTestRunReportData(features, startRunTime, endRunTime, $"{options.HtmlTestRunReportFileName}.{testRunDataExtension}", options.TestRunReportDataFormat, diagrams, dataLogs, reportDiagnostics, options.TestRunReportFullStepDetail, ciMetadata, suite, environment, attribution.Value, options.CompressTestRunReportPayloads, warmUp,
-                    compressedFile: WritesCompressedReport(options), parties: parties));
+                    compressedFile: WritesCompressedReport(options), parties: parties, shapeTemplates: RunsTemplates(options)));
             }
         }
 #pragma warning restore CS0618
@@ -5301,8 +5301,8 @@ public static class ReportGenerator
     /// <c>environment</c> is what the run executed on. Null means this machine, which is what a live run
     /// wants; <see cref="RunEnvironment.Unrecorded"/> leaves the key out, for a lane that cannot know.
     /// </remarks>
-    public static string GenerateTestRunReportData(Feature[] features, DateTime startTime, DateTime endTime, string fileName, DataFormat format, DefaultDiagramsFetcher.DiagramAsCode[]? diagrams = null, RequestResponseLog[]? trackedLogs = null, IReadOnlyList<DiagnosticEntry>? diagnostics = null, bool fullStepDetail = true, CiMetadata? ciMetadata = null, string? suite = null, RunEnvironment? environment = null) =>
-        GenerateTestRunReportData(features, startTime, endTime, fileName, format, diagrams, trackedLogs, diagnostics, fullStepDetail, ciMetadata, suite, environment, attribution: null);
+    public static string GenerateTestRunReportData(Feature[] features, DateTime startTime, DateTime endTime, string fileName, DataFormat format, DefaultDiagramsFetcher.DiagramAsCode[]? diagrams = null, RequestResponseLog[]? trackedLogs = null, IReadOnlyList<DiagnosticEntry>? diagnostics = null, bool fullStepDetail = true, CiMetadata? ciMetadata = null, string? suite = null, RunEnvironment? environment = null, IReadOnlyList<HistoryShapeTemplate>? shapeTemplates = null) =>
+        GenerateTestRunReportData(features, startTime, endTime, fileName, format, diagrams, trackedLogs, diagnostics, fullStepDetail, ciMetadata, suite, environment, attribution: null, shapeTemplates: shapeTemplates);
 
     /// <summary>
     /// The same, with the step attribution handed in when the run derived it already (a run derives it
@@ -5310,7 +5310,8 @@ public static class ReportGenerator
     /// </summary>
     internal static string GenerateTestRunReportData(Feature[] features, DateTime startTime, DateTime endTime, string fileName, DataFormat format, DefaultDiagramsFetcher.DiagramAsCode[]? diagrams, RequestResponseLog[]? trackedLogs, IReadOnlyList<DiagnosticEntry>? diagnostics, bool fullStepDetail, CiMetadata? ciMetadata, string? suite, RunEnvironment? environment,
         (Dictionary<string, List<string?>> StepPaths, Dictionary<string, List<ScenarioAnnotation>> Annotations)? attribution,
-        bool compressPayloads = false, WarmUpResult? warmUp = null, bool compressedFile = false, PartyTable? parties = null)
+        bool compressPayloads = false, WarmUpResult? warmUp = null, bool compressedFile = false, PartyTable? parties = null,
+        IReadOnlyList<HistoryShapeTemplate>? shapeTemplates = null)
     {
         var diagramLookup = diagrams?.ToLookup(d => d.TestRuntimeId, d => d.CodeBehind);
         // Diagram markers belong to the diagram, not the interaction list: exported as-is they read as
@@ -5324,10 +5325,10 @@ public static class ReportGenerator
         return format switch
         {
             // Every payload as text: the file is compressed whole (plans/REPORT_FORMAT_PLAN.md 4.2, Q14).
-            DataFormat.Json when compressedFile => WriteCompressedReport(BuildTestRunReportModel(features, startTime, endTime, diagramLookup, logLookup, diagnostics, fullStepDetail, durations, stepPaths, annotations, ciMetadata, suite, environment, compressPayloads: false, warmUp, parties), fileName),
-            DataFormat.Json => WriteFile(GenerateTestRunReportJson(features, startTime, endTime, diagramLookup, logLookup, diagnostics, fullStepDetail, durations, stepPaths, annotations, ciMetadata, suite, environment, compressPayloads, warmUp, parties), fileName),
-            DataFormat.Xml => WriteFile(GenerateTestRunReportXml(features, startTime, endTime, diagramLookup, logLookup, diagnostics, durations, stepPaths, annotations, ciMetadata, suite, environment, warmUp, parties), fileName),
-            DataFormat.Yaml => WriteFile(GenerateTestRunReportYaml(features, startTime, endTime, diagramLookup, logLookup, diagnostics, durations, stepPaths, annotations, ciMetadata, suite, environment, warmUp, parties), fileName),
+            DataFormat.Json when compressedFile => WriteCompressedReport(BuildTestRunReportModel(features, startTime, endTime, diagramLookup, logLookup, diagnostics, fullStepDetail, durations, stepPaths, annotations, ciMetadata, suite, environment, compressPayloads: false, warmUp, parties, shapeTemplates), fileName),
+            DataFormat.Json => WriteFile(GenerateTestRunReportJson(features, startTime, endTime, diagramLookup, logLookup, diagnostics, fullStepDetail, durations, stepPaths, annotations, ciMetadata, suite, environment, compressPayloads, warmUp, parties, shapeTemplates), fileName),
+            DataFormat.Xml => WriteFile(GenerateTestRunReportXml(features, startTime, endTime, diagramLookup, logLookup, diagnostics, durations, stepPaths, annotations, ciMetadata, suite, environment, warmUp, parties, shapeTemplates), fileName),
+            DataFormat.Yaml => WriteFile(GenerateTestRunReportYaml(features, startTime, endTime, diagramLookup, logLookup, diagnostics, durations, stepPaths, annotations, ciMetadata, suite, environment, warmUp, parties, shapeTemplates), fileName),
             _ => throw new ArgumentOutOfRangeException(nameof(format))
         };
     }
@@ -5530,14 +5531,14 @@ public static class ReportGenerator
         Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
     };
 
-    private static string GenerateTestRunReportJson(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, IReadOnlyList<DiagnosticEntry>? diagnostics = null, bool fullStepDetail = true, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, IReadOnlyDictionary<string, List<ScenarioAnnotation>>? annotations = null, CiMetadata? ciMetadata = null, string? suite = null, RunEnvironment? environment = null, bool compressPayloads = false, WarmUpResult? warmUp = null, PartyTable? parties = null) =>
-        JsonSerializer.Serialize(BuildTestRunReportModel(features, startTime, endTime, diagramLookup, logLookup, diagnostics, fullStepDetail, durations, stepPaths, annotations, ciMetadata, suite, environment, compressPayloads, warmUp, parties), TestRunReportJsonOptions);
+    private static string GenerateTestRunReportJson(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, IReadOnlyList<DiagnosticEntry>? diagnostics = null, bool fullStepDetail = true, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, IReadOnlyDictionary<string, List<ScenarioAnnotation>>? annotations = null, CiMetadata? ciMetadata = null, string? suite = null, RunEnvironment? environment = null, bool compressPayloads = false, WarmUpResult? warmUp = null, PartyTable? parties = null, IReadOnlyList<HistoryShapeTemplate>? shapeTemplates = null) =>
+        JsonSerializer.Serialize(BuildTestRunReportModel(features, startTime, endTime, diagramLookup, logLookup, diagnostics, fullStepDetail, durations, stepPaths, annotations, ciMetadata, suite, environment, compressPayloads, warmUp, parties, shapeTemplates), TestRunReportJsonOptions);
 
     /// <summary>
     /// The standard data file's model: what <see cref="GenerateTestRunReportJson"/> writes as JSON, and a compressed report
     /// streams into its file (plans/REPORT_FORMAT_PLAN.md 4.5).
     /// </summary>
-    private static Dictionary<string, object?> BuildTestRunReportModel(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, IReadOnlyList<DiagnosticEntry>? diagnostics = null, bool fullStepDetail = true, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, IReadOnlyDictionary<string, List<ScenarioAnnotation>>? annotations = null, CiMetadata? ciMetadata = null, string? suite = null, RunEnvironment? environment = null, bool compressPayloads = false, WarmUpResult? warmUp = null, PartyTable? parties = null)
+    private static Dictionary<string, object?> BuildTestRunReportModel(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, IReadOnlyList<DiagnosticEntry>? diagnostics = null, bool fullStepDetail = true, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, IReadOnlyDictionary<string, List<ScenarioAnnotation>>? annotations = null, CiMetadata? ciMetadata = null, string? suite = null, RunEnvironment? environment = null, bool compressPayloads = false, WarmUpResult? warmUp = null, PartyTable? parties = null, IReadOnlyList<HistoryShapeTemplate>? shapeTemplates = null)
     {
         var payloads = new ReportPayloads(compressPayloads);
         // Resolved ONCE and used for both the key and the ids under it. Writing `suite ?? RunSuite.Current`
@@ -5566,6 +5567,7 @@ public static class ReportGenerator
             data["environment"] = environmentJson;
 
         AddPartiesJson(data, parties);
+        AddShapeTemplatesJson(data, shapeTemplates);
 
         data["features"] = BuildFeaturesJsonModel(features, diagramLookup, logLookup, fullStepDetail, durations, stepPaths, annotations, resolvedSuite, payloads, warmUp);
         data["background"] = MapBackgroundJson(BackgroundAttribution.Summarise(logLookup?[TestIdentityScope.UnknownTestId], features), durations, payloads);
@@ -5719,7 +5721,8 @@ public static class ReportGenerator
         int? suppliedSpans = null,
         WarmUpResult? warmUp = null,
         bool compressPayloads = false,
-        PartyTable? parties = null)
+        PartyTable? parties = null,
+        IReadOnlyList<HistoryShapeTemplate>? shapeTemplates = null)
     {
         var diagramLookup = diagrams?.ToLookup(d => d.TestRuntimeId, d => d.CodeBehind);
 
@@ -5769,7 +5772,7 @@ public static class ReportGenerator
             relationships, internalFlowSegmentData, wholeTestFlow,
             options.WholeTestFlowVisualization, ciMetadata, diagnostics, trackedLogs,
             stepPathsOverride: attribution?.StepPaths, annotationsOverride: attribution?.Annotations,
-            suite: suite, environment: environment, compressPayloads: compressPayloads, warmUp: warmUp, parties: parties);
+            suite: suite, environment: environment, compressPayloads: compressPayloads, warmUp: warmUp, parties: parties, shapeTemplates: shapeTemplates);
     }
 
     /// <summary>
@@ -5805,10 +5808,11 @@ public static class ReportGenerator
         RunEnvironment? environment = null,
         bool compressPayloads = false,
         WarmUpResult? warmUp = null,
-        PartyTable? parties = null) =>
+        PartyTable? parties = null,
+        IReadOnlyList<HistoryShapeTemplate>? shapeTemplates = null) =>
         JsonSerializer.Serialize(BuildMergeableReportModel(features, startTime, endTime, diagramLookup, componentRelationships,
             internalFlowSegmentData, wholeTestFlow, wholeTestVisualization, ciMetadata, diagnostics, trackedLogs, kronikolVersion,
-            stepPathsOverride, annotationsOverride, suite, environment, compressPayloads, warmUp, parties), TestRunReportJsonOptions);
+            stepPathsOverride, annotationsOverride, suite, environment, compressPayloads, warmUp, parties, shapeTemplates), TestRunReportJsonOptions);
 
     /// <summary>
     /// The mergeable file's model: what <see cref="GenerateMergeableReportJson"/> writes as JSON, and a compressed report
@@ -5833,7 +5837,8 @@ public static class ReportGenerator
         RunEnvironment? environment = null,
         bool compressPayloads = false,
         WarmUpResult? warmUp = null,
-        PartyTable? parties = null)
+        PartyTable? parties = null,
+        IReadOnlyList<HistoryShapeTemplate>? shapeTemplates = null)
     {
         var payloads = new ReportPayloads(compressPayloads);
         // A merge hands in the shards' marks, None included, and never has them recomputed here.
@@ -5903,6 +5908,7 @@ public static class ReportGenerator
             data["environment"] = environmentJson;
 
         AddPartiesJson(data, parties);
+        AddShapeTemplatesJson(data, shapeTemplates);
 
         return data;
     }
@@ -5919,6 +5925,31 @@ public static class ReportGenerator
             data["serviceId"] = serviceId;
         data["parties"] = PartiesReport.Json(parties);
     }
+
+    /// <summary>
+    /// <c>shapeTemplates</c> (#192): the run's HistoryShapeTemplates as given, so a query of the file templates a call's
+    /// route as the run templated its history. Only when there are rules: a report without them keeps its bytes. A
+    /// placeholder given as null is written empty in every format, as the run's rules read it (<see cref="HistoryShapeRules"/>).
+    /// </summary>
+    private static void AddShapeTemplatesJson(Dictionary<string, object?> data, IReadOnlyList<HistoryShapeTemplate>? shapeTemplates)
+    {
+        if (Recorded(shapeTemplates) is not { } rules)
+            return;
+        data["shapeTemplates"] = rules
+            .Select(t => new Dictionary<string, object?> { ["pattern"] = t.Pattern, ["placeholder"] = t.Placeholder ?? "" })
+            .ToList();
+    }
+
+    /// <summary>
+    /// The rules a data file records: the ones the run applies, as <see cref="HistoryShapeRules.Create"/> keeps them, so a
+    /// null rule or an empty pattern, which no run applies, is left out rather than lose the file; null when none is left.
+    /// </summary>
+    private static IReadOnlyList<HistoryShapeTemplate>? Recorded(IReadOnlyList<HistoryShapeTemplate>? shapeTemplates) =>
+        shapeTemplates?.Where(t => t is not null && !string.IsNullOrEmpty(t.Pattern)).ToList() is { Count: > 0 } rules ? rules : null;
+
+    /// <summary>The run's rules for its data files, a list the consumer set to null being none.</summary>
+    private static IReadOnlyList<HistoryShapeTemplate>? RunsTemplates(ReportConfigurationOptions options) =>
+        options.HistoryShapeTemplates is { } rules ? Recorded([.. rules]) : null;
 
     /// <summary>
     /// An interaction instant, as UTC, in the one format all three data writers share.
@@ -6219,7 +6250,7 @@ public static class ReportGenerator
         s.TableReferenceFormattedValue
     };
 
-    private static string GenerateTestRunReportXml(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, IReadOnlyList<DiagnosticEntry>? diagnostics = null, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, IReadOnlyDictionary<string, List<ScenarioAnnotation>>? annotations = null, CiMetadata? ciMetadata = null, string? suite = null, RunEnvironment? environment = null, WarmUpResult? warmUp = null, PartyTable? parties = null)
+    private static string GenerateTestRunReportXml(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, IReadOnlyList<DiagnosticEntry>? diagnostics = null, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, IReadOnlyDictionary<string, List<ScenarioAnnotation>>? annotations = null, CiMetadata? ciMetadata = null, string? suite = null, RunEnvironment? environment = null, WarmUpResult? warmUp = null, PartyTable? parties = null, IReadOnlyList<HistoryShapeTemplate>? shapeTemplates = null)
     {
         var resolvedSuite = suite ?? RunSuite.Current;
         var doc = new XDocument(
@@ -6236,6 +6267,10 @@ public static class ReportGenerator
                         new XElement("Runtime", xmlEnvironment.Runtime))
                     : null,
                 PartiesReport.Xml(parties),
+                Recorded(shapeTemplates) is { } xmlRules
+                    ? new XElement("ShapeTemplates", xmlRules.Select(t =>
+                        new XElement("ShapeTemplate", new XElement("Pattern", t.Pattern), new XElement("Placeholder", t.Placeholder ?? ""))))
+                    : null,
                 new XElement("Features",
                     features.OrderBy(f => f.DisplayName).Select(f =>
                         new XElement("Feature",
@@ -6495,7 +6530,7 @@ public static class ReportGenerator
             AppendYaml(yml, indent + "  - ", item);
     }
 
-    private static string GenerateTestRunReportYaml(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, IReadOnlyList<DiagnosticEntry>? diagnostics = null, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, IReadOnlyDictionary<string, List<ScenarioAnnotation>>? annotations = null, CiMetadata? ciMetadata = null, string? suite = null, RunEnvironment? environment = null, WarmUpResult? warmUp = null, PartyTable? parties = null)
+    private static string GenerateTestRunReportYaml(Feature[] features, DateTime startTime, DateTime endTime, ILookup<string, string>? diagramLookup, ILookup<string, RequestResponseLog>? logLookup, IReadOnlyList<DiagnosticEntry>? diagnostics = null, IReadOnlyDictionary<Guid, double>? durations = null, IReadOnlyDictionary<string, List<string?>>? stepPaths = null, IReadOnlyDictionary<string, List<ScenarioAnnotation>>? annotations = null, CiMetadata? ciMetadata = null, string? suite = null, RunEnvironment? environment = null, WarmUpResult? warmUp = null, PartyTable? parties = null, IReadOnlyList<HistoryShapeTemplate>? shapeTemplates = null)
     {
         var resolvedSuite = suite ?? RunSuite.Current;
         var yml = new StringBuilder();
@@ -6532,6 +6567,15 @@ public static class ReportGenerator
                 AppendYaml(yml, "    Kind: ", PartiesReport.KindName(party.Kind));
                 AppendYamlIfPresent(yml, "    KindSource: ", party.KindSource is { } source ? PartiesReport.SourceName(source) : null);
                 AppendYamlIfPresent(yml, "    Note: ", party.Note);
+            }
+        }
+        if (Recorded(shapeTemplates) is { } ymlRules)
+        {
+            yml.Append("ShapeTemplates:\n");
+            foreach (var template in ymlRules)
+            {
+                AppendYaml(yml, "  - Pattern: ", template.Pattern);
+                AppendYaml(yml, "    Placeholder: ", template.Placeholder ?? "");
             }
         }
         yml.Append("Features:\n");
@@ -7623,6 +7667,22 @@ public static class ReportGenerator
                         }
                     }
                 },
+                ["shapeTemplates"] = new Dictionary<string, object?>
+                {
+                    ["type"] = "array",
+                    ["description"] = "The run's HistoryShapeTemplates in the order given: what in a call's path or statement head is variable in this application, and what to write in its place. A query of the file applies them before the built-in rules when it names a call's route, as the run did when it fingerprinted its history. Present only when the run had rules.",
+                    ["items"] = new Dictionary<string, object?>
+                    {
+                        ["type"] = "object",
+                        ["required"] = new[] { "pattern", "placeholder" },
+                        ["additionalProperties"] = false,
+                        ["properties"] = new Dictionary<string, object?>
+                        {
+                            ["pattern"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "A .NET regular expression, matched culture-invariantly against a call's path as this file writes it, before its query string, and against a statement head" },
+                            ["placeholder"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "What replaces each match: a replacement pattern, so $1 keeps a group of the match" }
+                        }
+                    }
+                },
                 ["background"] = new Dictionary<string, object?>
                 {
                     ["type"] = "object",
@@ -8442,6 +8502,14 @@ public static class ReportGenerator
                                 new XElement(xs + "complexType",
                                     new XElement(xs + "sequence",
                                         new XElement(xs + "element", new XAttribute("name", "Party"), new XAttribute("type", "PartyType"), new XAttribute("minOccurs", "0"), new XAttribute("maxOccurs", "unbounded"))))),
+                            new XElement(xs + "element", new XAttribute("name", "ShapeTemplates"), new XAttribute("minOccurs", "0"),
+                                new XElement(xs + "complexType",
+                                    new XElement(xs + "sequence",
+                                        new XElement(xs + "element", new XAttribute("name", "ShapeTemplate"), new XAttribute("maxOccurs", "unbounded"),
+                                            new XElement(xs + "complexType",
+                                                new XElement(xs + "sequence",
+                                                    new XElement(xs + "element", new XAttribute("name", "Pattern"), new XAttribute("type", "xs:string")),
+                                                    new XElement(xs + "element", new XAttribute("name", "Placeholder"), new XAttribute("type", "xs:string")))))))),
                             new XElement(xs + "element", new XAttribute("name", "Features"),
                                 new XElement(xs + "complexType",
                                     new XElement(xs + "sequence",

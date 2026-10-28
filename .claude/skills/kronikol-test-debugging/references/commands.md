@@ -51,7 +51,7 @@ every failure in the report under a filter that had never run, which reads exact
 payments broke anything".
 
 The distinction worth holding on to: some flags filter **scenarios** (`--result`, `--feature`, `--tag`,
-`--slower-than`), others filter **calls** (`--service`, `--status`, `--method`, `--step`). `--grep`
+`--slower-than`), others filter **calls** (`--service`, `--phase`, `--status`, `--method`, `--step`). `--grep`
 belongs to both and means different things — a scenario name on `scenarios`, a URI on `interactions`.
 
 | Flag | Effect |
@@ -265,7 +265,7 @@ $.status across 44 response bodies (7 distinct bodies)
 | Flag | Effect |
 |---|---|
 | `--path '$.x'` | required; the full path grammar applies (`[*]` fans out over every element) |
-| `--service X` / `--status 5xx` / `--method M` / `--step 2` / `--grep URI` | the same filters `interactions` takes |
+| `--service X` / `--phase setup` / `--status 5xx` / `--method M` / `--step 2` / `--grep URI` | the same filters `interactions` takes |
 | `--where '$.status = APPROVED'` | body-content predicate, same grammar as `interactions --where` |
 | `--stats` | numeric summary: count/absent/non-numeric/distinct, min/median/max/sum/mean — min and max carry the address of the extreme |
 | `--request` / `--both` | target request bodies, or both (rows tagged `req`/`resp`); default is the response body |
@@ -293,6 +293,7 @@ after its duration, and its `--json` item gains `warmUp` (`kind` `first` or `wai
 | Flag | Effect |
 |---|---|
 | `--service X` | substring match |
+| `--phase setup` | only calls made in that phase of their test: `setup`, `action`, or `unknown` for a call recorded without one, ignoring case; anything else exits 2 |
 | `--status 5xx` | a class, or an exact status |
 | `--method GET` | |
 | `--step 2` | only calls inside that step |
@@ -341,8 +342,10 @@ payments     OK                      38       0    12 ms    80 ms       4    96.
 payments     InternalServerError      2       2   230 ms   410 ms       1     1.1 KB
 ```
 
-Dimensions (comma list, any order): `service`, `method`, `status`, `path` (URI path, query stripped),
-`step`, `phase`, `category`, `kind` (metaType), `capturedBy`. `bodies` is the number of distinct
+Dimensions (comma list, any order): `service`, `caller` (who made the call), `method`, `status`, `path` (URI path, query stripped),
+`route`, `step`, `phase`, `category`, `kind` (metaType), `capturedBy`. `route` is the call's operation: its path
+with ids templated (`/orders/{n}`), then a statement's head or a GraphQL operation, under the rules the run
+recorded; cut at 80 characters in text, whole in `--json`. `bodies` is the number of distinct
 response bodies in the bucket — a bucket with 120 calls and 1 body is one fact. `bytes` is the length of
 every request and response body in the bucket, decoded, as `services` counts it per service. Index-only unless
 combined with `--where`; composes with every filter. Default sort is calls descending;

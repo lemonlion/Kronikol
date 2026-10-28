@@ -276,9 +276,10 @@ public static partial class QueryCommand
         // Each call is compared with the same call in the other scenario, paired as `diff --body` pairs one
         // across runs: by position, two scenarios whose calls ran in another order had their first two
         // different calls suggested as the pair to diff.
+        using var keys = CallPairing.CallKeys.Of(index);
         foreach (var (_, leftRequest, leftResponse) in AllInteractions(index, left))
         {
-            if (CallPairing.Pair(left, leftRequest, right).Partner is not { } rightRequest)
+            if (CallPairing.Pair(left, leftRequest, right, keys, keys).Partner is not { } rightRequest)
                 continue;
             var rightResponse = FindResponse(right, rightRequest);
             if (leftRequest.BodyHash is not null && rightRequest.BodyHash is not null && leftRequest.BodyHash != rightRequest.BodyHash)
@@ -293,6 +294,8 @@ public static partial class QueryCommand
             }
         }
 
+        foreach (var problem in keys.Problems)
+            writer.Note("pairing: " + problem);
         writer.Footer("a passing neighbour is the best oracle for a failing scenario — the first differing call is usually the answer");
         return 0;
     }

@@ -206,6 +206,7 @@ internal static class ReportScanner
         private AttachmentEntry? _attachment;
         private ReportDiagnosticEntry? _diagnostic;
         private ReportPartyEntry? _party;
+        private (string? Pattern, string? Placeholder)? _template;
         private string _featureName = "";
         private string[] _featureTags = [];
         private readonly List<string> _pendingFeatureTags = [];
@@ -343,6 +344,8 @@ internal static class ReportScanner
                 "pipelineUrl", "repository", "runId", "runAttempt", "os", "runtime",
                 // Who each party is (#190).
                 "serviceId", "parties", "kindSource", "note", "callerDependencyCategory", "attributionSource",
+                // The run's templating rules (#192).
+                "shapeTemplates", "pattern", "placeholder",
                 "background", "interactions",
                 // A compressed payload's keys (#85).
                 "$h", "$n", "$z",
@@ -474,6 +477,11 @@ internal static class ReportScanner
             {
                 _party = new ReportPartyEntry();
             }
+            // The root's templating rules alone (#192), as the parties block is read.
+            else if (_path.Count == 3 && At("shapeTemplates", "#"))
+            {
+                _template = (null, null);
+            }
             else if (InStepArray())
             {
                 var step = new StepEntry();
@@ -549,6 +557,13 @@ internal static class ReportScanner
                 if (_party is { Name.Length: > 0 })
                     index.Parties.Add(_party);
                 _party = null;
+            }
+            else if (_path.Count == 3 && At("shapeTemplates", "#"))
+            {
+                // A rule without a pattern is no rule; a missing placeholder is an empty one, as the run reads it.
+                if (_template is { Pattern: { } pattern } template)
+                    index.ShapeTemplates.Add(new History.HistoryShapeTemplate(pattern, template.Placeholder ?? ""));
+                _template = null;
             }
             else if (InStepArray() && _stepStack.Count > 0)
             {
@@ -701,6 +716,17 @@ internal static class ReportScanner
                     case "os": index.EnvironmentOs = reader.GetString(); return;
                     case "runtime": index.EnvironmentRuntime = reader.GetString(); return;
                 }
+            }
+
+            if (_template is { } rule && _path.Count == 3)
+            {
+                var text = reader.TokenType == JsonTokenType.String ? reader.GetString() : null;
+                switch (key)
+                {
+                    case "pattern": _template = (text, rule.Placeholder); return;
+                    case "placeholder": _template = (rule.Pattern, text); return;
+                }
+                return;
             }
 
             if (_party is not null && _path.Count == 3)

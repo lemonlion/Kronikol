@@ -859,6 +859,10 @@ public record ReportConfigurationOptions
     /// shards given different rules keeps its fingerprints under a rule every shard reaches. The same rules fold
     /// the ids in the shapes the first-call warm-up is judged by (<c>warmUp</c> in the data files): without one,
     /// a path whose ids no built-in rule knows is a new shape on every call, and its first call is never marked.
+    /// Since 5.19.0 the data files record the rules too (<c>shapeTemplates</c>, only when there are some), so a
+    /// query of the report templates as the run did: <c>kronikol query interactions --group-by route</c>, and the
+    /// call pairing of <c>diff --body</c> and <c>compare</c>, read a call under them, a merge keeps them when every
+    /// shard records the same ones, and <c>kronikol ingest --shape-templates FILE</c> gives an ingested run its own.
     /// Default: none.
     /// </summary>
     public IList<History.HistoryShapeTemplate> HistoryShapeTemplates { get; set; } = [];

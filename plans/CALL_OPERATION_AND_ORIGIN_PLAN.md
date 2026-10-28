@@ -1101,7 +1101,8 @@ answers.
     `ScenarioStableId.EarlierRules`, empty until an id changes; the analyzer, `record` (its rename suggestions and its
     partial check) and `import` read them.
 16. **Q16. A run that changes most scenarios at once.** *Answered: its own issue,* reading such a run as one
-    suite-wide change, named once with the lines that moved most. Filed when this plan is committed.
+    suite-wide change, named once with the lines that moved most. Filed when this plan is committed, as
+    [#217](https://github.com/lemonlion/Kronikol/issues/217).
 17. **Q17. What the consumer's rules see.** *Answered: the data file's unescaped string everywhere,* with a
     diagnostic naming a pattern that holds a `%XX` escape, called out in the changelog.
 18. **Q18. A consumer's rule edit in the fragment flow.** *Answered: close the gap.* The fragment carries the run's
@@ -1158,3 +1159,29 @@ answers.
   each compared stream's window (#95), so a stream another's runs crowded out still took a quiet run; the ingest's
   scheme mend took text before a `://` in a query for a scheme; a span written as records lost its rule 6 and 7
   reading; and hand-edited aliases or counts, or a torn line of a newer kind, threw or misread.
+- 2026-10-28: R2 built on 5.18.0 and released as 5.19.0, test first: the `caller` and `route` dimensions, `caller` on
+  `interactions --json` rows, `--phase` on `interactions` and `values`, the `shapeTemplates` block in every data format
+  and its schemas, read by the engine (a pattern dropped at its first timeout), by call pairing, by `merge` and by
+  `merge --history`, and Q7's ingest option. Q7's option takes a file, `--shape-templates FILE`, in the block's own
+  shape, since a pattern holds what every shell quotes and `(?<=` holds the `=` a `PATTERN=PLACEHOLDER` form would split
+  on. A route is cut at 80 characters in text. The note on an older report is 4.4's but for one phrase: a report
+  Kronikol4J writes carries the port's own version and records no rules, so "predates recorded HistoryShapeTemplates"
+  was false of it, and the note says the report "cannot say whether its run had HistoryShapeTemplates". Found on the
+  way and fixed: `merge --history` read the window alone, so
+  a merged run its shards had recorded sent the analysis back to read the whole ledger, as `query history` did before
+  R1, and it bridged no edit of the consumer's patterns, which `query history` has since R1; call pairing's exact key
+  held no GraphQL operation either, so the operation in the shape key alone (the table in 4.1) would still have paired
+  the n-th `POST /graphql` with the n-th, since the shape key is tried only for what the exact key leaves; both keys
+  now hold it. A run that writes the block for a rule given no placeholder writes an empty one, where the
+  YAML writer threw. kronikol-ed's card found, on 5.17.0's key, that a Cosmos DB LINQ statement keeps its boolean
+  literals (`WHERE ((true OR ...` beside `((false OR ...`), since a query's text templates numbers and strings and a
+  document's booleans only: stable across runs, and finer than the operation. Templating them moves the fingerprint,
+  so it is left for the owner rather than taken into this plan. An independent review of the built code before
+  release found seven defects in it, each fixed test first: `route`'s notes broke `--count`'s one token; a null rule
+  list or a null rule lost the run its data file, and an empty pattern was recorded; keying each report's calls under
+  its own rules stopped `diff --body` pairing on the shape across a rule edit, so the two reports' calls are keyed
+  under the rules both recorded, or the built-in rules alone where they differ; a response recorded without its
+  request had its rows read as its statement; diff and compare skipped a failing rule in silence; the note on an
+  older report was said of one that holds the block; and two statements on one table paired by position, so the
+  exact key holds a statement's head, under the built-in rules, as it holds a GraphQL operation. It also found that a
+  dimension named twice threw under `--json` since `--group-by` was written, now refused at exit 2.

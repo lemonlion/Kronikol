@@ -25,6 +25,8 @@ public static class MergeableReportMerger
         var serviceId = reports.Select(r => r.ServiceId).Distinct(StringComparer.Ordinal).Count() == 1 ? reports[0].ServiceId : null;
         var partyDiagnostics = new List<DiagnosticEntry>();
         var parties = MergeParties(reports, interactions, serviceId, partyDiagnostics);
+        var templateDiagnostics = new List<DiagnosticEntry>();
+        var shapeTemplates = MergeShapeTemplates(reports, templateDiagnostics);
 
         return new MergeableReport
         {
@@ -65,14 +67,47 @@ public static class MergeableReportMerger
             // Kept only when every shard has the same one, a shard without one included, as Suite is (#190).
             ServiceId = serviceId,
             Parties = parties,
+            ShapeTemplates = shapeTemplates,
             PayloadsCompressed = reports.Any(r => r.PayloadsCompressed),
             FileCompressed = reports.Any(r => r.FileCompressed),
             StepPaths = MergeByScenario(reports.Select(r => r.StepPaths)),
             // Each shard's own marks, carried: never recomputed over the merged calls (plans/WARM_UP_PLAN.md 4.3).
             WarmUp = MergeWarmUp(reports.Select(r => r.WarmUp)),
             Annotations = MergeByScenario(reports.Select(r => r.Annotations)),
-            Diagnostics = [.. reports.SelectMany(r => r.Diagnostics), .. duplicateDiagnostics, .. DisagreementDiagnostics(reports), .. partyDiagnostics]
+            Diagnostics = [.. reports.SelectMany(r => r.Diagnostics), .. duplicateDiagnostics, .. DisagreementDiagnostics(reports), .. partyDiagnostics, .. templateDiagnostics]
         };
+    }
+
+    /// <summary>
+    /// The shards' HistoryShapeTemplates (#192, plan 4.5): kept when every shard records the same ones, and none otherwise,
+    /// said by a diagnostic naming the shards of each set, as <c>history record</c>'s fold blanks a run whose shards were
+    /// fingerprinted under different rules. A shard that records none counts as a set of its own: its run had no rules, or
+    /// was made before a report could say.
+    /// </summary>
+    private static IReadOnlyList<History.HistoryShapeTemplate>? MergeShapeTemplates(IReadOnlyList<MergeableReport> reports, List<DiagnosticEntry> diagnostics)
+    {
+        var sets = reports
+            .Select((report, i) => (Number: i + 1, Rules: report.ShapeTemplates ?? []))
+            .GroupBy(x => string.Join("\n", x.Rules.Select(t => t.Pattern + "\u001f" + t.Placeholder)), StringComparer.Ordinal)
+            .ToList();
+        if (sets.Count == 1)
+            return sets[0].First().Rules is { Count: > 0 } agreed ? agreed : null;
+
+        var described = sets.Select(set =>
+        {
+            var numbers = set.Select(x => x.Number).ToList();
+            var who = numbers.Count == 1
+                ? $"report {numbers[0]} records"
+                : $"reports {string.Join(", ", numbers.SkipLast(1))} and {numbers[^1]} record";
+            var rules = set.First().Rules;
+            return rules.Count == 0
+                ? $"{who} none"
+                : $"{who} {rules.Count} {(rules.Count == 1 ? "rule" : "rules")} ({History.HistoryShapeRules.Create(rules)?.Hash})";
+        });
+        diagnostics.Add(new DiagnosticEntry(DiagnosticKind.Other,
+            $"Merged {reports.Count} reports that do not record the same HistoryShapeTemplates, so the merged report records none, "
+            + "and a query of it templates a route by the built-in rules only: " + string.Join("; ", described) + "."));
+        return null;
     }
 
     /// <summary>

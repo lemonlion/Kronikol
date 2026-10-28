@@ -71,6 +71,9 @@ public sealed record MergeableReport
     /// <summary>The run's parties block (#190) as written, or null when the run declared nothing and so wrote none.</summary>
     public IReadOnlyList<Kronikol.Parties.Party>? Parties { get; init; }
 
+    /// <summary>The run's HistoryShapeTemplates as its file records them (#192), or null when it recorded none.</summary>
+    public IReadOnlyList<History.HistoryShapeTemplate>? ShapeTemplates { get; init; }
+
     /// <summary>
     /// Every captured interaction in the contained run, keyed to its scenario by
     /// <see cref="RequestResponseLog.TestId"/>. Empty for a file written before 3.1.0, which carried

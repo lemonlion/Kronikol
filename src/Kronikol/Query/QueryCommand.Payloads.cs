@@ -11,13 +11,15 @@ namespace Kronikol.Query;
 /// </summary>
 public static partial class QueryCommand
 {
-    private static int Interactions(ReportIndex index, QueryOptions options, QueryWriter writer, TextWriter error)
+    internal static int Interactions(ReportIndex index, QueryOptions options, QueryWriter writer, TextWriter error)
     {
         if (options.Group && options.GroupBy is not null)
         {
             error.WriteLine("--group folds adjacent identical calls; --group-by buckets by dimensions — they don't compose. Pick one.");
             return 2;
         }
+        if (!PhaseIsValid(options, error))
+            return 2;
 
         // An address scopes to one scenario; without one the whole run is in scope — rows already print
         // full `s3/i47` addresses, and the page cap keeps the output honest.
@@ -58,7 +60,7 @@ public static partial class QueryCommand
         }
 
         if (options.GroupBy is not null)
-            return GroupedInteractions(matches, options, writer, error, only, clauses, unevaluable, cache.CappedReads);
+            return GroupedInteractions(index, cache, matches, options, writer, error, only, clauses, unevaluable);
 
         // Nothing reads --sort on the ungrouped path: the list is capture order, always. Accepting the
         // flag and discarding it lets an agent read row one as the slowest call when it is merely the
@@ -129,6 +131,8 @@ public static partial class QueryCommand
                 address = interaction.Address(scenario),
                 scenario = scenario.Address,
                 service = interaction.ServiceName,
+                // Who made the call (#184, #192): the field --group-by caller buckets by, none when the record names nobody.
+                caller = interaction.CallerName.Length > 0 ? interaction.CallerName : null,
                 method = interaction.Method,
                 uri = interaction.Uri,
                 summary = interaction.Summary(),
@@ -171,6 +175,11 @@ public static partial class QueryCommand
     private static bool Matches(ScenarioEntry scenario, InteractionEntry interaction, QueryOptions options)
     {
         if (options.Service is { } service && !interaction.ServiceName.Contains(service, StringComparison.OrdinalIgnoreCase))
+            return false;
+        // The scanner keeps no phase for a call recorded as Unknown, so `unknown` is the call with none (#192).
+        if (options.Phase is { } phase && !(phase.Equals("unknown", StringComparison.OrdinalIgnoreCase)
+                ? interaction.Phase is null
+                : string.Equals(interaction.Phase, phase, StringComparison.OrdinalIgnoreCase)))
             return false;
         if (options.Method is { } method && !string.Equals(interaction.Method, method, StringComparison.OrdinalIgnoreCase))
             return false;

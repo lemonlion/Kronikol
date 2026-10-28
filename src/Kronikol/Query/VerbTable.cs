@@ -66,6 +66,7 @@ internal static class VerbTable
         new("--label", "TAG", "The same as --tag, by its name before 5.0.0."),
         new("--service", "TEXT", "Only calls whose service name contains TEXT."),
         new("--kind", "KIND", "Only parties of this kind: test, underTest, real, double or unknown."),
+        new("--phase", "PHASE", "Only calls made in this phase of their test: setup, action, or unknown for a call recorded without one."),
         new("--status", "STATUS", "Only calls with this status: a code (500), a name (InternalServerError) or a class (5xx)."),
         new("--method", "METHOD", "Only calls with this HTTP method or tracker label."),
         new("--grep", "TEXT", "A substring filter: on scenarios the scenario name, on interactions and values the URI."),
@@ -74,7 +75,7 @@ internal static class VerbTable
         new("--path", "JSONPATH", "One value out of a body: $.a.b[2]; [*] every element; ['a.b'] a dotted key; .length() a count. Quote it."),
         new("--in", "TARGETS", "Where grep looks, as a comma list: bodies, uris, steps, assertions, names, errors, headers, notes."),
         new("--where", "EXPR", "Keep only calls whose body satisfies EXPR, like $.success = false; req: targets the request body. AND across repeats.", Repeatable: true),
-        new("--group-by", "DIMS", "Bucket calls by a comma list of dimensions: service method status path step phase category kind capturedBy."),
+        new("--group-by", "DIMS", "Bucket calls by a comma list of dimensions: service caller method status path route step phase category kind capturedBy."),
         new("--tolerance", "T", "How far a numeric grep match may be from the needle: absolute (0.5) or relative (1%)."),
         new("--count", null, "Print only how many matched - one token, with any caveats on stderr."),
         new("--json", null, "One JSON envelope instead of text, on the verbs that list like things."),
@@ -199,21 +200,21 @@ internal static class VerbTable
         new("values", "Aggregation",
             "The distinct values one JSON path holds across bodies, counted, each with an address that fetches a body holding it.",
             ["<report> --path '$.x'", "<report> s3 --path '$.x'"],
-            ["--path", "--service", "--status", "--method", "--step", "--grep", "--where", "--request", "--both", "--stats", "--count", "--offset", "--limit"], Json: false,
+            ["--path", "--service", "--phase", "--status", "--method", "--step", "--grep", "--where", "--request", "--both", "--stats", "--count", "--offset", "--limit"], Json: false,
             [
-                "  values       <report> [s3] --path '$.status' [--service X] [--status 5xx] [--method M] [--step 2]",
+                "  values       <report> [s3] --path '$.status' [--service X] [--phase setup] [--status 5xx] [--method M] [--step 2]",
                 "               [--grep URI] [--where E] [--stats] [--request|--both]   distinct values × counts, with addresses"
             ]),
 
         new("interactions", "Payloads",
             "The calls, filtered, folded or bucketed; a row names the call's address and the size and hash of each payload, never the payload.",
             ["<report>", "<report> s3", "<report> s3/2"],
-            ["--service", "--status", "--method", "--step", "--grep", "--where", "--group", "--group-by", "--sort", "--count", "--offset", "--limit", "--json"], Json: true,
+            ["--service", "--phase", "--status", "--method", "--step", "--grep", "--where", "--group", "--group-by", "--sort", "--count", "--offset", "--limit", "--json"], Json: true,
             [
-                "  interactions <report> [s3] [--service X] [--status 5xx] [--method GET] [--grep T] [--group]",
+                "  interactions <report> [s3] [--service X] [--phase setup] [--status 5xx] [--method GET] [--grep T] [--group]",
                 "               [--where \"$.success = false\"]   repeatable; AND; req: prefix targets the request body",
                 "               [--group-by service,status]      buckets with calls/errors/median/max/bodies/bytes; dims:",
-                "                                                service method status path step phase category kind capturedBy"
+                "                                                service caller method status path route step phase category kind capturedBy"
             ]),
 
         new("http", "Payloads",

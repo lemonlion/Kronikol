@@ -262,7 +262,7 @@ public class SkillDriftTests
     {
         var usage = RenderedUsage();
 
-        AssertLineEnumerates(usage, "service method status path", QueryCommand.GroupByDimensions,
+        AssertLineEnumerates(usage, "bodies/bytes; dims:", QueryCommand.GroupByDimensions,
             "--group-by dimensions");
         AssertLineEnumerates(usage, "[--in ", QueryCommand.GrepTargets, "--in targets");
     }

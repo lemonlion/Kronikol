@@ -24,6 +24,8 @@ public static partial class QueryCommand
             error.WriteLine("Grammar: $.name · [2] · [*] · ['key.with.dots'] · .length() (last segment only). Quote the whole path — [*] is shell-active.");
             return 2;
         }
+        if (!PhaseIsValid(options, error))
+            return 2;
 
         ScenarioEntry? only = null;
         if (options.Positional.Count > 0)

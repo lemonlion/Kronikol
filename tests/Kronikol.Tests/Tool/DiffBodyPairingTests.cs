@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using Kronikol.History;
 using Kronikol.Query;
 using Kronikol.Reports;
 using Kronikol.Tracking;
@@ -185,6 +186,112 @@ public class DiffBodyPairingTests : IDisposable
         Assert.Contains("+ New.json s0/i3", output);
         Assert.Contains("$.state: \"open\" → \"paid\"", output);
         Assert.Contains("matched on its shape /orders/{id} (the URIs differ in what looks like an id)", output);
+    }
+
+    [Fact]
+    public void Pairing_pairs_graphql_calls_by_operation()
+    {
+        // #192 R2: every operation of a GraphQL endpoint is one path, so the n-th POST /graphql paired with the n-th
+        // whatever it asked; the operation is part of what a call is.
+        var oldUser = new Call("api", "POST", "http://api/graphql", "{\"query\":\"query GetUser { user { name } }\"}", "{\"data\":{\"user\":{\"name\":\"a\"}}}");
+        var oldOrder = new Call("api", "POST", "http://api/graphql", "{\"query\":\"mutation PlaceOrder { placeOrder { id } }\"}", "{\"data\":{\"placeOrder\":{\"id\":1}}}");
+        var newUser = new Call("api", "POST", "http://api/graphql", "{\"query\":\"query GetUser { user { name } }\"}", "{\"data\":{\"user\":{\"name\":\"b\"}}}");
+        var newOrder = new Call("api", "POST", "http://api/graphql", "{\"query\":\"mutation PlaceOrder { placeOrder { id } }\"}", "{\"data\":{\"placeOrder\":{\"id\":1}}}");
+        var old = Write("Old.json", Rq(oldUser), Rs(oldUser), Rq(oldOrder), Rs(oldOrder));
+        var @new = Write("New.json", Rq(newOrder), Rs(newOrder), Rq(newUser), Rs(newUser));
+
+        Assert.Equal("s0/i3", Partner(old, @new, "s0/i1"));
+        Assert.Equal("s0/i1", Partner(old, @new, "s0/i3"));
+    }
+
+    [Fact]
+    public void Pairing_pairs_with_the_recorded_rules()
+    {
+        // A key the built-in rules cannot see as an id, which the consumer's rule names: each report's calls are keyed
+        // under the rules its run recorded, as its history was.
+        HistoryShapeTemplate[] rules = [new(@"(?<=/cache/)[a-z]+-\d+", "{key}")];
+        var oldKey = new Call("cache", "GET", "http://cache/cache/abc-1", "{}", "{\"v\":1}");
+        var newKey = new Call("cache", "GET", "http://cache/cache/def-2", "{}", "{\"v\":2}");
+        var old = Write("Old.json", null, [("Checkout", [Rq(oldKey), Rs(oldKey)])], rules);
+        var @new = Write("New.json", null, [("Checkout", [Rq(newKey), Rs(newKey)])], rules);
+
+        var (output, error, exit) = Diff(old, @new, "--body", "s0/i1");
+
+        Assert.True(exit == 0, error);
+        Assert.Contains("$.v: 1 → 2", output);
+        Assert.Contains("matched on its shape /cache/{key}", output);
+    }
+
+    [Fact]
+    public void Statements_on_one_table_pair_by_what_they_ran()
+    {
+        // The exact key held a statement's table and not its statement, so the n-th SELECT on a table paired with the n-th
+        // whatever it selected. Its head, its literals templated, is part of what the call is, as a GraphQL operation is.
+        const string region = "SELECT Id FROM Orders WHERE Region = 'a'";
+        var oldA = new Call("OrdersDb", "SELECT", "sql:///orders/Orders", region, "[{\"id\":1}]", "SQL");
+        var oldB = new Call("OrdersDb", "SELECT", "sql:///orders/Orders", "SELECT Total FROM Orders WHERE Id = 7", "[{\"total\":10}]", "SQL");
+        var newC = new Call("OrdersDb", "SELECT", "sql:///orders/Orders", "SELECT COUNT(*) FROM Orders", "[{\"n\":3}]", "SQL");
+        var newA = new Call("OrdersDb", "SELECT", "sql:///orders/Orders", region, "[{\"id\":1}]", "SQL");
+        var newB = new Call("OrdersDb", "SELECT", "sql:///orders/Orders", "SELECT Total FROM Orders WHERE Id = 8", "[{\"total\":12}]", "SQL");
+        var old = Write("Old.json", Rq(oldA), Rs(oldA), Rq(oldB), Rs(oldB));
+        var @new = Write("New.json", Rq(newC), Rs(newC), Rq(newA), Rs(newA), Rq(newB), Rs(newB));
+
+        Assert.Equal("s0/i5", Partner(old, @new, "s0/i3"));
+        Assert.Equal("s0/i3", Partner(old, @new, "s0/i1"));
+    }
+
+    [Fact]
+    public void A_response_recorded_without_its_request_is_keyed_by_its_call_not_its_rows()
+    {
+        // A response a writer recorded with no id ranks among the responses, and its body is the rows it returned, never a
+        // statement: no part of what the call is.
+        static string Lone(string rows) =>
+            $$"""{ "type": "Response", "method": "SELECT", "uri": "sql:///orders/Orders", "serviceName": "OrdersDb", "callerName": "test", "dependencyCategory": "SQL", "content": {{JsonSerializer.Serialize(rows)}}, "headers": [], "statusCode": "OK" }""";
+        // Rows of another shape, which a key read from them would part.
+        var old = WriteJson("Old.json", "5.17.0", [("Checkout", "aaaabbbbccccdddd", [Lone("[{\"id\":1}]")])]);
+        var @new = WriteJson("New.json", "5.17.0", [("Checkout", "aaaabbbbccccdddd", [Lone("[{\"id\":1,\"total\":5}]")])]);
+
+        var (output, error, exit) = Diff(old, @new, "--body", "s0/i0");
+
+        Assert.True(exit == 0, error);
+        Assert.Contains("$[0].total", output);
+    }
+
+    [Fact]
+    public void A_rule_edit_between_the_runs_still_pairs_on_the_shape_both_reach()
+    {
+        // Each report records its own rules. Where the two differ, a call's shape is read under the built-in rules alone,
+        // as before 5.19.0: the old run's /orders/{order} and the new run's /orders/{n} were one call, and still are.
+        var oldOrder = new Call("api", "GET", "http://api/orders/41", "{}", "{\"state\":\"open\"}");
+        var newOrder = new Call("api", "GET", "http://api/orders/97", "{}", "{\"state\":\"paid\"}");
+        var old = Write("Old.json", null, [("Checkout", [Rq(oldOrder), Rs(oldOrder)])], [new(@"(?<=/orders/)\d+", "{order}")]);
+        var @new = Write("New.json", Rq(newOrder), Rs(newOrder));
+
+        var (output, error, exit) = Diff(old, @new, "--body", "s0/i1");
+
+        Assert.True(exit == 0, error);
+        Assert.Contains("$.state: \"open\" → \"paid\"", output);
+    }
+
+    [Fact]
+    public void A_recorded_rule_that_does_not_compile_is_named_by_diff_and_compare()
+    {
+        // As a run names it, and as route does: a rule the pairing could not apply is said, never skipped in silence.
+        HistoryShapeTemplate[] rules = [new("([unclosed", "{x}")];
+        var oldKey = new Call("cache", "GET", "http://cache/cache/1", "{}", "{\"v\":1}");
+        var newKey = new Call("cache", "GET", "http://cache/cache/1", "{}", "{\"v\":2}");
+        var old = Write("Old.json", null, [("Checkout", [Rq(oldKey), Rs(oldKey)])], rules);
+        var @new = Write("New.json", null, [("Checkout", [Rq(newKey), Rs(newKey)]), ("Checkout again", [Rq(oldKey), Rs(oldKey)])], rules);
+
+        var (output, error, exit) = Diff(old, @new, "--body", "s0/i1");
+        var compare = new StringWriter();
+        var compareError = new StringWriter();
+        var compareExit = QueryCommand.Run(["compare", @new, "s0", "s1"], compare, compareError);
+
+        Assert.True(exit == 0, error);
+        Assert.Contains("([unclosed", output + error, StringComparison.Ordinal);
+        Assert.True(compareExit == 0, compareError.ToString());
+        Assert.Contains("([unclosed", compare.ToString() + compareError, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -496,7 +603,7 @@ public class DiffBodyPairingTests : IDisposable
     // ─── Fixtures ──────────────────────────────────────────────
 
     /// <summary>One call of one run. Each instance has its own pairing id, as every call of a run does.</summary>
-    private sealed class Call(string service, string method, string uri, string request, string? response = "{\"ok\":true}")
+    private sealed class Call(string service, string method, string uri, string request, string? response = "{\"ok\":true}", string? category = null)
     {
         public Guid Id { get; } = Guid.NewGuid();
         public Guid TraceId { get; } = Guid.NewGuid();
@@ -505,6 +612,7 @@ public class DiffBodyPairingTests : IDisposable
         public string Uri => uri;
         public string Request => request;
         public string? Response => response;
+        public string? Category => category;
     }
 
     private static (Call Call, bool Response) Rq(Call call) => (call, false);
@@ -516,7 +624,8 @@ public class DiffBodyPairingTests : IDisposable
         Write(fileName, null, [("Checkout", entries)]);
 
     /// <summary>A run of the scenarios given, each holding the halves in the order given, through the real writer.</summary>
-    private string Write(string fileName, string? suite, (string Name, (Call Call, bool Response)[] Entries)[] scenarios)
+    private string Write(string fileName, string? suite, (string Name, (Call Call, bool Response)[] Entries)[] scenarios,
+        IReadOnlyList<HistoryShapeTemplate>? rules = null)
     {
         var at = new DateTimeOffset(2026, 1, 1, 10, 0, 0, TimeSpan.Zero);
         var logs = new List<RequestResponseLog>();
@@ -542,9 +651,9 @@ public class DiffBodyPairingTests : IDisposable
                 OneOf<HttpMethod, string> method = IsHttp(call.Method) ? new HttpMethod(call.Method) : call.Method;
                 logs.Add(response
                     ? new RequestResponseLog(testId, testId, method, call.Response, new Uri(call.Uri), [], call.Service, "test",
-                        RequestResponseType.Response, call.TraceId, call.Id, false, HttpStatusCode.OK) { Timestamp = at }
+                        RequestResponseType.Response, call.TraceId, call.Id, false, HttpStatusCode.OK, DependencyCategory: call.Category) { Timestamp = at }
                     : new RequestResponseLog(testId, testId, method, call.Request, new Uri(call.Uri), [], call.Service, "test",
-                        RequestResponseType.Request, call.TraceId, call.Id, false) { Timestamp = at });
+                        RequestResponseType.Request, call.TraceId, call.Id, false, DependencyCategory: call.Category) { Timestamp = at });
             }
         }
 
@@ -552,7 +661,7 @@ public class DiffBodyPairingTests : IDisposable
             features,
             new DateTime(2026, 1, 1, 10, 0, 0, DateTimeKind.Utc),
             new DateTime(2026, 1, 1, 10, 5, 0, DateTimeKind.Utc),
-            "Pairing_" + Guid.NewGuid().ToString("N")[..8] + ".json", DataFormat.Json, diagrams: null, logs.ToArray(), suite: suite);
+            "Pairing_" + Guid.NewGuid().ToString("N")[..8] + ".json", DataFormat.Json, diagrams: null, logs.ToArray(), suite: suite, shapeTemplates: rules);
 
         var path = Path.Combine(_directory, fileName);
         File.Move(written, path, overwrite: true);

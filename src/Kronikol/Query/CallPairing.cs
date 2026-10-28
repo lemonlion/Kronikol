@@ -1,3 +1,4 @@
+using Kronikol.Constants;
 using Kronikol.History;
 
 namespace Kronikol.Query;
@@ -20,10 +21,14 @@ namespace Kronikol.Query;
 /// (ignoring case, as <c>--method</c> compares it) and the path and query - not the host and port, which a
 /// container runtime picks per run, while the service name already says which dependency it is. The n-th
 /// of the old scenario's calls with a key pairs with the n-th of the new scenario's. The shape key is the
-/// same with the path and query templated as the history fingerprint templates it
-/// (<see cref="InteractionShape.Template(string)"/>: ids, timestamps and numbers as placeholders, query values
-/// dropped), because a URI that carries an id the test generated never matches across runs; it ranks only
+/// same with the call's operation key in place of the path and query (<see cref="CallOperation.Of"/>: ids,
+/// timestamps and numbers as placeholders, query values dropped, a statement's head), as the history fingerprint
+/// keys it, because a URI that carries an id the test generated never matches across runs; it ranks only
 /// the calls the exact key left unpaired on each side, so no call is the partner of two.</para>
+///
+/// <para>Both keys hold a GraphQL request's operation, where the n-th <c>POST /graphql</c> paired with the n-th
+/// whatever it asked, and each report's calls are keyed under the HistoryShapeTemplates its run recorded (#192 R2):
+/// <see cref="CallKeys"/>.</para>
 /// </remarks>
 internal static class CallPairing
 {
@@ -61,8 +66,56 @@ internal static class CallPairing
         int NewCount,
         Refusal? Reason);
 
-    /// <summary>The same call as <paramref name="entry"/>, the same half of it, in <paramref name="other"/>.</summary>
-    internal static Result Pair(ScenarioEntry scenario, InteractionEntry entry, ScenarioEntry other)
+    /// <summary>
+    /// How one report's calls are keyed (#192 R2): for the exact key, a GraphQL request's operation or a statement's head
+    /// under the built-in rules alone; for the shape key, the operation key under <paramref name="rules"/>. A body is read
+    /// only for a request, a statement-shaped call's or a POST's, once each, and the report opened for it only when one is:
+    /// a response's body is what it returned, never what it asked.
+    /// </summary>
+    internal sealed class CallKeys(ReportIndex index, HistoryShapeRules? rules) : IDisposable
+    {
+        private readonly Dictionary<InteractionEntry, (string? Operation, string Shape)> _keys = new(ReferenceEqualityComparer.Instance);
+        private BodyCache? _cache;
+
+        /// <summary>The keys of the calls of one report, under the rules it recorded (<c>compare</c>'s two scenarios).</summary>
+        internal static CallKeys Of(ReportIndex index) => new(index, HistoryShapeRules.ForReading(index.ShapeTemplates));
+
+        /// <summary>
+        /// The keys of two reports' calls (<c>diff --body</c>): under the rules both recorded, or under the built-in rules
+        /// alone where they recorded different ones, since a call's shape under one run's rules and under another's are
+        /// not comparable; before 5.19.0 no report recorded any and the shape was always read so.
+        /// </summary>
+        internal static (CallKeys Old, CallKeys New) Of(ReportIndex old, ReportIndex @new)
+        {
+            var rules = old.ShapeTemplates.SequenceEqual(@new.ShapeTemplates) ? HistoryShapeRules.ForReading(old.ShapeTemplates) : null;
+            return (new CallKeys(old, rules), new CallKeys(@new, rules));
+        }
+
+        /// <summary>What went wrong with a rule the keys applied, each said once, as the run says it.</summary>
+        internal IReadOnlyList<string> Problems => rules?.Problems ?? [];
+
+        internal (string? Operation, string Shape) Of(InteractionEntry entry)
+        {
+            if (_keys.TryGetValue(entry, out var keys))
+                return keys;
+            var needsBody = entry.Type.Equals("Request", StringComparison.OrdinalIgnoreCase)
+                            && (DependencyCategories.IsStatementShaped(entry.DependencyCategory)
+                                || string.Equals(entry.Method, "POST", StringComparison.OrdinalIgnoreCase));
+            var content = needsBody && entry.BodyHash is { } hash ? (_cache ??= new BodyCache(index)).Raw(hash) : null;
+            var call = CallOperation.Untemplated(entry.Method, entry.Uri, entry.DependencyCategory, content, queryKeys: true);
+            var exact = call.Operation ?? (call.Head is { } head ? InteractionShape.StatementHead(head, null) : null);
+            return _keys[entry] = (exact, CallOperation.Key(call, rules));
+        }
+
+        public void Dispose() => _cache?.Dispose();
+    }
+
+    /// <summary>
+    /// The same call as <paramref name="entry"/>, the same half of it, in <paramref name="other"/>: the calls of
+    /// <paramref name="scenario"/> keyed by <paramref name="mine"/>, its report's, and those of <paramref name="other"/> by
+    /// <paramref name="theirs"/>.
+    /// </summary>
+    internal static Result Pair(ScenarioEntry scenario, InteractionEntry entry, ScenarioEntry other, CallKeys mine, CallKeys theirs)
     {
         var isResponse = Is(entry, "Response");
 
@@ -73,23 +126,23 @@ internal static class CallPairing
         var anchor = request ?? entry;
         var half = anchor.Type;
 
-        var mine = scenario.Interactions.Where(i => Is(i, half)).ToList();
-        var theirs = other.Interactions.Where(i => Is(i, half)).ToList();
+        var mineCalls = scenario.Interactions.Where(i => Is(i, half)).ToList();
+        var theirCalls = other.Interactions.Where(i => Is(i, half)).ToList();
         var target = Target(anchor);
-        var shape = InteractionShape.Template(target);
+        var shape = mine.Of(anchor).Shape;
 
-        var key = Key(anchor);
-        var mineExact = mine.Where(i => Key(i) == key).ToList();
-        var theirsExact = theirs.Where(i => Key(i) == key).ToList();
+        var key = Key(anchor, mine);
+        var mineExact = mineCalls.Where(i => Key(i, mine) == key).ToList();
+        var theirsExact = theirCalls.Where(i => Key(i, theirs) == key).ToList();
         var rank = mineExact.IndexOf(anchor);
         if (rank < theirsExact.Count)
             return Found(theirsExact[rank], onShape: false, rank, mineExact.Count, theirsExact.Count);
 
         // Only what the exact key left unpaired, on both sides: a call the exact key paired already has its
         // partner, and ranking it here as well could hand that partner to a second call.
-        var shapeKey = ShapeKey(anchor);
-        var mineShaped = Unpaired(mine, theirs).Where(i => ShapeKey(i) == shapeKey).ToList();
-        var theirsShaped = Unpaired(theirs, mine).Where(i => ShapeKey(i) == shapeKey).ToList();
+        var shapeKey = ShapeKey(anchor, mine);
+        var mineShaped = Unpaired(mineCalls, mine, theirCalls, theirs).Where(i => ShapeKey(i, mine) == shapeKey).ToList();
+        var theirsShaped = Unpaired(theirCalls, theirs, mineCalls, mine).Where(i => ShapeKey(i, theirs) == shapeKey).ToList();
         var shapedRank = mineShaped.IndexOf(anchor);
         if (shapedRank < theirsShaped.Count)
             return Found(theirsShaped[shapedRank], onShape: true, shapedRank, mineShaped.Count, theirsShaped.Count);
@@ -132,14 +185,14 @@ internal static class CallPairing
     /// The calls of <paramref name="side"/> the exact key leaves without a partner in <paramref name="opposite"/>:
     /// those past the number of calls the opposite side makes with the same key.
     /// </summary>
-    private static List<InteractionEntry> Unpaired(List<InteractionEntry> side, List<InteractionEntry> opposite)
+    private static List<InteractionEntry> Unpaired(List<InteractionEntry> side, CallKeys sideKeys, List<InteractionEntry> opposite, CallKeys oppositeKeys)
     {
-        var available = opposite.GroupBy(Key).ToDictionary(group => group.Key, group => group.Count());
+        var available = opposite.GroupBy(i => Key(i, oppositeKeys)).ToDictionary(group => group.Key, group => group.Count());
         var seen = new Dictionary<CallKey, int>();
         var unpaired = new List<InteractionEntry>();
         foreach (var call in side)
         {
-            var key = Key(call);
+            var key = Key(call, sideKeys);
             var rank = seen.GetValueOrDefault(key);
             seen[key] = rank + 1;
             if (rank >= available.GetValueOrDefault(key))
@@ -148,13 +201,14 @@ internal static class CallPairing
         return unpaired;
     }
 
-    private readonly record struct CallKey(string Service, string Method, string Target);
+    private readonly record struct CallKey(string Service, string Method, string Target, string? Operation);
 
-    private static CallKey Key(InteractionEntry entry) =>
-        new(entry.ServiceName, (entry.Method ?? "").ToUpperInvariant(), Target(entry));
+    private static CallKey Key(InteractionEntry entry, CallKeys keys) =>
+        new(entry.ServiceName, (entry.Method ?? "").ToUpperInvariant(), Target(entry), keys.Of(entry).Operation);
 
-    private static CallKey ShapeKey(InteractionEntry entry) =>
-        new(entry.ServiceName, (entry.Method ?? "").ToUpperInvariant(), InteractionShape.Template(Target(entry)));
+    // The operation key holds the operation, so the shape key needs no second copy of it.
+    private static CallKey ShapeKey(InteractionEntry entry, CallKeys keys) =>
+        new(entry.ServiceName, (entry.Method ?? "").ToUpperInvariant(), keys.Of(entry).Shape, null);
 
     private static bool Is(InteractionEntry entry, string type) =>
         entry.Type.Equals(type, StringComparison.OrdinalIgnoreCase);

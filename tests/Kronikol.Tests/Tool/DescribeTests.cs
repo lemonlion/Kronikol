@@ -108,6 +108,21 @@ public class DescribeTests : IDisposable
     }
 
     [Fact]
+    public void Phase_is_a_flag_of_interactions_and_values_and_no_other_verb()
+    {
+        // #192 R2 (Q10): the two verbs that filter calls take --phase; a verb that would accept it and not read it
+        // is the silence the per-verb lists exist to remove.
+        var verbs = Document().GetProperty("verbs").EnumerateArray()
+            .Where(v => v.GetProperty("flags").EnumerateArray().Any(f => f.GetProperty("name").GetString() == "--phase"))
+            .Select(v => v.GetProperty("name").GetString()!)
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+
+        Assert.Equal(["interactions", "values"], verbs);
+        Assert.Contains("setup", VerbTable.Flag("--phase")!.Summary, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Every_flag_a_verb_names_exists_in_the_flag_table()
     {
         foreach (var verb in VerbTable.Verbs)
