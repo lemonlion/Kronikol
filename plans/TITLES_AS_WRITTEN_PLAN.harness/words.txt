@@ -1,0 +1,27 @@
+kind | name | shown by the candidate C rule | with the words
+feature | AcmePayWebhookTests | Acme Pay Webhook Tests | AcmePay Webhook Tests
+scenario | Webhook_LeadCreatedViaApiJourney_ForAnEligibleCustomer | Webhook lead created via api journey for an eligible customer | Webhook lead created via API journey for an eligible customer
+scenario | WhenMcaFundingActivates_TheLocIsDrawn | When mca funding activates the loc is drawn | When MCA funding activates the LOC is drawn
+scenario | ApiKeyIsRotated | Api key is rotated | API key is rotated
+scenario | TheSbrIsFiledForTheLoc | The sbr is filed for the loc | The SBR is filed for the LOC
+scenario | TheApisAreListed | The apis are listed | The apis are listed
+feature | Grpc_Order_Status_Tests | Grpc Order Status Tests | gRPC Order Status Tests
+feature | Specifications_Open_Api_Scalar_UI_Tests | Specifications Open Api Scalar UI Tests | Specifications OpenAPI Scalar UI Tests
+feature | Specifications__Async_Api_Feature | Specifications Async Api Feature | Specifications AsyncAPI Feature
+feature | ClickHouseSqlTranslatorTests | Click House Sql Translator Tests | ClickHouse SQL Translator Tests
+feature | DuckDbClickHouseQueryEngineTests | Duck Db Click House Query Engine Tests | DuckDB ClickHouse Query Engine Tests
+scenario | The_Scalar_UI_endpoint_should_return_a_valid_page | The scalar UI endpoint should return a valid page | The scalar UI endpoint should return a valid page
+scenario | GrpcStreamsTheOrderUpdates | Grpc streams the order updates | gRPC streams the order updates
+scenario | Two_gRPC_hops_carry_the_identity_to_the_third_host | Two g RPC hops carry the identity to the third host | Two gRPC hops carry the identity to the third host
+scenario | Check_out_the_basket | Check out the basket | CheckOut the basket
+feature | Grpc_Recipe_Summary_Tests | Grpc Recipe Summary Tests | gRPC Recipe Summary Tests
+feature | Grpc_Stream_Order_Updates_Tests | Grpc Stream Order Updates Tests | gRPC Stream Order Updates Tests
+feature | Specifications_Async_Api_Tests | Specifications Async Api Tests | Specifications AsyncAPI Tests
+feature | Specifications_Open_Api_Tests | Specifications Open Api Tests | Specifications OpenAPI Tests
+feature | Grpc__Order_Status_Feature | Grpc Order Status Feature | gRPC Order Status Feature
+feature | Grpc__Recipe_Summary_Feature | Grpc Recipe Summary Feature | gRPC Recipe Summary Feature
+feature | Grpc__Stream_Order_Updates_Feature | Grpc Stream Order Updates Feature | gRPC Stream Order Updates Feature
+feature | Specifications__Open_Api_Feature | Specifications Open Api Feature | Specifications OpenAPI Feature
+feature | Specifications__Open_Api_Scalar_UI_Feature | Specifications Open Api Scalar UI Feature | Specifications OpenAPI Scalar UI Feature
+bddfy title | When m c a funding activates | When m c a funding activates | When MCA funding activates
+FormatFeatureName(Returns404WhenMissing) = Returns 404 When Missing

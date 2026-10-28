@@ -1,0 +1,62 @@
+## Feature names: FormatFeatureName (StringCasing.Titleize)
+AcmePayWebhookTests                -> Acme Pay Webhook Tests
+MCAFundingTests                    -> MCA Funding Tests
+McaFundingTests                    -> Mca Funding Tests
+ApiKeyTests                        -> Api Key Tests
+HTTPClientTests                    -> HTTP Client Tests
+PostgreSQLStoreTests               -> Postgre SQL Store Tests
+OAuth2LoginTests                   -> O Auth 2 Login Tests
+IOStreamTests                      -> IO Stream Tests
+UKShippingTests                    -> UK Shipping Tests
+GraphQLTests                       -> Graph QL Tests
+
+## Scenario names from a method: FormatScenarioDisplayName  |  keep-capitals prototype
+Webhook_LeadCreatedViaApiJourney_ForAnEligibleCustomer   -> Webhook lead created via api journey for an eligible customer | B Webhook lead created via api journey for an eligible customer | C Webhook lead created via api journey for an eligible customer
+WhenMcaFundingActivates_TheLocIsDrawn                    -> When mca funding activates the loc is drawn          | B When mca funding activates the loc is drawn          | C When mca funding activates the loc is drawn
+WhenMCAFundingActivates_TheLOCIsDrawn                    -> When mca funding activates the loc is drawn          | B When MCA funding activates the LOC is drawn          | C When MCA funding activates the LOC is drawn
+Webhook_LeadCreatedViaAPIJourney_ForAnEligibleCustomer   -> Webhook lead created via api journey for an eligible customer | B Webhook lead created via API journey for an eligible customer | C Webhook lead created via API journey for an eligible customer
+Returns_404_when_the_API_key_is_missing                  -> Returns 404 when the api key is missing              | B Returns 404 when the API key is missing              | C Returns 404 when the API key is missing
+Given_the_UK_store_when_I_pay_then_VAT_is_added          -> Given the uk store when i pay then vat is added      | B Given the UK store when I pay then VAT is added      | C Given the UK store when I pay then VAT is added
+WhenIOpenTheApp                                          -> When i open the app                                  | B When I open the app                                  | C When I open the app
+Returns404WhenMissing                                    -> Returns404when missing                               | B Returns 404 when missing                             | C Returns404 when missing
+Retries3TimesThenFails                                   -> Retries3times then fails                             | B Retries 3 times then fails                           | C Retries3 times then fails
+V2ApiReturnsOk                                           -> V2api returns ok                                     | B V 2 api returns ok                                   | C V2 api returns ok
+AcmePayRejectsTheWebhook                                 -> Acme pay rejects the webhook                         | B Acme pay rejects the webhook                         | C Acme pay rejects the webhook
+PostgreSQLStoreKeepsTheOrder                             -> Postgre sql store keeps the order                    | B Postgre SQL store keeps the order                    | C Postgre SQL store keeps the order
+OrdersAreSentToKafka                                     -> Orders are sent to kafka                             | B Orders are sent to kafka                             | C Orders are sent to kafka
+ShipsToTheUK(country: "GB")                              -> Ships to the uk [country: "GB"]                      | B Ships to the UK [country: "GB"]                      | C Ships to the UK [country: "GB"]
+Ns.OrderTests.ShipsToTheUK(country: "GB")                -> Ships to the uk [country: "GB"]                      | B Ships to the UK [country: "GB"]                      | C Ships to the UK [country: "GB"]
+
+## A display name a person wrote
+   xUnit [Fact(DisplayName = ..)]: FormatXunitDisplayName(dn, dn); a theory row adds its arguments
+   TUnit [DisplayName(..)] and MSTest DisplayName: FormatScenarioDisplayName(dn)
+Order API returns 404 for a missing SKU
+   xUnit       -> Order api returns 404 for a missing sku
+   xUnit row   -> Order api returns 404 for a missing sku [sku: "A1"]
+   TUnit/MSTest-> Order api returns 404 for a missing sku
+   candidate B -> Order API returns 404 for a missing SKU   (why a written name must not be humanised at all)
+Orders are sent to Kafka and stored in MongoDB
+   xUnit       -> Orders are sent to kafka and stored in mongo db
+   xUnit row   -> Orders are sent to kafka and stored in mongo db [sku: "A1"]
+   TUnit/MSTest-> Orders are sent to kafka and stored in mongo db
+   candidate B -> Orders are sent to kafka and stored in mongo DB   (why a written name must not be humanised at all)
+AcmePay rejects a webhook without a signature
+   xUnit       -> Acme pay rejects a webhook without a signature
+   xUnit row   -> Acme pay rejects a webhook without a signature [sku: "A1"]
+   TUnit/MSTest-> Acme pay rejects a webhook without a signature
+   candidate B -> Acme pay rejects a webhook without a signature   (why a written name must not be humanised at all)
+When MCA funding activates, the LOC is drawn
+   xUnit       -> When mca funding activates, the loc is drawn
+   xUnit row   -> When mca funding activates, the loc is drawn [sku: "A1"]
+   TUnit/MSTest-> When mca funding activates, the loc is drawn
+   candidate B -> When MCA funding activates, the LOC is drawn   (why a written name must not be humanised at all)
+iOS users see the new checkout
+   xUnit       -> I os users see the new checkout
+   xUnit row   -> I os users see the new checkout [sku: "A1"]
+   TUnit/MSTest-> I os users see the new checkout
+   candidate B -> I OS users see the new checkout   (why a written name must not be humanised at all)
+
+## Feature ids: TitleizeAsOf590 vs Titleize (5.9.1 keeps ids on the frozen copy)
+Month's report           shown Month's Report             keyed Month S Report
+HTTP, HTTPS and gRPC     shown HTTP, HTTPS And G RPC      keyed Http, HTTPS And G RPC
+AcmePayWebhookTests      shown Acme Pay Webhook Tests     keyed Acme Pay Webhook Tests

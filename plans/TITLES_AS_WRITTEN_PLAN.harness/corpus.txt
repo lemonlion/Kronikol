@@ -1,0 +1,4 @@
+corpus | tests | names with a word in capitals | of them lowered by 5.12.0 | names with a digit against a letter | names with a Pascal acronym (a word list's case) | written display names | of them re-cased | titles candidate B changes | of them case only | titles candidate C changes (ids that move unless frozen) | of them case only | feature names | with a Pascal acronym
+breakfastprovider | 864 | 5 | 5 | 4 | 13 | 0 | 0 | 67 | 63 | 5 | 5 | 148 | 14
+kronikol-tests | 12358 | 335 | 335 | 381 | 474 | 5 | 1 | 686 | 324 | 427 | 371 | 1113 | 91
+kronikol-examples | 120 | 0 | 0 | 4 | 1 | 0 | 0 | 4 | 0 | 0 | 0 | 24 | 0

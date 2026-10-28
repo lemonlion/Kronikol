@@ -1,0 +1,443 @@
+## Shapes under candidate C: rows per corpus (tests), and real examples
+
+### plural acronym split before its s (URLs, IDs): breakfastprovider 0, kronikol-tests 0, kronikol-examples 0
+
+### plural acronym ending Is/As (APIs, SLAs) left for the list: breakfastprovider 0, kronikol-tests 0, kronikol-examples 0
+
+### name entirely in capitals, kept in capitals: breakfastprovider 0, kronikol-tests 0, kronikol-examples 0
+
+### interface name: its I kept as a word (I tracking component): breakfastprovider 0, kronikol-tests 47, kronikol-examples 0
+   Implements_ITrackingComponent  =>  Implements I tracking component
+   Legacy_constructor_also_implements_ITrackingComponent  =>  Legacy constructor also implements I tracking component
+   TrackDependenciesForDiagrams_registers_IHttpMessageHandlerBuilderFilter  =>  Track dependencies for diagrams registers I http message handler builder filter
+   TrackDependenciesForDiagrams_does_not_replace_IHttpClientFactory  =>  Track dependencies for diagrams does not replace I http client factory
+   Step_with_ITabularParameterData_produces_Tabular_parameter  =>  Step with I tabular parameter data produces tabular parameter
+   Every_member_of_IClickHouseClient_is_named_in_the_handled_list  =>  Every member of I click house client is named in the handled list
+   AddClickHouseDriverTestTracking_decorates_an_IClickHouseClient_registration_with_its_options  =>  Add click house driver test tracking decorates an I click house client registration with its options
+   AddDapperTestTracking_resolves_IHttpContextAccessor_from_DI  =>  Add dapper test tracking resolves I http context accessor from DI
+   RemoveDbContext_Removes_IDbContextOptionsConfiguration  =>  Remove db context removes I db context options configuration
+   ImplementsIEventSubscriber  =>  Implements I event subscriber
+
+### IPv4/IPv6 read as I pv4 / I pv6: breakfastprovider 0, kronikol-tests 10, kronikol-examples 0
+   A_taken_IPv6_port_is_logged_and_reported  =>  A taken I pv6 port is logged and reported
+   A_tap_on_an_IPv6_address_starts_and_names_an_endpoint_an_exporter_can_dial  =>  A tap on an I pv6 address starts and names an endpoint an exporter can dial
+   ATapOnLocalhostAlsoListensOnTheIPv6Loopback  =>  A tap on localhost also listens on the I pv6 loopback
+   ATapForwardingToLocalhostReachesAnIPv4OnlyServerAtOnce  =>  A tap forwarding to localhost reaches an I pv4 only server at once
+   ATapForwardingToLocalhostStillReachesAnIPv6OnlyServer  =>  A tap forwarding to localhost still reaches an I pv6 only server
+   ATapOnLocalhostWhoseIPv6PortIsTakenListensOnIPv4AndSaysSo  =>  A tap on localhost whose I pv6 port is taken listens on I pv4 and says so
+   ATapOnLocalhostWhoseIPv6ListenerCannotBeMadeListensOnIPv4AndSaysSo  =>  A tap on localhost whose I pv6 listener cannot be made listens on I pv4 and says so
+   ANamesIPv4AddressesAreTriedFirstWhereverTheTapRuns  =>  A names I pv4 addresses are tried first wherever the tap runs
+   AnIPv6ForwardAddressIsNamedInBracketsOnce  =>  An I pv6 forward address is named in brackets once
+   TheForwardAddressesAreTriedIPv4First  =>  The forward addresses are tried I pv4 first
+
+### camelCase identifier split and lower-cased (stable id, g RPC, x unit): breakfastprovider 0, kronikol-tests 170, kronikol-examples 0
+   BDDfy_xUnit3_CurrentTestInfo_Fetcher_is_not_null  =>  BD dfy x unit3 current test info fetcher is not null
+   BDDfy_xUnit3_CurrentTestInfo_Fetcher_returns_test_info  =>  BD dfy x unit3 current test info fetcher returns test info
+   Every_reader_takes_formatVersion_3_with_its_empty_keys_left_out  =>  Every reader takes format version 3 with its empty keys left out
+   Every_reader_sends_formatVersion_4_to_an_upgrade  =>  Every reader sends format version 4 to an upgrade
+   Payloads_are_text_and_formatVersion_is_3_whatever_CompressTestRunReportPayloads_says  =>  Payloads are text and format version is 3 whatever compress test run report payloads says
+   A_roster_keeps_every_scenario_sharing_a_stableId_positionally  =>  A roster keeps every scenario sharing a stable id positionally
+   Two_projects_sharing_a_stableId_do_not_share_history  =>  Two projects sharing a stable id do not share history
+   Unknown_historyFormatVersion_is_refused_by_the_reader  =>  Unknown history format version is refused by the reader
+   Unknown_historyFormatVersion_is_not_appended_to  =>  Unknown history format version is not appended to
+   Fold_renumbers_slots_when_two_shards_carry_the_same_stableId  =>  Fold renumbers slots when two shards carry the same stable id
+
+### lone capital before a capitalised word, not A or I (X unit, T unit, Req n roll): breakfastprovider 0, kronikol-tests 71, kronikol-examples 1
+   XUnit2_assembly_contains_binding_annotated_types  =>  X unit2 assembly contains binding annotated types
+   XUnit3_assembly_contains_binding_annotated_types  =>  X unit3 assembly contains binding annotated types
+   TUnit_assembly_contains_binding_annotated_types  =>  T unit assembly contains binding annotated types
+   FormatScenarioDisplayName_ShouldHandleNUnitStyleParams  =>  Format scenario display name should handle n unit style params
+   No_TUnit_template_references_the_test_SDK  =>  No t unit template references the test SDK
+   Parses_NUnit_expected_but_was  =>  Parses n unit expected but was
+   XUnit3_string_path_full_rendering_pipeline_with_diagnostics  =>  X unit3 string path full rendering pipeline with diagnostics
+   XUnit3_raw_path_full_rendering_pipeline_with_diagnostics  =>  X unit3 raw path full rendering pipeline with diagnostics
+   XUnit3_path_renders_complex_recipe_as_expandable  =>  X unit3 path renders complex recipe as expandable
+   XUnit3_path_renders_small_expectation_as_subtable  =>  X unit3 path renders small expectation as subtable
+
+### a lone capital variable lowered (first n scenarios): breakfastprovider 0, kronikol-tests 2, kronikol-examples 0
+   GenerateMarkdown_all_passed_includes_diagram_images_for_first_N_scenarios  =>  Generate markdown all passed includes diagram images for first n scenarios
+   Import_records_a_scenario_that_is_not_a_test_as_N  =>  Import records a scenario that is not a test as n
+
+### product name from a fixed list split or lowered (word-list case): breakfastprovider 10, kronikol-tests 233, kronikol-examples 1
+   The_AsyncApi_endpoint_should_return_a_valid_specification  =>  The async api endpoint should return a valid specification
+   The_OpenApi_endpoint_should_return_a_valid_specification  =>  The open api endpoint should return a valid specification
+   The_AsyncApi_Endpoint_Should_Return_A_Valid_Specification  =>  The async api endpoint should return a valid specification
+   The_OpenApi_Endpoint_Should_Return_A_Valid_Specification  =>  The open api endpoint should return a valid specification
+   XUnit2_assembly_contains_binding_annotated_types  =>  X unit2 assembly contains binding annotated types
+   XUnit3_assembly_contains_binding_annotated_types  =>  X unit3 assembly contains binding annotated types
+   TUnit_assembly_contains_binding_annotated_types  =>  T unit assembly contains binding annotated types
+   FormatScenarioDisplayName_ShouldHandleNUnitStyleParams  =>  Format scenario display name should handle n unit style params
+   ClickHouse_alter_table_update_mutation_is_classified_as_Update  =>  Click house alter table update mutation is classified as update
+   ClickHouse_alter_table_delete_mutation_is_classified_as_Delete  =>  Click house alter table delete mutation is classified as delete
+
+### acronym fragment kept in capitals (BD dfy, SQ lite): breakfastprovider 0, kronikol-tests 4, kronikol-examples 0
+   BDDfy_xUnit3_CurrentTestInfo_Fetcher_is_not_null  =>  BD dfy x unit3 current test info fetcher is not null
+   BDDfy_xUnit3_CurrentTestInfo_Fetcher_returns_test_info  =>  BD dfy x unit3 current test info fetcher returns test info
+   BDDfy_parameterized_scenario_title_render_R1  =>  BD dfy parameterized scenario title render R1
+   SQLite_category_resolves_to_Database  =>  SQ lite category resolves to database
+
+### digit between capitals split (F6 F6 F6, E2 e): breakfastprovider 0, kronikol-tests 1, kronikol-examples 0
+   Setup_partition_uses_default_color_F6F6F6  =>  Setup partition uses default color F6 F6 F6
+
+### number glued to the word before it (more than10, with100): breakfastprovider 0, kronikol-tests 9, kronikol-examples 0
+   DependencyFilter_FeaturesContracted_WhenMoreThan10VisibleScenarios  =>  Dependency filter features contracted when more than10 visible scenarios
+   DependencyFilter_FeaturesExpanded_WhenAtMost10VisibleScenarios  =>  Dependency filter features expanded when at most10 visible scenarios
+   StatusFilter_FeaturesContracted_WhenMoreThan10VisibleScenarios  =>  Status filter features contracted when more than10 visible scenarios
+   StatusFilter_FeaturesExpanded_WhenAtMost10VisibleScenarios  =>  Status filter features expanded when at most10 visible scenarios
+   DependencyFilter_CompletesWithin1Second_With100Scenarios  =>  Dependency filter completes within1 second with100 scenarios
+   DependencyFilter_CompletesWithin1Second_With200Scenarios  =>  Dependency filter completes within1 second with200 scenarios
+   DependencyFilter_ToggleOffCompletesWithin1Second  =>  Dependency filter toggle off completes within1 second
+   DependencyFilter_FeaturesContracted_WhenMoreThan10Matches  =>  Dependency filter features contracted when more than10 matches
+   FormatResultSet_EmptyResult_Returns0Rows  =>  Format result set empty result returns0 rows
+
+### article A glued to a number (is A500 with): breakfastprovider 0, kronikol-tests 5, kronikol-examples 0
+   AMongoFailureIsA500WithTheServersWordsInBothCaptures  =>  A mongo failure is A500 with the servers words in both captures
+   ACommandThatFailedBecomesA500WithItsErrmsgCodeAndCodeName  =>  A command that failed becomes A500 with its errmsg code and code name
+   AWriteErrorIsA500WithItsErrmsgAsTheError  =>  A write error is A500 with its errmsg as the error
+   AWriteConcernErrorIsA500  =>  A write concern error is A500
+   AnErrorReplyBecomesA500WithTheMessage  =>  An error reply becomes A500 with the message
+
+### possessive written _s_ (the scenario s tags): breakfastprovider 0, kronikol-tests 210, kronikol-examples 2
+   ToFeatures_maps_tags_to_the_scenario_s_tags_less_the_happy_path_and_the_endpoint  =>  To features maps tags to the scenario s tags less the happy path and the endpoint
+   The_processor_adds_the_running_test_s_category_traits_to_the_story_scenario_s_tags  =>  The processor adds the running test s category traits to the story scenario s tags
+   The_processor_gives_a_story_scenario_its_tags_then_the_running_test_s_category_traits  =>  The processor gives a story scenario its tags then the running test s category traits
+   Out_writes_the_plain_page_s_bytes_and_nothing_to_stdout  =>  Out writes the plain page s bytes and nothing to stdout
+   A_baseline_folder_s_one_report_is_taken_whatever_it_is_called  =>  A baseline folder s one report is taken whatever it is called
+   Diff_between_a_run_s_json_and_its_krkl_finds_nothing  =>  Diff between a run s json and its krkl finds nothing
+   Headers_are_read_from_the_decoded_report_past_the_file_s_size_on_disk  =>  Headers are read from the decoded report past the file s size on disk
+   The_CI_summary_s_rule_says_a_compressed_data_file_needs_the_tool  =>  The CI summary s rule says a compressed data file needs the tool
+   With_no_runs_kept_the_earlier_run_s_data_file_under_the_other_name_does_not_stay  =>  With no runs kept the earlier run s data file under the other name does not stay
+   With_no_runs_kept_another_report_s_data_file_stays  =>  With no runs kept another report s data file stays
+
+### plural acronym ending Is/As (APIs, SLAs, left for the word list): Counter()
+### a lone capital variable lowered (first n scenarios): Counter({'kronikol-tests': 2}) ['GenerateMarkdown_all_passed_includes_diagram_images_for_first_N_scenarios => Generate markdown all passed includes diagram images for first n scenarios', 'Import_records_a_scenario_that_is_not_a_test_as_N => Import records a scenario that is not a test as n']
+
+## Variants: rows that differ from candidate C (cost beyond C) and from 5.12.0, per corpus
+V1_caps    beyond C: breakfastprovider 0, kronikol-tests 0, kronikol-examples 0 | vs 5.12.0: breakfastprovider 5, kronikol-tests 427, kronikol-examples 0 | of C's 432 changed rows, 0 read differently
+V2_plural  beyond C: breakfastprovider 0, kronikol-tests 0, kronikol-examples 0 | vs 5.12.0: breakfastprovider 5, kronikol-tests 427, kronikol-examples 0 | of C's 432 changed rows, 0 read differently
+V3_lone    beyond C: breakfastprovider 0, kronikol-tests 43, kronikol-examples 0 | vs 5.12.0: breakfastprovider 5, kronikol-tests 468, kronikol-examples 0 | of C's 432 changed rows, 2 read differently
+V4a_iface  beyond C: breakfastprovider 0, kronikol-tests 48, kronikol-examples 0 | vs 5.12.0: breakfastprovider 5, kronikol-tests 429, kronikol-examples 0 | of C's 432 changed rows, 46 read differently
+V4b_camel  beyond C: breakfastprovider 0, kronikol-tests 170, kronikol-examples 0 | vs 5.12.0: breakfastprovider 5, kronikol-tests 582, kronikol-examples 0 | of C's 432 changed rows, 15 read differently
+V5_digits  beyond C: breakfastprovider 0, kronikol-tests 1, kronikol-examples 0 | vs 5.12.0: breakfastprovider 5, kronikol-tests 427, kronikol-examples 0 | of C's 432 changed rows, 1 read differently
+V6_poss    beyond C: breakfastprovider 0, kronikol-tests 210, kronikol-examples 2 | vs 5.12.0: breakfastprovider 5, kronikol-tests 629, kronikol-examples 2 | of C's 432 changed rows, 8 read differently
+REC        beyond C: breakfastprovider 0, kronikol-tests 44, kronikol-examples 0 | vs 5.12.0: breakfastprovider 5, kronikol-tests 468, kronikol-examples 0 | of C's 432 changed rows, 3 read differently
+SEG        beyond C: breakfastprovider 0, kronikol-tests 218, kronikol-examples 0 | vs 5.12.0: breakfastprovider 5, kronikol-tests 584, kronikol-examples 0 | of C's 432 changed rows, 61 read differently
+RECSEG     beyond C: breakfastprovider 0, kronikol-tests 261, kronikol-examples 0 | vs 5.12.0: breakfastprovider 5, kronikol-tests 624, kronikol-examples 0 | of C's 432 changed rows, 64 read differently
+ALL        beyond C: breakfastprovider 0, kronikol-tests 471, kronikol-examples 2 | vs 5.12.0: breakfastprovider 5, kronikol-tests 826, kronikol-examples 2 | of C's 432 changed rows, 72 read differently
+NONE       beyond C: breakfastprovider 0, kronikol-tests 0, kronikol-examples 0 | vs 5.12.0: breakfastprovider 5, kronikol-tests 427, kronikol-examples 0 | of C's 432 changed rows, 0 read differently
+
+### V1_caps: up to 12 distinct rows where it differs from C
+
+### V2_plural: up to 12 distinct rows where it differs from C
+
+### V3_lone: up to 12 distinct rows where it differs from C
+   FormatScenarioDisplayName_ShouldHandleNUnitStyleParams
+      C   Format scenario display name should handle n unit style params
+      V3_lone Format scenario display name should handle N unit style params
+   No_TUnit_template_references_the_test_SDK
+      C   No t unit template references the test SDK
+      V3_lone No T unit template references the test SDK
+   GenerateMarkdown_all_passed_includes_diagram_images_for_first_N_scenarios
+      C   Generate markdown all passed includes diagram images for first n scenarios
+      V3_lone Generate markdown all passed includes diagram images for first N scenarios
+   CreateNoteButtons_hover_rect_inserted_inside_mainG_before_note_paths
+      C   Create note buttons hover rect inserted inside main g before note paths
+      V3_lone Create note buttons hover rect inserted inside main G before note paths
+   Parses_NUnit_expected_but_was
+      C   Parses n unit expected but was
+      V3_lone Parses N unit expected but was
+   ReqNRoll_scenario_outline_examples_render_R1
+      C   Req n roll scenario outline examples render R1
+      V3_lone Req N roll scenario outline examples render R1
+   GetBBox_is_zero_and_canvas_text_is_measured_through_OffscreenCanvas
+      C   Get b box is zero and canvas text is measured through offscreen canvas
+      V3_lone Get B box is zero and canvas text is measured through offscreen canvas
+   Import_records_a_scenario_that_is_not_a_test_as_N
+      C   Import records a scenario that is not a test as n
+      V3_lone Import records a scenario that is not a test as N
+   A_TUnit_label_takes_resolved_values
+      C   A t unit label takes resolved values
+      V3_lone A T unit label takes resolved values
+   A_failed_TUnit_assertion_in_Assert_Multiple_is_drawn_failed
+      C   A failed t unit assertion in assert multiple is drawn failed
+      V3_lone A failed T unit assertion in assert multiple is drawn failed
+   Weave_TUnitShouldSyntax_InstrumentsAssertion
+      C   Weave t unit should syntax instruments assertion
+      V3_lone Weave T unit should syntax instruments assertion
+   Weave_TUnitAssertThat_InstrumentsAssertion
+      C   Weave t unit assert that instruments assertion
+      V3_lone Weave T unit assert that instruments assertion
+
+### V4a_iface: up to 12 distinct rows where it differs from C
+   Implements_ITrackingComponent
+      C   Implements I tracking component
+      V4a_iface Implements ITrackingComponent
+   Legacy_constructor_also_implements_ITrackingComponent
+      C   Legacy constructor also implements I tracking component
+      V4a_iface Legacy constructor also implements ITrackingComponent
+   TrackDependenciesForDiagrams_registers_IHttpMessageHandlerBuilderFilter
+      C   Track dependencies for diagrams registers I http message handler builder filter
+      V4a_iface Track dependencies for diagrams registers IHttpMessageHandlerBuilderFilter
+   TrackDependenciesForDiagrams_does_not_replace_IHttpClientFactory
+      C   Track dependencies for diagrams does not replace I http client factory
+      V4a_iface Track dependencies for diagrams does not replace IHttpClientFactory
+   Step_with_ITabularParameterData_produces_Tabular_parameter
+      C   Step with I tabular parameter data produces tabular parameter
+      V4a_iface Step with ITabularParameterData produces tabular parameter
+   Every_member_of_IClickHouseClient_is_named_in_the_handled_list
+      C   Every member of I click house client is named in the handled list
+      V4a_iface Every member of IClickHouseClient is named in the handled list
+   AddClickHouseDriverTestTracking_decorates_an_IClickHouseClient_registration_with_its_options
+      C   Add click house driver test tracking decorates an I click house client registration with its options
+      V4a_iface Add click house driver test tracking decorates an IClickHouseClient registration with its options
+   AddDapperTestTracking_resolves_IHttpContextAccessor_from_DI
+      C   Add dapper test tracking resolves I http context accessor from DI
+      V4a_iface Add dapper test tracking resolves IHttpContextAccessor from DI
+   RemoveDbContext_Removes_IDbContextOptionsConfiguration
+      C   Remove db context removes I db context options configuration
+      V4a_iface Remove db context removes IDbContextOptionsConfiguration
+   IEventSubscriber_RoutesCommandStartedEvent_ProducesLogs
+      C   I event subscriber routes command started event produces logs
+      V4a_iface IEventSubscriber routes command started event produces logs
+   IEventSubscriber_RoutesCommandFailedEvent_ProducesErrorLog
+      C   I event subscriber routes command failed event produces error log
+      V4a_iface IEventSubscriber routes command failed event produces error log
+   A_taken_IPv6_port_is_logged_and_reported
+      C   A taken I pv6 port is logged and reported
+      V4a_iface A taken IPv6 port is logged and reported
+
+### V4b_camel: up to 12 distinct rows where it differs from C
+   BDDfy_xUnit3_CurrentTestInfo_Fetcher_is_not_null
+      C   BD dfy x unit3 current test info fetcher is not null
+      V4b_camel BD dfy xUnit3 current test info fetcher is not null
+   BDDfy_xUnit3_CurrentTestInfo_Fetcher_returns_test_info
+      C   BD dfy x unit3 current test info fetcher returns test info
+      V4b_camel BD dfy xUnit3 current test info fetcher returns test info
+   Every_reader_takes_formatVersion_3_with_its_empty_keys_left_out
+      C   Every reader takes format version 3 with its empty keys left out
+      V4b_camel Every reader takes formatVersion 3 with its empty keys left out
+   Every_reader_sends_formatVersion_4_to_an_upgrade
+      C   Every reader sends format version 4 to an upgrade
+      V4b_camel Every reader sends formatVersion 4 to an upgrade
+   Payloads_are_text_and_formatVersion_is_3_whatever_CompressTestRunReportPayloads_says
+      C   Payloads are text and format version is 3 whatever compress test run report payloads says
+      V4b_camel Payloads are text and formatVersion is 3 whatever compress test run report payloads says
+   A_roster_keeps_every_scenario_sharing_a_stableId_positionally
+      C   A roster keeps every scenario sharing a stable id positionally
+      V4b_camel A roster keeps every scenario sharing a stableId positionally
+   Two_projects_sharing_a_stableId_do_not_share_history
+      C   Two projects sharing a stable id do not share history
+      V4b_camel Two projects sharing a stableId do not share history
+   Unknown_historyFormatVersion_is_refused_by_the_reader
+      C   Unknown history format version is refused by the reader
+      V4b_camel Unknown historyFormatVersion is refused by the reader
+   Unknown_historyFormatVersion_is_not_appended_to
+      C   Unknown history format version is not appended to
+      V4b_camel Unknown historyFormatVersion is not appended to
+   Fold_renumbers_slots_when_two_shards_carry_the_same_stableId
+      C   Fold renumbers slots when two shards carry the same stable id
+      V4b_camel Fold renumbers slots when two shards carry the same stableId
+   GetFlameChartData_caps_at_maxSpans
+      C   Get flame chart data caps at max spans
+      V4b_camel Get flame chart data caps at maxSpans
+   FormattedWithMetadata_operationName_is_not_shown
+      C   Formatted with metadata operation name is not shown
+      V4b_camel Formatted with metadata operationName is not shown
+
+### V5_digits: up to 12 distinct rows where it differs from C
+   Setup_partition_uses_default_color_F6F6F6
+      C   Setup partition uses default color F6 F6 F6
+      V5_digits Setup partition uses default color F6F6F6
+
+### V6_poss: up to 12 distinct rows where it differs from C
+   ToFeatures_maps_tags_to_the_scenario_s_tags_less_the_happy_path_and_the_endpoint
+      C   To features maps tags to the scenario s tags less the happy path and the endpoint
+      V6_poss To features maps tags to the scenario's tags less the happy path and the endpoint
+   The_processor_adds_the_running_test_s_category_traits_to_the_story_scenario_s_tags
+      C   The processor adds the running test s category traits to the story scenario s tags
+      V6_poss The processor adds the running test's category traits to the story scenario's tags
+   The_processor_gives_a_story_scenario_its_tags_then_the_running_test_s_category_traits
+      C   The processor gives a story scenario its tags then the running test s category traits
+      V6_poss The processor gives a story scenario its tags then the running test's category traits
+   Out_writes_the_plain_page_s_bytes_and_nothing_to_stdout
+      C   Out writes the plain page s bytes and nothing to stdout
+      V6_poss Out writes the plain page's bytes and nothing to stdout
+   A_baseline_folder_s_one_report_is_taken_whatever_it_is_called
+      C   A baseline folder s one report is taken whatever it is called
+      V6_poss A baseline folder's one report is taken whatever it is called
+   Diff_between_a_run_s_json_and_its_krkl_finds_nothing
+      C   Diff between a run s json and its krkl finds nothing
+      V6_poss Diff between a run's json and its krkl finds nothing
+   Headers_are_read_from_the_decoded_report_past_the_file_s_size_on_disk
+      C   Headers are read from the decoded report past the file s size on disk
+      V6_poss Headers are read from the decoded report past the file's size on disk
+   The_CI_summary_s_rule_says_a_compressed_data_file_needs_the_tool
+      C   The CI summary s rule says a compressed data file needs the tool
+      V6_poss The CI summary's rule says a compressed data file needs the tool
+   With_no_runs_kept_the_earlier_run_s_data_file_under_the_other_name_does_not_stay
+      C   With no runs kept the earlier run s data file under the other name does not stay
+      V6_poss With no runs kept the earlier run's data file under the other name does not stay
+   With_no_runs_kept_another_report_s_data_file_stays
+      C   With no runs kept another report s data file stays
+      V6_poss With no runs kept another report's data file stays
+   An_absence_check_on_a_krkl_s_raw_bytes_passes_whatever_the_file_holds
+      C   An absence check on a krkl s raw bytes passes whatever the file holds
+      V6_poss An absence check on a krkl's raw bytes passes whatever the file holds
+   The_file_is_Kronikol_s_marker_then_one_zstd_frame_with_its_checksum
+      C   The file is kronikol s marker then one zstd frame with its checksum
+      V6_poss The file is kronikol's marker then one zstd frame with its checksum
+
+### REC: up to 12 distinct rows where it differs from C
+   FormatScenarioDisplayName_ShouldHandleNUnitStyleParams
+      C   Format scenario display name should handle n unit style params
+      REC Format scenario display name should handle N unit style params
+   No_TUnit_template_references_the_test_SDK
+      C   No t unit template references the test SDK
+      REC No T unit template references the test SDK
+   Setup_partition_uses_default_color_F6F6F6
+      C   Setup partition uses default color F6 F6 F6
+      REC Setup partition uses default color F6F6F6
+   GenerateMarkdown_all_passed_includes_diagram_images_for_first_N_scenarios
+      C   Generate markdown all passed includes diagram images for first n scenarios
+      REC Generate markdown all passed includes diagram images for first N scenarios
+   CreateNoteButtons_hover_rect_inserted_inside_mainG_before_note_paths
+      C   Create note buttons hover rect inserted inside main g before note paths
+      REC Create note buttons hover rect inserted inside main G before note paths
+   Parses_NUnit_expected_but_was
+      C   Parses n unit expected but was
+      REC Parses N unit expected but was
+   ReqNRoll_scenario_outline_examples_render_R1
+      C   Req n roll scenario outline examples render R1
+      REC Req N roll scenario outline examples render R1
+   GetBBox_is_zero_and_canvas_text_is_measured_through_OffscreenCanvas
+      C   Get b box is zero and canvas text is measured through offscreen canvas
+      REC Get B box is zero and canvas text is measured through offscreen canvas
+   Import_records_a_scenario_that_is_not_a_test_as_N
+      C   Import records a scenario that is not a test as n
+      REC Import records a scenario that is not a test as N
+   A_TUnit_label_takes_resolved_values
+      C   A t unit label takes resolved values
+      REC A T unit label takes resolved values
+   A_failed_TUnit_assertion_in_Assert_Multiple_is_drawn_failed
+      C   A failed t unit assertion in assert multiple is drawn failed
+      REC A failed T unit assertion in assert multiple is drawn failed
+   Weave_TUnitShouldSyntax_InstrumentsAssertion
+      C   Weave t unit should syntax instruments assertion
+      REC Weave T unit should syntax instruments assertion
+
+### SEG: up to 12 distinct rows where it differs from C
+   BDDfy_xUnit3_CurrentTestInfo_Fetcher_is_not_null
+      C   BD dfy x unit3 current test info fetcher is not null
+      SEG BD dfy xUnit3 current test info fetcher is not null
+   BDDfy_xUnit3_CurrentTestInfo_Fetcher_returns_test_info
+      C   BD dfy x unit3 current test info fetcher returns test info
+      SEG BD dfy xUnit3 current test info fetcher returns test info
+   Every_reader_takes_formatVersion_3_with_its_empty_keys_left_out
+      C   Every reader takes format version 3 with its empty keys left out
+      SEG Every reader takes formatVersion 3 with its empty keys left out
+   Every_reader_sends_formatVersion_4_to_an_upgrade
+      C   Every reader sends format version 4 to an upgrade
+      SEG Every reader sends formatVersion 4 to an upgrade
+   Payloads_are_text_and_formatVersion_is_3_whatever_CompressTestRunReportPayloads_says
+      C   Payloads are text and format version is 3 whatever compress test run report payloads says
+      SEG Payloads are text and formatVersion is 3 whatever compress test run report payloads says
+   A_roster_keeps_every_scenario_sharing_a_stableId_positionally
+      C   A roster keeps every scenario sharing a stable id positionally
+      SEG A roster keeps every scenario sharing a stableId positionally
+   Two_projects_sharing_a_stableId_do_not_share_history
+      C   Two projects sharing a stable id do not share history
+      SEG Two projects sharing a stableId do not share history
+   Unknown_historyFormatVersion_is_refused_by_the_reader
+      C   Unknown history format version is refused by the reader
+      SEG Unknown historyFormatVersion is refused by the reader
+   Unknown_historyFormatVersion_is_not_appended_to
+      C   Unknown history format version is not appended to
+      SEG Unknown historyFormatVersion is not appended to
+   Fold_renumbers_slots_when_two_shards_carry_the_same_stableId
+      C   Fold renumbers slots when two shards carry the same stable id
+      SEG Fold renumbers slots when two shards carry the same stableId
+   GetFlameChartData_caps_at_maxSpans
+      C   Get flame chart data caps at max spans
+      SEG Get flame chart data caps at maxSpans
+   FormattedWithMetadata_operationName_is_not_shown
+      C   Formatted with metadata operation name is not shown
+      SEG Formatted with metadata operationName is not shown
+
+### RECSEG: up to 12 distinct rows where it differs from C
+   FormatScenarioDisplayName_ShouldHandleNUnitStyleParams
+      C   Format scenario display name should handle n unit style params
+      RECSEG Format scenario display name should handle N unit style params
+   BDDfy_xUnit3_CurrentTestInfo_Fetcher_is_not_null
+      C   BD dfy x unit3 current test info fetcher is not null
+      RECSEG BD dfy xUnit3 current test info fetcher is not null
+   BDDfy_xUnit3_CurrentTestInfo_Fetcher_returns_test_info
+      C   BD dfy x unit3 current test info fetcher returns test info
+      RECSEG BD dfy xUnit3 current test info fetcher returns test info
+   Every_reader_takes_formatVersion_3_with_its_empty_keys_left_out
+      C   Every reader takes format version 3 with its empty keys left out
+      RECSEG Every reader takes formatVersion 3 with its empty keys left out
+   Every_reader_sends_formatVersion_4_to_an_upgrade
+      C   Every reader sends format version 4 to an upgrade
+      RECSEG Every reader sends formatVersion 4 to an upgrade
+   Payloads_are_text_and_formatVersion_is_3_whatever_CompressTestRunReportPayloads_says
+      C   Payloads are text and format version is 3 whatever compress test run report payloads says
+      RECSEG Payloads are text and formatVersion is 3 whatever compress test run report payloads says
+   A_roster_keeps_every_scenario_sharing_a_stableId_positionally
+      C   A roster keeps every scenario sharing a stable id positionally
+      RECSEG A roster keeps every scenario sharing a stableId positionally
+   Two_projects_sharing_a_stableId_do_not_share_history
+      C   Two projects sharing a stable id do not share history
+      RECSEG Two projects sharing a stableId do not share history
+   Unknown_historyFormatVersion_is_refused_by_the_reader
+      C   Unknown history format version is refused by the reader
+      RECSEG Unknown historyFormatVersion is refused by the reader
+   Unknown_historyFormatVersion_is_not_appended_to
+      C   Unknown history format version is not appended to
+      RECSEG Unknown historyFormatVersion is not appended to
+   Fold_renumbers_slots_when_two_shards_carry_the_same_stableId
+      C   Fold renumbers slots when two shards carry the same stable id
+      RECSEG Fold renumbers slots when two shards carry the same stableId
+   GetFlameChartData_caps_at_maxSpans
+      C   Get flame chart data caps at max spans
+      RECSEG Get flame chart data caps at maxSpans
+
+### ALL: up to 12 distinct rows where it differs from C
+   FormatScenarioDisplayName_ShouldHandleNUnitStyleParams
+      C   Format scenario display name should handle n unit style params
+      ALL Format scenario display name should handle N unit style params
+   ToFeatures_maps_tags_to_the_scenario_s_tags_less_the_happy_path_and_the_endpoint
+      C   To features maps tags to the scenario s tags less the happy path and the endpoint
+      ALL To features maps tags to the scenario's tags less the happy path and the endpoint
+   The_processor_adds_the_running_test_s_category_traits_to_the_story_scenario_s_tags
+      C   The processor adds the running test s category traits to the story scenario s tags
+      ALL The processor adds the running test's category traits to the story scenario's tags
+   The_processor_gives_a_story_scenario_its_tags_then_the_running_test_s_category_traits
+      C   The processor gives a story scenario its tags then the running test s category traits
+      ALL The processor gives a story scenario its tags then the running test's category traits
+   BDDfy_xUnit3_CurrentTestInfo_Fetcher_is_not_null
+      C   BD dfy x unit3 current test info fetcher is not null
+      ALL BD dfy xUnit3 current test info fetcher is not null
+   BDDfy_xUnit3_CurrentTestInfo_Fetcher_returns_test_info
+      C   BD dfy x unit3 current test info fetcher returns test info
+      ALL BD dfy xUnit3 current test info fetcher returns test info
+   Out_writes_the_plain_page_s_bytes_and_nothing_to_stdout
+      C   Out writes the plain page s bytes and nothing to stdout
+      ALL Out writes the plain page's bytes and nothing to stdout
+   A_baseline_folder_s_one_report_is_taken_whatever_it_is_called
+      C   A baseline folder s one report is taken whatever it is called
+      ALL A baseline folder's one report is taken whatever it is called
+   Every_reader_takes_formatVersion_3_with_its_empty_keys_left_out
+      C   Every reader takes format version 3 with its empty keys left out
+      ALL Every reader takes formatVersion 3 with its empty keys left out
+   Every_reader_sends_formatVersion_4_to_an_upgrade
+      C   Every reader sends format version 4 to an upgrade
+      ALL Every reader sends formatVersion 4 to an upgrade
+   Diff_between_a_run_s_json_and_its_krkl_finds_nothing
+      C   Diff between a run s json and its krkl finds nothing
+      ALL Diff between a run's json and its krkl finds nothing
+   Headers_are_read_from_the_decoded_report_past_the_file_s_size_on_disk
+      C   Headers are read from the decoded report past the file s size on disk
+      ALL Headers are read from the decoded report past the file's size on disk
+
+## words before _s_: [('scenario', 27), ('feature', 27), ('run', 15), ('class', 10), ('note', 9), ('report', 8), ('row', 7), ('test', 6), ('file', 6), ('diagram', 6), ('adapter', 6), ('box', 6), ('page', 5), ('rule', 5), ('outline', 5), ('author', 4), ('assembly', 4), ('method', 4), ('kronikol', 3), ('step', 3), ('bar', 3), ('shard', 3), ('gherkin', 3), ('builder', 3), ('switch', 3), ('line', 3), ('writer', 2), ('option', 2), ('call', 2), ('link', 2), ('attempt', 2), ('search', 2), ('field', 2), ('label', 2), ('tab', 2), ('result', 2), ('piece', 2), ('folder', 1), ('summary', 1), ('krkl', 1)]
+totals {'breakfastprovider': 864, 'kronikol-tests': 12358, 'kronikol-examples': 120}

@@ -1,0 +1,11 @@
+breakfastprovider {'n': 864, 'C': 5, 'C_caseonly': 5, 'REC': 5, 'REC_caseonly': 5, 'REC_vs_C': 0, 'RECSEG': 5}
+kronikol-examples {'n': 120, 'C': 0, 'C_caseonly': 0, 'REC': 0, 'REC_caseonly': 0, 'REC_vs_C': 0, 'RECSEG': 0}
+kronikol-tests {'n': 12358, 'C': 427, 'C_caseonly': 371, 'REC': 468, 'REC_caseonly': 413, 'REC_vs_C': 44, 'RECSEG': 624}
+   FormatScenarioDisplayName_ShouldHandleNUnitSt | Format scenario display name should handle n  | Format scenario display name should handle N 
+   No_TUnit_template_references_the_test_SDK | No t unit template references the test SDK | No T unit template references the test SDK
+   Setup_partition_uses_default_color_F6F6F6 | Setup partition uses default color F6 F6 F6 | Setup partition uses default color F6F6F6
+   GenerateMarkdown_all_passed_includes_diagram_ | Generate markdown all passed includes diagram | Generate markdown all passed includes diagram
+   CreateNoteButtons_hover_rect_inserted_inside_ | Create note buttons hover rect inserted insid | Create note buttons hover rect inserted insid
+   Parses_NUnit_expected_but_was | Parses n unit expected but was | Parses N unit expected but was
+   ReqNRoll_scenario_outline_examples_render_R1 | Req n roll scenario outline examples render R | Req N roll scenario outline examples render R
+   GetBBox_is_zero_and_canvas_text_is_measured_t | Get b box is zero and canvas text is measured | Get B box is zero and canvas text is measured
