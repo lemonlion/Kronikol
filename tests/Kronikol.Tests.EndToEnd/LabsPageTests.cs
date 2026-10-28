@@ -66,9 +66,12 @@ public class LabsPageTests : PlaywrightTestBase
 
         var link = Page.Locator($"#history-section a.history-link[href='LabsPage_Link.html#sid-{HistoryReportHelper.PayId}']").First;
         await Expect(link).ToBeVisibleAsync();
+        // The wait starts before the click, and asks for the commit only: started after it, it found the report's URL
+        // already there when the report opened quickly, and then waited for a load event that never came (Linux CI on
+        // 5.16.0, as BackForwardRestoreTests' wait once did). WaitForURLReportAsync then waits for the report itself.
+        var opened = Page.WaitForURLReportAsync(report + "#sid-" + HistoryReportHelper.PayId, new() { WaitUntil = WaitUntilState.Commit });
         await link.ClickAsync();
-
-        await Page.WaitForURLReportAsync(report + "#sid-" + HistoryReportHelper.PayId);
+        await opened;
         await Page.WaitForFunctionAsync(
             $"() => {{ const el = document.querySelector('[data-stable-id=\"{HistoryReportHelper.PayId}\"]'); return el && el.hasAttribute('open'); }}",
             null, new() { Timeout = 10000, PollingInterval = 200 });
