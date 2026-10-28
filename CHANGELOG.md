@@ -4,6 +4,40 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.24.0] - 2026-10-28
+
+The minor part moves (5.23.0 to 5.24.0): `kronikol query diagram` gains three forms and a `--json` answer (#184,
+`plans/QUERY_FOR_PROGRAMS_PLAN.md` R2).
+
+### Added
+
+- **`diagram <report> s3` lists a scenario's diagrams** (#184), one row each with its address, size and note count, as
+  `note s3/d0` lists a diagram's notes. It takes `sN`, `sid:` and `id:`. A host counted a scenario's diagrams by
+  probing `s3/dK` until a refusal, which exits 2 as a usage error does.
+- **`diagram <report> s3 --out DIR` writes every diagram of the scenario**, as `DIR/s3-d0.puml`, `DIR/s3-d1.puml` and
+  so on, making `DIR`; **`diagram <report> --out DIR`**, with no address, writes every diagram in the run. That is one
+  process where a 100-scenario run took about 200 through `query.cs`. Files are named by address, since an id is free
+  text, and `scenarios --json` maps an address to its id. With a scenario address `--out` names a directory, so a
+  file there is refused (exit 2); with `s3/d0` it names a file, as before.
+- **`diagram` answers `--json`**: one item per diagram listed or written, with `address`, `bytes`, `notes`, and `path`
+  when written. `--describe` lists the verb as a JSON verb with its four forms.
+
+### Unchanged
+
+- `diagram s3/d0` still refuses to print a diagram without `--out`, and `s3/dK` past the last diagram is still
+  refused, exit 2.
+
+### Documentation
+
+- Wiki `Querying-Reports.md`'s `diagram` section, the skill's (both copies), with how the rendering decides how many
+  diagrams a scenario holds: one at the default `BrowserJs`, several where a server-side rendering split a long one.
+  The data file's schema no longer calls a scenario's `diagrams` never needed: an agent does not need them to answer a
+  question, and `kronikol query diagram` lists and writes them for a program that checks them.
+
+### Tests
+
+- `QueryDiagramVerbTests` (10 facts, 9 red on 5.23.0). Checks: the core suite (11,392 passed, 2 skipped), the ten new facts run against 5.23.0's tree (nine failed; the tenth holds the single-diagram behaviour that does not change), and the verb table, skill and describe facts.
+
 ## [5.23.0] - 2026-10-28
 
 The minor part moves (5.22.1 to 5.23.0): a new address form, `id:<test id>`, and new members on `kronikol query`'s

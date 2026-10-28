@@ -509,3 +509,15 @@ The owner asked on 2026-10-28 for the plan to be implemented in full and took ev
   scaffold (the enum member and record field): 27 failed, and the three that passed hold behaviour that does not
   change (a `diff` row has no `id`, an inexact id is refused, and the guard's own vacuity fact).
 - **Checks.** The core suite (11,379 passed, 2 skipped, and 11,382 passed, 2 skipped, after the rebase onto 5.22.1), the 30 new facts run against 5.22.0 in a separate worktree (27 failed; the other three hold behaviour that does not change), BreakfastProvider's NUnit report read by id:0-1287 with its row's id, calls and diagrams, and an independent review of the diff, whose two defects and two weak facts are fixed test first
+
+### R2, 5.24.0
+
+- **As designed.** `diagram <scenario>` (`sN`, `sid:`, `id:`, through R1's `TryWholeScenario`) lists the scenario's
+  diagrams with each one's address, size and note count; `--out DIR` writes them as `DIR/sN-dK.puml`, making `DIR`,
+  and refuses a file there (exit 2); `diagram --out DIR` with no address writes the run's. `diagram` answers `--json`
+  with one item per diagram (`address`, `bytes`, `notes`, `path` when written), the single `sN/dK --out FILE` write
+  included. `sN/dK` is unchanged.
+- **A limit, documented.** The payload verbs keep the byte budget when they write (`QueryCommand.cs` gives them no
+  universal `--out`), so a large run's `--json` list of written files can be cut; `--max-bytes 0` lifts it, and the
+  files are written either way.
+- **Checks.** The core suite (11,392 passed, 2 skipped), the ten new facts run against 5.23.0's tree (nine failed; the tenth holds the single-diagram behaviour that does not change), and the verb table, skill and describe facts

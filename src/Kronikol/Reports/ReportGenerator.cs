@@ -7858,7 +7858,7 @@ public static class ReportGenerator
                                         ["diagrams"] = new Dictionary<string, object?>
                                         {
                                             ["type"] = "array",
-                                            ["description"] = "The PlantUML source of each sequence diagram rendered for the scenario: hundreds of kilobytes each, never needed to answer a question (kronikol query flow sN tells the same story in a couple of KB). With CompressTestRunReportPayloads, a source of 8,192 characters or more (512 through 4.0.1) is a compressedPayload object instead of its text",
+                                            ["description"] = "The PlantUML source of each sequence diagram rendered for the scenario: hundreds of kilobytes each, and not needed to answer a question about the run (kronikol query flow sN tells the same story in a couple of KB); kronikol query diagram sN lists them, and diagram --out DIR writes them out, for a program that checks them. With CompressTestRunReportPayloads, a source of 8,192 characters or more (512 through 4.0.1) is a compressedPayload object instead of its text",
                                             ["items"] = new Dictionary<string, object?>
                                             {
                                                 ["oneOf"] = new object[]
