@@ -1,0 +1,2 @@
+all pairs: {'pairs': 1005, 'deps': 4, 'tpairs': 933, 'ops': 27, 'calls': 34}
+pairs with identical results: {'pairs': 993, 'deps': 0, 'tpairs': 921, 'ops': 21, 'calls': 28}

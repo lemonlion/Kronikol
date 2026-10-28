@@ -1,0 +1,8 @@
+# 5.14.0 query parties on the plan's harness report inputs/examples-5.8.0/ReqNRoll.xUnit3/TestRunReport.krkl (copied)
+party                    kind       how        made received  id · note
+Caller                   test       inferred     16        0
+Cow Service              unknown    -             0        4
+Dessert Provider         underTest  inferred      7       16
+Event broker             unknown    -             0        3
+2 parties of unknown kind: declare them in Parties or .kronikol/parties.json · the report declares nothing, so this table is inferred from the calls
+{"formatVersion":1,"command":"parties","report":"example-reqnroll/TestRunReport.krkl","kronikolVersion":"5.8.0\u002Befb9ce9debf632bb88767eb2431885e7d515349e","notes":[],"items":[{"party":"Caller","id":null,"kind":"test","kindSource":"inferred","callsMade":16,"callsReceived":0,"note":null},{"party":"Cow Service","id":null,"kind":"unknown","kindSource":null,"callsMade":0,"callsReceived":4,"note":null},{"party":"Dessert Provider","id":null,"kind":"underTest","kindSource":"inferred","callsMade":7,"callsReceived":16,"note":null},{"party":"Event broker","id":null,"kind":"unknown","kindSource":null,"callsMade":0,"callsReceived":3,"note":null}],"total":4,"truncated":null,"next":null,"error":null}

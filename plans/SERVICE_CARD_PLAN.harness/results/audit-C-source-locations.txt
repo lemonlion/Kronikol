@@ -1,0 +1,10 @@
+xunit-in-memory.json: scenarios 212, scenario sourceFile 0, features with sourceFile 0, scenarios with a step sourceFile 1, distinct step files 5
+reqnroll-in-memory.json: scenarios 214, scenario sourceFile 214, features with sourceFile 73, scenarios with a step sourceFile 213, distinct step files 90
+reqnroll-in-docker.json: scenarios 214, scenario sourceFile 214, features with sourceFile 73, scenarios with a step sourceFile 212, distinct step files 90
+xunit-external-sut.json: scenarios 212, scenario sourceFile 0, features with sourceFile 0, scenarios with a step sourceFile 1, distinct step files 4
+nunit-in-memory.json: scenarios 212, scenario sourceFile 0, features with sourceFile 0, scenarios with a step sourceFile 1, distinct step files 5
+tunit-in-memory.json: scenarios 212, scenario sourceFile 0, features with sourceFile 0, scenarios with a step sourceFile 1, distinct step files 5
+lightbdd-in-memory.json: scenarios 187, scenario sourceFile 0, features with sourceFile 0, scenarios with a step sourceFile 179, distinct step files 109
+bddfy-in-memory.json: scenarios 212, scenario sourceFile 0, features with sourceFile 0, scenarios with a step sourceFile 211, distinct step files 110
+jest-ingest.json: scenarios 2, scenario sourceFile 2, features with sourceFile 1, scenarios with a step sourceFile 2, distinct step files 1
+example-reqnroll.json: scenarios 10, scenario sourceFile 10, features with sourceFile 4, scenarios with a step sourceFile 0, distinct step files 0

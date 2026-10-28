@@ -1,0 +1,4 @@
+xunit-in-memory        TestRunReport.krkl    301,914 bytes; decoded JSON    5,287,167 bytes; ratio  17.5 to 1
+reqnroll-in-memory     TestRunReport.krkl    316,706 bytes; decoded JSON    6,037,504 bytes; ratio  19.1 to 1
+xunit-external-sut     TestRunReport.krkl    136,451 bytes; decoded JSON    2,051,016 bytes; ratio  15.0 to 1
+reqnroll-in-docker     TestRunReport.krkl    388,195 bytes; decoded JSON   14,135,227 bytes; ratio  36.4 to 1

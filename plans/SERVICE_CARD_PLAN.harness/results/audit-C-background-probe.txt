@@ -1,0 +1,20 @@
+# 5.14.0 tool (/c/Code/Kronikol-190-r1/src/Kronikol.Tool/bin/Debug/net10.0/Kronikol.Tool.dll, --version 5.14.0) on inputs/background-probe/TestRunReport.json
+## query summary
+TestRunReport.json  2.8 KB  Kronikol 5.14.0
+2026-10-27T10:00:00Z → 2026-10-27T10:01:00Z
+1 scenarios · 0 failed · 2 interactions · 0 distinct bodies
+
+Orders  1 passed
+
+Slowest:
+  s0  0.5s  Creating an order
+next: scenarios · services
+## query services
+service                  calls errors     bytes      p50      max  statuses
+Orders Api                   1      0       0 B              0 ms  Created×1
+1 services · a service missing here was never called
+## query parties
+party                    kind       how        made received  id · note
+Caller                   test       inferred      1        0
+Orders Api               underTest  inferred      0        1
+2 parties · the report declares nothing, so this table is inferred from the calls

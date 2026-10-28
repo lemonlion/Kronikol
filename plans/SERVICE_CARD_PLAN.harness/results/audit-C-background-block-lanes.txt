@@ -1,0 +1,70 @@
+== xunit-in-memory.json
+   root keys: ['background', 'ciMetadata', 'endTime', 'environment', 'features', 'formatVersion', 'kronikolVersion', 'startTime', 'suite']
+   kronikolVersion=5.4.1+90e357fd4ffe25d7bdb22a7a6b0028bbc6161f1c formatVersion=3
+   scenario interactions: 2818 records, 1409 requests
+   background.calls=0 interactions=0 requests=0 afterScenarioEnd rows=0
+   background attributionSource: {}
+   background phase: {}
+== reqnroll-in-memory.json
+   root keys: ['background', 'ciMetadata', 'endTime', 'environment', 'features', 'formatVersion', 'kronikolVersion', 'startTime', 'suite']
+   kronikolVersion=5.4.1+90e357fd4ffe25d7bdb22a7a6b0028bbc6161f1c formatVersion=3
+   scenario interactions: 2706 records, 1353 requests
+   background.calls=0 interactions=0 requests=0 afterScenarioEnd rows=0
+   background attributionSource: {}
+   background phase: {}
+== reqnroll-in-docker.json
+   root keys: ['background', 'ciMetadata', 'endTime', 'environment', 'features', 'formatVersion', 'kronikolVersion', 'startTime', 'suite']
+   kronikolVersion=5.4.1+90e357fd4ffe25d7bdb22a7a6b0028bbc6161f1c formatVersion=3
+   scenario interactions: 2522 records, 1261 requests
+   background.calls=0 interactions=0 requests=0 afterScenarioEnd rows=0
+   background attributionSource: {}
+   background phase: {}
+== xunit-external-sut.json
+   root keys: ['background', 'ciMetadata', 'endTime', 'environment', 'features', 'formatVersion', 'kronikolVersion', 'startTime', 'suite']
+   kronikolVersion=5.4.1+90e357fd4ffe25d7bdb22a7a6b0028bbc6161f1c formatVersion=3
+   scenario interactions: 756 records, 378 requests
+   background.calls=0 interactions=0 requests=0 afterScenarioEnd rows=0
+   background attributionSource: {}
+   background phase: {}
+== nunit-in-memory.json
+   root keys: ['background', 'ciMetadata', 'endTime', 'environment', 'features', 'formatVersion', 'kronikolVersion', 'startTime', 'suite']
+   kronikolVersion=5.4.1+90e357fd4ffe25d7bdb22a7a6b0028bbc6161f1c formatVersion=3
+   scenario interactions: 2818 records, 1409 requests
+   background.calls=0 interactions=0 requests=0 afterScenarioEnd rows=0
+   background attributionSource: {}
+   background phase: {}
+== tunit-in-memory.json
+   root keys: ['background', 'ciMetadata', 'endTime', 'environment', 'features', 'formatVersion', 'kronikolVersion', 'startTime', 'suite']
+   kronikolVersion=5.4.1+90e357fd4ffe25d7bdb22a7a6b0028bbc6161f1c formatVersion=3
+   scenario interactions: 2826 records, 1413 requests
+   background.calls=0 interactions=0 requests=0 afterScenarioEnd rows=0
+   background attributionSource: {}
+   background phase: {}
+== lightbdd-in-memory.json
+   root keys: ['background', 'ciMetadata', 'endTime', 'environment', 'features', 'formatVersion', 'kronikolVersion', 'startTime', 'suite']
+   kronikolVersion=5.4.1+90e357fd4ffe25d7bdb22a7a6b0028bbc6161f1c formatVersion=3
+   scenario interactions: 2758 records, 1379 requests
+   background.calls=0 interactions=0 requests=0 afterScenarioEnd rows=0
+   background attributionSource: {}
+   background phase: {}
+== bddfy-in-memory.json
+   root keys: ['background', 'ciMetadata', 'endTime', 'environment', 'features', 'formatVersion', 'kronikolVersion', 'startTime', 'suite']
+   kronikolVersion=5.4.1+90e357fd4ffe25d7bdb22a7a6b0028bbc6161f1c formatVersion=3
+   scenario interactions: 2818 records, 1409 requests
+   background.calls=0 interactions=0 requests=0 afterScenarioEnd rows=0
+   background attributionSource: {}
+   background phase: {}
+== jest-ingest.json
+   root keys: ['background', 'ciMetadata', 'diagnostics', 'endTime', 'features', 'formatVersion', 'kronikolVersion', 'startTime']
+   kronikolVersion=5.11.0+44bcc62a6e9419b3491699b8f09177cbe97d72c9 formatVersion=3
+   scenario interactions: 16 records, 8 requests
+   background.calls=0 interactions=0 requests=0 afterScenarioEnd rows=0
+   background attributionSource: {}
+   background phase: {}
+== example-reqnroll.json
+   root keys: ['background', 'ciMetadata', 'endTime', 'environment', 'features', 'formatVersion', 'kronikolVersion', 'startTime', 'suite']
+   kronikolVersion=5.8.0+efb9ce9debf632bb88767eb2431885e7d515349e formatVersion=3
+   scenario interactions: 46 records, 23 requests
+   background.calls=0 interactions=0 requests=0 afterScenarioEnd rows=0
+   background attributionSource: {}
+   background phase: {}

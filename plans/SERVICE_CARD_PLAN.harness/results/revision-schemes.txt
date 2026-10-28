@@ -1,0 +1,56 @@
+== xunit-in-memory.json
+      7  scheme=clickhouse method=INSERT authority=True segments=2 cat=ClickHouse callerCat=- meta=Default
+      4  scheme=clickhouse method=SELECT authority=True segments=2 cat=ClickHouse callerCat=- meta=Default
+      1  scheme=clickhouse method=DELETE authority=True segments=2 cat=ClickHouse callerCat=- meta=Default
+     33  scheme=eventgrid method=Publish authority=True segments=1 cat=MessageQueue callerCat=- meta=Event
+     39  scheme=eventhub method=Consume authority=False segments=1 cat=- callerCat=MessageQueue meta=Event
+     36  scheme=grpc method=SendOrderConfirmation authority=False segments=2 cat=gRPC callerCat=- meta=Default
+      5  scheme=grpc method=SendReservationReminder authority=False segments=2 cat=gRPC callerCat=- meta=Default
+      3  scheme=grpc method=GetRecipeSummary authority=False segments=2 cat=gRPC callerCat=- meta=Default
+      2  scheme=grpc method=GetOrderStatus authority=False segments=2 cat=gRPC callerCat=- meta=Default
+      2  scheme=grpc method=StreamOrderUpdates authority=False segments=2 cat=gRPC callerCat=- meta=Default
+      2  scheme=grpc method=ServerReflectionInfo authority=False segments=2 cat=gRPC callerCat=- meta=Default
+     42  scheme=kafka method=Consume authority=False segments=1 cat=- callerCat=MessageQueue meta=Event
+     40  scheme=kafka method=Produce authority=False segments=1 cat=MessageQueue callerCat=- meta=Event
+      8  scheme=mongodb method=Insert authority=False segments=2 cat=MongoDB callerCat=- meta=Default
+      6  scheme=mongodb method=Find authority=False segments=2 cat=MongoDB callerCat=- meta=Default
+      2  scheme=mongodb method=FindAndModify authority=False segments=2 cat=MongoDB callerCat=- meta=Default
+     68  scheme=pubsub method=Publish authority=False segments=1 cat=MessageQueue callerCat=- meta=Event
+     36  scheme=pubsub method=Consume authority=False segments=1 cat=- callerCat=MessageQueue meta=Event
+      5  scheme=spanner method=Select authority=False segments=2 cat=Spanner callerCat=- meta=Event
+      4  scheme=spanner method=InsertOrUpdate authority=False segments=2 cat=Spanner callerCat=- meta=Event
+      3  scheme=spanner method=Insert authority=False segments=2 cat=Spanner callerCat=- meta=Event
+    161  scheme=sql method=Insert authority=True segments=2 cat=SQL callerCat=- meta=Default
+     53  scheme=sql method=Select authority=True segments=2 cat=SQL callerCat=- meta=Default
+      3  scheme=sql method=Delete authority=True segments=2 cat=SQL callerCat=- meta=Default
+      3  scheme=sql method=Update authority=True segments=2 cat=SQL callerCat=- meta=Default
+  http/https requests: 841
+== xunit-in-docker.json
+      7  scheme=clickhouse method=INSERT authority=True segments=2 cat=ClickHouse callerCat=- meta=Default
+      5  scheme=clickhouse method=SELECT authority=True segments=1 cat=ClickHouse callerCat=- meta=Default
+      4  scheme=clickhouse method=SELECT authority=True segments=2 cat=ClickHouse callerCat=- meta=Default
+      1  scheme=clickhouse method=DELETE authority=True segments=2 cat=ClickHouse callerCat=- meta=Default
+     33  scheme=eventgrid method=Publish authority=True segments=1 cat=MessageQueue callerCat=- meta=Event
+     39  scheme=eventhub method=Publish authority=False segments=1 cat=MessageQueue callerCat=- meta=Event
+     36  scheme=grpc method=SendOrderConfirmation authority=False segments=2 cat=gRPC callerCat=- meta=Default
+      5  scheme=grpc method=SendReservationReminder authority=False segments=2 cat=gRPC callerCat=- meta=Default
+      3  scheme=grpc method=GetRecipeSummary authority=False segments=2 cat=gRPC callerCat=- meta=Default
+      2  scheme=grpc method=GetOrderStatus authority=False segments=2 cat=gRPC callerCat=- meta=Default
+      2  scheme=grpc method=StreamOrderUpdates authority=False segments=2 cat=gRPC callerCat=- meta=Default
+      2  scheme=grpc method=ServerReflectionInfo authority=False segments=2 cat=gRPC callerCat=- meta=Default
+     40  scheme=kafka method=Produce authority=False segments=1 cat=MessageQueue callerCat=- meta=Event
+      2  scheme=kafka method=Consume authority=False segments=1 cat=- callerCat=MessageQueue meta=Event
+      8  scheme=mongodb method=Insert authority=False segments=2 cat=MongoDB callerCat=- meta=Default
+      6  scheme=mongodb method=Find authority=False segments=2 cat=MongoDB callerCat=- meta=Default
+      2  scheme=mongodb method=FindAndModify authority=False segments=2 cat=MongoDB callerCat=- meta=Default
+     68  scheme=pubsub method=Publish authority=False segments=1 cat=MessageQueue callerCat=- meta=Event
+      1  scheme=pubsub method=Consume authority=False segments=1 cat=- callerCat=MessageQueue meta=Event
+      5  scheme=spanner method=Select authority=False segments=2 cat=Spanner callerCat=- meta=Event
+      4  scheme=spanner method=InsertOrUpdate authority=False segments=2 cat=Spanner callerCat=- meta=Event
+      3  scheme=spanner method=Insert authority=False segments=2 cat=Spanner callerCat=- meta=Event
+     54  scheme=sql method=Select authority=True segments=2 cat=SQL callerCat=- meta=Default
+     53  scheme=sql method=Other authority=True segments=1 cat=SQL callerCat=- meta=Default
+  http/https requests: 914
+== example-reqnroll.json
+      3  scheme=event method=Send authority=True segments=1 cat=MessageQueue callerCat=- meta=Event
+  http/https requests: 20

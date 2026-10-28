@@ -1,0 +1,8 @@
+# 5.14.0 query parties on inputs/background-probe-declared/TestRunReport.json (block names Outbox Store, seen only in the background block)
+party                    kind       how        made received  id · note
+Caller                   test       inferred      1        0
+Orders Api               underTest  declared      0        1  orders-api
+2 parties
+## --kind real
+no parties of kind real
+0 parties

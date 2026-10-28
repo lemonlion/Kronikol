@@ -1,0 +1,32 @@
+same-commit A-vs-B xunit-in-memory         behaviour same; without index same; members differ []; scenario rows: ops differ 0, titles differ 0, only in one 0; run.counts rows differ 0
+same-commit A-vs-B reqnroll-in-memory      behaviour same; without index same; members differ []; scenario rows: ops differ 0, titles differ 0, only in one 0; run.counts rows differ 2
+same-commit A-vs-B reqnroll-in-docker      behaviour same; without index same; members differ []; scenario rows: ops differ 0, titles differ 0, only in one 0; run.counts rows differ 0
+same-commit A-vs-B xunit-external-sut      behaviour same; without index same; members differ []; scenario rows: ops differ 0, titles differ 0, only in one 0; run.counts rows differ 1
+same-commit A-vs-B nunit-in-memory         behaviour same; without index same; members differ []; scenario rows: ops differ 0, titles differ 0, only in one 0; run.counts rows differ 2
+same-commit A-vs-B tunit-in-memory         behaviour same; without index same; members differ []; scenario rows: ops differ 0, titles differ 0, only in one 0; run.counts rows differ 0
+same-commit A-vs-B lightbdd-in-memory      behaviour same; without index same; members differ []; scenario rows: ops differ 0, titles differ 0, only in one 0; run.counts rows differ 0
+same-commit A-vs-B bddfy-in-memory         behaviour same; without index same; members differ []; scenario rows: ops differ 0, titles differ 0, only in one 0; run.counts rows differ 1
+same-commit L1-vs-L2 xunit-in-memory       behaviour same; without index same; members differ []; scenario rows: ops differ 0, titles differ 0, only in one 0; run.counts rows differ 1
+same-commit L1-vs-L2 reqnroll-in-memory    behaviour same; without index same; members differ []; scenario rows: ops differ 0, titles differ 0, only in one 0; run.counts rows differ 2
+upgrade B-vs-C bddfy-external-sut          behaviour same; without index same; members differ []; scenario rows: ops differ 0, titles differ 0, only in one 0; run.counts rows differ 0
+upgrade B-vs-C bddfy-in-docker             behaviour same; without index same; members differ []; scenario rows: ops differ 0, titles differ 0, only in one 0; run.counts rows differ 2
+upgrade B-vs-C bddfy-in-memory             behaviour same; without index same; members differ []; scenario rows: ops differ 0, titles differ 0, only in one 0; run.counts rows differ 1
+upgrade B-vs-C lightbdd-external-sut       behaviour DIFF; without index DIFF; members differ ['edges']; scenario rows: ops differ 0, titles differ 0, only in one 0; run.counts rows differ 1
+upgrade B-vs-C lightbdd-in-docker          behaviour DIFF; without index DIFF; members differ ['edges']; scenario rows: ops differ 0, titles differ 0, only in one 0; run.counts rows differ 2
+upgrade B-vs-C lightbdd-in-memory          behaviour same; without index same; members differ []; scenario rows: ops differ 0, titles differ 0, only in one 0; run.counts rows differ 0
+upgrade B-vs-C nunit-external-sut          behaviour same; without index same; members differ []; scenario rows: ops differ 0, titles differ 0, only in one 0; run.counts rows differ 0
+upgrade B-vs-C nunit-in-docker             behaviour same; without index same; members differ []; scenario rows: ops differ 0, titles differ 0, only in one 0; run.counts rows differ 0
+upgrade B-vs-C nunit-in-memory             behaviour same; without index same; members differ []; scenario rows: ops differ 0, titles differ 0, only in one 0; run.counts rows differ 2
+upgrade B-vs-C reqnroll-external-sut       behaviour DIFF; without index same; members differ ['scenarios']; scenario rows: ops differ 0, titles differ 13, only in one 0; run.counts rows differ 0
+upgrade B-vs-C reqnroll-in-docker          behaviour DIFF; without index same; members differ ['scenarios']; scenario rows: ops differ 0, titles differ 13, only in one 0; run.counts rows differ 2
+upgrade B-vs-C reqnroll-in-memory          behaviour DIFF; without index same; members differ ['scenarios']; scenario rows: ops differ 0, titles differ 13, only in one 0; run.counts rows differ 4
+upgrade B-vs-C tunit-external-sut          behaviour same; without index same; members differ []; scenario rows: ops differ 0, titles differ 0, only in one 0; run.counts rows differ 0
+upgrade B-vs-C tunit-in-docker             behaviour same; without index same; members differ []; scenario rows: ops differ 0, titles differ 0, only in one 0; run.counts rows differ 1
+upgrade B-vs-C tunit-in-memory             behaviour same; without index same; members differ []; scenario rows: ops differ 0, titles differ 0, only in one 0; run.counts rows differ 0
+upgrade B-vs-C xunit-external-sut          behaviour same; without index same; members differ []; scenario rows: ops differ 0, titles differ 0, only in one 0; run.counts rows differ 1
+upgrade B-vs-C xunit-in-docker             behaviour same; without index same; members differ []; scenario rows: ops differ 0, titles differ 0, only in one 0; run.counts rows differ 0
+upgrade B-vs-C xunit-in-memory             behaviour same; without index same; members differ []; scenario rows: ops differ 0, titles differ 0, only in one 0; run.counts rows differ 0
+platform C-vs-L1 xunit-in-memory           behaviour DIFF; without index DIFF; members differ ['edges']; scenario rows: ops differ 0, titles differ 0, only in one 0; run.counts rows differ 52
+    only in the first: Breakfast Provider > CosmosDB Other /colls/orders {"query":"{v}"} (15 calls)
+platform C-vs-L2 xunit-in-memory           behaviour DIFF; without index DIFF; members differ ['edges']; scenario rows: ops differ 0, titles differ 0, only in one 0; run.counts rows differ 51
+    only in the first: Breakfast Provider > CosmosDB Other /colls/orders {"query":"{v}"} (15 calls)

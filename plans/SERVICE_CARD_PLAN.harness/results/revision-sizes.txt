@@ -1,0 +1,140 @@
+== C-bddfy-external-sut
+subject Breakfast Provider; scenarios 180 (sids 180); requests 378; background-section requests 0
+parties 2; edges 1; ops 74; exposes 74; messages 0; emptyTargets 0; derived phases 0
+behaviour index refs 358; run index refs 358; ops with errors 26; hosts 1; degraded {}
+hash from the file's bytes equals behaviourHash: True
+sizes (bytes, UTF-8): file compact 87679 indented 151710; behaviour compact 60417 indented 92266; behaviour without its index compact 15620 indented 32589; run compact 27222
+parts (compact): run.counts 9901, run.examples 3363, run.scenarios 13110, run.parties 119; behaviour.scenarios 44784, behaviour.edges 13681, behaviour.parties 206, behaviour.messages 2
+== C-bddfy-in-docker
+subject Breakfast Provider; scenarios 211 (sids 211); requests 1319; background-section requests 0
+parties 18; edges 20; ops 168; exposes 81; messages 22; emptyTargets 0; derived phases 695
+behaviour index refs 427; run index refs 1039; ops with errors 37; hosts 11; degraded {"UnattributedInteractions":1}
+hash from the file's bytes equals behaviourHash: True
+sizes (bytes, UTF-8): file compact 159041 indented 280654; behaviour compact 99968 indented 158039; behaviour without its index compact 48782 indented 89316; run compact 59033
+parts (compact): run.counts 22373, run.examples 7650, run.scenarios 27131, run.parties 1125; behaviour.scenarios 51173, behaviour.edges 42324, behaviour.parties 1934, behaviour.messages 2375
+== C-bddfy-in-memory
+subject Breakfast Provider; scenarios 212 (sids 212); requests 1409; background-section requests 0
+parties 18; edges 20; ops 179; exposes 81; messages 24; emptyTargets 0; derived phases 869
+behaviour index refs 428; run index refs 1230; ops with errors 37; hosts 11; degraded {}
+hash from the file's bytes equals behaviourHash: True
+sizes (bytes, UTF-8): file compact 169423 indented 298124; behaviour compact 104781 indented 165437; behaviour without its index compact 53426 indented 96471; run compact 64602
+parts (compact): run.counts 23801, run.examples 8156, run.scenarios 30795, run.parties 1124; behaviour.scenarios 51342, behaviour.edges 46740, behaviour.parties 1934, behaviour.messages 2603
+== C-lightbdd-external-sut
+subject Breakfast Provider; scenarios 187 (sids 187); requests 379; background-section requests 0
+parties 2; edges 1; ops 74; exposes 74; messages 0; emptyTargets 0; derived phases 0
+behaviour index refs 333; run index refs 333; ops with errors 26; hosts 1; degraded {}
+hash from the file's bytes equals behaviourHash: True
+sizes (bytes, UTF-8): file compact 94250 indented 158127; behaviour compact 67178 indented 99111; behaviour without its index compact 15680 indented 32727; run compact 27032
+parts (compact): run.counts 9901, run.examples 3366, run.scenarios 12912, run.parties 119; behaviour.scenarios 51485, behaviour.edges 13741, behaviour.parties 206, behaviour.messages 2
+== C-lightbdd-in-docker
+subject Breakfast Provider; scenarios 187 (sids 187); requests 1283; background-section requests 0
+parties 18; edges 20; ops 168; exposes 81; messages 22; emptyTargets 0; derived phases 666
+behaviour index refs 402; run index refs 1014; ops with errors 37; hosts 11; degraded {}
+hash from the file's bytes equals behaviourHash: True
+sizes (bytes, UTF-8): file compact 159473 indented 277736; behaviour compact 101745 indented 158245; behaviour without its index compact 48970 indented 89725; run compact 57688
+parts (compact): run.counts 22366, run.examples 7651, run.scenarios 25817, run.parties 1125; behaviour.scenarios 52762, behaviour.edges 42512, behaviour.parties 1934, behaviour.messages 2375
+== C-lightbdd-in-memory
+subject Breakfast Provider; scenarios 187 (sids 187); requests 1379; background-section requests 0
+parties 18; edges 20; ops 179; exposes 81; messages 24; emptyTargets 0; derived phases 850
+behaviour index refs 403; run index refs 1205; ops with errors 37; hosts 11; degraded {}
+hash from the file's bytes equals behaviourHash: True
+sizes (bytes, UTF-8): file compact 169669 indented 294880; behaviour compact 106379 indented 165367; behaviour without its index compact 53586 indented 96813; run compact 63250
+parts (compact): run.counts 23796, run.examples 8156, run.scenarios 29445, run.parties 1124; behaviour.scenarios 52780, behaviour.edges 46900, behaviour.parties 1934, behaviour.messages 2603
+== C-nunit-external-sut
+subject Breakfast Provider; scenarios 212 (sids 212); requests 379; background-section requests 0
+parties 2; edges 1; ops 74; exposes 74; messages 0; emptyTargets 0; derived phases 0
+behaviour index refs 358; run index refs 358; ops with errors 26; hosts 1; degraded {}
+hash from the file's bytes equals behaviourHash: True
+sizes (bytes, UTF-8): file compact 95774 indented 163246; behaviour compact 67359 indented 101043; behaviour without its index compact 15628 indented 32480; run compact 28375
+parts (compact): run.counts 9899, run.examples 3366, run.scenarios 14262, run.parties 119; behaviour.scenarios 51718, behaviour.edges 13689, behaviour.parties 206, behaviour.messages 2
+== C-nunit-in-docker
+subject Breakfast Provider; scenarios 212 (sids 212); requests 1299; background-section requests 3
+parties 18; edges 20; ops 168; exposes 81; messages 22; emptyTargets 0; derived phases 14
+behaviour index refs 427; run index refs 1039; ops with errors 37; hosts 11; degraded {"BackgroundCalls":1}
+hash from the file's bytes equals behaviourHash: True
+sizes (bytes, UTF-8): file compact 160767 indented 282113; behaviour compact 101698 indented 159494; behaviour without its index compact 48690 indented 88795; run compact 59029
+parts (compact): run.counts 22346, run.examples 7646, run.scenarios 27167, run.parties 1125; behaviour.scenarios 52995, behaviour.edges 42232, behaviour.parties 1934, behaviour.messages 2375
+== C-nunit-in-memory
+subject Breakfast Provider; scenarios 212 (sids 212); requests 1409; background-section requests 0
+parties 18; edges 20; ops 179; exposes 81; messages 24; emptyTargets 0; derived phases 19
+behaviour index refs 428; run index refs 1230; ops with errors 37; hosts 11; degraded {}
+hash from the file's bytes equals behaviourHash: True
+sizes (bytes, UTF-8): file compact 170954 indented 299220; behaviour compact 106339 indented 166610; behaviour without its index compact 53313 indented 95877; run compact 64575
+parts (compact): run.counts 23773, run.examples 8157, run.scenarios 30795, run.parties 1124; behaviour.scenarios 53013, behaviour.edges 46627, behaviour.parties 1934, behaviour.messages 2603
+== C-reqnroll-external-sut
+subject Breakfast Provider; scenarios 214 (sids 214); requests 363; background-section requests 0
+parties 2; edges 1; ops 73; exposes 73; messages 0; emptyTargets 0; derived phases 0
+behaviour index refs 343; run index refs 343; ops with errors 26; hosts 1; degraded {}
+hash from the file's bytes equals behaviourHash: True
+sizes (bytes, UTF-8): file compact 102173 indented 176944; behaviour compact 74141 indented 114010; behaviour without its index compact 15425 indented 32203; run compact 27992
+parts (compact): run.counts 9772, run.examples 3318, run.scenarios 14050, run.parties 119; behaviour.scenarios 58703, behaviour.edges 13505, behaviour.parties 206, behaviour.messages 2
+== C-reqnroll-in-docker
+subject Breakfast Provider; scenarios 214 (sids 214); requests 1263; background-section requests 0
+parties 18; edges 20; ops 168; exposes 81; messages 22; emptyTargets 0; derived phases 667
+behaviour index refs 419; run index refs 1013; ops with errors 37; hosts 11; degraded {}
+hash from the file's bytes equals behaviourHash: True
+sizes (bytes, UTF-8): file compact 167624 indented 297145; behaviour compact 108969 indented 173641; behaviour without its index compact 48846 indented 89484; run compact 58615
+parts (compact): run.counts 22367, run.examples 7651, run.scenarios 26743, run.parties 1125; behaviour.scenarios 60110, behaviour.edges 42388, behaviour.parties 1934, behaviour.messages 2375
+== C-reqnroll-in-memory
+subject Breakfast Provider; scenarios 214 (sids 214); requests 1355; background-section requests 0
+parties 18; edges 20; ops 179; exposes 81; messages 24; emptyTargets 0; derived phases 839
+behaviour index refs 420; run index refs 1192; ops with errors 37; hosts 11; degraded {}
+hash from the file's bytes equals behaviourHash: True
+sizes (bytes, UTF-8): file compact 177632 indented 314029; behaviour compact 113640 indented 180852; behaviour without its index compact 53499 indented 96661; run compact 63952
+parts (compact): run.counts 23800, run.examples 8156, run.scenarios 30143, run.parties 1124; behaviour.scenarios 60128, behaviour.edges 46813, behaviour.parties 1934, behaviour.messages 2603
+== C-tunit-external-sut
+subject Breakfast Provider; scenarios 212 (sids 212); requests 379; background-section requests 0
+parties 2; edges 1; ops 74; exposes 74; messages 0; emptyTargets 0; derived phases 0
+behaviour index refs 358; run index refs 358; ops with errors 26; hosts 1; degraded {}
+hash from the file's bytes equals behaviourHash: True
+sizes (bytes, UTF-8): file compact 93391 indented 160743; behaviour compact 64976 indented 98564; behaviour without its index compact 15628 indented 32480; run compact 28375
+parts (compact): run.counts 9899, run.examples 3366, run.scenarios 14262, run.parties 119; behaviour.scenarios 49335, behaviour.edges 13689, behaviour.parties 206, behaviour.messages 2
+== C-tunit-in-docker
+subject Breakfast Provider; scenarios 212 (sids 212); requests 1304; background-section requests 3
+parties 18; edges 20; ops 171; exposes 81; messages 22; emptyTargets 0; derived phases 14
+behaviour index refs 427; run index refs 1038; ops with errors 39; hosts 12; degraded {"BackgroundCalls":1}
+hash from the file's bytes equals behaviourHash: True
+sizes (bytes, UTF-8): file compact 159672 indented 282227; behaviour compact 100068 indented 158437; behaviour without its index compact 49443 indented 90217; run compact 59564
+parts (compact): run.counts 22752, run.examples 7776, run.scenarios 27148, run.parties 1143; behaviour.scenarios 50612, behaviour.edges 42985, behaviour.parties 1934, behaviour.messages 2375
+== C-tunit-in-memory
+subject Breakfast Provider; scenarios 212 (sids 212); requests 1413; background-section requests 0
+parties 18; edges 20; ops 180; exposes 81; messages 24; emptyTargets 0; derived phases 19
+behaviour index refs 428; run index refs 1230; ops with errors 38; hosts 12; degraded {}
+hash from the file's bytes equals behaviourHash: True
+sizes (bytes, UTF-8): file compact 168952 indented 297529; behaviour compact 104148 indented 164533; behaviour without its index compact 53505 indented 96279; run compact 64764
+parts (compact): run.counts 23903, run.examples 8198, run.scenarios 30795, run.parties 1142; behaviour.scenarios 50630, behaviour.edges 46819, behaviour.parties 1934, behaviour.messages 2603
+== C-xunit-external-sut
+subject Breakfast Provider; scenarios 212 (sids 212); requests 378; background-section requests 0
+parties 2; edges 1; ops 74; exposes 74; messages 0; emptyTargets 0; derived phases 0
+behaviour index refs 358; run index refs 358; ops with errors 26; hosts 1; degraded {}
+hash from the file's bytes equals behaviourHash: True
+sizes (bytes, UTF-8): file compact 98130 indented 165482; behaviour compact 69715 indented 103303; behaviour without its index compact 15628 indented 32480; run compact 28375
+parts (compact): run.counts 9899, run.examples 3366, run.scenarios 14262, run.parties 119; behaviour.scenarios 54074, behaviour.edges 13689, behaviour.parties 206, behaviour.messages 2
+== C-xunit-in-docker
+subject Breakfast Provider; scenarios 212 (sids 212); requests 1299; background-section requests 0
+parties 18; edges 20; ops 168; exposes 81; messages 22; emptyTargets 0; derived phases 14
+behaviour index refs 427; run index refs 1039; ops with errors 37; hosts 11; degraded {}
+hash from the file's bytes equals behaviourHash: True
+sizes (bytes, UTF-8): file compact 163110 indented 284323; behaviour compact 104054 indented 161754; behaviour without its index compact 48690 indented 88795; run compact 59016
+parts (compact): run.counts 22346, run.examples 7652, run.scenarios 27167, run.parties 1125; behaviour.scenarios 55351, behaviour.edges 42232, behaviour.parties 1934, behaviour.messages 2375
+== C-xunit-in-memory
+subject Breakfast Provider; scenarios 212 (sids 212); requests 1409; background-section requests 0
+parties 18; edges 20; ops 179; exposes 81; messages 24; emptyTargets 0; derived phases 19
+behaviour index refs 428; run index refs 1230; ops with errors 37; hosts 11; degraded {}
+hash from the file's bytes equals behaviourHash: True
+sizes (bytes, UTF-8): file compact 173310 indented 301456; behaviour compact 108695 indented 168870; behaviour without its index compact 53313 indented 95877; run compact 64575
+parts (compact): run.counts 23773, run.examples 8157, run.scenarios 30795, run.parties 1124; behaviour.scenarios 55369, behaviour.edges 46627, behaviour.parties 1934, behaviour.messages 2603
+== example-ReqNRoll.xUnit3
+subject Dessert Provider; scenarios 10 (sids 10); requests 23; background-section requests 0
+parties 4; edges 3; ops 6; exposes 4; messages 1; emptyTargets 0; derived phases 7
+behaviour index refs 16; run index refs 23; ops with errors 1; hosts 3; degraded {}
+hash from the file's bytes equals behaviourHash: True
+sizes (bytes, UTF-8): file compact 7378 indented 13133; behaviour compact 4529 indented 7444; behaviour without its index compact 2224 indented 4110; run compact 2809
+parts (compact): run.counts 795, run.examples 265, run.scenarios 794, run.parties 244; behaviour.scenarios 2292, behaviour.edges 1294, behaviour.parties 411, behaviour.messages 96
+== jest-ingest
+subject Payments GraphQL; scenarios 2 (sids 2); requests 8; background-section requests 0
+parties 4; edges 3; ops 6; exposes 2; messages 0; emptyTargets 0; derived phases 0
+behaviour index refs 4; run index refs 8; ops with errors 0; hosts 3; degraded {}
+hash from the file's bytes equals behaviourHash: True
+sizes (bytes, UTF-8): file compact 4631 indented 8780; behaviour compact 2516 indented 4541; behaviour without its index compact 2055 indented 3853; run compact 2075
+parts (compact): run.counts 781, run.examples 265, run.scenarios 223, run.parties 230; behaviour.scenarios 448, behaviour.edges 1307, behaviour.parties 379, behaviour.messages 2

@@ -1,0 +1,368 @@
+== A-xunit-in-memory
+subject Breakfast Provider; tests Caller; scenarios 212 (sids 212); requests 1409; background-section requests 0
+parties 18; edges 20; ops 179; exposes 81; messages 24; graphql-labelled calls 8; derived phases 19
+calls by cause (nesting first): background 203, request 755, test 451
+calls by origin/cause: other/background 117, subject/background 86, subject/request 755, test/test 451
+cause readings disagree: other: nesting background / attribution request (RequestHeader) x114
+behaviour bytes compact 125536, indented 200813; without scenarios compact 53381
+behaviourHash 739c6fb80eebf3616cf4e0e322759245653aa440e39f863528336605ffe6e955; without scenarios 1f1303a0c3b85a3517a0ff382ffff3d2a56d07843c8ec13b740fd1e61651c8b6
+== A-reqnroll-in-memory
+subject Breakfast Provider; tests Caller; scenarios 214 (sids 214); requests 1353; background-section requests 0
+parties 18; edges 20; ops 179; exposes 81; messages 24; graphql-labelled calls 8; derived phases 839
+calls by cause (nesting first): background 179, request 731, test 443
+calls by origin/cause: other/background 111, subject/background 68, subject/request 731, test/test 443
+cause readings disagree: other: nesting background / attribution request (RequestHeader) x108
+behaviour bytes compact 129580, indented 212187; without scenarios compact 53567
+behaviourHash 166f6b7210ed0b343da83b15634f7071f75789c49cd44ce36250478f480121cd; without scenarios a25f0976c8ec0e82ac109edc2e0d6e562dd0baf47dc54e41abc0ab82e782daa2
+== A-xunit-external-sut
+subject Breakfast Provider; tests Caller; scenarios 212 (sids 212); requests 378; background-section requests 0
+parties 2; edges 1; ops 74; exposes 74; messages 0; graphql-labelled calls 6; derived phases 0
+calls by cause (nesting first): test 378
+calls by origin/cause: test/test 378
+cause readings disagree: none
+behaviour bytes compact 69755, indented 107090; without scenarios compact 15668
+behaviourHash e3b4a6024489fb9e78033b0e65f655307d73a772008498beff778ce286ecf13c; without scenarios 0a56c2a81c29061714b437cb8f4d5e7eb2029a6e7e61d0db1dae9fd542e047c7
+== A-reqnroll-in-docker
+subject Breakfast Provider; tests Caller; scenarios 214 (sids 214); requests 1261; background-section requests 0
+parties 18; edges 20; ops 168; exposes 81; messages 22; graphql-labelled calls 8; derived phases 665
+calls by cause (nesting first): background 154, request 665, test 442
+calls by origin/cause: other/background 3, subject/background 151, subject/request 665, test/test 442
+cause readings disagree: none
+behaviour bytes compact 121195, indented 199090; without scenarios compact 48905
+behaviourHash e3f3b25c971acda90c6b6e184360f0f2542621a9c7103d9b46eabcc38d2b3480; without scenarios f8b48dc13294429f4024f3065588105bff7357e5d1c7f5f574d2f2dbe8c671df
+== A-nunit-in-memory
+subject Breakfast Provider; tests Caller; scenarios 212 (sids 212); requests 1409; background-section requests 0
+parties 18; edges 20; ops 179; exposes 81; messages 24; graphql-labelled calls 8; derived phases 19
+calls by cause (nesting first): background 203, request 755, test 451
+calls by origin/cause: other/background 117, subject/background 86, subject/request 755, test/test 451
+cause readings disagree: other: nesting background / attribution request (RequestHeader) x114
+behaviour bytes compact 123180, indented 198565; without scenarios compact 53381
+behaviourHash f5e3717649347aeff8a3deeccdbc7e825a5b942c02f8d2f3f06d5645bc8287c4; without scenarios 1f1303a0c3b85a3517a0ff382ffff3d2a56d07843c8ec13b740fd1e61651c8b6
+== A-tunit-in-memory
+subject Breakfast Provider; tests Caller; scenarios 212 (sids 212); requests 1413; background-section requests 0
+parties 18; edges 20; ops 180; exposes 81; messages 24; graphql-labelled calls 8; derived phases 19
+calls by cause (nesting first): background 207, request 755, test 451
+calls by origin/cause: other/background 117, subject/background 90, subject/request 755, test/test 451
+cause readings disagree: other: nesting background / attribution request (RequestHeader) x114
+behaviour bytes compact 121065, indented 196610; without scenarios compact 53573
+behaviourHash f0fae64d00264095d16305c955eecf695a13de6d5d721b7ace67295c9c49d8ce; without scenarios 4736413e8a45dd917d63edc4f3848ab2415485d4ad32b677636d123c2213358e
+== A-lightbdd-in-memory
+subject Breakfast Provider; tests Caller; scenarios 187 (sids 187); requests 1379; background-section requests 0
+parties 18; edges 20; ops 179; exposes 81; messages 24; graphql-labelled calls 8; derived phases 850
+calls by cause (nesting first): background 173, request 755, test 451
+calls by origin/cause: other/background 117, subject/background 56, subject/request 755, test/test 451
+cause readings disagree: other: nesting background / attribution request (RequestHeader) x114
+behaviour bytes compact 122650, indented 196241; without scenarios compact 53654
+behaviourHash db19eede1569af317dee1c96cda07b5704443d6182aafd84478edfd5c40dcd51; without scenarios 9344c70294026088585e92d6feae1555d637d574a0f7491e4e054df03493bf6e
+== A-bddfy-in-memory
+subject Breakfast Provider; tests Caller; scenarios 212 (sids 212); requests 1409; background-section requests 0
+parties 18; edges 20; ops 179; exposes 81; messages 24; graphql-labelled calls 8; derived phases 869
+calls by cause (nesting first): background 203, request 755, test 451
+calls by origin/cause: other/background 117, subject/background 86, subject/request 755, test/test 451
+cause readings disagree: other: nesting background / attribution request (RequestHeader) x114
+behaviour bytes compact 121622, indented 197417; without scenarios compact 53494
+behaviourHash a21a801e416a766d13041b703e491513bbc0a82f608b0ca0fd42a93d341d5b25; without scenarios 0ecdf9d25614e2e418516172ff65ffa100d92e232c7d29a4eb7c27271ca10435
+== B-bddfy-external-sut
+subject Breakfast Provider; tests Caller; scenarios 180 (sids 180); requests 378; background-section requests 0
+parties 2; edges 1; ops 74; exposes 74; messages 0; graphql-labelled calls 6; derived phases 0
+calls by cause (nesting first): test 378
+calls by origin/cause: test/test 378
+cause readings disagree: none
+behaviour bytes compact 60457, indented 95806; without scenarios compact 15660
+behaviourHash 59667332b70daabf905e74fe2fbceaf10ad82befad2d0fce83a3010649c3d3cc; without scenarios d4666a34608b411a0e375969eba6a166364880e5c43c539e4a074d2723a0caba
+== B-bddfy-in-docker
+subject Breakfast Provider; tests Caller; scenarios 211 (sids 211); requests 1299; background-section requests 0
+parties 18; edges 20; ops 168; exposes 81; messages 22; graphql-labelled calls 8; derived phases 685
+calls by cause (nesting first): background 164, request 685, test 450
+calls by origin/cause: other/background 3, subject/background 161, subject/request 685, test/test 450
+cause readings disagree: none
+behaviour bytes compact 112753, indented 183604; without scenarios compact 48841
+behaviourHash 5865eeb3dc47a31bfce7afb1392d4bf5dafed953d29321315995a0220a775dbe; without scenarios 8332644b98b57099a6e9b39bce0e3e0584235d6f809d1e33005914b5e48046fe
+== B-bddfy-in-memory
+subject Breakfast Provider; tests Caller; scenarios 212 (sids 212); requests 1411; background-section requests 0
+parties 18; edges 20; ops 179; exposes 81; messages 24; graphql-labelled calls 8; derived phases 870
+calls by cause (nesting first): background 204, request 756, test 451
+calls by origin/cause: other/background 117, subject/background 87, subject/request 756, test/test 451
+cause readings disagree: other: nesting background / attribution request (RequestHeader) x114; subject: nesting request / attribution background (DocumentOwner) x1
+behaviour bytes compact 121660, indented 197493; without scenarios compact 53513
+behaviourHash b0203898eafdc786529778a71c428548567807a0d716a9482aca1cac77afaa63; without scenarios 26b5a00e5e44b8a35cf692c9ca54959a4b709812ab800d6576c2df09d67d6cb6
+== B-lightbdd-external-sut
+subject Breakfast Provider; tests Caller; scenarios 187 (sids 187); requests 378; background-section requests 0
+parties 2; edges 1; ops 74; exposes 74; messages 0; graphql-labelled calls 6; derived phases 0
+calls by cause (nesting first): test 378
+calls by origin/cause: test/test 378
+cause readings disagree: none
+behaviour bytes compact 67208, indented 102639; without scenarios compact 15710
+behaviourHash e9061a1099c0ded5bb8f4a97a7084d160efc6a914a17a36f10c1e9a5568c8a15; without scenarios 3ed25aec544f54eddf401c20826f6069ef2064643321c4786b3ae2b1df88ec1b
+== B-lightbdd-in-docker
+subject Breakfast Provider; tests Caller; scenarios 187 (sids 187); requests 1281; background-section requests 0
+parties 18; edges 20; ops 168; exposes 81; messages 22; graphql-labelled calls 8; derived phases 666
+calls by cause (nesting first): background 146, request 685, test 450
+calls by origin/cause: other/background 3, subject/background 143, subject/request 685, test/test 450
+cause readings disagree: none
+behaviour bytes compact 114168, indented 183015; without scenarios compact 49009
+behaviourHash c2f7e403a4d976072dc61ff1ed7c459977fe7930d00493104036395dfe3ace83; without scenarios 7684ae52cb953605080395af3b6175d0a3594d08229757abaaa7c8c1fc3f643e
+== B-lightbdd-in-memory
+subject Breakfast Provider; tests Caller; scenarios 187 (sids 187); requests 1379; background-section requests 0
+parties 18; edges 20; ops 179; exposes 81; messages 24; graphql-labelled calls 8; derived phases 850
+calls by cause (nesting first): background 173, request 755, test 451
+calls by origin/cause: other/background 117, subject/background 56, subject/request 755, test/test 451
+cause readings disagree: other: nesting background / attribution request (RequestHeader) x114
+behaviour bytes compact 122650, indented 196241; without scenarios compact 53654
+behaviourHash db19eede1569af317dee1c96cda07b5704443d6182aafd84478edfd5c40dcd51; without scenarios 9344c70294026088585e92d6feae1555d637d574a0f7491e4e054df03493bf6e
+== B-nunit-external-sut
+subject Breakfast Provider; tests Caller; scenarios 212 (sids 212); requests 379; background-section requests 0
+parties 2; edges 1; ops 74; exposes 74; messages 0; graphql-labelled calls 7; derived phases 0
+calls by cause (nesting first): test 379
+calls by origin/cause: test/test 379
+cause readings disagree: none
+behaviour bytes compact 67399, indented 104842; without scenarios compact 15668
+behaviourHash c74953be660c14625c6edee307f5fcf5b391f45f8faa2f08f4efa797f76ed5ef; without scenarios 0a56c2a81c29061714b437cb8f4d5e7eb2029a6e7e61d0db1dae9fd542e047c7
+== B-nunit-in-docker
+subject Breakfast Provider; tests Caller; scenarios 212 (sids 212); requests 1296; background-section requests 0
+parties 18; edges 20; ops 167; exposes 81; messages 22; graphql-labelled calls 9; derived phases 14
+calls by cause (nesting first): background 159, request 686, test 451
+calls by origin/cause: other/background 3, subject/background 156, subject/request 686, test/test 451
+cause readings disagree: none
+behaviour bytes compact 114030, indented 184383; without scenarios compact 48278
+behaviourHash a33ec0ee137b7f8652e34b0def2a7c8da64443588eb271fb3e70b4327fb8adc6; without scenarios c4fa2343aadf9468913a9ea8321d60922d5683bca80a4e5f6cd480673b008188
+== B-nunit-in-memory
+subject Breakfast Provider; tests Caller; scenarios 212 (sids 212); requests 1411; background-section requests 0
+parties 18; edges 20; ops 179; exposes 81; messages 24; graphql-labelled calls 8; derived phases 19
+calls by cause (nesting first): background 205, request 755, test 451
+calls by origin/cause: other/background 117, subject/background 88, subject/request 755, test/test 451
+cause readings disagree: other: nesting background / attribution request (RequestHeader) x114
+behaviour bytes compact 123180, indented 198565; without scenarios compact 53381
+behaviourHash f5e3717649347aeff8a3deeccdbc7e825a5b942c02f8d2f3f06d5645bc8287c4; without scenarios 1f1303a0c3b85a3517a0ff382ffff3d2a56d07843c8ec13b740fd1e61651c8b6
+== B-reqnroll-external-sut
+subject Breakfast Provider; tests Caller; scenarios 214 (sids 214); requests 363; background-section requests 0
+parties 2; edges 1; ops 73; exposes 73; messages 0; graphql-labelled calls 4; derived phases 0
+calls by cause (nesting first): test 363
+calls by origin/cause: test/test 363
+cause readings disagree: none
+behaviour bytes compact 74192, indented 118517; without scenarios compact 15465
+behaviourHash d59774962b9691cb2d1257d8f70329a5af61025fdc98eea9a62aab9bafaa3069; without scenarios f00e213df4c4e26f8047cd3e428736a94971b766d66077c6e44ab5824317cece
+== B-reqnroll-in-docker
+subject Breakfast Provider; tests Caller; scenarios 214 (sids 214); requests 1261; background-section requests 0
+parties 18; edges 20; ops 168; exposes 81; messages 22; graphql-labelled calls 8; derived phases 665
+calls by cause (nesting first): background 154, request 665, test 442
+calls by origin/cause: other/background 3, subject/background 151, subject/request 665, test/test 442
+cause readings disagree: none
+behaviour bytes compact 121195, indented 199090; without scenarios compact 48905
+behaviourHash e3f3b25c971acda90c6b6e184360f0f2542621a9c7103d9b46eabcc38d2b3480; without scenarios f8b48dc13294429f4024f3065588105bff7357e5d1c7f5f574d2f2dbe8c671df
+== B-reqnroll-in-memory
+subject Breakfast Provider; tests Caller; scenarios 214 (sids 214); requests 1355; background-section requests 0
+parties 18; edges 20; ops 179; exposes 81; messages 24; graphql-labelled calls 8; derived phases 841
+calls by cause (nesting first): background 179, request 733, test 443
+calls by origin/cause: other/background 111, subject/background 68, subject/request 733, test/test 443
+cause readings disagree: other: nesting background / attribution request (RequestHeader) x108
+behaviour bytes compact 129618, indented 212245; without scenarios compact 53567
+behaviourHash 8ce455227cfd5f148559207e90fc0a66900b017d1a9b1d9e8e966137b734e533; without scenarios a25f0976c8ec0e82ac109edc2e0d6e562dd0baf47dc54e41abc0ab82e782daa2
+== B-tunit-external-sut
+subject Breakfast Provider; tests Caller; scenarios 212 (sids 212); requests 379; background-section requests 0
+parties 2; edges 1; ops 74; exposes 74; messages 0; graphql-labelled calls 7; derived phases 0
+calls by cause (nesting first): test 379
+calls by origin/cause: test/test 379
+cause readings disagree: none
+behaviour bytes compact 65016, indented 102351; without scenarios compact 15668
+behaviourHash 9aca2700d80ca89fc4c99aa21383b06049bac981a24d9187e0005739d36bdf00; without scenarios 3891b67c018014d1fa754b8bc242d10d3a129c7a780a6033f2c9699cdd82afab
+== B-tunit-in-docker
+subject Breakfast Provider; tests Caller; scenarios 212 (sids 212); requests 1302; background-section requests 0
+parties 18; edges 20; ops 170; exposes 81; messages 22; graphql-labelled calls 9; derived phases 14
+calls by cause (nesting first): background 165, request 686, test 451
+calls by origin/cause: other/background 3, subject/background 162, subject/request 686, test/test 451
+cause readings disagree: none
+behaviour bytes compact 112514, indented 183545; without scenarios compact 49031
+behaviourHash 5ccf394342a1f7054bfc25e850eb2e0a5a7d21fd2658e0225af041b499d8fcbc; without scenarios d0e3be0f314694a9542162d338be9c0a94a3729d8c8683faf6ca2f481d48b22e
+== B-tunit-in-memory
+subject Breakfast Provider; tests Caller; scenarios 212 (sids 212); requests 1413; background-section requests 0
+parties 18; edges 20; ops 180; exposes 81; messages 24; graphql-labelled calls 8; derived phases 19
+calls by cause (nesting first): background 207, request 755, test 451
+calls by origin/cause: other/background 117, subject/background 90, subject/request 755, test/test 451
+cause readings disagree: other: nesting background / attribution request (RequestHeader) x114
+behaviour bytes compact 121065, indented 196610; without scenarios compact 53573
+behaviourHash 1f7d84287cdac2ae3e702bdeb11ea7c9c681649b24574eee5c73b275a23cd281; without scenarios 4736413e8a45dd917d63edc4f3848ab2415485d4ad32b677636d123c2213358e
+== B-xunit-external-sut
+subject Breakfast Provider; tests Caller; scenarios 212 (sids 212); requests 379; background-section requests 0
+parties 2; edges 1; ops 74; exposes 74; messages 0; graphql-labelled calls 7; derived phases 0
+calls by cause (nesting first): test 379
+calls by origin/cause: test/test 379
+cause readings disagree: none
+behaviour bytes compact 69755, indented 107090; without scenarios compact 15668
+behaviourHash e3b4a6024489fb9e78033b0e65f655307d73a772008498beff778ce286ecf13c; without scenarios 0a56c2a81c29061714b437cb8f4d5e7eb2029a6e7e61d0db1dae9fd542e047c7
+== B-xunit-in-docker
+subject Breakfast Provider; tests Caller; scenarios 212 (sids 212); requests 1299; background-section requests 0
+parties 18; edges 20; ops 168; exposes 81; messages 22; graphql-labelled calls 9; derived phases 14
+calls by cause (nesting first): background 162, request 686, test 451
+calls by origin/cause: other/background 3, subject/background 159, subject/request 686, test/test 451
+cause readings disagree: none
+behaviour bytes compact 116876, indented 187359; without scenarios compact 48749
+behaviourHash a12cc0f835694242fd62183f3ca7a172d010570bba7cea32aa1421464cc99983; without scenarios 22eaa9e247572527fafe44495c6613e0c6a60938e6a4220a2e5ea49b015e631e
+== B-xunit-in-memory
+subject Breakfast Provider; tests Caller; scenarios 212 (sids 212); requests 1409; background-section requests 0
+parties 18; edges 20; ops 179; exposes 81; messages 24; graphql-labelled calls 8; derived phases 19
+calls by cause (nesting first): background 203, request 755, test 451
+calls by origin/cause: other/background 117, subject/background 86, subject/request 755, test/test 451
+cause readings disagree: other: nesting background / attribution request (RequestHeader) x114
+behaviour bytes compact 125536, indented 200813; without scenarios compact 53381
+behaviourHash 739c6fb80eebf3616cf4e0e322759245653aa440e39f863528336605ffe6e955; without scenarios 1f1303a0c3b85a3517a0ff382ffff3d2a56d07843c8ec13b740fd1e61651c8b6
+== C-bddfy-external-sut
+subject Breakfast Provider; tests Caller; scenarios 180 (sids 180); requests 378; background-section requests 0
+parties 2; edges 1; ops 74; exposes 74; messages 0; graphql-labelled calls 6; derived phases 0
+calls by cause (nesting first): test 378
+calls by origin/cause: test/test 378
+cause readings disagree: none
+behaviour bytes compact 60457, indented 95806; without scenarios compact 15660
+behaviourHash 59667332b70daabf905e74fe2fbceaf10ad82befad2d0fce83a3010649c3d3cc; without scenarios d4666a34608b411a0e375969eba6a166364880e5c43c539e4a074d2723a0caba
+== C-bddfy-in-docker
+subject Breakfast Provider; tests Caller; scenarios 211 (sids 211); requests 1319; background-section requests 0
+parties 18; edges 20; ops 168; exposes 81; messages 22; graphql-labelled calls 18; derived phases 695
+calls by cause (nesting first): background 164, request 695, test 460
+calls by origin/cause: other/background 3, subject/background 161, subject/request 695, test/test 460
+cause readings disagree: none
+behaviour bytes compact 112753, indented 183604; without scenarios compact 48841
+behaviourHash 5865eeb3dc47a31bfce7afb1392d4bf5dafed953d29321315995a0220a775dbe; without scenarios 8332644b98b57099a6e9b39bce0e3e0584235d6f809d1e33005914b5e48046fe
+== C-bddfy-in-memory
+subject Breakfast Provider; tests Caller; scenarios 212 (sids 212); requests 1409; background-section requests 0
+parties 18; edges 20; ops 179; exposes 81; messages 24; graphql-labelled calls 8; derived phases 869
+calls by cause (nesting first): background 203, request 755, test 451
+calls by origin/cause: other/background 117, subject/background 86, subject/request 755, test/test 451
+cause readings disagree: other: nesting background / attribution request (RequestHeader) x114
+behaviour bytes compact 121622, indented 197417; without scenarios compact 53494
+behaviourHash a21a801e416a766d13041b703e491513bbc0a82f608b0ca0fd42a93d341d5b25; without scenarios 0ecdf9d25614e2e418516172ff65ffa100d92e232c7d29a4eb7c27271ca10435
+== C-lightbdd-external-sut
+subject Breakfast Provider; tests Caller; scenarios 187 (sids 187); requests 379; background-section requests 0
+parties 2; edges 1; ops 74; exposes 74; messages 0; graphql-labelled calls 7; derived phases 0
+calls by cause (nesting first): test 379
+calls by origin/cause: test/test 379
+cause readings disagree: none
+behaviour bytes compact 67218, indented 102663; without scenarios compact 15720
+behaviourHash ca850cc668c331e38e0496d769e8dfa7d39d8ad92bf9cdca5fbc5f4b6d183e3b; without scenarios b68e54b979d79c0747378914ab925f460004108e8c0b100bf6fe8ac1959a2bb3
+== C-lightbdd-in-docker
+subject Breakfast Provider; tests Caller; scenarios 187 (sids 187); requests 1283; background-section requests 0
+parties 18; edges 20; ops 168; exposes 81; messages 22; graphql-labelled calls 9; derived phases 666
+calls by cause (nesting first): background 146, request 686, test 451
+calls by origin/cause: other/background 3, subject/background 143, subject/request 686, test/test 451
+cause readings disagree: none
+behaviour bytes compact 114188, indented 183063; without scenarios compact 49029
+behaviourHash 9d7d371f64c080db9db8d7b07cccc0d8564bed345ab398598a20a20eb8fd0852; without scenarios 248f431859dd3e626f5a05bfdaf1717d42399700161a8417876e2b225282b11e
+== C-lightbdd-in-memory
+subject Breakfast Provider; tests Caller; scenarios 187 (sids 187); requests 1379; background-section requests 0
+parties 18; edges 20; ops 179; exposes 81; messages 24; graphql-labelled calls 8; derived phases 850
+calls by cause (nesting first): background 173, request 755, test 451
+calls by origin/cause: other/background 117, subject/background 56, subject/request 755, test/test 451
+cause readings disagree: other: nesting background / attribution request (RequestHeader) x114
+behaviour bytes compact 122650, indented 196241; without scenarios compact 53654
+behaviourHash db19eede1569af317dee1c96cda07b5704443d6182aafd84478edfd5c40dcd51; without scenarios 9344c70294026088585e92d6feae1555d637d574a0f7491e4e054df03493bf6e
+== C-nunit-external-sut
+subject Breakfast Provider; tests Caller; scenarios 212 (sids 212); requests 379; background-section requests 0
+parties 2; edges 1; ops 74; exposes 74; messages 0; graphql-labelled calls 7; derived phases 0
+calls by cause (nesting first): test 379
+calls by origin/cause: test/test 379
+cause readings disagree: none
+behaviour bytes compact 67399, indented 104842; without scenarios compact 15668
+behaviourHash c74953be660c14625c6edee307f5fcf5b391f45f8faa2f08f4efa797f76ed5ef; without scenarios 0a56c2a81c29061714b437cb8f4d5e7eb2029a6e7e61d0db1dae9fd542e047c7
+== C-nunit-in-docker
+subject Breakfast Provider; tests Caller; scenarios 212 (sids 212); requests 1296; background-section requests 0
+parties 18; edges 20; ops 167; exposes 81; messages 22; graphql-labelled calls 9; derived phases 14
+calls by cause (nesting first): background 159, request 686, test 451
+calls by origin/cause: other/background 3, subject/background 156, subject/request 686, test/test 451
+cause readings disagree: none
+behaviour bytes compact 114030, indented 184383; without scenarios compact 48278
+behaviourHash a33ec0ee137b7f8652e34b0def2a7c8da64443588eb271fb3e70b4327fb8adc6; without scenarios c4fa2343aadf9468913a9ea8321d60922d5683bca80a4e5f6cd480673b008188
+== C-nunit-in-memory
+subject Breakfast Provider; tests Caller; scenarios 212 (sids 212); requests 1409; background-section requests 0
+parties 18; edges 20; ops 179; exposes 81; messages 24; graphql-labelled calls 8; derived phases 19
+calls by cause (nesting first): background 203, request 755, test 451
+calls by origin/cause: other/background 117, subject/background 86, subject/request 755, test/test 451
+cause readings disagree: other: nesting background / attribution request (RequestHeader) x114
+behaviour bytes compact 123180, indented 198565; without scenarios compact 53381
+behaviourHash f5e3717649347aeff8a3deeccdbc7e825a5b942c02f8d2f3f06d5645bc8287c4; without scenarios 1f1303a0c3b85a3517a0ff382ffff3d2a56d07843c8ec13b740fd1e61651c8b6
+== C-reqnroll-external-sut
+subject Breakfast Provider; tests Caller; scenarios 214 (sids 214); requests 363; background-section requests 0
+parties 2; edges 1; ops 73; exposes 73; messages 0; graphql-labelled calls 4; derived phases 0
+calls by cause (nesting first): test 363
+calls by origin/cause: test/test 363
+cause readings disagree: none
+behaviour bytes compact 74181, indented 118506; without scenarios compact 15465
+behaviourHash 1cc80fc95b29610fa399d5e2b78673184b74cc43e487fa946ccafc094151b169; without scenarios f00e213df4c4e26f8047cd3e428736a94971b766d66077c6e44ab5824317cece
+== C-reqnroll-in-docker
+subject Breakfast Provider; tests Caller; scenarios 214 (sids 214); requests 1263; background-section requests 0
+parties 18; edges 20; ops 168; exposes 81; messages 22; graphql-labelled calls 8; derived phases 667
+calls by cause (nesting first): background 154, request 667, test 442
+calls by origin/cause: other/background 3, subject/background 151, subject/request 667, test/test 442
+cause readings disagree: none
+behaviour bytes compact 121222, indented 199137; without scenarios compact 48905
+behaviourHash dce55ae08d7639d39ea57cd38295fdac1d85d91c9f2adc007aef8513a5750705; without scenarios f8b48dc13294429f4024f3065588105bff7357e5d1c7f5f574d2f2dbe8c671df
+== C-reqnroll-in-memory
+subject Breakfast Provider; tests Caller; scenarios 214 (sids 214); requests 1355; background-section requests 0
+parties 18; edges 20; ops 179; exposes 81; messages 24; graphql-labelled calls 8; derived phases 839
+calls by cause (nesting first): background 181, request 731, test 443
+calls by origin/cause: other/background 111, subject/background 70, subject/request 731, test/test 443
+cause readings disagree: other: nesting background / attribution request (RequestHeader) x108
+behaviour bytes compact 129569, indented 212176; without scenarios compact 53567
+behaviourHash 512d107668cb6c86367878b5048587973e17147f2981d3e7c9355a976142dde7; without scenarios a25f0976c8ec0e82ac109edc2e0d6e562dd0baf47dc54e41abc0ab82e782daa2
+== C-tunit-external-sut
+subject Breakfast Provider; tests Caller; scenarios 212 (sids 212); requests 379; background-section requests 0
+parties 2; edges 1; ops 74; exposes 74; messages 0; graphql-labelled calls 7; derived phases 0
+calls by cause (nesting first): test 379
+calls by origin/cause: test/test 379
+cause readings disagree: none
+behaviour bytes compact 65016, indented 102351; without scenarios compact 15668
+behaviourHash 9aca2700d80ca89fc4c99aa21383b06049bac981a24d9187e0005739d36bdf00; without scenarios 3891b67c018014d1fa754b8bc242d10d3a129c7a780a6033f2c9699cdd82afab
+== C-tunit-in-docker
+subject Breakfast Provider; tests Caller; scenarios 212 (sids 212); requests 1301; background-section requests 0
+parties 18; edges 20; ops 170; exposes 81; messages 22; graphql-labelled calls 9; derived phases 14
+calls by cause (nesting first): background 165, request 685, test 451
+calls by origin/cause: other/background 3, subject/background 162, subject/request 685, test/test 451
+cause readings disagree: none
+behaviour bytes compact 112495, indented 183516; without scenarios compact 49031
+behaviourHash 098041071c89b10afb5c13d576d1b64509d086537028a0c08ce3d829448be100; without scenarios d0e3be0f314694a9542162d338be9c0a94a3729d8c8683faf6ca2f481d48b22e
+== C-tunit-in-memory
+subject Breakfast Provider; tests Caller; scenarios 212 (sids 212); requests 1413; background-section requests 0
+parties 18; edges 20; ops 180; exposes 81; messages 24; graphql-labelled calls 8; derived phases 19
+calls by cause (nesting first): background 207, request 755, test 451
+calls by origin/cause: other/background 117, subject/background 90, subject/request 755, test/test 451
+cause readings disagree: other: nesting background / attribution request (RequestHeader) x114
+behaviour bytes compact 121065, indented 196610; without scenarios compact 53573
+behaviourHash f0fae64d00264095d16305c955eecf695a13de6d5d721b7ace67295c9c49d8ce; without scenarios 4736413e8a45dd917d63edc4f3848ab2415485d4ad32b677636d123c2213358e
+== C-xunit-external-sut
+subject Breakfast Provider; tests Caller; scenarios 212 (sids 212); requests 378; background-section requests 0
+parties 2; edges 1; ops 74; exposes 74; messages 0; graphql-labelled calls 6; derived phases 0
+calls by cause (nesting first): test 378
+calls by origin/cause: test/test 378
+cause readings disagree: none
+behaviour bytes compact 69755, indented 107090; without scenarios compact 15668
+behaviourHash e3b4a6024489fb9e78033b0e65f655307d73a772008498beff778ce286ecf13c; without scenarios 0a56c2a81c29061714b437cb8f4d5e7eb2029a6e7e61d0db1dae9fd542e047c7
+== C-xunit-in-docker
+subject Breakfast Provider; tests Caller; scenarios 212 (sids 212); requests 1299; background-section requests 0
+parties 18; edges 20; ops 168; exposes 81; messages 22; graphql-labelled calls 9; derived phases 14
+calls by cause (nesting first): background 162, request 686, test 451
+calls by origin/cause: other/background 3, subject/background 159, subject/request 686, test/test 451
+cause readings disagree: none
+behaviour bytes compact 116876, indented 187359; without scenarios compact 48749
+behaviourHash a12cc0f835694242fd62183f3ca7a172d010570bba7cea32aa1421464cc99983; without scenarios 22eaa9e247572527fafe44495c6613e0c6a60938e6a4220a2e5ea49b015e631e
+== C-xunit-in-memory
+subject Breakfast Provider; tests Caller; scenarios 212 (sids 212); requests 1409; background-section requests 0
+parties 18; edges 20; ops 179; exposes 81; messages 24; graphql-labelled calls 8; derived phases 19
+calls by cause (nesting first): background 203, request 755, test 451
+calls by origin/cause: other/background 117, subject/background 86, subject/request 755, test/test 451
+cause readings disagree: other: nesting background / attribution request (RequestHeader) x114
+behaviour bytes compact 125536, indented 200813; without scenarios compact 53381
+behaviourHash 739c6fb80eebf3616cf4e0e322759245653aa440e39f863528336605ffe6e955; without scenarios 1f1303a0c3b85a3517a0ff382ffff3d2a56d07843c8ec13b740fd1e61651c8b6
+== jest-ingest
+subject Payments GraphQL; tests Test; scenarios 2 (sids 2); requests 8; background-section requests 0
+parties 4; edges 3; ops 6; exposes 2; messages 0; graphql-labelled calls 4; derived phases 0
+calls by cause (nesting first): request 4, test 4
+calls by origin/cause: subject/request 4, test/test 4
+cause readings disagree: none
+behaviour bytes compact 2614, indented 4911; without scenarios compact 2077
+behaviourHash c2c9cd421725628b93bbcdd3e038417a8d8a0b0122dbb1bae3cde78cda43933c; without scenarios 82464418b0846156cd8e695b09df02a7dfcd471a72b864b571b7a52b3cb06b49
+== example-ReqNRoll.xUnit3
+subject Dessert Provider; tests Caller; scenarios 10 (sids 10); requests 23; background-section requests 0
+parties 4; edges 3; ops 6; exposes 4; messages 1; graphql-labelled calls 0; derived phases 7
+calls by cause (nesting first): request 7, test 16
+calls by origin/cause: subject/request 7, test/test 16
+cause readings disagree: none
+behaviour bytes compact 4684, indented 8015; without scenarios compact 2246
+behaviourHash 475fc6af88ed880509491e7edb09ad5d13c0bd3af4f78961b2e3e2c177a387cf; without scenarios 31240985934bc55f0541d2c746d9b89aa8d15d76132133d672a194f27b0a8d04

@@ -1,0 +1,12 @@
+pairs 933; operations differ 27
+pairs by the set of (service method) kinds that differ:
+   18  ['CosmosDB Replace']
+    5  ['Spanner Rollback']
+    4  ['Breakfast Provider GET', 'MongoDB Find', 'MongoDB FindAndModify', 'MongoDB Insert']
+pairs touching each (service method):
+   18  CosmosDB Replace
+    5  Spanner Rollback
+    4  Breakfast Provider GET
+    4  MongoDB Insert
+    4  MongoDB Find
+    4  MongoDB FindAndModify

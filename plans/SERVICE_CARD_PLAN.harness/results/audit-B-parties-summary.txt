@@ -1,0 +1,52 @@
+A-bddfy-in-memory            parties 18 tests ['Caller'] underTest [('Breakfast Provider', 'inferred', 841, 568)] subjectRow 'Breakfast Provider' kinds {'unknown': 16, 'underTest': 1, 'test': 1} truncated None
+A-lightbdd-in-memory         parties 18 tests ['Caller'] underTest [('Breakfast Provider', 'inferred', 811, 568)] subjectRow 'Breakfast Provider' kinds {'unknown': 16, 'underTest': 1, 'test': 1} truncated None
+A-nunit-in-memory            parties 18 tests ['Caller'] underTest [('Breakfast Provider', 'inferred', 841, 568)] subjectRow 'Breakfast Provider' kinds {'unknown': 16, 'underTest': 1, 'test': 1} truncated None
+A-reqnroll-in-docker         parties 18 tests ['Caller'] underTest [('Breakfast Provider', 'inferred', 816, 445)] subjectRow 'Breakfast Provider' kinds {'unknown': 16, 'underTest': 1, 'test': 1} truncated None
+A-reqnroll-in-memory         parties 18 tests ['Caller'] underTest [('Breakfast Provider', 'inferred', 799, 554)] subjectRow 'Breakfast Provider' kinds {'unknown': 16, 'underTest': 1, 'test': 1} truncated None
+A-tunit-in-memory            parties 18 tests ['Caller'] underTest [('Breakfast Provider', 'inferred', 845, 568)] subjectRow 'Breakfast Provider' kinds {'unknown': 16, 'underTest': 1, 'test': 1} truncated None
+A-xunit-external-sut         parties  2 tests ['Caller'] underTest [('Breakfast Provider', 'inferred', 0, 378)] subjectRow 'Breakfast Provider' kinds {'underTest': 1, 'test': 1} truncated None
+A-xunit-in-memory            parties 18 tests ['Caller'] underTest [('Breakfast Provider', 'inferred', 841, 568)] subjectRow 'Breakfast Provider' kinds {'unknown': 16, 'underTest': 1, 'test': 1} truncated None
+B-bddfy-external-sut         parties  2 tests ['Caller'] underTest [('Breakfast Provider', 'inferred', 0, 378)] subjectRow 'Breakfast Provider' kinds {'underTest': 1, 'test': 1} truncated None
+B-bddfy-in-docker            parties 18 tests ['Caller'] underTest [('Breakfast Provider', 'inferred', 846, 453)] subjectRow 'Breakfast Provider' kinds {'unknown': 16, 'underTest': 1, 'test': 1} truncated None
+    note: ! 2 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (2) under '7f5834b661…
+B-bddfy-in-memory            parties 18 tests ['Caller'] underTest [('Breakfast Provider', 'inferred', 843, 568)] subjectRow 'Breakfast Provider' kinds {'unknown': 16, 'underTest': 1, 'test': 1} truncated None
+B-lightbdd-external-sut      parties  2 tests ['Caller'] underTest [('Breakfast Provider', 'inferred', 0, 378)] subjectRow 'Breakfast Provider' kinds {'underTest': 1, 'test': 1} truncated None
+B-lightbdd-in-docker         parties 18 tests ['Caller'] underTest [('Breakfast Provider', 'inferred', 828, 453)] subjectRow 'Breakfast Provider' kinds {'unknown': 16, 'underTest': 1, 'test': 1} truncated None
+B-lightbdd-in-memory         parties 18 tests ['Caller'] underTest [('Breakfast Provider', 'inferred', 811, 568)] subjectRow 'Breakfast Provider' kinds {'unknown': 16, 'underTest': 1, 'test': 1} truncated None
+B-nunit-external-sut         parties  2 tests ['Caller'] underTest [('Breakfast Provider', 'inferred', 0, 379)] subjectRow 'Breakfast Provider' kinds {'underTest': 1, 'test': 1} truncated None
+B-nunit-in-docker            parties 18 tests ['Caller'] underTest [('Breakfast Provider', 'inferred', 842, 454)] subjectRow 'Breakfast Provider' kinds {'unknown': 16, 'underTest': 1, 'test': 1} truncated None
+B-nunit-in-memory            parties 18 tests ['Caller'] underTest [('Breakfast Provider', 'inferred', 843, 568)] subjectRow 'Breakfast Provider' kinds {'unknown': 16, 'underTest': 1, 'test': 1} truncated None
+B-reqnroll-external-sut      parties  2 tests ['Caller'] underTest [('Breakfast Provider', 'inferred', 0, 363)] subjectRow 'Breakfast Provider' kinds {'underTest': 1, 'test': 1} truncated None
+B-reqnroll-in-docker         parties 18 tests ['Caller'] underTest [('Breakfast Provider', 'inferred', 816, 445)] subjectRow 'Breakfast Provider' kinds {'unknown': 16, 'underTest': 1, 'test': 1} truncated None
+B-reqnroll-in-memory         parties 18 tests ['Caller'] underTest [('Breakfast Provider', 'inferred', 801, 554)] subjectRow 'Breakfast Provider' kinds {'unknown': 16, 'underTest': 1, 'test': 1} truncated None
+B-tunit-external-sut         parties  2 tests ['Caller'] underTest [('Breakfast Provider', 'inferred', 0, 379)] subjectRow 'Breakfast Provider' kinds {'underTest': 1, 'test': 1} truncated None
+B-tunit-in-docker            parties 18 tests ['Caller'] underTest [('Breakfast Provider', 'inferred', 848, 454)] subjectRow 'Breakfast Provider' kinds {'unknown': 16, 'underTest': 1, 'test': 1} truncated None
+B-tunit-in-memory            parties 18 tests ['Caller'] underTest [('Breakfast Provider', 'inferred', 845, 568)] subjectRow 'Breakfast Provider' kinds {'unknown': 16, 'underTest': 1, 'test': 1} truncated None
+B-xunit-external-sut         parties  2 tests ['Caller'] underTest [('Breakfast Provider', 'inferred', 0, 379)] subjectRow 'Breakfast Provider' kinds {'underTest': 1, 'test': 1} truncated None
+B-xunit-in-docker            parties 18 tests ['Caller'] underTest [('Breakfast Provider', 'inferred', 845, 454)] subjectRow 'Breakfast Provider' kinds {'unknown': 16, 'underTest': 1, 'test': 1} truncated None
+B-xunit-in-memory            parties 18 tests ['Caller'] underTest [('Breakfast Provider', 'inferred', 841, 568)] subjectRow 'Breakfast Provider' kinds {'unknown': 16, 'underTest': 1, 'test': 1} truncated None
+C-bddfy-external-sut         parties  2 tests ['Caller'] underTest [('Breakfast Provider', 'inferred', 0, 378)] subjectRow 'Breakfast Provider' kinds {'underTest': 1, 'test': 1} truncated None
+C-bddfy-in-docker            parties 18 tests ['Caller'] underTest [('Breakfast Provider', 'inferred', 856, 463)] subjectRow 'Breakfast Provider' kinds {'unknown': 16, 'underTest': 1, 'test': 1} truncated None
+    note: ! 2 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (2) under '7f5834b661…
+C-bddfy-in-memory            parties 18 tests ['Caller'] underTest [('Breakfast Provider', 'inferred', 841, 568)] subjectRow 'Breakfast Provider' kinds {'unknown': 16, 'underTest': 1, 'test': 1} truncated None
+C-lightbdd-external-sut      parties  2 tests ['Caller'] underTest [('Breakfast Provider', 'inferred', 0, 379)] subjectRow 'Breakfast Provider' kinds {'underTest': 1, 'test': 1} truncated None
+C-lightbdd-in-docker         parties 18 tests ['Caller'] underTest [('Breakfast Provider', 'inferred', 829, 454)] subjectRow 'Breakfast Provider' kinds {'unknown': 16, 'underTest': 1, 'test': 1} truncated None
+C-lightbdd-in-memory         parties 18 tests ['Caller'] underTest [('Breakfast Provider', 'inferred', 811, 568)] subjectRow 'Breakfast Provider' kinds {'unknown': 16, 'underTest': 1, 'test': 1} truncated None
+C-nunit-external-sut         parties  2 tests ['Caller'] underTest [('Breakfast Provider', 'inferred', 0, 379)] subjectRow 'Breakfast Provider' kinds {'underTest': 1, 'test': 1} truncated None
+C-nunit-in-docker            parties 18 tests ['Caller'] underTest [('Breakfast Provider', 'inferred', 842, 454)] subjectRow 'Breakfast Provider' kinds {'unknown': 16, 'underTest': 1, 'test': 1} truncated None
+C-nunit-in-memory            parties 18 tests ['Caller'] underTest [('Breakfast Provider', 'inferred', 841, 568)] subjectRow 'Breakfast Provider' kinds {'unknown': 16, 'underTest': 1, 'test': 1} truncated None
+C-reqnroll-external-sut      parties  2 tests ['Caller'] underTest [('Breakfast Provider', 'inferred', 0, 363)] subjectRow 'Breakfast Provider' kinds {'underTest': 1, 'test': 1} truncated None
+C-reqnroll-in-docker         parties 18 tests ['Caller'] underTest [('Breakfast Provider', 'inferred', 818, 445)] subjectRow 'Breakfast Provider' kinds {'unknown': 16, 'underTest': 1, 'test': 1} truncated None
+C-reqnroll-in-memory         parties 18 tests ['Caller'] underTest [('Breakfast Provider', 'inferred', 801, 554)] subjectRow 'Breakfast Provider' kinds {'unknown': 16, 'underTest': 1, 'test': 1} truncated None
+C-tunit-external-sut         parties  2 tests ['Caller'] underTest [('Breakfast Provider', 'inferred', 0, 379)] subjectRow 'Breakfast Provider' kinds {'underTest': 1, 'test': 1} truncated None
+C-tunit-in-docker            parties 18 tests ['Caller'] underTest [('Breakfast Provider', 'inferred', 847, 454)] subjectRow 'Breakfast Provider' kinds {'unknown': 16, 'underTest': 1, 'test': 1} truncated None
+C-tunit-in-memory            parties 18 tests ['Caller'] underTest [('Breakfast Provider', 'inferred', 845, 568)] subjectRow 'Breakfast Provider' kinds {'unknown': 16, 'underTest': 1, 'test': 1} truncated None
+C-xunit-external-sut         parties  2 tests ['Caller'] underTest [('Breakfast Provider', 'inferred', 0, 378)] subjectRow 'Breakfast Provider' kinds {'underTest': 1, 'test': 1} truncated None
+C-xunit-in-docker            parties 18 tests ['Caller'] underTest [('Breakfast Provider', 'inferred', 845, 454)] subjectRow 'Breakfast Provider' kinds {'unknown': 16, 'underTest': 1, 'test': 1} truncated None
+C-xunit-in-memory            parties 18 tests ['Caller'] underTest [('Breakfast Provider', 'inferred', 841, 568)] subjectRow 'Breakfast Provider' kinds {'unknown': 16, 'underTest': 1, 'test': 1} truncated None
+example-LightBDD.xUnit3      parties  4 tests ['Caller'] underTest [('Dessert Provider', 'inferred', 4, 14)] subjectRow 'Dessert Provider' kinds {'test': 1, 'unknown': 2, 'underTest': 1} truncated None
+example-ReqNRoll.xUnit3      parties  4 tests ['Caller'] underTest [('Dessert Provider', 'inferred', 7, 16)] subjectRow 'Dessert Provider' kinds {'test': 1, 'unknown': 2, 'underTest': 1} truncated None
+example-xUnit3               parties  0 tests [] underTest [] subjectRow None kinds {} truncated None
+    note: no parties: nothing was captured for this scope
+jest-ingest                  parties  4 tests ['Test'] underTest [('Payments GraphQL', 'inferred', 4, 4)] subjectRow 'Payments GraphQL' kinds {'unknown': 2, 'underTest': 1, 'test': 1} truncated None
+    note: ! 8 interaction record(s) of earlier attempts of retried tests left out: a retried test's scenario shows its last attempt, its retry badge counting the earlier on… (×2)
