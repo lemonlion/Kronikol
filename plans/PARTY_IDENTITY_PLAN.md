@@ -11,8 +11,9 @@ every line number here is to that commit.
     higher on 5.12.0.
   - the SQL trackers: 5.11.1 (#193) replaced their address code with `Sql/SqlEndpoint.cs` (Appendix B).
 
-**Status:** ⏳ **green-lit 2026-10-27** ("Can you implement the plan in full, make sure to not interfere with any other
-sessions"), every question in section 10 answered by the owner the same day; being executed. Written by kronikol-67 at
+**Status:** ✅ **executed 2026-10-27 and 2026-10-28 as 5.13.0 (R0), 5.14.0 (R1), 5.15.0 (R2) and 5.16.0 (R3);
+#190 closed.** Green-lit 2026-10-27 ("Can you implement the plan in full, make sure to not interfere with any other
+sessions"), every question in section 10 answered by the owner the same day. Written by kronikol-67 at
 the owner's request of 2026-10-26: analyse #190 critically, then plan a fix for the underlying problem, which may not
 be the fix the issue proposes.
 
@@ -101,10 +102,12 @@ Evidence labels:
     - Declarations, observations and inference feed one resolver in core.
     - The block goes into every form of the data file, and merges.
     - A `parties` verb is added, and `serviceId` goes on the run line and into `Run.json`.
-    - A declared double is drawn with the stereotype «test double» (Q11).
+    - A declared double is drawn with the stereotype «test double» (Q11; reversed by the owner on 2026-10-28, so
+      5.16.2 draws it by its name alone).
   - **R2, a minor:** ingest's flags, the per-call `testDouble` field, and the Jest recipe.
   - **R3, a minor:** the .NET handler marks a call that code in the process answered.
-- Green-lit 2026-10-27. The owner's answers to the sixteen questions are in section 10.
+- Green-lit 2026-10-27. The owner's answers to the sixteen questions are in section 10. Executed as 5.13.0 to
+  5.16.0 (section 12).
 
 ---
 
@@ -1313,6 +1316,23 @@ Agreed by message on 2026-10-26:
     compressed-content wrapper serve the scenarios' calls. Nothing in this plan reads those bodies; #191's R1, whose
     card does, takes that on (kronikol-ed's verification of this release).
   - 12 of 12 mutations caught.
+- 2026-10-28, kronikol-67, closing the plan, after the owner asked whether it was implemented in full:
+  - Checked every release, fact, page and record of sections 6 to 8 against `origin/main`, the wiki and Kronikol4J.
+    The code, the facts and the docs were all there. Four records were not: this header still said the plan was
+    being executed, its `PLANS_STATUS.md` row still showed it in progress, `ROADMAP.md` had no placement (section
+    8), and section 7.5's compatibility check had not run on a release's own output.
+  - The check, on a report the released 5.16.0 wrote with its parties declared and four calls marked
+    (`compat/real-report.cs`), against the same file without `serviceId`, `parties` and `testDouble`
+    (`compat/strip-report.py`): 5.4.1, 5.12.1 and 5.13.0 read all seven outputs the same but for path and size.
+    5.14.0, which reads the block, differs only by R1's own additions: the summary's service line, `id` and `kind`
+    on each `services` row, and CTRF's `appName`. No tool reads `testDouble` differently
+    (`compat/results-5.16.0.txt`).
+  - BreakfastProvider moved to 5.14.0 with its parties declared (its `640c190`, at the owner's request): its 18
+    lanes passed on CI with no new failure, and its 12 in-memory and Docker lanes carry the same 16 dependency
+    names.
+  - `ROADMAP.md`: row 14.11 and D23 marked built, a register row, and an Appendix C row for what is left:
+    Kronikol4J mirrors R0 alone (Q12), and a suite's own transport at the end of a handler chain reads as a test
+    double.
 
 ---
 

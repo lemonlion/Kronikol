@@ -57,6 +57,18 @@ bash run.sh <path to kronikol> <scratch>/compat 5.11.0
 folder with `dotnet tool install Kronikol.Tool --version 5.4.1 --tool-path <scratch>/tool541`, never globally (plan
 §5.5, A1).
 
+`results-5.16.0.txt` runs the same check on a report a release wrote (plan section 7.5). `real-report.cs` writes it
+with the released Kronikol 5.16.0, its parties declared and four calls marked, and `strip-report.py` makes the base
+by taking `serviceId`, `parties` and `testDouble` out of the decoded file. The four tools (5.4.1, 5.12.1, 5.13.0 and
+5.14.0) were installed with `--tool-path` into a scratch folder.
+
+```
+dotnet run --file real-report.cs -- <scratch>/reports
+kronikol decode <scratch>/reports/TestRunReport.krkl -o <scratch>/decoded.json
+python -I strip-report.py <scratch>/decoded.json <scratch>/pair
+bash run.sh <path to kronikol> <scratch>/pair 5.4.1
+```
+
 ## sweeps/
 
 `trackers.md` records how every capturer in `src/` names its two parties (plan Appendix B). A read-only sweep made it,
