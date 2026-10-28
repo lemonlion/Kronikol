@@ -47,6 +47,9 @@ public class DeclaredDoubleDiagramTests : IDisposable
 
     private string Run(string folder, bool declared)
     {
+        // Each report draws its own diagrams: the cache keeps the last ones drawn, the class before this one's or this
+        // fact's other run, and a run that took them would compare a diagram with itself.
+        DefaultDiagramsFetcher.Reset();
         var reports = Path.Combine(_dir, folder);
         var names = new HashSet<string> { Shop, Orders, Stock };
         ReportGenerator.CreateStandardReportsWithDiagrams(

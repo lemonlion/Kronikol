@@ -1,0 +1,25 @@
+R1's mutations (ASSERTION_LABELS_PLAN section 4.3 and the behaviours added in execution), each run alone in a
+snapshot worktree of the R1 commit: the facts named must turn red. "Shouldly's argument split" was rerun after
+its first entry did not build.
+
+[links cut at every dot] CAUGHT: ['Failed!  - Failed:    15, Passed:     9, Skipped:     0, Total:    24, Duration: 197 ms - Kronikol.Tests.dll (net10.0)']
+[a link's brackets read as words] CAUGHT: ['Failed!  - Failed:    19, Passed:     5, Skipped:     0, Total:    24, Duration: 58 ms - Kronikol.Tests.dll (net10.0)']
+[a subject that is not a member path read as links] CAUGHT: ['Failed!  - Failed:     1, Passed:     5, Skipped:     0, Total:     6, Duration: 53 ms - Kronikol.Tests.dll (net10.0)']
+[a lambda subject kept as written] CAUGHT: ['Failed!  - Failed:     2, Passed:     0, Skipped:     0, Total:     2, Duration: 49 ms - Kronikol.Tests.dll (net10.0)']
+[a space kept after an opening bracket] CAUGHT: ['Failed!  - Failed:     3, Passed:    12, Skipped:     0, Total:    15, Duration: 153 ms - Kronikol.Tests.dll (net10.0)']
+[the nameof reading removed] CAUGHT: ['Failed!  - Failed:    13, Passed:     1, Skipped:     0, Total:    14, Duration: 282 ms - Kronikol.Tests.dll (net10.0)']
+[the nameof reading done before the values] CAUGHT: ['Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 56 ms - Kronikol.Tests.dll (net10.0)']
+[FluentAssertions' split by the first .Should(). anywhere] CAUGHT: ['Failed!  - Failed:     3, Passed:     1, Skipped:     0, Total:     4, Duration: 50 ms - Kronikol.Tests.dll (net10.0)']
+[.And. and .Or. read as one link each no more (Q8)] CAUGHT: ['Failed!  - Failed:     5, Passed:     5, Skipped:     0, Total:    10, Duration: 157 ms - Kronikol.Tests.dll (net10.0)']
+[the chain after the first call not read] CAUGHT: ['Failed!  - Failed:    13, Passed:     6, Skipped:     0, Total:    19, Duration: 59 ms - Kronikol.Tests.dll (net10.0)']
+[nested type arguments end at the first >] CAUGHT: ['Failed!  - Failed:     3, Passed:    40, Skipped:     0, Total:    43, Duration: 92 ms - Kronikol.Tests.dll (net10.0)']
+[the lambda head narrowed to "() => "] CAUGHT: ['Failed!  - Failed:     3, Passed:     2, Skipped:     0, Total:     5, Duration: 153 ms - Kronikol.Tests.dll (net10.0)']
+[the nested search entering a lambda] CAUGHT: ['Failed!  - Failed:     3, Passed:     1, Skipped:     0, Total:     4, Duration: 48 ms - Kronikol.Tests.dll (net10.0)']
+[the lambda brackets for a => in a literal] CAUGHT: ['Failed!  - Failed:     1, Passed:     1, Skipped:     0, Total:     2, Duration: 49 ms - Kronikol.Tests.dll (net10.0)']
+[comments kept (F12)] CAUGHT: ['Failed!  - Failed:     3, Passed:     2, Skipped:     0, Total:     5, Duration: 97 ms - Kronikol.Tests.dll (net10.0)']
+[an interpolated hole read as the string again (F13)] CAUGHT: ['Failed!  - Failed:     1, Passed:     2, Skipped:     0, Total:     3, Duration: 50 ms - Kronikol.Tests.dll (net10.0)']
+[?[ kept] CAUGHT: ['Failed!  - Failed:     1, Passed:    23, Skipped:     0, Total:    24, Duration: 49 ms - Kronikol.Tests.dll (net10.0)']
+[a member after any call follows a comma] CAUGHT: ['Failed!  - Failed:     1, Passed:    18, Skipped:     0, Total:    19, Duration: 55 ms - Kronikol.Tests.dll (net10.0)']
+[a later Shouldly call read by the generic rule] CAUGHT: ['Failed!  - Failed:     2, Passed:    17, Skipped:     0, Total:    19, Duration: 53 ms - Kronikol.Tests.dll (net10.0)']
+[a label's creole not escaped (Q9)] CAUGHT: ['Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 63 ms - Kronikol.Tests.dll (net10.0)']
+[Shouldly's argument split counting < and > again] CAUGHT: ['Failed!  - Failed:     1, Passed:     1, Skipped:     0, Total:     2, Duration: 50 ms - Kronikol.Tests.dll (net10.0)']

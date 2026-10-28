@@ -1,0 +1,30 @@
+R1 as released against the prototype (prototype.patch), every corpus through formatter/probe.cs (2026-10-28, 5.16.2 base)
+
+Labels that differ from the prototype's, by corpus:
+
+  BreakfastProvider, one-line                  0 of 1,016
+  BreakfastProvider, over lines                0 of 49
+  BreakfastProvider, joined as the weave joins 0 of 49
+  examples/                                    0 of 53
+  AutoMapper, one-line                         1 of 1,541
+  AutoMapper, over lines                       1 of 38
+  MediatR, one-line                            1 of 262
+  MediatR, over lines                          0 of 20
+  Marten, one-line                             1 of 7,523
+  Marten, over lines                           9 of 582
+  formatter/ shape files                       5 of 110 (chains 2, f6 1, edges 2)
+
+Every difference is one the release decided on purpose:
+
+  - A later Shouldly call reads by Shouldly's rule, as the first does: its type argument without brackets
+    (`..., exception should be of type TException`, the prototype `<TException>`). AutoMapper 2, MediatR 1, Marten 9.
+  - The comma before a member goes only where the chain moves on from an assertion, so after a later Shouldly call
+    too (`..., exception should be of type X, projection name should be ...`, where the prototype read
+    `... X projection name ...`). Marten 4 of the 9 above.
+  - F13: the one Marten statement with a quote inside an interpolated string's hole keeps the hole's literal as
+    written (`{string.Join("\n", stale)}`; the prototype collapsed the probe's line break inside it).
+  - Q8: `.And.` and `.Or.` read both halves: chains.txt 2, f6.txt 1 (`X should not be null and have count 2`).
+  - F12: comments are not read: edges.txt 2 (`Result should be 5`, `Result total should be expected.Total`).
+
+The third-party suites' statements are not kept (AutoMapper and MediatR are under the Lucky Penny Software licence):
+corpus/shouldly_corpora.sh fetches them again at the commits the plan measured.

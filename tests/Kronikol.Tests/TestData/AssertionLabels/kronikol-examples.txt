@@ -1,0 +1,106 @@
+# Example.Api\tests\Example.Api.Tests.CiPreview.AllFailing\Scenarios\AllFailingTests.cs
+response.StatusCode.Should().Be(HttpStatusCode.Created, "we expect 201 Created but the API returns 200 OK")
+# Example.Api\tests\Example.Api.Tests.CiPreview.AllFailing\Scenarios\AllFailingTests.cs
+response.StatusCode.Should().Be(HttpStatusCode.NotFound, "deliberately wrong expectation")
+# Example.Api\tests\Example.Api.Tests.CiPreview.AllFailing\Scenarios\AllFailingTests.cs
+response.StatusCode.Should().Be(HttpStatusCode.Conflict, "deliberately wrong expectation")
+# Example.Api\tests\Example.Api.Tests.CiPreview.AllFailing\Scenarios\AllFailingTests.cs
+response.StatusCode.Should().Be(HttpStatusCode.Unauthorized, "deliberately wrong expectation")
+# Example.Api\tests\Example.Api.Tests.CiPreview.AllFailing\Scenarios\AllFailingTests.cs
+cake!.Ingredients.Should().HaveCount(4, "deliberately wrong — only 3 ingredients exist")
+# Example.Api\tests\Example.Api.Tests.CiPreview.AllFailing\Scenarios\AllFailingTests.cs
+cake!.Ingredients.Should().Contain("Sugar", "deliberately wrong — sugar is not an ingredient")
+# Example.Api\tests\Example.Api.Tests.CiPreview.AllFailing\Scenarios\AllFailingTests.cs
+milk!.Milk.Should().BeNullOrEmpty("deliberately wrong — milk has a value")
+# Example.Api\tests\Example.Api.Tests.CiPreview.AllFailing\Scenarios\AllFailingTests.cs
+response.StatusCode.Should().Be(HttpStatusCode.Forbidden, "deliberately wrong expectation")
+# Example.Api\tests\Example.Api.Tests.CiPreview.AllFailing\Scenarios\AllFailingTests.cs
+response.StatusCode.Should().Be(HttpStatusCode.InternalServerError, "deliberately wrong expectation")
+# Example.Api\tests\Example.Api.Tests.CiPreview.AllPassing\Scenarios\AllPassingTests.cs
+response.StatusCode.Should().Be(HttpStatusCode.OK)
+# Example.Api\tests\Example.Api.Tests.CiPreview.AllPassing\Scenarios\AllPassingTests.cs
+response.StatusCode.Should().Be(HttpStatusCode.BadRequest)
+# Example.Api\tests\Example.Api.Tests.CiPreview.AllPassing\Scenarios\AllPassingTests.cs
+cake!.Ingredients.Should().HaveCount(3)
+# Example.Api\tests\Example.Api.Tests.CiPreview.AllPassing\Scenarios\AllPassingTests.cs
+milk!.Milk.Should().NotBeNullOrEmpty()
+# Example.Api\tests\Example.Api.Tests.CiPreview.AllPassing\Scenarios\AllPassingTests.cs
+flour!.Flour.Should().NotBeNullOrEmpty()
+# Example.Api\tests\Example.Api.Tests.CiPreview.FailingWithSteps\Scenarios\Dessert_Feature.steps.cs
+_cakeResponseMessage.StatusCode.Should().Be(HttpStatusCode.Conflict)
+# Example.Api\tests\Example.Api.Tests.CiPreview.FailingWithSteps\Scenarios\Dessert_Feature.steps.cs
+_cakeResponse!.Ingredients.Should().Contain("Marzipan")
+# Example.Api\tests\Example.Api.Tests.CiPreview.FailingWithSteps\Scenarios\Dessert_Feature.steps.cs
+_cakeRequest.Milk.Should().Be("Buttermilk")
+# Example.Api\tests\Example.Api.Tests.CiPreview.FailingWithSteps\Scenarios\Dessert_Feature.steps.cs
+_cakeResponseMessage!.StatusCode.Should().Be(HttpStatusCode.Conflict)
+# Example.Api\tests\Example.Api.Tests.CiPreview.FailingWithSteps\Scenarios\Dessert_Feature.steps.cs
+_cakeResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+# Example.Api\tests\Example.Api.Tests.CiPreview.FailingWithSteps\Scenarios\Dessert_Feature.steps.cs
+_cakeResponse!.Ingredients.Should().Contain(_cakeRequest.Milk)
+# Example.Api\tests\Example.Api.Tests.CiPreview.Mixed\Scenarios\NewFeatureDemoTests.cs
+response.StatusCode.Should().Be(HttpStatusCode.Created, "the API should return 201 for new resources")
+# Example.Api\tests\Example.Api.Tests.CiPreview.Mixed\Scenarios\NewFeatureDemoTests.cs
+response.StatusCode.Should().Be(HttpStatusCode.NotFound, "we expect the eggs endpoint to return 404")
+# Example.Api\tests\Example.Api.Tests.CiPreview.Mixed\Scenarios\NewFeatureDemoTests.cs
+response.StatusCode.Should().Be(HttpStatusCode.InternalServerError, "deliberately wrong — expecting server error")
+# Example.Api\tests\Example.Api.Tests.Component.BDDfy.xUnit3\Scenarios\CakeFeature.cs
+Json.IsValid(_cakeResponseString).Should().BeTrue()
+# Example.Api\tests\Example.Api.Tests.Component.BDDfy.xUnit3\Scenarios\CakeFeature.cs
+_cakeResponse!.Ingredients.Should().Contain(_milkResponse!.Milk)
+# Example.Api\tests\Example.Api.Tests.Component.BDDfy.xUnit3\Scenarios\CakeFeature.cs
+_cakeResponse.Ingredients.Should().Contain(_eggsResponse!.Eggs)
+# Example.Api\tests\Example.Api.Tests.Component.BDDfy.xUnit3\Scenarios\CakeFeature.cs
+_cakeResponse.Ingredients.Should().Contain(_flourResponse!.Flour)
+# Example.Api\tests\Example.Api.Tests.Component.BDDfy.xUnit3\Scenarios\CakeFeature.cs
+_cakeResponseMessage!.StatusCode.Should().Be(HttpStatusCode.BadRequest)
+# Example.Api\tests\Example.Api.Tests.Component.LightBDD.TUnit\Scenarios\Cake_Feature.steps.cs
+_cakeResponse!.Ingredients.Should().Contain(_milkResponse.Milk)
+# Example.Api\tests\Example.Api.Tests.Component.LightBDD.TUnit\Scenarios\Cake_Feature.steps.cs
+_cakeResponse!.Ingredients.Should().Contain(_flourResponse.Flour)
+# Example.Api\tests\Example.Api.Tests.Component.LightBDD.TUnit\Scenarios\Cake_Feature.steps.cs
+_cakeResponse!.Ingredients.Should().Contain(_eggsResponse.Eggs)
+# Example.Api\tests\Example.Api.Tests.Component.LightBDD.xUnit3\Scenarios\ParameterizedDiagnostic_Feature.cs
+recipeName.Should().NotBeNullOrEmpty()
+# Example.Api\tests\Example.Api.Tests.Component.LightBDD.xUnit3\Scenarios\ParameterizedDiagnostic_Feature.cs
+recipe.Should().NotBeNull()
+# Example.Api\tests\Example.Api.Tests.Component.LightBDD.xUnit3\Scenarios\ParameterizedDiagnostic_Feature.cs
+recipe.Ingredients.Should().NotBeNull()
+# Example.Api\tests\Example.Api.Tests.Component.LightBDD.xUnit3\Scenarios\ParameterizedDiagnostic_Feature.cs
+recipe.Baking.Should().NotBeNull()
+# Example.Api\tests\Example.Api.Tests.Component.LightBDD.xUnit3\Scenarios\ParameterizedDiagnostic_Feature.cs
+recipe.Toppings.Should().NotBeNull()
+# Example.Api\tests\Example.Api.Tests.Component.LightBDD.xUnit3\Scenarios\ParameterizedDiagnostic_Feature.cs
+expected.Should().NotBeNull()
+# Example.Api\tests\Example.Api.Tests.Component.LightBDD.xUnit3\Scenarios\ParameterizedDiagnostic_Feature.cs
+expected.ExpectedIngredientCount.Should().BeGreaterThan(0)
+# Example.Api\tests\Example.Api.Tests.Component.ReqNRoll.TUnit\StepDefinitions\CakeStepDefinitions.cs
+_cakeResponse.Ingredients.Should().Contain(_milkResponse.Milk)
+# Example.Api\tests\Example.Api.Tests.Component.ReqNRoll.TUnit\StepDefinitions\CakeStepDefinitions.cs
+_cakeResponse.Ingredients.Should().Contain(_eggsResponse.Eggs)
+# Example.Api\tests\Example.Api.Tests.Component.ReqNRoll.TUnit\StepDefinitions\CakeStepDefinitions.cs
+_cakeResponse.Ingredients.Should().Contain(_flourResponse.Flour)
+# Example.Api\tests\Example.Api.Tests.Component.ReqNRoll.xUnit3\StepDefinitions\CakeStepDefinitions.cs
+cake.Ingredients.Should().Contain(_milkResponse.Milk)
+# Example.Api\tests\Example.Api.Tests.Component.ReqNRoll.xUnit3\StepDefinitions\CakeStepDefinitions.cs
+cake.Ingredients.Should().Contain(_flourResponse.Flour)
+# Example.Api\tests\Example.Api.Tests.Component.ReqNRoll.xUnit3\StepDefinitions\MuffinsStepDefinitions.cs
+_recipeName.Should().NotBeNullOrEmpty()
+# Example.Api\tests\Example.Api.Tests.Component.ReqNRoll.xUnit3\StepDefinitions\MuffinsStepDefinitions.cs
+_flour.Should().NotBeNullOrEmpty()
+# Example.Api\tests\Example.Api.Tests.Component.ReqNRoll.xUnit3\StepDefinitions\MuffinsStepDefinitions.cs
+_appleVariety.Should().NotBeNullOrEmpty()
+# Example.Api\tests\Example.Api.Tests.Component.ReqNRoll.xUnit3\StepDefinitions\MuffinsStepDefinitions.cs
+_cinnamonType.Should().NotBeNullOrEmpty()
+# Example.Api\tests\Example.Api.Tests.Component.ReqNRoll.xUnit3\StepDefinitions\MuffinsStepDefinitions.cs
+_expectedIngredientCount.Should().BeGreaterThan(0)
+# Example.Api\tests\Example.Api.Tests.Component.ReqNRoll.xUnit3\StepDefinitions\MuffinsStepDefinitions.cs
+_toppings.Count.Should().Be(_expectedToppingCount)
+# Example.Api\tests\Example.Api.Tests.Component.ReqNRoll.xUnit3\StepDefinitions\MuffinsStepDefinitions.cs
+actual.Should().Be(expected)
+# Example.Api\tests\Example.Api.Tests.Component.xUnit3\Scenarios\ParameterizedDiagnostic_Feature.cs
+recipe.Baking.Temperature.Should().BeGreaterThan(0)
+# Example.Api\tests\Example.Api.Tests.Component.xUnit3\Scenarios\ParameterizedDiagnostic_Feature.cs
+recipe.Toppings.Should().HaveCount(expected.ExpectedToppingCount)
+# Example.Api\tests\Example.Api.Tests.Component.xUnit3\Scenarios\ParameterizedDiagnostic_Feature.cs
+expected.HasBakingInfo.Should().BeTrue()

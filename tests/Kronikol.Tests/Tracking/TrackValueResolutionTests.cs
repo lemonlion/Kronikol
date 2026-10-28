@@ -1,4 +1,5 @@
 using Kronikol.Tracking;
+using Shouldly;
 
 namespace Kronikol.Tests.Tracking;
 
@@ -345,8 +346,9 @@ public class TrackValueResolutionTests : IDisposable
     {
         var label = Label(expression, [name], [value]);
 
+        // The note escapes the creole in its code (#210, Q9): Get<int>() is written Get~<int>(), and draws as written.
         Assert.DoesNotContain("'null'", label);
-        Assert.EndsWith(" " + argumentPart, label);
+        Assert.EndsWith(" " + global::Kronikol.PlantUml.PlantUmlCreator.EscapeCreoleMarkup(argumentPart), label);
     }
 
     [Theory]
@@ -443,9 +445,40 @@ public class TrackValueResolutionTests : IDisposable
     [Fact]
     public void A_chain_inside_nameof_is_not_read()
     {
+        // nameof(…) reads as the string it makes (#210), never as the chain's value.
         var label = Label("actual.ShouldBe(nameof(expected.Colour))", ["expected"], [Expected]);
 
-        Assert.EndsWith(" should be nameof(expected.Colour)", label);
+        Assert.EndsWith(" should be 'Colour'", label);
+        Assert.DoesNotContain("Blue", label);
+    }
+
+    [Fact]
+    public void An_assertion_note_escapes_the_creole_in_its_code()
+    {
+        // A label is code, not markup anyone wrote (#210, Q9): two "" on one line drew the text between them in
+        // monospace, and a type argument <b> drew the rest bold. The note escapes them as a payload's are.
+        var label = Label("actual.Get<b>().ShouldBe(\"\" + \"\")", ["actual"], [Expected]);
+
+        Assert.Equal(global::Kronikol.PlantUml.PlantUmlCreator.EscapeCreoleMarkup("Actual get<b>() should be \"\" + \"\""), label);
+        Assert.NotEqual("Actual get<b>() should be \"\" + \"\"", label);
+    }
+
+    [Fact]
+    public void A_nameof_argument_reads_as_its_value_through_the_weave_and_Track_That()
+    {
+        // #210's W02: the weave passes no value for a constant, nor does Track.That find one in its closure, so the
+        // label read nameof's code.
+        var woven = Label("actual.ShouldBe(nameof(DayOfWeek.Monday))", ["actual"], ["Monday"]);
+
+        using var scope = TestIdentityScope.Begin(_testId, _testId);
+        var before = GetAssertionLogs().Count;
+        var actual = "Monday";
+        Track.That(() => actual.ShouldBe(nameof(DayOfWeek.Monday)));
+        var tracked = GetAssertionLogs()[before].PlantUml!.Split('\n')
+            .Single(l => l.StartsWith(Track.PassSymbol + " ", StringComparison.Ordinal));
+
+        Assert.EndsWith(" should be 'Monday'", woven);
+        Assert.EndsWith(" should be 'Monday'", tracked);
     }
 
     [Fact]

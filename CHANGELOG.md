@@ -4,6 +4,76 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.16.3] - 2026-10-28
+
+The patch part moves (5.16.2 to 5.16.3): fixes, nothing new to call. Assertion labels read differently where their
+code was misread, as each entry says; a label is report output, so no option and no file changes shape.
+
+### Fixed
+- **An assertion's subject keeps its code (#210).** The subject was cut at every dot, inside a call's brackets too, and
+  each piece split on case, so a call's arguments, an index, a type argument and a lambda read as words:
+  `result.SplitPercentage.ToString(CultureInfo.InvariantCulture)` read `Result split percentage to string( culture info
+  invariant culture)` and `result.Get<Item>().Name` `Result get< item>() name`. Only a member's name reads as words
+  now, and its brackets and type arguments are kept as written: `to string(CultureInfo.InvariantCulture)`,
+  `get<Item>()`, `count(x => x.IsActive)`, `map[Keys.Primary]`. A subject that is not a member path (an operator or a
+  cast outside brackets) is kept as written whole, and a null-conditional index reads as a null-conditional member
+  does (`items?[0]` reads `items[0]`). Three public Shouldly suites had 1,785 of 9,326 subjects rewritten this way,
+  BreakfastProvider 97 of 1,016.
+- **`nameof(…)` reads as the string it makes (#210):** `ShouldBe(nameof(CurrencyCode.GBP))` read `should be
+  nameof(CurrencyCode.GBP)`, and reads `should be 'GBP'` in every library and through `Track.That`. Inside an
+  interpolated string it stays as written.
+- **A chain reads each call with its own arguments (#210).** A chain was read as its first call's method with its last
+  call's arguments: TUnit's `IsEqualTo(10.0).Within(0.5)` read `is equal to 0.5` and `IsEqualTo("bob").IgnoringCase()`
+  `is equal to`, Shouldly's `Should.Throw<X>(…).Message.ShouldContain("boom")` `Should throw X "boom"`, and
+  FluentAssertions' `ContainKey("a").WhoseValue.Should().Be(1)` `should contain key 1`. Each link reads in order now:
+  `is equal to 10.0 within 0.5`, `Should throw X, message should contain "boom"`, `should contain key "a", whose value
+  should be 1`, and a later Shouldly call as Shouldly's first does (`…, inner exception should be of type
+  NotSupportedException`). A nested type argument list was cut at its first `>` (`should be of type <List<int>`).
+- **`.And.` and `.Or.` (#210):** they were cut wherever they stood, inside a literal or a lambda too, so
+  `Be("Rock.And.Roll")` read `should be` with its value lost; and only the first assertion of an `.And.` was read, so a
+  failing second half was labelled with the half that passed. Both halves read now: `X should not be null and have
+  count 2`, TUnit's `X is less than 3 or is greater than 9`.
+- **FluentAssertions' subject ends at its own `.Should()` (#210):** the first `.Should().` anywhere was taken, inside
+  brackets or a literal too, so `(await act.Should().ThrowAsync<T>()).Which.Message.Should().StartWith("Code: 60.")`
+  read `(await act should throw async <T>`, cut inside its own bracket.
+- **A label reads on one line (#210):** `Track.That`'s labels kept the statement's line breaks and indentation, and a
+  call's brackets kept the space a line break left (`should be ⏎ expected.Value`). Code kept as written reads on one
+  line, with no space after `(` or `[` or before `)` or `]`. A comment in a statement reached the label (`should be 5
+  /* five */`), and a quote inside an interpolated string's hole ended the string, so the rest read as code; neither
+  does now.
+- **`Track.ThatAsync`, and an assertion inside other code (#210):** only an exact `() => ` head was taken off, so
+  `async () =>` and a block body read as code; a block body reads as the assertions it holds, joined by `; `. An
+  assertion inside another call (`Console.WriteLine((await Should.ThrowAsync<T>(…)).Message)`) reads as that assertion,
+  and TUnit's lambda subject `Assert.That(() => client.GetOrderAsync(r))` as its body. An argument list holding `=>`
+  only in a literal is no longer put in lambda brackets, and Shouldly's argument split no longer reads `<` and `>` as
+  brackets, so a lambda's arrow or a comparison inside an argument no longer cuts it in two.
+- **A label's code draws as written (#210):** a diagram note's creole was live, so code holding a type argument
+  `<b>`, two `""` or two URLs' `//` on one line styled the label instead of drawing it. The note escapes a label's
+  creole as a captured payload's is; the step list shows the label as it is.
+
+### Changed
+- Labels read differently where the code above applies: over the five corpora measured (BreakfastProvider, the
+  examples, AutoMapper, MediatR and Marten), 2,330 of 10,395 one-line labels change, and none loses its sentence.
+  Nothing identifies anything by a label across runs (merge, `kronikol query diff`, history and failure clusters key on
+  other fields), so an upgrade makes no scenario look changed; a merge of shards from both sides of the release shows
+  both forms, and `kronikol query compare` lists each changed label as a difference. Reports written before keep their
+  labels.
+
+### Tests
+
+- **The labels fixed (#210)** are pinned one by one, and the corpus facts pin every label BreakfastProvider's and the
+  examples' assertions read, one-line and multi-line. The new facts fail on 5.16.2 (100 of 298), and each of 21
+  mutations of the formatter and of the note's escape fails one. `AssertionLabelPaintTests` (Playwright) reads ten
+  labels as the report paints them, code holding creole among them.
+- **`DeclaredDoubleDiagramTests` draws each of its reports from its own calls.** It reset the process-wide diagram
+  cache only when it finished, so its first report took what the class before it in the `DiagramsFetcher`
+  collection had left there, diagrams with none of its calls: the scenario had no sequence diagram, and the fact
+  failed in two whole runs of the core suite of two while passing alone. Its second report, the run that declares
+  nothing, took the first's diagrams, so the participant lines it compared were one diagram's with themselves. Each
+  report resets the cache first now. With the cache seeded before the class starts, the fact failed alone with the
+  whole run's message; with participant colours on for the declared run only, it passed before the change and
+  fails after.
+
 ## [5.16.2] - 2026-10-28
 
 The patch part moves (5.16.1 to 5.16.2): a change to what the diagrams draw, nothing new to call. It reverses part of

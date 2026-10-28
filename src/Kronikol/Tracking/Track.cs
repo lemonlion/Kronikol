@@ -353,8 +353,10 @@ public static class Track
         var color = passed ? PassColor : FailColor;
         var symbol = passed ? PassSymbol : FailSymbol;
 
-        // The note is the reader's sentence: capitalise it the way the step list is capitalised.
-        var label = Reports.StepText.CapitaliseIfEnabled(formatted) ?? formatted;
+        // The note is the reader's sentence: capitalise it the way the step list is capitalised. Its code is code, not
+        // markup anyone wrote, so its creole is escaped as a payload's is: a type argument <b>, two "" or two URLs'
+        // // on one line styled the text instead of drawing it (#210, Q9). The step list keeps the label as it is.
+        var label = PlantUml.PlantUmlCreator.EscapeCreoleMarkup(Reports.StepText.CapitaliseIfEnabled(formatted) ?? formatted);
 
         // The assertion note's body never passes through FormatNoteContent, so it is the one note class
         // that misses the unbreakable-run bound — an assertion diff quoting a token, a connection string

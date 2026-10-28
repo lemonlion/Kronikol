@@ -6,7 +6,9 @@ with Shouldly 4.3.0).
 Shouldly 4.3.0 and FluentAssertions 6.12.1, on net10.0, SDK 10.0.300, Windows 11, in Debug and in Release. Revised the
 same day on 5.14.0 (`8d7d1e1d`), which changed none of the files this plan edits: the prototype's suites, the woven probe
 and every corpus were run again there.
-**Status:** a draft, **not green-lit**. Nothing in `src/` or `tests/` is changed; the prototype is a patch in the harness.
+**Status:** **green-lit 2026-10-28** ("implement the plan in full"), every question at its recommendation: Q8 and Q9
+yes, Q7 left to #139's release as Q7 recommends. **R1 released as 5.16.3** (the Log says what execution added and
+found); R2 next.
 **Harness:** `plans/ASSERTION_LABELS_PLAN.harness/` (Appendix B).
 
 ## TL;DR
@@ -459,7 +461,8 @@ break inside a call's brackets would otherwise leave one. Literals are not touch
   `(await act.Should().ThrowAsync<T>()) which message should start with "Code: 60."`. A statement that starts with `(`
   is never touched by #212's statement-head reader (kronikol-c6, by message), so this split owns the shape.
 - `.And.` (FluentAssertions) and `.And.` and `.Or.` (TUnit) are found outside brackets and literals only. What follows
-  them is dropped, as today, unless the owner answers **Q8** yes: then it reads "and …" or "or …".
+  them is dropped, as today, unless the owner answers **Q8** yes: then it reads "and …" or "or …". (Q8 was answered
+  yes; R1 reads them as links of the chain, §3.6.)
 
 ### 3.6 The chain (R1, F10, F11)
 
@@ -483,6 +486,12 @@ that only hands the value on (`Which`, `Subject`, `And`) is not read.
 The weave captures the first call's arguments, so the value it read now shows where it belongs; a later call's
 arguments show as code. A `Should.Throw` action that is a delegate variable (`act`) is shown, as it is today when
 nothing follows the call; a lambda is not.
+
+Two readings were settled in execution, on the Shouldly corpora: the comma goes before a member that moves on from an
+assertion (the first call, a call that asserts, or what `.And.` starts), so a member further along that value's path
+follows a space (`Should throw X, errors single names single should be "Id"`, where the first rule read `errors single,
+names single`); and a later Shouldly call reads by Shouldly's own rule, as the first does
+(`…, inner exception should be of type NotSupportedException`, not `<NotSupportedException>`).
 
 ### 3.7 Other code (R1, F12 to F17)
 
@@ -616,7 +625,11 @@ keeps its expectation, and passes through F16 instead of F6's accident. Measured
 core suite failed only the two (`s1/suites-5.14.0-prototype.txt`); with F6 and F10 it failed the third too, and F16
 fixed it; on the final prototype it fails only the two again, 9,107 of 9,111 passing (`s2/suites-5.14.0-prototype.txt`).
 The audit grepped every project under `tests/`, the end-to-end suite included, and found no other expected label that
-the prototype changes.
+the prototype changes. In execution, Q8's yes turned three more facts round: the two §2.8 names
+(`AssertionExpressionFormatterTests.cs:71-75`, `:477`) and `Format_handles_multiline_expressions_with_whitespace_around_dots`
+(three rows ending in `.And`). Q9's yes changed one fact that reads a note's source
+(`TrackValueResolutionTests.A_call_after_a_path_is_not_read_as_a_member`: `Get<int>()` is written `Get~<int>()`, which
+draws as written, and copy and the search index read back).
 
 ### 4.2 R2 (`tests/Kronikol.Tests.AssertionTracking/`, through `WovenRun`, in Debug and Release)
 
@@ -789,3 +802,26 @@ with their labels and counts), `probe_local.sh` and `prototype.patch`.
     because F6 alone broke a `Track.ThatAsync` label that read by accident. #212's S18a and S23 taken from kronikol-c6.
   - R2 kept after a review of the alternative (no spill), with two fixes to the prototype. Where a label goes, and
     that nothing keys on it, mapped (§2.10). New questions Q8 and Q9.
+- 2026-10-28, kronikol-be, executed at the owner's word ("implement the plan in full"), every question at its
+  recommendation. #212 (kronikol-c6) and #211 are not being executed, so R2 follows R1 at once and they rebase onto
+  both (c6, by message).
+  - **R1, released as 5.16.3.** The prototype's formatter, written up: release comments, the helpers after the
+    library branches, and every name read as words through one helper, `NameWords`, the seam agreed with kronikol-50,
+    whose #139 R1 changes its body. Built beyond the prototype: F12 (comments; a `//` one only up to its line break,
+    since text the weave joined has none), F13 (an interpolated string's holes), Q8 (`.And.` and `.Or.` read as "and …"
+    and "or …") and Q9 (a label's creole escaped in its diagram note by `Track.LogAssertion`, the step list unchanged).
+    Settled on the Shouldly corpora: the two chain readings of §3.6's last paragraph.
+  - Found on the way: three more facts pinned an `.And.`'s first assertion (§4.1); Q9 writes a type argument's `<` as
+    `~<` in a note's source (`get~<Item>()`), which draws as written and which copy and the search index read back,
+    so one fact that read the source changed; the corpus fact's first cut read a `\n` inside a one-line statement's
+    literal as a line break. And 5.16.2's `DeclaredDoubleDiagramTests` failed in two whole runs of the core suite
+    of two, passing alone: the class before it left the diagram cache filled, so its first report had no sequence
+    diagram, and its second report took the first's, so it compared one diagram's participant lines with themselves
+    (kronikol-7b's catch). Each of its reports resets the cache first now (CHANGELOG 5.16.3, Tests).
+  - Proofs (`s3/`): the new facts red on 5.16.1 (95 of 297) and, final, on 5.16.2 (100 of 298; fact 15 there with all
+    ten labels misdrawn); fact 15 red on R1 without Q9's escape (exactly its three creole rows); the core suite 9,275
+    passed and 2 skipped, the weaver suite 406 passed and 28 skipped; 34 Playwright facts (fact 15 with
+    `ShouldlyAssertionNoteTests`, `AssertionToggleTests`, `AssertionTooltipTests` and `FilteredBlocksTests`); `release.slnf` in Release;
+    21 mutations, each caught (`s3/mutations.txt`); the woven probe on local packages, Debug and Release identical and as §3.9 says for R1 alone; and the
+    five corpora against the prototype's labels (`s3/corpora-vs-prototype.txt`): BreakfastProvider's and the
+    examples' identical, the Shouldly suites' 13 differences all of the two settled readings and F13.

@@ -1,0 +1,2032 @@
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\AppleCinnamonMuffins\Apple_Cinnamon_Muffins_Creation_Tests.cs
+_milkSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\AppleCinnamonMuffins\Apple_Cinnamon_Muffins_Creation_Tests.cs
+_eggsSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\AppleCinnamonMuffins\Apple_Cinnamon_Muffins_Creation_Tests.cs
+_flourSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\AppleCinnamonMuffins\Apple_Cinnamon_Muffins_Creation_Tests.cs
+_muffinSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.Created)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\AppleCinnamonMuffins\Apple_Cinnamon_Muffins_Creation_Tests.cs
+_muffinSteps.Response!.Ingredients.Should().Contain(_milkSteps.MilkResponse.Milk)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\AppleCinnamonMuffins\Apple_Cinnamon_Muffins_Creation_Tests.cs
+_muffinSteps.Response!.Ingredients.Should().Contain(_eggsSteps.EggsResponse.Eggs)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\AppleCinnamonMuffins\Apple_Cinnamon_Muffins_Creation_Tests.cs
+_muffinSteps.Response!.Ingredients.Should().Contain(_flourSteps.FlourResponse.Flour)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\AppleCinnamonMuffins\Apple_Cinnamon_Muffins_Creation_Tests.cs
+_muffinSteps.Response!.Ingredients.Should().Contain(MuffinDefaults.GrannySmithApples)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\AppleCinnamonMuffins\Apple_Cinnamon_Muffins_Creation_Tests.cs
+_muffinSteps.Response!.Ingredients.Should().Contain(MuffinDefaults.CeylonCinnamon)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\AppleCinnamonMuffins\Apple_Cinnamon_Muffins_Creation_Tests.cs
+_muffinSteps.Response!.Toppings.Should().HaveCount(1)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\AppleCinnamonMuffins\Apple_Cinnamon_Muffins_Creation_Tests.cs
+_muffinSteps.Response!.BakingTemperature.Should().Be(MuffinDefaults.DefaultTemperature)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\AppleCinnamonMuffins\Apple_Cinnamon_Muffins_Creation_Tests.cs
+_muffinSteps.Response!.BakingDuration.Should().Be(MuffinDefaults.DefaultDuration)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\AppleCinnamonMuffins\Apple_Cinnamon_Muffins_Creation_Tests.cs
+_muffinSteps.Response!.Ingredients.Should().HaveCount(_expected.ExpectedIngredientCount)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\AppleCinnamonMuffins\Apple_Cinnamon_Muffins_Creation_Tests.cs
+_muffinSteps.Response!.Toppings.Should().HaveCount(_expected.ExpectedToppingCount)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\AppleCinnamonMuffins\Apple_Cinnamon_Muffins_Creation_Tests.cs
+bakingTemperatureMatchesExpectation.Should().BeTrue()
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\AppleCinnamonMuffins\Apple_Cinnamon_Muffins_Creation_Tests.cs
+_actual!.ErrorMessage.Should().Contain(expectedError)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\AppleCinnamonMuffins\Apple_Cinnamon_Muffins_Creation_Tests.cs
+_actual!.ResponseStatus.Should().Be(expectedStatus)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\AuditLogs\AuditLogs_Filtering_Tests.cs
+_auditLogResponse!.StatusCode.Should().Be(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\AuditLogs\AuditLogs_Filtering_Tests.cs
+_auditLogs!.Should().OnlyContain(l => l.EntityType == AuditLogDefaults.OrderEntityType)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\AuditLogs\AuditLogs_Filtering_Tests.cs
+_auditLogs!.Should().Contain(l => l.EntityId == _orderId)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\AuditLogs\AuditLogs_Filtering_Tests.cs
+_auditLogs!.Should().BeEmpty()
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\AuditLogs\AuditLogs_Filtering_Tests.cs
+_auditLogs.Should().NotBeNullOrEmpty()
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\AuditLogs\AuditLogs_Filtering_Tests.cs
+_auditLogs!.Should().BeInDescendingOrder(l => l.Timestamp)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\AuditLogs\AuditLogs_Retrieval_Tests.cs
+_pancakeSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.Created)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\AuditLogs\AuditLogs_Retrieval_Tests.cs
+_pancakeSteps.Response.Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\AuditLogs\AuditLogs_Retrieval_Tests.cs
+_pancakeSteps.Response!.BatchId.Should().NotBeEmpty()
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\AuditLogs\AuditLogs_Retrieval_Tests.cs
+_orderSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.Created)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\AuditLogs\AuditLogs_Retrieval_Tests.cs
+_orderSteps.Response.Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\AuditLogs\AuditLogs_Retrieval_Tests.cs
+_orderSteps.Response!.OrderId.Should().NotBeEmpty()
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\AuditLogs\AuditLogs_Retrieval_Tests.cs
+_auditSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\ChefNotes\ChefNotes_Management_Tests.cs
+_postSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.Created)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\ChefNotes\ChefNotes_Management_Tests.cs
+_postSteps.Response!.RecipeName.Should().Be(_recipeName)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\ChefNotes\ChefNotes_Management_Tests.cs
+_postSteps.Response!.NoteText.Should().Be("Remember to fold the batter gently to keep it fluffy.")
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\ChefNotes\ChefNotes_Management_Tests.cs
+_postSteps.Response!.Category.Should().Be("Technique")
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\ChefNotes\ChefNotes_Management_Tests.cs
+_postSteps.Response!.NoteId.Should().NotBeNullOrEmpty()
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\ChefNotes\ChefNotes_Management_Tests.cs
+_getSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\ChefNotes\ChefNotes_Management_Tests.cs
+_getSteps.Response!.NoteId.Should().Be(_createdNoteId)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\ChefNotes\ChefNotes_Management_Tests.cs
+_getSteps.Response!.RecipeName.Should().Be(_recipeName)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\ChefNotes\ChefNotes_Management_Tests.cs
+_patchSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\ChefNotes\ChefNotes_Management_Tests.cs
+_patchSteps.Response!.NoteId.Should().Be(_createdNoteId)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\ChefNotes\ChefNotes_Management_Tests.cs
+_patchSteps.Response!.NoteText.Should().Be("Updated: Use unsalted butter for better flavour control.")
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\ChefNotes\ChefNotes_Management_Tests.cs
+_patchSteps.Response!.Category.Should().Be("Ingredients")
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\ChefNotes\ChefNotes_Management_Tests.cs
+_patchSteps.Response!.UpdatedAt.Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\ChefNotes\ChefNotes_Management_Tests.cs
+_getSteps.ListResponse!.Should().Contain(n => n.NoteId == _createdNoteId)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\ChefNotes\ChefNotes_Management_Tests.cs
+_getSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.NotFound)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\ChefNotes\ChefNotes_Management_Tests.cs
+_patchSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.NotFound)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\ChefNotes\ChefNotes_Management_Tests.cs
+_postSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.BadRequest)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\CustomerFeedback\CustomerFeedback_Alert_Tests.cs
+_publishSteps.FeedbackId.Should().NotBe(Guid.Empty)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\CustomerPreferences\CustomerPreferences_Management_Tests.cs
+_putSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\CustomerPreferences\CustomerPreferences_Management_Tests.cs
+_putSteps.Response!.PreferredMilkType.Should().Be("Oat")
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\CustomerPreferences\CustomerPreferences_Management_Tests.cs
+_putSteps.Response!.FavouriteItem.Should().Be("Blueberry Pancakes")
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\CustomerPreferences\CustomerPreferences_Management_Tests.cs
+_getSteps.Response!.CustomerId.Should().Be(_customerId)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\CustomerPreferences\CustomerPreferences_Management_Tests.cs
+_getSteps.Response!.PreferredMilkType.Should().Be("Oat")
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\CustomerPreferences\CustomerPreferences_Management_Tests.cs
+_getSteps.Response!.LikesExtraToppings.Should().BeTrue()
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\CustomerPreferences\CustomerPreferences_Management_Tests.cs
+_putSteps.Response!.PreferredMilkType.Should().Be("Almond")
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\CustomerPreferences\CustomerPreferences_Management_Tests.cs
+_putSteps.Response!.FavouriteItem.Should().Be("Belgian Waffles")
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\CustomerPreferences\CustomerPreferences_Management_Tests.cs
+_putSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.BadRequest)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\DailySpecials\DailySpecials_Idempotency_Tests.cs
+_firstConfirmationId.Should().Be(_secondConfirmationId)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\DailySpecials\DailySpecials_Idempotency_Tests.cs
+_firstConfirmationId.Should().NotBe(_secondConfirmationId)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\DailySpecials\DailySpecials_Not_Found_Tests.cs
+_postSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.NotFound)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\DailySpecials\DailySpecials_Ordering_Tests.cs
+_postSteps.Response!.SpecialId.Should().Be(DailySpecialDefaults.CinnamonSwirlId)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\DailySpecials\DailySpecials_Ordering_Tests.cs
+_postSteps.Response!.OrderConfirmationId.Should().NotBeEmpty()
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\DailySpecials\DailySpecials_Ordering_Tests.cs
+_getSteps.Response.Should().HaveCount(DailySpecialDefaults.ExpectedSpecialsCount)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\DailySpecials\DailySpecials_Ordering_Tests.cs
+_postSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.Conflict)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\DailySpecials\DailySpecials_Ordering_Tests.cs
+lemonRicottaRemainingQuantity.Should().Be(MaxOrdersPerSpecial - 1)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\DailySpecials\DailySpecials_Validation_Tests.cs
+_actual!.ErrorMessage.Should().Be(expectedError)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\EquipmentReadings\EquipmentReadings_Monitoring_Tests.cs
+_postSteps.Response!.EquipmentId.Should().Be(_equipmentId)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\EquipmentReadings\EquipmentReadings_Monitoring_Tests.cs
+_postSteps.Response!.Value.Should().Be(180.5m)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\EquipmentReadings\EquipmentReadings_Monitoring_Tests.cs
+_postSteps.Response!.ReadingId.Should().NotBeNullOrEmpty()
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\EquipmentReadings\EquipmentReadings_Monitoring_Tests.cs
+_getSteps.ListResponse!.Should().Contain(r => r.ReadingId == _createdReadingId)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\EquipmentReadings\EquipmentReadings_Monitoring_Tests.cs
+_deleteSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.NoContent)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\EquipmentReadings\EquipmentReadings_Monitoring_Tests.cs
+_getSteps.ListResponse!.Should().NotContain(r => r.ReadingId == _createdReadingId)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Feedback\Feedback_Management_Tests.cs
+_postSteps.Response!.CustomerName.Should().Be(_postSteps.Request!.CustomerName)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Feedback\Feedback_Management_Tests.cs
+_postSteps.Response!.Rating.Should().Be(4)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Feedback\Feedback_Management_Tests.cs
+_getSteps.Response!.FeedbackId.Should().Be(_createdFeedbackId)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Feedback\Feedback_Management_Tests.cs
+_getSteps.Response!.CustomerName.Should().Be(_postSteps.Response!.CustomerName)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Feedback\Feedback_Management_Tests.cs
+_getSteps.Response!.Rating.Should().Be(4)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Feedback\Feedback_Management_Tests.cs
+_getSteps.ListResponse!.Should().Contain(f => f.FeedbackId == _createdFeedbackId)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Grpc\Grpc_Order_Status_Tests.cs
+_grpcSteps.OrderStatusReply!.OrderId.Should().Be(_createdOrderId)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Grpc\Grpc_Order_Status_Tests.cs
+_grpcSteps.OrderStatusReply!.CustomerName.Should().Be(_customerName)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Grpc\Grpc_Order_Status_Tests.cs
+_grpcSteps.OrderStatusReply!.Status.Should().Be(OrderStatuses.Created)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Grpc\Grpc_Order_Status_Tests.cs
+_grpcSteps.RpcException.Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Grpc\Grpc_Order_Status_Tests.cs
+_grpcSteps.RpcException!.StatusCode.Should().Be(StatusCode.NotFound)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Grpc\Grpc_Recipe_Summary_Tests.cs
+_grpcSteps.RecipeSummaryReply!.RecipeType.Should().Be("Pancakes")
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Grpc\Grpc_Recipe_Summary_Tests.cs
+_grpcSteps.RecipeSummaryReply!.TotalBatches.Should().Be(42)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Grpc\Grpc_Recipe_Summary_Tests.cs
+_grpcSteps.RecipeSummaryReply!.CommonIngredients.Should().BeEquivalentTo(["Milk", "Flour", "Eggs"])
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Grpc\Grpc_Recipe_Summary_Tests.cs
+_grpcSteps.RecipeSummaryReply!.RecipeType.Should().Be("Waffles")
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Grpc\Grpc_Recipe_Summary_Tests.cs
+_grpcSteps.RecipeSummaryReply!.TotalBatches.Should().Be(28)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Grpc\Grpc_Recipe_Summary_Tests.cs
+_grpcSteps.RecipeSummaryReply!.CommonIngredients.Should().BeEquivalentTo(["Milk", "Flour", "Eggs", "Butter"])
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Grpc\Grpc_Recipe_Summary_Tests.cs
+_grpcSteps.RecipeSummaryReply!.RecipeType.Should().Be("Unknown")
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Grpc\Grpc_Recipe_Summary_Tests.cs
+_grpcSteps.RecipeSummaryReply!.TotalBatches.Should().Be(0)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Grpc\Grpc_Recipe_Summary_Tests.cs
+_grpcSteps.RecipeSummaryReply!.CommonIngredients.Should().BeEmpty()
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Grpc\Grpc_Stream_Order_Updates_Tests.cs
+_grpcSteps.StreamedReplies.Should().HaveCount(1)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Grpc\Grpc_Stream_Order_Updates_Tests.cs
+_grpcSteps.StreamedReplies[0].OrderId.Should().Be(_createdOrderId)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Grpc\Grpc_Stream_Order_Updates_Tests.cs
+_grpcSteps.StreamedReplies[0].CustomerName.Should().Be(_customerName)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Grpc\Grpc_Stream_Order_Updates_Tests.cs
+_grpcSteps.StreamedReplies[0].Status.Should().Be(OrderStatuses.Created)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Infrastructure\Infrastructure_Correlation_Id_Tests.cs
+responseContainsCorrelationIdHeader.Should().BeTrue()
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Infrastructure\Infrastructure_Correlation_Id_Tests.cs
+values!.First().Should().Be(_knownCorrelationId)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Infrastructure\Infrastructure_Correlation_Id_Tests.cs
+values!.First().Should().NotBeNullOrEmpty()
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Infrastructure\Infrastructure_Degraded_Health_Check_Tests.cs
+_response!.StatusCode.Should().Be(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Infrastructure\Infrastructure_Degraded_Health_Check_Tests.cs
+_result.Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Infrastructure\Infrastructure_Degraded_Health_Check_Tests.cs
+_result!.Status.Should().Be(HealthCheckStatuses.Degraded)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Infrastructure\Infrastructure_Degraded_Health_Check_Tests.cs
+_result!.Results.Should().ContainKey(HealthCheckNames.CowService)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Infrastructure\Infrastructure_Degraded_Health_Check_Tests.cs
+_result.Results[HealthCheckNames.CowService].Status.Should().Be(HealthCheckStatuses.Degraded)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Infrastructure\Infrastructure_Degraded_Health_Check_Tests.cs
+_result!.Results.Should().ContainKey(HealthCheckNames.SupplierService)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Infrastructure\Infrastructure_Degraded_Health_Check_Tests.cs
+_result.Results[HealthCheckNames.SupplierService].Status.Should().Be(HealthCheckStatuses.Degraded)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Infrastructure\Infrastructure_Downstream_Error_Health_Check_Tests.cs
+response.StatusCode.Should().Be(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Infrastructure\Infrastructure_Downstream_Error_Health_Check_Tests.cs
+_result!.Results.Should().ContainKey(HealthCheckNames.KitchenService)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Infrastructure\Infrastructure_Downstream_Error_Health_Check_Tests.cs
+kitchenEntry.Status.Should().Be(HealthCheckStatuses.Degraded)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Infrastructure\Infrastructure_Downstream_Error_Health_Check_Tests.cs
+kitchenEntry.Description.Should().Contain("503")
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Infrastructure\Infrastructure_Health_Check_Detail_Tests.cs
+_result!.Results.Should().ContainKey(checkName)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Infrastructure\Infrastructure_Health_Check_Tests.cs
+_result!.Status.Should().Be(HealthCheckStatuses.Healthy)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Infrastructure\Infrastructure_Health_Check_Tests.cs
+_result.Results.Should().ContainKey(HealthCheckNames.GoatService)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Infrastructure\Infrastructure_Health_Check_Tests.cs
+_result.Results.Should().ContainKey(HealthCheckNames.SupplierService)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Infrastructure\Infrastructure_Health_Check_Tests.cs
+_result.Results.Should().ContainKey(HealthCheckNames.KitchenService)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Infrastructure\Infrastructure_Health_Check_Tests.cs
+_result.Results.Should().ContainKey(HealthCheckNames.CosmosDb)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Infrastructure\Infrastructure_Health_Check_Tests.cs
+_result.Results.Should().ContainKey(HealthCheckNames.Kafka)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Infrastructure\Infrastructure_Heartbeat_Tests.cs
+_result!.Status.Should().Be(Documentation.HeartbeatStatus)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Infrastructure\Infrastructure_Telemetry_Tests.cs
+_logProvider.Entries.Should().Contain(e => e.Message.Contains("created for customer"))
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Infrastructure\Infrastructure_Telemetry_Tests.cs
+_logProvider.Entries.Should().Contain(e => e.Message.Contains(_customerName))
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Infrastructure\Infrastructure_Telemetry_Tests.cs
+_logProvider.Entries.Should().Contain(e => e.Message.Contains("1 items"))
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Ingredients\Ingredients_Goat_Milk_Downstream_Failure_Tests.cs
+_goatMilkSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.BadGateway)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Ingredients\Ingredients_Goat_Milk_Downstream_Failure_Tests.cs
+body.Should().Contain(DownstreamErrorMessages.GoatServiceUnavailableTitle)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Ingredients\Ingredients_Goat_Milk_Feature_Flag_Tests.cs
+_goatMilkSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.NotFound)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Ingredients\Ingredients_Goat_Milk_Feature_Flag_Tests.cs
+body.Should().Contain(DownstreamErrorMessages.FeatureDisabled)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Ingredients\Ingredients_Goat_Milk_Feature_Flag_Tests.cs
+_goatMilkSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Ingredients\Ingredients_Goat_Milk_Feature_Flag_Tests.cs
+_goatMilkSteps.GoatMilkResponse.GoatMilk.Should().Be(GoatServiceDefaults.FreshGoatMilk)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Ingredients\Ingredients_Goat_Milk_Sourcing_Tests.cs
+_goatMilkSteps.GoatMilkResponse.Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Ingredients\Ingredients_Milk_Downstream_Failure_Tests.cs
+_milkSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.BadGateway)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Ingredients\Ingredients_Milk_Downstream_Failure_Tests.cs
+milkErrorResponseBody.Should().Contain(DownstreamErrorMessages.CowServiceUnavailableTitle)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\IngredientUsage\IngredientUsage_Analytics_Tests.cs
+_postSteps.Response!.IngredientName.Should().Be(_ingredientName)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\IngredientUsage\IngredientUsage_Analytics_Tests.cs
+_postSteps.Response!.QuantityUsed.Should().Be(2.5m)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\IngredientUsage\IngredientUsage_Analytics_Tests.cs
+_postSteps.Response!.UsageId.Should().NotBeNullOrEmpty()
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\IngredientUsage\IngredientUsage_Analytics_Tests.cs
+_getSteps.ListResponse!.Should().Contain(u => u.IngredientName == _ingredientName)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\IngredientUsage\IngredientUsage_Analytics_Tests.cs
+_getSteps.SummaryResponse!.Should().Contain(s => s.IngredientName == _ingredientName)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\IngredientWaste\IngredientWaste_Tracking_Tests.cs
+_postSteps.Response!.IngredientName.Should().NotBeNullOrEmpty()
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\IngredientWaste\IngredientWaste_Tracking_Tests.cs
+_postSteps.Response!.QuantityWasted.Should().Be(0.5m)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\IngredientWaste\IngredientWaste_Tracking_Tests.cs
+_postSteps.Response!.WasteId.Should().NotBeNullOrEmpty()
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\IngredientWaste\IngredientWaste_Tracking_Tests.cs
+_postSteps.Response!.Reason.Should().Be("Expired before use")
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\IngredientWaste\IngredientWaste_Tracking_Tests.cs
+_getSteps.ListResponse!.Should().Contain(w => w.WasteId == _createdWasteId)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Inventory\Inventory_Management_Tests.cs
+_postSteps.Response!.Name.Should().Be(_postSteps.Request!.Name)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Inventory\Inventory_Management_Tests.cs
+_postSteps.Response!.Category.Should().Be("Dry Goods")
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Inventory\Inventory_Management_Tests.cs
+_getSteps.Response!.Id.Should().Be(_createdItemId)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Inventory\Inventory_Management_Tests.cs
+_getSteps.Response!.Name.Should().Be(_postSteps.Response!.Name)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Inventory\Inventory_Management_Tests.cs
+_getSteps.ListResponse!.Should().Contain(i => i.Id == _createdItemId)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Inventory\Inventory_Management_Tests.cs
+_putSteps.Response!.Category.Should().Be("Updated Category")
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Menu\Menu_Availability_Tests.cs
+_menuSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Menu\Menu_Availability_Tests.cs
+_menuSteps.Response!.Should().Contain(m => m.Name == MenuDefaults.ClassicPancakes)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Menu\Menu_Availability_Tests.cs
+_menuSteps.Response!.Should().Contain(m => m.Name == MenuDefaults.BelgianWaffles)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Menu\Menu_Availability_Tests.cs
+_menuSteps.Response!.Should().Contain(m => m.Name == MenuDefaults.GoatMilkPancakes)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Menu\Menu_Availability_Tests.cs
+_menuSteps.Response!.Should().BeInAscendingOrder(m => m.Name)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Menu\Menu_Caching_Tests.cs
+_secondMenuSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Menu\Menu_Caching_Tests.cs
+_secondMenuSteps.Response!.Should().Contain(m => m.IsAvailable)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Menu\Menu_Downstream_Failure_Tests.cs
+_menuSteps.Response!.Should().OnlyContain(m => m.IsAvailable == false)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Orders\Orders_Breakfast_Order_Tests.cs
+_orderSteps.Response!.CustomerName.Should().Be(_customerName)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Orders\Orders_Breakfast_Order_Tests.cs
+_orderSteps.Response!.Items.Should().HaveCount(1)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Orders\Orders_Breakfast_Order_Tests.cs
+orderCreatedEvents.Should().Contain(e => e.CustomerName == _customerName)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Orders\Orders_Complete_Lifecycle_Tests.cs
+_orderId.Should().NotBeEmpty()
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Orders\Orders_Complete_Lifecycle_Tests.cs
+_retrievalSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Orders\Orders_Complete_Lifecycle_Tests.cs
+_retrievalSteps.Response!.Status.Should().Be(OrderStatuses.Completed)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Orders\Orders_Complete_Lifecycle_Tests.cs
+_retrievalSteps.Response!.CustomerName.Should().Be(_customerName)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Orders\Orders_Complete_Lifecycle_Tests.cs
+_retrievalSteps.Response!.Items.Should().HaveCount(1)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Orders\Orders_Complete_Lifecycle_Tests.cs
+_retrievalSteps.Response!.TableNumber.Should().Be(4)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Orders\Orders_Complete_Lifecycle_Tests.cs
+_retrievalSteps.Response!.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromMinutes(2))
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Orders\Orders_Complete_Lifecycle_Tests.cs
+_retrievalSteps.Response!.OrderId.ToString().Should().MatchRegex(@"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Orders\Orders_Complete_Lifecycle_Tests.cs
+auditLogResponse.StatusCode.Should().Be(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Orders\Orders_Complete_Lifecycle_Tests.cs
+auditLogs.Should().Contain(l => l.EntityId == _orderId && l.Action == AuditLogDefaults.CreatedAction)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Orders\Orders_Cross_Field_Validation_Tests.cs
+_orderSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.BadRequest)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Orders\Orders_Cross_Field_Validation_Tests.cs
+orderValidationErrors.Should().Contain(e => e.Contains("cannot contain more than 2 items"))
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Orders\Orders_Kitchen_Service_Failure_Tests.cs
+_getOrderSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Orders\Orders_Order_Retrieval_Tests.cs
+_retrievalSteps.Response!.OrderId.Should().Be(_orderSteps.Response!.OrderId)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Orders\Orders_Order_Retrieval_Tests.cs
+_retrievalSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.NotFound)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Orders\Orders_Pagination_Tests.cs
+_listSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Orders\Orders_Pagination_Tests.cs
+_listSteps.Response!.Items.Should().HaveCountGreaterThanOrEqualTo(_createdOrderCount)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Orders\Orders_Pagination_Tests.cs
+_listSteps.Response!.Page.Should().Be(1)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Orders\Orders_Pagination_Tests.cs
+_listSteps.Response!.TotalCount.Should().BeGreaterThanOrEqualTo(_createdOrderCount)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Orders\Orders_Pagination_Tests.cs
+_listSteps.Response!.Items.Should().HaveCount(1)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Orders\Orders_Pagination_Tests.cs
+_listSteps.Response!.TotalPages.Should().BeGreaterThanOrEqualTo(_createdOrderCount)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Orders\Orders_Pagination_Tests.cs
+_listSteps.Response!.Page.Should().Be(2)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Orders\Orders_Pagination_Tests.cs
+_listSteps.Response!.Items.Should().BeEmpty()
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Orders\Orders_Pagination_Tests.cs
+_listSteps.Response!.TotalCount.Should().Be(0)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Orders\Orders_Rate_Limiting_Tests.cs
+_firstResponse!.StatusCode.Should().Be(HttpStatusCode.Created)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Orders\Orders_Rate_Limiting_Tests.cs
+_secondResponse!.StatusCode.Should().Be(HttpStatusCode.TooManyRequests)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Orders\Orders_Status_Transition_Tests.cs
+_patchSteps.Response!.Status.Should().Be(expectedStatus)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Orders\Orders_Status_Transition_Tests.cs
+_patchSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.Conflict)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\OrderTimings\OrderTimings_Analytics_Tests.cs
+_postSteps.Response!.Station.Should().Be(_station)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\OrderTimings\OrderTimings_Analytics_Tests.cs
+_postSteps.Response!.PrepSeconds.Should().Be(42.5m)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\OrderTimings\OrderTimings_Analytics_Tests.cs
+_postSteps.Response!.TimingId.Should().NotBeNullOrEmpty()
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\OrderTimings\OrderTimings_Analytics_Tests.cs
+_getSteps.ListResponse!.Should().Contain(t => t.TimingId == _createdTimingId)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\OrderTimings\OrderTimings_Analytics_Tests.cs
+_getSteps.SummaryResponse!.Should().Contain(s => s.Station == _station && s.TimingCount >= 1)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Pancakes\Pancakes_Content_Negotiation_Tests.cs
+_response.StatusCode.Should().Be(HttpStatusCode.UnsupportedMediaType)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Pancakes\Pancakes_Creation_Tests.cs
+_pancakeSteps.Response!.Ingredients.Should().Contain(_milkSteps.MilkResponse.Milk)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Pancakes\Pancakes_Creation_Tests.cs
+_pancakeSteps.Response!.Ingredients.Should().Contain(_eggsSteps.EggsResponse.Eggs)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Pancakes\Pancakes_Creation_Tests.cs
+_pancakeSteps.Response!.Ingredients.Should().Contain(_flourSteps.FlourResponse.Flour)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Pancakes\Pancakes_Creation_Tests.cs
+_pancakeSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.BadRequest)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Pancakes\Pancakes_Creation_Tests.cs
+body.Should().Contain(PancakeValidationMessages.MaxToppingsExceeded)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\RecipeCosts\RecipeCost_Analysis_Tests.cs
+_publishSteps.CalculationId.Should().NotBe(Guid.Empty)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\RecipeReviews\RecipeReview_Management_Tests.cs
+_postSteps.Response!.Rating.Should().Be(5)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\RecipeReviews\RecipeReview_Management_Tests.cs
+_postSteps.Response!.ReviewId.Should().NotBeNullOrEmpty()
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\RecipeReviews\RecipeReview_Management_Tests.cs
+_getSteps.Response!.ReviewId.Should().Be(_createdReviewId)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\RecipeReviews\RecipeReview_Management_Tests.cs
+_getSteps.ListResponse!.Should().Contain(r => r.ReviewId == _createdReviewId)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Reporting\Reporting_Batch_Completions_Tests.cs
+_graphQlSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Reporting\Reporting_EventGrid_Webhook_Tests.cs
+webhookResponse.StatusCode.Should().Be(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Reporting\Reporting_Order_Summaries_Tests.cs
+_graphQlSteps.OrderSummaries.Should().NotContain(o => o.OrderId == _orderId)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Reporting\Reporting_Recipe_Reports_Tests.cs
+pancakes.Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Reporting\Reporting_Recipe_Reports_Tests.cs
+pancakes!.Count.Should().BeGreaterThanOrEqualTo(2)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Reservations\Reservations_Management_Tests.cs
+_postSteps.Response!.Status.Should().Be("Confirmed")
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Reservations\Reservations_Management_Tests.cs
+_getSteps.Response!.Id.Should().Be(_createdReservationId)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Reservations\Reservations_Management_Tests.cs
+_getSteps.Response!.Status.Should().Be("Confirmed")
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Reservations\Reservations_Management_Tests.cs
+_cancelSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Reservations\Reservations_Management_Tests.cs
+_cancelSteps.Response!.Status.Should().Be("Cancelled")
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Reservations\Reservations_Management_Tests.cs
+_cancelSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.Conflict)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Reservations\Reservations_Management_Tests.cs
+_deleteResponse!.StatusCode.Should().Be(HttpStatusCode.NoContent)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\ServiceTimes\ServiceTime_Analysis_Tests.cs
+_publishSteps.OrderId.Should().NotBe(Guid.Empty)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Specifications\Specifications_Async_Api_Tests.cs
+_asyncApiResponse!.StatusCode.Should().Be(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Specifications\Specifications_Async_Api_Tests.cs
+_asyncApiJson!.RootElement.GetProperty("asyncapi").Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Specifications\Specifications_Async_Api_Tests.cs
+_asyncApiJson!.RootElement.GetProperty("info").Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Specifications\Specifications_Async_Api_Tests.cs
+_asyncApiJson!.RootElement.GetProperty("defaultContentType").Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Specifications\Specifications_Async_Api_Tests.cs
+_asyncApiJson!.RootElement.GetProperty("channels").Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Specifications\Specifications_Async_Api_Tests.cs
+_asyncApiJson!.RootElement.GetProperty("operations").Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Specifications\Specifications_Async_Api_Tests.cs
+_asyncApiJson!.RootElement.GetProperty("components").Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Specifications\Specifications_Open_Api_Scalar_UI_Tests.cs
+_scalarResponse!.StatusCode.Should().Be(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Specifications\Specifications_Open_Api_Scalar_UI_Tests.cs
+_scalarUiResponseBody.Should().Contain("<html")
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Specifications\Specifications_Open_Api_Scalar_UI_Tests.cs
+_scalarUiResponseBody.Should().Contain("scalar")
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Specifications\Specifications_Open_Api_Tests.cs
+_swaggerResponse!.StatusCode.Should().Be(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Specifications\Specifications_Open_Api_Tests.cs
+openApiResponseIsValidJson.Should().BeTrue()
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Specifications\Specifications_Open_Api_Tests.cs
+_swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.PancakesPath).Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Specifications\Specifications_Open_Api_Tests.cs
+_swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.WafflesPath).Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Specifications\Specifications_Open_Api_Tests.cs
+_swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.OrdersPath).Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Specifications\Specifications_Open_Api_Tests.cs
+_swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.OrderByIdPath).Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Specifications\Specifications_Open_Api_Tests.cs
+_swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.ToppingsPath).Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Specifications\Specifications_Open_Api_Tests.cs
+_swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.MenuPath).Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Specifications\Specifications_Open_Api_Tests.cs
+_swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.MilkPath).Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Specifications\Specifications_Open_Api_Tests.cs
+_swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.EggsPath).Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Specifications\Specifications_Open_Api_Tests.cs
+_swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.FlourPath).Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Specifications\Specifications_Open_Api_Tests.cs
+_swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.GoatMilkPath).Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Specifications\Specifications_Open_Api_Tests.cs
+_swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.AuditLogsPath).Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Staff\Staff_Management_Tests.cs
+_postSteps.Response!.Role.Should().Be("Chef")
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Staff\Staff_Management_Tests.cs
+_getSteps.Response!.Id.Should().Be(_createdMemberId)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Staff\Staff_Management_Tests.cs
+_getSteps.Response!.Role.Should().Be("Chef")
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Toppings\Toppings_Deletion_Tests.cs
+_deleteSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.NotFound)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Toppings\Toppings_Feature_Flag_Tests.cs
+_toppingsSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Toppings\Toppings_Feature_Flag_Tests.cs
+_toppingsSteps.Response!.Should().NotContain(t => t.Name == ToppingDefaults.Raspberries)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Toppings\Toppings_Feature_Flag_Tests.cs
+_toppingsSteps.Response!.Should().Contain(t => t.Name == ToppingDefaults.Raspberries)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Toppings\Toppings_Management_Tests.cs
+_getSteps.Response.Should().HaveCount(ToppingDefaults.ExpectedToppingCount)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Toppings\Toppings_Management_Tests.cs
+_getSteps.Response!.Should().Contain(t => t.Name == ToppingDefaults.Raspberries)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Toppings\Toppings_Management_Tests.cs
+_getSteps.Response!.Should().Contain(t => t.Name == ToppingDefaults.Blueberries)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Toppings\Toppings_Management_Tests.cs
+_getSteps.Response!.Should().Contain(t => t.Name == ToppingDefaults.MapleSyrup)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Toppings\Toppings_Management_Tests.cs
+_getSteps.Response!.Should().Contain(t => t.Name == ToppingDefaults.WhippedCream)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Toppings\Toppings_Management_Tests.cs
+_getSteps.Response!.Should().Contain(t => t.Name == ToppingDefaults.ChocolateChips)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Toppings\Toppings_Management_Tests.cs
+_postSteps.Response!.Name.Should().Be(ToppingDefaults.Strawberries)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Toppings\Toppings_Management_Tests.cs
+_postSteps.Response!.Category.Should().Be(ToppingDefaults.FruitCategory)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Toppings\Toppings_Update_Tests.cs
+_putSteps.Response!.ToppingId.Should().Be(KnownBlueberryToppingId)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Toppings\Toppings_Update_Tests.cs
+_putSteps.Response!.Name.Should().Be(ToppingDefaults.Strawberries)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Toppings\Toppings_Update_Tests.cs
+_putSteps.Response!.Category.Should().Be(ToppingDefaults.FruitCategory)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Toppings\Toppings_Update_Tests.cs
+_putSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.NotFound)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Waffles\Waffles_Creation_Tests.cs
+_waffleSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.Created)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Waffles\Waffles_Creation_Tests.cs
+_waffleSteps.Response!.Ingredients.Should().Contain(_milkSteps.MilkResponse.Milk)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Waffles\Waffles_Creation_Tests.cs
+_waffleSteps.Response!.Ingredients.Should().Contain(_eggsSteps.EggsResponse.Eggs)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Waffles\Waffles_Creation_Tests.cs
+_waffleSteps.Response!.Ingredients.Should().Contain(_flourSteps.FlourResponse.Flour)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Waffles\Waffles_Creation_Tests.cs
+_waffleSteps.Response!.Ingredients.Should().Contain(IngredientDefaults.UnsaltedButter)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Waffles\Waffles_Creation_Tests.cs
+_waffleSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.BadRequest)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Waffles\Waffles_Creation_Tests.cs
+body.Should().Contain(WaffleValidationMessages.MaxToppingsExceeded)
+# tests\BreakfastProvider.Tests.Component.LightBDD\Scenarios\AppleCinnamonMuffins\Apple_Cinnamon_Muffins__Creation_Feature.steps.cs
+_muffinSteps.Response!.Ingredients.Should().HaveCount(expected.ExpectedIngredientCount)
+# tests\BreakfastProvider.Tests.Component.LightBDD\Scenarios\AppleCinnamonMuffins\Apple_Cinnamon_Muffins__Creation_Feature.steps.cs
+_muffinSteps.Response!.Toppings.Should().HaveCount(expected.ExpectedToppingCount)
+# tests\BreakfastProvider.Tests.Component.LightBDD\Scenarios\AppleCinnamonMuffins\Apple_Cinnamon_Muffins__Creation_Feature.steps.cs
+responseBody.Should().Contain(error)
+# tests\BreakfastProvider.Tests.Component.LightBDD\Scenarios\AppleCinnamonMuffins\Apple_Cinnamon_Muffins__Creation_Feature.steps.cs
+_muffinSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.BadRequest)
+# tests\BreakfastProvider.Tests.Component.LightBDD\Scenarios\AuditLogs\AuditLogs__Filtering_Feature.steps.cs
+auditLogsFromDifferentTimeRange.Should().BeEmpty()
+# tests\BreakfastProvider.Tests.Component.LightBDD\Scenarios\Feedback\Feedback__Management_Feature.steps.cs
+_postSteps.Response!.CustomerName.Should().Be(_postSteps.Request.CustomerName)
+# tests\BreakfastProvider.Tests.Component.LightBDD\Scenarios\Grpc\Grpc__Order_Status_Feature.steps.cs
+_grpcSteps.OrderStatusReply!.OrderId.Should().Be(_createdOrderId.ToString())
+# tests\BreakfastProvider.Tests.Component.LightBDD\Scenarios\Grpc\Grpc__Recipe_Summary_Feature.steps.cs
+_grpcSteps.RecipeSummaryReply!.RecipeType.Should().Be(type)
+# tests\BreakfastProvider.Tests.Component.LightBDD\Scenarios\Grpc\Grpc__Recipe_Summary_Feature.steps.cs
+_grpcSteps.RecipeSummaryReply!.TotalBatches.Should().Be(count)
+# tests\BreakfastProvider.Tests.Component.LightBDD\Scenarios\Grpc\Grpc__Recipe_Summary_Feature.steps.cs
+_grpcSteps.RecipeSummaryReply!.CommonIngredients.Should().BeEquivalentTo(expected)
+# tests\BreakfastProvider.Tests.Component.LightBDD\Scenarios\Grpc\Grpc__Stream_Order_Updates_Feature.steps.cs
+_grpcSteps.StreamedReplies[0].OrderId.Should().Be(_createdOrderId.ToString())
+# tests\BreakfastProvider.Tests.Component.LightBDD\Scenarios\Infrastructure\Infrastructure__Correlation_Id_Feature.steps.cs
+firstCorrelationIdHeaderValue.Should().Be(_knownCorrelationId)
+# tests\BreakfastProvider.Tests.Component.LightBDD\Scenarios\Infrastructure\Infrastructure__Correlation_Id_Feature.steps.cs
+firstCorrelationIdHeaderValue.Should().NotBeNullOrEmpty()
+# tests\BreakfastProvider.Tests.Component.LightBDD\Scenarios\Infrastructure\Infrastructure__Degraded_Health_Check_Feature.steps.cs
+_healthResponse!.StatusCode.Should().Be(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.LightBDD\Scenarios\Infrastructure\Infrastructure__Degraded_Health_Check_Feature.steps.cs
+_healthCheckResult.Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.LightBDD\Scenarios\Infrastructure\Infrastructure__Degraded_Health_Check_Feature.steps.cs
+_healthCheckResult!.Status.Should().Be(HealthCheckStatuses.Degraded)
+# tests\BreakfastProvider.Tests.Component.LightBDD\Scenarios\Infrastructure\Infrastructure__Degraded_Health_Check_Feature.steps.cs
+_healthCheckResult!.Results.Should().ContainKey(HealthCheckNames.CowService)
+# tests\BreakfastProvider.Tests.Component.LightBDD\Scenarios\Infrastructure\Infrastructure__Degraded_Health_Check_Feature.steps.cs
+_healthCheckResult.Results[HealthCheckNames.CowService].Status.Should().Be(HealthCheckStatuses.Degraded)
+# tests\BreakfastProvider.Tests.Component.LightBDD\Scenarios\Infrastructure\Infrastructure__Degraded_Health_Check_Feature.steps.cs
+_healthCheckResult!.Results.Should().ContainKey(HealthCheckNames.SupplierService)
+# tests\BreakfastProvider.Tests.Component.LightBDD\Scenarios\Infrastructure\Infrastructure__Degraded_Health_Check_Feature.steps.cs
+_healthCheckResult.Results[HealthCheckNames.SupplierService].Status.Should().Be(HealthCheckStatuses.Degraded)
+# tests\BreakfastProvider.Tests.Component.LightBDD\Scenarios\Infrastructure\Infrastructure__Downstream_Error_Health_Check_Feature.steps.cs
+_healthCheckResult!.Results.Should().ContainKey(HealthCheckNames.KitchenService)
+# tests\BreakfastProvider.Tests.Component.LightBDD\Scenarios\Infrastructure\Infrastructure__Downstream_Error_Health_Check_Feature.steps.cs
+kitchenServiceHealthStatus.Should().Be(HealthCheckStatuses.Degraded)
+# tests\BreakfastProvider.Tests.Component.LightBDD\Scenarios\Infrastructure\Infrastructure__Downstream_Error_Health_Check_Feature.steps.cs
+kitchenServiceHealthDescription.Should().Contain("503")
+# tests\BreakfastProvider.Tests.Component.LightBDD\Scenarios\Infrastructure\Infrastructure__Health_Check_Detail_Feature.steps.cs
+_healthCheckResult!.Results.Should().ContainKey(checkName)
+# tests\BreakfastProvider.Tests.Component.LightBDD\Scenarios\Infrastructure\Infrastructure__Health_Check_Feature.steps.cs
+_healthCheckResult!.Status.Should().Be(HealthCheckStatuses.Healthy)
+# tests\BreakfastProvider.Tests.Component.LightBDD\Scenarios\Infrastructure\Infrastructure__Health_Check_Feature.steps.cs
+_healthCheckResult!.Results.Should().ContainKey(HealthCheckNames.GoatService)
+# tests\BreakfastProvider.Tests.Component.LightBDD\Scenarios\Infrastructure\Infrastructure__Health_Check_Feature.steps.cs
+_healthCheckResult!.Results.Should().ContainKey(HealthCheckNames.CosmosDb)
+# tests\BreakfastProvider.Tests.Component.LightBDD\Scenarios\Infrastructure\Infrastructure__Health_Check_Feature.steps.cs
+_healthCheckResult!.Results.Should().ContainKey(HealthCheckNames.Kafka)
+# tests\BreakfastProvider.Tests.Component.LightBDD\Scenarios\Infrastructure\Infrastructure__Heartbeat_Feature.steps.cs
+_heartbeatResponse!.StatusCode.Should().Be(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.LightBDD\Scenarios\Infrastructure\Infrastructure__Heartbeat_Feature.steps.cs
+_heartbeatResult.Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.LightBDD\Scenarios\Infrastructure\Infrastructure__Heartbeat_Feature.steps.cs
+_heartbeatResult!.Status.Should().Be(Documentation.HeartbeatStatus)
+# tests\BreakfastProvider.Tests.Component.LightBDD\Scenarios\Ingredients\Ingredients__Goat_Milk_Downstream_Failure_Feature.steps.cs
+goatMilkErrorResponseBody.Should().Contain(DownstreamErrorMessages.GoatServiceUnavailableTitle)
+# tests\BreakfastProvider.Tests.Component.LightBDD\Scenarios\Ingredients\Ingredients__Goat_Milk_Feature_Flag_Feature.steps.cs
+goatMilkFeatureDisabledResponseBody.Should().Contain(DownstreamErrorMessages.FeatureDisabled)
+# tests\BreakfastProvider.Tests.Component.LightBDD\Scenarios\Inventory\Inventory__Management_Feature.steps.cs
+_postSteps.Response!.Name.Should().Be(_postSteps.Request.Name)
+# tests\BreakfastProvider.Tests.Component.LightBDD\Scenarios\Orders\Orders__Complete_Lifecycle_Feature.steps.cs
+_auditLogResponse.StatusCode.Should().Be(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.LightBDD\Scenarios\Orders\Orders__Complete_Lifecycle_Feature.steps.cs
+_auditLogs!.Should().Contain(l => l.EntityId == _orderId && l.Action == AuditLogDefaults.CreatedAction)
+# tests\BreakfastProvider.Tests.Component.LightBDD\Scenarios\Orders\Orders__Status_Transition_Feature.steps.cs
+_patchSteps.Response!.Status.Should().Be(status)
+# tests\BreakfastProvider.Tests.Component.LightBDD\Scenarios\Pancakes\Pancakes__Content_Negotiation_Feature.steps.cs
+_response!.StatusCode.Should().Be(HttpStatusCode.UnsupportedMediaType)
+# tests\BreakfastProvider.Tests.Component.LightBDD\Scenarios\Pancakes\Pancakes__Creation_Feature.steps.cs
+pancakeErrorResponseBody.Should().Contain(PancakeValidationMessages.MaxToppingsExceeded)
+# tests\BreakfastProvider.Tests.Component.LightBDD\Scenarios\Reporting\Reporting__EventGrid_Webhook_Feature.steps.cs
+_webhookResponse!.StatusCode.Should().Be(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.LightBDD\Scenarios\Specifications\Specifications__Async_Api_Feature.steps.cs
+_asyncApiJson!.RootElement.GetProperty(name).Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.LightBDD\Scenarios\Specifications\Specifications__Open_Api_Feature.steps.cs
+_swaggerJson!.RootElement.GetProperty("paths").GetProperty(path).Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.LightBDD\Scenarios\Specifications\Specifications__Open_Api_Scalar_UI_Feature.steps.cs
+scalarUiResponseBody.Should().Contain("<html")
+# tests\BreakfastProvider.Tests.Component.LightBDD\Scenarios\Specifications\Specifications__Open_Api_Scalar_UI_Feature.steps.cs
+scalarUiResponseBody.Should().Contain("scalar")
+# tests\BreakfastProvider.Tests.Component.LightBDD\Scenarios\Waffles\Waffles__Creation_Feature.steps.cs
+waffleErrorResponseBody.Should().Contain(WaffleValidationMessages.MaxToppingsExceeded)
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\AppleCinnamonMuffins\Apple_Cinnamon_Muffins_Creation_Tests.cs
+actual.ErrorMessage.Should().Contain(expectedError)
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\AppleCinnamonMuffins\Apple_Cinnamon_Muffins_Creation_Tests.cs
+actual.ResponseStatus.Should().Be(expectedStatus)
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\AuditLogs\AuditLogs_Filtering_Tests.cs
+auditLogs.Should().BeEmpty()
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\ChefNotes\ChefNotes_Management_Tests.cs
+_postSteps.Response!.RecipeName.Should().Be(recipeName)
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\ChefNotes\ChefNotes_Management_Tests.cs
+_getSteps.Response!.NoteId.Should().Be(createdNoteId)
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\ChefNotes\ChefNotes_Management_Tests.cs
+_getSteps.Response!.RecipeName.Should().Be(recipeName)
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\ChefNotes\ChefNotes_Management_Tests.cs
+_patchSteps.Response!.NoteId.Should().Be(createdNoteId)
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\ChefNotes\ChefNotes_Management_Tests.cs
+_getSteps.ListResponse!.Should().Contain(n => n.NoteId == createdNoteId)
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\CustomerPreferences\CustomerPreferences_Management_Tests.cs
+_getSteps.Response!.CustomerId.Should().Be(customerId)
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\DailySpecials\DailySpecials_Validation_Tests.cs
+actual.ErrorMessage.Should().Be(expectedError)
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\EquipmentReadings\EquipmentReadings_Monitoring_Tests.cs
+_postSteps.Response!.EquipmentId.Should().Be(equipmentId)
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\EquipmentReadings\EquipmentReadings_Monitoring_Tests.cs
+_getSteps.ListResponse!.Should().Contain(r => r.ReadingId == createdReadingId)
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\EquipmentReadings\EquipmentReadings_Monitoring_Tests.cs
+_getSteps.ListResponse!.Should().NotContain(r => r.ReadingId == createdReadingId)
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\Feedback\Feedback_Management_Tests.cs
+_getSteps.Response!.FeedbackId.Should().Be(createdFeedbackId)
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\Feedback\Feedback_Management_Tests.cs
+_getSteps.ListResponse!.Should().Contain(f => f.FeedbackId == createdFeedbackId)
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\Grpc\Grpc_Order_Status_Tests.cs
+_grpcSteps.OrderStatusReply!.OrderId.Should().Be(createdOrderId.ToString())
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\Grpc\Grpc_Stream_Order_Updates_Tests.cs
+_grpcSteps.StreamedReplies[0].OrderId.Should().Be(createdOrderId.ToString())
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\Infrastructure\Infrastructure_Correlation_Id_Tests.cs
+firstCorrelationIdHeaderValue.Should().Be(knownCorrelationId)
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\Infrastructure\Infrastructure_Degraded_Health_Check_Tests.cs
+result.Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\Infrastructure\Infrastructure_Degraded_Health_Check_Tests.cs
+result.Status.Should().Be(HealthCheckStatuses.Degraded)
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\Infrastructure\Infrastructure_Degraded_Health_Check_Tests.cs
+result.Results.Should().ContainKey(HealthCheckNames.CowService)
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\Infrastructure\Infrastructure_Degraded_Health_Check_Tests.cs
+result.Results[HealthCheckNames.CowService].Status.Should().Be(HealthCheckStatuses.Degraded)
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\Infrastructure\Infrastructure_Degraded_Health_Check_Tests.cs
+result.Results.Should().ContainKey(HealthCheckNames.SupplierService)
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\Infrastructure\Infrastructure_Degraded_Health_Check_Tests.cs
+result.Results[HealthCheckNames.SupplierService].Status.Should().Be(HealthCheckStatuses.Degraded)
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\Infrastructure\Infrastructure_Downstream_Error_Health_Check_Tests.cs
+result.Results.Should().ContainKey(HealthCheckNames.KitchenService)
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\Infrastructure\Infrastructure_Health_Check_Detail_Tests.cs
+result.Results.Should().ContainKey(checkName)
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\Infrastructure\Infrastructure_Health_Check_Tests.cs
+result.Status.Should().Be(HealthCheckStatuses.Healthy)
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\Infrastructure\Infrastructure_Health_Check_Tests.cs
+result.Results.Should().ContainKey(HealthCheckNames.GoatService)
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\Infrastructure\Infrastructure_Health_Check_Tests.cs
+result.Results.Should().ContainKey(HealthCheckNames.CosmosDb)
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\Infrastructure\Infrastructure_Health_Check_Tests.cs
+result.Results.Should().ContainKey(HealthCheckNames.Kafka)
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\Infrastructure\Infrastructure_Heartbeat_Tests.cs
+result!.Status.Should().Be(Documentation.HeartbeatStatus)
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\Infrastructure\Infrastructure_Telemetry_Tests.cs
+pancakeSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.Created)
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\Infrastructure\Infrastructure_Telemetry_Tests.cs
+orderSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.Created)
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\Infrastructure\Infrastructure_Telemetry_Tests.cs
+_logProvider.Entries.Should().Contain(e => e.Message.Contains(customerName))
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\IngredientUsage\IngredientUsage_Analytics_Tests.cs
+_postSteps.Response!.IngredientName.Should().Be(_postSteps.Request.IngredientName)
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\IngredientUsage\IngredientUsage_Analytics_Tests.cs
+_getSteps.ListResponse!.Should().Contain(u => u.UsageId == createdUsageId)
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\IngredientUsage\IngredientUsage_Analytics_Tests.cs
+_getSteps.SummaryResponse!.Should().Contain(s => s.IngredientName == ingredientName)
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\IngredientWaste\IngredientWaste_Tracking_Tests.cs
+_getSteps.ListResponse!.Should().Contain(w => w.WasteId == createdWasteId)
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\Inventory\Inventory_Management_Tests.cs
+_getSteps.Response!.Id.Should().Be(createdItemId)
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\Inventory\Inventory_Management_Tests.cs
+_getSteps.ListResponse!.Should().Contain(i => i.Id == createdItemId)
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\Orders\Orders_Rate_Limiting_Tests.cs
+firstResponse!.StatusCode.Should().Be(HttpStatusCode.Created)
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\Orders\Orders_Rate_Limiting_Tests.cs
+secondResponse!.StatusCode.Should().Be(HttpStatusCode.TooManyRequests)
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\Orders\Orders_Status_Transition_Tests.cs
+_patchSteps.Response!.Status.Should().Be(toStatus)
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\OrderTimings\OrderTimings_Analytics_Tests.cs
+_postSteps.Response!.Station.Should().Be(station)
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\OrderTimings\OrderTimings_Analytics_Tests.cs
+_getSteps.ListResponse!.Should().Contain(t => t.TimingId == createdTimingId)
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\OrderTimings\OrderTimings_Analytics_Tests.cs
+_getSteps.SummaryResponse!.Should().Contain(s => s.Station == station && s.TimingCount >= 1)
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\Pancakes\Pancakes_Content_Negotiation_Tests.cs
+response.StatusCode.Should().Be(HttpStatusCode.UnsupportedMediaType)
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\RecipeReviews\RecipeReview_Management_Tests.cs
+_postSteps.Response!.RecipeName.Should().Be("Fluffy Pancakes")
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\RecipeReviews\RecipeReview_Management_Tests.cs
+_getSteps.Response!.ReviewId.Should().Be(createdReviewId)
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\RecipeReviews\RecipeReview_Management_Tests.cs
+_getSteps.Response!.RecipeName.Should().Be("Classic Waffles")
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\RecipeReviews\RecipeReview_Management_Tests.cs
+_getSteps.ListResponse!.Should().Contain(r => r.ReviewId == createdReviewId)
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\Reservations\Reservations_Management_Tests.cs
+_getSteps.Response!.Id.Should().Be(createdReservationId)
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\Reservations\Reservations_Management_Tests.cs
+deleteResponse.StatusCode.Should().Be(HttpStatusCode.NoContent)
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\Specifications\Specifications_Async_Api_Tests.cs
+asyncApiResponse!.StatusCode.Should().Be(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\Specifications\Specifications_Async_Api_Tests.cs
+asyncApiJson!.RootElement.GetProperty("asyncapi").Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\Specifications\Specifications_Async_Api_Tests.cs
+asyncApiJson!.RootElement.GetProperty("info").Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\Specifications\Specifications_Async_Api_Tests.cs
+asyncApiJson!.RootElement.GetProperty("defaultContentType").Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\Specifications\Specifications_Async_Api_Tests.cs
+asyncApiJson!.RootElement.GetProperty("channels").Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\Specifications\Specifications_Async_Api_Tests.cs
+asyncApiJson!.RootElement.GetProperty("operations").Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\Specifications\Specifications_Async_Api_Tests.cs
+asyncApiJson!.RootElement.GetProperty("components").Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\Specifications\Specifications_Open_Api_Scalar_UI_Tests.cs
+scalarResponse.StatusCode.Should().Be(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\Specifications\Specifications_Open_Api_Tests.cs
+swaggerResponse.StatusCode.Should().Be(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\Specifications\Specifications_Open_Api_Tests.cs
+swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.PancakesPath).Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\Specifications\Specifications_Open_Api_Tests.cs
+swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.WafflesPath).Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\Specifications\Specifications_Open_Api_Tests.cs
+swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.OrdersPath).Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\Specifications\Specifications_Open_Api_Tests.cs
+swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.OrderByIdPath).Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\Specifications\Specifications_Open_Api_Tests.cs
+swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.ToppingsPath).Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\Specifications\Specifications_Open_Api_Tests.cs
+swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.MenuPath).Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\Specifications\Specifications_Open_Api_Tests.cs
+swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.MilkPath).Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\Specifications\Specifications_Open_Api_Tests.cs
+swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.EggsPath).Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\Specifications\Specifications_Open_Api_Tests.cs
+swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.FlourPath).Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\Specifications\Specifications_Open_Api_Tests.cs
+swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.GoatMilkPath).Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\Specifications\Specifications_Open_Api_Tests.cs
+swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.AuditLogsPath).Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\Staff\Staff_Management_Tests.cs
+_getSteps.Response!.Id.Should().Be(createdMemberId)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\SharedSteps.cs
+milkSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\SharedSteps.cs
+eggsSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\SharedSteps.cs
+flourSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\SharedSteps.cs
+pancakeSteps.Response.Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\SharedSteps.cs
+pancakeSteps.Response!.BatchId.Should().NotBeEmpty()
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\AppleCinnamonMuffins\MuffinCreationSteps.cs
+muffinSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.Created)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\AppleCinnamonMuffins\MuffinCreationSteps.cs
+muffinSteps.Response!.Ingredients.Should().Contain(milkSteps.MilkResponse.Milk)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\AppleCinnamonMuffins\MuffinCreationSteps.cs
+muffinSteps.Response!.Ingredients.Should().Contain(eggsSteps.EggsResponse.Eggs)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\AppleCinnamonMuffins\MuffinCreationSteps.cs
+muffinSteps.Response!.Ingredients.Should().Contain(flourSteps.FlourResponse.Flour)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\AppleCinnamonMuffins\MuffinCreationSteps.cs
+muffinSteps.Response!.Ingredients.Should().Contain(MuffinDefaults.GrannySmithApples)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\AppleCinnamonMuffins\MuffinCreationSteps.cs
+muffinSteps.Response!.Ingredients.Should().Contain(MuffinDefaults.CeylonCinnamon)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\AppleCinnamonMuffins\MuffinCreationSteps.cs
+muffinSteps.Response!.Toppings.Should().HaveCount(1)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\AppleCinnamonMuffins\MuffinCreationSteps.cs
+muffinSteps.Response!.BakingTemperature.Should().Be(MuffinDefaults.DefaultTemperature)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\AppleCinnamonMuffins\MuffinCreationSteps.cs
+muffinSteps.Response!.BakingDuration.Should().Be(MuffinDefaults.DefaultDuration)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\AppleCinnamonMuffins\MuffinCreationSteps.cs
+muffinSteps.Response!.Ingredients.Should().HaveCount(expectedCount)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\AppleCinnamonMuffins\MuffinCreationSteps.cs
+muffinSteps.Response!.Toppings.Should().HaveCount(expectedCount)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\AppleCinnamonMuffins\MuffinCreationSteps.cs
+muffinSteps.Response!.BakingTemperature.Should().BeGreaterThan(0)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\AppleCinnamonMuffins\MuffinCreationSteps.cs
+responseBody.Should().Contain(errorMessage)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\AppleCinnamonMuffins\MuffinCreationSteps.cs
+muffinSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.BadRequest)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\AuditLogs\AuditLogSteps.cs
+orderSteps.Response!.OrderId.Should().NotBeEmpty()
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\AuditLogs\AuditLogSteps.cs
+auditSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\ChefNotes\ChefNotesManagementSteps.cs
+postSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.Created)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\ChefNotes\ChefNotesManagementSteps.cs
+postSteps.Response!.RecipeName.Should().Be(_recipeName)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\ChefNotes\ChefNotesManagementSteps.cs
+postSteps.Response!.NoteText.Should().Be("Remember to fold the batter gently to keep it fluffy.")
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\ChefNotes\ChefNotesManagementSteps.cs
+postSteps.Response!.Category.Should().Be("Technique")
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\ChefNotes\ChefNotesManagementSteps.cs
+postSteps.Response!.NoteId.Should().NotBeNullOrEmpty()
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\ChefNotes\ChefNotesManagementSteps.cs
+getSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\ChefNotes\ChefNotesManagementSteps.cs
+getSteps.Response!.NoteId.Should().Be(_createdNoteId)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\ChefNotes\ChefNotesManagementSteps.cs
+getSteps.Response!.RecipeName.Should().Be(_recipeName)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\ChefNotes\ChefNotesManagementSteps.cs
+patchSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\ChefNotes\ChefNotesManagementSteps.cs
+patchSteps.Response!.NoteId.Should().Be(_createdNoteId)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\ChefNotes\ChefNotesManagementSteps.cs
+patchSteps.Response!.NoteText.Should().Be("Updated: Use unsalted butter for better flavour control.")
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\ChefNotes\ChefNotesManagementSteps.cs
+patchSteps.Response!.Category.Should().Be("Ingredients")
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\ChefNotes\ChefNotesManagementSteps.cs
+patchSteps.Response!.UpdatedAt.Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\ChefNotes\ChefNotesManagementSteps.cs
+getSteps.ListResponse!.Should().Contain(n => n.NoteId == _createdNoteId)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\ChefNotes\ChefNotesManagementSteps.cs
+getSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.NotFound)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\ChefNotes\ChefNotesManagementSteps.cs
+patchSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.NotFound)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\ChefNotes\ChefNotesManagementSteps.cs
+postSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.BadRequest)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\CustomerFeedback\CustomerFeedbackAlertSteps.cs
+publishSteps.FeedbackId.Should().NotBe(Guid.Empty)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\CustomerPreferences\CustomerPreferencesManagementSteps.cs
+putSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\CustomerPreferences\CustomerPreferencesManagementSteps.cs
+putSteps.Response!.PreferredMilkType.Should().Be("Oat")
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\CustomerPreferences\CustomerPreferencesManagementSteps.cs
+putSteps.Response!.FavouriteItem.Should().Be("Blueberry Pancakes")
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\CustomerPreferences\CustomerPreferencesManagementSteps.cs
+getSteps.Response!.CustomerId.Should().Be(_customerId)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\CustomerPreferences\CustomerPreferencesManagementSteps.cs
+getSteps.Response!.PreferredMilkType.Should().Be("Oat")
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\CustomerPreferences\CustomerPreferencesManagementSteps.cs
+getSteps.Response!.LikesExtraToppings.Should().BeTrue()
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\CustomerPreferences\CustomerPreferencesManagementSteps.cs
+putSteps.Response!.PreferredMilkType.Should().Be("Almond")
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\CustomerPreferences\CustomerPreferencesManagementSteps.cs
+putSteps.Response!.FavouriteItem.Should().Be("Belgian Waffles")
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\CustomerPreferences\CustomerPreferencesManagementSteps.cs
+putSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.BadRequest)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\DailySpecials\DailySpecialsSteps.cs
+postSteps.Response!.SpecialId.Should().Be(DailySpecialDefaults.CinnamonSwirlId)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\DailySpecials\DailySpecialsSteps.cs
+postSteps.Response!.OrderConfirmationId.Should().NotBeEmpty()
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\DailySpecials\DailySpecialsSteps.cs
+getSteps.Response.Should().HaveCount(DailySpecialDefaults.ExpectedSpecialsCount)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\DailySpecials\DailySpecialsSteps.cs
+postSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.Conflict)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\DailySpecials\DailySpecialsSteps.cs
+actualResults.Should().Contain(r => r.ErrorMessage.Contains(errorMessage))
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\DailySpecials\DailySpecialsSteps.cs
+postSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.NotFound)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\EquipmentReadings\EquipmentReadingsMonitoringSteps.cs
+postSteps.Response!.EquipmentId.Should().Be(_equipmentId)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\EquipmentReadings\EquipmentReadingsMonitoringSteps.cs
+postSteps.Response!.Value.Should().Be(180.5m)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\EquipmentReadings\EquipmentReadingsMonitoringSteps.cs
+postSteps.Response!.ReadingId.Should().NotBeNullOrEmpty()
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\EquipmentReadings\EquipmentReadingsMonitoringSteps.cs
+getSteps.ListResponse!.Should().Contain(r => r.ReadingId == _createdReadingId)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\EquipmentReadings\EquipmentReadingsMonitoringSteps.cs
+deleteSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.NoContent)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\EquipmentReadings\EquipmentReadingsMonitoringSteps.cs
+getSteps.ListResponse!.Should().NotContain(r => r.ReadingId == _createdReadingId)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Feedback\FeedbackManagementSteps.cs
+postSteps.Response!.CustomerName.Should().Be(postSteps.Request.CustomerName)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Feedback\FeedbackManagementSteps.cs
+postSteps.Response!.Rating.Should().Be(4)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Feedback\FeedbackManagementSteps.cs
+getSteps.Response!.FeedbackId.Should().Be(_createdFeedbackId)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Feedback\FeedbackManagementSteps.cs
+getSteps.Response!.CustomerName.Should().Be(postSteps.Response!.CustomerName)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Feedback\FeedbackManagementSteps.cs
+getSteps.Response!.Rating.Should().Be(4)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Feedback\FeedbackManagementSteps.cs
+getSteps.ListResponse!.Should().Contain(f => f.FeedbackId == _createdFeedbackId)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Grpc\GrpcOrderStatusSteps.cs
+_grpcSteps.OrderStatusReply.Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Grpc\GrpcOrderStatusSteps.cs
+_grpcSteps.OrderStatusReply!.OrderId.Should().Be(orderSteps.Response!.OrderId.ToString())
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Grpc\GrpcOrderStatusSteps.cs
+_grpcSteps.OrderStatusReply.CustomerName.Should().Be(orderSteps.Request.CustomerName)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Grpc\GrpcOrderStatusSteps.cs
+_grpcSteps.OrderStatusReply.Status.Should().Be(OrderStatuses.Created)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Grpc\GrpcRecipeSummarySteps.cs
+_grpcSteps.RecipeSummaryReply!.TotalBatches.Should().Be(expectedBatches)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Grpc\GrpcStreamOrderUpdatesSteps.cs
+_grpcSteps.StreamedReplies[0].OrderId.Should().Be(orderSteps.Response!.OrderId.ToString())
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Grpc\GrpcStreamOrderUpdatesSteps.cs
+_grpcSteps.StreamedReplies[0].CustomerName.Should().Be(orderSteps.Request.CustomerName)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Infrastructure\HealthCheckSteps.cs
+_healthCheckResult.Results.Should().ContainKey(HealthCheckNames.CowService)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Infrastructure\HealthCheckSteps.cs
+_healthCheckResult.Results.Should().ContainKey(HealthCheckNames.GoatService)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Infrastructure\HealthCheckSteps.cs
+_healthCheckResult.Results.Should().ContainKey(HealthCheckNames.SupplierService)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Infrastructure\HealthCheckSteps.cs
+_healthCheckResult.Results.Should().ContainKey(HealthCheckNames.KitchenService)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Infrastructure\HealthCheckSteps.cs
+_healthCheckResult.Results.Should().ContainKey(HealthCheckNames.CosmosDb)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Infrastructure\HealthCheckSteps.cs
+_healthCheckResult.Results.Should().ContainKey(HealthCheckNames.Kafka)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Infrastructure\HealthCheckSteps.cs
+healthCheckEntryStatus.Should().NotBeNullOrEmpty($"'{entry.Key}' should have a status")
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Infrastructure\HealthCheckSteps.cs
+_healthCheckResult.Results.Should().ContainKey(checkName)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Infrastructure\HealthCheckSteps.cs
+healthCheckDescription.Should().NotBeNullOrEmpty($"'{checkName}' should have a description")
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Infrastructure\HealthCheckSteps.cs
+healthCheckEntryData.Should().NotBeNull($"'{entry.Key}' should have a data object")
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Infrastructure\HealthCheckSteps.cs
+cowServiceHealthStatus.Should().Be(HealthCheckStatuses.Degraded)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Infrastructure\HealthCheckSteps.cs
+supplierServiceHealthStatus.Should().Be(HealthCheckStatuses.Degraded)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Infrastructure\TelemetrySteps.cs
+_logProvider.Entries.Should().Contain(e => e.Message.Contains(orderSteps.Request.CustomerName!))
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Ingredients\IngredientsSteps.cs
+milkSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.BadGateway)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Ingredients\IngredientsSteps.cs
+goatMilkSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Ingredients\IngredientsSteps.cs
+goatMilkSteps.GoatMilkResponse.GoatMilk.Should().Be(GoatServiceDefaults.FreshGoatMilk)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Ingredients\IngredientsSteps.cs
+goatMilkSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.NotFound)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Ingredients\IngredientsSteps.cs
+goatMilkSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.BadGateway)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\IngredientUsage\IngredientUsageAnalyticsSteps.cs
+postSteps.Response!.IngredientName.Should().Be(_ingredientName)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\IngredientUsage\IngredientUsageAnalyticsSteps.cs
+postSteps.Response!.QuantityUsed.Should().Be(2.5m)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\IngredientUsage\IngredientUsageAnalyticsSteps.cs
+postSteps.Response!.UsageId.Should().NotBeNullOrEmpty()
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\IngredientUsage\IngredientUsageAnalyticsSteps.cs
+getSteps.ListResponse!.Should().Contain(u => u.IngredientName == _ingredientName)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\IngredientUsage\IngredientUsageAnalyticsSteps.cs
+getSteps.SummaryResponse!.Should().Contain(s => s.IngredientName == _ingredientName)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\IngredientWaste\IngredientWasteTrackingSteps.cs
+postSteps.Response!.IngredientName.Should().NotBeNullOrEmpty()
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\IngredientWaste\IngredientWasteTrackingSteps.cs
+postSteps.Response!.QuantityWasted.Should().Be(0.5m)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\IngredientWaste\IngredientWasteTrackingSteps.cs
+postSteps.Response!.WasteId.Should().NotBeNullOrEmpty()
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\IngredientWaste\IngredientWasteTrackingSteps.cs
+postSteps.Response!.Reason.Should().Be("Expired before use")
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\IngredientWaste\IngredientWasteTrackingSteps.cs
+getSteps.ListResponse!.Should().Contain(w => w.WasteId == _createdWasteId)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Inventory\InventoryManagementSteps.cs
+postSteps.Response!.Name.Should().Be(postSteps.Request.Name)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Inventory\InventoryManagementSteps.cs
+postSteps.Response!.Category.Should().Be("Dry Goods")
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Inventory\InventoryManagementSteps.cs
+getSteps.Response!.Id.Should().Be(_createdItemId)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Inventory\InventoryManagementSteps.cs
+getSteps.Response!.Name.Should().Be(postSteps.Response!.Name)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Inventory\InventoryManagementSteps.cs
+getSteps.ListResponse!.Should().Contain(i => i.Id == _createdItemId)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Inventory\InventoryManagementSteps.cs
+putSteps.Response!.Category.Should().Be("Updated Category")
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Menu\MenuSteps.cs
+menuSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Menu\MenuSteps.cs
+menuSteps.Response!.Should().Contain(m => m.Name == MenuDefaults.ClassicPancakes)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Menu\MenuSteps.cs
+menuSteps.Response!.Should().Contain(m => m.Name == MenuDefaults.BelgianWaffles)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Menu\MenuSteps.cs
+menuSteps.Response!.Should().Contain(m => m.Name == MenuDefaults.GoatMilkPancakes)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Menu\MenuSteps.cs
+menuSteps.Response!.Should().BeInAscendingOrder(m => m.Name)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Menu\MenuSteps.cs
+steps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Menu\MenuSteps.cs
+steps.Response!.Should().Contain(m => m.IsAvailable)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Menu\MenuSteps.cs
+menuSteps.Response!.Should().OnlyContain(m => m.IsAvailable == false)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\OpenApi\OpenApiSteps.cs
+_swaggerResponse.StatusCode.Should().Be(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\OpenApi\OpenApiSteps.cs
+_asyncApiResponse.StatusCode.Should().Be(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\OpenApi\OpenApiSteps.cs
+paths.GetProperty(Endpoints.Swagger.PancakesPath).Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\OpenApi\OpenApiSteps.cs
+paths.GetProperty(Endpoints.Swagger.WafflesPath).Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\OpenApi\OpenApiSteps.cs
+paths.GetProperty(Endpoints.Swagger.OrdersPath).Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\OpenApi\OpenApiSteps.cs
+paths.GetProperty(Endpoints.Swagger.OrderByIdPath).Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\OpenApi\OpenApiSteps.cs
+paths.GetProperty(Endpoints.Swagger.ToppingsPath).Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\OpenApi\OpenApiSteps.cs
+paths.GetProperty(Endpoints.Swagger.MenuPath).Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\OpenApi\OpenApiSteps.cs
+paths.GetProperty(Endpoints.Swagger.MilkPath).Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\OpenApi\OpenApiSteps.cs
+paths.GetProperty(Endpoints.Swagger.EggsPath).Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\OpenApi\OpenApiSteps.cs
+paths.GetProperty(Endpoints.Swagger.FlourPath).Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\OpenApi\OpenApiSteps.cs
+paths.GetProperty(Endpoints.Swagger.GoatMilkPath).Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\OpenApi\OpenApiSteps.cs
+paths.GetProperty(Endpoints.Swagger.AuditLogsPath).Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\OpenApi\OpenApiSteps.cs
+_asyncApiJson.RootElement.GetProperty("info").Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\OpenApi\OpenApiSteps.cs
+_asyncApiJson.RootElement.GetProperty("defaultContentType").Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\OpenApi\OpenApiSteps.cs
+_asyncApiJson.RootElement.GetProperty("channels").Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\OpenApi\OpenApiSteps.cs
+_asyncApiJson.RootElement.GetProperty("operations").Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\OpenApi\OpenApiSteps.cs
+_asyncApiJson.RootElement.GetProperty("components").Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Orders\BreakfastOrderSteps.cs
+orderSteps.Response!.CustomerName.Should().Be(_customerName)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Orders\BreakfastOrderSteps.cs
+orderSteps.Response!.Items.Should().HaveCount(1)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Orders\BreakfastOrderSteps.cs
+eventStore.Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Orders\BreakfastOrderSteps.cs
+kafkaStore.Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Orders\CompleteLifecycleSteps.cs
+getOrderSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Orders\CompleteLifecycleSteps.cs
+getOrderSteps.Response!.OrderId.Should().Be(_orderId)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Orders\CompleteLifecycleSteps.cs
+getOrderSteps.Response!.Status.Should().Be(OrderStatuses.Completed)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Orders\CompleteLifecycleSteps.cs
+getOrderSteps.Response!.CustomerName.Should().Be(_customerName)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Orders\CrossFieldValidationSteps.cs
+orderSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.BadRequest)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Orders\CrossFieldValidationSteps.cs
+orderValidationErrorResponseBody.Should().Contain("Items")
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Orders\OrderRetrievalSteps.cs
+getOrderSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.NotFound)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Orders\PaginationSteps.cs
+listSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Orders\PaginationSteps.cs
+listSteps.Response!.Items.Should().HaveCountGreaterThanOrEqualTo(_createdOrderCount)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Orders\PaginationSteps.cs
+listSteps.Response!.Page.Should().BeGreaterThanOrEqualTo(1)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Orders\PaginationSteps.cs
+listSteps.Response!.TotalCount.Should().BeGreaterThanOrEqualTo(_createdOrderCount)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Orders\StatusTransitionSteps.cs
+patchSteps.Response!.Status.Should().Be(expectedStatus)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Orders\StatusTransitionSteps.cs
+patchSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.Conflict)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\OrderTimings\OrderTimingsAnalyticsSteps.cs
+postSteps.Response!.Station.Should().Be(_station)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\OrderTimings\OrderTimingsAnalyticsSteps.cs
+postSteps.Response!.PrepSeconds.Should().Be(42.5m)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\OrderTimings\OrderTimingsAnalyticsSteps.cs
+postSteps.Response!.TimingId.Should().NotBeNullOrEmpty()
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\OrderTimings\OrderTimingsAnalyticsSteps.cs
+getSteps.ListResponse!.Should().Contain(t => t.TimingId == _createdTimingId)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\OrderTimings\OrderTimingsAnalyticsSteps.cs
+getSteps.SummaryResponse!.Should().Contain(s => s.Station == _station && s.TimingCount >= 1)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Pancakes\PancakeCreationSteps.cs
+pancakeSteps.Response!.Ingredients.Should().Contain(milkSteps.MilkResponse.Milk)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Pancakes\PancakeCreationSteps.cs
+pancakeSteps.Response!.Ingredients.Should().Contain(eggsSteps.EggsResponse.Eggs)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Pancakes\PancakeCreationSteps.cs
+pancakeSteps.Response!.Ingredients.Should().Contain(flourSteps.FlourResponse.Flour)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Pancakes\PancakeCreationSteps.cs
+pancakeSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.BadRequest)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\RecipeCosts\RecipeCostAnalysisSteps.cs
+publishSteps.CalculationId.Should().NotBe(Guid.Empty)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\RecipeReviews\RecipeReviewManagementSteps.cs
+postSteps.Response!.Rating.Should().Be(5)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\RecipeReviews\RecipeReviewManagementSteps.cs
+postSteps.Response!.ReviewId.Should().NotBeNullOrEmpty()
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\RecipeReviews\RecipeReviewManagementSteps.cs
+getSteps.Response!.ReviewId.Should().Be(_createdReviewId)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\RecipeReviews\RecipeReviewManagementSteps.cs
+getSteps.ListResponse!.Should().Contain(r => r.ReviewId == _createdReviewId)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Reporting\BatchCompletionsSteps.cs
+graphQlSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Reporting\ReportingSteps.cs
+graphQlSteps.OrderSummaries.Should().NotContain(o => o.OrderId == _testOrderId)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Reporting\ReportingSteps.cs
+graphQlSteps.IngredientUsage.Should().Contain(i => i.Ingredient == "Milk" && i.Count >= 2)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Reporting\ReportingSteps.cs
+graphQlSteps.IngredientUsage.Should().Contain(i => i.Ingredient == "Butter" && i.Count >= 1)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Reporting\ReportingSteps.cs
+graphQlSteps.PopularRecipes.Should().Contain(r => r.RecipeType == "Waffles" && r.Count >= 1)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Reservations\ReservationsManagementSteps.cs
+cancelSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Reservations\ReservationsManagementSteps.cs
+postSteps.Response!.Status.Should().Be("Confirmed")
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Reservations\ReservationsManagementSteps.cs
+getSteps.Response!.Id.Should().Be(_createdReservationId)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Reservations\ReservationsManagementSteps.cs
+getSteps.Response!.Status.Should().Be("Confirmed")
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Reservations\ReservationsManagementSteps.cs
+cancelSteps.Response!.Status.Should().Be("Cancelled")
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Reservations\ReservationsManagementSteps.cs
+cancelSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.Conflict)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\ServiceTimes\ServiceTimeAnalysisSteps.cs
+publishSteps.OrderId.Should().NotBe(Guid.Empty)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Staff\StaffManagementSteps.cs
+postSteps.Response!.Role.Should().Be("Chef")
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Staff\StaffManagementSteps.cs
+getSteps.Response!.Id.Should().Be(_createdMemberId)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Staff\StaffManagementSteps.cs
+getSteps.Response!.Role.Should().Be("Chef")
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Toppings\ToppingsSteps.cs
+getSteps.Response.Should().HaveCount(ToppingDefaults.ExpectedToppingCount)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Toppings\ToppingsSteps.cs
+getSteps.Response!.Should().Contain(t => t.Name == ToppingDefaults.Raspberries)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Toppings\ToppingsSteps.cs
+getSteps.Response!.Should().Contain(t => t.Name == ToppingDefaults.Blueberries)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Toppings\ToppingsSteps.cs
+getSteps.Response!.Should().Contain(t => t.Name == ToppingDefaults.MapleSyrup)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Toppings\ToppingsSteps.cs
+getSteps.Response!.Should().Contain(t => t.Name == ToppingDefaults.WhippedCream)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Toppings\ToppingsSteps.cs
+getSteps.Response!.Should().Contain(t => t.Name == ToppingDefaults.ChocolateChips)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Toppings\ToppingsSteps.cs
+postSteps.Response!.Name.Should().Be(ToppingDefaults.Strawberries)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Toppings\ToppingsSteps.cs
+postSteps.Response!.Category.Should().Be(ToppingDefaults.FruitCategory)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Toppings\ToppingsSteps.cs
+deleteSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.NotFound)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Toppings\ToppingsSteps.cs
+putSteps.Response!.ToppingId.Should().Be(ToppingDefaults.KnownBlueberryToppingId)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Toppings\ToppingsSteps.cs
+putSteps.Response!.Name.Should().Be(ToppingDefaults.Strawberries)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Toppings\ToppingsSteps.cs
+putSteps.Response!.Category.Should().Be(ToppingDefaults.FruitCategory)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Toppings\ToppingsSteps.cs
+putSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.NotFound)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Toppings\ToppingsSteps.cs
+getSteps.Response!.Should().NotContain(t => t.Name == ToppingDefaults.Raspberries)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Waffles\WaffleCreationSteps.cs
+waffleSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.Created)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Waffles\WaffleCreationSteps.cs
+waffleSteps.Response!.Ingredients.Should().Contain(milkSteps.MilkResponse.Milk)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Waffles\WaffleCreationSteps.cs
+waffleSteps.Response!.Ingredients.Should().Contain(eggsSteps.EggsResponse.Eggs)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Waffles\WaffleCreationSteps.cs
+waffleSteps.Response!.Ingredients.Should().Contain(flourSteps.FlourResponse.Flour)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Waffles\WaffleCreationSteps.cs
+waffleSteps.Response!.Ingredients.Should().Contain(IngredientDefaults.UnsaltedButter)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Waffles\WaffleCreationSteps.cs
+waffleSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.BadRequest)
+# tests\BreakfastProvider.Tests.Component.Shared\Common\AppleCinnamonMuffins\PostMuffinsSteps.cs
+responseContentIsValidJson.Should().BeTrue()
+# tests\BreakfastProvider.Tests.Component.Shared\Common\Downstream\DownstreamRequestSteps.cs
+requests.Should().NotBeEmpty()
+# tests\BreakfastProvider.Tests.Component.Shared\Common\Downstream\DownstreamRequestSteps.cs
+request.Headers.Should().ContainKey(CustomHeaders.CorrelationId)
+# tests\BreakfastProvider.Tests.Component.Shared\Common\Downstream\DownstreamRequestSteps.cs
+request.Headers[CustomHeaders.CorrelationId].Should().Be(expectedCorrelationId)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\AppleCinnamonMuffins\Apple_Cinnamon_Muffins_Creation_Tests.cs
+await _milkSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\AppleCinnamonMuffins\Apple_Cinnamon_Muffins_Creation_Tests.cs
+await _eggsSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\AppleCinnamonMuffins\Apple_Cinnamon_Muffins_Creation_Tests.cs
+await _flourSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\AppleCinnamonMuffins\Apple_Cinnamon_Muffins_Creation_Tests.cs
+await _muffinSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.Created)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\AppleCinnamonMuffins\Apple_Cinnamon_Muffins_Creation_Tests.cs
+await _muffinSteps.Response!.Ingredients.Should().Contain(_milkSteps.MilkResponse.Milk)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\AppleCinnamonMuffins\Apple_Cinnamon_Muffins_Creation_Tests.cs
+await _muffinSteps.Response!.Ingredients.Should().Contain(_eggsSteps.EggsResponse.Eggs)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\AppleCinnamonMuffins\Apple_Cinnamon_Muffins_Creation_Tests.cs
+await _muffinSteps.Response!.Ingredients.Should().Contain(_flourSteps.FlourResponse.Flour)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\AppleCinnamonMuffins\Apple_Cinnamon_Muffins_Creation_Tests.cs
+await _muffinSteps.Response!.Ingredients.Should().Contain(MuffinDefaults.GrannySmithApples)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\AppleCinnamonMuffins\Apple_Cinnamon_Muffins_Creation_Tests.cs
+await _muffinSteps.Response!.Ingredients.Should().Contain(MuffinDefaults.CeylonCinnamon)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\AppleCinnamonMuffins\Apple_Cinnamon_Muffins_Creation_Tests.cs
+await _muffinSteps.Response!.Toppings.Should().HaveCount(1)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\AppleCinnamonMuffins\Apple_Cinnamon_Muffins_Creation_Tests.cs
+await _muffinSteps.Response!.BakingTemperature.Should().BeEqualTo(MuffinDefaults.DefaultTemperature)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\AppleCinnamonMuffins\Apple_Cinnamon_Muffins_Creation_Tests.cs
+await _muffinSteps.Response!.BakingDuration.Should().BeEqualTo(MuffinDefaults.DefaultDuration)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\AppleCinnamonMuffins\Apple_Cinnamon_Muffins_Creation_Tests.cs
+await _muffinSteps.Response!.Ingredients.Should().HaveCount(expected.ExpectedIngredientCount)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\AppleCinnamonMuffins\Apple_Cinnamon_Muffins_Creation_Tests.cs
+await _muffinSteps.Response!.Toppings.Should().HaveCount(expected.ExpectedToppingCount)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\AppleCinnamonMuffins\Apple_Cinnamon_Muffins_Creation_Tests.cs
+await bakingTemperatureMatchesExpectation.Should().BeTrue()
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\AppleCinnamonMuffins\Apple_Cinnamon_Muffins_Creation_Tests.cs
+await actual.ErrorMessage.Should().Contain(expectedError)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\AppleCinnamonMuffins\Apple_Cinnamon_Muffins_Creation_Tests.cs
+await actual.ResponseStatus.Should().BeEqualTo(expectedStatus)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\AuditLogs\AuditLogs_Filtering_Tests.cs
+await _auditLogResponse!.StatusCode.Should().BeEqualTo(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\AuditLogs\AuditLogs_Filtering_Tests.cs
+await _auditLogs!.Should().All(l => l.EntityType == AuditLogDefaults.OrderEntityType)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\AuditLogs\AuditLogs_Filtering_Tests.cs
+await _auditLogs!.Should().Contain(l => l.EntityId == _orderId)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\AuditLogs\AuditLogs_Filtering_Tests.cs
+await auditLogs.Should().BeEmpty()
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\AuditLogs\AuditLogs_Filtering_Tests.cs
+await _auditLogs.Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\AuditLogs\AuditLogs_Filtering_Tests.cs
+await _auditLogs!.Select(l => l.Timestamp).Should().BeInDescendingOrder()
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\AuditLogs\AuditLogs_Retrieval_Tests.cs
+await _pancakeSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.Created)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\AuditLogs\AuditLogs_Retrieval_Tests.cs
+await _pancakeSteps.Response.Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\AuditLogs\AuditLogs_Retrieval_Tests.cs
+await _pancakeSteps.Response!.BatchId.Should().NotBeEqualTo(Guid.Empty)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\AuditLogs\AuditLogs_Retrieval_Tests.cs
+await _orderSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.Created)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\AuditLogs\AuditLogs_Retrieval_Tests.cs
+await _orderSteps.Response.Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\AuditLogs\AuditLogs_Retrieval_Tests.cs
+await _orderSteps.Response!.OrderId.Should().NotBeEqualTo(Guid.Empty)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\AuditLogs\AuditLogs_Retrieval_Tests.cs
+await _auditSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\ChefNotes\ChefNotes_Management_Tests.cs
+await _postSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.Created)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\ChefNotes\ChefNotes_Management_Tests.cs
+await _postSteps.Response!.RecipeName.Should().BeEqualTo(recipeName)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\ChefNotes\ChefNotes_Management_Tests.cs
+await _postSteps.Response!.NoteText.Should().BeEqualTo("Remember to fold the batter gently to keep it fluffy.")
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\ChefNotes\ChefNotes_Management_Tests.cs
+await _postSteps.Response!.Category.Should().BeEqualTo("Technique")
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\ChefNotes\ChefNotes_Management_Tests.cs
+await _postSteps.Response!.NoteId.Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\ChefNotes\ChefNotes_Management_Tests.cs
+await _getSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\ChefNotes\ChefNotes_Management_Tests.cs
+await _getSteps.Response!.NoteId.Should().BeEqualTo(createdNoteId)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\ChefNotes\ChefNotes_Management_Tests.cs
+await _getSteps.Response!.RecipeName.Should().BeEqualTo(recipeName)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\ChefNotes\ChefNotes_Management_Tests.cs
+await _patchSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\ChefNotes\ChefNotes_Management_Tests.cs
+await _patchSteps.Response!.NoteId.Should().BeEqualTo(createdNoteId)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\ChefNotes\ChefNotes_Management_Tests.cs
+await _patchSteps.Response!.NoteText.Should().BeEqualTo("Updated: Use unsalted butter for better flavour control.")
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\ChefNotes\ChefNotes_Management_Tests.cs
+await _patchSteps.Response!.Category.Should().BeEqualTo("Ingredients")
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\ChefNotes\ChefNotes_Management_Tests.cs
+await _patchSteps.Response!.UpdatedAt.HasValue.Should().BeTrue()
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\ChefNotes\ChefNotes_Management_Tests.cs
+await _getSteps.ListResponse!.Should().Contain(n => n.NoteId == createdNoteId)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\ChefNotes\ChefNotes_Management_Tests.cs
+await _getSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.NotFound)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\ChefNotes\ChefNotes_Management_Tests.cs
+await _patchSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.NotFound)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\ChefNotes\ChefNotes_Management_Tests.cs
+await _postSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.BadRequest)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\CustomerFeedback\CustomerFeedback_Alert_Tests.cs
+await _publishSteps.FeedbackId.Should().NotBeEqualTo(Guid.Empty)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\CustomerPreferences\CustomerPreferences_Management_Tests.cs
+await _putSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\CustomerPreferences\CustomerPreferences_Management_Tests.cs
+await _putSteps.Response!.PreferredMilkType.Should().BeEqualTo("Oat")
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\CustomerPreferences\CustomerPreferences_Management_Tests.cs
+await _putSteps.Response!.FavouriteItem.Should().BeEqualTo("Blueberry Pancakes")
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\CustomerPreferences\CustomerPreferences_Management_Tests.cs
+await _getSteps.Response!.CustomerId.Should().BeEqualTo(customerId)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\CustomerPreferences\CustomerPreferences_Management_Tests.cs
+await _getSteps.Response!.PreferredMilkType.Should().BeEqualTo("Oat")
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\CustomerPreferences\CustomerPreferences_Management_Tests.cs
+await _getSteps.Response!.LikesExtraToppings.Should().BeTrue()
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\CustomerPreferences\CustomerPreferences_Management_Tests.cs
+await _putSteps.Response!.PreferredMilkType.Should().BeEqualTo("Almond")
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\CustomerPreferences\CustomerPreferences_Management_Tests.cs
+await _putSteps.Response!.FavouriteItem.Should().BeEqualTo("Belgian Waffles")
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\CustomerPreferences\CustomerPreferences_Management_Tests.cs
+await _putSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.BadRequest)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\DailySpecials\DailySpecials_Idempotency_Tests.cs
+await _firstConfirmationId.Should().BeEqualTo(_secondConfirmationId)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\DailySpecials\DailySpecials_Idempotency_Tests.cs
+await _firstConfirmationId.Should().NotBeEqualTo(_secondConfirmationId)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\DailySpecials\DailySpecials_Not_Found_Tests.cs
+await _postSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.NotFound)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\DailySpecials\DailySpecials_Ordering_Tests.cs
+await _postSteps.Response!.SpecialId.Should().BeEqualTo(DailySpecialDefaults.CinnamonSwirlId)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\DailySpecials\DailySpecials_Ordering_Tests.cs
+await _postSteps.Response!.OrderConfirmationId.Should().NotBeEqualTo(Guid.Empty)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\DailySpecials\DailySpecials_Ordering_Tests.cs
+await _getSteps.Response.Should().HaveCount(DailySpecialDefaults.ExpectedSpecialsCount)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\DailySpecials\DailySpecials_Ordering_Tests.cs
+await _postSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.Conflict)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\DailySpecials\DailySpecials_Ordering_Tests.cs
+await lemonRicottaRemainingQuantity.Should().BeEqualTo(MaxOrdersPerSpecial - 1)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\DailySpecials\DailySpecials_Validation_Tests.cs
+await actual.ErrorMessage.Should().BeEqualTo(expectedError)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\EquipmentReadings\EquipmentReadings_Monitoring_Tests.cs
+await _postSteps.Response!.EquipmentId.Should().BeEqualTo(equipmentId)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\EquipmentReadings\EquipmentReadings_Monitoring_Tests.cs
+await _postSteps.Response!.Value.Should().BeEqualTo(180.5m)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\EquipmentReadings\EquipmentReadings_Monitoring_Tests.cs
+await _postSteps.Response!.ReadingId.Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\EquipmentReadings\EquipmentReadings_Monitoring_Tests.cs
+await _getSteps.ListResponse!.Should().Contain(r => r.ReadingId == createdReadingId)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\EquipmentReadings\EquipmentReadings_Monitoring_Tests.cs
+await _deleteSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.NoContent)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\EquipmentReadings\EquipmentReadings_Monitoring_Tests.cs
+await _getSteps.ListResponse!.Where(r => r.ReadingId == createdReadingId).ToList().Should().BeEmpty()
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Feedback\Feedback_Management_Tests.cs
+await _postSteps.Response!.CustomerName.Should().BeEqualTo(_postSteps.Request.CustomerName)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Feedback\Feedback_Management_Tests.cs
+await _postSteps.Response!.Rating.Should().BeEqualTo(4)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Feedback\Feedback_Management_Tests.cs
+await _getSteps.Response!.FeedbackId.Should().BeEqualTo(createdFeedbackId)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Feedback\Feedback_Management_Tests.cs
+await _getSteps.Response!.CustomerName.Should().BeEqualTo(_postSteps.Response!.CustomerName)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Feedback\Feedback_Management_Tests.cs
+await _getSteps.Response!.Rating.Should().BeEqualTo(4)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Feedback\Feedback_Management_Tests.cs
+await _getSteps.ListResponse!.Should().Contain(f => f.FeedbackId == createdFeedbackId)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Grpc\Grpc_Order_Status_Tests.cs
+await _grpcSteps.OrderStatusReply!.OrderId.Should().BeEqualTo(createdOrderId.ToString())
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Grpc\Grpc_Order_Status_Tests.cs
+await _grpcSteps.OrderStatusReply!.CustomerName.Should().BeEqualTo(_customerName)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Grpc\Grpc_Order_Status_Tests.cs
+await _grpcSteps.OrderStatusReply!.Status.Should().BeEqualTo(OrderStatuses.Created)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Grpc\Grpc_Order_Status_Tests.cs
+await _grpcSteps.RpcException.Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Grpc\Grpc_Order_Status_Tests.cs
+await _grpcSteps.RpcException!.StatusCode.Should().BeEqualTo(StatusCode.NotFound)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Grpc\Grpc_Recipe_Summary_Tests.cs
+await _grpcSteps.RecipeSummaryReply!.RecipeType.Should().BeEqualTo("Pancakes")
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Grpc\Grpc_Recipe_Summary_Tests.cs
+await _grpcSteps.RecipeSummaryReply!.TotalBatches.Should().BeEqualTo(42)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Grpc\Grpc_Recipe_Summary_Tests.cs
+await _grpcSteps.RecipeSummaryReply!.CommonIngredients.Should().BeEquivalentTo(["Milk", "Flour", "Eggs"])
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Grpc\Grpc_Recipe_Summary_Tests.cs
+await _grpcSteps.RecipeSummaryReply!.RecipeType.Should().BeEqualTo("Waffles")
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Grpc\Grpc_Recipe_Summary_Tests.cs
+await _grpcSteps.RecipeSummaryReply!.TotalBatches.Should().BeEqualTo(28)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Grpc\Grpc_Recipe_Summary_Tests.cs
+await _grpcSteps.RecipeSummaryReply!.CommonIngredients.Should().BeEquivalentTo(["Milk", "Flour", "Eggs", "Butter"])
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Grpc\Grpc_Recipe_Summary_Tests.cs
+await _grpcSteps.RecipeSummaryReply!.RecipeType.Should().BeEqualTo("Unknown")
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Grpc\Grpc_Recipe_Summary_Tests.cs
+await _grpcSteps.RecipeSummaryReply!.TotalBatches.Should().BeEqualTo(0)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Grpc\Grpc_Recipe_Summary_Tests.cs
+await _grpcSteps.RecipeSummaryReply!.CommonIngredients.Should().BeEmpty()
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Grpc\Grpc_Stream_Order_Updates_Tests.cs
+await _grpcSteps.StreamedReplies.Should().HaveCount(1)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Grpc\Grpc_Stream_Order_Updates_Tests.cs
+await _grpcSteps.StreamedReplies[0].OrderId.Should().BeEqualTo(createdOrderId.ToString())
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Grpc\Grpc_Stream_Order_Updates_Tests.cs
+await _grpcSteps.StreamedReplies[0].CustomerName.Should().BeEqualTo(_customerName)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Grpc\Grpc_Stream_Order_Updates_Tests.cs
+await _grpcSteps.StreamedReplies[0].Status.Should().BeEqualTo(OrderStatuses.Created)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Infrastructure\Infrastructure_Correlation_Id_Tests.cs
+await responseContainsCorrelationIdHeader.Should().BeTrue()
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Infrastructure\Infrastructure_Correlation_Id_Tests.cs
+await firstCorrelationIdHeaderValue.Should().BeEqualTo(knownCorrelationId)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Infrastructure\Infrastructure_Correlation_Id_Tests.cs
+await firstCorrelationIdHeaderValue.Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Infrastructure\Infrastructure_Degraded_Health_Check_Tests.cs
+await response.StatusCode.Should().BeEqualTo(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Infrastructure\Infrastructure_Degraded_Health_Check_Tests.cs
+await result.Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Infrastructure\Infrastructure_Degraded_Health_Check_Tests.cs
+await result.Status.Should().BeEqualTo(HealthCheckStatuses.Degraded)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Infrastructure\Infrastructure_Degraded_Health_Check_Tests.cs
+await result.Results.Should().ContainKey(HealthCheckNames.CowService)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Infrastructure\Infrastructure_Degraded_Health_Check_Tests.cs
+await result.Results[HealthCheckNames.CowService].Status.Should().BeEqualTo(HealthCheckStatuses.Degraded)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Infrastructure\Infrastructure_Degraded_Health_Check_Tests.cs
+await result.Results.Should().ContainKey(HealthCheckNames.SupplierService)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Infrastructure\Infrastructure_Degraded_Health_Check_Tests.cs
+await result.Results[HealthCheckNames.SupplierService].Status.Should().BeEqualTo(HealthCheckStatuses.Degraded)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Infrastructure\Infrastructure_Downstream_Error_Health_Check_Tests.cs
+await result.Results.Should().ContainKey(HealthCheckNames.KitchenService)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Infrastructure\Infrastructure_Downstream_Error_Health_Check_Tests.cs
+await kitchenServiceHealthStatus.Should().BeEqualTo(HealthCheckStatuses.Degraded)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Infrastructure\Infrastructure_Downstream_Error_Health_Check_Tests.cs
+await kitchenServiceHealthDescription.Should().Contain("503")
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Infrastructure\Infrastructure_Health_Check_Detail_Tests.cs
+await healthCheckEntryStatus.Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Infrastructure\Infrastructure_Health_Check_Detail_Tests.cs
+await result.Results.Should().ContainKey(checkName)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Infrastructure\Infrastructure_Health_Check_Detail_Tests.cs
+await healthCheckDescription.Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Infrastructure\Infrastructure_Health_Check_Detail_Tests.cs
+await healthCheckEntryData.Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Infrastructure\Infrastructure_Health_Check_Tests.cs
+await result.Status.Should().BeEqualTo(HealthCheckStatuses.Healthy)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Infrastructure\Infrastructure_Health_Check_Tests.cs
+await result.Results.Should().ContainKey(HealthCheckNames.GoatService)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Infrastructure\Infrastructure_Health_Check_Tests.cs
+await result.Results.Should().ContainKey(HealthCheckNames.CosmosDb)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Infrastructure\Infrastructure_Health_Check_Tests.cs
+await result.Results.Should().ContainKey(HealthCheckNames.Kafka)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Infrastructure\Infrastructure_Heartbeat_Tests.cs
+await result!.Status.Should().BeEqualTo(Documentation.HeartbeatStatus)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Infrastructure\Infrastructure_Telemetry_Tests.cs
+await pancakeSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.Created)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Infrastructure\Infrastructure_Telemetry_Tests.cs
+await orderSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.Created)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Infrastructure\Infrastructure_Telemetry_Tests.cs
+await _logProvider.Entries.Should().Contain(e => e.Message.Contains("created for customer"))
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Infrastructure\Infrastructure_Telemetry_Tests.cs
+await _logProvider.Entries.Should().Contain(e => e.Message.Contains(customerName))
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Infrastructure\Infrastructure_Telemetry_Tests.cs
+await _logProvider.Entries.Should().Contain(e => e.Message.Contains("1 items"))
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Ingredients\Ingredients_Goat_Milk_Downstream_Failure_Tests.cs
+await _goatMilkSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.BadGateway)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Ingredients\Ingredients_Goat_Milk_Downstream_Failure_Tests.cs
+await goatMilkErrorResponseBody.Should().Contain(DownstreamErrorMessages.GoatServiceUnavailableTitle)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Ingredients\Ingredients_Goat_Milk_Feature_Flag_Tests.cs
+await _goatMilkSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.NotFound)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Ingredients\Ingredients_Goat_Milk_Feature_Flag_Tests.cs
+await goatMilkFeatureDisabledResponseBody.Should().Contain(DownstreamErrorMessages.FeatureDisabled)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Ingredients\Ingredients_Goat_Milk_Feature_Flag_Tests.cs
+await _goatMilkSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Ingredients\Ingredients_Goat_Milk_Feature_Flag_Tests.cs
+await _goatMilkSteps.GoatMilkResponse.GoatMilk.Should().BeEqualTo(GoatServiceDefaults.FreshGoatMilk)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Ingredients\Ingredients_Goat_Milk_Sourcing_Tests.cs
+await _goatMilkSteps.GoatMilkResponse.Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Ingredients\Ingredients_Milk_Downstream_Failure_Tests.cs
+await _milkSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.BadGateway)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Ingredients\Ingredients_Milk_Downstream_Failure_Tests.cs
+await milkErrorResponseBody.Should().Contain(DownstreamErrorMessages.CowServiceUnavailableTitle)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\IngredientUsage\IngredientUsage_Analytics_Tests.cs
+await _postSteps.Response!.IngredientName.Should().BeEqualTo(ingredientName)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\IngredientUsage\IngredientUsage_Analytics_Tests.cs
+await _postSteps.Response!.QuantityUsed.Should().BeEqualTo(2.5m)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\IngredientUsage\IngredientUsage_Analytics_Tests.cs
+await _postSteps.Response!.UsageId.Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\IngredientUsage\IngredientUsage_Analytics_Tests.cs
+await _getSteps.ListResponse!.Should().Contain(u => u.IngredientName == ingredientName)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\IngredientUsage\IngredientUsage_Analytics_Tests.cs
+await _getSteps.SummaryResponse!.Should().Contain(s => s.IngredientName == ingredientName)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\IngredientWaste\IngredientWaste_Tracking_Tests.cs
+await _postSteps.Response!.IngredientName.Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\IngredientWaste\IngredientWaste_Tracking_Tests.cs
+await _postSteps.Response!.QuantityWasted.Should().BeEqualTo(0.5m)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\IngredientWaste\IngredientWaste_Tracking_Tests.cs
+await _postSteps.Response!.WasteId.Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\IngredientWaste\IngredientWaste_Tracking_Tests.cs
+await _postSteps.Response!.Reason.Should().BeEqualTo("Expired before use")
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\IngredientWaste\IngredientWaste_Tracking_Tests.cs
+await _getSteps.ListResponse!.Should().Contain(w => w.WasteId == createdWasteId)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Inventory\Inventory_Management_Tests.cs
+await _postSteps.Response!.Name.Should().BeEqualTo(_postSteps.Request.Name)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Inventory\Inventory_Management_Tests.cs
+await _postSteps.Response!.Category.Should().BeEqualTo("Dry Goods")
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Inventory\Inventory_Management_Tests.cs
+await _getSteps.Response!.Id.Should().BeEqualTo(createdItemId)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Inventory\Inventory_Management_Tests.cs
+await _getSteps.Response!.Name.Should().BeEqualTo(_postSteps.Response!.Name)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Inventory\Inventory_Management_Tests.cs
+await _getSteps.ListResponse!.Should().Contain(i => i.Id == createdItemId)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Inventory\Inventory_Management_Tests.cs
+await _putSteps.Response!.Category.Should().BeEqualTo("Updated Category")
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Menu\Menu_Availability_Tests.cs
+await _menuSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Menu\Menu_Availability_Tests.cs
+await _menuSteps.Response!.Should().Contain(m => m.Name == MenuDefaults.ClassicPancakes)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Menu\Menu_Availability_Tests.cs
+await _menuSteps.Response!.Should().Contain(m => m.Name == MenuDefaults.BelgianWaffles)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Menu\Menu_Availability_Tests.cs
+await _menuSteps.Response!.Should().Contain(m => m.Name == MenuDefaults.GoatMilkPancakes)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Menu\Menu_Availability_Tests.cs
+await _menuSteps.Response!.Select(m => m.Name).Should().BeInOrder()
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Menu\Menu_Caching_Tests.cs
+await _secondMenuSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Menu\Menu_Caching_Tests.cs
+await _secondMenuSteps.Response!.Should().Contain(m => m.IsAvailable)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Menu\Menu_Downstream_Failure_Tests.cs
+await _menuSteps.Response!.Should().All(m => m.IsAvailable == false)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Orders\Orders_Breakfast_Order_Tests.cs
+await _orderSteps.Response!.CustomerName.Should().BeEqualTo(_customerName)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Orders\Orders_Breakfast_Order_Tests.cs
+await _orderSteps.Response!.Items.Should().HaveCount(1)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Orders\Orders_Breakfast_Order_Tests.cs
+await orderCreatedEvents.Should().Contain(e => e.CustomerName == _customerName)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Orders\Orders_Complete_Lifecycle_Tests.cs
+await _orderId.Should().NotBeEqualTo(Guid.Empty)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Orders\Orders_Complete_Lifecycle_Tests.cs
+await _retrievalSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Orders\Orders_Complete_Lifecycle_Tests.cs
+await _retrievalSteps.Response!.Status.Should().BeEqualTo(OrderStatuses.Completed)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Orders\Orders_Complete_Lifecycle_Tests.cs
+await _retrievalSteps.Response!.CustomerName.Should().BeEqualTo(_customerName)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Orders\Orders_Complete_Lifecycle_Tests.cs
+await _retrievalSteps.Response!.Items.Should().HaveCount(1)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Orders\Orders_Complete_Lifecycle_Tests.cs
+await _retrievalSteps.Response!.TableNumber.Should().BeEqualTo(4)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Orders\Orders_Complete_Lifecycle_Tests.cs
+await (_retrievalSteps.Response!.CreatedAt > DateTime.UtcNow.AddMinutes(-2) && _retrievalSteps.Response!.CreatedAt < DateTime.UtcNow.AddMinutes(2)).Should().BeTrue()
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Orders\Orders_Complete_Lifecycle_Tests.cs
+await System.Text.RegularExpressions.Regex.IsMatch(_retrievalSteps.Response!.OrderId.ToString(), @"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$").Should().BeTrue()
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Orders\Orders_Complete_Lifecycle_Tests.cs
+await auditLogResponse.StatusCode.Should().BeEqualTo(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Orders\Orders_Complete_Lifecycle_Tests.cs
+await auditLogs.Should().Contain(l => l.EntityId == _orderId && l.Action == AuditLogDefaults.CreatedAction)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Orders\Orders_Cross_Field_Validation_Tests.cs
+await _orderSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.BadRequest)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Orders\Orders_Cross_Field_Validation_Tests.cs
+await orderValidationErrors.Should().Contain(e => e.Contains("cannot contain more than 2 items"))
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Orders\Orders_Kitchen_Service_Failure_Tests.cs
+await _getOrderSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Orders\Orders_Order_Retrieval_Tests.cs
+await _retrievalSteps.Response!.OrderId.Should().BeEqualTo(_orderSteps.Response!.OrderId)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Orders\Orders_Order_Retrieval_Tests.cs
+await _retrievalSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.NotFound)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Orders\Orders_Pagination_Tests.cs
+await _listSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Orders\Orders_Pagination_Tests.cs
+await _listSteps.Response!.Items.Count.Should().BeGreaterThanOrEqualTo(_createdOrderCount)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Orders\Orders_Pagination_Tests.cs
+await _listSteps.Response!.Page.Should().BeEqualTo(1)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Orders\Orders_Pagination_Tests.cs
+await _listSteps.Response!.TotalCount.Should().BeGreaterThanOrEqualTo(_createdOrderCount)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Orders\Orders_Pagination_Tests.cs
+await _listSteps.Response!.Items.Should().HaveCount(1)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Orders\Orders_Pagination_Tests.cs
+await _listSteps.Response!.TotalPages.Should().BeGreaterThanOrEqualTo(_createdOrderCount)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Orders\Orders_Pagination_Tests.cs
+await _listSteps.Response!.Page.Should().BeEqualTo(2)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Orders\Orders_Pagination_Tests.cs
+await _listSteps.Response!.Items.Should().BeEmpty()
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Orders\Orders_Pagination_Tests.cs
+await _listSteps.Response!.TotalCount.Should().BeEqualTo(0)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Orders\Orders_Rate_Limiting_Tests.cs
+await firstResponse!.StatusCode.Should().BeEqualTo(HttpStatusCode.Created)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Orders\Orders_Rate_Limiting_Tests.cs
+await secondResponse!.StatusCode.Should().BeEqualTo(HttpStatusCode.TooManyRequests)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Orders\Orders_Status_Transition_Tests.cs
+await _patchSteps.Response!.Status.Should().BeEqualTo(toStatus)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Orders\Orders_Status_Transition_Tests.cs
+await _patchSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.Conflict)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\OrderTimings\OrderTimings_Analytics_Tests.cs
+await _postSteps.Response!.Station.Should().BeEqualTo(station)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\OrderTimings\OrderTimings_Analytics_Tests.cs
+await _postSteps.Response!.PrepSeconds.Should().BeEqualTo(42.5m)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\OrderTimings\OrderTimings_Analytics_Tests.cs
+await _postSteps.Response!.TimingId.Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\OrderTimings\OrderTimings_Analytics_Tests.cs
+await _getSteps.ListResponse!.Should().Contain(t => t.TimingId == createdTimingId)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\OrderTimings\OrderTimings_Analytics_Tests.cs
+await _getSteps.SummaryResponse!.Should().Contain(s => s.Station == station && s.TimingCount >= 1)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Pancakes\Pancakes_Content_Negotiation_Tests.cs
+await response.StatusCode.Should().BeEqualTo(HttpStatusCode.UnsupportedMediaType)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Pancakes\Pancakes_Creation_Tests.cs
+await _pancakeSteps.Response!.Ingredients.Should().Contain(_milkSteps.MilkResponse.Milk)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Pancakes\Pancakes_Creation_Tests.cs
+await _pancakeSteps.Response!.Ingredients.Should().Contain(_eggsSteps.EggsResponse.Eggs)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Pancakes\Pancakes_Creation_Tests.cs
+await _pancakeSteps.Response!.Ingredients.Should().Contain(_flourSteps.FlourResponse.Flour)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Pancakes\Pancakes_Creation_Tests.cs
+await _pancakeSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.BadRequest)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Pancakes\Pancakes_Creation_Tests.cs
+await body.Should().Contain(PancakeValidationMessages.MaxToppingsExceeded)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\RecipeCosts\RecipeCost_Analysis_Tests.cs
+await _publishSteps.CalculationId.Should().NotBeEqualTo(Guid.Empty)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\RecipeReviews\RecipeReview_Management_Tests.cs
+await _postSteps.Response!.RecipeName.Should().BeEqualTo("Fluffy Pancakes")
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\RecipeReviews\RecipeReview_Management_Tests.cs
+await _postSteps.Response!.Rating.Should().BeEqualTo(5)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\RecipeReviews\RecipeReview_Management_Tests.cs
+await _postSteps.Response!.ReviewId.Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\RecipeReviews\RecipeReview_Management_Tests.cs
+await _getSteps.Response!.ReviewId.Should().BeEqualTo(reviewId)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\RecipeReviews\RecipeReview_Management_Tests.cs
+await _getSteps.Response!.RecipeName.Should().BeEqualTo("Classic Waffles")
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\RecipeReviews\RecipeReview_Management_Tests.cs
+await _getSteps.ListResponse!.Should().Contain(r => r.ReviewId == reviewId)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Reporting\Reporting_Batch_Completions_Tests.cs
+await _graphQlSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Reporting\Reporting_EventGrid_Webhook_Tests.cs
+await webhookResponse.StatusCode.Should().BeEqualTo(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Reporting\Reporting_Order_Summaries_Tests.cs
+await _graphQlSteps.OrderSummaries.Should().All(o => o.OrderId != _orderId)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Reporting\Reporting_Recipe_Reports_Tests.cs
+await pancakes.Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Reporting\Reporting_Recipe_Reports_Tests.cs
+await pancakes!.Count.Should().BeGreaterThanOrEqualTo(2)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Reservations\Reservations_Management_Tests.cs
+await _postSteps.Response!.Status.Should().BeEqualTo("Confirmed")
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Reservations\Reservations_Management_Tests.cs
+await _getSteps.Response!.Id.Should().BeEqualTo(createdReservationId)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Reservations\Reservations_Management_Tests.cs
+await _getSteps.Response!.Status.Should().BeEqualTo("Confirmed")
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Reservations\Reservations_Management_Tests.cs
+await _cancelSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Reservations\Reservations_Management_Tests.cs
+await _cancelSteps.Response!.Status.Should().BeEqualTo("Cancelled")
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Reservations\Reservations_Management_Tests.cs
+await _cancelSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.Conflict)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Reservations\Reservations_Management_Tests.cs
+await deleteResponse.StatusCode.Should().BeEqualTo(HttpStatusCode.NoContent)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\ServiceTimes\ServiceTime_Analysis_Tests.cs
+await _publishSteps.OrderId.Should().NotBeEqualTo(Guid.Empty)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Specifications\Specifications_Async_Api_Tests.cs
+await asyncApiResponse!.StatusCode.Should().BeEqualTo(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Specifications\Specifications_Async_Api_Tests.cs
+await asyncApiResponseIsValidJson.Should().BeTrue()
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Specifications\Specifications_Async_Api_Tests.cs
+await asyncApiJson!.RootElement.GetProperty("asyncapi").Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Specifications\Specifications_Async_Api_Tests.cs
+await asyncApiJson!.RootElement.GetProperty("info").Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Specifications\Specifications_Async_Api_Tests.cs
+await asyncApiJson!.RootElement.GetProperty("defaultContentType").Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Specifications\Specifications_Async_Api_Tests.cs
+await asyncApiJson!.RootElement.GetProperty("channels").Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Specifications\Specifications_Async_Api_Tests.cs
+await asyncApiJson!.RootElement.GetProperty("operations").Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Specifications\Specifications_Async_Api_Tests.cs
+await asyncApiJson!.RootElement.GetProperty("components").Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Specifications\Specifications_Open_Api_Scalar_UI_Tests.cs
+await scalarResponse.StatusCode.Should().BeEqualTo(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Specifications\Specifications_Open_Api_Scalar_UI_Tests.cs
+await scalarUiResponseBody.Should().Contain("<html")
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Specifications\Specifications_Open_Api_Scalar_UI_Tests.cs
+await scalarUiResponseBody.Should().Contain("scalar")
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Specifications\Specifications_Open_Api_Tests.cs
+await swaggerResponse.StatusCode.Should().BeEqualTo(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Specifications\Specifications_Open_Api_Tests.cs
+await openApiResponseIsValidJson.Should().BeTrue()
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Specifications\Specifications_Open_Api_Tests.cs
+await swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.PancakesPath).Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Specifications\Specifications_Open_Api_Tests.cs
+await swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.WafflesPath).Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Specifications\Specifications_Open_Api_Tests.cs
+await swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.OrdersPath).Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Specifications\Specifications_Open_Api_Tests.cs
+await swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.OrderByIdPath).Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Specifications\Specifications_Open_Api_Tests.cs
+await swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.ToppingsPath).Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Specifications\Specifications_Open_Api_Tests.cs
+await swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.MenuPath).Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Specifications\Specifications_Open_Api_Tests.cs
+await swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.MilkPath).Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Specifications\Specifications_Open_Api_Tests.cs
+await swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.EggsPath).Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Specifications\Specifications_Open_Api_Tests.cs
+await swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.FlourPath).Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Specifications\Specifications_Open_Api_Tests.cs
+await swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.GoatMilkPath).Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Specifications\Specifications_Open_Api_Tests.cs
+await swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.AuditLogsPath).Should().NotBeNull()
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Staff\Staff_Management_Tests.cs
+await _postSteps.Response!.Role.Should().BeEqualTo("Chef")
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Staff\Staff_Management_Tests.cs
+await _getSteps.Response!.Id.Should().BeEqualTo(createdMemberId)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Staff\Staff_Management_Tests.cs
+await _getSteps.Response!.Role.Should().BeEqualTo("Chef")
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Toppings\Toppings_Deletion_Tests.cs
+await _deleteSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.NotFound)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Toppings\Toppings_Feature_Flag_Tests.cs
+await _toppingsSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.OK)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Toppings\Toppings_Feature_Flag_Tests.cs
+await _toppingsSteps.Response!.Should().All(t => t.Name != ToppingDefaults.Raspberries)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Toppings\Toppings_Feature_Flag_Tests.cs
+await _toppingsSteps.Response!.Should().Contain(t => t.Name == ToppingDefaults.Raspberries)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Toppings\Toppings_Management_Tests.cs
+await _getSteps.Response.Should().HaveCount(ToppingDefaults.ExpectedToppingCount)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Toppings\Toppings_Management_Tests.cs
+await _getSteps.Response!.Should().Contain(t => t.Name == ToppingDefaults.Raspberries)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Toppings\Toppings_Management_Tests.cs
+await _getSteps.Response!.Should().Contain(t => t.Name == ToppingDefaults.Blueberries)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Toppings\Toppings_Management_Tests.cs
+await _getSteps.Response!.Should().Contain(t => t.Name == ToppingDefaults.MapleSyrup)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Toppings\Toppings_Management_Tests.cs
+await _getSteps.Response!.Should().Contain(t => t.Name == ToppingDefaults.WhippedCream)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Toppings\Toppings_Management_Tests.cs
+await _getSteps.Response!.Should().Contain(t => t.Name == ToppingDefaults.ChocolateChips)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Toppings\Toppings_Management_Tests.cs
+await _postSteps.Response!.Name.Should().BeEqualTo(ToppingDefaults.Strawberries)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Toppings\Toppings_Management_Tests.cs
+await _postSteps.Response!.Category.Should().BeEqualTo(ToppingDefaults.FruitCategory)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Toppings\Toppings_Update_Tests.cs
+await _putSteps.Response!.ToppingId.Should().BeEqualTo(KnownBlueberryToppingId)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Toppings\Toppings_Update_Tests.cs
+await _putSteps.Response!.Name.Should().BeEqualTo(ToppingDefaults.Strawberries)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Toppings\Toppings_Update_Tests.cs
+await _putSteps.Response!.Category.Should().BeEqualTo(ToppingDefaults.FruitCategory)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Toppings\Toppings_Update_Tests.cs
+await _putSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.NotFound)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Waffles\Waffles_Creation_Tests.cs
+await _waffleSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.Created)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Waffles\Waffles_Creation_Tests.cs
+await _waffleSteps.Response!.Ingredients.Should().Contain(_milkSteps.MilkResponse.Milk)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Waffles\Waffles_Creation_Tests.cs
+await _waffleSteps.Response!.Ingredients.Should().Contain(_eggsSteps.EggsResponse.Eggs)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Waffles\Waffles_Creation_Tests.cs
+await _waffleSteps.Response!.Ingredients.Should().Contain(_flourSteps.FlourResponse.Flour)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Waffles\Waffles_Creation_Tests.cs
+await _waffleSteps.Response!.Ingredients.Should().Contain(IngredientDefaults.UnsaltedButter)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Waffles\Waffles_Creation_Tests.cs
+await _waffleSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.BadRequest)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Waffles\Waffles_Creation_Tests.cs
+await body.Should().Contain(WaffleValidationMessages.MaxToppingsExceeded)
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseConformanceTests.cs
+reader.FieldCount.Should().Be(4)
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseConformanceTests.cs
+Enumerable.Range(0, 4).Select(reader.GetName).Should().Equal("station", "avg_prep_seconds", "p95_prep_seconds", "timing_count")
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseConformanceTests.cs
+Enumerable.Range(0, 4).Select(reader.GetDataTypeName).Should().Equal("String", "Float64", "Float64", "UInt64")
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseConformanceTests.cs
+Enumerable.Range(0, 4).Select(reader.GetFieldType).Should().Equal(typeof(string), typeof(double), typeof(double), typeof(ulong))
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseConformanceTests.cs
+(await reader.ReadAsync()).Should().BeTrue()
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseConformanceTests.cs
+reader.GetString(0).Should().Be(station)
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseConformanceTests.cs
+reader.GetDouble(1).Should().Be(26.25d)
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseConformanceTests.cs
+reader.GetDouble(2).Should().BeApproximately(38.625d, 0.001)
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseConformanceTests.cs
+reader.GetValue(3).Should().Be(2UL)
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseConformanceTests.cs
+Convert.ToInt32(reader["timing_count"]).Should().Be(2)
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseConformanceTests.cs
+(await reader.ReadAsync()).Should().BeFalse()
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseConformanceTests.cs
+Enumerable.Range(0, 6).Select(reader.GetDataTypeName).Should().Equal("String", "String", "String", "String", "Float64", "DateTime")
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseConformanceTests.cs
+Enumerable.Range(0, 6).Select(reader.GetFieldType).Should().Equal(typeof(string), typeof(string), typeof(string), typeof(string), typeof(double), typeof(DateTime))
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseConformanceTests.cs
+reader.GetString(0).Should().Be(secondId, "ORDER BY recorded_at DESC puts the later row first")
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseConformanceTests.cs
+reader.GetDateTime(5).Should().Be(recordedAt.AddMinutes(1))
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseConformanceTests.cs
+reader.GetDateTime(5).Kind.Should().Be(DateTimeKind.Unspecified)
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseConformanceTests.cs
+reader.GetString(0).Should().Be(firstId)
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseConformanceTests.cs
+reader.GetDouble(4).Should().Be(12.5d)
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseConformanceTests.cs
+(await count.ExecuteScalarAsync()).Should().Be(1UL, "the lightweight DELETE is visible to the next SELECT")
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseConformanceTests.cs
+(await Insert(connection, id, $"Station-{Guid.NewGuid():N}", 1d, DateTime.UtcNow)).Should().Be(0)
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseConformanceTests.cs
+(await delete.ExecuteNonQueryAsync()).Should().Be(0)
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseConformanceTests.cs
+(await command.ExecuteScalarAsync()).Should().Be((byte)1)
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseConformanceTests.cs
+(await Fail(connection, "SELECT * FROM nope")).Should().StartWith("Code: 60.")
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseConformanceTests.cs
+(await Fail(connection, "SELEC 1")).Should().StartWith("Code: 62.")
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseConformanceTests.cs
+(await Fail(connection, "SELECT BAD SYNTAX")).Should().StartWith("Code: 47.")
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseConformanceTests.cs
+stored.Should().Be(expected)
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseConformanceTests.cs
+stored.Kind.Should().Be(DateTimeKind.Unspecified)
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseConformanceTests.cs
+return (await act.Should().ThrowAsync<ClickHouseServerException>()).Which.Message
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseParameterBinderTests.cs
+sql.Should().Be("SELECT 1 WHERE station = $station")
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseParameterBinderTests.cs
+parameters.Should().ContainSingle().Which.Should().Be(new BoundParameter("station", "Griddle-abc"))
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseParameterBinderTests.cs
+parameters.Single().Value.Should().Be(1.5d)
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseParameterBinderTests.cs
+var value = parameters.Single().Value.Should().BeOfType<DateTime>().Subject
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseParameterBinderTests.cs
+value.Should().Be(new DateTime(2026, 9, 2, 10, 11, 12))
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseParameterBinderTests.cs
+value.Kind.Should().Be(DateTimeKind.Utc)
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseParameterBinderTests.cs
+parameters.Single().Value.Should().Be(guid)
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseParameterBinderTests.cs
+rewritten.Should().Be("INSERT INTO t (a, b, c) VALUES ($a, $b, $a)")
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseParameterBinderTests.cs
+parameters.Select(p => p.Name).Should().Equal("a", "b")
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseParameterBinderTests.cs
+act.Should().Throw<ClickHouseEmulatorException>().Which.Code.Should().Be(456)
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseParameterBinderTests.cs
+value.Year.Should().Be(2026)
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseSqlTranslatorTests.cs
+_translator.TranslateDdl("CREATE DATABASE IF NOT EXISTS kitchen_analytics;").Should().BeNull()
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseSqlTranslatorTests.cs
+.Should().Be("SELECT timing_id FROM order_timings")
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseSqlTranslatorTests.cs
+.Should().Be($"CREATE TABLE t (c {duckDbType})")
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseSqlTranslatorTests.cs
+act.Should().Throw<NotSupportedException>().WithMessage("*DateTime64(3)*")
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseSqlTranslatorTests.cs
+.Should().Be("SELECT 1 FROM order_timings WHERE station = {station:String}")
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseSqlTranslatorTests.cs
+.Should().Be("SELECT quantile_cont(prep_seconds, 0.95) AS p95 FROM order_timings")
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseSqlTranslatorTests.cs
+.Should().Be("SELECT station, CAST(count(*) AS UBIGINT) AS timing_count FROM order_timings GROUP BY station")
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseSqlTranslatorTests.cs
+_translator.TranslateQuery("SELECT 1").Should().Be("SELECT CAST(1 AS UTINYINT) AS \"1\"")
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseSqlTranslatorTests.cs
+_translator.TranslateQuery(sql).Should().Be(sql)
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseSqlTranslatorTests.cs
+act.Should().Throw<NotSupportedException>().WithMessage($"*{fragment}*")
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseSqlTranslatorTests.cs
+act.Should().Throw<ClickHouseEmulatorException>().Which.Code.Should().Be(62)
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseSqlTranslatorTests.cs
+act.Should().Throw<NotSupportedException>().WithMessage("*c String DEFAULT 'x'*")
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseSqlTranslatorTests.cs
+ClickHouseSqlTranslator.IsDdl("CREATE TABLE t (c String)").Should().BeTrue()
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseSqlTranslatorTests.cs
+ClickHouseSqlTranslator.IsDdl("  create database x").Should().BeTrue()
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseSqlTranslatorTests.cs
+ClickHouseSqlTranslator.IsDdl("INSERT INTO t VALUES (1)").Should().BeFalse()
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseSqlTranslatorTests.cs
+ClickHouseSqlTranslator.ReturnsResultSet("SELECT 1").Should().BeTrue()
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseSqlTranslatorTests.cs
+ClickHouseSqlTranslator.ReturnsResultSet("DELETE FROM t WHERE 1").Should().BeFalse()
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseSqlTranslatorTests.cs
+ClickHouseSqlTranslator.ReturnsResultSet("INSERT INTO t VALUES (1)").Should().BeFalse()
+# tests\BreakfastProvider.Tests.Unit\Emulator\CoreIsTransportAgnosticTests.cs
+coreTypes.Should().NotBeEmpty()
+# tests\BreakfastProvider.Tests.Unit\Emulator\CoreIsTransportAgnosticTests.cs
+offenders.Should().BeEmpty()
+# tests\BreakfastProvider.Tests.Unit\Emulator\DuckDbClickHouseQueryEngineTests.cs
+tables.Rows.Select(r => (string)r[0]!).Should().BeEquivalentTo("order_timings", "equipment_readings", "service_times")
+# tests\BreakfastProvider.Tests.Unit\Emulator\DuckDbClickHouseQueryEngineTests.cs
+inserted.Should().Be(1)
+# tests\BreakfastProvider.Tests.Unit\Emulator\DuckDbClickHouseQueryEngineTests.cs
+list.Columns.Select(c => c.TypeString).Should().Equal("String", "String", "String", "String", "Float64", "DateTime")
+# tests\BreakfastProvider.Tests.Unit\Emulator\DuckDbClickHouseQueryEngineTests.cs
+var row = list.Rows.Should().ContainSingle().Subject
+# tests\BreakfastProvider.Tests.Unit\Emulator\DuckDbClickHouseQueryEngineTests.cs
+row[0].Should().Be("t-1")
+# tests\BreakfastProvider.Tests.Unit\Emulator\DuckDbClickHouseQueryEngineTests.cs
+row[4].Should().Be(12.5d)
+# tests\BreakfastProvider.Tests.Unit\Emulator\DuckDbClickHouseQueryEngineTests.cs
+var recordedAt = row[5].Should().BeOfType<DateTime>().Subject
+# tests\BreakfastProvider.Tests.Unit\Emulator\DuckDbClickHouseQueryEngineTests.cs
+recordedAt.Should().Be(new DateTime(2026, 9, 2, 10, 11, 12))
+# tests\BreakfastProvider.Tests.Unit\Emulator\DuckDbClickHouseQueryEngineTests.cs
+recordedAt.Kind.Should().Be(DateTimeKind.Utc)
+# tests\BreakfastProvider.Tests.Unit\Emulator\DuckDbClickHouseQueryEngineTests.cs
+deleted.Should().Be(1)
+# tests\BreakfastProvider.Tests.Unit\Emulator\DuckDbClickHouseQueryEngineTests.cs
+.Rows.Should().BeEmpty()
+# tests\BreakfastProvider.Tests.Unit\Emulator\DuckDbClickHouseQueryEngineTests.cs
+summary.Columns.Select(c => c.Name).Should().Equal("station", "avg_prep_seconds", "p95_prep_seconds", "timing_count")
+# tests\BreakfastProvider.Tests.Unit\Emulator\DuckDbClickHouseQueryEngineTests.cs
+summary.Columns.Select(c => c.TypeString).Should().Equal("String", "Float64", "Float64", "UInt64")
+# tests\BreakfastProvider.Tests.Unit\Emulator\DuckDbClickHouseQueryEngineTests.cs
+var row = summary.Rows.Should().ContainSingle().Subject
+# tests\BreakfastProvider.Tests.Unit\Emulator\DuckDbClickHouseQueryEngineTests.cs
+row[1].Should().Be(25d)
+# tests\BreakfastProvider.Tests.Unit\Emulator\DuckDbClickHouseQueryEngineTests.cs
+row[2].Should().Be(38.5d)
+# tests\BreakfastProvider.Tests.Unit\Emulator\DuckDbClickHouseQueryEngineTests.cs
+row[3].Should().Be(4UL)
+# tests\BreakfastProvider.Tests.Unit\Emulator\DuckDbClickHouseQueryEngineTests.cs
+result.Columns.Should().ContainSingle().Which.Should().Be(new ClickHouseColumn("1", "UInt8"))
+# tests\BreakfastProvider.Tests.Unit\Emulator\DuckDbClickHouseQueryEngineTests.cs
+result.Rows.Single()[0].Should().Be((byte)1)
+# tests\BreakfastProvider.Tests.Unit\Emulator\DuckDbClickHouseQueryEngineTests.cs
+result.Columns[0].TypeString.Should().Be("Nullable(Int32)")
+# tests\BreakfastProvider.Tests.Unit\Emulator\DuckDbClickHouseQueryEngineTests.cs
+result.Columns[1].TypeString.Should().Be("String")
+# tests\BreakfastProvider.Tests.Unit\Emulator\DuckDbClickHouseQueryEngineTests.cs
+result.Rows.Single()[0].Should().Be(DBNull.Value)
+# tests\BreakfastProvider.Tests.Unit\Emulator\DuckDbClickHouseQueryEngineTests.cs
+var exception = act.Should().Throw<ClickHouseEmulatorException>().Which
+# tests\BreakfastProvider.Tests.Unit\Emulator\DuckDbClickHouseQueryEngineTests.cs
+exception.Code.Should().Be(code)
+# tests\BreakfastProvider.Tests.Unit\Emulator\DuckDbClickHouseQueryEngineTests.cs
+exception.Name.Should().Be(name)
+# tests\BreakfastProvider.Tests.Unit\Emulator\DuckDbClickHouseQueryEngineTests.cs
+act.Should().Throw<ClickHouseEmulatorException>().WithMessage("*never sum() an integer column*")
+# tests\BreakfastProvider.Tests.Unit\Emulator\DuckDbClickHouseQueryEngineTests.cs
+count.Rows.Single()[0].Should().Be(50UL)
+# tests\BreakfastProvider.Tests.Unit\Emulator\InMemoryClickHouseHandlerTests.cs
+(await response.Content.ReadAsStringAsync()).Should().Be("25.8.33.6\tUTC\n")
+# tests\BreakfastProvider.Tests.Unit\Emulator\InMemoryClickHouseHandlerTests.cs
+response.Headers.GetValues("X-ClickHouse-Timezone").Should().Equal("UTC")
+# tests\BreakfastProvider.Tests.Unit\Emulator\InMemoryClickHouseHandlerTests.cs
+response.Headers.GetValues("X-ClickHouse-Server-Display-Name").Should().Equal("inmemory")
+# tests\BreakfastProvider.Tests.Unit\Emulator\InMemoryClickHouseHandlerTests.cs
+response.Headers.Contains("X-ClickHouse-Query-Id").Should().BeTrue()
+# tests\BreakfastProvider.Tests.Unit\Emulator\InMemoryClickHouseHandlerTests.cs
+bytes.Should().Equal([0x01, 0x01, (byte)'1', 0x05, .. "UInt8"u8.ToArray(), 0x01])
+# tests\BreakfastProvider.Tests.Unit\Emulator\InMemoryClickHouseHandlerTests.cs
+response.Headers.GetValues("X-ClickHouse-Format").Should().Equal("RowBinaryWithNamesAndTypes")
+# tests\BreakfastProvider.Tests.Unit\Emulator\InMemoryClickHouseHandlerTests.cs
+(await response.Content.ReadAsByteArrayAsync()).Should().BeEmpty()
+# tests\BreakfastProvider.Tests.Unit\Emulator\InMemoryClickHouseHandlerTests.cs
+response.Headers.GetValues("X-ClickHouse-Summary").Single().Should().Contain("\"written_rows\":\"1\"")
+# tests\BreakfastProvider.Tests.Unit\Emulator\InMemoryClickHouseHandlerTests.cs
+stored.Rows.Single()[0].Should().Be(new DateTime(2026, 9, 2, 19, 57, 52, DateTimeKind.Utc))
+# tests\BreakfastProvider.Tests.Unit\Emulator\InMemoryClickHouseHandlerTests.cs
+(await response.Content.ReadAsByteArrayAsync()).Should().EndWith([0x01])
+# tests\BreakfastProvider.Tests.Unit\Emulator\InMemoryClickHouseHandlerTests.cs
+(await response.Content.ReadAsStringAsync()).Should().Be("1\n")
+# tests\BreakfastProvider.Tests.Unit\Emulator\InMemoryClickHouseHandlerTests.cs
+response.StatusCode.Should().Be(status)
+# tests\BreakfastProvider.Tests.Unit\Emulator\InMemoryClickHouseHandlerTests.cs
+response.Headers.GetValues("X-ClickHouse-Exception-Code").Should().Equal(code.ToString())
+# tests\BreakfastProvider.Tests.Unit\Emulator\InMemoryClickHouseHandlerTests.cs
+body.Should().StartWith($"Code: {code}. DB::Exception: ")
+# tests\BreakfastProvider.Tests.Unit\Emulator\InMemoryClickHouseHandlerTests.cs
+body.Should().EndWith($". ({name}) (version 25.8.33.6 (official build))")
+# tests\BreakfastProvider.Tests.Unit\Emulator\InMemoryClickHouseHandlerTests.cs
+response.StatusCode.Should().Be(HttpStatusCode.NotImplemented)
+# tests\BreakfastProvider.Tests.Unit\Emulator\InMemoryClickHouseHandlerTests.cs
+(await response.Content.ReadAsStringAsync()).Should().Contain("JSONEachRow")
+# tests\BreakfastProvider.Tests.Unit\Emulator\InMemoryClickHouseHandlerTests.cs
+_engine.Execute("SHOW TABLES", NoParams).Rows.Select(r => r[0]).Should().Contain("extra")
+# tests\BreakfastProvider.Tests.Unit\Emulator\InMemoryClickHouseServerEndToEndTests.cs
+(await version.ExecuteScalarAsync()).Should().Be("25.8.33.6")
+# tests\BreakfastProvider.Tests.Unit\Emulator\InMemoryClickHouseServerEndToEndTests.cs
+connection.Database.Should().Be("kitchen_analytics")
+# tests\BreakfastProvider.Tests.Unit\Emulator\InMemoryClickHouseServerEndToEndTests.cs
+(await insert.ExecuteNonQueryAsync()).Should().Be(0, "the driver reports 0 rows affected, as it does against a real server")
+# tests\BreakfastProvider.Tests.Unit\Emulator\InMemoryClickHouseServerEndToEndTests.cs
+reader.GetString(0).Should().Be("t-1")
+# tests\BreakfastProvider.Tests.Unit\Emulator\InMemoryClickHouseServerEndToEndTests.cs
+reader.GetDouble(1).Should().Be(12.5d)
+# tests\BreakfastProvider.Tests.Unit\Emulator\InMemoryClickHouseServerEndToEndTests.cs
+reader.GetDateTime(2).Should().Be(recordedAt)
+# tests\BreakfastProvider.Tests.Unit\Emulator\InMemoryClickHouseServerEndToEndTests.cs
+reader.GetDateTime(2).Kind.Should().Be(DateTimeKind.Unspecified)
+# tests\BreakfastProvider.Tests.Unit\Emulator\InMemoryClickHouseServerEndToEndTests.cs
+(await scalar.ExecuteScalarAsync()).Should().Be(0UL)
+# tests\BreakfastProvider.Tests.Unit\Emulator\InMemoryClickHouseServerEndToEndTests.cs
+(await act.Should().ThrowAsync<ClickHouseServerException>()).Which.Message.Should().StartWith("Code: 60.")
+# tests\BreakfastProvider.Tests.Unit\Emulator\RowBinaryWriterTests.cs
+reader.FieldCount.Should().Be(10)
+# tests\BreakfastProvider.Tests.Unit\Emulator\RowBinaryWriterTests.cs
+reader.GetName(0).Should().Be("timing_id")
+# tests\BreakfastProvider.Tests.Unit\Emulator\RowBinaryWriterTests.cs
+reader.GetFieldType(0).Should().Be(typeof(string))
+# tests\BreakfastProvider.Tests.Unit\Emulator\RowBinaryWriterTests.cs
+reader.GetFieldType(1).Should().Be(typeof(double))
+# tests\BreakfastProvider.Tests.Unit\Emulator\RowBinaryWriterTests.cs
+reader.GetFieldType(2).Should().Be(typeof(DateTime))
+# tests\BreakfastProvider.Tests.Unit\Emulator\RowBinaryWriterTests.cs
+reader.GetFieldType(3).Should().Be(typeof(ulong))
+# tests\BreakfastProvider.Tests.Unit\Emulator\RowBinaryWriterTests.cs
+reader.GetFieldType(5).Should().Be(typeof(byte))
+# tests\BreakfastProvider.Tests.Unit\Emulator\RowBinaryWriterTests.cs
+reader.GetFieldType(6).Should().Be(typeof(int))
+# tests\BreakfastProvider.Tests.Unit\Emulator\RowBinaryWriterTests.cs
+reader.GetFieldType(7).Should().Be(typeof(long))
+# tests\BreakfastProvider.Tests.Unit\Emulator\RowBinaryWriterTests.cs
+reader.GetFieldType(8).Should().Be(typeof(uint))
+# tests\BreakfastProvider.Tests.Unit\Emulator\RowBinaryWriterTests.cs
+reader.GetFieldType(9).Should().Be(typeof(float))
+# tests\BreakfastProvider.Tests.Unit\Emulator\RowBinaryWriterTests.cs
+reader.GetString(0).Should().Be("id-1")
+# tests\BreakfastProvider.Tests.Unit\Emulator\RowBinaryWriterTests.cs
+reader.GetDouble(1).Should().Be(2.5d)
+# tests\BreakfastProvider.Tests.Unit\Emulator\RowBinaryWriterTests.cs
+reader.GetDateTime(2).Should().Be(SampleUtc)
+# tests\BreakfastProvider.Tests.Unit\Emulator\RowBinaryWriterTests.cs
+reader.GetValue(3).Should().Be(3UL)
+# tests\BreakfastProvider.Tests.Unit\Emulator\RowBinaryWriterTests.cs
+reader.GetString(4).Should().Be("hello")
+# tests\BreakfastProvider.Tests.Unit\Emulator\RowBinaryWriterTests.cs
+reader.GetValue(5).Should().Be((byte)1)
+# tests\BreakfastProvider.Tests.Unit\Emulator\RowBinaryWriterTests.cs
+reader.GetInt32(6).Should().Be(-7)
+# tests\BreakfastProvider.Tests.Unit\Emulator\RowBinaryWriterTests.cs
+reader.GetInt64(7).Should().Be(-9L)
+# tests\BreakfastProvider.Tests.Unit\Emulator\RowBinaryWriterTests.cs
+reader.GetValue(8).Should().Be(5U)
+# tests\BreakfastProvider.Tests.Unit\Emulator\RowBinaryWriterTests.cs
+reader.GetFloat(9).Should().Be(1.25f)
+# tests\BreakfastProvider.Tests.Unit\Emulator\RowBinaryWriterTests.cs
+reader.GetString(0).Should().Be("id-2")
+# tests\BreakfastProvider.Tests.Unit\Emulator\RowBinaryWriterTests.cs
+reader.GetValue(3).Should().Be(ulong.MaxValue)
+# tests\BreakfastProvider.Tests.Unit\Emulator\RowBinaryWriterTests.cs
+reader.IsDBNull(4).Should().BeTrue()
+# tests\BreakfastProvider.Tests.Unit\Emulator\RowBinaryWriterTests.cs
+reader.GetValue(5).Should().Be((byte)1, "bool true is encoded as UInt8 1")
+# tests\BreakfastProvider.Tests.Unit\Emulator\RowBinaryWriterTests.cs
+reader.GetInt32(6).Should().Be(int.MaxValue)
+# tests\BreakfastProvider.Tests.Unit\Emulator\RowBinaryWriterTests.cs
+reader.GetInt64(7).Should().Be(long.MinValue)
+# tests\BreakfastProvider.Tests.Unit\Emulator\RowBinaryWriterTests.cs
+reader.GetValue(8).Should().Be(uint.MaxValue)
+# tests\BreakfastProvider.Tests.Unit\Emulator\RowBinaryWriterTests.cs
+Varint(0).Should().Equal([0x00])
+# tests\BreakfastProvider.Tests.Unit\Emulator\RowBinaryWriterTests.cs
+Varint(127).Should().Equal([0x7F])
+# tests\BreakfastProvider.Tests.Unit\Emulator\RowBinaryWriterTests.cs
+Varint(128).Should().Equal([0x80, 0x01])
+# tests\BreakfastProvider.Tests.Unit\Emulator\RowBinaryWriterTests.cs
+Varint(300).Should().Equal([0xAC, 0x02])
+# tests\BreakfastProvider.Tests.Unit\Emulator\RowBinaryWriterTests.cs
+Encode("Nullable(String)", DBNull.Value).Should().Equal([0x01])
+# tests\BreakfastProvider.Tests.Unit\Emulator\RowBinaryWriterTests.cs
+Encode("Nullable(String)", "a").Should().Equal([0x00, 0x01, (byte)'a'])
+# tests\BreakfastProvider.Tests.Unit\Emulator\RowBinaryWriterTests.cs
+Encode("Nullable(UInt8)", (byte)7).Should().Equal([0x00, 0x07])
+# tests\BreakfastProvider.Tests.Unit\Emulator\RowBinaryWriterTests.cs
+Encode("UInt32", 1U).Should().Equal([0x01, 0x00, 0x00, 0x00])
+# tests\BreakfastProvider.Tests.Unit\Emulator\RowBinaryWriterTests.cs
+Encode("Int64", -1L).Should().Equal(Enumerable.Repeat((byte)0xFF, 8))
+# tests\BreakfastProvider.Tests.Unit\Emulator\RowBinaryWriterTests.cs
+Encode("Float64", 1.0d).Should().Equal(BitConverter.GetBytes(1.0d))
+# tests\BreakfastProvider.Tests.Unit\Emulator\RowBinaryWriterTests.cs
+Encode("DateTime", SampleUtc).Should().Equal(BitConverter.GetBytes((uint)new DateTimeOffset(SampleUtc).ToUnixTimeSeconds()))
+# tests\BreakfastProvider.Tests.Unit\Emulator\RowBinaryWriterTests.cs
+Encode("String", "hé").Should().Equal([0x03, 0x68, 0xC3, 0xA9])
+# tests\BreakfastProvider.Tests.Unit\Emulator\RowBinaryWriterTests.cs
+bytes.Should().Equal([0x02, 0x01, (byte)'a', 0x02, (byte)'b', (byte)'b', 0x05, .. "UInt8"u8.ToArray(), 0x06, .. "String"u8.ToArray()])
+# tests\BreakfastProvider.Tests.Unit\Emulator\RowBinaryWriterTests.cs
+act.Should().Throw<InvalidOperationException>().WithMessage("*non-Nullable*")
+# tests\BreakfastProvider.Tests.Unit\Emulator\TsvWriterTests.cs
+TsvWriter.Write(resultSet).Should().Be("25.8.33.6\tUTC\n")
+# tests\BreakfastProvider.Tests.Unit\Emulator\TsvWriterTests.cs
+TsvWriter.Write(resultSet, withNamesAndTypes: true).Should().Be("a\tb\nString\tUInt8\nx\t1\ny\t0\n")
+# tests\BreakfastProvider.Tests.Unit\Emulator\TsvWriterTests.cs
+TsvWriter.Format(DBNull.Value).Should().Be("\\N")
+# tests\BreakfastProvider.Tests.Unit\Emulator\TsvWriterTests.cs
+TsvWriter.Format(null).Should().Be("\\N")
+# tests\BreakfastProvider.Tests.Unit\Emulator\TsvWriterTests.cs
+TsvWriter.Format(true).Should().Be("1")
+# tests\BreakfastProvider.Tests.Unit\Emulator\TsvWriterTests.cs
+TsvWriter.Format(2.5d).Should().Be("2.5")
+# tests\BreakfastProvider.Tests.Unit\Emulator\TsvWriterTests.cs
+TsvWriter.Format(new DateTime(2026, 9, 2, 10, 11, 12, DateTimeKind.Utc)).Should().Be("2026-09-02 10:11:12")
+# tests\BreakfastProvider.Tests.Unit\Emulator\TsvWriterTests.cs
+TsvWriter.Format("tab\there\nnew\\slash").Should().Be("tab\\there\\nnew\\\\slash")
