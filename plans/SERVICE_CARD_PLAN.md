@@ -1,31 +1,35 @@
 # The service card: one call graph, and `service.json` from any run (#191)
 
-**Date:** 2026-10-26, audited and revised 2026-10-27 · **Repo version:** written against 5.11.0 (`origin/main` at
-`44bcc62a`); a READ citation is at that commit unless it says `at 8d7d1e1d` (5.14.0, the base this branch is rebased
-on), and Appendix A is at `8d7d1e1d` · **Status:** ❌ plan written, nothing implemented, **NOT green-lit**. Written at
-the owner's request of 2026-10-26: analyse #191 critically, then plan a fix for the underlying problem, which may not be
-the fix the issue proposes. Audited on 2026-10-27 by three reviews and revised to them (section 9).
+**Date:** 2026-10-26, audited and revised 2026-10-27, verified 2026-10-28 · **Repo version:** written against 5.11.0
+(`origin/main` at `44bcc62a`); a READ citation is at that commit unless it names another (`8d7d1e1d`, 5.14.0;
+`6bbc2ce1`, 5.15.0; `15a95d4c`, 5.16.0), and Appendix A is at `8d7d1e1d`. This branch is rebased on `6bbc2ce1`;
+`origin/main` has since reached `15a95d4c` · **Status:** ❌ plan written, nothing implemented, **NOT green-lit**. Written
+at the owner's request of 2026-10-26: analyse #191 critically, then plan a fix for the underlying problem, which may not
+be the fix the issue proposes. Audited on 2026-10-27 by three reviews and revised to them, and verified on 2026-10-28 by
+a fourth (section 9).
 
 Two sibling plans were written the same day, by agreement, so that the three issues get one design rather than three:
 
 - `PARTY_IDENTITY_PLAN.md` (#190, session kronikol-67): the subject's identity, each party's id, kind and `kindSource`,
-  and the rule that infers the test client and the subject when nothing is declared. Its R2 (planned as 5.15.0) adds the
-  per-call `testDouble` mark and changes that rule; its R3 (planned as 5.16.0) indexes the data file's root background
-  calls apart from the scenarios' and resolves parties at run scope over both (PEER, agreed by message on 2026-10-27).
+  and the rule that infers the test client and the subject when nothing is declared. Its R2 (5.15.0) added the per-call
+  `testDouble` mark and changed that rule; its R3 (5.16.0) makes the .NET handler mark a call a stub handler answered
+  (§5.11) and, as agreed by message on 2026-10-27, indexes the data file's root background calls apart from the
+  scenarios' and resolves parties at run scope over both.
 - `CALL_OPERATION_AND_ORIGIN_PLAN.md` (#192, session kronikol-bf): the one key that says what operation a call is
   (built on `InteractionShape`), `origin`, `cause` (its open Q4), and the `--group-by` dimensions.
 
 This plan cites them for those rules and does not restate them. Section 4.0 has the split. `PARTY_IDENTITY_PLAN.md`
-has been on `main` since 5.13.0 (`2b74a2e4`), which shipped its R0, and 5.14.0 (`8d7d1e1d`) shipped its R1; its R2 and
-R3 as cited here are its session's plan, not yet on `main`. `CALL_OPERATION_AND_ORIGIN_PLAN.md` lives in its session's
-worktree (`C:/Code/Kronikol-192`), not on `main`.
+has been on `main` since 5.13.0 (`2b74a2e4`), which shipped its R0; 5.14.0 (`8d7d1e1d`) shipped its R1, 5.15.0
+(`6bbc2ce1`) its R2 and 5.16.0 (`15a95d4c`) its R3. `CALL_OPERATION_AND_ORIGIN_PLAN.md` lives in its session's worktree
+(`C:/Code/Kronikol-192`), not on `main`.
 
 Evidence labels:
 
 - **RUN** means measured with the probes in [`SERVICE_CARD_PLAN.harness/`](SERVICE_CARD_PLAN.harness/README.md), on
   Windows 11 26200 with .NET 10: on 2026-10-26 with the 5.11.0 tool built from `44bcc62a`, and on 2026-10-27 with the
   5.14.0 tool and source (`8d7d1e1d`) by this plan's audit (files named `audit-A-`, `audit-B-` and `audit-C-`) and its
-  revision (files named `revision-`). The inputs were:
+  revision (files named `revision-`), and on 2026-10-28 by its verification (files named `verify-`), with the
+  revision's probe built as before and the same inputs. The inputs were:
   - BreakfastProvider, the reference consumer: CI run 40290999167 on `cf47045` (Kronikol 5.4.1), four lanes' data
     files (`xunit-in-memory`, `reqnroll-in-memory`, `xunit-external-sut`, `reqnroll-in-docker`), fetched with
     `gh run download` and decoded with `kronikol decode`; from 2026-10-27 also all 18 lanes of runs 40473765203
@@ -37,7 +41,7 @@ Evidence labels:
   - stand-ins kronikol-bf made on 2026-10-27 for the stacks the issue was measured on (A3): the same CI run's
     `nunit`, `tunit`, `lightbdd` and `bddfy` in-memory lanes, and a Jest ingest (5.11.0, from
     `INGEST_FIDELITY_PLAN.harness/otel-jest` through the wiki's recipe), kept in its plan's harness.
-- **READ** means Kronikol's source at `44bcc62a`, or at `8d7d1e1d` where the citation says so.
+- **READ** means Kronikol's source at `44bcc62a`, or at the commit the citation names.
 - **PEER** means measured or read by a sibling plan's session, or planned by it and agreed by message; the script is
   named where there is one.
 - **ISSUE** means the issue's own numbers, not measured again: the three reports it used are not on this machine
@@ -79,8 +83,8 @@ Evidence labels:
   2. **Phase cannot break the tie, but nesting can repair it.** On the Reqnroll lane every call the service made
      inside a received request has no phase, 731 of 731. The identity reaches the service in a request header
      (`attributionSource: RequestHeader`), and the header carries the test's id but not its phase (RUN, PEER). The
-     phase of the call they ran inside is known. A background call keeps the phase it recorded, as a rule: one was
-     nested under an unrelated request by the order it was recorded in (RUN, 2.4).
+     phase of the call they ran inside is known. A background call keeps the phase it recorded, as a rule, because
+     recording order once placed one under an unrelated request (RUN, 2.4).
   3. **"Byte-identical for the same behaviour" contradicts the issue's own fields, and holds for presence.** Over
      1,005 pairs of consecutive runs of one suite on one commit (RUN, the ledger): some scenario's call count changed
      in 37.6% of the pairs, some call order in 79.1%, the run's set of distinct operations in 2.9% (of the 933 pairs
@@ -97,13 +101,15 @@ Evidence labels:
      queries Cosmos DB and BigQuery send as documents; that lane has no batch behind a `SET` prologue (PEER, #192's
      `results/route/_summary.txt`). #192 owns the one shared key built on it.
   5. **Most parties have no path, and many have no host.** Most of BreakfastProvider's 18 parties are databases and
-     brokers. On its in-memory lanes 7 of 16 called parties have no host in any call's URI (both SQL Server databases,
-     Pub/Sub, Kafka, MongoDB, the gRPC notification service, Spanner) and Event Grid has only the placeholder
-     `topics`; in docker, 6 of 17 and the same placeholder (PEER, `hosts.py`). An operation is a method and a
-     templated target: a path, a statement head or a topic.
+     brokers. On its in-memory lanes 7 of 16 called parties have no host in any call's URI on a 5.4.1 report (both SQL
+     Server databases, Pub/Sub, Kafka, MongoDB, the gRPC notification service, Spanner) and 5 on a 5.12.1 one, the
+     databases gaining `localhost`, since 5.11.1 gives a data source a host (`CHANGELOG.md` L252 at `8d7d1e1d`); in
+     docker, 6 of 17 on both (those five and Event Hubs). Event Grid has only the placeholder `topics` on every lane
+     (RUN, `results/verify-party-hosts.txt`; PEER, `hosts.py`). An operation is a method and a templated target: a
+     path, a statement head or a topic.
   6. **It is not an 8 KB file.** In the revised shape, on BreakfastProvider's in-process lanes (187 to 214 scenarios,
-     168 to 180 operations), the whole file is 159 to 178 KB written compact and 23 to 25 KB gzipped; `behaviour`
-     without its scenario index (edges, operations, parties, `exposes`, `messages`) is 49 to 54 KB (RUN, 2.3). That is
+     168 to 180 operations), the whole file is 159 to 177 KB written compact and 23 to 25 KB gzipped; `behaviour`
+     without its scenario index (edges, operations, parties, `exposes`, `messages`) is 48 to 53 KB (RUN, 2.3). That is
      fine for an indexer. A model's first read is FLEET's `Service.md`, which this plan does not build.
 - **The plan.**
   - **One call graph, in core** (4.2): parties, edges, operations, and for each call its parent, `origin`, `cause` and
@@ -112,8 +118,8 @@ Evidence labels:
   - **`service.json` is a projection of it** (4.3), in two parts. `behaviour` holds sets only, in a total order, and
     is byte-identical when the behaviour is; its SHA-256 is `behaviourHash`, over the bytes the file holds. `run` holds
     the per-run facts: counts, errors, example addresses, hosts, and every operation each scenario reached. A `capture`
-    block says what the run could not see. The card is a function of the data file alone: what a run observed and did
-    not write never reaches it (Q15).
+    block says what the run could not see. The card's `behaviour` is a function of the data file alone: what a run
+    observed and did not write never reaches it (Q15).
   - **`kronikol card <report>`** writes the same file from any report, 4.x JSON or 5.x `.krkl`, through the same
     writer (4.4).
   - **At run end** the file is written after the outputs, once the data file is on disk, behind `GenerateServiceCard`,
@@ -123,9 +129,9 @@ Evidence labels:
 - **Releases.** R1, a minor: the call graph, `kronikol card` and the committed JSON Schema, with the one function that
   resolves parties from a report and the inference's version; no report byte changes. R2, a minor: the run-end file,
   its option, `Run.json`'s new key and the merge's card. The order across the three plans: #190 R0 (5.13.0), R1
-  (5.14.0), R2 and R3, then #192 (R1 to R3), then this plan, since the card needs #190's resolver and its background
-  calls at run scope, and #192's operation key, `origin` and `cause`. Seventeen questions are in section 7; Q6 is
-  answered by measurement.
+  (5.14.0), R2 (5.15.0) and R3 (5.16.0), all released, then #192 (R1 to R3), then this plan, since the card needs
+  #190's resolver and its background calls at run scope, and #192's operation key, `origin` and `cause`. Seventeen
+  questions are in section 7; Q6 is answered by measurement.
 
 ## 1. How far each claim was checked
 
@@ -143,7 +149,7 @@ Evidence labels:
 | 10 | Jest marks every call Action, under one synthetic `Run:` step | **Not measured on the issue's report.** The stand-in made with the wiki's recipe records no phase on its 8 calls (2.3). Ingest gives Action only to a step whose keyword or keyword type is When, Then, Action or Outcome; a step of another keyword keeps the previous step's phase, none on a test's first (`IngestAttribution.cs:448-453`, `:480`). So the issue's report must have sent its `Run:` step as one of those. | ISSUE; RUN; READ |
 | 11 | `origin` works even where phase is missing | **Half true.** As the caller's role it works where the test acts with a client of its own. It cannot separate a test that acts through the service's own clients, because caller names are static per registration (2.2). `cause` covers part of that; no recorded signal covers the rest (#192). | READ, RUN, PEER |
 | 12 | Two runs with the same behaviour can produce byte-identical files | **False for the fields the issue lists, true for presence.** Over 1,005 same-commit run pairs: counts 37.6%, order 79.1%, the operation set 2.9% of the 933 pairs that carry call lists, edges 0.4% and none where the scenarios' results were the same. The card's `behaviour` as revised: byte-identical on 10 of 10 same-commit lane pairs (2.4). | RUN |
-| 13 | `kronikol card` can write the file from a 4.x JSON report and from a 5.x `.krkl` | **Feasible.** `ReportScanner` reads both, as `kronikol ctrf` does (`CtrfCommand.cs:80`), and has read `attributionSource` since 5.14.0; the root background block it reads after #190's R3. Without declarations in the file, the card infers every party and says so. No run is written by both a 4.x and a 5.x writer, so the fixtures are per writer (5.3.1). | READ, PEER |
+| 13 | `kronikol card` can write the file from a 4.x JSON report and from a 5.x `.krkl` | **Feasible.** `ReportScanner` reads both, as `kronikol ctrf` does (`CtrfCommand.cs:80`), has read `attributionSource` since 5.14.0, and reads the root background block's calls since 5.16.0 (#190's R3), though not yet a compressed body there (Appendix A). Without declarations in the file, the card infers every party and says so. No run is written by both a 4.x and a 5.x writer, so the fixtures are per writer (5.3.1). | READ |
 | 14 | Source file and line "when the run has it" | **Reqnroll lanes, the Jest stand-in and Example.Api's Reqnroll report: every scenario** (214 of 214 on Reqnroll, feature `sourceFile` too). **xUnit, NUnit and TUnit lanes: none** (0 of 212). LightBDD and BDDfy: none at the scenario; a step's bare file name on 179 of 187 and 211 of 212, which is no path and which the card does not take. | RUN (`results/audit-C-source-locations.txt`) |
 | 15 | `framework` (e.g. `reqnroll+xunit3`) | **Not recorded anywhere.** A data file's root holds `formatVersion`, `kronikolVersion`, `suite`, the two times, `ciMetadata`, `environment`, `features`, `background`, `diagnostics` when there are any, and since 5.14.0 `serviceId` and `parties` when the run declares something. Null for every existing report. | RUN (`results/audit-C-background-block-lanes.txt`), READ |
 | 16 | `FixedNameForReceivingService` is a display name | **True, and narrower than that.** It is read only for the report's title (`ReportGenerator.cs:1063`). The name a party gets on the calls comes from the handler's options, so a subject declared from this option could name a party no call carries. | PEER, READ |
@@ -220,13 +226,14 @@ report, holds no calls), and its second-subject rule never fires, so no number b
 On the five in-memory lanes other than Reqnroll's, five test frameworks driving the same service, the calls inside a
 received call are 755 every time, and the calls outside any vary from 56 to 90 between frameworks: the Cosmos DB
 metadata reads repeat per host start (11 to 22 each), and the frameworks start the host a different number of times.
-Across every in-process lane measured, the docker ones included, the range is 56 to 159 (PEER: `xunit-in-docker` gives
-159, counted by `attributionSource`). These are differences between frameworks in one CI run; what background calls do
-between runs of one suite is measured in 2.4. The test's own phases are recorded on the Gherkin-style lanes (LightBDD:
-Setup 234, Action 199) and not on xUnit, NUnit and TUnit (445 of 451 unknown). The Jest stand-in carries no
-`attributionSource` and no phase on any of its 8 calls, but its records nest: the service's 4 calls sit inside the
-test's (`results/card-prototype-stand-ins.txt`). The prototype has no GraphQL rule, so its 5 operations count the
-stand-in's two GraphQL operations as one; #192's 4.2 splits them.
+Across every in-process lane measured, the docker ones included, the range is 56 to 162 over the scenarios' calls, and
+165 on `tunit-in-docker` with its root background block's 3 calls (RUN, `results/audit-B-cards-all.txt`,
+`audit-B-cards-bgsection.txt`; PEER: `xunit-in-docker` gives 159 counted by `attributionSource`). These are
+differences between frameworks in one CI run; what background calls do between runs of one suite is measured in 2.4.
+The test's own phases are recorded on the Gherkin-style lanes (LightBDD: Setup 234, Action 199) and not on xUnit, NUnit
+and TUnit (445 of 451 unknown). The Jest stand-in carries no `attributionSource` and no phase on any of its 8 calls, but
+its records nest: the service's 4 calls sit inside the test's (`results/card-prototype-stand-ins.txt`). The prototype
+has no GraphQL rule, so its 5 operations count the stand-in's two GraphQL operations as one; #192's 4.2 splits them.
 
 The service's calls outside any received call, commonest first: Cosmos DB metadata reads (`Other` on `/`,
 `/dbs/BreakfastDb` and `/colls/orders`, 15 to 21 each), the outbox poller's query (`SELECT VALUE root FROM root WHERE
@@ -237,26 +244,30 @@ in-memory lanes, 755 and 86, 731 and 68 (PEER, #192's measurement). The two sign
 call of 25,831 differs over 46 reports) and differ on deliveries, which are top level by nesting and `RequestHeader`
 by attribution (RUN, `results/audit-B-cards-all.txt`; 4.2). The docker lane above is the run's `reqnroll-in-docker`
 artifact; the same run's `xunit-in-docker` lane holds 1,297 requests (PEER). With R1's subject, `exposes` is 81
-operations on the in-memory and docker lanes and 74 on the external-SUT lanes (73 on Reqnroll's), and `messages` 24 in
-memory and 22 in docker (RUN, audit B; the revised probe gives the same, `results/revision-sizes.txt`).
+operations on the in-memory and docker lanes and 74 on the external-SUT lanes (73 on Reqnroll's), and `messages` 19 in
+memory and 17 in docker under 4.2's message rule (RUN, `results/verify-sizes.txt`). Audit B and the revision counted 24
+and 22: their probes read a call with the meta type `Event` as a message, so Spanner's 5 operations were publishes
+(`results/revision-sizes.txt`, `verify-messages.txt`).
 
-The card in the revised shape (4.3), written by `probes/revision-card-revised.cs` from the 18 lanes of run 40491266394
-(`68a8760`, Kronikol 5.12.1, the newest), in bytes of UTF-8, gzipped at level 9 (`results/revision-sizes-table.txt`):
+The card in the revised shape (4.3), written by `probes/revision-card-revised.cs` with `--corrected-broker-rule` from
+the 18 lanes of run 40491266394 (`68a8760`, Kronikol 5.12.1, the newest), in bytes of UTF-8, gzipped at level 9
+(`results/verify-sizes-table.txt`). The revision's table, `revision-sizes-table.txt`, came before the message rule was
+corrected; its in-process cards are 457 bytes larger compact, the 5 Spanner rows, and nothing else in them differs:
 
 | Reports | Operations | Whole file, compact | gzipped | Indented | gzipped | `behaviour`, compact | `behaviour` without the scenario index | `run`, compact |
 |---|---|---|---|---|---|---|---|---|
-| 6 in-memory lanes (187 to 214 scenarios) | 179 to 180 | 168,952 to 177,632 | 24,505 to 25,375 | 294,880 to 314,029 | 28,441 to 29,746 | 104,148 to 113,640 | 53,313 to 53,586 | 63,250 to 64,764 |
-| 6 in-docker lanes | 168 to 171 | 159,041 to 167,624 | 23,494 to 24,459 | 277,736 to 297,145 | 27,302 to 28,495 | 99,968 to 108,969 | 48,690 to 49,443 | 57,688 to 59,564 |
+| 6 in-memory lanes (187 to 214 scenarios) | 179 to 180 | 168,495 to 177,175 | 24,460 to 25,324 | 294,153 to 313,302 | 28,338 to 29,653 | 103,691 to 113,183 | 52,856 to 53,129 | 63,250 to 64,764 |
+| 6 in-docker lanes | 168 to 171 | 158,584 to 167,167 | 23,449 to 24,420 | 277,009 to 296,418 | 27,202 to 28,392 | 99,511 to 108,512 | 48,233 to 48,986 | 57,688 to 59,564 |
 | 6 external-SUT lanes | 73 to 74 | 87,679 to 102,173 | 13,259 to 15,928 | 151,710 to 176,944 | 15,035 to 17,902 | 60,417 to 74,141 | 15,425 to 15,680 | 27,032 to 28,375 |
 | Example.Api Reqnroll (10 scenarios, 5.8.0) | 6 | 7,378 | 1,816 | 13,133 | 2,021 | 4,529 | 2,224 | 2,809 |
 | Jest ingest stand-in (2 scenarios) | 6 | 4,631 | 1,250 | 8,780 | 1,421 | 2,516 | 2,055 | 2,075 |
 
-On `xunit-in-memory` the compact file's 173,310 bytes are `behaviour`'s 108,695 (the scenario index 55,369, the edges
-with their operations 46,627, the rest 6,699) and `run`'s 64,575 (`run.scenarios` 30,795, `counts` 23,773,
+On `xunit-in-memory` the compact file's 172,853 bytes are `behaviour`'s 108,238 (the scenario index 55,369, the edges
+with their operations 46,627, the rest 6,242) and `run`'s 64,575 (`run.scenarios` 30,795, `counts` 23,773,
 `examples` 8,157, `parties` 1,124). The first draft's table here measured the prototype's smaller shape (no op ids, no
 status, cause or phase sets, no `run` part); audit B measured the first draft's 4.3 at 143,806 to 152,218 bytes
-compact on the same six lanes. The probe approximates #192's key (no `SET` skip, no templating of a document's
-`query`), which moves the operation counts, not the shape.
+compact on the same six lanes (`results/audit-B-sizes-table.txt`). The probe approximates #192's key (no `SET` skip,
+no templating of a document's `query`), which moves the operation counts, not the shape.
 
 ### 2.4 What a summary would keep from one run to the next
 
@@ -275,12 +286,14 @@ slots passed in both (`results/ledger-stability-breakfastprovider.txt`).
 | a scenario's operations, status dropped (the first draft's scenario index) | 88 of 933 run pairs (9.4%); 80 of the 921 whose scenarios all had the same result (8.7%) |
 
 The operations that come and go are real non-determinism or a failure's footprint (RUN,
-`results/audit-A-ops-diff.txt`, `audit-A-ops-diff-results.txt`): a Cosmos DB `Replace` (an optimistic-concurrency
-retry, 18 pairs, 2 of them with 3 scenarios whose results differ), a Spanner `Rollback` (5), and a block of MongoDB
-calls with a `Breakfast Provider GET` (4) that comes and goes with 11 scenarios that passed in one run and failed in the
-other. Where the scenarios all had the same result, the edges never changed (0 of 993 pairs) and the operations changed
-in 21 of 921 (2.3%) (`results/audit-A-same-results.txt`, `audit-A-scenario-index.txt`). A run averages 123.5 distinct
-operations and 13 edges.
+`results/audit-A-ops-diff.txt`, `audit-A-ops-diff-results.txt`): a Cosmos DB `Replace` (the outbox poller's,
+`Replace /orders` in all 18 pairs, attributed `DocumentOwner` or `Expired` on every lane decoded and never to a
+request, so timing decides whether a run records it, `results/verify-replace.txt`; 2 of the 18 pairs with 3 scenarios
+whose results differ), a Spanner `Rollback` (5), and a block of MongoDB calls with a `Breakfast Provider GET` (4)
+that comes and goes with 11 scenarios that passed in one run and failed in the other. Where the scenarios all had the
+same result, the edges never changed (0 of 993 pairs) and the operations changed in 21 of 921 (2.3%)
+(`results/audit-A-same-results.txt`, `audit-A-scenario-index.txt`). A run averages 123.5 distinct operations and 13
+edges.
 
 The ledger holds history's lines, not the card. The card itself was measured on ten pairs of runs of one lane on one
 commit, 2,101 scenario rows: eight CI lanes of BreakfastProvider's runs 40290999167 and 40473765203 (`cf47045`,
@@ -298,6 +311,10 @@ revision's probe wrote the revised card in full (RUN, `results/audit-B-readings-
 | P4: P2, and a scenario's operations the test's own | 10 of 10 | 10 of 10 | 0 |
 | **As revised (4.3), the whole card** | **10 of 10** | 10 of 10 | 0 |
 
+The pairs were read under the revision's message rule. The corrected rule (4.2) takes the same 5 Spanner rows out of
+both cards of a pair and changes nothing else on these lanes (`results/verify-messages.txt`), so no count in the table
+moves (INFERRED).
+
 - Three of the five changed rows were background calls: the Cosmos DB SDK's metadata reads at host start, landing in
   whichever scenario started the host (TUnit, 2 rows), and the outbox poller's `Replace` of a document one scenario
   wrote (BDDfy, 1 row). That answers Q6: background calls leave every scenario's operations.
@@ -308,7 +325,8 @@ revision's probe wrote the revised card in full (RUN, `results/audit-B-readings-
 - The other two rows are real behaviour moving between scenarios through state they share: BreakfastProvider's
   `MenuService` caches the menu for 5 minutes in a host-wide `IMemoryCache`, and which of six `GET /menu` scenarios
   misses, and so calls Supplier Service and publishes, depends on order and timing (4 misses in one run, 5 in the
-  other). Only an index of the test's own operations removes it (P4); the full list moves to `run` (Q16).
+  other, on the CI pair and on the local one, `results/verify-pair-details.txt`). Only an index of the test's own
+  operations removes it (P4); the full list moves to `run` (Q16).
 - No edge, operation, status, origin, party, `exposes`, `messages`, `unresolved` or `capture` member differed in any
   pair. The revised card's `run.counts` differs on 6 of the 10 pairs, on one or two operations a lane.
 
@@ -318,12 +336,12 @@ revision's probe wrote the revised card in full (RUN, `results/audit-B-readings-
   `ReportScanner.Scan` (`CtrfCommand.cs:80`) into a neutral `CtrfTest` list, then the one writer,
   `CtrfReportGenerator.Build` (`CtrfReportGenerator.cs:212`). Its doc comment gives the reason it is not a `query` verb:
   "a document that gets truncated is not a document".
-- **`Run.json` is written last** and lists what reached disk, from the outputs that actually wrote
+- **`Run.json` is written last** and lists what reached disk, from the outputs that wrote
   (`ReportGenerator.cs:781`). Its reader ignores members it does not know (`RunManifest.cs:135`), so a new key is
   additive. A new output added to the run-end list (`Add(...)`, as `ComponentDiagram.html` at L579 and the failures
   digest at L594) is listed in its `files` without further work. The list of files a run plans to write, which the
-  rotation moves aside for a run that left no manifest (`PlannedFiles`, `ReportGenerator.cs:852-895` at `8d7d1e1d`),
-  names each by hand. A merged run writes no `Run.json` (`Generated-Reports.md:537`).
+  rotation moves aside for a run that left no manifest (`PlannedFiles`, `ReportGenerator.cs:852-897` at `8d7d1e1d`),
+  names each by hand. A merged run writes no `Run.json` (`Generated-Reports.md:538`, the wiki at `aed3a7b`).
 - **Ingest goes through the same run end** (`IngestPipeline.cs:694`), with the library's default options and a curated
   flag set (`IngestPipeline.DefaultOptions`, `IngestPipeline.cs:428-435` at `8d7d1e1d`). A new run-end file reaches an
   ingested run when it is on by default, and not otherwise: ingest has no `--ctrf` either. **`kronikol merge`** writes
@@ -352,18 +370,19 @@ revision's probe wrote the revised card in full (RUN, `results/audit-B-readings-
 | F7 | Databases and brokers have no path; a Kafka topic is in the URI only at `Detailed` or `Raw` verbosity (`KafkaOperationClassifier.cs:40-51`; `Summarised` writes `kafka:///`) | READ, PEER | An operation has a `target`, which may be a statement head or a topic; a message's topic is read from the URI by a table per scheme (4.2), and a destination the capture did not record is said so (`capture.emptyTargets`) |
 | F8 | A run can miss whole sides of the graph: the external-SUT lanes record none of the service's calls | RUN | A `capture` block states it; absence is "not recorded", never "none" |
 | F9 | A party's kind is per run (a fake on one lane, an emulator on another, a fake answering for the production host); its id is per codebase | PEER | The card's kinds describe the run, and say how each was known (`kindSource`, #190) |
-| F10 | The card is 159 to 178 KB compact on an in-process lane of 187 to 214 scenarios (23 to 25 KB gzipped), not 8 KB | RUN (2.3) | Fine for an indexer, and written compact (4.3); `Service.md`, a model's first read, stays FLEET S4's and keeps its budget |
+| F10 | The card is 159 to 177 KB compact on an in-process lane of 187 to 214 scenarios (23 to 25 KB gzipped), not 8 KB | RUN (2.3) | Fine for an indexer, and written compact (4.3); `Service.md`, a model's first read, stays FLEET S4's and keeps its budget |
 | F11 | Kronikol4J writes its own reports, and its calls rarely reach a data file. Its fragments carry no calls (`ReportFragment.java:32-40`: calls survive only as diagrams and `componentRelationships`), and `kronikol4j merge` writes the HTML report alone, no data file at all (`MergeCommand.java:64-65`). A standalone run writes calls only when `kronikol.report.dataFormats` names a format, which is empty by default (`ReportOptions.java:122-123`, `:559-568`; 0.1.24). Its data file's root has no `formatVersion`, `suite`, `ciMetadata`, `environment` or `background`, and a call no `attributionSource`, `statusText` or `error` (`ReportDataSerializer.java:57-81`, `:290-322`) | READ (Kronikol4J `origin/main` at `d7ad2b0`, audit C); PEER (#192's 3.6, which tried to make a Java stand-in, and its 3.9) | `kronikol card` gives a Java suite a card only from a standalone run with `dataFormats=json`, and that card has `run.repository`, `commit`, `branch`, `suite` and `run.report.formatVersion` null even on CI, `cause` from nesting alone (which finds little: Kronikol4J logs a call after the calls it made, PEER), and a thrown call it cannot tell apart. A merged Java run has no data file and so no card. Q7's Kronikol4J issue asks for the rest; ledger lines at R1 and R2 |
 | F12 | `sid:` addresses a scenario, never a call; `sN/iM` depends on order | READ (`Address.cs:46-52`), RUN (2.4) | An example address belongs to the run part, and a call from the root background block has none |
 | F13 | The test framework is recorded nowhere | RUN, READ | `run.framework` is null until a capturer writes it (Q12) |
 | F14 | `FixedNameForReceivingService` names the title only | PEER, READ | The subject comes from #190's `ServiceId` or inference, never from this option |
-| F15 | At run end the resolver also reads which test client `CreateTestTrackingClient` built (`observed`, with the application as `note`), and the data file records it only when the run declares something; `kronikol card` and `query parties` infer from the file. All 12 `dotnet new` template files and 15 Example.Api suites build their client that way and declare nothing | READ (`PartiesReport.cs:18-25`, `ReportGenerator.cs:5850-5853`, `QueryCommand.Overview.cs:518` at `8d7d1e1d`); RUN (`results/audit-C-example-parties.txt`: the plan's own example report infers `Caller` and `Dessert Provider`, both `inferred`) | The card is a function of the data file: at run end too it reads the block or infers, never the observations (Q15) |
-| F16 | The data file's root `background.interactions` holds calls no scenario owns (expired, or with no identity). The scanner never reads it, while the run end, the component diagram and the resolver include it | READ (`ReportScanner.cs:322-347`, `:441`, `:495-507` at `8d7d1e1d`); RUN (`results/audit-C-background-probe.txt`: `services` and `parties` leave out the party only a background call reaches; audit B: two docker lanes of runs 40473765203 and 40491266394 hold 3 `Expired` calls there, the only calls of one operation) | #190's R3 indexes it (planned 5.16.0). The card reads it: on edges and operations with `cause` `background`, in no scenario's operations, with no example address |
+| F15 | At run end the resolver also reads which test client `CreateTestTrackingClient` built (`observed`, with the application as `note`), and the data file records it only when the run declares something; `kronikol card` and `query parties` infer from the file. All 12 `dotnet new` template files and 15 Example.Api suites build their client that way and declare nothing | READ (`PartiesReport.cs:18-25`, `ReportGenerator.cs:5850-5853`, `QueryCommand.Overview.cs:518` at `8d7d1e1d`); RUN (`results/audit-C-example-parties.txt`: the plan's own example report infers `Caller` and `Dessert Provider`, both `inferred`) | The card's `behaviour` is a function of the data file: at run end too it reads the block or infers, never the observations (Q15) |
+| F16 | The data file's root `background.interactions` holds calls no scenario owns (expired, or with no identity). The scanner never read it before 5.16.0, while the run end, the component diagram and the resolver include it | READ (`ReportScanner.cs:322-347`, `:441`, `:495-507` at `8d7d1e1d`); RUN (`results/audit-C-background-probe.txt`: `services` and `parties` leave out the party only a background call reaches; `nunit-in-docker` and `tunit-in-docker` of runs 40473765203 and 40491266394 hold 3 `Expired` calls there, `Breakfast Provider > CosmosDB` `Replace`, the only calls of that operation on those lanes: `results/verify-background-block.txt`, `verify-replace.txt`, `audit-B-cards-bgsection.txt`) | 5.16.0 (#190's R3) indexes it (`ReportIndex.cs:88` at `15a95d4c`), its compressed bodies not yet (Appendix A). The card reads it: on edges and operations with `cause` `background`, in no scenario's operations, with no example address |
 | F17 | A run-end output cannot hash the data file: the outputs run in parallel, the data file among them, and its `formatVersion` is known only once its payloads are written | READ (`ReportGenerator.cs:939-951`, the data file's action at `:575`, `:607-610`, `:5536-5537` at `8d7d1e1d`) | The card is written after the output list and before `Run.json` (4.5) |
 | F18 | The first draft's message rule read most brokers' receives as publishes, and took the topic from the target's last segment, which is `{n}@{n}` for Kafka at Raw, `{n}` for Event Hubs at Detailed and Raw, and nothing for Service Bus and EventBridge, whose queue or bus is the URI's authority | READ (the table in 4.2) | Direction and topic come from a table per URI scheme built from each classifier (4.2) |
-| F19 | Three things move the card's `behaviour` with no change of behaviour beyond its own rules: the platform (the Cosmos DB SDK asks for a query plan on Linux only), Kronikol's own titles (5.9.1) and a recorded phase (LightBDD, 5.4.1 to 5.12.1) | RUN (`results/revision-pairs.txt`, audit B) | Listed in 4.3 with what tells each apart; `run.environment` added |
+| F19 | Four things move the card's `behaviour` with no change of behaviour beyond its own rules: the platform (the Cosmos DB SDK asks for a query plan on Linux only), Kronikol's own titles (5.9.1), a recorded phase (LightBDD, 5.4.1 to 5.12.1) and, from 5.16.0, the .NET handler's `testDouble` marks (#190's R3), which turn a party a stub handler answered `double` | RUN (`results/revision-pairs.txt`, `verify-pair-details.txt`); READ (`TestTrackingMessageHandler.cs:424` at `15a95d4c`) | Listed in 4.3 with what tells each apart; `run.environment` added |
 
-**Found on the way** (5.14.0; owner kronikol-67, fixed in #190's R3; lines at `8d7d1e1d`):
+**Found on the way** (5.14.0; owner kronikol-67; all three fixed in 5.16.0, #190's R3, `15a95d4c`; lines at
+`8d7d1e1d`):
 
 1. `RunManifest.ToJson`'s doc says "the ten members" (`RunManifest.cs:81`); the file has written eleven since 5.14.0
    added `serviceId`.
@@ -381,17 +400,17 @@ revision's probe wrote the revised card in full (RUN, `results/audit-B-readings-
 
 | Concern | Owner | What this plan needs from it |
 |---|---|---|
-| `ServiceId`, each party's id, kind (`test`, `underTest`, `real`, `double`, `unknown`) and `kindSource` (`declared`, `observed`, `inferred`); the `serviceId` and `parties` blocks in the data file, written only when something is declared; the inference of the test client and the subject; the per-call `testDouble` mark and the change to the inference that comes with it (its R2, planned 5.15.0); the root background block indexed apart from the scenarios' calls, with parties resolved at run scope over both (its R3, planned 5.16.0) | #190, `PARTY_IDENTITY_PLAN.md`: the resolver §5.1, inference §5.4, the data file block §5.5, `Run.json` §5.8, the mark §5.10, what this plan may rely on §5.12; R2 and R3 as its session plans them (PEER, agreed by message on 2026-10-27) | The resolver in core (`src/Kronikol/Parties/`), which the card calls with what the data file holds and nothing else: the block's rows when the run declared something, else the calls alone, the root block's included. What a run observed and did not write (an observed `kindSource`, the application as `note`) never reaches the card (Q15). Inferred rows say `inferred`; an unknown row carries no `kindSource`, as 5.14.0 writes (`PartyResolver.cs:116-117` at `8d7d1e1d`). Rows for every caller and every callee, and no row set that implies completeness (§5.5) |
+| `ServiceId`, each party's id, kind (`test`, `underTest`, `real`, `double`, `unknown`) and `kindSource` (`declared`, `observed`, `inferred`); the `serviceId` and `parties` blocks in the data file, written only when something is declared; the inference of the test client and the subject; the per-call `testDouble` mark and the change to the inference that comes with it (its R2, 5.15.0); the root background block indexed apart from the scenarios' calls, with parties resolved at run scope over both, and the .NET handler's mark on a call a stub handler answered (its R3, 5.16.0) | #190, `PARTY_IDENTITY_PLAN.md`: the resolver §5.1, inference §5.4, the data file block §5.5, `Run.json` §5.8, the mark §5.10, the handler's marks §5.11, what this plan may rely on §5.12; R2 and R3 as released (READ at `6bbc2ce1` and `15a95d4c`) | The resolver in core (`src/Kronikol/Parties/`), which the card calls with what the data file holds and nothing else: the block's rows when the run declared something, else the calls alone, the root block's included. What a run observed and did not write (an observed `kindSource`, the application as `note`) never reaches the card (Q15). Inferred rows say `inferred`; an unknown row carries no `kindSource`, as 5.14.0 writes (`PartyResolver.cs:116-117` at `8d7d1e1d`). Rows for every caller and every callee, and no row set that implies completeness (§5.5) |
 | The operation key (`CallOperation.Of`, internal, built on `InteractionShape.Template` and `StatementHead`; query keys dropped for the card; the GraphQL operation joining it; version 8, as 5.13.0 took 7); `origin` (the caller's role) and `cause` (`test`, `request`, `background`, `unknown`, from `attributionSource` first, else nesting); the consumer's templating rules written into the data file; `--group-by caller,origin,route`; `caller` on `interactions --json` rows (#184's third ask) | #192, `CALL_OPERATION_AND_ORIGIN_PLAN.md`: the key 4.1 (`CallOperation.Of`, with query keys off for the card), GraphQL 4.2, `origin` 4.3 (with the seeding limit), the engine's dimensions 4.4, the `shapeTemplates` block 4.5, `cause` its section 9 Q4, open; releases R1 (the key), R2 (the dimensions, `caller` on rows, the rules block) and R3 (`origin`, and `cause` if Q4 says so) | All of them pure functions of what a report holds, in core. `cause` recommended to the owner with this plan's reason (F3, Q5). If Q4 is declined, the graph keeps the background classification it needs itself (4.2) and the card leaves `causes` out |
-| The call graph (parties, edges, operations, per-call parent, origin, cause and effective phase); the message table; the one function that resolves parties from what a report holds and returns the subject row, and `InferenceVersion` beside the inference (this plan's R1, agreed with kronikol-67 by message on 2026-10-27); `service.json`, its schema, its stability and its `capture` block; `kronikol card`; the run-end and merge files and `Run.json`'s key | this plan | |
+| The call graph (parties, edges, operations, per-call parent, origin, cause and effective phase); the message table; the one function that resolves parties from what a report holds and returns the subject row, with #192's `origin` moved onto it, and `InferenceVersion` beside the inference (this plan's R1, agreed with kronikol-67 by message on 2026-10-27; 4.2); `service.json`, its schema, its stability and its `capture` block; `kronikol card`; the run-end and merge files and `Run.json`'s key | this plan | |
 
 The order: #190 R0 (released as 5.13.0, a minor once the owner chose history's bridge), #190 R1 (5.14.0: the resolver,
-the declarations and the block), #190 R2 (planned 5.15.0: `testDouble`, and the inference rule this plan calls version
-1) and R3 (planned 5.16.0: background calls at run scope), then #192 (R1 to R3: the key, the rules block, then `origin`
-and `cause`, which read #190's roles), then R1 here. Version numbers are claimed at push; 5.15.0 and 5.16.0 are #190's
-session's plan (PEER).
+the declarations and the block), #190 R2 (5.15.0: `testDouble`, and the inference rule this plan calls version 1) and
+R3 (5.16.0: background calls at run scope, and the handler's marks), all four released, then #192 (R1 to R3: the key,
+the rules block, then `origin` and `cause`, which read #190's roles), then R1 here. Version numbers are claimed at
+push.
 
-For the sibling plans, found by this plan's audit and not changes to this plan:
+For the sibling plans, found by this plan's audit and verification and not changes to this plan:
 
 - #192's key drops a URI's authority (its 4.1, step 1), so two Service Bus queues at Summarised
   (`servicebus://orders/`, `servicebus://payments/`) are one operation, and an EventBridge bus is not in the target;
@@ -400,8 +419,15 @@ For the sibling plans, found by this plan's audit and not changes to this plan:
   "6 to 7, or 7 to 8", and 5.13.0 shipped 7 with the bridge; its F8 ("the engine never reads a call's attribution")
   has been false since 5.14.0.
 - #190's §5.1 and §5.12 promise that a card written later from a report matches the run-end one; that holds because
-  the card reads only the file (Q15). `query parties` differs from the run's own table on a report with background
-  calls (section 3, found on the way, 3).
+  the card reads only the file (Q15). `query parties` differed from the run's own table on a report with background
+  calls until 5.16.0 (section 3, found on the way, 3).
+- #190's inference (§5.4): a consume-only service traced by Kronikol's Kafka or MassTransit tracker, or by the generic
+  `MessageTracker` with its default options, has a broker party that is never called and whose deliveries carry no
+  caller category, so `InferTests` counts it a candidate test party (`PartyResolver.cs:212-228` at `6bbc2ce1`). §5.4's
+  "A broker's delivery carries `MessageQueue`, so it is excluded" holds only where the generic tracker's
+  `CallerDependencyCategory` is set (4.2, Messages). The broker stays a test when its deliveries are mostly
+  `TestContext`, when no candidate qualifies and it sorts first, or when nothing records attribution (ingest), and its
+  deliveries then read origin `test`. #192's `origin` and `cause` meet the same deliveries.
 
 ### 4.1 Principles
 
@@ -431,17 +457,20 @@ A new folder, `src/Kronikol/CallGraph/`:
   `CallOperation.Of` reads it: its `SET` skip reads past the first line, and its GraphQL reader parses a body whole, so
   a pretty-printed body or Apollo's key order is read too. Never a body otherwise.
 - **The call set** is the data file's, on both sides: every scenario's `httpInteractions` and the root
-  `background.interactions` (#190's R3 indexes the latter apart, PEER), without diagram markers and `TrackingIgnore`
-  calls, which the writer drops (`ReportGenerator.cs:5281`, `:382-384` at `8d7d1e1d`), and without calls whose test id
-  names no scenario, which the data file leaves out (`PartiesReport.cs:15-16` at `8d7d1e1d`). The component diagram
-  draws those orphaned calls too (`OrphanedCalls.cs:29-30`) and honours `ComponentDiagramOptions.ParticipantFilter`; the
-  card does neither.
-- **The mapping rules both sides share**, one function each: the empty Guid is no id (`ReportScanner.cs:987-992` at
-  `8d7d1e1d`: markers and user actions travel with it, and kept as an id it would pair every user action with every
-  other in `CallNesting`); a phase of `Unknown` and a meta type of `Default` are none (`:831-832`); a status is read
-  through `InteractionStatus.Split` at run end and `InteractionStatus.Read` from a report (`InteractionStatus.cs:29`,
-  `:62`), and written as the code's digits, else the label, else `none` for a call with no response; `iM` counts the
-  scenario's list as the data file writes it, as `Failures.md` counts it (`FailuresDigestGenerator.cs:244-254`).
+  `background.interactions` (5.16.0, #190's R3, indexes the latter apart, `ReportIndex.cs:88` at `15a95d4c`), without
+  diagram markers and `TrackingIgnore` calls, which the writer drops (`ReportGenerator.cs:5281`, `:382-384` at
+  `8d7d1e1d`), and without calls whose test id names no scenario, which the data file leaves out
+  (`PartiesReport.cs:15-16` at `8d7d1e1d`). The component diagram draws those orphaned calls too
+  (`OrphanedCalls.cs:29-30`) and honours `ComponentDiagramOptions.ParticipantFilter`; the card does neither.
+- **The mapping rules both sides share**, one function each (lines at `8d7d1e1d`):
+  - the empty Guid is no id (`ReportScanner.cs:987-992`): markers and user actions travel with it, and kept as an id it
+    would pair every user action with every other in `CallNesting`;
+  - a phase of `Unknown` and a meta type of `Default` are none (`ReportScanner.cs:831-832`);
+  - a status is read through `InteractionStatus.Split` at run end and `InteractionStatus.Read` from a report
+    (`InteractionStatus.cs:29`, `:62`), and written as the code's digits, else the label, else `none` for a call with
+    no response;
+  - `iM` counts the scenario's list as the data file writes it, as `Failures.md` counts it
+    (`FailuresDigestGenerator.cs:244-254`).
 - **`CallGraphBuilder.Build(records, parties, rules)`** returns the graph:
   - **Parent** of each request, by `CallNesting`'s rule. The rule moves from `Query/CallNesting.cs` into this folder,
     taking `CallRecord`; `flow` keeps asking it through a mapping. One rule, as its doc comment requires.
@@ -451,20 +480,22 @@ A new folder, `src/Kronikol/CallGraph/`:
     #192 describes `cause` and audit B measured it:
     1. a call the test party made: `test`;
     2. a call from the root background block: `background`;
-    3. else by `attributionSource`: `RequestHeader` is `request`, and any other value (`TestContext`, `Scope`,
+    3. a call the subject made in the test's own context (`TestContext`) when the run has no test party, the in-process
+       subject of #190 §5.2, where the test and the subject are one participant: `test`;
+    4. else by `attributionSource`: `RequestHeader` is `request`, and any other value (`TestContext`, `Scope`,
        `DocumentOwner`, `DocumentFlow`, `Detached`, `Expired`, `GlobalFallback`, `None`) is `background`;
-    4. else, where a producer records no `attributionSource` (ingest, the taps, Kronikol4J): `request` when the call
+    5. else, where a producer records no `attributionSource` (ingest, the taps, Kronikol4J): `request` when the call
        ran inside a call its caller received, else `unknown`.
 
     Attribution comes before nesting because nesting places by recording order: read nesting first, the outbox
     `Replace` recorded while an unrelated request was open reads `request`, and the BDDfy pair of 2.4 stays different
     (P0). The two readings agree on the subject's calls and differ on deliveries: a broker's call into the subject is
     top level by nesting and `RequestHeader` by attribution, 108 to 114 of 111 to 117 a lane in memory (RUN,
-    `results/audit-B-cards-all.txt`), so a delivery reads `request`. A `TestContext` call the subject makes outside any
-    request reads `background`: it is the service's own background work or a test seeding through the service's
-    clients, which no recorded signal tells apart (#192 4.3, item 2); 80 of the 86 such calls on `xunit-in-memory`
-    are `TestContext` (PEER). If #192's Q4 is declined, this classification stays inside the graph and the card leaves
-    `causes` out (Q5).
+    `results/audit-B-cards-all.txt`), so a delivery reads `request`. With a test party, a `TestContext` call the
+    subject makes outside any request reads `background`: it is the service's own background work or a test seeding
+    through the service's clients, which no recorded signal tells apart (#192 4.3, item 2); 80 of the 86 such calls on
+    `xunit-in-memory` are `TestContext` (PEER). If #192's Q4 is declined, this classification stays inside the graph
+    and the card leaves `causes` out (Q5).
   - **Effective phase**: the recorded phase when it is `Setup` or `Action`; else, for a call whose cause is not
     `background`, the effective phase of the call it ran inside, when there is one; else `unknown`. A background call
     keeps the phase it recorded as a rule, not because it has no parent: one was nested under an unrelated request by
@@ -472,9 +503,9 @@ A new folder, `src/Kronikol/CallGraph/`:
     test's call they served (the 731 of 2.2). The card counts the phases derived (`run.counts`), and names the field
     `effectivePhases`: #192's `--phase` filter reads the recorded phase, so for a nested call the two readings differ
     on purpose, and the names say which is which.
-  - **Parties**: every caller and service name in the call set, with the set of categories its calls carried (a
-    party's category is per record: the service is plain HTTP on most calls and gRPC on nine, PEER), and the row the
-    parties function gives (below).
+  - **Parties**: every caller and service name in the call set, with the set of categories its calls carried, a
+    delivery's counting for its broker (Messages, below; a party's category is per record: the service is plain HTTP
+    on most calls and gRPC on nine, PEER), and the row the parties function gives (below).
   - **Edges**: (caller, service, protocol), the protocol by the component diagram's rule (`GetProtocol`,
     `ComponentDiagramGenerator.cs:534` at `8d7d1e1d`, split to take the category, the meta type and the method, and
     shared rather than copied), so over the same calls and with no participant filter the card's edges are the
@@ -485,11 +516,16 @@ A new folder, `src/Kronikol/CallGraph/`:
     (`isUserAction`, caller `Browser`) is an operation on its edge, as the diagram draws it, and never in `exposes`.
 - **The parties, one function** (this plan's R1, agreed with kronikol-67 by message on 2026-10-27). `query parties`
   resolves inline today: the block's rows as written when the report has one, else `PartyResolver.Resolve` over the
-  scenarios' calls with no declarations and no observations (`QueryCommand.Overview.cs:504-523` at `8d7d1e1d`), and the
-  subject row is computed inside the resolver and dropped (`PartyResolver.cs:97-99` at `8d7d1e1d`). R1 lifts that branch
+  scenarios' calls and, since 5.16.0, the root block's, with no declarations and no observations
+  (`QueryCommand.Overview.cs:504-523` at `8d7d1e1d`, L511-529 at `15a95d4c`), and the subject row is computed inside
+  the resolver and dropped (`PartyResolver.cs:97-99` at `8d7d1e1d`, `:104-106` at `15a95d4c`). R1 lifts that branch
   into one function in `src/Kronikol/Parties/` taking neutral inputs (the block's rows as written, `serviceId`, the
-  calls) and returning the table with its subject row; `query parties`, the card and #192's `origin` call it. It takes
-  no observations: what a run observed and did not write never reaches a reader of its file (Q15).
+  calls) and returning the table with its subject row; `query parties` and the card call it, and R1 moves #192's
+  `origin` onto it: #192's R3 ships first and reads the block or infers as `query parties` does
+  (`CALL_OPERATION_AND_ORIGIN_PLAN.md` 4.4's table and section 5, R3). If #192's R3 lifts the function first (offered
+  to kronikol-bf by message on 2026-10-28), R1 uses it and adds only what the card needs: the subject row and
+  `InferenceVersion`. The function takes no observations: what a run observed and did not write never reaches a
+  reader of its file (Q15).
   - **The subject row** is the `underTest` party that received the most calls in the call set, then the first by ordinal
     name: the rule 5.14.0's resolver applies (`PartyResolver.cs:98-99` at `8d7d1e1d`), so on a report with the block it
     is the row that carries `serviceId`. When the inference names two subjects (a second that makes calls and takes a
@@ -498,22 +534,35 @@ A new folder, `src/Kronikol/CallGraph/`:
     fired.
   - **`PartyResolver.InferenceVersion`**, a constant beside the inference. Version 1 is the rule 5.15.0 (#190 R2)
     ships: a party every call to which carries `testDouble` is `double`, `observed`, and the subject is chosen only
-    among parties of unknown kind; before it, a known-kind party the test called most blocked the subject (PEER:
-    kronikol-67's R2 snapshot `bae9b02b`). The version moves when the table the inference returns for some set of
-    calls changes: `InferTests`, `InferSubjects`, the store list they read (`IsStore`, from `DependencyPalette.Resolve`
-    and `DependencyCategories.IsStatementShaped`, so a palette change that moves a category into or out of a store
-    type moves it too), the double rule, and the subject row's choice. A guard fact holds a corpus of call sets, one
-    per category the palette names among them, with the table each gives; a changed answer fails it until the version
-    moves and the answers are pinned again, as #192's guard holds `InteractionShape.Version`. #190's R3 does not touch
-    the inference (PEER).
-- **Messages.** A message is the subject's: an operation the table below calls a publish (`publishes`) or a receive
-  (`consumes`), on a call from the subject to a broker, or a broker's delivery into the subject (a call that carries a
-  caller category, broker to consumer), which is `consumes` in every scheme. The table is built from each tracker's
-  classifier, its label function over its operation enum at every verbosity, so a label a classifier can write maps
-  back to its operation: labels change with verbosity (`Receive ← q`, `Receive (×3) ← q`, `Receive`), and no list of
-  method names matches them. Settlement and management operations stay operations on their edges and are not
-  messages. A label the table cannot map (a capturer newer than the card's writer) gives a row with `direction: null`,
-  never `publishes`. One fact per scheme. Lines are at `8d7d1e1d`.
+    among parties of unknown kind; before it, a known-kind party the test called most blocked the subject (READ at
+    `6bbc2ce1`: `PartyResolver.cs:75-80`, `:89`, `:99`, `:239`). The version moves when the table the inference
+    returns for some set of calls changes: `InferTests`, `InferSubjects`, the store list they read (`IsStore`, from
+    `DependencyPalette.Resolve` and `DependencyCategories.IsStatementShaped`, so a palette change that moves a category
+    into or out of a store type moves it too), the double rule, and the subject row's choice. A guard fact holds a
+    corpus of call sets, one per category the palette names among them, with the table each gives; a changed answer
+    fails it until the version moves and the answers are pinned again, as #192's guard holds
+    `InteractionShape.Version`. #190's R3 changes no rule of the inference; its handler's marks change what the rule
+    reads (READ: `src/Kronikol/Parties/` is the same at `6bbc2ce1` and `15a95d4c`; `TestTrackingMessageHandler.cs:424`
+    at `15a95d4c`; 4.3).
+- **Messages.** A message is the subject's call to a broker that the table below calls a publish (`publishes`) or a
+  receive (`consumes`), or a broker's delivery into the subject. Lines are at `8d7d1e1d`.
+  - A call between the subject and another party is a message call when it carries the category `MessageQueue`, as
+    its own category or as its caller category, or when its URI scheme is a row of the table (Service Bus writes a
+    category of its own); the other party is then the broker. A meta type of `Event` makes no message call: Spanner,
+    BigQuery and Bigtable write it (`SpannerTracker.cs:66-67`). Read per call, a party is no broker for the subject's
+    calls to it that carry neither, such as a management call over HTTP, and a consumer whose own tracker puts the
+    category on its side is no broker at all.
+  - A delivery is a message call into the subject, whichever side its tracker put the category on. Kronikol's
+    Kafka and MassTransit trackers put `MessageQueue` on the delivery itself (`KafkaTracker.cs:385-396`,
+    `MassTransitTracker.cs:159-166`), and so does the generic `MessageTracker` by default; it writes it as the caller
+    category once its `CallerDependencyCategory` is set, as BreakfastProvider sets it (`TrackConsumeEvent`,
+    `MessageTracker.cs:326-331`, logs the record at `:123-138`; `MessageTrackerOptions.cs:68`, `:76`). A delivery is
+    `consumes` in every scheme and never in `exposes`, and its category counts for the broker, not the subject.
+  - The table is built from each tracker's classifier, its label function over its operation enum at every verbosity,
+    so a label a classifier can write maps back to its operation: labels change with verbosity (`Receive ← q`,
+    `Receive (×3) ← q`, `Receive`), and no list of method names matches them. Settlement and management operations
+    stay operations on their edges and are not messages. A label the table cannot map (a capturer newer than the
+    card's writer) gives a row with `direction: null`, never `publishes`. One fact per scheme.
 
   | Scheme | Publishes (the subject's call) | Receives (the subject's call) | Neither | Where the destination is |
   |---|---|---|---|---|
@@ -524,9 +573,9 @@ A new folder, `src/Kronikol/CallGraph/`:
   | `sqs` | SendMessage, SendMessageBatch | ReceiveMessage | DeleteMessage, ChangeMessageVisibility and their batches, the queue management calls (`SqsOperationClassifier.cs:75-88`) | the first path segment; none in `sqs:///` (`SqsTrackingMessageHandler.cs:183-185`) |
   | `sns` | Publish, PublishBatch | none: SNS delivers through the subscriber's own transport | Subscribe, Unsubscribe, the topic and subscription management calls (`SnsOperationClassifier.cs:72-83`) | the first path segment; none in `sns:///` (`SnsTrackingMessageHandler.cs:183-185`) |
   | `storagequeue` | SendMessage | ReceiveMessages, PeekMessages | DeleteMessage, UpdateMessage, ClearMessages, the queue management calls (`StorageQueueOperationClassifier.cs:34-46`) | the first path segment; none in `storagequeue:///` (`StorageQueueTrackingMessageHandler.cs:163-165`) |
-  | `masstransit` | Send, Publish | Consume | none | the first path segment: the queue of a send, the message type of a publish or a consume; `unknown` when none (`MassTransitOperationClassifier.cs:61-62`, `:76-79`) |
+  | `masstransit` | Send, Publish | none: MassTransit logs every consume as the broker's delivery (`MassTransitTracker.cs:159-166`) | SendFault, PublishFault, ConsumeFault (`LogFault`, `:195-216`) | at Summarised the message type (`masstransit:///{type}`), at Detailed the queue (`masstransit:///{queue}`), at Raw the transport's own address, whose scheme is the transport's; `masstransit:///unknown` when neither is known (`MassTransitOperationClassifier.cs:69-80`) |
   | `eventbridge` | PutEvents | none | the rule, target and bus management calls (`EventBridgeOperationClassifier.cs:122-136`) | the authority, the bus (`eventbridge://{bus}/`, `EventBridgeTrackingMessageHandler.cs:189`) |
-  | any other: the generic `MessageTracker`, or an application's own scheme (`event://` on Example.Api; `eventgrid://` and `eventhub://` on BreakfastProvider, `results/revision-schemes.txt`) | a call from the subject | none: a consume is logged broker to consumer (`TrackConsumeEvent`, `MessageTracker.cs:318-331`) | none | the last path segment, else the authority |
+  | any other: the generic `MessageTracker`, an application's own scheme (`event://` on Example.Api; `eventgrid://` and `eventhub://` on BreakfastProvider, `results/revision-schemes.txt`), or a MassTransit call at Raw | the subject's call to the broker | none: a consume is logged broker to consumer, a delivery (`TrackConsumeEvent`, `MessageTracker.cs:318-331`) | none | the last path segment, else the authority |
 
 Nothing in the report changes. The graph is built in memory at run end and by the tool.
 
@@ -619,13 +668,13 @@ cut.)
 | Member | Holds | Sorted by |
 |---|---|---|
 | `rules` | `operationKey`: the version of #192's key, `InteractionShape.Version` (7 since 5.13.0, 8 after #192's R1). `templateRules`: `HistoryShapeRules.Hash` (`HistoryShapeRules.cs:70` at `8d7d1e1d`, what history records as `shapeRules`) of the consumer's rules the report recorded in #192's `shapeTemplates` block, `"none"` when it recorded none, null when the report predates recording them (decided by its `kronikolVersion`, as #192 4.4 decides). `inference`: `PartyResolver.InferenceVersion` when the card inferred a row, null when every row came from the report's block, whose rows the writer resolved under a version the report does not record. Two cards made under different rules are not compared by their hash (below) | |
-| `subject` | the subject row (4.2): the `underTest` party that received the most calls, then by name; its name, id and `source` (`declared`, `observed` or `inferred`). Another `underTest` party stays in `parties`, and `exposes` is the subject's alone | |
+| `subject` | the subject row (4.2): the `underTest` party that received the most calls, then by name; its name, id and `source` (`declared`, `observed` or `inferred`). Another `underTest` party stays in `parties`, and `exposes` is the subject's alone. `subject` is null when no party is `underTest` (a test that calls only stores, #190 §5.4, or a block a 5.14.0 run wrote whose subject a known-kind party left unknown), and `exposes.ops` and `messages` are then empty | |
 | `parties` | name, id, kind, `kindSource` (null on an unknown row) and `note` as the parties function gives them, and the set of categories seen. A party some of whose calls carry #190's `testDouble` mark keeps its kind (§5.10); how many were marked is a count, `run.parties[].doubleCalls` | name |
 | `edges` | from, to, protocol, and the operations. An edge names its parties; their kinds are on `parties`, joined by name (the issue asks for edges that carry each party's kind) | from, to, protocol |
 | an operation | `op` (the first 16 hex of SHA-256 over from, to, protocol, method, target and the GraphQL operation when there is one, joined by U+001F), method, `target` (#192's key, query keys off, without its GraphQL suffix), `graphqlOperation` (#192 §4.2, which names an anonymous operation by its root fields, `query { orderSummaries }`: all 8 of BreakfastProvider's GraphQL POSTs are anonymous, and `TryExtractLabel` reads each as `query`, PEER), and the sets of statuses, origins, causes (left out if #192 declines `cause`) and effective phases | method, target, GraphQL operation |
 | `exposes` | the operations received by the subject that are neither deliveries nor user actions; `basis: "tested"` says they are the tested surface, not the service's (FLEET F1). S3's coverage block joins it later | `op` |
 | `messages` | `op`, direction (`publishes`, `consumes`, or null for a label the table cannot map), party (the broker), topic (from the URI by the table, 4.2). One row for each topic an operation's calls name: two Service Bus queues at Summarised share one operation and give two rows | party, topic, direction, `op` |
-| `scenarios` | `sid`, feature, scenario, tags; `source`: the scenario's own file and line, else its feature's file with a null line, as `ctrf` takes them (`CtrfCommand.cs:139-150` at `8d7d1e1d`), else null; `ops`: the test's own operations in the scenario, the operations of the calls the test party made there, or, with no test party (an in-process subject declared `underTest`, #190 §5.2), the scenario's top-level calls that are not background (Q16). Rows sharing a `sid` are one row; scenarios that are not tests are left out, as `ctrf` leaves them (`CtrfCommand.cs:103`) | `sid` |
+| `scenarios` | `sid`, feature, scenario, tags; `source`: the scenario's own file and line, else its feature's file with a null line, as `ctrf` takes them (`CtrfCommand.cs:139-150` at `8d7d1e1d`), else null; `ops`: the test's own operations in the scenario, the operations of the calls the test party made there, or, with no test party (an in-process subject declared `underTest`, #190 §5.2), the scenario's top-level calls that are not background, its `TestContext` calls being `test` there (4.2; Q16). Rows sharing a `sid` are one row: `ops` is their union, and `feature`, `scenario`, `tags` and `source` are those of the row that sorts first by ordinal comparison of `feature`, then `scenario`. Scenarios that are not tests are left out, as `ctrf` leaves them (`CtrfCommand.cs:103`) | `sid` |
 | `unresolved` | party names with no id | name |
 | `capture` | `calls` (`recorded`, or `notRecorded` when the data file cannot carry calls: a mergeable file written before 3.1.0, `ReportScanner.CarriesInteractions`, `ReportScanner.cs:56-57` at `8d7d1e1d`; a run that made no call is `recorded`, with no edges); `subjectCalls` (`recorded`, or `notRecorded` when no call made by the subject is in the run); `emptyTargets`, the `op`s of a scheme in the message table whose URI holds no destination where the table says one belongs, or only a tracker's placeholder (`kafka:///` at Summarised; `sqs:///`, `sns:///` and `storagequeue:///` when the classifier found no name; `unknown`). A target of `/` on HTTP is a real path, never an empty one: BreakfastProvider has two, `GET /` on the service and the Cosmos DB account read `Other /` (RUN, audit B) | |
 
@@ -641,7 +690,7 @@ Operation ids instead of positions keep a change local: a new operation adds one
 
 | Member | Holds | Sorted by |
 |---|---|---|
-| `id`, `at` | at run end, the run's own, as `Run.json` writes them; from `kronikol card`, a `Run.json` beside the report whose `files` lists it (the check `QueryCommand.cs:505-506` at `8d7d1e1d` makes), else null. A local run's id is salted with the machine's name and the test assembly's directory (`HistoryRunBuilder.cs:221-251` at `8d7d1e1d`), which no report holds | |
+| `id`, `at` | at run end, the run's own, as `Run.json` writes them; from `kronikol card`, a `Run.json` beside the report whose `files` lists it (the check `QueryCommand.cs:505-506` at `8d7d1e1d` makes, by file name alone) and whose `at` is not before the report's `endTime`, else null. Both are the run's end to the second (`RunManifest.cs:35`, `ReportGenerator.cs:390`, `:794`, `:5522` at `8d7d1e1d`), so a run's own manifest passes and an earlier run's beside a later report, as after a merge into a run's folder, does not. The tool mints no id, not even on CI from `ciMetadata`: a local run's id is salted with the machine's name and the test assembly's directory (`HistoryRunBuilder.cs:221-251` at `8d7d1e1d`), which no report holds, and a host's `HistoryRunId` overrides any run's (`ReportGenerator.cs:400-401` at `8d7d1e1d`), so a minted id could differ from the run's own and give one run two ids | |
 | `repository`, `commit`, `branch` | from the report's `ciMetadata`; null off CI | |
 | `suite` | the report's `suite`, else null | |
 | `framework` | null until a capturer records it (F13, Q12) | |
@@ -650,7 +699,7 @@ Operation ids instead of positions keep a change local: a new operation adds one
 | `environment` | the data file's `environment` (`os`, `runtime`), else null: one commit's operations differ by platform (below) | |
 | `results` | scenarios, passed, failed, skipped (`Skipped` and `SkippedAfterFailure`), bypassed, which sum to scenarios, as `query summary` counts them; scenarios that are not tests are not counted (as `Run.json`) | |
 | `behaviourHash` | the SHA-256 of the `behaviour` member's bytes as the file holds them (below) | |
-| `parties` | per party: `hosts`, the distinct URI authorities of the calls it received, as written (`localhost:15037`), leaving out a scheme whose authority the message table says is a destination (Service Bus, EventBridge); a placeholder a tracker writes there is listed as written (BreakfastProvider's Event Grid writes `topics`), and a party reached only through URIs with no authority (Kafka, Pub/Sub, gRPC, MongoDB, Spanner on BreakfastProvider) has none. `doubleCalls`, how many of the calls it received carry #190's `testDouble` mark, 0 when none. Hosts vary by lane (random ports, container names), so they are run facts | name |
+| `parties` | per party: `hosts`, the distinct URI authorities of the calls it received, as written (`localhost:15037`), leaving out a scheme whose authority the message table says is a destination (Service Bus, EventBridge); a placeholder a tracker writes there is listed as written (BreakfastProvider's Event Grid writes `topics`), and a party reached only through URIs with no authority has none: on BreakfastProvider Kafka, Pub/Sub, gRPC, MongoDB and Spanner, Event Hubs in docker too, and both SQL Server databases in memory on a report written before 5.11.1 (`results/verify-party-hosts.txt`). `doubleCalls`, how many of the calls it received carry #190's `testDouble` mark, 0 when none. Hosts vary by lane (random ports, container names), so they are run facts | name |
 | `counts` | per `op`: calls; `errors`, the calls whose response `InteractionStatus.IsError` reads as an error (a code of 400 or more, or a label that is no success, such as `!TimeoutException` or `Nack`; `InteractionStatus.cs:101` at `8d7d1e1d`), the one classifier behind `services`, `--group-by` and the digest; calls by status; `phases`, calls by effective phase (`setup`, `action`, `unknown`); `derivedPhases`, the phases derived through nesting | `op` |
 | `examples` | per `op`: the first call's address in report order, `sN/iM`; null for an operation seen only in the root background block, whose calls have no address | `op` |
 | `scenarios` | per `sid`: every operation the scenario's calls reached, the service's and the brokers' included, background calls left out (Q16) | `sid` |
@@ -662,9 +711,10 @@ from the `{` after the last `"behaviour":` in the file to the byte before the fi
 encoder a `"` inside a string is written `\u0022`, so `"behaviour":` cannot occur inside a value. A reader in any
 language verifies the hash over that byte range with no JSON serializer; re-serialising (`jq -c .behaviour`, Python's
 `json`) changes the escapes and does not give the same bytes. The revision's probe checks the range on all 20 cards it
-wrote (RUN, `results/revision-sizes.txt`). Compact is the choice for that reason first, and it is 42.5 to 43.4%
-smaller than indented on the in-memory lanes (13.5 to 14.7% once gzipped, as an artifact zip stores it; 2.3). A person
-reads it through `jq .`; a git branch of cards (FLEET S5) would keep them pretty-printed if it wants line diffs.
+wrote, before and after the message rule's correction (RUN, `results/revision-sizes.txt`, `verify-sizes.txt`). Compact
+is the choice for that reason first, and it is 42.5 to 43.4% smaller than indented on the in-memory lanes (13.4 to
+14.6% once gzipped, as an artifact zip stores it; 2.3). A person reads it through `jq .`; a git branch of cards (FLEET
+S5) would keep them pretty-printed if it wants line diffs.
 
 So the file as a whole changes on every run, as `Run.json` does, and `behaviour` changes only when the behaviour does:
 on ten same-commit lane pairs it was byte-identical on all ten (2.4). Background calls are in no scenario's operations
@@ -673,17 +723,23 @@ a scenario can move between scenarios through state they share (a 5-minute menu 
 `run.scenarios`. An operation seen only in the root background block arrives after its scenario ended, by timing, so
 it can come and go between runs as 2.4's Cosmos DB `Replace` does. The blocks of the ten same-commit pairs were empty;
 `nunit-in-docker` and `tunit-in-docker` hold 3 calls there in both run 40473765203 and run 40491266394, and their
-`behaviour` is the same across that upgrade (RUN, `results/revision-pairs.txt`).
+`behaviour` is the same across that upgrade (RUN, `results/revision-pairs.txt`; the block counts per card,
+`verify-pair-details.txt`).
 
 **What moves `behaviourHash` with no change of behaviour**, and how a reader tells it apart:
 
 - **The card's own rules**: the operation key, the consumer's templating rules, the inference. Each changes `rules`
   too, and `kronikol card` rebuilds an older card under the newer rules from its report, while the report is kept.
 - **The inference changed once already.** 5.15.0 (#190 R2) made a party every call to which carries `testDouble`
-  `double`, `observed`, and chose the subject only among parties of unknown kind; version 1 is that rule. A block a
-  5.14.0 run wrote holds rows resolved under the earlier rule, and a newer tool infers an undeclared old report under
-  version 1, so two cards of one suite made on either side of 5.15.0 can differ with nothing changed. `rules.inference`
-  is null for a card whose rows came from a block; `run.report.kronikolVersion` says which writer resolved them (PEER).
+  `double`, `observed`, and chose the subject only among parties of unknown kind; version 1 is that rule. On a report
+  with no block and no marks the two rules give the same table: with nothing declared or observed, `InferTests` takes
+  only parties never called, so every callee is of unknown kind when the subject is chosen (`PartyResolver.cs:91-93`,
+  `:197-213` at `8d7d1e1d`). They differ on a block a 5.14.0 run wrote, which `rules.inference` null and
+  `run.report.kronikolVersion` say.
+- **A capturer marking doubles anew.** From 5.16.0 (#190's R3) the .NET handler marks each call a stub handler
+  answered (`TestTrackingMessageHandler.cs:424` at `15a95d4c`), so a suite whose clients end in one sees those parties
+  become `double`, `observed`, across the upgrade, their `doubleCalls` move, and the subject is chosen among the parties
+  left unknown. `run.report.kronikolVersion` tells it.
 - **A capturer naming a party anew.** 5.13.0 (#190 R0) is one: a call to an unmapped remote host is named by its host,
   `pricing.example.com:443`, where it was `localhost:443`, so the card of a suite that makes such calls moves once
   across that upgrade. The card cannot see the rename; `run.report.kronikolVersion` says which side of 5.13.0 a report
@@ -694,17 +750,21 @@ it can come and go between runs as 2.4's Cosmos DB `Replace` does. The blocks of
 - **The platform.** The same commit on Linux (CI) and on Windows (this machine) differs by one operation,
   `Breakfast Provider > CosmosDB Other /colls/orders` with a `{"query":…}` body: 15 calls in 12 scenarios on Linux,
   none on Windows. All 15 carry `x-ms-cosmos-is-query-plan-request: True`: the Cosmos DB SDK asks the gateway for a
-  query plan on Linux and computes it in process on Windows x64 (RUN, `results/revision-pairs.txt`; audit B).
-  `run.environment` tells the two apart.
+  query plan on Linux and computes it in process on Windows x64 (RUN, `results/revision-pairs.txt`,
+  `verify-pair-details.txt`). `run.environment` tells the two apart.
 - **Kronikol's own titles.** 5.9.1's "Names as written" (`CHANGELOG.md` L465 at `8d7d1e1d`) renamed 7 of
   BreakfastProvider's Reqnroll feature titles, on 13 scenario rows, under the same `sid`s (`Recipe Summary Via G RPC`
   became `Recipe Summary via gRPC`), which moves the hash of all three Reqnroll lanes across that upgrade. Over run
   40473765203 (5.4.1) against 40491266394 (5.12.1), 13 of 18 lanes kept their hash, and 16 of 18 without the
-  scenario index (RUN, `results/revision-pairs.txt`). `run.report.kronikolVersion` tells them apart.
+  scenario index (RUN, `results/revision-pairs.txt`; the 7 titles, `verify-pair-details.txt`).
+  `run.report.kronikolVersion` tells them apart.
 - **A recorded phase.** On two LightBDD lanes across the same upgrade, `Caller > Breakfast Provider POST /graphql`
-  (`query { equipmentAlerts }`, `query { batchCompletions }`) recorded no phase on one call in 5.4.1 and `Action` in
-  5.12.1, and on the docker lane the subject's SQL call inside it takes it through nesting. Whether the adapter or
-  timing changed it is not determined, and it was not seen within one version (RUN, audit B).
+  (`query { batchCompletions }` on the docker lane, `query { equipmentAlerts }` on the external-SUT lane) was called
+  once in 5.4.1, recording `Action`, and twice in 5.12.1, the second call recording no phase, so its effective phases
+  gained `unknown`; on the docker lane the subject's SQL call inside that second call reads `unknown` too, through
+  nesting. The commit moved as well (`cf47045` to `68a8760`), and whether the adapter, BreakfastProvider's change or
+  timing made the second call is not determined; it was not seen within one version (RUN,
+  `results/verify-pair-details.txt`).
 - **The tests' own text** (INFERRED): a scenario renamed, a tag added, or a source line moved by an edit above it
   changes `scenarios`, with no change of what the service does.
 
@@ -719,12 +779,14 @@ kronikol card <report> [-o <file>]
   holding one, found and gated as `ctrf` finds and gates one (`QueryCommand.ResolveReport`, `ReportGate.Refuse`;
   `CtrfCommand.cs:73`, `:97` at `8d7d1e1d`). The scan maps into `CallRecord`, reading only the request bodies the key
   and the GraphQL rule need (statement-shaped calls and POSTs) through the index's offsets, and the root background
-  block's calls from the list #190's R3 adds to the index.
-- It takes no declarations. The card is a function of the report, and a declaration on the command line would give
-  one report two cards. A report without #190's block gets inferred parties; one without #192's rules block gets the
-  built-in rules, with `rules.templateRules` `"none"` or null as the report's version says (4.3). Both say so in the
-  card itself.
-- `run.id` and `run.at` come from a `Run.json` beside the report that lists it, else null (4.3).
+  block's calls from the list 5.16.0 added to the index (`ReportIndex.BackgroundInteractions`), whose compressed
+  bodies R1 teaches the scanner to read (Appendix A).
+- It takes no declarations. The card's `behaviour` is a function of the report, and a declaration on the command line
+  would give one report two cards. A report without #190's block gets inferred parties; one without #192's rules block
+  gets the built-in rules, with `rules.templateRules` `"none"` or null as the report's version says (4.3). Both say so
+  in the card itself.
+- `run.id` and `run.at` come from a `Run.json` beside the report that lists it and whose `at` is not before the
+  report's `endTime`, else null (4.3).
 - Writes to stdout without `-o`. `-o` and `--out` as `ctrf` takes them, and a folder that does not exist is created,
   as `ctrf` creates it (`CtrfCommand.cs:115-119` at `8d7d1e1d`). Any other option, the issue's `--json` included, is
   refused with exit 2, as `ctrf` refuses one: the output is always JSON. Exit codes as the tool's: 0; 1 for a runtime
@@ -744,11 +806,11 @@ kronikol card <report> [-o <file>]
   (`:697-699`), beside `history?.Append()` (`:703`), inside `RunIsolated` (`:959`) and recorded with
   `RunFileCollector.Record`, as `CiSummary.md` is (`:764-780`), and before `WriteRunManifest` (`:791`).
 - **Only with the JSON data file.** It is written when `written` holds this run's JSON data file (`.json` or
-  `.krkl`): the card is a function of that file, and with the file off, failed, or written as XML or YAML there is
-  nothing for `kronikol card` to agree with. Such a run writes no card and no `serviceCard`. An `OptionNotApplied`
-  diagnostic says why when the file is off or not JSON, recorded before the diagnostics snapshot as
-  `RecordOptionDiagnostics` records its own (`ReportGenerator.cs:998` at `8d7d1e1d`); a failed write is already an
-  `OutputFailure`.
+  `.krkl`): the card's `behaviour` is a function of that file, and without it there is nothing for `kronikol card` to
+  agree with. With the data file off, failed, or written as XML or YAML, no card is written and `Run.json` has no
+  `serviceCard`, silently, as `query.cs` is skipped (`WritesQueryScript`, `ReportGenerator.cs:1016-1017` at
+  `8d7d1e1d`); the wiki says so. A diagnostic would fire on every run of a suite that writes XML or YAML and never set
+  the option, since Q2 recommends it on; a failed write is already an `OutputFailure`.
 - **Its inputs** are the data file's: the calls the file holds, mapped by the shared rules (4.2), and the parties the
   file holds, the block's rows when the run declared something, else the inference over those calls (Q15). Never the
   table `ReportGenerator` resolved with the run's observations (`ReportGenerator.cs:518` at `8d7d1e1d`). The run end
@@ -773,7 +835,8 @@ kronikol card <report> [-o <file>]
     a run that left none, leaves `serviceCard` out on purpose: it cannot tell this run's card from an older run's
     without hashing the data file. The card itself moves with its run, since `PlannedFiles` lists `service.json`;
     without it, a run killed before its manifest would leave the previous run's card on top.
-  - The doc of `RunManifest.ToJson` ("the ten members", `:81`) is corrected with it (section 3, found on the way).
+  - The doc of `RunManifest.ToJson` (`:81`), which 5.16.0 corrected for `serviceId` (section 3, found on the way),
+    names `serviceCard` too.
 - **The name is fixed**, `service.json`, as `Failures.md`, `ctrf-report.json` and `Run.json` are
   (`ReportGenerator.cs:919-921`, `CtrfReportGenerator.cs:145`, `RunManifest.cs:30` at `8d7d1e1d`); only the report's
   own files take `HtmlTestRunReportFileName` (Q11).
@@ -783,9 +846,11 @@ kronikol card <report> [-o <file>]
 - `schemas/service-card.v1.schema.json`, committed, with `$id` its raw URL on `main`. The issue asks for a fixed path in
   the repo; this is the first schema committed, so the folder is new (Q13). The card carries no `$schema` member:
   `formatVersion` names its shape.
-- Closed, as the data file's schema is: `additionalProperties: false` on every object. An additive key (4.1) joins the
-  v1 file on `main` in the release that writes it, so a consumer validating against an older copy rejects a newer
-  card, as #190 §5.5 says of the data file's schema; the `$id` on `main` is the copy to validate against.
+- Closed, as the data file's schema is: `additionalProperties: false` on every object that declares properties.
+  `run.counts[].statuses` is a map of status to count (`additionalProperties: { "type": "integer" }`); `run.degraded`
+  declares the seven kinds 4.3 lists. An additive key (4.1) joins the v1 file on `main` in the release that writes it,
+  so a consumer validating against an older copy rejects a newer card, as #190 §5.5 says of the data file's schema;
+  the `$id` on `main` is the copy to validate against.
 - Two facts hold it, on the models of the data file's: every card the tests write validates and every member the
   writer can emit is declared (`TestRunReportSchemaContractTests`' pattern), and an undeclared member is a violation
   (`SchemaClosedContractTests`'). The tests read the schema from the repository root, as `SkillDriftTests` reads the
@@ -800,7 +865,8 @@ kronikol card <report> [-o <file>]
   the diagram's edges against the graph instead (5.1), and the rest is Q10.
 - Propagating the phase in the identity header. Nesting repairs it for the card; a capture fix is a separate issue
   (Q8).
-- Indexing the data file's root background block, and resolving parties over it at run scope: #190's R3 (PEER).
+- Indexing the data file's root background block, and resolving parties over it at run scope: #190's R3, released as
+  5.16.0.
 - `behaviourHash` on history's run line (Q17).
 
 ## 5. Tests, red first
@@ -815,31 +881,40 @@ through the builder for the hand-written records of 5.1.
 
 ### 5.1 The call graph (R1)
 
-1. **Origin, cause and phase on the shapes that matter**, from hand-written records: the test calls the subject, which
-   calls a dependency inside that request (`request`, the request's phase); the test seeds a database with its own
-   client (`test`); the test seeds through the subject's own client between requests (origin `subject`, cause
-   `background`: the documented limit, pinned); the subject's background job calls a dependency with no test in the
-   stack (`background`, its recorded phase); a background call recorded while an unrelated request is open (it keeps
-   its recorded phase, never the request's); a broker delivers to the subject (`RequestHeader`, so `request`); a call
-   from the root background block (`background`, in no scenario); a stream with no `attributionSource` (nesting alone:
-   `request` inside a received call, `unknown` outside, never `background`).
+1. **Origin, cause and phase on the shapes that matter**, from hand-written records, one shape each:
+   - the test calls the subject, which calls a dependency inside that request: `request`, the request's phase;
+   - the test seeds a database with its own client: `test`;
+   - the test seeds through the subject's own client between requests: origin `subject`, cause `background`, the
+     documented limit, pinned;
+   - the subject's background job calls a dependency with no test in the stack: `background`, its recorded phase;
+   - a background call recorded while an unrelated request is open: it keeps its recorded phase, never the request's;
+   - a broker delivers to the subject: `RequestHeader`, so `request`;
+   - a call from the root background block: `background`, in no scenario;
+   - a stream with no `attributionSource`: nesting alone, `request` inside a received call, `unknown` outside, never
+     `background`;
+   - an in-process subject declared `underTest`, no test party, its calls `TestContext`: cause `test`, origin
+     `subject`, each call in its scenario's `ops`.
 2. **Parity with the component diagram over the same calls**: for every report the test suites write, the card's edge
    set equals `ExtractRelationships`' (caller, service, protocol) set over the data file's call set with no participant
-   filter; and a run with `ComponentDiagramOptions.ParticipantFilter` set filters its diagram, not its card. A mutation
-   of either protocol rule fails it.
+   filter; and a run with `ComponentDiagramOptions.ParticipantFilter` set filters its diagram, not its card. A fact
+   pins the protocol for each shape (a dependency category, an event's method, an event with none, plain HTTP), since
+   parity cannot see a change to a rule both sides share.
 3. **Parity with #192's key**: each operation's target, with its GraphQL operation, equals `CallOperation.Of` at
    `queryKeys` off (`route`'s setting) for the same call: one key, not two. History keeps query keys, so the parity is
    not with history.
 4. **`flow` unchanged**: the existing `flow` facts pass with `CallNesting` moved.
 5. **The parties function**: on a report with the block, the rows as written and the subject row; without it, the
    inference over the call set, the root block's calls included; `query parties` prints what it printed before the
-   lift on every fixture of its tests; the subject row is the `underTest` party with the most calls received, then by
-   name, also when the inference keeps two.
+   lift on every fixture of its tests, and #192's `origin` gives what it gave before the move; the subject row is the
+   `underTest` party with the most calls received, then by name, also when the inference keeps two.
 6. **The inference version's guard**: the corpus of call sets with their tables, one per palette category among them;
    a changed answer fails until `InferenceVersion` moves.
 7. **The message table**: per scheme, every label its classifier writes, for each operation at each verbosity, maps to
    the direction the table gives; a delivery reads `consumes`; Service Bus's queue and EventBridge's bus come from the
-   authority; Kafka at Raw gives the topic, not `{n}@{n}`; a label the table cannot map gives `direction: null`.
+   authority; Kafka at Raw gives the topic, not `{n}@{n}`; a label the table cannot map gives `direction: null`. Then
+   from records each tracker writes, not hand-written labels: a Kafka or MassTransit consume, and a generic
+   `MessageTracker` consume with its default options, reads `consumes` and stays out of `exposes`; a Spanner, BigQuery
+   or Bigtable call is no message, nor is a call over HTTP to a broker that carries no `MessageQueue`.
 
 ### 5.2 `service.json` (R1)
 
@@ -863,35 +938,46 @@ through the builder for the hand-written records of 5.1.
 6. **Null, never guessed**: `framework` null; `source` null on a scenario with none; `run.id` and `run.at` null for a
    report with no `Run.json` beside it; `id` null on a report without declarations; `kindSource` `inferred` on the rows
    whose kind was inferred, null on unknown rows; `rules.templateRules` null for a report written before #192's R2 and
-   `"none"` after it when the run had no rules.
+   `"none"` after it when the run had no rules; `subject` null, and `exposes.ops` and `messages` empty, on a run where
+   no party is `underTest`.
 7. **Schema**: every card written by the facts above validates; every member the writer can emit is declared; an
-   undeclared member is a violation.
+   undeclared member of a declared object is a violation.
 8. **Size and cost**: a card on a 2,000-scenario synthetic report, and on one scenario of 1,000 calls (`CallNesting`
    keeps a list of open calls per record, `CallNesting.cs:42-57`), is written in one scan, the bodies the key reads
    included, under a time set from R1's first measurement.
-9. **The hash**: for every card the facts write, `behaviourHash` equals the SHA-256 of the bytes from the last
-   `"behaviour":` to the file's closing brace.
+9. **The hash**: for every card the facts write, `behaviourHash` equals the SHA-256 of the bytes from the `{` after the
+   last `"behaviour":` to the byte before the file's closing `}`, the range 4.3 defines. One fixture's `behaviour`
+   holds a `"`, a `+` and a non-ASCII name, which the default encoder escapes and another serializer need not.
 
 ### 5.3 `kronikol card` (R1)
 
-1. **Writers**: one run written by one build as `TestRunReport.json` (`CompressTestRunReport = false`) and as `.krkl`
-   gives equal `behaviour`. Older writers get kept fixtures, each with its own golden card, since writers changed what
-   they record between 4.x and 5.x (tags in 5.0.0, names and stable ids in 5.9.x, party names in 5.13.0) and no run is
-   written by both: a 4.x standard report made from one NDJSON fixture through `kronikol ingest` of the 4.32.x tool
-   (`formatVersion` 2, compressed payloads), with the same NDJSON through the current tool beside it and their
-   expected differences listed before either card is written; and an in-process-shaped 4.x fixture with
-   `attributionSource`, statement and GraphQL bodies, and a non-empty root background block. The test data holds no
-   4.x standard report today (`TestData/Reports/` has the current pin file and two 3.1.0 mergeable files).
+1. **Writers**, one shape each:
+   - one run written by one build as `TestRunReport.json` (`CompressTestRunReport = false`) and as `.krkl` gives equal
+     `behaviour`;
+   - older writers get kept fixtures, each with its own golden card, since writers changed what they record between
+     4.x and 5.x (tags in 5.0.0, names and stable ids in 5.9.x, party names in 5.13.0) and no run is written by both.
+     The test data holds no 4.x standard report today (`TestData/Reports/` has the current pin file and two 3.1.0
+     mergeable files);
+   - a 4.x standard report made from one NDJSON fixture through `kronikol ingest` of the 4.32.x tool, with one request
+     body of at least 8,192 characters, so the file holds a wrapper and is `formatVersion` 2 (a 4.32.x writer compresses
+     a payload only from that length, and writes version 2 only when it holds one: `Threshold`,
+     `CompressedFormatVersion`, `ReportPayloads.cs:35-41` at `v4.32.1`); the same NDJSON through the current tool
+     beside it, and their expected differences listed before either card is written;
+   - an in-process-shaped 4.x fixture with `attributionSource`, statement and GraphQL bodies, and a non-empty root
+     background block, one of whose statement bodies is 8,192 characters or more, so compressed there too
+     (`MapBackgroundJson`, `ReportGenerator.cs:4533`, `:4822` at `v4.32.1`; Appendix A).
 2. **One writer**: for a run made in the tests, `kronikol card` on its data file gives the same `behaviour` as the
    run's own builder (R2 makes this the run-end file). The runs include a suite that builds its client with
    `CreateTestTrackingClient` and declares nothing (`inferred` both ways, Q15), one that declares a `ServiceId` (both
-   read the block, its `observed` rows included), and one with a non-empty root background block.
+   read the block, its `observed` rows included), one with a non-empty root background block, and one with two or
+   more user actions or markers recorded with the empty Guid.
 3. **Usage**: no report (exit 2), an unknown option such as `--json` (2), an unreadable file (1); `-o` to a folder that
    does not exist creates it and exits 0, as `ctrf` does.
 4. **An old name kept**: a report written before 5.13.0 whose call to a remote host was named `localhost:443` by the
    fallback gives a card that keeps `localhost:443` and lists it in `unresolved` (4.3).
-5. **The run's id**: `run.id` and `run.at` come from the `Run.json` beside the report when it lists the report, and
-   are null otherwise.
+5. **The run's id**: `run.id` and `run.at` come from the `Run.json` beside the report when it lists the report and its
+   `at` is not before the report's `endTime`, and are null otherwise, an earlier run's `Run.json` that lists the same
+   name beside a later report included.
 
 ### 5.4 The run end and the merge (R2)
 
@@ -899,14 +985,16 @@ through the builder for the hand-written records of 5.1.
    and `serviceCard.behaviourHash` equals the file's; `run.report.sha256` equals the data file's on disk. With it off,
    neither.
 2. A write that fails leaves the file out of `Run.json` (`StaleOutputTests`' rule); with the data file off or written
-   as XML, no card, no `serviceCard`, and an `OptionNotApplied` diagnostic.
+   as XML, no card, no `serviceCard`, and no diagnostic.
 3. An ingested run writes it (`kronikol ingest` over an NDJSON fixture) when the option is on by default (Q2).
 4. The run-end file's `behaviour` equals `kronikol card`'s on the same run's data file (5.3.2 against the real file),
-   for the three runs of 5.3.2.
+   for the runs of 5.3.2.
 5. `kronikol merge` of two shards writes `service.json` beside the merged report, equal to `kronikol card` on the
    merged data file.
 6. `Run.json`: a new fact on the model of `RunManifestTests.cs:106-119` at `8d7d1e1d` (12 members with both keys,
-   `serviceId` then `serviceCard`, round trip, absent when off), with `:89-103` kept as it is; a malformed `serviceCard`
+   `serviceId` then `serviceCard`, round trip, absent when off), with `:89-103` kept as it is, and one for the commonest
+   run under Q2, a card and no `ServiceId` (11 members, `serviceCard` last: `RunManifest.ToJson` writes ten and
+   `serviceId` only when set, `RunManifest.cs:81-106` at `8d7d1e1d`); a malformed `serviceCard`
    reads as absent, never as a null manifest; `RunRotation.Reconstruct` leaves it out; `PlannedFiles` lists
    `service.json`, so a run killed before its manifest moves its card with it.
 7. The facts a new default changes, run again with the card on: `RunRotationTests.cs:189`, `:405-416`
@@ -921,8 +1009,10 @@ No Playwright: nothing here changes the HTML report.
 
 - On BreakfastProvider's four lanes, after R2: the run-end file's `behaviour` equals `kronikol card`'s on the same
   data file, and the external-SUT lane says `subjectCalls: "notRecorded"`.
-- On two runs of one lane of the same commit whose scenarios all had the same result: `behaviour` byte-identical, as
-  measured on 10 of 10 pairs (2.4); `run.counts` may differ.
+- On two runs of one lane of the same commit whose scenarios all had the same result: `behaviour` byte-identical, or
+  differing only by an operation or a status 2.4 shows coming and going (a Cosmos DB `Replace`, a Spanner `Rollback`;
+  28 of 921 such ledger pairs, `results/audit-A-same-results.txt`); `run.counts` may differ. The card's own pairs held
+  on 10 of 10 (2.4).
 - On the ingested runs of A3, kronikol-bf's Jest stand-in and a Cucumber Messages run built in R1's tests, on a tap
   capture (ProxyTap or TcpTap) and on a `kronikol merge` of shards: the card is written. Where a producer records no
   `attributionSource` (ingest, the taps), `cause` and `effectivePhases` come from nesting alone, and nesting is only as
@@ -950,7 +1040,7 @@ Each named mutation must fail at least one fact; one that survives means a fixtu
 - background calls kept in a scenario's operations, or the root background block skipped;
 - the run's observations used at run end, or the block ignored by the tool;
 - the subject row taken first by name instead of by calls received;
-- `GetProtocol` copied instead of shared;
+- the card's protocol taken from the category alone (the event and HTTP branches of `GetProtocol` dropped);
 - the empty Guid kept as an id at run end;
 - the card written inside the parallel output list;
 - a label the message table cannot map written as `publishes`, or the destination taken from the target's last
@@ -959,7 +1049,8 @@ Each named mutation must fail at least one fact; one that survives means a fixtu
 - `InferenceVersion` left where it is after a change to the inference's answers;
 - `templateRules` written `"none"` for a report written before #192's R2;
 - `capture.calls` keyed on "no call at all" instead of `CarriesInteractions`;
-- `behaviourHash` taken over re-serialised bytes instead of the file's.
+- `behaviourHash` taken over bytes another serializer or encoder wrote (5.2.9's fixture holds a `"`, a `+` and a
+  non-ASCII name).
 
 ## 6. Releases and records
 
@@ -967,7 +1058,7 @@ Each named mutation must fail at least one fact; one that survives means a fixtu
 
 | Release | Holds | Bump | Waits for |
 |---|---|---|---|
-| **R1** | `CallGraph/` (with `CallNesting` moved and the message table), the shared parties function and `InferenceVersion` in `src/Kronikol/Parties/` (`query parties` calls the function), the card writer, `kronikol card`, the committed schema, docs | **minor**: a new command | #190's R2 and R3 (planned 5.15.0 and 5.16.0: version 1 of the inference is R2's rule, and R3 indexes the root background block and resolves parties at run scope); #192's R1 (the key), R2 (the rules block) and R3 (`origin`, and `cause` if its Q4 says so; if not, R1 keeps the graph's own classification and leaves `causes` out) |
+| **R1** | `CallGraph/` (with `CallNesting` moved and the message table), the shared parties function and `InferenceVersion` in `src/Kronikol/Parties/` (`query parties` and #192's `origin` call the function), the scanner reading a compressed body in the root background block, the card writer, `kronikol card`, the committed schema, docs | **minor**: a new command | #192's R1 (the key), R2 (the rules block) and R3 (`origin`, and `cause` if its Q4 says so; if not, R1 keeps the graph's own classification and leaves `causes` out). #190's R2 and R3, which it needs too (version 1 of the inference is R2's rule; R3 indexes the root background block and resolves parties at run scope), shipped as 5.15.0 and 5.16.0 |
 | **R2** | `GenerateServiceCard`, the run-end file after the output list, `Run.json`'s `serviceCard` key with its reader and the rotation's reconstruction, `PlannedFiles`, the card from `kronikol merge`, and an ingest flag only if Q2 is off | **minor**: a new option and a new output | R1 |
 
 R1 changes no report bytes and no golden pin: `query parties` prints what it printed (5.1.5). R2 adds a file, and with
@@ -984,11 +1075,12 @@ the run-end file in the first release, R1 and R2 merge into one minor.
   Works on any report the tool reads, 4.x JSON or 5.x `.krkl`; parties come from the report's block, else from the
   inference over its calls, never from what the run observed and did not write. The schema is
   `schemas/service-card.v1.schema.json`. A minor: a new command."
-- **R2**: "`GenerateServiceCard` writes `service.json` at run end, after the report and before `Run.json`, which lists
-  it and gains `serviceCard.behaviourHash`; `kronikol merge` writes it beside a merged report. A minor: a new option
-  and a new output."
+- **R2**: "`GenerateServiceCard`, on by default, writes `service.json` at run end, after the report and before
+  `Run.json`, which lists it and gains `serviceCard.behaviourHash`; a run whose data file is off or not JSON writes
+  none. `kronikol merge` writes it beside a merged report. A minor: a new option and a new output." The draft takes
+  Q2's recommendation; with Q2 answered off it says "off by default" and names ingest's flag.
 
-### 6.3 Wiki (`../Kronikol.wiki`, `origin/master` at `183dbb0`, 5.14.0)
+### 6.3 Wiki (`../Kronikol.wiki`, `origin/master` at `aed3a7b`, 5.16.0)
 
 - A new `Service-Card` page: what the file holds; what is stable, and what moves the hash with no change of behaviour
   (4.3); what `origin`, `cause` and `capture` mean, with their limits (seeding through the service's clients reads
@@ -996,7 +1088,7 @@ the run-end file in the first release, R1 and R2 merge into one minor.
   it; what an inferred row means, and why a run's observed test client reaches the card only when the run declares
   something.
 - `Generated-Reports.md`: a row in the file table (beside `Failures.md`, L16, and `Run.json`, L23), `Run.json`'s new
-  key (its example at L541-552), and the merged run (L537).
+  key (its example at L542-553), and the merged run (L538).
 - `Querying-Reports.md`: `kronikol card` beside `kronikol ctrf`.
 - `Report-Configuration.md`: `GenerateServiceCard` (R2); its Parties section (5.14.0) links the card.
 - `Cross-Run-History.md`: `HistoryShapeTemplates` now also shapes the card's targets (after #192).
@@ -1006,7 +1098,7 @@ the run-end file in the first release, R1 and R2 merge into one minor.
 - `_Sidebar.md` and `Home.md`: the new page.
 - Grep the wiki for every page that lists the run-end files or the tool's commands again before each release.
 - Outside the wiki: `README.md:223`, `nuget-readme.md:55` and `:79`, and the tool's package description and tags
-  (`Kronikol.Tool.csproj:22`, `:24`) list the tool's commands.
+  (`Kronikol.Tool.csproj:22`, `:24`) list the tool's commands (lines at `8d7d1e1d`).
 
 ### 6.4 Plans, roadmap, Kronikol4J, skill, issues
 
@@ -1032,13 +1124,13 @@ the run-end file in the first release, R1 and R2 merge into one minor.
 
 | # | Question | Recommendation |
 |---|---|---|
-| Q1 | Where in the roadmap: now, for the owner's company (D23's "sooner"), or after the launch as 14.13 | Now, R1 first: it is tool-only, changes no report and no pin, and serves every report already written. It waits for #190's R2 and R3 and #192's three releases (6.1). R2 when the owner wants the file at run end |
-| Q2 | `GenerateServiceCard` on by default | On, like `Failures.md` and as D23 recommends for the card: an indexer is only as current as the runs that write the file. The cost is one file of 159 to 178 KB a run on BreakfastProvider's in-process lanes (23 to 25 KB gzipped, as an artifact zip stores it) and 88 to 102 KB on its external-SUT lanes (RUN, 2.3), and the graph's build at every run end (budgeted in R2, 5.4.8). On also decides ingest: `kronikol ingest` has no flag for an output that is off by default, so off means no card for ingested runs unless R2 adds one |
+| Q1 | Where in the roadmap: now, for the owner's company (D23's "sooner"), or after the launch as 14.13 | Now, R1 first: it is tool-only, changes no report and no pin, and serves every report already written. It waits for #192's three releases; #190's R2 and R3 shipped as 5.15.0 and 5.16.0 (6.1). R2 when the owner wants the file at run end |
+| Q2 | `GenerateServiceCard` on by default | On, like `Failures.md` and as D23 recommends for the card: an indexer is only as current as the runs that write the file. The cost is one file of 159 to 177 KB a run on BreakfastProvider's in-process lanes (23 to 25 KB gzipped, as an artifact zip stores it) and 88 to 102 KB on its external-SUT lanes (RUN, 2.3), and the graph's build at every run end (budgeted in R2, 5.4.8). On also decides ingest: `kronikol ingest` has no flag for an output that is off by default, so off means no card for ingested runs unless R2 adds one |
 | Q3 | One file with `run` and `behaviour`, or two files | One file. The issue asks for one, the indexer compares `behaviourHash`, and the hashed bytes are the `behaviour` member as the file holds them (4.3); `jq .behaviour` re-escapes and is for reading, not for hashing. Two files would let a git branch of cards diff cleanly, which FLEET S5 may want later |
 | Q4 | Counts in the card at all | Yes, in `run`. They are the issue's ask and cost the stable part nothing there |
 | Q5 | `cause` on the card (#192 asks it too, its section 9 Q4, with this card as its second reason) | Yes. Without it the card cannot say which dependencies are used while serving requests; "only outside requests" is `cause` other than `request`. It cannot tell background work from seeding through the service's own clients (both `TestContext`, both top level, #192 4.3), and the docs say so. If #192's Q4 is declined, the graph keeps the classification it needs for the scenario index and the phase rule (4.2), and the card leaves `causes` out |
 | Q6 | Background calls in a scenario's `ops` | **Answered (2026-10-27, audit B): no.** Three of the five scenario rows that changed between same-commit runs were background calls (2.4); the operation stays on its edge. The rest of the trade is Q16 |
-| Q7 | Kronikol4J: port the writer, or `kronikol card` in Java CI | The tool, until a port asks: one implementation keeps one format. A Java card needs a standalone run with `kronikol.report.dataFormats=json`, and even then lacks `ciMetadata`, `suite`, `formatVersion` and `attributionSource` (F11). Recommend one Kronikol4J issue, raised when R1 ships: calls in fragments and a merged data file, and those root members and `attributionSource` on calls |
+| Q7 | Kronikol4J: port the writer, or `kronikol card` in Java CI | The tool, until a port asks: one implementation keeps one format. A Java card needs a standalone run with `kronikol.report.dataFormats=json`, and even then lacks `ciMetadata`, `suite`, `formatVersion` and `attributionSource` (F11). Recommend one Kronikol4J issue, raised when R1 ships: calls in fragments and a merged data file, and those root members and `attributionSource` on calls. Short of calls, a merged data file carrying the fragments' `componentRelationships` (caller, service, protocol, methods, counts; F11) would give a merged Java run's card its edges and their methods, flagged partial in `capture` |
 | Q8 | Fix phase at capture (carry it in the identity header) | Not here. Nesting repairs it for every reader of the graph. A capture fix changes the wire and every port; a separate issue if wanted |
 | Q9 | A `query graph` verb now | Not in this plan. Cheap once the graph exists; ask when an agent needs it (FLEET S2) |
 | Q10 | Move the component diagram, `services` and history onto the graph | No: each changes output. The card pins the diagram's edges; the others stay as they are until a defect makes the move worth a pin change |
@@ -1046,7 +1138,7 @@ the run-end file in the first release, R1 and R2 merge into one minor.
 | Q12 | `run.framework` | Null now. It needs each capturer to record its framework, which is the contract question at 14.5 (`GO_PLATFORM_PLAN`'s ask of the raw test name with its framework). Record it there |
 | Q13 | Where committed schemas live | `schemas/` at the repo root, one file per format version, raw URL as `$id`; the card carries no `$schema` member |
 | Q14 | The command's name | `kronikol card`, the issue's. It is short and pairs with `ctrf`; the wiki page says "service card" in full. Its options are `ctrf`'s, `-o` and `--out`; the issue's `--json` is refused, since the output is always JSON |
-| Q15 | What a run observed and did not write. At run end Kronikol knows which client `CreateTestTrackingClient` built (`observed`, with the application as `note`), and the data file records it only when the run also declares something (F15). (a) The card is a function of the data file: built at run end from the block when there is one, else from the inference over the calls, as `kronikol card` and `query parties` build it from the same file, so an undeclared run's card says `inferred` where the run observed. (b) #190 writes the block whenever a test client was observed: every such suite's report changes bytes, which #190 §5.14 declined as "a block on every run". (c) The run-end card uses what it observed and the tool what the file holds: one report then has two cards, and an indexer mixing run-end and rebuilt cards sees a change that is none | (a). One writer, two readers holds, and a card rebuilt from a kept report agrees with the one its run wrote. A suite that wants `observed` on its card declares its `ServiceId`, which writes the block, observed rows included |
+| Q15 | What a run observed and did not write. At run end Kronikol knows which client `CreateTestTrackingClient` built (`observed`, with the application as `note`), and the data file records it only when the run also declares something (F15). (a) The card's `behaviour` is a function of the data file: built at run end from the block when there is one, else from the inference over the calls, as `kronikol card` and `query parties` build it from the same file, so an undeclared run's card says `inferred` where the run observed. (b) #190 writes the block whenever a test client was observed: every such suite's report changes bytes, which #190 §5.14 declined as "a block on every run". (c) The run-end card uses what it observed and the tool what the file holds: one report then has two cards, and an indexer mixing run-end and rebuilt cards sees a change that is none. (d) (c), with `kindSource` and `note` moved out of `behaviour`, leaving `kind`, and a fact that observation and inference agree on kind for the template suites | (a). One writer, two readers holds, and a card rebuilt from a kept report agrees with the one its run wrote. A suite that wants `observed` on its card declares its `ServiceId`, which writes the block, observed rows included. (d) keeps the hash equal only where observation and inference name the same kinds, which a fact can pin for the template suites and not for a suite that builds its clients otherwise; and `kindSource` and `note` would still differ between the run-end card and a rebuilt one, so one report would still have two cards |
 | Q16 | What `behaviour.scenarios[].ops` holds. (a) The test's own operations in each scenario, with the full list, the service's included, in `run.scenarios`; (b) every call but background ones (Q6's answer alone); (c) every call, as first written; (d) (a), with titles, tags and source moved to `run` beside the full list. Measured (2.4, RUN): same-commit pairs byte-identical on 10 of 10 (a), 8 of 10 (b), 6 of 10 (c); across 5.4.1 to 5.12.1 on 18 lanes, 13 of 18 (a) and 16 of 18 (d), the difference being 5.9.1's renamed titles | (a). It is the only reading that held on every pair. Its cost: which scenarios reach a dependency (Supplier Service, through the menu cache) is answered from `run.scenarios`, which is not hashed. (d) costs a reader of `behaviour` alone the scenario's name |
 | Q17 | `behaviourHash` on history's run line. 5.14.0 put `serviceId` there, and the ledger is where an indexer reads many runs at once | Not in this plan. History's own fingerprints already say, scenario by scenario, when behaviour changed; the card's hash would be a second, coarser signal on a format suites on many versions share. Ask again with FLEET S5, which reads the history branches |
 
@@ -1058,11 +1150,11 @@ the run-end file in the first release, R1 and R2 merge into one minor.
 | A2 | The service's calls outside any received call are seeding in suites that seed through the container | INFERRED from 2.2; not observed on BreakfastProvider | `cause` reads `background` for both (4.2), and says what is known; 5.2.4's second fixture pins what the card prints |
 | A3 | The three reports in the issue behave like BreakfastProvider's lanes | ISSUE. Searched for on 2026-10-27 and not found: every file under `C:/Users/cex` (PEER, the list in #192's session scratchpad, `found-reports-profile.txt`), C: (the only drive), `C:/Code` outside Kronikol's worktrees; the session transcripts show the issues were written on another machine. Stand-ins measured instead (2.3): four more BreakfastProvider lanes and a Jest ingest (RUN on PEER-made inputs). A Kronikol4J stand-in could not be made with calls (F11) | R1's acceptance adds, in its own tests, a Jest-shaped run as the issue describes it (one synthetic `Run:` step, every call Action, MSW-style doubles answering in 1 to 2 ms) and a Cucumber Messages run, both from hand-written NDJSON through `kronikol ingest` as #184's repro was, and pins them like the BreakfastProvider lanes |
 | A4 | #192's key and cause, and #190's inference, are pure functions of what a report holds | PEER, agreed by message. True of the inference; the run end's resolver also reads observations (`PartiesReport.cs:18-25` at `8d7d1e1d`), which the card does not read (Q15) | R1 waits, or the card gets a field that differs between run end and backfill; 5.3.2 catches it |
-| A5 | `ReportScanner` can give the card every field it needs | READ: `attributionSource` and `callerDependencyCategory` read since 5.14.0 (`ReportScanner.cs:834-835` at `8d7d1e1d`); the root `background` block not read until #190's R3 (F16, PEER) | R1 teaches the scanner the block itself, in a list of its own on `ReportIndex`, so the existing verbs keep their output |
+| A5 | `ReportScanner` can give the card every field it needs | READ: `attributionSource` and `callerDependencyCategory` read since 5.14.0 (`ReportScanner.cs:834-835` at `8d7d1e1d`); the root `background` block's calls read since 5.16.0 (#190's R3, F16; `ReportIndex.cs:88` at `15a95d4c`), but not a compressed body there, which the scanner recognises and records under `httpInteractions` only (`ReportScanner.cs:567-574`, `:514` at `15a95d4c`) | R1 teaches the scanner what it lacks, in the index's own lists, so the existing verbs keep their output; the block's compressed bodies are R1's already (Appendix A) |
 | A6 | 16 hex of SHA-256 is enough for an operation id | INFERRED: about 200 operations a run | A collision would merge two operations; a fact over the corpus checks there is none |
 | A7 | Ingested runs reach the run-end list | READ (`IngestPipeline.cs:694`), for an output on by default (`IngestPipeline.cs:428-435` at `8d7d1e1d`) | With Q2 off, ingest needs a flag (4.5); 5.4.3 catches it |
 | A8 | Card sizes scale with scenarios and operations as measured | RUN on 187 to 214 scenarios, in the revised shape (2.3) | Q2's cost line moves; 5.2.8 measures a large run |
-| A9 | #190's R3 indexes the root background block and resolves parties at run scope | PEER, agreed by message on 2026-10-27 | R1 does it (A5's "if wrong"), and #190's three found-on-the-way defects stay open until someone fixes them |
+| A9 | #190's R3 indexes the root background block and resolves parties at run scope | Agreed by message on 2026-10-27, and released as 5.16.0: READ at `15a95d4c`, `ReportIndex.cs:88`, the parties verb over the background's calls at run scope (`QueryCommand.Overview.cs:502`, `:523`), and the three defects of section 3 fixed. It also marks a call a stub handler answered (§5.11), which the card reads as any mark (4.3) | Settled by the release |
 | A10 | Ten pairs say how often `behaviour` moves on a re-run | RUN: one consumer, ten pairs, Linux CI and one Windows machine | It moves more often than 2.4 says; the design promises presence only, and `run` takes what moves |
 
 ## 9. Log
@@ -1112,7 +1204,7 @@ the run-end file in the first release, R1 and R2 merge into one minor.
   - `cause` waits on #192's Q4, with a fallback; the graph's classification written out, deliveries and a subject's
     `TestContext` calls included (4.2, Q5); the message rule replaced by a table per URI scheme (4.2, F18);
   - `kronikol card` takes no declarations, reads `run.id` and `run.at` from a `Run.json` beside the report, creates
-    `-o`'s folder and refuses `--json` (4.4, 5.3.3, 5.3.4); `rules.templateRules` and `rules.inference` defined, the
+    `-o`'s folder and refuses `--json` (4.4, 5.3.3, 5.3.5); `rules.templateRules` and `rules.inference` defined, the
     shared parties function and `InferenceVersion` in this plan's R1, agreed with kronikol-67 (4.2, 4.3);
   - hosts, errors and phase counts placed in `run`, `capture.degraded` moved there as `run.degraded`,
     `results.bypassed`, `run.report.kronikolVersion` and `run.environment` added, `kindSource` null on unknown rows,
@@ -1131,12 +1223,46 @@ the run-end file in the first release, R1 and R2 merge into one minor.
     `attributionSource` (2.2, A5). Q15 to Q17 added; three 5.14.0 defects recorded for kronikol-67 (section 3, found on
     the way). No section, finding, question or test number another plan cites moved; `capture.emptyTargets` keeps its
     name with the narrower meaning.
+- 2026-10-28: verified by a fourth review in this session, against the code at `8d7d1e1d`, `6bbc2ce1` (5.15.0) and
+  `15a95d4c` (5.16.0, which released #190's R3 at 01:38 UTC that day), the three audits and the harness, and revised to
+  it and to the decisions taken on it. Its probes and results are in the harness (`verify-`). What changed:
+  - messages: a message call is a call between the subject and another party that carries `MessageQueue` on either
+    side or has a scheme of the table, so a delivery is told by where each tracker records the category, not by a
+    caller category: Kronikol's Kafka and MassTransit trackers, and the generic `MessageTracker` with its default
+    options, put `MessageQueue` on the delivery itself. A meta type of `Event` makes none, so Spanner's calls are no
+    messages; the MassTransit row corrected (4.2, 5.1.7). The review defined a broker per party; read per call
+    instead, a consumer that records the category on its own side is no broker and an HTTP call to a broker no
+    message. The revised probe, re-run with the rule behind `--corrected-broker-rule`, gives `messages` 19 in memory
+    and 17 in docker where it gave 24 and 22, and each in-process card 457 bytes smaller and otherwise unchanged (2.3,
+    0, F10, Q2);
+  - an in-process subject's `TestContext` calls are `test` (4.2, a new step 3 of the cause rule; 5.1.1); R1 moves
+    #192's `origin` onto the one parties function, unless #192's R3 lifts it first (4.2, 6.1); #190's R3 described
+    with its handler's marks, which move `behaviourHash` across 5.16.0 (4.3, F19), and the 5.15.0 inference bullet
+    corrected: on a report with no block and no marks the two rules give one table (4.3);
+  - no diagnostic when the card is skipped for want of a JSON data file (4.5, 5.4.2, 6.2); the acceptance allows the
+    operations 2.4 shows coming and going (5.5); the schema closes the objects that declare properties (4.6); facts and
+    mutations that could not catch their case corrected (5.1.2, 5.2.9, 5.3.1, 5.3.2, 5.6); a compressed body in the
+    root background block, which 5.16.0 does not read, made R1's (Appendix A, A5, 6.1); rows sharing a `sid`, a null
+    subject and an earlier run's `Run.json` defined (4.3, 4.4, 5.2.6, 5.3.5); why `kronikol card` mints no id (4.3);
+    Q15 gains option (d) and Q7 the fragments' `componentRelationships`; two notes for #190 and #192 on a broker
+    inferred as the test (4.0);
+  - numbers: the subject's calls outside any request 56 to 162 (165 with the root block), hosts by Kronikol version,
+    the `Replace` that comes and goes the outbox poller's; the numbers the harness lacked have result files, and F16's
+    3 `Expired` calls are right where `results/audit-B-cards-all.txt` reads 0, since that run did not read the block
+    (`audit-B-cards-bgsection.txt`);
+  - found here: the LightBDD phase change ran the other way, `Action` in 5.4.1 and a second call with no phase in
+    5.12.1 (4.3); 5.15.0 and 5.16.0 are released, so no "planned" is left for them (header, 4.0, 6.1, Q1, A9); the wiki
+    pin is `aed3a7b`, the README's line is at `8d7d1e1d`, `PlannedFiles` ends at L897; the log entry above cited 5.3.4
+    for 5.3.5. Sentences hard to follow split (0, 4.2's mapping rules and messages, 5.1.1, 5.3.1). No section,
+    finding, question, assumption or test number moved.
 
 ## Appendix A. Edit sites at `8d7d1e1d`
 
 Line numbers here are at `8d7d1e1d` (5.14.0); the READ citations in the rest of the plan stay at `44bcc62a` unless
-they say otherwise. #190's R2 and R3 and #192's releases come first and will move some of them; each release reads its
-sites again.
+they say otherwise. #190's R2 and R3 (5.15.0, 5.16.0) have moved some already: at `15a95d4c` the subject row of
+`PartyResolver.cs` is L104-106 and `InferTests` and `InferSubjects` L212-249, `ReportScanner.cs` reads
+`attributionSource` at L856, and the parties verb's block-or-infer branch is `QueryCommand.Overview.cs:511-529`.
+#192's releases will move more; each release reads its sites again.
 
 | Release | File | Change |
 |---|---|---|
@@ -1144,12 +1270,13 @@ sites again.
 | R1 | `src/Kronikol/Query/CallNesting.cs` (unchanged since `44bcc62a`: `Parents` L32, the rule L62-76) | delegates to the moved rule; its doc (L3-25, "The rule lives here alone") changes. Callers: `QueryCommand.Narrative.cs:674`, `tests/Kronikol.Tests/Tool/CallNestingTests.cs:215`, `FlowTreeTests.cs:140` |
 | R1 | `src/Kronikol/ComponentDiagram/ComponentDiagramGenerator.cs:534` (`GetProtocol`, private, takes a `RequestResponseLog`) | split to take the category, the meta type and the method, and shared with the graph; `DrawnCalls` (L75-90) is the filter the run-end mapping shares; `ExtractRelationships` L54 |
 | R1 | `src/Kronikol/Parties/PartyResolver.cs:38` (`PartyTable`), `:97-99` (the subject row, computed and dropped), `:197-234` (`InferTests`, `InferSubjects`) | `PartyTable` gains its subject; `InferenceVersion` beside the inference |
-| R1 | `src/Kronikol/Parties/` (a new function) and `src/Kronikol/Query/QueryCommand.Overview.cs:466-566` (`Parties`: the block-or-infer branch at L504-523, its doc at L460-465) | the branch lifted into one function that returns the table and its subject row; `query parties` calls it |
+| R1 | `src/Kronikol/Parties/` (a new function) and `src/Kronikol/Query/QueryCommand.Overview.cs:466-566` (`Parties`: the block-or-infer branch at L504-523, its doc at L460-465) | the branch lifted into one function that returns the table and its subject row; `query parties` and #192's `origin` call it (4.2) |
 | R1 | `src/Kronikol/Parties/PartiesReport.cs:13-25` | its doc says the run end's table is the report's when declared; the card calls the shared function, never `Resolve` with observations (Q15) |
-| R1 | `src/Kronikol/Query/ReportScanner.cs`, `ReportIndex.cs` | none here: 5.14.0 reads `attributionSource` (L835), and #190's R3 indexes the root background block (`Enter` L426-478, `Leave` L480-541, `KnownNames` L322-347; `ReportIndex.cs:82-95`). The card reads that list |
+| R1 | `src/Kronikol/Query/ReportScanner.cs`, `ReportIndex.cs` | none for the calls: 5.14.0 reads `attributionSource` (L835), and 5.16.0 (#190's R3) indexes the root background block's calls (`Enter` L426-478, `Leave` L480-541, `KnownNames` L322-347; `ReportIndex.cs:82-95`; `ReportIndex.BackgroundInteractions`, L88 at `15a95d4c`). The card reads that list |
+| R1 | `src/Kronikol/Query/ReportScanner.cs` `StartsWrapper` (L551; L567-574 at `15a95d4c`) and `RecordBody` (called at L504; L514 at `15a95d4c`) | a compressed `content` under a root background call is read as one under a scenario's: 5.16.0 indexes the block's calls, but recognises a wrapper and records a body under `httpInteractions` only, so a background statement or GraphQL body of 8,192 characters or more in a version-2 file loses its statement head or GraphQL operation. #190's log hands this to R1 (`PARTY_IDENTITY_PLAN.md` section 12 at `15a95d4c`); 5.3.1's in-process 4.x fixture holds one |
 | R1 | `src/Kronikol/Reports/ServiceCardWriter.cs` (new) | the one writer |
 | R1 | `src/Kronikol/Reports/InteractionStatus.cs:29`, `:62`, `:101`; `src/Kronikol/History/HistoryShapeRules.cs:70` | one status reader per side, the error rule; `rules.templateRules` |
-| R1 | `src/Kronikol.Tool/CardCommand.cs` (new), `src/Kronikol.Tool/Commands.cs` (`Table` L24-50, `ctrf` L41-43) | the command, beside `ctrf`; it takes and gates a report as `CtrfCommand.cs:73`, `:97` do (`QueryCommand.ResolveReport`, `QueryCommand.cs:443`; `ReportGate.Refuse`, `ReportGate.cs:29`) and reads `Run.json` as `QueryCommand.cs:505-506` does |
+| R1 | `src/Kronikol.Tool/CardCommand.cs` (new), `src/Kronikol.Tool/Commands.cs` (`Table` L24-50, `ctrf` L41-43) | the command, beside `ctrf`; it takes and gates a report as `CtrfCommand.cs:73`, `:97` do (`QueryCommand.ResolveReport`, `QueryCommand.cs:443`; `ReportGate.Refuse`, `ReportGate.cs:29`) and reads `Run.json` as `QueryCommand.cs:505-506` does, also checking its `at` against the report's `endTime` (4.3) |
 | R1 | `src/Kronikol.Tool/Kronikol.Tool.csproj:22` (the description lists every command), `:24` (tags); `README.md:223`; `nuget-readme.md:55`, `:79` | `kronikol card` |
 | R1 | `schemas/service-card.v1.schema.json` (new) | the schema; no schema is committed anywhere yet |
 | R1 | both skill copies, `references/commands.md` | `kronikol card` in a `##` section in prose (6.4) |
@@ -1158,12 +1285,12 @@ sites again.
 | R1 | `tests/Kronikol.Tests/Tool/CtrfCommandTests.cs` | the model for `CardCommandTests` |
 | R1 | `tests/Kronikol.Tests/Tool/SkillDriftTests.cs:109-119`, `:126-158`, `:414` | what the skill copies may say about `card` (6.4) |
 | R2 | `src/Kronikol/ReportConfigurationOptions.cs` (beside `GenerateFailuresDigest` L365 or `GenerateCtrfReport` L400) | `GenerateServiceCard` |
-| R2 | `src/Kronikol/Reports/ReportGenerator.cs:694` (`RunOutputs`), `:697-703`, `:764-780` (`CiSummary.md`'s isolation and record), `:959` (`RunIsolated`), `:998` (`RecordOptionDiagnostics`) | the card after the output list, before `Run.json`, only with the JSON data file |
+| R2 | `src/Kronikol/Reports/ReportGenerator.cs:694` (`RunOutputs`), `:697-703`, `:764-780` (`CiSummary.md`'s isolation and record), `:959` (`RunIsolated`), `:1016-1017` (`WritesQueryScript`, the model of the gate) | the card after the output list, before `Run.json`, only with the JSON data file, skipped silently otherwise |
 | R2 | `src/Kronikol/Reports/ReportGenerator.cs:791-802` (`WriteRunManifest`) | `serviceCard` set on the manifest |
-| R2 | `src/Kronikol/Reports/ReportGenerator.cs:852-895` (`PlannedFiles`) | lists `service.json` |
+| R2 | `src/Kronikol/Reports/ReportGenerator.cs:852-897` (`PlannedFiles`) | lists `service.json` |
 | R2 | `src/Kronikol/Reports/RunManifest.cs:78-82`, `:101-102`, `:164-194` | the `serviceCard` member after `serviceId`, written last when set, read in `Parse` (a malformed one read as absent); the doc at L81 |
 | R2 | `src/Kronikol/Reports/RunRotation.cs:491-575` (`Reconstruct`) | leaves `serviceCard` out on purpose, with a fact |
 | R2 | `src/Kronikol/Reports/Merge/MergedRunOutputs.cs:37-198`; `src/Kronikol.Tool/MergeCommand.cs:174-180` | the merge's card |
 | R2 | `src/Kronikol/Ingestion/IngestPipeline.cs:428-435`; `src/Kronikol.Tool/IngestCommand.cs` | nothing if Q2 is on; an ingest flag if it is off |
 | R2 | `tests/Kronikol.Tests/Reports/RunManifestTests.cs:89-119`; `RunRotationTests.cs:189`, `:405-416`, `:1052`; `StaleOutputTests.cs` | the pins (5.4) |
-| R2 | Wiki `Generated-Reports.md:16-23`, `:537`, `:541-552`, and the pages of 6.3 | 6.3 |
+| R2 | Wiki `Generated-Reports.md:16-23`, `:538`, `:542-553` (at `aed3a7b`), and the pages of 6.3 | 6.3 |

@@ -1,0 +1,29 @@
+# audit-C-background_block.py on the four docker lanes whose root background block holds calls (runs B and C)
+== B-nunit-in-docker.json
+   kronikolVersion=5.4.1+90e357fd4ffe25d7bdb22a7a6b0028bbc6161f1c formatVersion=3
+   scenario interactions: 2592 records, 1296 requests
+   background.calls=3 interactions=6 requests=3 afterScenarioEnd rows=1
+         3  Breakfast Provider > CosmosDB
+   background attributionSource: {'Expired': 3}
+   background phase: {'Unknown': 3}
+== B-tunit-in-docker.json
+   kronikolVersion=5.4.1+90e357fd4ffe25d7bdb22a7a6b0028bbc6161f1c formatVersion=3
+   scenario interactions: 2604 records, 1302 requests
+   background.calls=3 interactions=6 requests=3 afterScenarioEnd rows=1
+         3  Breakfast Provider > CosmosDB
+   background attributionSource: {'Expired': 3}
+   background phase: {'Unknown': 3}
+== C-nunit-in-docker.json
+   kronikolVersion=5.12.1+79e8d644a5facbb3555f790d249e32d327952c15 formatVersion=3
+   scenario interactions: 2592 records, 1296 requests
+   background.calls=3 interactions=6 requests=3 afterScenarioEnd rows=1
+         3  Breakfast Provider > CosmosDB
+   background attributionSource: {'Expired': 3}
+   background phase: {'Unknown': 3}
+== C-tunit-in-docker.json
+   kronikolVersion=5.12.1+79e8d644a5facbb3555f790d249e32d327952c15 formatVersion=3
+   scenario interactions: 2602 records, 1301 requests
+   background.calls=3 interactions=6 requests=3 afterScenarioEnd rows=1
+         3  Breakfast Provider > CosmosDB
+   background attributionSource: {'Expired': 3}
+   background phase: {'Unknown': 3}

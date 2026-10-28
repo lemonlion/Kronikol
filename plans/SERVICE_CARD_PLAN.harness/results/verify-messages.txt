@@ -1,0 +1,29 @@
+# verify-messages-corrected.sh then verify-messages_compare.py: the revised card with --corrected-broker-rule against the revision's card (results/revision-sizes.txt) for each report
+card | messages before | after | dropped rows by broker | behaviour less messages equal | run less behaviourHash equal | compact before | after | change | gzipped before | after
+C-bddfy-external-sut | 0 | 0 | none | True | True | 87679 | 87679 | 0 | 13259 | 13259
+C-bddfy-in-docker | 22 | 17 | Spanner 5 | True | True | 159041 | 158584 | -457 | 23530 | 23485
+C-bddfy-in-memory | 24 | 19 | Spanner 5 | True | True | 169423 | 168966 | -457 | 24505 | 24460
+C-lightbdd-external-sut | 0 | 0 | none | True | True | 94250 | 94250 | 0 | 15070 | 15070
+C-lightbdd-in-docker | 22 | 17 | Spanner 5 | True | True | 159473 | 159016 | -457 | 23494 | 23449
+C-lightbdd-in-memory | 24 | 19 | Spanner 5 | True | True | 169669 | 169212 | -457 | 24687 | 24631
+C-nunit-external-sut | 0 | 0 | none | True | True | 95774 | 95774 | 0 | 15469 | 15469
+C-nunit-in-docker | 22 | 17 | Spanner 5 | True | True | 160767 | 160310 | -457 | 23830 | 23786
+C-nunit-in-memory | 24 | 19 | Spanner 5 | True | True | 170954 | 170497 | -457 | 24795 | 24759
+C-reqnroll-external-sut | 0 | 0 | none | True | True | 102173 | 102173 | 0 | 15928 | 15928
+C-reqnroll-in-docker | 22 | 17 | Spanner 5 | True | True | 167624 | 167167 | -457 | 24459 | 24420
+C-reqnroll-in-memory | 24 | 19 | Spanner 5 | True | True | 177632 | 177175 | -457 | 25375 | 25324
+C-tunit-external-sut | 0 | 0 | none | True | True | 93391 | 93391 | 0 | 15234 | 15234
+C-tunit-in-docker | 22 | 17 | Spanner 5 | True | True | 159672 | 159215 | -457 | 24014 | 23973
+C-tunit-in-memory | 24 | 19 | Spanner 5 | True | True | 168952 | 168495 | -457 | 24838 | 24789
+C-xunit-external-sut | 0 | 0 | none | True | True | 98130 | 98130 | 0 | 15452 | 15452
+C-xunit-in-docker | 22 | 17 | Spanner 5 | True | True | 163110 | 162653 | -457 | 23915 | 23866
+C-xunit-in-memory | 24 | 19 | Spanner 5 | True | True | 173310 | 172853 | -457 | 24961 | 24908
+example-ReqNRoll.xUnit3 | 1 | 1 | none | True | True | 7378 | 7378 | 0 | 1816 | 1816
+jest-ingest | 0 | 0 | none | True | True | 4631 | 4631 | 0 | 1250 | 1250
+
+# control: C-xunit-in-memory without the flag, against the revision's card
+== control: C-xunit-in-memory without the flag
+subject Breakfast Provider; scenarios 212 (sids 212); requests 1409; background-section requests 0
+parties 18; edges 20; ops 179; exposes 81; messages 24; emptyTargets 0; derived phases 19
+hash from the file's bytes equals behaviourHash: True
+control card byte-identical to the revision's

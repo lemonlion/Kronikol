@@ -3,6 +3,8 @@
 Probes and results behind `plans/SERVICE_CARD_PLAN.md` (#191). The first set was measured on 2026-10-26 against the
 5.11.0 tool built from `44bcc62a`. The second was made on 2026-10-27 by the plan's three audits (files named `audit-A-`,
 `audit-B-` and `audit-C-`) and by its revision (files named `revision-`), with the 5.14.0 tool and source (`8d7d1e1d`).
+The third was made on 2026-10-28 by the plan's verification (files named `verify-`), on the same inputs and with the
+revision's probe built the same way.
 
 ## What is here
 
@@ -34,7 +36,9 @@ Audit B (deep dives), on BreakfastProvider's CI runs 40290999167 (A) and 4047376
 | `probes/audit-B-local-lane-twice.sh`, `audit-B-local-pair.sh` | Run one in-memory lane twice on a scratch clone of BreakfastProvider, as CI's memory lane runs it (no containers, no browser), then decode, resolve and compare the pair |
 | `probes/audit-B-cards-all.sh`, `audit-B-readings-10pairs.sh`, `audit-B-readings-BC.sh` | Build the cards for every input, the ten same-commit pairs under each reading, and runs B against C on all 18 lanes |
 | `probes/audit-B-behaviour_diff.py`, `audit-B-count_drift.py`, `audit-B-parties_summary.py` | Compare two cards member by member, count the operations whose counts moved, summarise the parties envelopes |
-| `results/audit-B-cards-all.txt` | Per report (46): subject, origin and cause by both readings and where they disagree, sizes and hashes in the first draft's shape |
+| `results/audit-B-cards-all.txt` | Per report (46): subject, origin and cause by both readings and where they disagree, sizes and hashes in the first draft's shape. Read without the root `background` block: `audit-B-cards-all.sh` passed `--with-background-section` only to its second run, so `background-section requests` reads 0 on every card here, the four docker cards whose block holds 3 calls included |
+| `results/audit-B-cards-bgsection.txt` | That second run's lines, the root block read (the run end's view): `nunit-in-docker` and `tunit-in-docker` of runs B and C hold 3 calls there, one operation more than above |
+| `probes/audit-B-sizes-all.sh`, `results/audit-B-sizes-table.txt` | The whole card in the first draft's 4.3 shape on runs A, B and C, and its sizes, tabulated from the script's output (plan 2.3: 143,806 to 152,218 bytes compact on run C's in-memory lanes) |
 | `results/audit-B-parties-summary.txt` | 5.14.0's test and subject rows on 52 reports |
 | `results/audit-B-readings-10pairs.txt` | Readings P0 to P4 on the ten same-commit pairs (plan 2.4's table) |
 | `results/audit-B-readings-BC.txt` | Readings P1 to P4 across runs B and C on 18 lanes |
@@ -53,13 +57,24 @@ The revision, the whole card in the revised shape:
 
 | Path | What it is |
 |---|---|
-| `probes/revision-card-revised.cs` | Writes the whole `service.json` in the revised 4.3 shape from a decoded data file, its parties envelope, the `Run.json` beside the report and the report file, compact and indented, and checks `behaviourHash` against the file's own bytes. Grown from `audit-B-card-behaviour.cs`; its header lists what it approximates |
+| `probes/revision-card-revised.cs` | Writes the whole `service.json` in the revised 4.3 shape from a decoded data file, its parties envelope, the `Run.json` beside the report and the report file, compact and indented, and checks `behaviourHash` against the file's own bytes. Grown from `audit-B-card-behaviour.cs`; its header lists what it approximates. Without a flag it reads messages as the revision did, a meta type of `Event` counting as one; `--corrected-broker-rule` (2026-10-28) applies plan 4.2's message rule, read per call |
 | `probes/revision-sizes-revised.sh`, `revision-sizes_table.py`, `results/revision-sizes.txt`, `results/revision-sizes-table.txt` | The card's sizes on run C's 18 lanes, Example.Api's Reqnroll report and the Jest stand-in: compact, indented, each gzipped at level 9, and by part (plan 2.3) |
 | `probes/revision-pairs-revised.sh`, `revision-pairs_revised.py`, `results/revision-pairs.txt` | The revised card on the ten same-commit pairs, on runs B against C, and Linux against Windows on one commit (plan 2.4, 4.3) |
 | `probes/revision-report_sizes.py`, `results/revision-report-sizes.txt` | The four lanes' `.krkl` against their decoded JSON (claim 1) |
 | `probes/revision-schemes.py`, `results/revision-schemes.txt` | Requests per URI scheme, side, method word, authority, path, category and meta type (the message table, 4.2) |
 
-## How the 2026-10-27 files were run
+The verification (2026-10-28):
+
+| Path | What it is |
+|---|---|
+| `probes/verify-messages-corrected.sh`, `results/verify-sizes.txt`, `results/verify-sizes-table.txt` | The revised card with `--corrected-broker-rule` on the inputs of `revision-sizes-revised.sh`, the probe's lines (brokers and messages rows per broker included) and the size table (`revision-sizes_table.py` over them): `messages` 19 in memory and 17 in docker (plan 2.3) |
+| `probes/verify-messages_compare.py`, `results/verify-messages.txt` | Each of those cards against the revision's: only Spanner's 5 `messages` rows differ, 457 bytes compact a card on the in-process lanes; and a control run without the flag, byte for byte the revision's card |
+| `probes/verify-party_hosts.py`, `results/verify-party-hosts.txt` | Called parties with no host in any call's URI, per lane and Kronikol version (plan 0, item 5; 4.3's `run.parties`) |
+| `probes/verify-replace_targets.py`, `probes/verify-replace_calls.py`, `results/verify-replace.txt` | The Cosmos DB `Replace` that comes and goes in the ledger's pairs (`Replace /orders` in all 18), and its calls' attribution on four decoded lanes (plan 2.4) |
+| `probes/verify-pair_details.py`, `results/verify-pair-details.txt` | From the revision's pair cards and the decoded files: the root block's calls per card (44 of 48 with none), the 7 renamed Reqnroll titles on 13 rows, the menu cache's misses (4 and 5), the LightBDD operations whose phases moved across 5.4.1 to 5.12.1, and the Linux-only Cosmos DB query-plan calls (15 in 12 scenarios, all carrying the header) (plan 2.4, 4.3) |
+| `results/verify-background-block.txt` | `audit-C-background_block.py` on the four docker lanes whose root block holds calls: 3 `Expired` `Breakfast Provider > CosmosDB` calls each (F16) |
+
+## How the 2026-10-27 and 2026-10-28 files were run
 
 - **The audits' scripts are copied as written.** They name each other without the `audit-A-`, `audit-B-` or `audit-C-`
   prefix, and audit B's hard-code the probe folder (`P=`) and the tool to the worktree they ran in,
@@ -77,6 +92,10 @@ The revision, the whole card in the revised shape:
   `sh probes/audit-B-download.sh <run-id> <dest>`, decoded with 5.14.0 (`audit-B-decode-all.sh`). L1 and L2:
   `audit-B-local-lane-twice.sh` on a scratch clone at `68a8760`, decoded with 5.14.0 (`audit-B-local-pair.sh`). Every
   card probe takes 5.14.0's `query parties --json` for the report as its parties.
+- **The 2026-10-28 files** were made the same way, the scripts taking every folder as an argument: the revised probe
+  built against the same `git archive` copy of `8d7d1e1d`, audit B's downloads, decoded files and parties envelopes,
+  and the revision's cards for comparison. `verify-messages-corrected.sh` takes the Jest stand-in's report under the
+  name the revision gave its copy, `jest-ingest-TestRunReport.krkl`, as `run.report.file` holds the name.
 - **Not committed:** the downloads, the decoded files, the cards (up to 314 KB each indented) and audit C's two
   hand-written reports. The first, `inputs/background-probe/TestRunReport.json`, is a 5.14.0-shaped report with one
   scenario call (`Caller > Orders Api`) and one call in the root `background.interactions` (`Orders Api > Outbox Store`,

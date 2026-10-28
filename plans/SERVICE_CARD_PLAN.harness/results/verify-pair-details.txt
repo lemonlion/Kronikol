@@ -1,0 +1,33 @@
+== Root background block: requests per card (the probe's 'background-section requests')
+  B-nunit-in-docker: 3
+  B-tunit-in-docker: 3
+  C-nunit-in-docker: 3
+  C-tunit-in-docker: 3
+  cards 48: 44 with 0, 4 with 3
+== Titles across 5.4.1 (run B) and 5.12.1 (run C), same sid, the Reqnroll lanes
+  reqnroll-in-memory: rows whose feature title differs 13, distinct titles 7; rows whose scenario name, tags or source differ 0
+    'Order Cross Field Validation' -> 'Order Cross-Field Validation'
+    'Order Status Via G RPC' -> 'Order Status via gRPC'
+    'Recipe Summary Via G RPC' -> 'Recipe Summary via gRPC'
+    'Reporting Event Grid Webhook' -> 'Reporting EventGrid Webhook'
+    'Specifications Graph QL Schema' -> 'Specifications GraphQL Schema'
+    'Specifications Graph QL UI' -> 'Specifications GraphQL UI'
+    'Stream Order Updates Via G RPC' -> 'Stream Order Updates via gRPC'
+  reqnroll-in-docker: rows whose feature title differs 13, distinct titles 7; rows whose scenario name, tags or source differ 0
+  reqnroll-external-sut: rows whose feature title differs 13, distinct titles 7; rows whose scenario name, tags or source differ 0
+== The menu cache: scenarios of the test's own GET /menu, and which of them reached Supplier Service
+  A-reqnroll-in-memory: scenarios calling GET /menu 6, of which reached Supplier Service 4
+  B-reqnroll-in-memory: scenarios calling GET /menu 6, of which reached Supplier Service 5
+  L1-reqnroll-in-memory: scenarios calling GET /menu 6, of which reached Supplier Service 5
+  L2-reqnroll-in-memory: scenarios calling GET /menu 6, of which reached Supplier Service 4
+== The recorded phase across 5.4.1 (run B) and 5.12.1 (run C), the LightBDD lanes: operations whose effective phases differ
+  lightbdd-in-memory: 0
+  lightbdd-in-docker: 2
+    Breakfast Provider > Reporting Database (SQL Server) Select /BreakfastReporting/BatchCompletionRecords SELECT [b].[Batch: ['action'] -> ['action', 'unknown']
+    Caller > Breakfast Provider POST /graphql query { batchCompletions }: ['action'] -> ['action', 'unknown']
+  lightbdd-external-sut: 1
+    Caller > Breakfast Provider POST /graphql query { equipmentAlerts }: ['action'] -> ['action', 'unknown']
+== One commit, two platforms (68a8760, xunit-in-memory): Breakfast Provider > CosmosDB Other /colls/orders with a {"query":...} body
+  run C, Linux: calls 15 in 12 scenarios; carrying x-ms-cosmos-is-query-plan-request: True 15
+  L1, Windows: calls 0 in 0 scenarios; carrying x-ms-cosmos-is-query-plan-request: True 0
+  L2, Windows: calls 0 in 0 scenarios; carrying x-ms-cosmos-is-query-plan-request: True 0

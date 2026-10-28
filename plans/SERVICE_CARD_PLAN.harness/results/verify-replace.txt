@@ -1,0 +1,10 @@
+# verify-replace_targets.py over BreakfastProvider's ledger (results/audit-A-ops-diff.txt's 18 pairs)
+pairs whose distinct operations differ by a Cosmos DB Replace: 18
+   11  Replace /orders  (held by the first run only)
+    7  Replace /orders  (held by the second run only)
+
+# verify-replace_calls.py over four decoded lanes
+A-reqnroll-in-docker: 3 in scenario, Breakfast Provider > CosmosDB colls/orders, DocumentOwner
+B-bddfy-in-memory: 5 in scenario, Breakfast Provider > CosmosDB colls/orders, DocumentOwner
+C-xunit-in-memory: 3 in scenario, Breakfast Provider > CosmosDB colls/orders, DocumentOwner
+C-nunit-in-docker: 3 in root block, Breakfast Provider > CosmosDB colls/orders, Expired

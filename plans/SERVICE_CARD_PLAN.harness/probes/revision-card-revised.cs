@@ -20,7 +20,17 @@
 // The file is written compact with behaviour last, and indented for comparison; behaviourHash is the SHA-256 of the
 // behaviour value's bytes as the compact file holds them. Prints sizes and counts only, never a body.
 //
-// Usage: dotnet run --file revision-card-revised.cs -- <decoded.json> <parties-envelope.json> <Run.json or -> <report file or -> <out-prefix>
+// Without a flag the probe reads a message as the revision of 2026-10-27 did: a call whose category is MessageQueue,
+// whose meta type is Event, or that carries a caller category. That reading counted Spanner's calls (meta type Event) as
+// publishes, and the results/revision-*.txt files were written with it. --corrected-broker-rule applies the rule of the
+// plan's verification pass (2026-10-28, plan 4.2 "Messages"): a call between the subject and another party is a
+// message call when it carries the category MessageQueue, as its own category or as its caller category, or when its
+// URI scheme is a row of the message table, and the other party is then the broker; a meta type of Event makes none. A
+// delivery is a message call into the subject, whichever side its tracker put the category on, and its category counts
+// for the broker, not the subject. With the flag the probe also prints the brokers and the messages rows per broker
+// (results/verify-sizes.txt).
+//
+// Usage: dotnet run --file revision-card-revised.cs -- <decoded.json> <parties-envelope.json> <Run.json or -> <report file or -> <out-prefix> [--corrected-broker-rule]
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
@@ -98,6 +108,19 @@ var requests = calls.Where(c => c.Type == "Request" && c.Service.Length > 0 && c
 var responses = calls.Where(c => c.Type == "Response" && c.Rrid is not null)
     .GroupBy(c => (c.Scenario, c.Rrid)).ToDictionary(g => g.Key, g => g.First());
 
+// The verification pass's rule (--corrected-broker-rule): a call between the subject and another party is a message
+// call when it carries MessageQueue on either side or its URI scheme is a row of the table, and the other party is then
+// its broker. The category can sit on a delivery itself: Kronikol's Kafka and MassTransit trackers put it there, and so
+// does the generic MessageTracker unless its CallerDependencyCategory is set.
+var correctedBrokerRule = args.Skip(5).Contains("--corrected-broker-rule");
+bool IsMessageCall(Call r) =>
+    subject is not null && (r.Service == subject) != (r.Caller == subject)
+    && (r.Category == "MessageQueue" || r.CallerCategory == "MessageQueue" || MessageTable.InTable(r.Uri));
+var brokers = new SortedSet<string>(StringComparer.Ordinal);
+if (correctedBrokerRule)
+    foreach (var r in requests.Where(IsMessageCall))
+        brokers.Add(r.Service == subject ? r.Caller : r.Service);
+
 // CallNesting's rule (src/Kronikol/Query/CallNesting.cs at 8d7d1e1d), per scenario, in file order.
 var parentOf = new Dictionary<Call, Call?>(ReferenceEqualityComparer.Instance);
 foreach (var group in calls.GroupBy(c => c.Scenario))
@@ -145,7 +168,9 @@ bool Nested(Call r)
     return false;
 }
 
-bool IsDelivery(Call r) => r.CallerCategory is not null;
+bool IsDelivery(Call r) => correctedBrokerRule
+    ? r.Service == subject && IsMessageCall(r)
+    : r.CallerCategory is not null;
 
 // Attribution first, then nesting (audit B's P1 to P4): the reading the revised plan takes.
 string Cause(Call r) =>
@@ -247,6 +272,7 @@ foreach (var r in requests)
     if (r.Scenario >= 0)
         op.FirstAddress ??= $"s{r.Scenario}/i{r.Index}";
     if (IsDelivery(r)) op.Delivery = true;
+    if (correctedBrokerRule && IsMessageCall(r)) op.MessageCall = true;
     if (r.MetaType == "Event") op.Event = true;
     op.Uris.Add(r.Uri);
     responses.TryGetValue((r.Scenario, r.Rrid), out var response);
@@ -277,8 +303,8 @@ foreach (var r in requests)
     Bump(op.Causes, cause);
     Bump(op.Phases, phase);
     if (!partyCategories.TryGetValue(r.Service, out var sc)) partyCategories[r.Service] = sc = new SortedSet<string>(StringComparer.Ordinal);
-    if (r.Category is not null) sc.Add(r.Category);
     if (!partyCategories.TryGetValue(r.Caller, out var cc)) partyCategories[r.Caller] = cc = new SortedSet<string>(StringComparer.Ordinal);
+    if (r.Category is not null) (correctedBrokerRule && IsDelivery(r) ? cc : sc).Add(r.Category);
     if (r.CallerCategory is not null) cc.Add(r.CallerCategory);
     if (!partyHosts.TryGetValue(r.Service, out var hosts)) partyHosts[r.Service] = hosts = new SortedSet<string>(StringComparer.Ordinal);
     if (MessageTable.HostOf(r.Uri) is { } host) hosts.Add(host);
@@ -324,7 +350,7 @@ JsonObject Behaviour(bool withScenarios)
     var exposes = ops.Values.Where(o => o.To == subject && !o.Delivery).Select(o => o.Id).Order(StringComparer.Ordinal);
     var messageRows = new SortedSet<(string Party, string Topic, string Direction, string Op)>();
     foreach (var op in ops.Values)
-        foreach (var m in MessageTable.Messages(op, subject))
+        foreach (var m in MessageTable.Messages(op, subject, correctedBrokerRule))
             messageRows.Add((m.Party, m.Topic, m.Direction, op.Id));
     var messages = new JsonArray();
     foreach (var m in messageRows)
@@ -463,6 +489,12 @@ Console.WriteLine($"sizes (bytes, UTF-8): file compact {Bytes(compactFile)} inde
                   + $"behaviour without its index compact {Bytes(Compact(noIndex))} indented {Bytes(Indented(noIndex))}; run compact {Bytes(Compact(runPart))}");
 Console.WriteLine($"parts (compact): run.counts {Part(runPart, "counts")}, run.examples {Part(runPart, "examples")}, run.scenarios {Part(runPart, "scenarios")}, run.parties {Part(runPart, "parties")}; "
                   + $"behaviour.scenarios {Part(behaviour, "scenarios")}, behaviour.edges {Part(behaviour, "edges")}, behaviour.parties {Part(behaviour, "parties")}, behaviour.messages {Part(behaviour, "messages")}");
+if (correctedBrokerRule)
+{
+    var byBroker = ((JsonArray)behaviour["messages"]!).GroupBy(m => (string)m!["party"]!).OrderBy(g => g.Key, StringComparer.Ordinal)
+        .Select(g => $"{g.Key} {g.Count()}");
+    Console.WriteLine($"brokers ({brokers.Count}): {string.Join(", ", brokers)}; messages rows by broker: {string.Join(", ", byBroker)}");
+}
 
 static void Bump(SortedDictionary<string, int> map, string key) => map[key] = map.GetValueOrDefault(key) + 1;
 static string? NullIfEmpty(string? s) => string.IsNullOrEmpty(s) ? null : s;
@@ -503,6 +535,7 @@ sealed class Op(string id, string from, string to, string protocol, string metho
     public SortedSet<string> Uris { get; } = new(StringComparer.Ordinal);
     public bool Delivery { get; set; }
     public bool Event { get; set; }
+    public bool MessageCall { get; set; }
 }
 
 // The revised plan's 4.2 table, as far as a probe needs it: per URI scheme, where the destination sits and which
@@ -557,9 +590,14 @@ static class MessageTable
         return Schemes.ContainsKey(scheme) && Destination(uri) is null;
     }
 
-    public static IEnumerable<(string Direction, string Party, string Topic)> Messages(Op op, string? subject)
+    public static bool InTable(string uri) => Schemes.ContainsKey(Split(uri).Scheme);
+
+    // corrected false: the revision's reading (2026-10-27); true: the verification pass's (2026-10-28).
+    public static IEnumerable<(string Direction, string Party, string Topic)> Messages(Op op, string? subject, bool corrected = false)
     {
-        var isMessage = op.Protocol is "MessageQueue" || op.Event || op.Delivery;
+        var isMessage = corrected
+            ? op.MessageCall
+            : op.Protocol is "MessageQueue" || op.Event || op.Delivery;
         if (!isMessage || subject is null || (op.From != subject && op.To != subject))
             yield break;
         foreach (var uri in op.Uris)
