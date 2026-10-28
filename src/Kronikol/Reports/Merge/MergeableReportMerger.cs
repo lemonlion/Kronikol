@@ -405,9 +405,11 @@ public static class MergeableReportMerger
     /// tests. Once the merge stopped deleting the second of those, both survived under one id and each
     /// of them acquired ALL of both scenarios' calls.</para>
     ///
-    /// <para>Renumbering loses nothing. The runtime id has no meaning outside the process that minted
-    /// it and nothing user-facing keys on it: <c>stableId</c>, which is what the report prints and what
-    /// every cross-run comparison uses, is computed from the scenario's content and is untouched. Only
+    /// <para>Renumbering loses little. The runtime id has no meaning outside the process that minted it, and
+    /// <c>stableId</c>, which every cross-run comparison uses, is computed from the scenario's content and is
+    /// untouched. Since 5.23.0 <c>kronikol query</c> takes the id as <c>id:&lt;id&gt;</c> (#184) and prints it on
+    /// every scenario row, so a renamed scenario answers to <c>id:&lt;id&gt;#N</c>; a refused <c>id:</c> names the
+    /// renamed ones, and a host checks its own run's report, whose ids are as its framework minted them. Only
     /// genuine collisions are renumbered - a scenario whose id is not already taken keeps it - so the
     /// ordinary merge, and every report written by a framework with globally unique ids, is unchanged.
     /// </para>

@@ -47,6 +47,8 @@ public static partial class QueryCommand
             scenarios = tests.Count,
             failed,
             interactions,
+            // A call is its request, as the text and every listing count it; interactions counts the records, two for an answered call.
+            calls = scenarios.Sum(Calls),
             distinctBodies = index.Bodies.Count,
             ci = index.OnCi
                 ? new
@@ -141,6 +143,7 @@ public static partial class QueryCommand
             writer.Data("failed", tests.Where(s => s.Failed).Take(10).Select(s => new
             {
                 address = s.Address,
+                id = NullIfEmpty(s.Id),
                 stableId = s.StableId,
                 feature = s.FeatureName,
                 scenario = s.Name,
@@ -281,7 +284,7 @@ public static partial class QueryCommand
             var attempt = scenario.Attempt is > 1 ? $"  attempt {scenario.Attempt}" : "";
             // A call is its request, as `interactions` and `services` count it: the records count each half (the JSON's
             // `interactions`), and printed as calls they doubled every answered call.
-            var calls = scenario.Interactions.Count(i => i.Type.Equals("Request", StringComparison.OrdinalIgnoreCase));
+            var calls = Calls(scenario);
             // The row's time is wall time; what of it was the run's first-call warm-up follows, as --slower-than leaves it out.
             var warmUp = scenario.WarmUpSeconds is > 0 and var seconds ? $"  {seconds:0.##}s warm-up" : "";
             writer.Line($"{scenario.Address,-5} {flags,-4} {scenario.DurationSeconds,6:0.##}s  {calls,4} calls  "
@@ -291,6 +294,8 @@ public static partial class QueryCommand
         }, options.RerunArgs(), scenario => WithNotATest(scenario, WithWarmUp(scenario, new
         {
             address = scenario.Address,
+            // The id its producer gave it, which id: takes (#184); null only where the report holds an empty one.
+            id = NullIfEmpty(scenario.Id),
             stableId = scenario.StableId,
             feature = scenario.FeatureName,
             scenario = scenario.Name,
@@ -304,7 +309,16 @@ public static partial class QueryCommand
             attempt = scenario.Attempt,
             stableIdShared = shared.TryGetValue(scenario.StableId, out var repeats) ? repeats : 1,
             tags = scenario.EffectiveTags,
-            exampleValues = scenario.ExampleValues
+            exampleValues = scenario.ExampleValues,
+            // Every other fact the engine holds about a scenario, so a program reads the row and not the data file; the
+            // projection guard (QueryTestIdTests) fails when a new one is neither here nor excluded for a reason.
+            calls = Calls(scenario),
+            diagrams = scenario.Diagrams.Count,
+            sourceFile = scenario.SourceFile,
+            sourceLine = scenario.SourceLine,
+            rule = scenario.Rule,
+            isHappyPath = scenario.IsHappyPath,
+            featureSourceFile = scenario.FeatureSourceFile
         })));
         NoteWarmedOut();
 
@@ -343,21 +357,20 @@ public static partial class QueryCommand
         return true;
     }
 
+    /// <summary>A scenario's calls: its requests, as the text row, <c>interactions</c> and <c>services</c> count them.</summary>
+    private static int Calls(ScenarioEntry scenario) =>
+        scenario.Interactions.Count(i => i.Type.Equals("Request", StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>A scenario's id for a JSON item: null where the report holds an empty one, which no producer writes.</summary>
+    internal static string? NullIfEmpty(string id) => id.Length > 0 ? id : null;
+
     private static int Services(ReportIndex index, QueryOptions options, QueryWriter writer, TextWriter error)
     {
         var scope = index.Scenarios.AsEnumerable();
         if (options.Positional.Count > 0)
         {
-            if (!Address.TryParse(options.Positional[0], out var address) || address.Kind != AddressKind.Scenario)
-            {
-                error.WriteLine($"Not a scenario address: {options.Positional[0]} (expected s3)");
+            if (!TryWholeScenario(index, options.Positional[0], error, out var scenario))
                 return 2;
-            }
-            if (index.Scenario(address.Scenario) is not { } scenario)
-            {
-                error.WriteLine($"No scenario {address} — the report has {index.Scenarios.Count}.");
-                return 2;
-            }
             scope = [scenario];
         }
 
@@ -468,16 +481,8 @@ public static partial class QueryCommand
         var scope = index.Scenarios.AsEnumerable();
         if (options.Positional.Count > 0)
         {
-            if (!Address.TryParse(options.Positional[0], out var address) || address.Kind != AddressKind.Scenario)
-            {
-                error.WriteLine($"Not a scenario address: {options.Positional[0]} (expected s3)");
+            if (!TryWholeScenario(index, options.Positional[0], error, out var scenario))
                 return 2;
-            }
-            if (index.Scenario(address.Scenario) is not { } scenario)
-            {
-                error.WriteLine($"No scenario {address} — the report has {index.Scenarios.Count}.");
-                return 2;
-            }
             scope = [scenario];
         }
 

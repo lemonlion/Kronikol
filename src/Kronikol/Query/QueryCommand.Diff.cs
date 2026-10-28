@@ -31,7 +31,8 @@ public static partial class QueryCommand
             return 2;
         }
 
-        if (first.Kind == AddressKind.Scenario || second.Kind == AddressKind.Scenario)
+        if (first.Kind is AddressKind.Scenario or AddressKind.StableId or AddressKind.TestId
+            || second.Kind is AddressKind.Scenario or AddressKind.StableId or AddressKind.TestId)
         {
             // An agent will type exactly this; the error must teach the right verb, not just refuse.
             error.WriteLine($"A scenario address names no body — 'compare {options.Positional[0]} {options.Positional[1]}' is the command for two scenarios.");

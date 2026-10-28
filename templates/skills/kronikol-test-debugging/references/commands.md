@@ -23,6 +23,7 @@ the .NET 10 SDK.
 | diagram | `s3/d0` | |
 | note within a diagram | `s3/d0/n12` | |
 | scenario by cross-run identity | `sid:1a2b3c4d5e6f7a8b` | its `stableId`, as `steps` prints it. The `sid:` prefix is **required**: `diff`'s second positional is a report path unless it parses as an address, and a bare sixteen-hex form would capture hash-named artifact paths |
+| scenario by its test id | `id:0-1287` | the id its test framework or host gave it, as every `--json` scenario row prints it: matched exactly, unique within one run, not across runs. Everything after `id:` is the id (a JUnit id holds `/` and `:`), so it has no child forms; a merged report's colliding ids carry `#N` |
 | W3C trace | `c90a1912…` or the full 32 hex | `trace` takes the ellipsised form it prints, and a 16-hex **span** id resolves to the trace that span belongs to |
 
 Every address above is accepted by some verb, and a verb that cannot narrow the way an address asks
@@ -34,7 +35,8 @@ recorded per scenario and refuse a step path; `grep`'s positional is a search te
 pasted there is searched for literally and the miss says so.
 
 Ordinals are deterministic for a given file (features by display name, scenarios in file order).
-Across runs, use `sid:` and `b:` hashes — both survive a re-run.
+Across runs, use `sid:` and `b:` hashes — both survive a re-run. Within one run, a program that knows its tests'
+ids names a scenario by `id:<test id>`; `services`, `parties`, `values` and `compare` take all three forms.
 
 **What is quoted and what is the tool's own voice.** Addresses, column headings, `!` caveats and footers
 are written by `kronikol query`; every other field on a row is quoted from the report, capped to one line

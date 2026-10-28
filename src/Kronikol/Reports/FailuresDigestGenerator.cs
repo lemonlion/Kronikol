@@ -201,6 +201,7 @@ public static class FailuresDigestGenerator
 
     private sealed record Entry(
         string Address,
+        string Id,
         string StableId,
         string Feature,
         string Scenario,
@@ -285,7 +286,7 @@ public static class FailuresDigestGenerator
         var (calls, callsScope, callsTotal) = BuildCalls(located, failing, stepPaths, interactions, address);
 
         return new Entry(
-            address, stableId, located.Feature.DisplayName, scenario.DisplayName,
+            address, scenario.Id, stableId, located.Feature.DisplayName, scenario.DisplayName,
             scenario.ExampleValues is { Count: > 0 } ? new Dictionary<string, string>(scenario.ExampleValues) : null,
             scenario.Duration?.TotalSeconds ?? 0,
             scenario.ErrorMessage,
@@ -961,6 +962,8 @@ public static class FailuresDigestGenerator
             {
                 ["kind"] = "failure",
                 ["address"] = entry.Address,
+                // The id its producer gave the scenario, as failures --json carries it: kronikol query takes it as id:<id>.
+                ["id"] = entry.Id.Length > 0 ? entry.Id : null,
                 ["stableId"] = entry.StableId,
                 ["feature"] = entry.Feature,
                 ["scenario"] = entry.Scenario,

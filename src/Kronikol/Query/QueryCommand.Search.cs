@@ -174,7 +174,11 @@ public static partial class QueryCommand
                 writer.Note(mistaken.Kind switch
                 {
                     AddressKind.Body => $"! {needle} is an address, not text — `body <report> {needle}` reads that payload",
-                    AddressKind.StableId => $"! {needle} is an address, not text — `steps <report> {needle}` opens that scenario",
+                    AddressKind.StableId or AddressKind.TestId => $"! {needle} is an address, not text — `steps <report> {needle}` opens that scenario",
+                    // A call, diagram or note is read by its own verb: steps refuses them since 5.23.0.
+                    AddressKind.Interaction => $"! {needle} is an address, not text — `http <report> {needle}` reads that call",
+                    AddressKind.Diagram => $"! {needle} is an address, not text — `diagram <report> {needle} --out F` writes that diagram",
+                    AddressKind.Note => $"! {needle} is an address, not text — `note <report> {needle}` reads that note",
                     _ => $"! {needle} is an address, not text — `steps {needle}` opens it"
                 });
 
@@ -226,19 +230,16 @@ public static partial class QueryCommand
 
     private static int Compare(ReportIndex index, QueryOptions options, QueryWriter writer, TextWriter error)
     {
-        if (options.Positional.Count < 2
-            || !Address.TryParse(options.Positional[0], out var leftAddress)
-            || !Address.TryParse(options.Positional[1], out var rightAddress))
+        if (options.Positional.Count < 2)
         {
             error.WriteLine("Which two? kronikol query compare <report> s3 s7");
             return 2;
         }
 
-        if (index.Scenario(leftAddress.Scenario) is not { } left || index.Scenario(rightAddress.Scenario) is not { } right)
-        {
-            error.WriteLine("One of those scenarios is not in this report.");
+        // Each through the resolver every scenario verb uses: this read both as ordinals, so a sid: in the report was
+        // "not in this report" and s3/i2 was compared as s3 with nothing said (#184's audit).
+        if (!TryWholeScenario(index, options.Positional[0], error, out var left) || !TryWholeScenario(index, options.Positional[1], error, out var right))
             return 2;
-        }
 
         writer.Line($"{left.Address} {QueryWriter.OneLine(left.Name, 60)}  [{left.Result}]  {left.DurationSeconds:0.##}s");
         writer.Line($"{right.Address} {QueryWriter.OneLine(right.Name, 60)}  [{right.Result}]  {right.DurationSeconds:0.##}s");

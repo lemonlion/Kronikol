@@ -165,6 +165,8 @@ matters.
   every other address carrying that hash holds exactly the same bytes.
 - **Ordinals are per-file.** `s3/i47` means nothing in another run. Across runs use `sid:<stableId>`
   (printed by `steps`, and an address in its own right — the `sid:` prefix is required) and `b:` hashes.
+  Within one run, `id:<test id>` is a scenario by the id its test framework or host gave it, matched exactly;
+  every `--json` scenario row carries it, and it has no child forms.
 - **A step path covers its sub-steps.** `steps s3/2`, `assertions s3/2` and `flow s3/2` answer for `2` and
   for everything under it, and `--step 2` means the same. The addresses `failures` prints are frequently
   parents of the step that actually failed, so this is the common case, not the corner.

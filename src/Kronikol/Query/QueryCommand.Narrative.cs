@@ -209,6 +209,7 @@ public static partial class QueryCommand
         return new
         {
             address = scenario.Address,
+            id = NullIfEmpty(scenario.Id),
             stableId = scenario.StableId,
             feature = scenario.FeatureName,
             scenario = scenario.Name,
@@ -352,6 +353,7 @@ public static partial class QueryCommand
         return new
         {
             address = scenario.Address,
+            id = NullIfEmpty(scenario.Id),
             stableId = scenario.StableId,
             feature = scenario.FeatureName,
             scenario = scenario.Name,
@@ -805,7 +807,7 @@ public static partial class QueryCommand
 
         if (options.Positional.Count == 0)
         {
-            error.WriteLine("Which scenario? Pass an address like s3, or sid:<stableId> — 'scenarios' lists them.");
+            error.WriteLine("Which scenario? Pass an address like s3, sid:<stableId> or id:<test id> — 'scenarios' lists them.");
             return false;
         }
 
@@ -819,9 +821,14 @@ public static partial class QueryCommand
         if (address.Kind == AddressKind.StableId)
             return TryStableId(index, address.StableId!, error, out scenario);
 
-        if (address.Kind is AddressKind.Body)
+        if (address.Kind == AddressKind.TestId)
+            return TryTestId(index, address.TestId!, error, out scenario);
+
+        // A call, diagram or note address was read as its scenario, so `steps s0/i3` answered for all of s0 with
+        // nothing said (#184's audit): the wider answer this method exists to refuse.
+        if (NotAScenario(address, text) is { } refusal)
         {
-            error.WriteLine($"{text} is a body address, not a scenario. `body <report> {text}` reads it.");
+            error.WriteLine(refusal);
             return false;
         }
 
@@ -848,6 +855,110 @@ public static partial class QueryCommand
         scenario = found;
         return true;
     }
+
+    /// <summary>
+    /// Why an address that names something other than a scenario is not one, with the verb that reads what it names;
+    /// null for a scenario, a step, a <c>sid:</c> or an <c>id:</c>, which name a scenario.
+    /// </summary>
+    internal static string? NotAScenario(Address address, string text) => address.Kind switch
+    {
+        AddressKind.Body => $"{text} is a body address, not a scenario. `body <report> {text}` reads it.",
+        AddressKind.Interaction => $"{text} is a call address, not a scenario. `http <report> {text}` reads the call; s{address.Scenario} is its scenario.",
+        AddressKind.Diagram => $"{text} is a diagram address, not a scenario. `diagram <report> {text} --out F` writes it; s{address.Scenario} is its scenario.",
+        AddressKind.Note => $"{text} is a note address, not a scenario. `note <report> {text}` reads it; s{address.Scenario} is its scenario.",
+        _ => null
+    };
+
+    /// <summary>
+    /// A scenario for a verb that answers for a whole scenario and has no per-step form (<c>services</c>, <c>parties</c>,
+    /// <c>values</c>, <c>compare</c>): an ordinal, a <c>sid:</c> or an <c>id:</c>, resolved as every other verb resolves
+    /// them. Each used to parse its address itself and take an ordinal only, so the forms the reference documents for
+    /// every scenario were refused there, or, in <c>compare</c>, read as an ordinal they were not.
+    /// </summary>
+    private static bool TryWholeScenario(ReportIndex index, string text, TextWriter error, out ScenarioEntry scenario)
+    {
+        scenario = null!;
+        if (!Address.TryParse(text, out var address))
+        {
+            error.WriteLine($"Not an address: {text}");
+            return false;
+        }
+
+        switch (address.Kind)
+        {
+            case AddressKind.StableId:
+                return TryStableId(index, address.StableId!, error, out scenario);
+            case AddressKind.TestId:
+                return TryTestId(index, address.TestId!, error, out scenario);
+            case AddressKind.Step:
+                error.WriteLine($"Not a scenario address: {text} (expected s3, sid:<stableId> or id:<test id>). `steps <report> {text}` reads the step.");
+                return false;
+            case AddressKind.Scenario:
+                break;
+            default:
+                error.WriteLine(NotAScenario(address, text));
+                return false;
+        }
+
+        if (index.Scenario(address.Scenario) is not { } found)
+        {
+            error.WriteLine(index.Scenarios.Count == 0
+                ? $"No scenario s{address.Scenario} — the report has none."
+                : $"No scenario s{address.Scenario} — the report has {index.Scenarios.Count} (s0-s{index.Scenarios.Count - 1}).");
+            return false;
+        }
+
+        scenario = found;
+        return true;
+    }
+
+    /// <summary>
+    /// A scenario by the id its test framework or host gave it (#184), matched exactly. The schema calls it unique within
+    /// a run, and every producer keeps it so within one; a merged report is the exception. <c>kronikol merge</c> keeps a
+    /// colliding id on the first shard's scenario and renames the later ones to <c>&lt;id&gt;#N</c>, so the id as the
+    /// framework minted it names several tests there: it is refused with each of them listed, as is an id a scenario that
+    /// ran in two shards keeps twice, and a <c>&lt;id&gt;#N</c> is the address of its own. Cucumber ingest mints
+    /// <c>&lt;pickle id&gt;#&lt;attempt&gt;</c> the same way, so the listing says where <c>#N</c> comes from, not which.
+    /// </summary>
+    private static bool TryTestId(ReportIndex index, string id, TextWriter error, out ScenarioEntry scenario)
+    {
+        scenario = null!;
+
+        var matches = index.Scenarios.Where(s => string.Equals(s.Id, id, StringComparison.Ordinal)).ToList();
+        var numbered = index.Scenarios.Where(s => IsNumberedFrom(s.Id, id)).ToList();
+        if (matches.Count == 1 && numbered.Count == 0)
+        {
+            scenario = matches[0];
+            return true;
+        }
+
+        if (matches.Count == 0)
+        {
+            error.WriteLine($"No scenario with id {id} in {Path.GetFileName(index.Path)}.");
+            if (numbered.Count == 0)
+            {
+                error.WriteLine("`scenarios --json` lists every id in this report.");
+                return false;
+            }
+        }
+        else
+        {
+            error.WriteLine($"{matches.Count + numbered.Count} scenarios answer to id {id} — name the one you mean:");
+        }
+
+        // #N is what kronikol merge gives the later of two colliding ids, and Cucumber ingest a scenario's attempt.
+        foreach (var match in matches.Concat(numbered))
+            error.WriteLine($"  {match.Address}  id:{match.Id}  {QueryWriter.OneLine(match.Name, 70)}  [{match.Result}]");
+        if (numbered.Count > 0)
+            error.WriteLine($"{id}#N is how kronikol merge renames the later of two colliding ids, and how a Cucumber ingest numbers a scenario's attempts.");
+        return false;
+    }
+
+    /// <summary>Whether <paramref name="id"/> is <paramref name="original"/> numbered as a merge or an attempt numbers one: <c>original#N</c>.</summary>
+    private static bool IsNumberedFrom(string id, string original) =>
+        id.Length > original.Length + 1
+        && id.StartsWith(original + "#", StringComparison.Ordinal)
+        && id.AsSpan(original.Length + 1).IndexOfAnyExceptInRange('0', '9') < 0;
 
     /// <summary>
     /// A scenario by its <c>stableId</c>. Several scenarios can carry one - a repeated <c>[Theory]</c>

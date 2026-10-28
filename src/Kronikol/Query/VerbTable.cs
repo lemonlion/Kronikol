@@ -325,7 +325,8 @@ internal static class VerbTable
         (AddressKind.Diagram, "sN/dK", "s3/d0", "The K-th diagram of scenario N."),
         (AddressKind.Note, "sN/dK/nJ", "s3/d0/n12", "The J-th note of that diagram."),
         (AddressKind.Body, "b:<hash>", "b:4bdea521", "A payload by content hash: the same across every call in the run that carried the same bytes, and the only address a grep hit carries."),
-        (AddressKind.StableId, "sid:<16 hex>", "sid:1a2b3c4d5e6f7a8b", "A scenario by its cross-run identity, the key diff matches on. The prefix is mandatory, because diff tells an address from a report path by this grammar.")
+        (AddressKind.StableId, "sid:<16 hex>", "sid:1a2b3c4d5e6f7a8b", "A scenario by its cross-run identity, the key diff matches on. The prefix is mandatory, because diff tells an address from a report path by this grammar."),
+        (AddressKind.TestId, "id:<test id>", "id:0-1287", "A scenario by the id its test framework or host gave it: unique within one run, not across runs (sid: is the cross-run one). Everything after the prefix is the id, matched exactly, so it has no child forms.")
     ];
 
     /// <summary>The exit codes, as the help and the reference state them.</summary>

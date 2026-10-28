@@ -87,6 +87,7 @@ Stop at the first rung that answers the question. Most stop at the third.
 | body | `b:4bdea521` — a content hash; the same hash means byte-identical |
 | diagram / note | `s3/d0`, `s3/d0/n12` |
 | scenario, across runs | `sid:1a2b3c4d5e6f7a8b` — its `stableId`; the `sid:` prefix is required |
+| scenario, by its test id | `id:0-1287`: the id its test framework gave it, matched exactly; one run only |
 | the same scenario, for a human | `__REPORT__.html#sid-<stableId>` — opens it in the report |
 
 Every address here goes back into a command. A step address narrows to that step **and everything

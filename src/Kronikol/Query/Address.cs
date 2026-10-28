@@ -20,6 +20,11 @@ namespace Kronikol.Query;
 /// rather than a convenience: <c>diff</c> decides whether its second positional is an address or a report
 /// FILE by asking this grammar, so a bare sixteen-hex form would flip a hash-named artifact path from
 /// "the new run" to "a body to compare", which is how CI layouts name files.</para>
+///
+/// <para><c>id:0-1287</c> is a scenario by the id its test framework or host gave it (#184): what a host that
+/// wrote its own tests holds, unique within one run and not across runs. Its prefix is mandatory for the same
+/// reason as <c>sid:</c>'s. Everything after it is the id, matched exactly: ids are free text, and a JUnit id
+/// holds <c>/</c> and <c>:</c>, so the form has no child addresses and is never split or trimmed.</para>
 /// </summary>
 internal readonly record struct Address(
     AddressKind Kind,
@@ -29,7 +34,8 @@ internal readonly record struct Address(
     int Note = -1,
     string? StepPath = null,
     string? BodyHash = null,
-    string? StableId = null)
+    string? StableId = null,
+    string? TestId = null)
 {
     public static bool TryParse(string text, out Address address)
     {
@@ -50,6 +56,15 @@ internal readonly record struct Address(
                 return false;
 
             address = new Address(AddressKind.StableId, StableId: stableId.ToLowerInvariant());
+            return true;
+        }
+
+        if (text.StartsWith("id:", StringComparison.OrdinalIgnoreCase))
+        {
+            if (text.Length == 3)
+                return false;
+
+            address = new Address(AddressKind.TestId, TestId: text[3..]);
             return true;
         }
 
@@ -129,6 +144,7 @@ internal readonly record struct Address(
     {
         AddressKind.Body => BodyHash ?? "b:?",
         AddressKind.StableId => $"sid:{StableId}",
+        AddressKind.TestId => $"id:{TestId}",
         AddressKind.Scenario => $"s{Scenario}",
         AddressKind.Interaction => $"s{Scenario}/i{Interaction}",
         AddressKind.Step => $"s{Scenario}/{StepPath}",
@@ -147,4 +163,5 @@ internal enum AddressKind
     Note,
     Body,
     StableId,
+    TestId,
 }

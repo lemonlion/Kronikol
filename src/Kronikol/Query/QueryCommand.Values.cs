@@ -30,16 +30,8 @@ public static partial class QueryCommand
         ScenarioEntry? only = null;
         if (options.Positional.Count > 0)
         {
-            if (!Address.TryParse(options.Positional[0], out var address) || address.Kind != AddressKind.Scenario)
-            {
-                error.WriteLine($"Not a scenario address: {options.Positional[0]} (expected s3, or no address for the whole run)");
+            if (!TryWholeScenario(index, options.Positional[0], error, out var scenario))
                 return 2;
-            }
-            if (index.Scenario(address.Scenario) is not { } scenario)
-            {
-                error.WriteLine($"No scenario s{address.Scenario} — the report has {index.Scenarios.Count}.");
-                return 2;
-            }
             only = scenario;
         }
 

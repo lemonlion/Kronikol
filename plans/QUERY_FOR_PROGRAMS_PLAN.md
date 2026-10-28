@@ -475,3 +475,37 @@ The owner asked for the plan to be checked in full and for any deep dive that co
   (C2).
 - **Checked, no change:** the tests file's failure message key is `error` (`Ingestion/TestRunRecord.cs:58`). A probe
   that wrote `errorMessage` read a null message for that reason, not because of a bug.
+
+## 11. Execution
+
+The owner asked on 2026-10-28 for the plan to be implemented in full and took every recommendation in section 8.
+
+### R1, 5.23.0
+
+- **As designed.** `id:<test id>` (prefix case-insensitive, the id taken whole and matched ordinally, no child forms,
+  `id:` alone not an address) resolves through `TryTestId` beside `TryStableId`. No match is refused with the hint
+  that `scenarios --json` lists the ids. Two matches are refused with both listed. `id` sits after `address` on every item that names a scenario of one run, `Failures.jsonl` included,
+  and not on `diff`'s rows. The scenario row gains `calls`, `diagrams`, `sourceFile`, `sourceLine`, `rule`,
+  `isHappyPath` and `featureSourceFile` after its old members, and `summary`'s `run` gains `calls`. The projection
+  guard lists 21 properties as projected and 12 as excluded, each with its reason, internal ones included, and a
+  second fact proves it names a property nobody decided, public or internal.
+- **What the review changed (an independent read of the R1 diff).** The design's `#N` hint could never fire on a real
+  merge: the merge keeps a colliding id on the first shard's scenario and renames only the later ones, so `id:X`
+  matched one scenario exactly and answered for it, with nothing said about the other test that carried `X` in its
+  own shard. `id:X` is now refused with every scenario answering to it, `X` and each `X#N`, listed, and `X#N` is an
+  address of its own; the fact runs two colliding shards through `MergeableReportMerger` and the writer, where the
+  plan's fixture had an `X#1` with no `X`, which no merge writes. The listing does not claim the merge: a Cucumber
+  ingest mints `<pickle id>#<attempt>` too. Q8 stands, its premise corrected: the hint names the renamed ids because
+  the producer's id is refused there. Also: `grep`'s no-hits note sent a call, diagram or note address to `steps`,
+  which now refuses them; the guard walked public properties only, where a patch adds internal ones (`NotATest`);
+  and the `Failures.jsonl` fact now compares with `failures --json` from the same run.
+- **One resolver.** `services`, `parties`, `values` and `compare` resolve through `TryWholeScenario`, which takes
+  `sN`, `sid:` and `id:` and refuses a step path, call, diagram, note or body address, naming the verb that reads it.
+- **A fifth verb family the audit missed.** `TryScenario` read a call, diagram or note address as its scenario, so
+  `steps s0/i3` and every other verb that takes a scenario answered for all of `s0` with nothing said. Found while
+  wiring `id:` into it; fixed by the same refusal (`NotAScenario`). `diff` with two bodies refuses `sid:` and `id:`
+  as it refuses `sN`.
+- **Red first.** The 30 new facts ran against 5.22.0 in a separate worktree with only the tests and a compile
+  scaffold (the enum member and record field): 27 failed, and the three that passed hold behaviour that does not
+  change (a `diff` row has no `id`, an inexact id is refused, and the guard's own vacuity fact).
+- **Checks.** The core suite (11,379 passed, 2 skipped, and 11,382 passed, 2 skipped, after the rebase onto 5.22.1), the 30 new facts run against 5.22.0 in a separate worktree (27 failed; the other three hold behaviour that does not change), BreakfastProvider's NUnit report read by id:0-1287 with its row's id, calls and diagrams, and an independent review of the diff, whose two defects and two weak facts are fixed test first

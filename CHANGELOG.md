@@ -4,6 +4,62 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.23.0] - 2026-10-28
+
+The minor part moves (5.22.1 to 5.23.0): a new address form, `id:<test id>`, and new members on `kronikol query`'s
+`--json` items and on `Failures.jsonl`'s failure lines (#184, `plans/QUERY_FOR_PROGRAMS_PLAN.md` R1). It also fixes
+how five verbs read a scenario address.
+
+### Added
+
+- **`id:<test id>` addresses a scenario by the id its test framework or host gave it** (#184). A host checking its
+  own run knows its tests' ids, where an ordinal is known only after a listing and `sid:` is a hash of the name that
+  two tests can share. Everything after `id:` is the id, matched exactly, since ids are free text (a JUnit id from
+  Kronikol4J holds `/` and `:`), so the form has no child addresses. An id no scenario has is refused with where the
+  ids are listed. In a merged report, `kronikol merge` keeps a colliding id on the first shard's scenario and renames
+  the later ones to `<id>#N`, so the id as the framework minted it names several tests there: it is refused with each
+  of them listed, and `id:<id>#N` is the address of its own; an id two scenarios carry (a scenario that ran in two
+  shards) is refused the same way. `--describe` lists the form.
+- **`id` on every `--json` item that names a scenario of one run**: `scenarios` rows, `summary`'s `failed` items,
+  `failures` and `repro` items, and `Failures.jsonl`'s failure lines, after `address`. It is `null` only where the
+  report holds an empty id. `diff`'s rows carry none, as they name two runs.
+- **The `scenarios --json` row carries every fact the engine holds about a scenario**: `calls` (its requests, as the
+  text row counts them, where `interactions` counts the records, two for an answered call), `diagrams` (how many the
+  data file holds), `sourceFile` and `sourceLine` (roadmap 7.1, the rest of #76), `rule`, `isHappyPath` and
+  `featureSourceFile`, after the members it had. `summary`'s `run` gains `calls` beside `interactions`. A test now
+  fails when a fact is added to the engine's scenario and neither reaches the row nor is excluded for a stated reason.
+
+### Fixed
+
+- **`services`, `parties` and `values` take `sid:` and `id:`.** They refused `sid:` as "Not a scenario address",
+  though the reference has documented it as a scenario address since 3.5.0.
+- **`compare` reads its two addresses as scenarios.** A `sid:` scenario in the report was refused as "not in this
+  report", and `compare s0/i0 s1` compared `s0` with `s1` with nothing said. It now takes `sN`, `sid:` and `id:`, and
+  refuses a call, step, diagram, note or body address, naming the verb that reads it. `compare s0/i0 s1` was a wrong
+  answer and is now exit 2.
+- **A verb that answers for a scenario refuses a call, diagram or note address instead of answering for its
+  scenario.** `steps s0/i3`, `interactions s0/d0` and the other verbs that take a scenario read the address as `s0`
+  and answered for all of it with nothing said, the wider answer their resolver exists to refuse. They now exit 2
+  naming the verb that reads the address (`http`, `diagram` or `note`) and its scenario. Found while executing the
+  plan.
+- `diff` with two bodies refuses a `sid:` or `id:` as it refuses `sN`, pointing at `compare`.
+- `grep` with no hits for a call, diagram or note address names the verb that reads it (`http`, `diagram`, `note`),
+  where it said `steps` opens it.
+
+### Documentation
+
+- Wiki `Querying-Reports.md`: the `id:` address, the paragraph on scenario forms, and the members table's
+  `scenarios`, `failures` and `repro` rows, with which `id` a `services` or `parties` row means (the party's).
+  `Generated-Reports.md`: `id` in the `Failures.jsonl` failure line. The skill (both copies) and the agent
+  instructions written beside every report name the form. `kronikol merge`'s comment on renamed ids no longer says
+  nothing user-facing keys on them. `ROADMAP.md` 7.1's projection half is shipped.
+
+### Tests
+
+- `QueryTestIdTests` (30 facts, 27 red on 5.22.0; the other three hold behaviour that does not change), the
+  projection guard with a fact proving it names an undecided property, and `id` in `QueryJsonTests`' one-shape list.
+  Checks: the core suite (11,379 passed, 2 skipped, and 11,382 passed, 2 skipped, after the rebase onto 5.22.1), the 30 new facts run against 5.22.0 in a separate worktree (27 failed; the other three hold behaviour that does not change), BreakfastProvider's NUnit report read by id:0-1287 with its row's id, calls and diagrams, and an independent review of the diff, whose two defects and two weak facts are fixed test first.
+
 ## [5.22.1] - 2026-10-28
 
 The patch part moves (5.22.0 to 5.22.1): a packaging fix, with no new option and no new public member (#205, #97;
