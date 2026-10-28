@@ -15,7 +15,7 @@ public static partial class QueryCommand
         // refuses rather than inventing one - and names the two verbs that do answer narrowly.
         if (options.Positional.Count > 0)
         {
-            error.WriteLine($"summary answers for the whole run; it has no per-scenario form ({options.Positional[0]} was given).");
+            Refuse(error, RefusalKinds.Usage, $"summary answers for the whole run; it has no per-scenario form ({options.Positional[0]} was given).");
             error.WriteLine("For one scenario: `steps <address>` for its step tree, `flow <address>` for its calls.");
             return 2;
         }
@@ -491,7 +491,7 @@ public static partial class QueryCommand
         {
             if (!Kronikol.Parties.PartiesFile.TryParseKind(kindText, out var parsed))
             {
-                error.WriteLine($"Not a party kind: {kindText} (expected test, underTest, real, double or unknown)");
+                Refuse(error, RefusalKinds.Usage, $"Not a party kind: {kindText} (expected test, underTest, real, double or unknown)");
                 return 2;
             }
             only = parsed;

@@ -14,7 +14,7 @@ public static partial class QueryCommand
     {
         if (options.Positional.Count == 0)
         {
-            error.WriteLine("Which trace? kronikol query trace <report> <trace-id | prefix ≥8 hex | s3/i47>");
+            Refuse(error, RefusalKinds.Usage, "Which trace? kronikol query trace <report> <trace-id | prefix ≥8 hex | s3/i47>");
             return 2;
         }
 
@@ -35,18 +35,18 @@ public static partial class QueryCommand
         {
             if (index.Scenario(address.Scenario) is not { } scenario)
             {
-                error.WriteLine($"No scenario s{address.Scenario} — the report has {index.Scenarios.Count}.");
+                Refuse(error, RefusalKinds.NotFound, $"No scenario s{address.Scenario} — the report has {index.Scenarios.Count}.");
                 return 2;
             }
             var interaction = scenario.Interactions.FirstOrDefault(i => i.Ordinal == address.Interaction);
             if (interaction is null)
             {
-                error.WriteLine($"No interaction i{address.Interaction} in {scenario.Address} — it has {scenario.Interactions.Count}.");
+                Refuse(error, RefusalKinds.NotFound, $"No interaction i{address.Interaction} in {scenario.Address} — it has {scenario.Interactions.Count}.");
                 return 2;
             }
             if (interaction.ActivityTraceId is not { Length: > 0 } id)
             {
-                error.WriteLine($"{address} carries no W3C trace id — the report predates trace export, or the call was not traced. Re-run the suite on a current Kronikol to get trace ids.");
+                Refuse(error, RefusalKinds.NotFound, $"{address} carries no W3C trace id — the report predates trace export, or the call was not traced. Re-run the suite on a current Kronikol to get trace ids.");
                 return 2;
             }
             traceId = id;
@@ -59,7 +59,7 @@ public static partial class QueryCommand
             var prefix = argument.TrimEnd('…', '.', ' ').ToLowerInvariant();
             if (prefix.Length < 8 || !prefix.All(Uri.IsHexDigit))
             {
-                error.WriteLine($"Not a trace id or address: {argument} — pass a W3C trace id (or an unambiguous prefix of at least 8 hex chars), a span id, or an interaction address like s3/i47.");
+                Refuse(error, RefusalKinds.Usage, $"Not a trace id or address: {argument} — pass a W3C trace id (or an unambiguous prefix of at least 8 hex chars), a span id, or an interaction address like s3/i47.");
                 return 2;
             }
 
@@ -81,14 +81,15 @@ public static partial class QueryCommand
             switch (candidates.Count)
             {
                 case 0:
-                    error.WriteLine($"No trace {argument} — the report holds {distinctIds.Count} distinct trace id{(distinctIds.Count == 1 ? "" : "s")}."
+                    // A report with no trace ids at all cannot answer trace; one that has others does not hold this one.
+                    Refuse(error, distinctIds.Count == 0 ? RefusalKinds.Unsupported : RefusalKinds.NotFound, $"No trace {argument} — the report holds {distinctIds.Count} distinct trace id{(distinctIds.Count == 1 ? "" : "s")}."
                                     + (distinctIds.Count == 0 ? " Re-run the suite on a current Kronikol to get trace ids." : ""));
                     return 2;
                 case 1:
                     traceId = candidates[0]!;
                     break;
                 default:
-                    error.WriteLine($"{argument} is ambiguous — candidates:");
+                    Refuse(error, RefusalKinds.Ambiguous, $"{argument} is ambiguous — candidates:");
                     foreach (var candidate in candidates)
                         error.WriteLine("  " + candidate);
                     return 2;

@@ -598,7 +598,7 @@ public static partial class QueryCommand
         // to give, and giving the wider one silently is how a step address came to mean nothing at all.
         if (addressedStep is not null)
         {
-            error.WriteLine($"Annotations are recorded per scenario, not per step — drop the /{addressedStep} and ask for {scenario.Address}.");
+            Refuse(error, RefusalKinds.Usage, $"Annotations are recorded per scenario, not per step — drop the /{addressedStep} and ask for {scenario.Address}.");
             return 2;
         }
 
@@ -807,14 +807,14 @@ public static partial class QueryCommand
 
         if (options.Positional.Count == 0)
         {
-            error.WriteLine("Which scenario? Pass an address like s3, sid:<stableId> or id:<test id> — 'scenarios' lists them.");
+            Refuse(error, RefusalKinds.Usage, "Which scenario? Pass an address like s3, sid:<stableId> or id:<test id> — 'scenarios' lists them.");
             return false;
         }
 
         var text = options.Positional[0];
         if (!Address.TryParse(text, out var address))
         {
-            error.WriteLine($"Not an address: {text}");
+            Refuse(error, RefusalKinds.Usage, $"Not an address: {text}");
             return false;
         }
 
@@ -828,13 +828,13 @@ public static partial class QueryCommand
         // nothing said (#184's audit): the wider answer this method exists to refuse.
         if (NotAScenario(address, text) is { } refusal)
         {
-            error.WriteLine(refusal);
+            Refuse(error, RefusalKinds.Usage, refusal);
             return false;
         }
 
         if (index.Scenario(address.Scenario) is not { } found)
         {
-            error.WriteLine(index.Scenarios.Count == 0
+            Refuse(error, RefusalKinds.NotFound, index.Scenarios.Count == 0
                 ? $"No scenario s{address.Scenario} — the report has none."
                 : $"No scenario s{address.Scenario} — the report has {index.Scenarios.Count} (s0-s{index.Scenarios.Count - 1}).");
             return false;
@@ -845,7 +845,7 @@ public static partial class QueryCommand
             var wanted = address.StepPath!;
             if (!found.AllSteps().Any(step => Address.PathCoveredBy(step.Path, wanted)))
             {
-                error.WriteLine($"No step {wanted} in {found.Address} — `steps {found.Address}` lists its paths.");
+                Refuse(error, RefusalKinds.NotFound, $"No step {wanted} in {found.Address} — `steps {found.Address}` lists its paths.");
                 return false;
             }
 
@@ -880,7 +880,7 @@ public static partial class QueryCommand
         scenario = null!;
         if (!Address.TryParse(text, out var address))
         {
-            error.WriteLine($"Not an address: {text}");
+            Refuse(error, RefusalKinds.Usage, $"Not an address: {text}");
             return false;
         }
 
@@ -891,18 +891,18 @@ public static partial class QueryCommand
             case AddressKind.TestId:
                 return TryTestId(index, address.TestId!, error, out scenario);
             case AddressKind.Step:
-                error.WriteLine($"Not a scenario address: {text} (expected s3, sid:<stableId> or id:<test id>). `steps <report> {text}` reads the step.");
+                Refuse(error, RefusalKinds.Usage, $"Not a scenario address: {text} (expected s3, sid:<stableId> or id:<test id>). `steps <report> {text}` reads the step.");
                 return false;
             case AddressKind.Scenario:
                 break;
             default:
-                error.WriteLine(NotAScenario(address, text));
+                Refuse(error, RefusalKinds.Usage, NotAScenario(address, text));
                 return false;
         }
 
         if (index.Scenario(address.Scenario) is not { } found)
         {
-            error.WriteLine(index.Scenarios.Count == 0
+            Refuse(error, RefusalKinds.NotFound, index.Scenarios.Count == 0
                 ? $"No scenario s{address.Scenario} — the report has none."
                 : $"No scenario s{address.Scenario} — the report has {index.Scenarios.Count} (s0-s{index.Scenarios.Count - 1}).");
             return false;
@@ -934,7 +934,7 @@ public static partial class QueryCommand
 
         if (matches.Count == 0)
         {
-            error.WriteLine($"No scenario with id {id} in {Path.GetFileName(index.Path)}.");
+            Refuse(error, RefusalKinds.NotFound, $"No scenario with id {id} in {Path.GetFileName(index.Path)}.");
             if (numbered.Count == 0)
             {
                 error.WriteLine("`scenarios --json` lists every id in this report.");
@@ -943,7 +943,7 @@ public static partial class QueryCommand
         }
         else
         {
-            error.WriteLine($"{matches.Count + numbered.Count} scenarios answer to id {id} — name the one you mean:");
+            Refuse(error, RefusalKinds.Ambiguous, $"{matches.Count + numbered.Count} scenarios answer to id {id} — name the one you mean:");
         }
 
         // #N is what kronikol merge gives the later of two colliding ids, and Cucumber ingest a scenario's attempt.
@@ -976,7 +976,9 @@ public static partial class QueryCommand
         switch (matches.Count)
         {
             case 0:
-                error.WriteLine($"No scenario with stableId {stableId} in {Path.GetFileName(index.Path)}.");
+                // A report written before stableIds existed cannot answer sid: at all, which is not the same as not holding this one.
+                Refuse(error, index.Scenarios.Any(s => s.StableId.Length > 0) ? RefusalKinds.NotFound : RefusalKinds.Unsupported,
+                    $"No scenario with stableId {stableId} in {Path.GetFileName(index.Path)}.");
                 error.WriteLine(index.Scenarios.Any(s => s.StableId.Length > 0)
                     ? "`scenarios --json` lists every stableId in this report."
                     : "This report carries no stableIds at all (written before 3.0.47) — address scenarios by ordinal.");
@@ -985,7 +987,7 @@ public static partial class QueryCommand
                 scenario = matches[0];
                 return true;
             default:
-                error.WriteLine($"{matches.Count} scenarios share stableId {stableId} (a repeated row, or a retry) — name the one you mean:");
+                Refuse(error, RefusalKinds.Ambiguous, $"{matches.Count} scenarios share stableId {stableId} (a repeated row, or a retry) — name the one you mean:");
                 foreach (var match in matches)
                     error.WriteLine($"  {match.Address}  {QueryWriter.OneLine(match.Name, 70)}  [{match.Result}]");
                 return false;

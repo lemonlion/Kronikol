@@ -17,13 +17,13 @@ public static partial class QueryCommand
         var location = ReportHistory.Locate(options.HistoryPath, index.Directory, getEnv, _workingDirectory);
         if (location.Source == HistoryLocationSource.Disabled)
         {
-            error.WriteLine($"{HistoryFormat.EnvironmentVariable}={HistoryFormat.EnvironmentOff}: history is switched off in this environment. Pass --history <file> to read a ledger anyway.");
+            Refuse(error, RefusalKinds.Unsupported, $"{HistoryFormat.EnvironmentVariable}={HistoryFormat.EnvironmentOff}: history is switched off in this environment. Pass --history <file> to read a ledger anyway.");
             return 2;
         }
 
         if (location.Path is not { } ledgerPath)
         {
-            error.WriteLine($"No history ledger for {Path.GetFileName(index.Path)}: nothing named by --history or ${HistoryFormat.EnvironmentVariable}, and no .kronikol or .git directory above {index.Directory}.");
+            Refuse(error, RefusalKinds.Unsupported, $"No history ledger for {Path.GetFileName(index.Path)}: nothing named by --history or ${HistoryFormat.EnvironmentVariable}, and no .kronikol or .git directory above {index.Directory}.");
             error.WriteLine("Pass --history <file>, set KRONIKOL_HISTORY, or run kronikol history init in the repository the tests live in.");
             return 2;
         }
@@ -33,7 +33,7 @@ public static partial class QueryCommand
         var read = HistoryLedgerReader.Read(ledgerPath, options.HistoryReadWindow);
         if (read.Ledger is not { } ledger)
         {
-            error.WriteLine(read.Message ?? $"the ledger at {ledgerPath} could not be read");
+            Refuse(error, RefusalKinds.Unreadable, read.Message ?? $"the ledger at {ledgerPath} could not be read");
             return 1;
         }
 
@@ -93,7 +93,7 @@ public static partial class QueryCommand
             one = subjects.FirstOrDefault(s => string.Equals(s.StableId, sid, StringComparison.OrdinalIgnoreCase));
             if (one is null)
             {
-                error.WriteLine($"sid:{sid} is not in {Path.GetFileName(index.Path)} — `history {index.Path}` lists what is.");
+                Refuse(error, RefusalKinds.NotFound, $"sid:{sid} is not in {Path.GetFileName(index.Path)} — `history {index.Path}` lists what is.");
                 return 2;
             }
         }
@@ -112,13 +112,13 @@ public static partial class QueryCommand
         var location = ReportHistory.Locate(options.HistoryPath, start, getEnv, _workingDirectory);
         if (location.Source == HistoryLocationSource.Disabled)
         {
-            error.WriteLine($"{HistoryFormat.EnvironmentVariable}={HistoryFormat.EnvironmentOff}: history is switched off in this environment. Pass --history <file> to read a ledger anyway.");
+            Refuse(error, RefusalKinds.Unsupported, $"{HistoryFormat.EnvironmentVariable}={HistoryFormat.EnvironmentOff}: history is switched off in this environment. Pass --history <file> to read a ledger anyway.");
             return 2;
         }
 
         if (location.Path is not { } ledgerPath)
         {
-            error.WriteLine($"No report given, and no history ledger: nothing named by --history or ${HistoryFormat.EnvironmentVariable}, and no .kronikol or .git directory above {start}.");
+            Refuse(error, RefusalKinds.Unsupported, $"No report given, and no history ledger: nothing named by --history or ${HistoryFormat.EnvironmentVariable}, and no .kronikol or .git directory above {start}.");
             error.WriteLine("Pass a TestRunReport.json or TestRunReport.krkl (or a directory holding one), or --history <file> to read a ledger without a report.");
             return 2;
         }
@@ -126,13 +126,13 @@ public static partial class QueryCommand
         var read = HistoryLedgerReader.Read(ledgerPath, options.HistoryReadWindow);
         if (read.Ledger is not { } ledger)
         {
-            error.WriteLine(read.Message ?? $"the ledger at {ledgerPath} could not be read");
+            Refuse(error, RefusalKinds.Unreadable, read.Message ?? $"the ledger at {ledgerPath} could not be read");
             return 1;
         }
 
         if (read.Outcome == HistoryReadOutcome.Missing || ledger.IsEmpty)
         {
-            error.WriteLine($"No report given, and no run is recorded in {ledgerPath}.");
+            Refuse(error, RefusalKinds.Unsupported, $"No report given, and no run is recorded in {ledgerPath}.");
             error.WriteLine("Pass a TestRunReport.json or TestRunReport.krkl (or a directory holding one); a ledger answers on its own once a run has been recorded.");
             return 2;
         }
@@ -142,7 +142,7 @@ public static partial class QueryCommand
         {
             if (!ledger.Suites.Contains(named, StringComparer.Ordinal))
             {
-                error.WriteLine($"No suite {named} in {ledgerPath}. It holds: {string.Join(", ", ledger.Suites.Select(s => s ?? "(unnamed)"))}.");
+                Refuse(error, RefusalKinds.NotFound, $"No suite {named} in {ledgerPath}. It holds: {string.Join(", ", ledger.Suites.Select(s => s ?? "(unnamed)"))}.");
                 return 2;
             }
             suite = named;
@@ -153,7 +153,7 @@ public static partial class QueryCommand
         }
         else
         {
-            error.WriteLine($"{ledgerPath} holds {ledger.Suites.Count} suites — name one with --suite: {string.Join(", ", ledger.Suites.Select(s => s ?? "(unnamed)"))}.");
+            Refuse(error, RefusalKinds.Ambiguous, $"{ledgerPath} holds {ledger.Suites.Count} suites — name one with --suite: {string.Join(", ", ledger.Suites.Select(s => s ?? "(unnamed)"))}.");
             return 2;
         }
 
@@ -172,7 +172,7 @@ public static partial class QueryCommand
             run = ledger.LatestRun(suite);
             if (run is null)
             {
-                error.WriteLine($"No run of {suite ?? "(unnamed)"} is recorded in {ledgerPath}.");
+                Refuse(error, RefusalKinds.NotFound, $"No run of {suite ?? "(unnamed)"} is recorded in {ledgerPath}.");
                 return 2;
             }
         }
@@ -187,7 +187,7 @@ public static partial class QueryCommand
     {
         if (ledger.Roster(run.RosterHash) is not { } roster)
         {
-            error.WriteLine($"The ledger has run {run.Id} but not its roster ({run.RosterHash}) — kronikol history verify says what else is missing.");
+            Refuse(error, RefusalKinds.Unreadable, $"The ledger has run {run.Id} but not its roster ({run.RosterHash}) — kronikol history verify says what else is missing.");
             return 1;
         }
 
@@ -209,14 +209,14 @@ public static partial class QueryCommand
             one = subjects.FirstOrDefault(s => string.Equals(s.StableId, sid, StringComparison.OrdinalIgnoreCase));
             if (one is null)
             {
-                error.WriteLine($"sid:{sid} is not in run {run.Id} — `history --run {run.Id}` lists what is, and the run that has it is the one to name.");
+                Refuse(error, RefusalKinds.NotFound, $"sid:{sid} is not in run {run.Id} — `history --run {run.Id}` lists what is, and the run that has it is the one to name.");
                 return 2;
             }
         }
         else if (options.Positional.Count > 0)
         {
             // s3 is an ordinal in a REPORT; a run read from the ledger has none anybody else can use.
-            error.WriteLine($"{options.Positional[0]} addresses a scenario of a report, and run {run.Id} is being read from the ledger — name the scenario with --sid <id> (`history --run {run.Id}` lists them).");
+            Refuse(error, RefusalKinds.Usage, $"{options.Positional[0]} addresses a scenario of a report, and run {run.Id} is being read from the ledger — name the scenario with --sid <id> (`history --run {run.Id}` lists them).");
             return 2;
         }
 
@@ -240,7 +240,7 @@ public static partial class QueryCommand
             var entry = verdicts.At(one.Ordinal, one.StableId);
             if (entry is null)
             {
-                error.WriteLine($"{one.Address} has no history entry — the report's scenario list and the ledger disagree; re-run kronikol history record for this run.");
+                Refuse(error, RefusalKinds.Unreadable, $"{one.Address} has no history entry — the report's scenario list and the ledger disagree; re-run kronikol history record for this run.");
                 return 1;
             }
 
@@ -549,7 +549,7 @@ internal static class ReportHistory
         var ids = index.Scenarios.Select(s => s.StableId).ToArray();
         if (ids.Any(string.IsNullOrEmpty))
         {
-            error.WriteLine($"{Path.GetFileName(index.Path)} carries no stableIds (written before 3.0.47): history is keyed on them. Re-run the suite on a current Kronikol.");
+            QueryCommand.Refuse(error, RefusalKinds.Unsupported, $"{Path.GetFileName(index.Path)} carries no stableIds (written before 3.0.47): history is keyed on them. Re-run the suite on a current Kronikol.");
             return false;
         }
 
@@ -908,7 +908,7 @@ internal static class ReportHistory
         {
             if (runs.LastOrDefault(r => r.Results.Contains(HistoryFormat.Failed)) is { } failed)
                 return failed;
-            error.WriteLine($"--run {LastFailedAlias}: no run of {label} in the ledger has a failure ({runs.Count} run(s) read).");
+            QueryCommand.Refuse(error, RefusalKinds.NotFound, $"--run {LastFailedAlias}: no run of {label} in the ledger has a failure ({runs.Count} run(s) read).");
             return null;
         }
 
@@ -916,7 +916,7 @@ internal static class ReportHistory
         {
             if (runs.Count >= 2)
                 return runs[^2];
-            error.WriteLine($"--run {PreviousAlias}: the ledger holds {runs.Count} run(s) of {label} — there is no run before the newest.");
+            QueryCommand.Refuse(error, RefusalKinds.NotFound, $"--run {PreviousAlias}: the ledger holds {runs.Count} run(s) of {label} — there is no run before the newest.");
             return null;
         }
 
@@ -927,7 +927,7 @@ internal static class ReportHistory
         if (matches.Count == 1)
             return matches[0];
 
-        error.WriteLine(matches.Count == 0
+        QueryCommand.Refuse(error, matches.Count == 0 ? RefusalKinds.NotFound : RefusalKinds.Ambiguous, matches.Count == 0
             ? $"No run matching {wanted} among the {runs.Count} run(s) of {label} in the ledger. The newest:"
             : $"{matches.Count} runs of {label} match {wanted} — name one. The newest:");
         foreach (var run in (matches.Count == 0 ? runs : matches).TakeLast(10).Reverse())

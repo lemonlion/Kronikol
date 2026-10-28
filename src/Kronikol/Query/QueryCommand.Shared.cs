@@ -140,7 +140,7 @@ public static partial class QueryCommand
         {
             if (!WhereClause.TryParse(expression, out var clause, out var parseError))
             {
-                error.WriteLine($"Bad --where: {parseError}");
+                Refuse(error, RefusalKinds.Usage, $"Bad --where: {parseError}");
                 error.WriteLine(WhereClause.Grammar);
                 return null;
             }
@@ -218,7 +218,7 @@ public static partial class QueryCommand
         if (options.Sort is not { Length: > 0 } sort || allowed.Contains(sort, StringComparer.OrdinalIgnoreCase))
             return true;
 
-        error.WriteLine($"Unknown --sort value: {sort}");
+        Refuse(error, RefusalKinds.Usage, $"Unknown --sort value: {sort}");
         error.WriteLine("Valid here: " + string.Join(", ", allowed));
         return false;
     }
@@ -232,7 +232,7 @@ public static partial class QueryCommand
         if (options.Phase is not { } phase || phase.ToLowerInvariant() is "setup" or "action" or "unknown")
             return true;
 
-        error.WriteLine($"Not a phase: {phase} (expected setup, action or unknown)");
+        Refuse(error, RefusalKinds.Usage, $"Not a phase: {phase} (expected setup, action or unknown)");
         return false;
     }
 

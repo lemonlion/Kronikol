@@ -21,7 +21,7 @@ public static partial class QueryCommand
         var wanted = Interpretations(needle).ToArray();
         if (wanted.Length == 0)
         {
-            error.WriteLine($"--number needs a numeric needle; \"{options.Positional[0]}\" is not one — drop the flag for text search.");
+            Refuse(error, RefusalKinds.Usage, $"--number needs a numeric needle; \"{options.Positional[0]}\" is not one — drop the flag for text search.");
             return 2;
         }
 
@@ -35,7 +35,7 @@ public static partial class QueryCommand
                 absolute = abs;
             else
             {
-                error.WriteLine($"--tolerance takes a number (0.5) or a percentage (1%), not \"{tolerance}\".");
+                Refuse(error, RefusalKinds.Usage, $"--tolerance takes a number (0.5) or a percentage (1%), not \"{tolerance}\".");
                 return 2;
             }
         }

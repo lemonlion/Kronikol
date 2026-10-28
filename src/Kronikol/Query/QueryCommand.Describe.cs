@@ -39,7 +39,7 @@ public static partial class QueryCommand
                 formatVersion = QueryWriter.JsonFormatVersion,
                 members = new[] { "formatVersion", "command", "report", "kronikolVersion", "notes", "items | count", "total", "truncated", "next", "error" },
                 next = "The whole next command as an argv array - run its elements verbatim - or null when there is no next page.",
-                error = "Present only on a non-zero exit under --json: { exitCode, message, hint }, beside empty items. The prose still goes to stderr."
+                error = "Present only on a non-zero exit under --json: { exitCode, message, hint, kind }, beside empty items. kind is one of errorKinds (since 5.25.0); the prose still goes to stderr."
             },
             addresses = VerbTable.AddressForms.Select(a => new
             {
@@ -49,6 +49,7 @@ public static partial class QueryCommand
                 meaning = a.Meaning
             }),
             exitCodes = VerbTable.ExitCodes.Select(e => new { code = e.Code, meaning = e.Meaning }),
+            errorKinds = VerbTable.ErrorKinds.Select(k => new { kind = k.Kind, meaning = k.Meaning }),
             universalFlags = VerbTable.UniversalFlags.Select(FlagDocument),
             verbs = VerbTable.Verbs.Select(v => new
             {

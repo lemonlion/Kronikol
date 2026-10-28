@@ -216,7 +216,7 @@ internal sealed class QueryOptions
             {
                 if (++i < args.Count)
                     return args[i];
-                error.WriteLine("Missing value for " + flag);
+                QueryCommand.Refuse(error, RefusalKinds.Usage, "Missing value for " + flag);
                 return null;
             }
 
@@ -226,7 +226,7 @@ internal sealed class QueryOptions
                     if (Next(arg) is not { } maxBytes) return null;
                     if (!int.TryParse(maxBytes, out var parsedMax) || parsedMax < 0)
                     {
-                        error.WriteLine("--max-bytes takes a non-negative number of bytes (0 removes the budget).");
+                        QueryCommand.Refuse(error, RefusalKinds.Usage, "--max-bytes takes a non-negative number of bytes (0 removes the budget).");
                         return null;
                     }
                     options.MaxBytes = parsedMax;
@@ -236,7 +236,7 @@ internal sealed class QueryOptions
                     if (Next(arg) is not { } offset) return null;
                     if (!int.TryParse(offset, out var parsedOffset) || parsedOffset < 0)
                     {
-                        error.WriteLine("--offset takes a non-negative row number.");
+                        QueryCommand.Refuse(error, RefusalKinds.Usage, "--offset takes a non-negative row number.");
                         return null;
                     }
                     options.Offset = parsedOffset;
@@ -246,7 +246,7 @@ internal sealed class QueryOptions
                     if (Next(arg) is not { } limit) return null;
                     if (!int.TryParse(limit, out var parsedLimit) || parsedLimit <= 0)
                     {
-                        error.WriteLine("--limit takes a positive row count.");
+                        QueryCommand.Refuse(error, RefusalKinds.Usage, "--limit takes a positive row count.");
                         return null;
                     }
                     options.Limit = parsedLimit;
@@ -258,7 +258,7 @@ internal sealed class QueryOptions
                     // thousands: "1.5" read as 15 under a comma-decimal culture until 4.7.3, and "1,5" as 15 under the rest.
                     if (!double.TryParse(slower.TrimEnd('s'), NumberStyles.Float, CultureInfo.InvariantCulture, out var parsedSlower))
                     {
-                        error.WriteLine("--slower-than takes a number of seconds.");
+                        QueryCommand.Refuse(error, RefusalKinds.Usage, "--slower-than takes a number of seconds.");
                         return null;
                     }
                     options.SlowerThan = parsedSlower;
@@ -269,7 +269,7 @@ internal sealed class QueryOptions
                     var range = lines.Split('-', 2);
                     if (range.Length != 2 || !int.TryParse(range[0], out var from) || !int.TryParse(range[1], out var to))
                     {
-                        error.WriteLine("--lines takes a range like 20-60.");
+                        QueryCommand.Refuse(error, RefusalKinds.Usage, "--lines takes a range like 20-60.");
                         return null;
                     }
                     options.LineRange = (from, to);
@@ -324,14 +324,14 @@ internal sealed class QueryOptions
                         if (parsed && bodyAddress.Kind == AddressKind.Body)
                         {
                             // Offered by this very message until 4.6.1, and refused by the only reader of the value.
-                            error.WriteLine($"--body {given}: a body hash names bytes, not a call, so it cannot be followed into another run.");
+                            QueryCommand.Refuse(error, RefusalKinds.Usage, $"--body {given}: a body hash names bytes, not a call, so it cannot be followed into another run.");
                             error.WriteLine($"Two bodies are compared in one report: kronikol query diff <report> {given} b:<other>.");
                             return null;
                         }
 
                         if (!parsed || bodyAddress.Kind != AddressKind.Interaction)
                         {
-                            error.WriteLine($"--body {given}: not a call address.");
+                            QueryCommand.Refuse(error, RefusalKinds.Usage, $"--body {given}: not a call address.");
                             error.WriteLine("Give it the call to compare across the two runs, like s3/i47: an address the old report lists.");
                             return null;
                         }
@@ -360,7 +360,7 @@ internal sealed class QueryOptions
                     if (Next(arg) is not { } minRuns) return null;
                     if (!int.TryParse(minRuns, out var parsedMinRuns) || parsedMinRuns <= 0)
                     {
-                        error.WriteLine("--min-runs takes a positive number of runs: the bar the flaky and duration verdicts need, the report's HistoryMinRuns (default 5).");
+                        QueryCommand.Refuse(error, RefusalKinds.Usage, "--min-runs takes a positive number of runs: the bar the flaky and duration verdicts need, the report's HistoryMinRuns (default 5).");
                         return null;
                     }
                     options.MinRuns = parsedMinRuns;
@@ -369,7 +369,7 @@ internal sealed class QueryOptions
                     if (Next(arg) is not { } alternating) return null;
                     if (!int.TryParse(alternating, out var parsedAlternating) || parsedAlternating <= 0)
                     {
-                        error.WriteLine("--alternating-runs takes a positive number of runs: how far back a set of calls the scenario held counts as a known state, the report's HistoryAlternatingRuns (default 10).");
+                        QueryCommand.Refuse(error, RefusalKinds.Usage, "--alternating-runs takes a positive number of runs: how far back a set of calls the scenario held counts as a known state, the report's HistoryAlternatingRuns (default 10).");
                         return null;
                     }
                     options.AlternatingRuns = parsedAlternating;
@@ -378,7 +378,7 @@ internal sealed class QueryOptions
                     if (Next(arg) is not { } countRuns) return null;
                     if (!int.TryParse(countRuns, out var parsedCountRuns) || parsedCountRuns <= 0)
                     {
-                        error.WriteLine("--count-runs takes a positive number of runs: how many runs a changed call count must hold before it is behaviour, the report's HistoryCountRuns (default 2).");
+                        QueryCommand.Refuse(error, RefusalKinds.Usage, "--count-runs takes a positive number of runs: how many runs a changed call count must hold before it is behaviour, the report's HistoryCountRuns (default 2).");
                         return null;
                     }
                     options.CountRuns = parsedCountRuns;
@@ -388,7 +388,7 @@ internal sealed class QueryOptions
                     if (Next(arg) is not { } degradedBy) return null;
                     if (!double.TryParse(degradedBy, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsedDegradedBy) || parsedDegradedBy < 0)
                     {
-                        error.WriteLine("--degraded-by takes a factor: a run whose passing scenarios took this many times their usual is degraded, the report's HistoryDegradedBy (default 2.0; 0 switches it off).");
+                        QueryCommand.Refuse(error, RefusalKinds.Usage, "--degraded-by takes a factor: a run whose passing scenarios took this many times their usual is degraded, the report's HistoryDegradedBy (default 2.0; 0 switches it off).");
                         return null;
                     }
                     options.DegradedBy = parsedDegradedBy;
@@ -404,7 +404,7 @@ internal sealed class QueryOptions
                     if (Next(arg) is not { } window) return null;
                     if (!int.TryParse(window, out var parsedWindow) || parsedWindow <= 0)
                     {
-                        error.WriteLine("--window takes a positive number of runs: how far back the run is read against, the report's HistoryWindow (default 50).");
+                        QueryCommand.Refuse(error, RefusalKinds.Usage, "--window takes a positive number of runs: how far back the run is read against, the report's HistoryWindow (default 50).");
                         return null;
                     }
                     options.Window = parsedWindow;
@@ -418,7 +418,7 @@ internal sealed class QueryOptions
                 default:
                     if (arg.StartsWith("--", StringComparison.Ordinal))
                     {
-                        error.WriteLine("Unknown option: " + arg);
+                        QueryCommand.Refuse(error, RefusalKinds.Usage, "Unknown option: " + arg);
                         return null;
                     }
 

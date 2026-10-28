@@ -27,11 +27,16 @@ internal sealed record QueryEnvelope(string Command, string? Report, string? Kro
 /// </summary>
 internal static class QueryErrorEnvelope
 {
-    public static string Build(string command, string? report, string? kronikolVersion, int exit, string message)
+    public static string Build(string command, string? report, string? kronikolVersion, int exit, string message, string? kind = null,
+        string? refusal = null)
     {
         var compact = new JsonSerializerOptions { WriteIndented = false };
         var text = message.Replace("\r\n", "\n").TrimEnd('\n');
         var lines = text.Split('\n');
+        // The refusal's own line leads, when a site named it and something was said before it; the rest is the hint.
+        var first = refusal?.Replace("\r\n", "\n").Split('\n')[0];
+        if (first is not null && Array.IndexOf(lines, first) is > 0 and var at)
+            lines = [first, .. lines[..at], .. lines[(at + 1)..]];
 
         var envelope = new StringBuilder("{");
         void Member(string name, string value)
@@ -54,9 +59,12 @@ internal static class QueryErrorEnvelope
         Member("error", "{"
             + "\"exitCode\":" + exit.ToString(CultureInfo.InvariantCulture)
             + ",\"message\":" + JsonSerializer.Serialize(lines[0], compact)
-            // Everything the tool said after the first line is remediation - `Run 'kronikol query --help'`,
-            // the legal values for a flag - which is the half a caller can act on.
+            // Everything else the tool said is remediation - `Run 'kronikol query --help'`, the legal values for a
+            // flag, a note said before the refusal - which is the half a caller can act on.
             + ",\"hint\":" + JsonSerializer.Serialize(lines.Length > 1 ? string.Join("\n", lines[1..]) : null, compact)
+            // What the refusal was (#184 R3), so a program branches on it rather than on the prose; the exit code's own
+            // kind when the refusing site named none.
+            + ",\"kind\":" + JsonSerializer.Serialize(kind ?? RefusalKinds.ByExit(exit), compact)
             + "}");
 
         return envelope.Append("}\n").ToString();
@@ -324,7 +332,7 @@ internal sealed class QueryWriter
         // once should not answer the same mistake two different ways depending on where it is running.
         if (string.IsNullOrWhiteSpace(path))
         {
-            error.WriteLine($"{flag} was given an empty path.");
+            QueryCommand.Refuse(error, RefusalKinds.WriteFailed, $"{flag} was given an empty path.");
             return false;
         }
 
@@ -354,7 +362,7 @@ internal sealed class QueryWriter
     {
         if (string.IsNullOrWhiteSpace(path))
         {
-            error.WriteLine($"{flag} was given an empty path.");
+            QueryCommand.Refuse(error, RefusalKinds.WriteFailed, $"{flag} was given an empty path.");
             return false;
         }
 
@@ -408,7 +416,7 @@ internal sealed class QueryWriter
             or ArgumentException or NotSupportedException or System.Security.SecurityException;
 
     private static void ReportWriteFailure(string path, Exception exception, TextWriter error, string flag = "--out") =>
-        error.WriteLine($"Could not write {flag} {path}: {exception.Message}");
+        QueryCommand.Refuse(error, RefusalKinds.WriteFailed, $"Could not write {flag} {path}: {exception.Message}");
 
     /// <summary>
     /// Renders a paged listing and its footer in one place, so no command can page without saying so.

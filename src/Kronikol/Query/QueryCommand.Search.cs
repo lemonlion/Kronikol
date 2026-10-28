@@ -32,7 +32,7 @@ public static partial class QueryCommand
         // whole purpose is that grep never silently searches nothing, defeated by the emptiest input.
         if (targets.Length == 0)
         {
-            error.WriteLine("--in was given no targets.");
+            Refuse(error, RefusalKinds.Usage, "--in was given no targets.");
             error.WriteLine("Valid targets: " + string.Join(", ", GrepTargets));
             return null;
         }
@@ -40,7 +40,7 @@ public static partial class QueryCommand
         foreach (var target in targets)
             if (!GrepTargets.Contains(target, StringComparer.OrdinalIgnoreCase))
             {
-                error.WriteLine($"Unknown --in target: {target}");
+                Refuse(error, RefusalKinds.Usage, $"Unknown --in target: {target}");
                 error.WriteLine("Valid targets: " + string.Join(", ", GrepTargets));
                 return null;
             }
@@ -52,7 +52,7 @@ public static partial class QueryCommand
     {
         if (options.Positional.Count == 0)
         {
-            error.WriteLine("What are you looking for? kronikol query grep <report> \"4173\"");
+            Refuse(error, RefusalKinds.Usage, "What are you looking for? kronikol query grep <report> \"4173\"");
             return 2;
         }
 
@@ -232,7 +232,7 @@ public static partial class QueryCommand
     {
         if (options.Positional.Count < 2)
         {
-            error.WriteLine("Which two? kronikol query compare <report> s3 s7");
+            Refuse(error, RefusalKinds.Usage, "Which two? kronikol query compare <report> s3 s7");
             return 2;
         }
 
@@ -464,7 +464,7 @@ public static partial class QueryCommand
         if (leftHasIds != rightHasIds)
         {
             var (lacking, side) = leftHasIds ? (right, "new") : (left, "old");
-            error.WriteLine($"Cannot match scenarios: the {side} report ({Path.GetFileName(lacking.Path)}) has no stableIds — written before 3.0.47, or by hand — and the other has.");
+            Refuse(error, RefusalKinds.Unsupported, $"Cannot match scenarios: the {side} report ({Path.GetFileName(lacking.Path)}) has no stableIds — written before 3.0.47, or by hand — and the other has.");
             error.WriteLine("Matched by position, every scenario would read as new and gone. Re-run the older side with a current Kronikol, or compare two reports of the same vintage.");
             return 2;
         }
@@ -479,7 +479,7 @@ public static partial class QueryCommand
             var names = left.Scenarios.Select(s => s.Name).Intersect(right.Scenarios.Select(s => s.Name), StringComparer.Ordinal).Count();
             if (names > 0)
             {
-                error.WriteLine($"Cannot match scenarios: no stableId is shared by the two reports, yet {names} scenario name(s) are. "
+                Refuse(error, RefusalKinds.Unsupported, $"Cannot match scenarios: no stableId is shared by the two reports, yet {names} scenario name(s) are. "
                     + $"The ids were computed under different suites — old: {left.Suite ?? "(none recorded)"}, new: {right.Suite ?? "(none recorded)"}.");
                 error.WriteLine("Matched by stableId, every scenario would read as new and gone. Give both runs the same SuiteName, or compare two reports of one suite.");
                 return 2;
@@ -512,7 +512,7 @@ public static partial class QueryCommand
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or System.Text.Json.JsonException)
         {
-            error.WriteLine($"Could not read {resolved}: {exception.Message}");
+            Refuse(error, RefusalKinds.Unreadable, $"Could not read {resolved}: {exception.Message}");
             return null;
         }
 
@@ -539,7 +539,7 @@ public static partial class QueryCommand
         {
             case RetainedRunOutcome.Found when string.Equals(Path.GetFullPath(kept!), Path.GetFullPath(given.Path), StringComparison.OrdinalIgnoreCase):
                 var alias = string.Equals(resolvedName, wanted, StringComparison.Ordinal) ? "" : $" ({resolvedName})";
-                error.WriteLine($"{wanted} is the run the report already is{alias}; name another: previous, last-failed, a run id or a folder under runs/.");
+                Refuse(error, RefusalKinds.Usage, $"{wanted} is the run the report already is{alias}; name another: previous, last-failed, a run id or a folder under runs/.");
                 return null;
             case RetainedRunOutcome.Found:
                 return kept;
@@ -591,7 +591,7 @@ public static partial class QueryCommand
     {
         if (options.Positional.Count == 0 && !options.Baseline && options.BaselineRun is null)
         {
-            error.WriteLine("Diff takes two reports (kronikol query diff <old.json> <new.json> [--body s3/i47])");
+            Refuse(error, RefusalKinds.Usage, "Diff takes two reports (kronikol query diff <old.json> <new.json> [--body s3/i47])");
             error.WriteLine("or two bodies in one report (kronikol query diff <report> s3/i47 s7/i47).");
             error.WriteLine("Or compare against last-green: kronikol query diff <report> --baseline.");
             error.WriteLine("Or against a run kept under <reports>/runs/: kronikol query diff <report> --baseline-run last-failed.");
@@ -600,7 +600,7 @@ public static partial class QueryCommand
 
         if (options.Baseline && options.BaselineRun is not null)
         {
-            error.WriteLine("Pass one of --baseline and --baseline-run: each names the old side of the diff.");
+            Refuse(error, RefusalKinds.Usage, "Pass one of --baseline and --baseline-run: each names the old side of the diff.");
             return 2;
         }
 
@@ -608,7 +608,7 @@ public static partial class QueryCommand
         // address - would be one of two things read and one ignored. Refused, not half-answered.
         if (options.BaselineRun is not null && options.Positional.Count > 0)
         {
-            error.WriteLine($"--baseline-run names the old side itself; {options.Positional[0]} cannot be given beside it (a body across the two runs is --body s3/i47).");
+            Refuse(error, RefusalKinds.Usage, $"--baseline-run names the old side itself; {options.Positional[0]} cannot be given beside it (a body across the two runs is --body s3/i47).");
             return 2;
         }
 
@@ -616,7 +616,7 @@ public static partial class QueryCommand
         // two addresses it diffed the bodies and dropped the flag. Both at exit 0.
         if (options.Baseline && options.Positional.Count > 0)
         {
-            error.WriteLine($"--baseline names the old side itself; {options.Positional[0]} cannot be given beside it (a body across the two runs is --body s3/i47).");
+            Refuse(error, RefusalKinds.Usage, $"--baseline names the old side itself; {options.Positional[0]} cannot be given beside it (a body across the two runs is --body s3/i47).");
             return 2;
         }
 
@@ -628,13 +628,13 @@ public static partial class QueryCommand
         {
             if (options.BodyAddress is not null || options.Body)
             {
-                error.WriteLine("--body names a call to compare across two runs (diff <old.json> <new.json> --body s3/i47), so beside two addresses in one report it is refused rather than ignored.");
+                Refuse(error, RefusalKinds.Usage, "--body names a call to compare across two runs (diff <old.json> <new.json> --body s3/i47), so beside two addresses in one report it is refused rather than ignored.");
                 return 2;
             }
 
             if (options.Positional.Count > 2)
             {
-                error.WriteLine($"diff compares two bodies; {options.Positional[2]} would be ignored, so it is refused. Compare it with one of them in a call of its own.");
+                Refuse(error, RefusalKinds.Usage, $"diff compares two bodies; {options.Positional[2]} would be ignored, so it is refused. Compare it with one of them in a call of its own.");
                 return 2;
             }
 
@@ -645,7 +645,7 @@ public static partial class QueryCommand
         if (options.Positional.Count > 1)
         {
             var extra = options.Positional[1];
-            error.WriteLine(Address.TryParse(extra, out var mistaken) && mistaken.Kind == AddressKind.Interaction && options.BodyAddress is null
+            Refuse(error, RefusalKinds.Usage, Address.TryParse(extra, out var mistaken) && mistaken.Kind == AddressKind.Interaction && options.BodyAddress is null
                 ? $"diff compares two reports, or two bodies in one report; {extra} beside two reports would be ignored, so it is refused. One call across the two runs is: {QueryOptions.Shell(["kronikol", "query", "diff", options.File!, options.Positional[0], "--body", extra])}"
                 : $"diff compares two reports; {extra} would be ignored, so it is refused.");
             return 2;
@@ -655,7 +655,7 @@ public static partial class QueryCommand
         {
             if (options.Body)
             {
-                error.WriteLine("--body names the call to compare across the two runs: --body s3/i47, an address the old report lists. On its own it would be ignored, so it is refused.");
+                Refuse(error, RefusalKinds.Usage, "--body names the call to compare across the two runs: --body s3/i47, an address the old report lists. On its own it would be ignored, so it is refused.");
                 return 2;
             }
 
@@ -663,7 +663,7 @@ public static partial class QueryCommand
             // Paging rows that render under five headings is a feature, not a fix (plans/DIFF_BODY_CALL_PAIRING_PLAN.md Q9).
             if (options.Given.FirstOrDefault(flag => flag is "--offset" or "--limit") is { } paging)
             {
-                error.WriteLine($"The run diff does not read {paging}, so it is refused rather than ignored: it prints every change at once, and --json lists every row uncut.");
+                Refuse(error, RefusalKinds.Usage, $"The run diff does not read {paging}, so it is refused rather than ignored: it prints every change at once, and --json lists every row uncut.");
                 error.WriteLine("--offset and --limit page a body diff: diff <old.json> <new.json> --body s3/i47.");
                 return 2;
             }

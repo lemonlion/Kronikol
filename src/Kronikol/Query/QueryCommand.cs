@@ -74,9 +74,10 @@ public static partial class QueryCommand
         }
 
         // Under --json every failure has to reach stdout as an envelope too, and the failures are raised
-        // by forty-odd call sites that each write a sentence to `error` and return a code. Rather than
-        // rewrite all of them, the error writer is teed: stderr still gets the prose, and whatever was
-        // said is available here to put in `error.message` if the call ends non-zero. Asked for as a flag
+        // by many call sites that each write a sentence to `error` and return a code. The error writer is
+        // teed: stderr still gets the prose, and whatever was said is available here for `error.message` and
+        // `error.hint` if the call ends non-zero; since 5.25.0 each refusal also names its kind and its own
+        // line through Refuse, so the message is the refusal's and not a note said before it. Asked for as a flag
         // rather than inferred, because `--json` is parsed by QueryOptions further down and a wrapper
         // needs the envelope even when the failure is the parse itself.
         var wantsJson = args.Any(a => a is "--json");
@@ -86,7 +87,7 @@ public static partial class QueryCommand
         if (exitCode != 0 && captured is not null)
         {
             @out.Write(QueryErrorEnvelope.Build(
-                args[0], _lastResolvedReport, _lastKronikolVersion, exitCode, captured.ToString()));
+                args[0], _lastResolvedReport, _lastKronikolVersion, exitCode, captured.ToString(), _refusalKind, _refusalMessage));
         }
 
         return exitCode;
@@ -96,6 +97,18 @@ public static partial class QueryCommand
     [ThreadStatic] private static string? _lastResolvedReport;
 
     [ThreadStatic] private static string? _lastKronikolVersion;
+
+    /// <summary>
+    /// The kind of the first refusal this call made (#184 R3), for <c>error.kind</c> in the <c>--json</c> envelope; null
+    /// when no site named one, and the envelope then takes the exit code's (<see cref="RefusalKinds.ByExit"/>).
+    /// </summary>
+    [ThreadStatic] private static string? _refusalKind;
+
+    /// <summary>
+    /// The first line of that refusal: the envelope's <c>message</c>, where the first line written to the error writer
+    /// can be a note said on the way (two reports in one folder, a pairing problem) before the refusal itself.
+    /// </summary>
+    [ThreadStatic] private static string? _refusalMessage;
 
     /// <summary>Where the invocation runs from, for the verbs that look around it; null means the process's own.</summary>
     [ThreadStatic] private static string? _workingDirectory;
@@ -107,6 +120,8 @@ public static partial class QueryCommand
     {
         _lastResolvedReport = null;
         _lastKronikolVersion = null;
+        _refusalKind = null;
+        _refusalMessage = null;
 
         var command = args[0];
 
@@ -125,7 +140,7 @@ public static partial class QueryCommand
             // One verb answers without a report: the ledger holds the run a re-run overwrote (#81).
             if (command is not "history")
             {
-                error.WriteLine("No report given. Pass a TestRunReport.json or TestRunReport.krkl, or a directory holding one.");
+                Refuse(error, RefusalKinds.Usage, "No report given. Pass a TestRunReport.json or TestRunReport.krkl, or a directory holding one.");
                 return 2;
             }
 
@@ -178,7 +193,7 @@ public static partial class QueryCommand
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
-            error.WriteLine($"Could not read {resolved}: {exception.Message}");
+            Refuse(error, RefusalKinds.Unreadable, $"Could not read {resolved}: {exception.Message}");
             return 1;
         }
         catch (System.Text.Json.JsonException exception)
@@ -242,7 +257,7 @@ public static partial class QueryCommand
 
         if (options.Json && !JsonCommands.Contains(command, StringComparer.Ordinal))
         {
-            error.WriteLine($"--json is not available on '{command}'. It answers: " + string.Join(", ", JsonCommands) + ".");
+            Refuse(error, RefusalKinds.Usage, $"--json is not available on '{command}'. It answers: " + string.Join(", ", JsonCommands) + ".");
             error.WriteLine("The rest print prose - a step tree, a payload, a trace - that has no honest object form.");
             return 2;
         }
@@ -344,7 +359,7 @@ public static partial class QueryCommand
 
     private static int Unknown(string command, TextWriter error)
     {
-        error.WriteLine($"Unknown query command: {command}");
+        Refuse(error, RefusalKinds.Usage, $"Unknown query command: {command}");
         error.WriteLine("Run 'kronikol query --help' for the list.");
         return 2;
     }
@@ -447,7 +462,7 @@ public static partial class QueryCommand
 
         if (!Directory.Exists(path))
         {
-            error.WriteLine($"No such file or directory: {path}");
+            Refuse(error, RefusalKinds.NoReport, $"No such file or directory: {path}");
             return null;
         }
 
@@ -464,12 +479,12 @@ public static partial class QueryCommand
         switch (found.Length)
         {
             case 0:
-                error.WriteLine($"No TestRunReport.json or TestRunReport.krkl under {path}.");
+                Refuse(error, RefusalKinds.NoReport, $"No TestRunReport.json or TestRunReport.krkl under {path}.");
                 return null;
             case 1:
                 return found[0];
             default:
-                error.WriteLine($"Several reports under {path} — name the one you mean:");
+                Refuse(error, RefusalKinds.Ambiguous, $"Several reports under {path} — name the one you mean:");
                 foreach (var file in found.Take(MaxReportsListed))
                     error.WriteLine("  " + DescribeReport(file));
                 // A download of a sharded run's artifacts can hold more than the list shows: say so, or it reads as all.
@@ -599,7 +614,7 @@ public static partial class QueryCommand
             return null;
         }
 
-        error.WriteLine($"No baseline to compare against. Looked for {Path.Combine(folder, "TestRunReport.json")} and its .krkl, and $KRONIKOL_BASELINE is not set.");
+        Refuse(error, RefusalKinds.NotFound, $"No baseline to compare against. Looked for {Path.Combine(folder, "TestRunReport.json")} and its .krkl, and $KRONIKOL_BASELINE is not set.");
         error.WriteLine("Point $KRONIKOL_BASELINE at a report (or a directory holding one), name the older report (kronikol query diff <old.json> <new.json>), or a run kept under runs/ (kronikol query diff <report> --baseline-run last-failed).");
         return null;
     }

@@ -16,7 +16,7 @@ public static partial class QueryCommand
     {
         if (options.Positional.Count > 0)
         {
-            error.WriteLine($"sizes measures the whole file; it has no per-scenario form ({options.Positional[0]} was given).");
+            Refuse(error, RefusalKinds.Usage, $"sizes measures the whole file; it has no per-scenario form ({options.Positional[0]} was given).");
             error.WriteLine("For one scenario's calls and the bytes they carry: `interactions <address> --group-by service`.");
             return 2;
         }

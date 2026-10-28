@@ -27,7 +27,7 @@ public static partial class QueryCommand
             || !Address.TryParse(options.Positional[0], out var first)
             || !Address.TryParse(options.Positional[1], out var second))
         {
-            error.WriteLine("Body diff takes two addresses: kronikol query diff <report> s3/i47 s7/i47 (or b:hashes).");
+            Refuse(error, RefusalKinds.Usage, "Body diff takes two addresses: kronikol query diff <report> s3/i47 s7/i47 (or b:hashes).");
             return 2;
         }
 
@@ -35,7 +35,7 @@ public static partial class QueryCommand
             || second.Kind is AddressKind.Scenario or AddressKind.StableId or AddressKind.TestId)
         {
             // An agent will type exactly this; the error must teach the right verb, not just refuse.
-            error.WriteLine($"A scenario address names no body — 'compare {options.Positional[0]} {options.Positional[1]}' is the command for two scenarios.");
+            Refuse(error, RefusalKinds.Usage, $"A scenario address names no body — 'compare {options.Positional[0]} {options.Positional[1]}' is the command for two scenarios.");
             error.WriteLine("diff takes two bodies: s3/i47 s7/i47, or b:hashes ('interactions' prints both on every row).");
             return 2;
         }
@@ -61,7 +61,7 @@ public static partial class QueryCommand
             case AddressKind.Body:
                 if (!index.Bodies.TryGetValue(address.BodyHash!, out var entry))
                 {
-                    error.WriteLine($"No body {address.BodyHash} in this report.");
+                    Refuse(error, RefusalKinds.NotFound, $"No body {address.BodyHash} in this report.");
                     return false;
                 }
                 body = new BodyRef(address.BodyHash!, address.BodyHash!, entry.Length, PayloadReader.Read(index, entry.First));
@@ -70,25 +70,25 @@ public static partial class QueryCommand
             case AddressKind.Interaction:
                 if (index.Scenario(address.Scenario) is not { } scenario)
                 {
-                    error.WriteLine($"No scenario s{address.Scenario} — the report has {index.Scenarios.Count}.");
+                    Refuse(error, RefusalKinds.NotFound, $"No scenario s{address.Scenario} — the report has {index.Scenarios.Count}.");
                     return false;
                 }
                 var interaction = scenario.Interactions.FirstOrDefault(i => i.Ordinal == address.Interaction);
                 if (interaction is null)
                 {
-                    error.WriteLine($"No interaction i{address.Interaction} in {scenario.Address} — it has {scenario.Interactions.Count}.");
+                    Refuse(error, RefusalKinds.NotFound, $"No interaction i{address.Interaction} in {scenario.Address} — it has {scenario.Interactions.Count}.");
                     return false;
                 }
                 if (interaction.BodyHash is not { } hash)
                 {
-                    error.WriteLine($"{address} carries no body — 'interactions {scenario.Address}' shows which calls do.");
+                    Refuse(error, RefusalKinds.NotFound, $"{address} carries no body — 'interactions {scenario.Address}' shows which calls do.");
                     return false;
                 }
                 body = new BodyRef(address.ToString(), hash, interaction.BodyLength, PayloadReader.Read(index, interaction.Body));
                 return true;
 
             default:
-                error.WriteLine($"{address} does not name a body — use s3/i47 or b:hash.");
+                Refuse(error, RefusalKinds.Usage, $"{address} does not name a body — use s3/i47 or b:hash.");
                 return false;
         }
     }
@@ -105,7 +105,7 @@ public static partial class QueryCommand
     {
         if (!Address.TryParse(addressText, out var address) || address.Kind != AddressKind.Interaction)
         {
-            error.WriteLine("--body takes an interaction address like s3/i47, resolved in the old report.");
+            Refuse(error, RefusalKinds.Usage, "--body takes an interaction address like s3/i47, resolved in the old report.");
             return 2;
         }
 
@@ -115,7 +115,7 @@ public static partial class QueryCommand
 
         if (left.Scenario(address.Scenario) is not { } oldScenario)
         {
-            error.WriteLine($"No scenario s{address.Scenario} in {leftLabel} — it has {left.Scenarios.Count}.");
+            Refuse(error, RefusalKinds.NotFound, $"No scenario s{address.Scenario} in {leftLabel} — it has {left.Scenarios.Count}.");
             return 2;
         }
 
@@ -141,14 +141,14 @@ public static partial class QueryCommand
         }
         else if (candidates.Count == 0)
         {
-            error.WriteLine($"No scenario in {rightLabel} with stableId sid:{oldScenario.StableId} ({QueryWriter.OneLine(oldScenario.Name, 60)}).");
+            Refuse(error, RefusalKinds.NotFound, $"No scenario in {rightLabel} with stableId sid:{oldScenario.StableId} ({QueryWriter.OneLine(oldScenario.Name, 60)}).");
             return 2;
         }
         else if (unidentified)
         {
             // By position there is no first-holder fallback: the first scenario of the other report is
             // another test, not this one run once more.
-            error.WriteLine($"No scenario in {rightLabel} at {oldScenario.Address}'s position: neither report has stableIds, so scenarios are matched by position, and {rightLabel} has {candidates.Count}.");
+            Refuse(error, RefusalKinds.NotFound, $"No scenario in {rightLabel} at {oldScenario.Address}'s position: neither report has stableIds, so scenarios are matched by position, and {rightLabel} has {candidates.Count}.");
             return 2;
         }
         else
@@ -161,14 +161,14 @@ public static partial class QueryCommand
         var oldInteraction = oldScenario.Interactions.FirstOrDefault(i => i.Ordinal == address.Interaction);
         if (oldInteraction is null)
         {
-            error.WriteLine($"No interaction i{address.Interaction} in {leftLabel} {oldScenario.Address} — it has {oldScenario.Interactions.Count}.");
+            Refuse(error, RefusalKinds.NotFound, $"No interaction i{address.Interaction} in {leftLabel} {oldScenario.Address} — it has {oldScenario.Interactions.Count}.");
             return 2;
         }
 
         var oldAddress = oldInteraction.Address(oldScenario);
         if (oldInteraction.BodyHash is not { } oldHash)
         {
-            error.WriteLine($"{leftLabel} {oldAddress} carries no body — 'interactions {oldScenario.Address}' shows which calls do.");
+            Refuse(error, RefusalKinds.NotFound, $"{leftLabel} {oldAddress} carries no body — 'interactions {oldScenario.Address}' shows which calls do.");
             return 2;
         }
 
@@ -187,7 +187,7 @@ public static partial class QueryCommand
         var newAddress = newInteraction.Address(match);
         if (newInteraction.BodyHash is not { } newHash)
         {
-            error.WriteLine($"{rightLabel} {newAddress} carries no body, so there is nothing to compare {leftLabel} {oldAddress} with.");
+            Refuse(error, RefusalKinds.NotFound, $"{rightLabel} {newAddress} carries no body, so there is nothing to compare {leftLabel} {oldAddress} with.");
             return 2;
         }
 
@@ -251,7 +251,7 @@ public static partial class QueryCommand
         var call = CallPairing.Describe(oldInteraction, pairing.Target);
         var head = $"No call in {rightLabel} {match.Address} matches {leftLabel} {oldAddress}, {call}: ";
         var calls = CallPairing.Describe(oldInteraction, "");
-        error.WriteLine(head + pairing.Reason switch
+        Refuse(error, RefusalKinds.NotFound, head + pairing.Reason switch
         {
             CallPairing.Refusal.NoResponse =>
                 $"the call it pairs with, {pairing.PartnerCall!.Address(match)}, has no response recorded.",
@@ -318,7 +318,7 @@ public static partial class QueryCommand
         {
             // On stderr, not through the writer: nothing is flushed on a non-zero exit, so this message
             // was written into a buffer that was then thrown away - the failure reported nothing at all.
-            error.WriteLine("A body could not be read back from the report.");
+            Refuse(error, RefusalKinds.Unreadable, "A body could not be read back from the report.");
             return 1;
         }
 

@@ -30,7 +30,7 @@ internal static class ReportGate
     {
         if (!index.HasFeatures)
         {
-            error.WriteLine(
+            QueryCommand.Refuse(error, RefusalKinds.NoReport,
                 $"{path} is not a Kronikol report: it has no `features` array at the root. "
                 + "Point at a TestRunReport.json or TestRunReport.krkl, or the directory holding one.");
             return 1;
@@ -44,7 +44,7 @@ internal static class ReportGate
         // 3 is the JSON of a compressed report file, whose empty keys may be left out (plans/REPORT_FORMAT_PLAN.md 4.2).
         if (index.FormatVersion is { } format && !Kronikol.Reports.ReportPayloads.Reads(format))
         {
-            error.WriteLine(format == ReportScanner.UnreadableVersion
+            QueryCommand.Refuse(error, RefusalKinds.Unreadable, format == ReportScanner.UnreadableVersion
                 ? $"{path} declares a formatVersion that is not a number. It is not a Kronikol report this tool can read."
                 : $"{path} declares formatVersion {format}; this tool understands {Kronikol.Reports.ReportPayloads.ReadVersions}. Upgrade Kronikol.Tool.");
             return 1;
@@ -52,7 +52,7 @@ internal static class ReportGate
 
         if (index.MergeableFormatVersion is { } mergeable and not Kronikol.Reports.Merge.MergeableReportReader.MergeableFormatVersion)
         {
-            error.WriteLine(mergeable == ReportScanner.UnreadableVersion
+            QueryCommand.Refuse(error, RefusalKinds.Unreadable, mergeable == ReportScanner.UnreadableVersion
                 ? $"{path} declares a mergeableFormatVersion that is not a number. It is not a mergeable report this tool can read."
                 : $"{path} declares mergeableFormatVersion {mergeable}, which this tool does not understand. Upgrade Kronikol.Tool.");
             return 1;

@@ -37,6 +37,7 @@ internal static class RetainedRunResolver
         // runs/ and this one has not written yet, which is exactly when the run before is asked for.
         var lookup = new StringWriter();
         string directory;
+        var refusedBefore = QueryCommand.RefusalSoFar;
         string? topReport = QueryCommand.ResolveReport(reportArgument, lookup);
         if (topReport is not null)
         {
@@ -44,6 +45,8 @@ internal static class RetainedRunResolver
         }
         else if (Directory.Exists(reportArgument) && ReportFolders.RetainedRuns(Path.GetFullPath(reportArgument)).Count > 0)
         {
+            // The lookup's refusal was a question asked on the way, not this call's: a directory of kept runs answers it.
+            QueryCommand.RefusalSoFar = refusedBefore;
             directory = Path.GetFullPath(reportArgument);
         }
         else
@@ -80,7 +83,7 @@ internal static class RetainedRunResolver
 
         if (matches.Count > 1)
         {
-            error.WriteLine($"{matches.Count} runs kept under {directory} answer to {wanted} — name one by its folder:");
+            QueryCommand.Refuse(error, RefusalKinds.Ambiguous, $"{matches.Count} runs kept under {directory} answer to {wanted} — name one by its folder:");
             foreach (var match in matches)
                 error.WriteLine("  " + Describe(match));
             return RetainedRunOutcome.Refused;
@@ -112,8 +115,8 @@ internal static class RetainedRunResolver
             ? Path.GetFullPath(reportArgument)
             : QueryCommand.ResolveReport(reportArgument, TextWriter.Null) is { } top ? Path.GetDirectoryName(Path.GetFullPath(top))! : reportArgument;
         var retained = ReportFolders.RetainedRuns(directory);
-        error.WriteLine($"run {wanted} is not retained under {directory} (retained: {(retained.Count == 0 ? "none" : string.Join(", ", retained.Select(r => r.Manifest.Run)))}).");
-        error.WriteLine($"The ledger still has its results, the stored text of each error included: kronikol query history --run {wanted}");
+        QueryCommand.Refuse(error, RefusalKinds.NotFound, $"run {wanted} is not retained under {directory} (retained: {(retained.Count == 0 ? "none" : string.Join(", ", retained.Select(r => r.Manifest.Run)))}).");
+        QueryCommand.Refuse(error, RefusalKinds.NotFound, $"The ledger still has its results, the stored text of each error included: kronikol query history --run {wanted}");
     }
 
     private static string Describe(Candidate candidate) =>

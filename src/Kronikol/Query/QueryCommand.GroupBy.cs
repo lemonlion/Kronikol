@@ -41,19 +41,19 @@ public static partial class QueryCommand
         foreach (var dim in dims)
             if (!GroupByDimensions.Contains(dim, StringComparer.OrdinalIgnoreCase))
             {
-                error.WriteLine($"Unknown dimension: {dim}");
+                Refuse(error, RefusalKinds.Usage, $"Unknown dimension: {dim}");
                 error.WriteLine("Valid dimensions: " + string.Join(", ", GroupByDimensions));
                 return 2;
             }
         if (dims.Length == 0)
         {
-            error.WriteLine("--group-by takes a comma list of dimensions: " + string.Join(", ", GroupByDimensions));
+            Refuse(error, RefusalKinds.Usage, "--group-by takes a comma list of dimensions: " + string.Join(", ", GroupByDimensions));
             return 2;
         }
         // A bucket's JSON key is an object of its dimensions, which holds each once: a repeat threw there.
         if (dims.GroupBy(d => d, StringComparer.OrdinalIgnoreCase).FirstOrDefault(g => g.Count() > 1) is { } twice)
         {
-            error.WriteLine($"--group-by: {twice.Key} is named twice; each dimension is one column of a bucket, so name it once.");
+            Refuse(error, RefusalKinds.Usage, $"--group-by: {twice.Key} is named twice; each dimension is one column of a bucket, so name it once.");
             return 2;
         }
 

@@ -15,7 +15,7 @@ public static partial class QueryCommand
     {
         if (options.Group && options.GroupBy is not null)
         {
-            error.WriteLine("--group folds adjacent identical calls; --group-by buckets by dimensions — they don't compose. Pick one.");
+            Refuse(error, RefusalKinds.Usage, "--group folds adjacent identical calls; --group-by buckets by dimensions — they don't compose. Pick one.");
             return 2;
         }
         if (!PhaseIsValid(options, error))
@@ -68,7 +68,7 @@ public static partial class QueryCommand
         // is the stronger wrong signal of the two.
         if (options.Sort is { Length: > 0 })
         {
-            error.WriteLine("interactions lists calls in capture order and cannot sort them.");
+            Refuse(error, RefusalKinds.Usage, "interactions lists calls in capture order and cannot sort them.");
             error.WriteLine("Use --group-by (then --sort calls|duration|errors), or `services --sort duration` for per-service timings.");
             return 2;
         }
@@ -264,7 +264,7 @@ public static partial class QueryCommand
     {
         if (options.Positional.Count == 0 || !Address.TryParse(options.Positional[0], out var address))
         {
-            error.WriteLine("Which interaction? Pass an address like s3/i47 — 'interactions s3' lists them.");
+            Refuse(error, RefusalKinds.Usage, "Which interaction? Pass an address like s3/i47 — 'interactions s3' lists them.");
             return 2;
         }
 
@@ -272,7 +272,7 @@ public static partial class QueryCommand
         // the answer about both.
         if (options.Positional.Count > 1)
         {
-            error.WriteLine($"http describes one call; {options.Positional[1]} would be ignored, so it is refused. Ask for each call on its own.");
+            Refuse(error, RefusalKinds.Usage, $"http describes one call; {options.Positional[1]} would be ignored, so it is refused. Ask for each call on its own.");
             return 2;
         }
 
@@ -284,7 +284,7 @@ public static partial class QueryCommand
         {
             if (!index.Bodies.TryGetValue(address.BodyHash!, out var carried))
             {
-                error.WriteLine($"No body {address.BodyHash} in this report.");
+                Refuse(error, RefusalKinds.NotFound, $"No body {address.BodyHash} in this report.");
                 return 2;
             }
 
@@ -297,7 +297,7 @@ public static partial class QueryCommand
 
             if (!Address.TryParse(carried.Occurrences[0], out address))
             {
-                error.WriteLine($"Could not read {carried.Occurrences[0]} back as an address.");
+                Refuse(error, RefusalKinds.Unreadable, $"Could not read {carried.Occurrences[0]} back as an address.");
                 return 1;
             }
 
@@ -307,20 +307,20 @@ public static partial class QueryCommand
 
         if (address.Kind != AddressKind.Interaction)
         {
-            error.WriteLine("Which interaction? Pass an address like s3/i47 — 'interactions s3' lists them.");
+            Refuse(error, RefusalKinds.Usage, "Which interaction? Pass an address like s3/i47 — 'interactions s3' lists them.");
             return 2;
         }
 
         if (index.Scenario(address.Scenario) is not { } scenario)
         {
-            error.WriteLine($"No scenario s{address.Scenario}.");
+            Refuse(error, RefusalKinds.NotFound, $"No scenario s{address.Scenario}.");
             return 2;
         }
 
         var interaction = scenario.Interactions.FirstOrDefault(i => i.Ordinal == address.Interaction);
         if (interaction is null)
         {
-            error.WriteLine($"No interaction i{address.Interaction} in {scenario.Address} — it has {scenario.Interactions.Count}.");
+            Refuse(error, RefusalKinds.NotFound, $"No interaction i{address.Interaction} in {scenario.Address} — it has {scenario.Interactions.Count}.");
             return 2;
         }
 
@@ -394,7 +394,7 @@ public static partial class QueryCommand
     {
         if (options.Positional.Count == 0 || !Address.TryParse(options.Positional[0], out var given))
         {
-            error.WriteLine("Which body? Pass a content address like b:4bdea521 — listings print them beside each call.");
+            Refuse(error, RefusalKinds.Usage, "Which body? Pass a content address like b:4bdea521 — listings print them beside each call.");
             return 2;
         }
 
@@ -411,20 +411,20 @@ public static partial class QueryCommand
             // languages about the same call.
             if (index.Scenario(given.Scenario) is not { } holder)
             {
-                error.WriteLine($"No scenario s{given.Scenario}.");
+                Refuse(error, RefusalKinds.NotFound, $"No scenario s{given.Scenario}.");
                 return 2;
             }
 
             var call = holder.Interactions.FirstOrDefault(i => i.Ordinal == given.Interaction);
             if (call is null)
             {
-                error.WriteLine($"No interaction i{given.Interaction} in {holder.Address} — it has {holder.Interactions.Count}.");
+                Refuse(error, RefusalKinds.NotFound, $"No interaction i{given.Interaction} in {holder.Address} — it has {holder.Interactions.Count}.");
                 return 2;
             }
 
             if (call.BodyHash is null)
             {
-                error.WriteLine($"{given} carried no body.");
+                Refuse(error, RefusalKinds.NotFound, $"{given} carried no body.");
                 if (Counterpart(holder, call) is { Other.BodyHash: not null } pair)
                     error.WriteLine($"Its {pair.Role} {pair.Other.Address(holder)} did: {pair.Other.BodyHash}.");
                 return 2;
@@ -434,13 +434,13 @@ public static partial class QueryCommand
         }
         else
         {
-            error.WriteLine("Which body? Pass a content address like b:4bdea521, or the address of a call — listings print both.");
+            Refuse(error, RefusalKinds.Usage, "Which body? Pass a content address like b:4bdea521, or the address of a call — listings print both.");
             return 2;
         }
 
         if (!index.Bodies.TryGetValue(hash, out var entry))
         {
-            error.WriteLine($"No body {hash} in this report.");
+            Refuse(error, RefusalKinds.NotFound, $"No body {hash} in this report.");
             return 2;
         }
 
@@ -472,7 +472,7 @@ public static partial class QueryCommand
     {
         if (body is null)
         {
-            error.WriteLine("The body could not be read back from the report.");
+            Refuse(error, RefusalKinds.Unreadable, "The body could not be read back from the report.");
             return 1;
         }
 
@@ -538,7 +538,7 @@ public static partial class QueryCommand
     {
         if (!PathEngine.TryParse(jsonPath, out var segments, out var parseError))
         {
-            error.WriteLine($"Bad path: {parseError}");
+            Refuse(error, RefusalKinds.Usage, $"Bad path: {parseError}");
             error.WriteLine("Grammar: $.name · [2] · [*] · ['key.with.dots'] · .length() (last segment only). Quote the whole path — [*] is shell-active.");
             return 2;
         }
@@ -600,7 +600,7 @@ public static partial class QueryCommand
         if (options.Positional.Count == 0 || !Address.TryParse(options.Positional[0], out var address)
                                           || address.Kind is not (AddressKind.Diagram or AddressKind.Note))
         {
-            error.WriteLine("Which note? Pass s3/d0 to list a diagram's notes, or s3/d0/n12 for one.");
+            Refuse(error, RefusalKinds.Usage, "Which note? Pass s3/d0 to list a diagram's notes, or s3/d0/n12 for one.");
             return 2;
         }
 
@@ -622,7 +622,7 @@ public static partial class QueryCommand
         var note = notes.FirstOrDefault(n => n.Index == address.Note);
         if (note.Text is null)
         {
-            error.WriteLine($"No note n{address.Note} — that diagram has {notes.Count}.");
+            Refuse(error, RefusalKinds.NotFound, $"No note n{address.Note} — that diagram has {notes.Count}.");
             return 2;
         }
 
@@ -652,7 +652,7 @@ public static partial class QueryCommand
         {
             if (options.Out is null)
             {
-                error.WriteLine("Which diagram? Pass s3/d0 --out FILE for one, s3 to list a scenario's, s3 --out DIR to write them, or --out DIR alone for every diagram in the run.");
+                Refuse(error, RefusalKinds.Usage, "Which diagram? Pass s3/d0 --out FILE for one, s3 to list a scenario's, s3 --out DIR to write them, or --out DIR alone for every diagram in the run.");
                 return 2;
             }
 
@@ -662,7 +662,7 @@ public static partial class QueryCommand
         if (!Address.TryParse(options.Positional[0], out var address)
             || address.Kind is not (AddressKind.Diagram or AddressKind.Scenario or AddressKind.StableId or AddressKind.TestId))
         {
-            error.WriteLine("Which diagram? Pass s3/d0, or s3 to list a scenario's diagrams.");
+            Refuse(error, RefusalKinds.Usage, "Which diagram? Pass s3/d0, or s3 to list a scenario's diagrams.");
             return 2;
         }
 
@@ -683,7 +683,7 @@ public static partial class QueryCommand
         {
             // A single diagram has been measured at 663 KB — around 166,000 tokens, more than most context
             // windows hold. It is available, but never by accident.
-            error.WriteLine($"{scenario.Address}/d{address.Diagram} is {QueryWriter.Size(size)} of PlantUML — printing it would fill a context window.");
+            Refuse(error, RefusalKinds.Usage, $"{scenario.Address}/d{address.Diagram} is {QueryWriter.Size(size)} of PlantUML — printing it would fill a context window.");
             error.WriteLine($"Pass --out FILE to save it, or use 'flow {scenario.Address}' for the same story in a couple of kilobytes.");
             return 2;
         }
@@ -731,12 +731,12 @@ public static partial class QueryCommand
     {
         if (string.IsNullOrWhiteSpace(directory))
         {
-            error.WriteLine("--out was given an empty path.");
+            Refuse(error, RefusalKinds.WriteFailed, "--out was given an empty path.");
             return 1;
         }
         if (File.Exists(directory))
         {
-            error.WriteLine($"--out names a file, {directory}: with a scenario address, or none, it names a directory to write sN-dK.puml files into.");
+            Refuse(error, RefusalKinds.Usage, $"--out names a file, {directory}: with a scenario address, or none, it names a directory to write sN-dK.puml files into.");
             return 2;
         }
 
@@ -746,7 +746,7 @@ public static partial class QueryCommand
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
         {
-            error.WriteLine($"--out {directory} could not be made a directory: {exception.Message}");
+            Refuse(error, RefusalKinds.WriteFailed, $"--out {directory} could not be made a directory: {exception.Message}");
             return 1;
         }
 
@@ -789,14 +789,14 @@ public static partial class QueryCommand
 
         if (index.Scenario(address.Scenario) is not { } found)
         {
-            error.WriteLine($"No scenario s{address.Scenario}.");
+            Refuse(error, RefusalKinds.NotFound, $"No scenario s{address.Scenario}.");
             return false;
         }
 
         scenario = found;
         if (address.Diagram >= scenario.Diagrams.Count)
         {
-            error.WriteLine($"No diagram d{address.Diagram} in {scenario.Address} — it has {scenario.Diagrams.Count}.");
+            Refuse(error, RefusalKinds.NotFound, $"No diagram d{address.Diagram} in {scenario.Address} — it has {scenario.Diagrams.Count}.");
             return false;
         }
 

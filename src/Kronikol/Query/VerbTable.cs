@@ -332,6 +332,22 @@ internal static class VerbTable
         (AddressKind.TestId, "id:<test id>", "id:0-1287", "A scenario by the id its test framework or host gave it: unique within one run, not across runs (sid: is the cross-run one). Everything after the prefix is the id, matched exactly, so it has no child forms.")
     ];
 
+    /// <summary>
+    /// What <c>error.kind</c> can say under <c>--json</c>; <c>--describe</c> prints it. A kind does not decide the exit code,
+    /// which stays what each refusal always exited with: 2 for all but unreadable and writeFailed, except a file that is
+    /// not a Kronikol report and diff's second report, which exit 1.
+    /// </summary>
+    public static readonly (string Kind, string Meaning)[] ErrorKinds =
+    [
+        (RefusalKinds.Usage, "The command was used wrongly: an unknown verb or flag, a malformed address, a form or flag value the verb does not take."),
+        (RefusalKinds.NotFound, "A well-formed name the report or ledger does not hold: a scenario, call, step, diagram, note, body, trace, suite, baseline or kept run."),
+        (RefusalKinds.Ambiguous, "A name that matches several: a sid: or id: two scenarios carry, a directory holding several reports, a prefix several matches share."),
+        (RefusalKinds.NoReport, "No report where one was named: no such file or directory, no report under the directory, or a file that is not a Kronikol report."),
+        (RefusalKinds.Unsupported, "The report or the environment cannot answer this: a report written before what the verb reads existed, or history switched off."),
+        (RefusalKinds.Unreadable, "A report, body or ledger that could not be read."),
+        (RefusalKinds.WriteFailed, "--out was empty or could not be written.")
+    ];
+
     /// <summary>The exit codes, as the help and the reference state them.</summary>
     public static readonly (int Code, string Meaning)[] ExitCodes =
     [

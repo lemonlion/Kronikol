@@ -14,13 +14,13 @@ public static partial class QueryCommand
     {
         if (options.Path is null)
         {
-            error.WriteLine("values needs a path: kronikol query values <report> --path '$.status' [s3] [--service X] [--stats] [--request|--both]");
+            Refuse(error, RefusalKinds.Usage, "values needs a path: kronikol query values <report> --path '$.status' [s3] [--service X] [--stats] [--request|--both]");
             return 2;
         }
 
         if (!PathEngine.TryParse(options.Path, out var segments, out var parseError))
         {
-            error.WriteLine($"Bad path: {parseError}");
+            Refuse(error, RefusalKinds.Usage, $"Bad path: {parseError}");
             error.WriteLine("Grammar: $.name · [2] · [*] · ['key.with.dots'] · .length() (last segment only). Quote the whole path — [*] is shell-active.");
             return 2;
         }
