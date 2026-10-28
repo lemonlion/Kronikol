@@ -1014,8 +1014,8 @@ public class AssertionWeaver
 
     /// <summary>
     /// The source between the sequence point's start and end columns (1-based, the end exclusive), its lines
-    /// joined by a space; null when the columns do not fit the file, as with symbols from another revision of
-    /// the source, and the caller reads whole lines.
+    /// joined by a space, each line's <c>//</c> comment left out first; null when the columns do not fit the file, as
+    /// with symbols from another revision of the source, and the caller reads whole lines.
     /// </summary>
     private static string? CutColumns(string[] lines, SequencePoint sp)
     {
@@ -1030,11 +1030,41 @@ public class AssertionWeaver
         if (sp.StartLine == sp.EndLine)
             return sp.EndColumn > sp.StartColumn ? first.Substring(sp.StartColumn - 1, sp.EndColumn - sp.StartColumn) : null;
 
-        var parts = new List<string> { first.Substring(sp.StartColumn - 1).Trim() };
+        var parts = new List<string> { first.Substring(sp.StartColumn - 1) };
         for (var i = sp.StartLine + 1; i < sp.EndLine; i++)
-            parts.Add(lines[i - 1].Trim());
-        parts.Add(last.Substring(0, sp.EndColumn - 1).Trim());
-        return string.Join(" ", parts);
+            parts.Add(lines[i - 1]);
+        parts.Add(last.Substring(0, sp.EndColumn - 1));
+        // Once the lines are joined, a line's // comment would run to the statement's end and take its code with it
+        // (#210, F12).
+        return string.Join(" ", WithoutLineComments(string.Join("\n", parts)).Split('\n').Select(part => part.Trim()));
+    }
+
+    /// <summary><paramref name="text"/> without its <c>//</c> comments, each up to its line's end, outside literals and
+    /// block comments: a literal is read whole, so a raw or verbatim string's lines keep a <c>//</c> they hold.</summary>
+    private static string WithoutLineComments(string text)
+    {
+        if (text.IndexOf("//", StringComparison.Ordinal) < 0)
+            return text;
+
+        var sb = new System.Text.StringBuilder(text.Length);
+        for (var i = 0; i < text.Length; i++)
+        {
+            var c = text[i];
+            var next = i + 1 < text.Length ? text[i + 1] : '\0';
+            var end = c is '"' or '\'' ? EndOfLiteral(text, i)
+                : c == '/' && next == '*' && text.IndexOf("*/", i + 2, StringComparison.Ordinal) is >= 0 and var close ? close + 1
+                : -1;
+            if (end >= i)
+            {
+                sb.Append(text, i, end - i + 1);
+                i = end;
+            }
+            else if (c == '/' && next == '/' && text.IndexOf('\n', i) is >= 0 and var lineEnd)
+                i = lineEnd - 1;
+            else
+                sb.Append(c);
+        }
+        return sb.ToString();
     }
 
     /// <summary>
@@ -1141,9 +1171,12 @@ public class AssertionWeaver
     /// (ASSERTION_VALUE_SUBSTITUTION_PLAN Q3): <c>expected.Colour.ToString()</c> reads <c>'Blue'</c>, a join reads the
     /// branch taken. The call is Shouldly's own, or the first one that takes what FluentAssertions' <c>Should()</c>
     /// returned. An argument is left out when the library shows it itself (a custom message, a <c>because</c>, a
-    /// caller-expression parameter), when it is code with nothing to evaluate (a constant, <c>new[] { 1, 2 }</c>, a
-    /// lambda), when it is a variable already captured, and when its value cannot be held in an object (a by-ref or
-    /// a ref struct). Null when nothing is captured or the call's arguments cannot be matched to the text. The text is
+    /// caller-expression parameter), when it is code with nothing to evaluate (a literal, <c>new[] { 1, 2 }</c>, a
+    /// lambda), when it is a constant written as an enum's own members (<c>CurrencyCode.GBP</c>), when it is a variable
+    /// already captured, and when its value cannot be held in an object (a by-ref or a ref struct). Every other
+    /// constant is captured: a <c>nameof(…)</c>, a <c>const</c> field or local and constant arithmetic name something
+    /// other than the value they hold (#210). Null when nothing is captured or the call's arguments cannot be matched
+    /// to the text. The text is
     /// the statement as written, with Shouldly's custom message still in it, so the arguments match the parameters by
     /// position wherever the message sits.
     /// </summary>
@@ -1192,7 +1225,7 @@ public class AssertionWeaver
         var first = stack.Length - count;
         var isExtension = !callee.HasThis && resolved.HasCustomAttributes &&
                           resolved.CustomAttributes.Any(a => a.AttributeType.Name == "ExtensionAttribute");
-        var captured = new List<(int Slot, string Text, TypeReference? BoxAs)>();
+        var captured = new List<(int Slot, string Text, TypeReference? BoxAs, bool Constant)>();
         for (var p = isExtension ? 1 : 0; p < count; p++)
         {
             var parameter = resolved.Parameters[p];
@@ -1206,24 +1239,37 @@ public class AssertionWeaver
             var text = texts[index];
             var slot = stack[first + p];
             if (!EvaluatesSomething(text) || variables.Any(v => v.Name == text) || slot.Type == null ||
-                StackAnalysis.IsNull(slot) || IsConstant(slot.Producer, analysis) || !CanHoldAsObject(slot.Type, method))
+                StackAnalysis.IsNull(slot) || !CanHoldAsObject(slot.Type, method))
                 continue;
-            captured.Add((first + p, text, BoxType(callee, callee.Parameters[p].ParameterType, slot.Type)));
+            var boxAs = BoxType(callee, callee.Parameters[p].ParameterType, slot.Type);
+            // A constant is left out only when its text is its own spelling, an enum's members: a nameof, a const field
+            // or local and constant arithmetic read as a bare name or as their code (#210).
+            var constant = IsConstant(slot.Producer, analysis);
+            if (constant && SpellsEnumMembers(text, boxAs, slot.Producer, analysis))
+                continue;
+            captured.Add((first + p, text, boxAs, constant));
         }
-        if (captured.Count == 0)
-            return null;
 
-        var lowest = captured.Min(c => c.Slot);
-        var spill = stack.Skip(lowest).ToArray();
-        if (!StackAnalysis.IsFullyTyped(spill) || !spill.All(slot => StackAnalysis.IsNull(slot) || CanHoldAsLocal(slot.Type!, method)))
-            return null;
-
-        return new ArgumentCapture
+        // The stack is copied from the lowest argument captured up. A constant can take that start below a slot no local
+        // can hold (a ref or in argument's address); the statement then keeps the values it can copy without its
+        // constants, where it would lose them all (#210).
+        while (captured.Count > 0)
         {
-            Call = call,
-            Spill = spill,
-            Arguments = captured.Select(c => new CapturedArgument { SpillIndex = c.Slot - lowest, Text = c.Text, BoxAs = c.BoxAs }).ToList(),
-        };
+            var lowest = captured.Min(c => c.Slot);
+            var spill = stack.Skip(lowest).ToArray();
+            if (StackAnalysis.IsFullyTyped(spill) && spill.All(slot => StackAnalysis.IsNull(slot) || CanHoldAsLocal(slot.Type!, method)))
+            {
+                return new ArgumentCapture
+                {
+                    Call = call,
+                    Spill = spill,
+                    Arguments = captured.Select(c => new CapturedArgument { SpillIndex = c.Slot - lowest, Text = c.Text, BoxAs = c.BoxAs }).ToList(),
+                };
+            }
+            if (captured.RemoveAll(c => c.Constant) == 0)
+                break;
+        }
+        return null;
     }
 
     private static bool HasAttribute(ParameterDefinition parameter, string name) =>
@@ -1365,7 +1411,9 @@ public class AssertionWeaver
     }
 
     /// <summary>Whether a value comes straight from a constant (<c>ldc</c>, <c>ldstr</c>, <c>ldnull</c>), perhaps
-    /// converted or boxed: its text already says what it is.</summary>
+    /// converted or boxed. Its text says what it is only when it is a literal or an enum's own members
+    /// (<see cref="SpellsEnumMembers"/>); a <c>nameof(…)</c>, a <c>const</c> or constant arithmetic name something
+    /// else (#210).</summary>
     private static bool IsConstant(Instruction? producer, StackAnalysis analysis)
     {
         for (var depth = 0; producer != null && depth < 8; depth++)
@@ -1379,6 +1427,55 @@ public class AssertionWeaver
             producer = input is { Length: > 0 } ? input[input.Length - 1].Producer : null;
         }
         return false;
+    }
+
+    /// <summary>
+    /// Whether a constant argument of an enum type is written as that enum's own members, so its text already says what
+    /// the note would show: every name in it is the enum's, one of its members, an outer type or a part of the
+    /// namespace (<c>CurrencyCode.GBP</c>, <c>Perm.Read | Perm.Write</c>). An enum-typed <c>const</c>
+    /// (<c>Defaults.Code</c>) names something else, and so does a constant of any other type (#210).
+    /// </summary>
+    private static bool SpellsEnumMembers(string text, TypeReference? boxAs, Instruction? producer, StackAnalysis analysis)
+    {
+        var type = EnumOf(boxAs);
+        for (var depth = 0; type == null && producer != null && depth < 8; depth++)
+        {
+            if (producer.OpCode.Code == Code.Box && producer.Operand is TypeReference boxed)
+                type = EnumOf(boxed);
+            // Only through what IsConstant follows, a conversion or a box, down to the constant: the slot below a
+            // constant is another value's.
+            if (!(producer.OpCode.Name.StartsWith("conv.", StringComparison.Ordinal) || producer.OpCode.Code == Code.Box))
+                break;
+            var input = analysis.StackBefore(producer);
+            producer = input is { Length: > 0 } ? input[input.Length - 1].Producer : null;
+        }
+        if (type == null)
+            return false;
+
+        var names = new HashSet<string>(type.Fields.Where(f => f.HasConstant).Select(f => f.Name), StringComparer.Ordinal)
+        {
+            type.Name, "global",
+        };
+        var outermost = type;
+        for (var outer = type.DeclaringType; outer != null; outer = outer.DeclaringType)
+        {
+            names.Add(outer.Name);
+            outermost = outer;
+        }
+        foreach (var part in (outermost.Namespace ?? "").Split('.'))
+            names.Add(part);
+        return System.Text.RegularExpressions.Regex.Matches(text, @"@?[A-Za-z_]\w*")
+            .Cast<System.Text.RegularExpressions.Match>()
+            .All(m => names.Contains(m.Value.TrimStart('@')));
+    }
+
+    /// <summary>The enum <paramref name="type"/> is, or holds as a <c>Nullable</c>, resolved; null for any other
+    /// type.</summary>
+    private static TypeDefinition? EnumOf(TypeReference? type)
+    {
+        if (type is GenericInstanceType { Name: "Nullable`1" } nullable && nullable.GenericArguments.Count == 1)
+            type = nullable.GenericArguments[0];
+        return type != null && TryResolve(type) is { IsEnum: true } definition ? definition : null;
     }
 
     /// <summary>Whether a value of this type can be boxed into the values array: not a by-ref, a pointer, a ref

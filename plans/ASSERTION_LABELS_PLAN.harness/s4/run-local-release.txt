@@ -1,0 +1,70 @@
+Kronikol 5.16.4.0 · woven: True
+== Woven210.W01_issue_to_string_with_culture: passed
+   ✓ Result split percentage to string(CultureInfo.InvariantCulture) should not be null or empty
+== Woven210.W02_issue_nameof_enum_member: passed
+   ✓ Result currency iso alpha3 should be 'GBP'
+== Woven210.W03_issue_nameof_failing: threw ShouldAssertException
+   ✗ Result currency iso alpha3 should be 'USD' | result.CurrencyIsoAlpha3 |     should be
+== Woven210.W04_const_field: passed
+   ✓ Result currency iso alpha3 should be 'GBP'
+== Woven210.W05_const_field_failing: threw ShouldAssertException
+   ✗ Result currency iso alpha3 should be 'USD' | result.CurrencyIsoAlpha3 |     should be
+== Woven210.W06_static_readonly_field: passed
+   ✓ Result currency iso alpha3 should be 'GBP'
+== Woven210.W07_const_local: passed
+   ✓ Result currency iso alpha3 should be 'GBP'
+== Woven210.W08_const_int_field: passed
+   ✓ Result count should be '3'
+== Woven210.W09_int_max_value: passed
+   ✓ Result big should be '2147483647'
+== Woven210.W10_enum_member: passed
+   ✓ Result code should be GBP
+== Woven210.W11_local_holding_nameof: passed
+   ✓ Result currency iso alpha3 should be 'GBP'
+== Woven210.W12_nameof_concatenated: passed
+   ✓ Result stage should be 'Cancelled'
+== Woven210.W13_nameof_dictionary_key: passed
+   ✓ Result errors should contain key 'Email'
+== Woven210.W14_to_string_with_format_and_culture: passed
+   ✓ Result date to string("yyyy-MM-dd", CultureInfo.InvariantCulture) should be "2026-10-27"
+== Woven210.W15_lambda_in_subject: passed
+   ✓ Result items count(x => x.IsActive) should be 2
+== Woven210.W16_generic_call_in_subject: passed
+   ✓ Result get~<Item>() name should be "a"
+== Woven210.W17_new_in_subject: passed
+   ✓ New Uri(result.Link) host should be "example.com"
+== Woven210.W18_const_index_in_subject: passed
+   ✓ Result map[Keys.Primary] should be 1
+== Woven210.W19_to_string_with_culture_failing: threw ShouldAssertException
+   ✗ Result split percentage to string(CultureInfo.InvariantCulture) should be "12,5" | result.SplitPercentage.ToString(CultureInfo.InvariantCulture) |     should be
+== Fluent210.F01_to_string_with_culture: passed
+   ✓ Result split percentage to string(CultureInfo.InvariantCulture) should not be null or empty
+== Fluent210.F02_nameof_enum_member: passed
+   ✓ Result currency iso alpha3 should be 'GBP'
+== Fluent210.F03_const_field: passed
+   ✓ Result currency iso alpha3 should be 'GBP'
+== That210.T01_to_string_with_culture: passed
+   ✓ Result split percentage to string(CultureInfo.InvariantCulture) should not be null or empty
+== That210.T02_nameof_enum_member: passed
+   ✓ Result currency iso alpha3 should be 'GBP'
+== That210.T03_const_field: passed
+   ✓ Result currency iso alpha3 should be Gbp
+== Audit210.A01_framework_enum_member: passed
+   ✓ Result status code should be OK
+== Audit210.A02_framework_enum_member_failing: threw ShouldAssertException
+   ✗ Result status code should be NotFound | result.StatusCode |     should be
+== Audit210.A03_framework_enum_member_fluent: passed
+   ✓ Result status code should be OK
+== Audit210.A04_const_decimal: passed
+   ✓ Result split percentage should be '12.5'
+== Audit210.A05_nullable_enum_member: passed
+   ✓ Result maybe code should be 'GBP'
+== Audit210.A06_enum_typed_const: passed
+   ✓ Result code should be 'GBP'
+== Audit210.A07_fluent_chain_with_a_const_key: passed
+   ✓ Result map should contain key 'primary', whose value should be 1
+== Audit210.A08_shouldly_throw_then_message: passed
+   ✓ Should throw InvalidOperationException, message should contain "boom"
+== Audit210.A09_that_async_block_body: passed
+   ✓ Result code should be 'GBP'
+   ✓ Result code should be 'GBP'

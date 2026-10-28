@@ -4,6 +4,42 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.16.4] - 2026-10-28
+
+The patch part moves (5.16.3 to 5.16.4): fixes, nothing new to call. Assertion labels read a constant argument's value
+where they read its name; a label is report output, so no option and no file changes shape.
+
+### Fixed
+- **A constant argument reads as its value (#210).** The weave left out every argument the compiler folded into a
+  constant, as if its text were its value, which holds for a literal and for an enum's own members only: a `const`
+  field or local, constant arithmetic, a `nameof(…)` inside an expression and an enum-typed `const` read as a bare name
+  or as their code. `result.Count.ShouldBe(Limits.MaxRetries)` read `Result count should be MaxRetries` and reads
+  `should be '3'`; `ShouldBe(Currencies.Gbp)` read `should be Gbp` and reads `should be 'GBP'`;
+  `ShouldBe(Defaults.Code)`, an enum-typed `const`, reads `should be 'GBP'`; and FluentAssertions'
+  `ContainKey(Keys.Primary)` reads `should contain key 'primary'`. An enum's own members keep their names (`should be
+  GBP`, `should be OK`, `Perm.Read | Perm.Write`), a framework enum's too, and a literal is still not stored. In
+  BreakfastProvider, 49 of 116 assertions with a constant showed a name that is not the value.
+- **A constant never costs a statement its other values (#210).** The weave copies a statement's values from the lowest
+  argument it stores up. A constant below an argument no local can hold (a `ref` or `in` argument's address) would take
+  that copy across it, and the statement would lose every value; it keeps its other values now, and the constant reads
+  as written.
+- **A comment line inside a statement (#210):** the weave joins a statement's lines with a space, so a line's `//`
+  comment took the rest of the statement with it, and `result.Count.ShouldBe(` with `// the retries the policy allows`
+  and `3);` on the lines below read `Result count should be`. The weave leaves a `//` comment out before it joins the
+  lines, outside literals and block comments, so it reads `Result count should be 3`.
+
+### Changed
+- Labels of assertions with such a constant read its value in quotes, as a variable's value reads. Nothing identifies
+  anything by a label across runs, as for 5.16.3, so an upgrade makes no scenario look changed; reports written before
+  keep their labels.
+
+### Tests
+- **`ConstantArgumentWeaveTests` (#210 R2)** weaves each case in Debug and in Release: constants that name something
+  else, passing and failing, through Shouldly and FluentAssertions; enum members and framework enums; the `newobj`
+  constants; a constant below a `ref` argument with a call above it; a `const string` above another argument's enum
+  box; and a comment line. 13 of its 21 facts fail on 5.16.3, the other 8 pin what 5.16.3 already did, and each of six
+  mutations of the weave fails one. Every fixture goes through the ILVerify net.
+
 ## [5.16.3] - 2026-10-28
 
 The patch part moves (5.16.2 to 5.16.3): fixes, nothing new to call. Assertion labels read differently where their

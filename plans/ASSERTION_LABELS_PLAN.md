@@ -8,7 +8,7 @@ same day on 5.14.0 (`8d7d1e1d`), which changed none of the files this plan edits
 and every corpus were run again there.
 **Status:** **green-lit 2026-10-28** ("implement the plan in full"), every question at its recommendation: Q8 and Q9
 yes, Q7 left to #139's release as Q7 recommends. **R1 released as 5.16.3** (the Log says what execution added and
-found); R2 next.
+found); **R2 released as 5.16.4**, which completes the plan.
 **Harness:** `plans/ASSERTION_LABELS_PLAN.harness/` (Appendix B).
 
 ## TL;DR
@@ -635,10 +635,10 @@ draws as written, and copy and the search index read back).
 
 | # | Fact | Red on 5.14.0 |
 |---|---|---|
-| 16 | `A_constant_that_names_something_else_reads_as_its_value` (theory: W04, W05, W07, W08, W09, W12, an enum-typed `const`, `Limits.MaxRetries + 1`; Shouldly and FluentAssertions; passing and failing) | yes |
+| 16 | `A_constant_that_names_something_else_reads_as_its_value` (theory: W04, W05, W07, W08, W09, W12, an enum-typed `const`, `Limits.MaxRetries + 1`; Shouldly and FluentAssertions; passing and failing; as built, also a `const string` above another argument's enum box and a constant below a `ReadOnlySpan<char>`) | yes |
 | 17 | `An_enum_member_keeps_its_name` (W10, `Perm.Read \| Perm.Write`, an enum passed as `object`, and a framework enum, `HttpStatusCode.OK`, which has to resolve at weave time) | no: pins today's |
-| 18 | `A_const_decimal_and_a_nullable_constant_read_as_today` (captured today, `newobj`) | no: pins today's |
-| 19 | `A_constant_that_widens_the_copy_keeps_the_other_values` (a suite's own `[ShouldlyMethods]` helper whose constant argument sits below a `ReadOnlySpan<char>` one, so the wider range cannot be copied) | no on 5.14.0 (no constant is copied); red on the prototype without the fallback |
+| 18 | `A_const_decimal_and_a_nullable_constant_read_as_before` (captured today, `newobj`) | no: pins today's |
+| 19 | `A_constant_that_widens_the_copy_keeps_the_other_values` (a suite's own `[ShouldlyMethods]` helper whose constant argument sits below a `ref` argument, whose address no local can hold, with a call above it that only the copy reads; as planned it sat below a `ReadOnlySpan<char>`, which can be a local, see the Log) | no on 5.14.0 (no constant is copied); red on R2 without the fallback |
 | 20 | The new fixtures through the ILVerify net (`WovenIlVerifiesTests`) | no |
 
 On 5.12.0 and on the prototype the weaver suite passes with the same counts (406 passed, 28 skipped), so no existing
@@ -825,3 +825,22 @@ with their labels and counts), `probe_local.sh` and `prototype.patch`.
     21 mutations, each caught (`s3/mutations.txt`); the woven probe on local packages, Debug and Release identical and as §3.9 says for R1 alone; and the
     five corpora against the prototype's labels (`s3/corpora-vs-prototype.txt`): BreakfastProvider's and the
     examples' identical, the Shouldly suites' 13 differences all of the two settled readings and F13.
+  - **R2, released as 5.16.4.** The weave's constants as section 3 designs them: a constant argument is passed with
+    its value unless its text spells an enum's own members (`SpellsEnumMembers`, `EnumOf`); a constant that would take
+    the copy past a slot no local can hold is dropped before the statement's other values are; and a statement's
+    `//` comments are left out before its lines are joined (F12's weave side, `WithoutLineComments`).
+  - Found on the way: fact 19's premise was wrong. A `ReadOnlySpan<char>` can be a local (`CanHoldAsLocal` refuses
+    only a managed reference, a pointer and a function pointer), so the weave copies across a span and a constant
+    below one reads as its value; that is a row of fact 16 now, and fact 19's constant sits below a `ref` argument.
+    Its first form passed without the fallback too: a variable passed alone and a member path off a variable reach
+    the label through the statement's variables and their access chains, not through the copy, so only a call above
+    the address (`actual.ToUpperInvariant()`) shows the fallback. The walk not stopping at the constant (section 4.3)
+    survived the planned facts; a row of fact 16 puts a `const string` (`Codes.Primary`) above another argument's
+    box of an enum whose names spell it (`Codes.Kind.Primary`). Fact 20 needed no code: every fixture is woven
+    through `WovenIl.Weave`, which reads it with ILVerify before and after, and `Every_woven_fixture_verifies` holds
+    that none is woven another way.
+  - Proofs (`s4/`): the new facts red on 5.16.3 (13 of 21; the 8 that pass pin enum members, the `newobj` constants
+    and the fallback, which 5.16.3 keeps by copying no constant); section 4.3's five R2 mutations and F12's, each
+    caught (`s4/mutations.txt`); the weaver suite 427 passed and 28 skipped; and the woven probe on local packages,
+    Debug and Release identical, W04 `'GBP'`, W08 `'3'`, W12 `'Cancelled'`, A06 `'GBP'` and A07 "contain key
+    'primary'" as section 3.9 says.

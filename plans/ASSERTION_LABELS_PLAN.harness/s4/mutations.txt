@@ -1,0 +1,9 @@
+R2's mutations (ASSERTION_LABELS_PLAN section 4.3, and F12's weave side), each applied alone to the R2
+weaver in the release worktree with ConstantArgumentWeaveTests run: the facts named must turn red.
+
+[R2's skip restored for every constant (16)] CAUGHT: ['Failed!  - Failed:    12, Passed:     9, Skipped:     0, Total:    21, Duration: 3 s - Kronikol.Tests.AssertionTracking.dll (net10.0)'] ['A_constant_that_names_something_else_reads_as_its_value']
+[the enum check true for any enum type (16, its enum-typed const row)] CAUGHT: ['Failed!  - Failed:     1, Passed:    20, Skipped:     0, Total:    21, Duration: 2 s - Kronikol.Tests.AssertionTracking.dll (net10.0)'] ['A_constant_that_names_something_else_reads_as_its_value']
+[the enum check always false (17)] CAUGHT: ['Failed!  - Failed:     6, Passed:    15, Skipped:     0, Total:    21, Duration: 3 s - Kronikol.Tests.AssertionTracking.dll (net10.0)'] ['A_constant_that_names_something_else_reads_as_its_value', 'An_enum_member_keeps_its_name']
+[the walk not stopping at the constant (17)] CAUGHT: ['Failed!  - Failed:     1, Passed:    20, Skipped:     0, Total:    21, Duration: 3 s - Kronikol.Tests.AssertionTracking.dll (net10.0)'] ['A_constant_that_names_something_else_reads_as_its_value']
+[the fallback without constants removed (19)] CAUGHT: ['Failed!  - Failed:     1, Passed:    20, Skipped:     0, Total:    21, Duration: 3 s - Kronikol.Tests.AssertionTracking.dll (net10.0)'] ['A_constant_that_widens_the_copy_keeps_the_other_values']
+[a line's // comment read (F12, the weave's side)] CAUGHT: ['Failed!  - Failed:     1, Passed:    20, Skipped:     0, Total:    21, Duration: 2 s - Kronikol.Tests.AssertionTracking.dll (net10.0)'] ['A_comment_line_in_a_statement_is_not_read']
