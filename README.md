@@ -8,7 +8,7 @@
 # <img src="icon.svg" width="32" height="32" alt="Kronikol icon" style="vertical-align: middle;"> Kronikol
 
 > [!TIP]
-> **Install in your service today with this easy [AI Prompt](https://github.com/lemonlion/Kronikol/wiki/AI-Integration-Prompt)**
+> **Install Kronikol into your service today with this easy [AI Prompt](https://github.com/lemonlion/Kronikol/wiki/AI-Integration-Prompt)**
 
 Automatically generates [rich interactive UI reports](https://lemonlion.github.io/BreakfastProvider/) with PlantUML sequence, activity and component diagrams, with timeline visualizations from your integration/component test HTTP traffic (real or faked) and telemetry.
 
