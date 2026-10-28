@@ -2,11 +2,11 @@
 
 **Date:** 2026-10-26, audited and revised 2026-10-27, verified 2026-10-28 · **Repo version:** written against 5.11.0
 (`origin/main` at `44bcc62a`); a READ citation is at that commit unless it names another (`8d7d1e1d`, 5.14.0;
-`6bbc2ce1`, 5.15.0; `15a95d4c`, 5.16.0), and Appendix A is at `8d7d1e1d`. This branch is rebased on `6bbc2ce1`;
-`origin/main` has since reached `15a95d4c` · **Status:** ❌ plan written, nothing implemented, **NOT green-lit**. Written
-at the owner's request of 2026-10-26: analyse #191 critically, then plan a fix for the underlying problem, which may not
-be the fix the issue proposes. Audited on 2026-10-27 by three reviews and revised to them, and verified on 2026-10-28 by
-a fourth (section 9).
+`6bbc2ce1`, 5.15.0; `15a95d4c`, 5.16.0), and Appendix A is at `8d7d1e1d`. This branch is rebased on `a3f2f45a`
+(5.16.1) · **Status:** ⏳ **green-lit 2026-10-28** ("implement the plan in full"), executing after #192's releases.
+Written at the owner's request of 2026-10-26: analyse #191 critically, then plan a fix for the underlying problem, which
+may not be the fix the issue proposes. Audited on 2026-10-27 by three reviews and revised to them, and verified on
+2026-10-28 by a fourth (section 9). The owner answered Q1, Q2, Q15, Q16 and the release split on 2026-10-28 (section 7).
 
 Two sibling plans were written the same day, by agreement, so that the three issues get one design rather than three:
 
@@ -131,7 +131,7 @@ Evidence labels:
   its option, `Run.json`'s new key and the merge's card. The order across the three plans: #190 R0 (5.13.0), R1
   (5.14.0), R2 (5.15.0) and R3 (5.16.0), all released, then #192 (R1 to R3), then this plan, since the card needs
   #190's resolver and its background calls at run scope, and #192's operation key, `origin` and `cause`. Seventeen
-  questions are in section 7; Q6 is answered by measurement.
+  questions are in section 7; Q6 is answered by measurement, and Q1, Q2, Q15 and Q16 by the owner.
 
 ## 1. How far each claim was checked
 
@@ -1058,12 +1058,12 @@ Each named mutation must fail at least one fact; one that survives means a fixtu
 
 | Release | Holds | Bump | Waits for |
 |---|---|---|---|
-| **R1** | `CallGraph/` (with `CallNesting` moved and the message table), the shared parties function and `InferenceVersion` in `src/Kronikol/Parties/` (`query parties` and #192's `origin` call the function), the scanner reading a compressed body in the root background block, the card writer, `kronikol card`, the committed schema, docs | **minor**: a new command | #192's R1 (the key), R2 (the rules block) and R3 (`origin`, and `cause` if its Q4 says so; if not, R1 keeps the graph's own classification and leaves `causes` out). #190's R2 and R3, which it needs too (version 1 of the inference is R2's rule; R3 indexes the root background block and resolves parties at run scope), shipped as 5.15.0 and 5.16.0 |
+| **R1** | `CallGraph/` (with `CallNesting` moved and the message table), the shared parties function and `InferenceVersion` in `src/Kronikol/Parties/` (`query parties` and #192's `origin` call the function), the scanner reading a compressed body in the root background block, the card writer, `kronikol card`, the committed schema, docs | **minor**: a new command | #192's R1 (the key), R2 (the rules block) and R3 (`origin`, `cause`, which its owner answered yes on 2026-10-28, and the parties function, which kronikol-bf lifts there); its R2 and R3 may ship as one minor. #190's R2 and R3, which it needs too (version 1 of the inference is R2's rule; R3 indexes the root background block and resolves parties at run scope), shipped as 5.15.0 and 5.16.0 |
 | **R2** | `GenerateServiceCard`, the run-end file after the output list, `Run.json`'s `serviceCard` key with its reader and the rotation's reconstruction, `PlannedFiles`, the card from `kronikol merge`, and an ingest flag only if Q2 is off | **minor**: a new option and a new output | R1 |
 
 R1 changes no report bytes and no golden pin: `query parties` prints what it printed (5.1.5). R2 adds a file, and with
-Q2 on it adds `service.json` to the files `RunRotationTests` pins; the report itself is unchanged. If the owner wants
-the run-end file in the first release, R1 and R2 merge into one minor.
+Q2 on it adds `service.json` to the files `RunRotationTests` pins; the report itself is unchanged. The owner chose two
+minors over one on 2026-10-28.
 
 ### 6.2 Changelog drafts
 
@@ -1124,8 +1124,8 @@ the run-end file in the first release, R1 and R2 merge into one minor.
 
 | # | Question | Recommendation |
 |---|---|---|
-| Q1 | Where in the roadmap: now, for the owner's company (D23's "sooner"), or after the launch as 14.13 | Now, R1 first: it is tool-only, changes no report and no pin, and serves every report already written. It waits for #192's three releases; #190's R2 and R3 shipped as 5.15.0 and 5.16.0 (6.1). R2 when the owner wants the file at run end |
-| Q2 | `GenerateServiceCard` on by default | On, like `Failures.md` and as D23 recommends for the card: an indexer is only as current as the runs that write the file. The cost is one file of 159 to 177 KB a run on BreakfastProvider's in-process lanes (23 to 25 KB gzipped, as an artifact zip stores it) and 88 to 102 KB on its external-SUT lanes (RUN, 2.3), and the graph's build at every run end (budgeted in R2, 5.4.8). On also decides ingest: `kronikol ingest` has no flag for an output that is off by default, so off means no card for ingested runs unless R2 adds one |
+| Q1 | Where in the roadmap: now, for the owner's company (D23's "sooner"), or after the launch as 14.13 | **Answered (2026-10-28): now**, R1 and R2 as two minors, after #192's releases. The recommendation was: now, R1 first: it is tool-only, changes no report and no pin, and serves every report already written. It waits for #192's three releases; #190's R2 and R3 shipped as 5.15.0 and 5.16.0 (6.1). R2 when the owner wants the file at run end |
+| Q2 | `GenerateServiceCard` on by default | **Answered (2026-10-28): on.** The recommendation was: on, like `Failures.md` and as D23 recommends for the card: an indexer is only as current as the runs that write the file. The cost is one file of 159 to 177 KB a run on BreakfastProvider's in-process lanes (23 to 25 KB gzipped, as an artifact zip stores it) and 88 to 102 KB on its external-SUT lanes (RUN, 2.3), and the graph's build at every run end (budgeted in R2, 5.4.8). On also decides ingest: `kronikol ingest` has no flag for an output that is off by default, so off means no card for ingested runs unless R2 adds one |
 | Q3 | One file with `run` and `behaviour`, or two files | One file. The issue asks for one, the indexer compares `behaviourHash`, and the hashed bytes are the `behaviour` member as the file holds them (4.3); `jq .behaviour` re-escapes and is for reading, not for hashing. Two files would let a git branch of cards diff cleanly, which FLEET S5 may want later |
 | Q4 | Counts in the card at all | Yes, in `run`. They are the issue's ask and cost the stable part nothing there |
 | Q5 | `cause` on the card (#192 asks it too, its section 9 Q4, with this card as its second reason) | Yes. Without it the card cannot say which dependencies are used while serving requests; "only outside requests" is `cause` other than `request`. It cannot tell background work from seeding through the service's own clients (both `TestContext`, both top level, #192 4.3), and the docs say so. If #192's Q4 is declined, the graph keeps the classification it needs for the scenario index and the phase rule (4.2), and the card leaves `causes` out |
@@ -1138,8 +1138,8 @@ the run-end file in the first release, R1 and R2 merge into one minor.
 | Q12 | `run.framework` | Null now. It needs each capturer to record its framework, which is the contract question at 14.5 (`GO_PLATFORM_PLAN`'s ask of the raw test name with its framework). Record it there |
 | Q13 | Where committed schemas live | `schemas/` at the repo root, one file per format version, raw URL as `$id`; the card carries no `$schema` member |
 | Q14 | The command's name | `kronikol card`, the issue's. It is short and pairs with `ctrf`; the wiki page says "service card" in full. Its options are `ctrf`'s, `-o` and `--out`; the issue's `--json` is refused, since the output is always JSON |
-| Q15 | What a run observed and did not write. At run end Kronikol knows which client `CreateTestTrackingClient` built (`observed`, with the application as `note`), and the data file records it only when the run also declares something (F15). (a) The card's `behaviour` is a function of the data file: built at run end from the block when there is one, else from the inference over the calls, as `kronikol card` and `query parties` build it from the same file, so an undeclared run's card says `inferred` where the run observed. (b) #190 writes the block whenever a test client was observed: every such suite's report changes bytes, which #190 §5.14 declined as "a block on every run". (c) The run-end card uses what it observed and the tool what the file holds: one report then has two cards, and an indexer mixing run-end and rebuilt cards sees a change that is none. (d) (c), with `kindSource` and `note` moved out of `behaviour`, leaving `kind`, and a fact that observation and inference agree on kind for the template suites | (a). One writer, two readers holds, and a card rebuilt from a kept report agrees with the one its run wrote. A suite that wants `observed` on its card declares its `ServiceId`, which writes the block, observed rows included. (d) keeps the hash equal only where observation and inference name the same kinds, which a fact can pin for the template suites and not for a suite that builds its clients otherwise; and `kindSource` and `note` would still differ between the run-end card and a rebuilt one, so one report would still have two cards |
-| Q16 | What `behaviour.scenarios[].ops` holds. (a) The test's own operations in each scenario, with the full list, the service's included, in `run.scenarios`; (b) every call but background ones (Q6's answer alone); (c) every call, as first written; (d) (a), with titles, tags and source moved to `run` beside the full list. Measured (2.4, RUN): same-commit pairs byte-identical on 10 of 10 (a), 8 of 10 (b), 6 of 10 (c); across 5.4.1 to 5.12.1 on 18 lanes, 13 of 18 (a) and 16 of 18 (d), the difference being 5.9.1's renamed titles | (a). It is the only reading that held on every pair. Its cost: which scenarios reach a dependency (Supplier Service, through the menu cache) is answered from `run.scenarios`, which is not hashed. (d) costs a reader of `behaviour` alone the scenario's name |
+| Q15 | What a run observed and did not write. At run end Kronikol knows which client `CreateTestTrackingClient` built (`observed`, with the application as `note`), and the data file records it only when the run also declares something (F15). (a) The card's `behaviour` is a function of the data file: built at run end from the block when there is one, else from the inference over the calls, as `kronikol card` and `query parties` build it from the same file, so an undeclared run's card says `inferred` where the run observed. (b) #190 writes the block whenever a test client was observed: every such suite's report changes bytes, which #190 §5.14 declined as "a block on every run". (c) The run-end card uses what it observed and the tool what the file holds: one report then has two cards, and an indexer mixing run-end and rebuilt cards sees a change that is none. (d) (c), with `kindSource` and `note` moved out of `behaviour`, leaving `kind`, and a fact that observation and inference agree on kind for the template suites | (a). One writer, two readers holds, and a card rebuilt from a kept report agrees with the one its run wrote. A suite that wants `observed` on its card declares its `ServiceId`, which writes the block, observed rows included. (d) keeps the hash equal only where observation and inference name the same kinds, which a fact can pin for the template suites and not for a suite that builds its clients otherwise; and `kindSource` and `note` would still differ between the run-end card and a rebuilt one, so one report would still have two cards. **Answered (2026-10-28): (a)** |
+| Q16 | What `behaviour.scenarios[].ops` holds. (a) The test's own operations in each scenario, with the full list, the service's included, in `run.scenarios`; (b) every call but background ones (Q6's answer alone); (c) every call, as first written; (d) (a), with titles, tags and source moved to `run` beside the full list. Measured (2.4, RUN): same-commit pairs byte-identical on 10 of 10 (a), 8 of 10 (b), 6 of 10 (c); across 5.4.1 to 5.12.1 on 18 lanes, 13 of 18 (a) and 16 of 18 (d), the difference being 5.9.1's renamed titles | (a). It is the only reading that held on every pair. Its cost: which scenarios reach a dependency (Supplier Service, through the menu cache) is answered from `run.scenarios`, which is not hashed. (d) costs a reader of `behaviour` alone the scenario's name. **Answered (2026-10-28): (a)** |
 | Q17 | `behaviourHash` on history's run line. 5.14.0 put `serviceId` there, and the ledger is where an indexer reads many runs at once | Not in this plan. History's own fingerprints already say, scenario by scenario, when behaviour changed; the card's hash would be a second, coarser signal on a format suites on many versions share. Ask again with FLEET S5, which reads the history branches |
 
 ## 8. Assumption ledger
@@ -1255,6 +1255,11 @@ the run-end file in the first release, R1 and R2 merge into one minor.
     pin is `aed3a7b`, the README's line is at `8d7d1e1d`, `PlannedFiles` ends at L897; the log entry above cited 5.3.4
     for 5.3.5. Sentences hard to follow split (0, 4.2's mapping rules and messages, 5.1.1, 5.3.1). No section,
     finding, question, assumption or test number moved.
+- 2026-10-28: green-lit by the owner ("implement the plan in full"), who answered Q1 (now), Q2 (on by default), Q15
+  (a), Q16 (a) and the release split (two minors) with the recommendations; the other questions are taken at their
+  recommendations, and Q7's Kronikol4J issue is put to the owner when R1 ships. #192 is being implemented at the same
+  time by kronikol-bf, whose owner answered its Q4 (`cause`) yes, for its R3, and who lifts the parties function there.
+  R1 is built in parallel against those functions' places and released after #192's R3. Rebased on `a3f2f45a` (5.16.1).
 
 ## Appendix A. Edit sites at `8d7d1e1d`
 
