@@ -167,6 +167,15 @@ public static class StepText
                 scenario.DisplayName = Capitalise(scenario.DisplayName) ?? scenario.DisplayName;
                 scenario.Rule = Capitalise(scenario.Rule);
                 scenario.OutlineId = Capitalise(scenario.OutlineId);
+                scenario.OutlineTitle = Capitalise(scenario.OutlineTitle);
+                // The recorded key stands for the name and outline 5.16.4 showed, which this re-cased before they were
+                // hashed: so is the key, or the option would move the id of every scenario that carries one.
+                if (scenario.StableIdKey is { } key)
+                    scenario.StableIdKey = key with
+                    {
+                        Name = Capitalise(key.Name) ?? key.Name,
+                        OutlineId = Capitalise(key.OutlineId)
+                    };
             }
         }
     }

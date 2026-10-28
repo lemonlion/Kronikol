@@ -5606,6 +5606,25 @@ public static class ReportGenerator
                 if (s.KeyedByOutline)
                     scenario = InsertAfter(scenario, "outlineId", "keyedByOutline", true);
 
+                // Beside outlineId, and only where the lane's title for the outline is not the row's own name less its
+                // arguments (plans/TITLES_AS_WRITTEN_PLAN.md 4.3), so a merge heads the group as this run did.
+                if (s.OutlineId is not null && s.OutlineTitle is { } outlineTitle &&
+                    outlineTitle != (ParameterParser.ExtractBaseName(s.DisplayName) ?? s.DisplayName))
+                    scenario = InsertAfter(scenario, "outlineId", "outlineTitle", outlineTitle);
+
+                // Beside name, and only on a scenario whose id keys on what 5.16.4 showed (plans/TITLES_AS_WRITTEN_PLAN.md
+                // 4.4), so every other scenario's bytes stay as they were; a merge reads them back and computes the same ids.
+                if (s.StableIdKey is { } key)
+                {
+                    scenario = InsertAfter(scenario, s.NameAsWritten ? "nameAsWritten" : "name", "stableIdName", key.Name);
+                    // whenever the key has them, so their absence says it has none: the compressed file drops a null
+                    // and an empty object, and a merge must not read the scenario's own in their place
+                    if (key.OutlineId is not null)
+                        scenario = InsertAfter(scenario, "outlineId", "stableIdOutlineId", key.OutlineId);
+                    if (key.ExampleValues is { Count: > 0 })
+                        scenario = InsertAfter(scenario, "exampleValues", "stableIdExampleValues", key.ExampleValues);
+                }
+
                 if (diagramLookup != null)
                     scenario["diagrams"] = diagramLookup[s.Id].Select(d => payloads is null ? d : payloads.Write(d)).ToArray();
 
@@ -7663,7 +7682,7 @@ public static class ReportGenerator
                                     ["properties"] = new Dictionary<string, object?>
                                     {
                                         ["id"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "The runtime id the test framework gave this scenario (a test case id, a pickle id). Unique within the run but not stable across runs; use stableId for that." },
-                                        ["stableId"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "Deterministic cross-run identifier derived from feature name + scenario display name (+ outline ID and ordered example values for parameterized scenarios). Use this for matching the same test across runs. Not unique: repeated rows and retries share one.", ["examples"] = new[] { "a1b2c3d4e5f60718" } },
+                                        ["stableId"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "Deterministic cross-run identifier derived from the feature's stableIdName or name + the scenario's stableIdName or display name (+ outline ID and ordered example values for parameterized scenarios, stableIdOutlineId and stableIdExampleValues where present). Use this for matching the same test across runs. Not unique: repeated rows and retries share one.", ["examples"] = new[] { "a1b2c3d4e5f60718" } },
                                         ["name"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "Scenario display name; an outline row shows its expanded name" },
                                         ["description"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The scenario's own free-text description (the prose under Scenario:)" },
                                         ["result"] = new Dictionary<string, object?> { ["type"] = "string", ["enum"] = resultEnumValues, ["description"] = "The scenario's verdict" },
@@ -7671,7 +7690,10 @@ public static class ReportGenerator
                                         ["warmUpSeconds"] = new Dictionary<string, object?> { ["type"] = "number", ["minimum"] = 0, ["description"] = "Seconds of durationSeconds that the run's first-call warm-up took: the time the scenario's calls marked warmUp cover, each instant counted once, never more than durationSeconds. durationSeconds less this is the scenario's own time. Present only on a scenario that carries such a call." },
                                         ["endedAt"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["format"] = "date-time", ["description"] = "When the scenario finished (UTC), as the framework recorded it; null when the adapter did not record one. A call that inherited this scenario's context after this moment is background (see httpInteractions[].attributionSource = Expired)" },
                                         ["isHappyPath"] = new Dictionary<string, object?> { ["type"] = "boolean", ["description"] = "Marked as the happy path (an @happy-path tag or the adapter's attribute); the report lists happy paths first" },
-                                        ["nameAsWritten"] = new Dictionary<string, object?> { ["type"] = "boolean", ["description"] = "Present, and true, only on a scenario whose name a person wrote and the report shows as written (a Gherkin scenario): its outline's heading is its title as written, and a name ending in brackets is not read as a parameterised test's" },
+                                        ["nameAsWritten"] = new Dictionary<string, object?> { ["type"] = "boolean", ["description"] = "Present, and true, only on a scenario whose name a person wrote and the report shows as written (a Gherkin scenario, a DisplayName or a TestName): a name ending in brackets is not read as a parameterised test's" },
+                                        ["stableIdName"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "Present only where the scenario's stableId is computed from another name than name: the name 5.16.4 showed and hashed, for a title the report now shows otherwise (words in capitals kept, a name the test wrote shown as written), so the scenario keeps its id. A merge computes ids from it" },
+                                        ["stableIdOutlineId"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Present only beside stableIdName, where its stableId hashes an outline ID: the one 5.16.4 read from the name it showed. Absent beside stableIdName, the id hashes none" },
+                                        ["stableIdExampleValues"] = new Dictionary<string, object?> { ["type"] = new[] { "object", "null" }, ["description"] = "Present only beside stableIdName, where its stableId hashes example values: the ones 5.16.4 read from the name it showed. Absent beside stableIdName, the id hashes none", ["additionalProperties"] = new Dictionary<string, object?> { ["type"] = "string" } },
                                         ["notATest"] = new Dictionary<string, object?> { ["type"] = "boolean", ["description"] = "Present, and true, only on a scenario that is not a test, such as an ingest's \"Traffic outside any test\": it is drawn like any scenario, the run's counts and times, the timeline, the CI summary, Failures.md, the CTRF report and the specifications leave it out, and the history records it as N. Its result says only that it was drawn" },
                                         ["errorMessage"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The failure message the framework reported, when the scenario failed" },
                                         ["errorStackTrace"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The stack trace the framework reported, when the scenario failed" },
@@ -7683,6 +7705,7 @@ public static class ReportGenerator
                                         ["sourceLine"] = new Dictionary<string, object?> { ["type"] = new[] { "integer", "null" }, ["description"] = "The line the Scenario: or Scenario Outline: keyword is on - the declaration, not the Examples: row, so every row of an outline points at the same line. exampleValues is what says which row." },
                                         ["outlineId"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Original scenario outline name for parameterized scenarios" },
                                         ["keyedByOutline"] = new Dictionary<string, object?> { ["type"] = "boolean", ["description"] = "Present, and true, only on an outline row whose name was filled from its example values (a Reqnroll row): its stableId, its place and its anchor key on outlineId in place of name, the name it bore before" },
+                                        ["outlineTitle"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "Present only on an outline row whose lane titles the outline otherwise than the row's name less its arguments: the heading of a group whose rows are named apart (a theory's DisplayName or its method's title, LightBDD's name format, an ingested outline as written)" },
                                         ["examplesBlockName"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Name of the Examples: block this outline row came from" },
                                         ["examplesBlockDescription"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Free-text description under the Examples: header" },
                                         ["examplesBlockIndex"] = new Dictionary<string, object?> { ["type"] = new[] { "integer", "null" }, ["description"] = "0-based position of the Examples: block within the outline" },

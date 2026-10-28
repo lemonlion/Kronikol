@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
+using Kronikol.Naming;
 using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
 using Mono.Cecil;
@@ -616,7 +616,7 @@ public class StepWeaver
                 return desc;
         }
 
-        // Humanize method name: PascalCase → "Pascal case", underscores → spaces
+        // The method's name as a sentence: PascalCase → "Pascal case", underscores → spaces, a word in capitals kept
         var text = HumanizeMethodName(method.Name);
 
         // Strip leading keyword to avoid duplication (e.g. [WhenStep] WhenTheyGo → "They go" not "When they go")
@@ -632,26 +632,12 @@ public class StepWeaver
         return text;
     }
 
-    public static string HumanizeMethodName(string methodName)
-    {
-        // Replace underscores with spaces
-        var text = methodName.Replace("_", " ");
-
-        // Split PascalCase: insert space before uppercase that follows lowercase
-        text = Regex.Replace(text, @"(\p{Ll})(\p{Lu})", "$1 $2");
-        // Handle sequences like "HTTPClient" → "HTTP Client"
-        text = Regex.Replace(text, @"(\p{Lu}+)(\p{Lu}\p{Ll})", "$1 $2");
-
-        // Collapse multiple spaces and trim
-        text = Regex.Replace(text, @"\s+", " ").Trim();
-
-        // Sentence case: uppercase first letter, lowercase the rest. Invariant: the weaver runs in the consumer's build, and
-        // a Turkish or Azeri machine wove "İtems are shipped" (until 4.16.3).
-        if (text.Length > 0)
-            text = char.ToUpperInvariant(text[0]) + text.Substring(1).ToLowerInvariant();
-
-        return text;
-    }
+    /// <summary>
+    /// A step method's name as a sentence, by the rule a scenario's title takes (<c>Kronikol.Naming.SentenceCase</c>,
+    /// whose source this assembly compiles): <c>GetHTTPResponse</c> reads "Get HTTP response". Culture-invariant: the
+    /// weaver runs in the consumer's build, and a Turkish or Azeri machine wove "İtems are shipped" (until 4.16.3).
+    /// </summary>
+    public static string HumanizeMethodName(string methodName) => SentenceCase.Sentence(methodName);
 
     private static CustomAttribute? GetStepAttribute(MethodDefinition method)
     {

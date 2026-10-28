@@ -15,6 +15,7 @@ public class TrackedSinkTests
     public void Skipped() { }
     public void Cancelled() { }
     public void Passes_for_every_order() { }
+    public void Rejects_UD800() { }
 }
 
 public class UntrackedSinkTests
@@ -118,6 +119,39 @@ public class KronikolResultsSinkTests : IDisposable
         Run(sink, AssemblyStarting(), Starting(test), Passed(test), Finished(test), AssemblyFinished());
 
         Assert.Equal("Passes for every order", Assert.Single(Assert.Single(_written).Scenarios).ScenarioName);
+    }
+
+    [Fact]
+    public void A_method_s_words_in_capitals_keep_them_and_the_id_keys_on_what_5_16_4_showed()
+    {
+        var test = Test<TrackedSinkTests>(nameof(TrackedSinkTests.Passes_for_every_order),
+            "Kronikol.Tests.xUnit2.TrackedSinkTests.Passes_for_every_order(region: \"UK\")");
+        var written = Test<TrackedSinkTests>(nameof(TrackedSinkTests.Passes), "Orders are sent to Kafka (v1.2)");
+        using var sink = Sink();
+
+        Run(sink, AssemblyStarting(), Starting(test), Passed(test), Finished(test), Starting(written), Passed(written), Finished(written),
+            AssemblyFinished());
+
+        var scenarios = Assert.Single(_written).Scenarios;
+        Assert.Equal("Passes for every order [region: \"UK\"]", scenarios[0].ScenarioName);
+        Assert.Null(scenarios[0].StableIdName);
+        // a name xUnit got from elsewhere is shown as written, its id keyed on 5.16.4's reading of it
+        Assert.Equal("Orders are sent to Kafka (v1.2)", scenarios[1].ScenarioName);
+        Assert.Equal("Orders are sent to kafka [v1.2]", scenarios[1].StableIdName);
+        Assert.True(scenarios[1].NameAsWritten);
+        Assert.True(scenarios[1].NameWrittenWhole);
+    }
+
+    [Fact]
+    public void A_method_name_xUnit_cannot_format_under_every_option_is_still_named()
+    {
+        // xUnit's formatter throws on "Rejects_UD800" under UseEscapeSequences; the sink tries every option, and threw
+        var test = Test<TrackedSinkTests>(nameof(TrackedSinkTests.Rejects_UD800), "A lone surrogate's code is rejected");
+        using var sink = Sink();
+
+        Run(sink, AssemblyStarting(), Starting(test), Passed(test), Finished(test), AssemblyFinished());
+
+        Assert.Equal("A lone surrogate's code is rejected", Assert.Single(Assert.Single(_written).Scenarios).ScenarioName);
     }
 
     [Fact]

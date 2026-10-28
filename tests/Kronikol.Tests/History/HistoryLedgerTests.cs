@@ -219,6 +219,30 @@ public class HistoryLedgerTests : IDisposable
         Assert.Equal(2, lines.Count(l => l.StartsWith("{\"t\":\"run\"", StringComparison.Ordinal)));
     }
 
+    // B5 (plans/TITLES_AS_WRITTEN_PLAN.md): a roster's hash covers the suite and the ids alone, so a run whose titles
+    // changed while its ids did not (a title the rule reads better, kept to its id) has a roster of the same hash.
+
+    private static HistoryRoster Named(string? suite, params (string Id, string Name)[] scenarios) =>
+        HistoryRoster.Create(suite, scenarios.Select(s => new HistoryRosterEntry(s.Id, s.Name, "Order tests", null)).ToArray());
+
+    [Fact]
+    public void A_roster_whose_names_changed_under_the_same_ids_is_written_again_and_read_as_today_s()
+    {
+        var before = Named("Suite", ("a1b2", "Get http response"), ("c3d4", "Ships"));
+        var after = Named("Suite", ("a1b2", "Get HTTP response"), ("c3d4", "Ships"));
+        Assert.Equal(before.Hash, after.Hash);
+        HistoryLedgerWriter.Append(LedgerPath, before, Run(before, "gh:1:1", "PP"), "3.9.0");
+
+        HistoryLedgerWriter.Append(LedgerPath, after, Run(after, "gh:2:1", "PP"), "3.9.0");
+        HistoryLedgerWriter.Append(LedgerPath, after, Run(after, "gh:3:1", "PP"), "3.9.0");
+
+        var lines = File.ReadAllLines(LedgerPath);
+        Assert.Equal(2, lines.Count(l => l.StartsWith("{\"t\":\"roster\"", StringComparison.Ordinal)));
+        var ledger = HistoryLedgerReader.Read(LedgerPath, window: 50).Ledger!;
+        Assert.Equal(["Get HTTP response", "Ships"], ledger.Roster(after.Hash)!.Names);
+        Assert.Empty(HistoryLedgerReader.Verify(LedgerPath));
+    }
+
     [Fact]
     public void The_same_run_appended_twice_is_recorded_once()
     {

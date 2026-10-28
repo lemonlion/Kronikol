@@ -96,6 +96,7 @@ internal static class FeatureResultExtensions
             IsHappyPath = classified.IsHappyPath,
             Tags = tags.Length > 0 ? tags : null,
             OutlineId = outlineId,
+            OutlineTitle = outlineId,
             ExampleValues = exampleValues is { Count: > 0 } ? exampleValues : null,
             ExampleRawValues = exampleRawValues,
             Attachments = StepCollector.GetScenarioAttachments(result.Info.RuntimeId.ToString()),

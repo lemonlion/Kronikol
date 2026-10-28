@@ -28,9 +28,18 @@ internal static class TestContextEnumerableExtensions
                         .ThenBy(x => x.TestMethodName)
                         .Select(x =>
                         {
-                            var displayName = ScenarioTitleResolver.FormatScenarioDisplayName(x.TestDisplayName ?? x.TestMethodName);
-                            var parsed = ParameterParser.Parse(displayName);
-                            parsed = RebindParameterNames(parsed, x.ParameterNames);
+                            var name = ScenarioTitleResolver.FormatLaneScenarioName(x.TestDisplayName ?? x.TestMethodName, x.TestMethodName,
+                                x.MethodDisplayName);
+                            // a name the test wrote whole holds no arguments, whatever its brackets say
+                            var parsed = name.ReadArguments ? RebindParameterNames(ParameterParser.Parse(name.Shown), x.ParameterNames) : null;
+                            var outlineId = parsed is { Count: > 0 } ? ParameterParser.ExtractBaseName(name.Shown) : null;
+
+                            // 5.16.4's reading of the same test, which the id keys on where this one differs (plans/TITLES_AS_WRITTEN_PLAN.md 4.4)
+                            var frozenName = ScenarioTitleResolver.FormatScenarioDisplayNameAsOf5164(x.TestDisplayName ?? x.TestMethodName);
+                            var frozenParsed = RebindParameterNames(ParameterParser.Parse(frozenName), x.ParameterNames);
+                            var frozenKey = new ScenarioIdKey(frozenName,
+                                frozenParsed is { Count: > 0 } ? ParameterParser.ExtractBaseName(frozenName) : null,
+                                frozenParsed is { Count: > 0 } ? frozenParsed : null);
                             var classified = ScenarioTags.Classify(x.Tags);
                             var tags = ScenarioTags.Merge(ScenarioTags.Classify(x.FeatureTags).Tags, classified.Tags)
                                 .Except(featureTags, ScenarioTags.Comparer).ToArray();
@@ -38,7 +47,9 @@ internal static class TestContextEnumerableExtensions
                             {
                                 Id = x.TestId,
                                 Result = x.Outcome.ToExecutionResult(),
-                                DisplayName = displayName,
+                                DisplayName = name.Shown,
+                                NameAsWritten = name.Written,
+                                StableIdKey = ScenarioStableId.KeyWhereChanged(frozenKey, name.Shown, outlineId, parsed is { Count: > 0 } ? parsed : null),
                                 IsHappyPath = x.IsHappyPath || classified.IsHappyPath,
                                 Tags = tags.Length > 0 ? tags : null,
                                 ErrorMessage = x.ErrorMessage,
@@ -48,7 +59,8 @@ internal static class TestContextEnumerableExtensions
                                 EndedAt = x.EndedAt,
                                 Steps = StepCollector.GetSteps(x.TestId) is { Length: > 0 } steps ? steps : null,
                                 Attachments = StepCollector.GetScenarioAttachments(x.TestId),
-                                OutlineId = parsed is { Count: > 0 } ? ParameterParser.ExtractBaseName(displayName) : null,
+                                OutlineId = outlineId,
+                                OutlineTitle = outlineId is null ? null : x.MethodDisplayName ?? ScenarioTitleResolver.FormatScenarioDisplayName(x.TestMethodName),
                                 ExampleValues = parsed is { Count: > 0 } ? parsed : null
                             };
                         }).ToArray()

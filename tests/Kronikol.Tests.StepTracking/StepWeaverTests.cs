@@ -591,8 +591,30 @@ public class StepWeaverTests
     [Fact]
     public void HumanizeMethodName_MixedCase()
     {
-        Assert.Equal("Get http response", StepWeaver.HumanizeMethodName("GetHTTPResponse"));
+        // a word in capitals keeps them, as in a scenario's title: 5.16.4 wove "Get http response" (#139)
+        Assert.Equal("Get HTTP response", StepWeaver.HumanizeMethodName("GetHTTPResponse"));
     }
+
+    // The weaver compiles the core's rule from its own source file (Kronikol.Naming.SentenceCase), so a woven step reads
+    // as a title does. These are rows of the core's SentenceCaseTests: a copy that drifted from the core's would fail here.
+    [Theory]
+    [InlineData("WhenMCAFundingActivates_TheLOCIsDrawn", "When MCA funding activates the LOC is drawn")]
+    [InlineData("Given_the_UK_store_when_I_pay_then_VAT_is_added", "Given the UK store when I pay then VAT is added")]
+    [InlineData("WhenMcaFundingActivates", "When mca funding activates")]
+    [InlineData("ParsesURLs", "Parses URLs")]
+    [InlineData("XIs", "X is")]
+    [InlineData("GIVEN_VALID_INPUT_WHEN_SAVED", "Given valid input when saved")]
+    [InlineData("HTTP_GET", "Http get")]
+    [InlineData("Returns404WhenMissing", "Returns404 when missing")]
+    [InlineData("Returns200OK", "Returns200 OK")]
+    [InlineData("E2ETestsPass", "E2E tests pass")]
+    [InlineData("color_F6F6F6", "Color F6F6F6")]
+    [InlineData("IsXValid", "Is X valid")]
+    [InlineData("ReturnsAValue", "Returns a value")]
+    [InlineData("Order\tAPI works", "Order API works")]
+    [InlineData("___", "")]
+    public void HumanizeMethodName_reads_by_the_rule_a_scenario_title_takes(string methodName, string expected) =>
+        Assert.Equal(expected, StepWeaver.HumanizeMethodName(methodName));
     [Fact]
     public void HumanizeMethodName_reads_the_same_on_a_machine_whose_culture_cases_i_otherwise()
     {

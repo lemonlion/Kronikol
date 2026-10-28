@@ -25,6 +25,12 @@ public record MSTestScenarioInfo
     public DateTimeOffset? EndedAt { get; init; }
     public string?[]? ParameterNames { get; init; }
 
+    /// <summary>
+    /// The test method's <c>[TestMethod(DisplayName = …)]</c>, which MSTest gives a data row's arguments after it
+    /// ("Adds numbers (1,2)"): a name the test wrote, shown as written with the row's values after it.
+    /// </summary>
+    internal string? MethodDisplayName { get; init; }
+
     /// <summary>The <c>[TestCategory]</c> values of the test's class, its base classes' included, and of its assembly.</summary>
     public string[]? FeatureTags { get; init; }
 

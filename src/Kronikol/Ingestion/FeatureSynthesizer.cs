@@ -207,6 +207,7 @@ public static class FeatureSynthesizer
                 BackgroundSteps = backgroundSteps,
                 Rule = acc.Rule,
                 OutlineId = acc.OutlineId,
+                OutlineTitle = acc.OutlineId,
                 ExamplesBlockName = acc.ExamplesBlockName,
                 ExamplesBlockDescription = acc.ExamplesBlockDescription,
                 ExamplesBlockIndex = acc.ExamplesBlockIndex,

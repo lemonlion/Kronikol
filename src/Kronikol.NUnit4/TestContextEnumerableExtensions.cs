@@ -35,12 +35,21 @@ internal static class TestContextEnumerableExtensions
                         .ThenBy(x => x.Test.MethodName)
                         .Select(x =>
                         {
-                            var displayName = ScenarioTitleResolver.FormatScenarioDisplayName(x.Test.Name!);
+                            var name = ScenarioTitleResolver.FormatLaneScenarioName(x.Test.Name!, x.Test.MethodName ?? "");
 
                             var structuredResult = TryExtractStructuredParametersWithRaw(x);
                             var structuredParams = structuredResult?.StringValues;
                             Dictionary<string, object?>? rawValues = structuredResult?.RawValues;
-                            var parsed = structuredParams ?? ParameterParser.Parse(displayName);
+                            // a name the test wrote whole holds no arguments, whatever its brackets say
+                            var parsed = structuredParams ?? (name.ReadArguments ? ParameterParser.Parse(name.Shown) : null);
+                            var outlineId = parsed is { Count: > 0 } ? (structuredParams is not null ? GetStructuredOutlineId(x) : ParameterParser.ExtractBaseName(name.Shown)) : null;
+
+                            // 5.16.4's reading of the same test, which the id keys on where this one differs (plans/TITLES_AS_WRITTEN_PLAN.md 4.4)
+                            var frozenName = ScenarioTitleResolver.FormatScenarioDisplayNameAsOf5164(x.Test.Name!);
+                            var frozenParsed = structuredParams ?? ParameterParser.Parse(frozenName);
+                            var frozenKey = new ScenarioIdKey(frozenName,
+                                frozenParsed is { Count: > 0 } ? (structuredParams is not null ? GetStructuredOutlineId(x) : ParameterParser.ExtractBaseName(frozenName)) : null,
+                                frozenParsed is { Count: > 0 } ? frozenParsed : null);
                             var levels = Levels(x.Test);
                             var tags = ScenarioTags.Merge(ScenarioTags.Classify(levels.Feature).Tags, ScenarioTags.Classify(levels.Scenario).Tags)
                                 .Except(featureTags, ScenarioTags.Comparer).ToArray();
@@ -49,14 +58,17 @@ internal static class TestContextEnumerableExtensions
                             {
                                 Id = x.Test.ID,
                                 Result = x.Result.Outcome.Status.ToExecutionResult(),
-                                DisplayName = displayName,
+                                DisplayName = name.Shown,
+                                NameAsWritten = name.Written,
+                                StableIdKey = ScenarioStableId.KeyWhereChanged(frozenKey, name.Shown, outlineId, parsed is { Count: > 0 } ? parsed : null),
                                 IsHappyPath = IsHappyPath(x.Test),
                                 Tags = tags.Length > 0 ? tags : null,
                                 ErrorMessage = ScenarioOutcome.Message(x.Result.Outcome.Status, x.Result.Message),
                                 ErrorStackTrace = ScenarioOutcome.StackTrace(x.Result.Outcome.Status, x.Result.StackTrace),
                                 Duration = DiagrammedTestRun.TestDurations.TryGetValue(x.Test.ID, out var dur) ? dur : null,
                                 EndedAt = DiagrammedTestRun.TestEnds.TryGetValue(x.Test.ID, out var endedAt) ? endedAt : null,
-                                OutlineId = parsed is { Count: > 0 } ? (structuredParams is not null ? GetStructuredOutlineId(x) : ParameterParser.ExtractBaseName(displayName)) : null,
+                                OutlineId = outlineId,
+                                OutlineTitle = outlineId is null ? null : ScenarioTitleResolver.FormatScenarioDisplayName(x.Test.MethodName ?? x.Test.Name!),
                                 ExampleValues = parsed is { Count: > 0 } ? parsed : null,
                                 ExampleRawValues = rawValues,
                                 Steps = StepCollector.GetSteps(x.Test.ID) is { Length: > 0 } steps ? steps : null,

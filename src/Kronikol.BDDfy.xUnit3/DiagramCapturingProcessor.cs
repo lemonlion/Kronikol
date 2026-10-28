@@ -48,6 +48,10 @@ public class DiagramCapturingProcessor : IProcessor
         {
             var resolvedTitle = ScenarioTitleResolver.ResolveScenarioTitle(
                 scenario.Title, testClassSimpleName, testMethodName);
+            // 5.16.4's title, which the id keys on where this one differs (plans/TITLES_AS_WRITTEN_PLAN.md 4.4)
+            var frozenTitle = ScenarioTitleResolver.AppendTestParameters(
+                ScenarioTitleResolver.ResolveScenarioTitleAsOf5164(scenario.Title, testClassSimpleName, testMethodName),
+                testContext.Test?.TestDisplayName);
 
             // For parameterised tests (e.g. [Theory] / [InlineData]), append the
             // parameter values from the xUnit display name so each iteration gets a
@@ -78,6 +82,7 @@ public class DiagramCapturingProcessor : IProcessor
                 StoryTitle = storyTitle,
                 StoryDescription = storyDescription,
                 ScenarioTitle = resolvedTitle,
+                StableIdTitle = frozenTitle == resolvedTitle ? null : frozenTitle,
                 Tags = TagsOf(scenario.Tags, testContext.Test),
                 Steps = steps,
                 Result = scenario.Result,

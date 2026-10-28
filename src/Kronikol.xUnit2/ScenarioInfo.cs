@@ -45,4 +45,20 @@ public class ScenarioInfo
 
     /// <summary>An attribute's own scenario that a run's sink has reported, so no later run reports it again.</summary>
     internal bool Claimed { get; set; }
+
+    /// <summary>
+    /// The name 5.16.4 gave the test, where <see cref="ScenarioName"/> is another: the scenario's id keys on it, and
+    /// on the outline and values read from it (plans/TITLES_AS_WRITTEN_PLAN.md 4.4). Null for a scenario a consumer
+    /// made, whose id keys on its name as it is.
+    /// </summary>
+    internal string? StableIdName { get; set; }
+
+    /// <summary>A name the test wrote (a DisplayName), shown as written (<see cref="Scenario.NameAsWritten"/>).</summary>
+    internal bool NameAsWritten { get; set; }
+
+    /// <summary>A name the test wrote whole, with no arguments xUnit appended: its brackets are not a row's values.</summary>
+    internal bool NameWrittenWhole { get; set; }
+
+    /// <summary>The theory's DisplayName, else its method's title by the rule (<see cref="Scenario.OutlineTitle"/>).</summary>
+    internal string? OutlineTitle { get; set; }
 }

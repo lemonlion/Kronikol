@@ -19,7 +19,9 @@ internal static class ScenarioInfoExtensions
                 var scenarios = DeduplicateScenarioTitles(featureGroup
                         .DistinctBy(x => x.TestId)
                         .OrderByDescending(x => ScenarioTags.Classify(x.Tags).IsHappyPath)
-                        .ThenBy(x => x.ScenarioTitle)
+                        // by the title 5.16.4 sorted by, so the order, the sN addresses and the ` [n]` of two titles
+                        // that read alike there stay as they were
+                        .ThenBy(x => x.StableIdTitle ?? x.ScenarioTitle)
                         .Select(x =>
                         {
                             // a story has no tags, so they are all the scenario's; category:x is the tag x (F1)
@@ -51,10 +53,19 @@ internal static class ScenarioInfoExtensions
                                 }
                             }
 
+                            // 5.16.4 read the row's values from its own title the same way; only the name can differ
+                            var frozenTitle = x.StableIdTitle ?? x.ScenarioTitle;
+                            var frozenValues = structured is not null ? exampleValues : ParameterParser.Parse(frozenTitle);
+                            var frozenKey = new ScenarioIdKey(frozenTitle,
+                                frozenValues is { Count: > 0 } ? x.TestMethodName ?? ParameterParser.ExtractBaseName(frozenTitle) : null,
+                                frozenValues is { Count: > 0 } ? frozenValues : null);
+
                             return new Scenario
                             {
                                 Id = x.TestId,
                                 DisplayName = x.ScenarioTitle,
+                                StableIdKey = ScenarioStableId.KeyWhereChanged(frozenKey, x.ScenarioTitle, outlineId,
+                                    exampleValues is { Count: > 0 } ? exampleValues : null),
                                 IsHappyPath = classified.IsHappyPath,
                                 Result = x.Steps.Count == 0 && x.Result == TestStack.BDDfy.Result.NotExecuted
                                     ? ExecutionResult.Passed
@@ -68,6 +79,7 @@ internal static class ScenarioInfoExtensions
                                     : StepCollector.GetSteps(x.TestId) is { Length: > 0 } collectedSteps ? collectedSteps : null,
                                 Tags = classified.Tags.Length > 0 ? classified.Tags : null,
                                 OutlineId = outlineId,
+                                OutlineTitle = outlineId is null ? null : x.TestMethodName is { } method ? ScenarioTitleResolver.FormatScenarioDisplayName(method) : outlineId,
                                 ExampleValues = exampleValues is { Count: > 0 } ? exampleValues : null,
                                 ExampleRawValues = exampleRawValues,
                                 Attachments = StepCollector.GetScenarioAttachments(x.TestId),
@@ -111,21 +123,32 @@ internal static class ScenarioInfoExtensions
         return mapped;
     }
 
+    /// <summary>
+    /// Numbers the titles a story repeats, ` [1]`, ` [2]`, in the story's order. The suffix is in the id, so the ids
+    /// number the titles 5.16.4 showed alike (each scenario's recorded key), as it did; a title shown takes its number
+    /// only where the titles shown still repeat, so two that read apart now need none, and two the rule made alike show
+    /// alike, their ids apart (plans/TITLES_AS_WRITTEN_PLAN.md 4.4).
+    /// </summary>
     private static Scenario[] DeduplicateScenarioTitles(Scenario[] scenarios)
     {
-        var titleCounts = scenarios.GroupBy(s => s.DisplayName).Where(g => g.Count() > 1).Select(g => g.Key).ToHashSet();
-        if (titleCounts.Count == 0) return scenarios;
+        var repeatedKeys = scenarios.GroupBy(ScenarioStableId.KeyName).Where(g => g.Count() > 1).Select(g => g.Key).ToHashSet();
+        if (repeatedKeys.Count == 0) return scenarios;
+        var repeatedTitles = scenarios.GroupBy(s => s.DisplayName).Where(g => g.Count() > 1).Select(g => g.Key).ToHashSet();
 
         var titleIndex = new Dictionary<string, int>();
         foreach (var scenario in scenarios)
         {
-            if (!titleCounts.Contains(scenario.DisplayName)) continue;
+            var key = scenario.StableIdKey ?? new ScenarioIdKey(scenario.DisplayName, scenario.OutlineId, scenario.ExampleValues);
+            if (!repeatedKeys.Contains(key.Name)) continue;
 
-            if (!titleIndex.TryGetValue(scenario.DisplayName, out var index))
+            if (!titleIndex.TryGetValue(key.Name, out var index))
                 index = 0;
-            titleIndex[scenario.DisplayName] = index + 1;
+            titleIndex[key.Name] = index + 1;
 
-            scenario.DisplayName = $"{scenario.DisplayName} [{index + 1}]";
+            if (repeatedTitles.Contains(scenario.DisplayName))
+                scenario.DisplayName = $"{scenario.DisplayName} [{index + 1}]";
+            scenario.StableIdKey = ScenarioStableId.KeyWhereChanged(key with { Name = $"{key.Name} [{index + 1}]" },
+                scenario.DisplayName, scenario.OutlineId, scenario.ExampleValues);
         }
 
         return scenarios;

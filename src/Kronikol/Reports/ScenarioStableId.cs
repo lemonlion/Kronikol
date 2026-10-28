@@ -57,17 +57,41 @@ public static class ScenarioStableId
     }
 
     /// <summary>
-    /// The name a scenario's id, order and in-page anchor key on: its display name, except for an outline row whose
-    /// name Kronikol filled from its values (<see cref="Scenario.KeyedByOutline"/>, a Reqnroll row since #101), which
-    /// keys on its outline's title, the name it bore before. Read when it is used, so a title
+    /// The name a scenario's id, order and in-page anchor key on: the name its lane recorded where it shows another
+    /// (<see cref="Scenario.StableIdKey"/>), else its display name, except for an outline row whose name Kronikol filled
+    /// from its values (<see cref="Scenario.KeyedByOutline"/>, a Reqnroll row since #101), which keys on its outline's
+    /// title, the name it bore before. Read when it is used, so a title
     /// <see cref="ReportConfigurationOptions.CapitaliseTitles"/> re-cased is the key as it is.
     /// </summary>
     internal static string KeyName(Scenario scenario) =>
-        scenario is { KeyedByOutline: true, OutlineId: { } outlineId } ? outlineId : scenario.DisplayName;
+        scenario.StableIdKey?.Name
+        ?? (scenario is { KeyedByOutline: true, OutlineId: { } outlineId } ? outlineId : scenario.DisplayName);
 
-    /// <summary>The stable id of a scenario the report holds: <see cref="Compute"/> over <see cref="KeyName"/>.</summary>
+    /// <summary>
+    /// The stable id of a scenario the report holds: <see cref="Compute"/> over <see cref="KeyName"/>, its outline and
+    /// its example values, or over its recorded <see cref="Scenario.StableIdKey"/> where its lane recorded one.
+    /// </summary>
     internal static string For(string? suite, string featureName, Scenario scenario) =>
-        Compute(suite, featureName, KeyName(scenario), scenario.OutlineId, scenario.ExampleValues);
+        scenario.StableIdKey is { } key
+            ? Compute(suite, featureName, key.Name, key.OutlineId, key.ExampleValues)
+            : Compute(suite, featureName, KeyName(scenario), scenario.OutlineId, scenario.ExampleValues);
+
+    /// <summary>
+    /// The key a lane records for a scenario it names <paramref name="name"/>, with <paramref name="outlineId"/> and
+    /// <paramref name="exampleValues"/>, where 5.16.4 named it <paramref name="frozen"/>'s way: null when the two agree on
+    /// everything the id hashes, so only a scenario whose title the rule changed carries one.
+    /// </summary>
+    internal static ScenarioIdKey? KeyWhereChanged(ScenarioIdKey frozen, string name, string? outlineId,
+        IReadOnlyDictionary<string, string>? exampleValues) =>
+        frozen.Name == name && frozen.OutlineId == outlineId && SameValues(frozen.ExampleValues, exampleValues) ? null : frozen;
+
+    /// <summary>Whether two rows' values hash alike: the same pairs, in any order, none and empty being one.</summary>
+    internal static bool SameValues(IReadOnlyDictionary<string, string>? a, IReadOnlyDictionary<string, string>? b)
+    {
+        if (a is not { Count: > 0 } || b is not { Count: > 0 })
+            return (a?.Count ?? 0) == 0 && (b?.Count ?? 0) == 0;
+        return a.Count == b.Count && a.All(kv => b.TryGetValue(kv.Key, out var value) && value == kv.Value);
+    }
 
     /// <summary>
     /// The name a feature's scenarios' ids key on: <see cref="Feature.StableIdName"/> where its lane recorded the name
@@ -79,3 +103,11 @@ public static class ScenarioStableId
     internal static string For(string? suite, Feature feature, Scenario scenario) =>
         For(suite, FeatureKey(feature), scenario);
 }
+
+/// <summary>
+/// What a scenario's stable id is computed from where its lane shows the scenario otherwise than 5.16.4 did: the name
+/// 5.16.4 showed, and the outline and example values the lane read from that name then
+/// (plans/TITLES_AS_WRITTEN_PLAN.md 4.4). So a title the rule now reads better, a name the test wrote shown as written,
+/// keeps its id and its history.
+/// </summary>
+internal sealed record ScenarioIdKey(string Name, string? OutlineId, IReadOnlyDictionary<string, string>? ExampleValues);

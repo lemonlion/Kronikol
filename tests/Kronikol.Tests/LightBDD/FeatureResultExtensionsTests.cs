@@ -534,6 +534,21 @@ public class FeatureResultExtensionsTests
     }
 
     [Fact]
+    public void An_outline_with_inline_values_is_headed_as_LightBDD_wrote_it()
+    {
+        // B4 (plans/TITLES_AS_WRITTEN_PLAN.md): its rows' names hold their values inline, so they share no name, and 5.16.4
+        // headed the group by humanising the outline id again: "Caller uses endpoint with invalid new passcode"
+        StubExecutionResult Row(string id, string passcode) => new(id,
+            nameFormat: "Caller Uses Endpoint With Invalid NewPasscode \"{0}\" [reasonForBeingInvalid: \"{1}\"]",
+            nameParams: [new StubNameParam(passcode), new StubNameParam("TooShort")]);
+        var feature = new[] { new StubFeatureResult("F").WithScenario(Row("s1", "111111")).WithScenario(Row("s2", "222222")) }.ToFeatures()[0];
+
+        Assert.All(feature.Scenarios, s => Assert.Equal("Caller Uses Endpoint With Invalid NewPasscode", s.OutlineTitle));
+        Assert.Equal("Caller Uses Endpoint With Invalid NewPasscode",
+            Assert.Single(ParameterGrouper.Analyze(feature.Scenarios).Groups).GroupDisplayName);
+    }
+
+    [Fact]
     public void ToFeatures_extracts_all_bracket_params_from_NameFormat()
     {
         // Both params unmatched in method name — both appended as brackets

@@ -32,12 +32,21 @@ internal static class TestContextEnumerableExtensions
                         .ThenBy(x => x.Metadata.DisplayName)
                         .Select(x =>
                         {
-                            var displayName = ScenarioTitleResolver.FormatScenarioDisplayName(x.Metadata.DisplayName);
+                            var name = ScenarioTitleResolver.FormatLaneScenarioName(x.Metadata.DisplayName, x.Metadata.TestDetails.MethodName);
 
                             var structuredResult = TryExtractStructuredParametersWithRaw(x);
                             var structuredParams = structuredResult?.StringValues;
                             Dictionary<string, object?>? rawValues = structuredResult?.RawValues;
-                            var parsed = structuredParams ?? ParameterParser.Parse(displayName);
+                            // a name the test wrote whole holds no arguments, whatever its brackets say
+                            var parsed = structuredParams ?? (name.ReadArguments ? ParameterParser.Parse(name.Shown) : null);
+                            var outlineId = parsed is { Count: > 0 } ? (structuredParams is not null ? GetStructuredOutlineId(x) : ParameterParser.ExtractBaseName(name.Shown)) : null;
+
+                            // 5.16.4's reading of the same test, which the id keys on where this one differs (plans/TITLES_AS_WRITTEN_PLAN.md 4.4)
+                            var frozenName = ScenarioTitleResolver.FormatScenarioDisplayNameAsOf5164(x.Metadata.DisplayName);
+                            var frozenParsed = structuredParams ?? ParameterParser.Parse(frozenName);
+                            var frozenKey = new ScenarioIdKey(frozenName,
+                                frozenParsed is { Count: > 0 } ? (structuredParams is not null ? GetStructuredOutlineId(x) : ParameterParser.ExtractBaseName(frozenName)) : null,
+                                frozenParsed is { Count: > 0 } ? frozenParsed : null);
 
                             var result = x.Execution.Result?.State.ToExecutionResult() ?? ExecutionResult.Skipped;
                             var own = TestTags.OfScenario(x.Metadata.TestDetails.Categories, featureTags);
@@ -46,14 +55,17 @@ internal static class TestContextEnumerableExtensions
                             {
                                 Id = x.Id,
                                 Result = result,
-                                DisplayName = displayName,
+                                DisplayName = name.Shown,
+                                NameAsWritten = name.Written,
+                                StableIdKey = ScenarioStableId.KeyWhereChanged(frozenKey, name.Shown, outlineId, parsed is { Count: > 0 } ? parsed : null),
                                 IsHappyPath = own.IsHappyPath,
                                 Tags = own.Tags.Length > 0 ? own.Tags : null,
                                 ErrorMessage = ScenarioOutcome.Message(result, x.Execution.Result?.Exception),
                                 ErrorStackTrace = ScenarioOutcome.StackTrace(result, x.Execution.Result?.Exception),
                                 Duration = ScenarioOutcome.Duration(x.Execution.Result?.Duration, x.Execution.Result?.Start),
                                 EndedAt = x.Execution.Result?.End,
-                                OutlineId = parsed is { Count: > 0 } ? (structuredParams is not null ? GetStructuredOutlineId(x) : ParameterParser.ExtractBaseName(displayName)) : null,
+                                OutlineId = outlineId,
+                                OutlineTitle = outlineId is null ? null : ScenarioTitleResolver.FormatScenarioDisplayName(x.Metadata.TestDetails.MethodName),
                                 ExampleValues = parsed is { Count: > 0 } ? parsed : null,
                                 ExampleRawValues = rawValues,
                                 Steps = StepCollector.GetSteps(x.Id) is { Length: > 0 } steps ? steps : null,

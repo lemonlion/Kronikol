@@ -198,6 +198,19 @@ public static class HistoryLedgerWriter
         }
     }
 
+    /// <summary>Whether a roster line the ledger holds names its scenarios as <paramref name="roster"/> does.</summary>
+    private static bool SameNames(string rosterLine, HistoryRoster roster)
+    {
+        try
+        {
+            return HistoryJson.Parse(rosterLine).Roster is { } held && held.SameNamesAs(roster);
+        }
+        catch (FormatException)
+        {
+            return false;
+        }
+    }
+
     private static HistoryAppendResult AppendLocked(FileStream stream, string path, HistoryRoster roster, HistoryRun run, string generator, int attempts,
         HistoryShapes? shapes)
     {
@@ -222,7 +235,7 @@ public static class HistoryLedgerWriter
                         attempts);
             }
 
-            var rosterPresent = false;
+            string? lastRosterLine = null;
             var shapesPresent = shapes is null;
             var presentShapes = new HashSet<string>(StringComparer.Ordinal);
             foreach (var raw in lines)
@@ -231,7 +244,7 @@ public static class HistoryLedgerWriter
                 if (line.Length == 0) continue;
                 var (kind, id, suite, suiteIsNull) = HistoryJson.Peek(line);
                 if (kind == HistoryLineKind.Roster && string.Equals(id, roster.Hash, StringComparison.Ordinal))
-                    rosterPresent = true;
+                    lastRosterLine = line;
                 if (kind == HistoryLineKind.Shapes && id is not null)
                     presentShapes.Add(id);
                 if (kind == HistoryLineKind.Shapes && shapes is not null && string.Equals(id, shapes.Hash, StringComparison.Ordinal))
@@ -246,7 +259,8 @@ public static class HistoryLedgerWriter
             if (!text.EndsWith('\n'))
                 builder.Append('\n');
 
-            if (!rosterPresent)
+            // The reader keeps the last roster line of each hash, so one written before under other names is written again.
+            if (lastRosterLine is null || !SameNames(lastRosterLine, roster))
                 builder.Append(HistoryJson.RosterLine(roster)).Append('\n');
             if (!shapesPresent)
                 builder.Append(HistoryJson.ShapesLine(shapes!)).Append('\n');

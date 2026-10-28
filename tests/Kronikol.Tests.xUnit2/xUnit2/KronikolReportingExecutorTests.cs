@@ -150,6 +150,33 @@ public class KronikolReportingExecutorTests : IDisposable
     }
 
     [Fact]
+    public void A_paired_scenario_takes_the_sink_s_recorded_key_with_its_name()
+    {
+        // plans/TITLES_AS_WRITTEN_PLAN.md 4.4: 5.16.4 hashed the sink's name, so the attribute's scenario, made from its
+        // method alone, keeps the sink's id only if the key the sink recorded comes across with the name
+        var named = Test<TrackedSinkTests>(nameof(TrackedSinkTests.Fails), "Orders reach Kafka");
+        var written = new List<IReadOnlyList<ScenarioInfo>>();
+        using var sink = new KronikolResultsSink(new RecordingSink(), (scenarios, _, _, _) => written.Add(scenarios));
+        sink.OnMessage(AssemblyStarting());
+
+        var attribute = new TestTrackingAttribute();
+        attribute.Before(MethodOf(named));
+        attribute.After(MethodOf(named));
+        Task.Run(() =>
+        {
+            foreach (var message in new IMessageSinkMessage[] { Starting(named), Failed(named, "boom"), Finished(named), AssemblyFinished() })
+                sink.OnMessage(message);
+        }).GetAwaiter().GetResult();
+
+        var reported = Assert.Single(Assert.Single(written));
+        Assert.Equal("Orders reach Kafka", reported.ScenarioName);
+        Assert.Equal("Orders reach kafka", reported.StableIdName);
+        var feature = Assert.Single(new[] { reported }.ToFeatures());
+        Assert.Equal(ScenarioStableId.Compute(null, "Tracked Sink Tests", "Orders reach kafka"),
+            ScenarioStableId.For(null, feature, Assert.Single(feature.Scenarios)));
+    }
+
+    [Fact]
     public void A_run_that_hands_its_scenarios_over_records_no_pairing()
     {
         var test = Test<TrackedSinkTests>(nameof(TrackedSinkTests.Passes));

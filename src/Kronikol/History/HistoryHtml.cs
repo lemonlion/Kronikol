@@ -222,7 +222,8 @@ internal static class HistoryHtml
 
     private static void List(StringBuilder sb, string heading, IEnumerable<ScenarioHistory> items, Func<ScenarioHistory, string> link)
     {
-        var list = items.OrderBy(e => HistoryAnalyzer.Precedence(e.Primary)).ThenBy(e => e.Feature, StringComparer.Ordinal).ThenBy(e => e.Name, StringComparer.Ordinal).ToList();
+        // the report's own comparer, so an entry sits where the report puts its feature and scenario whatever their case
+        var list = items.OrderBy(e => HistoryAnalyzer.Precedence(e.Primary)).ThenBy(e => e.Feature, StringComparer.CurrentCulture).ThenBy(e => e.Name, StringComparer.CurrentCulture).ToList();
         if (list.Count == 0)
             return;
         sb.Append($"<div class=\"history-list\"><h4>{heading} <span class=\"history-count\">{list.Count.ToString(CultureInfo.InvariantCulture)}</span></h4><ul>");

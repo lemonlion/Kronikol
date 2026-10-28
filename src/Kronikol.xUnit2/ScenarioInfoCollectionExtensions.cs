@@ -23,10 +23,18 @@ internal static class ScenarioInfoCollectionExtensions
                     Tags = featureTags.Length > 0 ? featureTags : null,
                     Scenarios = scenariosForFeature
                         .OrderByDescending(x => x.IsHappyPath || ScenarioTags.Classify(x.Tags).IsHappyPath)
-                        .ThenBy(x => x.ScenarioName)
+                        // by the name 5.16.4 sorted by, so the data files' order and the sN addresses stay as they were
+                        .ThenBy(x => x.StableIdName ?? x.ScenarioName)
                         .Select(x =>
                         {
-                            var parsed = ParameterParser.Parse(x.ScenarioName);
+                            // a name the test wrote whole holds no arguments, whatever its brackets say
+                            var parsed = x.NameWrittenWhole ? null : ParameterParser.Parse(x.ScenarioName);
+                            var outlineId = parsed is { Count: > 0 } ? ParameterParser.ExtractBaseName(x.ScenarioName) : null;
+                            var frozenName = x.StableIdName ?? x.ScenarioName;
+                            var frozenParsed = ParameterParser.Parse(frozenName);
+                            var frozenKey = new ScenarioIdKey(frozenName,
+                                frozenParsed is { Count: > 0 } ? ParameterParser.ExtractBaseName(frozenName) : null,
+                                frozenParsed is { Count: > 0 } ? frozenParsed : null);
                             var classified = ScenarioTags.Classify(x.Tags);
                             var tags = ScenarioTags.Merge(ScenarioTags.Classify(x.FeatureTags).Tags, classified.Tags)
                                 .Except(featureTags, ScenarioTags.Comparer).ToArray();
@@ -35,6 +43,8 @@ internal static class ScenarioInfoCollectionExtensions
                                 Id = x.Id,
                                 Result = x.Result,
                                 DisplayName = x.ScenarioName,
+                                NameAsWritten = x.NameAsWritten,
+                                StableIdKey = ScenarioStableId.KeyWhereChanged(frozenKey, x.ScenarioName, outlineId, parsed is { Count: > 0 } ? parsed : null),
                                 IsHappyPath = x.IsHappyPath || classified.IsHappyPath,
                                 Tags = tags.Length > 0 ? tags : null,
                                 // Null when there is nothing to report, the rule every failure field follows
@@ -47,7 +57,8 @@ internal static class ScenarioInfoCollectionExtensions
                                 ResultDefaulted = x.ResultDefaulted,
                                 Steps = StepCollector.GetSteps(x.Id) is { Length: > 0 } steps ? steps : null,
                                 Attachments = StepCollector.GetScenarioAttachments(x.Id),
-                                OutlineId = parsed is { Count: > 0 } ? ParameterParser.ExtractBaseName(x.ScenarioName) : null,
+                                OutlineId = outlineId,
+                                OutlineTitle = outlineId is null ? null : x.OutlineTitle,
                                 ExampleValues = parsed is { Count: > 0 } ? parsed : null
                             };
                         }).ToArray()

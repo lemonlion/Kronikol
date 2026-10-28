@@ -26,7 +26,21 @@ public static class Expected
 
     public static string Feature(TrxTest test) => ScenarioTitleResolver.FormatFeatureName(test.ClassSimpleName);
 
-    public static string ScenarioName(TrxTest test) => ScenarioTitleResolver.FormatScenarioDisplayName(test.DisplayName);
+    /// <summary>
+    /// The name xUnit made for a test, its method path (or under <c>methodDisplay: method</c> its method alone) and a
+    /// row's arguments, read by the rule; a DisplayName the test was given, as written (plans/TITLES_AS_WRITTEN_PLAN.md 4.2).
+    /// </summary>
+    public static string ScenarioName(TrxTest test) =>
+        MadeByXunit(test) ? ScenarioTitleResolver.FormatScenarioDisplayName(test.DisplayName) : test.DisplayName;
+
+    private static bool MadeByXunit(TrxTest test)
+    {
+        foreach (var prefix in new[] { $"{test.ClassName}.{test.MethodName}", test.MethodName })
+            if (test.DisplayName.StartsWith(prefix, StringComparison.Ordinal) &&
+                (test.DisplayName.Length == prefix.Length || test.DisplayName[prefix.Length] == '('))
+                return true;
+        return false;
+    }
 
     public static string Result(TrxTest test) => test.Outcome switch
     {

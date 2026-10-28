@@ -272,6 +272,14 @@ public static class MergeableReportReader
         ExamplesBlockIndex = ReadInt(se, "examplesBlockIndex"),
         ExampleValues = ReadStringDictionary(se, "exampleValues"),
         ExampleFlatValues = ReadStringDictionary(se, "exampleFlatValues") ?? ReadStringDictionary(se, "exampleValues"),
+        OutlineTitle = GetString(se, "outlineTitle"),
+        // A scenario whose id keys on what 5.16.4 showed (plans/TITLES_AS_WRITTEN_PLAN.md 4.4): without it the merge would
+        // hash the name as shown and give the scenario an id its shard never wrote.
+        StableIdKey = GetString(se, "stableIdName") is { } stableIdName
+            ? new ScenarioIdKey(stableIdName,
+                GetString(se, "stableIdOutlineId"),
+                ReadStringDictionary(se, "stableIdExampleValues"))
+            : null,
         ExampleDisplayName = GetString(se, "exampleDisplayName"),
         Attachments = ReadAttachments(se, "attachments"),
         BackgroundSteps = ReadSteps(se, "backgroundSteps", notes),

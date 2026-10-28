@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.RegularExpressions;
+using Kronikol.Naming;
 
 namespace Kronikol.Tracking;
 
@@ -1022,24 +1023,10 @@ public static partial class AssertionExpressionFormatter
         return Regex.Replace(args, @"^([A-Z][a-zA-Z0-9]*)\.([A-Z][a-zA-Z0-9]*)$", "$2");
     }
 
-    /// <summary>A name in words: split on case and lower-cased. Every name a label reads as words comes here.</summary>
-    private static string NameWords(string name) => SplitPascalCase(name).ToLowerInvariant();
-
-    private static string SplitPascalCase(string input)
-    {
-        if (string.IsNullOrEmpty(input))
-            return input;
-
-        var sb = new StringBuilder();
-        for (var i = 0; i < input.Length; i++)
-        {
-            if (i > 0 && char.IsUpper(input[i]) && !char.IsUpper(input[i - 1]))
-                sb.Append(' ');
-            else if (i > 1 && char.IsUpper(input[i]) && char.IsUpper(input[i - 1]) && i + 1 < input.Length && char.IsLower(input[i + 1]))
-                sb.Append(' ');
-            sb.Append(input[i]);
-        }
-
-        return sb.ToString();
-    }
+    /// <summary>
+    /// A name in words, by the rule a scenario's title takes (plans/TITLES_AS_WRITTEN_PLAN.md 4.1, #210's question 7): split
+    /// on case, a word written in capitals kept and every other word lower-cased. Every name a label reads as words comes
+    /// here.
+    /// </summary>
+    private static string NameWords(string name) => SentenceCase.Words(name);
 }

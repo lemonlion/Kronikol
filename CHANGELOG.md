@@ -4,6 +4,81 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.16.5] - 2026-10-28
+
+The patch part moves (5.16.4 to 5.16.5): fixes, nothing new to call. Titles read as their tests write them, and every
+scenario keeps the stable id it had: Kronikol's own adapters record the name 5.16.4 showed and compute the id from it.
+What else moves is under Changed.
+
+### Fixed
+
+- **A title made from a method's name keeps the words it writes in capitals (#139).** `WhenMCAFundingActivates` reads
+  "When MCA funding activates", `GetHTTPResponse` "Get HTTP response" and `ParsesURLs` "Parses URLs"; until now every
+  word but the first was lower-cased ("When mca funding activates"). One rule names a scenario from its method on every
+  adapter (xUnit v2 and v3, NUnit, MSTest, TUnit, and BDDfy's fallback title) and a woven step from its method: a run of
+  capitals is one word up to the capital that starts the next word, a plural of capitals stays whole, a digit parts from
+  capitals only where they start a word (`Returns404WhenMissing` reads "Returns404 when missing"), a word in capitals
+  and a one-letter capital other than the article `A` keep their case, and a name with no lower-case letter at all
+  (`GIVEN_VALID_INPUT`) reads as an ordinary sentence, "Given valid input". A word written in Pascal case (`Mca`)
+  cannot say it is an acronym, and is lower-cased as before.
+- **A name the test wrote is shown as written (#102).** An xUnit `DisplayName` or theory row's `TestDisplayName`, an
+  NUnit `TestName`, and an MSTest or TUnit `DisplayName`: "Order API returns 404 for v1.2" read "Order api returns 404
+  for v1.2". A row's arguments still follow the name in brackets. On xUnit v2's collection-fixture path a `DisplayName`
+  is now read; the scenario was named after its method.
+- **xUnit v3: a row's own name or its label is read whole.** A `TestDisplayName` was cut at its last dot or comma ("Order
+  v1.2 ships" read "2 ships"), and a `Label` read as arguments ("Ships [ [UK]]") or cut at its dot.
+- **TUnit, NUnit and MSTest: a written name is not read as a method's.** One ending in a parenthesis was split into a
+  method and arguments ("Orders are sent to kafka [v1.2]"), and one with no space was cut at its last dot.
+- **A group's heading is the name its rows share.** A theory's group is headed by its rows' name without their
+  arguments, as the rows read ("Adds VAT for the UK"); a LightBDD, BDDfy or ingested outline's heading was lower-cased
+  although its rows were not, and is now its title as the adapter wrote it.
+- **The Search tab's sort by name reads letters, not code units,** as the data files order features: every capital
+  sorted before every lower-case letter ("Get HTTP response" before "Get a list").
+- **`kronikol merge` orders features, and the History tab and the labs page order their entries, by the culture's
+  comparer,** as a single report's data files do: a merged report could order its features otherwise than each shard.
+- **The cross-run ledger takes a suite's new names.** It kept the names a suite's scenarios and features had in the
+  first run the ledger saw (a feature's pre-5.9.1 name among them): a run whose names differ now writes the suite's list
+  again, and the History tab and the labs page show the names the run shows.
+- **An assertion label keeps a word written in capitals,** by the same rule (#210's question 7): a name a label reads
+  as words, since 5.16.3 a member's or method's name only, keeps its capitals, so `reader.IsDBNull(4).Should().BeTrue()`
+  reads "Reader is DB null(4) should be true" (5.16.4: "Reader is db null(4)"). Over BreakfastProvider's 1,132
+  assertions that is the one label that changes; none of the 53 in Kronikol's examples or the 88 written over several
+  lines does.
+
+### Changed
+
+- **What moves although no id does:** a group's in-page anchor where its heading's words change; the order of the Search
+  tab's name sort, of a merged report's features and of the History tab's entries, where names differ only in case; a
+  retitled scenario's CTRF `name` (once: a tool that matches tests across runs by name sees a new test); a saved search
+  for a word whose letters the rule parts otherwise; BDDfy's own reports' fallback titles; and an id a consumer computes
+  from `ScenarioTitleResolver.FormatScenarioDisplayName` or `ResolveScenarioTitle`, whose titles change with the rule.
+- The data files write `stableIdName` (with `stableIdOutlineId` and `stableIdExampleValues`) on a scenario whose id is
+  computed from another name than the one shown, `outlineTitle` where an adapter heads an outline otherwise than its
+  rows' name, and `nameAsWritten` on a written name too; each only where it applies, and `kronikol merge` reads them
+  back, so a merged report computes the ids and headings the shards did.
+
+### Documentation
+
+- The wiki's Step Tracking page gives the rule, with `GetHTTPResponse` reading "Get HTTP response"; API Reference says
+  what the two formatters do now and that Kronikol's adapters keep their ids; Generated Reports adds `nameAsWritten`,
+  `stableIdName` and `outlineTitle` and says what the `stableId` is computed from; the xUnit v2, xUnit v3, NUnit and
+  TUnit pages say a written name is shown as written; Search Syntax, Ingesting External Captures and Cross-Run History
+  say what the rule changes there.
+
+### Tests
+
+- Facts for the rule (`SentenceCaseTests`, and a fixture of 1,437 test names, 437 of which the rule reads otherwise,
+  each pinned to the title 5.16.4 gave and the one it gives now), for each adapter's names and ids (xUnit v2's sink,
+  pairing and fixture lane, xUnit v3, NUnit, MSTest, TUnit through its name reader, BDDfy, LightBDD), for headings, for
+  the recorded key through a merge and through a compressed data file, for the ledger's names and the sorts, and
+  Playwright facts for a written name and a word in capitals on the painted page and for the Search tab's sort. Each of
+  24 mutations (the rule's parts one at a time, the written-name and method-boundary tests, each heading source, the
+  key's recording, capitalising and pairing, the sorts, the ledger) turns a fact red.
+- BreakfastProvider's xUnit, NUnit, BDDfy and TUnit lanes, run on this build, keep every one of their 848 stable ids;
+  18 of their titles gain their capitals ("The scalar UI endpoint should return a valid page").
+- Turned round: MSTest's happy-path ordering fact reads "ZZZ happy path", and the label of `a?.B?.C.Should()` reads "A B
+  C should not be null" (a one-letter capital keeps its case).
+
 ## [5.16.4] - 2026-10-28
 
 The patch part moves (5.16.3 to 5.16.4): fixes, nothing new to call. Assertion labels read a constant argument's value

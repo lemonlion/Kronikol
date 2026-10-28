@@ -37,6 +37,13 @@ public record BDDfyScenarioInfo
     /// truncated generic type notation in scenario titles breaks bracket-based base name extraction.
     /// </summary>
     public string? TestMethodName { get; init; }
+
+    /// <summary>
+    /// The title 5.16.4 gave the scenario, where <see cref="ScenarioTitle"/> is another (a fallback title the rule now
+    /// reads better): the scenario's id, its place in the story and its ` [n]` keep to it
+    /// (plans/TITLES_AS_WRITTEN_PLAN.md 4.4).
+    /// </summary>
+    internal string? StableIdTitle { get; init; }
 }
 
 /// <summary>

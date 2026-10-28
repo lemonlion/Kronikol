@@ -50,6 +50,15 @@ public sealed record HistoryRoster
     /// <summary>How many positions the roster has.</summary>
     public int Count => Ids.Count;
 
+    /// <summary>
+    /// Whether two rosters of one hash name their scenarios and features alike. The hash covers the suite and the ids
+    /// alone, so a run whose titles changed while its ids did not (a title the rule reads better, kept to its id) has a
+    /// roster of the same hash and other names: the writer writes it again, and the reader, which keeps the last line
+    /// of each hash, shows today's titles (plans/TITLES_AS_WRITTEN_PLAN.md B5).
+    /// </summary>
+    internal bool SameNamesAs(HistoryRoster other) =>
+        Names.SequenceEqual(other.Names, StringComparer.Ordinal) && Features.SequenceEqual(other.Features, StringComparer.Ordinal);
+
     /// <summary>The roster for a list of scenarios, in the order given, with slots numbered and the hash computed.</summary>
     public static HistoryRoster Create(string? suite, IReadOnlyList<HistoryRosterEntry> entries)
     {

@@ -107,6 +107,35 @@ internal sealed class KronikolResultsSink : LongLivedMarshalByRefObject, IMessag
         }
     }
 
+    private static readonly TestMethodDisplayOptions[] EveryDisplayOption =
+        Enumerable.Range(0, 16).Select(options => (TestMethodDisplayOptions)options).ToArray();
+
+    /// <summary>
+    /// The names xUnit gives a test method when the test names it nothing itself, each with the method's own part: the
+    /// class and method, or the method alone, formatted by each <c>methodDisplayOptions</c> there is. xUnit's own
+    /// formatter makes them, so the sink needs no configuration to tell its default name from a DisplayName.
+    /// </summary>
+    internal static IEnumerable<(string Name, string Method)> DefaultNames(string className, string methodName)
+    {
+        foreach (var options in EveryDisplayOption)
+        {
+            // xUnit's formatter throws under UseEscapeSequences on a name such as "Rejects_UD800" (a lone surrogate's
+            // code): a suite with that option on could not name the test either, so that reading is not its name
+            string method, classAndMethod;
+            try
+            {
+                method = new DisplayNameFormatter(TestMethodDisplay.Method, options).Format(methodName);
+                classAndMethod = new DisplayNameFormatter(TestMethodDisplay.ClassAndMethod, options).Format($"{className}.{methodName}");
+            }
+            catch (ArgumentException)
+            {
+                continue;
+            }
+            yield return (classAndMethod, method);
+            yield return (method, method);
+        }
+    }
+
     private void Start(ITest test)
     {
         var testMethod = test.TestCase.TestMethod;
@@ -116,14 +145,22 @@ internal sealed class KronikolResultsSink : LongLivedMarshalByRefObject, IMessag
             return;
 
         var (featureTags, tags) = CategoryTraits.Of(type, method);
+        var explicitDisplayName = method.GetCustomAttribute<FactAttribute>(inherit: true)?.DisplayName;
+        var name = ScenarioTitleResolver.FormatXunitScenarioName(test.DisplayName, explicitDisplayName,
+            DefaultNames(testMethod.TestClass.Class.Name, testMethod.Method.Name), firstParameterName: null);
+        // 5.16.4's reading of the same test, which the id keys on where this one differs (plans/TITLES_AS_WRITTEN_PLAN.md 4.4)
+        var frozenName = ScenarioTitleResolver.FormatXunitDisplayNameAsOf5164(test.DisplayName, explicitDisplayName);
         var scenario = new ScenarioInfo
         {
             Id = Guid.NewGuid().ToString(),
             // As TestTrackingAttribute.Before names a scenario it makes: the class running the test, which for an
             // inherited test method is the derived class.
             FeatureName = ScenarioTitleResolver.FormatFeatureName(type.Name),
-            ScenarioName = ScenarioTitleResolver.FormatXunitDisplayName(test.DisplayName,
-                method.GetCustomAttribute<FactAttribute>(inherit: true)?.DisplayName),
+            ScenarioName = name.Shown,
+            StableIdName = frozenName == name.Shown ? null : frozenName,
+            NameAsWritten = name.Written,
+            NameWrittenWhole = name.Written && !name.ReadArguments,
+            OutlineTitle = explicitDisplayName ?? ScenarioTitleResolver.FormatScenarioDisplayName(testMethod.Method.Name),
             MethodMatchKey = $"{type.FullName}.{method.Name}",
             Endpoint = type.GetCustomAttributes(inherit: true).OfType<EndpointAttribute>().FirstOrDefault()?.Endpoint,
             IsHappyPath = method.GetCustomAttributes(inherit: true).OfType<HappyPathAttribute>().Any(),
@@ -220,6 +257,12 @@ internal sealed class KronikolResultsSink : LongLivedMarshalByRefObject, IMessag
             own.Remove(partner);
             partner.Claimed = true;
             partner.ScenarioName = scenario.ScenarioName;
+            // with the name the key it stands for, since 5.16.4 hashed the sink's name: else a paired theory row or
+            // DisplayName test would key on the attribute's method-only name and take a new id
+            partner.StableIdName = scenario.StableIdName;
+            partner.NameAsWritten = scenario.NameAsWritten;
+            partner.NameWrittenWhole = scenario.NameWrittenWhole;
+            partner.OutlineTitle = scenario.OutlineTitle;
             partner.Result = scenario.Result;
             partner.ErrorMessage = scenario.ErrorMessage;
             partner.ErrorStackTrace = scenario.ErrorStackTrace;

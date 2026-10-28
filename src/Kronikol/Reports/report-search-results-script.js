@@ -150,9 +150,10 @@
         var s = state.s, o = state.o, list = results.slice();
         var by;
         if (s === 'order') by = function (a, b) { return a.order - b.order; };
+        // as the data files and a merge order features: by letter, not by code unit, so case and accents do not part two names
         else if (s === 'name') by = function (a, b) {
             var x = nameOf(a.item), y = nameOf(b.item);
-            return (x < y ? -1 : x > y ? 1 : 0) * (o === 'desc' ? -1 : 1) || a.order - b.order;
+            return x.localeCompare(y, undefined, { numeric: true, sensitivity: 'base' }) * (o === 'desc' ? -1 : 1) || a.order - b.order;
         };
         else if (s === 'duration') by = function (a, b) {
             var x = msOf(a.item), y = msOf(b.item);

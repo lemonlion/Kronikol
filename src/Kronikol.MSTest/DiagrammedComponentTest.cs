@@ -47,6 +47,7 @@ public abstract class DiagrammedComponentTest
             TestClassSimpleName = type.Name,
             TestMethodName = TestContext.TestName!,
             TestDisplayName = TestContext.TestDisplayName,
+            MethodDisplayName = methodInfo?.GetCustomAttribute<TestMethodAttribute>()?.DisplayName,
             TestId = CurrentTestId.Value ?? TestIdOf(type, TestContext),
             Outcome = TestContext.CurrentTestOutcome,
             // What was actually thrown. Until 3.1.0 this was the constant sentence "Test failed — see

@@ -835,3 +835,45 @@ gate reports no new or absent scenario and no partial run.
 - 2026-10-28, kronikol-50: 5.15.1 (`5ac5022f`) and #190's R3 as 5.16.0 (`15a95d4c`) shipped, touching no cited code;
   the worktree is rebased onto 5.16.0, R1 is 5.16.1 and R2 5.17.0 as things stand, the frozen copies `AsOf5160`, and
   the wiki's `Ingesting-External-Captures.md` lines moved by 4 (header). Not green-lit.
+- 2026-10-28, kronikol-50, at the owner's word ("Can you implement the plan in full"): every question takes its
+  recommendation (Q1 to Q12), as the owner's "in full" took them for REPORT_UI_FIXES_PLAN. R1 shipped as 5.16.5
+  (tag `v5.16.5`), after 5.16.2 (kronikol-7b) and 5.16.3 and 5.16.4 (#210's R1 and R2, kronikol-be), so the frozen
+  copies are `AsOf5164`.
+  #210's Q7 ("follow #139's decision, in #139's release") puts the label's case rule in R1: `NameWords`, the one helper
+  every word site of `AssertionExpressionFormatter` calls since 5.16.3, is `SentenceCase.Words`. Departures from the
+  design, each for the reason given:
+  - **Ids from a recorded key, not from the recorded name parsed again** (4.4). Reading the outline and the row's values
+    back from 5.16.x's name would show that name's lowered values in the parameter table, and keep a written name's
+    "(not found)" as an `Arg 0` column (against B2 and 4.2). Each lane records what 5.16.x computed, the name, the
+    outline id and the example values (`Scenario.StableIdKey`), only where one of them differs, and the data files
+    write them as `stableIdName`, `stableIdOutlineId` and `stableIdExampleValues`.
+  - **xUnit v2's model and BDDfy order by the recorded key alone,** where 4.4 said the key and then the shown name: the
+    key alone is 5.16.x's order exactly, and it is stable.
+  - **The ledger's `Amend` writes no roster.** `HistoryFold` keeps a run's earliest names, so a roster written by an
+    amend was never read; the append writes the roster again when a run's names differ (B5, Q12).
+  - **xUnit's generated names are found with xUnit's own public `DisplayNameFormatter`** (v3 `Xunit.v3`, v2
+    `Xunit.Sdk`) under all 16 combinations of `TestMethodDisplayOptions`, with no configuration read; a name whose
+    method part follows a dot, on a path with no whitespace or bracket, is generated too (a display name made
+    elsewhere, as xUnit v2's own executor tests make one).
+  - **TUnit has no constructible `TestContext` in its test project,** so its lane is covered by
+    `FormatLaneScenarioName`'s facts and its example lane.
+  - **`SentenceCase.Words` judges each run of letters and digits between punctuation** for keeping capitals, so
+    `Encode(1U)` reads "encode(1U)": the label measurement found "encode(1u)". The shouting test still counts
+    whitespace words only.
+  - **6.3's sort fact compares with the culture's order of the names,** the order the data files and, since R1, a merge
+    give features: the HTML Features list keeps the order the lane hands over, so "the order the Features list would"
+    is that comparer.
+  - Rows turned round: MSTest's happy-path ordering fact (`ZZZ_HappyPath` reads "ZZZ happy path"), the label
+    `a?.B?.C` ("A B C should not be null": a one-letter capital keeps its case), and `GetsTheUKVATRate`, which no rule
+    can part ("Gets the UKVAT rate"; the lane facts use `Gets_the_UK_VAT_rate`).
+  Measured: on top of 5.16.3, which already keeps a call's brackets as written, the label rule changes 1 of
+  BreakfastProvider's 1,132 labels ("Reader is DB null(4) should be true"), none of the 53 in the examples and none of
+  the 88 written over several lines (#210's `probe.cs` over its corpora, run against both trees). Mutations (6.4, R1's 23): all 23 of the list run against the core, MSTest, xUnit v2 and StepTracking
+  suites and the Search tab sort against its Playwright fact turn a fact red. Checks (6.5): the core suite (10,778), every adapter suite, the xUnit v2 fixture lane, the new Playwright class, the Release
+  build of `release.slnf` for every target, and BreakfastProvider's xUnit, NUnit, BDDfy and TUnit lanes on local
+  packages, whose 848 stable ids all match a run on its published 5.14.0 and whose 18 changed titles differ in case
+  only; the full Playwright suite (2,095 facts, none failed; 28 skipped and 2 not run, as on `main`). A read-only review of the diff found four faults, each fixed with a fact before release: xUnit's
+  formatter throws under `UseEscapeSequences` on a name such as `Rejects_UD800`, which the default-name probe tried and
+  lost the report on; a heading cut a Gherkin title's own "(<case>)" (the 5.9.1 fact went red); the compressed data
+  file dropped a key's none, so a merge read the scenario's outline in its place; `CapitaliseTitles` left an outline
+  title lower-case.

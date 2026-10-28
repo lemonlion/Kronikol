@@ -106,10 +106,11 @@ public record Scenario
 
     /// <summary>
     /// True for a scenario whose name a person wrote and the report shows as written: a Gherkin scenario (the Reqnroll
-    /// lanes and the Cucumber ingest). Its outline's grouped heading is its title as written, not the method-name
-    /// humaniser's reading (#102: <c>UK</c> lower-cased, brackets as <c>[...]</c>), and a name ending in brackets is never
-    /// read as a parameterised test's (5.9.1, plans/REPORT_UI_FIXES_PLAN.md N4, N5, E8). The data files write it as
-    /// <c>nameAsWritten</c> (only where it is true), so a merge keeps it.
+    /// lanes and the Cucumber ingest), and since 5.16.5 a DisplayName, a TestName or an MSTest DisplayName
+    /// (plans/TITLES_AS_WRITTEN_PLAN.md 4.2). Its outline's grouped heading is its title as written, not the method-name
+    /// rule's reading (#102), and a name ending in brackets is never read as a parameterised test's (5.9.1,
+    /// plans/REPORT_UI_FIXES_PLAN.md N4, N5, E8). The data files write it as <c>nameAsWritten</c> (only where it is
+    /// true), so a merge keeps it.
     /// </summary>
     internal bool NameAsWritten { get; set; }
 
@@ -121,6 +122,25 @@ public record Scenario
     /// <c>keyedByOutline</c> (only where it is true), so a merge computes the same ids.
     /// </summary>
     internal bool KeyedByOutline { get; set; }
+
+    /// <summary>
+    /// What the scenario's stable id is computed from, where its lane shows it otherwise than 5.16.4 did: the name 5.16.4
+    /// showed (a title the rule now reads better, a name the test wrote now shown as written) and the outline and example
+    /// values the lane read from it then, so the scenario keeps its id, its history and its anchor
+    /// (plans/TITLES_AS_WRITTEN_PLAN.md 4.4). Null where the id keys on the scenario as it is. The data files write it
+    /// as <c>stableIdName</c>, with <c>stableIdOutlineId</c> and <c>stableIdExampleValues</c> where those differ, so a
+    /// merge computes the same ids.
+    /// </summary>
+    internal ScenarioIdKey? StableIdKey { get; set; }
+
+    /// <summary>
+    /// The title the scenario's lane gives the outline it is a row of, for a heading its rows' names do not share: a
+    /// theory's DisplayName or its method's title by the rule, LightBDD's name format as it wrote it, an ingested
+    /// outline as the input wrote it (plans/TITLES_AS_WRITTEN_PLAN.md 4.3). Null where the lane gives none. The data
+    /// files write it as <c>outlineTitle</c> where it differs from the row's own name less its arguments, so a merge
+    /// heads the group as the run did.
+    /// </summary>
+    internal string? OutlineTitle { get; set; }
 
     /// <summary>
     /// Where the scenario is written - a project-relative path with forward slashes, matching

@@ -206,7 +206,9 @@ public static class MergeableReportMerger
             };
         }
 
-        return byName.Keys.OrderBy(n => n, StringComparer.Ordinal).Select(n => byName[n]).ToArray();
+        // in the order a single report puts its features (ReportGenerator orders them by name with the same comparer), so a
+        // merged report hands out anchors and addresses as each shard's own did
+        return byName.Keys.OrderBy(n => n, StringComparer.CurrentCulture).Select(n => byName[n]).ToArray();
     }
 
     /// <summary>

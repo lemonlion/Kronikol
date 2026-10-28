@@ -1,5 +1,6 @@
 using System.Reflection;
 using Kronikol.Tracking;
+using Xunit;
 using Xunit.Sdk;
 
 namespace Kronikol.xUnit2;
@@ -48,7 +49,12 @@ public sealed class TestTrackingAttribute : BeforeAfterTestAttribute
         // pairs it with its result by test method in the order the tests started (plans/XUNIT2_FRAMEWORK_COMPOSITION_PLAN.md 4.4).
         var testId = Guid.NewGuid().ToString();
         var featureName = ScenarioTitleResolver.FormatFeatureName(className);
-        var scenarioName = ScenarioTitleResolver.FormatScenarioDisplayName(methodName);
+        // As the sink names it, less the arguments this path never sees: a DisplayName as written, else the method's
+        // name read by the rule. The id keys on the method-only name 5.16.4 gave here (until the sink pairs the test and
+        // hands its own over).
+        var displayName = methodUnderTest.GetCustomAttribute<FactAttribute>(inherit: true)?.DisplayName;
+        var scenarioName = displayName is { Length: > 0 } ? displayName : ScenarioTitleResolver.FormatScenarioDisplayName(methodName);
+        var frozenName = ScenarioTitleResolver.FormatScenarioDisplayNameAsOf5164(methodName);
 
         XUnit2TestTrackingContext.SetCurrentTest($"{className}.{methodName}", testId);
 
@@ -70,6 +76,10 @@ public sealed class TestTrackingAttribute : BeforeAfterTestAttribute
             Id = testId,
             FeatureName = featureName,
             ScenarioName = scenarioName,
+            StableIdName = frozenName == scenarioName ? null : frozenName,
+            NameAsWritten = displayName is { Length: > 0 },
+            NameWrittenWhole = displayName is { Length: > 0 },
+            OutlineTitle = displayName is { Length: > 0 } ? displayName : scenarioName,
             MethodMatchKey = methodMatchKey,
             Endpoint = endpointAttr?.Endpoint,
             IsHappyPath = isHappyPath,

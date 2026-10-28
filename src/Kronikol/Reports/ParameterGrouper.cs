@@ -50,9 +50,7 @@ public static class ParameterGrouper
             }
             else
             {
-                // a Gherkin outline's title as written (5.9.1, N4); a test method's through the humaniser
-                var heading = members.Any(m => m.NameAsWritten) ? og.Key : ScenarioTitleResolver.FormatScenarioDisplayName(og.Key);
-                groups.Add(BuildGroup(heading, members, maxColumns, diagramComparer));
+                groups.Add(BuildGroup(HeadingOf(og.Key, members), members, maxColumns, diagramComparer));
             }
             foreach (var m in members) consumed.Add(m.Id);
         }
@@ -87,6 +85,37 @@ public static class ParameterGrouper
 
         return (groups.ToArray(), ungrouped.ToArray());
     }
+
+    /// <summary>
+    /// The heading of an outline's group (plans/TITLES_AS_WRITTEN_PLAN.md 4.3), never its key read by a humaniser a second
+    /// time: a Reqnroll outline whose rows are named from their values keeps its title as written (5.9.1, N4); else what
+    /// every row's name shares less its arguments; else the title the lane gave the outline
+    /// (<see cref="Scenario.OutlineTitle"/>), or a Gherkin outline's title as written; else, for a model none of Kronikol's
+    /// lanes made in 5.16.5 or later, the heading 5.16.4 gave.
+    /// </summary>
+    internal static string HeadingOf(string outlineId, IReadOnlyCollection<Scenario> members)
+    {
+        if (members.Any(m => m.KeyedByOutline))
+            return outlineId;
+
+        var bases = members.Select(BaseOf)
+            .Distinct(StringComparer.Ordinal)
+            .Take(2)
+            .ToArray();
+        if (bases.Length == 1)
+            return bases[0];
+
+        if (members.Select(m => m.OutlineTitle).FirstOrDefault(t => t is not null) is { } title)
+            return title;
+        return members.Any(m => m.NameAsWritten) ? outlineId : ScenarioTitleResolver.FormatScenarioDisplayNameAsOf5164(outlineId);
+    }
+
+    // A row's name without its arguments. A name the test wrote keeps its own brackets, a Gherkin title's "(<case>)"
+    // among them (#102); only the arguments a lane put after it, in square brackets, go.
+    private static string BaseOf(Scenario member) =>
+        !member.NameAsWritten || (member.OutlineTitle is not null && member.DisplayName.EndsWith(']'))
+            ? ParameterParser.ExtractBaseName(member.DisplayName) ?? member.DisplayName
+            : member.DisplayName;
 
     private static ParameterizedGroup BuildGroup(
         string groupName,

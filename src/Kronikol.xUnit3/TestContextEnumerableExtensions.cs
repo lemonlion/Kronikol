@@ -2,6 +2,7 @@ using System.Reflection;
 using Kronikol.Reports;
 using Kronikol.Tracking;
 using Xunit;
+using Xunit.Sdk;
 using Xunit.v3;
 
 namespace Kronikol.xUnit3;
@@ -32,20 +33,33 @@ internal static class TestContextEnumerableExtensions
                         .ThenBy(x => x.Test?.TestDisplayName)
                         .Select(x =>
                         {
-                            var displayName = ScenarioTitleResolver.FormatXunitDisplayName(x.Test!.TestDisplayName, ExplicitDisplayName(x));
+                            var explicitDisplayName = ExplicitDisplayName(x);
+                            var name = ScenarioTitleResolver.FormatXunitScenarioName(x.Test!.TestDisplayName, explicitDisplayName,
+                                DefaultNames(x), FirstParameterName(x));
 
                             // Try structured extraction from TestMethodArguments first
                             var structuredResult = TryExtractStructuredParametersWithRaw(x);
                             var structuredParams = structuredResult?.StringValues;
                             Dictionary<string, object?>? rawValues = structuredResult?.RawValues;
-                            var parsed = structuredParams ?? ParameterParser.Parse(displayName);
+                            // a name the test wrote whole holds no arguments, whatever its brackets say
+                            var parsed = structuredParams ?? (name.ReadArguments ? ParameterParser.Parse(name.Shown) : null);
+                            var outlineId = parsed is { Count: > 0 } ? (structuredParams is not null ? GetStructuredOutlineId(x) : ParameterParser.ExtractBaseName(name.Shown)) : null;
+
+                            // 5.16.4's reading of the same test, which the id keys on where this one differs (plans/TITLES_AS_WRITTEN_PLAN.md 4.4)
+                            var frozenName = ScenarioTitleResolver.FormatXunitDisplayNameAsOf5164(x.Test!.TestDisplayName, explicitDisplayName);
+                            var frozenParsed = structuredParams ?? ParameterParser.Parse(frozenName);
+                            var frozenKey = new ScenarioIdKey(frozenName,
+                                frozenParsed is { Count: > 0 } ? (structuredParams is not null ? GetStructuredOutlineId(x) : ParameterParser.ExtractBaseName(frozenName)) : null,
+                                frozenParsed is { Count: > 0 } ? frozenParsed : null);
                             var tags = ScenarioTags.Classify(CategoryTraits(x.Test!.Traits)).Tags.Except(featureTags, ScenarioTags.Comparer).ToArray();
 
                             return new Scenario
                             {
                                 Id = x.Test!.UniqueID,
                                 Result = x.TestState!.Result.ToExecutionResult(),
-                                DisplayName = displayName,
+                                DisplayName = name.Shown,
+                                NameAsWritten = name.Written,
+                                StableIdKey = ScenarioStableId.KeyWhereChanged(frozenKey, name.Shown, outlineId, parsed is { Count: > 0 } ? parsed : null),
                                 IsHappyPath = IsHappyPath(x),
                                 Tags = tags.Length > 0 ? tags : null,
                                 // The message is what was thrown, and nothing else. Until 3.1.0 the
@@ -64,7 +78,8 @@ internal static class TestContextEnumerableExtensions
                                     : null,
                                 Duration = x.TestState!.ExecutionTime is > 0 ? TimeSpan.FromMilliseconds((double)x.TestState.ExecutionTime.Value) : null,
                                 EndedAt = DiagrammedTestRun.TestEnds.TryGetValue(x.Test!.UniqueID, out var endedAt) ? endedAt : null,
-                                OutlineId = parsed is { Count: > 0 } ? (structuredParams is not null ? GetStructuredOutlineId(x) : ParameterParser.ExtractBaseName(displayName)) : null,
+                                OutlineId = outlineId,
+                                OutlineTitle = outlineId is null ? null : explicitDisplayName ?? MethodTitle(x),
                                 ExampleValues = parsed is { Count: > 0 } ? parsed : null,
                                 ExampleRawValues = rawValues,
                                 Steps = StepCollector.GetSteps(x.Test!.UniqueID) is { Length: > 0 } steps ? steps : null,
@@ -121,6 +136,47 @@ internal static class TestContextEnumerableExtensions
         context.TestCase is IXunitTestCase testCase
             ? testCase.TestMethod.Method.GetCustomAttribute<FactAttribute>()?.DisplayName
             : null;
+
+    private static readonly TestMethodDisplayOptions[] EveryDisplayOption =
+        Enumerable.Range(0, 16).Select(options => (TestMethodDisplayOptions)options).ToArray();
+
+    /// <summary>
+    /// The names xUnit gives the test's method when the test names it nothing itself, each with the method's own part:
+    /// the class and method, or the method alone, formatted by each <c>methodDisplayOptions</c> there is. xUnit's own
+    /// formatter makes them, so the lane needs no configuration to tell its default name from one the test wrote.
+    /// </summary>
+    private static IEnumerable<(string Name, string Method)> DefaultNames(ITestContext context)
+    {
+        if (context.TestCase is not IXunitTestCase testCase)
+            yield break;
+        var className = testCase.TestMethod.TestClass.TestClassName;
+        var methodName = testCase.TestMethod.MethodName;
+        foreach (var options in EveryDisplayOption)
+        {
+            // xUnit's formatter throws under UseEscapeSequences on a name such as "Rejects_UD800" (a lone surrogate's
+            // code): a suite with that option on could not name the test either, so that reading is not its name
+            string method, classAndMethod;
+            try
+            {
+                method = new DisplayNameFormatter(TestMethodDisplay.Method, options).Format(methodName);
+                classAndMethod = new DisplayNameFormatter(TestMethodDisplay.ClassAndMethod, options).Format($"{className}.{methodName}");
+            }
+            catch (ArgumentException)
+            {
+                continue;
+            }
+            yield return (classAndMethod, method);
+            yield return (method, method);
+        }
+    }
+
+    /// <summary>The test method's name read by the rule: the heading of a theory whose rows are named apart.</summary>
+    private static string? MethodTitle(ITestContext context) =>
+        context.TestCase is IXunitTestCase testCase ? ScenarioTitleResolver.FormatScenarioDisplayName(testCase.TestMethod.MethodName) : null;
+
+    /// <summary>The test method's first parameter, which xUnit writes before a row's first value.</summary>
+    private static string? FirstParameterName(ITestContext context) =>
+        context.TestCase is IXunitTestCase testCase ? testCase.TestMethod.Method.GetParameters().FirstOrDefault()?.Name : null;
 
     private static string? GetStructuredOutlineId(ITestContext context)
     {

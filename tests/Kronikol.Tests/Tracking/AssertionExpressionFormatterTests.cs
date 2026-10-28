@@ -24,6 +24,20 @@ public class AssertionExpressionFormatterTests
         Assert.Equal(expected, result);
     }
 
+    // A word the code writes in capitals keeps them, by the rule a scenario's title takes (#139, #210's Q7): 5.16.4
+    // lower-cased every word of a label, "Response http status should be 200".
+    [Theory]
+    [InlineData("() => response.HTTPStatus.Should().Be(200)", "Response HTTP status should be 200")]
+    [InlineData("() => order.SKUs.Should().HaveCount(3)", "Order SKUs should have count 3")]
+    [InlineData("() => result.IsValidURL.Should().BeTrue()", "Result is valid URL should be true")]
+    [InlineData("() => result.E2EOrder.Should().NotBeNull()", "Result E2E order should not be null")]
+    [InlineData("result.APIKey.ShouldBe(\"k\")", "Result API key should be \"k\"")]
+    [InlineData("await Assert.That(response.HTTPStatus).IsEqualTo(200)", "Response HTTP status is equal to 200")]
+    [InlineData("() => reader.IsDBNull(4).Should().BeTrue()", "Reader is DB null(4) should be true")]
+    [InlineData("() => Encode(1U).Should().Be(1)", "Encode(1U) should be 1")]
+    public void Format_keeps_a_word_written_in_capitals(string expression, string expected) =>
+        Assert.Equal(expected, AssertionExpressionFormatter.Format(expression));
+
     [Fact]
     public void Format_strips_lambda_prefix()
     {
@@ -379,7 +393,8 @@ public class AssertionExpressionFormatterTests
     [Theory]
     [InlineData("() => foo?.Bar.Should().Be(\"blah\")", "Foo bar should be \"blah\"")]
     [InlineData("() => _response?.StatusCode.Should().Be(HttpStatusCode.OK)", "Response status code should be OK")]
-    [InlineData("() => a?.B?.C.Should().NotBeNull()", "A b c should not be null")]
+    // a member named by a capital letter keeps it (plans/TITLES_AS_WRITTEN_PLAN.md 4.1); 5.16.4 read "A b c should not be null"
+    [InlineData("() => a?.B?.C.Should().NotBeNull()", "A B C should not be null")]
     public void Format_strips_null_conditional_operators(string expression, string expected)
     {
         var result = AssertionExpressionFormatter.Format(expression);

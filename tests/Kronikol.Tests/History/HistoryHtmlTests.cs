@@ -170,6 +170,33 @@ public class HistoryHtmlTests : IDisposable
     }
 
     [Fact]
+    public void The_history_lists_order_their_entries_as_the_report_orders_names_whatever_their_case()
+    {
+        // B6 (plans/TITLES_AS_WRITTEN_PLAN.md): an ordinal sort put every capital before every lower-case letter, so a
+        // title that kept its first word's case ("apple...", "gRPC...") sank below "Zebra..."
+        Feature[] features =
+        [
+            new Feature
+            {
+                DisplayName = "Checkout",
+                Scenarios =
+                [
+                    new Scenario { Id = "t-z", DisplayName = "Zebra checkout fails", Result = ExecutionResult.Failed, ErrorMessage = "boom" },
+                    new Scenario { Id = "t-a", DisplayName = "apple checkout fails", Result = ExecutionResult.Failed, ErrorMessage = "boom" },
+                ]
+            }
+        ];
+
+        var section = Regex.Match(Html(features, Verdicts(features, "PP", "PP", "PP")), "<details id=\"history-section\"[^>]*>.*?</details>",
+            RegexOptions.Singleline).Value;
+
+        var apple = section.IndexOf("apple checkout fails", StringComparison.Ordinal);
+        var zebra = section.IndexOf("Zebra checkout fails", StringComparison.Ordinal);
+        Assert.True(apple >= 0 && zebra >= 0, "both are listed");
+        Assert.True(apple < zebra, "listed in the report's order");
+    }
+
+    [Fact]
     public void The_history_section_lists_the_regression_and_links_it_by_stable_id()
     {
         var features = Features(pay: ExecutionResult.Failed);

@@ -76,9 +76,10 @@ public class MSTestScenarioInfoToFeaturesTests
 
         var features = infos.ToFeatures();
 
-        Assert.AreEqual("Zzz happy path", features[0].Scenarios[0].DisplayName);
+        // a word written in capitals keeps them (plans/TITLES_AS_WRITTEN_PLAN.md 4.1); 5.16.4 read "Zzz happy path"
+        Assert.AreEqual("ZZZ happy path", features[0].Scenarios[0].DisplayName);
         Assert.IsTrue(features[0].Scenarios[0].IsHappyPath);
-        Assert.AreEqual("Aaa non happy", features[0].Scenarios[1].DisplayName);
+        Assert.AreEqual("AAA non happy", features[0].Scenarios[1].DisplayName);
         Assert.IsFalse(features[0].Scenarios[1].IsHappyPath);
     }
 
