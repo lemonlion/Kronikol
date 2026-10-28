@@ -1,0 +1,6 @@
+# Statements spread over lines ("\n" is a line break): a call's arguments, a lambda, a chain
+result.Items.Count(x =>\n    x.IsActive).ShouldBe(2)
+result.Date.ToString(\n    "yyyy-MM-dd",\n    CultureInfo.InvariantCulture).ShouldBe("2026-10-27")
+result.Items\n    .Single(x => x.Id == expected.Id)\n    .Name.ShouldBe("A")
+result.Name.ShouldBe(\n    nameof(CurrencyCode.GBP))
+items.Should().Contain(x =>\n    x.Name == "A")

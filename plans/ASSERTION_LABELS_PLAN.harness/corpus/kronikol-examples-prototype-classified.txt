@@ -1,0 +1,2 @@
+53 statements
+stripped-name: external type: 6

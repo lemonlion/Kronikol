@@ -1,0 +1,12 @@
+Assert.That(() => _client.GetOrderAsync(r)).Throws<InvalidOperationException>()
+    => () => _client get order async(r) throws <InvalidOperationException>
+Console.WriteLine((await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(r))).Message)
+    => Console.WriteLine((await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(r))).Message)
+results.ForEach(r => r.Should().BeTrue())
+    => Results for each(r => r should be true
+items.ForEach(x => (x.Should().BeTrue()))
+    => Items for each(x => (x should be true
+ex.Message.ShouldContain("opts.Events.RegisterTagType<EnrolleeId, Guid>(x => x.Value, \"enrollee\");")
+    => Ex message should contain [ "opts.Events.RegisterTagType<EnrolleeId, Guid>(x => x.Value, \"enrollee\");" ]
+Should.Throw<InvalidOperationException>(() => opts.Events.RegisterTagType<EnrolleeId, string>(x => x.Value.ToString(), "enrollee")).Message.ShouldContain("already registered")
+    => Should throw InvalidOperationException "already registered"

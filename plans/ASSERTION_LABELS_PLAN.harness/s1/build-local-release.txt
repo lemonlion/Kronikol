@@ -1,0 +1,1 @@
+Kronikol.AssertionTracking: Instrumented 22 assertion(s) in 22 method(s) (221ms)

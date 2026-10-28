@@ -1,0 +1,10 @@
+result.Items.Count(x =>\n    x.IsActive).ShouldBe(2)
+    => Result items count(x => x.IsActive) should be 2
+result.Date.ToString(\n    "yyyy-MM-dd",\n    CultureInfo.InvariantCulture).ShouldBe("2026-10-27")
+    => Result date to string("yyyy-MM-dd", CultureInfo.InvariantCulture) should be "2026-10-27"
+result.Items\n    .Single(x => x.Id == expected.Id)\n    .Name.ShouldBe("A")
+    => Result items single(x => x.Id == expected.Id) name should be "A"
+result.Name.ShouldBe(\n    nameof(CurrencyCode.GBP))
+    => Result name should be 'GBP'
+items.Should().Contain(x =>\n    x.Name == "A")
+    => Items should contain [ x => x.Name == "A" ]

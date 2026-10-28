@@ -1,0 +1,24 @@
+(await act.Should().ThrowAsync<ClickHouseServerException>()).Which.Message.Should().StartWith("Code: 60.")
+    => (await act should throw async <ClickHouseServerException>
+x.Should().Be("Rock.And.Roll")
+    => X should be
+act.Should().Throw<InvalidOperationException>().WithMessage("*.And.*")
+    => Act should throw <InvalidOperationException>
+x.Should().NotBeNull().And.HaveCount(2)
+    => X should not be null
+x.Should().ContainSingle().Which.Name.Should().Be("a")
+    => X should contain single "a"
+dict.Should().ContainKey("a").WhoseValue.Should().Be(1)
+    => Dict should contain key 1
+list.Select(x => x.Should().BeOfType<int>()).Should().HaveCount(3)
+    => List select(x => x should be of type <int>
+"a.Should().b".Should().Be("x")
+    => "a should b". should(). be("x")
+response.StatusCode.Should().Be(HttpStatusCode.OK)
+    => Response status code should be OK
+(await client.GetAsync("/x")).StatusCode.Should().Be(HttpStatusCode.OK)
+    => (await client get async("/x")) status code should be OK
+x.Should().BeEquivalentTo(expected, o => o.Excluding(e => e.Id).And.Excluding(e => e.At))
+    => X should be equivalent to
+results.ForEach(r => r.Should().BeTrue())
+    => Results for each(r => r should be true

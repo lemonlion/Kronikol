@@ -1,0 +1,14 @@
+53 statements
+stripped-name: external type: 6
+    response.StatusCode.Should().Be(HttpStatusCode.OK)
+      => Response status code should be OK
+    response.StatusCode.Should().Be(HttpStatusCode.BadRequest)
+      => Response status code should be BadRequest
+    _cakeResponseMessage.StatusCode.Should().Be(HttpStatusCode.Conflict)
+      => Cake response message status code should be Conflict
+    _cakeResponseMessage!.StatusCode.Should().Be(HttpStatusCode.Conflict)
+      => Cake response message status code should be Conflict
+    _cakeResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+      => Cake response message status code should be OK
+    _cakeResponseMessage!.StatusCode.Should().Be(HttpStatusCode.BadRequest)
+      => Cake response message status code should be BadRequest

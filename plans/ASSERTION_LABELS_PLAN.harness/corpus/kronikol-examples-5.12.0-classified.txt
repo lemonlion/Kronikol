@@ -1,0 +1,3 @@
+53 statements
+rewritten-call: 1
+stripped-name: external type: 6

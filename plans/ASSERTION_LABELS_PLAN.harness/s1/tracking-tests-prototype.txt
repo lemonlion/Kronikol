@@ -1,0 +1,5 @@
+[xUnit.net 00:00:03.51]     Kronikol.Tests.Tracking.AssertionExpressionFormatterTests.A_subject_literal_is_kept_as_written(expression: "\"Colour\".ShouldBe(nameof(expected.Colour))", expected: "\"Colour\" should be nameof(expected.Colour)") [FAIL]
+Expected: ""Colour" should be nameof(expected.Colour)"
+Actual:   ""Colour" should be 'Colour'"
+[xUnit.net 00:00:05.58]     Kronikol.Tests.Tracking.TrackValueResolutionTests.A_chain_inside_nameof_is_not_read [FAIL]
+Failed!  - Failed:     2, Passed:   997, Skipped:     0, Total:   999, Duration: 5 s - Kronikol.Tests.dll (net10.0)

@@ -1,0 +1,98 @@
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\AuditLogs\AuditLogs_Retrieval_Tests.cs
+_auditSteps.Response!.Should().Contain(a => a.Action == AuditLogDefaults.CreatedAction && a.EntityType == AuditLogDefaults.OrderEntityType && a.Details.Contains(_customerName))
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Infrastructure\Infrastructure_Health_Check_Detail_Tests.cs
+entry.Value.Status.Should().NotBeNullOrEmpty( $"health check entry '{entry.Key}' should have a status")
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Infrastructure\Infrastructure_Health_Check_Detail_Tests.cs
+_result.Results[checkName].Description.Should().NotBeNullOrEmpty( $"health check entry '{checkName}' should have a description")
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Infrastructure\Infrastructure_Health_Check_Detail_Tests.cs
+entry.Value.Data.Should().NotBeNull( $"health check entry '{entry.Key}' should have a data object")
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Orders\Orders_Breakfast_Order_Tests.cs
+recipeLogMessages.Should().Contain(m => m.Message.RecipeType == OrderDefaults.PancakeItemType, "a RecipeLogEvent should have been published for the pancake recipe")
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Orders\Orders_Outbox_Retry_Exhaustion_Tests.cs
+_outboxSteps.OutboxMessages.Should().Contain(m => m.EventType == EventTypes.OrderCreated && m.Status == OutboxStatuses.Failed, "the outbox message should have transitioned to Failed after exhausting retries")
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Reporting\Reporting_Batch_Completions_Tests.cs
+_graphQlSteps.BatchCompletions.Should().Contain(r => r.BatchId == batchId && r.RecipeType == "Pancakes" && r.Ingredients.Contains("Milk"))
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Reporting\Reporting_Equipment_Alerts_Tests.cs
+_graphQlSteps.EquipmentAlerts.Should().Contain(a => a.BatchId == batchId && a.EquipmentName == "Griddle" && a.AlertType == "UsageCycleCompleted")
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Reporting\Reporting_EventGrid_Webhook_Tests.cs
+_graphQlSteps.IngredientShipments.Should().Contain(s => s.DeliveryId == _deliveryId && s.IngredientName == "Milk" && s.Quantity == 50.0m)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Reporting\Reporting_Order_Summaries_Tests.cs
+_graphQlSteps.OrderSummaries.Should().Contain(o => o.OrderId == _orderId && o.CustomerName == _customerName && o.ItemCount == 1 && o.TableNumber == 7)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Reporting\Reporting_Recipe_Reports_Tests.cs
+_graphQlSteps.RecipeReports.Should().Contain(r => r.OrderId == batchId && r.RecipeType == "Pancakes" && r.Ingredients.Contains("Milk"))
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Reporting\Reporting_Recipe_Reports_Tests.cs
+_graphQlSteps.IngredientUsage.Should().Contain(i => i.Ingredient == "Milk" && i.Count >= 2)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Reporting\Reporting_Recipe_Reports_Tests.cs
+_graphQlSteps.IngredientUsage.Should().Contain(i => i.Ingredient == "Butter" && i.Count >= 1)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Reporting\Reporting_Recipe_Reports_Tests.cs
+_graphQlSteps.PopularRecipes.Should().Contain(r => r.RecipeType == "Waffles" && r.Count >= 1)
+# tests\BreakfastProvider.Tests.Component.BDDfy\Scenarios\Specifications\Specifications_Async_Api_Tests.cs
+asyncApiResponseIsValidJson.Should().BeTrue( $"response body (first 500 chars): {_asyncApiJsonString?[..Math.Min(_asyncApiJsonString.Length, 500)]}")
+# tests\BreakfastProvider.Tests.Component.LightBDD\Scenarios\Infrastructure\Infrastructure__Health_Check_Detail_Feature.steps.cs
+healthCheckEntryStatus.Should().NotBeNullOrEmpty( $"health check entry '{entry.Key}' should have a status")
+# tests\BreakfastProvider.Tests.Component.LightBDD\Scenarios\Infrastructure\Infrastructure__Health_Check_Detail_Feature.steps.cs
+healthCheckDescription.Should().NotBeNullOrEmpty( $"health check entry '{checkName}' should have a description")
+# tests\BreakfastProvider.Tests.Component.LightBDD\Scenarios\Infrastructure\Infrastructure__Health_Check_Detail_Feature.steps.cs
+healthCheckEntryData.Should().NotBeNull( $"health check entry '{entry.Key}' should have a data object")
+# tests\BreakfastProvider.Tests.Component.LightBDD\Scenarios\Infrastructure\Infrastructure__Telemetry_Feature.steps.cs
+_logProvider.Entries.Should().Contain(e => e.Message.Contains(_orderSteps.Request.CustomerName!))
+# tests\BreakfastProvider.Tests.Component.LightBDD\Scenarios\Infrastructure\Infrastructure__Telemetry_Feature.steps.cs
+_logProvider.Entries.Should().Contain(e => e.Message.Contains("1 items"))
+# tests\BreakfastProvider.Tests.Component.NUnit\Scenarios\Specifications\Specifications_Async_Api_Tests.cs
+asyncApiResponseIsValidJson.Should().BeTrue( $"response body (first 500 chars): {asyncApiJsonString?[..Math.Min(asyncApiJsonString.Length, 500)]}")
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\AuditLogs\AuditLogSteps.cs
+auditSteps.Response!.Should().Contain(a => a.Action == AuditLogDefaults.CreatedAction && a.EntityType == AuditLogDefaults.OrderEntityType && a.Details.Contains(_customerName))
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Orders\OutboxRetryExhaustionSteps.cs
+outboxSteps.OutboxMessages.Should().Contain(m => m.EventType == EventTypes.OrderCreated && m.Status == OutboxStatuses.Failed, "the outbox message should have transitioned to Failed after exhausting retries")
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Reporting\BatchCompletionsSteps.cs
+graphQlSteps.BatchCompletions.Should().Contain(r => r.BatchId == batchId && r.RecipeType == "Pancakes" && r.Ingredients.Contains("Milk"))
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Reporting\EquipmentAlertsSteps.cs
+graphQlSteps.EquipmentAlerts.Should().Contain(a => a.BatchId == batchId && a.EquipmentName == "Griddle" && a.AlertType == "UsageCycleCompleted")
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Reporting\EventGridWebhookSteps.cs
+graphQlSteps.IngredientShipments.Should().Contain(s => s.DeliveryId == _deliveryId && s.IngredientName == "Milk" && s.Quantity == 50.0m)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Reporting\ReportingSteps.cs
+graphQlSteps.OrderSummaries.Should().Contain(o => o.OrderId == _testOrderId && o.CustomerName == _customerName && o.ItemCount == 3 && o.TableNumber == 7)
+# tests\BreakfastProvider.Tests.Component.ReqNRoll\StepDefinitions\Reporting\ReportingSteps.cs
+graphQlSteps.RecipeReports.Should().Contain(r => r.OrderId == _recipeOrderId1 && r.RecipeType == "Pancakes" && r.Ingredients.Contains("Milk"))
+# tests\BreakfastProvider.Tests.Component.Shared\Common\Downstream\DownstreamRequestSteps.cs
+requests.Should().Contain(r => r.RequestUri!.AbsolutePath == "/milk" && r.Method == HttpMethod.Get)
+# tests\BreakfastProvider.Tests.Component.Shared\Common\Downstream\DownstreamRequestSteps.cs
+requests.Should().Contain(r => r.RequestUri!.AbsolutePath == "/goat-milk" && r.Method == HttpMethod.Get)
+# tests\BreakfastProvider.Tests.Component.Shared\Common\Downstream\DownstreamRequestSteps.cs
+requests.Should().Contain(r => r.RequestUri!.AbsolutePath.Contains("/availability") && r.Method == HttpMethod.Get)
+# tests\BreakfastProvider.Tests.Component.Shared\Common\Downstream\DownstreamRequestSteps.cs
+requests.Should().Contain(r => r.RequestUri!.AbsolutePath == "/prepare" && r.Method == HttpMethod.Post)
+# tests\BreakfastProvider.Tests.Component.Shared\Common\Downstream\DownstreamRequestSteps.cs
+requests.Should().Contain(r => r.RequestUri!.AbsolutePath == $"/status/{orderId}" && r.Method == HttpMethod.Get)
+# tests\BreakfastProvider.Tests.Component.Shared\Common\Downstream\DownstreamRequestSteps.cs
+requests.Should().Contain(r => r.RequestUri!.AbsolutePath == "/ingredients/feedback" && r.Method == HttpMethod.Post)
+# tests\BreakfastProvider.Tests.Component.Shared\Common\Orders\OutboxSteps.cs
+OutboxMessages.Should().Contain(m => m.EventType == eventType, $"an outbox message should exist for event type '{eventType}'")
+# tests\BreakfastProvider.Tests.Component.Shared\Common\Orders\OutboxSteps.cs
+OutboxMessages.Should().Contain(m => m.EventType == eventType && m.Status == OutboxStatuses.Processed, $"an outbox message for '{eventType}' should have been processed")
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\AuditLogs\AuditLogs_Retrieval_Tests.cs
+await _auditSteps.Response!.Should().Contain(a => a.Action == AuditLogDefaults.CreatedAction && a.EntityType == AuditLogDefaults.OrderEntityType && a.Details.Contains(_customerName))
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Orders\Orders_Breakfast_Order_Tests.cs
+await recipeLogMessages.Should().Contain(m => m.Message.RecipeType == OrderDefaults.PancakeItemType, "a RecipeLogEvent should have been published for the pancake recipe")
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Orders\Orders_Outbox_Retry_Exhaustion_Tests.cs
+await _outboxSteps.OutboxMessages.Should().Contain(m => m.EventType == EventTypes.OrderCreated && m.Status == OutboxStatuses.Failed, "the outbox message should have transitioned to Failed after exhausting retries")
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Reporting\Reporting_Batch_Completions_Tests.cs
+await _graphQlSteps.BatchCompletions.Should().Contain(r => r.BatchId == batchId && r.RecipeType == "Pancakes" && r.Ingredients.Contains("Milk"))
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Reporting\Reporting_Equipment_Alerts_Tests.cs
+await _graphQlSteps.EquipmentAlerts.Should().Contain(a => a.BatchId == batchId && a.EquipmentName == "Griddle" && a.AlertType == "UsageCycleCompleted")
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Reporting\Reporting_EventGrid_Webhook_Tests.cs
+await _graphQlSteps.IngredientShipments.Should().Contain(s => s.DeliveryId == _deliveryId && s.IngredientName == "Milk" && s.Quantity == 50.0m)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Reporting\Reporting_Order_Summaries_Tests.cs
+await _graphQlSteps.OrderSummaries.Should().Contain(o => o.OrderId == _orderId && o.CustomerName == _customerName && o.ItemCount == 1 && o.TableNumber == 7)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Reporting\Reporting_Recipe_Reports_Tests.cs
+await _graphQlSteps.RecipeReports.Should().Contain(r => r.OrderId == batchId && r.RecipeType == "Pancakes" && r.Ingredients.Contains("Milk"))
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Reporting\Reporting_Recipe_Reports_Tests.cs
+await _graphQlSteps.IngredientUsage.Should().Contain(i => i.Ingredient == "Milk" && i.Count >= 2)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Reporting\Reporting_Recipe_Reports_Tests.cs
+await _graphQlSteps.IngredientUsage.Should().Contain(i => i.Ingredient == "Butter" && i.Count >= 1)
+# tests\BreakfastProvider.Tests.Component.TUnit\Scenarios\Reporting\Reporting_Recipe_Reports_Tests.cs
+await _graphQlSteps.PopularRecipes.Should().Contain(r => r.RecipeType == "Waffles" && r.Count >= 1)
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseSqlTranslatorTests.cs
+_translator.TranslateDdl(ddl).Should().Be( "CREATE TABLE IF NOT EXISTS order_timings (timing_id VARCHAR, prep_seconds DOUBLE, recorded_at TIMESTAMP)")
+# tests\BreakfastProvider.Tests.Unit\Emulator\ClickHouseSqlTranslatorTests.cs
+_translator.TranslateQuery(sql).Should().Be( "SELECT station, avg(prep_seconds) AS avg_prep_seconds, quantile_cont(prep_seconds, 0.95) AS p95_prep_seconds, CAST(count(*) AS UBIGINT) AS timing_count " + "FROM order_timings GROUP BY station ORDER BY avg_prep_seconds DESC")

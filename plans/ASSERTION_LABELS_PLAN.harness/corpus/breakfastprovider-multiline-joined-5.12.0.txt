@@ -1,0 +1,98 @@
+_auditSteps.Response!.Should().Contain(a => a.Action == AuditLogDefaults.CreatedAction && a.EntityType == AuditLogDefaults.OrderEntityType && a.Details.Contains(_customerName))
+    => Audit steps response should contain [ a => a.Action == AuditLogDefaults.CreatedAction && a.EntityType == AuditLogDefaults.OrderEntityType && a.Details.Contains(_customerName) ]
+entry.Value.Status.Should().NotBeNullOrEmpty( $"health check entry '{entry.Key}' should have a status")
+    => Entry value status should not be null or empty  $"health check entry '{entry.Key}' should have a status"
+_result.Results[checkName].Description.Should().NotBeNullOrEmpty( $"health check entry '{checkName}' should have a description")
+    => Result results[check name] description should not be null or empty  $"health check entry '{checkName}' should have a description"
+entry.Value.Data.Should().NotBeNull( $"health check entry '{entry.Key}' should have a data object")
+    => Entry value data should not be null  $"health check entry '{entry.Key}' should have a data object"
+recipeLogMessages.Should().Contain(m => m.Message.RecipeType == OrderDefaults.PancakeItemType, "a RecipeLogEvent should have been published for the pancake recipe")
+    => Recipe log messages should contain [ m => m.Message.RecipeType == OrderDefaults.PancakeItemType, "a RecipeLogEvent should have been published for the pancake recipe" ]
+_outboxSteps.OutboxMessages.Should().Contain(m => m.EventType == EventTypes.OrderCreated && m.Status == OutboxStatuses.Failed, "the outbox message should have transitioned to Failed after exhausting retries")
+    => Outbox steps outbox messages should contain [ m => m.EventType == EventTypes.OrderCreated && m.Status == OutboxStatuses.Failed, "the outbox message should have transitioned to Failed after exhausting retries" ]
+_graphQlSteps.BatchCompletions.Should().Contain(r => r.BatchId == batchId && r.RecipeType == "Pancakes" && r.Ingredients.Contains("Milk"))
+    => Graph ql steps batch completions should contain [ r => r.BatchId == batchId && r.RecipeType == "Pancakes" && r.Ingredients.Contains("Milk") ]
+_graphQlSteps.EquipmentAlerts.Should().Contain(a => a.BatchId == batchId && a.EquipmentName == "Griddle" && a.AlertType == "UsageCycleCompleted")
+    => Graph ql steps equipment alerts should contain [ a => a.BatchId == batchId && a.EquipmentName == "Griddle" && a.AlertType == "UsageCycleCompleted" ]
+_graphQlSteps.IngredientShipments.Should().Contain(s => s.DeliveryId == _deliveryId && s.IngredientName == "Milk" && s.Quantity == 50.0m)
+    => Graph ql steps ingredient shipments should contain [ s => s.DeliveryId == _deliveryId && s.IngredientName == "Milk" && s.Quantity == 50.0m ]
+_graphQlSteps.OrderSummaries.Should().Contain(o => o.OrderId == _orderId && o.CustomerName == _customerName && o.ItemCount == 1 && o.TableNumber == 7)
+    => Graph ql steps order summaries should contain [ o => o.OrderId == _orderId && o.CustomerName == _customerName && o.ItemCount == 1 && o.TableNumber == 7 ]
+_graphQlSteps.RecipeReports.Should().Contain(r => r.OrderId == batchId && r.RecipeType == "Pancakes" && r.Ingredients.Contains("Milk"))
+    => Graph ql steps recipe reports should contain [ r => r.OrderId == batchId && r.RecipeType == "Pancakes" && r.Ingredients.Contains("Milk") ]
+_graphQlSteps.IngredientUsage.Should().Contain(i => i.Ingredient == "Milk" && i.Count >= 2)
+    => Graph ql steps ingredient usage should contain [ i => i.Ingredient == "Milk" && i.Count >= 2 ]
+_graphQlSteps.IngredientUsage.Should().Contain(i => i.Ingredient == "Butter" && i.Count >= 1)
+    => Graph ql steps ingredient usage should contain [ i => i.Ingredient == "Butter" && i.Count >= 1 ]
+_graphQlSteps.PopularRecipes.Should().Contain(r => r.RecipeType == "Waffles" && r.Count >= 1)
+    => Graph ql steps popular recipes should contain [ r => r.RecipeType == "Waffles" && r.Count >= 1 ]
+asyncApiResponseIsValidJson.Should().BeTrue( $"response body (first 500 chars): {_asyncApiJsonString?[..Math.Min(_asyncApiJsonString.Length, 500)]}")
+    => Async api response is valid json should be true  $"response body (first 500 chars): {_asyncApiJsonString?[..Math.Min(_asyncApiJsonString.Length, 500)]}"
+healthCheckEntryStatus.Should().NotBeNullOrEmpty( $"health check entry '{entry.Key}' should have a status")
+    => Health check entry status should not be null or empty  $"health check entry '{entry.Key}' should have a status"
+healthCheckDescription.Should().NotBeNullOrEmpty( $"health check entry '{checkName}' should have a description")
+    => Health check description should not be null or empty  $"health check entry '{checkName}' should have a description"
+healthCheckEntryData.Should().NotBeNull( $"health check entry '{entry.Key}' should have a data object")
+    => Health check entry data should not be null  $"health check entry '{entry.Key}' should have a data object"
+_logProvider.Entries.Should().Contain(e => e.Message.Contains(_orderSteps.Request.CustomerName!))
+    => Log provider entries should contain [ e => e.Message.Contains(_orderSteps.Request.CustomerName) ]
+_logProvider.Entries.Should().Contain(e => e.Message.Contains("1 items"))
+    => Log provider entries should contain [ e => e.Message.Contains("1 items") ]
+asyncApiResponseIsValidJson.Should().BeTrue( $"response body (first 500 chars): {asyncApiJsonString?[..Math.Min(asyncApiJsonString.Length, 500)]}")
+    => Async api response is valid json should be true  $"response body (first 500 chars): {asyncApiJsonString?[..Math.Min(asyncApiJsonString.Length, 500)]}"
+auditSteps.Response!.Should().Contain(a => a.Action == AuditLogDefaults.CreatedAction && a.EntityType == AuditLogDefaults.OrderEntityType && a.Details.Contains(_customerName))
+    => Audit steps response should contain [ a => a.Action == AuditLogDefaults.CreatedAction && a.EntityType == AuditLogDefaults.OrderEntityType && a.Details.Contains(_customerName) ]
+outboxSteps.OutboxMessages.Should().Contain(m => m.EventType == EventTypes.OrderCreated && m.Status == OutboxStatuses.Failed, "the outbox message should have transitioned to Failed after exhausting retries")
+    => Outbox steps outbox messages should contain [ m => m.EventType == EventTypes.OrderCreated && m.Status == OutboxStatuses.Failed, "the outbox message should have transitioned to Failed after exhausting retries" ]
+graphQlSteps.BatchCompletions.Should().Contain(r => r.BatchId == batchId && r.RecipeType == "Pancakes" && r.Ingredients.Contains("Milk"))
+    => Graph ql steps batch completions should contain [ r => r.BatchId == batchId && r.RecipeType == "Pancakes" && r.Ingredients.Contains("Milk") ]
+graphQlSteps.EquipmentAlerts.Should().Contain(a => a.BatchId == batchId && a.EquipmentName == "Griddle" && a.AlertType == "UsageCycleCompleted")
+    => Graph ql steps equipment alerts should contain [ a => a.BatchId == batchId && a.EquipmentName == "Griddle" && a.AlertType == "UsageCycleCompleted" ]
+graphQlSteps.IngredientShipments.Should().Contain(s => s.DeliveryId == _deliveryId && s.IngredientName == "Milk" && s.Quantity == 50.0m)
+    => Graph ql steps ingredient shipments should contain [ s => s.DeliveryId == _deliveryId && s.IngredientName == "Milk" && s.Quantity == 50.0m ]
+graphQlSteps.OrderSummaries.Should().Contain(o => o.OrderId == _testOrderId && o.CustomerName == _customerName && o.ItemCount == 3 && o.TableNumber == 7)
+    => Graph ql steps order summaries should contain [ o => o.OrderId == _testOrderId && o.CustomerName == _customerName && o.ItemCount == 3 && o.TableNumber == 7 ]
+graphQlSteps.RecipeReports.Should().Contain(r => r.OrderId == _recipeOrderId1 && r.RecipeType == "Pancakes" && r.Ingredients.Contains("Milk"))
+    => Graph ql steps recipe reports should contain [ r => r.OrderId == _recipeOrderId1 && r.RecipeType == "Pancakes" && r.Ingredients.Contains("Milk") ]
+requests.Should().Contain(r => r.RequestUri!.AbsolutePath == "/milk" && r.Method == HttpMethod.Get)
+    => Requests should contain [ r => r.RequestUri.AbsolutePath == "/milk" && r.Method == HttpMethod.Get ]
+requests.Should().Contain(r => r.RequestUri!.AbsolutePath == "/goat-milk" && r.Method == HttpMethod.Get)
+    => Requests should contain [ r => r.RequestUri.AbsolutePath == "/goat-milk" && r.Method == HttpMethod.Get ]
+requests.Should().Contain(r => r.RequestUri!.AbsolutePath.Contains("/availability") && r.Method == HttpMethod.Get)
+    => Requests should contain [ r => r.RequestUri.AbsolutePath.Contains("/availability") && r.Method == HttpMethod.Get ]
+requests.Should().Contain(r => r.RequestUri!.AbsolutePath == "/prepare" && r.Method == HttpMethod.Post)
+    => Requests should contain [ r => r.RequestUri.AbsolutePath == "/prepare" && r.Method == HttpMethod.Post ]
+requests.Should().Contain(r => r.RequestUri!.AbsolutePath == $"/status/{orderId}" && r.Method == HttpMethod.Get)
+    => Requests should contain [ r => r.RequestUri.AbsolutePath == $"/status/{orderId}" && r.Method == HttpMethod.Get ]
+requests.Should().Contain(r => r.RequestUri!.AbsolutePath == "/ingredients/feedback" && r.Method == HttpMethod.Post)
+    => Requests should contain [ r => r.RequestUri.AbsolutePath == "/ingredients/feedback" && r.Method == HttpMethod.Post ]
+OutboxMessages.Should().Contain(m => m.EventType == eventType, $"an outbox message should exist for event type '{eventType}'")
+    => Outbox messages should contain [ m => m.EventType == eventType, $"an outbox message should exist for event type '{eventType}'" ]
+OutboxMessages.Should().Contain(m => m.EventType == eventType && m.Status == OutboxStatuses.Processed, $"an outbox message for '{eventType}' should have been processed")
+    => Outbox messages should contain [ m => m.EventType == eventType && m.Status == OutboxStatuses.Processed, $"an outbox message for '{eventType}' should have been processed" ]
+await _auditSteps.Response!.Should().Contain(a => a.Action == AuditLogDefaults.CreatedAction && a.EntityType == AuditLogDefaults.OrderEntityType && a.Details.Contains(_customerName))
+    => Audit steps response should contain [ a => a.Action == AuditLogDefaults.CreatedAction && a.EntityType == AuditLogDefaults.OrderEntityType && a.Details.Contains(_customerName) ]
+await recipeLogMessages.Should().Contain(m => m.Message.RecipeType == OrderDefaults.PancakeItemType, "a RecipeLogEvent should have been published for the pancake recipe")
+    => Recipe log messages should contain [ m => m.Message.RecipeType == OrderDefaults.PancakeItemType, "a RecipeLogEvent should have been published for the pancake recipe" ]
+await _outboxSteps.OutboxMessages.Should().Contain(m => m.EventType == EventTypes.OrderCreated && m.Status == OutboxStatuses.Failed, "the outbox message should have transitioned to Failed after exhausting retries")
+    => Outbox steps outbox messages should contain [ m => m.EventType == EventTypes.OrderCreated && m.Status == OutboxStatuses.Failed, "the outbox message should have transitioned to Failed after exhausting retries" ]
+await _graphQlSteps.BatchCompletions.Should().Contain(r => r.BatchId == batchId && r.RecipeType == "Pancakes" && r.Ingredients.Contains("Milk"))
+    => Graph ql steps batch completions should contain [ r => r.BatchId == batchId && r.RecipeType == "Pancakes" && r.Ingredients.Contains("Milk") ]
+await _graphQlSteps.EquipmentAlerts.Should().Contain(a => a.BatchId == batchId && a.EquipmentName == "Griddle" && a.AlertType == "UsageCycleCompleted")
+    => Graph ql steps equipment alerts should contain [ a => a.BatchId == batchId && a.EquipmentName == "Griddle" && a.AlertType == "UsageCycleCompleted" ]
+await _graphQlSteps.IngredientShipments.Should().Contain(s => s.DeliveryId == _deliveryId && s.IngredientName == "Milk" && s.Quantity == 50.0m)
+    => Graph ql steps ingredient shipments should contain [ s => s.DeliveryId == _deliveryId && s.IngredientName == "Milk" && s.Quantity == 50.0m ]
+await _graphQlSteps.OrderSummaries.Should().Contain(o => o.OrderId == _orderId && o.CustomerName == _customerName && o.ItemCount == 1 && o.TableNumber == 7)
+    => Graph ql steps order summaries should contain [ o => o.OrderId == _orderId && o.CustomerName == _customerName && o.ItemCount == 1 && o.TableNumber == 7 ]
+await _graphQlSteps.RecipeReports.Should().Contain(r => r.OrderId == batchId && r.RecipeType == "Pancakes" && r.Ingredients.Contains("Milk"))
+    => Graph ql steps recipe reports should contain [ r => r.OrderId == batchId && r.RecipeType == "Pancakes" && r.Ingredients.Contains("Milk") ]
+await _graphQlSteps.IngredientUsage.Should().Contain(i => i.Ingredient == "Milk" && i.Count >= 2)
+    => Graph ql steps ingredient usage should contain [ i => i.Ingredient == "Milk" && i.Count >= 2 ]
+await _graphQlSteps.IngredientUsage.Should().Contain(i => i.Ingredient == "Butter" && i.Count >= 1)
+    => Graph ql steps ingredient usage should contain [ i => i.Ingredient == "Butter" && i.Count >= 1 ]
+await _graphQlSteps.PopularRecipes.Should().Contain(r => r.RecipeType == "Waffles" && r.Count >= 1)
+    => Graph ql steps popular recipes should contain [ r => r.RecipeType == "Waffles" && r.Count >= 1 ]
+_translator.TranslateDdl(ddl).Should().Be( "CREATE TABLE IF NOT EXISTS order_timings (timing_id VARCHAR, prep_seconds DOUBLE, recorded_at TIMESTAMP)")
+    => Translator translate ddl(ddl) should be  "CREATE TABLE IF NOT EXISTS order_timings (timing_id VARCHAR, prep_seconds DOUBLE, recorded_at TIMESTAMP)"
+_translator.TranslateQuery(sql).Should().Be( "SELECT station, avg(prep_seconds) AS avg_prep_seconds, quantile_cont(prep_seconds, 0.95) AS p95_prep_seconds, CAST(count(*) AS UBIGINT) AS timing_count " + "FROM order_timings GROUP BY station ORDER BY avg_prep_seconds DESC")
+    => Translator translate query(sql) should be  "SELECT station, avg(prep_seconds) AS avg_prep_seconds, quantile_cont(prep_seconds, 0.95) AS p95_prep_seconds, CAST(count(*) AS UBIGINT) AS timing_count " + "FROM order_timings GROUP BY station ORDER BY avg_prep_seconds DESC"

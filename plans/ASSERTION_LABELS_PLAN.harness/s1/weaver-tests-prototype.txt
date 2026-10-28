@@ -1,0 +1,1 @@
+Passed!  - Failed:     0, Passed:   406, Skipped:    28, Total:   434, Duration: 2 m 45 s - Kronikol.Tests.AssertionTracking.dll (net10.0)

@@ -1,0 +1,51 @@
+Kronikol 5.12.0.0 · woven: True
+== Woven210.W01_issue_to_string_with_culture: passed
+   ✓ Result split percentage to string( culture info invariant culture) should not be null or empty
+== Woven210.W02_issue_nameof_enum_member: passed
+   ✓ Result currency iso alpha3 should be nameof(CurrencyCode.GBP)
+== Woven210.W03_issue_nameof_failing: threw ShouldAssertException
+   ✗ Result currency iso alpha3 should be nameof(CurrencyCode.USD) | result.CurrencyIsoAlpha3 |     should be
+== Woven210.W04_const_field: passed
+   ✓ Result currency iso alpha3 should be Gbp
+== Woven210.W05_const_field_failing: threw ShouldAssertException
+   ✗ Result currency iso alpha3 should be Usd | result.CurrencyIsoAlpha3 |     should be
+== Woven210.W06_static_readonly_field: passed
+   ✓ Result currency iso alpha3 should be 'GBP'
+== Woven210.W07_const_local: passed
+   ✓ Result currency iso alpha3 should be gbp
+== Woven210.W08_const_int_field: passed
+   ✓ Result count should be MaxRetries
+== Woven210.W09_int_max_value: passed
+   ✓ Result big should be MaxValue
+== Woven210.W10_enum_member: passed
+   ✓ Result code should be GBP
+== Woven210.W11_local_holding_nameof: passed
+   ✓ Result currency iso alpha3 should be 'GBP'
+== Woven210.W12_nameof_concatenated: passed
+   ✓ Result stage should be nameof(ApplicationStage.Cancelled) + ""
+== Woven210.W13_nameof_dictionary_key: passed
+   ✓ Result errors should contain key nameof(Request.Email)
+== Woven210.W14_to_string_with_format_and_culture: passed
+   ✓ Result date to string("yyyy-MM-dd",  culture info invariant culture) should be "2026-10-27"
+== Woven210.W15_lambda_in_subject: passed
+   ✓ Result items count(x => x is active) should be 2
+== Woven210.W16_generic_call_in_subject: passed
+   ✓ Result get< item>() name should be "a"
+== Woven210.W17_new_in_subject: passed
+   ✓ New  uri(result link) host should be "example.com"
+== Woven210.W18_const_index_in_subject: passed
+   ✓ Result map[ keys primary] should be 1
+== Woven210.W19_to_string_with_culture_failing: threw ShouldAssertException
+   ✗ Result split percentage to string( culture info invariant culture) should be "12,5" | result.SplitPercentage.ToString(CultureInfo.InvariantCulture) |     should be
+== Fluent210.F01_to_string_with_culture: passed
+   ✓ Result split percentage to string( culture info invariant culture) should not be null or empty
+== Fluent210.F02_nameof_enum_member: passed
+   ✓ Result currency iso alpha3 should be nameof(CurrencyCode.GBP)
+== Fluent210.F03_const_field: passed
+   ✓ Result currency iso alpha3 should be Gbp
+== That210.T01_to_string_with_culture: passed
+   ✓ Result split percentage to string( culture info invariant culture) should not be null or empty
+== That210.T02_nameof_enum_member: passed
+   ✓ Result currency iso alpha3 should be nameof(CurrencyCode.GBP)
+== That210.T03_const_field: passed
+   ✓ Result currency iso alpha3 should be Gbp

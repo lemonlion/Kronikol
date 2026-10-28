@@ -1,0 +1,8 @@
+async () =>\n        {\n            await Task.Yield();\n            "x".Should().Be(expected);\n        }
+    => "x" should be expected
+() => { a.ShouldBe(1); b.Total.ShouldBe(2); }
+    => A should be 1; B total should be 2
+async () => await act.Should().ThrowAsync<InvalidOperationException>()
+    => Act should throw async <InvalidOperationException>
+() => results.ForEach(r => r.Should().BeTrue())
+    => results.ForEach(r => r.Should().BeTrue())

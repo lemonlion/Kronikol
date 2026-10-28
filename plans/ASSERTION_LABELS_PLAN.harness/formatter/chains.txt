@@ -1,0 +1,17 @@
+# TUnit modifiers after the assertion
+await Assert.That(price).IsEqualTo(10.0).Within(0.5)
+await Assert.That(name).IsEqualTo("bob").IgnoringCase()
+await Assert.That(text).IsEqualTo("Rock.And.Roll")
+await Assert.That(x).IsGreaterThan(3).And.IsLessThan(9)
+await Assert.That(act).Throws<InvalidOperationException>().WithMessage("boom")
+# Shouldly: a value handed on after the assertion
+Should.Throw<InvalidOperationException>(() => service.Run()).Message.ShouldContain("boom")
+Should.Throw<ArgumentException>(act).ParamName.ShouldBe("id")
+var ex = Should.Throw<InvalidOperationException>(() => service.Run())
+(await Should.ThrowAsync<HttpRequestException>(act)).StatusCode.ShouldBe(HttpStatusCode.NotFound)
+# FluentAssertions chains
+dict.Should().ContainKey("a").WhoseValue.Should().Be(1)
+act.Should().Throw<ClickHouseEmulatorException>().Which.Code.Should().Be(456)
+act.Should().Throw<InvalidOperationException>().WithMessage("boom")
+x.Should().NotBeNull().And.HaveCount(2)
+price.Should().BeApproximately(10.0, 0.5)

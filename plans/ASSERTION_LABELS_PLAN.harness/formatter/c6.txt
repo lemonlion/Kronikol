@@ -1,0 +1,9 @@
+# kronikol-c6's two (#212 S18a, S23), after #212's head cut
+Assert.That(() => _client.GetOrderAsync(r)).Throws<InvalidOperationException>()
+Console.WriteLine((await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(r))).Message)
+# a lambda's assertion stays as written
+results.ForEach(r => r.Should().BeTrue())
+items.ForEach(x => (x.Should().BeTrue()))
+# F14, F15 (Marten shapes)
+ex.Message.ShouldContain("opts.Events.RegisterTagType<EnrolleeId, Guid>(x => x.Value, \"enrollee\");")
+Should.Throw<InvalidOperationException>(() => opts.Events.RegisterTagType<EnrolleeId, string>(x => x.Value.ToString(), "enrollee")).Message.ShouldContain("already registered")

@@ -1,0 +1,7 @@
+1016 statements
+bracket-space: 1
+rewritten-call: 3
+stripped-name: const, value is not the name: 49
+stripped-name: const, value is the name: 67
+stripped-name: external type: 178
+stripped-name: static field or property: 4

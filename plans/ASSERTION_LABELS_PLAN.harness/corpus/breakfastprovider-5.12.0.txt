@@ -1,0 +1,2032 @@
+_milkSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+    => Milk steps response message status code should be OK
+_eggsSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+    => Eggs steps response message status code should be OK
+_flourSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+    => Flour steps response message status code should be OK
+_muffinSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.Created)
+    => Muffin steps response message status code should be Created
+_muffinSteps.Response!.Ingredients.Should().Contain(_milkSteps.MilkResponse.Milk)
+    => Muffin steps response ingredients should contain _milkSteps.MilkResponse.Milk
+_muffinSteps.Response!.Ingredients.Should().Contain(_eggsSteps.EggsResponse.Eggs)
+    => Muffin steps response ingredients should contain _eggsSteps.EggsResponse.Eggs
+_muffinSteps.Response!.Ingredients.Should().Contain(_flourSteps.FlourResponse.Flour)
+    => Muffin steps response ingredients should contain _flourSteps.FlourResponse.Flour
+_muffinSteps.Response!.Ingredients.Should().Contain(MuffinDefaults.GrannySmithApples)
+    => Muffin steps response ingredients should contain GrannySmithApples
+_muffinSteps.Response!.Ingredients.Should().Contain(MuffinDefaults.CeylonCinnamon)
+    => Muffin steps response ingredients should contain CeylonCinnamon
+_muffinSteps.Response!.Toppings.Should().HaveCount(1)
+    => Muffin steps response toppings should have count 1
+_muffinSteps.Response!.BakingTemperature.Should().Be(MuffinDefaults.DefaultTemperature)
+    => Muffin steps response baking temperature should be DefaultTemperature
+_muffinSteps.Response!.BakingDuration.Should().Be(MuffinDefaults.DefaultDuration)
+    => Muffin steps response baking duration should be DefaultDuration
+_muffinSteps.Response!.Ingredients.Should().HaveCount(_expected.ExpectedIngredientCount)
+    => Muffin steps response ingredients should have count _expected.ExpectedIngredientCount
+_muffinSteps.Response!.Toppings.Should().HaveCount(_expected.ExpectedToppingCount)
+    => Muffin steps response toppings should have count _expected.ExpectedToppingCount
+bakingTemperatureMatchesExpectation.Should().BeTrue()
+    => Baking temperature matches expectation should be true
+_actual!.ErrorMessage.Should().Contain(expectedError)
+    => Actual error message should contain expectedError
+_actual!.ResponseStatus.Should().Be(expectedStatus)
+    => Actual response status should be expectedStatus
+_auditLogResponse!.StatusCode.Should().Be(HttpStatusCode.OK)
+    => Audit log response status code should be OK
+_auditLogs!.Should().OnlyContain(l => l.EntityType == AuditLogDefaults.OrderEntityType)
+    => Audit logs should only contain [ l => l.EntityType == AuditLogDefaults.OrderEntityType ]
+_auditLogs!.Should().Contain(l => l.EntityId == _orderId)
+    => Audit logs should contain [ l => l.EntityId == _orderId ]
+_auditLogs!.Should().BeEmpty()
+    => Audit logs should be empty
+_auditLogs.Should().NotBeNullOrEmpty()
+    => Audit logs should not be null or empty
+_auditLogs!.Should().BeInDescendingOrder(l => l.Timestamp)
+    => Audit logs should be in descending order [ l => l.Timestamp ]
+_pancakeSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.Created)
+    => Pancake steps response message status code should be Created
+_pancakeSteps.Response.Should().NotBeNull()
+    => Pancake steps response should not be null
+_pancakeSteps.Response!.BatchId.Should().NotBeEmpty()
+    => Pancake steps response batch id should not be empty
+_orderSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.Created)
+    => Order steps response message status code should be Created
+_orderSteps.Response.Should().NotBeNull()
+    => Order steps response should not be null
+_orderSteps.Response!.OrderId.Should().NotBeEmpty()
+    => Order steps response order id should not be empty
+_auditSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+    => Audit steps response message status code should be OK
+_postSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.Created)
+    => Post steps response message status code should be Created
+_postSteps.Response!.RecipeName.Should().Be(_recipeName)
+    => Post steps response recipe name should be _recipeName
+_postSteps.Response!.NoteText.Should().Be("Remember to fold the batter gently to keep it fluffy.")
+    => Post steps response note text should be "Remember to fold the batter gently to keep it fluffy."
+_postSteps.Response!.Category.Should().Be("Technique")
+    => Post steps response category should be "Technique"
+_postSteps.Response!.NoteId.Should().NotBeNullOrEmpty()
+    => Post steps response note id should not be null or empty
+_getSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+    => Get steps response message status code should be OK
+_getSteps.Response!.NoteId.Should().Be(_createdNoteId)
+    => Get steps response note id should be _createdNoteId
+_getSteps.Response!.RecipeName.Should().Be(_recipeName)
+    => Get steps response recipe name should be _recipeName
+_patchSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+    => Patch steps response message status code should be OK
+_patchSteps.Response!.NoteId.Should().Be(_createdNoteId)
+    => Patch steps response note id should be _createdNoteId
+_patchSteps.Response!.NoteText.Should().Be("Updated: Use unsalted butter for better flavour control.")
+    => Patch steps response note text should be "Updated: Use unsalted butter for better flavour control."
+_patchSteps.Response!.Category.Should().Be("Ingredients")
+    => Patch steps response category should be "Ingredients"
+_patchSteps.Response!.UpdatedAt.Should().NotBeNull()
+    => Patch steps response updated at should not be null
+_getSteps.ListResponse!.Should().Contain(n => n.NoteId == _createdNoteId)
+    => Get steps list response should contain [ n => n.NoteId == _createdNoteId ]
+_getSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.NotFound)
+    => Get steps response message status code should be NotFound
+_patchSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.NotFound)
+    => Patch steps response message status code should be NotFound
+_postSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.BadRequest)
+    => Post steps response message status code should be BadRequest
+_publishSteps.FeedbackId.Should().NotBe(Guid.Empty)
+    => Publish steps feedback id should not be Empty
+_putSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+    => Put steps response message status code should be OK
+_putSteps.Response!.PreferredMilkType.Should().Be("Oat")
+    => Put steps response preferred milk type should be "Oat"
+_putSteps.Response!.FavouriteItem.Should().Be("Blueberry Pancakes")
+    => Put steps response favourite item should be "Blueberry Pancakes"
+_getSteps.Response!.CustomerId.Should().Be(_customerId)
+    => Get steps response customer id should be _customerId
+_getSteps.Response!.PreferredMilkType.Should().Be("Oat")
+    => Get steps response preferred milk type should be "Oat"
+_getSteps.Response!.LikesExtraToppings.Should().BeTrue()
+    => Get steps response likes extra toppings should be true
+_putSteps.Response!.PreferredMilkType.Should().Be("Almond")
+    => Put steps response preferred milk type should be "Almond"
+_putSteps.Response!.FavouriteItem.Should().Be("Belgian Waffles")
+    => Put steps response favourite item should be "Belgian Waffles"
+_putSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.BadRequest)
+    => Put steps response message status code should be BadRequest
+_firstConfirmationId.Should().Be(_secondConfirmationId)
+    => First confirmation id should be _secondConfirmationId
+_firstConfirmationId.Should().NotBe(_secondConfirmationId)
+    => First confirmation id should not be _secondConfirmationId
+_postSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.NotFound)
+    => Post steps response message status code should be NotFound
+_postSteps.Response!.SpecialId.Should().Be(DailySpecialDefaults.CinnamonSwirlId)
+    => Post steps response special id should be CinnamonSwirlId
+_postSteps.Response!.OrderConfirmationId.Should().NotBeEmpty()
+    => Post steps response order confirmation id should not be empty
+_getSteps.Response.Should().HaveCount(DailySpecialDefaults.ExpectedSpecialsCount)
+    => Get steps response should have count ExpectedSpecialsCount
+_postSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.Conflict)
+    => Post steps response message status code should be Conflict
+lemonRicottaRemainingQuantity.Should().Be(MaxOrdersPerSpecial - 1)
+    => Lemon ricotta remaining quantity should be MaxOrdersPerSpecial - 1
+_actual!.ErrorMessage.Should().Be(expectedError)
+    => Actual error message should be expectedError
+_postSteps.Response!.EquipmentId.Should().Be(_equipmentId)
+    => Post steps response equipment id should be _equipmentId
+_postSteps.Response!.Value.Should().Be(180.5m)
+    => Post steps response value should be 180.5m
+_postSteps.Response!.ReadingId.Should().NotBeNullOrEmpty()
+    => Post steps response reading id should not be null or empty
+_getSteps.ListResponse!.Should().Contain(r => r.ReadingId == _createdReadingId)
+    => Get steps list response should contain [ r => r.ReadingId == _createdReadingId ]
+_deleteSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.NoContent)
+    => Delete steps response message status code should be NoContent
+_getSteps.ListResponse!.Should().NotContain(r => r.ReadingId == _createdReadingId)
+    => Get steps list response should not contain [ r => r.ReadingId == _createdReadingId ]
+_postSteps.Response!.CustomerName.Should().Be(_postSteps.Request!.CustomerName)
+    => Post steps response customer name should be _postSteps.Request.CustomerName
+_postSteps.Response!.Rating.Should().Be(4)
+    => Post steps response rating should be 4
+_getSteps.Response!.FeedbackId.Should().Be(_createdFeedbackId)
+    => Get steps response feedback id should be _createdFeedbackId
+_getSteps.Response!.CustomerName.Should().Be(_postSteps.Response!.CustomerName)
+    => Get steps response customer name should be _postSteps.Response.CustomerName
+_getSteps.Response!.Rating.Should().Be(4)
+    => Get steps response rating should be 4
+_getSteps.ListResponse!.Should().Contain(f => f.FeedbackId == _createdFeedbackId)
+    => Get steps list response should contain [ f => f.FeedbackId == _createdFeedbackId ]
+_grpcSteps.OrderStatusReply!.OrderId.Should().Be(_createdOrderId)
+    => Grpc steps order status reply order id should be _createdOrderId
+_grpcSteps.OrderStatusReply!.CustomerName.Should().Be(_customerName)
+    => Grpc steps order status reply customer name should be _customerName
+_grpcSteps.OrderStatusReply!.Status.Should().Be(OrderStatuses.Created)
+    => Grpc steps order status reply status should be Created
+_grpcSteps.RpcException.Should().NotBeNull()
+    => Grpc steps rpc exception should not be null
+_grpcSteps.RpcException!.StatusCode.Should().Be(StatusCode.NotFound)
+    => Grpc steps rpc exception status code should be NotFound
+_grpcSteps.RecipeSummaryReply!.RecipeType.Should().Be("Pancakes")
+    => Grpc steps recipe summary reply recipe type should be "Pancakes"
+_grpcSteps.RecipeSummaryReply!.TotalBatches.Should().Be(42)
+    => Grpc steps recipe summary reply total batches should be 42
+_grpcSteps.RecipeSummaryReply!.CommonIngredients.Should().BeEquivalentTo(["Milk", "Flour", "Eggs"])
+    => Grpc steps recipe summary reply common ingredients should be equivalent to ["Milk", "Flour", "Eggs"]
+_grpcSteps.RecipeSummaryReply!.RecipeType.Should().Be("Waffles")
+    => Grpc steps recipe summary reply recipe type should be "Waffles"
+_grpcSteps.RecipeSummaryReply!.TotalBatches.Should().Be(28)
+    => Grpc steps recipe summary reply total batches should be 28
+_grpcSteps.RecipeSummaryReply!.CommonIngredients.Should().BeEquivalentTo(["Milk", "Flour", "Eggs", "Butter"])
+    => Grpc steps recipe summary reply common ingredients should be equivalent to ["Milk", "Flour", "Eggs", "Butter"]
+_grpcSteps.RecipeSummaryReply!.RecipeType.Should().Be("Unknown")
+    => Grpc steps recipe summary reply recipe type should be "Unknown"
+_grpcSteps.RecipeSummaryReply!.TotalBatches.Should().Be(0)
+    => Grpc steps recipe summary reply total batches should be 0
+_grpcSteps.RecipeSummaryReply!.CommonIngredients.Should().BeEmpty()
+    => Grpc steps recipe summary reply common ingredients should be empty
+_grpcSteps.StreamedReplies.Should().HaveCount(1)
+    => Grpc steps streamed replies should have count 1
+_grpcSteps.StreamedReplies[0].OrderId.Should().Be(_createdOrderId)
+    => Grpc steps streamed replies[0] order id should be _createdOrderId
+_grpcSteps.StreamedReplies[0].CustomerName.Should().Be(_customerName)
+    => Grpc steps streamed replies[0] customer name should be _customerName
+_grpcSteps.StreamedReplies[0].Status.Should().Be(OrderStatuses.Created)
+    => Grpc steps streamed replies[0] status should be Created
+responseContainsCorrelationIdHeader.Should().BeTrue()
+    => Response contains correlation id header should be true
+values!.First().Should().Be(_knownCorrelationId)
+    => First value of values should be _knownCorrelationId
+values!.First().Should().NotBeNullOrEmpty()
+    => First value of values should not be null or empty
+_response!.StatusCode.Should().Be(HttpStatusCode.OK)
+    => Response status code should be OK
+_result.Should().NotBeNull()
+    => Result should not be null
+_result!.Status.Should().Be(HealthCheckStatuses.Degraded)
+    => Result status should be Degraded
+_result!.Results.Should().ContainKey(HealthCheckNames.CowService)
+    => Result results should contain key CowService
+_result.Results[HealthCheckNames.CowService].Status.Should().Be(HealthCheckStatuses.Degraded)
+    => Result results[ health check names cow service] status should be Degraded
+_result!.Results.Should().ContainKey(HealthCheckNames.SupplierService)
+    => Result results should contain key SupplierService
+_result.Results[HealthCheckNames.SupplierService].Status.Should().Be(HealthCheckStatuses.Degraded)
+    => Result results[ health check names supplier service] status should be Degraded
+response.StatusCode.Should().Be(HttpStatusCode.OK)
+    => Response status code should be OK
+_result!.Results.Should().ContainKey(HealthCheckNames.KitchenService)
+    => Result results should contain key KitchenService
+kitchenEntry.Status.Should().Be(HealthCheckStatuses.Degraded)
+    => Kitchen entry status should be Degraded
+kitchenEntry.Description.Should().Contain("503")
+    => Kitchen entry description should contain "503"
+_result!.Results.Should().ContainKey(checkName)
+    => Result results should contain key checkName
+_result!.Status.Should().Be(HealthCheckStatuses.Healthy)
+    => Result status should be Healthy
+_result.Results.Should().ContainKey(HealthCheckNames.GoatService)
+    => Result results should contain key GoatService
+_result.Results.Should().ContainKey(HealthCheckNames.SupplierService)
+    => Result results should contain key SupplierService
+_result.Results.Should().ContainKey(HealthCheckNames.KitchenService)
+    => Result results should contain key KitchenService
+_result.Results.Should().ContainKey(HealthCheckNames.CosmosDb)
+    => Result results should contain key CosmosDb
+_result.Results.Should().ContainKey(HealthCheckNames.Kafka)
+    => Result results should contain key Kafka
+_result!.Status.Should().Be(Documentation.HeartbeatStatus)
+    => Result status should be HeartbeatStatus
+_logProvider.Entries.Should().Contain(e => e.Message.Contains("created for customer"))
+    => Log provider entries should contain [ e => e.Message.Contains("created for customer") ]
+_logProvider.Entries.Should().Contain(e => e.Message.Contains(_customerName))
+    => Log provider entries should contain [ e => e.Message.Contains(_customerName) ]
+_logProvider.Entries.Should().Contain(e => e.Message.Contains("1 items"))
+    => Log provider entries should contain [ e => e.Message.Contains("1 items") ]
+_goatMilkSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.BadGateway)
+    => Goat milk steps response message status code should be BadGateway
+body.Should().Contain(DownstreamErrorMessages.GoatServiceUnavailableTitle)
+    => Body should contain GoatServiceUnavailableTitle
+_goatMilkSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.NotFound)
+    => Goat milk steps response message status code should be NotFound
+body.Should().Contain(DownstreamErrorMessages.FeatureDisabled)
+    => Body should contain FeatureDisabled
+_goatMilkSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+    => Goat milk steps response message status code should be OK
+_goatMilkSteps.GoatMilkResponse.GoatMilk.Should().Be(GoatServiceDefaults.FreshGoatMilk)
+    => Goat milk steps goat milk response goat milk should be FreshGoatMilk
+_goatMilkSteps.GoatMilkResponse.Should().NotBeNull()
+    => Goat milk steps goat milk response should not be null
+_milkSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.BadGateway)
+    => Milk steps response message status code should be BadGateway
+milkErrorResponseBody.Should().Contain(DownstreamErrorMessages.CowServiceUnavailableTitle)
+    => Milk error response body should contain CowServiceUnavailableTitle
+_postSteps.Response!.IngredientName.Should().Be(_ingredientName)
+    => Post steps response ingredient name should be _ingredientName
+_postSteps.Response!.QuantityUsed.Should().Be(2.5m)
+    => Post steps response quantity used should be 2.5m
+_postSteps.Response!.UsageId.Should().NotBeNullOrEmpty()
+    => Post steps response usage id should not be null or empty
+_getSteps.ListResponse!.Should().Contain(u => u.IngredientName == _ingredientName)
+    => Get steps list response should contain [ u => u.IngredientName == _ingredientName ]
+_getSteps.SummaryResponse!.Should().Contain(s => s.IngredientName == _ingredientName)
+    => Get steps summary response should contain [ s => s.IngredientName == _ingredientName ]
+_postSteps.Response!.IngredientName.Should().NotBeNullOrEmpty()
+    => Post steps response ingredient name should not be null or empty
+_postSteps.Response!.QuantityWasted.Should().Be(0.5m)
+    => Post steps response quantity wasted should be 0.5m
+_postSteps.Response!.WasteId.Should().NotBeNullOrEmpty()
+    => Post steps response waste id should not be null or empty
+_postSteps.Response!.Reason.Should().Be("Expired before use")
+    => Post steps response reason should be "Expired before use"
+_getSteps.ListResponse!.Should().Contain(w => w.WasteId == _createdWasteId)
+    => Get steps list response should contain [ w => w.WasteId == _createdWasteId ]
+_postSteps.Response!.Name.Should().Be(_postSteps.Request!.Name)
+    => Post steps response name should be _postSteps.Request.Name
+_postSteps.Response!.Category.Should().Be("Dry Goods")
+    => Post steps response category should be "Dry Goods"
+_getSteps.Response!.Id.Should().Be(_createdItemId)
+    => Get steps response id should be _createdItemId
+_getSteps.Response!.Name.Should().Be(_postSteps.Response!.Name)
+    => Get steps response name should be _postSteps.Response.Name
+_getSteps.ListResponse!.Should().Contain(i => i.Id == _createdItemId)
+    => Get steps list response should contain [ i => i.Id == _createdItemId ]
+_putSteps.Response!.Category.Should().Be("Updated Category")
+    => Put steps response category should be "Updated Category"
+_menuSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+    => Menu steps response message status code should be OK
+_menuSteps.Response!.Should().Contain(m => m.Name == MenuDefaults.ClassicPancakes)
+    => Menu steps response should contain [ m => m.Name == MenuDefaults.ClassicPancakes ]
+_menuSteps.Response!.Should().Contain(m => m.Name == MenuDefaults.BelgianWaffles)
+    => Menu steps response should contain [ m => m.Name == MenuDefaults.BelgianWaffles ]
+_menuSteps.Response!.Should().Contain(m => m.Name == MenuDefaults.GoatMilkPancakes)
+    => Menu steps response should contain [ m => m.Name == MenuDefaults.GoatMilkPancakes ]
+_menuSteps.Response!.Should().BeInAscendingOrder(m => m.Name)
+    => Menu steps response should be in ascending order [ m => m.Name ]
+_secondMenuSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+    => Second menu steps response message status code should be OK
+_secondMenuSteps.Response!.Should().Contain(m => m.IsAvailable)
+    => Second menu steps response should contain [ m => m.IsAvailable ]
+_menuSteps.Response!.Should().OnlyContain(m => m.IsAvailable == false)
+    => Menu steps response should only contain [ m => m.IsAvailable == false ]
+_orderSteps.Response!.CustomerName.Should().Be(_customerName)
+    => Order steps response customer name should be _customerName
+_orderSteps.Response!.Items.Should().HaveCount(1)
+    => Order steps response items should have count 1
+orderCreatedEvents.Should().Contain(e => e.CustomerName == _customerName)
+    => Order created events should contain [ e => e.CustomerName == _customerName ]
+_orderId.Should().NotBeEmpty()
+    => Order id should not be empty
+_retrievalSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+    => Retrieval steps response message status code should be OK
+_retrievalSteps.Response!.Status.Should().Be(OrderStatuses.Completed)
+    => Retrieval steps response status should be Completed
+_retrievalSteps.Response!.CustomerName.Should().Be(_customerName)
+    => Retrieval steps response customer name should be _customerName
+_retrievalSteps.Response!.Items.Should().HaveCount(1)
+    => Retrieval steps response items should have count 1
+_retrievalSteps.Response!.TableNumber.Should().Be(4)
+    => Retrieval steps response table number should be 4
+_retrievalSteps.Response!.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromMinutes(2))
+    => Retrieval steps response created at should be close to DateTime.UtcNow, TimeSpan.FromMinutes(2)
+_retrievalSteps.Response!.OrderId.ToString().Should().MatchRegex(@"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
+    => Retrieval steps response order id should match regex @"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+auditLogResponse.StatusCode.Should().Be(HttpStatusCode.OK)
+    => Audit log response status code should be OK
+auditLogs.Should().Contain(l => l.EntityId == _orderId && l.Action == AuditLogDefaults.CreatedAction)
+    => Audit logs should contain [ l => l.EntityId == _orderId && l.Action == AuditLogDefaults.CreatedAction ]
+_orderSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.BadRequest)
+    => Order steps response message status code should be BadRequest
+orderValidationErrors.Should().Contain(e => e.Contains("cannot contain more than 2 items"))
+    => Order validation errors should contain [ e => e.Contains("cannot contain more than 2 items") ]
+_getOrderSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+    => Get order steps response message status code should be OK
+_retrievalSteps.Response!.OrderId.Should().Be(_orderSteps.Response!.OrderId)
+    => Retrieval steps response order id should be _orderSteps.Response.OrderId
+_retrievalSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.NotFound)
+    => Retrieval steps response message status code should be NotFound
+_listSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+    => List steps response message status code should be OK
+_listSteps.Response!.Items.Should().HaveCountGreaterThanOrEqualTo(_createdOrderCount)
+    => List steps response items should have count greater than or equal to _createdOrderCount
+_listSteps.Response!.Page.Should().Be(1)
+    => List steps response page should be 1
+_listSteps.Response!.TotalCount.Should().BeGreaterThanOrEqualTo(_createdOrderCount)
+    => List steps response total count should be greater than or equal to _createdOrderCount
+_listSteps.Response!.Items.Should().HaveCount(1)
+    => List steps response items should have count 1
+_listSteps.Response!.TotalPages.Should().BeGreaterThanOrEqualTo(_createdOrderCount)
+    => List steps response total pages should be greater than or equal to _createdOrderCount
+_listSteps.Response!.Page.Should().Be(2)
+    => List steps response page should be 2
+_listSteps.Response!.Items.Should().BeEmpty()
+    => List steps response items should be empty
+_listSteps.Response!.TotalCount.Should().Be(0)
+    => List steps response total count should be 0
+_firstResponse!.StatusCode.Should().Be(HttpStatusCode.Created)
+    => First response status code should be Created
+_secondResponse!.StatusCode.Should().Be(HttpStatusCode.TooManyRequests)
+    => Second response status code should be TooManyRequests
+_patchSteps.Response!.Status.Should().Be(expectedStatus)
+    => Patch steps response status should be expectedStatus
+_patchSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.Conflict)
+    => Patch steps response message status code should be Conflict
+_postSteps.Response!.Station.Should().Be(_station)
+    => Post steps response station should be _station
+_postSteps.Response!.PrepSeconds.Should().Be(42.5m)
+    => Post steps response prep seconds should be 42.5m
+_postSteps.Response!.TimingId.Should().NotBeNullOrEmpty()
+    => Post steps response timing id should not be null or empty
+_getSteps.ListResponse!.Should().Contain(t => t.TimingId == _createdTimingId)
+    => Get steps list response should contain [ t => t.TimingId == _createdTimingId ]
+_getSteps.SummaryResponse!.Should().Contain(s => s.Station == _station && s.TimingCount >= 1)
+    => Get steps summary response should contain [ s => s.Station == _station && s.TimingCount >= 1 ]
+_response.StatusCode.Should().Be(HttpStatusCode.UnsupportedMediaType)
+    => Response status code should be UnsupportedMediaType
+_pancakeSteps.Response!.Ingredients.Should().Contain(_milkSteps.MilkResponse.Milk)
+    => Pancake steps response ingredients should contain _milkSteps.MilkResponse.Milk
+_pancakeSteps.Response!.Ingredients.Should().Contain(_eggsSteps.EggsResponse.Eggs)
+    => Pancake steps response ingredients should contain _eggsSteps.EggsResponse.Eggs
+_pancakeSteps.Response!.Ingredients.Should().Contain(_flourSteps.FlourResponse.Flour)
+    => Pancake steps response ingredients should contain _flourSteps.FlourResponse.Flour
+_pancakeSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.BadRequest)
+    => Pancake steps response message status code should be BadRequest
+body.Should().Contain(PancakeValidationMessages.MaxToppingsExceeded)
+    => Body should contain MaxToppingsExceeded
+_publishSteps.CalculationId.Should().NotBe(Guid.Empty)
+    => Publish steps calculation id should not be Empty
+_postSteps.Response!.Rating.Should().Be(5)
+    => Post steps response rating should be 5
+_postSteps.Response!.ReviewId.Should().NotBeNullOrEmpty()
+    => Post steps response review id should not be null or empty
+_getSteps.Response!.ReviewId.Should().Be(_createdReviewId)
+    => Get steps response review id should be _createdReviewId
+_getSteps.ListResponse!.Should().Contain(r => r.ReviewId == _createdReviewId)
+    => Get steps list response should contain [ r => r.ReviewId == _createdReviewId ]
+_graphQlSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+    => Graph ql steps response message status code should be OK
+webhookResponse.StatusCode.Should().Be(HttpStatusCode.OK)
+    => Webhook response status code should be OK
+_graphQlSteps.OrderSummaries.Should().NotContain(o => o.OrderId == _orderId)
+    => Graph ql steps order summaries should not contain [ o => o.OrderId == _orderId ]
+pancakes.Should().NotBeNull()
+    => Pancakes should not be null
+pancakes!.Count.Should().BeGreaterThanOrEqualTo(2)
+    => Pancakes count should be greater than or equal to 2
+_postSteps.Response!.Status.Should().Be("Confirmed")
+    => Post steps response status should be "Confirmed"
+_getSteps.Response!.Id.Should().Be(_createdReservationId)
+    => Get steps response id should be _createdReservationId
+_getSteps.Response!.Status.Should().Be("Confirmed")
+    => Get steps response status should be "Confirmed"
+_cancelSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+    => Cancel steps response message status code should be OK
+_cancelSteps.Response!.Status.Should().Be("Cancelled")
+    => Cancel steps response status should be "Cancelled"
+_cancelSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.Conflict)
+    => Cancel steps response message status code should be Conflict
+_deleteResponse!.StatusCode.Should().Be(HttpStatusCode.NoContent)
+    => Delete response status code should be NoContent
+_publishSteps.OrderId.Should().NotBe(Guid.Empty)
+    => Publish steps order id should not be Empty
+_asyncApiResponse!.StatusCode.Should().Be(HttpStatusCode.OK)
+    => Async api response status code should be OK
+_asyncApiJson!.RootElement.GetProperty("asyncapi").Should().NotBeNull()
+    => Async api json root element get property("asyncapi") should not be null
+_asyncApiJson!.RootElement.GetProperty("info").Should().NotBeNull()
+    => Async api json root element get property("info") should not be null
+_asyncApiJson!.RootElement.GetProperty("defaultContentType").Should().NotBeNull()
+    => Async api json root element get property("defaultContentType") should not be null
+_asyncApiJson!.RootElement.GetProperty("channels").Should().NotBeNull()
+    => Async api json root element get property("channels") should not be null
+_asyncApiJson!.RootElement.GetProperty("operations").Should().NotBeNull()
+    => Async api json root element get property("operations") should not be null
+_asyncApiJson!.RootElement.GetProperty("components").Should().NotBeNull()
+    => Async api json root element get property("components") should not be null
+_scalarResponse!.StatusCode.Should().Be(HttpStatusCode.OK)
+    => Scalar response status code should be OK
+_scalarUiResponseBody.Should().Contain("<html")
+    => Scalar ui response body should contain "<html"
+_scalarUiResponseBody.Should().Contain("scalar")
+    => Scalar ui response body should contain "scalar"
+_swaggerResponse!.StatusCode.Should().Be(HttpStatusCode.OK)
+    => Swagger response status code should be OK
+openApiResponseIsValidJson.Should().BeTrue()
+    => Open api response is valid json should be true
+_swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.PancakesPath).Should().NotBeNull()
+    => Swagger json root element get property("paths") get property( endpoints swagger pancakes path) should not be null
+_swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.WafflesPath).Should().NotBeNull()
+    => Swagger json root element get property("paths") get property( endpoints swagger waffles path) should not be null
+_swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.OrdersPath).Should().NotBeNull()
+    => Swagger json root element get property("paths") get property( endpoints swagger orders path) should not be null
+_swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.OrderByIdPath).Should().NotBeNull()
+    => Swagger json root element get property("paths") get property( endpoints swagger order by id path) should not be null
+_swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.ToppingsPath).Should().NotBeNull()
+    => Swagger json root element get property("paths") get property( endpoints swagger toppings path) should not be null
+_swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.MenuPath).Should().NotBeNull()
+    => Swagger json root element get property("paths") get property( endpoints swagger menu path) should not be null
+_swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.MilkPath).Should().NotBeNull()
+    => Swagger json root element get property("paths") get property( endpoints swagger milk path) should not be null
+_swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.EggsPath).Should().NotBeNull()
+    => Swagger json root element get property("paths") get property( endpoints swagger eggs path) should not be null
+_swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.FlourPath).Should().NotBeNull()
+    => Swagger json root element get property("paths") get property( endpoints swagger flour path) should not be null
+_swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.GoatMilkPath).Should().NotBeNull()
+    => Swagger json root element get property("paths") get property( endpoints swagger goat milk path) should not be null
+_swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.AuditLogsPath).Should().NotBeNull()
+    => Swagger json root element get property("paths") get property( endpoints swagger audit logs path) should not be null
+_postSteps.Response!.Role.Should().Be("Chef")
+    => Post steps response role should be "Chef"
+_getSteps.Response!.Id.Should().Be(_createdMemberId)
+    => Get steps response id should be _createdMemberId
+_getSteps.Response!.Role.Should().Be("Chef")
+    => Get steps response role should be "Chef"
+_deleteSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.NotFound)
+    => Delete steps response message status code should be NotFound
+_toppingsSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+    => Toppings steps response message status code should be OK
+_toppingsSteps.Response!.Should().NotContain(t => t.Name == ToppingDefaults.Raspberries)
+    => Toppings steps response should not contain [ t => t.Name == ToppingDefaults.Raspberries ]
+_toppingsSteps.Response!.Should().Contain(t => t.Name == ToppingDefaults.Raspberries)
+    => Toppings steps response should contain [ t => t.Name == ToppingDefaults.Raspberries ]
+_getSteps.Response.Should().HaveCount(ToppingDefaults.ExpectedToppingCount)
+    => Get steps response should have count ExpectedToppingCount
+_getSteps.Response!.Should().Contain(t => t.Name == ToppingDefaults.Raspberries)
+    => Get steps response should contain [ t => t.Name == ToppingDefaults.Raspberries ]
+_getSteps.Response!.Should().Contain(t => t.Name == ToppingDefaults.Blueberries)
+    => Get steps response should contain [ t => t.Name == ToppingDefaults.Blueberries ]
+_getSteps.Response!.Should().Contain(t => t.Name == ToppingDefaults.MapleSyrup)
+    => Get steps response should contain [ t => t.Name == ToppingDefaults.MapleSyrup ]
+_getSteps.Response!.Should().Contain(t => t.Name == ToppingDefaults.WhippedCream)
+    => Get steps response should contain [ t => t.Name == ToppingDefaults.WhippedCream ]
+_getSteps.Response!.Should().Contain(t => t.Name == ToppingDefaults.ChocolateChips)
+    => Get steps response should contain [ t => t.Name == ToppingDefaults.ChocolateChips ]
+_postSteps.Response!.Name.Should().Be(ToppingDefaults.Strawberries)
+    => Post steps response name should be Strawberries
+_postSteps.Response!.Category.Should().Be(ToppingDefaults.FruitCategory)
+    => Post steps response category should be FruitCategory
+_putSteps.Response!.ToppingId.Should().Be(KnownBlueberryToppingId)
+    => Put steps response topping id should be KnownBlueberryToppingId
+_putSteps.Response!.Name.Should().Be(ToppingDefaults.Strawberries)
+    => Put steps response name should be Strawberries
+_putSteps.Response!.Category.Should().Be(ToppingDefaults.FruitCategory)
+    => Put steps response category should be FruitCategory
+_putSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.NotFound)
+    => Put steps response message status code should be NotFound
+_waffleSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.Created)
+    => Waffle steps response message status code should be Created
+_waffleSteps.Response!.Ingredients.Should().Contain(_milkSteps.MilkResponse.Milk)
+    => Waffle steps response ingredients should contain _milkSteps.MilkResponse.Milk
+_waffleSteps.Response!.Ingredients.Should().Contain(_eggsSteps.EggsResponse.Eggs)
+    => Waffle steps response ingredients should contain _eggsSteps.EggsResponse.Eggs
+_waffleSteps.Response!.Ingredients.Should().Contain(_flourSteps.FlourResponse.Flour)
+    => Waffle steps response ingredients should contain _flourSteps.FlourResponse.Flour
+_waffleSteps.Response!.Ingredients.Should().Contain(IngredientDefaults.UnsaltedButter)
+    => Waffle steps response ingredients should contain UnsaltedButter
+_waffleSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.BadRequest)
+    => Waffle steps response message status code should be BadRequest
+body.Should().Contain(WaffleValidationMessages.MaxToppingsExceeded)
+    => Body should contain MaxToppingsExceeded
+_muffinSteps.Response!.Ingredients.Should().HaveCount(expected.ExpectedIngredientCount)
+    => Muffin steps response ingredients should have count expected.ExpectedIngredientCount
+_muffinSteps.Response!.Toppings.Should().HaveCount(expected.ExpectedToppingCount)
+    => Muffin steps response toppings should have count expected.ExpectedToppingCount
+responseBody.Should().Contain(error)
+    => Response body should contain error
+_muffinSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.BadRequest)
+    => Muffin steps response message status code should be BadRequest
+auditLogsFromDifferentTimeRange.Should().BeEmpty()
+    => Audit logs from different time range should be empty
+_postSteps.Response!.CustomerName.Should().Be(_postSteps.Request.CustomerName)
+    => Post steps response customer name should be _postSteps.Request.CustomerName
+_grpcSteps.OrderStatusReply!.OrderId.Should().Be(_createdOrderId.ToString())
+    => Grpc steps order status reply order id should be _createdOrderId.ToString()
+_grpcSteps.RecipeSummaryReply!.RecipeType.Should().Be(type)
+    => Grpc steps recipe summary reply recipe type should be type
+_grpcSteps.RecipeSummaryReply!.TotalBatches.Should().Be(count)
+    => Grpc steps recipe summary reply total batches should be count
+_grpcSteps.RecipeSummaryReply!.CommonIngredients.Should().BeEquivalentTo(expected)
+    => Grpc steps recipe summary reply common ingredients should be equivalent to expected
+_grpcSteps.StreamedReplies[0].OrderId.Should().Be(_createdOrderId.ToString())
+    => Grpc steps streamed replies[0] order id should be _createdOrderId.ToString()
+firstCorrelationIdHeaderValue.Should().Be(_knownCorrelationId)
+    => First correlation id header value should be _knownCorrelationId
+firstCorrelationIdHeaderValue.Should().NotBeNullOrEmpty()
+    => First correlation id header value should not be null or empty
+_healthResponse!.StatusCode.Should().Be(HttpStatusCode.OK)
+    => Health response status code should be OK
+_healthCheckResult.Should().NotBeNull()
+    => Health check result should not be null
+_healthCheckResult!.Status.Should().Be(HealthCheckStatuses.Degraded)
+    => Health check result status should be Degraded
+_healthCheckResult!.Results.Should().ContainKey(HealthCheckNames.CowService)
+    => Health check result results should contain key CowService
+_healthCheckResult.Results[HealthCheckNames.CowService].Status.Should().Be(HealthCheckStatuses.Degraded)
+    => Health check result results[ health check names cow service] status should be Degraded
+_healthCheckResult!.Results.Should().ContainKey(HealthCheckNames.SupplierService)
+    => Health check result results should contain key SupplierService
+_healthCheckResult.Results[HealthCheckNames.SupplierService].Status.Should().Be(HealthCheckStatuses.Degraded)
+    => Health check result results[ health check names supplier service] status should be Degraded
+_healthCheckResult!.Results.Should().ContainKey(HealthCheckNames.KitchenService)
+    => Health check result results should contain key KitchenService
+kitchenServiceHealthStatus.Should().Be(HealthCheckStatuses.Degraded)
+    => Kitchen service health status should be Degraded
+kitchenServiceHealthDescription.Should().Contain("503")
+    => Kitchen service health description should contain "503"
+_healthCheckResult!.Results.Should().ContainKey(checkName)
+    => Health check result results should contain key checkName
+_healthCheckResult!.Status.Should().Be(HealthCheckStatuses.Healthy)
+    => Health check result status should be Healthy
+_healthCheckResult!.Results.Should().ContainKey(HealthCheckNames.GoatService)
+    => Health check result results should contain key GoatService
+_healthCheckResult!.Results.Should().ContainKey(HealthCheckNames.CosmosDb)
+    => Health check result results should contain key CosmosDb
+_healthCheckResult!.Results.Should().ContainKey(HealthCheckNames.Kafka)
+    => Health check result results should contain key Kafka
+_heartbeatResponse!.StatusCode.Should().Be(HttpStatusCode.OK)
+    => Heartbeat response status code should be OK
+_heartbeatResult.Should().NotBeNull()
+    => Heartbeat result should not be null
+_heartbeatResult!.Status.Should().Be(Documentation.HeartbeatStatus)
+    => Heartbeat result status should be HeartbeatStatus
+goatMilkErrorResponseBody.Should().Contain(DownstreamErrorMessages.GoatServiceUnavailableTitle)
+    => Goat milk error response body should contain GoatServiceUnavailableTitle
+goatMilkFeatureDisabledResponseBody.Should().Contain(DownstreamErrorMessages.FeatureDisabled)
+    => Goat milk feature disabled response body should contain FeatureDisabled
+_postSteps.Response!.Name.Should().Be(_postSteps.Request.Name)
+    => Post steps response name should be _postSteps.Request.Name
+_auditLogResponse.StatusCode.Should().Be(HttpStatusCode.OK)
+    => Audit log response status code should be OK
+_auditLogs!.Should().Contain(l => l.EntityId == _orderId && l.Action == AuditLogDefaults.CreatedAction)
+    => Audit logs should contain [ l => l.EntityId == _orderId && l.Action == AuditLogDefaults.CreatedAction ]
+_patchSteps.Response!.Status.Should().Be(status)
+    => Patch steps response status should be status
+_response!.StatusCode.Should().Be(HttpStatusCode.UnsupportedMediaType)
+    => Response status code should be UnsupportedMediaType
+pancakeErrorResponseBody.Should().Contain(PancakeValidationMessages.MaxToppingsExceeded)
+    => Pancake error response body should contain MaxToppingsExceeded
+_webhookResponse!.StatusCode.Should().Be(HttpStatusCode.OK)
+    => Webhook response status code should be OK
+_asyncApiJson!.RootElement.GetProperty(name).Should().NotBeNull()
+    => Async api json root element get property(name) should not be null
+_swaggerJson!.RootElement.GetProperty("paths").GetProperty(path).Should().NotBeNull()
+    => Swagger json root element get property("paths") get property(path) should not be null
+scalarUiResponseBody.Should().Contain("<html")
+    => Scalar ui response body should contain "<html"
+scalarUiResponseBody.Should().Contain("scalar")
+    => Scalar ui response body should contain "scalar"
+waffleErrorResponseBody.Should().Contain(WaffleValidationMessages.MaxToppingsExceeded)
+    => Waffle error response body should contain MaxToppingsExceeded
+actual.ErrorMessage.Should().Contain(expectedError)
+    => Actual error message should contain expectedError
+actual.ResponseStatus.Should().Be(expectedStatus)
+    => Actual response status should be expectedStatus
+auditLogs.Should().BeEmpty()
+    => Audit logs should be empty
+_postSteps.Response!.RecipeName.Should().Be(recipeName)
+    => Post steps response recipe name should be recipeName
+_getSteps.Response!.NoteId.Should().Be(createdNoteId)
+    => Get steps response note id should be createdNoteId
+_getSteps.Response!.RecipeName.Should().Be(recipeName)
+    => Get steps response recipe name should be recipeName
+_patchSteps.Response!.NoteId.Should().Be(createdNoteId)
+    => Patch steps response note id should be createdNoteId
+_getSteps.ListResponse!.Should().Contain(n => n.NoteId == createdNoteId)
+    => Get steps list response should contain [ n => n.NoteId == createdNoteId ]
+_getSteps.Response!.CustomerId.Should().Be(customerId)
+    => Get steps response customer id should be customerId
+actual.ErrorMessage.Should().Be(expectedError)
+    => Actual error message should be expectedError
+_postSteps.Response!.EquipmentId.Should().Be(equipmentId)
+    => Post steps response equipment id should be equipmentId
+_getSteps.ListResponse!.Should().Contain(r => r.ReadingId == createdReadingId)
+    => Get steps list response should contain [ r => r.ReadingId == createdReadingId ]
+_getSteps.ListResponse!.Should().NotContain(r => r.ReadingId == createdReadingId)
+    => Get steps list response should not contain [ r => r.ReadingId == createdReadingId ]
+_getSteps.Response!.FeedbackId.Should().Be(createdFeedbackId)
+    => Get steps response feedback id should be createdFeedbackId
+_getSteps.ListResponse!.Should().Contain(f => f.FeedbackId == createdFeedbackId)
+    => Get steps list response should contain [ f => f.FeedbackId == createdFeedbackId ]
+_grpcSteps.OrderStatusReply!.OrderId.Should().Be(createdOrderId.ToString())
+    => Grpc steps order status reply order id should be createdOrderId.ToString()
+_grpcSteps.StreamedReplies[0].OrderId.Should().Be(createdOrderId.ToString())
+    => Grpc steps streamed replies[0] order id should be createdOrderId.ToString()
+firstCorrelationIdHeaderValue.Should().Be(knownCorrelationId)
+    => First correlation id header value should be knownCorrelationId
+result.Should().NotBeNull()
+    => Result should not be null
+result.Status.Should().Be(HealthCheckStatuses.Degraded)
+    => Result status should be Degraded
+result.Results.Should().ContainKey(HealthCheckNames.CowService)
+    => Result results should contain key CowService
+result.Results[HealthCheckNames.CowService].Status.Should().Be(HealthCheckStatuses.Degraded)
+    => Result results[ health check names cow service] status should be Degraded
+result.Results.Should().ContainKey(HealthCheckNames.SupplierService)
+    => Result results should contain key SupplierService
+result.Results[HealthCheckNames.SupplierService].Status.Should().Be(HealthCheckStatuses.Degraded)
+    => Result results[ health check names supplier service] status should be Degraded
+result.Results.Should().ContainKey(HealthCheckNames.KitchenService)
+    => Result results should contain key KitchenService
+result.Results.Should().ContainKey(checkName)
+    => Result results should contain key checkName
+result.Status.Should().Be(HealthCheckStatuses.Healthy)
+    => Result status should be Healthy
+result.Results.Should().ContainKey(HealthCheckNames.GoatService)
+    => Result results should contain key GoatService
+result.Results.Should().ContainKey(HealthCheckNames.CosmosDb)
+    => Result results should contain key CosmosDb
+result.Results.Should().ContainKey(HealthCheckNames.Kafka)
+    => Result results should contain key Kafka
+result!.Status.Should().Be(Documentation.HeartbeatStatus)
+    => Result status should be HeartbeatStatus
+pancakeSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.Created)
+    => Pancake steps response message status code should be Created
+orderSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.Created)
+    => Order steps response message status code should be Created
+_logProvider.Entries.Should().Contain(e => e.Message.Contains(customerName))
+    => Log provider entries should contain [ e => e.Message.Contains(customerName) ]
+_postSteps.Response!.IngredientName.Should().Be(_postSteps.Request.IngredientName)
+    => Post steps response ingredient name should be _postSteps.Request.IngredientName
+_getSteps.ListResponse!.Should().Contain(u => u.UsageId == createdUsageId)
+    => Get steps list response should contain [ u => u.UsageId == createdUsageId ]
+_getSteps.SummaryResponse!.Should().Contain(s => s.IngredientName == ingredientName)
+    => Get steps summary response should contain [ s => s.IngredientName == ingredientName ]
+_getSteps.ListResponse!.Should().Contain(w => w.WasteId == createdWasteId)
+    => Get steps list response should contain [ w => w.WasteId == createdWasteId ]
+_getSteps.Response!.Id.Should().Be(createdItemId)
+    => Get steps response id should be createdItemId
+_getSteps.ListResponse!.Should().Contain(i => i.Id == createdItemId)
+    => Get steps list response should contain [ i => i.Id == createdItemId ]
+firstResponse!.StatusCode.Should().Be(HttpStatusCode.Created)
+    => First response status code should be Created
+secondResponse!.StatusCode.Should().Be(HttpStatusCode.TooManyRequests)
+    => Second response status code should be TooManyRequests
+_patchSteps.Response!.Status.Should().Be(toStatus)
+    => Patch steps response status should be toStatus
+_postSteps.Response!.Station.Should().Be(station)
+    => Post steps response station should be station
+_getSteps.ListResponse!.Should().Contain(t => t.TimingId == createdTimingId)
+    => Get steps list response should contain [ t => t.TimingId == createdTimingId ]
+_getSteps.SummaryResponse!.Should().Contain(s => s.Station == station && s.TimingCount >= 1)
+    => Get steps summary response should contain [ s => s.Station == station && s.TimingCount >= 1 ]
+response.StatusCode.Should().Be(HttpStatusCode.UnsupportedMediaType)
+    => Response status code should be UnsupportedMediaType
+_postSteps.Response!.RecipeName.Should().Be("Fluffy Pancakes")
+    => Post steps response recipe name should be "Fluffy Pancakes"
+_getSteps.Response!.ReviewId.Should().Be(createdReviewId)
+    => Get steps response review id should be createdReviewId
+_getSteps.Response!.RecipeName.Should().Be("Classic Waffles")
+    => Get steps response recipe name should be "Classic Waffles"
+_getSteps.ListResponse!.Should().Contain(r => r.ReviewId == createdReviewId)
+    => Get steps list response should contain [ r => r.ReviewId == createdReviewId ]
+_getSteps.Response!.Id.Should().Be(createdReservationId)
+    => Get steps response id should be createdReservationId
+deleteResponse.StatusCode.Should().Be(HttpStatusCode.NoContent)
+    => Delete response status code should be NoContent
+asyncApiResponse!.StatusCode.Should().Be(HttpStatusCode.OK)
+    => Async api response status code should be OK
+asyncApiJson!.RootElement.GetProperty("asyncapi").Should().NotBeNull()
+    => Async api json root element get property("asyncapi") should not be null
+asyncApiJson!.RootElement.GetProperty("info").Should().NotBeNull()
+    => Async api json root element get property("info") should not be null
+asyncApiJson!.RootElement.GetProperty("defaultContentType").Should().NotBeNull()
+    => Async api json root element get property("defaultContentType") should not be null
+asyncApiJson!.RootElement.GetProperty("channels").Should().NotBeNull()
+    => Async api json root element get property("channels") should not be null
+asyncApiJson!.RootElement.GetProperty("operations").Should().NotBeNull()
+    => Async api json root element get property("operations") should not be null
+asyncApiJson!.RootElement.GetProperty("components").Should().NotBeNull()
+    => Async api json root element get property("components") should not be null
+scalarResponse.StatusCode.Should().Be(HttpStatusCode.OK)
+    => Scalar response status code should be OK
+swaggerResponse.StatusCode.Should().Be(HttpStatusCode.OK)
+    => Swagger response status code should be OK
+swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.PancakesPath).Should().NotBeNull()
+    => Swagger json root element get property("paths") get property( endpoints swagger pancakes path) should not be null
+swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.WafflesPath).Should().NotBeNull()
+    => Swagger json root element get property("paths") get property( endpoints swagger waffles path) should not be null
+swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.OrdersPath).Should().NotBeNull()
+    => Swagger json root element get property("paths") get property( endpoints swagger orders path) should not be null
+swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.OrderByIdPath).Should().NotBeNull()
+    => Swagger json root element get property("paths") get property( endpoints swagger order by id path) should not be null
+swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.ToppingsPath).Should().NotBeNull()
+    => Swagger json root element get property("paths") get property( endpoints swagger toppings path) should not be null
+swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.MenuPath).Should().NotBeNull()
+    => Swagger json root element get property("paths") get property( endpoints swagger menu path) should not be null
+swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.MilkPath).Should().NotBeNull()
+    => Swagger json root element get property("paths") get property( endpoints swagger milk path) should not be null
+swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.EggsPath).Should().NotBeNull()
+    => Swagger json root element get property("paths") get property( endpoints swagger eggs path) should not be null
+swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.FlourPath).Should().NotBeNull()
+    => Swagger json root element get property("paths") get property( endpoints swagger flour path) should not be null
+swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.GoatMilkPath).Should().NotBeNull()
+    => Swagger json root element get property("paths") get property( endpoints swagger goat milk path) should not be null
+swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.AuditLogsPath).Should().NotBeNull()
+    => Swagger json root element get property("paths") get property( endpoints swagger audit logs path) should not be null
+_getSteps.Response!.Id.Should().Be(createdMemberId)
+    => Get steps response id should be createdMemberId
+milkSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+    => Milk steps response message status code should be OK
+eggsSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+    => Eggs steps response message status code should be OK
+flourSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+    => Flour steps response message status code should be OK
+pancakeSteps.Response.Should().NotBeNull()
+    => Pancake steps response should not be null
+pancakeSteps.Response!.BatchId.Should().NotBeEmpty()
+    => Pancake steps response batch id should not be empty
+muffinSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.Created)
+    => Muffin steps response message status code should be Created
+muffinSteps.Response!.Ingredients.Should().Contain(milkSteps.MilkResponse.Milk)
+    => Muffin steps response ingredients should contain milkSteps.MilkResponse.Milk
+muffinSteps.Response!.Ingredients.Should().Contain(eggsSteps.EggsResponse.Eggs)
+    => Muffin steps response ingredients should contain eggsSteps.EggsResponse.Eggs
+muffinSteps.Response!.Ingredients.Should().Contain(flourSteps.FlourResponse.Flour)
+    => Muffin steps response ingredients should contain flourSteps.FlourResponse.Flour
+muffinSteps.Response!.Ingredients.Should().Contain(MuffinDefaults.GrannySmithApples)
+    => Muffin steps response ingredients should contain GrannySmithApples
+muffinSteps.Response!.Ingredients.Should().Contain(MuffinDefaults.CeylonCinnamon)
+    => Muffin steps response ingredients should contain CeylonCinnamon
+muffinSteps.Response!.Toppings.Should().HaveCount(1)
+    => Muffin steps response toppings should have count 1
+muffinSteps.Response!.BakingTemperature.Should().Be(MuffinDefaults.DefaultTemperature)
+    => Muffin steps response baking temperature should be DefaultTemperature
+muffinSteps.Response!.BakingDuration.Should().Be(MuffinDefaults.DefaultDuration)
+    => Muffin steps response baking duration should be DefaultDuration
+muffinSteps.Response!.Ingredients.Should().HaveCount(expectedCount)
+    => Muffin steps response ingredients should have count expectedCount
+muffinSteps.Response!.Toppings.Should().HaveCount(expectedCount)
+    => Muffin steps response toppings should have count expectedCount
+muffinSteps.Response!.BakingTemperature.Should().BeGreaterThan(0)
+    => Muffin steps response baking temperature should be greater than 0
+responseBody.Should().Contain(errorMessage)
+    => Response body should contain errorMessage
+muffinSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.BadRequest)
+    => Muffin steps response message status code should be BadRequest
+orderSteps.Response!.OrderId.Should().NotBeEmpty()
+    => Order steps response order id should not be empty
+auditSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+    => Audit steps response message status code should be OK
+postSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.Created)
+    => Post steps response message status code should be Created
+postSteps.Response!.RecipeName.Should().Be(_recipeName)
+    => Post steps response recipe name should be _recipeName
+postSteps.Response!.NoteText.Should().Be("Remember to fold the batter gently to keep it fluffy.")
+    => Post steps response note text should be "Remember to fold the batter gently to keep it fluffy."
+postSteps.Response!.Category.Should().Be("Technique")
+    => Post steps response category should be "Technique"
+postSteps.Response!.NoteId.Should().NotBeNullOrEmpty()
+    => Post steps response note id should not be null or empty
+getSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+    => Get steps response message status code should be OK
+getSteps.Response!.NoteId.Should().Be(_createdNoteId)
+    => Get steps response note id should be _createdNoteId
+getSteps.Response!.RecipeName.Should().Be(_recipeName)
+    => Get steps response recipe name should be _recipeName
+patchSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+    => Patch steps response message status code should be OK
+patchSteps.Response!.NoteId.Should().Be(_createdNoteId)
+    => Patch steps response note id should be _createdNoteId
+patchSteps.Response!.NoteText.Should().Be("Updated: Use unsalted butter for better flavour control.")
+    => Patch steps response note text should be "Updated: Use unsalted butter for better flavour control."
+patchSteps.Response!.Category.Should().Be("Ingredients")
+    => Patch steps response category should be "Ingredients"
+patchSteps.Response!.UpdatedAt.Should().NotBeNull()
+    => Patch steps response updated at should not be null
+getSteps.ListResponse!.Should().Contain(n => n.NoteId == _createdNoteId)
+    => Get steps list response should contain [ n => n.NoteId == _createdNoteId ]
+getSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.NotFound)
+    => Get steps response message status code should be NotFound
+patchSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.NotFound)
+    => Patch steps response message status code should be NotFound
+postSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.BadRequest)
+    => Post steps response message status code should be BadRequest
+publishSteps.FeedbackId.Should().NotBe(Guid.Empty)
+    => Publish steps feedback id should not be Empty
+putSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+    => Put steps response message status code should be OK
+putSteps.Response!.PreferredMilkType.Should().Be("Oat")
+    => Put steps response preferred milk type should be "Oat"
+putSteps.Response!.FavouriteItem.Should().Be("Blueberry Pancakes")
+    => Put steps response favourite item should be "Blueberry Pancakes"
+getSteps.Response!.CustomerId.Should().Be(_customerId)
+    => Get steps response customer id should be _customerId
+getSteps.Response!.PreferredMilkType.Should().Be("Oat")
+    => Get steps response preferred milk type should be "Oat"
+getSteps.Response!.LikesExtraToppings.Should().BeTrue()
+    => Get steps response likes extra toppings should be true
+putSteps.Response!.PreferredMilkType.Should().Be("Almond")
+    => Put steps response preferred milk type should be "Almond"
+putSteps.Response!.FavouriteItem.Should().Be("Belgian Waffles")
+    => Put steps response favourite item should be "Belgian Waffles"
+putSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.BadRequest)
+    => Put steps response message status code should be BadRequest
+postSteps.Response!.SpecialId.Should().Be(DailySpecialDefaults.CinnamonSwirlId)
+    => Post steps response special id should be CinnamonSwirlId
+postSteps.Response!.OrderConfirmationId.Should().NotBeEmpty()
+    => Post steps response order confirmation id should not be empty
+getSteps.Response.Should().HaveCount(DailySpecialDefaults.ExpectedSpecialsCount)
+    => Get steps response should have count ExpectedSpecialsCount
+postSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.Conflict)
+    => Post steps response message status code should be Conflict
+actualResults.Should().Contain(r => r.ErrorMessage.Contains(errorMessage))
+    => Actual results should contain [ r => r.ErrorMessage.Contains(errorMessage) ]
+postSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.NotFound)
+    => Post steps response message status code should be NotFound
+postSteps.Response!.EquipmentId.Should().Be(_equipmentId)
+    => Post steps response equipment id should be _equipmentId
+postSteps.Response!.Value.Should().Be(180.5m)
+    => Post steps response value should be 180.5m
+postSteps.Response!.ReadingId.Should().NotBeNullOrEmpty()
+    => Post steps response reading id should not be null or empty
+getSteps.ListResponse!.Should().Contain(r => r.ReadingId == _createdReadingId)
+    => Get steps list response should contain [ r => r.ReadingId == _createdReadingId ]
+deleteSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.NoContent)
+    => Delete steps response message status code should be NoContent
+getSteps.ListResponse!.Should().NotContain(r => r.ReadingId == _createdReadingId)
+    => Get steps list response should not contain [ r => r.ReadingId == _createdReadingId ]
+postSteps.Response!.CustomerName.Should().Be(postSteps.Request.CustomerName)
+    => Post steps response customer name should be postSteps.Request.CustomerName
+postSteps.Response!.Rating.Should().Be(4)
+    => Post steps response rating should be 4
+getSteps.Response!.FeedbackId.Should().Be(_createdFeedbackId)
+    => Get steps response feedback id should be _createdFeedbackId
+getSteps.Response!.CustomerName.Should().Be(postSteps.Response!.CustomerName)
+    => Get steps response customer name should be postSteps.Response.CustomerName
+getSteps.Response!.Rating.Should().Be(4)
+    => Get steps response rating should be 4
+getSteps.ListResponse!.Should().Contain(f => f.FeedbackId == _createdFeedbackId)
+    => Get steps list response should contain [ f => f.FeedbackId == _createdFeedbackId ]
+_grpcSteps.OrderStatusReply.Should().NotBeNull()
+    => Grpc steps order status reply should not be null
+_grpcSteps.OrderStatusReply!.OrderId.Should().Be(orderSteps.Response!.OrderId.ToString())
+    => Grpc steps order status reply order id should be orderSteps.Response.OrderId.ToString()
+_grpcSteps.OrderStatusReply.CustomerName.Should().Be(orderSteps.Request.CustomerName)
+    => Grpc steps order status reply customer name should be orderSteps.Request.CustomerName
+_grpcSteps.OrderStatusReply.Status.Should().Be(OrderStatuses.Created)
+    => Grpc steps order status reply status should be Created
+_grpcSteps.RecipeSummaryReply!.TotalBatches.Should().Be(expectedBatches)
+    => Grpc steps recipe summary reply total batches should be expectedBatches
+_grpcSteps.StreamedReplies[0].OrderId.Should().Be(orderSteps.Response!.OrderId.ToString())
+    => Grpc steps streamed replies[0] order id should be orderSteps.Response.OrderId.ToString()
+_grpcSteps.StreamedReplies[0].CustomerName.Should().Be(orderSteps.Request.CustomerName)
+    => Grpc steps streamed replies[0] customer name should be orderSteps.Request.CustomerName
+_healthCheckResult.Results.Should().ContainKey(HealthCheckNames.CowService)
+    => Health check result results should contain key CowService
+_healthCheckResult.Results.Should().ContainKey(HealthCheckNames.GoatService)
+    => Health check result results should contain key GoatService
+_healthCheckResult.Results.Should().ContainKey(HealthCheckNames.SupplierService)
+    => Health check result results should contain key SupplierService
+_healthCheckResult.Results.Should().ContainKey(HealthCheckNames.KitchenService)
+    => Health check result results should contain key KitchenService
+_healthCheckResult.Results.Should().ContainKey(HealthCheckNames.CosmosDb)
+    => Health check result results should contain key CosmosDb
+_healthCheckResult.Results.Should().ContainKey(HealthCheckNames.Kafka)
+    => Health check result results should contain key Kafka
+healthCheckEntryStatus.Should().NotBeNullOrEmpty($"'{entry.Key}' should have a status")
+    => Health check entry status should not be null or empty $"'{entry.Key}' should have a status"
+_healthCheckResult.Results.Should().ContainKey(checkName)
+    => Health check result results should contain key checkName
+healthCheckDescription.Should().NotBeNullOrEmpty($"'{checkName}' should have a description")
+    => Health check description should not be null or empty $"'{checkName}' should have a description"
+healthCheckEntryData.Should().NotBeNull($"'{entry.Key}' should have a data object")
+    => Health check entry data should not be null $"'{entry.Key}' should have a data object"
+cowServiceHealthStatus.Should().Be(HealthCheckStatuses.Degraded)
+    => Cow service health status should be Degraded
+supplierServiceHealthStatus.Should().Be(HealthCheckStatuses.Degraded)
+    => Supplier service health status should be Degraded
+_logProvider.Entries.Should().Contain(e => e.Message.Contains(orderSteps.Request.CustomerName!))
+    => Log provider entries should contain [ e => e.Message.Contains(orderSteps.Request.CustomerName) ]
+milkSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.BadGateway)
+    => Milk steps response message status code should be BadGateway
+goatMilkSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+    => Goat milk steps response message status code should be OK
+goatMilkSteps.GoatMilkResponse.GoatMilk.Should().Be(GoatServiceDefaults.FreshGoatMilk)
+    => Goat milk steps goat milk response goat milk should be FreshGoatMilk
+goatMilkSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.NotFound)
+    => Goat milk steps response message status code should be NotFound
+goatMilkSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.BadGateway)
+    => Goat milk steps response message status code should be BadGateway
+postSteps.Response!.IngredientName.Should().Be(_ingredientName)
+    => Post steps response ingredient name should be _ingredientName
+postSteps.Response!.QuantityUsed.Should().Be(2.5m)
+    => Post steps response quantity used should be 2.5m
+postSteps.Response!.UsageId.Should().NotBeNullOrEmpty()
+    => Post steps response usage id should not be null or empty
+getSteps.ListResponse!.Should().Contain(u => u.IngredientName == _ingredientName)
+    => Get steps list response should contain [ u => u.IngredientName == _ingredientName ]
+getSteps.SummaryResponse!.Should().Contain(s => s.IngredientName == _ingredientName)
+    => Get steps summary response should contain [ s => s.IngredientName == _ingredientName ]
+postSteps.Response!.IngredientName.Should().NotBeNullOrEmpty()
+    => Post steps response ingredient name should not be null or empty
+postSteps.Response!.QuantityWasted.Should().Be(0.5m)
+    => Post steps response quantity wasted should be 0.5m
+postSteps.Response!.WasteId.Should().NotBeNullOrEmpty()
+    => Post steps response waste id should not be null or empty
+postSteps.Response!.Reason.Should().Be("Expired before use")
+    => Post steps response reason should be "Expired before use"
+getSteps.ListResponse!.Should().Contain(w => w.WasteId == _createdWasteId)
+    => Get steps list response should contain [ w => w.WasteId == _createdWasteId ]
+postSteps.Response!.Name.Should().Be(postSteps.Request.Name)
+    => Post steps response name should be postSteps.Request.Name
+postSteps.Response!.Category.Should().Be("Dry Goods")
+    => Post steps response category should be "Dry Goods"
+getSteps.Response!.Id.Should().Be(_createdItemId)
+    => Get steps response id should be _createdItemId
+getSteps.Response!.Name.Should().Be(postSteps.Response!.Name)
+    => Get steps response name should be postSteps.Response.Name
+getSteps.ListResponse!.Should().Contain(i => i.Id == _createdItemId)
+    => Get steps list response should contain [ i => i.Id == _createdItemId ]
+putSteps.Response!.Category.Should().Be("Updated Category")
+    => Put steps response category should be "Updated Category"
+menuSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+    => Menu steps response message status code should be OK
+menuSteps.Response!.Should().Contain(m => m.Name == MenuDefaults.ClassicPancakes)
+    => Menu steps response should contain [ m => m.Name == MenuDefaults.ClassicPancakes ]
+menuSteps.Response!.Should().Contain(m => m.Name == MenuDefaults.BelgianWaffles)
+    => Menu steps response should contain [ m => m.Name == MenuDefaults.BelgianWaffles ]
+menuSteps.Response!.Should().Contain(m => m.Name == MenuDefaults.GoatMilkPancakes)
+    => Menu steps response should contain [ m => m.Name == MenuDefaults.GoatMilkPancakes ]
+menuSteps.Response!.Should().BeInAscendingOrder(m => m.Name)
+    => Menu steps response should be in ascending order [ m => m.Name ]
+steps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+    => Steps response message status code should be OK
+steps.Response!.Should().Contain(m => m.IsAvailable)
+    => Steps response should contain [ m => m.IsAvailable ]
+menuSteps.Response!.Should().OnlyContain(m => m.IsAvailable == false)
+    => Menu steps response should only contain [ m => m.IsAvailable == false ]
+_swaggerResponse.StatusCode.Should().Be(HttpStatusCode.OK)
+    => Swagger response status code should be OK
+_asyncApiResponse.StatusCode.Should().Be(HttpStatusCode.OK)
+    => Async api response status code should be OK
+paths.GetProperty(Endpoints.Swagger.PancakesPath).Should().NotBeNull()
+    => Paths get property( endpoints swagger pancakes path) should not be null
+paths.GetProperty(Endpoints.Swagger.WafflesPath).Should().NotBeNull()
+    => Paths get property( endpoints swagger waffles path) should not be null
+paths.GetProperty(Endpoints.Swagger.OrdersPath).Should().NotBeNull()
+    => Paths get property( endpoints swagger orders path) should not be null
+paths.GetProperty(Endpoints.Swagger.OrderByIdPath).Should().NotBeNull()
+    => Paths get property( endpoints swagger order by id path) should not be null
+paths.GetProperty(Endpoints.Swagger.ToppingsPath).Should().NotBeNull()
+    => Paths get property( endpoints swagger toppings path) should not be null
+paths.GetProperty(Endpoints.Swagger.MenuPath).Should().NotBeNull()
+    => Paths get property( endpoints swagger menu path) should not be null
+paths.GetProperty(Endpoints.Swagger.MilkPath).Should().NotBeNull()
+    => Paths get property( endpoints swagger milk path) should not be null
+paths.GetProperty(Endpoints.Swagger.EggsPath).Should().NotBeNull()
+    => Paths get property( endpoints swagger eggs path) should not be null
+paths.GetProperty(Endpoints.Swagger.FlourPath).Should().NotBeNull()
+    => Paths get property( endpoints swagger flour path) should not be null
+paths.GetProperty(Endpoints.Swagger.GoatMilkPath).Should().NotBeNull()
+    => Paths get property( endpoints swagger goat milk path) should not be null
+paths.GetProperty(Endpoints.Swagger.AuditLogsPath).Should().NotBeNull()
+    => Paths get property( endpoints swagger audit logs path) should not be null
+_asyncApiJson.RootElement.GetProperty("info").Should().NotBeNull()
+    => Async api json root element get property("info") should not be null
+_asyncApiJson.RootElement.GetProperty("defaultContentType").Should().NotBeNull()
+    => Async api json root element get property("defaultContentType") should not be null
+_asyncApiJson.RootElement.GetProperty("channels").Should().NotBeNull()
+    => Async api json root element get property("channels") should not be null
+_asyncApiJson.RootElement.GetProperty("operations").Should().NotBeNull()
+    => Async api json root element get property("operations") should not be null
+_asyncApiJson.RootElement.GetProperty("components").Should().NotBeNull()
+    => Async api json root element get property("components") should not be null
+orderSteps.Response!.CustomerName.Should().Be(_customerName)
+    => Order steps response customer name should be _customerName
+orderSteps.Response!.Items.Should().HaveCount(1)
+    => Order steps response items should have count 1
+eventStore.Should().NotBeNull()
+    => Event store should not be null
+kafkaStore.Should().NotBeNull()
+    => Kafka store should not be null
+getOrderSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+    => Get order steps response message status code should be OK
+getOrderSteps.Response!.OrderId.Should().Be(_orderId)
+    => Get order steps response order id should be _orderId
+getOrderSteps.Response!.Status.Should().Be(OrderStatuses.Completed)
+    => Get order steps response status should be Completed
+getOrderSteps.Response!.CustomerName.Should().Be(_customerName)
+    => Get order steps response customer name should be _customerName
+orderSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.BadRequest)
+    => Order steps response message status code should be BadRequest
+orderValidationErrorResponseBody.Should().Contain("Items")
+    => Order validation error response body should contain "Items"
+getOrderSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.NotFound)
+    => Get order steps response message status code should be NotFound
+listSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+    => List steps response message status code should be OK
+listSteps.Response!.Items.Should().HaveCountGreaterThanOrEqualTo(_createdOrderCount)
+    => List steps response items should have count greater than or equal to _createdOrderCount
+listSteps.Response!.Page.Should().BeGreaterThanOrEqualTo(1)
+    => List steps response page should be greater than or equal to 1
+listSteps.Response!.TotalCount.Should().BeGreaterThanOrEqualTo(_createdOrderCount)
+    => List steps response total count should be greater than or equal to _createdOrderCount
+patchSteps.Response!.Status.Should().Be(expectedStatus)
+    => Patch steps response status should be expectedStatus
+patchSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.Conflict)
+    => Patch steps response message status code should be Conflict
+postSteps.Response!.Station.Should().Be(_station)
+    => Post steps response station should be _station
+postSteps.Response!.PrepSeconds.Should().Be(42.5m)
+    => Post steps response prep seconds should be 42.5m
+postSteps.Response!.TimingId.Should().NotBeNullOrEmpty()
+    => Post steps response timing id should not be null or empty
+getSteps.ListResponse!.Should().Contain(t => t.TimingId == _createdTimingId)
+    => Get steps list response should contain [ t => t.TimingId == _createdTimingId ]
+getSteps.SummaryResponse!.Should().Contain(s => s.Station == _station && s.TimingCount >= 1)
+    => Get steps summary response should contain [ s => s.Station == _station && s.TimingCount >= 1 ]
+pancakeSteps.Response!.Ingredients.Should().Contain(milkSteps.MilkResponse.Milk)
+    => Pancake steps response ingredients should contain milkSteps.MilkResponse.Milk
+pancakeSteps.Response!.Ingredients.Should().Contain(eggsSteps.EggsResponse.Eggs)
+    => Pancake steps response ingredients should contain eggsSteps.EggsResponse.Eggs
+pancakeSteps.Response!.Ingredients.Should().Contain(flourSteps.FlourResponse.Flour)
+    => Pancake steps response ingredients should contain flourSteps.FlourResponse.Flour
+pancakeSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.BadRequest)
+    => Pancake steps response message status code should be BadRequest
+publishSteps.CalculationId.Should().NotBe(Guid.Empty)
+    => Publish steps calculation id should not be Empty
+postSteps.Response!.Rating.Should().Be(5)
+    => Post steps response rating should be 5
+postSteps.Response!.ReviewId.Should().NotBeNullOrEmpty()
+    => Post steps response review id should not be null or empty
+getSteps.Response!.ReviewId.Should().Be(_createdReviewId)
+    => Get steps response review id should be _createdReviewId
+getSteps.ListResponse!.Should().Contain(r => r.ReviewId == _createdReviewId)
+    => Get steps list response should contain [ r => r.ReviewId == _createdReviewId ]
+graphQlSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+    => Graph ql steps response message status code should be OK
+graphQlSteps.OrderSummaries.Should().NotContain(o => o.OrderId == _testOrderId)
+    => Graph ql steps order summaries should not contain [ o => o.OrderId == _testOrderId ]
+graphQlSteps.IngredientUsage.Should().Contain(i => i.Ingredient == "Milk" && i.Count >= 2)
+    => Graph ql steps ingredient usage should contain [ i => i.Ingredient == "Milk" && i.Count >= 2 ]
+graphQlSteps.IngredientUsage.Should().Contain(i => i.Ingredient == "Butter" && i.Count >= 1)
+    => Graph ql steps ingredient usage should contain [ i => i.Ingredient == "Butter" && i.Count >= 1 ]
+graphQlSteps.PopularRecipes.Should().Contain(r => r.RecipeType == "Waffles" && r.Count >= 1)
+    => Graph ql steps popular recipes should contain [ r => r.RecipeType == "Waffles" && r.Count >= 1 ]
+cancelSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+    => Cancel steps response message status code should be OK
+postSteps.Response!.Status.Should().Be("Confirmed")
+    => Post steps response status should be "Confirmed"
+getSteps.Response!.Id.Should().Be(_createdReservationId)
+    => Get steps response id should be _createdReservationId
+getSteps.Response!.Status.Should().Be("Confirmed")
+    => Get steps response status should be "Confirmed"
+cancelSteps.Response!.Status.Should().Be("Cancelled")
+    => Cancel steps response status should be "Cancelled"
+cancelSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.Conflict)
+    => Cancel steps response message status code should be Conflict
+publishSteps.OrderId.Should().NotBe(Guid.Empty)
+    => Publish steps order id should not be Empty
+postSteps.Response!.Role.Should().Be("Chef")
+    => Post steps response role should be "Chef"
+getSteps.Response!.Id.Should().Be(_createdMemberId)
+    => Get steps response id should be _createdMemberId
+getSteps.Response!.Role.Should().Be("Chef")
+    => Get steps response role should be "Chef"
+getSteps.Response.Should().HaveCount(ToppingDefaults.ExpectedToppingCount)
+    => Get steps response should have count ExpectedToppingCount
+getSteps.Response!.Should().Contain(t => t.Name == ToppingDefaults.Raspberries)
+    => Get steps response should contain [ t => t.Name == ToppingDefaults.Raspberries ]
+getSteps.Response!.Should().Contain(t => t.Name == ToppingDefaults.Blueberries)
+    => Get steps response should contain [ t => t.Name == ToppingDefaults.Blueberries ]
+getSteps.Response!.Should().Contain(t => t.Name == ToppingDefaults.MapleSyrup)
+    => Get steps response should contain [ t => t.Name == ToppingDefaults.MapleSyrup ]
+getSteps.Response!.Should().Contain(t => t.Name == ToppingDefaults.WhippedCream)
+    => Get steps response should contain [ t => t.Name == ToppingDefaults.WhippedCream ]
+getSteps.Response!.Should().Contain(t => t.Name == ToppingDefaults.ChocolateChips)
+    => Get steps response should contain [ t => t.Name == ToppingDefaults.ChocolateChips ]
+postSteps.Response!.Name.Should().Be(ToppingDefaults.Strawberries)
+    => Post steps response name should be Strawberries
+postSteps.Response!.Category.Should().Be(ToppingDefaults.FruitCategory)
+    => Post steps response category should be FruitCategory
+deleteSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.NotFound)
+    => Delete steps response message status code should be NotFound
+putSteps.Response!.ToppingId.Should().Be(ToppingDefaults.KnownBlueberryToppingId)
+    => Put steps response topping id should be KnownBlueberryToppingId
+putSteps.Response!.Name.Should().Be(ToppingDefaults.Strawberries)
+    => Put steps response name should be Strawberries
+putSteps.Response!.Category.Should().Be(ToppingDefaults.FruitCategory)
+    => Put steps response category should be FruitCategory
+putSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.NotFound)
+    => Put steps response message status code should be NotFound
+getSteps.Response!.Should().NotContain(t => t.Name == ToppingDefaults.Raspberries)
+    => Get steps response should not contain [ t => t.Name == ToppingDefaults.Raspberries ]
+waffleSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.Created)
+    => Waffle steps response message status code should be Created
+waffleSteps.Response!.Ingredients.Should().Contain(milkSteps.MilkResponse.Milk)
+    => Waffle steps response ingredients should contain milkSteps.MilkResponse.Milk
+waffleSteps.Response!.Ingredients.Should().Contain(eggsSteps.EggsResponse.Eggs)
+    => Waffle steps response ingredients should contain eggsSteps.EggsResponse.Eggs
+waffleSteps.Response!.Ingredients.Should().Contain(flourSteps.FlourResponse.Flour)
+    => Waffle steps response ingredients should contain flourSteps.FlourResponse.Flour
+waffleSteps.Response!.Ingredients.Should().Contain(IngredientDefaults.UnsaltedButter)
+    => Waffle steps response ingredients should contain UnsaltedButter
+waffleSteps.ResponseMessage!.StatusCode.Should().Be(HttpStatusCode.BadRequest)
+    => Waffle steps response message status code should be BadRequest
+responseContentIsValidJson.Should().BeTrue()
+    => Response content is valid json should be true
+requests.Should().NotBeEmpty()
+    => Requests should not be empty
+request.Headers.Should().ContainKey(CustomHeaders.CorrelationId)
+    => Request headers should contain key CorrelationId
+request.Headers[CustomHeaders.CorrelationId].Should().Be(expectedCorrelationId)
+    => Request headers[ custom headers correlation id] should be expectedCorrelationId
+await _milkSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.OK)
+    => Milk steps response message status code should be equal to OK
+await _eggsSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.OK)
+    => Eggs steps response message status code should be equal to OK
+await _flourSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.OK)
+    => Flour steps response message status code should be equal to OK
+await _muffinSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.Created)
+    => Muffin steps response message status code should be equal to Created
+await _muffinSteps.Response!.Ingredients.Should().Contain(_milkSteps.MilkResponse.Milk)
+    => Muffin steps response ingredients should contain _milkSteps.MilkResponse.Milk
+await _muffinSteps.Response!.Ingredients.Should().Contain(_eggsSteps.EggsResponse.Eggs)
+    => Muffin steps response ingredients should contain _eggsSteps.EggsResponse.Eggs
+await _muffinSteps.Response!.Ingredients.Should().Contain(_flourSteps.FlourResponse.Flour)
+    => Muffin steps response ingredients should contain _flourSteps.FlourResponse.Flour
+await _muffinSteps.Response!.Ingredients.Should().Contain(MuffinDefaults.GrannySmithApples)
+    => Muffin steps response ingredients should contain GrannySmithApples
+await _muffinSteps.Response!.Ingredients.Should().Contain(MuffinDefaults.CeylonCinnamon)
+    => Muffin steps response ingredients should contain CeylonCinnamon
+await _muffinSteps.Response!.Toppings.Should().HaveCount(1)
+    => Muffin steps response toppings should have count 1
+await _muffinSteps.Response!.BakingTemperature.Should().BeEqualTo(MuffinDefaults.DefaultTemperature)
+    => Muffin steps response baking temperature should be equal to DefaultTemperature
+await _muffinSteps.Response!.BakingDuration.Should().BeEqualTo(MuffinDefaults.DefaultDuration)
+    => Muffin steps response baking duration should be equal to DefaultDuration
+await _muffinSteps.Response!.Ingredients.Should().HaveCount(expected.ExpectedIngredientCount)
+    => Muffin steps response ingredients should have count expected.ExpectedIngredientCount
+await _muffinSteps.Response!.Toppings.Should().HaveCount(expected.ExpectedToppingCount)
+    => Muffin steps response toppings should have count expected.ExpectedToppingCount
+await bakingTemperatureMatchesExpectation.Should().BeTrue()
+    => Baking temperature matches expectation should be true
+await actual.ErrorMessage.Should().Contain(expectedError)
+    => Actual error message should contain expectedError
+await actual.ResponseStatus.Should().BeEqualTo(expectedStatus)
+    => Actual response status should be equal to expectedStatus
+await _auditLogResponse!.StatusCode.Should().BeEqualTo(HttpStatusCode.OK)
+    => Audit log response status code should be equal to OK
+await _auditLogs!.Should().All(l => l.EntityType == AuditLogDefaults.OrderEntityType)
+    => Audit logs should all [ l => l.EntityType == AuditLogDefaults.OrderEntityType ]
+await _auditLogs!.Should().Contain(l => l.EntityId == _orderId)
+    => Audit logs should contain [ l => l.EntityId == _orderId ]
+await auditLogs.Should().BeEmpty()
+    => Audit logs should be empty
+await _auditLogs.Should().NotBeNull()
+    => Audit logs should not be null
+await _auditLogs!.Select(l => l.Timestamp).Should().BeInDescendingOrder()
+    => Audit logs select(l => l timestamp) should be in descending order
+await _pancakeSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.Created)
+    => Pancake steps response message status code should be equal to Created
+await _pancakeSteps.Response.Should().NotBeNull()
+    => Pancake steps response should not be null
+await _pancakeSteps.Response!.BatchId.Should().NotBeEqualTo(Guid.Empty)
+    => Pancake steps response batch id should not be equal to Empty
+await _orderSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.Created)
+    => Order steps response message status code should be equal to Created
+await _orderSteps.Response.Should().NotBeNull()
+    => Order steps response should not be null
+await _orderSteps.Response!.OrderId.Should().NotBeEqualTo(Guid.Empty)
+    => Order steps response order id should not be equal to Empty
+await _auditSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.OK)
+    => Audit steps response message status code should be equal to OK
+await _postSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.Created)
+    => Post steps response message status code should be equal to Created
+await _postSteps.Response!.RecipeName.Should().BeEqualTo(recipeName)
+    => Post steps response recipe name should be equal to recipeName
+await _postSteps.Response!.NoteText.Should().BeEqualTo("Remember to fold the batter gently to keep it fluffy.")
+    => Post steps response note text should be equal to "Remember to fold the batter gently to keep it fluffy."
+await _postSteps.Response!.Category.Should().BeEqualTo("Technique")
+    => Post steps response category should be equal to "Technique"
+await _postSteps.Response!.NoteId.Should().NotBeNull()
+    => Post steps response note id should not be null
+await _getSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.OK)
+    => Get steps response message status code should be equal to OK
+await _getSteps.Response!.NoteId.Should().BeEqualTo(createdNoteId)
+    => Get steps response note id should be equal to createdNoteId
+await _getSteps.Response!.RecipeName.Should().BeEqualTo(recipeName)
+    => Get steps response recipe name should be equal to recipeName
+await _patchSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.OK)
+    => Patch steps response message status code should be equal to OK
+await _patchSteps.Response!.NoteId.Should().BeEqualTo(createdNoteId)
+    => Patch steps response note id should be equal to createdNoteId
+await _patchSteps.Response!.NoteText.Should().BeEqualTo("Updated: Use unsalted butter for better flavour control.")
+    => Patch steps response note text should be equal to "Updated: Use unsalted butter for better flavour control."
+await _patchSteps.Response!.Category.Should().BeEqualTo("Ingredients")
+    => Patch steps response category should be equal to "Ingredients"
+await _patchSteps.Response!.UpdatedAt.HasValue.Should().BeTrue()
+    => Patch steps response updated at has value should be true
+await _getSteps.ListResponse!.Should().Contain(n => n.NoteId == createdNoteId)
+    => Get steps list response should contain [ n => n.NoteId == createdNoteId ]
+await _getSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.NotFound)
+    => Get steps response message status code should be equal to NotFound
+await _patchSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.NotFound)
+    => Patch steps response message status code should be equal to NotFound
+await _postSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.BadRequest)
+    => Post steps response message status code should be equal to BadRequest
+await _publishSteps.FeedbackId.Should().NotBeEqualTo(Guid.Empty)
+    => Publish steps feedback id should not be equal to Empty
+await _putSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.OK)
+    => Put steps response message status code should be equal to OK
+await _putSteps.Response!.PreferredMilkType.Should().BeEqualTo("Oat")
+    => Put steps response preferred milk type should be equal to "Oat"
+await _putSteps.Response!.FavouriteItem.Should().BeEqualTo("Blueberry Pancakes")
+    => Put steps response favourite item should be equal to "Blueberry Pancakes"
+await _getSteps.Response!.CustomerId.Should().BeEqualTo(customerId)
+    => Get steps response customer id should be equal to customerId
+await _getSteps.Response!.PreferredMilkType.Should().BeEqualTo("Oat")
+    => Get steps response preferred milk type should be equal to "Oat"
+await _getSteps.Response!.LikesExtraToppings.Should().BeTrue()
+    => Get steps response likes extra toppings should be true
+await _putSteps.Response!.PreferredMilkType.Should().BeEqualTo("Almond")
+    => Put steps response preferred milk type should be equal to "Almond"
+await _putSteps.Response!.FavouriteItem.Should().BeEqualTo("Belgian Waffles")
+    => Put steps response favourite item should be equal to "Belgian Waffles"
+await _putSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.BadRequest)
+    => Put steps response message status code should be equal to BadRequest
+await _firstConfirmationId.Should().BeEqualTo(_secondConfirmationId)
+    => First confirmation id should be equal to _secondConfirmationId
+await _firstConfirmationId.Should().NotBeEqualTo(_secondConfirmationId)
+    => First confirmation id should not be equal to _secondConfirmationId
+await _postSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.NotFound)
+    => Post steps response message status code should be equal to NotFound
+await _postSteps.Response!.SpecialId.Should().BeEqualTo(DailySpecialDefaults.CinnamonSwirlId)
+    => Post steps response special id should be equal to CinnamonSwirlId
+await _postSteps.Response!.OrderConfirmationId.Should().NotBeEqualTo(Guid.Empty)
+    => Post steps response order confirmation id should not be equal to Empty
+await _getSteps.Response.Should().HaveCount(DailySpecialDefaults.ExpectedSpecialsCount)
+    => Get steps response should have count ExpectedSpecialsCount
+await _postSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.Conflict)
+    => Post steps response message status code should be equal to Conflict
+await lemonRicottaRemainingQuantity.Should().BeEqualTo(MaxOrdersPerSpecial - 1)
+    => Lemon ricotta remaining quantity should be equal to MaxOrdersPerSpecial - 1
+await actual.ErrorMessage.Should().BeEqualTo(expectedError)
+    => Actual error message should be equal to expectedError
+await _postSteps.Response!.EquipmentId.Should().BeEqualTo(equipmentId)
+    => Post steps response equipment id should be equal to equipmentId
+await _postSteps.Response!.Value.Should().BeEqualTo(180.5m)
+    => Post steps response value should be equal to 180.5m
+await _postSteps.Response!.ReadingId.Should().NotBeNull()
+    => Post steps response reading id should not be null
+await _getSteps.ListResponse!.Should().Contain(r => r.ReadingId == createdReadingId)
+    => Get steps list response should contain [ r => r.ReadingId == createdReadingId ]
+await _deleteSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.NoContent)
+    => Delete steps response message status code should be equal to NoContent
+await _getSteps.ListResponse!.Where(r => r.ReadingId == createdReadingId).ToList().Should().BeEmpty()
+    => Get steps list response where(r => r reading id == created reading id) to list() should be empty
+await _postSteps.Response!.CustomerName.Should().BeEqualTo(_postSteps.Request.CustomerName)
+    => Post steps response customer name should be equal to _postSteps.Request.CustomerName
+await _postSteps.Response!.Rating.Should().BeEqualTo(4)
+    => Post steps response rating should be equal to 4
+await _getSteps.Response!.FeedbackId.Should().BeEqualTo(createdFeedbackId)
+    => Get steps response feedback id should be equal to createdFeedbackId
+await _getSteps.Response!.CustomerName.Should().BeEqualTo(_postSteps.Response!.CustomerName)
+    => Get steps response customer name should be equal to _postSteps.Response.CustomerName
+await _getSteps.Response!.Rating.Should().BeEqualTo(4)
+    => Get steps response rating should be equal to 4
+await _getSteps.ListResponse!.Should().Contain(f => f.FeedbackId == createdFeedbackId)
+    => Get steps list response should contain [ f => f.FeedbackId == createdFeedbackId ]
+await _grpcSteps.OrderStatusReply!.OrderId.Should().BeEqualTo(createdOrderId.ToString())
+    => Grpc steps order status reply order id should be equal to createdOrderId.ToString()
+await _grpcSteps.OrderStatusReply!.CustomerName.Should().BeEqualTo(_customerName)
+    => Grpc steps order status reply customer name should be equal to _customerName
+await _grpcSteps.OrderStatusReply!.Status.Should().BeEqualTo(OrderStatuses.Created)
+    => Grpc steps order status reply status should be equal to Created
+await _grpcSteps.RpcException.Should().NotBeNull()
+    => Grpc steps rpc exception should not be null
+await _grpcSteps.RpcException!.StatusCode.Should().BeEqualTo(StatusCode.NotFound)
+    => Grpc steps rpc exception status code should be equal to NotFound
+await _grpcSteps.RecipeSummaryReply!.RecipeType.Should().BeEqualTo("Pancakes")
+    => Grpc steps recipe summary reply recipe type should be equal to "Pancakes"
+await _grpcSteps.RecipeSummaryReply!.TotalBatches.Should().BeEqualTo(42)
+    => Grpc steps recipe summary reply total batches should be equal to 42
+await _grpcSteps.RecipeSummaryReply!.CommonIngredients.Should().BeEquivalentTo(["Milk", "Flour", "Eggs"])
+    => Grpc steps recipe summary reply common ingredients should be equivalent to ["Milk", "Flour", "Eggs"]
+await _grpcSteps.RecipeSummaryReply!.RecipeType.Should().BeEqualTo("Waffles")
+    => Grpc steps recipe summary reply recipe type should be equal to "Waffles"
+await _grpcSteps.RecipeSummaryReply!.TotalBatches.Should().BeEqualTo(28)
+    => Grpc steps recipe summary reply total batches should be equal to 28
+await _grpcSteps.RecipeSummaryReply!.CommonIngredients.Should().BeEquivalentTo(["Milk", "Flour", "Eggs", "Butter"])
+    => Grpc steps recipe summary reply common ingredients should be equivalent to ["Milk", "Flour", "Eggs", "Butter"]
+await _grpcSteps.RecipeSummaryReply!.RecipeType.Should().BeEqualTo("Unknown")
+    => Grpc steps recipe summary reply recipe type should be equal to "Unknown"
+await _grpcSteps.RecipeSummaryReply!.TotalBatches.Should().BeEqualTo(0)
+    => Grpc steps recipe summary reply total batches should be equal to 0
+await _grpcSteps.RecipeSummaryReply!.CommonIngredients.Should().BeEmpty()
+    => Grpc steps recipe summary reply common ingredients should be empty
+await _grpcSteps.StreamedReplies.Should().HaveCount(1)
+    => Grpc steps streamed replies should have count 1
+await _grpcSteps.StreamedReplies[0].OrderId.Should().BeEqualTo(createdOrderId.ToString())
+    => Grpc steps streamed replies[0] order id should be equal to createdOrderId.ToString()
+await _grpcSteps.StreamedReplies[0].CustomerName.Should().BeEqualTo(_customerName)
+    => Grpc steps streamed replies[0] customer name should be equal to _customerName
+await _grpcSteps.StreamedReplies[0].Status.Should().BeEqualTo(OrderStatuses.Created)
+    => Grpc steps streamed replies[0] status should be equal to Created
+await responseContainsCorrelationIdHeader.Should().BeTrue()
+    => Response contains correlation id header should be true
+await firstCorrelationIdHeaderValue.Should().BeEqualTo(knownCorrelationId)
+    => First correlation id header value should be equal to knownCorrelationId
+await firstCorrelationIdHeaderValue.Should().NotBeNull()
+    => First correlation id header value should not be null
+await response.StatusCode.Should().BeEqualTo(HttpStatusCode.OK)
+    => Response status code should be equal to OK
+await result.Should().NotBeNull()
+    => Result should not be null
+await result.Status.Should().BeEqualTo(HealthCheckStatuses.Degraded)
+    => Result status should be equal to Degraded
+await result.Results.Should().ContainKey(HealthCheckNames.CowService)
+    => Result results should contain key CowService
+await result.Results[HealthCheckNames.CowService].Status.Should().BeEqualTo(HealthCheckStatuses.Degraded)
+    => Result results[ health check names cow service] status should be equal to Degraded
+await result.Results.Should().ContainKey(HealthCheckNames.SupplierService)
+    => Result results should contain key SupplierService
+await result.Results[HealthCheckNames.SupplierService].Status.Should().BeEqualTo(HealthCheckStatuses.Degraded)
+    => Result results[ health check names supplier service] status should be equal to Degraded
+await result.Results.Should().ContainKey(HealthCheckNames.KitchenService)
+    => Result results should contain key KitchenService
+await kitchenServiceHealthStatus.Should().BeEqualTo(HealthCheckStatuses.Degraded)
+    => Kitchen service health status should be equal to Degraded
+await kitchenServiceHealthDescription.Should().Contain("503")
+    => Kitchen service health description should contain "503"
+await healthCheckEntryStatus.Should().NotBeNull()
+    => Health check entry status should not be null
+await result.Results.Should().ContainKey(checkName)
+    => Result results should contain key checkName
+await healthCheckDescription.Should().NotBeNull()
+    => Health check description should not be null
+await healthCheckEntryData.Should().NotBeNull()
+    => Health check entry data should not be null
+await result.Status.Should().BeEqualTo(HealthCheckStatuses.Healthy)
+    => Result status should be equal to Healthy
+await result.Results.Should().ContainKey(HealthCheckNames.GoatService)
+    => Result results should contain key GoatService
+await result.Results.Should().ContainKey(HealthCheckNames.CosmosDb)
+    => Result results should contain key CosmosDb
+await result.Results.Should().ContainKey(HealthCheckNames.Kafka)
+    => Result results should contain key Kafka
+await result!.Status.Should().BeEqualTo(Documentation.HeartbeatStatus)
+    => Result status should be equal to HeartbeatStatus
+await pancakeSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.Created)
+    => Pancake steps response message status code should be equal to Created
+await orderSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.Created)
+    => Order steps response message status code should be equal to Created
+await _logProvider.Entries.Should().Contain(e => e.Message.Contains("created for customer"))
+    => Log provider entries should contain [ e => e.Message.Contains("created for customer") ]
+await _logProvider.Entries.Should().Contain(e => e.Message.Contains(customerName))
+    => Log provider entries should contain [ e => e.Message.Contains(customerName) ]
+await _logProvider.Entries.Should().Contain(e => e.Message.Contains("1 items"))
+    => Log provider entries should contain [ e => e.Message.Contains("1 items") ]
+await _goatMilkSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.BadGateway)
+    => Goat milk steps response message status code should be equal to BadGateway
+await goatMilkErrorResponseBody.Should().Contain(DownstreamErrorMessages.GoatServiceUnavailableTitle)
+    => Goat milk error response body should contain GoatServiceUnavailableTitle
+await _goatMilkSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.NotFound)
+    => Goat milk steps response message status code should be equal to NotFound
+await goatMilkFeatureDisabledResponseBody.Should().Contain(DownstreamErrorMessages.FeatureDisabled)
+    => Goat milk feature disabled response body should contain FeatureDisabled
+await _goatMilkSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.OK)
+    => Goat milk steps response message status code should be equal to OK
+await _goatMilkSteps.GoatMilkResponse.GoatMilk.Should().BeEqualTo(GoatServiceDefaults.FreshGoatMilk)
+    => Goat milk steps goat milk response goat milk should be equal to FreshGoatMilk
+await _goatMilkSteps.GoatMilkResponse.Should().NotBeNull()
+    => Goat milk steps goat milk response should not be null
+await _milkSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.BadGateway)
+    => Milk steps response message status code should be equal to BadGateway
+await milkErrorResponseBody.Should().Contain(DownstreamErrorMessages.CowServiceUnavailableTitle)
+    => Milk error response body should contain CowServiceUnavailableTitle
+await _postSteps.Response!.IngredientName.Should().BeEqualTo(ingredientName)
+    => Post steps response ingredient name should be equal to ingredientName
+await _postSteps.Response!.QuantityUsed.Should().BeEqualTo(2.5m)
+    => Post steps response quantity used should be equal to 2.5m
+await _postSteps.Response!.UsageId.Should().NotBeNull()
+    => Post steps response usage id should not be null
+await _getSteps.ListResponse!.Should().Contain(u => u.IngredientName == ingredientName)
+    => Get steps list response should contain [ u => u.IngredientName == ingredientName ]
+await _getSteps.SummaryResponse!.Should().Contain(s => s.IngredientName == ingredientName)
+    => Get steps summary response should contain [ s => s.IngredientName == ingredientName ]
+await _postSteps.Response!.IngredientName.Should().NotBeNull()
+    => Post steps response ingredient name should not be null
+await _postSteps.Response!.QuantityWasted.Should().BeEqualTo(0.5m)
+    => Post steps response quantity wasted should be equal to 0.5m
+await _postSteps.Response!.WasteId.Should().NotBeNull()
+    => Post steps response waste id should not be null
+await _postSteps.Response!.Reason.Should().BeEqualTo("Expired before use")
+    => Post steps response reason should be equal to "Expired before use"
+await _getSteps.ListResponse!.Should().Contain(w => w.WasteId == createdWasteId)
+    => Get steps list response should contain [ w => w.WasteId == createdWasteId ]
+await _postSteps.Response!.Name.Should().BeEqualTo(_postSteps.Request.Name)
+    => Post steps response name should be equal to _postSteps.Request.Name
+await _postSteps.Response!.Category.Should().BeEqualTo("Dry Goods")
+    => Post steps response category should be equal to "Dry Goods"
+await _getSteps.Response!.Id.Should().BeEqualTo(createdItemId)
+    => Get steps response id should be equal to createdItemId
+await _getSteps.Response!.Name.Should().BeEqualTo(_postSteps.Response!.Name)
+    => Get steps response name should be equal to _postSteps.Response.Name
+await _getSteps.ListResponse!.Should().Contain(i => i.Id == createdItemId)
+    => Get steps list response should contain [ i => i.Id == createdItemId ]
+await _putSteps.Response!.Category.Should().BeEqualTo("Updated Category")
+    => Put steps response category should be equal to "Updated Category"
+await _menuSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.OK)
+    => Menu steps response message status code should be equal to OK
+await _menuSteps.Response!.Should().Contain(m => m.Name == MenuDefaults.ClassicPancakes)
+    => Menu steps response should contain [ m => m.Name == MenuDefaults.ClassicPancakes ]
+await _menuSteps.Response!.Should().Contain(m => m.Name == MenuDefaults.BelgianWaffles)
+    => Menu steps response should contain [ m => m.Name == MenuDefaults.BelgianWaffles ]
+await _menuSteps.Response!.Should().Contain(m => m.Name == MenuDefaults.GoatMilkPancakes)
+    => Menu steps response should contain [ m => m.Name == MenuDefaults.GoatMilkPancakes ]
+await _menuSteps.Response!.Select(m => m.Name).Should().BeInOrder()
+    => Menu steps response select(m => m name) should be in order
+await _secondMenuSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.OK)
+    => Second menu steps response message status code should be equal to OK
+await _secondMenuSteps.Response!.Should().Contain(m => m.IsAvailable)
+    => Second menu steps response should contain [ m => m.IsAvailable ]
+await _menuSteps.Response!.Should().All(m => m.IsAvailable == false)
+    => Menu steps response should all [ m => m.IsAvailable == false ]
+await _orderSteps.Response!.CustomerName.Should().BeEqualTo(_customerName)
+    => Order steps response customer name should be equal to _customerName
+await _orderSteps.Response!.Items.Should().HaveCount(1)
+    => Order steps response items should have count 1
+await orderCreatedEvents.Should().Contain(e => e.CustomerName == _customerName)
+    => Order created events should contain [ e => e.CustomerName == _customerName ]
+await _orderId.Should().NotBeEqualTo(Guid.Empty)
+    => Order id should not be equal to Empty
+await _retrievalSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.OK)
+    => Retrieval steps response message status code should be equal to OK
+await _retrievalSteps.Response!.Status.Should().BeEqualTo(OrderStatuses.Completed)
+    => Retrieval steps response status should be equal to Completed
+await _retrievalSteps.Response!.CustomerName.Should().BeEqualTo(_customerName)
+    => Retrieval steps response customer name should be equal to _customerName
+await _retrievalSteps.Response!.Items.Should().HaveCount(1)
+    => Retrieval steps response items should have count 1
+await _retrievalSteps.Response!.TableNumber.Should().BeEqualTo(4)
+    => Retrieval steps response table number should be equal to 4
+await (_retrievalSteps.Response!.CreatedAt > DateTime.UtcNow.AddMinutes(-2) && _retrievalSteps.Response!.CreatedAt < DateTime.UtcNow.AddMinutes(2)).Should().BeTrue()
+    => (_retrieval steps response created at >  date time utc now add minutes(-2) && _retrieval steps response created at <  date time utc now add minutes(2)) should be true
+await System.Text.RegularExpressions.Regex.IsMatch(_retrievalSteps.Response!.OrderId.ToString(), @"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$").Should().BeTrue()
+    => System text regular expressions regex is match(_retrieval steps response order id to string(), @"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$") should be true
+await auditLogResponse.StatusCode.Should().BeEqualTo(HttpStatusCode.OK)
+    => Audit log response status code should be equal to OK
+await auditLogs.Should().Contain(l => l.EntityId == _orderId && l.Action == AuditLogDefaults.CreatedAction)
+    => Audit logs should contain [ l => l.EntityId == _orderId && l.Action == AuditLogDefaults.CreatedAction ]
+await _orderSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.BadRequest)
+    => Order steps response message status code should be equal to BadRequest
+await orderValidationErrors.Should().Contain(e => e.Contains("cannot contain more than 2 items"))
+    => Order validation errors should contain [ e => e.Contains("cannot contain more than 2 items") ]
+await _getOrderSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.OK)
+    => Get order steps response message status code should be equal to OK
+await _retrievalSteps.Response!.OrderId.Should().BeEqualTo(_orderSteps.Response!.OrderId)
+    => Retrieval steps response order id should be equal to _orderSteps.Response.OrderId
+await _retrievalSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.NotFound)
+    => Retrieval steps response message status code should be equal to NotFound
+await _listSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.OK)
+    => List steps response message status code should be equal to OK
+await _listSteps.Response!.Items.Count.Should().BeGreaterThanOrEqualTo(_createdOrderCount)
+    => List steps response items count should be greater than or equal to _createdOrderCount
+await _listSteps.Response!.Page.Should().BeEqualTo(1)
+    => List steps response page should be equal to 1
+await _listSteps.Response!.TotalCount.Should().BeGreaterThanOrEqualTo(_createdOrderCount)
+    => List steps response total count should be greater than or equal to _createdOrderCount
+await _listSteps.Response!.Items.Should().HaveCount(1)
+    => List steps response items should have count 1
+await _listSteps.Response!.TotalPages.Should().BeGreaterThanOrEqualTo(_createdOrderCount)
+    => List steps response total pages should be greater than or equal to _createdOrderCount
+await _listSteps.Response!.Page.Should().BeEqualTo(2)
+    => List steps response page should be equal to 2
+await _listSteps.Response!.Items.Should().BeEmpty()
+    => List steps response items should be empty
+await _listSteps.Response!.TotalCount.Should().BeEqualTo(0)
+    => List steps response total count should be equal to 0
+await firstResponse!.StatusCode.Should().BeEqualTo(HttpStatusCode.Created)
+    => First response status code should be equal to Created
+await secondResponse!.StatusCode.Should().BeEqualTo(HttpStatusCode.TooManyRequests)
+    => Second response status code should be equal to TooManyRequests
+await _patchSteps.Response!.Status.Should().BeEqualTo(toStatus)
+    => Patch steps response status should be equal to toStatus
+await _patchSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.Conflict)
+    => Patch steps response message status code should be equal to Conflict
+await _postSteps.Response!.Station.Should().BeEqualTo(station)
+    => Post steps response station should be equal to station
+await _postSteps.Response!.PrepSeconds.Should().BeEqualTo(42.5m)
+    => Post steps response prep seconds should be equal to 42.5m
+await _postSteps.Response!.TimingId.Should().NotBeNull()
+    => Post steps response timing id should not be null
+await _getSteps.ListResponse!.Should().Contain(t => t.TimingId == createdTimingId)
+    => Get steps list response should contain [ t => t.TimingId == createdTimingId ]
+await _getSteps.SummaryResponse!.Should().Contain(s => s.Station == station && s.TimingCount >= 1)
+    => Get steps summary response should contain [ s => s.Station == station && s.TimingCount >= 1 ]
+await response.StatusCode.Should().BeEqualTo(HttpStatusCode.UnsupportedMediaType)
+    => Response status code should be equal to UnsupportedMediaType
+await _pancakeSteps.Response!.Ingredients.Should().Contain(_milkSteps.MilkResponse.Milk)
+    => Pancake steps response ingredients should contain _milkSteps.MilkResponse.Milk
+await _pancakeSteps.Response!.Ingredients.Should().Contain(_eggsSteps.EggsResponse.Eggs)
+    => Pancake steps response ingredients should contain _eggsSteps.EggsResponse.Eggs
+await _pancakeSteps.Response!.Ingredients.Should().Contain(_flourSteps.FlourResponse.Flour)
+    => Pancake steps response ingredients should contain _flourSteps.FlourResponse.Flour
+await _pancakeSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.BadRequest)
+    => Pancake steps response message status code should be equal to BadRequest
+await body.Should().Contain(PancakeValidationMessages.MaxToppingsExceeded)
+    => Body should contain MaxToppingsExceeded
+await _publishSteps.CalculationId.Should().NotBeEqualTo(Guid.Empty)
+    => Publish steps calculation id should not be equal to Empty
+await _postSteps.Response!.RecipeName.Should().BeEqualTo("Fluffy Pancakes")
+    => Post steps response recipe name should be equal to "Fluffy Pancakes"
+await _postSteps.Response!.Rating.Should().BeEqualTo(5)
+    => Post steps response rating should be equal to 5
+await _postSteps.Response!.ReviewId.Should().NotBeNull()
+    => Post steps response review id should not be null
+await _getSteps.Response!.ReviewId.Should().BeEqualTo(reviewId)
+    => Get steps response review id should be equal to reviewId
+await _getSteps.Response!.RecipeName.Should().BeEqualTo("Classic Waffles")
+    => Get steps response recipe name should be equal to "Classic Waffles"
+await _getSteps.ListResponse!.Should().Contain(r => r.ReviewId == reviewId)
+    => Get steps list response should contain [ r => r.ReviewId == reviewId ]
+await _graphQlSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.OK)
+    => Graph ql steps response message status code should be equal to OK
+await webhookResponse.StatusCode.Should().BeEqualTo(HttpStatusCode.OK)
+    => Webhook response status code should be equal to OK
+await _graphQlSteps.OrderSummaries.Should().All(o => o.OrderId != _orderId)
+    => Graph ql steps order summaries should all [ o => o.OrderId != _orderId ]
+await pancakes.Should().NotBeNull()
+    => Pancakes should not be null
+await pancakes!.Count.Should().BeGreaterThanOrEqualTo(2)
+    => Pancakes count should be greater than or equal to 2
+await _postSteps.Response!.Status.Should().BeEqualTo("Confirmed")
+    => Post steps response status should be equal to "Confirmed"
+await _getSteps.Response!.Id.Should().BeEqualTo(createdReservationId)
+    => Get steps response id should be equal to createdReservationId
+await _getSteps.Response!.Status.Should().BeEqualTo("Confirmed")
+    => Get steps response status should be equal to "Confirmed"
+await _cancelSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.OK)
+    => Cancel steps response message status code should be equal to OK
+await _cancelSteps.Response!.Status.Should().BeEqualTo("Cancelled")
+    => Cancel steps response status should be equal to "Cancelled"
+await _cancelSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.Conflict)
+    => Cancel steps response message status code should be equal to Conflict
+await deleteResponse.StatusCode.Should().BeEqualTo(HttpStatusCode.NoContent)
+    => Delete response status code should be equal to NoContent
+await _publishSteps.OrderId.Should().NotBeEqualTo(Guid.Empty)
+    => Publish steps order id should not be equal to Empty
+await asyncApiResponse!.StatusCode.Should().BeEqualTo(HttpStatusCode.OK)
+    => Async api response status code should be equal to OK
+await asyncApiResponseIsValidJson.Should().BeTrue()
+    => Async api response is valid json should be true
+await asyncApiJson!.RootElement.GetProperty("asyncapi").Should().NotBeNull()
+    => Async api json root element get property("asyncapi") should not be null
+await asyncApiJson!.RootElement.GetProperty("info").Should().NotBeNull()
+    => Async api json root element get property("info") should not be null
+await asyncApiJson!.RootElement.GetProperty("defaultContentType").Should().NotBeNull()
+    => Async api json root element get property("defaultContentType") should not be null
+await asyncApiJson!.RootElement.GetProperty("channels").Should().NotBeNull()
+    => Async api json root element get property("channels") should not be null
+await asyncApiJson!.RootElement.GetProperty("operations").Should().NotBeNull()
+    => Async api json root element get property("operations") should not be null
+await asyncApiJson!.RootElement.GetProperty("components").Should().NotBeNull()
+    => Async api json root element get property("components") should not be null
+await scalarResponse.StatusCode.Should().BeEqualTo(HttpStatusCode.OK)
+    => Scalar response status code should be equal to OK
+await scalarUiResponseBody.Should().Contain("<html")
+    => Scalar ui response body should contain "<html"
+await scalarUiResponseBody.Should().Contain("scalar")
+    => Scalar ui response body should contain "scalar"
+await swaggerResponse.StatusCode.Should().BeEqualTo(HttpStatusCode.OK)
+    => Swagger response status code should be equal to OK
+await openApiResponseIsValidJson.Should().BeTrue()
+    => Open api response is valid json should be true
+await swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.PancakesPath).Should().NotBeNull()
+    => Swagger json root element get property("paths") get property( endpoints swagger pancakes path) should not be null
+await swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.WafflesPath).Should().NotBeNull()
+    => Swagger json root element get property("paths") get property( endpoints swagger waffles path) should not be null
+await swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.OrdersPath).Should().NotBeNull()
+    => Swagger json root element get property("paths") get property( endpoints swagger orders path) should not be null
+await swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.OrderByIdPath).Should().NotBeNull()
+    => Swagger json root element get property("paths") get property( endpoints swagger order by id path) should not be null
+await swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.ToppingsPath).Should().NotBeNull()
+    => Swagger json root element get property("paths") get property( endpoints swagger toppings path) should not be null
+await swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.MenuPath).Should().NotBeNull()
+    => Swagger json root element get property("paths") get property( endpoints swagger menu path) should not be null
+await swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.MilkPath).Should().NotBeNull()
+    => Swagger json root element get property("paths") get property( endpoints swagger milk path) should not be null
+await swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.EggsPath).Should().NotBeNull()
+    => Swagger json root element get property("paths") get property( endpoints swagger eggs path) should not be null
+await swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.FlourPath).Should().NotBeNull()
+    => Swagger json root element get property("paths") get property( endpoints swagger flour path) should not be null
+await swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.GoatMilkPath).Should().NotBeNull()
+    => Swagger json root element get property("paths") get property( endpoints swagger goat milk path) should not be null
+await swaggerJson!.RootElement.GetProperty("paths").GetProperty(Endpoints.Swagger.AuditLogsPath).Should().NotBeNull()
+    => Swagger json root element get property("paths") get property( endpoints swagger audit logs path) should not be null
+await _postSteps.Response!.Role.Should().BeEqualTo("Chef")
+    => Post steps response role should be equal to "Chef"
+await _getSteps.Response!.Id.Should().BeEqualTo(createdMemberId)
+    => Get steps response id should be equal to createdMemberId
+await _getSteps.Response!.Role.Should().BeEqualTo("Chef")
+    => Get steps response role should be equal to "Chef"
+await _deleteSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.NotFound)
+    => Delete steps response message status code should be equal to NotFound
+await _toppingsSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.OK)
+    => Toppings steps response message status code should be equal to OK
+await _toppingsSteps.Response!.Should().All(t => t.Name != ToppingDefaults.Raspberries)
+    => Toppings steps response should all [ t => t.Name != ToppingDefaults.Raspberries ]
+await _toppingsSteps.Response!.Should().Contain(t => t.Name == ToppingDefaults.Raspberries)
+    => Toppings steps response should contain [ t => t.Name == ToppingDefaults.Raspberries ]
+await _getSteps.Response.Should().HaveCount(ToppingDefaults.ExpectedToppingCount)
+    => Get steps response should have count ExpectedToppingCount
+await _getSteps.Response!.Should().Contain(t => t.Name == ToppingDefaults.Raspberries)
+    => Get steps response should contain [ t => t.Name == ToppingDefaults.Raspberries ]
+await _getSteps.Response!.Should().Contain(t => t.Name == ToppingDefaults.Blueberries)
+    => Get steps response should contain [ t => t.Name == ToppingDefaults.Blueberries ]
+await _getSteps.Response!.Should().Contain(t => t.Name == ToppingDefaults.MapleSyrup)
+    => Get steps response should contain [ t => t.Name == ToppingDefaults.MapleSyrup ]
+await _getSteps.Response!.Should().Contain(t => t.Name == ToppingDefaults.WhippedCream)
+    => Get steps response should contain [ t => t.Name == ToppingDefaults.WhippedCream ]
+await _getSteps.Response!.Should().Contain(t => t.Name == ToppingDefaults.ChocolateChips)
+    => Get steps response should contain [ t => t.Name == ToppingDefaults.ChocolateChips ]
+await _postSteps.Response!.Name.Should().BeEqualTo(ToppingDefaults.Strawberries)
+    => Post steps response name should be equal to Strawberries
+await _postSteps.Response!.Category.Should().BeEqualTo(ToppingDefaults.FruitCategory)
+    => Post steps response category should be equal to FruitCategory
+await _putSteps.Response!.ToppingId.Should().BeEqualTo(KnownBlueberryToppingId)
+    => Put steps response topping id should be equal to KnownBlueberryToppingId
+await _putSteps.Response!.Name.Should().BeEqualTo(ToppingDefaults.Strawberries)
+    => Put steps response name should be equal to Strawberries
+await _putSteps.Response!.Category.Should().BeEqualTo(ToppingDefaults.FruitCategory)
+    => Put steps response category should be equal to FruitCategory
+await _putSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.NotFound)
+    => Put steps response message status code should be equal to NotFound
+await _waffleSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.Created)
+    => Waffle steps response message status code should be equal to Created
+await _waffleSteps.Response!.Ingredients.Should().Contain(_milkSteps.MilkResponse.Milk)
+    => Waffle steps response ingredients should contain _milkSteps.MilkResponse.Milk
+await _waffleSteps.Response!.Ingredients.Should().Contain(_eggsSteps.EggsResponse.Eggs)
+    => Waffle steps response ingredients should contain _eggsSteps.EggsResponse.Eggs
+await _waffleSteps.Response!.Ingredients.Should().Contain(_flourSteps.FlourResponse.Flour)
+    => Waffle steps response ingredients should contain _flourSteps.FlourResponse.Flour
+await _waffleSteps.Response!.Ingredients.Should().Contain(IngredientDefaults.UnsaltedButter)
+    => Waffle steps response ingredients should contain UnsaltedButter
+await _waffleSteps.ResponseMessage!.StatusCode.Should().BeEqualTo(HttpStatusCode.BadRequest)
+    => Waffle steps response message status code should be equal to BadRequest
+await body.Should().Contain(WaffleValidationMessages.MaxToppingsExceeded)
+    => Body should contain MaxToppingsExceeded
+reader.FieldCount.Should().Be(4)
+    => Reader field count should be 4
+Enumerable.Range(0, 4).Select(reader.GetName).Should().Equal("station", "avg_prep_seconds", "p95_prep_seconds", "timing_count")
+    => Enumerable range(0, 4) select(reader get name) should equal "station", "avg_prep_seconds", "p95_prep_seconds", "timing_count"
+Enumerable.Range(0, 4).Select(reader.GetDataTypeName).Should().Equal("String", "Float64", "Float64", "UInt64")
+    => Enumerable range(0, 4) select(reader get data type name) should equal "String", "Float64", "Float64", "UInt64"
+Enumerable.Range(0, 4).Select(reader.GetFieldType).Should().Equal(typeof(string), typeof(double), typeof(double), typeof(ulong))
+    => Enumerable range(0, 4) select(reader get field type) should equal typeof(string), typeof(double), typeof(double), typeof(ulong)
+(await reader.ReadAsync()).Should().BeTrue()
+    => (await reader read async()) should be true
+reader.GetString(0).Should().Be(station)
+    => Reader get string(0) should be station
+reader.GetDouble(1).Should().Be(26.25d)
+    => Reader get double(1) should be 26.25d
+reader.GetDouble(2).Should().BeApproximately(38.625d, 0.001)
+    => Reader get double(2) should be approximately 38.625d, 0.001
+reader.GetValue(3).Should().Be(2UL)
+    => Reader get value(3) should be 2UL
+Convert.ToInt32(reader["timing_count"]).Should().Be(2)
+    => Convert to int32(reader["timing_count"]) should be 2
+(await reader.ReadAsync()).Should().BeFalse()
+    => (await reader read async()) should be false
+Enumerable.Range(0, 6).Select(reader.GetDataTypeName).Should().Equal("String", "String", "String", "String", "Float64", "DateTime")
+    => Enumerable range(0, 6) select(reader get data type name) should equal "String", "String", "String", "String", "Float64", "DateTime"
+Enumerable.Range(0, 6).Select(reader.GetFieldType).Should().Equal(typeof(string), typeof(string), typeof(string), typeof(string), typeof(double), typeof(DateTime))
+    => Enumerable range(0, 6) select(reader get field type) should equal typeof(string), typeof(string), typeof(string), typeof(string), typeof(double), typeof(DateTime)
+reader.GetString(0).Should().Be(secondId, "ORDER BY recorded_at DESC puts the later row first")
+    => Reader get string(0) should be secondId, "ORDER BY recorded_at DESC puts the later row first"
+reader.GetDateTime(5).Should().Be(recordedAt.AddMinutes(1))
+    => Reader get date time(5) should be recordedAt.AddMinutes(1)
+reader.GetDateTime(5).Kind.Should().Be(DateTimeKind.Unspecified)
+    => Reader get date time(5) kind should be Unspecified
+reader.GetString(0).Should().Be(firstId)
+    => Reader get string(0) should be firstId
+reader.GetDouble(4).Should().Be(12.5d)
+    => Reader get double(4) should be 12.5d
+(await count.ExecuteScalarAsync()).Should().Be(1UL, "the lightweight DELETE is visible to the next SELECT")
+    => (await count execute scalar async()) should be 1UL, "the lightweight DELETE is visible to the next SELECT"
+(await Insert(connection, id, $"Station-{Guid.NewGuid():N}", 1d, DateTime.UtcNow)).Should().Be(0)
+    => (await  insert(connection, id, $"Station-{Guid.NewGuid():N}", 1d,  date time utc now)) should be 0
+(await delete.ExecuteNonQueryAsync()).Should().Be(0)
+    => (await delete execute non query async()) should be 0
+(await command.ExecuteScalarAsync()).Should().Be((byte)1)
+    => (await command execute scalar async()) should be (byte)1
+(await Fail(connection, "SELECT * FROM nope")).Should().StartWith("Code: 60.")
+    => (await  fail(connection, "SELECT * FROM nope")) should start with "Code: 60."
+(await Fail(connection, "SELEC 1")).Should().StartWith("Code: 62.")
+    => (await  fail(connection, "SELEC 1")) should start with "Code: 62."
+(await Fail(connection, "SELECT BAD SYNTAX")).Should().StartWith("Code: 47.")
+    => (await  fail(connection, "SELECT BAD SYNTAX")) should start with "Code: 47."
+stored.Should().Be(expected)
+    => Stored should be expected
+stored.Kind.Should().Be(DateTimeKind.Unspecified)
+    => Stored kind should be Unspecified
+return (await act.Should().ThrowAsync<ClickHouseServerException>()).Which.Message
+    => Return (await act should throw async <ClickHouseServerException>
+sql.Should().Be("SELECT 1 WHERE station = $station")
+    => Sql should be "SELECT 1 WHERE station = $station"
+parameters.Should().ContainSingle().Which.Should().Be(new BoundParameter("station", "Griddle-abc"))
+    => Parameters should contain single new BoundParameter("station", "Griddle-abc")
+parameters.Single().Value.Should().Be(1.5d)
+    => Parameters single() value should be 1.5d
+var value = parameters.Single().Value.Should().BeOfType<DateTime>().Subject
+    => Parameters single() value should be of type <DateTime>
+value.Should().Be(new DateTime(2026, 9, 2, 10, 11, 12))
+    => Value should be new DateTime(2026, 9, 2, 10, 11, 12)
+value.Kind.Should().Be(DateTimeKind.Utc)
+    => Value kind should be Utc
+parameters.Single().Value.Should().Be(guid)
+    => Parameters single() value should be guid
+rewritten.Should().Be("INSERT INTO t (a, b, c) VALUES ($a, $b, $a)")
+    => Rewritten should be "INSERT INTO t (a, b, c) VALUES ($a, $b, $a)"
+parameters.Select(p => p.Name).Should().Equal("a", "b")
+    => Parameters select(p => p name) should equal "a", "b"
+act.Should().Throw<ClickHouseEmulatorException>().Which.Code.Should().Be(456)
+    => Act should throw <ClickHouseEmulatorException>, 456
+value.Year.Should().Be(2026)
+    => Value year should be 2026
+_translator.TranslateDdl("CREATE DATABASE IF NOT EXISTS kitchen_analytics;").Should().BeNull()
+    => Translator translate ddl("CREATE DATABASE IF NOT EXISTS kitchen_analytics;") should be null
+.Should().Be("SELECT timing_id FROM order_timings")
+    =>  should be "SELECT timing_id FROM order_timings"
+.Should().Be($"CREATE TABLE t (c {duckDbType})")
+    =>  should be $"CREATE TABLE t (c {duckDbType})"
+act.Should().Throw<NotSupportedException>().WithMessage("*DateTime64(3)*")
+    => Act should throw <NotSupportedException>, "*DateTime64(3)*"
+.Should().Be("SELECT 1 FROM order_timings WHERE station = {station:String}")
+    =>  should be "SELECT 1 FROM order_timings WHERE station = {station:String}"
+.Should().Be("SELECT quantile_cont(prep_seconds, 0.95) AS p95 FROM order_timings")
+    =>  should be "SELECT quantile_cont(prep_seconds, 0.95) AS p95 FROM order_timings"
+.Should().Be("SELECT station, CAST(count(*) AS UBIGINT) AS timing_count FROM order_timings GROUP BY station")
+    =>  should be "SELECT station, CAST(count(*) AS UBIGINT) AS timing_count FROM order_timings GROUP BY station"
+_translator.TranslateQuery("SELECT 1").Should().Be("SELECT CAST(1 AS UTINYINT) AS \"1\"")
+    => Translator translate query("SELECT 1") should be "SELECT CAST(1 AS UTINYINT) AS \"1\""
+_translator.TranslateQuery(sql).Should().Be(sql)
+    => Translator translate query(sql) should be sql
+act.Should().Throw<NotSupportedException>().WithMessage($"*{fragment}*")
+    => Act should throw <NotSupportedException>, $"*{fragment}*"
+act.Should().Throw<ClickHouseEmulatorException>().Which.Code.Should().Be(62)
+    => Act should throw <ClickHouseEmulatorException>, 62
+act.Should().Throw<NotSupportedException>().WithMessage("*c String DEFAULT 'x'*")
+    => Act should throw <NotSupportedException>, "*c String DEFAULT 'x'*"
+ClickHouseSqlTranslator.IsDdl("CREATE TABLE t (c String)").Should().BeTrue()
+    => Click house sql translator is ddl("CREATE TABLE t (c String)") should be true
+ClickHouseSqlTranslator.IsDdl("  create database x").Should().BeTrue()
+    => Click house sql translator is ddl("  create database x") should be true
+ClickHouseSqlTranslator.IsDdl("INSERT INTO t VALUES (1)").Should().BeFalse()
+    => Click house sql translator is ddl("INSERT INTO t VALUES (1)") should be false
+ClickHouseSqlTranslator.ReturnsResultSet("SELECT 1").Should().BeTrue()
+    => Click house sql translator returns result set("SELECT 1") should be true
+ClickHouseSqlTranslator.ReturnsResultSet("DELETE FROM t WHERE 1").Should().BeFalse()
+    => Click house sql translator returns result set("DELETE FROM t WHERE 1") should be false
+ClickHouseSqlTranslator.ReturnsResultSet("INSERT INTO t VALUES (1)").Should().BeFalse()
+    => Click house sql translator returns result set("INSERT INTO t VALUES (1)") should be false
+coreTypes.Should().NotBeEmpty()
+    => Core types should not be empty
+offenders.Should().BeEmpty()
+    => Offenders should be empty
+tables.Rows.Select(r => (string)r[0]!).Should().BeEquivalentTo("order_timings", "equipment_readings", "service_times")
+    => Tables rows select(r => (string)r[0]) should be equivalent to "order_timings", "equipment_readings", "service_times"
+inserted.Should().Be(1)
+    => Inserted should be 1
+list.Columns.Select(c => c.TypeString).Should().Equal("String", "String", "String", "String", "Float64", "DateTime")
+    => List columns select(c => c type string) should equal "String", "String", "String", "String", "Float64", "DateTime"
+var row = list.Rows.Should().ContainSingle().Subject
+    => List rows should contain single
+row[0].Should().Be("t-1")
+    => Row[0] should be "t-1"
+row[4].Should().Be(12.5d)
+    => Row[4] should be 12.5d
+var recordedAt = row[5].Should().BeOfType<DateTime>().Subject
+    => Row[5] should be of type <DateTime>
+recordedAt.Should().Be(new DateTime(2026, 9, 2, 10, 11, 12))
+    => Recorded at should be new DateTime(2026, 9, 2, 10, 11, 12)
+recordedAt.Kind.Should().Be(DateTimeKind.Utc)
+    => Recorded at kind should be Utc
+deleted.Should().Be(1)
+    => Deleted should be 1
+.Rows.Should().BeEmpty()
+    =>  rows should be empty
+summary.Columns.Select(c => c.Name).Should().Equal("station", "avg_prep_seconds", "p95_prep_seconds", "timing_count")
+    => Summary columns select(c => c name) should equal "station", "avg_prep_seconds", "p95_prep_seconds", "timing_count"
+summary.Columns.Select(c => c.TypeString).Should().Equal("String", "Float64", "Float64", "UInt64")
+    => Summary columns select(c => c type string) should equal "String", "Float64", "Float64", "UInt64"
+var row = summary.Rows.Should().ContainSingle().Subject
+    => Summary rows should contain single
+row[1].Should().Be(25d)
+    => Row[1] should be 25d
+row[2].Should().Be(38.5d)
+    => Row[2] should be 38.5d
+row[3].Should().Be(4UL)
+    => Row[3] should be 4UL
+result.Columns.Should().ContainSingle().Which.Should().Be(new ClickHouseColumn("1", "UInt8"))
+    => Result columns should contain single new ClickHouseColumn("1", "UInt8")
+result.Rows.Single()[0].Should().Be((byte)1)
+    => Result rows single()[0] should be (byte)1
+result.Columns[0].TypeString.Should().Be("Nullable(Int32)")
+    => Result columns[0] type string should be "Nullable(Int32)"
+result.Columns[1].TypeString.Should().Be("String")
+    => Result columns[1] type string should be "String"
+result.Rows.Single()[0].Should().Be(DBNull.Value)
+    => Result rows single()[0] should be Value
+var exception = act.Should().Throw<ClickHouseEmulatorException>().Which
+    => Act should throw <ClickHouseEmulatorException>
+exception.Code.Should().Be(code)
+    => Exception code should be code
+exception.Name.Should().Be(name)
+    => Exception name should be name
+act.Should().Throw<ClickHouseEmulatorException>().WithMessage("*never sum() an integer column*")
+    => Act should throw <ClickHouseEmulatorException>, "*never sum() an integer column*"
+count.Rows.Single()[0].Should().Be(50UL)
+    => Count rows single()[0] should be 50UL
+(await response.Content.ReadAsStringAsync()).Should().Be("25.8.33.6\tUTC\n")
+    => (await response content read as string async()) should be "25.8.33.6\tUTC\n"
+response.Headers.GetValues("X-ClickHouse-Timezone").Should().Equal("UTC")
+    => Response headers get values("X-ClickHouse-Timezone") should equal "UTC"
+response.Headers.GetValues("X-ClickHouse-Server-Display-Name").Should().Equal("inmemory")
+    => Response headers get values("X-ClickHouse-Server-Display-Name") should equal "inmemory"
+response.Headers.Contains("X-ClickHouse-Query-Id").Should().BeTrue()
+    => Response headers contains("X-ClickHouse-Query-Id") should be true
+bytes.Should().Equal([0x01, 0x01, (byte)'1', 0x05, .. "UInt8"u8.ToArray(), 0x01])
+    => Bytes should equal [0x01, 0x01, (byte)'1', 0x05,.. "UInt8"u8.ToArray(), 0x01]
+response.Headers.GetValues("X-ClickHouse-Format").Should().Equal("RowBinaryWithNamesAndTypes")
+    => Response headers get values("X-ClickHouse-Format") should equal "RowBinaryWithNamesAndTypes"
+(await response.Content.ReadAsByteArrayAsync()).Should().BeEmpty()
+    => (await response content read as byte array async()) should be empty
+response.Headers.GetValues("X-ClickHouse-Summary").Single().Should().Contain("\"written_rows\":\"1\"")
+    => Response headers get values("X-ClickHouse-Summary") single() should contain "\"written_rows\":\"1\""
+stored.Rows.Single()[0].Should().Be(new DateTime(2026, 9, 2, 19, 57, 52, DateTimeKind.Utc))
+    => Stored rows single()[0] should be new DateTime(2026, 9, 2, 19, 57, 52, DateTimeKind.Utc)
+(await response.Content.ReadAsByteArrayAsync()).Should().EndWith([0x01])
+    => (await response content read as byte array async()) should end with [0x01]
+(await response.Content.ReadAsStringAsync()).Should().Be("1\n")
+    => (await response content read as string async()) should be "1\n"
+response.StatusCode.Should().Be(status)
+    => Response status code should be status
+response.Headers.GetValues("X-ClickHouse-Exception-Code").Should().Equal(code.ToString())
+    => Response headers get values("X-ClickHouse-Exception-Code") should equal code.ToString()
+body.Should().StartWith($"Code: {code}. DB::Exception: ")
+    => Body should start with $"Code: {code}. DB::Exception: "
+body.Should().EndWith($". ({name}) (version 25.8.33.6 (official build))")
+    => Body should end with $". ({name}) (version 25.8.33.6 (official build))"
+response.StatusCode.Should().Be(HttpStatusCode.NotImplemented)
+    => Response status code should be NotImplemented
+(await response.Content.ReadAsStringAsync()).Should().Contain("JSONEachRow")
+    => (await response content read as string async()) should contain "JSONEachRow"
+_engine.Execute("SHOW TABLES", NoParams).Rows.Select(r => r[0]).Should().Contain("extra")
+    => Engine execute("SHOW TABLES",  no params) rows select(r => r[0]) should contain "extra"
+(await version.ExecuteScalarAsync()).Should().Be("25.8.33.6")
+    => (await version execute scalar async()) should be "25.8.33.6"
+connection.Database.Should().Be("kitchen_analytics")
+    => Connection database should be "kitchen_analytics"
+(await insert.ExecuteNonQueryAsync()).Should().Be(0, "the driver reports 0 rows affected, as it does against a real server")
+    => (await insert execute non query async()) should be 0, "the driver reports 0 rows affected, as it does against a real server"
+reader.GetString(0).Should().Be("t-1")
+    => Reader get string(0) should be "t-1"
+reader.GetDouble(1).Should().Be(12.5d)
+    => Reader get double(1) should be 12.5d
+reader.GetDateTime(2).Should().Be(recordedAt)
+    => Reader get date time(2) should be recordedAt
+reader.GetDateTime(2).Kind.Should().Be(DateTimeKind.Unspecified)
+    => Reader get date time(2) kind should be Unspecified
+(await scalar.ExecuteScalarAsync()).Should().Be(0UL)
+    => (await scalar execute scalar async()) should be 0UL
+(await act.Should().ThrowAsync<ClickHouseServerException>()).Which.Message.Should().StartWith("Code: 60.")
+    => (await act should throw async <ClickHouseServerException>
+reader.FieldCount.Should().Be(10)
+    => Reader field count should be 10
+reader.GetName(0).Should().Be("timing_id")
+    => Reader get name(0) should be "timing_id"
+reader.GetFieldType(0).Should().Be(typeof(string))
+    => Reader get field type(0) should be typeof(string)
+reader.GetFieldType(1).Should().Be(typeof(double))
+    => Reader get field type(1) should be typeof(double)
+reader.GetFieldType(2).Should().Be(typeof(DateTime))
+    => Reader get field type(2) should be typeof(DateTime)
+reader.GetFieldType(3).Should().Be(typeof(ulong))
+    => Reader get field type(3) should be typeof(ulong)
+reader.GetFieldType(5).Should().Be(typeof(byte))
+    => Reader get field type(5) should be typeof(byte)
+reader.GetFieldType(6).Should().Be(typeof(int))
+    => Reader get field type(6) should be typeof(int)
+reader.GetFieldType(7).Should().Be(typeof(long))
+    => Reader get field type(7) should be typeof(long)
+reader.GetFieldType(8).Should().Be(typeof(uint))
+    => Reader get field type(8) should be typeof(uint)
+reader.GetFieldType(9).Should().Be(typeof(float))
+    => Reader get field type(9) should be typeof(float)
+reader.GetString(0).Should().Be("id-1")
+    => Reader get string(0) should be "id-1"
+reader.GetDouble(1).Should().Be(2.5d)
+    => Reader get double(1) should be 2.5d
+reader.GetDateTime(2).Should().Be(SampleUtc)
+    => Reader get date time(2) should be SampleUtc
+reader.GetValue(3).Should().Be(3UL)
+    => Reader get value(3) should be 3UL
+reader.GetString(4).Should().Be("hello")
+    => Reader get string(4) should be "hello"
+reader.GetValue(5).Should().Be((byte)1)
+    => Reader get value(5) should be (byte)1
+reader.GetInt32(6).Should().Be(-7)
+    => Reader get int32(6) should be -7
+reader.GetInt64(7).Should().Be(-9L)
+    => Reader get int64(7) should be -9L
+reader.GetValue(8).Should().Be(5U)
+    => Reader get value(8) should be 5U
+reader.GetFloat(9).Should().Be(1.25f)
+    => Reader get float(9) should be 1.25f
+reader.GetString(0).Should().Be("id-2")
+    => Reader get string(0) should be "id-2"
+reader.GetValue(3).Should().Be(ulong.MaxValue)
+    => Reader get value(3) should be ulong.MaxValue
+reader.IsDBNull(4).Should().BeTrue()
+    => Reader is db null(4) should be true
+reader.GetValue(5).Should().Be((byte)1, "bool true is encoded as UInt8 1")
+    => Reader get value(5) should be (byte)1, "bool true is encoded as UInt8 1"
+reader.GetInt32(6).Should().Be(int.MaxValue)
+    => Reader get int32(6) should be int.MaxValue
+reader.GetInt64(7).Should().Be(long.MinValue)
+    => Reader get int64(7) should be long.MinValue
+reader.GetValue(8).Should().Be(uint.MaxValue)
+    => Reader get value(8) should be uint.MaxValue
+Varint(0).Should().Equal([0x00])
+    => Varint(0) should equal [0x00]
+Varint(127).Should().Equal([0x7F])
+    => Varint(127) should equal [0x7F]
+Varint(128).Should().Equal([0x80, 0x01])
+    => Varint(128) should equal [0x80, 0x01]
+Varint(300).Should().Equal([0xAC, 0x02])
+    => Varint(300) should equal [0xAC, 0x02]
+Encode("Nullable(String)", DBNull.Value).Should().Equal([0x01])
+    => Encode("Nullable(String)",  db null value) should equal [0x01]
+Encode("Nullable(String)", "a").Should().Equal([0x00, 0x01, (byte)'a'])
+    => Encode("Nullable(String)", "a") should equal [0x00, 0x01, (byte)'a']
+Encode("Nullable(UInt8)", (byte)7).Should().Equal([0x00, 0x07])
+    => Encode("Nullable(UInt8)", (byte)7) should equal [0x00, 0x07]
+Encode("UInt32", 1U).Should().Equal([0x01, 0x00, 0x00, 0x00])
+    => Encode("UInt32", 1 u) should equal [0x01, 0x00, 0x00, 0x00]
+Encode("Int64", -1L).Should().Equal(Enumerable.Repeat((byte)0xFF, 8))
+    => Encode("Int64", -1 l) should equal Enumerable.Repeat((byte)0xFF, 8)
+Encode("Float64", 1.0d).Should().Equal(BitConverter.GetBytes(1.0d))
+    => Encode("Float64", 1 0d) should equal BitConverter.GetBytes(1.0d)
+Encode("DateTime", SampleUtc).Should().Equal(BitConverter.GetBytes((uint)new DateTimeOffset(SampleUtc).ToUnixTimeSeconds()))
+    => Encode("DateTime",  sample utc) should equal BitConverter.GetBytes((uint)new DateTimeOffset(SampleUtc).ToUnixTimeSeconds())
+Encode("String", "hé").Should().Equal([0x03, 0x68, 0xC3, 0xA9])
+    => Encode("String", "hé") should equal [0x03, 0x68, 0xC3, 0xA9]
+bytes.Should().Equal([0x02, 0x01, (byte)'a', 0x02, (byte)'b', (byte)'b', 0x05, .. "UInt8"u8.ToArray(), 0x06, .. "String"u8.ToArray()])
+    => Bytes should equal [0x02, 0x01, (byte)'a', 0x02, (byte)'b', (byte)'b', 0x05,.. "UInt8"u8.ToArray(), 0x06,.. "String"u8.ToArray()]
+act.Should().Throw<InvalidOperationException>().WithMessage("*non-Nullable*")
+    => Act should throw <InvalidOperationException>, "*non-Nullable*"
+TsvWriter.Write(resultSet).Should().Be("25.8.33.6\tUTC\n")
+    => Tsv writer write(result set) should be "25.8.33.6\tUTC\n"
+TsvWriter.Write(resultSet, withNamesAndTypes: true).Should().Be("a\tb\nString\tUInt8\nx\t1\ny\t0\n")
+    => Tsv writer write(result set, with names and types: true) should be "a\tb\nString\tUInt8\nx\t1\ny\t0\n"
+TsvWriter.Format(DBNull.Value).Should().Be("\\N")
+    => Tsv writer format( db null value) should be "\\N"
+TsvWriter.Format(null).Should().Be("\\N")
+    => Tsv writer format(null) should be "\\N"
+TsvWriter.Format(true).Should().Be("1")
+    => Tsv writer format(true) should be "1"
+TsvWriter.Format(2.5d).Should().Be("2.5")
+    => Tsv writer format(2 5d) should be "2.5"
+TsvWriter.Format(new DateTime(2026, 9, 2, 10, 11, 12, DateTimeKind.Utc)).Should().Be("2026-09-02 10:11:12")
+    => Tsv writer format(new  date time(2026, 9, 2, 10, 11, 12,  date time kind utc)) should be "2026-09-02 10:11:12"
+TsvWriter.Format("tab\there\nnew\\slash").Should().Be("tab\\there\\nnew\\\\slash")
+    => Tsv writer format("tab\there\nnew\\slash") should be "tab\\there\\nnew\\\\slash"

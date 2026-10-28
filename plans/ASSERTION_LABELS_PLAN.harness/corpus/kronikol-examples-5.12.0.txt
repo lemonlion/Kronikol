@@ -1,0 +1,106 @@
+response.StatusCode.Should().Be(HttpStatusCode.Created, "we expect 201 Created but the API returns 200 OK")
+    => Response status code should be HttpStatusCode.Created, "we expect 201 Created but the API returns 200 OK"
+response.StatusCode.Should().Be(HttpStatusCode.NotFound, "deliberately wrong expectation")
+    => Response status code should be HttpStatusCode.NotFound, "deliberately wrong expectation"
+response.StatusCode.Should().Be(HttpStatusCode.Conflict, "deliberately wrong expectation")
+    => Response status code should be HttpStatusCode.Conflict, "deliberately wrong expectation"
+response.StatusCode.Should().Be(HttpStatusCode.Unauthorized, "deliberately wrong expectation")
+    => Response status code should be HttpStatusCode.Unauthorized, "deliberately wrong expectation"
+cake!.Ingredients.Should().HaveCount(4, "deliberately wrong — only 3 ingredients exist")
+    => Cake ingredients should have count 4, "deliberately wrong — only 3 ingredients exist"
+cake!.Ingredients.Should().Contain("Sugar", "deliberately wrong — sugar is not an ingredient")
+    => Cake ingredients should contain "Sugar", "deliberately wrong — sugar is not an ingredient"
+milk!.Milk.Should().BeNullOrEmpty("deliberately wrong — milk has a value")
+    => Milk milk should be null or empty "deliberately wrong — milk has a value"
+response.StatusCode.Should().Be(HttpStatusCode.Forbidden, "deliberately wrong expectation")
+    => Response status code should be HttpStatusCode.Forbidden, "deliberately wrong expectation"
+response.StatusCode.Should().Be(HttpStatusCode.InternalServerError, "deliberately wrong expectation")
+    => Response status code should be HttpStatusCode.InternalServerError, "deliberately wrong expectation"
+response.StatusCode.Should().Be(HttpStatusCode.OK)
+    => Response status code should be OK
+response.StatusCode.Should().Be(HttpStatusCode.BadRequest)
+    => Response status code should be BadRequest
+cake!.Ingredients.Should().HaveCount(3)
+    => Cake ingredients should have count 3
+milk!.Milk.Should().NotBeNullOrEmpty()
+    => Milk milk should not be null or empty
+flour!.Flour.Should().NotBeNullOrEmpty()
+    => Flour flour should not be null or empty
+_cakeResponseMessage.StatusCode.Should().Be(HttpStatusCode.Conflict)
+    => Cake response message status code should be Conflict
+_cakeResponse!.Ingredients.Should().Contain("Marzipan")
+    => Cake response ingredients should contain "Marzipan"
+_cakeRequest.Milk.Should().Be("Buttermilk")
+    => Cake request milk should be "Buttermilk"
+_cakeResponseMessage!.StatusCode.Should().Be(HttpStatusCode.Conflict)
+    => Cake response message status code should be Conflict
+_cakeResponseMessage!.StatusCode.Should().Be(HttpStatusCode.OK)
+    => Cake response message status code should be OK
+_cakeResponse!.Ingredients.Should().Contain(_cakeRequest.Milk)
+    => Cake response ingredients should contain _cakeRequest.Milk
+response.StatusCode.Should().Be(HttpStatusCode.Created, "the API should return 201 for new resources")
+    => Response status code should be HttpStatusCode.Created, "the API should return 201 for new resources"
+response.StatusCode.Should().Be(HttpStatusCode.NotFound, "we expect the eggs endpoint to return 404")
+    => Response status code should be HttpStatusCode.NotFound, "we expect the eggs endpoint to return 404"
+response.StatusCode.Should().Be(HttpStatusCode.InternalServerError, "deliberately wrong — expecting server error")
+    => Response status code should be HttpStatusCode.InternalServerError, "deliberately wrong — expecting server error"
+Json.IsValid(_cakeResponseString).Should().BeTrue()
+    => Json is valid(_cake response string) should be true
+_cakeResponse!.Ingredients.Should().Contain(_milkResponse!.Milk)
+    => Cake response ingredients should contain _milkResponse.Milk
+_cakeResponse.Ingredients.Should().Contain(_eggsResponse!.Eggs)
+    => Cake response ingredients should contain _eggsResponse.Eggs
+_cakeResponse.Ingredients.Should().Contain(_flourResponse!.Flour)
+    => Cake response ingredients should contain _flourResponse.Flour
+_cakeResponseMessage!.StatusCode.Should().Be(HttpStatusCode.BadRequest)
+    => Cake response message status code should be BadRequest
+_cakeResponse!.Ingredients.Should().Contain(_milkResponse.Milk)
+    => Cake response ingredients should contain _milkResponse.Milk
+_cakeResponse!.Ingredients.Should().Contain(_flourResponse.Flour)
+    => Cake response ingredients should contain _flourResponse.Flour
+_cakeResponse!.Ingredients.Should().Contain(_eggsResponse.Eggs)
+    => Cake response ingredients should contain _eggsResponse.Eggs
+recipeName.Should().NotBeNullOrEmpty()
+    => Recipe name should not be null or empty
+recipe.Should().NotBeNull()
+    => Recipe should not be null
+recipe.Ingredients.Should().NotBeNull()
+    => Recipe ingredients should not be null
+recipe.Baking.Should().NotBeNull()
+    => Recipe baking should not be null
+recipe.Toppings.Should().NotBeNull()
+    => Recipe toppings should not be null
+expected.Should().NotBeNull()
+    => Expected should not be null
+expected.ExpectedIngredientCount.Should().BeGreaterThan(0)
+    => Expected expected ingredient count should be greater than 0
+_cakeResponse.Ingredients.Should().Contain(_milkResponse.Milk)
+    => Cake response ingredients should contain _milkResponse.Milk
+_cakeResponse.Ingredients.Should().Contain(_eggsResponse.Eggs)
+    => Cake response ingredients should contain _eggsResponse.Eggs
+_cakeResponse.Ingredients.Should().Contain(_flourResponse.Flour)
+    => Cake response ingredients should contain _flourResponse.Flour
+cake.Ingredients.Should().Contain(_milkResponse.Milk)
+    => Cake ingredients should contain _milkResponse.Milk
+cake.Ingredients.Should().Contain(_flourResponse.Flour)
+    => Cake ingredients should contain _flourResponse.Flour
+_recipeName.Should().NotBeNullOrEmpty()
+    => Recipe name should not be null or empty
+_flour.Should().NotBeNullOrEmpty()
+    => Flour should not be null or empty
+_appleVariety.Should().NotBeNullOrEmpty()
+    => Apple variety should not be null or empty
+_cinnamonType.Should().NotBeNullOrEmpty()
+    => Cinnamon type should not be null or empty
+_expectedIngredientCount.Should().BeGreaterThan(0)
+    => Expected ingredient count should be greater than 0
+_toppings.Count.Should().Be(_expectedToppingCount)
+    => Toppings count should be _expectedToppingCount
+actual.Should().Be(expected)
+    => Actual should be expected
+recipe.Baking.Temperature.Should().BeGreaterThan(0)
+    => Recipe baking temperature should be greater than 0
+recipe.Toppings.Should().HaveCount(expected.ExpectedToppingCount)
+    => Recipe toppings should have count expected.ExpectedToppingCount
+expected.HasBakingInfo.Should().BeTrue()
+    => Expected has baking info should be true

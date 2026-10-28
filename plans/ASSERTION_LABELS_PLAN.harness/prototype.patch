@@ -1,0 +1,766 @@
+diff --git a/src/Kronikol.AssertionTracking/AssertionWeaver.cs b/src/Kronikol.AssertionTracking/AssertionWeaver.cs
+index b29e50c3..b0311fba 100644
+--- a/src/Kronikol.AssertionTracking/AssertionWeaver.cs
++++ b/src/Kronikol.AssertionTracking/AssertionWeaver.cs
+@@ -1192,7 +1192,7 @@ private bool IsPragmaDisabled(SequencePoint sp)
+         var first = stack.Length - count;
+         var isExtension = !callee.HasThis && resolved.HasCustomAttributes &&
+                           resolved.CustomAttributes.Any(a => a.AttributeType.Name == "ExtensionAttribute");
+-        var captured = new List<(int Slot, string Text, TypeReference? BoxAs)>();
++        var captured = new List<(int Slot, string Text, TypeReference? BoxAs, bool Constant)>();
+         for (var p = isExtension ? 1 : 0; p < count; p++)
+         {
+             var parameter = resolved.Parameters[p];
+@@ -1205,25 +1205,35 @@ private bool IsPragmaDisabled(SequencePoint sp)
+ 
+             var text = texts[index];
+             var slot = stack[first + p];
++            var boxAs = slot.Type == null ? null : BoxType(callee, callee.Parameters[p].ParameterType, slot.Type);
++            // PROTOTYPE (#210): a constant is left out only when its text is its own spelling (an enum member); a
++            // nameof, a const member and a folded expression name something else, so their value is passed.
+             if (!EvaluatesSomething(text) || variables.Any(v => v.Name == text) || slot.Type == null ||
+-                StackAnalysis.IsNull(slot) || IsConstant(slot.Producer, analysis) || !CanHoldAsObject(slot.Type, method))
++                StackAnalysis.IsNull(slot) || (IsConstant(slot.Producer, analysis) && SpellsEnumMembers(text, boxAs, slot.Producer, analysis)) ||
++                !CanHoldAsObject(slot.Type, method))
+                 continue;
+-            captured.Add((first + p, text, BoxType(callee, callee.Parameters[p].ParameterType, slot.Type)));
++            captured.Add((first + p, text, boxAs, IsConstant(slot.Producer, analysis)));
+         }
+-        if (captured.Count == 0)
+-            return null;
+-
+-        var lowest = captured.Min(c => c.Slot);
+-        var spill = stack.Skip(lowest).ToArray();
+-        if (!StackAnalysis.IsFullyTyped(spill) || !spill.All(slot => StackAnalysis.IsNull(slot) || CanHoldAsLocal(slot.Type!, method)))
+-            return null;
+ 
+-        return new ArgumentCapture
++        // PROTOTYPE (#210): a constant can lower the start of the copied range. When the wider range cannot be
++        // copied, the statement keeps the values it copied without its constants, rather than losing them all.
++        while (captured.Count > 0)
+         {
+-            Call = call,
+-            Spill = spill,
+-            Arguments = captured.Select(c => new CapturedArgument { SpillIndex = c.Slot - lowest, Text = c.Text, BoxAs = c.BoxAs }).ToList(),
+-        };
++            var lowest = captured.Min(c => c.Slot);
++            var spill = stack.Skip(lowest).ToArray();
++            if (StackAnalysis.IsFullyTyped(spill) && spill.All(slot => StackAnalysis.IsNull(slot) || CanHoldAsLocal(slot.Type!, method)))
++            {
++                return new ArgumentCapture
++                {
++                    Call = call,
++                    Spill = spill,
++                    Arguments = captured.Select(c => new CapturedArgument { SpillIndex = c.Slot - lowest, Text = c.Text, BoxAs = c.BoxAs }).ToList(),
++                };
++            }
++            if (captured.RemoveAll(c => c.Constant) == 0)
++                break;
++        }
++        return null;
+     }
+ 
+     private static bool HasAttribute(ParameterDefinition parameter, string name) =>
+@@ -1381,6 +1391,48 @@ private static bool IsConstant(Instruction? producer, StackAnalysis analysis)
+         return false;
+     }
+ 
++    /// <summary>
++    /// PROTOTYPE (#210): whether a constant argument of an enum type is written as that enum's own members, so its
++    /// text already says what the note would: every name in it is the enum's, one of its members or a namespace part
++    /// (<c>CurrencyCode.GBP</c>, <c>Perm.Read | Perm.Write</c>). An enum-typed <c>const</c> (<c>Defaults.Stage</c>)
++    /// names something else and is not.
++    /// </summary>
++    private static bool SpellsEnumMembers(string text, TypeReference? boxAs, Instruction? producer, StackAnalysis analysis)
++    {
++        var type = EnumOf(boxAs);
++        for (var depth = 0; type == null && producer != null && depth < 8; depth++)
++        {
++            if (producer.OpCode.Code == Code.Box && producer.Operand is TypeReference boxed)
++                type = EnumOf(boxed);
++            // Only through what IsConstant follows (a conversion or a box), down to the constant: the slot below a
++            // constant is another value's.
++            if (!(producer.OpCode.Name.StartsWith("conv.", StringComparison.Ordinal) || producer.OpCode.Code == Code.Box))
++                break;
++            var input = analysis.StackBefore(producer);
++            producer = input is { Length: > 0 } ? input[input.Length - 1].Producer : null;
++        }
++        if (type == null)
++            return false;
++        var allowed = new HashSet<string>(type.Fields.Where(f => f.HasConstant).Select(f => f.Name), StringComparer.Ordinal)
++        {
++            type.Name, "global",
++        };
++        foreach (var part in (type.Namespace ?? "").Split('.'))
++            allowed.Add(part);
++        for (var outer = type.DeclaringType; outer != null; outer = outer.DeclaringType)
++            allowed.Add(outer.Name);
++        return System.Text.RegularExpressions.Regex.Matches(text, @"@?[A-Za-z_]\w*")
++            .Cast<System.Text.RegularExpressions.Match>()
++            .All(m => allowed.Contains(m.Value.TrimStart('@')));
++    }
++
++    private static TypeDefinition? EnumOf(TypeReference? type)
++    {
++        if (type is GenericInstanceType { Name: "Nullable`1" } nullable && nullable.GenericArguments.Count == 1)
++            type = nullable.GenericArguments[0];
++        return type != null && TryResolve(type) is { IsEnum: true } definition ? definition : null;
++    }
++
+     /// <summary>Whether a value of this type can be boxed into the values array: not a by-ref, a pointer, a ref
+     /// struct (Span&lt;T&gt;), a delegate or an expression tree (a lambda's value is its code).</summary>
+     private static bool CanHoldAsObject(TypeReference type, MethodDefinition method)
+diff --git a/src/Kronikol/Tracking/AssertionExpressionFormatter.cs b/src/Kronikol/Tracking/AssertionExpressionFormatter.cs
+index 56c8511b..d03aeabb 100644
+--- a/src/Kronikol/Tracking/AssertionExpressionFormatter.cs
++++ b/src/Kronikol/Tracking/AssertionExpressionFormatter.cs
+@@ -12,10 +12,108 @@ namespace Kronikol.Tracking;
+ /// </summary>
+ public static partial class AssertionExpressionFormatter
+ {
+-    private static readonly Regex ShouldSplitRegex = CreateShouldSplitRegex();
++    [GeneratedRegex(@"^(?:async\s+)?\(\)\s*=>\s*")]
++    private static partial Regex LambdaHead();
+ 
+-    [GeneratedRegex(@"\.Should\(\)\.", RegexOptions.None)]
+-    private static partial Regex CreateShouldSplitRegex();
++    /// <summary>The statements of a lambda's block body that are assertions (PROTOTYPE #210), or null when none is:
++    /// the body is then shown as written.</summary>
++    private static List<string>? BlockAssertions(string block)
++    {
++        var body = block[1..^1];
++        var literal = LiteralMask(body);
++        var statements = new List<string>();
++        var depth = 0;
++        var start = 0;
++        for (var i = 0; i <= body.Length; i++)
++        {
++            if (i < body.Length && literal[i])
++                continue;
++            if (i < body.Length && body[i] is '(' or '[' or '{')
++                depth++;
++            else if (i < body.Length && body[i] is ')' or ']' or '}')
++                depth--;
++            else if (i == body.Length || (body[i] == ';' && depth == 0))
++            {
++                var statement = body[start..Math.Min(i, body.Length)].Trim();
++                var bare = statement.StartsWith("await ", StringComparison.Ordinal) ? statement["await ".Length..] : statement;
++                if (bare.Length > 0 && (TopLevel(bare, ".Should().") >= 0 || TopLevelShouldCall(bare) >= 0 ||
++                                        bare.StartsWith("Should.", StringComparison.Ordinal) ||
++                                        bare.StartsWith("Assert.That(", StringComparison.Ordinal)))
++                    statements.Add(statement);
++                start = i + 1;
++            }
++        }
++        return statements.Count > 0 ? statements : null;
++    }
++
++    /// <summary>The index of <paramref name="token"/> outside literals, or -1.</summary>
++    private static int IndexOutsideLiterals(string text, string token)
++    {
++        var literal = LiteralMask(text);
++        for (var i = text.IndexOf(token, StringComparison.Ordinal); i >= 0; i = text.IndexOf(token, i + 1, StringComparison.Ordinal))
++        {
++            if (!literal[i])
++                return i;
++        }
++        return -1;
++    }
++
++    /// <summary>An assertion inside another call's arguments or brackets (PROTOTYPE #210, #212's S23:
++    /// <c>Console.WriteLine((await Should.ThrowAsync&lt;T&gt;(…)).Message)</c>) read as that assertion, the outermost
++    /// bracket that holds one alone. One in a lambda's body runs elsewhere (for each element, later), and the code
++    /// stays as written: null.</summary>
++    private static string? NestedAssertion(string expr, Dictionary<string, string>? resolvedValues)
++    {
++        var literal = LiteralMask(expr);
++        for (var open = 0; open < expr.Length; open++)
++        {
++            if (literal[open] || expr[open] != '(')
++                continue;
++            var depth = 0;
++            var close = -1;
++            for (var j = open; j < expr.Length && close < 0; j++)
++            {
++                if (literal[j])
++                    continue;
++                if (expr[j] is '(' or '[' or '{')
++                    depth++;
++                else if (expr[j] is ')' or ']' or '}' && --depth == 0)
++                    close = j;
++            }
++            if (close < 0)
++                return null;
++            var inner = expr[(open + 1)..close].Trim();
++            var bare = inner.StartsWith("await ", StringComparison.Ordinal) ? inner["await ".Length..] : inner;
++            if (TopLevelArrow(bare) >= 0)
++            {
++                open = close;   // a lambda: what it asserts runs elsewhere
++                continue;
++            }
++            if (bare.StartsWith("Should.", StringComparison.Ordinal) || bare.StartsWith("Assert.That(", StringComparison.Ordinal) ||
++                TopLevel(bare, ".Should().") >= 0 || TopLevelShouldCall(bare) >= 0)
++                return Format(inner, resolvedValues);
++        }
++        return null;
++    }
++
++    /// <summary>The index of a lambda's <c>=&gt;</c> outside brackets and literals, or -1.</summary>
++    private static int TopLevelArrow(string text)
++    {
++        var literal = LiteralMask(text);
++        var depth = 0;
++        for (var i = 0; i + 1 < text.Length; i++)
++        {
++            if (literal[i])
++                continue;
++            if (text[i] is '(' or '[' or '{')
++                depth++;
++            else if (text[i] is ')' or ']' or '}')
++                depth--;
++            else if (depth == 0 && text[i] == '=' && text[i + 1] == '>')
++                return i;
++        }
++        return -1;
++    }
+ 
+     public static string Format(string? expression)
+     {
+@@ -27,10 +125,12 @@ public static string Format(string? expression, Dictionary<string, string>? reso
+         if (string.IsNullOrWhiteSpace(expression))
+             return "";
+ 
+-        // Strip lambda prefix: "() => "
+-        var expr = expression.StartsWith("() => ")
+-            ? expression["() => ".Length..]
+-            : expression;
++        // Strip a lambda's head: "() => ", or "async () => " from Track.ThatAsync, with any whitespace after the arrow.
++        // A block body reads as its assertion statements (PROTOTYPE #210).
++        var head = LambdaHead().Match(expression);
++        var expr = head.Success ? expression[head.Length..] : expression;
++        if (head.Success && expr.TrimEnd() is ['{', .., '}'] block && BlockAssertions(block) is { } statements)
++            return string.Join("; ", statements.Select(statement => Format(statement, resolvedValues)));
+ 
+         // Strip await prefix
+         if (expr.StartsWith("await "))
+@@ -48,29 +148,31 @@ public static string Format(string? expression, Dictionary<string, string>? reso
+         // before a dot (multi-line expressions from [CallerArgumentExpression]): in the code, never in a literal.
+         expr = CleanCode(expr);
+ 
+-        // Split on .Should().
+-        var match = ShouldSplitRegex.Match(expr);
+-        if (!match.Success)
+-            return FormatShouldly(expr, resolvedValues) ?? FormatTUnit(expr, resolvedValues) ?? expr;
++        // Split on FluentAssertions' own .Should(): the first outside brackets and literals, so an assertion inside
++        // the subject's brackets stays part of the subject, as Shouldly's split does (TopLevelShouldCall).
++        var should = TopLevel(expr, ".Should().");
++        if (should < 0)
++            return FormatShouldly(expr, resolvedValues) ?? FormatTUnit(expr, resolvedValues) ??
++                   NestedAssertion(expr, resolvedValues) ?? CollapseSpace(expr);
+ 
+-        var subject = expr[..match.Index];
+-        var assertionPart = expr[(match.Index + match.Length)..];
++        var subject = expr[..should];
++        var assertionPart = expr[(should + ".Should().".Length)..];
+ 
+         // Format subject: split on '.', PascalCase-split each segment, rejoin with spaces
+         var formattedSubject = FormatSubject(subject);
+ 
+         // Format assertion: method(args) — handle .And. chaining by taking first assertion
+-        var andIndex = assertionPart.IndexOf(".And.", StringComparison.Ordinal);
++        var andIndex = TopLevel(assertionPart, ".And.");
+         if (andIndex >= 0)
+             assertionPart = assertionPart[..andIndex];
+ 
+-        var (method, args) = ParseMethodAndArgs(assertionPart);
++        var (method, args, rest) = ParseMethodAndArgs(assertionPart);
+         var formattedMethod = SplitPascalCase(method).ToLowerInvariant();
+         var formattedArgs = FormatArgs(args, resolvedValues);
+ 
+-        return string.IsNullOrEmpty(formattedArgs)
++        return (string.IsNullOrEmpty(formattedArgs)
+             ? $"{formattedSubject} should {formattedMethod}"
+-            : $"{formattedSubject} should {formattedMethod} {formattedArgs}";
++            : $"{formattedSubject} should {formattedMethod} {formattedArgs}") + FormatChain(rest, resolvedValues);
+     }
+ 
+     /// <summary>
+@@ -99,12 +201,13 @@ public static string Format(string? expression, Dictionary<string, string>? reso
+             call = expr[(at + 1 + "Should".Length)..];
+         }
+ 
+-        var (method, args) = ParseMethodAndArgs(call);
++        var (method, args, rest) = ParseMethodAndArgs(call);
+         string? typeArgument = null;
+-        if (args is not null && args.StartsWith('<') && args.IndexOf('>') is > 0 and var close)
++        if (args is not null && args.StartsWith('<') &&
++            TypeArgumentsEnd(args, LiteralMask(args), 0) is > 0 and var afterType)
+         {
+-            typeArgument = args[1..close];
+-            args = args[(close + 1)..].TrimStart(',', ' ');
++            typeArgument = args[1..(afterType - 1)];
++            args = args[afterType..].TrimStart(',', ' ');
+         }
+ 
+         var words = SplitPascalCase(method).ToLowerInvariant();
+@@ -126,7 +229,7 @@ public static string Format(string? expression, Dictionary<string, string>? reso
+             if (!string.IsNullOrEmpty(part))
+                 sentence.Append(' ').Append(part);
+         }
+-        return sentence.ToString();
++        return sentence.Append(FormatChain(rest, resolvedValues)).ToString();
+     }
+ 
+     /// <summary>
+@@ -160,17 +263,42 @@ public static string Format(string? expression, Dictionary<string, string>? reso
+         var assertionPart = expr[(close + 2)..];
+         foreach (var chain in new[] { ".And.", ".Or." })
+         {
+-            var at = assertionPart.IndexOf(chain, StringComparison.Ordinal);
++            var at = TopLevel(assertionPart, chain);
+             if (at >= 0)
+                 assertionPart = assertionPart[..at];
+         }
+ 
+-        var (method, args) = ParseMethodAndArgs(assertionPart);
++        var (method, args, rest) = ParseMethodAndArgs(assertionPart);
+         var words = SplitPascalCase(method).ToLowerInvariant();
+         var formattedArgs = FormatArgs(args, resolvedValues);
+-        return string.IsNullOrEmpty(formattedArgs)
++        return (string.IsNullOrEmpty(formattedArgs)
+             ? $"{FormatSubject(subject)} {words}"
+-            : $"{FormatSubject(subject)} {words} {formattedArgs}";
++            : $"{FormatSubject(subject)} {words} {formattedArgs}") + FormatChain(rest, resolvedValues);
++    }
++
++    /// <summary>The index of the first <paramref name="token"/>, which starts with a dot, outside brackets and
++    /// literals, or -1.</summary>
++    private static int TopLevel(string expr, string token)
++    {
++        var literal = LiteralMask(expr);
++        var depth = 0;
++        for (var i = 0; i < expr.Length; i++)
++        {
++            if (literal[i])
++                continue;
++            switch (expr[i])
++            {
++                case '(' or '[' or '{':
++                    depth++;
++                    break;
++                case ')' or ']' or '}':
++                    depth--;
++                    break;
++                case '.' when depth == 0 && string.CompareOrdinal(expr, i, token, 0, token.Length) == 0:
++                    return i;
++            }
++        }
++        return -1;
+     }
+ 
+     /// <summary>The index of the dot before the first <c>.ShouldX(</c> call outside brackets and literals, or -1:
+@@ -208,7 +336,17 @@ private static int TopLevelShouldCall(string expr)
+     /// </summary>
+     private static string FormatSubject(string subject)
+     {
+-        var segments = SplitOutsideLiterals(subject, '.');
++        // A subject that is an action (TUnit's Assert.That(() => …)) reads as what the action does (PROTOTYPE #210).
++        if (LambdaHead().Match(subject.TrimStart()) is { Success: true } lambda)
++        {
++            subject = subject.TrimStart()[lambda.Length..];
++            if (subject.StartsWith("await ", StringComparison.Ordinal))
++                subject = subject["await ".Length..];
++        }
++
++        // PROTOTYPE (#210): a member path in words, the code in its brackets as written.
++        if (SubjectLinks(subject) is not { } segments)
++            return CollapseSpace(subject.Trim());
+         if (segments.Count > 1)
+             segments.RemoveAll(segment => segment is "ToString()" or "ToString");
+ 
+@@ -251,24 +389,204 @@ private static string FormatSubject(string subject)
+         }
+     }
+ 
+-    /// <summary>One subject segment in words: its code split on case and lower-cased, its literals as written.</summary>
++    /// <summary>One subject link in words: its name split on case and lower-cased, then its type arguments and
++    /// brackets exactly as written (PROTOTYPE #210). A link that does not start with a name (a literal, a bracketed
++    /// expression, <c>new T(…)</c>) is code and is kept as written.</summary>
+     private static string Words(string segment)
+     {
+-        segment = segment.Trim('_');
+-        var literal = LiteralMask(segment);
+-        var sb = new StringBuilder();
+-        for (var i = 0; i < segment.Length;)
++        var nameEnd = 0;
++        while (nameEnd < segment.Length && IsIdentifierChar(segment[nameEnd]))
++            nameEnd++;
++        if (nameEnd == 0 || char.IsDigit(segment[0]) || segment.StartsWith("new ", StringComparison.Ordinal))
++            return CollapseSpace(segment);
++        var name = segment[..nameEnd].Trim('_');
++        return SplitPascalCase(name).ToLowerInvariant() + CollapseSpace(segment[nameEnd..]);
++    }
++
++    /// <summary>
++    /// The subject's links (PROTOTYPE #210): split at each <c>.</c> outside literals and outside brackets, so a call's
++    /// arguments, an index and a type argument list stay inside the link they belong to. Null when the subject is not
++    /// one primary followed by member links: an operator, a lambda or anything else outside brackets after the first
++    /// link means the subject is code, kept as written.
++    /// </summary>
++    private static List<string>? SubjectLinks(string subject)
++    {
++        var literal = LiteralMask(subject);
++        var links = new List<string>();
++        var depth = 0;
++        var start = 0;
++        for (var i = 0; i < subject.Length; i++)
+         {
+-            var end = i;
+-            while (end < segment.Length && literal[end] == literal[i])
+-                end++;
+-            var part = segment[i..end];
+-            sb.Append(literal[i] ? part : SplitPascalCase(part).ToLowerInvariant());
+-            i = end;
++            if (literal[i])
++                continue;
++            switch (subject[i])
++            {
++                case '(' or '[' or '{':
++                    depth++;
++                    break;
++                case ')' or ']' or '}':
++                    depth--;
++                    break;
++                case '<' when depth == 0 && i > 0 && IsIdentifierChar(subject[i - 1]) && TypeArgumentsEnd(subject, literal, i) is > 0 and var close:
++                    i = close - 1;
++                    break;
++                case '.' when depth == 0 && !(i + 1 < subject.Length && subject[i + 1] == '.'):
++                    links.Add(subject[start..i]);
++                    start = i + 1;
++                    break;
++            }
++        }
++        links.Add(subject[start..]);
++
++        for (var l = 0; l < links.Count; l++)
++        {
++            if (l == 0 && !StartsWithName(links[0]))
++                continue;
++            if (!IsNameLink(links[l], l == 0))
++                return null;
++        }
++        return links;
++    }
++
++    private static bool StartsWithName(string link) =>
++        link.Length > 0 && (char.IsLetter(link[0]) || link[0] == '_') && !link.StartsWith("new ", StringComparison.Ordinal);
++
++    /// <summary>Whether a link is a name with only type arguments and brackets after it (outside literals).</summary>
++    private static bool IsNameLink(string link, bool first)
++    {
++        var literal = LiteralMask(link);
++        var i = 0;
++        while (i < link.Length && IsIdentifierChar(link[i]))
++            i++;
++        if (i == 0)
++            return first;
++        if (i < link.Length && link[i] == '<' && TypeArgumentsEnd(link, literal, i) is > 0 and var afterTypes)
++            i = afterTypes;
++        var depth = 0;
++        for (; i < link.Length; i++)
++        {
++            if (literal[i])
++                continue;
++            var c = link[i];
++            if (c is '(' or '[' or '{')
++                depth++;
++            else if (c is ')' or ']' or '}')
++                depth--;
++            else if (depth == 0)
++                return false;
++        }
++        return depth == 0;
++    }
++
++    /// <summary>The index after the type argument list that opens at <paramref name="open"/>, or -1 when it is a
++    /// comparison: only names, dots, commas, spaces, <c>?</c>, <c>[]</c> and nested lists, then <c>(</c> or the end.</summary>
++    private static int TypeArgumentsEnd(string text, bool[] literal, int open)
++    {
++        var depth = 0;
++        for (var i = open; i < text.Length; i++)
++        {
++            if (literal[i])
++                return -1;
++            var c = text[i];
++            if (c == '<')
++                depth++;
++            else if (c == '>')
++            {
++                if (--depth == 0)
++                    return i + 1;
++            }
++            else if (!(IsIdentifierChar(c) || char.IsWhiteSpace(c) || c is '.' or ',' or '?' or '[' or ']' or '(' or ')'))
++                return -1;
++        }
++        return -1;
++    }
++
++    /// <summary>Each run of whitespace outside literals read as one space, so code kept as written stays on one line;
++    /// none after <c>(</c> or <c>[</c> or before <c>)</c> or <c>]</c>, where a line break in a call's arguments
++    /// left one.</summary>
++    private static string CollapseSpace(string code)
++    {
++        var literal = LiteralMask(code);
++        var sb = new StringBuilder(code.Length);
++        for (var i = 0; i < code.Length; i++)
++        {
++            if (!literal[i] && char.IsWhiteSpace(code[i]))
++            {
++                var j = i;
++                while (j < code.Length && char.IsWhiteSpace(code[j]) && !literal[j])
++                    j++;
++                var before = sb.Length == 0 ? '\0' : sb[^1];
++                var after = j < code.Length ? code[j] : '\0';
++                if (sb.Length > 0 && before is not ('(' or '[') && after is not (')' or ']' or '\0'))
++                    sb.Append(' ');
++                i = j - 1;
++                continue;
++            }
++            sb.Append(code[i]);
++        }
++        return sb.ToString();
++    }
++
++    /// <summary>
++    /// Each <c>nameof(…)</c> outside literals as the string the compiler made of it, in quotes as a value
++    /// (PROTOTYPE #210): the operand's last name, without type arguments or <c>@</c>, as C# defines it.
++    /// <c>nameof(CurrencyCode.GBP)</c> reads <c>'GBP'</c>. An operand that does not end in a name is kept as written.
++    /// </summary>
++    internal static string ReadNameofs(string code)
++    {
++        var literal = LiteralMask(code);
++        var sb = new StringBuilder(code.Length);
++        for (var i = 0; i < code.Length; i++)
++        {
++            if (!literal[i] && string.CompareOrdinal(code, i, "nameof", 0, 6) == 0 &&
++                (i == 0 || !(IsIdentifierChar(code[i - 1]) || code[i - 1] is '.' or '@')))
++            {
++                var open = i + 6;
++                while (open < code.Length && code[open] == ' ')
++                    open++;
++                if (open < code.Length && code[open] == '(' && Close(code, literal, open) is > 0 and var close &&
++                    SimpleName(code[(open + 1)..close]) is { } name)
++                {
++                    sb.Append('\'').Append(name).Append('\'');
++                    i = close;
++                    continue;
++                }
++            }
++            sb.Append(code[i]);
+         }
+         return sb.ToString();
+     }
+ 
++    private static int Close(string text, bool[] literal, int open)
++    {
++        var depth = 0;
++        for (var i = open; i < text.Length; i++)
++        {
++            if (literal[i])
++                continue;
++            if (text[i] == '(')
++                depth++;
++            else if (text[i] == ')' && --depth == 0)
++                return i;
++        }
++        return -1;
++    }
++
++    private static string? SimpleName(string operand)
++    {
++        var text = operand.Trim();
++        string previous;
++        do
++        {
++            previous = text;
++            text = Regex.Replace(text, "<[^<>]*>", "");
++        } while (text != previous);
++        var colons = text.LastIndexOf("::", StringComparison.Ordinal);
++        var cut = Math.Max(text.LastIndexOf('.'), colons >= 0 ? colons + 1 : -1);
++        var name = (cut >= 0 ? text[(cut + 1)..] : text).Trim().TrimStart('@');
++        return name.Length > 0 && (char.IsLetter(name[0]) || name[0] == '_') && name.All(IsIdentifierChar) ? name : null;
++    }
++
+     /// <summary><paramref name="text"/> split at each <paramref name="separator"/> outside string and character
+     /// literals.</summary>
+     private static List<string> SplitOutsideLiterals(string text, char separator)
+@@ -307,7 +625,7 @@ private static string CleanCode(string expr)
+                 var next = i + 1 < expr.Length ? expr[i + 1] : '\0';
+                 if (c == '!' && i > 0 && (IsIdentifierChar(expr[i - 1]) || expr[i - 1] is ')' or ']') && next != '=')
+                     continue;
+-                if (c == '?' && next == '.')
++                if (c == '?' && (next == '.' || (next == '[' && i > 0 && (IsIdentifierChar(expr[i - 1]) || expr[i - 1] is ')' or ']'))))
+                     continue;
+                 if (char.IsWhiteSpace(c))
+                 {
+@@ -384,63 +702,88 @@ private static int EndOfLiteral(string text, int start)
+         return text.Length - 1;
+     }
+ 
+-    private static (string Method, string? Args) ParseMethodAndArgs(string assertionPart)
++    /// <summary>The assertion's first call (PROTOTYPE #210 F10): its name, its type arguments and its own
++    /// arguments (type arguments first, as <c>&lt;T&gt;, args</c>), and the code after its closing bracket, which
++    /// <see cref="FormatChain"/> reads. The arguments were the last call's in the chain, so
++    /// <c>IsEqualTo(10.0).Within(0.5)</c> read "is equal to 0.5".</summary>
++    private static (string Method, string? Args, string Tail) ParseMethodAndArgs(string assertionPart)
+     {
+-        // Handle generic methods: BeOfType<string>()
+-        var parenDepth = 0;
+-        var angleBracketDepth = 0;
+-        var methodEnd = -1;
+-        var argsStart = -1;
+-        var argsEnd = -1;
+         var literal = LiteralMask(assertionPart);
++        var i = 0;
++        while (i < assertionPart.Length && IsIdentifierChar(assertionPart[i]))
++            i++;
++        if (i == 0)
++            return (assertionPart, null, "");
++        var method = assertionPart[..i];
++
++        var typeArguments = "";
++        if (i < assertionPart.Length && assertionPart[i] == '<' &&
++            TypeArgumentsEnd(assertionPart, literal, i) is > 0 and var afterTypes)
++        {
++            typeArguments = assertionPart[i..afterTypes];
++            i = afterTypes;
++        }
+ 
+-        for (var i = 0; i < assertionPart.Length; i++)
++        string? args = null;
++        if (i < assertionPart.Length && assertionPart[i] == '(')
+         {
+-            if (literal[i])
+-                continue;
+-            var c = assertionPart[i];
+-            switch (c)
++            var depth = 0;
++            var close = -1;
++            for (var j = i; j < assertionPart.Length && close < 0; j++)
+             {
+-                case '<' when parenDepth == 0:
+-                    if (methodEnd < 0) methodEnd = i;
+-                    angleBracketDepth++;
+-                    break;
+-                case '>' when parenDepth == 0 && angleBracketDepth > 0:
+-                    angleBracketDepth--;
+-                    break;
+-                case '(':
+-                    if (angleBracketDepth == 0 && methodEnd < 0) methodEnd = i;
+-                    if (angleBracketDepth == 0 && parenDepth == 0) argsStart = i + 1;
+-                    parenDepth++;
+-                    break;
+-                case ')':
+-                    parenDepth--;
+-                    if (parenDepth == 0 && angleBracketDepth == 0) argsEnd = i;
+-                    break;
++                if (literal[j])
++                    continue;
++                if (assertionPart[j] is '(' or '[' or '{')
++                    depth++;
++                else if (assertionPart[j] is ')' or ']' or '}' && --depth == 0)
++                    close = j;
+             }
++            if (close < 0)
++                return (method, null, "");
++            args = assertionPart[(i + 1)..close];
++            i = close + 1;
+         }
+ 
+-        if (methodEnd < 0) return (assertionPart, null);
++        if (typeArguments.Length > 0)
++            args = typeArguments + (string.IsNullOrWhiteSpace(args) ? "" : ", " + args);
++        return (method, string.IsNullOrWhiteSpace(args) ? null : args, assertionPart[i..]);
++    }
+ 
+-        var method = assertionPart[..methodEnd];
++    private static readonly HashSet<string> HandOn = ["Which", "Subject", "And", "Or", "Which()"];
++
++    /// <summary>The links after an assertion's first call, in order (PROTOTYPE #210 F10): a member reads as words, a
++    /// call as its words and its arguments, <c>Should()</c> as "should". A chain that goes on to a value of the
++    /// assertion (<c>.Which.Code</c>, <c>.WhoseValue</c>, <c>.Message</c>) follows a comma; a call on the assertion
++    /// itself (<c>.Within(0.5)</c>, <c>.WithMessage("…")</c>) follows a space. A last link that only hands the value on
++    /// (<c>Which</c>, <c>Subject</c>, <c>And</c>) is not read. Empty when nothing follows the call.</summary>
++    private static string FormatChain(string rest, Dictionary<string, string>? resolvedValues)
++    {
++        rest = rest.Trim();
++        if (rest.Length < 2 || rest[0] != '.')
++            return "";
++        if (SubjectLinks(rest[1..]) is not { } links)
++            return " " + CollapseSpace(rest);
++        while (links.Count > 0 && HandOn.Contains(links[^1]))
++            links.RemoveAt(links.Count - 1);
++        if (links.Count == 0)
++            return "";
+ 
+-        // Extract generic type suffix if present
+-        var genericSuffix = "";
+-        if (assertionPart.Length > methodEnd && assertionPart[methodEnd] == '<')
++        var sb = new StringBuilder();
++        for (var l = 0; l < links.Count; l++)
+         {
+-            var closeAngle = assertionPart.IndexOf('>', methodEnd);
+-            if (closeAngle >= 0)
+-                genericSuffix = " " + assertionPart[methodEnd..(closeAngle + 1)];
++            var (name, args, _) = ParseMethodAndArgs(links[l]);
++            var isCall = links[l].Length > name.Length && links[l][name.Length] is '(' or '<';
++            if (l == 0)
++                sb.Append(isCall ? " " : ", ");
++            else
++                sb.Append(' ');
++            sb.Append(SplitPascalCase(name.Trim('_')).ToLowerInvariant());
++            if (isCall && FormatArgs(args, resolvedValues) is { Length: > 0 } formatted)
++                sb.Append(' ').Append(formatted);
++            else if (!isCall && links[l].Length > name.Length)
++                sb.Append(CollapseSpace(links[l][name.Length..]));
+         }
+-
+-        string? args = null;
+-        if (argsStart >= 0 && argsEnd > argsStart)
+-            args = assertionPart[argsStart..argsEnd];
+-
+-        if (!string.IsNullOrEmpty(genericSuffix))
+-            args = genericSuffix.TrimStart() + (args is not null ? ", " + args : "");
+-
+-        return (method, string.IsNullOrWhiteSpace(args) ? null : args);
++        return sb.ToString();
+     }
+ 
+     private static string FormatArgs(string? args, Dictionary<string, string>? resolvedValues)
+@@ -451,8 +794,11 @@ private static string FormatArgs(string? args, Dictionary<string, string>? resol
+         if (resolvedValues is { Count: > 0 })
+             args = SubstituteResolvedValues(args, resolvedValues);
+ 
++        // PROTOTYPE (#210): a nameof is a value the compiler made, read as one; code kept as written reads on one line.
++        args = CollapseSpace(ReadNameofs(args).Trim());
++
+         // Wrap lambda expressions in square brackets for readability
+-        if (args.Contains("=>"))
++        if (IndexOutsideLiterals(args, "=>") >= 0)
+             return $"[ {args} ]";
+ 
+         // Strip enum prefixes: TaskStatus.RanToCompletion → RanToCompletion, HttpStatusCode.OK → OK
+@@ -574,8 +920,11 @@ private static string[] SplitTopLevelCommas(string text)
+                 continue;
+             switch (text[i])
+             {
+-                case '(' or '<': depth++; break;
+-                case ')' or '>': depth--; break;
++                case '(' or '[' or '{': depth++; break;
++                case ')' or ']' or '}': depth--; break;
++                case '<' when i > 0 && IsIdentifierChar(text[i - 1]) && TypeArgumentsEnd(text, literal, i) is > 0 and var afterTypes:
++                    i = afterTypes - 1;
++                    break;
+                 case ',' when depth == 0:
+                     parts.Add(text[start..i]);
+                     start = i + 1;

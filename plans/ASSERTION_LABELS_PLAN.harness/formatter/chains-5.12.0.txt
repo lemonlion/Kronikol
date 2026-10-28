@@ -1,0 +1,28 @@
+await Assert.That(price).IsEqualTo(10.0).Within(0.5)
+    => Price is equal to 0.5
+await Assert.That(name).IsEqualTo("bob").IgnoringCase()
+    => Name is equal to
+await Assert.That(text).IsEqualTo("Rock.And.Roll")
+    => Text is equal to
+await Assert.That(x).IsGreaterThan(3).And.IsLessThan(9)
+    => X is greater than 3
+await Assert.That(act).Throws<InvalidOperationException>().WithMessage("boom")
+    => Act throws <InvalidOperationException>, "boom"
+Should.Throw<InvalidOperationException>(() => service.Run()).Message.ShouldContain("boom")
+    => Should throw InvalidOperationException "boom"
+Should.Throw<ArgumentException>(act).ParamName.ShouldBe("id")
+    => Should throw ArgumentException "id"
+var ex = Should.Throw<InvalidOperationException>(() => service.Run())
+    => Should throw InvalidOperationException
+(await Should.ThrowAsync<HttpRequestException>(act)).StatusCode.ShouldBe(HttpStatusCode.NotFound)
+    => (await  should throw async< http request exception>(act)) status code should be NotFound
+dict.Should().ContainKey("a").WhoseValue.Should().Be(1)
+    => Dict should contain key 1
+act.Should().Throw<ClickHouseEmulatorException>().Which.Code.Should().Be(456)
+    => Act should throw <ClickHouseEmulatorException>, 456
+act.Should().Throw<InvalidOperationException>().WithMessage("boom")
+    => Act should throw <InvalidOperationException>, "boom"
+x.Should().NotBeNull().And.HaveCount(2)
+    => X should not be null
+price.Should().BeApproximately(10.0, 0.5)
+    => Price should be approximately 10.0, 0.5

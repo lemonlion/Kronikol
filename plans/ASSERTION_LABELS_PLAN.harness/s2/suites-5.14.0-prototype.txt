@@ -1,0 +1,12 @@
+# prototype.patch (final) on 5.14.0 (8d7d1e1d), dotnet test --configuration Release, 2026-10-27
+## Kronikol.Tests
+Failed!  - Failed:     2, Passed:  9107, Skipped:     2, Total:  9111, Duration: 5 m 45 s - Kronikol.Tests.dll (net10.0)
+  Failed Kronikol.Tests.Tracking.AssertionExpressionFormatterTests.A_subject_literal_is_kept_as_written(expression: "\"Colour\".ShouldBe(nameof(expected.Colour))", expected: "\"Colour\" should be nameof(expected.Colour)") [3 ms]
+  Failed Kronikol.Tests.Tracking.TrackValueResolutionTests.A_chain_inside_nameof_is_not_read [< 1 ms]
+## Kronikol.Tests.AssertionTracking
+Passed!  - Failed:     0, Passed:   406, Skipped:    28, Total:   434, Duration: 5 m 3 s - Kronikol.Tests.AssertionTracking.dll (net10.0)
+## the run before F16 (lambda heads), F14, F15, F17 and the nested type arguments
+Failed!  - Failed:     3, Passed:  9106, Skipped:     2, Total:  9111, Duration: 8 m 19 s - Kronikol.Tests.dll (net10.0)
+  Failed Kronikol.Tests.Tracking.AssertionExpressionFormatterTests.A_subject_literal_is_kept_as_written(expression: "\"Colour\".ShouldBe(nameof(expected.Colour)
+  Failed Kronikol.Tests.Tracking.TrackThatTests.ThatAsync_resolves_captured_variable_value [2 ms]
+  Failed Kronikol.Tests.Tracking.TrackValueResolutionTests.A_chain_inside_nameof_is_not_read [< 1 ms]

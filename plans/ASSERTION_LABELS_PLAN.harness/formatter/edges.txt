@@ -1,0 +1,13 @@
+# Nested type arguments on the assertion method
+result.Should().BeOfType<List<int>>()
+result.ShouldBeOfType<Dictionary<string, List<int>>>()
+Should.Throw<AggregateException>(() => run()).InnerExceptions.ShouldHaveSingleItem()
+# Comments inside a statement (the weave's text runs from the statement's first column to its last)
+result.ShouldBe(5 /* five */)
+result.Total.ShouldBe(\n    // the discount is applied first\n    expected.Total)
+# Literals the scanner must step over
+result.Name.ShouldBe(@"a ""quoted"" (b")
+result.Name.ShouldBe("""raw "quoted" (text""")
+result.Text.Substring(0, 1).ShouldBe(")")
+result.Chars[')'].ShouldBe(1)
+result.Name.ShouldBe($"{(flag ? "a.b" : "c")}.Should().")

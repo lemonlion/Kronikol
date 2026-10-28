@@ -1,0 +1,14 @@
+result.Get<(int, string)>().Name.ShouldBe("a")
+    => Result get<(int, string)>() name should be "a"
+result.Items?[0].Name.ShouldBe("a")
+    => Result items?[0] name should be "a"
+Assert.Equal(\n    expected,\n    actual)
+    => Assert.Equal(\n    expected,\n    actual)
+result.Value.Should().Be(\n    expected.Value)
+    => Result value should be \n    expected.Value
+result.Should().BeOfType<List<int>>()
+    => Result should be of type <List<int>
+result.ShouldBeOfType<Dictionary<string, List<int>>>()
+    => Result should be of type Dictionary<string, List<int
+Should.Throw<AggregateException>(() => run()).InnerExceptions.ShouldHaveSingleItem()
+    => Should throw AggregateException

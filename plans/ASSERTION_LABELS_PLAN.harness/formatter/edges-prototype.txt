@@ -1,0 +1,20 @@
+result.Should().BeOfType<List<int>>()
+    => Result should be of type <List<int>>
+result.ShouldBeOfType<Dictionary<string, List<int>>>()
+    => Result should be of type Dictionary<string, List<int>>
+Should.Throw<AggregateException>(() => run()).InnerExceptions.ShouldHaveSingleItem()
+    => Should throw AggregateException, inner exceptions should have single item
+result.ShouldBe(5 /* five */)
+    => Result should be 5 /* five */
+result.Total.ShouldBe(\n    // the discount is applied first\n    expected.Total)
+    => Result total should be // the discount is applied first expected.Total
+result.Name.ShouldBe(@"a ""quoted"" (b")
+    => Result name should be @"a ""quoted"" (b"
+result.Name.ShouldBe("""raw "quoted" (text""")
+    => Result name should be """raw "quoted" (text"""
+result.Text.Substring(0, 1).ShouldBe(")")
+    => Result text substring(0, 1) should be ")"
+result.Chars[')'].ShouldBe(1)
+    => Result chars[')'] should be 1
+result.Name.ShouldBe($"{(flag ? "a.b" : "c")}.Should().")
+    => Result name should be $"{(flag ? "a.b" : "c")}.Should()."

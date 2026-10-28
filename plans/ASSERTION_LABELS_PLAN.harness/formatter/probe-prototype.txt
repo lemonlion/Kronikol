@@ -1,0 +1,84 @@
+result.SplitPercentage.ToString(CultureInfo.InvariantCulture).ShouldNotBeNullOrEmpty()
+    => Result split percentage to string(CultureInfo.InvariantCulture) should not be null or empty
+result.CurrencyIsoAlpha3.ShouldBe(nameof(CurrencyCode.GBP))
+    => Result currency iso alpha3 should be 'GBP'
+application.Stage.ShouldBe(nameof(ApplicationStage.Cancelled))
+    => Application stage should be 'Cancelled'
+result.Amount.ToString("N2").ShouldBe("1,234.00")
+    => Result amount to string("N2") should be "1,234.00"
+result.Amount.ToString(format).ShouldBe("1,234.00")
+    => Result amount to string(format) should be "1,234.00"
+result.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture).ShouldBe("2026-10-27")
+    => Result date to string("yyyy-MM-dd", CultureInfo.InvariantCulture) should be "2026-10-27"
+Math.Round(result.Total, 2).ShouldBe(10.5m)
+    => Math round(result.Total, 2) should be 10.5m
+string.Join(",", result.Ids).ShouldBe("a,b")
+    => String join(",", result.Ids) should be "a,b"
+result.Items.Count(x => x.IsActive).ShouldBe(3)
+    => Result items count(x => x.IsActive) should be 3
+result.Items.Where(x => x.IsActive).Count().ShouldBe(3)
+    => Result items where(x => x.IsActive) count() should be 3
+result.Items.Single(x => x.Id == expected.Id).Name.ShouldBe("A")
+    => Result items single(x => x.Id == expected.Id) name should be "A"
+response.Headers.GetValues("X-Id").First().ShouldBe("1")
+    => First value of response headers get values("X-Id") should be "1"
+result.Get<Customer>().Name.ShouldBe("A")
+    => Result get<Customer>() name should be "A"
+dict[Keys.Primary].ShouldBe(1)
+    => Dict[Keys.Primary] should be 1
+result.Lines[index].Total.ShouldBe(3)
+    => Result lines[index] total should be 3
+((int)response.StatusCode).ShouldBe(200)
+    => ((int)response.StatusCode) should be 200
+(result.Total + result.Tax).ShouldBe(12)
+    => (result.Total + result.Tax) should be 12
+new Uri(result.Link).Host.ShouldBe("example.com")
+    => New Uri(result.Link) host should be "example.com"
+result.Name.Substring(0, 3).ShouldBe("abc")
+    => Result name substring(0, 3) should be "abc"
+result.Items.Select(i => i.Name).ShouldContain("A")
+    => Result items select(i => i.Name) should contain "A"
+DateTime.Parse(result.When).Year.ShouldBe(2026)
+    => Date time parse(result.When) year should be 2026
+result.Status.ToString().ShouldBe("Done")
+    => Result status should be "Done"
+result.Amount.ToString(CultureInfo.InvariantCulture).Should().Be("1.5")
+    => Result amount to string(CultureInfo.InvariantCulture) should be "1.5"
+await Assert.That(result.Amount.ToString(CultureInfo.InvariantCulture)).IsEqualTo("1.5")
+    => Result amount to string(CultureInfo.InvariantCulture) is equal to "1.5"
+result.Value.ToString(CultureInfo.InvariantCulture).ToUpperInvariant().ShouldBe("X")
+    => Result value to string(CultureInfo.InvariantCulture) to upper invariant() should be "X"
+JsonSerializer.Serialize(result.Body).ShouldContain("id")
+    => Json serializer serialize(result.Body) should contain "id"
+result.Name.ShouldBe(nameof(Customer))
+    => Result name should be 'Customer'
+result.Name.ShouldBe(nameof(List<int>))
+    => Result name should be 'List'
+result.Name.ShouldBe(nameof(@class))
+    => Result name should be 'class'
+result.Name.ShouldBe(nameof(this.Name))
+    => Result name should be 'Name'
+result.Field.ShouldBe(nameof(expected.Colour))
+    => Result field should be 'Colour'
+result.Code.ShouldBe(Currencies.Gbp)
+    => Result code should be Gbp
+result.Code.ShouldBe(Gbp)
+    => Result code should be Gbp
+result.Count.ShouldBe(Limits.MaxRetries)
+    => Result count should be MaxRetries
+result.Count.ShouldBe(int.MaxValue)
+    => Result count should be int.MaxValue
+result.Count.ShouldBe(Int32.MaxValue)
+    => Result count should be MaxValue
+result.Name.ShouldBe($"{nameof(Customer)}-1")
+    => Result name should be $"{nameof(Customer)}-1"
+result.Name.ShouldBe(nameof(Customer) + "s")
+    => Result name should be 'Customer' + "s"
+result.Name.Should().Be(nameof(CurrencyCode.GBP))
+    => Result name should be 'GBP'
+await Assert.That(result.Name).IsEqualTo(nameof(CurrencyCode.GBP))
+    => Result name is equal to 'GBP'
+result.Errors.ShouldContainKey(nameof(Request.Email))
+    => Result errors should contain key 'Email'
+result.Stage.ShouldBe(ApplicationStage.Cancelled)
+    => Result stage should be Cancelled
