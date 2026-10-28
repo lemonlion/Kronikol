@@ -139,11 +139,13 @@ never called — no payload needed to establish that.
 ### `parties <report> [s3] [--kind double]`
 Who each party is (5.14.0): one row per name the calls carry, with its kind (`test`, `underTest`, `real`,
 `double` or `unknown`), how that kind is known (`declared` in the run's options or `.kronikol/parties.json`,
-`observed` from a test client Kronikol built, `inferred` from the calls), the calls it made and received, and its
+`observed` from a test client Kronikol built or from calls every one of which a capturer marked as a test double's
+answer, `inferred` from the calls), the calls it made and received, and its
 id and note. A report that declares its parties prints the table it wrote; one that declares nothing gets the table
 inferred from its calls, and the footer says so. The checks a declaring run records as diagnostics (a name that
 differs only by case, a test's name on a service's calls) are printed as notes here instead. `--json`: one item per
-party with `party`, `id`, `kind`, `kindSource`, `callsMade`, `callsReceived` and `note`.
+party with `party`, `id`, `kind`, `kindSource`, `callsMade`, `callsReceived`, `doubleCalls` (the calls a capturer
+marked as a test double's answers, 5.15.0) and `note`.
 
 Ask it before reading a call as the real service's answer: a `double` answered in the service's place.
 

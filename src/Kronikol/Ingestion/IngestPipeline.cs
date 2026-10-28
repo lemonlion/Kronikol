@@ -1491,6 +1491,15 @@ public static class IngestPipeline
             }
         }
 
+        // A call is marked when either half says a test double answered it, so both carry it (#190): a mock library says
+        // so when it answers, which the Jest recipe writes on the response.
+        foreach (var call in logs.Where(l => !l.IsDiagramMarker).GroupBy(l => l.RequestResponseId))
+        {
+            if (call.Select(l => l.TestDouble).FirstOrDefault(d => d is not null) is { } testDouble)
+                foreach (var half in call)
+                    half.TestDouble ??= testDouble;
+        }
+
         return logs;
     }
 

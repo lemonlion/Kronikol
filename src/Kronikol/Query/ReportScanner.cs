@@ -799,6 +799,11 @@ internal static class ReportScanner
                 return;
             }
 
+            // Only the call's own members from here, as a scenario's since 4.16.3: an object under a call, such as a
+            // testDouble a capturer wrote as one, has members of its own, and a serviceName there renamed the call (#190).
+            if (!At("httpInteractions", "#"))
+                return;
+
             switch (key)
             {
                 case "type": interaction.Type = reader.GetString() ?? ""; break;
@@ -836,6 +841,7 @@ internal static class ReportScanner
                 case "activityTraceId": interaction.ActivityTraceId = reader.GetString(); break;
                 case "activitySpanId": interaction.ActivitySpanId = reader.GetString(); break;
                 case "capturedBy": interaction.CapturedBy = reader.GetString(); break;
+                case "testDouble": interaction.TestDouble = reader.TokenType == JsonTokenType.String ? reader.GetString() : null; break;
                 case "isUserAction": interaction.IsUserAction = reader.TokenType == JsonTokenType.True; break;
                 case "durationMs":
                     interaction.DurationMs = reader.TokenType == JsonTokenType.Number && reader.TryGetDouble(out var ms) ? ms : null;

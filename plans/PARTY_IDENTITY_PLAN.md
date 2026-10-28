@@ -1269,6 +1269,25 @@ Agreed by message on 2026-10-26:
     background call is not counted on a report that declares nothing.
   - The verb's text output was checked on a real report written by the release build (`impl/parties-demo/`), which is
     also where the wiki's examples come from; a row with no id and no note ended in two spaces, now trimmed.
+- 2026-10-27, kronikol-67, executing R2:
+  - The facts of 7.3, each beside the code it holds: the mark in the JSON, XML and YAML forms (the XML validated
+    against the XSD), absent when unset; an object under the key leaves the call's own `serviceName` standing in the
+    scanner (red before the guard); the round trip from a log to a record and back; a mark on one half of an ingested
+    call reaching both; a blank mark marking nothing; the merged wire and span pair; the mergeable file read back; the
+    OTLP attribute; the resolver's three rules; `doubleCalls`; ingest's three options, each refusing a missing value,
+    the pointer addressing the report's own ids under `--suite`, discovery from where the ingest runs, and a parties
+    file among the inputs read as the parties file rather than as a capture of malformed lines.
+  - The Jest recipe's fixture is a capture shaped as the recipe writes it, not a run of Jest, which needs packages from
+    the network: one host MSW mocked once and let through once (`unknown`, two calls received, one a double's) and one
+    it mocked every time (`double`, `observed`, on a report that declares nothing).
+  - 31 of 31 mutations caught.
+  - One fault in R1 found on the way, fixed with a fact red first: the subject's inference took the party the test called
+    most and, when that party's kind was known already, kept it and inferred nothing, so a test that called a stub more
+    than its service left the service `unknown`. The inference now chooses among the parties of unknown kind.
+  - `PLATFORM_FOUNDATIONS_PLAN.md` 4.7 is amended as 5.10 says, and `FLEET_EVIDENCE_PLAN.md` 4.1's note names the mark.
+  - Six of the mutants had no fact to fail until one was written for each, each passing on the code and failing on its
+    mutant: a blank mark, a parties file among the inputs, the mergeable reader, the `Pair` overload, the XML
+    validated against the XSD, and a host MSW answered every time (the verb's inferred path).
 
 ---
 

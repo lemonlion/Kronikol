@@ -495,10 +495,14 @@ public static partial class QueryCommand
         static bool IsRequest(InteractionEntry i) => i.Type.Equals("Request", StringComparison.OrdinalIgnoreCase) && i.ServiceName.Length > 0 && i.CallerName.Length > 0;
         var made = new Dictionary<string, int>(StringComparer.Ordinal);
         var received = new Dictionary<string, int>(StringComparer.Ordinal);
+        // The calls a test double answered, as their capturers saw (#190, R2): counted here, the row keeps its members.
+        var doubled = new Dictionary<string, int>(StringComparer.Ordinal);
         foreach (var interaction in scope.SelectMany(s => s.Interactions).Where(IsRequest))
         {
             made[interaction.CallerName] = made.GetValueOrDefault(interaction.CallerName) + 1;
             received[interaction.ServiceName] = received.GetValueOrDefault(interaction.ServiceName) + 1;
+            if (interaction.TestDouble is not null)
+                doubled[interaction.ServiceName] = doubled.GetValueOrDefault(interaction.ServiceName) + 1;
         }
 
         IReadOnlyList<Kronikol.Parties.Party> table;
@@ -514,7 +518,7 @@ public static partial class QueryCommand
         else
         {
             var calls = index.Scenarios.SelectMany(s => s.Interactions).Where(IsRequest)
-                .Select(i => new Kronikol.Parties.PartyCall(i.CallerName, i.ServiceName, i.DependencyCategory, i.CallerDependencyCategory, i.AttributionSource));
+                .Select(i => new Kronikol.Parties.PartyCall(i.CallerName, i.ServiceName, i.DependencyCategory, i.CallerDependencyCategory, i.AttributionSource, i.TestDouble));
             var inferred = Kronikol.Parties.PartyResolver.Resolve(calls, Kronikol.Parties.PartyDeclarations.None, Kronikol.Parties.PartyObservations.None);
             table = inferred.Parties;
             foreach (var note in inferred.Notes)
@@ -558,6 +562,7 @@ public static partial class QueryCommand
                 kindSource = party.KindSource is { } how ? Kronikol.Parties.PartiesReport.SourceName(how) : null,
                 callsMade = made.GetValueOrDefault(party.Name),
                 callsReceived = received.GetValueOrDefault(party.Name),
+                doubleCalls = doubled.GetValueOrDefault(party.Name),
                 note = party.Note
             },
             footer);

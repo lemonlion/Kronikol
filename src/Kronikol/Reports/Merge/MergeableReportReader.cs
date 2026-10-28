@@ -580,6 +580,7 @@ public static class MergeableReportReader
                 DurationMs = ReadDouble(element, "durationMs"),
                 // Read back since 4.3.0: a merged report wrote null for all three.
                 Error = GetString(element, "error"),
+                TestDouble = GetString(element, "testDouble"),
                 AttributionSource = GetString(element, "attributionSource") is { } source
                                     && Enum.TryParse<AttributionSource>(source, ignoreCase: true, out var parsedSource)
                     ? parsedSource

@@ -78,6 +78,26 @@ public class InteractionMergerTests
         Assert.Equal(InteractionMerger.MergedSource, response.CapturedBy);
     }
 
+    // #190 R2: what answered the call in its service's place, as either view saw it: the wire's, else the span's.
+    [Theory]
+    [InlineData("WireMock", null, "WireMock")]
+    [InlineData(null, "MSW", "MSW")]
+    [InlineData("WireMock", "MSW", "WireMock")]
+    [InlineData(null, null, null)]
+    public void A_merged_call_keeps_the_wires_test_double_else_the_spans(string? wireDouble, string? spanDouble, string? kept)
+    {
+        List<InteractionRecord> records =
+        [
+            .. Wire("Find ← Trial", "mongodb:///data-insights/Trial", 0, 12).Select(r => r with { TestDouble = wireDouble }),
+            .. Span("Find ← Trial", "mongodb:///data-insights-Development/Trial", 1, 10).Select(r => r with { TestDouble = spanDouble }),
+        ];
+
+        var merged = InteractionMerger.Merge(records);
+
+        Assert.Equal(2, merged.Count);
+        Assert.All(merged, r => Assert.Equal(kept, r.TestDouble));
+    }
+
     [Fact]
     public void Explicit_capture_stamps_are_honoured_and_the_wire_label_wins()
     {

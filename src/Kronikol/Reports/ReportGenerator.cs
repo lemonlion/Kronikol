@@ -342,7 +342,7 @@ public static class ReportGenerator
             Logs = runLogs
         };
         // A participant the run declares a test double carries <<test double>> in every diagram the run draws (#190, Q11).
-        using var declaredDoubles = DiagramParties.Declare(PartiesReport.DeclaredDoubles(options, CurrentReportsDirectory));
+        using var declaredDoubles = DiagramParties.Declare(PartiesReport.DeclaredDoubles(options, CurrentReportsDirectory, getEnv, historyBaseDirectory));
         var diagrams = DefaultDiagramsFetcher.GetDiagramsFetcher(fetcherOptions)();
 
         var internalFlowDataScript = "";
@@ -515,7 +515,7 @@ public static class ReportGenerator
         // by one of those outputs is therefore only in the collector, not in the files.
         // Who each party is (#190): resolved once, here, so the table and what its checks found reach every output alike. A
         // run that declares nothing records nothing, and no file gains the block.
-        var parties = PartiesReport.Resolve(options, features, dataLogs, CurrentReportsDirectory);
+        var parties = PartiesReport.Resolve(options, features, dataLogs, CurrentReportsDirectory, getEnv, historyBaseDirectory);
         foreach (var finding in parties.Diagnostics)
             ReportDiagnosticsScope.Record(finding.Kind, finding.Message);
 
@@ -5926,7 +5926,8 @@ public static class ReportGenerator
         WarmUp = log.Type == RequestResponseType.Request && warmUp is not null && warmUp.Calls.TryGetValue(log.RequestResponseId, out var mark)
             ? MapWarmUpJson(mark)
             : null,
-        StepPath = stepPath
+        StepPath = stepPath,
+        TestDouble = log.TestDouble
     };
 
     /// <summary>
@@ -5965,6 +5966,10 @@ public static class ReportGenerator
         public Dictionary<string, object?>? WarmUp { get; init; }
 
         public string? StepPath { get; init; }
+
+        /// <summary>What answered the call in its service's place (#190): the call's last member, and only on a marked call.</summary>
+        [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+        public string? TestDouble { get; init; }
     }
 
     /// <summary>A call's warm-up mark in the JSON data files: <c>first</c> names the run's first call only on a call that waited.</summary>
@@ -6311,7 +6316,8 @@ public static class ReportGenerator
                     new XElement("BaselineCalls", xmlMark.BaselineCalls.ToString(CultureInfo.InvariantCulture)),
                     xmlMark.First is { } xmlFirst ? new XElement("First", xmlFirst.ToString()) : null)
                 : null,
-            stepPath != null ? new XElement("StepPath", stepPath) : null
+            stepPath != null ? new XElement("StepPath", stepPath) : null,
+            log.TestDouble is { } xmlDouble ? new XElement("TestDouble", xmlDouble) : null
         );
 
     /// <summary>The step address for the <paramref name="index"/>th interaction of a scenario, if one was worked out.</summary>
@@ -6736,6 +6742,8 @@ public static class ReportGenerator
         }
         if (stepPath is not null)
             AppendYaml(yml, indent + "  StepPath: ", stepPath);
+        if (log.TestDouble is not null)
+            AppendYaml(yml, indent + "  TestDouble: ", log.TestDouble);
         if (log.Headers.Length > 0)
         {
             yml.Append(indent + "  Headers:\n");
@@ -7977,7 +7985,8 @@ public static class ReportGenerator
                             }
                         },
                         ["durationMs"] = new Dictionary<string, object?> { ["type"] = new[] { "number", "null" }, ["description"] = "Wall-clock milliseconds between the request and its response: the capturer's own measurement when the record carried one (durationMs on the NDJSON input), otherwise derived from the two timestamps. Repeated on both halves of the pair; null when the request went unanswered and nothing was measured, when timestamps are absent, or when both records carry the same instant (a call logged after the fact, which measured nothing)." },
-                        ["stepPath"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Which step this call happened under: an index into the scenario's steps, prefixed b for a background step (b0, 0, 1, ...). Null before the first step, and whenever attribution could not be trusted — see the StepAttributionMismatch diagnostic.", ["examples"] = new[] { "0", "b0", "2.1" } }
+                        ["stepPath"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Which step this call happened under: an index into the scenario's steps, prefixed b for a background step (b0, 0, 1, ...). Null before the first step, and whenever attribution could not be trusted — see the StepAttributionMismatch diagnostic.", ["examples"] = new[] { "0", "b0", "2.1" } },
+                        ["testDouble"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "What answered the call in its service's place, when its capturer saw a test double answer it (#190): MSW, WireMock, a handler's type name. Written only on a marked call; an unmarked call is unknown, never real.", ["examples"] = new[] { "MSW", "WireMock" } }
                     }
                 }
             }
@@ -8173,7 +8182,8 @@ public static class ReportGenerator
                             new XElement(xs + "element", new XAttribute("name", "BaselineMs"), NonNegativeDecimal()),
                             new XElement(xs + "element", new XAttribute("name", "BaselineCalls"), new XAttribute("type", "xs:positiveInteger")),
                             new XElement(xs + "element", new XAttribute("name", "First"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0"))))),
-                new XElement(xs + "element", new XAttribute("name", "StepPath"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0"))
+                new XElement(xs + "element", new XAttribute("name", "StepPath"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0")),
+                new XElement(xs + "element", new XAttribute("name", "TestDouble"), new XAttribute("type", "xs:string"), new XAttribute("minOccurs", "0"))
             ));
 
         var scenarioType = new XElement(xs + "complexType",

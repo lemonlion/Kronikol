@@ -67,6 +67,16 @@ public sealed record InteractionRecord
     [JsonConverter(typeof(AnyJsonAsTextConverter))]
     public string? Error { get; init; }
 
+    /// <summary>
+    /// What answered the call in its service's place, when the capturer saw a test double answer it (#190): <c>MSW</c>,
+    /// <c>WireMock</c>, a handler's type name. Write it on the half that knows, usually the response, which is when a mock
+    /// library says it answered; a call either half of which carries it is marked. Leave it out when nothing said so: an
+    /// unmarked call is unknown, never real. A value that is not a string is read as its text.
+    /// </summary>
+    [JsonPropertyName("testDouble")]
+    [JsonConverter(typeof(AnyJsonAsTextConverter))]
+    public string? TestDouble { get; init; }
+
     /// <summary>Chain/trace correlation id shared by every hop of one call chain. Defaults to <see cref="RequestResponseId"/>.</summary>
     [JsonPropertyName("traceId")] public string? TraceId { get; init; }
 
@@ -257,6 +267,7 @@ public sealed record InteractionRecord
         },
         // A failed send's message chain (3.18.0); on the wire from 4.3.0, where it was the first of the gaps 14.1 pinned.
         Error = log.Error,
+        TestDouble = log.TestDouble,
         TraceId = log.TraceId.ToString(),
         RequestResponseId = log.RequestResponseId.ToString(),
         Timestamp = log.Timestamp,
@@ -344,6 +355,7 @@ public sealed record InteractionRecord
             CapturedBy = CapturedBy,
             DurationMs = DurationMs,
             Error = string.IsNullOrWhiteSpace(Error) ? null : Error,
+            TestDouble = string.IsNullOrWhiteSpace(TestDouble) ? null : TestDouble,
         };
     }
 
@@ -535,6 +547,38 @@ public sealed record InteractionRecord
         TestId = testId,
         TestName = testName,
     };
+
+    /// <summary>
+    /// The pair the other <c>Pair</c> builds, for a call a test double answered (#190): both halves carry
+    /// <paramref name="testDouble"/>, what answered in the service's place.
+    /// </summary>
+    public static (InteractionRecord Request, InteractionRecord Response) Pair(
+        string testId,
+        string? testName,
+        string method,
+        string uri,
+        string serviceName,
+        string callerName,
+        string? requestContent,
+        string? responseContent,
+        string? statusCode,
+        InteractionHeader[]? requestHeaders,
+        InteractionHeader[]? responseHeaders,
+        DateTimeOffset? requestTimestamp,
+        DateTimeOffset? responseTimestamp,
+        string? requestResponseId,
+        string? traceId,
+        string? dependencyCategory,
+        string? phase,
+        string? activityTraceId,
+        string? activitySpanId,
+        string? testDouble)
+    {
+        var (request, response) = Pair(testId, testName, method, uri, serviceName, callerName, requestContent, responseContent, statusCode,
+            requestHeaders, responseHeaders, requestTimestamp, responseTimestamp, requestResponseId, traceId, dependencyCategory, phase,
+            activityTraceId, activitySpanId);
+        return (request with { TestDouble = testDouble }, response with { TestDouble = testDouble });
+    }
 
     /// <summary>
     /// Builds the Request/Response pair for one synchronous call — the shape every capturer needs most.

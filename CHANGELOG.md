@@ -4,6 +4,47 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.15.0] - 2026-10-28
+
+The minor part moves (5.14.0 to 5.15.0): a new member on a call, `testDouble`, in the capture format
+(`InteractionRecord.TestDouble`, and an `InteractionRecord.Pair` overload that takes it), on `RequestResponseLog`
+(`TestDouble`) and in every form of the data file; three new `kronikol ingest` options (`--suite`, `--service-id`,
+`--parties`); `doubleCalls` in `kronikol query parties --json`; and a new OTLP export attribute, `kronikol.double`
+(#190 R2, `plans/PARTY_IDENTITY_PLAN.md`). Two fixes ride along, below.
+
+### Added
+
+- **A call can say a test double answered it.** A capturer that saw a double answer a call in its service's place
+  writes `testDouble`, naming what answered (`"MSW"`, `"WireMock"`, a mock handler's type name), on either half of
+  the call; the call takes it from whichever half carries it. A call without it is unknown, never real, and a blank one
+  in a capture marks nothing. It reaches `httpInteractions[].testDouble` in `TestRunReport.json` (the call's last member, written only
+  when set, so a report without marks is the same bytes as before), `TestDouble` in the XML and YAML forms, the
+  schema and the XSD, and the mergeable file, so `kronikol merge` keeps it; a wire and span pair merged by
+  `--merge-duplicates` keeps the wire record's mark, else the span's. The OTLP export writes it as `kronikol.double`.
+  The wiki's Jest recipe marks every response MSW mocked (`response:mocked`) and none it let through.
+- **What the marks say of a party.** A party every call to which is marked is a `double`, `observed`, in the
+  parties table, the report's `parties` block and `kronikol query parties`, on a report that declares nothing too.
+  A party only some of whose calls are marked keeps its kind, and `parties --json` counts the marked ones as
+  `doubleCalls`. Marked calls to a party declared `Real` are a `PartyDeclarationConflict`: each is still a double's
+  answer.
+- **`kronikol ingest --suite <name>`, `--service-id <id>` and `--parties <file>`**, the options an in-process run
+  sets in `ReportConfigurationOptions` (`SuiteName`, `ServiceId`, `PartiesFilePath`). Without `--parties` an ingest
+  finds the parties file as an in-process run does: the file `KRONIKOL_PARTIES` names, else `.kronikol/parties.json` at
+  the root of the repository the ingest runs in. Each option requires its value; a blank `--suite` or `--service-id`
+  is refused, and so is a `--parties` file that is not there. **A suite scopes every scenario's `stableId`**, so the
+  first ingest given one starts a new history stream: its ids differ from those of every ingest before it, which had
+  none. Choose the name once and keep it.
+
+### Fixed
+
+- **A call in the data file reads only its own members.** `kronikol query` read any value under a call as the call's
+  own member, at any depth, so an object under a member (a capturer's `testDouble` written as one, say) holding a
+  `serviceName` renamed the call. A call now reads its own members only, as a scenario has since 4.16.3.
+- **A party whose kind is known is no longer a candidate for the service under test.** The inference picked the
+  party the test called most, and when that party's kind was already known (declared, or a double its marks showed)
+  it kept it and inferred nothing, so a test that called a stub more often than its service left the service
+  `unknown`. The inference now picks among the parties whose kind is unknown.
+
 ## [5.14.0] - 2026-10-27
 
 The minor part moves (5.13.0 to 5.14.0): new options (`ServiceId`, `Parties`, `PartiesFilePath`), new public types

@@ -348,6 +348,9 @@ internal sealed class InteractionEntry
     public string? ActivityTraceId { get; set; }
     public string? ActivitySpanId { get; set; }
     public string? CapturedBy { get; set; }
+
+    /// <summary>What answered the call in its service's place, when its capturer saw a test double answer it (#190).</summary>
+    public string? TestDouble { get; set; }
     public bool IsUserAction { get; set; }
 
     /// <summary>The <c>b:</c> address of this interaction's body, or null when it carried none.</summary>

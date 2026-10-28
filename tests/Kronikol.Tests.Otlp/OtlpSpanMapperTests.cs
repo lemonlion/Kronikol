@@ -283,6 +283,21 @@ public class OtlpSpanMapperTests
         Assert.Null(plain.Attribute("kronikol.captured.by"));
     }
 
+    // #190 R2: what answered the call in its service's place, beside kronikol.captured.by; not kronikol.test.*, which is
+    // the test's identity. Read from either half, as a capture may mark only the response.
+    [Fact]
+    public void A_call_a_test_double_answered_is_exported_with_what_answered_it()
+    {
+        var (request, response) = Pair();
+        response.TestDouble = "WireMock";
+
+        var span = OtlpSpanMapper.Map(request, response, Options(), ExportTime);
+
+        Assert.Equal("WireMock", span.Attribute("kronikol.double"));
+        var (req2, resp2) = Pair();
+        Assert.Null(OtlpSpanMapper.Map(req2, resp2, Options(), ExportTime).Attribute("kronikol.double"));
+    }
+
     // ------------------------------------------------------------------ verdict
 
     /// <summary>

@@ -229,6 +229,9 @@ public static class OtlpSpanMapper
             attributes.Add(OtlpExportAttribute.Str("kronikol.dependency.category", primary.DependencyCategory));
         if (!string.IsNullOrEmpty(primary.CapturedBy))
             attributes.Add(OtlpExportAttribute.Str("kronikol.captured.by", primary.CapturedBy));
+        // What answered the call in its service's place (#190), from either half: a capture may mark only the response.
+        if ((primary.TestDouble ?? response?.TestDouble) is { Length: > 0 } testDouble)
+            attributes.Add(OtlpExportAttribute.Str("kronikol.double", testDouble));
 
         if (options.IncludeBodies)
         {

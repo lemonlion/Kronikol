@@ -166,6 +166,9 @@ Each is what the architecture would get wrong without a change, or what it gets 
 > in `.kronikol/parties.json`; the table has a verb of its own, `kronikol query parties`, and `services` gains `id` and
 > `kind` only on a report that declares something; there is no `graph` verb (S2). Read that plan for what was built.
 > This section stays as the ask.
+>
+> From 5.15.0 a capturer can also mark each call a test double answered (`testDouble`), and a party every call to
+> which is marked is a `double`, `observed`. Q4 still holds where it matters: nothing is inferred from a port.
 
 **`ReportConfigurationOptions.ServiceId`** (`string?`, default `null`): the canonical, stable identity of
 the service under test, lower-case, the string every other service uses for it (`orders-api`). Distinct

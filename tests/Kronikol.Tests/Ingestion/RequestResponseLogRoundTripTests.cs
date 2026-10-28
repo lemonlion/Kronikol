@@ -46,6 +46,8 @@ public class RequestResponseLogRoundTripTests
         nameof(RequestResponseLog.RequestResponseId),
         nameof(RequestResponseLog.ServiceName),
         nameof(RequestResponseLog.StatusCode), // an HttpStatusCode as its number, a custom label as text
+        // #190 R2 (5.15.0): what answered in the service's place, when the capturer saw a test double answer.
+        nameof(RequestResponseLog.TestDouble),
         nameof(RequestResponseLog.TestId),
         nameof(RequestResponseLog.TestName),
         nameof(RequestResponseLog.Timestamp),
@@ -185,6 +187,7 @@ public class RequestResponseLogRoundTripTests
             IsUserAction = true,
             CapturedBy = "wire",
             DurationMs = 123.4,
+            TestDouble = "WireMock",
         };
 
     /// <summary>
@@ -211,6 +214,7 @@ public class RequestResponseLogRoundTripTests
             CapturedBy = "span",
             DurationMs = 4.5,
             Error = "a redaction hook's note",
+            TestDouble = "MSW",
         },
     ];
 

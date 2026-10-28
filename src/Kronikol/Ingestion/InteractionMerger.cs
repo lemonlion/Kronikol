@@ -322,6 +322,8 @@ public static class InteractionMerger
         // A wire record the phase pass could not place (it named no test yet) takes its twin's phase, as it takes its
         // test: until #130's R2 the merged call kept none.
         Phase = wire.ResolvedPhase == TestPhase.Unknown ? span.Phase ?? wire.Phase : wire.Phase,
+        // What answered in the service's place, as either view saw it: the wire's when it said, else the span's (#190).
+        TestDouble = wire.TestDouble ?? span.TestDouble,
         CapturedBy = MergedSource,
     };
 

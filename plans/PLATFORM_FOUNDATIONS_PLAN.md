@@ -405,6 +405,14 @@ They must be in before `captureFormatVersion 1` freezes (§8.1, roadmap 14.5): a
 stub's answer from a dependency's, or join one report's `payments` to another's `Payments API`, is the
 class of lie a frozen contract would carry for a version. Not green-lit; roadmap D23.
 
+**Amended 2026-10-27 by `PARTY_IDENTITY_PLAN.md` (#190), built as 5.14.0 and 5.15.0.** The party table stays out of
+the stream: when F4's options file lands, `serviceId` is an option like any other and `parties` takes the shape
+`.kronikol/parties.json` already has (rows of `name`, `id`, `kind` and `note`). One field is a stream field, and the
+only one: `testDouble` on an interaction record, an optional string naming what answered the call in its service's
+place (`MSW`, `WireMock`), written only by a capturer that saw a test double answer. A call without it is unknown,
+never real. It is a string and stays one, since every released scanner reads a member under a call as the call's own.
+It entered before the freeze, so `captureFormatVersion 1` carries it.
+
 ### 4.8 Go's asks (added 2026-09-28)
 
 `GO_PLATFORM_PLAN.md` §4 asks the contract for five things and the renderer for two, each found by

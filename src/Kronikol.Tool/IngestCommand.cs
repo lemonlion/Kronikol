@@ -66,6 +66,10 @@ internal static class IngestCommand
         var cleanAttachments = false;
         var hostDiagnostics = new List<DiagnosticEntry>();
         var spanInputs = new List<string>();
+        // Who each party is (#190): the run's options, as an in-process run's ReportConfigurationOptions say it.
+        string? serviceId = null;
+        string? partiesFile = null;
+        string? suite = null;
 
         for (var i = 0; i < args.Count; i++)
         {
@@ -307,6 +311,22 @@ internal static class IngestCommand
                     if (++i >= args.Count) { error.WriteLine("Missing value for " + arg); return 2; }
                     spanInputs.Add(args[i]);
                     break;
+                // Each takes its value whatever it looks like: none is optional, as --attribute-by-window's is, which would
+                // read a following input path as the value.
+                case "--service-id":
+                    if (++i >= args.Count) { error.WriteLine("Missing value for " + arg); return 2; }
+                    if (string.IsNullOrWhiteSpace(args[i])) { error.WriteLine("--service-id must not be blank"); return 2; }
+                    serviceId = args[i].Trim();
+                    break;
+                case "--parties":
+                    if (++i >= args.Count) { error.WriteLine("Missing value for " + arg); return 2; }
+                    partiesFile = args[i];
+                    break;
+                case "--suite":
+                    if (++i >= args.Count) { error.WriteLine("Missing value for " + arg); return 2; }
+                    if (string.IsNullOrWhiteSpace(args[i])) { error.WriteLine("--suite must not be blank"); return 2; }
+                    suite = args[i].Trim();
+                    break;
                 case "--diagnostic":
                     if (++i >= args.Count) { error.WriteLine("Missing value for " + arg); return 2; }
                     if (!TryParseDiagnostic(args[i], out var diagnostic))
@@ -352,6 +372,17 @@ internal static class IngestCommand
 
         var setup = setupWindow is not { } window ? null
             : setupName is null ? new SetupWindow(window.Start, window.End) : new SetupWindow(window.Start, window.End, setupName);
+
+        if (partiesFile is not null)
+        {
+            var partiesFull = Path.GetFullPath(partiesFile);
+            if (!File.Exists(partiesFull))
+            {
+                error.WriteLine($"Parties file not found: {partiesFile}");
+                return 1;
+            }
+            partiesFile = partiesFull;
+        }
 
         var files = CliInputs.Resolve(inputs, InteractionPatterns, error);
         if (tests is not null)
@@ -482,6 +513,13 @@ internal static class IngestCommand
         options.CapitaliseTitles = capitalise;
         if (title is not null)
             options.TestRunReportTitle = title;
+        // A suite scopes every stable id, so an ingest given one starts a stream of its own in history (#190).
+        if (suite is not null)
+            options.SuiteName = suite;
+        options.ServiceId = serviceId;
+        if (partiesFile is not null)
+            files.Remove(partiesFile); // a parties file inside an input directory is not an interaction capture
+        options.PartiesFilePath = partiesFile;
 
         if (attachmentsBase is not null && !Directory.Exists(attachmentsBase))
         {
@@ -773,6 +811,11 @@ internal static class IngestCommand
         w.WriteLine("  -o, --output <dir>       Output directory (default: ./Reports).");
         w.WriteLine("  --render <mode>          browserjs (default, needs internet at view time) | nodejs | server; local is library-only.");
         w.WriteLine("  -t, --title <text>       Report title.");
+        w.WriteLine("  --suite <name>           The suite the run belongs to. It scopes every scenario's stableId, so an ingest");
+        w.WriteLine("                           given one starts a history stream of its own (default: none).");
+        w.WriteLine("  --service-id <id>        The service the run is about: the report's serviceId (5.15.0).");
+        w.WriteLine("  --parties <file>         A parties file (partiesFormatVersion 1) saying who each party is; without it,");
+        w.WriteLine("                           .kronikol/parties.json above the directory the ingest runs in, or $KRONIKOL_PARTIES.");
         w.WriteLine("  --feature <name>         Feature name for tests without one (default: Ingested).");
         w.WriteLine("  --collapse | --no-collapse   Collapse consecutive identical calls into a loop fragment (default: on).");
         w.WriteLine("  --collapse-threshold <n> Minimum run length to collapse (default: 2).");

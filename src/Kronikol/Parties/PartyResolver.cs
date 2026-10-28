@@ -3,8 +3,8 @@ using Kronikol.Reports;
 
 namespace Kronikol.Parties;
 
-/// <summary>One call as the resolver reads it: its two parties, its categories and how it got its scenario.</summary>
-internal readonly record struct PartyCall(string Caller, string Service, string? Category = null, string? CallerCategory = null, string? AttributionSource = null);
+/// <summary>One call as the resolver reads it: its two parties, its categories, how it got its scenario, and what answered it in its service's place when a capturer saw a test double do so.</summary>
+internal readonly record struct PartyCall(string Caller, string Service, string? Category = null, string? CallerCategory = null, string? AttributionSource = null, string? TestDouble = null);
 
 /// <summary>
 /// What the run declares (<see cref="ReportConfigurationOptions.ServiceId"/>, <see cref="ReportConfigurationOptions.Parties"/>)
@@ -72,6 +72,13 @@ internal static class PartyResolver
 
         PartyKind? Declared(string name) => (fromOptions.TryGetValue(name, out var o) ? o.Kind : null) ?? (fromFile.TryGetValue(name, out var f) ? f.Kind : null);
 
+        // A party every call to which a test double answered is a double, as its capturers saw (#190, R2). One only some of
+        // whose calls were so answered keeps its kind: the parties verb counts them.
+        var marked = all.Where(c => c.TestDouble is not null).GroupBy(c => c.Service, StringComparer.Ordinal)
+            .ToDictionary(g => g.Key, g => (Count: g.Count(), By: g.Select(c => c.TestDouble!).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray()), StringComparer.Ordinal);
+        var calledTimes = all.GroupBy(c => c.Service, StringComparer.Ordinal).ToDictionary(g => g.Key, g => g.Count(), StringComparer.Ordinal);
+        bool AllMarked(string name) => marked.TryGetValue(name, out var m) && m.Count == calledTimes.GetValueOrDefault(name);
+
         var kinds = new Dictionary<string, (PartyKind Kind, PartyKindSource? Source)>(StringComparer.Ordinal);
         var inferredTests = InferTests(all);
         foreach (var name in names)
@@ -79,6 +86,7 @@ internal static class PartyResolver
             kinds[name] = Declared(name) is { } declared ? (declared, PartyKindSource.Declared)
                 : observedTests.Contains(name) ? (PartyKind.Test, PartyKindSource.Observed)
                 : observedSubjects.ContainsKey(name) ? (PartyKind.UnderTest, PartyKindSource.Observed)
+                : AllMarked(name) ? (PartyKind.Double, PartyKindSource.Observed)
                 : inferredTests.Contains(name) ? (PartyKind.Test, PartyKindSource.Inferred)
                 : (PartyKind.Unknown, null);
         }
@@ -88,9 +96,8 @@ internal static class PartyResolver
         if (!kinds.Values.Any(k => k.Kind == PartyKind.UnderTest))
         {
             var tests = names.Where(n => kinds[n].Kind == PartyKind.Test).ToHashSet(StringComparer.Ordinal);
-            foreach (var subject in InferSubjects(all, tests))
-                if (kinds[subject] is (PartyKind.Unknown, null))
-                    kinds[subject] = (PartyKind.UnderTest, PartyKindSource.Inferred);
+            foreach (var subject in InferSubjects(all, tests, name => kinds[name] is (PartyKind.Unknown, null)))
+                kinds[subject] = (PartyKind.UnderTest, PartyKindSource.Inferred);
         }
 
         var serviceId = string.IsNullOrWhiteSpace(declarations.ServiceId) ? null : declarations.ServiceId;
@@ -115,6 +122,14 @@ internal static class PartyResolver
             var note = option?.Note ?? file?.Note ?? (kinds[name].Source == PartyKindSource.Observed && observedSubjects.TryGetValue(name, out var application) ? application : null);
             // A party declared unknown keeps the inference off it, and like any unknown carries no source.
             rows.Add(new Party(name, id, kinds[name].Kind, kinds[name].Kind == PartyKind.Unknown ? null : kinds[name].Source, note));
+        }
+
+        foreach (var name in names)
+        {
+            if (kinds[name] is (PartyKind.Real, PartyKindSource.Declared) && marked.TryGetValue(name, out var marks))
+                findings.Add(new DiagnosticEntry(DiagnosticKind.PartyDeclarationConflict,
+                    $"\"{name}\" is declared real and {marks.Count} of its {calledTimes.GetValueOrDefault(name)} calls were answered by a test double "
+                    + $"({string.Join(", ", marks.By)}); each such call is still a double's answer, so check the declaration or the capture."));
         }
 
         var hostCalls = all.Where(c => string.Equals(c.AttributionSource, RequestHeader, StringComparison.Ordinal) && kinds.TryGetValue(c.Caller, out var k) && k.Kind == PartyKind.Test).ToList();
@@ -216,12 +231,12 @@ internal static class PartyResolver
     /// The subjects among the test parties' callees, stores left out: one that makes calls of its own is preferred, then
     /// the one with the most calls; a second is kept only when it too makes calls and takes a quarter of the tests' calls.
     /// </summary>
-    private static List<string> InferSubjects(List<PartyCall> calls, HashSet<string> tests)
+    private static List<string> InferSubjects(List<PartyCall> calls, HashSet<string> tests, Func<string, bool> open)
     {
         var made = calls.Where(c => tests.Contains(c.Caller)).ToList();
         var callers = new HashSet<string>(calls.Select(c => c.Caller), StringComparer.Ordinal);
         var eligible = made.GroupBy(c => c.Service, StringComparer.Ordinal)
-            .Where(g => !g.Any(c => IsStore(c.Category)))
+            .Where(g => open(g.Key) && !g.Any(c => IsStore(c.Category)))
             .Select(g => (Name: g.Key, MakesCalls: callers.Contains(g.Key), Count: g.Count()))
             .OrderByDescending(e => e.MakesCalls).ThenByDescending(e => e.Count).ThenByDescending(e => e.Name, StringComparer.Ordinal)
             .ToList();

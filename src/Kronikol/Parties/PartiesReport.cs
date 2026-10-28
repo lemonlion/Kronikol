@@ -15,9 +15,10 @@ internal static class PartiesReport
     /// A call whose test id names none of the run's scenarios is in no scenario and not in the background, so the report
     /// leaves it out, and its names are no parties of the report either.
     /// </summary>
-    internal static PartyTable Resolve(ReportConfigurationOptions options, IReadOnlyList<Reports.Feature> features, IEnumerable<RequestResponseLog> logs, string reportsDirectory)
+    internal static PartyTable Resolve(ReportConfigurationOptions options, IReadOnlyList<Reports.Feature> features, IEnumerable<RequestResponseLog> logs, string reportsDirectory,
+        Func<string, string?>? getEnv = null, string? baseDirectory = null)
     {
-        var path = PartiesFile.Locate(options.PartiesFilePath, reportsDirectory);
+        var path = Locate(options, reportsDirectory, getEnv, baseDirectory);
         var (rows, findings) = path is null ? ([], []) : PartiesFile.Read(path);
         var declarations = new PartyDeclarations(options.ServiceId?.Trim(), [.. options.Parties ?? []], rows, findings);
         var carried = new HashSet<string>(features.SelectMany(f => f.Scenarios ?? []).Select(s => s.Id), StringComparer.Ordinal) { TestIdentityScope.UnknownTestId };
@@ -28,10 +29,11 @@ internal static class PartiesReport
     /// The names the run declares test doubles (options over the parties file, name by name), for the diagrams'
     /// stereotype (#190, Q11); null when it declares none, which draws nothing new.
     /// </summary>
-    internal static IReadOnlySet<string>? DeclaredDoubles(ReportConfigurationOptions options, string reportsDirectory)
+    internal static IReadOnlySet<string>? DeclaredDoubles(ReportConfigurationOptions options, string reportsDirectory,
+        Func<string, string?>? getEnv = null, string? baseDirectory = null)
     {
         var kinds = new Dictionary<string, PartyKind>(StringComparer.Ordinal);
-        if (PartiesFile.Locate(options.PartiesFilePath, reportsDirectory) is { } path)
+        if (Locate(options, reportsDirectory, getEnv, baseDirectory) is { } path)
             foreach (var row in PartiesFile.Read(path).Rows)
                 if (row.Kind is { } kind && !string.IsNullOrWhiteSpace(row.Name))
                     kinds[row.Name] = kind;
@@ -42,10 +44,18 @@ internal static class PartiesReport
         return doubles.Count == 0 ? null : doubles;
     }
 
+    /// <summary>
+    /// The run's parties file. <paramref name="baseDirectory"/> is where it is looked for first, then above the reports
+    /// directory: an ingest passes the directory it runs in, as it does for the history ledger, and a test run its own
+    /// base directory.
+    /// </summary>
+    private static string? Locate(ReportConfigurationOptions options, string reportsDirectory, Func<string, string?>? getEnv, string? baseDirectory) =>
+        PartiesFile.Locate(options.PartiesFilePath, reportsDirectory, getEnv ?? System.Environment.GetEnvironmentVariable, baseDirectory ?? AppContext.BaseDirectory);
+
     /// <summary>One call a pair: the request of each, diagram markers left out, as the data file's interactions list them.</summary>
     internal static IEnumerable<PartyCall> CallsOf(IEnumerable<RequestResponseLog> logs) =>
         logs.Where(l => l is not null && l.Type == RequestResponseType.Request && !l.IsDiagramMarker)
-            .Select(l => new PartyCall(l.CallerName, l.ServiceName, l.DependencyCategory, l.CallerDependencyCategory, l.AttributionSource?.ToString()));
+            .Select(l => new PartyCall(l.CallerName, l.ServiceName, l.DependencyCategory, l.CallerDependencyCategory, l.AttributionSource?.ToString(), l.TestDouble));
 
     /// <summary>A kind as the data file writes it: <c>test</c>, <c>underTest</c>, <c>real</c>, <c>double</c>, <c>unknown</c>.</summary>
     internal static string KindName(PartyKind kind) => kind switch

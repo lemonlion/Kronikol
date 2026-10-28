@@ -315,7 +315,7 @@ public class TestRunReportSchemaContractTests
             new RequestResponseLog(TestId, TestId, HttpMethod.Post, "{\"item\":\"Widget\"}", new Uri("http://orders/api/orders"),
                 [("accept", "application/json"), ("x-empty", null)], "orders", "test", RequestResponseType.Request, traceId, pairId, false,
                 MetaType: RequestResponseMetaType.Default, DependencyCategory: "http", CallerDependencyCategory: "test")
-            { Timestamp = at, ActivityTraceId = "4bf92f3577b34da6a3ce929d0e0e4736", ActivitySpanId = "00f067aa0ba902b7", CapturedBy = "wire", Phase = TestPhase.Action },
+            { Timestamp = at, ActivityTraceId = "4bf92f3577b34da6a3ce929d0e0e4736", ActivitySpanId = "00f067aa0ba902b7", CapturedBy = "wire", Phase = TestPhase.Action, TestDouble = "WireMock" },
             new RequestResponseLog(TestId, TestId, HttpMethod.Post, "{\"total\":3902}", new Uri("http://orders/api/orders"), [],
                 "orders", "test", RequestResponseType.Response, traceId, pairId, false, HttpStatusCode.Created)
             { Timestamp = at.AddMilliseconds(35) },
