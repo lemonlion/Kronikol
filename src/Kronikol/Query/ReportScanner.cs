@@ -576,12 +576,13 @@ internal static class ReportScanner
 
         /// <summary>
         /// Whether the object starting here is a compressed payload: null when it is not, else whether it is a
-        /// diagram. Only the two places a writer puts one are recognised, an interaction's <c>content</c> and an
+        /// diagram. Only the places a writer puts one are recognised: an interaction's <c>content</c>, a scenario's or the
+        /// root background block's (whose statement heads the service card reads, plans/SERVICE_CARD_PLAN.md A5), and an
         /// entry of its scenario's <c>diagrams</c>.
         /// </summary>
         private bool? StartsWrapper()
         {
-            if (_interaction is not null && At("httpInteractions", "#") && Key == "content")
+            if (_interaction is not null && (At("httpInteractions", "#") || InBackgroundCall()) && Key == "content")
                 return false;
             if (_scenario is not null && _interaction is null && At("scenarios", "#", "diagrams"))
                 return true;

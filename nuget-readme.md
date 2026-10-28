@@ -52,7 +52,7 @@ See the [Quick Start guide](https://github.com/lemonlion/Kronikol/wiki/Quick-Sta
 | Proxy tap (out-of-process capture for uninstrumentable backends) | `Kronikol.Extensions.ProxyTap` |
 | OTLP tap + export (OTel spans in, Kronikol captures out as spans) | `Kronikol.Extensions.Otlp` |
 | Playwright (browser-driven E2E identity) | `Kronikol.Playwright` |
-| CLI (`kronikol merge`, `kronikol ingest`, `kronikol query`, `kronikol export`, `kronikol ctrf`, `kronikol history`, `kronikol init-agents`) | `Kronikol.Tool` |
+| CLI (`kronikol merge`, `kronikol ingest`, `kronikol query`, `kronikol export`, `kronikol ctrf`, `kronikol card`, `kronikol history`, `kronikol init-agents`) | `Kronikol.Tool` |
 
 ## Use Cases
 
@@ -77,6 +77,7 @@ kronikol query trace    ./Reports 4bf92f3577b34da6  # follow one W3C trace acros
 kronikol query grep     ./Reports "4173" --values   # where a wrong value entered the system
 kronikol query failures ./Reports --json            # the same answer as one envelope, for scripts
 kronikol ctrf           ./Reports --out ctrf-report.json  # the run in Common Test Report Format, for CI tooling
+kronikol card           ./Reports -o service.json         # the service card: parties, operations and why, for an indexer
 ```
 
 With nothing installed and no network, every run's `query.cs` answers the same: from the reports directory, `dotnet run --file query.cs -- failures .` runs the engine that wrote the report (it needs the .NET 10 SDK).

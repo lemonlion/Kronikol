@@ -1,0 +1,80 @@
+pair | equal behaviour | hash holds | sizes (bytes)
+A-vs-B bddfy-in-memory | yes | yes | 166553, 166583
+A-vs-B lightbdd-in-memory | yes | yes | 166803, 166830
+A-vs-B nunit-in-memory | yes | yes | 168078, 168111
+A-vs-B reqnroll-in-docker | yes | yes | 164782, 164782
+A-vs-B reqnroll-in-memory | yes | yes | 174804, 174841
+A-vs-B tunit-in-memory | yes | yes | 166076, 166106
+A-vs-B xunit-external-sut | yes | yes | 96544, 96544
+A-vs-B xunit-in-memory | yes | yes | 170465, 170465
+L1-vs-L2 reqnroll-in-memory | yes | yes | 172408, 172370
+L1-vs-L2 xunit-in-memory | yes | yes | 169839, 169837
+equal on 10 of 10
+
+lane of run 40491266394 | against the corrected probe card
+bddfy-external-sut | parties 2/2 edges 1/1 ops 70/74 messages 0/0 exposes 70/74 scenarios 180/180 diffs 0
+bddfy-in-docker | parties 18/18 edges 20/20 ops 162/168 messages 17/17 exposes 75/81 scenarios 211/211 diffs 0
+bddfy-in-memory | parties 18/18 edges 20/20 ops 173/179 messages 19/19 exposes 75/81 scenarios 212/212 diffs 0
+lightbdd-external-sut | parties 2/2 edges 1/1 ops 70/74 messages 0/0 exposes 70/74 scenarios 187/187 diffs 0
+lightbdd-in-docker | parties 18/18 edges 20/20 ops 162/168 messages 17/17 exposes 75/81 scenarios 187/187 diffs 0
+lightbdd-in-memory | parties 18/18 edges 20/20 ops 173/179 messages 19/19 exposes 75/81 scenarios 187/187 diffs 0
+nunit-external-sut | parties 2/2 edges 1/1 ops 70/74 messages 0/0 exposes 70/74 scenarios 212/212 diffs 0
+nunit-in-docker | parties 18/18 edges 20/20 ops 162/168 messages 17/17 exposes 75/81 scenarios 212/212 diffs 0
+nunit-in-memory | parties 18/18 edges 20/20 ops 173/179 messages 19/19 exposes 75/81 scenarios 212/212 diffs 0
+reqnroll-external-sut | parties 2/2 edges 1/1 ops 70/73 messages 0/0 exposes 70/73 scenarios 214/214 diffs 0
+reqnroll-in-docker | parties 18/18 edges 20/20 ops 162/168 messages 17/17 exposes 75/81 scenarios 214/214 diffs 0
+reqnroll-in-memory | parties 18/18 edges 20/20 ops 173/179 messages 19/19 exposes 75/81 scenarios 214/214 diffs 0
+tunit-external-sut | parties 2/2 edges 1/1 ops 70/74 messages 0/0 exposes 70/74 scenarios 212/212 diffs 0
+tunit-in-docker | parties 18/18 edges 20/20 ops 165/171 messages 17/17 exposes 75/81 scenarios 212/212 diffs 0
+tunit-in-memory | parties 18/18 edges 20/20 ops 174/180 messages 19/19 exposes 75/81 scenarios 212/212 diffs 0
+xunit-external-sut | parties 2/2 edges 1/1 ops 70/74 messages 0/0 exposes 70/74 scenarios 212/212 diffs 0
+xunit-in-docker | parties 18/18 edges 20/20 ops 162/168 messages 17/17 exposes 75/81 scenarios 212/212 diffs 0
+xunit-in-memory | parties 18/18 edges 20/20 ops 173/179 messages 19/19 exposes 75/81 scenarios 212/212 diffs 0
+
+Again on 2026-10-28 after the rebase onto 5.17.0, with the operation key #192's CallOperation.Parts (query keys off):
+
+pair | equal behaviour | hash holds | sizes (bytes)
+A-vs-B bddfy-in-memory | yes | yes | 171142, 171172
+A-vs-B lightbdd-in-memory | yes | yes | 171404, 171431
+A-vs-B nunit-in-memory | yes | yes | 172669, 172705
+A-vs-B reqnroll-in-docker | yes | yes | 173117, 173117
+A-vs-B reqnroll-in-memory | yes | yes | 179398, 179435
+A-vs-B tunit-in-memory | yes | yes | 170667, 170697
+A-vs-B xunit-external-sut | yes | yes | 98130, 98130
+A-vs-B xunit-in-memory | yes | yes | 175056, 175056
+L1-vs-L2 reqnroll-in-memory | yes | yes | 175470, 175432
+L1-vs-L2 xunit-in-memory | yes | yes | 172911, 172909
+equal on 10 of 10
+
+lane of run 40491266394 | against the corrected probe card
+bddfy-external-sut | parties 2/2 edges 1/1 ops 74/74 messages 0/0 exposes 74/74 scenarios 180/180 diffs 0
+bddfy-in-docker | parties 18/18 edges 20/20 ops 181/168 messages 17/17 exposes 81/81 scenarios 211/211 diffs 1
+bddfy-in-memory | parties 18/18 edges 20/20 ops 184/179 messages 19/19 exposes 81/81 scenarios 212/212 diffs 1
+lightbdd-external-sut | parties 2/2 edges 1/1 ops 74/74 messages 0/0 exposes 74/74 scenarios 187/187 diffs 0
+lightbdd-in-docker | parties 18/18 edges 20/20 ops 181/168 messages 17/17 exposes 81/81 scenarios 187/187 diffs 1
+lightbdd-in-memory | parties 18/18 edges 20/20 ops 184/179 messages 19/19 exposes 81/81 scenarios 187/187 diffs 1
+nunit-external-sut | parties 2/2 edges 1/1 ops 74/74 messages 0/0 exposes 74/74 scenarios 212/212 diffs 0
+nunit-in-docker | parties 18/18 edges 20/20 ops 181/168 messages 17/17 exposes 81/81 scenarios 212/212 diffs 1
+nunit-in-memory | parties 18/18 edges 20/20 ops 184/179 messages 19/19 exposes 81/81 scenarios 212/212 diffs 1
+reqnroll-external-sut | parties 2/2 edges 1/1 ops 73/73 messages 0/0 exposes 73/73 scenarios 214/214 diffs 0
+reqnroll-in-docker | parties 18/18 edges 20/20 ops 181/168 messages 17/17 exposes 81/81 scenarios 214/214 diffs 1
+reqnroll-in-memory | parties 18/18 edges 20/20 ops 184/179 messages 19/19 exposes 81/81 scenarios 214/214 diffs 1
+tunit-external-sut | parties 2/2 edges 1/1 ops 74/74 messages 0/0 exposes 74/74 scenarios 212/212 diffs 0
+tunit-in-docker | parties 18/18 edges 20/20 ops 184/171 messages 17/17 exposes 81/81 scenarios 212/212 diffs 1
+tunit-in-memory | parties 18/18 edges 20/20 ops 185/180 messages 19/19 exposes 81/81 scenarios 212/212 diffs 1
+xunit-external-sut | parties 2/2 edges 1/1 ops 74/74 messages 0/0 exposes 74/74 scenarios 212/212 diffs 0
+xunit-in-docker | parties 18/18 edges 20/20 ops 181/168 messages 17/17 exposes 81/81 scenarios 212/212 diffs 1
+xunit-in-memory | parties 18/18 edges 20/20 ops 184/179 messages 19/19 exposes 81/81 scenarios 212/212 diffs 1
+
+Every operation that differs from the corrected probe cards is one of 5.17.0's two statement-head fixes, which the
+probes predate: EF Core's SQL Server prologue (SET IMPLICIT_TRANSACTIONS OFF;) is skipped, so the statement after it
+is the head (the in-docker lanes' SQL Server calls), and a document whose top-level query member is a string has
+that string templated as a statement (BigQuery's /query, Cosmos DB's /colls/orders), where the probes wrote {v}.
+xunit-in-docker: 18 operations only in this card, 5 only in the probe's; xunit-in-memory: 8 and 3. GraphQL no longer
+differs on any lane: the key names the operation, as the probes did.
+
+On 5.20.0, the card's parties, origin and cause swapped onto #192's PartyTable (OfReport, OriginOf, CauseOf): the
+same 38 cards written before and after the swap are byte-identical, 38 of 38, and the pairs again equal on 10 of
+10. The 19 cards the example lanes wrote at their run end (R2, built on 5.18.0) keep identical behaviour parts
+when `kronikol card` writes them again after the swap; only run.kronikolVersion, the card writer's, moved.
+

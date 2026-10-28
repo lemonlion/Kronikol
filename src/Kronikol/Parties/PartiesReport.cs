@@ -7,6 +7,11 @@ namespace Kronikol.Parties;
 /// A run's parties as the report carries them (#190): resolved once from the run's calls, its options, the parties
 /// file and the test clients Kronikol built, and written as <c>serviceId</c> and <c>parties</c> in each form of the
 /// data file, only when the run declared something.
+///
+/// <para>The service card never calls this: it reads the block the report carries, else infers over the report's calls
+/// (<see cref="CallGraph.GraphParties"/>), so the card a run writes and the one <c>kronikol card</c> writes from its data
+/// file are the same. What the run observed of its test clients reaches the card only through the block, that is only
+/// when the run declares something (plans/SERVICE_CARD_PLAN.md, Q15).</para>
 /// </summary>
 internal static class PartiesReport
 {

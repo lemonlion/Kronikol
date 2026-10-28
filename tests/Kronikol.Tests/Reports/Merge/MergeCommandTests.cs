@@ -159,6 +159,33 @@ public class MergeCommandTests
         }
     }
 
+    // The service card (`kronikol card -o Reports/service.json`, and every run's from #191's R2), and the copy a failed
+    // write of any of these leaves under its name with a 2 before the extension (ReportGenerator.WriteFile's salvage):
+    // none is a report, and the reader failed the whole merge on the first one.
+    [Theory]
+    [InlineData("service.json")]
+    [InlineData("service2.json")]
+    [InlineData("ctrf-report2.json")]
+    [InlineData("History.run2.json")]
+    public void A_sweep_skips_the_card_and_the_copy_a_failed_write_leaves(string name)
+    {
+        var (dir, _, _, _) = AReportsDirectoryWithWhatARunWritesBesideIt();
+        try
+        {
+            File.WriteAllText(Path.Combine(dir, name), "{\"formatVersion\":1}");
+            var error = new StringWriter();
+
+            var swept = MergeCommand.ResolveInputFiles([dir], error);
+
+            Assert.Equal([Path.Combine(dir, "TestRunReport.json")], swept);
+            Assert.Contains(name, error.ToString());
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
+
     [Fact]
     public void Merge_still_refuses_such_a_file_when_it_is_named_rather_than_found()
     {

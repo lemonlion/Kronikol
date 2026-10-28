@@ -747,6 +747,16 @@ Given a report page instead, `kronikol decode TestRunReport.html -o plain.html` 
 nothing in them, and the plain page is the same report, which a browser opens as it is. To answer a question about the
 run, the verbs above still read the data file, never the page.
 
+## What the service talks to: `kronikol card`
+
+`kronikol card <report>` (5.21.0; run it alone for its options) writes the run's service card, `service.json`, from
+any form the query reads: the parties the run saw, every operation between them with the statuses it answered, the
+messages the service published and consumed, and for each operation whether the test made it, the service made it
+while serving a request, or it was made in the background. `-o service.json` writes it to a file. Its `behaviour` part
+changes when the service's behaviour does (a Kronikol upgrade that records more moves it too) and `behaviourHash` is
+its SHA-256, so an indexer compares runs by the hash; `run` holds what moves every run (counts, the run's id, one example address per operation, which the verbs
+above open). A question about one run is still the verbs' to answer.
+
 ## Exit codes
 
 | Code | Meaning |

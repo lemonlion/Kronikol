@@ -84,6 +84,16 @@
 		<InternalsVisibleTo Include="Kronikol.Extensions.SNS" />
 		<InternalsVisibleTo Include="Kronikol.Extensions.SQS" />
 		<InternalsVisibleTo Include="Kronikol.Extensions.StorageQueues" />
+		<!-- MessageTable and CallGraphBuilder: each broker package's tests hold its row of the service card's message table
+		     to the calls its tracker records (Kronikol.Tests.Kafka, listed above, does too) -->
+		<InternalsVisibleTo Include="Kronikol.Tests.EventBridge" />
+		<InternalsVisibleTo Include="Kronikol.Tests.EventHubs" />
+		<InternalsVisibleTo Include="Kronikol.Tests.MassTransit" />
+		<InternalsVisibleTo Include="Kronikol.Tests.PubSub" />
+		<InternalsVisibleTo Include="Kronikol.Tests.ServiceBus" />
+		<InternalsVisibleTo Include="Kronikol.Tests.SNS" />
+		<InternalsVisibleTo Include="Kronikol.Tests.SQS" />
+		<InternalsVisibleTo Include="Kronikol.Tests.StorageQueues" />
 		<!-- search-index bench harness (tools/search-bench/formatter-probe), query-bench precedent -->
 		<InternalsVisibleTo Include="formatter-probe" />
 	</ItemGroup>

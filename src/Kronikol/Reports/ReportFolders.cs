@@ -112,13 +112,16 @@ public static class ReportFolders
 
     /// <summary>
     /// Whether <paramref name="fileName"/> names a JSON file a run writes into its reports directory that is not a report:
-    /// the history fragment, the CTRF document or the run's manifest. A sweep that finds one leaves it alone.
+    /// the history fragment, the CTRF document, the run's manifest or the service card, or the copy a failed write of one
+    /// leaves under its name with a 2 before the extension (<c>History.run2.json</c>, as <c>WriteFile</c> salvages it). A
+    /// sweep that finds one leaves it alone.
     /// </summary>
     internal static bool IsWrittenBesideAReport(string fileName) =>
-        WrittenBesideAReport.Contains(fileName, StringComparer.OrdinalIgnoreCase);
+        WrittenBesideAReport.Any(name => string.Equals(fileName, name, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(fileName, Path.GetFileNameWithoutExtension(name) + "2" + Path.GetExtension(name), StringComparison.OrdinalIgnoreCase));
 
     private static readonly string[] WrittenBesideAReport =
-        [Kronikol.History.HistoryFormat.FragmentFileName, CtrfReportGenerator.FileName, RunManifest.FileName];
+        [Kronikol.History.HistoryFormat.FragmentFileName, CtrfReportGenerator.FileName, RunManifest.FileName, ServiceCardWriter.FileName];
 
     internal static bool IsIncoming(string directory) =>
         Path.GetFileName(directory).StartsWith(IncomingPrefix, StringComparison.OrdinalIgnoreCase);

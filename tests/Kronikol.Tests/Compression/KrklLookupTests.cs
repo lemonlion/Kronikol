@@ -135,6 +135,9 @@ public class KrklLookupTests : IDisposable
             File.WriteAllText(Path.Combine(baseline, "Run.json"), "{\"run\":\"gh_1_1\"}");
             File.WriteAllText(Path.Combine(baseline, "History.run.json"), "{\"runs\":[]}");
             File.WriteAllText(Path.Combine(baseline, "ctrf-report.json"), "{\"results\":{}}");
+            File.WriteAllText(Path.Combine(baseline, "service.json"), "{\"formatVersion\":1}");
+            // The copy a failed write of one leaves, under its name with a 2 before the extension.
+            File.WriteAllText(Path.Combine(baseline, "History.run2.json"), "{\"runs\":[]}");
             File.WriteAllText(Path.Combine(baseline, "last-green.schema.json"), "{}");
         }
 
@@ -158,7 +161,7 @@ public class KrklLookupTests : IDisposable
         Assert.DoesNotContain("Run.json", output + error, StringComparison.Ordinal);
     }
 
-    public static TheoryData<string> Readers => new() { "query", "ctrf", "history gate", "merge" };
+    public static TheoryData<string> Readers => new() { "query", "ctrf", "card", "history gate", "merge" };
 
     [Theory]
     [MemberData(nameof(Readers))]
@@ -307,7 +310,7 @@ public class KrklLookupTests : IDisposable
     public static TheoryData<string, string> DamageForEveryReader()
     {
         var data = new TheoryData<string, string>();
-        foreach (var reader in new[] { "query", "ctrf", "history gate", "history import", "merge" })
+        foreach (var reader in new[] { "query", "ctrf", "card", "history gate", "history import", "merge" })
             foreach (var damage in new[] { "truncated", "a byte flipped" })
                 data.Add(reader, damage);
         return data;
@@ -369,6 +372,7 @@ public class KrklLookupTests : IDisposable
         {
             "query" => QueryCommand.Run(["summary", krkl], output, error),
             "ctrf" => CtrfCommand.Run([krkl], output, error),
+            "card" => CardCommand.Run([krkl], output, error),
             "history gate" => HistoryCommand.Run(["gate", krkl, "--history", Ledger()], output, error, _ => null),
             "history import" => HistoryCommand.Run(["import", krkl, "--history", Ledger()], output, error, _ => null),
             _ => MergeCommand.Run([krkl, "-o", Path.Combine(_root, "merged", "TestRunReport.html")], output, error, _ => null),

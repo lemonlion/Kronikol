@@ -529,14 +529,22 @@ public static partial class ComponentDiagramGenerator
         _ => $"System({alias}, \"{name}\")"
     };
 
-    private static string GetProtocol(RequestResponseLog log)
-    {
-        if (log.DependencyCategory is not null)
-            return log.DependencyCategory;
+    private static string GetProtocol(RequestResponseLog log) =>
+        Protocol(log.DependencyCategory, log.MetaType == RequestResponseMetaType.Event, log.Method.Value?.ToString());
 
-        return log.MetaType == RequestResponseMetaType.Event
-            ? log.Method.Value?.ToString() ?? "Event"
-            : DependencyCategories.HTTP;
+    /// <summary>
+    /// The protocol an edge is drawn with: the call's dependency category, else for an event its method (<c>Event</c> when
+    /// it has none), else <c>HTTP</c>. An empty category is none, as the party inference reads it: a consumer that leaves a
+    /// message tracker's category blank, so the service is not drawn as a queue, had its deliveries labelled
+    /// <c>: Consume (Kafka)</c>. The call graph reads its edges by this rule too (plans/SERVICE_CARD_PLAN.md 4.2), so over
+    /// the same calls the card's edges are this diagram's.
+    /// </summary>
+    internal static string Protocol(string? dependencyCategory, bool isEvent, string? method)
+    {
+        if (!string.IsNullOrEmpty(dependencyCategory))
+            return dependencyCategory;
+
+        return isEvent ? method ?? "Event" : DependencyCategories.HTTP;
     }
 
     private static string GetMethodName(RequestResponseLog log) =>

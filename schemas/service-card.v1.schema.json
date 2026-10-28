@@ -1,0 +1,290 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/lemonlion/Kronikol/main/schemas/service-card.v1.schema.json",
+  "title": "Kronikol service card (service.json), formatVersion 1",
+  "description": "One run's parties, the edges between them with each operation, and what the capture could not see (plans/SERVICE_CARD_PLAN.md 4.3). 'behaviour' holds sets only and is byte-identical whenever the run's behaviour is; 'run' holds the facts of this run. The file is compact, UTF-8, one line and a final LF; behaviourHash is the SHA-256 of the 'behaviour' member's bytes as the file holds them, from the '{' after the last '\"behaviour\":' to the byte before the file's closing '}'. Closed: a member this version does not declare is a violation, so validate against the copy on main.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["formatVersion", "run", "behaviour"],
+  "properties": {
+    "formatVersion": { "const": 1, "description": "The card's shape. Additive members do not move it; they join this schema in the release that writes them." },
+    "run": { "$ref": "#/$defs/run" },
+    "behaviour": { "$ref": "#/$defs/behaviour" }
+  },
+  "$defs": {
+    "nullableString": { "type": ["string", "null"] },
+    "strings": { "type": "array", "items": { "type": "string" } },
+    "count": { "type": "integer", "minimum": 0 },
+    "run": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "at", "repository", "commit", "branch", "suite", "framework", "kronikolVersion", "report", "environment", "results", "behaviourHash", "parties", "counts", "examples", "scenarios", "degraded"],
+      "properties": {
+        "id": { "$ref": "#/$defs/nullableString", "description": "The run's id as its Run.json writes it; from kronikol card, a Run.json beside the report that lists it and is not older than it, else null. Never minted." },
+        "at": { "$ref": "#/$defs/nullableString", "description": "The run's end, yyyy-MM-ddTHH:mm:ssZ, as its Run.json writes it; null when id is." },
+        "repository": { "$ref": "#/$defs/nullableString", "description": "From the report's ciMetadata; null off CI." },
+        "commit": { "$ref": "#/$defs/nullableString" },
+        "branch": { "$ref": "#/$defs/nullableString" },
+        "suite": { "$ref": "#/$defs/nullableString" },
+        "framework": { "type": "null", "description": "No capturer records its test framework yet." },
+        "kronikolVersion": { "type": "string", "description": "The Kronikol that wrote the card, which for kronikol card may differ from the report's." },
+        "report": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["file", "formatVersion", "kronikolVersion", "sha256"],
+          "properties": {
+            "file": { "$ref": "#/$defs/nullableString" },
+            "formatVersion": { "type": ["integer", "null"] },
+            "kronikolVersion": { "$ref": "#/$defs/nullableString", "description": "The Kronikol that wrote the report." },
+            "sha256": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$", "description": "Of the data file's bytes on disk." }
+          }
+        },
+        "environment": {
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "required": ["os", "runtime"],
+          "properties": {
+            "os": { "$ref": "#/$defs/nullableString" },
+            "runtime": { "$ref": "#/$defs/nullableString" }
+          }
+        },
+        "results": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["scenarios", "passed", "failed", "skipped", "bypassed"],
+          "description": "The scenarios that are tests, by result; skipped counts SkippedAfterFailure too, and the four sum to scenarios.",
+          "properties": {
+            "scenarios": { "$ref": "#/$defs/count" },
+            "passed": { "$ref": "#/$defs/count" },
+            "failed": { "$ref": "#/$defs/count" },
+            "skipped": { "$ref": "#/$defs/count" },
+            "bypassed": { "$ref": "#/$defs/count" }
+          }
+        },
+        "behaviourHash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "parties": {
+          "type": "array",
+          "description": "By name.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "hosts", "doubleCalls"],
+            "properties": {
+              "name": { "type": "string" },
+              "hosts": { "$ref": "#/$defs/strings", "description": "The distinct URI authorities of the calls it received, as written; a delivery's are its broker's." },
+              "doubleCalls": { "$ref": "#/$defs/count", "description": "How many of the calls it received carry a test double's mark." }
+            }
+          }
+        },
+        "counts": {
+          "type": "array",
+          "description": "By op.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["op", "calls", "errors", "statuses", "phases", "derivedPhases"],
+            "properties": {
+              "op": { "$ref": "#/$defs/op" },
+              "calls": { "$ref": "#/$defs/count" },
+              "errors": { "$ref": "#/$defs/count" },
+              "statuses": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 }, "description": "Calls by status: the code's digits, else the label, else none." },
+              "phases": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["setup", "action", "unknown"],
+                "properties": {
+                  "setup": { "$ref": "#/$defs/count" },
+                  "action": { "$ref": "#/$defs/count" },
+                  "unknown": { "$ref": "#/$defs/count" }
+                }
+              },
+              "derivedPhases": { "$ref": "#/$defs/count", "description": "The calls whose effective phase came through nesting." }
+            }
+          }
+        },
+        "examples": {
+          "type": "array",
+          "description": "By op: the first call's address in report order, sN/iM; null for an operation seen only in the root background block.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["op", "address"],
+            "properties": {
+              "op": { "$ref": "#/$defs/op" },
+              "address": { "type": ["string", "null"], "pattern": "^s[0-9]+/i[0-9]+$" }
+            }
+          }
+        },
+        "scenarios": {
+          "type": "array",
+          "description": "By sid: every operation the scenario's calls reached, the service's and the brokers' included, background calls left out.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["sid", "ops"],
+            "properties": {
+              "sid": { "type": "string" },
+              "ops": { "$ref": "#/$defs/ops" }
+            }
+          }
+        },
+        "degraded": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Per kind, how many of the report's diagnostics say the capture lost or misplaced calls; a kind with none is left out.",
+          "properties": {
+            "BackgroundCalls": { "$ref": "#/$defs/count" },
+            "CaptureDegraded": { "$ref": "#/$defs/count" },
+            "DroppedOutsideRunWindow": { "$ref": "#/$defs/count" },
+            "DroppedUnattributed": { "$ref": "#/$defs/count" },
+            "MalformedLine": { "$ref": "#/$defs/count" },
+            "StepAttributionMismatch": { "$ref": "#/$defs/count" },
+            "UnattributedInteractions": { "$ref": "#/$defs/count" }
+          }
+        }
+      }
+    },
+    "op": { "type": "string", "pattern": "^[0-9a-f]{16}$", "description": "The first 16 hex of SHA-256 over from, to, protocol, method, target and the GraphQL operation when there is one, joined by U+001F." },
+    "ops": { "type": "array", "items": { "$ref": "#/$defs/op" } },
+    "kindSource": { "enum": ["declared", "observed", "inferred", null] },
+    "behaviour": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rules", "subject", "parties", "edges", "exposes", "messages", "scenarios", "unresolved", "capture"],
+      "properties": {
+        "rules": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["operationKey", "templateRules", "inference"],
+          "description": "The rules the card was built under: two cards made under different rules are not compared by their hash.",
+          "properties": {
+            "operationKey": { "type": "integer", "description": "The operation key's version (InteractionShape.Version)." },
+            "templateRules": { "$ref": "#/$defs/nullableString", "description": "The hash of the consumer's templating rules the report recorded, \"none\" when it recorded none, null when it predates recording them." },
+            "inference": { "type": ["integer", "null"], "description": "The inference's version when the card inferred a row, null when every row came from the report's parties block." }
+          }
+        },
+        "subject": {
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "required": ["name", "id", "source"],
+          "description": "The underTest party whose id is the run's serviceId, else the one that received the most calls, then the first by name; null when no party is underTest.",
+          "properties": {
+            "name": { "type": "string" },
+            "id": { "$ref": "#/$defs/nullableString" },
+            "source": { "$ref": "#/$defs/kindSource" }
+          }
+        },
+        "parties": {
+          "type": "array",
+          "description": "By name: every caller and service the calls name.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "id", "kind", "kindSource", "note", "categories"],
+            "properties": {
+              "name": { "type": "string" },
+              "id": { "$ref": "#/$defs/nullableString" },
+              "kind": { "enum": ["test", "underTest", "real", "double", "unknown"] },
+              "kindSource": { "$ref": "#/$defs/kindSource", "description": "Null on an unknown row." },
+              "note": { "$ref": "#/$defs/nullableString" },
+              "categories": { "$ref": "#/$defs/strings", "description": "The categories its calls carried; a delivery's count for its broker." }
+            }
+          }
+        },
+        "edges": {
+          "type": "array",
+          "description": "By from, to and protocol.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["from", "to", "protocol", "operations"],
+            "properties": {
+              "from": { "type": "string" },
+              "to": { "type": "string" },
+              "protocol": { "type": "string", "description": "The component diagram's rule: the dependency category, else an event's method (Event when it has none), else HTTP." },
+              "operations": {
+                "type": "array",
+                "description": "By method, target and GraphQL operation.",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["op", "method", "target", "graphqlOperation", "statuses", "origins", "causes", "effectivePhases"],
+                  "properties": {
+                    "op": { "$ref": "#/$defs/op" },
+                    "method": { "type": "string" },
+                    "target": { "type": "string", "description": "The templated target: the path with ids, timestamps and numbers as placeholders and the query left out, and a statement-shaped call's templated statement head." },
+                    "graphqlOperation": { "$ref": "#/$defs/nullableString" },
+                    "statuses": { "$ref": "#/$defs/strings" },
+                    "origins": { "type": "array", "items": { "enum": ["test", "subject", "other"] } },
+                    "causes": { "type": "array", "items": { "enum": ["test", "request", "background", "unknown"] } },
+                    "effectivePhases": { "type": "array", "items": { "enum": ["setup", "action", "unknown"] } }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "exposes": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["basis", "ops"],
+          "properties": {
+            "basis": { "const": "tested", "description": "The tested surface: what the subject received in this run, not everything it serves." },
+            "ops": { "$ref": "#/$defs/ops" }
+          }
+        },
+        "messages": {
+          "type": "array",
+          "description": "By party, topic, direction and op: one row for each destination an operation's calls name.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["op", "direction", "party", "topic"],
+            "properties": {
+              "op": { "$ref": "#/$defs/op" },
+              "direction": { "enum": ["publishes", "consumes", null], "description": "Null for a label the table cannot map, or a message call recorded as its HTTP request." },
+              "party": { "type": "string", "description": "The broker." },
+              "topic": { "$ref": "#/$defs/nullableString" }
+            }
+          }
+        },
+        "scenarios": {
+          "type": "array",
+          "description": "By sid: the scenarios that are tests, rows sharing a sid as one.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["sid", "feature", "scenario", "tags", "source", "ops"],
+            "properties": {
+              "sid": { "type": "string" },
+              "feature": { "type": "string" },
+              "scenario": { "type": "string" },
+              "tags": { "$ref": "#/$defs/strings" },
+              "source": {
+                "type": ["object", "null"],
+                "additionalProperties": false,
+                "required": ["file", "line"],
+                "properties": {
+                  "file": { "type": "string" },
+                  "line": { "type": ["integer", "null"] }
+                }
+              },
+              "ops": { "$ref": "#/$defs/ops", "description": "The test's own operations in the scenario." }
+            }
+          }
+        },
+        "unresolved": { "$ref": "#/$defs/strings", "description": "Party names with no id." },
+        "capture": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["calls", "subjectCalls", "emptyTargets"],
+          "properties": {
+            "calls": { "enum": ["recorded", "notRecorded"] },
+            "subjectCalls": { "enum": ["recorded", "notRecorded"] },
+            "emptyTargets": { "$ref": "#/$defs/ops", "description": "Message operations whose URI holds no destination where one belongs, or only a tracker's placeholder." }
+          }
+        }
+      }
+    }
+  }
+}

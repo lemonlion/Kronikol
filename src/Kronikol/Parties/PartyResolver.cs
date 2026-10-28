@@ -38,6 +38,17 @@ internal sealed record PartyObservations(IReadOnlyList<TestClientObservation> Te
 /// </summary>
 internal static class PartyResolver
 {
+    /// <summary>
+    /// The version of the inference: what <see cref="InferTests"/>, <see cref="InferSubjects"/>, the store list they read
+    /// (<see cref="IsStore"/>, so a palette change that moves a category into or out of a store type moves it too), the
+    /// double rule and the subject row's choice answer for a set of calls. A card that inferred a row records it
+    /// (plans/SERVICE_CARD_PLAN.md 4.2, 4.3), so two cards inferred under different rules are not compared by their hash.
+    /// 1: 5.15.0 (#190 R2) - a party every call to which carries a test double's mark is a double, observed, and the subject
+    /// is chosen only among parties of unknown kind. Move it when the answers change; <c>InferenceVersionGuardTests</c>
+    /// holds them.
+    /// </summary>
+    internal const int InferenceVersion = 1;
+
     private const string TestContext = nameof(Kronikol.Tracking.AttributionSource.TestContext);
     private const string RequestHeader = nameof(Kronikol.Tracking.AttributionSource.RequestHeader);
 

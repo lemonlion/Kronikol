@@ -142,3 +142,14 @@ Measured by the sessions writing the sibling plans, on the same decoded files, a
   `PARTY_IDENTITY_PLAN.harness/bp-reports/` (5.13.0).
 - kronikol-bf (#192): the call-identity rules, the GraphQL counts, the attribution split and the CLI timings, in
   `CALL_OPERATION_AND_ORIGIN_PLAN.harness/`.
+
+## Implementation (R1, 2026-10-28)
+
+What building R1 measured, with the tool built from the implementation:
+
+| Path | What it is |
+|---|---|
+| `probes/impl/acceptance.py`, `results/impl-acceptance.txt` | `kronikol card` on the ten same-commit pairs of plan 2.4 (whether the two `behaviour` byte ranges are equal, and whether `behaviourHash` holds over each file's own bytes), then its card for each of run 40491266394's 18 lanes against the corrected probe card of `verify-messages-corrected.sh` (plan 5.5). The pairs read the folders the audit scripts above downloaded and decoded |
+| `probes/impl/compare_cards.py` | Compares two cards member by member, keying operations by caller, callee, protocol, method, target and GraphQL operation so the op ids need not agree |
+| `probes/impl/mutate.py`, `results/impl-mutations.txt` | Plan 5.6's mutations and the message table's, each applied alone, built and run against the card's facts, the file restored after each: the first pass, and the five survivors again after the facts they showed missing were written |
+| `probes/v4-fixtures/gen_ndjson.py`, `probes/v4-fixtures/gen.cs` | The capture and the two reports Kronikol 4.32.0 wrote from it (plan 5.3.1), kept in `tests/Kronikol.Tests/TestData/Cards/`: `gen.cs` is a file-based app on the `Kronikol` 4.32.0 package, run as `dotnet run --file gen.cs -- <out> card-capture.ndjson` |

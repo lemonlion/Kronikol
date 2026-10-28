@@ -18,6 +18,7 @@
   <ItemGroup>
     <Compile Include="..\Kronikol.Tests\Tracking\RequestHeaderAccessor.cs" Link="RequestHeaderAccessor.cs" />
     <Compile Include="..\Kronikol.Tests\History\HistoryGuard.cs" Link="HistoryGuard.cs" />
+    <Compile Include="..\Kronikol.Tests\CallGraph\TrackedMessages.cs" Link="TrackedMessages.cs" />
   </ItemGroup>
 
 </Project>

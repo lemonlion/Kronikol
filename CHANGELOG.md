@@ -4,6 +4,74 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.21.0] - 2026-10-28
+
+The minor part moves (5.20.1 to 5.21.0): a new command, `kronikol card`, and a committed schema for the file it writes
+(#191, `plans/SERVICE_CARD_PLAN.md` R1). It also fixes how the component diagram labels a call whose tracker gave it an
+empty category, and a merge that read the copy a failed write leaves beside a report as a shard.
+
+### Added
+
+- **`kronikol card <report>` writes the run's service card, `service.json`** (#191). One compact JSON file for a
+  service catalogue or an indexer. Its `behaviour` part holds the run's parties and their kinds, the edges between
+  them, each operation with its method, its target and GraphQL operation as 5.17.0's operation key reads them (the
+  templated path, a statement's head, the operation a GraphQL request names), the statuses it answered, its origins
+  (the test, the service under test, another party), causes (the test, a request the service was serving, the
+  background) and effective phases; the operations the service exposes; the messages it publishes and consumes, with
+  the broker and the topic or queue; each scenario's own operations; and what the capture could not see. Its `run`
+  part holds what moves from run to run: the run's id and end from the `Run.json` beside the report, the counts,
+  errors and statuses per operation, one example address per operation (which `kronikol query` opens), each party's
+  hosts, and every operation each scenario reached. `behaviour` is byte-identical when the run's behaviour is, and
+  `behaviourHash` is the SHA-256 of exactly its bytes in the file, so an indexer compares runs by the hash.
+- **The card reads the report alone**, any report the tool reads, a 4.x `TestRunReport.json` or a 5.x
+  `TestRunReport.krkl`: its parties are the report's block, else the inference over its calls, through the party table
+  `kronikol query` reads (5.20.0), so the card and the query name one subject and give each call one origin and one
+  cause. A run's `HistoryShapeTemplates`, as the report records them (5.19.0), shape the targets as they shape
+  history's, and `rules.templateRules` names them by their hash (`none` for a run with none, null for a report that
+  cannot say). `-o FILE` writes the card to a file and creates its folder; `--json` is refused, the card being JSON.
+- **`schemas/service-card.v1.schema.json`**: the card's JSON Schema (draft 2020-12), closed, at its raw URL on `main`.
+  A member a later version adds does not move `formatVersion`.
+
+### Fixed
+
+- **A call whose tracker set an empty dependency category is drawn as one with none.** The component diagram took `""`
+  as a category, so a delivery from a tracker configured with `DependencyCategory = ""` (to keep the consumer from being
+  drawn as a queue) was labelled `: Consume (Kafka)`, with an empty protocol before the colon; it is now labelled with
+  its event's method, `Consume (Kafka): Consume (Kafka)`, as a delivery with no category always was. Report output:
+  recorded in the Kronikol4J divergence ledger.
+- **`kronikol merge <dir>` leaves alone the copy a failed write leaves beside a report.** A run whose
+  `History.run.json` or `ctrf-report.json` was held open writes this run's copy as `History.run2.json` or
+  `ctrf-report2.json`, and a merge that swept the folder read it as a shard and failed whole (`Not a recognised
+  Kronikol test-run report (missing 'features')`). A sweep now skips those as it skips the files themselves, and the
+  card, `service.json`, too; a file named on the command line is still read and refused for what it is. A
+  `--baseline` folder's lookup skips them alike.
+
+### Documentation
+
+- A new wiki page, Service-Card: what the file holds, the operation key, origins, causes and their limits, messages,
+  parties, how to check `behaviourHash`, what moves it with no change of behaviour, and the schema. Querying-Reports
+  gives `kronikol card` beside `kronikol ctrf`; Report-Configuration's Parties section, Cross-Run-History's
+  `HistoryShapeTemplates`, Merging-Parallel-Reports and Migrating-to-v5-Tags name it. The README, the NuGet readme,
+  the tool's package description and tags, and the skill, both copies, list the command.
+
+### Tests
+
+- New facts: the call graph (`CallGraphCauseTests`, `CallGraphEdgeTests`, `GraphPartiesTests`, `OperationKeyTests`,
+  `MessageTableTests`, `GenericMessageTrackerCardTests`, `BackgroundBodyTests`, `ServiceCardTests`,
+  `ServiceCardSchemaTests`, `InferenceVersionGuardTests`), the command (`CardCommandTests`, and `KeptReportCardTests`
+  over two reports a 4.32.0 writer made, kept with their golden `behaviour`), the `.krkl` lookup and the culture, the
+  merge sweep, and in each broker package's tests the message table held to the calls its tracker records, each
+  operation at each verbosity (412 facts over Kafka, MassTransit, Service Bus, Event Hubs, Pub/Sub, SQS, SNS, Storage
+  Queues and EventBridge). Twenty-seven mutations of the graph, the table and the scanner each turn a fact red.
+- On BreakfastProvider's reports: ten pairs of runs of one commit give byte-identical `behaviour` on all ten, with
+  `behaviourHash` holding; the cards of the 18 lanes of one CI run equal an independent probe's but for 5.17.0's two
+  statement-head fixes, which the probe predates; and moving the card's parties, origin and cause onto 5.20.0's party
+  table left all 38 cards byte-identical.
+- Checks: the core suite (11,315 passed, 2 skipped), the nine broker packages' suites (1,273 passed, 3 skipped), and the
+  Release build of `release.slnf`. The example lanes passed on this work at 5.18.0 with the next release's run-end card
+  (every component project, Integration 259 of 259) and run again for that release. No Playwright run: the HTML report
+  changes only in the component diagram's label for an empty category.
+
 ## [5.20.1] - 2026-10-28
 
 The patch part moves (5.20.0 to 5.20.1): a fix to how the report draws an activity diagram, nothing new to call.

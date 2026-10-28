@@ -1,6 +1,7 @@
 using System.Net;
 using Kronikol.Query;
 using Kronikol.Reports;
+using Kronikol.Tool;
 using Kronikol.Tracking;
 
 namespace Kronikol.Tests.Tool;
@@ -155,6 +156,26 @@ public class QueryCultureTests : IDisposable
         Assert.Equal(["price", "1.10"], index.Scenarios.Single().Steps.Single().Parameters);
     }
 
+    // kronikol card scans a report outside the query's invariant scope too, as ctrf does (plans/SERVICE_CARD_PLAN.md
+    // 5.2.3): its statuses, its run's end from the Run.json beside the report (2569 under a Buddhist calendar, were it
+    // written with the machine's) and its ordering are the same on every machine.
+    [Theory]
+    [MemberData(nameof(CultureRun.Data), MemberType = typeof(CultureRun))]
+    public void Card_prints_under_the_culture_what_it_prints_under_en_us(string culture)
+    {
+        var report = Report();
+        new RunManifest { Run = "local:20260101T100500Z:00c4406a", At = new DateTimeOffset(2026, 1, 1, 10, 5, 30, TimeSpan.Zero), Files = [Path.GetFileName(report)] }
+            .Write(_directory);
+
+        var expected = CultureRun.Under("en-US", () => Card(report));
+        var actual = CultureRun.Under(culture, () => Card(report));
+
+        Assert.True(expected.Exit == 0, $"exit {expected.Exit}: {expected.Error}");
+        Assert.Contains("\"at\":\"2026-01-01T10:05:30Z\"", expected.Output, StringComparison.Ordinal);
+        Assert.Equal(expected.Output, actual.Output);
+        Assert.Equal(expected.Error, actual.Error);
+    }
+
     // ─── Harness ───────────────────────────────────────────────
 
     private static (string Output, string Error, int Exit) Run(string command, string report, params string[] args)
@@ -163,6 +184,14 @@ public class QueryCultureTests : IDisposable
         var error = new StringWriter();
         var exit = QueryCommand.Run([command, report, .. args], output, error);
         return (output.ToString().Replace("\r\n", "\n"), error.ToString().Replace("\r\n", "\n"), exit);
+    }
+
+    private static (string Output, string Error, int Exit) Card(string report)
+    {
+        var output = new StringWriter();
+        var error = new StringWriter();
+        var exit = CardCommand.Run([report], output, error);
+        return (output.ToString(), error.ToString(), exit);
     }
 
     private string Diagram => Path.Combine(_directory, "diagram.puml");

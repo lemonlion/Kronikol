@@ -1260,6 +1260,65 @@ minors over one on 2026-10-28.
   recommendations, and Q7's Kronikol4J issue is put to the owner when R1 ships. #192 is being implemented at the same
   time by kronikol-bf, whose owner answered its Q4 (`cause`) yes, for its R3, and who lifts the parties function there.
   R1 is built in parallel against those functions' places and released after #192's R3. Rebased on `a3f2f45a` (5.16.1).
+- 2026-10-28: R1 built on `release/191-r1` (session kronikol-ed), released as 5.21.0. What building it found, each with a fact written red
+  first:
+  - the run end will scan the data file it has just written (R2), so the run-end card and `kronikol card`'s are one
+    function of one file by construction (Q15), where 4.5 had the run end map its records in memory;
+  - 5.2.1's background call moving between scenarios changes `run.examples`, not `run.scenarios`, which lists the
+    operations whose cause is not background (4.3); the fact says so;
+  - the message table, held in each broker package by facts that drive the package's own tracker for every operation
+    at every verbosity (412 facts in nine test projects, through a helper linked into each), found four things 4.2's
+    table missed: a MassTransit consume's fault is logged into the consumer as a delivery (`LogFaults` is on by
+    default), which is no message, as the service's own send fault is not; Service Bus and Event Hubs write `unknown`
+    for a queue or hub the client did not name, a placeholder as Pub/Sub's and MassTransit's are; Pub/Sub's Raw URI
+    is the full resource name (`projects/{project}/topics/{topic}`), so its destination is the last path segment; and
+    a message call recorded as its HTTP request (SQS, SNS, Storage Queues and EventBridge at Raw) names no
+    destination, as it names no direction: SNS's topic is in the body and a storage queue's path ends in `messages`.
+    The handlers record no call they cannot name at Summarised, and EventBridge leaves four tag and listing calls out
+    by default; the facts pin both;
+  - `PutPartnerEvents` publishes; the generic `MessageTracker` writing a scheme of the table (`kafka://` with a label
+    of its own) is read by that row, so `Publish (Kafka)` has no direction, the limit of a label the table does not
+    know; a delivery's host is the broker's, as its category is; a meta type of `Event` is no sign either way (4.2's
+    sentence on Spanner, BigQuery and Bigtable reads as an exclusion; the rule is the category and the scheme);
+  - a scenario result the card does not know counts as bypassed, as `ctrf` reads it, so the four counts sum to the
+    scenarios; tags are written sorted, since the order a writer lists them in is not behaviour;
+  - the subject row is the `underTest` party whose id is the run's `serviceId`, then the one with the most calls
+    received, then by name, as kronikol-bf's lifted function chooses it;
+  - an empty dependency category is no category, in the component diagram too: BreakfastProvider's consume trackers
+    set `""`, and the diagram's edge read `: Consume (Kafka)`. A report output change, in R1's changelog and the
+    Kronikol4J ledger; parity (5.1.2) holds over it;
+  - acceptance so far: the tool on the ten same-commit pairs of 2.4 gives a byte-identical `behaviour` on 10 of 10,
+    and its cards for the 18 lanes of run 40491266394 equal the corrected probe cards outside GraphQL, which waits for
+    #192's key, both measured again after the table's four corrections (`results/impl-acceptance.txt`);
+  - mutations (5.6), with the message table's and the scanner's: 27, each applied alone. 22 failed a fact at once and
+    five survived, each a case no fixture reached: a culture's order of a list of values (statuses `Responded` and
+    `none` sort apart only there), a background call at the top of a scenario in a run with no test party, two
+    parties under test whose busier one is not first by name, user actions answered with the empty Guid, and a report
+    that can carry calls and carries none. A fact was written for each, and all 27 fail one now
+    (`results/impl-mutations.txt`);
+  - 5.3.1's older writer: no 4.32.x tool is needed for its two fixtures; a file-based app on the `Kronikol` 4.32.0
+    package (`probes/v4-fixtures/gen.cs`) runs that release's ingest over a capture with a 9,000-character body
+    (`formatVersion` 2, the body compressed) and its run end over an in-process-shaped run whose root background
+    block holds a 9,142-character statement, compressed there. Each is kept with its golden `behaviour`, and the
+    capture through this build's ingest differs from 4.32.0's only in the scenarios' stable ids, as listed before
+    either card was written;
+  - rebased onto 5.17.0 (#192's R1), the card's key is #192's `CallOperation.Parts` with the query's keys off. 5.1.3's
+    parity facts (`OperationKeyTests`) failed 5 of 7 on the interim key and pass on this one; the message table's
+    two-queue fact moved to queues the key templates alike, as the key now keeps a Service Bus queue as its target's
+    first segment; the two old-writer goldens moved only by `rules.operationKey` (7 to 8) and the in-process report's
+    GraphQL POST, now `query Menu`. Acceptance again: 10 of 10 pairs byte-identical, and the 18 lanes differ from the
+    corrected probe cards only by 5.17.0's two statement-head fixes, which the probes predate (`SET` prologue skipped;
+    a document's `query` string templated as a statement), with GraphQL equal on every lane
+    (`results/impl-acceptance.txt`);
+  - rebased onto 5.19.0 and 5.20.0 (#192's R2 and R3), the card reads the consumer's rules from the report's
+    `shapeTemplates` block as `route` does, `rules.templateRules` their hash, `none` from 5.19.0 for a run with
+    none, null for a report that cannot say (`QueryCommand.PredatesShapeTemplates`, the one rule both read); and its
+    parties, origin and cause through #192's `PartyTable` (`OfReport`, `OriginOf`, `CauseOf`), its own copies
+    deleted. #192 aligned three rules to the card's before release (no root `serviceId` without a block, the id
+    matched among subjects only, step 3 for a subject only). Before and after the swap the 38 acceptance cards are
+    byte-identical, and the 19 example-lane cards' `behaviour` too. Two edge cases moved with the table, which reads
+    the whole block: a declared subject no call reaches is the subject and listed, and a declared test party with
+    no calls counts for cause; a fact pins each, red before the swap.
 
 ## Appendix A. Edit sites at `8d7d1e1d`
 

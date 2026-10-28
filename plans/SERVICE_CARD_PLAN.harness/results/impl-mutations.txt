@@ -1,0 +1,29 @@
+mutation | first pass | after the facts it found missing | a fact that failed
+phase: recorded phase only, no derivation | KILLED | - | Kronikol.Tests.CallGraph.CallGraphCauseTests.A_call_the_subject_makes_inside_the_tests_request_is_request_with_the_requests_phase
+phase: a background call's phase from its parent | KILLED | - | Kronikol.Tests.CallGraph.CallGraphCauseTests.A_background_call_recorded_while_an_unrelated_request_is_open_keeps_its_own_phase
+nesting: trace clause dropped | KILLED | - | Kronikol.Tests.Tool.CallNestingTests.A_message_delivered_on_an_open_calls_trace_is_inside_it
+sort: culture-sensitive | SURVIVED | KILLED | Kronikol.Tests.CallGraph.ServiceCardTests.The_card_is_the_same_bytes_under_any_culture(culture: "cs-CZ")
+sort: an edge's operations left unsorted | KILLED | - | Kronikol.Tests.CallGraph.ServiceCardTests.Calls_reordered_within_each_scenario_give_the_same_behaviour
+behaviour: a count written into it | KILLED | - | Kronikol.Tests.CallGraph.ServiceCardSchemaTests.A_card_holding_every_member_the_writer_can_write_validates
+scenarios: background calls kept in a scenario's own operations | SURVIVED | KILLED | Kronikol.Tests.CallGraph.CallGraphCauseTests.An_in_process_subject_declared_under_test_with_no_test_party_makes_test_calls_that_its_scenario_lists
+scenarios: run.scenarios keeps background calls | KILLED | - | Kronikol.Tests.CallGraph.ServiceCardTests.A_background_call_moving_between_scenarios_moves_its_example_only
+background: the root background block skipped | KILLED | - | Kronikol.Tests.CallGraph.BackgroundBodyTests.A_compressed_body_under_a_root_background_call_is_read_as_a_scenarios_is
+parties: the block ignored by the tool | KILLED | - | Kronikol.Tests.CallGraph.CallGraphCauseTests.An_in_process_subject_declared_under_test_with_no_test_party_makes_test_calls_that_its_scenario_lists
+parties: the subject first by name | SURVIVED | KILLED | Kronikol.Tests.CallGraph.GraphPartiesTests.Of_two_parties_under_test_the_subject_is_the_one_that_received_the_most_calls
+protocol: the category alone | KILLED | - | Kronikol.Tests.ComponentDiagram.ComponentDiagramGeneratorTests.ExtractRelationships_MultipleProtocols_TrackedSeparately
+ids: the empty Guid kept | SURVIVED | KILLED | Kronikol.Tests.Tool.CardCommandTests.User_actions_with_the_empty_guid_are_operations_never_nested_and_never_exposed
+messages: an unmapped label publishes | KILLED | - | Kronikol.Tests.CallGraph.MessageTableTests.A_message_call_recorded_as_its_http_request_gives_no_direction_and_no_destination(broker: "SQS", uri: "https://sqs.eu-west-1.amazonaws.com/123456789012/j"···)
+messages: the destination from the last segment | KILLED | - | Kronikol.Tests.CallGraph.MessageTableTests.The_destination_is_where_each_scheme_puts_it(uri: "kafka:///orders/2@17", expected: "orders")
+emptyTargets: keyed on a target of / | KILLED | - | Kronikol.Tests.CallGraph.MessageTableTests.A_message_call_recorded_as_its_http_request_gives_no_direction_and_no_destination(broker: "SNS", uri: "https://sns.eu-west-1.amazonaws.com/")
+inference: changed and InferenceVersion left | KILLED | - | Kronikol.Tests.Parties.InferenceVersionGuardTests.The_inferences_answers_are_the_ones_pinned_for_its_version
+capture: calls keyed on no call at all | SURVIVED | KILLED | Kronikol.Tests.Tool.CardCommandTests.A_run_that_made_no_call_says_its_calls_were_recorded
+hash: over another encoder's bytes | KILLED | - | Kronikol.Tests.CallGraph.ServiceCardTests.Only_a_destination_the_capture_did_not_record_is_an_empty_target
+delivery: a fault delivered reads consumes | KILLED | - | Kronikol.Tests.MassTransit.MassTransitCardMessageTests.Each_call_the_tracker_records_reads_as_its_operation(operation: ConsumeFault, verbosity: Summarised)
+kafka row: Subscribe forgotten | KILLED | - | Kronikol.Tests.Kafka.KafkaCardMessageTests.Each_call_the_tracker_records_reads_as_its_operation(operation: Subscribe, verbosity: Detailed)
+eventbridge row: PutPartnerEvents forgotten | KILLED | - | Kronikol.Tests.EventBridge.EventBridgeCardMessageTests.Each_call_the_handler_records_reads_as_its_operation(operation: PutPartnerEvents, verbosity: Summarised)
+storagequeue row: Peek forgotten | KILLED | - | Kronikol.Tests.StorageQueues.StorageQueueCardMessageTests.Each_call_the_handler_records_reads_as_its_operation(operation: PeekMessages, verbosity: Detailed)
+pubsub row: first segment | KILLED | - | Kronikol.Tests.PubSub.PubSubCardMessageTests.Each_call_the_tracker_records_reads_as_its_operation(operation: Other, verbosity: Raw)
+servicebus row: no placeholder | KILLED | - | Kronikol.Tests.ServiceBus.ServiceBusCardMessageTests.A_send_to_a_queue_the_client_did_not_name_names_no_destination(verbosity: Detailed)
+http message call: a destination from the URI | KILLED | - | Kronikol.Tests.SQS.SqsCardMessageTests.A_send_recorded_as_its_http_request_names_no_queue
+scanner: a background body's wrapper not recognised | KILLED | - | Kronikol.Tests.CallGraph.BackgroundBodyTests.A_compressed_body_under_a_root_background_call_is_read_as_a_scenarios_is
+killed 27 of 27
