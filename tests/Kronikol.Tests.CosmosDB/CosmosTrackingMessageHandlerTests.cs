@@ -531,6 +531,77 @@ public class CosmosTrackingMessageHandlerTests : IDisposable
         TestCorrelationStore.Clear();
     }
 
+    // A write's document id is read from its reply whether or not the reply is drawn: what a diagram shows must not
+    // decide what a change feed's work is attributed to.
+    [Theory]
+    [InlineData("create")]
+    [InlineData("upsert")]
+    [InlineData("replace")]
+    public async Task A_write_at_Summarised_with_LogResponseContent_false_still_correlates_its_document(string write)
+    {
+        TestCorrelationStore.Clear();
+        var reply = new CountingContent("""{"id":"order-1","total":42.50}""");
+        _innerHandler.ResponseToReturn = new HttpResponseMessage(HttpStatusCode.Created) { Content = reply };
+        var options = MakeOptions(CosmosTrackingVerbosity.Summarised, serviceName: "Orders");
+        options.LogResponseContent = false;
+        using var invoker = CreateInvoker(options);
+        var request = write == "replace"
+            ? new HttpRequestMessage(HttpMethod.Put, "https://account.documents.azure.com/dbs/mydb/colls/orders/docs/order-1")
+            {
+                Content = new StringContent("""{"id":"order-1","total":42.50}""")
+            }
+            : MakeCreateRequest();
+        if (write == "upsert") request.Headers.Add("x-ms-documentdb-is-upsert", "true");
+
+        await invoker.SendAsync(request, CancellationToken.None);
+
+        var result = TestCorrelationStore.Resolve(CorrelationKeys.Cosmos("Orders", "order-1"));
+        Assert.NotNull(result);
+        Assert.Equal(_testId, result.Value.Id);
+        Assert.Null(GetLogsFromThisTest().First(l => l.Type == RequestResponseType.Response).Content);
+        // A replace names its document in its address, so its reply is left unread, as a note that does not show it is.
+        Assert.Equal(write == "replace" ? 0 : 1, reply.Reads);
+        TestCorrelationStore.Clear();
+    }
+
+    [Fact]
+    public async Task At_Summarised_with_LogResponseContent_false_a_body_nothing_shows_is_not_read()
+    {
+        var reply = new CountingContent("""{"id":"order-1","total":42.50}""");
+        _innerHandler.ResponseToReturn = new HttpResponseMessage(HttpStatusCode.OK) { Content = reply };
+        var options = MakeOptions(CosmosTrackingVerbosity.Summarised);
+        options.LogResponseContent = false;
+        using var invoker = CreateInvoker(options);
+        var document = new CountingContent("""{"id":"order-1","total":42.50}""");
+        var replace = new HttpRequestMessage(HttpMethod.Put,
+            "https://account.documents.azure.com/dbs/mydb/colls/orders/docs/order-1") { Content = document };
+
+        await invoker.SendAsync(MakeReadRequest(), CancellationToken.None);
+        await invoker.SendAsync(replace, CancellationToken.None);
+
+        Assert.Equal(0, reply.Reads);
+        Assert.Equal(0, document.Reads);
+    }
+
+    /// <summary>JSON content that counts how often its bytes are read.</summary>
+    private sealed class CountingContent(string json) : HttpContent
+    {
+        private readonly byte[] _bytes = System.Text.Encoding.UTF8.GetBytes(json);
+        public int Reads { get; private set; }
+
+        protected override Task SerializeToStreamAsync(Stream stream, System.Net.TransportContext? context)
+        {
+            Reads++;
+            return stream.WriteAsync(_bytes).AsTask();
+        }
+
+        protected override bool TryComputeLength(out long length)
+        {
+            length = _bytes.Length;
+            return true;
+        }
+    }
+
     [Fact]
     public async Task Read_Does_Not_AutoCorrelate()
     {
@@ -655,6 +726,61 @@ public class CosmosTrackingMessageHandlerTests : IDisposable
         var log = GetLogsFromThisTest().First(l => l.Type == RequestResponseType.Response);
         Assert.NotNull(log.SetupVariant!.Content);
         Assert.Contains("doc1", log.SetupVariant!.Content);
+    }
+
+    // A phase's own verbosity decides its notes: a Detailed phase of a Summarised handler shows the bodies a Detailed
+    // handler shows, though the call was made before its phase was known.
+    [Fact]
+    public async Task A_detailed_phase_of_a_summarised_handler_shows_both_bodies_when_LogResponseContent_is_false()
+    {
+        TestPhaseContext.Reset();
+        var options = MakeOptions(CosmosTrackingVerbosity.Summarised);
+        options.ActionVerbosity = CosmosTrackingVerbosity.Detailed;
+        options.LogResponseContent = false;
+        using var invoker = CreateInvoker(options);
+
+        await invoker.SendAsync(MakeCreateRequest(), CancellationToken.None);
+
+        var logs = GetLogsFromThisTest();
+        var request = logs.First(l => l.Type == RequestResponseType.Request);
+        var response = logs.First(l => l.Type == RequestResponseType.Response);
+        Assert.Null(request.Content);
+        Assert.Null(request.SetupVariant!.Content);
+        Assert.Contains("order-1", request.ActionVariant!.Content);
+        Assert.Null(response.Content);
+        Assert.Null(response.SetupVariant!.Content);
+        Assert.Contains("doc1", response.ActionVariant!.Content);
+    }
+
+    [Fact]
+    public async Task A_detailed_phase_of_a_summarised_handler_shows_a_query_s_text_as_a_detailed_handler_does()
+    {
+        TestPhaseContext.Reset();
+        var options = MakeOptions(CosmosTrackingVerbosity.Summarised);
+        options.ActionVerbosity = CosmosTrackingVerbosity.Detailed;
+        options.SetupVerbosity = CosmosTrackingVerbosity.Raw;
+        using var invoker = CreateInvoker(options);
+
+        await invoker.SendAsync(MakeQueryRequest(), CancellationToken.None);
+
+        var request = GetLogsFromThisTest().First(l => l.Type == RequestResponseType.Request);
+        Assert.Equal("SELECT * FROM c WHERE c.status = 'active'", request.Content);
+        Assert.Equal("SELECT * FROM c WHERE c.status = 'active'", request.ActionVariant!.Content);
+        Assert.Contains("\"parameters\"", request.SetupVariant!.Content);
+    }
+
+    [Fact]
+    public async Task A_summarised_phase_shows_a_query_s_text_as_a_summarised_handler_does()
+    {
+        TestPhaseContext.Reset();
+        var options = MakeOptions(CosmosTrackingVerbosity.Detailed);
+        options.SetupVerbosity = CosmosTrackingVerbosity.Summarised;
+        using var invoker = CreateInvoker(options);
+
+        await invoker.SendAsync(MakeQueryRequest(), CancellationToken.None);
+
+        var request = GetLogsFromThisTest().First(l => l.Type == RequestResponseType.Request);
+        Assert.Equal("SELECT * FROM c WHERE c.status = 'active'", request.SetupVariant!.Content);
     }
 
     // ─── Gzip decompression ────────────────────────────────────

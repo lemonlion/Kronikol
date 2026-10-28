@@ -4,6 +4,55 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.15.1] - 2026-10-28
+
+The patch part moves (5.15.0 to 5.15.1): four fixes and four option descriptions corrected, nothing new to call. Two of
+the fixes change what a diagram shows, as their entries say.
+
+### Fixed
+
+- **Elasticsearch: with `LogResponseContent = false` a Raw response keeps its body.** The option's description, the wiki
+  and the 2.37.1 changelog say it decides the Detailed note alone and that `false` restores the body at Raw only, as
+  before the option, but since 2.37.1 `false` left the body out at Raw too. A Raw response now always has its body, a
+  Detailed one while `LogResponseContent` is on, a Summarised one never. Behaviour change: with `LogResponseContent =
+  false` at Raw verbosity, response notes show the body again.
+- **Cosmos DB: a create or an upsert at Summarised with `LogResponseContent = false` is correlated.** Its document id is in
+  its reply alone, and at Summarised with `LogResponseContent = false` the reply was never read, so `AutoCorrelateWrites`
+  stored nothing for it and a change feed's work on the document was not attributed to the test. The reply is now read
+  for the id whenever correlation needs it, and left unread when nothing does.
+- **Cosmos DB: a phase with a verbosity of its own gets its own level's notes.** When the phase is not known as a call is
+  made and `SetupVerbosity` or `ActionVerbosity` differs from `Verbosity`, each phase's note was made at `Verbosity`, so a
+  Detailed or Raw phase of a Summarised handler had no request body, nor a response body while `LogResponseContent` was
+  `false`, and a Summarised phase gave a query no text. Each note is now made at its phase's level, from bodies read once.
+- **Spanner: a streamed read that fails is drawn with status `Error` and its message.** 4.4.1 drew a failed unary call so,
+  but a failed `ExecuteStreamingSql` or `StreamingRead` through the gRPC interceptor was still drawn as an answer, and
+  with `LogResponseContent = false` every streamed read was answered as its call started, before its stream was read. The
+  response now waits for the stream to end whatever `LogResponseContent` says, and a read that throws `RpcException`
+  gives `Error` with the call's message (left out at Summarised with `LogResponseContent = false`, as for a unary call).
+  Behaviour change: with `LogResponseContent = false` a streamed read is answered when its stream ends or its call is
+  disposed, not when the call starts.
+
+### Documentation
+
+- **`LogResponseContent` says what it does on four packages.** Cosmos DB's said `false` left response arrows empty: it
+  decides the Summarised note alone, as Detailed and Raw always show the body. Spanner's said the same: with `false` a
+  command through the ADO.NET command that changed rows still says how many, except at Summarised, and only through the
+  gRPC interceptor has no response a note. Elasticsearch's adds that Summarised never shows the body, and the TcpTap
+  `MongoTapOptions` one that Raw always shows the whole reply. The wiki pages say the same, and the Cosmos DB page's advice
+  for the in-memory emulator adds `LogResponseContent = false`, without which Summarised shows its synthetic replies.
+
+### Tests
+
+- **Three TcpTap facts no longer lose the reaper's beats.** `The_reaper_acts_while_a_debugger_is_attached`,
+  `The_stop_line_names_the_connections_the_reaper_closed` and `The_reaper_ignores_a_wall_clock_jump` advanced their fake
+  clock as soon as the command was decoded. The tap starts a connection's pumps before it watches the connection for the
+  reaper, so on a loaded runner the command could be decoded and both advances made before the reaper watched, and no
+  later beat ever looked (5.14.0's Linux CI failed the first once). Each now waits for the reaper's entry first. A 3 s
+  delay put before the reaper's registration fails the old facts and passes the new ones.
+- Facts added: 3 for Elasticsearch, 7 for Cosmos DB (with a content that counts its reads, so a body nothing needs is
+  shown to stay unread) and 3 for Spanner (with a stream reader that throws after its items), and one Spanner fact now
+  reads its stream before it looks for the response. Each fix undone, one at a time, fails its facts (8 of 8).
+
 ## [5.15.0] - 2026-10-28
 
 The minor part moves (5.14.0 to 5.15.0): a new member on a call, `testDouble`, in the capture format

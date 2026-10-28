@@ -63,7 +63,13 @@ public class CosmosTrackingMessageHandler : DelegatingHandler, ITrackingComponen
 
         var label = CosmosOperationClassifier.GetDiagramLabel(cosmosOp, effectiveVerbosity);
 
-        var requestContent = await GetRequestContent(request, cosmosOp, effectiveVerbosity, cancellationToken);
+        // Each note is made at its own verbosity from bodies read once: a phase's variant was given the effective
+        // verbosity's note, so a Detailed phase of a Summarised handler had neither body.
+        var drawnAt = DrawnAt(effectiveVerbosity);
+        var requestBody = request.Content is not null && drawnAt.Any(v => v != CosmosTrackingVerbosity.Summarised)
+            ? await HttpContentReader.ReadContentAsStringAsync(request.Content, cancellationToken)
+            : null;
+        var requestContent = RequestNote(requestBody, cosmosOp, effectiveVerbosity);
         var requestHeaders = GetFilteredHeaders(request, effectiveVerbosity);
 
         // Use the label as the "method" for Detailed/Summarised, or the real HTTP method for Raw
@@ -97,16 +103,18 @@ public class CosmosTrackingMessageHandler : DelegatingHandler, ITrackingComponen
             v => new PhaseVariant(
                 v == CosmosTrackingVerbosity.Raw ? request.Method : CosmosOperationClassifier.GetDiagramLabel(cosmosOp, v),
                 v == CosmosTrackingVerbosity.Raw ? request.RequestUri! : BuildCleanUri(request.RequestUri!, cosmosOp, v),
-                v == CosmosTrackingVerbosity.Summarised ? null : requestContent,
+                RequestNote(requestBody, cosmosOp, v),
                 GetFilteredHeaders(request, v),
                 v == CosmosTrackingVerbosity.Summarised && cosmosOp.Operation == CosmosOperation.Other)));
 
         HttpResponseMessage response;
-        string? responseContent;
+        string? responseBody;
         try
         {
             response = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
-            responseContent = await GetResponseContent(response, effectiveVerbosity, cancellationToken);
+            responseBody = ReadsResponseBody(drawnAt, cosmosOp, testInfo.Value, response)
+                ? await HttpContentReader.ReadContentAsStringAsync(response.Content, cancellationToken)
+                : null;
         }
         catch (Exception ex)
         {
@@ -140,7 +148,7 @@ public class CosmosTrackingMessageHandler : DelegatingHandler, ITrackingComponen
             testInfo.Value.Name,
             testInfo.Value.Id,
             method,
-            responseContent,
+            ShowsResponseBody(effectiveVerbosity) ? responseBody : null,
             requestUri,
             responseHeaders,
             _options.ServiceName,
@@ -159,11 +167,11 @@ public class CosmosTrackingMessageHandler : DelegatingHandler, ITrackingComponen
             v => new PhaseVariant(
                 v == CosmosTrackingVerbosity.Raw ? request.Method : CosmosOperationClassifier.GetDiagramLabel(cosmosOp, v),
                 v == CosmosTrackingVerbosity.Raw ? request.RequestUri! : BuildCleanUri(request.RequestUri!, cosmosOp, v),
-                v == CosmosTrackingVerbosity.Summarised && !_options.LogResponseContent ? null : responseContent,
+                ShowsResponseBody(v) ? responseBody : null,
                 GetFilteredHeaders(response, v),
                 v == CosmosTrackingVerbosity.Summarised && cosmosOp.Operation == CosmosOperation.Other)));
 
-        AutoCorrelateIfWrite(cosmosOp, testInfo.Value, response, responseContent);
+        AutoCorrelateIfWrite(cosmosOp, testInfo.Value, response, responseBody);
 
         return response;
     }
@@ -228,29 +236,38 @@ public class CosmosTrackingMessageHandler : DelegatingHandler, ITrackingComponen
         return null;
     }
 
-    private async Task<string?> GetRequestContent(HttpRequestMessage request, CosmosOperationInfo op, CosmosTrackingVerbosity verbosity, CancellationToken ct)
-    {
-        if (request.Content is null)
-            return null;
+    /// <summary>
+    /// The verbosities the call may be drawn at: its phase's, and each phase's too while its phase is not known and a
+    /// phase has a verbosity of its own (the variants <see cref="PhaseVariantExtensions.AttachVariants{TVerbosity}"/> adds).
+    /// </summary>
+    private CosmosTrackingVerbosity[] DrawnAt(CosmosTrackingVerbosity effectiveVerbosity) =>
+        TestPhaseContext.Current == TestPhase.Unknown && (_options.SetupVerbosity is not null || _options.ActionVerbosity is not null)
+            ? [effectiveVerbosity, _options.SetupVerbosity ?? _options.Verbosity, _options.ActionVerbosity ?? _options.Verbosity]
+            : [effectiveVerbosity];
 
-        if (verbosity == CosmosTrackingVerbosity.Summarised)
-            return op.QueryText;
+    /// <summary>
+    /// A request's note: at Summarised a query's text alone (none for any other operation), at Detailed a query's text
+    /// or the whole body, at Raw the whole body.
+    /// </summary>
+    private static string? RequestNote(string? body, CosmosOperationInfo op, CosmosTrackingVerbosity verbosity) =>
+        verbosity == CosmosTrackingVerbosity.Summarised
+        || (verbosity == CosmosTrackingVerbosity.Detailed && op.Operation == CosmosOperation.Query)
+            ? op.QueryText
+            : body;
 
-        var content = await HttpContentReader.ReadContentAsStringAsync(request.Content, ct);
+    /// <summary>Detailed and Raw always show the response body; Summarised only while LogResponseContent is on.</summary>
+    private bool ShowsResponseBody(CosmosTrackingVerbosity verbosity) =>
+        verbosity != CosmosTrackingVerbosity.Summarised || _options.LogResponseContent;
 
-        if (verbosity == CosmosTrackingVerbosity.Detailed && op.Operation == CosmosOperation.Query)
-            return op.QueryText;
-
-        return content;
-    }
-
-    private async Task<string?> GetResponseContent(HttpResponseMessage response, CosmosTrackingVerbosity verbosity, CancellationToken ct)
-    {
-        if (verbosity == CosmosTrackingVerbosity.Summarised && !_options.LogResponseContent)
-            return null;
-
-        return await HttpContentReader.ReadContentAsStringAsync(response.Content, ct);
-    }
+    /// <summary>
+    /// Whether the response body is read: when a note shows it, and when it alone names the document a write correlates
+    /// (a create's or an upsert's id is in its reply), since what a diagram shows must not decide what a change feed's
+    /// work is attributed to.
+    /// </summary>
+    private bool ReadsResponseBody(CosmosTrackingVerbosity[] drawnAt, CosmosOperationInfo op, TestIdentity testInfo, HttpResponseMessage response) =>
+        drawnAt.Any(ShowsResponseBody)
+        || (_options.AutoCorrelateWrites && testInfo.IsAttributed && response.IsSuccessStatusCode && op.DocumentId is null
+            && op.Operation is CosmosOperation.Create or CosmosOperation.Upsert);
 
     private (string Key, string? Value)[] GetFilteredHeaders(HttpRequestMessage request, CosmosTrackingVerbosity verbosity)
     {

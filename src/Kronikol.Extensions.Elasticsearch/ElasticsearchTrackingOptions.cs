@@ -36,7 +36,7 @@ public class ElasticsearchTrackingOptions
 
     /// <summary>
     /// Whether to include response body content in diagrams at Detailed verbosity.
-    /// At Raw verbosity, the response body is always included regardless.
+    /// At Raw verbosity, the response body is always included regardless, and at Summarised never.
     /// Default: true.
     /// </summary>
     public bool LogResponseContent { get; set; } = true;

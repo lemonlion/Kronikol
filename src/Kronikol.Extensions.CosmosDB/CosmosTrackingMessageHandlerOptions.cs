@@ -75,9 +75,9 @@ public record CosmosTrackingMessageHandlerOptions
     public Func<string, string, string>? ChangeFeedKeyExtractor { get; set; }
 
     /// <summary>
-    /// Whether to include response content in diagrams. Default: <c>true</c>.
-    /// When <c>true</c>, response arrows show the HTTP response body even at Summarised verbosity.
-    /// When <c>false</c>, response arrows are empty (previous behaviour).
+    /// Whether a response at Summarised verbosity shows the HTTP response body. Default: <c>true</c>.
+    /// Detailed and Raw always show it. When <c>false</c>, a response at Summarised verbosity has no note; a create's or
+    /// an upsert's reply is still read for the document id <see cref="AutoCorrelateWrites"/> correlates.
     /// </summary>
     public bool LogResponseContent { get; set; } = true;
 }

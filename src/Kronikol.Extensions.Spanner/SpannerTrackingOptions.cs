@@ -38,8 +38,10 @@ public record SpannerTrackingOptions
 
     /// <summary>
     /// Whether to include response content in diagrams. Default: true.
-    /// When false, response arrows are empty (previous behaviour).
-    /// Response arrows show payload data (row counts, column names, etc.) at all verbosity levels.
+    /// When true, response arrows show payload data (row counts, column names, etc.) at all verbosity levels.
+    /// When false, through the ADO.NET command a query's or a scalar's response arrow has no note, and a command that
+    /// changed rows still says how many, except at Summarised verbosity; through the gRPC interceptor no response has a
+    /// note, at any verbosity; and a call that fails keeps status Error, with its message except at Summarised verbosity.
     /// </summary>
     public bool LogResponseContent { get; set; } = true;
 

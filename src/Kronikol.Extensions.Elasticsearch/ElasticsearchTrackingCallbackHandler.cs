@@ -72,9 +72,7 @@ public class ElasticsearchTrackingCallbackHandler : ITrackingComponent
         }
 
         string? responseBody = null;
-        if (effectiveVerbosity != ElasticsearchTrackingVerbosity.Summarised
-            && _options.LogResponseContent
-            && responseBodyBytes is not null)
+        if (ShowsResponseBody(effectiveVerbosity) && responseBodyBytes is not null)
         {
             responseBody = Encoding.UTF8.GetString(responseBodyBytes);
         }
@@ -126,8 +124,7 @@ public class ElasticsearchTrackingCallbackHandler : ITrackingComponent
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v =>
             {
-                var vResponseBody = v != ElasticsearchTrackingVerbosity.Summarised
-                    && _options.LogResponseContent && responseBodyBytes is not null
+                var vResponseBody = ShowsResponseBody(v) && responseBodyBytes is not null
                     ? Encoding.UTF8.GetString(responseBodyBytes) : null;
                 return new PhaseVariant(
                     ElasticsearchOperationClassifier.GetDiagramLabel(op, v),
@@ -135,4 +132,10 @@ public class ElasticsearchTrackingCallbackHandler : ITrackingComponent
                     vResponseBody, [], false);
             }));
     }
+
+    // Raw always shows the response body and Summarised never does; LogResponseContent decides Detailed's alone. Off, it
+    // was to restore the body at Raw only, as before the option, and dropped Raw's too.
+    private bool ShowsResponseBody(ElasticsearchTrackingVerbosity verbosity) =>
+        verbosity == ElasticsearchTrackingVerbosity.Raw
+        || (verbosity == ElasticsearchTrackingVerbosity.Detailed && _options.LogResponseContent);
 }

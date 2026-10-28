@@ -164,6 +164,51 @@ public class ElasticsearchTrackingCallbackHandlerTests
         Assert.Null(log.Content);
     }
 
+    [Fact]
+    public void LogOperation_omits_the_response_body_at_summarised_when_LogResponseContent_is_true()
+    {
+        var options = MakeOptions(ElasticsearchTrackingVerbosity.Summarised);
+        options.LogResponseContent = true;
+        var handler = new ElasticsearchTrackingCallbackHandler(options);
+        var responseBody = System.Text.Encoding.UTF8.GetBytes("{\"hits\":{\"total\":42}}");
+
+        CallHandler(handler, responseBody: responseBody);
+
+        var log = GetLogsFromThisTest().First(l => l.Type == RequestResponseType.Response);
+        Assert.Null(log.Content);
+    }
+
+    // LogResponseContent decides the Detailed note alone: Raw always had the body, and false was to restore that.
+    [Fact]
+    public void LogOperation_keeps_the_response_body_at_raw_when_LogResponseContent_is_false()
+    {
+        var options = MakeOptions(ElasticsearchTrackingVerbosity.Raw);
+        options.LogResponseContent = false;
+        var handler = new ElasticsearchTrackingCallbackHandler(options);
+        var responseBody = System.Text.Encoding.UTF8.GetBytes("{\"hits\":{\"total\":42}}");
+
+        CallHandler(handler, responseBody: responseBody);
+
+        var log = GetLogsFromThisTest().First(l => l.Type == RequestResponseType.Response);
+        Assert.Contains("hits", log.Content);
+    }
+
+    [Fact]
+    public void A_raw_phase_keeps_the_response_body_and_a_detailed_one_leaves_it_out_when_LogResponseContent_is_false()
+    {
+        var options = MakeOptions(ElasticsearchTrackingVerbosity.Detailed);
+        options.ActionVerbosity = ElasticsearchTrackingVerbosity.Raw;
+        options.LogResponseContent = false;
+        var handler = new ElasticsearchTrackingCallbackHandler(options);
+        var responseBody = System.Text.Encoding.UTF8.GetBytes("{\"hits\":{\"total\":42}}");
+
+        CallHandler(handler, responseBody: responseBody);
+
+        var log = GetLogsFromThisTest().First(l => l.Type == RequestResponseType.Response);
+        Assert.Null(log.SetupVariant!.Content);
+        Assert.Contains("hits", log.ActionVariant!.Content);
+    }
+
     // ─── ITrackingComponent ─────────────────────────────────────
 
     [Fact]

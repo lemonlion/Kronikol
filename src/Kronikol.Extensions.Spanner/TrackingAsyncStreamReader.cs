@@ -4,8 +4,8 @@ using Grpc.Core;
 namespace Kronikol.Extensions.Spanner;
 
 /// <summary>
-/// Wraps an IAsyncStreamReader to accumulate PartialResultSet messages
-/// and log response content after stream completion.
+/// Wraps a streamed call's IAsyncStreamReader: logs the response when the stream ends, with the PartialResultSet rows
+/// read while LogResponseContent is on, or the failure when a read throws.
 /// </summary>
 internal sealed class TrackingAsyncStreamReader<TResponse> : IAsyncStreamReader<TResponse>
 {
@@ -54,20 +54,22 @@ internal sealed class TrackingAsyncStreamReader<TResponse> : IAsyncStreamReader<
 
             return hasNext;
         }
-        catch (RpcException)
+        catch (RpcException ex)
         {
+            // A read that fails is drawn as a unary call that fails is: status Error, with the call's message.
             if (!_logged)
             {
                 _logged = true;
-                LogStreamResponse();
+                _chunks.Clear();
+                _tracker.LogFailure(_opInfo, _reqId, _traceId, ex);
             }
             throw;
         }
     }
 
     /// <summary>
-    /// Logs accumulated response content if not already logged.
-    /// Called on stream completion, disposal, or error.
+    /// Logs the response with the rows read so far if it is not logged yet. Called when the call is disposed, so a
+    /// stream left before its end is still answered.
     /// </summary>
     internal void LogIfNotAlreadyLogged()
     {

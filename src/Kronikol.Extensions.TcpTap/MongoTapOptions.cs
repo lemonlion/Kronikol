@@ -47,7 +47,7 @@ public sealed class MongoTapOptions : TcpTapOptions
     /// getMore's <c>nextBatch</c>), a findAndModify's <c>value</c> and a distinct's <c>values</c>. Off, the note keeps
     /// the rest of the reply (a write's counts, upserted ids, write errors, and a client bulkWrite's failed operations),
     /// and at <see cref="TapVerbosity.Summarised"/> a reply has no note and a failed command's note is the server's
-    /// message alone. Default true.
+    /// message alone. At <see cref="TapVerbosity.Raw"/> the whole reply is always shown regardless. Default true.
     /// </summary>
     public bool LogResponseContent { get; set; } = true;
 

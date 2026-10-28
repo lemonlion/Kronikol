@@ -282,6 +282,7 @@ public class TcpTapStallTests
         Assert.True(await WaitUntilAsync(() => decoder.Seen is not null), "the command was never decoded");
         Assert.Equal(sentAt, decoder.Seen); // a segment keeps the wall-clock time it arrived at
 
+        await EntryAsync(run.Tap, TcpTapCore.ReaperPhase); // it must see the command before the jump, not after
         fake.Advance(TimeSpan.FromSeconds(2)); // the reaper sees the command unanswered
         clock.Jump = TimeSpan.FromHours(1);
         fake.Advance(TimeSpan.FromSeconds(2));
@@ -393,6 +394,9 @@ public class TcpTapStallTests
         await pair.Client.GetStream().WriteAsync("cmd"u8.ToArray());
         await ReceiveExactlyAsync(pair.Upstream, 3);
         Assert.True(await WaitUntilAsync(() => decoder.Seen is not null), "the command was never decoded");
+        // The pumps start before the reaper is watched, so the command can be decoded first: the beats of an advance made
+        // before the reaper watches are lost to it, and on a loaded machine both advances were.
+        await EntryAsync(run.Tap, TcpTapCore.ReaperPhase);
         clock.Advance(TimeSpan.FromSeconds(2));
         clock.Advance(TimeSpan.FromSeconds(2));
 
@@ -627,6 +631,9 @@ public class TcpTapStallTests
         await pair.Client.GetStream().WriteAsync("cmd"u8.ToArray());
         await ReceiveExactlyAsync(pair.Upstream, 3);
         Assert.True(await WaitUntilAsync(() => decoder.Seen is not null), "the command was never decoded");
+        // The pumps start before the reaper is watched, so the command can be decoded first: the beats of an advance made
+        // before the reaper watches are lost to it, and on a loaded machine both advances were.
+        await EntryAsync(run.Tap, TcpTapCore.ReaperPhase);
         clock.Advance(TimeSpan.FromSeconds(2));
         clock.Advance(TimeSpan.FromSeconds(2));
         Assert.True(await WaitUntilAsync(() => run.Tap.StuckConnectionsReaped == 1), "the command was never reaped");

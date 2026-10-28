@@ -78,29 +78,24 @@ public class SpannerTrackingInterceptor : Interceptor, ITrackingComponent
 
         var call = continuation(request, context);
 
-        if (_options.LogResponseContent)
+        // Wrapped with LogResponseContent off too, which collects no rows: the response waits for the stream to end, so a
+        // read that fails is drawn as a failure, where logging it here drew every read as answered before it was read.
+        var wrappedStream = new TrackingAsyncStreamReader<TResponse>(
+            call.ResponseStream, _tracker, _options, opInfo, reqId, traceId);
+
+        var originalDispose = call.Dispose;
+        void WrappedDispose()
         {
-            var wrappedStream = new TrackingAsyncStreamReader<TResponse>(
-                call.ResponseStream, _tracker, _options, opInfo, reqId, traceId);
-
-            var originalDispose = call.Dispose;
-            void WrappedDispose()
-            {
-                wrappedStream.LogIfNotAlreadyLogged();
-                originalDispose();
-            }
-
-            return new AsyncServerStreamingCall<TResponse>(
-                wrappedStream,
-                call.ResponseHeadersAsync,
-                call.GetStatus,
-                call.GetTrailers,
-                WrappedDispose);
+            wrappedStream.LogIfNotAlreadyLogged();
+            originalDispose();
         }
 
-        // When response content logging is disabled, log immediately and return as-is
-        _tracker.LogResponse(opInfo, reqId, traceId, null);
-        return call;
+        return new AsyncServerStreamingCall<TResponse>(
+            wrappedStream,
+            call.ResponseHeadersAsync,
+            call.GetStatus,
+            call.GetTrailers,
+            WrappedDispose);
     }
 
     public override AsyncClientStreamingCall<TRequest, TResponse> AsyncClientStreamingCall<TRequest, TResponse>(

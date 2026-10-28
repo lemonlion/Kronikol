@@ -757,7 +757,7 @@ public class SpannerTrackingInterceptorTests
     }
 
     [Fact]
-    public void StreamingCall_LogsNullContent_WhenLogResponseContentFalse()
+    public async Task StreamingCall_LogsNullContent_WhenLogResponseContentFalse()
     {
         var options = MakeOptions();
         options.LogResponseContent = false;
@@ -773,7 +773,7 @@ public class SpannerTrackingInterceptorTests
         var context = new ClientInterceptorContext<ExecuteSqlRequest, PartialResultSet>(
             method, null, new CallOptions());
 
-        var fakeStream = new FakeAsyncStreamReader<PartialResultSet>([]);
+        var fakeStream = new FakeAsyncStreamReader<PartialResultSet>([NameChunk("Alice", "Bob")]);
         var originalCall = new AsyncServerStreamingCall<PartialResultSet>(
             fakeStream,
             Task.FromResult(new Metadata()),
@@ -781,12 +781,110 @@ public class SpannerTrackingInterceptorTests
             () => new Metadata(),
             () => { });
 
-        interceptor.AsyncServerStreamingCall(request, context,
+        var call = interceptor.AsyncServerStreamingCall(request, context,
             (req, ctx) => originalCall);
 
-        var logs = GetLogs();
-        var responseLog = logs.Last();
+        // The response waits for the stream to end, as it does with content on, so a stream that fails can say so.
+        Assert.DoesNotContain(GetLogs(), l => l.Type == RequestResponseType.Response);
+        while (await call.ResponseStream.MoveNext(CancellationToken.None)) { }
+
+        var responseLog = Assert.Single(GetLogs(), l => l.Type == RequestResponseType.Response);
         Assert.Null(responseLog.Content);
+        Assert.Null(responseLog.StatusCode);
+    }
+
+    // 4.4.1 drew a unary call that failed with status Error and its message; a streamed read that failed was still drawn
+    // as an answer, and with LogResponseContent off it was answered before its stream was read at all.
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task A_streamed_read_that_fails_is_drawn_with_status_Error_and_its_message(bool logResponseContent)
+    {
+        var options = MakeOptions();
+        options.LogResponseContent = logResponseContent;
+        var interceptor = CreateInterceptor(options);
+        var request = new ExecuteSqlRequest
+        {
+            Sql = "SELECT Nme FROM Users",
+            Session = "projects/p/instances/i/databases/d/sessions/s"
+        };
+        var method = MakeMethod<ExecuteSqlRequest, PartialResultSet>(
+            "google.spanner.v1.Spanner", "ExecuteStreamingSql",
+            MethodType.ServerStreaming);
+        var context = new ClientInterceptorContext<ExecuteSqlRequest, PartialResultSet>(
+            method, null, new CallOptions());
+        var rpcEx = new RpcException(new Status(StatusCode.InvalidArgument, "Unrecognized name: Nme"));
+        var originalCall = new AsyncServerStreamingCall<PartialResultSet>(
+            new FakeAsyncStreamReader<PartialResultSet>([], failWith: rpcEx),
+            Task.FromResult(new Metadata()),
+            () => new Status(StatusCode.InvalidArgument, "Unrecognized name: Nme"),
+            () => new Metadata(),
+            () => { });
+
+        var call = interceptor.AsyncServerStreamingCall(request, context,
+            (req, ctx) => originalCall);
+        var thrown = await Assert.ThrowsAsync<RpcException>(() => call.ResponseStream.MoveNext(CancellationToken.None));
+        call.Dispose();
+
+        Assert.Same(rpcEx, thrown);
+        var responseLog = Assert.Single(GetLogs(), l => l.Type == RequestResponseType.Response);
+        Assert.Equal("Error", responseLog.StatusCode?.Value?.ToString());
+        Assert.Equal(rpcEx.Message, responseLog.Content);
+    }
+
+    [Fact]
+    public async Task A_streamed_read_that_fails_after_some_rows_is_drawn_with_status_Error()
+    {
+        var interceptor = CreateInterceptor(MakeOptions());
+        var request = new ExecuteSqlRequest
+        {
+            Sql = "SELECT Name FROM Users",
+            Session = "projects/p/instances/i/databases/d/sessions/s"
+        };
+        var method = MakeMethod<ExecuteSqlRequest, PartialResultSet>(
+            "google.spanner.v1.Spanner", "ExecuteStreamingSql",
+            MethodType.ServerStreaming);
+        var context = new ClientInterceptorContext<ExecuteSqlRequest, PartialResultSet>(
+            method, null, new CallOptions());
+        var rpcEx = new RpcException(new Status(StatusCode.Unavailable, "Connection reset"));
+        var originalCall = new AsyncServerStreamingCall<PartialResultSet>(
+            new FakeAsyncStreamReader<PartialResultSet>([NameChunk("Alice")], failWith: rpcEx),
+            Task.FromResult(new Metadata()),
+            () => new Status(StatusCode.Unavailable, "Connection reset"),
+            () => new Metadata(),
+            () => { });
+
+        var call = interceptor.AsyncServerStreamingCall(request, context,
+            (req, ctx) => originalCall);
+        Assert.True(await call.ResponseStream.MoveNext(CancellationToken.None));
+        await Assert.ThrowsAsync<RpcException>(() => call.ResponseStream.MoveNext(CancellationToken.None));
+
+        var responseLog = Assert.Single(GetLogs(), l => l.Type == RequestResponseType.Response);
+        Assert.Equal("Error", responseLog.StatusCode?.Value?.ToString());
+        Assert.Equal(rpcEx.Message, responseLog.Content);
+    }
+
+    private static PartialResultSet NameChunk(params string[] names)
+    {
+        var chunk = new PartialResultSet
+        {
+            Metadata = new ResultSetMetadata
+            {
+                RowType = new StructType
+                {
+                    Fields =
+                    {
+                        new StructType.Types.Field
+                        {
+                            Name = "Name",
+                            Type = new Google.Cloud.Spanner.V1.Type { Code = TypeCode.String }
+                        }
+                    }
+                }
+            }
+        };
+        foreach (var name in names) chunk.Values.Add(Value.ForString(name));
+        return chunk;
     }
 
     [Fact]
@@ -943,15 +1041,23 @@ public class SpannerTrackingInterceptorTests
     private sealed class FakeAsyncStreamReader<T> : IAsyncStreamReader<T>
     {
         private readonly IReadOnlyList<T> _items;
+        private readonly Exception? _failWith;
         private int _index = -1;
 
-        public FakeAsyncStreamReader(IReadOnlyList<T> items) => _items = items;
+        /// <param name="failWith">Thrown by the read after the last item, in place of the end of the stream.</param>
+        public FakeAsyncStreamReader(IReadOnlyList<T> items, Exception? failWith = null)
+        {
+            _items = items;
+            _failWith = failWith;
+        }
 
         public T Current => _items[_index];
 
         public Task<bool> MoveNext(CancellationToken cancellationToken)
         {
             _index++;
+            if (_index >= _items.Count && _failWith is not null)
+                return Task.FromException<bool>(_failWith);
             return Task.FromResult(_index < _items.Count);
         }
     }
