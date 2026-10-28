@@ -62,9 +62,33 @@ internal static class WovenRun
         var lines = plantUml.ReplaceLineEndings("\n").Split('\n');
         var start = Array.FindIndex(lines, l => l.StartsWith("hnote across <<assertionNote>>", StringComparison.Ordinal));
         var end = Array.IndexOf(lines, "end note", start);
-        var body = lines[(start + 1)..end];
+        var body = Rejoined(lines[(start + 1)..end]);
         var message = body.Length > 1 ? string.Join("\n", body[1..]) : null;
         var source = lines.Skip(end + 1).FirstOrDefault(l => l.StartsWith("'__^*__:", StringComparison.Ordinal));
         return new Note(body[0].StartsWith('✓'), body[0][2..], message, source?["'__^*__:".Length..]);
+    }
+
+    // A long line is broken for the diagram with a marker at each break, two where the break took a space and one
+    // where it cut a word (DiagramWidth.JoinMarker): undone here, so a long label reads whole.
+    private static string[] Rejoined(string[] lines)
+    {
+        const string marker = "<U+200B>";
+        var joined = new List<string>(lines.Length);
+        var current = new System.Text.StringBuilder();
+        foreach (var line in lines)
+        {
+            if (line.EndsWith(marker + marker, StringComparison.Ordinal))
+                current.Append(line, 0, line.Length - 2 * marker.Length).Append(' ');
+            else if (line.EndsWith(marker, StringComparison.Ordinal) && !line.EndsWith("~" + marker, StringComparison.Ordinal))
+                current.Append(line, 0, line.Length - marker.Length);
+            else
+            {
+                joined.Add(current.Append(line).ToString());
+                current.Clear();
+            }
+        }
+        if (current.Length > 0)
+            joined.Add(current.ToString());
+        return joined.ToArray();
     }
 }

@@ -106,14 +106,16 @@ public class WeaveAssertionsTask : Microsoft.Build.Utilities.Task
             Log.LogMessage(MessageImportance.Low, "AssertionTracking: {0}", message);
 
         // A statement the weave cannot account for is left as the compiler wrote it, never miscompiled; it still
-        // runs, untracked, and the build says where and why.
+        // runs, untracked, and the build says where and why. At high importance, which a build shows at its default,
+        // minimal, verbosity (#212): at normal importance only a build asked for more said it, so a note was missing
+        // with no word.
         if (result.Unwoven.Count > 0)
         {
-            Log.LogMessage(MessageImportance.Normal,
+            Log.LogMessage(MessageImportance.High,
                 "Kronikol.AssertionTracking: Left {0} assertion statement(s) unwoven; they run as written, without a note:",
                 result.Unwoven.Count);
             foreach (var unwoven in result.Unwoven)
-                Log.LogMessage(MessageImportance.Normal, "  {0}", unwoven);
+                Log.LogMessage(MessageImportance.High, "  {0}", unwoven);
         }
 
         // [assembly: TrackAssertions] asks for notes; a weave that can give none says why, as a warning with a code

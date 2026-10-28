@@ -332,6 +332,50 @@ public class TargetsBuildTests
           </Target>
         """;
 
+    // An assertion with an await after its own in the same statement: a resumed state machine's dispatch jumps into the
+    // statement past the assertion, so the weave leaves it as written (#212, plan 4.1 c).
+    private const string AwaitAfterTheAssertion = """
+        using System;
+        using System.Threading.Tasks;
+        using Shouldly;
+
+        [assembly: Kronikol.Tracking.TrackAssertions]
+
+        public static class IssueCases
+        {
+            public static async Task Statements()
+            {
+                await Task.Yield();
+                (await Should.ThrowAsync<InvalidOperationException>(() => Fail())).Message.ShouldBe(await Expected());
+            }
+
+            private static async Task Fail()
+            {
+                await Task.Yield();
+                throw new InvalidOperationException("not found");
+            }
+
+            private static async Task<string> Expected()
+            {
+                await Task.Yield();
+                return "not found";
+            }
+        }
+        """;
+
+    [Fact]
+    public void A_build_at_its_default_verbosity_names_a_statement_left_unwoven()
+    {
+        // The console logger, as a CI build or any build whose output is redirected uses, at minimal verbosity: what
+        // `dotnet build` and `dotnet test` show by default (#212, F2).
+        var build = Build("UnwovenListed", ["-v:m"], source: AwaitAfterTheAssertion);
+
+        Assert.Contains("Kronikol.AssertionTracking: Left 1 assertion statement(s) unwoven; they run as written, without a note:",
+            build.Output);
+        Assert.Matches(@"IssueCases/<Statements>d__\d+\.MoveNext, line 12: an await in the statement comes after the assertion",
+            build.Output);
+    }
+
     [Fact]
     public void A_statement_whose_source_cannot_be_read_warns_once()
     {

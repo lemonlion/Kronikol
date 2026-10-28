@@ -4,6 +4,95 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.26.1] - 2026-10-28
+
+The patch part moves (5.26.0 to 5.26.1): fixes, nothing new to call (#212, `plans/AWAITED_ASSERTION_LABELS_PLAN.md`
+R1). Awaited assertions are drawn in Debug as in Release, with the assertion's own outcome and a sentence for a label;
+which notes a run draws changes, as the entries say, and no option or file changes shape.
+
+### Fixed
+- **An awaited assertion whose result is used is drawn in a Debug build (#212).** A Debug build keeps the result of an
+  await it uses in a field, and pushes the field's owner where the await's two paths meet, before the result is read.
+  The weave required an empty stack there, so it left every such statement as written, with no note: `var e = await
+  Should.ThrowAsync<T>(…)`, `return await …`, a typed declaration, an assignment to a local or a field, the discard
+  `_ = await …`, `ConfigureAwait(false)`, and an awaited assertion fed to another, of Shouldly, FluentAssertions,
+  AwesomeAssertions and TUnit. The note's `try` now starts where the two paths meet, which is stack-empty in every build
+  (226 of 226 awaits measured on SDKs 8, 9 and 10), and the same code draws the same notes in Debug and in Release.
+- **A statement's head is not part of its label (#212).** The label read the statement's text after taking off `await`
+  and then `var x = `, in that order, so `var exception = await Should.ThrowAsync<InvalidOperationException>(…)` read
+  `Await Should.ThrowAsync<InvalidOperationException>(…)`, and `return await …`, `T e = await …`, `e = await …`,
+  `this.e = await …`, `_ = await …` and a trailing `.ConfigureAwait(false)` read as their source. A head of any of these
+  kinds, in any order, is not read now, so each reads `Should throw InvalidOperationException`, as the bare statement
+  does, and FluentAssertions' `var a = await act.Should().ThrowAsync<T>()` reads `Act should throw async <T>`.
+- **An assertion on an awaited value is drawn (#212).** `(await client.GetNameAsync()).ShouldBe("order")`,
+  `(await x).Should().Be(y)`, `actual.ShouldBe(await x)`, FluentAssertions' `actual.Should().Be(await x)` and TUnit's
+  `await Assert.That(await x).IsEqualTo(y)` were never drawn, in Debug or in Release, and the build did not name them:
+  the compiler writes everything after an await under a hidden sequence point, which belongs to no statement the weave
+  read. A statement is read on through its awaits now, and wrapped from its last await. So is a suite's own async
+  `[ShouldlyMethods]` assertion, `await client.ShouldBeKnownAsync(id)`, which was skipped as an await on something else.
+- **A compound awaited statement is drawn ✗ when its second assertion fails (#212).** In
+  `(await act.Should().ThrowAsync<T>()).Which.Message.Should().Be("not found")` the pass was recorded right after the
+  await, before the message was checked, so the statement was drawn ✓ when the test failed on its message. The `try`
+  ends with the statement now: one note, ✗ with the failure when either part fails.
+- **A Debug `return` of an assertion draws its pass (#212).** Debug ends `return Should.Throw<T>(…);` with a jump to the
+  method's one return, and the weave sent that jump past the pass, so only a failure was ever drawn. The end of an
+  `if`'s branch, which jumps past its `else`, did the same. A jump that ends a statement now stays after its `try`.
+- **The build names a statement it leaves as written (#212).** The list of statements left unwoven, with each one's
+  line and reason, was logged at normal importance, which `dotnet build` and `dotnet test` do not show by default. It is
+  logged at high importance now, which a build shows at its default verbosity where its output is not a terminal, as on
+  CI. The terminal logger, `dotnet`'s default in an interactive terminal since .NET 9, shows it only at `-v:d`.
+- **Three kinds of statement are left as written rather than drawn wrong (#212).** An awaited assertion with another await after
+  it in the same statement, `(await Should.ThrowAsync<T>(…)).Message.ShouldBe(await GetExpectedAsync())`, was drawn ✓
+  in Release when its trailing assertion failed: a resumed method jumps into the statement past the assertion, so no
+  `try` can hold it. A TUnit assertion a statement does not await, such as a helper returning
+  `Assert.That(x).IsEqualTo(y)`, was drawn ✓ before it had run: TUnit runs it only when it is awaited. Both are listed
+  with their reason. So is an await whose merge point the weave cannot find, which was wrapped as a synchronous
+  statement, its pass recorded before the assertion ran.
+
+### Changed
+- A Debug run draws a note for each awaited assertion whose result is used, and every run one for each assertion on an
+  awaited value, where it drew none. Notes are numbered by position (`s0/d0/n1`), so the addresses of later notes in
+  such a diagram move, and a Debug scenario with no calls gains a diagram to hold its notes. Nothing compares assertion
+  notes across runs, so no history verdict moves; a saved search or a committed Specifications file that names an old
+  label reads differently.
+- A statement first drawn by this release shows the values of the async method's parameters and of what the statement
+  reads after its last await, the same in every build. A local it reads only before the await is not shown: in a plain
+  Release build it is gone after the await resumes (#211 carries such values).
+- An assertion task a statement does not await, returned by a helper that is not `async`, stored for a later `await`
+  or returned by an expression-bodied test, is still drawn ✓ when the task is made (#212's next release observes it).
+
+### Tests
+- **`AwaitedAssertionShapeTests` (#212)**: 48 statement shapes, each a file of its own under
+  `Fixtures/AwaitedShapes/` whose header names the notes each entry draws, the builds it runs in and the statements the
+  weave leaves as written; and #212's own five tests, verbatim. Each is built in Debug, plain Release and Release with
+  debug-plus (xUnit v2's), woven beside an unwoven build, and run where its assertion holds and where it does not: the
+  notes and their outcomes, the test's outcome equal to the unwoven build's, the statements left unwoven, and every
+  assertion call in the IL either woven or listed. The issue's project, S2, S4, S7, S8, S16a and S17a are also built by
+  `dotnet build` on SDKs 8, 9 and 10. On 5.22.0, whose weaver and formatter are 5.26.0's, 158 of the first 508
+  checks failed.
+- `TestAssemblyBuilder` builds Release with debug-plus too (`BuildConfiguration.ReleaseDebugPlus`, csc's
+  `/debug+ /optimize+`, as xUnit v2's props make it), and `BuildWithSdk` takes MSBuild properties; `WovenRun` reads a
+  label the diagram wrapped onto several lines whole.
+- Formatter facts: every head with Shouldly, FluentAssertions, TUnit and a suite's own assertion, `ConfigureAwait`, the
+  issue's two rows, and the code a head must not take (`==`, `=>`, `<=`, `>=`, `!=`, compound assignments, a literal's
+  ` = `, a statement in brackets). `TargetsBuildTests` builds a project at the default verbosity and reads the list.
+- Three facts that pinned the skip of an await inside an assertion's argument expect its note now:
+  `Weave_AsyncMethod_AwaitInsideAssertionArguments_DoesNotThrowInvalidProgram`, the mixed-statement fact (renamed
+  `Weave_AsyncMethod_MixedAwaitAndNormalAssertions_TracksEach`) and Shouldly's `An_await_inside_an_argument` shape.
+  Each still runs the woven method.
+- Mutations: each one the plan lists (the `try` from the awaiter's load, the `try` ending at `GetResult`, `await` taken
+  off before the declaration, no `return` head, no `ConfigureAwait` tail, the trailing `br` left in the `try`, the
+  list at normal importance, the hidden region not joined, the first await read, library types only, no cut at the
+  protected region's end, S20 not refused) and three for rules added on the way (values not limited, a missing merge
+  point read as synchronous, TUnit's un-awaited assertion not refused) turns a fact red: 15 of 15.
+- Checks: The whole weaver suite (1,025 facts; 28 skipped, the SDK 11 lanes), `tests/Kronikol.Tests` (11,521), and
+  `release.slnf` built in Release for every target framework. #212's own project on this release's packages, from a
+  local feed with NU1603 an error, in Debug and in Release: each of its five tests draws its notes, each a sentence,
+  the same in both builds, and two for `Assigned_ThrowAsync`. BreakfastProvider's xUnit in-memory lane on 5.23.0 and
+  on this release: 212 scenarios passed in both, with 896 notes in both, which differ only in the values a run makes
+  (ids, names, times). That lane runs none of the shapes this release changes; BreakfastProvider's are in its unit
+  tests, which are not woven.
+
 ## [5.26.0] - 2026-10-28
 
 The minor part moves (5.25.0 to 5.26.0): `summary --json` gains every diagnostic of each kind (#183), and

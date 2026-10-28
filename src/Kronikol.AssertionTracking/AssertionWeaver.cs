@@ -618,6 +618,13 @@ public class AssertionWeaver
             }
         }
 
+        // The compiler writes an await's resumption, and the rest of its statement after it, under a hidden sequence
+        // point, so a statement is read on through each of its awaits' merge points (F8).
+        var visibleOffsets = new HashSet<int>(sequencePoints.Where(p => !p.IsHidden).Select(p => p.Offset));
+        var indexOf = new Dictionary<Instruction, int>(instrByOffset.Count);
+        for (var i = 0; i < instrByOffset.Count; i++)
+            indexOf[instrByOffset[i]] = i;
+
         // Group instructions by sequence point (each sequence point = one source statement)
         for (var spIdx = 0; spIdx < sequencePoints.Count; spIdx++)
         {
@@ -639,6 +646,8 @@ public class AssertionWeaver
             if (statementInstructions.Count == 0)
                 continue;
 
+            var awaits = ReadThroughAwaits(method, statementInstructions, instrByOffset, indexOf, visibleOffsets);
+
             // Check if any instruction is an assertion entry point (.Should() or Assert.That())
             var hasAssertionCall = statementInstructions.Any(i =>
                 (i.OpCode == OpCodes.Call || i.OpCode == OpCodes.Callvirt) &&
@@ -652,20 +661,6 @@ public class AssertionWeaver
             if (IsPragmaDisabled(sp))
                 continue;
 
-            // Collect conditional/unconditional branches jumping outside the statement range.
-            // These come from null-propagation (?.) which generates brfalse/brtrue that skip
-            // past the expression. We exclude leave/leave.s since those are structural control
-            // flow for exception handling (e.g. async state machine's outer try/catch exit).
-            var startOffset = statementInstructions[0].Offset;
-            var endOffset = statementInstructions.Count > 0
-                ? statementInstructions[statementInstructions.Count - 1].Offset + 1
-                : startOffset;
-            var outboundBranches = statementInstructions
-                .Where(i => i.OpCode != OpCodes.Leave && i.OpCode != OpCodes.Leave_S &&
-                    i.Operand is Instruction target &&
-                    (target.Offset < startOffset || target.Offset >= endOffset))
-                .ToList();
-
             // Read the source text for this statement
             var sourceText = ReadSourceText(sp);
             var writtenText = sourceText;
@@ -676,53 +671,56 @@ public class AssertionWeaver
             if (shouldlyCall != null)
                 sourceText = WithoutCustomMessage(sourceText, shouldlyCall);
 
-            // Exclude trailing leave/leave.s and ret from the statement. In async state machines,
-            // the compiler places a leave at the end of user code to exit the outer try.
-            // A ret instruction cannot be inside a try block (CLR verifier rejects it).
+            // An awaited assertion's try starts at its await's merge point (4.1 a, g); any other at its first
+            // instruction.
+            var (mergePoint, refusal) = AwaitedStart(statementInstructions, awaits);
+            var start = mergePoint ?? statementInstructions[0];
+
+            // Exclude trailing leave/leave.s, ret and br/br.s from the statement. In async state machines, the
+            // compiler places a leave at the end of user code to exit the outer try; a ret cannot be inside a try
+            // block (the CLR verifier rejects it); and a br at a statement's end is how it completes, as a Debug
+            // `return x;` jumps to the method's one return and the end of an if's branch jumps past the else (F6).
             // These instructions should remain after our wrapper.
             var lastInstr = statementInstructions.Last();
-            while (lastInstr != statementInstructions.First() &&
+            Instruction? trailingJump = null;
+            while (lastInstr != start &&
                    (lastInstr.OpCode == OpCodes.Leave || lastInstr.OpCode == OpCodes.Leave_S ||
-                    lastInstr.OpCode == OpCodes.Ret))
+                    lastInstr.OpCode == OpCodes.Ret || lastInstr.OpCode == OpCodes.Br || lastInstr.OpCode == OpCodes.Br_S))
             {
+                if (lastInstr.OpCode == OpCodes.Br || lastInstr.OpCode == OpCodes.Br_S)
+                    trailingJump = lastInstr;
                 lastInstr = lastInstr.Previous;
             }
 
-            // Detect awaited assertions: if the statement contains GetAwaiter() after
-            // the assertion call, this is an awaited assertion where the failure manifests
-            // at GetResult() in the hidden SP (merge point after await suspension/resume).
-            var isAwaited = false;
-            Instruction? getResultInstr = null;
-            var hasGetAwaiter = statementInstructions.Any(i =>
-                (i.OpCode == OpCodes.Call || i.OpCode == OpCodes.Callvirt) &&
-                i.Operand is MethodReference mr2 &&
-                mr2.Name == "GetAwaiter");
+            // Collect conditional/unconditional branches jumping outside the statement range.
+            // These come from null-propagation (?.) which generates brfalse/brtrue that skip
+            // past the expression. We exclude leave/leave.s since those are structural control
+            // flow for exception handling (e.g. async state machine's outer try/catch exit), and
+            // a trailing br, which stays after the wrapper.
+            var range = statementInstructions.SkipWhile(i => i != start).ToList();
+            var startOffset = start.Offset;
+            var endOffset = range[range.Count - 1].Offset + 1;
+            var outboundBranches = range
+                .Where(i => i.OpCode != OpCodes.Leave && i.OpCode != OpCodes.Leave_S && i != trailingJump &&
+                    i.Operand is Instruction target &&
+                    (target.Offset < startOffset || target.Offset >= endOffset))
+                .ToList();
 
-            if (hasGetAwaiter)
+            var isAwaited = mergePoint != null;
+            var capturedVariables = refusal != null
+                ? new List<CapturedVariable>()
+                : DetectCapturedVariables(method, statementInstructions, sourceText,
+                    () => analysis ??= StackAnalysis.Analyze(method.Body));
+            // The values are read at the merge point, after the await's resumption, where a value one of MoveNext's
+            // own locals held is gone once the state machine has suspended: #211 carries such values across the await.
+            // Until then they are read only as they were before (one await, on a library's assertion), and a statement
+            // first woven by this reading shows only the values every build keeps in the state machine's fields, so
+            // its label is the same in Debug and in Release.
+            if (isAwaited && !ReadAsBefore(statementInstructions, awaits))
             {
-                // Distinguish between:
-                // A) True assertion-await: await x.Should().ThrowAsync<T>()
-                //    — GetAwaiter is on the assertion chain's result (Task from ThrowAsync)
-                //    — Wrap GetResult() in try/catch (existing WrapAwaitedAssertion logic)
-                // B) Argument-await: x.Should().Be(y, await someTask)
-                //    — GetAwaiter is on a non-assertion Task (argument computation)
-                //    — Cannot safely wrap: statement spans async state machine boundary
-                //    — Skip this assertion (still runs, just not tracked)
-                if (IsGetAwaiterOnAssertionResult(statementInstructions))
-                {
-                    getResultInstr = FindGetResultInstruction(statementInstructions);
-                    if (getResultInstr != null)
-                        isAwaited = true;
-                }
-                else
-                {
-                    // Argument-await: skip — wrapping would produce invalid IL
-                    continue;
-                }
+                var resumed = statementInstructions.SkipWhile(i => i != mergePoint).ToList();
+                capturedVariables.RemoveAll(cv => !IsKeptAcrossTheAwait(resumed, cv));
             }
-
-            var capturedVariables = DetectCapturedVariables(method, statementInstructions, sourceText,
-                () => analysis ??= StackAnalysis.Analyze(method.Body));
             results.Add(new AssertionStatement
             {
                 FirstInstruction = statementInstructions.First(),
@@ -731,127 +729,214 @@ public class AssertionWeaver
                 SourceText = sourceText,
                 OutboundBranches = outboundBranches,
                 CapturedVariables = capturedVariables,
-                ArgumentCapture = isAwaited
+                ArgumentCapture = isAwaited || refusal != null
                     ? null
                     : DetectCapturedArguments(method, statementInstructions, writtenText, capturedVariables,
                         analysis ??= StackAnalysis.Analyze(method.Body)),
                 IsAwaited = isAwaited,
-                GetResultInstruction = getResultInstr
+                MergePoint = mergePoint,
+                Refusal = refusal,
             });
         }
 
         return results;
     }
 
-    /// <summary>
-    /// Determines whether the GetAwaiter() call in the statement is on the result of an
-    /// assertion-library method (true assertion-await like <c>await x.Should().ThrowAsync()</c>)
-    /// versus a non-assertion Task (argument-await like <c>x.Should().Be(y, await someTask)</c>).
-    /// Walks backwards from GetAwaiter through the instruction stream, skipping ConfigureAwait,
-    /// and checks if the Task-producing call is on an assertion-library type.
-    /// </summary>
-    private static bool IsGetAwaiterOnAssertionResult(List<Instruction> statementInstructions)
+    /// <summary>One await in a statement: its <c>GetAwaiter()</c> call and its merge point, where the path that
+    /// found the task complete (the <c>IsCompleted</c> test's <c>brtrue</c>) and the path that resumed after it
+    /// suspended meet, and the result is read. The merge point is null when the test has no such branch.</summary>
+    private sealed class Await(Instruction getAwaiter, Instruction? mergePoint)
     {
-        Instruction? getAwaiterInstr = null;
-        foreach (var instr in statementInstructions)
+        public Instruction GetAwaiter { get; } = getAwaiter;
+        public Instruction? MergePoint { get; } = mergePoint;
+    }
+
+    /// <summary>
+    /// The statement's awaits, in order. From each merge point on, the instructions up to the next visible sequence
+    /// point, or to the end of the protected region the statement starts in, are added to the statement: the compiler
+    /// writes the rest of a statement after an await under a hidden sequence point, and the instructions before the
+    /// merge point, its suspension and resumption, belong to the await. Where a statement is the last of the
+    /// compiler's own try around an async method's body, the next visible point lies past the try's handler, hence
+    /// the region's end. A <c>GetAwaiter()</c> with no <c>IsCompleted</c> test after it (a synchronous
+    /// <c>.GetAwaiter().GetResult()</c>) is no await.
+    /// </summary>
+    private static List<Await> ReadThroughAwaits(MethodDefinition method, List<Instruction> statement,
+        List<Instruction> instructions, Dictionary<Instruction, int> indexOf, HashSet<int> visibleOffsets)
+    {
+        var awaits = new List<Await>();
+        HashSet<Instruction>? inStatement = null;
+        for (var k = 0; k < statement.Count; k++)
         {
-            if ((instr.OpCode == OpCodes.Call || instr.OpCode == OpCodes.Callvirt) &&
-                instr.Operand is MethodReference mr && mr.Name == "GetAwaiter")
+            if (!IsCall(statement[k], "GetAwaiter") || !IsAwait(statement[k], out var mergePoint))
+                continue;
+            awaits.Add(new Await(statement[k], mergePoint));
+            if (mergePoint == null)
+                continue;
+            inStatement ??= new HashSet<Instruction>(statement);
+            if (inStatement.Contains(mergePoint))
+                continue;
+
+            var regionEnd = ProtectedRegionEnd(method, statement[0]);
+            for (var i = indexOf[mergePoint]; i < instructions.Count; i++)
             {
-                getAwaiterInstr = instr;
-                break;
+                var instruction = instructions[i];
+                if (instruction != mergePoint && visibleOffsets.Contains(instruction.Offset) ||
+                    regionEnd != null && instruction.Offset >= regionEnd.Offset)
+                    break;
+                statement.Add(instruction);
+                inStatement.Add(instruction);
             }
         }
+        return awaits;
+    }
 
-        if (getAwaiterInstr == null)
-            return false;
-
-        // Walk backwards to find the call that produced the Task/ValueTask
-        var current = getAwaiterInstr.Previous;
-        while (current != null)
+    /// <summary>Whether <paramref name="getAwaiter"/> is awaited: its awaiter's <c>IsCompleted</c> is tested before
+    /// any other call. <paramref name="mergePoint"/> is the target of the test's <c>brtrue</c>, or null when no
+    /// <c>brtrue</c> follows the test.</summary>
+    private static bool IsAwait(Instruction getAwaiter, out Instruction? mergePoint)
+    {
+        mergePoint = null;
+        var scan = 8;
+        for (var current = getAwaiter.Next; current != null && scan-- > 0; current = current.Next)
         {
-            if ((current.OpCode == OpCodes.Call || current.OpCode == OpCodes.Callvirt) &&
-                current.Operand is MethodReference mr)
+            if (current.OpCode.FlowControl == FlowControl.Call)
             {
-                // ConfigureAwait is an intermediate — skip past it
-                if (mr.Name == "ConfigureAwait")
-                {
-                    current = current.Previous;
-                    continue;
-                }
-
-                // This is the Task-producing call. Check if it's on an assertion type.
-                return IsAssertionLibraryType(mr.DeclaringType);
+                if (current.Operand is not MethodReference { Name: "get_IsCompleted" })
+                    return false;
+                if (current.Next is { } branch && (branch.OpCode == OpCodes.Brtrue || branch.OpCode == OpCodes.Brtrue_S))
+                    mergePoint = branch.Operand as Instruction;
+                return true;
             }
-
-            current = current.Previous;
+            if (current.OpCode.FlowControl != FlowControl.Next)
+                return false;
         }
-
         return false;
     }
 
-    /// <summary>
-    /// For an awaited assertion statement, finds the GetResult() instruction at the
-    /// merge point. Starting from the GetAwaiter call within the statement, scans forward
-    /// (including into hidden sequence points) to find get_IsCompleted → brtrue → merge point → GetResult.
-    /// </summary>
-    private static Instruction? FindGetResultInstruction(List<Instruction> statementInstructions)
+    /// <summary>The end of the innermost protected region, a try or a handler, that holds <paramref name="first"/>:
+    /// the first instruction past it, or null when the statement is in none.</summary>
+    private static Instruction? ProtectedRegionEnd(MethodDefinition method, Instruction first)
     {
-        // Find the GetAwaiter call within the statement
-        Instruction? getAwaiterInstr = null;
-        foreach (var instr in statementInstructions)
+        Instruction? end = null;
+        foreach (var handler in method.Body.ExceptionHandlers)
         {
-            if ((instr.OpCode == OpCodes.Call || instr.OpCode == OpCodes.Callvirt) &&
-                instr.Operand is MethodReference mr && mr.Name == "GetAwaiter")
-            {
-                getAwaiterInstr = instr;
-            }
+            Consider(handler.TryStart, handler.TryEnd);
+            Consider(handler.HandlerStart, handler.HandlerEnd);
+        }
+        return end;
+
+        void Consider(Instruction? regionStart, Instruction? regionEnd)
+        {
+            if (regionStart != null && regionEnd != null && regionStart.Offset <= first.Offset &&
+                first.Offset < regionEnd.Offset && (end == null || regionEnd.Offset < end.Offset))
+                end = regionEnd;
+        }
+    }
+
+    /// <summary>
+    /// For a statement with an await: the merge point its try starts at, or why it is left as written. The try
+    /// starts at the merge point of the statement's last await, which is stack-empty, so it holds where the result of
+    /// an awaited assertion is read and the code after it (4.1 a, c), and an assertion on an awaited value (4.1 g).
+    /// Whatever runs before that merge point runs outside the try, so the statement is refused when an assertion
+    /// would: an awaited assertion with another await after it (S20), whose result a resumed state machine's
+    /// dispatch jumps past, or an assertion called before an await it does not itself make.
+    /// </summary>
+    private static (Instruction? MergePoint, string? Refusal) AwaitedStart(List<Instruction> statement, List<Await> awaits)
+    {
+        if (awaits.Count == 0)
+        {
+            // TUnit runs an assertion only when it is awaited, so one the statement does not await is drawn before it
+            // has run, if at all (S19b). A chain whose last call returns nothing has nothing left to await: it ran.
+            var tunit = statement.Any(i => IsCall(i, "That") && i.Operand is MethodReference mr && IsAssertionEntryPoint(mr) &&
+                                           mr.DeclaringType.Namespace.StartsWith("TUnit.Assertions", StringComparison.Ordinal));
+            var lastAssertion = statement.LastOrDefault(i => IsCallInstruction(i) && i.Operand is MethodReference mr && IsAssertionCall(mr));
+            return tunit && !statement.Any(i => IsCall(i, "GetAwaiter")) &&
+                   ((MethodReference)lastAssertion!.Operand).ReturnType.MetadataType != MetadataType.Void
+                ? (null, "a TUnit assertion the statement does not await runs only when it is awaited")
+                : (null, null);
         }
 
-        if (getAwaiterInstr == null)
-            return null;
+        var index = new Dictionary<Instruction, int>(statement.Count);
+        for (var i = 0; i < statement.Count; i++)
+            index[statement[i]] = i;
+        if (awaits.Any(a => a.MergePoint == null || !index.ContainsKey(a.MergePoint)))
+            return (null, "the merge point of an await in the statement could not be found");
 
-        // Scan forward from GetAwaiter through ALL instructions (including hidden SPs)
-        // looking for the get_IsCompleted → brtrue pattern
-        Instruction? brtrueTarget = null;
-        var current = getAwaiterInstr.Next;
-        var maxScan = 30; // IsCompleted check is typically within a few instructions
-        while (current != null && maxScan-- > 0)
+        var last = awaits[awaits.Count - 1];
+        var assertionAwait = awaits.LastOrDefault(a => ProducerOf(statement, index, a.GetAwaiter) is { } producer &&
+                                                       IsAssertionCall(producer));
+        const string awaitAfter = "an await in the statement comes after the assertion";
+        if (assertionAwait != null && assertionAwait != last)
+            return (null, awaitAfter);
+
+        // The calls an awaited assertion makes before its own await build the task it awaits: a failure reaches its
+        // result. Any other assertion call before the merge point would fail outside the try.
+        var calledBefore = assertionAwait != null
+            ? awaits.Count > 1 ? index[awaits[awaits.Count - 2].MergePoint!] : 0
+            : index[last.MergePoint!];
+        if (statement.Take(calledBefore).Any(i => i.Operand is MethodReference mr && IsCallInstruction(i) &&
+                                                  IsAssertionCall(mr) && !IsAssertionEntryPoint(mr)) ||
+            assertionAwait == null && !statement.Skip(index[last.MergePoint!]).Any(i =>
+                i.Operand is MethodReference mr && IsCallInstruction(i) && IsAssertionCall(mr)))
+            return (null, awaitAfter);
+        return (last.MergePoint, null);
+    }
+
+    /// <summary>The call whose result an await's <c>GetAwaiter()</c> is called on, past a <c>ConfigureAwait</c>,
+    /// looking back no further than the statement's own instructions.</summary>
+    private static MethodReference? ProducerOf(List<Instruction> statement, Dictionary<Instruction, int> index,
+        Instruction getAwaiter)
+    {
+        for (var i = index[getAwaiter] - 1; i >= 0; i--)
         {
-            if ((current.OpCode == OpCodes.Brtrue || current.OpCode == OpCodes.Brtrue_S) &&
-                current.Operand is Instruction target)
-            {
-                // Verify the preceding instruction is get_IsCompleted
-                var prev = current.Previous;
-                if (prev != null &&
-                    (prev.OpCode == OpCodes.Call || prev.OpCode == OpCodes.Callvirt) &&
-                    prev.Operand is MethodReference mr2 && mr2.Name == "get_IsCompleted")
-                {
-                    brtrueTarget = target;
-                    break;
-                }
-            }
-            current = current.Next;
+            if (IsCallInstruction(statement[i]) && statement[i].Operand is MethodReference mr && mr.Name != "ConfigureAwait")
+                return mr;
         }
-
-        if (brtrueTarget == null)
-            return null;
-
-        // From the brtrue target (merge point), scan forward for GetResult()
-        current = brtrueTarget;
-        maxScan = 10;
-        while (current != null && maxScan-- > 0)
-        {
-            if ((current.OpCode == OpCodes.Call || current.OpCode == OpCodes.Callvirt) &&
-                current.Operand is MethodReference mr && mr.Name == "GetResult")
-            {
-                return current;
-            }
-            current = current.Next;
-        }
-
         return null;
     }
+
+    /// <summary>
+    /// Whether the statement's values are read as the weave read them before it read on through awaits: an awaited
+    /// assertion of a library's, with no other await in the statement.
+    /// </summary>
+    private static bool ReadAsBefore(List<Instruction> statement, List<Await> awaits)
+    {
+        if (awaits.Count != 1)
+            return false;
+        var index = new Dictionary<Instruction, int>(statement.Count);
+        for (var i = 0; i < statement.Count; i++)
+            index[statement[i]] = i;
+        return ProducerOf(statement, index, awaits[0].GetAwaiter) is { } producer &&
+               IsAssertionLibraryType(producer.DeclaringType);
+    }
+
+    /// <summary>
+    /// Whether every build keeps <paramref name="variable"/> in a field of the state machine across the await, so its
+    /// value can be read at the merge point: a parameter of the async method, which a state machine always copies into
+    /// a field named as it is, or a variable the statement reads after the merge point (in
+    /// <paramref name="resumed"/>), which lives across the await. A local the statement reads only before it is kept
+    /// in a field in Debug, but in plain Release in a local of MoveNext's own.
+    /// </summary>
+    private static bool IsKeptAcrossTheAwait(List<Instruction> resumed, CapturedVariable variable)
+    {
+        if (variable.StateField is not { } stateField)
+            return false;
+        if (variable.ClosureField == null && !stateField.Name.StartsWith("<", StringComparison.Ordinal))
+            return true;
+        var field = (variable.ClosureField ?? stateField).FullName;
+        return resumed.Any(i => (i.OpCode == OpCodes.Ldfld || i.OpCode == OpCodes.Ldflda) &&
+                                i.Operand is FieldReference read && read.FullName == field);
+    }
+
+    /// <summary>A call into an assertion library, or to a suite's own <c>[ShouldlyMethods]</c> assertion.</summary>
+    private static bool IsAssertionCall(MethodReference method) =>
+        IsAssertionLibraryType(method.DeclaringType) || IsShouldlyMethod(method);
+
+    private static bool IsCallInstruction(Instruction instruction) =>
+        instruction.OpCode == OpCodes.Call || instruction.OpCode == OpCodes.Callvirt;
+
+    private static bool IsCall(Instruction instruction, string name) =>
+        IsCallInstruction(instruction) && instruction.Operand is MethodReference mr && mr.Name == name;
 
     private static bool IsAssertionLibraryType(TypeReference type)
     {
@@ -868,7 +953,7 @@ public class AssertionWeaver
     /// - Assert.That() on TUnit.Assertions.Assert
     /// - a method on a type Shouldly marks [ShouldlyMethods], or a suite's own type so marked
     /// </summary>
-    private static bool IsAssertionEntryPoint(MethodReference method)
+    internal static bool IsAssertionEntryPoint(MethodReference method)
     {
         if (method.Name == "Should" && IsAssertionLibraryType(method.DeclaringType))
             return true;
@@ -2604,24 +2689,25 @@ public class AssertionWeaver
     {
         entry = Array.Empty<StackAnalysis.Slot>();
         exit = Array.Empty<StackAnalysis.Slot>();
+        if (assertion.Refusal != null)
+            return assertion.Refusal;
         if (!analysis.Consistent)
             return "the method's evaluation stack could not be followed";
 
-        var awaited = assertion.IsAwaited && assertion.GetResultInstruction != null;
-        var (start, end) = awaited
-            ? AwaitedRange(assertion.GetResultInstruction!)
-            : (assertion.FirstInstruction, assertion.LastInstruction);
+        var awaited = assertion.IsAwaited;
+        var start = StartOf(assertion);
+        var end = assertion.LastInstruction;
 
         // A return part-way through the statement (the null path of `order?.Name.ShouldBe("a")` ending a void
         // method) cannot stay inside a try; it can leave to the method's own return when the statement is followed
         // by one and there is no value to return.
-        if (!awaited && Range(start, end).Any(i => i.OpCode == OpCodes.Ret) &&
+        if (Range(start, end).Any(i => i.OpCode == OpCodes.Ret) &&
             (method.ReturnType.MetadataType != MetadataType.Void || end.Next?.OpCode != OpCodes.Ret))
             return "the statement returns from the method part-way";
 
         // A try is entered only through its first instruction: a branch from outside the statement to any later one
-        // would jump into it.
-        if (!awaited && EntersPartWay(method, start, end))
+        // would jump into it. An awaited statement is entered at its merge point by both of the await's paths.
+        if (EntersPartWay(method, start, end))
             return "a branch from outside the statement lands inside it";
 
         var before = analysis.StackBefore(start);
@@ -2637,20 +2723,20 @@ public class AssertionWeaver
 
         // A branch out of the statement (a null-conditional's short cut) is sent to the statement's exit, which
         // stores the exit values: it must arrive with as many as the statement's end leaves.
-        if (!awaited)
+        foreach (var branch in assertion.OutboundBranches)
         {
-            foreach (var branch in assertion.OutboundBranches)
-            {
-                var at = branch.Operand is Instruction target ? analysis.StackBefore(target) : null;
-                if (at == null || at.Length != after.Length)
-                    return "a branch out of the statement leaves the stack at another depth than its end";
-            }
+            var at = branch.Operand is Instruction target ? analysis.StackBefore(target) : null;
+            if (at == null || at.Length != after.Length)
+                return "a branch out of the statement leaves the stack at another depth than its end";
         }
 
         entry = before;
         exit = after;
         return null;
     }
+
+    /// <summary>Where the statement's try starts: its first instruction, or an awaited statement's merge point.</summary>
+    private static Instruction StartOf(AssertionStatement assertion) => assertion.MergePoint ?? assertion.FirstInstruction;
 
     /// <summary>Whether an instruction outside the statement, or an exception handler, reaches one of its instructions
     /// after the first: a try around the statement would then be entered other than through its start.</summary>
@@ -2696,25 +2782,6 @@ public class AssertionWeaver
             default:
                 return true;
         }
-    }
-
-    /// <summary>The awaited result's read at the await's merge point: the load of the awaiter, <c>GetResult()</c>,
-    /// and the <c>pop</c> or Debug <c>nop</c> after a void one.</summary>
-    private static (Instruction Start, Instruction End) AwaitedRange(Instruction getResult)
-    {
-        var start = getResult;
-        var previous = getResult.Previous;
-        if (previous != null && (previous.OpCode == OpCodes.Ldloca || previous.OpCode == OpCodes.Ldloca_S ||
-                                 previous.OpCode == OpCodes.Ldloc || previous.OpCode == OpCodes.Ldloc_S ||
-                                 previous.OpCode == OpCodes.Ldloc_0 || previous.OpCode == OpCodes.Ldloc_1 ||
-                                 previous.OpCode == OpCodes.Ldloc_2 || previous.OpCode == OpCodes.Ldloc_3))
-            start = previous;
-
-        var end = getResult;
-        var next = getResult.Next;
-        if (next != null && (next.OpCode == OpCodes.Pop || next.OpCode == OpCodes.Nop))
-            end = next;
-        return (start, end);
     }
 
     /// <summary>
@@ -2853,17 +2920,11 @@ public class AssertionWeaver
         var filePath = assertion.SequencePoint.Document.Url;
         var lineNumber = assertion.SequencePoint.StartLine;
 
-        var firstInstr = assertion.FirstInstruction;
+        // An awaited statement's try starts at its await's merge point, past the suspension and resumption, where both
+        // of the await's paths meet with nothing on the stack, and ends with the statement, so a failure of the awaited
+        // assertion (thrown by GetResult()) and of anything after it in the statement is caught.
+        var firstInstr = StartOf(assertion);
         var lastInstr = assertion.LastInstruction;
-
-        // Awaited assertions need special handling: wrap GetResult() at the merge point
-        // instead of wrapping the visible SP range (which spans await suspend/resume machinery).
-        if (assertion.IsAwaited && assertion.GetResultInstruction != null)
-        {
-            WrapAwaitedAssertion(method, il, assertion, exit, passedRef, failedRef,
-                passedWithValuesRef, failedWithValuesRef, getMessageRef, exceptionTypeRef);
-            return;
-        }
 
         // Find the instruction AFTER the last assertion instruction
         var afterLastInstr = lastInstr.Next;
@@ -2893,7 +2954,10 @@ public class AssertionWeaver
         var prologueStart = tryStart;
         for (var s = 0; s < (spillLocals?.Count ?? 0); s++)
             prologueStart = prologueStart.Previous!;
-        MoveSequencePoint(method, assertion.SequencePoint, prologueStart);
+        // An awaited statement's sequence point stays where the statement starts, before its await; its merge point
+        // is under the await's hidden one.
+        if (!assertion.IsAwaited)
+            MoveSequencePoint(method, assertion.SequencePoint, prologueStart);
 
         // Reload spilled values after tryStart (inside the try block, before firstInstr)
         if (spillLocals != null)
@@ -3209,272 +3273,6 @@ public class AssertionWeaver
             }
         }
     }
-
-    /// <summary>
-    /// Wraps an awaited assertion by injecting try/catch around the GetResult() instruction.
-    /// In async state machines, an awaited assertion like `await x.Should().ThrowAsync&lt;T&gt;()`
-    /// compiles to: [assertion call chain] → GetAwaiter() → IsCompleted check → brtrue MERGE
-    /// → suspend → resume → MERGE: GetResult(). The assertion failure throws at GetResult().
-    /// We wrap just GetResult() in try { GetResult(); AssertionPassed() } catch { AssertionFailed(); rethrow; }
-    /// and retarget the brtrue to our tryStart so both paths enter the try block.
-    /// </summary>
-    private void WrapAwaitedAssertion(
-        MethodDefinition method,
-        ILProcessor il,
-        AssertionStatement assertion,
-        StackAnalysis.Slot[] exit,
-        MethodReference passedRef,
-        MethodReference failedRef,
-        MethodReference passedWithValuesRef,
-        MethodReference failedWithValuesRef,
-        MethodReference getMessageRef,
-        TypeReference exceptionTypeRef)
-    {
-        var body = method.Body;
-        var module = method.Module;
-        var hasValues = assertion.CapturedVariables.Count > 0;
-
-        var expressionText = assertion.SourceText;
-        var filePath = assertion.SequencePoint.Document.Url; // the PDB's name, as above
-        var lineNumber = assertion.SequencePoint.StartLine;
-
-        var getResultInstr = assertion.GetResultInstruction!;
-
-        // The merge point's read of the result: the awaiter's load, GetResult() and a pop or nop after a void one.
-        var (mergeStart, mergeEnd) = AwaitedRange(getResultInstr);
-        var afterMergeEnd = mergeEnd.Next;
-
-        // Insert tryStart nop before array construction AND the merge point.
-        // This ensures branches retargeted from mergeStart→tryStart (the sync-completion
-        // brtrue path) will execute array construction before entering the assertion.
-        // Without this, the sync path skips array init, leaving namesLocal/valuesLocal
-        // as null — causing NRE in Track.ResolveVariableValues when the catch handler
-        // calls AssertionFailedWithValues. (#52)
-        var tryStart = il.Create(OpCodes.Nop);
-        il.InsertBefore(mergeStart, tryStart);
-
-        // Build captured variable arrays if needed (inside the try block, before mergeStart)
-        VariableDefinition? namesLocal = null;
-        VariableDefinition? valuesLocal = null;
-
-        if (hasValues)
-        {
-            var stringArrayType = new ArrayType(module.TypeSystem.String);
-            var objectArrayType = new ArrayType(module.TypeSystem.Object);
-            namesLocal = new VariableDefinition(stringArrayType);
-            valuesLocal = new VariableDefinition(objectArrayType);
-            body.Variables.Add(namesLocal);
-            body.Variables.Add(valuesLocal);
-
-            var count = assertion.CapturedVariables.Count;
-            il.InsertBefore(mergeStart, il.Create(OpCodes.Ldc_I4, count));
-            il.InsertBefore(mergeStart, il.Create(OpCodes.Newarr, module.TypeSystem.String));
-            for (var vi = 0; vi < count; vi++)
-            {
-                il.InsertBefore(mergeStart, il.Create(OpCodes.Dup));
-                il.InsertBefore(mergeStart, il.Create(OpCodes.Ldc_I4, vi));
-                il.InsertBefore(mergeStart, il.Create(OpCodes.Ldstr, assertion.CapturedVariables[vi].Name));
-                il.InsertBefore(mergeStart, il.Create(OpCodes.Stelem_Ref));
-            }
-            il.InsertBefore(mergeStart, il.Create(OpCodes.Stloc, namesLocal));
-
-            il.InsertBefore(mergeStart, il.Create(OpCodes.Ldc_I4, count));
-            il.InsertBefore(mergeStart, il.Create(OpCodes.Newarr, module.TypeSystem.Object));
-            for (var vi = 0; vi < count; vi++)
-            {
-                var cv = assertion.CapturedVariables[vi];
-                il.InsertBefore(mergeStart, il.Create(OpCodes.Dup));
-                il.InsertBefore(mergeStart, il.Create(OpCodes.Ldc_I4, vi));
-
-                if (cv.ClosureField != null && cv.ClosureLocalIndex >= 0)
-                {
-                    il.InsertBefore(mergeStart, il.Create(OpCodes.Ldloc, body.Variables[cv.ClosureLocalIndex]));
-                    il.InsertBefore(mergeStart, il.Create(OpCodes.Ldfld, cv.ClosureField));
-                }
-                else if (cv.ClosureField != null && cv.StateField != null)
-                {
-                    il.InsertBefore(mergeStart, il.Create(OpCodes.Ldarg_0));
-                    il.InsertBefore(mergeStart, il.Create(OpCodes.Ldfld, cv.StateField));
-                    il.InsertBefore(mergeStart, il.Create(OpCodes.Ldfld, cv.ClosureField));
-                }
-                else if (cv.StateField != null)
-                {
-                    il.InsertBefore(mergeStart, il.Create(OpCodes.Ldarg_0));
-                    il.InsertBefore(mergeStart, il.Create(OpCodes.Ldfld, cv.StateField));
-                }
-                else if (cv.ParameterIndex >= 0)
-                {
-                    il.InsertBefore(mergeStart, il.Create(OpCodes.Ldarg, method.Parameters[method.IsStatic ? cv.ParameterIndex : cv.ParameterIndex - 1]));
-                }
-                else
-                {
-                    il.InsertBefore(mergeStart, il.Create(OpCodes.Ldloc, body.Variables[cv.LocalIndex]));
-                }
-
-                if (cv.NeedsBoxing)
-                    il.InsertBefore(mergeStart, il.Create(OpCodes.Box, cv.Type));
-
-                il.InsertBefore(mergeStart, il.Create(OpCodes.Stelem_Ref));
-            }
-            il.InsertBefore(mergeStart, il.Create(OpCodes.Stloc, valuesLocal));
-        }
-
-        // Retarget the brtrue (IsCompleted sync-completion branch) to our tryStart
-        // so that the sync-completion path also enters our try block.
-        foreach (var instr in body.Instructions)
-        {
-            if (instr.Operand is Instruction target && target == mergeStart)
-            {
-                // Only retarget branches that were pointing at the original merge start
-                if (instr.OpCode.FlowControl == FlowControl.Cond_Branch ||
-                    instr.OpCode.FlowControl == FlowControl.Branch)
-                {
-                    instr.Operand = tryStart;
-                }
-            }
-            else if (instr.Operand is Instruction[] targets)
-            {
-                for (var idx = 0; idx < targets.Length; idx++)
-                    if (targets[idx] == mergeStart)
-                        targets[idx] = tryStart;
-            }
-        }
-
-        // Also retarget exception handler boundaries that reference mergeStart
-        foreach (var existingHandler in body.ExceptionHandlers)
-        {
-            if (existingHandler.TryStart == mergeStart)
-                existingHandler.TryStart = tryStart;
-            if (existingHandler.HandlerEnd == mergeStart)
-                existingHandler.HandlerEnd = tryStart;
-        }
-
-        // After mergeEnd (GetResult + optional pop), emit AssertionPassed + leave
-        if (afterMergeEnd != null)
-        {
-            if (hasValues)
-            {
-                il.InsertBefore(afterMergeEnd, il.Create(OpCodes.Ldstr, expressionText));
-                il.InsertBefore(afterMergeEnd, il.Create(OpCodes.Ldloc, namesLocal!));
-                il.InsertBefore(afterMergeEnd, il.Create(OpCodes.Ldloc, valuesLocal!));
-                il.InsertBefore(afterMergeEnd, il.Create(OpCodes.Ldstr, filePath));
-                il.InsertBefore(afterMergeEnd, il.Create(OpCodes.Ldc_I4, lineNumber));
-                il.InsertBefore(afterMergeEnd, il.Create(OpCodes.Call, passedWithValuesRef));
-            }
-            else
-            {
-                il.InsertBefore(afterMergeEnd, il.Create(OpCodes.Ldstr, expressionText));
-                il.InsertBefore(afterMergeEnd, il.Create(OpCodes.Ldstr, filePath));
-                il.InsertBefore(afterMergeEnd, il.Create(OpCodes.Ldc_I4, lineNumber));
-                il.InsertBefore(afterMergeEnd, il.Create(OpCodes.Call, passedRef));
-            }
-        }
-        else
-        {
-            if (hasValues)
-            {
-                il.Append(il.Create(OpCodes.Ldstr, expressionText));
-                il.Append(il.Create(OpCodes.Ldloc, namesLocal!));
-                il.Append(il.Create(OpCodes.Ldloc, valuesLocal!));
-                il.Append(il.Create(OpCodes.Ldstr, filePath));
-                il.Append(il.Create(OpCodes.Ldc_I4, lineNumber));
-                il.Append(il.Create(OpCodes.Call, passedWithValuesRef));
-            }
-            else
-            {
-                il.Append(il.Create(OpCodes.Ldstr, expressionText));
-                il.Append(il.Create(OpCodes.Ldstr, filePath));
-                il.Append(il.Create(OpCodes.Ldc_I4, lineNumber));
-                il.Append(il.Create(OpCodes.Call, passedRef));
-            }
-        }
-
-        // A result the code after the await reads (var ex = await Should.ThrowAsync<T>(...)) is still on the stack
-        // where the try ends, and 'leave' clears the stack: store it first and load it back after the catch.
-        List<VariableDefinition?>? exitLocals = null;
-        if (exit.Length > 0 && afterMergeEnd != null)
-        {
-            exitLocals = exit.Select(slot => SlotLocal(method, slot)).ToList();
-            for (var i = exit.Length - 1; i >= 0; i--)
-                il.InsertBefore(afterMergeEnd, StoreSlot(il, exitLocals[i]));
-        }
-
-        // Leave to after catch
-        var afterCatch = il.Create(OpCodes.Nop);
-        var leaveInstr = il.Create(OpCodes.Leave, afterCatch);
-
-        if (afterMergeEnd != null)
-            il.InsertBefore(afterMergeEnd, leaveInstr);
-        else
-            il.Append(leaveInstr);
-
-        // Catch handler
-        var exVar = new VariableDefinition(exceptionTypeRef);
-        body.Variables.Add(exVar);
-        var catchStart = il.Create(OpCodes.Stloc, exVar);
-
-        if (afterMergeEnd != null)
-        {
-            il.InsertBefore(afterMergeEnd, catchStart);
-            il.InsertBefore(afterMergeEnd, il.Create(OpCodes.Ldstr, expressionText));
-            il.InsertBefore(afterMergeEnd, il.Create(OpCodes.Ldloc, exVar));
-            il.InsertBefore(afterMergeEnd, il.Create(OpCodes.Callvirt, getMessageRef));
-            if (hasValues)
-            {
-                il.InsertBefore(afterMergeEnd, il.Create(OpCodes.Ldloc, namesLocal!));
-                il.InsertBefore(afterMergeEnd, il.Create(OpCodes.Ldloc, valuesLocal!));
-                il.InsertBefore(afterMergeEnd, il.Create(OpCodes.Ldstr, filePath));
-                il.InsertBefore(afterMergeEnd, il.Create(OpCodes.Ldc_I4, lineNumber));
-                il.InsertBefore(afterMergeEnd, il.Create(OpCodes.Call, failedWithValuesRef));
-            }
-            else
-            {
-                il.InsertBefore(afterMergeEnd, il.Create(OpCodes.Ldstr, filePath));
-                il.InsertBefore(afterMergeEnd, il.Create(OpCodes.Ldc_I4, lineNumber));
-                il.InsertBefore(afterMergeEnd, il.Create(OpCodes.Call, failedRef));
-            }
-            il.InsertBefore(afterMergeEnd, il.Create(OpCodes.Rethrow));
-            il.InsertBefore(afterMergeEnd, afterCatch);
-        }
-        else
-        {
-            il.Append(catchStart);
-            il.Append(il.Create(OpCodes.Ldstr, expressionText));
-            il.Append(il.Create(OpCodes.Ldloc, exVar));
-            il.Append(il.Create(OpCodes.Callvirt, getMessageRef));
-            if (hasValues)
-            {
-                il.Append(il.Create(OpCodes.Ldloc, namesLocal!));
-                il.Append(il.Create(OpCodes.Ldloc, valuesLocal!));
-                il.Append(il.Create(OpCodes.Ldstr, filePath));
-                il.Append(il.Create(OpCodes.Ldc_I4, lineNumber));
-                il.Append(il.Create(OpCodes.Call, failedWithValuesRef));
-            }
-            else
-            {
-                il.Append(il.Create(OpCodes.Ldstr, filePath));
-                il.Append(il.Create(OpCodes.Ldc_I4, lineNumber));
-                il.Append(il.Create(OpCodes.Call, failedRef));
-            }
-            il.Append(il.Create(OpCodes.Rethrow));
-            il.Append(afterCatch);
-        }
-
-        // Add exception handler
-        var handler = new ExceptionHandler(ExceptionHandlerType.Catch)
-        {
-            TryStart = tryStart,
-            TryEnd = catchStart,
-            HandlerStart = catchStart,
-            HandlerEnd = afterCatch,
-            CatchType = exceptionTypeRef
-        };
-        body.ExceptionHandlers.Insert(0, handler);
-
-        if (exitLocals != null)
-            foreach (var local in exitLocals)
-                il.InsertBefore(afterMergeEnd!, LoadSlot(il, local));
-    }
 }
 
 public class AssertionStatement
@@ -3500,16 +3298,18 @@ public class AssertionStatement
     /// </summary>
     internal ArgumentCapture? ArgumentCapture { get; set; }
     /// <summary>
-    /// True if this assertion is awaited (contains GetAwaiter/IsCompleted pattern).
-    /// Awaited assertions require wrapping GetResult() at the merge point instead of
-    /// wrapping the entire visible SP range in try/catch.
+    /// True if this assertion is awaited, or asserts on an awaited value: its try starts at
+    /// <see cref="MergePoint"/>, past the await's suspension and resumption, where the result is read.
     /// </summary>
     public bool IsAwaited { get; set; }
     /// <summary>
-    /// For awaited assertions: the GetResult() call instruction in the hidden SP.
-    /// This is where assertion failures actually throw.
+    /// For an awaited statement: the merge point of its last await, where the path that found the task complete and
+    /// the path that resumed after it suspended meet, with nothing on the stack. The try runs from here to
+    /// <see cref="LastInstruction"/>, the statement's end.
     /// </summary>
-    public Instruction? GetResultInstruction { get; set; }
+    public Instruction? MergePoint { get; set; }
+    /// <summary>Why the statement is left as written, when that is decided by its shape rather than its stack.</summary>
+    internal string? Refusal { get; set; }
 }
 
 /// <summary>The values an assertion call takes from the stack from its lowest captured argument up, which the weave

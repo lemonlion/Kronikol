@@ -62,6 +62,41 @@ public static class TestAssemblyBuilder
     /// real TUnit.Assertions, which the fixtures with TUnit stubs must not see.
     /// </summary>
     public static string Build(string name, string source, OptimizationLevel optimization, DebugInformationFormat? symbols,
+        IReadOnlyList<string> extraReferences) =>
+        Build(name, source, new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary).WithOptimizationLevel(optimization),
+            symbols, extraReferences);
+
+    /// <summary>
+    /// The ways a test project's own build compiles it. <see cref="Release"/> is how xUnit v3, TUnit, MSTest, NUnit and
+    /// a plain library build Release (csc's <c>/optimize+ /debug-</c>, with a portable PDB).
+    /// <see cref="ReleaseDebugPlus"/> is xUnit v2's Release: its props set <c>DebugSymbols</c>, so csc gets
+    /// <c>/debug+ /optimize+</c>, Roslyn's debug-plus mode, which keeps a closure or an awaited result in a local of
+    /// its own where plain Release keeps it on the stack (AWAITED_ASSERTION_VALUES_PLAN 3.7). Debug compiles the same
+    /// either way.
+    /// </summary>
+    public enum BuildConfiguration
+    {
+        Debug,
+        Release,
+        ReleaseDebugPlus
+    }
+
+    /// <summary>Compiles source code as <paramref name="configuration"/> builds it, with a portable PDB beside the
+    /// assembly.</summary>
+    public static string Build(string name, string source, BuildConfiguration configuration,
+        IReadOnlyList<string>? extraReferences = null) =>
+        Build(name, source, configuration switch
+        {
+            BuildConfiguration.Debug => new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
+                .WithOptimizationLevel(OptimizationLevel.Debug),
+            BuildConfiguration.Release => new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
+                .WithOptimizationLevel(OptimizationLevel.Release),
+            // Debug-plus is internal to Roslyn's options; csc's own parser is the public way to it.
+            _ => CSharpCommandLineParser.Default.Parse(["/debug+", "/debug:portable", "/optimize+", "/target:library"],
+                OutputDir, sdkDirectory: null).CompilationOptions,
+        }, DebugInformationFormat.PortablePdb, extraReferences ?? []);
+
+    private static string Build(string name, string source, CSharpCompilationOptions options, DebugInformationFormat? symbols,
         IReadOnlyList<string> extraReferences)
     {
         var assemblyPath = Path.Combine(OutputDir, $"{name}.dll");
@@ -89,8 +124,7 @@ public static class TestAssemblyBuilder
             name,
             new[] { syntaxTree, attrTree },
             references,
-            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
-                .WithOptimizationLevel(optimization));
+            options);
 
         using var peStream = File.Create(assemblyPath);
         EmitResult result;
@@ -314,11 +348,16 @@ public static class TestAssemblyBuilder
     /// <param name="tfm">Target framework (e.g. "net9.0")</param>
     /// <param name="configuration">Debug or Release</param>
     /// <param name="dotnetPath">Optional custom dotnet path (for preview SDKs installed outside Program Files)</param>
+    /// <param name="packageVersions">Another version of a package the fixture project references.</param>
+    /// <param name="properties">MSBuild properties for the build (<c>DebugSymbols=true</c> makes a Release build
+    /// xUnit v2's debug-plus one). Each build runs in a project directory named after <paramref name="name"/>, so two
+    /// builds that differ only by a property need two names: with one <c>obj/</c>, the second skips its compile.</param>
     /// <returns>Path to the compiled assembly DLL</returns>
     public static string BuildWithSdk(
         string name, string source, string sdkVersion, string tfm,
         string configuration = "Debug", string? dotnetPath = null,
-        IReadOnlyDictionary<string, string>? packageVersions = null)
+        IReadOnlyDictionary<string, string>? packageVersions = null,
+        IReadOnlyDictionary<string, string>? properties = null)
     {
         var fixturesDir = Path.GetFullPath(FixturesDir);
         if (!File.Exists(Path.Combine(fixturesDir, "WeaverFixture.csproj")))
@@ -374,6 +413,7 @@ public static class TestAssemblyBuilder
                         $"/p:FixtureSource=\"{Path.GetFullPath(sourceFile)}\" " +
                         $"/p:TargetFramework={tfm} " +
                         $"/p:OutputPath=\"{Path.GetFullPath(buildDir)}\" " +
+                        string.Concat((properties ?? new Dictionary<string, string>()).Select(p => $"/p:{p.Key}={p.Value} ")) +
                         $"--no-restore",
             WorkingDirectory = buildDir,
             RedirectStandardOutput = true,

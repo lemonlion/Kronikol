@@ -377,6 +377,96 @@ public class AssertionExpressionFormatterTests
         Assert.Equal(expected, result);
     }
 
+    // #212 (F3): a statement's head says where its assertion's value goes, and is no part of the label, in each library
+    // and in any combination: the label of `var e = await X` is X's.
+    public static TheoryData<string, string> HeadsAndAssertions()
+    {
+        string[] heads =
+        [
+            "await ", "return ", "return await ", "var e = ", "var e = await ", "InvalidOperationException e = await ",
+            "System.InvalidOperationException e = await ", "Dictionary<string, List<int>>? map = await ", "int[] values = ",
+            "using var scope = await ", "e = await ", "this.e = await ", "_e = await ", "_ = await ", "items[0] = await ",
+            "order.Error = await ", "e = f = await ",
+        ];
+        string[] assertions =
+        [
+            "Should.ThrowAsync<InvalidOperationException>(() => client.GetOrderAsync(request))",
+            "Should.NotThrowAsync(() => client.GetOrderAsync(new OrderRequest { Id = \"known\" }))",
+            "act.Should().ThrowAsync<InvalidOperationException>()",
+            "Assert.That(x).IsNotNull()",
+            "client.ShouldBeKnownAsync(id)",
+        ];
+        var data = new TheoryData<string, string>();
+        foreach (var head in heads)
+            foreach (var assertion in assertions)
+                data.Add(head, assertion);
+        return data;
+    }
+
+    [Theory]
+    [MemberData(nameof(HeadsAndAssertions))]
+    public void A_statement_with_a_head_reads_as_its_assertion(string head, string assertion)
+    {
+        Assert.Equal(AssertionExpressionFormatter.Format(assertion), AssertionExpressionFormatter.Format(head + assertion));
+    }
+
+    [Theory]
+    [InlineData("var e = await ", ".ConfigureAwait(false)")]
+    [InlineData("await ", ".ConfigureAwait(continueOnCapturedContext: false)")]
+    [InlineData("return await ", " .ConfigureAwait(false)")]
+    public void An_awaited_assertion_reads_without_its_ConfigureAwait(string head, string tail)
+    {
+        const string assertion = "Should.ThrowAsync<InvalidOperationException>(() => client.GetOrderAsync(request))";
+
+        Assert.Equal("Should throw InvalidOperationException", AssertionExpressionFormatter.Format(head + assertion + tail));
+    }
+
+    // The issue's two rows, as the weave hands them over.
+    [Theory]
+    [InlineData("var exception = await Should.ThrowAsync<InvalidOperationException>(async () => await _client.GetOrderAsync(request))")]
+    [InlineData("return await Should.ThrowAsync<InvalidOperationException>(() => _client.GetOrderAsync(new OrderRequest { Id = id }))")]
+    public void The_issues_assigned_and_returned_rows_read_as_sentences(string statement)
+    {
+        Assert.Equal("Should throw InvalidOperationException", AssertionExpressionFormatter.Format(statement));
+    }
+
+    // What is code, not a head: a plain '=' outside literals and brackets ends a head, after a declaration, a variable,
+    // a member, an element or the discard; nothing else does.
+    [Theory]
+    [InlineData("a == b")]
+    [InlineData("a != b")]
+    [InlineData("a <= b")]
+    [InlineData("a >= b")]
+    [InlineData("x => x.ShouldBe(1)")]
+    [InlineData("items.Where(x => x.Id == 3).ShouldBeEmpty()")]
+    [InlineData("total += Should.Throw<InvalidOperationException>(() => Run()).Message.Length")]
+    [InlineData("count -= Should.Throw<InvalidOperationException>(() => Run()).Message.Length")]
+    [InlineData("value ??= Should.Throw<InvalidOperationException>(() => Run())")]
+    [InlineData("flags |= Should.Throw<InvalidOperationException>(() => Run()).HResult")]
+    [InlineData("message.ShouldBe(\"a = b\")")]
+    [InlineData("\"a = b\".ShouldBe(message)")]
+    [InlineData("(await Should.ThrowAsync<InvalidOperationException>(() => Run())).Message.ShouldBe(\"x\")")]
+    [InlineData("Get(x) = Should.Throw<InvalidOperationException>(() => Run())")]
+    [InlineData("awaiter.ConfigureAwait(false)")]
+    [InlineData("returned.ShouldBeTrue()")]
+    [InlineData("awaited.ShouldBeTrue()")]
+    public void Code_that_is_not_a_head_is_kept(string statement)
+    {
+        Assert.Equal(statement, AssertionExpressionFormatter.WithoutHead(statement));
+    }
+
+    [Theory]
+    [InlineData("var e = Should.Throw<InvalidOperationException>(() => Run()).ConfigureAwait(false)",
+        "Should.Throw<InvalidOperationException>(() => Run()).ConfigureAwait(false)")]
+    [InlineData("await Should.ThrowAsync<InvalidOperationException>(() => Run()).ConfigureAwait(false).Result",
+        "Should.ThrowAsync<InvalidOperationException>(() => Run()).ConfigureAwait(false).Result")]
+    [InlineData("var e =\n    await Should.ThrowAsync<InvalidOperationException>(\n        () => Run())",
+        "Should.ThrowAsync<InvalidOperationException>(\n        () => Run())")]
+    public void A_head_is_removed_and_what_the_await_awaits_is_kept(string statement, string expected)
+    {
+        Assert.Equal(expected, AssertionExpressionFormatter.WithoutHead(statement));
+    }
+
     [Theory]
     [InlineData("() => myCollection.First().Should().Be(42)", "First value of my collection should be 42")]
     [InlineData("() => myCollection.Last().Should().Be(42)", "Last value of my collection should be 42")]

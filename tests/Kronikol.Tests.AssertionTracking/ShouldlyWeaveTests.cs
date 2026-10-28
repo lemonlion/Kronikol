@@ -508,7 +508,8 @@ public class ShouldlyWeaveTests
         }
         """;
 
-    // Each shape: the notes it draws, all passes; an await inside an argument is left unwoven (plan section 3.8).
+    // Each shape: the notes it draws, all passes. An await inside an argument was left unwoven (plan section 3.8);
+    // it is wrapped from the await's merge point since #212 (F8).
     public static TheoryData<string, int> ShapeNotes() => new()
     {
         { "ShouldBeOfType_result_used", 2 },
@@ -527,7 +528,7 @@ public class ShouldlyWeaveTests
         { "Async_without_an_await", 1 },
         { "Async_after_an_await", 1 },
         { "ShouldThrowAsync_on_a_task", 1 },
-        { "An_await_inside_an_argument", 0 },
+        { "An_await_inside_an_argument", 1 },
     };
 
     private static readonly Dictionary<OptimizationLevel, string> BuiltShapes = [];

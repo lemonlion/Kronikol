@@ -37,17 +37,8 @@ public static partial class AssertionExpressionFormatter
         if (head.Success && expr.TrimEnd() is ['{', .., '}'] block && BlockAssertions(block) is { } statements)
             return string.Join("; ", statements.Select(statement => Format(statement, resolvedValues)));
 
-        // Strip await prefix
-        if (expr.StartsWith("await "))
-            expr = expr["await ".Length..];
-
-        // Strip var assignment prefix: "var identifier = "
-        if (expr.StartsWith("var "))
-        {
-            var eqIdx = expr.IndexOf(" = ", 4, StringComparison.Ordinal);
-            if (eqIdx > 0)
-                expr = expr[(eqIdx + 3)..];
-        }
+        // The statement's head, which says where the assertion's value goes and is not the assertion (#212, F3).
+        expr = WithoutHead(expr);
 
         // Remove null-forgiving operators (!) and null-conditional ones (?. reads as .), and the whitespace
         // before a dot (multi-line expressions from [CallerArgumentExpression]): in the code, never in a literal.
@@ -75,6 +66,94 @@ public static partial class AssertionExpressionFormatter
         return (string.IsNullOrEmpty(formattedArgs)
             ? $"{formattedSubject} should {formattedMethod}"
             : $"{formattedSubject} should {formattedMethod} {formattedArgs}") + FormatChain(rest, resolvedValues);
+    }
+
+    // What an assertion's value can be given to before a plain '=': a declaration (var, a type, using var), a variable,
+    // a member or an element, or the discard.
+    [GeneratedRegex(@"^(?:(?:using\s+)?(?:var|@?[A-Za-z_][\w.]*(?:<[\w\s.,<>?\[\]]*>)?(?:\?|\[,*\])*)\s+@?[A-Za-z_]\w*|@?[A-Za-z_]\w*(?:\??\.@?[A-Za-z_]\w*|\[[^\]]*\])*)$")]
+    private static partial Regex AssignmentTarget();
+
+    /// <summary>
+    /// The statement without its head, which says where the assertion's value goes and is not the assertion (#212,
+    /// F3): a <c>return</c> or an <c>await</c>, and a declaration or an assignment (<c>var e = </c>, <c>T e = </c>,
+    /// <c>using var e = </c>, <c>e = </c>, <c>this.e = </c>, <c>a[i] = </c>, the discard <c>_ = </c>), removed again and
+    /// again until none is left, in whatever order they come. What an <c>await</c> awaits loses a trailing
+    /// <c>.ConfigureAwait(…)</c> as well. Only a plain <c>=</c> outside literals and brackets ends a head: <c>==</c>,
+    /// <c>=&gt;</c>, <c>&lt;=</c>, <c>&gt;=</c>, <c>!=</c> and a compound assignment are code. A statement in brackets,
+    /// <c>(await …).X.ShouldBe(…)</c>, has none.
+    /// </summary>
+    internal static string WithoutHead(string expr)
+    {
+        var awaited = false;
+        while (true)
+        {
+            expr = expr.TrimStart();
+            if (StartsWithKeyword(expr, "return"))
+                expr = expr["return".Length..];
+            else if (StartsWithKeyword(expr, "await"))
+            {
+                expr = expr["await".Length..];
+                awaited = true;
+            }
+            else if (AssignmentValue(expr) is { } value)
+                expr = expr[value..];
+            else
+                return awaited ? WithoutConfigureAwait(expr) : expr;
+        }
+    }
+
+    private static bool StartsWithKeyword(string text, string keyword) =>
+        text.StartsWith(keyword, StringComparison.Ordinal) && text.Length > keyword.Length &&
+        char.IsWhiteSpace(text[keyword.Length]);
+
+    /// <summary>Where an assignment's value starts: after the first <c>=</c> outside literals and brackets, when that
+    /// <c>=</c> is a plain one and what comes before it is a declaration, a variable, a member, an element or the
+    /// discard. Otherwise null.</summary>
+    private static int? AssignmentValue(string text)
+    {
+        var literal = LiteralMask(text);
+        var depth = 0;
+        for (var i = 0; i < text.Length; i++)
+        {
+            if (literal[i])
+                continue;
+            switch (text[i])
+            {
+                case '(' or '[' or '{':
+                    depth++;
+                    break;
+                case ')' or ']' or '}':
+                    depth--;
+                    break;
+                case '=' when depth == 0:
+                    var plain = (i + 1 == text.Length || text[i + 1] is not ('=' or '>')) &&
+                                (i == 0 || text[i - 1] is not ('=' or '!' or '<' or '>' or '+' or '-' or '*' or '/' or '%' or
+                                    '&' or '|' or '^' or '?'));
+                    return plain && AssignmentTarget().IsMatch(text[..i].Trim()) ? i + 1 : null;
+            }
+        }
+        return null;
+    }
+
+    /// <summary>An awaited expression without a trailing <c>.ConfigureAwait(…)</c> outside brackets and literals: how
+    /// the await resumes is not what the assertion says.</summary>
+    private static string WithoutConfigureAwait(string expr)
+    {
+        var at = TopLevel(expr, ".ConfigureAwait(");
+        if (at < 0)
+            return expr;
+        var literal = LiteralMask(expr);
+        var depth = 0;
+        for (var i = at + ".ConfigureAwait".Length; i < expr.Length; i++)
+        {
+            if (literal[i])
+                continue;
+            if (expr[i] is '(' or '[' or '{')
+                depth++;
+            else if (expr[i] is ')' or ']' or '}' && --depth == 0)
+                return expr[(i + 1)..].Trim().Length == 0 ? expr[..at].TrimEnd() : expr;
+        }
+        return expr;
     }
 
     /// <summary>

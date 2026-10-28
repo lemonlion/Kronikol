@@ -2005,8 +2005,9 @@ public class AssertionWeaverTests
         var weaver = new AssertionWeaver();
         var result = WovenIl.Weave(weaver, assemblyPath);
 
-        // Assertions with await in arguments are skipped (can't safely wrap across await boundary)
-        result.WeavedCount.Should().Be(0);
+        // An assertion with an await in its arguments is wrapped from the await's merge point, where both of the await's
+        // paths meet with nothing on the stack (#212, F8). Before, it was left as written, with no note.
+        result.WeavedCount.Should().Be(1);
 
         // Critical: the weaved assembly must execute without InvalidProgramException
         var asm = Assembly.LoadFrom(assemblyPath);
@@ -2022,10 +2023,10 @@ public class AssertionWeaverTests
     [Theory]
     [InlineData(OptimizationLevel.Debug)]
     [InlineData(OptimizationLevel.Release)]
-    public void Weave_AsyncMethod_MixedAwaitAndNormalAssertions_OnlySkipsAwaitedArgAssertions(OptimizationLevel optimization)
+    public void Weave_AsyncMethod_MixedAwaitAndNormalAssertions_TracksEach(OptimizationLevel optimization)
     {
         // Real-world pattern: async method with both normal assertions and assertions
-        // that have awaited arguments. Normal assertions should still be tracked.
+        // that have awaited arguments. Each is tracked.
         var assemblyPath = TestAssemblyBuilder.Build(
             $"AsyncMixed_{optimization}",
             """
@@ -2052,9 +2053,10 @@ public class AssertionWeaverTests
         var weaver = new AssertionWeaver();
         var result = WovenIl.Weave(weaver, assemblyPath);
 
-        // First assertion (with await arg) is skipped; the other two are weaved
-        result.WeavedCount.Should().Be(2,
-            "assertions without awaited arguments should still be tracked");
+        // The first assertion, with an awaited argument, is wrapped from its await's merge point (#212, F8); it was
+        // skipped before. The other two are wrapped as ever.
+        result.WeavedCount.Should().Be(3,
+            "an assertion with an awaited argument is tracked as the others are");
 
         var asm = Assembly.LoadFrom(assemblyPath);
         var testType = asm.GetType("Tests")!;

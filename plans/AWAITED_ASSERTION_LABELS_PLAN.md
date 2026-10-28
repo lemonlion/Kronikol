@@ -786,3 +786,52 @@ whichever of them the owner takes. Or one minor carrying all of it.
   the other sessions"), every question at its recommendation: Q1 a (`Track.AssertionTask` in R2), Q2 a (the list at
   high importance in R1, `KRONIKOL003` in R2), Q3 (R1 a patch, then R2 a minor). Executing from 5.22.0 (`3d1817b2`)
   in `C:/Code/Kronikol-212`, ahead of #211, which is not green-lit (section 8).
+- 2026-10-28: R1 released as 5.26.1, a patch. What it ships differs from
+  section 4 in these ways, each for the reason given:
+  1. 4.1 e is wider. Any unconditional `br` that ends a statement is trimmed like a trailing `leave`, not only one to
+     the next instruction: the end of an `if`'s branch jumps past its `else`, and that skipped the pass too (S25, a
+     shape added for it). Its second sentence is not done. A null-conditional's short cut to the statement's end
+     means the assertion never ran, so sending it to the pass would draw a ✓ for an assertion that did not run.
+  2. One wrap. `WrapAwaitedAssertion` and `AwaitedRange` are gone: an awaited statement goes through
+     `WrapSingleAssertion` from its merge point. With 4.1 c the awaited wrap needed every branch rule the synchronous
+     one has (the outbound short cuts, the trailing trim, the exit spill), so a second copy of them was not kept.
+     #211's arrays block is now `WrapSingleAssertion`'s (kronikol-12 told).
+  3. Values of a statement R1 is the first to weave (F8, S17c's last await, S24's own type, any statement with two
+     awaits) are the ones every build keeps in a state machine field: the async method's parameters, and what the
+     statement reads after its last merge point. A local read only before the await is a `MoveNext` local in plain
+     Release and gone after a suspension (#211's dead-local read; kronikol-12's warning that reading it would turn
+     untracked statements into failing ones). S17f and S17g pin it. Statements woven before R1 keep their values as
+     before; #211 owns those.
+  4. "The merge point of an await in the statement could not be found" is a refusal only where the `GetAwaiter` is an
+     await, with an `IsCompleted` test after it. A synchronous `.GetAwaiter().GetResult()` is no await and is woven as
+     before.
+  5. S15c and S15d hit #211's D-A in plain Release too (ILVerify's StackUnexpected), so they run in Debug and
+     debug-plus only. 3.10 named S9, S9b, S15a, S15b and R212's `Throw`.
+  6. A bracketed or awaited subject reads as code: `(await _client.GetNameAsync()) should be 'order'`, TUnit's
+     `Await _client.GetNameAsync() is equal to 'order'`. Subjects and arguments are #210's reading (4.1 d); the shapes
+     pin the labels as drawn, and a rule for them is #210's to take up.
+  7. `WovenRun.Parse` rejoins a label the diagram wrapped (DiagramWidth's U+200B join markers). It cut a wrapped
+     label at its first line, which hid the issue's long Release labels.
+  8. The refusal of an un-awaited TUnit assertion (f) needs the chain's last assertion call to return something to
+     await. As first written it took every `Assert.That` statement with no `GetAwaiter`, and the whole weaver suite
+     found `Weave_TUnitAssertThat_InstrumentsAssertion` refused: a TUnit-namespaced assertion whose `IsEqualTo`
+     returns nothing has run. Real TUnit's chains always return one, so S19b is still refused.
+  9. Three facts pinned the skip of an await inside an assertion's argument, which g undoes, and now expect its
+     note: `Weave_AsyncMethod_AwaitInsideAssertionArguments_DoesNotThrowInvalidProgram`, the mixed-statement fact
+     (renamed `..._TracksEach`) and Shouldly's `An_await_inside_an_argument` shape. Each still runs the woven method.
+
+  BreakfastProvider (6.4) changed nothing its xUnit in-memory lane draws: its awaited-value statements, and its
+  compound and returned ones, are all in `BreakfastProvider.Tests.Unit`, which declares no `[assembly:
+  TrackAssertions]`. So the before and after runs were compared on 5.23.0 and this release only, with no 5.12.0
+  control: they differ in the values a run makes and in nothing else.
+
+  Measured: `AwaitedAssertionShapeTests` holds 48 shapes and #212's five tests, in 134 shape builds (Debug, plain
+  Release, debug-plus); on 5.22.0, 158 of its first 508 checks failed, and all 537 pass. The formatter's facts, 350.
+  The cross-SDK fact, 60 builds on SDKs 8, 9 and 10. All 15 mutations of 6.3 and of the three rules added on the way
+  (values limited, no merge point refused, TUnit un-awaited refused) turn a fact red. Checks: The whole weaver suite (1,025 facts; 28 skipped, the SDK 11 lanes), `tests/Kronikol.Tests` (11,521), and
+  `release.slnf` built in Release for every target framework. #212's own project on this release's packages, from a
+  local feed with NU1603 an error, in Debug and in Release: each of its five tests draws its notes, each a sentence,
+  the same in both builds, and two for `Assigned_ThrowAsync`. BreakfastProvider's xUnit in-memory lane on 5.23.0 and
+  on this release: 212 scenarios passed in both, with 896 notes in both, which differ only in the values a run makes
+  (ids, names, times). That lane runs none of the shapes this release changes; BreakfastProvider's are in its unit
+  tests, which are not woven.
