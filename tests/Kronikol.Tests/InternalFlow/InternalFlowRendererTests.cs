@@ -576,4 +576,72 @@ public class InternalFlowRendererTests : IDisposable
         var result = InternalFlowRenderer.RenderCallTree(MakeSegment(span));
         Assert.Contains("data-diagram-type=\"calltree\"", result);
     }
+    // ── A diagram's only swimlane ──
+    //
+    // The engine spends time on a diagram's only swimlane that grows steeply with the digits in the first word of its title
+    // (measured 2026-10-28, the Wasm engine in Chromium 147: 25 hex characters 9 ms, 40 of them 287 ms, a fully qualified
+    // name of 57 ending in a hash 422 ms, 60 digits more than a minute, 60 letters 2 ms), and a zero-width space in front
+    // takes it to a few ms.
+
+    private static string ActivityOf(string spanName, string source)
+    {
+        var start = new DateTime(2026, 10, 28, 10, 0, 0, DateTimeKind.Utc);
+        FlowSpan[] spans =
+        [
+            new("trace1", "s1", null, "POST /orders", source, start, TimeSpan.FromMilliseconds(40)),
+            new("trace1", "s2", "s1", spanName, source, start.AddMilliseconds(5), TimeSpan.FromMilliseconds(12)),
+        ];
+        return InternalFlowRenderer.RenderActivityDiagram(new InternalFlowSegment(Guid.NewGuid(), RequestResponseType.Request, "t-1", null, null, []) { FlowSpans = spans });
+    }
+
+    [Fact]
+    public void A_swimlane_whose_first_word_holds_many_digits_is_written_after_a_zero_width_space()
+    {
+        var result = ActivityOf("SELECT 1", "Kronikol.Tests.Dense.E2E.accf9a1e8fec4155813879d55c4dbe54");
+
+        Assert.Contains("|<U+200B>Kronikol.Tests.Dense.E2E.accf9a1e8fec4155813879d55c4dbe54|", result);
+    }
+
+    [Fact]
+    public void A_first_word_of_nine_digits_is_written_after_a_zero_width_space()
+    {
+        Assert.Contains("|<U+200B>Orders.V123456789|", ActivityOf("SELECT 1", "Orders.V123456789"));
+    }
+
+    [Fact]
+    public void The_zero_width_space_counts_toward_the_name_cap()
+    {
+        // 760 characters, ten digits in every 19: the engine walks the space with the rest of the name
+        var source = string.Concat(Enumerable.Repeat("replica-0123456789.", 40));
+
+        var lane = ActivityOf("SELECT 1", source).Split('\n').Select(l => l.TrimEnd('\r'))
+            .Single(l => l.StartsWith("|<U+200B>replica-0123456789.", StringComparison.Ordinal));
+
+        Assert.True(lane[1..^1].Replace("\\n", "", StringComparison.Ordinal).Length <= Kronikol.PlantUml.PlantUmlStatementLimits.MaxParticipantNameChars,
+            $"{lane.Length} characters");
+    }
+
+    [Theory]
+    [InlineData("OrderService")]
+    [InlineData("@opentelemetry/instrumentation-graphql")]
+    [InlineData("Microsoft.EntityFrameworkCore.Database.Command")]
+    [InlineData("Orders.V12345678")]
+    [InlineData("Orders Api accf9a1e8fec4155813879d55c4dbe54accf9a1e8fec41")]
+    public void A_swimlane_whose_first_word_holds_few_digits_is_written_as_before(string source)
+    {
+        var result = ActivityOf("SELECT 1", source);
+
+        Assert.Contains("|" + source + "|", result);
+        Assert.DoesNotContain("<U+200B>", result);
+    }
+
+    [Fact]
+    public void An_action_named_by_a_long_word_is_written_as_before()
+    {
+        var name = "accf9a1e8fec4155813879d55c4dbe54accf9a1e8fec4155813879d55c4dbe54";
+
+        var result = ActivityOf(name, "OrderService");
+
+        Assert.Contains(":" + name + " (12ms);", result);
+    }
 }

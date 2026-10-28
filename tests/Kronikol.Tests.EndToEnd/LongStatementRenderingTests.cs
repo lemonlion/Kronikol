@@ -375,6 +375,32 @@ public class LongStatementRenderingTests : PlaywrightTestBase
         await AssertDrawsAsADiagram(page.Locator("#puml-1"), expected);
     }
 
+    // The engine's time for a diagram's only swimlane grows steeply with the digits in the first word of its title, a title
+    // it does not draw: until 5.20.1 a span's source of 60 characters ending in a hash, which names the lane, held a render
+    // worker for fifteen to twenty seconds in every diagram it named, and the 57 of a test fixture's source half a second.
+    [Fact]
+    public async Task A_diagram_whose_only_swimlane_is_named_by_a_hash_draws_without_holding_the_worker()
+    {
+        const string lane = "Kronikol.accf9a1e8fec4155813879d55c4dbe54accf9a1e8fec4155813";
+        var start = new DateTime(2026, 10, 28, 10, 0, 0, DateTimeKind.Utc);
+        Kronikol.InternalFlow.FlowSpan[] spans =
+        [
+            new("trace1", "s1", null, "POST /orders", lane, start, TimeSpan.FromMilliseconds(40)),
+            new("trace1", "s2", "s1", "SELECT o.Id FROM Orders AS o", lane, start.AddMilliseconds(5), TimeSpan.FromMilliseconds(12)),
+        ];
+        var segment = new Kronikol.InternalFlow.InternalFlowSegment(Guid.NewGuid(), RequestResponseType.Request, "lane-1", null, null, []) { FlowSpans = spans };
+        var source = Kronikol.InternalFlow.InternalFlowRenderer.RenderActivityDiagramBatched(segment).Single();
+
+        await Page.GotoReportAsync(DiagramPage(source, "long first word"));
+        await Page.WaitForFunctionAsync(
+            "() => document.querySelector('#puml-1')?.getAttribute('data-rendered') === '1'",
+            null, new() { Timeout = 120_000, PollingInterval = 200 });
+
+        await AssertDrawsAsADiagram(Page.Locator("#puml-1"), ("POST /orders", 1), ("FROM Orders", 1));
+        var workerMs = await Page.EvaluateAsync<double>("() => window.__kronikolRender.workerMs");
+        Assert.True(workerMs < 3000, $"the engine took {workerMs:F0} ms to draw the diagram");
+    }
+
     [Fact]
     public async Task The_classifier_names_each_statement_past_its_worker_cap()
     {

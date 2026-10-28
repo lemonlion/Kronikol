@@ -107,8 +107,7 @@ public static class InternalFlowRenderer
         var source = string.IsNullOrEmpty(node.Span.Source) ? "Unknown" : node.Span.Source;
         if (source != currentSwimlane)
         {
-            // A swimlane's name is a participant's: the engine walks it once per character on its stack.
-            sb.AppendLine($"|{WrapForWidth(EscapePlantUml(PlantUml.PlantUmlStatementLimits.CapName(source)))}|");
+            sb.AppendLine($"|{SwimlaneTitle(source)}|");
             currentSwimlane = source;
         }
 
@@ -202,6 +201,40 @@ public static class InternalFlowRenderer
     /// </summary>
     private static string WrapForWidth(string escaped) =>
         PlantUml.DiagramWidth.Wrap(escaped, PlantUml.DiagramWidth.MaxLabelLineChars);
+
+    /// <summary>
+    /// What a swimlane's title is written after when its first word holds more than <see cref="MaxSwimlaneFirstWordDigits"/>
+    /// digits: a zero-width space, which draws nothing. The engine spends time on a diagram's only swimlane that grows
+    /// steeply with the digits in the first word of its title, a title it does not draw: measured on 2026-10-28 with the
+    /// Wasm engine in Chromium 147, a first word of 25 hex characters took 9 ms, 40 took 287 ms, a fully qualified name of
+    /// 57 ending in a hash (a span's source, which names the lane) 422 ms in every diagram it named, and 60 digits more than
+    /// a minute, where letters cost nothing (60 of them 2 ms, a 98-character dotted name 3 ms). With this in front each drew
+    /// in 2 to 11 ms, as a lane of a diagram with two always did. A space or a line break later in the title does not help,
+    /// and a space in front would be drawn.
+    /// </summary>
+    private const string SwimlaneLead = "<U+200B>";
+
+    private const int MaxSwimlaneFirstWordDigits = 8;
+
+    /// <summary>
+    /// A swimlane's title: its source, capped, escaped and wrapped as a participant's name is (the engine walks it once per
+    /// character on its stack), after <see cref="SwimlaneLead"/> when its first word holds many digits, which counts toward
+    /// the cap.
+    /// </summary>
+    private static string SwimlaneTitle(string source)
+    {
+        var title = WrapForWidth(EscapePlantUml(PlantUml.PlantUmlStatementLimits.CapName(source)));
+        var firstWord = title.IndexOf(' ');
+        var digits = 0;
+        for (var i = 0; i < (firstWord < 0 ? title.Length : firstWord); i++)
+            if (title[i] is >= '0' and <= '9')
+                digits++;
+        if (digits <= MaxSwimlaneFirstWordDigits)
+            return title;
+        var capped = PlantUml.PlantUmlStatementLimits.TruncateLabel(source,
+            PlantUml.PlantUmlStatementLimits.MaxParticipantNameChars - SwimlaneLead.Length);
+        return SwimlaneLead + WrapForWidth(EscapePlantUml(capped));
+    }
 
     /// <summary>
     /// Returns compact flame chart data for client-side rendering.

@@ -4,6 +4,38 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.20.1] - 2026-10-28
+
+The patch part moves (5.20.0 to 5.20.1): a fix to how the report draws an activity diagram, nothing new to call.
+
+### Fixed
+
+- **An activity diagram whose only swimlane is named by a hash, a GUID or a long number no longer holds a render worker
+  for seconds.** The engine the report draws with spends time on a diagram's only swimlane that grows steeply with the
+  digits in the first word of its title, a title it does not even draw: measured with the Wasm engine in Chromium 147,
+  25 hex characters took 9 ms, 40 took 287 ms, the 57 of a fully qualified name ending in a hash 422 ms, a 60-character
+  name ending in a 51-character hash from 15 to 21 seconds and 60 digits more than a minute, where letters cost nothing
+  (60 of them 2 ms, `@opentelemetry/instrumentation-graphql` 3 ms). An internal-flow activity diagram names its
+  swimlanes after its spans' sources, so a suite whose ActivitySource names end in an id paid this in every Activity
+  view and internal-flow popup it drew, and a page drawing many of them waited on the engine: sixty such diagrams were
+  35 seconds of it, and minutes on a loaded machine. A swimlane's title whose first word holds more than 8 digits is now
+  written after a zero-width space (`<U+200B>`), which draws nothing, and each such diagram draws in 2 to 11 ms, as a
+  lane of a diagram with two always did. Where the engine draws the title, it is drawn as written; the name's cap of 200
+  characters counts the space. Every other title, and every other line of the diagram, keeps its exact bytes.
+- **DiagramColourFrameTests' far-scenario fact timed out on 5.18.0's CI run.** It draws sixty of those diagrams, named
+  by its fixture's 57-character source, before it starts, and on a loaded runner they outlasted its 300-second wait (the
+  same fact took 2 minutes 34 seconds and 3 minutes 4 seconds on earlier runs). It now takes about half a minute.
+
+### Changed
+
+- The activity diagram's source writes `<U+200B>` before a swimlane title whose first word holds more than 8 digits.
+  Kronikol4J writes the title as it is, recorded in its divergence ledger.
+
+Checks: the core suite (11,144 passed, 2 skipped), LongStatementRenderingTests (28) and DiagramColourFrameTests (8) in
+Playwright on the rebased code, the new Playwright fact red with the zero-width space taken out (the engine took 20.9
+seconds for one diagram), the Release build of Kronikol, and every timing above measured in a fresh page of the suite's
+own Chromium.
+
 ## [5.20.0] - 2026-10-28
 
 The minor part moves (5.19.0 to 5.20.0): new public surface for #192 R3, the last release of
