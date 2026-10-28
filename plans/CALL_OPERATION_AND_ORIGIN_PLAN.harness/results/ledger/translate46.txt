@@ -1,0 +1,14 @@
+identity (no translation)              of 255 positions the move changed, equal under S: 0 (0.0%)
+rule 6 only                            of 255 positions the move changed, equal under S: 12 (4.7%)
+rule 6 + MongoDB command               of 255 positions the move changed, equal under S: 144 (56.5%)
+rule 6 + MongoDB command + re-cut      of 255 positions the move changed, equal under S: 180 (70.6%)
+    x24 v6 Breakfast Provider>CosmosDB Read /orders 404
+    x24 v6 Breakfast Provider>CosmosDB Read /orders 200
+    x24 v4 Caller>Breakfast Provider ServerReflectionInfo (duplex-stream) /grpc.reflection.v1.ServerReflection/ServerReflectionInfo 200
+    x24 v6 Caller>Breakfast Provider ServerReflectionInfo (duplex-stream) /grpc.reflection.v1.ServerReflection/ServerReflectionInfo 408
+    x12 v4 Caller>Breakfast Provider StreamOrderUpdates (server-stream) /breakfast.BreakfastGrpc/StreamOrderUpdates 200
+    x12 v6 Caller>Breakfast Provider StreamOrderUpdates (server-stream) /breakfast.BreakfastGrpc/StreamOrderUpdates 404
+    x2 v6 Breakfast Provider>Google Cloud Pub/Sub Publish (Pub/Sub) /MenuAvailabilityChangedEvent Responded
+    x2 v6 Breakfast Provider>Supplier Service GET /ingredients/milk/availability 200
+    x1 v4 Breakfast Provider>Spanner Insert /breakfast-db/Feedback INSERT Feedback Error
+    x1 v4 Breakfast Provider>Spanner Rollback /breakfast-db -

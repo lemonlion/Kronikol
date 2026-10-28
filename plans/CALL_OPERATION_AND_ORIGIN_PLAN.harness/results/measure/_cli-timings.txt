@@ -1,0 +1,6 @@
+reports/bp-ci-xunit-in-memory/TestRunReport.krkl | query ms: 1565 286 308 | decode -o ms: 194 196 217 | answer: 207 
+reports/bp-ci-xunit-in-docker/TestRunReport.krkl | query ms: 288 279 319 | decode -o ms: 205 201 211 | answer: 195 
+reports/bp-ci-xunit-external-sut/TestRunReport.krkl | query ms: 255 257 278 | decode -o ms: 186 172 182 | answer: 98 
+reports/bp-ci-reqnroll-in-memory/TestRunReport.krkl | query ms: 333 292 295 | decode -o ms: 209 209 212 | answer: 206 
+reports/bp-ci-reqnroll-in-memory/decoded.json | query ms: 247 328 286 | decode -o ms: 207 177 158 | answer: 206 
+reports/bp-cmock-reqnroll/TestRunReport.json | query ms: 300 304 293 | decode -o ms: 174 191 201 | answer: ! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 3 test ids, the most calls (1) under '37381faf-… ! mergeable-format report 180 

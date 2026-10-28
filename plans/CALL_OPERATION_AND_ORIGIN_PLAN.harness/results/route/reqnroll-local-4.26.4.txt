@@ -1,0 +1,94 @@
+# reqnroll-local-4.26.4
+analysis file C:/Users/cex/AppData/Local/Temp/claude/c--Code-Kronikol/2245987c-f041-4de7-9fd5-372b946d167a/scratchpad/measure/reports/bp-cmock-reqnroll/TestRunReport.json (Json, decoded 8,540,092 bytes); engine file C:/Users/cex/AppData/Local/Temp/claude/c--Code-Kronikol/2245987c-f041-4de7-9fd5-372b946d167a/scratchpad/measure/reports/bp-cmock-reqnroll/TestRunReport.json
+kronikolVersion 4.26.4+0a3d095ffcc03973292074b93747db71f90b8d1e, formatVersion 2, suite reqnroll-in-memory
+request records 1290; callers 5; services 16; content forms: null 808, string 482
+
+## 1. buckets of (service, method, X), request records
+  X = today's path (Uri.AbsolutePath)                      180   (3.6 col 1)
+  X = Template(Uri.PathAndQuery), query keys kept          153   (3.6 col 2)
+  X = Template(Uri.PathAndQuery less query)                151   (3.6 col 3, 'route' there)
+  X = Template(PathOf(data file uri))   [4.1 steps 1-2]    151
+    + statement head                    [4.1 step 3]       159
+    + GraphQL operation = route         [4.1 step 4]       165   <- the prototype's route
+  (caller, service, method, route)                         165
+  route with the strict GraphQL reader                     165   (with caller 165)
+  distinct route values 130: length median 24, p90 145, max 165; over 100 characters 20 (--group-by pads every row to the widest value: service 31 + method 36 + route 165 characters)
+
+## 2. records whose templated PathOf differs from the templated Uri.PathAndQuery path: 0
+
+## 3. statement-shaped calls: by category, calls (with content), buckets path only -> with head; top routes
+  SQL: calls 212 (content 0); buckets 21 -> 21; distinct raw first lines 0; schemes sql
+    x38  raw 0   Insert /RecipeReports
+    x37  raw 0   Insert /EquipmentAlerts
+    x34  raw 0   Select /OrderSummaries
+    x33  raw 0   Insert /BatchCompletionRecords
+    x32  raw 0   Insert /OrderSummaries
+    x5   raw 0   Insert /InventoryItems
+    x5   raw 0   Select /InventoryItems
+    x5   raw 0   Insert /Reservations
+  CosmosDB: calls 197 (content 15); buckets 5 -> 8; distinct raw first lines 5; schemes https
+    x124 raw 0   Create /orders
+    x37  raw 0   Read /orders
+    x18  raw 0   Upsert /orders
+    x9   raw 1   Query /orders SELECT VALUE root FROM root WHERE true
+    x3   raw 2   Query /orders SELECT VALUE root FROM root WHERE ((false OR (root["EntityType"] = "{v}")) AND (true OR (…
+    x3   raw 0   Replace /orders
+    x2   raw 1   Query /orders SELECT VALUE root FROM root WHERE ((true OR (root["EntityType"] = null)) AND (true OR (ro…
+    x1   raw 1   Query /orders SELECT VALUE root FROM root WHERE ((true OR (root["EntityType"] = null)) AND (false OR (r…
+      folds 2 raw first lines into '/orders SELECT VALUE root FROM root WHERE ((false OR (root[…', e.g. SELECT VALUE root FROM root WHERE ((false OR (root["EntityType"] = "O… || SELECT VALUE root FROM root WHERE ((false OR (root["EntityType"] = "N…
+  MongoDB: calls 16 (content 16); buckets 6 -> 8; distinct raw first lines 16; schemes mongodb
+    x4   raw 4   Insert → chef_notes /BreakfastDb/chef_notes { "documents" : [{ "_id" : "{v}", "RecipeName" : "{v}", "Ch…
+    x3   raw 3   Insert → recipe_reviews /BreakfastDb/recipe_reviews { "documents" : [{ "_id" : "{v}", "RecipeName" : "{…
+    x2   raw 2   Find ← chef_notes /BreakfastDb/chef_notes { "filter" : { "_id" : "{v}" } }
+      folds 4 raw first lines into '/BreakfastDb/chef_notes { "documents" : [{ "_id" : "{v}", "…', e.g. { "documents" : [{ "_id" : "371a92ee-7201-4898-be97-773966cb0c82", "R… || { "documents" : [{ "_id" : "5f2ba27b-59dd-43e3-aa1d-e2aac20c55df", "R… || { "documents" : [{ "_id" : "c8bb722b-9e63-49d8-95d7-35eac1cefa11", "R…
+  Spanner: calls 12 (content 12); buckets 4 -> 5; distinct raw first lines 5; schemes spanner
+    x4   raw 1   InsertOrUpdate /test-db/CustomerPreferences UPSERT CustomerPreferences
+    x3   raw 1   Insert /test-db/Feedback INSERT Feedback
+    x2   raw 1   Select /test-db/CustomerPreferences SELECT CustomerId, CustomerName, PreferredMilkType, LikesExtraToppi…
+  ClickHouse: calls 12 (content 12); buckets 6 -> 7; distinct raw first lines 7; schemes clickhouse
+    x3   raw 1   INSERT INTO equipment_readings /kitchen_analytics/equipment_readings INSERT INTO equipment_readings (re…
+    x3   raw 1   INSERT INTO order_timings /kitchen_analytics/order_timings INSERT INTO order_timings (timing_id, order_…
+    x2   raw 1   SELECT FROM equipment_readings /kitchen_analytics/equipment_readings SELECT reading_id, equipment_id, m…
+  BigQuery: calls 11 (content 11); buckets 4 -> 5; distinct raw first lines 11; schemes https
+    x3   raw 3   Insert /breakfast_analytics/table/ingredient_usage {"rows":[{"insertId":"{v}","json":{"usage_id":"{v}",…
+    x3   raw 3   Query /query {"formatOptions":{"useInt64Timestamp":{b}},"parameterMode":"{v}","query":"{v}","queryParam…
+    x3   raw 3   Insert /breakfast_analytics/table/ingredient_waste {"rows":[{"insertId":"{v}","json":{"waste_id":"{v}",…
+    x1   raw 1   Query /query {"formatOptions":{"useInt64Timestamp":{b}},"query":"{v}","useLegacySql":{b}}
+    x1   raw 1   Insert /breakfast_analytics/table/recipe_costs {"rows":[{"insertId":"{v}","json":{"calculation_id":"{v}…
+      folds 3 raw first lines into '/breakfast_analytics/table/ingredient_usage {"rows":[{"inse…', e.g. {"rows":[{"insertId":"0f9e6934-a9a8-4243-a2e6-e594e5024f45","json":{"… || {"rows":[{"insertId":"92529c75-4cda-4e68-bebb-684d908cbf4b","json":{"… || {"rows":[{"insertId":"a651e658-5c7e-45fb-b70c-fd1d107f7223","json":{"…
+      folds 3 raw first lines into '/query {"formatOptions":{"useInt64Timestamp":{b}},"paramete…', e.g. {"formatOptions":{"useInt64Timestamp":true},"parameterMode":"named","… || {"formatOptions":{"useInt64Timestamp":true},"parameterMode":"named","… || {"formatOptions":{"useInt64Timestamp":true},"parameterMode":"named","…
+      folds 3 raw first lines into '/breakfast_analytics/table/ingredient_waste {"rows":[{"inse…', e.g. {"rows":[{"insertId":"802fa156-0281-49a4-9b73-99a099235c99","json":{"… || {"rows":[{"insertId":"0d3524f1-c6cb-4e44-9e61-1276b017fd5d","json":{"… || {"rows":[{"insertId":"836e6ea2-f0cf-4de8-a4bc-d709d1da46bd","json":{"…
+
+## 3b. heads that hide the statement: route buckets 165 with the plan's head, 167 with the alternative head (a document's query string templated as the statement; the statement after a SET prologue)
+  documents with a top-level query string: calls 4 (BigQuery 4); plan buckets 2 -> alternative 4; distinct raw statements 4
+    plan  x3   Query /query {"formatOptions":{"useInt64Timestamp":{b}},"parameterMode":"{v}","query":"{v}","queryP…
+     alt  x1   Query /query SELECT usage_id, ingredient_name, quantity_used, unit, recipe_name, recorded_at
+     alt  x1   Query /query DELETE FROM `breakfast_analytics.ingredient_waste` WHERE waste_id = @wasteId
+     alt  x1   Query /query SELECT waste_id, ingredient_name, quantity_wasted, unit, recipe_name, reason, recorded…
+    plan  x1   Query /query {"formatOptions":{"useInt64Timestamp":{b}},"query":"{v}","useLegacySql":{b}}
+     alt  x1   Query /query SELECT ingredient_name, SUM(quantity_used) as total_quantity, unit, COUNT(*) as record…
+  statements after a SET prologue: none
+
+## 4. GraphQL: POST JSON-object bodies read 214, GETs with GraphQL parameters 0; operations found 8
+  how (plan): none 206; anonymous: root fields 8
+  distinct GraphQL routes 7 (calls 8); the detector's labels on the same bodies: query x8
+    x2   Caller > Breakfast Provider POST /graphql query { orderSummaries }
+    x1   Caller > Breakfast Provider POST /graphql query { equipmentAlerts }
+    x1   Caller > Breakfast Provider POST /graphql query { recipeReports }
+    x1   Caller > Breakfast Provider POST /graphql query { ingredientUsage }
+    x1   Caller > Breakfast Provider POST /graphql query { popularRecipes }
+    x1   Caller > Breakfast Provider POST /graphql query { batchCompletions }
+    x1   Caller > Breakfast Provider POST /graphql query { ingredientShipments }
+  operations on a path without 'graphql' 0; strict reader disagrees on 0 records
+  POST JSON-object bodies that are not GraphQL 206, by (service, method, templated path): Breakfast Provider POST /pancakes x43; Breakfast Provider POST /orders x39; Kitchen Service POST /prepare x32; Breakfast Provider POST /waffles x13; Breakfast Provider POST /daily-specials/orders x11; Breakfast Provider POST /muffins x10
+
+## 5. (service, method, route) buckets with more than one caller: 0 (so caller adds 0 buckets)
+
+## 6. request bodies the key reads (4.4: a statement-shaped call's, and every POST's), against all request bodies
+  all request records 1290; with content 482 (non-empty 482); distinct non-empty 388; decoded bytes 66,599 over records, 60,765 distinct; stored 68,004 distinct
+  read by the key: records 281 (statement-shaped 66, other POSTs 215); distinct 217; decoded bytes 37,206 over records, 32,296 distinct; stored 36,197 distinct
+  the POSTs read: first character '{' 214, '[' 1; by service Breakfast Provider 183, Kitchen Service 32
+  for comparison, POSTs with content on a path holding 'graphql' 8 (a rule keyed on the endpoint's name would read only these)
+
+## 7. cross-checks: PathOf reproduction vs WarmUpCalls.PathOf mismatches 0 of 1290; statement head reproduction vs InteractionShape.StatementHead mismatches 0 of 66
+

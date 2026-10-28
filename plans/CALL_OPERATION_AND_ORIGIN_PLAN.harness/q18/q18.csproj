@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Q18 size probe: how much a history fragment grows when it carries the run's distinct untemplated calls. Prints counts
+    and byte sizes only. AssemblyName is one Kronikol.csproj grants InternalsVisibleTo, so it can call the internal
+    builder pieces the product uses.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>Kronikol.Tests.PlantUml.Ikvm</AssemblyName>
+    <RootNamespace>Q18Probe</RootNamespace>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../../src/Kronikol/Kronikol.csproj" />
+  </ItemGroup>
+
+</Project>

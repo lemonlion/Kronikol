@@ -1,0 +1,80 @@
+# jest-recipe
+analysis file: C:/Users/cex/AppData/Local/Temp/claude/c--Code-Kronikol/2245987c-f041-4de7-9fd5-372b946d167a/scratchpad/producers/A-jest/Reports/TestRunReport.krkl (3,224 bytes)
+form: Krkl; decoded JSON 17,184 bytes
+root: formatVersion=3, kronikolVersion=5.11.0+44bcc62a6e9419b3491699b8f09177cbe97d72c9, startTime=2026-10-27T00:42:04Z, endTime=2026-10-27T00:42:04Z, ci.provider=None
+features 1, scenarios 2, scenario interactions 16 (requests 8, responses 8, other type 0); background interactions 0 requests (keys seen under background: afterScenarioEnd[0],calls=0,interactions[0])
+request keys present (count of 8): type=8, method=8, uri=8, serviceName=8, callerName=8, traceId=8, requestResponseId=8, timestamp=8, metaType=8, phase=8, isUserAction=8, activityTraceId=8, activitySpanId=8, durationMs=8, stepPath=8, content=4
+content forms on requests: string=4, absent=4
+
+## 1. calls, callers, services
+calls (request records) 8; distinct callerName 2; distinct serviceName 3
+  caller 'Test' x4 -> 1 services: Payments GraphQL x4
+  caller 'Payments GraphQL' x4 -> 2 services: PSP x2; Risk x2
+
+## 2/3. buckets (service, method, path)
+distinct raw uri strings 5; requests with a query string 0
+item 2  (service, method, AbsolutePath)                  : 5
+item 3a (service, method, Template(PathAndQuery))        : 5
+item 3b (service, method, Template(path, query removed)) : 5
+item 4  R0 = digits | GUID | hex 8+ (whole segment)       : 5
+item 4  R0 + A (20+ chars, at least one digit)           : 5
+item 4  R0 + B (20+ chars of [A-Za-z0-9_-])              : 5
+item 4  R0 + A + B                                       : 5
+  R0 vs item 3b: joint keys 5 (own 5, templater 5) -> same partition
+  R0+A vs item 3b: joint keys 5 (own 5, templater 5) -> same partition
+  R0+B vs item 3b: joint keys 5 (own 5, templater 5) -> same partition
+
+## 4. segment census (distinct segments over all request paths)
+distinct segments 5; R0 folds: digits 0, GUID 0, hex8+ (not digits/GUID) 0
+R0 segments the templater leaves unchanged: 0: 
+rule A (20+ chars, a digit): folds 0 distinct segments R0 does not (0 occurrences); templater leaves 0 of them unchanged, changes part of 0
+  templater leaves unchanged (up to 40, segment xrequests):
+rule B (20+ of [A-Za-z0-9_-]): folds 0 distinct segments R0 does not (0 occurrences); templater leaves 0 of them unchanged, changes part of 0
+  templater leaves unchanged (up to 40, segment xrequests):
+segments the templater changes and R0+A+B leave whole: 0 distinct; up to 15: 
+
+## 5a. buckets under Template(path, query removed) holding the most distinct raw paths (top 20)
+templated buckets 5; holding more than one raw path 0
+  [1 raw / 4 calls] Payments GraphQL POST /graphql   e.g. /graphql
+  [1 raw / 1 calls] PSP GET /charges/c2   e.g. /charges/c2
+  [1 raw / 1 calls] Risk GET /score/c2   e.g. /score/c2
+  [1 raw / 1 calls] PSP GET /charges/c3   e.g. /charges/c3
+  [1 raw / 1 calls] Risk GET /score/c3   e.g. /score/c3
+
+## 5b. after Template(path, query removed): segment positions that still vary across templated paths (top 15, >= 3 values)
+families with >= 3 distinct values at one position: 0
+
+## 6. non-HTTP request records (scheme other than http/https)
+non-http requests 0 of 8
+  scheme | requests | categories | item2 buckets | item3a | item3b | statement-head buckets (history shape: path + templated first line, statement-shaped categories only)
+  total non-http: item2 0, item3a 0, item3b 0, statement-head 0
+  http(s) requests whose category is statement-shaped: 0 (); buckets item2 0, item3a 0, item3b 0, statement-head 0
+  categories over all requests: (absent) x8
+  non-http by (caller > service, scheme, category): 
+  metaType over all requests: Default x8; isUserAction 0; capturedBy (none) x8
+
+## 7. GraphQL
+candidates 4 (path contains graphql 4, label without graphql path 0)
+  by method + path + query keys + body?: POST /graphql body=yes x4
+  query text starts (first 60 chars of the query value, whitespace collapsed): keys[query] { __typename } x2 | keys[query] query Charge { charge(id: "c2") { id amount fee status recei... x1 | keys[query] query Charge { charge(id: "c3") { id amount fee status recei... x1
+methods: POST x4
+services: Test>Payments GraphQL x4
+body present 4, absent 0; TryExtractLabel non-null 4
+distinct labels 2; by operation type: query x4; anonymous (type only) 2
+  query  x2
+  query Charge  x2
+top-level operationName: non-empty 0, null/empty 0; operationName differs from the inline name 0
+JSON array bodies (batched) 0; bodies mentioning persistedQuery 0, of which no top-level query 0; non-JSON bodies 0 (raw GraphQL text 0)
+URIs carrying GraphQL parameters in the query string: none
+plainly GraphQL but TryExtractLabel null (candidates): 0
+plainly GraphQL bodies on a path without 'graphql' that the detector misses: 0
+
+## 9. attributionSource x callerName, x phase (scenario request records)
+  (absent) | Test | 4
+  (absent) | Payments GraphQL | 4
+  --
+  (absent) | Unknown | 8
+
+## 8. timings
+analysis file: decode 88 ms (form Krkl), JsonDocument parse 7 ms, walk 19 ms, analysis 174 ms
+analysis C:/Users/cex/AppData/Local/Temp/claude/c--Code-Kronikol/2245987c-f041-4de7-9fd5-372b946d167a/scratchpad/producers/A-jest/Reports/TestRunReport.krkl: decode-only 3 ms (Krkl, 17,184 bytes); query interactions --group-by service,method,path --count: first 130 ms (includes the process's first JIT of the engine), warm min 1 ms; answer: 5

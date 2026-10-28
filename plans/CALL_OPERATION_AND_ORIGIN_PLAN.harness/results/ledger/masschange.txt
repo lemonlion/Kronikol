@@ -1,0 +1,27 @@
+v6 steps with the most changed positions (suite, from -> to, commits):
+  nunit-in-docker          10-25 08:00 -> 10-25 11:56  d2ce0e2 -> cf47045  changed 81/212
+  xunit-in-docker          10-25 08:01 -> 10-25 11:56  d2ce0e2 -> cf47045  changed 81/212
+  tunit-in-docker          10-25 08:00 -> 10-25 11:55  d2ce0e2 -> cf47045  changed 81/212
+  bddfy-in-docker          10-25 08:00 -> 10-25 11:54  d2ce0e2 -> cf47045  changed 80/211
+  tunit-in-memory          10-25 07:55 -> 10-25 11:51  d2ce0e2 -> cf47045  changed 80/212
+  bddfy-in-memory          10-25 07:56 -> 10-25 11:50  d2ce0e2 -> cf47045  changed 79/212
+changed positions per step time (all suites): 10-20 08h:2, 10-20 10h:1, 10-21 07h:1, 10-21 08h:1, 10-21 15h:1, 10-21 23h:3, 10-22 08h:2, 10-22 10h:4, 10-23 08h:2, 10-24 07h:2, 10-25 07h:1, 10-25 11h:946, 10-26 08h:4, 10-27 08h:6, 10-27 10h:8
+biggest commit step: -> cf47045 changed 956 positions across 54 suites
+  lines gone (positions):
+    x512 Breakfast Provider>CosmosDB Create /orders 201
+    x476 Breakfast Provider>Kafka Broker Produce / -
+    x372 Breakfast Provider>Reporting Database (SQL Server) Select /OrderSummaries OK
+    x358 Breakfast Provider>CosmosDB Create /orders 200
+    x238 Breakfast Provider>Reporting Database (SQL Server) Insert /RecipeReports OK
+    x232 Breakfast Provider>Reporting Database (SQL Server) Insert /EquipmentAlerts OK
+    x208 Breakfast Provider>Reporting Database (SQL Server) Insert /BatchCompletionRecords OK
+    x202 Breakfast Provider>CosmosDB Read /orders 200
+  lines new (positions):
+    x476 Breakfast Provider>Kafka Broker Produce → breakfast_recipe_logs /breakfast_recipe_logs -
+    x238 Breakfast Provider>Reporting Database (SQL Server) Insert /main/RecipeReports INSERT INTO "RecipeReports" ("Ingredients", "LoggedAt", "OrderId", "RecipeType", "Toppings") OK
+    x232 Breakfast Provider>Reporting Database (SQL Server) Insert /main/EquipmentAlerts INSERT INTO "EquipmentAlerts" ("AlertId", "AlertType", "AlertedAt", "BatchId", "EquipmentName") OK
+    x222 Breakfast Provider>CosmosDB Other /colls/orders 200
+    x222 Breakfast Provider>CosmosDB Other /dbs/BreakfastDb 200
+    x214 Breakfast Provider>CosmosDB Create /colls/orders {"id":"{v}","partitionKey":"{v}","orderId":"{v}","recipeType":"{v}","ingredients":["{v}"],"toppings":[],"loggedAt":"{v}"… 201
+    x214 Breakfast Provider>CosmosDB Create /colls/orders {"id":"{v}","partitionKey":"{v}","OrderId":"{v}","RecipeType":"{v}","Ingredients":["{v}"],"Toppings":[],"LoggedAt":"{v}"… 201
+    x208 Breakfast Provider>Reporting Database (SQL Server) Insert /main/BatchCompletionRecords INSERT INTO "BatchCompletionRecords" ("BatchId", "CompletedAt", "Ingredients", "RecipeType") OK

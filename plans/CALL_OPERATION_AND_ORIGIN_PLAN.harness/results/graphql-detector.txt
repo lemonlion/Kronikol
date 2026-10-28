@@ -1,0 +1,15 @@
+# probes/graphql-detector.cs at 44bcc62a (5.11.0), 2026-10-27
+ok   named query (covered by the tests)
+     got: query GetUser   expected: query GetUser
+ok   Apollo Client key order: operationName, variables, query
+     got: query GetUser   expected: query GetUser
+MISS a variable named query before the top-level query (a search API)
+     got: null   expected: query Search
+MISS the same, without operationName
+     got: null   expected: query Search
+MISS Apollo persisted query, hash only (first try)
+     got: null   expected: GetUser
+ok   a batch of two operations
+     got: null   expected: (none: pinned by design)
+MISS a mutation with an input object holding a key named query
+     got: null   expected: mutation Save

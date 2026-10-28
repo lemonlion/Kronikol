@@ -1,0 +1,110 @@
+# bp-ci-xunit-external-sut
+analysis file: reports/bp-ci-xunit-external-sut/decoded.json (2,051,016 bytes)
+original file: reports/bp-ci-xunit-external-sut/TestRunReport.krkl (136,451 bytes)
+form: Json; decoded JSON 2,051,016 bytes
+root: formatVersion=3, kronikolVersion=5.4.1+90e357fd4ffe25d7bdb22a7a6b0028bbc6161f1c, suite=xunit-external-sut, startTime=2026-10-26T08:19:10Z, endTime=2026-10-26T08:19:27Z, ci.provider=GitHubActions, ci.branch=main, ci.repository=lemonlion/BreakfastProvider, ci.runId=40290999167, env.os=Ubuntu 24.04.5 LTS, env.runtime=.NET 10.0.14
+features 73, scenarios 212, scenario interactions 756 (requests 378, responses 378, other type 0); background interactions 0 requests (keys seen under background: afterScenarioEnd[0],calls=0,interactions[0])
+request keys present (count of 378): type=378, method=378, uri=378, serviceName=378, callerName=378, headers=378, traceId=378, requestResponseId=378, timestamp=378, metaType=378, phase=378, attributionSource=378, isUserAction=378, activityTraceId=378, activitySpanId=378, durationMs=378, content=209, warmUp=8, stepPath=6
+content forms on requests: string=209, absent=169
+
+## 1. calls, callers, services
+calls (request records) 378; distinct callerName 1; distinct serviceName 1
+  caller 'Caller' x378 -> 1 services: Breakfast Provider x378
+
+## 2/3. buckets (service, method, path)
+distinct raw uri strings 101; requests with a query string 11
+item 2  (service, method, AbsolutePath)                  : 98
+item 3a (service, method, Template(PathAndQuery))        : 72
+item 3b (service, method, Template(path, query removed)) : 70
+  with a query string: Breakfast Provider GET /audit-logs?entityType  x3  (raw e.g. /audit-logs?entityType=Order)
+  with a query string: Breakfast Provider DELETE /daily-specials/orders?specialId  x3  (raw e.g. /daily-specials/orders?specialId=aaaa0000-0000-0000-0000-000000000001)
+  with a query string: Breakfast Provider GET /orders?page&pageSize  x3  (raw e.g. /orders?page=1&pageSize=10)
+  with a query string: Breakfast Provider GET /audit-logs?entityId  x2  (raw e.g. /audit-logs?entityId=1a2c7696-4498-4d01-b844-6a70bce4b365)
+item 4  R0 = digits | GUID | hex 8+ (whole segment)       : 71
+item 4  R0 + A (20+ chars, at least one digit)           : 70
+item 4  R0 + B (20+ chars of [A-Za-z0-9_-])              : 70
+item 4  R0 + A + B                                       : 70
+  R0 vs item 3b: joint keys 71 (own 71, templater 70) -> templater merges more
+  R0+A vs item 3b: joint keys 70 (own 70, templater 70) -> same partition
+  R0+B vs item 3b: joint keys 70 (own 70, templater 70) -> same partition
+
+## 4. segment census (distinct segments over all request paths)
+distinct segments 94; R0 folds: digits 6, GUID 31, hex8+ (not digits/GUID) 5
+R0 segments the templater leaves unchanged: 0: 
+rule A (20+ chars, a digit): folds 7 distinct segments R0 does not (7 occurrences); templater leaves 0 of them unchanged, changes part of 7
+  templater leaves unchanged (up to 40, segment xrequests):
+  templater changes part of (up to 8): Recipe-34c0a40db28f43eb807e9803916b27da -> Recipe-{id} x1 | Oven-ba553523e6e245e6b2db54fdafcf6a3a -> Oven-{id} x1 | Oven-70476e1eff344eb19abf5615dcea58d3 -> Oven-{id} x1 | Sugar-ab0d2de64a494fc788e802f14efeb99e -> Sugar-{id} x1 | Pancakes-f77b2c63540a4b278dabe5518ac1cc28 -> Pancakes-{id} x1 | Griddle-bb5610067e314017bf4a2ec49360ed72 -> Griddle-{id} x1 | Recipe-722c354938b24f128508e549732b482d -> Recipe-{id} x1
+rule B (20+ of [A-Za-z0-9_-]): folds 8 distinct segments R0 does not (14 occurrences); templater leaves 1 of them unchanged, changes part of 7
+  templater leaves unchanged (up to 40, segment xrequests):
+    customer-preferences  x7
+  templater changes part of (up to 8): Recipe-34c0a40db28f43eb807e9803916b27da -> Recipe-{id} x1 | Oven-ba553523e6e245e6b2db54fdafcf6a3a -> Oven-{id} x1 | Oven-70476e1eff344eb19abf5615dcea58d3 -> Oven-{id} x1 | Sugar-ab0d2de64a494fc788e802f14efeb99e -> Sugar-{id} x1 | Pancakes-f77b2c63540a4b278dabe5518ac1cc28 -> Pancakes-{id} x1 | Griddle-bb5610067e314017bf4a2ec49360ed72 -> Griddle-{id} x1 | Recipe-722c354938b24f128508e549732b482d -> Recipe-{id} x1
+segments the templater changes and R0+A+B leave whole: 0 distinct; up to 15: 
+
+## 5a. buckets under Template(path, query removed) holding the most distinct raw paths (top 20)
+templated buckets 70; holding more than one raw path 13
+  [14 raw / 27 calls] Breakfast Provider PATCH /orders/{id}/status   e.g. /orders/bc9e3744-21d6-432e-b453-e219fe022fbe/status  /orders/9c83a003-cb4e-4f12-9b8a-68837a2f2f4c/status  /orders/f31042b9-f9d5-4a57-a158-8421c6cba445/status
+  [4 raw / 5 calls] Breakfast Provider PUT /customer-preferences/{id}   e.g. /customer-preferences/f1d9f91154c448bcbc6c93670973d3a6  /customer-preferences/b88d2f5054cf4b35a0d0e83079717dfa  /customer-preferences/4bf5f5f9b0bc4b4991d0c87bc49505cb
+  [3 raw / 3 calls] Breakfast Provider GET /orders/{id}   e.g. /orders/bc9e3744-21d6-432e-b453-e219fe022fbe  /orders/69d84b4a-f372-4ad9-b1ed-21c9617ab127  /orders/4a07e504-e5c8-48fe-b8ff-421f000bd677
+  [2 raw / 8 calls] Breakfast Provider PUT /toppings/{id}   e.g. /toppings/11111111-0000-0000-0000-000000000002  /toppings/6e516441-1027-4310-840b-8101f125bb48
+  [2 raw / 3 calls] Breakfast Provider PATCH /reservations/{n}/cancel   e.g. /reservations/1/cancel  /reservations/3/cancel
+  [2 raw / 2 calls] Breakfast Provider GET /chef-notes/{id}   e.g. /chef-notes/b076dd84-a4e9-4d53-842a-e2fd3aefe96a  /chef-notes/54eb39a4-db5e-4a52-9e63-3c83a89ddf48
+  [2 raw / 2 calls] Breakfast Provider PATCH /chef-notes/{id}   e.g. /chef-notes/83efda70-e43d-4185-a595-0faea518532f  /chef-notes/a80af4eb-8c6d-4b34-b500-29d41aec0925
+  [2 raw / 2 calls] Breakfast Provider GET /customer-preferences/{id}   e.g. /customer-preferences/b88d2f5054cf4b35a0d0e83079717dfa  /customer-preferences/17a017d983bb46eba015321b78c2bdd6
+  [2 raw / 2 calls] Breakfast Provider GET /equipment-readings/equipment/Oven-{id}   e.g. /equipment-readings/equipment/Oven-ba553523e6e245e6b2db54fdafcf6a3a  /equipment-readings/equipment/Oven-70476e1eff344eb19abf5615dcea58d3
+  [2 raw / 2 calls] Breakfast Provider GET /feedback/{id}   e.g. /feedback/8a1e4ed3-7faf-4185-876c-9cb7b6ce24d7  /feedback/4d1fb5c2-42b6-470e-9dc3-9f400504371d
+  [2 raw / 2 calls] Breakfast Provider GET /inventory/{n}   e.g. /inventory/99999  /inventory/1
+  [2 raw / 2 calls] Breakfast Provider GET /recipe-reviews/{id}   e.g. /recipe-reviews/bccffc47-44bd-45a1-a37e-b3f26b3493fe  /recipe-reviews/f68ec5ab-a25f-44a3-8308-e017ad48ce04
+  [2 raw / 2 calls] Breakfast Provider DELETE /toppings/{id}   e.g. /toppings/11111111-0000-0000-0000-000000000001  /toppings/3691e58c-3405-4de4-bdfc-ddbb2c9a9649
+  [1 raw / 39 calls] Breakfast Provider POST /pancakes   e.g. /pancakes
+  [1 raw / 35 calls] Breakfast Provider GET /milk   e.g. /milk
+  [1 raw / 35 calls] Breakfast Provider GET /eggs   e.g. /eggs
+  [1 raw / 34 calls] Breakfast Provider POST /orders   e.g. /orders
+  [1 raw / 32 calls] Breakfast Provider GET /flour   e.g. /flour
+  [1 raw / 10 calls] Breakfast Provider POST /muffins   e.g. /muffins
+  [1 raw / 10 calls] Breakfast Provider POST /waffles   e.g. /waffles
+
+## 5b. after Template(path, query removed): segment positions that still vary across templated paths (top 15, >= 3 values)
+families with >= 3 distinct values at one position: 7
+  [16 values / 157 calls] Breakfast Provider POST /*   * = muffins, pancakes, orders, chef-notes, equipment-readings, feedback
+  [12 values / 121 calls] Breakfast Provider GET /*   * = milk, eggs, flour, audit-logs, daily-specials, menu
+  [5 values / 11 calls] Breakfast Provider GET /*/{id}   * = chef-notes, customer-preferences, feedback, orders, recipe-reviews
+  [3 values / 4 calls] Breakfast Provider DELETE /*/{id}   * = equipment-readings, ingredient-waste, toppings
+  [3 values / 4 calls] Breakfast Provider GET /*/{n}   * = inventory, reservations, staff
+  [3 values / 3 calls] Breakfast Provider DELETE /*/{n}   * = inventory, reservations, staff
+  [3 values / 3 calls] Breakfast Provider GET /*/v1.json   * = asyncapi, grpc, openapi
+
+## 6. non-HTTP request records (scheme other than http/https)
+non-http requests 0 of 378
+  scheme | requests | categories | item2 buckets | item3a | item3b | statement-head buckets (history shape: path + templated first line, statement-shaped categories only)
+  total non-http: item2 0, item3a 0, item3b 0, statement-head 0
+  http(s) requests whose category is statement-shaped: 0 (); buckets item2 0, item3a 0, item3b 0, statement-head 0
+  categories over all requests: (absent) x378
+  non-http by (caller > service, scheme, category): 
+  metaType over all requests: Default x378; isUserAction 0; capturedBy (none) x378
+
+## 7. GraphQL
+candidates 9 (path contains graphql 9, label without graphql path 0)
+  by method + path + query keys + body?: POST /graphql body=yes x6; GET /graphql/schema.graphql body=no x1; GET /graphql/schema.json body=no x1; GET /graphql/ body=no x1
+  query text starts (first 60 chars of the query value, whitespace collapsed): keys[query] { batchCompletions { batchId recipeType ingredients complete... x1 | keys[query] { equipmentAlerts { id alertId batchId equipmentName alertTy... x1 | keys[query] { ingredientShipments { deliveryId ingredientName quantity d... x1 | keys[query] { orderSummaries { orderId customerName itemCount tableNumbe... x2 | keys[query] { recipeReports { orderId recipeType ingredients toppings lo... x1
+methods: POST x6, GET x3
+services: Caller>Breakfast Provider x9
+body present 6, absent 3; TryExtractLabel non-null 6
+distinct labels 1; by operation type: query x6; anonymous (type only) 6
+  query  x6
+top-level operationName: non-empty 0, null/empty 0; operationName differs from the inline name 0
+JSON array bodies (batched) 0; bodies mentioning persistedQuery 0, of which no top-level query 0; non-JSON bodies 0 (raw GraphQL text 0)
+URIs carrying GraphQL parameters in the query string: none
+plainly GraphQL but TryExtractLabel null (candidates): 0
+plainly GraphQL bodies on a path without 'graphql' that the detector misses: 0
+
+## 9. attributionSource x callerName, x phase (scenario request records)
+  TestContext | Caller | 378
+  --
+  TestContext | Unknown | 372
+  TestContext | Setup | 5
+  TestContext | Action | 1
+
+## 8. timings
+analysis file: decode 1 ms (form Json), JsonDocument parse 9 ms, walk 4 ms, analysis 9 ms
+analysis reports/bp-ci-xunit-external-sut/decoded.json: decode-only 0 ms (Json, 2,051,016 bytes); query interactions --group-by service,method,path --count: first 18 ms, warm min 17 ms; answer: 98
+original reports/bp-ci-xunit-external-sut/TestRunReport.krkl: decode-only 2 ms (Krkl, 2,051,016 bytes); query interactions --group-by service,method,path --count: first 18 ms, warm min 18 ms; answer: 98

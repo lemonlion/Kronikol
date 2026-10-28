@@ -1,0 +1,283 @@
+# The operation key's GraphQL step over GraphQlOperationDetectorTests.cs
+test cases run 236 (methods 125); cases passing a body to TryExtractLabel 230, bodies 230 (204 distinct); IsAtTopLevel cases (no body) 6
+each case's own expectation met by the real detector (extraction check): 236 of 236
+
+Columns: test[row] | body (excerpt) | detector label | plan key (4.2 as written) | strict key, where it differs | how
+(the plan key is what 4.2's rule appends to the path; '-' is none)
+  Null_empty_or_whitespace_returns_null[0] | (null) | - | - (not a JSON object)
+  Null_empty_or_whitespace_returns_null[1] |  | - | - (not a JSON object)
+  Null_empty_or_whitespace_returns_null[2] |   | - | - (not a JSON object)
+  Null_empty_or_whitespace_returns_null[3] | \u0009\u000a | - | - (not a JSON object)
+  Non_json_body_returns_null[0] | name=Alice&age=30 | - | - (not a JSON object)
+  Non_json_body_returns_null[1] | key=value | - | - (not a JSON object)
+  Non_json_body_returns_null[2] | plain text content | - | - (not a JSON object)
+  Non_json_body_returns_null[3] | Hello World | - | - (not a JSON object)
+  Xml_body_returns_null[0] | <request><query>select * from users</query>. | - | - (not a JSON object)
+  Xml_body_returns_null[1] | <xml><query>query GetUser { user }</query><. | - | - (not a JSON object)
+  Xml_body_returns_null[2] | <?xml version="1.0"?><root/> | - | - (not a JSON object)
+  Json_without_query_key_returns_null[0] | {"name":"Alice","age":30} | - | - | none
+  Json_without_query_key_returns_null[1] | {"data":{"orderSummaries":[{"orderId":"abc". | - | - | none
+  Json_without_query_key_returns_null[2] | {"errors":[{"message":"something failed"}]} | - | - | none
+  Json_without_query_key_returns_null[3] | {"id":1,"type":"request"} | - | - | none
+  Json_without_query_key_returns_null[4] | {"method":"POST","url":"/api"} | - | - | none
+  Json_without_query_key_returns_null[5] | {"status":200,"body":"ok"} | - | - | none
+  Query_key_with_non_string_value_returns_null[0] | {"query":42} | - | - | none
+  Query_key_with_non_string_value_returns_null[1] | {"query":true} | - | - | none
+  Query_key_with_non_string_value_returns_null[2] | {"query":false} | - | - | none
+  Query_key_with_non_string_value_returns_null[3] | {"query":null} | - | - | none
+  Query_key_with_non_string_value_returns_null[4] | {"query":[1,2,3]} | - | - | none
+  Query_key_with_non_string_value_returns_null[5] | {"query":{"nested":"value"}} | - | - | none
+  Query_key_with_non_string_value_returns_null[6] | {"query":3.14} | - | - | none
+  Query_key_with_non_graphql_string_value_returns_nul. | {"query":"select * from users"} | - | - | none
+  Query_key_with_non_graphql_string_value_returns_nul. | {"query":"SELECT query FROM table"} | - | - | none
+  Query_key_with_non_graphql_string_value_returns_nul. | {"query":"INSERT INTO orders VALUES (1)"} | - | - | none
+  Query_key_with_non_graphql_string_value_returns_nul. | {"query":"UPDATE users SET name='Alice'"} | - | - | none
+  Query_key_with_non_graphql_string_value_returns_nul. | {"query":"DELETE FROM orders WHERE id=1"} | - | - | none
+  Query_key_with_non_graphql_string_value_returns_nul. | {"query":"hello world"} | - | - | none
+  Query_key_with_non_graphql_string_value_returns_nul. | {"query":""} | - | - | none
+  Query_key_with_non_graphql_string_value_returns_nul. | {"query":" "} | - | - | none
+  Query_key_with_non_graphql_string_value_returns_nul. | {"query":"some random text"} | - | - | none
+  Query_key_with_non_graphql_string_value_returns_nul. | {"query":"GET /api/users"} | - | - | none
+  Query_key_with_non_graphql_string_value_returns_nul. | {"query":"POST /api/orders"} | - | - | none
+  Query_key_with_non_graphql_string_value_returns_nul. | {"query":"https://example.com/api"} | - | - | none
+  Nested_query_key_not_at_top_level_returns_null | {"data":{"query":"query GetUser { user { na. | - | - | none
+  Deeply_nested_query_key_returns_null | {"outer":{"inner":{"query":"query GetUser {. | - | - | none
+  Query_key_inside_array_returns_null | [{"query":"query GetUser { user }"}] | - | - (not a JSON object)
+  Graphql_response_body_not_confused_as_request | {"data":{"orderSummaries":[{"orderId":"abc-. | - | - | none
+  Graphql_error_response_not_confused_as_request | {"errors":[{"message":"Unexpected Execution. | - | - | none
+  Very_long_non_graphql_content_returns_quickly | {"data":"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx. | - | - | none
+  Query_key_is_case_sensitive[0] | {"Query":"query GetUser { user { name } }"} | - | - | none
+  Query_key_is_case_sensitive[1] | {"QUERY":"query GetUser { user { name } }"} | - | - | none
+  Anonymous_shorthand_query_returns_query[0] | {"query":"{ user { name } }"} | query | query { user } | anonymous: root fields
+  Anonymous_shorthand_query_returns_query[1] | {"query":"{ orderSummaries { orderId custom. | query | query { orderSummaries } | anonymous: root fields
+  Anonymous_shorthand_query_returns_query[2] | {"query":"{ recipeReports { recipeType ingr. | query | query { recipeReports } | anonymous: root fields
+  Anonymous_shorthand_query_returns_query[3] | {"query":"{ orderSummaries { orderId status. | query | query { orderSummaries recipeReports } | anonymous: root fields
+  Shorthand_query_with_filtering_and_sorting | {"query":"{ orderSummaries(where: { status:. | query | query { orderSummaries } | anonymous: root fields
+  Shorthand_query_with_aliases | {"query":"{ completed: orderSummaries(where. | query | query { orderSummaries orderSummaries } | anonymous: root fields
+  Shorthand_query_with_fragments | {"query":"{ orderSummaries { ...OrderFields. | query | query { orderSummaries } | anonymous: root fields
+  Shorthand_query_with_inline_fragment | {"query":"{ orderSummaries { orderId ... on. | query | query { orderSummaries } | anonymous: root fields
+  Shorthand_introspection_schema | {"query":"{ __schema { queryType { name } m. | query | query { __schema } | anonymous: root fields
+  Shorthand_introspection_type | {"query":"{ __type(name: \"OrderSummary\") . | query | query { __type } | anonymous: root fields
+  Shorthand_introspection_available_queries | {"query":"{ __schema { queryType { fields {. | query | query { __schema } | anonymous: root fields
+  Unnamed_operation_returns_type_only[0] | {"query":"query { user { name } }"} | query | query { user } | anonymous: root fields
+  Unnamed_operation_returns_type_only[1] | {"query":"mutation { createUser { id } }"} | mutation | mutation { createUser } | anonymous: root fields
+  Unnamed_operation_returns_type_only[2] | {"query":"subscription { onMessage { text }. | subscription | subscription { onMessage } | anonymous: root fields
+  Unnamed_mutation_with_arguments | {"query":"mutation { createOrder(input: { c. | mutation | mutation { createOrder } | anonymous: root fields
+  Unnamed_mutation_with_multiple_operations | {"query":"mutation { updateOrderStatus(orde. | mutation | mutation { updateOrderStatus cancelOrder } | anonymous: root fields
+  Unnamed_subscription | {"query":"subscription { orderStatusChanged. | subscription | subscription { orderStatusChanged } | anonymous: root fields
+  Named_operation_extracts_type_and_name[0] | {"query":"query GetUser { user { name } }"} | query GetUser | query GetUser | named (detector label)
+  Named_operation_extracts_type_and_name[1] | {"query":"query GetOrderSummaries { orderSu. | query GetOrderSummaries | query GetOrderSummaries | named (detector label)
+  Named_operation_extracts_type_and_name[2] | {"query":"mutation CreateOrder { createOrde. | mutation CreateOrder | mutation CreateOrder | named (detector label)
+  Named_operation_extracts_type_and_name[3] | {"query":"subscription OnMessage { messageA. | subscription OnMessage | subscription OnMessage | named (detector label)
+  Named_query_with_variables_extracts_name[0] | {"query":"query GetUser($id: ID!) { user(id. | query GetUser | query GetUser | named (detector label)
+  Named_query_with_variables_extracts_name[1] | {"query":"query GetOrdersByStatus($status: . | query GetOrdersByStatus | query GetOrdersByStatus | named (detector label)
+  Named_mutation_with_complex_variables | {"query":"mutation CreateOrder($input: Crea. | mutation CreateOrder | mutation CreateOrder | named (detector label)
+  Named_subscription_with_variables | {"query":"subscription OnOrderUpdate($order. | subscription OnOrderUpdate | subscription OnOrderUpdate | named (detector label)
+  Named_query_with_directives_include | {"query":"query GetOrders($includeCustomer:. | query GetOrders | query GetOrders | named (detector label)
+  Named_query_with_directives_skip | {"query":"query GetOrders($hideTable: Boole. | query GetOrders | query GetOrders | named (detector label)
+  Named_query_with_fragments | {"query":"query GetUser { ...UserFields } f. | query GetUser | query GetUser | named (detector label)
+  Named_mutation_with_multiple_variables | {"query":"mutation UpdateUser($id: ID!, $na. | mutation UpdateUser | mutation UpdateUser | named (detector label)
+  Named_introspection_query | {"query":"query IntrospectionQuery { __sche. | query IntrospectionQuery | query IntrospectionQuery | named (detector label)
+  Operation_name_various_identifiers[0] | {"query":"query Get_User_2 { user { name } . | query Get_User_2 | query Get_User_2 | named (detector label)
+  Operation_name_various_identifiers[1] | {"query":"query A { x }"} | query A | query A | named (detector label)
+  Operation_name_various_identifiers[2] | {"query":"query ALLCAPS { x }"} | query ALLCAPS | query ALLCAPS | named (detector label)
+  Operation_name_various_identifiers[3] | {"query":"query camelCase { x }"} | query camelCase | query camelCase | named (detector label)
+  Operation_name_various_identifiers[4] | {"query":"query PascalCase { x }"} | query PascalCase | query PascalCase | named (detector label)
+  Operation_name_various_identifiers[5] | {"query":"query _leading { x }"} | query _leading | query _leading | named (detector label)
+  Operation_name_various_identifiers[6] | {"query":"query x123 { x }"} | query x123 | query x123 | named (detector label)
+  OperationName_field_used_regardless_of_json_key_ord. | {"query":"query GetUser { user { name } }",. | query GetUser | query GetUser | named (detector label)
+  OperationName_field_used_regardless_of_json_key_ord. | {"operationName":"GetUser","query":"query G. | query GetUser | query GetUser | named (detector label)
+  OperationName_overrides_inline_name | {"query":"query Q1 { user { name } }","oper. | query GetUser | query GetUser | named (detector label)
+  Multiple_named_operations_with_operationName | {"query":"query GetOrders { orderSummaries . | query GetOrders | query GetOrders | named (detector label)
+  OperationName_null_or_empty_is_ignored[0] | {"query":"query { user { name } }","operati. | query | query { user } | anonymous: root fields
+  OperationName_null_or_empty_is_ignored[1] | {"query":"query { user { name } }","operati. | query | query { user } | anonymous: root fields
+  OperationName_with_unnamed_query_provides_name | {"query":"query { user { name } }","operati. | query GetUser | query GetUser | named (detector label)
+  OperationName_with_anonymous_shorthand_provides_name | {"query":"{ user { name } }","operationName. | query GetUser | query GetUser | named (detector label)
+  Minified_body | {"query":"query GetUser{user{name}}"} | query GetUser | query GetUser | named (detector label)
+  Pretty_printed_body_with_real_newlines | {\u000a "query": "query GetUser { user { na. | query GetUser | query GetUser | named (detector label)
+  Pretty_printed_body_with_crlf | {\u000d\u000a "query": "query GetUser { use. | query GetUser | query GetUser | named (detector label)
+  Pretty_printed_body_with_tabs | {\u000a\u0009"query": "query GetUser { user. | query GetUser | query GetUser | named (detector label)
+  Leading_whitespace_in_query_value[0] | {"query":"\n query GetUser {\n user { name . | query GetUser | query GetUser | named (detector label)
+  Leading_whitespace_in_query_value[1] | {"query":"\r\n\tquery GetUser { user { name. | query GetUser | query GetUser | named (detector label)
+  Leading_whitespace_in_query_value[2] | {"query":" query GetUser { user { name } }"} | query GetUser | query GetUser | named (detector label)
+  Leading_whitespace_in_query_value[3] | {"query":"\n\n\n query GetUser { user { nam. | query GetUser | query GetUser | named (detector label)
+  Leading_whitespace_in_query_value[4] | {"query":"\t\t query GetUser { user { name . | query GetUser | query GetUser | named (detector label)
+  Leading_whitespace_in_anonymous_query[0] | {"query":"\n { user { name } }"} | query | query { user } | anonymous: root fields
+  Leading_whitespace_in_anonymous_query[1] | {"query":"\r\n { user { name } }"} | query | query { user } | anonymous: root fields
+  Leading_whitespace_in_anonymous_query[2] | {"query":" { user { name } }"} | query | query { user } | anonymous: root fields
+  Whitespace_around_json_keys_and_colons[0] | { "query" : "query GetUser { user { name } . | query GetUser | query GetUser | named (detector label)
+  Whitespace_around_json_keys_and_colons[1] | { "query" : "query GetUser { user { name } . | query GetUser | query GetUser | named (detector label)
+  Whitespace_around_json_keys_and_colons[2] | {"query" :"query GetUser { user { name } }"} | query GetUser | query GetUser | named (detector label)
+  Pretty_printed_with_variables_before_query | {\u000a "variables": {\u000a "input": {\u00. | mutation CreateOrder | mutation CreateOrder | named (detector label)
+  Pretty_printed_with_all_fields | {\u000a "operationName": "GetOrders",\u000a. | query GetOrders | query GetOrders | named (detector label)
+  Pretty_printed_shorthand_query | {\u000a "query": "{ orderSummaries { orderI. | query | query { orderSummaries } | anonymous: root fields
+  Operation_type_must_be_lowercase_per_graphql_spec[0] | {"query":"Query GetUser { user { name } }"} | - | - | none
+  Operation_type_must_be_lowercase_per_graphql_spec[1] | {"query":"QUERY GetUser { user { name } }"} | - | - | none
+  Operation_type_must_be_lowercase_per_graphql_spec[2] | {"query":"Mutation CreateUser { createUser . | - | - | none
+  Operation_type_must_be_lowercase_per_graphql_spec[3] | {"query":"MUTATION CreateUser { createUser . | - | - | none
+  Operation_type_must_be_lowercase_per_graphql_spec[4] | {"query":"Subscription OnMsg { msg { text }. | - | - | none
+  Operation_type_must_be_lowercase_per_graphql_spec[5] | {"query":"SUBSCRIPTION OnMsg { msg { text }. | - | - | none
+  Operation_name_preserves_original_casing[0] | {"query":"query GetUserProfile { user { nam. | query GetUserProfile | query GetUserProfile | named (detector label)
+  Operation_name_preserves_original_casing[1] | {"query":"query getUserProfile { user { nam. | query getUserProfile | query getUserProfile | named (detector label)
+  Operation_name_preserves_original_casing[2] | {"query":"query GETUSERPROFILE { user { nam. | query GETUSERPROFILE | query GETUSERPROFILE | named (detector label)
+  Variables_with_simple_object_before_query | {"variables":{"status":"Completed"},"query". | query GetOrders | query GetOrders | named (detector label)
+  Variables_with_nested_object_before_query | {"variables":{"input":{"name":"Alice","addr. | mutation CreateUser | mutation CreateUser | named (detector label)
+  Variables_with_deeply_nested_object_before_query | {"variables":{"a":{"b":{"c":{"d":{"e":"deep. | query Deep | query Deep | named (detector label)
+  Variables_with_array_before_query | {"variables":{"ids":["a","b","c"]},"query":. | query GetUsers | query GetUsers | named (detector label)
+  Variables_with_array_of_objects_before_query | {"variables":{"items":[{"name":"item1"},{"n. | query GetItems | query GetItems | named (detector label)
+  Extensions_with_persisted_query_before_query | {"extensions":{"persistedQuery":{"version":. | query GetUser | query GetUser | named (detector label)
+  Variables_and_extensions_both_before_query | {"variables":{"id":"1"},"extensions":{"pers. | query GetUser | query GetUser | named (detector label)
+  All_fields_before_query | {"operationName":"GetUser","variables":{"id. | query GetUser | query GetUser | named (detector label)
+  Escaped_quotes_in_filter_arguments | {"query":"{ orderSummaries(where: { status:. | query | query { orderSummaries } | anonymous: root fields
+  Escaped_quotes_in_named_query_filter | {"query":"query GetCompleted { orderSummari. | query GetCompleted | query GetCompleted | named (detector label)
+  Multiple_escaped_quotes_in_aliases | {"query":"{ completed: orderSummaries(where. | query | query { orderSummaries orderSummaries } | anonymous: root fields
+  Escaped_backslash_in_query | {"query":"query GetPath { file(path: \"C:\\. | query GetPath | query GetPath | named (detector label)
+  Escaped_newlines_and_tabs_in_query | {"query":"query GetFormatted {\n user {\n n. | query GetFormatted | query GetFormatted | named (detector label)
+  Example_shorthand_no_variables | {"query":"{ orderSummaries { orderId custom. | query | query { orderSummaries } | anonymous: root fields
+  Example_named_query_no_variables | {"query":"query GetOrderSummaries { orderSu. | query GetOrderSummaries | query GetOrderSummaries | named (detector label)
+  Example_query_with_variables | {"query":"query GetOrdersByStatus($status: . | query GetOrdersByStatus | query GetOrdersByStatus | named (detector label)
+  Example_filtering_and_sorting | {"query":"{ orderSummaries(where: { status:. | query | query { orderSummaries } | anonymous: root fields
+  Example_projection | {"query":"{ recipeReports { recipeType ingr. | query | query { recipeReports } | anonymous: root fields
+  Example_multiple_root_fields | {"query":"{ orderSummaries { orderId status. | query | query { orderSummaries recipeReports } | anonymous: root fields
+  Example_multiple_named_operations_with_operationName | {"query":"query GetOrders { orderSummaries . | query GetOrders | query GetOrders | named (detector label)
+  Example_named_query_fragments | {"query":"{ orderSummaries { ...OrderFields. | query | query { orderSummaries } | anonymous: root fields
+  Example_inline_fragment | {"query":"{ orderSummaries { orderId ... on. | query | query { orderSummaries } | anonymous: root fields
+  Example_aliases | {"query":"{ completed: orderSummaries(where. | query | query { orderSummaries orderSummaries } | anonymous: root fields
+  Example_mutation_no_variables | {"query":"mutation { createOrder(input: { c. | mutation | mutation { createOrder } | anonymous: root fields
+  Example_named_mutation_with_variables | {"query":"mutation CreateOrder($input: Crea. | mutation CreateOrder | mutation CreateOrder | named (detector label)
+  Example_mutation_multiple_operations | {"query":"mutation { updateOrderStatus(orde. | mutation | mutation { updateOrderStatus cancelOrder } | anonymous: root fields
+  Example_subscription | {"query":"subscription { orderStatusChanged. | subscription | subscription { orderStatusChanged } | anonymous: root fields
+  Example_named_subscription_with_variables | {"query":"subscription OnOrderUpdate($order. | subscription OnOrderUpdate | subscription OnOrderUpdate | named (detector label)
+  Example_introspection_full_schema | {"query":"{ __schema { queryType { name } m. | query | query { __schema } | anonymous: root fields
+  Example_introspection_single_type | {"query":"{ __type(name: \"OrderSummary\") . | query | query { __type } | anonymous: root fields
+  Example_introspection_available_queries | {"query":"{ __schema { queryType { fields {. | query | query { __schema } | anonymous: root fields
+  Example_directive_include | {"query":"query GetOrders($includeCustomer:. | query GetOrders | query GetOrders | named (detector label)
+  Example_directive_skip | {"query":"query GetOrders($hideTable: Boole. | query GetOrders | query GetOrders | named (detector label)
+  PrettyPrinted_shorthand_no_variables | {\u000a "query": "{ orderSummaries { orderI. | query | query { orderSummaries } | anonymous: root fields
+  PrettyPrinted_named_query_no_variables | {\u000a "query": "query GetOrderSummaries {. | query GetOrderSummaries | query GetOrderSummaries | named (detector label)
+  PrettyPrinted_query_with_variables | {\u000a "query": "query GetOrdersByStatus($. | query GetOrdersByStatus | query GetOrdersByStatus | named (detector label)
+  PrettyPrinted_named_mutation_with_variables | {\u000a "query": "mutation CreateOrder($inp. | mutation CreateOrder | mutation CreateOrder | named (detector label)
+  PrettyPrinted_multiple_operations_with_operationName | {\u000a "query": "query GetOrders { orderSu. | query GetOrders | query GetOrders | named (detector label)
+  PrettyPrinted_subscription_with_variables | {\u000a "query": "subscription OnOrderUpdat. | subscription OnOrderUpdate | subscription OnOrderUpdate | named (detector label)
+  PrettyPrinted_variables_before_query | {\u000a "variables": {\u000a "status": "Com. | query GetOrdersByStatus | query GetOrdersByStatus | named (detector label)
+  PrettyPrinted_deeply_nested_variables_before_query | {\u000a "variables": {\u000a "input": {\u00. | mutation CreateOrder | mutation CreateOrder | named (detector label)
+  HotChocolate_filtering_sorting_paging | {"query":"query GetPaged($first: Int, $afte. | query GetPaged | query GetPaged | named (detector label)
+  Apollo_persisted_query_with_extensions | {"query":"query GetUser { user { name } }",. | query GetUser | query GetUser | named (detector label)
+  Mutation_with_file_upload_style_variables | {"query":"mutation UploadFile($file: Upload. | mutation UploadFile | mutation UploadFile | named (detector label)
+  Query_with_enum_arguments | {"query":"query GetOrders($status: OrderSta. | query GetOrders | query GetOrders | named (detector label)
+  Mutation_with_boolean_and_int_variables | {"query":"mutation UpdateSettings($notify: . | mutation UpdateSettings | mutation UpdateSettings | named (detector label)
+  Query_with_default_variable_values | {"query":"query GetOrders($status: String =. | query GetOrders | query GetOrders | named (detector label)
+  Query_with_union_type_inline_fragments | {"query":"query Search($term: String!) { se. | query Search | query Search | named (detector label)
+  Mutation_with_array_input | {"query":"mutation CreateBatch($orders: [Or. | mutation CreateBatch | mutation CreateBatch | named (detector label)
+  Extra_or_null_fields_do_not_interfere[0] | {"query":"query A { x }","extra":"value"} | query A | query A | named (detector label)
+  Extra_or_null_fields_do_not_interfere[1] | {"query":"query A { x }","variables":null} | query A | query A | named (detector label)
+  Extra_or_null_fields_do_not_interfere[2] | {"query":"query A { x }","variables":{}} | query A | query A | named (detector label)
+  Extra_or_null_fields_do_not_interfere[3] | {"query":"query A { x }","extensions":null} | query A | query A | named (detector label)
+  Query_value_containing_braces_in_strings_inside_var. | {"variables":{"template":"Hello {name}!"},". | query GetTemplate | query GetTemplate | named (detector label)
+  Query_value_containing_escaped_quotes_in_variable_s. | {"variables":{"name":"She said \"hello\""},. | query GetGreeting | query GetGreeting | named (detector label)
+  Query_after_boolean_variable | {"variables":{"includeDetails":true},"query. | query GetUser | query GetUser | named (detector label)
+  Query_after_null_variables | {"variables":null,"query":"query GetUser { . | query GetUser | query GetUser | named (detector label)
+  Query_after_empty_variables | {"variables":{},"query":"query GetUser { us. | query GetUser | query GetUser | named (detector label)
+  Single_character_operation_name | {"query":"query Q { user { name } }"} | query Q | query Q | named (detector label)
+  Very_long_operation_name | {"query":"query AAAAAAAAAAAAAAAAAAAAAAAAAAA. | query AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA | query AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA. | named (detector label)
+  Very_long_query_string | {"query":"query GetAll { entity { field0 fi. | query GetAll | query GetAll | named (detector label)
+  Operation_name_that_starts_with_underscore | {"query":"query _internal { user { name } }. | query _internal | query _internal | named (detector label)
+  Operation_name_with_digits | {"query":"query GetV2Users { users { name }. | query GetV2Users | query GetV2Users | named (detector label)
+  Query_with_comment_like_content_in_string | {"query":"query GetUser { user(filter: \"#a. | query GetUser | query GetUser | named (detector label)
+  Content_that_starts_with_whitespace_then_json |  \u000a {"query":"query GetUser { user { na. | query GetUser | query GetUser | named (detector label)
+  Array_batch_request_returns_null | [{"query":"query A { a }"},{"query":"query . | - | - (not a JSON object)
+  Named_operations_parametrized[0] | {"query":"query GetUser { result { id } }"} | query GetUser | query GetUser | named (detector label)
+  Named_operations_parametrized[1] | {"query":"query ListOrders { result { id } . | query ListOrders | query ListOrders | named (detector label)
+  Named_operations_parametrized[2] | {"query":"query SearchProducts { result { i. | query SearchProducts | query SearchProducts | named (detector label)
+  Named_operations_parametrized[3] | {"query":"query FetchCustomer { result { id. | query FetchCustomer | query FetchCustomer | named (detector label)
+  Named_operations_parametrized[4] | {"query":"query LoadDashboard { result { id. | query LoadDashboard | query LoadDashboard | named (detector label)
+  Named_operations_parametrized[5] | {"query":"query ReadProfile { result { id }. | query ReadProfile | query ReadProfile | named (detector label)
+  Named_operations_parametrized[6] | {"query":"query FindInventory { result { id. | query FindInventory | query FindInventory | named (detector label)
+  Named_operations_parametrized[7] | {"query":"query GetOrderHistory { result { . | query GetOrderHistory | query GetOrderHistory | named (detector label)
+  Named_operations_parametrized[8] | {"query":"query CheckBalance { result { id . | query CheckBalance | query CheckBalance | named (detector label)
+  Named_operations_parametrized[9] | {"query":"query VerifyEmail { result { id }. | query VerifyEmail | query VerifyEmail | named (detector label)
+  Named_operations_parametrized[10] | {"query":"mutation CreateUser { result { id. | mutation CreateUser | mutation CreateUser | named (detector label)
+  Named_operations_parametrized[11] | {"query":"mutation UpdateOrder { result { i. | mutation UpdateOrder | mutation UpdateOrder | named (detector label)
+  Named_operations_parametrized[12] | {"query":"mutation DeleteProduct { result {. | mutation DeleteProduct | mutation DeleteProduct | named (detector label)
+  Named_operations_parametrized[13] | {"query":"mutation CancelSubscription { res. | mutation CancelSubscription | mutation CancelSubscription | named (detector label)
+  Named_operations_parametrized[14] | {"query":"mutation SubmitPayment { result {. | mutation SubmitPayment | mutation SubmitPayment | named (detector label)
+  Named_operations_parametrized[15] | {"query":"mutation ResetPassword { result {. | mutation ResetPassword | mutation ResetPassword | named (detector label)
+  Named_operations_parametrized[16] | {"query":"mutation ToggleFeature { result {. | mutation ToggleFeature | mutation ToggleFeature | named (detector label)
+  Named_operations_parametrized[17] | {"query":"mutation ArchiveOrder { result { . | mutation ArchiveOrder | mutation ArchiveOrder | named (detector label)
+  Named_operations_parametrized[18] | {"query":"mutation RefundPayment { result {. | mutation RefundPayment | mutation RefundPayment | named (detector label)
+  Named_operations_parametrized[19] | {"query":"mutation AssignRole { result { id. | mutation AssignRole | mutation AssignRole | named (detector label)
+  Named_operations_parametrized[20] | {"query":"subscription OnOrderCreated { res. | subscription OnOrderCreated | subscription OnOrderCreated | named (detector label)
+  Named_operations_parametrized[21] | {"query":"subscription OnUserLoggedIn { res. | subscription OnUserLoggedIn | subscription OnUserLoggedIn | named (detector label)
+  Named_operations_parametrized[22] | {"query":"subscription OnPaymentReceived { . | subscription OnPaymentReceived | subscription OnPaymentReceived | named (detector label)
+  Named_operations_parametrized[23] | {"query":"subscription OnInventoryChanged {. | subscription OnInventoryChanged | subscription OnInventoryChanged | named (detector label)
+  Named_operations_parametrized[24] | {"query":"subscription OnNotification { res. | subscription OnNotification | subscription OnNotification | named (detector label)
+  Named_operations_with_variable_signatures[0] | {"query":"query GetUser($id: ID!) { result . | query GetUser | query GetUser | named (detector label)
+  Named_operations_with_variable_signatures[1] | {"query":"query ListOrders($status: String!. | query ListOrders | query ListOrders | named (detector label)
+  Named_operations_with_variable_signatures[2] | {"query":"mutation CreateUser($input: Creat. | mutation CreateUser | mutation CreateUser | named (detector label)
+  Named_operations_with_variable_signatures[3] | {"query":"mutation UpdateOrder($id: ID!, $s. | mutation UpdateOrder | mutation UpdateOrder | named (detector label)
+  Named_operations_with_variable_signatures[4] | {"query":"subscription OnOrder($orderId: St. | subscription OnOrder | subscription OnOrder | named (detector label)
+  All_key_orderings_produce_same_result[0] | {"query":"query A { x }"} | query A | query A | named (detector label)
+  All_key_orderings_produce_same_result[1] | {"query":"query A { x }","variables":{}} | query A | query A | named (detector label)
+  All_key_orderings_produce_same_result[2] | {"query":"query A { x }","operationName":"A. | query A | query A | named (detector label)
+  All_key_orderings_produce_same_result[3] | {"query":"query A { x }","variables":{},"op. | query A | query A | named (detector label)
+  All_key_orderings_produce_same_result[4] | {"query":"query A { x }","operationName":"A. | query A | query A | named (detector label)
+  All_key_orderings_produce_same_result[5] | {"variables":{},"query":"query A { x }"} | query A | query A | named (detector label)
+  All_key_orderings_produce_same_result[6] | {"variables":{},"query":"query A { x }","op. | query A | query A | named (detector label)
+  All_key_orderings_produce_same_result[7] | {"operationName":"A","query":"query A { x }. | query A | query A | named (detector label)
+  All_key_orderings_produce_same_result[8] | {"operationName":"A","query":"query A { x }. | query A | query A | named (detector label)
+  All_key_orderings_produce_same_result[9] | {"operationName":"A","variables":{},"query". | query A | query A | named (detector label)
+  All_key_orderings_produce_same_result[10] | {"variables":{},"operationName":"A","query". | query A | query A | named (detector label)
+  All_key_orderings_produce_same_result[11] | {"extensions":{},"query":"query A { x }"} | query A | query A | named (detector label)
+  All_key_orderings_produce_same_result[12] | {"extensions":{},"variables":{},"query":"qu. | query A | query A | named (detector label)
+  All_key_orderings_produce_same_result[13] | {"variables":{},"extensions":{},"query":"qu. | query A | query A | named (detector label)
+  All_key_orderings_produce_same_result[14] | {"operationName":"A","extensions":{},"varia. | query A | query A | named (detector label)
+  Shorthand_vs_explicit_vs_named[0] | {"query":"{ user { name } }"} | query | query { user } | anonymous: root fields
+  Shorthand_vs_explicit_vs_named[1] | {"query":"query { user { name } }"} | query | query { user } | anonymous: root fields
+  Shorthand_vs_explicit_vs_named[2] | {"query":"query GetUser { user { name } }"} | query GetUser | query GetUser | named (detector label)
+
+bodies where the plan key is the detector label unchanged 189; where the plan key differs from the label 41 (anonymous operations named by root fields); strict differs from plan 0
+
+# Probes (not in the test file): route = Key.Route(method, uri, no category, body)
+id | method uri | body (excerpt) | plan route | strict route, where it differs | how (plan) | question
+  P1 | POST /graphql | {"query":"fragment F on Query { a } que. | detector - | plan /graphql | STRICT /graphql query Q (named) | none | a document whose fragments come first (Relay, codegen)
+  P2 | POST /graphql | {"query":"# fetch the user\nquery Q { u. | detector - | plan /graphql | STRICT /graphql query Q (named) | none | a document opening with a comment
+  P3 | POST /graphql | {"query":"query\nGetUser { user { name . | detector query | plan /graphql query { user } | STRICT /graphql query GetUser (named) | anonymous: root fields | a name on the line after its keyword
+  P4 | POST /graphql | {"query":"query A { a } mutation B { b . | detector query B | plan /graphql query B | STRICT /graphql mutation B (named, selected by operationName) | named (detector label) | operationName selects a mutation after a query
+  P5 | POST /graphql | {"variables":{"query":"pancakes"},"quer. | detector - | plan /graphql | STRICT /graphql query Search (named) | none | a variable named query before the query (F4)
+  P6 | POST /graphql | {"operationName":"GetUser","variables":. | detector - | plan /graphql GetUser | persisted query by name | APQ by hash alone
+  P7 | POST /graphql | {"operationName":"GetUser","query":"que. | detector query GetUser | plan /graphql query GetUser | named (detector label) | APQ's registering retry of the same operation
+  P8 | GET /graphql?query=%7B%20user%20%7B%20name%. | (null) | detector - | plan /graphql query { user } | anonymous: root fields | a GET with an anonymous query
+  P9 | GET /graphql?operationName=GetUser&variable. | (null) | detector - | plan /graphql GetUser | persisted query by name | a GET persisted query (Apollo's GET mode)
+  P10 | GET /search?query=mutation%20testing | (null) | detector - | plan /search mutation testing | STRICT /search (none: query is not GraphQL (mutation testing without a selection set (at 'end'))) | named (detector label) | a REST search whose term starts with a keyword
+  P11 | GET /search?query=pancakes&page=2 | (null) | detector - | plan /search | none | a REST search
+  P12 | POST /search | {"query":"{\"match\":{\"title\":\"x\"}}. | detector query | plan /search query | STRICT /search (none: query is not GraphQL (unreadable selection set)) | anonymous: root fields unreadable, type alone | a search API taking a JSON filter as a string
+  P13 | POST /_search | {"query":{"match":{"title":"x"}}} | detector - | plan /_search | none | Elasticsearch's query DSL
+  P14 | POST /docs | {"query":"SELECT * FROM c WHERE c.id = . | detector - | plan /docs | none | a Cosmos DB query spec posted over HTTP
+  P15 | POST /graphql | {"query":"query Q { a } query R { b }"} | detector query Q | plan /graphql query Q | named (detector label) | two named operations, no operationName (a server rejects it)
+  P16 | POST /graphql | {"query":"{ a(s: \"}\") b }"} | detector query | plan /graphql query { a b } | anonymous: root fields | a brace inside a string argument
+  P17 | POST /graphql | {"query":"{ a(s: \"\"\"block } ) \\\"\". | detector query | plan /graphql query { a b } | anonymous: root fields | a block string argument holding braces and an escaped triple quote
+  P18 | POST /graphql | {"query":"query ($id: ID!) { user(id: $. | detector query | plan /graphql query { user } | anonymous: root fields | an anonymous operation with variables
+  P19 | POST /graphql | {"query":"{ ... @include(if: true) { a . | detector query | plan /graphql query { ... b } | anonymous: root fields | an inline fragment with no type condition
+  P20 | POST /graphql | {"query":"query Q @cached(ttl: 5) { a }. | detector query Q | plan /graphql query Q | named (detector label) | a directive on the operation
+  P21 | POST /graphql | {"query":"{ __typename }"} | detector query | plan /graphql query { __typename } | anonymous: root fields | the Jest stand-in's anonymous body
+  P22 | POST /graphql | {"query":"mutation { first: createOrder. | detector mutation | plan /graphql mutation { createOrder createOrder } | anonymous: root fields | one root field twice under two aliases
+  P23 | POST /graphql | {"query":"{ b a }"} | detector query | plan /graphql query { b a } | anonymous: root fields | the same fields as P24 in the other order
+  P24 | POST /graphql | {"query":"{ a b }"} | detector query | plan /graphql query { a b } | anonymous: root fields | the same fields as P23
+  P25 | POST /graphql | {"query":"{ orderSummaries(where: {stat. | detector query | plan /graphql query { orderSummaries } | anonymous: root fields | operationName null
+  P26 | POST /graphql | {"query":"query { orders { id } }","ope. | detector query ListOrders | plan /graphql query ListOrders | named (detector label) | a client name for an unnamed operation
+  P27 | POST /graphql | {"query":"query GetUser { user { name }. | detector query GetUser | plan /graphql query GetUser | named (detector label) | a body cut at capture
+  P28 | PUT /graphql | {"query":"mutation M { m }"} | detector mutation M | plan /graphql | not read | a PUT: 4.4 reads POST bodies only
+
+# {bin} probe: a key with bytes, as RedisTracker builds the URI (new Uri($"redis://{endpoint}/{db}/{key}"))
+key | history today: Template(Uri.PathAndQuery) | the plan's input: Template(PathOf(Uri.ToString())) | Uri.ToString() path
+  app:_customerDates_100000000000001-\u001d(\ufffd4\ufffd\ufffd: | /{n}/app:_customerDates_{n}-{bin} | /{n}/app:_customerDates_{n}-{bin} | /0/app:_customerDates_100000000000001-\u001d(%EF%BF%BD4%EF%BF%BD%EF%BF%BD:
+  app:_customerDates_100000000000002-(\ufffd4\ufffd\ufffd: | /{n}/app:_customerDates_{n}-{bin} | /{n}/app:_customerDates_{n}-{bin} | /0/app:_customerDates_100000000000002-(%EF%BF%BD4%EF%BF%BD%EF%BF%BD:
+  cache/key-ab\u000ccd/next | /{n}/cache/key-{bin}/next | /{n}/cache/key-ab\u000ccd/next | /0/cache/key-ab\u000ccd/next
+
+# SQL classifier probe: UnifiedSqlClassifier.Classify (operation, table) and the statement head
+  INSERT INTO [Reservations] ([Status]) OUTPUT INSERTED.[Id] VALUES (@p. | Insert Reservations | head: INSERT INTO [Reservations] ([Status]) OUTPUT INSERTED.[Id] VALUES (@p0);
+  SET NOCOUNT ON;\u000d\u000aINSERT INTO [Reservations] ([Status]) OUTP. | Insert Reservations | head: SET NOCOUNT ON;
+  SET IMPLICIT_TRANSACTIONS OFF;\u000d\u000aSET NOCOUNT ON;\u000d\u000a. | Other (no table) | head: SET IMPLICIT_TRANSACTIONS OFF;
+  SET IMPLICIT_TRANSACTIONS OFF;\u000d\u000aSET NOCOUNT ON;\u000d\u000a. | Other (no table) | head: SET IMPLICIT_TRANSACTIONS OFF;
+
+

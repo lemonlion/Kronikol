@@ -1,0 +1,14 @@
+# probes/service-case.cs at 44bcc62a (5.11.0), 2026-10-27
+Report diagnostics: 4 log entries across 1 test(s).
+Kronikol: reports written to C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\2245987c-f041-4de7-9fd5-372b946d167a\scratchpad\case\out  (TestRunReport.html · TestRunReport.krkl · Failures.md)
+$ query services   (exit 0)
+service                  calls errors     bytes      p50      max  statuses
+Orders                       2      0      18 B    10 ms    10 ms  OK×2
+1 services · a service missing here was never called
+
+$ query interactions --group-by service   (exit 0)
+service  calls errors   median      max bodies     bytes
+Orders       1      0    10 ms    10 ms      1       7 B
+orders       1      0    10 ms    10 ms      1      11 B
+2 buckets
+

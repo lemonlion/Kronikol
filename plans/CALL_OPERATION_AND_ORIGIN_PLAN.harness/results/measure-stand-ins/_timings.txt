@@ -1,0 +1,6 @@
+label | file | form | bytes on disk | decoded bytes | decode ms | parse ms | walk ms | analysis ms | query cold ms | query warm ms (min of 3) | query bucket count
+jest-recipe | analysis | Krkl | 3,224 | 17,184 | 3 | 7 | 19 | 174 | 130* | 1 | 5
+bp-ci-nunit-in-memory | analysis | Krkl | 290,017 | 4,775,754 | 9 | 36 | 26 | 169 | 151 | 118 | 207
+bp-ci-tunit-in-memory | analysis | Krkl | 284,316 | 4,778,790 | 8 | 44 | 38 | 141 | 142 | 117 | 208
+bp-ci-lightbdd-in-memory | analysis | Krkl | 320,309 | 5,506,360 | 10 | 77 | 28 | 192 | 118 | 90 | 207
+bp-ci-bddfy-in-memory | analysis | Krkl | 322,985 | 5,613,633 | 8 | 18 | 19 | 177 | 55 | 55 | 207

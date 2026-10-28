@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Prototype of CALL_OPERATION_AND_ORIGIN_PLAN.md's operation key (4.1, 4.2, 4.4), measured on real reports.
+
+    AssemblyName is one of the names Kronikol.csproj grants InternalsVisibleTo, so the prototype can cross-check its
+    reproductions against the internal originals (WarmUpCalls.PathOf, InteractionShape.StatementHead) and time the
+    engine's own path (ReportScanner, BodyCache, QueryCommand.AllInteractions). Nothing here changes the library.
+
+    The library is referenced under the alias K, so that the detector's test file, compiled in as it is, binds its
+    GraphQlOperationDetector and Assert to the recording shims in Corpus.cs rather than to the library and xUnit.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>preview</LangVersion>
+    <AssemblyName>Kronikol.Tests.PlantUml.Ikvm</AssemblyName>
+    <RootNamespace>RouteProbe</RootNamespace>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <TieredCompilation>true</TieredCompilation>
+    <NoWarn>$(NoWarn);CS1591;CS8981</NoWarn>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../../src/Kronikol/Kronikol.csproj" Aliases="K" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="Program.cs;Key.cs;Gql.cs;Measure.cs;Corpus.cs" />
+    <!-- Read in place, never copied or changed. -->
+    <Compile Include="../../../tests/Kronikol.Tests/PlantUml/GraphQlOperationDetectorTests.cs" Link="Corpus/GraphQlOperationDetectorTests.cs" />
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,84 @@
+# example-api-5111-reqnroll
+analysis file: reports/example-api-5111-reqnroll/TestRunReport.krkl (8,145 bytes)
+form: Krkl; decoded JSON 77,005 bytes
+root: formatVersion=3, kronikolVersion=5.11.1+44bcc62a6e9419b3491699b8f09177cbe97d72c9, suite=Example.Api.Tests.Component.ReqNRoll.xUnit3, startTime=2026-10-26T23:28:30Z, endTime=2026-10-26T23:28:32Z, ci.provider=None, env.os=Microsoft Windows 10.0.26200, env.runtime=.NET 10.0.11
+features 5, scenarios 11, scenario interactions 46 (requests 23, responses 23, other type 0); background interactions 0 requests (keys seen under background: afterScenarioEnd[0],calls=0,interactions[0])
+request keys present (count of 23): type=23, method=23, uri=23, serviceName=23, callerName=23, traceId=23, requestResponseId=23, timestamp=23, metaType=23, phase=23, attributionSource=23, isUserAction=23, activityTraceId=23, activitySpanId=23, durationMs=23, stepPath=23, headers=16, content=7, dependencyCategory=3, warmUp=2
+content forms on requests: absent=16, string=7
+
+## 1. calls, callers, services
+calls (request records) 23; distinct callerName 2; distinct serviceName 3
+  caller 'Caller' x16 -> 1 services: Dessert Provider x16
+  caller 'Dessert Provider' x7 -> 2 services: Cow Service x4; Event broker x3
+
+## 2/3. buckets (service, method, path)
+distinct raw uri strings 6; requests with a query string 0
+item 2  (service, method, AbsolutePath)                  : 6
+item 3a (service, method, Template(PathAndQuery))        : 6
+item 3b (service, method, Template(path, query removed)) : 6
+item 4  R0 = digits | GUID | hex 8+ (whole segment)       : 6
+item 4  R0 + A (20+ chars, at least one digit)           : 6
+item 4  R0 + B (20+ chars of [A-Za-z0-9_-])              : 6
+item 4  R0 + A + B                                       : 6
+  R0 vs item 3b: joint keys 6 (own 6, templater 6) -> same partition
+  R0+A vs item 3b: joint keys 6 (own 6, templater 6) -> same partition
+  R0+B vs item 3b: joint keys 6 (own 6, templater 6) -> same partition
+
+## 4. segment census (distinct segments over all request paths)
+distinct segments 5; R0 folds: digits 0, GUID 0, hex8+ (not digits/GUID) 0
+R0 segments the templater leaves unchanged: 0: 
+rule A (20+ chars, a digit): folds 0 distinct segments R0 does not (0 occurrences); templater leaves 0 of them unchanged, changes part of 0
+  templater leaves unchanged (up to 40, segment xrequests):
+rule B (20+ of [A-Za-z0-9_-]): folds 0 distinct segments R0 does not (0 occurrences); templater leaves 0 of them unchanged, changes part of 0
+  templater leaves unchanged (up to 40, segment xrequests):
+segments the templater changes and R0+A+B leave whole: 0 distinct; up to 15: 
+
+## 5a. buckets under Template(path, query removed) holding the most distinct raw paths (top 20)
+templated buckets 6; holding more than one raw path 0
+  [1 raw / 4 calls] Dessert Provider GET /milk   e.g. /milk
+  [1 raw / 4 calls] Cow Service GET /milk   e.g. /milk
+  [1 raw / 4 calls] Dessert Provider GET /eggs   e.g. /eggs
+  [1 raw / 4 calls] Dessert Provider GET /flour   e.g. /flour
+  [1 raw / 4 calls] Dessert Provider POST /cake   e.g. /cake
+  [1 raw / 3 calls] Event broker Send (Event Protocol) /cake_events   e.g. /cake_events
+
+## 5b. after Template(path, query removed): segment positions that still vary across templated paths (top 15, >= 3 values)
+families with >= 3 distinct values at one position: 1
+  [3 values / 12 calls] Dessert Provider GET /*   * = milk, eggs, flour
+
+## 6. non-HTTP request records (scheme other than http/https)
+non-http requests 3 of 23
+  scheme | requests | categories | item2 buckets | item3a | item3b | statement-head buckets (history shape: path + templated first line, statement-shaped categories only)
+  event | 3 | MessageQueue | 1 | 1 | 1 | 1
+    event e.g. Send (Event Protocol) event://event-broker/cake_events
+  total non-http: item2 1, item3a 1, item3b 1, statement-head 1
+  http(s) requests whose category is statement-shaped: 0 (); buckets item2 0, item3a 0, item3b 0, statement-head 0
+  categories over all requests: (absent) x20, MessageQueue x3
+  non-http by (caller > service, scheme, category): Dessert Provider > Event broker [event, MessageQueue] x3
+  metaType over all requests: Default x20, Event x3; isUserAction 0; capturedBy (none) x23
+
+## 7. GraphQL
+candidates 0 (path contains graphql 0, label without graphql path 0)
+  by method + path + query keys + body?: 
+  query text starts (first 60 chars of the query value, whitespace collapsed): 
+methods: 
+services: 
+body present 0, absent 0; TryExtractLabel non-null 0
+distinct labels 0; by operation type: ; anonymous (type only) 0
+top-level operationName: non-empty 0, null/empty 0; operationName differs from the inline name 0
+JSON array bodies (batched) 0; bodies mentioning persistedQuery 0, of which no top-level query 0; non-JSON bodies 0 (raw GraphQL text 0)
+URIs carrying GraphQL parameters in the query string: none
+plainly GraphQL but TryExtractLabel null (candidates): 0
+plainly GraphQL bodies on a path without 'graphql' that the detector misses: 0
+
+## 9. attributionSource x callerName, x phase (scenario request records)
+  RequestHeader | Dessert Provider | 7
+  TestContext | Caller | 16
+  --
+  RequestHeader | Unknown | 7
+  TestContext | Setup | 12
+  TestContext | Action | 4
+
+## 8. timings
+analysis file: decode 36 ms (form Krkl), JsonDocument parse 4 ms, walk 9 ms, analysis 62 ms
+analysis reports/example-api-5111-reqnroll/TestRunReport.krkl: decode-only 2 ms (Krkl, 77,005 bytes); query interactions --group-by service,method,path --count: first 58 ms (includes the process's first JIT of the engine), warm min 2 ms; answer: 6

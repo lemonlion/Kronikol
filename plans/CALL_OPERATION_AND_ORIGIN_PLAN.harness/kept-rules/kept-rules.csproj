@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <!-- A name Kronikol.csproj grants InternalsVisibleTo: InteractionShape.Calls under a kept version. -->
+    <AssemblyName>Kronikol.Tests.PlantUml.Ikvm</AssemblyName>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <!-- This checkout's library by default; -p:KronikolProject=<a 5.16.4 checkout>/src/Kronikol/Kronikol.csproj for the old one. -->
+    <KronikolProject Condition="'$(KronikolProject)' == ''">..\..\..\src\Kronikol\Kronikol.csproj</KronikolProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(KronikolProject)" />
+  </ItemGroup>
+
+</Project>

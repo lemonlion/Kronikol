@@ -1,0 +1,12 @@
+label | file | form | bytes on disk | decoded bytes | decode ms | parse ms | walk ms | analysis ms | query cold ms | query warm ms (min of 3) | query bucket count
+example-api-5111-reqnroll | analysis | Krkl | 8,145 | 77,005 | 2 | 4 | 9 | 62 | 58* | 2 | 6
+bp-ci-xunit-in-memory | analysis | Json | 5,287,167 | 5,287,167 | 1 | 21 | 12 | 91 | 58 | 53 | 207
+bp-ci-xunit-in-memory | original | Krkl | 301,914 | 5,287,167 | 14 | - | - | - | 54 | 54 | 207
+bp-ci-xunit-in-docker | analysis | Json | 5,488,916 | 5,488,916 | 1 | 23 | 14 | 54 | 47 | 46 | 195
+bp-ci-xunit-in-docker | original | Krkl | 307,472 | 5,488,916 | 4 | - | - | - | 50 | 54 | 195
+bp-ci-xunit-external-sut | analysis | Json | 2,051,016 | 2,051,016 | 0 | 9 | 4 | 9 | 18 | 17 | 98
+bp-ci-xunit-external-sut | original | Krkl | 136,451 | 2,051,016 | 2 | - | - | - | 18 | 18 | 98
+bp-ci-reqnroll-in-memory | analysis | Json | 6,037,504 | 6,037,504 | 1 | 24 | 15 | 51 | 56 | 48 | 206
+bp-ci-reqnroll-in-memory | original | Krkl | 316,706 | 6,037,504 | 4 | - | - | - | 67 | 66 | 206
+bp-cmock-reqnroll | analysis | Json | 8,540,092 | 8,540,092 | 2 | 50 | 14 | 61 | 89 | 87 | 180
+bp-java-junit5 | analysis | Json | 107,488 | 107,488 | 0 | 1 | 0 | 1 | 4 | 1 | 0

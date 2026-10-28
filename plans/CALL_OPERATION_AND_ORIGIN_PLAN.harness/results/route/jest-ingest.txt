@@ -1,0 +1,42 @@
+# jest-ingest
+analysis file C:/Users/cex/AppData/Local/Temp/claude/c--Code-Kronikol/2245987c-f041-4de7-9fd5-372b946d167a/scratchpad/producers/A-jest/Reports/TestRunReport.krkl (Krkl, decoded 17,184 bytes); engine file C:/Users/cex/AppData/Local/Temp/claude/c--Code-Kronikol/2245987c-f041-4de7-9fd5-372b946d167a/scratchpad/producers/A-jest/Reports/TestRunReport.krkl
+kronikolVersion 5.11.0+44bcc62a6e9419b3491699b8f09177cbe97d72c9, formatVersion 3, suite 
+request records 8; callers 2; services 3; content forms: string 4, absent 4
+
+## 1. buckets of (service, method, X), request records
+  X = today's path (Uri.AbsolutePath)                        5   (3.6 col 1)
+  X = Template(Uri.PathAndQuery), query keys kept            5   (3.6 col 2)
+  X = Template(Uri.PathAndQuery less query)                  5   (3.6 col 3, 'route' there)
+  X = Template(PathOf(data file uri))   [4.1 steps 1-2]      5
+    + statement head                    [4.1 step 3]         5
+    + GraphQL operation = route         [4.1 step 4]         6   <- the prototype's route
+  (caller, service, method, route)                           6
+  route with the strict GraphQL reader                       6   (with caller 6)
+  distinct route values 6: length median 11, p90 29, max 29; over 100 characters 0 (--group-by pads every row to the widest value: service 16 + method 4 + route 29 characters)
+
+## 2. records whose templated PathOf differs from the templated Uri.PathAndQuery path: 0
+
+## 3. statement-shaped calls: by category, calls (with content), buckets path only -> with head; top routes
+
+## 3b. heads that hide the statement: route buckets 6 with the plan's head, 6 with the alternative head (a document's query string templated as the statement; the statement after a SET prologue)
+  documents with a top-level query string: none
+  statements after a SET prologue: none
+
+## 4. GraphQL: POST JSON-object bodies read 4, GETs with GraphQL parameters 0; operations found 4
+  how (plan): anonymous: root fields 2; named (detector label) 2
+  distinct GraphQL routes 2 (calls 4); the detector's labels on the same bodies: query x2, query Charge x2
+    x2   Test > Payments GraphQL POST /graphql query { __typename }
+    x2   Test > Payments GraphQL POST /graphql query Charge
+  operations on a path without 'graphql' 0; strict reader disagrees on 0 records
+  POST JSON-object bodies that are not GraphQL 0, by (service, method, templated path): 
+
+## 5. (service, method, route) buckets with more than one caller: 0 (so caller adds 0 buckets)
+
+## 6. request bodies the key reads (4.4: a statement-shaped call's, and every POST's), against all request bodies
+  all request records 8; with content 4 (non-empty 4); distinct non-empty 3; decoded bytes 234 over records, 208 distinct; stored 234 distinct
+  read by the key: records 4 (statement-shaped 0, other POSTs 4); distinct 3; decoded bytes 234 over records, 208 distinct; stored 234 distinct
+  the POSTs read: first character '{' 4; by service Payments GraphQL 4
+  for comparison, POSTs with content on a path holding 'graphql' 4 (a rule keyed on the endpoint's name would read only these)
+
+## 7. cross-checks: PathOf reproduction vs WarmUpCalls.PathOf mismatches 0 of 8; statement head reproduction vs InteractionShape.StatementHead mismatches 0 of 0
+

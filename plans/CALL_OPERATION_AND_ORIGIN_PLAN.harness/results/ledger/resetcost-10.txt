@@ -1,0 +1,49 @@
+== 1. latest run of 18 suites: 3714 tests ==
+  same-rule shaped prior points per scenario: min 17 median 17 max 18; points under an earlier rule still in the window: median 33 (sum 121,055)
+  with a previous shaped point: 3714; set changed at least once in the same-rule window: 949 (twice or more: 12); 2+ sets in the alternating memory: 931
+  verdicts now: alternating 9, unstable 0, behaviour-changed by set 1, by count 0; earlier-rule notes 0
+== 2. the latest run as version 7: 3714 scenarios read the earlier-rule note, 0 keep a behaviour verdict ==
+== 3. the real 4 -> 6 move: 325 v6 runs replayed (67,063 scenario readings; 255 scenarios the move changed) ==
+  actual   alternating                                           [move-changed] 19
+  actual   alternating                                           [move-untouched] 31
+  actual   changed-count                                         [move-untouched] 1
+  actual   changed-set                                           [move-changed] 50
+  actual   changed-set                                           [move-untouched] 905
+  actual   quiet (earlier-rule note)                             [move-changed] 255
+  actual   quiet (earlier-rule note)                             [move-untouched] 3,459
+  diff at run #1                                                 [move-changed] 255
+  diff at run #1                                                 [move-untouched] 2
+  diff at run #10                                                [move-changed] 1
+  diff at run #10                                                [move-untouched] 1
+  diff at run #2                                                 [move-changed] 3
+  diff at run #2                                                 [move-untouched] 1
+  diff at run #3                                                 [move-changed] 3
+  diff at run #4                                                 [move-changed] 3
+  diff at run #5                                                 [move-changed] 3
+  diff at run #6                                                 [move-changed] 3
+  diff at run #7                                                 [move-changed] 2
+  diff at run #8                                                 [move-changed] 2
+  diff at run #9                                                 [move-changed] 2
+  DIFF changed-count              where translated none          [move-untouched] 1
+  DIFF changed-set                where translated alternating   [move-changed] 2
+  DIFF changed-set                where translated alternating   [move-untouched] 1
+  DIFF none                       where translated alternating   [move-changed] 23
+  DIFF none                       where translated alternating   [move-untouched] 2
+  DIFF none                       where translated changed-set   [move-changed] 252
+  exact-tr alternating                                           [move-changed] 44
+  exact-tr alternating                                           [move-untouched] 34
+  exact-tr changed-set                                           [move-changed] 300
+  exact-tr changed-set                                           [move-untouched] 904
+== 4. a version move 10 runs back, fingerprints unchanged: 180 runs replayed (37,140 readings) ==
+  actual   alternating                                           [all] 36
+  actual   changed-set                                           [all] 954
+  actual   quiet (earlier-rule note)                             [all] 3,714
+  diff at run #1                                                 [all] 2
+  diff at run #2                                                 [all] 3
+  diff at run #3                                                 [all] 1
+  DIFF changed-set                where translated alternating   [all] 2
+  DIFF none                       where translated alternating   [all] 3
+  DIFF none                       where translated changed-count [all] 1
+  exact-tr alternating                                           [all] 41
+  exact-tr changed-count                                         [all] 1
+  exact-tr changed-set                                           [all] 952

@@ -1,0 +1,176 @@
+# bp-ci-nunit-in-memory
+analysis file: C:/Users/cex/AppData/Local/Temp/claude/c--Code-Kronikol/2245987c-f041-4de7-9fd5-372b946d167a/scratchpad/producers/C-ci/nunit-in-memory-report/TestRunReport.krkl (290,017 bytes)
+form: Krkl; decoded JSON 4,775,754 bytes
+root: formatVersion=3, kronikolVersion=5.4.1+90e357fd4ffe25d7bdb22a7a6b0028bbc6161f1c, suite=nunit-in-memory, startTime=2026-10-26T08:16:30Z, endTime=2026-10-26T08:16:47Z, ci.provider=GitHubActions, ci.branch=main, ci.repository=lemonlion/BreakfastProvider, ci.runId=40290999167, env.os=Ubuntu 24.04.5 LTS, env.runtime=.NET 10.0.14
+features 73, scenarios 212, scenario interactions 2818 (requests 1409, responses 1409, other type 0); background interactions 0 requests (keys seen under background: afterScenarioEnd[0],calls=0,interactions[0])
+request keys present (count of 1409): type=1409, method=1409, uri=1409, serviceName=1409, callerName=1409, traceId=1409, requestResponseId=1409, timestamp=1409, metaType=1409, phase=1409, attributionSource=1409, isUserAction=1409, durationMs=1409, content=1018, headers=867, dependencyCategory=859, activityTraceId=855, activitySpanId=855, callerDependencyCategory=117, stepPath=25, warmUp=13
+content forms on requests: string=1018, absent=391
+
+## 1. calls, callers, services
+calls (request records) 1409; distinct callerName 5; distinct serviceName 16
+  caller 'Breakfast Provider' x841 -> 15 services: CosmosDB x280; Reporting Database (SQL Server) x189; Google Cloud Pub/Sub x68; Cow Service x49; Notification Service (gRPC) x41; Kafka Broker x40; Kitchen Service x40; Event Grid x33; Breakfast Database (SQL Server) x31; MongoDB x16; Spanner x12; ClickHouse x12; BigQuery x11; Supplier Service x10; Goat Service x9
+  caller 'Caller' x451 -> 1 services: Breakfast Provider x451
+  caller 'Kafka Broker' x42 -> 1 services: Breakfast Provider x42
+  caller 'Azure Event Hub' x39 -> 1 services: Breakfast Provider x39
+  caller 'Google Cloud Pub/Sub' x36 -> 1 services: Breakfast Provider x36
+
+## 2/3. buckets (service, method, path)
+distinct raw uri strings 187; requests with a query string 14
+item 2  (service, method, AbsolutePath)                  : 207
+item 3a (service, method, Template(PathAndQuery))        : 158
+item 3b (service, method, Template(path, query removed)) : 156
+  with a query string: Breakfast Provider DELETE /daily-specials/orders?specialId  x5  (raw e.g. /daily-specials/orders?specialId=aaaa0000-0000-0000-0000-000000000001)
+  with a query string: Breakfast Provider GET /orders?page&pageSize  x4  (raw e.g. /orders?page=1&pageSize=10)
+  with a query string: Breakfast Provider GET /audit-logs?entityType  x3  (raw e.g. /audit-logs?entityType=Order)
+  with a query string: Breakfast Provider GET /audit-logs?entityId  x2  (raw e.g. /audit-logs?entityId=2b7e9ac4-f5b5-471d-8b1f-f862103b5b8b)
+item 4  R0 = digits | GUID | hex 8+ (whole segment)       : 157
+item 4  R0 + A (20+ chars, at least one digit)           : 156
+item 4  R0 + B (20+ chars of [A-Za-z0-9_-])              : 144
+item 4  R0 + A + B                                       : 144
+  R0 vs item 3b: joint keys 157 (own 157, templater 156) -> templater merges more
+  R0+A vs item 3b: joint keys 156 (own 156, templater 156) -> same partition
+  R0+B vs item 3b: joint keys 156 (own 144, templater 156) -> rule merges more
+
+## 4. segment census (distinct segments over all request paths)
+distinct segments 165; R0 folds: digits 6, GUID 41, hex8+ (not digits/GUID) 5
+R0 segments the templater leaves unchanged: 0: 
+rule A (20+ chars, a digit): folds 8 distinct segments R0 does not (9 occurrences); templater leaves 1 of them unchanged, changes part of 7
+  templater leaves unchanged (up to 40, segment xrequests):
+    grpc.reflection.v1.ServerReflection  x2
+  templater changes part of (up to 8): Recipe-088f7f0b02f4476f8cb1f8ba29831f0f -> Recipe-{id} x1 | Oven-20874391fe634a0c8d3d98b4b905e69b -> Oven-{id} x1 | Oven-428185d364be4288bf56ae382145badb -> Oven-{id} x1 | Sugar-ecb1b1567bcc484d93bee1ffb55864b8 -> Sugar-{id} x1 | Pancakes-e229f21bae2c4bb480791960b3f7c8d1 -> Pancakes-{id} x1 | Griddle-0f78f5d2209341b1b781175961eb0718 -> Griddle-{id} x1 | Recipe-d69e415df5b6414d891b0fa156a65e19 -> Recipe-{id} x1
+rule B (20+ of [A-Za-z0-9_-]): folds 28 distinct segments R0 does not (317 occurrences); templater leaves 21 of them unchanged, changes part of 7
+  templater leaves unchanged (up to 40, segment xrequests):
+    breakfast_recipe_logs  x80
+    breakfast-equipment-alerts  x39
+    BatchCompletionRecords  x36
+    SendOrderConfirmation  x36
+    PancakeBatchCompletedEvent  x35
+    breakfast_batch_completions  x35
+    customer-preferences  x7
+    DailySpecialOrderedEvent  x6
+    InventoryItemAddedEvent  x5
+    MenuAvailabilityChangedEvent  x5
+    ReservationConfirmedEvent  x5
+    SendReservationReminder  x5
+    MuffinBatchCompletedEvent  x4
+    StaffMemberAddedEvent  x3
+    ReservationCancelledEvent  x2
+    ServerReflectionInfo  x2
+    InventoryStockUpdatedEvent  x1
+    WaffleBatchCompletedEvent  x1
+    breakfast_orders_served  x1
+    breakfast_recipe_costs  x1
+    customer_feedback_received  x1
+  templater changes part of (up to 8): Recipe-088f7f0b02f4476f8cb1f8ba29831f0f -> Recipe-{id} x1 | Oven-20874391fe634a0c8d3d98b4b905e69b -> Oven-{id} x1 | Oven-428185d364be4288bf56ae382145badb -> Oven-{id} x1 | Sugar-ecb1b1567bcc484d93bee1ffb55864b8 -> Sugar-{id} x1 | Pancakes-e229f21bae2c4bb480791960b3f7c8d1 -> Pancakes-{id} x1 | Griddle-0f78f5d2209341b1b781175961eb0718 -> Griddle-{id} x1 | Recipe-d69e415df5b6414d891b0fa156a65e19 -> Recipe-{id} x1
+segments the templater changes and R0+A+B leave whole: 0 distinct; up to 15: 
+
+## 5a. buckets under Template(path, query removed) holding the most distinct raw paths (top 20)
+templated buckets 156; holding more than one raw path 14
+  [23 raw / 38 calls] CosmosDB Read /colls/orders/docs/{id}   e.g. /colls/orders/docs/cf0d2d9e-20cb-4b6b-892c-70bd4005e6d7  /colls/orders/docs/79c3f05d-f32a-4793-a220-6e768bbb1067  /colls/orders/docs/678537da-1d3f-4f9e-a2f6-bd4e7ed014c4
+  [14 raw / 27 calls] Breakfast Provider PATCH /orders/{id}/status   e.g. /orders/c5e649a2-0c5b-4069-8ddf-d77fae024cae/status  /orders/800f67f5-b7b0-428c-8a26-ace2081555fa/status  /orders/7788e406-1912-4cbf-a21b-c7798a3632d2/status
+  [4 raw / 5 calls] Breakfast Provider PUT /customer-preferences/{id}   e.g. /customer-preferences/19a758497c69456098ff15d2ab5bd28d  /customer-preferences/9879bc59fe6e49bd9b7ce123bd7c9315  /customer-preferences/9453f8e141f44271a44fcc9dcc63f28a
+  [4 raw / 4 calls] Breakfast Provider GET /orders/{id}   e.g. /orders/c5e649a2-0c5b-4069-8ddf-d77fae024cae  /orders/f85d8d2d-d13c-4f06-b16f-8dcb5c387548  /orders/00c238f2-3635-4e28-8b95-87a98092d586
+  [2 raw / 8 calls] Breakfast Provider PUT /toppings/{id}   e.g. /toppings/11111111-0000-0000-0000-000000000002  /toppings/06660657-9ba5-48df-af5f-51d810d24c34
+  [2 raw / 3 calls] Breakfast Provider PATCH /reservations/{n}/cancel   e.g. /reservations/1/cancel  /reservations/2/cancel
+  [2 raw / 2 calls] Breakfast Provider GET /chef-notes/{id}   e.g. /chef-notes/5f24b98b-3bcf-469b-8d77-fa44e38860a6  /chef-notes/0ea0939b-8703-4d67-b76a-4ff1a83952b7
+  [2 raw / 2 calls] Breakfast Provider PATCH /chef-notes/{id}   e.g. /chef-notes/9251a7a3-4294-4155-8f11-7ad9b1fe88d0  /chef-notes/1a2bef64-53ed-4ee8-888a-2aff31228012
+  [2 raw / 2 calls] Breakfast Provider GET /customer-preferences/{id}   e.g. /customer-preferences/9879bc59fe6e49bd9b7ce123bd7c9315  /customer-preferences/6ecc9ea423e7427fae913332c156b49d
+  [2 raw / 2 calls] Breakfast Provider GET /equipment-readings/equipment/Oven-{id}   e.g. /equipment-readings/equipment/Oven-20874391fe634a0c8d3d98b4b905e69b  /equipment-readings/equipment/Oven-428185d364be4288bf56ae382145badb
+  [2 raw / 2 calls] Breakfast Provider GET /feedback/{id}   e.g. /feedback/a940029e-cb0a-4e14-ab0c-54dc58fea921  /feedback/cc378f2b-7c30-494e-87b7-2fececb8f4af
+  [2 raw / 2 calls] Breakfast Provider GET /inventory/{n}   e.g. /inventory/99999  /inventory/4
+  [2 raw / 2 calls] Breakfast Provider GET /recipe-reviews/{id}   e.g. /recipe-reviews/3296538c-e7ce-4b66-81f0-cc5251569615  /recipe-reviews/36ffa6d6-9ef2-4b48-9dc9-1c254d61841c
+  [2 raw / 2 calls] Breakfast Provider DELETE /toppings/{id}   e.g. /toppings/11111111-0000-0000-0000-000000000001  /toppings/c1979a25-bb5c-4cdf-880b-9a12aeaac7d2
+  [1 raw / 128 calls] CosmosDB Create /colls/orders   e.g. /colls/orders
+  [1 raw / 46 calls] Breakfast Provider GET /milk   e.g. /milk
+  [1 raw / 46 calls] Cow Service GET /milk   e.g. /milk
+  [1 raw / 45 calls] Breakfast Provider POST /pancakes   e.g. /pancakes
+  [1 raw / 42 calls] Breakfast Provider GET /eggs   e.g. /eggs
+  [1 raw / 40 calls] Breakfast Provider Consume (Kafka) /breakfast_recipe_logs   e.g. /breakfast_recipe_logs
+
+## 5b. after Template(path, query removed): segment positions that still vary across templated paths (top 15, >= 3 values)
+families with >= 3 distinct values at one position: 15
+  [16 values / 172 calls] Breakfast Provider POST /*   * = muffins, pancakes, orders, chef-notes, equipment-readings, feedback
+  [12 values / 161 calls] Breakfast Provider GET /*   * = milk, eggs, flour, audit-logs, daily-specials, menu
+  [11 values / 68 calls] Google Cloud Pub/Sub Publish (Pub/Sub) /*   * = MuffinBatchCompletedEvent, PancakeBatchCompletedEvent, DailySpecialOrderedEvent, MenuAvailabilityChangedEvent, InventoryItemAddedEvent, InventoryStockUpdatedEvent
+  [5 values / 148 calls] Reporting Database (SQL Server) Insert /main/*   * = RecipeReports, EquipmentAlerts, BatchCompletionRecords, OrderSummaries, IngredientShipments
+  [5 values / 41 calls] Reporting Database (SQL Server) Select /main/*   * = OrderSummaries, BatchCompletionRecords, EquipmentAlerts, IngredientShipments, RecipeReports
+  [5 values / 12 calls] Breakfast Provider GET /*/{id}   * = chef-notes, customer-preferences, feedback, orders, recipe-reviews
+  [3 values / 42 calls] Breakfast Provider Consume (Kafka) /*   * = breakfast_recipe_logs, breakfast_recipe_costs, breakfast_orders_served
+  [3 values / 13 calls] Breakfast Database (SQL Server) Insert /main/*   * = InventoryItems, Reservations, StaffMembers
+  [3 values / 12 calls] Breakfast Database (SQL Server) Select /main/*   * = InventoryItems, Reservations, StaffMembers
+  [3 values / 7 calls] BigQuery Insert /breakfast_analytics/table/*   * = ingredient_usage, ingredient_waste, recipe_costs
+  [3 values / 4 calls] Breakfast Provider DELETE /*/{id}   * = equipment-readings, ingredient-waste, toppings
+  [3 values / 4 calls] Breakfast Provider GET /*/{n}   * = inventory, reservations, staff
+  [3 values / 3 calls] Breakfast Provider DELETE /*/{n}   * = inventory, reservations, staff
+  [3 values / 3 calls] Breakfast Database (SQL Server) Delete /main/*   * = InventoryItems, Reservations, StaffMembers
+  [3 values / 3 calls] Breakfast Provider GET /*/v1.json   * = asyncapi, grpc, openapi
+
+## 6. non-HTTP request records (scheme other than http/https)
+non-http requests 568 of 1409
+  scheme | requests | categories | item2 buckets | item3a | item3b | statement-head buckets (history shape: path + templated first line, statement-shaped categories only)
+  sql | 220 | SQL | 21 | 21 | 21 | 24
+  pubsub | 104 | MessageQueue,(empty) | 13 | 13 | 13 | 13
+  kafka | 82 | (empty),MessageQueue | 4 | 4 | 4 | 4
+  grpc | 50 | gRPC | 6 | 6 | 6 | 6
+  eventhub | 39 | (empty) | 1 | 1 | 1 | 1
+  eventgrid | 33 | MessageQueue | 1 | 1 | 1 | 1
+  mongodb | 16 | MongoDB | 6 | 6 | 6 | 8
+  spanner | 12 | Spanner | 4 | 4 | 4 | 5
+  clickhouse | 12 | ClickHouse | 6 | 6 | 6 | 7
+    sql e.g. Insert sql:///main/RecipeReports  Insert sql:///main/EquipmentAlerts  Insert sql:///main/BatchCompletionRecords
+      statement heads (top 4 of 24 distinct raw first lines): Insert /main/RecipeReports :: INSERT INTO "RecipeReports" ("Ingredients", "LoggedAt", "OrderId", "RecipeType", "Toppings") x40 || Insert /main/EquipmentAlerts :: INSERT INTO "EquipmentAlerts" ("AlertId", "AlertType", "AlertedAt", "BatchId", "EquipmentName") x39 || Insert /main/BatchCompletionRecords :: INSERT INTO "BatchCompletionRecords" ("BatchId", "CompletedAt", "Ingredients", "RecipeType") x35 || Select /main/OrderSummaries :: SELECT "o"."Id", "o"."CreatedAt", "o"."CustomerName", "o"."ItemCount", "o"."OrderId", "o"."Status", "o"."TableNumber" x33
+    pubsub e.g. Publish (Pub/Sub) pubsub:///MuffinBatchCompletedEvent  Consume (Pub/Sub) pubsub:///breakfast_batch_completions  Publish (Pub/Sub) pubsub:///PancakeBatchCompletedEvent
+    kafka e.g. Consume (Kafka) kafka:///breakfast_recipe_logs  Produce → breakfast_recipe_logs kafka:///breakfast_recipe_logs  Consume (Kafka) kafka:///breakfast_recipe_costs
+    grpc e.g. SendOrderConfirmation grpc:///notifications.NotificationGrpc/SendOrderConfirmation  GetOrderStatus grpc:///breakfast.BreakfastGrpc/GetOrderStatus  GetRecipeSummary grpc:///breakfast.BreakfastGrpc/GetRecipeSummary
+    eventhub e.g. Consume (Event Hub) eventhub:///breakfast-equipment-alerts
+    eventgrid e.g. Publish (Event Grid) eventgrid://topics/OrderCreatedEvent
+    mongodb e.g. Insert → chef_notes mongodb:///BreakfastDb/chef_notes  Find ← chef_notes mongodb:///BreakfastDb/chef_notes  FindAndModify ↔ chef_notes mongodb:///BreakfastDb/chef_notes
+      statement heads (top 4 of 16 distinct raw first lines): Insert → chef_notes /BreakfastDb/chef_notes :: { "documents" : [{ "_id" : "{v}", "RecipeName" : "{v}", "ChefName" : "{v}", "NoteText" : "{v}", "Category" : "{v}", "Cre… x4 || Insert → recipe_reviews /BreakfastDb/recipe_reviews :: { "documents" : [{ "_id" : "{v}", "RecipeName" : "{v}", "ReviewerName" : "{v}", "Rating" : {n}, "Comments" : "{v}", "Tag… x3 || Find ← chef_notes /BreakfastDb/chef_notes :: { "filter" : { "_id" : "{v}" } } x2 || FindAndModify ↔ chef_notes /BreakfastDb/chef_notes :: { "query" : { "_id" : "{v}" }, "update" : {b} } x2
+    spanner e.g. InsertOrUpdate spanner:///test-db/CustomerPreferences  Select spanner:///test-db/CustomerPreferences  Insert spanner:///test-db/Feedback
+      statement heads (top 4 of 5 distinct raw first lines): InsertOrUpdate /test-db/CustomerPreferences :: UPSERT CustomerPreferences x4 || Insert /test-db/Feedback :: INSERT Feedback x3 || Select /test-db/CustomerPreferences :: SELECT CustomerId, CustomerName, PreferredMilkType, LikesExtraToppings, FavouriteItem, UpdatedAt FROM CustomerPreference… x2 || Select /test-db/Feedback :: SELECT FeedbackId, CustomerName, OrderId, Rating, Comment, CreatedAt FROM Feedback WHERE FeedbackId = @id x2
+    clickhouse e.g. INSERT INTO equipment_readings clickhouse://localhost/kitchen_analytics/equipment_readings  DELETE FROM equipment_readings clickhouse://localhost/kitchen_analytics/equipment_readings  SELECT FROM equipment_readings clickhouse://localhost/kitchen_analytics/equipment_readings
+      statement heads (top 4 of 7 distinct raw first lines): INSERT INTO equipment_readings /kitchen_analytics/equipment_readings :: INSERT INTO equipment_readings (reading_id, equipment_id, metric, value, unit, recorded_at) VALUES ({readingId:String}, … x3 || INSERT INTO order_timings /kitchen_analytics/order_timings :: INSERT INTO order_timings (timing_id, order_id, station, item_type, prep_seconds, recorded_at) VALUES ({timingId:String}… x3 || SELECT FROM equipment_readings /kitchen_analytics/equipment_readings :: SELECT reading_id, equipment_id, metric, value, unit, recorded_at FROM equipment_readings WHERE equipment_id = {equipmen… x2 || DELETE FROM equipment_readings /kitchen_analytics/equipment_readings :: DELETE FROM equipment_readings WHERE reading_id = {readingId:String} x1
+  total non-http: item2 62, item3a 62, item3b 62, statement-head 69
+  http(s) requests whose category is statement-shaped: 291 (CosmosDB/CosmosDB x280, BigQuery/BigQuery x11); buckets item2 34, item3a 12, item3b 12, statement-head 22
+    statement heads (top 6): Create /colls/orders :: {"id":"{v}","partitionKey":"{v}","AuditLogId":"{v}","Action":"{v}","EntityType":"{v}","EntityId":"{v… x51 || Create /colls/orders :: {"id":"{v}","partitionKey":"{v}","OrderId":"{v}","RecipeType":"{v}","Ingredients":["{v}"],"Toppings"… x40 || Create /colls/orders :: [{"id":"{v}","partitionKey":"{v}","OrderId":"{v}","CustomerName":"{v}","Items":[{"ItemType":"{v}","B… x33 || Upsert /colls/orders :: {"id":"{v}","partitionKey":"{v}","OrderId":"{v}","CustomerName":"{v}","Items":[{"ItemType":"{v}","Ba… x18 || Other /colls/orders :: {"query":"{v}"} x15 || Query /colls/orders :: SELECT VALUE root FROM root WHERE true x9
+  categories over all requests: (absent) x550, CosmosDB x280, SQL x220, MessageQueue x141, (empty) x117, gRPC x50, MongoDB x16, Spanner x12, ClickHouse x12, BigQuery x11
+  non-http by (caller > service, scheme, category): Breakfast Provider > Reporting Database (SQL Server) [sql, SQL] x189; Breakfast Provider > Google Cloud Pub/Sub [pubsub, MessageQueue] x68; Kafka Broker > Breakfast Provider [kafka, empty] x42; Breakfast Provider > Notification Service (gRPC) [grpc, gRPC] x41; Breakfast Provider > Kafka Broker [kafka, MessageQueue] x40; Azure Event Hub > Breakfast Provider [eventhub, empty] x39; Google Cloud Pub/Sub > Breakfast Provider [pubsub, empty] x36; Breakfast Provider > Event Grid [eventgrid, MessageQueue] x33; Breakfast Provider > Breakfast Database (SQL Server) [sql, SQL] x31; Breakfast Provider > MongoDB [mongodb, MongoDB] x16; Breakfast Provider > Spanner [spanner, Spanner] x12; Breakfast Provider > ClickHouse [clickhouse, ClickHouse] x12; Caller > Breakfast Provider [grpc, gRPC] x9
+  metaType over all requests: Default x1139, Event x270; isUserAction 0; capturedBy (none) x1409
+
+## 7. GraphQL
+candidates 11 (path contains graphql 11, label without graphql path 0)
+  by method + path + query keys + body?: POST /graphql body=yes x8; GET /graphql/schema.graphql body=no x1; GET /graphql/schema.json body=no x1; GET /graphql/ body=no x1
+  query text starts (first 60 chars of the query value, whitespace collapsed): keys[query] { batchCompletions { batchId recipeType ingredients complete... x1 | keys[query] { equipmentAlerts { id alertId batchId equipmentName alertTy... x1 | keys[query] { ingredientShipments { deliveryId ingredientName quantity d... x1 | keys[query] { orderSummaries { orderId customerName itemCount tableNumbe... x2 | keys[query] { recipeReports { orderId recipeType ingredients toppings lo... x1 | keys[query] { ingredientUsage { ingredient count } } x1 | keys[query] { popularRecipes { recipeType count } } x1
+methods: POST x8, GET x3
+services: Caller>Breakfast Provider x11
+body present 8, absent 3; TryExtractLabel non-null 8
+distinct labels 1; by operation type: query x8; anonymous (type only) 8
+  query  x8
+top-level operationName: non-empty 0, null/empty 0; operationName differs from the inline name 0
+JSON array bodies (batched) 0; bodies mentioning persistedQuery 0, of which no top-level query 0; non-JSON bodies 0 (raw GraphQL text 0)
+URIs carrying GraphQL parameters in the query string: none
+plainly GraphQL but TryExtractLabel null (candidates): 0
+plainly GraphQL bodies on a path without 'graphql' that the detector misses: 0
+
+## 9. attributionSource x callerName, x phase (scenario request records)
+  DocumentOwner | Breakfast Provider | 3
+  RequestHeader | Breakfast Provider | 755
+  RequestHeader | Kafka Broker | 40
+  RequestHeader | Azure Event Hub | 39
+  RequestHeader | Google Cloud Pub/Sub | 35
+  Scope | Breakfast Provider | 3
+  TestContext | Caller | 451
+  TestContext | Breakfast Provider | 80
+  TestContext | Kafka Broker | 2
+  TestContext | Google Cloud Pub/Sub | 1
+  --
+  DocumentOwner | Unknown | 3
+  RequestHeader | Unknown | 869
+  Scope | Unknown | 3
+  TestContext | Unknown | 528
+  TestContext | Setup | 5
+  TestContext | Action | 1
+
+## 8. timings
+analysis file: decode 45 ms (form Krkl), JsonDocument parse 36 ms, walk 26 ms, analysis 169 ms
+analysis C:/Users/cex/AppData/Local/Temp/claude/c--Code-Kronikol/2245987c-f041-4de7-9fd5-372b946d167a/scratchpad/producers/C-ci/nunit-in-memory-report/TestRunReport.krkl: decode-only 9 ms (Krkl, 4,775,754 bytes); query interactions --group-by service,method,path --count: first 151 ms, warm min 118 ms; answer: 207

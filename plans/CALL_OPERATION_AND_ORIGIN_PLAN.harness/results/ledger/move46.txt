@@ -1,0 +1,35 @@
+bddfy-external-sut: v4 6fed77c -> v6 0306dff (adjacent: True)
+bddfy-in-docker: v4 6fed77c -> v6 0306dff (adjacent: True)
+bddfy-in-memory: v4 6fed77c -> v6 0306dff (adjacent: True)
+... (18 suites)
+positions present on both sides: 3714; same set fingerprint across the move: 3459; different: 255 (a statement line among the differences: 219, none: 36)
+distinct lines only under v4: 13; only under v6: 16
+  v4-only by service: BigQuery: 2
+  v4-only by service: MongoDB: 8
+  v4-only by service: Spanner: 2
+  v4-only by service: Breakfast Provider: 1
+  v6-only by service: BigQuery: 2
+  v6-only by service: MongoDB: 12
+  v6-only by service: Breakfast Provider: 2
+-- v4-only lines [suites holding it] (head cut to 150 chars):
+  [12] Breakfast Provider>BigQuery Query /query {"formatOptions":{"useInt64Timestamp":true},"parameterMode":"{v}","query":"{v}","queryParameters":[{"name":"{v}","parame… 200 (len 166)
+  [12] Breakfast Provider>BigQuery Query /query {"formatOptions":{"useInt64Timestamp":true},"query":"{v}","useLegacySql":false} 200 (len 124)
+  [12] Breakfast Provider>MongoDB Find ← chef_notes /BreakfastDb/chef_notes { "RecipeName" : "{v}" } 200 (len 97)
+  [12] Breakfast Provider>MongoDB Find ← chef_notes /BreakfastDb/chef_notes { "_id" : "{v}" } 200 (len 90)
+  [12] Breakfast Provider>MongoDB Find ← recipe_reviews /BreakfastDb/recipe_reviews { "RecipeName" : "{v}" } 200 (len 105)
+  [12] Breakfast Provider>MongoDB Find ← recipe_reviews /BreakfastDb/recipe_reviews { "_id" : "{v}" } 200 (len 98)
+  [12] Breakfast Provider>MongoDB FindAndModify ↔ chef_notes /BreakfastDb/chef_notes 200 (len 81)
+  [12] Breakfast Provider>MongoDB Insert → chef_notes /BreakfastDb/chef_notes 200 (len 74)
+-- v6-only lines [suites holding it]:
+  [12] Breakfast Provider>BigQuery Query /query {"formatOptions":{"useInt64Timestamp":{b}},"parameterMode":"{v}","query":"{v}","queryParameters":[{"name":"{v}","paramet… 200 (len 166)
+  [12] Breakfast Provider>BigQuery Query /query {"formatOptions":{"useInt64Timestamp":{b}},"query":"{v}","useLegacySql":{b}} 200 (len 121)
+  [6] Breakfast Provider>MongoDB Find ← chef_notes /BreakfastDb/chef_notes { "filter" : { "RecipeName" : "{v}" } } 200 (len 112)
+  [6] Breakfast Provider>MongoDB Find ← chef_notes /BreakfastDb/chef_notes { "filter" : { "RecipeName" : "{v}" }, "sort" : { "CreatedAt" : {n} } } 200 (len 144)
+  [6] Breakfast Provider>MongoDB Find ← chef_notes /BreakfastDb/chef_notes { "filter" : { "_id" : "{v}" } } 200 (len 105)
+  [6] Breakfast Provider>MongoDB Find ← chef_notes /BreakfastDb/chef_notes { "filter" : { "_id" : "{v}" }, "limit" : {n} } 200 (len 120)
+  [12] Breakfast Provider>MongoDB Find ← recipe_reviews /BreakfastDb/recipe_reviews { "filter" : { "RecipeName" : "{v}" } } 200 (len 120)
+  [6] Breakfast Provider>MongoDB Find ← recipe_reviews /BreakfastDb/recipe_reviews { "filter" : { "_id" : "{v}" } } 200 (len 113)
+-- the positions that differ with no statement line among the differences: the differing lines
+  x24 new:  Breakfast Provider>CosmosDB Read /orders 200
+  x12 new:  Breakfast Provider>CosmosDB Read /orders 404
+latest runs: 263 distinct lines; by service: Breakfast Provider 123, Azure Event Hub 1, BigQuery 5, Breakfast Database (SQL Server) 16, ClickHouse 8, CosmosDB 35, Cow Service 4, Event Grid 1, Goat Service 3, Google Cloud Pub/Sub 11, Kafka Broker 1, Kitchen Service 5, MongoDB 12, Notification Service (gRPC) 2, Reporting Database (SQL Server) 22, Spanner 10, Supplier Service 4

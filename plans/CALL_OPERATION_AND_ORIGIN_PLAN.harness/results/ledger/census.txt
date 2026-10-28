@@ -1,0 +1,105 @@
+file: 19,596,917 bytes, 1,719 lines
+header: historyFormatVersion 1, generator 3.13.0; damaged lines 0
+  Header      1 lines           61 bytes
+  Roster     36 lines    1,194,479 bytes
+  Run      1635 lines   17,616,941 bytes
+  Shapes     47 lines      785,436 bytes
+run lines that do not round-trip through HistoryJson.RunLine: 36
+
+== runs per suite (streams: runs) ==
+  bddfy-external-sut                   90 runs  2026-09-14..2026-10-27  roster 180  [main: 90]
+  bddfy-in-docker                      92 runs  2026-09-14..2026-10-27  roster 211  [main: 92]
+  bddfy-in-memory                      92 runs  2026-09-14..2026-10-27  roster 212  [main: 92]
+  lightbdd-external-sut                91 runs  2026-09-14..2026-10-27  roster 187  [main: 91]
+  lightbdd-in-docker                   91 runs  2026-09-14..2026-10-27  roster 187  [main: 91]
+  lightbdd-in-memory                   91 runs  2026-09-14..2026-10-27  roster 187  [main: 91]
+  nunit-external-sut                   91 runs  2026-09-14..2026-10-27  roster 212  [main: 91]
+  nunit-in-docker                      91 runs  2026-09-14..2026-10-27  roster 212  [main: 91]
+  nunit-in-memory                      91 runs  2026-09-14..2026-10-27  roster 212  [main: 91]
+  reqnroll-external-sut                91 runs  2026-09-14..2026-10-27  roster 214  [main: 91]
+  reqnroll-in-docker                   91 runs  2026-09-14..2026-10-27  roster 214  [main: 91]
+  reqnroll-in-memory                   92 runs  2026-09-14..2026-10-27  roster 214  [main: 92]
+  tunit-external-sut                   90 runs  2026-09-14..2026-10-27  roster 212  [main: 90]
+  tunit-in-docker                      90 runs  2026-09-14..2026-10-27  roster 212  [main: 90]
+  tunit-in-memory                      90 runs  2026-09-14..2026-10-27  roster 212  [main: 90]
+  xunit-external-sut                   90 runs  2026-09-14..2026-10-27  roster 212  [main: 90]
+  xunit-in-docker                      90 runs  2026-09-14..2026-10-27  roster 212  [main: 90]
+  xunit-in-memory                      91 runs  2026-09-14..2026-10-27  roster 212  [main: 91]
+  streams overall: 1; main: 1635, other: 0
+  shards: 1x1635; partial=true 0, null 0
+  rosters: 36; positions per roster 171..214
+
+== shapeVersion (runs, first..last at, file lines) ==
+  v1        36 runs  2026-09-14 18:38..2026-09-14 19:31  lines 3..55  explicit-key 0
+  v2        36 runs  2026-09-14 21:00..2026-09-14 21:13  lines 56..91  explicit-key 36
+  v3       394 runs  2026-09-14 22:02..2026-09-22 08:15  lines 92..501  explicit-key 394
+  v4       844 runs  2026-09-22 08:19..2026-10-19 08:21  lines 502..1380  explicit-key 844
+  v6       325 runs  2026-10-19 21:05..2026-10-27 10:56  lines 1381..1719  explicit-key 325
+  moves, per suite in append order (from -> to @ first run under the new version):
+    bddfy-external-sut                 1->2 09-14; 2->3 09-14; 3->4 09-22; 4->6 10-19
+    bddfy-in-docker                    1->2 09-14; 2->3 09-14; 3->4 09-22; 4->6 10-19
+    bddfy-in-memory                    1->2 09-14; 2->3 09-14; 3->4 09-22; 4->6 10-19
+    lightbdd-external-sut              1->2 09-14; 2->3 09-14; 3->4 09-22; 4->6 10-19
+    lightbdd-in-docker                 1->2 09-14; 2->3 09-14; 3->4 09-22; 4->6 10-19
+    lightbdd-in-memory                 1->2 09-14; 2->3 09-14; 3->4 09-22; 4->6 10-19
+    nunit-external-sut                 1->2 09-14; 2->3 09-14; 3->4 09-22; 4->6 10-19
+    nunit-in-docker                    1->2 09-14; 2->3 09-14; 3->4 09-22; 4->6 10-19
+    nunit-in-memory                    1->2 09-14; 2->3 09-14; 3->4 09-22; 4->6 10-19
+    reqnroll-external-sut              1->2 09-14; 2->3 09-14; 3->4 09-22; 4->6 10-19
+    reqnroll-in-docker                 1->2 09-14; 2->3 09-14; 3->4 09-22; 4->6 10-19
+    reqnroll-in-memory                 1->2 09-14; 2->3 09-14; 3->4 09-22; 4->6 10-19
+    tunit-external-sut                 1->2 09-14; 2->3 09-14; 3->4 09-22; 4->6 10-19
+    tunit-in-docker                    1->2 09-14; 2->3 09-14; 3->4 09-22; 4->6 10-19
+    tunit-in-memory                    1->2 09-14; 2->3 09-14; 3->4 09-22; 4->6 10-19
+    xunit-external-sut                 1->2 09-14; 2->3 09-14; 3->4 09-22; 4->6 10-19
+    xunit-in-docker                    1->2 09-14; 2->3 09-14; 3->4 09-22; 4->6 10-19
+    xunit-in-memory                    1->2 09-14; 2->3 09-14; 3->4 09-22; 4->6 10-19
+  total moves across suites: 72
+== shapeRules ==
+  (none): 1635 runs
+
+== call lists ==
+  run lines with callSets: 1455 of 1635; with a shapes hash: 1455; hash resolves: 1455
+  first run with callSets: 2026-09-15 06:55 (line 201); runs with shapeSet but no callSets after it: 0
+  shapes lines: 47; calls per list 97..221 (median 194); runs per list 171,152,140,109,92,86,75,69,63,56,46,44...
+  shapes lines not hashing their own calls: 0; not distinct+ordinal-sorted: 0
+  distinct call lines across all shapes lines: 318
+  bytes the callSets+shapes members add to run lines: 4,665,598 (+ shapes lines 785,436)
+
+== set fingerprint rebuilt from callSets + shapes vs stored shapeSet ==
+  positions checked: 294,100 in 1455 runs (unresolved shapes: 0); blank stored fingerprint: 0
+  MATCH 294,100 of 294,100 = 100.0000%; mismatches 0
+  per shapeVersion: v3: 56,426/56,426; v4: 170,611/170,611; v6: 67,063/67,063
+  integrity: index out of range 0, unsorted index lists 0, call count below distinct set 0, count 0 with calls 0, Hash8 vs independent SHA-256 disagreements 0
+
+== edge cases over the distinct call lines ==
+  caller>service pairs in deps: 20; with a space: 20
+  lines parsed into pair/method/uri/rest/status by known deps prefix: 318 of 318
+  lines with a %XX escape anywhere: 0; in the path+query: 0; in a statement head: 0
+  escapes in paths: 
+  lines with %{n}/%{id}/%{ts}/%{bin} (an escape the templater cut): 0 []
+  lines with {bin} anywhere: 0
+  path lines whose unescaped path templates differently (translation must re-template): 0
+  GraphQL lines (/graphql): 4: Caller>Breakfast Provider POST /graphql 200 | Caller>Breakfast Provider GET /graphql/ 200 | Caller>Breakfast Provider GET /graphql/schema.graphql 200 | Caller>Breakfast Provider GET /graphql/schema.json 200
+  lines with a statement head: 114; head cut at 120 chars (ends in an ellipsis): 40
+  lines with no path found after the pair: 0; methods holding a space: 22 of 44 distinct
+
+== latest run per suite: positions whose set holds an affected line ==
+  bddfy-external-sut                 positions  180: escape 0, cut escape 0, graphql 9, any 9
+  bddfy-in-docker                    positions  211: escape 0, cut escape 0, graphql 11, any 11
+  bddfy-in-memory                    positions  212: escape 0, cut escape 0, graphql 11, any 11
+  lightbdd-external-sut              positions  187: escape 0, cut escape 0, graphql 9, any 9
+  lightbdd-in-docker                 positions  187: escape 0, cut escape 0, graphql 11, any 11
+  lightbdd-in-memory                 positions  187: escape 0, cut escape 0, graphql 11, any 11
+  nunit-external-sut                 positions  212: escape 0, cut escape 0, graphql 9, any 9
+  nunit-in-docker                    positions  212: escape 0, cut escape 0, graphql 11, any 11
+  nunit-in-memory                    positions  212: escape 0, cut escape 0, graphql 11, any 11
+  reqnroll-external-sut              positions  214: escape 0, cut escape 0, graphql 7, any 7
+  reqnroll-in-docker                 positions  214: escape 0, cut escape 0, graphql 11, any 11
+  reqnroll-in-memory                 positions  214: escape 0, cut escape 0, graphql 11, any 11
+  tunit-external-sut                 positions  212: escape 0, cut escape 0, graphql 9, any 9
+  tunit-in-docker                    positions  212: escape 0, cut escape 0, graphql 11, any 11
+  tunit-in-memory                    positions  212: escape 0, cut escape 0, graphql 11, any 11
+  xunit-external-sut                 positions  212: escape 0, cut escape 0, graphql 9, any 9
+  xunit-in-docker                    positions  212: escape 0, cut escape 0, graphql 11, any 11
+  xunit-in-memory                    positions  212: escape 0, cut escape 0, graphql 11, any 11

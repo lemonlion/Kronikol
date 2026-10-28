@@ -1,0 +1,11 @@
+ledger 19,596,917 bytes; without call lists 14,145,883 bytes
+  read50  with call lists                                        median   159.6 ms  min   134.6 ms  alloc  124.0 MB  [parsed 983, runs 900, shapes 47, reader 202 ms]
+  read50  without                                                median    62.4 ms  min    59.2 ms  alloc   68.4 MB  [parsed 936, runs 900, shapes 0, reader 62 ms]
+  read50  + resolve every windowed call list + rebuild (naive)   median   266.1 ms  min   242.1 ms  alloc  326.5 MB  [positions 184,566, rebuilt 184,566, lines joined 760,942]
+  read50  + rebuild memoised by stored fingerprint               median   168.4 ms  min   146.7 ms  alloc  131.8 MB  [positions 184,566, rebuilt 5,302, lines joined 25,807]
+  read50  + analyse latest x18, with (re-reads file per suite)   median  1127.0 ms  min  1039.9 ms  alloc 1221.9 MB  [scenarios 3714]
+  read50  + analyse latest x18, without (re-reads file per suite) median   810.6 ms  min   776.8 ms  alloc  884.5 MB  [scenarios 3714]
+  read51  + analyse latest run x18, with call lists (no re-read) median   310.3 ms  min   285.4 ms  alloc  199.0 MB  [scenarios 3714]
+  read51  + analyse latest run x18, without (no re-read)         median   232.9 ms  min   224.4 ms  alloc  142.6 MB  [scenarios 3714]
+  read0   (every run) with call lists                            median   214.2 ms  min   200.0 ms  alloc  166.0 MB  [parsed 1718, runs 1635, shapes 47, reader 257 ms]
+  read0   (every run) without                                    median    96.0 ms  min    92.7 ms  alloc   87.5 MB  [parsed 1671, runs 1635, shapes 0, reader 97 ms]

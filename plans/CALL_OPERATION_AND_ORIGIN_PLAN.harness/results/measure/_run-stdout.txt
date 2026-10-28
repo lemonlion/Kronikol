@@ -1,0 +1,28 @@
+done example-api-5111-reqnroll
+done bp-ci-xunit-in-memory
+done bp-ci-xunit-in-docker
+done bp-ci-xunit-external-sut
+done bp-ci-reqnroll-in-memory
+done bp-cmock-reqnroll
+done bp-java-junit5
+example-api-5111-reqnroll | 5.11.1+44bcc62a6e9419b3491699b8f09177cbe97d72c9 | fmt 3 | suite Example.Api.Tests.Component.ReqNRoll.xUnit3 | calls 23 | callers 2 | services 3 | b2 6 | b3a 6 | b3b 6 | R0 6 | R0+A 6 | R0+B 6 | R0+A+B 6 | non-http 3 (b2 1, b3a 1, b3b 1, stmt 1) | gql 0 labelled 0 | background 0
+bp-ci-xunit-in-memory | 5.4.1+90e357fd4ffe25d7bdb22a7a6b0028bbc6161f1c | fmt 3 | suite xunit-in-memory | calls 1409 | callers 5 | services 16 | b2 207 | b3a 158 | b3b 156 | R0 157 | R0+A 156 | R0+B 144 | R0+A+B 144 | non-http 568 (b2 62, b3a 62, b3b 62, stmt 69) | gql 11 labelled 8 | background 0
+bp-ci-xunit-in-docker | 5.4.1+90e357fd4ffe25d7bdb22a7a6b0028bbc6161f1c | fmt 3 | suite xunit-in-docker | calls 1297 | callers 4 | services 17 | b2 195 | b3a 146 | b3b 144 | R0 145 | R0+A 144 | R0+B 134 | R0+A+B 134 | non-http 384 (b2 50, b3a 50, b3b 50, stmt 58) | gql 11 labelled 8 | background 0
+bp-ci-xunit-external-sut | 5.4.1+90e357fd4ffe25d7bdb22a7a6b0028bbc6161f1c | fmt 3 | suite xunit-external-sut | calls 378 | callers 1 | services 1 | b2 98 | b3a 72 | b3b 70 | R0 71 | R0+A 70 | R0+B 70 | R0+A+B 70 | non-http 0 (b2 0, b3a 0, b3b 0, stmt 0) | gql 9 labelled 6 | background 0
+bp-ci-reqnroll-in-memory | 5.4.1+90e357fd4ffe25d7bdb22a7a6b0028bbc6161f1c | fmt 3 | suite reqnroll-in-memory | calls 1353 | callers 5 | services 16 | b2 206 | b3a 158 | b3b 156 | R0 157 | R0+A 156 | R0+B 144 | R0+A+B 144 | non-http 547 (b2 62, b3a 62, b3b 62, stmt 69) | gql 11 labelled 8 | background 0
+bp-cmock-reqnroll | 4.26.4+0a3d095ffcc03973292074b93747db71f90b8d1e | fmt 2 | suite reqnroll-in-memory | calls 1290 | callers 5 | services 16 | b2 180 | b3a 153 | b3b 151 | R0 152 | R0+A 151 | R0+B 139 | R0+A+B 139 | non-http 547 (b2 62, b3a 62, b3b 62, stmt 66) | gql 11 labelled 8 | background 0
+bp-java-junit5 |  | fmt  | suite  | calls 0 | callers 0 | services 0 | b2 0 | b3a 0 | b3b 0 | R0 0 | R0+A 0 | R0+B 0 | R0+A+B 0 | non-http 0 (b2 0, b3a 0, b3b 0, stmt 0) | gql 0 labelled 0 | background 0
+
+label | file | form | bytes on disk | decoded bytes | decode ms | parse ms | walk ms | analysis ms | query cold ms | query warm ms (min of 3) | query bucket count
+example-api-5111-reqnroll | analysis | Krkl | 8,145 | 77,005 | 2 | 4 | 9 | 62 | 58* | 2 | 6
+bp-ci-xunit-in-memory | analysis | Json | 5,287,167 | 5,287,167 | 1 | 21 | 12 | 91 | 58 | 53 | 207
+bp-ci-xunit-in-memory | original | Krkl | 301,914 | 5,287,167 | 14 | - | - | - | 54 | 54 | 207
+bp-ci-xunit-in-docker | analysis | Json | 5,488,916 | 5,488,916 | 1 | 23 | 14 | 54 | 47 | 46 | 195
+bp-ci-xunit-in-docker | original | Krkl | 307,472 | 5,488,916 | 4 | - | - | - | 50 | 54 | 195
+bp-ci-xunit-external-sut | analysis | Json | 2,051,016 | 2,051,016 | 0 | 9 | 4 | 9 | 18 | 17 | 98
+bp-ci-xunit-external-sut | original | Krkl | 136,451 | 2,051,016 | 2 | - | - | - | 18 | 18 | 98
+bp-ci-reqnroll-in-memory | analysis | Json | 6,037,504 | 6,037,504 | 1 | 24 | 15 | 51 | 56 | 48 | 206
+bp-ci-reqnroll-in-memory | original | Krkl | 316,706 | 6,037,504 | 4 | - | - | - | 67 | 66 | 206
+bp-cmock-reqnroll | analysis | Json | 8,540,092 | 8,540,092 | 2 | 50 | 14 | 61 | 89 | 87 | 180
+bp-java-junit5 | analysis | Json | 107,488 | 107,488 | 0 | 1 | 0 | 1 | 4 | 1 | 0
+

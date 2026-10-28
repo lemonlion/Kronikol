@@ -1,0 +1,172 @@
+== 6 none
+http :: TestCaller>TargetService POST /api/items/{n}?b&expand 200
+http named by its address :: TestCaller>localhost:8080 GET /orders/{n} 200
+http relative :: TestCaller>Api PUT /relative/{n} 204
+http escapes :: TestCaller>Files GET /a%2Fb/c%20d/caf%C3%A9/{bin} 200
+graphql body :: TestCaller>Api POST /graphql 200
+graphql anonymous :: TestCaller>Api POST /graphql 200
+graphql get :: TestCaller>Api GET /graphql?query 200
+graphql batch :: TestCaller>Api POST /graphql 200
+sql set batch :: TestCaller>Database Other /app SET NOCOUNT ON; SET XACT_ABORT ON; OK
+sql set batch not recorded before 8 :: 
+ef summarised :: TestCaller>Database Select /Users SELECT [u].[Id] FROM [dbo].[Users] AS [u] WHERE [u].[Id] = {n} OK
+dapper :: TestCaller>TestDB SELECT FROM Users /localhost/TestDb/Users SELECT * FROM Users WHERE Id = {n} OK
+sqlclient :: TestCaller>SQL Server SELECT FROM breakfasts /analytics/breakfasts SELECT id, name FROM breakfasts OK
+npgsql :: TestCaller>PostgreSQL SELECT FROM breakfasts /analytics/breakfasts SELECT id, name FROM breakfasts WHERE name = '{s}' OK
+clickhouse :: TestCaller>Analytics INSERT INTO events /analytics/events INSERT INTO events (name) VALUES ('{s}') OK
+redis :: TestCaller>Redis Get /user:{n} GET user:{n} OK
+redis raw endpoint :: TestCaller>Redis Get /cache:{n}/{n}/user:{n} GET user:{n} OK
+mongodb :: TestCaller>MongoDB Find ← testcollection /testdb/testcollection {"find":"{v}","filter":{"_id":"{v}","n":{n},"ok":{b}}} 200
+cosmos create :: TestCaller>CosmosDB Create /dbs/mydb/colls/orders/docs {"id":"{v}","total":{n}.{n}} 201
+cosmos query :: TestCaller>CosmosDB Query /dbs/mydb/colls/orders/docs {"query":"{v}","parameters":[{"name":"{v}","value":"{v}"}]} 200
+bigquery :: TestCaller>BigQuery Query /myproject {"query":"{v}","useLegacySql":{b}} 200
+spanner :: TestCaller>Spanner SELECT FROM Users /Users SELECT * FROM Users WHERE Id = {n} -
+dynamodb :: TestCaller>DynamoDB PutItem /Users {"TableName":"{v}","Item":{"id":{"S":"{v}"}}} 200
+elasticsearch :: TestCaller>Elasticsearch Search → orders /orders {"query":{"match":{"name":"{v}"}}} 200
+bigtable :: TestCaller>Bigtable ReadRows ← my-table /my-table -
+atlas :: TestCaller>AtlasDataApi insertOne → orders /orders_db/orders {"document":{"name":"{v}"}} 200
+s3 :: TestCaller>S3 GetObject /path/to/file.json 200
+blob :: TestCaller>BlobStorage Upload /mycontainer/myblob.txt 201
+gcs :: TestCaller>CloudStorage Download → my-bucket/file.txt /my-bucket/file.txt 200
+servicebus :: TestCaller>ServiceBus Send → orders-queue / -
+sqs :: TestCaller>SQS SendMessage /orders-queue 200
+sns :: TestCaller>SNS Publish /my-topic 200
+eventbridge :: TestCaller>EventBridge PutEvents [OrderCreated] / 200
+eventhubs :: TestCaller>EventHubs Send → telemetry /telemetry -
+kafka :: TestCaller>Kafka Produce → orders-topic /orders-topic -
+pubsub :: TestCaller>PubSub Publish → my-topic /my-topic -
+storagequeue :: TestCaller>StorageQueue Receive ← my-queue /my-queue 200
+masstransit :: TestCaller>MassTransit Send OrderCreated /orders -
+grpc :: TestCaller>GrpcService SayHello /greet.Greeter/SayHello 200
+mediatr :: Caller>Application Send /IMediator/Send 200
+otlp mongo :: data-insights>mongo Find ← Trial / {"find":"{v}"} OK
+ingest :: web>graphql POST /sidekick?x 201
+== 6 patterns
+http :: TestCaller>TargetService POST /api/items/{n}?b&expand 200
+http named by its address :: TestCaller>localhost:8080 GET /{o}/{n} 200
+http relative :: TestCaller>Api PUT /relative/{n} 204
+http escapes :: TestCaller>Files GET /a%2Fb/{dir}/{cafe}/{bin} 200
+graphql body :: TestCaller>Api POST /graphql 200
+graphql anonymous :: TestCaller>Api POST /graphql 200
+graphql get :: TestCaller>Api GET /graphql?query 200
+graphql batch :: TestCaller>Api POST /graphql 200
+sql set batch :: TestCaller>Database Other /app SET NOCOUNT ON; SET XACT_ABORT ON; OK
+sql set batch not recorded before 8 :: 
+ef summarised :: TestCaller>Database Select /Users SELECT [u].[Id] FROM [dbo].{users} AS [u] WHERE [u].[Id] = {n} OK
+dapper :: TestCaller>TestDB SELECT FROM Users /localhost/TestDb/Users SELECT * FROM Users WHERE Id = {n} OK
+sqlclient :: TestCaller>SQL Server SELECT FROM breakfasts /analytics/{table} SELECT id, name FROM {table} OK
+npgsql :: TestCaller>PostgreSQL SELECT FROM breakfasts /analytics/{table} SELECT id, name FROM {table} WHERE name = '{s}' OK
+clickhouse :: TestCaller>Analytics INSERT INTO events /analytics/events INSERT INTO events (name) VALUES ('{s}') OK
+redis :: TestCaller>Redis Get /user:{id} GET user:{id} OK
+redis raw endpoint :: TestCaller>Redis Get /cache:{n}/{n}/user:{id} GET user:{id} OK
+mongodb :: TestCaller>MongoDB Find ← testcollection /testdb/testcollection {"find":"{v}","filter":{"_id":"{v}","n":{n},"ok":{b}}} 200
+cosmos create :: TestCaller>CosmosDB Create /dbs/mydb/colls/{o}/docs {"id":"{v}","total":{n}.{n}} 201
+cosmos query :: TestCaller>CosmosDB Query /dbs/mydb/colls/{o}/docs {"query":"{v}","parameters":[{"name":"{v}","value":"{v}"}]} 200
+bigquery :: TestCaller>BigQuery Query /myproject {"query":"{v}","useLegacySql":{b}} 200
+spanner :: TestCaller>Spanner SELECT FROM Users /Users SELECT * FROM Users WHERE Id = {n} -
+dynamodb :: TestCaller>DynamoDB PutItem /Users {"TableName":"{v}","Item":{"id":{"S":"{v}"}}} 200
+elasticsearch :: TestCaller>Elasticsearch Search → orders /{o} {"query":{"match":{"name":"{v}"}}} 200
+bigtable :: TestCaller>Bigtable ReadRows ← my-table /my-table -
+atlas :: TestCaller>AtlasDataApi insertOne → orders /{o}_db/{o} {"document":{"name":"{v}"}} 200
+s3 :: TestCaller>S3 GetObject /path/to/file.json 200
+blob :: TestCaller>BlobStorage Upload /mycontainer/myblob.txt 201
+gcs :: TestCaller>CloudStorage Download → my-bucket/file.txt /my-bucket/file.txt 200
+servicebus :: TestCaller>ServiceBus Send → orders-queue / -
+sqs :: TestCaller>SQS SendMessage /{o}-queue 200
+sns :: TestCaller>SNS Publish /my-topic 200
+eventbridge :: TestCaller>EventBridge PutEvents [OrderCreated] / 200
+eventhubs :: TestCaller>EventHubs Send → telemetry /telemetry -
+kafka :: TestCaller>Kafka Produce → orders-topic /{o}-topic -
+pubsub :: TestCaller>PubSub Publish → my-topic /my-topic -
+storagequeue :: TestCaller>StorageQueue Receive ← my-queue /my-queue 200
+masstransit :: TestCaller>MassTransit Send OrderCreated /{o} -
+grpc :: TestCaller>GrpcService SayHello /greet.Greeter/SayHello 200
+mediatr :: Caller>Application Send /IMediator/Send 200
+otlp mongo :: data-insights>mongo Find ← Trial / {"find":"{v}"} OK
+ingest :: web>graphql POST /{sk}?x 201
+== 7 none
+http :: TestCaller>TargetService POST /api/items/{n}?b&expand 200
+http named by its address :: TestCaller>orders-host:8080 GET /orders/{n} 200
+http relative :: TestCaller>Api PUT /relative/{n} 204
+http escapes :: TestCaller>Files GET /a%2Fb/c%20d/caf%C3%A9/{bin} 200
+graphql body :: TestCaller>Api POST /graphql 200
+graphql anonymous :: TestCaller>Api POST /graphql 200
+graphql get :: TestCaller>Api GET /graphql?query 200
+graphql batch :: TestCaller>Api POST /graphql 200
+sql set batch :: TestCaller>Database Other /app SET NOCOUNT ON; SET XACT_ABORT ON; OK
+sql set batch not recorded before 8 :: 
+ef summarised :: TestCaller>Database Select /Users SELECT [u].[Id] FROM [dbo].[Users] AS [u] WHERE [u].[Id] = {n} OK
+dapper :: TestCaller>TestDB SELECT FROM Users /localhost/TestDb/Users SELECT * FROM Users WHERE Id = {n} OK
+sqlclient :: TestCaller>SQL Server SELECT FROM breakfasts /analytics/breakfasts SELECT id, name FROM breakfasts OK
+npgsql :: TestCaller>PostgreSQL SELECT FROM breakfasts /analytics/breakfasts SELECT id, name FROM breakfasts WHERE name = '{s}' OK
+clickhouse :: TestCaller>Analytics INSERT INTO events /analytics/events INSERT INTO events (name) VALUES ('{s}') OK
+redis :: TestCaller>Redis Get /user:{n} GET user:{n} OK
+redis raw endpoint :: TestCaller>Redis Get /cache:{n}/{n}/user:{n} GET user:{n} OK
+mongodb :: TestCaller>MongoDB Find ← testcollection /testdb/testcollection {"find":"{v}","filter":{"_id":"{v}","n":{n},"ok":{b}}} 200
+cosmos create :: TestCaller>CosmosDB Create /dbs/mydb/colls/orders/docs {"id":"{v}","total":{n}.{n}} 201
+cosmos query :: TestCaller>CosmosDB Query /dbs/mydb/colls/orders/docs {"query":"{v}","parameters":[{"name":"{v}","value":"{v}"}]} 200
+bigquery :: TestCaller>BigQuery Query /myproject {"query":"{v}","useLegacySql":{b}} 200
+spanner :: TestCaller>Spanner SELECT FROM Users /Users SELECT * FROM Users WHERE Id = {n} -
+dynamodb :: TestCaller>DynamoDB PutItem /Users {"TableName":"{v}","Item":{"id":{"S":"{v}"}}} 200
+elasticsearch :: TestCaller>Elasticsearch Search → orders /orders {"query":{"match":{"name":"{v}"}}} 200
+bigtable :: TestCaller>Bigtable ReadRows ← my-table /my-table -
+atlas :: TestCaller>AtlasDataApi insertOne → orders /orders_db/orders {"document":{"name":"{v}"}} 200
+s3 :: TestCaller>S3 GetObject /path/to/file.json 200
+blob :: TestCaller>BlobStorage Upload /mycontainer/myblob.txt 201
+gcs :: TestCaller>CloudStorage Download → my-bucket/file.txt /my-bucket/file.txt 200
+servicebus :: TestCaller>ServiceBus Send → orders-queue / -
+sqs :: TestCaller>SQS SendMessage /orders-queue 200
+sns :: TestCaller>SNS Publish /my-topic 200
+eventbridge :: TestCaller>EventBridge PutEvents [OrderCreated] / 200
+eventhubs :: TestCaller>EventHubs Send → telemetry /telemetry -
+kafka :: TestCaller>Kafka Produce → orders-topic /orders-topic -
+pubsub :: TestCaller>PubSub Publish → my-topic /my-topic -
+storagequeue :: TestCaller>StorageQueue Receive ← my-queue /my-queue 200
+masstransit :: TestCaller>MassTransit Send OrderCreated /orders -
+grpc :: TestCaller>GrpcService SayHello /greet.Greeter/SayHello 200
+mediatr :: Caller>Application Send /IMediator/Send 200
+otlp mongo :: data-insights>mongo Find ← Trial / {"find":"{v}"} OK
+ingest :: web>graphql POST /sidekick?x 201
+== 7 patterns
+http :: TestCaller>TargetService POST /api/items/{n}?b&expand 200
+http named by its address :: TestCaller>orders-host:8080 GET /{o}/{n} 200
+http relative :: TestCaller>Api PUT /relative/{n} 204
+http escapes :: TestCaller>Files GET /a%2Fb/{dir}/{cafe}/{bin} 200
+graphql body :: TestCaller>Api POST /graphql 200
+graphql anonymous :: TestCaller>Api POST /graphql 200
+graphql get :: TestCaller>Api GET /graphql?query 200
+graphql batch :: TestCaller>Api POST /graphql 200
+sql set batch :: TestCaller>Database Other /app SET NOCOUNT ON; SET XACT_ABORT ON; OK
+sql set batch not recorded before 8 :: 
+ef summarised :: TestCaller>Database Select /Users SELECT [u].[Id] FROM [dbo].{users} AS [u] WHERE [u].[Id] = {n} OK
+dapper :: TestCaller>TestDB SELECT FROM Users /localhost/TestDb/Users SELECT * FROM Users WHERE Id = {n} OK
+sqlclient :: TestCaller>SQL Server SELECT FROM breakfasts /analytics/{table} SELECT id, name FROM {table} OK
+npgsql :: TestCaller>PostgreSQL SELECT FROM breakfasts /analytics/{table} SELECT id, name FROM {table} WHERE name = '{s}' OK
+clickhouse :: TestCaller>Analytics INSERT INTO events /analytics/events INSERT INTO events (name) VALUES ('{s}') OK
+redis :: TestCaller>Redis Get /user:{id} GET user:{id} OK
+redis raw endpoint :: TestCaller>Redis Get /cache:{n}/{n}/user:{id} GET user:{id} OK
+mongodb :: TestCaller>MongoDB Find ← testcollection /testdb/testcollection {"find":"{v}","filter":{"_id":"{v}","n":{n},"ok":{b}}} 200
+cosmos create :: TestCaller>CosmosDB Create /dbs/mydb/colls/{o}/docs {"id":"{v}","total":{n}.{n}} 201
+cosmos query :: TestCaller>CosmosDB Query /dbs/mydb/colls/{o}/docs {"query":"{v}","parameters":[{"name":"{v}","value":"{v}"}]} 200
+bigquery :: TestCaller>BigQuery Query /myproject {"query":"{v}","useLegacySql":{b}} 200
+spanner :: TestCaller>Spanner SELECT FROM Users /Users SELECT * FROM Users WHERE Id = {n} -
+dynamodb :: TestCaller>DynamoDB PutItem /Users {"TableName":"{v}","Item":{"id":{"S":"{v}"}}} 200
+elasticsearch :: TestCaller>Elasticsearch Search → orders /{o} {"query":{"match":{"name":"{v}"}}} 200
+bigtable :: TestCaller>Bigtable ReadRows ← my-table /my-table -
+atlas :: TestCaller>AtlasDataApi insertOne → orders /{o}_db/{o} {"document":{"name":"{v}"}} 200
+s3 :: TestCaller>S3 GetObject /path/to/file.json 200
+blob :: TestCaller>BlobStorage Upload /mycontainer/myblob.txt 201
+gcs :: TestCaller>CloudStorage Download → my-bucket/file.txt /my-bucket/file.txt 200
+servicebus :: TestCaller>ServiceBus Send → orders-queue / -
+sqs :: TestCaller>SQS SendMessage /{o}-queue 200
+sns :: TestCaller>SNS Publish /my-topic 200
+eventbridge :: TestCaller>EventBridge PutEvents [OrderCreated] / 200
+eventhubs :: TestCaller>EventHubs Send → telemetry /telemetry -
+kafka :: TestCaller>Kafka Produce → orders-topic /{o}-topic -
+pubsub :: TestCaller>PubSub Publish → my-topic /my-topic -
+storagequeue :: TestCaller>StorageQueue Receive ← my-queue /my-queue 200
+masstransit :: TestCaller>MassTransit Send OrderCreated /{o} -
+grpc :: TestCaller>GrpcService SayHello /greet.Greeter/SayHello 200
+mediatr :: Caller>Application Send /IMediator/Send 200
+otlp mongo :: data-insights>mongo Find ← Trial / {"find":"{v}"} OK
+ingest :: web>graphql POST /{sk}?x 201
