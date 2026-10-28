@@ -239,10 +239,13 @@ internal static class VerbTable
             ["  note         <report> s3/d0 [/n12] [--out F]  what the HTML rendered, when it differs from the capture"]),
 
         new("diagram", "Payloads",
-            "The raw PlantUML of one diagram, written to a file and never printed.",
-            ["<report> s3/d0 --out FILE"],
-            [], Json: false,
-            ["  diagram      <report> s3/d0 --out F          the raw PlantUML; never printed to stdout"]),
+            "The raw PlantUML of a diagram, written to a file and never printed; a scenario's diagrams listed, or written to a directory with the whole run's.",
+            ["<report> s3/d0 --out FILE", "<report> s3", "<report> s3 --out DIR", "<report> --out DIR"],
+            ["--json"], Json: true,
+            [
+                "  diagram      <report> s3/d0 --out F          the raw PlantUML; never printed to stdout",
+                "               <report> s3 [--out DIR]          a scenario's diagrams listed, or written as DIR/s3-d0.puml; no address: the run's"
+            ]),
 
         new("grep", "Search and comparison",
             "Where a value appears in the run - bodies, URIs, steps, assertions, names, errors, headers, notes - with the address of each hit.",

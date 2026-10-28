@@ -63,7 +63,7 @@ belongs to both and means different things — a scenario name on `scenarios`, a
 | `--limit N` | cap rows. The verbs that list rows |
 | `--count` | print how many matched, and nothing else. Every verb that counts something — not `http`, `body`, `note`, `diagram`, `steps`, `compare` |
 | `--out FILE` | write the answer to a file instead of the terminal; prints one line. Lifts the byte budget — a file is not a context window. `http`, `body`, `note` and `diagram` write the payload; every other verb writes what it would have printed |
-| `--json` | one envelope instead of text, on `summary`, `scenarios`, `failures`, `repro`, `attachments`, `services`, `parties`, `sizes`, `interactions`, `assertions`, `diff`, `history`. **Not for reading in a terminal** — the same answer costs about twice the tokens. It is for scripts |
+| `--json` | one envelope instead of text, on `summary`, `scenarios`, `failures`, `repro`, `attachments`, `services`, `parties`, `sizes`, `interactions`, `assertions`, `diagram`, `diff`, `history`. **Not for reading in a terminal** — the same answer costs about twice the tokens. It is for scripts |
 | `--kind KIND` | only the parties of this kind: `test`, `underTest`, `real`, `double` or `unknown`, ignoring case; anything else exits 2. `parties` only (5.14.0) |
 | `--history FILE` | the cross-run ledger `history` reads, instead of `$KRONIKOL_HISTORY` or the `.kronikol/history.jsonl` above the report. `history` only |
 | `--flaky`, `--new`, `--failing`, `--regressed`, `--changed` | which verdicts `history` lists; several combine as OR. `history` only |
@@ -427,8 +427,27 @@ it — focus fields, phase variants, GraphQL query-only mode and user formatting
 and a processor can add information found nowhere else. This is where to look when the user quotes
 something the payloads do not contain.
 
-### `diagram <report> s3/d0 --out FILE`
+### `diagram <report> s3/d0 --out FILE`, `diagram <report> s3 [--out DIR]`, `diagram <report> --out DIR`
 The raw PlantUML. **Refuses to print to stdout** — a real one is 663 KB — and points at `flow` instead.
+
+Since **5.24.0** it also takes a scenario (`s3`, `sid:` or `id:`), so a script that checks a run's diagrams needs
+no probing (#184):
+
+- `diagram <report> s3` lists the scenario's diagrams, one row each with its address, size and note count, as
+  `note s3/d0` lists notes. A scenario that made no calls draws none and says so.
+- `diagram <report> s3 --out DIR` writes every diagram of the scenario as `DIR/s3-d0.puml`, `DIR/s3-d1.puml` and
+  so on, making `DIR`; with `s3/d0`, `--out` names a file as before, and with a scenario it names a directory, so
+  a file there is refused.
+- `diagram <report> --out DIR`, with no address, writes every diagram in the run: one process where probing
+  took one a diagram.
+- `--json` gives one item per diagram listed or written: `address`, `bytes`, `notes`, and `path` when written.
+  A large run's list of written files can pass the byte budget; `--max-bytes 0` lifts it, and the files are
+  written either way.
+
+Files are named by address, not by id: an id is free text (a JUnit id holds `/` and `:`), and `scenarios --json`
+maps each address to its id. How many diagrams a scenario holds follows the rendering: at the default,
+`BrowserJs`, the browser splits a long diagram, so the data file holds one per scenario that made calls; a
+server-side rendering (`NodeJs`, `Local` or a server) splits it before writing, so a long scenario holds several.
 
 ## Search and comparison
 

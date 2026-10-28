@@ -646,11 +646,32 @@ public static partial class QueryCommand
 
     private static int Diagram(ReportIndex index, QueryOptions options, QueryWriter writer, TextWriter error)
     {
-        if (options.Positional.Count == 0 || !Address.TryParse(options.Positional[0], out var address)
-                                          || address.Kind != AddressKind.Diagram)
+        // No address and a directory: every diagram of the run, in one process where a host probing sN/dK until a
+        // refusal took one a diagram (#184).
+        if (options.Positional.Count == 0)
         {
-            error.WriteLine("Which diagram? Pass s3/d0.");
+            if (options.Out is null)
+            {
+                error.WriteLine("Which diagram? Pass s3/d0 --out FILE for one, s3 to list a scenario's, s3 --out DIR to write them, or --out DIR alone for every diagram in the run.");
+                return 2;
+            }
+
+            return WriteDiagrams(index, index.Scenarios, options.Out, writer, error);
+        }
+
+        if (!Address.TryParse(options.Positional[0], out var address)
+            || address.Kind is not (AddressKind.Diagram or AddressKind.Scenario or AddressKind.StableId or AddressKind.TestId))
+        {
+            error.WriteLine("Which diagram? Pass s3/d0, or s3 to list a scenario's diagrams.");
             return 2;
+        }
+
+        // A scenario: its diagrams listed as `note sN/dK` lists notes, or written, so a count needs no probing.
+        if (address.Kind != AddressKind.Diagram)
+        {
+            if (!TryWholeScenario(index, options.Positional[0], error, out var whole))
+                return 2;
+            return options.Out is null ? ListDiagrams(index, whole, writer) : WriteDiagrams(index, [whole], options.Out, writer, error);
         }
 
         if (!TryDiagram(index, address, error, out var scenario, out var diagram))
@@ -670,8 +691,95 @@ public static partial class QueryCommand
         if (!QueryWriter.TryWriteFile(options.Out, diagram, error))
             return 1;
         writer.Line($"wrote {QueryWriter.Size(size)} → {Path.GetFullPath(options.Out)}");
+        writer.Item(DiagramItem($"{scenario.Address}/d{address.Diagram}", diagram, Path.GetFullPath(options.Out)).Item);
         writer.Footer($"flow {scenario.Address} says the same thing in a fraction of the bytes");
         return 0;
+    }
+
+    /// <summary>
+    /// A scenario's diagrams, one row each with its address, size and note count. Each is read to be measured, which is
+    /// bounded by one scenario's diagrams: one at the default rendering, a few where a server-side one split it.
+    /// </summary>
+    private static int ListDiagrams(ReportIndex index, ScenarioEntry scenario, QueryWriter writer)
+    {
+        if (scenario.Diagrams.Count == 0)
+        {
+            writer.Line($"{scenario.Address} has no diagrams (a scenario that made no calls draws none)");
+            writer.Footer($"flow {scenario.Address} lists its calls");
+            return 0;
+        }
+
+        writer.Line($"{scenario.Address}  {scenario.Diagrams.Count} diagram{(scenario.Diagrams.Count == 1 ? "" : "s")}");
+        writer.Line();
+        for (var k = 0; k < scenario.Diagrams.Count; k++)
+        {
+            var text = PayloadReader.Read(index, scenario.Diagrams[k]) ?? "";
+            var item = DiagramItem($"{scenario.Address}/d{k}", text, null);
+            writer.Line($"{scenario.Address}/d{k,-4} {QueryWriter.Size(item.Bytes),8}  {item.Notes} notes");
+            writer.Item(item.Item);
+        }
+        writer.Footer($"diagram {scenario.Address}/dK --out F writes one, diagram {scenario.Address} --out DIR all of them; note {scenario.Address}/dK lists a diagram's notes");
+        return 0;
+    }
+
+    /// <summary>
+    /// Every diagram of <paramref name="scenarios"/> into <paramref name="directory"/>, created if it is not there, as
+    /// <c>sN-dK.puml</c>: named by address and not by id, because an id is free text that no file name can hold
+    /// (a JUnit id has <c>/</c> and <c>:</c>), and <c>scenarios --json</c> maps one to the other.
+    /// </summary>
+    private static int WriteDiagrams(ReportIndex index, IReadOnlyList<ScenarioEntry> scenarios, string directory, QueryWriter writer, TextWriter error)
+    {
+        if (string.IsNullOrWhiteSpace(directory))
+        {
+            error.WriteLine("--out was given an empty path.");
+            return 1;
+        }
+        if (File.Exists(directory))
+        {
+            error.WriteLine($"--out names a file, {directory}: with a scenario address, or none, it names a directory to write sN-dK.puml files into.");
+            return 2;
+        }
+
+        try
+        {
+            Directory.CreateDirectory(directory);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+        {
+            error.WriteLine($"--out {directory} could not be made a directory: {exception.Message}");
+            return 1;
+        }
+
+        var written = 0;
+        var bytes = 0;
+        foreach (var scenario in scenarios)
+        {
+            for (var k = 0; k < scenario.Diagrams.Count; k++)
+            {
+                var text = PayloadReader.Read(index, scenario.Diagrams[k]) ?? "";
+                var path = Path.GetFullPath(Path.Combine(directory, $"{scenario.Address}-d{k}.puml"));
+                if (!QueryWriter.TryWriteFile(path, text, error))
+                    return 1;
+                var item = DiagramItem($"{scenario.Address}/d{k}", text, path);
+                writer.Item(item.Item);
+                written++;
+                bytes += item.Bytes;
+            }
+        }
+
+        writer.Line(written == 0
+            ? $"no diagrams to write: {(scenarios.Count == 1 ? $"{scenarios[0].Address} has none" : "no scenario in the run has one")}"
+            : $"wrote {written} diagram{(written == 1 ? "" : "s")}, {QueryWriter.Size(bytes)} → {Path.GetFullPath(directory)}");
+        writer.Footer("each file is named by its address; scenarios --json maps an address to its id");
+        return 0;
+    }
+
+    /// <summary>One diagram as <c>diagram --json</c> gives it: its address, size and note count, and the file it was written to.</summary>
+    private static (object Item, int Bytes, int Notes) DiagramItem(string address, string text, string? path)
+    {
+        var bytes = Encoding.UTF8.GetByteCount(text);
+        var notes = PayloadReader.Notes(text).Count;
+        return (path is null ? (object)new { address, bytes, notes } : new { address, bytes, notes, path }, bytes, notes);
     }
 
     private static bool TryDiagram(ReportIndex index, Address address, TextWriter error, out ScenarioEntry scenario, out string diagram)
