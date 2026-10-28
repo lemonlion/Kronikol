@@ -755,7 +755,9 @@ messages the service published and consumed, and for each operation whether the 
 while serving a request, or it was made in the background. `-o service.json` writes it to a file. Its `behaviour` part
 changes when the service's behaviour does (a Kronikol upgrade that records more moves it too) and `behaviourHash` is
 its SHA-256, so an indexer compares runs by the hash; `run` holds what moves every run (counts, the run's id, one example address per operation, which the verbs
-above open). A question about one run is still the verbs' to answer.
+above open). From 5.22.0 a run writes `service.json` beside its report itself (`GenerateServiceCard`, on by
+default), the card this command writes from its data file, and `Run.json` lists it with `serviceCard.behaviourHash`.
+A question about one run is still the verbs' to answer.
 
 ## Exit codes
 

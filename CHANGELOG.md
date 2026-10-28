@@ -4,6 +4,55 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.22.0] - 2026-10-28
+
+The minor part moves (5.21.0 to 5.22.0): a new option, `GenerateServiceCard`, on by default, and a new run-end output,
+`service.json`, which `Run.json` now names with its hash (#191, `plans/SERVICE_CARD_PLAN.md` R2, the plan's last
+release).
+
+### Added
+
+- **Every run writes its service card, `service.json`, beside its report** (#191). `GenerateServiceCard`, on by
+  default, writes at the run end the card `kronikol card` writes from the run's data file, byte for byte: after the
+  run's other outputs, from the data file the run has just written, and before `Run.json`. A run whose data file is off
+  (`GenerateTestRunReportData = false`) or written as XML writes none and says nothing of it. An ingested run writes
+  one, and `kronikol merge` writes one beside a merged report, from the merged data file, so a sharded run has one card
+  for all its shards.
+- **`Run.json` gains `serviceCard`**, `{"file": "service.json", "behaviourHash": "…"}`, after `serviceId`, written only
+  when the run wrote a card. An indexer that keeps the last hash it read tells from `Run.json` alone whether the card
+  changed. `RunManifest.ServiceCard`, a `RunManifestServiceCard`, reads it, and a malformed one reads as none.
+
+### Changed
+
+- **A reports directory holds one more file**, `service.json`: 96 to 175 KB on BreakfastProvider's lanes (23 to 25 KB
+  once zipped into an artifact), and a run end takes one more pass over its data file, about 150 ms on a run of 2,000
+  scenarios. Set `GenerateServiceCard = false` to go without it.
+- A card that cannot be written, its file held open by a reader, is no card of the run's: `Run.json` names no
+  `serviceCard`, and its bytes go to `service2.json`, listed under `files`, as any output's do. A run killed before its
+  `Run.json` moves its card with its other files, and the manifest rebuilt for it names no card.
+
+### Documentation
+
+- The wiki's Service-Card page says every run writes the card, and when it does not; Generated-Reports gives
+  `service.json` in its file table, `Run.json`'s `serviceCard` and the merged run's card; Report-Configuration gives
+  `GenerateServiceCard`; CI-Artifact-Upload and Merging-Parallel-Reports list the file. The README and the skill, both
+  copies, say a run writes it.
+
+### Tests
+
+- New facts: `ServiceCardRunEndTests` (the card listed in `Run.json` with its hash, written after the output list from
+  the data file it wrote, equal to the command's, off with the option, absent without a JSON data file with nothing
+  said, a card that cannot be written left out with its copy salvaged, an ingested run's card, the cost on a
+  2,000-scenario run), `MergeServiceCardTests`, `RunManifestTests` (the member's place and a malformed one read as
+  none), `RunRotationTests` (an earlier run's card rotated with it, a rebuilt manifest naming none) and a theory
+  holding the run end's card byte-equal to the command's over three run shapes. Ten mutations of the run end, the
+  manifest, the rotation and the merge each turn a fact red.
+- On the example lanes, the 20 cards the runs wrote are byte-identical to what `kronikol card` writes from their data
+  files, each listed in its `Run.json` with a `behaviourHash` that holds.
+- Checks: the core suite (11,345 passed, 2 skipped), the adapter and step and assertion tracking projects (861 passed,
+  28 skipped), the full Playwright suite (2,068 passed, 28 skipped), every example lane (Integration 259 of 259), and
+  the Release build of `release.slnf`.
+
 ## [5.21.0] - 2026-10-28
 
 The minor part moves (5.20.1 to 5.21.0): a new command, `kronikol card`, and a committed schema for the file it writes

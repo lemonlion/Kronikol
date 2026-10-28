@@ -1319,6 +1319,16 @@ minors over one on 2026-10-28.
     byte-identical, and the 19 example-lane cards' `behaviour` too. Two edge cases moved with the table, which reads
     the whole block: a declared subject no call reaches is the subject and listed, and a declared test party with
     no calls counts for cause; a fact pins each, red before the swap.
+- 2026-10-28: R2 built on `release/191-r2` (session kronikol-ed), on R1, released as 5.22.0. The run end scans the data file it has just
+  written, after the output list and before `Run.json` (`ReportGenerator`, through `RunIsolated` and `WriteFile`, so a
+  card that cannot be written falls back as every output does and stays out of `Run.json`), so the run's card is the
+  command's by construction; a fact holds the two byte-equal over three run shapes (no declarations; `ServiceId` with
+  an observed client; a JSON-only run with user actions). `PlannedFiles` lists `service.json` whenever the option is on,
+  so the rotation moves an earlier run's card. `RunRotation.Reconstruct` names no card: a killed run's card was never
+  checked against its data file. `kronikol merge` writes the merged data file's card (`MergedRunOutputs`), with
+  `run.id` and `run.at` null, and ingest writes one through the run end. Measured: the card adds 148 ms to the end of a
+  2,000-scenario run of 685 ms (`ServiceCardRunEndTests`, budget 1,000 ms scaled by contention). Mutations: ten,
+  each applied alone, and each failed a fact (`results/impl-mutations.txt`).
 
 ## Appendix A. Edit sites at `8d7d1e1d`
 

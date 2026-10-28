@@ -78,7 +78,14 @@ public sealed record RunManifest
     /// <summary>The service the run was about (<see cref="ReportConfigurationOptions.ServiceId"/>, #190); written after the ten members, and only when set.</summary>
     public string? ServiceId { get; init; }
 
-    /// <summary>The file's text: the ten members in a fixed order, and <c>serviceId</c> after them when set, so two runs that wrote the same things write the same bytes.</summary>
+    /// <summary>
+    /// The service card the run wrote (<see cref="ReportConfigurationOptions.GenerateServiceCard"/>): its file and the hash
+    /// of its <c>behaviour</c> part, so an indexer that keeps the last hash it read decides from this file alone whether
+    /// the card changed. Written after <c>serviceId</c>, and only when the run wrote a card.
+    /// </summary>
+    public RunManifestServiceCard? ServiceCard { get; init; }
+
+    /// <summary>The file's text: the ten members in a fixed order, then <c>serviceId</c> and <c>serviceCard</c> when set, so two runs that wrote the same things write the same bytes.</summary>
     public string ToJson()
     {
         var buffer = new ArrayBufferWriter<byte>();
@@ -100,6 +107,13 @@ public sealed record RunManifest
             WriteNames(writer, "attachments", Attachments);
             if (ServiceId is { } serviceId)
                 writer.WriteString("serviceId", serviceId);
+            if (ServiceCard is { } card)
+            {
+                writer.WriteStartObject("serviceCard");
+                writer.WriteString("file", card.File);
+                writer.WriteString("behaviourHash", card.BehaviourHash);
+                writer.WriteEndObject();
+            }
             writer.WriteEndObject();
         }
         return Encoding.UTF8.GetString(buffer.WrittenSpan).ReplaceLineEndings("\n") + "\n";
@@ -189,9 +203,17 @@ public sealed record RunManifest
             KronikolVersion = Text(root, "kronikolVersion"),
             Files = files,
             Attachments = attachments,
-            ServiceId = Text(root, "serviceId")
+            ServiceId = Text(root, "serviceId"),
+            ServiceCard = Card(root)
         };
     }
+
+    /// <summary>A <c>serviceCard</c> this build can read, else none: a manifest with a malformed one is still the run's manifest.</summary>
+    private static RunManifestServiceCard? Card(JsonElement root) =>
+        root.TryGetProperty("serviceCard", out var card) && card.ValueKind == JsonValueKind.Object
+        && Text(card, "file") is { Length: > 0 } file && Text(card, "behaviourHash") is { Length: > 0 } hash
+            ? new RunManifestServiceCard(file, hash)
+            : null;
 
     private static string? Text(JsonElement root, string member) =>
         root.TryGetProperty(member, out var value) && value.ValueKind == JsonValueKind.String ? value.GetString() : null;
@@ -219,3 +241,6 @@ public sealed record RunManifest
         return true;
     }
 }
+
+/// <summary>A run's <c>service.json</c> as <c>Run.json</c> lists it: the file's name and its <c>behaviourHash</c>.</summary>
+public sealed record RunManifestServiceCard(string File, string BehaviourHash);

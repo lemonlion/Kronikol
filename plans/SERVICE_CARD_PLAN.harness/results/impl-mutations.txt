@@ -27,3 +27,16 @@ servicebus row: no placeholder | KILLED | - | Kronikol.Tests.ServiceBus.ServiceB
 http message call: a destination from the URI | KILLED | - | Kronikol.Tests.SQS.SqsCardMessageTests.A_send_recorded_as_its_http_request_names_no_queue
 scanner: a background body's wrapper not recognised | KILLED | - | Kronikol.Tests.CallGraph.BackgroundBodyTests.A_compressed_body_under_a_root_background_call_is_read_as_a_scenarios_is
 killed 27 of 27
+
+R2 (the run end's card, Run.json's serviceCard, the rotation and the merge), each applied alone
+R2 run end: a card written inside the output list | KILLED | - | Kronikol.Tests.Reports.ServiceCardRunEndTests.Without_a_JSON_data_file_there_is_no_card_and_nothing_said_of_it
+R2 run end: Run.json without the card's key | KILLED | - | Kronikol.Tests.Reports.ServiceCardRunEndTests.An_ingested_run_writes_its_card
+R2 run end: the card not among the planned files | KILLED | - | Kronikol.Tests.Reports.RunRotationTests.A_run_killed_before_its_manifest_leaves_none_and_is_kept_but_never_counted_or_pruned
+R2 rotation: a rebuilt manifest claims the card | KILLED | - | Kronikol.Tests.Reports.RunRotationTests.A_directory_written_before_manifests_existed_rotates_once_by_what_this_run_is_about_to_write
+R2 run end: the option ignored | KILLED | - | Kronikol.Tests.Reports.ServiceCardRunEndTests.With_the_card_off_there_is_neither_the_file_nor_the_key
+R2 run end: an XML data file carded | KILLED | - | Kronikol.Tests.Reports.ServiceCardRunEndTests.Without_a_JSON_data_file_there_is_no_card_and_nothing_said_of_it
+R2 manifest: a malformed card read | KILLED | - | Kronikol.Tests.Reports.RunManifestTests.A_malformed_service_card_reads_as_absent
+R2 run end: a card that failed to write still listed | KILLED | - | Kronikol.Tests.Reports.ServiceCardRunEndTests.A_card_that_cannot_be_written_is_left_out_of_Run_json
+R2 merge: no card | KILLED | - | Kronikol.Tests.Reports.Merge.MergeServiceCardTests.A_merge_writes_the_card_of_its_merged_data_file
+R2 run end: the run's id left out | KILLED | - | Kronikol.Tests.Tool.CardCommandTests.The_run_ends_card_is_the_one_the_command_writes
+killed 10 of 10

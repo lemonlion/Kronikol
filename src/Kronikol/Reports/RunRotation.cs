@@ -571,6 +571,8 @@ internal static class RunRotation
             Files = files.Order(StringComparer.Ordinal).ToArray(),
             Attachments = [],
             ServiceId = serviceId
+            // and no serviceCard: a service.json among the files moves with them, but only a run's own manifest says the
+            // card is that run's, and this one is rebuilt from what the run left
         });
     }
 

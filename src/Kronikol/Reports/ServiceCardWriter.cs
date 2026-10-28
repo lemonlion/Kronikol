@@ -46,6 +46,9 @@ internal sealed record ServiceCardRun
     internal static ServiceCardRun Empty { get; } = new();
 }
 
+/// <summary>A card as written: the file's text and the <c>behaviourHash</c> its <c>run</c> part carries.</summary>
+internal sealed record ServiceCardFile(string Text, string BehaviourHash);
+
 /// <summary>
 /// The one writer of <c>service.json</c> (plans/SERVICE_CARD_PLAN.md 4.3): a projection of a <see cref="Graph"/> in two
 /// parts. <c>behaviour</c> holds sets only, in a total order, and is byte-identical whenever the behaviour is; <c>run</c>
@@ -53,7 +56,7 @@ internal sealed record ServiceCardRun
 ///
 /// <para><b>The hashed bytes.</b> <c>behaviourHash</c> is the SHA-256 of the <c>behaviour</c> member's bytes exactly as the
 /// file holds them. The file is compact, UTF-8, LF, no BOM, one line and a final LF, written by <see cref="Utf8JsonWriter"/>
-/// with its default encoder, which writes a <c>"</c> inside a string as <c>"</c>; <c>behaviour</c> is the last member,
+/// with its default encoder, which writes a <c>"</c> inside a string as <c>\u0022</c>; <c>behaviour</c> is the last member,
 /// so its bytes run from the <c>{</c> after the last <c>"behaviour":</c> to the byte before the file's closing <c>}</c>,
 /// and a reader in any language checks the hash over that range without a JSON serializer. Re-serialising changes the
 /// escapes and so the bytes.</para>
@@ -78,8 +81,8 @@ internal static class ServiceCardWriter
         nameof(DiagnosticKind.UnattributedInteractions)
     ];
 
-    /// <summary>The file's text.</summary>
-    internal static string Write(Graph graph, ServiceCardRun run)
+    /// <summary>The file's text, and the <c>behaviourHash</c> it carries, which <c>Run.json</c> carries too.</summary>
+    internal static ServiceCardFile Write(Graph graph, ServiceCardRun run)
     {
         var behaviour = Behaviour(graph);
         var hash = Convert.ToHexStringLower(SHA256.HashData(behaviour));
@@ -96,7 +99,7 @@ internal static class ServiceCardWriter
             writer.WriteEndObject();
         }
 
-        return Encoding.UTF8.GetString(buffer.WrittenSpan) + "\n";
+        return new ServiceCardFile(Encoding.UTF8.GetString(buffer.WrittenSpan) + "\n", hash);
     }
 
     /// <summary>The <c>behaviour</c> member's bytes, as the file holds them.</summary>

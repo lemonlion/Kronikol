@@ -260,6 +260,19 @@ public class CardCommandTests : IDisposable
         Assert.DoesNotContain(browser, o => exposed.Contains(o.GetProperty("op").GetString()));
     }
 
+    // 5.4.4: for each run of 5.3.2, the card its run end wrote is the one the command writes from its data file, byte for
+    // byte. Every run here also writes the root background block's outbox call.
+    [Theory]
+    [InlineData(false, null, false, false)]
+    [InlineData(false, "breakfast-provider", true, false)]
+    [InlineData(true, null, true, true)]
+    public void The_run_ends_card_is_the_one_the_command_writes(bool json, string? serviceId, bool observeTheClient, bool userActions)
+    {
+        WriteRun(_directory, json, serviceId, observeTheClient, userActions);
+
+        Assert.Equal(File.ReadAllText(Path.Combine(_directory, "service.json")), Run(Report()).Out);
+    }
+
     // 5.3.5: the run's id and end from the Run.json beside the report, when it lists the report and is not older than it.
     [Fact]
     public void The_run_id_comes_from_the_manifest_beside_the_report_that_lists_it()

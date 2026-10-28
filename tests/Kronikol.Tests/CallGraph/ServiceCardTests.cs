@@ -21,7 +21,7 @@ public class ServiceCardTests
 
     internal static string Card(Graph graph, ServiceCardRun? run = null)
     {
-        var text = ServiceCardWriter.Write(graph, run ?? ServiceCardRun.Empty);
+        var text = ServiceCardWriter.Write(graph, run ?? ServiceCardRun.Empty).Text;
         AssertHashHolds(text);
         return text;
     }

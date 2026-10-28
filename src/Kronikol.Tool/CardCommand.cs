@@ -80,7 +80,7 @@ internal static class CardCommand
                 return refused;
 
             var (id, at) = ServiceCard.RunBeside(index);
-            card = ServiceCard.Build(index, id, at);
+            card = ServiceCard.Build(index, id, at).Text;
         }
         catch (Exception exception) when (QueryWriter.IsAWriteFailure(exception))
         {

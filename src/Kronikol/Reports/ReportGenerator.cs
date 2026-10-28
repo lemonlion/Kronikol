@@ -710,6 +710,23 @@ public static class ReportGenerator
         if (options.GenerateTestRunReportData && written.Contains($"{options.HtmlTestRunReportFileName}.{testRunDataExtension}"))
             RunRotation.RemoveReplacedDataFile(reportsDir, options.HtmlTestRunReportFileName, testRunDataExtension);
 
+        // The service card, read from the data file the list has just written, so it is the card `kronikol card` writes
+        // from that file and never what the run observed and did not write (plans/SERVICE_CARD_PLAN.md 4.5, Q15). After
+        // the list, which writes the data file in parallel with everything else; with no JSON data file there is nothing
+        // it is a function of, and like query.cs it is skipped without a word.
+        RunManifestServiceCard? serviceCard = null;
+        var dataFileName = $"{options.HtmlTestRunReportFileName}.{testRunDataExtension}";
+        if (options.GenerateServiceCard && options.GenerateTestRunReportData && options.TestRunReportDataFormat == DataFormat.Json && written.Contains(dataFileName))
+        {
+            RunIsolated(ServiceCardWriter.FileName, () =>
+            {
+                using var index = Query.ReportScanner.Scan(Path.Combine(reportsDir, dataFileName));
+                var card = ServiceCard.Build(index, runId, ServiceCard.Instant(runEndedAt));
+                WriteFile(card.Text, ServiceCardWriter.FileName);
+                serviceCard = new RunManifestServiceCard(ServiceCardWriter.FileName, card.BehaviourHash);
+            });
+        }
+
         // After every output is on disk: a run whose report failed to write still has its fragment, and a
         // ledger that stays locked past the retry budget costs a diagnostic, never the run.
         history?.Append();
@@ -810,7 +827,8 @@ public static class ReportGenerator
             Failed = features.Sum(f => (f.Scenarios ?? []).Count(s => s.Result == ExecutionResult.Failed && !s.NotATest)),
             Partial = history?.Run.Partial,
             KronikolVersion = KronikolVersion,
-            ServiceId = parties.ServiceId
+            ServiceId = parties.ServiceId,
+            ServiceCard = serviceCard
         });
 
         if (options.PublishCiArtifacts)
@@ -888,6 +906,10 @@ public static class ReportGenerator
         }
         if (options.GenerateCtrfReport)
             planned.Add(CtrfReportGenerator.FileName);
+        // Whenever the switch is on, whatever the data file: an earlier run's card is that run's to keep, never left on
+        // top beside a report it does not describe.
+        if (options.GenerateServiceCard)
+            planned.Add(ServiceCardWriter.FileName);
         if (options.GenerateHistoryFragment && history is not null)
             planned.Add(HistoryFormat.FragmentFileName);
         if (options.GenerateComponentDiagram)

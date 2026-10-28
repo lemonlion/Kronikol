@@ -29,7 +29,7 @@ public static class MergedRunOutputs
     /// <param name="report">The merged report.</param>
     /// <param name="htmlPath">Where the merged HTML was written. Every other file lands in its directory, and takes its base name wherever a name is derived from the report's.</param>
     /// <param name="dataFilePath">Where the merged data file was written, or null when it was not - in which case there is nothing for a schema to describe and nothing for <c>kronikol query</c> to open.</param>
-    /// <param name="options">The switches a run honours for the same outputs: <see cref="ReportConfigurationOptions.GenerateFailuresDigest"/>, <see cref="ReportConfigurationOptions.WriteAgentInstructions"/>, <see cref="ReportConfigurationOptions.WriteQueryScript"/>, <see cref="ReportConfigurationOptions.GenerateTestRunReportSchema"/>, <see cref="ReportConfigurationOptions.WriteCiSummary"/>, <see cref="ReportConfigurationOptions.WriteCiDebugSection"/>, <see cref="ReportConfigurationOptions.PublishCiArtifacts"/> and <see cref="ReportConfigurationOptions.WriteRunSummaryToConsole"/>.</param>
+    /// <param name="options">The switches a run honours for the same outputs: <see cref="ReportConfigurationOptions.GenerateFailuresDigest"/>, <see cref="ReportConfigurationOptions.WriteAgentInstructions"/>, <see cref="ReportConfigurationOptions.WriteQueryScript"/>, <see cref="ReportConfigurationOptions.GenerateTestRunReportSchema"/>, <see cref="ReportConfigurationOptions.GenerateServiceCard"/>, <see cref="ReportConfigurationOptions.WriteCiSummary"/>, <see cref="ReportConfigurationOptions.WriteCiDebugSection"/>, <see cref="ReportConfigurationOptions.PublishCiArtifacts"/> and <see cref="ReportConfigurationOptions.WriteRunSummaryToConsole"/>.</param>
     /// <param name="output">Where the pointer and any CI workflow commands go: the merge's stdout, which a CI step owns in a way the library under a test runner never does.</param>
     /// <param name="error">Where an output that could not be written is reported.</param>
     /// <param name="getEnvironmentVariable">The environment the CI detection and the CI writers read; the process's own when null.</param>
@@ -117,6 +117,17 @@ public static class MergedRunOutputs
             else
                 Attempt(QueryScriptGenerator.FileName, () => QueryScriptGenerator.Write(directory, QueryScriptGenerator.Build(directory),
                     text => File.WriteAllText(Path.Combine(directory, QueryScriptGenerator.FileName), text)));
+        }
+
+        // The card of the merged data file, as `kronikol card` writes it from that file: one card for all the shards.
+        if (options.GenerateServiceCard && dataFilePath is not null)
+        {
+            Attempt(ServiceCardWriter.FileName, () =>
+            {
+                using var index = Query.ReportScanner.Scan(dataFilePath);
+                var (runId, runAt) = ServiceCard.RunBeside(index);
+                File.WriteAllText(Path.Combine(directory, ServiceCardWriter.FileName), ServiceCard.Build(index, runId, runAt).Text);
+            });
         }
 
         if (options.GenerateTestRunReportSchema && dataFilePath is not null)

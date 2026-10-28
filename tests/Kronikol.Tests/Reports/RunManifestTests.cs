@@ -118,6 +118,55 @@ public class RunManifestTests : IDisposable
         Assert.Null(RunManifest.TryRead(Sample().Write(Directory.CreateDirectory(Path.Combine(_dir, "plain")).FullName))!.ServiceId);
     }
 
+    // #191 R2: the run's service card, after serviceId, written only when the run wrote one.
+    [Fact]
+    public void A_service_card_is_written_after_the_service_id_and_reads_back()
+    {
+        var card = new RunManifestServiceCard("service.json", new string('a', 64));
+        var path = (Sample() with { ServiceId = "breakfast-provider", ServiceCard = card }).Write(_dir);
+
+        using (var json = JsonDocument.Parse(ReportHtml.Read(path)))
+        {
+            Assert.Equal(12, json.RootElement.EnumerateObject().Count());
+            Assert.Equal(["serviceId", "serviceCard"], json.RootElement.EnumerateObject().TakeLast(2).Select(p => p.Name));
+            var written = json.RootElement.GetProperty("serviceCard");
+            Assert.Equal(["file", "behaviourHash"], written.EnumerateObject().Select(p => p.Name));
+            Assert.Equal("service.json", written.GetProperty("file").GetString());
+        }
+        Assert.Equal(card, RunManifest.TryRead(path)!.ServiceCard);
+    }
+
+    // The commonest run under the default: a card and no ServiceId.
+    [Fact]
+    public void A_service_card_with_no_service_id_is_the_eleventh_member()
+    {
+        var path = (Sample() with { ServiceCard = new RunManifestServiceCard("service.json", new string('b', 64)) }).Write(_dir);
+
+        using var json = JsonDocument.Parse(ReportHtml.Read(path));
+        Assert.Equal(11, json.RootElement.EnumerateObject().Count());
+        Assert.Equal("serviceCard", json.RootElement.EnumerateObject().Last().Name);
+    }
+
+    // A serviceCard this build cannot read is no card, never a manifest that cannot say which run it is.
+    [Theory]
+    [InlineData("5")]
+    [InlineData("null")]
+    [InlineData("{}")]
+    [InlineData("{\"file\":\"service.json\"}")]
+    [InlineData("{\"file\":7,\"behaviourHash\":\"aa\"}")]
+    [InlineData("{\"file\":\"\",\"behaviourHash\":\"aa\"}")]
+    public void A_malformed_service_card_reads_as_absent(string member)
+    {
+        var path = Sample().Write(_dir);
+        var text = ReportHtml.Read(path).TrimEnd();
+        File.WriteAllText(path, text[..^1] + ",\"serviceCard\":" + member + "}");
+
+        var manifest = RunManifest.TryRead(path);
+
+        Assert.NotNull(manifest);
+        Assert.Null(manifest.ServiceCard);
+    }
+
     [Fact]
     public void A_manifest_reads_back_as_it_was_written()
     {

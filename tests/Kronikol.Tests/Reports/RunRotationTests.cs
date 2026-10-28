@@ -186,7 +186,7 @@ public class RunRotationTests : IDisposable
         Assert.Equal("local:second:1", Manifest().Run);
         Assert.Equal(0, Manifest().Failed);
         Assert.Equal(
-            ["AGENTS.md", "CLAUDE.md", "Failures.jsonl", "Failures.md", "History.run.json", "Run.json", "TestRunReport.html", "TestRunReport.krkl", "TestRunReport.labs.html", "query.cs"],
+            ["AGENTS.md", "CLAUDE.md", "Failures.jsonl", "Failures.md", "History.run.json", "Run.json", "TestRunReport.html", "TestRunReport.krkl", "TestRunReport.labs.html", "query.cs", "service.json"],
             TopLevel(Reports));
     }
 
@@ -410,7 +410,7 @@ public class RunRotationTests : IDisposable
 
         Assert.False(Directory.Exists(Runs), "nothing is rotated at KeepRuns = 0");
         Assert.Equal(
-            ["AGENTS.md", "CLAUDE.md", "Failures.jsonl", "Failures.md", "Run.json", "TestRunReport.html", "TestRunReport.krkl", "query.cs"],
+            ["AGENTS.md", "CLAUDE.md", "Failures.jsonl", "Failures.md", "Run.json", "TestRunReport.html", "TestRunReport.krkl", "query.cs", "service.json"],
             TopLevel(Reports));
         Assert.Equal(LocalId(2), Manifest().Run);
     }
@@ -516,7 +516,7 @@ public class RunRotationTests : IDisposable
         File.WriteAllText(Path.Combine(Reports, "notes.txt"), "somebody's own file");
         Directory.CreateDirectory(Path.Combine(Reports, "attachments"));
         File.WriteAllText(Path.Combine(Reports, "attachments", "old.png"), "from the old run");
-        var old = Snapshot(Reports, "TestRunReport.krkl", "TestRunReport.html", "Failures.md", "Failures.jsonl");
+        var old = Snapshot(Reports, "TestRunReport.krkl", "TestRunReport.html", "Failures.md", "Failures.jsonl", "service.json");
         var stamp = File.GetLastWriteTimeUtc(Path.Combine(Reports, "TestRunReport.krkl"));
 
         Run(ExecutionResult.Passed);
@@ -540,6 +540,8 @@ public class RunRotationTests : IDisposable
         Assert.Equal(1, manifest.Failed);
         Assert.Equal(2, manifest.Scenarios);
         Assert.Equal(old.Keys.Order(StringComparer.Ordinal).ToArray(), manifest.Files.Order(StringComparer.Ordinal).ToArray());
+        // Its card moved with it, but only a run's own manifest says a card is that run's: the rebuilt one does not.
+        Assert.Null(manifest.ServiceCard);
         Assert.Equal([retained], ReportFolders.RetainedRuns(Reports).Select(r => r.Directory).ToArray());
 
         // Never again: the next rotation reads the manifest the run above wrote.
@@ -611,6 +613,8 @@ public class RunRotationTests : IDisposable
 
         var killed = Path.Combine(Runs, name);
         Assert.True(File.Exists(Path.Combine(killed, "TestRunReport.krkl")));
+        // the card it wrote after its outputs goes with it (PlannedFiles), never left on top for the next run's report
+        Assert.True(File.Exists(Path.Combine(killed, "service.json")));
         Assert.False(File.Exists(Path.Combine(killed, RunManifest.FileName)));
         Assert.Equal([killed], ReportFolders.Unfinished(Reports));
         Assert.Empty(ReportFolders.RetainedRuns(Reports));
@@ -1049,7 +1053,7 @@ public class RunRotationTests : IDisposable
 
         Assert.Equal("not Kronikol's", ReportHtml.Read(outside));
         Assert.Equal([LocalName(1)], RetainedNames());
-        Assert.Equal(["Failures.jsonl", "Failures.md", "Run.json", "TestRunReport.html", "TestRunReport.krkl"], TopLevel(Path.Combine(Runs, LocalName(1))));
+        Assert.Equal(["Failures.jsonl", "Failures.md", "Run.json", "TestRunReport.html", "TestRunReport.krkl", "service.json"], TopLevel(Path.Combine(Runs, LocalName(1))));
         Assert.True(File.Exists(Path.Combine(Reports, "CLAUDE.md")));
     }
 

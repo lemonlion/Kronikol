@@ -18,8 +18,8 @@ namespace Kronikol.Reports;
 /// </summary>
 internal static class ServiceCard
 {
-    /// <summary>The card of a scanned report, as the file's text. <paramref name="runId"/> and <paramref name="runAt"/> are its run's, or null.</summary>
-    internal static string Build(ReportIndex index, string? runId, string? runAt) =>
+    /// <summary>The card of a scanned report: the file's text and its hash. <paramref name="runId"/> and <paramref name="runAt"/> are its run's, or null.</summary>
+    internal static ServiceCardFile Build(ReportIndex index, string? runId, string? runAt) =>
         ServiceCardWriter.Write(GraphOf(index), RunOf(index, runId, runAt));
 
     /// <summary>The call graph of a scanned report: every scenario's calls and the root background block's.</summary>
@@ -181,7 +181,8 @@ internal static class ServiceCard
         }
     }
 
-    private static string Instant(DateTimeOffset at) => at.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
+    /// <summary>An instant as Run.json and the card write it, to the second in UTC.</summary>
+    internal static string Instant(DateTimeOffset at) => at.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
 
     private static string? Trimmed(string? value) => string.IsNullOrEmpty(value) ? null : value;
 }

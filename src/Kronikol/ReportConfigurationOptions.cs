@@ -400,6 +400,16 @@ public record ReportConfigurationOptions
     public bool GenerateCtrfReport { get; set; }
 
     /// <summary>
+    /// When <c>true</c>, writes <c>service.json</c> next to the report: the run's service card, which says what the
+    /// service did in the run (its parties, every operation between them with its statuses, and whether each call was
+    /// the test's, made while serving a request, or made in the background) in one small file a service catalogue or
+    /// an indexer reads without the report. It is written from the data file this run has just written, so it is the
+    /// card <c>kronikol card</c> writes from that file, and <c>Run.json</c> carries its <c>behaviourHash</c>. A run whose
+    /// data file is off or written as XML writes none. Default: <c>true</c>.
+    /// </summary>
+    public bool GenerateServiceCard { get; set; } = true;
+
+    /// <summary>
     /// When <c>true</c>, writes <c>&lt;YamlSpecificationsFileName&gt;.md</c> next to the report: the
     /// specification as prose — every feature, rule, scenario and step, with no result, no duration, no
     /// interaction and no diagram. The same suite run red and run green produces the same bytes, which is
