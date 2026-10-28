@@ -1329,6 +1329,10 @@ minors over one on 2026-10-28.
   `run.id` and `run.at` null, and ingest writes one through the run end. Measured: the card adds 148 ms to the end of a
   2,000-scenario run of 685 ms (`ServiceCardRunEndTests`, budget 1,000 ms scaled by contention). Mutations: ten,
   each applied alone, and each failed a fact (`results/impl-mutations.txt`).
+- 2026-10-28: Q7 answered by the owner at R1's release: file the one Kronikol4J issue. Filed as
+  lemonlion/Kronikol4J#1 after 5.21.0 and 5.22.0 were pushed: calls in fragments and a merged data file, the data
+  file's root members (`formatVersion`, `suite`, `ciMetadata`, `environment`, `background`) and `attributionSource`
+  on calls, each cited at the port's main (`2011650`). The plan is complete; #191 is closed.
 
 ## Appendix A. Edit sites at `8d7d1e1d`
 
