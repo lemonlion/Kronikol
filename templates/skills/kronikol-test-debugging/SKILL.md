@@ -217,6 +217,8 @@ matters.
   - `! … is an address, not text` (`grep`) — the positional you gave `grep` is a search
     TERM, and the thing you pasted is an address. `grep` did search for it literally and did not find it;
     that is not evidence the scenario is absent. Use the verb the line names.
+  - `! not searched: headers, notes` (`grep --count`, on stderr) — the count covers the default targets
+    only, so a 0 is not proof the value is absent from a header or a note. Add `--in` with them to count there.
   - `! a scenario listing has no per-step form` (`scenarios`) and `! the failure digest is per scenario`
     (`failures`) — you gave a step address to a verb that answers per scenario. It scoped to the
     scenario, which is the nearest true answer, and the line names the verb that answers for the step.

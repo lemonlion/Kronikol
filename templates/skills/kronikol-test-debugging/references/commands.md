@@ -473,7 +473,7 @@ asked, and because both are already in the index and open no payload.
 An unknown target exits 2 rather than searching nothing — a silently dropped `--in bodys` would have read
 exactly like proof the value is absent — and so does an empty one (`--in ""`, `--in ,`), which is what you
 get from joining a list that came back empty. Every paging footer carries `--in` and `--values` forward, so
-the command in a `next:` line continues the search you asked for rather than the default one.
+the command in a `next:` line continues the search you asked for rather than the default one. `--count` over the default targets names what it did not search on stderr (`! not searched: headers, notes`), so a 0 there is not proof of absence from a header (5.26.0).
 
 `--values` names the JSON path a match came from: `s3/i47  $.data.customers[2].total = 4173`. This is the
 command for "the number on screen is wrong" — it finds where the number entered the system.

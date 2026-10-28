@@ -4,6 +4,34 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.26.0] - 2026-10-28
+
+The minor part moves (5.25.0 to 5.26.0): `summary --json` gains every diagnostic of each kind (#183), and
+`grep --count` says on stderr what it did not search (#182, a fix). `plans/QUERY_FOR_PROGRAMS_PLAN.md` R4, the plan's
+last release.
+
+### Added
+
+- **`summary --json` lists every diagnostic** (#183). Each `diagnostics` group keeps `kind`, `count` and `message`
+  (the first) and gains `entries`: every diagnostic of the kind, with its `message`, and the scenario's `id` and its
+  address as `scenario` when it names one (`null` where it names none, or names an id two scenarios carry). A host
+  checking its capture saw one of its two degraded taps. The text and the `!` notes stay one line a kind, and say
+  where the rest are (`summary --json lists all N`) when a kind was recorded more than once.
+
+### Fixed
+
+- **`grep --count` over the default targets says what it did not search** (#182): `! not searched: headers, notes
+  (--in ... widens it)` on stderr, and stdout stays one number. A count of 0 read as proof that a credential in a
+  header was absent. Putting headers into the default would change existing counts, so it waits for a major.
+
+### Documentation
+
+- Wiki `Querying-Reports.md`: the diagnostics roll-up and `grep --count`. The skill, both copies.
+
+### Tests
+
+- `QueryCompletenessTests` (3 facts, All three were red on 5.25.0). Checks: the core suite (11,411 passed, 2 skipped; a first run's two failures were this release's own, the skill not yet explaining the new stderr line and a merge fact pinning the old note's end, both fixed), and the three new facts run against 5.25.0's tree (all three failed).
+
 ## [5.25.0] - 2026-10-28
 
 The minor part moves (5.24.0 to 5.25.0): `kronikol query`'s `--json` error envelope gains `error.kind`, and

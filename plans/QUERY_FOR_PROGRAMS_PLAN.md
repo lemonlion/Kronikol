@@ -1,6 +1,6 @@
 # Query for programs: a run read by the keys its producer holds (#184)
 
-**Status:** green-lit. Written 2026-10-28 against 5.19.0 and audited the same day against 5.20.0 (`69ed51a7`);
+**Status:** executed: R1 as 5.23.0, R2 as 5.24.0, R3 as 5.25.0 and R4 as 5.26.0, all on 2026-10-28 (section 11). Written 2026-10-28 against 5.19.0 and audited the same day against 5.20.0 (`69ed51a7`);
 section 10 records what the audit changed. The same day the owner asked for the plan to be implemented in full and
 took every recommendation in section 8, so R4 is in (Q1) and the scenario row is made whole (Q2). Every line reference
 is to `69ed51a7` unless it names another revision. The wiki references are to `Kronikol.wiki` `28724ec`. The plan
@@ -541,3 +541,14 @@ The owner asked on 2026-10-28 for the plan to be implemented in full and took ev
   engine's words (`No `, `carries no`, `is not in`, `is not retained`, `: no run`), not only on `No ` as planned;
   three vacuity rows prove it finds one.
 - **Checks.** The core suite (11,408 passed, 2 skipped), the query tool's tests after the rewrite of about 150 refusal sites (1,400 passed), and the sixteen new cases run against 5.24.0's tree (thirteen failed, one of them by not compiling; the source scan's three vacuity rows pass on both, as they should)
+
+### R4, 5.26.0
+
+- **As designed.** `summary --json`'s diagnostics groups keep `kind`, `count` and `message` and gain `entries`, each
+  with its `message`, the scenario's `id` and its address as `scenario` (null where a diagnostic names no scenario,
+  or names an id two scenarios carry). The text line of a kind recorded more than once, and the `!` note above an
+  answer, say `summary --json lists all N`. `grep --count` over the default targets, and its numeric form, say on
+  stderr which targets were not searched, through the verb's note sink, so stdout stays one number; `--in` given
+  says nothing, since the caller chose.
+- **#182, #183 and #184** are closed with this release, the plan's last.
+- **Checks.** The core suite (11,411 passed, 2 skipped; a first run's two failures were this release's own, the skill not yet explaining the new stderr line and a merge fact pinning the old note's end, both fixed), and the three new facts run against 5.25.0's tree (all three failed)

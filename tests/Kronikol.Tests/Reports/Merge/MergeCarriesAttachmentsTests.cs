@@ -244,6 +244,6 @@ public class MergeCarriesAttachmentsTests : IDisposable
 
         var line = Assert.Single(output.ToString().Split('\n'), l => l.StartsWith("! ", StringComparison.Ordinal) && l.Contains("attachment(s) are not in the report", StringComparison.Ordinal)).TrimEnd('\r');
         Assert.StartsWith("! 2 attachment(s) are not in the report: 2 not found when the report was drawn: ", line, StringComparison.Ordinal);
-        Assert.EndsWith("(×2)", line, StringComparison.Ordinal);
+        Assert.EndsWith("(×2; summary --json lists all 2)", line, StringComparison.Ordinal);
     }
 }
