@@ -521,3 +521,23 @@ The owner asked on 2026-10-28 for the plan to be implemented in full and took ev
   universal `--out`), so a large run's `--json` list of written files can be cut; `--max-bytes 0` lifts it, and the
   files are written either way.
 - **Checks.** The core suite (11,392 passed, 2 skipped), the ten new facts run against 5.23.0's tree (nine failed; the tenth holds the single-diagram behaviour that does not change), and the verb table, skill and describe facts
+
+### R3, 5.25.0
+
+- **As designed, with every refusal naming its kind.** `error.kind` sits after `hint` in the envelope; `RefusalKinds`
+  holds the seven, `Refuse` writes a refusal's first line and records its kind, and an exit with no named kind falls
+  back to `usage` (2) or `unreadable` (1). The plan asked for the non-default kinds to be marked; the execution went
+  further and gave every classified refusal its kind (about 150 sites, from a hand classification of the inventory
+  in `results/refusals-classified.tsv`), so a reader sees the kind at the site.
+- **What the classification changed.** Four sites have a kind that depends on the branch taken (a `sid:` in a report
+  with no stableIds is `unsupported`, not `notFound`; a trace prefix in a report with no trace ids likewise; a run
+  lookup matching none is `notFound` and several `ambiguous`). A file that is not a Kronikol report is `noReport` at
+  exit 1, and `diff`'s second report exits 1 on every refusal, so `--describe`'s `errorKinds` pins no exit code per
+  kind. A note said before the refusal (two reports in one folder, a pairing problem) had been the envelope's
+  `message`; `Refuse` records the refusal's own line and the envelope puts it first, the rest going to `hint`. A
+  `--run` lookup that refused into a scratch writer and then succeeded through the kept runs left its kind behind;
+  the resolver puts it back.
+- **The source scan** fails on a refusal written straight to the error writer that says something is missing in the
+  engine's words (`No `, `carries no`, `is not in`, `is not retained`, `: no run`), not only on `No ` as planned;
+  three vacuity rows prove it finds one.
+- **Checks.** The core suite (11,408 passed, 2 skipped), the query tool's tests after the rewrite of about 150 refusal sites (1,400 passed), and the sixteen new cases run against 5.24.0's tree (thirteen failed, one of them by not compiling; the source scan's three vacuity rows pass on both, as they should)

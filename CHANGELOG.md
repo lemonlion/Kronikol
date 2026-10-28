@@ -4,6 +4,40 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.25.0] - 2026-10-28
+
+The minor part moves (5.24.0 to 5.25.0): `kronikol query`'s `--json` error envelope gains `error.kind`, and
+`--describe` gains `errorKinds` (#184, `plans/QUERY_FOR_PROGRAMS_PLAN.md` R3).
+
+### Added
+
+- **`error.kind` says what a refusal was**, so a program branches on it rather than on the prose (#184). Bad usage, a
+  scenario or call the report does not hold, and a path with no report all exit 2, and the envelope carried only
+  `exitCode`, `message` and `hint`. `kind` is one of `usage`, `notFound`, `ambiguous` (a `sid:` or `id:` two scenarios
+  carry, a directory with several reports, a prefix several matches share), `noReport` (no such file, no report under
+  the directory, or a file that is not a Kronikol report), `unsupported` (the report or environment cannot answer:
+  history switched off, a report written before what the verb reads), `unreadable` and `writeFailed`. Every refusal
+  the engine writes names its kind, from an inventory of its messages; one that names none takes its exit code's
+  (`usage` for 2, `unreadable` for 1). The exit codes do not change. `--describe` lists the kinds as `errorKinds`, and
+  its envelope description names `kind`.
+
+### Fixed
+
+- **The envelope's `message` is the refusal's own line.** It was the first line written to the error writer, so a line
+  said on the way, such as which of two reports in a folder was read or why a call did not pair, came out as the
+  message and the refusal as part of the hint. Text output is unchanged.
+
+### Documentation
+
+- Wiki `Querying-Reports.md`: the error envelope example and the exit codes section, with the kinds. The skill's `--json`
+  notes, in both copies.
+
+### Tests
+
+- `QueryErrorKindTests` (16 facts): one per kind through `Run` with `--json`, the fallbacks, every other envelope
+  member and the text answer unchanged, `--describe`, and a source scan that fails on a refusal saying something is
+  missing that does not name its kind, with facts proving the scan finds one. Thirteen, one of them by not compiling, were red on 5.24.0. Checks: the core suite (11,408 passed, 2 skipped), the query tool's tests after the rewrite of about 150 refusal sites (1,400 passed), and the sixteen new cases run against 5.24.0's tree (thirteen failed, one of them by not compiling; the source scan's three vacuity rows pass on both, as they should).
+
 ## [5.24.0] - 2026-10-28
 
 The minor part moves (5.23.0 to 5.24.0): `kronikol query diagram` gains three forms and a `--json` answer (#184,

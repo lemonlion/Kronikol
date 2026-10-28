@@ -100,8 +100,9 @@ belongs to both and means different things — a scenario name on `scenarios`, a
 - Row caps still apply (25 for `failures`, 120 for `interactions` rows, 200 elsewhere), so `total` can
   exceed what one page returns whatever `--limit` says.
 - Errors: plain text on stderr, exit 2 for usage and 1 for a read failure. Under `--json` stdout also
-  carries an envelope with an `error` member — `{ exitCode, message, hint }` beside empty `items` — so a
-  wrapper parses JSON on both paths; in text mode nothing is written to stdout on a non-zero exit.
+  carries an envelope with an `error` member — `{ exitCode, message, hint, kind }` beside empty `items` — so a
+  wrapper parses JSON on both paths; in text mode nothing is written to stdout on a non-zero exit. `kind` (5.25.0) is
+  `usage` (the command was used wrongly), `notFound` (a well-formed name the report does not hold), `ambiguous` (a name several things answer to), `noReport` (no report where one was named, or a file that is not one), `unsupported` (the report or environment cannot answer: history off, a report written before what the verb reads), `unreadable` and `writeFailed`: branch on it, not on the prose, since five of them share exit 2.
 
 ## Overview
 
