@@ -1,0 +1,45 @@
+Report diagnostics: 4 log entries across 2 test(s).
+Kronikol: reports written to <probe>\run1\out  (TestRunReport.html · TestRunReport.krkl · Failures.md · TestRunReport.labs.html)
+  1 failed — kronikol query failures <probe>\run1\out
+    7b41a99eb768004c  Orders › Lists orders
+  agents: read <probe>\run1\out\CLAUDE.md first; never open TestRunReport.krkl
+  no tool: dotnet run --file <probe>\run1\out\query.cs -- failures <probe>\run1\out
+$ query grep needle-in-a-header --count   (exit 0)
+0
+[stderr] ! tap-a: 3 oversize payload(s) streamed past (×2)
+
+$ query summary --json   (exit 0)
+{"formatVersion":1,"command":"summary","report":"<probe>\\run1\\out\\TestRunReport.krkl","kronikolVersion":"5.19.0\u002Be21bd1030366e6e6fbd4c1507d4699b890ae229f","notes":["! tap-a: 3 oversize payload(s) streamed past (\u00D72)"],"run":{"file":"TestRunReport.krkl","sizeBytes":1289,"jsonBytes":4589,"startTime":"2026-01-01T10:00:00Z","endTime":"2026-01-01T10:00:03Z","scenarios":2,"failed":1,"interactions":4,"distinctBodies":1,"ci":null},"failed":[{"address":"s1","stableId":"7b41a99eb768004c","feature":"Orders","scenario":"Lists orders","errorMessage":null}],"failedTotal":1,"slowest":[{"address":"s0","durationSeconds":1,"scenario":"Lists orders"},{"address":"s1","durationSeconds":1,"scenario":"Lists orders"}],"diagnostics":[{"kind":"CaptureDegraded","count":2,"message":"tap-a: 3 oversize payload(s) streamed past"}],"items":[{"feature":"Orders","total":2,"passed":1,"failed":1,"skipped":0,"bypassed":0}],"total":null,"truncated":null,"next":null,"error":null}
+
+$ query scenarios --json   (exit 0)
+{"formatVersion":1,"command":"scenarios","report":"<probe>\\run1\\out\\TestRunReport.krkl","kronikolVersion":"5.19.0\u002Be21bd1030366e6e6fbd4c1507d4699b890ae229f","notes":["! tap-a: 3 oversize payload(s) streamed past (\u00D72)"],"items":[{"address":"s0","stableId":"7b41a99eb768004c","feature":"Orders","scenario":"Lists orders","result":"Passed","failed":false,"durationSeconds":1,"interactions":2,"errorMessage":null,"attempt":null,"stableIdShared":2,"tags":[],"exampleValues":{}},{"address":"s1","stableId":"7b41a99eb768004c","feature":"Orders","scenario":"Lists orders","result":"Failed","failed":true,"durationSeconds":1,"interactions":2,"errorMessage":null,"attempt":null,"stableIdShared":2,"tags":[],"exampleValues":{}}],"total":2,"truncated":null,"next":null,"error":null}
+
+$ query interactions s0 --json   (exit 0)
+{"formatVersion":1,"command":"interactions","report":"<probe>\\run1\\out\\TestRunReport.krkl","kronikolVersion":"5.19.0\u002Be21bd1030366e6e6fbd4c1507d4699b890ae229f","notes":["! tap-a: 3 oversize payload(s) streamed past (\u00D72)"],"items":[{"address":"s0/i0","scenario":"s0","service":"orders-api","caller":"orders-ui","method":"GET","uri":"http://orders-api/orders","summary":"GET /orders","status":"OK","statusCode":null,"durationMs":10,"stepPath":null,"request":{"bodyHash":null,"bodyLength":0},"response":{"bodyHash":"b:97d170e1","bodyLength":2}}],"total":1,"truncated":null,"next":null,"error":null}
+
+$ query diagram s0/d0 --out <probe>\run1\d0.puml   (exit 0)
+! tap-a: 3 oversize payload(s) streamed past (×2)
+wrote 1.1 KB → <probe>\run1\d0.puml
+flow s0 says the same thing in a fraction of the bytes
+
+$ query diagram s0/d1 --out <probe>\run1\d1.puml   (exit 2)
+
+[stderr] No diagram d1 in s0 — it has 1.
+
+$ query diagram s0 --out <probe>\run1   (exit 2)
+
+[stderr] Which diagram? Pass s3/d0.
+
+$ query steps id:0af7651916cd43dd8448eb211c80319c   (exit 2)
+
+[stderr] Not an address: id:0af7651916cd43dd8448eb211c80319c
+
+$ query steps s9   (exit 2)
+
+[stderr] No scenario s9 — the report has 2 (s0-s1).
+
+$ query bogusverb   (exit 2)
+
+[stderr] Unknown query command: bogusverb
+Run 'kronikol query --help' for the list.
+

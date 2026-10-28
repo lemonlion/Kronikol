@@ -1,0 +1,9 @@
+steps         exit 2  2 scenarios share stableId 7b41a99eb768004c (a repeated row, or a retry) — name the one you mean:
+flow          exit 2  2 scenarios share stableId 7b41a99eb768004c (a repeated row, or a retry) — name the one you mean:
+interactions  exit 2  2 scenarios share stableId 7b41a99eb768004c (a repeated row, or a retry) — name the one you mean:
+services      exit 2  Not a scenario address: sid:7b41a99eb768004c (expected s3)
+parties       exit 2  Not a scenario address: sid:7b41a99eb768004c (expected s3)
+values        exit 2  values needs a path: kronikol query values <report> --path '$.status' [s3] [--service X] [--stats] [--request|--both]
+diagram       exit 2  Which diagram? Pass s3/d0.
+failures      exit 2  2 scenarios share stableId 7b41a99eb768004c (a repeated row, or a retry) — name the one you mean:
+scenarios     exit 2  2 scenarios share stableId 7b41a99eb768004c (a repeated row, or a retry) — name the one you mean:

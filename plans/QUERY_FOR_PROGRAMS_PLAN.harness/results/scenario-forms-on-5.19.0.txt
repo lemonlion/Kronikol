@@ -1,0 +1,22 @@
+Report diagnostics: 4 log entries across 2 test(s).
+Kronikol: reports written to <probe>\run2\out  (TestRunReport.html · TestRunReport.krkl · Failures.md)
+$ query scenarios --json                                 exit 0  {"formatVersion":1,"command":"scenarios","report":"<probe>\\run2\\out\\TestRunReport.krkl","kronikolVersion":"5.19.0\u002Be21bd1030366e6e6fbd4c1507d4699b890ae229f","notes":[],"items":[{"address":"s0","stableId":"423dbca40476979b","feature":"Orders","scenario":"Lists orders","result":"Passed","failed":false,"durationSeconds":1,"interactions":2,"errorMessage":null,"attempt":null,"stableIdShared":1,"tags":[],"exampleValues":{}},{"address":"s1","stableId":"2f9d8f82e8edf4ce","feature":"Orders","scenario":"Cancels an order","result":"Passed","failed":false,"durationSeconds":1,"interactions":2,"errorMessage":null,"attempt":null,"stableIdShared":1,"tags":[],"exampleValues":{}}],"total":2,"truncated":null,"next":null,"error":null}
+s0 is sid:423dbca40476979b
+$ query steps sid:423dbca40476979b                       exit 0  s0  Orders › Lists orders  [Passed]  1s
+$ query flow sid:423dbca40476979b                        exit 0  s0  Lists orders  [Passed]
+$ query interactions sid:423dbca40476979b                exit 0  s0/i0     orders-api       GET /orders                                                    OK        10 ms  → 17 B b:47719175
+$ query failures sid:423dbca40476979b                    exit 0  nothing failed
+$ query scenarios sid:423dbca40476979b                   exit 0  s0    pass      1s     1 calls  Lists orders
+$ query annotations sid:423dbca40476979b                 exit 0  no annotations
+$ query attachments sid:423dbca40476979b                 exit 0  s0 has no attachments, of its own or on its steps
+$ query assertions sid:423dbca40476979b                  exit 0  this report tracks no assertions
+$ query repro sid:423dbca40476979b                       exit 0  s0  Orders › Lists orders  [Passed]
+$ query services sid:423dbca40476979b                    exit 2  [stderr] Not a scenario address: sid:423dbca40476979b (expected s3)
+$ query parties sid:423dbca40476979b                     exit 2  [stderr] Not a scenario address: sid:423dbca40476979b (expected s3)
+$ query values --path $.status sid:423dbca40476979b      exit 2  [stderr] Not a scenario address: sid:423dbca40476979b (expected s3, or no address for the whole run)
+$ query values --path $.status s0                        exit 0  $.status across 1 response bodies (1 distinct bodies)
+$ query compare sid:423dbca40476979b s1                  exit 2  [stderr] One of those scenarios is not in this report.
+$ query compare s0 s1                                    exit 0  s0 Lists orders  [Passed]  1s
+$ query compare s0/i0 s1                                 exit 0  s0 Lists orders  [Passed]  1s
+$ query compare b:00000000 s1                            exit 2  [stderr] One of those scenarios is not in this report.
+$ query history sid:423dbca40476979b                     exit 2  [stderr] KRONIKOL_HISTORY=off: history is switched off in this environment. Pass --history <file> to read a ledger anyway.

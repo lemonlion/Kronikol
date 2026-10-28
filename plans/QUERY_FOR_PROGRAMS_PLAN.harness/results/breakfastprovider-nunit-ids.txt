@@ -1,0 +1,8 @@
+kronikolVersion 5.14.0+8d7d1e1d071382a56599f272d1c708119be276a2
+scenarios 212 distinct ids 212 ids used twice+ 0 empty ids 0
+distinct stableIds 212 stableIds shared 0
+id shapes (letters->a, digits->h): [('h-hhhh', 212)]
+chars outside [A-Za-z0-9-]: []
+examples: ['0-1287', '0-1289', '0-1290']
+diagnostics 0 with scenarioId 0
+diagrams per scenario: [(1, 212)]

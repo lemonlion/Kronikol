@@ -1,0 +1,191 @@
+file	line	kind (first guess)	message
+QueryCommand.Diff.cs	30	usage?	Body diff takes two addresses: kronikol query diff <report> s3/i47 s7/i47 (or b:hashes).
+QueryCommand.Diff.cs	37	usage?	A scenario address names no body — 'compare {options.Positional[0]} {options.Positional[1]}' is the command for two scenarios.
+QueryCommand.Diff.cs	38	usage?	diff takes two bodies: s3/i47 s7/i47, or b:hashes ('interactions' prints both on every row).
+QueryCommand.Diff.cs	63	notFound?	No body {address.BodyHash} in this report.
+QueryCommand.Diff.cs	72	notFound?	No scenario s{address.Scenario} — the report has {index.Scenarios.Count}.
+QueryCommand.Diff.cs	78	notFound?	No interaction i{address.Interaction} in {scenario.Address} — it has {scenario.Interactions.Count}.
+QueryCommand.Diff.cs	83	usage?	{address} carries no body — 'interactions {scenario.Address}' shows which calls do.
+QueryCommand.Diff.cs	90	usage?	{address} does not name a body — use s3/i47 or b:hash.
+QueryCommand.Diff.cs	107	usage?	--body takes an interaction address like s3/i47, resolved in the old report.
+QueryCommand.Diff.cs	117	notFound?	No scenario s{address.Scenario} in {leftLabel} — it has {left.Scenarios.Count}.
+QueryCommand.Diff.cs	143	notFound?	No scenario in {rightLabel} with stableId sid:{oldScenario.StableId} ({QueryWriter.OneLine(oldScenario.Name, 60)}).
+QueryCommand.Diff.cs	150	notFound?	No scenario in {rightLabel} at {oldScenario.Address}'s position: neither report has stableIds, so scenarios are matched by position, and {rightLabel} 
+QueryCommand.Diff.cs	163	notFound?	No interaction i{address.Interaction} in {leftLabel} {oldScenario.Address} — it has {oldScenario.Interactions.Count}.
+QueryCommand.Diff.cs	170	usage?	{leftLabel} {oldAddress} carries no body — 'interactions {oldScenario.Address}' shows which calls do.
+QueryCommand.Diff.cs	182	usage?	pairing: 
+QueryCommand.Diff.cs	189	notFound?	{rightLabel} {newAddress} carries no body, so there is nothing to compare {leftLabel} {oldAddress} with.
+QueryCommand.Diff.cs	253	usage?	head + pairing.Reason switch
+QueryCommand.Diff.cs	273	usage?	{match.Address} makes no {oldInteraction.ServiceName} calls.
+QueryCommand.Diff.cs	279	usage?	{match.Address}'s {noun} calls: {rows}
+QueryCommand.Diff.cs	282	hint	`{QueryOptions.Shell([
+QueryCommand.Diff.cs	320	unreadable?	A body could not be read back from the report.
+QueryCommand.GroupBy.cs	44	usage?	Unknown dimension: {dim}
+QueryCommand.GroupBy.cs	45	usage?	Valid dimensions: 
+QueryCommand.GroupBy.cs	50	usage?	--group-by takes a comma list of dimensions: 
+QueryCommand.GroupBy.cs	56	usage?	--group-by: {twice.Key} is named twice; each dimension is one column of a bucket, so name it once.
+QueryCommand.History.cs	20	usage?	{HistoryFormat.EnvironmentVariable}={HistoryFormat.EnvironmentOff}: history is switched off in this environment. Pass --history <file> to read a ledge
+QueryCommand.History.cs	26	notFound?	No history ledger for {Path.GetFileName(index.Path)}: nothing named by --history or ${HistoryFormat.EnvironmentVariable}, and no .kronikol or .git dir
+QueryCommand.History.cs	27	hint	Pass --history <file>, set KRONIKOL_HISTORY, or run kronikol history init in the repository the tests live in.
+QueryCommand.History.cs	36	unreadable?	read.Message ?? $"the ledger at {ledgerPath} could not be read
+QueryCommand.History.cs	96	notFound?	sid:{sid} is not in {Path.GetFileName(index.Path)} — `history {index.Path}` lists what is.
+QueryCommand.History.cs	115	usage?	{HistoryFormat.EnvironmentVariable}={HistoryFormat.EnvironmentOff}: history is switched off in this environment. Pass --history <file> to read a ledge
+QueryCommand.History.cs	121	notFound?	No report given, and no history ledger: nothing named by --history or ${HistoryFormat.EnvironmentVariable}, and no .kronikol or .git directory above {
+QueryCommand.History.cs	122	hint	Pass a TestRunReport.json or TestRunReport.krkl (or a directory holding one), or --history <file> to read a ledger without a report.
+QueryCommand.History.cs	129	unreadable?	read.Message ?? $"the ledger at {ledgerPath} could not be read
+QueryCommand.History.cs	135	notFound?	No report given, and no run is recorded in {ledgerPath}.
+QueryCommand.History.cs	136	hint	Pass a TestRunReport.json or TestRunReport.krkl (or a directory holding one); a ledger answers on its own once a run has been recorded.
+QueryCommand.History.cs	145	notFound?	No suite {named} in {ledgerPath}. It holds: {string.Join(
+QueryCommand.History.cs	156	usage?	{ledgerPath} holds {ledger.Suites.Count} suites — name one with --suite: {string.Join(
+QueryCommand.History.cs	175	notFound?	No run of {suite ?? 
+QueryCommand.History.cs	190	usage?	The ledger has run {run.Id} but not its roster ({run.RosterHash}) — kronikol history verify says what else is missing.
+QueryCommand.History.cs	212	notFound?	sid:{sid} is not in run {run.Id} — `history --run {run.Id}` lists what is, and the run that has it is the one to name.
+QueryCommand.History.cs	219	usage?	{options.Positional[0]} addresses a scenario of a report, and run {run.Id} is being read from the ledger — name the scenario with --sid <id> (`history
+QueryCommand.History.cs	243	notFound?	{one.Address} has no history entry — the report's scenario list and the ledger disagree; re-run kronikol history record for this run.
+QueryCommand.History.cs	552	usage?	{Path.GetFileName(index.Path)} carries no stableIds (written before 3.0.47): history is keyed on them. Re-run the suite on a current Kronikol.
+QueryCommand.History.cs	911	usage?	--run {LastFailedAlias}: no run of {label} in the ledger has a failure ({runs.Count} run(s) read).
+QueryCommand.History.cs	919	notFound?	--run {PreviousAlias}: the ledger holds {runs.Count} run(s) of {label} — there is no run before the newest.
+QueryCommand.History.cs	930	usage?	matches.Count == 0
+QueryCommand.History.cs	936	hint	  {run.Id}  {run.At.ToString(
+QueryCommand.History.cs	938	usage?	Aliases: {LastFailedAlias} (the newest run with a failure), {PreviousAlias} (the run before the newest).
+QueryCommand.Narrative.cs	599	usage?	Annotations are recorded per scenario, not per step — drop the /{addressedStep} and ask for {scenario.Address}.
+QueryCommand.Narrative.cs	808	usage?	Which scenario? Pass an address like s3, or sid:<stableId> — 'scenarios' lists them.
+QueryCommand.Narrative.cs	815	usage?	Not an address: {text}
+QueryCommand.Narrative.cs	824	usage?	{text} is a body address, not a scenario. `body <report> {text}` reads it.
+QueryCommand.Narrative.cs	830	usage?	index.Scenarios.Count == 0
+QueryCommand.Narrative.cs	841	notFound?	No step {wanted} in {found.Address} — `steps {found.Address}` lists its paths.
+QueryCommand.Narrative.cs	868	notFound?	No scenario with stableId {stableId} in {Path.GetFileName(index.Path)}.
+QueryCommand.Narrative.cs	869	usage?	index.Scenarios.Any(s => s.StableId.Length > 0
+QueryCommand.Narrative.cs	877	ambiguous?	{matches.Count} scenarios share stableId {stableId} (a repeated row, or a retry) — name the one you mean:
+QueryCommand.Narrative.cs	879	hint	  {match.Address}  {QueryWriter.OneLine(match.Name, 70)}  [{match.Result}]
+QueryCommand.NumberGrep.cs	24	usage?	--number needs a numeric needle; \"{options.Positional[0]}\" is not one — drop the flag for text search.
+QueryCommand.NumberGrep.cs	38	usage?	--tolerance takes a number (0.5) or a percentage (1%), not \"{tolerance}\".
+QueryCommand.Overview.cs	18	notFound?	summary answers for the whole run; it has no per-scenario form ({options.Positional[0]} was given).
+QueryCommand.Overview.cs	19	hint	For one scenario: `steps <address>` for its step tree, `flow <address>` for its calls.
+QueryCommand.Overview.cs	353	usage?	Not a scenario address: {options.Positional[0]} (expected s3)
+QueryCommand.Overview.cs	358	notFound?	No scenario {address} — the report has {index.Scenarios.Count}.
+QueryCommand.Overview.cs	473	usage?	Not a scenario address: {options.Positional[0]} (expected s3)
+QueryCommand.Overview.cs	478	notFound?	No scenario {address} — the report has {index.Scenarios.Count}.
+QueryCommand.Overview.cs	489	usage?	Not a party kind: {kindText} (expected test, underTest, real, double or unknown)
+QueryCommand.Payloads.cs	18	usage?	--group folds adjacent identical calls; --group-by buckets by dimensions — they don't compose. Pick one.
+QueryCommand.Payloads.cs	71	usage?	interactions lists calls in capture order and cannot sort them.
+QueryCommand.Payloads.cs	72	hint	Use --group-by (then --sort calls|duration|errors), or `services --sort duration` for per-service timings.
+QueryCommand.Payloads.cs	267	usage?	Which interaction? Pass an address like s3/i47 — 'interactions s3' lists them.
+QueryCommand.Payloads.cs	275	usage?	http describes one call; {options.Positional[1]} would be ignored, so it is refused. Ask for each call on its own.
+QueryCommand.Payloads.cs	287	notFound?	No body {address.BodyHash} in this report.
+QueryCommand.Payloads.cs	300	usage?	Could not read {carried.Occurrences[0]} back as an address.
+QueryCommand.Payloads.cs	310	usage?	Which interaction? Pass an address like s3/i47 — 'interactions s3' lists them.
+QueryCommand.Payloads.cs	316	notFound?	No scenario s{address.Scenario}.
+QueryCommand.Payloads.cs	323	notFound?	No interaction i{address.Interaction} in {scenario.Address} — it has {scenario.Interactions.Count}.
+QueryCommand.Payloads.cs	397	usage?	Which body? Pass a content address like b:4bdea521 — listings print them beside each call.
+QueryCommand.Payloads.cs	414	notFound?	No scenario s{given.Scenario}.
+QueryCommand.Payloads.cs	421	notFound?	No interaction i{given.Interaction} in {holder.Address} — it has {holder.Interactions.Count}.
+QueryCommand.Payloads.cs	427	usage?	{given} carried no body.
+QueryCommand.Payloads.cs	429	usage?	Its {pair.Role} {pair.Other.Address(holder)} did: {pair.Other.BodyHash}.
+QueryCommand.Payloads.cs	437	usage?	Which body? Pass a content address like b:4bdea521, or the address of a call — listings print both.
+QueryCommand.Payloads.cs	443	notFound?	No body {hash} in this report.
+QueryCommand.Payloads.cs	475	unreadable?	The body could not be read back from the report.
+QueryCommand.Payloads.cs	541	usage?	Bad path: {parseError}
+QueryCommand.Payloads.cs	542	usage?	Grammar: $.name · [2] · [*] · ['key.with.dots'] · .length() (last segment only). Quote the whole path — [*] is shell-active.
+QueryCommand.Payloads.cs	603	usage?	Which note? Pass s3/d0 to list a diagram's notes, or s3/d0/n12 for one.
+QueryCommand.Payloads.cs	625	notFound?	No note n{address.Note} — that diagram has {notes.Count}.
+QueryCommand.Payloads.cs	652	usage?	Which diagram? Pass s3/d0.
+QueryCommand.Payloads.cs	665	usage?	{scenario.Address}/d{address.Diagram} is {QueryWriter.Size(size)} of PlantUML — printing it would fill a context window.
+QueryCommand.Payloads.cs	666	hint	Pass --out FILE to save it, or use 'flow {scenario.Address}' for the same story in a couple of kilobytes.
+QueryCommand.Payloads.cs	684	notFound?	No scenario s{address.Scenario}.
+QueryCommand.Payloads.cs	691	notFound?	No diagram d{address.Diagram} in {scenario.Address} — it has {scenario.Diagrams.Count}.
+QueryCommand.Search.cs	35	usage?	--in was given no targets.
+QueryCommand.Search.cs	36	usage?	Valid targets: 
+QueryCommand.Search.cs	43	usage?	Unknown --in target: {target}
+QueryCommand.Search.cs	44	usage?	Valid targets: 
+QueryCommand.Search.cs	55	usage?	What are you looking for? kronikol query grep <report> \"4173\
+QueryCommand.Search.cs	233	usage?	Which two? kronikol query compare <report> s3 s7
+QueryCommand.Search.cs	239	notFound?	One of those scenarios is not in this report.
+QueryCommand.Search.cs	466	notFound?	Cannot match scenarios: the {side} report ({Path.GetFileName(lacking.Path)}) has no stableIds — written before 3.0.47, or by hand — and the other has.
+QueryCommand.Search.cs	467	usage?	Matched by position, every scenario would read as new and gone. Re-run the older side with a current Kronikol, or compare two reports of the same vint
+QueryCommand.Search.cs	481	ambiguous?	Cannot match scenarios: no stableId is shared by the two reports, yet {names} scenario name(s) are. 
+QueryCommand.Search.cs	483	usage?	Matched by stableId, every scenario would read as new and gone. Give both runs the same SuiteName, or compare two reports of one suite.
+QueryCommand.Search.cs	514	usage?	Could not read {resolved}: {exception.Message}
+QueryCommand.Search.cs	541	usage?	{wanted} is the run the report already is{alias}; name another: previous, last-failed, a run id or a folder under runs/.
+QueryCommand.Search.cs	593	usage?	Diff takes two reports (kronikol query diff <old.json> <new.json> [--body s3/i47])
+QueryCommand.Search.cs	594	usage?	or two bodies in one report (kronikol query diff <report> s3/i47 s7/i47).
+QueryCommand.Search.cs	595	usage?	Or compare against last-green: kronikol query diff <report> --baseline.
+QueryCommand.Search.cs	596	usage?	Or against a run kept under <reports>/runs/: kronikol query diff <report> --baseline-run last-failed.
+QueryCommand.Search.cs	602	hint	Pass one of --baseline and --baseline-run: each names the old side of the diff.
+QueryCommand.Search.cs	610	usage?	--baseline-run names the old side itself; {options.Positional[0]} cannot be given beside it (a body across the two runs is --body s3/i47).
+QueryCommand.Search.cs	618	usage?	--baseline names the old side itself; {options.Positional[0]} cannot be given beside it (a body across the two runs is --body s3/i47).
+QueryCommand.Search.cs	630	usage?	--body names a call to compare across two runs (diff <old.json> <new.json> --body s3/i47), so beside two addresses in one report it is refused rather 
+QueryCommand.Search.cs	636	usage?	diff compares two bodies; {options.Positional[2]} would be ignored, so it is refused. Compare it with one of them in a call of its own.
+QueryCommand.Search.cs	647	usage?	Address.TryParse(extra, out var mistaken) && mistaken.Kind == AddressKind.Interaction && options.BodyAddress is null
+QueryCommand.Search.cs	657	usage?	--body names the call to compare across the two runs: --body s3/i47, an address the old report lists. On its own it would be ignored, so it is refused
+QueryCommand.Search.cs	665	usage?	The run diff does not read {paging}, so it is refused rather than ignored: it prints every change at once, and --json lists every row uncut.
+QueryCommand.Search.cs	666	usage?	--offset and --limit page a body diff: diff <old.json> <new.json> --body s3/i47.
+QueryCommand.Shared.cs	143	usage?	Bad --where: {parseError}
+QueryCommand.Shared.cs	144	usage?	WhereClause.Grammar
+QueryCommand.Shared.cs	221	usage?	Unknown --sort value: {sort}
+QueryCommand.Shared.cs	222	usage?	Valid here: 
+QueryCommand.Shared.cs	235	usage?	Not a phase: {phase} (expected setup, action or unknown)
+QueryCommand.Sizes.cs	19	notFound?	sizes measures the whole file; it has no per-scenario form ({options.Positional[0]} was given).
+QueryCommand.Sizes.cs	20	hint	For one scenario's calls and the bytes they carry: `interactions <address> --group-by service`.
+QueryCommand.Trace.cs	17	usage?	Which trace? kronikol query trace <report> <trace-id | prefix ≥8 hex | s3/i47>
+QueryCommand.Trace.cs	38	notFound?	No scenario s{address.Scenario} — the report has {index.Scenarios.Count}.
+QueryCommand.Trace.cs	44	notFound?	No interaction i{address.Interaction} in {scenario.Address} — it has {scenario.Interactions.Count}.
+QueryCommand.Trace.cs	49	usage?	{address} carries no W3C trace id — the report predates trace export, or the call was not traced. Re-run the suite on a current Kronikol to get trace 
+QueryCommand.Trace.cs	62	ambiguous?	Not a trace id or address: {argument} — pass a W3C trace id (or an unambiguous prefix of at least 8 hex chars), a span id, or an interaction address l
+QueryCommand.Trace.cs	84	notFound?	No trace {argument} — the report holds {distinctIds.Count} distinct trace id{(distinctIds.Count == 1 ? 
+QueryCommand.Trace.cs	91	ambiguous?	{argument} is ambiguous — candidates:
+QueryCommand.Trace.cs	93	hint	  
+QueryCommand.Values.cs	17	usage?	values needs a path: kronikol query values <report> --path '$.status' [s3] [--service X] [--stats] [--request|--both]
+QueryCommand.Values.cs	23	usage?	Bad path: {parseError}
+QueryCommand.Values.cs	24	usage?	Grammar: $.name · [2] · [*] · ['key.with.dots'] · .length() (last segment only). Quote the whole path — [*] is shell-active.
+QueryCommand.Values.cs	35	usage?	Not a scenario address: {options.Positional[0]} (expected s3, or no address for the whole run)
+QueryCommand.Values.cs	40	notFound?	No scenario s{address.Scenario} — the report has {index.Scenarios.Count}.
+QueryCommand.cs	128	notFound?	No report given. Pass a TestRunReport.json or TestRunReport.krkl, or a directory holding one.
+QueryCommand.cs	176	usage?	exception.Message
+QueryCommand.cs	181	usage?	Could not read {resolved}: {exception.Message}
+QueryCommand.cs	186	unreadable?	{resolved} is not valid JSON: {exception.Message}
+QueryCommand.cs	218	usage?	exception is ReportChangedException ? exception.Message : $"Could not read {resolved}: {exception.Message}
+QueryCommand.cs	238	usage?	{command} lists rows in the report's own order and cannot sort them.
+QueryCommand.cs	239	hint	Only `services --sort calls|duration|bytes|errors` and `interactions --group-by … --sort calls|duration|bytes|errors` order their rows.
+QueryCommand.cs	245	usage?	--json is not available on '{command}'. It answers: 
+QueryCommand.cs	246	notFound?	The rest print prose - a step tree, a payload, a trace - that has no honest object form.
+QueryCommand.cs	329	usage?	{command} does not read {flag}, so it is refused rather than ignored: an ignored flag makes an answer look filtered, sorted or counted when it is not.
+QueryCommand.cs	333	usage?	{flag} is read by: {string.Join(
+QueryCommand.cs	336	usage?	accepted.Length > 0
+QueryCommand.cs	347	usage?	Unknown query command: {command}
+QueryCommand.cs	348	hint	Run 'kronikol query --help' for the list.
+QueryCommand.cs	450	notFound?	No such file or directory: {path}
+QueryCommand.cs	467	notFound?	No TestRunReport.json or TestRunReport.krkl under {path}.
+QueryCommand.cs	472	ambiguous?	Several reports under {path} — name the one you mean:
+QueryCommand.cs	474	hint	  
+QueryCommand.cs	477	hint	  … and {found.Length - MaxReportsListed} more
+QueryCommand.cs	540	usage?	{Path.GetDirectoryName(listed)} holds {Path.GetFileName(first)} and {Path.GetFileName(second)}: reading {Path.GetFileName(listed)}, the one its {RunMa
+QueryCommand.cs	545	usage?	{Path.GetDirectoryName(newer)} holds {Path.GetFileName(first)} and {Path.GetFileName(second)}: reading {Path.GetFileName(newer)}, the newer.
+QueryCommand.cs	602	notFound?	No baseline to compare against. Looked for {Path.Combine(folder, 
+QueryCommand.cs	603	usage?	Point $KRONIKOL_BASELINE at a report (or a directory holding one), name the older report (kronikol query diff <old.json> <new.json>), or a run kept un
+QueryOptions.cs	219	usage?	Missing value for 
+QueryOptions.cs	229	usage?	--max-bytes takes a non-negative number of bytes (0 removes the budget).
+QueryOptions.cs	239	usage?	--offset takes a non-negative row number.
+QueryOptions.cs	249	usage?	--limit takes a positive row count.
+QueryOptions.cs	261	usage?	--slower-than takes a number of seconds.
+QueryOptions.cs	272	usage?	--lines takes a range like 20-60.
+QueryOptions.cs	327	usage?	--body {given}: a body hash names bytes, not a call, so it cannot be followed into another run.
+QueryOptions.cs	328	usage?	Two bodies are compared in one report: kronikol query diff <report> {given} b:<other>.
+QueryOptions.cs	334	usage?	--body {given}: not a call address.
+QueryOptions.cs	335	usage?	Give it the call to compare across the two runs, like s3/i47: an address the old report lists.
+QueryOptions.cs	363	usage?	--min-runs takes a positive number of runs: the bar the flaky and duration verdicts need, the report's HistoryMinRuns (default 5).
+QueryOptions.cs	372	usage?	--alternating-runs takes a positive number of runs: how far back a set of calls the scenario held counts as a known state, the report's HistoryAlterna
+QueryOptions.cs	381	usage?	--count-runs takes a positive number of runs: how many runs a changed call count must hold before it is behaviour, the report's HistoryCountRuns (defa
+QueryOptions.cs	391	usage?	--degraded-by takes a factor: a run whose passing scenarios took this many times their usual is degraded, the report's HistoryDegradedBy (default 2.0;
+QueryOptions.cs	407	usage?	--window takes a positive number of runs: how far back the run is read against, the report's HistoryWindow (default 50).
+QueryOptions.cs	421	usage?	Unknown option: 
+QueryWriter.cs	327	writeFailed?	{flag} was given an empty path.
+QueryWriter.cs	357	writeFailed?	{flag} was given an empty path.
+QueryWriter.cs	411	writeFailed?	Could not write {flag} {path}: {exception.Message}
+ReportGate.cs	33	hint	
+ReportGate.cs	47	usage?	format == ReportScanner.UnreadableVersion
+ReportGate.cs	55	usage?	mergeable == ReportScanner.UnreadableVersion
+RetainedRunResolver.cs	83	usage?	{matches.Count} runs kept under {directory} answer to {wanted} — name one by its folder:
+RetainedRunResolver.cs	85	hint	  
+RetainedRunResolver.cs	115	hint	run {wanted} is not retained under {directory} (retained: {(retained.Count == 0 ? 
+RetainedRunResolver.cs	116	usage?	The ledger still has its results, the stored text of each error included: kronikol query history --run {wanted}
