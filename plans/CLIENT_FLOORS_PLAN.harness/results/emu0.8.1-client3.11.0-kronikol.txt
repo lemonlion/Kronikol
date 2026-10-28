@@ -1,0 +1,121 @@
+# Google.Cloud.BigQuery.V2 3.11.0+5941905203230689e31e7a060757a3e4cc3ef8a8 | mode kronikol | BaseUri http://127.0.0.1:19050/
+## S0 setup: dataset, table (ts, rec.inner_ts, arr), insertAll one row
+  > POST /projects/probe/datasets?key=any&prettyPrint=false
+    body: {"datasetReference":{"datasetId":"ds_3_11_0_kronikol_e081","projectId":"probe"}}
+  < 200 (no rows)
+  > POST /projects/probe/datasets/ds_3_11_0_kronikol_e081/tables?key=any&prettyPrint=false
+    body: {"schema":{"fields":[{"mode":"NULLABLE","name":"id","type":"INTEGER"},{"mode":"NULLABLE","name":"ts","type":"TIMESTAMP"},{"fields":[{"mode":"NULLABLE","name":"inner_ts","type":"TIMESTAMP"},{"mode":"NULLABLE","name":"label","type":"STRING"}],"mode":"NULLABLE","name":"rec","type":"RECORD"},{"mode":"REPEATED","name":"arr","type":"TIMESTAMP"}]},"tableReference":...
+  < 200 (no rows)
+  > POST /projects/probe/datasets/ds_3_11_0_kronikol_e081/tables/t/insertAll?key=any&prettyPrint=false
+    body: {"rows":[{"insertId":"a396ce08-488e-40fc-822f-96e2e01b8cb3","json":{"id":1,"ts":"2023-10-27T00:00:00Z","rec":{"inner_ts":"2023-10-27T00:00:01.5Z","label":"x"},"arr":["2023-10-27T00:00:00Z","2023-10-27T00:00:02Z"]}}]}
+  < 200 (no rows)
+  = ok
+## Q1 ExecuteQueryAsync(sql, null, QueryOptions { UseQueryCache = false }), the issue's call
+  > POST /projects/probe/jobs?key=any&prettyPrint=false
+    body: {"configuration":{"query":{"query":"SELECT id, ts FROM `probe.ds_3_11_0_kronikol_e081.t`","useLegacySql":false,"useQueryCache":false}},"jobReference":{"jobId":"job_4ab80822_2a88_4488_bacd_ff7d3cf64b58","projectId":"probe"}}
+  < 200 (no rows)
+  > GET /projects/probe/queries/job_4ab80822_2a88_4488_bacd_ff7d3cf64b58?key=any&formatOptions.useInt64Timestamp=true&timeoutMs=60000&prettyPrint=false
+  < 200 "rows":[{"f":[{"v":"1"},{"v":"1698364800000000"}]}],"totalRows":"1","jobComplete":true}
+  = ts=2023-10-27T00:00:00.0000000Z
+## Q2 ExecuteQueryAsync(sql, null), no options
+  > POST /projects/probe/jobs?key=any&prettyPrint=false
+    body: {"configuration":{"query":{"query":"SELECT id, ts FROM `probe.ds_3_11_0_kronikol_e081.t`","useLegacySql":false}},"jobReference":{"jobId":"job_a3f26bd2_ef86_46c0_880f_61624491201b","projectId":"probe"}}
+  < 200 (no rows)
+  > GET /projects/probe/queries/job_a3f26bd2_ef86_46c0_880f_61624491201b?key=any&formatOptions.useInt64Timestamp=true&timeoutMs=60000&prettyPrint=false
+  < 200 "rows":[{"f":[{"v":"1"},{"v":"1698364800000000"}]}],"totalRows":"1","jobComplete":true}
+  = ts=2023-10-27T00:00:00.0000000Z
+## Q3 a TIMESTAMP literal, no table
+  > POST /projects/probe/jobs?key=any&prettyPrint=false
+    body: {"configuration":{"query":{"query":"SELECT TIMESTAMP '2023-10-27 00:00:00+00' AS ts","useLegacySql":false}},"jobReference":{"jobId":"job_28174066_a8bc_49ee_a752_b102b7708fac","projectId":"probe"}}
+  < 200 (no rows)
+  > GET /projects/probe/queries/job_28174066_a8bc_49ee_a752_b102b7708fac?key=any&formatOptions.useInt64Timestamp=true&timeoutMs=60000&prettyPrint=false
+  < 200 "rows":[{"f":[{"v":"1698364800000000"}]}],"totalRows":"1","jobComplete":true}
+  = ts=2023-10-27T00:00:00.0000000Z
+## Q4 a TIMESTAMP query parameter
+  > POST /projects/probe/jobs?key=any&prettyPrint=false
+    body: {"configuration":{"query":{"parameterMode":"named","query":"SELECT @p AS ts","queryParameters":[{"name":"p","parameterType":{"type":"TIMESTAMP"},"parameterValue":{"value":"2023-10-27 00:00:00+00"}}],"useLegacySql":false}},"jobReference":{"jobId":"job_b492a081_63a3_4914_ab64_67160e91c2ee","projectId":"probe"}}
+  < 200 (no rows)
+  > GET /projects/probe/queries/job_b492a081_63a3_4914_ab64_67160e91c2ee?key=any&formatOptions.useInt64Timestamp=true&timeoutMs=60000&prettyPrint=false
+  < 200 "rows":[{"f":[{"v":"2023-10-27 00:00:00+00"}]}],"totalRows":"1","jobComplete":true}
+  = ts=2023-10-27 00:00:00+00
+## Q5 RECORD and REPEATED timestamps
+  > POST /projects/probe/jobs?key=any&prettyPrint=false
+    body: {"configuration":{"query":{"query":"SELECT rec, arr FROM `probe.ds_3_11_0_kronikol_e081.t`","useLegacySql":false}},"jobReference":{"jobId":"job_d3a7c954_b475_4135_a72a_dbef1c8da4b4","projectId":"probe"}}
+  < 200 (no rows)
+  > GET /projects/probe/queries/job_d3a7c954_b475_4135_a72a_dbef1c8da4b4?key=any&formatOptions.useInt64Timestamp=true&timeoutMs=60000&prettyPrint=false
+  < 200 "rows":[{"f":[{"v":{"f":[{"v":"2023-10-27 00:00:01.500000+00"},{"v":"x"}]}},{"v":[{"v":"2023-10-27 00:00:00+00"},{"v":"2023-10-27 00:00:02+00"}]}]}],"totalRows":"1","jobComplete":true}
+  = THROWS FormatException: The input string '2023-10-27 00:00:01.500000+00' was not in a correct format.
+## Q6 ListRows (tabledata.list)
+  > GET /projects/probe/datasets/ds_3_11_0_kronikol_e081/tables/t?key=any&prettyPrint=false
+  < 200 (no rows)
+  > GET /projects/probe/datasets/ds_3_11_0_kronikol_e081/tables/t/data?key=any&formatOptions.useInt64Timestamp=true&prettyPrint=false
+  < 200 "rows":[{"f":[{"v":"1"},{"v":"1698364800000000"},{"v":{"f":[{"v":"2023-10-27 00:00:01.500000+00"},{"v":"x"}]}},{"v":[{"v":"2023-10-27 00:00:00+00"},{"v":"2023-10-27 00:00:02+00"}]}]},{"f":[{"v":"2"},{"v":"1698364801000000"},{"v":null},{"v":[]}]}],"totalRows":"2"}
+  = ts=2023-10-27T00:00:00.0000000Z, THROWS FormatException: The input string '2023-10-27 00:00:01.500000+00' was not in a correct format.
+## Q7 DML INSERT, then SELECT the inserted row
+  > POST /projects/probe/jobs?key=any&prettyPrint=false
+    body: {"configuration":{"query":{"query":"INSERT INTO `probe.ds_3_11_0_kronikol_e081.t` (id, ts) VALUES (2, TIMESTAMP '2023-10-27 00:00:01+00')","useLegacySql":false}},"jobReference":{"jobId":"job_467c2221_536f_4ae3_ae8b_1184e4321fd2","projectId":"probe"}}
+  < 200 (no rows)
+  > GET /projects/probe/queries/job_467c2221_536f_4ae3_ae8b_1184e4321fd2?key=any&formatOptions.useInt64Timestamp=true&timeoutMs=60000&prettyPrint=false
+  < 200 "rows":[],"totalRows":"0","jobComplete":true}
+  > POST /projects/probe/jobs?key=any&prettyPrint=false
+    body: {"configuration":{"query":{"query":"SELECT ts FROM `probe.ds_3_11_0_kronikol_e081.t` WHERE id = 2","useLegacySql":false}},"jobReference":{"jobId":"job_7e889105_316d_4822_9af1_00f43df6ce34","projectId":"probe"}}
+  < 200 (no rows)
+  > GET /projects/probe/queries/job_7e889105_316d_4822_9af1_00f43df6ce34?key=any&formatOptions.useInt64Timestamp=true&timeoutMs=60000&prettyPrint=false
+  < 200 "rows":[{"f":[{"v":"1698364801000000"}]}],"totalRows":"1","jobComplete":true}
+  = ts=2023-10-27T00:00:01.0000000Z
+## Q8 QueryOptions { Priority = Interactive } (the default priority, set explicitly)
+  > POST /projects/probe/jobs?key=any&prettyPrint=false
+    body: {"configuration":{"query":{"priority":"INTERACTIVE","query":"SELECT id, ts FROM `probe.ds_3_11_0_kronikol_e081.t`","useLegacySql":false,"useQueryCache":false}},"jobReference":{"jobId":"job_0f9f5c98_5b66_46e9_8115_e6210d5bbe12","projectId":"probe"}}
+  < 200 (no rows)
+  > GET /projects/probe/queries/job_0f9f5c98_5b66_46e9_8115_e6210d5bbe12?key=any&formatOptions.useInt64Timestamp=true&timeoutMs=60000&prettyPrint=false
+  < 200 "rows":[{"f":[{"v":"1"},{"v":"1698364800000000"}]},{"f":[{"v":"2"},{"v":"1698364801000000"}]}],"totalRows":"2","jobComplete":true}
+  = ts=2023-10-27T00:00:00.0000000Z, ts=2023-10-27T00:00:01.0000000Z
+## Q9 QueryOptions { JobIdPrefix }
+  > POST /projects/probe/jobs?key=any&prettyPrint=false
+    body: {"configuration":{"query":{"query":"SELECT id, ts FROM `probe.ds_3_11_0_kronikol_e081.t`","useLegacySql":false,"useQueryCache":false}},"jobReference":{"jobId":"probe_de4dd085_8b41_402a_820c_0168135fe1ad","projectId":"probe"}}
+  < 200 (no rows)
+  > GET /projects/probe/queries/probe_de4dd085_8b41_402a_820c_0168135fe1ad?key=any&formatOptions.useInt64Timestamp=true&timeoutMs=60000&prettyPrint=false
+  < 200 "rows":[{"f":[{"v":"1"},{"v":"1698364800000000"}]},{"f":[{"v":"2"},{"v":"1698364801000000"}]}],"totalRows":"2","jobComplete":true}
+  = ts=2023-10-27T00:00:00.0000000Z, ts=2023-10-27T00:00:01.0000000Z
+## Q10 GetQueryResultsOptions { UseInt64Timestamp = false }
+  > POST /projects/probe/jobs?key=any&prettyPrint=false
+    body: {"configuration":{"query":{"query":"SELECT id, ts FROM `probe.ds_3_11_0_kronikol_e081.t`","useLegacySql":false,"useQueryCache":false}},"jobReference":{"jobId":"job_56072352_1f90_4a17_b0f3_f4100da67d9a","projectId":"probe"}}
+  < 200 (no rows)
+  > GET /projects/probe/queries/job_56072352_1f90_4a17_b0f3_f4100da67d9a?key=any&formatOptions.useInt64Timestamp=false&timeoutMs=60000&prettyPrint=false
+  < 200 "rows":[{"f":[{"v":"1"},{"v":"1698364800.000000"}]},{"f":[{"v":"2"},{"v":"1698364801.000000"}]}],"totalRows":"2","jobComplete":true}
+  = ts=2023-10-27T00:00:00.0000000Z, ts=2023-10-27T00:00:01.0000000Z
+## Q11 CreateQueryJob + GetQueryResults (the job path, by hand)
+  > POST /projects/probe/jobs?key=any&prettyPrint=false
+    body: {"configuration":{"query":{"query":"SELECT id, ts FROM `probe.ds_3_11_0_kronikol_e081.t`","useLegacySql":false}},"jobReference":{"jobId":"job_d4e821cb_03d5_493b_a8a2_89bd71462c03","projectId":"probe"}}
+  < 200 (no rows)
+  > GET /projects/probe/queries/job_d4e821cb_03d5_493b_a8a2_89bd71462c03?key=any&formatOptions.useInt64Timestamp=true&timeoutMs=60000&prettyPrint=false
+  < 200 "rows":[{"f":[{"v":"1"},{"v":"1698364800000000"}]},{"f":[{"v":"2"},{"v":"1698364801000000"}]}],"totalRows":"2","jobComplete":true}
+  = ts=2023-10-27T00:00:00.0000000Z, ts=2023-10-27T00:00:01.0000000Z
+## What Kronikol recorded (request records)
+  Other http://127.0.0.1:19050/projects/probe/datasets?key=any&prettyPrint=false
+  Other http://127.0.0.1:19050/projects/probe/datasets/ds_3_11_0_kronikol_e081/tables?key=any&prettyPrint=false
+  Other http://127.0.0.1:19050/projects/probe/datasets/ds_3_11_0_kronikol_e081/tables/t/insertAll?key=any&prettyPrint=false
+  Other http://127.0.0.1:19050/projects/probe/jobs?key=any&prettyPrint=false
+  Other http://127.0.0.1:19050/projects/probe/queries/job_4ab80822_2a88_4488_bacd_ff7d3cf64b58?key=any&formatOptions.useInt64Timestamp=true&timeoutMs=60000&prettyPrint=false
+  Other http://127.0.0.1:19050/projects/probe/jobs?key=any&prettyPrint=false
+  Other http://127.0.0.1:19050/projects/probe/queries/job_a3f26bd2_ef86_46c0_880f_61624491201b?key=any&formatOptions.useInt64Timestamp=true&timeoutMs=60000&prettyPrint=false
+  Other http://127.0.0.1:19050/projects/probe/jobs?key=any&prettyPrint=false
+  Other http://127.0.0.1:19050/projects/probe/queries/job_28174066_a8bc_49ee_a752_b102b7708fac?key=any&formatOptions.useInt64Timestamp=true&timeoutMs=60000&prettyPrint=false
+  Other http://127.0.0.1:19050/projects/probe/jobs?key=any&prettyPrint=false
+  Other http://127.0.0.1:19050/projects/probe/queries/job_b492a081_63a3_4914_ab64_67160e91c2ee?key=any&formatOptions.useInt64Timestamp=true&timeoutMs=60000&prettyPrint=false
+  Other http://127.0.0.1:19050/projects/probe/jobs?key=any&prettyPrint=false
+  Other http://127.0.0.1:19050/projects/probe/queries/job_d3a7c954_b475_4135_a72a_dbef1c8da4b4?key=any&formatOptions.useInt64Timestamp=true&timeoutMs=60000&prettyPrint=false
+  Other http://127.0.0.1:19050/projects/probe/datasets/ds_3_11_0_kronikol_e081/tables/t?key=any&prettyPrint=false
+  Other http://127.0.0.1:19050/projects/probe/datasets/ds_3_11_0_kronikol_e081/tables/t/data?key=any&formatOptions.useInt64Timestamp=true&prettyPrint=false
+  Other http://127.0.0.1:19050/projects/probe/jobs?key=any&prettyPrint=false
+  Other http://127.0.0.1:19050/projects/probe/queries/job_467c2221_536f_4ae3_ae8b_1184e4321fd2?key=any&formatOptions.useInt64Timestamp=true&timeoutMs=60000&prettyPrint=false
+  Other http://127.0.0.1:19050/projects/probe/jobs?key=any&prettyPrint=false
+  Other http://127.0.0.1:19050/projects/probe/queries/job_7e889105_316d_4822_9af1_00f43df6ce34?key=any&formatOptions.useInt64Timestamp=true&timeoutMs=60000&prettyPrint=false
+  Other http://127.0.0.1:19050/projects/probe/jobs?key=any&prettyPrint=false
+  Other http://127.0.0.1:19050/projects/probe/queries/job_0f9f5c98_5b66_46e9_8115_e6210d5bbe12?key=any&formatOptions.useInt64Timestamp=true&timeoutMs=60000&prettyPrint=false
+  Other http://127.0.0.1:19050/projects/probe/jobs?key=any&prettyPrint=false
+  Other http://127.0.0.1:19050/projects/probe/queries/probe_de4dd085_8b41_402a_820c_0168135fe1ad?key=any&formatOptions.useInt64Timestamp=true&timeoutMs=60000&prettyPrint=false
+  Other http://127.0.0.1:19050/projects/probe/jobs?key=any&prettyPrint=false
+  Other http://127.0.0.1:19050/projects/probe/queries/job_56072352_1f90_4a17_b0f3_f4100da67d9a?key=any&formatOptions.useInt64Timestamp=false&timeoutMs=60000&prettyPrint=false
+  Other http://127.0.0.1:19050/projects/probe/jobs?key=any&prettyPrint=false
+  Other http://127.0.0.1:19050/projects/probe/queries/job_d4e821cb_03d5_493b_a8a2_89bd71462c03?key=any&formatOptions.useInt64Timestamp=true&timeoutMs=60000&prettyPrint=false

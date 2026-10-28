@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- A consumer on the newest client against the extension built at a 3.0.0 floor (the #205 worktree's source). -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../Program.cs" />
+    <PackageReference Include="Google.Cloud.BigQuery.V2" Version="3.12.0" />
+    <ProjectReference Include="C:/Code/Kronikol-205/src/Kronikol.Extensions.BigQuery/Kronikol.Extensions.BigQuery.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,11 @@
+<Project>
+  <!-- restore/cpm with R1's packed extension (its version in $(KronikolVersion), from the local feed). -->
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageVersion Include="Google.Cloud.BigQuery.V2" Version="3.11.0" />
+    <PackageVersion Include="Kronikol.Extensions.BigQuery" Version="$(KronikolVersion)" />
+  </ItemGroup>
+</Project>

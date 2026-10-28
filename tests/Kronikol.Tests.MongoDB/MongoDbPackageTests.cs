@@ -1,6 +1,4 @@
-using System.Diagnostics;
-using System.IO.Compression;
-using System.Xml.Linq;
+using Kronikol.Tests.Packaging;
 using MongoDB.Driver;
 
 namespace Kronikol.Tests.MongoDB;
@@ -16,9 +14,6 @@ namespace Kronikol.Tests.MongoDB;
 /// </summary>
 public class MongoDbPackageTests
 {
-    private static readonly string RepoRoot = Path.GetFullPath(
-        Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".."));
-
     [Fact]
     public void The_packed_extension_asks_for_its_measured_driver_floor()
     {
@@ -34,55 +29,9 @@ public class MongoDbPackageTests
             _ => throw new InvalidOperationException($"No extension is built on driver {major}.x.")
         };
 
-        var versions = PackedDependencyVersions(project, "MongoDB.Driver");
+        var versions = PackedNuspec.DependencyVersions(project, "MongoDB.Driver");
 
         Assert.NotEmpty(versions);
         Assert.All(versions, version => Assert.Equal(floor, version));
-    }
-
-    /// <summary>
-    /// Packs the extension this suite built, for the one framework the suite runs on, and reads the version each of the
-    /// nuspec's dependency groups gives the package.
-    /// </summary>
-    private static List<string> PackedDependencyVersions(string project, string id)
-    {
-        // bin/<configuration>/<framework>/: the configuration that built this assembly built the extension it references.
-        var configuration = new DirectoryInfo(AppContext.BaseDirectory).Parent!.Name;
-        var output = Directory.CreateTempSubdirectory("kronikol-pack-");
-        try
-        {
-            var start = new ProcessStartInfo("dotnet")
-            {
-                WorkingDirectory = RepoRoot,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false
-            };
-            foreach (var argument in new[]
-                     {
-                         "pack", Path.Combine(RepoRoot, project), "--no-build", "--no-restore", "--nologo",
-                         "-c", configuration, "-p:TargetFrameworks=net10.0", "-o", output.FullName
-                     })
-                start.ArgumentList.Add(argument);
-
-            using var process = Process.Start(start)!;
-            var stdout = process.StandardOutput.ReadToEndAsync();
-            var stderr = process.StandardError.ReadToEndAsync();
-            Assert.True(process.WaitForExit(TimeSpan.FromMinutes(3)), "dotnet pack did not finish in three minutes");
-            Assert.True(process.ExitCode == 0, $"dotnet pack failed:\n{stdout.Result}\n{stderr.Result}");
-
-            var package = Assert.Single(output.GetFiles("*.nupkg"));
-            using var archive = ZipFile.OpenRead(package.FullName);
-            var nuspec = archive.Entries.Single(entry => entry.FullName.EndsWith(".nuspec", StringComparison.Ordinal));
-            using var stream = nuspec.Open();
-            return XDocument.Load(stream).Descendants()
-                .Where(element => element.Name.LocalName == "dependency" && (string?)element.Attribute("id") == id)
-                .Select(element => (string)element.Attribute("version")!)
-                .ToList();
-        }
-        finally
-        {
-            output.Delete(recursive: true);
-        }
     }
 }

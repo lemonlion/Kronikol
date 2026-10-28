@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- R1's consumer, #205's suite's case: a project pinned to client 3.11.0 beside the packed extension (the version in
+       $(KronikolVersion), from the local feed in ../nuget.config). No NoWarn: restore must pass on its own. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../Program.cs" />
+    <PackageReference Include="Google.Cloud.BigQuery.V2" Version="3.11.0" />
+    <PackageReference Include="Kronikol.Extensions.BigQuery" Version="$(KronikolVersion)" />
+  </ItemGroup>
+</Project>

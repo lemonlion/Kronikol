@@ -4,6 +4,48 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.22.1] - 2026-10-28
+
+The patch part moves (5.22.0 to 5.22.1): a packaging fix, with no new option and no new public member (#205, #97;
+`plans/CLIENT_FLOORS_PLAN.md` R1).
+
+### Fixed
+
+- **Each release raised the BigQuery client every consumer had to take.** `Kronikol.Extensions.BigQuery` referenced
+  Google.Cloud.BigQuery.V2 `3.*`, which NuGet packs as the newest version of the day: 3.11.0 from 3.0.0 to 3.0.27, and
+  3.12.0 from 3.0.28 (2026-06-06) to 5.22.0. A project that pinned 3.11.0 failed restore (NU1109 under central package
+  management, NU1605 without it), and a suite that moved to 3.12.0 to restore ran its services on a client they do not
+  ship with, one that runs `ExecuteQuery` through a different REST call (`jobs.query`), which a BigQuery emulator older
+  than 0.6.1 answers in seconds, so reading a TIMESTAMP threw `FormatException` (#205). The package now asks for 3.0.0:
+  the extension's suite passes on every 3.x from 3.0.0 to 3.12.0, restore reports no advisory in the graph at 3.0.0, the
+  client's assemblies are strong-named, and a project on 3.11.0 or 3.12.0 restores and runs against the packed extension.
+
+Behaviour change: a project that takes the client only through Kronikol now resolves 3.0.0, where it resolved the
+newest; reference Google.Cloud.BigQuery.V2 yourself for a newer one.
+
+### Tests
+
+- `BigQueryPackageTests` packs the extension and reads the floor back from the nuspec, through `PackedNuspec`, which
+  `MongoDbPackageTests` now shares.
+- The BigQuery suite runs on the newest 3.x through a direct reference, and again on 3.0.0 with `-p:FloorRun=true`. CI
+  runs every test project whose csproj names `$(FloorRun)` a second time with it set, in both of the test job's steps,
+  and `FloorRunTests` holds both halves: the CI steps, and that a project naming the switch drops a reference under it.
+- `Kronikol.Tests` and the example's integration tests take AngleSharp 1.5.0, past GHSA-pgww-w46g-26qg (moderate;
+  test projects only, nothing shipped).
+
+### Documentation
+
+- The wiki's BigQuery page gains "Client versions and emulators": the floor, the 3.12.0 `jobs.query` path and what
+  keeps a query on the job path, the emulator release that reads the body's options (0.6.1), Testcontainers' default
+  image (0.4.4) and how to name another, and three gaps in emulator 0.8.1.
+
+Checks: the core suite (11,348 passed, 2 skipped), which now resolves 3.0.0 through its reference to the extension;
+the BigQuery suite on 3.12.0 and on 3.0.0 (99 of 99 each); `BigQueryPackageTests` red on 5.22.0, which packed 3.12.0,
+and `FloorRunTests` red on 5.22.0's `ci.yml` and on a csproj that names the switch without dropping a reference; both
+MongoDB suites' floor facts; the Integration (NUnit4) lane (30 of 30); the Release build of `release.slnf`; and the
+packed extension, which restores beside client 3.11.0 with central package management and without, and gives the same
+outcomes on clients 3.11.0 and 3.12.0 against BigQuery emulator 0.8.1 as 5.12.0 did.
+
 ## [5.22.0] - 2026-10-28
 
 The minor part moves (5.21.0 to 5.22.0): a new option, `GenerateServiceCard`, on by default, and a new run-end output,

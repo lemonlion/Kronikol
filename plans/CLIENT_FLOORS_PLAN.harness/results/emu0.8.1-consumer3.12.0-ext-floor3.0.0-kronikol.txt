@@ -1,0 +1,97 @@
+# Google.Cloud.BigQuery.V2 3.12.0+7ffaea80ef3a3f3d1ca332ab391c2563e0f79998 | mode kronikol | BaseUri http://127.0.0.1:19050/
+## S0 setup: dataset, table (ts, rec.inner_ts, arr), insertAll one row
+  > POST /projects/probe/datasets?key=any&prettyPrint=false
+    body: {"datasetReference":{"datasetId":"ds_3_12_0_kronikol_floor","projectId":"probe"}}
+  < 200 (no rows)
+  > POST /projects/probe/datasets/ds_3_12_0_kronikol_floor/tables?key=any&prettyPrint=false
+    body: {"schema":{"fields":[{"mode":"NULLABLE","name":"id","type":"INTEGER"},{"mode":"NULLABLE","name":"ts","type":"TIMESTAMP"},{"fields":[{"mode":"NULLABLE","name":"inner_ts","type":"TIMESTAMP"},{"mode":"NULLABLE","name":"label","type":"STRING"}],"mode":"NULLABLE","name":"rec","type":"RECORD"},{"mode":"REPEATED","name":"arr","type":"TIMESTAMP"}]},"tableReference":...
+  < 200 (no rows)
+  > POST /projects/probe/datasets/ds_3_12_0_kronikol_floor/tables/t/insertAll?key=any&prettyPrint=false
+    body: {"rows":[{"insertId":"1dfa7b17-014e-4156-904c-09b0df07a193","json":{"id":1,"ts":"2023-10-27T00:00:00Z","rec":{"inner_ts":"2023-10-27T00:00:01.5Z","label":"x"},"arr":["2023-10-27T00:00:00Z","2023-10-27T00:00:02Z"]}}]}
+  < 200 (no rows)
+  = ok
+## Q1 ExecuteQueryAsync(sql, null, QueryOptions { UseQueryCache = false }), the issue's call
+  > POST /projects/probe/queries?key=any&prettyPrint=false
+    body: {"formatOptions":{"useInt64Timestamp":true},"query":"SELECT id, ts FROM `probe.ds_3_12_0_kronikol_floor.t`","useLegacySql":false,"useQueryCache":false}
+  < 200 "rows":[{"f":[{"v":"1"},{"v":"1698364800000000"}]}],"totalRows":"1","jobComplete":true}
+  = ts=2023-10-27T00:00:00.0000000Z
+## Q2 ExecuteQueryAsync(sql, null), no options
+  > POST /projects/probe/queries?key=any&prettyPrint=false
+    body: {"formatOptions":{"useInt64Timestamp":true},"query":"SELECT id, ts FROM `probe.ds_3_12_0_kronikol_floor.t`","useLegacySql":false}
+  < 200 "rows":[{"f":[{"v":"1"},{"v":"1698364800000000"}]}],"totalRows":"1","jobComplete":true}
+  = ts=2023-10-27T00:00:00.0000000Z
+## Q3 a TIMESTAMP literal, no table
+  > POST /projects/probe/queries?key=any&prettyPrint=false
+    body: {"formatOptions":{"useInt64Timestamp":true},"query":"SELECT TIMESTAMP '2023-10-27 00:00:00+00' AS ts","useLegacySql":false}
+  < 200 "rows":[{"f":[{"v":"1698364800000000"}]}],"totalRows":"1","jobComplete":true}
+  = ts=2023-10-27T00:00:00.0000000Z
+## Q4 a TIMESTAMP query parameter
+  > POST /projects/probe/queries?key=any&prettyPrint=false
+    body: {"formatOptions":{"useInt64Timestamp":true},"parameterMode":"named","query":"SELECT @p AS ts","queryParameters":[{"name":"p","parameterType":{"type":"TIMESTAMP"},"parameterValue":{"value":"2023-10-27 00:00:00+00"}}],"useLegacySql":false}
+  < 200 "rows":[{"f":[{"v":"2023-10-27 00:00:00+00"}]}],"totalRows":"1","jobComplete":true}
+  = ts=2023-10-27 00:00:00+00
+## Q5 RECORD and REPEATED timestamps
+  > POST /projects/probe/queries?key=any&prettyPrint=false
+    body: {"formatOptions":{"useInt64Timestamp":true},"query":"SELECT rec, arr FROM `probe.ds_3_12_0_kronikol_floor.t`","useLegacySql":false}
+  < 200 "rows":[{"f":[{"v":{"f":[{"v":"2023-10-27 00:00:01.500000+00"},{"v":"x"}]}},{"v":[{"v":"2023-10-27 00:00:00+00"},{"v":"2023-10-27 00:00:02+00"}]}]}],"totalRows":"1","jobComplete":true}
+  = THROWS FormatException: The input string '2023-10-27 00:00:01.500000+00' was not in a correct format.
+## Q6 ListRows (tabledata.list)
+  > GET /projects/probe/datasets/ds_3_12_0_kronikol_floor/tables/t?key=any&prettyPrint=false
+  < 200 (no rows)
+  > GET /projects/probe/datasets/ds_3_12_0_kronikol_floor/tables/t/data?key=any&formatOptions.useInt64Timestamp=true&prettyPrint=false
+  < 200 "rows":[{"f":[{"v":"1"},{"v":"1698364800000000"},{"v":{"f":[{"v":"2023-10-27 00:00:01.500000+00"},{"v":"x"}]}},{"v":[{"v":"2023-10-27 00:00:00+00"},{"v":"2023-10-27 00:00:02+00"}]}]},{"f":[{"v":"2"},{"v":"1698364801000000"},{"v":null},{"v":[]}]}],"totalRows":"2"}
+  = ts=2023-10-27T00:00:00.0000000Z, THROWS FormatException: The input string '2023-10-27 00:00:01.500000+00' was not in a correct format.
+## Q7 DML INSERT, then SELECT the inserted row
+  > POST /projects/probe/queries?key=any&prettyPrint=false
+    body: {"formatOptions":{"useInt64Timestamp":true},"query":"INSERT INTO `probe.ds_3_12_0_kronikol_floor.t` (id, ts) VALUES (2, TIMESTAMP '2023-10-27 00:00:01+00')","useLegacySql":false}
+  < 200 "rows":[],"totalRows":"0","jobComplete":true}
+  > POST /projects/probe/queries?key=any&prettyPrint=false
+    body: {"formatOptions":{"useInt64Timestamp":true},"query":"SELECT ts FROM `probe.ds_3_12_0_kronikol_floor.t` WHERE id = 2","useLegacySql":false}
+  < 200 "rows":[{"f":[{"v":"1698364801000000"}]}],"totalRows":"1","jobComplete":true}
+  = ts=2023-10-27T00:00:01.0000000Z
+## Q8 QueryOptions { Priority = Interactive } (the default priority, set explicitly)
+  > POST /projects/probe/jobs?key=any&prettyPrint=false
+    body: {"configuration":{"query":{"priority":"INTERACTIVE","query":"SELECT id, ts FROM `probe.ds_3_12_0_kronikol_floor.t`","useLegacySql":false,"useQueryCache":false}},"jobReference":{"jobId":"job_c4505532_ec65_4f96_9918_d8105e06bb53","projectId":"probe"}}
+  < 200 (no rows)
+  > GET /projects/probe/queries/job_c4505532_ec65_4f96_9918_d8105e06bb53?key=any&formatOptions.useInt64Timestamp=true&timeoutMs=60000&prettyPrint=false
+  < 200 "rows":[{"f":[{"v":"1"},{"v":"1698364800000000"}]},{"f":[{"v":"2"},{"v":"1698364801000000"}]}],"totalRows":"2","jobComplete":true}
+  = ts=2023-10-27T00:00:00.0000000Z, ts=2023-10-27T00:00:01.0000000Z
+## Q9 QueryOptions { JobIdPrefix }
+  > POST /projects/probe/jobs?key=any&prettyPrint=false
+    body: {"configuration":{"query":{"query":"SELECT id, ts FROM `probe.ds_3_12_0_kronikol_floor.t`","useLegacySql":false,"useQueryCache":false}},"jobReference":{"jobId":"probe_350b9521_33ef_45e9_9840_c1760685af20","projectId":"probe"}}
+  < 200 (no rows)
+  > GET /projects/probe/queries/probe_350b9521_33ef_45e9_9840_c1760685af20?key=any&formatOptions.useInt64Timestamp=true&timeoutMs=60000&prettyPrint=false
+  < 200 "rows":[{"f":[{"v":"1"},{"v":"1698364800000000"}]},{"f":[{"v":"2"},{"v":"1698364801000000"}]}],"totalRows":"2","jobComplete":true}
+  = ts=2023-10-27T00:00:00.0000000Z, ts=2023-10-27T00:00:01.0000000Z
+## Q10 GetQueryResultsOptions { UseInt64Timestamp = false }
+  > POST /projects/probe/queries?key=any&prettyPrint=false
+    body: {"formatOptions":{"useInt64Timestamp":false},"query":"SELECT id, ts FROM `probe.ds_3_12_0_kronikol_floor.t`","useLegacySql":false,"useQueryCache":false}
+  < 200 "rows":[{"f":[{"v":"1"},{"v":"1698364800.000000"}]},{"f":[{"v":"2"},{"v":"1698364801.000000"}]}],"totalRows":"2","jobComplete":true}
+  = ts=2023-10-27T00:00:00.0000000Z, ts=2023-10-27T00:00:01.0000000Z
+## Q11 CreateQueryJob + GetQueryResults (the job path, by hand)
+  > POST /projects/probe/jobs?key=any&prettyPrint=false
+    body: {"configuration":{"query":{"query":"SELECT id, ts FROM `probe.ds_3_12_0_kronikol_floor.t`","useLegacySql":false}},"jobReference":{"jobId":"job_134761c8_e5e1_4ebb_8e3a_69ab7778ab5e","projectId":"probe"}}
+  < 200 (no rows)
+  > GET /projects/probe/queries/job_134761c8_e5e1_4ebb_8e3a_69ab7778ab5e?key=any&formatOptions.useInt64Timestamp=true&timeoutMs=60000&prettyPrint=false
+  < 200 "rows":[{"f":[{"v":"1"},{"v":"1698364800000000"}]},{"f":[{"v":"2"},{"v":"1698364801000000"}]}],"totalRows":"2","jobComplete":true}
+  = ts=2023-10-27T00:00:00.0000000Z, ts=2023-10-27T00:00:01.0000000Z
+## What Kronikol recorded (request records)
+  Other http://127.0.0.1:19050/projects/probe/datasets?key=any&prettyPrint=false
+  Other http://127.0.0.1:19050/projects/probe/datasets/ds_3_12_0_kronikol_floor/tables?key=any&prettyPrint=false
+  Other http://127.0.0.1:19050/projects/probe/datasets/ds_3_12_0_kronikol_floor/tables/t/insertAll?key=any&prettyPrint=false
+  Other http://127.0.0.1:19050/projects/probe/queries?key=any&prettyPrint=false
+  Other http://127.0.0.1:19050/projects/probe/queries?key=any&prettyPrint=false
+  Other http://127.0.0.1:19050/projects/probe/queries?key=any&prettyPrint=false
+  Other http://127.0.0.1:19050/projects/probe/queries?key=any&prettyPrint=false
+  Other http://127.0.0.1:19050/projects/probe/queries?key=any&prettyPrint=false
+  Other http://127.0.0.1:19050/projects/probe/datasets/ds_3_12_0_kronikol_floor/tables/t?key=any&prettyPrint=false
+  Other http://127.0.0.1:19050/projects/probe/datasets/ds_3_12_0_kronikol_floor/tables/t/data?key=any&formatOptions.useInt64Timestamp=true&prettyPrint=false
+  Other http://127.0.0.1:19050/projects/probe/queries?key=any&prettyPrint=false
+  Other http://127.0.0.1:19050/projects/probe/queries?key=any&prettyPrint=false
+  Other http://127.0.0.1:19050/projects/probe/jobs?key=any&prettyPrint=false
+  Other http://127.0.0.1:19050/projects/probe/queries/job_c4505532_ec65_4f96_9918_d8105e06bb53?key=any&formatOptions.useInt64Timestamp=true&timeoutMs=60000&prettyPrint=false
+  Other http://127.0.0.1:19050/projects/probe/jobs?key=any&prettyPrint=false
+  Other http://127.0.0.1:19050/projects/probe/queries/probe_350b9521_33ef_45e9_9840_c1760685af20?key=any&formatOptions.useInt64Timestamp=true&timeoutMs=60000&prettyPrint=false
+  Other http://127.0.0.1:19050/projects/probe/queries?key=any&prettyPrint=false
+  Other http://127.0.0.1:19050/projects/probe/jobs?key=any&prettyPrint=false
+  Other http://127.0.0.1:19050/projects/probe/queries/job_134761c8_e5e1_4ebb_8e3a_69ab7778ab5e?key=any&formatOptions.useInt64Timestamp=true&timeoutMs=60000&prettyPrint=false

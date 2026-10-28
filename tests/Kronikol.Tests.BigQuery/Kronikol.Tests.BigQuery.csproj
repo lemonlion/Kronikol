@@ -18,6 +18,9 @@
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.*" />
     <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.3.9" />
+    <!-- The suite runs on the newest 3.x, which most consumers have; the extension compiles against its floor (3.0.0).
+         -p:FloorRun=true drops this reference, so the suite runs on the floor the package asks for. -->
+    <PackageReference Include="Google.Cloud.BigQuery.V2" Version="3.*" Condition="'$(FloorRun)' != 'true'" />
   </ItemGroup>
 
   <ItemGroup>
@@ -32,6 +35,7 @@
   <ItemGroup>
     <Compile Include="..\Kronikol.Tests\Tracking\RequestHeaderAccessor.cs" Link="RequestHeaderAccessor.cs" />
     <Compile Include="..\Kronikol.Tests\History\HistoryGuard.cs" Link="HistoryGuard.cs" />
+    <Compile Include="..\Kronikol.Tests\Packaging\PackedNuspec.cs" Link="PackedNuspec.cs" />
   </ItemGroup>
 
 </Project>

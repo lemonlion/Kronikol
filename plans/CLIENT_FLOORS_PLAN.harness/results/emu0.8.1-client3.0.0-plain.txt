@@ -1,0 +1,86 @@
+# Google.Cloud.BigQuery.V2 3.0.0+7be8c10d1bd7403d12516c3c9a14b1a453f618a7 | mode plain | BaseUri http://127.0.0.1:19050/
+## S0 setup: dataset, table (ts, rec.inner_ts, arr), insertAll one row
+  > POST /projects/probe/datasets?key=any&prettyPrint=false
+    body: {"datasetReference":{"datasetId":"ds_3_0_0_plain_e081","projectId":"probe"}}
+  < 200 (no rows)
+  > POST /projects/probe/datasets/ds_3_0_0_plain_e081/tables?key=any&prettyPrint=false
+    body: {"schema":{"fields":[{"mode":"NULLABLE","name":"id","type":"INTEGER"},{"mode":"NULLABLE","name":"ts","type":"TIMESTAMP"},{"fields":[{"mode":"NULLABLE","name":"inner_ts","type":"TIMESTAMP"},{"mode":"NULLABLE","name":"label","type":"STRING"}],"mode":"NULLABLE","name":"rec","type":"RECORD"},{"mode":"REPEATED","name":"arr","type":"TIMESTAMP"}]},"tableReference":...
+  < 200 (no rows)
+  > POST /projects/probe/datasets/ds_3_0_0_plain_e081/tables/t/insertAll?key=any&prettyPrint=false
+    body: {"rows":[{"insertId":"c59ff045-71e1-45dd-8206-d37a85b5ce01","json":{"id":1,"ts":"2023-10-27T00:00:00Z","rec":{"inner_ts":"2023-10-27T00:00:01.5Z","label":"x"},"arr":["2023-10-27T00:00:00Z","2023-10-27T00:00:02Z"]}}]}
+  < 200 (no rows)
+  = ok
+## Q1 ExecuteQueryAsync(sql, null, QueryOptions { UseQueryCache = false }), the issue's call
+  > POST /projects/probe/jobs?key=any&prettyPrint=false
+    body: {"configuration":{"query":{"query":"SELECT id, ts FROM `probe.ds_3_0_0_plain_e081.t`","useLegacySql":false,"useQueryCache":false}},"jobReference":{"jobId":"job_ce312afe_4aab_4e11_9b8c_af9f46e2f095","projectId":"probe"}}
+  < 200 (no rows)
+  > GET /projects/probe/queries/job_ce312afe_4aab_4e11_9b8c_af9f46e2f095?key=any&timeoutMs=60000&prettyPrint=false
+  < 200 "rows":[{"f":[{"v":"1"},{"v":"1698364800.000000"}]}],"totalRows":"1","jobComplete":true}
+  = ts=2023-10-27T00:00:00.0000000Z
+## Q2 ExecuteQueryAsync(sql, null), no options
+  > POST /projects/probe/jobs?key=any&prettyPrint=false
+    body: {"configuration":{"query":{"query":"SELECT id, ts FROM `probe.ds_3_0_0_plain_e081.t`","useLegacySql":false}},"jobReference":{"jobId":"job_6d3872ff_1bd5_4530_8406_315fda24f025","projectId":"probe"}}
+  < 200 (no rows)
+  > GET /projects/probe/queries/job_6d3872ff_1bd5_4530_8406_315fda24f025?key=any&timeoutMs=60000&prettyPrint=false
+  < 200 "rows":[{"f":[{"v":"1"},{"v":"1698364800.000000"}]}],"totalRows":"1","jobComplete":true}
+  = ts=2023-10-27T00:00:00.0000000Z
+## Q3 a TIMESTAMP literal, no table
+  > POST /projects/probe/jobs?key=any&prettyPrint=false
+    body: {"configuration":{"query":{"query":"SELECT TIMESTAMP '2023-10-27 00:00:00+00' AS ts","useLegacySql":false}},"jobReference":{"jobId":"job_a9fa715b_1f62_46b6_b6ea_f1db5803d1d4","projectId":"probe"}}
+  < 200 (no rows)
+  > GET /projects/probe/queries/job_a9fa715b_1f62_46b6_b6ea_f1db5803d1d4?key=any&timeoutMs=60000&prettyPrint=false
+  < 200 "rows":[{"f":[{"v":"1698364800.000000"}]}],"totalRows":"1","jobComplete":true}
+  = ts=2023-10-27T00:00:00.0000000Z
+## Q4 a TIMESTAMP query parameter
+  > POST /projects/probe/jobs?key=any&prettyPrint=false
+    body: {"configuration":{"query":{"parameterMode":"named","query":"SELECT @p AS ts","queryParameters":[{"name":"p","parameterType":{"type":"TIMESTAMP"},"parameterValue":{"value":"2023-10-27 00:00:00+00"}}],"useLegacySql":false}},"jobReference":{"jobId":"job_5642d52b_1594_4cab_80ad_85db23f914f6","projectId":"probe"}}
+  < 200 (no rows)
+  > GET /projects/probe/queries/job_5642d52b_1594_4cab_80ad_85db23f914f6?key=any&timeoutMs=60000&prettyPrint=false
+  < 200 "rows":[{"f":[{"v":"2023-10-27 00:00:00+00"}]}],"totalRows":"1","jobComplete":true}
+  = ts=2023-10-27 00:00:00+00
+## Q5 RECORD and REPEATED timestamps
+  > POST /projects/probe/jobs?key=any&prettyPrint=false
+    body: {"configuration":{"query":{"query":"SELECT rec, arr FROM `probe.ds_3_0_0_plain_e081.t`","useLegacySql":false}},"jobReference":{"jobId":"job_93feccdd_bb66_4493_9b58_1154676f8d1d","projectId":"probe"}}
+  < 200 (no rows)
+  > GET /projects/probe/queries/job_93feccdd_bb66_4493_9b58_1154676f8d1d?key=any&timeoutMs=60000&prettyPrint=false
+  < 200 "rows":[{"f":[{"v":{"f":[{"v":"2023-10-27 00:00:01.500000+00"},{"v":"x"}]}},{"v":[{"v":"2023-10-27 00:00:00+00"},{"v":"2023-10-27 00:00:02+00"}]}]}],"totalRows":"1","jobComplete":true}
+  = THROWS FormatException: The input string '2023-10-27 00:00:01.500000+00' was not in a correct format.
+## Q6 ListRows (tabledata.list)
+  > GET /projects/probe/datasets/ds_3_0_0_plain_e081/tables/t?key=any&prettyPrint=false
+  < 200 (no rows)
+  > GET /projects/probe/datasets/ds_3_0_0_plain_e081/tables/t/data?key=any&prettyPrint=false
+  < 200 "rows":[{"f":[{"v":"1"},{"v":"1698364800.000000"},{"v":{"f":[{"v":"2023-10-27 00:00:01.500000+00"},{"v":"x"}]}},{"v":[{"v":"2023-10-27 00:00:00+00"},{"v":"2023-10-27 00:00:02+00"}]}]},{"f":[{"v":"2"},{"v":"1698364801.000000"},{"v":null},{"v":[]}]}],"totalRows":"2"}
+  = ts=2023-10-27T00:00:00.0000000Z, THROWS FormatException: The input string '2023-10-27 00:00:01.500000+00' was not in a correct format.
+## Q7 DML INSERT, then SELECT the inserted row
+  > POST /projects/probe/jobs?key=any&prettyPrint=false
+    body: {"configuration":{"query":{"query":"INSERT INTO `probe.ds_3_0_0_plain_e081.t` (id, ts) VALUES (2, TIMESTAMP '2023-10-27 00:00:01+00')","useLegacySql":false}},"jobReference":{"jobId":"job_41a11e2b_e627_404c_8686_3f46b08df764","projectId":"probe"}}
+  < 200 (no rows)
+  > GET /projects/probe/queries/job_41a11e2b_e627_404c_8686_3f46b08df764?key=any&timeoutMs=60000&prettyPrint=false
+  < 200 "rows":[],"totalRows":"0","jobComplete":true}
+  > POST /projects/probe/jobs?key=any&prettyPrint=false
+    body: {"configuration":{"query":{"query":"SELECT ts FROM `probe.ds_3_0_0_plain_e081.t` WHERE id = 2","useLegacySql":false}},"jobReference":{"jobId":"job_35a84e4c_afbe_4e16_afe7_7f87d5a2d6d0","projectId":"probe"}}
+  < 200 (no rows)
+  > GET /projects/probe/queries/job_35a84e4c_afbe_4e16_afe7_7f87d5a2d6d0?key=any&timeoutMs=60000&prettyPrint=false
+  < 200 "rows":[{"f":[{"v":"1698364801.000000"}]}],"totalRows":"1","jobComplete":true}
+  = ts=2023-10-27T00:00:01.0000000Z
+## Q8 QueryOptions { Priority = Interactive } (the default priority, set explicitly)
+  > POST /projects/probe/jobs?key=any&prettyPrint=false
+    body: {"configuration":{"query":{"priority":"INTERACTIVE","query":"SELECT id, ts FROM `probe.ds_3_0_0_plain_e081.t`","useLegacySql":false,"useQueryCache":false}},"jobReference":{"jobId":"job_4fa2bbe8_62a4_4bf1_8857_e77d0fc6763b","projectId":"probe"}}
+  < 200 (no rows)
+  > GET /projects/probe/queries/job_4fa2bbe8_62a4_4bf1_8857_e77d0fc6763b?key=any&timeoutMs=60000&prettyPrint=false
+  < 200 "rows":[{"f":[{"v":"1"},{"v":"1698364800.000000"}]},{"f":[{"v":"2"},{"v":"1698364801.000000"}]}],"totalRows":"2","jobComplete":true}
+  = ts=2023-10-27T00:00:00.0000000Z, ts=2023-10-27T00:00:01.0000000Z
+## Q9 QueryOptions { JobIdPrefix }
+  > POST /projects/probe/jobs?key=any&prettyPrint=false
+    body: {"configuration":{"query":{"query":"SELECT id, ts FROM `probe.ds_3_0_0_plain_e081.t`","useLegacySql":false,"useQueryCache":false}},"jobReference":{"jobId":"probe_ca9555c2_3986_4397_934d_09a0876fae03","projectId":"probe"}}
+  < 200 (no rows)
+  > GET /projects/probe/queries/probe_ca9555c2_3986_4397_934d_09a0876fae03?key=any&timeoutMs=60000&prettyPrint=false
+  < 200 "rows":[{"f":[{"v":"1"},{"v":"1698364800.000000"}]},{"f":[{"v":"2"},{"v":"1698364801.000000"}]}],"totalRows":"2","jobComplete":true}
+  = ts=2023-10-27T00:00:00.0000000Z, ts=2023-10-27T00:00:01.0000000Z
+## Q11 CreateQueryJob + GetQueryResults (the job path, by hand)
+  > POST /projects/probe/jobs?key=any&prettyPrint=false
+    body: {"configuration":{"query":{"query":"SELECT id, ts FROM `probe.ds_3_0_0_plain_e081.t`","useLegacySql":false}},"jobReference":{"jobId":"job_134f3f64_fec0_4c94_9fba_709761ce4475","projectId":"probe"}}
+  < 200 (no rows)
+  > GET /projects/probe/queries/job_134f3f64_fec0_4c94_9fba_709761ce4475?key=any&timeoutMs=60000&prettyPrint=false
+  < 200 "rows":[{"f":[{"v":"1"},{"v":"1698364800.000000"}]},{"f":[{"v":"2"},{"v":"1698364801.000000"}]}],"totalRows":"2","jobComplete":true}
+  = ts=2023-10-27T00:00:00.0000000Z, ts=2023-10-27T00:00:01.0000000Z

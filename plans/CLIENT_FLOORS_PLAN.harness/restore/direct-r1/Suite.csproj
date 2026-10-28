@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- restore/direct with R1's packed extension (its version in $(KronikolVersion), from the local feed). -->
+  <PropertyGroup><TargetFramework>net10.0</TargetFramework><ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally></PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Google.Cloud.BigQuery.V2" Version="3.11.0" />
+    <PackageReference Include="Kronikol.Extensions.BigQuery" Version="$(KronikolVersion)" />
+  </ItemGroup>
+</Project>

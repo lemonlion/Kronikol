@@ -1,0 +1,42 @@
+# Fixed PackageReference versions in packable src/ projects, with what each published 5.14.0 nuspec asks for.
+# project | pin | published | older releases of the same major | newest | in the nuspec
+Kronikol.AssertionTracking | Mono.Cecil 0.11.6 | published 2024-10-02 | 23 older 0.x (first 0.9.4) | newest 0.11.6 | nuspec: not a dependency (bundled or private)
+Kronikol.AssertionTracking | Microsoft.Build.Utilities.Core 18.4.0 | published 2026-03-10 | 2 older 18.x (first 18.0.2) | newest 18.11.0 | nuspec: not a dependency (bundled or private)
+Kronikol.BDDfy.xUnit3 | TestStack.BDDfy 8.0.1.3 | published 2025-10-16 | 0 older 8.x (first 8.0.1.3) | newest 10.0.13 | nuspec: 8.0.1.3
+Kronikol.Extensions.ClickHouse.Client | ClickHouse.Client 7.14.0 | published 2025-05-05 | 33 older 7.x (first 7.0.0) | newest 7.14.0 | nuspec: 7.14.0
+Kronikol.Extensions.ClickHouse.Driver | ClickHouse.Driver 1.4.0 | published 2026-09-02 | 6 older 1.x (first 1.0.0) | newest 1.5.0 | nuspec: 1.4.0
+Kronikol.Extensions.ClickHouse.Octonica | Octonica.ClickHouseClient 3.1.10 | published 2026-05-21 | 7 older 3.x (first 3.1.1) | newest 4.1.6 | nuspec: 3.1.10
+Kronikol.Extensions.DynamoDB | AWSSDK.DynamoDBv2 4.0.18.1 | published 2026-05-04 | 84 older 4.x (first 4.0.0) | newest 4.0.109.3 | nuspec: 4.0.18.1
+Kronikol.Extensions.Elasticsearch | Elastic.Clients.Elasticsearch 9.4.0 | published 2026-05-06 | 34 older 9.x (first 9.0.0) | newest 9.5.3 | nuspec: 9.4.0
+Kronikol.Extensions.EventBridge | AWSSDK.EventBridge 4.0.5.29 | published 2026-05-04 | 62 older 4.x (first 4.0.0) | newest 4.0.101.8 | nuspec: 4.0.5.29
+Kronikol.Extensions.MassTransit | MassTransit 9.1.0 | published 2026-03-30 | 2 older 9.x (first 9.0.0) | newest 9.2.4 | nuspec: 9.1.0
+Kronikol.Extensions.MediatR | MediatR 14.1.0 | published 2026-03-03 | 1 older 14.x (first 14.0.0) | newest 14.2.0 | nuspec: 14.1.0
+Kronikol.Extensions.MongoDB.V2 | MongoDB.Driver 2.28.0 | published 2024-07-23 | 74 older 2.x (first 2.0.0) | newest 3.13.0 | nuspec: 2.28.0
+Kronikol.Extensions.MongoDB | MongoDB.Driver 3.9.0 | published 2026-05-27 | 17 older 3.x (first 3.0.0) | newest 3.13.0 | nuspec: 3.9.0
+Kronikol.Extensions.MySqlConnector | MySqlConnector 2.5.0 | published 2025-11-12 | 32 older 2.x (first 2.0.0) | newest 2.6.2 | nuspec: 2.5.0
+Kronikol.Extensions.Npgsql | Npgsql 10.0.2 | published 2026-03-12 | 2 older 10.x (first 10.0.0) | newest 10.0.3 | nuspec: 10.0.2
+Kronikol.Extensions.S3 | AWSSDK.S3 4.0.23 | published 2026-05-06 | 107 older 4.x (first 4.0.0) | newest 4.0.104.7 | nuspec: 4.0.23
+Kronikol.Extensions.SNS | AWSSDK.SimpleNotificationService 4.0.2.30 | published 2026-05-04 | 62 older 4.x (first 4.0.0) | newest 4.0.100.22 | nuspec: 4.0.2.30
+Kronikol.Extensions.SQS | AWSSDK.SQS 4.0.2.28 | published 2026-05-04 | 65 older 4.x (first 4.0.0) | newest 4.0.100.21 | nuspec: 4.0.2.28
+Kronikol.Extensions.SqlClient | Microsoft.Data.SqlClient 7.0.1 | published 2026-04-24 | 1 older 7.x (first 7.0.0) | newest 7.1.1 | nuspec: 7.0.1
+Kronikol.LightBDD.Core | LightBDD.Framework 3.12.0 | published 2026-03-28 | 20 older 3.x (first 3.0.0) | newest 3.12.1 | nuspec: 3.12.0
+Kronikol.LightBDD.TUnit | LightBDD.TUnit 3.12.1 | published 2026-06-27 | 4 older 3.x (first 3.11.0) | newest 3.12.1 | nuspec: 3.12.1
+Kronikol.LightBDD.xUnit2 | LightBDD.XUnit2 3.12.0 | published 2026-03-28 | 20 older 3.x (first 3.0.0) | newest 3.12.1 | nuspec: 3.12.0
+Kronikol.LightBDD.xUnit2 | xunit 2.9.3 | published 2025-01-08 | 26 older 2.x (first 2.0.0) | newest 2.9.3 | nuspec: 2.9.3
+Kronikol.LightBDD.xUnit3 | LightBDD.XUnit3 3.12.0 | published 2026-03-28 | 0 older 3.x (first 3.12.0) | newest 3.12.1 | nuspec: 3.12.0
+Kronikol.MSTest | MSTest.TestFramework 4.2.2 | published 2026-04-30 | 5 older 4.x (first 4.0.0) | newest 4.5.2 | nuspec: 4.2.2
+Kronikol.NUnit4 | NUnit 4.6.0 | published 2026-05-03 | 12 older 4.x (first 4.0.0) | newest 5.0.0 | nuspec: 4.6.0
+Kronikol.PlantUml.Ikvm | IKVM 8.15.0 | published 2025-12-06 | 49 older 8.x (first 8.0.5449) | newest 8.16.3 | nuspec: 8.15.0
+Kronikol.PlantUml.Ikvm | IKVM.Image 8.15.0 | published 2025-12-06 | 42 older 8.x (first 8.3.0) | newest 8.16.3 | nuspec: 8.15.0
+Kronikol.PlantUml.Ikvm | IKVM.Image.JDK 8.15.0 | published 2025-12-06 | 42 older 8.x (first 8.3.0) | newest 8.16.3 | nuspec: 8.15.0
+Kronikol.PlantUml.Ikvm | IKVM.Image.JRE 8.15.0 | published 2025-12-06 | 42 older 8.x (first 8.3.0) | newest 8.16.3 | nuspec: 8.15.0
+Kronikol.PlantUml.Ikvm | IKVM.MSBuild 8.15.0 | published 2025-12-06 | 42 older 8.x (first 8.3.0) | newest 8.16.3 | nuspec: 8.15.0
+Kronikol.Playwright | Microsoft.Playwright 1.59.0 | published 2026-04-09 | 70 older 1.x (first 1.12.0) | newest 1.64.1 | nuspec: 1.59.0
+Kronikol.ReqNRoll.Core | Reqnroll 3.3.4 | published 2026-03-23 | 13 older 3.x (first 3.0.0) | newest 3.3.4 | nuspec: 3.3.4
+Kronikol.StepTracking | Mono.Cecil 0.11.6 | published 2024-10-02 | 23 older 0.x (first 0.9.4) | newest 0.11.6 | nuspec: not a dependency (bundled or private)
+Kronikol.StepTracking | Microsoft.Build.Utilities.Core 18.4.0 | published 2026-03-10 | 2 older 18.x (first 18.0.2) | newest 18.11.0 | nuspec: not a dependency (bundled or private)
+Kronikol.TUnit | TUnit.Core 1.43.11 | published 2026-05-02 | 172 older 1.x (first 1.0.0) | newest 1.76.28 | nuspec: 1.43.11
+Kronikol.xUnit2 | xunit.extensibility.execution 2.9.3 | published 2025-01-08 | 26 older 2.x (first 2.0.0) | newest 2.9.3 | nuspec: 2.9.3
+Kronikol.xUnit3 | xunit.v3.extensibility.core 3.2.2 | published 2026-01-14 | 5 older 3.x (first 3.0.0) | newest 4.0.2 | nuspec: 3.2.2
+Kronikol | Microsoft.AspNetCore.Mvc.Testing 10.0.7 | published 2026-04-21 | 7 older 10.x (first 10.0.0) | newest 10.0.14 | nuspec: 10.0.7
+# 35 of 39 pins reach consumers as the nuspec floor

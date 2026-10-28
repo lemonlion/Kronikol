@@ -1,0 +1,7 @@
+# R1's floor run (green.sh in the session scratchpad, 2026-10-28), at 5.22.0 (3d1817b2) with R1's changes; 05bdd90d, the
+# base R1 is committed on, changes plans/ only. The suite on the newest 3.x through the direct reference, then on the
+# floor with -p:FloorRun=true, and the restore put back on the newest. 99 facts: 95 when floor.txt was written, plus
+# BigQueryPackageTests and three handler facts 5.16.1 and 5.17.0 added.
+newest: exit 0 | Passed! - Failed: 0, Passed: 99, Skipped: 0, Total: 99, Duration: 3 s - Kronikol.Tests.BigQuery.dll (net10.0) | Google.Api.Gax.Rest/4.13.1 Google.Apis/1.74.0 Google.Cloud.BigQuery.V2/3.12.0 | audit: 0
+floor: exit 0 | Passed! - Failed: 0, Passed: 99, Skipped: 0, Total: 99, Duration: 1 s - Kronikol.Tests.BigQuery.dll (net10.0) | Google.Api.Gax.Rest/4.0.0 Google.Apis/1.57.0 Google.Cloud.BigQuery.V2/3.0.0 | audit: 0
+restored back: Google.Api.Gax.Rest/4.13.1 Google.Apis/1.74.0 Google.Cloud.BigQuery.V2/3.12.0

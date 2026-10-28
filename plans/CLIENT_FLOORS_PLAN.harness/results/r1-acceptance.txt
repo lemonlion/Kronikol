@@ -1,0 +1,35 @@
+# r1-acceptance.sh, 2026-10-28, at 5.22.0 with R1's changes, emulator ghcr.io/goccy/bigquery-emulator:0.8.1 (a fresh
+# container for each client). Kronikol and the extension packed as 5.22.1-r1floor.
+<dependency id="Google.Cloud.BigQuery.V2" version="3.0.0" exclude="Build,Analyzers" />
+cpm-r1: restore exit 0 | Google.Cloud.BigQuery.V2/3.11.0 | 
+direct-r1: restore exit 0 | Google.Cloud.BigQuery.V2/3.11.0 | 
+probe client 3.11.0: restore exit 0 | 
+probe client 3.11.0: run exit 0
+probe client 3.12.0: restore exit 0 | 
+probe client 3.12.0: run exit 0
+
+# probe/compare.py: each scenario's outcome lines, the new runs (kronikol mode, the packed R1 extension) against the
+# earlier runs on the same emulator: kronikol mode through the published 5.12.0 extension (Q1 to Q11), and plain mode
+# (Q1 to Q13, the audit's).
+## client 3.11.0 vs emu0.8.1-client3.11.0-kronikol.txt
+Q6: DIFFERS
+S0: DIFFERS
+Q12: only in new
+Q13: only in new
+10 the same, 2 differ
+## client 3.11.0 vs emu0.8.1-client3.11.0-plain-params.txt
+S0: DIFFERS
+13 the same, 1 differ
+## client 3.12.0 vs emu0.8.1-client3.12.0-kronikol.txt
+Q6: DIFFERS
+S0: DIFFERS
+Q12: only in new
+Q13: only in new
+10 the same, 2 differ
+## client 3.12.0 vs emu0.8.1-client3.12.0-plain-params.txt
+Q6: DIFFERS
+S0: DIFFERS
+12 the same, 2 differ
+# S0 differs only in its random insertId. Q6 differs only in totalRows (2 against 1): the earlier runs shared one
+# emulator, whose tabledata.list read the other run's table of the same name (F3); here each client had a fresh one.
+# Q12 and Q13 were added after the kronikol-mode runs. Every outcome (the = lines) is the same.

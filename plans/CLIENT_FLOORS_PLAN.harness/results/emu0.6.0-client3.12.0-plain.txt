@@ -1,0 +1,77 @@
+# Google.Cloud.BigQuery.V2 3.12.0+7ffaea80ef3a3f3d1ca332ab391c2563e0f79998 | mode plain | BaseUri http://127.0.0.1:19052/
+## S0 setup: dataset, table (ts, rec.inner_ts, arr), insertAll one row
+  > POST /projects/probe/datasets?key=any&prettyPrint=false
+    body: {"datasetReference":{"datasetId":"ds_3_12_0_plain_e060","projectId":"probe"}}
+  < 200 (no rows)
+  > POST /projects/probe/datasets/ds_3_12_0_plain_e060/tables?key=any&prettyPrint=false
+    body: {"schema":{"fields":[{"mode":"NULLABLE","name":"id","type":"INTEGER"},{"mode":"NULLABLE","name":"ts","type":"TIMESTAMP"},{"fields":[{"mode":"NULLABLE","name":"inner_ts","type":"TIMESTAMP"},{"mode":"NULLABLE","name":"label","type":"STRING"}],"mode":"NULLABLE","name":"rec","type":"RECORD"},{"mode":"REPEATED","name":"arr","type":"TIMESTAMP"}]},"tableReference":...
+  < 200 (no rows)
+  > POST /projects/probe/datasets/ds_3_12_0_plain_e060/tables/t/insertAll?key=any&prettyPrint=false
+    body: {"rows":[{"insertId":"e693d46c-cb80-4a5e-8ae9-9faf2c1987e0","json":{"id":1,"ts":"2023-10-27T00:00:00Z","rec":{"inner_ts":"2023-10-27T00:00:01.5Z","label":"x"},"arr":["2023-10-27T00:00:00Z","2023-10-27T00:00:02Z"]}}]}
+  < 200 (no rows)
+  = ok
+## Q1 ExecuteQueryAsync(sql, null, QueryOptions { UseQueryCache = false }), the issue's call
+  > POST /projects/probe/queries?key=any&prettyPrint=false
+    body: {"formatOptions":{"useInt64Timestamp":true},"query":"SELECT id, ts FROM `probe.ds_3_12_0_plain_e060.t`","useLegacySql":false,"useQueryCache":false}
+  < 200 "rows":[{"f":[{"v":"1"},{"v":"1698364800.0"}]}],"totalRows":"1","jobComplete":true}
+  = THROWS FormatException: The input string '1698364800.0' was not in a correct format.
+## Q2 ExecuteQueryAsync(sql, null), no options
+  > POST /projects/probe/queries?key=any&prettyPrint=false
+    body: {"formatOptions":{"useInt64Timestamp":true},"query":"SELECT id, ts FROM `probe.ds_3_12_0_plain_e060.t`","useLegacySql":false}
+  < 200 "rows":[{"f":[{"v":"1"},{"v":"1698364800.0"}]}],"totalRows":"1","jobComplete":true}
+  = THROWS FormatException: The input string '1698364800.0' was not in a correct format.
+## Q3 a TIMESTAMP literal, no table
+  > POST /projects/probe/queries?key=any&prettyPrint=false
+    body: {"formatOptions":{"useInt64Timestamp":true},"query":"SELECT TIMESTAMP '2023-10-27 00:00:00+00' AS ts","useLegacySql":false}
+  < 200 "rows":[{"f":[{"v":"1698364800.0"}]}],"totalRows":"1","jobComplete":true}
+  = THROWS FormatException: The input string '1698364800.0' was not in a correct format.
+## Q4 a TIMESTAMP query parameter
+  > POST /projects/probe/queries?key=any&prettyPrint=false
+    body: {"formatOptions":{"useInt64Timestamp":true},"parameterMode":"named","query":"SELECT @p AS ts","queryParameters":[{"name":"p","parameterType":{"type":"TIMESTAMP"},"parameterValue":{"value":"2023-10-27 00:00:00+00"}}],"useLegacySql":false}
+  < 400 "error":{"errors":[{"reason":"jobInternalError","location":"","debugInfo":"","message":"failed to convert value from {Name:p Ordinal:1 Value:2023-10-27 00:00:00+00}: strconv.ParseInt: parsing \"2023-10-27 00:00:00+00\": invalid syntax"}],"c...
+  = THROWS GoogleApiException: The service bigquery has thrown an exception. HttpStatusCode is BadRequest. failed to convert value from {Name:p Ordinal:1 Value:2023-10-27 00:00:00+00}: strconv.ParseInt: parsing "2023-10-27 00:00:00...
+## Q5 RECORD and REPEATED timestamps
+  > POST /projects/probe/queries?key=any&prettyPrint=false
+    body: {"formatOptions":{"useInt64Timestamp":true},"query":"SELECT rec, arr FROM `probe.ds_3_12_0_plain_e060.t`","useLegacySql":false}
+  < 200 "rows":[{"f":[{"v":{"f":[{"v":"2023-10-27T00:00:01Z"},{"v":"x"}]}},{"v":[{"v":"1698364800.0"},{"v":"1698364802.0"}]}]}],"totalRows":"1","jobComplete":true}
+  = THROWS FormatException: The input string '2023-10-27T00:00:01Z' was not in a correct format.
+## Q6 ListRows (tabledata.list)
+  > GET /projects/probe/datasets/ds_3_12_0_plain_e060/tables/t?key=any&prettyPrint=false
+  < 200 (no rows)
+  > GET /projects/probe/datasets/ds_3_12_0_plain_e060/tables/t/data?key=any&formatOptions.useInt64Timestamp=true&prettyPrint=false
+  < 200 "rows":[{"f":[{"v":"1"},{"v":"1698364800.0"},{"v":{"f":[{"v":"2023-10-27T00:00:01Z"},{"v":"x"}]}},{"v":[{"v":"1698364800.0"},{"v":"1698364802.0"}]}]}],"totalRows":"1"}
+  = THROWS FormatException: The input string '1698364800.0' was not in a correct format.
+## Q7 DML INSERT, then SELECT the inserted row
+  > POST /projects/probe/queries?key=any&prettyPrint=false
+    body: {"formatOptions":{"useInt64Timestamp":true},"query":"INSERT INTO `probe.ds_3_12_0_plain_e060.t` (id, ts) VALUES (2, TIMESTAMP '2023-10-27 00:00:01+00')","useLegacySql":false}
+  < 200 "rows":[],"totalRows":"0","jobComplete":true}
+  > POST /projects/probe/queries?key=any&prettyPrint=false
+    body: {"formatOptions":{"useInt64Timestamp":true},"query":"SELECT ts FROM `probe.ds_3_12_0_plain_e060.t` WHERE id = 2","useLegacySql":false}
+  < 200 "rows":[{"f":[{"v":"1698364801.0"}]}],"totalRows":"1","jobComplete":true}
+  = THROWS FormatException: The input string '1698364801.0' was not in a correct format.
+## Q8 QueryOptions { Priority = Interactive } (the default priority, set explicitly)
+  > POST /projects/probe/jobs?key=any&prettyPrint=false
+    body: {"configuration":{"query":{"priority":"INTERACTIVE","query":"SELECT id, ts FROM `probe.ds_3_12_0_plain_e060.t`","useLegacySql":false,"useQueryCache":false}},"jobReference":{"jobId":"job_358ad548_e2bb_4469_b0fb_cd681019a15f","projectId":"probe"}}
+  < 200 (no rows)
+  > GET /projects/probe/queries/job_358ad548_e2bb_4469_b0fb_cd681019a15f?key=any&formatOptions.useInt64Timestamp=true&timeoutMs=60000&prettyPrint=false
+  < 200 "rows":[{"f":[{"v":"1"},{"v":"1698364800000000"}]},{"f":[{"v":"2"},{"v":"1698364801000000"}]}],"totalRows":"2","jobComplete":true}
+  = ts=2023-10-27T00:00:00.0000000Z, ts=2023-10-27T00:00:01.0000000Z
+## Q9 QueryOptions { JobIdPrefix }
+  > POST /projects/probe/jobs?key=any&prettyPrint=false
+    body: {"configuration":{"query":{"query":"SELECT id, ts FROM `probe.ds_3_12_0_plain_e060.t`","useLegacySql":false,"useQueryCache":false}},"jobReference":{"jobId":"probe_29dba232_b181_4b23_9c53_fa423eb55bcd","projectId":"probe"}}
+  < 200 (no rows)
+  > GET /projects/probe/queries/probe_29dba232_b181_4b23_9c53_fa423eb55bcd?key=any&formatOptions.useInt64Timestamp=true&timeoutMs=60000&prettyPrint=false
+  < 200 "rows":[{"f":[{"v":"1"},{"v":"1698364800000000"}]},{"f":[{"v":"2"},{"v":"1698364801000000"}]}],"totalRows":"2","jobComplete":true}
+  = ts=2023-10-27T00:00:00.0000000Z, ts=2023-10-27T00:00:01.0000000Z
+## Q10 GetQueryResultsOptions { UseInt64Timestamp = false }
+  > POST /projects/probe/queries?key=any&prettyPrint=false
+    body: {"formatOptions":{"useInt64Timestamp":false},"query":"SELECT id, ts FROM `probe.ds_3_12_0_plain_e060.t`","useLegacySql":false,"useQueryCache":false}
+  < 200 "rows":[{"f":[{"v":"1"},{"v":"1698364800.0"}]},{"f":[{"v":"2"},{"v":"1698364801.0"}]}],"totalRows":"2","jobComplete":true}
+  = ts=2023-10-27T00:00:00.0000000Z, ts=2023-10-27T00:00:01.0000000Z
+## Q11 CreateQueryJob + GetQueryResults (the job path, by hand)
+  > POST /projects/probe/jobs?key=any&prettyPrint=false
+    body: {"configuration":{"query":{"query":"SELECT id, ts FROM `probe.ds_3_12_0_plain_e060.t`","useLegacySql":false}},"jobReference":{"jobId":"job_c325fafc_963d_4ba2_a6e2_2ed8156b5aa2","projectId":"probe"}}
+  < 200 (no rows)
+  > GET /projects/probe/queries/job_c325fafc_963d_4ba2_a6e2_2ed8156b5aa2?key=any&formatOptions.useInt64Timestamp=true&timeoutMs=60000&prettyPrint=false
+  < 200 "rows":[{"f":[{"v":"1"},{"v":"1698364800000000"}]},{"f":[{"v":"2"},{"v":"1698364801000000"}]}],"totalRows":"2","jobComplete":true}
+  = ts=2023-10-27T00:00:00.0000000Z, ts=2023-10-27T00:00:01.0000000Z

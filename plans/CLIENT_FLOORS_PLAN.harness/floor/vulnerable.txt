@@ -1,0 +1,6 @@
+== client 3.0.0 with Kronikol.Extensions.BigQuery 5.12.0
+   C:\Program Files (x86)\Microsoft SDKs\NuGetPackages\
+The given project `Probe` has no vulnerable packages given the current sources.
+== client 3.12.0 with Kronikol.Extensions.BigQuery 5.12.0
+   C:\Program Files (x86)\Microsoft SDKs\NuGetPackages\
+The given project `Probe` has no vulnerable packages given the current sources.

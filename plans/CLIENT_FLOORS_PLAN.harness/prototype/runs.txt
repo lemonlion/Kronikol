@@ -1,0 +1,12 @@
+# R1 prototype runs, 2026-10-27, on 1ee6373a (5.12.0; the files R1 touches are unchanged at 8d7d1e1d, 5.14.0)
+## red: BigQueryPackageTests before the csproj pin
+[xUnit.net 00:00:03.02]                   Expected: "3.0.0"
+[xUnit.net 00:00:03.02]                   Actual:   "3.12.0"
+Total tests: 1
+## green: suite on the newest 3.x (direct test reference)
+Passed!  - Failed:     0, Passed:    96, Skipped:     0, Total:    96, Duration: 2 s - Kronikol.Tests.BigQuery.dll (net10.0)
+client resolved: Google.Cloud.BigQuery.V2 3.12.0
+## floor: dotnet test -p:FloorRun=true
+Passed!  - Failed:     0, Passed:    96, Skipped:     0, Total:    96, Duration: 2 s - Kronikol.Tests.BigQuery.dll (net10.0)
+client resolved: Google.Cloud.BigQuery.V2 3.0.0
+No NU warning in either restore.

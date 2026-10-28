@@ -1,0 +1,4 @@
+## dotnet restore, CPM with a central float
+error NU1011: The following PackageVersion items cannot specify a floating version: Google.Cloud.BigQuery.V2. For more information on how to enable this functionality for projects using Central Package Management, visit https://aka.ms/nu1011
+## with -p:CentralPackageFloatingVersionsEnabled=true
+Restored C:\Code\Kronikol-205\plans\CLIENT_FLOORS_PLAN.harness\restore\cpm-float\Lib.csproj

@@ -1,0 +1,107 @@
+# Google.Cloud.BigQuery.V2 3.11.0+5941905203230689e31e7a060757a3e4cc3ef8a8 | mode plain | BaseUri http://127.0.0.1:19050/
+## S0 setup: dataset, table (ts, rec.inner_ts, arr), insertAll one row
+  > POST /projects/probe/datasets?key=any&prettyPrint=false
+    body: {"datasetReference":{"datasetId":"ds_3_11_0_plain_p0813110","projectId":"probe"}}
+  < 200 (no rows)
+  > POST /projects/probe/datasets/ds_3_11_0_plain_p0813110/tables?key=any&prettyPrint=false
+    body: {"schema":{"fields":[{"mode":"NULLABLE","name":"id","type":"INTEGER"},{"mode":"NULLABLE","name":"ts","type":"TIMESTAMP"},{"fields":[{"mode":"NULLABLE","name":"inner_ts","type":"TIMESTAMP"},{"mode":"NULLABLE","name":"label","type":"STRING"}],"mode":"NULLABLE","name":"rec","type":"RECORD"},{"mode":"REPEATED","name":"arr","type":"TIMESTAMP"}]},"tableReference":...
+  < 200 (no rows)
+  > POST /projects/probe/datasets/ds_3_11_0_plain_p0813110/tables/t/insertAll?key=any&prettyPrint=false
+    body: {"rows":[{"insertId":"48f908a2-f5ef-4117-a415-615c403c3c4f","json":{"id":1,"ts":"2023-10-27T00:00:00Z","rec":{"inner_ts":"2023-10-27T00:00:01.5Z","label":"x"},"arr":["2023-10-27T00:00:00Z","2023-10-27T00:00:02Z"]}}]}
+  < 200 (no rows)
+  = ok
+## Q1 ExecuteQueryAsync(sql, null, QueryOptions { UseQueryCache = false }), the issue's call
+  > POST /projects/probe/jobs?key=any&prettyPrint=false
+    body: {"configuration":{"query":{"query":"SELECT id, ts FROM `probe.ds_3_11_0_plain_p0813110.t`","useLegacySql":false,"useQueryCache":false}},"jobReference":{"jobId":"job_8391e8ca_0a3a_4f12_b4a7_ca3a630c8ef5","projectId":"probe"}}
+  < 200 (no rows)
+  > GET /projects/probe/queries/job_8391e8ca_0a3a_4f12_b4a7_ca3a630c8ef5?key=any&formatOptions.useInt64Timestamp=true&timeoutMs=60000&prettyPrint=false
+  < 200 "rows":[{"f":[{"v":"1"},{"v":"1698364800000000"}]}],"totalRows":"1","jobComplete":true}
+  = ts=2023-10-27T00:00:00.0000000Z
+## Q2 ExecuteQueryAsync(sql, null), no options
+  > POST /projects/probe/jobs?key=any&prettyPrint=false
+    body: {"configuration":{"query":{"query":"SELECT id, ts FROM `probe.ds_3_11_0_plain_p0813110.t`","useLegacySql":false}},"jobReference":{"jobId":"job_dd45331d_d348_44a9_aba2_e9b13989d2bc","projectId":"probe"}}
+  < 200 (no rows)
+  > GET /projects/probe/queries/job_dd45331d_d348_44a9_aba2_e9b13989d2bc?key=any&formatOptions.useInt64Timestamp=true&timeoutMs=60000&prettyPrint=false
+  < 200 "rows":[{"f":[{"v":"1"},{"v":"1698364800000000"}]}],"totalRows":"1","jobComplete":true}
+  = ts=2023-10-27T00:00:00.0000000Z
+## Q3 a TIMESTAMP literal, no table
+  > POST /projects/probe/jobs?key=any&prettyPrint=false
+    body: {"configuration":{"query":{"query":"SELECT TIMESTAMP '2023-10-27 00:00:00+00' AS ts","useLegacySql":false}},"jobReference":{"jobId":"job_65b607bf_782d_43fc_81d5_2648f856e2b8","projectId":"probe"}}
+  < 200 (no rows)
+  > GET /projects/probe/queries/job_65b607bf_782d_43fc_81d5_2648f856e2b8?key=any&formatOptions.useInt64Timestamp=true&timeoutMs=60000&prettyPrint=false
+  < 200 "rows":[{"f":[{"v":"1698364800000000"}]}],"totalRows":"1","jobComplete":true}
+  = ts=2023-10-27T00:00:00.0000000Z
+## Q4 a TIMESTAMP query parameter
+  > POST /projects/probe/jobs?key=any&prettyPrint=false
+    body: {"configuration":{"query":{"parameterMode":"named","query":"SELECT @p AS ts","queryParameters":[{"name":"p","parameterType":{"type":"TIMESTAMP"},"parameterValue":{"value":"2023-10-27 00:00:00+00"}}],"useLegacySql":false}},"jobReference":{"jobId":"job_9c66b35a_8dd1_40a6_8f90_c3f98bcaded6","projectId":"probe"}}
+  < 200 (no rows)
+  > GET /projects/probe/queries/job_9c66b35a_8dd1_40a6_8f90_c3f98bcaded6?key=any&formatOptions.useInt64Timestamp=true&timeoutMs=60000&prettyPrint=false
+  < 200 "rows":[{"f":[{"v":"2023-10-27 00:00:00+00"}]}],"totalRows":"1","jobComplete":true}
+  = ts=2023-10-27 00:00:00+00
+## Q5 RECORD and REPEATED timestamps
+  > POST /projects/probe/jobs?key=any&prettyPrint=false
+    body: {"configuration":{"query":{"query":"SELECT rec, arr FROM `probe.ds_3_11_0_plain_p0813110.t`","useLegacySql":false}},"jobReference":{"jobId":"job_d8ea1a18_2141_496f_aba6_5a07e38c3dda","projectId":"probe"}}
+  < 200 (no rows)
+  > GET /projects/probe/queries/job_d8ea1a18_2141_496f_aba6_5a07e38c3dda?key=any&formatOptions.useInt64Timestamp=true&timeoutMs=60000&prettyPrint=false
+  < 200 "rows":[{"f":[{"v":{"f":[{"v":"2023-10-27 00:00:01.500000+00"},{"v":"x"}]}},{"v":[{"v":"2023-10-27 00:00:00+00"},{"v":"2023-10-27 00:00:02+00"}]}]}],"totalRows":"1","jobComplete":true}
+  = THROWS FormatException: The input string '2023-10-27 00:00:01.500000+00' was not in a correct format.
+## Q6 ListRows (tabledata.list)
+  > GET /projects/probe/datasets/ds_3_11_0_plain_p0813110/tables/t?key=any&prettyPrint=false
+  < 200 (no rows)
+  > GET /projects/probe/datasets/ds_3_11_0_plain_p0813110/tables/t/data?key=any&formatOptions.useInt64Timestamp=true&prettyPrint=false
+  < 200 "rows":[{"f":[{"v":"1"},{"v":"1698364800000000"},{"v":{"f":[{"v":"2023-10-27 00:00:01.500000+00"},{"v":"x"}]}},{"v":[{"v":"2023-10-27 00:00:00+00"},{"v":"2023-10-27 00:00:02+00"}]}]}],"totalRows":"1"}
+  = ts=2023-10-27T00:00:00.0000000Z, THROWS FormatException: The input string '2023-10-27 00:00:01.500000+00' was not in a correct format.
+## Q7 DML INSERT, then SELECT the inserted row
+  > POST /projects/probe/jobs?key=any&prettyPrint=false
+    body: {"configuration":{"query":{"query":"INSERT INTO `probe.ds_3_11_0_plain_p0813110.t` (id, ts) VALUES (2, TIMESTAMP '2023-10-27 00:00:01+00')","useLegacySql":false}},"jobReference":{"jobId":"job_ce662d1e_e9da_4a05_a2fe_d15c5588e5d7","projectId":"probe"}}
+  < 200 (no rows)
+  > GET /projects/probe/queries/job_ce662d1e_e9da_4a05_a2fe_d15c5588e5d7?key=any&formatOptions.useInt64Timestamp=true&timeoutMs=60000&prettyPrint=false
+  < 200 "rows":[],"totalRows":"0","jobComplete":true}
+  > POST /projects/probe/jobs?key=any&prettyPrint=false
+    body: {"configuration":{"query":{"query":"SELECT ts FROM `probe.ds_3_11_0_plain_p0813110.t` WHERE id = 2","useLegacySql":false}},"jobReference":{"jobId":"job_ff7900df_cdfd_4bfe_929c_3accedcf31f8","projectId":"probe"}}
+  < 200 (no rows)
+  > GET /projects/probe/queries/job_ff7900df_cdfd_4bfe_929c_3accedcf31f8?key=any&formatOptions.useInt64Timestamp=true&timeoutMs=60000&prettyPrint=false
+  < 200 "rows":[{"f":[{"v":"1698364801000000"}]}],"totalRows":"1","jobComplete":true}
+  = ts=2023-10-27T00:00:01.0000000Z
+## Q8 QueryOptions { Priority = Interactive } (the default priority, set explicitly)
+  > POST /projects/probe/jobs?key=any&prettyPrint=false
+    body: {"configuration":{"query":{"priority":"INTERACTIVE","query":"SELECT id, ts FROM `probe.ds_3_11_0_plain_p0813110.t`","useLegacySql":false,"useQueryCache":false}},"jobReference":{"jobId":"job_80fecb50_04f7_40f6_9940_466f08f18265","projectId":"probe"}}
+  < 200 (no rows)
+  > GET /projects/probe/queries/job_80fecb50_04f7_40f6_9940_466f08f18265?key=any&formatOptions.useInt64Timestamp=true&timeoutMs=60000&prettyPrint=false
+  < 200 "rows":[{"f":[{"v":"1"},{"v":"1698364800000000"}]},{"f":[{"v":"2"},{"v":"1698364801000000"}]}],"totalRows":"2","jobComplete":true}
+  = ts=2023-10-27T00:00:00.0000000Z, ts=2023-10-27T00:00:01.0000000Z
+## Q9 QueryOptions { JobIdPrefix }
+  > POST /projects/probe/jobs?key=any&prettyPrint=false
+    body: {"configuration":{"query":{"query":"SELECT id, ts FROM `probe.ds_3_11_0_plain_p0813110.t`","useLegacySql":false,"useQueryCache":false}},"jobReference":{"jobId":"probe_201459da_3785_4d98_bcc2_09e425b479c4","projectId":"probe"}}
+  < 200 (no rows)
+  > GET /projects/probe/queries/probe_201459da_3785_4d98_bcc2_09e425b479c4?key=any&formatOptions.useInt64Timestamp=true&timeoutMs=60000&prettyPrint=false
+  < 200 "rows":[{"f":[{"v":"1"},{"v":"1698364800000000"}]},{"f":[{"v":"2"},{"v":"1698364801000000"}]}],"totalRows":"2","jobComplete":true}
+  = ts=2023-10-27T00:00:00.0000000Z, ts=2023-10-27T00:00:01.0000000Z
+## Q10 GetQueryResultsOptions { UseInt64Timestamp = false }
+  > POST /projects/probe/jobs?key=any&prettyPrint=false
+    body: {"configuration":{"query":{"query":"SELECT id, ts FROM `probe.ds_3_11_0_plain_p0813110.t`","useLegacySql":false,"useQueryCache":false}},"jobReference":{"jobId":"job_98abf19b_894c_4d5c_bbf1_8127bd8727f5","projectId":"probe"}}
+  < 200 (no rows)
+  > GET /projects/probe/queries/job_98abf19b_894c_4d5c_bbf1_8127bd8727f5?key=any&formatOptions.useInt64Timestamp=false&timeoutMs=60000&prettyPrint=false
+  < 200 "rows":[{"f":[{"v":"1"},{"v":"1698364800.000000"}]},{"f":[{"v":"2"},{"v":"1698364801.000000"}]}],"totalRows":"2","jobComplete":true}
+  = ts=2023-10-27T00:00:00.0000000Z, ts=2023-10-27T00:00:01.0000000Z
+## Q11 CreateQueryJob + GetQueryResults (the job path, by hand)
+  > POST /projects/probe/jobs?key=any&prettyPrint=false
+    body: {"configuration":{"query":{"query":"SELECT id, ts FROM `probe.ds_3_11_0_plain_p0813110.t`","useLegacySql":false}},"jobReference":{"jobId":"job_22a61687_a6af_4a60_aa77_6b3382118ab2","projectId":"probe"}}
+  < 200 (no rows)
+  > GET /projects/probe/queries/job_22a61687_a6af_4a60_aa77_6b3382118ab2?key=any&formatOptions.useInt64Timestamp=true&timeoutMs=60000&prettyPrint=false
+  < 200 "rows":[{"f":[{"v":"1"},{"v":"1698364800000000"}]},{"f":[{"v":"2"},{"v":"1698364801000000"}]}],"totalRows":"2","jobComplete":true}
+  = ts=2023-10-27T00:00:00.0000000Z, ts=2023-10-27T00:00:01.0000000Z
+## Q12 the issue's call with an INT64 parameter in the WHERE
+  > POST /projects/probe/jobs?key=any&prettyPrint=false
+    body: {"configuration":{"query":{"parameterMode":"named","query":"SELECT id, ts FROM `probe.ds_3_11_0_plain_p0813110.t` WHERE id = @id","queryParameters":[{"name":"id","parameterType":{"type":"INTEGER"},"parameterValue":{"value":"1"}}],"useLegacySql":false,"useQueryCache":false}},"jobReference":{"jobId":"job_68e2232d_4735_4ff5_bcb6_de442b9df531","projectId":"probe...
+  < 200 (no rows)
+  > GET /projects/probe/queries/job_68e2232d_4735_4ff5_bcb6_de442b9df531?key=any&formatOptions.useInt64Timestamp=true&timeoutMs=60000&prettyPrint=false
+  < 200 "rows":[{"f":[{"v":"1"},{"v":"1698364800000000"}]}],"totalRows":"1","jobComplete":true}
+  = ts=2023-10-27T00:00:00.0000000Z
+## Q13 the issue's call with a STRING parameter in the WHERE
+  > POST /projects/probe/jobs?key=any&prettyPrint=false
+    body: {"configuration":{"query":{"parameterMode":"named","query":"SELECT ts FROM `probe.ds_3_11_0_plain_p0813110.t` WHERE rec.label = @label","queryParameters":[{"name":"label","parameterType":{"type":"STRING"},"parameterValue":{"value":"x"}}],"useLegacySql":false,"useQueryCache":false}},"jobReference":{"jobId":"job_7d7c0c9c_bb45_4004_95a6_143ef77abca7","projectId...
+  < 200 (no rows)
+  > GET /projects/probe/queries/job_7d7c0c9c_bb45_4004_95a6_143ef77abca7?key=any&formatOptions.useInt64Timestamp=true&timeoutMs=60000&prettyPrint=false
+  < 200 "rows":[{"f":[{"v":"1698364800000000"}]}],"totalRows":"1","jobComplete":true}
+  = ts=2023-10-27T00:00:00.0000000Z

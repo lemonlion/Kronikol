@@ -1,0 +1,9 @@
+<Project>
+  <!-- Central package management with a floating version, the way #97's third option would hold a float. -->
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageVersion Include="Google.Cloud.BigQuery.V2" Version="3.*" />
+  </ItemGroup>
+</Project>

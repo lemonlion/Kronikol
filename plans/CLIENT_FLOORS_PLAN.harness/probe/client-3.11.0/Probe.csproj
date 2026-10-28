@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Run: dotnet run, then the arguments baseUri, plain or kronikol, a tag. Kronikol.Extensions.BigQuery 5.12.0 asks for Google.Cloud.BigQuery.V2
+       >= 3.12.0; NU1605 is let through so the published extension can run on an older client. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <NoWarn>$(NoWarn);NU1605;NU1608</NoWarn>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../Program.cs" />
+    <PackageReference Include="Google.Cloud.BigQuery.V2" Version="[3.11.0]" />
+    <PackageReference Include="Kronikol.Extensions.BigQuery" Version="5.12.0" />
+  </ItemGroup>
+</Project>

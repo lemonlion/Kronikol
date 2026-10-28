@@ -1,0 +1,11 @@
+## tables.get ds2.t (schema)
+"schema":{"fields":[{"name":"label","type":"STRING"}]
+## jobs.query SELECT * FROM probe.ds2.t
+"rows":[{"f":[{"v":"only row of ds2.t"}]}]
+
+## tabledata.list ds2.t
+"rows":[{"f":[{"v":"1"},{"v":"one"}]},{"f":[{"v":"2"},{"v":"two"}]}]
+
+## tabledata.list ds1.t
+"rows":[{"f":[{"v":"1"},{"v":"one"}]},{"f":[{"v":"2"},{"v":"two"}]}]
+

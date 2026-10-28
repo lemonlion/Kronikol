@@ -312,6 +312,15 @@ jobs:
             dotnet test "$project" --configuration Release --verbosity normal $FILTER_ARG -- RunConfiguration.TreatNoTestsAsError=true
             echo "::endgroup::"
           done
+          # The floor run (plans/CLIENT_FLOORS_PLAN.md): a test project that takes its client directly only under
+          # '$(FloorRun)' != 'true' runs again without that reference, on the floor its package asks consumers for.
+          # After the loop above, as the switch rewrites the project's assets file.
+          for project in ${{ matrix.projects }}; do
+            grep -qsF '$(FloorRun)' "$project"/*.csproj || continue
+            echo "::group::Testing $project on its floor"
+            dotnet test "$project" --configuration Release --verbosity normal $FILTER_ARG -p:FloorRun=true -- RunConfiguration.TreatNoTestsAsError=true
+            echo "::endgroup::"
+          done
 
       - name: Build & Test (auto-discovered remainder)
         if: matrix.discover-remaining
@@ -327,6 +336,16 @@ jobs:
             ls "$dir"*.csproj >/dev/null 2>&1 || continue
             echo "::group::Testing $name"
             dotnet test "$dir" --configuration Release --verbosity normal -- RunConfiguration.TreatNoTestsAsError=true
+            echo "::endgroup::"
+          done
+          # The floor run, as in the step above: every project here whose csproj names $(FloorRun) runs again on the
+          # floor its package asks for, so a package that moves to a measured floor joins without a CI edit.
+          for dir in tests/*/; do
+            name=$(basename "$dir")
+            case " $SKIP " in *" $name "*) continue;; esac
+            grep -qsF '$(FloorRun)' "$dir"*.csproj || continue
+            echo "::group::Testing $name on its floor"
+            dotnet test "$dir" --configuration Release --verbosity normal -p:FloorRun=true -- RunConfiguration.TreatNoTestsAsError=true
             echo "::endgroup::"
           done
 

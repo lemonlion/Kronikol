@@ -1,0 +1,5 @@
+build exit=0
+resolved: Google.Api.Gax/4.0.0 Google.Api.Gax.Rest/4.0.0 Google.Apis/1.57.0 Google.Apis.Bigquery.v2/1.57.0.2704 Google.Cloud.BigQuery.V2/3.0.0
+warning NU1902: Package 'AngleSharp' 1.4.0 has a known moderate severity vulnerability, https://github.com/advisories/GHSA-pgww-w46g-26qg
+Passed!  - Failed:     0, Passed:     9, Skipped:     0, Total:     9, Duration: 633 ms - Kronikol.Tests.dll (net10.0)
+DONE

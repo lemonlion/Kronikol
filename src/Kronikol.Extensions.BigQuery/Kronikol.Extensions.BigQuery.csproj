@@ -9,7 +9,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Google.Cloud.BigQuery.V2" Version="3.*" />
+    <!-- The floor this package asks for, not a float: 3.* was packed as the newest 3.x of the day, so from 3.0.28 every
+         release asked for 3.12.0 and moved consumers' services onto it (#205, plans/CLIENT_FLOORS_PLAN.md R1). 3.0.0 is
+         the oldest 3.x the suite passes on, its graph carries no known advisory, and the client is strong-named, so a
+         consumer on a later 3.x compiles against it. BigQueryPackageTests reads it back from the packed nuspec; the suite
+         itself runs on the newest 3.x, and again on this floor with -p:FloorRun=true. -->
+    <PackageReference Include="Google.Cloud.BigQuery.V2" Version="3.0.0" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,0 +1,8 @@
+== cpm
+error NU1109:  Suite -> Google.Cloud.BigQuery.V2 (>= 3.11.0)
+error NU1109:  Suite -> Kronikol.Extensions.BigQuery 5.12.0 -> Google.Cloud.BigQuery.V2 (>= 3.12.0) 
+error NU1109: Detected package downgrade: Google.Cloud.BigQuery.V2 from 3.12.0 to centrally defined 3.11.0. Update the centrally managed package version to a higher version. 
+== direct
+error NU1605:  Suite -> Google.Cloud.BigQuery.V2 (>= 3.11.0)
+error NU1605:  Suite -> Kronikol.Extensions.BigQuery 5.12.0 -> Google.Cloud.BigQuery.V2 (>= 3.12.0) 
+error NU1605: Warning As Error: Detected package downgrade: Google.Cloud.BigQuery.V2 from 3.12.0 to 3.11.0. Reference the package directly from the project to select a different version. 
