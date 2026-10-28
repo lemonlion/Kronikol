@@ -122,6 +122,8 @@ public static class MergeableReportReader
                 DisplayName = GetString(fe, "name") ?? "",
                 // the name the run's ids were computed from, where it was not the name (plans/REPORT_UI_FIXES_PLAN.md N3)
                 StableIdName = GetString(fe, "stableIdName"),
+                // a name its lane made, which the merge pairs by the name its ids key on (plans/TITLES_AS_WRITTEN_PLAN.md 4.5)
+                NameGenerated = fe.TryGetProperty("nameGenerated", out var generated) && generated.ValueKind == JsonValueKind.True,
                 Endpoint = GetString(fe, "endpoint"),
                 Description = GetString(fe, "description"),
                 SourceFile = GetString(fe, "sourceFile"),

@@ -143,6 +143,25 @@ public class KronikolResultsSinkTests : IDisposable
     }
 
     [Fact]
+    public void The_sink_marks_the_names_it_made_and_not_a_name_xUnit_got_from_the_test()
+    {
+        // the word list rewrites only the names Kronikol made (plans/TITLES_AS_WRITTEN_PLAN.md 4.5)
+        var test = Test<TrackedSinkTests>(nameof(TrackedSinkTests.Passes_for_every_order),
+            "Kronikol.Tests.xUnit2.TrackedSinkTests.Passes_for_every_order(region: \"UK\")");
+        var written = Test<TrackedSinkTests>(nameof(TrackedSinkTests.Passes), "Orders are sent to Kafka (v1.2)");
+        using var sink = Sink();
+
+        Run(sink, AssemblyStarting(), Starting(test), Passed(test), Finished(test), Starting(written), Passed(written), Finished(written),
+            AssemblyFinished());
+
+        var scenarios = Assert.Single(_written).Scenarios;
+        Assert.All(scenarios, s => Assert.True(s.FeatureNameGenerated));
+        Assert.True(scenarios[0].NameGenerated);
+        Assert.True(scenarios[0].OutlineTitleGenerated);
+        Assert.False(scenarios[1].NameGenerated);
+    }
+
+    [Fact]
     public void A_method_name_xUnit_cannot_format_under_every_option_is_still_named()
     {
         // xUnit's formatter throws on "Rejects_UD800" under UseEscapeSequences; the sink tries every option, and threw

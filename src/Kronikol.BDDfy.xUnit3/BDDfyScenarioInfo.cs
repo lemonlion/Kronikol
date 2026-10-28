@@ -44,6 +44,19 @@ public record BDDfyScenarioInfo
     /// (plans/TITLES_AS_WRITTEN_PLAN.md 4.4).
     /// </summary>
     internal string? StableIdTitle { get; init; }
+
+    /// <summary>
+    /// True where <see cref="ScenarioTitle"/> is BDDfy's own, made from the method's or the class's name by its
+    /// humaniser, or Kronikol's from the method's: never a title the test passed (<c>BDDfy("...")</c>), which the word
+    /// list leaves as written (plans/TITLES_AS_WRITTEN_PLAN.md 4.5, Q11).
+    /// </summary>
+    internal bool TitleGenerated { get; init; }
+
+    /// <summary>
+    /// True where <see cref="StoryTitle"/> is BDDfy's own, made from the story's class or namespace: never a
+    /// <c>[Story(Title)]</c>.
+    /// </summary>
+    internal bool StoryTitleGenerated { get; init; }
 }
 
 /// <summary>

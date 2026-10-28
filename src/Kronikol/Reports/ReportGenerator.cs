@@ -1,4 +1,5 @@
-﻿using Kronikol.History;
+﻿using Kronikol.Naming;
+using Kronikol.History;
 using System.Globalization;
 using System.Diagnostics;
 using System.Reflection;
@@ -254,6 +255,11 @@ public static class ReportGenerator
         // Same idea for the headings: a Gherkin "Scenario: the overview renders" is a sentence too.
         if (options.CapitaliseTitles)
             StepText.ApplyToTitles(features);
+
+        // The suite's own spellings, over the titles Kronikol made (plans/TITLES_AS_WRITTEN_PLAN.md 4.5): after the pass
+        // above, so the names it records for the ids are the ones the ids were computed from.
+        var titleWords = new TitleWords(options.TitleWords);
+        titleWords.ApplyTo(features);
 
         ReportLowercaseSteps(features);
         ReportLowercaseTitles(features);
@@ -544,12 +550,12 @@ public static class ReportGenerator
 
         if (options.GenerateSpecificationsReport)
         {
-            Add($"{options.HtmlSpecificationsFileName}.html", () => GenerateHtmlReportCore(diagrams, features, startRunTime, endRunTime, UserStylesheets(options.HtmlSpecificationsCustomStyleSheet, options), $"{options.HtmlSpecificationsFileName}.html", options.SpecificationsTitle, false, generateBlankOnFailedTests: true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScriptSpecifications, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, showStepNumbers: options.SpecificationsShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, showNoInteractionsMarker: options.ShowNoInteractionsMarker, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat, fullSearchIndex: options.FullSearchIndex, searchIndexCache: searchIndexCache, toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: true), suite: suite, renderCollapsedSubStepsOnExpand: options.RenderCollapsedSubStepsOnExpand, warmUp: warmUp));
+            Add($"{options.HtmlSpecificationsFileName}.html", () => GenerateHtmlReportCore(diagrams, features, startRunTime, endRunTime, UserStylesheets(options.HtmlSpecificationsCustomStyleSheet, options), $"{options.HtmlSpecificationsFileName}.html", options.SpecificationsTitle, false, generateBlankOnFailedTests: true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScriptSpecifications, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, showStepNumbers: options.SpecificationsShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, titleWords: titleWords, showNoInteractionsMarker: options.ShowNoInteractionsMarker, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat, fullSearchIndex: options.FullSearchIndex, searchIndexCache: searchIndexCache, toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: true), suite: suite, renderCollapsedSubStepsOnExpand: options.RenderCollapsedSubStepsOnExpand, warmUp: warmUp));
         }
 
         if (options.GenerateTestRunReport)
         {
-            Add($"{options.HtmlTestRunReportFileName}.html", () => GenerateHtmlReportCore(diagrams, features, startRunTime, endRunTime, UserStylesheets(null, options), $"{options.HtmlTestRunReportFileName}.html", GetTestRunReportTitle(options), true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScript, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, ciMetadata: ciMetadata, showStepNumbers: options.TestRunReportShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, componentDiagramPlantUml: ShouldEmbedComponentDiagram(options) ? componentDiagramPlantUml : null, componentDiagramDrawn: componentDiagramDrawn, componentDiagram: ShouldEmbedComponentDiagram(options) ? componentDiagram : null, showNoInteractionsMarker: options.ShowNoInteractionsMarker, diagnostics: reportDiagnostics, background: background, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat, fullSearchIndex: options.FullSearchIndex, searchIndexCache: searchIndexCache, toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: false), suite: suite, history: options.EmbedHistoryInReport && (options.ShowScenarioHistory || options.ShowHistorySection) ? history?.Verdicts : null, showHistorySection: options.ShowHistorySection, showReportDiagnostics: options.ShowReportDiagnosticsSection, renderCollapsedSubStepsOnExpand: options.RenderCollapsedSubStepsOnExpand, showScenarioHistory: options.ShowScenarioHistory, warmUp: warmUp, backgroundPaths: backgroundPaths));
+            Add($"{options.HtmlTestRunReportFileName}.html", () => GenerateHtmlReportCore(diagrams, features, startRunTime, endRunTime, UserStylesheets(null, options), $"{options.HtmlTestRunReportFileName}.html", GetTestRunReportTitle(options), true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScript, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, ciMetadata: ciMetadata, showStepNumbers: options.TestRunReportShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, titleWords: titleWords, componentDiagramPlantUml: ShouldEmbedComponentDiagram(options) ? componentDiagramPlantUml : null, componentDiagramDrawn: componentDiagramDrawn, componentDiagram: ShouldEmbedComponentDiagram(options) ? componentDiagram : null, showNoInteractionsMarker: options.ShowNoInteractionsMarker, diagnostics: reportDiagnostics, background: background, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat, fullSearchIndex: options.FullSearchIndex, searchIndexCache: searchIndexCache, toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: false), suite: suite, history: options.EmbedHistoryInReport && (options.ShowScenarioHistory || options.ShowHistorySection) ? history?.Verdicts : null, showHistorySection: options.ShowHistorySection, showReportDiagnostics: options.ShowReportDiagnosticsSection, renderCollapsedSubStepsOnExpand: options.RenderCollapsedSubStepsOnExpand, showScenarioHistory: options.ShowScenarioHistory, warmUp: warmUp, backgroundPaths: backgroundPaths));
         }
 
         if (options.GenerateSpecificationsData)
@@ -1436,6 +1442,7 @@ public static class ReportGenerator
         bool groupParameterizedTests = true,
         int maxParameterColumns = 10,
         bool titleizeParameterNames = true,
+        TitleWords? titleWords = null,
         string? componentDiagramPlantUml = null,
         Dictionary<string, Merge.WholeTestFlowFragment>? precomputedWholeTestContent = null,
         bool showNoInteractionsMarker = false,
@@ -2429,6 +2436,7 @@ public static class ReportGenerator
                         showStepNumbers, isPlantUmlBrowser, isInlineSvg, lazyLoadImages,
                         ref plantUmlBrowserCounter, diagramDataMap, wholeTestSegments, trackedLogs, wholeTestVisualization, medianSpanCount,
                         titleizeParameterNames,
+                        titleWords: titleWords,
                         showNoInteractionsMarker: showNoInteractionsMarker,
                         scenarioAnchorIds: scenarioAnchorIds,
                         takenAnchorIds: takenAnchorIds,
@@ -3665,6 +3673,7 @@ public static class ReportGenerator
         WholeTestFlowVisualization wholeTestVisualization,
         int medianSpanCount,
         bool titleizeParameterNames = true,
+        TitleWords? titleWords = null,
         Dictionary<string, string>? scenarioAnchorIds = null,
         HashSet<string>? takenAnchorIds = null,
         string? featureDisplayName = null,
@@ -3816,7 +3825,8 @@ public static class ReportGenerator
             body.Append("<tr>");
             foreach (var name in flatNames)
             {
-                var displayName = titleizeParameterNames ? name.Titleize() : name;
+                // a header the report titleized is its words, which the suite's list spells (plans/TITLES_AS_WRITTEN_PLAN.md Q6)
+                var displayName = titleizeParameterNames ? titleWords?.Apply(name.Titleize()) ?? name.Titleize() : name;
                 body.Append($"<th class=\"sub-header\">{System.Net.WebUtility.HtmlEncode(displayName)}</th>");
             }
             body.Append("</tr></thead><tbody>");
@@ -3912,7 +3922,8 @@ public static class ReportGenerator
             body.Append("<tr>");
             foreach (var name in group.ParameterNames)
             {
-                var displayName = titleizeParameterNames ? name.Titleize() : name;
+                // a header the report titleized is its words, which the suite's list spells (plans/TITLES_AS_WRITTEN_PLAN.md Q6)
+                var displayName = titleizeParameterNames ? titleWords?.Apply(name.Titleize()) ?? name.Titleize() : name;
                 body.Append($"<th class=\"sub-header\">{System.Net.WebUtility.HtmlEncode(displayName)}</th>");
             }
             body.Append("</tr>");
@@ -5674,8 +5685,16 @@ public static class ReportGenerator
 
     // Beside name, and only on a feature whose ids key on another name (plans/REPORT_UI_FIXES_PLAN.md N3: the name 5.9.0
     // showed and hashed), so every other feature's bytes stay as they were; a merge reads it back and computes the same ids.
-    private static Dictionary<string, object?> WithStableIdName(Feature f, Dictionary<string, object?> feature) =>
-        f.StableIdName is { } key && key != f.DisplayName ? InsertAfter(feature, "name", "stableIdName", key) : feature;
+    // nameGenerated likewise, only on a feature whose lane made its name (plans/TITLES_AS_WRITTEN_PLAN.md 4.5): a merge
+    // pairs two such features by the name their ids key on, however each shard spelled it.
+    private static Dictionary<string, object?> WithStableIdName(Feature f, Dictionary<string, object?> feature)
+    {
+        if (f.NameGenerated)
+            feature = InsertAfter(feature, "name", "nameGenerated", true);
+        return f.StableIdName is { } key && key != f.DisplayName
+            ? InsertAfter(feature, f.NameGenerated ? "nameGenerated" : "name", "stableIdName", key)
+            : feature;
+    }
 
     /// <summary>
     /// Assembles the enriched "mergeable" report from in-process state captured during a test run:
@@ -7694,7 +7713,8 @@ public static class ReportGenerator
                         ["properties"] = new Dictionary<string, object?>
                         {
                             ["name"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "Feature display name: the test class, or the title after Feature: in Gherkin" },
-                            ["stableIdName"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "Present only where the feature's scenarios' stableIds are computed from another name than name: the name 5.9.0 showed and hashed, for a feature 5.9.1 shows as written or with its apostrophe kept, so its scenarios keep their ids. A merge computes ids from it" },
+                            ["nameGenerated"] = new Dictionary<string, object?> { ["type"] = "boolean", ["description"] = "Present, and true, only on a feature whose name its lane made from a class's or a library's name, not one a person wrote: the titles TitleWords rewrites. A merge pairs two such features by stableIdName or name, so two shards that spell one differently are one feature" },
+                            ["stableIdName"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "Present only where the feature's scenarios' stableIds are computed from another name than name: the name 5.9.0 showed and hashed, for a feature 5.9.1 shows as written or with its apostrophe kept, or the name before TitleWords spelled its words, so its scenarios keep their ids. A merge computes ids from it" },
                             ["endpoint"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The endpoint or component the feature covers, when declared (an @endpoint: tag, or the adapter's attribute)" },
                             ["description"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Free text under the Feature: line, dedented" },
                             ["sourceFile"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Where the feature is written: a project-relative path with forward slashes, from the Gherkin document, or from the first sourceFile a tests NDJSON start record gives one of its scenarios. Null on the lanes that cannot supply one (unit-test adapters, a tests NDJSON without sourceFile). Features are grouped by display name, so two files sharing a Feature: title collapse into one entry and the first path seen wins.", ["examples"] = new[] { "Features/Cake.feature" } },

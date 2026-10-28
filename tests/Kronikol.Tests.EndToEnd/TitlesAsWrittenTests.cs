@@ -101,4 +101,63 @@ public class TitlesAsWrittenTests : PlaywrightTestBase
         Assert.Equal("Get a list | Get HTTP response | gRPC call", string.Join(" | ", sorted));
         Assert.Equal(string.Join(" | ", names.Order(StringComparer.CurrentCulture)), string.Join(" | ", sorted));
     }
+
+    // R2 (plans/TITLES_AS_WRITTEN_PLAN.md 4.5): a name a lane made, the feature's from its class and a scenario's from its
+    // method, reads the suite's words; a name the test wrote stays as written
+    private static Scenario Made(string id, string name, string? outlineId = null, string? net = null) =>
+        Run(id, name, outlineId: outlineId, net: net) with { NameGenerated = true, OutlineTitle = outlineId, OutlineTitleGenerated = outlineId is not null };
+
+    [Fact]
+    public async Task A_listed_word_is_spelled_as_the_suite_spells_it_in_the_names_the_report_made()
+    {
+        var reportsDir = Path.Combine(TempDir, "TitleWords");
+        lock (ReportTestHelper.WholePipeline)
+        {
+            DefaultDiagramsFetcher.Reset();
+            ReportGenerator.CreateStandardReportsWithDiagrams(
+            [
+                new Feature
+                {
+                    DisplayName = "Acme Pay Webhook Tests",
+                    NameGenerated = true,
+                    Scenarios =
+                    [
+                        Made("s-made", "Webhook lead created via api journey"),
+                        Run("s-written", "Calls the acme pay api", written: true),
+                        Made("s-row1", "Adds vat for the uk [1]", outlineId: "Adds vat for the uk", net: "1"),
+                        Made("s-row2", "Adds vat for the uk [2]", outlineId: "Adds vat for the uk", net: "2"),
+                    ],
+                },
+            ], T0, T0.AddMinutes(1), new ReportConfigurationOptions
+            {
+                ReportsFolderPath = reportsDir,
+                TitleWords = ["AcmePay", "API", "VAT", "UK"],
+                GenerateSpecificationsReport = false,
+                GenerateSpecificationsData = false,
+            });
+            DefaultDiagramsFetcher.Reset();
+        }
+        var report = Path.Combine(reportsDir, "TestRunReport.html");
+        File.Copy(report, Path.Combine(OutputDir, "TitleWords.html"), true);
+        await Page.GotoReportAsync(new Uri(report).AbsoluteUri);
+        await Page.Locator("details.feature").First.WaitForAsync(new() { State = WaitForSelectorState.Attached });
+        await Page.WaitForFunctionAsync("() => !!window.kronikol_search_results", null, new() { PollingInterval = 200 });
+
+        await Expect(Page.Locator("details.feature > summary").First).ToContainTextAsync("AcmePay Webhook Tests");
+        var headings = await TextsAsync("details.scenario > summary");
+        Assert.Contains(headings, h => h.Contains("Webhook lead created via API journey"));
+        Assert.Contains(headings, h => h.Contains("Calls the acme pay api"));
+        await Expect(Page.Locator("details.scenario-parameterized > summary").First).ToContainTextAsync("Adds VAT for the UK");
+
+        var copied = await Page.EvaluateAsync<string[]>(
+            "() => Array.from(document.querySelectorAll('.copy-scenario-name')).map(b => b.getAttribute('data-scenario-name'))");
+        Assert.Contains("Webhook lead created via API journey", copied);
+        Assert.Contains("Calls the acme pay api", copied);
+        Assert.Contains("Adds VAT for the UK", copied);
+
+        await SearchAsync("catalogue");
+        var results = await TextsAsync("#panel-search .search-result-title");
+        Assert.Contains("Webhook lead created via API journey", results);
+        Assert.Contains("Calls the acme pay api", results);
+    }
 }

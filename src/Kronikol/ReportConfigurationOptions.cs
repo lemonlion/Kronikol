@@ -711,6 +711,21 @@ public record ReportConfigurationOptions
     public bool CapitaliseTitles { get; set; } = true;
 
     /// <summary>
+    /// Words as the suite spells them (<c>AcmePay</c>, <c>API</c>, <c>gRPC</c>, <c>PostgreSQL</c>, <c>iOS</c>), put back
+    /// into the titles Kronikol makes from a class's or a method's name: a feature named after its class, a scenario after
+    /// its method, LightBDD's names, BDDfy's own titles, the headings made from them, and the parameter columns'
+    /// headers when <see cref="TitleizeParameterNames"/> is on. An entry matches a run of whole words whose letters and
+    /// digits, read without case, are its own, so <c>AcmePay</c> mends "Acme pay webhook tests" into "AcmePay webhook
+    /// tests" and <c>gRPC</c> both "Grpc" and "g RPC"; longer entries are tried first, and the digits after the run's last
+    /// word stay (<c>xUnit</c> mends "X unit3" into "xUnit3"). A plural is an entry of its own (<c>APIs</c>), and an entry
+    /// that is a run of ordinary words rewrites them too (<c>CheckOut</c> turns "Check out the basket" into "CheckOut the
+    /// basket"). A name a person wrote (a Gherkin title, a DisplayName, a TestName), a row's arguments and a value written
+    /// into a title are never changed, and no <c>stableId</c> moves when an entry is added, edited or removed. Default:
+    /// empty.
+    /// </summary>
+    public string[] TitleWords { get; set; } = [];
+
+    /// <summary>
     /// Optional delegate returning the total number of test scenarios expected in this assembly.
     /// When set, report generation is skipped if the actual scenario count is less than the expected
     /// count — preventing partial test runs (e.g. single-test filtering) from overwriting the

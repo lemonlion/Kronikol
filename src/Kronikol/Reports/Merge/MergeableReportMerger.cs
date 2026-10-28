@@ -176,19 +176,30 @@ public static class MergeableReportMerger
 
     /// <summary>
     /// Groups features by display name so a feature split across multiple runners is recombined into
-    /// one, with its scenarios concatenated. Feature order is alphabetical to match the report's own
-    /// ordering. Nothing is deduplicated here: <see cref="DropWhatWasAlreadySupplied"/> has already
-    /// removed every scenario the merge was given twice, together with everything hung off it.
+    /// one, with its scenarios concatenated, and two features whose lanes made their names by the name
+    /// their ids key on, so two shards that spell one differently (one with <c>TitleWords</c>, one without)
+    /// are one feature too. Feature order is alphabetical to match the report's own ordering. Nothing is
+    /// deduplicated here: <see cref="DropWhatWasAlreadySupplied"/> has already removed every scenario the
+    /// merge was given twice, together with everything hung off it.
     /// </summary>
     private static Feature[] MergeFeatures(IReadOnlyList<MergeableReport> reports)
     {
         var byName = new Dictionary<string, Feature>(StringComparer.Ordinal);
+        // Only names a lane made (plans/TITLES_AS_WRITTEN_PLAN.md 4.5): two Gherkin titles that differ only in case are
+        // two features with one key.
+        var byKey = new Dictionary<string, string>(StringComparer.Ordinal);
 
         foreach (var feature in reports.SelectMany(r => r.Features))
         {
-            if (!byName.TryGetValue(feature.DisplayName, out var existing))
+            var name = byName.ContainsKey(feature.DisplayName) || !feature.NameGenerated
+                || !byKey.TryGetValue(ScenarioStableId.FeatureKey(feature), out var paired)
+                ? feature.DisplayName
+                : paired;
+            if (feature.NameGenerated)
+                byKey.TryAdd(ScenarioStableId.FeatureKey(feature), name);
+            if (!byName.TryGetValue(name, out var existing))
             {
-                byName[feature.DisplayName] = feature;
+                byName[name] = feature;
                 continue;
             }
 
@@ -196,8 +207,9 @@ public static class MergeableReportMerger
             // so no scenario gains or loses a tag (plans/TAGS_PLAN.md §4.13, F22): the tests NDJSON lane lifts per
             // shard the tags that shard's scenarios share, and the first shard's set held tags another's lacked.
             var shared = ScenarioTags.Shared([existing.Tags, feature.Tags]);
-            byName[feature.DisplayName] = existing with
+            byName[name] = existing with
             {
+                NameGenerated = existing.NameGenerated && feature.NameGenerated,
                 Scenarios = [.. WithFeatureTags(existing.Scenarios, existing.Tags, shared), .. WithFeatureTags(feature.Scenarios, feature.Tags, shared)],
                 Endpoint = existing.Endpoint ?? feature.Endpoint,
                 SourceFile = existing.SourceFile ?? feature.SourceFile,

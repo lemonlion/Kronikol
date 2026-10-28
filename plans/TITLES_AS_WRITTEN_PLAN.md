@@ -877,3 +877,43 @@ gate reports no new or absent scenario and no partial run.
   lost the report on; a heading cut a Gherkin title's own "(<case>)" (the 5.9.1 fact went red); the compressed data
   file dropped a key's none, so a merge read the scenario's outline in its place; `CapitaliseTitles` left an outline
   title lower-case.
+- 2026-10-28, kronikol-50: R2 shipped as 5.18.0 (tag `v5.18.0`), after #192's 5.17.0 (kronikol-bf) took the number 4.5's section 5 gave it. Departures from 4.5, each for the
+  reason given:
+  - **Three marks, not one.** A row's name and its outline's title are made apart: an xUnit theory row with its own
+    `TestDisplayName`, or an MSTest row under a `DisplayName`, has a written name and the method's title as its outline
+    title. So a scenario carries `NameGenerated` and `OutlineTitleGenerated`, and a feature `NameGenerated`, each set by
+    its lane (internal; on xUnit v2 they ride on `ScenarioInfo`, and a consumer's `ScenarioInfo` sets none). Only the
+    feature's goes into the data files (`nameGenerated`), which is all a merge needs.
+  - **`OutlineId` is never rewritten.** It is a key the rows are grouped and hashed by, and a theory's written and
+    generated rows share it: rewriting it on the generated rows alone would split the group. The heading's words come
+    from the rows' names and `OutlineTitle`, which are rewritten.
+  - **BDDfy's humaniser is `Configurator.Scanners.Humanize`** in BDDfy 8.0.1.3, the version Kronikol builds against; 4.5
+    named 10.x's `Configurator.Humanizer`. A title is BDDfy's own where it is that humaniser's reading of the method's or
+    the class's name, or the class's name itself (which Kronikol reads the method's in place of); a story's where no
+    `[Story]` names it, or its title is the humaniser's reading of its class's name.
+  - **A run's leading mark stays too, and a mark inside a run stops it.** 4.5 kept the last word's trailing punctuation;
+    the first word's leading one ("(acme pay)") stays as well, and a run with a mark before an inner word, after an inner
+    word or inside a word ("acme, pay", "acme-pay") does not match, so no character is ever dropped. A digit-only word
+    after the run is a word of its own ("x unit 3" reads "xUnit 3").
+  - **A merge pairs by name first, then by key.** A generated feature pairs with one of the same name as today, and
+    otherwise with a generated feature whose ids key on the same name; a merged feature keeps the mark only when both
+    halves carry it.
+  - **A feature's place follows its new name.** 4.7 said no order moves; every view orders features by name, so a feature
+    the list renames takes its place by that name. The scenarios' order within a feature is the lane's, made before the
+    pass, and does not move.
+  - **The parameter headers' list is the run's.** A merge re-renders headers titleized without the list, since the list
+    is a run option the merge does not have.
+  - **The Report Configuration page also gains the `CapitaliseTitles` and `CapitaliseStepText` rows** it lacked (section
+    7 noted the first missing).
+  - **TUnit has no lane fact,** as in R1: its marks are the NUnit lane's, line for line, and its example lane runs.
+  - **The adapter test projects of xUnit v3, NUnit and MSTest now see Kronikol's internals,** as xUnit v2's did, so their
+    facts read the marks and run the pass on the lane's own model.
+  Found on the way and fixed in R2: 5.16.5's CI run failed only `OtlpTapStallTests.A_slow_steady_export_is_received`,
+  which moved the fake clock before the tap had read the head, so a loaded runner reached the kept-alive limit (ProxyTap's
+  slow body fact had the same gap); and `AttachmentProblemTests` and `NotATestReportTests` wrote a ledger into the
+  repository root (`_ => null` as the environment switches history on). Measured on BreakfastProvider's names from R1's
+  lane runs, with the harness's seven words (`gRPC`, `OpenAPI`, `AsyncAPI`, `ClickHouse`, `SQL`, `DuckDB`, `UI`): 10 of 73
+  features and 9 of 212 scenarios change on each of the xUnit, NUnit and TUnit lanes, and 1 of 27 features and 9
+  scenarios on BDDfy's, each as `words.txt` has it ("Grpc Order Status Tests" reads "gRPC Order Status Tests").
+  Checks: the core suite (11,068, 2 skipped), every adapter suite (xUnit v2 110, MSTest 84, NUnit 48, xUnit v3 32, TUnit 48, StepTracking 61, LightBDD 26 and 25), every other test project CI's remainder job runs, the Release build of `release.slnf`, the full Playwright suite (2,096, 0 failed) and the example lanes. Mutations: 36 of 36 killed, one of them (a mark before an inner word) only after the row "acme (pay)" was added. #139 is closed with a comment naming 5.16.5 and 5.18.0; #102 and
+  #110 are closed (Q7), #110's comment saying its second ask is not taken.

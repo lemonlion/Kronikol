@@ -64,6 +64,7 @@ internal static class ScenarioInfoExtensions
                             {
                                 Id = x.TestId,
                                 DisplayName = x.ScenarioTitle,
+                                NameGenerated = x.TitleGenerated,
                                 StableIdKey = ScenarioStableId.KeyWhereChanged(frozenKey, x.ScenarioTitle, outlineId,
                                     exampleValues is { Count: > 0 } ? exampleValues : null),
                                 IsHappyPath = classified.IsHappyPath,
@@ -80,6 +81,7 @@ internal static class ScenarioInfoExtensions
                                 Tags = classified.Tags.Length > 0 ? classified.Tags : null,
                                 OutlineId = outlineId,
                                 OutlineTitle = outlineId is null ? null : x.TestMethodName is { } method ? ScenarioTitleResolver.FormatScenarioDisplayName(method) : outlineId,
+                                OutlineTitleGenerated = outlineId is not null && (x.TestMethodName is not null || x.TitleGenerated),
                                 ExampleValues = exampleValues is { Count: > 0 } ? exampleValues : null,
                                 ExampleRawValues = exampleRawValues,
                                 Attachments = StepCollector.GetScenarioAttachments(x.TestId),
@@ -89,6 +91,7 @@ internal static class ScenarioInfoExtensions
                 return new Feature
                 {
                     DisplayName = featureGroup.Key.Titleize(),
+                    NameGenerated = featureGroup.All(x => x.StoryTitleGenerated),
                     // the ids key on 5.9.0's name, which Titleize can now differ from (plans/REPORT_UI_FIXES_PLAN.md N3)
                     StableIdName = StringCasing.TitleizeAsOf590(featureGroup.Key),
                     Endpoint = endpoint,

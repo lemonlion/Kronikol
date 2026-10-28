@@ -25,6 +25,8 @@ internal static class TestContextEnumerableExtensions
                 return new Feature
                 {
                     DisplayName = firstScenarioForFeature.Test.DisplayName!.Titleize(),
+                    // the fixture's type's name: a TestName names its tests, never the fixture's feature
+                    NameGenerated = true,
                     // the ids key on 5.9.0's name, which Titleize can now differ from (plans/REPORT_UI_FIXES_PLAN.md N3)
                     StableIdName = StringCasing.TitleizeAsOf590(firstScenarioForFeature.Test.DisplayName!),
                     Endpoint = EndpointOf(firstScenarioForFeature.Test),
@@ -60,6 +62,7 @@ internal static class TestContextEnumerableExtensions
                                 Result = x.Result.Outcome.Status.ToExecutionResult(),
                                 DisplayName = name.Shown,
                                 NameAsWritten = name.Written,
+                                NameGenerated = !name.Written,
                                 StableIdKey = ScenarioStableId.KeyWhereChanged(frozenKey, name.Shown, outlineId, parsed is { Count: > 0 } ? parsed : null),
                                 IsHappyPath = IsHappyPath(x.Test),
                                 Tags = tags.Length > 0 ? tags : null,
@@ -69,6 +72,7 @@ internal static class TestContextEnumerableExtensions
                                 EndedAt = DiagrammedTestRun.TestEnds.TryGetValue(x.Test.ID, out var endedAt) ? endedAt : null,
                                 OutlineId = outlineId,
                                 OutlineTitle = outlineId is null ? null : ScenarioTitleResolver.FormatScenarioDisplayName(x.Test.MethodName ?? x.Test.Name!),
+                                OutlineTitleGenerated = outlineId is not null,
                                 ExampleValues = parsed is { Count: > 0 } ? parsed : null,
                                 ExampleRawValues = rawValues,
                                 Steps = StepCollector.GetSteps(x.Test.ID) is { Length: > 0 } steps ? steps : null,

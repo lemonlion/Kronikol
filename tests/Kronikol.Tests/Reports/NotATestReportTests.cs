@@ -236,7 +236,7 @@ public class NotATestReportTests : IDisposable
         var options = new ReportConfigurationOptions
         {
             ReportsFolderPath = reports, PlantUmlRendering = PlantUmlRendering.BrowserJs, GenerateComponentDiagram = false,
-            WriteRunSummaryToConsole = false,
+            WriteRunSummaryToConsole = false, HistoryFilePath = Path.Combine(_dir, "history.ndjson"),
         };
         DefaultDiagramsFetcher.Reset();
         using (ReportDiagnosticsScope.Begin(new ReportDiagnosticsCollector()))
@@ -245,6 +245,8 @@ public class NotATestReportTests : IDisposable
         var manifest = RunManifest.TryRead(reports)!;
         Assert.Equal(3, manifest.Scenarios);
         Assert.Equal(1, manifest.Failed);
+        // an environment that answers nothing switches history on: the ledger is the run's own, not the repository's
+        Assert.True(File.Exists(Path.Combine(_dir, "history.ndjson")), "the run wrote its ledger outside its own folder");
     }
 
     [Theory]
@@ -259,6 +261,7 @@ public class NotATestReportTests : IDisposable
         {
             ReportsFolderPath = reports, PlantUmlRendering = PlantUmlRendering.BrowserJs, GenerateComponentDiagram = false,
             WriteRunSummaryToConsole = false, ExpectedTestCount = () => expected,
+            HistoryFilePath = Path.Combine(_dir, "history.ndjson"),
         };
         DefaultDiagramsFetcher.Reset();
         using (ReportDiagnosticsScope.Begin(new ReportDiagnosticsCollector()))

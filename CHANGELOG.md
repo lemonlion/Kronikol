@@ -4,6 +4,75 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.18.0] - 2026-10-28
+
+The minor part moves (5.17.0 to 5.18.0): a new configuration option, `ReportConfigurationOptions.TitleWords` (#139 R2),
+with the data file key and the merge pairing it needs. A suite that does not set it sees its titles as before; its data
+files gain only `nameGenerated` on each feature whose name its lane made.
+
+### Added
+
+- **`ReportConfigurationOptions.TitleWords`: words as the suite spells them (#139).** A list of entries such as
+  `AcmePay`, `API`, `gRPC`, `PostgreSQL` or `iOS`, put back into the titles Kronikol makes from a class's or a method's
+  name: a feature named after its class, a scenario after its method, LightBDD's names, BDDfy's own titles, the group
+  headings made from them, and the parameter columns' headers when `TitleizeParameterNames` is on. An entry matches a
+  run of whole words whose letters and digits, read without case, are its own, so `AcmePay` turns "Acme pay webhook
+  tests" into "AcmePay webhook tests", `gRPC` mends both "Grpc" and "g RPC", and `MCA` BDDfy's "When m c a funding
+  activates". Longer entries are tried first, the punctuation around a run stays, and so do the digits written after its
+  last word (`xUnit` mends "X unit3" into "xUnit3"). A plural is an entry of its own (`APIs`), an entry that is a run of
+  ordinary words rewrites them too (`CheckOut` turns "Check out the basket" into "CheckOut the basket"), and an entry
+  with no letter or digit is ignored.
+- **What it never rewrites:** a name a person wrote (a Gherkin title, an xUnit `DisplayName`, an NUnit `TestName`, an
+  MSTest or TUnit `DisplayName`, a title passed to BDDfy or a `[Story(Title)]`), a row's arguments, a value written into
+  a title in quotes (LightBDD's), and the names in a model a consumer builds itself, which carry no mark. A BDDfy title
+  is BDDfy's own where it is its humaniser's reading of the method's or the class's name
+  (`Configurator.Scanners.Humanize`).
+- **No id moves.** Before it rewrites a title, the pass records the name the id was computed from, which the data files
+  write as `stableIdName`, so adding, editing or removing an entry keeps every `stableId`, the history and the `#sid-`
+  links.
+- The data files write `nameGenerated: true` on a feature whose name its lane made, with a list or without one, and
+  **`kronikol merge` pairs two such features by the name their ids key on**, so a shard written with the list and one
+  written without it are one feature, named as the first shard names it. A Gherkin feature pairs by its name alone, as
+  before: two Gherkin titles that differ only in case share a key and stay two features. A shard written before 5.18.0
+  has no mark and pairs by its name.
+
+### Changed
+
+- **What reads the words moves with them.** A saved search, or a link to a group, for words the list joined ("Acme Pay"
+  to "AcmePay") finds nothing after the join, and a renamed feature takes its place among the features by its new name,
+  since every view orders features by name. A retitled scenario's CTRF `name` changes with its title, once, as R1's rule
+  did. A merged report titleizes its parameter headers without the list, which is the run's option, not the merge's.
+
+### Documentation
+
+- The wiki's Report Configuration page gives `TitleWords`, and the `CapitaliseTitles` and `CapitaliseStepText` rows it
+  lacked; Generated Reports adds a feature's `stableIdName` and `nameGenerated`; Step Tracking says a word in Pascal
+  case is spelled with the list; Merging Parallel Reports says how features pair.
+
+### Tests
+
+- New facts: `TitleWordsTests` (the plan's table, the punctuation around a run, the longest entry first, digits after
+  the last word, a plural, an entry of ordinary words, an entry with no letter, a row's arguments and a quoted value),
+  `TitleWordsReportTests` (only the names Kronikol made are rewritten, the keys are recorded, no id moves as the list
+  changes, the pass runs after `CapitaliseTitles`, the `nameGenerated` key, a parameter header) and
+  `TitleWordsMergeTests` (a generated feature pairs across a list change in either order, two Gherkin features with one
+  key stay apart, an unmarked shard pairs by name); lane facts on xUnit v2 (the sink, the pairing, a consumer's
+  `ScenarioInfo`), xUnit v3, NUnit, MSTest, BDDfy (`IsOwnTitle`, `IsOwnStoryTitle`) and LightBDD; and a Playwright fact
+  for a listed word in a heading, the copied name, a group heading and the search results. Each of 36 mutations of the
+  design turns a fact red: the pass before `CapitaliseTitles`, a match by the entry's split, the shortest entry first, a
+  row's arguments rewritten, a written name listed, a Gherkin feature paired by key, a key not recorded, and each lane's
+  mark among them.
+- Two stall facts are fixed at their cause. `OtlpTapStallTests.A_slow_steady_export_is_received`, red on 5.16.5's CI
+  run, and ProxyTap's `A_slow_steady_body_is_never_cut` moved the fake clock before the tap had read the request's head,
+  so on a loaded runner the kept-alive limit cut the connection; each now waits for its phase to begin first, as the
+  facts beside them do.
+- `AttachmentProblemTests` and `NotATestReportTests` ran the generator with an environment that answers nothing, which
+  switches history on, and so wrote a ledger into the repository the suite ran in (`.kronikol/history.jsonl` at its
+  root); each run now names a ledger in its own folder.
+- Checks: the core suite (11,068, 2 skipped), every adapter suite (xUnit v2 110, MSTest 84, NUnit 48, xUnit v3 32, TUnit
+  48, StepTracking 61, LightBDD 26 and 25), every other test project CI's remainder job runs, the Release build of
+  `release.slnf`, the full Playwright suite (2,096, 0 failed) and the example lanes.
+
 ## [5.17.0] - 2026-10-28
 
 The minor part moves (5.16.5 to 5.17.0): new public members (`HistoryRun.Generator`, `HistoryRun.ShapeTemplates`,

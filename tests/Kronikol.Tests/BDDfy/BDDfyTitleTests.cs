@@ -82,4 +82,54 @@ public class BDDfyTitleTests
         Assert.Equal("Gets the UK VAT rate", scenario.DisplayName);
         Assert.Equal(ScenarioStableId.Compute(null, "Gets", "Gets the uk vat rate"), Id(scenario));
     }
+
+    [Theory]
+    // BDDfy's humaniser over the method's name, and over the class's for a class-per-scenario story
+    [InlineData("When m c a funding activates", true)]
+    [InlineData("Funding tests", true)]
+    // the class's name, which Kronikol reads the method's in place of
+    [InlineData("FundingTests", true)]
+    // a title the test passed: BDDfy("When MCA funding activates")
+    [InlineData("When MCA funding activates", false)]
+    [InlineData("Funding activates", false)]
+    public void A_title_is_BDDfy_s_own_only_where_its_humaniser_or_Kronikol_made_it(string title, bool own) =>
+        Assert.Equal(own, DiagramCapturingProcessor.IsOwnTitle(title, "FundingTests", "WhenMCAFundingActivates"));
+
+    [Fact]
+    public void A_story_s_title_is_BDDfy_s_own_unless_a_Story_attribute_wrote_one()
+    {
+        Assert.True(DiagramCapturingProcessor.IsOwnStoryTitle(null));
+        Assert.True(DiagramCapturingProcessor.IsOwnStoryTitle(new TestStack.BDDfy.StoryMetadata(typeof(BDDfyTitleTests), "n1", "n2", "n3")));
+        Assert.False(DiagramCapturingProcessor.IsOwnStoryTitle(
+            new TestStack.BDDfy.StoryMetadata(typeof(BDDfyTitleTests), "n1", "n2", "n3", title: "Funding via AcmePay")));
+    }
+
+    [Fact]
+    public void The_word_list_rewrites_BDDfy_s_own_titles_and_leaves_a_title_the_test_passed()
+    {
+        BDDfyScenarioInfo Info(string testId, string title, bool own, string story, bool ownStory) => new()
+        {
+            TestId = testId,
+            StoryTitle = story,
+            StoryTitleGenerated = ownStory,
+            ScenarioTitle = title,
+            TitleGenerated = own,
+            Tags = [],
+            Steps = [],
+            Result = TestStack.BDDfy.Result.Passed,
+        };
+        var features = new[]
+        {
+            Info("own", "When m c a funding activates", own: true, "Mca funding", ownStory: true),
+            Info("passed", "When m c a funding stops", own: false, "Mca funding", ownStory: true),
+            Info("story", "When m c a funding stops", own: true, "Mca funding by hand", ownStory: false),
+        }.ToFeatures();
+
+        new Kronikol.Naming.TitleWords(["MCA"]).ApplyTo(features);
+
+        var own = features.Single(f => f.DisplayName == "MCA Funding");
+        Assert.Equal(["When MCA funding activates", "When m c a funding stops"], own.Scenarios.OrderBy(s => s.Id).Select(s => s.DisplayName));
+        var written = features.Single(f => f.DisplayName == "Mca Funding By Hand");
+        Assert.Equal("When MCA funding stops", written.Scenarios.Single().DisplayName);
+    }
 }

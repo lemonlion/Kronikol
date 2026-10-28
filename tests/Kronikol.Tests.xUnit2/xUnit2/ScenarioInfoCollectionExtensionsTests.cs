@@ -21,6 +21,25 @@ public class ScenarioInfoCollectionExtensionsTests
     }
 
     [Fact]
+    public void ToFeatures_marks_no_name_a_consumer_made_and_carries_the_marks_Kronikol_set()
+    {
+        // the word list rewrites only the names Kronikol made (plans/TITLES_AS_WRITTEN_PLAN.md 4.5)
+        var consumer = new[] { MakeScenario(featureName: "Acme Pay", scenarioName: "Pays via acme pay") }.ToFeatures().Single();
+        var made = MakeScenario(id: "t2", featureName: "Acme Pay", scenarioName: "Pays via acme pay [1]");
+        made.FeatureNameGenerated = true;
+        made.NameGenerated = true;
+        made.OutlineTitle = "Pays via acme pay";
+        made.OutlineTitleGenerated = true;
+        var kronikol = new[] { made }.ToFeatures().Single();
+
+        Assert.False(consumer.NameGenerated);
+        Assert.False(consumer.Scenarios.Single().NameGenerated);
+        Assert.True(kronikol.NameGenerated);
+        Assert.True(kronikol.Scenarios.Single().NameGenerated);
+        Assert.True(kronikol.Scenarios.Single().OutlineTitleGenerated);
+    }
+
+    [Fact]
     public void ToFeatures_carries_when_the_scenario_ended()
     {
         var ended = new DateTimeOffset(2026, 1, 1, 10, 0, 3, 250, TimeSpan.Zero);

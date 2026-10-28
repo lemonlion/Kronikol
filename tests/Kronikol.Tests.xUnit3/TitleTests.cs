@@ -108,4 +108,43 @@ public class TitleTests : DiagrammedComponentTest
         // names the row, where it threw and lost the report
         Assert.Equal("A lone surrogate's code is rejected [s: \"x\"]", Mapped().Scenarios.Single().DisplayName);
     }
+
+    // the names the lane made, which the word list spells as the suite does (plans/TITLES_AS_WRITTEN_PLAN.md 4.5)
+    private static Feature Listed(params string[] words)
+    {
+        var feature = Mapped();
+        new Kronikol.Naming.TitleWords(words).ApplyTo([feature]);
+        return feature;
+    }
+
+    [Fact]
+    public void Pays_via_Acme_pay()
+    {
+        var feature = Listed("AcmePay", "TitleTests");
+
+        Assert.Equal("TitleTests", feature.DisplayName);
+        Assert.Equal("Pays via AcmePay", feature.Scenarios.Single().DisplayName);
+    }
+
+    [Fact(DisplayName = "Pays via acme pay, as written")]
+    public void A_display_name_is_not_rewritten_by_the_word_list()
+    {
+        var feature = Listed("AcmePay");
+
+        Assert.Equal("Pays via acme pay, as written", feature.Scenarios.Single().DisplayName);
+        Assert.True(feature.NameGenerated);
+        Assert.False(feature.Scenarios.Single().NameGenerated);
+    }
+
+    [Theory]
+    [InlineData("uk")]
+    public void Adds_vat_for(string country)
+    {
+        var scenario = Listed("VAT", "UK").Scenarios.Single();
+
+        // the method's words, never the row's value
+        Assert.Equal("Adds VAT for [country: \"uk\"]", scenario.DisplayName);
+        Assert.True(scenario.OutlineTitleGenerated);
+        Assert.Equal("uk", country);
+    }
 }

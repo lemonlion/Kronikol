@@ -20,6 +20,7 @@ internal static class TestContextEnumerableExtensions
                 return new Feature
                 {
                     DisplayName = firstScenario.TestClassSimpleName.Titleize(),
+                    NameGenerated = true,
                     Endpoint = firstScenario.Endpoint,
                     Tags = featureTags.Length > 0 ? featureTags : null,
                     Scenarios = scenariosForFeature
@@ -49,6 +50,7 @@ internal static class TestContextEnumerableExtensions
                                 Result = x.Outcome.ToExecutionResult(),
                                 DisplayName = name.Shown,
                                 NameAsWritten = name.Written,
+                                NameGenerated = !name.Written,
                                 StableIdKey = ScenarioStableId.KeyWhereChanged(frozenKey, name.Shown, outlineId, parsed is { Count: > 0 } ? parsed : null),
                                 IsHappyPath = x.IsHappyPath || classified.IsHappyPath,
                                 Tags = tags.Length > 0 ? tags : null,
@@ -61,6 +63,7 @@ internal static class TestContextEnumerableExtensions
                                 Attachments = StepCollector.GetScenarioAttachments(x.TestId),
                                 OutlineId = outlineId,
                                 OutlineTitle = outlineId is null ? null : x.MethodDisplayName ?? ScenarioTitleResolver.FormatScenarioDisplayName(x.TestMethodName),
+                                OutlineTitleGenerated = outlineId is not null && x.MethodDisplayName is null,
                                 ExampleValues = parsed is { Count: > 0 } ? parsed : null
                             };
                         }).ToArray()

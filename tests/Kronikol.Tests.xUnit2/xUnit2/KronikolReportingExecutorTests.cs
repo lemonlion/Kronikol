@@ -171,6 +171,8 @@ public class KronikolReportingExecutorTests : IDisposable
         var reported = Assert.Single(Assert.Single(written));
         Assert.Equal("Orders reach Kafka", reported.ScenarioName);
         Assert.Equal("Orders reach kafka", reported.StableIdName);
+        // and the sink's reading of whose name it is: the attribute made one from the method, xUnit's is not Kronikol's
+        Assert.False(reported.NameGenerated);
         var feature = Assert.Single(new[] { reported }.ToFeatures());
         Assert.Equal(ScenarioStableId.Compute(null, "Tracked Sink Tests", "Orders reach kafka"),
             ScenarioStableId.For(null, feature, Assert.Single(feature.Scenarios)));

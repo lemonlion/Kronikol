@@ -28,6 +28,10 @@
 		<InternalsVisibleTo Include="Kronikol.xUnit2" />
 		<!-- ReportFileFormat: the xUnit2 lane reads the TestRunReport.krkl its fixtures write -->
 		<InternalsVisibleTo Include="Kronikol.Tests.xUnit2" />
+		<!-- the generated-name marks each lane sets, which the word list reads (plans/TITLES_AS_WRITTEN_PLAN.md 4.5) -->
+		<InternalsVisibleTo Include="Kronikol.Tests.xUnit3" />
+		<InternalsVisibleTo Include="Kronikol.Tests.NUnit4" />
+		<InternalsVisibleTo Include="Kronikol.Tests.MSTest" />
 		<InternalsVisibleTo Include="Kronikol.xUnit3" />
 		<InternalsVisibleTo Include="Kronikol.ReqNRoll.Core" />
 		<!-- WebApplicationFactoryExtensions.OneAtATime: each framework's CreateTestTrackingClient makes its client under the

@@ -156,11 +156,14 @@ internal sealed class KronikolResultsSink : LongLivedMarshalByRefObject, IMessag
             // As TestTrackingAttribute.Before names a scenario it makes: the class running the test, which for an
             // inherited test method is the derived class.
             FeatureName = ScenarioTitleResolver.FormatFeatureName(type.Name),
+            FeatureNameGenerated = true,
             ScenarioName = name.Shown,
+            NameGenerated = !name.Written,
             StableIdName = frozenName == name.Shown ? null : frozenName,
             NameAsWritten = name.Written,
             NameWrittenWhole = name.Written && !name.ReadArguments,
             OutlineTitle = explicitDisplayName ?? ScenarioTitleResolver.FormatScenarioDisplayName(testMethod.Method.Name),
+            OutlineTitleGenerated = explicitDisplayName is null,
             MethodMatchKey = $"{type.FullName}.{method.Name}",
             Endpoint = type.GetCustomAttributes(inherit: true).OfType<EndpointAttribute>().FirstOrDefault()?.Endpoint,
             IsHappyPath = method.GetCustomAttributes(inherit: true).OfType<HappyPathAttribute>().Any(),
@@ -263,6 +266,8 @@ internal sealed class KronikolResultsSink : LongLivedMarshalByRefObject, IMessag
             partner.NameAsWritten = scenario.NameAsWritten;
             partner.NameWrittenWhole = scenario.NameWrittenWhole;
             partner.OutlineTitle = scenario.OutlineTitle;
+            partner.NameGenerated = scenario.NameGenerated;
+            partner.OutlineTitleGenerated = scenario.OutlineTitleGenerated;
             partner.Result = scenario.Result;
             partner.ErrorMessage = scenario.ErrorMessage;
             partner.ErrorStackTrace = scenario.ErrorStackTrace;

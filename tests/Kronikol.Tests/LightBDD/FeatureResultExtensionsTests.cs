@@ -28,6 +28,21 @@ public class FeatureResultExtensionsTests
     }
 
     [Fact]
+    public void ToFeatures_marks_its_names_as_made_so_the_word_list_spells_them()
+    {
+        // LightBDD names a feature from its class and a scenario from its method, always (plans/TITLES_AS_WRITTEN_PLAN.md 4.5)
+        var feature = new StubFeatureResult("AcmePayService").WithScenario(new StubExecutionResult("s1", "Pays via acme pay"));
+        var features = new[] { feature }.ToFeatures();
+        var ids = features[0].Scenarios.Select(s => ScenarioStableId.For(null, features[0], s)).ToArray();
+
+        new Kronikol.Naming.TitleWords(["AcmePay"]).ApplyTo(features);
+
+        Assert.Equal("AcmePay Service", features[0].DisplayName);
+        Assert.Equal("Pays via AcmePay", features[0].Scenarios[0].DisplayName);
+        Assert.Equal(ids, features[0].Scenarios.Select(s => ScenarioStableId.For(null, features[0], s)));
+    }
+
+    [Fact]
     public void ToFeatures_carries_when_the_scenario_ended()
     {
         var result = new StubExecutionResult("s1", "Place order", duration: TimeSpan.FromSeconds(2));

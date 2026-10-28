@@ -182,6 +182,9 @@ public class ProxyTapStallTests
             ? "POST /steady HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\nTransfer-Encoding: chunked\r\n\r\n"
             : $"POST /steady HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\nContent-Length: {pieces * Piece}\r\n\r\n");
         var stream = caller.Client.GetStream();
+        // Until the tap has read the head there is no body to make progress, so the clock must not move before it has
+        // (OtlpTapStallTests' slow export, which a loaded runner failed that way).
+        await EntryAsync(tap, Tap.BodyPhase);
         var piece = new byte[Piece];
         for (var i = 0; i < pieces; i++)
         {

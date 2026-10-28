@@ -36,4 +36,12 @@ public record Feature
     /// write it as <c>stableIdName</c> (only where it differs from the name), so a merge computes the same ids.
     /// </summary>
     internal string? StableIdName { get; set; }
+
+    /// <summary>
+    /// True for a feature whose name its lane made from a class's or a library's name, not one a person wrote: the list
+    /// <see cref="ReportConfigurationOptions.TitleWords"/> rewrites only such names (plans/TITLES_AS_WRITTEN_PLAN.md 4.5).
+    /// The data files write it as <c>nameGenerated</c> (only where it is true), and <c>kronikol merge</c> pairs two such
+    /// features by the name their ids key on, so two shards that spell one differently are one feature.
+    /// </summary>
+    internal bool NameGenerated { get; set; }
 }

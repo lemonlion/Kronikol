@@ -96,4 +96,29 @@ public class TitleTests
 
         Assert.AreEqual("Adds vat [1,2]", scenario.DisplayName);
     }
+
+    [TestMethod]
+    public void The_word_list_spells_the_names_the_lane_made_and_leaves_a_display_name()
+    {
+        // plans/TITLES_AS_WRITTEN_PLAN.md 4.5: the class's and the method's names are the lane's, a DisplayName the test's
+        var features = new[] { Info("PaysViaAcmePay"), Info("PaysAsWritten", displayName: "Pays via acme pay, as written") }.ToFeatures();
+        var ids = features[0].Scenarios.Select(s => ScenarioStableId.For(null, features[0], s)).ToArray();
+
+        new Kronikol.Naming.TitleWords(["AcmePay", "OrderTests"]).ApplyTo(features);
+
+        Assert.AreEqual("OrderTests", features[0].DisplayName);
+        CollectionAssert.AreEquivalent(new[] { "Pays via AcmePay", "Pays via acme pay, as written" }, features[0].Scenarios.Select(s => s.DisplayName).ToArray());
+        CollectionAssert.AreEqual(ids, features[0].Scenarios.Select(s => ScenarioStableId.For(null, features[0], s)).ToArray());
+    }
+
+    [TestMethod]
+    public void A_data_row_s_outline_title_is_the_lane_s_only_without_a_method_display_name()
+    {
+        var own = new[] { Info("AddsVat", displayName: "AddsVat (1,2)", parameterNames: ["net", "rate"]) }.ToFeatures().Single().Scenarios.Single();
+        var written = new[] { Info("AddsVat", displayName: "Adds VAT (1,2)", methodDisplayName: "Adds VAT", parameterNames: ["net", "rate"]) }
+            .ToFeatures().Single().Scenarios.Single();
+
+        Assert.IsTrue(own.OutlineTitleGenerated);
+        Assert.IsFalse(written.OutlineTitleGenerated);
+    }
 }

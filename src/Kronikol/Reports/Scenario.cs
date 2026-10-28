@@ -143,6 +143,19 @@ public record Scenario
     internal string? OutlineTitle { get; set; }
 
     /// <summary>
+    /// True for a scenario whose name its lane made from a method's name (plans/TITLES_AS_WRITTEN_PLAN.md 4.1), LightBDD's
+    /// and BDDfy's own among them, not one a person wrote: the list <see cref="ReportConfigurationOptions.TitleWords"/>
+    /// rewrites only such names (4.5). Not written to the data files: a merge shows each shard's titles as its run did.
+    /// </summary>
+    internal bool NameGenerated { get; set; }
+
+    /// <summary>
+    /// True where <see cref="OutlineTitle"/> is the lane's reading of a method's name, not a DisplayName a person wrote,
+    /// so the list <see cref="ReportConfigurationOptions.TitleWords"/> rewrites it as it does a generated name.
+    /// </summary>
+    internal bool OutlineTitleGenerated { get; set; }
+
+    /// <summary>
     /// Where the scenario is written - a project-relative path with forward slashes, matching
     /// <see cref="Feature.SourceFile"/>. Null on the lanes that cannot supply one. Deliberately NOT the
     /// bare-file-name contract of <see cref="ScenarioStep.SourceFile"/>: a step's path comes from

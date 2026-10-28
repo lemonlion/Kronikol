@@ -82,6 +82,8 @@ public class AttachmentProblemTests : IDisposable
             PlantUmlRendering = PlantUmlRendering.BrowserJs,
             GenerateComponentDiagram = false,
             WriteRunSummaryToConsole = false,
+            // the environment below answers nothing, which switches history on: the ledger is the run's own
+            HistoryFilePath = PathOf("history.ndjson"),
         };
         configure?.Invoke(options);
         var collector = new ReportDiagnosticsCollector();
@@ -140,6 +142,16 @@ public class AttachmentProblemTests : IDisposable
         ];
 
     // ─── The model ───────────────────────────────────────────────
+
+    [Fact]
+    public void A_run_keeps_its_history_in_its_own_folder()
+    {
+        // An environment that answers nothing switches history on, and with no path named the ledger went to the repository
+        // the test ran in (.kronikol/history.jsonl at its root), where every later run of the history facts read it.
+        RunWithMissingFiles();
+
+        Assert.True(File.Exists(PathOf("history.ndjson")), "the run wrote its ledger outside its own folder");
+    }
 
     [Fact]
     public void The_state_is_public_for_a_host_that_draws_its_own_view()
@@ -316,7 +328,7 @@ public class AttachmentProblemTests : IDisposable
                 new ReportConfigurationOptions
                 {
                     ReportsFolderPath = Reports, PlantUmlRendering = PlantUmlRendering.BrowserJs, GenerateComponentDiagram = false,
-                    WriteRunSummaryToConsole = false,
+                    WriteRunSummaryToConsole = false, HistoryFilePath = PathOf("history.ndjson"),
                 }, RunEnvironment.Unrecorded, _ => null);
         DefaultDiagramsFetcher.Reset();
 

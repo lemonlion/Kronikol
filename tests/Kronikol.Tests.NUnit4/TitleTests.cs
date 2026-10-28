@@ -19,6 +19,8 @@ public class TitleTests
         public void Gets_the_UK_VAT_rate() { }
 
         public void Ships(string country) { }
+
+        public void Pays_via_acme_pay() { }
     }
 
     private static TestMethod Test(string method, string? name = null)
@@ -99,5 +101,23 @@ public class TitleTests
         Assert.That(stableIdName, Is.EqualTo("Login via pay pal [v1.2]"));
         Assert.That(stableId, Is.EqualTo(ScenarioStableId.Compute(null, featureKey, "Login via pay pal [v1.2]", "Login via pay pal",
             new Dictionary<string, string> { ["arg0"] = "v1.2" })));
+    }
+
+    [Test]
+    public void The_word_list_spells_the_names_the_lane_made_and_leaves_a_test_name()
+    {
+        // plans/TITLES_AS_WRITTEN_PLAN.md 4.5: the fixture's and the method's names are the lane's, a TestName the test's
+        var made = Feature(Test(nameof(Orders.Pays_via_acme_pay)));
+        var written = Feature(Test(nameof(Orders.Ships), "Ships to the uk"));
+        var id = ScenarioStableId.For(null, made, made.Scenarios.Single());
+
+        new Kronikol.Naming.TitleWords(["AcmePay", "UK", "ORDERS"]).ApplyTo([made, written]);
+
+        // the nested fixture's type, TitleTests+Orders
+        Assert.That(made.DisplayName, Is.EqualTo("Title Tests ORDERS"));
+        Assert.That(made.Scenarios.Single().DisplayName, Is.EqualTo("Pays via AcmePay"));
+        Assert.That(ScenarioStableId.For(null, made, made.Scenarios.Single()), Is.EqualTo(id));
+        Assert.That(written.Scenarios.Single().DisplayName, Is.EqualTo("Ships to the uk"));
+        Assert.That(written.Scenarios.Single().NameGenerated, Is.False);
     }
 }

@@ -19,6 +19,7 @@ internal static class ScenarioInfoCollectionExtensions
                 return new Feature
                 {
                     DisplayName = first.FeatureName,
+                    NameGenerated = scenariosForFeature.All(x => x.FeatureNameGenerated),
                     Endpoint = first.Endpoint,
                     Tags = featureTags.Length > 0 ? featureTags : null,
                     Scenarios = scenariosForFeature
@@ -44,6 +45,7 @@ internal static class ScenarioInfoCollectionExtensions
                                 Result = x.Result,
                                 DisplayName = x.ScenarioName,
                                 NameAsWritten = x.NameAsWritten,
+                                NameGenerated = x.NameGenerated,
                                 StableIdKey = ScenarioStableId.KeyWhereChanged(frozenKey, x.ScenarioName, outlineId, parsed is { Count: > 0 } ? parsed : null),
                                 IsHappyPath = x.IsHappyPath || classified.IsHappyPath,
                                 Tags = tags.Length > 0 ? tags : null,
@@ -59,6 +61,7 @@ internal static class ScenarioInfoCollectionExtensions
                                 Attachments = StepCollector.GetScenarioAttachments(x.Id),
                                 OutlineId = outlineId,
                                 OutlineTitle = outlineId is null ? null : x.OutlineTitle,
+                                OutlineTitleGenerated = outlineId is not null && x.OutlineTitleGenerated,
                                 ExampleValues = parsed is { Count: > 0 } ? parsed : null
                             };
                         }).ToArray()

@@ -37,6 +37,7 @@ internal static class FeatureResultExtensions
                     return new Feature
                 {
                     DisplayName = f.Info.Name.ToString().Titleize(),
+                    NameGenerated = true,
                     // the ids key on 5.9.0's name, which Titleize can now differ from (plans/REPORT_UI_FIXES_PLAN.md N3)
                     StableIdName = StringCasing.TitleizeAsOf590(f.Info.Name.ToString()),
                     Description = f.Info.Description,
@@ -97,6 +98,9 @@ internal static class FeatureResultExtensions
             Tags = tags.Length > 0 ? tags : null,
             OutlineId = outlineId,
             OutlineTitle = outlineId,
+            // LightBDD names a scenario and its outline from the method's name, always
+            NameGenerated = true,
+            OutlineTitleGenerated = outlineId is not null,
             ExampleValues = exampleValues is { Count: > 0 } ? exampleValues : null,
             ExampleRawValues = exampleRawValues,
             Attachments = StepCollector.GetScenarioAttachments(result.Info.RuntimeId.ToString()),

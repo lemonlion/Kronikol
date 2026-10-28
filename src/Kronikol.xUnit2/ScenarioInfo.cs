@@ -61,4 +61,16 @@ public class ScenarioInfo
 
     /// <summary>The theory's DisplayName, else its method's title by the rule (<see cref="Scenario.OutlineTitle"/>).</summary>
     internal string? OutlineTitle { get; set; }
+
+    /// <summary>
+    /// The feature's name Kronikol made from the class's (<see cref="Feature.NameGenerated"/>): false on a scenario a
+    /// consumer made, whose names the word list never rewrites, as are the two below.
+    /// </summary>
+    internal bool FeatureNameGenerated { get; set; }
+
+    /// <summary>A name Kronikol made from the method's (<see cref="Scenario.NameGenerated"/>).</summary>
+    internal bool NameGenerated { get; set; }
+
+    /// <summary>An outline title Kronikol made from the method's (<see cref="Scenario.OutlineTitleGenerated"/>).</summary>
+    internal bool OutlineTitleGenerated { get; set; }
 }

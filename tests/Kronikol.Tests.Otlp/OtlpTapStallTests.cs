@@ -144,6 +144,9 @@ public class OtlpTapStallTests
 
         using var exporter = await RawExporter.ConnectAsync(tap);
         await exporter.SendAsync(Head($"Content-Length: {pieces * Piece}\r\n"));
+        // Until the tap has read the head there is no export to make progress, so the clock must not move: on a loaded
+        // runner nine moves of 0.6 s before the tap read it passed the kept-alive limit, and the tap closed the connection.
+        await EntryAsync(tap, OtlpTap.SendingPhase);
         var body = new byte[pieces * Piece];
         new Random(173).NextBytes(body);
         for (var i = 0; i < pieces; i++)

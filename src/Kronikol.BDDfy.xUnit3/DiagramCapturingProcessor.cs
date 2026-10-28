@@ -1,5 +1,6 @@
 using System.Reflection;
 using TestStack.BDDfy;
+using TestStack.BDDfy.Configuration;
 using Kronikol.xUnit3;
 
 namespace Kronikol.BDDfy.xUnit3;
@@ -24,6 +25,23 @@ public class DiagramCapturingProcessor : IProcessor
     internal static string[] TagsOf(IEnumerable<string>? scenarioTags, Xunit.Sdk.ITest? test) =>
         [.. scenarioTags ?? [], .. (test is not null && test.Traits.TryGetValue("Category", out var categories) ? categories : [])];
 
+    /// <summary>
+    /// Whether a scenario's title is BDDfy's own (plans/TITLES_AS_WRITTEN_PLAN.md 4.5, Q11): its humaniser's reading of the
+    /// method's or the class's name, or the class's name, which Kronikol reads the method's in place of. A title the test
+    /// passed (<c>BDDfy("...")</c>) is none of these, and the word list leaves it as written.
+    /// </summary>
+    internal static bool IsOwnTitle(string title, string? testClassSimpleName, string? testMethodName) =>
+        title == testClassSimpleName
+        || (testMethodName is not null && title == Configurator.Scanners.Humanize(testMethodName))
+        || (testClassSimpleName is not null && title == Configurator.Scanners.Humanize(testClassSimpleName));
+
+    /// <summary>
+    /// Whether a story's title is BDDfy's own: none written (Kronikol names the story from its namespace) or its
+    /// humaniser's reading of the story's class's name, which is what a <c>[Story]</c> with no <c>Title</c> gives.
+    /// </summary>
+    internal static bool IsOwnStoryTitle(StoryMetadata? metadata) =>
+        metadata is null || metadata.Title == Configurator.Scanners.Humanize(metadata.Type.Name);
+
     public void Process(Story story)
     {
         var testContext = Xunit.TestContext.Current;
@@ -33,6 +51,7 @@ public class DiagramCapturingProcessor : IProcessor
         var storyTitle = story.Metadata?.Title
             ?? story.Namespace?.Split('.').LastOrDefault()
             ?? "Unknown Feature";
+        var storyTitleGenerated = IsOwnStoryTitle(story.Metadata);
 
         var storyDescription = BuildStoryDescription(story.Metadata);
 
@@ -48,6 +67,7 @@ public class DiagramCapturingProcessor : IProcessor
         {
             var resolvedTitle = ScenarioTitleResolver.ResolveScenarioTitle(
                 scenario.Title, testClassSimpleName, testMethodName);
+            var titleGenerated = IsOwnTitle(scenario.Title, testClassSimpleName, testMethodName);
             // 5.16.4's title, which the id keys on where this one differs (plans/TITLES_AS_WRITTEN_PLAN.md 4.4)
             var frozenTitle = ScenarioTitleResolver.AppendTestParameters(
                 ScenarioTitleResolver.ResolveScenarioTitleAsOf5164(scenario.Title, testClassSimpleName, testMethodName),
@@ -83,6 +103,8 @@ public class DiagramCapturingProcessor : IProcessor
                 StoryDescription = storyDescription,
                 ScenarioTitle = resolvedTitle,
                 StableIdTitle = frozenTitle == resolvedTitle ? null : frozenTitle,
+                TitleGenerated = titleGenerated,
+                StoryTitleGenerated = storyTitleGenerated,
                 Tags = TagsOf(scenario.Tags, testContext.Test),
                 Steps = steps,
                 Result = scenario.Result,
