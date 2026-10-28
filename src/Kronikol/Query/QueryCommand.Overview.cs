@@ -492,7 +492,6 @@ public static partial class QueryCommand
             only = parsed;
         }
 
-        static bool IsRequest(InteractionEntry i) => i.Type.Equals("Request", StringComparison.OrdinalIgnoreCase) && i.ServiceName.Length > 0 && i.CallerName.Length > 0;
         var made = new Dictionary<string, int>(StringComparer.Ordinal);
         var received = new Dictionary<string, int>(StringComparer.Ordinal);
         // The calls a test double answered, as their capturers saw (#190, R2): counted here, the row keeps its members.
@@ -500,7 +499,7 @@ public static partial class QueryCommand
         // The run's calls outside every scenario belong to its parties too: the run resolved its table over them, so a party
         // only the background called is in the block (5.16.0). An address scopes to one scenario's calls, which they are not.
         var background = options.Positional.Count == 0 ? index.BackgroundInteractions : [];
-        foreach (var interaction in scope.SelectMany(s => s.Interactions).Concat(background).Where(IsRequest))
+        foreach (var interaction in scope.SelectMany(s => s.Interactions).Concat(background).Where(IsPartyCall))
         {
             made[interaction.CallerName] = made.GetValueOrDefault(interaction.CallerName) + 1;
             received[interaction.ServiceName] = received.GetValueOrDefault(interaction.ServiceName) + 1;
@@ -508,25 +507,11 @@ public static partial class QueryCommand
                 doubled[interaction.ServiceName] = doubled.GetValueOrDefault(interaction.ServiceName) + 1;
         }
 
-        IReadOnlyList<Kronikol.Parties.Party> table;
-        if (index.HasParties)
-        {
-            table = index.Parties.Select(p =>
-            {
-                var kind = p.Kind is { } k && Kronikol.Parties.PartiesFile.TryParseKind(k, out var parsed) ? parsed : Kronikol.Parties.PartyKind.Unknown;
-                Kronikol.Parties.PartyKindSource? source = Kronikol.Parties.PartiesReport.TryParseSource(p.KindSource, out var how) ? how : null;
-                return new Kronikol.Parties.Party(p.Name, p.Id, kind, kind == Kronikol.Parties.PartyKind.Unknown ? null : source, p.Note);
-            }).ToList();
-        }
-        else
-        {
-            var calls = index.Scenarios.SelectMany(s => s.Interactions).Concat(index.BackgroundInteractions).Where(IsRequest)
-                .Select(i => new Kronikol.Parties.PartyCall(i.CallerName, i.ServiceName, i.DependencyCategory, i.CallerDependencyCategory, i.AttributionSource, i.TestDouble));
-            var inferred = Kronikol.Parties.PartyResolver.Resolve(calls, Kronikol.Parties.PartyDeclarations.None, Kronikol.Parties.PartyObservations.None);
-            table = inferred.Parties;
-            foreach (var note in inferred.Notes)
-                writer.Note(note.Message);
-        }
+        // A table read as written has no findings to print; an inferred one prints what its checks found.
+        var (parties, _) = PartiesOf(index);
+        var table = parties.Parties;
+        foreach (var note in parties.Notes)
+            writer.Note(note.Message);
 
         var rows = table.Where(p => made.ContainsKey(p.Name) || received.ContainsKey(p.Name))
             .Where(p => only is null || p.Kind == only)
@@ -571,6 +556,32 @@ public static partial class QueryCommand
             footer);
         return 0;
     }
+
+    /// <summary>
+    /// The report's party table and its subject (#192 R3), as <see cref="Kronikol.Parties.PartyTable.OfReport"/> reads them:
+    /// the <c>parties</c> block as written, else the table the run would have inferred from every call, those outside
+    /// every scenario included, as the run's own writer resolved it. <c>parties</c>, <c>origin</c> and <c>cause</c> read it.
+    /// </summary>
+    private static (Kronikol.Parties.PartyTable Table, string? Subject) PartiesOf(ReportIndex index)
+    {
+        index.PartyTableReads++;
+        var written = index.HasParties
+            ? index.Parties.Select(p =>
+            {
+                var kind = p.Kind is { } k && Kronikol.Parties.PartiesFile.TryParseKind(k, out var parsed) ? parsed : Kronikol.Parties.PartyKind.Unknown;
+                Kronikol.Parties.PartyKindSource? source = Kronikol.Parties.PartiesReport.TryParseSource(p.KindSource, out var how) ? how : null;
+                return new Kronikol.Parties.Party(p.Name, p.Id, kind, kind == Kronikol.Parties.PartyKind.Unknown ? null : source, p.Note);
+            }).ToList()
+            : null;
+        var calls = index.Scenarios.SelectMany(s => s.Interactions).Concat(index.BackgroundInteractions).Where(IsPartyCall)
+            .Select(i => new Kronikol.Parties.PartyCall(i.CallerName, i.ServiceName, i.DependencyCategory, i.CallerDependencyCategory, i.AttributionSource, i.TestDouble))
+            .ToList();
+        return Kronikol.Parties.PartyTable.OfReport(written, index.ServiceId, calls);
+    }
+
+    /// <summary>A call's request record that names both its parties, the one record of a call the party table counts.</summary>
+    private static bool IsPartyCall(InteractionEntry i) =>
+        i.Type.Equals("Request", StringComparison.OrdinalIgnoreCase) && i.ServiceName.Length > 0 && i.CallerName.Length > 0;
 
     /// <summary>How many kinds of status a row of <c>services</c> names; <c>--json</c> gives every one.</summary>
     private const int MaxStatusesShown = 4;

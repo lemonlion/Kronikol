@@ -342,10 +342,16 @@ payments     OK                      38       0    12 ms    80 ms       4    96.
 payments     InternalServerError      2       2   230 ms   410 ms       1     1.1 KB
 ```
 
-Dimensions (comma list, any order): `service`, `caller` (who made the call), `method`, `status`, `path` (URI path, query stripped),
-`route`, `step`, `phase`, `category`, `kind` (metaType), `capturedBy`. `route` is the call's operation: its path
-with ids templated (`/orders/{n}`), then a statement's head or a GraphQL operation, under the rules the run
-recorded; cut at 80 characters in text, whole in `--json`. `bodies` is the number of distinct
+Dimensions (comma list, any order): `service`, `caller` (who made the call), `origin`, `cause`, `method`, `status`,
+`path` (URI path, query stripped), `route`, `step`, `phase`, `category`, `kind` (metaType), `capturedBy`. `route` is
+the call's operation: its path with ids templated (`/orders/{n}`), then a statement's head or a GraphQL operation,
+under the rules the run recorded; cut at 80 characters in text, whole in `--json`. `origin` is the caller's role in
+the table `parties` prints (`test`, `subject`, `other`): a test that seeds through the subject's own client reads
+`subject`, and a subject in the test's own process reads `test` until the run declares it. `cause` is why the call
+was made (`test`, `request`, `background`, `unknown`): the test's own calls, and a subject's on the test's context
+when no party is the test; then the record's attribution (`RequestHeader` is a request's, any other background); then
+the nesting where a record has none (inside another call, as `flow` nests it, is a request's). `interactions --json`
+rows carry both after `caller`. `bodies` is the number of distinct
 response bodies in the bucket — a bucket with 120 calls and 1 body is one fact. `bytes` is the length of
 every request and response body in the bucket, decoded, as `services` counts it per service. Index-only unless
 combined with `--where`; composes with every filter. Default sort is calls descending;

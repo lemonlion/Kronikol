@@ -1185,3 +1185,23 @@ answers.
   older report was said of one that holds the block; and two statements on one table paired by position, so the
   exact key holds a statement's head, under the built-in rules, as it holds a GraphQL operation. It also found that a
   dimension named twice threw under `--json` since `--group-by` was written, now refused at exit 2.
+- 2026-10-28: R3 built on 5.19.0 and released as 5.20.0, test first, the plan's last release: the `origin` and `cause`
+  dimensions, both on the `interactions --json` rows after `caller`, and the party table of a written report as one
+  function, `PartyTable.OfReport` (`src/Kronikol/Parties/PartyTable.cs`, the record moved there from the resolver), which
+  the `parties` verb now reads and the service card (#191) will: the block as written, else the table inferred from
+  every call, the background block's included, with nothing declared; and the subject, the subject whose id is the
+  service id, else the one that received the most calls, then the first by name. `cause` is the card's rule
+  (`SERVICE_CARD_PLAN.md` 4.2, agreed with kronikol-ed): the test's own calls; the background block's; a subject's call
+  on the test's context when no party is the test; by attribution, a request header a request's and any other way
+  background; and with none, a request's when the flow nesting puts the call inside another, by its caller or by its
+  trace, else unknown. On BreakfastProvider's newest xunit-in-memory report (run 40661741525, Kronikol 5.14.0, which
+  declares its parties) `--group-by origin,cause` gives subject and request 755, test 451, other and request 114,
+  subject and background 86 and other and background 3: the split 3.5 measured from attribution alone (reqnroll-in-memory
+  733, 443, 108, 70 and 3). The schema's description of the `parties` block already says a reader works the table out
+  from the calls as `parties` does, which is what `origin` reads, so it is unchanged and no report's bytes move. An
+  independent review of the built code found no break of the rules; it found that a report with a root service id and
+  no block took the id onto its inferred subject, which the `parties` verb had not done; that the service id named the
+  subject among parties of any kind and the test's context made any party's call the test's, where the card reads both
+  among the subjects; that the skill's reference left that step out; and three facts a wrong change would pass (the
+  table resolved for a text listing, a delivery nested by its trace, a double's origin). Each is fixed test first, with
+  a mutation that turns its fact red. Checks: the core suite (11,135 passed, 2 skipped), the Release build of `release.slnf`, and the 24 mutations.

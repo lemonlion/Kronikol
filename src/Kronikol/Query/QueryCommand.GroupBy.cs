@@ -8,16 +8,27 @@ namespace Kronikol.Query;
 /// count/error/timing/bodies/bytes summary per bucket. <c>services</c> stays as the curated view and the only
 /// answerer of negative questions; this is the general form. Index-only unless combined with
 /// <c>--where</c>, or grouped by <c>route</c>, which reads the request body of a POST or a statement-shaped call (#192).
+/// <c>origin</c> and <c>cause</c> read the report's party table, the one <c>parties</c> prints, and the flow nesting.
 /// </summary>
 public static partial class QueryCommand
 {
     /// <summary>The dimensions <c>interactions --group-by</c> accepts. Internal so SkillDriftTests can pin
     /// the help text and the skill's reference to the one list the tool actually validates against.</summary>
     internal static readonly string[] GroupByDimensions =
-        ["service", "caller", "method", "status", "path", "route", "step", "phase", "category", "kind", "capturedBy"];
+        ["service", "caller", "origin", "cause", "method", "status", "path", "route", "step", "phase", "category", "kind", "capturedBy"];
 
     /// <summary>The first release whose reports carry their run's HistoryShapeTemplates (#192): an earlier report cannot say whether its run had rules.</summary>
     internal static readonly Version FirstVersionWithShapeTemplates = new(5, 19, 0);
+
+    /// <summary>
+    /// Whether a report without the block was written by a version that cannot say whether its run had rules: one before
+    /// <see cref="FirstVersionWithShapeTemplates"/>, or one whose version is not Kronikol's (Kronikol4J writes its own).
+    /// </summary>
+    internal static bool PredatesShapeTemplates(string? kronikolVersion)
+    {
+        var numbers = (kronikolVersion ?? "").Split('-', '+')[0];
+        return !Version.TryParse(numbers, out var version) || version < FirstVersionWithShapeTemplates;
+    }
 
     /// <summary>How much of a route a text row shows; the JSON key carries all of it.</summary>
     private const int RouteWidth = 80;
@@ -49,10 +60,19 @@ public static partial class QueryCommand
         // A route is the call's operation key, read as the run read it: under the rules its report recorded, and from the
         // request body only where the key is in it, a statement's head or a POST that may be GraphQL (plan 4.4).
         var routes = dims.Contains("route", StringComparer.OrdinalIgnoreCase) ? new RouteReader(index, cache) : null;
+        var roles = dims.Any(d => d.Equals("origin", StringComparison.OrdinalIgnoreCase) || d.Equals("cause", StringComparison.OrdinalIgnoreCase))
+            ? new RoleReader(index)
+            : null;
         var buckets = new Dictionary<string, GroupBucket>(StringComparer.Ordinal);
         foreach (var (scenario, request, response) in matches)
         {
-            var values = dims.Select(d => d.Equals("route", StringComparison.OrdinalIgnoreCase) ? routes!.Of(request) : DimensionValue(d, request, response)).ToArray();
+            var values = dims.Select(d => d.ToLowerInvariant() switch
+            {
+                "route" => routes!.Of(request),
+                "origin" => roles!.OriginOf(request),
+                "cause" => roles!.CauseOf(scenario, request),
+                _ => DimensionValue(d, request, response)
+            }).ToArray();
             // A service is one service whatever case its callers name it in, as `services` counts it (OrdinalIgnoreCase, so
             // the invariant upper case), the row named as its first call names it, and a caller likewise, since a caller is
             // a service named by the other end of the call (#192); every other value is kept as written.
@@ -183,16 +203,40 @@ public static partial class QueryCommand
         /// </summary>
         public void Note(Action<string> note)
         {
-            if (index.ShapeTemplates.Count == 0 && Predates(index.KronikolVersion))
+            if (index.ShapeTemplates.Count == 0 && PredatesShapeTemplates(index.KronikolVersion))
                 note("route: built-in templating only; this report cannot say whether its run had HistoryShapeTemplates");
             foreach (var problem in _rules?.Problems ?? [])
                 note("route: " + problem);
         }
+    }
 
-        private static bool Predates(string? kronikolVersion)
+    /// <summary>
+    /// The <c>origin</c> and <c>cause</c> of each call, for one command (#192 R3): the report's party table, read once, as
+    /// <see cref="Kronikol.Parties.PartyTable"/> answers them, with each scenario's nesting worked out once.
+    /// </summary>
+    private sealed class RoleReader(ReportIndex index)
+    {
+        private readonly Kronikol.Parties.PartyTable _table = PartiesOf(index).Table;
+        private readonly Dictionary<ScenarioEntry, int?[]> _parents = [];
+        private readonly Dictionary<string, string> _origins = new(StringComparer.Ordinal);
+        private readonly Dictionary<(string Caller, string? Source, bool Inside), string> _causes = [];
+
+        public string OriginOf(InteractionEntry request)
         {
-            var numbers = (kronikolVersion ?? "").Split('-', '+')[0];
-            return !Version.TryParse(numbers, out var version) || version < FirstVersionWithShapeTemplates;
+            if (!_origins.TryGetValue(request.CallerName, out var origin))
+                _origins[request.CallerName] = origin = _table.OriginOf(request.CallerName);
+            return origin;
+        }
+
+        /// <summary>A scenario's call, so never one of the root background block's.</summary>
+        public string CauseOf(ScenarioEntry scenario, InteractionEntry request)
+        {
+            if (!_parents.TryGetValue(scenario, out var parents))
+                _parents[scenario] = parents = CallNesting.Parents(scenario.Interactions);
+            var key = (request.CallerName, request.AttributionSource, request.Ordinal < parents.Length && parents[request.Ordinal] is not null);
+            if (!_causes.TryGetValue(key, out var cause))
+                _causes[key] = cause = _table.CauseOf(key.CallerName, key.AttributionSource, inBackgroundBlock: false, insideReceivedCall: key.Item3);
+            return cause;
         }
     }
 

@@ -108,6 +108,8 @@ public static partial class QueryCommand
             return 0;
         }
 
+        // Read for the JSON rows alone, at the first one: a text listing never resolves the party table.
+        RoleReader? roles = null;
         writer.Page(matches, options.Offset, options.PageSize(120, writer, "calls"), "calls", row =>
         {
             var (scenario, interaction, response) = row;
@@ -133,6 +135,9 @@ public static partial class QueryCommand
                 service = interaction.ServiceName,
                 // Who made the call (#184, #192): the field --group-by caller buckets by, none when the record names nobody.
                 caller = interaction.CallerName.Length > 0 ? interaction.CallerName : null,
+                // Who made it as a role, and why it was made (#192 R3), as --group-by origin,cause buckets them.
+                origin = (roles ??= new RoleReader(index)).OriginOf(interaction),
+                cause = roles.CauseOf(scenario, interaction),
                 method = interaction.Method,
                 uri = interaction.Uri,
                 summary = interaction.Summary(),

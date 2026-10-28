@@ -132,6 +132,12 @@ internal sealed class ReportIndex : IDisposable
     /// </summary>
     public int BodyReads { get; set; }
 
+    /// <summary>
+    /// How many times a command worked out the party table (#192): once for <c>origin</c> or <c>cause</c>, and never for a
+    /// command that reads neither, since on a report without the block it is resolved over every call.
+    /// </summary>
+    public int PartyTableReads { get; set; }
+
     /// <summary>The mergeable format version, when the file declares one. An unknown value is fatal, not ignored.</summary>
     public int? MergeableFormatVersion { get; set; }
 

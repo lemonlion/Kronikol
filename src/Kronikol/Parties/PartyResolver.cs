@@ -31,18 +31,6 @@ internal sealed record PartyObservations(IReadOnlyList<TestClientObservation> Te
 }
 
 /// <summary>
-/// A run's parties: one row a participant, sorted by name, and what the checks found. The findings are the report's
-/// diagnostics only when the run declared something, so a report that declares nothing keeps its bytes; the
-/// <c>parties</c> verb prints them as notes either way.
-/// </summary>
-internal sealed record PartyTable(IReadOnlyList<Party> Parties, string? ServiceId, bool Declared, IReadOnlyList<DiagnosticEntry> Findings)
-{
-    internal IReadOnlyList<DiagnosticEntry> Diagnostics => Declared ? Findings : [];
-
-    internal IReadOnlyList<DiagnosticEntry> Notes => Findings;
-}
-
-/// <summary>
 /// Who each party is (#190, plans/PARTY_IDENTITY_PLAN.md §5.1-5.4): a pure function of the run's calls, its
 /// declarations and Kronikol's observations, so the writer, merge and the query engine resolve a run alike. Each field
 /// of a row is resolved on its own: the run's options, then the parties file, then an observation, then the inference,

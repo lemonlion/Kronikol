@@ -4,6 +4,69 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.20.0] - 2026-10-28
+
+The minor part moves (5.19.0 to 5.20.0): new public surface for #192 R3, the last release of
+`plans/CALL_OPERATION_AND_ORIGIN_PLAN.md`. `kronikol query interactions --group-by` gains the `origin` and `cause`
+dimensions, and `interactions --json` rows gain `origin` and `cause`. No report's bytes change.
+
+### Added
+
+- **Who made a call, as a role (#192).** `--group-by origin` buckets a call by its caller's role: `test` when the
+  caller is a test party, `subject` when it is a party under test, `other` for anyone else, a broker delivering a
+  message among them. The roles are the ones `kronikol query parties` prints: the report's `parties` block as written
+  when the run declared its parties, else the table the run would have inferred from its calls, those outside every
+  scenario included. Two limits, documented with a recipe: a test that seeds through a client the subject registers
+  writes its calls under the subject's name, so they read `subject` (seed through a client tracked under the test's
+  caller name to keep them apart), and a subject in the test's own process, a test calling handler code, reads `test`
+  until the run declares it `underTest`.
+- **Why a call was made (#192, the plan's Q4).** `--group-by cause` reads `test`, `request`, `background` or
+  `unknown`, the first that applies: the test made it (its caller is a test party, or a subject made it on the test's
+  context and no party is the test, the subject running in the test's own process); by the record's attribution,
+  `request` for a call that got its scenario from the request it served and `background` for one that got it any other
+  way (a scope, a message's identity, the test's context reaching a hosted service or a delivery, a document's owner);
+  and on a record with no attribution, as the ingest, the taps and Kronikol4J write them, `request` when `flow` nests it
+  inside another call (one its caller was serving, or the publish a delivered message came from), else `unknown`.
+  So `--group-by origin,cause` parts the subject's work for the test's requests from its background work.
+- **`origin` and `cause` on `interactions --json` rows**, after `caller`. A text listing reads neither, so it never
+  resolves the party table.
+
+### Changed
+
+- **`kronikol query parties` and the new dimensions read one table.** The table of a written report, and the subject
+  it is about, are one function the query engine and the service card (#191) both call, so they agree on who each
+  party is: the block as written, else the table inferred from every call with nothing declared, and the subject the
+  subject whose id is the service id, else the one that received the most calls, then the first by name. `parties`
+  prints what it did before.
+
+### Documentation
+
+- The wiki's Querying-Reports gives `origin` and `cause`, their rules and limits, and the seeding recipe;
+  Ingesting-External-Captures and Ingesting-From-Jest the in-process subject, which reads `test` until it is declared.
+  The skill, both copies, names the dimensions and their rules.
+
+### Tests
+
+- New facts: `QueryOriginCauseTests` (origin from a written block that differs from the inference and from the
+  inference itself, a broker's deliveries, a declared and an undeclared in-process subject, a seed through the
+  subject's client, each step of `cause` in order, the test's context with no test party, an unattributed delivery
+  nested by its trace, the JSON rows' members, and the party table resolved once and only for a role) and
+  `PartyTableTests` (the block as written, or inferred with nothing declared whatever the service id, the subject
+  rule, the origin of every kind, the test's context only on a subject's call, a call outside every scenario).
+  Twenty-four mutations, one for each step of the two rules, the subject rule and the query's reader, each turn a fact
+  red.
+- On BreakfastProvider's newest xunit-in-memory report (Kronikol 5.14.0, which declares its parties),
+  `--group-by origin,cause` gives subject and request 755, test 451, other and request 114, subject and background 86,
+  and other and background 3: the split the plan measured from attribution alone.
+- An independent review of the built code before release found no break of the rules, and five things, each fixed
+  test first with a mutation of its own: a report with a root service id and no block took the id onto its inferred
+  subject, which `parties` had not done; the service id named the subject among parties of any kind, and the test's
+  context made any party's call the test's, where the card reads both among the subjects; the skill's reference left
+  that step out; and three facts a wrong change would pass (the table resolved for a text listing, a delivery nested
+  by its trace, a double's origin).
+- Checks: the core suite (11,135 passed, 2 skipped) and the Release build of `release.slnf`. No example lane or
+  Playwright run: nothing in the HTML report changes.
+
 ## [5.19.0] - 2026-10-28
 
 The minor part moves (5.18.0 to 5.19.0): new public surface for #192 R2. `kronikol query interactions --group-by` gains
