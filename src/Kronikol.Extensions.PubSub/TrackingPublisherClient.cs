@@ -35,15 +35,14 @@ public class TrackingPublisherClient : PublisherClient
         InjectTestIdentityAttributes(message);
         var op = PubSubOperationClassifier.Classify(
             "PublishAsync", _inner.TopicName?.ToString(), null, 1);
-        var content = _options.Verbosity != PubSubTrackingVerbosity.Summarised
+        var content = PubSubTracker.DrawnAt(_options).Any(v => v != PubSubTrackingVerbosity.Summarised)
             ? message.Data?.ToStringUtf8() : null;
         var (reqId, traceId) = _tracker.LogRequest(op, content);
 
         try
         {
             var messageId = await _inner.PublishAsync(message);
-            _tracker.LogResponse(op, reqId, traceId,
-                _options.Verbosity == PubSubTrackingVerbosity.Raw ? $"MessageId: {messageId}" : null);
+            _tracker.LogResponse(op, reqId, traceId, content: null, rawContent: $"MessageId: {messageId}");
             return messageId;
         }
         catch (Exception ex)
@@ -62,10 +61,10 @@ public class TrackingPublisherClient : PublisherClient
         foreach (var msg in messageList) InjectTestIdentityAttributes(msg);
         var op = PubSubOperationClassifier.Classify(
             "PublishAsync", _inner.TopicName?.ToString(), null, messageList.Count);
-        var content = _options.Verbosity == PubSubTrackingVerbosity.Raw
+        var bodies = PubSubTracker.DrawnAt(_options).Contains(PubSubTrackingVerbosity.Raw)
             ? string.Join(", ", messageList.Select(m => m.Data?.ToStringUtf8() ?? ""))
             : null;
-        var (reqId, traceId) = _tracker.LogRequest(op, content);
+        var (reqId, traceId) = _tracker.LogRequest(op, content: null, rawContent: bodies);
 
         try
         {

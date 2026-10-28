@@ -218,12 +218,9 @@ public class TrackingSpannerCommand : DbCommand
             return;
         }
 
-        var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(
-            _options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
-
-        var responseContent = effectiveVerbosity == SpannerTrackingVerbosity.Summarised && !_options.LogResponseContent
-            ? null
-            : rowsAffected.HasValue ? $"{rowsAffected.Value.ToString(CultureInfo.InvariantCulture)} rows affected" : null;
+        // The tracker leaves the count out of each note whose verbosity hides it: left out here, at the base verbosity,
+        // a Detailed phase of a Summarised command had no count with LogResponseContent off.
+        var responseContent = rowsAffected.HasValue ? $"{rowsAffected.Value.ToString(CultureInfo.InvariantCulture)} rows affected" : null;
 
         _connection.Tracker.LogResponse(op, requestResponseId, traceId, responseContent);
     }
@@ -235,13 +232,17 @@ public class TrackingSpannerCommand : DbCommand
     }
 
     // The caller's behavior goes with the reader: under SequentialAccess (Dapper's every query) a row is recorded as
-    // the caller reads it, since reading it first made the caller's own read throw on SqlClient and Npgsql.
+    // the caller reads it, since reading it first made the caller's own read throw on SqlClient and Npgsql. Rows are
+    // kept at the most detail any verbosity the call may be drawn at shows, and each note is made at its own: a phase's
+    // variant was given the effective verbosity's note, so a Detailed phase of a Summarised command had only a count.
     private TrackingDbDataReader WrapReader(DbDataReader inner, Guid traceId, Guid requestResponseId, CommandBehavior behavior)
     {
-        var detail = (SqlResponseDetail)(int)_options.ResolveResponseDetail();
+        var detail = (SqlResponseDetail)(int)_options.ResolveKeptResponseDetail();
         return new TrackingDbDataReader(
-            inner, detail, _options.MaxResponseRows, 500,
-            content => LogResponseWithContent(traceId, requestResponseId, content), behavior);
+            inner, detail, _options.MaxResponseRows, 500, behavior,
+            rowsAt => _connection.Tracker.LogResponseAtDetail(
+                SpannerOperationClassifier.ClassifySql(CommandText, CommandType), requestResponseId, traceId,
+                spannerDetail => rowsAt((SqlResponseDetail)(int)spannerDetail)));
     }
 
     private string? FormatScalar(object? result) =>

@@ -110,14 +110,17 @@ public class AtlasDataApiTrackingMessageHandler : DelegatingHandler, ITrackingCo
 
         var response = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
-        var responseContent = await GetResponseContent(response, effectiveVerbosity, cancellationToken);
+        // Each note is made at its own verbosity from a body read once: a phase's variant was given the effective
+        // verbosity's note, so a Detailed phase of a Summarised handler had no response body.
+        var drawnAt = PhaseConfiguration.DrawnAt(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
+        var responseBody = await ReadResponseBody(response, drawnAt, cancellationToken);
         var responseHeaders = GetFilteredHeaders(response, effectiveVerbosity);
 
         RequestResponseLogger.Log(new RequestResponseLog(
             testInfo.Value.Name,
             testInfo.Value.Id,
             method,
-            responseContent,
+            effectiveVerbosity == AtlasDataApiTrackingVerbosity.Summarised ? null : responseBody,
             requestUri,
             responseHeaders,
             _options.ServiceName,
@@ -136,7 +139,7 @@ public class AtlasDataApiTrackingMessageHandler : DelegatingHandler, ITrackingCo
             v => new PhaseVariant(
                 v == AtlasDataApiTrackingVerbosity.Raw ? request.Method : AtlasDataApiOperationClassifier.GetDiagramLabel(apiOp, v),
                 v == AtlasDataApiTrackingVerbosity.Raw ? request.RequestUri! : BuildCleanUri(apiOp),
-                v == AtlasDataApiTrackingVerbosity.Summarised ? null : responseContent,
+                v == AtlasDataApiTrackingVerbosity.Summarised ? null : responseBody,
                 GetFilteredHeaders(response, v),
                 v == AtlasDataApiTrackingVerbosity.Summarised && apiOp.Operation == AtlasDataApiOperation.Other)));
 
@@ -150,10 +153,11 @@ public class AtlasDataApiTrackingMessageHandler : DelegatingHandler, ITrackingCo
         return bodyJson;
     }
 
-    private static async Task<string?> GetResponseContent(
-        HttpResponseMessage response, AtlasDataApiTrackingVerbosity verbosity, CancellationToken ct)
+    // Read when any verbosity the call may be drawn at shows the body, as Detailed and Raw do and Summarised does not.
+    private static async Task<string?> ReadResponseBody(
+        HttpResponseMessage response, AtlasDataApiTrackingVerbosity[] drawnAt, CancellationToken ct)
     {
-        if (verbosity == AtlasDataApiTrackingVerbosity.Summarised) return null;
+        if (drawnAt.All(v => v == AtlasDataApiTrackingVerbosity.Summarised)) return null;
         return await HttpContentReader.ReadContentAsStringAsync(response.Content, ct);
     }
 

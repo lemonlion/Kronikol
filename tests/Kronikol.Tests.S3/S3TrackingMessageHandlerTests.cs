@@ -314,6 +314,68 @@ public class S3TrackingMessageHandlerTests : IDisposable
         Assert.Contains("amazonaws.com", log.Uri.ToString());
     }
 
+    // ─── Phase variants ───────────────────────────────────────
+
+    // A phase's own verbosity decides its notes: a Detailed phase of a Summarised handler shows the bodies a Detailed
+    // handler shows, though the call was made before its phase was known.
+    [Fact]
+    public async Task A_detailed_phase_of_a_summarised_handler_shows_both_bodies()
+    {
+        TestPhaseContext.Reset();
+        var options = MakeOptions(S3TrackingVerbosity.Summarised);
+        options.ActionVerbosity = S3TrackingVerbosity.Detailed;
+        using var invoker = CreateInvoker(options);
+
+        await invoker.SendAsync(MakePutObjectRequest(), CancellationToken.None);
+
+        var logs = GetLogsFromThisTest();
+        var request = logs.First(l => l.Type == RequestResponseType.Request);
+        var response = logs.First(l => l.Type == RequestResponseType.Response);
+        Assert.Null(request.Content);
+        Assert.Null(request.SetupVariant!.Content);
+        Assert.Equal("{\"hello\":\"world\"}", request.ActionVariant!.Content);
+        Assert.Null(response.Content);
+        Assert.Null(response.SetupVariant!.Content);
+        Assert.Equal("s3-response-body", response.ActionVariant!.Content);
+    }
+
+    [Fact]
+    public async Task At_Summarised_in_every_phase_a_body_nothing_shows_is_not_read()
+    {
+        TestPhaseContext.Reset();
+        var reply = new CountingContent("s3-response-body");
+        _innerHandler.ResponseToReturn = new HttpResponseMessage(HttpStatusCode.OK) { Content = reply };
+        var options = MakeOptions(S3TrackingVerbosity.Summarised);
+        options.SetupVerbosity = S3TrackingVerbosity.Summarised;
+        using var invoker = CreateInvoker(options);
+        var upload = new CountingContent("{\"hello\":\"world\"}");
+
+        await invoker.SendAsync(new HttpRequestMessage(HttpMethod.Put,
+            "https://my-bucket.s3.us-east-1.amazonaws.com/path/to/file.json") { Content = upload }, CancellationToken.None);
+
+        Assert.Equal(0, upload.Reads);
+        Assert.Equal(0, reply.Reads);
+    }
+
+    /// <summary>Content that counts how often its bytes are read.</summary>
+    private sealed class CountingContent(string text) : HttpContent
+    {
+        private readonly byte[] _bytes = System.Text.Encoding.UTF8.GetBytes(text);
+        public int Reads { get; private set; }
+
+        protected override Task SerializeToStreamAsync(Stream stream, TransportContext? context)
+        {
+            Reads++;
+            return stream.WriteAsync(_bytes).AsTask();
+        }
+
+        protected override bool TryComputeLength(out long length)
+        {
+            length = _bytes.Length;
+            return true;
+        }
+    }
+
     // ─── Header filtering ─────────────────────────────────────
 
     [Fact]

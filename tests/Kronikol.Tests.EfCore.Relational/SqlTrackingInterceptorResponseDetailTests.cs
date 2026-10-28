@@ -23,7 +23,9 @@ public class SqlTrackingInterceptorResponseDetailTests : IDisposable
         CurrentTestInfoFetcher = () => ("My Test", _testId),
     };
 
-    private string? RunSelectAndGetResponseContent(SqlTrackingInterceptorOptions options)
+    private string? RunSelectAndGetResponseContent(SqlTrackingInterceptorOptions options) => RunSelectAndGetResponse(options).Content;
+
+    private RequestResponseLog RunSelectAndGetResponse(SqlTrackingInterceptorOptions options)
     {
         var interceptor = new SqlTrackingInterceptor(options);
         var command = new StubDbCommand("SELECT [id], [name] FROM [breakfasts]", "MyDb", "localhost");
@@ -32,7 +34,7 @@ public class SqlTrackingInterceptorResponseDetailTests : IDisposable
         while (wrapped.Read()) { }
         wrapped.Close();
 
-        return GetLogsFromThisTest().Last(l => l.Type == RequestResponseType.Response).Content;
+        return GetLogsFromThisTest().Last(l => l.Type == RequestResponseType.Response);
     }
 
     [Fact]
@@ -61,6 +63,37 @@ public class SqlTrackingInterceptorResponseDetailTests : IDisposable
         options.ResponseDetail = Kronikol.Sql.SqlResponseDetail.RowCountAndColumns;
 
         Assert.Equal("2 rows [id, name]", RunSelectAndGetResponseContent(options));
+    }
+
+    // A phase's own verbosity decides its note's detail, though the query ran before its phase was known: a Detailed
+    // phase of a Summarised interceptor lists the rows, and a Summarised phase of a Detailed one counts them.
+    [Fact]
+    public void A_detailed_phase_of_a_summarised_interceptor_lists_the_rows()
+    {
+        TestPhaseContext.Reset();
+        var options = MakeOptions();
+        options.Verbosity = SqlTrackingVerbosity.Summarised;
+        options.ActionVerbosity = SqlTrackingVerbosity.Detailed;
+
+        var response = RunSelectAndGetResponse(options);
+
+        Assert.Equal("2 rows [id, name]", response.Content);
+        Assert.Equal("2 rows [id, name]", response.SetupVariant!.Content);
+        Assert.Contains("\"name\":\"Pancakes\"", response.ActionVariant!.Content);
+    }
+
+    [Fact]
+    public void A_summarised_phase_of_a_detailed_interceptor_counts_the_rows()
+    {
+        TestPhaseContext.Reset();
+        var options = MakeOptions();
+        options.SetupVerbosity = SqlTrackingVerbosity.Summarised;
+
+        var response = RunSelectAndGetResponse(options);
+
+        Assert.Contains("\"name\":\"Pancakes\"", response.Content);
+        Assert.Equal("2 rows [id, name]", response.SetupVariant!.Content);
+        Assert.Contains("\"name\":\"Pancakes\"", response.ActionVariant!.Content);
     }
 }
 

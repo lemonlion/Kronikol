@@ -54,7 +54,11 @@ public class CloudStorageTrackingMessageHandler : DelegatingHandler, ITrackingCo
 
         var label = CloudStorageOperationClassifier.GetDiagramLabel(gcsOp, effectiveVerbosity);
 
-        var requestContent = await GetRequestContent(request, effectiveVerbosity, cancellationToken);
+        // Each note is made at its own verbosity from bodies read once: a phase's variant was given the effective
+        // verbosity's note, so a Detailed phase of a Summarised handler had neither body.
+        var drawnAt = PhaseConfiguration.DrawnAt(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
+        var requestBody = await ReadRequestBody(request, drawnAt, cancellationToken);
+        var requestContent = effectiveVerbosity == CloudStorageTrackingVerbosity.Summarised ? null : requestBody;
         var requestHeaders = GetFilteredHeaders(request, effectiveVerbosity);
 
         OneOf<HttpMethod, string> method = effectiveVerbosity == CloudStorageTrackingVerbosity.Raw
@@ -87,20 +91,20 @@ public class CloudStorageTrackingMessageHandler : DelegatingHandler, ITrackingCo
             v => new PhaseVariant(
                 v == CloudStorageTrackingVerbosity.Raw ? request.Method : CloudStorageOperationClassifier.GetDiagramLabel(gcsOp, v),
                 v == CloudStorageTrackingVerbosity.Raw ? request.RequestUri! : BuildCleanUri(gcsOp),
-                v == CloudStorageTrackingVerbosity.Summarised ? null : requestContent,
+                v == CloudStorageTrackingVerbosity.Summarised ? null : requestBody,
                 GetFilteredHeaders(request, v),
                 v == CloudStorageTrackingVerbosity.Summarised && gcsOp.Operation == CloudStorageOperation.Other)));
 
         var response = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
-        var responseContent = await GetResponseContent(response, effectiveVerbosity, cancellationToken);
+        var responseBody = await ReadResponseBody(response, drawnAt, cancellationToken);
         var responseHeaders = GetFilteredHeaders(response, effectiveVerbosity);
 
         RequestResponseLogger.Log(new RequestResponseLog(
             testInfo.Value.Name,
             testInfo.Value.Id,
             method,
-            responseContent,
+            effectiveVerbosity == CloudStorageTrackingVerbosity.Summarised ? null : responseBody,
             requestUri,
             responseHeaders,
             _options.ServiceName,
@@ -119,23 +123,24 @@ public class CloudStorageTrackingMessageHandler : DelegatingHandler, ITrackingCo
             v => new PhaseVariant(
                 v == CloudStorageTrackingVerbosity.Raw ? request.Method : CloudStorageOperationClassifier.GetDiagramLabel(gcsOp, v),
                 v == CloudStorageTrackingVerbosity.Raw ? request.RequestUri! : BuildCleanUri(gcsOp),
-                v == CloudStorageTrackingVerbosity.Summarised ? null : responseContent,
+                v == CloudStorageTrackingVerbosity.Summarised ? null : responseBody,
                 GetFilteredHeaders(response, v),
                 v == CloudStorageTrackingVerbosity.Summarised && gcsOp.Operation == CloudStorageOperation.Other)));
 
         return response;
     }
 
-    private async Task<string?> GetRequestContent(HttpRequestMessage request, CloudStorageTrackingVerbosity verbosity, CancellationToken ct)
+    // Read when any verbosity the call may be drawn at shows a body, as Detailed and Raw do and Summarised does not.
+    private async Task<string?> ReadRequestBody(HttpRequestMessage request, CloudStorageTrackingVerbosity[] drawnAt, CancellationToken ct)
     {
         if (request.Content is null) return null;
-        if (verbosity == CloudStorageTrackingVerbosity.Summarised) return null;
+        if (drawnAt.All(v => v == CloudStorageTrackingVerbosity.Summarised)) return null;
         return await HttpContentReader.ReadContentAsStringAsync(request.Content, ct);
     }
 
-    private async Task<string?> GetResponseContent(HttpResponseMessage response, CloudStorageTrackingVerbosity verbosity, CancellationToken ct)
+    private async Task<string?> ReadResponseBody(HttpResponseMessage response, CloudStorageTrackingVerbosity[] drawnAt, CancellationToken ct)
     {
-        if (verbosity == CloudStorageTrackingVerbosity.Summarised) return null;
+        if (drawnAt.All(v => v == CloudStorageTrackingVerbosity.Summarised)) return null;
         return await HttpContentReader.ReadContentAsStringAsync(response.Content, ct);
     }
 

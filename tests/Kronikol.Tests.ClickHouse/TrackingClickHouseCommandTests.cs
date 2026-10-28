@@ -314,6 +314,37 @@ public class TrackingClickHouseCommandTests : IDisposable
         Assert.Equal("2 rows [id, name]", GetLogsForTest()[1].Content);
     }
 
+    // A phase's own verbosity decides its note's detail, though the query ran before its phase was known: a Detailed
+    // phase of a Summarised handler lists the rows, and a Summarised phase of a Detailed one counts them.
+    [Fact]
+    public void A_detailed_phase_of_a_summarised_handler_lists_the_rows()
+    {
+        TestPhaseContext.Reset();
+        _options.Verbosity = SqlTrackingVerbosityLevel.Summarised;
+        _options.ActionVerbosity = SqlTrackingVerbosityLevel.Detailed;
+        using var cmd = CreateRowReaderCommand();
+        using (var reader = cmd.ExecuteReader()) { while (reader.Read()) { } }
+
+        var response = GetLogsForTest()[1];
+        Assert.Equal("2 rows [id, name]", response.Content);
+        Assert.Equal("2 rows [id, name]", response.SetupVariant!.Content);
+        Assert.Contains("\"name\":\"Pancakes\"", response.ActionVariant!.Content);
+    }
+
+    [Fact]
+    public void A_summarised_phase_of_a_detailed_handler_counts_the_rows()
+    {
+        TestPhaseContext.Reset();
+        _options.SetupVerbosity = SqlTrackingVerbosityLevel.Summarised;
+        using var cmd = CreateRowReaderCommand();
+        using (var reader = cmd.ExecuteReader()) { while (reader.Read()) { } }
+
+        var response = GetLogsForTest()[1];
+        Assert.Contains("\"name\":\"Pancakes\"", response.Content);
+        Assert.Equal("2 rows [id, name]", response.SetupVariant!.Content);
+        Assert.Contains("\"name\":\"Pancakes\"", response.ActionVariant!.Content);
+    }
+
     // ─── No test info → no logging ──────────────────────────────
 
     [Fact]

@@ -118,7 +118,10 @@ public class EventBridgeTrackingMessageHandler : DelegatingHandler, ITrackingCom
 
         var response = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
-        var responseContent = effectiveVerbosity == EventBridgeTrackingVerbosity.Summarised
+        // Each note is made at its own verbosity from a body read once, when any of them shows it: a phase's variant
+        // was given the effective verbosity's note, so a Detailed phase of a Summarised handler had no response body.
+        var drawnAt = PhaseConfiguration.DrawnAt(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
+        var responseBody = drawnAt.All(v => v == EventBridgeTrackingVerbosity.Summarised)
             ? null
             : await HttpContentReader.ReadContentAsStringAsync(response.Content, cancellationToken);
 
@@ -128,7 +131,7 @@ public class EventBridgeTrackingMessageHandler : DelegatingHandler, ITrackingCom
             testInfo.Value.Name,
             testInfo.Value.Id,
             method,
-            responseContent,
+            effectiveVerbosity == EventBridgeTrackingVerbosity.Summarised ? null : responseBody,
             requestUri,
             responseHeaders,
             _options.ServiceName,
@@ -147,7 +150,7 @@ public class EventBridgeTrackingMessageHandler : DelegatingHandler, ITrackingCom
             v => new PhaseVariant(
                 v == EventBridgeTrackingVerbosity.Raw ? request.Method : EventBridgeOperationClassifier.GetDiagramLabel(ebOp, v),
                 v == EventBridgeTrackingVerbosity.Raw ? request.RequestUri! : BuildCleanUri(ebOp),
-                v == EventBridgeTrackingVerbosity.Summarised ? null : responseContent,
+                v == EventBridgeTrackingVerbosity.Summarised ? null : responseBody,
                 GetFilteredHeaders(response, v),
                 v == EventBridgeTrackingVerbosity.Summarised && ebOp.Operation == EventBridgeOperation.Other)));
 

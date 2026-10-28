@@ -1429,6 +1429,78 @@ public class MessageTrackerTests
         Assert.Equal(before + 1, tracker.InvocationCount);
     }
 
+    // A phase's own verbosity decides its notes: a send made before its phase was known carries each phase's, as one
+    // through TrackMessageRequest does, so a Detailed phase of a Summarised tracker shows the payload.
+    [Fact]
+    public void TrackSendMessage_gives_a_detailed_phase_of_a_summarised_tracker_the_payload()
+    {
+        TestPhaseContext.Reset();
+        var testId = Guid.NewGuid().ToString();
+        var tracker = new MessageTracker(new MessageTrackerOptions
+        {
+            CallerName = "Svc",
+            Verbosity = MessageTrackerVerbosity.Summarised,
+            ActionVerbosity = MessageTrackerVerbosity.Detailed,
+            CurrentTestInfoFetcher = () => ("T", testId)
+        });
+
+        var id = tracker.TrackSendMessage("Send", "Queue", new Uri("sb://q"), new { Msg = "hello" });
+
+        var logs = RequestResponseLogger.RequestAndResponseLogs.Where(l => l.RequestResponseId == id).ToArray();
+        var request = Assert.Single(logs, l => l.Type == RequestResponseType.Request);
+        var response = Assert.Single(logs, l => l.Type == RequestResponseType.Response);
+        Assert.Null(request.Content);
+        Assert.Null(request.SetupVariant!.Content);
+        Assert.Contains("hello", request.ActionVariant!.Content);
+        Assert.Null(response.SetupVariant!.Content);
+        Assert.Null(response.ActionVariant!.Content);
+    }
+
+    // A phase's payload is written for its variant while the call's own note, at Summarised, has none: a payload
+    // System.Text.Json cannot write (a reference cycle) threw into the caller, where a Summarised tracker had written
+    // nothing. Recording never fails the caller, so that phase's note goes without content, and the run's diagnostics
+    // say why.
+    [Fact]
+    public void TrackSendMessage_with_a_payload_a_phase_cannot_write_leaves_that_phase_without_content_and_does_not_throw()
+    {
+        TestPhaseContext.Reset();
+        var testId = Guid.NewGuid().ToString();
+        var tracker = new MessageTracker(new MessageTrackerOptions
+        {
+            CallerName = "Svc",
+            ServiceName = "Bus-" + Guid.NewGuid().ToString("N")[..8],
+            Verbosity = MessageTrackerVerbosity.Summarised,
+            ActionVerbosity = MessageTrackerVerbosity.Detailed,
+            CurrentTestInfoFetcher = () => ("T", testId)
+        });
+        var cyclic = new Node();
+        cyclic.Next = cyclic;
+
+        try
+        {
+            var id = Guid.Empty;
+            var thrown = Record.Exception(() => id = tracker.TrackSendMessage("Send", "Queue", new Uri("sb://q"), cyclic));
+
+            Assert.Null(thrown);
+            var request = Assert.Single(GetLogsById(id), l => l.Type == RequestResponseType.Request);
+            Assert.Null(request.Content);
+            Assert.Null(request.SetupVariant!.Content);
+            Assert.Null(request.ActionVariant!.Content);
+            Assert.Contains(Kronikol.Reports.ProcessDiagnostics.Entries, e =>
+                e.Kind == Kronikol.Reports.DiagnosticKind.CaptureDegraded &&
+                e.Message.StartsWith($"{tracker.ComponentName} could not write a message's payload", StringComparison.Ordinal));
+        }
+        finally
+        {
+            Kronikol.Reports.ProcessDiagnostics.Remove(MessageTracker.PayloadNotWrittenKey(tracker.ComponentName));
+        }
+    }
+
+    private sealed class Node
+    {
+        public Node? Next { get; set; }
+    }
+
     [Fact]
     public void TrackSendMessage_does_nothing_when_no_test_info()
     {

@@ -45,7 +45,7 @@ public class TrackingEventHubProducerClient : EventHubProducerClient
         InjectTestIdentityProperties(events);
         var op = EventHubsOperationClassifier.Classify(
             "SendAsync", _inner.EventHubName, null, events.Count);
-        var content = _options.Verbosity != EventHubsTrackingVerbosity.Summarised
+        var content = EventHubsTracker.ShowsContent(_options)
             ? SerializeEvents(events) : null;
         var (reqId, traceId) = _tracker.LogRequest(op, content);
 
@@ -71,7 +71,7 @@ public class TrackingEventHubProducerClient : EventHubProducerClient
         var partitionId = sendOptions?.PartitionId;
         var op = EventHubsOperationClassifier.Classify(
             "SendAsync", _inner.EventHubName, partitionId, events.Count);
-        var content = _options.Verbosity != EventHubsTrackingVerbosity.Summarised
+        var content = EventHubsTracker.ShowsContent(_options)
             ? SerializeEvents(events) : null;
         var (reqId, traceId) = _tracker.LogRequest(op, content);
 

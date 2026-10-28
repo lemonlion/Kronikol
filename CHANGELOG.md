@@ -4,6 +4,58 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.16.1] - 2026-10-28
+
+The patch part moves (5.16.0 to 5.16.1): fixes, nothing new to call. Each changes what a phase with a verbosity of its own
+shows, as its entry says; a tracker with no `SetupVerbosity` or `ActionVerbosity` records what it did.
+
+### Fixed
+
+- **A phase with a verbosity of its own is drawn at that verbosity in every tracker.** While a call's phase is not known
+  as it is made and `SetupVerbosity` or `ActionVerbosity` is set, a tracker records how the call looks at each phase's
+  verbosity, and the report draws the one of the phase the call turns out to be in. Most trackers made each of those from
+  what the base `Verbosity` captured, so a Detailed or Raw phase of a Summarised tracker showed no request or response
+  body, and a phase at a level that shows other content than the base's showed the base's. Each is now made at its own
+  level from content read once, and a body no level in play shows is still not read. Fixed in the HTTP handlers of
+  AtlasDataApi, BigQuery, Blob Storage, Cloud Storage, DynamoDB, EventBridge, S3, SNS, SQS and Storage Queues, in gRPC,
+  and in the SQL trackers (SqlClient, Npgsql, MySqlConnector, Oracle, Sqlite, ClickHouse, ClickHouse.Driver, Dapper, EF
+  Core Relational and Spanner), which formatted a query's rows note once, at one detail, for every phase. Cosmos DB, fixed
+  so in 5.15.1, now follows the same rule.
+- **Service Bus, Event Hubs and Pub/Sub take a message's body from the phase's own verbosity.** They decided from the base
+  `Verbosity` whether to capture it, even in a known phase, so `ActionVerbosity = Detailed` under a Summarised `Verbosity`
+  showed no bodies. The notes only Raw shows (Event Hubs' count of the events a read returned, Pub/Sub's message id, reply
+  and batch bodies) now show at Raw alone, where under a Raw `Verbosity` they showed in a Detailed phase too.
+- **`MessageTracker.TrackSendMessage` gives each phase its own note.** It attached no phase variants, so `SetupVerbosity`
+  and `ActionVerbosity` changed nothing for a sent message whose phase was not known. A payload a phase's note cannot
+  write leaves that phase without content and records one capture diagnostic; the call does not fail.
+- **gRPC: a Summarised phase shows a failed call's status.** A failed call's or stream's `{code}: {message}`, which a
+  Summarised tracker shows, was missing from a Summarised phase of a more detailed one.
+- **Spanner: a Detailed phase of a Summarised command says how many rows it changed while `LogResponseContent` is
+  off.** The command decided at the base verbosity whether to write `N rows affected`.
+- **ClickHouse.Driver: a query's note claims no more detail than was kept.** A query that started in a phase whose note
+  keeps no rows and ended in one that lists them read `12 rows` with `... (2 more rows not shown)` under it; it now reads
+  `12 rows [Id, Item]`.
+
+### Changed
+
+- When a phase may be drawn at Detailed or Raw, an HTTP handler whose `Verbosity` is Summarised now reads the bodies that
+  level shows, as a Detailed handler always has, so a body that cannot be read (a truncated or badly compressed one) fails
+  there as it does at Detailed.
+
+### Documentation
+
+- The wiki's Phase-Aware Tracking page says each phase is drawn at its own level, its example no longer sets
+  `SqlTrackingVerbosity.Other` (there is no such value), and its skip rule names what a Summarised phase leaves out. Its
+  table of extensions is whole again (a note in the middle of it left the rows below unrendered) and lists the SQL
+  wrappers, Spanner, Bigtable, AtlasDataApi and the message tracker, which were missing.
+
+### Tests
+
+- Facts for every tracker fixed, each red before its fix (the shared helper's did not compile before it existed): the ten
+  HTTP handlers, gRPC, Service Bus, Event Hubs, Pub/Sub, the message tracker, the SQL reader and trackers, Dapper, EF Core,
+  ClickHouse(.Driver) and Spanner. Undoing the shared helper, or the fix in BigQuery, SQS, gRPC, the SQL reader and
+  tracker, EF Core or ClickHouse.Driver, fails its facts.
+
 ## [5.16.0] - 2026-10-28
 
 The minor part moves (5.15.1 to 5.16.0): the tracking handler gains a capability, marking a call a stub handler

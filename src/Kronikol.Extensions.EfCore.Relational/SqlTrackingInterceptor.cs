@@ -601,17 +601,23 @@ public class SqlTrackingInterceptor : DbCommandInterceptor, ITrackingComponent
         // Capture IDs in the closure — LogCommandExecutedWithContent would fail to
         // find them in _pendingIds since we already removed them above.
         var capturedIds = ids;
-        var detail = SqlResponseDetailResolver.Resolve(
-            _options.ResponseDetail, effectiveVerbosity == SqlTrackingVerbosity.Summarised);
+        // Rows are kept at the most detail any verbosity the call may be drawn at shows, and each note is made at the
+        // detail its own verbosity resolves to: a phase's variant was given the effective verbosity's note, so a
+        // Detailed phase of a Summarised interceptor had only a count.
+        var detail = SqlResponseDetailResolver.ResolveKept(_options.ResponseDetail,
+            _options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity, SqlTrackingVerbosity.Summarised);
         return new TrackingDbDataReader(
-            result, detail, _options.MaxResponseRows, _options.MaxValueDisplayLength,
-            content => LogCommandExecutedWithContentDirect(command, capturedIds.TraceId, capturedIds.RequestResponseId, content));
+            result, detail, _options.MaxResponseRows, _options.MaxValueDisplayLength, System.Data.CommandBehavior.Default,
+            rowsAt => LogCommandExecutedWithContentDirect(command, capturedIds.TraceId, capturedIds.RequestResponseId,
+                verbosity => rowsAt(SqlResponseDetailResolver.Resolve(
+                    _options.ResponseDetail, verbosity == SqlTrackingVerbosity.Summarised))));
     }
 
     private string? FormatScalar(object? result) =>
         _options.LogResponseContent ? SqlRowFormatter.ScalarText(result, _options.MaxValueDisplayLength) : null;
 
-    private void LogCommandExecutedWithContentDirect(DbCommand command, Guid traceId, Guid requestResponseId, string? content)
+    private void LogCommandExecutedWithContentDirect(DbCommand command, Guid traceId, Guid requestResponseId,
+        Func<SqlTrackingVerbosity, string?> contentAt)
     {
         var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
         var sqlOp = SqlOperationClassifier.Classify(command.CommandText, command.CommandType);
@@ -633,7 +639,7 @@ public class SqlTrackingInterceptor : DbCommandInterceptor, ITrackingComponent
         // Summarised suppresses content only when LogResponseContent is off.
         var responseContent = effectiveVerbosity == SqlTrackingVerbosity.Summarised && !_options.LogResponseContent
             ? null
-            : content;
+            : contentAt(effectiveVerbosity);
 
         var log = new RequestResponseLog(
             testInfo.Value.Name,
@@ -657,7 +663,7 @@ public class SqlTrackingInterceptor : DbCommandInterceptor, ITrackingComponent
         };
 
         log.AttachVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
-            v => BuildResponseVariantWithContent(command, sqlOp, v, content));
+            v => BuildResponseVariantWithContent(command, sqlOp, v, contentAt(v)));
 
         RequestResponseLogger.Log(log);
     }

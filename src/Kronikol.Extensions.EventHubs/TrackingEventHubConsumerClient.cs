@@ -52,8 +52,7 @@ public class TrackingEventHubConsumerClient : EventHubConsumerClient
             yield return partitionEvent;
         }
 
-        _tracker.LogResponse(op, reqId, traceId,
-            _options.Verbosity == EventHubsTrackingVerbosity.Raw ? $"Events: {eventCount}" : null);
+        _tracker.LogResponse(op, reqId, traceId, content: null, rawContent: $"Events: {eventCount}");
     }
 
     public override async IAsyncEnumerable<PartitionEvent> ReadEventsAsync(
@@ -72,8 +71,7 @@ public class TrackingEventHubConsumerClient : EventHubConsumerClient
             yield return partitionEvent;
         }
 
-        _tracker.LogResponse(op, reqId, traceId,
-            _options.Verbosity == EventHubsTrackingVerbosity.Raw ? $"Events: {eventCount}" : null);
+        _tracker.LogResponse(op, reqId, traceId, content: null, rawContent: $"Events: {eventCount}");
     }
 
     public override async IAsyncEnumerable<PartitionEvent> ReadEventsFromPartitionAsync(

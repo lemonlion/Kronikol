@@ -61,7 +61,7 @@ public class TrackingServiceBusReceiver : ServiceBusReceiver
         {
             var result = await _inner.ReceiveMessagesAsync(maxMessages, maxWaitTime, cancellationToken);
             if (result.Count > 0) EstablishTestIdentityFromProperties(result[0]);
-            var content = _options.Verbosity != ServiceBusTrackingVerbosity.Summarised
+            var content = ServiceBusTracker.ShowsContent(_options)
                 ? $"[{result.Count} messages received]"
                 : null;
             _tracker.LogResponse(op, reqId, traceId, content);
@@ -140,7 +140,7 @@ public class TrackingServiceBusReceiver : ServiceBusReceiver
         CancellationToken cancellationToken = default)
     {
         var op = ServiceBusOperationClassifier.Classify("DeadLetterMessageAsync", EntityPath, null);
-        var content = deadLetterReason is not null && _options.Verbosity != ServiceBusTrackingVerbosity.Summarised
+        var content = deadLetterReason is not null && ServiceBusTracker.ShowsContent(_options)
             ? $"Reason: {deadLetterReason}"
             : null;
         var (reqId, traceId) = _tracker.LogRequest(op, content);
@@ -234,7 +234,7 @@ public class TrackingServiceBusReceiver : ServiceBusReceiver
 
     private string? GetReceivedMessageContent(ServiceBusReceivedMessage message)
     {
-        if (_options.Verbosity == ServiceBusTrackingVerbosity.Summarised)
+        if (!ServiceBusTracker.ShowsContent(_options))
             return null;
 
         try

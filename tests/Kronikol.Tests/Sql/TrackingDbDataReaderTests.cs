@@ -53,6 +53,26 @@ public class TrackingDbDataReaderTests
         Assert.Equal(2, JsonDocument.Parse(lines[0]).RootElement.GetArrayLength());
     }
 
+    // A call drawn at more than one verbosity (a phase's own, before its phase was known) makes each note at its own
+    // detail, so the reader hands over the note at any detail up to the one its rows were kept at.
+    [Fact]
+    public void A_reader_keeping_full_rows_makes_its_note_at_any_lesser_detail_from_the_same_read()
+    {
+        Func<SqlResponseDetail, string>? noteAt = null;
+        var inner = new FakeDbDataReader(["Name", "Age"], [["Alice", 30], ["Bob", 25]]);
+
+        var reader = new TrackingDbDataReader(
+            inner, SqlResponseDetail.FullRows, maxRows: 10, maxValueLen: 500, CommandBehavior.Default,
+            notes => noteAt = notes);
+
+        while (reader.Read()) { }
+        reader.Close();
+
+        Assert.Contains("\"Name\":\"Alice\"", noteAt!(SqlResponseDetail.FullRows));
+        Assert.Equal("2 rows [Name, Age]", noteAt(SqlResponseDetail.RowCountAndColumns));
+        Assert.Equal("2 rows", noteAt(SqlResponseDetail.RowCountOnly));
+    }
+
     [Fact]
     public void Read_EmptyResultSet_LogsZeroRows()
     {

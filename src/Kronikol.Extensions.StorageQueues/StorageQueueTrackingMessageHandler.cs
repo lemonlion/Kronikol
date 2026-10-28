@@ -54,7 +54,11 @@ public class StorageQueueTrackingMessageHandler : DelegatingHandler, ITrackingCo
 
         var label = StorageQueueOperationClassifier.GetDiagramLabel(queueOp, effectiveVerbosity);
 
-        var requestContent = await GetRequestContent(request, effectiveVerbosity, cancellationToken);
+        // Each note is made at its own verbosity from bodies read once: a phase's variant was given the effective
+        // verbosity's note, so a Detailed phase of a Summarised handler had neither body.
+        var drawnAt = PhaseConfiguration.DrawnAt(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
+        var requestBody = await ReadRequestBody(request, drawnAt, cancellationToken);
+        var requestContent = effectiveVerbosity == StorageQueueTrackingVerbosity.Summarised ? null : requestBody;
         var requestHeaders = GetFilteredHeaders(request, effectiveVerbosity);
 
         OneOf<HttpMethod, string> method = effectiveVerbosity == StorageQueueTrackingVerbosity.Raw
@@ -87,20 +91,20 @@ public class StorageQueueTrackingMessageHandler : DelegatingHandler, ITrackingCo
             v => new PhaseVariant(
                 v == StorageQueueTrackingVerbosity.Raw ? request.Method : StorageQueueOperationClassifier.GetDiagramLabel(queueOp, v),
                 v == StorageQueueTrackingVerbosity.Raw ? request.RequestUri! : BuildCleanUri(queueOp),
-                v == StorageQueueTrackingVerbosity.Summarised ? null : requestContent,
+                v == StorageQueueTrackingVerbosity.Summarised ? null : requestBody,
                 GetFilteredHeaders(request, v),
                 v == StorageQueueTrackingVerbosity.Summarised && queueOp.Operation == StorageQueueOperation.Other)));
 
         var response = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
-        var responseContent = await GetResponseContent(response, effectiveVerbosity, cancellationToken);
+        var responseBody = await ReadResponseBody(response, drawnAt, cancellationToken);
         var responseHeaders = GetFilteredHeaders(response, effectiveVerbosity);
 
         RequestResponseLogger.Log(new RequestResponseLog(
             testInfo.Value.Name,
             testInfo.Value.Id,
             method,
-            responseContent,
+            effectiveVerbosity == StorageQueueTrackingVerbosity.Summarised ? null : responseBody,
             requestUri,
             responseHeaders,
             _options.ServiceName,
@@ -119,23 +123,24 @@ public class StorageQueueTrackingMessageHandler : DelegatingHandler, ITrackingCo
             v => new PhaseVariant(
                 v == StorageQueueTrackingVerbosity.Raw ? request.Method : StorageQueueOperationClassifier.GetDiagramLabel(queueOp, v),
                 v == StorageQueueTrackingVerbosity.Raw ? request.RequestUri! : BuildCleanUri(queueOp),
-                v == StorageQueueTrackingVerbosity.Summarised ? null : responseContent,
+                v == StorageQueueTrackingVerbosity.Summarised ? null : responseBody,
                 GetFilteredHeaders(response, v),
                 v == StorageQueueTrackingVerbosity.Summarised && queueOp.Operation == StorageQueueOperation.Other)));
 
         return response;
     }
 
-    private async Task<string?> GetRequestContent(HttpRequestMessage request, StorageQueueTrackingVerbosity verbosity, CancellationToken ct)
+    // Read when any verbosity the call may be drawn at shows a body, as Detailed and Raw do and Summarised does not.
+    private async Task<string?> ReadRequestBody(HttpRequestMessage request, StorageQueueTrackingVerbosity[] drawnAt, CancellationToken ct)
     {
         if (request.Content is null) return null;
-        if (verbosity == StorageQueueTrackingVerbosity.Summarised) return null;
+        if (drawnAt.All(v => v == StorageQueueTrackingVerbosity.Summarised)) return null;
         return await HttpContentReader.ReadContentAsStringAsync(request.Content, ct);
     }
 
-    private async Task<string?> GetResponseContent(HttpResponseMessage response, StorageQueueTrackingVerbosity verbosity, CancellationToken ct)
+    private async Task<string?> ReadResponseBody(HttpResponseMessage response, StorageQueueTrackingVerbosity[] drawnAt, CancellationToken ct)
     {
-        if (verbosity == StorageQueueTrackingVerbosity.Summarised) return null;
+        if (drawnAt.All(v => v == StorageQueueTrackingVerbosity.Summarised)) return null;
         return await HttpContentReader.ReadContentAsStringAsync(response.Content, ct);
     }
 

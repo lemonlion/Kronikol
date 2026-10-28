@@ -368,7 +368,7 @@ public abstract class SqlDiagnosticTracker : ITrackingComponent
     {
         try
         {
-            ResponseLoggedWithContent(traceId, requestResponseId, content, exception);
+            ResponseLoggedWithContent(traceId, requestResponseId, _ => content, exception);
         }
         catch (Exception ex)
         {
@@ -376,7 +376,28 @@ public abstract class SqlDiagnosticTracker : ITrackingComponent
         }
     }
 
-    private void ResponseLoggedWithContent(Guid traceId, Guid requestResponseId, string? content, Exception? exception)
+    /// <summary>
+    /// Logs the rows a query read, such as a <see cref="TrackingDbDataReader"/>'s, kept at
+    /// <see cref="SqlResponseDetailResolver.ResolveKept(SqlTrackingOptionsBase)"/>: the call's note and each phase's
+    /// are made at the detail their own verbosity resolves to.
+    /// </summary>
+    internal void LogRowsResponse(Guid traceId, Guid requestResponseId, Func<SqlResponseDetail, string?> rowsAt)
+    {
+        try
+        {
+            ResponseLoggedWithContent(traceId, requestResponseId,
+                verbosity => rowsAt(SqlResponseDetailResolver.Resolve(
+                    _options.ResponseDetail, verbosity == SqlTrackingVerbosityLevel.Summarised)),
+                exception: null);
+        }
+        catch (Exception ex)
+        {
+            NotRecorded(ex);
+        }
+    }
+
+    private void ResponseLoggedWithContent(Guid traceId, Guid requestResponseId,
+        Func<SqlTrackingVerbosityLevel, string?> contentAt, Exception? exception)
     {
         if (!PhaseConfiguration.ShouldTrack(_options.TrackDuringSetup, _options.TrackDuringAction))
             return;
@@ -392,7 +413,7 @@ public abstract class SqlDiagnosticTracker : ITrackingComponent
             ? null
             : exception is not null
                 ? exception.Message
-                : content;
+                : contentAt(effectiveVerbosity);
 
         OneOf<HttpStatusCode, string> status = exception is not null ? "Error" : "OK";
 
@@ -423,7 +444,7 @@ public abstract class SqlDiagnosticTracker : ITrackingComponent
                     ? null
                     : exception is not null
                         ? exception.Message
-                        : content;
+                        : contentAt(v);
                 return new PhaseVariant("", new Uri($"{_options.UriScheme}:///"), vContent, [], false);
             });
 

@@ -112,7 +112,10 @@ public class SqsTrackingMessageHandler : DelegatingHandler, ITrackingComponent
 
         var response = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
-        var responseContent = effectiveVerbosity == SqsTrackingVerbosity.Summarised
+        // Each note is made at its own verbosity from a body read once, when any of them shows it: a phase's variant
+        // was given the effective verbosity's note, so a Detailed phase of a Summarised handler had no response body.
+        var drawnAt = PhaseConfiguration.DrawnAt(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
+        var responseBody = drawnAt.All(v => v == SqsTrackingVerbosity.Summarised)
             ? null
             : await HttpContentReader.ReadContentAsStringAsync(response.Content, cancellationToken);
 
@@ -122,7 +125,7 @@ public class SqsTrackingMessageHandler : DelegatingHandler, ITrackingComponent
             testInfo.Value.Name,
             testInfo.Value.Id,
             method,
-            responseContent,
+            effectiveVerbosity == SqsTrackingVerbosity.Summarised ? null : responseBody,
             requestUri,
             responseHeaders,
             _options.ServiceName,
@@ -141,7 +144,7 @@ public class SqsTrackingMessageHandler : DelegatingHandler, ITrackingComponent
             v => new PhaseVariant(
                 v == SqsTrackingVerbosity.Raw ? request.Method : SqsOperationClassifier.GetDiagramLabel(sqsOp, v)!,
                 v == SqsTrackingVerbosity.Raw ? request.RequestUri! : BuildCleanUri(sqsOp),
-                v == SqsTrackingVerbosity.Summarised ? null : responseContent,
+                v == SqsTrackingVerbosity.Summarised ? null : responseBody,
                 GetFilteredHeaders(response, v),
                 v == SqsTrackingVerbosity.Summarised && sqsOp.Operation == SqsOperation.Other)));
 

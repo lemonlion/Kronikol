@@ -316,6 +316,67 @@ public class BigQueryTrackingMessageHandlerTests : IDisposable
         Assert.Equal($"{BaseUrl}/datasets/mydataset/tables/mytable", log.Uri.ToString());
     }
 
+    // ─── Phase variants ───────────────────────────────────────
+
+    // A phase's own verbosity decides its notes: a Detailed phase of a Summarised handler shows the bodies a Detailed
+    // handler shows, though the call was made before its phase was known.
+    [Fact]
+    public async Task A_detailed_phase_of_a_summarised_handler_shows_both_bodies()
+    {
+        TestPhaseContext.Reset();
+        var options = MakeOptions(BigQueryTrackingVerbosity.Summarised);
+        options.ActionVerbosity = BigQueryTrackingVerbosity.Detailed;
+        using var invoker = CreateInvoker(options);
+
+        await invoker.SendAsync(MakeQueryRequest(), CancellationToken.None);
+
+        var logs = GetLogsFromThisTest();
+        var request = logs.First(l => l.Type == RequestResponseType.Request);
+        var response = logs.First(l => l.Type == RequestResponseType.Response);
+        Assert.Null(request.Content);
+        Assert.Null(request.SetupVariant!.Content);
+        Assert.Contains("SELECT * FROM dataset.table", request.ActionVariant!.Content);
+        Assert.Null(response.Content);
+        Assert.Null(response.SetupVariant!.Content);
+        Assert.Contains("bigquery#queryResponse", response.ActionVariant!.Content);
+    }
+
+    [Fact]
+    public async Task At_Summarised_in_every_phase_a_body_nothing_shows_is_not_read()
+    {
+        TestPhaseContext.Reset();
+        var reply = new CountingContent("""{"kind":"bigquery#queryResponse","rows":[]}""");
+        var options = MakeOptions(BigQueryTrackingVerbosity.Summarised);
+        options.SetupVerbosity = BigQueryTrackingVerbosity.Summarised;
+        using var invoker = new HttpMessageInvoker(new BigQueryTrackingMessageHandler(options,
+            new StubInnerHandler(new HttpResponseMessage(HttpStatusCode.OK) { Content = reply })));
+        var query = new CountingContent("""{"query":"SELECT * FROM dataset.table","useLegacySql":false}""");
+
+        await invoker.SendAsync(new HttpRequestMessage(HttpMethod.Post, $"{BaseUrl}/queries") { Content = query }, CancellationToken.None);
+
+        Assert.Equal(0, query.Reads);
+        Assert.Equal(0, reply.Reads);
+    }
+
+    /// <summary>JSON content that counts how often its bytes are read.</summary>
+    private sealed class CountingContent(string json) : HttpContent
+    {
+        private readonly byte[] _bytes = System.Text.Encoding.UTF8.GetBytes(json);
+        public int Reads { get; private set; }
+
+        protected override Task SerializeToStreamAsync(Stream stream, TransportContext? context)
+        {
+            Reads++;
+            return stream.WriteAsync(_bytes).AsTask();
+        }
+
+        protected override bool TryComputeLength(out long length)
+        {
+            length = _bytes.Length;
+            return true;
+        }
+    }
+
     // ─── Header filtering ─────────────────────────────────────
 
     [Fact]

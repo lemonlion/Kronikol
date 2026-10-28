@@ -37,4 +37,18 @@ public static class SqlResponseDetailResolver
             options.Verbosity, options.SetupVerbosity, options.ActionVerbosity);
         return Resolve(options.ResponseDetail, effectiveVerbosity == SqlTrackingVerbosityLevel.Summarised);
     }
+
+    /// <summary>
+    /// The detail a call's rows are kept at: the most that any verbosity its notes may be drawn at
+    /// (<see cref="PhaseConfiguration.DrawnAt{T}"/>) resolves to, so each note is made at its own detail from one read.
+    /// </summary>
+    internal static SqlResponseDetail ResolveKept<T>(SqlResponseDetail? configured, T defaultVerbosity, T? setupVerbosity,
+        T? actionVerbosity, T summarised) where T : struct =>
+        PhaseConfiguration.DrawnAt(defaultVerbosity, setupVerbosity, actionVerbosity)
+            .Max(verbosity => Resolve(configured, EqualityComparer<T>.Default.Equals(verbosity, summarised)));
+
+    /// <inheritdoc cref="ResolveKept{T}"/>
+    internal static SqlResponseDetail ResolveKept(SqlTrackingOptionsBase options) =>
+        ResolveKept(options.ResponseDetail, options.Verbosity, options.SetupVerbosity, options.ActionVerbosity,
+            SqlTrackingVerbosityLevel.Summarised);
 }

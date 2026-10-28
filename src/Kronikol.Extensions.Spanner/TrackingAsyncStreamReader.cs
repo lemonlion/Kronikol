@@ -86,10 +86,9 @@ internal sealed class TrackingAsyncStreamReader<TResponse> : IAsyncStreamReader<
             return;
         }
 
-        var content = SpannerResponseFormatter.FormatPartialResultSets(
-            _chunks, _options.ResolveResponseDetail(), _options.MaxResponseRows);
-
-        _tracker.LogResponse(_opInfo, _reqId, _traceId, content);
+        // Each note is made at the detail its own verbosity resolves to, from the rows read once.
+        _tracker.LogResponseAtDetail(_opInfo, _reqId, _traceId,
+            detail => SpannerResponseFormatter.FormatPartialResultSets(_chunks, detail, _options.MaxResponseRows));
         _chunks.Clear();
     }
 }

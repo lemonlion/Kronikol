@@ -39,15 +39,14 @@ public class TrackingSubscriberClient : SubscriberClient
 
             var op = PubSubOperationClassifier.Classify(
                 "Receive", null, _inner.SubscriptionName?.ToString(), 1);
-            var content = _options.Verbosity != PubSubTrackingVerbosity.Summarised
+            var content = PubSubTracker.DrawnAt(_options).Any(v => v != PubSubTrackingVerbosity.Summarised)
                 ? msg.Data?.ToStringUtf8() : null;
             var (reqId, traceId) = _tracker.LogRequest(op, content);
 
             var reply = await messageHandler(msg, ct);
 
             var replyLabel = reply == Reply.Ack ? "Ack" : "Nack";
-            _tracker.LogResponse(op, reqId, traceId,
-                _options.Verbosity == PubSubTrackingVerbosity.Raw ? replyLabel : null);
+            _tracker.LogResponse(op, reqId, traceId, content: null, rawContent: replyLabel);
 
             return reply;
         }

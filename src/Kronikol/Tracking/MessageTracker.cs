@@ -282,7 +282,12 @@ public class MessageTracker : ITrackingComponent
             ActivitySpanId = Activity.Current?.SpanId.ToString(),
             ActivityTraceId = Activity.Current?.TraceId.ToString(),
             Phase = TestPhaseContext.Current
-        });
+        }.WithVariants(_verbosity, _setupVerbosity, _actionVerbosity,
+            v => new PhaseVariant(
+                protocol,
+                destinationUri,
+                v == MessageTrackerVerbosity.Summarised ? null : PhasePayload(payload ?? new { }),
+                [], false)));
 
         RequestResponseLogger.Log(new RequestResponseLog(
             testInfo.Value.TestName,
@@ -308,7 +313,8 @@ public class MessageTracker : ITrackingComponent
             ActivitySpanId = Activity.Current?.SpanId.ToString(),
             ActivityTraceId = Activity.Current?.TraceId.ToString(),
             Phase = TestPhaseContext.Current
-        });
+        }.WithVariants(_verbosity, _setupVerbosity, _actionVerbosity,
+            v => new PhaseVariant(protocol, destinationUri, null, [], false)));
 
         return requestResponseId;
     }
@@ -380,4 +386,41 @@ public class MessageTracker : ITrackingComponent
         var who = TestInfoResolver.ResolveWithSource(null, _testInfoFallback);
         return who is { } identity ? (identity.Name, identity.Id, Guid.NewGuid(), identity.Source) : null;
     }
+
+    /// <summary>
+    /// A phase's note for a payload the call's own note did not write: a send made before its phase was known, by a
+    /// Summarised tracker with a Detailed phase. Recording never fails the caller, so a payload System.Text.Json cannot
+    /// write (a reference cycle) leaves that phase's note without content, and the run's diagnostics say so once.
+    /// </summary>
+    private string? PhasePayload(object payload)
+    {
+        try
+        {
+            return JsonSerializer.Serialize(payload, _serializerOptions);
+        }
+        catch (Exception ex)
+        {
+            PayloadNotWritten(ex);
+            return null;
+        }
+    }
+
+    private void PayloadNotWritten(Exception ex)
+    {
+        try
+        {
+            Kronikol.Reports.ProcessDiagnostics.RecordOnce(
+                PayloadNotWrittenKey(ComponentName),
+                Kronikol.Reports.DiagnosticKind.CaptureDegraded,
+                $"{ComponentName} could not write a message's payload for a phase's note: {ex.GetType().Name}: {ex.Message}. " +
+                "The application's call was not affected; that note, and any whose payload fails the same way, have no content.");
+        }
+        catch (Exception)
+        {
+            // Nothing a diagnostic can fail on may reach the application either.
+        }
+    }
+
+    /// <summary>The key of that entry; tests remove it, as they share the process with every report.</summary>
+    internal static string PayloadNotWrittenKey(string component) => $"message-payload-not-written:{component}";
 }

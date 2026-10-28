@@ -274,6 +274,68 @@ public class StorageQueueTrackingMessageHandlerTests : IDisposable
         Assert.Equal(2, logs.Length);
     }
 
+    // ─── Phase variants ───────────────────────────────────────
+
+    // A phase's own verbosity decides its notes: a Detailed phase of a Summarised handler shows the bodies a Detailed
+    // handler shows, though the call was made before its phase was known.
+    [Fact]
+    public async Task A_detailed_phase_of_a_summarised_handler_shows_both_bodies()
+    {
+        TestPhaseContext.Reset();
+        var options = MakeOptions(StorageQueueTrackingVerbosity.Summarised);
+        options.ActionVerbosity = StorageQueueTrackingVerbosity.Detailed;
+        using var invoker = CreateInvoker(options);
+
+        await invoker.SendAsync(MakeSendRequest(), CancellationToken.None);
+
+        var logs = GetLogsFromThisTest();
+        var request = logs.First(l => l.Type == RequestResponseType.Request);
+        var response = logs.First(l => l.Type == RequestResponseType.Response);
+        Assert.Null(request.Content);
+        Assert.Null(request.SetupVariant!.Content);
+        Assert.Equal("<QueueMessage><MessageText>hello</MessageText></QueueMessage>", request.ActionVariant!.Content);
+        Assert.Null(response.Content);
+        Assert.Null(response.SetupVariant!.Content);
+        Assert.Equal("queue-response", response.ActionVariant!.Content);
+    }
+
+    [Fact]
+    public async Task At_Summarised_in_every_phase_a_body_nothing_shows_is_not_read()
+    {
+        TestPhaseContext.Reset();
+        var reply = new CountingContent("queue-response");
+        _innerHandler.ResponseToReturn = new HttpResponseMessage(HttpStatusCode.OK) { Content = reply };
+        var options = MakeOptions(StorageQueueTrackingVerbosity.Summarised);
+        options.SetupVerbosity = StorageQueueTrackingVerbosity.Summarised;
+        using var invoker = CreateInvoker(options);
+        var message = new CountingContent("<QueueMessage><MessageText>hello</MessageText></QueueMessage>");
+
+        await invoker.SendAsync(new HttpRequestMessage(HttpMethod.Post,
+            "https://account.queue.core.windows.net/my-queue/messages") { Content = message }, CancellationToken.None);
+
+        Assert.Equal(0, message.Reads);
+        Assert.Equal(0, reply.Reads);
+    }
+
+    /// <summary>Content that counts how often its bytes are read.</summary>
+    private sealed class CountingContent(string text) : HttpContent
+    {
+        private readonly byte[] _bytes = System.Text.Encoding.UTF8.GetBytes(text);
+        public int Reads { get; private set; }
+
+        protected override Task SerializeToStreamAsync(Stream stream, TransportContext? context)
+        {
+            Reads++;
+            return stream.WriteAsync(_bytes).AsTask();
+        }
+
+        protected override bool TryComputeLength(out long length)
+        {
+            length = _bytes.Length;
+            return true;
+        }
+    }
+
     // ─── Header filtering ─────────────────────────────────────
 
     [Fact]

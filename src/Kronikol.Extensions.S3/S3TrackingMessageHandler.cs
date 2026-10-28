@@ -56,7 +56,11 @@ public class S3TrackingMessageHandler : DelegatingHandler, ITrackingComponent
 
         var label = S3OperationClassifier.GetDiagramLabel(s3Op, effectiveVerbosity);
 
-        var requestContent = await GetRequestContent(request, effectiveVerbosity, cancellationToken);
+        // Each note is made at its own verbosity from bodies read once: a phase's variant was given the effective
+        // verbosity's note, so a Detailed phase of a Summarised handler had neither body.
+        var drawnAt = PhaseConfiguration.DrawnAt(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
+        var requestBody = await ReadRequestBody(request, drawnAt, cancellationToken);
+        var requestContent = effectiveVerbosity == S3TrackingVerbosity.Summarised ? null : requestBody;
         var requestHeaders = GetFilteredHeaders(request, effectiveVerbosity);
 
         OneOf<HttpMethod, string> method = effectiveVerbosity == S3TrackingVerbosity.Raw
@@ -89,20 +93,20 @@ public class S3TrackingMessageHandler : DelegatingHandler, ITrackingComponent
             v => new PhaseVariant(
                 v == S3TrackingVerbosity.Raw ? request.Method : S3OperationClassifier.GetDiagramLabel(s3Op, v)!,
                 v == S3TrackingVerbosity.Raw ? request.RequestUri! : BuildCleanUri(s3Op, v),
-                v == S3TrackingVerbosity.Summarised ? null : requestContent,
+                v == S3TrackingVerbosity.Summarised ? null : requestBody,
                 GetFilteredHeaders(request, v),
                 v == S3TrackingVerbosity.Summarised && s3Op.Operation == S3Operation.Other)));
 
         var response = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
-        var responseContent = await GetResponseContent(response, effectiveVerbosity, cancellationToken);
+        var responseBody = await ReadResponseBody(response, drawnAt, cancellationToken);
         var responseHeaders = GetFilteredHeaders(response, effectiveVerbosity);
 
         RequestResponseLogger.Log(new RequestResponseLog(
             testInfo.Value.Name,
             testInfo.Value.Id,
             method,
-            responseContent,
+            effectiveVerbosity == S3TrackingVerbosity.Summarised ? null : responseBody,
             requestUri,
             responseHeaders,
             _options.ServiceName,
@@ -121,27 +125,28 @@ public class S3TrackingMessageHandler : DelegatingHandler, ITrackingComponent
             v => new PhaseVariant(
                 v == S3TrackingVerbosity.Raw ? request.Method : S3OperationClassifier.GetDiagramLabel(s3Op, v)!,
                 v == S3TrackingVerbosity.Raw ? request.RequestUri! : BuildCleanUri(s3Op, v),
-                v == S3TrackingVerbosity.Summarised ? null : responseContent,
+                v == S3TrackingVerbosity.Summarised ? null : responseBody,
                 GetFilteredHeaders(response, v),
                 v == S3TrackingVerbosity.Summarised && s3Op.Operation == S3Operation.Other)));
 
         return response;
     }
 
-    private async Task<string?> GetRequestContent(HttpRequestMessage request, S3TrackingVerbosity verbosity, CancellationToken ct)
+    // Read when any verbosity the call may be drawn at shows a body, as Detailed and Raw do and Summarised does not.
+    private async Task<string?> ReadRequestBody(HttpRequestMessage request, S3TrackingVerbosity[] drawnAt, CancellationToken ct)
     {
         if (request.Content is null)
             return null;
 
-        if (verbosity == S3TrackingVerbosity.Summarised)
+        if (drawnAt.All(v => v == S3TrackingVerbosity.Summarised))
             return null;
 
         return await HttpContentReader.ReadContentAsStringAsync(request.Content, ct);
     }
 
-    private async Task<string?> GetResponseContent(HttpResponseMessage response, S3TrackingVerbosity verbosity, CancellationToken ct)
+    private async Task<string?> ReadResponseBody(HttpResponseMessage response, S3TrackingVerbosity[] drawnAt, CancellationToken ct)
     {
-        if (verbosity == S3TrackingVerbosity.Summarised)
+        if (drawnAt.All(v => v == S3TrackingVerbosity.Summarised))
             return null;
 
         return await HttpContentReader.ReadContentAsStringAsync(response.Content, ct);

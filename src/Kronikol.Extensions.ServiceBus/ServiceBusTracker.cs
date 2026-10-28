@@ -30,6 +30,15 @@ public class ServiceBusTracker : ITrackingComponent
     public bool WasInvoked => _invocationCount > 0;
     public int InvocationCount => _invocationCount;
 
+    /// <summary>
+    /// Whether a verbosity the call may be drawn at shows a message's content, as Detailed and Raw do and Summarised does
+    /// not, so the sender and receiver make it only then: the phase's verbosity, and each phase's while the phase is not
+    /// known (<see cref="PhaseConfiguration.DrawnAt{T}"/>). Each note then shows it at its own verbosity.
+    /// </summary>
+    internal static bool ShowsContent(ServiceBusTrackingOptions options) =>
+        PhaseConfiguration.DrawnAt(options.Verbosity, options.SetupVerbosity, options.ActionVerbosity)
+            .Any(v => v != ServiceBusTrackingVerbosity.Summarised);
+
     public (Guid RequestResponseId, Guid TraceId) LogRequest(
         ServiceBusOperationInfo operation, string? content)
     {

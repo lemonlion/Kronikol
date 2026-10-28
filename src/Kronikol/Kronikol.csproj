@@ -60,6 +60,22 @@
 		<!-- ProcessDiagnostics: a SQL command the tracking could not record is named in the run's diagnostics -->
 		<InternalsVisibleTo Include="Kronikol.Tests.Dapper" />
 		<InternalsVisibleTo Include="Kronikol.Tests.EfCore.Relational" />
+		<!-- PhaseConfiguration.DrawnAt: a tracker reads a body when any verbosity a call's notes may be drawn at shows it
+		     (the gRPC interceptor, listed above, uses it too) -->
+		<InternalsVisibleTo Include="Kronikol.Extensions.AtlasDataApi" />
+		<InternalsVisibleTo Include="Kronikol.Extensions.BigQuery" />
+		<InternalsVisibleTo Include="Kronikol.Extensions.BlobStorage" />
+		<InternalsVisibleTo Include="Kronikol.Extensions.CloudStorage" />
+		<InternalsVisibleTo Include="Kronikol.Extensions.CosmosDB" />
+		<InternalsVisibleTo Include="Kronikol.Extensions.DynamoDB" />
+		<InternalsVisibleTo Include="Kronikol.Extensions.EventBridge" />
+		<InternalsVisibleTo Include="Kronikol.Extensions.EventHubs" />
+		<InternalsVisibleTo Include="Kronikol.Extensions.PubSub" />
+		<InternalsVisibleTo Include="Kronikol.Extensions.S3" />
+		<InternalsVisibleTo Include="Kronikol.Extensions.ServiceBus" />
+		<InternalsVisibleTo Include="Kronikol.Extensions.SNS" />
+		<InternalsVisibleTo Include="Kronikol.Extensions.SQS" />
+		<InternalsVisibleTo Include="Kronikol.Extensions.StorageQueues" />
 		<!-- search-index bench harness (tools/search-bench/formatter-probe), query-bench precedent -->
 		<InternalsVisibleTo Include="formatter-probe" />
 	</ItemGroup>

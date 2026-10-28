@@ -65,7 +65,7 @@ public class CosmosTrackingMessageHandler : DelegatingHandler, ITrackingComponen
 
         // Each note is made at its own verbosity from bodies read once: a phase's variant was given the effective
         // verbosity's note, so a Detailed phase of a Summarised handler had neither body.
-        var drawnAt = DrawnAt(effectiveVerbosity);
+        var drawnAt = PhaseConfiguration.DrawnAt(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
         var requestBody = request.Content is not null && drawnAt.Any(v => v != CosmosTrackingVerbosity.Summarised)
             ? await HttpContentReader.ReadContentAsStringAsync(request.Content, cancellationToken)
             : null;
@@ -235,15 +235,6 @@ public class CosmosTrackingMessageHandler : DelegatingHandler, ITrackingComponen
         catch { }
         return null;
     }
-
-    /// <summary>
-    /// The verbosities the call may be drawn at: its phase's, and each phase's too while its phase is not known and a
-    /// phase has a verbosity of its own (the variants <see cref="PhaseVariantExtensions.AttachVariants{TVerbosity}"/> adds).
-    /// </summary>
-    private CosmosTrackingVerbosity[] DrawnAt(CosmosTrackingVerbosity effectiveVerbosity) =>
-        TestPhaseContext.Current == TestPhase.Unknown && (_options.SetupVerbosity is not null || _options.ActionVerbosity is not null)
-            ? [effectiveVerbosity, _options.SetupVerbosity ?? _options.Verbosity, _options.ActionVerbosity ?? _options.Verbosity]
-            : [effectiveVerbosity];
 
     /// <summary>
     /// A request's note: at Summarised a query's text alone (none for any other operation), at Detailed a query's text

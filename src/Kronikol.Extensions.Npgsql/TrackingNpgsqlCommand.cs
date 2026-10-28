@@ -214,13 +214,15 @@ public class TrackingNpgsqlCommand : DbCommand
     }
 
     // The caller's behavior goes with the reader: under SequentialAccess (Dapper's every query) a row is recorded as
-    // the caller reads it, since reading it first made the caller's own read throw on SqlClient and Npgsql.
+    // the caller reads it, since reading it first made the caller's own read throw on SqlClient and Npgsql. Rows are
+    // kept at the most detail any verbosity the call may be drawn at shows, and each note is made at its own: a phase's
+    // variant was given the effective verbosity's note, so a Detailed phase of a Summarised wrapper had only a count.
     private TrackingDbDataReader WrapReader(DbDataReader inner, Guid traceId, Guid requestResponseId, CommandBehavior behavior)
     {
         var opts = _connection.Options;
         return new TrackingDbDataReader(
-            inner, SqlResponseDetailResolver.Resolve(opts), opts.MaxResponseRows, opts.MaxValueDisplayLength,
-            content => LogResponseWithContent(traceId, requestResponseId, content), behavior);
+            inner, SqlResponseDetailResolver.ResolveKept(opts), opts.MaxResponseRows, opts.MaxValueDisplayLength, behavior,
+            rowsAt => _connection.Tracker.LogRowsResponse(traceId, requestResponseId, rowsAt));
     }
 
     private string? FormatScalar(object? result) =>

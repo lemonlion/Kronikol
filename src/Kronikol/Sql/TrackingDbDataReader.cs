@@ -23,7 +23,7 @@ public sealed class TrackingDbDataReader : DbDataReader, IDbColumnSchemaGenerato
     private readonly SqlResponseDetail _detail;
     private readonly int _maxRows;
     private readonly int _maxValueLen;
-    private readonly Action<string?> _onComplete;
+    private readonly Action<Func<SqlResponseDetail, string>> _onComplete;
     private readonly bool _sequential;
     private readonly List<ResultSet> _sets = [new()];
     private Dictionary<string, object?>? _rowBeingRead;
@@ -58,6 +58,25 @@ public sealed class TrackingDbDataReader : DbDataReader, IDbColumnSchemaGenerato
         int maxValueLen,
         Action<string?> onComplete,
         CommandBehavior behavior)
+        : this(inner, detail, maxRows, maxValueLen, behavior, noteAt => onComplete(noteAt(detail)))
+    {
+    }
+
+    /// <summary>
+    /// A wrapper that keeps rows at <paramref name="detail"/> and hands <paramref name="onComplete"/> the note at any
+    /// detail up to it, so a call whose notes may be drawn at more than one verbosity
+    /// (<see cref="Tracking.PhaseConfiguration.DrawnAt{T}"/>) makes each at its own detail from rows read once. Rows
+    /// are kept at every detail but <see cref="SqlResponseDetail.RowCountOnly"/>, which only an explicit ResponseDetail
+    /// gives, and then every note asks for it; so a reader opened in a Summarised phase and closed in a Detailed one,
+    /// whose note asks for more than it was opened at, still has the rows to list.
+    /// </summary>
+    internal TrackingDbDataReader(
+        DbDataReader inner,
+        SqlResponseDetail detail,
+        int maxRows,
+        int maxValueLen,
+        CommandBehavior behavior,
+        Action<Func<SqlResponseDetail, string>> onComplete)
     {
         _inner = inner;
         _detail = detail;
@@ -220,7 +239,7 @@ public sealed class TrackingDbDataReader : DbDataReader, IDbColumnSchemaGenerato
         {
             FinishRowBeingRead();
             Current.ColumnNames ??= TryReadColumnNames();
-            _onComplete(FormatContent());
+            _onComplete(FormatContent);
         }
         catch (Exception)
         {
@@ -228,19 +247,19 @@ public sealed class TrackingDbDataReader : DbDataReader, IDbColumnSchemaGenerato
         }
     }
 
-    private string FormatContent()
+    private string FormatContent(SqlResponseDetail detail)
     {
         // A set with no columns is a statement that returned none (an UPDATE in a batch); the first set always counts.
         var sets = _sets.Where((set, index) => index == 0 || set.TotalRows > 0 || set.ColumnNames is { Length: > 0 });
-        return string.Join("\n", sets.Select(Format));
+        return string.Join("\n", sets.Select(set => Format(set, detail)));
     }
 
-    private string Format(ResultSet set)
+    private string Format(ResultSet set, SqlResponseDetail detail)
     {
-        var columnNames = _detail is SqlResponseDetail.RowCountOnly || set.ColumnNames is null
+        var columnNames = detail is SqlResponseDetail.RowCountOnly || set.ColumnNames is null
             ? null
             : SqlRowFormatter.FormatColumnNames(set.ColumnNames);
-        return SqlRowFormatter.Format(_detail, _maxRows, set.TotalRows, set.Rows, columnNames);
+        return SqlRowFormatter.Format(detail, _maxRows, set.TotalRows, set.Rows, columnNames);
     }
 
     // ─── Close / Dispose ────────────────────────────────────

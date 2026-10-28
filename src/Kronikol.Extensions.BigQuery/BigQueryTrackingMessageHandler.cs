@@ -55,7 +55,11 @@ public class BigQueryTrackingMessageHandler : DelegatingHandler, ITrackingCompon
 
         var label = BigQueryOperationClassifier.GetDiagramLabel(bqOp, effectiveVerbosity);
 
-        var requestContent = await GetRequestContent(request, effectiveVerbosity, cancellationToken);
+        // Each note is made at its own verbosity from bodies read once: a phase's variant was given the effective
+        // verbosity's note, so a Detailed phase of a Summarised handler had neither body.
+        var drawnAt = PhaseConfiguration.DrawnAt(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
+        var requestBody = await ReadRequestBody(request, drawnAt, cancellationToken);
+        var requestContent = effectiveVerbosity == BigQueryTrackingVerbosity.Summarised ? null : requestBody;
         var requestHeaders = GetFilteredHeaders(request, effectiveVerbosity);
 
         OneOf<HttpMethod, string> method = effectiveVerbosity == BigQueryTrackingVerbosity.Raw
@@ -88,20 +92,20 @@ public class BigQueryTrackingMessageHandler : DelegatingHandler, ITrackingCompon
             v => new PhaseVariant(
                 v == BigQueryTrackingVerbosity.Raw ? request.Method : BigQueryOperationClassifier.GetDiagramLabel(bqOp, v)!,
                 v == BigQueryTrackingVerbosity.Raw ? request.RequestUri! : BuildCleanUri(request.RequestUri!, bqOp, v),
-                v == BigQueryTrackingVerbosity.Summarised ? null : requestContent,
+                v == BigQueryTrackingVerbosity.Summarised ? null : requestBody,
                 GetFilteredHeaders(request, v),
                 v == BigQueryTrackingVerbosity.Summarised && bqOp.Operation == BigQueryOperation.Other)));
 
         var response = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
-        var responseContent = await GetResponseContent(response, effectiveVerbosity, cancellationToken);
+        var responseBody = await ReadResponseBody(response, drawnAt, cancellationToken);
         var responseHeaders = GetFilteredHeaders(response, effectiveVerbosity);
 
         RequestResponseLogger.Log(new RequestResponseLog(
             testInfo.Value.Name,
             testInfo.Value.Id,
             method,
-            responseContent,
+            effectiveVerbosity == BigQueryTrackingVerbosity.Summarised ? null : responseBody,
             requestUri,
             responseHeaders,
             _options.ServiceName,
@@ -120,27 +124,28 @@ public class BigQueryTrackingMessageHandler : DelegatingHandler, ITrackingCompon
             v => new PhaseVariant(
                 v == BigQueryTrackingVerbosity.Raw ? request.Method : BigQueryOperationClassifier.GetDiagramLabel(bqOp, v)!,
                 v == BigQueryTrackingVerbosity.Raw ? request.RequestUri! : BuildCleanUri(request.RequestUri!, bqOp, v),
-                v == BigQueryTrackingVerbosity.Summarised ? null : responseContent,
+                v == BigQueryTrackingVerbosity.Summarised ? null : responseBody,
                 GetFilteredHeaders(response, v),
                 v == BigQueryTrackingVerbosity.Summarised && bqOp.Operation == BigQueryOperation.Other)));
 
         return response;
     }
 
-    private async Task<string?> GetRequestContent(HttpRequestMessage request, BigQueryTrackingVerbosity verbosity, CancellationToken ct)
+    // Read when any verbosity the call may be drawn at shows a body, as Detailed and Raw do and Summarised does not.
+    private async Task<string?> ReadRequestBody(HttpRequestMessage request, BigQueryTrackingVerbosity[] drawnAt, CancellationToken ct)
     {
         if (request.Content is null)
             return null;
 
-        if (verbosity == BigQueryTrackingVerbosity.Summarised)
+        if (drawnAt.All(v => v == BigQueryTrackingVerbosity.Summarised))
             return null;
 
         return await HttpContentReader.ReadContentAsStringAsync(request.Content, ct);
     }
 
-    private async Task<string?> GetResponseContent(HttpResponseMessage response, BigQueryTrackingVerbosity verbosity, CancellationToken ct)
+    private async Task<string?> ReadResponseBody(HttpResponseMessage response, BigQueryTrackingVerbosity[] drawnAt, CancellationToken ct)
     {
-        if (verbosity == BigQueryTrackingVerbosity.Summarised)
+        if (drawnAt.All(v => v == BigQueryTrackingVerbosity.Summarised))
             return null;
 
         return await HttpContentReader.ReadContentAsStringAsync(response.Content, ct);

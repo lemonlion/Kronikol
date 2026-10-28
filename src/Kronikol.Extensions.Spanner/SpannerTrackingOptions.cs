@@ -71,12 +71,20 @@ public record SpannerTrackingOptions
     public Microsoft.AspNetCore.Http.IHttpContextAccessor? HttpContextAccessor { get; set; }
 
     /// <summary>The effective response detail, applying any phase verbosity overrides in effect.</summary>
-    internal SpannerResponseDetail ResolveResponseDetail()
-    {
-        var effectiveVerbosity = Tracking.PhaseConfiguration.GetEffectiveVerbosity(
-            Verbosity, SetupVerbosity, ActionVerbosity);
-        return ResponseDetail ?? (effectiveVerbosity == SpannerTrackingVerbosity.Summarised
+    internal SpannerResponseDetail ResolveResponseDetail() =>
+        ResolveResponseDetail(Tracking.PhaseConfiguration.GetEffectiveVerbosity(Verbosity, SetupVerbosity, ActionVerbosity));
+
+    /// <summary>The response detail of a note drawn at <paramref name="verbosity"/>.</summary>
+    internal SpannerResponseDetail ResolveResponseDetail(SpannerTrackingVerbosity verbosity) =>
+        ResponseDetail ?? (verbosity == SpannerTrackingVerbosity.Summarised
             ? SpannerResponseDetail.RowCountAndColumns
             : SpannerResponseDetail.FullRows);
-    }
+
+    /// <summary>
+    /// The detail a call's rows are kept at: the most that any verbosity its notes may be drawn at
+    /// (<see cref="Tracking.PhaseConfiguration.DrawnAt{T}"/>) resolves to, so each note is made at its own from one read.
+    /// </summary>
+    internal SpannerResponseDetail ResolveKeptResponseDetail() =>
+        Tracking.PhaseConfiguration.DrawnAt(Verbosity, SetupVerbosity, ActionVerbosity)
+            .Max(verbosity => ResolveResponseDetail(verbosity));
 }

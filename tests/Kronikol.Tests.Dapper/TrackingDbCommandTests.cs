@@ -108,7 +108,9 @@ public class TrackingDbCommandTests : IDisposable
     // Unset ResponseDetail follows the effective verbosity: actual row data at Raw/Detailed,
     // a count+columns summary at Summarised. An explicit setting always wins.
 
-    private string? RunSelectAndGetResponseContent()
+    private string? RunSelectAndGetResponseContent() => RunSelectAndGetResponse().Content;
+
+    private RequestResponseLog RunSelectAndGetResponse()
     {
         var fakeCmd = new FakeDbCommand { ReaderResult = new FakeRowDbDataReader() };
         using var cmd = new TrackingDbCommand(fakeCmd, _trackingConnection, _options);
@@ -117,7 +119,7 @@ public class TrackingDbCommandTests : IDisposable
         {
             while (reader.Read()) { }
         }
-        return GetLogsForTest().Last(l => l.Type == RequestResponseType.Response).Content;
+        return GetLogsForTest().Last(l => l.Type == RequestResponseType.Response);
     }
 
     [Fact]
@@ -142,6 +144,35 @@ public class TrackingDbCommandTests : IDisposable
     {
         _options.ResponseDetail = Kronikol.Sql.SqlResponseDetail.RowCountAndColumns;
         Assert.Equal("2 rows [id, name]", RunSelectAndGetResponseContent());
+    }
+
+    // A phase's own verbosity decides its note's detail, though the query ran before its phase was known: a Detailed
+    // phase of a Summarised handler lists the rows, and a Summarised phase of a Detailed one counts them.
+    [Fact]
+    public void A_detailed_phase_of_a_summarised_handler_lists_the_rows()
+    {
+        TestPhaseContext.Reset();
+        _options.Verbosity = DapperTrackingVerbosity.Summarised;
+        _options.ActionVerbosity = DapperTrackingVerbosity.Detailed;
+
+        var response = RunSelectAndGetResponse();
+
+        Assert.Equal("2 rows [id, name]", response.Content);
+        Assert.Equal("2 rows [id, name]", response.SetupVariant!.Content);
+        Assert.Contains("\"name\":\"Pancakes\"", response.ActionVariant!.Content);
+    }
+
+    [Fact]
+    public void A_summarised_phase_of_a_detailed_handler_counts_the_rows()
+    {
+        TestPhaseContext.Reset();
+        _options.SetupVerbosity = DapperTrackingVerbosity.Summarised;
+
+        var response = RunSelectAndGetResponse();
+
+        Assert.Contains("\"name\":\"Pancakes\"", response.Content);
+        Assert.Equal("2 rows [id, name]", response.SetupVariant!.Content);
+        Assert.Contains("\"name\":\"Pancakes\"", response.ActionVariant!.Content);
     }
 
     // ─── Logging ────────────────────────────────────────────────

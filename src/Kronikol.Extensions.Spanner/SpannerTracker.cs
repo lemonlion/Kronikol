@@ -84,18 +84,30 @@ public class SpannerTracker : ITrackingComponent
     public void LogResponse(
         SpannerOperationInfo operation,
         Guid requestResponseId, Guid traceId, string? content, string? rawContent = null)
-        => LogResponseCore(operation, requestResponseId, traceId, content, rawContent, status: null);
+        => LogResponseCore(operation, requestResponseId, traceId, _ => content, rawContent, status: null);
+
+    /// <summary>
+    /// Logs a response whose note depends on the detail it is made at, such as the rows a query read: the call's note
+    /// and each phase's are made at the detail their own verbosity resolves to. Made once, at the base verbosity, a
+    /// Detailed phase of a Summarised tracker had a count where it lists the rows.
+    /// </summary>
+    internal void LogResponseAtDetail(
+        SpannerOperationInfo operation,
+        Guid requestResponseId, Guid traceId, Func<SpannerResponseDetail, string?> contentAt, string? rawContent = null)
+        => LogResponseCore(operation, requestResponseId, traceId,
+            verbosity => contentAt(_options.ResolveResponseDetail(verbosity)), rawContent, status: null);
 
     /// <summary>
     /// Logs the response of a call that failed: status <c>Error</c>, with the exception's message as its content.
     /// Without it a failed call is drawn as an answer with nothing in it.
     /// </summary>
     internal void LogFailure(SpannerOperationInfo operation, Guid requestResponseId, Guid traceId, Exception exception)
-        => LogResponseCore(operation, requestResponseId, traceId, exception.Message, rawContent: null, status: "Error");
+        => LogResponseCore(operation, requestResponseId, traceId, _ => exception.Message, rawContent: null, status: "Error");
 
     private void LogResponseCore(
         SpannerOperationInfo operation,
-        Guid requestResponseId, Guid traceId, string? content, string? rawContent, OneOf<HttpStatusCode, string>? status)
+        Guid requestResponseId, Guid traceId, Func<SpannerTrackingVerbosity, string?> contentAt, string? rawContent,
+        OneOf<HttpStatusCode, string>? status)
     {
         if (!PhaseConfiguration.ShouldTrack(_options.TrackDuringSetup, _options.TrackDuringAction)) return;
         if (_options.ExcludedOperations.Contains(operation.Operation)) return;
@@ -113,7 +125,7 @@ public class SpannerTracker : ITrackingComponent
             : label;
 
         var logContent = effectiveVerbosity == SpannerTrackingVerbosity.Summarised && !_options.LogResponseContent ? null :
-            effectiveVerbosity == SpannerTrackingVerbosity.Raw ? (rawContent ?? content) : content;
+            effectiveVerbosity == SpannerTrackingVerbosity.Raw ? (rawContent ?? contentAt(effectiveVerbosity)) : contentAt(effectiveVerbosity);
 
         RequestResponseLogger.Log(new RequestResponseLog(
             testInfo.Value.Name, testInfo.Value.Id,
@@ -131,7 +143,7 @@ public class SpannerTracker : ITrackingComponent
                     : SpannerOperationClassifier.GetDiagramLabel(operation, v),
                 BuildUri(operation, v),
                 v == SpannerTrackingVerbosity.Summarised && !_options.LogResponseContent ? null :
-                    v == SpannerTrackingVerbosity.Raw ? (rawContent ?? content) : content,
+                    v == SpannerTrackingVerbosity.Raw ? (rawContent ?? contentAt(v)) : contentAt(v),
                 [], false)));
     }
 
@@ -208,7 +220,7 @@ public class SpannerTracker : ITrackingComponent
             // A call that failed is drawn with its error, as through the ADO.NET command and the interceptor: the
             // status is all the observer has of it, so the status names it.
             if (statusCode is { } code && code != StatusCode.OK)
-                tracker.LogResponseCore(op, reqId, traceId, code.ToString(), rawContent: null, status: "Error");
+                tracker.LogResponseCore(op, reqId, traceId, _ => code.ToString(), rawContent: null, status: "Error");
             else
                 tracker.LogResponse(op, reqId, traceId, null);
         }

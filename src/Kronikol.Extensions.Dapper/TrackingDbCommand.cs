@@ -331,11 +331,20 @@ public class TrackingDbCommand : DbCommand
             }));
     }
 
-    private void LogResponseWithContent(Guid traceId, Guid requestResponseId, string? content)
+    private void LogResponseWithContent(Guid traceId, Guid requestResponseId, string? content) =>
+        LogResponseWithContent(traceId, requestResponseId, _ => content);
+
+    // A reader's rows, kept at the most detail any verbosity the call may be drawn at shows: each note is made at the
+    // detail its own verbosity resolves to.
+    private void LogRowsResponse(Guid traceId, Guid requestResponseId, Func<SqlResponseDetail, string> rowsAt) =>
+        LogResponseWithContent(traceId, requestResponseId, verbosity => rowsAt(SqlResponseDetailResolver.Resolve(
+            _options.ResponseDetail, verbosity == DapperTrackingVerbosity.Summarised)));
+
+    private void LogResponseWithContent(Guid traceId, Guid requestResponseId, Func<DapperTrackingVerbosity, string?> contentAt)
     {
         try
         {
-            ResponseLoggedWithContent(traceId, requestResponseId, content);
+            ResponseLoggedWithContent(traceId, requestResponseId, contentAt);
         }
         catch (Exception ex)
         {
@@ -343,7 +352,7 @@ public class TrackingDbCommand : DbCommand
         }
     }
 
-    private void ResponseLoggedWithContent(Guid traceId, Guid requestResponseId, string? content)
+    private void ResponseLoggedWithContent(Guid traceId, Guid requestResponseId, Func<DapperTrackingVerbosity, string?> contentAt)
     {
         var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
 
@@ -358,7 +367,7 @@ public class TrackingDbCommand : DbCommand
             ? DapperOperationClassifier.GetRawKeyword(CommandText) ?? "SQL"
             : label;
         var uri = BuildUri(op, effectiveVerbosity);
-        var responseContent = effectiveVerbosity == DapperTrackingVerbosity.Summarised && !_options.LogResponseContent ? null : content;
+        var responseContent = effectiveVerbosity == DapperTrackingVerbosity.Summarised && !_options.LogResponseContent ? null : contentAt(effectiveVerbosity);
 
         RequestResponseLogger.Log(new RequestResponseLog(
             testInfo.Value.Name,
@@ -384,23 +393,23 @@ public class TrackingDbCommand : DbCommand
                 OneOf<System.Net.Http.HttpMethod, string> vMethod = v == DapperTrackingVerbosity.Raw
                     ? DapperOperationClassifier.GetRawKeyword(CommandText) ?? "SQL"
                     : DapperOperationClassifier.GetDiagramLabel(op, v);
-                var vContent = v == DapperTrackingVerbosity.Summarised && !_options.LogResponseContent ? null : content;
+                var vContent = v == DapperTrackingVerbosity.Summarised && !_options.LogResponseContent ? null : contentAt(v);
                 return new PhaseVariant(
                     vMethod, BuildUri(op, v), vContent, [], false);
             }));
     }
 
     // The caller's behavior goes with the reader: under SequentialAccess (Dapper's every query) a row is recorded as
-    // the caller reads it, since reading it first made the caller's own read throw on SqlClient and Npgsql.
+    // the caller reads it, since reading it first made the caller's own read throw on SqlClient and Npgsql. Rows are
+    // kept at the most detail any verbosity the call may be drawn at shows: a phase's variant was given the effective
+    // verbosity's note, so a Detailed phase of a Summarised wrapper had only a count.
     private TrackingDbDataReader WrapReader(DbDataReader inner, Guid traceId, Guid requestResponseId, CommandBehavior behavior)
     {
-        var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(
-            _options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
-        var detail = SqlResponseDetailResolver.Resolve(
-            _options.ResponseDetail, effectiveVerbosity == DapperTrackingVerbosity.Summarised);
+        var detail = SqlResponseDetailResolver.ResolveKept(_options.ResponseDetail,
+            _options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity, DapperTrackingVerbosity.Summarised);
         return new TrackingDbDataReader(
-            inner, detail, _options.MaxResponseRows, _options.MaxValueDisplayLength,
-            content => LogResponseWithContent(traceId, requestResponseId, content), behavior);
+            inner, detail, _options.MaxResponseRows, _options.MaxValueDisplayLength, behavior,
+            rowsAt => LogRowsResponse(traceId, requestResponseId, rowsAt));
     }
 
     private string? FormatScalar(object? result) =>

@@ -150,6 +150,66 @@ public class AtlasDataApiTrackingMessageHandlerTests
         Assert.IsType<HttpMethod>(log.Method.Value); // HttpMethod
     }
 
+    // ── Phase variants ──
+
+    // A phase's own verbosity decides its notes: a Detailed phase of a Summarised handler shows the bodies a Detailed
+    // handler shows, though the call was made before its phase was known.
+    [Fact]
+    public async Task A_detailed_phase_of_a_summarised_handler_shows_both_bodies()
+    {
+        TestPhaseContext.Reset();
+        var options = CreateOptions();
+        options.Verbosity = AtlasDataApiTrackingVerbosity.Summarised;
+        options.ActionVerbosity = AtlasDataApiTrackingVerbosity.Detailed;
+        var inner = new FakeInnerHandler(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent("""{"document":{"_id":"1"}}""")
+        });
+        using var handler = new AtlasDataApiTrackingMessageHandler(options, inner);
+        using var client = new HttpClient(handler);
+
+        var request = new HttpRequestMessage(HttpMethod.Post,
+            "https://data.mongodb-api.com/app/myapp/endpoint/data/v1/action/findOne");
+        request.Content = new StringContent("""{"dataSource":"C","database":"db","collection":"col"}""",
+            System.Text.Encoding.UTF8, "application/json");
+
+        await client.SendAsync(request, TestContext.Current.CancellationToken);
+
+        var logs = GetLogsForTest();
+        var requestLog = logs.First(l => l.Type == RequestResponseType.Request);
+        var responseLog = logs.First(l => l.Type == RequestResponseType.Response);
+        Assert.Null(requestLog.Content);
+        Assert.Null(requestLog.SetupVariant!.Content);
+        Assert.Contains("\"collection\":\"col\"", requestLog.ActionVariant!.Content);
+        Assert.Null(responseLog.Content);
+        Assert.Null(responseLog.SetupVariant!.Content);
+        Assert.Contains("\"_id\":\"1\"", responseLog.ActionVariant!.Content);
+    }
+
+    // The request body is always read, to classify the call; the response body only when a note shows it. An invoker,
+    // not an HttpClient, which reads every response body itself.
+    [Fact]
+    public async Task At_Summarised_in_every_phase_a_response_body_nothing_shows_is_not_read()
+    {
+        TestPhaseContext.Reset();
+        var options = CreateOptions();
+        options.Verbosity = AtlasDataApiTrackingVerbosity.Summarised;
+        options.SetupVerbosity = AtlasDataApiTrackingVerbosity.Summarised;
+        var reply = new CountingContent("""{"document":{"_id":"1"}}""");
+        var inner = new FakeInnerHandler(new HttpResponseMessage(HttpStatusCode.OK) { Content = reply });
+        using var handler = new AtlasDataApiTrackingMessageHandler(options, inner);
+        using var invoker = new HttpMessageInvoker(handler);
+
+        var request = new HttpRequestMessage(HttpMethod.Post,
+            "https://data.mongodb-api.com/app/myapp/endpoint/data/v1/action/findOne");
+        request.Content = new StringContent("""{"dataSource":"C","database":"db","collection":"col"}""",
+            System.Text.Encoding.UTF8, "application/json");
+
+        await invoker.SendAsync(request, TestContext.Current.CancellationToken);
+
+        Assert.Equal(0, reply.Reads);
+    }
+
     // ── ExcludedOperations ──
 
     [Fact]
@@ -280,5 +340,24 @@ public class AtlasDataApiTrackingMessageHandlerTests
         protected override Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request, CancellationToken cancellationToken)
             => Task.FromResult(_response);
+    }
+
+    /// <summary>JSON content that counts how often its bytes are read.</summary>
+    private sealed class CountingContent(string json) : HttpContent
+    {
+        private readonly byte[] _bytes = System.Text.Encoding.UTF8.GetBytes(json);
+        public int Reads { get; private set; }
+
+        protected override Task SerializeToStreamAsync(Stream stream, TransportContext? context)
+        {
+            Reads++;
+            return stream.WriteAsync(_bytes).AsTask();
+        }
+
+        protected override bool TryComputeLength(out long length)
+        {
+            length = _bytes.Length;
+            return true;
+        }
     }
 }

@@ -150,7 +150,8 @@ public sealed class TrackingClickHouseClient : IClickHouseClient, ITrackingCompo
         [EnumeratorCancellation] CancellationToken cancellationToken = default) where T : class
     {
         var ids = LogRequest(sql, options, parameters);
-        var keep = RowsToKeep();
+        var keptAt = SqlResponseDetailResolver.ResolveKept(_options);
+        var keep = RowsToKeep(keptAt);
         var kept = new List<T>();
         long read = 0;
         var failed = false;
@@ -180,10 +181,16 @@ public sealed class TrackingClickHouseClient : IClickHouseClient, ITrackingCompo
         }
         finally
         {
+            // Each note is made at the detail its own verbosity resolves to, from the rows kept once. The rows are kept by
+            // the phase the query starts in and noted in the phase it ends in, as each is read in the caller's own flow.
             if (!failed && ids is not null)
-                LogResponseContent(ids, _options.LogResponseContent
-                    ? FormatRows(() => kept.Select(FormatObject).ToList(), read, PropertyNames(typeof(T)))
-                    : null);
+            {
+                if (_options.LogResponseContent)
+                    _tracker.LogRowsResponse(ids.Value.TraceId, ids.Value.RequestResponseId,
+                        detail => FormatRows(() => kept.Select(FormatObject).ToList(), read, PropertyNames(typeof(T)), detail, keptAt));
+                else
+                    LogResponseContent(ids, null);
+            }
         }
     }
 
@@ -193,19 +200,21 @@ public sealed class TrackingClickHouseClient : IClickHouseClient, ITrackingCompo
         InsertOptions? options = null, CancellationToken cancellationToken = default)
     {
         var names = columns?.ToArray();
-        var captured = rows is null ? null : new CapturedRows<object[]>(rows, RowsToKeep());
+        var keptAt = SqlResponseDetailResolver.ResolveKept(_options);
+        var captured = rows is null ? null : new CapturedRows<object[]>(rows, RowsToKeep(keptAt));
         return Insert(table, options,
             () => _inner.InsertBinaryAsync(table, names!, captured ?? rows!, options, cancellationToken),
-            () => captured is null ? null : FormatRows(() => captured.Kept.Select(r => FormatRow(r, names)).ToList(), captured.Count, names));
+            () => captured is null ? null : FormatRows(() => captured.Kept.Select(r => FormatRow(r, names)).ToList(), captured.Count, names, SentRowsDetail, keptAt));
     }
 
     public Task<long> InsertBinaryAsync<T>(string table, IEnumerable<T> rows, InsertOptions? options = null,
         CancellationToken cancellationToken = default) where T : class
     {
-        var captured = rows is null ? null : new CapturedRows<T>(rows, RowsToKeep());
+        var keptAt = SqlResponseDetailResolver.ResolveKept(_options);
+        var captured = rows is null ? null : new CapturedRows<T>(rows, RowsToKeep(keptAt));
         return Insert(table, options,
             () => _inner.InsertBinaryAsync(table, captured ?? rows!, options, cancellationToken),
-            () => captured is null ? null : FormatRows(() => captured.Kept.Select(FormatObject).ToList(), captured.Count, PropertyNames(typeof(T))));
+            () => captured is null ? null : FormatRows(() => captured.Kept.Select(FormatObject).ToList(), captured.Count, PropertyNames(typeof(T)), SentRowsDetail, keptAt));
     }
 
     // One call whatever the batching, timed from before the driver's schema probe to after its last batch. The
@@ -331,16 +340,28 @@ public sealed class TrackingClickHouseClient : IClickHouseClient, ITrackingCompo
     private string? FormatScalar(object? result) =>
         _options.LogResponseContent ? SqlRowFormatter.ScalarText(result, _options.MaxValueDisplayLength) : null;
 
-    private int RowsToKeep()
-        => SqlResponseDetailResolver.Resolve(_options) == SqlResponseDetail.FullRows ? Math.Max(0, _options.MaxResponseRows) : 0;
+    // Rows are kept at the most detail any verbosity the call may be drawn at shows (SqlResponseDetailResolver.ResolveKept,
+    // read as the call starts): a phase's variant was given the effective verbosity's note, so a Detailed phase of a
+    // Summarised client had only a count.
+    private int RowsToKeep(SqlResponseDetail keptAt)
+        => keptAt == SqlResponseDetail.FullRows ? Math.Max(0, _options.MaxResponseRows) : 0;
+
+    // The rows an insert sent are its request's body, which only Raw and Detailed show (LogRequestAfterCall).
+    private SqlResponseDetail SentRowsDetail
+        => SqlResponseDetailResolver.Resolve(_options.ResponseDetail, effectiveVerbosityIsSummarised: false);
 
     // A row the note cannot show must not fail a call that has succeeded: an unformattable row leaves the note empty.
-    private string? FormatRows(Func<IReadOnlyList<object>> rows, long total, IReadOnlyList<string>? columnNames)
+    // The rows are formatted only for a note that shows them, and no note claims more detail than they were kept at: a
+    // query that started in a Summarised phase kept none, so a note made in a Detailed one gives the count and columns.
+    private string? FormatRows(Func<IReadOnlyList<object>> rows, long total, IReadOnlyList<string>? columnNames,
+        SqlResponseDetail detail, SqlResponseDetail keptAt)
     {
+        var shown = detail <= keptAt ? detail : keptAt;
         try
         {
-            return SqlRowFormatter.Format(SqlResponseDetailResolver.Resolve(_options), _options.MaxResponseRows, total,
-                rows(), columnNames is null ? null : SqlRowFormatter.FormatColumnNames(columnNames));
+            return SqlRowFormatter.Format(shown, _options.MaxResponseRows, total,
+                shown == SqlResponseDetail.FullRows ? rows() : [],
+                columnNames is null ? null : SqlRowFormatter.FormatColumnNames(columnNames));
         }
         catch (Exception ex) when (ex is not OutOfMemoryException)
         {

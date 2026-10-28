@@ -28,6 +28,15 @@ public class EventHubsTracker : ITrackingComponent
     /// <summary>The accessor this tracker resolves the scenario through: the constructor's, else the options'.</summary>
     internal IHttpContextAccessor? HttpContextAccessor => _httpContextAccessor;
 
+    /// <summary>
+    /// Whether a verbosity the call may be drawn at shows an event's body, as Detailed and Raw do and Summarised does not,
+    /// so the producer writes the bodies only then: the phase's verbosity, and each phase's while the phase is not known
+    /// (<see cref="PhaseConfiguration.DrawnAt{T}"/>). Each note then shows them at its own verbosity.
+    /// </summary>
+    internal static bool ShowsContent(EventHubsTrackingOptions options) =>
+        PhaseConfiguration.DrawnAt(options.Verbosity, options.SetupVerbosity, options.ActionVerbosity)
+            .Any(v => v != EventHubsTrackingVerbosity.Summarised);
+
     public (Guid RequestResponseId, Guid TraceId) LogRequest(
         EventHubsOperationInfo operation, string? content)
     {
@@ -70,6 +79,15 @@ public class EventHubsTracker : ITrackingComponent
     public void LogResponse(
         EventHubsOperationInfo operation,
         Guid requestResponseId, Guid traceId, string? content)
+        => LogResponse(operation, requestResponseId, traceId, content, rawContent: null);
+
+    /// <summary>
+    /// A response whose note at Raw is <paramref name="rawContent"/> when it has one, and <paramref name="content"/>
+    /// otherwise: the consumer's count of the events it read, which Raw alone shows.
+    /// </summary>
+    internal void LogResponse(
+        EventHubsOperationInfo operation,
+        Guid requestResponseId, Guid traceId, string? content, string? rawContent)
     {
         if (!PhaseConfiguration.ShouldTrack(_options.TrackDuringSetup, _options.TrackDuringAction)) return;
 
@@ -81,7 +99,7 @@ public class EventHubsTracker : ITrackingComponent
         var uri = BuildUri(operation, effectiveVerbosity);
         var label = EventHubsOperationClassifier.GetDiagramLabel(operation, effectiveVerbosity);
 
-        var logContent = effectiveVerbosity == EventHubsTrackingVerbosity.Summarised ? null : content;
+        var logContent = Note(content, rawContent, effectiveVerbosity);
 
         RequestResponseLogger.Log(new RequestResponseLog(
             testInfo.Value.Name, testInfo.Value.Id,
@@ -96,9 +114,15 @@ public class EventHubsTracker : ITrackingComponent
             v => new PhaseVariant(
                 EventHubsOperationClassifier.GetDiagramLabel(operation, v),
                 BuildUri(operation, v),
-                v == EventHubsTrackingVerbosity.Summarised ? null : content,
+                Note(content, rawContent, v),
                 [], false)));
     }
+
+    /// <summary>A note at <paramref name="verbosity"/>: none at Summarised, the Raw content where there is one at Raw.</summary>
+    private static string? Note(string? content, string? rawContent, EventHubsTrackingVerbosity verbosity) =>
+        verbosity == EventHubsTrackingVerbosity.Summarised ? null
+        : verbosity == EventHubsTrackingVerbosity.Raw ? rawContent ?? content
+        : content;
 
     private Uri BuildUri(EventHubsOperationInfo op, EventHubsTrackingVerbosity effectiveVerbosity)
     {

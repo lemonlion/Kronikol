@@ -207,8 +207,8 @@ public class SpannerTrackingInterceptor : Interceptor, ITrackingComponent
         try
         {
             var response = await responseTask;
-            var (responseContent, rawContent) = ExtractResponseContent(response);
-            _tracker.LogResponse(opInfo, reqId, traceId, responseContent, rawContent);
+            var (contentAt, rawContent) = ExtractResponseContent(response);
+            _tracker.LogResponseAtDetail(opInfo, reqId, traceId, contentAt, rawContent);
             return response;
         }
         catch (RpcException ex)
@@ -218,20 +218,19 @@ public class SpannerTrackingInterceptor : Interceptor, ITrackingComponent
         }
     }
 
-    private (string? Content, string? RawContent) ExtractResponseContent<TResponse>(TResponse response)
+    // The content at each detail, so the tracker makes each note at the detail its own verbosity resolves to.
+    private (Func<SpannerResponseDetail, string?> ContentAt, string? RawContent) ExtractResponseContent<TResponse>(TResponse response)
     {
         if (!_options.LogResponseContent)
-            return (null, null);
+            return (_ => null, null);
 
-        var content = response switch
+        Func<SpannerResponseDetail, string?> contentAt = response switch
         {
-            ResultSet rs => SpannerResponseFormatter.FormatResultSet(
-                rs, _options.ResolveResponseDetail(), _options.MaxResponseRows),
-            CommitResponse cr => SpannerResponseFormatter.FormatCommitResponse(cr),
-            ExecuteBatchDmlResponse batch => SpannerResponseFormatter.FormatBatchDmlResponse(
-                batch, _options.ResolveResponseDetail()),
-            Transaction tx => $"Transaction: {tx.Id.ToBase64()}",
-            _ => null
+            ResultSet rs => detail => SpannerResponseFormatter.FormatResultSet(rs, detail, _options.MaxResponseRows),
+            CommitResponse cr => _ => SpannerResponseFormatter.FormatCommitResponse(cr),
+            ExecuteBatchDmlResponse batch => detail => SpannerResponseFormatter.FormatBatchDmlResponse(batch, detail),
+            Transaction tx => _ => $"Transaction: {tx.Id.ToBase64()}",
+            _ => _ => null
         };
 
         var rawContent = (_options.Verbosity == SpannerTrackingVerbosity.Raw
@@ -240,7 +239,7 @@ public class SpannerTrackingInterceptor : Interceptor, ITrackingComponent
             ? SpannerResponseFormatter.FormatRaw(response)
             : null;
 
-        return (content, rawContent);
+        return (contentAt, rawContent);
     }
 
     private static string? ExtractMutationTableName(CommitRequest commit)

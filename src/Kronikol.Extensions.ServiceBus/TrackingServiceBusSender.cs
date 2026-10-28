@@ -57,7 +57,7 @@ public class TrackingServiceBusSender : ServiceBusSender
         {
             MessageCount = messageList.Count
         };
-        var content = _options.Verbosity != ServiceBusTrackingVerbosity.Summarised
+        var content = ServiceBusTracker.ShowsContent(_options)
             ? $"[{messageList.Count} messages]"
             : null;
         var (reqId, traceId) = _tracker.LogRequest(op, content);
@@ -134,7 +134,7 @@ public class TrackingServiceBusSender : ServiceBusSender
 
     private string? GetMessageContent(ServiceBusMessage message)
     {
-        if (_options.Verbosity == ServiceBusTrackingVerbosity.Summarised)
+        if (!ServiceBusTracker.ShowsContent(_options))
             return null;
 
         try

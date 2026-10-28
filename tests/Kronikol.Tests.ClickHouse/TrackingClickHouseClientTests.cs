@@ -384,6 +384,60 @@ public class TrackingClickHouseClientTests : IDisposable
         Assert.Null(request.Content);
     }
 
+    // A phase's own verbosity decides its note's detail, though the call was made before its phase was known: a
+    // Detailed phase of a Summarised client lists the rows, as a Detailed client does.
+    [Fact]
+    public async Task A_detailed_phase_of_a_summarised_client_shows_the_rows_an_insert_sent()
+    {
+        TestPhaseContext.Reset();
+        _options.Verbosity = SqlTrackingVerbosityLevel.Summarised;
+        _options.ActionVerbosity = SqlTrackingVerbosityLevel.Detailed;
+
+        await Client().InsertBinaryAsync("orders", ["id", "item"], [[1u, "tea"], [2u, "toast"]]);
+
+        var (request, _) = Single(Logs());
+        Assert.Null(request.Content);
+        Assert.Null(request.SetupVariant!.Content);
+        Assert.Equal("""[{"id":1,"item":"tea"},{"id":2,"item":"toast"}]""", request.ActionVariant!.Content);
+    }
+
+    [Fact]
+    public async Task A_detailed_phase_of_a_summarised_client_lists_the_rows_a_query_read()
+    {
+        TestPhaseContext.Reset();
+        _options.Verbosity = SqlTrackingVerbosityLevel.Summarised;
+        _options.ActionVerbosity = SqlTrackingVerbosityLevel.Detailed;
+        _inner.QueryRows.AddRange([new Order { Id = 1, Item = "tea" }, new Order { Id = 2, Item = "toast" }]);
+
+        await foreach (var _ in Client().QueryAsync<Order>("SELECT Id, Item FROM orders")) { }
+
+        var (_, response) = Single(Logs());
+        Assert.Equal("2 rows [Id, Item]", response.Content);
+        Assert.Equal("2 rows [Id, Item]", response.SetupVariant!.Content);
+        Assert.Equal("""[{"Id":1,"Item":"tea"},{"Id":2,"Item":"toast"}]""", response.ActionVariant!.Content);
+    }
+
+    // A query keeps its rows by the phase it starts in and is noted in the phase it ends in, as each row is read in the
+    // caller's own flow: one started in a Summarised phase kept none, so a note made in a Detailed or an unknown phase
+    // counted them as rows it never kept ("12 rows", no columns, and "2 more rows not shown") instead of listing columns.
+    [Theory]
+    [InlineData(TestPhase.Action)]
+    [InlineData(TestPhase.Unknown)]
+    public async Task A_query_started_in_a_summarised_phase_claims_no_rows_it_did_not_keep(TestPhase endedIn)
+    {
+        _options.SetupVerbosity = SqlTrackingVerbosityLevel.Summarised;
+        _inner.QueryRows.AddRange(Enumerable.Range(1, 12).Select(i => new Order { Id = (uint)i, Item = $"item{i}" }));
+        TestPhaseContext.Current = TestPhase.Setup;
+
+        await foreach (var _ in Client().QueryAsync<Order>("SELECT Id, Item FROM orders"))
+            TestPhaseContext.Current = endedIn;
+
+        var (_, response) = Single(Logs());
+        Assert.Equal("12 rows [Id, Item]", response.Content);
+        Assert.All(new[] { response.SetupVariant, response.ActionVariant }.OfType<PhaseVariant>(),
+            variant => Assert.Equal("12 rows [Id, Item]", variant.Content));
+    }
+
     [Fact]
     public async Task An_excluded_operation_records_nothing()
     {

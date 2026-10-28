@@ -233,6 +233,113 @@ public class GrpcTrackingInterceptorTests
         Assert.Null(log.Content);
     }
 
+    // ─── Phase variants ────────────────────────────────────
+
+    // A phase's own verbosity decides its notes: a Detailed phase of a Summarised interceptor shows the messages a
+    // Detailed interceptor shows, though the call was made before its phase was known. A server stream's response and
+    // a client stream's request are messages the record never shows.
+    [Theory]
+    [MemberData(nameof(CallKinds.All), MemberType = typeof(CallKinds))]
+    public async Task A_detailed_phase_of_a_summarised_interceptor_shows_the_messages_a_detailed_one_shows(CallKind kind)
+    {
+        TestPhaseContext.Reset();
+        var options = MakeOptions(GrpcTrackingVerbosity.Summarised);
+        options.ActionVerbosity = GrpcTrackingVerbosity.Detailed;
+
+        await CallKinds.InvokeAsync(new GrpcTrackingInterceptor(options), kind);
+
+        var logs = GetLogsFromThisTest();
+        var request = Assert.Single(logs, l => l.Type == RequestResponseType.Request);
+        var response = Assert.Single(logs, l => l.Type == RequestResponseType.Response);
+        Assert.Null(request.Content);
+        Assert.Null(request.SetupVariant!.Content);
+        Assert.Equal(kind is CallKind.AsyncUnary or CallKind.BlockingUnary or CallKind.ServerStreaming ? "request" : null,
+            request.ActionVariant!.Content);
+        Assert.Null(response.Content);
+        Assert.Null(response.SetupVariant!.Content);
+        Assert.Equal(kind is CallKind.AsyncUnary or CallKind.BlockingUnary or CallKind.ClientStreaming ? "response" : null,
+            response.ActionVariant!.Content);
+    }
+
+    // A failed call's "{code}: {message}" is its response's note at every verbosity, Summarised too.
+    [Fact]
+    public async Task A_summarised_phase_shows_a_failed_call_s_status_as_a_summarised_interceptor_does()
+    {
+        TestPhaseContext.Reset();
+        var options = MakeOptions(GrpcTrackingVerbosity.Summarised);
+        options.ActionVerbosity = GrpcTrackingVerbosity.Detailed;
+        var interceptor = new GrpcTrackingInterceptor(options);
+
+        var call = interceptor.AsyncUnaryCall(
+            "Hello", CreateContext(),
+            (req, ctx) => new AsyncUnaryCall<string>(
+                Task.FromException<string>(new RpcException(new Status(StatusCode.NotFound, "not found"))),
+                Task.FromResult(new Metadata()),
+                () => new Status(StatusCode.NotFound, "not found"),
+                () => new Metadata(),
+                () => { }));
+        await Assert.ThrowsAsync<RpcException>(() => call.ResponseAsync);
+
+        var response = GetLogsFromThisTest().Single(l => l.Type == RequestResponseType.Response);
+        Assert.StartsWith("NotFound: ", response.Content);
+        Assert.Equal(response.Content, response.SetupVariant!.Content);
+        Assert.Equal(response.Content, response.ActionVariant!.Content);
+    }
+
+    [Fact]
+    public async Task A_summarised_phase_shows_a_failed_stream_s_status_as_a_summarised_interceptor_does()
+    {
+        TestPhaseContext.Reset();
+        var options = MakeOptions(GrpcTrackingVerbosity.Summarised);
+        options.ActionVerbosity = GrpcTrackingVerbosity.Detailed;
+        var interceptor = new GrpcTrackingInterceptor(options);
+
+        using var call = interceptor.AsyncServerStreamingCall("request", CallKinds.Context(CallKind.ServerStreaming), (_, _) =>
+            new AsyncServerStreamingCall<string>(
+                new CallKinds.ListReader([], new RpcException(new Status(StatusCode.NotFound, "no such order"))),
+                Task.FromResult(new Metadata()),
+                () => throw new InvalidOperationException("not finished"),
+                () => new Metadata(),
+                () => { }));
+        await Assert.ThrowsAsync<RpcException>(() => call.ResponseStream.MoveNext(CancellationToken.None));
+
+        var response = GetLogsFromThisTest().Single(l => l.Type == RequestResponseType.Response);
+        Assert.StartsWith("NotFound: ", response.Content);
+        Assert.Equal(response.Content, response.SetupVariant!.Content);
+        Assert.Equal(response.Content, response.ActionVariant!.Content);
+    }
+
+    /// <summary>A message that counts how often its text is written.</summary>
+    private sealed class Counted
+    {
+        public int Writes { get; private set; }
+
+        public override string ToString()
+        {
+            Writes++;
+            return "counted";
+        }
+    }
+
+    [Fact]
+    public void At_Summarised_in_every_phase_a_message_nothing_shows_is_not_written()
+    {
+        TestPhaseContext.Reset();
+        var options = MakeOptions(GrpcTrackingVerbosity.Summarised);
+        options.SetupVerbosity = GrpcTrackingVerbosity.Summarised;
+        var marshaller = Marshallers.Create<Counted>(_ => [], _ => new Counted());
+        var context = new ClientInterceptorContext<Counted, Counted>(
+            new Method<Counted, Counted>(MethodType.Unary, "probe.Probe", "Counted", marshaller, marshaller), null, new CallOptions());
+        var request = new Counted();
+        var reply = new Counted();
+
+        new GrpcTrackingInterceptor(options).BlockingUnaryCall(request, context, (_, _) => reply);
+
+        Assert.Equal(0, request.Writes);
+        Assert.Equal(0, reply.Writes);
+        Assert.Equal(2, GetLogsFromThisTest().Length);
+    }
+
     // ─── UseProtoServiceName ──────────────────────────────
 
     [Fact]

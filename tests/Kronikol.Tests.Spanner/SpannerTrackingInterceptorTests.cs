@@ -613,6 +613,110 @@ public class SpannerTrackingInterceptorTests
         Assert.Contains("Age", responseLog.Content!);
     }
 
+    // A phase's own verbosity decides its note's detail, though the call was made before its phase was known: a
+    // Detailed phase of a Summarised interceptor lists the rows, and a Summarised phase of a Detailed one counts them.
+    private RequestResponseLog ExecuteSqlAnswered(SpannerTrackingOptions options, ResultSet response)
+    {
+        var interceptor = CreateInterceptor(options);
+        var request = new ExecuteSqlRequest { Sql = "SELECT Name FROM Users", Session = "projects/p/instances/i/databases/d/sessions/s" };
+        var method = MakeMethod<ExecuteSqlRequest, ResultSet>("google.spanner.v1.Spanner", "ExecuteSql");
+        interceptor.AsyncUnaryCall(request, new ClientInterceptorContext<ExecuteSqlRequest, ResultSet>(method, null, new CallOptions()),
+            (_, _) => FakeUnaryCall(response));
+        return Assert.Single(GetLogs(), l => l.Type == RequestResponseType.Response);
+    }
+
+    [Fact]
+    public void A_detailed_phase_of_a_summarised_interceptor_lists_the_rows()
+    {
+        TestPhaseContext.Reset();
+        var options = MakeOptions(SpannerTrackingVerbosity.Summarised);
+        options.ActionVerbosity = SpannerTrackingVerbosity.Detailed;
+
+        var response = ExecuteSqlAnswered(options, MakeResultSetResponse(["Name"], [["Alice"], ["Bob"]]));
+
+        Assert.Equal("2 rows [Name]", response.Content);
+        Assert.Equal("2 rows [Name]", response.SetupVariant!.Content);
+        Assert.Contains("Alice", response.ActionVariant!.Content);
+    }
+
+    [Fact]
+    public void A_summarised_phase_of_a_detailed_interceptor_counts_the_rows()
+    {
+        TestPhaseContext.Reset();
+        var options = MakeOptions();
+        options.SetupVerbosity = SpannerTrackingVerbosity.Summarised;
+
+        var response = ExecuteSqlAnswered(options, MakeResultSetResponse(["Name"], [["Alice"], ["Bob"]]));
+
+        Assert.Contains("Alice", response.Content);
+        Assert.Equal("2 rows [Name]", response.SetupVariant!.Content);
+        Assert.Contains("Alice", response.ActionVariant!.Content);
+    }
+
+    // Reads a stream of two names to its end, calling whileReading after each chunk.
+    private async Task<RequestResponseLog> ReadNamesStream(SpannerTrackingOptions options, Action? whileReading = null)
+    {
+        var interceptor = CreateInterceptor(options);
+        var request = new ExecuteSqlRequest { Sql = "SELECT Name FROM Users", Session = "projects/p/instances/i/databases/d/sessions/s" };
+        var method = MakeMethod<ExecuteSqlRequest, PartialResultSet>("google.spanner.v1.Spanner", "ExecuteStreamingSql", MethodType.ServerStreaming);
+        var chunk = new PartialResultSet
+        {
+            Metadata = new ResultSetMetadata
+            {
+                RowType = new StructType
+                {
+                    Fields = { new StructType.Types.Field { Name = "Name", Type = new Google.Cloud.Spanner.V1.Type { Code = TypeCode.String } } }
+                }
+            },
+            Values = { Value.ForString("Alice"), Value.ForString("Bob") }
+        };
+        var originalCall = new AsyncServerStreamingCall<PartialResultSet>(
+            new FakeAsyncStreamReader<PartialResultSet>([chunk]), Task.FromResult(new Metadata()),
+            () => Status.DefaultSuccess, () => new Metadata(), () => { });
+
+        var wrappedCall = interceptor.AsyncServerStreamingCall(request,
+            new ClientInterceptorContext<ExecuteSqlRequest, PartialResultSet>(method, null, new CallOptions()), (_, _) => originalCall);
+        while (await wrappedCall.ResponseStream.MoveNext(CancellationToken.None))
+            whileReading?.Invoke();
+
+        return Assert.Single(GetLogs(), l => l.Type == RequestResponseType.Response);
+    }
+
+    [Fact]
+    public async Task A_detailed_phase_of_a_summarised_interceptor_lists_the_rows_a_stream_read()
+    {
+        TestPhaseContext.Reset();
+        var options = MakeOptions(SpannerTrackingVerbosity.Summarised);
+        options.ActionVerbosity = SpannerTrackingVerbosity.Detailed;
+
+        var response = await ReadNamesStream(options);
+
+        Assert.Equal("2 rows [Name]", response.Content);
+        Assert.Equal("2 rows [Name]", response.SetupVariant!.Content);
+        Assert.Contains("Alice", response.ActionVariant!.Content);
+    }
+
+    // A stream keeps every row it reads, whatever phase it starts in, so one started in a Summarised phase and read to
+    // its end in a Detailed one lists the rows the Detailed note asks for.
+    [Fact]
+    public async Task A_stream_started_in_a_summarised_phase_and_ended_in_a_detailed_one_lists_the_rows()
+    {
+        var options = MakeOptions();
+        options.SetupVerbosity = SpannerTrackingVerbosity.Summarised;
+        try
+        {
+            TestPhaseContext.Current = TestPhase.Setup;
+
+            var response = await ReadNamesStream(options, whileReading: () => TestPhaseContext.Current = TestPhase.Action);
+
+            Assert.Contains("Alice", response.Content);
+        }
+        finally
+        {
+            TestPhaseContext.Reset();
+        }
+    }
+
     [Fact]
     public async Task UnaryCall_RpcException_LogsAnErrorResponseWithTheCallsMessage()
     {

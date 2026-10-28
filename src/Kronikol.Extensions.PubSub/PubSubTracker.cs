@@ -28,8 +28,24 @@ public class PubSubTracker : ITrackingComponent
     /// <summary>The accessor this tracker resolves the scenario through: the constructor's, else the options'.</summary>
     internal IHttpContextAccessor? HttpContextAccessor => _httpContextAccessor;
 
+    /// <summary>
+    /// The verbosities the call may be drawn at: the phase's, and each phase's while the phase is not known
+    /// (<see cref="PhaseConfiguration.DrawnAt{T}"/>). The publisher and subscriber make a note's content only when one of
+    /// them shows it, and each note shows it at its own verbosity.
+    /// </summary>
+    internal static PubSubTrackingVerbosity[] DrawnAt(PubSubTrackingOptions options) =>
+        PhaseConfiguration.DrawnAt(options.Verbosity, options.SetupVerbosity, options.ActionVerbosity);
+
     public (Guid RequestResponseId, Guid TraceId) LogRequest(
         PubSubOperationInfo operation, string? content)
+        => LogRequest(operation, content, rawContent: null);
+
+    /// <summary>
+    /// A request whose note at Raw is <paramref name="rawContent"/> when it has one, and <paramref name="content"/>
+    /// otherwise: a batch's bodies, which Raw alone shows.
+    /// </summary>
+    internal (Guid RequestResponseId, Guid TraceId) LogRequest(
+        PubSubOperationInfo operation, string? content, string? rawContent)
     {
         if (!PhaseConfiguration.ShouldTrack(_options.TrackDuringSetup, _options.TrackDuringAction)) return (Guid.Empty, Guid.Empty);
 
@@ -45,7 +61,7 @@ public class PubSubTracker : ITrackingComponent
         var traceId = Guid.NewGuid();
         var requestResponseId = Guid.NewGuid();
 
-        var logContent = effectiveVerbosity == PubSubTrackingVerbosity.Summarised ? null : content;
+        var logContent = Note(content, rawContent, effectiveVerbosity);
 
         RequestResponseLogger.Log(new RequestResponseLog(
             testInfo.Value.Name, testInfo.Value.Id,
@@ -61,7 +77,7 @@ public class PubSubTracker : ITrackingComponent
             v => new PhaseVariant(
                 PubSubOperationClassifier.GetDiagramLabel(operation, v),
                 BuildUri(operation, v),
-                v == PubSubTrackingVerbosity.Summarised ? null : content,
+                Note(content, rawContent, v),
                 [], false)));
 
         return (requestResponseId, traceId);
@@ -70,6 +86,15 @@ public class PubSubTracker : ITrackingComponent
     public void LogResponse(
         PubSubOperationInfo operation,
         Guid requestResponseId, Guid traceId, string? content)
+        => LogResponse(operation, requestResponseId, traceId, content, rawContent: null);
+
+    /// <summary>
+    /// A response whose note at Raw is <paramref name="rawContent"/> when it has one, and <paramref name="content"/>
+    /// otherwise: a publish's message id or a handler's reply, which Raw alone shows.
+    /// </summary>
+    internal void LogResponse(
+        PubSubOperationInfo operation,
+        Guid requestResponseId, Guid traceId, string? content, string? rawContent)
     {
         if (!PhaseConfiguration.ShouldTrack(_options.TrackDuringSetup, _options.TrackDuringAction)) return;
 
@@ -81,7 +106,7 @@ public class PubSubTracker : ITrackingComponent
         var uri = BuildUri(operation, effectiveVerbosity);
         var label = PubSubOperationClassifier.GetDiagramLabel(operation, effectiveVerbosity);
 
-        var logContent = effectiveVerbosity == PubSubTrackingVerbosity.Summarised ? null : content;
+        var logContent = Note(content, rawContent, effectiveVerbosity);
 
         RequestResponseLogger.Log(new RequestResponseLog(
             testInfo.Value.Name, testInfo.Value.Id,
@@ -96,9 +121,15 @@ public class PubSubTracker : ITrackingComponent
             v => new PhaseVariant(
                 PubSubOperationClassifier.GetDiagramLabel(operation, v),
                 BuildUri(operation, v),
-                v == PubSubTrackingVerbosity.Summarised ? null : content,
+                Note(content, rawContent, v),
                 [], false)));
     }
+
+    /// <summary>A note at <paramref name="verbosity"/>: none at Summarised, the Raw content where there is one at Raw.</summary>
+    private static string? Note(string? content, string? rawContent, PubSubTrackingVerbosity verbosity) =>
+        verbosity == PubSubTrackingVerbosity.Summarised ? null
+        : verbosity == PubSubTrackingVerbosity.Raw ? rawContent ?? content
+        : content;
 
     private Uri BuildUri(PubSubOperationInfo op, PubSubTrackingVerbosity effectiveVerbosity)
     {

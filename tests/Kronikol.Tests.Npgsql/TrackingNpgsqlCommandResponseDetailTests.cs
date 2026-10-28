@@ -102,7 +102,9 @@ public class TrackingNpgsqlCommandResponseDetailTests : IDisposable
         Assert.Equal(rejected.Message, logs[3].Content);
     }
 
-    private string? RunSelectAndGetResponseContent()
+    private string? RunSelectAndGetResponseContent() => RunSelectAndGetResponse().Content;
+
+    private RequestResponseLog RunSelectAndGetResponse()
     {
         using var cmd = new TrackingNpgsqlCommand(new RowReaderFakeDbCommand(), _trackingConnection);
         cmd.CommandText = "SELECT id, name FROM breakfasts";
@@ -110,7 +112,7 @@ public class TrackingNpgsqlCommandResponseDetailTests : IDisposable
         {
             while (reader.Read()) { }
         }
-        return GetLogsForTest().Last(l => l.Type == RequestResponseType.Response).Content;
+        return GetLogsForTest().Last(l => l.Type == RequestResponseType.Response);
     }
 
     [Fact]
@@ -135,6 +137,35 @@ public class TrackingNpgsqlCommandResponseDetailTests : IDisposable
     {
         _options.ResponseDetail = SqlResponseDetail.RowCountAndColumns;
         Assert.Equal("2 rows [id, name]", RunSelectAndGetResponseContent());
+    }
+
+    // A phase's own verbosity decides its note's detail, though the query ran before its phase was known: a Detailed
+    // phase of a Summarised handler lists the rows, and a Summarised phase of a Detailed one counts them.
+    [Fact]
+    public void A_detailed_phase_of_a_summarised_handler_lists_the_rows()
+    {
+        TestPhaseContext.Reset();
+        _options.Verbosity = SqlTrackingVerbosityLevel.Summarised;
+        _options.ActionVerbosity = SqlTrackingVerbosityLevel.Detailed;
+
+        var response = RunSelectAndGetResponse();
+
+        Assert.Equal("2 rows [id, name]", response.Content);
+        Assert.Equal("2 rows [id, name]", response.SetupVariant!.Content);
+        Assert.Contains("\"name\":\"Pancakes\"", response.ActionVariant!.Content);
+    }
+
+    [Fact]
+    public void A_summarised_phase_of_a_detailed_handler_counts_the_rows()
+    {
+        TestPhaseContext.Reset();
+        _options.SetupVerbosity = SqlTrackingVerbosityLevel.Summarised;
+
+        var response = RunSelectAndGetResponse();
+
+        Assert.Contains("\"name\":\"Pancakes\"", response.Content);
+        Assert.Equal("2 rows [id, name]", response.SetupVariant!.Content);
+        Assert.Contains("\"name\":\"Pancakes\"", response.ActionVariant!.Content);
     }
 }
 

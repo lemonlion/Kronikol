@@ -340,6 +340,66 @@ public class DynamoDbTrackingMessageHandlerTests : IDisposable
         Assert.Equal(2, logs.Length);
     }
 
+    // ─── Phase variants ───────────────────────────────────────
+
+    // A phase's own verbosity decides its notes: a Detailed phase of a Summarised handler shows the bodies a Detailed
+    // handler shows, though the call was made before its phase was known.
+    [Fact]
+    public async Task A_detailed_phase_of_a_summarised_handler_shows_both_bodies()
+    {
+        TestPhaseContext.Reset();
+        var options = MakeOptions(DynamoDbTrackingVerbosity.Summarised);
+        options.ActionVerbosity = DynamoDbTrackingVerbosity.Detailed;
+        using var invoker = CreateInvoker(options);
+
+        await invoker.SendAsync(MakeGetItemRequest(), CancellationToken.None);
+
+        var logs = GetLogsFromThisTest();
+        var request = logs.First(l => l.Type == RequestResponseType.Request);
+        var response = logs.First(l => l.Type == RequestResponseType.Response);
+        Assert.Null(request.Content);
+        Assert.Null(request.SetupVariant!.Content);
+        Assert.Contains("\"Key\"", request.ActionVariant!.Content);
+        Assert.Null(response.Content);
+        Assert.Null(response.SetupVariant!.Content);
+        Assert.Contains("\"Item\"", response.ActionVariant!.Content);
+    }
+
+    // The request body is always read, to classify the call; the response body only when a note shows it.
+    [Fact]
+    public async Task At_Summarised_in_every_phase_a_response_body_nothing_shows_is_not_read()
+    {
+        TestPhaseContext.Reset();
+        var reply = new CountingContent("""{"Item": {"id": {"S": "123"}}}""");
+        _innerHandler.ResponseToReturn = new HttpResponseMessage(HttpStatusCode.OK) { Content = reply };
+        var options = MakeOptions(DynamoDbTrackingVerbosity.Summarised);
+        options.SetupVerbosity = DynamoDbTrackingVerbosity.Summarised;
+        using var invoker = CreateInvoker(options);
+
+        await invoker.SendAsync(MakeGetItemRequest(), CancellationToken.None);
+
+        Assert.Equal(0, reply.Reads);
+    }
+
+    /// <summary>JSON content that counts how often its bytes are read.</summary>
+    private sealed class CountingContent(string json) : HttpContent
+    {
+        private readonly byte[] _bytes = System.Text.Encoding.UTF8.GetBytes(json);
+        public int Reads { get; private set; }
+
+        protected override Task SerializeToStreamAsync(Stream stream, TransportContext? context)
+        {
+            Reads++;
+            return stream.WriteAsync(_bytes).AsTask();
+        }
+
+        protected override bool TryComputeLength(out long length)
+        {
+            length = _bytes.Length;
+            return true;
+        }
+    }
+
     // ─── Header filtering ─────────────────────────────────────
 
     [Fact]

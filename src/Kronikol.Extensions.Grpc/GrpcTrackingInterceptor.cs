@@ -53,6 +53,10 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
         if (!plan.Tracked)
             return continuation(request, plan.Propagates ? WithCallMetadata(context, plan) : context);
         var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
+        // A message is written when any verbosity the call may be drawn at shows it, and each note is made at its own:
+        // a phase's variant was given the effective verbosity's, so a Detailed phase of a Summarised interceptor had
+        // neither message.
+        var drawnAt = PhaseConfiguration.DrawnAt(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
 
         var testInfo = plan.Identity;
 
@@ -60,7 +64,7 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
         var label = GrpcOperationClassifier.GetDiagramLabel(opInfo, effectiveVerbosity);
         var serviceName = ResolveServiceName(opInfo);
         var uri = BuildUri(opInfo, effectiveVerbosity);
-        var requestContent = SerializeMessage(request, effectiveVerbosity);
+        var requestMessage = SerializeMessage(request, drawnAt);
         var headers = plan.LoggedHeaders;
 
         var traceId = plan.TraceId;
@@ -82,14 +86,14 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
 
             context = WithCallMetadata(context, plan, activityTraceId, activitySpanId, recorded);
 
-            LogRequest(testInfo, label, requestContent, uri, headers, serviceName, traceId, requestResponseId, activityTraceId, activitySpanId, opInfo);
+            LogRequest(testInfo, label, MessageNote(requestMessage), effectiveVerbosity, uri, headers, serviceName, traceId, requestResponseId, activityTraceId, activitySpanId, opInfo);
             requestLogged = true;
 
             // Started under the span, so the transport's own spans are its children.
             call = continuation(request, context);
 
             wrappedResponseAsync = WrapUnaryResponse(
-                call.ResponseAsync, testInfo, label, uri, serviceName, traceId, requestResponseId, effectiveVerbosity,
+                call.ResponseAsync, testInfo, label, uri, serviceName, traceId, requestResponseId, effectiveVerbosity, drawnAt,
                 activityTraceId, activitySpanId, activity, opInfo);
         }
         catch (Exception ex)
@@ -98,7 +102,7 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
             if (requestLogged)
             {
                 var (status, content) = Failure(ex);
-                LogResponse(testInfo, label, content, uri, serviceName, traceId, requestResponseId, status,
+                LogResponse(testInfo, label, _ => content, effectiveVerbosity, uri, serviceName, traceId, requestResponseId, status,
                     activityTraceId, activitySpanId, opInfo);
             }
             InternalFlowSpanStore.Complete(activity);
@@ -129,6 +133,7 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
         if (!plan.Tracked)
             return continuation(request, plan.Propagates ? WithCallMetadata(context, plan) : context);
         var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
+        var drawnAt = PhaseConfiguration.DrawnAt(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
 
         var testInfo = plan.Identity;
 
@@ -136,7 +141,7 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
         var label = GrpcOperationClassifier.GetDiagramLabel(opInfo, effectiveVerbosity);
         var serviceName = ResolveServiceName(opInfo);
         var uri = BuildUri(opInfo, effectiveVerbosity);
-        var requestContent = SerializeMessage(request, effectiveVerbosity);
+        var requestMessage = SerializeMessage(request, drawnAt);
         var headers = plan.LoggedHeaders;
 
         var traceId = plan.TraceId;
@@ -148,19 +153,19 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
 
         context = WithCallMetadata(context, plan, activityTraceId, activitySpanId, recorded);
 
-        LogRequest(testInfo, label, requestContent, uri, headers, serviceName, traceId, requestResponseId, activityTraceId, activitySpanId, opInfo);
+        LogRequest(testInfo, label, MessageNote(requestMessage), effectiveVerbosity, uri, headers, serviceName, traceId, requestResponseId, activityTraceId, activitySpanId, opInfo);
 
         try
         {
             var response = continuation(request, context);
-            var responseContent = SerializeMessage(response, effectiveVerbosity);
-            LogResponse(testInfo, label, responseContent, uri, serviceName, traceId, requestResponseId, HttpStatusCode.OK, activityTraceId, activitySpanId, opInfo);
+            var responseMessage = SerializeMessage(response, drawnAt);
+            LogResponse(testInfo, label, MessageNote(responseMessage), effectiveVerbosity, uri, serviceName, traceId, requestResponseId, HttpStatusCode.OK, activityTraceId, activitySpanId, opInfo);
             return response;
         }
         catch (Exception ex)
         {
             var (status, content) = Failure(ex);
-            LogResponse(testInfo, label, content, uri, serviceName,
+            LogResponse(testInfo, label, _ => content, effectiveVerbosity, uri, serviceName,
                 traceId, requestResponseId, status, activityTraceId, activitySpanId, opInfo);
             throw;
         }
@@ -178,6 +183,7 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
         if (!plan.Tracked)
             return continuation(request, plan.Propagates ? WithCallMetadata(context, plan) : context);
         var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
+        var drawnAt = PhaseConfiguration.DrawnAt(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
 
         var testInfo = plan.Identity;
 
@@ -185,7 +191,7 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
         var label = GrpcOperationClassifier.GetDiagramLabel(opInfo, effectiveVerbosity);
         var serviceName = ResolveServiceName(opInfo);
         var uri = BuildUri(opInfo, effectiveVerbosity);
-        var requestContent = SerializeMessage(request, effectiveVerbosity);
+        var requestMessage = SerializeMessage(request, drawnAt);
         var headers = plan.LoggedHeaders;
 
         var traceId = plan.TraceId;
@@ -203,10 +209,10 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
 
             context = WithCallMetadata(context, plan, activityTraceId, activitySpanId, recorded);
 
-            LogRequest(testInfo, label, requestContent, uri, headers, serviceName, traceId, requestResponseId, activityTraceId, activitySpanId, opInfo);
+            LogRequest(testInfo, label, MessageNote(requestMessage), effectiveVerbosity, uri, headers, serviceName, traceId, requestResponseId, activityTraceId, activitySpanId, opInfo);
 
             var outcome = new StreamOutcome(this, testInfo, label, uri, serviceName, traceId, requestResponseId,
-                activityTraceId, activitySpanId, opInfo, activity, TestPhaseContext.Current);
+                activityTraceId, activitySpanId, opInfo, activity, TestPhaseContext.Current, effectiveVerbosity);
             started = outcome;
 
             var call = continuation(request, context);
@@ -244,6 +250,7 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
         if (!plan.Tracked)
             return continuation(plan.Propagates ? WithCallMetadata(context, plan) : context);
         var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
+        var drawnAt = PhaseConfiguration.DrawnAt(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
 
         var testInfo = plan.Identity;
 
@@ -268,17 +275,17 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
 
             context = WithCallMetadata(context, plan, activityTraceId, activitySpanId, recorded);
 
-            LogRequest(testInfo, label, null, uri, headers, serviceName, traceId, requestResponseId, activityTraceId, activitySpanId, opInfo);
+            LogRequest(testInfo, label, _ => null, effectiveVerbosity, uri, headers, serviceName, traceId, requestResponseId, activityTraceId, activitySpanId, opInfo);
 
             var outcome = new StreamOutcome(this, testInfo, label, uri, serviceName, traceId, requestResponseId,
-                activityTraceId, activitySpanId, opInfo, activity, TestPhaseContext.Current);
+                activityTraceId, activitySpanId, opInfo, activity, TestPhaseContext.Current, effectiveVerbosity);
             started = outcome;
 
             var call = continuation(context);
 
             return new AsyncClientStreamingCall<TRequest, TResponse>(
                 call.RequestStream,
-                WrapStreamResponse(call.ResponseAsync, outcome, effectiveVerbosity),
+                WrapStreamResponse(call.ResponseAsync, outcome, drawnAt),
                 call.ResponseHeadersAsync,
                 call.GetStatus,
                 call.GetTrailers,
@@ -334,10 +341,10 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
 
             context = WithCallMetadata(context, plan, activityTraceId, activitySpanId, recorded);
 
-            LogRequest(testInfo, label, null, uri, headers, serviceName, traceId, requestResponseId, activityTraceId, activitySpanId, opInfo);
+            LogRequest(testInfo, label, _ => null, effectiveVerbosity, uri, headers, serviceName, traceId, requestResponseId, activityTraceId, activitySpanId, opInfo);
 
             var outcome = new StreamOutcome(this, testInfo, label, uri, serviceName, traceId, requestResponseId,
-                activityTraceId, activitySpanId, opInfo, activity, TestPhaseContext.Current);
+                activityTraceId, activitySpanId, opInfo, activity, TestPhaseContext.Current, effectiveVerbosity);
             started = outcome;
 
             var call = continuation(context);
@@ -369,21 +376,21 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
         Task<TResponse> responseTask,
         TestIdentity testInfo,
         string label, Uri uri, string serviceName,
-        Guid traceId, Guid requestResponseId, GrpcTrackingVerbosity effectiveVerbosity,
+        Guid traceId, Guid requestResponseId, GrpcTrackingVerbosity effectiveVerbosity, GrpcTrackingVerbosity[] drawnAt,
         string? activityTraceId, string? activitySpanId,
         Activity? activity, GrpcOperationInfo? opInfo = null)
     {
         try
         {
             var response = await responseTask;
-            var responseContent = SerializeMessage(response, effectiveVerbosity);
-            LogResponse(testInfo, label, responseContent, uri, serviceName, traceId, requestResponseId, HttpStatusCode.OK, activityTraceId, activitySpanId, opInfo);
+            var responseMessage = SerializeMessage(response, drawnAt);
+            LogResponse(testInfo, label, MessageNote(responseMessage), effectiveVerbosity, uri, serviceName, traceId, requestResponseId, HttpStatusCode.OK, activityTraceId, activitySpanId, opInfo);
             return response;
         }
         catch (Exception ex)
         {
             var (status, content) = Failure(ex);
-            LogResponse(testInfo, label, content, uri, serviceName,
+            LogResponse(testInfo, label, _ => content, effectiveVerbosity, uri, serviceName,
                 traceId, requestResponseId, status, activityTraceId, activitySpanId, opInfo);
             throw;
         }
@@ -397,8 +404,8 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
     /// How a call that failed is recorded: an <see cref="RpcException"/> as its status, an
     /// <see cref="OperationCanceledException"/> as <c>Cancelled</c> (a channel with
     /// <c>ThrowOperationCanceledOnCancellation</c> throws one where it would throw <c>RpcException(Cancelled)</c>), and
-    /// anything else as <c>Unknown</c>, each with <c>"{code}: {message}"</c>. Every failure is recorded, so no request
-    /// is left without its response.
+    /// anything else as <c>Unknown</c>, each with <c>"{code}: {message}"</c>, its note at every verbosity. Every failure is
+    /// recorded, so no request is left without its response.
     /// </summary>
     private static (HttpStatusCode Status, string Content) Failure(Exception exception)
     {
@@ -413,7 +420,7 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
 
     /// <summary>A client stream's response, recorded as an async unary call's is, through its outcome.</summary>
     private async Task<TResponse> WrapStreamResponse<TResponse>(
-        Task<TResponse> responseTask, StreamOutcome outcome, GrpcTrackingVerbosity effectiveVerbosity)
+        Task<TResponse> responseTask, StreamOutcome outcome, GrpcTrackingVerbosity[] drawnAt)
     {
         TResponse response;
         try
@@ -426,7 +433,7 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
             throw;
         }
 
-        outcome.Completed(SerializeMessage(response, effectiveVerbosity));
+        outcome.Completed(SerializeMessage(response, drawnAt));
         return response;
     }
 
@@ -439,16 +446,16 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
     private sealed class StreamOutcome(
         GrpcTrackingInterceptor owner, TestIdentity testInfo, string label, Uri uri, string serviceName,
         Guid traceId, Guid requestResponseId, string? activityTraceId, string? activitySpanId,
-        GrpcOperationInfo opInfo, Activity? activity, TestPhase phase)
+        GrpcOperationInfo opInfo, Activity? activity, TestPhase phase, GrpcTrackingVerbosity verbosity)
     {
         private int _recorded;
 
-        public void Completed(string? content = null) => Record(content, HttpStatusCode.OK);
+        public void Completed(string? message = null) => Record(MessageNote(message), HttpStatusCode.OK);
 
         public void Failed(Exception exception)
         {
             var (status, content) = Failure(exception);
-            Record(content, status);
+            Record(_ => content, status);
         }
 
         /// <summary>
@@ -474,7 +481,7 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
             finally
             {
                 if (status is not { } known)
-                    Record($"{StatusCode.Cancelled}: the call was disposed before its stream ended", MapGrpcStatusToHttp(StatusCode.Cancelled));
+                    Record(_ => $"{StatusCode.Cancelled}: the call was disposed before its stream ended", MapGrpcStatusToHttp(StatusCode.Cancelled));
                 else if (known.StatusCode == StatusCode.OK)
                     Completed();
                 else
@@ -482,12 +489,12 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
             }
         }
 
-        private void Record(string? content, HttpStatusCode statusCode)
+        private void Record(Func<GrpcTrackingVerbosity, string?> note, HttpStatusCode statusCode)
         {
             if (Interlocked.Exchange(ref _recorded, 1) != 0)
                 return;
 
-            owner.LogResponse(testInfo, label, content, uri, serviceName, traceId, requestResponseId, statusCode,
+            owner.LogResponse(testInfo, label, note, verbosity, uri, serviceName, traceId, requestResponseId, statusCode,
                 activityTraceId, activitySpanId, opInfo, phase);
             InternalFlowSpanStore.Complete(activity);
         }
@@ -517,8 +524,12 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
         }
     }
 
+    /// <summary>
+    /// The request half of a call, with the note <paramref name="note"/> gives it at <paramref name="verbosity"/>, the
+    /// call's, and at each phase's verbosity on the phase's variant.
+    /// </summary>
     private void LogRequest(
-        TestIdentity testInfo, string label, string? content,
+        TestIdentity testInfo, string label, Func<GrpcTrackingVerbosity, string?> note, GrpcTrackingVerbosity verbosity,
         Uri uri, (string Key, string? Value)[] headers, string serviceName,
         Guid traceId, Guid requestResponseId,
         string? activityTraceId, string? activitySpanId,
@@ -526,7 +537,7 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
     {
         RequestResponseLogger.Log(new RequestResponseLog(
             testInfo.Name, testInfo.Id,
-            label, content, uri,
+            label, note(verbosity), uri,
             headers, serviceName, _options.CallerName,
             RequestResponseType.Request, traceId, requestResponseId, false,
             DependencyCategory: DependencyCategories.Grpc)
@@ -540,12 +551,13 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
             v => new PhaseVariant(
                 GrpcOperationClassifier.GetDiagramLabel(opInfo!, v),
                 BuildUri(opInfo!, v),
-                v == GrpcTrackingVerbosity.Summarised ? null : content,
+                note(v),
                 headers, false)));
     }
 
+    /// <summary>The response half of a call, with its note made as <see cref="LogRequest"/> makes the request's.</summary>
     private void LogResponse(
-        TestIdentity testInfo, string label, string? content,
+        TestIdentity testInfo, string label, Func<GrpcTrackingVerbosity, string?> note, GrpcTrackingVerbosity verbosity,
         Uri uri, string serviceName,
         Guid traceId, Guid requestResponseId, HttpStatusCode statusCode,
         string? activityTraceId, string? activitySpanId,
@@ -553,7 +565,7 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
     {
         RequestResponseLogger.Log(new RequestResponseLog(
             testInfo.Name, testInfo.Id,
-            label, content, uri,
+            label, note(verbosity), uri,
             [], serviceName, _options.CallerName,
             RequestResponseType.Response, traceId, requestResponseId, false,
             statusCode,
@@ -568,9 +580,13 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
             v => new PhaseVariant(
                 GrpcOperationClassifier.GetDiagramLabel(opInfo!, v),
                 BuildUri(opInfo!, v),
-                v == GrpcTrackingVerbosity.Summarised ? null : content,
+                note(v),
                 [], false)));
     }
+
+    /// <summary>A message's note: its JSON at Detailed and Raw, none at Summarised.</summary>
+    private static Func<GrpcTrackingVerbosity, string?> MessageNote(string? message) =>
+        verbosity => verbosity == GrpcTrackingVerbosity.Summarised ? null : message;
 
     private void EnsureListenerStarted()
     {
@@ -758,11 +774,12 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
     /// The message as the call's record shows it, which never fails the call: JSON through
     /// <see cref="JsonFormatter.ToDiagnosticString"/>, the same text <c>JsonFormatter.Default</c> writes except for a
     /// <c>google.protobuf.Any</c> whose type no registry holds, written as its type URL and bytes where
-    /// <c>JsonFormatter.Default</c> throws; and a short note in place of a message that cannot be written at all.
+    /// <c>JsonFormatter.Default</c> throws; and a short note in place of a message that cannot be written at all. It is
+    /// written only when a verbosity in <paramref name="drawnAt"/> shows it, as Detailed and Raw do and Summarised does not.
     /// </summary>
-    private string? SerializeMessage<T>(T message, GrpcTrackingVerbosity verbosity)
+    private string? SerializeMessage<T>(T message, GrpcTrackingVerbosity[] drawnAt)
     {
-        if (verbosity == GrpcTrackingVerbosity.Summarised) return null;
+        if (drawnAt.All(v => v == GrpcTrackingVerbosity.Summarised)) return null;
 
         try
         {
