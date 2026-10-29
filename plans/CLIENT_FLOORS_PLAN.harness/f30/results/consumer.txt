@@ -1,0 +1,6 @@
+## Kronikol.TUnit 5.27.7 (published), TUnit.Core 1.43.11
+constructed Kronikol.TabularAttributes.HeadInAttribute
+## Kronikol.TUnit 5.27.7 (published), TUnit.Core 1.53.0
+TypeLoadException: Method 'get_DeferEnumeration' in type 'Kronikol.TabularAttributes.HeadInAttribute' from assembly 'Kronikol.TUnit, Version=5.27.7.0, Culture=neutral, PublicKeyToken=null' does not have an implementation.
+## Kronikol.TUnit 5.27.7 (published), TUnit.Core 1.76.45
+TypeLoadException: Method 'get_DeferEnumeration' in type 'Kronikol.TabularAttributes.HeadInAttribute' from assembly 'Kronikol.TUnit, Version=5.27.7.0, Culture=neutral, PublicKeyToken=null' does not have an implementation.

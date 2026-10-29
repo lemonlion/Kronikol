@@ -4,7 +4,8 @@
 plan a fix for the underlying problem; audited the same day at 5.14.0 (`8d7d1e1d`), at the owner's ask to make it
 complete and accurate (section 11 lists what the audit found and changed). **Green-lit 2026-10-28** by the owner ("Can
 you implement the plan in full"), every question in section 10 at its recommendation; executing. **R1 released as
-5.22.1, R2a as 5.27.1, R2b as 5.27.3, R2c as 5.27.5, and F26, found by R2c, as 5.27.7** (section 11).
+5.22.1, R2a as 5.27.1, R2b as 5.27.3, R2c as 5.27.5, F26, found by R2c, as 5.27.7, and F30, found by R3a, as
+5.27.8** (section 11).
 
 **Issues:** [#205](https://github.com/lemonlion/Kronikol/issues/205), "BigQuery: the extension's floor,
 Google.Cloud.BigQuery.V2 3.12, runs ExecuteQuery through jobs.query, whose timestamps the emulator answers in seconds,
@@ -587,6 +588,7 @@ No Playwright fact: nothing in a report changes.
 | F26 | Every Oracle arrow names `oracle://localhost/unknown/<table>`: `SqlEndpoint.Host` reads an EZConnect data source (`127.0.0.1:21521/FREEPDB1`) as no host, and ODP.NET's `Database` is empty, so the database is `unknown`, on the floor and the newest alike (RUN, `results/r2c-oracle-{floor,newest}.txt`). The database is in history's call line, so its fix moves history's rule. | Kronikol | Fixed in 5.27.7, its own patch: `SqlEndpoint.Address` reads the host, port and service of an EZConnect string or a connect descriptor for the shared SQL tracker, Dapper and the EF Core interceptor, and history's rule moved to 10, each moved call keeping the address rules 6 to 9 recorded (`RequestResponseLog.RecordedBefore10`) |
 | F27 | The TcpTap test project pinned `StackExchange.Redis` 2.6.48 and references the Redis extension, so the Redis floor, 2.6.80, made its restore a downgrade NuGet refuses (NU1605): the TcpTap search's first probe failed to build (RUN, `floor/r2c-tcptap.txt`). | Kronikol | Fixed in R2c: the pin moves to 2.6.80; no other test project pins a floored client below its floor |
 | F28 | The audit column of `floor/otel_floor.py` and `floor/paired_floor.py` read only a warning that names its project in a closing bracket, and a restore warning names it first, so the EF Core search reported no advisory where each build had three, all from the test providers: `System.Security.Cryptography.Pkcs` 9.0.4 through the SQL Server provider and `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 through the Sqlite provider (RUN). The floors do not rest on that column: each graph was read on its own (`floor/r2c-advisory.sh`, and a restore of the one reference). | the harness | Fixed in R2c: the three search scripts, `floor_probe2.py` among them, read either form |
+| F30 | `Kronikol.TUnit`'s `HeadInAttribute` implemented TUnit's `IDataSourceAttribute` itself, and TUnit.Core 1.53.0 added `DeferEnumeration` to the interface, so on 1.53.0 and every later release a test with `[HeadIn]` failed before it ran: TUnit's generated test source threw `TypeLoadException` (RUN, `f30/results/`). R3a's TUnit search found it, its first probe, the newest release (1.76.45), failing to build the adapter. Nothing had run the adapter on a later TUnit.Core, as its test project took TUnit.Core only through it, and the wiki's TUnit page installs 1.53.0. | Kronikol | Fixed in 5.27.8, its own patch, ahead of R3a, whose TUnit search needs it: the attribute derives from TUnit's `AsyncUntypedDataSourceGeneratorAttribute`, which implements what TUnit adds; the TUnit suite runs on the newest 1.x and, with `-p:FloorRun=true`, on 1.43.11, and `TUnitInterfaceTests` holds that no adapter type implements a TUnit interface its base class does not |
 
 ## 9. Risks and assumptions
 
@@ -729,6 +731,22 @@ Each has a recommendation; none is legwork.
   skipped), the Oracle, Dapper, EF Core Relational (251, its servers in podman), SqlClient, Npgsql, MySqlConnector,
   Spanner and Sqlite suites, and the Release build of `release.slnf`, whose only advisories are the older ones 5.27.5
   listed.
+
+- **2026-10-29, F30 released as 5.27.8**, on 5.27.7 (`7d06fd92`). R3a's TUnit search found that the newest
+  TUnit.Core, 1.76.45, does not build the TUnit adapter: 1.53.0 added `DeferEnumeration` to `IDataSourceAttribute`,
+  which `HeadInAttribute` implemented itself. A consumer's build does not check a referenced type's interfaces, so on
+  1.53.0 and later a test with `[HeadIn]` built and then failed: the published 5.27.7 on 1.76.45 throws
+  `TypeLoadException` from TUnit's generated test source, and passes on 1.43.11 (RUN, `f30/results/`). The attribute
+  now derives from TUnit's `AsyncUntypedDataSourceGeneratorAttribute`, which 1.43.11 already has: it hands
+  `GetDataRowsAsync` to the protected `GenerateDataSourcesAsync` the attribute overrides, and from 1.53.0 implements
+  `DeferEnumeration` itself.
+
+  Run: the TUnit suite on 1.76.45, red in the five `HeadInAttribute` facts and the four methods that carry the
+  attribute (xUnit's discovery reads it), then green, 49 of 49, and on 1.43.11 with `-p:FloorRun=true`, 49 of 49;
+  `TUnitInterfaceTests` red on the old attribute; TUnit's own engine on a `[HeadIn]` test, through the fixed adapter on
+  1.43.11 and 1.76.45 and through the published 5.27.7 on 1.76.45 (`f30/`); then, on 5.27.7 with F30, the
+  LightBDD.TUnit suite (25), the three TUnit examples as CI runs them (12, 3 and 2), the core suite (11,569 passed, 2
+  skipped) and the Release build of `release.slnf`, whose only advisories are the older ones 5.27.5 listed.
 
 ---
 

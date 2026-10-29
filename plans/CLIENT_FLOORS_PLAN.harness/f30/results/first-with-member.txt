@@ -1,0 +1,6 @@
+# python -I floor/first_with_member.py TUnit.Core 1 P:TUnit.Core.IDataSourceAttribute.DeferEnumeration
+1.56.18 True
+1.54.0 True
+1.51.0 False
+1.53.0 True
+first naming P:TUnit.Core.IDataSourceAttribute.DeferEnumeration: 1.53.0

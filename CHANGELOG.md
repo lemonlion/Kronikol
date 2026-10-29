@@ -4,6 +4,40 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.27.8] - 2026-10-29
+
+The patch part moves (5.27.7 to 5.27.8): a fix to `Kronikol.TUnit`, with no new option and nothing new of
+Kronikol's own to call (`plans/CLIENT_FLOORS_PLAN.md` F30).
+
+### Fixed
+
+- **`[HeadIn]` runs on TUnit 1.53.0 and later.** TUnit.Core 1.53.0 added `DeferEnumeration` to `IDataSourceAttribute`,
+  which `Kronikol.TUnit`'s `HeadInAttribute` implemented itself, so on 1.53.0 and every later release, the newest
+  (1.76.45) included, a test with `[HeadIn]` failed before it ran: TUnit's generated test source threw
+  `TypeLoadException` ("Method 'get_DeferEnumeration' in type 'Kronikol.TabularAttributes.HeadInAttribute' ... does not
+  have an implementation"), and every test of its class failed with it. The project the wiki's TUnit page sets up takes
+  TUnit 1.53.0. The attribute now derives from TUnit's `AsyncUntypedDataSourceGeneratorAttribute`, which implements
+  what TUnit adds to the interface; its rows, `SkipIfEmpty` and the disposal of each `TabularOutputs<T>` are as before.
+  Behaviour change: `HeadInAttribute`'s base class is TUnit's `AsyncUntypedDataSourceGeneratorAttribute`, not
+  `Attribute`, so it carries that class's members, among them `GenerateAsync`.
+
+### Tests
+
+- `Kronikol.Tests.TUnit` runs on the newest TUnit.Core 1.x against the adapter built on the 1.43.11 it asks for, and on
+  1.43.11 itself with `-p:FloorRun=true`, which CI's floor run now takes as well; nothing ran the adapter on a later
+  release before. On the newest, the five `HeadInAttribute` facts were red with the `TypeLoadException`.
+  `TUnitInterfaceTests` holds that no adapter type implements a TUnit interface its base class does not, red on the old
+  attribute.
+
+### Documentation
+
+- The wiki's TUnit page says which TUnit releases the adapter is tested on and how the failure read, under
+  Troubleshooting as well, and Tabular Attributes says which release `[HeadIn]` needs on TUnit 1.53.0 and later.
+
+Checks: the TUnit suite on the newest TUnit.Core 1.x and on 1.43.11 with `-p:FloorRun=true` (49 of 49 each), the
+LightBDD.TUnit suite (25), the three TUnit examples as CI runs them (12, 3 and 2), the core suite (11,569 passed, 2
+skipped), and the Release build of `release.slnf`, whose only advisories are the older ones 5.27.5 listed.
+
 ## [5.27.7] - 2026-10-29
 
 The patch part moves (5.27.6 to 5.27.7): a tracking fix, with no new option and no new public member

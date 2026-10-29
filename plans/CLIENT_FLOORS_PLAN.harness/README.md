@@ -168,6 +168,20 @@ together.
 - `floor/r2c-suites.sh`: each R2c suite on the newest and on the floor, one line a run with what NuGet audit reported
   (`floor/r2c-suites.txt`); the EF Core and TcpTap suites run through it with `DOCKER_HOST` set to the podman API.
 
+## f30/: `[HeadIn]` on a later TUnit.Core, found by R3a
+
+Run from the session scratchpad, so `engine/f30run.csproj` names the F30 worktree's adapter by its absolute path.
+
+- `consumer/`: a program that makes a `HeadInAttribute` from the published Kronikol.TUnit 5.27.7 on the TUnit.Core
+  given (`-p:TUnitCore=1.53.0`); `results/consumer.txt` has it on 1.43.11, 1.53.0 and 1.76.45, the last two the
+  `TypeLoadException` of F30.
+- `members/`: the members of `IDataSourceAttribute` and of TUnit's two data source generator base classes on the
+  TUnit.Core given (`results/members.txt`, the same three releases): 1.53.0 adds `DeferEnumeration` to the interface,
+  and the base class implements it. `results/first-with-member.txt` is `floor/first_with_member.py` finding 1.53.0.
+- `engine/`: a TUnit project with one `[HeadIn]` test, run by TUnit's own engine on the TUnit release given
+  (`-p:TUnitVersion=`), through the adapter of the F30 worktree, or the published one with `-p:Published=5.27.7`
+  (`results/engine.txt`).
+
 ## prototype/: R1, applied and reverted
 
 `r1.patch` is R1's steps 1 to 4 (the pin, the test project's direct reference under `$(FloorRun)`, and

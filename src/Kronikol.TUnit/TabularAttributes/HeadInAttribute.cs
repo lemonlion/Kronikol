@@ -9,16 +9,19 @@ namespace Kronikol.TabularAttributes;
 /// to provide <see cref="TabularInputs{T}"/> and <see cref="TabularOutputs{T}"/>
 /// as method parameters. Use with <c>[Test]</c>.
 /// </summary>
+/// <remarks>
+/// It takes <see cref="IDataSourceAttribute"/> through TUnit's <see cref="AsyncUntypedDataSourceGeneratorAttribute"/>,
+/// which implements what TUnit adds to the interface, so it loads on every later 1.x. Before 5.27.8 it implemented
+/// the interface itself and failed to load on TUnit.Core 1.53.0 and later, which added <c>DeferEnumeration</c>.
+/// </remarks>
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-public class HeadInAttribute : Attribute, IDataSourceAttribute
+public class HeadInAttribute : AsyncUntypedDataSourceGeneratorAttribute
 {
     private readonly string[] _columnNames;
 
     public HeadInAttribute(params string[] columnNames) => _columnNames = columnNames;
 
-    public bool SkipIfEmpty { get; set; }
-
-    public async IAsyncEnumerable<Func<Task<object?[]?>>> GetDataRowsAsync(
+    protected override async IAsyncEnumerable<Func<Task<object?[]?>>> GenerateDataSourcesAsync(
         DataGeneratorMetadata dataGeneratorMetadata)
     {
         var testInfo = dataGeneratorMetadata.TestInformation!;

@@ -1,0 +1,50 @@
+## TUnit.Core 1.43.11
+TUnit.Core.IDataSourceAttribute: base , interfaces 
+  abstract IAsyncEnumerable`1 GetDataRowsAsync(DataGeneratorMetadata)
+  abstract Boolean get_SkipIfEmpty()
+  abstract Void set_SkipIfEmpty(Boolean)
+TUnit.Core.AsyncUntypedDataSourceGeneratorAttribute: base Attribute, interfaces IAsyncUntypedDataSourceGeneratorAttribute, IDataSourceAttribute
+  virtual Boolean get_SkipIfEmpty()
+  virtual Void set_SkipIfEmpty(Boolean)
+  abstract IAsyncEnumerable`1 GenerateDataSourcesAsync(DataGeneratorMetadata)
+  IAsyncEnumerable`1 GenerateAsync(DataGeneratorMetadata)
+  virtual IAsyncEnumerable`1 GetDataRowsAsync(DataGeneratorMetadata)
+TUnit.Core.UntypedDataSourceGeneratorAttribute: base AsyncUntypedDataSourceGeneratorAttribute, interfaces IAsyncUntypedDataSourceGeneratorAttribute, IDataSourceAttribute
+  abstract IEnumerable`1 GenerateDataSources(DataGeneratorMetadata)
+  virtual IAsyncEnumerable`1 GenerateDataSourcesAsync(DataGeneratorMetadata)
+## TUnit.Core 1.53.0
+TUnit.Core.IDataSourceAttribute: base , interfaces 
+  abstract IAsyncEnumerable`1 GetDataRowsAsync(DataGeneratorMetadata)
+  abstract Boolean get_SkipIfEmpty()
+  abstract Void set_SkipIfEmpty(Boolean)
+  abstract Boolean get_DeferEnumeration()
+  abstract Void set_DeferEnumeration(Boolean)
+TUnit.Core.AsyncUntypedDataSourceGeneratorAttribute: base Attribute, interfaces IAsyncUntypedDataSourceGeneratorAttribute, IDataSourceAttribute
+  virtual Boolean get_SkipIfEmpty()
+  virtual Void set_SkipIfEmpty(Boolean)
+  virtual Boolean get_DeferEnumeration()
+  virtual Void set_DeferEnumeration(Boolean)
+  abstract IAsyncEnumerable`1 GenerateDataSourcesAsync(DataGeneratorMetadata)
+  IAsyncEnumerable`1 GenerateAsync(DataGeneratorMetadata)
+  virtual IAsyncEnumerable`1 GetDataRowsAsync(DataGeneratorMetadata)
+TUnit.Core.UntypedDataSourceGeneratorAttribute: base AsyncUntypedDataSourceGeneratorAttribute, interfaces IAsyncUntypedDataSourceGeneratorAttribute, IDataSourceAttribute
+  abstract IEnumerable`1 GenerateDataSources(DataGeneratorMetadata)
+  virtual IAsyncEnumerable`1 GenerateDataSourcesAsync(DataGeneratorMetadata)
+## TUnit.Core 1.76.45
+TUnit.Core.IDataSourceAttribute: base , interfaces 
+  abstract IAsyncEnumerable`1 GetDataRowsAsync(DataGeneratorMetadata)
+  abstract Boolean get_SkipIfEmpty()
+  abstract Void set_SkipIfEmpty(Boolean)
+  abstract Boolean get_DeferEnumeration()
+  abstract Void set_DeferEnumeration(Boolean)
+TUnit.Core.AsyncUntypedDataSourceGeneratorAttribute: base Attribute, interfaces IAsyncUntypedDataSourceGeneratorAttribute, IDataSourceAttribute
+  virtual Boolean get_SkipIfEmpty()
+  virtual Void set_SkipIfEmpty(Boolean)
+  virtual Boolean get_DeferEnumeration()
+  virtual Void set_DeferEnumeration(Boolean)
+  abstract IAsyncEnumerable`1 GenerateDataSourcesAsync(DataGeneratorMetadata)
+  IAsyncEnumerable`1 GenerateAsync(DataGeneratorMetadata)
+  virtual IAsyncEnumerable`1 GetDataRowsAsync(DataGeneratorMetadata)
+TUnit.Core.UntypedDataSourceGeneratorAttribute: base AsyncUntypedDataSourceGeneratorAttribute, interfaces IAsyncUntypedDataSourceGeneratorAttribute, IDataSourceAttribute
+  abstract IEnumerable`1 GenerateDataSources(DataGeneratorMetadata)
+  virtual IAsyncEnumerable`1 GenerateDataSourcesAsync(DataGeneratorMetadata)

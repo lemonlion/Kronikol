@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- A TUnit project using [HeadIn], run by TUnit's own engine: the fixed adapter from the F30 worktree, or the
+       published package (-p:Published=5.27.7), on the TUnit release given (-p:TUnitVersion=...). -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <TUnitVersion Condition="'$(TUnitVersion)' == ''">1.43.11</TUnitVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="TUnit" Version="$(TUnitVersion)" />
+    <PackageReference Include="Kronikol.TUnit" Version="$(Published)" Condition="'$(Published)' != ''" />
+    <ProjectReference Include="C:\Code\Kronikol-f30\src\Kronikol.TUnit\Kronikol.TUnit.csproj" Condition="'$(Published)' == ''" />
+  </ItemGroup>
+</Project>
