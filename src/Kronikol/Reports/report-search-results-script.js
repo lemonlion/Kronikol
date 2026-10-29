@@ -222,15 +222,16 @@
         renderHead(r, results);
         renderPhoneRow(r);
         renderWarning();
-        listEl.textContent = '';
+        var into = el('div');
         var shownList = features ? byFeature(sorted(results)) : sorted(results);
         var page = Math.max(1, parseInt(state.p, 10) || 1), last = Math.max(1, Math.ceil(shownList.length / PER_PAGE));
         if (page > last) page = last;
-        if (!shownList.length) listEl.appendChild(nothingFound(r, features));
+        if (!shownList.length) into.appendChild(nothingFound(r, features));
         var onPage = shownList.slice((page - 1) * PER_PAGE, page * PER_PAGE);
         onPage.forEach(function (x) {
-            listEl.appendChild(features ? featureCard(x, r) : resultCard(x, r));
+            into.appendChild(features ? featureCard(x, r) : resultCard(x, r));
         });
+        place(listEl, into, listKey);
         if (!features) askDeepLines(onPage);
         renderPages(page, last);
         progress.hidden = !deepWorking;
@@ -268,20 +269,24 @@
         }
         return row;
     }
+    // The sidebar is drawn into a part of its own and put in place only where something in it changed: a row drawn again
+    // as it was is a new element, which loses the pointer's hover and a keyboard's focus, and every run, sort, page and word
+    // of the deep search draws the tab (5.27.2: it was built anew each time, three to five times a click). Each row's
+    // control does what its markup says, so a sidebar whose markup is the same does the same.
     function renderSide(r) {
-        side.textContent = '';
+        var into = el('div');
         var all = r.all, results = placeFilter(all);
         // SHOW: the two kinds of thing a result is (G26)
-        side.appendChild(sideHeading('Show'));
+        into.appendChild(sideHeading('Show'));
         var types = el('ul', 'search-side-list');
         var featureCount = byFeature(results).length;
         types.appendChild(sideRow({ name: 'Scenarios', icon: 'scenario', count: results.length, pill: true, current: state.type !== 'features',
             title: 'Every scenario the search matched', act: function () { setState({ type: '', p: '' }); focusCount(); } }));
         types.appendChild(sideRow({ name: 'Features', icon: 'feature', count: featureCount, pill: true, current: state.type === 'features',
             title: 'The features holding a result', act: function () { setState({ type: 'features', p: '' }); focusCount(); } }));
-        side.appendChild(types);
+        into.appendChild(types);
         // MATCHED IN: where each result matched, a result matched in two places counted in both (G27)
-        side.appendChild(sideHeading('Matched in'));
+        into.appendChild(sideHeading('Matched in'));
         var places = el('ul', 'search-side-list');
         PLACES.forEach(function (p) {
             var n = all.filter(function (x) { return x.places[p[0]]; }).length, on = state.in === p[0];
@@ -289,13 +294,13 @@
                 title: on ? 'Show every result again' : 'Only the results that matched in their ' + p[1].toLowerCase(),
                 act: function () { setState({ in: on ? '' : p[0], p: '' }); focusCount(); } }));
         });
-        side.appendChild(places);
+        into.appendChild(places);
         // STATUS, TAGS, DEPENDENCIES: the search narrowed, each counted over its results (Q9)
-        facetStatus(r);
-        facetNames(r, 'tag', 'Tags', 'More tags…');
-        facetNames(r, 'dep', 'Dependencies', 'More dependencies…');
+        facetStatus(r, into);
+        facetNames(r, into, 'tag', 'Tags', 'More tags…');
+        facetNames(r, into, 'dep', 'Dependencies', 'More dependencies…');
         // ADVANCED: a key written into the search, the builder open at its values (G29)
-        side.appendChild(sideHeading('Advanced'));
+        into.appendChild(sideHeading('Advanced'));
         var adv = el('ul', 'search-side-list');
         [['Feature', 'feature:'], ['Tag', 'tag:'], ['Dependency', 'dep:'], ['Status', 'status:'], ['Duration', 'duration:'], ['Happy paths', 'is:happy']].forEach(function (a) {
             adv.appendChild(sideRow({ name: a[0], icon: 'plus', title: a[1] === 'is:happy' ? 'Only the happy paths' : 'Write ' + a[1] + ' into the search',
@@ -306,8 +311,38 @@
                 } }));
         });
         adv.appendChild(sideRow({ name: 'Search syntax tips', icon: 'info', title: 'How to write a search', act: function () { if (window.kronikol_search) window.kronikol_search.open({ tips: true }); } }));
-        side.appendChild(adv);
+        into.appendChild(adv);
+        place(side, into, sideKey);
     }
+    // What a drawing built for a part of the tab put in the part's place, unless it is what the part holds already: the old
+    // nodes keep the pointer's hover and the keyboard's focus. A tip the reader opened is opened in the new ones first, and
+    // where they differ, the focus goes to the new node standing for the one it was on, the one keyOf names alike (5.27.2:
+    // each batch and answer of the deep search built the list, the pages and the sidebar anew, and the focus fell to the
+    // page, an open tip of "nothing found" shut, and a link under the pointer lost its hover)
+    function place(box, into, keyOf) {
+        var open = $$('details[open] > summary', box).map(function (s) { return s.textContent; });
+        $$('details > summary', into).forEach(function (s) { if (open.indexOf(s.textContent) >= 0) s.parentNode.open = true; });
+        if (into.innerHTML === box.innerHTML) return;
+        var a = doc.activeElement, key = a && a !== box && box.contains(a) ? keyOf(a) : null;
+        box.textContent = '';
+        while (into.firstChild) box.appendChild(into.firstChild);
+        if (key === null) return;
+        var like = $$('*', box).filter(function (n) { return keyOf(n) === key; })[0];
+        if (like) like.focus({ preventScroll: true });
+    }
+    // a row's control by its section, its name and its kind; a result's by the result, its kind and its words (5.27.2: by
+    // its place among its kind, a line the deep search put before it, or a place it added to "nothing found", took the
+    // focus to the next one); a page's button by its words. A control whose words changed is not found, and the focus
+    // stays on the page
+    function sideKey(n) {
+        var row = n.closest('.search-side-row'), h = row && row.parentNode.previousElementSibling;
+        return row ? (h ? h.textContent : '') + '\n' + $('.search-side-name', row).textContent + '\n' + n.className : '';
+    }
+    function listKey(n) {
+        var card = n.closest('.search-result');
+        return card ? card.kronKey + '\n' + n.className + '\n' + n.textContent : '';
+    }
+    function pageKey(n) { return n.className + '\n' + n.textContent; }
     // ---- STATUS, TAGS and DEPENDENCIES: the search narrowed, as GitHub's sidebar narrows it ----
 
     // A row writes its qualifier into the search's query and a second click takes it out, so a row is on exactly while
@@ -428,7 +463,7 @@
         else { go(); state = keys; render(); }
         focusCount();
     }
-    function facetStatus(r) {
+    function facetStatus(r, into) {
         var q = applied(), counts = {};
         r.all.forEach(function (x) { var s = statusOf(x.item); counts[s] = (counts[s] || 0) + 1; });
         var rows = el('ul', 'search-side-list');
@@ -439,10 +474,10 @@
                 title: st === 'in' ? 'Take status:' + low + ' out of the search' : st === 'out' ? 'Stop leaving the ' + low + ' scenarios out of the search' : 'Narrow the search to the ' + low + ' scenarios (status:' + low + ')',
                 act: function () { narrowTo('status', s, st === 'off' ? 'in' : 'off'); } }));
         });
-        if (rows.children.length) { side.appendChild(sideHeading('Status')); side.appendChild(rows); }
+        if (rows.children.length) { into.appendChild(sideHeading('Status')); into.appendChild(rows); }
     }
     // the tags or the dependencies the results carry, most first, and any the query names besides
-    function facetNames(r, key, title, moreText) {
+    function facetNames(r, into, key, title, moreText) {
         var q = applied(), counts = {};
         r.all.forEach(function (x) {
             if (key === 'tag') tag_names(x.item.el).forEach(function (t) { counts[t] = (counts[t] || 0) + 1; });
@@ -462,7 +497,7 @@
         var rows = names.map(function (name) { return { name: name, n: counts[name] || 0, st: rowState(q, key, name) }; });
         if (!rows.length) return;
         rows.sort(function (a, b) { return (b.st !== 'off') - (a.st !== 'off') || b.n - a.n || (a.name < b.name ? -1 : a.name > b.name ? 1 : 0); });
-        side.appendChild(sideHeading(title));
+        into.appendChild(sideHeading(title));
         var list = el('ul', 'search-side-list');
         var top = moreOpen[key] ? rows : rows.slice(0, 10);
         top.forEach(function (x) {
@@ -479,41 +514,57 @@
             list.appendChild(sideRow({ name: moreOpen[key] ? 'Fewer' : moreText, icon: 'plus', title: moreOpen[key] ? 'Show the ten most frequent' : 'Show every one',
                 act: function () { moreOpen[key] = !moreOpen[key]; render(); } }));
         }
-        side.appendChild(list);
+        into.appendChild(list);
     }
 
+    var phoneSwitch = null, phoneMenu = null, phoneItems = [];
     function renderPhoneRow(r) {
-        phoneRow.textContent = '';
         // the kebab sits in the head beside the sort, and on a phone, where the sort goes, beside the type switcher
-        if (!phone.matches) { if (kebabWrap && kebabWrap.parentNode !== tools) tools.appendChild(kebabWrap); return; }
-        // a type switcher in place of the sidebar, GitHub's narrow page (4.5.9); the builder narrows the search there
+        if (!phone.matches) {
+            // the switcher kept for a phone's page again comes back shut (5.27.2: it came back as it was left)
+            if (phoneMenu) { phoneMenu.hidden = true; phoneSwitch.setAttribute('aria-expanded', 'false'); }
+            phoneRow.textContent = '';
+            if (kebabWrap && kebabWrap.parentNode !== tools) tools.appendChild(kebabWrap);
+            return;
+        }
+        // a type switcher in place of the sidebar, GitHub's narrow page (4.5.9); the builder narrows the search there. It is
+        // built once and its words set at each drawing, so its menu stays open, and the focus on it, as the deep search's
+        // batches and answer draw the tab (5.27.2: it was built anew, and shut)
+        if (!phoneSwitch) buildPhoneRow();
         var current = state.type === 'features' ? 'Features' : state.in ? PLACES.filter(function (p) { return p[0] === state.in; })[0][1] : 'Scenarios';
-        var n = state.type === 'features' ? byFeature(placeFilter(r.all)).length : placeFilter(r.all).length;
-        var b = el('button', 'search-type-switch', current + ' ' + n);
+        var counts = [placeFilter(r.all).length, byFeature(placeFilter(r.all)).length].concat(PLACES.map(function (p) {
+            return r.all.filter(function (x) { return x.places[p[0]]; }).length;
+        }));
+        phoneSwitch.textContent = current + ' ' + (state.type === 'features' ? counts[1] : counts[0]);
+        phoneItems.forEach(function (it, k) { it.textContent = it.kronLabel + ' ' + counts[k]; });
+        if (phoneSwitch.parentNode !== phoneRow) { phoneRow.textContent = ''; phoneRow.appendChild(phoneSwitch); phoneRow.appendChild(phoneMenu); }
+        if (kebabWrap && kebabWrap.parentNode !== phoneRow) phoneRow.appendChild(kebabWrap);
+    }
+    function buildPhoneRow() {
+        var b = phoneSwitch = el('button', 'search-type-switch');
         b.type = 'button';
         b.setAttribute('aria-haspopup', 'menu');
         b.setAttribute('aria-expanded', 'false');
         b.title = 'Show scenarios or features, or where they matched';
-        var menu = el('ul', 'search-menu');
+        var menu = phoneMenu = el('ul', 'search-menu');
         menu.setAttribute('role', 'menu');
         menu.hidden = true;
-        function item(label, nn, act) {
-            var li = el('li'), it = el('button', 'search-menu-item', label + ' ' + nn);
+        function item(label, act) {
+            var li = el('li'), it = el('button', 'search-menu-item');
             it.type = 'button';
+            it.kronLabel = label;
             it.setAttribute('role', 'menuitem');
-            it.addEventListener('click', function () { menu.hidden = true; act(); });
+            it.addEventListener('click', function () { menu.hidden = true; b.setAttribute('aria-expanded', 'false'); act(); });
             li.appendChild(it);
             menu.appendChild(li);
+            phoneItems.push(it);
         }
-        item('Scenarios', placeFilter(r.all).length, function () { setState({ type: '', in: '', p: '' }); focusCount(); });
-        item('Features', byFeature(placeFilter(r.all)).length, function () { setState({ type: 'features', p: '' }); focusCount(); });
+        item('Scenarios', function () { setState({ type: '', in: '', p: '' }); focusCount(); });
+        item('Features', function () { setState({ type: 'features', p: '' }); focusCount(); });
         PLACES.forEach(function (p) {
-            item(p[1], r.all.filter(function (x) { return x.places[p[0]]; }).length, function () { setState({ type: '', in: p[0], p: '' }); focusCount(); });
+            item(p[1], function () { setState({ type: '', in: p[0], p: '' }); focusCount(); });
         });
         b.addEventListener('click', function () { menu.hidden = !menu.hidden; b.setAttribute('aria-expanded', String(!menu.hidden)); });
-        phoneRow.appendChild(b);
-        phoneRow.appendChild(menu);
-        if (kebabWrap) phoneRow.appendChild(kebabWrap);
     }
 
     function renderHead(r, results) {
@@ -618,6 +669,7 @@
     function resultCard(x, r) {
         var i = x.item, art = el('article', 'search-result');
         art.tabIndex = -1;
+        art.kronKey = anchorOf(i);
         var top = el('div', 'search-result-head');
         var st = statusOf(i);
         top.appendChild(el('span', 'search-result-glyph status-' + (st || '').toLowerCase(), GLYPH[st] || '•'));
@@ -693,18 +745,20 @@
         return out;
     }
 
-    // ---- the deep search's lines (4.6.2): asked for the results on the page shown, kept while the search stays ----
+    // ---- the deep search's lines (4.6.2): asked for the results on the page shown, kept while the search's words stay ----
 
+    // The lines are the words' the deep search read, which a row of the sidebar leaves as they were (5.27.2: they were kept
+    // for the query, so a click on a row asked for them again, and drew each result without them until they came)
     var deepLines = new Map(), deepAsked = new Set(), deepFor = null;
     function askDeepLines(list) {
-        var q = applied();
-        if (q !== deepFor) { deepFor = q; deepLines = new Map(); deepAsked = new Set(); }
+        var words = typeof window._kronDeepWords === 'function' ? window._kronDeepWords() : applied();
+        if (words !== deepFor) { deepFor = words; deepLines = new Map(); deepAsked = new Set(); }
         if (typeof window._kronDeepSnippets !== 'function') return;
         var want = [];
         list.forEach(function (x) { if (!deepAsked.has(x.item.el)) { deepAsked.add(x.item.el); want.push(x.order); } });
         if (!want.length) return;
         window._kronDeepSnippets(want, 20).then(function (answers) {
-            if (!answers || q !== deepFor) return;
+            if (!answers || words !== deepFor) return;
             var any = false;
             answers.forEach(function (a) { if (a.el && a.lines.length) { deepLines.set(a.el, a); any = true; } });
             if (any && showing()) queue();
@@ -837,6 +891,7 @@
     function featureCard(g, r) {
         var art = el('article', 'search-result search-feature');
         art.tabIndex = -1;
+        art.kronKey = 'f:' + featureOf(g.results[0].item);
         var top = el('div', 'search-result-head');
         var first = g.results[0].item;
         var name = featureOf(first);
@@ -875,6 +930,7 @@
 
     function nothingFound(r, features) {
         var box = el('div', 'search-result search-nothing');
+        box.kronKey = 'nothing';
         box.innerHTML = '<svg class="search-nothing-art" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><circle cx="27" cy="27" r="17"/><path d="M40 40l14 14"/></svg>';
         var what = features ? 'features' : state.in ? PLACES.filter(function (p) { return p[0] === state.in; })[0][1].toLowerCase() : 'scenarios';
         box.appendChild(el('p', 'search-nothing-title', 'Your search did not match any ' + what));
@@ -913,9 +969,12 @@
     // ---- pages (4.5.6) ----
 
     function renderPages(page, last) {
-        pages.textContent = '';
+        var into = el('div');
         pages.hidden = last <= 1;
-        if (last <= 1) return;
+        if (last > 1) drawPages(into, page, last);
+        place(pages, into, pageKey);
+    }
+    function drawPages(pages, page, last) {
         function btn(label, p, o) {
             var b = el('button', 'search-page' + (o && o.cls ? ' ' + o.cls : ''), label);
             b.type = 'button';

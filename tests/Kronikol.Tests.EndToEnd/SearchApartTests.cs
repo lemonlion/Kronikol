@@ -604,4 +604,464 @@ public class SearchApartTests : PlaywrightTestBase
         Assert.InRange(m[0], -1, 1);
         Assert.InRange(m[1], 4, 10);
     }
+
+    // 5.27.2: a row's click leaves the search's words as they were, so what the deep search found for them stays found
+    // while the search runs again. Until then every run read the words afresh: the instant pass's flags went on, every
+    // scenario only the deep search finds dropped out until it answered again, and the tab drew it in between, so a click
+    // on a Dependencies row emptied the sidebar (no results, no Status, no Tags) and filled it again (the owner,
+    // 2026-10-28: "everything in that panel flickers"). The fixture's diagrams alone hold "insert", which only the deep
+    // search reads
+    private const string AllHeadings = "Show, Matched in, Status, Tags, Dependencies, Advanced";
+
+    // the values the Search tab's count and the sidebar's headings take from now on, starting from the ones they have
+    private Task WatchTabAsync() => Page.EvaluateAsync("""
+        () => {
+            const n = document.querySelector('#tab-search .tab-n'), side = document.querySelector('.search-sidebar');
+            const seen = window.__seen = { counts: [], headings: [] };
+            const note = (list, v) => { if (list[list.length - 1] !== v) list.push(v); };
+            const look = () => {
+                note(seen.counts, n.textContent);
+                note(seen.headings, Array.from(side.querySelectorAll('.search-side-heading')).map(h => h.textContent).join(', '));
+            };
+            look();
+            new MutationObserver(look).observe(n, { childList: true, characterData: true, subtree: true });
+            new MutationObserver(look).observe(side, { childList: true, characterData: true, subtree: true });
+        }
+        """);
+
+    private Task<string[]> SeenAsync(string what) => Page.EvaluateAsync<string[]>($"() => window.__seen.{what}");
+
+    // A row of each kind, and the results it narrows the search to: of the twelve, the six that call Payment Service, the
+    // six tagged smoke, and all twelve, which passed
+    [Theory]
+    [InlineData("Payment Service", "6")]
+    [InlineData("smoke", "6")]
+    [InlineData("Passed", "12")]
+    public async Task A_sidebar_row_s_click_keeps_what_the_deep_search_found(string row, string narrowed)
+    {
+        await OpenAsync($"Apart_DeepKept_{row.Replace(' ', '_')}.html", both: true);
+        await FillSearchBar("insert", toSearchTab: true);
+        await Expect(Count).ToHaveTextAsync("12");
+        await SidebarSettledAsync();
+        string[] Path(string from, string to) => from == to ? [from] : [from, to];
+
+        await WatchTabAsync();
+        await Row(row).ClickAsync();
+        await Expect(Row(row)).ToHaveAttributeAsync("aria-pressed", "true");
+        await Expect(Count).ToHaveTextAsync(narrowed);
+        await SidebarSettledAsync();
+        Assert.Equal(Path("12", narrowed), await SeenAsync("counts"));
+        Assert.Equal([AllHeadings], await SeenAsync("headings"));
+
+        await WatchTabAsync();
+        await Row(row).ClickAsync();
+        await Expect(Row(row)).ToHaveAttributeAsync("aria-pressed", "false");
+        await Expect(Count).ToHaveTextAsync("12");
+        await SidebarSettledAsync();
+        Assert.Equal(Path(narrowed, "12"), await SeenAsync("counts"));
+        Assert.Equal([AllHeadings], await SeenAsync("headings"));
+    }
+
+    // 5.27.2: a tag's Exclude (-tag:) keeps what the deep search found too
+    [Fact]
+    public async Task A_tag_s_Exclude_keeps_what_the_deep_search_found()
+    {
+        await OpenAsync("Apart_DeepKeptExclude.html", both: true);
+        await FillSearchBar("insert", toSearchTab: true);
+        await Expect(Count).ToHaveTextAsync("12");
+        await SidebarSettledAsync();
+        await Row("smoke").HoverAsync();
+
+        await WatchTabAsync();
+        await SideRow("smoke").Locator(".search-side-exclude").ClickAsync();
+
+        await Expect(Query).ToHaveTextAsync("insert -tag:smoke");
+        await Expect(Count).ToHaveTextAsync("6");
+        await SidebarSettledAsync();
+        Assert.Equal(["12", "6"], await SeenAsync("counts"));
+        // the six left are the ones without the tag, not the six with it
+        await Expect(Row("smoke").Locator(".search-side-count")).ToHaveTextAsync("0");
+    }
+
+    // 5.27.2: Back from a row's click puts the search back with the same words, and what the deep search found stays found
+    [Fact]
+    public async Task Back_from_a_row_s_click_keeps_what_the_deep_search_found()
+    {
+        await OpenAsync("Apart_DeepKeptBack.html", both: true);
+        await FillSearchBar("insert", toSearchTab: true);
+        await Expect(Count).ToHaveTextAsync("12");
+        await Row("Payment Service").ClickAsync();
+        await Expect(Count).ToHaveTextAsync("6");
+        await SidebarSettledAsync();
+
+        await WatchTabAsync();
+        await Page.GoBackReportAsync();
+
+        await Expect(Query).ToHaveTextAsync("insert");
+        await Expect(Count).ToHaveTextAsync("12");
+        await SidebarSettledAsync();
+        Assert.Equal(["6", "12"], await SeenAsync("counts"));
+        Assert.Equal([AllHeadings], await SeenAsync("headings"));
+    }
+
+    // A hundred and twenty scenarios in five features, each with an INSERT in its diagram, which only the deep search reads.
+    // The first, second and fifth features' call Payment Service too, the fourth's failed, and each feature's take longer
+    // than the one before, and the third feature's are tagged Clickhouse, the name of the dependency every one of them calls.
+    // The deep search's read of "insert" sends its first hundred (four features, and four of the fifth) as a batch
+    private string GenerateMany(string fileName)
+    {
+        var diagrams = new List<DefaultDiagramsFetcher.DiagramAsCode>();
+        var features = Enumerable.Range(1, 5).Select(f => new Feature
+        {
+            DisplayName = $"Feature {f}",
+            Scenarios = Enumerable.Range(1, 24).Select(i =>
+            {
+                var id = $"f{f}s{i}";
+                diagrams.Add(new DefaultDiagramsFetcher.DiagramAsCode(id, "", f is 1 or 2 or 5 ? PaymentAndStoreSource : StoreSource));
+                return new Scenario
+                {
+                    Id = id, DisplayName = $"Scenario {f}.{i:00}", Result = f == 4 ? ExecutionResult.Failed : ExecutionResult.Passed,
+                    ErrorMessage = f == 4 ? "boom" : null, Duration = TimeSpan.FromMilliseconds(100 * f + i), Tags = f == 3 ? ["Clickhouse"] : null
+                };
+            }).ToArray()
+        }).ToArray();
+        var path = ReportGenerator.GenerateHtmlReport(diagrams.ToArray(), features, DateTime.UtcNow, DateTime.UtcNow, null, Path.Combine(TempDir, fileName), "Bakery", true,
+            diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
+        File.Copy(path, Path.Combine(OutputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
+    }
+
+    // The deep search's worker with the reads the search hands it counted (__reads), and, once __hold is set, its answers
+    // to them held until __release(): the page stands where a read has sent its batch and is still reading
+    private const string HoldTheDeepAnswer = """
+        (() => {
+            const Real = window.Worker;
+            window.__reads = 0;
+            window.__hold = false;
+            window.__held = [];
+            window.Worker = function (url, options) {
+                const w = new Real(url, options), post = w.postMessage.bind(w);
+                let own = null, search = false;
+                w.postMessage = function (m) {
+                    if (m && m.type === 'init' && 'indexB64' in m) search = true;
+                    if (search && m && m.type === 'query' && m.ch === 's') window.__reads++;
+                    return post.apply(null, arguments);
+                };
+                w.addEventListener('message', e => {
+                    const answer = search && e.data && e.data.type === 'result' && e.data.ch === 's' && e.data.done;
+                    if (answer && window.__hold) window.__held.push(() => own && own.call(w, e));
+                    else if (own) own.call(w, e);
+                });
+                Object.defineProperty(w, 'onmessage', { get: () => own, set: f => { own = f; } });
+                return w;
+            };
+            window.__release = () => { const held = window.__held; window.__held = []; held.forEach(f => f()); };
+        })();
+        """;
+
+    // 5.27.2: a row's click while the deep search still reads the words keeps what the read has found, and the read goes
+    // on: the search reads them once, what the read brings after joins after the results on the page, as a new search's
+    // deep results do (4.5.7), and its answer lands on the search as it now stands. Until then the read began again, and
+    // what it had found dropped out until it answered. The search before it, read to its end, lends it nothing. Payment
+    // Service: 52 of the first hundred, 72 in all. Failed: the fourth feature's 24, all of them in the first hundred
+    [Theory]
+    [InlineData("Payment Service", "52", "72", "Scenario 5.04")]
+    [InlineData("Failed", "24", "24", "Scenario 4.24")]
+    public async Task A_row_s_click_while_the_deep_search_reads_keeps_what_it_found_and_lets_it_go_on(string row, string found, string all, string first)
+    {
+        await Page.AddInitScriptAsync(HoldTheDeepAnswer);
+        await Page.SetViewportSizeAsync(1400, 800);
+        await Page.GotoReportAsync(GenerateMany($"Apart_DeepRunning_{row.Replace(' ', '_')}.html"));
+        await Page.Locator("details.feature").First.WaitForAsync(new() { State = WaitForSelectorState.Attached });
+        await FillSearchBar("post", toSearchTab: true);
+        await Expect(Count).ToHaveTextAsync("72");
+        await SidebarSettledAsync();
+        await Page.EvaluateAsync("() => { window.__hold = true; }");
+        await FillSearchBar("insert", toSearchTab: true);
+        await Expect(Count).ToHaveTextAsync("100");
+        await Page.WaitForFunctionAsync("() => window.__held.length === 1", null, new() { PollingInterval = 200 });
+        await Page.Locator("#panel-search .search-sort-select").SelectOptionAsync("duration:desc");
+
+        await WatchTabAsync();
+        await Row(row).ClickAsync();
+
+        await Expect(Count).ToHaveTextAsync(found);
+        Assert.Equal(["100", found], await SeenAsync("counts"));
+        Assert.Equal(2, await Page.EvaluateAsync<int>("() => window.__reads"));
+        Assert.Equal("working", await Page.EvaluateAsync<string>("() => window.__kronikolSearch.deep"));
+
+        await Page.EvaluateAsync("() => window.__release()");
+
+        await Page.WaitForFunctionAsync("() => window.__kronikolSearch.deep === 'done'", null, new() { PollingInterval = 200 });
+        await Expect(Count).ToHaveTextAsync(all);
+        await Expect(Page.Locator("#panel-search .search-result-title").First).ToHaveTextAsync(first);
+        Assert.Equal(2, await Page.EvaluateAsync<int>("() => window.__reads"));
+    }
+
+    // 5.27.2: words taken out of the search and put back are read again. A query of qualifiers alone has no words for the
+    // deep search, which forgets the ones it read, so the words put back have no read to stand on and wait for none
+    [Fact]
+    public async Task Words_taken_out_of_the_search_and_put_back_are_read_again()
+    {
+        await OpenAsync("Apart_WordsBack.html", both: true);
+        await FillSearchBar("insert", toSearchTab: true);
+        await Expect(Count).ToHaveTextAsync("12");
+        await SidebarSettledAsync();
+        await FillSearchBar("dep:\"Payment Service\"", toSearchTab: true);
+        await Expect(Count).ToHaveTextAsync("15");
+
+        await FillSearchBar("insert dep:\"Payment Service\"", toSearchTab: true);
+
+        await Expect(Count).ToHaveTextAsync("6");
+        await SidebarSettledAsync();
+    }
+
+    // 5.27.2: a result's lines from the deep search stay with it as a row's click narrows the search, as they are the
+    // words' and the words are as they were. Until then the tab asked for them again whenever the query changed, and drew
+    // each result without them until the deep search answered. A result the click brings onto the page from a later one
+    // asks for its own, as any page does
+    [Theory]
+    [InlineData("Payment Service")]
+    [InlineData("smoke")]
+    public async Task A_row_s_click_keeps_each_result_s_lines_from_the_deep_search(string row)
+    {
+        await OpenAsync($"Apart_DeepLines_{row.Replace(' ', '_')}.html", both: true);
+        await FillSearchBar("insert", toSearchTab: true);
+        await Expect(Count).ToHaveTextAsync("12");
+        await SidebarSettledAsync();
+        await Expect(Page.Locator("#panel-search .search-result .search-line")).ToHaveCountAsync(10);
+        await Page.EvaluateAsync("""
+            () => {
+                const list = document.querySelector('#panel-search .search-list');
+                const cards = () => Array.from(list.querySelectorAll('.search-result:not(.search-nothing)'));
+                const title = r => r.querySelector('.search-result-title').textContent;
+                window.__had = cards().filter(r => r.querySelector('.search-line')).map(title);
+                window.__bare = [];
+                new MutationObserver(() => cards().forEach(r => {
+                    if (!r.querySelector('.search-line') && window.__had.includes(title(r))) window.__bare.push(title(r));
+                })).observe(list, { childList: true, subtree: true });
+            }
+            """);
+
+        await Row(row).ClickAsync();
+
+        await Expect(Count).ToHaveTextAsync("6");
+        await SidebarSettledAsync();
+        await Expect(Page.Locator("#panel-search .search-result .search-line")).ToHaveCountAsync(6);
+        Assert.Contains("Scenario 1.6", await Page.EvaluateAsync<string[]>("() => window.__had"));
+        Assert.Empty(await Page.EvaluateAsync<string[]>("() => window.__bare"));
+    }
+
+    // 5.27.2: the filter field's words are kept the same way: a qualifier typed after them leaves them as they were, and the
+    // scenarios the deep search found for them stay shown. Until then the instant pass hid them and the deep search showed
+    // them again, and the readout, the timeline and the components drew both
+    [Theory]
+    [InlineData("dep:\"Payment Service\"")]
+    [InlineData("tag:smoke")]
+    public async Task A_qualifier_typed_into_the_filter_field_keeps_what_the_deep_search_found(string qualifier)
+    {
+        await OpenAsync($"Apart_DeepKeptField_{qualifier.Length}.html", both: true);
+        await OpenFilterRowsAsync();
+        await Field.FillAsync("insert");
+        await Field.PressAsync("Enter");
+        await Expect(Status).ToHaveTextAsync(new Regex("^Filtered 12 of 30 scenarios"));
+        await Page.WaitForFunctionAsync("() => window.__kronikolSearch.deep === 'done'", null, new() { PollingInterval = 200 });
+        await Page.EvaluateAsync("() => { window.__shown = []; document.addEventListener('kron-filter-change', e => window.__shown.push(e.detail.shown)); }");
+
+        await Field.FillAsync("insert " + qualifier);
+        await Field.PressAsync("Enter");
+
+        await Expect(Status).ToHaveTextAsync(new Regex("^Filtered 6 of 30 scenarios"));
+        await Page.WaitForFunctionAsync("() => window.__kronikolSearch.deep !== 'working'", null, new() { PollingInterval = 200 });
+        await TwoAnimationFramesAsync(Page);
+        var shown = await Page.EvaluateAsync<int[]>("() => window.__shown");
+        Assert.Equal([6], shown);
+    }
+
+    // 5.27.2: the sidebar is drawn again only where something in it changed. Until then every drawing of the tab built it
+    // anew, three to five times a click, and a row put back as it was is a new element: the one under the pointer lost its
+    // hover, and its Exclude, until the browser looked again
+    [Fact]
+    public async Task A_drawing_that_changes_nothing_in_the_sidebar_keeps_its_rows()
+    {
+        await OpenAsync("Apart_SideKept.html");
+        await FillSearchBar("Scenario", toSearchTab: true);
+        await Expect(Count).ToHaveTextAsync("30");
+        await SidebarSettledAsync();
+        await Row("Clickhouse").HoverAsync();
+        Assert.True(await Page.EvaluateAsync<bool>("() => !!(window.__row = document.querySelector('.search-sidebar .search-side-link:hover'))"));
+
+        await Page.Locator("#panel-search .search-sort-select").SelectOptionAsync("duration:desc");
+
+        await Expect(Page.Locator("#panel-search .search-result-title").First).ToHaveTextAsync("Scenario 3.10");
+        await TwoAnimationFramesAsync(Page);
+        Assert.True(await Page.EvaluateAsync<bool>("() => window.__row.isConnected"), "the sort drew the sidebar's rows anew");
+        Assert.True(await Page.EvaluateAsync<bool>("() => window.__row.matches(':hover')"));
+    }
+
+    // 5.27.2: what the reader has open, or is on, stays as it was while the deep search's batches and answer draw the tab
+    // again. Until then each drawing built the list, the pages and the phone's row anew: an open tip of "nothing found"
+    // and the phone's type menu shut, the focus fell to the page, and a link under the pointer lost its hover. The hundred
+    // and twenty, searched for "insert" with the answer held: the first hundred are in, ten pages of them; the answer
+    // brings the rest, twelve pages
+    private async Task HeldAtTheBatchAsync(string fileName, string query = "insert", string batch = "100", int width = 1400)
+    {
+        await Page.AddInitScriptAsync(HoldTheDeepAnswer);
+        await Page.SetViewportSizeAsync(width, 800);
+        await Page.GotoReportAsync(GenerateMany(fileName));
+        await Page.Locator("details.feature").First.WaitForAsync(new() { State = WaitForSelectorState.Attached });
+        await Page.EvaluateAsync("() => { window.__hold = true; }");
+        await FillSearchBar(query, toSearchTab: true);
+        await Expect(Count).ToHaveTextAsync(batch);
+        await Page.WaitForFunctionAsync("() => window.__held.length === 1", null, new() { PollingInterval = 200 });
+    }
+
+    private async Task ReleaseAsync(string all)
+    {
+        await Page.EvaluateAsync("() => window.__release()");
+        await Page.WaitForFunctionAsync("() => window.__kronikolSearch.deep === 'done'", null, new() { PollingInterval = 200 });
+        await Expect(Count).ToHaveTextAsync(all);
+        await TwoAnimationFramesAsync(Page);
+    }
+
+    // the node the focus is on, as the class it has and its words, or none where it fell to the page
+    private Task<string> FocusedAsync() => Page.EvaluateAsync<string>(
+        "() => { const a = document.activeElement; return !a || a === document.body || !a.isConnected ? 'none' : a.className + ': ' + a.textContent; }");
+
+    [Fact]
+    public async Task The_deep_search_s_answer_leaves_a_tip_of_nothing_found_open()
+    {
+        await HeldAtTheBatchAsync("Apart_TipKept.html", "zqxnothing", "0");
+        await Page.Locator("#panel-search .search-nothing-tip summary").First.ClickAsync();
+        await Expect(Page.Locator("#panel-search .search-nothing-tip").First).ToHaveAttributeAsync("open", "");
+
+        await ReleaseAsync("0");
+
+        await Expect(Page.Locator("#panel-search .search-nothing-tip").First).ToHaveAttributeAsync("open", "");
+    }
+
+    [Fact]
+    public async Task The_deep_search_s_answer_leaves_the_phone_s_type_menu_open_and_counts_in_it()
+    {
+        await HeldAtTheBatchAsync("Apart_PhoneMenuKept.html", width: 400);
+        var toggle = Page.Locator("#panel-search .search-type-switch");
+        await Expect(toggle).ToHaveTextAsync("Scenarios 100");
+        await toggle.ClickAsync();
+        await Expect(Page.Locator("#panel-search .search-phone-row > .search-menu")).ToBeVisibleAsync();
+
+        await ReleaseAsync("120");
+
+        await Expect(toggle).ToHaveTextAsync("Scenarios 120");
+        await Expect(Page.Locator("#panel-search .search-phone-row > .search-menu")).ToBeVisibleAsync();
+        await Expect(toggle).ToHaveAttributeAsync("aria-expanded", "true");
+        await Expect(Page.Locator("#panel-search .search-phone-row > .search-menu .search-menu-item").First).ToHaveTextAsync("Scenarios 120");
+        Assert.Equal("search-type-switch: Scenarios 120", await FocusedAsync());
+    }
+
+    // the switcher is built once, so its item says the menu is shut as it shuts it, where a switcher built anew said so
+    [Fact]
+    public async Task The_phone_s_type_menu_shuts_and_says_so_once_an_item_is_chosen()
+    {
+        await HeldAtTheBatchAsync("Apart_PhoneMenuChosen.html", width: 400);
+        var toggle = Page.Locator("#panel-search .search-type-switch");
+        await toggle.ClickAsync();
+        await Expect(toggle).ToHaveAttributeAsync("aria-expanded", "true");
+
+        await Page.Locator("#panel-search .search-phone-row > .search-menu .search-menu-item", new() { HasText = "Features" }).ClickAsync();
+
+        await Expect(toggle).ToHaveTextAsync("Features 5");
+        await Expect(Page.Locator("#panel-search .search-phone-row > .search-menu")).ToBeHiddenAsync();
+        await Expect(toggle).ToHaveAttributeAsync("aria-expanded", "false");
+    }
+
+    // 5.27.2: the switcher kept for a phone's page comes back shut once the page is a phone's again, as one built anew did
+    [Fact]
+    public async Task The_phone_s_type_menu_comes_back_shut_after_the_page_was_wider()
+    {
+        await HeldAtTheBatchAsync("Apart_PhoneMenuWider.html", width: 400);
+        var toggle = Page.Locator("#panel-search .search-type-switch");
+        await toggle.ClickAsync();
+        await Expect(toggle).ToHaveAttributeAsync("aria-expanded", "true");
+
+        await Page.SetViewportSizeAsync(1400, 800);
+        await Expect(toggle).ToHaveCountAsync(0);
+        await Page.SetViewportSizeAsync(400, 800);
+
+        await Expect(toggle).ToBeVisibleAsync();
+        await Expect(Page.Locator("#panel-search .search-phone-row > .search-menu")).ToBeHiddenAsync();
+        await Expect(toggle).ToHaveAttributeAsync("aria-expanded", "false");
+    }
+
+    // the result the focus is on stays on the page as the answer brings more onto it: the fifth feature's first four are
+    // in the first hundred, and the answer brings its twenty more. The focus is on the third one's second line, as the
+    // deep search wrote it (its INSERT as written)
+    [Fact]
+    public async Task The_deep_search_s_answer_leaves_the_focus_on_the_result_s_line_it_was_on()
+    {
+        await HeldAtTheBatchAsync("Apart_ResultFocusKept.html", "insert clickhouse feature:\"Feature 5\"", "4");
+        var lines = Page.Locator("#panel-search .search-result", new() { Has = Page.Locator(".search-result-title", new() { HasText = "Scenario 5.03" }) })
+            .Locator(".search-line");
+        await Expect(lines.Filter(new() { HasText = "INSERT" })).ToHaveCountAsync(1);
+        await lines.Nth(1).FocusAsync();
+        var line = await lines.Nth(1).TextContentAsync();
+
+        await ReleaseAsync("24");
+
+        await Expect(Page.Locator("#panel-search .search-result")).ToHaveCountAsync(10);
+        Assert.Equal("Scenario 5.03 / search-line: " + line, await Page.EvaluateAsync<string>("""
+            () => {
+                const a = document.activeElement, card = a && a.closest('.search-result');
+                return card && a.isConnected ? card.querySelector('.search-result-title').textContent + ' / ' + a.className + ': ' + a.textContent : 'none';
+            }
+            """));
+    }
+
+    // a row by its section too: Clickhouse is the third feature's tag, and a dependency every result calls
+    [Fact]
+    public async Task The_deep_search_s_answer_leaves_the_focus_on_the_sidebar_s_row_it_was_on()
+    {
+        await HeldAtTheBatchAsync("Apart_RowFocusKept.html");
+        var dependency = Page.Locator("xpath=//h3[normalize-space()='Dependencies']/following-sibling::ul[1]"
+            + "//*[contains(@class,'search-side-link')][.//span[@class='search-side-name' and normalize-space()='Clickhouse']]");
+        await Expect(dependency.Locator(".search-side-count")).ToHaveTextAsync("100");
+        await dependency.FocusAsync();
+
+        await ReleaseAsync("120");
+
+        await Expect(dependency.Locator(".search-side-count")).ToHaveTextAsync("120");
+        Assert.Equal("Dependencies: Clickhouse", await Page.EvaluateAsync<string>("""
+            () => {
+                const a = document.activeElement, row = a && a.closest('.search-side-row');
+                return row && a.isConnected ? row.parentNode.previousElementSibling.textContent + ': ' + row.querySelector('.search-side-name').textContent : 'none';
+            }
+            """));
+    }
+
+    [Fact]
+    public async Task The_deep_search_s_answer_leaves_the_focus_on_the_page_button_it_was_on()
+    {
+        await HeldAtTheBatchAsync("Apart_PageFocusKept.html");
+        await Expect(Page.Locator("#panel-search .search-page").Nth(-2)).ToHaveTextAsync("10");
+        await Page.Locator("#panel-search .search-page", new() { HasText = "Next" }).FocusAsync();
+
+        await ReleaseAsync("120");
+
+        await Expect(Page.Locator("#panel-search .search-page").Nth(-2)).ToHaveTextAsync("12");
+        Assert.Equal("search-page search-page-step: Next", await FocusedAsync());
+    }
+
+    // the answer leaves the first page as it was, so its links are the ones the reader sees, under the pointer as before
+    [Fact]
+    public async Task The_deep_search_s_answer_leaves_a_page_it_changes_nothing_on_as_it_was()
+    {
+        await HeldAtTheBatchAsync("Apart_ListKept.html");
+        await Expect(Page.Locator("#panel-search .search-result .search-line")).ToHaveCountAsync(10);
+        await Page.Locator("#panel-search .search-result-title").First.HoverAsync();
+        Assert.True(await Page.EvaluateAsync<bool>("() => !!(window.__title = document.querySelector('#panel-search .search-result-title:hover'))"));
+
+        await ReleaseAsync("120");
+
+        Assert.True(await Page.EvaluateAsync<bool>("() => window.__title.isConnected"), "the answer drew the first page's results anew");
+        Assert.True(await Page.EvaluateAsync<bool>("() => window.__title.matches(':hover')"));
+    }
 }

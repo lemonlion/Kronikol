@@ -342,10 +342,12 @@ function highlight_search_rows(words) {
     });
 }
 
-// The filter field's run (#searchbar): the query's flags put on the scenarios, which show or hide by them with the other
-// filters' (applyVisibility), the address written, a single match opened, the rows of a parameterized scenario marked and
-// the deep search handed the rest. A run first stops a timer still waiting to run it (a word typed, then Back or Clear
-// All), which would run it again with the results of the instant pass alone.
+// The filter field's run (#searchbar): the query's flags put on the scenarios, the deep search handed the rest, the
+// scenarios shown or hidden by the flags with the other filters' (applyVisibility), the address written, a single match
+// opened and the rows of a parameterized scenario marked. A run first stops a timer still waiting to run it (a word typed,
+// then Back or Clear All), which would run it again with the results of the instant pass alone. The deep search goes
+// first, as words it has read already are answered at once, on the flags (5.27.2: the scenarios it found were hidden as
+// the instant pass left them and shown again as it answered, and the readout, the timeline and the components drew both).
 function run_search_scenarios() {
     if (searchTimeoutId) {
         clearTimeout(searchTimeoutId);
@@ -371,6 +373,7 @@ function run_search_scenarios() {
         if (window._kronDeepReset) window._kronDeepReset();
         return;
     }
+    if (window._kronDeepQuery) window._kronDeepQuery(r.input);
     applyVisibility(c);
     update_url_hash();
     // Single match: expand scenario with diagrams
@@ -378,7 +381,6 @@ function run_search_scenarios() {
         revealSingleMatch(r.single);
     }
     highlight_search_rows(r.words);
-    if (window._kronDeepQuery) window._kronDeepQuery(r.input);
 }
 
 // The search's own query (the owner, 2026-10-27: a search gives a page of results, and a result picked goes to it; a

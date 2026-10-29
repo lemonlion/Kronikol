@@ -957,6 +957,8 @@ function kronSearchWorkerMain(self) {
             deepState: 'idle',     // what it last said
             posted: -1,            // the gen of the last query the worker was handed, and its input
             input: null,
+            read: { found: new Set(), answer: null },   // what that read has found so far (item indices), and its answer
+            test: null,            // what the query in effect set apart from its words (narrowing)
             terms: [],             // its positive terms, and what they hit in each scenario it matched (item index -> kinds)
             kinds: {},
             pending: {}            // the snippets requests the worker has not answered, by id
@@ -1159,6 +1161,80 @@ function kronSearchWorkerMain(self) {
         settleAsks(chans.s);
     }
 
+    // What narrows a whole query, set apart from its words (5.27.2). A query the advanced search reads, with no || outside
+    // its brackets, holds where each operand outside them holds, and an operand that is a tag or a status (tag:, status:,
+    // @ or $, with a - or a !! before it or not) says only which scenarios may match, which the page knows as the instant
+    // pass does. The deep search reads the other operands, the query's words, written the one way whatever stood between
+    // them, joined by && as the advanced search joins them, which makes them an advanced query the deep search reads as the
+    // instant pass read the whole (5.27.2: joined as they stood, a word alone or words with nothing but spaces between were
+    // read the legacy way, where an open quote, a bracket, or an and, or or not beside a word holding an @ read otherwise).
+    // A row of the Search tab's sidebar writes such an operand, so every row leaves the words, and their read, as they
+    // were. A word alone that the legacy search reads otherwise keeps the query whole. A legacy query of plain words reads
+    // the same either way, and its words are joined the same way, so a row's first click, which writes the query in the
+    // advanced form, leaves them as they were too. Returns { words, test }, test(item) whether a scenario holds for each
+    // operand set apart, or null where none is.
+    function plainWords(text) { return /^[^"@()!|&$]*$/.test(text) && !/(^|\s)-/.test(text); }
+    function narrowing(input) {
+        var whole = { words: input, test: null };
+        if (!isAdvancedSearch(input)) return plainWords(input) ? { words: input.trim().split(/\s+/).join(' && '), test: null } : whole;
+        var tokens = advancedSearchTokenise(input);
+        if (advancedSearchParse(tokens) === null) return whole;
+        var ops = [], depth = 0, open = 0, not = null;
+        for (var k = 0; k < tokens.length; k++) {
+            var t = tokens[k];
+            if (t.type === 'lparen') { if (depth++ === 0) open = t.start; continue; }
+            if (t.type === 'rparen') { if (--depth === 0) { ops.push({ start: not ? not.start : open, end: t.end, ast: null }); not = null; } continue; }
+            if (depth > 0) continue;
+            if (t.type === 'or') return whole;
+            if (t.type === 'and') continue;
+            if (t.type === 'not') { not = t; continue; }
+            var ast = t.type === 'tag' || t.type === 'status' ? { type: t.type, value: t.value } : null;
+            if (ast && not) ast = { type: 'not', operand: ast };
+            ops.push({ start: not ? not.start : t.start, end: t.end, ast: ast });
+            not = null;
+        }
+        var kept = [], asts = [];
+        ops.forEach(function(op) {
+            if (op.ast) asts.push(op.ast);
+            else kept.push(input.substring(op.start, op.end));
+        });
+        if (kept.length === 1 && !isAdvancedSearch(kept[0]) && !plainWords(kept[0])) return whole;
+        var words = kept.join(' && ');
+        return {
+            words: words,
+            test: asts.length ? function(item) {
+                var tags = search_tags(item.el);
+                for (var a = 0; a < asts.length; a++) {
+// kron:verdicts
+                    if (!advancedSearchEvaluate(asts[a], '', tags, item.status, item.verdicts)) return false;
+// kron:else
+//|                    if (!advancedSearchEvaluate(asts[a], '', tags, item.status)) return false;
+// kron:/verdicts
+                }
+                return true;
+            } : null
+        };
+    }
+
+    // whether a scenario the read found holds for what the query in effect set apart from its words
+    function holds(ch, item) { return !ch.test || ch.test(item); }
+
+    // A scenario's flag by its read's answer: authoritative (it may hide a shallow match) only for a negated query; a
+    // positive query's answer only adds (kronQueryCanRemove)
+    function answered(ch, item, i) {
+        var found = ch.read.answer.has(i) && holds(ch, item);
+        return ch.canRemove ? !found : item[ch.flag] && !found;
+    }
+    // What a read has found so far, put on the flags: a scenario among found (item indices) that holds is a result. Returns
+    // whether any flag changed.
+    function putFound(ch, items, found) {
+        var changed = false;
+        found.forEach(function(i) {
+            if (items[i] && items[i][ch.flag] && holds(ch, items[i])) { items[i][ch.flag] = false; changed = true; }
+        });
+        return changed;
+    }
+
     function onDeepResult(msg) {
         var ch = chans[msg.ch];
         if (!ch || msg.gen !== ch.gen) return; // stale — a newer query superseded it
@@ -1171,42 +1247,47 @@ function kronSearchWorkerMain(self) {
         if (!msg.done) {
             // progressive reveal: batches only ADD results (document order); the authoritative
             // set (which may also remove) lands with the final message
-            for (var i = 0; i < c.items.length; i++) {
-                if (matched.has(i) && c.items[i][flag]) { c.items[i][flag] = false; changed = true; }
-            }
-            if (changed) {
+            matched.forEach(function(m) { ch.read.found.add(m); });
+            if (putFound(ch, c.items, matched)) {
                 // the filter field's results show on the page; the search's are the Search tab's alone
                 if (ch.name === 'f') applyVisibility(c);
                 tell(ch, 'batch');
             }
             return;
         }
-        var added = 0, removed = 0;
+        ch.read.answer = matched;
+        ch.read.stats = msg.stats;
+        settle(ch, c, changed, true);
+    }
+    // A read's answer put on every scenario, and told done with what it added to the instant pass's results and took from
+    // them; the filter field's scenarios shown and hidden again where a flag changed and show says so (a replay leaves it
+    // to the filter field, which shows and hides them next)
+    function settle(ch, c, changed, show) {
+        var added = 0, removed = 0, flag = ch.flag, stats = ch.read.stats;
         for (var j = 0; j < c.items.length; j++) {
-            // Authoritative (may hide a shallow match) only for negated queries; positive
-            // queries are add-only — see kronQueryCanRemove.
-            var newSr = ch.canRemove ? !matched.has(j) : (c.items[j][flag] && !matched.has(j));
+            var newSr = answered(ch, c.items[j], j);
             if (c.items[j][flag] !== newSr) { c.items[j][flag] = newSr; changed = true; }
             if (ch.shallowHidden) {
                 if (ch.shallowHidden[j] && !newSr) added++;
                 if (!ch.shallowHidden[j] && newSr) removed++;
             }
         }
-        if (changed && ch.name === 'f') applyVisibility(c);
+        if (show && changed && ch.name === 'f') applyVisibility(c);
         tell(ch, 'done', { added: added, removed: removed });
         window.__kronikolSearch.lastQuery = {
-            candidates: msg.stats.candidates,
-            candidateItems: msg.stats.candidateItems,
-            verified: msg.stats.verified,
+            candidates: stats.candidates,
+            candidateItems: stats.candidateItems,
+            verified: stats.verified,
             added: added,
             removed: removed,
-            ms: msg.stats.ms
+            ms: stats.ms
         };
     }
 
     // A new query, or none: what the last one hit goes, and the lines asked for it are answered with nothing.
     function forget(ch) {
         ch.gen = ++state.gens;
+        ch.read = { found: new Set(), answer: null };
         ch.terms = [];
         ch.kinds = {};
         settleAsks(ch);
@@ -1217,7 +1298,34 @@ function kronSearchWorkerMain(self) {
         for (var id in pending) pending[id](null);
     }
 
-    function deepQuery(ch, input) {
+    // The words it read last, again: a qualifier put in or taken out leaves a query's words as they were (each click on the
+    // Search tab's sidebar writes one), and so does the same query run again, by Back or by Enter. The instant pass has
+    // just written their flags afresh, and what the read found goes back on them at once, held to what the query in
+    // effect set apart: its answer, or what a read still running has found so far, and that read goes on. The caller
+    // shows and hides the scenarios after it (5.27.2: until then the read began again, and every scenario only the deep
+    // search finds dropped out until it answered, so a click on a row of the sidebar emptied the Search tab and filled it
+    // again).
+    function replay(ch, input) {
+        if (ch.posted !== ch.gen || ch.input !== input || window.__kronikolSearch.indexState === 'error') return false;
+        var c = fc(), read = ch.read;
+        // a read that is done is told done again, with what it adds to and takes from this query's instant pass; the
+        // filter field shows and hides the scenarios after it (5.27.2: it told nothing, and the chip kept the last query's)
+        if (read.answer) { settle(ch, c, false, false); return true; }
+        putFound(ch, c.items, read.found);
+        // a read still running says so again, so the Search tab's results it brings join after the ones it has
+        tell(ch, 'working');
+        return true;
+    }
+
+    function deepQuery(ch, query) {
+        var apart = narrowing(query), input = apart.words, c = fc();
+        ch.test = apart.test;
+        // what the instant pass found, which the deep search's count of what it added and took is against (5.27.2: a
+        // replay counted against the query before, and the filter field's chip said so)
+        var shallowHidden = new Array(c.items.length);
+        for (var i = 0; i < c.items.length; i++) shallowHidden[i] = c.items[i][ch.flag];
+        ch.shallowHidden = shallowHidden;
+        if (replay(ch, input)) return;
         forget(ch);
         if (!indexScript()) return;
         if (!kronIsDeepEligible(input)) { idle(ch); return; }
@@ -1225,10 +1333,6 @@ function kronSearchWorkerMain(self) {
         if (window.__kronikolSearch.indexState === 'absent'
             || window.__kronikolSearch.indexState === 'unsupported'
             || window.__kronikolSearch.indexState === 'error') return;
-        var c = fc();
-        var shallowHidden = new Array(c.items.length);
-        for (var i = 0; i < c.items.length; i++) shallowHidden[i] = c.items[i][ch.flag];
-        ch.shallowHidden = shallowHidden;
         ch.canRemove = kronQueryCanRemove(input);
         tell(ch, 'working');
         ch.posted = ch.gen;
@@ -1247,6 +1351,8 @@ function kronSearchWorkerMain(self) {
     // and by run_search_query, for the search's own
     window._kronDeepSearch = function(input) { deepQuery(chans.s, input); };
     window._kronDeepSearchReset = function() { deepReset(chans.s); };
+    // the words the search's deep read is of, whose lines _kronDeepSnippets gives, or none while it has no read
+    window._kronDeepWords = function() { return chans.s.posted === chans.s.gen ? chans.s.input : ''; };
 
     function itemIndex(x) {
         var items = fc().items;

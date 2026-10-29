@@ -429,6 +429,173 @@ public sealed class SearchSnippetTests : IDisposable
         Assert.Equal("{\"terms\":[\"grams\"],\"kinds\":[\"g\"]}", page.Evaluate("JSON.stringify(window._kronDeepKinds(0))").AsString());
     }
 
+    // 5.27.2: the same words again, as a row of the Search tab's sidebar leaves them, are answered at once with what the read
+    // of them found: the flags the instant pass has just written get the answer back, the worker is not asked again, and
+    // what the read hit stays. A status: or tag: that narrows the whole query is the page's to test, so the words read are
+    // the query's without it: waffles, whose flour is in its failure's text alone and which failed, is found, and
+    // pancakes, which passed, is not. Until then every run read the whole query again, and waffles dropped out of the
+    // search until the worker answered
+    [Fact]
+    public void The_same_words_again_are_answered_with_what_their_read_found()
+    {
+        using var page = PageWithDeepSearch();
+        page.Execute("__buildPage(); run_search_query('flour');");
+        Assert.Equal("false,false", Flags(page, "xs"));
+
+        page.Execute("__hold = true; run_search_query('flour status:failed');");
+
+        Assert.Equal(0, (int)page.Evaluate("__held.length").AsNumber());
+        Assert.Equal("true,false", Flags(page, "xs"));
+        Assert.Equal("{\"terms\":[\"flour\"],\"kinds\":[\"e\"]}", page.Evaluate("JSON.stringify(window._kronDeepKinds(1))").AsString());
+
+        // and back: the words alone, answered from the same read
+        page.Execute("run_search_query('flour');");
+        Assert.Equal(0, (int)page.Evaluate("__held.length").AsNumber());
+        Assert.Equal("false,false", Flags(page, "xs"));
+    }
+
+    // 5.27.2: the same words while the read of them is still going: the read goes on and says so again, the worker is not
+    // asked again, and the answer, when it comes, lands on the flags as the newest run left them
+    [Fact]
+    public void The_same_words_while_their_read_is_going_let_it_go_on()
+    {
+        using var page = PageWithDeepSearch();
+        page.Execute("__buildPage(); run_search_query('kitchen');");
+        page.Execute("__hold = true; run_search_query('flour');");
+        Assert.Equal(1, (int)page.Evaluate("__held.length").AsNumber());
+
+        page.Execute("__events = []; run_search_query('flour status:failed');");
+
+        Assert.Equal(1, (int)page.Evaluate("__held.length").AsNumber());
+        Assert.Equal("working", page.Evaluate("__events.map(function (e) { return e.detail.state; }).join(',')").AsString());
+        Assert.Equal("true,true", Flags(page, "xs"));
+        page.Execute("__release();");
+        Assert.Equal("true,false", Flags(page, "xs"));
+        Assert.Equal("done", page.Evaluate("window.__kronikolSearch.deep").AsString());
+    }
+
+    // 5.27.2: words taken out of the search and put back are read again, the words alone: a query of a status: alone has no
+    // words for the deep search, which forgets the ones it read
+    [Fact]
+    public void Words_taken_out_and_put_back_are_read_again()
+    {
+        using var page = PageWithDeepSearch();
+        page.Execute("__buildPage(); run_search_query('flour'); run_search_query('status:failed');");
+
+        page.Execute("__hold = true; run_search_query('flour status:failed');");
+
+        Assert.Equal(1, (int)page.Evaluate("__held.length").AsNumber());
+        Assert.Equal("flour", page.Evaluate("__held[0].input").AsString());
+        page.Execute("__release();");
+        Assert.Equal("true,false", Flags(page, "xs"));
+    }
+
+    // 5.27.2: a history verdict set apart from the words ($flaky) is tested on the scenario's verdicts, as the instant pass
+    // tests it: waffles, flaky, is found, and pancakes, which is not, is not
+    [Fact]
+    public void A_verdict_set_apart_is_tested_on_the_scenario_s_verdicts()
+    {
+        using var page = PageWithDeepSearch();
+        page.Execute("__buildPage(); fc().items[1].verdicts = new Set(['flaky']); run_search_query('flour');");
+
+        page.Execute("__hold = true; run_search_query('flour $flaky');");
+
+        Assert.Equal(0, (int)page.Evaluate("__held.length").AsNumber());
+        Assert.Equal("true,false", Flags(page, "xs"));
+    }
+
+    // 5.27.2: the same words again, after their read is done, are told done again, with what the read adds to the instant
+    // pass of the query as it now stands and takes from it, which the filter field's chip says. Until then a replay told
+    // nothing, and the chip kept the last query's count
+    [Fact]
+    public void The_same_words_again_after_their_read_tell_what_it_adds_to_this_query()
+    {
+        using var page = PageWithDeepSearch();
+        page.Execute("__buildPage(); run_search_query('flour');");
+
+        page.Execute("__events = []; run_search_query('flour status:failed');");
+
+        Assert.Equal("true,false", Flags(page, "xs"));
+        Assert.Equal("done 1 0", DeepTold(page));
+    }
+
+    // 5.27.2: and the answer of a read the same words found going is counted against the query as it now stands. Until
+    // then it was counted against the instant pass of the query the read began for, so status:failed's hiding pancakes
+    // was counted as the deep search taking it
+    [Fact]
+    public void The_answer_of_a_read_the_same_words_found_going_counts_against_the_query_as_it_now_stands()
+    {
+        using var page = PageWithDeepSearch();
+        page.Execute("__buildPage(); run_search_query('kitchen');");
+        page.Execute("__hold = true; run_search_query('flour');");
+        page.Execute("run_search_query('flour status:failed'); __events = [];");
+
+        page.Execute("__release();");
+
+        Assert.Equal("true,false", Flags(page, "xs"));
+        Assert.Equal("done 1 0", DeepTold(page));
+    }
+
+    // what the deep search said since __events was emptied: each state, with what it added and took where it says
+    private static string DeepTold(Engine page) => page.Evaluate(
+        "__events.filter(function (e) { return e.type === 'kron-deep'; }).map(function (e) { var d = e.detail; return d.state + (d.added !== undefined ? ' ' + d.added + ' ' + d.removed : ''); }).join(',')").AsString();
+
+    // 5.27.2: what narrows the whole query is set apart from its words, and only that: a status:, tag:, @ or $ outside every
+    // bracket of a query with no || outside them, a - or a !! before it going with it; anything else stays in the words
+    // the deep search reads, written the one way, an && kept with the operand it stood before
+    [Theory]
+    [InlineData("flour status:failed", "flour")]
+    [InlineData("flour && tag:menu && grams", "flour && grams")]
+    [InlineData("flour  &&  grams", "flour && grams")]
+    [InlineData("tag:menu && flour", "flour")]
+    [InlineData("-tag:menu flour !!status:passed", "flour")]
+    [InlineData("flour @menu $failed", "flour")]
+    [InlineData("(flour || grams) status:failed", "(flour || grams)")]
+    [InlineData("flour || status:failed", "flour || status:failed")]
+    [InlineData("flour (grams status:failed)", "flour && (grams status:failed)")]
+    [InlineData("!!flour status:failed", "!!flour")]
+    [InlineData("salt and pepper status:failed", "salt && and && pepper")]
+    [InlineData("(flour) status:failed", "(flour) status:failed")]
+    [InlineData("status:failed", "")]
+    [InlineData("flour", "flour")]
+    // 5.27.2: words are joined by &&, so the deep search reads them as the advanced search the instant pass read the whole
+    // query with, where words joined as they stood were read the legacy way: an open quote there is a word, and an and, or
+    // or not beside a word holding an @ is a tag expression. A word alone the legacy way reads otherwise keeps the query
+    // whole, and a legacy query of plain words is joined the same way, so a row's first click leaves its words as they were
+    [InlineData("flour grams status:failed", "flour && grams")]
+    [InlineData("flour grams", "flour && grams")]
+    [InlineData("flour  grams", "flour && grams")]
+    [InlineData("status:failed \"connection refused", "status:failed \"connection refused")]
+    [InlineData("$failed alice@example.com not found", "alice@example.com && not && found")]
+    [InlineData("-flour status:failed", "-flour status:failed")]
+    [InlineData("@menu flour", "@menu flour")]
+    public void Only_what_narrows_the_whole_query_is_set_apart_from_its_words(string query, string words)
+    {
+        using var page = PageWithDeepSearch();
+        page.Execute("__buildPage(); run_search_query('kitchen');");
+
+        page.SetValue("__query", query);
+        page.Execute("__hold = true; run_search_query(__query);");
+
+        Assert.Equal(words, page.Evaluate("__held.length ? __held[0].input : window._kronDeepWords()").AsString());
+    }
+
+    // the page of PageStub with the scripts the deep search's page side runs among
+    private static Engine PageWithDeepSearch()
+    {
+        var page = new Engine();
+        page.Execute(PageStub);
+        page.Execute(StreamStubs);
+        foreach (var script in new[] { "advanced-search.js", "report-scenario-feature-map-helper.js", "report-search-function.js", "report-search-index.js" })
+            page.Execute(LoadEmbedded(script));
+        page.SetValue("__diagram", Diagram);
+        page.SetValue("__failure", Failure);
+        page.SetValue("__index", Convert.ToBase64String(AllOnesIndex(2)));
+        return page;
+    }
+
+    private static string Flags(Engine page, string flag) => page.Evaluate($"fc().items.map(function (i) {{ return i.{flag}; }}).join(',')").AsString();
+
     // A page of two scenarios as the generator writes them, with what the deep search reads of it: the index and the
     // diagram sources in their scripts, the diagram element, the failure's pre, and a worker that runs the shipped
     // worker's code in this engine, its messages going each way as the page's do, a turn later and as a copy

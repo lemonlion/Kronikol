@@ -4,6 +4,46 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.27.2] - 2026-10-29
+
+The patch part moves (5.27.1 to 5.27.2): fixes to the Search tab and the filter field, nothing new to call.
+
+### Fixed
+
+- **A click on a row of the Search tab's sidebar no longer empties the tab before it draws the narrowed search.** A
+  click on a Status, Tags or Dependencies row, or a tag's or a dependency's Exclude, writes a qualifier into the search's
+  query and runs it again, and every run read the query afresh: the instant pass's results went on first, and every
+  scenario only the deep search finds (in a payload, a query, a diagram's source or a stack trace) dropped out until the
+  deep search had read it again. On a search only the deep search matches, such as `insert` in a report whose diagrams
+  hold SQL, every click took the tab to 0 results and "Your search did not match any scenarios", the sidebar down to its
+  Show, Matched in and Advanced headings and the tab's count to 0, then put everything back once the read was done. The
+  deep search now reads a query's words apart from the `tag:` and `status:` that narrow the whole of it (outside every
+  bracket of a query with no `||` outside them), which the page tests on each scenario as the instant pass does, and it
+  answers words it has read already at once with what it found for them: a row put on or taken off, a `dep:` typed after
+  the words, or the same search run again by Back, Forward or Enter. A read still running goes on, keeping what it has
+  found so far, and the results it brings join after those on the page, as a new search's do.
+- **A qualifier typed after the filter field's words no longer hides what the deep search found for them.** The same
+  fault in the filter field: `insert tag:smoke` typed after `insert` hid every scenario only the deep search had found,
+  and showed them again once it had read the query again, and the readout, the timeline and the components drew both.
+  The field's run now hands the deep search its query before it shows and hides the scenarios.
+- **A result's lines from the deep search stay with it as a row's click narrows the search.** The Search tab kept them
+  for the whole query, so each click asked for them again and drew each result without them until they came. They are
+  kept while the words the deep search read stay.
+- **The Search tab's sidebar is drawn again only where something in it changed.** Every run, sort, page and word from the
+  deep search drew it anew, three to five times a click, and a row drawn again as it was is a new element: the row under
+  the pointer lost its hover and its Exclude (×) for a frame or two each time, and a row a keyboard had reached lost the
+  focus.
+- **What the reader has open, or is on, stays as it was while the deep search's batches and answer draw the Search tab
+  again.** Each drawing built the list of results, the page buttons and the phone's row anew, so as the deep search
+  answered an open tip of "Your search did not match any scenarios" shut, the type menu on a phone (Scenarios, Features,
+  Names, Steps, Diagrams, Errors) shut, a link under the pointer lost its hover, and the focus fell from a result's link,
+  a page button or a sidebar row to the page, so the next Tab started from the top. A part is now put in place only where
+  it changed; where it did, an open tip is opened again and the focus goes to the new node standing for the one it was
+  on, found by the result, the sidebar section and row, or the page button's words. The phone's type switcher is built
+  once, and its counts are set as they change.
+
+Checks: the core suite (11,543 passed, 2 skipped), the search engine suite (787 passed), the full E2E suite (2,089 passed, 28 skipped; the run before it, on the same build while other sessions ran their suites, had two failures that did not come back, which its output did not name), and three rounds of mutations of the new code: 13 of 14 caught, the survivor showing the gap the narrowing then closed, which the second round caught; 25 of 25; and 12 of 12 once a fact was added for the one the third round first missed. An independent review of the change found five defects before release, the worst a regression: words set apart from tag: and status: and joined as they stood were read by the deep search's legacy grammar, so an open quote, or an and, or or not beside a word holding an @, gave wrong results. Each is fixed test first, and its facts fail on the code before the fix.
+
 ## [5.27.1] - 2026-10-29
 
 The patch part moves (5.27.0 to 5.27.1): packaging and tracking fixes, with no new option and no new public member (#97;

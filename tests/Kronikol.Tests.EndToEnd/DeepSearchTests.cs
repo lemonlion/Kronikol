@@ -449,6 +449,11 @@ public class DeepSearchTests : PlaywrightTestBase
             null, new() { Timeout = 15000, PollingInterval = 200 });
         await WaitForDeepIdle(5000);
 
+        // the same words again, with a qualifier: the read of them failed, and none says it is still going (5.27.2)
+        await FillSearchBar(PayloadNeedle + " status:passed");
+        await TwoAnimationFramesAsync(Page);
+        Assert.Equal("idle", await Page.EvaluateAsync<string>("() => window.__kronikolSearch.deep"));
+
         // shallow search is unaffected
         await SearchAndWaitForVisible("successfully", 1);
     }
