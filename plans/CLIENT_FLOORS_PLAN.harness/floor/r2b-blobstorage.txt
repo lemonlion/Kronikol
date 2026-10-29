@@ -1,0 +1,10 @@
+# Azure.Storage.Blobs: 54 stable 12.x releases, 12.0.0 to 12.30.1; binary search
+12.30.1 | ok | Kronikol.Tests.BlobStorage: Passed! - Failed: 0, Passed: 74, Skipped: 0, Total: 74 | audit: none | resolved: Azure.Storage.Blobs/12.30.1
+12.14.1 | ok | Kronikol.Tests.BlobStorage: Passed! - Failed: 0, Passed: 74, Skipped: 0, Total: 74 | audit: none | resolved: Azure.Storage.Blobs/12.14.1
+12.8.0 | ok | Kronikol.Tests.BlobStorage: Passed! - Failed: 0, Passed: 74, Skipped: 0, Total: 74 | audit: Azure.Storage.Blobs 12.8.0 moderate (Kronikol.Tests.BlobStorage); Azure.Storage.Blobs 12.8.0 moderate (TargetFramework=net10) | resolved: Azure.Storage.Blobs/12.8.0
+12.4.2 | ok | Kronikol.Tests.BlobStorage: Passed! - Failed: 0, Passed: 74, Skipped: 0, Total: 74 | audit: Azure.Storage.Blobs 12.4.2 moderate (Kronikol.Tests.BlobStorage); Azure.Storage.Blobs 12.4.2 moderate (TargetFramework=net10) | resolved: Azure.Storage.Blobs/12.4.2
+12.3.0 | ok | Kronikol.Tests.BlobStorage: Passed! - Failed: 0, Passed: 74, Skipped: 0, Total: 74 | audit: Azure.Storage.Blobs 12.3.0 moderate (Kronikol.Tests.BlobStorage); Azure.Storage.Blobs 12.3.0 moderate (TargetFramework=net10) | resolved: Azure.Storage.Blobs/12.3.0
+12.1.0 | ok | Kronikol.Tests.BlobStorage: Passed! - Failed: 0, Passed: 74, Skipped: 0, Total: 74 | audit: Azure.Storage.Blobs 12.1.0 moderate (Kronikol.Tests.BlobStorage); Azure.Storage.Blobs 12.1.0 moderate (TargetFramework=net10) | resolved: Azure.Storage.Blobs/12.1.0
+12.0.0 | ok | Kronikol.Tests.BlobStorage: Passed! - Failed: 0, Passed: 74, Skipped: 0, Total: 74 | audit: Azure.Storage.Blobs 12.0.0 moderate (Kronikol.Tests.BlobStorage); Azure.Storage.Blobs 12.0.0 moderate (TargetFramework=net10) | resolved: Azure.Storage.Blobs/12.0.0
+# oldest passing: 12.0.0
+12.13.0 | ok | Kronikol.Tests.BlobStorage: Passed! - Failed: 0, Passed: 74, Skipped: 0, Total: 74 | audit: none | resolved: Azure.Storage.Blobs/12.13.0

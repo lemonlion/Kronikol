@@ -1,0 +1,21 @@
+# Azure.Messaging.EventHubs 5.12.2 | emulator
+the producer's names, held as EventHubProducerClient: ok localhost eh1
+the partitions: ok 0,1
+send two events: ok sent
+send a batch: ok sent
+the consumer's names, held as EventHubConsumerClient: ok cg1 eh1
+read from the start: ok three
+read with options: ok three
+read a partition: ok one
+dispose both (left to the base): ok producer closed True (inner True), consumer closed True (inner True)
+## What Kronikol recorded
+  Request Send (×2) → eh1 eventhubs:///eh1 (EventHubs)
+  Response Send (×2) → eh1 eventhubs:///eh1 (EventHubs)
+  Request Send → eh1 eventhubs:///eh1 (EventHubs)
+  Response Send → eh1 eventhubs:///eh1 (EventHubs)
+  Request Read ← eh1 eventhubs:///eh1 (EventHubs)
+  Response Read ← eh1 eventhubs:///eh1 (EventHubs)
+  Request Read ← eh1 eventhubs:///eh1 (EventHubs)
+  Response Read ← eh1 eventhubs:///eh1 (EventHubs)
+  Request Read ← eh1[0] eventhubs:///eh1/0 (EventHubs)
+  Response Read ← eh1[0] eventhubs:///eh1/0 (EventHubs)

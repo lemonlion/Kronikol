@@ -65,6 +65,16 @@ public class TrackingServiceBusClient : ServiceBusClient
         return new TrackingServiceBusReceiver(receiver, _tracker, _options);
     }
 
+    // The overloads without options, and the rule manager, would otherwise run against the empty client the base was
+    // built as (the constructor for mocking); they come from the client this one holds, untracked as the others are.
+    public override ServiceBusProcessor CreateProcessor(string queueName) => _inner.CreateProcessor(queueName);
+
+    public override ServiceBusProcessor CreateProcessor(string topicName, string subscriptionName)
+        => _inner.CreateProcessor(topicName, subscriptionName);
+
+    public override ServiceBusRuleManager CreateRuleManager(string topicName, string subscriptionName)
+        => _inner.CreateRuleManager(topicName, subscriptionName);
+
     public override ServiceBusProcessor CreateProcessor(string queueName, ServiceBusProcessorOptions? options = null)
         => _inner.CreateProcessor(queueName, options);
 

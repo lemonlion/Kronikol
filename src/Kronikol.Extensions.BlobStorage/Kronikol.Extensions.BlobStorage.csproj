@@ -9,7 +9,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Azure.Storage.Blobs" Version="12.*" />
+    <!-- Azure.Storage.Blobs: 12.13.0 is the first release past GHSA-64x4-9hc6-r2h6 (moderate, a padding oracle in
+         client-side encryption), as the suite passes from 12.0.0; its graph carries no other known advisory (harness
+         floor/r2b-blobstorage.txt). FloorLedger holds the floor, and the test project's package fact reads it back from
+         the packed nuspec; the suite runs on the newest 12.x, and on this floor with -p:FloorRun=true
+         (plans/CLIENT_FLOORS_PLAN.md R2b). -->
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.13.0" />
   </ItemGroup>
 
   <ItemGroup>

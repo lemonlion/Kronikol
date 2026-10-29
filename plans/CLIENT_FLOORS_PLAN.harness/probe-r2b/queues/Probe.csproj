@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- R2b's fourth test for StorageQueues: the client on the extension's floor, or on the newest 12.x with -p:Newest=true. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../../src/Kronikol.Extensions.StorageQueues/Kronikol.Extensions.StorageQueues.csproj" />
+    <PackageReference Include="Azure.Storage.Queues" Version="12.*" Condition="'$(Newest)' == 'true'" />
+  </ItemGroup>
+</Project>

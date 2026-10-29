@@ -1,0 +1,17 @@
+# Azure.Messaging.EventHubs 5.12.2 | emulator
+the producer's names, held as EventHubProducerClient: THROWS NullReferenceException: Object reference not set to an instance of an object.
+the partitions: ok 0,1
+send two events: ok sent
+send a batch: ok sent
+the consumer's names, held as EventHubConsumerClient: THROWS NullReferenceException: Object reference not set to an instance of an object.
+read from the start: THROWS NullReferenceException: Object reference not set to an instance of an object.
+read with options: ok three
+read a partition: ok one
+dispose both (left to the base): ok producer closed False (inner True), consumer closed False (inner True)
+## What Kronikol recorded
+  Request Send (×2) → eh1 eventhubs:///eh1 (EventHubs)
+  Response Send (×2) → eh1 eventhubs:///eh1 (EventHubs)
+  Request Send → eh1 eventhubs:///eh1 (EventHubs)
+  Response Send → eh1 eventhubs:///eh1 (EventHubs)
+  Request Read ← eh1 eventhubs:///eh1 (EventHubs)
+  Request Read ← eh1[0] eventhubs:///eh1/0 (EventHubs)

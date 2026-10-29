@@ -10,9 +10,12 @@ namespace Kronikol.Extensions.EventHubs;
 /// An <see cref="EventHubConsumerClient"/> subclass that intercepts read operations
 /// for test diagram tracking.
 /// <para>
-/// <b>Note:</b> The base class properties (<see cref="EventHubName"/>, <see cref="ConsumerGroup"/>,
-/// <see cref="FullyQualifiedNamespace"/>) are not virtual and are shadowed with <c>new</c>.
-/// See property-level remarks on <see cref="TrackingEventHubProducerClient"/> for limitations.
+/// <b>Note:</b> The SDK client's <see cref="EventHubConsumerClient.EventHubName"/>,
+/// <see cref="EventHubConsumerClient.ConsumerGroup"/>, <see cref="EventHubConsumerClient.FullyQualifiedNamespace"/>,
+/// <see cref="EventHubConsumerClient.Identifier"/> and <see cref="EventHubConsumerClient.IsClosed"/> are not virtual.
+/// The client this derives from is built with the names and identifier of the client it wraps and is closed with it,
+/// so they read the same through an <see cref="EventHubConsumerClient"/> reference. That client never connects: each
+/// call goes to <see cref="Inner"/>.
 /// </para>
 /// </summary>
 public class TrackingEventHubConsumerClient : EventHubConsumerClient
@@ -22,7 +25,15 @@ public class TrackingEventHubConsumerClient : EventHubConsumerClient
     private readonly EventHubsTrackingOptions _options;
 
     public TrackingEventHubConsumerClient(
-        EventHubConsumerClient inner, EventHubsTrackingOptions options) : base()
+        EventHubConsumerClient inner, EventHubsTrackingOptions options) : this(inner, options, UnconnectedBase.NamesOf(inner))
+    {
+    }
+
+    private TrackingEventHubConsumerClient(
+        EventHubConsumerClient inner, EventHubsTrackingOptions options,
+        (string ConsumerGroup, string Namespace, string EventHub, string? Identifier) names)
+        : base(names.ConsumerGroup, names.Namespace, names.EventHub, UnconnectedBase.Credential,
+            new EventHubConsumerClientOptions { Identifier = names.Identifier })
     {
         _inner = inner;
         _tracker = new EventHubsTracker(options, options.HttpContextAccessor);
@@ -37,78 +48,32 @@ public class TrackingEventHubConsumerClient : EventHubConsumerClient
     public new string FullyQualifiedNamespace => _inner.FullyQualifiedNamespace;
     public new bool IsClosed => _inner.IsClosed;
 
-    public override async IAsyncEnumerable<PartitionEvent> ReadEventsAsync(
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
-    {
-        var op = EventHubsOperationClassifier.Classify(
-            "ReadEventsAsync", _inner.EventHubName);
-        var (reqId, traceId) = _tracker.LogRequest(op, null);
+    public override IAsyncEnumerable<PartitionEvent> ReadEventsAsync(
+        CancellationToken cancellationToken = default)
+        => Track("ReadEventsAsync", null, token => _inner.ReadEventsAsync(token), cancellationToken);
 
-        var eventCount = 0;
-        await foreach (var partitionEvent in _inner.ReadEventsAsync(cancellationToken))
-        {
-            eventCount++;
-            EstablishTestIdentityFromProperties(partitionEvent.Data);
-            yield return partitionEvent;
-        }
-
-        _tracker.LogResponse(op, reqId, traceId, content: null, rawContent: $"Events: {eventCount}");
-    }
-
-    public override async IAsyncEnumerable<PartitionEvent> ReadEventsAsync(
+    public override IAsyncEnumerable<PartitionEvent> ReadEventsAsync(
         ReadEventOptions readOptions,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
-    {
-        var op = EventHubsOperationClassifier.Classify(
-            "ReadEventsAsync", _inner.EventHubName);
-        var (reqId, traceId) = _tracker.LogRequest(op, null);
+        CancellationToken cancellationToken = default)
+        => Track("ReadEventsAsync", null, token => _inner.ReadEventsAsync(readOptions, token), cancellationToken);
 
-        var eventCount = 0;
-        await foreach (var partitionEvent in _inner.ReadEventsAsync(readOptions, cancellationToken))
-        {
-            eventCount++;
-            EstablishTestIdentityFromProperties(partitionEvent.Data);
-            yield return partitionEvent;
-        }
+    public override IAsyncEnumerable<PartitionEvent> ReadEventsAsync(
+        bool startReadingAtEarliestEvent, ReadEventOptions? readOptions = null,
+        CancellationToken cancellationToken = default)
+        => Track("ReadEventsAsync", null,
+            token => _inner.ReadEventsAsync(startReadingAtEarliestEvent, readOptions, token), cancellationToken);
 
-        _tracker.LogResponse(op, reqId, traceId, content: null, rawContent: $"Events: {eventCount}");
-    }
-
-    public override async IAsyncEnumerable<PartitionEvent> ReadEventsFromPartitionAsync(
+    public override IAsyncEnumerable<PartitionEvent> ReadEventsFromPartitionAsync(
         string partitionId, EventPosition startingPosition,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
-    {
-        var op = EventHubsOperationClassifier.Classify(
-            "ReadEventsFromPartitionAsync", _inner.EventHubName, partitionId);
-        var (reqId, traceId) = _tracker.LogRequest(op, null);
+        CancellationToken cancellationToken = default)
+        => Track("ReadEventsFromPartitionAsync", partitionId,
+            token => _inner.ReadEventsFromPartitionAsync(partitionId, startingPosition, token), cancellationToken);
 
-        await foreach (var partitionEvent in _inner.ReadEventsFromPartitionAsync(
-            partitionId, startingPosition, cancellationToken))
-        {
-            EstablishTestIdentityFromProperties(partitionEvent.Data);
-            yield return partitionEvent;
-        }
-
-        _tracker.LogResponse(op, reqId, traceId, null);
-    }
-
-    public override async IAsyncEnumerable<PartitionEvent> ReadEventsFromPartitionAsync(
+    public override IAsyncEnumerable<PartitionEvent> ReadEventsFromPartitionAsync(
         string partitionId, EventPosition startingPosition, ReadEventOptions readOptions,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
-    {
-        var op = EventHubsOperationClassifier.Classify(
-            "ReadEventsFromPartitionAsync", _inner.EventHubName, partitionId);
-        var (reqId, traceId) = _tracker.LogRequest(op, null);
-
-        await foreach (var partitionEvent in _inner.ReadEventsFromPartitionAsync(
-            partitionId, startingPosition, readOptions, cancellationToken))
-        {
-            EstablishTestIdentityFromProperties(partitionEvent.Data);
-            yield return partitionEvent;
-        }
-
-        _tracker.LogResponse(op, reqId, traceId, null);
-    }
+        CancellationToken cancellationToken = default)
+        => Track("ReadEventsFromPartitionAsync", partitionId,
+            token => _inner.ReadEventsFromPartitionAsync(partitionId, startingPosition, readOptions, token), cancellationToken);
 
     public override async Task<string[]> GetPartitionIdsAsync(
         CancellationToken cancellationToken = default)
@@ -122,8 +87,61 @@ public class TrackingEventHubConsumerClient : EventHubConsumerClient
         string partitionId, CancellationToken cancellationToken = default)
         => await _inner.GetPartitionPropertiesAsync(partitionId, cancellationToken);
 
+    // The client this derives from is closed with the one it wraps, as code holding this as the SDK type reads its
+    // IsClosed. Given the caller's token, a close that is cancelled leaves both open.
     public override async Task CloseAsync(CancellationToken cancellationToken = default)
-        => await _inner.CloseAsync(cancellationToken);
+    {
+        try
+        {
+            await _inner.CloseAsync(cancellationToken);
+        }
+        finally
+        {
+            await base.CloseAsync(cancellationToken);
+        }
+    }
+
+    // Nothing is read before the events are enumerated, so nothing is recorded before: the request when enumeration
+    // starts, and the response, with the count of events read, when it ends or its caller leaves it, or the failure
+    // when a read fails.
+    private async IAsyncEnumerable<PartitionEvent> Track(
+        string operation, string? partitionId, Func<CancellationToken, IAsyncEnumerable<PartitionEvent>> read,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        var op = EventHubsOperationClassifier.Classify(operation, _inner.EventHubName, partitionId);
+        var (reqId, traceId) = _tracker.LogRequest(op, null);
+
+        var eventCount = 0;
+        var failed = false;
+        await using var events = read(cancellationToken).GetAsyncEnumerator(cancellationToken);
+        try
+        {
+            while (true)
+            {
+                bool more;
+                try
+                {
+                    more = await events.MoveNextAsync();
+                }
+                catch (Exception ex)
+                {
+                    failed = true;
+                    _tracker.LogResponse(op, reqId, traceId, ex.Message);
+                    throw;
+                }
+                if (!more)
+                    break;
+                eventCount++;
+                EstablishTestIdentityFromProperties(events.Current.Data);
+                yield return events.Current;
+            }
+        }
+        finally
+        {
+            if (!failed)
+                _tracker.LogResponse(op, reqId, traceId, content: null, rawContent: $"Events: {eventCount}");
+        }
+    }
 
     private void EstablishTestIdentityFromProperties(EventData? eventData)
     {

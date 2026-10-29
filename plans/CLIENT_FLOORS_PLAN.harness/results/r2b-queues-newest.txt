@@ -1,0 +1,19 @@
+# Azure.Storage.Queues 12.28.1 | Azurite at http://127.0.0.1:20001/devstoreaccount1
+create a queue: ok created
+send a message: ok sent
+peek it: ok hello
+receive and delete it: ok hello
+delete the queue: ok deleted
+## What Kronikol recorded
+  Request Other /  (StorageQueue)
+  Response Other / Created (StorageQueue)
+  Request Other /  (StorageQueue)
+  Response Other / Created (StorageQueue)
+  Request Other /  (StorageQueue)
+  Response Other / OK (StorageQueue)
+  Request Other /  (StorageQueue)
+  Response Other / OK (StorageQueue)
+  Request Other /  (StorageQueue)
+  Response Other / NoContent (StorageQueue)
+  Request Other /  (StorageQueue)
+  Response Other / NoContent (StorageQueue)

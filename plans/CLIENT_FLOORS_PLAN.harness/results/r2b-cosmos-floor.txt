@@ -1,0 +1,40 @@
+# Microsoft.Azure.Cosmos 3.46.0 | emulator at http://127.0.0.1:28081/
+create a database: ok created
+create a container: ok created
+create an item: ok Created
+read it: ok hello
+query it: THROWS ArgumentOutOfRangeException: Specified argument was out of the range of valid values. (Parameter 'Unknown JsonNodeType: Unknown.')
+replace it: ok again
+delete it: ok NoContent
+delete the database: ok NoContent
+## What Kronikol recorded
+  Request Other /metadata/instance  (CosmosDB)
+  Request Other /  (CosmosDB)
+  Response Other /metadata/instance !HttpRequestException (CosmosDB)
+  Response Other / OK (CosmosDB)
+  Request Other /dbs/probe-3-46-0  (CosmosDB)
+  Response Other /dbs/probe-3-46-0 NotFound (CosmosDB)
+  Request Other /dbs  (CosmosDB)
+  Response Other /dbs Created (CosmosDB)
+  Request Other /colls/items  (CosmosDB)
+  Response Other /colls/items NotFound (CosmosDB)
+  Request Other /dbs/probe-3-46-0/colls  (CosmosDB)
+  Response Other /dbs/probe-3-46-0/colls Created (CosmosDB)
+  Request Create /colls/items  (CosmosDB)
+  Response Create /colls/items Created (CosmosDB)
+  Request Read /colls/items/docs/1  (CosmosDB)
+  Response Read /colls/items/docs/1 OK (CosmosDB)
+  Request Other /colls/items  (CosmosDB)
+  Response Other /colls/items OK (CosmosDB)
+  Request Other /colls/MDAwMQ==  (CosmosDB)
+  Response Other /colls/MDAwMQ== OK (CosmosDB)
+  Request Other /colls/MDAwMQ==  (CosmosDB)
+  Response Other /colls/MDAwMQ== NotModified (CosmosDB)
+  Request Query /colls/items  (CosmosDB)
+  Response Query /colls/items OK (CosmosDB)
+  Request Replace /colls/items/docs/1  (CosmosDB)
+  Response Replace /colls/items/docs/1 OK (CosmosDB)
+  Request Delete /colls/items/docs/1  (CosmosDB)
+  Response Delete /colls/items/docs/1 NoContent (CosmosDB)
+  Request Other /dbs/probe-3-46-0  (CosmosDB)
+  Response Other /dbs/probe-3-46-0 NoContent (CosmosDB)

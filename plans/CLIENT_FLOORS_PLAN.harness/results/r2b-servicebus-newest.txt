@@ -1,0 +1,33 @@
+# Azure.Messaging.ServiceBus 7.21.0 | emulator
+the client's namespace and identifier: ok localhost localhost-c40c7a58-0d2a-4892-a2c5-be722f2968db
+send through the sender: ok queue.1
+send a batch: ok sent 2
+receive and complete: ok one
+receive as a stream (left to the base): ok two
+dead-letter with a reason (the overload left to the base on the newest): ok dead-lettered
+a processor from CreateProcessor(String) (left to the base): ok four
+a rule manager (left to the base): ok topic.1/Subscriptions/subscription.1
+the queue's message sessions (left to the base on the newest): THROWS NullReferenceException: Object reference not set to an instance of an object.
+dispose the sender and the receiver (left to the base): ok sender closed True, receiver closed True
+dispose the client: ok wrapper closed True, inner closed True
+## What Kronikol recorded
+  Request Send → queue.1 servicebus://queue.1/ (ServiceBus)
+  Response Send → queue.1 servicebus://queue.1/ (ServiceBus)
+  Request Send (×2) → queue.1 servicebus://queue.1/ (ServiceBus)
+  Response Send (×2) → queue.1 servicebus://queue.1/ (ServiceBus)
+  Request Receive ← queue.1 servicebus://queue.1/ (ServiceBus)
+  Response Receive ← queue.1 servicebus://queue.1/ (ServiceBus)
+  Request Complete servicebus://queue.1/ (ServiceBus)
+  Response Complete servicebus://queue.1/ (ServiceBus)
+  Request Receive ← queue.1 servicebus://queue.1/ (ServiceBus)
+  Response Receive ← queue.1 servicebus://queue.1/ (ServiceBus)
+  Request Complete servicebus://queue.1/ (ServiceBus)
+  Response Complete servicebus://queue.1/ (ServiceBus)
+  Request Send → queue.1 servicebus://queue.1/ (ServiceBus)
+  Response Send → queue.1 servicebus://queue.1/ (ServiceBus)
+  Request Receive ← queue.1 servicebus://queue.1/ (ServiceBus)
+  Response Receive ← queue.1 servicebus://queue.1/ (ServiceBus)
+  Request DeadLetter servicebus://queue.1/ (ServiceBus)
+  Response DeadLetter servicebus://queue.1/ (ServiceBus)
+  Request Send → queue.1 servicebus://queue.1/ (ServiceBus)
+  Response Send → queue.1 servicebus://queue.1/ (ServiceBus)

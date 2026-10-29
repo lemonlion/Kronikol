@@ -113,6 +113,37 @@ together.
 - `floor/ledger_mutations.py`: the ledger's facts against seven changes they exist to catch, each applied, run and put
   back; `floor/ledger-mutations.txt` names the facts each one turned red.
 
+## R2b, as released
+
+- `floor/r2b-search.sh`: the six binary searches, one after another, with `floor_probe2.py --search`;
+  `floor/r2b-<package>.txt` are their output, as R2a's. `floor/r2b-eventhubs.txt` closes with the suite on 5.6.0 and on
+  5.12.2 after the wrapper fix moved the Event Hubs floor; `floor/r2b-servicebus-di.txt` and the copies beside it record
+  the three searches the Dependency Injection floor took (plan section 5.2).
+- `floor/first_with_member.py`: the first release of a major whose XML documentation names a member, by binary search
+  over the nupkgs read in memory. It dated `Identifier` (Event Hubs 5.6.0), `UseDevelopmentEmulator` (Event Hubs 5.11.0,
+  Service Bus 7.17.3) and the members the wrappers had to override.
+- `probe-r2b/wrappers.cs`: a file-based app that lists, for each Kronikol class deriving from an SDK client, the base's
+  virtual members it does not override, read from the assemblies without loading them. It found F11 and the members
+  of F12 and F13; the guard facts that `tests/Kronikol.Tests/Packaging/WrapperCoverage.cs` serves now do the same on
+  every run, so the app is the record of the sweep, not a step to repeat.
+- `probe-r2b/{blobs,queues,cosmos,servicebus,eventhubs}/`: the fourth test. Each runs the real client through the
+  extension against an emulator from `podman/start-r2b-emulators.sh` (Azurite, the Cosmos DB vnext-preview emulator
+  over HTTP, the Service Bus emulator with its SQL Server, the Event Hubs emulator), on the floor the extension asks
+  for, on the newest with `-p:Newest=true`, or, for Service Bus and Event Hubs, whose floors predate
+  `UseDevelopmentEmulator`, on a given release with `-p:ClientVersion=<release>`. The Service Bus and Event Hubs probes
+  hold the wrappers as the SDK types, as dependency injection hands them out, and call the members the wrappers left to
+  their base. `results/r2b-<package>-<run>.txt` are their output; `results/r2b-servicebus-newest-before-fix.txt` and
+  `results/r2b-eventhubs-newest-before-fix.txt` are the runs that found F12 and F13, and `results/r2b-cosmos-floor-plain.txt`
+  is the Cosmos floor with `--plain`, no tracking, which shows F16 is the client's own.
+- `probe-r2b/eh-base/`: what an Event Hubs client answers when built through the constructor for mocking, and when built
+  from a namespace, a hub and a credential that throws if asked for a token: the names, the identifier, closing, and
+  how soon a stray call fails (`-p:EventHubsVersion=<release>`; `results/r2b-eventhubs-base.txt` on 5.12.2, 5.6.0 and
+  5.5.0). It is the evidence for F13's fix; F14, the same base for Service Bus, failed on the network instead and was
+  reverted.
+- `floor/wrapper_mutations.py`: five mutations, each an override removed from a wrapper, each run against the guard
+  fact that holds that wrapper and put back; `floor/wrapper-mutations.txt` shows each guard red with the member named,
+  after F17.
+
 ## prototype/: R1, applied and reverted
 
 `r1.patch` is R1's steps 1 to 4 (the pin, the test project's direct reference under `$(FloorRun)`, and

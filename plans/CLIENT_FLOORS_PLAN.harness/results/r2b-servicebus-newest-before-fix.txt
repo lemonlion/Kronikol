@@ -1,0 +1,29 @@
+# Azure.Messaging.ServiceBus 7.21.0 | emulator
+the client's namespace and identifier: ok localhost localhost-00952b97-0f2a-40a1-a140-4155e7de638c
+send through the sender: ok queue.1
+send a batch: ok sent 2
+receive and complete: ok one
+receive as a stream (left to the base): ok two
+dead-letter with a reason (the overload left to the base on the newest): THROWS NullReferenceException: Object reference not set to an instance of an object.
+a processor from CreateProcessor(String) (left to the base): THROWS NullReferenceException: Object reference not set to an instance of an object.
+a rule manager (left to the base): THROWS NullReferenceException: Object reference not set to an instance of an object.
+the queue's message sessions (left to the base on the newest): THROWS NullReferenceException: Object reference not set to an instance of an object.
+dispose the sender and the receiver (left to the base): ok sender closed True, receiver closed True
+dispose the client: ok wrapper closed True, inner closed True
+## What Kronikol recorded
+  Request Send → queue.1 servicebus://queue.1/ (ServiceBus)
+  Response Send → queue.1 servicebus://queue.1/ (ServiceBus)
+  Request Receive ← queue.1 servicebus://queue.1/ (ServiceBus)
+  Response Receive ← queue.1 servicebus://queue.1/ (ServiceBus)
+  Request Complete servicebus://queue.1/ (ServiceBus)
+  Response Complete servicebus://queue.1/ (ServiceBus)
+  Request Receive ← queue.1 servicebus://queue.1/ (ServiceBus)
+  Response Receive ← queue.1 servicebus://queue.1/ (ServiceBus)
+  Request Complete servicebus://queue.1/ (ServiceBus)
+  Response Complete servicebus://queue.1/ (ServiceBus)
+  Request Send → queue.1 servicebus://queue.1/ (ServiceBus)
+  Response Send → queue.1 servicebus://queue.1/ (ServiceBus)
+  Request Receive ← queue.1 servicebus://queue.1/ (ServiceBus)
+  Response Receive ← queue.1 servicebus://queue.1/ (ServiceBus)
+  Request Send → queue.1 servicebus://queue.1/ (ServiceBus)
+  Response Send → queue.1 servicebus://queue.1/ (ServiceBus)

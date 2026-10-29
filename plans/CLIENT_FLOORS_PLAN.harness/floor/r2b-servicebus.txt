@@ -1,0 +1,9 @@
+# Azure.Messaging.ServiceBus: 42 stable 7.x releases, 7.0.0 to 7.21.0; binary search
+7.21.0 | ok | Kronikol.Tests.ServiceBus: Passed! - Failed: 0, Passed: 181, Skipped: 0, Total: 181 | audit: none | resolved: Azure.Messaging.ServiceBus/7.21.0
+7.13.0 | ok | Kronikol.Tests.ServiceBus: Passed! - Failed: 0, Passed: 181, Skipped: 0, Total: 181 | audit: none | resolved: Azure.Messaging.ServiceBus/7.13.0
+7.5.1 | BUILD FAILED | Kronikol.Tests.ServiceBus: error CS0115: 'TrackingServiceBusClient.Identifier': no suitable method found to override  error CS0115: 'TrackingServiceBusReceiver.Identifier': no suitable method found to override  error CS0115: 'TrackingServiceBusSender.Identifier': no suitable method found to override  error CS0246: The type or namespace name 'ServiceBusSenderOptions' could not be found (are you missing a using directive or an assembly reference?)  | audit: none | resolved: Azure.Messaging.ServiceBus/7.5.1
+7.9.0 | BUILD FAILED | Kronikol.Tests.ServiceBus: error CS0115: 'TrackingServiceBusClient.Identifier': no suitable method found to override  error CS0115: 'TrackingServiceBusReceiver.Identifier': no suitable method found to override  error CS0115: 'TrackingServiceBusSender.Identifier': no suitable method found to override  error CS0246: The type or namespace name 'ServiceBusSenderOptions' could not be found (are you missing a using directive or an assembly reference?)  | audit: none | resolved: Azure.Messaging.ServiceBus/7.9.0
+7.11.1 | ok | Kronikol.Tests.ServiceBus: Passed! - Failed: 0, Passed: 181, Skipped: 0, Total: 181 | audit: none | resolved: Azure.Messaging.ServiceBus/7.11.1
+7.11.0 | ok | Kronikol.Tests.ServiceBus: Passed! - Failed: 0, Passed: 181, Skipped: 0, Total: 181 | audit: none | resolved: Azure.Messaging.ServiceBus/7.11.0
+7.10.0 | ok | Kronikol.Tests.ServiceBus: Passed! - Failed: 0, Passed: 181, Skipped: 0, Total: 181 | audit: none | resolved: Azure.Messaging.ServiceBus/7.10.0
+# oldest passing: 7.10.0

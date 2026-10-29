@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- R2b's fourth test for CosmosDB: the client on the extension's floor, or on the newest 3.x with -p:Newest=true. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../../src/Kronikol.Extensions.CosmosDB/Kronikol.Extensions.CosmosDB.csproj" />
+    <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.*" Condition="'$(Newest)' == 'true'" />
+    <!-- The client's default serializer; from 3.46.0 the client asks for no Newtonsoft.Json of its own. -->
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+</Project>

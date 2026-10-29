@@ -133,11 +133,31 @@ public class TrackingServiceBusReceiver : ServiceBusReceiver
         }
     }
 
-    public override async Task DeadLetterMessageAsync(
+    public override Task DeadLetterMessageAsync(
         ServiceBusReceivedMessage message,
         string? deadLetterReason = null,
         string? deadLetterErrorDescription = null,
         CancellationToken cancellationToken = default)
+        => DeadLetterTracked(deadLetterReason,
+            () => _inner.DeadLetterMessageAsync(message, deadLetterReason, deadLetterErrorDescription, cancellationToken));
+
+    public override Task DeadLetterMessageAsync(
+        ServiceBusReceivedMessage message,
+        IDictionary<string, object>? propertiesToModify = null,
+        CancellationToken cancellationToken = default)
+        => DeadLetterTracked(null, () => _inner.DeadLetterMessageAsync(message, propertiesToModify, cancellationToken));
+
+    // New in 7.11.0; the base's would run against the empty receiver it was built as.
+    public override Task DeadLetterMessageAsync(
+        ServiceBusReceivedMessage message,
+        IDictionary<string, object> propertiesToModify,
+        string deadLetterReason,
+        string? deadLetterErrorDescription = null,
+        CancellationToken cancellationToken = default)
+        => DeadLetterTracked(deadLetterReason,
+            () => _inner.DeadLetterMessageAsync(message, propertiesToModify, deadLetterReason, deadLetterErrorDescription, cancellationToken));
+
+    private async Task DeadLetterTracked(string? deadLetterReason, Func<Task> deadLetter)
     {
         var op = ServiceBusOperationClassifier.Classify("DeadLetterMessageAsync", EntityPath, null);
         var content = deadLetterReason is not null && ServiceBusTracker.ShowsContent(_options)
@@ -146,7 +166,7 @@ public class TrackingServiceBusReceiver : ServiceBusReceiver
         var (reqId, traceId) = _tracker.LogRequest(op, content);
         try
         {
-            await _inner.DeadLetterMessageAsync(message, deadLetterReason, deadLetterErrorDescription, cancellationToken);
+            await deadLetter();
             _tracker.LogResponse(op, reqId, traceId, null);
         }
         catch (Exception ex)
@@ -155,12 +175,6 @@ public class TrackingServiceBusReceiver : ServiceBusReceiver
             throw;
         }
     }
-
-    public override async Task DeadLetterMessageAsync(
-        ServiceBusReceivedMessage message,
-        IDictionary<string, object>? propertiesToModify = null,
-        CancellationToken cancellationToken = default)
-        => await _inner.DeadLetterMessageAsync(message, propertiesToModify, cancellationToken);
 
     public override async Task DeferMessageAsync(
         ServiceBusReceivedMessage message,
@@ -208,6 +222,9 @@ public class TrackingServiceBusReceiver : ServiceBusReceiver
 
     public override async Task CloseAsync(CancellationToken cancellationToken = default)
         => await _inner.CloseAsync(cancellationToken);
+
+    // The base's would close the empty receiver it was built as, and leave this one's open.
+    public override ValueTask DisposeAsync() => _inner.DisposeAsync();
 
     private void EstablishTestIdentityFromProperties(ServiceBusReceivedMessage message)
     {

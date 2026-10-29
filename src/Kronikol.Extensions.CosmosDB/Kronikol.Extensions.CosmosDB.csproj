@@ -10,7 +10,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.*" />
+    <!-- Microsoft.Azure.Cosmos: 3.46.0 is the first release whose graph carries no known advisory, as earlier ones ask
+         for Newtonsoft.Json 10.0.2, under GHSA-5crp-9r3c-p9vr (high), and 3.46.0 asks for none; the suite passes from
+         3.9.0, where CosmosClientOptions.HttpClientFactory came (harness floor/r2b-cosmosdb.txt). FloorLedger holds the
+         floor, and the test project's package fact reads it back from the packed nuspec; the suite runs on the newest
+         3.x, and on this floor with -p:FloorRun=true (plans/CLIENT_FLOORS_PLAN.md R2b). -->
+    <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.46.0" />
   </ItemGroup>
 
   <ItemGroup>

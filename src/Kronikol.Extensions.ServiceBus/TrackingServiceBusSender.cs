@@ -73,9 +73,29 @@ public class TrackingServiceBusSender : ServiceBusSender
         }
     }
 
+    // A batch's messages were added before it got here, so they carry no test identity; the send is drawn with its count.
     public override async Task SendMessagesAsync(
         ServiceBusMessageBatch messageBatch, CancellationToken cancellationToken = default)
-        => await _inner.SendMessagesAsync(messageBatch, cancellationToken);
+    {
+        var op = ServiceBusOperationClassifier.Classify("SendMessagesAsync", EntityPath, null) with
+        {
+            MessageCount = messageBatch.Count
+        };
+        var content = ServiceBusTracker.ShowsContent(_options)
+            ? $"[{messageBatch.Count} messages]"
+            : null;
+        var (reqId, traceId) = _tracker.LogRequest(op, content);
+        try
+        {
+            await _inner.SendMessagesAsync(messageBatch, cancellationToken);
+            _tracker.LogResponse(op, reqId, traceId, null);
+        }
+        catch (Exception ex)
+        {
+            _tracker.LogResponse(op, reqId, traceId, ex.Message);
+            throw;
+        }
+    }
 
     public override async Task<long> ScheduleMessageAsync(
         ServiceBusMessage message, DateTimeOffset scheduledEnqueueTime, CancellationToken cancellationToken = default)
@@ -131,6 +151,9 @@ public class TrackingServiceBusSender : ServiceBusSender
 
     public override async Task CloseAsync(CancellationToken cancellationToken = default)
         => await _inner.CloseAsync(cancellationToken);
+
+    // The base's would close the empty sender it was built as, and leave this one's open.
+    public override ValueTask DisposeAsync() => _inner.DisposeAsync();
 
     private string? GetMessageContent(ServiceBusMessage message)
     {

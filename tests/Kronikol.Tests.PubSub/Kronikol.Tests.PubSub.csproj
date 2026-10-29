@@ -26,6 +26,7 @@
     <Compile Include="..\Kronikol.Tests\CallGraph\TrackedMessages.cs" Link="TrackedMessages.cs" />
     <Compile Include="..\Kronikol.Tests\Packaging\PackedNuspec.cs" Link="PackedNuspec.cs" />
     <Compile Include="..\Kronikol.Tests\Packaging\FloorLedger.cs" Link="FloorLedger.cs" />
+    <Compile Include="..\Kronikol.Tests\Packaging\WrapperCoverage.cs" Link="WrapperCoverage.cs" />
   </ItemGroup>
 
 </Project>

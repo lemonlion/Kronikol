@@ -10,10 +10,20 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.*" />
+    <!-- The suite builds service providers. It takes the newest 10.x; with -p:FloorRun=true it takes 10.0.7, the least
+         the core's Microsoft.AspNetCore.Mvc.Testing 10.0.7 allows, which asks for no newer DependencyInjection.Abstractions
+         than the floor the package asks for, so the suite runs on that. -->
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.*" Condition="'$(FloorRun)' != 'true'" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.7" Condition="'$(FloorRun)' == 'true'" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.5.1" />
     <PackageReference Include="xunit.v3" Version="3.2.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" />
+    <!-- The suite runs on the newest 7.x; -p:FloorRun=true drops this reference, so it runs on the floor the package
+         asks for (7.11.0). -->
+    <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.*" Condition="'$(FloorRun)' != 'true'" />
+    <!-- The suite runs on the newest 10.x; -p:FloorRun=true drops this reference, so it runs on the floor the package
+         asks for (10.0.7). -->
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.*" Condition="'$(FloorRun)' != 'true'" />
   </ItemGroup>
 
   <ItemGroup>
@@ -29,6 +39,9 @@
     <Compile Include="..\Kronikol.Tests\Tracking\RequestHeaderAccessor.cs" Link="RequestHeaderAccessor.cs" />
     <Compile Include="..\Kronikol.Tests\History\HistoryGuard.cs" Link="HistoryGuard.cs" />
     <Compile Include="..\Kronikol.Tests\CallGraph\TrackedMessages.cs" Link="TrackedMessages.cs" />
+    <Compile Include="..\Kronikol.Tests\Packaging\WrapperCoverage.cs" Link="WrapperCoverage.cs" />
+    <Compile Include="..\Kronikol.Tests\Packaging\PackedNuspec.cs" Link="PackedNuspec.cs" />
+    <Compile Include="..\Kronikol.Tests\Packaging\FloorLedger.cs" Link="FloorLedger.cs" />
   </ItemGroup>
 
 </Project>

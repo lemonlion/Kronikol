@@ -9,11 +9,11 @@ namespace Kronikol.Extensions.EventHubs;
 /// An <see cref="EventHubProducerClient"/> subclass that intercepts send operations
 /// for test diagram tracking.
 /// <para>
-/// <b>Note:</b> The base class properties (<see cref="EventHubName"/>, <see cref="FullyQualifiedNamespace"/>,
-/// <see cref="IsClosed"/>) are not virtual in the Azure SDK and are shadowed with <c>new</c>.
-/// They work correctly when accessed through the <see cref="TrackingEventHubProducerClient"/> type,
-/// but accessing them through a polymorphic <see cref="EventHubProducerClient"/> reference will
-/// access the base implementation which may throw if no real connection was established.
+/// <b>Note:</b> The SDK client's <see cref="EventHubProducerClient.EventHubName"/>,
+/// <see cref="EventHubProducerClient.FullyQualifiedNamespace"/>, <see cref="EventHubProducerClient.Identifier"/> and
+/// <see cref="EventHubProducerClient.IsClosed"/> are not virtual. The client this derives from is built with the names
+/// and identifier of the client it wraps and is closed with it, so they read the same through an
+/// <see cref="EventHubProducerClient"/> reference. That client never connects: each call goes to <see cref="Inner"/>.
 /// </para>
 /// </summary>
 public class TrackingEventHubProducerClient : EventHubProducerClient
@@ -23,7 +23,14 @@ public class TrackingEventHubProducerClient : EventHubProducerClient
     private readonly EventHubsTrackingOptions _options;
 
     public TrackingEventHubProducerClient(
-        EventHubProducerClient inner, EventHubsTrackingOptions options) : base()
+        EventHubProducerClient inner, EventHubsTrackingOptions options) : this(inner, options, UnconnectedBase.NamesOf(inner))
+    {
+    }
+
+    private TrackingEventHubProducerClient(
+        EventHubProducerClient inner, EventHubsTrackingOptions options, (string Namespace, string EventHub, string? Identifier) names)
+        : base(names.Namespace, names.EventHub, UnconnectedBase.Credential,
+            new EventHubProducerClientOptions { Identifier = names.Identifier })
     {
         _inner = inner;
         _tracker = new EventHubsTracker(options, options.HttpContextAccessor);
@@ -128,8 +135,19 @@ public class TrackingEventHubProducerClient : EventHubProducerClient
         string partitionId, CancellationToken cancellationToken = default)
         => await _inner.GetPartitionPropertiesAsync(partitionId, cancellationToken);
 
+    // The client this derives from is closed with the one it wraps, as code holding this as the SDK type reads its
+    // IsClosed. Given the caller's token, a close that is cancelled leaves both open.
     public override async Task CloseAsync(CancellationToken cancellationToken = default)
-        => await _inner.CloseAsync(cancellationToken);
+    {
+        try
+        {
+            await _inner.CloseAsync(cancellationToken);
+        }
+        finally
+        {
+            await base.CloseAsync(cancellationToken);
+        }
+    }
 
     private static string? SerializeEvents(IList<EventData> events)
     {

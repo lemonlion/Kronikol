@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- R2b's fourth test for ServiceBus: the client on the extension's floor, or on the newest 7.x with -p:Newest=true
+       (which also compiles the calls to members only the newest has, under NEWEST), or on a given release with
+       -p:ClientVersion=<release>: the emulator needs UseDevelopmentEmulator, which releases before the floor lack. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+    <DefineConstants Condition="'$(Newest)' == 'true'">$(DefineConstants);NEWEST</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../../src/Kronikol.Extensions.ServiceBus/Kronikol.Extensions.ServiceBus.csproj" />
+    <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.*" Condition="'$(Newest)' == 'true'" />
+    <PackageReference Include="Azure.Messaging.ServiceBus" Version="$(ClientVersion)" Condition="'$(ClientVersion)' != ''" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,5 @@
+PubSub | remove StartAsync(SubscriptionHandler) | The_subscriber_leaves_to_its_base_only_overloads_shown_to_come_back: caught | named: True | Failed! 
+ServiceBus | remove CreateRuleManager(String, String) | The_client_leaves_to_its_base_only_the_members_this_class_names: caught | named: True | Failed! 
+ServiceBus | remove DisposeAsync() | The_sender_leaves_nothing_to_its_base: caught | named: True | Failed! 
+EventHubs | remove ReadEventsAsync(Boolean, ReadEventOptions, CancellationToken) | The_consumer_leaves_to_its_base_only_what_comes_back_to_an_override: caught | named: True | Failed! 
+EventHubs | remove GetPartitionPropertiesAsync(String, CancellationToken) | The_producer_leaves_to_its_base_only_what_comes_back_to_an_override: caught | named: True | Failed! 

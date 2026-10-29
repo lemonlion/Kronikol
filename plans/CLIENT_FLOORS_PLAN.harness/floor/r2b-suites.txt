@@ -1,0 +1,13 @@
+BlobStorage | exit 0 | Passed! - Failed: 0, Passed: 75, Skipped: 0, Total: 75 - Kronikol.Tests.BlobStorage.dll (net10.0) | audit: none
+BlobStorage floor | exit 0 | Passed! - Failed: 0, Passed: 75, Skipped: 0, Total: 75 - Kronikol.Tests.BlobStorage.dll (net10.0) | audit: none
+StorageQueues | exit 0 | Passed! - Failed: 0, Passed: 87, Skipped: 0, Total: 87 - Kronikol.Tests.StorageQueues.dll (net10.0) | audit: none
+StorageQueues floor | exit 0 | Passed! - Failed: 0, Passed: 87, Skipped: 0, Total: 87 - Kronikol.Tests.StorageQueues.dll (net10.0) | audit: none
+EventHubs | exit 0 | Passed! - Failed: 0, Passed: 122, Skipped: 0, Total: 122 - Kronikol.Tests.EventHubs.dll (net10.0) | audit: none
+EventHubs floor | exit 0 | Passed! - Failed: 0, Passed: 122, Skipped: 0, Total: 122 - Kronikol.Tests.EventHubs.dll (net10.0) | audit: none
+CosmosDB | exit 0 | Passed! - Failed: 0, Passed: 118, Skipped: 0, Total: 118 - Kronikol.Tests.CosmosDB.dll (net10.0) | audit: none
+CosmosDB floor | exit 0 | Passed! - Failed: 0, Passed: 118, Skipped: 0, Total: 118 - Kronikol.Tests.CosmosDB.dll (net10.0) | audit: none
+ServiceBus | exit 0 | Passed! - Failed: 0, Passed: 194, Skipped: 0, Total: 194 - Kronikol.Tests.ServiceBus.dll (net10.0) | audit: none
+ServiceBus floor | exit 0 | Passed! - Failed: 0, Passed: 194, Skipped: 0, Total: 194 - Kronikol.Tests.ServiceBus.dll (net10.0) | audit: none
+PubSub | exit 0 | Passed! - Failed: 0, Passed: 103, Skipped: 0, Total: 103 - Kronikol.Tests.PubSub.dll (net10.0) | audit: none
+PubSub floor | exit 0 | Passed! - Failed: 0, Passed: 103, Skipped: 0, Total: 103 - Kronikol.Tests.PubSub.dll (net10.0) | audit: none
+ALLDONE

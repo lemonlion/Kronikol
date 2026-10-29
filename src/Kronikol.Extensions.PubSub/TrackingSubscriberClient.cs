@@ -54,6 +54,9 @@ public class TrackingSubscriberClient : SubscriberClient
         return _inner.StartAsync(wrappedHandler);
     }
 
+    // The base's handler overload does not come back to the delegate one; it throws.
+    public override Task StartAsync(SubscriptionHandler handler) => StartAsync(handler.HandleMessage);
+
     public override Task StopAsync(CancellationToken cancellationToken) => _inner.StopAsync(cancellationToken);
     // From 3.35.0 the base's StopAsync(TimeSpan) comes here, and the base of this one throws.
     public override Task StopAsync(ShutdownOptions shutdownOptions, CancellationToken cancellationToken) =>

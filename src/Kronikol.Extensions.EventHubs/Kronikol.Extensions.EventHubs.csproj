@@ -7,7 +7,13 @@
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Azure.Messaging.EventHubs" Version="5.*" />
+    <!-- Azure.Messaging.EventHubs: 5.6.0 is the oldest 5.x the extension compiles against, as each tracking client
+         builds the client it derives from with the Identifier of the client it wraps, which 5.6.0 added (before that
+         change the oldest was 5.5.0, which added the EventData.MessageId the consumer reads); the suite passes there,
+         and its graph carries no known advisory (harness floor/r2b-eventhubs.txt, results/r2b-eventhubs-base.txt).
+         FloorLedger holds the floor, and the test project's package fact reads it back from the packed nuspec; the
+         suite runs on the newest 5.x, and on this floor with -p:FloorRun=true (plans/CLIENT_FLOORS_PLAN.md R2b). -->
+    <PackageReference Include="Azure.Messaging.EventHubs" Version="5.6.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Kronikol\Kronikol.csproj" />

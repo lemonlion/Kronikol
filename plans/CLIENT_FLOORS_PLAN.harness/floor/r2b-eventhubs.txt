@@ -1,0 +1,13 @@
+# Azure.Messaging.EventHubs: 35 stable 5.x releases, 5.0.0 to 5.12.2; binary search
+5.12.2 | ok | Kronikol.Tests.EventHubs: Passed! - Failed: 0, Passed: 91, Skipped: 0, Total: 91 | audit: none | resolved: Azure.Messaging.EventHubs/5.12.2
+5.7.5 | ok | Kronikol.Tests.EventHubs: Passed! - Failed: 0, Passed: 91, Skipped: 0, Total: 91 | audit: none | resolved: Azure.Messaging.EventHubs/5.7.5
+5.5.0 | ok | Kronikol.Tests.EventHubs: Passed! - Failed: 0, Passed: 91, Skipped: 0, Total: 91 | audit: none | resolved: Azure.Messaging.EventHubs/5.5.0
+5.3.0 | BUILD FAILED | Kronikol.Tests.EventHubs: error CS1061: 'EventData' does not contain a definition for 'MessageId' and no accessible extension method 'MessageId' accepting a first argument of type 'EventData | audit: none | resolved: Azure.Messaging.EventHubs/5.3.0
+5.4.0 | BUILD FAILED | Kronikol.Tests.EventHubs: error CS1061: 'EventData' does not contain a definition for 'MessageId' and no accessible extension method 'MessageId' accepting a first argument of type 'EventData | audit: none | resolved: Azure.Messaging.EventHubs/5.4.0
+5.4.1 | BUILD FAILED | Kronikol.Tests.EventHubs: error CS1061: 'EventData' does not contain a definition for 'MessageId' and no accessible extension method 'MessageId' accepting a first argument of type 'EventData | audit: none | resolved: Azure.Messaging.EventHubs/5.4.1
+# oldest passing: 5.5.0
+# after the wrapper fix: each tracking client builds the client it derives from with the Identifier of the client it
+# wraps, which 5.6.0 added (results/r2b-eventhubs-base.txt), so the floor moves to 5.6.0; the suite on both runs
+5.6.0 | ok | Kronikol.Tests.EventHubs: Passed! - Failed: 0, Passed: 122, Skipped: 0, Total: 122 | audit: none | resolved: Azure.Messaging.EventHubs/5.6.0
+5.12.2 | ok | Kronikol.Tests.EventHubs: Passed! - Failed: 0, Passed: 122, Skipped: 0, Total: 122 | audit: none | resolved: Azure.Messaging.EventHubs/5.12.2
+# floor: 5.6.0

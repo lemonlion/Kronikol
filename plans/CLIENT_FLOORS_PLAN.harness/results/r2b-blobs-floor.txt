@@ -1,0 +1,20 @@
+# Azure.Storage.Blobs 12.13.0 | Azurite at http://127.0.0.1:20000/devstoreaccount1
+create a container: ok created
+upload a blob: ok uploaded
+download it: ok hello
+list the container: ok a.txt
+delete the blob: ok deleted
+delete the container: ok deleted
+## What Kronikol recorded
+  Request Upload /devstoreaccount1/probe-12-13-0  (BlobStorage)
+  Response Upload /devstoreaccount1/probe-12-13-0 Created (BlobStorage)
+  Request Upload /devstoreaccount1/probe-12-13-0/a.txt  (BlobStorage)
+  Response Upload /devstoreaccount1/probe-12-13-0/a.txt Created (BlobStorage)
+  Request Download /devstoreaccount1/probe-12-13-0/a.txt  (BlobStorage)
+  Response Download /devstoreaccount1/probe-12-13-0/a.txt OK (BlobStorage)
+  Request Other /devstoreaccount1/probe-12-13-0  (BlobStorage)
+  Response Other /devstoreaccount1/probe-12-13-0 OK (BlobStorage)
+  Request Delete /devstoreaccount1/probe-12-13-0/a.txt  (BlobStorage)
+  Response Delete /devstoreaccount1/probe-12-13-0/a.txt Accepted (BlobStorage)
+  Request Delete /devstoreaccount1/probe-12-13-0  (BlobStorage)
+  Response Delete /devstoreaccount1/probe-12-13-0 Accepted (BlobStorage)

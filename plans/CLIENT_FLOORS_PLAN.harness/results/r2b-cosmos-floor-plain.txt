@@ -1,0 +1,10 @@
+# Microsoft.Azure.Cosmos 3.46.0 | emulator at http://127.0.0.1:28081/ | no tracking
+create a database: ok created
+create a container: ok created
+create an item: ok Created
+read it: ok hello
+query it: THROWS ArgumentOutOfRangeException: Specified argument was out of the range of valid values. (Parameter 'Unknown JsonNodeType: Unknown.')
+replace it: ok again
+delete it: ok NoContent
+delete the database: ok NoContent
+## What Kronikol recorded

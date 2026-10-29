@@ -6,8 +6,8 @@ namespace Kronikol.Tests.Packaging;
 /// are the system under test's: a suite that hosts its services in-process runs them on whatever client version its
 /// test project resolves, and NuGet packs a fixed version as a floor (<c>&gt;=</c>) that every consumer must meet. So
 /// each entry is a floor someone measured, not the newest release of the day the package was packed (a float) or of the
-/// day someone last moved the pin. <see cref="FloorLedgerTests"/> holds every packable csproj to this list: no float
-/// unless it is marked still floating, every fixed pin here at its version, and the marks only go.
+/// day someone last moved the pin. <c>FloorLedgerTests</c>, in Kronikol.Tests, holds every packable csproj to this
+/// list: no float unless it is marked still floating, every fixed pin here at its version, and the marks only go.
 /// </summary>
 internal static class FloorLedger
 {
@@ -33,7 +33,7 @@ internal static class FloorLedger
     internal sealed record Entry(string Project, string Package, string Version, Basis Basis, string Evidence);
 
     /// <summary>No more entries may be marked still floating than this. Each batch lowers it; none raises it.</summary>
-    internal const int StillFloatingAtMost = 16;
+    internal const int StillFloatingAtMost = 10;
 
     /// <summary>No more fixed pins may be marked unmeasured than this. Each batch lowers it; none raises it.</summary>
     internal const int UnmeasuredAtMost = 33;
@@ -70,18 +70,18 @@ internal static class FloorLedger
         // Clients.
         Measured("Kronikol.Extensions.BigQuery", "Google.Cloud.BigQuery.V2", "3.0.0", "CLIENT_FLOORS_PLAN.md R1"),
         Measured("Kronikol.Extensions.Bigtable", "Google.Cloud.Bigtable.V2", "3.0.0", "R2a: floor/r2a-bigtable.txt"),
-        Floating("Kronikol.Extensions.BlobStorage", "Azure.Storage.Blobs", "12.*", "R2b"),
+        Measured("Kronikol.Extensions.BlobStorage", "Azure.Storage.Blobs", "12.13.0", "R2b: floor/r2b-blobstorage.txt"),
         Unmeasured("Kronikol.Extensions.ClickHouse.Client", "ClickHouse.Client", "7.14.0", "R3b"),
         Unmeasured("Kronikol.Extensions.ClickHouse.Driver", "ClickHouse.Driver", "1.4.0", "R3b"),
         Unmeasured("Kronikol.Extensions.ClickHouse.Octonica", "Octonica.ClickHouseClient", "3.1.10", "R3b"),
         Measured("Kronikol.Extensions.CloudStorage", "Google.Cloud.Storage.V1", "4.0.0", "R2a: floor/r2a-cloudstorage.txt"),
-        Floating("Kronikol.Extensions.CosmosDB", "Microsoft.Azure.Cosmos", "3.*", "R2b"),
+        Measured("Kronikol.Extensions.CosmosDB", "Microsoft.Azure.Cosmos", "3.46.0", "R2b: floor/r2b-cosmosdb.txt"),
         Floating("Kronikol.Extensions.DispatchProxy", "Microsoft.Extensions.DependencyInjection.Abstractions", "10.*", "R2c"),
         Unmeasured("Kronikol.Extensions.DynamoDB", "AWSSDK.DynamoDBv2", "4.0.18.1", "R3b"),
         Floating("Kronikol.Extensions.EfCore.Relational", "Microsoft.EntityFrameworkCore.Relational", "10.*", "R2c"),
         Unmeasured("Kronikol.Extensions.Elasticsearch", "Elastic.Clients.Elasticsearch", "9.4.0", "R3b"),
         Unmeasured("Kronikol.Extensions.EventBridge", "AWSSDK.EventBridge", "4.0.5.29", "R3b"),
-        Floating("Kronikol.Extensions.EventHubs", "Azure.Messaging.EventHubs", "5.*", "R2b"),
+        Measured("Kronikol.Extensions.EventHubs", "Azure.Messaging.EventHubs", "5.6.0", "R2b: floor/r2b-eventhubs.txt, the base's Identifier results/r2b-eventhubs-base.txt"),
         Measured("Kronikol.Extensions.Grpc", "Grpc.Net.Client", "2.45.0", "R2a: floor/r2a-grpc.txt"),
         Measured("Kronikol.Extensions.Grpc", "Google.Protobuf", "3.19.4", "R2a: floor/r2a-grpc.txt"),
         Measured("Kronikol.Extensions.Kafka", "Confluent.Kafka", "2.2.0", "R2a: floor/r2a-kafka.txt"),
@@ -106,14 +106,14 @@ internal static class FloorLedger
         Unmeasured("Kronikol.Extensions.S3", "AWSSDK.S3", "4.0.23", "R3b"),
         Unmeasured("Kronikol.Extensions.SNS", "AWSSDK.SimpleNotificationService", "4.0.2.30", "R3b"),
         Unmeasured("Kronikol.Extensions.SQS", "AWSSDK.SQS", "4.0.2.28", "R3b"),
-        Floating("Kronikol.Extensions.ServiceBus", "Azure.Messaging.ServiceBus", "7.*", "R2b"),
-        Floating("Kronikol.Extensions.ServiceBus", "Microsoft.Extensions.DependencyInjection.Abstractions", "10.*", "R2b"),
+        Measured("Kronikol.Extensions.ServiceBus", "Azure.Messaging.ServiceBus", "7.11.0", "R2b: floor/r2b-servicebus.txt"),
+        Measured("Kronikol.Extensions.ServiceBus", "Microsoft.Extensions.DependencyInjection.Abstractions", "10.0.7", "R2b: floor/r2b-servicebus-di.txt"),
         Measured("Kronikol.Extensions.Spanner", "Google.Cloud.Spanner.Data", "5.0.0", "R2a: floor/r2a-spanner.txt"),
         Measured("Kronikol.Extensions.Spanner", "Google.Cloud.Spanner.V1", "5.0.0", "R2a: floor/r2a-spanner.txt"),
         Measured("Kronikol.Extensions.Spanner", "Grpc.Core.Api", "2.66.0", "R2a: floor/r2a-spanner.txt"),
         Unmeasured("Kronikol.Extensions.SqlClient", "Microsoft.Data.SqlClient", "7.0.1", "R3b"),
         Floating("Kronikol.Extensions.Sqlite", "Microsoft.Data.Sqlite", "10.*", "R2c"),
-        Floating("Kronikol.Extensions.StorageQueues", "Azure.Storage.Queues", "12.*", "R2b"),
+        Measured("Kronikol.Extensions.StorageQueues", "Azure.Storage.Queues", "12.11.0", "R2b: floor/r2b-storagequeues.txt"),
         Floating("Kronikol.Extensions.TcpTap", "MongoDB.Bson", "2.*", "R2c"),
 
         // The Java PlantUML renderer, which consumers rarely reference themselves.

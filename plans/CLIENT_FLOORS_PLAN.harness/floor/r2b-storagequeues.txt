@@ -1,0 +1,10 @@
+# Azure.Storage.Queues: 43 stable 12.x releases, 12.0.0 to 12.28.1; binary search
+12.28.1 | ok | Kronikol.Tests.StorageQueues: Passed! - Failed: 0, Passed: 86, Skipped: 0, Total: 86 | audit: none | resolved: Azure.Storage.Queues/12.28.1
+12.13.0 | ok | Kronikol.Tests.StorageQueues: Passed! - Failed: 0, Passed: 86, Skipped: 0, Total: 86 | audit: none | resolved: Azure.Storage.Queues/12.13.0
+12.5.0 | ok | Kronikol.Tests.StorageQueues: Passed! - Failed: 0, Passed: 86, Skipped: 0, Total: 86 | audit: Azure.Storage.Queues 12.5.0 moderate (Kronikol.Tests.StorageQueues); Azure.Storage.Queues 12.5.0 moderate (TargetFramework=net10) | resolved: Azure.Storage.Queues/12.5.0
+12.3.1 | ok | Kronikol.Tests.StorageQueues: Passed! - Failed: 0, Passed: 86, Skipped: 0, Total: 86 | audit: Azure.Storage.Queues 12.3.1 moderate (Kronikol.Tests.StorageQueues); Azure.Storage.Queues 12.3.1 moderate (TargetFramework=net10) | resolved: Azure.Storage.Queues/12.3.1
+12.1.1 | ok | Kronikol.Tests.StorageQueues: Passed! - Failed: 0, Passed: 86, Skipped: 0, Total: 86 | audit: Azure.Storage.Queues 12.1.1 moderate (Kronikol.Tests.StorageQueues); Azure.Storage.Queues 12.1.1 moderate (TargetFramework=net10) | resolved: Azure.Storage.Queues/12.1.1
+12.1.0 | ok | Kronikol.Tests.StorageQueues: Passed! - Failed: 0, Passed: 86, Skipped: 0, Total: 86 | audit: Azure.Storage.Queues 12.1.0 moderate (Kronikol.Tests.StorageQueues); Azure.Storage.Queues 12.1.0 moderate (TargetFramework=net10) | resolved: Azure.Storage.Queues/12.1.0
+12.0.0 | ok | Kronikol.Tests.StorageQueues: Passed! - Failed: 0, Passed: 86, Skipped: 0, Total: 86 | audit: Azure.Storage.Queues 12.0.0 moderate (Kronikol.Tests.StorageQueues); Azure.Storage.Queues 12.0.0 moderate (TargetFramework=net10) | resolved: Azure.Storage.Queues/12.0.0
+# oldest passing: 12.0.0
+12.11.0 | ok | Kronikol.Tests.StorageQueues: Passed! - Failed: 0, Passed: 86, Skipped: 0, Total: 86 | audit: none | resolved: Azure.Storage.Queues/12.11.0

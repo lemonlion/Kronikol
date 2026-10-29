@@ -4,6 +4,79 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.27.3] - 2026-10-29
+
+The patch part moves (5.27.2 to 5.27.3): packaging and tracking fixes, with no new option and no new public member (#97;
+`plans/CLIENT_FLOORS_PLAN.md` R2b).
+
+### Fixed
+
+- **The five Azure packages stop raising the client every consumer has to take.** BlobStorage, StorageQueues,
+  EventHubs, CosmosDB and ServiceBus referenced their clients as floats (`12.*`, `5.*`, `3.*`, `7.*`, and `10.*` for
+  ServiceBus's dependency injection abstractions), which NuGet packs as the newest version of the day. Each now asks for
+  a measured floor: the oldest release its suite passes on, past every known advisory in its graph.
+
+  | Package | Asks for |
+  |---|---|
+  | `Kronikol.Extensions.BlobStorage` | `Azure.Storage.Blobs` 12.13.0 |
+  | `Kronikol.Extensions.StorageQueues` | `Azure.Storage.Queues` 12.11.0 |
+  | `Kronikol.Extensions.EventHubs` | `Azure.Messaging.EventHubs` 5.6.0 |
+  | `Kronikol.Extensions.CosmosDB` | `Microsoft.Azure.Cosmos` 3.46.0 |
+  | `Kronikol.Extensions.ServiceBus` | `Azure.Messaging.ServiceBus` 7.11.0, `Microsoft.Extensions.DependencyInjection.Abstractions` 10.0.7 |
+
+  Blob Storage and Storage Queues sit at the first releases past GHSA-64x4-9hc6-r2h6 (moderate, in client-side
+  encryption), and Cosmos DB at the first whose graph does not ask for Newtonsoft.Json 10.0.2, under GHSA-5crp-9r3c-p9vr
+  (high). Behaviour change: a project that takes a client only through Kronikol now resolves that floor, where it
+  resolved the newest; reference the client yourself for a newer one.
+- **A tracked Pub/Sub subscriber started with a `SubscriptionHandler` threw.** The base
+  `SubscriberClient.StartAsync(SubscriptionHandler)` does not come back to the delegate overload `TrackingSubscriberClient`
+  overrides, so it ran against the empty client the wrapper is built as. It now handles each message on the tracked path.
+- **Service Bus calls the wrappers left to their base threw, or went undrawn.** Through a `TrackingServiceBusClient` held
+  as `ServiceBusClient`, as dependency injection hands it out, `CreateProcessor(queue)`, `CreateProcessor(topic,
+  subscription)` and `CreateRuleManager` threw `NullReferenceException`, and so did a dead-letter with properties and a
+  reason (new in 7.11.0); disposing a sender or a receiver left the one it wraps open; and a batch send, and a
+  dead-letter with properties alone, went through undrawn. Each now reaches the client the wrapper holds, and the sends
+  and dead-letters are drawn. A batch's messages carry no test identity, as the caller builds the batch.
+  `GetMessageSessionsAsync`, new in 7.21.0, is past the 7.11.0 floor, so the wrapper cannot override it: call it on
+  `Inner`.
+- **Event Hubs clients held as the SDK type read an empty client.** Their names, `Identifier` and `IsClosed` are not
+  virtual, so a `TrackingEventHubProducerClient` or `TrackingEventHubConsumerClient` held as `EventHubProducerClient` or
+  `EventHubConsumerClient` threw `NullReferenceException` for its names, had no identifier, and said it was open after
+  it was disposed. Each now derives from a client built with the names and identifier of the client it wraps, which
+  never connects and is closed with it. The identifier needs 5.6.0, so the package asks for 5.6.0.
+- **Event Hubs reads went unanswered.** `ReadEventsAsync(bool, ReadEventOptions, CancellationToken)` ran against the
+  empty base and threw; a read its caller left early, or that failed, drew its request with no response; and a read
+  from one partition never showed at `Raw` how many events it read. Every read now goes through the client it wraps and
+  is drawn with its response, the failure's message when it fails. Behaviour change: a read from one partition shows
+  its count at `Raw`, as a read from every partition did.
+
+### Tests
+
+- `WrapperCoverage` lists the public virtual members each tracking client leaves to the SDK client it derives from, and
+  a guard fact per wrapper holds it to the members known to come back to an override, on whichever release the run
+  resolves, naming each in full when one is not: a release that adds a virtual turns the newest run red. Five
+  mutations, each an override removed, each turn their guard red.
+- The floor ledger's count of floats still to measure falls from 16 to 10. Each of the five packages has a fact that
+  packs it and holds its nuspec to the ledger, and each suite runs on the newest client and, with `-p:FloorRun=true`,
+  on the floor.
+- The ledger's doc comment no longer names `FloorLedgerTests` in a `cref` that the projects linking the file cannot
+  resolve, which warned CS1574 in each of their builds.
+
+### Documentation
+
+- The wiki pages of the five packages gain "Client versions": the floor and why it sits there, and that the suite runs
+  on the newest and, in CI, on the floor. The Service Bus page says to call `GetMessageSessionsAsync` on `Inner` and
+  that a batch's messages carry no test identity; the Cosmos DB page says that a query against the vnext-preview
+  emulator needs a newer client than the floor; the Event Hubs page names what a read shows at `Raw`.
+
+Checks: the core suite (11,543 passed, 2 skipped, on 5.27.2 with R2b), with the wrapper guards, each red on the
+override it guards in five mutations; each of the six suites on the newest client and on its floor (BlobStorage 75,
+StorageQueues 87, EventHubs 122, CosmosDB 118, ServiceBus 194 and PubSub 103, each on both, with no advisory in any
+graph); the real Blob, Queue, Cosmos DB, Service Bus and Event Hubs clients through the extensions against Azurite and
+the Cosmos DB, Service Bus and Event Hubs emulators, on the floor, or the oldest release that reaches the emulator,
+and on the newest; and the Release build of `release.slnf`, whose remaining advisories are the older ones 5.22.1
+listed.
+
 ## [5.27.2] - 2026-10-29
 
 The patch part moves (5.27.1 to 5.27.2): fixes to the Search tab and the filter field, nothing new to call.

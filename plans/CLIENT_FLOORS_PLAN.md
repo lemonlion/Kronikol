@@ -4,7 +4,7 @@
 and plan a fix for the underlying problem; audited the same day at 5.14.0 (`8d7d1e1d`), at the owner's ask to make it
 complete and accurate (section 11 lists what the audit found and changed). **Green-lit 2026-10-28** by the owner ("Can
 you implement the plan in full"), every question in section 10 at its recommendation; executing. **R1 released as
-5.22.1, R2a as 5.27.1** (section 11).
+5.22.1, R2a as 5.27.1, R2b as 5.27.3** (section 11).
 
 **Issues:** [#205](https://github.com/lemonlion/Kronikol/issues/205), "BigQuery: the extension's floor,
 Google.Cloud.BigQuery.V2 3.12, runs ExecuteQuery through jobs.query, whose timestamps the emulator answers in seconds,
@@ -418,6 +418,33 @@ None of their graphs carries a known advisory. The gRPC test project's server mo
 `2.*` on the normal run, and `$(GrpcServerFloor)`, 2.45.0, under `-p:FloorRun=true`. After R2a the ledger holds 16
 still floating, 33 unmeasured and 12 measured.
 
+*As built in R2b:* the five Azure packages ask for measured floors (RUN, `floor/r2b-*.txt`, and the fourth test in
+`probe-r2b/`):
+
+| Package | Floor | Why there |
+|---|---|---|
+| BlobStorage, `Azure.Storage.Blobs` | 12.13.0 | The first release past GHSA-64x4-9hc6-r2h6 (moderate, a padding oracle in client-side encryption); the suite passes from 12.0.0 |
+| StorageQueues, `Azure.Storage.Queues` | 12.11.0 | The first release past the same advisory; the suite passes from 12.0.0 |
+| EventHubs, `Azure.Messaging.EventHubs` | 5.6.0 | Each tracking client builds the client it derives from with the identifier of the client it wraps, which 5.6.0 added (F13); before that fix the suite passed from 5.5.0, where `EventData.MessageId` came |
+| CosmosDB, `Microsoft.Azure.Cosmos` | 3.46.0 | The first release whose graph carries no known advisory: earlier ones ask for Newtonsoft.Json 10.0.2, under GHSA-5crp-9r3c-p9vr (high); the suite passes from 3.9.0, where `CosmosClientOptions.HttpClientFactory` came |
+| ServiceBus, `Azure.Messaging.ServiceBus` | 7.11.0 | `TrackingServiceBusReceiver` overrides the `DeadLetterMessageAsync` with properties and a reason that 7.11.0 added (F12); the suite passes from 7.10.0 without it |
+| ServiceBus, `Microsoft.Extensions.DependencyInjection.Abstractions` | 10.0.7 | The least the core's graph allows: `Microsoft.AspNetCore.Mvc.Testing` 10.0.7 asks for it, and a lower pin is a downgrade NuGet refuses (NU1605); R3a measures that pin |
+
+The last took three searches. While Service Bus floated, its newest, 7.21.0, brought an Azure.Core that asks for
+10.0.10; with Service Bus on its floor, the test project's own 10.0.0 conflicted with the core's 10.0.7 (NU1605); the
+test project now takes 10.0.7 under `-p:FloorRun=true` and `10.*` otherwise (`floor/r2b-servicebus-di.txt`).
+
+The fourth test drove each real client through its extension against the emulators
+(`podman/start-r2b-emulators.sh`, `results/r2b-*.txt`): Azurite for Blob Storage and Storage Queues, and the Cosmos DB
+vnext-preview emulator, each on the floor and on the newest; the Service Bus and Event Hubs emulators on the newest and
+on the oldest release that reads `UseDevelopmentEmulator`, 7.17.3 and 5.11.0, as their floors cannot reach an
+emulator. It found that the Service Bus and Event Hubs wrappers left members to their base, which, built through the
+constructor for mocking, runs against an empty client (F12, F13), and a sweep of every wrapper found F11.
+`WrapperCoverage` (`tests/Kronikol.Tests/Packaging/`) lists the public virtual members a wrapper leaves to its SDK base,
+and a guard fact per wrapper holds it to the members known to come back to an override, on whichever release the run
+resolves, so a release that adds a virtual turns the newest run red. After R2b the ledger holds 10 still floating, 33
+unmeasured and 18 measured.
+
 **Not chosen: central package management**, #97's third option. RUN, `restore/cpm-float/`: under
 `ManagePackageVersionsCentrally`, restore rejects a central floating version (`NU1011: The following PackageVersion
 items cannot specify a floating version`) unless a project sets `CentralPackageFloatingVersionsEnabled`, so a test
@@ -493,10 +520,14 @@ together they can share one patch release (Q7).
 | `BigQueryPackageTests.The_packed_extension_asks_for_its_measured_client_floor` | the nuspec asks for 3.0.0 | 5.12.0 (asks 3.12.0) |
 | The BigQuery suite with `-p:FloorRun=true` in CI | the extension works on its floor, not only compiles | a floor raised by a call into a newer API |
 | The BigQuery suite without it | it still runs on the newest 3.x | a missing direct reference (it would run on 3.0.0) |
-| The floor ledger's facts, six as built (section 5.2) | no packable project floats, every consumer-facing pin is in the ledger at its version, the still-floating and unmeasured marks only go, and the ledger names only references that exist, each once, each with its basis | an empty ledger; the counts are 25 and 33 after R1, 16 and 33 after R2a |
+| The floor ledger's facts, six as built (section 5.2) | no packable project floats, every consumer-facing pin is in the ledger at its version, the still-floating and unmeasured marks only go, and the ledger names only references that exist, each once, each with its basis | an empty ledger; the counts are 25 and 33 after R1, 16 and 33 after R2a, 10 and 33 after R2b |
 | Each R2 and R3 package's floor run and nuspec check | as R1 | each batch's parent commit |
 | `TrackingSubscriberClientTests` (R2a) | stopping the tracking subscriber stops the client it wraps, by each overload | R2a's parent on 3.39.0: two of the three throw `NotImplementedException` (F8) |
 | `A_statement_is_named_for_what_it_does_not_for_the_call_that_carries_it` and the server observer's twin (R2a) | an INSERT, UPDATE or DELETE through `ExecuteSql` is drawn as what it does | R2a's parent: each drawn as `SELECT FROM <table>` (F9) |
+| The wrapper guards, one per tracking client that derives from an SDK client (R2b) | the client leaves to its SDK base only the members known to come back to an override, on whichever release the run resolves, and names each in full when one is not | each of five mutations, an override removed (`floor/wrapper-mutations.txt`); on the newest run, a release that adds a virtual |
+| `TrackingClientOverloadTests` (R2b) | each Pub/Sub publish overload sends one tracked message through the client it wraps, and a subscriber started with a `SubscriptionHandler` handles on the tracked path | R2b's parent: the handler start throws (F11) |
+| `TrackingServiceBusWrapperCoverageTests` (R2b) | processors, rule managers, disposal, a batch send and both dead-letters with properties reach the client the wrapper holds, and the sends and dead-letters are drawn | R2b's parent: `NullReferenceException`, or undrawn (F12) |
+| `TrackingEventHubsWrapperCoverageTests` (R2b) | held as the SDK type, the clients have the names and identifier of the clients they wrap and are closed with them; each of the five reads goes through the same overload of the client it wraps and is drawn with its response when it ends, is left early or fails, with its count at `Raw` | R2b's parent: 23 of its facts and theory rows (F13) |
 
 No Playwright fact: nothing in a report changes.
 
@@ -514,6 +545,14 @@ No Playwright fact: nothing in a report changes.
 | F8 | `TrackingSubscriberClient` left `SubscriberClient.StopAsync(ShutdownOptions, CancellationToken)`, new in Pub/Sub 3.35.0, to its base, which throws `NotImplementedException`, and the base `StopAsync(TimeSpan)` goes through it: on 3.35.0 and later both stops threw through the wrapper (RUN, `probe-r2a/pubsub` on 3.39.0 against the emulator). The suite's stubs never stopped a subscriber. | Kronikol | Fixed in R2a: the wrapper overrides it, which needs 3.35.0 to compile, so that is the floor; `TrackingSubscriberClientTests` |
 | F9 | The interceptor that `SpannerConnectionStringBuilder.WithTestTracking` installs, and the server observer, named an `ExecuteSql` statement for the call that carried it, so an INSERT, UPDATE or DELETE was drawn as `SELECT FROM <table>`; `TrackingSpannerCommand` named it right (RUN, `probe-r2a/spanner` against the emulator, on 5.0.0 and 5.12.0 alike). | Kronikol | Fixed in R2a: both name a statement the SQL classifier knows for what it does; two theories |
 | F10 | `Kronikol.Extensions.MySqlConnector` pins MySqlConnector 2.5.0, one of R3b's pins, and GHSA-473q-m89c-ghf8 (moderate, published 2026-10-28) covers every release before 2.6.1: in zero-configuration TLS mode the client sends the account password before it has verified the server's certificate (RUN: NU1902 in R2a's Release build of `release.slnf`). | Kronikol | Moved in R2a to 2.6.1, the first release past it, as A3 has it; the ledger keeps it unmeasured, at its new version, for R3b |
+| F11 | `TrackingSubscriberClient` left `SubscriberClient.StartAsync(SubscriptionHandler)` to its base, whose body does not come back to the delegate overload the wrapper overrides: it throws, so a subscriber started with a `SubscriptionHandler` threw through the wrapper (READ, `probe-r2b/wrappers.cs`, then RUN in a fact). The eight `PublishAsync` overloads it leaves come back to the one it overrides. | Kronikol | Fixed in R2b: the override hands the handler's method to the tracked overload; `TrackingClientOverloadTests`, with a guard fact for each client |
+| F12 | The Service Bus wrappers left to their base `CreateProcessor(String)`, `CreateProcessor(String, String)`, `CreateRuleManager`, the `DeadLetterMessageAsync` with properties and a reason (new in 7.11.0) and the sender's and receiver's `DisposeAsync`: against the emulator the processors, the rule manager and that dead-letter threw `NullReferenceException` through a wrapper held as the SDK type, and a batch send and a dead-letter with properties went through undrawn (RUN, `results/r2b-servicebus-newest-before-fix.txt`). | Kronikol | Fixed in R2b, each reaching the client the wrapper holds, the batch send and both dead-letters drawn; the override sets the floor at 7.11.0. Left: `GetMessageSessionsAsync`, new in 7.21.0, which a wrapper built against 7.11.0 cannot override; through the wrapper it throws, and the wiki says to call it on `Inner`. A batch's messages carry no test identity, as the caller built the batch |
+| F13 | The Event Hubs wrappers, held as the SDK type, threw `NullReferenceException` for their names, had no `Identifier` and said they were open after disposal, as those members are not virtual and read the empty base; the consumer left `ReadEventsAsync(Boolean, ReadEventOptions, CancellationToken)` to its base, which threw; a read its caller left early, or that failed, drew a request with no response; and a read of one partition never showed at `Raw` how many events it read (RUN, `results/r2b-eventhubs-newest-before-fix.txt`: 4 requests, 2 responses). | Kronikol | Fixed in R2b: each wrapper builds its base from the names and identifier of the client it wraps, with a credential that fails at once if asked for a token, and closes it with that client; the SDK asks the credential before it opens a connection, so a call that reached the base would never touch the network (`results/r2b-eventhubs-base.txt`). The five reads go through one tracked loop. `Identifier` needs 5.6.0, the floor |
+| F14 | That base is no fix for Service Bus: its client resolves the host before it asks for a token ("No such host is known" in 201 ms with retries off; with them on, it waits out the caller's token), so a call that reached the base would go to the network (RUN). | Kronikol | Tried in R2b and reverted: the Service Bus client keeps the constructor for mocking, and `GetMessageSessionsAsync` stays F12's recorded gap |
+| F15 | Storage Queues against Azurite name every call `Other /`, on 12.11.0 and on 12.30.1 alike (RUN, `results/r2b-queues-{floor,newest}.txt`): #125's F10. | Kronikol, #125 | Left to `EMULATOR_URL_SHAPES_PLAN.md` R2, green-lit 2026-10-29 |
+| F16 | Cosmos DB 3.46.0's query fails against the vnext-preview emulator ("Unknown JsonNodeType: Unknown"), with Kronikol and without it (RUN, `results/r2b-cosmos-floor-plain.txt`); 3.63.3's passes, and every other call works through the extension on both. | upstream, the client or the emulator | Wiki: a query against vnext-preview needs a newer client than the floor |
+| F17 | xUnit cuts a string over 50 characters short in a collection failure, so a guard that listed `ReadEventsAsync(Boolean, ReadEventOptions, CancellationToken)` did not name it (RUN, `floor/wrapper_mutations.py`). | Kronikol | Fixed in R2b: the guards fail through `WrapperCoverage.AssertLeavesOnly`, which names each member in full; five mutations, each red on its guard with the member named (`floor/wrapper-mutations.txt`) |
+| F18 | `FloorLedger.cs` names `FloorLedgerTests` in a `cref` that resolves only in `Kronikol.Tests`, so from 5.27.1 each test project that links the file warned CS1574 (RUN). | Kronikol | Fixed in R2b |
 
 ## 9. Risks and assumptions
 
@@ -609,6 +648,22 @@ Each has a recommendation; none is legwork.
   `floor/ledger-mutations.txt`); then, on 5.27.0 with R2a, the core suite (11,543 passed, 2 skipped), the MySqlConnector
   suite on 2.6.1 (22 of 22), `DiagnosticPageAccessorColumnTests` (2 of 2), which take the gRPC extension, and the
   Release build of `release.slnf`, which reported F10 and, after it, only the older advisories 5.22.1 listed.
+- **2026-10-29, R2b released as 5.27.3**, rebased onto 5.27.2 (`753f17f9`). The six references of section 5.2's R2b row
+  are measured floors (the table in section 5.2's note), and the still-floating count fell from 16 to 10. Found on the
+  way and fixed in the release, each red first: F11, the Pub/Sub subscriber started with a handler; F12, the members
+  the Service Bus wrappers left to their base; F13, the Event Hubs wrappers' names, identifier, closing and reads, which
+  moved the Event Hubs floor from the 5.5.0 the suite passes on to 5.6.0; F17, the guards' failure message; and F18.
+  F14 was tried and reverted, F15 is #125's and F16 the client's own.
+
+  Run: the floor searches (`floor/r2b-search.sh`, `floor/r2b-*.txt`); the fourth test (`probe-r2b/`, `results/r2b-*.txt`)
+  and the Event Hubs base probe (`probe-r2b/eh-base/`, `results/r2b-eventhubs-base.txt`); the wrapper guards against
+  five mutations, each red on its guard with the member named (`floor/wrapper_mutations.py`,
+  `floor/wrapper-mutations.txt`); then, on 5.27.2 with R2b, each R2b suite and Pub/Sub's on the newest and on the
+  floor (`floor/r2b-suites.sh`, `floor/r2b-suites.txt`: BlobStorage 75, StorageQueues 87, EventHubs 122, CosmosDB
+  118, ServiceBus 194 and PubSub 103, each on both, with no advisory), the core suite (11,543 passed, 2 skipped) and
+  the Release build of `release.slnf`, whose only advisories are the older ones R1 listed: MongoDB.Driver 2.x's
+  Snappier and SharpCompress, and System.Security.Cryptography.Pkcs through the Oracle and SqlClient clients, which
+  R2c and R3b take.
 
 ---
 
