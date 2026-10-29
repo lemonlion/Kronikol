@@ -4,6 +4,54 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.27.13] - 2026-10-29
+
+The patch part moves (5.27.12 to 5.27.13): bug fixes in one package's build and packaging, with no new option and no
+new public member (#97; `plans/CLIENT_FLOORS_PLAN.md` R3c, the plan's last batch).
+
+### Fixed
+
+- **`Kronikol.PlantUml.Ikvm` renders from a package.** The package never carried the PlantUML assembly its renderer is
+  compiled against. IKVM compiles PlantUML's jar at the package's build and adds the result as a file reference, which
+  packing left out, so each release on nuget.org, 3.0.0 to 5.27.12, held the renderer alone, and a project that took
+  it failed at its first render with "Could not load file or assembly 'net.sourceforge.plantuml'". The package now
+  carries `net.sourceforge.plantuml.dll`, and is about 8 MB where it was 26 KB.
+- **`Kronikol.PlantUml.Ikvm` asks for a measured IKVM floor.** Its five IKVM references, one release line (`IKVM`,
+  `IKVM.Image`, `IKVM.Image.JDK`, `IKVM.Image.JRE` and `IKVM.MSBuild`), ask for 8.9.0, where they asked for 8.15.0, the
+  release of the day they were pinned. 8.9.0 is the oldest 8.x the suite passes on: on 8.8.1 and older, the Java
+  runtime IKVM brings fails to start on .NET 10, and every render fails. The PlantUML assembly the package carries is
+  compiled by 8.9.0, and runs on the newest 8.x as well. Behaviour change: a project that takes IKVM only through this
+  package now resolves 8.9.0, where it resolved 8.15.0; reference IKVM yourself for a newer one. With this, every
+  reference a Kronikol package hands its consumers is a measured floor.
+- **A project that references `Kronikol.PlantUml.Ikvm` by its project keeps its own IKVM image.** The package's build
+  handed on the IKVM image it copies, the Java runtime's own files, and it overwrote the referencing project's own. On
+  another IKVM release than the package's, that project's class library then read the package's data files, and every
+  diagram that formats a number failed ("Currency data format is incorrect"). A project that takes the package was
+  never affected.
+
+### Tests
+
+- The IKVM suite runs on the newest 8.x and, with `-p:FloorRun=true`, on 8.9.0. Facts hold the packed package to the
+  floor ledger and to carrying the PlantUML assembly, and the suite's output to the IKVM image of the release it runs
+  on. The ledger's count of pins still to measure falls from 5 to none, so it now refuses any unmeasured pin.
+
+### Documentation
+
+- The wiki's PlantUML IKVM page gains an IKVM versions section: the floor, why it sits there, and that releases before
+  5.27.13 do not render from a package.
+
+Checks: the floor search, and the search again with the package built on each release and the suite on the newest; the
+IKVM suite on its floor and on the newest 8.x, each run from an empty `bin/` and `obj/` of the package and the suite,
+before the fixes, after F39's first fix and after the fix as released (85 facts each way after it, on 8.9.0 and on
+8.16.3), and on Linux both ways in the dotnet SDK 10 container (85 each way); the image fact red with the package built
+on 8.15.0 and the suite on 8.16.3 ("Expected 8.16.3.60000, Actual 8.15.0.60000") and green after F39's fix, and the
+package fact red on the package as 5.27.12 packed it and green after F40's; a project that takes the package from a
+feed, 5.27.12 from nuget.org failing at its first render and the new package drawing both diagrams alone, with IKVM
+alone raised to 8.16.3 and with all five raised; the whole suite as CI runs it (65 projects on the newest, 21,264
+passed, 63 skipped; 42 floor runs, 17,301 passed, 21 skipped; none failed); the Playwright E2E suite (2,089 passed, 28
+skipped); and the Release build of `release.slnf`, whose only advisories are MongoDB.Driver 2.x's SharpCompress and
+Snappier, and its pack, whose IKVM package carries `net.sourceforge.plantuml.dll` (7.9 MB).
+
 ## [5.27.12] - 2026-10-29
 
 The patch part moves (5.27.11 to 5.27.12): packaging fixes, with no new option and no new public member (#97;

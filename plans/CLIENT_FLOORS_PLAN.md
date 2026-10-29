@@ -3,9 +3,10 @@
 **Status:** written 2026-10-27 at 5.12.0 (`1ee6373a`) by kronikol-2d, at the owner's ask to analyse #205 critically and
 plan a fix for the underlying problem; audited the same day at 5.14.0 (`8d7d1e1d`), at the owner's ask to make it
 complete and accurate (section 11 lists what the audit found and changed). **Green-lit 2026-10-28** by the owner ("Can
-you implement the plan in full"), every question in section 10 at its recommendation; executing. **R1 released as
+you implement the plan in full"), every question in section 10 at its recommendation; complete. **R1 released as
 5.22.1, R2a as 5.27.1, R2b as 5.27.3, R2c as 5.27.5, F26, found by R2c, as 5.27.7, F30, found by R3a, as 5.27.8,
-R3a as 5.27.10, F37, found by 5.27.10's first CI run, as 5.27.11, and R3b as 5.27.12** (section 11).
+R3a as 5.27.10, F37, found by 5.27.10's first CI run, as 5.27.11, R3b as 5.27.12, and R3c as 5.27.13** (section
+11).
 
 **Issues:** [#205](https://github.com/lemonlion/Kronikol/issues/205), "BigQuery: the extension's floor,
 Google.Cloud.BigQuery.V2 3.12, runs ExecuteQuery through jobs.query, whose timestamps the emulator answers in seconds,
@@ -536,6 +537,24 @@ newest under `'$(FloorRun)' != 'true'`, as R2's do; the ClickHouse suite took it
 switch, so no run of it took the floors the packages ask for (F38), and now takes them under the switch. After R3b the
 ledger holds none still floating, 5 unmeasured (R3c's IKVM) and 58 measured.
 
+*As built in R3c:* the five IKVM references, one release line, ask for 8.9.0, the oldest 8.x the suite passes on (RUN,
+`floor/r3c-ikvm.txt`): on 8.8.1 and older the Java runtime IKVM brings fails to start on .NET 10
+(`java.lang.ref.Finalizer`'s type initializer throws a `NullReferenceException`), and 77 of the suite's 82 facts fail.
+The package now carries the PlantUML assembly IKVM compiles from the jar (F40), compiled by the release the package asks
+for, so the floor has to hold two ways, as TUnit's does (F35): the suite on 8.9.0, and the package built on 8.9.0 under
+the suite on the newest 8.x. Built on 8.9.0, the suite first failed 46 of its facts on 8.16.3, and a second search, the
+package built on each release and the suite on the newest (`paired_floor.py --no-floor-run`, `floor/r3c-ikvm2.sh`,
+`floor/r3c-ikvm2.txt`), passed from 8.15.0 on; what both measured was the suite's output, which held the image of the
+release the package was built on beside the newest release's class library (F39). With F39 fixed the suite passes on
+8.9.0 both ways (`floor/r3c-suites.sh`, `floor/r3c-suites.txt`, its last two runs), on Linux as well
+(`floor/r3c-linux.sh`, `floor/r3c-linux.txt`), and a project that takes the package built on 8.9.0 from a feed renders
+on 8.9.0, with IKVM alone raised to 8.16.3, and with all five raised (`probe-r3c/consumer/`). An IKVM release takes
+about 14.6 GB in the NuGet packages folder and 3.85 GB more in NuGet's HTTP cache, a JDK and a JRE image for each of
+twelve runtimes, and the first search's three filled the disk; that search ran again with a NuGet cache of its own, each
+probe's release removed from it and from the HTTP cache after the probe (`paired_floor.py --after`), resuming past
+8.7.6, which had failed (`--from`), and the second removed each release it probed the same way. After R3c the ledger
+holds none still floating, none unmeasured and 63 measured.
+
 **Not chosen: central package management**, #97's third option. RUN, `restore/cpm-float/`: under
 `ManagePackageVersionsCentrally`, restore rejects a central floating version (`NU1011: The following PackageVersion
 items cannot specify a floating version`) unless a project sets `CentralPackageFloatingVersionsEnabled`, so a test
@@ -626,6 +645,9 @@ together they can share one patch release (Q7).
 | `The_floor_run_installs_the_Chromium_its_Playwright_floor_drives_before_it_tests` (R3a) | CI's floor run builds the Playwright suite on its floor and installs that build's Chromium before it tests | R3a's parent's `ci.yml` |
 | `MediatRPackageTests` (R3b) | the packed MediatR package agrees with the ledger in every line | R3b's parent: the ledger marks MediatR 14.1.0 Unmeasured, the line the fact expected until R3b (F24) |
 | The ClickHouse suite with `-p:FloorRun=true` (R3b) | the three ClickHouse packages work on their floors, the ClickHouse.Driver facts against a real server | R3b's parent: the suite took the newest whatever the switch said (F38) |
+| `PlantUmlIkvmPackageTests` (R3c) | the packed IKVM package agrees with the ledger in every line, and carries `lib/net10.0/net.sourceforge.plantuml.dll`, the assembly its renderer is compiled against | R3c's parent: the ledger marks the five IKVM pins Unmeasured, and the package carries the renderer alone (F40) |
+| `IkvmImageTests` (R3c) | the IKVM image in the suite's output is the one of the release whose class library it runs | R3c's parent, the package built on 8.15.0 and the suite on 8.16.3: the output's image is 8.15.0's (F39) |
+| The IKVM suite on the newest 8.x and with `-p:FloorRun=true` (R3c) | the package built on 8.9.0 renders on 8.9.0 and on the newest 8.x | R3c's parent: the suite took IKVM only through the package, so no run put the package on a release other than its own |
 
 No Playwright fact: nothing in a report changes.
 
@@ -667,6 +689,8 @@ No Playwright fact: nothing in a report changes.
 | F36 | CI's floor runs built each project over its normal run's output, so a file a package copies only when newer kept the newest's: the MSTest floor run found no test, on MSTest 4.5.2's test adapter, which refuses the 4.0.0 framework (F31's cause), and the Playwright floor's build, 1.12.0's over 1.64.1's, left no `playwright.ps1` to install its browser with, and so did one into an empty `bin/` on the newest's `obj/` (RUN, `probe-r3a/f36/playwright-obj.txt`: a floor build from an empty `bin/` and `obj/` has it, one from an empty `bin/` after a newest build has not) (RUN, the full suite as CI runs it, and `probe-r3a/f36/over-the-newest.txt`: red over the newest's output, green from an empty one). Neither project had a floor run before R3a. | CI | Fixed in R3a: each floor run, in both of CI's loops, starts from an empty `bin/` and `obj/`, and `FloorRunTests` holds both loops to it |
 | F37 | `Microsoft.Playwright` 1.12.0 ships the script that starts its driver on Linux and macOS, `.playwright/node/linux/playwright.sh`, with CRLF line ends, so Linux looks for an interpreter named `/bin/sh` and a carriage return and reports "No such file or directory": every test that starts Playwright fails there. R3a's Playwright search ran on Windows alone, where the driver starts through `playwright.cmd`, so it measured 1.12.0, and 5.27.10's first CI run failed its Linux floor run of the Playwright suite (RUN, CI run 40910684927, the Playwright Adapter Tests job; `probe-f37/results.txt`: of the 77 stable 1.x releases only 1.12.0's driver fails to start on Linux; `probe-f37/suite.txt`: the suite on Linux, red on 1.12.0, its browser facts green on 1.12.1). 1.12.1's scripts end their lines in LF; the targets and the code that starts the driver are the same. | the harness | Fixed in 5.27.11: the floor is 1.12.1, and the suite passes on it on Linux and on Windows |
 | F38 | The ClickHouse suite took `ClickHouse.Client` 7.*, `ClickHouse.Driver` 1.* and `Octonica.ClickHouseClient` 3.* as direct references with no `'$(FloorRun)' != 'true'` condition, so `-p:FloorRun=true` left them at the newest and no run of the suite took the floors the three packages asked for; CI's floor loops, which find a project by the switch in its csproj, never ran it (READ). | the ClickHouse suite | Fixed in R3b: the three references are under the switch, so CI runs the suite on the floors too |
+| F39 | IKVM.Image hands the image it copies, the Java runtime's own files under `ikvm/<runtime>/`, to a project that references the project by its project, and copied there last it overwrites that project's own: the IKVM suite's normal run takes IKVM at the newest 8.x and the package built on its floor, so its output held the floor's image beside the newest release's class library. A class library reads data files whose format it knows, and 8.16.3's refuses 8.9.0's `currency.data` ("Currency data format is incorrect": format 2, where it reads 3), so every diagram that formats a number drew PlantUML's error page: built on 8.9.0, 46 of the suite's 83 facts failed on 8.16.3, and the second search passed from 8.15.0 on, whose `currency.data` is 8.16.3's (RUN, `floor/r3c-suites.txt`, `floor/r3c-ikvm2.txt`, `probe-r3c/mixing.txt`). No fault of the package: a project that takes the package gets its image from its own IKVM.Image. | `Kronikol.PlantUml.Ikvm`'s suite | Fixed in R3c: the package's csproj marks the image items it copies `Never`, so a project that references it takes none, and `IkvmImageTests` holds the output's image to the release the suite runs on. A first fix, IKVM.Image's `CopyIkvmImageItemToOutputDirectory`, is a property 8.9.0 does not read |
+| F40 | `Kronikol.PlantUml.Ikvm` never carried the PlantUML assembly its renderer is compiled against. IKVM compiles the jar at the package's build and adds the result as a plain file reference, which `dotnet pack` leaves out, so each of the 328 releases on nuget.org, 3.0.0 to 5.27.12, is 26 to 36 KB and carries the renderer alone, and a project that takes it from nuget.org fails at its first render: "Could not load file or assembly 'net.sourceforge.plantuml, Version=1.2024.0.0'" (RUN, `probe-r3c/package-sizes.txt`, `probe-r3c/consumer/`). The suite references the project, not the package, so no run of it could see it; the probe of F39 found it. | `Kronikol.PlantUml.Ikvm` | Fixed in R3c: the package carries `lib/net10.0/net.sourceforge.plantuml.dll`, which a package fact holds it to, and a project that takes the new package from a feed renders (`probe-r3c/consumer/`) |
 | F31 | Each probe built its test project in place, and `MSTest.TestAdapter` reaches the output as content copied only when newer, so a probe after a newer one ran that one's adapter, which refuses a framework of another release ("'MSTest.TestAdapter' and 'MSTest.TestFramework' must have the same version") and so found no test: MSTest 4.1.0 and older looked unsupported (RUN, VSTest diagnostics; 84 of 84 on 4.1.0 from an empty output). Library assemblies copy on any change, so no client library's search was touched. | the harness | Fixed in R3a: every probe builds from an empty `bin/` and `obj/`; the MSTest, xUnit v3 and xUnit v2 searches ran again so |
 | F32 | The BDDfy adapter decides whether a title is BDDfy's own by asking `Configurator.Scanners.Humanize`, the instance field 8.0.1.3 titles with; 8.0.11 titles with `Configurator.Humanizer` and keeps `Scanners.Humanize` only as an obsolete static copy of the humaniser configured when the field is first read, for the rest of the run. The adapter does not build on 8.0.11 or 8.0.12 (CS0176, RUN, `floor/r3a-bddfy.txt`), but built on 8.0.1.3, as published, it runs on them, as the runtime reads the static field through the instance reference, and reads that copy (RUN, `probe-r3a/bddfy-humanize/`). So once a test sets or changes its humaniser after the adapter's first title, a title BDDfy makes with it is taken for one the test wrote: it is left as written, where BDDfy's own titles pass through the title word list (`TitleWords`), and the report marks it written (RUN, `BDDfyHumaniserTests` on the parent and 8.0.12: green each alone, and in one run the default's fact fails after a fact that set a humaniser). Nothing ran the adapter on a later BDDfy, as the core suite took BDDfy only through it. | Kronikol | Fixed in R3a: the adapter reads `Configurator.Humanizer` where the release has it and `Scanners.Humanize` where it does not, each time, as a test may set its own; the core suite runs on the newest 8.x and on 8.0.1.3 |
 | F33 | Kronikol holds a LightBDD run's scenarios to the count of tests the adapter expects (`ReportConfigurationOptions.ExpectedTestCount`) and writes no Specifications report, data or Markdown when the run falls short, as a partial run would. The xUnit v2 and v3 adapters counted a scenario method as one test plus the rows of its `MemberData` and `ClassData`, so on xUnit v2 a method with either counted one over its rows and a whole run fell short: no Specifications report, for any suite with such a method (READ, `ReportGenerator`; RUN, `TestCountTests`). On v3 `ClassData` counted one over too, and `MemberData` one, as the count asked for its rows with xUnit v2's signature, and v3's attribute names no rows until it is given the test class, which xUnit gives it before it reads them. The TUnit runner's count reads `[Arguments]` alone, so a method with another data source counts one, under its rows: the report is written, and a partial run that leaves out fewer tests than the shortfall can overwrite it. | Kronikol | Fixed in R3a for xUnit v2 and v3: a method is a test for each row its data attributes give, read through xUnit's own `DataAttribute` and `IDataAttribute`, and one with none; the TUnit count is left, as TUnit's data sources are read by its engine, and TUnit's API moves fast (F30) |
@@ -883,6 +907,28 @@ Each has a recommendation; none is legwork.
   Playwright E2E suite (2,089 passed, 28 skipped); and the Release build of `release.slnf`, whose only advisories are
   MongoDB.Driver 2.x's SharpCompress and Snappier, SqlClient's Pkcs gone. The solution's only other is the Pkcs 9.0.11
   that the EF Core SqlServer provider brings to the EF Core suite, a test provider's.
+
+- **2026-10-29, R3c released as 5.27.13**, on 5.27.12 (`17555ab7`). Kronikol.PlantUml.Ikvm's five IKVM references ask
+  for 8.9.0, measured (the note in section 5.2), and the unmeasured count fell from 5 to none: every reference a
+  packable project hands its consumers is a measured floor, which completes the plan. Two findings in the package came
+  with it, both fixed: its build handed its IKVM image to its suite's output (F39), and it never carried the PlantUML
+  assembly, so no project could render with it from nuget.org (F40).
+
+  Run: the floor search (`floor/r3c-search.sh`, `floor/r3c-ikvm.txt`), the second search, which measured F39
+  (`floor/r3c-ikvm2.sh`, `floor/r3c-ikvm2.txt`), the suite on its floor and on the newest before and after the fixes
+  (`floor/r3c-suites.sh`, `floor/r3c-suites.txt`) and on Linux (`floor/r3c-linux.sh`, `floor/r3c-linux.txt`), and a
+  project that takes the package (`probe-r3c/`); then the floor search, and the search again with the package built on
+  each release and the suite on the newest; the IKVM suite on its floor and on the newest 8.x, each run from an empty
+  `bin/` and `obj/` of the package and the suite, before the fixes, after F39's first fix and after the fix as released
+  (85 facts each way after it, on 8.9.0 and on 8.16.3), and on Linux both ways in the dotnet SDK 10 container (85 each
+  way); the image fact red with the package built on 8.15.0 and the suite on 8.16.3 ("Expected 8.16.3.60000, Actual
+  8.15.0.60000") and green after F39's fix, and the package fact red on the package as 5.27.12 packed it and green after
+  F40's; a project that takes the package from a feed, 5.27.12 from nuget.org failing at its first render and the new
+  package drawing both diagrams alone, with IKVM alone raised to 8.16.3 and with all five raised; the whole suite as CI
+  runs it (65 projects on the newest, 21,264 passed, 63 skipped; 42 floor runs, 17,301 passed, 21 skipped; none failed);
+  the Playwright E2E suite (2,089 passed, 28 skipped); and the Release build of `release.slnf`, whose only advisories
+  are MongoDB.Driver 2.x's SharpCompress and Snappier, and its pack, whose IKVM package carries
+  `net.sourceforge.plantuml.dll` (7.9 MB).
 
 ---
 

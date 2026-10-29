@@ -36,7 +36,7 @@ internal static class FloorLedger
     internal const int StillFloatingAtMost = 0;
 
     /// <summary>No more fixed pins may be marked unmeasured than this. Each batch lowers it; none raises it.</summary>
-    internal const int UnmeasuredAtMost = 5;
+    internal const int UnmeasuredAtMost = 0;
 
     private static Entry Measured(string project, string package, string version, string evidence) =>
         new(project, package, version, Basis.Measured, evidence);
@@ -121,10 +121,10 @@ internal static class FloorLedger
         Measured("Kronikol.Extensions.TcpTap", "MongoDB.Bson", "2.28.0", "R2c: floor/r2c-tcptap.txt, the oldest the suite runs on, its own graph clean"),
 
         // The Java PlantUML renderer, which consumers rarely reference themselves.
-        Unmeasured("Kronikol.PlantUml.Ikvm", "IKVM", "8.15.0", "R3c"),
-        Unmeasured("Kronikol.PlantUml.Ikvm", "IKVM.Image", "8.15.0", "R3c"),
-        Unmeasured("Kronikol.PlantUml.Ikvm", "IKVM.Image.JDK", "8.15.0", "R3c"),
-        Unmeasured("Kronikol.PlantUml.Ikvm", "IKVM.Image.JRE", "8.15.0", "R3c"),
-        Unmeasured("Kronikol.PlantUml.Ikvm", "IKVM.MSBuild", "8.15.0", "R3c"),
+        Measured("Kronikol.PlantUml.Ikvm", "IKVM", "8.9.0", "R3c: floor/r3c-ikvm.txt, floor/r3c-suites.txt"),
+        Measured("Kronikol.PlantUml.Ikvm", "IKVM.Image", "8.9.0", "R3c: floor/r3c-ikvm.txt, floor/r3c-suites.txt"),
+        Measured("Kronikol.PlantUml.Ikvm", "IKVM.Image.JDK", "8.9.0", "R3c: floor/r3c-ikvm.txt, floor/r3c-suites.txt"),
+        Measured("Kronikol.PlantUml.Ikvm", "IKVM.Image.JRE", "8.9.0", "R3c: floor/r3c-ikvm.txt, floor/r3c-suites.txt"),
+        Measured("Kronikol.PlantUml.Ikvm", "IKVM.MSBuild", "8.9.0", "R3c: floor/r3c-ikvm.txt, floor/r3c-suites.txt"),
     ];
 }

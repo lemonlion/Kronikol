@@ -1,0 +1,2 @@
+FAILED: System.IO.FileNotFoundException: Could not load file or assembly 'net.sourceforge.plantuml, Version=1.2024.0.0, Culture=neutral, PublicKeyToken=13235d27fcbfff58'. The system cannot find the file specified.
+exit 1

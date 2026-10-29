@@ -13,18 +13,61 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="IKVM" Version="8.15.0" />
-    <PackageReference Include="IKVM.Image" Version="8.15.0" />
-    <PackageReference Include="IKVM.Image.JDK" Version="8.15.0" />
-    <PackageReference Include="IKVM.Image.JRE" Version="8.15.0" />
-    <PackageReference Include="IKVM.MSBuild" Version="8.15.0" />
+    <!-- IKVM: 8.9.0 is the oldest 8.x the suite passes on, each probe compiling the PlantUML jar with the release and
+         running on it: on 8.8.1 and older the Java runtime IKVM brings fails to start on .NET 10
+         (java.lang.ref.Finalizer's type initializer throws), and 77 of the 82 facts fail; its graph carries no known
+         advisory (harness floor/r3c-ikvm.txt). The PlantUML assembly this package carries is compiled by the release it
+         asks for, and runs on the newest 8.x as well: the suite passes on 8.16.3 against this package built on 8.9.0
+         (floor/r3c-suites.txt), and so does a project that takes the package (probe-r3c/consumer/). FloorLedger holds
+         the floor, and the test project's package fact reads it back from the packed nuspec; the suite runs on the
+         newest 8.x, and on this floor with -p:FloorRun=true (plans/CLIENT_FLOORS_PLAN.md R3c). -->
+    <PackageReference Include="IKVM" Version="8.9.0" />
+    <!-- IKVM.Image: the release of IKVM's, as the five are one release line (harness floor/r3c-ikvm.txt)
+         (plans/CLIENT_FLOORS_PLAN.md R3c). -->
+    <PackageReference Include="IKVM.Image" Version="8.9.0" />
+    <!-- IKVM.Image.JDK: the release of IKVM's, as the five are one release line (harness floor/r3c-ikvm.txt)
+         (plans/CLIENT_FLOORS_PLAN.md R3c). -->
+    <PackageReference Include="IKVM.Image.JDK" Version="8.9.0" />
+    <!-- IKVM.Image.JRE: the release of IKVM's, as the five are one release line (harness floor/r3c-ikvm.txt)
+         (plans/CLIENT_FLOORS_PLAN.md R3c). -->
+    <PackageReference Include="IKVM.Image.JRE" Version="8.9.0" />
+    <!-- IKVM.MSBuild: the release of IKVM's, as the five are one release line (harness floor/r3c-ikvm.txt)
+         (plans/CLIENT_FLOORS_PLAN.md R3c). -->
+    <PackageReference Include="IKVM.MSBuild" Version="8.9.0" />
   </ItemGroup>
 
   <ItemGroup>
     <IkvmReference Include="PlantUml\plantuml-mit-1.2024.6.jar">
+      <AssemblyName>net.sourceforge.plantuml</AssemblyName>
       <Debug>true</Debug>
     </IkvmReference>
   </ItemGroup>
+
+  <!-- IKVM.Image copies its image, the Java runtime's own files under ikvm\<runtime>\, into this library's output and
+       hands it on to a project that references this one by its project, as the suite does. That project's own
+       IKVM.Image copies the image of the release it runs on, and this one's, of the release the library is built on,
+       overwrote it, so the suite on the newest 8.x ran the newest class library on the floor's data files and failed
+       (plans/CLIENT_FLOORS_PLAN.md F39). The image stays in this output alone: a project that takes the package gets
+       its image from its own IKVM.Image. -->
+  <Target Name="KeepIkvmImageInThisOutput" AfterTargets="AssignTargetPaths">
+    <ItemGroup>
+      <_SourceItemsToCopyToOutputDirectory Update="@(_SourceItemsToCopyToOutputDirectory)" CopyToOutputDirectory="Never"
+          Condition="$([System.String]::Copy('%(_SourceItemsToCopyToOutputDirectory.TargetPath)').StartsWith('ikvm\'))" />
+    </ItemGroup>
+  </Target>
+
+  <!-- The package carries the assembly IKVM compiles from the jar, which the renderer is compiled against: a project
+       that takes the package has no other way to get it, and until 5.27.13 the package carried the renderer alone, so
+       its first render failed, unable to load net.sourceforge.plantuml (plans/CLIENT_FLOORS_PLAN.md F40). -->
+  <PropertyGroup>
+    <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);AddIkvmReferencesToPackage</TargetsForTfmSpecificBuildOutput>
+  </PropertyGroup>
+
+  <Target Name="AddIkvmReferencesToPackage">
+    <ItemGroup>
+      <BuildOutputInPackage Include="@(IkvmReference->'$(OutDir)%(AssemblyName).dll')" />
+    </ItemGroup>
+  </Target>
 
   <ItemGroup>
     <ProjectReference Include="..\Kronikol\Kronikol.csproj" />

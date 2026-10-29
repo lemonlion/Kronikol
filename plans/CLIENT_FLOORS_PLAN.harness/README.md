@@ -256,3 +256,29 @@ R1 changelog entry.
   read from NuGet's registration metadata (`floor/r3b-aws-core.txt`), which sets the five AWS floors.
 - `floor/r3b-suites.sh`: each R3b suite on the newest and on its floor, the floor run from an empty `bin/` and
   `obj/` (`floor/r3b-suites.txt`), the ClickHouse one against a server in the podman VM.
+
+## R3c, as released
+
+- `floor/r3c-search.sh`: the five IKVM references, one release line, searched with `paired_floor.py`
+  (`floor/r3c-ikvm.txt`). An IKVM release takes about 18 GB here, so the search restores into a NuGet cache of its own,
+  `--after` removes each probe's release from it, and `--from` resumed it past the first run's 8.7.6, after that run's
+  three releases filled the disk. NuGet's HTTP cache keeps each release too, whatever `NUGET_PACKAGES` says; the session
+  removed each finished probe's from it as the search ran.
+- `floor/r3c-ikvm2.sh`: the search again, each probe building the package on the release and running the suite on the
+  newest 8.x (`paired_floor.py --no-floor-run`, `floor/r3c-ikvm2.txt`), from 8.9.1 on, into the shared NuGet cache, each
+  release but 8.15.0 and 8.16.3 removed after its probe. It passed from 8.15.0 on, but what it measured was F39, the
+  package's IKVM image in the suite's output, not the package.
+- `floor/r3c-suites.sh`: the suite on its floor and on the newest, each from an empty bin/ and obj/ of the package and
+  the suite, each run's HTTP cache copy removed after it (`floor/r3c-suites.txt`: before the fixes, after F39's first
+  fix, and after the fix as released).
+- `floor/r3c-linux.sh`: the suite on Linux both ways, in the dotnet SDK 10 container with Graphviz, as CI's IKVM job
+  runs it (`floor/r3c-linux.txt`). The tree and the NuGet packages folder were the Windows side's, mounted, as the
+  podman VM's disk does not shrink after an IKVM release lands in it.
+- `probe-r3c/`: `mixing.txt`, which release's files the suite's output held (F39); `bind/`, the file-based program that
+  found it, the package built on 8.9.0 and on 8.15.0 and run on 8.16.3; `package_sizes.py` and `package-sizes.txt`,
+  every published package's size (F40); `consumer/`, a project that takes the package from a feed, run on 5.27.12 from
+  nuget.org and on the package packed from the release commit, alone and with IKVM raised to 8.16.3 (`run-*.txt`). The
+  consumer ran from a folder outside the repository, the packed packages in `feed/` beside it, so the repository's build
+  props did not apply.
+- `paired_floor.py` gained `--after`, `--from` and `--no-floor-run` (the last as `floor_probe2.py`'s, F35), and empties
+  the package's own bin/ and obj/ before each probe as well as the suite's.

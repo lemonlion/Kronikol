@@ -5,7 +5,7 @@ using System.Xml.Linq;
 namespace Kronikol.Tests.Packaging;
 
 /// <summary>
-/// What a packed project asks its consumers for. NuGet packs a fixed <c>Version</c> as a floor (<c>&gt;=</c>) and a
+/// What a packed project asks its consumers for, and what it carries. NuGet packs a fixed <c>Version</c> as a floor (<c>&gt;=</c>) and a
 /// floating one as the newest version of the day, so the nuspec, not the csproj, is what a consumer's restore meets
 /// (<c>plans/CLIENT_FLOORS_PLAN.md</c>). Linked into each test project that reads its package's floor back; it throws
 /// rather than asserts, so a suite on any test framework can use it.
@@ -44,6 +44,13 @@ internal static class PackedNuspec
         return lines;
     }
 
+    /// <summary>
+    /// Every file the packed <c>src/<paramref name="project"/></c> carries, by its path in the package
+    /// (<c>lib/net10.0/...</c>).
+    /// </summary>
+    public static List<string> Files(string project) =>
+        Pack($"src/{project}/{project}.csproj", archive => archive.Entries.Select(entry => entry.FullName).ToList());
+
     /// <summary>One dependency of a packed nuspec: its group's target framework, the package and the version.</summary>
     private sealed record Dependency(string Group, string Id, string Version);
 
@@ -51,7 +58,22 @@ internal static class PackedNuspec
     /// Packs a project this suite built, for the one framework the suites run on, and reads every dependency of every
     /// group in the nuspec it writes.
     /// </summary>
-    private static List<Dependency> Dependencies(string project)
+    private static List<Dependency> Dependencies(string project) =>
+        Pack(project, archive =>
+        {
+            var nuspec = archive.Entries.Single(entry => entry.FullName.EndsWith(".nuspec", StringComparison.Ordinal));
+            using var stream = nuspec.Open();
+            return XDocument.Load(stream).Descendants()
+                .Where(element => element.Name.LocalName == "dependency")
+                .Select(element => new Dependency(
+                    (string?)element.Parent?.Attribute("targetFramework") ?? "",
+                    (string)element.Attribute("id")!,
+                    (string)element.Attribute("version")!))
+                .ToList();
+        });
+
+    /// <summary>Packs a project this suite built, for the one framework the suites run on, and reads the package.</summary>
+    private static T Pack<T>(string project, Func<ZipArchive, T> read)
     {
         // bin/<configuration>/<framework>/: the configuration that built this assembly built the project it references.
         var configuration = new DirectoryInfo(AppContext.BaseDirectory).Parent!.Name;
@@ -84,15 +106,7 @@ internal static class PackedNuspec
             if (packages.Length != 1)
                 throw new InvalidOperationException($"dotnet pack {project} wrote {packages.Length} packages, not one");
             using var archive = ZipFile.OpenRead(packages[0].FullName);
-            var nuspec = archive.Entries.Single(entry => entry.FullName.EndsWith(".nuspec", StringComparison.Ordinal));
-            using var stream = nuspec.Open();
-            return XDocument.Load(stream).Descendants()
-                .Where(element => element.Name.LocalName == "dependency")
-                .Select(element => new Dependency(
-                    (string?)element.Parent?.Attribute("targetFramework") ?? "",
-                    (string)element.Attribute("id")!,
-                    (string)element.Attribute("version")!))
-                .ToList();
+            return read(archive);
         }
         finally
         {

@@ -1,0 +1,31 @@
+# F39 (plans/CLIENT_FLOORS_PLAN.md): which IKVM release's files the IKVM suite's output held, 2026-10-29, Windows x64.
+# The package (src/Kronikol.PlantUml.Ikvm) pinned at 8.15.0 and the suite at 8.* (8.16.3, its normal run), each built
+# from an empty bin/ and obj/. md5 of each file, its first 12 hex digits.
+
+# The two releases' own files, in the NuGet packages folder
+ikvm.image/8.15.0/ikvm/any/any/lib/tzdb.dat         af181f031988
+ikvm.image/8.16.3/ikvm/any/any/lib/tzdb.dat         f8e911ffdab8
+ikvm/8.15.0/runtimes/win/lib/net8.0/IKVM.Java.dll   a2480a9eb81d
+ikvm/8.16.3/runtimes/win/lib/net8.0/IKVM.Java.dll   a53433d8927c
+# The two images differ in lib/tzdb.dat, lib/security/cacerts and the four policy jars; lib/currency.data is the same
+# file in both (80cbff688e01, format 3), and so is ikvm.properties.
+
+# Before the fix: the suite's output, bin/Debug/net10.0/, its deps.json resolving IKVM/8.16.3
+ikvm/win-x64/lib/tzdb.dat                           af181f031988   8.15.0's
+ikvm/win-x64/bin/IKVM.Java.dll, the image's copy    a2480a9eb81d   8.15.0's
+runtimes/win/lib/net8.0/IKVM.Java.dll, the loaded   a53433d8927c   8.16.3's
+# IkvmImageTests, the image's IKVM.Java.dll against the loaded one: Expected "8.16.3.60000", Actual "8.15.0.60000".
+
+# With CopyIkvmImageItemToOutputDirectory set to Never in the package's csproj, the first fix
+ikvm/win-x64/lib/tzdb.dat                           f8e911ffdab8   8.16.3's
+ikvm/win-x64/bin/IKVM.Java.dll                      a53433d8927c   8.16.3's
+# 8.9.0's IKVM.Image does not read that property: it gives its image items PreserveNewest itself, so with the package
+# at 8.9.0 the image fact failed again (floor/r3c-suites.txt). The fix as released is the package's own target,
+# KeepIkvmImageInThisOutput, which marks the image items Never on any release; with it the fact passes at 8.9.0.
+
+# The package built on 8.9.0 and run on 8.16.3 before any fix (bind/run-8.9.0-on-8.16.3.txt): a sequence diagram
+# draws, and a component diagram draws PlantUML's error page after
+#   java.lang.InternalError: Currency data format is incorrect
+#     at java.util.Currency.<clinit>, reached from java.text.DecimalFormatSymbols and java.util.Formatter
+# The 8.16.3 class library read 8.9.0's currency.data, of an older format: the file's header (magic "CurD", then
+# the format) reads 43 75 72 44 00 00 00 02 in 8.9.0's image and 43 75 72 44 00 00 00 03 in 8.15.0's and 8.16.3's.

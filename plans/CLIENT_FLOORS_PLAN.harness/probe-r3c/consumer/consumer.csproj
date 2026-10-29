@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- A project that takes Kronikol.PlantUml.Ikvm from a feed, as a consumer does, and renders two diagrams.
+         dotnet run -p:KronikolVersion=V                        the package alone: IKVM at the package's floors
+         dotnet run -p:KronikolVersion=V -p:IkvmVersion=X       IKVM raised to X alone (it brings IKVM.Image and IKVM.MSBuild)
+         dotnet run -p:KronikolVersion=V -p:IkvmVersion=X -p:AllIkvm=true   all five raised to X -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Kronikol.PlantUml.Ikvm" Version="$(KronikolVersion)" />
+    <PackageReference Include="IKVM" Version="$(IkvmVersion)" Condition="'$(IkvmVersion)' != ''" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(IkvmVersion)' != '' And '$(AllIkvm)' == 'true'">
+    <PackageReference Include="IKVM.Image" Version="$(IkvmVersion)" />
+    <PackageReference Include="IKVM.Image.JDK" Version="$(IkvmVersion)" />
+    <PackageReference Include="IKVM.Image.JRE" Version="$(IkvmVersion)" />
+    <PackageReference Include="IKVM.MSBuild" Version="$(IkvmVersion)" />
+  </ItemGroup>
+
+</Project>

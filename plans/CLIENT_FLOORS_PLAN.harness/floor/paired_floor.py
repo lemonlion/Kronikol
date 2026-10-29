@@ -2,9 +2,11 @@
 # general. For each release X of --series (the releases every package named there shares) this pins the project's
 # --pin references to X, builds the test project with -p:FloorRun=true -p:<--property>=X (the test project takes its
 # partners at X under the switch), runs the suite, and binary-searches for the oldest that passes; with releases given,
-# it probes each in turn instead.
+# it probes each in turn instead. With --no-floor-run the test project builds without the switch, so the suite runs on
+# its own newest references against the package built on the release probed (F39, as F35 was for TUnit).
 #   python -I paired_floor.py --worktree W --project src/X/X.csproj --tests tests/T --pin Id[,Id] --series Id[,Id]
-#       --property Name --major N --out out.txt --logs dir [--env NAME=value]... [release...]
+#       --property Name --major N --out out.txt --logs dir [--env NAME=value]... [--after CMD] [--from X] [--no-floor-run]
+#       [release...]
 import argparse, json, os, re, shutil, subprocess, urllib.request
 
 ap = argparse.ArgumentParser()
@@ -13,6 +15,15 @@ for a in ("--worktree", "--project", "--tests", "--pin", "--series", "--property
 ap.add_argument("--env", action="append", default=[])
 ap.add_argument("--filter", help="a dotnet test --filter: a package fact holds the nuspec to the ledger,"
                 " so it fails every probe of another release (F23) and a search leaves it out")
+ap.add_argument("--after", help="a command run through sh after each probe, with {version} filled in: R3c empties"
+                " the probe's IKVM release from a NuGet cache of the search's own (NUGET_PACKAGES through --env), as"
+                " each takes about 8 GB and three filled the disk")
+ap.add_argument("--from", dest="start", help="the oldest release the search takes, so it can resume past a release"
+                " measured to fail")
+ap.add_argument("--no-floor-run", action="store_true",
+                help="build the test project without -p:FloorRun=true, so the suite runs on its own newest references"
+                " against the package built on the release probed: IKVM compiles Kronikol.PlantUml.Ikvm's PlantUML"
+                " assembly at the package's build, and built on 8.9.0 it fails on 8.16.3 (F39)")
 ap.add_argument("releases", nargs="*")
 o = ap.parse_args()
 PROJECT = os.path.join(o.worktree, o.project)
@@ -40,6 +51,10 @@ def run(cmd, log):
         code = subprocess.run(cmd, stdout=f, stderr=subprocess.STDOUT, env=ENV).returncode
     return code, open(log, encoding="utf-8", errors="replace").read()
 
+def assets(project):
+    target = next(iter(json.load(open(os.path.join(project, "obj", "project.assets.json"), encoding="utf-8"))["targets"].values()))
+    return [k for k in target if k.split("/")[0] in set(PINS) | set(SERIES)]
+
 def probe(x):
     text = original
     for package in PINS:
@@ -49,20 +64,25 @@ def probe(x):
     # From an empty bin/ and obj/: MSTest.TestAdapter reaches the output as content copied only when newer, so a probe
     # built in place after a newer one kept that one's adapter, which refused the older framework and found no test
     # (plans/CLIENT_FLOORS_PLAN.md F31).
-    for output in ("bin", "obj"):
-        shutil.rmtree(os.path.join(TESTS, output), ignore_errors=True)
-    code, out = run(["dotnet", "build", TESTS, "-nologo", "-nodeReuse:false", "-p:FloorRun=true", f"-p:{o.property}={x}",
-                     "-p:NuGetAuditMode=all"], log)
+    # The package's own as well: IKVM compiles its PlantUML assembly at its build, so each probe has to run the one its
+    # release compiled (F39).
+    for project in (TESTS, os.path.dirname(PROJECT)):
+        for output in ("bin", "obj"):
+            shutil.rmtree(os.path.join(project, output), ignore_errors=True)
+    switch = [] if o.no_floor_run else ["-p:FloorRun=true", f"-p:{o.property}={x}"]
+    code, out = run(["dotnet", "build", TESTS, "-nologo", "-nodeReuse:false"] + switch + ["-p:NuGetAuditMode=all"], log)
     # The project is in a [suffix] on some lines and leads others ("path.csproj : warning NU1903: ..."), which the first
     # form of this pattern missed, so it reported no advisory where the build had three (plans/CLIENT_FLOORS_PLAN.md F28).
     audit = sorted(set(f"{m['pkg']} {m['ver']} {m['sev']} ({os.path.splitext(os.path.basename((m['proj'] or m['pre'].split(' : ')[0]).split('::')[0].strip()))[0]})"
                        for m in re.finditer(r"^(?P<pre>[^\r\n]*?)warning NU190[1-4]: Package '(?P<pkg>[^']+)' (?P<ver>[0-9][^ ]*) has a known (?P<sev>[a-z]+) severity[^\[\r\n]*(?:\[(?P<proj>[^\]]+)\])?", out, re.M)))
     try:
-        target = next(iter(json.load(open(os.path.join(TESTS, "obj", "project.assets.json"), encoding="utf-8"))["targets"].values()))
-        resolved = " ".join(k for k in target if k.split("/")[0] in set(PINS) | set(SERIES))
+        ran = assets(TESTS)
+        built = assets(os.path.dirname(PROJECT)) if o.no_floor_run else []
+        resolved = " ".join(ran) + (f" (built on: {' '.join(built)})" if o.no_floor_run else "")
         # A series package on another release means the probe did not run on this one: the LightBDD.xUnit2 example
-        # asks for LightBDD.Framework 3.10.0 or later through LightBDD.TabularAttributes, so 3.5.0 ran on 3.10.0.
-        elsewhere = [k for k in target if k.split("/")[0] in SERIES and k.split("/")[1] != x]
+        # asks for LightBDD.Framework 3.10.0 or later through LightBDD.TabularAttributes, so 3.5.0 ran on 3.10.0. With
+        # --no-floor-run the suite runs on the newest, and it is the package that has to be built on the release.
+        elsewhere = [k for k in (built if o.no_floor_run else ran) if k.split("/")[0] in SERIES and k.split("/")[1] != x]
     except OSError:
         resolved, elsewhere = "?", []
     if code != 0:
@@ -80,6 +100,8 @@ def probe(x):
     with open(o.out, "a", encoding="utf-8") as f:
         f.write(line + chr(10))
     print(line, flush=True)
+    if o.after:
+        subprocess.run(["sh", "-c", o.after.replace("{version}", x)], env=ENV)
     return "| ok |" in line
 
 try:
@@ -90,9 +112,12 @@ try:
             probe(x)
     else:
         versions = sorted(set.intersection(*(stable(p) for p in SERIES)), key=key)
+        if o.start:
+            versions = [v for v in versions if key(v) >= key(o.start)]
         with open(o.out, "a", encoding="utf-8") as f:
             f.write(f"# {', '.join(PINS)} with {', '.join(SERIES)} of the same release: {len(versions)} {o.major}.x releases all"
-                    f" share, {versions[0]} to {versions[-1]}; binary search" + chr(10))
+                    f" share, {versions[0]} to {versions[-1]}; binary search"
+                    + ("; each built on the release, the suite on its newest (--no-floor-run)" if o.no_floor_run else "") + chr(10))
         lo, hi = 0, len(versions) - 1
         if not probe(versions[hi]):
             raise SystemExit("the newest release fails")

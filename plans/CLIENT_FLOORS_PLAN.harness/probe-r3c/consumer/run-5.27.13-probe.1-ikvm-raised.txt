@@ -1,0 +1,6 @@
+build exit 0
+layout engine: dot
+--- sequence: 2039 bytes; text: A A B B hello
+--- component: 1982 bytes; text: Payments API Ledger
+exit 0
+resolved: IKVM.ByteCode/9.3.13 IKVM.Image.JDK/8.9.0 IKVM.Image.JRE/8.9.0 IKVM.Image/8.16.3 IKVM.MSBuild.Tools/8.16.3 IKVM.MSBuild/8.16.3 IKVM/8.16.3

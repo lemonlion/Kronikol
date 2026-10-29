@@ -16,6 +16,21 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <!-- The suite runs on the newest 8.x; -p:FloorRun=true drops this reference, so it runs on the floor the package
+         asks for (8.9.0). -->
+    <PackageReference Include="IKVM" Version="8.*" Condition="'$(FloorRun)' != 'true'" />
+    <!-- The suite runs on the newest 8.x; -p:FloorRun=true drops this reference, so it runs on the floor the package
+         asks for (8.9.0). -->
+    <PackageReference Include="IKVM.Image" Version="8.*" Condition="'$(FloorRun)' != 'true'" />
+    <!-- The suite runs on the newest 8.x; -p:FloorRun=true drops this reference, so it runs on the floor the package
+         asks for (8.9.0). -->
+    <PackageReference Include="IKVM.Image.JDK" Version="8.*" Condition="'$(FloorRun)' != 'true'" />
+    <!-- The suite runs on the newest 8.x; -p:FloorRun=true drops this reference, so it runs on the floor the package
+         asks for (8.9.0). -->
+    <PackageReference Include="IKVM.Image.JRE" Version="8.*" Condition="'$(FloorRun)' != 'true'" />
+    <!-- The suite runs on the newest 8.x; -p:FloorRun=true drops this reference, so it runs on the floor the package
+         asks for (8.9.0). -->
+    <PackageReference Include="IKVM.MSBuild" Version="8.*" Condition="'$(FloorRun)' != 'true'" />
   </ItemGroup>
 
   <ItemGroup>
@@ -25,6 +40,11 @@
 
   <ItemGroup>
     <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Kronikol.Tests\Packaging\PackedNuspec.cs" Link="PackedNuspec.cs" />
+    <Compile Include="..\Kronikol.Tests\Packaging\FloorLedger.cs" Link="FloorLedger.cs" />
   </ItemGroup>
 
 </Project>

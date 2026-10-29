@@ -1,0 +1,17 @@
+PlantUml.Ikvm floor | exit 0 | Passed! - Failed: 0, Passed: 83, Skipped: 0, Total: 83 - Kronikol.Tests.PlantUml.Ikvm.dll (net10.0) | audit: none | resolved: IKVM/8.9.0
+# free after PlantUml.Ikvm floor: 29604 MB
+PlantUml.Ikvm | exit 1 | Failed! - Failed: 46, Passed: 37, Skipped: 0, Total: 83 - Kronikol.Tests.PlantUml.Ikvm.dll (net10.0) | audit: none | resolved: IKVM/8.16.3
+# free after PlantUml.Ikvm: 15076 MB
+ALLDONE
+# the runs above were before F39 and F40 were fixed: the package's build copied its IKVM image (8.9.0) into the suite's output over the suite's own (8.16.3). The runs below are after both, each from an empty bin/ and obj/ of the package and the suite
+PlantUml.Ikvm floor | exit 0 | Passed! - Failed: 0, Passed: 85, Skipped: 0, Total: 85 - Kronikol.Tests.PlantUml.Ikvm.dll (net10.0) | audit: none | resolved: IKVM/8.9.0
+# free after PlantUml.Ikvm floor: 38506 MB
+PlantUml.Ikvm | exit 1 | Failed! - Failed: 47, Passed: 38, Skipped: 0, Total: 85 - Kronikol.Tests.PlantUml.Ikvm.dll (net10.0) | audit: none | resolved: IKVM/8.16.3
+# free after PlantUml.Ikvm: 38501 MB
+ALLDONE
+# F39's first fix, CopyIkvmImageItemToOutputDirectory set to Never, is a property 8.9.0's IKVM.Image does not read, so the image fact failed above with the package built on 8.9.0; the runs below are with the target that marks the package's image items Never itself
+PlantUml.Ikvm floor | exit 0 | Passed! - Failed: 0, Passed: 85, Skipped: 0, Total: 85 - Kronikol.Tests.PlantUml.Ikvm.dll (net10.0) | audit: none | resolved: IKVM/8.9.0
+# free after PlantUml.Ikvm floor: 38519 MB
+PlantUml.Ikvm | exit 0 | Passed! - Failed: 0, Passed: 85, Skipped: 0, Total: 85 - Kronikol.Tests.PlantUml.Ikvm.dll (net10.0) | audit: none | resolved: IKVM/8.16.3
+# free after PlantUml.Ikvm: 38501 MB
+ALLDONE

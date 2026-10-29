@@ -1,0 +1,11 @@
+# IKVM, IKVM.Image, IKVM.Image.JDK, IKVM.Image.JRE, IKVM.MSBuild with IKVM, IKVM.Image, IKVM.Image.JDK, IKVM.Image.JRE, IKVM.MSBuild of the same release: 47 8.x releases all share, 8.3.0 to 8.16.3; binary search
+8.16.3 | ok | Passed! - Failed: 0, Passed: 82, Skipped: 0, Total: 82 | audit: none | resolved: IKVM/8.16.3 IKVM.Image/8.16.3 IKVM.Image.JDK/8.16.3 IKVM.Image.JRE/8.16.3 IKVM.MSBuild/8.16.3
+8.7.6 | TESTS FAILED | Failed! - Failed: 77, Passed: 5, Skipped: 0, Total: 82 | audit: none | resolved: IKVM/8.7.6 IKVM.Image/8.7.6 IKVM.Image.JDK/8.7.6 IKVM.Image.JRE/8.7.6 IKVM.MSBuild/8.7.6
+# the first run: 8.16.3 passed and 8.7.6 failed, then the disk filled during 8.12.0's build; this run resumes from 8.8.0 with a NuGet cache of its own
+# IKVM, IKVM.Image, IKVM.Image.JDK, IKVM.Image.JRE, IKVM.MSBuild with IKVM, IKVM.Image, IKVM.Image.JDK, IKVM.Image.JRE, IKVM.MSBuild of the same release: 23 8.x releases all share, 8.8.0 to 8.16.3; binary search
+8.16.3 | ok | Passed! - Failed: 0, Passed: 82, Skipped: 0, Total: 82 | audit: none | resolved: IKVM/8.16.3 IKVM.Image/8.16.3 IKVM.Image.JDK/8.16.3 IKVM.Image.JRE/8.16.3 IKVM.MSBuild/8.16.3
+8.12.0 | ok | Passed! - Failed: 0, Passed: 82, Skipped: 0, Total: 82 | audit: none | resolved: IKVM/8.12.0 IKVM.Image/8.12.0 IKVM.Image.JDK/8.12.0 IKVM.Image.JRE/8.12.0 IKVM.MSBuild/8.12.0
+8.10.1 | ok | Passed! - Failed: 0, Passed: 82, Skipped: 0, Total: 82 | audit: none | resolved: IKVM/8.10.1 IKVM.Image/8.10.1 IKVM.Image.JDK/8.10.1 IKVM.Image.JRE/8.10.1 IKVM.MSBuild/8.10.1
+8.9.0 | ok | Passed! - Failed: 0, Passed: 82, Skipped: 0, Total: 82 | audit: none | resolved: IKVM/8.9.0 IKVM.Image/8.9.0 IKVM.Image.JDK/8.9.0 IKVM.Image.JRE/8.9.0 IKVM.MSBuild/8.9.0
+8.8.1 | TESTS FAILED | Failed! - Failed: 77, Passed: 5, Skipped: 0, Total: 82 | audit: none | resolved: IKVM/8.8.1 IKVM.Image/8.8.1 IKVM.Image.JDK/8.8.1 IKVM.Image.JRE/8.8.1 IKVM.MSBuild/8.8.1
+# oldest passing: 8.9.0
