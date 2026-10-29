@@ -1,0 +1,3 @@
+  Failed Kronikol.Tests.AssertionTracking.Probe211DebugPlusTests.Closure_local_by_debug_plus_mode(debugPlus: False)
+  Failed Kronikol.Tests.AssertionTracking.Probe211DebugPlusTests.Closure_local_by_debug_plus_mode(debugPlus: True)
+Failed!  - Failed:     2, Passed:   430, Skipped:    28, Total:   460, Duration: 2 m 31 s - Kronikol.Tests.AssertionTracking.dll (net10.0)

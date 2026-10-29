@@ -1,0 +1,26 @@
+  Failed Kronikol.Tests.AssertionTracking.AwaitedAssertionResumeTests.An_optimized_build_draws_the_notes_a_debug_build_draws(method: "Fa_WithMessage_plain_local")
+  Error Message:
+   Assert.Equal() Failure: Collections differ
+  Failed Kronikol.Tests.AssertionTracking.AwaitedAssertionResumeTests.An_optimized_build_draws_the_notes_a_debug_build_draws(method: "Fa_WithMessage_reads_the_closure")
+  Error Message:
+   Assert.Equal() Failure: Collections differ
+  Failed Kronikol.Tests.AssertionTracking.AwaitedAssertionResumeTests.An_optimized_build_draws_the_notes_a_debug_build_draws(method: "Fa_WithMessage_plain_local_fails")
+  Error Message:
+   Assert.Equal() Failure: Collections differ
+  Failed Kronikol.Tests.AssertionTracking.AwaitedAssertionResumeTests.An_optimized_build_draws_the_notes_a_debug_build_draws(method: "Fa_CompleteWithinAsync_value_type_local")
+  Error Message:
+   Assert.Equal() Failure: Collections differ
+  Failed Kronikol.Tests.AssertionTracking.AwaitedAssertionResumeTests.A_woven_optimized_build_runs_as_the_unwoven_one(method: "Fa_WithMessage_reads_the_closure")
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Actual:   typeof(System.NullReferenceException)
+  Failed Kronikol.Tests.AssertionTracking.AwaitedAssertionResumeTests.An_awaited_assertion_in_a_generic_method_verifies_and_runs(optimization: Debug)
+  Error Message:
+  Cases/<Generic>d__2`1.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 218, Found ref '[ResumeGeneric_Debug]Cases+<Generic>d__2`1<T0>', Expected ref '[ResumeGeneric_Debug]Cases+<Generic>d__2`1')
+  Failed Kronikol.Tests.AssertionTracking.AwaitedAssertionResumeTests.An_awaited_assertion_in_a_generic_method_verifies_and_runs(optimization: Release)
+  Error Message:
+  Cases/<Generic>d__2`1.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 159, Found address of '[ResumeGeneric_Release]Cases+<Generic>d__2`1<T0>', Expected readonly address of '[ResumeGeneric_Release]Cases+<Generic>d__2`1')
+  Failed Kronikol.Tests.AssertionTracking.AwaitedAssertionResumeTests.A_closure_kept_on_the_stack_is_not_read_off_the_state_machine(optimization: Release)
+  Error Message:
+  Cases/<Shouldly_ThrowAsync_closure_on_the_stack>d__1.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 146, Found address of '[ResumeStackClosure_Release]Cases+<Shouldly_ThrowAsync_closure_on_the_stack>d__1', Expected ref '[ResumeStackClosure_Release]Cases+<>c__DisplayClass1_0')
+Failed!  - Failed:     8, Passed:    16, Skipped:     0, Total:    24, Duration: 3 s - Kronikol.Tests.AssertionTracking.dll (net10.0)

@@ -1,0 +1,6 @@
+<CallAsync>d__0 debugPlus=False: locals [Int32, String, YieldAwaiter, YieldAwaitable, Exception]
+<Issue_Unassigned>d__1 debugPlus=False: locals [Int32, Task, TaskAwaiter, Exception]
+<Short_closure>d__2 debugPlus=False: locals [Int32, Task, TaskAwaiter, Exception]
+<CallAsync>d__0 debugPlus=True: locals [Int32, String, YieldAwaiter, YieldAwaitable, Exception]
+<Issue_Unassigned>d__1 debugPlus=True: locals [Int32, <>c__DisplayClass1_0, Task, TaskAwaiter, Exception]
+<Short_closure>d__2 debugPlus=True: locals [Int32, <>c__DisplayClass2_0, Task, TaskAwaiter, Exception]

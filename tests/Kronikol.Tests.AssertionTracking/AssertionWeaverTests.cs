@@ -2946,6 +2946,10 @@ public class AssertionWeaverTests
         // reported environment). Uses class inheritance with raw generic field Response
         // (not a property!). The field type is a raw GenericParameter (!0) which caused
         // the weaver to emit 'box !0' in the non-generic state machine → BadImageFormatException.
+        // It needs the SDK 8 compiler, as CrossSdkWeaverTests' facts do: a host without it (a dotnet sdk:10.0
+        // container) cannot run it, and its restore failed there rather than the fact being skipped.
+        if (!TestAssemblyBuilder.IsSdkAvailable("8.0"))
+            Assert.Skip(".NET 8.0 SDK not installed");
         var assemblyPath = TestAssemblyBuilder.BuildWithSdk(
             $"Sdk8AALinqOrderBy_{configuration}",
             """

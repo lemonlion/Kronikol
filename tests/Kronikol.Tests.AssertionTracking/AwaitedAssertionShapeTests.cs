@@ -144,7 +144,7 @@ public class AwaitedAssertionShapeTests
         var data = new TheoryData<string, string, string>();
         foreach (var sdk in new[] { "8.0", "9.0", "10.0" })
             foreach (var configuration in new[] { BuildConfiguration.Debug, BuildConfiguration.Release, BuildConfiguration.ReleaseDebugPlus })
-                foreach (var id in new[] { "R212", "S2", "S4", "S7", "S8", "S16a", "S17a" })
+                foreach (var id in new[] { "R211", "R212", "S2", "S4", "S7", "S8", "S16a", "S17a", "S37", "S48" })
                     if (Shapes.Value[id].Builds.Contains(configuration))
                         data.Add(sdk, configuration.ToString(), id);
         return data;

@@ -1,6 +1,5 @@
 // R212: #212's reproduction, verbatim but for xUnit ([Fact], its usings, the test framework and TestTracking attributes)
-// Builds: Debug, ReleaseDebugPlus
-// Plain Release is left out: there #211's D-A reads the closure kept on the stack off this in Throw, and the woven IL does not verify (plan 3.10). The issue's xUnit v2 suites build Release with debug-plus.
+// Builds: Debug, Release, ReleaseDebugPlus
 // Type: LabelRepro.LabelTests
 // Shared: none
 // Awaited_ThrowAsync: ✓ Should throw InvalidOperationException

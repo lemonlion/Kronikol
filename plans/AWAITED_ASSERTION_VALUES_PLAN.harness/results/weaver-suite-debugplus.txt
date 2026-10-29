@@ -1,0 +1,15 @@
+# The whole weaver suite (net10.0) with every Release fixture compiled with debug-plus (KRONIKOL_DEBUGPLUS=1, probe/dive-TestAssemblyBuilder.patch), 2026-10-27
+
+## 5.14.0
+Failed!  - Failed:     1, Passed:   407, Skipped:    28, Total:   436, Duration: 3 m 33 s - Kronikol.Tests.AssertionTracking.dll (net10.0)
+Failed Kronikol.Tests.AssertionTracking.WovenIlVerifiesTests.Every_woven_fixture_verifies [126 ms]
+A weave that ILVerify never reads:
+Dive211Tests.cs:328: var weave = mode == "ReleaseUnwoven" ? new WeaveResult() : new AssertionWeaver().Weave(path, Path.ChangeExtension(path, ".pdb"));
+Dive211Tests.cs:422: var weave = new AssertionWeaver().Weave(path, Path.ChangeExtension(path, ".pdb"));
+
+## prototype
+Failed!  - Failed:     1, Passed:   407, Skipped:    28, Total:   436, Duration: 4 m 8 s - Kronikol.Tests.AssertionTracking.dll (net10.0)
+Failed Kronikol.Tests.AssertionTracking.WovenIlVerifiesTests.Every_woven_fixture_verifies [76 ms]
+A weave that ILVerify never reads:
+Dive211Tests.cs:328: var weave = mode == "ReleaseUnwoven" ? new WeaveResult() : new AssertionWeaver().Weave(path, Path.ChangeExtension(path, ".pdb"));
+Dive211Tests.cs:422: var weave = new AssertionWeaver().Weave(path, Path.ChangeExtension(path, ".pdb"));

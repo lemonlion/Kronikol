@@ -1,0 +1,18 @@
+# Release properties per test framework, measured 2026-10-27 with SDK 10.0.300 on Windows 11
+# dotnet msbuild <Fw>Probe.csproj -p:Configuration=Release -getProperty:DebugSymbols -getProperty:DebugType -getProperty:Optimize (after restore)
+XunitV2Probe  xunit 2.9.3,xunit.runner.visualstudio 3.0.2,Microsoft.NET.Test.Sdk 18.0.1  {"Properties":{"DebugSymbols":"true","DebugType":"portable","Optimize":"true"}}
+XunitV3Probe  xunit.v3 3.2.2,xunit.runner.visualstudio 3.1.5,Microsoft.NET.Test.Sdk 18.5.1  {"Properties":{"DebugSymbols":"false","DebugType":"portable","Optimize":"true"}}
+TUnitProbe    TUnit 1.53.0  {"Properties":{"DebugSymbols":"false","DebugType":"portable","Optimize":"true"}}
+MSTestProbe   MSTest 4.2.2  {"Properties":{"DebugSymbols":"false","DebugType":"portable","Optimize":"true"}}
+NUnitProbe    NUnit 4.6.0,NUnit3TestAdapter 6.2.0,Microsoft.NET.Test.Sdk 18.5.1  {"Properties":{"DebugSymbols":"false","DebugType":"portable","Optimize":"true"}}
+LibraryProbe  Shouldly 4.3.0  {"Properties":{"DebugSymbols":"false","DebugType":"portable","Optimize":"true"}}
+
+# Where XunitV2's comes from: xunit.core 2.9.3 build/xunit.core.props
+9:    <DebugSymbols>true</DebugSymbols>
+# xunit.v3 3.2.2 brings xunit.v3.core.mtp-v1 3.2.2; its buildTransitive/xunit.v3.core.mtp-v1.targets sets it only when empty, and the SDK has set false by then
+21:    <DebugSymbols Condition=" '$(DebugSymbols)' == '' ">true</DebugSymbols>
+
+# csc switches, from -v:d build logs
+BuildWithSdk replica (Fixtures/WeaverFixture.csproj, -c Release, SDK 10.0.300):  /debug-  /debug:portable  /optimize+ 
+shapes, -c Release -p:DebugSymbols=false:  /debug-  /optimize+   (warning KRONIKOL001: Kronikol.AssertionTracking: [assembly: TrackAssertions] is declared, but no assertion was instrumented: the build writes no symbols (<DebugType>none</DebugType>), and the weave finds each statement through them.)
+LibraryProbe, -p:Configuration=Release -p:DebugSymbols=false: {"DebugType":"None","DebugSymbols":"false"} (the SDK sets DebugType None itself, so the warning above names the property in effect)

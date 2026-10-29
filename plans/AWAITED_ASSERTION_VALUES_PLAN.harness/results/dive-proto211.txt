@@ -1,0 +1,591 @@
+# Dive211: weaver 5.14.0+8d7d1e1d071382a56599f272d1c708119be276a2, runtime 10.0.11
+
+## Common [Debug]
+  stmt Sync::Throw_capturing_a_local L30 awaited=False "var e = Should.Throw<InvalidOperationException>(() => _client.Get(request))"
+    locals [V_0 <>c__DisplayClass2_0, V_1 InvalidOperationException]
+    captured 'request': local=-1 closureLocal=0 closureField=Dive.Request Dive.Sync/<>c__DisplayClass2_0::request stateField= param=-1
+    captured '_client': local=-1 closureLocal=-1 closureField= stateField=Dive.Client Dive.Sync::_client param=-1
+  stmt Sync::Throw_capturing_a_local L31 awaited=False "e.Message.ShouldBe("expected a1")"
+    locals [V_0 <>c__DisplayClass2_0, V_1 InvalidOperationException]
+    captured: none
+  stmt Sync::ShouldBe_argument_captured_by_nothing L37 awaited=False ""a1".ShouldBe(expected)"
+    locals [V_0 String]
+    captured 'expected': local=0 closureLocal=-1 closureField= stateField= param=-1
+  stmt Sync::ShouldContain_predicate L44 awaited=False "items.ShouldContain(x => x == expected)"
+    locals [V_0 <>c__DisplayClass4_0, V_1 List`1, V_2 ParameterExpression]
+    captured 'expected': local=-1 closureLocal=0 closureField=System.String Dive.Sync/<>c__DisplayClass4_0::expected stateField= param=-1
+  stmt Sync::Fa_Contain_predicate L51 awaited=False "items.Should().Contain(x => x == expected)"
+    locals [V_0 <>c__DisplayClass5_0, V_1 List`1, V_2 ParameterExpression]
+    captured 'expected': local=-1 closureLocal=0 closureField=System.String Dive.Sync/<>c__DisplayClass5_0::expected stateField= param=-1
+  stmt Sync::ThrowAsync_GetResult L57 awaited=False "Should.ThrowAsync<InvalidOperationException>(() => _client.CallAsync(request)).GetAwaiter().GetResult()"
+    locals [V_0 <>c__DisplayClass6_0, V_1 TaskAwaiter`1]
+    captured 'request': local=-1 closureLocal=0 closureField=Dive.Request Dive.Sync/<>c__DisplayClass6_0::request stateField= param=-1
+    captured '_client': local=-1 closureLocal=-1 closureField= stateField=Dive.Client Dive.Sync::_client param=-1
+  stmt Sync::Fa_ThrowAsync_GetResult_WithMessage_local L64 awaited=False "act.Should().ThrowAsync<InvalidOperationException>().WithMessage(message).GetAwaiter().GetResult()"
+    locals [V_0 String, V_1 Func`1, V_2 TaskAwaiter`1]
+    captured 'message': local=0 closureLocal=-1 closureField= stateField= param=-1
+  stmt Sync::Fa_Invoking_capturing_a_local L70 awaited=False "_client.Invoking(c => c.Get(request)).Should().Throw<InvalidOperationException>()"
+    locals [V_0 <>c__DisplayClass8_0]
+    captured: none
+  stmt Sync::Sibling_blocks_used_once L75 awaited=False ""one".ShouldBe(first)"
+    locals [V_0 String, V_1 String]
+    captured 'first': local=0 closureLocal=-1 closureField= stateField= param=-1
+  stmt Sync::Sibling_blocks_used_once L76 awaited=False ""two".ShouldBe(second)"
+    locals [V_0 String, V_1 String]
+    captured 'second': local=1 closureLocal=-1 closureField= stateField= param=-1
+  stmt Sync::Sibling_blocks_used_twice L81 awaited=False ""one".ShouldBe(first)"
+    locals [V_0 String, V_1 String]
+    captured 'first': local=0 closureLocal=-1 closureField= stateField= param=-1
+  stmt Sync::Sibling_blocks_used_twice L82 awaited=False ""two".ShouldBe(second)"
+    locals [V_0 String, V_1 String]
+    captured 'second': local=1 closureLocal=-1 closureField= stateField= param=-1
+  stmt <<Async_lambda>b__10_0>d::MoveNext L171 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => _client.CallAsync(request))"
+    locals [V_0 Int32, V_1 TaskAwaiter`1, V_2 <<Async_lambda>b__10_0>d, V_3 Exception]
+    captured 'request': local=-1 closureLocal=-1 closureField=Dive.Request Dive.Async/<>c__DisplayClass10_0::request stateField=Dive.Async/<>c__DisplayClass10_0 Dive.Async/<<Async_lambda>b__10_0>d::<>8__1 param=-1
+    captured '_client': local=-1 closureLocal=-1 closureField=Dive.Client Dive.Async::_client stateField=Dive.Async Dive.Async/<<Async_lambda>b__10_0>d::<>4__this param=-1
+  stmt <<Local_function>g__Check|11_0>d::MoveNext L181 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => _client.CallAsync(request))"
+    locals [V_0 Int32, V_1 TaskAwaiter`1, V_2 <<Local_function>g__Check|11_0>d, V_3 Exception]
+    captured 'request': local=-1 closureLocal=-1 closureField=Dive.Request Dive.Async/<>c__DisplayClass11_0::request stateField=Dive.Async/<>c__DisplayClass11_0 Dive.Async/<<Local_function>g__Check|11_0>d::<>8__1 param=-1
+    captured '_client': local=-1 closureLocal=-1 closureField=Dive.Client Dive.Async::_client stateField=Dive.Async Dive.Async/<<Local_function>g__Check|11_0>d::<>4__this param=-1
+  stmt <ConfigureAwait_false>d__7::MoveNext L150 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => _client.CallAsync(request)).ConfigureAwait(false)"
+    locals [V_0 Int32, V_1 ConfiguredTaskAwaiter, V_2 ConfiguredTaskAwaitable`1, V_3 <ConfigureAwait_false>d__7, V_4 Exception]
+    captured 'request': local=-1 closureLocal=-1 closureField=Dive.Request Dive.Async/<>c__DisplayClass7_0::request stateField=Dive.Async/<>c__DisplayClass7_0 Dive.Async/<ConfigureAwait_false>d__7::<>8__1 param=-1
+    captured '_client': local=-1 closureLocal=-1 closureField=Dive.Client Dive.Async::_client stateField=Dive.Async Dive.Async/<ConfigureAwait_false>d__7::<>4__this param=-1
+  stmt <Fa_Awaiting_capturing_a_local>d__12::MoveNext L187 awaited=True "await _client.Awaiting(c => c.CallAsync(request)).Should().ThrowAsync<InvalidOperationException>()"
+    locals [V_0 Int32, V_1 TaskAwaiter`1, V_2 <Fa_Awaiting_capturing_a_local>d__12, V_3 Exception]
+    captured: none
+  stmt <Fa_WithMessage_closure>d__14::MoveNext L201 awaited=True "await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("expected " + request.Id)"
+    locals [V_0 Int32, V_1 TaskAwaiter`1, V_2 <Fa_WithMessage_closure>d__14, V_3 Exception]
+    captured 'request': local=-1 closureLocal=-1 closureField=Dive.Request Dive.Async/<>c__DisplayClass14_0::request stateField=Dive.Async/<>c__DisplayClass14_0 Dive.Async/<Fa_WithMessage_closure>d__14::<>8__1 param=-1
+  stmt <Fa_WithMessage_local>d__13::MoveNext L194 awaited=True "await act.Should().ThrowAsync<InvalidOperationException>().WithMessage(message)"
+    locals [V_0 Int32, V_1 TaskAwaiter`1, V_2 <Fa_WithMessage_local>d__13, V_3 Exception]
+    captured 'message': local=-1 closureLocal=-1 closureField= stateField=System.String Dive.Async/<Fa_WithMessage_local>d__13::<message>5__1 param=-1
+  stmt <Foreach_after_await>d__6::MoveNext L143 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => _client.CallAsync(request))"
+    locals [V_0 Int32, V_1 YieldAwaiter, V_2 YieldAwaitable, V_3 <Foreach_after_await>d__6, V_4 TaskAwaiter`1, V_5 Exception]
+    captured 'request': local=-1 closureLocal=-1 closureField=Dive.Request Dive.Async/<>c__DisplayClass6_0::request stateField=Dive.Async/<>c__DisplayClass6_0 Dive.Async/<Foreach_after_await>d__6::<>8__3 param=-1
+    captured '_client': local=-1 closureLocal=-1 closureField=Dive.Client Dive.Async::_client stateField=Dive.Async Dive.Async/<Foreach_after_await>d__6::<>4__this param=-1
+  stmt <Issue_assigned>d__1::MoveNext L93 awaited=True "var exception = await Should.ThrowAsync<InvalidOperationException>(async () => await _client.CallAsync(request))"
+    locals [V_0 Int32, V_1 TaskAwaiter`1, V_2 <Issue_assigned>d__1, V_3 Exception]
+    captured 'request': local=-1 closureLocal=-1 closureField=Dive.Request Dive.Async/<>c__DisplayClass1_0::request stateField=Dive.Async/<>c__DisplayClass1_0 Dive.Async/<Issue_assigned>d__1::<>8__1 param=-1
+  stmt <Issue_assigned>d__1::MoveNext L94 awaited=False "exception.Message.ShouldBe("expected a1")"
+    locals [V_0 Int32, V_1 TaskAwaiter`1, V_2 <Issue_assigned>d__1, V_3 Exception]
+    captured: none
+  stmt <Issue_unassigned>d__2::MoveNext L100 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => _client.CallAsync(request))"
+    locals [V_0 Int32, V_1 TaskAwaiter`1, V_2 <Issue_unassigned>d__2, V_3 Exception]
+    captured 'request': local=-1 closureLocal=-1 closureField=Dive.Request Dive.Async/<>c__DisplayClass2_0::request stateField=Dive.Async/<>c__DisplayClass2_0 Dive.Async/<Issue_unassigned>d__2::<>8__1 param=-1
+    captured '_client': local=-1 closureLocal=-1 closureField=Dive.Client Dive.Async::_client stateField=Dive.Async Dive.Async/<Issue_unassigned>d__2::<>4__this param=-1
+  stmt <Try_catch_block>d__5::MoveNext L130 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => _client.CallAsync(request))"
+    locals [V_0 Int32, V_1 TaskAwaiter`1, V_2 <Try_catch_block>d__5, V_3 Exception]
+    captured 'request': local=-1 closureLocal=-1 closureField=Dive.Request Dive.Async/<>c__DisplayClass5_0::request stateField=Dive.Async/<>c__DisplayClass5_0 Dive.Async/<Try_catch_block>d__5::<>8__1 param=-1
+    captured '_client': local=-1 closureLocal=-1 closureField=Dive.Client Dive.Async::_client stateField=Dive.Async Dive.Async/<Try_catch_block>d__5::<>4__this param=-1
+  stmt <Try_finally>d__4::MoveNext L117 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => _client.CallAsync(request))"
+    locals [V_0 Int32, V_1 TaskAwaiter`1, V_2 <Try_finally>d__4, V_3 Exception]
+    captured 'request': local=-1 closureLocal=-1 closureField=Dive.Request Dive.Async/<>c__DisplayClass4_0::request stateField=Dive.Async/<>c__DisplayClass4_0 Dive.Async/<Try_finally>d__4::<>8__1 param=-1
+    captured '_client': local=-1 closureLocal=-1 closureField=Dive.Client Dive.Async::_client stateField=Dive.Async Dive.Async/<Try_finally>d__4::<>4__this param=-1
+  stmt <Try_finally>d__4::MoveNext L121 awaited=False "request.Id.ShouldBe("a1")"
+    locals [V_0 Int32, V_1 TaskAwaiter`1, V_2 <Try_finally>d__4, V_3 Exception]
+    captured: none
+  stmt <Two_statements_one_closure>d__8::MoveNext L156 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => _client.CallAsync(request))"
+    locals [V_0 Int32, V_1 TaskAwaiter`1, V_2 <Two_statements_one_closure>d__8, V_3 TaskAwaiter`1, V_4 Exception]
+    captured 'request': local=-1 closureLocal=-1 closureField=Dive.Request Dive.Async/<>c__DisplayClass8_0::request stateField=Dive.Async/<>c__DisplayClass8_0 Dive.Async/<Two_statements_one_closure>d__8::<>8__1 param=-1
+    captured '_client': local=-1 closureLocal=-1 closureField=Dive.Client Dive.Async::_client stateField=Dive.Async Dive.Async/<Two_statements_one_closure>d__8::<>4__this param=-1
+  stmt <Two_statements_one_closure>d__8::MoveNext L157 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => _client.CallAsync(request))"
+    locals [V_0 Int32, V_1 TaskAwaiter`1, V_2 <Two_statements_one_closure>d__8, V_3 TaskAwaiter`1, V_4 Exception]
+    captured 'request': local=-1 closureLocal=-1 closureField=Dive.Request Dive.Async/<>c__DisplayClass8_0::request stateField=Dive.Async/<>c__DisplayClass8_0 Dive.Async/<Two_statements_one_closure>d__8::<>8__1 param=-1
+    captured '_client': local=-1 closureLocal=-1 closureField=Dive.Client Dive.Async::_client stateField=Dive.Async Dive.Async/<Two_statements_one_closure>d__8::<>4__this param=-1
+  stmt <Using_block>d__3::MoveNext L108 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => _client.CallAsync(request))"
+    locals [V_0 Int32, V_1 TaskAwaiter`1, V_2 <Using_block>d__3, V_3 Exception]
+    captured 'request': local=-1 closureLocal=-1 closureField=Dive.Request Dive.Async/<>c__DisplayClass3_0::request stateField=Dive.Async/<>c__DisplayClass3_0 Dive.Async/<Using_block>d__3::<>8__2 param=-1
+    captured '_client': local=-1 closureLocal=-1 closureField=Dive.Client Dive.Async::_client stateField=Dive.Async Dive.Async/<Using_block>d__3::<>4__this param=-1
+  stmt <ValueTask_method>d__9::MoveNext L163 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => _client.CallAsync(request))"
+    locals [V_0 Int32, V_1 TaskAwaiter`1, V_2 <ValueTask_method>d__9, V_3 Exception]
+    captured 'request': local=-1 closureLocal=-1 closureField=Dive.Request Dive.Async/<>c__DisplayClass9_0::request stateField=Dive.Async/<>c__DisplayClass9_0 Dive.Async/<ValueTask_method>d__9::<>8__1 param=-1
+    captured '_client': local=-1 closureLocal=-1 closureField=Dive.Client Dive.Async::_client stateField=Dive.Async Dive.Async/<ValueTask_method>d__9::<>4__this param=-1
+  stmt NoThis::Sync_static_callee L216 awaited=False "Should.Throw<InvalidOperationException>(() => new Client().Get(request))"
+    locals [V_0 <>c__DisplayClass1_0]
+    captured 'request': local=-1 closureLocal=0 closureField=Dive.Request Dive.NoThis/<>c__DisplayClass1_0::request stateField= param=-1
+  stmt <Static_callee>d__0::MoveNext L210 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => Client.StaticCallAsync(request))"
+    locals [V_0 Int32, V_1 TaskAwaiter`1, V_2 <Static_callee>d__0, V_3 Exception]
+    captured 'request': local=-1 closureLocal=-1 closureField=Dive.Request Dive.NoThis/<>c__DisplayClass0_0::request stateField=Dive.NoThis/<>c__DisplayClass0_0 Dive.NoThis/<Static_callee>d__0::<>8__1 param=-1
+  stmt Base`1::Sync_in_generic_base L233 awaited=False "Should.Throw<InvalidOperationException>(() => _client.Get(request))"
+    locals [V_0 <>c__DisplayClass2_0]
+    captured 'request': local=-1 closureLocal=0 closureField=Dive.Request Dive.Base`1/<>c__DisplayClass2_0<T>::request stateField= param=-1
+    captured '_client': local=-1 closureLocal=-1 closureField= stateField=Dive.Client Dive.Base`1<T>::_client param=-1
+  stmt <In_generic_base>d__1::MoveNext L227 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => _client.CallAsync(request))"
+    locals [V_0 Int32, V_1 TaskAwaiter`1, V_2 <In_generic_base>d__1, V_3 Exception]
+    captured 'request': local=-1 closureLocal=-1 closureField=Dive.Request Dive.Base`1/<>c__DisplayClass1_0<T>::request stateField=Dive.Base`1/<>c__DisplayClass1_0<T> Dive.Base`1/<In_generic_base>d__1<T>::<>8__1 param=-1
+    captured '_client': local=-1 closureLocal=-1 closureField=Dive.Client Dive.Base`1<T>::_client stateField=Dive.Base`1<T> Dive.Base`1/<In_generic_base>d__1<T>::<>4__this param=-1
+  weave: WeavedCount=32; ILVerify errors the weave added: 0
+    unwoven: Dive.Async/<Issue_assigned>d__1.MoveNext, line 93: the stack is not empty where the awaited result is read
+  run Dive.Sync.Throw_capturing_a_local: woven threw nothing; unwoven threw nothing
+    note ✓ Should throw InvalidOperationException
+    note ✓ E message should be "expected a1"
+  run Dive.Sync.ShouldBe_argument_captured_by_nothing: woven threw nothing; unwoven threw nothing
+    note ✓ "a1" should be 'a1'
+  run Dive.Sync.ShouldContain_predicate: woven threw nothing; unwoven threw nothing
+    note ✓ Items should contain [ x => x == 'a1' ]
+  run Dive.Sync.Fa_Contain_predicate: woven threw nothing; unwoven threw nothing
+    note ✓ Items should contain [ x => x == 'a1' ]
+  run Dive.Sync.ThrowAsync_GetResult: woven threw nothing; unwoven threw nothing
+    note ✓ Should throw InvalidOperationException
+  run Dive.Sync.Fa_ThrowAsync_GetResult_WithMessage_local: woven threw nothing; unwoven threw nothing
+    note ✓ Act should throw async <InvalidOperationException>
+  run Dive.Sync.Fa_Invoking_capturing_a_local: woven threw nothing; unwoven threw nothing
+    note ✓ Client invoking(c => c get(request)) should throw <InvalidOperationException>
+  run Dive.Async.Fa_Awaiting_capturing_a_local: woven threw nothing; unwoven threw nothing
+    note ✓ Client awaiting(c => c call async(request)) should throw async <InvalidOperationException>
+  run Dive.Sync.Sibling_blocks_used_once: woven threw nothing; unwoven threw nothing
+    note ✓ "one" should be 'one'
+    note ✓ "two" should be 'two'
+  run Dive.Sync.Sibling_blocks_used_twice: woven threw nothing; unwoven threw nothing
+    note ✓ "one" should be 'one'
+    note ✓ "two" should be 'two'
+  run Dive.Async.Issue_assigned: woven threw nothing; unwoven threw nothing
+    note ✓ Exception message should be "expected a1"
+  run Dive.Async.Issue_unassigned: woven threw nothing; unwoven threw nothing
+    note ✓ Should throw InvalidOperationException
+  run Dive.Async.Using_block: woven threw nothing; unwoven threw nothing
+    note ✓ Should throw InvalidOperationException
+  run Dive.Async.Try_finally: woven threw nothing; unwoven threw nothing
+    note ✓ Should throw InvalidOperationException
+    note ✓ Request id should be "a1"
+  run Dive.Async.Try_catch_block: woven threw nothing; unwoven threw nothing
+    note ✓ Should throw InvalidOperationException
+  run Dive.Async.Foreach_after_await: woven threw nothing; unwoven threw nothing
+    note ✓ Should throw InvalidOperationException
+  run Dive.Async.ConfigureAwait_false: woven threw nothing; unwoven threw nothing
+    note ✓ Should throw InvalidOperationException false
+  run Dive.Async.Two_statements_one_closure: woven threw nothing; unwoven threw nothing
+    note ✓ Should throw InvalidOperationException
+    note ✓ Should throw InvalidOperationException
+  run Dive.Async.ValueTask_method: woven threw nothing; unwoven threw nothing
+    note ✓ Should throw InvalidOperationException
+  run Dive.Async.Async_lambda: woven threw nothing; unwoven threw nothing
+    note ✓ Should throw InvalidOperationException
+  run Dive.Async.Local_function: woven threw nothing; unwoven threw nothing
+    note ✓ Should throw InvalidOperationException
+  run Dive.Async.Fa_WithMessage_local: woven threw nothing; unwoven threw nothing
+    note ✓ Act should throw async <InvalidOperationException>, 'expected a1'
+  run Dive.Async.Fa_WithMessage_closure: woven threw nothing; unwoven threw nothing
+    note ✓ Act should throw async <InvalidOperationException>, "expected " + 'a1'
+  run Dive.NoThis.Static_callee: woven threw nothing; unwoven threw nothing
+    note ✓ Should throw InvalidOperationException
+  run Dive.NoThis.Sync_static_callee: woven threw nothing; unwoven threw nothing
+    note ✓ Should throw InvalidOperationException
+  run Dive.Derived.In_generic_base: woven threw nothing; unwoven threw nothing
+    note ✓ Should throw InvalidOperationException
+  run Dive.Derived.Sync_in_generic_base: woven threw nothing; unwoven threw nothing
+    note ✓ Should throw InvalidOperationException
+
+## TUnit [Debug]
+  stmt <IsEqualTo_closure_after_suspension>d__5::MoveNext L45 awaited=True "await Assert.That(async () => await DelayedAsync(request.Id)).IsEqualTo(request.Id)"
+    locals [V_0 Int32, V_1 TaskAwaiter`1, V_2 <IsEqualTo_closure_after_suspension>d__5, V_3 Exception]
+    captured 'request': local=-1 closureLocal=-1 closureField=DiveTUnit.Request DiveTUnit.Shapes/<>c__DisplayClass5_0::request stateField=DiveTUnit.Shapes/<>c__DisplayClass5_0 DiveTUnit.Shapes/<IsEqualTo_closure_after_suspension>d__5::<>8__1 param=-1
+  stmt <IsEqualTo_local>d__1::MoveNext L25 awaited=True "await Assert.That("a1").IsEqualTo(expected)"
+    locals [V_0 Int32, V_1 TaskAwaiter`1, V_2 <IsEqualTo_local>d__1, V_3 Exception]
+    captured 'expected': local=-1 closureLocal=-1 closureField= stateField=System.String DiveTUnit.Shapes/<IsEqualTo_local>d__1::<expected>5__1 param=-1
+  stmt <IsEqualTo_local_after_suspension>d__4::MoveNext L39 awaited=True "await Assert.That(async () => await DelayedAsync("a1")).IsEqualTo(expected)"
+    locals [V_0 Int32, V_1 TaskAwaiter`1, V_2 <IsEqualTo_local_after_suspension>d__4, V_3 Exception]
+    captured 'expected': local=-1 closureLocal=-1 closureField= stateField=System.String DiveTUnit.Shapes/<IsEqualTo_local_after_suspension>d__4::<expected>5__1 param=-1
+  stmt <Throws_capturing_delegate>d__2::MoveNext L31 awaited=True "await Assert.That(() => _client.CallAsync(request)).Throws<InvalidOperationException>()"
+    locals [V_0 Int32, V_1 TaskAwaiter`1, V_2 <Throws_capturing_delegate>d__2, V_3 Exception]
+    captured: none
+  weave: WeavedCount=4; ILVerify errors the weave added: 0
+  run DiveTUnit.Shapes.IsEqualTo_local: woven threw nothing; unwoven threw nothing
+    note ✓ "a1" is equal to 'a1'
+  run DiveTUnit.Shapes.Throws_capturing_delegate: woven threw nothing; unwoven threw nothing
+    note ✓ () => _client call async(request) throws <InvalidOperationException>
+  run DiveTUnit.Shapes.IsEqualTo_local_after_suspension: woven threw nothing; unwoven threw nothing
+    note ✓ Async () => await  delayed async("a1") is equal to 'a1'
+  run DiveTUnit.Shapes.IsEqualTo_closure_after_suspension: woven threw nothing; unwoven threw nothing
+    note ✓ Async () => await  delayed async(request id) is equal to 'a1'
+
+## Common [Release]
+  stmt Sync::Throw_capturing_a_local L30 awaited=False "var e = Should.Throw<InvalidOperationException>(() => _client.Get(request))"
+    locals []
+    captured '_client': local=-1 closureLocal=-1 closureField= stateField=Dive.Client Dive.Sync::_client param=-1
+  stmt Sync::Throw_capturing_a_local L31 awaited=False "e.Message.ShouldBe("expected a1")"
+    locals []
+    captured: none
+  stmt Sync::ShouldBe_argument_captured_by_nothing L37 awaited=False ""a1".ShouldBe(expected)"
+    locals [V_0 String]
+    captured 'expected': local=0 closureLocal=-1 closureField= stateField= param=-1
+  stmt Sync::ShouldContain_predicate L44 awaited=False "items.ShouldContain(x => x == expected)"
+    locals [V_0 <>c__DisplayClass4_0, V_1 ParameterExpression]
+    captured 'expected': local=-1 closureLocal=0 closureField=System.String Dive.Sync/<>c__DisplayClass4_0::expected stateField= param=-1
+  stmt Sync::Fa_Contain_predicate L51 awaited=False "items.Should().Contain(x => x == expected)"
+    locals [V_0 <>c__DisplayClass5_0, V_1 ParameterExpression]
+    captured 'expected': local=-1 closureLocal=0 closureField=System.String Dive.Sync/<>c__DisplayClass5_0::expected stateField= param=-1
+  stmt Sync::ThrowAsync_GetResult L57 awaited=False "Should.ThrowAsync<InvalidOperationException>(() => _client.CallAsync(request)).GetAwaiter().GetResult()"
+    locals [V_0 TaskAwaiter`1]
+    captured '_client': local=-1 closureLocal=-1 closureField= stateField=Dive.Client Dive.Sync::_client param=-1
+  stmt Sync::Fa_ThrowAsync_GetResult_WithMessage_local L64 awaited=False "act.Should().ThrowAsync<InvalidOperationException>().WithMessage(message).GetAwaiter().GetResult()"
+    locals [V_0 String, V_1 TaskAwaiter`1]
+    captured 'message': local=0 closureLocal=-1 closureField= stateField= param=-1
+  stmt Sync::Fa_Invoking_capturing_a_local L70 awaited=False "_client.Invoking(c => c.Get(request)).Should().Throw<InvalidOperationException>()"
+    locals [V_0 <>c__DisplayClass8_0]
+    captured: none
+  stmt Sync::Sibling_blocks_used_once L75 awaited=False ""one".ShouldBe(first)"
+    locals [V_0 String, V_1 String]
+    captured 'first': local=0 closureLocal=-1 closureField= stateField= param=-1
+  stmt Sync::Sibling_blocks_used_once L76 awaited=False ""two".ShouldBe(second)"
+    locals [V_0 String, V_1 String]
+    captured 'second': local=1 closureLocal=-1 closureField= stateField= param=-1
+  stmt Sync::Sibling_blocks_used_twice L81 awaited=False ""one".ShouldBe(first)"
+    locals [V_0 String, V_1 String]
+    captured 'first': local=0 closureLocal=-1 closureField= stateField= param=-1
+  stmt Sync::Sibling_blocks_used_twice L82 awaited=False ""two".ShouldBe(second)"
+    locals [V_0 String, V_1 String]
+    captured 'second': local=1 closureLocal=-1 closureField= stateField= param=-1
+  stmt <<Async_lambda>b__10_0>d::MoveNext L171 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => _client.CallAsync(request))"
+    locals [V_0 Int32, V_1 Async, V_2 TaskAwaiter`1, V_3 Exception]
+    captured '_client': local=-1 closureLocal=-1 closureField=Dive.Client Dive.Async::_client stateField=Dive.Async Dive.Async/<<Async_lambda>b__10_0>d::<>4__this param=-1
+  stmt <<Local_function>g__Check|11_0>d::MoveNext L181 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => _client.CallAsync(request))"
+    locals [V_0 Int32, V_1 Async, V_2 TaskAwaiter`1, V_3 Exception]
+    captured '_client': local=-1 closureLocal=-1 closureField=Dive.Client Dive.Async::_client stateField=Dive.Async Dive.Async/<<Local_function>g__Check|11_0>d::<>4__this param=-1
+  stmt <ConfigureAwait_false>d__7::MoveNext L150 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => _client.CallAsync(request)).ConfigureAwait(false)"
+    locals [V_0 Int32, V_1 ConfiguredTaskAwaiter, V_2 ConfiguredTaskAwaitable`1, V_3 Exception]
+    captured '_client': local=-1 closureLocal=-1 closureField=Dive.Client Dive.Async::_client stateField=Dive.Async Dive.Async/<ConfigureAwait_false>d__7::<>4__this param=-1
+  stmt <Fa_Awaiting_capturing_a_local>d__12::MoveNext L187 awaited=True "await _client.Awaiting(c => c.CallAsync(request)).Should().ThrowAsync<InvalidOperationException>()"
+    locals [V_0 Int32, V_1 Async, V_2 <>c__DisplayClass12_0, V_3 TaskAwaiter`1, V_4 Exception]
+    captured: none
+  stmt <Fa_WithMessage_closure>d__14::MoveNext L201 awaited=True "await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("expected " + request.Id)"
+    locals [V_0 Int32, V_1 <>c__DisplayClass14_0, V_2 TaskAwaiter`1, V_3 Exception]
+    captured 'request': local=-1 closureLocal=1 closureField=Dive.Request Dive.Async/<>c__DisplayClass14_0::request stateField= param=-1
+  stmt <Fa_WithMessage_local>d__13::MoveNext L194 awaited=True "await act.Should().ThrowAsync<InvalidOperationException>().WithMessage(message)"
+    locals [V_0 Int32, V_1 Async, V_2 String, V_3 TaskAwaiter`1, V_4 Exception]
+    captured 'message': local=2 closureLocal=-1 closureField= stateField= param=-1
+  stmt <Foreach_after_await>d__6::MoveNext L143 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => _client.CallAsync(request))"
+    locals [V_0 Int32, V_1 Async, V_2 YieldAwaiter, V_3 YieldAwaitable, V_4 String, V_5 TaskAwaiter`1, V_6 Exception]
+    captured '_client': local=-1 closureLocal=-1 closureField=Dive.Client Dive.Async::_client stateField=Dive.Async Dive.Async/<Foreach_after_await>d__6::<>4__this param=-1
+  stmt <Issue_assigned>d__1::MoveNext L93 awaited=True "var exception = await Should.ThrowAsync<InvalidOperationException>(async () => await _client.CallAsync(request))"
+    locals [V_0 Int32, V_1 TaskAwaiter`1, V_2 Exception]
+    captured: none
+  stmt <Issue_assigned>d__1::MoveNext L94 awaited=False "exception.Message.ShouldBe("expected a1")"
+    locals [V_0 Int32, V_1 TaskAwaiter`1, V_2 Exception]
+    captured: none
+  stmt <Issue_unassigned>d__2::MoveNext L100 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => _client.CallAsync(request))"
+    locals [V_0 Int32, V_1 TaskAwaiter`1, V_2 Exception]
+    captured '_client': local=-1 closureLocal=-1 closureField=Dive.Client Dive.Async::_client stateField=Dive.Async Dive.Async/<Issue_unassigned>d__2::<>4__this param=-1
+  stmt <Try_catch_block>d__5::MoveNext L130 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => _client.CallAsync(request))"
+    locals [V_0 Int32, V_1 <>c__DisplayClass5_0, V_2 TaskAwaiter`1, V_3 Exception]
+    captured 'request': local=-1 closureLocal=1 closureField=Dive.Request Dive.Async/<>c__DisplayClass5_0::request stateField= param=-1
+    captured '_client': local=-1 closureLocal=-1 closureField=Dive.Client Dive.Async::_client stateField=Dive.Async Dive.Async/<Try_catch_block>d__5::<>4__this param=-1
+  stmt <Try_finally>d__4::MoveNext L117 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => _client.CallAsync(request))"
+    locals [V_0 Int32, V_1 TaskAwaiter`1, V_2 Exception]
+    captured 'request': local=-1 closureLocal=-1 closureField=Dive.Request Dive.Async/<>c__DisplayClass4_0::request stateField=Dive.Async/<>c__DisplayClass4_0 Dive.Async/<Try_finally>d__4::<>8__1 param=-1
+    captured '_client': local=-1 closureLocal=-1 closureField=Dive.Client Dive.Async::_client stateField=Dive.Async Dive.Async/<Try_finally>d__4::<>4__this param=-1
+  stmt <Try_finally>d__4::MoveNext L121 awaited=False "request.Id.ShouldBe("a1")"
+    locals [V_0 Int32, V_1 TaskAwaiter`1, V_2 Exception]
+    captured: none
+  stmt <Two_statements_one_closure>d__8::MoveNext L156 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => _client.CallAsync(request))"
+    locals [V_0 Int32, V_1 TaskAwaiter`1, V_2 Exception]
+    captured 'request': local=-1 closureLocal=-1 closureField=Dive.Request Dive.Async/<>c__DisplayClass8_0::request stateField=Dive.Async/<>c__DisplayClass8_0 Dive.Async/<Two_statements_one_closure>d__8::<>8__1 param=-1
+    captured '_client': local=-1 closureLocal=-1 closureField=Dive.Client Dive.Async::_client stateField=Dive.Async Dive.Async/<Two_statements_one_closure>d__8::<>4__this param=-1
+  stmt <Two_statements_one_closure>d__8::MoveNext L157 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => _client.CallAsync(request))"
+    locals [V_0 Int32, V_1 TaskAwaiter`1, V_2 Exception]
+    captured 'request': local=-1 closureLocal=-1 closureField=Dive.Request Dive.Async/<>c__DisplayClass8_0::request stateField=Dive.Async/<>c__DisplayClass8_0 Dive.Async/<Two_statements_one_closure>d__8::<>8__1 param=-1
+    captured '_client': local=-1 closureLocal=-1 closureField=Dive.Client Dive.Async::_client stateField=Dive.Async Dive.Async/<Two_statements_one_closure>d__8::<>4__this param=-1
+  stmt <Using_block>d__3::MoveNext L108 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => _client.CallAsync(request))"
+    locals [V_0 Int32, V_1 <>c__DisplayClass3_0, V_2 TaskAwaiter`1, V_3 Exception]
+    captured 'request': local=-1 closureLocal=1 closureField=Dive.Request Dive.Async/<>c__DisplayClass3_0::request stateField= param=-1
+    captured '_client': local=-1 closureLocal=-1 closureField=Dive.Client Dive.Async::_client stateField=Dive.Async Dive.Async/<Using_block>d__3::<>4__this param=-1
+  stmt <ValueTask_method>d__9::MoveNext L163 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => _client.CallAsync(request))"
+    locals [V_0 Int32, V_1 TaskAwaiter`1, V_2 Exception]
+    captured '_client': local=-1 closureLocal=-1 closureField=Dive.Client Dive.Async::_client stateField=Dive.Async Dive.Async/<ValueTask_method>d__9::<>4__this param=-1
+  stmt NoThis::Sync_static_callee L216 awaited=False "Should.Throw<InvalidOperationException>(() => new Client().Get(request))"
+    locals []
+    captured: none
+  stmt <Static_callee>d__0::MoveNext L210 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => Client.StaticCallAsync(request))"
+    locals [V_0 Int32, V_1 TaskAwaiter`1, V_2 Exception]
+    captured: none
+  stmt Base`1::Sync_in_generic_base L233 awaited=False "Should.Throw<InvalidOperationException>(() => _client.Get(request))"
+    locals []
+    captured '_client': local=-1 closureLocal=-1 closureField= stateField=Dive.Client Dive.Base`1<T>::_client param=-1
+  stmt <In_generic_base>d__1::MoveNext L227 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => _client.CallAsync(request))"
+    locals [V_0 Int32, V_1 TaskAwaiter`1, V_2 Exception]
+    captured '_client': local=-1 closureLocal=-1 closureField=Dive.Client Dive.Base`1<T>::_client stateField=Dive.Base`1<T> Dive.Base`1/<In_generic_base>d__1<T>::<>4__this param=-1
+  weave: WeavedCount=33; ILVerify errors the weave added: 0
+  run Dive.Sync.Throw_capturing_a_local: woven threw nothing; unwoven threw nothing
+    note ✓ Should throw InvalidOperationException
+    note ✓ E message should be "expected a1"
+  run Dive.Sync.ShouldBe_argument_captured_by_nothing: woven threw nothing; unwoven threw nothing
+    note ✓ "a1" should be 'a1'
+  run Dive.Sync.ShouldContain_predicate: woven threw nothing; unwoven threw nothing
+    note ✓ Items should contain [ x => x == 'a1' ]
+  run Dive.Sync.Fa_Contain_predicate: woven threw nothing; unwoven threw nothing
+    note ✓ Items should contain [ x => x == 'a1' ]
+  run Dive.Sync.ThrowAsync_GetResult: woven threw nothing; unwoven threw nothing
+    note ✓ Should throw InvalidOperationException
+  run Dive.Sync.Fa_ThrowAsync_GetResult_WithMessage_local: woven threw nothing; unwoven threw nothing
+    note ✓ Act should throw async <InvalidOperationException>
+  run Dive.Sync.Fa_Invoking_capturing_a_local: woven threw nothing; unwoven threw nothing
+    note ✓ Client invoking(c => c get(request)) should throw <InvalidOperationException>
+  run Dive.Async.Fa_Awaiting_capturing_a_local: woven threw nothing; unwoven threw nothing
+    note ✓ Client awaiting(c => c call async(request)) should throw async <InvalidOperationException>
+  run Dive.Sync.Sibling_blocks_used_once: woven threw nothing; unwoven threw nothing
+    note ✓ "one" should be 'one'
+    note ✓ "two" should be 'two'
+  run Dive.Sync.Sibling_blocks_used_twice: woven threw nothing; unwoven threw nothing
+    note ✓ "one" should be 'one'
+    note ✓ "two" should be 'two'
+  run Dive.Async.Issue_assigned: woven threw nothing; unwoven threw nothing
+    note ✓ Await Should.ThrowAsync<InvalidOperationException>(async () => await _client.CallAsync(request))
+    note ✓ Exception message should be "expected a1"
+  run Dive.Async.Issue_unassigned: woven threw nothing; unwoven threw nothing
+    note ✓ Should throw InvalidOperationException
+  run Dive.Async.Using_block: woven threw nothing; unwoven threw nothing
+    note ✓ Should throw InvalidOperationException
+  run Dive.Async.Try_finally: woven threw nothing; unwoven threw nothing
+    note ✓ Should throw InvalidOperationException
+    note ✓ Request id should be "a1"
+  run Dive.Async.Try_catch_block: woven threw nothing; unwoven threw nothing
+    note ✓ Should throw InvalidOperationException
+  run Dive.Async.Foreach_after_await: woven threw nothing; unwoven threw nothing
+    note ✓ Should throw InvalidOperationException
+  run Dive.Async.ConfigureAwait_false: woven threw nothing; unwoven threw nothing
+    note ✓ Should throw InvalidOperationException false
+  run Dive.Async.Two_statements_one_closure: woven threw nothing; unwoven threw nothing
+    note ✓ Should throw InvalidOperationException
+    note ✓ Should throw InvalidOperationException
+  run Dive.Async.ValueTask_method: woven threw nothing; unwoven threw nothing
+    note ✓ Should throw InvalidOperationException
+  run Dive.Async.Async_lambda: woven threw nothing; unwoven threw nothing
+    note ✓ Should throw InvalidOperationException
+  run Dive.Async.Local_function: woven threw nothing; unwoven threw nothing
+    note ✓ Should throw InvalidOperationException
+  run Dive.Async.Fa_WithMessage_local: woven threw nothing; unwoven threw nothing
+    note ✓ Act should throw async <InvalidOperationException>, 'expected a1'
+  run Dive.Async.Fa_WithMessage_closure: woven threw nothing; unwoven threw nothing
+    note ✓ Act should throw async <InvalidOperationException>, "expected " + 'a1'
+  run Dive.NoThis.Static_callee: woven threw nothing; unwoven threw nothing
+    note ✓ Should throw InvalidOperationException
+  run Dive.NoThis.Sync_static_callee: woven threw nothing; unwoven threw nothing
+    note ✓ Should throw InvalidOperationException
+  run Dive.Derived.In_generic_base: woven threw nothing; unwoven threw nothing
+    note ✓ Should throw InvalidOperationException
+  run Dive.Derived.Sync_in_generic_base: woven threw nothing; unwoven threw nothing
+    note ✓ Should throw InvalidOperationException
+
+## TUnit [Release]
+  stmt <IsEqualTo_closure_after_suspension>d__5::MoveNext L45 awaited=True "await Assert.That(async () => await DelayedAsync(request.Id)).IsEqualTo(request.Id)"
+    locals [V_0 Int32, V_1 <>c__DisplayClass5_0, V_2 TaskAwaiter`1, V_3 Exception]
+    captured 'request': local=-1 closureLocal=1 closureField=DiveTUnit.Request DiveTUnit.Shapes/<>c__DisplayClass5_0::request stateField= param=-1
+  stmt <IsEqualTo_local>d__1::MoveNext L25 awaited=True "await Assert.That("a1").IsEqualTo(expected)"
+    locals [V_0 Int32, V_1 String, V_2 TaskAwaiter`1, V_3 Exception]
+    captured 'expected': local=1 closureLocal=-1 closureField= stateField= param=-1
+  stmt <IsEqualTo_local_after_suspension>d__4::MoveNext L39 awaited=True "await Assert.That(async () => await DelayedAsync("a1")).IsEqualTo(expected)"
+    locals [V_0 Int32, V_1 String, V_2 TaskAwaiter`1, V_3 Exception]
+    captured 'expected': local=1 closureLocal=-1 closureField= stateField= param=-1
+  stmt <Throws_capturing_delegate>d__2::MoveNext L31 awaited=True "await Assert.That(() => _client.CallAsync(request)).Throws<InvalidOperationException>()"
+    locals [V_0 Int32, V_1 TaskAwaiter`1, V_2 Exception]
+    captured: none
+  weave: WeavedCount=4; ILVerify errors the weave added: 0
+  run DiveTUnit.Shapes.IsEqualTo_local: woven threw nothing; unwoven threw nothing
+    note ✓ "a1" is equal to 'a1'
+  run DiveTUnit.Shapes.Throws_capturing_delegate: woven threw nothing; unwoven threw nothing
+    note ✓ () => _client call async(request) throws <InvalidOperationException>
+  run DiveTUnit.Shapes.IsEqualTo_local_after_suspension: woven threw nothing; unwoven threw nothing
+    note ✓ Async () => await  delayed async("a1") is equal to 'a1'
+  run DiveTUnit.Shapes.IsEqualTo_closure_after_suspension: woven threw nothing; unwoven threw nothing
+    note ✓ Async () => await  delayed async(request id) is equal to 'a1'
+
+## Common [ReleaseDebugPlus]
+  stmt Sync::Throw_capturing_a_local L30 awaited=False "var e = Should.Throw<InvalidOperationException>(() => _client.Get(request))"
+    locals [V_0 <>c__DisplayClass2_0, V_1 InvalidOperationException]
+    captured 'request': local=-1 closureLocal=0 closureField=Dive.Request Dive.Sync/<>c__DisplayClass2_0::request stateField= param=-1
+    captured '_client': local=-1 closureLocal=-1 closureField= stateField=Dive.Client Dive.Sync::_client param=-1
+  stmt Sync::Throw_capturing_a_local L31 awaited=False "e.Message.ShouldBe("expected a1")"
+    locals [V_0 <>c__DisplayClass2_0, V_1 InvalidOperationException]
+    captured: none
+  stmt Sync::ShouldBe_argument_captured_by_nothing L37 awaited=False ""a1".ShouldBe(expected)"
+    locals [V_0 String]
+    captured 'expected': local=0 closureLocal=-1 closureField= stateField= param=-1
+  stmt Sync::ShouldContain_predicate L44 awaited=False "items.ShouldContain(x => x == expected)"
+    locals [V_0 <>c__DisplayClass4_0, V_1 List`1, V_2 ParameterExpression]
+    captured 'expected': local=-1 closureLocal=0 closureField=System.String Dive.Sync/<>c__DisplayClass4_0::expected stateField= param=-1
+  stmt Sync::Fa_Contain_predicate L51 awaited=False "items.Should().Contain(x => x == expected)"
+    locals [V_0 <>c__DisplayClass5_0, V_1 List`1, V_2 ParameterExpression]
+    captured 'expected': local=-1 closureLocal=0 closureField=System.String Dive.Sync/<>c__DisplayClass5_0::expected stateField= param=-1
+  stmt Sync::ThrowAsync_GetResult L57 awaited=False "Should.ThrowAsync<InvalidOperationException>(() => _client.CallAsync(request)).GetAwaiter().GetResult()"
+    locals [V_0 <>c__DisplayClass6_0, V_1 TaskAwaiter`1]
+    captured 'request': local=-1 closureLocal=0 closureField=Dive.Request Dive.Sync/<>c__DisplayClass6_0::request stateField= param=-1
+    captured '_client': local=-1 closureLocal=-1 closureField= stateField=Dive.Client Dive.Sync::_client param=-1
+  stmt Sync::Fa_ThrowAsync_GetResult_WithMessage_local L64 awaited=False "act.Should().ThrowAsync<InvalidOperationException>().WithMessage(message).GetAwaiter().GetResult()"
+    locals [V_0 String, V_1 Func`1, V_2 TaskAwaiter`1]
+    captured 'message': local=0 closureLocal=-1 closureField= stateField= param=-1
+  stmt Sync::Fa_Invoking_capturing_a_local L70 awaited=False "_client.Invoking(c => c.Get(request)).Should().Throw<InvalidOperationException>()"
+    locals [V_0 <>c__DisplayClass8_0]
+    captured: none
+  stmt Sync::Sibling_blocks_used_once L75 awaited=False ""one".ShouldBe(first)"
+    locals [V_0 String, V_1 String]
+    captured 'first': local=0 closureLocal=-1 closureField= stateField= param=-1
+  stmt Sync::Sibling_blocks_used_once L76 awaited=False ""two".ShouldBe(second)"
+    locals [V_0 String, V_1 String]
+    captured 'second': local=1 closureLocal=-1 closureField= stateField= param=-1
+  stmt Sync::Sibling_blocks_used_twice L81 awaited=False ""one".ShouldBe(first)"
+    locals [V_0 String, V_1 String]
+    captured 'first': local=0 closureLocal=-1 closureField= stateField= param=-1
+  stmt Sync::Sibling_blocks_used_twice L82 awaited=False ""two".ShouldBe(second)"
+    locals [V_0 String, V_1 String]
+    captured 'second': local=1 closureLocal=-1 closureField= stateField= param=-1
+  stmt <<Async_lambda>b__10_0>d::MoveNext L171 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => _client.CallAsync(request))"
+    locals [V_0 Int32, V_1 Async, V_2 <>c__DisplayClass10_0, V_3 TaskAwaiter`1, V_4 Exception]
+    captured 'request': local=-1 closureLocal=2 closureField=Dive.Request Dive.Async/<>c__DisplayClass10_0::request stateField= param=-1
+    captured '_client': local=-1 closureLocal=-1 closureField=Dive.Client Dive.Async::_client stateField=Dive.Async Dive.Async/<<Async_lambda>b__10_0>d::<>4__this param=-1
+  stmt <<Local_function>g__Check|11_0>d::MoveNext L181 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => _client.CallAsync(request))"
+    locals [V_0 Int32, V_1 Async, V_2 <>c__DisplayClass11_0, V_3 TaskAwaiter`1, V_4 Exception]
+    captured 'request': local=-1 closureLocal=2 closureField=Dive.Request Dive.Async/<>c__DisplayClass11_0::request stateField= param=-1
+    captured '_client': local=-1 closureLocal=-1 closureField=Dive.Client Dive.Async::_client stateField=Dive.Async Dive.Async/<<Local_function>g__Check|11_0>d::<>4__this param=-1
+  stmt <ConfigureAwait_false>d__7::MoveNext L150 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => _client.CallAsync(request)).ConfigureAwait(false)"
+    locals [V_0 Int32, V_1 <>c__DisplayClass7_0, V_2 ConfiguredTaskAwaiter, V_3 ConfiguredTaskAwaitable`1, V_4 Exception]
+    captured 'request': local=-1 closureLocal=1 closureField=Dive.Request Dive.Async/<>c__DisplayClass7_0::request stateField= param=-1
+    captured '_client': local=-1 closureLocal=-1 closureField=Dive.Client Dive.Async::_client stateField=Dive.Async Dive.Async/<ConfigureAwait_false>d__7::<>4__this param=-1
+  stmt <Fa_Awaiting_capturing_a_local>d__12::MoveNext L187 awaited=True "await _client.Awaiting(c => c.CallAsync(request)).Should().ThrowAsync<InvalidOperationException>()"
+    locals [V_0 Int32, V_1 Async, V_2 <>c__DisplayClass12_0, V_3 TaskAwaiter`1, V_4 Exception]
+    captured: none
+  stmt <Fa_WithMessage_closure>d__14::MoveNext L201 awaited=True "await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("expected " + request.Id)"
+    locals [V_0 Int32, V_1 <>c__DisplayClass14_0, V_2 Func`1, V_3 TaskAwaiter`1, V_4 Exception]
+    captured 'request': local=-1 closureLocal=1 closureField=Dive.Request Dive.Async/<>c__DisplayClass14_0::request stateField= param=-1
+  stmt <Fa_WithMessage_local>d__13::MoveNext L194 awaited=True "await act.Should().ThrowAsync<InvalidOperationException>().WithMessage(message)"
+    locals [V_0 Int32, V_1 Async, V_2 String, V_3 Func`1, V_4 TaskAwaiter`1, V_5 Exception]
+    captured 'message': local=2 closureLocal=-1 closureField= stateField= param=-1
+  stmt <Foreach_after_await>d__6::MoveNext L143 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => _client.CallAsync(request))"
+    locals [V_0 Int32, V_1 Async, V_2 YieldAwaiter, V_3 YieldAwaitable, V_4 String, V_5 <>c__DisplayClass6_0, V_6 TaskAwaiter`1, V_7 Exception]
+    captured 'request': local=-1 closureLocal=5 closureField=Dive.Request Dive.Async/<>c__DisplayClass6_0::request stateField= param=-1
+    captured '_client': local=-1 closureLocal=-1 closureField=Dive.Client Dive.Async::_client stateField=Dive.Async Dive.Async/<Foreach_after_await>d__6::<>4__this param=-1
+  stmt <Issue_assigned>d__1::MoveNext L93 awaited=True "var exception = await Should.ThrowAsync<InvalidOperationException>(async () => await _client.CallAsync(request))"
+    locals [V_0 Int32, V_1 <>c__DisplayClass1_0, V_2 InvalidOperationException, V_3 InvalidOperationException, V_4 TaskAwaiter`1, V_5 Exception]
+    captured 'request': local=-1 closureLocal=1 closureField=Dive.Request Dive.Async/<>c__DisplayClass1_0::request stateField= param=-1
+  stmt <Issue_assigned>d__1::MoveNext L94 awaited=False "exception.Message.ShouldBe("expected a1")"
+    locals [V_0 Int32, V_1 <>c__DisplayClass1_0, V_2 InvalidOperationException, V_3 InvalidOperationException, V_4 TaskAwaiter`1, V_5 Exception]
+    captured: none
+  stmt <Issue_unassigned>d__2::MoveNext L100 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => _client.CallAsync(request))"
+    locals [V_0 Int32, V_1 <>c__DisplayClass2_0, V_2 TaskAwaiter`1, V_3 Exception]
+    captured 'request': local=-1 closureLocal=1 closureField=Dive.Request Dive.Async/<>c__DisplayClass2_0::request stateField= param=-1
+    captured '_client': local=-1 closureLocal=-1 closureField=Dive.Client Dive.Async::_client stateField=Dive.Async Dive.Async/<Issue_unassigned>d__2::<>4__this param=-1
+  stmt <Try_catch_block>d__5::MoveNext L130 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => _client.CallAsync(request))"
+    locals [V_0 Int32, V_1 <>c__DisplayClass5_0, V_2 TaskAwaiter`1, V_3 Exception]
+    captured 'request': local=-1 closureLocal=1 closureField=Dive.Request Dive.Async/<>c__DisplayClass5_0::request stateField= param=-1
+    captured '_client': local=-1 closureLocal=-1 closureField=Dive.Client Dive.Async::_client stateField=Dive.Async Dive.Async/<Try_catch_block>d__5::<>4__this param=-1
+  stmt <Try_finally>d__4::MoveNext L117 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => _client.CallAsync(request))"
+    locals [V_0 Int32, V_1 TaskAwaiter`1, V_2 Exception]
+    captured 'request': local=-1 closureLocal=-1 closureField=Dive.Request Dive.Async/<>c__DisplayClass4_0::request stateField=Dive.Async/<>c__DisplayClass4_0 Dive.Async/<Try_finally>d__4::<>8__1 param=-1
+    captured '_client': local=-1 closureLocal=-1 closureField=Dive.Client Dive.Async::_client stateField=Dive.Async Dive.Async/<Try_finally>d__4::<>4__this param=-1
+  stmt <Try_finally>d__4::MoveNext L121 awaited=False "request.Id.ShouldBe("a1")"
+    locals [V_0 Int32, V_1 TaskAwaiter`1, V_2 Exception]
+    captured: none
+  stmt <Two_statements_one_closure>d__8::MoveNext L156 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => _client.CallAsync(request))"
+    locals [V_0 Int32, V_1 TaskAwaiter`1, V_2 TaskAwaiter`1, V_3 Exception]
+    captured 'request': local=-1 closureLocal=-1 closureField=Dive.Request Dive.Async/<>c__DisplayClass8_0::request stateField=Dive.Async/<>c__DisplayClass8_0 Dive.Async/<Two_statements_one_closure>d__8::<>8__1 param=-1
+    captured '_client': local=-1 closureLocal=-1 closureField=Dive.Client Dive.Async::_client stateField=Dive.Async Dive.Async/<Two_statements_one_closure>d__8::<>4__this param=-1
+  stmt <Two_statements_one_closure>d__8::MoveNext L157 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => _client.CallAsync(request))"
+    locals [V_0 Int32, V_1 TaskAwaiter`1, V_2 TaskAwaiter`1, V_3 Exception]
+    captured 'request': local=-1 closureLocal=-1 closureField=Dive.Request Dive.Async/<>c__DisplayClass8_0::request stateField=Dive.Async/<>c__DisplayClass8_0 Dive.Async/<Two_statements_one_closure>d__8::<>8__1 param=-1
+    captured '_client': local=-1 closureLocal=-1 closureField=Dive.Client Dive.Async::_client stateField=Dive.Async Dive.Async/<Two_statements_one_closure>d__8::<>4__this param=-1
+  stmt <Using_block>d__3::MoveNext L108 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => _client.CallAsync(request))"
+    locals [V_0 Int32, V_1 <>c__DisplayClass3_0, V_2 TaskAwaiter`1, V_3 Exception]
+    captured 'request': local=-1 closureLocal=1 closureField=Dive.Request Dive.Async/<>c__DisplayClass3_0::request stateField= param=-1
+    captured '_client': local=-1 closureLocal=-1 closureField=Dive.Client Dive.Async::_client stateField=Dive.Async Dive.Async/<Using_block>d__3::<>4__this param=-1
+  stmt <ValueTask_method>d__9::MoveNext L163 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => _client.CallAsync(request))"
+    locals [V_0 Int32, V_1 <>c__DisplayClass9_0, V_2 TaskAwaiter`1, V_3 Exception]
+    captured 'request': local=-1 closureLocal=1 closureField=Dive.Request Dive.Async/<>c__DisplayClass9_0::request stateField= param=-1
+    captured '_client': local=-1 closureLocal=-1 closureField=Dive.Client Dive.Async::_client stateField=Dive.Async Dive.Async/<ValueTask_method>d__9::<>4__this param=-1
+  stmt NoThis::Sync_static_callee L216 awaited=False "Should.Throw<InvalidOperationException>(() => new Client().Get(request))"
+    locals [V_0 <>c__DisplayClass1_0]
+    captured 'request': local=-1 closureLocal=0 closureField=Dive.Request Dive.NoThis/<>c__DisplayClass1_0::request stateField= param=-1
+  stmt <Static_callee>d__0::MoveNext L210 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => Client.StaticCallAsync(request))"
+    locals [V_0 Int32, V_1 <>c__DisplayClass0_0, V_2 TaskAwaiter`1, V_3 Exception]
+    captured 'request': local=-1 closureLocal=1 closureField=Dive.Request Dive.NoThis/<>c__DisplayClass0_0::request stateField= param=-1
+  stmt Base`1::Sync_in_generic_base L233 awaited=False "Should.Throw<InvalidOperationException>(() => _client.Get(request))"
+    locals [V_0 <>c__DisplayClass2_0]
+    captured 'request': local=-1 closureLocal=0 closureField=Dive.Request Dive.Base`1/<>c__DisplayClass2_0<T>::request stateField= param=-1
+    captured '_client': local=-1 closureLocal=-1 closureField= stateField=Dive.Client Dive.Base`1<T>::_client param=-1
+  stmt <In_generic_base>d__1::MoveNext L227 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => _client.CallAsync(request))"
+    locals [V_0 Int32, V_1 <>c__DisplayClass1_0, V_2 TaskAwaiter`1, V_3 Exception]
+    captured 'request': local=-1 closureLocal=1 closureField=Dive.Request Dive.Base`1/<>c__DisplayClass1_0<T>::request stateField= param=-1
+    captured '_client': local=-1 closureLocal=-1 closureField=Dive.Client Dive.Base`1<T>::_client stateField=Dive.Base`1<T> Dive.Base`1/<In_generic_base>d__1<T>::<>4__this param=-1
+  weave: WeavedCount=33; ILVerify errors the weave added: 0
+  run Dive.Sync.Throw_capturing_a_local: woven threw nothing; unwoven threw nothing
+    note ✓ Should throw InvalidOperationException
+    note ✓ E message should be "expected a1"
+  run Dive.Sync.ShouldBe_argument_captured_by_nothing: woven threw nothing; unwoven threw nothing
+    note ✓ "a1" should be 'a1'
+  run Dive.Sync.ShouldContain_predicate: woven threw nothing; unwoven threw nothing
+    note ✓ Items should contain [ x => x == 'a1' ]
+  run Dive.Sync.Fa_Contain_predicate: woven threw nothing; unwoven threw nothing
+    note ✓ Items should contain [ x => x == 'a1' ]
+  run Dive.Sync.ThrowAsync_GetResult: woven threw nothing; unwoven threw nothing
+    note ✓ Should throw InvalidOperationException
+  run Dive.Sync.Fa_ThrowAsync_GetResult_WithMessage_local: woven threw nothing; unwoven threw nothing
+    note ✓ Act should throw async <InvalidOperationException>
+  run Dive.Sync.Fa_Invoking_capturing_a_local: woven threw nothing; unwoven threw nothing
+    note ✓ Client invoking(c => c get(request)) should throw <InvalidOperationException>
+  run Dive.Async.Fa_Awaiting_capturing_a_local: woven threw nothing; unwoven threw nothing
+    note ✓ Client awaiting(c => c call async(request)) should throw async <InvalidOperationException>
+  run Dive.Sync.Sibling_blocks_used_once: woven threw nothing; unwoven threw nothing
+    note ✓ "one" should be 'one'
+    note ✓ "two" should be 'two'
+  run Dive.Sync.Sibling_blocks_used_twice: woven threw nothing; unwoven threw nothing
+    note ✓ "one" should be 'one'
+    note ✓ "two" should be 'two'
+  run Dive.Async.Issue_assigned: woven threw nothing; unwoven threw nothing
+    note ✓ Await Should.ThrowAsync<InvalidOperationException>(async () => await _client.CallAsync(request))
+    note ✓ Exception message should be "expected a1"
+  run Dive.Async.Issue_unassigned: woven threw nothing; unwoven threw nothing
+    note ✓ Should throw InvalidOperationException
+  run Dive.Async.Using_block: woven threw nothing; unwoven threw nothing
+    note ✓ Should throw InvalidOperationException
+  run Dive.Async.Try_finally: woven threw nothing; unwoven threw nothing
+    note ✓ Should throw InvalidOperationException
+    note ✓ Request id should be "a1"
+  run Dive.Async.Try_catch_block: woven threw nothing; unwoven threw nothing
+    note ✓ Should throw InvalidOperationException
+  run Dive.Async.Foreach_after_await: woven threw nothing; unwoven threw nothing
+    note ✓ Should throw InvalidOperationException
+  run Dive.Async.ConfigureAwait_false: woven threw nothing; unwoven threw nothing
+    note ✓ Should throw InvalidOperationException false
+  run Dive.Async.Two_statements_one_closure: woven threw nothing; unwoven threw nothing
+    note ✓ Should throw InvalidOperationException
+    note ✓ Should throw InvalidOperationException
+  run Dive.Async.ValueTask_method: woven threw nothing; unwoven threw nothing
+    note ✓ Should throw InvalidOperationException
+  run Dive.Async.Async_lambda: woven threw nothing; unwoven threw nothing
+    note ✓ Should throw InvalidOperationException
+  run Dive.Async.Local_function: woven threw nothing; unwoven threw nothing
+    note ✓ Should throw InvalidOperationException
+  run Dive.Async.Fa_WithMessage_local: woven threw nothing; unwoven threw nothing
+    note ✓ Act should throw async <InvalidOperationException>, 'expected a1'
+  run Dive.Async.Fa_WithMessage_closure: woven threw nothing; unwoven threw nothing
+    note ✓ Act should throw async <InvalidOperationException>, "expected " + 'a1'
+  run Dive.NoThis.Static_callee: woven threw nothing; unwoven threw nothing
+    note ✓ Should throw InvalidOperationException
+  run Dive.NoThis.Sync_static_callee: woven threw nothing; unwoven threw nothing
+    note ✓ Should throw InvalidOperationException
+  run Dive.Derived.In_generic_base: woven threw nothing; unwoven threw nothing
+    note ✓ Should throw InvalidOperationException
+  run Dive.Derived.Sync_in_generic_base: woven threw nothing; unwoven threw nothing
+    note ✓ Should throw InvalidOperationException
+
+## TUnit [ReleaseDebugPlus]
+  stmt <IsEqualTo_closure_after_suspension>d__5::MoveNext L45 awaited=True "await Assert.That(async () => await DelayedAsync(request.Id)).IsEqualTo(request.Id)"
+    locals [V_0 Int32, V_1 <>c__DisplayClass5_0, V_2 TaskAwaiter`1, V_3 Exception]
+    captured 'request': local=-1 closureLocal=1 closureField=DiveTUnit.Request DiveTUnit.Shapes/<>c__DisplayClass5_0::request stateField= param=-1
+  stmt <IsEqualTo_local>d__1::MoveNext L25 awaited=True "await Assert.That("a1").IsEqualTo(expected)"
+    locals [V_0 Int32, V_1 String, V_2 TaskAwaiter`1, V_3 Exception]
+    captured 'expected': local=1 closureLocal=-1 closureField= stateField= param=-1
+  stmt <IsEqualTo_local_after_suspension>d__4::MoveNext L39 awaited=True "await Assert.That(async () => await DelayedAsync("a1")).IsEqualTo(expected)"
+    locals [V_0 Int32, V_1 String, V_2 TaskAwaiter`1, V_3 Exception]
+    captured 'expected': local=1 closureLocal=-1 closureField= stateField= param=-1
+  stmt <Throws_capturing_delegate>d__2::MoveNext L31 awaited=True "await Assert.That(() => _client.CallAsync(request)).Throws<InvalidOperationException>()"
+    locals [V_0 Int32, V_1 <>c__DisplayClass2_0, V_2 TaskAwaiter`1, V_3 Exception]
+    captured: none
+  weave: WeavedCount=4; ILVerify errors the weave added: 0
+  run DiveTUnit.Shapes.IsEqualTo_local: woven threw nothing; unwoven threw nothing
+    note ✓ "a1" is equal to 'a1'
+  run DiveTUnit.Shapes.Throws_capturing_delegate: woven threw nothing; unwoven threw nothing
+    note ✓ () => _client call async(request) throws <InvalidOperationException>
+  run DiveTUnit.Shapes.IsEqualTo_local_after_suspension: woven threw nothing; unwoven threw nothing
+    note ✓ Async () => await  delayed async("a1") is equal to 'a1'
+  run DiveTUnit.Shapes.IsEqualTo_closure_after_suspension: woven threw nothing; unwoven threw nothing
+    note ✓ Async () => await  delayed async(request id) is equal to 'a1'

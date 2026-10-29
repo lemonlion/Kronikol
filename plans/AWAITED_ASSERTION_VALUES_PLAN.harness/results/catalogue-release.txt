@@ -1,0 +1,2 @@
+# The release's weaver: AwaitedAssertionShapeTests (without the SDK rows) and AwaitedAssertionResumeTests
+Passed!  - Failed:     0, Passed:   887, Skipped:     0, Total:   887, Duration: 2 m 33 s - Kronikol.Tests.AssertionTracking.dll (net10.0)

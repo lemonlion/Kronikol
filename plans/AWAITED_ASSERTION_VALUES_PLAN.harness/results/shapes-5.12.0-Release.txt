@@ -1,0 +1,15 @@
+  Failed Shapes.FaShapeTests.P10_fa_with_message_closure_field
+  Error Message:
+   System.NullReferenceException : Object reference not set to an instance of an object.
+  Failed Shapes.ShapeTests.P4_first_await_completes_synchronously
+  Error Message:
+   System.NullReferenceException : Object reference not set to an instance of an object.
+  Failed Shapes.ShapeTests.P8_failing_awaited_assertion_names_a_value_type_local
+  Error Message:
+   Shouldly.ShouldAssertException : Task `await task`
+  Failed Shapes.ShapeTests.P2_loop_after_an_earlier_await
+  Error Message:
+   System.NullReferenceException : Object reference not set to an instance of an object.
+  Failed Shapes.FaShapeTests.P9_fa_with_message_plain_local_fails
+  Error Message:
+Failed!  - Failed:     5, Passed:     5, Skipped:     0, Total:    10, Shapes.dll (net10.0)

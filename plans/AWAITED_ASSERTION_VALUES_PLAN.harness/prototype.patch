@@ -1,0 +1,527 @@
+diff --git a/src/Kronikol.AssertionTracking/AssertionWeaver.cs b/src/Kronikol.AssertionTracking/AssertionWeaver.cs
+index b29e50c3..50ae9e44 100644
+--- a/src/Kronikol.AssertionTracking/AssertionWeaver.cs
++++ b/src/Kronikol.AssertionTracking/AssertionWeaver.cs
+@@ -1734,7 +1734,7 @@ instr.Operand is MethodReference mr &&
+                                 captured.Add(new CapturedVariable
+                                 {
+                                     Name = rawName,
+-                                    StateField = outerThisField,
++                                    StateField = OwnField(outerThisField),
+                                     ClosureField = resolvedLambdaFieldRef,
+                                     NeedsBoxing = resolvedLambdaFieldType.IsValueType || resolvedLambdaFieldType is GenericParameter,
+                                     Type = resolvedLambdaFieldType
+@@ -1742,7 +1742,11 @@ instr.Operand is MethodReference mr &&
+                             }
+                             else
+                             {
+-                                // Non-async: ldarg.0 → ldfld field (this.field)
++                                // ldarg.0 → ldfld field (this.field). Only a field of this method's own type: a closure's
++                                // field is read off its display class, and a closure the compiler kept on the stack is
++                                // in no local or field to read it from (#211, D-A).
++                                if (!IsFieldAccessibleOnType(lambdaFieldRef, method.DeclaringType))
++                                    continue;
+                                 captured.Add(new CapturedVariable
+                                 {
+                                     Name = rawName,
+@@ -1796,7 +1800,7 @@ instr.Operand is MethodReference mr &&
+                     captured.Add(new CapturedVariable
+                     {
+                         Name = fieldName,
+-                        StateField = outerThisForToken,
++                        StateField = OwnField(outerThisForToken),
+                         ClosureField = resolvedTokenFieldRef,
+                         NeedsBoxing = resolvedTokenFieldType.IsValueType || resolvedTokenFieldType is GenericParameter,
+                         Type = resolvedTokenFieldType
+@@ -1804,7 +1808,9 @@ instr.Operand is MethodReference mr &&
+                 }
+                 else
+                 {
+-                    // Non-async: ldarg.0 → ldfld field (this.field)
++                    // ldarg.0 → ldfld field (this.field), for a field of this method's own type only (#211, D-A).
++                    if (!IsFieldAccessibleOnType(tokenFieldRef, method.DeclaringType))
++                        continue;
+                     captured.Add(new CapturedVariable
+                     {
+                         Name = fieldName,
+@@ -1870,7 +1876,7 @@ instr.Operand is FieldReference standaloneFldRef &&
+                     captured.Add(new CapturedVariable
+                     {
+                         Name = fieldName,
+-                        StateField = outerThisForStandalone,
++                        StateField = OwnField(outerThisForStandalone),
+                         ClosureField = resolvedFieldRef,
+                         NeedsBoxing = resolvedFieldType.IsValueType || resolvedFieldType is GenericParameter,
+                         Type = resolvedFieldType
+@@ -3135,7 +3141,6 @@ private void WrapAwaitedAssertion(
+     {
+         var body = method.Body;
+         var module = method.Module;
+-        var hasValues = assertion.CapturedVariables.Count > 0;
+ 
+         var expressionText = assertion.SourceText;
+         var filePath = assertion.SequencePoint.Document.Url; // the PDB's name, as above
+@@ -3143,6 +3148,16 @@ private void WrapAwaitedAssertion(
+ 
+         var getResultInstr = assertion.GetResultInstruction!;
+ 
++        // The values are read at the merge point, after the await. A variable the statement read through one of
++        // MoveNext's own locals is carried across the await in a field of the state machine (#211): an optimized
++        // build keeps a local there only for one call of MoveNext, and the code after a suspension runs in the
++        // next call, where every local starts zeroed. A variable that cannot be carried is left out of the values.
++        var carried = CarryAcrossAwait(method, il, assertion, getResultInstr);
++        var variables = assertion.CapturedVariables
++            .Where(cv => MoveNextLocal(cv) < 0 || carried.ContainsKey(cv))
++            .ToList();
++        var hasValues = variables.Count > 0;
++
+         // The merge point's read of the result: the awaiter's load, GetResult() and a pop or nop after a void one.
+         var (mergeStart, mergeEnd) = AwaitedRange(getResultInstr);
+         var afterMergeEnd = mergeEnd.Next;
+@@ -3159,6 +3174,7 @@ private void WrapAwaitedAssertion(
+         // Build captured variable arrays if needed (inside the try block, before mergeStart)
+         VariableDefinition? namesLocal = null;
+         VariableDefinition? valuesLocal = null;
++        ExceptionHandler? valuesHandler = null;
+ 
+         if (hasValues)
+         {
+@@ -3169,14 +3185,20 @@ private void WrapAwaitedAssertion(
+             body.Variables.Add(namesLocal);
+             body.Variables.Add(valuesLocal);
+ 
+-            var count = assertion.CapturedVariables.Count;
+-            il.InsertBefore(mergeStart, il.Create(OpCodes.Ldc_I4, count));
++            // The arrays are the weave's own work, in a protected region of their own: if reading a value throws,
++            // the arrays stay null, Track draws the note without values, and the assertion runs as compiled. The
++            // weave's fault never stands in for the assertion's verdict.
++            var valuesStart = il.Create(OpCodes.Ldc_I4, variables.Count);
++            var valuesDone = il.Create(OpCodes.Nop);
++
++            var count = variables.Count;
++            il.InsertBefore(mergeStart, valuesStart);
+             il.InsertBefore(mergeStart, il.Create(OpCodes.Newarr, module.TypeSystem.String));
+             for (var vi = 0; vi < count; vi++)
+             {
+                 il.InsertBefore(mergeStart, il.Create(OpCodes.Dup));
+                 il.InsertBefore(mergeStart, il.Create(OpCodes.Ldc_I4, vi));
+-                il.InsertBefore(mergeStart, il.Create(OpCodes.Ldstr, assertion.CapturedVariables[vi].Name));
++                il.InsertBefore(mergeStart, il.Create(OpCodes.Ldstr, variables[vi].Name));
+                 il.InsertBefore(mergeStart, il.Create(OpCodes.Stelem_Ref));
+             }
+             il.InsertBefore(mergeStart, il.Create(OpCodes.Stloc, namesLocal));
+@@ -3185,11 +3207,18 @@ private void WrapAwaitedAssertion(
+             il.InsertBefore(mergeStart, il.Create(OpCodes.Newarr, module.TypeSystem.Object));
+             for (var vi = 0; vi < count; vi++)
+             {
+-                var cv = assertion.CapturedVariables[vi];
++                var cv = variables[vi];
+                 il.InsertBefore(mergeStart, il.Create(OpCodes.Dup));
+                 il.InsertBefore(mergeStart, il.Create(OpCodes.Ldc_I4, vi));
+ 
+-                if (cv.ClosureField != null && cv.ClosureLocalIndex >= 0)
++                if (carried.TryGetValue(cv, out var carrier))
++                {
++                    il.InsertBefore(mergeStart, il.Create(OpCodes.Ldarg_0));
++                    il.InsertBefore(mergeStart, il.Create(OpCodes.Ldfld, carrier));
++                    if (cv.ClosureField != null)
++                        il.InsertBefore(mergeStart, il.Create(OpCodes.Ldfld, cv.ClosureField));
++                }
++                else if (cv.ClosureField != null && cv.ClosureLocalIndex >= 0)
+                 {
+                     il.InsertBefore(mergeStart, il.Create(OpCodes.Ldloc, body.Variables[cv.ClosureLocalIndex]));
+                     il.InsertBefore(mergeStart, il.Create(OpCodes.Ldfld, cv.ClosureField));
+@@ -3220,6 +3249,31 @@ private void WrapAwaitedAssertion(
+                 il.InsertBefore(mergeStart, il.Create(OpCodes.Stelem_Ref));
+             }
+             il.InsertBefore(mergeStart, il.Create(OpCodes.Stloc, valuesLocal));
++            il.InsertBefore(mergeStart, il.Create(OpCodes.Leave, valuesDone));
++
++            var valuesCatch = il.Create(OpCodes.Pop);
++            il.InsertBefore(mergeStart, valuesCatch);
++            il.InsertBefore(mergeStart, il.Create(OpCodes.Ldnull));
++            il.InsertBefore(mergeStart, il.Create(OpCodes.Stloc, valuesLocal));
++            il.InsertBefore(mergeStart, il.Create(OpCodes.Leave, valuesDone));
++            il.InsertBefore(mergeStart, valuesDone);
++
++            // The fields let go of what they carried, as the compiler's own hoisted temporaries do.
++            foreach (var carrier in carried.Values)
++            {
++                il.InsertBefore(mergeStart, il.Create(OpCodes.Ldarg_0));
++                il.InsertBefore(mergeStart, il.Create(OpCodes.Ldflda, carrier));
++                il.InsertBefore(mergeStart, il.Create(OpCodes.Initobj, carrier.FieldType));
++            }
++
++            valuesHandler = new ExceptionHandler(ExceptionHandlerType.Catch)
++            {
++                TryStart = valuesStart,
++                TryEnd = valuesCatch,
++                HandlerStart = valuesCatch,
++                HandlerEnd = valuesDone,
++                CatchType = exceptionTypeRef
++            };
+         }
+ 
+         // Retarget the brtrue (IsCompleted sync-completion branch) to our tryStart
+@@ -3374,10 +3428,95 @@ private void WrapAwaitedAssertion(
+         };
+         body.ExceptionHandlers.Insert(0, handler);
+ 
++        // Nested in the assertion's try, so listed before it.
++        if (valuesHandler != null)
++            body.ExceptionHandlers.Insert(0, valuesHandler);
++
+         if (exitLocals != null)
+             foreach (var local in exitLocals)
+                 il.InsertBefore(afterMergeEnd!, LoadSlot(il, local));
+     }
++
++    /// <summary>
++    /// A field of a compiler-generated type, as code inside that type names it: through the type instantiated over its
++    /// own generic parameters when it has any (#211, D-B). A field definition named directly is the open type's, which
++    /// ILVerify rejects in a generic state machine's MoveNext.
++    /// </summary>
++    private static FieldReference OwnField(FieldDefinition field)
++    {
++        var type = field.DeclaringType;
++        if (!type.HasGenericParameters)
++            return field;
++        var instance = new GenericInstanceType(type);
++        foreach (var parameter in type.GenericParameters)
++            instance.GenericArguments.Add(parameter);
++        return new FieldReference(field.Name, field.FieldType, instance);
++    }
++
++    /// <summary>
++    /// The local of MoveNext a captured variable is read through: the closure's display class, or the variable itself;
++    /// -1 for one read through a field of the state machine or a parameter.
++    /// </summary>
++    private static int MoveNextLocal(CapturedVariable cv) =>
++        cv.ClosureField != null ? cv.ClosureLocalIndex :
++        cv.StateField == null && cv.ParameterIndex < 0 ? cv.LocalIndex : -1;
++
++    /// <summary>
++    /// Carries each local of MoveNext the awaited statement's values are read through across its await, in a field
++    /// of the state machine (#211), and returns the field for each variable it carries. The local is stored right
++    /// after the statement stores its awaiter: the stack is empty there, it runs on the path that completes at once
++    /// and on the one that suspends, and the statement has read every local it names. One field per local, shared by
++    /// the statements that carry it: each stores before it reads. Nothing is carried when the await is not the
++    /// compiler's shape (GetAwaiter, then a store of the awaiter) or the method is not an async state machine's.
++    /// </summary>
++    private static Dictionary<CapturedVariable, FieldReference> CarryAcrossAwait(
++        MethodDefinition method, ILProcessor il, AssertionStatement assertion, Instruction getResult)
++    {
++        var carried = new Dictionary<CapturedVariable, FieldReference>();
++        var stateMachine = method.DeclaringType;
++        if (method.Name != "MoveNext" ||
++            !stateMachine.Interfaces.Any(i => i.InterfaceType.FullName == "System.Runtime.CompilerServices.IAsyncStateMachine"))
++            return carried;
++
++        Instruction? getAwaiter = null;
++        for (var instr = assertion.FirstInstruction; instr != null && instr != getResult; instr = instr.Next)
++        {
++            if ((instr.OpCode == OpCodes.Call || instr.OpCode == OpCodes.Callvirt) &&
++                instr.Operand is MethodReference mr && mr.Name == "GetAwaiter")
++                getAwaiter = instr;
++        }
++        if (getAwaiter?.Next is not { } storeAwaiter || storeAwaiter.OpCode.Code != Code.Stloc)
++            return carried;
++
++        var at = storeAwaiter;
++        foreach (var cv in assertion.CapturedVariables)
++        {
++            var index = MoveNextLocal(cv);
++            if (index < 0)
++                continue;
++
++            var local = method.Body.Variables[index];
++            var name = $"<>krk__carried{index}";
++            var field = stateMachine.Fields.FirstOrDefault(f => f.Name == name);
++            if (field == null)
++            {
++                field = new FieldDefinition(name, Mono.Cecil.FieldAttributes.Private, local.VariableType);
++                stateMachine.Fields.Add(field);
++            }
++            var carrier = OwnField(field);
++
++            var load = il.Create(OpCodes.Ldarg_0);
++            il.InsertAfter(at, load);
++            var value = il.Create(OpCodes.Ldloc, local);
++            il.InsertAfter(load, value);
++            var store = il.Create(OpCodes.Stfld, carrier);
++            il.InsertAfter(value, store);
++            at = store;
++            carried[cv] = carrier;
++        }
++
++        return carried;
++    }
+ }
+ 
+ public class AssertionStatement
+diff --git a/tests/Kronikol.Tests.AssertionTracking/AwaitedAssertionResumeTests.cs b/tests/Kronikol.Tests.AssertionTracking/AwaitedAssertionResumeTests.cs
+new file mode 100644
+index 00000000..fadf78a6
+--- /dev/null
++++ b/tests/Kronikol.Tests.AssertionTracking/AwaitedAssertionResumeTests.cs
+@@ -0,0 +1,260 @@
++using Microsoft.CodeAnalysis;
++
++namespace Kronikol.Tests.AssertionTracking;
++
++/// <summary>
++/// #211: an awaited assertion's values are read at the await's merge point, after the await. Each case here suspends
++/// for real (the awaited code yields, or Shouldly's ThrowAsync continues the task), so the code after the await runs
++/// in a later call of MoveNext, where an optimized build's locals start zeroed. A woven build must run as the unwoven
++/// one does, and an optimized build must draw the notes a Debug build draws.
++/// </summary>
++public class AwaitedAssertionResumeTests
++{
++    private const string Cases = """
++        using System;
++        using System.Threading.Tasks;
++        using FluentAssertions;
++        using Kronikol.Tracking;
++        using Shouldly;
++
++        [assembly: TrackAssertions]
++
++        public sealed class Client
++        {
++            public async Task<string> CallAsync(string id)
++            {
++                await Task.Yield();
++                throw new InvalidOperationException("expected " + id);
++            }
++
++            public async Task WaitAsync() => await Task.Yield();
++        }
++
++        public sealed class Request
++        {
++            public string Id { get; init; } = "";
++        }
++
++        public class Cases
++        {
++            private readonly Client _client = new();
++
++            // The issue's own two tests, as filed: the object initializer is what makes the compiler keep the closure
++            // in a local, where a closure with nothing to initialize stays on the stack.
++            public async Task Issue_ThrowAsync_is_the_first_await()
++            {
++                var request = new Request { Id = string.Empty };
++
++                var exception = await Should.ThrowAsync<InvalidOperationException>(
++                    async () => await _client.CallAsync(request.Id)
++                );
++
++                exception.Message.ShouldBe("expected ");
++            }
++
++            public async Task Issue_Unassigned_ThrowAsync_is_the_first_await()
++            {
++                var request = new Request { Id = string.Empty };
++
++                await Should.ThrowAsync<InvalidOperationException>(() => _client.CallAsync(request.Id));
++            }
++
++            public async Task Shouldly_ThrowAsync_assigned_first_await()
++            {
++                var id = "a1";
++                var exception = await Should.ThrowAsync<InvalidOperationException>(async () => await _client.CallAsync(id));
++                exception.Message.ShouldBe("expected a1");
++            }
++
++            public async Task Shouldly_ThrowAsync_unassigned_first_await()
++            {
++                var id = "a1";
++                await Should.ThrowAsync<InvalidOperationException>(() => _client.CallAsync(id));
++            }
++
++            public async Task Shouldly_NotThrowAsync_first_await()
++            {
++                var id = "a1";
++                await Should.NotThrowAsync(async () => { await _client.WaitAsync(); id.Length.ShouldBe(2); });
++            }
++
++            public async Task Shouldly_ThrowAsync_in_a_loop_after_an_await()
++            {
++                await Task.Yield();
++                foreach (var id in new[] { "a", "b" })
++                    await Should.ThrowAsync<InvalidOperationException>(() => _client.CallAsync(id));
++            }
++
++            public async Task Fa_WithMessage_reads_the_closure()
++            {
++                var id = "a1";
++                Func<Task> act = () => _client.CallAsync(id);
++                await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("expected " + id);
++            }
++
++            public async Task Fa_WithMessage_plain_local()
++            {
++                var message = "expected a1";
++                Func<Task> act = () => _client.CallAsync("a1");
++                await act.Should().ThrowAsync<InvalidOperationException>().WithMessage(message);
++            }
++
++            public async Task Fa_WithMessage_plain_local_fails()
++            {
++                var message = "not the message";
++                Func<Task> act = () => _client.CallAsync("a1");
++                await act.Should().ThrowAsync<InvalidOperationException>().WithMessage(message);
++            }
++
++            public async Task Fa_CompleteWithinAsync_value_type_local()
++            {
++                var timeout = TimeSpan.FromSeconds(30);
++                Func<Task> act = () => _client.WaitAsync();
++                await act.Should().CompleteWithinAsync(timeout);
++            }
++        }
++        """;
++
++    public static TheoryData<string> Methods() =>
++    [
++        "Issue_ThrowAsync_is_the_first_await",
++        "Issue_Unassigned_ThrowAsync_is_the_first_await",
++        "Shouldly_ThrowAsync_assigned_first_await",
++        "Shouldly_ThrowAsync_unassigned_first_await",
++        "Shouldly_NotThrowAsync_first_await",
++        "Shouldly_ThrowAsync_in_a_loop_after_an_await",
++        "Fa_WithMessage_reads_the_closure",
++        "Fa_WithMessage_plain_local",
++        "Fa_WithMessage_plain_local_fails",
++        "Fa_CompleteWithinAsync_value_type_local",
++    ];
++
++    private static readonly Lazy<string> DebugWoven = new(() => WovenRun.BuildAndWeave("Resume_Debug", Cases, OptimizationLevel.Debug));
++    private static readonly Lazy<string> ReleaseWoven = new(() => WovenRun.BuildAndWeave("Resume_Release", Cases, OptimizationLevel.Release));
++    private static readonly Lazy<string> ReleaseUnwoven = new(() => TestAssemblyBuilder.Build("Resume_Release_Unwoven", Cases, OptimizationLevel.Release));
++
++    [Theory]
++    [MemberData(nameof(Methods))]
++    public void A_woven_optimized_build_runs_as_the_unwoven_one(string method)
++    {
++        var (unwoven, _) = WovenRun.Run(ReleaseUnwoven.Value, "Cases", method);
++        var (woven, _) = WovenRun.Run(ReleaseWoven.Value, "Cases", method);
++
++        Assert.Equal(unwoven?.GetType(), woven?.GetType());
++        Assert.Equal(unwoven?.Message, woven?.Message);
++    }
++
++    [Theory]
++    [MemberData(nameof(Methods))]
++    public void An_optimized_build_draws_the_notes_a_debug_build_draws(string method)
++    {
++        var (_, debug) = WovenRun.Run(DebugWoven.Value, "Cases", method);
++        var (_, release) = WovenRun.Run(ReleaseWoven.Value, "Cases", method);
++
++        if (Environment.GetEnvironmentVariable("KRONIKOL_211_DUMP") is { Length: > 0 } dump)
++        {
++            lock (typeof(AwaitedAssertionResumeTests))
++                File.AppendAllText(dump, $"== {method}\nDebug:\n{string.Join("\n", debug.Select(n => "  " + n))}\nRelease:\n{string.Join("\n", release.Select(n => "  " + n))}\n");
++        }
++
++        // The assigned ThrowAsync draws no note in a Debug build (#212, AWAITED_ASSERTION_LABELS_PLAN.md): its row is
++        // compared once that plan's fix is in.
++        if (method is "Shouldly_ThrowAsync_assigned_first_await" or "Issue_ThrowAsync_is_the_first_await")
++            return;
++        Assert.Equal(debug.Select(WithoutFile), release.Select(WithoutFile));
++    }
++
++    // Each build is its own fixture file, so a note's source is compared by its line alone.
++    private static WovenRun.Note WithoutFile(WovenRun.Note note) =>
++        note with { Source = note.Source?[(note.Source.LastIndexOf(':') + 1)..] };
++
++    // A generic method's state machine is generic, and a field read in its MoveNext names the state machine as
++    // instantiated over its own parameters. Its own fixture: ILVerify reads the whole assembly, so one unverifiable
++    // method fails every case built with it.
++    private const string GenericCases = """
++        using System;
++        using System.Threading.Tasks;
++        using Kronikol.Tracking;
++        using Shouldly;
++
++        [assembly: TrackAssertions]
++
++        public sealed class Client
++        {
++            public async Task<string> CallAsync(string id)
++            {
++                await Task.Yield();
++                throw new InvalidOperationException("expected " + id);
++            }
++        }
++
++        public class Cases
++        {
++            private readonly Client _client = new();
++
++            public async Task Shouldly_ThrowAsync_in_a_generic_method() => await Generic("a1");
++
++            private async Task Generic<T>(T id)
++            {
++                var copy = id;
++                await Should.ThrowAsync<InvalidOperationException>(() => _client.CallAsync(copy!.ToString()!));
++            }
++        }
++        """;
++
++    [Theory]
++    [InlineData(OptimizationLevel.Debug)]
++    [InlineData(OptimizationLevel.Release)]
++    public void An_awaited_assertion_in_a_generic_method_verifies_and_runs(OptimizationLevel optimization)
++    {
++        var path = WovenRun.BuildAndWeave($"ResumeGeneric_{optimization}", GenericCases, optimization);
++
++        var (thrown, notes) = WovenRun.Run(path, "Cases", "Shouldly_ThrowAsync_in_a_generic_method");
++
++        Assert.Null(thrown);
++        Assert.Equal([true], notes.Select(n => n.Passed).ToArray());
++    }
++
++    // A closure that captures locals only, in an async method that never uses this: an optimized build keeps it on the
++    // stack (newobj; dup; stfld; ldftn), so no local holds it, and the state machine has no <>4__this field.
++    private const string StackClosureCases = """
++        using System;
++        using System.Threading.Tasks;
++        using FluentAssertions;
++        using Kronikol.Tracking;
++        using Shouldly;
++
++        [assembly: TrackAssertions]
++
++        public class Cases
++        {
++            public void Fa_Contain_expression_tree_closure_on_the_stack()
++            {
++                var id = "a1";
++                FluentAssertions.AssertionExtensions.Should(new[] { "a1" }).Contain(x => x == id);
++            }
++
++            public async Task Shouldly_ThrowAsync_closure_on_the_stack()
++            {
++                var id = "a1";
++                await Should.ThrowAsync<InvalidOperationException>(() => Task.FromException(new InvalidOperationException(id)));
++            }
++        }
++        """;
++
++    [Theory]
++    [InlineData(OptimizationLevel.Debug)]
++    [InlineData(OptimizationLevel.Release)]
++    public void A_closure_kept_on_the_stack_is_not_read_off_the_state_machine(OptimizationLevel optimization)
++    {
++        var path = WovenRun.BuildAndWeave($"ResumeStackClosure_{optimization}", StackClosureCases, optimization);
++
++        foreach (var method in new[] { "Shouldly_ThrowAsync_closure_on_the_stack", "Fa_Contain_expression_tree_closure_on_the_stack" })
++        {
++            var (thrown, notes) = WovenRun.Run(path, "Cases", method);
++
++            Assert.Null(thrown);
++            Assert.Equal([true], notes.Select(n => n.Passed).ToArray());
++        }
++    }
++}

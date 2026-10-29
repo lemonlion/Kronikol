@@ -1,0 +1,36 @@
+diff --git a/tests/Kronikol.Tests.AssertionTracking/TestAssemblyBuilder.cs b/tests/Kronikol.Tests.AssertionTracking/TestAssemblyBuilder.cs
+index 22a5df01..000fa933 100644
+--- a/tests/Kronikol.Tests.AssertionTracking/TestAssemblyBuilder.cs
++++ b/tests/Kronikol.Tests.AssertionTracking/TestAssemblyBuilder.cs
+@@ -20,6 +20,14 @@ public static class TestAssemblyBuilder
+     private static readonly string FixturesDir = Path.Combine(
+         AppContext.BaseDirectory, "..", "..", "..", "Fixtures");
+ 
++    /// <summary>Dive211 only: a Release compile as csc's /debug+ /debug:portable /optimize+ makes it.</summary>
++    [ThreadStatic] private static bool? _debugPlusRelease;
++    public static bool DebugPlusRelease
++    {
++        get => _debugPlusRelease ?? Environment.GetEnvironmentVariable("KRONIKOL_DEBUGPLUS") == "1";
++        set => _debugPlusRelease = value;
++    }
++
+     static TestAssemblyBuilder()
+     {
+         Directory.CreateDirectory(OutputDir);
+@@ -89,8 +97,14 @@ public static string Build(string name, string source, OptimizationLevel optimiz
+             name,
+             new[] { syntaxTree, attrTree },
+             references,
+-            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
+-                .WithOptimizationLevel(optimization));
++            DebugPlusRelease && optimization == OptimizationLevel.Release
++                ? CSharpCommandLineParser.Default.Parse(["/debug+", "/debug:portable", "/optimize+", "/target:library"],
++                    OutputDir, sdkDirectory: null).CompilationOptions
++                : Environment.GetEnvironmentVariable("KRONIKOL_DEBUGPLUS_DEBUG") == "1" && optimization == OptimizationLevel.Debug
++                ? CSharpCommandLineParser.Default.Parse(["/debug+", "/debug:portable", "/optimize-", "/target:library"],
++                    OutputDir, sdkDirectory: null).CompilationOptions
++                : new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
++                    .WithOptimizationLevel(optimization));
+ 
+         using var peStream = File.Create(assemblyPath);
+         EmitResult result;

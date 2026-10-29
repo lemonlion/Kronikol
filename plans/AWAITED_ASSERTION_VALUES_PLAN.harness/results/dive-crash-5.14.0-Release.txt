@@ -1,0 +1,12 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Kronikol.AssertionTracking -> C:\Code\Kronikol-211-dive\src\Kronikol.AssertionTracking\bin\Debug\netstandard2.0\Kronikol.AssertionTracking.dll
+  Kronikol -> C:\Code\Kronikol-211-dive\src\Kronikol\bin\Debug\net10.0\Kronikol.dll
+C:\Code\Kronikol-211-dive\tests\Kronikol.Tests.AssertionTracking\TestAssemblyBuilder.cs(327,46): warning CS1573: Parameter 'packageVersions' has no matching param tag in the XML comment for 'TestAssemblyBuilder.BuildWithSdk(string, string, string, string, string, string?, IReadOnlyDictionary<string, string>?)' (but other parameters do) [C:\Code\Kronikol-211-dive\tests\Kronikol.Tests.AssertionTracking\Kronikol.Tests.AssertionTracking.csproj::TargetFramework=net10.0]
+  Kronikol.Tests.AssertionTracking -> C:\Code\Kronikol-211-dive\tests\Kronikol.Tests.AssertionTracking\bin\Debug\net10.0\Kronikol.Tests.AssertionTracking.dll
+Test run for C:\Code\Kronikol-211-dive\tests\Kronikol.Tests.AssertionTracking\bin\Debug\net10.0\Kronikol.Tests.AssertionTracking.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:01:07.90]     [FATAL ERROR] Xunit.Sdk.TestPipelineException
+[xUnit.net 00:01:07.90] Catastrophic failure: Test process crashed with exit code -1073741819.
+No test matches the given testcase filter `FullyQualifiedName~Dive211Tests.Crash` in C:\Code\Kronikol-211-dive\tests\Kronikol.Tests.AssertionTracking\bin\Debug\net10.0\Kronikol.Tests.AssertionTracking.dll
+

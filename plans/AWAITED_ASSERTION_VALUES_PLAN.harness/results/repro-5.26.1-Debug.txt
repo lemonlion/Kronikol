@@ -1,0 +1,5 @@
+  WeaveRepro -> C:\Code\Kronikol-211\plans\AWAITED_ASSERTION_VALUES_PLAN.harness\repro\bin\Debug\net10.0\WeaveRepro.dll
+Test run for C:\Code\Kronikol-211\plans\AWAITED_ASSERTION_VALUES_PLAN.harness\repro\bin\Debug\net10.0\WeaveRepro.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+
+Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 439 ms - WeaveRepro.dll (net10.0)

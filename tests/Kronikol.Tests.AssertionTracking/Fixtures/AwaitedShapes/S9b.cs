@@ -1,6 +1,5 @@
 // S9b: return Should.Throw<T>(...) from a synchronous helper (F6: a Debug return never recorded its pass)
-// Builds: Debug, ReleaseDebugPlus
-// Plain Release is left out: there #211's D-A reads the closure kept on the stack off this, and the woven IL does not verify (plan 3.10). The issue's xUnit v2 suites build Release with debug-plus.
+// Builds: Debug, Release, ReleaseDebugPlus
 // AssertionPasses: ✓ Should throw InvalidOperationException | ✓ E message should be "not found"
 // AssertionFails: ✗ Should throw InvalidOperationException
 #nullable enable

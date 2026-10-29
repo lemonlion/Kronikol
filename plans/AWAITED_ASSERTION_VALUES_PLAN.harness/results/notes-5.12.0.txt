@@ -1,0 +1,56 @@
+== Fa_WithMessage_plain_local
+Debug:
+  Note { Passed = True, Label = Act should throw async <InvalidOperationException>, 'expected a1', Message = , Source = Resume_Debug.cs:L86 }
+Release:
+  Note { Passed = True, Label = Act should throw async <InvalidOperationException>, 'null', Message = , Source = Resume_Release.cs:L86 }
+== Shouldly_NotThrowAsync_first_await
+Debug:
+  Note { Passed = True, Label = Id length should be 2, Message = , Source = Resume_Debug.cs:L65 }
+  Note { Passed = True, Label = Should not throw, Message = , Source = Resume_Debug.cs:L65 }
+Release:
+  Note { Passed = True, Label = Id length should be 2, Message = , Source = Resume_Release.cs:L65 }
+  Note { Passed = True, Label = Should not throw, Message = , Source = Resume_Release.cs:L65 }
+== Shouldly_ThrowAsync_unassigned_first_await
+Debug:
+  Note { Passed = True, Label = Should throw InvalidOperationException, Message = , Source = Resume_Debug.cs:L59 }
+Release:
+  Note { Passed = True, Label = Should throw InvalidOperationException, Message = , Source = Resume_Release.cs:L59 }
+== Issue_ThrowAsync_is_the_first_await
+Debug:
+  Note { Passed = True, Label = Exception message should be "expected ", Message = , Source = Resume_Debug.cs:L39 }
+Release:
+  Note { Passed = True, Label = Await Should.ThrowAsync<InvalidOperationException>( async () => await _client.CallAsync(request.Id) ), Message = , Source = Resume_Release.cs:L35 }
+  Note { Passed = True, Label = Exception message should be "expected ", Message = , Source = Resume_Release.cs:L39 }
+== Fa_WithMessage_reads_the_closure
+Debug:
+  Note { Passed = True, Label = Act should throw async <InvalidOperationException>, "expected " + 'a1', Message = , Source = Resume_Debug.cs:L79 }
+Release:
+  Note { Passed = False, Label = Act should throw async <InvalidOperationException>, "expected " + id, Message = Object reference not set to an instance of an object., Source = Resume_Release.cs:L79 }
+== Shouldly_ThrowAsync_assigned_first_await
+Debug:
+  Note { Passed = True, Label = Exception message should be "expected a1", Message = , Source = Resume_Debug.cs:L53 }
+Release:
+  Note { Passed = True, Label = Await Should.ThrowAsync<InvalidOperationException>(async () => await _client.CallAsync(id)), Message = , Source = Resume_Release.cs:L52 }
+  Note { Passed = True, Label = Exception message should be "expected a1", Message = , Source = Resume_Release.cs:L53 }
+== Fa_WithMessage_plain_local_fails
+Debug:
+  Note { Passed = False, Label = Act should throw async <InvalidOperationException>, 'not the message', Message = Expected the exception message to match the equivalent of "not the message", but "expected a1" does not., Source = Resume_Debug.cs:L93 }
+Release:
+  Note { Passed = False, Label = Act should throw async <InvalidOperationException>, 'null', Message = Expected the exception message to match the equivalent of "not the message", but "expected a1" does not., Source = Resume_Release.cs:L93 }
+== Fa_CompleteWithinAsync_value_type_local
+Debug:
+  Note { Passed = True, Label = Act should complete within async '00:00:30', Message = , Source = Resume_Debug.cs:L100 }
+Release:
+  Note { Passed = True, Label = Act should complete within async '00:00:00', Message = , Source = Resume_Release.cs:L100 }
+== Issue_Unassigned_ThrowAsync_is_the_first_await
+Debug:
+  Note { Passed = True, Label = Should throw InvalidOperationException, Message = , Source = Resume_Debug.cs:L46 }
+Release:
+  Note { Passed = True, Label = Should throw InvalidOperationException, Message = , Source = Resume_Release.cs:L46 }
+== Shouldly_ThrowAsync_in_a_loop_after_an_await
+Debug:
+  Note { Passed = True, Label = Should throw InvalidOperationException, Message = , Source = Resume_Debug.cs:L72 }
+  Note { Passed = True, Label = Should throw InvalidOperationException, Message = , Source = Resume_Debug.cs:L72 }
+Release:
+  Note { Passed = True, Label = Should throw InvalidOperationException, Message = , Source = Resume_Release.cs:L72 }
+  Note { Passed = True, Label = Should throw InvalidOperationException, Message = , Source = Resume_Release.cs:L72 }

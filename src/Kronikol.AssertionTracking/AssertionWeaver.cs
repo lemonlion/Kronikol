@@ -814,15 +814,18 @@ public class AssertionWeaver
                 ? new List<CapturedVariable>()
                 : DetectCapturedVariables(method, statementInstructions, sourceText,
                     () => analysis ??= StackAnalysis.Analyze(method.Body));
-            // The values are read at the merge point, after the await's resumption, where a value one of MoveNext's
-            // own locals held is gone once the state machine has suspended: #211 carries such values across the await.
-            // Until then they are read only as they were before (one await, on a library's assertion), and a statement
-            // first woven by this reading shows only the values every build keeps in the state machine's fields, so
-            // its label is the same in Debug and in Release.
-            if (isAwaited && !ReadAsBefore(statementInstructions, awaits))
+            // The values are read at the merge point, after the await's resumption. A value one of MoveNext's own
+            // locals held is gone there once the state machine has suspended: an optimized build keeps a local for one
+            // call of MoveNext, and the code after a suspension runs in the next call, whose locals start zeroed. Such
+            // a value is carried across the await in a field of the state machine (#211). Where it cannot be, the
+            // statement shows only the values every build keeps in fields, so its label is the same in Debug and in
+            // Release.
+            var carriedAfter = new Dictionary<CapturedVariable, Instruction>();
+            if (isAwaited && !CarryPoints(method, statementInstructions, awaits, mergePoint!, capturedVariables, carriedAfter))
             {
                 var resumed = statementInstructions.SkipWhile(i => i != mergePoint).ToList();
                 capturedVariables.RemoveAll(cv => !IsKeptAcrossTheAwait(resumed, cv));
+                carriedAfter.Clear();
             }
             results.Add(new AssertionStatement
             {
@@ -838,6 +841,7 @@ public class AssertionWeaver
                         analysis ??= StackAnalysis.Analyze(method.Body)),
                 IsAwaited = isAwaited,
                 MergePoint = mergePoint,
+                CarriedAfter = carriedAfter,
                 Refusal = refusal,
                 TaskCall = taskCall,
             });
@@ -1000,19 +1004,53 @@ public class AssertionWeaver
     }
 
     /// <summary>
-    /// Whether the statement's values are read as the weave read them before it read on through awaits: an awaited
-    /// assertion of a library's, with no other await in the statement.
+    /// Where each value the awaited statement reads through one of MoveNext's own locals is carried across its awaits
+    /// (#211): after the store of the awaiter of the first await that follows the local's last load in the statement.
+    /// The local still holds what the statement read there, the stack is empty, and both the path that finds the task
+    /// complete and the one that suspends run it; at the last await instead, a local loaded before an earlier await
+    /// that suspended would already read zero (4.1 i). False when the statement is not the compiler's shape: the method
+    /// is not an async state machine's MoveNext, or an await does not store its awaiter in a local right after
+    /// GetAwaiter(). That is decided for the statement, not the value, so Debug, whose values are in fields, falls
+    /// back as Release does.
     /// </summary>
-    private static bool ReadAsBefore(List<Instruction> statement, List<Await> awaits)
+    private static bool CarryPoints(MethodDefinition method, List<Instruction> statement, List<Await> awaits,
+        Instruction mergePoint, List<CapturedVariable> variables, Dictionary<CapturedVariable, Instruction> carriedAfter)
     {
-        if (awaits.Count != 1)
+        if (method.Name != "MoveNext" || !method.DeclaringType.Interfaces.Any(i =>
+                i.InterfaceType.FullName == "System.Runtime.CompilerServices.IAsyncStateMachine") ||
+            awaits.Any(a => !IsStloc(a.GetAwaiter.Next)))
             return false;
+
         var index = new Dictionary<Instruction, int>(statement.Count);
         for (var i = 0; i < statement.Count; i++)
             index[statement[i]] = i;
-        return ProducerOf(statement, index, awaits[0].GetAwaiter) is { } producer &&
-               IsAssertionLibraryType(producer.DeclaringType);
+        foreach (var variable in variables)
+        {
+            var local = MoveNextLocal(variable);
+            if (local < 0)
+                continue;
+            var lastLoad = -1;
+            for (var i = 0; i < index[mergePoint]; i++)
+            {
+                if (IsLdloc(statement[i], out var loaded) && loaded == local)
+                    lastLoad = i;
+            }
+            var store = awaits.FirstOrDefault(a => index[a.GetAwaiter] > lastLoad)?.GetAwaiter.Next;
+            if (lastLoad < 0 || store == null)
+                return false;
+            carriedAfter[variable] = store;
+        }
+        return true;
     }
+
+    private static bool IsStloc(Instruction? instruction) =>
+        instruction?.OpCode.Code is Code.Stloc or Code.Stloc_S or Code.Stloc_0 or Code.Stloc_1 or Code.Stloc_2 or Code.Stloc_3;
+
+    /// <summary>The local of MoveNext a captured variable is read through: the closure's display class, or the
+    /// variable itself; -1 for one read through a field of the state machine or a parameter.</summary>
+    private static int MoveNextLocal(CapturedVariable variable) =>
+        variable.ClosureField != null ? variable.ClosureLocalIndex :
+        variable.StateField == null && variable.ParameterIndex < 0 ? variable.LocalIndex : -1;
 
     /// <summary>
     /// Whether every build keeps <paramref name="variable"/> in a field of the state machine across the await, so its
@@ -2020,7 +2058,7 @@ public class AssertionWeaver
                                 captured.Add(new CapturedVariable
                                 {
                                     Name = rawName,
-                                    StateField = outerThisField,
+                                    StateField = OwnField(outerThisField),
                                     ClosureField = resolvedLambdaFieldRef,
                                     NeedsBoxing = resolvedLambdaFieldType.IsValueType || resolvedLambdaFieldType is GenericParameter,
                                     Type = resolvedLambdaFieldType
@@ -2028,7 +2066,13 @@ public class AssertionWeaver
                             }
                             else
                             {
-                                // Non-async: ldarg.0 → ldfld field (this.field)
+                                // ldarg.0 → ldfld field (this.field), only for a field of this method's own type: the
+                                // field may be a closure's, and a closure the compiler kept on the stack is in no local
+                                // or field to read it from. Read off this, it took whatever lay at the field's offset of
+                                // another object (#211, D-A). A static method has no this: its ldarg.0 is its first
+                                // parameter.
+                                if (method.IsStatic || !IsFieldAccessibleOnType(lambdaFieldRef, method.DeclaringType))
+                                    continue;
                                 captured.Add(new CapturedVariable
                                 {
                                     Name = rawName,
@@ -2082,7 +2126,7 @@ public class AssertionWeaver
                     captured.Add(new CapturedVariable
                     {
                         Name = fieldName,
-                        StateField = outerThisForToken,
+                        StateField = OwnField(outerThisForToken),
                         ClosureField = resolvedTokenFieldRef,
                         NeedsBoxing = resolvedTokenFieldType.IsValueType || resolvedTokenFieldType is GenericParameter,
                         Type = resolvedTokenFieldType
@@ -2090,7 +2134,10 @@ public class AssertionWeaver
                 }
                 else
                 {
-                    // Non-async: ldarg.0 → ldfld field (this.field)
+                    // ldarg.0 → ldfld field (this.field), for a field of this method's own type only, and never in a
+                    // static method, which has no this (#211, D-A).
+                    if (method.IsStatic || !IsFieldAccessibleOnType(tokenFieldRef, method.DeclaringType))
+                        continue;
                     captured.Add(new CapturedVariable
                     {
                         Name = fieldName,
@@ -2156,7 +2203,7 @@ public class AssertionWeaver
                     captured.Add(new CapturedVariable
                     {
                         Name = fieldName,
-                        StateField = outerThisForStandalone,
+                        StateField = OwnField(outerThisForStandalone),
                         ClosureField = resolvedFieldRef,
                         NeedsBoxing = resolvedFieldType.IsValueType || resolvedFieldType is GenericParameter,
                         Type = resolvedFieldType
@@ -3131,6 +3178,8 @@ public class AssertionWeaver
         // If we have captured variables, build arrays at try-start so both paths can use them
         VariableDefinition? namesLocal = null;
         VariableDefinition? valuesLocal = null;
+        ExceptionHandler? valuesHandler = null;
+        var carried = CarryAcrossTheAwait(method, il, assertion);
 
         if (hasValues)
         {
@@ -3159,7 +3208,8 @@ public class AssertionWeaver
             // Build values array: new object[N] { var1, var2, ... } (with boxing if needed). An argument's slot starts
             // as a plain object, which prints as its type name, so an argument the statement throws before evaluating
             // shows no value; the call fills it in (below).
-            il.InsertBefore(firstInstr, il.Create(OpCodes.Ldc_I4, count + arguments.Count));
+            var valuesStart = il.Create(OpCodes.Ldc_I4, count + arguments.Count);
+            il.InsertBefore(firstInstr, valuesStart);
             il.InsertBefore(firstInstr, il.Create(OpCodes.Newarr, module.TypeSystem.Object));
             for (var ai = 0; ai < arguments.Count; ai++)
             {
@@ -3176,7 +3226,15 @@ public class AssertionWeaver
                 il.InsertBefore(firstInstr, il.Create(OpCodes.Ldc_I4, vi));
 
                 // Load the variable
-                if (cv.ClosureField != null && cv.ClosureLocalIndex >= 0)
+                if (carried.TryGetValue(cv, out var carrier))
+                {
+                    // A local of MoveNext carried across the await (#211): read back from its field.
+                    il.InsertBefore(firstInstr, il.Create(OpCodes.Ldarg_0));
+                    il.InsertBefore(firstInstr, il.Create(OpCodes.Ldfld, carrier));
+                    if (cv.ClosureField != null)
+                        il.InsertBefore(firstInstr, il.Create(OpCodes.Ldfld, cv.ClosureField));
+                }
+                else if (cv.ClosureField != null && cv.ClosureLocalIndex >= 0)
                 {
                     // Closure in non-async: ldloc displayClass; ldfld field
                     il.InsertBefore(firstInstr, il.Create(OpCodes.Ldloc, body.Variables[cv.ClosureLocalIndex]));
@@ -3213,6 +3271,38 @@ public class AssertionWeaver
 
             if (capture != null)
                 CaptureArguments(method, il, capture, valuesLocal, count);
+
+            // An awaited statement's values are read after its await, in a protected region of their own: if a read
+            // throws, the values stay null, Track draws the note without them, and the assertion runs as compiled.
+            // The weave's own fault never stands in for the assertion's verdict (#211).
+            if (assertion.IsAwaited && spillLocals == null)
+            {
+                var valuesDone = il.Create(OpCodes.Nop);
+                il.InsertBefore(firstInstr, il.Create(OpCodes.Leave, valuesDone));
+                var valuesCatch = il.Create(OpCodes.Pop);
+                il.InsertBefore(firstInstr, valuesCatch);
+                il.InsertBefore(firstInstr, il.Create(OpCodes.Ldnull));
+                il.InsertBefore(firstInstr, il.Create(OpCodes.Stloc, valuesLocal));
+                il.InsertBefore(firstInstr, il.Create(OpCodes.Leave, valuesDone));
+                il.InsertBefore(firstInstr, valuesDone);
+                valuesHandler = new ExceptionHandler(ExceptionHandlerType.Catch)
+                {
+                    TryStart = valuesStart,
+                    TryEnd = valuesCatch,
+                    HandlerStart = valuesCatch,
+                    HandlerEnd = valuesDone,
+                    CatchType = exceptionTypeRef
+                };
+            }
+        }
+
+        // The fields let go of what they carried, as the compiler's own hoisted temporaries do, so the state machine
+        // does not keep a closure alive for the rest of the method.
+        foreach (var carrier in carried.Values.Distinct())
+        {
+            il.InsertBefore(firstInstr, il.Create(OpCodes.Ldarg_0));
+            il.InsertBefore(firstInstr, il.Create(OpCodes.Ldflda, carrier));
+            il.InsertBefore(firstInstr, il.Create(OpCodes.Initobj, carrier.FieldType));
         }
 
         // An assertion task the statement does not await is handed to Track.AssertionTask, which draws the note when the
@@ -3380,6 +3470,9 @@ public class AssertionWeaver
             CatchType = exceptionTypeRef
         };
         body.ExceptionHandlers.Insert(0, handler);
+        // Nested in the assertion's try, so listed before it.
+        if (valuesHandler != null)
+            body.ExceptionHandlers.Insert(0, valuesHandler);
 
         // Exit reload: push spilled exit values back onto the stack for subsequent assertions
         if (exitSpillLocals != null)
@@ -3411,6 +3504,55 @@ public class AssertionWeaver
                 scan = scan.Next;
             }
         }
+    }
+
+    /// <summary>
+    /// Carries each local of MoveNext the awaited statement's values are read through across the await, in a field of
+    /// the state machine, and returns the field for each value it carries (#211). The local is stored where
+    /// <see cref="CarryPoints"/> found, right after the statement stores an awaiter. One field per local, shared by the
+    /// statements that carry it: each stores before it reads.
+    /// </summary>
+    private static Dictionary<CapturedVariable, FieldReference> CarryAcrossTheAwait(MethodDefinition method, ILProcessor il,
+        AssertionStatement assertion)
+    {
+        var carried = new Dictionary<CapturedVariable, FieldReference>();
+        var stateMachine = method.DeclaringType;
+        foreach (var entry in assertion.CarriedAfter)
+        {
+            var (variable, storeOfAwaiter) = (entry.Key, entry.Value);
+            var local = method.Body.Variables[MoveNextLocal(variable)];
+            var name = $"<>krk__carried{local.Index}";
+            var field = stateMachine.Fields.FirstOrDefault(f => f.Name == name);
+            if (field == null)
+            {
+                field = new FieldDefinition(name, FieldAttributes.Private, local.VariableType);
+                stateMachine.Fields.Add(field);
+            }
+            var carrier = OwnField(field);
+
+            var store = il.Create(OpCodes.Stfld, carrier);
+            il.InsertAfter(storeOfAwaiter, store);
+            il.InsertAfter(storeOfAwaiter, il.Create(OpCodes.Ldloc, local));
+            il.InsertAfter(storeOfAwaiter, il.Create(OpCodes.Ldarg_0));
+            carried[variable] = carrier;
+        }
+        return carried;
+    }
+
+    /// <summary>
+    /// A field of a compiler-generated type, as code inside that type names it: through the type instantiated over its
+    /// own generic parameters when it has any. A field definition named directly is the open type's, which ILVerify
+    /// rejects in a generic state machine's MoveNext (#211, D-B).
+    /// </summary>
+    private static FieldReference OwnField(FieldDefinition field)
+    {
+        var type = field.DeclaringType;
+        if (!type.HasGenericParameters)
+            return field;
+        var instance = new GenericInstanceType(type);
+        foreach (var parameter in type.GenericParameters)
+            instance.GenericArguments.Add(parameter);
+        return new FieldReference(field.Name, field.FieldType, instance);
     }
 }
 
@@ -3447,6 +3589,12 @@ public class AssertionStatement
     /// <see cref="LastInstruction"/>, the statement's end.
     /// </summary>
     public Instruction? MergePoint { get; set; }
+    /// <summary>
+    /// For an awaited statement: each captured variable it reads through one of MoveNext's own locals, and the store of
+    /// an awaiter after which the weave copies that local into a field of the state machine, to be read from the field
+    /// at <see cref="MergePoint"/> (#211).
+    /// </summary>
+    internal Dictionary<CapturedVariable, Instruction> CarriedAfter { get; set; } = new Dictionary<CapturedVariable, Instruction>();
     /// <summary>Why the statement is left as written, when that is decided by its shape rather than its stack.</summary>
     internal string? Refusal { get; set; }
 

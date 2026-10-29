@@ -4,6 +4,87 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.27.4] - 2026-10-29
+
+The patch part moves (5.27.3 to 5.27.4): fixes, nothing new to call (#211, `plans/AWAITED_ASSERTION_VALUES_PLAN.md`).
+An awaited assertion's values are read in a Release build as in Debug, a value the weave cannot read no longer stands
+in for the assertion's outcome, and two defects of the weave found on the way are fixed; no option, API or file
+changes shape.
+
+### Fixed
+- **An awaited assertion no longer fails a Release test with a NullReferenceException of the weave's own (#211).** The
+  weave reads an awaited assertion's values where the await resumes, and it read each one back through the local of
+  the compiled method that held it before the await. An optimized build keeps such a local for one call of the async
+  method's `MoveNext`, and the code after an await that suspended runs in the next call, where every local starts
+  zeroed. A closure read there as null, the weave's read of its field threw, and that exception was recorded as the
+  assertion's failure and thrown in its place, before the assertion's own result was read: `await
+  Should.ThrowAsync<T>(() => client.CallAsync(request))` with `request` a local, as filed, and the same in
+  FluentAssertions, AwesomeAssertions and TUnit. Shouldly's `ThrowAsync` always suspends, so such a test failed on
+  every run. Every Release build of xUnit v2, whose props turn on the compiler's debug-plus mode, keeps such a closure
+  in a local; the Release build of every other framework keeps one there in a `using` block or a `try`. The weave now
+  copies each such local into a field of the state machine right after the statement stores its awaiter, before the
+  await can suspend, reads the value from that field, and clears the field once it has.
+- **An awaited assertion draws the values Debug draws (#211).** A plain local read the same way drew its zero:
+  FluentAssertions' `WithMessage(message)` read `'null'` and `CompleteWithinAsync(timeout)` `'00:00:00'` in Release,
+  where Debug read the message and `'00:00:30'`, in passing notes and failing ones alike, and TUnit's
+  `IsEqualTo(expected)` read `'null'`. They read what Debug reads now.
+- **A value the weave cannot read no longer becomes the assertion's verdict (#211).** An awaited statement's values
+  are built in a protected region of their own: if a read throws, the note is drawn without values and the assertion's
+  own outcome stands.
+- **A lambda's captured local is no longer read off the wrong object (#211).** In a Release build of xUnit v3, TUnit,
+  MSTest or NUnit, which keep a closure on the stack, a lambda that captures a local, as in `Should.Throw<T>(() =>
+  client.Get(request))`, had its closure's field taken for one of the test class's and read off `this`, or off the
+  state machine in an async method. That read whatever lay at the field's offset of another object: a wrong value,
+  null, or, where a value-type field lay there, such as a `long` declared first in the test class, an access violation
+  that ended the test process. A lambda or an expression tree in a static method had a field of its own class read
+  off the method's first parameter, which a static method has in place of `this`. The weave reads a field off `this`
+  only in an instance method, and only when the field belongs to the method's own type, now. A delegate's captured
+  values are never drawn in its label, so no note loses text.
+- **The woven IL of an async test of a generic class verifies (#211).** In a generic async method, and in every async
+  test of a generic base class, the weave named fields of the state machine on its open type, which ILVerify rejects
+  (the runtime ran it). It names them as the compiler does now.
+- **Statements #212 began to draw show the values of locals read before their last await (#211).** An assertion on an
+  awaited value, or one with two awaits, left out every value read through a local in every build, so that Debug and
+  Release would agree. Such values are carried now, so `await Assert.That(await client.GetNameAsync()).IsEqualTo(copy)`
+  reads `'order'` where it read `copy`. A value loaded before an earlier await of the statement is carried from that
+  await, where the local still holds it.
+
+### Changed
+- A Release run's awaited assertions draw the values a Debug run draws, and a Release test that failed with the
+  weave's NullReferenceException runs its assertion and draws its own outcome. If reading a value ever fails, the note
+  is drawn without values, where it was drawn failed.
+- A Release run of xUnit v3, TUnit, MSTest or NUnit no longer reads a closure's field off another object: the value is
+  left out, which no label measured shows, and a run that crashed the test process runs.
+- Debug notes are unchanged but for the statements #212 began to draw, which show the values of locals read before
+  their last await, in every build.
+- Where an awaited statement's await is not the compiler's shape (a `GetAwaiter()` call and a store of the awaiter, as
+  another IL rewriter could change it), the statement shows only the values every build keeps in fields of the state
+  machine, in every build.
+
+### Tests
+- **`AwaitedAssertionShapeTests` (#211)**: R211, the issue's project as filed, and S27 to S52, the plan's cases
+  (`using`, `try`, `foreach`, `ConfigureAwait`, `ValueTask`, async lambdas and local functions, FluentAssertions',
+  AwesomeAssertions' and TUnit's values after a suspension, D-A's and D-B's shapes, the crash shape, values loaded
+  before an earlier await, and a static helper's lambda and expression tree), each built in Debug, plain Release and
+  debug-plus Release. The eight shapes that left plain
+  Release out because of D-A (S9, S9b, S15a to S15d, S26, R212) are built in it now, and S17g draws its local's value.
+  R211, S37 and S48 join the SDK rows (8, 9 and 10, in the three builds). On 5.27.2, 124 of the catalogue's 868 rows
+  fail; all pass.
+- **`AwaitedAssertionResumeTests` (#211)**: a value whose read is made to fail draws the note without values and keeps
+  the assertion's outcome; an await of another shape draws no value in any build; the field that carried a closure is
+  cleared, so what the closure holds is collected while the method runs. All seven fail on 5.27.2.
+- The SDK 8 fact of #54 (`Weave_Sdk8_AwesomeAssertions_LinqOrderByDescending_DoesNotThrowBadImageFormat`) is skipped
+  where no SDK 8 is installed, as the cross-SDK facts are; in a `dotnet/sdk:10.0` container its restore failed.
+- Mutations of the weave, each caught by the facts above: the local read after the await again; the store moved after
+  the resumption; no protected region; plain locals not carried; a carried field or `<>4__this` named on the open
+  generic type; no D-A guard; no clear; the store at the statement's last await; the fallback decided per value
+  (`plans/AWAITED_ASSERTION_VALUES_PLAN.harness/results/mutations-release.txt`).
+- Checks: the weaver suite (1,432 passed, 28 skipped for the .NET 11 SDK, which is not installed), also in a Linux
+  container (1,315 passed, 145 skipped for the SDKs the image lacks); the core suite (11,543 passed, 2 skipped); the
+  issue's project as filed, on the weaver packed from this release, passes 3 of 3 in Release (2 of 3 failed on 5.26.1)
+  and in Debug, and the plan's SDK-built probes pass but for the two that fail on purpose, with their libraries' own
+  messages; `release.slnf` builds in Release.
+
 ## [5.27.3] - 2026-10-29
 
 The patch part moves (5.27.2 to 5.27.3): packaging and tracking fixes, with no new option and no new public member (#97;

@@ -1,0 +1,2 @@
+# repro, -c Release, on the release's weaver packed as 5.27.4-proto211b (Kronikol core and xUnit2 at the published 5.27.2), SDK 10.0.300, 2026-10-29
+Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 597 ms - WeaveRepro.dll (net10.0)

@@ -1,0 +1,8 @@
+# shapes, -c Debug, on the release's weaver packed as 5.27.4-proto211b (Kronikol core and xUnit2 at the published 5.27.2), SDK 10.0.300, 2026-10-29
+  Failed Shapes.ShapeTests.P8_failing_awaited_assertion_names_a_value_type_local [392 ms]
+  Error Message:
+   Shouldly.ShouldAssertException : Task `await task`
+  Failed Shapes.FaShapeTests.P9_fa_with_message_plain_local_fails [630 ms]
+  Error Message:
+   Expected exception message to match the equivalent of "not the message", but "expected" does not.
+Failed!  - Failed:     2, Passed:    11, Skipped:     0, Total:    13, Duration: 1 s - Shapes.dll (net10.0)

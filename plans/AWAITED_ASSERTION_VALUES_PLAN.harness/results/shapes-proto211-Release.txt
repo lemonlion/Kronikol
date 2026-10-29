@@ -1,0 +1,6 @@
+  Failed Shapes.ShapeTests.P8_failing_awaited_assertion_names_a_value_type_local
+  Error Message:
+   Shouldly.ShouldAssertException : Task `await task`
+  Failed Shapes.FaShapeTests.P9_fa_with_message_plain_local_fails
+  Error Message:
+Failed!  - Failed:     2, Passed:    11, Skipped:     0, Total:    13, Shapes.dll (net10.0)

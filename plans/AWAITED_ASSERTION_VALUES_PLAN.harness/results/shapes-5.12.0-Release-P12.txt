@@ -1,0 +1,4 @@
+  Failed Shapes.NoThisShapeTests.P12_async_closure_without_this
+  Error Message:
+   System.NullReferenceException : Object reference not set to an instance of an object.
+Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Shapes.dll (net10.0)

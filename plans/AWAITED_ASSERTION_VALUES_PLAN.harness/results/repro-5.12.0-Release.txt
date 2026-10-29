@@ -1,0 +1,7 @@
+  Failed WeaveRepro.ReproTests.ThrowAsync_is_the_first_await
+  Error Message:
+   System.NullReferenceException : Object reference not set to an instance of an object.
+  Failed WeaveRepro.ReproTests.Unassigned_ThrowAsync_is_the_first_await
+  Error Message:
+   System.NullReferenceException : Object reference not set to an instance of an object.
+Failed!  - Failed:     2, Passed:     1, Skipped:     0, Total:     3, WeaveRepro.dll (net10.0)

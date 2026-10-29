@@ -1,0 +1,16 @@
+# The weaver suite on the release, Windows (SDKs 8.0.421, 9.0.314, 10.0.300) and a Linux container (mcr.microsoft.com/dotnet/sdk:10.0, SDK 10.0.401 only), 2026-10-29
+Windows:
+Passed!  - Failed:     0, Passed:  1408, Skipped:    28, Total:  1436, Duration: 5 m 19 s - Kronikol.Tests.AssertionTracking.dll (net10.0)
+  (28 skipped: the .NET 11 SDK facts)
+Linux, first run:
+Failed!  - Failed:     1, Passed:  1291, Skipped:   144, Total:  1436, Duration: 2 m 3 s - Kronikol.Tests.AssertionTracking.dll (net10.0)
+  the one failure: AssertionWeaverTests.Weave_Sdk8_AwesomeAssertions_LinqOrderByDescending_DoesNotThrowBadImageFormat(Release), its restore of an SDK 8 project failing in an image with no SDK 8; the fact had no SDK check, and has one now
+Linux, with that check:
+Passed!  - Failed:     0, Passed:  1291, Skipped:   145, Total:  1436, Duration: 2 m 43 s - Kronikol.Tests.AssertionTracking.dll (net10.0)
+  (145 skipped: the SDK 8, 9 and 11 facts)
+
+Final tree (with the static-method guard and S51, S52):
+Windows:
+Passed!  - Failed:     0, Passed:  1432, Skipped:    28, Total:  1460, Duration: 4 m 40 s - Kronikol.Tests.AssertionTracking.dll (net10.0)
+Linux:
+Passed!  - Failed:     0, Passed:  1315, Skipped:   145, Total:  1460, Duration: 3 m 44 s - Kronikol.Tests.AssertionTracking.dll (net10.0)

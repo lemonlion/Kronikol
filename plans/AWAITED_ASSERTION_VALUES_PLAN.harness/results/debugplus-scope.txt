@@ -1,0 +1,43 @@
+# What debug-plus changes in the audit's shapes (probe/Dive211Tests.cs EnvCheck, the Common source; locals and instruction count of every method)
+# Debug, /optimize- without and with /debug+: 155 methods, lines that differ: 0
+# Release, /optimize+ without (<) and with (>) /debug+: 134 methods, 20 differ
+< Dive.Async/<<Async_lambda>b__10_0>d::MoveNext [Int32, Async, TaskAwaiter`1, Exception] 72 instructions
+> Dive.Async/<<Async_lambda>b__10_0>d::MoveNext [Int32, Async, <>c__DisplayClass10_0, TaskAwaiter`1, Exception] 74 instructions
+< Dive.Async/<<Local_function>g__Check|11_0>d::MoveNext [Int32, Async, TaskAwaiter`1, Exception] 70 instructions
+> Dive.Async/<<Local_function>g__Check|11_0>d::MoveNext [Int32, Async, <>c__DisplayClass11_0, TaskAwaiter`1, Exception] 72 instructions
+< Dive.Async/<Async_lambda>d__10::MoveNext [Int32, Async, TaskAwaiter, Exception] 61 instructions
+> Dive.Async/<Async_lambda>d__10::MoveNext [Int32, Async, Func`1, TaskAwaiter, Exception] 63 instructions
+< Dive.Async/<ConfigureAwait_false>d__7::MoveNext [Int32, ConfiguredTaskAwaiter, ConfiguredTaskAwaitable`1, Exception] 74 instructions
+> Dive.Async/<ConfigureAwait_false>d__7::MoveNext [Int32, <>c__DisplayClass7_0, ConfiguredTaskAwaiter, ConfiguredTaskAwaitable`1, Exception] 76 instructions
+< Dive.Async/<Fa_WithMessage_closure>d__14::MoveNext [Int32, <>c__DisplayClass14_0, TaskAwaiter`1, Exception] 82 instructions
+> Dive.Async/<Fa_WithMessage_closure>d__14::MoveNext [Int32, <>c__DisplayClass14_0, Func`1, TaskAwaiter`1, Exception] 84 instructions
+< Dive.Async/<Fa_WithMessage_local>d__13::MoveNext [Int32, Async, String, TaskAwaiter`1, Exception] 71 instructions
+> Dive.Async/<Fa_WithMessage_local>d__13::MoveNext [Int32, Async, String, Func`1, TaskAwaiter`1, Exception] 73 instructions
+< Dive.Async/<Foreach_after_await>d__6::MoveNext [Int32, Async, YieldAwaiter, YieldAwaitable, String, TaskAwaiter`1, Exception] 142 instructions
+> Dive.Async/<Foreach_after_await>d__6::MoveNext [Int32, Async, YieldAwaiter, YieldAwaitable, String, <>c__DisplayClass6_0, TaskAwaiter`1, Exception] 144 instructions
+< Dive.Async/<Issue_assigned>d__1::MoveNext [Int32, TaskAwaiter`1, Exception] 73 instructions
+> Dive.Async/<Issue_assigned>d__1::MoveNext [Int32, <>c__DisplayClass1_0, InvalidOperationException, InvalidOperationException, TaskAwaiter`1, Exception] 79 instructions
+< Dive.Async/<Issue_unassigned>d__2::MoveNext [Int32, TaskAwaiter`1, Exception] 70 instructions
+> Dive.Async/<Issue_unassigned>d__2::MoveNext [Int32, <>c__DisplayClass2_0, TaskAwaiter`1, Exception] 72 instructions
+< Dive.Async/<Two_statements_one_closure>d__8::MoveNext [Int32, TaskAwaiter`1, Exception] 124 instructions
+> Dive.Async/<Two_statements_one_closure>d__8::MoveNext [Int32, TaskAwaiter`1, TaskAwaiter`1, Exception] 124 instructions
+< Dive.Async/<ValueTask_method>d__9::MoveNext [Int32, TaskAwaiter`1, Exception] 70 instructions
+> Dive.Async/<ValueTask_method>d__9::MoveNext [Int32, <>c__DisplayClass9_0, TaskAwaiter`1, Exception] 72 instructions
+< Dive.Base`1::Sync_in_generic_base [] 16 instructions
+> Dive.Base`1::Sync_in_generic_base [<>c__DisplayClass2_0] 18 instructions
+< Dive.Base`1/<In_generic_base>d__1::MoveNext [Int32, TaskAwaiter`1, Exception] 70 instructions
+> Dive.Base`1/<In_generic_base>d__1::MoveNext [Int32, <>c__DisplayClass1_0, TaskAwaiter`1, Exception] 72 instructions
+< Dive.NoThis::Sync_static_callee [] 13 instructions
+> Dive.NoThis::Sync_static_callee [<>c__DisplayClass1_0] 15 instructions
+< Dive.NoThis/<Static_callee>d__0::MoveNext [Int32, TaskAwaiter`1, Exception] 66 instructions
+> Dive.NoThis/<Static_callee>d__0::MoveNext [Int32, <>c__DisplayClass0_0, TaskAwaiter`1, Exception] 68 instructions
+< Dive.Sync::Throw_capturing_a_local [] 19 instructions
+> Dive.Sync::Throw_capturing_a_local [<>c__DisplayClass2_0, InvalidOperationException] 23 instructions
+< Dive.Sync::ShouldContain_predicate [<>c__DisplayClass4_0, ParameterExpression] 36 instructions
+< Dive.Sync::Fa_Contain_predicate [<>c__DisplayClass5_0, ParameterExpression] 39 instructions
+< Dive.Sync::ThrowAsync_GetResult [TaskAwaiter`1] 20 instructions
+< Dive.Sync::Fa_ThrowAsync_GetResult_WithMessage_local [String, TaskAwaiter`1] 19 instructions
+> Dive.Sync::ShouldContain_predicate [<>c__DisplayClass4_0, List`1, ParameterExpression] 38 instructions
+> Dive.Sync::Fa_Contain_predicate [<>c__DisplayClass5_0, List`1, ParameterExpression] 41 instructions
+> Dive.Sync::ThrowAsync_GetResult [<>c__DisplayClass6_0, TaskAwaiter`1] 22 instructions
+> Dive.Sync::Fa_ThrowAsync_GetResult_WithMessage_local [String, Func`1, TaskAwaiter`1] 21 instructions

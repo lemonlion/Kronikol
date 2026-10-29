@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsTestProject>true</IsTestProject>
+    <KronikolVersion Condition="'$(KronikolVersion)' == ''">5.12.0</KronikolVersion>
+    <AssertionTrackingVersion Condition="'$(AssertionTrackingVersion)' == ''">$(KronikolVersion)</AssertionTrackingVersion>
+    <!-- A version missing from feed/ fails the restore instead of resolving a published weaver above it. -->
+    <WarningsAsErrors>$(WarningsAsErrors);NU1603</WarningsAsErrors>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Kronikol.AssertionTracking" Version="$(AssertionTrackingVersion)" PrivateAssets="all" />
+    <PackageReference Include="Kronikol.xUnit2" Version="$(KronikolVersion)" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
+    <PackageReference Include="Shouldly" Version="4.3.0" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.0.2" PrivateAssets="all" />
+  </ItemGroup>
+</Project>

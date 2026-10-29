@@ -1,0 +1,19 @@
+  WeaveRepro -> C:\Code\Kronikol-211\plans\AWAITED_ASSERTION_VALUES_PLAN.harness\repro\bin\Release\net10.0\WeaveRepro.dll
+Test run for C:\Code\Kronikol-211\plans\AWAITED_ASSERTION_VALUES_PLAN.harness\repro\bin\Release\net10.0\WeaveRepro.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:01.40]     WeaveRepro.ReproTests.ThrowAsync_is_the_first_await [FAIL]
+[xUnit.net 00:00:01.41]     WeaveRepro.ReproTests.Unassigned_ThrowAsync_is_the_first_await [FAIL]
+  Failed WeaveRepro.ReproTests.ThrowAsync_is_the_first_await [4 ms]
+  Error Message:
+   System.NullReferenceException : Object reference not set to an instance of an object.
+  Stack Trace:
+     at WeaveRepro.ReproTests.ThrowAsync_is_the_first_await() in C:\Code\Kronikol-211\plans\AWAITED_ASSERTION_VALUES_PLAN.harness\repro\ReproTests.cs:line 20
+--- End of stack trace from previous location ---
+  Failed WeaveRepro.ReproTests.Unassigned_ThrowAsync_is_the_first_await [2 ms]
+  Error Message:
+   System.NullReferenceException : Object reference not set to an instance of an object.
+  Stack Trace:
+     at WeaveRepro.ReproTests.Unassigned_ThrowAsync_is_the_first_await() in C:\Code\Kronikol-211\plans\AWAITED_ASSERTION_VALUES_PLAN.harness\repro\ReproTests.cs:line 32
+--- End of stack trace from previous location ---
+
+Failed!  - Failed:     2, Passed:     1, Skipped:     0, Total:     3, Duration: 573 ms - WeaveRepro.dll (net10.0)

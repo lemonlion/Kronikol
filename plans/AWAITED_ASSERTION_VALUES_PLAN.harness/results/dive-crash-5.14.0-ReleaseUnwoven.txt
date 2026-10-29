@@ -1,0 +1,18 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Kronikol.AssertionTracking -> C:\Code\Kronikol-211-dive\src\Kronikol.AssertionTracking\bin\Debug\netstandard2.0\Kronikol.AssertionTracking.dll
+  Kronikol -> C:\Code\Kronikol-211-dive\src\Kronikol\bin\Debug\net10.0\Kronikol.dll
+C:\Code\Kronikol-211-dive\tests\Kronikol.Tests.AssertionTracking\TestAssemblyBuilder.cs(327,46): warning CS1573: Parameter 'packageVersions' has no matching param tag in the XML comment for 'TestAssemblyBuilder.BuildWithSdk(string, string, string, string, string, string?, IReadOnlyDictionary<string, string>?)' (but other parameters do) [C:\Code\Kronikol-211-dive\tests\Kronikol.Tests.AssertionTracking\Kronikol.Tests.AssertionTracking.csproj::TargetFramework=net10.0]
+  Kronikol.Tests.AssertionTracking -> C:\Code\Kronikol-211-dive\tests\Kronikol.Tests.AssertionTracking\bin\Debug\net10.0\Kronikol.Tests.AssertionTracking.dll
+Test run for C:\Code\Kronikol-211-dive\tests\Kronikol.Tests.AssertionTracking\bin\Debug\net10.0\Kronikol.Tests.AssertionTracking.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:04.31]     Kronikol.Tests.AssertionTracking.Dive211Tests.Crash [FAIL]
+  Failed Kronikol.Tests.AssertionTracking.Dive211Tests.Crash [2 s]
+  Error Message:
+   [ReleaseUnwoven] the run came back: threw nothing; 0 notes
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.Dive211Tests.Crash() in C:\Code\Kronikol-211-dive\tests\Kronikol.Tests.AssertionTracking\Dive211Tests.cs:line 320
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+
+Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 2 s - Kronikol.Tests.AssertionTracking.dll (net10.0)
