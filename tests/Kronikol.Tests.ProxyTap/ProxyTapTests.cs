@@ -134,7 +134,7 @@ public class ProxyTapTests
         using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
         await tap.DisposeAsync();
 
-        HistoryGuard.Pin(sink.Logs, 9,
+        HistoryGuard.Pin(sink.Logs, 10,
             "web>graphql POST /sidekick?op query Overview 200");
     }
 

@@ -96,7 +96,7 @@ public class BlobTrackingMessageHandlerTests : IDisposable
         using var invoker = CreateInvoker(MakeOptions());
         await invoker.SendAsync(MakeUploadRequest(), CancellationToken.None);
 
-        HistoryGuard.Pin(GetLogsFromThisTest(), 9,
+        HistoryGuard.Pin(GetLogsFromThisTest(), 10,
             "TestCaller>BlobStorage Upload /mycontainer/myblob.txt 200");
     }
 

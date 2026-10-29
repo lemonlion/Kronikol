@@ -1,10 +1,10 @@
 # Client floors plan (#205, #97)
 
-**Status:** written 2026-10-27 at 5.12.0 (`1ee6373a`) by kronikol-2d, at the owner's ask to analyse #205 critically
-and plan a fix for the underlying problem; audited the same day at 5.14.0 (`8d7d1e1d`), at the owner's ask to make it
+**Status:** written 2026-10-27 at 5.12.0 (`1ee6373a`) by kronikol-2d, at the owner's ask to analyse #205 critically and
+plan a fix for the underlying problem; audited the same day at 5.14.0 (`8d7d1e1d`), at the owner's ask to make it
 complete and accurate (section 11 lists what the audit found and changed). **Green-lit 2026-10-28** by the owner ("Can
 you implement the plan in full"), every question in section 10 at its recommendation; executing. **R1 released as
-5.22.1, R2a as 5.27.1, R2b as 5.27.3, R2c as 5.27.5** (section 11).
+5.22.1, R2a as 5.27.1, R2b as 5.27.3, R2c as 5.27.5, and F26, found by R2c, as 5.27.7** (section 11).
 
 **Issues:** [#205](https://github.com/lemonlion/Kronikol/issues/205), "BigQuery: the extension's floor,
 Google.Cloud.BigQuery.V2 3.12, runs ExecuteQuery through jobs.query, whose timestamps the emulator answers in seconds,
@@ -584,7 +584,7 @@ No Playwright fact: nothing in a report changes.
 | F23 | A package fact present while a floor search runs fails every probe that pins an older release, so the OpenTelemetry search stopped at "the newest release fails" (RUN). | the harness | The fact is written after the search (`apply_floor.py`) |
 | F24 | A package with an unmeasured R3 pin cannot hold its nuspec to an empty list of disagreements: MediatR's fact reads its one line, MediatR 14.1.0 unmeasured (RUN). | the harness | The fact expects that line until R3b measures the pin |
 | F25 | The TcpTap test project's `NoWarn` hides NU1902 to NU1904 from its own restore, so its runs cannot report an advisory in the Bson it resolves; the ones its logs show, SharpCompress 0.30.1 and Snappier 1.0.0, come from the MongoDB.V2 extension it references, through MongoDB.Driver (READ, RUN). | the harness | The Bson graph was read on its own, a restore of the one reference: MongoDB.Bson alone, no advisory |
-| F26 | Every Oracle arrow names `oracle://localhost/unknown/<table>`: `SqlEndpoint.Host` reads an EZConnect data source (`127.0.0.1:21521/FREEPDB1`) as no host, and ODP.NET's `Database` is empty, so the database is `unknown`, on the floor and the newest alike (RUN, `results/r2c-oracle-{floor,newest}.txt`). The database is in history's call line, so its fix moves history's rule. | Kronikol | Its own patch after R2c, on the rule origin then holds, as #125's R1 moves it to 9 |
+| F26 | Every Oracle arrow names `oracle://localhost/unknown/<table>`: `SqlEndpoint.Host` reads an EZConnect data source (`127.0.0.1:21521/FREEPDB1`) as no host, and ODP.NET's `Database` is empty, so the database is `unknown`, on the floor and the newest alike (RUN, `results/r2c-oracle-{floor,newest}.txt`). The database is in history's call line, so its fix moves history's rule. | Kronikol | Fixed in 5.27.7, its own patch: `SqlEndpoint.Address` reads the host, port and service of an EZConnect string or a connect descriptor for the shared SQL tracker, Dapper and the EF Core interceptor, and history's rule moved to 10, each moved call keeping the address rules 6 to 9 recorded (`RequestResponseLog.RecordedBefore10`) |
 | F27 | The TcpTap test project pinned `StackExchange.Redis` 2.6.48 and references the Redis extension, so the Redis floor, 2.6.80, made its restore a downgrade NuGet refuses (NU1605): the TcpTap search's first probe failed to build (RUN, `floor/r2c-tcptap.txt`). | Kronikol | Fixed in R2c: the pin moves to 2.6.80; no other test project pins a floored client below its floor |
 | F28 | The audit column of `floor/otel_floor.py` and `floor/paired_floor.py` read only a warning that names its project in a closing bracket, and a restore warning names it first, so the EF Core search reported no advisory where each build had three, all from the test providers: `System.Security.Cryptography.Pkcs` 9.0.4 through the SQL Server provider and `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 through the Sqlite provider (RUN). The floors do not rest on that column: each graph was read on its own (`floor/r2c-advisory.sh`, and a restore of the one reference). | the harness | Fixed in R2c: the three search scripts, `floor_probe2.py` among them, read either form |
 
@@ -715,6 +715,20 @@ Each has a recommendation; none is legwork.
   advisories each reports all the test providers' and the MongoDB driver's), the core suite (11,538 passed, 2 skipped)
   and the Release build of `release.slnf`, whose only advisories are MongoDB.Driver 2.x's Snappier and SharpCompress and
   the Pkcs 9.0.13 that SqlClient brings, R3b's; the Oracle client's are gone.
+
+- **2026-10-29, F26 released as 5.27.7**, on 5.27.6 (`7b7a238d`). An Oracle call is drawn against the server and the
+  service its data source names, through the Oracle tracker, Dapper and EF Core; `SqlEndpoint.Address` reads EZConnect
+  strings and connect descriptors, and a `host/name` data source as a server and a service only where the connection
+  names no database. The address is in history's call line, so the rule moved from 9 (#125's R1, 5.27.6) to 10, with the
+  address rules 6 to 9 recorded kept on each moved call; the rule was claimed at push with kronikol-5d, whose #125 R2
+  moves it next.
+
+  Run: the address theories and facts in `SqlEndpointTests`, the three trackers' suites and
+  `SqlOracleAddressBridgeTests`, each red on 5.27.6; three mutations of the bridge (the trackers' mark, rule 9's path,
+  the stored `path9`), each red on the facts that guard it; then, on 5.27.6 with F26, the core suite (11,569 passed, 2
+  skipped), the Oracle, Dapper, EF Core Relational (251, its servers in podman), SqlClient, Npgsql, MySqlConnector,
+  Spanner and Sqlite suites, and the Release build of `release.slnf`, whose only advisories are the older ones 5.27.5
+  listed.
 
 ---
 

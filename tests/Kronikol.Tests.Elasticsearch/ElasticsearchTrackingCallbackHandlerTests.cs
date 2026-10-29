@@ -52,7 +52,7 @@ public class ElasticsearchTrackingCallbackHandlerTests
         var handler = new ElasticsearchTrackingCallbackHandler(MakeOptions());
         CallHandler(handler, method: "POST", path: "/orders/_search");
 
-        HistoryGuard.Pin(GetLogsFromThisTest(), 9,
+        HistoryGuard.Pin(GetLogsFromThisTest(), 10,
             "TestCaller>Elasticsearch Search → orders /orders 200");
     }
 

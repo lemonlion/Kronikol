@@ -24,7 +24,7 @@ public class RedisDecoderTests
         harness.ClientToServer(Resp.Command("GET", "user:42"));
         harness.ServerToClient(Resp.Bulk("{\"name\":\"Ada\"}"));
 
-        HistoryGuard.Pin(harness.Sink.Logs, 9,
+        HistoryGuard.Pin(harness.Sink.Logs, 10,
             "svc>redis Get /db0/user:{n} OK");
     }
 

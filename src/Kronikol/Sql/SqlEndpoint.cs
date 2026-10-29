@@ -73,6 +73,49 @@ internal static partial class SqlEndpoint
         return WithPort(host, port);
     }
 
+    /// <summary>
+    /// The host an arrow is drawn against and the database it names, from what a connection reports. Oracle names its
+    /// server and the service it reaches in the data source, as an EZConnect string (<c>[//]host[:port]/service</c>, with
+    /// an optional server type, instance and parameters after the service) or a connect descriptor
+    /// (<c>(DESCRIPTION=…(HOST=h)(PORT=p)…(SERVICE_NAME=s))</c>), and ODP.NET reports no database, so until F26
+    /// (plans/CLIENT_FLOORS_PLAN.md) every Oracle arrow named <c>localhost</c> and a database called <c>unknown</c>.
+    /// A database the connection names wins over the service. A <c>host/name</c> data source with no port is read as a
+    /// server and a service only when the connection names no database, as a relative SQLite path has its shape and its
+    /// connection names <c>main</c>; any other data source reads as <see cref="Host"/> reads it.
+    /// </summary>
+    internal static (string Host, string? Database) Address(string? dataSource, string? database)
+    {
+        var text = dataSource?.Trim() ?? "";
+        var named = string.IsNullOrEmpty(database) ? null : database;
+
+        if (Descriptor().IsMatch(text))
+        {
+            var host = DescriptorValue(text, "HOST");
+            var service = DescriptorValue(text, "SERVICE_NAME") ?? DescriptorValue(text, "SID");
+            return (host is null ? "localhost" : WithPort(Host(host), DescriptorValue(text, "PORT")), named ?? service);
+        }
+
+        var ez = EzConnect().Match(text);
+        if (ez.Success && (named is null || ez.Groups["port"].Success))
+        {
+            var host = ez.Groups["port"].Success ? $"{ez.Groups["host"].Value}:{ez.Groups["port"].Value}" : ez.Groups["host"].Value;
+            return (Host(host), named ?? ez.Groups["service"].Value);
+        }
+
+        return (Host(dataSource), named);
+    }
+
+    private static string? DescriptorValue(string descriptor, string key)
+    {
+        foreach (Match match in DescriptorPair().Matches(descriptor))
+        {
+            if (match.Groups["key"].Value.Equals(key, StringComparison.OrdinalIgnoreCase))
+                return match.Groups["value"].Value;
+        }
+
+        return null;
+    }
+
     /// <summary>A path segment (a database or table name) as written, escaped for the address.</summary>
     internal static string Segment(string? name) => Uri.EscapeDataString(string.IsNullOrEmpty(name) ? "unknown" : name);
 
@@ -118,4 +161,16 @@ internal static partial class SqlEndpoint
 
     [GeneratedRegex(@"[^A-Za-z0-9.-]+")]
     private static partial Regex NotHostCharacters();
+
+    // An Oracle connect descriptor; LocalDB's "(localdb)\…" and "(local)" open with a parenthesis too.
+    [GeneratedRegex(@"^\(\s*DESCRIPTION(?:_LIST)?\s*=", RegexOptions.IgnoreCase)]
+    private static partial Regex Descriptor();
+
+    // One (KEY=value) pair of a descriptor: the innermost, so (ADDRESS=(HOST=h)) yields HOST, not ADDRESS.
+    [GeneratedRegex(@"\(\s*(?<key>[A-Za-z_]+)\s*=\s*(?<value>[^()\s]+)\s*\)")]
+    private static partial Regex DescriptorPair();
+
+    // EZConnect: [tcp[s]://][//]host[:port]/service, then a server type, an instance or parameters, all ignored.
+    [GeneratedRegex(@"^(?:tcps?://)?(?://)?(?<host>\[[^\]]+\]|[^/:?\s\[\]]+)(?::(?<port>\d{1,5}))?/(?<service>[^:/?\s]+)", RegexOptions.IgnoreCase)]
+    private static partial Regex EzConnect();
 }

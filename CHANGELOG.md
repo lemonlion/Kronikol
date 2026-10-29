@@ -4,6 +4,47 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.27.7] - 2026-10-29
+
+The patch part moves (5.27.6 to 5.27.7): a tracking fix, with no new option and no new public member
+(`plans/CLIENT_FLOORS_PLAN.md` F26).
+
+### Fixed
+
+- **An Oracle call is drawn against the server and the service its data source names.** ODP.NET reports a data source
+  such as `127.0.0.1:21521/FREEPDB1`, or a connect descriptor, and no database, so every call through
+  `Kronikol.Extensions.Oracle`, through Dapper on an `OracleConnection` and through EF Core on Oracle was drawn against
+  `localhost` and a database called `unknown` (`oracle://localhost/unknown/breakfasts`). The trackers now read the host,
+  the port and the service from an EZConnect string (`[//]host[:port]/service`, with an optional server type, instance
+  or parameters) or a connect descriptor (`(DESCRIPTION=...(HOST=...)(PORT=...)...(SERVICE_NAME=...))`, or `SID`):
+  `oracle://127.0.0.1:21521/FREEPDB1/breakfasts`. A database the connection names still wins, and a data source of any
+  other provider reads as before. Behaviour change: an Oracle call's address, and its line in history, name its service.
+- **History reads an Oracle call the same before the fix and after it.** History's rule moves from 9 to 10, and each
+  call the fix moves keeps the address rules 6 to 9 recorded, so a run made before this release and one made after
+  compare as the same, and no scenario reads as changed.
+
+### Tests
+
+- `SqlEndpointTests` gains theories for the EZConnect and descriptor forms and for the data sources that read as before,
+  and a fact that no awkward data source makes the address throw or fail. The Oracle, Dapper and EF Core suites gain
+  address facts, and `SqlOracleAddressBridgeTests` holds the bridge through both of the shared tracker's paths;
+  `ShapeGuardTests` and `HistoryRawCallsTests` gain an Oracle capture read under rules 6 to 10, and every tracker's
+  history guard is pinned under rule 10. The two kept reports' golden cards (`KeptReportCardTests`) move only by
+  `rules.operationKey`, 9 to 10.
+
+### Documentation
+
+- The wiki's Oracle page says how a call is addressed, and the Dapper and EF Core Relational pages that a call on Oracle
+  names its service. Their address tables now show what the trackers write, which they had not since 5.17.0: the
+  database keeps its case, at `Summarised` it is the first segment of the path (`sql:///OrdersDb/Users`), and Dapper's
+  `Detailed` address has the data source in the path (`sql:///localhost/TestDb/Orders`).
+
+Checks: the core suite (11,569 passed, 2 skipped, on 5.27.6 with F26), with every tracker's history guard under rule 10
+and three mutations of the bridge (the trackers' mark, rule 9's path, the stored `path9`), each red on the facts that
+guard it; the Oracle (30), Dapper (151), EF Core Relational (251, its servers in podman), SqlClient (24), Npgsql (26),
+MySqlConnector (22), Spanner (204) and Sqlite (30) suites; and the Release build of `release.slnf`, whose only
+advisories are the older ones 5.27.5 listed.
+
 ## [5.27.6] - 2026-10-29
 
 The patch part moves (5.27.5 to 5.27.6): bug fixes in the BigQuery and Cloud Storage packages, with no new option and

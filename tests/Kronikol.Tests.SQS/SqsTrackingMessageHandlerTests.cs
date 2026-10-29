@@ -100,7 +100,7 @@ public class SqsTrackingMessageHandlerTests : IDisposable
         using var invoker = CreateInvoker(MakeOptions());
         await invoker.SendAsync(MakeSendMessageRequest(), CancellationToken.None);
 
-        HistoryGuard.Pin(GetLogsFromThisTest(), 9,
+        HistoryGuard.Pin(GetLogsFromThisTest(), 10,
             "TestCaller>SQS SendMessage /orders-queue 200");
     }
 

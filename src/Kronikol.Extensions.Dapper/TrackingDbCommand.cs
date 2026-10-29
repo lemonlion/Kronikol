@@ -230,7 +230,9 @@ public class TrackingDbCommand : DbCommand
         OneOf<System.Net.Http.HttpMethod, string> method = effectiveVerbosity == DapperTrackingVerbosity.Raw
             ? DapperOperationClassifier.GetRawKeyword(CommandText) ?? "SQL"
             : label;
-        var uri = BuildUri(op, effectiveVerbosity);
+        var dataSource = _connection.InnerConnection.DataSource;
+        var database = _connection.InnerConnection.Database;
+        var uri = BuildUri(op, effectiveVerbosity, dataSource, database);
         var content = effectiveVerbosity == DapperTrackingVerbosity.Raw
             ? BuildParameterizedContent()
             : _options.LogSqlText ? CommandText : null;
@@ -252,7 +254,8 @@ public class TrackingDbCommand : DbCommand
         {
             AttributionSource = testInfo.Value.Source,
             Phase = TestPhaseContext.Current,
-            RecordedBefore8 = Before8(effectiveVerbosity)
+            RecordedBefore8 = Before8(effectiveVerbosity),
+            RecordedBefore10 = Before10(method, uri, BuildUriBeforeAddress(op, effectiveVerbosity, dataSource, database))
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v =>
             {
@@ -434,14 +437,35 @@ public class TrackingDbCommand : DbCommand
         OneOf<System.Net.Http.HttpMethod, string> method = verbosity == DapperTrackingVerbosity.Raw
             ? before.RawKeyword ?? "SQL"
             : DapperOperationClassifier.GetDiagramLabel(before.Info, verbosity);
-        return new RecordedBefore(method, BuildUri(before.Info, verbosity));
+        return new RecordedBefore(method, BuildUriBeforeAddress(before.Info, verbosity, _connection.InnerConnection.DataSource, _connection.InnerConnection.Database));
     }
 
-    private Uri BuildUri(DapperOperationInfo op, DapperTrackingVerbosity verbosity)
-    {
-        var database = _connection.InnerConnection.Database;
-        var dataSource = _connection.InnerConnection.DataSource;
+    /// <summary>
+    /// The call as history's rules 6 to 9 recorded it, when that differs (<see cref="RequestResponseLog.RecordedBefore10"/>):
+    /// an Oracle data source's call drawn against <c>localhost</c> and <c>unknown</c> (plans/CLIENT_FLOORS_PLAN.md F26).
+    /// </summary>
+    private static RecordedBefore? Before10(OneOf<System.Net.Http.HttpMethod, string> method, Uri uri, Uri before) =>
+        before == uri ? null : new RecordedBefore(method, before);
 
+    private Uri BuildUri(DapperOperationInfo op, DapperTrackingVerbosity verbosity) =>
+        BuildUri(op, verbosity, _connection.InnerConnection.DataSource, _connection.InnerConnection.Database);
+
+    private static Uri BuildUri(DapperOperationInfo op, DapperTrackingVerbosity verbosity, string? dataSource, string? database)
+    {
+        // An Oracle data source names the server and the service, and ODP.NET no database (plans/CLIENT_FLOORS_PLAN.md F26).
+        var (host, named) = SqlEndpoint.Address(dataSource, database);
+        return UriOf(op, verbosity, dataSource, named, host);
+    }
+
+    /// <summary>
+    /// The address as it was written before F26: the data source read as a host alone and the database as the connection
+    /// reports it. What history's earlier rules recorded, so their bridges are made from it.
+    /// </summary>
+    private static Uri BuildUriBeforeAddress(DapperOperationInfo op, DapperTrackingVerbosity verbosity, string? dataSource, string? database) =>
+        UriOf(op, verbosity, dataSource, database, SqlEndpoint.Host(string.IsNullOrEmpty(dataSource) ? "localhost" : dataSource));
+
+    private static Uri UriOf(DapperOperationInfo op, DapperTrackingVerbosity verbosity, string? dataSource, string? database, string host)
+    {
         if (string.IsNullOrEmpty(database)) database = "unknown";
         if (string.IsNullOrEmpty(dataSource)) dataSource = "localhost";
 
@@ -449,15 +473,15 @@ public class TrackingDbCommand : DbCommand
         // not: SqlEndpoint makes it one. The other forms put it in the path, as written, and fall back the same way.
         return verbosity switch
         {
-            DapperTrackingVerbosity.Raw => SqlEndpoint.Build($"sql://{SqlEndpoint.Host(dataSource)}/{SqlEndpoint.Segment(database)}"),
+            DapperTrackingVerbosity.Raw => SqlEndpoint.Build($"sql://{host}/{SqlEndpoint.Segment(database)}"),
             DapperTrackingVerbosity.Summarised => op.TableName is not null
                 ? PathAddress($"sql:///{database}/{op.TableName}", $"sql:///{SqlEndpoint.Segment(database)}/{op.TableName}")
                 : PathAddress($"sql:///{database}", $"sql:///{SqlEndpoint.Segment(database)}"),
             _ => op.TableName is not null
                 ? PathAddress($"sql:///{dataSource}/{database}/{op.TableName}",
-                    $"sql:///{SqlEndpoint.Host(dataSource)}/{SqlEndpoint.Segment(database)}/{op.TableName}")
+                    $"sql:///{host}/{SqlEndpoint.Segment(database)}/{op.TableName}")
                 : PathAddress($"sql:///{dataSource}/{database}",
-                    $"sql:///{SqlEndpoint.Host(dataSource)}/{SqlEndpoint.Segment(database)}")
+                    $"sql:///{host}/{SqlEndpoint.Segment(database)}")
         };
     }
 

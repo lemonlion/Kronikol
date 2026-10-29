@@ -151,6 +151,8 @@ public static class HistoryJson
             if (call.Path8 is not null) writer.WriteString("path8", call.Path8);
             if (call.Absent8) writer.WriteBoolean("absent8", true);
             if (call.Unanswered8) writer.WriteBoolean("unanswered8", true);
+            if (call.Method9 is not null) writer.WriteString("method9", call.Method9);
+            if (call.Path9 is not null) writer.WriteString("path9", call.Path9);
             writer.WriteEndObject();
         }
         return Encoding.UTF8.GetString(buffer.WrittenSpan);
@@ -185,7 +187,9 @@ public static class HistoryJson
                 Method8 = Text(call, "method8"),
                 Path8 = Text(call, "path8"),
                 Absent8 = call.TryGetProperty("absent8", out var absent8) && absent8.ValueKind == JsonValueKind.True,
-                Unanswered8 = call.TryGetProperty("unanswered8", out var unanswered8) && unanswered8.ValueKind == JsonValueKind.True
+                Unanswered8 = call.TryGetProperty("unanswered8", out var unanswered8) && unanswered8.ValueKind == JsonValueKind.True,
+                Method9 = Text(call, "method9"),
+                Path9 = Text(call, "path9")
             });
         }
 

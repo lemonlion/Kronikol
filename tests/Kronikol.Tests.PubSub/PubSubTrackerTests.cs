@@ -39,7 +39,7 @@ public class PubSubTrackerTests
         var (reqId, traceId) = tracker.LogRequest(op, "hello");
         tracker.LogResponse(op, reqId, traceId, "MessageId: abc");
 
-        HistoryGuard.Pin(GetLogsFromThisTest(), 9,
+        HistoryGuard.Pin(GetLogsFromThisTest(), 10,
             "TestCaller>PubSub Publish → my-topic /my-topic -");
     }
 

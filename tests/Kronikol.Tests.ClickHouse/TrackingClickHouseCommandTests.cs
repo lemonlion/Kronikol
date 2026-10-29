@@ -75,7 +75,7 @@ public class TrackingClickHouseCommandTests : IDisposable
         using var cmd = CreateCommand("INSERT INTO events (name) VALUES ('x')");
         cmd.ExecuteNonQuery();
 
-        HistoryGuard.Pin(GetLogsForTest(), 9,
+        HistoryGuard.Pin(GetLogsForTest(), 10,
             "TestCaller>Analytics INSERT INTO events /analytics/events INSERT INTO events (name) VALUES ('{s}') OK");
     }
 

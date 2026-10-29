@@ -63,6 +63,45 @@ public class SqlTrackingInterceptorFaultTests : IDisposable
         Assert.Equal("/TestDb/Orders", request.Uri.AbsolutePath);
     }
 
+    // An Oracle data source names the server and the service, and ODP.NET no database, so until F26
+    // (plans/CLIENT_FLOORS_PLAN.md) EF Core over Oracle drew every call against localhost and unknown.
+    [Theory]
+    [InlineData("127.0.0.1:21521/FREEPDB1", SqlTrackingVerbosity.Detailed, "sql://127.0.0.1:21521/FREEPDB1/Orders")]
+    [InlineData("127.0.0.1:21521/FREEPDB1", SqlTrackingVerbosity.Raw, "sql://127.0.0.1:21521/FREEPDB1")]
+    [InlineData("127.0.0.1:21521/FREEPDB1", SqlTrackingVerbosity.Summarised, "sql:///FREEPDB1/Orders")]
+    [InlineData("(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=dbhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=orcl)))", SqlTrackingVerbosity.Detailed, "sql://dbhost:1521/orcl/Orders")]
+    public void An_Oracle_data_source_draws_the_server_and_service_it_names(string dataSource, SqlTrackingVerbosity verbosity, string expected)
+    {
+        var interceptor = Interceptor(verbosity);
+
+        interceptor.LogCommandExecuting(new StubDbCommand("SELECT * FROM Orders", database: "", dataSource: dataSource));
+
+        Assert.Equal(expected, Assert.Single(Logs()).Uri.ToString());
+    }
+
+    [Fact]
+    public void An_Oracle_call_keeps_the_address_history_s_rules_6_to_9_recorded()
+    {
+        var interceptor = Interceptor();
+
+        interceptor.LogCommandExecuting(new StubDbCommand("SELECT * FROM Orders", database: "", dataSource: "127.0.0.1:21521/FREEPDB1"));
+
+        var log = Assert.Single(Logs());
+        Assert.Equal("sql://localhost/unknown/Orders", log.RecordedBefore10!.Uri.ToString());
+        Assert.Contains("/unknown/Orders", Assert.Single(Kronikol.History.InteractionShape.Calls(Logs(), null, 9)).ToString());
+        Assert.Contains("/FREEPDB1/Orders", Assert.Single(Kronikol.History.InteractionShape.Calls(Logs(), null, 10)).ToString());
+    }
+
+    [Fact]
+    public void A_call_whose_address_did_not_move_carries_no_mark()
+    {
+        var interceptor = Interceptor();
+
+        interceptor.LogCommandExecuting(new StubDbCommand("SELECT * FROM Orders"));
+
+        Assert.Null(Assert.Single(Logs()).RecordedBefore10);
+    }
+
     [Fact]
     public void A_database_name_is_a_path_segment_and_was_made_a_host_before_8()
     {

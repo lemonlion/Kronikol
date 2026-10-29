@@ -47,7 +47,7 @@ public class ServiceBusTrackerTests : IDisposable
         var (reqId, traceId) = tracker.LogRequest(op, "message body");
         tracker.LogResponse(op, reqId, traceId, null);
 
-        HistoryGuard.Pin(GetLogs(), 9,
+        HistoryGuard.Pin(GetLogs(), 10,
             "TestCaller>ServiceBus Send → orders-queue /orders-queue/ -");
     }
 

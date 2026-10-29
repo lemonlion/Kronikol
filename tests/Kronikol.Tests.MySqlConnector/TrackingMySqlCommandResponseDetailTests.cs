@@ -70,7 +70,7 @@ public class TrackingMySqlCommandResponseDetailTests : IDisposable
             while (reader.Read()) { }
         }
 
-        HistoryGuard.Pin(GetLogsForTest(), 9,
+        HistoryGuard.Pin(GetLogsForTest(), 10,
             "Caller>MySQL SELECT FROM breakfasts /analytics/breakfasts SELECT id, name FROM breakfasts OK");
     }
 

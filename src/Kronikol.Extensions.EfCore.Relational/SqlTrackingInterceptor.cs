@@ -91,7 +91,8 @@ public class SqlTrackingInterceptor : DbCommandInterceptor, ITrackingComponent
         {
             AttributionSource = testInfo.Value.Source,
             Phase = TestPhaseContext.Current,
-            RecordedBefore8 = Before8(command, sqlOp, effectiveVerbosity)
+            RecordedBefore8 = Before8(command, sqlOp, effectiveVerbosity),
+            RecordedBefore10 = Before10(command, method, requestUri, sqlOp, effectiveVerbosity)
         };
 
         log.AttachVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
@@ -455,12 +456,24 @@ public class SqlTrackingInterceptor : DbCommandInterceptor, ITrackingComponent
     // which until 5.11.1 went into the address as it was: on LocalDB every command failed with a UriFormatException.
     // A connection that cannot name its data source or database is drawn against localhost and "unknown". At Summarised
     // the database is the first segment of the path, as every other SQL tracker writes it; until #192 R1 it stood where
-    // a host goes, lower-cased (UriBefore8).
+    // a host goes, lower-cased (UriBefore8). An Oracle data source names the server and the service, and ODP.NET no
+    // database, so until F26 (plans/CLIENT_FLOORS_PLAN.md) EF Core over Oracle drew localhost and "unknown"
+    // (BuildUriBeforeAddress).
     private static Uri BuildUri(DbCommand command, SqlOperationInfo op, SqlTrackingVerbosity verbosity)
     {
-        var database = Named(() => command.Connection?.Database) ?? "unknown";
-        var host = SqlEndpoint.Host(Named(() => command.Connection?.DataSource));
+        var (host, database) = SqlEndpoint.Address(Named(() => command.Connection?.DataSource), Named(() => command.Connection?.Database));
+        return UriOf(host, database ?? "unknown", op, verbosity);
+    }
 
+    /// <summary>
+    /// The address as it was written before F26: the data source read as a host alone and the database as the
+    /// connection reports it. What history's earlier rules recorded, so their bridges are made from it.
+    /// </summary>
+    private static Uri BuildUriBeforeAddress(DbCommand command, SqlOperationInfo op, SqlTrackingVerbosity verbosity) =>
+        UriOf(SqlEndpoint.Host(Named(() => command.Connection?.DataSource)), Named(() => command.Connection?.Database) ?? "unknown", op, verbosity);
+
+    private static Uri UriOf(string host, string database, SqlOperationInfo op, SqlTrackingVerbosity verbosity)
+    {
         return SqlEndpoint.Build(verbosity switch
         {
             SqlTrackingVerbosity.Raw => $"sql://{host}/{SqlEndpoint.Segment(database)}",
@@ -505,11 +518,21 @@ public class SqlTrackingInterceptor : DbCommandInterceptor, ITrackingComponent
         return new RecordedBefore(method, UriBefore8(command, op, verbosity));
     }
 
+    /// <summary>
+    /// The call as history's rules 6 to 9 recorded it, when that differs (<see cref="RequestResponseLog.RecordedBefore10"/>):
+    /// an Oracle data source's call drawn against <c>localhost</c> and <c>unknown</c> (plans/CLIENT_FLOORS_PLAN.md F26).
+    /// </summary>
+    private static RecordedBefore? Before10(DbCommand command, OneOf<HttpMethod, string> method, Uri uri, SqlOperationInfo op, SqlTrackingVerbosity verbosity)
+    {
+        var before = BuildUriBeforeAddress(command, op, verbosity);
+        return before == uri ? null : new RecordedBefore(method, before);
+    }
+
     /// <summary>The address as 5.16.1 wrote it: at Summarised the database where a host goes.</summary>
     private static Uri UriBefore8(DbCommand command, SqlOperationInfo op, SqlTrackingVerbosity verbosity)
     {
         if (verbosity != SqlTrackingVerbosity.Summarised)
-            return BuildUri(command, op, verbosity);
+            return BuildUriBeforeAddress(command, op, verbosity);
         var database = SqlEndpoint.Host(Named(() => command.Connection?.Database) ?? "unknown");
         return SqlEndpoint.Build(op.TableName is not null ? $"sql://{database}/{op.TableName}" : $"sql://{database}");
     }

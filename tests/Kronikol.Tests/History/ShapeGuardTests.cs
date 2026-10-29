@@ -103,6 +103,10 @@ public class ShapeGuardTests
         ("bigquery summarised drop", [.. Call("c", "Other", "http://127.0.0.1:9050/projects/shop/unknown", "BigQuery", category: DependencyCategories.BigQuery,
             status: HttpStatusCode.OK, request: r => r with { RecordedBefore9 = RecordedBefore.NotRecorded })]),
         ("failed send", ThrownSend()),
+        // An Oracle data source: 10 draws the server and the service it names, where 9 and earlier drew localhost and a
+        // database called unknown (plans/CLIENT_FLOORS_PLAN.md F26).
+        ("oracle address", [.. Call("c", "SELECT FROM breakfasts", "oracle://127.0.0.1:21521/FREEPDB1/breakfasts", "Oracle", "SELECT id, name FROM breakfasts",
+            DependencyCategories.Oracle, "OK", request: r => r with { RecordedBefore10 = new RecordedBefore("SELECT FROM breakfasts", new Uri("oracle://localhost/unknown/breakfasts")) })]),
     ];
 
     /// <summary>
@@ -158,7 +162,8 @@ public class ShapeGuardTests
             "web>graphql POST /sidekick?x 201",
             "TestCaller>BigQuery Other /projects/shop/datasets/sales?key&prettyPrint 200",
             "",
-            "TestCaller>BigQuery Insert /upload/bigquery/v2/projects/shop/jobs?uploadType&upload_id -"
+            "TestCaller>BigQuery Insert /upload/bigquery/v2/projects/shop/jobs?uploadType&upload_id -",
+            "TestCaller>Oracle SELECT FROM breakfasts /unknown/breakfasts SELECT id, name FROM breakfasts OK"
         ],
         [7] =
         [
@@ -206,7 +211,8 @@ public class ShapeGuardTests
             "web>graphql POST /sidekick?x 201",
             "TestCaller>BigQuery Other /projects/shop/datasets/sales?key&prettyPrint 200",
             "",
-            "TestCaller>BigQuery Insert /upload/bigquery/v2/projects/shop/jobs?uploadType&upload_id -"
+            "TestCaller>BigQuery Insert /upload/bigquery/v2/projects/shop/jobs?uploadType&upload_id -",
+            "TestCaller>Oracle SELECT FROM breakfasts /unknown/breakfasts SELECT id, name FROM breakfasts OK"
         ],
         [8] =
         [
@@ -254,7 +260,8 @@ public class ShapeGuardTests
             "web>graphql POST /sidekick?x query { me } 201",
             "TestCaller>BigQuery Other /projects/shop/datasets/sales?key&prettyPrint 200",
             "",
-            "TestCaller>BigQuery Insert /upload/bigquery/v2/projects/shop/jobs?uploadType&upload_id -"
+            "TestCaller>BigQuery Insert /upload/bigquery/v2/projects/shop/jobs?uploadType&upload_id -",
+            "TestCaller>Oracle SELECT FROM breakfasts /unknown/breakfasts SELECT id, name FROM breakfasts OK"
         ],
         [9] =
         [
@@ -302,7 +309,57 @@ public class ShapeGuardTests
             "web>graphql POST /sidekick?x query { me } 201",
             "TestCaller>BigQuery Read /sales 200",
             "TestCaller>BigQuery Other /projects/shop/unknown 200",
-            "TestCaller>BigQuery Insert /upload/bigquery/v2/projects/shop/jobs?uploadType&upload_id !HttpRequestException"
+            "TestCaller>BigQuery Insert /upload/bigquery/v2/projects/shop/jobs?uploadType&upload_id !HttpRequestException",
+            "TestCaller>Oracle SELECT FROM breakfasts /unknown/breakfasts SELECT id, name FROM breakfasts OK"
+        ],
+        [10] =
+        [
+            "TestCaller>TargetService POST /api/items/{n}?b&expand 200",
+            "TestCaller>orders-host:8080 GET /orders/{n} 200",
+            "TestCaller>Api PUT /relative/{n} 204",
+            "TestCaller>Files GET /a%2Fb/c d/café/{bin} 200",
+            "TestCaller>Api POST /graphql query GetUser 200",
+            "TestCaller>Api POST /graphql query { menu } 200",
+            "TestCaller>Api GET /graphql?query query Menu 200",
+            "TestCaller>Api POST /graphql batch 200",
+            "TestCaller>Database INSERT INTO Orders /app/Orders INSERT INTO [Orders] ([Total]) VALUES ({n}) OK",
+            "TestCaller>Database INSERT INTO Audit /app/Audit INSERT INTO [Audit] VALUES ({n}) OK",
+            "TestCaller>Database Select /OrdersDb/Users SELECT [u].[Id] FROM [dbo].[Users] AS [u] WHERE [u].[Id] = {n} OK",
+            "TestCaller>TestDB SELECT FROM Users /localhost/TestDb/Users SELECT * FROM Users WHERE Id = {n} OK",
+            "TestCaller>SQL Server SELECT FROM breakfasts /analytics/breakfasts SELECT id, name FROM breakfasts OK",
+            "TestCaller>PostgreSQL SELECT FROM breakfasts /analytics/breakfasts SELECT id, name FROM breakfasts WHERE name = '{s}' OK",
+            "TestCaller>Analytics INSERT INTO events /analytics/events INSERT INTO events (name) VALUES ('{s}') OK",
+            "TestCaller>Redis Get /db0/user:{n} GET user:{n} OK",
+            "TestCaller>Redis Get /{n}/user:{n} GET user:{n} OK",
+            "TestCaller>MongoDB Find ← testcollection /testdb/testcollection {\"find\":\"{v}\",\"filter\":{\"_id\":\"{v}\",\"n\":{n},\"ok\":{b}}} 200",
+            "TestCaller>CosmosDB Create /dbs/mydb/colls/orders/docs {\"id\":\"{v}\",\"total\":{n}.{n}} 201",
+            "TestCaller>CosmosDB Query /dbs/mydb/colls/orders/docs SELECT * FROM c WHERE c.id = @id 200",
+            "TestCaller>BigQuery Query /myproject SELECT name FROM ds.t WHERE id = {n} 200",
+            "TestCaller>Spanner SELECT FROM Users /Users SELECT * FROM Users WHERE Id = {n} -",
+            "TestCaller>DynamoDB PutItem /Users {\"TableName\":\"{v}\",\"Item\":{\"id\":{\"S\":\"{v}\"}}} 200",
+            "TestCaller>Elasticsearch Search → orders /orders {\"query\":{\"match\":{\"name\":\"{v}\"}}} 200",
+            "TestCaller>Bigtable ReadRows ← my-table /my-table -",
+            "TestCaller>AtlasDataApi insertOne → orders /orders_db/orders {\"document\":{\"name\":\"{v}\"}} 200",
+            "TestCaller>S3 GetObject /my-bucket/path/to/file.json 200",
+            "TestCaller>BlobStorage Upload /mycontainer/myblob.txt 201",
+            "TestCaller>CloudStorage Download → my-bucket/file.txt /my-bucket/file.txt 200",
+            "TestCaller>ServiceBus Send → orders-queue /orders-queue/ -",
+            "TestCaller>SQS SendMessage /orders-queue 200",
+            "TestCaller>SNS Publish /my-topic 200",
+            "TestCaller>EventBridge PutEvents [OrderCreated] /default/ 200",
+            "TestCaller>EventHubs Send → telemetry /telemetry -",
+            "TestCaller>Kafka Produce → orders-topic /orders-topic -",
+            "TestCaller>PubSub Publish → my-topic /my-topic -",
+            "TestCaller>StorageQueue Receive ← my-queue /my-queue 200",
+            "TestCaller>MassTransit Send OrderCreated /orders -",
+            "TestCaller>GrpcService SayHello /greet.Greeter/SayHello 200",
+            "Caller>Application Send /IMediator/Send 200",
+            "data-insights>mongo Find ← Trial /data-insights-Development/Trial {\"find\":\"{v}\"} OK",
+            "web>graphql POST /sidekick?x query { me } 201",
+            "TestCaller>BigQuery Read /sales 200",
+            "TestCaller>BigQuery Other /projects/shop/unknown 200",
+            "TestCaller>BigQuery Insert /upload/bigquery/v2/projects/shop/jobs?uploadType&upload_id !HttpRequestException",
+            "TestCaller>Oracle SELECT FROM breakfasts /FREEPDB1/breakfasts SELECT id, name FROM breakfasts OK"
         ]
     };
 

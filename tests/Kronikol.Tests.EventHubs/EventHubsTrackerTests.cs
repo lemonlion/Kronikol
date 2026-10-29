@@ -38,7 +38,7 @@ public class EventHubsTrackerTests
         var (reqId, traceId) = tracker.LogRequest(op, "hello");
         tracker.LogResponse(op, reqId, traceId, null);
 
-        HistoryGuard.Pin(GetLogsFromThisTest(), 9,
+        HistoryGuard.Pin(GetLogsFromThisTest(), 10,
             "TestCaller>EventHubs Send → telemetry /telemetry -");
     }
 

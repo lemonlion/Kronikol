@@ -299,9 +299,10 @@ public class InteractionShapeTests
         // and list lengths are data too (the #168 audit). 7: a remote host the HTTP handler names by its fallback keeps
         // its name, where 6 recorded localhost (#190 R0); 6 is kept, so a run bridges it. 8: the operation key (#192 R1):
         // the path as the data file writes it, an entity in the authority, a GraphQL operation, a statement past its SET
-        // prologue; 6 and 7 are kept.
-        Assert.Equal(9, InteractionShape.Version);
-        Assert.Equal([6, 7, 8, 9], InteractionShape.KeptVersions);
+        // prologue; 6 and 7 are kept. 9: what the BigQuery and Cloud Storage handlers name (#125 R1). 10: where an Oracle
+        // call is drawn, the server and the service its data source names (CLIENT_FLOORS_PLAN.md F26); 6 to 9 are kept.
+        Assert.Equal(10, InteractionShape.Version);
+        Assert.Equal([6, 7, 8, 9, 10], InteractionShape.KeptVersions);
     }
 
     [Fact]

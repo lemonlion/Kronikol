@@ -106,7 +106,8 @@ public abstract class SqlDiagnosticTracker : ITrackingComponent
         {
             AttributionSource = testInfo.Value.Source,
             Phase = TestPhaseContext.Current,
-            RecordedBefore8 = Before8(commandText, CommandType.Text, dataSource, database, effectiveVerbosity)
+            RecordedBefore8 = Before8(commandText, CommandType.Text, dataSource, database, effectiveVerbosity),
+            RecordedBefore10 = Before10(method, uri, dataSource, database, op, effectiveVerbosity)
         };
 
         log.AttachVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
@@ -282,7 +283,8 @@ public abstract class SqlDiagnosticTracker : ITrackingComponent
             AttributionSource = testInfo.Value.Source,
             Phase = TestPhaseContext.Current,
             Timestamp = timestamp,
-            RecordedBefore8 = Before8(commandText, commandType, dataSource, database, effectiveVerbosity)
+            RecordedBefore8 = Before8(commandText, commandType, dataSource, database, effectiveVerbosity),
+            RecordedBefore10 = Before10(method, uri, dataSource, database, op, effectiveVerbosity)
         };
 
         log.AttachVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
@@ -456,9 +458,23 @@ public abstract class SqlDiagnosticTracker : ITrackingComponent
 
     private Uri BuildUri(string? dataSource, string? database, UnifiedSqlOperationInfo op, SqlTrackingVerbosityLevel verbosity)
     {
-        // SqlEndpoint makes a host of any data source: "host,1433", "(localdb)\MSSQLLocalDB", "tcp:host", a host list.
-        var db = SqlEndpoint.Segment(database);
-        var host = SqlEndpoint.Host(dataSource);
+        // SqlEndpoint reads a host and a database out of any data source: "host,1433", "(localdb)\MSSQLLocalDB",
+        // "tcp:host", a host list, and Oracle's EZConnect strings and connect descriptors, whose database ODP.NET does
+        // not report (plans/CLIENT_FLOORS_PLAN.md F26).
+        var (host, named) = SqlEndpoint.Address(dataSource, database);
+        return UriOf(host, SqlEndpoint.Segment(named), op, verbosity);
+    }
+
+    /// <summary>
+    /// The address as it was written before F26: the data source read as a host alone and the database as the
+    /// connection reports it, so an Oracle call named <c>localhost</c> and <c>unknown</c>. What history's earlier rules
+    /// recorded, so their bridges are made from it.
+    /// </summary>
+    private Uri BuildUriBeforeAddress(string? dataSource, string? database, UnifiedSqlOperationInfo op, SqlTrackingVerbosityLevel verbosity)
+        => UriOf(SqlEndpoint.Host(dataSource), SqlEndpoint.Segment(database), op, verbosity);
+
+    private Uri UriOf(string host, string db, UnifiedSqlOperationInfo op, SqlTrackingVerbosityLevel verbosity)
+    {
         var scheme = _options.UriScheme;
 
         return SqlEndpoint.Build(verbosity switch
@@ -476,6 +492,18 @@ public abstract class SqlDiagnosticTracker : ITrackingComponent
     private void NotRecorded(Exception ex) => SqlCaptureFailure.Record(ComponentName, ex);
 
     /// <summary>
+    /// The call as history's rules 6 to 9 recorded it, when that differs (<see cref="RequestResponseLog.RecordedBefore10"/>):
+    /// the data source read as a host alone and the database as the connection reports it, so an Oracle call drawn
+    /// against <c>localhost</c> and <c>unknown</c> (plans/CLIENT_FLOORS_PLAN.md F26).
+    /// </summary>
+    private RecordedBefore? Before10(OneOf<HttpMethod, string> method, Uri uri, string? dataSource, string? database,
+        UnifiedSqlOperationInfo op, SqlTrackingVerbosityLevel verbosity)
+    {
+        var before = BuildUriBeforeAddress(dataSource, database, op, verbosity);
+        return before == uri ? null : new RecordedBefore(method, before);
+    }
+
+    /// <summary>
     /// The call as 5.16.1 recorded it, when that differs, for history's rules 6 and 7 (<see cref="RequestResponseLog.RecordedBefore8"/>):
     /// a batch opening with two SET statements was classified by neither, so it was <c>Other</c> with no table, and was
     /// not recorded at Summarised or where <c>Other</c> is excluded.
@@ -490,7 +518,7 @@ public abstract class SqlDiagnosticTracker : ITrackingComponent
         OneOf<HttpMethod, string> method = verbosity == SqlTrackingVerbosityLevel.Raw
             ? before.RawKeyword ?? "SQL"
             : UnifiedSqlClassifier.GetDiagramLabel(before.Info, verbosity);
-        return new RecordedBefore(method, BuildUri(dataSource, database, before.Info, verbosity));
+        return new RecordedBefore(method, BuildUriBeforeAddress(dataSource, database, before.Info, verbosity));
     }
 
     private string? BuildRequestContent(string? commandText, string? parameters, SqlTrackingVerbosityLevel verbosity)

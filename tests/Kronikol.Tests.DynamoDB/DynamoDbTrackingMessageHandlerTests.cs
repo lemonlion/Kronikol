@@ -97,7 +97,7 @@ public class DynamoDbTrackingMessageHandlerTests : IDisposable
         using var invoker = CreateInvoker(MakeOptions());
         await invoker.SendAsync(MakePutItemRequest(), CancellationToken.None);
 
-        HistoryGuard.Pin(GetLogsFromThisTest(), 9,
+        HistoryGuard.Pin(GetLogsFromThisTest(), 10,
             "TestCaller>DynamoDB PutItem /Users {\"TableName\": \"{v}\", \"Item\": {\"id\": {\"S\": \"{v}\"}}} 200");
     }
 

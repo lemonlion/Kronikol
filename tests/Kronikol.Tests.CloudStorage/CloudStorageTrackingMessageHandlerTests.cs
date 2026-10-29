@@ -84,7 +84,7 @@ public class CloudStorageTrackingMessageHandlerTests : IDisposable
         using var invoker = CreateInvoker(MakeOptions());
         await invoker.SendAsync(MakeDownloadRequest(), CancellationToken.None);
 
-        HistoryGuard.Pin(GetLogsFromThisTest(), 9,
+        HistoryGuard.Pin(GetLogsFromThisTest(), 10,
             "TestCaller>CloudStorage Download → my-bucket/file.txt /my-bucket/file.txt 200");
     }
 

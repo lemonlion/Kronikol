@@ -52,6 +52,15 @@ public record RequestResponseLog(
     /// </summary>
     internal RecordedBefore? RecordedBefore9 { get; init; }
 
+    /// <summary>
+    /// The call as its tracker recorded it before F26 (plans/CLIENT_FLOORS_PLAN.md) changed where an Oracle call is drawn,
+    /// when that differs: the server and the service its data source names, where 9 and earlier recorded <c>localhost</c>
+    /// and a database called <c>unknown</c>. History's rules 6 to 9 read its method and URI from here. Never
+    /// <see cref="RecordedBefore.Absent"/>, as the change moved no call in or out. Null for every call recorded as before.
+    /// Set by the trackers alone and never written out.
+    /// </summary>
+    internal RecordedBefore? RecordedBefore10 { get; init; }
+
     public bool NoteOnRight { get; set; }
     public bool IsOverrideStart { get; set; }
     public bool IsOverrideEnd { get; set; }

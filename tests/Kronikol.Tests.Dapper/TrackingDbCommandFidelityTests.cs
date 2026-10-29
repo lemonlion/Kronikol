@@ -109,6 +109,56 @@ public class TrackingDbCommandFidelityTests : IDisposable
             Assert.Equal(rawAuthority, request.Uri.Authority);
     }
 
+    /// <summary>A connection that reports what ODP.NET reports: a data source, and no database.</summary>
+    private sealed class NoDatabaseConnection(string dataSource) : FakeDbConnection
+    {
+        public override string DataSource => dataSource;
+
+        public override string Database => "";
+
+        protected override DbCommand CreateDbCommand() => new FakeDbCommand { Connection = this, ReaderResult = TwoRows() };
+    }
+
+    // An Oracle data source names the server and the service, and ODP.NET no database, so until F26
+    // (plans/CLIENT_FLOORS_PLAN.md) Dapper over an OracleConnection drew every call against localhost and unknown.
+    [Theory]
+    [InlineData("127.0.0.1:21521/FREEPDB1", DapperTrackingVerbosity.Raw, "sql://127.0.0.1:21521/FREEPDB1")]
+    [InlineData("127.0.0.1:21521/FREEPDB1", DapperTrackingVerbosity.Summarised, "sql:///FREEPDB1/Orders")]
+    [InlineData("127.0.0.1:21521/FREEPDB1", DapperTrackingVerbosity.Detailed, "sql:///127.0.0.1:21521/FREEPDB1/FREEPDB1/Orders")]
+    [InlineData("(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=dbhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=orcl)))", DapperTrackingVerbosity.Raw, "sql://dbhost:1521/orcl")]
+    [InlineData("(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=dbhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=orcl)))", DapperTrackingVerbosity.Summarised, "sql:///orcl/Orders")]
+    public void An_Oracle_data_source_draws_the_server_and_service_it_names(string dataSource, DapperTrackingVerbosity verbosity, string expected)
+    {
+        using var connection = new TrackingDbConnection(new NoDatabaseConnection(dataSource), Options(verbosity));
+
+        connection.Execute("UPDATE Orders SET Name = 'x'");
+
+        Assert.Equal(expected, Logs().First(l => l.Type == RequestResponseType.Request).Uri.ToString());
+    }
+
+    [Fact]
+    public void An_Oracle_call_keeps_the_address_history_s_rules_6_to_9_recorded()
+    {
+        using var connection = new TrackingDbConnection(new NoDatabaseConnection("127.0.0.1:21521/FREEPDB1"), Options());
+
+        connection.Execute("UPDATE Orders SET Name = 'x'");
+
+        var request = Logs().First(l => l.Type == RequestResponseType.Request);
+        Assert.Equal("sql:///127.0.0.1:21521/FREEPDB1/unknown/Orders", request.RecordedBefore10!.Uri.ToString());
+        Assert.Contains("/FREEPDB1/unknown/Orders", Assert.Single(Kronikol.History.InteractionShape.Calls(Logs(), null, 9)).ToString());
+        Assert.Contains("/FREEPDB1/FREEPDB1/Orders", Assert.Single(Kronikol.History.InteractionShape.Calls(Logs(), null, 10)).ToString());
+    }
+
+    [Fact]
+    public void A_call_whose_address_did_not_move_carries_no_mark()
+    {
+        using var connection = new TrackingDbConnection(new ReaderConnection(TwoRows), Options());
+
+        connection.Execute("UPDATE Orders SET Name = 'x'");
+
+        Assert.Null(Logs().First(l => l.Type == RequestResponseType.Request).RecordedBefore10);
+    }
+
     [Fact]
     public void A_detailed_address_that_parsed_before_is_unchanged()
     {
