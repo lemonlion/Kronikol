@@ -13,6 +13,9 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.*" />
     <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.3.9" />
+    <!-- The suite runs on the newest 3.x; -p:FloorRun=true drops this reference, so it runs on the floor the package
+         asks for (3.35.0). -->
+    <PackageReference Include="Google.Cloud.PubSub.V1" Version="3.*" Condition="'$(FloorRun)' != 'true'" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Kronikol.Extensions.PubSub\Kronikol.Extensions.PubSub.csproj" />
@@ -21,6 +24,8 @@
     <Compile Include="..\Kronikol.Tests\Tracking\RequestHeaderAccessor.cs" Link="RequestHeaderAccessor.cs" />
     <Compile Include="..\Kronikol.Tests\History\HistoryGuard.cs" Link="HistoryGuard.cs" />
     <Compile Include="..\Kronikol.Tests\CallGraph\TrackedMessages.cs" Link="TrackedMessages.cs" />
+    <Compile Include="..\Kronikol.Tests\Packaging\PackedNuspec.cs" Link="PackedNuspec.cs" />
+    <Compile Include="..\Kronikol.Tests\Packaging\FloorLedger.cs" Link="FloorLedger.cs" />
   </ItemGroup>
 
 </Project>

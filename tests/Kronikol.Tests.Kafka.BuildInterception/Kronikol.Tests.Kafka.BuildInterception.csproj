@@ -22,6 +22,9 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.5.1" />
     <PackageReference Include="xunit.v3" Version="3.2.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" />
+    <!-- The suite runs on the newest 2.x; -p:FloorRun=true drops this reference, so it runs on the floor the package
+         asks for (2.2.0). -->
+    <PackageReference Include="Confluent.Kafka" Version="2.*" Condition="'$(FloorRun)' != 'true'" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Kronikol.Extensions.Kafka.BuildInterception\Kronikol.Extensions.Kafka.BuildInterception.csproj" />

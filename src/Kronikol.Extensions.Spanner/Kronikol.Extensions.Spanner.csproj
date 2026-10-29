@@ -14,9 +14,17 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Google.Cloud.Spanner.Data" Version="5.*" />
-    <PackageReference Include="Google.Cloud.Spanner.V1" Version="5.*" />
-    <PackageReference Include="Grpc.Core.Api" Version="2.*" />
+    <!-- Google.Cloud.Spanner.Data: 5.0.0 is the oldest 5.x the suite passes on, the first of the major, with Spanner.V1
+         at the same version and Grpc.Core.Api at the least that version needs; no known advisory in its graph (harness
+         floor/r2a-spanner.txt). FloorLedger holds the floor, and the test project's package fact reads it back from the
+         packed nuspec; the suite runs on the newest 5.x, and on this floor with -p:FloorRun=true
+         (plans/CLIENT_FLOORS_PLAN.md R2a). -->
+    <PackageReference Include="Google.Cloud.Spanner.Data" Version="5.0.0" />
+    <!-- Google.Cloud.Spanner.V1: the version Spanner.Data 5.0.0 brings (plans/CLIENT_FLOORS_PLAN.md R2a). -->
+    <PackageReference Include="Google.Cloud.Spanner.V1" Version="5.0.0" />
+    <!-- Grpc.Core.Api: the least Spanner.Data 5.0.0 needs, through Google.Api.Gax.Grpc, as a lower pin is a downgrade
+         NuGet refuses with NU1605 (plans/CLIENT_FLOORS_PLAN.md R2a). -->
+    <PackageReference Include="Grpc.Core.Api" Version="2.66.0" />
   </ItemGroup>
 
   <ItemGroup>

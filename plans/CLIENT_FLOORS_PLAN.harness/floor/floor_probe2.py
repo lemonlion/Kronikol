@@ -2,7 +2,7 @@
 # the packable project that references it and the test projects that run it.
 #
 #   python -I floor_probe2.py --worktree C:/Code/Kronikol-205 --project src/X/X.csproj --package Id \
-#       --tests tests/Kronikol.Tests.X [--tests ...] [--also Id2=version ...] --out results.txt  v1 v2 ...
+#       --tests tests/Kronikol.Tests.X [--tests ...] [--also Id2=version ...] --out results.txt --logs <dir>  v1 v2 ...
 #   python -I floor_probe2.py ... --search [--from 2.0.0]   # binary search for the oldest passing release of the major
 #
 # For each version: pin the package to it in the project's csproj, build each test project with -p:FloorRun=true (so a
@@ -20,6 +20,7 @@ ap.add_argument("--package", required=True)
 ap.add_argument("--tests", action="append", required=True)
 ap.add_argument("--also", action="append", default=[])
 ap.add_argument("--out", required=True)
+ap.add_argument("--logs", required=True, help="a folder for the build and test logs")
 ap.add_argument("--search", action="store_true")
 ap.add_argument("--from", dest="start")
 ap.add_argument("--env", action="append", default=[], help="NAME=value for the test runs")
@@ -27,6 +28,7 @@ ap.add_argument("--filter", help="a dotnet test --filter for the suite")
 ap.add_argument("versions", nargs="*")
 a = ap.parse_args()
 
+os.makedirs(a.logs, exist_ok=True)
 os.chdir(a.worktree)
 csproj = a.project
 backup = open(csproj, encoding="utf-8", newline="").read()
@@ -64,10 +66,13 @@ def probe(version):
     open(csproj, "w", encoding="utf-8", newline="").write(text)
     status, notes, audit, res = "ok", [], set(), []
     for test in a.tests:
-        log = os.path.join(os.path.dirname(os.path.abspath(a.out)), f"build-{os.path.basename(test)}-{version}.log")
+        log = os.path.join(a.logs, f"build-{os.path.basename(test)}-{version}.log")
         code, out = run(["dotnet", "build", test, "-nologo", "-p:FloorRun=true", "-p:NuGetAuditMode=all"], log)
-        for m in re.finditer(r"warning (NU190[1-4]): Package '([^']+)' ([0-9][^ ]*) has a known ([a-z]+) severity", out):
-            audit.add(f"{m.group(2)} {m.group(3)} {m.group(4)}")
+        # Each advisory with the project whose graph holds it: one in the packable project's graph is the floor's
+        # concern, one only in a test project's (Testcontainers, say) is not.
+        for m in re.finditer(r"warning (NU190[1-4]): Package '([^']+)' ([0-9][^ ]*) has a known ([a-z]+) severity[^\[\r\n]*\[([^\]]+)\]", out):
+            where = os.path.splitext(os.path.basename(m.group(5).split("::")[0]))[0]
+            audit.add(f"{m.group(2)} {m.group(3)} {m.group(4)} ({where})")
         res.append(resolved(test))
         if code != 0:
             errs = sorted(set(re.findall(r"error (?:CS|NU|MSB)[0-9]+: [^\[\r\n]{0,150}", out)))[:4]

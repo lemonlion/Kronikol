@@ -4,7 +4,7 @@
 and plan a fix for the underlying problem; audited the same day at 5.14.0 (`8d7d1e1d`), at the owner's ask to make it
 complete and accurate (section 11 lists what the audit found and changed). **Green-lit 2026-10-28** by the owner ("Can
 you implement the plan in full"), every question in section 10 at its recommendation; executing. **R1 released as
-5.22.1** (section 11).
+5.22.1, R2a as 5.27.1** (section 11).
 
 **Issues:** [#205](https://github.com/lemonlion/Kronikol/issues/205), "BigQuery: the extension's floor,
 Google.Cloud.BigQuery.V2 3.12, runs ExecuteQuery through jobs.query, whose timestamps the emulator answers in seconds,
@@ -375,7 +375,7 @@ first:
 | R2b, Azure | BlobStorage (`Azure.Storage.Blobs` `12.*`), StorageQueues (`Azure.Storage.Queues` `12.*`), ServiceBus (`Azure.Messaging.ServiceBus` `7.*`, `Microsoft.Extensions.DependencyInjection.Abstractions` `10.*`), EventHubs (`Azure.Messaging.EventHubs` `5.*`), CosmosDB (`Microsoft.Azure.Cosmos` `3.*`) |
 | R2c, the rest | Kafka.BuildInterception (`Lib.Harmony` `2.*`), TcpTap (`MongoDB.Bson` `2.*`), Redis (`StackExchange.Redis` `2.*`), Oracle (`Oracle.ManagedDataAccess.Core` `23.*`), OpenTelemetry (`OpenTelemetry` `1.*`, `OpenTelemetry.Exporter.InMemory` `1.*`), DispatchProxy and MediatR (`Microsoft.Extensions.DependencyInjection.Abstractions` `10.*`), EfCore.Relational (`Microsoft.EntityFrameworkCore.Relational` `10.*`), Sqlite (`Microsoft.Data.Sqlite` `10.*`) |
 | R3a, the core and the test frameworks | Kronikol (`Microsoft.AspNetCore.Mvc.Testing` 10.0.7), xUnit2 (`xunit.extensibility.execution` 2.9.3), xUnit3 (`xunit.v3.extensibility.core` 3.2.2), NUnit4 (`NUnit` 4.6.0), MSTest (`MSTest.TestFramework` 4.2.2), TUnit (`TUnit.Core` 1.43.11), ReqNRoll.Core (`Reqnroll` 3.3.4), LightBDD.Core, .TUnit, .xUnit2 and .xUnit3 (`LightBDD.*` 3.12.0 and 3.12.1, and `xunit` 2.9.3), BDDfy.xUnit3 (`TestStack.BDDfy` 8.0.1.3), Playwright (`Microsoft.Playwright` 1.59.0) |
-| R3b, the SDK clients | S3, DynamoDB, SNS, SQS and EventBridge (`AWSSDK.*` 4.0.x), Npgsql (10.0.2), SqlClient (`Microsoft.Data.SqlClient` 7.0.1), Elasticsearch (`Elastic.Clients.Elasticsearch` 9.4.0), MassTransit (9.1.0), MediatR (`MediatR` 14.1.0), MySqlConnector (2.5.0), ClickHouse.Client (7.14.0), ClickHouse.Driver (1.4.0), ClickHouse.Octonica (`Octonica.ClickHouseClient` 3.1.10) |
+| R3b, the SDK clients | S3, DynamoDB, SNS, SQS and EventBridge (`AWSSDK.*` 4.0.x), Npgsql (10.0.2), SqlClient (`Microsoft.Data.SqlClient` 7.0.1), Elasticsearch (`Elastic.Clients.Elasticsearch` 9.4.0), MassTransit (9.1.0), MediatR (`MediatR` 14.1.0), MySqlConnector (2.5.0, 2.6.1 from R2a: F10), ClickHouse.Client (7.14.0), ClickHouse.Driver (1.4.0), ClickHouse.Octonica (`Octonica.ClickHouseClient` 3.1.10) |
 | R3c | PlantUml.Ikvm (`IKVM`, `IKVM.Image`, `IKVM.Image.JDK`, `IKVM.Image.JRE` and `IKVM.MSBuild` 8.15.0), which consumers rarely reference themselves |
 
 Known in advance, from `nuget/floors-5120.txt` and #97:
@@ -395,6 +395,28 @@ Known in advance, from `nuget/floors-5120.txt` and #97:
 
 R2 and R3 need their own measurements before each batch ships; this plan fixes the method and the guard, not the
 numbers.
+
+*As built in R2a:* the ledger landed with R2a, as section 6 has it, and its facts are six, in `FloorLedgerTests`: rules
+1 and 2 above, the counts of rule 3, and three that keep the list true to the csprojs: every entry names a reference
+its project still has, a project references a package once and the ledger holds it once, and each entry says what its
+version rests on. Red against an empty ledger, green on the full one. `PackedNuspec.DisagreementsWithLedger` packs a
+project and holds every dependency group of its nuspec to the ledger, so each package's fact is one line. R2a's floors
+(RUN, `floor/r2a-*.txt`, and the fourth test in `probe-r2a/`):
+
+| Package | Floor | Why there |
+|---|---|---|
+| Kafka, `Confluent.Kafka` | 2.2.0 | The IConsumer of 2.1.x declares `PositionTopicPartitionOffset`, added in 2.1.0 and dropped in 2.2.0, which `TrackingKafkaConsumer` does not implement; both suites pass on 2.2.0, as on 2.16.0 |
+| Grpc, `Grpc.Net.Client` | 2.45.0 | The oldest the suite passes on, against the server of the same release; older releases build the extension, but the suite's streaming facts pass a `CancellationToken` to `WriteAsync`, an overload new in 2.45.0 |
+| Grpc, `Google.Protobuf` | 3.19.4 | What Grpc.AspNetCore 2.45.0, the suite's server on the floor run, asks for |
+| CloudStorage, `Google.Cloud.Storage.V1` | 4.0.0 | The first of the major |
+| Bigtable, `Google.Cloud.Bigtable.V2` | 3.0.0 | The first of the major; the extension calls none of the client's types |
+| PubSub, `Google.Cloud.PubSub.V1` | 3.35.0 | The suite passes on 3.4.0, where `DisposeAsync` came, but `SubscriberClient` gained `StopAsync(ShutdownOptions, CancellationToken)` in 3.35.0 with a base that throws, and the wrapper must override it (F8) |
+| Spanner, `Google.Cloud.Spanner.Data` and `.V1` | 5.0.0 | The first of the major |
+| Spanner, `Grpc.Core.Api` | 2.66.0 | The least Spanner.Data 5.0.0 needs; a lower pin is a downgrade NuGet refuses (NU1605) |
+
+None of their graphs carries a known advisory. The gRPC test project's server moves with the switch: `Grpc.AspNetCore`
+`2.*` on the normal run, and `$(GrpcServerFloor)`, 2.45.0, under `-p:FloorRun=true`. After R2a the ledger holds 16
+still floating, 33 unmeasured and 12 measured.
 
 **Not chosen: central package management**, #97's third option. RUN, `restore/cpm-float/`: under
 `ManagePackageVersionsCentrally`, restore rejects a central floating version (`NU1011: The following PackageVersion
@@ -471,8 +493,10 @@ together they can share one patch release (Q7).
 | `BigQueryPackageTests.The_packed_extension_asks_for_its_measured_client_floor` | the nuspec asks for 3.0.0 | 5.12.0 (asks 3.12.0) |
 | The BigQuery suite with `-p:FloorRun=true` in CI | the extension works on its floor, not only compiles | a floor raised by a call into a newer API |
 | The BigQuery suite without it | it still runs on the newest 3.x | a missing direct reference (it would run on 3.0.0) |
-| The floor ledger's three facts | no packable project floats, every consumer-facing pin is in the ledger at its version, and the still-floating and unmeasured marks only go | today's tree: no ledger; after R1, 25 still floating and 33 unmeasured |
+| The floor ledger's facts, six as built (section 5.2) | no packable project floats, every consumer-facing pin is in the ledger at its version, the still-floating and unmeasured marks only go, and the ledger names only references that exist, each once, each with its basis | an empty ledger; the counts are 25 and 33 after R1, 16 and 33 after R2a |
 | Each R2 and R3 package's floor run and nuspec check | as R1 | each batch's parent commit |
+| `TrackingSubscriberClientTests` (R2a) | stopping the tracking subscriber stops the client it wraps, by each overload | R2a's parent on 3.39.0: two of the three throw `NotImplementedException` (F8) |
+| `A_statement_is_named_for_what_it_does_not_for_the_call_that_carries_it` and the server observer's twin (R2a) | an INSERT, UPDATE or DELETE through `ExecuteSql` is drawn as what it does | R2a's parent: each drawn as `SELECT FROM <table>` (F9) |
 
 No Playwright fact: nothing in a report changes.
 
@@ -486,6 +510,10 @@ No Playwright fact: nothing in a report changes.
 | F4 | Emulators up to 0.6.0 broke `ListRows` for every client from 3.6.0 (RUN, Q6). | upstream, fixed in 0.6.1 | Wiki (covered by "use 0.6.1 or later") |
 | F5 | The Windows build of emulator 0.8.1 does not start: "failed to create analyzer: … wasm trap: invalid memory address or nil pointer dereference" (RUN). | upstream | Noted in the harness only |
 | F6 | `tests/Kronikol.Tests` takes AngleSharp 1.4.0 (`Kronikol.Tests.csproj` L14) and the example's integration tests 1.3.0 (`Example.Api.Tests.Integration.csproj` L13), both under GHSA-pgww-w46g-26qg (moderate, mXSS), patched in 1.5.0 (RUN, NU1902 on restore). Test projects only, nothing shipped. | Kronikol | Both move to 1.5.0 in R1 |
+| F7 | Six test projects took Testcontainers 4.8.1 (ClickHouse, EfCore.Relational, Kafka, MongoDB, MongoDB.V2 and TcpTap), whose SSH.NET 2024.2.0 is under GHSA-q939-rpr3-3284 and GHSA-mggc-4xg6-vcxf (both high, patched in 2026.0.0); NuGet audit reported it on every Kafka probe (RUN). Test projects only, nothing shipped. | Kronikol | All six move to 4.16.0, which brings SSH.NET 2026.0.0, in R2a, building each container from its image (`new KafkaBuilder(Image)` for `new KafkaBuilder().WithImage(Image)`), as 4.16.0 marks the parameterless builders obsolete |
+| F8 | `TrackingSubscriberClient` left `SubscriberClient.StopAsync(ShutdownOptions, CancellationToken)`, new in Pub/Sub 3.35.0, to its base, which throws `NotImplementedException`, and the base `StopAsync(TimeSpan)` goes through it: on 3.35.0 and later both stops threw through the wrapper (RUN, `probe-r2a/pubsub` on 3.39.0 against the emulator). The suite's stubs never stopped a subscriber. | Kronikol | Fixed in R2a: the wrapper overrides it, which needs 3.35.0 to compile, so that is the floor; `TrackingSubscriberClientTests` |
+| F9 | The interceptor that `SpannerConnectionStringBuilder.WithTestTracking` installs, and the server observer, named an `ExecuteSql` statement for the call that carried it, so an INSERT, UPDATE or DELETE was drawn as `SELECT FROM <table>`; `TrackingSpannerCommand` named it right (RUN, `probe-r2a/spanner` against the emulator, on 5.0.0 and 5.12.0 alike). | Kronikol | Fixed in R2a: both name a statement the SQL classifier knows for what it does; two theories |
+| F10 | `Kronikol.Extensions.MySqlConnector` pins MySqlConnector 2.5.0, one of R3b's pins, and GHSA-473q-m89c-ghf8 (moderate, published 2026-10-28) covers every release before 2.6.1: in zero-configuration TLS mode the client sends the account password before it has verified the server's certificate (RUN: NU1902 in R2a's Release build of `release.slnf`). | Kronikol | Moved in R2a to 2.6.1, the first release past it, as A3 has it; the ledger keeps it unmeasured, at its new version, for R3b |
 
 ## 9. Risks and assumptions
 
@@ -562,6 +590,25 @@ Each has a recommendation; none is legwork.
 - **2026-10-28, Q5 posted:** the comment on goccy/bigquery-emulator#482 (the .NET client, REPEATED as well as RECORD), the
   note on PR #492 (`getQueryResults` still returns text; its head needs a newer grpc to build), and F3 filed as #532 with
   a client-free repro (`emulator/same-name-tables-curl.sh`), run again on a fresh 0.8.1.
+- **2026-10-29, R2a released as 5.27.1**, rebased onto 5.27.0 (`fd9c1c53`). The nine references of section 5.2's R2a row
+  are measured floors (the table in section 5.2's note), the ledger landed with its six facts, and its still-floating
+  count fell from 25 to 16. Found on the way and fixed in the release, each red first: F8, the Pub/Sub subscriber's
+  stop, which moved the Pub/Sub floor from the 3.4.0 the suite passes on to 3.35.0; and F9, the Spanner interceptor's
+  and server observer's DML labels. F10, which the Release build reported, moved MySqlConnector's pin past an advisory
+  published the day before. F7 moved six test projects to Testcontainers 4.16.0. The fourth test ran for the three unit
+  suites against emulators (`probe-r2a/`), each on its floor and on the newest client, with the same calls and the same
+  record on both once F8 and F9 were fixed. This machine's podman logs to journald, which returns no logs, so a
+  Testcontainers start that waits on a log line never completes through its own API: Kafka's broker facts ran first
+  against a broker started by hand (`KRONIKOL_TEST_KAFKA`), then, with TcpTap's MongoDB facts, through a podman API of
+  the session's own whose containers log to files (`floor/r2a-suites.txt`).
+
+  Run: the floor searches (`floor/r2a-*.txt`); the suite matrix before the rebase, on 5.22.1 with R2a's changes, each
+  R2a suite on the newest and on the floor and the six Testcontainers suites (`floor/r2a-suites.sh`,
+  `floor/r2a-suites.txt`); the fourth test (`probe-r2a/`, `results/r2a-*-{floor,newest}.txt`); the ledger's facts
+  against seven mutations, each red on the fact that guards it (`floor/ledger_mutations.py`,
+  `floor/ledger-mutations.txt`); then, on 5.27.0 with R2a, the core suite (11,543 passed, 2 skipped), the MySqlConnector
+  suite on 2.6.1 (22 of 22), `DiagnosticPageAccessorColumnTests` (2 of 2), which take the gRPC extension, and the
+  Release build of `release.slnf`, which reported F10 and, after it, only the older advisories 5.22.1 listed.
 
 ---
 

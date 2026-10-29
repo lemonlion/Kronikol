@@ -7,7 +7,13 @@
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Confluent.Kafka" Version="2.*" />
+    <!-- Confluent.Kafka: 2.2.0 is the floor, as the IConsumer of 2.1.x declares a PositionTopicPartitionOffset, added
+         in 2.1.0 and dropped in 2.2.0, that TrackingKafkaConsumer does not implement, so an older floor would let a
+         consumer resolve a release the extension fails on; the suite and the build interception suite pass on 2.2.0,
+         and its graph carries no known advisory (harness floor/r2a-kafka.txt). FloorLedger holds the floor, and the
+         test project's package fact reads it back from the packed nuspec; the suite runs on the newest 2.x, and on this
+         floor with -p:FloorRun=true (plans/CLIENT_FLOORS_PLAN.md R2a). -->
+    <PackageReference Include="Confluent.Kafka" Version="2.2.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Kronikol\Kronikol.csproj" />

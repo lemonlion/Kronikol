@@ -7,8 +7,15 @@
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Grpc.Net.Client" Version="2.*" />
-    <PackageReference Include="Google.Protobuf" Version="3.*" />
+    <!-- Grpc.Net.Client: 2.45.0 is the oldest 2.x the suite passes on, against the Grpc.AspNetCore server of the same
+         release; older releases build the extension, but the suite's streaming facts pass a CancellationToken to
+         WriteAsync, an overload new in 2.45.0; its graph carries no known advisory (harness floor/r2a-grpc.txt).
+         FloorLedger holds the floor, and the test project's package fact reads it back from the packed nuspec; the
+         suite runs on the newest 2.x, and on this floor with -p:FloorRun=true (plans/CLIENT_FLOORS_PLAN.md R2a). -->
+    <PackageReference Include="Grpc.Net.Client" Version="2.45.0" />
+    <!-- Google.Protobuf: 3.19.4 is the oldest the suite can run on, as Grpc.AspNetCore 2.45.0, its server on the floor
+         run, asks for it (plans/CLIENT_FLOORS_PLAN.md R2a). -->
+    <PackageReference Include="Google.Protobuf" Version="3.19.4" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Kronikol\Kronikol.csproj" />

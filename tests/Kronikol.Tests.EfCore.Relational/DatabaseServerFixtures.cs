@@ -33,7 +33,7 @@ public sealed class PostgresServerFixture : IAsyncLifetime
         // Testcontainers says when no Docker endpoint answers; any other failure to start the server fails the facts.
         try
         {
-            _container = new PostgreSqlBuilder().WithImage(Image).Build();
+            _container = new PostgreSqlBuilder(Image).Build();
             await _container.StartAsync();
         }
         catch (DockerUnavailableException ex)
@@ -86,7 +86,7 @@ public sealed class SqlServerServerFixture : IAsyncLifetime
 
         try
         {
-            _container = new MsSqlBuilder().WithImage(Image).Build();
+            _container = new MsSqlBuilder(Image).Build();
             await _container.StartAsync();
         }
         catch (DockerUnavailableException ex)

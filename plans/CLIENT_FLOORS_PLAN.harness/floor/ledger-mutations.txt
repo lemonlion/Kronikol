@@ -1,0 +1,8 @@
+unchanged | exit 0 | Passed! - Failed: 0, Passed: 6 | failed: none
+a measured package floats again | exit 1 | Failed! - Failed: 1, Passed: 5 | failed: No_packable_project_floats_a_dependency_unless_the_ledger_says_which_batch_measures_it
+a floor moves without the ledger | exit 1 | Failed! - Failed: 1, Passed: 5 | failed: Every_fixed_dependency_a_consumer_gets_is_in_the_ledger_at_its_version
+a new package floats unlisted | exit 1 | Failed! - Failed: 1, Passed: 5 | failed: No_packable_project_floats_a_dependency_unless_the_ledger_says_which_batch_measures_it
+the still-floating count is raised past the marks | exit 1 | Failed! - Failed: 1, Passed: 5 | failed: The_still_floating_and_unmeasured_marks_only_go
+an entry outlives its reference | exit 1 | Failed! - Failed: 1, Passed: 5 | failed: Every_entry_names_a_reference_its_project_has
+a package listed twice | exit 1 | Failed! - Failed: 2, Passed: 4 | failed: A_project_references_a_package_once_and_the_ledger_holds_it_once, Every_fixed_dependency_a_consumer_gets_is_in_the_ledger_at_its_version
+a measured entry without evidence | exit 1 | Failed! - Failed: 1, Passed: 5 | failed: Each_entry_says_what_its_version_rests_on

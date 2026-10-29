@@ -19,8 +19,8 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.*" Condition="'$(TargetFramework)' == 'net10.0'" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer.NetTopologySuite" Version="10.*" Condition="'$(TargetFramework)' == 'net10.0'" />
     <!-- The servers those facts run against when no connection string names one, the version the other Testcontainers references pin -->
-    <PackageReference Include="Testcontainers.PostgreSql" Version="4.8.1" />
-    <PackageReference Include="Testcontainers.MsSql" Version="4.8.1" />
+    <PackageReference Include="Testcontainers.PostgreSql" Version="4.16.0" />
+    <PackageReference Include="Testcontainers.MsSql" Version="4.16.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.*" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.5.1" />
     <PackageReference Include="xunit.v3" Version="3.2.2" />

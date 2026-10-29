@@ -4,6 +4,72 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.27.1] - 2026-10-29
+
+The patch part moves (5.27.0 to 5.27.1): packaging and tracking fixes, with no new option and no new public member (#97;
+`plans/CLIENT_FLOORS_PLAN.md` R2a).
+
+### Fixed
+
+- **Six more packages stop raising the client every consumer has to take.** Kafka, Grpc, CloudStorage, Bigtable, PubSub
+  and Spanner referenced their clients as floats (`2.*`, `3.*`, `4.*`, `5.*`), which NuGet packs as the newest version
+  of the day, so each release raised the floor of every project that took them; 5.22.1 made the same change for
+  BigQuery. Each now asks for a measured floor: the oldest release its suite passes on, with no known advisory in its
+  graph.
+
+  | Package | Asks for |
+  |---|---|
+  | `Kronikol.Extensions.Kafka` | `Confluent.Kafka` 2.2.0 |
+  | `Kronikol.Extensions.Grpc` | `Grpc.Net.Client` 2.45.0, `Google.Protobuf` 3.19.4 |
+  | `Kronikol.Extensions.CloudStorage` | `Google.Cloud.Storage.V1` 4.0.0 |
+  | `Kronikol.Extensions.Bigtable` | `Google.Cloud.Bigtable.V2` 3.0.0 |
+  | `Kronikol.Extensions.PubSub` | `Google.Cloud.PubSub.V1` 3.35.0 |
+  | `Kronikol.Extensions.Spanner` | `Google.Cloud.Spanner.Data` and `Google.Cloud.Spanner.V1` 5.0.0, `Grpc.Core.Api` 2.66.0 |
+
+  Behaviour change: a project that takes a client only through Kronikol now resolves that floor, where it resolved the
+  newest; reference the client yourself for a newer one.
+- **Stopping a tracked Pub/Sub subscriber threw on clients from 3.35.0.** That release added
+  `SubscriberClient.StopAsync(ShutdownOptions, CancellationToken)`, whose base throws `NotImplementedException`, and
+  routed the base `StopAsync(TimeSpan)` through it. `TrackingSubscriberClient` did not override it, so both threw. It
+  now stops the client it wraps, which needs 3.35.0 to compile against, so the package asks for 3.35.0.
+- **A Spanner DML statement through the interceptor was drawn as a query.** The interceptor that
+  `SpannerConnectionStringBuilder.WithTestTracking` installs, and the server observer, named an `ExecuteSql` or
+  `ExecuteStreamingSql` call after the call, not the statement it carried, so an INSERT, UPDATE or DELETE was drawn as
+  `SELECT FROM <table>`. Both now name it for what it does, as `TrackingSpannerCommand` already did. Behaviour change:
+  such a call's label, operation and Summarised keyword change from the query's to the statement's.
+- **`Kronikol.Extensions.MySqlConnector` asked for a client under an advisory.** It pinned MySqlConnector 2.5.0, and
+  GHSA-473q-m89c-ghf8 (moderate, published 2026-10-28) covers every release before 2.6.1: in zero-configuration TLS mode
+  the client sends the account password before it has verified the server's certificate. The package now asks for 2.6.1,
+  the first release past it.
+
+### Tests
+
+- The floor ledger (`tests/Kronikol.Tests/Packaging/FloorLedger.cs`) lists every dependency a packable project hands its
+  consumers, with what its version rests on; six facts hold every packable csproj to it, and its count of floats still
+  to measure falls from 25 to 16. Each package's fact packs it and holds its nuspec to the ledger.
+- Each of the six suites runs on the newest client through a direct reference, and on the floor with `-p:FloorRun=true`,
+  which CI runs. The gRPC suite's server moves with the switch: the newest `Grpc.AspNetCore`, or the 2.45.0 release on
+  the floor run.
+- Six test projects move to Testcontainers 4.16.0, whose SSH.NET 2026.0.0 is past GHSA-q939-rpr3-3284 and
+  GHSA-mggc-4xg6-vcxf (both high, in SSH.NET 2024.2.0 through Testcontainers 4.8.1; test projects only, nothing
+  shipped), and build each container from its image, as 4.16.0 marks the parameterless builders obsolete.
+
+### Documentation
+
+- The wiki pages of the six packages gain "Client versions": the floor, and that the suite runs on the newest and, in
+  CI, on the floor; MySqlConnector's gains its new floor and the advisory behind it. The Spanner page's operations table
+  names the calls that carry each statement.
+
+Checks: the core suite (11,543 passed, 2 skipped, on 5.27.0 with R2a), with the ledger's six facts, each red on the
+change it guards in seven mutations; each of the six suites on the newest client and on its floor (Grpc 261,
+CloudStorage 48, Bigtable 52, PubSub 91, Spanner 204 and Kafka 364 with its broker facts, and Kafka's build interception
+suite 75, each on both); the six Testcontainers suites on 4.16.0 (ClickHouse 136, EfCore.Relational 244, MongoDB and
+MongoDB.V2 318 each, TcpTap 509 with its one Windows skip, and Kafka with Testcontainers' own broker); the real Cloud
+Storage, Pub/Sub and Spanner clients through the extensions against their emulators, on the floor and on the newest,
+with the same calls and the same record on both; the MySqlConnector suite on 2.6.1 (22 of 22);
+`DiagnosticPageAccessorColumnTests`, which take the gRPC extension (2 of 2); and the Release build of `release.slnf`,
+whose remaining advisories are the older ones 5.22.1 listed.
+
 ## [5.27.0] - 2026-10-29
 
 The minor part moves (5.26.1 to 5.27.0): `Track.AssertionTask` and `Track.AssertionTaskWithValues` are new public

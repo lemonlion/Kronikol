@@ -1,0 +1,9 @@
+# Grpc.Net.Client with Google.Protobuf at what Grpc.AspNetCore of the same release asks for, the suite's server of that release: 53 2.x releases, 2.23.0 to 2.84.0; binary search
+2.84.0 | ok | Google.Protobuf 3.35.1: Passed! - Failed: 0, Passed: 260, Skipped: 0, Total: 260 | audit: none | resolved: Google.Protobuf/3.35.1 Grpc.AspNetCore/2.84.0 Grpc.Net.Client/2.84.0
+2.47.0 | ok | Google.Protobuf 3.19.4: Passed! - Failed: 0, Passed: 260, Skipped: 0, Total: 260 | audit: none | resolved: Google.Protobuf/3.19.4 Grpc.AspNetCore/2.47.0 Grpc.Net.Client/2.47.0
+2.34.0 | BUILD FAILED | Google.Protobuf 3.14.0: error CS1501: No overload for method 'WriteAsync' takes 2 arguments  | audit: none | resolved: Google.Protobuf/3.14.0 Grpc.AspNetCore/2.34.0 Grpc.Net.Client/2.34.0
+2.41.0 | BUILD FAILED | Google.Protobuf 3.18.0: error CS1501: No overload for method 'WriteAsync' takes 2 arguments  | audit: none | resolved: Google.Protobuf/3.18.0 Grpc.AspNetCore/2.41.0 Grpc.Net.Client/2.41.0
+2.44.0 | BUILD FAILED | Google.Protobuf 3.19.2: error CS1501: No overload for method 'WriteAsync' takes 2 arguments  | audit: none | resolved: Google.Protobuf/3.19.2 Grpc.AspNetCore/2.44.0 Grpc.Net.Client/2.44.0
+2.46.0 | ok | Google.Protobuf 3.19.4: Passed! - Failed: 0, Passed: 260, Skipped: 0, Total: 260 | audit: none | resolved: Google.Protobuf/3.19.4 Grpc.AspNetCore/2.46.0 Grpc.Net.Client/2.46.0
+2.45.0 | ok | Google.Protobuf 3.19.4: Passed! - Failed: 0, Passed: 260, Skipped: 0, Total: 260 | audit: none | resolved: Google.Protobuf/3.19.4 Grpc.AspNetCore/2.45.0 Grpc.Net.Client/2.45.0
+# oldest passing: 2.45.0 (Google.Protobuf 3.19.4)

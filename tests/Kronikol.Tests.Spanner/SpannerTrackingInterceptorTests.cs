@@ -70,6 +70,18 @@ public class SpannerTrackingInterceptorTests
         return Assert.Single(GetLogs(), l => l.Type == RequestResponseType.Request);
     }
 
+    [Theory]
+    [InlineData("INSERT INTO Users (Id) VALUES (1)", "INSERT INTO Users")]
+    [InlineData("UPDATE Users SET Name = 'a' WHERE Id = 1", "UPDATE Users")]
+    [InlineData("DELETE FROM Users WHERE Id = 1", "DELETE FROM Users")]
+    [InlineData("SELECT * FROM Users", "SELECT FROM Users")]
+    public void A_statement_is_named_for_what_it_does_not_for_the_call_that_carries_it(string sql, string expected)
+    {
+        // ExecuteSql carries DML as well as queries, and the interceptor named every statement it carried a SELECT, as
+        // the real client against the emulator showed (plans/CLIENT_FLOORS_PLAN.md R2a); the ADO.NET command did not.
+        Assert.Equal(expected, ExecuteSql(MakeOptions(), sql).Method.Value);
+    }
+
     [Fact]
     public void With_LogSqlText_off_a_statement_is_logged_without_its_SQL_at_Detailed_as_a_command_is()
     {

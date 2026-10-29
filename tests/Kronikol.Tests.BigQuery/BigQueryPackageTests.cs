@@ -8,18 +8,12 @@ namespace Kronikol.Tests.BigQuery;
 /// NU1605), and one that moved to 3.12.0 ran its services on a REST call its emulator answered differently (#205,
 /// <c>plans/CLIENT_FLOORS_PLAN.md</c> R1). The extension pins the oldest 3.x its suite passes on (3.0.0): no advisory
 /// in that graph, and the client's assemblies are strong-named, so a consumer on a later 3.x compiles against it. This
-/// reads the floor back from the nuspec <c>dotnet pack</c> writes. Moving the floor is a decision: run the suite on the
-/// new one first (<c>-p:FloorRun=true</c>).
+/// reads the floor back from the nuspec <c>dotnet pack</c> writes and holds it to <see cref="FloorLedger"/>. Moving the
+/// floor is a decision: run the suite on the new one first (<c>-p:FloorRun=true</c>).
 /// </summary>
 public class BigQueryPackageTests
 {
     [Fact]
-    public void The_packed_extension_asks_for_its_measured_client_floor()
-    {
-        var versions = PackedNuspec.DependencyVersions(
-            "src/Kronikol.Extensions.BigQuery/Kronikol.Extensions.BigQuery.csproj", "Google.Cloud.BigQuery.V2");
-
-        Assert.NotEmpty(versions);
-        Assert.All(versions, version => Assert.Equal("3.0.0", version));
-    }
+    public void The_packed_extension_asks_for_its_measured_client_floor() =>
+        Assert.Empty(PackedNuspec.DisagreementsWithLedger("Kronikol.Extensions.BigQuery"));
 }

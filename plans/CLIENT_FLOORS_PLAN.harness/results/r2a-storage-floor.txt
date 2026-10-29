@@ -1,0 +1,19 @@
+# Google.Cloud.Storage.V1 4.0.0 | fake-gcs-server at http://127.0.0.1:14443/
+create a bucket: ok
+upload an object: ok
+download it: ok hello
+list the bucket: ok a.txt
+delete the object: ok deleted
+## What Kronikol recorded
+  Request CreateBucket /  (CloudStorage)
+  Response CreateBucket / OK (CloudStorage)
+  Request Upload → probe-4-0-0 /probe-4-0-0  (CloudStorage)
+  Response Upload → probe-4-0-0 /probe-4-0-0 OK (CloudStorage)
+  Request Other → probe-4-0-0 /probe-4-0-0  (CloudStorage)
+  Response Other → probe-4-0-0 /probe-4-0-0 OK (CloudStorage)
+  Request Download → probe-4-0-0/a.txt /probe-4-0-0/a.txt  (CloudStorage)
+  Response Download → probe-4-0-0/a.txt /probe-4-0-0/a.txt OK (CloudStorage)
+  Request ListObjects → probe-4-0-0 /probe-4-0-0  (CloudStorage)
+  Response ListObjects → probe-4-0-0 /probe-4-0-0 OK (CloudStorage)
+  Request Delete → probe-4-0-0/a.txt /probe-4-0-0/a.txt  (CloudStorage)
+  Response Delete → probe-4-0-0/a.txt /probe-4-0-0/a.txt OK (CloudStorage)

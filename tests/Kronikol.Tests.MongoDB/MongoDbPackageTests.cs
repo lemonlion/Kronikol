@@ -9,8 +9,9 @@ namespace Kronikol.Tests.MongoDB;
 /// NuGet's downgrade error (#168 F21, <c>plans/MONGODB_DETAILED_PAYLOADS_PLAN.md</c> Q18). The 3.x extension pins the
 /// oldest driver its suite passes on whose dependencies carry no known advisory (3.9.0); the V2 extension pins the first
 /// 2.x with strong-named assemblies (2.28.0), and every 2.x driver brings Snappier 1.0.0 and SharpCompress 0.30.1, which
-/// carry advisories. This reads the floor back from the nuspec <c>dotnet pack</c> writes. Moving a floor is a decision:
-/// run the suite on the new one first.
+/// carry advisories. This reads the floor back from the nuspec <c>dotnet pack</c> writes and holds it to
+/// <see cref="FloorLedger"/>, which gives each floor's reason. Moving a floor is a decision: run the suite on the new one
+/// first.
 /// </summary>
 public class MongoDbPackageTests
 {
@@ -19,19 +20,13 @@ public class MongoDbPackageTests
     {
         // This file runs in both suites, each on its own driver line, so the driver it runs on names the extension.
         var major = typeof(MongoClient).Assembly.GetName().Version!.Major;
-        var (project, floor) = major switch
+        var project = major switch
         {
-            // 3.9.0: older 3.x drivers allow Snappier 1.0.0 (a high advisory) or SharpCompress 0.30.1 (a moderate one).
-            3 => ("src/Kronikol.Extensions.MongoDB/Kronikol.Extensions.MongoDB.csproj", "3.9.0"),
-            // 2.28.0: the first strong-named 2.x, so a consumer on a later 2.x can compile against it (this suite, on the
-            // newest 2.x, could not against an unsigned 2.21); every 2.x up to 2.18.0 carries a high advisory of its own.
-            2 => ("src/Kronikol.Extensions.MongoDB.V2/Kronikol.Extensions.MongoDB.V2.csproj", "2.28.0"),
+            3 => "Kronikol.Extensions.MongoDB",
+            2 => "Kronikol.Extensions.MongoDB.V2",
             _ => throw new InvalidOperationException($"No extension is built on driver {major}.x.")
         };
 
-        var versions = PackedNuspec.DependencyVersions(project, "MongoDB.Driver");
-
-        Assert.NotEmpty(versions);
-        Assert.All(versions, version => Assert.Equal(floor, version));
+        Assert.Empty(PackedNuspec.DisagreementsWithLedger(project));
     }
 }

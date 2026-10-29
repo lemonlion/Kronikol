@@ -31,7 +31,7 @@ public sealed class ClickHouseServerFixture : IAsyncLifetime
         // Testcontainers says when no Docker endpoint answers; any other failure to start the server fails the facts.
         try
         {
-            _container = new ClickHouseBuilder().WithImage(Image).Build();
+            _container = new ClickHouseBuilder(Image).Build();
             await _container.StartAsync();
         }
         catch (DockerUnavailableException ex)

@@ -1,0 +1,10 @@
+C:\Code\Kronikol-205\plans\CLIENT_FLOORS_PLAN.harness\probe-r2a\pubsub\Program.cs(49,11): warning CS0618: 'SubscriberClient.StopAsync(TimeSpan)' is obsolete: 'Use StopAsync(ShutdownOptions, CancellationToken) instead.' [C:\Code\Kronikol-205\plans\CLIENT_FLOORS_PLAN.harness\probe-r2a\pubsub\Probe.csproj]
+# Google.Cloud.PubSub.V1 3.35.0 | emulator at 127.0.0.1:18085
+create the topic and subscription: ok created
+publish through TrackingPublisherClient: ok 3
+receive through TrackingSubscriberClient: ok hello
+## What Kronikol recorded
+  Request Publish → t-3-35-0 pubsub:///t-3-35-0  (PubSub)
+  Response Publish → t-3-35-0 pubsub:///t-3-35-0  (PubSub)
+  Request Receive ← s-3-35-0 pubsub:///s-3-35-0  (PubSub)
+  Response Receive ← s-3-35-0 pubsub:///s-3-35-0  (PubSub)

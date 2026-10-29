@@ -33,7 +33,7 @@ public sealed class KafkaBrokerFixture : IAsyncLifetime
         // Testcontainers says when no Docker endpoint answers; any other failure to start the broker fails the facts.
         try
         {
-            _container = new KafkaBuilder().WithImage(Image).Build();
+            _container = new KafkaBuilder(Image).Build();
             await _container.StartAsync();
         }
         catch (DockerUnavailableException ex)

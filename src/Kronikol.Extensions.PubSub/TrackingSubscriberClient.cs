@@ -55,6 +55,9 @@ public class TrackingSubscriberClient : SubscriberClient
     }
 
     public override Task StopAsync(CancellationToken cancellationToken) => _inner.StopAsync(cancellationToken);
+    // From 3.35.0 the base's StopAsync(TimeSpan) comes here, and the base of this one throws.
+    public override Task StopAsync(ShutdownOptions shutdownOptions, CancellationToken cancellationToken) =>
+        _inner.StopAsync(shutdownOptions, cancellationToken);
     public override ValueTask DisposeAsync() => _inner.DisposeAsync();
 
     private IDisposable? EstablishTestIdentityFromAttributes(PubsubMessage message)

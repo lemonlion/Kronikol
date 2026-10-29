@@ -233,6 +233,7 @@ public class SpannerTracker : ITrackingComponent
         string? tableName = null;
         string? databaseId = null;
         string? sqlText = null;
+        var statement = SpannerOperation.Other;
 
         switch (request)
         {
@@ -240,6 +241,7 @@ public class SpannerTracker : ITrackingComponent
                 sqlText = sql.Sql;
                 var sqlClassified = SpannerOperationClassifier.ClassifySql(sql.Sql);
                 tableName = sqlClassified.TableName;
+                statement = sqlClassified.Operation;
                 break;
             case ReadRequest read:
                 tableName = read.Table;
@@ -260,6 +262,10 @@ public class SpannerTracker : ITrackingComponent
 
         var op = SpannerOperationClassifier.ClassifyGrpc(methodName, tableName, databaseId);
         if (sqlText is not null) op = op with { SqlText = sqlText };
+
+        // ExecuteSql carries DML as well as queries, which the method name cannot tell apart (as SpannerTrackingInterceptor).
+        if (statement != SpannerOperation.Other)
+            op = op with { Operation = statement };
 
         // Reclassify Commit with mutations to specific operation type
         if (request is CommitRequest commitReq && commitReq.Mutations.Count > 0)

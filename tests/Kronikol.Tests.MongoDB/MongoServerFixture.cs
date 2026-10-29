@@ -34,7 +34,7 @@ public sealed class MongoServerFixture : IAsyncLifetime
         // Testcontainers says when no Docker endpoint answers; any other failure to start the server fails the facts.
         try
         {
-            _container = new MongoDbBuilder().WithImage(Image).WithReplicaSet("rs0").Build();
+            _container = new MongoDbBuilder(Image).WithReplicaSet("rs0").Build();
             await _container.StartAsync();
         }
         catch (DockerUnavailableException ex)

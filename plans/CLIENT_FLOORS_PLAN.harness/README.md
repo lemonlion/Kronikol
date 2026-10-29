@@ -83,6 +83,36 @@ back. `--search` binary-searches the stable releases of the reference's major fo
 checking the newest; `--also Id=version` moves another reference of the project with it, for a family that must move
 together.
 
+## R2a, as released
+
+- `floor/r2a-<package>.txt`: each binary search, one line per probed release with the suite's result, every advisory
+  NuGet audit reported with the project whose graph held it, and what NuGet resolved; the closing line names the oldest
+  release that passed, and a `#` note gives any reason the floor sits above it. Bigtable, Cloud Storage, Pub/Sub and
+  Kafka came from `floor_probe2.py --search`; Kafka's two suites ran on each release, without Docker, so its three
+  broker facts were skipped there and ran in `floor/r2a-suites.txt`.
+- `floor/spanner_floor.py`: Spanner.Data and Spanner.V1 move together, and Grpc.Core.Api goes to the least each release
+  needs, which it reads from the NU1605 that a pin of 2.23.0 draws.
+- `floor/grpc_floor.py`: the suite's server, Grpc.AspNetCore, brings a Grpc.Net.Client and a Google.Protobuf of its own
+  release, so each Grpc.Net.Client release runs against the server of the same release (`-p:GrpcServerFloor=X` under
+  `-p:FloorRun=true`) with Google.Protobuf at what that server asks for.
+- `probe-r2a/{storage,pubsub,spanner}/`: the fourth test for the three unit suites. Each runs the real client through the
+  extension against an emulator (fake-gcs-server, the gcloud Pub/Sub emulator, cloud-spanner-emulator), on the floor
+  the extension asks for, or on the newest of the major with `-p:Newest=true`, and prints each call's outcome and what
+  Kronikol recorded; `results/r2a-<package>-{floor,newest}.txt` are their output, each on a freshly started emulator.
+  The Pub/Sub probe found the subscriber's stop failing on 3.39.0, and the Spanner probe found every DML statement
+  through the interceptor drawn as a SELECT (both fixed in R2a; plan section 11). Bigtable needs no probe: the
+  extension calls none of the client's types. Kafka's broker facts and gRPC's in-process server are their suites' own
+  fourth test.
+- `floor/r2a-suites.sh`: each R2a suite on the newest client and on its floor, and the six Testcontainers suites, one
+  line each in `floor/r2a-suites.txt` with every advisory NuGet audit reported. On this machine podman logs to journald,
+  which returns no logs, so a Testcontainers start that waits on a log line (Kafka's, and MongoDB's with a user) never
+  completes through the VM's own API: the file records Kafka's broker facts against a broker started by hand
+  (`KRONIKOL_TEST_KAFKA`), then TcpTap and Kafka through a podman API started with `CONTAINERS_CONF_OVERRIDE` naming
+  `log_driver = "k8s-file"` (and the VM's `volume_path`, which the override otherwise loses) on another port. The
+  scripts are in `podman/`: `podman-api-2376.sh` and `stop-api-2376.sh`, the override, and `start-kafka.sh`, the broker.
+- `floor/ledger_mutations.py`: the ledger's facts against seven changes they exist to catch, each applied, run and put
+  back; `floor/ledger-mutations.txt` names the facts each one turned red.
+
 ## prototype/: R1, applied and reverted
 
 `r1.patch` is R1's steps 1 to 4 (the pin, the test project's direct reference under `$(FloorRun)`, and

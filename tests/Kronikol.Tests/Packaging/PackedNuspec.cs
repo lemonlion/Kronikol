@@ -17,10 +17,41 @@ internal static class PackedNuspec
         Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".."));
 
     /// <summary>
-    /// Packs a project this suite built, for the one framework the suites run on, and reads the version each of the
-    /// nuspec's dependency groups gives the package <paramref name="id"/>: one entry per group that names it.
+    /// Where the packed <c>src/<paramref name="project"/></c> and <see cref="FloorLedger"/> disagree, one line each:
+    /// every dependency the ledger gives the project must be in every one of the nuspec's dependency groups at the
+    /// ledger's version, so moving a floor means moving it in the csproj and the ledger alike. Empty when they agree.
     /// </summary>
-    public static List<string> DependencyVersions(string project, string id)
+    public static List<string> DisagreementsWithLedger(string project)
+    {
+        var entries = FloorLedger.Entries.Where(e => e.Project == project).ToList();
+        if (entries.Count == 0)
+            return [$"{project}: the ledger has no entry for it"];
+        var packed = Dependencies($"src/{project}/{project}.csproj");
+        // A nuspec with no dependency group at all still owes each entry its version.
+        var groups = packed.Select(d => d.Group).Distinct().DefaultIfEmpty("(none)").ToList();
+        var lines = new List<string>();
+        foreach (var entry in entries)
+        {
+            if (entry.Basis != FloorLedger.Basis.Measured)
+                lines.Add($"{entry.Package}: the ledger marks {entry.Version} {entry.Basis} ({entry.Evidence}), not a measured floor");
+            foreach (var group in groups)
+            {
+                var versions = packed.Where(d => d.Group == group && d.Id == entry.Package).Select(d => d.Version).ToList();
+                if (versions.Count != 1 || versions[0] != entry.Version)
+                    lines.Add($"{entry.Package}: the nuspec's {group} group asks for {string.Join(", ", versions.DefaultIfEmpty("nothing"))}, the ledger for {entry.Version}");
+            }
+        }
+        return lines;
+    }
+
+    /// <summary>One dependency of a packed nuspec: its group's target framework, the package and the version.</summary>
+    private sealed record Dependency(string Group, string Id, string Version);
+
+    /// <summary>
+    /// Packs a project this suite built, for the one framework the suites run on, and reads every dependency of every
+    /// group in the nuspec it writes.
+    /// </summary>
+    private static List<Dependency> Dependencies(string project)
     {
         // bin/<configuration>/<framework>/: the configuration that built this assembly built the project it references.
         var configuration = new DirectoryInfo(AppContext.BaseDirectory).Parent!.Name;
@@ -56,8 +87,11 @@ internal static class PackedNuspec
             var nuspec = archive.Entries.Single(entry => entry.FullName.EndsWith(".nuspec", StringComparison.Ordinal));
             using var stream = nuspec.Open();
             return XDocument.Load(stream).Descendants()
-                .Where(element => element.Name.LocalName == "dependency" && (string?)element.Attribute("id") == id)
-                .Select(element => (string)element.Attribute("version")!)
+                .Where(element => element.Name.LocalName == "dependency")
+                .Select(element => new Dependency(
+                    (string?)element.Parent?.Attribute("targetFramework") ?? "",
+                    (string)element.Attribute("id")!,
+                    (string)element.Attribute("version")!))
                 .ToList();
         }
         finally

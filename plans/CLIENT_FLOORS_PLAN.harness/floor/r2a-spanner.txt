@@ -1,0 +1,7 @@
+# Google.Cloud.Spanner.Data with Spanner.V1 at the same version and Grpc.Core.Api at the least it needs: 13 5.x releases, 5.0.0 to 5.12.0; binary search
+5.12.0 | ok | Kronikol.Tests.Spanner: Passed! - Failed: 0, Passed: 195, Skipped: 0, Total: 195 | audit: none | resolved: Google.Cloud.Spanner.Data/5.12.0 Google.Cloud.Spanner.V1/5.12.0 Grpc.Core.Api/2.71.0
+5.6.0 | ok | Kronikol.Tests.Spanner: Passed! - Failed: 0, Passed: 195, Skipped: 0, Total: 195 | audit: none | resolved: Google.Cloud.Spanner.Data/5.6.0 Google.Cloud.Spanner.V1/5.6.0 Grpc.Core.Api/2.71.0
+5.3.0 | ok | Kronikol.Tests.Spanner: Passed! - Failed: 0, Passed: 195, Skipped: 0, Total: 195 | audit: none | resolved: Google.Cloud.Spanner.Data/5.3.0 Google.Cloud.Spanner.V1/5.3.0 Grpc.Core.Api/2.71.0
+5.1.0 | ok | Kronikol.Tests.Spanner: Passed! - Failed: 0, Passed: 195, Skipped: 0, Total: 195 | audit: none | resolved: Google.Cloud.Spanner.Data/5.1.0 Google.Cloud.Spanner.V1/5.1.0 Grpc.Core.Api/2.71.0
+5.0.0 | ok | Kronikol.Tests.Spanner: Passed! - Failed: 0, Passed: 195, Skipped: 0, Total: 195 | audit: none | resolved: Google.Cloud.Spanner.Data/5.0.0 Google.Cloud.Spanner.V1/5.0.0 Grpc.Core.Api/2.66.0
+# oldest passing: 5.0.0 (Grpc.Core.Api 2.66.0)

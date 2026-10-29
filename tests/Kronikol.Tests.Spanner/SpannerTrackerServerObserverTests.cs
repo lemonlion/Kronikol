@@ -112,6 +112,21 @@ public class SpannerTrackerServerObserverTests
         Assert.Equal(expected, Assert.Single(GetLogs()).Content);
     }
 
+    [Theory]
+    [InlineData("INSERT INTO Users (Id) VALUES (1)", "INSERT INTO Users")]
+    [InlineData("UPDATE Users SET Name = 'a' WHERE Id = 1", "UPDATE Users")]
+    [InlineData("DELETE FROM Users WHERE Id = 1", "DELETE FROM Users")]
+    [InlineData("SELECT Name FROM Users", "SELECT FROM Users")]
+    public void OnRequest_names_a_statement_for_what_it_does_not_for_the_call_that_carries_it(string sql, string expected)
+    {
+        // As the client interceptor: ExecuteSql carries DML as well as queries, and every statement was named a SELECT.
+        var (onRequest, _) = SpannerTracker.CreateServerObservers(new SpannerTracker(MakeOptions()));
+
+        onRequest("ExecuteSql", new ExecuteSqlRequest { Sql = sql }, DateTimeOffset.UtcNow);
+
+        Assert.Equal(expected, Assert.Single(GetLogs()).Method.Value);
+    }
+
     [Fact]
     public void OnRequest_Extracts_table_from_ReadRequest()
     {

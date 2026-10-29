@@ -1,0 +1,7 @@
+# Google.Cloud.Storage.V1: 16 stable 4.x releases, 4.0.0 to 4.16.0; binary search
+4.16.0 | ok | Kronikol.Tests.CloudStorage: Passed! - Failed: 0, Passed: 47, Skipped: 0, Total: 47 | audit: none | resolved: Google.Cloud.Storage.V1/4.16.0
+4.7.0 | ok | Kronikol.Tests.CloudStorage: Passed! - Failed: 0, Passed: 47, Skipped: 0, Total: 47 | audit: none | resolved: Google.Cloud.Storage.V1/4.7.0
+4.3.0 | ok | Kronikol.Tests.CloudStorage: Passed! - Failed: 0, Passed: 47, Skipped: 0, Total: 47 | audit: none | resolved: Google.Cloud.Storage.V1/4.3.0
+4.1.0 | ok | Kronikol.Tests.CloudStorage: Passed! - Failed: 0, Passed: 47, Skipped: 0, Total: 47 | audit: none | resolved: Google.Cloud.Storage.V1/4.1.0
+4.0.0 | ok | Kronikol.Tests.CloudStorage: Passed! - Failed: 0, Passed: 47, Skipped: 0, Total: 47 | audit: none | resolved: Google.Cloud.Storage.V1/4.0.0
+# oldest passing: 4.0.0

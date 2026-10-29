@@ -7,7 +7,13 @@
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Google.Cloud.PubSub.V1" Version="3.*" />
+    <!-- Google.Cloud.PubSub.V1: 3.35.0, as SubscriberClient gained StopAsync(ShutdownOptions, CancellationToken) there,
+         with a base that throws and that its own StopAsync(TimeSpan) goes through, so TrackingSubscriberClient
+         overrides it and compiles against it; the suite passes on 3.35.0, as it does on 3.4.0, and its graph carries
+         no known advisory (harness floor/r2a-pubsub.txt). FloorLedger holds the floor, and the test project's package
+         fact reads it back from the packed nuspec; the suite runs on the newest 3.x, and on this floor with
+         -p:FloorRun=true (plans/CLIENT_FLOORS_PLAN.md R2a). -->
+    <PackageReference Include="Google.Cloud.PubSub.V1" Version="3.35.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Kronikol\Kronikol.csproj" />

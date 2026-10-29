@@ -128,6 +128,7 @@ public class SpannerTrackingInterceptor : Interceptor, ITrackingComponent
         string? tableName = null;
         string? databaseId = null;
         string? sqlText = null;
+        var statement = SpannerOperation.Other;
 
         switch (request)
         {
@@ -137,6 +138,7 @@ public class SpannerTrackingInterceptor : Interceptor, ITrackingComponent
                 // Use SQL classifier to get table name from SQL
                 var sqlClassified = SpannerOperationClassifier.ClassifySql(sql.Sql);
                 tableName = sqlClassified.TableName;
+                statement = sqlClassified.Operation;
                 break;
             case ReadRequest read:
                 tableName = read.Table;
@@ -167,6 +169,11 @@ public class SpannerTrackingInterceptor : Interceptor, ITrackingComponent
         }
 
         var grpcOp = SpannerOperationClassifier.ClassifyGrpc(methodName, tableName, databaseId);
+
+        // ExecuteSql and ExecuteStreamingSql carry DML as well as queries, which the method name cannot tell apart, so a
+        // statement the SQL classifier knows is named for what it does, as TrackingSpannerCommand names it.
+        if (statement != SpannerOperation.Other)
+            grpcOp = grpcOp with { Operation = statement };
 
         // Enrich with SQL text if available
         if (sqlText is not null)

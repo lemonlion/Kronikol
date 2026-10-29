@@ -1,0 +1,23 @@
+# R2a's suites before the rebase, 2026-10-28T23:33Z, on 6f40870f with R2a's changes; Kafka's broker facts against cp-kafka 7.6.1 in podman (KRONIKOL_TEST_KAFKA), the container suites through podman's Docker API
+Grpc | exit 0 | Passed! - Failed: 0, Passed: 261, Skipped: 0, Total: 261 - Kronikol.Tests.Grpc.dll (net10.0) | audit: none
+Grpc floor | exit 0 | Passed! - Failed: 0, Passed: 261, Skipped: 0, Total: 261 - Kronikol.Tests.Grpc.dll (net10.0) | audit: none
+CloudStorage | exit 0 | Passed! - Failed: 0, Passed: 48, Skipped: 0, Total: 48 - Kronikol.Tests.CloudStorage.dll (net10.0) | audit: none
+CloudStorage floor | exit 0 | Passed! - Failed: 0, Passed: 48, Skipped: 0, Total: 48 - Kronikol.Tests.CloudStorage.dll (net10.0) | audit: none
+Bigtable | exit 0 | Passed! - Failed: 0, Passed: 52, Skipped: 0, Total: 52 - Kronikol.Tests.Bigtable.dll (net10.0) | audit: none
+Bigtable floor | exit 0 | Passed! - Failed: 0, Passed: 52, Skipped: 0, Total: 52 - Kronikol.Tests.Bigtable.dll (net10.0) | audit: none
+PubSub | exit 0 | Passed! - Failed: 0, Passed: 91, Skipped: 0, Total: 91 - Kronikol.Tests.PubSub.dll (net10.0) | audit: none
+PubSub floor | exit 0 | Passed! - Failed: 0, Passed: 91, Skipped: 0, Total: 91 - Kronikol.Tests.PubSub.dll (net10.0) | audit: none
+Spanner | exit 0 | Passed! - Failed: 0, Passed: 204, Skipped: 0, Total: 204 - Kronikol.Tests.Spanner.dll (net10.0) | audit: none
+Spanner floor | exit 0 | Passed! - Failed: 0, Passed: 204, Skipped: 0, Total: 204 - Kronikol.Tests.Spanner.dll (net10.0) | audit: none
+Kafka.BuildInterception | exit 0 | Passed! - Failed: 0, Passed: 75, Skipped: 0, Total: 75 - Kronikol.Tests.Kafka.BuildInterception.dll (net10.0) | audit: none
+Kafka.BuildInterception floor | exit 0 | Passed! - Failed: 0, Passed: 75, Skipped: 0, Total: 75 - Kronikol.Tests.Kafka.BuildInterception.dll (net10.0) | audit: none
+Kafka | exit 0 | Passed! - Failed: 0, Passed: 364, Skipped: 0, Total: 364 - Kronikol.Tests.Kafka.dll (net10.0) | audit: none
+Kafka floor | exit 0 | Passed! - Failed: 0, Passed: 364, Skipped: 0, Total: 364 - Kronikol.Tests.Kafka.dll (net10.0) | audit: none
+ClickHouse | exit 0 | Passed! - Failed: 0, Passed: 136, Skipped: 0, Total: 136 - Kronikol.Tests.ClickHouse.dll (net10.0) | audit: none
+EfCore.Relational | exit 0 | Passed! - Failed: 0, Passed: 244, Skipped: 0, Total: 244 - Kronikol.Tests.EfCore.Relational.dll (net10.0) | audit: 'System.Security.Cryptography.Pkcs' 9.0.11 has a known moderate;'System.Security.Cryptography.Pkcs' 9.0.11 has a known high;
+MongoDB | exit 0 | Passed! - Failed: 0, Passed: 318, Skipped: 0, Total: 318 - Kronikol.Tests.MongoDB.dll (net10.0) | audit: none
+MongoDB.V2 | exit 0 | Passed! - Failed: 0, Passed: 318, Skipped: 0, Total: 318 - Kronikol.Tests.MongoDB.V2.dll (net10.0) | audit: 'SharpCompress' 0.30.1 has a known moderate;'Snappier' 1.0.0 has a known high;
+# TcpTap's MongoDB facts never started through the VM's own API: its log driver, journald, returns no logs, and Testcontainers (4.8.1 and 4.16.0 alike) waits for MongoDB's 'Waiting for connections' when a user is set. Stopped, and run again with Kafka's own Testcontainers start through a podman API of this session's that logs to files (CONTAINERS_CONF_OVERRIDE, log_driver k8s-file; DOCKER_HOST=tcp://127.0.0.1:2376):
+TcpTap | exit 0 | Passed! - Failed: 0, Passed: 509, Skipped: 1, Total: 510 - Kronikol.Tests.TcpTap.dll (net10.0) | audit: 'SharpCompress' 0.30.1 has a known moderate;'Snappier' 1.0.0 has a known high;
+Kafka (Testcontainers' broker) | exit 0 | Passed! - Failed: 0, Passed: 364, Skipped: 0, Total: 364 - Kronikol.Tests.Kafka.dll (net10.0) | audit: none
+Kafka floor (Testcontainers' broker) | exit 0 | Passed! - Failed: 0, Passed: 364, Skipped: 0, Total: 364 - Kronikol.Tests.Kafka.dll (net10.0) | audit: none

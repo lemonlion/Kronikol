@@ -10,7 +10,10 @@
     <InternalsVisibleTo Include="Kronikol.Tests.MySqlConnector" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="MySqlConnector" Version="2.5.0" />
+    <!-- MySqlConnector: 2.6.1, the first release past GHSA-473q-m89c-ghf8 (published 2026-10-28; before 2.6.1, the
+         client in zero-configuration TLS mode sends the password before it has verified the server's certificate).
+         R3b measures the floor (plans/CLIENT_FLOORS_PLAN.md F10). -->
+    <PackageReference Include="MySqlConnector" Version="2.6.1" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Kronikol\Kronikol.csproj" />

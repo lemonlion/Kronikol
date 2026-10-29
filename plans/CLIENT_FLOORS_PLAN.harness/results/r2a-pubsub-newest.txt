@@ -1,0 +1,9 @@
+# Google.Cloud.PubSub.V1 3.39.0 | emulator at 127.0.0.1:18085
+create the topic and subscription: ok created
+publish through TrackingPublisherClient: ok 1
+receive through TrackingSubscriberClient: ok hello
+## What Kronikol recorded
+  Request Publish → t-3-39-0 pubsub:///t-3-39-0  (PubSub)
+  Response Publish → t-3-39-0 pubsub:///t-3-39-0  (PubSub)
+  Request Receive ← s-3-39-0 pubsub:///s-3-39-0  (PubSub)
+  Response Receive ← s-3-39-0 pubsub:///s-3-39-0  (PubSub)

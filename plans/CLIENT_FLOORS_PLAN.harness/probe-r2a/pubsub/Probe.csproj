@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- R2a's fourth test for PubSub: the clients on the extension's floor, or on the newest 3.x with -p:Newest=true. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../../src/Kronikol.Extensions.PubSub/Kronikol.Extensions.PubSub.csproj" />
+    <PackageReference Include="Google.Cloud.PubSub.V1" Version="3.*" Condition="'$(Newest)' == 'true'" />
+  </ItemGroup>
+</Project>

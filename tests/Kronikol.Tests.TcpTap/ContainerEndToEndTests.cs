@@ -52,7 +52,7 @@ public class ContainerEndToEndTests(ITestOutputHelper output)
     {
         Assert.SkipWhen(!DockerAvailable(), "Docker is not available.");
 
-        var container = new RedisBuilder().WithImage("redis:7").Build();
+        var container = new RedisBuilder("redis:7").Build();
         await container.StartAsync();
         try
         {
@@ -112,7 +112,7 @@ public class ContainerEndToEndTests(ITestOutputHelper output)
     {
         Assert.SkipWhen(!DockerAvailable(), "Docker is not available.");
 
-        var container = new RedisBuilder().WithImage("redis:7").Build();
+        var container = new RedisBuilder("redis:7").Build();
         await container.StartAsync();
         try
         {
@@ -168,7 +168,7 @@ public class ContainerEndToEndTests(ITestOutputHelper output)
     {
         Assert.SkipWhen(!DockerAvailable(), "Docker is not available.");
 
-        var container = new MongoDbBuilder().WithImage("mongo:7").WithUsername("tapuser").WithPassword(TapPassword).Build();
+        var container = new MongoDbBuilder("mongo:7").WithUsername("tapuser").WithPassword(TapPassword).Build();
         await container.StartAsync();
         try
         {
@@ -237,7 +237,7 @@ public class ContainerEndToEndTests(ITestOutputHelper output)
     {
         Assert.SkipWhen(!DockerAvailable(), "Docker is not available.");
 
-        var container = new MongoDbBuilder().WithImage("mongo:7").WithUsername("tapuser").WithPassword(TapPassword).Build();
+        var container = new MongoDbBuilder("mongo:7").WithUsername("tapuser").WithPassword(TapPassword).Build();
         await container.StartAsync();
         try
         {

@@ -1,0 +1,12 @@
+# Google.Cloud.PubSub.V1: 43 stable 3.x releases, 3.0.0 to 3.39.0; binary search
+3.39.0 | ok | Kronikol.Tests.PubSub: Passed! - Failed: 0, Passed: 87, Skipped: 0, Total: 87 | audit: none | resolved: Google.Cloud.PubSub.V1/3.39.0
+3.18.0 | ok | Kronikol.Tests.PubSub: Passed! - Failed: 0, Passed: 87, Skipped: 0, Total: 87 | audit: none | resolved: Google.Cloud.PubSub.V1/3.18.0
+3.9.0 | ok | Kronikol.Tests.PubSub: Passed! - Failed: 0, Passed: 87, Skipped: 0, Total: 87 | audit: none | resolved: Google.Cloud.PubSub.V1/3.9.0
+3.5.0 | ok | Kronikol.Tests.PubSub: Passed! - Failed: 0, Passed: 87, Skipped: 0, Total: 87 | audit: none | resolved: Google.Cloud.PubSub.V1/3.5.0
+3.2.0 | BUILD FAILED | Kronikol.Tests.PubSub: error CS0115: 'TrackingPublisherClient.DisposeAsync()': no suitable method found to override  error CS0115: 'TrackingSubscriberClient.DisposeAsync()': no suitable method found to override  | audit: none | resolved: Google.Cloud.PubSub.V1/3.2.0
+3.4.0 | ok | Kronikol.Tests.PubSub: Passed! - Failed: 0, Passed: 87, Skipped: 0, Total: 87 | audit: none | resolved: Google.Cloud.PubSub.V1/3.4.0
+3.3.0 | BUILD FAILED | Kronikol.Tests.PubSub: error CS0115: 'TrackingPublisherClient.DisposeAsync()': no suitable method found to override  error CS0115: 'TrackingSubscriberClient.DisposeAsync()': no suitable method found to override  | audit: none | resolved: Google.Cloud.PubSub.V1/3.3.0
+# oldest passing: 3.4.0
+# Raised to 3.35.0 after the fourth test (probe-r2a/pubsub against the emulator): on 3.39.0, stopping through TrackingSubscriberClient threw NotImplementedException, as SubscriberClient gained StopAsync(ShutdownOptions, CancellationToken) in 3.35.0 (the first release whose dll names ShutdownOptions, binary search over the 3.x nupkgs), with a base that throws and that StopAsync(TimeSpan) goes through. The wrapper now overrides it, which needs 3.35.0 to compile; TrackingSubscriberClientTests is red without it.
+3.35.0 | ok | Kronikol.Tests.PubSub: Passed! - Failed: 0, Passed: 91, Skipped: 0, Total: 91 | audit: none | resolved: Google.Cloud.PubSub.V1/3.35.0 (-p:FloorRun=true, after the fix)
+3.39.0 | ok | Kronikol.Tests.PubSub: Passed! - Failed: 0, Passed: 91, Skipped: 0, Total: 91 | audit: none | resolved: Google.Cloud.PubSub.V1/3.39.0 (the newest, after the fix)

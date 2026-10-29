@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- R2a's fourth test for Spanner: the client on the extension's floors, or on the newest 5.x with -p:Newest=true. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../../src/Kronikol.Extensions.Spanner/Kronikol.Extensions.Spanner.csproj" />
+    <PackageReference Include="Google.Cloud.Spanner.Data" Version="5.*" Condition="'$(Newest)' == 'true'" />
+    <PackageReference Include="Google.Cloud.Spanner.V1" Version="5.*" Condition="'$(Newest)' == 'true'" />
+  </ItemGroup>
+</Project>

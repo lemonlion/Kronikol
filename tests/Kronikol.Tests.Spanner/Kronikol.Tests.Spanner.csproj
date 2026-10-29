@@ -13,8 +13,11 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.*" />
     <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.3.9" />
-    <PackageReference Include="Google.Cloud.Spanner.V1" Version="5.*" />
-    <PackageReference Include="Grpc.Core.Api" Version="2.*" />
+    <!-- The suite runs on the newest Spanner 5.x and Grpc.Core.Api 2.x; -p:FloorRun=true drops these references, so it
+         runs on the floors the package asks for. -->
+    <PackageReference Include="Google.Cloud.Spanner.Data" Version="5.*" Condition="'$(FloorRun)' != 'true'" />
+    <PackageReference Include="Google.Cloud.Spanner.V1" Version="5.*" Condition="'$(FloorRun)' != 'true'" />
+    <PackageReference Include="Grpc.Core.Api" Version="2.*" Condition="'$(FloorRun)' != 'true'" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Kronikol.Extensions.Spanner\Kronikol.Extensions.Spanner.csproj" />
@@ -25,5 +28,7 @@
   <ItemGroup>
     <Compile Include="..\Kronikol.Tests\Tracking\RequestHeaderAccessor.cs" Link="RequestHeaderAccessor.cs" />
     <Compile Include="..\Kronikol.Tests\History\HistoryGuard.cs" Link="HistoryGuard.cs" />
+    <Compile Include="..\Kronikol.Tests\Packaging\PackedNuspec.cs" Link="PackedNuspec.cs" />
+    <Compile Include="..\Kronikol.Tests\Packaging\FloorLedger.cs" Link="FloorLedger.cs" />
   </ItemGroup>
 </Project>
