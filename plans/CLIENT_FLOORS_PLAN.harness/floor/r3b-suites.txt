@@ -1,0 +1,25 @@
+S3 | exit 0 | Passed! - Failed: 0, Passed: 119, Skipped: 0, Total: 119 - Kronikol.Tests.S3.dll (net10.0) | audit: none
+S3 floor | exit 0 | Passed! - Failed: 0, Passed: 119, Skipped: 0, Total: 119 - Kronikol.Tests.S3.dll (net10.0) | audit: none
+DynamoDB | exit 0 | Passed! - Failed: 0, Passed: 94, Skipped: 0, Total: 94 - Kronikol.Tests.DynamoDB.dll (net10.0) | audit: none
+DynamoDB floor | exit 0 | Passed! - Failed: 0, Passed: 94, Skipped: 0, Total: 94 - Kronikol.Tests.DynamoDB.dll (net10.0) | audit: none
+SNS | exit 0 | Passed! - Failed: 0, Passed: 101, Skipped: 0, Total: 101 - Kronikol.Tests.SNS.dll (net10.0) | audit: none
+SNS floor | exit 0 | Passed! - Failed: 0, Passed: 101, Skipped: 0, Total: 101 - Kronikol.Tests.SNS.dll (net10.0) | audit: none
+SQS | exit 0 | Passed! - Failed: 0, Passed: 109, Skipped: 0, Total: 109 - Kronikol.Tests.SQS.dll (net10.0) | audit: none
+SQS floor | exit 0 | Passed! - Failed: 0, Passed: 109, Skipped: 0, Total: 109 - Kronikol.Tests.SQS.dll (net10.0) | audit: none
+EventBridge | exit 0 | Passed! - Failed: 0, Passed: 191, Skipped: 0, Total: 191 - Kronikol.Tests.EventBridge.dll (net10.0) | audit: none
+EventBridge floor | exit 0 | Passed! - Failed: 0, Passed: 191, Skipped: 0, Total: 191 - Kronikol.Tests.EventBridge.dll (net10.0) | audit: none
+Npgsql | exit 0 | Passed! - Failed: 0, Passed: 27, Skipped: 0, Total: 27 - Kronikol.Tests.Npgsql.dll (net10.0) | audit: none
+Npgsql floor | exit 0 | Passed! - Failed: 0, Passed: 27, Skipped: 0, Total: 27 - Kronikol.Tests.Npgsql.dll (net10.0) | audit: none
+SqlClient | exit 0 | Passed! - Failed: 0, Passed: 25, Skipped: 0, Total: 25 - Kronikol.Tests.SqlClient.dll (net10.0) | audit: none
+SqlClient floor | exit 0 | Passed! - Failed: 0, Passed: 25, Skipped: 0, Total: 25 - Kronikol.Tests.SqlClient.dll (net10.0) | audit: none
+MySqlConnector | exit 0 | Passed! - Failed: 0, Passed: 23, Skipped: 0, Total: 23 - Kronikol.Tests.MySqlConnector.dll (net10.0) | audit: none
+MySqlConnector floor | exit 0 | Passed! - Failed: 0, Passed: 23, Skipped: 0, Total: 23 - Kronikol.Tests.MySqlConnector.dll (net10.0) | audit: none
+Elasticsearch | exit 0 | Passed! - Failed: 0, Passed: 60, Skipped: 0, Total: 60 - Kronikol.Tests.Elasticsearch.dll (net10.0) | audit: none
+Elasticsearch floor | exit 0 | Passed! - Failed: 0, Passed: 60, Skipped: 0, Total: 60 - Kronikol.Tests.Elasticsearch.dll (net10.0) | audit: none
+MassTransit | exit 0 | Passed! - Failed: 0, Passed: 71, Skipped: 0, Total: 71 - Kronikol.Tests.MassTransit.dll (net10.0) | audit: none
+MassTransit floor | exit 0 | Passed! - Failed: 0, Passed: 71, Skipped: 0, Total: 71 - Kronikol.Tests.MassTransit.dll (net10.0) | audit: none
+MediatR | exit 0 | Passed! - Failed: 0, Passed: 6, Skipped: 0, Total: 6 - Kronikol.Tests.MediatR.dll (net10.0) | audit: none
+MediatR floor | exit 0 | Passed! - Failed: 0, Passed: 6, Skipped: 0, Total: 6 - Kronikol.Tests.MediatR.dll (net10.0) | audit: none
+ClickHouse | exit 0 | Passed! - Failed: 0, Passed: 139, Skipped: 0, Total: 139 - Kronikol.Tests.ClickHouse.dll (net10.0) | audit: none
+ClickHouse floor | exit 0 | Passed! - Failed: 0, Passed: 139, Skipped: 0, Total: 139 - Kronikol.Tests.ClickHouse.dll (net10.0) | audit: none
+ALLDONE

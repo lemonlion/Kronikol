@@ -36,7 +36,7 @@ internal static class FloorLedger
     internal const int StillFloatingAtMost = 0;
 
     /// <summary>No more fixed pins may be marked unmeasured than this. Each batch lowers it; none raises it.</summary>
-    internal const int UnmeasuredAtMost = 19;
+    internal const int UnmeasuredAtMost = 5;
 
     private static Entry Measured(string project, string package, string version, string evidence) =>
         new(project, package, version, Basis.Measured, evidence);
@@ -71,23 +71,23 @@ internal static class FloorLedger
         Measured("Kronikol.Extensions.BigQuery", "Google.Cloud.BigQuery.V2", "3.0.0", "CLIENT_FLOORS_PLAN.md R1"),
         Measured("Kronikol.Extensions.Bigtable", "Google.Cloud.Bigtable.V2", "3.0.0", "R2a: floor/r2a-bigtable.txt"),
         Measured("Kronikol.Extensions.BlobStorage", "Azure.Storage.Blobs", "12.13.0", "R2b: floor/r2b-blobstorage.txt"),
-        Unmeasured("Kronikol.Extensions.ClickHouse.Client", "ClickHouse.Client", "7.14.0", "R3b"),
-        Unmeasured("Kronikol.Extensions.ClickHouse.Driver", "ClickHouse.Driver", "1.4.0", "R3b"),
-        Unmeasured("Kronikol.Extensions.ClickHouse.Octonica", "Octonica.ClickHouseClient", "3.1.10", "R3b"),
+        Measured("Kronikol.Extensions.ClickHouse.Client", "ClickHouse.Client", "7.7.0", "R3b: floor/r3b-clickhouse-client.txt (the suite's limit)"),
+        Measured("Kronikol.Extensions.ClickHouse.Driver", "ClickHouse.Driver", "1.3.0", "R3b: floor/r3b-clickhouse-driver.txt"),
+        Measured("Kronikol.Extensions.ClickHouse.Octonica", "Octonica.ClickHouseClient", "3.1.1", "R3b: floor/r3b-clickhouse-octonica.txt"),
         Measured("Kronikol.Extensions.CloudStorage", "Google.Cloud.Storage.V1", "4.0.0", "R2a: floor/r2a-cloudstorage.txt"),
         Measured("Kronikol.Extensions.CosmosDB", "Microsoft.Azure.Cosmos", "3.46.0", "R2b: floor/r2b-cosmosdb.txt"),
         Measured("Kronikol.Extensions.DispatchProxy", "Microsoft.Extensions.DependencyInjection.Abstractions", "10.0.0", "R3a: floor/r3a-di-dispatchproxy.txt"),
-        Unmeasured("Kronikol.Extensions.DynamoDB", "AWSSDK.DynamoDBv2", "4.0.18.1", "R3b"),
+        Measured("Kronikol.Extensions.DynamoDB", "AWSSDK.DynamoDBv2", "4.0.10.1", "R3b: floor/r3b-dynamodb.txt, floor/r3b-aws-core.txt"),
         Measured("Kronikol.Extensions.EfCore.Relational", "Microsoft.EntityFrameworkCore.Relational", "10.0.0", "R2c: floor/r2c-efcore.txt, the first of the major, its own graph clean"),
-        Unmeasured("Kronikol.Extensions.Elasticsearch", "Elastic.Clients.Elasticsearch", "9.4.0", "R3b"),
-        Unmeasured("Kronikol.Extensions.EventBridge", "AWSSDK.EventBridge", "4.0.5.29", "R3b"),
+        Measured("Kronikol.Extensions.Elasticsearch", "Elastic.Clients.Elasticsearch", "9.0.0", "R3b: floor/r3b-elasticsearch.txt"),
+        Measured("Kronikol.Extensions.EventBridge", "AWSSDK.EventBridge", "4.0.5.7", "R3b: floor/r3b-eventbridge.txt, floor/r3b-aws-core.txt"),
         Measured("Kronikol.Extensions.EventHubs", "Azure.Messaging.EventHubs", "5.6.0", "R2b: floor/r2b-eventhubs.txt, the base's Identifier results/r2b-eventhubs-base.txt"),
         Measured("Kronikol.Extensions.Grpc", "Grpc.Net.Client", "2.45.0", "R2a: floor/r2a-grpc.txt"),
         Measured("Kronikol.Extensions.Grpc", "Google.Protobuf", "3.19.4", "R2a: floor/r2a-grpc.txt"),
         Measured("Kronikol.Extensions.Kafka", "Confluent.Kafka", "2.2.0", "R2a: floor/r2a-kafka.txt"),
         Measured("Kronikol.Extensions.Kafka.BuildInterception", "Lib.Harmony", "2.4.2", "R2c: floor/r2c-harmony.txt"),
-        Unmeasured("Kronikol.Extensions.MassTransit", "MassTransit", "9.1.0", "R3b"),
-        Unmeasured("Kronikol.Extensions.MediatR", "MediatR", "14.1.0", "R3b"),
+        Measured("Kronikol.Extensions.MassTransit", "MassTransit", "9.0.0", "R3b: floor/r3b-masstransit.txt"),
+        Measured("Kronikol.Extensions.MediatR", "MediatR", "14.0.0", "R3b: floor/r3b-mediatr.txt"),
         Measured("Kronikol.Extensions.MediatR", "Microsoft.Extensions.DependencyInjection.Abstractions", "10.0.0", "R3a: floor/r3a-di-mediatr.txt"),
         // 3.9.0: older 3.x drivers allow Snappier 1.0.0 (a high advisory) or SharpCompress 0.30.1 (a moderate one).
         Measured("Kronikol.Extensions.MongoDB", "MongoDB.Driver", "3.9.0", "MONGODB_DETAILED_PAYLOADS_PLAN.md Q18"),
@@ -96,8 +96,8 @@ internal static class FloorLedger
         Measured("Kronikol.Extensions.MongoDB.V2", "MongoDB.Driver", "2.28.0", "MONGODB_DETAILED_PAYLOADS_PLAN.md Q18"),
         // 2.6.1, the first release past GHSA-473q-m89c-ghf8; moved in R2a ahead of its batch
         // (plans/CLIENT_FLOORS_PLAN.md F10).
-        Unmeasured("Kronikol.Extensions.MySqlConnector", "MySqlConnector", "2.6.1", "R3b"),
-        Unmeasured("Kronikol.Extensions.Npgsql", "Npgsql", "10.0.2", "R3b"),
+        Measured("Kronikol.Extensions.MySqlConnector", "MySqlConnector", "2.6.1", "R3b: the first past GHSA-473q-m89c-ghf8 (F10); the suite passes from 2.0.0 (floor/r3b-mysqlconnector.txt)"),
+        Measured("Kronikol.Extensions.Npgsql", "Npgsql", "10.0.0", "R3b: floor/r3b-npgsql.txt"),
         Measured("Kronikol.Extensions.OpenTelemetry", "OpenTelemetry", "1.15.3", "R2c: floor/r2c-opentelemetry.txt"),
         Measured("Kronikol.Extensions.OpenTelemetry", "OpenTelemetry.Exporter.InMemory", "1.15.3", "R2c: floor/r2c-opentelemetry.txt"),
         Measured("Kronikol.Extensions.Oracle", "Oracle.ManagedDataAccess.Core", "23.4.0", "R2c: floor/r2c-oracle.txt"),
@@ -105,15 +105,17 @@ internal static class FloorLedger
             "R2c: the first past GHSA-846f-f764-76mx and GHSA-2fmv-rv2c-59x7, under which every 23.x client's own Pkcs falls (floor/r2c-oracle.txt)"),
         Measured("Kronikol.Extensions.PubSub", "Google.Cloud.PubSub.V1", "3.35.0", "R2a: floor/r2a-pubsub.txt"),
         Measured("Kronikol.Extensions.Redis", "StackExchange.Redis", "2.6.80", "R2c: floor/r2c-redis.txt"),
-        Unmeasured("Kronikol.Extensions.S3", "AWSSDK.S3", "4.0.23", "R3b"),
-        Unmeasured("Kronikol.Extensions.SNS", "AWSSDK.SimpleNotificationService", "4.0.2.30", "R3b"),
-        Unmeasured("Kronikol.Extensions.SQS", "AWSSDK.SQS", "4.0.2.28", "R3b"),
+        Measured("Kronikol.Extensions.S3", "AWSSDK.S3", "4.0.13.1", "R3b: floor/r3b-s3.txt, floor/r3b-aws-core.txt"),
+        Measured("Kronikol.Extensions.SNS", "AWSSDK.SimpleNotificationService", "4.0.2.7", "R3b: floor/r3b-sns.txt, floor/r3b-aws-core.txt"),
+        Measured("Kronikol.Extensions.SQS", "AWSSDK.SQS", "4.0.2.5", "R3b: floor/r3b-sqs.txt, floor/r3b-aws-core.txt"),
         Measured("Kronikol.Extensions.ServiceBus", "Azure.Messaging.ServiceBus", "7.11.0", "R2b: floor/r2b-servicebus.txt"),
         Measured("Kronikol.Extensions.ServiceBus", "Microsoft.Extensions.DependencyInjection.Abstractions", "10.0.0", "R3a: floor/r3a-di-servicebus.txt"),
         Measured("Kronikol.Extensions.Spanner", "Google.Cloud.Spanner.Data", "5.0.0", "R2a: floor/r2a-spanner.txt"),
         Measured("Kronikol.Extensions.Spanner", "Google.Cloud.Spanner.V1", "5.0.0", "R2a: floor/r2a-spanner.txt"),
         Measured("Kronikol.Extensions.Spanner", "Grpc.Core.Api", "2.66.0", "R2a: floor/r2a-spanner.txt"),
-        Unmeasured("Kronikol.Extensions.SqlClient", "Microsoft.Data.SqlClient", "7.0.1", "R3b"),
+        Measured("Kronikol.Extensions.SqlClient", "Microsoft.Data.SqlClient", "7.0.0", "R3b: floor/r3b-sqlclient.txt"),
+        Measured("Kronikol.Extensions.SqlClient", "System.Security.Cryptography.Pkcs", "9.0.21",
+            "R3b: the first 9.x past GHSA-846f-f764-76mx and GHSA-2fmv-rv2c-59x7, under which every 7.x client's own Pkcs falls (floor/r3b-sqlclient.txt)"),
         Measured("Kronikol.Extensions.Sqlite", "Microsoft.Data.Sqlite", "10.0.11", "R2c: floor/r2c-sqlite.txt"),
         Measured("Kronikol.Extensions.StorageQueues", "Azure.Storage.Queues", "12.11.0", "R2b: floor/r2b-storagequeues.txt"),
         Measured("Kronikol.Extensions.TcpTap", "MongoDB.Bson", "2.28.0", "R2c: floor/r2c-tcptap.txt, the oldest the suite runs on, its own graph clean"),

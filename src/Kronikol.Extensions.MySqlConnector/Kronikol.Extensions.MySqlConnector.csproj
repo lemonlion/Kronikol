@@ -13,6 +13,9 @@
     <!-- MySqlConnector: 2.6.1, the first release past GHSA-473q-m89c-ghf8 (published 2026-10-28; before 2.6.1, the
          client in zero-configuration TLS mode sends the password before it has verified the server's certificate).
          R3b measures the floor (plans/CLIENT_FLOORS_PLAN.md F10). -->
+    <!-- MySqlConnector: 2.6.1 is the first release past GHSA-473q-m89c-ghf8 (moderate), which covers every 2.x before
+         it, and the suite passes from 2.0.0, the first of the major (harness floor/r3b-mysqlconnector.txt, F10)
+         (plans/CLIENT_FLOORS_PLAN.md R3b). -->
     <PackageReference Include="MySqlConnector" Version="2.6.1" />
   </ItemGroup>
   <ItemGroup>

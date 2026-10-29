@@ -1,0 +1,11 @@
+# AWSSDK.S3: 155 stable 4.x releases, 4.0.0 to 4.0.104.7; binary search
+4.0.104.7 | ok | Kronikol.Tests.S3: Passed! - Failed: 0, Passed: 118, Skipped: 0, Total: 118 | audit: none | resolved: AWSSDK.S3/4.0.104.7
+4.0.16.4 | ok | Kronikol.Tests.S3: Passed! - Failed: 0, Passed: 118, Skipped: 0, Total: 118 | audit: none | resolved: AWSSDK.S3/4.0.16.4
+4.0.6.12 | ok | Kronikol.Tests.S3: Passed! - Failed: 0, Passed: 118, Skipped: 0, Total: 118 | audit: AWSSDK.Core 4.0.0.26 low (Kronikol.Tests.S3); AWSSDK.Core 4.0.0.26 low (TargetFramework=net10) | resolved: AWSSDK.S3/4.0.6.12
+4.0.3.1 | ok | Kronikol.Tests.S3: Passed! - Failed: 0, Passed: 118, Skipped: 0, Total: 118 | audit: AWSSDK.Core 4.0.0.13 low (Kronikol.Tests.S3); AWSSDK.Core 4.0.0.13 low (TargetFramework=net10) | resolved: AWSSDK.S3/4.0.3.1
+4.0.1.1 | ok | Kronikol.Tests.S3: Passed! - Failed: 0, Passed: 118, Skipped: 0, Total: 118 | audit: AWSSDK.Core 4.0.0.5 low (Kronikol.Tests.S3); AWSSDK.Core 4.0.0.5 low (TargetFramework=net10) | resolved: AWSSDK.S3/4.0.1.1
+4.0.0.4 | ok | Kronikol.Tests.S3: Passed! - Failed: 0, Passed: 118, Skipped: 0, Total: 118 | audit: AWSSDK.Core 4.0.0.4 low (Kronikol.Tests.S3); AWSSDK.Core 4.0.0.4 low (TargetFramework=net10) | resolved: AWSSDK.S3/4.0.0.4
+4.0.0.2 | ok | Kronikol.Tests.S3: Passed! - Failed: 0, Passed: 118, Skipped: 0, Total: 118 | audit: AWSSDK.Core 4.0.0.3 low (Kronikol.Tests.S3); AWSSDK.Core 4.0.0.3 low (TargetFramework=net10) | resolved: AWSSDK.S3/4.0.0.2
+4.0.0.1 | ok | Kronikol.Tests.S3: Passed! - Failed: 0, Passed: 118, Skipped: 0, Total: 118 | audit: AWSSDK.Core 4.0.0.2 low (Kronikol.Tests.S3); AWSSDK.Core 4.0.0.2 low (TargetFramework=net10) | resolved: AWSSDK.S3/4.0.0.1
+4.0.0 | ok | Kronikol.Tests.S3: Passed! - Failed: 0, Passed: 118, Skipped: 0, Total: 118 | audit: AWSSDK.Core 4.0.0 low (Kronikol.Tests.S3); AWSSDK.Core 4.0.0 low (TargetFramework=net10) | resolved: AWSSDK.S3/4.0.0
+# oldest passing: 4.0.0

@@ -10,7 +10,11 @@
     <InternalsVisibleTo Include="Kronikol.Tests.Npgsql" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Npgsql" Version="10.0.2" />
+    <!-- Npgsql: 10.0.0 is the oldest 10.x the suite passes on, the first of the major, and its graph carries no known
+         advisory (harness floor/r3b-npgsql.txt). FloorLedger holds the floor, and the test project's package fact reads
+         it back from the packed nuspec; the suite runs on the newest 10.x, and on this floor with -p:FloorRun=true
+         (plans/CLIENT_FLOORS_PLAN.md R3b). -->
+    <PackageReference Include="Npgsql" Version="10.0.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Kronikol\Kronikol.csproj" />

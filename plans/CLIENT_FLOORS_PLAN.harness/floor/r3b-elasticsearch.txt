@@ -1,0 +1,9 @@
+# Elastic.Clients.Elasticsearch: 41 stable 9.x releases, 9.0.0 to 9.5.3; binary search
+9.5.3 | ok | Kronikol.Tests.Elasticsearch: Passed! - Failed: 0, Passed: 59, Skipped: 0, Total: 59 | audit: none | resolved: Elastic.Clients.Elasticsearch/9.5.3
+9.1.11 | ok | Kronikol.Tests.Elasticsearch: Passed! - Failed: 0, Passed: 59, Skipped: 0, Total: 59 | audit: none | resolved: Elastic.Clients.Elasticsearch/9.1.11
+9.1.1 | ok | Kronikol.Tests.Elasticsearch: Passed! - Failed: 0, Passed: 59, Skipped: 0, Total: 59 | audit: none | resolved: Elastic.Clients.Elasticsearch/9.1.1
+9.0.5 | ok | Kronikol.Tests.Elasticsearch: Passed! - Failed: 0, Passed: 59, Skipped: 0, Total: 59 | audit: none | resolved: Elastic.Clients.Elasticsearch/9.0.5
+9.0.2 | ok | Kronikol.Tests.Elasticsearch: Passed! - Failed: 0, Passed: 59, Skipped: 0, Total: 59 | audit: none | resolved: Elastic.Clients.Elasticsearch/9.0.2
+9.0.1 | ok | Kronikol.Tests.Elasticsearch: Passed! - Failed: 0, Passed: 59, Skipped: 0, Total: 59 | audit: none | resolved: Elastic.Clients.Elasticsearch/9.0.1
+9.0.0 | ok | Kronikol.Tests.Elasticsearch: Passed! - Failed: 0, Passed: 59, Skipped: 0, Total: 59 | audit: none | resolved: Elastic.Clients.Elasticsearch/9.0.0
+# oldest passing: 9.0.0

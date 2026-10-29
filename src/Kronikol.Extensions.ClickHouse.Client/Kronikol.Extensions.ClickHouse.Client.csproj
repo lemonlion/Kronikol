@@ -10,7 +10,12 @@
     <InternalsVisibleTo Include="Kronikol.Tests.ClickHouse" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="ClickHouse.Client" Version="7.14.0" />
+    <!-- ClickHouse.Client: 7.7.0 is the oldest 7.x the suite builds and passes on: its facts construct the client's
+         QueryStats with the eight arguments 7.7.0 gave it, so the package itself may run on older releases; its graph
+         carries no known advisory (harness floor/r3b-clickhouse-client.txt). FloorLedger holds the floor, and the test
+         project's package fact reads it back from the packed nuspec; the suite runs on the newest 7.x, and on this
+         floor with -p:FloorRun=true (plans/CLIENT_FLOORS_PLAN.md R3b). -->
+    <PackageReference Include="ClickHouse.Client" Version="7.7.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Kronikol.Extensions.ClickHouse\Kronikol.Extensions.ClickHouse.csproj" />

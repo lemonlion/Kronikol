@@ -13,9 +13,15 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.*" />
     <!-- All three supported ClickHouse ADO.NET clients, to verify each is tracked -->
-    <PackageReference Include="ClickHouse.Client" Version="7.*" />
-    <PackageReference Include="ClickHouse.Driver" Version="1.*" />
-    <PackageReference Include="Octonica.ClickHouseClient" Version="3.*" />
+    <!-- The suite runs on the newest 7.x; -p:FloorRun=true drops this reference, so it runs on the floor the package
+         asks for (7.7.0). -->
+    <PackageReference Include="ClickHouse.Client" Version="7.*" Condition="'$(FloorRun)' != 'true'" />
+    <!-- The suite runs on the newest 1.x; -p:FloorRun=true drops this reference, so it runs on the floor the package
+         asks for (1.3.0). -->
+    <PackageReference Include="ClickHouse.Driver" Version="1.*" Condition="'$(FloorRun)' != 'true'" />
+    <!-- The suite runs on the newest 3.x; -p:FloorRun=true drops this reference, so it runs on the floor the package
+         asks for (3.1.1). -->
+    <PackageReference Include="Octonica.ClickHouseClient" Version="3.*" Condition="'$(FloorRun)' != 'true'" />
     <!-- A real server for the client facts no fake can stand in for (ClickHouseServerFixture) -->
     <PackageReference Include="Testcontainers.ClickHouse" Version="4.16.0" />
   </ItemGroup>
@@ -27,6 +33,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Kronikol.Tests\History\HistoryGuard.cs" Link="HistoryGuard.cs" />
+    <Compile Include="..\Kronikol.Tests\Packaging\PackedNuspec.cs" Link="PackedNuspec.cs" />
+    <Compile Include="..\Kronikol.Tests\Packaging\FloorLedger.cs" Link="FloorLedger.cs" />
   </ItemGroup>
 
 </Project>

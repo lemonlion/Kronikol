@@ -1,0 +1,1 @@
+# server: clickhouse-server:25.8-alpine, ping Ok.

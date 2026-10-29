@@ -9,7 +9,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MediatR" Version="14.1.0" />
+    <!-- MediatR: 14.0.0 is the oldest 14.x the suite passes on, the first of the major, and its graph carries no known
+         advisory (harness floor/r3b-mediatr.txt) (plans/CLIENT_FLOORS_PLAN.md R3b). -->
+    <PackageReference Include="MediatR" Version="14.0.0" />
     <!-- Microsoft.Extensions.DependencyInjection.Abstractions: 10.0.0 is the oldest 10.x the suite passes on, the first
          of the major, each probe with the container and the logging of the same release, as MediatR 14.1.0 asks for
          10.0.0 and the Kronikol core no longer asks for more; its graph carries no known advisory (harness

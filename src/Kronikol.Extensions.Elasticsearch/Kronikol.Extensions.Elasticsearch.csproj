@@ -10,7 +10,11 @@
     <InternalsVisibleTo Include="Kronikol.Tests.Elasticsearch" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Elastic.Clients.Elasticsearch" Version="9.4.0" />
+    <!-- Elastic.Clients.Elasticsearch: 9.0.0 is the oldest 9.x the suite passes on, the first of the major, and its
+         graph carries no known advisory (harness floor/r3b-elasticsearch.txt). FloorLedger holds the floor, and the
+         test project's package fact reads it back from the packed nuspec; the suite runs on the newest 9.x, and on this
+         floor with -p:FloorRun=true (plans/CLIENT_FLOORS_PLAN.md R3b). -->
+    <PackageReference Include="Elastic.Clients.Elasticsearch" Version="9.0.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Kronikol\Kronikol.csproj" />

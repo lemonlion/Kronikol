@@ -10,7 +10,12 @@
     <InternalsVisibleTo Include="Kronikol.Tests.ClickHouse" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="ClickHouse.Driver" Version="1.4.0" />
+    <!-- ClickHouse.Driver: 1.3.0 is the oldest 1.x the package builds on, as it wraps client members 1.3.0 added
+         (QueryAsync and the insert type registrations), and the suite passes on it against a ClickHouse 25.8 server;
+         its graph carries no known advisory (harness floor/r3b-clickhouse-driver.txt). FloorLedger holds the floor, and
+         the test project's package fact reads it back from the packed nuspec; the suite runs on the newest 1.x, and on
+         this floor with -p:FloorRun=true (plans/CLIENT_FLOORS_PLAN.md R3b). -->
+    <PackageReference Include="ClickHouse.Driver" Version="1.3.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Kronikol.Extensions.ClickHouse\Kronikol.Extensions.ClickHouse.csproj" />

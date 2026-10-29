@@ -1,0 +1,8 @@
+# ClickHouse.Client: 34 stable 7.x releases, 7.0.0 to 7.14.0; binary search
+7.14.0 | ok | Kronikol.Tests.ClickHouse: Passed! - Failed: 0, Passed: 127, Skipped: 9, Total: 136 | audit: none | resolved: ClickHouse.Client/7.14.0
+7.7.0 | ok | Kronikol.Tests.ClickHouse: Passed! - Failed: 0, Passed: 127, Skipped: 9, Total: 136 | audit: none | resolved: ClickHouse.Client/7.7.0
+7.4.1 | BUILD FAILED | Kronikol.Tests.ClickHouse: error CS1729: 'QueryStats' does not contain a constructor that takes 8 arguments  | audit: none | resolved: ClickHouse.Client/7.4.1
+7.5.3 | BUILD FAILED | Kronikol.Tests.ClickHouse: error CS1729: 'QueryStats' does not contain a constructor that takes 8 arguments  | audit: none | resolved: ClickHouse.Client/7.5.3
+7.6.1 | BUILD FAILED | Kronikol.Tests.ClickHouse: error CS1729: 'QueryStats' does not contain a constructor that takes 8 arguments  | audit: none | resolved: ClickHouse.Client/7.6.1
+7.6.2 | BUILD FAILED | Kronikol.Tests.ClickHouse: error CS1729: 'QueryStats' does not contain a constructor that takes 8 arguments  | audit: none | resolved: ClickHouse.Client/7.6.2
+# oldest passing: 7.7.0

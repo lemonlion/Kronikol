@@ -1,0 +1,6 @@
+# Octonica.ClickHouseClient: 8 stable 3.x releases, 3.1.1 to 3.1.10; binary search
+3.1.10 | ok | Kronikol.Tests.ClickHouse: Passed! - Failed: 0, Passed: 127, Skipped: 9, Total: 136 | audit: none | resolved: Octonica.ClickHouseClient/3.1.10
+3.1.5 | ok | Kronikol.Tests.ClickHouse: Passed! - Failed: 0, Passed: 127, Skipped: 9, Total: 136 | audit: none | resolved: Octonica.ClickHouseClient/3.1.5
+3.1.2 | ok | Kronikol.Tests.ClickHouse: Passed! - Failed: 0, Passed: 127, Skipped: 9, Total: 136 | audit: none | resolved: Octonica.ClickHouseClient/3.1.2
+3.1.1 | ok | Kronikol.Tests.ClickHouse: Passed! - Failed: 0, Passed: 127, Skipped: 9, Total: 136 | audit: none | resolved: Octonica.ClickHouseClient/3.1.1
+# oldest passing: 3.1.1

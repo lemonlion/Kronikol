@@ -4,6 +4,67 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.27.12] - 2026-10-29
+
+The patch part moves (5.27.11 to 5.27.12): packaging fixes, with no new option and no new public member (#97;
+`plans/CLIENT_FLOORS_PLAN.md` R3b).
+
+### Fixed
+
+- **The SDK client packages ask for measured floors.** Each asks for the oldest release its suite passes on and whose
+  graph is past every known advisory, where it asked for the release of the day it was pinned.
+
+  | Package | Asks for |
+  |---|---|
+  | `Kronikol.Extensions.S3` | `AWSSDK.S3` 4.0.13.1 (was 4.0.23) |
+  | `Kronikol.Extensions.DynamoDB` | `AWSSDK.DynamoDBv2` 4.0.10.1 (was 4.0.18.1) |
+  | `Kronikol.Extensions.SNS` | `AWSSDK.SimpleNotificationService` 4.0.2.7 (was 4.0.2.30) |
+  | `Kronikol.Extensions.SQS` | `AWSSDK.SQS` 4.0.2.5 (was 4.0.2.28) |
+  | `Kronikol.Extensions.EventBridge` | `AWSSDK.EventBridge` 4.0.5.7 (was 4.0.5.29) |
+  | `Kronikol.Extensions.Npgsql` | `Npgsql` 10.0.0 (was 10.0.2) |
+  | `Kronikol.Extensions.SqlClient` | `Microsoft.Data.SqlClient` 7.0.0 (was 7.0.1), and `System.Security.Cryptography.Pkcs` 9.0.21 (new) |
+  | `Kronikol.Extensions.MySqlConnector` | `MySqlConnector` 2.6.1 (as before) |
+  | `Kronikol.Extensions.Elasticsearch` | `Elastic.Clients.Elasticsearch` 9.0.0 (was 9.4.0) |
+  | `Kronikol.Extensions.MassTransit` | `MassTransit` 9.0.0 (was 9.1.0) |
+  | `Kronikol.Extensions.MediatR` | `MediatR` 14.0.0 (was 14.1.0) |
+  | `Kronikol.Extensions.ClickHouse.Client` | `ClickHouse.Client` 7.7.0 (was 7.14.0) |
+  | `Kronikol.Extensions.ClickHouse.Driver` | `ClickHouse.Driver` 1.3.0 (was 1.4.0) |
+  | `Kronikol.Extensions.ClickHouse.Octonica` | `Octonica.ClickHouseClient` 3.1.1 (was 3.1.10) |
+
+  The five AWS floors are each client's first release that asks for an `AWSSDK.Core` past GHSA-9cvc-h2w8-phrp (low),
+  which covers every `AWSSDK.Core` before 4.0.3.3; their suites pass from older releases. Every
+  `Microsoft.Data.SqlClient` 7.x, the newest included, brings a `System.Security.Cryptography.Pkcs` under
+  GHSA-846f-f764-76mx (high) and GHSA-2fmv-rv2c-59x7 (moderate), so the SqlClient package asks for Pkcs 9.0.21, the
+  first 9.x past both, as the Oracle package does for its client. MySqlConnector's suite passes from 2.0.0, and its
+  floor stays at 2.6.1, the first past GHSA-473q-m89c-ghf8. ClickHouse.Driver's floor is the oldest release the package
+  builds on, and ClickHouse.Client's the oldest its suite builds on. Behaviour change: a project that takes one of these
+  clients only through Kronikol now resolves its floor, where it resolved the newer pin; reference the client yourself
+  for a newer one.
+
+### Tests
+
+- Each R3b package's suite runs on its client's newest release and, with `-p:FloorRun=true`, on the floor its package
+  asks for; each package has a fact that packs it and holds its nuspec to the floor ledger, whose count of pins still to
+  measure falls from 19 to 5. MediatR's fact, which expected its one unmeasured line, now expects none.
+- The ClickHouse suite took its three clients floating with no `'$(FloorRun)' != 'true'` condition, so no run of it took
+  the floors the packages ask for, and CI's floor loops never ran it. They are under the switch now.
+
+### Documentation
+
+- The wiki pages of the S3, DynamoDB, SNS, SQS, EventBridge, Npgsql, SqlClient, Elasticsearch, MassTransit and
+  ClickHouse packages gain a Client versions section naming each floor and why it sits there, and the MySqlConnector and
+  MediatR pages say where their suites run.
+
+Checks: the floor searches, each batch in a worktree of its own; each R3b suite on the newest and on its floor, each
+floor run from an empty `bin/` and `obj/` (S3 119, DynamoDB 94, SNS 101, SQS 109, EventBridge 191, Npgsql 27, SqlClient
+25, MySqlConnector 23, Elasticsearch 60, MassTransit 71, MediatR 6 and ClickHouse 139, the ClickHouse.Driver facts
+against a ClickHouse 25.8 server in podman), none with an advisory; the MediatR and S3 package facts red on 5.27.11's
+ledger and green on R3b's; the whole suite as CI runs it (65 projects on the newest, 21,261 passed, 63 skipped; 41 floor
+runs, 17,216 passed, 21 skipped; none failed); the Playwright E2E suite (2,089 passed, 28 skipped); and the Release
+build of `release.slnf`, whose only advisories are MongoDB.Driver 2.x's SharpCompress and Snappier, SqlClient's Pkcs
+gone. The solution's only other is the Pkcs 9.0.11 that the EF Core SqlServer provider brings to the EF Core suite, a
+test provider's.
+
 ## [5.27.11] - 2026-10-29
 
 The patch part moves (5.27.10 to 5.27.11): a packaging fix, with no new option and no new public member (#97;

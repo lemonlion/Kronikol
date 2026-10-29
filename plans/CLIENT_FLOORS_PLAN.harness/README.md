@@ -245,3 +245,14 @@ test red on today's tree, then the suite on 3.12.0 and on 3.0.0 with `-p:FloorRu
 
 Text for the owner to decide on: the wiki section, the reply on #205, two upstream reports for the emulator, and the
 R1 changelog entry.
+
+## R3b, as released
+
+- `floor/r3b-search-aws.sh`, `floor/r3b-search-data.sh` and `floor/r3b-search-bus.sh`: the fourteen searches, in
+  three worktrees at once, one per script (`floor/r3b-<name>.txt`). The bus script starts a ClickHouse 25.8 server
+  in the podman VM for the ClickHouse.Driver search (`floor/r3b-clickhouse-server.txt`), and the ClickHouse suite
+  took its clients under the switch for the searches (F38).
+- `floor/r3b_aws_core.py`: each AWS client's first release whose `AWSSDK.Core` dependency is past GHSA-9cvc-h2w8-phrp,
+  read from NuGet's registration metadata (`floor/r3b-aws-core.txt`), which sets the five AWS floors.
+- `floor/r3b-suites.sh`: each R3b suite on the newest and on its floor, the floor run from an empty `bin/` and
+  `obj/` (`floor/r3b-suites.txt`), the ClickHouse one against a server in the podman VM.

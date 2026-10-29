@@ -1,0 +1,9 @@
+# MySqlConnector: 36 stable 2.x releases, 2.0.0 to 2.6.2; binary search
+2.6.2 | ok | Kronikol.Tests.MySqlConnector: Passed! - Failed: 0, Passed: 22, Skipped: 0, Total: 22 | audit: none | resolved: MySqlConnector/2.6.2
+2.2.2 | ok | Kronikol.Tests.MySqlConnector: Passed! - Failed: 0, Passed: 22, Skipped: 0, Total: 22 | audit: MySqlConnector 2.2.2 moderate (Kronikol.Tests.MySqlConnector); MySqlConnector 2.2.2 moderate (TargetFramework=net10) | resolved: MySqlConnector/2.2.2
+2.1.7 | ok | Kronikol.Tests.MySqlConnector: Passed! - Failed: 0, Passed: 22, Skipped: 0, Total: 22 | audit: MySqlConnector 2.1.7 moderate (Kronikol.Tests.MySqlConnector); MySqlConnector 2.1.7 moderate (TargetFramework=net10) | resolved: MySqlConnector/2.1.7
+2.1.3 | ok | Kronikol.Tests.MySqlConnector: Passed! - Failed: 0, Passed: 22, Skipped: 0, Total: 22 | audit: MySqlConnector 2.1.3 moderate (Kronikol.Tests.MySqlConnector); MySqlConnector 2.1.3 moderate (TargetFramework=net10) | resolved: MySqlConnector/2.1.3
+2.1.1 | ok | Kronikol.Tests.MySqlConnector: Passed! - Failed: 0, Passed: 22, Skipped: 0, Total: 22 | audit: MySqlConnector 2.1.1 moderate (Kronikol.Tests.MySqlConnector); MySqlConnector 2.1.1 moderate (TargetFramework=net10) | resolved: MySqlConnector/2.1.1
+2.1.0 | ok | Kronikol.Tests.MySqlConnector: Passed! - Failed: 0, Passed: 22, Skipped: 0, Total: 22 | audit: MySqlConnector 2.1.0 moderate (Kronikol.Tests.MySqlConnector); MySqlConnector 2.1.0 moderate (TargetFramework=net10) | resolved: MySqlConnector/2.1.0
+2.0.0 | ok | Kronikol.Tests.MySqlConnector: Passed! - Failed: 0, Passed: 22, Skipped: 0, Total: 22 | audit: MySqlConnector 2.0.0 moderate (Kronikol.Tests.MySqlConnector); MySqlConnector 2.0.0 moderate (TargetFramework=net10) | resolved: MySqlConnector/2.0.0
+# oldest passing: 2.0.0

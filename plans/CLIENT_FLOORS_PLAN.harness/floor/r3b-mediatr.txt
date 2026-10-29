@@ -1,0 +1,5 @@
+# MediatR: 3 stable 14.x releases, 14.0.0 to 14.2.0; binary search
+14.2.0 | ok | Kronikol.Tests.MediatR: Passed! - Failed: 0, Passed: 5, Skipped: 0, Total: 5 | audit: none | resolved: MediatR/14.2.0
+14.1.0 | ok | Kronikol.Tests.MediatR: Passed! - Failed: 0, Passed: 5, Skipped: 0, Total: 5 | audit: none | resolved: MediatR/14.1.0
+14.0.0 | ok | Kronikol.Tests.MediatR: Passed! - Failed: 0, Passed: 5, Skipped: 0, Total: 5 | audit: none | resolved: MediatR/14.0.0
+# oldest passing: 14.0.0

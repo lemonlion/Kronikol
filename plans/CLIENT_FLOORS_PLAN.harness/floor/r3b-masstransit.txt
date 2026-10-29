@@ -1,0 +1,7 @@
+# MassTransit: 10 stable 9.x releases, 9.0.0 to 9.2.4; binary search
+9.2.4 | ok | Kronikol.Tests.MassTransit: Passed! - Failed: 0, Passed: 70, Skipped: 0, Total: 70 | audit: none | resolved: MassTransit/9.2.4
+9.1.2 | ok | Kronikol.Tests.MassTransit: Passed! - Failed: 0, Passed: 70, Skipped: 0, Total: 70 | audit: none | resolved: MassTransit/9.1.2
+9.1.0 | ok | Kronikol.Tests.MassTransit: Passed! - Failed: 0, Passed: 70, Skipped: 0, Total: 70 | audit: none | resolved: MassTransit/9.1.0
+9.0.1 | ok | Kronikol.Tests.MassTransit: Passed! - Failed: 0, Passed: 70, Skipped: 0, Total: 70 | audit: none | resolved: MassTransit/9.0.1
+9.0.0 | ok | Kronikol.Tests.MassTransit: Passed! - Failed: 0, Passed: 70, Skipped: 0, Total: 70 | audit: none | resolved: MassTransit/9.0.0
+# oldest passing: 9.0.0

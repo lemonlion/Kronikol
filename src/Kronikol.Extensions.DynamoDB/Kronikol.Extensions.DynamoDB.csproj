@@ -9,7 +9,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AWSSDK.DynamoDBv2" Version="4.0.18.1" />
+    <!-- AWSSDK.DynamoDBv2: 4.0.10.1 is the first 4.x that asks for an AWSSDK.Core past GHSA-9cvc-h2w8-phrp (low;
+         4.0.3.3 and later), and the suite passes from 4.0.0.2, as 4.0.0.1 does not build against the AWSSDK.Core it
+         asks for (CS1705) (harness floor/r3b-dynamodb.txt, floor/r3b-aws-core.txt). FloorLedger holds the floor, and
+         the test project's package fact reads it back from the packed nuspec; the suite runs on the newest 4.x, and on
+         this floor with -p:FloorRun=true (plans/CLIENT_FLOORS_PLAN.md R3b). -->
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="4.0.10.1" />
   </ItemGroup>
 
   <ItemGroup>

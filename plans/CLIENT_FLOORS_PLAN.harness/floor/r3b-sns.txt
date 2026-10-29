@@ -1,0 +1,10 @@
+# AWSSDK.SimpleNotificationService: 101 stable 4.x releases, 4.0.0 to 4.0.100.22; binary search
+4.0.100.22 | ok | Kronikol.Tests.SNS: Passed! - Failed: 0, Passed: 100, Skipped: 0, Total: 100 | audit: none | resolved: AWSSDK.SimpleNotificationService/4.0.100.22
+4.0.2.18 | ok | Kronikol.Tests.SNS: Passed! - Failed: 0, Passed: 100, Skipped: 0, Total: 100 | audit: none | resolved: AWSSDK.SimpleNotificationService/4.0.2.18
+4.0.1.3 | ok | Kronikol.Tests.SNS: Passed! - Failed: 0, Passed: 100, Skipped: 0, Total: 100 | audit: AWSSDK.Core 4.0.0.29 low (Kronikol.Tests.SNS); AWSSDK.Core 4.0.0.29 low (TargetFramework=net10) | resolved: AWSSDK.SimpleNotificationService/4.0.1.3
+4.0.0.12 | ok | Kronikol.Tests.SNS: Passed! - Failed: 0, Passed: 100, Skipped: 0, Total: 100 | audit: AWSSDK.Core 4.0.0.14 low (Kronikol.Tests.SNS); AWSSDK.Core 4.0.0.14 low (TargetFramework=net10) | resolved: AWSSDK.SimpleNotificationService/4.0.0.12
+4.0.0.6 | ok | Kronikol.Tests.SNS: Passed! - Failed: 0, Passed: 100, Skipped: 0, Total: 100 | audit: AWSSDK.Core 4.0.0.8 low (Kronikol.Tests.SNS); AWSSDK.Core 4.0.0.8 low (TargetFramework=net10) | resolved: AWSSDK.SimpleNotificationService/4.0.0.6
+4.0.0.3 | ok | Kronikol.Tests.SNS: Passed! - Failed: 0, Passed: 100, Skipped: 0, Total: 100 | audit: AWSSDK.Core 4.0.0.4 low (Kronikol.Tests.SNS); AWSSDK.Core 4.0.0.4 low (TargetFramework=net10) | resolved: AWSSDK.SimpleNotificationService/4.0.0.3
+4.0.0.1 | ok | Kronikol.Tests.SNS: Passed! - Failed: 0, Passed: 100, Skipped: 0, Total: 100 | audit: AWSSDK.Core 4.0.0.2 low (Kronikol.Tests.SNS); AWSSDK.Core 4.0.0.2 low (TargetFramework=net10) | resolved: AWSSDK.SimpleNotificationService/4.0.0.1
+4.0.0 | ok | Kronikol.Tests.SNS: Passed! - Failed: 0, Passed: 100, Skipped: 0, Total: 100 | audit: AWSSDK.Core 4.0.0 low (Kronikol.Tests.SNS); AWSSDK.Core 4.0.0 low (TargetFramework=net10) | resolved: AWSSDK.SimpleNotificationService/4.0.0
+# oldest passing: 4.0.0

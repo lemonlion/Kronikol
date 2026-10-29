@@ -1,0 +1,6 @@
+# Microsoft.Data.SqlClient: 6 stable 7.x releases, 7.0.0 to 7.1.1; binary search
+7.1.1 | ok | Kronikol.Tests.SqlClient: Passed! - Failed: 0, Passed: 24, Skipped: 0, Total: 24 | audit: System.Security.Cryptography.Pkcs 9.0.18 high (Kronikol.Tests.SqlClient); System.Security.Cryptography.Pkcs 9.0.18 high (TargetFramework=net10) | resolved: Microsoft.Data.SqlClient/7.1.1
+7.0.2 | ok | Kronikol.Tests.SqlClient: Passed! - Failed: 0, Passed: 24, Skipped: 0, Total: 24 | audit: System.Security.Cryptography.Pkcs 9.0.13 high (Kronikol.Tests.SqlClient); System.Security.Cryptography.Pkcs 9.0.13 high (TargetFramework=net10) | resolved: Microsoft.Data.SqlClient/7.0.2
+7.0.1 | ok | Kronikol.Tests.SqlClient: Passed! - Failed: 0, Passed: 24, Skipped: 0, Total: 24 | audit: System.Security.Cryptography.Pkcs 9.0.13 high (Kronikol.Tests.SqlClient); System.Security.Cryptography.Pkcs 9.0.13 high (TargetFramework=net10) | resolved: Microsoft.Data.SqlClient/7.0.1
+7.0.0 | ok | Kronikol.Tests.SqlClient: Passed! - Failed: 0, Passed: 24, Skipped: 0, Total: 24 | audit: System.Security.Cryptography.Pkcs 9.0.13 high (Kronikol.Tests.SqlClient); System.Security.Cryptography.Pkcs 9.0.13 high (TargetFramework=net10) | resolved: Microsoft.Data.SqlClient/7.0.0
+# oldest passing: 7.0.0

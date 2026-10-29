@@ -7,7 +7,12 @@
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.EventBridge" Version="4.0.5.29" />
+    <!-- AWSSDK.EventBridge: 4.0.5.7 is the first 4.x that asks for an AWSSDK.Core past GHSA-9cvc-h2w8-phrp (low;
+         4.0.3.3 and later), and the suite passes from 4.0.0, the first of the major (harness floor/r3b-eventbridge.txt,
+         floor/r3b-aws-core.txt). FloorLedger holds the floor, and the test project's package fact reads it back from
+         the packed nuspec; the suite runs on the newest 4.x, and on this floor with -p:FloorRun=true
+         (plans/CLIENT_FLOORS_PLAN.md R3b). -->
+    <PackageReference Include="AWSSDK.EventBridge" Version="4.0.5.7" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Kronikol\Kronikol.csproj" />

@@ -1,0 +1,10 @@
+# AWSSDK.SQS: 102 stable 4.x releases, 4.0.0 to 4.0.100.21; binary search
+4.0.100.21 | ok | Kronikol.Tests.SQS: Passed! - Failed: 0, Passed: 108, Skipped: 0, Total: 108 | audit: none | resolved: AWSSDK.SQS/4.0.100.21
+4.0.2.13 | ok | Kronikol.Tests.SQS: Passed! - Failed: 0, Passed: 108, Skipped: 0, Total: 108 | audit: none | resolved: AWSSDK.SQS/4.0.2.13
+4.0.1.2 | ok | Kronikol.Tests.SQS: Passed! - Failed: 0, Passed: 108, Skipped: 0, Total: 108 | audit: AWSSDK.Core 4.0.0.26 low (Kronikol.Tests.SQS); AWSSDK.Core 4.0.0.26 low (TargetFramework=net10) | resolved: AWSSDK.SQS/4.0.1.2
+4.0.0.12 | ok | Kronikol.Tests.SQS: Passed! - Failed: 0, Passed: 108, Skipped: 0, Total: 108 | audit: AWSSDK.Core 4.0.0.13 low (Kronikol.Tests.SQS); AWSSDK.Core 4.0.0.13 low (TargetFramework=net10) | resolved: AWSSDK.SQS/4.0.0.12
+4.0.0.6 | ok | Kronikol.Tests.SQS: Passed! - Failed: 0, Passed: 108, Skipped: 0, Total: 108 | audit: AWSSDK.Core 4.0.0.7 low (Kronikol.Tests.SQS); AWSSDK.Core 4.0.0.7 low (TargetFramework=net10) | resolved: AWSSDK.SQS/4.0.0.6
+4.0.0.3 | ok | Kronikol.Tests.SQS: Passed! - Failed: 0, Passed: 108, Skipped: 0, Total: 108 | audit: AWSSDK.Core 4.0.0.4 low (Kronikol.Tests.SQS); AWSSDK.Core 4.0.0.4 low (TargetFramework=net10) | resolved: AWSSDK.SQS/4.0.0.3
+4.0.0.1 | ok | Kronikol.Tests.SQS: Passed! - Failed: 0, Passed: 108, Skipped: 0, Total: 108 | audit: AWSSDK.Core 4.0.0.2 low (Kronikol.Tests.SQS); AWSSDK.Core 4.0.0.2 low (TargetFramework=net10) | resolved: AWSSDK.SQS/4.0.0.1
+4.0.0 | ok | Kronikol.Tests.SQS: Passed! - Failed: 0, Passed: 108, Skipped: 0, Total: 108 | audit: AWSSDK.Core 4.0.0 low (Kronikol.Tests.SQS); AWSSDK.Core 4.0.0 low (TargetFramework=net10) | resolved: AWSSDK.SQS/4.0.0
+# oldest passing: 4.0.0

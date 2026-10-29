@@ -5,7 +5,7 @@ plan a fix for the underlying problem; audited the same day at 5.14.0 (`8d7d1e1d
 complete and accurate (section 11 lists what the audit found and changed). **Green-lit 2026-10-28** by the owner ("Can
 you implement the plan in full"), every question in section 10 at its recommendation; executing. **R1 released as
 5.22.1, R2a as 5.27.1, R2b as 5.27.3, R2c as 5.27.5, F26, found by R2c, as 5.27.7, F30, found by R3a, as 5.27.8,
-R3a as 5.27.10, and F37, found by 5.27.10's first CI run, as 5.27.11** (section 11).
+R3a as 5.27.10, F37, found by 5.27.10's first CI run, as 5.27.11, and R3b as 5.27.12** (section 11).
 
 **Issues:** [#205](https://github.com/lemonlion/Kronikol/issues/205), "BigQuery: the extension's floor,
 Google.Cloud.BigQuery.V2 3.12, runs ExecuteQuery through jobs.query, whose timestamps the emulator answers in seconds,
@@ -510,6 +510,32 @@ probed ("NOT ON x"), `--to` (a search from below a release that cannot build), `
 probe), `--no-floor-run` (the package built on the release probed, the suites on their newest, F35) and `--filter` for the paired and family searches (each package fact fails every probe of another release, as
 F23 found). After R3a the ledger holds none still floating, 19 unmeasured and 43 measured.
 
+*As built in R3b:* the fourteen SDK client pins ask for measured floors (RUN, `floor/r3b-*.txt`), and the SqlClient
+package lifts the Pkcs its client brings:
+
+| Package | Floor | Why there |
+|---|---|---|
+| S3, `AWSSDK.S3` | 4.0.13.1 | The first 4.x that asks for an `AWSSDK.Core` past GHSA-9cvc-h2w8-phrp (low; 4.0.3.3 and later, `floor/r3b-aws-core.txt`); the suite passes from 4.0.0 |
+| DynamoDB, `AWSSDK.DynamoDBv2` | 4.0.10.1 | The same advisory; the suite passes from 4.0.0.2, as 4.0.0.1 does not build against the `AWSSDK.Core` it asks for (CS1705) |
+| SNS, `AWSSDK.SimpleNotificationService` | 4.0.2.7 | The same advisory; the suite passes from 4.0.0 |
+| SQS, `AWSSDK.SQS` | 4.0.2.5 | The same advisory; the suite passes from 4.0.0 |
+| EventBridge, `AWSSDK.EventBridge` | 4.0.5.7 | The same advisory; the suite passes from 4.0.0 |
+| Npgsql, `Npgsql` | 10.0.0 | The first of the major |
+| SqlClient, `Microsoft.Data.SqlClient` | 7.0.0 | The first of the major; every 7.x, the newest included, brings a `System.Security.Cryptography.Pkcs` under GHSA-846f-f764-76mx (high) and GHSA-2fmv-rv2c-59x7 (moderate) |
+| SqlClient, `System.Security.Cryptography.Pkcs` | 9.0.21 | The first 9.x past both, in the major the client asks for, as the Oracle package's 8.0.2 is in its (R2c, F21) |
+| MySqlConnector, `MySqlConnector` | 2.6.1 | The pin, the first past GHSA-473q-m89c-ghf8 (moderate, F10); the suite passes from 2.0.0 |
+| Elasticsearch, `Elastic.Clients.Elasticsearch` | 9.0.0 | The first of the major |
+| MassTransit, `MassTransit` | 9.0.0 | The first of the major |
+| MediatR, `MediatR` | 14.0.0 | The first of the major |
+| ClickHouse.Client, `ClickHouse.Client` | 7.7.0 | The oldest the suite builds on: its facts construct `QueryStats` with the eight arguments 7.7.0 gave it, so the package itself may run on older releases |
+| ClickHouse.Driver, `ClickHouse.Driver` | 1.3.0 | The oldest the package builds on, as it wraps client members 1.3.0 added (`QueryAsync` and the insert type registrations); the suite passes on it against a ClickHouse 25.8 server in podman |
+| ClickHouse.Octonica, `Octonica.ClickHouseClient` | 3.1.1 | The first of the major |
+
+Beyond those advisories, none of their graphs carries a known advisory. Each suite references its client at the
+newest under `'$(FloorRun)' != 'true'`, as R2's do; the ClickHouse suite took its three clients floating with no
+switch, so no run of it took the floors the packages ask for (F38), and now takes them under the switch. After R3b the
+ledger holds none still floating, 5 unmeasured (R3c's IKVM) and 58 measured.
+
 **Not chosen: central package management**, #97's third option. RUN, `restore/cpm-float/`: under
 `ManagePackageVersionsCentrally`, restore rejects a central floating version (`NU1011: The following PackageVersion
 items cannot specify a floating version`) unless a project sets `CentralPackageFloatingVersionsEnabled`, so a test
@@ -598,6 +624,8 @@ together they can share one patch release (Q7).
 | `TestCountTests` (R3a), in the LightBDD xUnit v2 and v3 suites | a scenario method is a test for each row of its test data, whichever attribute gives the rows, one with none and one whose rows cannot be read | R3a's parent: on xUnit v2 a `MemberData` or `ClassData` method counted one over its rows; on v3 `ClassData` counted one over and `MemberData` one (F33) |
 | `Each_floor_run_starts_from_an_empty_output` (R3a), for both of CI's loops | each floor run empties the project's `bin/` and `obj/` before it builds or tests | R3a's parent's `ci.yml` (F36) |
 | `The_floor_run_installs_the_Chromium_its_Playwright_floor_drives_before_it_tests` (R3a) | CI's floor run builds the Playwright suite on its floor and installs that build's Chromium before it tests | R3a's parent's `ci.yml` |
+| `MediatRPackageTests` (R3b) | the packed MediatR package agrees with the ledger in every line | R3b's parent: the ledger marks MediatR 14.1.0 Unmeasured, the line the fact expected until R3b (F24) |
+| The ClickHouse suite with `-p:FloorRun=true` (R3b) | the three ClickHouse packages work on their floors, the ClickHouse.Driver facts against a real server | R3b's parent: the suite took the newest whatever the switch said (F38) |
 
 No Playwright fact: nothing in a report changes.
 
@@ -638,6 +666,7 @@ No Playwright fact: nothing in a report changes.
 | F35 | TUnit's source generator writes `Kronikol.TUnit`'s hook registrations into the adapter at its build, bound to that TUnit.Core's internals, so the adapter built on one release loads only on releases that keep them: built on 1.39.0 or older it fails on later releases at load ("Field not found: 'TUnit.Core.Sources.AfterTestHooks'", `MissingFieldException`), and every test with it fails. R3a's second TUnit search built and ran each probe on one release, as every floor search had, so it reported 1.0.0; the full suite's normal runs, which run each suite on the newest against the package built on its floor, found it in the TUnit and LightBDD TUnit suites (RUN, `floor/r3a-tunit3.txt`). No other adapter carries code a framework generates into it. | the harness | Fixed in R3a: `floor_probe2.py --no-floor-run` builds the package on the release probed and runs the suites on their own newest references; the TUnit floor is 1.40.0, the oldest that passes so, and the TUnit suite passes on it as well, with `-p:FloorRun=true` |
 | F36 | CI's floor runs built each project over its normal run's output, so a file a package copies only when newer kept the newest's: the MSTest floor run found no test, on MSTest 4.5.2's test adapter, which refuses the 4.0.0 framework (F31's cause), and the Playwright floor's build, 1.12.0's over 1.64.1's, left no `playwright.ps1` to install its browser with, and so did one into an empty `bin/` on the newest's `obj/` (RUN, `probe-r3a/f36/playwright-obj.txt`: a floor build from an empty `bin/` and `obj/` has it, one from an empty `bin/` after a newest build has not) (RUN, the full suite as CI runs it, and `probe-r3a/f36/over-the-newest.txt`: red over the newest's output, green from an empty one). Neither project had a floor run before R3a. | CI | Fixed in R3a: each floor run, in both of CI's loops, starts from an empty `bin/` and `obj/`, and `FloorRunTests` holds both loops to it |
 | F37 | `Microsoft.Playwright` 1.12.0 ships the script that starts its driver on Linux and macOS, `.playwright/node/linux/playwright.sh`, with CRLF line ends, so Linux looks for an interpreter named `/bin/sh` and a carriage return and reports "No such file or directory": every test that starts Playwright fails there. R3a's Playwright search ran on Windows alone, where the driver starts through `playwright.cmd`, so it measured 1.12.0, and 5.27.10's first CI run failed its Linux floor run of the Playwright suite (RUN, CI run 40910684927, the Playwright Adapter Tests job; `probe-f37/results.txt`: of the 77 stable 1.x releases only 1.12.0's driver fails to start on Linux; `probe-f37/suite.txt`: the suite on Linux, red on 1.12.0, its browser facts green on 1.12.1). 1.12.1's scripts end their lines in LF; the targets and the code that starts the driver are the same. | the harness | Fixed in 5.27.11: the floor is 1.12.1, and the suite passes on it on Linux and on Windows |
+| F38 | The ClickHouse suite took `ClickHouse.Client` 7.*, `ClickHouse.Driver` 1.* and `Octonica.ClickHouseClient` 3.* as direct references with no `'$(FloorRun)' != 'true'` condition, so `-p:FloorRun=true` left them at the newest and no run of the suite took the floors the three packages asked for; CI's floor loops, which find a project by the switch in its csproj, never ran it (READ). | the ClickHouse suite | Fixed in R3b: the three references are under the switch, so CI runs the suite on the floors too |
 | F31 | Each probe built its test project in place, and `MSTest.TestAdapter` reaches the output as content copied only when newer, so a probe after a newer one ran that one's adapter, which refuses a framework of another release ("'MSTest.TestAdapter' and 'MSTest.TestFramework' must have the same version") and so found no test: MSTest 4.1.0 and older looked unsupported (RUN, VSTest diagnostics; 84 of 84 on 4.1.0 from an empty output). Library assemblies copy on any change, so no client library's search was touched. | the harness | Fixed in R3a: every probe builds from an empty `bin/` and `obj/`; the MSTest, xUnit v3 and xUnit v2 searches ran again so |
 | F32 | The BDDfy adapter decides whether a title is BDDfy's own by asking `Configurator.Scanners.Humanize`, the instance field 8.0.1.3 titles with; 8.0.11 titles with `Configurator.Humanizer` and keeps `Scanners.Humanize` only as an obsolete static copy of the humaniser configured when the field is first read, for the rest of the run. The adapter does not build on 8.0.11 or 8.0.12 (CS0176, RUN, `floor/r3a-bddfy.txt`), but built on 8.0.1.3, as published, it runs on them, as the runtime reads the static field through the instance reference, and reads that copy (RUN, `probe-r3a/bddfy-humanize/`). So once a test sets or changes its humaniser after the adapter's first title, a title BDDfy makes with it is taken for one the test wrote: it is left as written, where BDDfy's own titles pass through the title word list (`TitleWords`), and the report marks it written (RUN, `BDDfyHumaniserTests` on the parent and 8.0.12: green each alone, and in one run the default's fact fails after a fact that set a humaniser). Nothing ran the adapter on a later BDDfy, as the core suite took BDDfy only through it. | Kronikol | Fixed in R3a: the adapter reads `Configurator.Humanizer` where the release has it and `Scanners.Humanize` where it does not, each time, as a test may set its own; the core suite runs on the newest 8.x and on 8.0.1.3 |
 | F33 | Kronikol holds a LightBDD run's scenarios to the count of tests the adapter expects (`ReportConfigurationOptions.ExpectedTestCount`) and writes no Specifications report, data or Markdown when the run falls short, as a partial run would. The xUnit v2 and v3 adapters counted a scenario method as one test plus the rows of its `MemberData` and `ClassData`, so on xUnit v2 a method with either counted one over its rows and a whole run fell short: no Specifications report, for any suite with such a method (READ, `ReportGenerator`; RUN, `TestCountTests`). On v3 `ClassData` counted one over too, and `MemberData` one, as the count asked for its rows with xUnit v2's signature, and v3's attribute names no rows until it is given the test class, which xUnit gives it before it reads them. The TUnit runner's count reads `[Arguments]` alone, so a method with another data source counts one, under its rows: the report is written, and a partial run that leaves out fewer tests than the shortfall can overwrite it. | Kronikol | Fixed in R3a for xUnit v2 and v3: a method is a test for each row its data attributes give, read through xUnit's own `DataAttribute` and `IDataAttribute`, and one with none; the TUnit count is left, as TUnit's data sources are read by its engine, and TUnit's API moves fast (F30) |
@@ -836,6 +865,24 @@ Each has a recommendation; none is legwork.
   (10 of 10 each), its package fact red first on the moved ledger; the core suite's packaging, template and workflow
   facts (291); 5.27.10's CI, whose one failed job was this floor run; and the Release build of `release.slnf`, whose
   only advisories are the older ones 5.27.5 lists.
+
+- **2026-10-29, R3b released as 5.27.12**, on 5.27.11 (`42027390`). The fourteen SDK client pins of section 5.2's
+  R3b row ask for measured floors (the table in section 5.2's note), the SqlClient package asks for a Pkcs past its
+  client's advisories, and the unmeasured count fell from 19 to 5, R3c's. Found on the way and fixed in the release:
+  F38, the ClickHouse suite's floats.
+
+  Run: the floor searches (`floor/r3b-search-aws.sh`, `floor/r3b-search-data.sh`, `floor/r3b-search-bus.sh`,
+  `floor/r3b-*.txt`), each AWS client's first release past the AWSSDK.Core advisory from NuGet's metadata
+  (`floor/r3b_aws_core.py`, `floor/r3b-aws-core.txt`), and each R3b suite on the newest and on its floor
+  (`floor/r3b-suites.sh`, `floor/r3b-suites.txt`); then the floor searches, each batch in a worktree of its own; each
+  R3b suite on the newest and on its floor, each floor run from an empty `bin/` and `obj/` (S3 119, DynamoDB 94, SNS
+  101, SQS 109, EventBridge 191, Npgsql 27, SqlClient 25, MySqlConnector 23, Elasticsearch 60, MassTransit 71, MediatR 6
+  and ClickHouse 139, the ClickHouse.Driver facts against a ClickHouse 25.8 server in podman), none with an advisory;
+  the MediatR and S3 package facts red on 5.27.11's ledger and green on R3b's; the whole suite as CI runs it (65
+  projects on the newest, 21,261 passed, 63 skipped; 41 floor runs, 17,216 passed, 21 skipped; none failed); the
+  Playwright E2E suite (2,089 passed, 28 skipped); and the Release build of `release.slnf`, whose only advisories are
+  MongoDB.Driver 2.x's SharpCompress and Snappier, SqlClient's Pkcs gone. The solution's only other is the Pkcs 9.0.11
+  that the EF Core SqlServer provider brings to the EF Core suite, a test provider's.
 
 ---
 

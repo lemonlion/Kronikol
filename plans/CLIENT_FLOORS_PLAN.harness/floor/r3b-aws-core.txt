@@ -1,0 +1,5 @@
+AWSSDK.S3: 155 4.x releases; first with AWSSDK.Core >= 4.0.3.3: 4.0.13.1 (AWSSDK.Core [4.0.3.3, 5.0.0), listed True)
+AWSSDK.DynamoDBv2: 134 4.x releases; first with AWSSDK.Core >= 4.0.3.3: 4.0.10.1 (AWSSDK.Core [4.0.3.3, 5.0.0), listed True)
+AWSSDK.SimpleNotificationService: 101 4.x releases; first with AWSSDK.Core >= 4.0.3.3: 4.0.2.7 (AWSSDK.Core [4.0.3.3, 5.0.0), listed True)
+AWSSDK.SQS: 102 4.x releases; first with AWSSDK.Core >= 4.0.3.3: 4.0.2.5 (AWSSDK.Core [4.0.3.3, 5.0.0), listed True)
+AWSSDK.EventBridge: 102 4.x releases; first with AWSSDK.Core >= 4.0.3.3: 4.0.5.7 (AWSSDK.Core [4.0.3.3, 5.0.0), listed True)

@@ -1,0 +1,5 @@
+# Npgsql: 4 stable 10.x releases, 10.0.0 to 10.0.3; binary search
+10.0.3 | ok | Kronikol.Tests.Npgsql: Passed! - Failed: 0, Passed: 26, Skipped: 0, Total: 26 | audit: none | resolved: Npgsql/10.0.3
+10.0.1 | ok | Kronikol.Tests.Npgsql: Passed! - Failed: 0, Passed: 26, Skipped: 0, Total: 26 | audit: none | resolved: Npgsql/10.0.1
+10.0.0 | ok | Kronikol.Tests.Npgsql: Passed! - Failed: 0, Passed: 26, Skipped: 0, Total: 26 | audit: none | resolved: Npgsql/10.0.0
+# oldest passing: 10.0.0

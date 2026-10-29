@@ -23,6 +23,9 @@
     <!-- The suite runs on the newest 10.x; -p:FloorRun=true drops this reference, so it runs on the floor the package
          asks for (10.0.0). -->
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.*" Condition="'$(FloorRun)' != 'true'" />
+    <!-- The suite runs on the newest 14.x; -p:FloorRun=true drops this reference, so it runs on the floor the package
+         asks for (14.0.0). -->
+    <PackageReference Include="MediatR" Version="14.*" Condition="'$(FloorRun)' != 'true'" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Kronikol.Extensions.MediatR\Kronikol.Extensions.MediatR.csproj" />

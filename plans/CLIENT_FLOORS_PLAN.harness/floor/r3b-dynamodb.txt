@@ -1,0 +1,10 @@
+# AWSSDK.DynamoDBv2: 134 stable 4.x releases, 4.0.0 to 4.0.109.3; binary search
+4.0.109.3 | ok | Kronikol.Tests.DynamoDB: Passed! - Failed: 0, Passed: 93, Skipped: 0, Total: 93 | audit: none | resolved: AWSSDK.DynamoDBv2/4.0.109.3
+4.0.15 | ok | Kronikol.Tests.DynamoDB: Passed! - Failed: 0, Passed: 93, Skipped: 0, Total: 93 | audit: none | resolved: AWSSDK.DynamoDBv2/4.0.15
+4.0.6.2 | ok | Kronikol.Tests.DynamoDB: Passed! - Failed: 0, Passed: 93, Skipped: 0, Total: 93 | audit: AWSSDK.Core 4.0.0.28 low (Kronikol.Tests.DynamoDB); AWSSDK.Core 4.0.0.28 low (TargetFramework=net10) | resolved: AWSSDK.DynamoDBv2/4.0.6.2
+4.0.1.9 | ok | Kronikol.Tests.DynamoDB: Passed! - Failed: 0, Passed: 93, Skipped: 0, Total: 93 | audit: AWSSDK.Core 4.0.0.13 low (Kronikol.Tests.DynamoDB); AWSSDK.Core 4.0.0.13 low (TargetFramework=net10) | resolved: AWSSDK.DynamoDBv2/4.0.1.9
+4.0.1.1 | ok | Kronikol.Tests.DynamoDB: Passed! - Failed: 0, Passed: 93, Skipped: 0, Total: 93 | audit: AWSSDK.Core 4.0.0.5 low (Kronikol.Tests.DynamoDB); AWSSDK.Core 4.0.0.5 low (TargetFramework=net10) | resolved: AWSSDK.DynamoDBv2/4.0.1.1
+4.0.0.4 | ok | Kronikol.Tests.DynamoDB: Passed! - Failed: 0, Passed: 93, Skipped: 0, Total: 93 | audit: AWSSDK.Core 4.0.0.3 low (Kronikol.Tests.DynamoDB); AWSSDK.Core 4.0.0.3 low (TargetFramework=net10) | resolved: AWSSDK.DynamoDBv2/4.0.0.4
+4.0.0.2 | ok | Kronikol.Tests.DynamoDB: Passed! - Failed: 0, Passed: 93, Skipped: 0, Total: 93 | audit: AWSSDK.Core 4.0.0.2 low (Kronikol.Tests.DynamoDB); AWSSDK.Core 4.0.0.2 low (TargetFramework=net10) | resolved: AWSSDK.DynamoDBv2/4.0.0.2
+4.0.0.1 | BUILD FAILED | Kronikol.Tests.DynamoDB: error CS1705: Assembly 'AWSSDK.DynamoDBv2' with identity 'AWSSDK.DynamoDBv2, Version=4.0.0.1, Culture=neutral, PublicKeyToken=885c28607f98e604' uses 'AWSSDK.Core, V | audit: AWSSDK.Core 4.0.0 low (Kronikol.Tests.DynamoDB); AWSSDK.Core 4.0.0 low (TargetFramework=net10) | resolved: AWSSDK.DynamoDBv2/4.0.0.1
+# oldest passing: 4.0.0.2
