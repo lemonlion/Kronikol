@@ -1,0 +1,29 @@
+Kronikol 5.27.2.0, runtime 10.0.11
+
+shape                            testDouble       server's parent  transport span   response names  
+Sockets                          -                transport's      started          transport's     
+Onward over sockets              Onward           caller's span    started          caller's span   
+SendingThrough a socket client   SendingThrough   caller's span    started          caller's span   
+Stub                             CannedMilk       caller's span    (none)           caller's span   
+Onward over a stub               Onward           caller's span    (none)           caller's span   
+TestServer                       -                caller's span    (none)           caller's span   
+Onward over TestServer           Onward           caller's span    (none)           caller's span   
+SendingThrough a factory client  SendingThrough   caller's span    (none)           caller's span   
+Report diagnostics: 16 log entries across 8 test(s).
+InternalFlowSpanStore: 23 span(s).
+Kronikol: reports written to <reports>  (TestRunReport.html · TestRunReport.krkl · Failures.md · TestRunReport.labs.html)
+
+report written to <reports>
+
+$ query parties
+party                    kind       how        made received  id · note
+Breakfast Provider       test       inferred      8        0
+Onward over TestServer   double     observed      0        1
+Onward over a stub       double     observed      0        1
+Onward over sockets      double     observed      0        1
+SendingThrough a factory… double     observed      0        1
+SendingThrough a socket … double     observed      0        1
+Sockets                  unknown    -             0        1
+Stub                     double     observed      0        1
+TestServer               underTest  inferred      0        1
+1 parties of unknown kind: declare them in Parties or .kronikol/parties.json · the report declares nothing, so this table is inferred from the calls

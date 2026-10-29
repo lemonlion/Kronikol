@@ -1,0 +1,3 @@
+# The existing facts nearest the change, run on 753f17f9 with r1-walk.patch applied (2026-10-29):
+# dotnet test tests/Kronikol.Tests -c Debug --filter "FullyQualifiedName~Kronikol.Tests.Parties|FullyQualifiedName~TestTrackingMessageHandlerTests|FullyQualifiedName~CallOwnSpanThroughTheHandlerTests|FullyQualifiedName~HttpHopTests|FullyQualifiedName~SpanAttributionTests|FullyQualifiedName~WebApplicationFactoryClientsTests"
+Passed!  - Failed:     0, Passed:   297, Skipped:     0, Total:   297, Duration: 9 s - Kronikol.Tests.dll (net10.0)

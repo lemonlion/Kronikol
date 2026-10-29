@@ -1,0 +1,46 @@
+Kronikol 5.27.2.0, runtime 10.0.11
+
+shape                            testDouble       server's parent  transport span   response names  
+Sockets                          -                transport's      started          transport's     
+Onward over sockets              -                transport's      started          transport's     
+SendingThrough a socket client   -                transport's      started          transport's     
+Stub                             CannedMilk       caller's span    (none)           caller's span   
+Onward over a stub               CannedMilk       caller's span    (none)           caller's span   
+TestServer                       -                caller's span    (none)           caller's span   
+Onward over TestServer           -                caller's span    (none)           caller's span   
+SendingThrough a factory client  -                caller's span    (none)           caller's span   
+Report diagnostics: 16 log entries across 8 test(s).
+InternalFlowSpanStore: 23 span(s).
+Kronikol: reports written to <scratch>\reports  (TestRunReport.html · TestRunReport.krkl · Failures.md · TestRunReport.labs.html)
+
+report written to <scratch>/reports
+
+$ query parties
+party                    kind       how        made received  id · note
+Breakfast Provider       test       inferred      8        0
+Onward over TestServer   unknown    -             0        1
+Onward over a stub       double     observed      0        1
+Onward over sockets      unknown    -             0        1
+SendingThrough a factory… unknown    -             0        1
+SendingThrough a socket … unknown    -             0        1
+Sockets                  unknown    -             0        1
+Stub                     double     observed      0        1
+TestServer               underTest  inferred      0        1
+5 parties of unknown kind: declare them in Parties or .kronikol/parties.json · the report declares nothing, so this table is inferred from the calls
+
+Kronikol 5.27.2.0, runtime 10.0.11
+
+SocketsHttpHandler
+  /service-0/health      its popup: 2 spans, 0 of the other calls' work: server /service-0/health, transport
+  /service-1/health      its popup: 2 spans, 0 of the other calls' work: server /service-1/health, transport
+  /service-2/health      its popup: 2 spans, 0 of the other calls' work: server /service-2/health, transport
+
+Onward over sockets
+  /service-0/health      its popup: 2 spans, 0 of the other calls' work: server /service-0/health, transport
+  /service-1/health      its popup: 2 spans, 0 of the other calls' work: server /service-1/health, transport
+  /service-2/health      its popup: 2 spans, 0 of the other calls' work: server /service-2/health, transport
+
+SendingThrough a socket client
+  /service-0/health      its popup: 2 spans, 0 of the other calls' work: server /service-0/health, transport
+  /service-1/health      its popup: 2 spans, 0 of the other calls' work: server /service-1/health, transport
+  /service-2/health      its popup: 2 spans, 0 of the other calls' work: server /service-2/health, transport

@@ -1,0 +1,37 @@
+C:\Code\Kronikol-219\plans\WHAT_ANSWERS_PLAN.harness\p2-follow\follow.cs(41,15): warning ASP0000: Calling 'BuildServiceProvider' from application code results in an additional copy of singleton services being created. Consider alternatives such as dependency injecting services as parameters to 'Configure'. (https://aka.ms/AA5k895)
+runtime 10.0.11
+HttpMessageInvoker's fields: Boolean _disposed, Boolean _disposeHandler, HttpMessageHandler _handler
+
+shape                                    today: mark                  today: tp  | walk: ends                                   mark           tp
+SocketsHttpHandler                       -                            framework  | Socket                                       -              framework
+HttpClientHandler subclass               -                            framework  | Socket                                       -              framework
+Onward over sockets                      Onward                       Kronikol   | Socket                                       -              framework
+SendingThrough a socket client           SendingThrough               Kronikol   | Socket                                       -              framework
+Onward over the factory pipeline         Onward                       Kronikol   | Socket                                       -              framework
+SendingThrough a factory-made client     SendingThrough               Kronikol   | Socket                                       -              framework
+a stub                                   CannedMilk                   Kronikol   | Answerer CannedMilk                          CannedMilk     Kronikol
+Onward over a stub                       Onward                       Kronikol   | Answerer CannedMilk                          CannedMilk     Kronikol
+a stub with a responder                  Responder                    Kronikol   | Answerer Responder                           Responder      Kronikol
+TestServer                               -                            Kronikol   | InProcessServer                              -              Kronikol
+Onward over TestServer                   Onward                       Kronikol   | InProcessServer                              -              Kronikol
+SendingThrough a WAF-style client        SendingThrough               Kronikol   | InProcessServer                              -              Kronikol
+Moq Mock<HttpMessageHandler>             HttpMessageHandlerProxy      Kronikol   | Answerer HttpMessageHandlerProxy             HttpMessageHandlerProxy Kronikol
+MockHttp                                 MockHttpMessageHandler       Kronikol   | Answerer MockHttpMessageHandler              MockHttpMessageHandler Kronikol
+MockHttp, fallback to a client           MockHttpMessageHandler       Kronikol   | Answerer MockHttpMessageHandler              MockHttpMessageHandler Kronikol
+JustEat interceptor                      -                            Kronikol   | Unfollowed                                   -              Kronikol
+a router of two stubs                    Router                       Kronikol   | Answerer CannedMilk, Answerer CannedCream    CannedMilk     Kronikol
+a router of a stub and sockets           Router                       Kronikol   | Answerer CannedMilk, Socket                  -              Kronikol
+a stub holding an unused transport       Hoarder                      Kronikol   | Socket                                       -              framework
+a handler that holds itself              Looping                      Kronikol   | Answerer Looping                             Looping        Kronikol
+a lambda forwarder                       Lambda                       Kronikol   | Answerer Lambda                              Lambda         Kronikol
+a forwarder through IHttpClientFactory   ByFactory                    Kronikol   | Answerer ByFactory                           ByFactory      Kronikol
+
+SocketsHttpHandler               server's parent is the transport's span: True   response names the request sent: the same request  its traceparent is the transport's: True   the original's is: True
+Onward over sockets              server's parent is the transport's span: True   response names the request sent: the same request  its traceparent is the transport's: True   the original's is: True
+SendingThrough a socket client   server's parent is the transport's span: True   response names the request sent: a copy            its traceparent is the transport's: True   the original's is: False
+
+SocketsHttpHandler                       today       8 ns   walk     322 ns   walk with today's walk first      23 ns
+Onward over sockets                      today       4 ns   walk     440 ns   walk with today's walk first     615 ns
+Onward over the factory pipeline         today       4 ns   walk     503 ns   walk with today's walk first     325 ns
+a stub                                   today       4 ns   walk     252 ns   walk with today's walk first     320 ns
+SendingThrough a WAF-style client        today       5 ns   walk     460 ns   walk with today's walk first     517 ns
