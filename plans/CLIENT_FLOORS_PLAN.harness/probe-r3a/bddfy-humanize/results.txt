@@ -1,0 +1,22 @@
+# TestStack.BDDfy 8.0.1.3, default-first
+Scanners.Humanize static: False
+  read = 'When m c a funding activates' (8.0.1.3 has no Configurator.Humanizer)
+# TestStack.BDDfy 8.0.1.3, custom-first
+Scanners.Humanize static: False
+  read = 'When m c a funding activates' (8.0.1.3 has no Configurator.Humanizer)
+# TestStack.BDDfy 8.0.11, default-first
+Scanners.Humanize static: True
+  first:  read = 'When m c a funding activates', Configurator.Humanizer = 'When m c a funding activates'
+  second: read = 'When m c a funding activates', Configurator.Humanizer = 'Shouted WHENMCAFUNDINGACTIVATES'
+# TestStack.BDDfy 8.0.11, custom-first
+Scanners.Humanize static: True
+  first:  read = 'Shouted WHENMCAFUNDINGACTIVATES', Configurator.Humanizer = 'Shouted WHENMCAFUNDINGACTIVATES'
+  second: read = 'Shouted WHENMCAFUNDINGACTIVATES', Configurator.Humanizer = 'When m c a funding activates'
+# TestStack.BDDfy 8.0.12, default-first
+Scanners.Humanize static: True
+  first:  read = 'When m c a funding activates', Configurator.Humanizer = 'When m c a funding activates'
+  second: read = 'When m c a funding activates', Configurator.Humanizer = 'Shouted WHENMCAFUNDINGACTIVATES'
+# TestStack.BDDfy 8.0.12, custom-first
+Scanners.Humanize static: True
+  first:  read = 'Shouted WHENMCAFUNDINGACTIVATES', Configurator.Humanizer = 'Shouted WHENMCAFUNDINGACTIVATES'
+  second: read = 'Shouted WHENMCAFUNDINGACTIVATES', Configurator.Humanizer = 'When m c a funding activates'

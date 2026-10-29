@@ -12,10 +12,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- 3.12.1+ is compiled against the modern TUnit line (1.53.0); 3.12.0 shipped
-         hook registrations built against TUnit 1.0.0, which crash with the
-         TUnit.Core 1.43.11+ that Kronikol.TUnit pins (MissingFieldException on
-         TUnit.Core.Sources.AfterClassHooks at module initialization). -->
+    <!-- LightBDD.TUnit: 3.12.1 is the oldest 3.x the suite passes on, and it asks for TUnit 1.53.0: 3.12.0 and older
+         fail two of its facts, as 3.12.0 shipped hook registrations built against TUnit 1.0.0, which name
+         TUnit.Core.Sources.AfterClassHooks, a field later TUnit.Core releases no longer have (MissingFieldException at
+         module initialization); its graph carries no known advisory (harness floor/r3a-lightbdd-tunit.txt). FloorLedger
+         holds the floor, and the test project's package fact reads it back from the packed nuspec; the suite runs on
+         the newest 3.x, and on this floor with -p:FloorRun=true (plans/CLIENT_FLOORS_PLAN.md R3a). -->
     <PackageReference Include="LightBDD.TUnit" Version="3.12.1">
       <PrivateAssets>build;buildTransitive;analyzers</PrivateAssets>
     </PackageReference>

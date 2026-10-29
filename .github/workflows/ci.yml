@@ -318,6 +318,21 @@ jobs:
           for project in ${{ matrix.projects }}; do
             grep -qsF '$(FloorRun)' "$project"/*.csproj || continue
             echo "::group::Testing $project on its floor"
+            # From an empty output and an empty obj/: built over the run above, a file copied only when newer stays the
+            # newest's, so the MSTest floor run found no test on the newest's test adapter, and built on the newest's
+            # obj/, even into an empty bin/, the Playwright floor's build left no playwright.ps1 to install its browser
+            # with (plans/CLIENT_FLOORS_PLAN.md F36).
+            rm -rf "$project/bin" "$project/obj"
+            if [ "${{ matrix.needs-playwright }}" = "true" ]; then
+              # Each Playwright release drives the Chromium build it was made with, so the floor needs its own beside
+              # the newest one the step before installed (its packages are the same), bounded and retried as there.
+              dotnet build "$project" --configuration Release -p:FloorRun=true
+              for attempt in 1 2 3; do
+                timeout --kill-after=30s 10m pwsh "$project/bin/Release/net10.0/playwright.ps1" install chromium && break
+                [ "$attempt" = 3 ] && exit 1
+                echo "::warning::downloading the floor's Chromium failed or took over 10 minutes (attempt $attempt of 3); trying again"
+              done
+            fi
             dotnet test "$project" --configuration Release --verbosity normal $FILTER_ARG -p:FloorRun=true -- RunConfiguration.TreatNoTestsAsError=true
             echo "::endgroup::"
           done
@@ -345,6 +360,8 @@ jobs:
             case " $SKIP " in *" $name "*) continue;; esac
             grep -qsF '$(FloorRun)' "$dir"*.csproj || continue
             echo "::group::Testing $name on its floor"
+            # From an empty output and an empty obj/, as in the step above (F36).
+            rm -rf "${dir}bin" "${dir}obj"
             dotnet test "$dir" --configuration Release --verbosity normal -p:FloorRun=true -- RunConfiguration.TreatNoTestsAsError=true
             echo "::endgroup::"
           done

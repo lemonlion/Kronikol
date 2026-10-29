@@ -12,7 +12,14 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="TUnit.Core" Version="1.43.11" />
+		<!-- TUnit.Core: 1.40.0 is the oldest 1.x whose build of the adapter runs on the newest: TUnit's source generator
+		     writes the adapter's hook registrations at its build, bound to that release, and built on 1.39.0 or older they
+		     name TUnit.Core.Sources.AfterTestHooks, which later releases no longer have (MissingFieldException at load). The
+		     suite passes on the newest, 1.76.45, against the adapter built on 1.40.0, and the LightBDD TUnit suite on 1.53.0,
+		     and its graph carries no known advisory (harness floor/r3a-tunit3.txt, floor/r3a-tunit.txt). FloorLedger holds
+		     the floor, and the test project's package fact reads it back from the packed nuspec; the suite runs on the newest
+		     1.x, and on this floor with -p:FloorRun=true (plans/CLIENT_FLOORS_PLAN.md R3a, F35). -->
+		<PackageReference Include="TUnit.Core" Version="1.40.0" />
 	</ItemGroup>
 
 	<ItemGroup>

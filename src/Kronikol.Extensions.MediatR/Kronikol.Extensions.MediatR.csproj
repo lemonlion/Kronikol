@@ -10,13 +10,13 @@
 
   <ItemGroup>
     <PackageReference Include="MediatR" Version="14.1.0" />
-    <!-- Microsoft.Extensions.DependencyInjection.Abstractions: 10.0.7, the least the package's graph allows: the
-         Kronikol core's Microsoft.AspNetCore.Mvc.Testing 10.0.7, and MediatR 14.1.0 through
-         Microsoft.Extensions.Logging.Abstractions 10.0.7, ask for it, and a lower pin is a downgrade NuGet refuses
-         (NU1605); R3a and R3b measure those pins (harness floor/r2c-di.txt). FloorLedger holds the floor, and the test
-         project's package fact reads it back from the packed nuspec; the suite runs on the newest 10.x, and on this
-         floor with -p:FloorRun=true (plans/CLIENT_FLOORS_PLAN.md R2c). -->
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.7" Condition="'$(TargetFramework)' == 'net10.0'" />
+    <!-- Microsoft.Extensions.DependencyInjection.Abstractions: 10.0.0 is the oldest 10.x the suite passes on, the first
+         of the major, each probe with the container and the logging of the same release, as MediatR 14.1.0 asks for
+         10.0.0 and the Kronikol core no longer asks for more; its graph carries no known advisory (harness
+         floor/r3a-di-mediatr.txt). FloorLedger holds the floor, and the test project's package fact reads it back from
+         the packed nuspec; the suite runs on the newest 10.x, and on this floor with -p:FloorRun=true
+         (plans/CLIENT_FLOORS_PLAN.md R3a). -->
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.0" Condition="'$(TargetFramework)' == 'net10.0'" />
   </ItemGroup>
 
   <ItemGroup>

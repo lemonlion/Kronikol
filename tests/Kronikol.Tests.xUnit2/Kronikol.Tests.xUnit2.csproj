@@ -7,6 +7,7 @@
 
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <XunitFloor Condition="'$(XunitFloor)' == ''">2.4.0</XunitFloor>
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,7 +16,11 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.5.1" />
-    <PackageReference Include="xunit" Version="2.9.3" />
+    <!-- The suite is an xUnit v2 project of its own, so it takes xunit at the newest 2.x, and with -p:FloorRun=true at
+         the floor the adapter asks for, or at the release a floor search probes (-p:XunitFloor=<release>)
+         (plans/CLIENT_FLOORS_PLAN.md R3a). -->
+    <PackageReference Include="xunit" Version="2.*" Condition="'$(FloorRun)' != 'true'" />
+    <PackageReference Include="xunit" Version="$(XunitFloor)" Condition="'$(FloorRun)' == 'true'" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
@@ -28,6 +33,11 @@
 
   <ItemGroup>
     <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Kronikol.Tests\Packaging\PackedNuspec.cs" Link="PackedNuspec.cs" />
+    <Compile Include="..\Kronikol.Tests\Packaging\FloorLedger.cs" Link="FloorLedger.cs" />
   </ItemGroup>
 
 </Project>

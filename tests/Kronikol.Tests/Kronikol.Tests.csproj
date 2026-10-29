@@ -26,6 +26,16 @@
     </PackageReference>
     <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.3.9" />
     <PackageReference Include="YamlDotNet" Version="16.3.0" />
+    <!-- The suite runs on the newest 10.x; -p:FloorRun=true drops this reference, so it runs on the floor the package
+         asks for (10.0.0). -->
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.*" Condition="'$(FloorRun)' != 'true'" />
+    <!-- The suite runs on the newest 8.x; -p:FloorRun=true drops this reference, so it runs on the floor the package
+         asks for (8.0.1.3). Before 5.27.10 it took TestStack.BDDfy only through the adapter, so nothing ran 8.0.11, on
+         which the adapter missed a title made by a humaniser the test set (F32). -->
+    <PackageReference Include="TestStack.BDDfy" Version="8.*" Condition="'$(FloorRun)' != 'true'" />
+    <!-- The suite runs on the newest 3.x; -p:FloorRun=true drops this reference, so it runs on the floor the package
+         asks for (3.0.1). -->
+    <PackageReference Include="Reqnroll" Version="3.*" Condition="'$(FloorRun)' != 'true'" />
   </ItemGroup>
 
   <ItemGroup>

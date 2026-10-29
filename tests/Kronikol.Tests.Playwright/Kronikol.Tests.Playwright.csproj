@@ -17,6 +17,9 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <!-- The suite runs on the newest 1.x; -p:FloorRun=true drops this reference, so it runs on the floor the package
+         asks for (1.12.0). -->
+    <PackageReference Include="Microsoft.Playwright" Version="1.*" Condition="'$(FloorRun)' != 'true'" />
   </ItemGroup>
 
   <ItemGroup>
@@ -33,6 +36,8 @@
   <ItemGroup>
     <!-- Ports for the listeners the facts start, never one twice in this process (LoopbackPort.cs says why). -->
     <Compile Include="..\Kronikol.Tests\LoopbackPort.cs" Link="LoopbackPort.cs" />
+    <Compile Include="..\Kronikol.Tests\Packaging\PackedNuspec.cs" Link="PackedNuspec.cs" />
+    <Compile Include="..\Kronikol.Tests\Packaging\FloorLedger.cs" Link="FloorLedger.cs" />
   </ItemGroup>
 
 </Project>

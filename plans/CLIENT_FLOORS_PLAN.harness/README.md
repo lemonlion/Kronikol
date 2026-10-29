@@ -170,7 +170,7 @@ together.
 
 ## f30/: `[HeadIn]` on a later TUnit.Core, found by R3a
 
-Run from the session scratchpad, so `engine/f30run.csproj` names the F30 worktree's adapter by its absolute path.
+Run from the session scratchpad, so `engine/f30run.csproj` names the adapter by its absolute path: the F30 worktree's, or the one `-p:Adapter=` names, as R3a's run on its TUnit floor did (F35).
 
 - `consumer/`: a program that makes a `HeadInAttribute` from the published Kronikol.TUnit 5.27.7 on the TUnit.Core
   given (`-p:TUnitCore=1.53.0`); `results/consumer.txt` has it on 1.43.11, 1.53.0 and 1.76.45, the last two the
@@ -181,6 +181,46 @@ Run from the session scratchpad, so `engine/f30run.csproj` names the F30 worktre
 - `engine/`: a TUnit project with one `[HeadIn]` test, run by TUnit's own engine on the TUnit release given
   (`-p:TUnitVersion=`), through the adapter of the F30 worktree, or the published one with `-p:Published=5.27.7`
   (`results/engine.txt`).
+
+## R3a, as released
+
+Each search ran in a worktree of its own, one after another, as they share its builds; `floor/r3a-<package>.txt` close
+with the floor each took, and the lines above a `# the run below` note are the earlier run it replaced, with why.
+
+- `floor/r3a-core.sh`: the core's `Microsoft.AspNetCore.Mvc.Testing`, the whole core suite at each release
+  (`floor/r3a-core.txt`), without `FloorLedgerTests`, which holds the csproj to the ledger and so fails every other
+  release. `floor/r3a-di.sh` then searched the DI abstractions of ServiceBus, MediatR and DispatchProxy again, with the
+  core at 10.0.0 (`floor/r3a-di-<package>.txt`).
+- `floor/r3a-adapters.sh` to `floor/r3a-adapters4.sh`: the xUnit v3, NUnit, MSTest, xUnit v2 and TUnit adapters, each
+  test project taking its framework at the release probed (`-p:XunitV3Floor` and the like). The later scripts are the
+  reruns, each header saying what the run before found: F29 and F31 in the harness, the C# 14 ambiguity in
+  `TagMappingTests`, and the TUnit adapter not building on the newest TUnit.Core, which was F30. `floor/r3a-tunit2.sh`
+  is the TUnit search on 5.27.8's adapter (`floor/r3a-tunit.txt`), each probe built and run on one release, which
+  reported 1.0.0; `floor/r3a-tunit3.sh` is the search again with the adapter built on each release and the TUnit and
+  LightBDD TUnit suites on their own newest references (`--no-floor-run`), which found F35 and the floor, 1.40.0
+  (`floor/r3a-tunit3.txt`). `probe-r3a/tunit-engine-floor.txt` is TUnit's own engine on a `[HeadIn]` test through the
+  adapter built on the floor, on the floor and on later releases.
+- `floor/r3a-bdd.sh`: the LightBDD families with `floor/family_floor.py`, which moves a series in every packable project
+  that references it (LightBDD.Framework in the core of the three runners, each runner's package in its adapter), on
+  each runner's suite and on the LightBDD xUnit v2 example; xunit under the LightBDD xUnit v2 adapter; and BDDfy and
+  Reqnroll through the core suite's facts for each (`floor/r3a-lightbdd-*.txt`, `floor/r3a-bddfy.txt`,
+  `floor/r3a-reqnroll.txt`). `floor/r3a-bddfy2.sh` is the BDDfy search over the listed releases, and
+  `floor/r3a-bddfy-f32.sh` the same after F32, with the core suite's run on the unlisted 8.0.12 its floating `8.*`
+  takes. `probe-r3a/bddfy-humanize/` is what the adapter built on 8.0.1.3 reads on each release, with a humaniser set
+  before its first read or after it (`results.txt`, F32): on 8.0.11 and 8.0.12 a copy of the one set at the first read.
+  `probe-r3a/f36/` is F36: `over-the-newest.sh` runs the MSTest and Playwright floors over the normal run's output and
+  from an empty `bin/` (in the adapters' worktree, whose `obj/` came from the floor's own restore), and
+  `playwright-obj.sh` the Playwright floor's build after each of five starts, of which only an empty `bin/` on the
+  newest's `obj/` leaves no `playwright.ps1`.
+- `floor/r3a-playwright.sh`: Microsoft.Playwright, each probe installing the Chromium of the release it built into a
+  browsers folder of its own (`--setup`), never the shared cache (`floor/r3a-playwright.txt`).
+- `floor/floor_probe2.py`, `floor/paired_floor.py` and `floor/family_floor.py` gained, in R3a: a test run that finds no
+  test fails (F29); each probe builds from an empty `bin/` and `obj/` (F31); a probe fails when a series package
+  resolves to another release than the one probed ("NOT ON x"); `--filter`, to leave out the package facts, which
+  hold the nuspec to the ledger and so fail every probe of another release (F23); and in `floor_probe2.py`, `--to`, to
+  search from below a release that cannot build, `--setup`, a command each probe runs after its build, through
+  `sh`, as Python's bare `bash` on Windows is WSL's, and `--no-floor-run`, which builds the test projects without the
+  switch, so each runs on its own newest reference against the package built on the release probed (F35).
 
 ## prototype/: R1, applied and reverted
 

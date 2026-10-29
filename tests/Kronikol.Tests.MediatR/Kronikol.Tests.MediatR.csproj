@@ -2,6 +2,7 @@
   <PropertyGroup>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <DiFloor Condition="'$(DiFloor)' == ''">10.0.0</DiFloor>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="10.0.0">
@@ -11,15 +12,16 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.5.1" />
     <PackageReference Include="xunit.v3" Version="3.2.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" />
-    <!-- The suite builds service providers and loggers. It takes the newest 10.x of each; with -p:FloorRun=true it
-         takes 10.0.7, the least the core's Microsoft.AspNetCore.Mvc.Testing 10.0.7 allows, which asks for no newer
-         DependencyInjection.Abstractions than the floor the package asks for, so the suite runs on that. -->
+    <!-- The suite builds service providers and loggers. It takes the newest 10.x of each, and with -p:FloorRun=true the
+         container and the logging of the floor the package asks for, or of the release a floor search probes
+         (-p:DiFloor=<release>), as the container asks for DependencyInjection.Abstractions of its own release
+         (plans/CLIENT_FLOORS_PLAN.md R3a). -->
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.*" Condition="'$(FloorRun)' != 'true'" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.7" Condition="'$(FloorRun)' == 'true'" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="$(DiFloor)" Condition="'$(FloorRun)' == 'true'" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="10.*" Condition="'$(FloorRun)' != 'true'" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.7" Condition="'$(FloorRun)' == 'true'" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="$(DiFloor)" Condition="'$(FloorRun)' == 'true'" />
     <!-- The suite runs on the newest 10.x; -p:FloorRun=true drops this reference, so it runs on the floor the package
-         asks for (10.0.7). -->
+         asks for (10.0.0). -->
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.*" Condition="'$(FloorRun)' != 'true'" />
   </ItemGroup>
   <ItemGroup>

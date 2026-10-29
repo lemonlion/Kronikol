@@ -32,15 +32,36 @@ public class DiagramCapturingProcessor : IProcessor
     /// </summary>
     internal static bool IsOwnTitle(string title, string? testClassSimpleName, string? testMethodName) =>
         title == testClassSimpleName
-        || (testMethodName is not null && title == Configurator.Scanners.Humanize(testMethodName))
-        || (testClassSimpleName is not null && title == Configurator.Scanners.Humanize(testClassSimpleName));
+        || (testMethodName is not null && title == Humanize(testMethodName))
+        || (testClassSimpleName is not null && title == Humanize(testClassSimpleName));
 
     /// <summary>
     /// Whether a story's title is BDDfy's own: none written (Kronikol names the story from its namespace) or its
     /// humaniser's reading of the story's class's name, which is what a <c>[Story]</c> with no <c>Title</c> gives.
     /// </summary>
     internal static bool IsOwnStoryTitle(StoryMetadata? metadata) =>
-        metadata is null || metadata.Title == Configurator.Scanners.Humanize(metadata.Type.Name);
+        metadata is null || metadata.Title == Humanize(metadata.Type.Name);
+
+    private static readonly PropertyInfo? ConfiguredHumanizer =
+        typeof(Configurator).GetProperty("Humanizer", BindingFlags.Public | BindingFlags.Static);
+
+    private static readonly FieldInfo? ScannersHumanize =
+        typeof(Scanners).GetField("Humanize", BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
+
+    /// <summary>
+    /// The humaniser BDDfy titles with, read as the running release keeps it (plans/CLIENT_FLOORS_PLAN.md F32): 8.0.11
+    /// titles with <c>Configurator.Humanizer</c> and keeps <c>Scanners.Humanize</c> only as an obsolete static copy of
+    /// the humaniser configured when the field is first read, for the rest of the run, while 8.0.1.3, the release this
+    /// adapter asks for, has that field alone, on the instance. Read each time, as a test may set its own humaniser.
+    /// </summary>
+    private static string Humanize(string name)
+    {
+        if (ConfiguredHumanizer?.GetValue(null) is { } humanizer)
+            return ConfiguredHumanizer.PropertyType.GetMethod("Humanize", [typeof(string)])!.Invoke(humanizer, [name]) as string ?? name;
+        return ScannersHumanize?.GetValue(ScannersHumanize.IsStatic ? null : Configurator.Scanners) is Func<string, string> humanise
+            ? humanise(name)
+            : name;
+    }
 
     public void Process(Story story)
     {

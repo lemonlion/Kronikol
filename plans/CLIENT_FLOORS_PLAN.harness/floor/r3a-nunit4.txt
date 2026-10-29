@@ -1,0 +1,7 @@
+# NUnit with NUnit of the same release: 14 4.x releases all share, 4.0.0 to 4.6.1; binary search
+4.6.1 | ok | Passed! - Failed: 0, Passed: 48, Skipped: 0, Total: 48 | audit: none | resolved: NUnit/4.6.1
+4.3.0 | BUILD FAILED | error CS1061: 'TestContext.TestAdapter' does not contain a definition for 'MethodInfo' and no accessible extension method 'MethodInfo' accepting a first argument of | audit: none | resolved: NUnit/4.3.0
+4.5.0 | TESTS FAILED | Failed! - Failed: 1, Passed: 47, Skipped: 0, Total: 48 | audit: none | resolved: NUnit/4.5.0
+4.6.0 | ok | Passed! - Failed: 0, Passed: 48, Skipped: 0, Total: 48 | audit: none | resolved: NUnit/4.6.0
+4.5.1 | TESTS FAILED | Failed! - Failed: 1, Passed: 47, Skipped: 0, Total: 48 | audit: none | resolved: NUnit/4.5.1
+# oldest passing: 4.6.0

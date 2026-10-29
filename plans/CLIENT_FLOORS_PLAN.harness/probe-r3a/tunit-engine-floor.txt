@@ -1,0 +1,38 @@
+## -p:TUnitVersion=1.0.0, the adapter built on TUnit.Core 1.0.0 (its csproj pinned there for the run)
+Build succeeded.
+Test run summary: Passed! - <probe>/bin\Debug\net10.0\f30run.dll (net10.0|x64)
+  total: 1
+  failed: 0
+  succeeded: 1
+  skipped: 0
+
+## -p:TUnitVersion=1.40.0, the adapter built on TUnit.Core 1.40.0, its floor (R3a, F35)
+Test run summary: Passed! - <probe>\bin\Debug\net10.0\f30run.dll (net10.0|x64)
+  total: 1
+  failed: 0
+  succeeded: 1
+  skipped: 0
+exit 0
+
+## -p:TUnitVersion=1.53.0, the adapter built on TUnit.Core 1.40.0, its floor (R3a, F35)
+Test run summary: Passed! - <probe>\bin\Debug\net10.0\f30run.dll (net10.0|x64)
+  total: 1
+  failed: 0
+  succeeded: 1
+  skipped: 0
+exit 0
+
+## -p:TUnitVersion=1.76.45, the adapter built on TUnit.Core 1.40.0, its floor (R3a, F35)
+Test run summary: Passed! - <probe>\bin\Debug\net10.0\f30run.dll (net10.0|x64)
+  total: 1
+  failed: 0
+  succeeded: 1
+  skipped: 0
+exit 0
+
+## -p:TUnitVersion=1.76.45, the adapter built on TUnit.Core 1.0.0, R3a's first floor, which ran only on itself (F35)
+Unhandled exception. System.TypeInitializationException: The type initializer for '<Module>' threw an exception.
+ ---> System.MissingFieldException: Field not found: 'TUnit.Core.Sources.AfterTestHooks'.
+   --- End of inner exception stack trace ---
+exit 127 (no test ran: the registration TUnit's generator wrote into the adapter for DiagrammedComponentTest's
+[After(Test)] hook, run by the adapter's module initializer, names a field 1.76.45 no longer has)

@@ -12,7 +12,12 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="xunit.extensibility.execution" Version="2.9.3" />
+		<!-- xunit.extensibility.execution: 2.4.0 is the oldest 2.x the suite passes on, each probe with xunit of the same
+		     release, as 2.3.1 and older have no TestMethodDisplayOptions, which the adapter reads; its graph carries no known
+		     advisory (harness floor/r3a-xunit2.txt). FloorLedger holds the floor, and the test project's package fact reads
+		     it back from the packed nuspec; the suite runs on the newest 2.x, and on this floor with -p:FloorRun=true
+		     (plans/CLIENT_FLOORS_PLAN.md R3a). -->
+		<PackageReference Include="xunit.extensibility.execution" Version="2.4.0" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -38,6 +38,9 @@ public class DerivedCategorizedSinkTests : CategorizedSinkBase
 /// class's, its base classes' included, are the feature's, and the method's are the scenario's, on both of the
 /// adapter's capture paths: the results sink, which makes the scenario when xUnit starts the test, and the attribute's
 /// <c>Before</c>, which makes it when no sink handed one over. No other trait key is a tag (Q7). 4.x read none of them.
+/// The expected tags are arrays, not collection expressions: with C# 14's span conversions <c>Assert.Equal(["Slow"],
+/// tags)</c> is ambiguous on xunit.assert 2.6.1 to 2.9.0, which the floor search builds against
+/// (plans/CLIENT_FLOORS_PLAN.md R3a).
 /// </summary>
 [Collection("CollectedScenarios")]
 public class TagMappingTests : IDisposable
@@ -78,9 +81,9 @@ public class TagMappingTests : IDisposable
 
         var feature = scenarios.ToFeatures().Single();
 
-        Assert.Equal(["Slow"], feature.Tags);
+        Assert.Equal(new[] { "Slow" }, feature.Tags);
         // the method's slow repeats the class's Slow in another case, so it is the feature's (§4.3)
-        Assert.Equal(["Smoke"], feature.Scenarios.Single(s => s.DisplayName == "Tagged").Tags);
+        Assert.Equal(new[] { "Smoke" }, feature.Scenarios.Single(s => s.DisplayName == "Tagged").Tags);
         Assert.Null(feature.Scenarios.Single(s => s.DisplayName == "Untagged").Tags);
     }
 
@@ -92,8 +95,8 @@ public class TagMappingTests : IDisposable
 
         var feature = new[] { tagged, untagged }.ToFeatures().Single();
 
-        Assert.Equal(["Slow"], feature.Tags);
-        Assert.Equal(["Smoke"], feature.Scenarios.Single(s => s.Id == tagged.Id).Tags);
+        Assert.Equal(new[] { "Slow" }, feature.Tags);
+        Assert.Equal(new[] { "Smoke" }, feature.Scenarios.Single(s => s.Id == tagged.Id).Tags);
         Assert.Null(feature.Scenarios.Single(s => s.Id == untagged.Id).Tags);
     }
 
@@ -106,8 +109,8 @@ public class TagMappingTests : IDisposable
 
         foreach (var feature in new[] { fromSink, fromAttribute })
         {
-            Assert.Equal(["Own", "Inherited"], feature.Tags);
-            Assert.Equal(["Smoke"], feature.Scenarios.Single().Tags);
+            Assert.Equal(new[] { "Own", "Inherited" }, feature.Tags);
+            Assert.Equal(new[] { "Smoke" }, feature.Scenarios.Single().Tags);
         }
     }
 
@@ -115,9 +118,9 @@ public class TagMappingTests : IDisposable
     // other class's tests carried them and their own were nowhere; the one both classes have stays the feature's.
     private static void AssertEachKeepsItsOwn(Feature feature)
     {
-        Assert.Equal(["Shop"], feature.Tags);
-        Assert.Equal(["Web"], feature.Scenarios.Single(s => s.DisplayName == "Pay").Tags);
-        Assert.Equal(["Api"], feature.Scenarios.Single(s => s.DisplayName == "Refund").Tags);
+        Assert.Equal(new[] { "Shop" }, feature.Tags);
+        Assert.Equal(new[] { "Web" }, feature.Scenarios.Single(s => s.DisplayName == "Pay").Tags);
+        Assert.Equal(new[] { "Api" }, feature.Scenarios.Single(s => s.DisplayName == "Refund").Tags);
     }
 
     [Theory]

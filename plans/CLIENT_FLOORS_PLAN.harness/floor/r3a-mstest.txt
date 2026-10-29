@@ -1,0 +1,26 @@
+# MSTest.TestFramework with MSTest, MSTest.TestFramework of the same release: 14 4.x releases all share, 4.0.0 to 4.5.2; binary search
+4.5.2 | BUILD FAILED | error NU1605:  Kronikol.Tests.MSTest -> MSTest 4.5.2 -> Microsoft.NET.Test.Sdk (>= 18.10.1)  error NU1605:  Kronikol.Tests.MSTest -> Microsoft.NET.Test.Sdk (>= 18.5.1) error NU1605: Warning As Error: Detected package downgrade: Microsoft.NET.Test.Sdk from 18.10.1 to 18.5.1. Reference the package directly from the project to select | audit: none | resolved: MSTest/4.5.2 MSTest.TestFramework/4.5.2
+# the run below, after the test project floats Microsoft.NET.Test.Sdk (the first stopped on NU1605 against the pinned 18.5.1)
+# MSTest.TestFramework with MSTest, MSTest.TestFramework of the same release: 14 4.x releases all share, 4.0.0 to 4.5.2; binary search
+4.5.2 | ok | Passed! - Failed: 0, Passed: 84, Skipped: 0, Total: 84 | audit: none | resolved: MSTest/4.5.2 MSTest.TestFramework/4.5.2
+4.2.3 | ok | Passed! - Failed: 0, Passed: 84, Skipped: 0, Total: 84 | audit: none | resolved: MSTest/4.2.3 MSTest.TestFramework/4.2.3
+4.1.0 | ok | no summary | audit: none | resolved: MSTest/4.1.0 MSTest.TestFramework/4.1.0
+4.0.1 | ok | no summary | audit: none | resolved: MSTest/4.0.1 MSTest.TestFramework/4.0.1
+4.0.0 | ok | no summary | audit: none | resolved: MSTest/4.0.0 MSTest.TestFramework/4.0.0
+# oldest passing: 4.0.0
+# the run below, after a probe that finds no test fails (F29) and the floor run takes MSTest's own test SDK
+# MSTest.TestFramework with MSTest, MSTest.TestFramework of the same release: 14 4.x releases all share, 4.0.0 to 4.5.2; binary search
+4.5.2 | ok | Passed! - Failed: 0, Passed: 84, Skipped: 0, Total: 84 | audit: none | resolved: MSTest/4.5.2 MSTest.TestFramework/4.5.2
+4.2.3 | ok | Passed! - Failed: 0, Passed: 84, Skipped: 0, Total: 84 | audit: none | resolved: MSTest/4.2.3 MSTest.TestFramework/4.2.3
+4.1.0 | TESTS FAILED | no summary | audit: none | resolved: MSTest/4.1.0 MSTest.TestFramework/4.1.0
+4.2.2 | ok | Passed! - Failed: 0, Passed: 84, Skipped: 0, Total: 84 | audit: none | resolved: MSTest/4.2.2 MSTest.TestFramework/4.2.2
+4.2.1 | ok | Passed! - Failed: 0, Passed: 84, Skipped: 0, Total: 84 | audit: none | resolved: MSTest/4.2.1 MSTest.TestFramework/4.2.1
+# oldest passing: 4.2.1
+# the run below, each probe built from an empty bin/ and obj/ (F31)
+# MSTest.TestFramework with MSTest, MSTest.TestFramework of the same release: 14 4.x releases all share, 4.0.0 to 4.5.2; binary search
+4.5.2 | ok | Passed! - Failed: 0, Passed: 84, Skipped: 0, Total: 84 | audit: none | resolved: MSTest/4.5.2 MSTest.TestFramework/4.5.2
+4.2.3 | ok | Passed! - Failed: 0, Passed: 84, Skipped: 0, Total: 84 | audit: none | resolved: MSTest/4.2.3 MSTest.TestFramework/4.2.3
+4.1.0 | ok | Passed! - Failed: 0, Passed: 84, Skipped: 0, Total: 84 | audit: none | resolved: MSTest/4.1.0 MSTest.TestFramework/4.1.0
+4.0.1 | ok | Passed! - Failed: 0, Passed: 84, Skipped: 0, Total: 84 | audit: none | resolved: MSTest/4.0.1 MSTest.TestFramework/4.0.1
+4.0.0 | ok | Passed! - Failed: 0, Passed: 84, Skipped: 0, Total: 84 | audit: none | resolved: MSTest/4.0.0 MSTest.TestFramework/4.0.0
+# oldest passing: 4.0.0

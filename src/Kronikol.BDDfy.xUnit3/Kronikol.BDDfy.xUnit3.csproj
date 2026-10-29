@@ -12,6 +12,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- TestStack.BDDfy: 8.0.1.3, the oldest 8.x NuGet lists, is the oldest the core suite's BDDfy facts pass on, and
+         they pass on the newest too, 8.0.11 and the unlisted 8.0.12 that a floating 8.x reference takes, now that the
+         adapter reads BDDfy's humaniser as each release keeps it (F32); its graph carries no known advisory (harness
+         floor/r3a-bddfy.txt, floor/r3a-bddfy-f32.txt). FloorLedger holds the floor, and the test project's package fact
+         reads it back from the packed nuspec; the suite runs on the newest 8.x, and on this floor with -p:FloorRun=true
+         (plans/CLIENT_FLOORS_PLAN.md R3a). -->
     <PackageReference Include="TestStack.BDDfy" Version="8.0.1.3" />
   </ItemGroup>
 

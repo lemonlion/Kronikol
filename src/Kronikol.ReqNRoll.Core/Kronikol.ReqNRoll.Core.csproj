@@ -9,7 +9,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Reqnroll" Version="3.3.4" />
+    <!-- Reqnroll: 3.0.1 is the oldest 3.x the core suite's Reqnroll facts pass on, as 3.0.0 has no
+         IFeatureLevelCucumberMessages, which the adapter reads; its graph carries no known advisory (harness
+         floor/r3a-reqnroll.txt). FloorLedger holds the floor, and the test project's package fact reads it back from
+         the packed nuspec; the suite runs on the newest 3.x, and on this floor with -p:FloorRun=true
+         (plans/CLIENT_FLOORS_PLAN.md R3a). -->
+    <PackageReference Include="Reqnroll" Version="3.0.1" />
   </ItemGroup>
 
   <ItemGroup>

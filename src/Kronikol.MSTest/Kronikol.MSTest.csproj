@@ -13,7 +13,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="MSTest.TestFramework" Version="4.2.2" />
+    <!-- MSTest.TestFramework: 4.0.0 is the oldest 4.x the suite passes on, each probe with MSTest of the same release,
+         the first of the major, and its graph carries no known advisory (harness floor/r3a-mstest.txt). FloorLedger
+         holds the floor, and the test project's package fact reads it back from the packed nuspec; the suite runs on
+         the newest 4.x, and on this floor with -p:FloorRun=true (plans/CLIENT_FLOORS_PLAN.md R3a). -->
+    <PackageReference Include="MSTest.TestFramework" Version="4.0.0" />
   </ItemGroup>
 
   <ItemGroup>

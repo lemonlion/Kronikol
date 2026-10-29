@@ -8,6 +8,7 @@
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
     <RunSettingsFilePath>$(MSBuildProjectDirectory)\test.runsettings</RunSettingsFilePath>
+    <LightBddFloor Condition="'$(LightBddFloor)' == ''">3.12.0</LightBddFloor>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,7 +22,11 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="LightBDD.XUnit3" Version="3.12.0" />
+    <!-- LightBDD.XUnit3 asks for the LightBDD.Framework of its own release, so the suite takes it at the newest 3.x,
+         and with -p:FloorRun=true at the floor the adapters ask for, or at the release a floor search probes
+         (-p:LightBddFloor=<release>) (plans/CLIENT_FLOORS_PLAN.md R3a). -->
+    <PackageReference Include="LightBDD.XUnit3" Version="3.*" Condition="'$(FloorRun)' != 'true'" />
+    <PackageReference Include="LightBDD.XUnit3" Version="$(LightBddFloor)" Condition="'$(FloorRun)' == 'true'" />
   </ItemGroup>
 
   <ItemGroup>
@@ -30,6 +35,11 @@
 
   <ItemGroup>
     <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Kronikol.Tests\Packaging\PackedNuspec.cs" Link="PackedNuspec.cs" />
+    <Compile Include="..\Kronikol.Tests\Packaging\FloorLedger.cs" Link="FloorLedger.cs" />
   </ItemGroup>
 
 </Project>

@@ -1,0 +1,10 @@
+MSTest newest: exit 0 Passed!  - Failed:     0, Passed:    85, Skipped:     0, Total:    85, Duration: 2 s - Kronikol.Tests.MSTest.dll (net10.0) 
+MSTest floor over the newest's output: exit 1 No test is available in C:\Code\Kronikol-r3a2\tests\Kronikol.Tests.MSTest\bin\Release\net10.0\Kronikol.Tests.MSTest.dll. Make sure that test discoverer & executors are registered and platform & framew
+MSTest floor from an empty bin/: exit 0 Passed!  - Failed:     0, Passed:    85, Skipped:     0, Total:    85, Duration: 1 s - Kronikol.Tests.MSTest.dll (net10.0) 
+Playwright newest build: exit 0, playwright.ps1 present
+Playwright floor build over the newest's output: exit 0, playwright.ps1 MISSING
+Playwright floor build from an empty bin/: exit 0, playwright.ps1 present
+  install exit 0
+  floor tests: exit 0 Passed!  - Failed:     0, Passed:    10, Skipped:     0, Total:    10, Duration: 5 s - Kronikol.Tests.Playwright.dll (net10.0) 
+"Microsoft.Playwright/1.12.0 
+DONE

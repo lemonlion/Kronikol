@@ -11,13 +11,25 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="LightBDD.XUnit2" Version="3.12.0" />
-    <PackageReference Include="xunit" Version="2.9.3" />
+    <!-- LightBDD.XUnit2: 3.10.0 is the oldest 3.x the LightBDD xUnit v2 example passes on, each probe with
+         LightBDD.Framework of the same release, as 3.9.0 and older have no IScenario.Descriptor, which
+         Kronikol.LightBDD.Core reads; its graph carries no known advisory (harness floor/r3a-lightbdd-xunit2.txt).
+         FloorLedger holds the floor, and the test project's package fact reads it back from the packed nuspec; the
+         suite runs on the newest 3.x, and on this floor with -p:FloorRun=true (plans/CLIENT_FLOORS_PLAN.md R3a). -->
+    <PackageReference Include="LightBDD.XUnit2" Version="3.10.0" />
+    <!-- xunit: 2.4.2, the least LightBDD.XUnit2 3.10.0 asks for, is the oldest 2.x the example passes on, each probe
+         with xunit.extensibility.execution of the same release, and its graph carries no known advisory
+         (plans/CLIENT_FLOORS_PLAN.md R3a, harness floor/r3a-lightbdd-xunit2-xunit.txt). -->
+    <PackageReference Include="xunit" Version="2.4.2" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Kronikol.LightBDD.Core\Kronikol.LightBDD.Core.csproj" />
     <ProjectReference Include="..\Kronikol.xUnit2\Kronikol.xUnit2.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Kronikol.Tests.LightBDD.xUnit2" />
   </ItemGroup>
 
 </Project>

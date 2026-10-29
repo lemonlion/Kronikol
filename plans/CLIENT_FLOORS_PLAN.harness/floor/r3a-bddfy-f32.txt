@@ -1,0 +1,6 @@
+# TestStack.BDDfy: 2 stable 8.x releases, 8.0.1.3 to 8.0.11; binary search
+8.0.11 | ok | Kronikol.Tests: Passed! - Failed: 0, Passed: 57, Skipped: 0, Total: 57 | audit: none | resolved: TestStack.BDDfy/8.0.11
+8.0.1.3 | ok | Kronikol.Tests: Passed! - Failed: 0, Passed: 57, Skipped: 0, Total: 57 | audit: none | resolved: TestStack.BDDfy/8.0.1.3
+# oldest passing: 8.0.1.3
+# the core suite as CI runs it, at the newest of each: TestStack.BDDfy 8.* floats to 8.0.12, which nuget.org keeps unlisted (Packaging, BDDfy and Reqnroll facts)
+8.0.12 | ok | Kronikol.Tests: Passed! - Failed: 0, Passed: 319, Skipped: 0, Total: 319 | audit: none | resolved: TestStack.BDDfy/8.0.12

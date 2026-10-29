@@ -143,7 +143,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.7" Condition="'$(TargetFramework)' == 'net10.0'" />
+		<!-- Microsoft.AspNetCore.Mvc.Testing: 10.0.0, the first 10.x: the core suite passes on every 10.x release and NuGet
+		     audit reports no advisory on any. FloorLedger holds the floor, and the core suite's KronikolPackageTests reads
+		     it back from the packed nuspec; the suite runs on the newest 10.x, and on this floor with -p:FloorRun=true
+		     (plans/CLIENT_FLOORS_PLAN.md R3a). -->
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.0" Condition="'$(TargetFramework)' == 'net10.0'" />
 	</ItemGroup>
 
 </Project>

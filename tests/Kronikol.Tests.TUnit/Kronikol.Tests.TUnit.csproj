@@ -21,7 +21,7 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <!-- The suite runs on the newest 1.x, as most consumers do, against the adapter built on the release it asks for;
-         -p:FloorRun=true drops this reference, so it runs on that release (1.43.11). Before 5.27.8 nothing ran the
+         -p:FloorRun=true drops this reference, so it runs on that release (1.40.0). Before 5.27.8 nothing ran the
          adapter on a later TUnit.Core, and [HeadIn] failed to load on every release from 1.53.0
          (plans/CLIENT_FLOORS_PLAN.md F30). -->
     <PackageReference Include="TUnit.Core" Version="1.*" Condition="'$(FloorRun)' != 'true'" />
@@ -33,6 +33,11 @@
 
   <ItemGroup>
     <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Kronikol.Tests\Packaging\PackedNuspec.cs" Link="PackedNuspec.cs" />
+    <Compile Include="..\Kronikol.Tests\Packaging\FloorLedger.cs" Link="FloorLedger.cs" />
   </ItemGroup>
 
 </Project>

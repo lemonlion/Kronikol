@@ -34,6 +34,9 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="2.2.3" ExcludeAssets="build;buildTransitive" />
     <PackageReference Include="TUnit.Assertions" Version="1.53.0" ExcludeAssets="compile;analyzers;build;buildTransitive" />
+    <!-- The suite runs on the newest 3.x; -p:FloorRun=true drops this reference, so it runs on the floor the package
+         asks for (3.12.1). Its build assets and analyzers stay out, as the adapter's own reference keeps them. -->
+    <PackageReference Include="LightBDD.TUnit" Version="3.*" ExcludeAssets="build;buildTransitive;analyzers" Condition="'$(FloorRun)' != 'true'" />
   </ItemGroup>
 
   <ItemGroup>
@@ -42,6 +45,11 @@
 
   <ItemGroup>
     <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Kronikol.Tests\Packaging\PackedNuspec.cs" Link="PackedNuspec.cs" />
+    <Compile Include="..\Kronikol.Tests\Packaging\FloorLedger.cs" Link="FloorLedger.cs" />
   </ItemGroup>
 
 </Project>

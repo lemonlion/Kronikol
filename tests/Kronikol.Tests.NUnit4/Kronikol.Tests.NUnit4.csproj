@@ -15,12 +15,21 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.5.1" />
+    <!-- NUnit stays at 4.6.0, not the newest 4.x: the adapter reads the result tree of NUnit.Framework.Internal, which
+         was measured on 4.6.0 alone (UncapturedTestsTests), so a newer NUnit is a decision to measure again. 4.6.0 is
+         the adapter's measured floor as well, so the floor run takes the same release (plans/CLIENT_FLOORS_PLAN.md
+         R3a). -->
     <PackageReference Include="NUnit" Version="4.6.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="6.2.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Kronikol.NUnit4\Kronikol.NUnit4.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Kronikol.Tests\Packaging\PackedNuspec.cs" Link="PackedNuspec.cs" />
+    <Compile Include="..\Kronikol.Tests\Packaging\FloorLedger.cs" Link="FloorLedger.cs" />
   </ItemGroup>
 
 </Project>

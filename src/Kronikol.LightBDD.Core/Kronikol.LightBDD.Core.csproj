@@ -9,7 +9,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="LightBDD.Framework" Version="3.12.0" />
+    <!-- LightBDD.Framework: 3.10.0 is the oldest 3.x the LightBDD xUnit v2 example passes on, as 3.9.0 and older have
+         no IScenario.Descriptor, which the adapter reads; the xUnit v3 and TUnit runners begin later, at 3.12.0 and
+         3.12.1, and its graph carries no known advisory (harness floor/r3a-lightbdd-xunit2.txt). FloorLedger holds the
+         floor, and the test project's package fact reads it back from the packed nuspec; the suite runs on the newest
+         3.x, and on this floor with -p:FloorRun=true (plans/CLIENT_FLOORS_PLAN.md R3a). -->
+    <PackageReference Include="LightBDD.Framework" Version="3.10.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -18,6 +23,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="Kronikol.Tests" />
+    <InternalsVisibleTo Include="Kronikol.Tests.LightBDD.xUnit2" />
     <InternalsVisibleTo Include="Kronikol.Tests.LightBDD.xUnit3" />
     <InternalsVisibleTo Include="Kronikol.Tests.LightBDD.TUnit" />
     <InternalsVisibleTo Include="Kronikol.LightBDD.xUnit2" />

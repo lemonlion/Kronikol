@@ -4,8 +4,8 @@
 plan a fix for the underlying problem; audited the same day at 5.14.0 (`8d7d1e1d`), at the owner's ask to make it
 complete and accurate (section 11 lists what the audit found and changed). **Green-lit 2026-10-28** by the owner ("Can
 you implement the plan in full"), every question in section 10 at its recommendation; executing. **R1 released as
-5.22.1, R2a as 5.27.1, R2b as 5.27.3, R2c as 5.27.5, F26, found by R2c, as 5.27.7, and F30, found by R3a, as
-5.27.8** (section 11).
+5.22.1, R2a as 5.27.1, R2b as 5.27.3, R2c as 5.27.5, F26, found by R2c, as 5.27.7, F30, found by R3a, as 5.27.8,
+and R3a as 5.27.10** (section 11).
 
 **Issues:** [#205](https://github.com/lemonlion/Kronikol/issues/205), "BigQuery: the extension's floor,
 Google.Cloud.BigQuery.V2 3.12, runs ExecuteQuery through jobs.query, whose timestamps the emulator answers in seconds,
@@ -469,6 +469,47 @@ extensions against servers in podman, on the floor and on the newest: every call
 on both, which for Oracle names no host and no database (F26). After R2c the ledger holds none still floating, 33
 unmeasured and 29 measured.
 
+*As built in R3a:* the core package and the test framework adapters ask for measured floors (RUN, `floor/r3a-*.txt`,
+and `probe-r3a/`), and the three dependency injection floors R2b and R2c left at the core's 10.0.7 move with the core:
+
+| Package | Floor | Why there |
+|---|---|---|
+| Kronikol, `Microsoft.AspNetCore.Mvc.Testing` | 10.0.0 | The first of the major, where the core suite passes |
+| xUnit2, `xunit.extensibility.execution` | 2.4.0 | The oldest the xUnit v2 suite passes on, each probe with xunit of the same release: 2.3.1 and older have no `TestMethodDisplayOptions`, which the adapter reads |
+| xUnit3, `xunit.v3.extensibility.core` | 3.0.0 | The first of the major, each probe with xunit.v3 of the same release |
+| NUnit4, `NUnit` | 4.6.0 | The pin: on 4.5.x only `UncapturedTestsTests` fails, the guard on the result tree of `NUnit.Framework.Internal` that the adapter reads, and 4.3.0 and older have no `TestContext.TestAdapter.MethodInfo` |
+| MSTest, `MSTest.TestFramework` | 4.0.0 | The first of the major, each probe with MSTest of the same release |
+| TUnit, `TUnit.Core` | 1.40.0 | The oldest release whose build of the adapter runs on the newest (F35): TUnit's source generator writes the adapter's hook registrations at its build, and built on 1.39.0 or older they name a field later releases no longer have; each release the second search probed passes on itself, after F30 (`floor/r3a-tunit.txt`), and TUnit's own engine runs a `[HeadIn]` test through the adapter built on 1.40.0 (`probe-r3a/tunit-engine-floor.txt`) |
+| ReqNRoll.Core, `Reqnroll` | 3.0.1 | 3.0.0 has no `IFeatureLevelCucumberMessages`, which the adapter reads |
+| LightBDD.Core, `LightBDD.Framework` | 3.10.0 | The oldest the LightBDD xUnit v2 example passes on: 3.9.0 and older have no `IScenario.Descriptor`; the xUnit v3 and TUnit runners begin later, at 3.12.0 and 3.12.1 |
+| LightBDD.TUnit, `LightBDD.TUnit` | 3.12.1 | The pin: 3.12.0 and older fail two of the suite's facts, as 3.12.0's hook registrations, built on TUnit 1.0.0, name a field later TUnit.Core releases no longer have (`MissingFieldException`); 3.12.1 asks for TUnit 1.53.0 |
+| LightBDD.xUnit2, `LightBDD.XUnit2` | 3.10.0 | As LightBDD.Framework, each probe with it of the same release |
+| LightBDD.xUnit2, `xunit` | 2.4.2 | The least LightBDD.XUnit2 3.10.0 asks for, where the example passes |
+| LightBDD.xUnit3, `LightBDD.XUnit3` | 3.12.0 | Its first release |
+| BDDfy.xUnit3, `TestStack.BDDfy` | 8.0.1.3 | The pin, the oldest 8.x NuGet lists; after F32 the suite passes on the newest too, 8.0.11 and the unlisted 8.0.12 a floating `8.*` takes |
+| Playwright, `Microsoft.Playwright` | 1.12.0 | The first stable release, each probe driving the Chromium of its own release |
+| ServiceBus, MediatR and DispatchProxy, `Microsoft.Extensions.DependencyInjection.Abstractions` | 10.0.0 | The first of the major, each probe with the container (and for MediatR the logging) of the same release, now that the core asks for less; MediatR 14.1.0 asks for 10.0.0 |
+
+None of their graphs carries a known advisory. An adapter's suite takes its framework at the newest on the normal run
+and at the floor under `-p:FloorRun=true`, through a property a search can set: xUnit v3 (`$(XunitV3Floor)`), xUnit v2
+(`$(XunitFloor)`), MSTest (`$(MSTestFloor)`, with the test SDK MSTest brings) and LightBDD's xUnit v3 runner
+(`$(LightBddFloor)`); the DI suites take the container at `$(DiFloor)`. The NUnit suite keeps NUnit pinned at its
+floor, the release its guard holds the result tree to. The TUnit, LightBDD TUnit and Playwright suites, and the core
+suite for Mvc.Testing, Reqnroll and BDDfy, reference the newest under `'$(FloorRun)' != 'true'`, as R2's do. The
+LightBDD xUnit v2 adapter had no suite of its own, only the example, which no floor run reaches:
+`tests/Kronikol.Tests.LightBDD.xUnit2` holds its package fact, F33's facts and the configuration facts the other
+runners' suites have, and runs on 3.10.0 and 2.4.2 under the switch. CI's floor step installs the Chromium of the
+Playwright floor before the Playwright suite runs on it, as each release drives its own (`FloorRunTests`).
+
+The searches met three limits of the suites' own code, each fixed in the test, not the floor: `TagMappingTests`
+compared tags with collection expressions, which C# 14's first-class spans make ambiguous on xunit.assert 2.6.1 to
+2.9.0 (CS0121), so they compare arrays; `HeadInAttributeTests` built a `ParameterMetadata` without `ReflectionInfo`,
+required before TUnit.Core 1.19.0 and settable on every 1.x, so it sets it; and the NUnit guard keeps its floor where
+the guard reads. The harness gained F29's and F31's fixes, a check that every series package resolves on the release
+probed ("NOT ON x"), `--to` (a search from below a release that cannot build), `--setup` (Playwright's browsers, per
+probe), `--no-floor-run` (the package built on the release probed, the suites on their newest, F35) and `--filter` for the paired and family searches (each package fact fails every probe of another release, as
+F23 found). After R3a the ledger holds none still floating, 19 unmeasured and 43 measured.
+
 **Not chosen: central package management**, #97's third option. RUN, `restore/cpm-float/`: under
 `ManagePackageVersionsCentrally`, restore rejects a central floating version (`NU1011: The following PackageVersion
 items cannot specify a floating version`) unless a project sets `CentralPackageFloatingVersionsEnabled`, so a test
@@ -544,7 +585,7 @@ together they can share one patch release (Q7).
 | `BigQueryPackageTests.The_packed_extension_asks_for_its_measured_client_floor` | the nuspec asks for 3.0.0 | 5.12.0 (asks 3.12.0) |
 | The BigQuery suite with `-p:FloorRun=true` in CI | the extension works on its floor, not only compiles | a floor raised by a call into a newer API |
 | The BigQuery suite without it | it still runs on the newest 3.x | a missing direct reference (it would run on 3.0.0) |
-| The floor ledger's facts, six as built (section 5.2) | no packable project floats, every consumer-facing pin is in the ledger at its version, the still-floating and unmeasured marks only go, and the ledger names only references that exist, each once, each with its basis | an empty ledger; the counts are 25 and 33 after R1, 16 and 33 after R2a, 10 and 33 after R2b, 0 and 33 after R2c |
+| The floor ledger's facts, six as built (section 5.2) | no packable project floats, every consumer-facing pin is in the ledger at its version, the still-floating and unmeasured marks only go, and the ledger names only references that exist, each once, each with its basis | an empty ledger; the counts are 25 and 33 after R1, 16 and 33 after R2a, 10 and 33 after R2b, 0 and 33 after R2c, 0 and 19 after R3a |
 | Each R2 and R3 package's floor run and nuspec check | as R1 | each batch's parent commit |
 | `TrackingSubscriberClientTests` (R2a) | stopping the tracking subscriber stops the client it wraps, by each overload | R2a's parent on 3.39.0: two of the three throw `NotImplementedException` (F8) |
 | `A_statement_is_named_for_what_it_does_not_for_the_call_that_carries_it` and the server observer's twin (R2a) | an INSERT, UPDATE or DELETE through `ExecuteSql` is drawn as what it does | R2a's parent: each drawn as `SELECT FROM <table>` (F9) |
@@ -553,6 +594,10 @@ together they can share one patch release (Q7).
 | `TrackingServiceBusWrapperCoverageTests` (R2b) | processors, rule managers, disposal, a batch send and both dead-letters with properties reach the client the wrapper holds, and the sends and dead-letters are drawn | R2b's parent: `NullReferenceException`, or undrawn (F12) |
 | `TrackingEventHubsWrapperCoverageTests` (R2b) | held as the SDK type, the clients have the names and identifier of the clients they wrap and are closed with them; each of the five reads goes through the same overload of the client it wraps and is drawn with its response when it ends, is left early or fails, with its count at `Raw` | R2b's parent: 23 of its facts and theory rows (F13) |
 | `ReplaceWithTrackedTests` (R2c) | replacing a service replaces each of its unkeyed registrations, leaves its keyed ones, and the overload with options draws each call under the service it names | R2c's parent: the keyed registration removed (F19) |
+| `BDDfyHumaniserTests` (R3a) | a scenario or story title made by the humaniser a test sets is BDDfy's own, and the default's is not while another is set, on 8.0.1.3, 8.0.11 and 8.0.12 | R3a's parent on 8.0.12, its three facts in one run: the adapter reads the copy of the humaniser set first (F32) |
+| `TestCountTests` (R3a), in the LightBDD xUnit v2 and v3 suites | a scenario method is a test for each row of its test data, whichever attribute gives the rows, one with none and one whose rows cannot be read | R3a's parent: on xUnit v2 a `MemberData` or `ClassData` method counted one over its rows; on v3 `ClassData` counted one over and `MemberData` one (F33) |
+| `Each_floor_run_starts_from_an_empty_output` (R3a), for both of CI's loops | each floor run empties the project's `bin/` and `obj/` before it builds or tests | R3a's parent's `ci.yml` (F36) |
+| `The_floor_run_installs_the_Chromium_its_Playwright_floor_drives_before_it_tests` (R3a) | CI's floor run builds the Playwright suite on its floor and installs that build's Chromium before it tests | R3a's parent's `ci.yml` |
 
 No Playwright fact: nothing in a report changes.
 
@@ -588,7 +633,14 @@ No Playwright fact: nothing in a report changes.
 | F26 | Every Oracle arrow names `oracle://localhost/unknown/<table>`: `SqlEndpoint.Host` reads an EZConnect data source (`127.0.0.1:21521/FREEPDB1`) as no host, and ODP.NET's `Database` is empty, so the database is `unknown`, on the floor and the newest alike (RUN, `results/r2c-oracle-{floor,newest}.txt`). The database is in history's call line, so its fix moves history's rule. | Kronikol | Fixed in 5.27.7, its own patch: `SqlEndpoint.Address` reads the host, port and service of an EZConnect string or a connect descriptor for the shared SQL tracker, Dapper and the EF Core interceptor, and history's rule moved to 10, each moved call keeping the address rules 6 to 9 recorded (`RequestResponseLog.RecordedBefore10`) |
 | F27 | The TcpTap test project pinned `StackExchange.Redis` 2.6.48 and references the Redis extension, so the Redis floor, 2.6.80, made its restore a downgrade NuGet refuses (NU1605): the TcpTap search's first probe failed to build (RUN, `floor/r2c-tcptap.txt`). | Kronikol | Fixed in R2c: the pin moves to 2.6.80; no other test project pins a floored client below its floor |
 | F28 | The audit column of `floor/otel_floor.py` and `floor/paired_floor.py` read only a warning that names its project in a closing bracket, and a restore warning names it first, so the EF Core search reported no advisory where each build had three, all from the test providers: `System.Security.Cryptography.Pkcs` 9.0.4 through the SQL Server provider and `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 through the Sqlite provider (RUN). The floors do not rest on that column: each graph was read on its own (`floor/r2c-advisory.sh`, and a restore of the one reference). | the harness | Fixed in R2c: the three search scripts, `floor_probe2.py` among them, read either form |
+| F29 | VSTest exits 0 when it finds no test, and `floor/paired_floor.py` and `floor/floor_probe2.py` read the exit code alone, so the MSTest search's first rerun counted three probes that ran nothing as passes and reported 4.0.0 (RUN, `floor/r3a-mstest.txt`). | the harness | Fixed in R3a: each probe's test run passes `RunConfiguration.TreatNoTestsAsError=true`, and a run with no summary fails |
 | F30 | `Kronikol.TUnit`'s `HeadInAttribute` implemented TUnit's `IDataSourceAttribute` itself, and TUnit.Core 1.53.0 added `DeferEnumeration` to the interface, so on 1.53.0 and every later release a test with `[HeadIn]` failed before it ran: TUnit's generated test source threw `TypeLoadException` (RUN, `f30/results/`). R3a's TUnit search found it, its first probe, the newest release (1.76.45), failing to build the adapter. Nothing had run the adapter on a later TUnit.Core, as its test project took TUnit.Core only through it, and the wiki's TUnit page installs 1.53.0. | Kronikol | Fixed in 5.27.8, its own patch, ahead of R3a, whose TUnit search needs it: the attribute derives from TUnit's `AsyncUntypedDataSourceGeneratorAttribute`, which implements what TUnit adds; the TUnit suite runs on the newest 1.x and, with `-p:FloorRun=true`, on 1.43.11, and `TUnitInterfaceTests` holds that no adapter type implements a TUnit interface its base class does not |
+| F35 | TUnit's source generator writes `Kronikol.TUnit`'s hook registrations into the adapter at its build, bound to that TUnit.Core's internals, so the adapter built on one release loads only on releases that keep them: built on 1.39.0 or older it fails on later releases at load ("Field not found: 'TUnit.Core.Sources.AfterTestHooks'", `MissingFieldException`), and every test with it fails. R3a's second TUnit search built and ran each probe on one release, as every floor search had, so it reported 1.0.0; the full suite's normal runs, which run each suite on the newest against the package built on its floor, found it in the TUnit and LightBDD TUnit suites (RUN, `floor/r3a-tunit3.txt`). No other adapter carries code a framework generates into it. | the harness | Fixed in R3a: `floor_probe2.py --no-floor-run` builds the package on the release probed and runs the suites on their own newest references; the TUnit floor is 1.40.0, the oldest that passes so, and the TUnit suite passes on it as well, with `-p:FloorRun=true` |
+| F36 | CI's floor runs built each project over its normal run's output, so a file a package copies only when newer kept the newest's: the MSTest floor run found no test, on MSTest 4.5.2's test adapter, which refuses the 4.0.0 framework (F31's cause), and the Playwright floor's build, 1.12.0's over 1.64.1's, left no `playwright.ps1` to install its browser with, and so did one into an empty `bin/` on the newest's `obj/` (RUN, `probe-r3a/f36/playwright-obj.txt`: a floor build from an empty `bin/` and `obj/` has it, one from an empty `bin/` after a newest build has not) (RUN, the full suite as CI runs it, and `probe-r3a/f36/over-the-newest.txt`: red over the newest's output, green from an empty one). Neither project had a floor run before R3a. | CI | Fixed in R3a: each floor run, in both of CI's loops, starts from an empty `bin/` and `obj/`, and `FloorRunTests` holds both loops to it |
+| F31 | Each probe built its test project in place, and `MSTest.TestAdapter` reaches the output as content copied only when newer, so a probe after a newer one ran that one's adapter, which refuses a framework of another release ("'MSTest.TestAdapter' and 'MSTest.TestFramework' must have the same version") and so found no test: MSTest 4.1.0 and older looked unsupported (RUN, VSTest diagnostics; 84 of 84 on 4.1.0 from an empty output). Library assemblies copy on any change, so no client library's search was touched. | the harness | Fixed in R3a: every probe builds from an empty `bin/` and `obj/`; the MSTest, xUnit v3 and xUnit v2 searches ran again so |
+| F32 | The BDDfy adapter decides whether a title is BDDfy's own by asking `Configurator.Scanners.Humanize`, the instance field 8.0.1.3 titles with; 8.0.11 titles with `Configurator.Humanizer` and keeps `Scanners.Humanize` only as an obsolete static copy of the humaniser configured when the field is first read, for the rest of the run. The adapter does not build on 8.0.11 or 8.0.12 (CS0176, RUN, `floor/r3a-bddfy.txt`), but built on 8.0.1.3, as published, it runs on them, as the runtime reads the static field through the instance reference, and reads that copy (RUN, `probe-r3a/bddfy-humanize/`). So once a test sets or changes its humaniser after the adapter's first title, a title BDDfy makes with it is taken for one the test wrote: it is left as written, where BDDfy's own titles pass through the title word list (`TitleWords`), and the report marks it written (RUN, `BDDfyHumaniserTests` on the parent and 8.0.12: green each alone, and in one run the default's fact fails after a fact that set a humaniser). Nothing ran the adapter on a later BDDfy, as the core suite took BDDfy only through it. | Kronikol | Fixed in R3a: the adapter reads `Configurator.Humanizer` where the release has it and `Scanners.Humanize` where it does not, each time, as a test may set its own; the core suite runs on the newest 8.x and on 8.0.1.3 |
+| F33 | Kronikol holds a LightBDD run's scenarios to the count of tests the adapter expects (`ReportConfigurationOptions.ExpectedTestCount`) and writes no Specifications report, data or Markdown when the run falls short, as a partial run would. The xUnit v2 and v3 adapters counted a scenario method as one test plus the rows of its `MemberData` and `ClassData`, so on xUnit v2 a method with either counted one over its rows and a whole run fell short: no Specifications report, for any suite with such a method (READ, `ReportGenerator`; RUN, `TestCountTests`). On v3 `ClassData` counted one over too, and `MemberData` one, as the count asked for its rows with xUnit v2's signature, and v3's attribute names no rows until it is given the test class, which xUnit gives it before it reads them. The TUnit runner's count reads `[Arguments]` alone, so a method with another data source counts one, under its rows: the report is written, and a partial run that leaves out fewer tests than the shortfall can overwrite it. | Kronikol | Fixed in R3a for xUnit v2 and v3: a method is a test for each row its data attributes give, read through xUnit's own `DataAttribute` and `IDataAttribute`, and one with none; the TUnit count is left, as TUnit's data sources are read by its engine, and TUnit's API moves fast (F30) |
+| F34 | The example API and its fake cow service took `Swashbuckle.AspNetCore` 10.1.5, which brings `Microsoft.OpenApi` 2.4.1, under GHSA-v5pm-xwqc-g5wc (high, circular schema references may stop OpenAPI parsing): every LightBDD xUnit v2 probe's audit column named it (RUN, `floor/r3a-lightbdd-xunit2*.txt`). | the examples | Fixed in R3a: both take 10.3.1, which brings the patched 2.7.5 |
 
 ## 9. Risks and assumptions
 
@@ -747,6 +799,28 @@ Each has a recommendation; none is legwork.
   1.43.11 and 1.76.45 and through the published 5.27.7 on 1.76.45 (`f30/`); then, on 5.27.7 with F30, the
   LightBDD.TUnit suite (25), the three TUnit examples as CI runs them (12, 3 and 2), the core suite (11,569 passed, 2
   skipped) and the Release build of `release.slnf`, whose only advisories are the older ones 5.27.5 listed.
+
+- **2026-10-29, R3a released as 5.27.10**, on 5.27.9 and the plan commit after it (`d62d7c20`). The core package and
+  the test framework adapters ask for measured floors (the table in section 5.2's note), the three DI floors move to
+  10.0.0 with the core, and the unmeasured count fell from 33 to 19. Found on the way and fixed in the release, each red
+  first: F32, the BDDfy adapter's humaniser; F33, the LightBDD xUnit runners' test counts, with a suite of its own for
+  the xUnit v2 runner; F34, the examples' Swashbuckle; and F36, CI's floor runs, which now start from an empty output.
+  Fixed in the harness: F29, F31 and F35, which moved the TUnit floor to 1.40.0. CI's Playwright floor run installs
+  its floor's Chromium.
+
+  Run: the floor searches (`floor/r3a-*.sh`, `floor/r3a-*.txt`) and TUnit's own engine on the TUnit floor
+  (`probe-r3a/`); then the whole suite as CI runs it, before F35 and F36 were found (62 projects on the newest, 21,141
+  passed, 63 skipped; 29 floor runs, 16,175 passed, 12 skipped), every failure of which was F35's or F36's; after their
+  fixes, the suites they touch on the newest and on their floors, each floor run from an empty `bin/` and `obj/` (TUnit
+  50, LightBDD TUnit 26, MSTest 85, Playwright 10, on 1.12.0 with its own Chromium), the three TUnit examples as CI runs
+  them (12, 2 and 3), the Integration suite (259), and TUnit's own engine on a `[HeadIn]` test through the adapter built
+  on 1.40.0, on 1.40.0, 1.53.0 and 1.76.45, and through the one built on 1.0.0, which fails to load on 1.76.45; the
+  facts made red first, `BDDfyHumaniserTests`, the `TestCountTests` of both LightBDD xUnit suites and both new
+  `FloorRunTests` facts; the LightBDD xUnit examples, which write their Specifications reports, the v3 one with a
+  `[MemberData]` scenario; the core suite on the newest and on its floor (11,578 passed, 2 skipped, each); the
+  Playwright E2E suite (2,088 passed, 28 skipped; the one fact that failed, a toggle's timing against its budget under
+  the load of the whole run, passes alone with its class, 13 of 13); and the Release build of `release.slnf`, whose only
+  advisories are the older ones 5.27.5 lists.
 
 ---
 

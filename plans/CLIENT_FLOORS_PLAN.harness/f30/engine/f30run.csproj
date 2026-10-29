@@ -1,5 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- A TUnit project using [HeadIn], run by TUnit's own engine: the fixed adapter from the F30 worktree, or the
+  <!-- A TUnit project using [HeadIn], run by TUnit's own engine: the fixed adapter from the F30 worktree, or another
+       worktree's (-p:Adapter=<its Kronikol.TUnit.csproj>, built on the TUnit.Core it pins, as R3a's F35 asks), or the
        published package (-p:Published=5.27.7), on the TUnit release given (-p:TUnitVersion=...). -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -7,10 +8,11 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <TUnitVersion Condition="'$(TUnitVersion)' == ''">1.43.11</TUnitVersion>
+    <Adapter Condition="'$(Adapter)' == ''">C:\Code\Kronikol-f30\src\Kronikol.TUnit\Kronikol.TUnit.csproj</Adapter>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="TUnit" Version="$(TUnitVersion)" />
     <PackageReference Include="Kronikol.TUnit" Version="$(Published)" Condition="'$(Published)' != ''" />
-    <ProjectReference Include="C:\Code\Kronikol-f30\src\Kronikol.TUnit\Kronikol.TUnit.csproj" Condition="'$(Published)' == ''" />
+    <ProjectReference Include="$(Adapter)" Condition="'$(Published)' == ''" />
   </ItemGroup>
 </Project>

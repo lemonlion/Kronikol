@@ -1,0 +1,13 @@
+# xunit.v3.extensibility.core with xunit.v3, xunit.v3.extensibility.core of the same release: 6 3.x releases all share, 3.0.0 to 3.2.2; binary search
+3.2.2 | ok | Passed! - Failed: 0, Passed: 32, Skipped: 0, Total: 32 | audit: none | resolved: xunit.v3/3.2.2 xunit.v3.extensibility.core/3.2.2
+3.1.0 | ok | Passed! - Failed: 0, Passed: 32, Skipped: 0, Total: 32 | audit: none | resolved: xunit.v3/3.1.0 xunit.v3.extensibility.core/3.1.0
+3.0.1 | ok | Passed! - Failed: 0, Passed: 32, Skipped: 0, Total: 32 | audit: none | resolved: xunit.v3/3.0.1 xunit.v3.extensibility.core/3.0.1
+3.0.0 | ok | Passed! - Failed: 0, Passed: 32, Skipped: 0, Total: 32 | audit: none | resolved: xunit.v3/3.0.0 xunit.v3.extensibility.core/3.0.0
+# oldest passing: 3.0.0
+# the run below, each probe built from an empty bin/ and obj/ (F31)
+# xunit.v3.extensibility.core with xunit.v3, xunit.v3.extensibility.core of the same release: 6 3.x releases all share, 3.0.0 to 3.2.2; binary search
+3.2.2 | ok | Passed! - Failed: 0, Passed: 32, Skipped: 0, Total: 32 | audit: none | resolved: xunit.v3/3.2.2 xunit.v3.extensibility.core/3.2.2
+3.1.0 | ok | Passed! - Failed: 0, Passed: 32, Skipped: 0, Total: 32 | audit: none | resolved: xunit.v3/3.1.0 xunit.v3.extensibility.core/3.1.0
+3.0.1 | ok | Passed! - Failed: 0, Passed: 32, Skipped: 0, Total: 32 | audit: none | resolved: xunit.v3/3.0.1 xunit.v3.extensibility.core/3.0.1
+3.0.0 | ok | Passed! - Failed: 0, Passed: 32, Skipped: 0, Total: 32 | audit: none | resolved: xunit.v3/3.0.0 xunit.v3.extensibility.core/3.0.0
+# oldest passing: 3.0.0

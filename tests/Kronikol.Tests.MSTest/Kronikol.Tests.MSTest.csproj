@@ -7,6 +7,7 @@
 
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <MSTestFloor Condition="'$(MSTestFloor)' == ''">4.0.0</MSTestFloor>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,12 +15,24 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.5.1" />
-    <PackageReference Include="MSTest" Version="4.2.2" />
+    <!-- The MSTest metapackage brings a Microsoft.NET.Test.Sdk of its own release (4.5.2 asks for 18.10.1 or later), so
+         a pinned one is a downgrade NuGet refuses once MSTest moves. The suite takes the newest 18.x, and with
+         -p:FloorRun=true the one the MSTest release it runs on asks for, as that release shipped. -->
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.*" Condition="'$(FloorRun)' != 'true'" />
+    <!-- The suite is an MSTest project of its own, so it takes MSTest at the newest 4.x, and with -p:FloorRun=true at
+         the floor the adapter asks for, or at the release a floor search probes (-p:MSTestFloor=<release>)
+         (plans/CLIENT_FLOORS_PLAN.md R3a). -->
+    <PackageReference Include="MSTest" Version="4.*" Condition="'$(FloorRun)' != 'true'" />
+    <PackageReference Include="MSTest" Version="$(MSTestFloor)" Condition="'$(FloorRun)' == 'true'" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Kronikol.MSTest\Kronikol.MSTest.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Kronikol.Tests\Packaging\PackedNuspec.cs" Link="PackedNuspec.cs" />
+    <Compile Include="..\Kronikol.Tests\Packaging\FloorLedger.cs" Link="FloorLedger.cs" />
   </ItemGroup>
 
 </Project>

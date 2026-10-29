@@ -1,0 +1,4 @@
+# LightBDD.Framework, LightBDD.XUnit3 with LightBDD.Framework, LightBDD.XUnit3 of the same release: 2 3.x releases all share, 3.12.0 to 3.12.1; binary search
+3.12.1 | ok | Passed! - Failed: 0, Passed: 26, Skipped: 0, Total: 26 | audit: none | resolved: LightBDD.Framework/3.12.1 LightBDD.XUnit3/3.12.1
+3.12.0 | ok | Passed! - Failed: 0, Passed: 26, Skipped: 0, Total: 26 | audit: none | resolved: LightBDD.Framework/3.12.0 LightBDD.XUnit3/3.12.0
+# oldest passing: 3.12.0

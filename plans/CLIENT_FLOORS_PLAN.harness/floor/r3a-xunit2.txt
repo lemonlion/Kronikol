@@ -1,0 +1,26 @@
+# xunit.extensibility.execution with xunit, xunit.extensibility.execution of the same release: 27 2.x releases all share, 2.0.0 to 2.9.3; binary search
+2.9.3 | ok | Passed! - Failed: 0, Passed: 110, Skipped: 0, Total: 110 | audit: none | resolved: xunit/2.9.3 xunit.extensibility.execution/2.9.3
+2.6.1 | BUILD FAILED | error CS0121: The call is ambiguous between the following methods or properties: 'Xunit.Assert.Equal<T>(T, T)' and 'Xunit.Assert.Equal<T>(System.ReadOnlySpan<T>, Sy | audit: none | resolved: xunit/2.6.1 xunit.extensibility.execution/2.6.1
+2.7.1 | BUILD FAILED | error CS0121: The call is ambiguous between the following methods or properties: 'Xunit.Assert.Equal<T>(T, T)' and 'Xunit.Assert.Equal<T>(System.ReadOnlySpan<T>, Sy | audit: none | resolved: xunit/2.7.1 xunit.extensibility.execution/2.7.1
+2.9.0 | BUILD FAILED | error CS0121: The call is ambiguous between the following methods or properties: 'Xunit.Assert.Equal<T>(T, T)' and 'Xunit.Assert.Equal<T>(System.ReadOnlySpan<T>, Sy | audit: none | resolved: xunit/2.9.0 xunit.extensibility.execution/2.9.0
+2.9.2 | ok | Passed! - Failed: 0, Passed: 110, Skipped: 0, Total: 110 | audit: none | resolved: xunit/2.9.2 xunit.extensibility.execution/2.9.2
+2.9.1 | ok | Passed! - Failed: 0, Passed: 110, Skipped: 0, Total: 110 | audit: none | resolved: xunit/2.9.1 xunit.extensibility.execution/2.9.1
+# oldest passing: 2.9.1
+# the run below, after TagMappingTests' expected tags became arrays (the first stopped below 2.9.1 on CS0121)
+# xunit.extensibility.execution with xunit, xunit.extensibility.execution of the same release: 27 2.x releases all share, 2.0.0 to 2.9.3; binary search
+2.9.3 | ok | Passed! - Failed: 0, Passed: 110, Skipped: 0, Total: 110 | audit: none | resolved: xunit/2.9.3 xunit.extensibility.execution/2.9.3
+2.6.1 | ok | Passed! - Failed: 0, Passed: 110, Skipped: 0, Total: 110 | audit: none | resolved: xunit/2.6.1 xunit.extensibility.execution/2.6.1
+2.4.1 | ok | Passed! - Failed: 0, Passed: 110, Skipped: 0, Total: 110 | audit: none | resolved: xunit/2.4.1 xunit.extensibility.execution/2.4.1
+2.3.0 | BUILD FAILED | error CS0246: The type or namespace name 'TestMethodDisplayOptions' could not be found (are you missing a using directive or an assembly reference?)  | audit: none | resolved: xunit/2.3.0 xunit.extensibility.execution/2.3.0
+2.4.0 | ok | Passed! - Failed: 0, Passed: 110, Skipped: 0, Total: 110 | audit: none | resolved: xunit/2.4.0 xunit.extensibility.execution/2.4.0
+2.3.1 | BUILD FAILED | error CS0246: The type or namespace name 'TestMethodDisplayOptions' could not be found (are you missing a using directive or an assembly reference?)  | audit: none | resolved: xunit/2.3.1 xunit.extensibility.execution/2.3.1
+# oldest passing: 2.4.0
+# the run below, each probe built from an empty bin/ and obj/ (F31)
+# xunit.extensibility.execution with xunit, xunit.extensibility.execution of the same release: 27 2.x releases all share, 2.0.0 to 2.9.3; binary search
+2.9.3 | ok | Passed! - Failed: 0, Passed: 110, Skipped: 0, Total: 110 | audit: none | resolved: xunit/2.9.3 xunit.extensibility.execution/2.9.3
+2.6.1 | ok | Passed! - Failed: 0, Passed: 110, Skipped: 0, Total: 110 | audit: none | resolved: xunit/2.6.1 xunit.extensibility.execution/2.6.1
+2.4.1 | ok | Passed! - Failed: 0, Passed: 110, Skipped: 0, Total: 110 | audit: none | resolved: xunit/2.4.1 xunit.extensibility.execution/2.4.1
+2.3.0 | BUILD FAILED | error CS0246: The type or namespace name 'TestMethodDisplayOptions' could not be found (are you missing a using directive or an assembly reference?)  | audit: none | resolved: xunit/2.3.0 xunit.extensibility.execution/2.3.0
+2.4.0 | ok | Passed! - Failed: 0, Passed: 110, Skipped: 0, Total: 110 | audit: none | resolved: xunit/2.4.0 xunit.extensibility.execution/2.4.0
+2.3.1 | BUILD FAILED | error CS0246: The type or namespace name 'TestMethodDisplayOptions' could not be found (are you missing a using directive or an assembly reference?)  | audit: none | resolved: xunit/2.3.1 xunit.extensibility.execution/2.3.1
+# oldest passing: 2.4.0

@@ -9,6 +9,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- NUnit: 4.6.0 is the oldest 4.x the suite passes on: on 4.5.x only UncapturedTestsTests fails, the guard on the
+         result tree of NUnit.Framework.Internal that the adapter reads, and 4.3.0 and older have no
+         TestContext.TestAdapter.MethodInfo, which the adapter reads; its graph carries no known advisory (harness
+         floor/r3a-nunit4.txt). FloorLedger holds the floor, and the test project's package fact reads it back from the
+         packed nuspec; the suite runs on the newest 4.x, and on this floor with -p:FloorRun=true
+         (plans/CLIENT_FLOORS_PLAN.md R3a). -->
     <PackageReference Include="NUnit" Version="4.6.0" />
   </ItemGroup>
 

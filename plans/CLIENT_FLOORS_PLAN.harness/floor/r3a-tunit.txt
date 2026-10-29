@@ -1,0 +1,26 @@
+# TUnit.Core: 249 stable 1.x releases, 1.0.0 to 1.76.45; binary search
+1.76.45 | BUILD FAILED | Kronikol.Tests.TUnit: error CS0535: 'HeadInAttribute' does not implement interface member 'IDataSourceAttribute.DeferEnumeration'  | audit: none | resolved: TUnit.Core/1.76.45
+# the run below, from the pin down (--to 1.43.11): the adapter's HeadInAttribute does not build against 1.76.45
+# TUnit.Core: 173 stable 1.x releases, 1.0.0 to 1.43.11; binary search
+1.43.11 | ok | Kronikol.Tests.TUnit: Passed! - Failed: 0, Passed: 48, Skipped: 0, Total: 48 | audit: none | resolved: TUnit.Core/1.43.11
+1.12.125 | BUILD FAILED | Kronikol.Tests.TUnit: error CS9035: Required member 'ParameterMetadata.ReflectionInfo' must be set in the object initializer or attribute constructor.  | audit: none | resolved: TUnit.Core/1.12.125
+1.19.74 | ok | Kronikol.Tests.TUnit: Passed! - Failed: 0, Passed: 48, Skipped: 0, Total: 48 | audit: none | resolved: TUnit.Core/1.19.74
+1.15.11 | BUILD FAILED | Kronikol.Tests.TUnit: error CS9035: Required member 'ParameterMetadata.ReflectionInfo' must be set in the object initializer or attribute constructor.  | audit: none | resolved: TUnit.Core/1.15.11
+1.17.54 | BUILD FAILED | Kronikol.Tests.TUnit: error CS9035: Required member 'ParameterMetadata.ReflectionInfo' must be set in the object initializer or attribute constructor.  | audit: none | resolved: TUnit.Core/1.17.54
+1.19.0 | ok | Kronikol.Tests.TUnit: Passed! - Failed: 0, Passed: 48, Skipped: 0, Total: 48 | audit: none | resolved: TUnit.Core/1.19.0
+1.18.21 | ok | Kronikol.Tests.TUnit: Passed! - Failed: 0, Passed: 48, Skipped: 0, Total: 48 | audit: none | resolved: TUnit.Core/1.18.21
+1.18.9 | ok | Kronikol.Tests.TUnit: Passed! - Failed: 0, Passed: 48, Skipped: 0, Total: 48 | audit: none | resolved: TUnit.Core/1.18.9
+1.18.0 | BUILD FAILED | Kronikol.Tests.TUnit: error CS9035: Required member 'ParameterMetadata.ReflectionInfo' must be set in the object initializer or attribute constructor.  | audit: none | resolved: TUnit.Core/1.18.0
+# oldest passing: 1.18.9
+# the run below, on 5.27.8's adapter (F30) with the test helper building on every 1.x
+# TUnit.Core: 249 stable 1.x releases, 1.0.0 to 1.76.45; binary search
+1.76.45 | ok | Kronikol.Tests.TUnit: Passed! - Failed: 0, Passed: 49, Skipped: 0, Total: 49 | audit: none | resolved: TUnit.Core/1.76.45
+1.19.0 | ok | Kronikol.Tests.TUnit: Passed! - Failed: 0, Passed: 49, Skipped: 0, Total: 49 | audit: none | resolved: TUnit.Core/1.19.0
+1.10.0 | ok | Kronikol.Tests.TUnit: Passed! - Failed: 0, Passed: 49, Skipped: 0, Total: 49 | audit: none | resolved: TUnit.Core/1.10.0
+1.5.60 | ok | Kronikol.Tests.TUnit: Passed! - Failed: 0, Passed: 49, Skipped: 0, Total: 49 | audit: none | resolved: TUnit.Core/1.5.60
+1.3.15 | ok | Kronikol.Tests.TUnit: Passed! - Failed: 0, Passed: 49, Skipped: 0, Total: 49 | audit: none | resolved: TUnit.Core/1.3.15
+1.1.10 | ok | Kronikol.Tests.TUnit: Passed! - Failed: 0, Passed: 49, Skipped: 0, Total: 49 | audit: none | resolved: TUnit.Core/1.1.10
+1.0.39 | ok | Kronikol.Tests.TUnit: Passed! - Failed: 0, Passed: 49, Skipped: 0, Total: 49 | audit: none | resolved: TUnit.Core/1.0.39
+1.0.27 | ok | Kronikol.Tests.TUnit: Passed! - Failed: 0, Passed: 49, Skipped: 0, Total: 49 | audit: none | resolved: TUnit.Core/1.0.27
+1.0.0 | ok | Kronikol.Tests.TUnit: Passed! - Failed: 0, Passed: 49, Skipped: 0, Total: 49 | audit: none | resolved: TUnit.Core/1.0.0
+# oldest passing: 1.0.0

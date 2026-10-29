@@ -1,0 +1,10 @@
+# Microsoft.AspNetCore.Mvc.Testing: 15 stable 10.x releases, 10.0.0 to 10.0.14; binary search
+# stopped during 10.0.14: FloorLedgerTests failed, as it holds the csproj to the ledger's 10.0.7; the run below leaves it out
+# Microsoft.AspNetCore.Mvc.Testing: 15 stable 10.x releases, 10.0.0 to 10.0.14; binary search
+10.0.14 | ok | Kronikol.Tests: Passed! - Failed: 0, Passed: 11563, Skipped: 2, Total: 11565 | audit: none | resolved: Microsoft.AspNetCore.Mvc.Testing/10.0.14
+10.0.7 | ok | Kronikol.Tests: Passed! - Failed: 0, Passed: 11563, Skipped: 2, Total: 11565 | audit: none | resolved: Microsoft.AspNetCore.Mvc.Testing/10.0.7
+10.0.3 | ok | Kronikol.Tests: Passed! - Failed: 0, Passed: 11563, Skipped: 2, Total: 11565 | audit: none | resolved: Microsoft.AspNetCore.Mvc.Testing/10.0.3
+10.0.1 | ok | Kronikol.Tests: Passed! - Failed: 0, Passed: 11563, Skipped: 2, Total: 11565 | audit: none | resolved: Microsoft.AspNetCore.Mvc.Testing/10.0.1
+10.0.0 | ok | Kronikol.Tests: Passed! - Failed: 0, Passed: 11563, Skipped: 2, Total: 11565 | audit: none | resolved: Microsoft.AspNetCore.Mvc.Testing/10.0.0
+# oldest passing: 10.0.0
+ALLDONE

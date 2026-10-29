@@ -1,0 +1,13 @@
+# Microsoft.Playwright: 77 stable 1.x releases, 1.12.0 to 1.64.1; binary search
+1.64.1 | SETUP FAILED | Kronikol.Tests.Playwright: /bin/bash: line 1: pwsh: command not found | audit: none | resolved: Microsoft.Playwright/1.64.1
+# the first run stopped at setup: python's bare bash was System32's, WSL's (no pwsh); the run below uses sh
+# Microsoft.Playwright: 77 stable 1.x releases, 1.12.0 to 1.64.1; binary search
+1.64.1 | ok | Kronikol.Tests.Playwright: Passed! - Failed: 0, Passed: 9, Skipped: 0, Total: 9 | audit: none | resolved: Microsoft.Playwright/1.64.1
+1.31.1 | ok | Kronikol.Tests.Playwright: Passed! - Failed: 0, Passed: 9, Skipped: 0, Total: 9 | audit: none | resolved: Microsoft.Playwright/1.31.1
+1.19.0 | ok | Kronikol.Tests.Playwright: Passed! - Failed: 0, Passed: 9, Skipped: 0, Total: 9 | audit: none | resolved: Microsoft.Playwright/1.19.0
+1.15.3 | ok | Kronikol.Tests.Playwright: Passed! - Failed: 0, Passed: 9, Skipped: 0, Total: 9 | audit: none | resolved: Microsoft.Playwright/1.15.3
+1.14.0 | ok | Kronikol.Tests.Playwright: Passed! - Failed: 0, Passed: 9, Skipped: 0, Total: 9 | audit: none | resolved: Microsoft.Playwright/1.14.0
+1.12.2 | ok | Kronikol.Tests.Playwright: Passed! - Failed: 0, Passed: 9, Skipped: 0, Total: 9 | audit: none | resolved: Microsoft.Playwright/1.12.2
+1.12.1 | ok | Kronikol.Tests.Playwright: Passed! - Failed: 0, Passed: 9, Skipped: 0, Total: 9 | audit: none | resolved: Microsoft.Playwright/1.12.1
+1.12.0 | ok | Kronikol.Tests.Playwright: Passed! - Failed: 0, Passed: 9, Skipped: 0, Total: 9 | audit: none | resolved: Microsoft.Playwright/1.12.0
+# oldest passing: 1.12.0

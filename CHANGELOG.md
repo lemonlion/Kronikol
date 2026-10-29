@@ -4,6 +4,97 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.27.10] - 2026-10-29
+
+The patch part moves (5.27.9 to 5.27.10): packaging fixes, and fixes to the BDDfy and LightBDD adapters, with no new
+option and no new public member (#97; `plans/CLIENT_FLOORS_PLAN.md` R3a, F32 to F34).
+
+### Fixed
+
+- **The core package and the test framework adapters ask for measured floors.** Each asks for the oldest release its
+  suite passes on, where it asked for the release of the day it was pinned. No graph among them carries a known
+  advisory.
+
+  | Package | Asks for |
+  |---|---|
+  | `Kronikol` | `Microsoft.AspNetCore.Mvc.Testing` 10.0.0 (was 10.0.7) |
+  | `Kronikol.xUnit2` | `xunit.extensibility.execution` 2.4.0 (was 2.9.3) |
+  | `Kronikol.xUnit3` | `xunit.v3.extensibility.core` 3.0.0 (was 3.2.2) |
+  | `Kronikol.NUnit4` | `NUnit` 4.6.0 (as before) |
+  | `Kronikol.MSTest` | `MSTest.TestFramework` 4.0.0 (was 4.2.2) |
+  | `Kronikol.TUnit` | `TUnit.Core` 1.40.0 (was 1.43.11) |
+  | `Kronikol.ReqNRoll.Core` | `Reqnroll` 3.0.1 (was 3.3.4) |
+  | `Kronikol.LightBDD.Core` | `LightBDD.Framework` 3.10.0 (was 3.12.0) |
+  | `Kronikol.LightBDD.TUnit` | `LightBDD.TUnit` 3.12.1 (as before) |
+  | `Kronikol.LightBDD.xUnit2` | `LightBDD.XUnit2` 3.10.0 (was 3.12.0) and `xunit` 2.4.2 (was 2.9.3) |
+  | `Kronikol.LightBDD.xUnit3` | `LightBDD.XUnit3` 3.12.0 (as before) |
+  | `Kronikol.BDDfy.xUnit3` | `TestStack.BDDfy` 8.0.1.3 (as before) |
+  | `Kronikol.Playwright` | `Microsoft.Playwright` 1.12.0 (was 1.59.0) |
+  | `Kronikol.Extensions.ServiceBus`, `.MediatR` and `.DispatchProxy` | `Microsoft.Extensions.DependencyInjection.Abstractions` 10.0.0 (was 10.0.7) |
+
+  TUnit's floor is the oldest release whose build of the adapter runs on the newest: TUnit's source generator writes
+  the adapter's hook registrations at its build, and those built on 1.39.0 or older fail to load on later releases.
+  Where a floor stays, it is now measured: NUnit's 4.6.0 is the first release whose internal result tree the adapter
+  reads as it does, LightBDD.TUnit's 3.12.1 the first whose hook registrations load on the TUnit of today, and
+  LightBDD.XUnit3's 3.12.0 its first release. The three DI packages sat at 10.0.7 only because the core's Mvc.Testing
+  asked for it. Behaviour change: a project that takes a framework, Playwright or Mvc.Testing only through Kronikol now
+  resolves that floor, where it resolved the newer pin; reference the package yourself for a newer one, as a test
+  project does for its framework.
+- **A BDDfy title made by a humaniser the test sets is BDDfy's own on BDDfy 8.0.11 and later.** The adapter asked
+  `Configurator.Scanners.Humanize` whether a title was BDDfy's; 8.0.11 titles with `Configurator.Humanizer` and keeps
+  that field only as an obsolete copy of the humaniser configured when it is first read, so once a test set or changed
+  its humaniser after the adapter's first title, a title BDDfy made with it was taken for one the test wrote: it skipped
+  the title word list (`TitleWords`), and the report marked it written. The adapter now reads the humaniser each release
+  titles with, each time.
+- **A LightBDD scenario with `[MemberData]` or `[ClassData]` no longer stops the Specifications report.** Kronikol
+  writes no Specifications report, data or Markdown when a run has fewer scenarios than the adapter expects, as a
+  partial run would, and the xUnit v2 runner counted such a method as one test more than its rows, as the xUnit v3
+  runner did one with `[ClassData]`, so a whole run looked partial. The xUnit v3 runner counted a `[MemberData]` method
+  as one test, so a partial run that left out fewer tests than its rows could overwrite the report. A method is now a
+  test for each row its data attributes give, read through xUnit's own data attributes, so a library's own attribute
+  counts too, and one test with none. The TUnit runner's count still reads `[Arguments]` alone.
+- **The examples are past a high advisory.** The example API and its fake cow service took Swashbuckle.AspNetCore
+  10.1.5, which brings Microsoft.OpenApi 2.4.1, under GHSA-v5pm-xwqc-g5wc (high). They take 10.3.1, which brings the
+  patched 2.7.5.
+
+### Tests
+
+- Each adapter's suite runs on its framework's newest release and, with `-p:FloorRun=true`, on the floor its package
+  asks for, with the framework of the floor's release. The core suite references Mvc.Testing, Reqnroll and BDDfy itself
+  at their newest, so its floor run is on a graph of its own; its BDDfy is the unlisted 8.0.12, which a floating `8.*`
+  takes. Each package has a fact that packs it and holds its nuspec to the floor ledger, whose count of pins still to
+  measure falls from 33 to 19.
+- `Kronikol.Tests.LightBDD.xUnit2` is new: the LightBDD xUnit v2 runner had no suite but the example, which no floor
+  run reaches. It holds the runner's package fact, the count facts, which the xUnit v3 runner's suite has too, and the
+  configuration facts the other runners' suites have.
+- `BDDfyHumaniserTests` hold a title made by a humaniser the test sets to BDDfy's own, on the floor and on the newest.
+- CI's floor run installs the Chromium of the Playwright floor before the Playwright suite runs on it, as each
+  Playwright release drives its own, and each floor run starts from an empty `bin/` and `obj/`: built over the normal
+  run's output, the MSTest floor run found no test on the newest's test adapter, and built on the normal run's `obj/`,
+  even into an empty `bin/`, the Playwright floor's build left no `playwright.ps1`. Facts in `FloorRunTests` hold both
+  loops to it.
+
+### Documentation
+
+- The wiki pages of the xUnit v2 and v3, NUnit, MSTest, TUnit, Reqnroll, LightBDD and BDDfy adapters name the floor
+  each package asks for under their install step, and the Playwright page installs Microsoft.Playwright beside the
+  adapter, which now asks for 1.12.0. The ServiceBus, MediatR and DispatchProxy pages give the DI floor, 10.0.0. The
+  LightBDD xUnit pages say that a `[MemberData]` or `[ClassData]` scenario no longer stops the Specifications report,
+  and the BDDfy page that the humaniser you set is read whenever you set it.
+
+Checks: the whole suite as CI runs it, before F35 and F36 were found (62 projects on the newest, 21,141 passed, 63
+skipped; 29 floor runs, 16,175 passed, 12 skipped), every failure of which was F35's or F36's; after their fixes, the
+suites they touch on the newest and on their floors, each floor run from an empty `bin/` and `obj/` (TUnit 50, LightBDD
+TUnit 26, MSTest 85, Playwright 10, on 1.12.0 with its own Chromium), the three TUnit examples as CI runs them (12, 2
+and 3), the Integration suite (259), and TUnit's own engine on a `[HeadIn]` test through the adapter built on 1.40.0, on
+1.40.0, 1.53.0 and 1.76.45, and through the one built on 1.0.0, which fails to load on 1.76.45; the facts made red
+first, `BDDfyHumaniserTests`, the `TestCountTests` of both LightBDD xUnit suites and both new `FloorRunTests` facts; the
+LightBDD xUnit examples, which write their Specifications reports, the v3 one with a `[MemberData]` scenario; the core
+suite on the newest and on its floor (11,578 passed, 2 skipped, each); the Playwright E2E suite (2,088 passed, 28
+skipped; the one fact that failed, a toggle's timing against its budget under the load of the whole run, passes alone
+with its class, 13 of 13); and the Release build of `release.slnf`, whose only advisories are the older ones 5.27.5
+lists.
+
 ## [5.27.9] - 2026-10-29
 
 The patch part moves (5.27.8 to 5.27.9): bug fixes in the Blob Storage and Storage Queues packages, with no new

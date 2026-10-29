@@ -136,6 +136,9 @@ public class HeadInAttributeTests
             {
                 Name = p.Name!,
                 TypeInfo = new ConcreteType(p.ParameterType),
+                // Required before TUnit.Core 1.19.0 and settable on every 1.x, so the floor search builds this on any
+                // release (plans/CLIENT_FLOORS_PLAN.md R3a).
+                ReflectionInfo = p,
                 Position = p.Position,
             }).ToArray(),
             Class = new ClassMetadata

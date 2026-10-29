@@ -1,0 +1,7 @@
+1 floor build from empty bin (obj kept), exit 0: dll yes, ps1 yes
+2 floor build again, exit 0: dll yes, ps1 yes
+3 floor build from empty bin and obj, exit 0: dll yes, ps1 yes
+4 newest build over it, exit 0: dll yes, ps1 yes
+5 floor build from empty bin after a newest build, exit 0: dll yes, ps1 NO
+"Microsoft.Playwright/1.12.0
+DONE

@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Bddfy Condition="'$(Bddfy)' == ''">8.0.12</Bddfy>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="TestStack.BDDfy" Version="$(Bddfy)" />
+    <ProjectReference Include="../helper/helper.csproj" />
+  </ItemGroup>
+</Project>
