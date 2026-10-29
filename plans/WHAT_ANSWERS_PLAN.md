@@ -1,12 +1,12 @@
 # What answers a tracked call: follow the call past a forwarder, and let a handler say (#219)
 
-**Written:** 2026-10-29, kronikol-07, at `753f17f9` (5.27.2), and moved onto `38e5eaf4` (5.27.3, which changed none of
-the code or plans it cites) · **Status:** a draft, not green-lit. Nothing in `src/` is changed; a prototype of R1 is a
-patch in the harness. · **Issue:** #219, open, filed by the owner on 2026-10-28 on 5.17.0. · **Harness:**
-[`WHAT_ANSWERS_PLAN.harness/`](WHAT_ANSWERS_PLAN.harness/README.md), every probe re-runnable.
+**Written:** 2026-10-29, kronikol-07, at `753f17f9` (5.27.2), and moved onto `54e8ee82` (5.27.5; 5.27.3 to 5.27.5
+changed none of the code or plan lines it cites) · **Status:** a draft, not green-lit. Nothing in `src/` is changed; a
+prototype of R1 is a patch in the harness. · **Issue:** #219, open, filed by the owner on 2026-10-28 on 5.17.0. ·
+**Harness:** [`WHAT_ANSWERS_PLAN.harness/`](WHAT_ANSWERS_PLAN.harness/README.md), every probe re-runnable.
 
-Code citations hold at both commits; wiki citations are to the wiki's `origin/master` at `2c545b0`; Kronikol4J citations
-are to its `main` at `77811b4`.
+Code citations hold at every commit from `753f17f9` to `54e8ee82`; wiki citations are to the wiki's `origin/master` at
+`2c545b0`; Kronikol4J citations are to its `main` at `77811b4`.
 
 ---
 
@@ -92,8 +92,8 @@ The issue also says no call to WireMock can be marked, since the mark is set ins
 It suggests `string? TestDouble` on the handler's options (`null` reads the chain, a name marks every call, an empty
 string marks none), "or a resolver given the request, if per-call matters".
 
-The handler has not changed since 5.16.0 (`git log v5.16.0..38e5eaf4` on the handler and its options is empty), so
-5.17.0, 5.27.2 (where the probes ran) and 5.27.3 behave alike.
+The handler has not changed since 5.16.0 (`git log v5.16.0..54e8ee82` on the handler and its options is empty), so
+5.17.0, 5.27.2 (where the probes ran) and 5.27.5 behave alike.
 
 Three open siblings explain why the library forwards at all:
 
@@ -406,10 +406,10 @@ j. **Caching the walk per handler.** A chain of delegating handlers cannot chang
 
 ## 6. Releases
 
-Version numbers are claimed at push, by a message to the other sessions. The ones below assume nothing else ships first:
-5.27.3 went out (kronikol-2d, #205) while this plan was written.
+Neither release names its number here. Other sessions shipped 5.27.3, 5.27.4 and 5.27.5 while this plan was written,
+so each release takes the next free patch or minor when it is pushed, claimed first by a message to the other sessions.
 
-### 6.1 R1, a patch (5.27.4): follow the call
+### 6.1 R1, a patch: follow the call
 
 **Why a patch.** It fixes shipped behaviour and adds nothing to call. The behaviour change goes in the changelog, as
 the repository's rule asks.
@@ -508,7 +508,7 @@ Run the full core and E2E suites, as each release does.
 - Kronikol4J `docs/REMAINING_PARITY.md`, Not mirrored (5.7).
 - `ROADMAP.md:985`, the #190 Appendix C row: forwarders are followed; a home-made transport is left for R2.
 
-### 6.2 R2, a minor (5.28.0): say what answers
+### 6.2 R2, a minor: say what answers
 
 **Why a minor.** A new public option, even though its default keeps R1's behaviour (CLAUDE.md).
 
@@ -649,6 +649,7 @@ Run the full core and E2E suites, as each release does.
     passed on it. It was then taken out of `src/`, the worktree's build output deleted, and the patch kept.
   - BreakfastProvider's `main` (`640c190`, on 5.14.0) holds no forwarder (READ): R1 leaves its marks alone when it
     moves past 5.16.0.
-  - kronikol-2d released 5.27.3 (#205 R2b, `38e5eaf4`) meanwhile. The plan's branch moved onto it, and its version
-    numbers moved to 5.27.4 and 5.28.0. 5.27.3 changed none of the files cited here but `CHANGELOG.md`, which is now
-    cited by entry rather than by line.
+  - Other sessions released 5.27.3, 5.27.4 and 5.27.5 meanwhile (to `54e8ee82`), and the plan's branch moved onto
+    each. They changed no file cited here but `CHANGELOG.md`, now cited by entry rather than by line, and rows of
+    `ROADMAP.md` and `PLANS_STATUS.md` that the plan does not cite. Its releases name no number until they are pushed
+    (section 6).
