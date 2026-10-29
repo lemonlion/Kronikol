@@ -35,6 +35,7 @@
   <ItemGroup>
     <Compile Include="..\Kronikol.Tests\Tracking\RequestHeaderAccessor.cs" Link="RequestHeaderAccessor.cs" />
     <Compile Include="..\Kronikol.Tests\History\HistoryGuard.cs" Link="HistoryGuard.cs" />
+    <Compile Include="..\Kronikol.Tests\History\HistoryReplay.cs" Link="HistoryReplay.cs" />
     <Compile Include="..\Kronikol.Tests\Packaging\PackedNuspec.cs" Link="PackedNuspec.cs" />
     <Compile Include="..\Kronikol.Tests\Packaging\FloorLedger.cs" Link="FloorLedger.cs" />
   </ItemGroup>

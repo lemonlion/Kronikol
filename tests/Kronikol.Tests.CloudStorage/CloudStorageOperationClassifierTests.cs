@@ -19,14 +19,16 @@ public class CloudStorageOperationClassifierTests
     }
 
     [Fact]
-    public void Classify_PutWithObject_ReturnsUpload()
+    public void Classify_PutWithObject_ReturnsUpdateMetadata()
     {
+        // PUT b/{bucket}/o/{object} is objects.update, which replaces the object's metadata; an upload's data goes to
+        // /upload/storage/v1/b/{bucket}/o, which names no object (#125, F13).
         var request = new HttpRequestMessage(HttpMethod.Put,
             "https://storage.googleapis.com/storage/v1/b/my-bucket/o/file.txt");
 
         var result = CloudStorageOperationClassifier.Classify(request);
 
-        Assert.Equal(CloudStorageOperation.Upload, result.Operation);
+        Assert.Equal(CloudStorageOperation.UpdateMetadata, result.Operation);
         Assert.Equal("file.txt", result.ObjectName);
     }
 

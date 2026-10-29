@@ -42,10 +42,6 @@ public class BigQueryTrackingMessageHandler : DelegatingHandler, ITrackingCompon
 
         var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
 
-        // Skip unrecognised operations when in Summarised mode
-        if (effectiveVerbosity == BigQueryTrackingVerbosity.Summarised && bqOp.Operation == BigQueryOperation.Other)
-            return await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
         var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
         if (testInfo is null)
             return await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
@@ -87,16 +83,56 @@ public class BigQueryTrackingMessageHandler : DelegatingHandler, ITrackingCompon
         )
         {
             AttributionSource = testInfo.Value.Source,
-            Phase = TestPhaseContext.Current
+            Phase = TestPhaseContext.Current,
+            RecordedBefore9 = RecordedBefore9(request, effectiveVerbosity, method, requestUri)
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v => new PhaseVariant(
                 v == BigQueryTrackingVerbosity.Raw ? request.Method : BigQueryOperationClassifier.GetDiagramLabel(bqOp, v)!,
                 v == BigQueryTrackingVerbosity.Raw ? request.RequestUri! : BuildCleanUri(request.RequestUri!, bqOp, v),
                 v == BigQueryTrackingVerbosity.Summarised ? null : requestBody,
                 GetFilteredHeaders(request, v),
-                v == BigQueryTrackingVerbosity.Summarised && bqOp.Operation == BigQueryOperation.Other)));
+                Skip: false)));
 
-        var response = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        HttpResponseMessage response;
+        try
+        {
+            response = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            // A send that throws is still an answer, as the HTTP handler records it: the exception's type where the
+            // status would be, its message chain in Error, and the exception on its way (FailedSend). Before #125 it left
+            // a request with no response, which history's earlier rules still read.
+            RequestResponseLogger.Log(new RequestResponseLog(
+                testInfo.Value.Name,
+                testInfo.Value.Id,
+                method,
+                null,
+                requestUri,
+                [],
+                _options.ServiceName,
+                _options.CallerName,
+                RequestResponseType.Response,
+                traceId,
+                requestResponseId,
+                false,
+                FailedSend.Status(ex),
+                DependencyCategory: DependencyCategories.BigQuery
+            )
+            {
+                Error = FailedSend.Describe(ex),
+                AttributionSource = testInfo.Value.Source,
+                Phase = TestPhaseContext.Current,
+                RecordedBefore9 = RecordedBefore.NotRecorded
+            }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
+                v => new PhaseVariant(
+                    v == BigQueryTrackingVerbosity.Raw ? request.Method : BigQueryOperationClassifier.GetDiagramLabel(bqOp, v)!,
+                    v == BigQueryTrackingVerbosity.Raw ? request.RequestUri! : BuildCleanUri(request.RequestUri!, bqOp, v),
+                    null,
+                    [],
+                    Skip: false)));
+            throw;
+        }
 
         var responseBody = await ReadResponseBody(response, drawnAt, cancellationToken);
         var responseHeaders = GetFilteredHeaders(response, effectiveVerbosity);
@@ -126,7 +162,7 @@ public class BigQueryTrackingMessageHandler : DelegatingHandler, ITrackingCompon
                 v == BigQueryTrackingVerbosity.Raw ? request.RequestUri! : BuildCleanUri(request.RequestUri!, bqOp, v),
                 v == BigQueryTrackingVerbosity.Summarised ? null : responseBody,
                 GetFilteredHeaders(response, v),
-                v == BigQueryTrackingVerbosity.Summarised && bqOp.Operation == BigQueryOperation.Other)));
+                Skip: false)));
 
         return response;
     }
@@ -173,10 +209,31 @@ public class BigQueryTrackingMessageHandler : DelegatingHandler, ITrackingCompon
             .ToArray();
     }
 
+    /// <summary>
+    /// How every release before #125's fix recorded this call, when that differs from how it is recorded now: its label
+    /// and URI, or that it was not recorded at all (Summarised dropped a call it could not name). History's rules 6 to 8
+    /// read the call from here (<see cref="RequestResponseLog.RecordedBefore9"/>). Raw records the call as sent, then
+    /// and now.
+    /// </summary>
+    private static RecordedBefore? RecordedBefore9(HttpRequestMessage request, BigQueryTrackingVerbosity verbosity,
+        OneOf<HttpMethod, string> method, Uri uri)
+    {
+        if (verbosity == BigQueryTrackingVerbosity.Raw)
+            return null;
+        var then = BigQueryOperationClassifierBefore9.Classify(request);
+        if (verbosity == BigQueryTrackingVerbosity.Summarised && then.Operation == BigQueryOperation.Other)
+            return RecordedBefore.NotRecorded;
+        var label = BigQueryOperationClassifierBefore9.GetDiagramLabel(then, verbosity)!;
+        var thenUri = BigQueryOperationClassifierBefore9.BuildCleanUri(request.RequestUri!, then, verbosity);
+        return label == method.Value?.ToString() && thenUri.ToString() == uri.ToString() ? null : new RecordedBefore(label, thenUri);
+    }
+
     private static Uri BuildCleanUri(Uri originalUri, BigQueryOperationInfo op, BigQueryTrackingVerbosity verbosity)
     {
+        // A call no rule names is drawn at both verbosities with the API's own path, without the client's base or its
+        // query string, which carries the API key and the client's format flags (#125).
         if (op.ResourceType is null)
-            return originalUri;
+            return new UriBuilder(originalUri) { Path = BigQueryOperationClassifier.ApiPathOf(originalUri), Query = "" }.Uri;
 
         if (verbosity == BigQueryTrackingVerbosity.Summarised)
         {
@@ -186,10 +243,13 @@ public class BigQueryTrackingMessageHandler : DelegatingHandler, ITrackingCompon
             return new UriBuilder(originalUri) { Path = path, Query = "" }.Uri;
         }
 
-        // Detailed: include dataset context if available
+        // Detailed: the dataset's context, what the resource is on (a table's policy), then the resource. A dataset is
+        // named once.
         var parts = new List<string>();
-        if (op.DatasetId is not null)
+        if (op.DatasetId is not null && op.ResourceType != "dataset")
             parts.Add(op.DatasetId);
+        if (op.Parent is not null)
+            parts.Add(op.Parent);
         if (op.ResourceType != "dataset" || op.ResourceName is null)
             parts.Add(op.ResourceType);
         if (op.ResourceName is not null)

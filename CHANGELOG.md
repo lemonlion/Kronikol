@@ -4,6 +4,112 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.27.6] - 2026-10-29
+
+The patch part moves (5.27.5 to 5.27.6): bug fixes in the BigQuery and Cloud Storage packages, with no new option and
+no new public member (#125; `plans/EMULATOR_URL_SHAPES_PLAN.md` R1). Several fixes change what a report shows, each
+said below. History's fingerprint rule moves from 8 to 9 and is bridged, so the upgrade costs no quiet run.
+
+### Fixed
+
+- **BigQuery against an emulator or a gateway names every call (#125).** The classifier read the path as if the client
+  always spoke to `https://bigquery.googleapis.com/bigquery/v2/`. A client whose `BaseUri` is an emulator's root (as
+  Testcontainers' `GetEmulatorEndpoint()` returns it) or a gateway's prefix had every call drawn as `Other` at
+  `Detailed`, and `Summarised` recorded none but an upload's. The classifier now finds where the API's own path starts,
+  whatever the base: the leftmost `projects` segment that ends the path or is followed by one of the API's
+  collections.
+- **BigQuery calls it misread on Google's own endpoint are named.** `projects.list` reads `List /project` and
+  `getServiceAccount` `Read /serviceAccount`, where both were `Other`. The IAM methods on tables, routines and row
+  access policies read as `Read` (`getIamPolicy`, `testIamPermissions`) or `Update` (`setIamPolicy`) of an `iamPolicy`
+  on what they are on, where they read as the table with `:getIamPolicy` in its name; `datasets.undelete` reads as
+  `Create` of the dataset. The row access policy methods read as `List`, `Create`, `Read`, `Update` and `Delete` of a
+  `rowAccessPolicy` on its table, where they were drawn as calls on the table, and a load job's data `PUT` reads
+  `Insert /job`, where it read `List /job`, as `jobs.list` does.
+- **A BigQuery dataset's `Detailed` path names it once** (`/sales`, where it was `/sales/sales`), and a call the
+  classifier cannot name is drawn with its API path and no query string, where it kept the client's `key` and
+  `prettyPrint` parameters.
+- **Cloud Storage reads the bucket and the object a call is on, whatever the base.** With the root base that the SDK's
+  own `STORAGE_EMULATOR_HOST` support sets (`StorageClientBuilder.EmulatorDetection`), every call was `Other`, and
+  `Summarised` recorded only an upload's start. A bucket's sub-resources (ACLs, IAM, folders, managed folders,
+  notification configs, caches, operations) were drawn as `GetBucket` or `DeleteBucket`, so deleting an ACL entry read
+  as deleting the bucket, and an object's ACL and IAM calls as calls on the object. A bucket whose name starts with `o`
+  was misread: `GetBucket("orders")` as `ListObjects`, and `DeleteBucket("orders")` as `Other`. The path is now read
+  segment by segment: a sub-resource is `Other` with its path, and `GetBucket` and `DeleteBucket` hold for any name.
+- **Cloud Storage names `CopyObject` and an upload's data.** `CopyObject` sends `rewriteTo`, which now reads `Copy`, as
+  `copyTo` does, where it was `Other`. A resumable upload's data `PUT` reads `Upload`, where it was `Other`, and
+  `objects.update` (a `PUT` of an object) reads `UpdateMetadata`, as a `PATCH` does, where it read `Upload`.
+- **A failed send is answered** in both handlers (`ROADMAP.md` row 1.15 for these two). A send that throws, such as a
+  refused connection or the BigQuery emulator's resumable upload address on `0.0.0.0`, left its request with no
+  response. It is now logged as a response whose status is the exception's type (`!HttpRequestException`) and whose
+  error is its message, as the core HTTP handler logs one, and the exception is rethrown.
+
+### Changed
+
+- **`Summarised` records a call these two handlers cannot name**, drawn `Other` with its API path, where it dropped
+  the call and said nothing. The wiki gave SDK housekeeping requests as the reason, and these clients send none. The
+  other extensions keep their skip.
+- **Labels and `Detailed` URLs move for each call above, and history reads across the move.** Its rule moves from 8 to
+  9, and each call these handlers now record otherwise carries, internally, what 5.27.2 recorded for it, so rules 6, 7
+  and 8 read it exactly as it was: a renamed call under its old name, a call 5.27.2 dropped as no call, and a failed
+  send as unanswered. A suite's renamed calls read as no change, with no quiet run, and a real change still reads as
+  changed. One note is new once, and it is true: a service every call to which `Summarised` dropped (BigQuery on an
+  emulator's root in a suite that uploads nothing, or Cloud Storage on a root base) reads as a new dependency on the
+  first run. No gate fails on it. At the first run after the upgrade, a change is named as 5.27.2 drew the call, as at
+  every bridged move.
+- **A service card says `rules.operationKey` 9**, history's rule, where it said 8. Cards made under different rules
+  are not compared by their hash, so a card from this release and one from an earlier release read as made under
+  other rules, and `kronikol card` rebuilds the older card under 9 from its report.
+- `Raw` is unchanged, apart from a failed send's status.
+
+### Tests
+
+- Facts drive the real `BigQueryClient` and `StorageClient` through each handler into a stub, under every base URI
+  measured. For BigQuery: the default, an emulator's root with and without the slash, `/bigquery/v2/` and a gateway's
+  prefix, over 26 operations, a query on both of its paths among them. For Cloud Storage: the default,
+  `/storage/v1/`, the root, and `STORAGE_EMULATOR_HOST` wherever the client has `EmulatorDetection` (4.0.0, the
+  floor, does not).
+- Every method the generated clients declare is read by reflection from its request's `RestPath` and classified under
+  three bases as a map says: BigQuery's 47 and the one the floor's client adds, Cloud Storage's 82. A method a new SDK
+  adds fails the fact until it is named.
+- The kept rules are pinned to the published 5.27.2 packages: the frozen classifiers give what those packages recorded
+  for 248 BigQuery and 104 Cloud Storage requests, and rules 6 to 8 read the new handlers' calls exactly as 5.27.2
+  recorded them. A replay of each suite across the upgrade reads the verdicts this build reads throughout
+  (`HistoryAcrossTheFixTests`, through the shared `HistoryReplay`).
+- Red first: on 5.27.2's code, 72 of the 74 new BigQuery client and surface facts fail, and 65 of 114 for Cloud
+  Storage, each on its assertion; Cloud Storage's 49 that pass are methods both rules leave as `Other`. Mutations of
+  the collection anchor, the colon split, the query cut, the `o` segment, the bucket anchor and the marks each turn
+  their facts red.
+- Every tracker's `HistoryGuard.Pin` moves to rule 9, and `ShapeGuardTests` keeps rule 8's lines, with three new
+  captures: a renamed call, a dropped one and a failed send. `HistoryRawCallsTests` carries the same three through a
+  fragment, so a run of the History action's flow reads them under every kept rule as a run made in process does.
+- The two kept reports' golden cards (`KeptReportCardTests`) move only by `rules.operationKey`, 8 to 9.
+
+### Documentation
+
+- The BigQuery wiki page gains "Base URIs: emulators and gateways": how the handler reads an emulator's root, its
+  `/bigquery/v2/` path and a gateway's prefix, and what 5.27.5 and earlier drew there. Its labels, its classified
+  operations and its resource types name the methods 5.27.6 names.
+- The Cloud Storage page gains "Emulators": the `/storage/v1/` base, the root, and the root `STORAGE_EMULATOR_HOST`
+  sets through `StorageClientBuilder.EmulatorDetection`, which the 4.0.0 floor's client lacks. Its REST table gains a
+  resumable upload's data, `UpdateMetadata` and `rewriteTo`, and it says that a call the patterns do not name is drawn
+  as `Other` with its API path, at `Summarised` too. Two of the corrections #202 lists are made on this page: the
+  options example sets `CurrentTestInfoFetcher = CurrentTestInfo.Fetcher`, and the `HttpContextAccessor` row no longer
+  says the DI extensions resolve it.
+- Cross-Run-History says what the move to rule 9 changes and how it is bridged, and lists `"8"` among a bridge's keys.
+
+Checks: the whole suite before the rebase onto 5.27.5 (22,598 passed, 66 skipped; the two golden cards that failed are
+the `rules.operationKey` move above); after it, the core suite (11,538 passed, 2 skipped), each of HistoryJson's four
+new writes removed in turn, each turning `HistoryRawCallsTests` red, and every suite 5.27.4 and 5.27.5 changed with the
+BigQuery and Cloud Storage ones, each on the newest client and on its floor where it has one (AssertionTracking 1,432
+with 28 skipped, DispatchProxy 6, EfCore.Relational 241 with 4 skipped, Kafka.BuildInterception 76, MediatR 6,
+OpenTelemetry 4, Oracle 25, Redis 164, Sqlite 30, TcpTap 506 with 5 skipped, BigQuery 606 and 598 on its floor, Cloud
+Storage 370 and 337 on its floor); the Playwright suite (2,088 passed, 28 skipped; the one fact that failed,
+a toggle's timing under the load of other runs, passes alone with its class, 14 of 14); the BigQuery extension built
+from this release against `ghcr.io/goccy/bigquery-emulator:0.8.1`, at its root and at `/bigquery/v2/`, under
+`Detailed` and `Summarised`, where each of the 13 requests is recorded and named and a send the client refuses (to
+`0.0.0.0`) is answered with `!HttpRequestException`; and the Release build of `release.slnf`, whose only warnings are
+the advisories 5.27.5 lists.
+
 ## [5.27.5] - 2026-10-29
 
 The patch part moves (5.27.4 to 5.27.5): packaging and tracking fixes, with no new option and no new public member

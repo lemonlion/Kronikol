@@ -1,0 +1,16 @@
+blob  https://acct.blob.core.windows.net/orders?restype=container            account=acct              container=orders   blob=
+blob  https://acct.blob.core.windows.net/orders/2026/order-1.json            account=acct              container=orders   blob=2026/order-1.json
+blob  http://127.0.0.1:10000/devstoreaccount1/orders?restype=container       account=devstoreaccount1  container=orders   blob=
+blob  http://127.0.0.1:10000/devstoreaccount1/orders/2026/order-1.json       account=devstoreaccount1  container=orders   blob=2026/order-1.json
+blob  http://azurite:10000/devstoreaccount1/orders/order-1.json              account=devstoreaccount1  container=orders   blob=order-1.json
+blob  http://localhost:10000/devstoreaccount1/orders/order-1.json            account=devstoreaccount1  container=orders   blob=order-1.json
+blob  http://127.0.0.1:54321/devstoreaccount1/orders/order-1.json            account=devstoreaccount1  container=orders   blob=order-1.json
+blob  http://localhost:54321/devstoreaccount1/orders/order-1.json            account=                  container=devstoreaccount1 blob=orders/order-1.json
+blob  http://127.0.0.1:10000/devstoreaccount1?comp=list                      account=devstoreaccount1  container=         blob=
+blob  https://acct.blob.core.windows.net/?comp=list                          account=acct              container=         blob=
+queue https://acct.queue.core.windows.net/orders/messages                    account=acct              queue=orders   messages=True id=
+queue https://acct.queue.core.windows.net/orders/messages/m1?popreceipt=p    account=acct              queue=orders   messages=True id=m1
+queue http://127.0.0.1:10001/devstoreaccount1/orders                         account=devstoreaccount1  queue=orders   messages=False id=
+queue http://127.0.0.1:10001/devstoreaccount1/orders/messages/m1?popreceipt=p account=devstoreaccount1  queue=orders   messages=True id=m1
+queue http://azurite:10001/devstoreaccount1/orders/messages                  account=devstoreaccount1  queue=orders   messages=True id=
+queue http://localhost:54322/devstoreaccount1/orders/messages                account=                  queue=devstoreaccount1 messages=True id=messages

@@ -84,7 +84,7 @@ public class CloudStorageTrackingMessageHandlerTests : IDisposable
         using var invoker = CreateInvoker(MakeOptions());
         await invoker.SendAsync(MakeDownloadRequest(), CancellationToken.None);
 
-        HistoryGuard.Pin(GetLogsFromThisTest(), 8,
+        HistoryGuard.Pin(GetLogsFromThisTest(), 9,
             "TestCaller>CloudStorage Download → my-bucket/file.txt /my-bucket/file.txt 200");
     }
 
@@ -220,15 +220,17 @@ public class CloudStorageTrackingMessageHandlerTests : IDisposable
     }
 
     [Fact]
-    public async Task Summarised_SkipsOtherOperations()
+    public async Task Summarised_records_a_call_it_cannot_name_as_Other_with_its_path()
     {
+        // Summarised used to send an unnamed call on unrecorded, which dropped real calls (#125, Q1).
         using var invoker = CreateInvoker(MakeOptions(CloudStorageTrackingVerbosity.Summarised));
 
-        var request = new HttpRequestMessage(HttpMethod.Get, "https://storage.googleapis.com/discovery/v1/apis");
+        var request = new HttpRequestMessage(HttpMethod.Delete, "http://localhost:4443/b/orders/acl/user-a%40example.com?userProject=p");
         await invoker.SendAsync(request, CancellationToken.None);
 
-        var logs = GetLogsFromThisTest();
-        Assert.Empty(logs);
+        var logged = Assert.Single(GetLogsFromThisTest(), l => l.Type == RequestResponseType.Request);
+        Assert.Equal("Other", logged.Method.Value);
+        Assert.Equal("gcs:///b/orders/acl/user-a%40example.com", logged.Uri.ToString());
     }
 
     // ─── Raw verbosity ────────────────────────────────────────

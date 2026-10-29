@@ -1,0 +1,119 @@
+namespace Kronikol.Tests.CloudStorage;
+
+/// <summary>
+/// What the last package published before #125's fix (Kronikol.Extensions.CloudStorage 5.27.2) recorded for each request
+/// a <c>StorageClient</c> sends under three base URIs, and for the methods it misread on Google's own endpoint, at
+/// <c>Detailed</c> and <c>Summarised</c>: one line per request, "verbosity, method, url, label, uri" separated by tabs,
+/// label and uri "-" when it recorded nothing. Made once by
+/// plans/EMULATOR_URL_SHAPES_PLAN.harness/probes/before9-record-cloudstorage.cs against the published package; never
+/// edited.
+/// </summary>
+internal static class RecordedBefore9Record
+{
+    public const string Lines = """
+Detailed	POST	https://storage.googleapis.com/storage/v1/b?project=proj	CreateBucket	gcs:///
+Detailed	GET	https://storage.googleapis.com/storage/v1/b/orders	ListObjects → orders	gcs:///orders
+Detailed	POST	https://storage.googleapis.com/upload/storage/v1/b/orders/o?uploadType=resumable	Upload → orders	gcs:///orders
+Detailed	PUT	https://storage.googleapis.com/upload/storage/v1/b/orders/o?uploadType=resumable&upload_id=u1	Other → orders	gcs:///orders
+Detailed	DELETE	https://storage.googleapis.com/storage/v1/b/orders/o/order-1.json?generation=1	Delete → orders/order-1.json	gcs:///orders/order-1.json
+Detailed	GET	https://storage.googleapis.com/storage/v1/b/orders/o/order-1.json	GetMetadata → orders/order-1.json	gcs:///orders/order-1.json
+Detailed	GET	https://storage.googleapis.com/storage/v1/b/orders/o/order-1.json?alt=media	Download → orders/order-1.json	gcs:///orders/order-1.json
+Detailed	GET	https://storage.googleapis.com/storage/v1/b/orders/o	ListObjects → orders	gcs:///orders
+Detailed	POST	https://storage.googleapis.com/storage/v1/b/orders/o/order-1.json/rewriteTo/b/archive/o/order-1.json	Other → orders/order-1.json	gcs:///orders/order-1.json
+Detailed	DELETE	https://storage.googleapis.com/storage/v1/b/orders/o/order-1.json	Delete → orders/order-1.json	gcs:///orders/order-1.json
+Detailed	DELETE	https://storage.googleapis.com/storage/v1/b/orders	Other → orders	gcs:///orders
+Detailed	GET	https://storage.googleapis.com/storage/v1/b/archive	GetBucket → archive	gcs:///archive
+Detailed	DELETE	https://storage.googleapis.com/storage/v1/b/archive	DeleteBucket → archive	gcs:///archive
+Detailed	POST	http://127.0.0.1:4443/storage/v1/b?project=proj	CreateBucket	gcs:///
+Detailed	GET	http://127.0.0.1:4443/storage/v1/b/orders	ListObjects → orders	gcs:///orders
+Detailed	POST	http://127.0.0.1:4443/upload/storage/v1/b/orders/o?uploadType=resumable	Upload → orders	gcs:///orders
+Detailed	PUT	http://127.0.0.1:4443/upload/storage/v1/b/orders/o?uploadType=resumable&upload_id=u1	Other → orders	gcs:///orders
+Detailed	DELETE	http://127.0.0.1:4443/storage/v1/b/orders/o/order-1.json?generation=1	Delete → orders/order-1.json	gcs:///orders/order-1.json
+Detailed	GET	http://127.0.0.1:4443/storage/v1/b/orders/o/order-1.json	GetMetadata → orders/order-1.json	gcs:///orders/order-1.json
+Detailed	GET	http://127.0.0.1:4443/storage/v1/b/orders/o/order-1.json?alt=media	Download → orders/order-1.json	gcs:///orders/order-1.json
+Detailed	GET	http://127.0.0.1:4443/storage/v1/b/orders/o	ListObjects → orders	gcs:///orders
+Detailed	POST	http://127.0.0.1:4443/storage/v1/b/orders/o/order-1.json/rewriteTo/b/archive/o/order-1.json	Other → orders/order-1.json	gcs:///orders/order-1.json
+Detailed	DELETE	http://127.0.0.1:4443/storage/v1/b/orders/o/order-1.json	Delete → orders/order-1.json	gcs:///orders/order-1.json
+Detailed	DELETE	http://127.0.0.1:4443/storage/v1/b/orders	Other → orders	gcs:///orders
+Detailed	GET	http://127.0.0.1:4443/storage/v1/b/archive	GetBucket → archive	gcs:///archive
+Detailed	DELETE	http://127.0.0.1:4443/storage/v1/b/archive	DeleteBucket → archive	gcs:///archive
+Detailed	POST	http://127.0.0.1:4443/b?project=proj	Other	gcs:///
+Detailed	GET	http://127.0.0.1:4443/b/orders	Other	gcs:///
+Detailed	POST	http://127.0.0.1:4443/upload/storage/v1/b/orders/o?uploadType=resumable	Upload → orders	gcs:///orders
+Detailed	PUT	http://127.0.0.1:4443/upload/storage/v1/b/orders/o?uploadType=resumable&upload_id=u1	Other → orders	gcs:///orders
+Detailed	DELETE	http://127.0.0.1:4443/b/orders/o/order-1.json?generation=1	Other	gcs:///
+Detailed	GET	http://127.0.0.1:4443/b/orders/o/order-1.json	Other	gcs:///
+Detailed	GET	http://127.0.0.1:4443/b/orders/o/order-1.json?alt=media	Other	gcs:///
+Detailed	GET	http://127.0.0.1:4443/b/orders/o	Other	gcs:///
+Detailed	POST	http://127.0.0.1:4443/b/orders/o/order-1.json/rewriteTo/b/archive/o/order-1.json	Other	gcs:///
+Detailed	DELETE	http://127.0.0.1:4443/b/orders/o/order-1.json	Other	gcs:///
+Detailed	DELETE	http://127.0.0.1:4443/b/orders	Other	gcs:///
+Detailed	GET	http://127.0.0.1:4443/b/archive	Other	gcs:///
+Detailed	DELETE	http://127.0.0.1:4443/b/archive	Other	gcs:///
+Detailed	GET	https://storage.googleapis.com/storage/v1/b/orders/acl/user-a	ListObjects → orders	gcs:///orders
+Detailed	DELETE	https://storage.googleapis.com/storage/v1/b/orders/acl/user-a	Other → orders	gcs:///orders
+Detailed	GET	https://storage.googleapis.com/storage/v1/b/orders/iam	ListObjects → orders	gcs:///orders
+Detailed	GET	https://storage.googleapis.com/storage/v1/b/orders/operations	ListObjects → orders	gcs:///orders
+Detailed	GET	https://storage.googleapis.com/storage/v1/b/orders/notificationConfigs	ListObjects → orders	gcs:///orders
+Detailed	DELETE	https://storage.googleapis.com/storage/v1/b/orders/o/a.json/acl/user-a	Delete → orders/a.json	gcs:///orders/a.json
+Detailed	PUT	https://storage.googleapis.com/storage/v1/b/orders/o/a.json/acl/user-a	Upload → orders/a.json	gcs:///orders/a.json
+Detailed	POST	https://storage.googleapis.com/storage/v1/b/orders/o/a.json/iam	Other → orders/a.json	gcs:///orders/a.json
+Detailed	PUT	https://storage.googleapis.com/storage/v1/b/orders/o/a.json	Upload → orders/a.json	gcs:///orders/a.json
+Detailed	POST	https://storage.googleapis.com/storage/v1/b/orders/o/a.json/rewriteTo/b/archive/o/a.json	Other → orders/a.json	gcs:///orders/a.json
+Detailed	PUT	http://localhost:4443/upload/storage/v1/b/orders/o?uploadType=resumable&upload_id=u1	Other → orders	gcs:///orders
+Detailed	GET	https://storage.googleapis.com/storage/v1/projects/p/hmacKeys	Other	gcs:///
+Detailed	GET	https://storage.googleapis.com/discovery/v1/apis	Other	gcs:///
+Summarised	POST	https://storage.googleapis.com/storage/v1/b?project=proj	CreateBucket	gcs:///
+Summarised	GET	https://storage.googleapis.com/storage/v1/b/orders	ListObjects	gcs:///orders
+Summarised	POST	https://storage.googleapis.com/upload/storage/v1/b/orders/o?uploadType=resumable	Upload	gcs:///orders
+Summarised	PUT	https://storage.googleapis.com/upload/storage/v1/b/orders/o?uploadType=resumable&upload_id=u1	-	-
+Summarised	DELETE	https://storage.googleapis.com/storage/v1/b/orders/o/order-1.json?generation=1	Delete	gcs:///orders/order-1.json
+Summarised	GET	https://storage.googleapis.com/storage/v1/b/orders/o/order-1.json	GetMetadata	gcs:///orders/order-1.json
+Summarised	GET	https://storage.googleapis.com/storage/v1/b/orders/o/order-1.json?alt=media	Download	gcs:///orders/order-1.json
+Summarised	GET	https://storage.googleapis.com/storage/v1/b/orders/o	ListObjects	gcs:///orders
+Summarised	POST	https://storage.googleapis.com/storage/v1/b/orders/o/order-1.json/rewriteTo/b/archive/o/order-1.json	-	-
+Summarised	DELETE	https://storage.googleapis.com/storage/v1/b/orders/o/order-1.json	Delete	gcs:///orders/order-1.json
+Summarised	DELETE	https://storage.googleapis.com/storage/v1/b/orders	-	-
+Summarised	GET	https://storage.googleapis.com/storage/v1/b/archive	GetBucket	gcs:///archive
+Summarised	DELETE	https://storage.googleapis.com/storage/v1/b/archive	DeleteBucket	gcs:///archive
+Summarised	POST	http://127.0.0.1:4443/storage/v1/b?project=proj	CreateBucket	gcs:///
+Summarised	GET	http://127.0.0.1:4443/storage/v1/b/orders	ListObjects	gcs:///orders
+Summarised	POST	http://127.0.0.1:4443/upload/storage/v1/b/orders/o?uploadType=resumable	Upload	gcs:///orders
+Summarised	PUT	http://127.0.0.1:4443/upload/storage/v1/b/orders/o?uploadType=resumable&upload_id=u1	-	-
+Summarised	DELETE	http://127.0.0.1:4443/storage/v1/b/orders/o/order-1.json?generation=1	Delete	gcs:///orders/order-1.json
+Summarised	GET	http://127.0.0.1:4443/storage/v1/b/orders/o/order-1.json	GetMetadata	gcs:///orders/order-1.json
+Summarised	GET	http://127.0.0.1:4443/storage/v1/b/orders/o/order-1.json?alt=media	Download	gcs:///orders/order-1.json
+Summarised	GET	http://127.0.0.1:4443/storage/v1/b/orders/o	ListObjects	gcs:///orders
+Summarised	POST	http://127.0.0.1:4443/storage/v1/b/orders/o/order-1.json/rewriteTo/b/archive/o/order-1.json	-	-
+Summarised	DELETE	http://127.0.0.1:4443/storage/v1/b/orders/o/order-1.json	Delete	gcs:///orders/order-1.json
+Summarised	DELETE	http://127.0.0.1:4443/storage/v1/b/orders	-	-
+Summarised	GET	http://127.0.0.1:4443/storage/v1/b/archive	GetBucket	gcs:///archive
+Summarised	DELETE	http://127.0.0.1:4443/storage/v1/b/archive	DeleteBucket	gcs:///archive
+Summarised	POST	http://127.0.0.1:4443/b?project=proj	-	-
+Summarised	GET	http://127.0.0.1:4443/b/orders	-	-
+Summarised	POST	http://127.0.0.1:4443/upload/storage/v1/b/orders/o?uploadType=resumable	Upload	gcs:///orders
+Summarised	PUT	http://127.0.0.1:4443/upload/storage/v1/b/orders/o?uploadType=resumable&upload_id=u1	-	-
+Summarised	DELETE	http://127.0.0.1:4443/b/orders/o/order-1.json?generation=1	-	-
+Summarised	GET	http://127.0.0.1:4443/b/orders/o/order-1.json	-	-
+Summarised	GET	http://127.0.0.1:4443/b/orders/o/order-1.json?alt=media	-	-
+Summarised	GET	http://127.0.0.1:4443/b/orders/o	-	-
+Summarised	POST	http://127.0.0.1:4443/b/orders/o/order-1.json/rewriteTo/b/archive/o/order-1.json	-	-
+Summarised	DELETE	http://127.0.0.1:4443/b/orders/o/order-1.json	-	-
+Summarised	DELETE	http://127.0.0.1:4443/b/orders	-	-
+Summarised	GET	http://127.0.0.1:4443/b/archive	-	-
+Summarised	DELETE	http://127.0.0.1:4443/b/archive	-	-
+Summarised	GET	https://storage.googleapis.com/storage/v1/b/orders/acl/user-a	ListObjects	gcs:///orders
+Summarised	DELETE	https://storage.googleapis.com/storage/v1/b/orders/acl/user-a	-	-
+Summarised	GET	https://storage.googleapis.com/storage/v1/b/orders/iam	ListObjects	gcs:///orders
+Summarised	GET	https://storage.googleapis.com/storage/v1/b/orders/operations	ListObjects	gcs:///orders
+Summarised	GET	https://storage.googleapis.com/storage/v1/b/orders/notificationConfigs	ListObjects	gcs:///orders
+Summarised	DELETE	https://storage.googleapis.com/storage/v1/b/orders/o/a.json/acl/user-a	Delete	gcs:///orders/a.json
+Summarised	PUT	https://storage.googleapis.com/storage/v1/b/orders/o/a.json/acl/user-a	Upload	gcs:///orders/a.json
+Summarised	POST	https://storage.googleapis.com/storage/v1/b/orders/o/a.json/iam	-	-
+Summarised	PUT	https://storage.googleapis.com/storage/v1/b/orders/o/a.json	Upload	gcs:///orders/a.json
+Summarised	POST	https://storage.googleapis.com/storage/v1/b/orders/o/a.json/rewriteTo/b/archive/o/a.json	-	-
+Summarised	PUT	http://localhost:4443/upload/storage/v1/b/orders/o?uploadType=resumable&upload_id=u1	-	-
+Summarised	GET	https://storage.googleapis.com/storage/v1/projects/p/hmacKeys	-	-
+Summarised	GET	https://storage.googleapis.com/discovery/v1/apis	-	-
+""";
+}

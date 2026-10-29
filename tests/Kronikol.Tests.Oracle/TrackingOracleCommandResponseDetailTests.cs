@@ -70,7 +70,7 @@ public class TrackingOracleCommandResponseDetailTests : IDisposable
             while (reader.Read()) { }
         }
 
-        HistoryGuard.Pin(GetLogsForTest(), 8,
+        HistoryGuard.Pin(GetLogsForTest(), 9,
             "Caller>Oracle SELECT FROM breakfasts /unknown/breakfasts SELECT id, name FROM breakfasts OK");
     }
 

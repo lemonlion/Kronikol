@@ -53,19 +53,22 @@ public static partial class InteractionShape
     /// (<see cref="CallOperation"/>): the path as the data file writes it, unescaped, with an entity a tracker writes in
     /// the authority kept (a Service Bus queue, an S3 bucket); <c>{bin}</c> for bytes written raw; the consumer's rules
     /// applied to that string; a GraphQL request's operation; and a statement's head past a <c>SET</c> prologue, or a
-    /// document's query string rather than the document.
+    /// document's query string rather than the document. 9: #125 R1 - no rule changed, but what the BigQuery and Cloud
+    /// Storage handlers record did: a call is named from the API's own path wherever the client's base puts it, a call
+    /// <c>Summarised</c> could not name is drawn as <c>Other</c> rather than dropped, and a send that throws is
+    /// answered (<see cref="RequestResponseLog.RecordedBefore9"/> keeps how 8 and earlier read each such call).
     /// <para>From 6 on, a released rule is kept as a function of the raw call (<see cref="KeptVersions"/>): while the
     /// window holds runs fingerprinted under one, each run also fingerprints its own calls under it, its
     /// <see cref="HistoryRun.Bridge"/>, so a move costs no quiet run (plans/CALL_OPERATION_AND_ORIGIN_PLAN.md §4.8, built
     /// for #190). A window holding runs under 5 or earlier compares from the next run, as before.</para>
     /// </summary>
-    public const int Version = 8;
+    public const int Version = 9;
 
     /// <summary>
     /// The released rules a run can fingerprint its own calls under (<see cref="Calls(IEnumerable{RequestResponseLog}, HistoryShapeRules, int)"/>),
     /// the current one last. A rule is kept from 6 on: what each recorded is a function of what the current one records.
     /// </summary>
-    internal static IReadOnlyList<int> KeptVersions { get; } = [6, 7, Version];
+    internal static IReadOnlyList<int> KeptVersions { get; } = [6, 7, 8, Version];
 
     /// <summary>How much of a statement's first line is templated, and how much of the templated head is kept.</summary>
     private const int HeadRaw = 2000;
@@ -260,9 +263,19 @@ public static partial class InteractionShape
         var shaped = new List<ShapeCall>(calls.Count);
         foreach (var call in calls)
         {
-            if (version >= 8)
+            if (version >= 9)
             {
                 shaped.Add(new ShapeCall(call.Caller, call.Service, call.Method, CallOperation.Key((call.Path, call.Head, call.Operation), rules), call.Status));
+                continue;
+            }
+
+            // Under 8, the call as its tracker recorded it before 9, or none (RequestResponseLog.RecordedBefore9).
+            if (version == 8)
+            {
+                if (call.Absent8)
+                    continue;
+                shaped.Add(new ShapeCall(call.Caller, call.Service, call.Method8 ?? call.Method,
+                    CallOperation.Key((call.Path8 ?? call.Path, call.Head, call.Operation), rules), call.Unanswered8 ? null : call.Status));
                 continue;
             }
 
@@ -273,7 +286,8 @@ public static partial class InteractionShape
             var target = Template(call.Path7 ?? call.Path, rules, rawBytes: false);
             if ((call.Head7 ?? call.Head) is { } head)
                 target += " " + StatementHead(head, rules);
-            shaped.Add(new ShapeCall(call.Caller, version < 7 ? call.Service6 ?? call.Service : call.Service, call.Method7 ?? call.Method, target, call.Status));
+            shaped.Add(new ShapeCall(call.Caller, version < 7 ? call.Service6 ?? call.Service : call.Service, call.Method7 ?? call.Method, target,
+                call.Unanswered8 ? null : call.Status));
         }
         return shaped;
     }
@@ -308,18 +322,39 @@ public static partial class InteractionShape
             var (path, head, operation) = CallOperation.Untemplated(method, request.Uri.ToString(), request.DependencyCategory, request.Content, queryKeys: true);
             var call = new HistoryRawCall(request.CallerName, request.ServiceName, method, path, operation, head, status);
 
-            // Rules 6 and 7 read a call as its tracker recorded it before 8 (RequestResponseLog.RecordedBefore8), or no
-            // call, with its escaped path and its statement's own first line; 6 named a host by its address localhost.
+            // Rule 8 reads a call as its tracker recorded it before 9 (RequestResponseLog.RecordedBefore9), or no call;
+            // and no response when its tracker recorded none then.
+            if (request.RecordedBefore9 is { Absent: true })
+            {
+                call = call with { Absent8 = true };
+            }
+            else if (request.RecordedBefore9 is { } before9)
+            {
+                var method8 = MethodOf(before9.Method);
+                var (path8, _, _) = CallOperation.Untemplated(method8, before9.Uri.ToString(), request.DependencyCategory, request.Content, queryKeys: true);
+                call = call with
+                {
+                    Method8 = method8 == method ? null : method8,
+                    Path8 = path8 == path ? null : path8
+                };
+            }
+            if (response?.RecordedBefore9 is { Absent: true })
+                call = call with { Unanswered8 = true };
+
+            // Rules 6 and 7 read a call as its tracker recorded it before 8 (RequestResponseLog.RecordedBefore8), or, for
+            // a tracker that changed only at 9, as it recorded it before 9; or no call, with its escaped path and its
+            // statement's own first line; 6 named a host by its address localhost.
             var service6 = ServiceNameUnder(request, 6);
-            if (request.RecordedBefore8 is { Absent: true })
+            var before8 = request.RecordedBefore8 ?? request.RecordedBefore9;
+            if (before8 is { Absent: true })
             {
                 call = call with { Absent7 = true };
             }
             else
             {
-                var uri = request.RecordedBefore8?.Uri ?? request.Uri;
+                var uri = before8?.Uri ?? request.Uri;
                 var path7 = uri.IsAbsoluteUri ? uri.PathAndQuery : uri.OriginalString;
-                var method7 = request.RecordedBefore8 is { } before ? MethodOf(before.Method) : method;
+                var method7 = before8 is { } before ? MethodOf(before.Method) : method;
                 var head7 = head is null ? null : StatementLine(request.Content!);
                 call = call with
                 {

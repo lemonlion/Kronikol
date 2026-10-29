@@ -8,4 +8,11 @@ public record BigQueryOperationInfo(
     string? ResourceType,
     string? ResourceName,
     string? ProjectId,
-    string? DatasetId);
+    string? DatasetId)
+{
+    /// <summary>
+    /// What the resource is on, when it is named under another: <c>table/orders</c> for a table's IAM policy or row
+    /// access policy. The Detailed path keeps it, so the call reads as the resource it was made on.
+    /// </summary>
+    internal string? Parent { get; init; }
+}

@@ -71,7 +71,7 @@ public class GrpcTrackingInterceptorTests
                 () => { }));
         await call.ResponseAsync;
 
-        HistoryGuard.Pin(GetLogsFromThisTest(), 8,
+        HistoryGuard.Pin(GetLogsFromThisTest(), 9,
             "TestCaller>GrpcService SayHello /greet.Greeter/SayHello 200");
     }
 

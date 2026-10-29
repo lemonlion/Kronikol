@@ -300,8 +300,8 @@ public class InteractionShapeTests
         // its name, where 6 recorded localhost (#190 R0); 6 is kept, so a run bridges it. 8: the operation key (#192 R1):
         // the path as the data file writes it, an entity in the authority, a GraphQL operation, a statement past its SET
         // prologue; 6 and 7 are kept.
-        Assert.Equal(8, InteractionShape.Version);
-        Assert.Equal([6, 7, 8], InteractionShape.KeptVersions);
+        Assert.Equal(9, InteractionShape.Version);
+        Assert.Equal([6, 7, 8, 9], InteractionShape.KeptVersions);
     }
 
     [Fact]

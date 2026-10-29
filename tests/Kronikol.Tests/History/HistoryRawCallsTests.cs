@@ -53,11 +53,16 @@ public class HistoryRawCallsTests : IDisposable
 
     private static RequestResponseLog[] With(RequestResponseLog[] pair, Func<RequestResponseLog, RequestResponseLog> request) => [request(pair[0]), .. pair[1..]];
 
+    // A send that threw, answered by the tracker with the exception's type; the rules before 9 read it unanswered.
+    private static RequestResponseLog[] Failed(RequestResponseLog[] pair) => [pair[0], pair[1] with { RecordedBefore9 = RecordedBefore.NotRecorded }];
+
     /// <summary>
     /// A call of every form a rule reads differently: ids a pattern folds, a GraphQL operation in a body, in a query
     /// string and as a batch, a statement after a SET prologue that 6 and 7 read as their tracker recorded it then, one
     /// they did not record at all, a document's query, a host named by its address, a relative URI, escapes the data
-    /// file keeps and ones it does not, an entity in the authority, a status given as text, and a call never answered.
+    /// file keeps and ones it does not, an entity in the authority, a status given as text, and a call never answered;
+    /// and #125's: a call 6 to 8 read under another name, one they did not record, and a failed send they read as
+    /// unanswered.
     /// </summary>
     private static RequestResponseLog[] Corpus(string first, string second, int run) =>
     [
@@ -78,6 +83,11 @@ public class HistoryRawCallsTests : IDisposable
         .. Pair(second, HttpMethod.Get, new Uri("http://files/a%2Fb/c%20d/key%00tenant")),
         .. Pair(second, "Send", new Uri("servicebus://orders-queue/"), service: "Bus", category: DependencyCategories.ServiceBus, status: "Completed"),
         .. Pair(second, HttpMethod.Delete, new Uri($"http://cache/menu/key-tenant{run}x"), service: "Cache", answered: false),
+        .. With(Pair(first, "Read", new Uri("http://127.0.0.1:9050/sales"), service: "BigQuery", category: "BigQuery"),
+            r => r with { RecordedBefore9 = new RecordedBefore("Other", new Uri($"http://127.0.0.1:9050/projects/shop/datasets/sales?key=k&run={run}")) }),
+        .. With(Pair(second, "Other", new Uri("gcs:///b/orders/acl/user-a"), service: "CloudStorage", category: "CloudStorage"),
+            r => r with { RecordedBefore9 = RecordedBefore.NotRecorded }),
+        .. Failed(Pair(second, "Insert", new Uri("http://127.0.0.1:9050/job"), service: "BigQuery", category: "BigQuery", status: "!HttpRequestException")),
         // What a writer escapes: quotes, a backslash, angle brackets, a plus, non-ASCII and a control character.
         .. Pair(second, "SELECT", new Uri("sql:///Menu/Items"), "\"select a\\b <b>+ 'café'\u0001 FROM [Items] WHERE [Name] = 'crêpe' + '<i>'", service: "MenuDb",
             category: DependencyCategories.SqlServer)

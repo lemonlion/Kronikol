@@ -1,0 +1,2 @@
+Detailed: sent POST /storage/v1/b/archive/o/a.json/rewriteTo/b/backup/o/a.json; recorded 1: Other → archive/a.json /archive/a.json
+Summarised: sent POST /storage/v1/b/archive/o/a.json/rewriteTo/b/backup/o/a.json; recorded 0: 

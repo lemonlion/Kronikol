@@ -39,7 +39,7 @@ public class BigtableTrackerTests
         var (reqId, traceId) = tracker.LogRequest(op, null);
         tracker.LogResponse(op, reqId, traceId, "5 rows");
 
-        HistoryGuard.Pin(GetLogsFromThisTest(), 8,
+        HistoryGuard.Pin(GetLogsFromThisTest(), 9,
             "TestCaller>Bigtable ReadRows ← my-table /my-table -");
     }
 

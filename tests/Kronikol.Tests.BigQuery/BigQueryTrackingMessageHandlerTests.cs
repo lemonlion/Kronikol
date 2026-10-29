@@ -79,7 +79,7 @@ public class BigQueryTrackingMessageHandlerTests : IDisposable
         using var invoker = CreateInvoker(MakeOptions());
         await invoker.SendAsync(MakeQueryRequest(), CancellationToken.None);
 
-        HistoryGuard.Pin(GetLogsFromThisTest(), 8,
+        HistoryGuard.Pin(GetLogsFromThisTest(), 9,
             "TestCaller>BigQuery Query /query SELECT * FROM dataset.table 200");
     }
 
@@ -261,14 +261,31 @@ public class BigQueryTrackingMessageHandlerTests : IDisposable
     }
 
     [Fact]
-    public async Task Summarised_SkipsOtherOperations()
+    public async Task Summarised_records_a_call_it_cannot_name_as_Other_with_its_path()
     {
+        // Summarised used to send an unnamed call on unrecorded, which dropped real calls (#125, Q1).
         using var invoker = CreateInvoker(MakeOptions(BigQueryTrackingVerbosity.Summarised));
 
-        await invoker.SendAsync(MakeUnrecognisedRequest(), CancellationToken.None);
+        await invoker.SendAsync(new HttpRequestMessage(HttpMethod.Get,
+            "https://bigquery.googleapis.com/discovery/v1/apis?key=secret&prettyPrint=false"), CancellationToken.None);
 
-        var logs = GetLogsFromThisTest();
-        Assert.Empty(logs);
+        var request = Assert.Single(GetLogsFromThisTest(), l => l.Type == RequestResponseType.Request);
+        Assert.Equal("Other", request.Method.Value);
+        Assert.Equal("/discovery/v1/apis", request.Uri.PathAndQuery);
+        Assert.Null(request.Content);
+    }
+
+    [Fact]
+    public async Task Detailed_draws_a_call_it_cannot_name_without_the_clients_query_string()
+    {
+        using var invoker = CreateInvoker(MakeOptions(BigQueryTrackingVerbosity.Detailed));
+
+        await invoker.SendAsync(new HttpRequestMessage(HttpMethod.Get,
+            "http://127.0.0.1:9050/projects/shop/unknownThings?key=secret&prettyPrint=false"), CancellationToken.None);
+
+        var request = Assert.Single(GetLogsFromThisTest(), l => l.Type == RequestResponseType.Request);
+        Assert.Equal("Other", request.Method.Value);
+        Assert.Equal("/projects/shop/unknownThings", request.Uri.PathAndQuery);
     }
 
     [Fact]

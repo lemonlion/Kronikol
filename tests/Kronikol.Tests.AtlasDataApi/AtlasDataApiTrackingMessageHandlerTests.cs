@@ -27,7 +27,7 @@ public class AtlasDataApiTrackingMessageHandlerTests
             System.Text.Encoding.UTF8, "application/json");
         await client.SendAsync(request, TestContext.Current.CancellationToken);
 
-        HistoryGuard.Pin(GetLogsForTest(), 8,
+        HistoryGuard.Pin(GetLogsForTest(), 9,
             "Caller>AtlasDataApi InsertOne → orders /orders_db/orders {\"dataSource\":\"{v}\",\"database\":\"{v}\",\"collection\":\"{v}\",\"document\":{\"name\":\"{v}\"}} 200");
     }
 

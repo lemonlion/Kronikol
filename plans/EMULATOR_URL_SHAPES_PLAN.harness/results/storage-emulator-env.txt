@@ -1,0 +1,36 @@
+=== STORAGE_EMULATOR_HOST=localhost:4443, EmulatorDetection.EmulatorOnly
+  client base: http://localhost:4443
+  GetBucket       GET    http://localhost:4443    /b/orders                                                      logged: Other /
+  UploadObject threw UploadValidationException
+  UploadObject    POST   http://localhost:4443    /upload/storage/v1/b/orders/o?uploadType=resumable             logged: Upload → orders /orders
+  UploadObject    PUT    http://localhost:4443    /upload/storage/v1/b/orders/o?uploadType=resumable&upload_id=u1 logged: Other → orders /orders
+  UploadObject    DELETE http://localhost:4443    /b/orders/o/order-1.json?generation=1                          logged: Other /
+  DownloadObject  GET    http://localhost:4443    /b/orders/o/order-1.json?alt=media                             logged: Other /
+  DeleteBucket    DELETE http://localhost:4443    /b/orders                                                      logged: Other /
+=== STORAGE_EMULATOR_HOST=http://localhost:4443, EmulatorDetection.EmulatorOnly
+  client base: http://localhost:4443
+  GetBucket       GET    http://localhost:4443    /b/orders                                                      logged: Other /
+  UploadObject threw UploadValidationException
+  UploadObject    POST   http://localhost:4443    /upload/storage/v1/b/orders/o?uploadType=resumable             logged: Upload → orders /orders
+  UploadObject    PUT    http://localhost:4443    /upload/storage/v1/b/orders/o?uploadType=resumable&upload_id=u1 logged: Other → orders /orders
+  UploadObject    DELETE http://localhost:4443    /b/orders/o/order-1.json?generation=1                          logged: Other /
+  DownloadObject  GET    http://localhost:4443    /b/orders/o/order-1.json?alt=media                             logged: Other /
+  DeleteBucket    DELETE http://localhost:4443    /b/orders                                                      logged: Other /
+=== STORAGE_EMULATOR_HOST=http://localhost:4443/, EmulatorDetection.EmulatorOnly
+  client base: http://localhost:4443/
+  GetBucket       GET    http://localhost:4443    /b/orders                                                      logged: Other /
+  UploadObject threw UploadValidationException
+  UploadObject    POST   http://localhost:4443    /upload/storage/v1/b/orders/o?uploadType=resumable             logged: Upload → orders /orders
+  UploadObject    PUT    http://localhost:4443    /upload/storage/v1/b/orders/o?uploadType=resumable&upload_id=u1 logged: Other → orders /orders
+  UploadObject    DELETE http://localhost:4443    /b/orders/o/order-1.json?generation=1                          logged: Other /
+  DownloadObject  GET    http://localhost:4443    /b/orders/o/order-1.json?alt=media                             logged: Other /
+  DeleteBucket    DELETE http://localhost:4443    /b/orders                                                      logged: Other /
+=== STORAGE_EMULATOR_HOST=127.0.0.1:4443, EmulatorDetection.EmulatorOnly
+  client base: http://127.0.0.1:4443
+  GetBucket       GET    http://127.0.0.1:4443    /b/orders                                                      logged: Other /
+  UploadObject threw UploadValidationException
+  UploadObject    POST   http://127.0.0.1:4443    /upload/storage/v1/b/orders/o?uploadType=resumable             logged: Upload → orders /orders
+  UploadObject    PUT    http://127.0.0.1:4443    /upload/storage/v1/b/orders/o?uploadType=resumable&upload_id=u1 logged: Other → orders /orders
+  UploadObject    DELETE http://127.0.0.1:4443    /b/orders/o/order-1.json?generation=1                          logged: Other /
+  DownloadObject  GET    http://127.0.0.1:4443    /b/orders/o/order-1.json?alt=media                             logged: Other /
+  DeleteBucket    DELETE http://127.0.0.1:4443    /b/orders                                                      logged: Other /

@@ -89,7 +89,7 @@ public class TestTrackingMessageHandlerTests : IDisposable
         using var invoker = CreateInvoker(DefaultOptions());
         await invoker.SendAsync(new HttpRequestMessage(HttpMethod.Post, "http://target-service:5000/api/items/42?expand=1"), CancellationToken.None);
 
-        HistoryGuard.Pin(GetLogsFromThisTest(), 8,
+        HistoryGuard.Pin(GetLogsFromThisTest(), 9,
             "TestCaller>TargetService POST /api/items/{n}?expand 200");
     }
 

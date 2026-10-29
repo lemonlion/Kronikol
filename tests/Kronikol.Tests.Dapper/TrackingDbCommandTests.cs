@@ -46,7 +46,7 @@ public class TrackingDbCommandTests : IDisposable
         using var cmd = CreateCommand("SELECT * FROM Users WHERE Id = 1");
         cmd.ExecuteReader();
 
-        HistoryGuard.Pin(GetLogsForTest(), 8,
+        HistoryGuard.Pin(GetLogsForTest(), 9,
             "TestCaller>TestDB SELECT FROM Users /localhost/TestDb/Users SELECT * FROM Users WHERE Id = {n} -");
     }
 

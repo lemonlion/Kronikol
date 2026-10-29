@@ -42,6 +42,16 @@ public record RequestResponseLog(
     /// </summary>
     internal RecordedBefore? RecordedBefore8 { get; init; }
 
+    /// <summary>
+    /// The call as its tracker recorded it before #125 changed how the BigQuery, Cloud Storage, Blob Storage and Storage
+    /// Queues handlers name a call, when that differs: a call against an emulator or a gateway, once <c>Other</c>, or a
+    /// call <c>Summarised</c> did not record. History's rules 6 to 8 read its method and URI from here, and no call at all
+    /// when the tracker did not record it then; on a response, <see cref="RecordedBefore.Absent"/> says the tracker
+    /// recorded no response then (a send that threw, #125's Q5). Null for every call recorded as before. Set by the
+    /// trackers alone and never written out.
+    /// </summary>
+    internal RecordedBefore? RecordedBefore9 { get; init; }
+
     public bool NoteOnRight { get; set; }
     public bool IsOverrideStart { get; set; }
     public bool IsOverrideEnd { get; set; }

@@ -42,9 +42,6 @@ public class CloudStorageTrackingMessageHandler : DelegatingHandler, ITrackingCo
 
         var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
 
-        if (effectiveVerbosity == CloudStorageTrackingVerbosity.Summarised && gcsOp.Operation == CloudStorageOperation.Other)
-            return await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
         var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
         if (testInfo is null)
             return await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
@@ -67,7 +64,7 @@ public class CloudStorageTrackingMessageHandler : DelegatingHandler, ITrackingCo
 
         var requestUri = effectiveVerbosity == CloudStorageTrackingVerbosity.Raw
             ? request.RequestUri!
-            : BuildCleanUri(gcsOp);
+            : BuildCleanUri(gcsOp, request.RequestUri!);
 
         RequestResponseLogger.Log(new RequestResponseLog(
             testInfo.Value.Name,
@@ -86,16 +83,56 @@ public class CloudStorageTrackingMessageHandler : DelegatingHandler, ITrackingCo
         )
         {
             AttributionSource = testInfo.Value.Source,
-            Phase = TestPhaseContext.Current
+            Phase = TestPhaseContext.Current,
+            RecordedBefore9 = RecordedBefore9(request, effectiveVerbosity, method, requestUri)
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v => new PhaseVariant(
                 v == CloudStorageTrackingVerbosity.Raw ? request.Method : CloudStorageOperationClassifier.GetDiagramLabel(gcsOp, v),
-                v == CloudStorageTrackingVerbosity.Raw ? request.RequestUri! : BuildCleanUri(gcsOp),
+                v == CloudStorageTrackingVerbosity.Raw ? request.RequestUri! : BuildCleanUri(gcsOp, request.RequestUri!),
                 v == CloudStorageTrackingVerbosity.Summarised ? null : requestBody,
                 GetFilteredHeaders(request, v),
-                v == CloudStorageTrackingVerbosity.Summarised && gcsOp.Operation == CloudStorageOperation.Other)));
+                Skip: false)));
 
-        var response = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        HttpResponseMessage response;
+        try
+        {
+            response = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            // A send that throws is still an answer, as the HTTP handler records it: the exception's type where the
+            // status would be, its message chain in Error, and the exception on its way (FailedSend). Before #125 it left
+            // a request with no response, which history's earlier rules still read.
+            RequestResponseLogger.Log(new RequestResponseLog(
+                testInfo.Value.Name,
+                testInfo.Value.Id,
+                method,
+                null,
+                requestUri,
+                [],
+                _options.ServiceName,
+                _options.CallerName,
+                RequestResponseType.Response,
+                traceId,
+                requestResponseId,
+                false,
+                FailedSend.Status(ex),
+                DependencyCategory: DependencyCategories.CloudStorage
+            )
+            {
+                Error = FailedSend.Describe(ex),
+                AttributionSource = testInfo.Value.Source,
+                Phase = TestPhaseContext.Current,
+                RecordedBefore9 = RecordedBefore.NotRecorded
+            }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
+                v => new PhaseVariant(
+                    v == CloudStorageTrackingVerbosity.Raw ? request.Method : CloudStorageOperationClassifier.GetDiagramLabel(gcsOp, v),
+                    v == CloudStorageTrackingVerbosity.Raw ? request.RequestUri! : BuildCleanUri(gcsOp, request.RequestUri!),
+                    null,
+                    [],
+                    Skip: false)));
+            throw;
+        }
 
         var responseBody = await ReadResponseBody(response, drawnAt, cancellationToken);
         var responseHeaders = GetFilteredHeaders(response, effectiveVerbosity);
@@ -122,10 +159,10 @@ public class CloudStorageTrackingMessageHandler : DelegatingHandler, ITrackingCo
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v => new PhaseVariant(
                 v == CloudStorageTrackingVerbosity.Raw ? request.Method : CloudStorageOperationClassifier.GetDiagramLabel(gcsOp, v),
-                v == CloudStorageTrackingVerbosity.Raw ? request.RequestUri! : BuildCleanUri(gcsOp),
+                v == CloudStorageTrackingVerbosity.Raw ? request.RequestUri! : BuildCleanUri(gcsOp, request.RequestUri!),
                 v == CloudStorageTrackingVerbosity.Summarised ? null : responseBody,
                 GetFilteredHeaders(response, v),
-                v == CloudStorageTrackingVerbosity.Summarised && gcsOp.Operation == CloudStorageOperation.Other)));
+                Skip: false)));
 
         return response;
     }
@@ -162,8 +199,32 @@ public class CloudStorageTrackingMessageHandler : DelegatingHandler, ITrackingCo
             .ToArray();
     }
 
-    private static Uri BuildCleanUri(CloudStorageOperationInfo op)
+    /// <summary>
+    /// How every release before #125's fix recorded this call, when that differs from how it is recorded now: its label
+    /// and URI, or that it was not recorded at all (Summarised dropped a call it could not name). History's rules 6 to 8
+    /// read the call from here (<see cref="RequestResponseLog.RecordedBefore9"/>). Raw records the call as sent, then
+    /// and now.
+    /// </summary>
+    private static RecordedBefore? RecordedBefore9(HttpRequestMessage request, CloudStorageTrackingVerbosity verbosity,
+        OneOf<HttpMethod, string> method, Uri uri)
     {
+        if (verbosity == CloudStorageTrackingVerbosity.Raw)
+            return null;
+        var then = CloudStorageOperationClassifierBefore9.Classify(request);
+        if (verbosity == CloudStorageTrackingVerbosity.Summarised && then.Operation == CloudStorageOperation.Other)
+            return RecordedBefore.NotRecorded;
+        var label = CloudStorageOperationClassifierBefore9.GetDiagramLabel(then, verbosity);
+        var thenUri = CloudStorageOperationClassifierBefore9.BuildCleanUri(then);
+        return label == method.Value?.ToString() && thenUri.ToString() == uri.ToString() ? null : new RecordedBefore(label, thenUri);
+    }
+
+    // A call no member names is drawn with the API's own path, without the client's base or its query (#125); a named
+    // one with its bucket and object.
+    private static Uri BuildCleanUri(CloudStorageOperationInfo op, Uri originalUri)
+    {
+        if (op.Operation == CloudStorageOperation.Other)
+            return new Uri("gcs://" + CloudStorageOperationClassifier.ApiPathOf(originalUri));
+
         if (op.BucketName is null)
             return new Uri("gcs:///");
 

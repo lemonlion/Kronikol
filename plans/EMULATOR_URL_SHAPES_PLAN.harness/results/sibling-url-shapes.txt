@@ -1,0 +1,144 @@
+=== Blob, production account, Detailed
+  CreateContainer    PUT    /orders?restype=container                                              -> CreateContainer orders/-                 logged: CreateContainer /orders
+  Upload             PUT    /orders/order-1.json                                                   -> Upload orders/order-1.json               logged: Upload /orders/order-1.json
+  Download           GET    /orders/order-1.json                                                   -> Download orders/order-1.json             logged: Download /orders/order-1.json
+  GetProperties      HEAD   /orders/order-1.json                                                   -> GetProperties orders/order-1.json        logged: GetProperties /orders/order-1.json
+  ListBlobs          GET    /orders?restype=container&comp=list                                    -> ListBlobs orders/-                       logged: ListBlobs /orders
+  DeleteBlob         DELETE /orders/order-1.json                                                   -> Delete orders/order-1.json               logged: Delete /orders/order-1.json
+  DeleteContainer    DELETE /orders?restype=container                                              -> DeleteContainer orders/-                 logged: DeleteContainer /orders
+  requests sent 7; recorded 7
+=== Blob, production account, Summarised
+  CreateContainer    PUT    /orders?restype=container                                              -> CreateContainer orders/-                 logged: CreateContainer /orders
+  Upload             PUT    /orders/order-1.json                                                   -> Upload orders/order-1.json               logged: Upload /orders/order-1.json
+  Download           GET    /orders/order-1.json                                                   -> Download orders/order-1.json             logged: Download /orders/order-1.json
+  GetProperties      HEAD   /orders/order-1.json                                                   -> GetProperties orders/order-1.json        logged: GetProperties /orders/order-1.json
+  ListBlobs          GET    /orders?restype=container&comp=list                                    -> ListBlobs orders/-                       logged: ListBlobs /orders
+  DeleteBlob         DELETE /orders/order-1.json                                                   -> Delete orders/order-1.json               logged: Delete /orders/order-1.json
+  DeleteContainer    DELETE /orders?restype=container                                              -> DeleteContainer orders/-                 logged: DeleteContainer /orders
+  requests sent 7; recorded 7
+=== Blob, Azurite, Detailed
+  CreateContainer    PUT    /devstoreaccount1/orders?restype=container                             -> Upload devstoreaccount1/orders           logged: Upload /devstoreaccount1/orders
+  Upload             PUT    /devstoreaccount1/orders/order-1.json                                  -> Upload devstoreaccount1/orders/order-1.json logged: Upload /devstoreaccount1/orders/order-1.json
+  Download           GET    /devstoreaccount1/orders/order-1.json                                  -> Download devstoreaccount1/orders/order-1.json logged: Download /devstoreaccount1/orders/order-1.json
+  GetProperties      HEAD   /devstoreaccount1/orders/order-1.json                                  -> GetProperties devstoreaccount1/orders/order-1.json logged: GetProperties /devstoreaccount1/orders/order-1.json
+  ListBlobs          GET    /devstoreaccount1/orders?restype=container&comp=list                   -> Other devstoreaccount1/orders            logged: Other /devstoreaccount1/orders
+  DeleteBlob         DELETE /devstoreaccount1/orders/order-1.json                                  -> Delete devstoreaccount1/orders/order-1.json logged: Delete /devstoreaccount1/orders/order-1.json
+  DeleteContainer    DELETE /devstoreaccount1/orders?restype=container                             -> Delete devstoreaccount1/orders           logged: Delete /devstoreaccount1/orders
+  requests sent 7; recorded 7
+=== Blob, Azurite, Summarised
+  CreateContainer    PUT    /devstoreaccount1/orders?restype=container                             -> Upload devstoreaccount1/orders           logged: Upload /devstoreaccount1/orders
+  Upload             PUT    /devstoreaccount1/orders/order-1.json                                  -> Upload devstoreaccount1/orders/order-1.json logged: Upload /devstoreaccount1/orders/order-1.json
+  Download           GET    /devstoreaccount1/orders/order-1.json                                  -> Download devstoreaccount1/orders/order-1.json logged: Download /devstoreaccount1/orders/order-1.json
+  GetProperties      HEAD   /devstoreaccount1/orders/order-1.json                                  -> GetProperties devstoreaccount1/orders/order-1.json logged: GetProperties /devstoreaccount1/orders/order-1.json
+  ListBlobs          GET    /devstoreaccount1/orders?restype=container&comp=list                   -> Other devstoreaccount1/orders            logged: (not recorded)
+  DeleteBlob         DELETE /devstoreaccount1/orders/order-1.json                                  -> Delete devstoreaccount1/orders/order-1.json logged: Delete /devstoreaccount1/orders/order-1.json
+  DeleteContainer    DELETE /devstoreaccount1/orders?restype=container                             -> Delete devstoreaccount1/orders           logged: Delete /devstoreaccount1/orders
+  requests sent 7; recorded 6
+=== Queue, production account, Detailed
+  CreateQueue        PUT    /orders                                                                -> CreateQueue orders                       logged: CreateQueue /orders
+  SendMessage        POST   /orders/messages                                                       -> SendMessage orders                       logged: Send → orders /orders
+  ReceiveMessages    GET    /orders/messages                                                       -> ReceiveMessages orders                   logged: Receive ← orders /orders
+  PeekMessages       GET    /orders/messages?peekonly=true                                         -> PeekMessages orders                      logged: Peek ← orders /orders
+  DeleteMessage      DELETE /orders/messages/m1?popreceipt=pop1                                    -> DeleteMessage orders                     logged: Delete /orders
+  ClearMessages      DELETE /orders/messages                                                       -> ClearMessages orders                     logged: Clear → orders /orders
+  DeleteQueue        DELETE /orders                                                                -> DeleteQueue orders                       logged: DeleteQueue /orders
+  requests sent 7; recorded 7
+=== Queue, production account, Summarised
+  CreateQueue        PUT    /orders                                                                -> CreateQueue orders                       logged: CreateQueue /orders
+  SendMessage        POST   /orders/messages                                                       -> SendMessage orders                       logged: SendMessage /orders
+  ReceiveMessages    GET    /orders/messages                                                       -> ReceiveMessages orders                   logged: ReceiveMessages /orders
+  PeekMessages       GET    /orders/messages?peekonly=true                                         -> PeekMessages orders                      logged: PeekMessages /orders
+  DeleteMessage      DELETE /orders/messages/m1?popreceipt=pop1                                    -> DeleteMessage orders                     logged: DeleteMessage /orders
+  ClearMessages      DELETE /orders/messages                                                       -> ClearMessages orders                     logged: ClearMessages /orders
+  DeleteQueue        DELETE /orders                                                                -> DeleteQueue orders                       logged: DeleteQueue /orders
+  requests sent 7; recorded 7
+=== Queue, Azurite, Detailed
+  CreateQueue        PUT    /devstoreaccount1/orders                                               -> Other -                                  logged: Other /
+  SendMessage        POST   /devstoreaccount1/orders/messages                                      -> Other -                                  logged: Other /
+  ReceiveMessages    GET    /devstoreaccount1/orders/messages                                      -> Other -                                  logged: Other /
+  PeekMessages       GET    /devstoreaccount1/orders/messages?peekonly=true                        -> Other -                                  logged: Other /
+  DeleteMessage      DELETE /devstoreaccount1/orders/messages/m1?popreceipt=pop1                   -> Other -                                  logged: Other /
+  ClearMessages      DELETE /devstoreaccount1/orders/messages                                      -> Other -                                  logged: Other /
+  DeleteQueue        DELETE /devstoreaccount1/orders                                               -> Other -                                  logged: Other /
+  requests sent 7; recorded 7
+=== Queue, Azurite, Summarised
+  CreateQueue        PUT    /devstoreaccount1/orders                                               -> Other -                                  logged: (not recorded)
+  SendMessage        POST   /devstoreaccount1/orders/messages                                      -> Other -                                  logged: (not recorded)
+  ReceiveMessages    GET    /devstoreaccount1/orders/messages                                      -> Other -                                  logged: (not recorded)
+  PeekMessages       GET    /devstoreaccount1/orders/messages?peekonly=true                        -> Other -                                  logged: (not recorded)
+  DeleteMessage      DELETE /devstoreaccount1/orders/messages/m1?popreceipt=pop1                   -> Other -                                  logged: (not recorded)
+  ClearMessages      DELETE /devstoreaccount1/orders/messages                                      -> Other -                                  logged: (not recorded)
+  DeleteQueue        DELETE /devstoreaccount1/orders                                               -> Other -                                  logged: (not recorded)
+  requests sent 7; recorded 0
+=== Cloud Storage, BaseUri (default), Detailed
+  CreateBucket       POST   /storage/v1/b?project=proj                                             -> CreateBucket -/-                         logged: CreateBucket /
+  GetBucket          GET    /storage/v1/b/orders                                                   -> ListObjects orders/-                     logged: ListObjects → orders /orders
+  UploadObject[1]    POST   /upload/storage/v1/b/orders/o?uploadType=resumable                     -> Upload orders/-                          logged: Upload → orders /orders
+  UploadObject[2]    PUT    /upload/storage/v1/b/orders/o?uploadType=resumable&upload_id=u1        -> Other orders/-                           logged: Other → orders /orders
+  UploadObject[3]    DELETE /storage/v1/b/orders/o/order-1.json?generation=1                       -> Delete orders/order-1.json               logged: Delete → orders/order-1.json /orders/order-1.json
+  GetObject          GET    /storage/v1/b/orders/o/order-1.json                                    -> GetMetadata orders/order-1.json          logged: GetMetadata → orders/order-1.json /orders/order-1.json
+  DownloadObject     GET    /storage/v1/b/orders/o/order-1.json?alt=media                          -> Download orders/order-1.json             logged: Download → orders/order-1.json /orders/order-1.json
+  ListObjects        GET    /storage/v1/b/orders/o                                                 -> ListObjects orders/-                     logged: ListObjects → orders /orders
+  DeleteObject       DELETE /storage/v1/b/orders/o/order-1.json                                    -> Delete orders/order-1.json               logged: Delete → orders/order-1.json /orders/order-1.json
+  DeleteBucket       DELETE /storage/v1/b/orders                                                   -> Other orders/-                           logged: Other → orders /orders
+  requests sent 10; recorded 10
+=== Cloud Storage, BaseUri (default), Summarised
+  CreateBucket       POST   /storage/v1/b?project=proj                                             -> CreateBucket -/-                         logged: CreateBucket /
+  GetBucket          GET    /storage/v1/b/orders                                                   -> ListObjects orders/-                     logged: ListObjects /orders
+  UploadObject[1]    POST   /upload/storage/v1/b/orders/o?uploadType=resumable                     -> Upload orders/-                          logged: Upload /orders
+  UploadObject[2]    PUT    /upload/storage/v1/b/orders/o?uploadType=resumable&upload_id=u1        -> Other orders/-                           logged: (not recorded)
+  UploadObject[3]    DELETE /storage/v1/b/orders/o/order-1.json?generation=1                       -> Delete orders/order-1.json               logged: Delete /orders/order-1.json
+  GetObject          GET    /storage/v1/b/orders/o/order-1.json                                    -> GetMetadata orders/order-1.json          logged: GetMetadata /orders/order-1.json
+  DownloadObject     GET    /storage/v1/b/orders/o/order-1.json?alt=media                          -> Download orders/order-1.json             logged: Download /orders/order-1.json
+  ListObjects        GET    /storage/v1/b/orders/o                                                 -> ListObjects orders/-                     logged: ListObjects /orders
+  DeleteObject       DELETE /storage/v1/b/orders/o/order-1.json                                    -> Delete orders/order-1.json               logged: Delete /orders/order-1.json
+  DeleteBucket       DELETE /storage/v1/b/orders                                                   -> Other orders/-                           logged: (not recorded)
+  requests sent 10; recorded 8
+=== Cloud Storage, BaseUri http://127.0.0.1:4443/storage/v1/, Detailed
+  CreateBucket       POST   /storage/v1/b?project=proj                                             -> CreateBucket -/-                         logged: CreateBucket /
+  GetBucket          GET    /storage/v1/b/orders                                                   -> ListObjects orders/-                     logged: ListObjects → orders /orders
+  UploadObject[1]    POST   /upload/storage/v1/b/orders/o?uploadType=resumable                     -> Upload orders/-                          logged: Upload → orders /orders
+  UploadObject[2]    PUT    /upload/storage/v1/b/orders/o?uploadType=resumable&upload_id=u1        -> Other orders/-                           logged: Other → orders /orders
+  UploadObject[3]    DELETE /storage/v1/b/orders/o/order-1.json?generation=1                       -> Delete orders/order-1.json               logged: Delete → orders/order-1.json /orders/order-1.json
+  GetObject          GET    /storage/v1/b/orders/o/order-1.json                                    -> GetMetadata orders/order-1.json          logged: GetMetadata → orders/order-1.json /orders/order-1.json
+  DownloadObject     GET    /storage/v1/b/orders/o/order-1.json?alt=media                          -> Download orders/order-1.json             logged: Download → orders/order-1.json /orders/order-1.json
+  ListObjects        GET    /storage/v1/b/orders/o                                                 -> ListObjects orders/-                     logged: ListObjects → orders /orders
+  DeleteObject       DELETE /storage/v1/b/orders/o/order-1.json                                    -> Delete orders/order-1.json               logged: Delete → orders/order-1.json /orders/order-1.json
+  DeleteBucket       DELETE /storage/v1/b/orders                                                   -> Other orders/-                           logged: Other → orders /orders
+  requests sent 10; recorded 10
+=== Cloud Storage, BaseUri http://127.0.0.1:4443/storage/v1/, Summarised
+  CreateBucket       POST   /storage/v1/b?project=proj                                             -> CreateBucket -/-                         logged: CreateBucket /
+  GetBucket          GET    /storage/v1/b/orders                                                   -> ListObjects orders/-                     logged: ListObjects /orders
+  UploadObject[1]    POST   /upload/storage/v1/b/orders/o?uploadType=resumable                     -> Upload orders/-                          logged: Upload /orders
+  UploadObject[2]    PUT    /upload/storage/v1/b/orders/o?uploadType=resumable&upload_id=u1        -> Other orders/-                           logged: (not recorded)
+  UploadObject[3]    DELETE /storage/v1/b/orders/o/order-1.json?generation=1                       -> Delete orders/order-1.json               logged: Delete /orders/order-1.json
+  GetObject          GET    /storage/v1/b/orders/o/order-1.json                                    -> GetMetadata orders/order-1.json          logged: GetMetadata /orders/order-1.json
+  DownloadObject     GET    /storage/v1/b/orders/o/order-1.json?alt=media                          -> Download orders/order-1.json             logged: Download /orders/order-1.json
+  ListObjects        GET    /storage/v1/b/orders/o                                                 -> ListObjects orders/-                     logged: ListObjects /orders
+  DeleteObject       DELETE /storage/v1/b/orders/o/order-1.json                                    -> Delete orders/order-1.json               logged: Delete /orders/order-1.json
+  DeleteBucket       DELETE /storage/v1/b/orders                                                   -> Other orders/-                           logged: (not recorded)
+  requests sent 10; recorded 8
+=== Cloud Storage, BaseUri http://127.0.0.1:4443/, Detailed
+  CreateBucket       POST   /b?project=proj                                                        -> Other -/-                                logged: Other /
+  GetBucket          GET    /b/orders                                                              -> Other -/-                                logged: Other /
+  UploadObject[1]    POST   /upload/storage/v1/b/orders/o?uploadType=resumable                     -> Upload orders/-                          logged: Upload → orders /orders
+  UploadObject[2]    PUT    /upload/storage/v1/b/orders/o?uploadType=resumable&upload_id=u1        -> Other orders/-                           logged: Other → orders /orders
+  UploadObject[3]    DELETE /b/orders/o/order-1.json?generation=1                                  -> Other -/-                                logged: Other /
+  GetObject          GET    /b/orders/o/order-1.json                                               -> Other -/-                                logged: Other /
+  DownloadObject     GET    /b/orders/o/order-1.json?alt=media                                     -> Other -/-                                logged: Other /
+  ListObjects        GET    /b/orders/o                                                            -> Other -/-                                logged: Other /
+  DeleteObject       DELETE /b/orders/o/order-1.json                                               -> Other -/-                                logged: Other /
+  DeleteBucket       DELETE /b/orders                                                              -> Other -/-                                logged: Other /
+  requests sent 10; recorded 10
+=== Cloud Storage, BaseUri http://127.0.0.1:4443/, Summarised
+  CreateBucket       POST   /b?project=proj                                                        -> Other -/-                                logged: (not recorded)
+  GetBucket          GET    /b/orders                                                              -> Other -/-                                logged: (not recorded)
+  UploadObject[1]    POST   /upload/storage/v1/b/orders/o?uploadType=resumable                     -> Upload orders/-                          logged: Upload /orders
+  UploadObject[2]    PUT    /upload/storage/v1/b/orders/o?uploadType=resumable&upload_id=u1        -> Other orders/-                           logged: (not recorded)
+  UploadObject[3]    DELETE /b/orders/o/order-1.json?generation=1                                  -> Other -/-                                logged: (not recorded)
+  GetObject          GET    /b/orders/o/order-1.json                                               -> Other -/-                                logged: (not recorded)
+  DownloadObject     GET    /b/orders/o/order-1.json?alt=media                                     -> Other -/-                                logged: (not recorded)
+  ListObjects        GET    /b/orders/o                                                            -> Other -/-                                logged: (not recorded)
+  DeleteObject       DELETE /b/orders/o/order-1.json                                               -> Other -/-                                logged: (not recorded)
+  DeleteBucket       DELETE /b/orders                                                              -> Other -/-                                logged: (not recorded)
+  requests sent 10; recorded 1

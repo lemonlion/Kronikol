@@ -1,0 +1,108 @@
+=== BaseUri http://127.0.0.1:19070/, Detailed
+  CreateDataset  ok
+      POST   /projects/probe/datasets?key=any&prettyPrint=false                               200 -> Create /dataset
+  CreateTable    ok
+      POST   /projects/probe/datasets/sales_1/tables?key=any&prettyPrint=false                200 -> Create /sales_1/table
+  InsertRow      ok
+      POST   /projects/probe/datasets/sales_1/tables/orders/insertAll?key=any&prettyPrint=... 200 -> Insert /sales_1/table/orders
+[1 row]   ExecuteQuery   ok
+      POST   /projects/probe/queries?key=any&prettyPrint=false                                200 -> Query /query
+  ListRows       ok
+      GET    /projects/probe/datasets/sales_1/tables/orders?key=any&prettyPrint=false         200 -> Read /sales_1/table/orders
+      GET    /projects/probe/datasets/sales_1/tables/orders/data?key=any&formatOptions.use... 200 -> List /sales_1/tabledata/orders
+  UploadCsv      threw HttpRequestException: IPv4 address 0.0.0.0 and IPv6 address ::0 are unspecified addresses that cannot be used as a target address. (Parameter 'hostName') (0.0.0.0:9050)
+      POST   /upload/bigquery/v2/projects/probe/jobs?key=any&uploadType=resumable             200 -> Create /job
+      PUT    /upload/bigquery/v2/projects/probe/jobs?uploadType=resumable&upload_id=job_af... threw HttpRequestException -> Insert /job
+      PUT    /upload/bigquery/v2/projects/probe/jobs?uploadType=resumable&upload_id=job_af... threw HttpRequestException -> Insert /job
+      PUT    /upload/bigquery/v2/projects/probe/jobs?uploadType=resumable&upload_id=job_af... threw HttpRequestException -> Insert /job
+  ListProjects   ok
+      GET    /projects?key=any&prettyPrint=false                                              200 -> List /project
+  DeleteTable    ok
+      DELETE /projects/probe/datasets/sales_1/tables/orders?key=any&prettyPrint=false         200 -> Delete /sales_1/table/orders
+  DeleteDataset  ok
+      DELETE /projects/probe/datasets/sales_1?key=any&prettyPrint=false                       200 -> Delete /sales_1
+  requests sent 13; recorded 13
+  answered failed send: Insert /job !HttpRequestException: IPv4 address 0.0.0.0 and IPv6 address ::0 are unspecified addresses that cannot be used as a target address. (Parameter 'hostName') (0.0.0.0:9050) Caused by: IPv4 address 0.0.0.0 and IPv6 address ::0 are unspecified addresses that cannot be used as a target address. (Parameter 'hostName')
+  answered failed send: Insert /job !HttpRequestException: IPv4 address 0.0.0.0 and IPv6 address ::0 are unspecified addresses that cannot be used as a target address. (Parameter 'hostName') (0.0.0.0:9050) Caused by: IPv4 address 0.0.0.0 and IPv6 address ::0 are unspecified addresses that cannot be used as a target address. (Parameter 'hostName')
+  answered failed send: Insert /job !HttpRequestException: IPv4 address 0.0.0.0 and IPv6 address ::0 are unspecified addresses that cannot be used as a target address. (Parameter 'hostName') (0.0.0.0:9050) Caused by: IPv4 address 0.0.0.0 and IPv6 address ::0 are unspecified addresses that cannot be used as a target address. (Parameter 'hostName')
+=== BaseUri http://127.0.0.1:19070/, Summarised
+  CreateDataset  ok
+      POST   /projects/probe/datasets?key=any&prettyPrint=false                               200 -> Create /dataset
+  CreateTable    ok
+      POST   /projects/probe/datasets/sales_2/tables?key=any&prettyPrint=false                200 -> Create /table
+  InsertRow      ok
+      POST   /projects/probe/datasets/sales_2/tables/orders/insertAll?key=any&prettyPrint=... 200 -> Insert /table/orders
+[1 row]   ExecuteQuery   ok
+      POST   /projects/probe/queries?key=any&prettyPrint=false                                200 -> Query /query
+  ListRows       ok
+      GET    /projects/probe/datasets/sales_2/tables/orders?key=any&prettyPrint=false         200 -> Read /table/orders
+      GET    /projects/probe/datasets/sales_2/tables/orders/data?key=any&formatOptions.use... 200 -> List /tabledata/orders
+  UploadCsv      threw HttpRequestException: IPv4 address 0.0.0.0 and IPv6 address ::0 are unspecified addresses that cannot be used as a target address. (Parameter 'hostName') (0.0.0.0:9050)
+      POST   /upload/bigquery/v2/projects/probe/jobs?key=any&uploadType=resumable             200 -> Create /job
+      PUT    /upload/bigquery/v2/projects/probe/jobs?uploadType=resumable&upload_id=job_ee... threw HttpRequestException -> Insert /job
+      PUT    /upload/bigquery/v2/projects/probe/jobs?uploadType=resumable&upload_id=job_ee... threw HttpRequestException -> Insert /job
+      PUT    /upload/bigquery/v2/projects/probe/jobs?uploadType=resumable&upload_id=job_ee... threw HttpRequestException -> Insert /job
+  ListProjects   ok
+      GET    /projects?key=any&prettyPrint=false                                              200 -> List /project
+  DeleteTable    ok
+      DELETE /projects/probe/datasets/sales_2/tables/orders?key=any&prettyPrint=false         200 -> Delete /table/orders
+  DeleteDataset  ok
+      DELETE /projects/probe/datasets/sales_2?key=any&prettyPrint=false                       200 -> Delete /dataset/sales_2
+  requests sent 13; recorded 13
+  answered failed send: Insert /job !HttpRequestException: IPv4 address 0.0.0.0 and IPv6 address ::0 are unspecified addresses that cannot be used as a target address. (Parameter 'hostName') (0.0.0.0:9050) Caused by: IPv4 address 0.0.0.0 and IPv6 address ::0 are unspecified addresses that cannot be used as a target address. (Parameter 'hostName')
+  answered failed send: Insert /job !HttpRequestException: IPv4 address 0.0.0.0 and IPv6 address ::0 are unspecified addresses that cannot be used as a target address. (Parameter 'hostName') (0.0.0.0:9050) Caused by: IPv4 address 0.0.0.0 and IPv6 address ::0 are unspecified addresses that cannot be used as a target address. (Parameter 'hostName')
+  answered failed send: Insert /job !HttpRequestException: IPv4 address 0.0.0.0 and IPv6 address ::0 are unspecified addresses that cannot be used as a target address. (Parameter 'hostName') (0.0.0.0:9050) Caused by: IPv4 address 0.0.0.0 and IPv6 address ::0 are unspecified addresses that cannot be used as a target address. (Parameter 'hostName')
+=== BaseUri http://127.0.0.1:19070/bigquery/v2/, Detailed
+  CreateDataset  ok
+      POST   /bigquery/v2/projects/probe/datasets?key=any&prettyPrint=false                   200 -> Create /dataset
+  CreateTable    ok
+      POST   /bigquery/v2/projects/probe/datasets/sales_3/tables?key=any&prettyPrint=false    200 -> Create /sales_3/table
+  InsertRow      ok
+      POST   /bigquery/v2/projects/probe/datasets/sales_3/tables/orders/insertAll?key=any&... 200 -> Insert /sales_3/table/orders
+[1 row]   ExecuteQuery   ok
+      POST   /bigquery/v2/projects/probe/queries?key=any&prettyPrint=false                    200 -> Query /query
+  ListRows       ok
+      GET    /bigquery/v2/projects/probe/datasets/sales_3/tables/orders?key=any&prettyPrin... 200 -> Read /sales_3/table/orders
+      GET    /bigquery/v2/projects/probe/datasets/sales_3/tables/orders/data?key=any&forma... 200 -> List /sales_3/tabledata/orders
+  UploadCsv      threw HttpRequestException: IPv4 address 0.0.0.0 and IPv6 address ::0 are unspecified addresses that cannot be used as a target address. (Parameter 'hostName') (0.0.0.0:9050)
+      POST   /upload/bigquery/v2/projects/probe/jobs?key=any&uploadType=resumable             200 -> Create /job
+      PUT    /upload/bigquery/v2/projects/probe/jobs?uploadType=resumable&upload_id=job_34... threw HttpRequestException -> Insert /job
+      PUT    /upload/bigquery/v2/projects/probe/jobs?uploadType=resumable&upload_id=job_34... threw HttpRequestException -> Insert /job
+      PUT    /upload/bigquery/v2/projects/probe/jobs?uploadType=resumable&upload_id=job_34... threw HttpRequestException -> Insert /job
+  ListProjects   ok
+      GET    /bigquery/v2/projects?key=any&prettyPrint=false                                  200 -> List /project
+  DeleteTable    ok
+      DELETE /bigquery/v2/projects/probe/datasets/sales_3/tables/orders?key=any&prettyPrin... 200 -> Delete /sales_3/table/orders
+  DeleteDataset  ok
+      DELETE /bigquery/v2/projects/probe/datasets/sales_3?key=any&prettyPrint=false           200 -> Delete /sales_3
+  requests sent 13; recorded 13
+  answered failed send: Insert /job !HttpRequestException: IPv4 address 0.0.0.0 and IPv6 address ::0 are unspecified addresses that cannot be used as a target address. (Parameter 'hostName') (0.0.0.0:9050) Caused by: IPv4 address 0.0.0.0 and IPv6 address ::0 are unspecified addresses that cannot be used as a target address. (Parameter 'hostName')
+  answered failed send: Insert /job !HttpRequestException: IPv4 address 0.0.0.0 and IPv6 address ::0 are unspecified addresses that cannot be used as a target address. (Parameter 'hostName') (0.0.0.0:9050) Caused by: IPv4 address 0.0.0.0 and IPv6 address ::0 are unspecified addresses that cannot be used as a target address. (Parameter 'hostName')
+  answered failed send: Insert /job !HttpRequestException: IPv4 address 0.0.0.0 and IPv6 address ::0 are unspecified addresses that cannot be used as a target address. (Parameter 'hostName') (0.0.0.0:9050) Caused by: IPv4 address 0.0.0.0 and IPv6 address ::0 are unspecified addresses that cannot be used as a target address. (Parameter 'hostName')
+=== BaseUri http://127.0.0.1:19070/bigquery/v2/, Summarised
+  CreateDataset  ok
+      POST   /bigquery/v2/projects/probe/datasets?key=any&prettyPrint=false                   200 -> Create /dataset
+  CreateTable    ok
+      POST   /bigquery/v2/projects/probe/datasets/sales_4/tables?key=any&prettyPrint=false    200 -> Create /table
+  InsertRow      ok
+      POST   /bigquery/v2/projects/probe/datasets/sales_4/tables/orders/insertAll?key=any&... 200 -> Insert /table/orders
+[1 row]   ExecuteQuery   ok
+      POST   /bigquery/v2/projects/probe/queries?key=any&prettyPrint=false                    200 -> Query /query
+  ListRows       ok
+      GET    /bigquery/v2/projects/probe/datasets/sales_4/tables/orders?key=any&prettyPrin... 200 -> Read /table/orders
+      GET    /bigquery/v2/projects/probe/datasets/sales_4/tables/orders/data?key=any&forma... 200 -> List /tabledata/orders
+  UploadCsv      threw HttpRequestException: IPv4 address 0.0.0.0 and IPv6 address ::0 are unspecified addresses that cannot be used as a target address. (Parameter 'hostName') (0.0.0.0:9050)
+      POST   /upload/bigquery/v2/projects/probe/jobs?key=any&uploadType=resumable             200 -> Create /job
+      PUT    /upload/bigquery/v2/projects/probe/jobs?uploadType=resumable&upload_id=job_db... threw HttpRequestException -> Insert /job
+      PUT    /upload/bigquery/v2/projects/probe/jobs?uploadType=resumable&upload_id=job_db... threw HttpRequestException -> Insert /job
+      PUT    /upload/bigquery/v2/projects/probe/jobs?uploadType=resumable&upload_id=job_db... threw HttpRequestException -> Insert /job
+  ListProjects   ok
+      GET    /bigquery/v2/projects?key=any&prettyPrint=false                                  200 -> List /project
+  DeleteTable    ok
+      DELETE /bigquery/v2/projects/probe/datasets/sales_4/tables/orders?key=any&prettyPrin... 200 -> Delete /table/orders
+  DeleteDataset  ok
+      DELETE /bigquery/v2/projects/probe/datasets/sales_4?key=any&prettyPrint=false           200 -> Delete /dataset/sales_4
+  requests sent 13; recorded 13
+  answered failed send: Insert /job !HttpRequestException: IPv4 address 0.0.0.0 and IPv6 address ::0 are unspecified addresses that cannot be used as a target address. (Parameter 'hostName') (0.0.0.0:9050) Caused by: IPv4 address 0.0.0.0 and IPv6 address ::0 are unspecified addresses that cannot be used as a target address. (Parameter 'hostName')
+  answered failed send: Insert /job !HttpRequestException: IPv4 address 0.0.0.0 and IPv6 address ::0 are unspecified addresses that cannot be used as a target address. (Parameter 'hostName') (0.0.0.0:9050) Caused by: IPv4 address 0.0.0.0 and IPv6 address ::0 are unspecified addresses that cannot be used as a target address. (Parameter 'hostName')
+  answered failed send: Insert /job !HttpRequestException: IPv4 address 0.0.0.0 and IPv6 address ::0 are unspecified addresses that cannot be used as a target address. (Parameter 'hostName') (0.0.0.0:9050) Caused by: IPv4 address 0.0.0.0 and IPv6 address ::0 are unspecified addresses that cannot be used as a target address. (Parameter 'hostName')

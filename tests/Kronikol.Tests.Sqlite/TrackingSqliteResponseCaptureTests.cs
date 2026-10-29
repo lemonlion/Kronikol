@@ -73,7 +73,7 @@ public class TrackingSqliteResponseCaptureTests : IDisposable
             cmd.ExecuteScalar();
         }
 
-        HistoryGuard.Pin(GetLogsForTest(), 8,
+        HistoryGuard.Pin(GetLogsForTest(), 9,
             "Caller>SQLite SELECT FROM breakfasts /main/breakfasts SELECT COUNT(*) FROM breakfasts OK");
     }
 

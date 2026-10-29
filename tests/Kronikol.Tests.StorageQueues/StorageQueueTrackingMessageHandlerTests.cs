@@ -90,7 +90,7 @@ public class StorageQueueTrackingMessageHandlerTests : IDisposable
         using var invoker = CreateInvoker(MakeOptions());
         await invoker.SendAsync(MakeReceiveRequest(), CancellationToken.None);
 
-        HistoryGuard.Pin(GetLogsFromThisTest(), 8,
+        HistoryGuard.Pin(GetLogsFromThisTest(), 9,
             "TestCaller>StorageQueue Receive ← my-queue /my-queue 200");
     }
 

@@ -39,7 +39,7 @@ public class SpannerTrackerTests
         var (reqId, traceId) = tracker.LogRequest(op, "SELECT * FROM Users WHERE Id = 3");
         tracker.LogResponse(op, reqId, traceId, "2 rows returned");
 
-        HistoryGuard.Pin(GetLogsFromThisTest(), 8,
+        HistoryGuard.Pin(GetLogsFromThisTest(), 9,
             "TestCaller>Spanner SELECT FROM Users /Users SELECT * FROM Users WHERE Id = {n} -");
     }
 

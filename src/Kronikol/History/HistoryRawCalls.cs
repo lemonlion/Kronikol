@@ -30,6 +30,18 @@ internal sealed record HistoryRawCall(string Caller, string Service, string Meth
 
     /// <summary>Whether rules 6 and 7 read no call here: its tracker did not record it before 8.</summary>
     public bool Absent7 { get; init; }
+
+    /// <summary>The verb as rule 8 read it, when that differs (<see cref="Tracking.RequestResponseLog.RecordedBefore9"/>).</summary>
+    public string? Method8 { get; init; }
+
+    /// <summary>The untemplated path and query rule 8 keys, when that differs from <see cref="Path"/>.</summary>
+    public string? Path8 { get; init; }
+
+    /// <summary>Whether rule 8 reads no call here: its tracker did not record it before 9.</summary>
+    public bool Absent8 { get; init; }
+
+    /// <summary>Whether rules 6 to 8 read no response here: its tracker recorded none before 9, as for a send that threw.</summary>
+    public bool Unanswered8 { get; init; }
 }
 
 /// <summary>
