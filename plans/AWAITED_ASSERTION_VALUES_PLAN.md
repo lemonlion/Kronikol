@@ -528,7 +528,8 @@ caught:
 
 ### 6.4 Checks
 
-The weaver suite on net8.0, net9.0 and net10.0, with ILVerify over every weave as now; `TargetsBuildTests` (real
+The weaver suite on net8.0, net9.0 and net10.0, with ILVerify over every weave as now (at the release the suite
+targets net10.0 only, and its SDK rows build with SDKs 8, 9 and 10); `TargetsBuildTests` (real
 `dotnet build`); the core suite; the issue's project and the shapes on packages packed from the release, in Debug and
 Release; the weaver suite in the Linux container; release.slnf in Release.
 
@@ -683,3 +684,7 @@ on #211 at the release, and one patch.
   - The weaver suite ran in a Linux container (`results/weaver-suite-release.txt`). That run found an older SDK 8
     fact with no check for SDK 8, which now skips where the SDK is missing, and passes on the final tree.
   - Changed: the status, 6.1, 6.3 (results), section 9 (answered), this log.
+- 2026-10-29, e132cc3e: released as 5.27.4 (`41d0d38f`, tag `v5.27.4`); the Release workflow and CI passed. The wiki's
+  `Assertion-Tracking.md` says it (`e7fbbf2`), and Kronikol4J's ledger has its entry, not mirrored (`74c3725`). On
+  the published packages the issue's project passes 3 of 3 in Release and in Debug (`results/repro-5.27.4-*.txt`).
+  #211 is answered with the conditions of F2 and F6 and the fix, and closed (its comment 6493895307).
