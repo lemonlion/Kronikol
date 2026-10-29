@@ -9,7 +9,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="StackExchange.Redis" Version="2.*" />
+    <!-- StackExchange.Redis: 2.6.80 is the first release past GHSA-rxg9-xrhp-64gj (critical, in the
+         System.Drawing.Common 5.0.0 that earlier ones bring), as the suite passes from 2.2.50; its graph carries no
+         other known advisory (harness floor/r2c-redis.txt). FloorLedger holds the floor, and the test project's package
+         fact reads it back from the packed nuspec; the suite runs on the newest 2.x, and on this floor with
+         -p:FloorRun=true (plans/CLIENT_FLOORS_PLAN.md R2c). -->
+    <PackageReference Include="StackExchange.Redis" Version="2.6.80" />
   </ItemGroup>
 
   <ItemGroup>

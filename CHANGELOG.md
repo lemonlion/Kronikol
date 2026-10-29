@@ -4,6 +4,74 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.27.5] - 2026-10-29
+
+The patch part moves (5.27.4 to 5.27.5): packaging and tracking fixes, with no new option and no new public member
+(#97; `plans/CLIENT_FLOORS_PLAN.md` R2c).
+
+### Fixed
+
+- **The last ten floating references ask for a measured floor.** Each now asks for the oldest client its suite passes
+  on, past every known advisory in its graph, where it asked for the newest release of the day it was packed.
+
+  | Package | Asks for |
+  |---|---|
+  | `Kronikol.Extensions.Sqlite` | `Microsoft.Data.Sqlite` 10.0.11 |
+  | `Kronikol.Extensions.Redis` | `StackExchange.Redis` 2.6.80 |
+  | `Kronikol.Extensions.Oracle` | `Oracle.ManagedDataAccess.Core` 23.4.0, `System.Security.Cryptography.Pkcs` 8.0.2 |
+  | `Kronikol.Extensions.OpenTelemetry` | `OpenTelemetry` and `OpenTelemetry.Exporter.InMemory` 1.15.3 |
+  | `Kronikol.Extensions.MediatR` | `Microsoft.Extensions.DependencyInjection.Abstractions` 10.0.7 |
+  | `Kronikol.Extensions.DispatchProxy` | `Microsoft.Extensions.DependencyInjection.Abstractions` 10.0.7 |
+  | `Kronikol.Extensions.Kafka.BuildInterception` | `Lib.Harmony` 2.4.2 |
+  | `Kronikol.Extensions.EfCore.Relational` | `Microsoft.EntityFrameworkCore.Relational` 10.0.0 |
+  | `Kronikol.Extensions.TcpTap` | `MongoDB.Bson` 2.28.0 |
+
+  Sqlite, Redis and OpenTelemetry sit at the first releases past GHSA-2m69-gcr7-jv3q (high), GHSA-rxg9-xrhp-64gj
+  (critical) and GHSA-g94r-2vxg-569j (moderate), which the releases their suites pass from carry. Harmony sits at 2.4.2,
+  the first release that can patch on .NET 10, where every earlier one throws `PlatformNotSupportedException`. EF Core
+  Relational sits at 10.0.0, the first of its major, and TcpTap's MongoDB.Bson at 2.28.0, the oldest release its suite
+  can run on, as the suite also takes the MongoDB.V2 extension, whose driver floor is 2.28.0. Behaviour change: a
+  project that takes a client only through Kronikol now resolves that floor, where it resolved the newest; reference the
+  client yourself for a newer one.
+- **The Oracle package no longer hands its consumers a Pkcs under two advisories.** Every
+  `Oracle.ManagedDataAccess.Core` 23.x, the newest included, asks for a `System.Security.Cryptography.Pkcs` under
+  GHSA-846f-f764-76mx (high) and GHSA-2fmv-rv2c-59x7 (moderate), both published 2026-10-13, so no floor of the client is
+  past them. The package now asks for Pkcs 8.0.2, the first release past both, which lifts the client's. Behaviour
+  change: a test project that takes the Oracle package resolves Pkcs 8.0.2 or later.
+- **`ReplaceWithTracked` removed a service's keyed registrations.** It removed every registration of the service type,
+  keyed ones included, so replacing `IFoo` with a tracking proxy also dropped `AddKeyedSingleton<IFoo>(...)`. It now
+  replaces only the unkeyed registrations.
+
+### Tests
+
+- The DispatchProxy and OpenTelemetry packages have test projects of their own, `Kronikol.Tests.DispatchProxy` and
+  `Kronikol.Tests.OpenTelemetry`, where their facts move from the core suite, so their floor runs do not rerun it.
+  `ReplaceWithTracked` gains facts for its overload with options, for a service registered twice, and for a keyed
+  registration of the same type.
+- The TcpTap test project takes `StackExchange.Redis` 2.6.80 in place of 2.6.48: it references the Redis extension,
+  whose floor is now 2.6.80, and NuGet refuses the lower pin as a downgrade (NU1605).
+- The floor ledger's count of floats still to measure falls from 10 to none. Each of the nine packages has a fact that
+  packs it and holds its nuspec to the ledger; MediatR's expects the one line its own pin, MediatR 14.1.0, owes until
+  R3b measures it. Each suite runs on the newest client and, with `-p:FloorRun=true`, on the floor, the OpenTelemetry,
+  EF Core and TcpTap suites with partners of the floor's release: the OpenTelemetry hosting extensions, the EF Core
+  providers, and the MongoDB driver.
+
+### Documentation
+
+- The wiki pages of the Sqlite, Redis, Oracle, OpenTelemetry, MediatR, DispatchProxy, EF Core Relational and TcpTap
+  packages gain "Client versions", and the Kafka page's build interception section names the Harmony floor and why.
+  The Oracle page names the Pkcs it lifts; the DispatchProxy page says that `ReplaceWithTracked` leaves keyed
+  registrations alone.
+
+Checks: the core suite (11,538 passed, 2 skipped, on 5.27.4 with R2c), with the floor ledger's facts at none still
+floating; each of the nine suites on the newest client and on its floor (Sqlite 30, Redis 164, Oracle 25, OpenTelemetry
+4, MediatR 6, DispatchProxy 6, Kafka.BuildInterception 76, EfCore.Relational 245 and TcpTap 510 with 1 skipped, each on
+both, and the only advisories they report in test-only graphs); the real Redis and Oracle clients through the extensions
+against Redis 7 and Oracle Database Free 23, on the floor and on the newest; the whole solution's build; and the Release
+build of `release.slnf`, whose remaining advisories are MongoDB.Driver 2.x's Snappier and SharpCompress, as 5.22.1
+listed, and the `System.Security.Cryptography.Pkcs` 9.0.13 that SqlClient brings, which R3b takes; the Oracle client's
+are gone.
+
 ## [5.27.4] - 2026-10-29
 
 The patch part moves (5.27.3 to 5.27.4): fixes, nothing new to call (#211, `plans/AWAITED_ASSERTION_VALUES_PLAN.md`).

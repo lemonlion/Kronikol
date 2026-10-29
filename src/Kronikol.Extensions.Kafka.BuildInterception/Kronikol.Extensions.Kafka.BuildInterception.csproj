@@ -7,7 +7,12 @@
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Lib.Harmony" Version="2.*" />
+    <!-- Lib.Harmony: 2.4.2 is the first release that patches on .NET 10, where every earlier one throws
+         PlatformNotSupportedException (CoreCLR version 10.0.11 is not supported), so 48 of the suite's 75 facts fail on
+         2.4.1; its graph carries no known advisory (harness floor/r2c-harmony.txt). FloorLedger holds the floor, and
+         the test project's package fact reads it back from the packed nuspec; the suite runs on the newest 2.x, and on
+         this floor with -p:FloorRun=true (plans/CLIENT_FLOORS_PLAN.md R2c). -->
+    <PackageReference Include="Lib.Harmony" Version="2.4.2" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Kronikol.Extensions.Kafka\Kronikol.Extensions.Kafka.csproj" />

@@ -4,7 +4,7 @@
 and plan a fix for the underlying problem; audited the same day at 5.14.0 (`8d7d1e1d`), at the owner's ask to make it
 complete and accurate (section 11 lists what the audit found and changed). **Green-lit 2026-10-28** by the owner ("Can
 you implement the plan in full"), every question in section 10 at its recommendation; executing. **R1 released as
-5.22.1, R2a as 5.27.1, R2b as 5.27.3** (section 11).
+5.22.1, R2a as 5.27.1, R2b as 5.27.3, R2c as 5.27.5** (section 11).
 
 **Issues:** [#205](https://github.com/lemonlion/Kronikol/issues/205), "BigQuery: the extension's floor,
 Google.Cloud.BigQuery.V2 3.12, runs ExecuteQuery through jobs.query, whose timestamps the emulator answers in seconds,
@@ -445,6 +445,29 @@ and a guard fact per wrapper holds it to the members known to come back to an ov
 resolves, so a release that adds a virtual turns the newest run red. After R2b the ledger holds 10 still floating, 33
 unmeasured and 18 measured.
 
+*As built in R2c:* the last ten floating references ask for measured floors (RUN, `floor/r2c-*.txt`, and the fourth
+test in `probe-r2c/`):
+
+| Package | Floor | Why there |
+|---|---|---|
+| Sqlite, `Microsoft.Data.Sqlite` | 10.0.11 | The first release past GHSA-2m69-gcr7-jv3q (high), against the SQLite build earlier releases bring; the suite passes from 10.0.0 |
+| Redis, `StackExchange.Redis` | 2.6.80 | The first release past GHSA-rxg9-xrhp-64gj (critical), against the System.Drawing.Common 5.0.0 earlier releases bring; the suite passes from 2.2.50 |
+| Oracle, `Oracle.ManagedDataAccess.Core` | 23.4.0 | The first of the major, where the suite passes |
+| Oracle, `System.Security.Cryptography.Pkcs` | 8.0.2 | The first release past GHSA-846f-f764-76mx and GHSA-2fmv-rv2c-59x7, under which every 23.x client's own Pkcs falls (F21) |
+| OpenTelemetry, `OpenTelemetry` and `OpenTelemetry.Exporter.InMemory` | 1.15.3 | The first release past GHSA-g94r-2vxg-569j (moderate), against the `OpenTelemetry.Api` earlier releases bring; the suite passes from 1.4.0 |
+| MediatR and DispatchProxy, `Microsoft.Extensions.DependencyInjection.Abstractions` | 10.0.7 | The least the core's graph allows, as for Service Bus |
+| Kafka.BuildInterception, `Lib.Harmony` | 2.4.2 | The first release that can patch on .NET 10 (F22) |
+| EfCore.Relational, `Microsoft.EntityFrameworkCore.Relational` | 10.0.0 | The first of the major, where the suite passes with the providers of the same release; its own graph carries no known advisory, and the three the search's builds report are the test providers' (F28) |
+| TcpTap, `MongoDB.Bson` | 2.28.0 | The oldest release the suite can run on: its test project also takes the MongoDB.V2 extension, whose driver floor is 2.28.0, so every older release fails restore (NU1605); its own graph is MongoDB.Bson alone |
+
+The OpenTelemetry, EF Core and TcpTap suites need partners of the floor's release, so each test project takes them at
+the floor under `-p:FloorRun=true`: the OpenTelemetry hosting extensions (`$(OpenTelemetryFloor)`), the EF Core
+providers (`$(EfCoreFloor)`, with Npgsql's at 10.0.0) and the MongoDB driver (`$(MongoBsonFloor)`), and
+`floor/paired_floor.py` searches with them. The fourth test drove the real Redis and Oracle clients through their
+extensions against servers in podman, on the floor and on the newest: every call passed on both, with the same record
+on both, which for Oracle names no host and no database (F26). After R2c the ledger holds none still floating, 33
+unmeasured and 29 measured.
+
 **Not chosen: central package management**, #97's third option. RUN, `restore/cpm-float/`: under
 `ManagePackageVersionsCentrally`, restore rejects a central floating version (`NU1011: The following PackageVersion
 items cannot specify a floating version`) unless a project sets `CentralPackageFloatingVersionsEnabled`, so a test
@@ -520,7 +543,7 @@ together they can share one patch release (Q7).
 | `BigQueryPackageTests.The_packed_extension_asks_for_its_measured_client_floor` | the nuspec asks for 3.0.0 | 5.12.0 (asks 3.12.0) |
 | The BigQuery suite with `-p:FloorRun=true` in CI | the extension works on its floor, not only compiles | a floor raised by a call into a newer API |
 | The BigQuery suite without it | it still runs on the newest 3.x | a missing direct reference (it would run on 3.0.0) |
-| The floor ledger's facts, six as built (section 5.2) | no packable project floats, every consumer-facing pin is in the ledger at its version, the still-floating and unmeasured marks only go, and the ledger names only references that exist, each once, each with its basis | an empty ledger; the counts are 25 and 33 after R1, 16 and 33 after R2a, 10 and 33 after R2b |
+| The floor ledger's facts, six as built (section 5.2) | no packable project floats, every consumer-facing pin is in the ledger at its version, the still-floating and unmeasured marks only go, and the ledger names only references that exist, each once, each with its basis | an empty ledger; the counts are 25 and 33 after R1, 16 and 33 after R2a, 10 and 33 after R2b, 0 and 33 after R2c |
 | Each R2 and R3 package's floor run and nuspec check | as R1 | each batch's parent commit |
 | `TrackingSubscriberClientTests` (R2a) | stopping the tracking subscriber stops the client it wraps, by each overload | R2a's parent on 3.39.0: two of the three throw `NotImplementedException` (F8) |
 | `A_statement_is_named_for_what_it_does_not_for_the_call_that_carries_it` and the server observer's twin (R2a) | an INSERT, UPDATE or DELETE through `ExecuteSql` is drawn as what it does | R2a's parent: each drawn as `SELECT FROM <table>` (F9) |
@@ -528,6 +551,7 @@ together they can share one patch release (Q7).
 | `TrackingClientOverloadTests` (R2b) | each Pub/Sub publish overload sends one tracked message through the client it wraps, and a subscriber started with a `SubscriptionHandler` handles on the tracked path | R2b's parent: the handler start throws (F11) |
 | `TrackingServiceBusWrapperCoverageTests` (R2b) | processors, rule managers, disposal, a batch send and both dead-letters with properties reach the client the wrapper holds, and the sends and dead-letters are drawn | R2b's parent: `NullReferenceException`, or undrawn (F12) |
 | `TrackingEventHubsWrapperCoverageTests` (R2b) | held as the SDK type, the clients have the names and identifier of the clients they wrap and are closed with them; each of the five reads goes through the same overload of the client it wraps and is drawn with its response when it ends, is left early or fails, with its count at `Raw` | R2b's parent: 23 of its facts and theory rows (F13) |
+| `ReplaceWithTrackedTests` (R2c) | replacing a service replaces each of its unkeyed registrations, leaves its keyed ones, and the overload with options draws each call under the service it names | R2c's parent: the keyed registration removed (F19) |
 
 No Playwright fact: nothing in a report changes.
 
@@ -553,6 +577,16 @@ No Playwright fact: nothing in a report changes.
 | F16 | Cosmos DB 3.46.0's query fails against the vnext-preview emulator ("Unknown JsonNodeType: Unknown"), with Kronikol and without it (RUN, `results/r2b-cosmos-floor-plain.txt`); 3.63.3's passes, and every other call works through the extension on both. | upstream, the client or the emulator | Wiki: a query against vnext-preview needs a newer client than the floor |
 | F17 | xUnit cuts a string over 50 characters short in a collection failure, so a guard that listed `ReadEventsAsync(Boolean, ReadEventOptions, CancellationToken)` did not name it (RUN, `floor/wrapper_mutations.py`). | Kronikol | Fixed in R2b: the guards fail through `WrapperCoverage.AssertLeavesOnly`, which names each member in full; five mutations, each red on its guard with the member named (`floor/wrapper-mutations.txt`) |
 | F18 | `FloorLedger.cs` names `FloorLedgerTests` in a `cref` that resolves only in `Kronikol.Tests`, so from 5.27.1 each test project that links the file warned CS1574 (RUN). | Kronikol | Fixed in R2b |
+| F19 | `ReplaceWithTracked` removed every registration of the service type, keyed ones included, so replacing `IFoo` with a tracking proxy also dropped `AddKeyedSingleton<IFoo>(...)` (RUN, `floor/r2c-di.txt`: the new fact red on 10.0.7 and on 10.0.14). | Kronikol | Fixed in R2c: only the unkeyed registrations are replaced; three facts in `ReplaceWithTrackedTests` |
+| F20 | The OpenTelemetry and DispatchProxy facts lived in the core suite, so a floor run of either package would have rerun 11,500 facts on the floor's dependencies (READ). | Kronikol | R2c moved them to `Kronikol.Tests.OpenTelemetry` and `Kronikol.Tests.DispatchProxy` |
+| F21 | Every `Oracle.ManagedDataAccess.Core` 23.x, the newest included, asks for a `System.Security.Cryptography.Pkcs` under GHSA-846f-f764-76mx (high) and GHSA-2fmv-rv2c-59x7 (moderate), both published 2026-10-13, so no floor of the client is past them (RUN, `floor/r2c-oracle.txt`). | Kronikol, upstream | R2c: the package asks for Pkcs 8.0.2, the first past both, which lifts the client's; a ledger entry of its own |
+| F22 | `Lib.Harmony` before 2.4.2 cannot patch on .NET 10: it throws `PlatformNotSupportedException` ("CoreCLR version 10.0.x is not supported"), and 48 of the build interception suite's 75 facts fail on 2.4.1 (RUN, `floor/r2c-harmony.txt`). | upstream | The floor is 2.4.2 |
+| F23 | A package fact present while a floor search runs fails every probe that pins an older release, so the OpenTelemetry search stopped at "the newest release fails" (RUN). | the harness | The fact is written after the search (`apply_floor.py`) |
+| F24 | A package with an unmeasured R3 pin cannot hold its nuspec to an empty list of disagreements: MediatR's fact reads its one line, MediatR 14.1.0 unmeasured (RUN). | the harness | The fact expects that line until R3b measures the pin |
+| F25 | The TcpTap test project's `NoWarn` hides NU1902 to NU1904 from its own restore, so its runs cannot report an advisory in the Bson it resolves; the ones its logs show, SharpCompress 0.30.1 and Snappier 1.0.0, come from the MongoDB.V2 extension it references, through MongoDB.Driver (READ, RUN). | the harness | The Bson graph was read on its own, a restore of the one reference: MongoDB.Bson alone, no advisory |
+| F26 | Every Oracle arrow names `oracle://localhost/unknown/<table>`: `SqlEndpoint.Host` reads an EZConnect data source (`127.0.0.1:21521/FREEPDB1`) as no host, and ODP.NET's `Database` is empty, so the database is `unknown`, on the floor and the newest alike (RUN, `results/r2c-oracle-{floor,newest}.txt`). The database is in history's call line, so its fix moves history's rule. | Kronikol | Its own patch after R2c, on the rule origin then holds, as #125's R1 moves it to 9 |
+| F27 | The TcpTap test project pinned `StackExchange.Redis` 2.6.48 and references the Redis extension, so the Redis floor, 2.6.80, made its restore a downgrade NuGet refuses (NU1605): the TcpTap search's first probe failed to build (RUN, `floor/r2c-tcptap.txt`). | Kronikol | Fixed in R2c: the pin moves to 2.6.80; no other test project pins a floored client below its floor |
+| F28 | The audit column of `floor/otel_floor.py` and `floor/paired_floor.py` read only a warning that names its project in a closing bracket, and a restore warning names it first, so the EF Core search reported no advisory where each build had three, all from the test providers: `System.Security.Cryptography.Pkcs` 9.0.4 through the SQL Server provider and `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 through the Sqlite provider (RUN). The floors do not rest on that column: each graph was read on its own (`floor/r2c-advisory.sh`, and a restore of the one reference). | the harness | Fixed in R2c: the three search scripts, `floor_probe2.py` among them, read either form |
 
 ## 9. Risks and assumptions
 
@@ -664,6 +698,23 @@ Each has a recommendation; none is legwork.
   the Release build of `release.slnf`, whose only advisories are the older ones R1 listed: MongoDB.Driver 2.x's
   Snappier and SharpCompress, and System.Security.Cryptography.Pkcs through the Oracle and SqlClient clients, which
   R2c and R3b take.
+
+- **2026-10-29, R2c released as 5.27.5**, rebased onto 5.27.4 (`41d0d38f`). The ten references of section 5.2's R2c row
+  are measured floors, with the Pkcs the Oracle package now asks for (the table in section 5.2's note), and the
+  still-floating count fell from 10 to none. Found on the way and fixed in the release, each red first: F19, the keyed
+  registrations `ReplaceWithTracked` removed, and F27, the TcpTap test project's Redis pin; and in the harness, F28. F21
+  lifted the Oracle client's Pkcs past two advisories, F22 set the Harmony floor, and F20 gave the OpenTelemetry and
+  DispatchProxy packages test projects of their own. F26, the Oracle tracker's address, is left to a patch of its own,
+  as its fix moves history's rule, which #125's R1 moves first.
+
+  Run: the floor searches (`floor/r2c-search.sh`, `floor/r2c-advisory.sh`, `floor/r2c-di.sh`, `floor/otel_floor.py`,
+  `floor/paired_floor.py`, `floor/r2c-*.txt`); the fourth test for Redis and Oracle against servers in podman
+  (`floor/r2c-containers.sh`, `probe-r2c/`, `results/r2c-*.txt`); then each R2c suite on the newest and on the floor
+  (`floor/r2c-suites.sh`, `floor/r2c-suites.txt`: Sqlite 30, Redis 164, Oracle 25, OpenTelemetry 4, MediatR 6,
+  DispatchProxy 6, Kafka.BuildInterception 76, EfCore.Relational 245 and TcpTap 510 with 1 skipped, each on both, the
+  advisories each reports all the test providers' and the MongoDB driver's), the core suite (11,538 passed, 2 skipped)
+  and the Release build of `release.slnf`, whose only advisories are MongoDB.Driver 2.x's Snappier and SharpCompress and
+  the Pkcs 9.0.13 that SqlClient brings, R3b's; the Oracle client's are gone.
 
 ---
 

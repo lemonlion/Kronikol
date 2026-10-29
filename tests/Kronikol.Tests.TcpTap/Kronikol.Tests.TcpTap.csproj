@@ -4,6 +4,12 @@
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
     <NoWarn>$(NoWarn);xUnit1051;NU1902;NU1903;NU1904</NoWarn>
+    <!-- MongoDB.Driver asks for the MongoDB.Bson of its own release, so with -p:FloorRun=true the suite takes the driver
+         at the Bson floor the package asks for, or at the release a floor search probes (-p:MongoBsonFloor=<release>),
+         and otherwise at 2.30.0 (plans/CLIENT_FLOORS_PLAN.md R2c). -->
+    <MongoBsonFloor Condition="'$(MongoBsonFloor)' == ''">2.28.0</MongoBsonFloor>
+    <MongoDriver>2.30.0</MongoDriver>
+    <MongoDriver Condition="'$(FloorRun)' == 'true'">$(MongoBsonFloor)</MongoDriver>
   </PropertyGroup>
 
   <ItemGroup>
@@ -23,11 +29,15 @@
 
   <ItemGroup>
     <!-- The real clients the taps are proven against, pinned to the versions a tapped .NET service of this
-         generation actually uses: StackExchange.Redis 2.6.x (RESP2 by default) and MongoDB.Driver 2.30.x. -->
-    <PackageReference Include="StackExchange.Redis" Version="2.6.48" />
-    <PackageReference Include="MongoDB.Driver" Version="2.30.0" />
+         generation actually uses: StackExchange.Redis 2.6.x (RESP2 by default) and MongoDB.Driver 2.30.x. Redis at
+         2.6.80, the floor the Redis extension this project references asks for (plans/CLIENT_FLOORS_PLAN.md F27). -->
+    <PackageReference Include="StackExchange.Redis" Version="2.6.80" />
+    <PackageReference Include="MongoDB.Driver" Version="$(MongoDriver)" />
     <PackageReference Include="Testcontainers.Redis" Version="4.16.0" />
     <PackageReference Include="Testcontainers.MongoDb" Version="4.16.0" />
+    <!-- The suite runs on the newest 2.x; -p:FloorRun=true drops this reference, so it runs on the floor the package
+         asks for (2.28.0). -->
+    <PackageReference Include="MongoDB.Bson" Version="2.*" Condition="'$(FloorRun)' != 'true'" />
   </ItemGroup>
   <ItemGroup>
     <None Include="MongoWireShapes.json" CopyToOutputDirectory="PreserveNewest" />
@@ -55,6 +65,8 @@
 
   <ItemGroup>
     <Compile Include="..\Kronikol.Tests\History\HistoryGuard.cs" Link="HistoryGuard.cs" />
+    <Compile Include="..\Kronikol.Tests\Packaging\PackedNuspec.cs" Link="PackedNuspec.cs" />
+    <Compile Include="..\Kronikol.Tests\Packaging\FloorLedger.cs" Link="FloorLedger.cs" />
   </ItemGroup>
 
 </Project>

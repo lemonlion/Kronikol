@@ -1,0 +1,28 @@
+# StackExchange.Redis 2.6.80 | Redis at 127.0.0.1:26379
+set a string: ok True
+get it: ok hello
+get it with its expiry: ok hello
+increment a counter: ok 1
+push to a list: ok 1
+set and get a hash field: ok v
+expire it: ok True
+delete the keys: ok 4
+## What Kronikol recorded
+  Request Set redis://db0/probe:2.6.80 (Redis)
+  Response Set redis://db0/probe:2.6.80 (Redis)
+  Request Get redis://db0/probe:2.6.80 (Redis)
+  Response Get (Hit) redis://db0/probe:2.6.80 (Redis)
+  Request Get redis://db0/probe:2.6.80 (Redis)
+  Response Get (Hit) redis://db0/probe:2.6.80 (Redis)
+  Request Increment redis://db0/probe:2.6.80:n (Redis)
+  Response Increment redis://db0/probe:2.6.80:n (Redis)
+  Request ListPush redis://db0/probe:2.6.80:l (Redis)
+  Response ListPush redis://db0/probe:2.6.80:l (Redis)
+  Request HashSet redis://db0/probe:2.6.80:h (Redis)
+  Response HashSet redis://db0/probe:2.6.80:h (Redis)
+  Request HashGet redis://db0/probe:2.6.80:h (Redis)
+  Response HashGet (Hit) redis://db0/probe:2.6.80:h (Redis)
+  Request Expire redis://db0/probe:2.6.80 (Redis)
+  Response Expire redis://db0/probe:2.6.80 (Redis)
+  Request Delete redis://db0/probe:2.6.80,probe:2.6.80:n,probe:2.6.80:l,probe:2.6.80:h (Redis)
+  Response Delete redis://db0/probe:2.6.80,probe:2.6.80:n,probe:2.6.80:l,probe:2.6.80:h (Redis)

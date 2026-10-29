@@ -33,7 +33,7 @@ internal static class FloorLedger
     internal sealed record Entry(string Project, string Package, string Version, Basis Basis, string Evidence);
 
     /// <summary>No more entries may be marked still floating than this. Each batch lowers it; none raises it.</summary>
-    internal const int StillFloatingAtMost = 10;
+    internal const int StillFloatingAtMost = 0;
 
     /// <summary>No more fixed pins may be marked unmeasured than this. Each batch lowers it; none raises it.</summary>
     internal const int UnmeasuredAtMost = 33;
@@ -76,19 +76,19 @@ internal static class FloorLedger
         Unmeasured("Kronikol.Extensions.ClickHouse.Octonica", "Octonica.ClickHouseClient", "3.1.10", "R3b"),
         Measured("Kronikol.Extensions.CloudStorage", "Google.Cloud.Storage.V1", "4.0.0", "R2a: floor/r2a-cloudstorage.txt"),
         Measured("Kronikol.Extensions.CosmosDB", "Microsoft.Azure.Cosmos", "3.46.0", "R2b: floor/r2b-cosmosdb.txt"),
-        Floating("Kronikol.Extensions.DispatchProxy", "Microsoft.Extensions.DependencyInjection.Abstractions", "10.*", "R2c"),
+        Measured("Kronikol.Extensions.DispatchProxy", "Microsoft.Extensions.DependencyInjection.Abstractions", "10.0.7", "R2c: floor/r2c-di.txt"),
         Unmeasured("Kronikol.Extensions.DynamoDB", "AWSSDK.DynamoDBv2", "4.0.18.1", "R3b"),
-        Floating("Kronikol.Extensions.EfCore.Relational", "Microsoft.EntityFrameworkCore.Relational", "10.*", "R2c"),
+        Measured("Kronikol.Extensions.EfCore.Relational", "Microsoft.EntityFrameworkCore.Relational", "10.0.0", "R2c: floor/r2c-efcore.txt, the first of the major, its own graph clean"),
         Unmeasured("Kronikol.Extensions.Elasticsearch", "Elastic.Clients.Elasticsearch", "9.4.0", "R3b"),
         Unmeasured("Kronikol.Extensions.EventBridge", "AWSSDK.EventBridge", "4.0.5.29", "R3b"),
         Measured("Kronikol.Extensions.EventHubs", "Azure.Messaging.EventHubs", "5.6.0", "R2b: floor/r2b-eventhubs.txt, the base's Identifier results/r2b-eventhubs-base.txt"),
         Measured("Kronikol.Extensions.Grpc", "Grpc.Net.Client", "2.45.0", "R2a: floor/r2a-grpc.txt"),
         Measured("Kronikol.Extensions.Grpc", "Google.Protobuf", "3.19.4", "R2a: floor/r2a-grpc.txt"),
         Measured("Kronikol.Extensions.Kafka", "Confluent.Kafka", "2.2.0", "R2a: floor/r2a-kafka.txt"),
-        Floating("Kronikol.Extensions.Kafka.BuildInterception", "Lib.Harmony", "2.*", "R2c"),
+        Measured("Kronikol.Extensions.Kafka.BuildInterception", "Lib.Harmony", "2.4.2", "R2c: floor/r2c-harmony.txt"),
         Unmeasured("Kronikol.Extensions.MassTransit", "MassTransit", "9.1.0", "R3b"),
         Unmeasured("Kronikol.Extensions.MediatR", "MediatR", "14.1.0", "R3b"),
-        Floating("Kronikol.Extensions.MediatR", "Microsoft.Extensions.DependencyInjection.Abstractions", "10.*", "R2c"),
+        Measured("Kronikol.Extensions.MediatR", "Microsoft.Extensions.DependencyInjection.Abstractions", "10.0.7", "R2c: floor/r2c-di.txt"),
         // 3.9.0: older 3.x drivers allow Snappier 1.0.0 (a high advisory) or SharpCompress 0.30.1 (a moderate one).
         Measured("Kronikol.Extensions.MongoDB", "MongoDB.Driver", "3.9.0", "MONGODB_DETAILED_PAYLOADS_PLAN.md Q18"),
         // 2.28.0: the first strong-named 2.x, so a consumer on a later 2.x can compile against it (its suite, on the newest
@@ -98,11 +98,13 @@ internal static class FloorLedger
         // (plans/CLIENT_FLOORS_PLAN.md F10).
         Unmeasured("Kronikol.Extensions.MySqlConnector", "MySqlConnector", "2.6.1", "R3b"),
         Unmeasured("Kronikol.Extensions.Npgsql", "Npgsql", "10.0.2", "R3b"),
-        Floating("Kronikol.Extensions.OpenTelemetry", "OpenTelemetry", "1.*", "R2c"),
-        Floating("Kronikol.Extensions.OpenTelemetry", "OpenTelemetry.Exporter.InMemory", "1.*", "R2c"),
-        Floating("Kronikol.Extensions.Oracle", "Oracle.ManagedDataAccess.Core", "23.*", "R2c"),
+        Measured("Kronikol.Extensions.OpenTelemetry", "OpenTelemetry", "1.15.3", "R2c: floor/r2c-opentelemetry.txt"),
+        Measured("Kronikol.Extensions.OpenTelemetry", "OpenTelemetry.Exporter.InMemory", "1.15.3", "R2c: floor/r2c-opentelemetry.txt"),
+        Measured("Kronikol.Extensions.Oracle", "Oracle.ManagedDataAccess.Core", "23.4.0", "R2c: floor/r2c-oracle.txt"),
+        Measured("Kronikol.Extensions.Oracle", "System.Security.Cryptography.Pkcs", "8.0.2",
+            "R2c: the first past GHSA-846f-f764-76mx and GHSA-2fmv-rv2c-59x7, under which every 23.x client's own Pkcs falls (floor/r2c-oracle.txt)"),
         Measured("Kronikol.Extensions.PubSub", "Google.Cloud.PubSub.V1", "3.35.0", "R2a: floor/r2a-pubsub.txt"),
-        Floating("Kronikol.Extensions.Redis", "StackExchange.Redis", "2.*", "R2c"),
+        Measured("Kronikol.Extensions.Redis", "StackExchange.Redis", "2.6.80", "R2c: floor/r2c-redis.txt"),
         Unmeasured("Kronikol.Extensions.S3", "AWSSDK.S3", "4.0.23", "R3b"),
         Unmeasured("Kronikol.Extensions.SNS", "AWSSDK.SimpleNotificationService", "4.0.2.30", "R3b"),
         Unmeasured("Kronikol.Extensions.SQS", "AWSSDK.SQS", "4.0.2.28", "R3b"),
@@ -112,9 +114,9 @@ internal static class FloorLedger
         Measured("Kronikol.Extensions.Spanner", "Google.Cloud.Spanner.V1", "5.0.0", "R2a: floor/r2a-spanner.txt"),
         Measured("Kronikol.Extensions.Spanner", "Grpc.Core.Api", "2.66.0", "R2a: floor/r2a-spanner.txt"),
         Unmeasured("Kronikol.Extensions.SqlClient", "Microsoft.Data.SqlClient", "7.0.1", "R3b"),
-        Floating("Kronikol.Extensions.Sqlite", "Microsoft.Data.Sqlite", "10.*", "R2c"),
+        Measured("Kronikol.Extensions.Sqlite", "Microsoft.Data.Sqlite", "10.0.11", "R2c: floor/r2c-sqlite.txt"),
         Measured("Kronikol.Extensions.StorageQueues", "Azure.Storage.Queues", "12.11.0", "R2b: floor/r2b-storagequeues.txt"),
-        Floating("Kronikol.Extensions.TcpTap", "MongoDB.Bson", "2.*", "R2c"),
+        Measured("Kronikol.Extensions.TcpTap", "MongoDB.Bson", "2.28.0", "R2c: floor/r2c-tcptap.txt, the oldest the suite runs on, its own graph clean"),
 
         // The Java PlantUML renderer, which consumers rarely reference themselves.
         Unmeasured("Kronikol.PlantUml.Ikvm", "IKVM", "8.15.0", "R3c"),

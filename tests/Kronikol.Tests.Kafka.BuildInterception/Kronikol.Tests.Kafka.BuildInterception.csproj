@@ -25,9 +25,18 @@
     <!-- The suite runs on the newest 2.x; -p:FloorRun=true drops this reference, so it runs on the floor the package
          asks for (2.2.0). -->
     <PackageReference Include="Confluent.Kafka" Version="2.*" Condition="'$(FloorRun)' != 'true'" />
+    <!-- The suite runs on the newest 2.x; -p:FloorRun=true drops this reference, so it runs on the floor the package
+         asks for (2.4.2). -->
+    <PackageReference Include="Lib.Harmony" Version="2.*" Condition="'$(FloorRun)' != 'true'" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Kronikol.Extensions.Kafka.BuildInterception\Kronikol.Extensions.Kafka.BuildInterception.csproj" />
     <ProjectReference Include="..\..\src\Kronikol.Extensions.Kafka\Kronikol.Extensions.Kafka.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Kronikol.Tests\Packaging\PackedNuspec.cs" Link="PackedNuspec.cs" />
+    <Compile Include="..\Kronikol.Tests\Packaging\FloorLedger.cs" Link="FloorLedger.cs" />
+  </ItemGroup>
+
 </Project>

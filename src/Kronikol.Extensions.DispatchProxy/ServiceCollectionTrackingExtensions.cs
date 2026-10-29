@@ -21,10 +21,10 @@ public static class ServiceCollectionTrackingExtensions
     {
         var proxy = TrackingProxy<TService>.Create(implementation, options);
 
-        // Remove existing registrations
+        // Remove existing registrations; a keyed registration of the same type is another service, and stays.
         for (var i = services.Count - 1; i >= 0; i--)
         {
-            if (services[i].ServiceType == typeof(TService))
+            if (services[i].ServiceType == typeof(TService) && !services[i].IsKeyedService)
                 services.RemoveAt(i);
         }
 

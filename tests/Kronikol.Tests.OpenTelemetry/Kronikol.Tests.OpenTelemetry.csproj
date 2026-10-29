@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <!-- The OpenTelemetry release the floor run takes the hosting extensions at: the floor the package asks for, or
+         the release a floor search probes (-p:OpenTelemetryFloor=<release>). -->
+    <OpenTelemetryFloor Condition="'$(OpenTelemetryFloor)' == ''">1.15.3</OpenTelemetryFloor>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="10.0.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.5.1" />
+    <PackageReference Include="xunit.v3" Version="3.2.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" />
+    <!-- The suite runs on the newest 1.x; -p:FloorRun=true drops these references, so it runs on the floor the package
+         asks for, with the hosting extensions (AddOpenTelemetry) of the same release, as each release of them asks for
+         the OpenTelemetry of its own. -->
+    <PackageReference Include="OpenTelemetry" Version="1.*" Condition="'$(FloorRun)' != 'true'" />
+    <PackageReference Include="OpenTelemetry.Exporter.InMemory" Version="1.*" Condition="'$(FloorRun)' != 'true'" />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.*" Condition="'$(FloorRun)' != 'true'" />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="$(OpenTelemetryFloor)" Condition="'$(FloorRun)' == 'true'" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Kronikol.Extensions.OpenTelemetry\Kronikol.Extensions.OpenTelemetry.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Kronikol.Tests\Packaging\PackedNuspec.cs" Link="PackedNuspec.cs" />
+    <Compile Include="..\Kronikol.Tests\Packaging\FloorLedger.cs" Link="FloorLedger.cs" />
+  </ItemGroup>
+
+</Project>

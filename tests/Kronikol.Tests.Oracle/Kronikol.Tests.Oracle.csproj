@@ -12,12 +12,17 @@
     <PackageReference Include="xunit.v3" Version="3.2.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.*" />
+    <!-- The suite runs on the newest 23.x; -p:FloorRun=true drops this reference, so it runs on the floor the package
+         asks for (23.4.0). -->
+    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.*" Condition="'$(FloorRun)' != 'true'" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Kronikol.Extensions.Oracle\Kronikol.Extensions.Oracle.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Kronikol.Tests\History\HistoryGuard.cs" Link="HistoryGuard.cs" />
+    <Compile Include="..\Kronikol.Tests\Packaging\PackedNuspec.cs" Link="PackedNuspec.cs" />
+    <Compile Include="..\Kronikol.Tests\Packaging\FloorLedger.cs" Link="FloorLedger.cs" />
   </ItemGroup>
 
 </Project>

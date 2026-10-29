@@ -3,6 +3,15 @@
   <PropertyGroup>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <!-- The providers ask for the EF Core Relational of their own release, so the suite takes them at the newest 10.x,
+         and with -p:FloorRun=true at the floor the package asks for, or at the release a floor search probes
+         (-p:EfCoreFloor=<release>); Npgsql's provider, a release train of its own, at 10.0.0 there, which takes any
+         10.x (plans/CLIENT_FLOORS_PLAN.md R2c). -->
+    <EfCoreFloor Condition="'$(EfCoreFloor)' == ''">10.0.0</EfCoreFloor>
+    <EfCoreProviders>10.*</EfCoreProviders>
+    <EfCoreProviders Condition="'$(FloorRun)' == 'true'">$(EfCoreFloor)</EfCoreProviders>
+    <NpgsqlProvider>10.0.1</NpgsqlProvider>
+    <NpgsqlProvider Condition="'$(FloorRun)' == 'true'">10.0.0</NpgsqlProvider>
   </PropertyGroup>
 
   <ItemGroup>
@@ -10,14 +19,14 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.*" Condition="'$(TargetFramework)' == 'net10.0'" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="$(EfCoreProviders)" Condition="'$(TargetFramework)' == 'net10.0'" />
     <!-- A relational provider, so a command that fails runs through EF Core's own CommandFailed path -->
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.*" Condition="'$(TargetFramework)' == 'net10.0'" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="$(EfCoreProviders)" Condition="'$(TargetFramework)' == 'net10.0'" />
     <!-- Providers whose own code needs their own reader (plans/SQL_RESPONSE_CAPTURE_PLAN.md F1, F2): Npgsql's update
          pipeline casts it, and SQL Server's spatial columns are read through SqlDataReader.GetSqlBytes -->
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.1" Condition="'$(TargetFramework)' == 'net10.0'" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.*" Condition="'$(TargetFramework)' == 'net10.0'" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer.NetTopologySuite" Version="10.*" Condition="'$(TargetFramework)' == 'net10.0'" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="$(NpgsqlProvider)" Condition="'$(TargetFramework)' == 'net10.0'" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="$(EfCoreProviders)" Condition="'$(TargetFramework)' == 'net10.0'" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer.NetTopologySuite" Version="$(EfCoreProviders)" Condition="'$(TargetFramework)' == 'net10.0'" />
     <!-- The servers those facts run against when no connection string names one, the version the other Testcontainers references pin -->
     <PackageReference Include="Testcontainers.PostgreSql" Version="4.16.0" />
     <PackageReference Include="Testcontainers.MsSql" Version="4.16.0" />
@@ -28,6 +37,9 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <!-- The suite runs on the newest 10.x; -p:FloorRun=true drops this reference, so it runs on the floor the package
+         asks for (10.0.0). -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.*" Condition="'$(FloorRun)' != 'true'" />
   </ItemGroup>
 
   <ItemGroup>
@@ -42,5 +54,7 @@
   <ItemGroup>
     <Compile Include="..\Kronikol.Tests\Tracking\RequestHeaderAccessor.cs" Link="RequestHeaderAccessor.cs" />
     <Compile Include="..\Kronikol.Tests\History\HistoryGuard.cs" Link="HistoryGuard.cs" />
+    <Compile Include="..\Kronikol.Tests\Packaging\PackedNuspec.cs" Link="PackedNuspec.cs" />
+    <Compile Include="..\Kronikol.Tests\Packaging\FloorLedger.cs" Link="FloorLedger.cs" />
   </ItemGroup>
 </Project>

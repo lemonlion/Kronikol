@@ -9,7 +9,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.*" Condition="'$(TargetFramework)' == 'net10.0'" />
+    <!-- Microsoft.EntityFrameworkCore.Relational: 10.0.0 is the first release of the major, and the suite passes on it
+         with the providers of the same release; its graph carries no known advisory (plans/CLIENT_FLOORS_PLAN.md R2c)..
+         FloorLedger holds the floor, and the test project's package fact reads it back from the packed nuspec; the
+         suite runs on the newest 10.x, and on this floor with -p:FloorRun=true (plans/CLIENT_FLOORS_PLAN.md R2c). -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.0" Condition="'$(TargetFramework)' == 'net10.0'" />
   </ItemGroup>
 
   <ItemGroup>

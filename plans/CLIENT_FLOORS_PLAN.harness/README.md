@@ -144,6 +144,30 @@ together.
   fact that holds that wrapper and put back; `floor/wrapper-mutations.txt` shows each guard red with the member named,
   after F17.
 
+## R2c, as released
+
+- `floor/r2c-search.sh`: the Sqlite, Oracle and Redis searches with `floor_probe2.py --search`, and
+  `floor/r2c-advisory.sh`, which builds a package at each release of a range and lists what NuGet audit reports, to find
+  the first release past an advisory; `floor/r2c-<package>.txt` close with the floor each took, past the advisory or
+  at the suite's oldest pass. `floor/r2c-harmony.txt` is the Harmony search, which found F22.
+- `floor/r2c-di.sh`: the Dependency Injection floor of MediatR and DispatchProxy, with the run that found F19, red, and
+  the same run after the fix (`floor/r2c-di.txt`).
+- `floor/otel_floor.py` and `floor/paired_floor.py`: a search whose suite needs partners of the same release. Each
+  release of the series is pinned in the package and passed to the test project as a property (`-p:OpenTelemetryFloor`,
+  `-p:EfCoreFloor`, `-p:MongoBsonFloor`), under which the test project takes its partners at that release;
+  `paired_floor.py` is `otel_floor.py` made general (`--pin`, `--series`, `--property`, `--env`). Both read NuGet
+  audit's warnings in either form since F28. `floor/r2c-opentelemetry.txt`, `floor/r2c-efcore.txt` and
+  `floor/r2c-tcptap.txt` are their output; the first two lines of the last are the run that found F27.
+- `floor/r2c-containers.sh`: the runs that need podman, one after another: the EF Core and TcpTap searches through the
+  session's podman API on 2376, then the fourth test for Redis and Oracle against servers it starts as root in the VM
+  (`searches`, `probes`, or both).
+- `probe-r2c/redis/` and `probe-r2c/oracle/`: the fourth test, the real client through the extension against Redis 7 and
+  Oracle Database Free 23, on the floor the extension asks for or on the newest with `-p:Newest=true`.
+  `results/r2c-<package>-<run>.txt` are their output: every call passed on both, and the Oracle record, the same on
+  both, is F26.
+- `floor/r2c-suites.sh`: each R2c suite on the newest and on the floor, one line a run with what NuGet audit reported
+  (`floor/r2c-suites.txt`); the EF Core and TcpTap suites run through it with `DOCKER_HOST` set to the podman API.
+
 ## prototype/: R1, applied and reverted
 
 `r1.patch` is R1's steps 1 to 4 (the pin, the test project's direct reference under `$(FloorRun)`, and

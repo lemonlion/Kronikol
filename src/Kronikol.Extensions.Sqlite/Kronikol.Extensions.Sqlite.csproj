@@ -10,7 +10,12 @@
     <InternalsVisibleTo Include="Kronikol.Tests.Sqlite" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.*" Condition="'$(TargetFramework)' == 'net10.0'" />
+    <!-- Microsoft.Data.Sqlite: 10.0.11 is the first release past GHSA-2m69-gcr7-jv3q (high, in the
+         SQLitePCLRaw.lib.e_sqlite3 2.1.11 that earlier ones bring), as the suite passes from 10.0.0; its graph carries
+         no other known advisory (harness floor/r2c-sqlite.txt). FloorLedger holds the floor, and the test project's
+         package fact reads it back from the packed nuspec; the suite runs on the newest 10.x, and on this floor with
+         -p:FloorRun=true (plans/CLIENT_FLOORS_PLAN.md R2c). -->
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.11" Condition="'$(TargetFramework)' == 'net10.0'" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Kronikol\Kronikol.csproj" />

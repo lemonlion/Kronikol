@@ -9,8 +9,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="OpenTelemetry" Version="1.*" />
-    <PackageReference Include="OpenTelemetry.Exporter.InMemory" Version="1.*" />
+    <!-- OpenTelemetry: 1.15.3 is the first release past GHSA-g94r-2vxg-569j (moderate, in the OpenTelemetry.Api before
+         1.15.3), as the suite passes from 1.4.0, the first release whose hosting extensions, which the suite builds its
+         tracer with, are stable (harness floor/r2c-opentelemetry.txt). FloorLedger holds the floor, and the test
+         project's package fact reads it back from the packed nuspec; the suite runs on the newest 1.x, and on this
+         floor with -p:FloorRun=true (plans/CLIENT_FLOORS_PLAN.md R2c). -->
+    <PackageReference Include="OpenTelemetry" Version="1.15.3" />
+    <!-- OpenTelemetry.Exporter.InMemory: 1.15.3, the release of the OpenTelemetry above, as the two are released
+         together (plans/CLIENT_FLOORS_PLAN.md R2c). -->
+    <PackageReference Include="OpenTelemetry.Exporter.InMemory" Version="1.15.3" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,0 +1,27 @@
+Sqlite | exit 1 | no summary | audit: none
+Sqlite floor | exit 1 | no summary | audit: none
+Redis | exit 0 | Passed! - Failed: 0, Passed: 164, Skipped: 0, Total: 164 - Kronikol.Tests.Redis.dll (net10.0) | audit: none
+Redis floor | exit 0 | Passed! - Failed: 0, Passed: 164, Skipped: 0, Total: 164 - Kronikol.Tests.Redis.dll (net10.0) | audit: none
+Oracle | exit 1 | no summary | audit: none
+Oracle floor | exit 1 | no summary | audit: none
+OpenTelemetry | exit 0 | Passed! - Failed: 0, Passed: 4, Skipped: 0, Total: 4 - Kronikol.Tests.OpenTelemetry.dll (net10.0) | audit: none
+OpenTelemetry floor | exit 0 | Passed! - Failed: 0, Passed: 4, Skipped: 0, Total: 4 - Kronikol.Tests.OpenTelemetry.dll (net10.0) | audit: none
+MediatR | exit 1 | Failed! - Failed: 1, Passed: 5, Skipped: 0, Total: 6 - Kronikol.Tests.MediatR.dll (net10.0) | audit: none
+MediatR floor | exit 1 | Failed! - Failed: 1, Passed: 5, Skipped: 0, Total: 6 - Kronikol.Tests.MediatR.dll (net10.0) | audit: none
+DispatchProxy | exit 0 | Passed! - Failed: 0, Passed: 6, Skipped: 0, Total: 6 - Kronikol.Tests.DispatchProxy.dll (net10.0) | audit: none
+DispatchProxy floor | exit 0 | Passed! - Failed: 0, Passed: 6, Skipped: 0, Total: 6 - Kronikol.Tests.DispatchProxy.dll (net10.0) | audit: none
+Kafka.BuildInterception | exit 0 | Passed! - Failed: 0, Passed: 76, Skipped: 0, Total: 76 - Kronikol.Tests.Kafka.BuildInterception.dll (net10.0) | audit: none
+Kafka.BuildInterception floor | exit 0 | Passed! - Failed: 0, Passed: 76, Skipped: 0, Total: 76 - Kronikol.Tests.Kafka.BuildInterception.dll (net10.0) | audit: none
+# the three below again, after the fixes to their package facts: Sqlite's and Oracle's lacked a using for xUnit, and MediatR's now expects the one line its unmeasured MediatR pin (R3b) owes
+Sqlite | exit 0 | Passed! - Failed: 0, Passed: 30, Skipped: 0, Total: 30 - Kronikol.Tests.Sqlite.dll (net10.0) | audit: none
+Sqlite floor | exit 0 | Passed! - Failed: 0, Passed: 30, Skipped: 0, Total: 30 - Kronikol.Tests.Sqlite.dll (net10.0) | audit: none
+Oracle | exit 0 | Passed! - Failed: 0, Passed: 25, Skipped: 0, Total: 25 - Kronikol.Tests.Oracle.dll (net10.0) | audit: none
+Oracle floor | exit 0 | Passed! - Failed: 0, Passed: 25, Skipped: 0, Total: 25 - Kronikol.Tests.Oracle.dll (net10.0) | audit: none
+MediatR | exit 0 | Passed! - Failed: 0, Passed: 6, Skipped: 0, Total: 6 - Kronikol.Tests.MediatR.dll (net10.0) | audit: none
+MediatR floor | exit 0 | Passed! - Failed: 0, Passed: 6, Skipped: 0, Total: 6 - Kronikol.Tests.MediatR.dll (net10.0) | audit: none
+ALLDONE
+EfCore.Relational | exit 0 | Passed! - Failed: 0, Passed: 245, Skipped: 0, Total: 245 - Kronikol.Tests.EfCore.Relational.dll (net10.0) | audit: 'System.Security.Cryptography.Pkcs' 9.0.11 has a known moderate;'System.Security.Cryptography.Pkcs' 9.0.11 has a known high;
+EfCore.Relational floor | exit 0 | Passed! - Failed: 0, Passed: 245, Skipped: 0, Total: 245 - Kronikol.Tests.EfCore.Relational.dll (net10.0) | audit: 'System.Security.Cryptography.Pkcs' 9.0.4 has a known moderate;'SQLitePCLRaw.lib.e_sqlite3' 2.1.11 has a known high;'System.Security.Cryptography.Pkcs' 9.0.4 has a known high;
+TcpTap | exit 0 | Passed! - Failed: 0, Passed: 510, Skipped: 1, Total: 511 - Kronikol.Tests.TcpTap.dll (net10.0) | audit: 'SharpCompress' 0.30.1 has a known moderate;'Snappier' 1.0.0 has a known high;
+TcpTap floor | exit 0 | Passed! - Failed: 0, Passed: 510, Skipped: 1, Total: 511 - Kronikol.Tests.TcpTap.dll (net10.0) | audit: 'SharpCompress' 0.30.1 has a known moderate;'Snappier' 1.0.0 has a known high;
+ALLDONE

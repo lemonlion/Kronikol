@@ -9,7 +9,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.*" Condition="'$(TargetFramework)' == 'net10.0'" />
+    <!-- Microsoft.Extensions.DependencyInjection.Abstractions: 10.0.7, the least the Kronikol core's graph allows, as
+         Microsoft.AspNetCore.Mvc.Testing 10.0.7 asks for it through Microsoft.Extensions.Hosting and a lower pin is a
+         downgrade NuGet refuses (NU1605); R3a measures that pin (harness floor/r2c-di.txt). FloorLedger holds the
+         floor, and the test project's package fact reads it back from the packed nuspec; the suite runs on the newest
+         10.x, and on this floor with -p:FloorRun=true (plans/CLIENT_FLOORS_PLAN.md R2c). -->
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.7" Condition="'$(TargetFramework)' == 'net10.0'" />
   </ItemGroup>
 
   <ItemGroup>

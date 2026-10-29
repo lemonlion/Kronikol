@@ -18,7 +18,11 @@
          protocols itself, so it never takes a client-library dependency (and never sees a connection string).
          Pinned to the 2.x line: it is the lowest common denominator, so the tap composes with a host on
          either MongoDB.Driver 2.x or 3.x (NuGet unifies upward). -->
-    <PackageReference Include="MongoDB.Bson" Version="2.*" />
+    <!-- MongoDB.Bson: 2.28.0 is the oldest release the suite can run on, as its test project also takes the MongoDB.V2
+         extension, whose driver floor is 2.28.0; its graph carries no known advisory (plans/CLIENT_FLOORS_PLAN.md
+         R2c).. FloorLedger holds the floor, and the test project's package fact reads it back from the packed nuspec;
+         the suite runs on the newest 2.x, and on this floor with -p:FloorRun=true (plans/CLIENT_FLOORS_PLAN.md R2c). -->
+    <PackageReference Include="MongoDB.Bson" Version="2.28.0" />
     <!-- Hosting/DI abstractions arrive transitively through Kronikol (Microsoft.AspNetCore.Mvc.Testing). -->
     <ProjectReference Include="..\Kronikol\Kronikol.csproj" />
   </ItemGroup>

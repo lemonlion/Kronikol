@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- R2c's fourth test for Redis: the client on the extension's floor, or on the newest 2.x with -p:Newest=true. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../../src/Kronikol.Extensions.Redis/Kronikol.Extensions.Redis.csproj" />
+    <PackageReference Include="StackExchange.Redis" Version="2.*" Condition="'$(Newest)' == 'true'" />
+  </ItemGroup>
+</Project>

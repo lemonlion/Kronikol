@@ -70,9 +70,11 @@ def probe(version):
         code, out = run(["dotnet", "build", test, "-nologo", "-p:FloorRun=true", "-p:NuGetAuditMode=all"], log)
         # Each advisory with the project whose graph holds it: one in the packable project's graph is the floor's
         # concern, one only in a test project's (Testcontainers, say) is not.
-        for m in re.finditer(r"warning (NU190[1-4]): Package '([^']+)' ([0-9][^ ]*) has a known ([a-z]+) severity[^\[\r\n]*\[([^\]]+)\]", out):
-            where = os.path.splitext(os.path.basename(m.group(5).split("::")[0]))[0]
-            audit.add(f"{m.group(2)} {m.group(3)} {m.group(4)} ({where})")
+        # The project closes some lines in brackets and leads others ("path.csproj : warning NU1903: ..."), which the first
+        # form of this pattern missed (plans/CLIENT_FLOORS_PLAN.md F28).
+        for m in re.finditer(r"^(?P<pre>[^\r\n]*?)warning NU190[1-4]: Package '(?P<pkg>[^']+)' (?P<ver>[0-9][^ ]*) has a known (?P<sev>[a-z]+) severity[^\[\r\n]*(?:\[(?P<proj>[^\]]+)\])?", out, re.M):
+            where = os.path.splitext(os.path.basename((m["proj"] or m["pre"].split(" : ")[0]).split("::")[0].strip()))[0]
+            audit.add(f"{m['pkg']} {m['ver']} {m['sev']} ({where})")
         res.append(resolved(test))
         if code != 0:
             errs = sorted(set(re.findall(r"error (?:CS|NU|MSB)[0-9]+: [^\[\r\n]{0,150}", out)))[:4]

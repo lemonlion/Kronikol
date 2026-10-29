@@ -17,6 +17,9 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.*" />
+    <!-- The suite runs on the newest 2.x; -p:FloorRun=true drops this reference, so it runs on the floor the package
+         asks for (2.6.80). -->
+    <PackageReference Include="StackExchange.Redis" Version="2.*" Condition="'$(FloorRun)' != 'true'" />
   </ItemGroup>
 
   <ItemGroup>
@@ -30,6 +33,8 @@
 
   <ItemGroup>
     <Compile Include="..\Kronikol.Tests\History\HistoryGuard.cs" Link="HistoryGuard.cs" />
+    <Compile Include="..\Kronikol.Tests\Packaging\PackedNuspec.cs" Link="PackedNuspec.cs" />
+    <Compile Include="..\Kronikol.Tests\Packaging\FloorLedger.cs" Link="FloorLedger.cs" />
   </ItemGroup>
 
 </Project>

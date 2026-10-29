@@ -1,0 +1,15 @@
+# Microsoft.Data.Sqlite: 15 stable 10.x releases, 10.0.0 to 10.0.14; binary search
+10.0.14 | ok | Kronikol.Tests.Sqlite: Passed! - Failed: 0, Passed: 29, Skipped: 0, Total: 29 | audit: none | resolved: Microsoft.Data.Sqlite/10.0.14
+10.0.7 | ok | Kronikol.Tests.Sqlite: Passed! - Failed: 0, Passed: 29, Skipped: 0, Total: 29 | audit: SQLitePCLRaw.lib.e_sqlite3 2.1.11 high (Kronikol.Tests.Sqlite); SQLitePCLRaw.lib.e_sqlite3 2.1.11 high (TargetFramework=net10) | resolved: Microsoft.Data.Sqlite/10.0.7
+10.0.3 | ok | Kronikol.Tests.Sqlite: Passed! - Failed: 0, Passed: 29, Skipped: 0, Total: 29 | audit: SQLitePCLRaw.lib.e_sqlite3 2.1.11 high (Kronikol.Tests.Sqlite); SQLitePCLRaw.lib.e_sqlite3 2.1.11 high (TargetFramework=net10) | resolved: Microsoft.Data.Sqlite/10.0.3
+10.0.1 | ok | Kronikol.Tests.Sqlite: Passed! - Failed: 0, Passed: 29, Skipped: 0, Total: 29 | audit: SQLitePCLRaw.lib.e_sqlite3 2.1.11 high (Kronikol.Tests.Sqlite); SQLitePCLRaw.lib.e_sqlite3 2.1.11 high (TargetFramework=net10) | resolved: Microsoft.Data.Sqlite/10.0.1
+10.0.0 | ok | Kronikol.Tests.Sqlite: Passed! - Failed: 0, Passed: 29, Skipped: 0, Total: 29 | audit: SQLitePCLRaw.lib.e_sqlite3 2.1.11 high (Kronikol.Tests.Sqlite); SQLitePCLRaw.lib.e_sqlite3 2.1.11 high (TargetFramework=net10) | resolved: Microsoft.Data.Sqlite/10.0.0
+# oldest passing: 10.0.0
+# advisory floor: each release from the oldest passing to the first without an advisory
+10.0.8 | ok | Kronikol.Tests.Sqlite: Passed! - Failed: 0, Passed: 29, Skipped: 0, Total: 29 | audit: SQLitePCLRaw.lib.e_sqlite3 2.1.11 high (Kronikol.Tests.Sqlite); SQLitePCLRaw.lib.e_sqlite3 2.1.11 high (TargetFramework=net10) | resolved: Microsoft.Data.Sqlite/10.0.8
+10.0.9 | ok | Kronikol.Tests.Sqlite: Passed! - Failed: 0, Passed: 29, Skipped: 0, Total: 29 | audit: SQLitePCLRaw.lib.e_sqlite3 2.1.11 high (Kronikol.Tests.Sqlite); SQLitePCLRaw.lib.e_sqlite3 2.1.11 high (TargetFramework=net10) | resolved: Microsoft.Data.Sqlite/10.0.9
+10.0.10 | ok | Kronikol.Tests.Sqlite: Passed! - Failed: 0, Passed: 29, Skipped: 0, Total: 29 | audit: SQLitePCLRaw.lib.e_sqlite3 2.1.11 high (Kronikol.Tests.Sqlite); SQLitePCLRaw.lib.e_sqlite3 2.1.11 high (TargetFramework=net10) | resolved: Microsoft.Data.Sqlite/10.0.10
+10.0.11 | ok | Kronikol.Tests.Sqlite: Passed! - Failed: 0, Passed: 29, Skipped: 0, Total: 29 | audit: none | resolved: Microsoft.Data.Sqlite/10.0.11
+10.0.12 | ok | Kronikol.Tests.Sqlite: Passed! - Failed: 0, Passed: 29, Skipped: 0, Total: 29 | audit: none | resolved: Microsoft.Data.Sqlite/10.0.12
+10.0.13 | ok | Kronikol.Tests.Sqlite: Passed! - Failed: 0, Passed: 29, Skipped: 0, Total: 29 | audit: none | resolved: Microsoft.Data.Sqlite/10.0.13
+# floor: 10.0.11, the first release past GHSA-2m69-gcr7-jv3q (SQLitePCLRaw.lib.e_sqlite3 2.1.11, high), as the suite passes from 10.0.0

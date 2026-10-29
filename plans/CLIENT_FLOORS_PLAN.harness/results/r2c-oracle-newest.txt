@@ -1,0 +1,25 @@
+# Oracle.ManagedDataAccess.Core 23.1.0.0:20261001:ODPC:23.26.400:net8.0 | Oracle Database Free
+open the connection: ok open
+create a table: ok -1
+insert a row with parameters: ok 1
+select it: ok hello
+read it with a reader: ok 1=hello
+update it in a transaction: ok 1
+drop the table: ok -1
+## What Kronikol recorded
+  Request CREATE TABLE probe_2310020261001ODPC2326400net80 oracle://localhost/unknown/probe_2310020261001ODPC2326400net80 (Oracle)
+  Response  oracle:/// (Oracle)
+  Request INSERT INTO probe_2310020261001ODPC2326400net80 oracle://localhost/unknown/probe_2310020261001ODPC2326400net80 (Oracle)
+  Response  oracle:/// (Oracle)
+  Request SELECT FROM probe_2310020261001ODPC2326400net80 oracle://localhost/unknown/probe_2310020261001ODPC2326400net80 (Oracle)
+  Response  oracle:/// (Oracle)
+  Request SELECT FROM probe_2310020261001ODPC2326400net80 oracle://localhost/unknown/probe_2310020261001ODPC2326400net80 (Oracle)
+  Response  oracle:/// (Oracle)
+  Request BeginTransaction oracle://localhost/unknown (Oracle)
+  Response  oracle:/// (Oracle)
+  Request UPDATE probe_2310020261001ODPC2326400net80 oracle://localhost/unknown/probe_2310020261001ODPC2326400net80 (Oracle)
+  Response  oracle:/// (Oracle)
+  Request Commit oracle://localhost/unknown (Oracle)
+  Response  oracle:/// (Oracle)
+  Request DROP TABLE probe_2310020261001ODPC2326400net80 oracle://localhost/unknown/probe_2310020261001ODPC2326400net80 (Oracle)
+  Response  oracle:/// (Oracle)

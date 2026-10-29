@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- R2c's fourth test for Oracle: the client on the extension's floor, or on the newest 23.x with -p:Newest=true. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../../src/Kronikol.Extensions.Oracle/Kronikol.Extensions.Oracle.csproj" />
+    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.*" Condition="'$(Newest)' == 'true'" />
+  </ItemGroup>
+</Project>
