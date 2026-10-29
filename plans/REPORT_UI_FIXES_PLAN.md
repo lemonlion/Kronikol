@@ -1449,6 +1449,9 @@ ledger's reason. What changed:
   pages already wrong) are new; missed pins and facts were added to sections 2.1 and 6; four harness defects were fixed
   (the phone probe's line count, the flash probe's silent frame cap, a usage line, Appendix A's shell syntax).
 
+**2026-10-29, #131 closed** (kronikol-c6). I3, released in 5.9.1, is #131, filed on 2026-10-07 with the same empty
+loop and Setup boxes, which this plan did not cite. The comment names 5.9.1 and `FilteredBlocksTests`.
+
 ## Appendix A. Harness
 
 `plans/REPORT_UI_FIXES_PLAN.harness/`, run from that folder in Git Bash; `$OUT` is any absolute folder outside the

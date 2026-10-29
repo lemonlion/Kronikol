@@ -1205,3 +1205,6 @@ answers.
   among the subjects; that the skill's reference left that step out; and three facts a wrong change would pass (the
   table resolved for a text listing, a delivery nested by its trace, a double's origin). Each is fixed test first, with
   a mutation that turns its fact red. Checks: the core suite (11,135 passed, 2 skipped), the Release build of `release.slnf`, and the 24 mutations.
+- 2026-10-29, kronikol-c6: #117 closed. Its ask, a `shape` dimension for `--group-by` that templates a call's path or
+  key as the history fingerprint does, with a consumer's `HistoryShapeTemplates` carried in the report, is R2's
+  `route` and `shapeTemplates` (5.19.0), and `path` is still the literal path.

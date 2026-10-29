@@ -844,3 +844,8 @@ with their labels and counts), `probe_local.sh` and `prototype.patch`.
     caught (`s4/mutations.txt`); the weaver suite 427 passed and 28 skipped; and the woven probe on local packages,
     Debug and Release identical, W04 `'GBP'`, W08 `'3'`, W12 `'Cancelled'`, A06 `'GBP'` and A07 "contain key
     'primary'" as section 3.9 says.
+- 2026-10-29, kronikol-c6: #210 closed, with a comment naming both releases. Its statements, built on 5.27.2 from
+  nuget.org in Debug and in Release, read "Result split percentage to string(CultureInfo.InvariantCulture) should not
+  be null or empty", "Result currency iso alpha3 should be 'GBP'" and "Application stage should be 'Cancelled'". The
+  comment says the argument list follows the plan's one rule, other code as written on one line, rather than either
+  form the issue suggested.
