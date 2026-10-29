@@ -862,3 +862,11 @@ whichever of them the owner takes. Or one minor carrying all of it.
   weave adds: in Debug and in Release its un-awaited helper is woven through `Track.AssertionTask`, and it draws ✗ with
   Shouldly's message where the assertion fails and ✓ where it holds. #212's own project is unchanged: its helper is
   `async`, so it awaits the assertion itself.
+- 2026-10-29: #212 closed, with a comment naming both releases. The issue's own project, with only its two Kronikol
+  packages moved to 5.27.2 from nuget.org, passes in Debug and in Release and draws the same notes in both, each a
+  sentence: "Should throw InvalidOperationException" for `Throw` and the awaited, assigned and returned `ThrowAsync`,
+  "Should not throw" for `NotThrowAsync`, and the assigned and returned tests'
+  `exception.Message.ShouldBe("not found")` after them. Section 7 said Kronikol4J needs nothing, but every .NET
+  release has a line in its `docs/REMAINING_PARITY.md`, even one the port does not mirror: both of this plan's are
+  there as Not mirrored (Kronikol4J `77811b4`), and R1's records that the port's labels keep a statement's head
+  (`SourceExpression.readLine`).
