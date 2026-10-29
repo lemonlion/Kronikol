@@ -177,7 +177,15 @@ public class WeaveAssertionsTaskTests
         Assert.Contains("Kronikol.AssertionTracking: Left 1 assertion statement(s) unwoven; they run as written, without a note:", visible);
         Assert.Contains(visible, m => m.StartsWith("  Tests.Method, line ", StringComparison.Ordinal) &&
                                       m.EndsWith(": the method's evaluation stack could not be followed", StringComparison.Ordinal));
-        Assert.Empty(engine.Warnings);
+        // One warning, which every logger shows, names it; the list is at normal importance, where a build asked for
+        // more shows it (#212).
+        var warning = Assert.Single(engine.Warnings);
+        Assert.Equal("KRONIKOL003", warning.Code);
+        Assert.Matches(@"^Kronikol\.AssertionTracking: 1 assertion statement\(s\) were left as written, so they run without a note\. "
+            + @"First: \S+, line \d+, in Tests\.Method: the method's evaluation stack could not be followed\. "
+            + @"The build lists each one at normal verbosity \(-v:n\)\.$", warning.Message);
+        Assert.All(engine.Messages.Where(m => (m.Message ?? "").Contains("unwoven", StringComparison.Ordinal) || (m.Message ?? "").StartsWith("  Tests.", StringComparison.Ordinal)),
+            m => Assert.Equal(MessageImportance.Normal, m.Importance));
     }
 
     [Fact]
@@ -548,7 +556,9 @@ public class WeaveAssertionsTaskTests
         Assert.True(succeeded, string.Join("\n", engine.Errors.Select(e => e.Message)));
         var visible = engine.Visible().ToList();
         Assert.Contains("Kronikol.AssertionTracking: Left 2 assertion statement(s) unwoven; they run as written, without a note:", visible);
-        var warning = Assert.Single(engine.Warnings);
+        // The two statements left unwoven are KRONIKOL003's, not this warning's.
+        Assert.Single(engine.Warnings, w => w.Code == "KRONIKOL003");
+        var warning = Assert.Single(engine.Warnings, w => w.Code == "KRONIKOL002");
         Assert.StartsWith("Kronikol.AssertionTracking: the source of 1 assertion statement(s) in 1 file(s) could not be read,",
             warning.Message);
         Assert.Contains($"First: /_/tests/Cases.cs; tried {cases}, /_/tests/Cases.cs.", warning.Message);

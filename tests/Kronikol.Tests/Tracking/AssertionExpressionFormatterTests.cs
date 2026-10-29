@@ -421,6 +421,32 @@ public class AssertionExpressionFormatterTests
         Assert.Equal("Should throw InvalidOperationException", AssertionExpressionFormatter.Format(head + assertion + tail));
     }
 
+    // A statement that waits for its assertion's task itself reads as the assertion: how it waits is not what the
+    // assertion says (#212, S26).
+    [Theory]
+    [InlineData(".GetAwaiter().GetResult()")]
+    [InlineData(" .GetAwaiter() .GetResult()")]
+    [InlineData(".Wait()")]
+    [InlineData(".Wait(TimeSpan.FromSeconds(5))")]
+    [InlineData(".Result")]
+    public void An_assertion_task_waited_for_in_its_statement_reads_without_the_wait(string tail)
+    {
+        const string assertion = "Should.ThrowAsync<InvalidOperationException>(() => client.GetOrderAsync(request))";
+
+        Assert.Equal("Should throw InvalidOperationException", AssertionExpressionFormatter.Format(assertion + tail));
+        Assert.Equal("Should throw InvalidOperationException", AssertionExpressionFormatter.Format("var e = " + assertion + tail));
+    }
+
+    // A wait that is not the statement's last call is code the assertion reads.
+    [Theory]
+    [InlineData("result.Wait().Should().BeTrue()")]
+    [InlineData("job.Result.Should().Be(42)")]
+    [InlineData("handle.Wait(\"a .Wait()\").Should().BeTrue()")]
+    public void A_wait_that_is_not_the_statements_tail_is_kept(string statement)
+    {
+        Assert.Equal(statement, AssertionExpressionFormatter.WithoutHead(statement));
+    }
+
     // The issue's two rows, as the weave hands them over.
     [Theory]
     [InlineData("var exception = await Should.ThrowAsync<InvalidOperationException>(async () => await _client.GetOrderAsync(request))")]

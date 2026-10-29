@@ -183,6 +183,81 @@ public static class Track
             callerFilePath: callerFilePath, callerLineNumber: callerLineNumber);
     }
 
+    /// <summary>
+    /// Called by the IL weaver (AssertionWeaver) for an assertion whose task its statement does not await: a helper
+    /// that returns <c>Should.ThrowAsync&lt;T&gt;(…)</c> or <c>act.Should().ThrowAsync&lt;T&gt;()</c>, a task stored
+    /// for a later <c>await</c>, or a test whose body is the task. Records the assertion when the task ends, passed,
+    /// or failed with the message its <c>await</c> would throw, and returns a task that ends as
+    /// <paramref name="task"/> does, with the same result or exception object, so the code that awaits it runs as
+    /// written. The note is recorded before that code resumes, and at once for a task that has already ended.
+    /// </summary>
+    public static Task AssertionTask(Task task, string expression, string? callerFilePath = null, int callerLineNumber = 0) =>
+        Observe(task, expression, null, callerFilePath, callerLineNumber);
+
+    /// <inheritdoc cref="AssertionTask(Task, string, string?, int)"/>
+    public static Task<T> AssertionTask<T>(Task<T> task, string expression, string? callerFilePath = null, int callerLineNumber = 0) =>
+        Observe(task, expression, null, callerFilePath, callerLineNumber);
+
+    /// <summary>
+    /// <see cref="AssertionTask(Task, string, string?, int)"/> with the values the weave read, as
+    /// <see cref="AssertionPassedWithValues"/> takes them. They are read here, where the statement made the task, not
+    /// when the task ends.
+    /// </summary>
+    public static Task AssertionTaskWithValues(Task task, string expression, string[] varNames, object?[] varValues, string? callerFilePath = null, int callerLineNumber = 0) =>
+        Observe(task, expression, ResolveVariableValues(expression, varNames, varValues), callerFilePath, callerLineNumber);
+
+    /// <inheritdoc cref="AssertionTaskWithValues(Task, string, string[], object?[], string?, int)"/>
+    public static Task<T> AssertionTaskWithValues<T>(Task<T> task, string expression, string[] varNames, object?[] varValues, string? callerFilePath = null, int callerLineNumber = 0) =>
+        Observe(task, expression, ResolveVariableValues(expression, varNames, varValues), callerFilePath, callerLineNumber);
+
+    // The continuation returns the task itself, which Unwrap follows, so the task handed back ends with the original's
+    // result, exception object or cancellation. It runs where the task ends, before anything awaiting the task handed
+    // back resumes, in the execution context the statement ran in, so the note goes to the statement's test.
+    private static Task Observe(Task task, string expression, Dictionary<string, string>? resolved,
+        string? callerFilePath, int callerLineNumber) =>
+        task is null
+            ? task!
+            : task.ContinueWith(ended =>
+                {
+                    RecordTask(ended, expression, resolved, callerFilePath, callerLineNumber);
+                    return ended;
+                }, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default)
+                .Unwrap();
+
+    private static Task<T> Observe<T>(Task<T> task, string expression, Dictionary<string, string>? resolved,
+        string? callerFilePath, int callerLineNumber) =>
+        task is null
+            ? task!
+            : task.ContinueWith(ended =>
+                {
+                    RecordTask(ended, expression, resolved, callerFilePath, callerLineNumber);
+                    return ended;
+                }, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default)
+                .Unwrap();
+
+    // The message is the one an await of the task throws: its first exception's, or a cancellation's. A note that
+    // cannot be recorded is not the assertion's failure, so nothing here throws into the task.
+    private static void RecordTask(Task ended, string expression, Dictionary<string, string>? resolved,
+        string? callerFilePath, int callerLineNumber)
+    {
+        try
+        {
+            if (ended.IsFaulted)
+                LogAssertion(expression, passed: false, (ended.Exception!.InnerException ?? ended.Exception).Message,
+                    resolved, callerFilePath, callerLineNumber);
+            else if (ended.IsCanceled)
+                LogAssertion(expression, passed: false, new TaskCanceledException(ended).Message,
+                    resolved, callerFilePath, callerLineNumber);
+            else
+                LogAssertion(expression, passed: true, resolvedValues: resolved,
+                    callerFilePath: callerFilePath, callerLineNumber: callerLineNumber);
+        }
+        catch (Exception)
+        {
+            // The task ends as the assertion's did whatever happens here.
+        }
+    }
+
     private const int MaxValueLength = 100;
 
     internal static string? FormatValue(object? value)

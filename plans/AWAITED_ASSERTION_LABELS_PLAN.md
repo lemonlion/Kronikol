@@ -835,3 +835,30 @@ whichever of them the owner takes. Or one minor carrying all of it.
   on this release: 212 scenarios passed in both, with 896 notes in both, which differ only in the values a run makes
   (ids, names, times). That lane runs none of the shapes this release changes; BreakfastProvider's are in its unit
   tests, which are not woven.
+- 2026-10-29: R1's commit is `9b2331d5`, with the wiki at `e994185`. R2 released as 5.27.0, a minor. What it ships
+  differs from section 4 in these ways, each for the reason given:
+  1. `Track.AssertionTaskWithValues`, with a `Task<T>` overload, beside 4.1 f's two members. 4.4 keeps a statement's
+     values as they were, and an un-awaited statement showed them: FluentAssertions'
+     `act.Should().ThrowAsync<T>().WithMessage(expected)` in a helper reads `expected`'s value. They are read where the
+     statement made the task, where the synchronous wrap read them.
+  2. Where the compiler wrote no reference to Kronikol, the gate reads the version of the Kronikol the build
+     references. 4.1 f kept today's wrap for a reference the weave added itself (0.0.0.0), but the attribute is
+     generated into the project, so an assembly that names no Kronikol type has no reference: the suite's fixtures,
+     and #212's own project. The helper would never have been called there.
+  3. A statement that waits for its assertion's task itself (a member of a task type takes it: `.Wait()`,
+     `.GetAwaiter().GetResult()`, `.Result`) is not observed. Its catch draws the failure, and observing it too would
+     draw two notes. S26 pins it. Only the statement's own instructions are read for that: plain Release leaves
+     `var t = …; await t;`'s task on the stack for the next statement, whose await is the code after it.
+  4. Found on the way, and fixed: a label read a trailing `.GetAwaiter().GetResult()`, as in S26's
+     `Should throw InvalidOperationException get awaiter get result`. A statement that does not await reads without
+     its wait tail now.
+  5. S26 hits #211's D-A in plain Release too, so it runs in Debug and debug-plus.
+
+  Measured: the catalogue holds 49 shapes and #212's five tests, 548 checks, all passing; the helper's facts, 8; the
+  formatter's, 358; and the nine mutations of R2's rows in 6.3 and of the rules added on the way each turn a fact red.
+  Checks: the whole weaver suite (1,039 facts; 28 skipped, the SDK 11 lanes), `tests/Kronikol.Tests` (11,537), and
+  `release.slnf` built in Release for every target framework. A project on this release's packages, from a local feed
+  with NU1603 an error, whose test assembly names no Kronikol type, so its only reference to Kronikol is the one the
+  weave adds: in Debug and in Release its un-awaited helper is woven through `Track.AssertionTask`, and it draws ✗ with
+  Shouldly's message where the assertion fails and ✓ where it holds. #212's own project is unchanged: its helper is
+  `async`, so it awaits the assertion itself.

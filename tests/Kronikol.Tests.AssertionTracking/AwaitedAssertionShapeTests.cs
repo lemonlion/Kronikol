@@ -206,6 +206,87 @@ public class AwaitedAssertionShapeTests
         Assert.Empty(notes);
     }
 
+    /// <summary>
+    /// A project whose Kronikol core is older than the release that adds Track.AssertionTask is woven as it was: the
+    /// weave calls nothing the core does not have, so an un-awaited assertion task is drawn passed when it is made, as
+    /// before (#212, plan 4.1 f).
+    /// </summary>
+    [Fact]
+    public void An_older_core_keeps_the_wrap_an_unawaited_task_had()
+    {
+        var shape = Shapes.Value["S15a"];
+        var path = Build("Awaited_OlderCore", shape.Source, BuildConfiguration.Debug);
+        // The fixture names no Kronikol type, so the compiler wrote no reference to it: one is added at the older
+        // version, as a project that names one compiles it.
+        using (var assembly = AssemblyDefinition.ReadAssembly(path, new ReaderParameters { ReadWrite = true, ReadSymbols = true }))
+        {
+            var older = new Version(AssertionWeaver.AssertionTaskSince.Major, AssertionWeaver.AssertionTaskSince.Minor - 1, 0, 0);
+            if (assembly.MainModule.AssemblyReferences.SingleOrDefault(r => r.Name == "Kronikol") is { } core)
+                core.Version = older;
+            else
+                assembly.MainModule.AssemblyReferences.Add(new AssemblyNameReference("Kronikol", older));
+            assembly.Write(new WriterParameters { WriteSymbols = true });
+        }
+
+        var result = WovenIl.Weave(new AssertionWeaver(), path);
+
+        Assert.True(result.WeavedCount > 0);
+        using (var woven = AssemblyDefinition.ReadAssembly(path))
+            Assert.DoesNotContain(woven.MainModule.GetTypes().SelectMany(t => t.Methods).Where(m => m.HasBody)
+                .SelectMany(m => m.Body.Instructions), i => i.Operand is MethodReference { Name: "AssertionTask" or "AssertionTaskWithValues" });
+        var (_, notes) = Run(path, shape.TypeName, "AssertionFails");
+        Assert.Equal(["✓ Should throw InvalidOperationException"], notes.Select(Text));
+    }
+
+    /// <summary>
+    /// An assembly that names no Kronikol type has no reference to it for the gate to read: the compiler leaves it out,
+    /// and the weave adds one. The gate then reads the version of the Kronikol the build references, which the test
+    /// runs against, so an older one there keeps the wrap an un-awaited task had (#212, plan 4.1 f).
+    /// </summary>
+    [Fact]
+    public void Without_a_reference_the_gate_reads_the_core_the_build_references()
+    {
+        var shape = Shapes.Value["S15a"];
+        var path = Build("Awaited_TrimmedReference", shape.Source, BuildConfiguration.Debug);
+        using (var assembly = AssemblyDefinition.ReadAssembly(path))
+            Assert.DoesNotContain(assembly.MainModule.AssemblyReferences, r => r.Name == "Kronikol");
+
+        // The build's references: a Kronikol one release older than the helper, and nothing else beside the fixture.
+        var references = Path.Combine(Path.GetDirectoryName(path)!, "older-core");
+        Directory.CreateDirectory(references);
+        using (var core = AssemblyDefinition.ReadAssembly(typeof(Kronikol.Tracking.Track).Assembly.Location))
+        {
+            core.Name.Version = new Version(AssertionWeaver.AssertionTaskSince.Major, AssertionWeaver.AssertionTaskSince.Minor - 1, 0, 0);
+            core.Write(Path.Combine(references, "Kronikol.dll"));
+        }
+
+        WovenIl.Weave(new AssertionWeaver(null, [references]), path);
+
+        using (var woven = AssemblyDefinition.ReadAssembly(path))
+            Assert.DoesNotContain(woven.MainModule.GetTypes().SelectMany(t => t.Methods).Where(m => m.HasBody)
+                .SelectMany(m => m.Body.Instructions), i => i.Operand is MethodReference { Name: "AssertionTask" or "AssertionTaskWithValues" });
+    }
+
+    /// <summary>
+    /// With a core that has it, the un-awaited task goes through Track.AssertionTask, and its note is the assertion's
+    /// outcome: the old-core facts' twin, so the gate is read and not assumed (#212, plan 4.1 f).
+    /// </summary>
+    [Fact]
+    public void A_core_with_the_helper_observes_an_unawaited_task()
+    {
+        var shape = Shapes.Value["S15a"];
+        var path = Build("Awaited_CurrentCore", shape.Source, BuildConfiguration.Debug);
+
+        WovenIl.Weave(new AssertionWeaver(), path);
+
+        using (var woven = AssemblyDefinition.ReadAssembly(path))
+            Assert.Contains(woven.MainModule.GetTypes().SelectMany(t => t.Methods).Where(m => m.HasBody)
+                .SelectMany(m => m.Body.Instructions), i => i.Operand is MethodReference { Name: "AssertionTask" or "AssertionTaskWithValues" });
+        var (thrown, notes) = Run(path, shape.TypeName, "AssertionFails");
+        Assert.NotNull(thrown);
+        Assert.Equal(["✗ Should throw InvalidOperationException"], notes.Select(Text));
+    }
+
     private static string Text(WovenRun.Note note) => (note.Passed ? "✓ " : "✗ ") + note.Label;
 
     // A note's body is wrapped for the diagram: compare its words.

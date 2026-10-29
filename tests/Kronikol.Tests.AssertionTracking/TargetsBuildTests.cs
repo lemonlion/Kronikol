@@ -332,8 +332,8 @@ public class TargetsBuildTests
           </Target>
         """;
 
-    // An assertion with an await after its own in the same statement: a resumed state machine's dispatch jumps into the
-    // statement past the assertion, so the weave leaves it as written (#212, plan 4.1 c).
+    // Two assertions, each with an await after its own in the same statement: a resumed state machine's dispatch jumps
+    // into the statement past the assertion, so the weave leaves each as written (#212, plan 4.1 c).
     private const string AwaitAfterTheAssertion = """
         using System;
         using System.Threading.Tasks;
@@ -347,6 +347,7 @@ public class TargetsBuildTests
             {
                 await Task.Yield();
                 (await Should.ThrowAsync<InvalidOperationException>(() => Fail())).Message.ShouldBe(await Expected());
+                (await Should.ThrowAsync<InvalidOperationException>(() => Fail())).Message.ShouldStartWith(await Expected());
             }
 
             private static async Task Fail()
@@ -363,16 +364,58 @@ public class TargetsBuildTests
         }
         """;
 
-    [Fact]
-    public void A_build_at_its_default_verbosity_names_a_statement_left_unwoven()
-    {
-        // The console logger, as a CI build or any build whose output is redirected uses, at minimal verbosity: what
-        // `dotnet build` and `dotnet test` show by default (#212, F2).
-        var build = Build("UnwovenListed", ["-v:m"], source: AwaitAfterTheAssertion);
+    // Each KRONIKOL003 warning a build printed, as MSBuild wrote it: without the project a logger puts after it, or the
+    // colours the terminal logger puts around it.
+    private static string[] Kronikol003(string output) =>
+        Regex.Matches(output, @"warning KRONIKOL003: [^\r\n\x1b\[]*").Select(m => m.Value.TrimEnd()).Distinct().ToArray();
 
-        Assert.Contains("Kronikol.AssertionTracking: Left 1 assertion statement(s) unwoven; they run as written, without a note:",
+    [Fact]
+    public void A_build_at_its_default_verbosity_warns_once_for_the_statements_it_left_unwoven()
+    {
+        // The console logger at minimal verbosity, as a CI build or any build whose output is redirected uses it: what
+        // `dotnet build` and `dotnet test` show by default (#212, F2, Q2).
+        var build = Build("UnwovenWarns", ["-v:m", "-tl:off"], source: AwaitAfterTheAssertion);
+
+        var warning = Assert.Single(Kronikol003(build.Output));
+        Assert.Matches(@"^warning KRONIKOL003: Kronikol\.AssertionTracking: 2 assertion statement\(s\) were left as written, so they "
+            + @"run without a note\. First: \S*IssueCases\.cs, line 12, in IssueCases/<Statements>d__\d+\.MoveNext: an await in the "
+            + @"statement comes after the assertion\. The build lists each one at normal verbosity \(-v:n\)\.$", warning);
+        // The warning carries the signal, so the list is back at normal importance, which this build does not show.
+        Assert.DoesNotContain("assertion statement(s) unwoven", build.Output);
+    }
+
+    [Fact]
+    public void The_terminal_logger_shows_the_warning_for_statements_left_unwoven()
+    {
+        // dotnet's default in an interactive terminal since .NET 9: it shows no message below detailed verbosity, but it
+        // shows a warning (#212, F2).
+        var build = Build("UnwovenWarnsTl", ["-v:m", "-tl:on"], source: AwaitAfterTheAssertion);
+
+        // The terminal logger colours its lines and moves the cursor between them: read the text without its escapes.
+        var text = Regex.Replace(build.Output, @"\x1b\[[0-9;?]*[A-Za-z]|\x1b\][^\x1b\a]*(\x1b\\|\a)", "");
+        Assert.Matches(@"warning\s+KRONIKOL003:\s+Kronikol\.AssertionTracking: 2 assertion statement\(s\) were left as written", text);
+    }
+
+    [Fact]
+    public void NoWarn_silences_the_warning_for_statements_left_unwoven()
+    {
+        var build = Build("UnwovenNoWarn", ["-v:m", "-tl:off"], source: AwaitAfterTheAssertion,
+            extraProject: "<PropertyGroup><NoWarn>$(NoWarn);KRONIKOL003</NoWarn></PropertyGroup>");
+
+        Assert.Empty(Kronikol003(build.Output));
+        Assert.DoesNotContain("KRONIKOL003", build.Output);
+    }
+
+    [Fact]
+    public void A_build_at_normal_verbosity_lists_each_statement_left_unwoven()
+    {
+        var build = Build("UnwovenListed", [], source: AwaitAfterTheAssertion);
+
+        Assert.Contains("Kronikol.AssertionTracking: Left 2 assertion statement(s) unwoven; they run as written, without a note:",
             build.Output);
         Assert.Matches(@"IssueCases/<Statements>d__\d+\.MoveNext, line 12: an await in the statement comes after the assertion",
+            build.Output);
+        Assert.Matches(@"IssueCases/<Statements>d__\d+\.MoveNext, line 13: an await in the statement comes after the assertion",
             build.Output);
     }
 

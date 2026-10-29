@@ -24,6 +24,14 @@ public class AssertionWeaver
     private readonly System.Text.Encoding? _codePage;
     private SourceDocuments _sources;
 
+    /// <summary>The first release whose <c>Track</c> has <c>AssertionTask</c>: an older core is woven as before.</summary>
+    internal static readonly Version AssertionTaskSince = new Version(5, 27, 0, 0);
+
+    // Track's type in the module being woven, and whether its core has Track.AssertionTask, which observes an assertion
+    // task its statement does not await (#212, F4). Both are read once a weave, with the module's reference to Track.
+    private TypeReference? _trackType;
+    private bool _observesTasks;
+
     public AssertionWeaver(TaskLoggingHelper? log = null, string[]? searchDirectories = null)
         : this(log, searchDirectories, Array.Empty<KeyValuePair<string, string>>(), null)
     {
@@ -474,6 +482,9 @@ public class AssertionWeaver
         var ttdAssemblyRef = module.AssemblyReferences
             .FirstOrDefault(r => r.Name == "Kronikol");
 
+        // The version of the core the woven code calls: the reference's, or, where the compiler wrote none, the version of
+        // the Kronikol the build references, which the tests run against.
+        Version? coreVersion;
         if (ttdAssemblyRef == null)
         {
             // The compiler may have trimmed the reference if no types are used directly.
@@ -482,6 +493,7 @@ public class AssertionWeaver
             module.AssemblyReferences.Add(ttdAssemblyRef);
             _log?.LogMessage(MessageImportance.Low,
                 "AssertionTracking: Added Kronikol assembly reference");
+            coreVersion = ReferencedCoreVersion(module, ttdAssemblyRef);
         }
         else if (ttdAssemblyRef.Version != new Version(0, 0, 0, 0) &&
                  ttdAssemblyRef.Version < new Version(2, 30, 7, 0))
@@ -494,11 +506,17 @@ public class AssertionWeaver
                 "Please update all Kronikol packages to the same version.");
             return null;
         }
+        else
+        {
+            coreVersion = ttdAssemblyRef.Version;
+        }
 
         // Construct the Track type reference
         var trackTypeRef = new TypeReference(
             "Kronikol.Tracking", "Track",
             module, ttdAssemblyRef);
+        _trackType = trackTypeRef;
+        _observesTasks = coreVersion != null && coreVersion >= AssertionTaskSince;
 
         var stringType = module.TypeSystem.String;
         var int32Type = module.TypeSystem.Int32;
@@ -551,6 +569,89 @@ public class AssertionWeaver
         failedWithValuesMethod.Parameters.Add(new ParameterDefinition("callerLineNumber", ParameterAttributes.None, int32Type));
 
         return (passedMethod, failedMethod, passedWithValuesMethod, failedWithValuesMethod);
+    }
+
+    /// <summary>The version of the Kronikol assembly the build references, found where the weave finds every reference,
+    /// or null when it is not there.</summary>
+    private static Version? ReferencedCoreVersion(ModuleDefinition module, AssemblyNameReference core)
+    {
+        try { return module.AssemblyResolver.Resolve(core)?.Name.Version; }
+        catch (AssemblyResolutionException) { return null; }
+    }
+
+    /// <summary>
+    /// The statement's last assertion call when it returns a task: an assertion the statement does not await, such as a
+    /// helper's <c>=&gt; Should.ThrowAsync&lt;T&gt;(…)</c>, a task stored for a later await, or a test whose body is the
+    /// task. Its outcome is the task's, so it is drawn when the task ends, not when it is made (#212, F4).
+    /// </summary>
+    private static Instruction? TaskCallOf(List<Instruction> statement)
+    {
+        var last = statement.LastOrDefault(i => IsCallInstruction(i) && i.Operand is MethodReference mr && IsAssertionCall(mr));
+        return last != null && IsTask(((MethodReference)last.Operand).ReturnType) ? last : null;
+    }
+
+    private static bool IsTask(TypeReference type) =>
+        type.Namespace == "System.Threading.Tasks" && type.Name is "Task" or "Task`1";
+
+    /// <summary>
+    /// The type of the task the call leaves on the stack, when the statement hands it on as a task for the code after it:
+    /// stores it, returns it or passes it to a call. Null when the statement waits for it itself, through a member of a
+    /// task type (<c>Wait()</c>, <c>Result</c>, <c>GetAwaiter().GetResult()</c>): a failure then throws inside the
+    /// statement, where its catch draws it as before.
+    /// </summary>
+    private static TypeReference? TaskLeftBy(Instruction call, StackAnalysis analysis, Instruction last)
+    {
+        var after = call.Next != null ? analysis.StackBefore(call.Next) : null;
+        if (after == null || after.Length == 0 || after[after.Length - 1].Producer != call ||
+            after[after.Length - 1].Type is not { } type || !IsTask(type))
+            return null;
+        // Only the statement's own instructions: a Release build can leave the task on the stack for the next statement,
+        // `var t = Should.ThrowAsync<T>(…); await t;` with no local, and that statement's await is the code after it.
+        for (var i = call; i != last && i.Next != null;)
+        {
+            i = i.Next;
+            var next = i.Next != null ? analysis.StackBefore(i.Next) : null;
+            if (next == null || !next.Any(slot => slot.Producer == call))
+                return IsCallInstruction(i) && i.Operand is MethodReference consumer &&
+                       consumer.DeclaringType.Namespace == "System.Threading.Tasks"
+                    ? null
+                    : type;
+        }
+        return type;
+    }
+
+    /// <summary><c>Track.AssertionTask</c>, or <c>AssertionTaskWithValues</c>, for a task of <paramref name="task"/>'s
+    /// type, which names it in the module as the assertion's own call does.</summary>
+    private MethodReference AssertionTaskMethod(ModuleDefinition module, TypeReference task, bool withValues)
+    {
+        var method = new MethodReference(withValues ? "AssertionTaskWithValues" : "AssertionTask", module.TypeSystem.Void, _trackType)
+        {
+            HasThis = false,
+        };
+        var parameter = task;
+        if (task is GenericInstanceType generic)
+        {
+            var t = new GenericParameter("T", method);
+            method.GenericParameters.Add(t);
+            var open = new GenericInstanceType(generic.ElementType);
+            open.GenericArguments.Add(t);
+            parameter = open;
+        }
+        method.ReturnType = parameter;
+        method.Parameters.Add(new ParameterDefinition("task", ParameterAttributes.None, parameter));
+        method.Parameters.Add(new ParameterDefinition("expression", ParameterAttributes.None, module.TypeSystem.String));
+        if (withValues)
+        {
+            method.Parameters.Add(new ParameterDefinition("varNames", ParameterAttributes.None, new ArrayType(module.TypeSystem.String)));
+            method.Parameters.Add(new ParameterDefinition("varValues", ParameterAttributes.None, new ArrayType(module.TypeSystem.Object)));
+        }
+        method.Parameters.Add(new ParameterDefinition("callerFilePath", ParameterAttributes.None, module.TypeSystem.String));
+        method.Parameters.Add(new ParameterDefinition("callerLineNumber", ParameterAttributes.None, module.TypeSystem.Int32));
+        if (task is not GenericInstanceType instance)
+            return method;
+        var bound = new GenericInstanceMethod(method);
+        bound.GenericArguments.Add(module.ImportReference(instance.GenericArguments[0]));
+        return bound;
     }
 
     /// <summary>
@@ -675,6 +776,8 @@ public class AssertionWeaver
             // instruction.
             var (mergePoint, refusal) = AwaitedStart(statementInstructions, awaits);
             var start = mergePoint ?? statementInstructions[0];
+            // An assertion task the statement does not await is observed where the call returns it (F4).
+            var taskCall = mergePoint == null && refusal == null ? TaskCallOf(statementInstructions) : null;
 
             // Exclude trailing leave/leave.s, ret and br/br.s from the statement. In async state machines, the
             // compiler places a leave at the end of user code to exit the outer try; a ret cannot be inside a try
@@ -736,6 +839,7 @@ public class AssertionWeaver
                 IsAwaited = isAwaited,
                 MergePoint = mergePoint,
                 Refusal = refusal,
+                TaskCall = taskCall,
             });
         }
 
@@ -2642,6 +2746,17 @@ public class AssertionWeaver
         // wrap below inserts its code between statements and leaves each original instruction's stack as it was.
         var analysis = StackAnalysis.Analyze(method.Body);
 
+        // An assertion task its statement does not await is observed only where the core has Track.AssertionTask, and
+        // only when the statement hands the task on; otherwise the statement is wrapped as it was (#212, F4).
+        foreach (var assertion in assertions)
+        {
+            assertion.TaskType = assertion.TaskCall != null && _observesTasks
+                ? TaskLeftBy(assertion.TaskCall, analysis, assertion.LastInstruction)
+                : null;
+            if (assertion.TaskType == null)
+                assertion.TaskCall = null;
+        }
+
         // Every statement is planned before any is wrapped: a statement's exit is read at the instruction after
         // it, which the wrap of the statement after it puts its own code in front of.
         var plans = assertions
@@ -2656,7 +2771,8 @@ public class AssertionWeaver
             var (reason, entry, exit) = plans[i];
             if (reason != null)
             {
-                result.Unwoven.Add($"{method.DeclaringType.FullName}.{method.Name}, line {assertion.SequencePoint.StartLine}: {reason}");
+                result.UnwovenStatements.Add(new UnwovenStatement($"{method.DeclaringType.FullName}.{method.Name}",
+                    assertion.SequencePoint.Document.Url, assertion.SequencePoint.StartLine, reason));
                 continue;
             }
 
@@ -3099,8 +3215,31 @@ public class AssertionWeaver
                 CaptureArguments(method, il, capture, valuesLocal, count);
         }
 
-        // Create the "after assertion success" block
-        if (afterLastInstr != null)
+        // An assertion task the statement does not await is handed to Track.AssertionTask, which draws the note when the
+        // task ends and hands back a task that ends as it does, so the statement draws no pass of its own (#212, F4).
+        // Its try still holds the call, so a throw while the task is made is drawn as ever.
+        var observed = assertion.TaskCall != null;
+        if (observed)
+        {
+            var load = new List<Instruction> { il.Create(OpCodes.Ldstr, expressionText) };
+            if (hasValues)
+            {
+                load.Add(il.Create(OpCodes.Ldloc, namesLocal!));
+                load.Add(il.Create(OpCodes.Ldloc, valuesLocal!));
+            }
+            load.Add(il.Create(OpCodes.Ldstr, filePath));
+            load.Add(il.Create(OpCodes.Ldc_I4, lineNumber));
+            load.Add(il.Create(OpCodes.Call, AssertionTaskMethod(module, assertion.TaskType!, hasValues)));
+            var at = assertion.TaskCall!;
+            foreach (var instruction in load)
+            {
+                il.InsertAfter(at, instruction);
+                at = instruction;
+            }
+        }
+
+        // Create the "after assertion success" block, which an observed task's statement has none of
+        if (!observed && afterLastInstr != null)
         {
             if (hasValues)
             {
@@ -3119,7 +3258,7 @@ public class AssertionWeaver
                 il.InsertBefore(afterLastInstr, il.Create(OpCodes.Call, passedRef));
             }
         }
-        else
+        else if (!observed)
         {
             if (hasValues)
             {
@@ -3310,6 +3449,12 @@ public class AssertionStatement
     public Instruction? MergePoint { get; set; }
     /// <summary>Why the statement is left as written, when that is decided by its shape rather than its stack.</summary>
     internal string? Refusal { get; set; }
+
+    /// <summary>The assertion call whose task the statement does not await, and the task's type: Track.AssertionTask
+    /// observes the task where the call returns it (#212).</summary>
+    internal Instruction? TaskCall { get; set; }
+
+    internal TypeReference? TaskType { get; set; }
 }
 
 /// <summary>The values an assertion call takes from the stack from its lowest captured argument up, which the weave
@@ -3354,6 +3499,22 @@ public class CapturedVariable
     public TypeReference Type { get; set; } = null!;
 }
 
+/// <summary>An assertion statement the weave left as the compiler wrote it, and why.</summary>
+public sealed class UnwovenStatement(string method, string document, int line, string reason)
+{
+    /// <summary>The method holding it, as <c>Type.Method</c>.</summary>
+    public string Method { get; } = method;
+
+    /// <summary>Its document, as the symbols name it.</summary>
+    public string Document { get; } = document;
+
+    public int Line { get; } = line;
+
+    public string Reason { get; } = reason;
+
+    public override string ToString() => $"{Method}, line {Line}: {Reason}";
+}
+
 public class WeaveResult
 {
     public int WeavedCount { get; set; }
@@ -3362,7 +3523,10 @@ public class WeaveResult
     public List<string> DiagMessages { get; set; } = new List<string>();
 
     /// <summary>The assertion statements found but left unwoven, each with where it is and why.</summary>
-    public List<string> Unwoven { get; set; } = new List<string>();
+    public List<string> Unwoven => UnwovenStatements.ConvertAll(statement => statement.ToString());
+
+    /// <summary>The assertion statements found but left unwoven: the method, the document and line, and why.</summary>
+    public List<UnwovenStatement> UnwovenStatements { get; } = new List<UnwovenStatement>();
 
     /// <summary>The documents whose source no candidate reached, each with the paths tried: their statements are
     /// labelled by line, show no values, and their pragma comments were not read.</summary>

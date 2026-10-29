@@ -1,8 +1,8 @@
 // S19d: an expression-bodied test returning the assertion's task: public Task Test() => Should.ThrowAsync<T>(...);
 // Builds: Debug, Release, ReleaseDebugPlus
-// An un-awaited assertion task: R1 keeps today's note, drawn as passed when the task is made (pinned), until R2 observes the task (plan 4.1 f).
+// An un-awaited assertion task: drawn when the task ends, with its outcome; Track.AssertionTask observes it (plan 4.1 f, R2). R1 drew it passed when the task was made.
 // AssertionPasses: ✓ Should throw InvalidOperationException
-// AssertionFails: ✓ Should throw InvalidOperationException
+// AssertionFails: ✗ Should throw InvalidOperationException
 #nullable enable
 using System;
 using System.Threading.Tasks;

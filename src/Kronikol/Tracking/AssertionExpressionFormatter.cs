@@ -98,8 +98,51 @@ public static partial class AssertionExpressionFormatter
             else if (AssignmentValue(expr) is { } value)
                 expr = expr[value..];
             else
-                return awaited ? WithoutConfigureAwait(expr) : expr;
+                return awaited ? WithoutConfigureAwait(expr) : WithoutWait(expr);
         }
+    }
+
+    /// <summary>A statement that waits for its assertion's task itself, with a trailing <c>.GetAwaiter().GetResult()</c>,
+    /// <c>.Wait(…)</c> or <c>.Result</c>, without the wait: how the statement waits is not what the assertion says
+    /// (#212). An awaited expression keeps its tail, which is part of what it awaits.</summary>
+    private static string WithoutWait(string expr)
+    {
+        if (WithoutTrailingCall(expr, "GetResult") is { } result && WithoutTrailingCall(result, "GetAwaiter") is { } awaiter)
+            return awaiter;
+        if (WithoutTrailingCall(expr, "Wait") is { } waited)
+            return waited;
+        var trimmed = expr.TrimEnd();
+        if (trimmed.EndsWith(".Result", StringComparison.Ordinal) &&
+            trimmed[..^".Result".Length].TrimEnd() is var task && task.EndsWith(')'))
+            return task;
+        return expr;
+    }
+
+    /// <summary>The expression without its last call when that is <c>.{name}(…)</c> and ends the text, outside
+    /// literals; otherwise null.</summary>
+    private static string? WithoutTrailingCall(string expr, string name)
+    {
+        var trimmed = expr.TrimEnd();
+        if (!trimmed.EndsWith(')'))
+            return null;
+        var literal = LiteralMask(trimmed);
+        var depth = 0;
+        for (var i = trimmed.Length - 1; i >= 0; i--)
+        {
+            if (literal[i])
+                continue;
+            if (trimmed[i] is ')' or ']' or '}')
+                depth++;
+            else if (trimmed[i] is '(' or '[' or '{' && --depth == 0)
+            {
+                var callee = trimmed[..i].TrimEnd();
+                if (!callee.EndsWith(name, StringComparison.Ordinal))
+                    return null;
+                var receiver = callee[..^name.Length].TrimEnd();
+                return receiver.Length > 1 && receiver.EndsWith('.') ? receiver[..^1].TrimEnd() : null;
+            }
+        }
+        return null;
     }
 
     private static bool StartsWithKeyword(string text, string keyword) =>

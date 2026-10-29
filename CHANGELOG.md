@@ -4,6 +4,68 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.27.0] - 2026-10-29
+
+The minor part moves (5.26.1 to 5.27.0): `Track.AssertionTask` and `Track.AssertionTaskWithValues` are new public
+members, and `KRONIKOL003` is a new warning code (#212, `plans/AWAITED_ASSERTION_LABELS_PLAN.md` R2). Both close
+defects, and a bug fix ships with them.
+
+### Added
+- **`Track.AssertionTask` and `Track.AssertionTaskWithValues` (#212).** The weave calls them for an assertion whose task
+  its statement does not await: a helper that is not `async` and returns the task
+  (`Task<InvalidOperationException> Fails(OrderRequest r) => Should.ThrowAsync<InvalidOperationException>(…)`), a task
+  stored for a later `await`, or a test whose body is the task. Each takes the task, `Task` or `Task<T>`, and hands
+  back one that ends as it does, with the same result or the same exception object, after drawing the note: ✓ when the
+  task completes, ✗ with the message its `await` would throw when it faults or is cancelled. The note is drawn before
+  the code awaiting the task resumes, and at once for a task already ended. `AssertionTaskWithValues` takes the values
+  the weave read, as `AssertionPassedWithValues` does, and reads them where the statement made the task. Neither
+  throws into the task. The weave calls them only where the project's Kronikol core is 5.27.0 or later, and an
+  older core is woven as before.
+- **`KRONIKOL003`, a statement left as written (#212).** A build whose weave leaves assertion statements as the
+  compiler wrote them warns once: how many, and the first one's file, line, method and reason. Every logger shows a
+  warning, the terminal logger too, which `dotnet build` and `dotnet test` use in an interactive terminal since .NET 9
+  and which hides a message below `-v:d`. `<NoWarn>KRONIKOL003</NoWarn>` silences it; it fails a build only under
+  `-warnaserror` or a `WarningsAsErrors` that names it. `WeaveResult.UnwovenStatements` carries each one's method,
+  document, line and reason.
+
+### Fixed
+- **An un-awaited assertion task is drawn with its outcome (#212, F4).** The weave wrapped such a statement as a
+  synchronous one, so its `try` held only the making of the task, and the pass was drawn before the assertion had run:
+  a failing helper was drawn ✓. Its note is now the assertion's own, drawn when the task ends. A statement that waits
+  for the task itself, with `.GetAwaiter().GetResult()` or `.Wait()`, is drawn as a synchronous assertion, as before.
+- **A statement that waits for its assertion's task reads as the assertion (#212).** A trailing
+  `.GetAwaiter().GetResult()` was read into the label, so `Should.ThrowAsync<T>(…).GetAwaiter().GetResult()` read
+  `Should throw T get awaiter get result`; that tail, `.Wait(…)` and `.Result` are not read now. An awaited
+  expression keeps such a tail, which is part of what it awaits.
+
+### Changed
+- The list of statements left unwoven is logged at normal importance again, as it was before 5.26.1: the warning
+  carries the signal, and `-v:n` shows the list.
+- A project whose test assembly names no Kronikol type has no reference to Kronikol for the weave to read a version
+  from (the compiler leaves it out, and the weave adds one): the weave reads the version of the Kronikol the build
+  references, the one the tests run against.
+
+### Tests
+- The un-awaited shapes (S15a to S15d, S19a, S19c, S19d) are drawn ✗ where their assertion fails, in every build they
+  run in, and S26, a statement that waits for its task with `.GetAwaiter().GetResult()` and `.Wait()`, is one note,
+  ✓ or ✗, never two. Three facts on the core's version: a reference at an older version, no reference with an older
+  Kronikol among the build's references, and a current core, which observes the task.
+- `TrackAssertionTaskTests`: the same result object and exception object handed back, the note drawn before the
+  awaiting code resumes, a task already ended drawn at once, a cancelled one drawn ✗ and still cancelled, values read
+  where the task is made, outside a test the task ending as it would have, and a null task handed back as null.
+- `TargetsBuildTests`: one `KRONIKOL003` for two statements left unwoven at minimal verbosity with the console logger
+  (and no list there), the terminal logger shows it, `NoWarn` silences it, and `-v:n` lists each statement.
+- Formatter facts for the wait tails, and the code they must not take.
+- Mutations: the helper not called, the version gate ignored, a dropped reference not resolved, the wait check removed
+  (S26 drawn twice), `KRONIKOL003` not raised, raised once a statement, the list back at high importance, values read
+  when the task ends, and the wait tail read into a label: each turns a fact red, 9 of 9.
+- Checks: the whole weaver suite (1,039 facts; 28 skipped, the SDK 11 lanes), `tests/Kronikol.Tests` (11,537), and
+  `release.slnf` built in Release for every target framework. A project on this release's packages, from a local feed
+  with NU1603 an error, whose test assembly names no Kronikol type, so its only reference to Kronikol is the one the
+  weave adds: in Debug and in Release its un-awaited helper is woven through `Track.AssertionTask`, and it draws ✗
+  with Shouldly's message where the assertion fails and ✓ where it holds. #212's own project is unchanged: its helper
+  is `async`, so it awaits the assertion itself.
+
 ## [5.26.1] - 2026-10-28
 
 The patch part moves (5.26.0 to 5.26.1): fixes, nothing new to call (#212, `plans/AWAITED_ASSERTION_LABELS_PLAN.md`

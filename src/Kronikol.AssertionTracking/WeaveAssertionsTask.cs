@@ -12,8 +12,8 @@ namespace Kronikol.AssertionTracking;
 /// FluentAssertions and AwesomeAssertions (<c>.Should()</c>), Shouldly (<c>ShouldBe()</c> and the rest) and TUnit
 /// (<c>Assert.That()</c>) with assertion tracking: a try/catch around each statement that calls
 /// Track.AssertionPassed/Track.AssertionFailed. Only activates if <c>[assembly: TrackAssertions]</c> is found in the
-/// compiled assembly, and warns (KRONIKOL001) when that attribute finds nothing to instrument, and (KRONIKOL002) when
-/// a statement it instruments has no source it can read. It finds the
+/// compiled assembly, and warns (KRONIKOL001) when that attribute finds nothing to instrument, (KRONIKOL002) when
+/// a statement it instruments has no source it can read, and (KRONIKOL003) when it leaves a statement as written. It finds the
 /// statements through the build's symbols, a portable PDB beside the assembly or one embedded in it, and reads each
 /// statement's text where the compiler read it: the file the PDB names, mapped back through <see cref="PathMap"/> and
 /// <see cref="SourceRoots"/> when the build wrote other names (deterministic source paths, #165), or else the source
@@ -106,16 +106,23 @@ public class WeaveAssertionsTask : Microsoft.Build.Utilities.Task
             Log.LogMessage(MessageImportance.Low, "AssertionTracking: {0}", message);
 
         // A statement the weave cannot account for is left as the compiler wrote it, never miscompiled; it still
-        // runs, untracked, and the build says where and why. At high importance, which a build shows at its default,
-        // minimal, verbosity (#212): at normal importance only a build asked for more said it, so a note was missing
-        // with no word.
-        if (result.Unwoven.Count > 0)
+        // runs, untracked. The build says so once, as a warning a project can silence with <NoWarn>, naming how many
+        // and the first, which every logger shows (#212): a message, even at high importance, is hidden by the terminal
+        // logger, so a note was missing with no word. Each one is listed where a build shows more.
+        if (result.UnwovenStatements.Count > 0)
         {
-            Log.LogMessage(MessageImportance.High,
+            var first = result.UnwovenStatements
+                .OrderBy(u => u.Document, StringComparer.Ordinal).ThenBy(u => u.Line).First();
+            Log.LogWarning(subcategory: null, warningCode: "KRONIKOL003", helpKeyword: null, file: null,
+                lineNumber: 0, columnNumber: 0, endLineNumber: 0, endColumnNumber: 0,
+                message: "Kronikol.AssertionTracking: {0} assertion statement(s) were left as written, so they run without a note. "
+                    + "First: {1}, line {2}, in {3}: {4}. The build lists each one at normal verbosity (-v:n).",
+                result.UnwovenStatements.Count, first.Document, first.Line, first.Method, first.Reason);
+            Log.LogMessage(MessageImportance.Normal,
                 "Kronikol.AssertionTracking: Left {0} assertion statement(s) unwoven; they run as written, without a note:",
-                result.Unwoven.Count);
-            foreach (var unwoven in result.Unwoven)
-                Log.LogMessage(MessageImportance.High, "  {0}", unwoven);
+                result.UnwovenStatements.Count);
+            foreach (var unwoven in result.UnwovenStatements)
+                Log.LogMessage(MessageImportance.Normal, "  {0}", unwoven);
         }
 
         // [assembly: TrackAssertions] asks for notes; a weave that can give none says why, as a warning with a code
