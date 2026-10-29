@@ -17,4 +17,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Kronikol\Kronikol.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Kronikol.Tests.StorageQueues" />
+  </ItemGroup>
 </Project>

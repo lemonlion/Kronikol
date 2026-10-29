@@ -71,7 +71,7 @@ public class MongoDbTrackingSubscriberTests : IDisposable
         subscriber.OnCommandStarted(MakeStartedEvent("find"));
         subscriber.OnCommandSucceeded(MakeSucceededEvent("find"));
 
-        HistoryGuard.Pin(GetLogsFromThisTest(), 10,
+        HistoryGuard.Pin(GetLogsFromThisTest(), 11,
             "MyService>MongoDB Find ← testcollection /testdb/testcollection 200");
     }
 

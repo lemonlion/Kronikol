@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using Azure.Storage.Queues;
 
 namespace Kronikol.Extensions.StorageQueues;
 
@@ -7,12 +8,21 @@ namespace Kronikol.Extensions.StorageQueues;
 /// </summary>
 public static partial class StorageQueueOperationClassifier
 {
+    // The path after the account: Azure puts the account in the host, Azurite first in the path,
+    // /devstoreaccount1/{queue}/messages (#125).
     [GeneratedRegex(@"^/(?<queue>[^/?]+)(?:/messages(?:/(?<msgId>[^/?]+))?)?$", RegexOptions.Compiled)]
     private static partial Regex QueuePathRegex();
 
+    // Azurite's built-in account, which UseDevelopmentStorage=true and Testcontainers' Azurite module use.
+    internal const string AzuriteAccount = "devstoreaccount1";
+
+    // A first segment no account name can be (they are letters and digits), to ask the SDK's parser where a host and
+    // port put the account.
+    private const string Probe = "path-style";
+
     public static StorageQueueOperationInfo Classify(HttpRequestMessage request)
     {
-        var path = request.RequestUri?.AbsolutePath ?? "";
+        var path = request.RequestUri is { } uri ? ApiPathOf(uri) : "";
         var method = request.Method;
         var query = request.RequestUri?.Query ?? "";
 
@@ -65,5 +75,27 @@ public static partial class StorageQueueOperationClassifier
             StorageQueueTrackingVerbosity.Summarised => op.Operation.ToString(),
             _ => op.Operation.ToString() // Raw uses HTTP method
         };
+    }
+
+    /// <summary>
+    /// The path a URL names after its account, as sent. On Azure the account is in the host, and the path is the URL's
+    /// own; on Azurite it is the path's first segment, left out here. Where the account is comes from the Azure SDK's own
+    /// parser (<see cref="QueueUriBuilder"/>), which reads it from the path on an IP address and on the ports it reserves
+    /// for path-style URLs, Azurite's among them. On another host and port the parser reads the account as the queue,
+    /// and so does this, but for Azurite's built-in account, which is left out wherever the host names none.
+    /// </summary>
+    internal static string ApiPathOf(Uri uri)
+    {
+        var path = uri.AbsolutePath;
+        var end = path.IndexOf('/', 1);
+        var first = end < 0 ? path[1..] : path[1..end];
+        if (first.Length == 0)
+            return path;
+
+        var account = new QueueUriBuilder(new UriBuilder(uri.Scheme, uri.Host, uri.Port, "/" + Probe + "/q").Uri).AccountName;
+        var inPath = account == Probe || (string.IsNullOrEmpty(account) && first == AzuriteAccount);
+        if (!inPath)
+            return path;
+        return end < 0 ? "/" : path[end..];
     }
 }

@@ -33,7 +33,7 @@ public class MediatorTrackingExtensionsTests
         var mediator = services.BuildServiceProvider().GetRequiredService<IMediator>();
         await mediator.Send(new Ping("a"), TestContext.Current.CancellationToken);
 
-        HistoryGuard.Pin(GetLogsFromThisTest(), 10,
+        HistoryGuard.Pin(GetLogsFromThisTest(), 11,
             "Caller>Application Send /IMediator/Send 200");
     }
 

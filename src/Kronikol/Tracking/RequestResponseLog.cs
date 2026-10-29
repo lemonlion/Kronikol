@@ -61,6 +61,16 @@ public record RequestResponseLog(
     /// </summary>
     internal RecordedBefore? RecordedBefore10 { get; init; }
 
+    /// <summary>
+    /// The call as its tracker recorded it before #125's R2 changed how the Blob Storage and Storage Queues handlers name
+    /// a call, when that differs: a call against Azurite, once named from the account rather than the container or the
+    /// queue, or a call <c>Summarised</c> did not record. History's rules 6 to 10 read its method and URI from here, and
+    /// no call at all when the tracker did not record it then; on a response, <see cref="RecordedBefore.Absent"/> says
+    /// the tracker recorded no response then (a send that threw). Null for every call recorded as before. Set by the
+    /// trackers alone and never written out.
+    /// </summary>
+    internal RecordedBefore? RecordedBefore11 { get; init; }
+
     public bool NoteOnRight { get; set; }
     public bool IsOverrideStart { get; set; }
     public bool IsOverrideEnd { get; set; }

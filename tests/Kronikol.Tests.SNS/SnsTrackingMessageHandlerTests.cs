@@ -97,7 +97,7 @@ public class SnsTrackingMessageHandlerTests : IDisposable
         using var invoker = CreateInvoker(MakeOptions());
         await invoker.SendAsync(MakePublishRequest(), CancellationToken.None);
 
-        HistoryGuard.Pin(GetLogsFromThisTest(), 10,
+        HistoryGuard.Pin(GetLogsFromThisTest(), 11,
             "TestCaller>SNS Publish /my-topic 200");
     }
 

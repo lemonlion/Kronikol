@@ -76,7 +76,7 @@ public class HistoryFoldRuleTests
         var folded = HistoryFold.Attempts([first, retry]).Run;
 
         Assert.Equal(rules!.Hash, folded.ShapeRules);
-        Assert.Equal(10, folded.ShapeVersion);
+        Assert.Equal(11, folded.ShapeVersion);
     }
 
     [Fact]
@@ -128,7 +128,7 @@ public class HistoryFoldRuleTests
 
         var folded = Assert.Single(HistoryFold.Fold([shaped, plain]));
 
-        Assert.Equal(10, folded.Run.ShapeVersion);
+        Assert.Equal(11, folded.Run.ShapeVersion);
         Assert.Equal([shaped.Run.ShapeSet![0], ""], folded.Run.ShapeSet);
         Assert.Equal(shaped.Run.Bridge!["7"].ShapeSet?[0] ?? shaped.Run.ShapeSet[0], folded.Run.Bridge!["7"].ShapeSet?[0] ?? folded.Run.ShapeSet![0]);
     }
@@ -141,7 +141,7 @@ public class HistoryFoldRuleTests
 
         var folded = HistoryFold.Attempts([first, retry]).Run;
 
-        Assert.Equal(10, folded.ShapeVersion);
+        Assert.Equal(11, folded.ShapeVersion);
         Assert.Equal([retry.Run.ShapeSet![0], ""], folded.ShapeSet);
     }
 

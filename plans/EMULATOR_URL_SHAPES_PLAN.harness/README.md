@@ -6,6 +6,8 @@ output each one printed on 2026-10-27. Each probe is a file-based app: `dotnet r
 never the working tree, so they measure what a consumer has, and they build nothing in the repository. Three were
 added when R1 was built, on 2026-10-29: the two `before9-record-*` probes take the **published 5.27.2** packages, the
 last before the fix, and `bigquery-emulator-live-r1.cs` builds the BigQuery extension from this checkout's source.
+Two more were added when R2 was built, the same day: the `before-r2-record-*` probes take the **published 5.27.8**
+packages, the last before R2.
 
 Every probe but one puts the shipped tracking handler between the real SDK client and a stub server, so each URL in
 the output is one the SDK wrote. The handlers log a request before calling their inner handler, so the stub sees,
@@ -23,6 +25,8 @@ request by request, whether the call it is answering was recorded and what as.
 | `probes/before9-record-bigquery.cs` | What the published 5.27.2 BigQuery package records for each request `BigQueryClient` 3.12.0 sends under the five bases of `bigquery-url-shapes.cs`, and for the methods it misread on Google's endpoint, at `Detailed` and `Summarised`: 248 requests. Copied verbatim into `tests/Kronikol.Tests.BigQuery/RecordedBefore9Record.cs`, the record the frozen classifier and rules 6 to 8 are pinned to | `results/before9-record-bigquery.tsv` |
 | `probes/before9-record-cloudstorage.cs` | The same for the published 5.27.2 Cloud Storage package and `StorageClient` 4.16.0 under three bases: 104 requests, copied into `tests/Kronikol.Tests.CloudStorage/RecordedBefore9Record.cs` | `results/before9-record-cloudstorage.tsv` |
 | `probes/bigquery-emulator-live-r1.cs` | `bigquery-emulator-live.cs` again, against R1's build (#125 fixed): the same emulator, bases and verbosities, and the responses the handler logged for the sends that threw (F16, Q5) | `results/bigquery-emulator-live-r1.txt` |
+| `probes/before-r2-record-blob.cs` | What the published 5.27.8 Blob Storage package records for each request `BlobServiceClient` 12.30.1 sends under six connections (a production account, `UseDevelopmentStorage=true`, Azurite's account on `127.0.0.1` on another port, on `azurite:10000`, on `localhost` on another port and on a Docker host's name on another port), and for the other forms the classifier reads, at `Detailed` and `Summarised`: 156 requests, copied into `tests/Kronikol.Tests.BlobStorage/RecordedBefore11Record.cs` | `results/before-r2-record-blob.tsv` |
+| `probes/before-r2-record-queues.cs` | The same for the published 5.27.8 Storage Queues package and `QueueServiceClient` 12.28.1: 138 requests, copied into `tests/Kronikol.Tests.StorageQueues/RecordedBefore11Record.cs` | `results/before-r2-record-queues.tsv` |
 
 ## Reading the output
 

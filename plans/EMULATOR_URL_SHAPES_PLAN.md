@@ -3,7 +3,8 @@
 **Written:** 2026-10-27, at 5.12.0 (`v5.12.0`, `1ee6373a`), and checked again at 5.16.0 (`v5.16.0`, `15a95d4c`). The
 BigQuery, Blob Storage, Storage Queues and Cloud Storage sources and their test projects last changed in `c63e35f3`
 (doc comments only), so what the 5.12.0 packages were measured doing is what 5.16.0 does. **Status: green-lit on
-2026-10-29, every question answered by the owner (§10). R1 released as 5.27.6 (tag `v5.27.6`); R2 being built (§12).**
+2026-10-29, every question answered by the owner (§10). R1 released as 5.27.6 (tag `v5.27.6`) and R2 as 5.27.9
+(tag `v5.27.9`): executed in full (§12).**
 Evidence labels: **RUN** (measured here, against the published 5.12.0 packages), **READ** (in the source, `file:line`
 at 5.16.0), **DOC** (a vendor's own source or documentation), **INFERRED** (reasoned from facts, stated by none),
 **ISSUE** (taken from #125, not re-measured). Every RUN line has its probe and its output in
@@ -40,7 +41,7 @@ cannot name (Q1).
 | What a consumer sees | Against an emulator, every call named as it is against the cloud, at every verbosity. On the cloud endpoints, the IAM, undelete, row access policy, project list and copy calls named correctly. BigQuery's unnamed calls' Detailed URLs without the client's query string. History lines move for the renamed calls; under Q7 (a), history reads across them as no change (§7) |
 | What it does not change | `Raw` (the URL as sent), every option, every public type and member, and the eleven other extensions (and the core SQL tracker) that skip `Other` at `Summarised` |
 | Tests | Facts that drive the real `BigQueryClient`, `StorageClient`, `BlobServiceClient` and `QueueClient` through each handler into a stub transport, over every base URI and connection string shape measured here; and facts that classify every method the generated Google clients declare (§6). No network and no Docker |
-| Bumps | Both patches (§7). Q1 option (b) would have made its part a minor. R1 is 5.27.6 |
+| Bumps | Both patches (§7). Q1 option (b) would have made its part a minor. R1 is 5.27.6, R2 5.27.9 |
 | Open | Nothing: the owner answered Q1 to Q7 on 2026-10-29 (§10), Q1 (a), Q7 (a) and the rest as recommended |
 
 ## 1. How far each claim was checked
@@ -613,3 +614,43 @@ translation of stored lines to this change, so (b) was never coming from #192, a
     and on their floors, the Playwright suite (2,088 passed, 28 skipped), and the Release build of `release.slnf`. The
     changelog has the counts.
   - Left for the owner: Q4's issue (F17, the API key in the URL), not filed until the owner says so.
+- **2026-10-29, R2 released as 5.27.9** (tag `v5.27.9`) by kronikol-5d, on 5.27.8, as §5.2, Q1 (a) and Q5 say.
+  What the plan did not say, or said otherwise:
+  - The mark is `RecordedBefore11`, and history's rule is 11: F26 took 10 (5.27.7, an Oracle call's address) while R2
+    was built, and F30 took 5.27.8 (Kronikol.TUnit's `[HeadIn]`), each settled between the sessions before it pushed.
+    Rule 10 reads a call from the mark, rule 9 from `RecordedBefore10` or it, rule 8 from `RecordedBefore9`,
+    `RecordedBefore10` or it, and rules 6 and 7 with `RecordedBefore8` first, so a call marked by one release is read
+    under every earlier rule. F26's rule 9 read every call, as 10 dropped none; R2's mark can say a call was not
+    recorded, so rule 9 gains `absent9` and `unanswered9`, and a fragment carries rule 10's reading as `method10`,
+    `path10`, `absent10` and `unanswered10`.
+  - §5.2 said the container, the blob, the queue and the message come from the SDK's parsers. As built, the parser says
+    only where the account is, asked with a URL of its own on the request's scheme, host and port
+    (`/path-style/...`, which no account name can be), and the classifiers' patterns read the rest after it, as they
+    did. Names taken from `BlobUriBuilder` are unescaped, so a production blob `2026%2F10%2Forder-1.json` would have
+    been drawn `2026/10/order-1.json`, and the first draft's account test left out a container named like its account
+    on Azure (`shop.blob.core.windows.net/shop/...`). A production account's calls are recorded as before, byte for
+    byte, which a fact holds for every Azure row of the record.
+  - F11 has a second half: on a host name with another port the SDK's own blob client drops the container.
+    `GetBlobClient` on a container client builds the blob's URL with `BlobUriBuilder`, which reads Azurite's account as
+    the container there, so the request is `/devstoreaccount1/{blob}` and no classifier can name the container. §6.1's
+    fact that every connection reads as production holds for four of the six connections; for `localhost` and a
+    Docker host's name on another port, the facts hold what the SDK sends, drawn as `Other` on a container named after
+    the blob. Queue clients append to their URL, so Storage Queues reads all six as production.
+  - The frozen copies are `BlobOperationClassifierBefore11.cs` and `StorageQueueOperationClassifierBefore11.cs`: the
+    classifier, label and clean URI as 5.27.8 had them, internal, 136 and 81 lines.
+  - The record is what the published 5.27.8 packages recorded: 156 Blob Storage and 138 Storage Queues requests
+    (`probes/before-r2-record-*.cs`), copied verbatim into each test project.
+  - Proof (§6.4). Red first, on the code 5.27.8 ships, its Blob classifier given only a stub of `ApiPathOf` that returns
+    the path as sent: Blob Storage 37 of 47 new facts, Storage Queues 30 of 38, each on its own assertion. Mutations:
+    the account read from the path turns 21 and 18 facts red, the built-in account's fallback 11 and 13, that fallback
+    on any host 1 and 1, the request's mark 128 and 112, and the failed send's 1 and 1; each of HistoryJson's six new
+    writes turns `HistoryRawCallsTests` red, and each of rules 6 to 10 ignoring the mark turns `ShapeGuardTests` red.
+  - Checks: the whole suite on 5.27.7, before the rebase onto 5.27.8 (64 projects, 21,211 passed, 63 skipped, and the 21
+    with a floor on their floors, 4,327 passed, 10 skipped); after it, the suites either release changed, each on the
+    newest client and on its floor (Blob Storage 475, Storage Queues 431, TUnit 49), the LightBDD.TUnit suite (25), the
+    three TUnit examples and the core suite (11,569 passed, 2 skipped); 21 mutations of the fix, each turning its facts
+    red; the record probes run again against the published 5.27.8 packages, whose 156 and 138 rows are those 5.27.4 and
+    5.27.7 recorded; the Playwright suite (2,087 passed, 28 skipped; the two facts that failed, a Back in WebKit that
+    fails now and then and a toggle's timing under the load of other runs, pass alone with their classes, 38 of 38); and
+    the Release build of `release.slnf`, whose only warnings are the advisories 5.27.5 lists.
+  - Left for the owner: whether #125 closes now, and Q4's issue (F17), not filed until the owner says so.

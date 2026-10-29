@@ -39,7 +39,7 @@ public class MassTransitTrackerTests
         var op = new MassTransitOperationInfo(MassTransitOperation.Send, "OrderCreated", new Uri("rabbitmq://localhost/orders"));
         tracker.LogSend(op, new TestMessage("ORD-1", 99.99m));
 
-        HistoryGuard.Pin(GetLogsFromThisTest(), 10,
+        HistoryGuard.Pin(GetLogsFromThisTest(), 11,
             "TestCaller>MassTransit Send OrderCreated /orders -");
     }
 

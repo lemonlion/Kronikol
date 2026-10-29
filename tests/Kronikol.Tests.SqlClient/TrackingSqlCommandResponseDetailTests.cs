@@ -70,7 +70,7 @@ public class TrackingSqlCommandResponseDetailTests : IDisposable
             while (reader.Read()) { }
         }
 
-        HistoryGuard.Pin(GetLogsForTest(), 10,
+        HistoryGuard.Pin(GetLogsForTest(), 11,
             "Caller>SQL Server SELECT FROM breakfasts /analytics/breakfasts SELECT id, name FROM breakfasts OK");
     }
 

@@ -45,7 +45,7 @@ public class SqlSetBatchRecordTests
         tracker.Start(Batch, id);
         tracker.End(id);
 
-        HistoryGuard.Pin(RequestResponseLogger.RequestAndResponseLogs.Where(l => l.TestId == _testId), 10,
+        HistoryGuard.Pin(RequestResponseLogger.RequestAndResponseLogs.Where(l => l.TestId == _testId), 11,
             "Caller>Database INSERT INTO Orders /app/Orders INSERT INTO [Orders] ([Status]) VALUES (@p0); OK");
     }
 

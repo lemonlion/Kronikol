@@ -42,10 +42,6 @@ public class BlobTrackingMessageHandler : DelegatingHandler, ITrackingComponent
 
         var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
 
-        // Skip internal/metadata operations when in Summarised mode
-        if (effectiveVerbosity == BlobTrackingVerbosity.Summarised && blobOp.Operation == BlobOperation.Other)
-            return await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
         var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
         if (testInfo is null)
             return await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
@@ -87,16 +83,56 @@ public class BlobTrackingMessageHandler : DelegatingHandler, ITrackingComponent
         )
         {
             AttributionSource = testInfo.Value.Source,
-            Phase = TestPhaseContext.Current
+            Phase = TestPhaseContext.Current,
+            RecordedBefore11 = RecordedBefore11(request, effectiveVerbosity, method, requestUri)
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v => new PhaseVariant(
                 v == BlobTrackingVerbosity.Raw ? request.Method : BlobOperationClassifier.GetDiagramLabel(blobOp, v),
                 v == BlobTrackingVerbosity.Raw ? request.RequestUri! : BuildCleanUri(request.RequestUri!, blobOp, v),
                 v == BlobTrackingVerbosity.Summarised ? null : requestBody,
                 GetFilteredHeaders(request, v),
-                v == BlobTrackingVerbosity.Summarised && blobOp.Operation == BlobOperation.Other)));
+                Skip: false)));
 
-        var response = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        HttpResponseMessage response;
+        try
+        {
+            response = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            // A send that throws is still an answer, as the HTTP handler records it: the exception's type where the
+            // status would be, its message chain in Error, and the exception on its way (FailedSend). Before #125 it left
+            // a request with no response, which history's earlier rules still read.
+            RequestResponseLogger.Log(new RequestResponseLog(
+                testInfo.Value.Name,
+                testInfo.Value.Id,
+                method,
+                null,
+                requestUri,
+                [],
+                _options.ServiceName,
+                _options.CallerName,
+                RequestResponseType.Response,
+                traceId,
+                requestResponseId,
+                false,
+                FailedSend.Status(ex),
+                DependencyCategory: DependencyCategories.BlobStorage
+            )
+            {
+                Error = FailedSend.Describe(ex),
+                AttributionSource = testInfo.Value.Source,
+                Phase = TestPhaseContext.Current,
+                RecordedBefore11 = RecordedBefore.NotRecorded
+            }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
+                v => new PhaseVariant(
+                    v == BlobTrackingVerbosity.Raw ? request.Method : BlobOperationClassifier.GetDiagramLabel(blobOp, v),
+                    v == BlobTrackingVerbosity.Raw ? request.RequestUri! : BuildCleanUri(request.RequestUri!, blobOp, v),
+                    null,
+                    [],
+                    Skip: false)));
+            throw;
+        }
 
         var responseBody = await ReadResponseBody(response, drawnAt, cancellationToken);
         var responseHeaders = GetFilteredHeaders(response, effectiveVerbosity);
@@ -126,7 +162,7 @@ public class BlobTrackingMessageHandler : DelegatingHandler, ITrackingComponent
                 v == BlobTrackingVerbosity.Raw ? request.RequestUri! : BuildCleanUri(request.RequestUri!, blobOp, v),
                 v == BlobTrackingVerbosity.Summarised ? null : responseBody,
                 GetFilteredHeaders(response, v),
-                v == BlobTrackingVerbosity.Summarised && blobOp.Operation == BlobOperation.Other)));
+                Skip: false)));
 
         return response;
     }
@@ -175,8 +211,13 @@ public class BlobTrackingMessageHandler : DelegatingHandler, ITrackingComponent
 
     private static Uri BuildCleanUri(Uri originalUri, BlobOperationInfo op, BlobTrackingVerbosity verbosity)
     {
+        // A call on the account keeps its URL as sent, query and all, less the account segment Azurite puts in the
+        // path, so it reads on Azurite as it does on Azure.
         if (op.ContainerName is null)
-            return originalUri;
+        {
+            var path = BlobOperationClassifier.ApiPathOf(originalUri);
+            return path == originalUri.AbsolutePath ? originalUri : new UriBuilder(originalUri) { Path = path }.Uri;
+        }
 
         if (verbosity == BlobTrackingVerbosity.Summarised)
         {
@@ -197,5 +238,24 @@ public class BlobTrackingMessageHandler : DelegatingHandler, ITrackingComponent
 
         var uriBuilder = new UriBuilder(originalUri) { Path = cleanPath, Query = "" };
         return uriBuilder.Uri;
+    }
+
+    /// <summary>
+    /// How every release before #125's R2 recorded this call, when that differs from how it is recorded now: its label
+    /// and URI, or that it was not recorded at all (Summarised dropped a call it could not name). History's rules 6 to
+    /// 10 read the call from here (<see cref="RequestResponseLog.RecordedBefore11"/>). Raw records the call as sent, then
+    /// and now.
+    /// </summary>
+    private static RecordedBefore? RecordedBefore11(HttpRequestMessage request, BlobTrackingVerbosity verbosity,
+        OneOf<HttpMethod, string> method, Uri uri)
+    {
+        if (verbosity == BlobTrackingVerbosity.Raw)
+            return null;
+        var then = BlobOperationClassifierBefore11.Classify(request);
+        if (verbosity == BlobTrackingVerbosity.Summarised && then.Operation == BlobOperation.Other)
+            return RecordedBefore.NotRecorded;
+        var label = BlobOperationClassifierBefore11.GetDiagramLabel(then, verbosity);
+        var thenUri = BlobOperationClassifierBefore11.BuildCleanUri(request.RequestUri!, then, verbosity);
+        return label == method.Value?.ToString() && thenUri.ToString() == uri.ToString() ? null : new RecordedBefore(label, thenUri);
     }
 }

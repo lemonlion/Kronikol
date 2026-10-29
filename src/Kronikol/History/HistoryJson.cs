@@ -153,6 +153,12 @@ public static class HistoryJson
             if (call.Unanswered8) writer.WriteBoolean("unanswered8", true);
             if (call.Method9 is not null) writer.WriteString("method9", call.Method9);
             if (call.Path9 is not null) writer.WriteString("path9", call.Path9);
+            if (call.Absent9) writer.WriteBoolean("absent9", true);
+            if (call.Unanswered9) writer.WriteBoolean("unanswered9", true);
+            if (call.Method10 is not null) writer.WriteString("method10", call.Method10);
+            if (call.Path10 is not null) writer.WriteString("path10", call.Path10);
+            if (call.Absent10) writer.WriteBoolean("absent10", true);
+            if (call.Unanswered10) writer.WriteBoolean("unanswered10", true);
             writer.WriteEndObject();
         }
         return Encoding.UTF8.GetString(buffer.WrittenSpan);
@@ -189,7 +195,13 @@ public static class HistoryJson
                 Absent8 = call.TryGetProperty("absent8", out var absent8) && absent8.ValueKind == JsonValueKind.True,
                 Unanswered8 = call.TryGetProperty("unanswered8", out var unanswered8) && unanswered8.ValueKind == JsonValueKind.True,
                 Method9 = Text(call, "method9"),
-                Path9 = Text(call, "path9")
+                Path9 = Text(call, "path9"),
+                Absent9 = call.TryGetProperty("absent9", out var absent9) && absent9.ValueKind == JsonValueKind.True,
+                Unanswered9 = call.TryGetProperty("unanswered9", out var unanswered9) && unanswered9.ValueKind == JsonValueKind.True,
+                Method10 = Text(call, "method10"),
+                Path10 = Text(call, "path10"),
+                Absent10 = call.TryGetProperty("absent10", out var absent10) && absent10.ValueKind == JsonValueKind.True,
+                Unanswered10 = call.TryGetProperty("unanswered10", out var unanswered10) && unanswered10.ValueKind == JsonValueKind.True
             });
         }
 

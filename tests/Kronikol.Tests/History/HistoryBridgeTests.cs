@@ -246,10 +246,11 @@ public class HistoryBridgeTests : IDisposable
         var run = After(1, Mapped("t1", Prices, "Pricing"), Mapped("t2", Orders, "Orders API")).Run;
 
         // One bridge for every kept rule before the current one: 6, 7 since #192 moved the rule to 8, 8 since #125 moved
-        // it to 9, and 9 since F26 moved it to 10. No change touches these calls.
-        Assert.Equal(["6", "7", "8", "9"], run.Bridge!.Keys.Order(StringComparer.Ordinal));
+        // it to 9, 9 since F26 moved it to 10, and 10
+        // since #125's R2 moved it to 11. No change touches these calls.
+        Assert.Equal(["10", "6", "7", "8", "9"], run.Bridge!.Keys.Order(StringComparer.Ordinal));
         Assert.All(run.Bridge.Values, bridge => Assert.True(bridge.IsEmpty));
-        Assert.Contains("\"bridge\":{\"6\":{},\"7\":{},\"8\":{},\"9\":{}}", HistoryJson.RunLine(run), StringComparison.Ordinal);
+        Assert.Contains("\"bridge\":{\"10\":{},\"6\":{},\"7\":{},\"8\":{},\"9\":{}}", HistoryJson.RunLine(run), StringComparison.Ordinal);
     }
 
     [Fact]

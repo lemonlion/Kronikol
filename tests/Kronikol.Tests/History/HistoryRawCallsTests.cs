@@ -56,13 +56,17 @@ public class HistoryRawCallsTests : IDisposable
     // A send that threw, answered by the tracker with the exception's type; the rules before 9 read it unanswered.
     private static RequestResponseLog[] Failed(RequestResponseLog[] pair) => [pair[0], pair[1] with { RecordedBefore9 = RecordedBefore.NotRecorded }];
 
+    // The same for a tracker that began to answer one at 11; the rules before 11 read it unanswered.
+    private static RequestResponseLog[] FailedBefore11(RequestResponseLog[] pair) => [pair[0], pair[1] with { RecordedBefore11 = RecordedBefore.NotRecorded }];
+
     /// <summary>
     /// A call of every form a rule reads differently: ids a pattern folds, a GraphQL operation in a body, in a query
     /// string and as a batch, a statement after a SET prologue that 6 and 7 read as their tracker recorded it then, one
     /// they did not record at all, a document's query, a host named by its address, a relative URI, escapes the data
     /// file keeps and ones it does not, an entity in the authority, a status given as text, and a call never answered;
     /// #125's: a call 6 to 8 read under another name, one they did not record, and a failed send they read as
-    /// unanswered; and F26's, an Oracle call 6 to 9 read against localhost and unknown.
+    /// unanswered; and F26's, an Oracle call 6 to 9 read against localhost and unknown; and #125's three again, as
+    /// its R2 made them, which 6 to 10 read so.
     /// </summary>
     private static RequestResponseLog[] Corpus(string first, string second, int run) =>
     [
@@ -92,6 +96,14 @@ public class HistoryRawCallsTests : IDisposable
         .. With(Pair(second, "SELECT FROM breakfasts", new Uri("oracle://127.0.0.1:21521/FREEPDB1/breakfasts"), "SELECT id, name FROM breakfasts",
                 service: "Oracle", category: DependencyCategories.Oracle, status: "OK"),
             r => r with { RecordedBefore10 = new RecordedBefore("SELECT FROM breakfasts", new Uri("oracle://localhost/unknown/breakfasts")) }),
+        // #125 R2's: a container Azurite created, which 6 to 10 read as an upload on the account's path, a call they did
+        // not record, and a failed send they read as unanswered.
+        .. With(Pair(first, "CreateContainer", new Uri("http://127.0.0.1:10000/orders"), service: "BlobStorage", category: DependencyCategories.BlobStorage),
+            r => r with { RecordedBefore11 = new RecordedBefore("Upload", new Uri($"http://127.0.0.1:10000/devstoreaccount1/orders?run={run}")) }),
+        .. With(Pair(second, "Other", new Uri("storagequeue:///orders?comp=acl"), service: "StorageQueue", category: DependencyCategories.MessageQueue),
+            r => r with { RecordedBefore11 = RecordedBefore.NotRecorded }),
+        .. FailedBefore11(Pair(second, "Upload", new Uri("http://127.0.0.1:10000/orders/order-1.json"), service: "BlobStorage",
+            category: DependencyCategories.BlobStorage, status: "!HttpRequestException")),
         // What a writer escapes: quotes, a backslash, angle brackets, a plus, non-ASCII and a control character.
         .. Pair(second, "SELECT", new Uri("sql:///Menu/Items"), "\"select a\\b <b>+ 'café'\u0001 FROM [Items] WHERE [Name] = 'crêpe' + '<i>'", service: "MenuDb",
             category: DependencyCategories.SqlServer)

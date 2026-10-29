@@ -44,6 +44,23 @@ public class ShapeGuardTests
         ];
     }
 
+    // The same for Blob Storage, which 11 answers where 10 and earlier recorded no response (#125's R2).
+    private static RequestResponseLog[] ThrownBlobSend()
+    {
+        var pair = Guid.NewGuid();
+        var uri = new Uri("http://127.0.0.1:10000/orders/receipt.json");
+        return
+        [
+            new RequestResponseLog("t", "c", "Upload", null, uri, [], "BlobStorage", "TestCaller", RequestResponseType.Request, Guid.NewGuid(), pair,
+                TrackingIgnore: false, DependencyCategory: DependencyCategories.BlobStorage),
+            new RequestResponseLog("t", "c", "Upload", null, uri, [], "BlobStorage", "TestCaller", RequestResponseType.Response, Guid.NewGuid(), pair,
+                TrackingIgnore: false, StatusCode: FailedSend.Status(new HttpRequestException("refused")), DependencyCategory: DependencyCategories.BlobStorage)
+            {
+                RecordedBefore11 = RecordedBefore.NotRecorded
+            }
+        ];
+    }
+
     /// <summary>One capture of each form, in the order the pins list them.</summary>
     private static readonly (string Name, RequestResponseLog[] Logs)[] Corpus =
     [
@@ -107,6 +124,13 @@ public class ShapeGuardTests
         // database called unknown (plans/CLIENT_FLOORS_PLAN.md F26).
         ("oracle address", [.. Call("c", "SELECT FROM breakfasts", "oracle://127.0.0.1:21521/FREEPDB1/breakfasts", "Oracle", "SELECT id, name FROM breakfasts",
             DependencyCategories.Oracle, "OK", request: r => r with { RecordedBefore10 = new RecordedBefore("SELECT FROM breakfasts", new Uri("oracle://localhost/unknown/breakfasts")) })]),
+        // Azurite's calls: 11 reads the container after the account, where 10 and earlier drew creating it as an upload on
+        // the account's path; it draws what Summarised dropped; and it answers a send that throws (#125's R2).
+        ("blob renamed", [.. Call("c", "CreateContainer", "http://127.0.0.1:10000/orders", "BlobStorage", category: DependencyCategories.BlobStorage,
+            status: HttpStatusCode.Created, request: r => r with { RecordedBefore11 = new RecordedBefore("Upload", new Uri("http://127.0.0.1:10000/devstoreaccount1/orders")) })]),
+        ("storagequeue summarised drop", [.. Call("c", "Other", "storagequeue:///orders", "StorageQueue", category: DependencyCategories.MessageQueue,
+            status: HttpStatusCode.OK, request: r => r with { RecordedBefore11 = RecordedBefore.NotRecorded })]),
+        ("blob failed send", ThrownBlobSend()),
     ];
 
     /// <summary>
@@ -163,7 +187,10 @@ public class ShapeGuardTests
             "TestCaller>BigQuery Other /projects/shop/datasets/sales?key&prettyPrint 200",
             "",
             "TestCaller>BigQuery Insert /upload/bigquery/v2/projects/shop/jobs?uploadType&upload_id -",
-            "TestCaller>Oracle SELECT FROM breakfasts /unknown/breakfasts SELECT id, name FROM breakfasts OK"
+            "TestCaller>Oracle SELECT FROM breakfasts /unknown/breakfasts SELECT id, name FROM breakfasts OK",
+            "TestCaller>BlobStorage Upload /devstoreaccount1/orders 201",
+            "",
+            "TestCaller>BlobStorage Upload /orders/receipt.json -"
         ],
         [7] =
         [
@@ -212,7 +239,10 @@ public class ShapeGuardTests
             "TestCaller>BigQuery Other /projects/shop/datasets/sales?key&prettyPrint 200",
             "",
             "TestCaller>BigQuery Insert /upload/bigquery/v2/projects/shop/jobs?uploadType&upload_id -",
-            "TestCaller>Oracle SELECT FROM breakfasts /unknown/breakfasts SELECT id, name FROM breakfasts OK"
+            "TestCaller>Oracle SELECT FROM breakfasts /unknown/breakfasts SELECT id, name FROM breakfasts OK",
+            "TestCaller>BlobStorage Upload /devstoreaccount1/orders 201",
+            "",
+            "TestCaller>BlobStorage Upload /orders/receipt.json -"
         ],
         [8] =
         [
@@ -261,7 +291,10 @@ public class ShapeGuardTests
             "TestCaller>BigQuery Other /projects/shop/datasets/sales?key&prettyPrint 200",
             "",
             "TestCaller>BigQuery Insert /upload/bigquery/v2/projects/shop/jobs?uploadType&upload_id -",
-            "TestCaller>Oracle SELECT FROM breakfasts /unknown/breakfasts SELECT id, name FROM breakfasts OK"
+            "TestCaller>Oracle SELECT FROM breakfasts /unknown/breakfasts SELECT id, name FROM breakfasts OK",
+            "TestCaller>BlobStorage Upload /devstoreaccount1/orders 201",
+            "",
+            "TestCaller>BlobStorage Upload /orders/receipt.json -"
         ],
         [9] =
         [
@@ -310,7 +343,10 @@ public class ShapeGuardTests
             "TestCaller>BigQuery Read /sales 200",
             "TestCaller>BigQuery Other /projects/shop/unknown 200",
             "TestCaller>BigQuery Insert /upload/bigquery/v2/projects/shop/jobs?uploadType&upload_id !HttpRequestException",
-            "TestCaller>Oracle SELECT FROM breakfasts /unknown/breakfasts SELECT id, name FROM breakfasts OK"
+            "TestCaller>Oracle SELECT FROM breakfasts /unknown/breakfasts SELECT id, name FROM breakfasts OK",
+            "TestCaller>BlobStorage Upload /devstoreaccount1/orders 201",
+            "",
+            "TestCaller>BlobStorage Upload /orders/receipt.json -"
         ],
         [10] =
         [
@@ -359,7 +395,62 @@ public class ShapeGuardTests
             "TestCaller>BigQuery Read /sales 200",
             "TestCaller>BigQuery Other /projects/shop/unknown 200",
             "TestCaller>BigQuery Insert /upload/bigquery/v2/projects/shop/jobs?uploadType&upload_id !HttpRequestException",
-            "TestCaller>Oracle SELECT FROM breakfasts /FREEPDB1/breakfasts SELECT id, name FROM breakfasts OK"
+            "TestCaller>Oracle SELECT FROM breakfasts /FREEPDB1/breakfasts SELECT id, name FROM breakfasts OK",
+            "TestCaller>BlobStorage Upload /devstoreaccount1/orders 201",
+            "",
+            "TestCaller>BlobStorage Upload /orders/receipt.json -"
+        ],
+        [11] =
+        [
+            "TestCaller>TargetService POST /api/items/{n}?b&expand 200",
+            "TestCaller>orders-host:8080 GET /orders/{n} 200",
+            "TestCaller>Api PUT /relative/{n} 204",
+            "TestCaller>Files GET /a%2Fb/c d/café/{bin} 200",
+            "TestCaller>Api POST /graphql query GetUser 200",
+            "TestCaller>Api POST /graphql query { menu } 200",
+            "TestCaller>Api GET /graphql?query query Menu 200",
+            "TestCaller>Api POST /graphql batch 200",
+            "TestCaller>Database INSERT INTO Orders /app/Orders INSERT INTO [Orders] ([Total]) VALUES ({n}) OK",
+            "TestCaller>Database INSERT INTO Audit /app/Audit INSERT INTO [Audit] VALUES ({n}) OK",
+            "TestCaller>Database Select /OrdersDb/Users SELECT [u].[Id] FROM [dbo].[Users] AS [u] WHERE [u].[Id] = {n} OK",
+            "TestCaller>TestDB SELECT FROM Users /localhost/TestDb/Users SELECT * FROM Users WHERE Id = {n} OK",
+            "TestCaller>SQL Server SELECT FROM breakfasts /analytics/breakfasts SELECT id, name FROM breakfasts OK",
+            "TestCaller>PostgreSQL SELECT FROM breakfasts /analytics/breakfasts SELECT id, name FROM breakfasts WHERE name = '{s}' OK",
+            "TestCaller>Analytics INSERT INTO events /analytics/events INSERT INTO events (name) VALUES ('{s}') OK",
+            "TestCaller>Redis Get /db0/user:{n} GET user:{n} OK",
+            "TestCaller>Redis Get /{n}/user:{n} GET user:{n} OK",
+            "TestCaller>MongoDB Find ← testcollection /testdb/testcollection {\"find\":\"{v}\",\"filter\":{\"_id\":\"{v}\",\"n\":{n},\"ok\":{b}}} 200",
+            "TestCaller>CosmosDB Create /dbs/mydb/colls/orders/docs {\"id\":\"{v}\",\"total\":{n}.{n}} 201",
+            "TestCaller>CosmosDB Query /dbs/mydb/colls/orders/docs SELECT * FROM c WHERE c.id = @id 200",
+            "TestCaller>BigQuery Query /myproject SELECT name FROM ds.t WHERE id = {n} 200",
+            "TestCaller>Spanner SELECT FROM Users /Users SELECT * FROM Users WHERE Id = {n} -",
+            "TestCaller>DynamoDB PutItem /Users {\"TableName\":\"{v}\",\"Item\":{\"id\":{\"S\":\"{v}\"}}} 200",
+            "TestCaller>Elasticsearch Search → orders /orders {\"query\":{\"match\":{\"name\":\"{v}\"}}} 200",
+            "TestCaller>Bigtable ReadRows ← my-table /my-table -",
+            "TestCaller>AtlasDataApi insertOne → orders /orders_db/orders {\"document\":{\"name\":\"{v}\"}} 200",
+            "TestCaller>S3 GetObject /my-bucket/path/to/file.json 200",
+            "TestCaller>BlobStorage Upload /mycontainer/myblob.txt 201",
+            "TestCaller>CloudStorage Download → my-bucket/file.txt /my-bucket/file.txt 200",
+            "TestCaller>ServiceBus Send → orders-queue /orders-queue/ -",
+            "TestCaller>SQS SendMessage /orders-queue 200",
+            "TestCaller>SNS Publish /my-topic 200",
+            "TestCaller>EventBridge PutEvents [OrderCreated] /default/ 200",
+            "TestCaller>EventHubs Send → telemetry /telemetry -",
+            "TestCaller>Kafka Produce → orders-topic /orders-topic -",
+            "TestCaller>PubSub Publish → my-topic /my-topic -",
+            "TestCaller>StorageQueue Receive ← my-queue /my-queue 200",
+            "TestCaller>MassTransit Send OrderCreated /orders -",
+            "TestCaller>GrpcService SayHello /greet.Greeter/SayHello 200",
+            "Caller>Application Send /IMediator/Send 200",
+            "data-insights>mongo Find ← Trial /data-insights-Development/Trial {\"find\":\"{v}\"} OK",
+            "web>graphql POST /sidekick?x query { me } 201",
+            "TestCaller>BigQuery Read /sales 200",
+            "TestCaller>BigQuery Other /projects/shop/unknown 200",
+            "TestCaller>BigQuery Insert /upload/bigquery/v2/projects/shop/jobs?uploadType&upload_id !HttpRequestException",
+            "TestCaller>Oracle SELECT FROM breakfasts /FREEPDB1/breakfasts SELECT id, name FROM breakfasts OK",
+            "TestCaller>BlobStorage CreateContainer /orders 201",
+            "TestCaller>StorageQueue Other /orders 200",
+            "TestCaller>BlobStorage Upload /orders/receipt.json !HttpRequestException"
         ]
     };
 

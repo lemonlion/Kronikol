@@ -4,6 +4,86 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.27.9] - 2026-10-29
+
+The patch part moves (5.27.8 to 5.27.9): bug fixes in the Blob Storage and Storage Queues packages, with no new
+option and no new public member (#125; `plans/EMULATOR_URL_SHAPES_PLAN.md` R2). Several fixes change what a report
+shows against Azurite, each said below; a production account's calls are drawn as before. History's fingerprint rule
+moves from 10 to 11 and is bridged, so the upgrade costs no quiet run.
+
+### Fixed
+
+- Blob Storage reads the container and the blob after the account, wherever the URL puts it. Azurite's URLs put the
+  account first in the path (`/devstoreaccount1/orders/order-1.json`), and every call there was drawn with the account
+  as its container: a blob's path began `/devstoreaccount1/`, creating a container was drawn `Upload`, deleting one
+  `Delete`, and listing its blobs `Other`. Where the account is comes from the Azure SDK's own parser, so it is read
+  wherever the client reads it: on `127.0.0.1` on any port and on the emulator's ports (`azurite:10000`), and Azurite's
+  built-in account, `devstoreaccount1`, on any host.
+- Storage Queues does the same for the queue and the message. Against Azurite every call was drawn as `Other` on no
+  queue, and listing the queues as `Other` on a queue named after the account.
+- A call on the Blob account (listing the containers, the service's properties) keeps its URL as sent, less Azurite's
+  account segment, so it reads on Azurite as on Azure.
+- At `Summarised` both handlers dropped every call they could not name, so against Azurite a Storage Queues suite drew
+  no call at all, and a Blob Storage suite no listing. They draw such a call as `Other` with its path or its queue.
+- A send that throws is answered with the exception's type where the status would be, and its message chain in
+  `Error`, as the HTTP handler answers one. It left a request with no response.
+
+### Changed
+
+- On a host name with a port the SDK does not take for path-style (`localhost:54321`, a Docker host's name), the SDK
+  itself reads Azurite's account as the container, and the blob client it makes from a container client sends
+  `/devstoreaccount1/{blob}`, without the container. Such a call is drawn as sent, `Other` on a container named after
+  the blob, where 5.27.8 drew `Upload /devstoreaccount1/order-1.json`. The wiki says to use `127.0.0.1` or the
+  emulator's ports.
+- History's rule moves from 10 to 11. Each call the two handlers now record otherwise carries, internally, what 5.27.8
+  recorded for it, so rules 6 to 10 read it as it was: a call `Summarised` dropped is no call under them, and a failed
+  send is unanswered. At the first run after the move a real change is named as 5.27.8 drew the call, as at every
+  bridged move.
+- The service card's `rules.operationKey` is 11. Cards made under different rules are not compared by hash, and
+  `kronikol card` rebuilds an older card from its report.
+- `Raw` records the call as sent, as before.
+
+### Tests
+
+- Facts drive the real `BlobServiceClient` and `QueueServiceClient` through each handler into a stub under six
+  connections: a production account, `UseDevelopmentStorage=true`, and Azurite's account on `127.0.0.1` on another
+  port, on a docker compose name on the emulator's port, on `localhost` on another port and on a Docker host's name on
+  another port, eight operations each. They assert how each request was named, never which requests a client version
+  sends, so they hold on the floors too.
+- Parser facts (`BlobAccountPathRuleTests`, `QueueAccountPathRuleTests`) read each host shape, a blob name holding
+  slashes or escapes, a container or a queue named like an account on Azure, and an account of a suite's own on a host
+  name with another port, which stays as the SDK reads it.
+- The kept rules are pinned to the published 5.27.8 packages: the frozen classifiers give what those packages recorded
+  for 156 Blob Storage and 138 Storage Queues requests, the new handlers' calls read under rules 6 to 10 exactly as
+  5.27.8 recorded them, and every call on Azure's own endpoint is recorded as before, with no mark. A replay of each
+  suite across the upgrade reads the verdicts this build reads throughout (`HistoryAcrossTheFixTests`).
+- Red first: on the code 5.27.8 ships, its Blob classifier given only a stub of `ApiPathOf` that returns the path as
+  sent, 37 of the 47 new Blob Storage client and parser facts fail, and 30 of 38 for Storage Queues, each on its
+  assertion. Mutations each turn their facts red: the account read from the path (21 Blob Storage facts, 18 Storage
+  Queues), the built-in account's fallback (11, 13), that fallback on any host (1, 1), the request's mark (128, 112) and
+  the failed send's (1, 1); each of HistoryJson's six new writes; and rules 6 to 10 each ignoring the mark.
+- Every tracker's `HistoryGuard.Pin` moves to rule 11, and `ShapeGuardTests` keeps rule 10's lines, with three new
+  captures: a container Azurite created, a dropped queue call and a failed send. `HistoryRawCallsTests` carries the same
+  three through a fragment.
+- The facts that said `Summarised` skips a call it cannot name say it draws one as `Other`.
+- The two kept reports' golden cards (`KeptReportCardTests`) move only by `rules.operationKey`, 10 to 11.
+
+### Documentation
+
+- The Blob Storage and Storage Queues wiki pages gain "Azurite": where the handler reads the account, the built-in
+  account on any host, and what the SDK itself sends on a host name with another port. They say that `Summarised` draws
+  an unnamed call as `Other`, and lose the claim, item 16 of #202, that DI extensions resolve `HttpContextAccessor`.
+- Cross-Run-History says what the move to rule 11 changes, and lists `"10"` among a bridge's keys.
+
+Checks: the whole suite on 5.27.7, before the rebase onto 5.27.8 (64 projects, 21,211 passed, 63 skipped, and the 21
+with a floor on their floors, 4,327 passed, 10 skipped); after it, the suites either release changed, each on the newest
+client and on its floor (Blob Storage 475, Storage Queues 431, TUnit 49), the LightBDD.TUnit suite (25), the three TUnit
+examples and the core suite (11,569 passed, 2 skipped); 21 mutations of the fix, each turning its facts red; the record
+probes run again against the published 5.27.8 packages, whose 156 and 138 rows are those 5.27.4 and 5.27.7 recorded; the
+Playwright suite (2,087 passed, 28 skipped; the two facts that failed, a Back in WebKit that fails now and then and a
+toggle's timing under the load of other runs, pass alone with their classes, 38 of 38); and the Release build of
+`release.slnf`, whose only warnings are the advisories 5.27.5 lists.
+
 ## [5.27.8] - 2026-10-29
 
 The patch part moves (5.27.7 to 5.27.8): a fix to `Kronikol.TUnit`, with no new option and nothing new of

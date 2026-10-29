@@ -42,9 +42,6 @@ public class StorageQueueTrackingMessageHandler : DelegatingHandler, ITrackingCo
 
         var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
 
-        if (effectiveVerbosity == StorageQueueTrackingVerbosity.Summarised && queueOp.Operation == StorageQueueOperation.Other)
-            return await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
         var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
         if (testInfo is null)
             return await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
@@ -86,16 +83,56 @@ public class StorageQueueTrackingMessageHandler : DelegatingHandler, ITrackingCo
         )
         {
             AttributionSource = testInfo.Value.Source,
-            Phase = TestPhaseContext.Current
+            Phase = TestPhaseContext.Current,
+            RecordedBefore11 = RecordedBefore11(request, effectiveVerbosity, method, requestUri)
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v => new PhaseVariant(
                 v == StorageQueueTrackingVerbosity.Raw ? request.Method : StorageQueueOperationClassifier.GetDiagramLabel(queueOp, v),
                 v == StorageQueueTrackingVerbosity.Raw ? request.RequestUri! : BuildCleanUri(queueOp),
                 v == StorageQueueTrackingVerbosity.Summarised ? null : requestBody,
                 GetFilteredHeaders(request, v),
-                v == StorageQueueTrackingVerbosity.Summarised && queueOp.Operation == StorageQueueOperation.Other)));
+                Skip: false)));
 
-        var response = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        HttpResponseMessage response;
+        try
+        {
+            response = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            // A send that throws is still an answer, as the HTTP handler records it: the exception's type where the
+            // status would be, its message chain in Error, and the exception on its way (FailedSend). Before #125 it left
+            // a request with no response, which history's earlier rules still read.
+            RequestResponseLogger.Log(new RequestResponseLog(
+                testInfo.Value.Name,
+                testInfo.Value.Id,
+                method,
+                null,
+                requestUri,
+                [],
+                _options.ServiceName,
+                _options.CallerName,
+                RequestResponseType.Response,
+                traceId,
+                requestResponseId,
+                false,
+                FailedSend.Status(ex),
+                DependencyCategory: DependencyCategories.MessageQueue
+            )
+            {
+                Error = FailedSend.Describe(ex),
+                AttributionSource = testInfo.Value.Source,
+                Phase = TestPhaseContext.Current,
+                RecordedBefore11 = RecordedBefore.NotRecorded
+            }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
+                v => new PhaseVariant(
+                    v == StorageQueueTrackingVerbosity.Raw ? request.Method : StorageQueueOperationClassifier.GetDiagramLabel(queueOp, v),
+                    v == StorageQueueTrackingVerbosity.Raw ? request.RequestUri! : BuildCleanUri(queueOp),
+                    null,
+                    [],
+                    Skip: false)));
+            throw;
+        }
 
         var responseBody = await ReadResponseBody(response, drawnAt, cancellationToken);
         var responseHeaders = GetFilteredHeaders(response, effectiveVerbosity);
@@ -125,7 +162,7 @@ public class StorageQueueTrackingMessageHandler : DelegatingHandler, ITrackingCo
                 v == StorageQueueTrackingVerbosity.Raw ? request.RequestUri! : BuildCleanUri(queueOp),
                 v == StorageQueueTrackingVerbosity.Summarised ? null : responseBody,
                 GetFilteredHeaders(response, v),
-                v == StorageQueueTrackingVerbosity.Summarised && queueOp.Operation == StorageQueueOperation.Other)));
+                Skip: false)));
 
         return response;
     }
@@ -168,5 +205,24 @@ public class StorageQueueTrackingMessageHandler : DelegatingHandler, ITrackingCo
             return new Uri("storagequeue:///");
 
         return new Uri($"storagequeue:///{op.QueueName}");
+    }
+
+    /// <summary>
+    /// How every release before #125's R2 recorded this call, when that differs from how it is recorded now: its label
+    /// and URI, or that it was not recorded at all (Summarised dropped a call it could not name). History's rules 6 to
+    /// 10 read the call from here (<see cref="RequestResponseLog.RecordedBefore11"/>). Raw records the call as sent, then
+    /// and now.
+    /// </summary>
+    private static RecordedBefore? RecordedBefore11(HttpRequestMessage request, StorageQueueTrackingVerbosity verbosity,
+        OneOf<HttpMethod, string> method, Uri uri)
+    {
+        if (verbosity == StorageQueueTrackingVerbosity.Raw)
+            return null;
+        var then = StorageQueueOperationClassifierBefore11.Classify(request);
+        if (verbosity == StorageQueueTrackingVerbosity.Summarised && then.Operation == StorageQueueOperation.Other)
+            return RecordedBefore.NotRecorded;
+        var label = StorageQueueOperationClassifierBefore11.GetDiagramLabel(then, verbosity);
+        var thenUri = StorageQueueOperationClassifierBefore11.BuildCleanUri(then);
+        return label == method.Value?.ToString() && thenUri.ToString() == uri.ToString() ? null : new RecordedBefore(label, thenUri);
     }
 }

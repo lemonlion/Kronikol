@@ -17,7 +17,7 @@ public class InteractionRecordTests
         var request = InteractionRecord.FromJson("""{"type":"Request","method":"POST","uri":"http://localhost:8081/sidekick?x=1","serviceName":"graphql","callerName":"web","testId":"t","requestResponseId":"5c0c4d43-8f5e-4d8e-9b8e-7b1e2f7b6a01","content":"{\"query\":\"{ me }\"}"}""").ToLog();
         var response = InteractionRecord.FromJson("""{"type":"Response","method":"POST","uri":"http://localhost:8081/sidekick?x=1","serviceName":"graphql","callerName":"web","testId":"t","requestResponseId":"5c0c4d43-8f5e-4d8e-9b8e-7b1e2f7b6a01","statusCode":"201"}""").ToLog();
 
-        HistoryGuard.Pin([request, response], 10,
+        HistoryGuard.Pin([request, response], 11,
             "web>graphql POST /sidekick?x query { me } 201");
     }
 

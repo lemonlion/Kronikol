@@ -70,7 +70,7 @@ public class TrackingNpgsqlCommandResponseDetailTests : IDisposable
             while (reader.Read()) { }
         }
 
-        HistoryGuard.Pin(GetLogsForTest(), 10,
+        HistoryGuard.Pin(GetLogsForTest(), 11,
             "Caller>PostgreSQL SELECT FROM breakfasts /analytics/breakfasts SELECT id, name FROM breakfasts OK");
     }
 

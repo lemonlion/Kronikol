@@ -90,7 +90,7 @@ public class StorageQueueTrackingMessageHandlerTests : IDisposable
         using var invoker = CreateInvoker(MakeOptions());
         await invoker.SendAsync(MakeReceiveRequest(), CancellationToken.None);
 
-        HistoryGuard.Pin(GetLogsFromThisTest(), 10,
+        HistoryGuard.Pin(GetLogsFromThisTest(), 11,
             "TestCaller>StorageQueue Receive ← my-queue /my-queue 200");
     }
 
@@ -237,17 +237,19 @@ public class StorageQueueTrackingMessageHandlerTests : IDisposable
     }
 
     [Fact]
-    public async Task Summarised_SkipsOtherOperations()
+    public async Task Summarised_records_a_call_it_cannot_name_as_Other_on_its_queue()
     {
         using var invoker = CreateInvoker(MakeOptions(StorageQueueTrackingVerbosity.Summarised));
 
-        // GET on queue without comp=metadata → Other
+        // Summarised used to send an unnamed call on unrecorded, which dropped real calls (#125, Q1). A GET on a queue
+        // without comp=metadata names no operation.
         var request = new HttpRequestMessage(HttpMethod.Get,
             "https://account.queue.core.windows.net/my-queue");
         await invoker.SendAsync(request, CancellationToken.None);
 
-        var logs = GetLogsFromThisTest();
-        Assert.Empty(logs);
+        var logged = Assert.Single(GetLogsFromThisTest(), l => l.Type == RequestResponseType.Request);
+        Assert.Equal("Other", logged.Method.Value);
+        Assert.Equal("storagequeue:///my-queue", logged.Uri.ToString());
     }
 
     // ─── Raw verbosity ────────────────────────────────────────

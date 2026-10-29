@@ -96,7 +96,7 @@ public class BlobTrackingMessageHandlerTests : IDisposable
         using var invoker = CreateInvoker(MakeOptions());
         await invoker.SendAsync(MakeUploadRequest(), CancellationToken.None);
 
-        HistoryGuard.Pin(GetLogsFromThisTest(), 10,
+        HistoryGuard.Pin(GetLogsFromThisTest(), 11,
             "TestCaller>BlobStorage Upload /mycontainer/myblob.txt 200");
     }
 
@@ -244,17 +244,19 @@ public class BlobTrackingMessageHandlerTests : IDisposable
     }
 
     [Fact]
-    public async Task Summarised_SkipsOtherOperations()
+    public async Task Summarised_records_a_call_it_cannot_name_as_Other_on_its_container()
     {
         using var invoker = CreateInvoker(MakeOptions(BlobTrackingVerbosity.Summarised));
 
-        // GET on container with restype=container alone → Other
+        // Summarised used to send an unnamed call on unrecorded, which dropped real calls (#125, Q1). A GET on a
+        // container with restype=container alone names no operation.
         var request = new HttpRequestMessage(HttpMethod.Get,
             "https://account.blob.core.windows.net/mycontainer?restype=container");
         await invoker.SendAsync(request, CancellationToken.None);
 
-        var logs = GetLogsFromThisTest();
-        Assert.Empty(logs);
+        var logged = Assert.Single(GetLogsFromThisTest(), l => l.Type == RequestResponseType.Request);
+        Assert.Equal("Other", logged.Method.Value);
+        Assert.Equal("https://account.blob.core.windows.net/mycontainer", logged.Uri.ToString());
     }
 
     // ─── Raw verbosity ────────────────────────────────────────

@@ -118,7 +118,7 @@ public class CosmosTrackingMessageHandlerTests : IDisposable
         await invoker.SendAsync(MakeCreateRequest(), CancellationToken.None);
         await invoker.SendAsync(MakeQueryRequest(), CancellationToken.None);
 
-        HistoryGuard.Pin(GetLogsFromThisTest(), 10,
+        HistoryGuard.Pin(GetLogsFromThisTest(), 11,
             "TestCaller>CosmosDB Create /colls/orders {\"id\":\"{v}\",\"total\":{n}.{n}} 200",
             "TestCaller>CosmosDB Query /colls/orders SELECT * FROM c WHERE c.status = '{s}' 200");
     }

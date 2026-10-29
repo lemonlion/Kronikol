@@ -67,7 +67,7 @@ public class RedisTrackingDatabaseProxyTests : IDisposable
         var db = stub.WithRedisTestTracking(MakeOptions());
         db.StringGet("user:123");
 
-        HistoryGuard.Pin(GetLogsFromThisTest(), 10,
+        HistoryGuard.Pin(GetLogsFromThisTest(), 11,
             "TestCaller>Redis Get /db0/user:{n} OK");
     }
 
