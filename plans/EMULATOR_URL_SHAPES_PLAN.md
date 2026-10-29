@@ -653,4 +653,5 @@ translation of stored lines to this change, so (b) was never coming from #192, a
     5.27.7 recorded; the Playwright suite (2,087 passed, 28 skipped; the two facts that failed, a Back in WebKit that
     fails now and then and a toggle's timing under the load of other runs, pass alone with their classes, 38 of 38); and
     the Release build of `release.slnf`, whose only warnings are the advisories 5.27.5 lists.
-  - Left for the owner: whether #125 closes now, and Q4's issue (F17), not filed until the owner says so.
+  - At the owner's word, #125 was closed the same day with a comment naming both releases, and Q4's issue (F17, a
+    credential in a URL's query string stored as sent) was filed as #221.
