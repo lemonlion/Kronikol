@@ -19,3 +19,4 @@ R3c's probes of `Kronikol.PlantUml.Ikvm` (`plans/CLIENT_FLOORS_PLAN.md` section 
   five raised (`...-all-raised.txt`). Each draws both diagrams. The project ran from a folder outside the repository,
   with the packed packages in `feed/` beside it (`nuget.config`), so the repository's build props did not apply; the
   probe packages were removed from the NuGet packages folder afterwards.
+  `run-5.27.13-nuget.org.txt` is the released 5.27.13 from nuget.org, after its CI: it draws both, on 8.9.0.

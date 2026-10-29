@@ -930,6 +930,9 @@ Each has a recommendation; none is legwork.
   are MongoDB.Driver 2.x's SharpCompress and Snappier, and its pack, whose IKVM package carries
   `net.sourceforge.plantuml.dll` (7.9 MB).
 
+- **2026-10-29, #97 closed** after 5.27.13's CI, with a comment listing the releases from R1 to R3c, and 5.27.13 from
+  nuget.org drew both of `probe-r3c/consumer/`'s diagrams, where 5.27.12 failed at its first render.
+
 ---
 
 ## Appendix A. R1 edit sites (at `1ee6373a`)
