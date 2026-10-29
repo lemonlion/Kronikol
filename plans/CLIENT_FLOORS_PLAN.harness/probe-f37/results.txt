@@ -1,0 +1,11 @@
+# Microsoft.Playwright: 77 stable 1.x releases, 1.12.0 to 1.64.1; binary search on Linux (mcr.microsoft.com/dotnet/sdk:10.0)
+1.64.1 | ok | driver started
+1.31.1 | ok | driver started
+1.19.0 | ok | driver started
+1.15.3 | ok | driver started
+1.14.0 | ok | driver started
+1.12.2 | ok | driver started
+1.12.1 | ok | driver started
+1.12.0 | FAIL | driver failed: Win32Exception: An error occurred trying to start process '/probe/bin/Debug/net10.0/.playwright/node/linux/playwright.sh' with working directory '/probe'. No such file or directory
+# oldest whose driver starts on Linux: 1.12.1
+exit 0

@@ -4,6 +4,36 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.27.11] - 2026-10-29
+
+The patch part moves (5.27.10 to 5.27.11): a packaging fix, with no new option and no new public member (#97;
+`plans/CLIENT_FLOORS_PLAN.md` F37).
+
+### Fixed
+
+- **`Kronikol.Playwright` asks for Microsoft.Playwright 1.12.1, whose driver starts on Linux.** 5.27.10 asked for
+  1.12.0, which ships the scripts that start its driver on Linux and macOS with CRLF line ends, so Linux cannot run
+  them: in a project that took Microsoft.Playwright only through Kronikol, every test that starts Playwright failed on
+  Linux with "No such file or directory". 1.12.1 is the oldest release whose driver starts there. Behaviour change:
+  such a project now resolves 1.12.1.
+
+### Tests
+
+- The floor of the Playwright suite was measured on Windows alone, where the driver starts through `playwright.cmd`,
+  and CI's floor run, on Linux, failed on 1.12.0 in 5.27.10's first run. The suite passes on 1.12.1 on Linux, in the
+  .NET 10 SDK container, and on Windows.
+
+### Documentation
+
+- The wiki's Playwright page names 1.12.1, and says that 5.27.10's floor does not start its driver on Linux.
+
+Checks: the Playwright suite on Linux in the .NET 10 SDK container, as CI's floor run takes it: red on 1.12.0, whose two
+facts that start a browser cannot start its driver, as in 5.27.10's CI, and its browser facts green on 1.12.1; the
+driver of each stable 1.x on Linux, binary-searched, of which only 1.12.0's fails to start; on Windows the Playwright
+suite on the newest and, from an empty `bin/` and `obj/`, on 1.12.1 (10 of 10 each), its package fact red first on the
+moved ledger; the core suite's packaging, template and workflow facts (291); 5.27.10's CI, whose one failed job was this
+floor run; and the Release build of `release.slnf`, whose only advisories are the older ones 5.27.5 lists.
+
 ## [5.27.10] - 2026-10-29
 
 The patch part moves (5.27.9 to 5.27.10): packaging fixes, and fixes to the BDDfy and LightBDD adapters, with no new

@@ -212,6 +212,10 @@ with the floor each took, and the lines above a `# the run below` note are the e
   from an empty `bin/` (in the adapters' worktree, whose `obj/` came from the floor's own restore), and
   `playwright-obj.sh` the Playwright floor's build after each of five starts, of which only an empty `bin/` on the
   newest's `obj/` leaves no `playwright.ps1`.
+- `probe-f37/` is F37: `search.py` binary-searches the stable 1.x releases of Microsoft.Playwright for the oldest whose
+  driver starts on Linux, building `probe/` for each in the .NET 10 SDK container of the podman VM (`results.txt`), and
+  `suite.sh` runs the Playwright suite there as CI's floor run takes it, on the releases given (`suite.txt`: 1.12.0 and
+  1.12.1; on 1.12.1 the package fact fails, as the probe moves the pin and not the ledger).
 - `floor/r3a-playwright.sh`: Microsoft.Playwright, each probe installing the Chromium of the release it built into a
   browsers folder of its own (`--setup`), never the shared cache (`floor/r3a-playwright.txt`).
 - `floor/floor_probe2.py`, `floor/paired_floor.py` and `floor/family_floor.py` gained, in R3a: a test run that finds no

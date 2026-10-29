@@ -10,12 +10,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Microsoft.Playwright: 1.12.0 is the oldest 1.x the suite passes on, the first stable release, each probe
-         driving the Chromium of its own release, and its graph carries no known advisory (harness
-         floor/r3a-playwright.txt). FloorLedger holds the floor, and the test project's package fact reads it back from
-         the packed nuspec; the suite runs on the newest 1.x, and on this floor with -p:FloorRun=true
-         (plans/CLIENT_FLOORS_PLAN.md R3a). -->
-    <PackageReference Include="Microsoft.Playwright" Version="1.12.0" />
+    <!-- Microsoft.Playwright: 1.12.1 is the oldest 1.x whose driver starts on Linux, and the suite passes on it there
+         and on Windows, each run driving the Chromium of its own release; its graph carries no known advisory. 1.12.0,
+         which R3a measured on Windows alone, ships the script that starts its driver on Linux and macOS with CRLF line
+         ends, so Linux cannot run it ("No such file or directory") and every test that starts Playwright fails there
+         (F37; harness probe-f37/, floor/r3a-playwright.txt). FloorLedger holds the floor, and the test project's
+         package fact reads it back from the packed nuspec; the suite runs on the newest 1.x, and on this floor with
+         -p:FloorRun=true (plans/CLIENT_FLOORS_PLAN.md R3a, F37). -->
+    <PackageReference Include="Microsoft.Playwright" Version="1.12.1" />
   </ItemGroup>
 
   <ItemGroup>

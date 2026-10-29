@@ -65,7 +65,7 @@ internal static class FloorLedger
         Measured("Kronikol.LightBDD.xUnit2", "xunit", "2.4.2", "R3a: floor/r3a-lightbdd-xunit2-xunit.txt"),
         Measured("Kronikol.LightBDD.xUnit3", "LightBDD.XUnit3", "3.12.0", "R3a: floor/r3a-lightbdd-xunit3.txt"),
         Measured("Kronikol.BDDfy.xUnit3", "TestStack.BDDfy", "8.0.1.3", "R3a: floor/r3a-bddfy.txt, floor/r3a-bddfy-f32.txt"),
-        Measured("Kronikol.Playwright", "Microsoft.Playwright", "1.12.0", "R3a: floor/r3a-playwright.txt"),
+        Measured("Kronikol.Playwright", "Microsoft.Playwright", "1.12.1", "F37: probe-f37/results.txt, probe-f37/suite.txt; R3a: floor/r3a-playwright.txt"),
 
         // Clients.
         Measured("Kronikol.Extensions.BigQuery", "Google.Cloud.BigQuery.V2", "3.0.0", "CLIENT_FLOORS_PLAN.md R1"),
