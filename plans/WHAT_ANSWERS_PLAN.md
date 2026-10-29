@@ -5,8 +5,8 @@ changed none of the code or plan lines it cites) · **Status:** a draft, not gre
 prototype of R1 is a patch in the harness. · **Issue:** #219, open, filed by the owner on 2026-10-28 on 5.17.0. ·
 **Harness:** [`WHAT_ANSWERS_PLAN.harness/`](WHAT_ANSWERS_PLAN.harness/README.md), every probe re-runnable.
 
-Code citations hold at every commit from `753f17f9` to `54e8ee82`; wiki citations are to the wiki's `origin/master` at
-`2c545b0`; Kronikol4J citations are to its `main` at `77811b4`.
+Code citations hold at every commit from `753f17f9` to `7d06fd92` (5.27.7), checked again there; wiki citations are to
+the wiki's `origin/master` at `2c545b0`; Kronikol4J citations are to its `main` at `77811b4`.
 
 ---
 
@@ -182,8 +182,8 @@ direction:
   four of them are a server on a socket or an app on TestServer, which R3's own rule reads as no double.
 
 The gap was known and recorded as by design: "A transport of your own at the end of the chain reads as a double"
-(`Tracking-Dependencies.md:110`, the 5.16.0 entry of `CHANGELOG.md`, and the row R3 left in `ROADMAP.md:985`,
-Appendix C). A forwarder is a wider case than a home-made transport, and nobody had looked at it.
+(`Tracking-Dependencies.md:110`, the 5.16.0 entry of `CHANGELOG.md`, and the `PARTY_IDENTITY_PLAN` row R3 left in
+`ROADMAP.md`'s Appendix C). A forwarder is a wider case than a home-made transport, and nobody had looked at it.
 
 ### 3.4 Nobody who knows can say
 
@@ -506,7 +506,7 @@ Run the full core and E2E suites, as each release does.
   `behaviourHash` move once. A forwarded socket call made under a span sends the transport's span, as a direct one
   always did.
 - Kronikol4J `docs/REMAINING_PARITY.md`, Not mirrored (5.7).
-- `ROADMAP.md:985`, the #190 Appendix C row: forwarders are followed; a home-made transport is left for R2.
+- `ROADMAP.md`, Appendix C's `PARTY_IDENTITY_PLAN` row: forwarders are followed; a home-made transport is left for R2.
 
 ### 6.2 R2, a minor: say what answers
 
@@ -548,7 +548,7 @@ Run the full core and E2E suites, as each release does.
 - `Generated-Reports.md:427` and `Querying-Reports.md:567-570`: the handler's option as a source of the mark.
 - `AI-Integration-Prompt.md`: one clause, for a handler whose calls reach a stub on a socket (#190 Q14 made the prompt
   ask integrators to declare doubles).
-- `CHANGELOG.md`; Kronikol4J, Not mirrored; `ROADMAP.md:985`, the row's last part closed.
+- `CHANGELOG.md`; Kronikol4J, Not mirrored; `ROADMAP.md`, the Appendix C row's last part closed.
 - #219 closed with a comment (Q7).
 
 ---
@@ -572,7 +572,7 @@ Run the full core and E2E suites, as each release does.
   ground. #208's "track an existing `HttpClient`" helper, if built, would rest on R1's invoker reading to decide its
   `traceparent`.
 - **`PARTY_IDENTITY_PLAN.md`** (#190): §5.10 (the field's contract), §5.11 (R3, the mark this plan corrects), its R3
-  log (`:1296-1304`) and the Appendix C row it left (`ROADMAP.md:985`).
+  log (`:1296-1304`) and the row it left in `ROADMAP.md`'s Appendix C.
 - **`GRPC_IDENTITY_PROPAGATION_PLAN.md` R3** (4.14.3): the `traceparent` decision.
 - **4.26.5** (`b5806ae9`): each call's own span, which P3 shows a forwarder undoes.
 
@@ -607,7 +607,7 @@ Run the full core and E2E suites, as each release does.
    party does. **Recommended: keep it so.** Telling a declared mark from a seen one would put a new member on every
    call in the capture format, and the parties file remains the place to declare a party's kind.
 
-6. **Placement.** R1 is a defect in what shipped (`ROADMAP.md:75`, rule 1). **Recommended: R1 now, R2 straight after
+6. **Placement.** R1 is a defect in what shipped (`ROADMAP.md`'s rule 1). **Recommended: R1 now, R2 straight after
    it.** No roadmap row; this plan's `PLANS_STATUS.md` row is its record, as for other single-issue plans. Each release
    updates the Appendix C row.
 
