@@ -49,6 +49,12 @@ public class StorageQueueTrackingMessageHandler : DelegatingHandler, ITrackingCo
         var requestResponseId = Guid.NewGuid();
         var traceId = Guid.NewGuid();
 
+        // A call that moves a message is an event, and a response carries its request's kind. By the operation: at Raw the
+        // record is the HTTP request itself, whose verb and path do not name one.
+        var metaType = queueOp.Operation is StorageQueueOperation.SendMessage or StorageQueueOperation.ReceiveMessages or StorageQueueOperation.PeekMessages
+            ? RequestResponseMetaType.Event
+            : RequestResponseMetaType.Default;
+
         var label = StorageQueueOperationClassifier.GetDiagramLabel(queueOp, effectiveVerbosity);
 
         // Each note is made at its own verbosity from bodies read once: a phase's variant was given the effective
@@ -79,6 +85,7 @@ public class StorageQueueTrackingMessageHandler : DelegatingHandler, ITrackingCo
             traceId,
             requestResponseId,
             false,
+            MetaType: metaType,
             DependencyCategory: DependencyCategories.MessageQueue
         )
         {
@@ -117,6 +124,7 @@ public class StorageQueueTrackingMessageHandler : DelegatingHandler, ITrackingCo
                 requestResponseId,
                 false,
                 FailedSend.Status(ex),
+                MetaType: metaType,
                 DependencyCategory: DependencyCategories.MessageQueue
             )
             {
@@ -151,6 +159,7 @@ public class StorageQueueTrackingMessageHandler : DelegatingHandler, ITrackingCo
             requestResponseId,
             false,
             response.StatusCode,
+            MetaType: metaType,
             DependencyCategory: DependencyCategories.MessageQueue
         )
         {

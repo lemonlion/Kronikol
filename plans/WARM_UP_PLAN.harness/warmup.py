@@ -143,7 +143,9 @@ def load(loader):
                         end=(start + round(dur * TICKS_PER_MS)) if (start is not None and dur is not None) else None,
                         # Plan 4.1 step 1: the test's own call. Its caller never appears as a service in the
                         # scenario (the rule PlantUmlCreator uses to pick the diagram's actor), and it is a
-                        # request, not an event a broker delivered.
+                        # request, not an event a broker delivered. WarmUpCalls also judges an event MessageTable reads as a
+                        # publish (plans/CALLS_AND_EVENTS_PLAN.md Q5). No test-made event in the corpus reads so, so that
+                        # is not modelled here, and A_publish_the_test_makes_is_judged holds it.
                         test=(c['caller'] not in services and c['meta'] != 'Event'))
             call['shape'] = shape_of(call)
             sc['calls'].append(call)

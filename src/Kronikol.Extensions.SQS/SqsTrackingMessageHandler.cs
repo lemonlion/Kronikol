@@ -66,6 +66,12 @@ public class SqsTrackingMessageHandler : DelegatingHandler, ITrackingComponent
         var requestResponseId = Guid.NewGuid();
         var traceId = Guid.NewGuid();
 
+        // A call that moves a message is an event, and a response carries its request's kind. By the operation: at Raw the
+        // record is the HTTP request itself, whose verb and path do not name one.
+        var metaType = sqsOp.Operation is SqsOperation.SendMessage or SqsOperation.SendMessageBatch or SqsOperation.ReceiveMessage
+            ? RequestResponseMetaType.Event
+            : RequestResponseMetaType.Default;
+
         var label = SqsOperationClassifier.GetDiagramLabel(sqsOp, effectiveVerbosity);
 
         var logRequestContent = effectiveVerbosity == SqsTrackingVerbosity.Summarised
@@ -95,6 +101,7 @@ public class SqsTrackingMessageHandler : DelegatingHandler, ITrackingComponent
             traceId,
             requestResponseId,
             false,
+            MetaType: metaType,
             DependencyCategory: DependencyCategories.MessageQueue
         )
         {
@@ -135,6 +142,7 @@ public class SqsTrackingMessageHandler : DelegatingHandler, ITrackingComponent
             requestResponseId,
             false,
             response.StatusCode,
+            MetaType: metaType,
             DependencyCategory: DependencyCategories.MessageQueue
         )
         {

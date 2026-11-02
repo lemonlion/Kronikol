@@ -153,7 +153,7 @@ The report's scripts never read the field (READ: no `metaType` in any `.js`). Th
 | F19 | **`kronikol export` of NDJSON gives a database call an HTTP verb.** F16's flattening means a Cosmos `Delete`, a Spanner `DELETE` or a Redis `GET` gets `http.request.method` and a verb for a span name, beside its `db.system.name`, where the live route does not. Span kinds are unaffected | RUN | `otlp-verb`, `r3-export-verbs`; `OtlpSpanMapper.cs:212` |
 | F20 | **A shard that can see the ledger declares itself partial, and the fold keeps it.** `HistoryRunContext.cs:183-185` sets `Partial` from the shard's own reading, and `HistoryLedgerWriter.cs:665-667` makes the run partial if any shard says so, where `HistoryCommand.cs:386-391` and `Cross-Run-History.md:384` say the heuristic runs at append "so the shards of one run do not each declare themselves partial". The history action's flow does this, as it runs `read` in each test job before the tests. Real lane: `212 scenarios from 2 shards partial`. Nothing is then reported absent, and a merged run, which is not partial, reads past those lines: with `--history` it compares with an older run and raises a false `behaviour-changed` that R1 does not remove (C1), or stays silent on a real change (C2). Not about kind | RUN, READ | `merge-round-trip-*` |
 | F21 | **A merge differs from the run's own reading in other ways, none about kind.** Rarer and hand-built cases: a path ending in `%20`; `ResultDefaulted`; rows sharing a stable id, result, attempt, ticks and error; an `ExampleValues` null in a `.krkl`; two features with one display name. Options a merge never reads: `HistoryBranch`, `HistoryCountRuns`, `HistoryMinRuns`, `HistoryReordered`, `HistoryPartialRun`. Silence across a rule change; a false new dependency from rule 6 to 11; a tool older than its package (`3 behaviour changed` against own 1); merge order deciding a scenario in two shards; a retry in a second process, as `runs/` is not swept. Over 132 real reports and 20,781 positions, R1 has 0 differences in call lines, where 5.27.13 has 138, all casing. 4 positions differ in result, all in ingest reports, which a merge refuses | RUN | `merge-round-trip-*` |
-| F22 | **SQS, SNS and EventBridge log no response when a send throws** (`SqsTrackingMessageHandler.cs:113`, `SnsTrackingMessageHandler.cs:113`, `EventBridgeTrackingMessageHandler.cs:119`). Storage Queues has answered them since #125 (`StorageQueueTrackingMessageHandler.cs:119-126`). Under R2 these become orphan `Event` records. Answering them changes a call's status in the fingerprint (`Caller>SQS SendMessage /orders -` becomes `... !HttpRequestException`), so it needs a history rule of its own, as rules 9 and 11 had: `RecordedBefore.NotRecorded` on the response, an `Unanswered` mark, and a `HistoryAcrossTheFixTests` per package | RUN, READ | `failed-sends-*`, `r2-citations` |
+| F22 | **SQS, SNS and EventBridge log no response when a send throws** (`SqsTrackingMessageHandler.cs:113`, `SnsTrackingMessageHandler.cs:113`, `EventBridgeTrackingMessageHandler.cs:119`). Storage Queues has answered them since #125 (`StorageQueueTrackingMessageHandler.cs:119-126`). Under R2 these become orphan `Event` records, as does a Pub/Sub handler that throws (`TrackingSubscriberClient.cs:44-49`), which leaves its `Receive` unanswered. Answering them changes a call's status in the fingerprint (`Caller>SQS SendMessage /orders -` becomes `... !HttpRequestException`), so it needs a history rule of its own, as rules 9 and 11 had: `RecordedBefore.NotRecorded` on the response, an `Unanswered` mark, and a `HistoryAcrossTheFixTests` per package | RUN, READ | `failed-sends-*`, `r2-citations` |
 | F23 | **The wiki lists routes that do not exist.** `Integration-EventHubs-Extension.md:79-89` lists operations no wrapper logs, and its line 99 contradicts line 81. `Integration-PubSub-Extension.md:75-79` does the same | READ | R2 prototype |
 | F24 | **`kronikol merge <folder>` exits 1 on a real report folder.** It sweeps `attachments/*.json` as shards, so a shard with `attachments/openapi.json` stops the merge. The wiki's recipe can hit it. Not about kind | RUN | `merge-folder-attachments` |
 | F25 | **A record with a relative URI costs part of the report,** with a warning: "... not supported for a relative URI". It always loses the scenario's diagram. With internal flow on, its default, it also loses `TestRunReport.html` and `Specifications.html`. With `GenerateMergeableData` on as well, it also loses `TestRunReport.krkl` and `service.json`. With flow off, only the diagram is lost. Not about kind | RUN | `relative-address-report`, `merge-round-trip-*` |
@@ -241,8 +241,8 @@ public enum RequestResponseMetaType
 
     /// <summary>
     /// A message operation: one that hands a message to a broker, reads one from it or delivers one to a consumer, whatever
-    /// came back. An empty receive and a failed send are events too. A record written only to say a call failed, holding an
-    /// exception and no message, is a call. Drawn on the event card.
+    /// came back. An empty receive, a failed send and a failed consume are events too. A fault reported apart from the
+    /// operation, holding an exception and no message, as MassTransit's observers report one, is a call. Drawn on the event card.
     /// </summary>
     Event
 }
@@ -349,7 +349,7 @@ the corpus's 638 test-made events reads as a publish, so a 23-line port changes 
 `MessageTracker` on its own scheme stays unjudged, as today. BreakfastProvider's report cannot tell these apart: of its 1,290 requests in scenarios R2 moves none, and its marks are 18 in every view, the option's code among them (RUN).
 
 `MessageTable` is the oracle only at one remove: each broker's card class has a direction map, already held to the table by
-`Each_call_..._reads_as_its_operation`, and eight of §6.7's nine theories use that map, as the table cannot read `Raw` or `Consume`. MassTransit's reads the operation, as its map calls a fault a message at `Raw`
+`Each_call_..._reads_as_its_operation`, and eight of §6.7's nine theories use that map, as a tracker knows its operation and the table reads a label. MassTransit's reads the operation, as its map calls a fault a message at `Raw`
 (`MassTransitCardMessageTests.cs:30-35`).
 
 Readers that move: the note's card, `kind`, and warm-up. Also **the collapse key, at `Raw` on SQS, SNS and EventBridge only, with
@@ -537,7 +537,7 @@ It uses `PollingInterval = 200` and no network mocking, per the repo's rules.
 In each broker package's suite, beside the facts that already hold its `MessageTable` row to its classifier, a theory over
 operation and verbosity: `Event` exactly when the card class's direction map says it publishes or consumes. **Written for all nine in the patch:** 384 rows,
 green on R2, 135 red on R1's trackers, and Service Bus green on both (RUN). The first draft's form, "`Event` exactly when the table says `Publishes` or `Receives`", disagrees with correct
-records on 3 of 132 rows at Detailed, 15 of 132 at `Raw` and 3 of 129 at Summarised (RUN, `kinds-r2-analysis`), as the table cannot read `Raw` or `Consume`. It moves 36 operations, §5.4's 32 and four `Other`.
+records on 3 of 132 rows at Detailed, 15 of 132 at `Raw` and 3 of 129 at Summarised (RUN, `kinds-r2-analysis`), as a tracker knows its operation and the table reads a label. It moves 36 operations, §5.4's 32 and four `Other`.
 
 - `KafkaTrackerTests.LogTransaction_Uses_event_metatype` flips, and is renamed `LogTransaction_Uses_default_metatype`. It is the only existing pin R2 turns red, out of 1,762 (RUN), so the theory is the real guard.
 - `A_response_carries_its_requests_kind` for each package.
@@ -667,7 +667,7 @@ and `MassTransitTracker`; `src/Kronikol/Reports/WarmUpCalls.cs:46,155` and a com
 
 - **Q12. The order, new since Q1.** You agreed to "R1, R2, R3 in order" on my statement that R3 needed R2. Measured, it is the other way round (§5.5). (a) R1, R3, R2. (b) R1, R2, R3, with three receives wrong between them. **Recommended: (a).** The order cures the receives, and Q6 (b) cures the Collector edges.
 - **Q3. A response's kind** (R2): (a) it carries its request's, (b) keep each package's response as it logs it today. **Recommended: (a).** One rule, and a
-  reply's note stops depending on the broker. It moves Pub/Sub and Event Hubs replies at `Raw`, failure messages at every verbosity (`TrackingPublisherClient.cs:50,80`, `TrackingEventHubProducerClient.cs:66,92,112`) and the ten's reply notes onto the event card. (b) is not "no change", as it makes 10 new `Event` requests with `Default` replies.
+  reply's note stops depending on the broker. It moves Pub/Sub and Event Hubs replies at `Raw`, failure messages at `Detailed` and `Raw` (`TrackingPublisherClient.cs:50,80`, `TrackingEventHubProducerClient.cs:66,92,112`) and the ten's reply notes onto the event card. (b) is not "no change", as it makes 10 new `Event` requests with `Default` replies.
 - **Q4. MassTransit's fault records** (R2): (a) `Default`, as `MessageTable` already reads them, (b) stay `Event`.
   **Recommended: (a).** They record that a send, publish or consume failed, and the table's comment says "a fault is no message". On a working send the event card holds the message; under (b) the only card on a failed send would hold the exception's text in that slot, and "`Neither` is `Default`" would be false on three operations. (a) means a failed MassTransit send leaves no event, where Kafka's and Service Bus's keep one, as those log the call (§5.4). The best argument for (b) is that a consume fault did deliver its message (`CallGraphBuilder.cs:107`), yet `kind` shows no event; the record still holds no message. They give no warm-up mark either way (RUN).
 - **Q5. Warm-up in R2,** reversed since the first draft, which said a direction signal does not exist. `MessageTable.Read` gives it. (a) Leave warm-up's test: R2 loses a test's own publish marks on four packages. (b) One condition: an `Event` is skipped unless the table reads `Publishes`, which keeps those marks except at `Raw`, adds Kafka's, Service Bus's, Pub/Sub's and Event Hubs', and adds a clause to the class's exception, as `warmup.py` needs no port (§5.4). **Recommended: (b), in R2.** Without it R2 regresses a behaviour consumers have.
@@ -736,6 +736,15 @@ Not done: a real Actions or Azure DevOps runner (F18 is simulated), Linux and fl
 - **A name map keyed on a database's old name stopped hitting** once its spans moved to the registry's. `OtherNameOf` reads both ways.
 
 Still to prove once it is published: `r3-span-kinds`, `r3-real-capture`, and `r3-fingerprint-diff` again, as its 986 lines predate F17.
+
+**2026-11-02, R2 built as 5.28.1, Q5 taken as (b).** Whole suite: 54 projects, 23,798 passed, 93 skipped, none failed. Release build clean. ProxyTap 29 of 30, on a machine saturated on purpose by F27's stress runs: the one failure is in a package R2 does not touch, and F27 follows it. All 20 mutations caught, the browser fact among them: `results/r2-mutations.txt`. An independent review found no tracker that breaks the rule on an unambiguous input and no history line that moves, and these around them:
+
+- **The ledger row said the port already logged an SQS or SNS send as `EVENT`.** Only the hand-called `AwsTracking` does. The automatic route logs `DEFAULT`, as .NET's handlers did, so this release opens a difference there, which the row now says.
+- **The changelog's "55 operations" was stale,** 21 at R2's base (Pub/Sub 9, Event Hubs 12), and "failure messages at every verbosity" was false at `Summarised`.
+- **A call that throws had no fact for the kind of its answer,** and Kafka's failed consume and its `Raw` produce none at all. Each now has one. `An_event_is_not_judged` said more than the rule does, and now names what it holds.
+- **Nine card test files said the table leaves a delivery `Unknown`,** which stopped being true with R3.
+
+The proof still to run once it is published: `kinds-by-tracker`, which must give 0 bold rows of §2.2.
 
 ## Appendix A. The comment closing #220 (Q8), to post when R1 is published
 

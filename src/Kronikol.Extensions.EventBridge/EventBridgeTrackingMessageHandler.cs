@@ -72,6 +72,12 @@ public class EventBridgeTrackingMessageHandler : DelegatingHandler, ITrackingCom
         var requestResponseId = Guid.NewGuid();
         var traceId = Guid.NewGuid();
 
+        // A call that moves a message is an event, and a response carries its request's kind. By the operation: at Raw the
+        // record is the HTTP request itself, whose verb and path do not name one.
+        var metaType = ebOp.Operation is EventBridgeOperation.PutEvents or EventBridgeOperation.PutPartnerEvents
+            ? RequestResponseMetaType.Event
+            : RequestResponseMetaType.Default;
+
         var label = EventBridgeOperationClassifier.GetDiagramLabel(ebOp, effectiveVerbosity);
 
         var logRequestContent = effectiveVerbosity == EventBridgeTrackingVerbosity.Summarised
@@ -101,6 +107,7 @@ public class EventBridgeTrackingMessageHandler : DelegatingHandler, ITrackingCom
             traceId,
             requestResponseId,
             false,
+            MetaType: metaType,
             DependencyCategory: DependencyCategories.MessageQueue
         )
         {
@@ -141,6 +148,7 @@ public class EventBridgeTrackingMessageHandler : DelegatingHandler, ITrackingCom
             requestResponseId,
             false,
             response.StatusCode,
+            MetaType: metaType,
             DependencyCategory: DependencyCategories.MessageQueue
         )
         {

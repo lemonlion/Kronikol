@@ -392,7 +392,7 @@ public class KafkaTracker : ITrackingComponent
             verbosity == KafkaTrackingVerbosity.Summarised ? [] : payload.Headers,
             service, caller,
             RequestResponseType.Request, call.TraceId, entry.RequestResponseId, false,
-            MetaType: RequestResponseMetaType.Event,
+            MetaType: KindOf(op.Operation),
             DependencyCategory: DependencyCategories.MessageQueue)
         {
             AttributionSource = test.Source,
@@ -410,6 +410,12 @@ public class KafkaTracker : ITrackingComponent
         RequestResponseLogger.Log(request);
         return entry;
     }
+
+    // A call that moves a message is an event: a subscription, a commit, a flush or a transaction call is not.
+    private static RequestResponseMetaType KindOf(KafkaOperation operation) => operation is
+        KafkaOperation.Produce or KafkaOperation.ProduceAsync or KafkaOperation.Consume
+        ? RequestResponseMetaType.Event
+        : RequestResponseMetaType.Default;
 
     // An entry whose request is stored. Its response takes the test, phase, labels and ids the call captured, whenever
     // and wherever it is answered; each caller answers once (KafkaProduceTracking and ConsumeScope see to it).
@@ -429,7 +435,7 @@ public class KafkaTracker : ITrackingComponent
                 service, caller,
                 RequestResponseType.Response, call.TraceId, requestResponseId, false,
                 status,
-                MetaType: RequestResponseMetaType.Event,
+                MetaType: KindOf(op.Operation),
                 DependencyCategory: DependencyCategories.MessageQueue)
             {
                 AttributionSource = test.Source,

@@ -66,6 +66,12 @@ public class SnsTrackingMessageHandler : DelegatingHandler, ITrackingComponent
         var requestResponseId = Guid.NewGuid();
         var traceId = Guid.NewGuid();
 
+        // A call that moves a message is an event, and a response carries its request's kind. By the operation: at Raw the
+        // record is the HTTP request itself, whose verb and path do not name one.
+        var metaType = snsOp.Operation is SnsOperation.Publish or SnsOperation.PublishBatch
+            ? RequestResponseMetaType.Event
+            : RequestResponseMetaType.Default;
+
         var label = SnsOperationClassifier.GetDiagramLabel(snsOp, effectiveVerbosity);
 
         var logRequestContent = effectiveVerbosity == SnsTrackingVerbosity.Summarised
@@ -95,6 +101,7 @@ public class SnsTrackingMessageHandler : DelegatingHandler, ITrackingComponent
             traceId,
             requestResponseId,
             false,
+            MetaType: metaType,
             DependencyCategory: DependencyCategories.MessageQueue
         )
         {
@@ -135,6 +142,7 @@ public class SnsTrackingMessageHandler : DelegatingHandler, ITrackingComponent
             requestResponseId,
             false,
             response.StatusCode,
+            MetaType: metaType,
             DependencyCategory: DependencyCategories.MessageQueue
         )
         {

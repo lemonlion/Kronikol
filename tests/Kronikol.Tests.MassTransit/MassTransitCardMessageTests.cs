@@ -110,4 +110,19 @@ public class MassTransitCardMessageTests
         Assert.Null(TrackedMessages.Topic(call));
         Assert.True(TrackedMessages.EmptyTarget(call));
     }
+
+    // plans/CALLS_AND_EVENTS_PLAN.md 6.7: an event exactly when the call moves a message, at every verbosity, and a response
+    // carries its request's kind. The oracle is this class's own reading of the operation, not MessageTable: the table
+    // cannot read a call recorded as its HTTP request or under its transport's address.
+    [Theory]
+    [MemberData(nameof(Calls))]
+    public void A_call_is_an_event_exactly_when_it_moves_a_message(MassTransitOperation operation, MassTransitTrackingVerbosity verbosity)
+    {
+        var call = Track(operation, verbosity);
+
+        var expected = operation is MassTransitOperation.Send or MassTransitOperation.Publish or MassTransitOperation.Consume ? RequestResponseMetaType.Event : RequestResponseMetaType.Default;
+        Assert.Equal(expected, call.MetaType);
+        Assert.Equal(expected, RequestResponseLogger.RequestAndResponseLogs.Last(l =>
+            l.TestId == _testId && l.RequestResponseId == call.RequestResponseId && l.Type == RequestResponseType.Response).MetaType);
+    }
 }

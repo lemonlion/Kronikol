@@ -47,6 +47,9 @@
     <ProjectReference Include="..\..\src\Kronikol.Extensions.MongoDB\Kronikol.Extensions.MongoDB.csproj" />
     <!-- The Spanner tracker, so a database note is painted from what it writes (plans/CALLS_AND_EVENTS_PLAN.md 6.5). -->
     <ProjectReference Include="..\..\src\Kronikol.Extensions.Spanner\Kronikol.Extensions.Spanner.csproj" />
+    <!-- An SQS send and a Pub/Sub publish, so one card is painted from what each tracker writes (plans/CALLS_AND_EVENTS_PLAN.md 6.7). -->
+    <ProjectReference Include="..\..\src\Kronikol.Extensions.SQS\Kronikol.Extensions.SQS.csproj" />
+    <ProjectReference Include="..\..\src\Kronikol.Extensions.PubSub\Kronikol.Extensions.PubSub.csproj" />
   </ItemGroup>
 
 </Project>

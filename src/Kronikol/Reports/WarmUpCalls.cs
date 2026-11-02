@@ -1,3 +1,4 @@
+using Kronikol.CallGraph;
 using Kronikol.Constants;
 using Kronikol.History;
 using Kronikol.Tracking;
@@ -44,8 +45,9 @@ internal sealed record WarmUpResult(IReadOnlyDictionary<Guid, WarmUpMark> Calls,
 /// warm-up when it took at least <see cref="Ratio"/> times and <see cref="FloorMs"/> more than the median of the shape's
 /// calls that started after it ended, and so is a call that waited for it. The rule's executable spec is
 /// <c>plans/WARM_UP_PLAN.harness/warmup.py</c> (<c>marks</c>), which this must equal call for call, save a statement's
-/// templated head: the spec does not model it, since no test-made call in its corpus is statement-shaped, and
-/// <c>Statements_with_different_heads_on_one_connection_are_two_shapes</c> holds it instead.
+/// templated head and a publish: the spec models neither, since no test-made call in its corpus is statement-shaped or reads
+/// as a publish, and <c>Statements_with_different_heads_on_one_connection_are_two_shapes</c> and
+/// <c>A_publish_the_test_makes_is_judged</c> hold them instead.
 /// </summary>
 internal static class WarmUpCalls
 {
@@ -126,8 +128,8 @@ internal static class WarmUpCalls
     /// <summary>
     /// The calls the rule judges (4.1 step 1): a request paired with its response, in a scenario, made by the test
     /// itself. The test's caller never appears as a service among its scenario's calls (the actor rule the sequence
-    /// diagram uses, <c>PlantUmlCreator</c>), and no event is judged, whichever way it moved: a delivery is not a request
-    /// the test made, and nor, for this rule, is its own publish.
+    /// diagram uses, <c>PlantUmlCreator</c>), and a message a broker delivered, or one the test took from it, is not a
+    /// request the test made. Its own publish is, and is judged where the service card's table can read it: <see cref="IsBrokersMove"/>.
     /// </summary>
     private static List<Call> TestCalls(IReadOnlyList<RequestResponseLog?> logs, Dictionary<string, Scenario> scenarios,
         Dictionary<string, int> listed, IReadOnlyDictionary<Guid, double> durations, HistoryShapeRules? rules)
@@ -153,7 +155,7 @@ internal static class WarmUpCalls
         var calls = new List<Call>(requests.Count);
         foreach (var request in requests)
         {
-            if (request.MetaType == RequestResponseMetaType.Event || services[request.TestId].Contains(request.CallerName))
+            if (IsBrokersMove(request) || services[request.TestId].Contains(request.CallerName))
                 continue;
             responses.TryGetValue(request.RequestResponseId, out var response);
             // Grouped by the upper-cased method (warmup.py's shape_of) and named with the method as the data file writes
@@ -166,6 +168,15 @@ internal static class WarmUpCalls
         }
         return calls;
     }
+
+    /// <summary>
+    /// An event a broker delivered, or one the test took from it, is no request of the test's: a long poll's time is the wait for a
+    /// message. A publish is, as the service card's table reads it from the record's scheme and label, so a slow first publish is judged.
+    /// Where the table reads no publish, a <c>Raw</c> broker's HTTP verb or <c>MessageTracker</c>'s own scheme, the event is skipped too.
+    /// </summary>
+    private static bool IsBrokersMove(RequestResponseLog request) =>
+        request.MetaType == RequestResponseMetaType.Event
+        && MessageTable.Read(MessageTable.Scheme(request.Uri.ToString()), MethodOf(request)) != MessageLabelKind.Publishes;
 
     /// <summary>4.1 steps 3 to 6, for one shape's calls.</summary>
     private static void Judge(List<Call> calls, Dictionary<Guid, WarmUpMark> marks)

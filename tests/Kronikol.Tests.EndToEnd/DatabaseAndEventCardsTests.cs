@@ -1,4 +1,6 @@
+using Kronikol.Extensions.PubSub;
 using Kronikol.Extensions.Spanner;
+using Kronikol.Extensions.SQS;
 using Kronikol.PlantUml;
 using Kronikol.Reports;
 using Kronikol.Tracking;
@@ -35,7 +37,42 @@ public class DatabaseAndEventCardsTests : DiagramNotePlaywrightBase
         return PlantUmlCreator.GetPlantUmlImageTagsPerTestId(logs).Single().PlantUmls.First().PlainText;
     }
 
-    private async Task OpenAsync(string fileName)
+    /// <summary>An SQS send through the real handler, and a Pub/Sub publish through the real tracker, in one diagram.</summary>
+    private static string BrokerDiagramSource(string testId)
+    {
+        var fetcher = () => ("Place an order", testId);
+        using (var client = new HttpClient(new SqsTrackingMessageHandler(new SqsTrackingMessageHandlerOptions
+               {
+                   ServiceName = "Orders Queue", CallerName = "Orders Api", Verbosity = SqsTrackingVerbosity.Detailed, CurrentTestInfoFetcher = fetcher
+               }, new AnswersOk())))
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Post, "https://sqs.eu-west-1.amazonaws.com/");
+            request.Headers.Add("X-Amz-Target", "AmazonSQS.SendMessage");
+            request.Content = new StringContent("""{"QueueUrl": "https://sqs.eu-west-1.amazonaws.com/1/orders", "MessageBody": "QueuedOrder"}""");
+            client.Send(request);
+        }
+
+        var pubSub = new PubSubTracker(new PubSubTrackingOptions
+        {
+            ServiceName = "Orders Topic", CallerName = "Orders Api", Verbosity = PubSubTrackingVerbosity.Detailed, CurrentTestInfoFetcher = fetcher
+        });
+        var operation = new PubSubOperationInfo(PubSubOperation.Publish, "orders", null, 1);
+        var (id, trace) = pubSub.LogRequest(operation, """{"body":"PublishedOrder"}""");
+        pubSub.LogResponse(operation, id, trace, null);
+
+        var logs = RequestResponseLogger.RequestAndResponseLogs.Where(l => l.TestId == testId).ToArray();
+        return PlantUmlCreator.GetPlantUmlImageTagsPerTestId(logs).Single().PlantUmls.First().PlainText;
+    }
+
+    private sealed class AnswersOk : HttpMessageHandler
+    {
+        protected override HttpResponseMessage Send(HttpRequestMessage request, CancellationToken cancellationToken) => new(System.Net.HttpStatusCode.OK);
+
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) =>
+            Task.FromResult(Send(request, cancellationToken));
+    }
+
+    private async Task OpenAsync(string fileName, Func<string, string>? source = null)
     {
         var testId = Guid.NewGuid().ToString();
         Feature[] features =
@@ -46,7 +83,7 @@ public class DatabaseAndEventCardsTests : DiagramNotePlaywrightBase
                 Scenarios = [new() { Id = testId, DisplayName = "Place an order", Result = ExecutionResult.Passed, Duration = TimeSpan.FromMilliseconds(10) }]
             }
         ];
-        var path = ReportGenerator.GenerateHtmlReport([new DefaultDiagramsFetcher.DiagramAsCode(testId, "", DiagramSource(testId))],
+        var path = ReportGenerator.GenerateHtmlReport([new DefaultDiagramsFetcher.DiagramAsCode(testId, "", (source ?? DiagramSource)(testId))],
             features, DateTime.UtcNow, DateTime.UtcNow, null, Path.Combine(TempDir, fileName), "Bakery", true,
             diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
         File.Copy(path, Path.Combine(OutputDir, fileName), true);
@@ -101,6 +138,27 @@ public class DatabaseAndEventCardsTests : DiagramNotePlaywrightBase
         var (query, publish, note, card) = (paint[0], paint[1], paint[2], paint[3]);
         Assert.NotEqual(note, card); // what lets the two facts below tell the cards apart
         Assert.Equal(note, query);
+        Assert.Equal(card, publish);
+    }
+
+    /// <summary>
+    /// Two brokers, one card: an SQS send was a call on the plain note, and a Pub/Sub publish in the same diagram an event on the
+    /// event card (plans/CALLS_AND_EVENTS_PLAN.md F5, 6.7).
+    /// </summary>
+    [Theory]
+    [InlineData("light")]
+    [InlineData("dark")]
+    public async Task An_sqs_send_and_a_pubsub_publish_are_on_one_card(string scheme)
+    {
+        await Page.EmulateMediaAsync(new() { ColorScheme = scheme == "dark" ? ColorScheme.Dark : ColorScheme.Light });
+
+        await OpenAsync($"BrokerCards-{scheme}.html", BrokerDiagramSource);
+        Assert.Equal(scheme, await Page.EvaluateAsync<string?>("() => document.documentElement.getAttribute('data-theme')"));
+
+        var paint = await PaintAsync("QueuedOrder", "PublishedOrder");
+        var (send, publish, note, card) = (paint[0], paint[1], paint[2], paint[3]);
+        Assert.NotEqual(note, card);
+        Assert.Equal(card, send);
         Assert.Equal(card, publish);
     }
 }

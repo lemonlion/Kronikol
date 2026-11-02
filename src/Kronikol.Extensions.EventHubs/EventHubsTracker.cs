@@ -61,7 +61,7 @@ public class EventHubsTracker : ITrackingComponent
             label, logContent, uri, [],
             _options.ServiceName, _options.CallerName,
             RequestResponseType.Request, traceId, requestResponseId, false,
-            MetaType: RequestResponseMetaType.Event,
+            MetaType: KindOf(operation.Operation),
             DependencyCategory: DependencyCategories.MessageQueue)
         {
             AttributionSource = testInfo.Value.Source,
@@ -106,6 +106,7 @@ public class EventHubsTracker : ITrackingComponent
             label, logContent, uri, [],
             _options.ServiceName, _options.CallerName,
             RequestResponseType.Response, traceId, requestResponseId, false,
+            MetaType: KindOf(operation.Operation),
             DependencyCategory: DependencyCategories.MessageQueue)
         {
             AttributionSource = testInfo.Value.Source,
@@ -117,6 +118,13 @@ public class EventHubsTracker : ITrackingComponent
                 Note(content, rawContent, v),
                 [], false)));
     }
+
+    // A call that moves a message is an event: making a batch, reading a hub's properties or starting a processor is not.
+    private static RequestResponseMetaType KindOf(EventHubsOperation operation) => operation is
+        EventHubsOperation.Send or EventHubsOperation.SendBatch or EventHubsOperation.ReadEvents or
+        EventHubsOperation.ReadEventsFromPartition or EventHubsOperation.ProcessEvent
+        ? RequestResponseMetaType.Event
+        : RequestResponseMetaType.Default;
 
     /// <summary>A note at <paramref name="verbosity"/>: none at Summarised, the Raw content where there is one at Raw.</summary>
     private static string? Note(string? content, string? rawContent, EventHubsTrackingVerbosity verbosity) =>

@@ -1,0 +1,193 @@
+== SQS: nothing is an event: src/Kronikol.Extensions.SQS/SqsTrackingMessageHandler.cs
+   Kronikol.Tests.SQS: 9 failed of Total tests: 154
+     Kronikol.Tests.SQS.SqsCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: ReceiveMessage, verbosity: Detailed)
+     Kronikol.Tests.SQS.SqsCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: ReceiveMessage, verbosity: Raw)
+     Kronikol.Tests.SQS.SqsCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: ReceiveMessage, verbosity: Summarised)
+     Kronikol.Tests.SQS.SqsCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: SendMessage, verbosity: Detailed)
+     Kronikol.Tests.SQS.SqsCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: SendMessage, verbosity: Raw)
+     Kronikol.Tests.SQS.SqsCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: SendMessage, verbosity: Summarised)
+     ... and 3 more
+   Kronikol.Tests.EndToEnd: 2 failed of Total tests: 4
+     Kronikol.Tests.EndToEnd.DatabaseAndEventCardsTests.An_sqs_send_and_a_pubsub_publish_are_on_one_card(scheme: "dark")
+     Kronikol.Tests.EndToEnd.DatabaseAndEventCardsTests.An_sqs_send_and_a_pubsub_publish_are_on_one_card(scheme: "light")
+   CAUGHT
+== SQS: everything is an event: src/Kronikol.Extensions.SQS/SqsTrackingMessageHandler.cs
+   Kronikol.Tests.SQS: 35 failed of Total tests: 154
+     Kronikol.Tests.SQS.SqsCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: ChangeMessageVisibility, verbosity: Detailed)
+     Kronikol.Tests.SQS.SqsCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: ChangeMessageVisibility, verbosity: Raw)
+     Kronikol.Tests.SQS.SqsCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: ChangeMessageVisibility, verbosity: Summarised)
+     Kronikol.Tests.SQS.SqsCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: ChangeMessageVisibilityBatch, verbosity: Detailed
+     Kronikol.Tests.SQS.SqsCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: ChangeMessageVisibilityBatch, verbosity: Raw)
+     Kronikol.Tests.SQS.SqsCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: ChangeMessageVisibilityBatch, verbosity: Summaris
+     ... and 29 more
+   CAUGHT
+== SNS: nothing is an event: src/Kronikol.Extensions.SNS/SnsTrackingMessageHandler.cs
+   Kronikol.Tests.SNS: 6 failed of Total tests: 140
+     Kronikol.Tests.SNS.SnsCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: Publish, verbosity: Detailed)
+     Kronikol.Tests.SNS.SnsCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: Publish, verbosity: Raw)
+     Kronikol.Tests.SNS.SnsCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: Publish, verbosity: Summarised)
+     Kronikol.Tests.SNS.SnsCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: PublishBatch, verbosity: Detailed)
+     Kronikol.Tests.SNS.SnsCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: PublishBatch, verbosity: Raw)
+     Kronikol.Tests.SNS.SnsCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: PublishBatch, verbosity: Summarised)
+   CAUGHT
+== SNS: everything is an event: src/Kronikol.Extensions.SNS/SnsTrackingMessageHandler.cs
+   Kronikol.Tests.SNS: 32 failed of Total tests: 140
+     Kronikol.Tests.SNS.SnsCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: ConfirmSubscription, verbosity: Detailed)
+     Kronikol.Tests.SNS.SnsCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: ConfirmSubscription, verbosity: Raw)
+     Kronikol.Tests.SNS.SnsCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: ConfirmSubscription, verbosity: Summarised)
+     Kronikol.Tests.SNS.SnsCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: CreateTopic, verbosity: Detailed)
+     Kronikol.Tests.SNS.SnsCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: CreateTopic, verbosity: Raw)
+     Kronikol.Tests.SNS.SnsCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: CreateTopic, verbosity: Summarised)
+     ... and 26 more
+   CAUGHT
+== EventBridge: nothing is an event: src/Kronikol.Extensions.EventBridge/EventBridgeTrackingMessageHandler.cs
+   Kronikol.Tests.EventBridge: 6 failed of Total tests: 278
+     Kronikol.Tests.EventBridge.EventBridgeCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: PutEvents, verbosity: Detailed)
+     Kronikol.Tests.EventBridge.EventBridgeCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: PutEvents, verbosity: Raw)
+     Kronikol.Tests.EventBridge.EventBridgeCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: PutEvents, verbosity: Summarised)
+     Kronikol.Tests.EventBridge.EventBridgeCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: PutPartnerEvents, verbosity: Deta
+     Kronikol.Tests.EventBridge.EventBridgeCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: PutPartnerEvents, verbosity: Raw)
+     Kronikol.Tests.EventBridge.EventBridgeCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: PutPartnerEvents, verbosity: Summ
+   CAUGHT
+== EventBridge: everything is an event: src/Kronikol.Extensions.EventBridge/EventBridgeTrackingMessageHandler.cs
+   Kronikol.Tests.EventBridge: 80 failed of Total tests: 278
+     Kronikol.Tests.EventBridge.EventBridgeCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: CreateApiDestination, verbosity: 
+     Kronikol.Tests.EventBridge.EventBridgeCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: CreateApiDestination, verbosity: 
+     Kronikol.Tests.EventBridge.EventBridgeCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: CreateApiDestination, verbosity: 
+     Kronikol.Tests.EventBridge.EventBridgeCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: CreateArchive, verbosity: Detaile
+     Kronikol.Tests.EventBridge.EventBridgeCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: CreateArchive, verbosity: Raw)
+     Kronikol.Tests.EventBridge.EventBridgeCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: CreateArchive, verbosity: Summari
+     ... and 74 more
+   CAUGHT
+== Storage Queues: nothing is an event: src/Kronikol.Extensions.StorageQueues/StorageQueueTrackingMessageHandler.cs
+   Kronikol.Tests.StorageQueues: 11 failed of Total tests: 470
+     Kronikol.Tests.StorageQueues.StorageQueueCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: PeekMessages, verbosity: Detai
+     Kronikol.Tests.StorageQueues.StorageQueueCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: PeekMessages, verbosity: Raw)
+     Kronikol.Tests.StorageQueues.StorageQueueCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: PeekMessages, verbosity: Summa
+     Kronikol.Tests.StorageQueues.StorageQueueCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: ReceiveMessages, verbosity: De
+     Kronikol.Tests.StorageQueues.StorageQueueCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: ReceiveMessages, verbosity: Ra
+     Kronikol.Tests.StorageQueues.StorageQueueCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: ReceiveMessages, verbosity: Su
+     ... and 5 more
+   CAUGHT
+== Storage Queues: everything is an event: src/Kronikol.Extensions.StorageQueues/StorageQueueTrackingMessageHandler.cs
+   Kronikol.Tests.StorageQueues: 28 failed of Total tests: 470
+     Kronikol.Tests.StorageQueues.StorageQueueCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: ClearMessages, verbosity: Deta
+     Kronikol.Tests.StorageQueues.StorageQueueCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: ClearMessages, verbosity: Raw)
+     Kronikol.Tests.StorageQueues.StorageQueueCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: ClearMessages, verbosity: Summ
+     Kronikol.Tests.StorageQueues.StorageQueueCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: CreateQueue, verbosity: Detail
+     Kronikol.Tests.StorageQueues.StorageQueueCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: CreateQueue, verbosity: Raw)
+     Kronikol.Tests.StorageQueues.StorageQueueCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: CreateQueue, verbosity: Summar
+     ... and 22 more
+   CAUGHT
+== Pub/Sub: nothing is an event: src/Kronikol.Extensions.PubSub/PubSubTracker.cs
+   Kronikol.Tests.PubSub: 13 failed of Total tests: 130
+     Kronikol.Tests.PubSub.PubSubCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: Publish, verbosity: Detailed)
+     Kronikol.Tests.PubSub.PubSubCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: Publish, verbosity: Raw)
+     Kronikol.Tests.PubSub.PubSubCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: Publish, verbosity: Summarised)
+     Kronikol.Tests.PubSub.PubSubCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: PublishBatch, verbosity: Detailed)
+     Kronikol.Tests.PubSub.PubSubCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: PublishBatch, verbosity: Raw)
+     Kronikol.Tests.PubSub.PubSubCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: PublishBatch, verbosity: Summarised)
+     ... and 7 more
+   CAUGHT
+== Pub/Sub: everything is an event: src/Kronikol.Extensions.PubSub/PubSubTracker.cs
+   Kronikol.Tests.PubSub: 15 failed of Total tests: 130
+     Kronikol.Tests.PubSub.PubSubCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: Acknowledge, verbosity: Detailed)
+     Kronikol.Tests.PubSub.PubSubCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: Acknowledge, verbosity: Raw)
+     Kronikol.Tests.PubSub.PubSubCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: Acknowledge, verbosity: Summarised)
+     Kronikol.Tests.PubSub.PubSubCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: ModifyAckDeadline, verbosity: Detailed)
+     Kronikol.Tests.PubSub.PubSubCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: ModifyAckDeadline, verbosity: Raw)
+     Kronikol.Tests.PubSub.PubSubCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: ModifyAckDeadline, verbosity: Summarised)
+     ... and 9 more
+   CAUGHT
+== Event Hubs: nothing is an event: src/Kronikol.Extensions.EventHubs/EventHubsTracker.cs
+   Kronikol.Tests.EventHubs: 16 failed of Total tests: 158
+     Kronikol.Tests.EventHubs.EventHubsCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: ProcessEvent, verbosity: Detailed)
+     Kronikol.Tests.EventHubs.EventHubsCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: ProcessEvent, verbosity: Raw)
+     Kronikol.Tests.EventHubs.EventHubsCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: ProcessEvent, verbosity: Summarised)
+     Kronikol.Tests.EventHubs.EventHubsCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: ReadEvents, verbosity: Detailed)
+     Kronikol.Tests.EventHubs.EventHubsCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: ReadEvents, verbosity: Raw)
+     Kronikol.Tests.EventHubs.EventHubsCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: ReadEvents, verbosity: Summarised)
+     ... and 10 more
+   CAUGHT
+== Event Hubs: everything is an event: src/Kronikol.Extensions.EventHubs/EventHubsTracker.cs
+   Kronikol.Tests.EventHubs: 21 failed of Total tests: 158
+     Kronikol.Tests.EventHubs.EventHubsCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: CreateBatch, verbosity: Detailed)
+     Kronikol.Tests.EventHubs.EventHubsCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: CreateBatch, verbosity: Raw)
+     Kronikol.Tests.EventHubs.EventHubsCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: CreateBatch, verbosity: Summarised)
+     Kronikol.Tests.EventHubs.EventHubsCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: GetEventHubProperties, verbosity: Det
+     Kronikol.Tests.EventHubs.EventHubsCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: GetEventHubProperties, verbosity: Raw
+     Kronikol.Tests.EventHubs.EventHubsCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: GetEventHubProperties, verbosity: Sum
+     ... and 15 more
+   CAUGHT
+== Kafka: nothing is an event: src/Kronikol.Extensions.Kafka/KafkaTracker.cs
+   Kronikol.Tests.Kafka: 11 failed of Total tests: 403
+     Kronikol.Tests.Kafka.KafkaCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: Consume, verbosity: Detailed)
+     Kronikol.Tests.Kafka.KafkaCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: Consume, verbosity: Raw)
+     Kronikol.Tests.Kafka.KafkaCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: Consume, verbosity: Summarised)
+     Kronikol.Tests.Kafka.KafkaCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: Produce, verbosity: Detailed)
+     Kronikol.Tests.Kafka.KafkaCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: Produce, verbosity: Raw)
+     Kronikol.Tests.Kafka.KafkaCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: Produce, verbosity: Summarised)
+     ... and 5 more
+   CAUGHT
+== Kafka: everything is an event: src/Kronikol.Extensions.Kafka/KafkaTracker.cs
+   Kronikol.Tests.Kafka: 31 failed of Total tests: 403
+     Kronikol.Tests.Kafka.KafkaCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: AbortTransaction, verbosity: Detailed)
+     Kronikol.Tests.Kafka.KafkaCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: AbortTransaction, verbosity: Raw)
+     Kronikol.Tests.Kafka.KafkaCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: AbortTransaction, verbosity: Summarised)
+     Kronikol.Tests.Kafka.KafkaCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: BeginTransaction, verbosity: Detailed)
+     Kronikol.Tests.Kafka.KafkaCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: BeginTransaction, verbosity: Raw)
+     Kronikol.Tests.Kafka.KafkaCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: BeginTransaction, verbosity: Summarised)
+     ... and 25 more
+   CAUGHT
+== MassTransit: nothing is an event: src/Kronikol.Extensions.MassTransit/MassTransitTracker.cs
+   Kronikol.Tests.MassTransit: 10 failed of Total tests: 92
+     Kronikol.Tests.MassTransit.MassTransitCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: Consume, verbosity: Detailed)
+     Kronikol.Tests.MassTransit.MassTransitCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: Consume, verbosity: Raw)
+     Kronikol.Tests.MassTransit.MassTransitCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: Consume, verbosity: Summarised)
+     Kronikol.Tests.MassTransit.MassTransitCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: Publish, verbosity: Detailed)
+     Kronikol.Tests.MassTransit.MassTransitCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: Publish, verbosity: Raw)
+     Kronikol.Tests.MassTransit.MassTransitCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: Publish, verbosity: Summarised)
+     ... and 4 more
+   CAUGHT
+== MassTransit: everything is an event: src/Kronikol.Extensions.MassTransit/MassTransitTracker.cs
+   Kronikol.Tests.MassTransit: 3 failed of Total tests: 92
+     Kronikol.Tests.MassTransit.MassTransitCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: Other, verbosity: Detailed)
+     Kronikol.Tests.MassTransit.MassTransitCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: Other, verbosity: Raw)
+     Kronikol.Tests.MassTransit.MassTransitCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: Other, verbosity: Summarised)
+   CAUGHT
+== Storage Queues: a thrown call answers at Default: src/Kronikol.Extensions.StorageQueues/StorageQueueTrackingMessageHandler.cs
+   Kronikol.Tests.StorageQueues: 2 failed of Total tests: 470
+     Kronikol.Tests.StorageQueues.StorageQueueCardMessageTests.A_call_that_throws_is_answered_with_its_requests_kind(operation: ReceiveMessages, kind: Even
+     Kronikol.Tests.StorageQueues.StorageQueueCardMessageTests.A_call_that_throws_is_answered_with_its_requests_kind(operation: SendMessage, kind: Event)
+   CAUGHT
+== SQS: a reply at Default: src/Kronikol.Extensions.SQS/SqsTrackingMessageHandler.cs
+   Kronikol.Tests.SQS: 9 failed of Total tests: 154
+     Kronikol.Tests.SQS.SqsCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: ReceiveMessage, verbosity: Detailed)
+     Kronikol.Tests.SQS.SqsCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: ReceiveMessage, verbosity: Raw)
+     Kronikol.Tests.SQS.SqsCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: ReceiveMessage, verbosity: Summarised)
+     Kronikol.Tests.SQS.SqsCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: SendMessage, verbosity: Detailed)
+     Kronikol.Tests.SQS.SqsCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: SendMessage, verbosity: Raw)
+     Kronikol.Tests.SQS.SqsCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message(operation: SendMessage, verbosity: Summarised)
+     ... and 3 more
+   CAUGHT
+== warm-up skips every event again: src/Kronikol/Reports/WarmUpCalls.cs
+   Kronikol.Tests: 10 failed of Total tests: 59
+     Kronikol.Tests.Reports.WarmUpCallsTests.A_publish_the_test_makes_is_judged(uri: "eventbridge://orders-bus/", label: "PutEvents
+     Kronikol.Tests.Reports.WarmUpCallsTests.A_publish_the_test_makes_is_judged(uri: "eventhubs:///orders", label: "Send → orders")
+     Kronikol.Tests.Reports.WarmUpCallsTests.A_publish_the_test_makes_is_judged(uri: "kafka:///orders", label: "Produce → orders")
+     Kronikol.Tests.Reports.WarmUpCallsTests.A_publish_the_test_makes_is_judged(uri: "masstransit:///orders", label: "Publish OrderPlaced")
+     Kronikol.Tests.Reports.WarmUpCallsTests.A_publish_the_test_makes_is_judged(uri: "masstransit:///orders", label: "Send OrderPlaced")
+     Kronikol.Tests.Reports.WarmUpCallsTests.A_publish_the_test_makes_is_judged(uri: "pubsub:///orders", label: "Publish → orders")
+     ... and 4 more
+   CAUGHT
+== warm-up judges every event: src/Kronikol/Reports/WarmUpCalls.cs
+   Kronikol.Tests: 11 failed of Total tests: 59
+     Kronikol.Tests.Reports.WarmUpCallsTests.An_event_posted_over_http_is_not_judged
+     Kronikol.Tests.Reports.WarmUpCallsTests.An_event_the_table_does_not_read_as_a_publish_is_not_judged(uri: "event://cake_events", label: "Publish")
+     Kronikol.Tests.Reports.WarmUpCallsTests.An_event_the_table_does_not_read_as_a_publish_is_not_judged(uri: "https://shop.queue.core.windows.net/orders/m
+     Kronikol.Tests.Reports.WarmUpCallsTests.An_event_the_table_does_not_read_as_a_publish_is_not_judged(uri: "https://shop.queue.core.windows.net/orders/m
+     Kronikol.Tests.Reports.WarmUpCallsTests.An_event_the_table_does_not_read_as_a_publish_is_not_judged(uri: "https://sqs.us-east-1.amazonaws.com/", label
+     Kronikol.Tests.Reports.WarmUpCallsTests.An_event_the_table_does_not_read_as_a_publish_is_not_judged(uri: "kafka:///orders", label: "Consume ← orders")
+     ... and 5 more
+   CAUGHT
+DONE

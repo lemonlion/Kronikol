@@ -110,7 +110,7 @@ public class MassTransitTracker : ITrackingComponent
             label, body, uri, [],
             _options.ServiceName, _options.CallerName,
             RequestResponseType.Request, traceId, requestResponseId, false,
-            MetaType: RequestResponseMetaType.Event,
+            MetaType: KindOf(op.Operation),
             DependencyCategory: DependencyCategories.MessageQueue)
         {
             AttributionSource = testInfo.Value.Source,
@@ -128,7 +128,7 @@ public class MassTransitTracker : ITrackingComponent
             label, null, uri, [],
             _options.ServiceName, _options.CallerName,
             RequestResponseType.Response, traceId, requestResponseId, false,
-            MetaType: RequestResponseMetaType.Event,
+            MetaType: KindOf(op.Operation),
             DependencyCategory: DependencyCategories.MessageQueue)
         {
             AttributionSource = testInfo.Value.Source,
@@ -162,7 +162,7 @@ public class MassTransitTracker : ITrackingComponent
             label, body, uri, [],
             _options.CallerName, _options.ServiceName,
             RequestResponseType.Request, traceId, requestResponseId, false,
-            MetaType: RequestResponseMetaType.Event,
+            MetaType: KindOf(op.Operation),
             DependencyCategory: DependencyCategories.MessageQueue)
         {
             AttributionSource = testInfo.Value.Source,
@@ -180,7 +180,7 @@ public class MassTransitTracker : ITrackingComponent
             label, null, uri, [],
             _options.CallerName, _options.ServiceName,
             RequestResponseType.Response, traceId, requestResponseId, false,
-            MetaType: RequestResponseMetaType.Event,
+            MetaType: KindOf(op.Operation),
             DependencyCategory: DependencyCategories.MessageQueue)
         {
             AttributionSource = testInfo.Value.Source,
@@ -191,6 +191,12 @@ public class MassTransitTracker : ITrackingComponent
                 MassTransitOperationClassifier.BuildUri(op, v),
                 null, [], false)));
     }
+
+    // A call that moves a message is an event. A fault record holds an exception and no message, and Other names nothing.
+    private static RequestResponseMetaType KindOf(MassTransitOperation operation) => operation is
+        MassTransitOperation.Send or MassTransitOperation.Publish or MassTransitOperation.Consume
+        ? RequestResponseMetaType.Event
+        : RequestResponseMetaType.Default;
 
     private void LogFault(MassTransitOperationInfo op, Exception exception, bool outgoing)
     {
@@ -212,7 +218,6 @@ public class MassTransitTracker : ITrackingComponent
             label, exception.Message, uri, [],
             svc, caller,
             RequestResponseType.Request, traceId, requestResponseId, false,
-            MetaType: RequestResponseMetaType.Event,
             DependencyCategory: DependencyCategories.MessageQueue)
         {
             AttributionSource = testInfo.Value.Source,
@@ -229,7 +234,6 @@ public class MassTransitTracker : ITrackingComponent
             svc, caller,
             RequestResponseType.Response, traceId, requestResponseId, false,
             StatusCode: "Fault",
-            MetaType: RequestResponseMetaType.Event,
             DependencyCategory: DependencyCategories.MessageQueue)
         {
             AttributionSource = testInfo.Value.Source,

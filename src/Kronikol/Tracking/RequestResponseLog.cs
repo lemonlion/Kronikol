@@ -263,8 +263,8 @@ public enum RequestResponseMetaType
 
     /// <summary>
     /// A message operation: one that hands a message to a broker, reads one from it or delivers one to a consumer, whatever
-    /// came back. An empty receive and a failed send are events too. A record written only to say a call failed, holding an
-    /// exception and no message, is a call. Drawn on the event card.
+    /// came back. An empty receive, a failed send and a failed consume are events too. A fault reported apart from the
+    /// operation, holding an exception and no message, as MassTransit's observers report one, is a call. Drawn on the event card.
     /// </summary>
     Event
 }

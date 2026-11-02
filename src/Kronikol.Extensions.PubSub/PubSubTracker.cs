@@ -68,7 +68,7 @@ public class PubSubTracker : ITrackingComponent
             label, logContent, uri, [],
             _options.ServiceName, _options.CallerName,
             RequestResponseType.Request, traceId, requestResponseId, false,
-            MetaType: RequestResponseMetaType.Event,
+            MetaType: KindOf(operation.Operation),
             DependencyCategory: DependencyCategories.MessageQueue)
         {
             AttributionSource = testInfo.Value.Source,
@@ -113,6 +113,7 @@ public class PubSubTracker : ITrackingComponent
             label, logContent, uri, [],
             _options.ServiceName, _options.CallerName,
             RequestResponseType.Response, traceId, requestResponseId, false,
+            MetaType: KindOf(operation.Operation),
             DependencyCategory: DependencyCategories.MessageQueue)
         {
             AttributionSource = testInfo.Value.Source,
@@ -124,6 +125,12 @@ public class PubSubTracker : ITrackingComponent
                 Note(content, rawContent, v),
                 [], false)));
     }
+
+    // A call that moves a message is an event: settling one or managing the subscriber is not.
+    private static RequestResponseMetaType KindOf(PubSubOperation operation) => operation is
+        PubSubOperation.Publish or PubSubOperation.PublishBatch or PubSubOperation.Pull or PubSubOperation.Receive
+        ? RequestResponseMetaType.Event
+        : RequestResponseMetaType.Default;
 
     /// <summary>A note at <paramref name="verbosity"/>: none at Summarised, the Raw content where there is one at Raw.</summary>
     private static string? Note(string? content, string? rawContent, PubSubTrackingVerbosity verbosity) =>

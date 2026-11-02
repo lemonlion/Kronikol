@@ -86,4 +86,28 @@ public class PubSubCardMessageTests
         Assert.Null(TrackedMessages.Topic(call));
         Assert.True(TrackedMessages.EmptyTarget(call));
     }
+
+    // plans/CALLS_AND_EVENTS_PLAN.md 6.7: an event exactly when the call moves a message, at every verbosity, and a response
+    // carries its request's kind. The oracle is this class's own reading of the operation, not MessageTable: the table
+    // cannot read a call recorded as its HTTP request or under its transport's address.
+    [Theory]
+    [MemberData(nameof(Calls))]
+    public void A_call_is_an_event_exactly_when_it_moves_a_message(PubSubOperation operation, PubSubTrackingVerbosity verbosity)
+    {
+        var tracker = new PubSubTracker(new PubSubTrackingOptions
+        {
+            ServiceName = "Pub/Sub",
+            CallerName = TrackedMessages.Subject,
+            Verbosity = verbosity,
+            CurrentTestInfoFetcher = () => ("Order pancakes", _testId)
+        });
+        var info = new PubSubOperationInfo(operation, Topic, Subscription, 2);
+        var (id, trace) = tracker.LogRequest(info, "{}");
+        tracker.LogResponse(info, id, trace, "{}");
+
+        var expected = Directions[operation] is "publishes" or "consumes" ? RequestResponseMetaType.Event : RequestResponseMetaType.Default;
+        var logs = RequestResponseLogger.RequestAndResponseLogs.Where(l => l.TestId == _testId).ToArray();
+        Assert.Equal(2, logs.Length);
+        Assert.All(logs, log => Assert.Equal(expected, log.MetaType));
+    }
 }

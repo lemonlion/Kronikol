@@ -4,6 +4,62 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.28.1] - 2026-11-02
+
+The patch part moves (5.28.0 to 5.28.1): bug fixes that change what readers see, with no new option and no new public
+member (#220; `plans/CALLS_AND_EVENTS_PLAN.md` R2). The messaging trackers follow the rule 5.27.14 stated: `Event` means the call moves a
+message.
+
+### Fixed
+
+- **A publish or a receive is an event on every broker.** SQS `SendMessage`, `SendMessageBatch` and `ReceiveMessage`, SNS `Publish` and
+  `PublishBatch`, EventBridge `PutEvents` and `PutPartnerEvents`, and Storage Queues `SendMessage`, `ReceiveMessages` and `PeekMessages`
+  logged `Default`, so an SQS send sat on the plain note beside a Pub/Sub publish on the event card. Behaviour change: their notes
+  move to the event card, and `--group-by kind` reads `Event`. At `Raw` too, as each handler knows its operation whatever the label.
+- **Settling a message and managing a topic are calls on every broker.** Pub/Sub `Acknowledge`, `ModifyAckDeadline` and its subscriber's
+  start and stop, Event Hubs `CreateBatch`, `GetPartitionIds`, a hub's or a partition's properties and its processor's start and stop,
+  and Kafka's `Subscribe`, `Unsubscribe`, `Commit`, `Flush` and transaction calls logged `Event`. They log `Default`. Most of these
+  need a hand call or a flag: no wrapper logs the Pub/Sub or Event Hubs ones, and Kafka's are off by default.
+- **A MassTransit fault is a call.** A failed send, publish or consume is recorded only as a fault, which its observer reports apart from
+  the operation and which holds the exception and no message, so it logs `Default`. Behaviour change: a failed MassTransit send leaves no
+  event, where a failed Kafka or Service Bus send keeps one, since those log the call itself. A Kafka consume that throws stays an event,
+  and the rule's sentence in `RequestResponseMetaType`'s doc says so.
+- **An operation a classifier could not name is a call.** `Other` logged `Event` on four packages, and nothing says it moved a message.
+- **A response carries its request's kind.** 21 operations, 9 on Pub/Sub and 12 on Event Hubs, logged an `Event` request and a `Default` response, and the diagram reads a
+  response's own kind for its note's card, so a reply's note was on the event card from Service Bus and on the plain note from Pub/Sub.
+  Behaviour change: Pub/Sub's and Event Hubs' replies at `Raw`, their failure messages at `Detailed` and `Raw`, and the replies of the
+  publishes and receives above, move to the event card. A note that moves there is drawn at 11 px in the PlantUML source, where it was 13 px.
+- **Warm-up judges a publish the test makes.** It skipped every event, so its reason, "an event a broker delivered is not a request the
+  test made", did not hold for a test's own publish, and moving these sends to `Event` would have taken away real marks. An event is now
+  skipped unless the service card's table reads it as a publish:
+
+  | Slow first call | Before | Now |
+  |---|---|---|
+  | Test's SNS, SQS, EventBridge or Storage Queues send | first | first |
+  | Uncalled worker's SNS publish | first | first |
+  | Uncalled worker's Kafka, Service Bus, Pub/Sub or Event Hubs publish | none | first |
+  | SQS long poll (the first call is waiting for a message) | first, falsely | none |
+  | Storage Queues peek | first | none |
+  | Test's Kafka produce, Service Bus send, Pub/Sub publish or Event Hubs send | none | first |
+  | Pub/Sub `Ack` or Event Hubs `GetPartitionIds` by hand, worker never called | none | first |
+  | Test's send or receive at `Raw` on SQS, SNS, EventBridge or Storage Queues | first | none |
+  | Kafka hosted commit, Pub/Sub hosted subscriber, MassTransit faults | none | none |
+  | Test's MassTransit send or publish, MassTransit on `rabbitmq://`, `MessageTracker` on its own scheme | none | none |
+  | SQS delete, hosted Service Bus `Complete` | first | first |
+
+  At `Raw` the label is the HTTP verb, which no table can read, so those lose their marks. A Kafka produce at `Raw` names its offset, so
+  each is a kind of its own and gets no mark, and one in a scenario that also consumes under the same `CallerName` is not judged, as that
+  consume makes the caller a service. MassTransit's publishes are judged and hold no time, as both records are logged together after the
+  send. A Service Bus or Event Hubs send through a tap with messaging capture on, which 5.28.0 took out of the rule, is judged again.
+
+With `CollapseConsecutiveIdenticalCalls` on, off by default and on in `kronikol ingest`, consecutive `Raw` calls on SQS, SNS or EventBridge that differ in kind now
+collapse apart: `POST x4` can read `POST x2, POST x2`. No history rule moves, as a call's line holds no kind. A `CaptureRedaction.Custom`
+that blanks a broker's category makes its protocol fall back on the kind: an ack's edge then reads `HTTP`, and an SQS send its label. In
+OTLP, an `Other` record no longer carries `messaging.operation.type=send`, and a MassTransit fault on `rabbitmq://` carries no `messaging.*`,
+as neither is an event. Kronikol4J's automatic AWS route logs `DEFAULT`, as .NET's handlers did, so this opens a difference its ledger records.
+
+The wiki's Pub/Sub and Event Hubs pages listed routes no wrapper has, and now say which need a hand call.
+
 ## [5.28.0] - 2026-11-02
 
 The minor part moves (5.27.14 to 5.28.0): OTLP export gains four attributes a dashboard can filter on (#220;

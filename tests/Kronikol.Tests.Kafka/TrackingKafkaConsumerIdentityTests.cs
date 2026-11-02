@@ -125,6 +125,8 @@ public class TrackingKafkaConsumerIdentityTests
             var response = Assert.Single(entries, l => l.Type == RequestResponseType.Response);
             Assert.Equal("!Local_ValueDeserialization", response.StatusCode?.Value?.ToString());
             Assert.Equal("Local: Value deserialization error", response.Error);
+            // The operation reads a message, and that it failed has no say, as a failed send is an event too.
+            Assert.All(entries, entry => Assert.Equal(RequestResponseMetaType.Event, entry.MetaType));
         }
         finally
         {

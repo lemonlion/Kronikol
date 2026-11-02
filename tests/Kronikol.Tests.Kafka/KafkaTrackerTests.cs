@@ -407,7 +407,7 @@ public class KafkaTrackerTests
     }
 
     [Fact]
-    public void LogTransaction_Uses_event_metatype()
+    public void LogTransaction_Uses_default_metatype()
     {
         var options = MakeOptions();
         options.TrackTransactions = true;
@@ -417,7 +417,7 @@ public class KafkaTrackerTests
         tracker.LogTransaction(op);
 
         var log = GetLogsFromThisTest().First();
-        Assert.Equal(RequestResponseMetaType.Event, log.MetaType);
+        Assert.Equal(RequestResponseMetaType.Default, log.MetaType);
     }
 
     // ─── LogConsume content ─────────────────────────────────

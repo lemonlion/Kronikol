@@ -283,11 +283,76 @@ public class WarmUpCallsTests
     }
 
     [Fact]
-    public void An_event_is_not_judged()
+    public void An_event_posted_over_http_is_not_judged()
     {
         var run = new Run().Scenario("s1");
         run.Call("s1", 0, 600, meta: RequestResponseMetaType.Event, service: "bus", uri: "http://bus/order-placed");
         run.Call("s1", 700, 5, meta: RequestResponseMetaType.Event, service: "bus", uri: "http://bus/order-placed");
+
+        Assert.Empty(run.Find().Calls);
+    }
+
+    [Theory]
+    [InlineData("sns:///orders", "Publish")]
+    [InlineData("sqs:///orders", "SendMessage")]
+    [InlineData("eventbridge://orders-bus/", "PutEvents [OrderPlaced]")]
+    [InlineData("storagequeue:///orders", "Send \u2192 orders")]
+    [InlineData("kafka:///orders", "Produce \u2192 orders")]
+    [InlineData("servicebus://orders/", "Send \u2192 orders")]
+    [InlineData("pubsub:///orders", "Publish \u2192 orders")]
+    [InlineData("eventhubs:///orders", "Send \u2192 orders")]
+    [InlineData("masstransit:///orders", "Publish OrderPlaced")]
+    [InlineData("masstransit:///orders", "Send OrderPlaced")]
+    public void A_publish_the_test_makes_is_judged(string uri, string label)
+    {
+        var run = new Run().Scenario("s1");
+        var first = run.Call("s1", 0, 600, method: label, meta: RequestResponseMetaType.Event, service: "bus", uri: uri);
+        run.Call("s1", 700, 5, method: label, meta: RequestResponseMetaType.Event, service: "bus", uri: uri);
+
+        Assert.Equal(first, Assert.Single(run.Find().Calls).Key);
+    }
+
+    [Theory]
+    [InlineData("sqs:///orders", "ReceiveMessage")]
+    [InlineData("storagequeue:///orders", "Peek \u2190 orders")]
+    [InlineData("kafka:///orders", "Consume \u2190 orders")]
+    [InlineData("masstransit:///orders", "Consume OrderPlaced")]
+    [InlineData("event://cake_events", "Publish")]
+    // At Raw a broker's record is the request as it went: an endpoint on https, or MassTransit's own address.
+    [InlineData("https://sqs.us-east-1.amazonaws.com/", "POST")]
+    [InlineData("https://shop.queue.core.windows.net/orders/messages", "POST")]
+    [InlineData("https://shop.queue.core.windows.net/orders/messages", "GET")]
+    [InlineData("rabbitmq://localhost/orders", "Publish OrderPlaced \u2192 rabbitmq://localhost/orders")]
+    // A record's address may be relative: it has no scheme to read, and a report still has to be written.
+    [InlineData("orders", "Publish")]
+    public void An_event_the_table_does_not_read_as_a_publish_is_not_judged(string uri, string label)
+    {
+        var run = new Run().Scenario("s1");
+        run.Call("s1", 0, 600, method: label, meta: RequestResponseMetaType.Event, service: "bus", uri: uri);
+        run.Call("s1", 700, 5, method: label, meta: RequestResponseMetaType.Event, service: "bus", uri: uri);
+
+        Assert.Empty(run.Find().Calls);
+    }
+
+    [Fact]
+    public void A_kafka_produce_at_raw_is_a_kind_of_its_own()
+    {
+        // Its label names the offset, so two produces are two kinds of call, and a kind made once is not judged.
+        var run = new Run().Scenario("s1");
+        run.Call("s1", 0, 600, method: "ProduceAsync orders[0]@17", meta: RequestResponseMetaType.Event, service: "Kafka", uri: "kafka:///orders/0@17");
+        run.Call("s1", 700, 5, method: "ProduceAsync orders[0]@18", meta: RequestResponseMetaType.Event, service: "Kafka", uri: "kafka:///orders/0@18");
+
+        Assert.Empty(run.Find().Calls);
+    }
+
+    [Fact]
+    public void A_produce_beside_a_consume_under_one_caller_is_not_judged()
+    {
+        // The consume is the broker's arrow into the caller, which makes that caller a service, and a service's calls are not the test's.
+        var run = new Run().Scenario("s1");
+        run.Call("s1", 0, 600, method: "Produce \u2192 orders", meta: RequestResponseMetaType.Event, service: "Kafka", uri: "kafka:///orders");
+        run.Call("s1", 700, 5, method: "Produce \u2192 orders", meta: RequestResponseMetaType.Event, service: "Kafka", uri: "kafka:///orders");
+        run.Call("s1", 800, 5, method: "Consume \u2190 orders", meta: RequestResponseMetaType.Event, service: "Test", caller: "Kafka", uri: "kafka:///orders");
 
         Assert.Empty(run.Find().Calls);
     }

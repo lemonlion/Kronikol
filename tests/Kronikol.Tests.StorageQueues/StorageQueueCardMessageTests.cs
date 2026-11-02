@@ -52,7 +52,27 @@ public class StorageQueueCardMessageTests : IDisposable
         return calls;
     }
 
-    private async Task<RequestResponseLog?> Track(StorageQueueOperation operation, StorageQueueTrackingVerbosity verbosity)
+    private sealed class Refuses : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) =>
+            throw new HttpRequestException("connection refused");
+    }
+
+    // A call that throws is still answered (#125), and the answer carries its request's kind.
+    [Theory]
+    [InlineData(StorageQueueOperation.SendMessage, RequestResponseMetaType.Event)]
+    [InlineData(StorageQueueOperation.ReceiveMessages, RequestResponseMetaType.Event)]
+    [InlineData(StorageQueueOperation.DeleteMessage, RequestResponseMetaType.Default)]
+    public async Task A_call_that_throws_is_answered_with_its_requests_kind(StorageQueueOperation operation, RequestResponseMetaType kind)
+    {
+        await Assert.ThrowsAsync<HttpRequestException>(() => Track(operation, StorageQueueTrackingVerbosity.Detailed, new Refuses()));
+
+        var logs = RequestResponseLogger.RequestAndResponseLogs.Where(l => l.TestId == _testId).ToArray();
+        Assert.Equal(2, logs.Length);
+        Assert.All(logs, log => Assert.Equal(kind, log.MetaType));
+    }
+
+    private async Task<RequestResponseLog?> Track(StorageQueueOperation operation, StorageQueueTrackingVerbosity verbosity, HttpMessageHandler? inner = null)
     {
         using var invoker = new HttpMessageInvoker(new StorageQueueTrackingMessageHandler(new StorageQueueTrackingMessageHandlerOptions
         {
@@ -60,7 +80,7 @@ public class StorageQueueCardMessageTests : IDisposable
             CallerName = TrackedMessages.Subject,
             Verbosity = verbosity,
             CurrentTestInfoFetcher = () => ("Order pancakes", _testId)
-        }, _answer));
+        }, inner ?? _answer));
         var (method, path, _) = Operations[operation];
         using var request = new HttpRequestMessage(new HttpMethod(method), Account + path);
         if (method is "POST" or "PUT")
@@ -74,12 +94,7 @@ public class StorageQueueCardMessageTests : IDisposable
     public async Task Each_call_the_handler_records_reads_as_its_operation(StorageQueueOperation operation, StorageQueueTrackingVerbosity verbosity)
     {
         var call = await Track(operation, verbosity);
-        if (call is null)
-        {
-            // at Summarised the handler records no call it cannot name
-            Assert.Equal((StorageQueueOperation.Other, StorageQueueTrackingVerbosity.Summarised), (operation, verbosity));
-            return;
-        }
+        Assert.NotNull(call);
 
         var direction = Operations[operation].Direction;
         Assert.Equal(verbosity == StorageQueueTrackingVerbosity.Raw ? "no direction" : direction, TrackedMessages.Direction(call));
@@ -94,5 +109,21 @@ public class StorageQueueCardMessageTests : IDisposable
 
         Assert.Null(TrackedMessages.Topic(call));
         Assert.False(TrackedMessages.EmptyTarget(call));
+    }
+
+    // plans/CALLS_AND_EVENTS_PLAN.md 6.7: an event exactly when the call moves a message, at every verbosity, and a response
+    // carries its request's kind. The oracle is this class's own reading of the operation, not MessageTable: the table
+    // cannot read a call recorded as its HTTP request or under its transport's address.
+    [Theory]
+    [MemberData(nameof(Calls))]
+    public async Task A_call_is_an_event_exactly_when_it_moves_a_message(StorageQueueOperation operation, StorageQueueTrackingVerbosity verbosity)
+    {
+        var call = await Track(operation, verbosity);
+        Assert.NotNull(call);
+
+        var expected = Operations[operation].Direction is "publishes" or "consumes" ? RequestResponseMetaType.Event : RequestResponseMetaType.Default;
+        Assert.Equal(expected, call.MetaType);
+        Assert.Equal(expected, RequestResponseLogger.RequestAndResponseLogs.Last(l =>
+            l.TestId == _testId && l.RequestResponseId == call.RequestResponseId && l.Type == RequestResponseType.Response).MetaType);
     }
 }
