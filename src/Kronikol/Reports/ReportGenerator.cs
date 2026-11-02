@@ -5989,20 +5989,23 @@ public static class ReportGenerator
         instant.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ", CultureInfo.InvariantCulture);
 
     /// <summary>
-    /// The <c>method</c> field as the data writers emit it: an <see cref="HttpMethod"/> upper-cased,
+    /// The <c>method</c> field as the data writers emit it: an <see cref="HttpMethod"/> as it was built,
     /// and a label left exactly as the tracker wrote it.
     /// </summary>
     /// <remarks>
-    /// All three writers upper-cased the whole slot. For a real verb that is a no-op -
-    /// <c>HttpMethod.Get.ToString()</c> is already <c>GET</c> - and for everything else it rewrote
-    /// content the run supplied: Redis's <c>GET (Hit)</c> came back as <c>GET (HIT)</c>, and a cache
-    /// label of <c>Cache Get (Hit)</c> as <c>CACHE GET (HIT)</c>. The schema's own description of the
-    /// field names <c>Publish</c> as an example value, in mixed case, so the file and its contract had
-    /// disagreed since the field existed.
+    /// <para>All three writers upper-cased the whole slot. For a real verb that is a no-op -
+    /// <c>HttpMethod.Get.Method</c> is already <c>GET</c> - and for everything else it rewrote content the
+    /// run supplied: Redis's <c>Get (Hit)</c> came back as <c>GET (HIT)</c>, and a cache label of
+    /// <c>Cache Get (Hit)</c> as <c>CACHE GET (HIT)</c>. The schema's own description of the field names
+    /// <c>Publish</c> as an example value, in mixed case, so the file and its contract had disagreed since
+    /// the field existed.</para>
+    ///
+    /// <para>A verb built by hand is kept too: <c>new HttpMethod("Patch")</c> through the HTTP handler is
+    /// recorded by history as built, and a merge reads this file against that record.</para>
     /// </remarks>
     internal static string? MethodText(OneOf<HttpMethod, string> method) => method.Value switch
     {
-        HttpMethod verb => verb.ToString().ToUpperInvariant(),
+        HttpMethod verb => verb.Method,
         string label => label,
         _ => null
     };
@@ -8077,7 +8080,7 @@ public static class ReportGenerator
                     ["properties"] = new Dictionary<string, object?>
                     {
                         ["type"] = new Dictionary<string, object?> { ["type"] = "string", ["enum"] = new[] { "Request", "Response" }, ["description"] = "Which half of a call this is; the two halves share requestResponseId" },
-                        ["method"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "HTTP verb, or the operation label a non-HTTP tracker recorded (SELECT, GET for a cache, Publish for a message); null for a bare event" },
+                        ["method"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "HTTP verb, or the operation label a non-HTTP tracker recorded (SELECT, Get for a cache, Publish for a message); null for a bare event" },
                         ["uri"] = new Dictionary<string, object?> { ["type"] = "string", ["format"] = "uri", ["description"] = "The request URI; for non-HTTP dependencies a synthetic scheme://service/path the tracker built" },
                         ["serviceName"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "The dependency (callee), as named in the diagram" },
                         ["callerName"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "The caller: the system under test, or the test itself" },
@@ -8110,7 +8113,7 @@ public static class ReportGenerator
                         ["traceId"] = new Dictionary<string, object?> { ["type"] = "string", ["format"] = "uuid", ["description"] = "Kronikol's own id for the request/response pair. Not the W3C trace id — that is activityTraceId." },
                         ["requestResponseId"] = new Dictionary<string, object?> { ["type"] = "string", ["format"] = "uuid", ["description"] = "Pairs a request with its response: both halves carry the same value" },
                         ["timestamp"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["format"] = "date-time", ["description"] = "When this half was captured (UTC); null when the capture path recorded none" },
-                        ["metaType"] = new Dictionary<string, object?> { ["type"] = "string", ["enum"] = Enum.GetNames(typeof(RequestResponseMetaType)), ["description"] = "Default for a request/response exchange, Event for a fire-and-forget publish" },
+                        ["metaType"] = new Dictionary<string, object?> { ["type"] = "string", ["enum"] = Enum.GetNames(typeof(RequestResponseMetaType)), ["description"] = "Default for a call: a database query, an HTTP or gRPC call, settling a message, managing a topic or a queue. Event for an operation that moves a message: it hands one to a broker, reads one from it or delivers one to a consumer, whatever came back" },
                         ["dependencyCategory"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "What kind of thing the callee is (database, cache, queue, ...) — drives participant shape and arrow colour in the diagram" },
                         ["callerDependencyCategory"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "The same, for the caller" },
                         ["phase"] = new Dictionary<string, object?> { ["type"] = "string", ["enum"] = Enum.GetNames(typeof(TestPhase)), ["description"] = "Whether the call happened during Setup or the Action under test; Unknown when phase detection is off" },

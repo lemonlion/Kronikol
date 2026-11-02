@@ -1,0 +1,21 @@
+# The named report (bp-cmock-reqnroll, 4.26.4, mergeable JSON, no fragment beside it). Counts and key names only.
+
+== Which keys a merge moves
+-- 5.27.13
+scenarios 214 214 ids only before 0 ids only after 0
+calls compared 2580
+scenario keys that moved: {'categories': 214, 'labels': 214, 'tags': 214, 'exampleFlatValues': 57, 'steps': 33, 'durationSeconds': 14}
+call keys that moved: {'method': 6}
+top-level keys that differ: ['diagnostics']
+background calls 0 0
+-- prototype
+scenarios 214 214 ids only before 0 ids only after 0
+calls compared 2580
+scenario keys that moved: {'categories': 214, 'exampleFlatValues': 57, 'tags': 214, 'labels': 214, 'steps': 33, 'durationSeconds': 14}
+call keys that moved: {}
+top-level keys that differ: ['diagnostics']
+background calls 0 0
+
+== A ledger of its own fragment recorded 5 times (probes/merge-round-trip-fragment.cs: the fragment made from the file's own strings)
+5.27.13: history: 2 always failing, 3 behaviour changed (against 5 earlier runs on main)
+prototype: history: 2 always failing (against 5 earlier runs on main)

@@ -1,0 +1,81 @@
+== versions
+jaeger docker.io/jaegertracing/jaeger:2.22.0
+tempo docker.io/grafana/tempo:2.10.10
+collector docker.io/otel/opentelemetry-collector-contrib:0.164.0
+prometheus docker.io/prom/prometheus:v3.5.0
+== POST
+http://127.0.0.1:4318: 200
+http://127.0.0.1:24318: 200
+http://127.0.0.1:34318: 200
+http://127.0.0.1:4318, second POST: 200
+http://127.0.0.1:24318, second POST: 200
+http://127.0.0.1:34318, second POST: 200
+== collector: traces_service_graph_request_total
+{client="c1-app",connection_type="virtual_node",failed="false",otel_scope_name="traces_service_graph",otel_scope_schema_url="",otel_scope_version="",server="c1-broker"} 1
+{client="c10-app",connection_type="virtual_node",failed="false",otel_scope_name="traces_service_graph",otel_scope_schema_url="",otel_scope_version="",server="spanner"} 1
+{client="c11-app",connection_type="virtual_node",failed="false",otel_scope_name="traces_service_graph",otel_scope_schema_url="",otel_scope_version="",server="gcp.spanner"} 1
+{client="c18-app",connection_type="virtual_node",failed="false",otel_scope_name="traces_service_graph",otel_scope_schema_url="",otel_scope_version="",server="c18-peer"} 2
+{client="c7-producer",connection_type="messaging_system",failed="false",otel_scope_name="traces_service_graph",otel_scope_schema_url="",otel_scope_version="",server="c7-consumer"} 1
+{client="c8-producer",connection_type="messaging_system",failed="false",otel_scope_name="traces_service_graph",otel_scope_schema_url="",otel_scope_version="",server="c8-consumer"} 1
+{client="c9-app",connection_type="virtual_node",failed="false",otel_scope_name="traces_service_graph",otel_scope_schema_url="",otel_scope_version="",server="c9-peer"} 1
+== tempo: traces_service_graph_request_total
+client=c1-app server=c1-broker connection_type=virtual_node
+client=c12-app server=c12-peer connection_type=virtual_node
+client=c13-app server=c13-broker connection_type=virtual_node
+client=c14-broker server=c14-app connection_type=virtual_node
+client=c15-app server=c15-broker connection_type=virtual_node
+client=c15-broker server=c15-app connection_type=virtual_node
+client=c16-app server=c16-broker connection_type=virtual_node
+client=c16-broker server=c16-app connection_type=virtual_node
+client=c17-app server=c17-broker connection_type=virtual_node
+client=c17-broker server=c17-app connection_type=virtual_node
+client=c18-app server=c18-peer connection_type=virtual_node
+client=c2-app server=c2-broker connection_type=virtual_node
+client=c3-app server=c3-broker connection_type=virtual_node
+client=c4-broker server=c4-app connection_type=virtual_node
+client=c5-app server=c5-broker connection_type=virtual_node
+client=c6-broker server=c6-app connection_type=virtual_node
+client=c7-producer server=c7-consumer connection_type=messaging_system
+client=c9-app server=c9-peer connection_type=virtual_node
+client=user server=c8-consumer connection_type=virtual_node
+
+== jaeger: /api/dependencies
+{"data":[{"parent":"c7-producer","child":"c7-consumer","callCount":1}],"total":0,"limit":0,"offset":0,"errors":null}
+== spans kept of each trace
+c1	c56e3f09b977b10f5634bce1f65d39fa	jaeger=1	tempo=1	CLIENT, peer.service (an SQS send today; a pull on R3)
+c2	ce0713c54c1ce6bfb1e2d7951991ac5d	jaeger=1	tempo=1	PRODUCER, peer.service (a Pub/Sub publish today; an SQS send on R2+R3)
+c3	da11373f6a5e1c66b4baac16fcce4f4e	jaeger=1	tempo=1	PRODUCER, peer.service, messaging.* (a send on the first cut)
+c4	909b9e5929e24d980ad7c574561dffe2	jaeger=1	tempo=1	CONSUMER, the consumer as service.name, the broker as peer.service (a delivery on the first cut)
+c5	08be9a8e88ee5026658663f090e75bca	jaeger=1	tempo=1	CONSUMER, the broker as service.name, the consumer as peer.service (a Kafka consume on section 5.5, unswapped)
+c6	58f3c927e02f6e2a9e2fa95cfd27092b	jaeger=1	tempo=1	PRODUCER, the broker as service.name, the consumer as peer.service (a Kafka consume today)
+c7	f137843082f65ae134ae082028b39866	jaeger=2	tempo=2	PRODUCER, then CONSUMER with it as parentSpanId (not what Kronikol writes)
+c8	df2f379d543642568f18647f08164beb	jaeger=1	tempo=1	PRODUCER, then CONSUMER in a trace of its own with a span link (not what Kronikol writes)
+c9	6a5adc903408bb75c969f456d0a1f3c1	jaeger=1	tempo=1	CLIENT, db.system.name spanner, peer.service
+c10	695025a3ce162fb3540f88df71f08e01	jaeger=1	tempo=1	CLIENT, db.system.name spanner, no peer.service
+c11	386841fc72b7ce6e15df6fa7755516be	jaeger=1	tempo=1	CLIENT, db.system.name gcp.spanner, no peer.service
+c12	58a4437def5b77cb52441902c4c83cc2	jaeger=1	tempo=1	PRODUCER, db.system.name spanner, peer.service (Spanner at 5.27.13)
+c13	03db72e74fb36718bccc7cfe3803b369	jaeger=3	tempo=3	three PRODUCER spans with one trace id and one span id (three sends under one Activity)
+c14	f16b2e8808e907f76e02401a113f9f7d	jaeger=2	tempo=2	a Kafka produce and its consume as they export today: PRODUCER twice, one span id
+c15	9b4ce77a5a3d919ff430ff12d222c45f	jaeger=2	tempo=2	a Kafka produce and its consume on the first cut: PRODUCER and CONSUMER, one span id
+c16	0dba6addc174638c8a9106ca19109a5a	jaeger=2	tempo=2	as c14, the second span in a second POST
+c17	9b1da1ed320a045de4ec69d11dd8351e	jaeger=2	tempo=2	as c15, the second span in a second POST
+c18	9546d0b2869b20b0ed81b4e6f0caa6d2	jaeger=2	tempo=2	two CLIENT calls under one Activity, the second in a second POST
+== jaeger warnings and span ids on the traces that repeat a span id
+c13: "warnings":["duplicate span IDs; skipping clock skew adjustment","duplicate span IDs; skipping clock skew adjustment"]       3 "spanID":"356a1152787c888a" 
+c14: "warnings":["duplicate span IDs; skipping clock skew adjustment"]       2 "spanID":"c8db62c3d77d6246" 
+c15: "warnings":["duplicate span IDs; skipping clock skew adjustment"]       2 "spanID":"d2d0dafeb788b5d0" 
+c16: "warnings":["duplicate span IDs; skipping clock skew adjustment"]       2 "spanID":"ae2cd9fec0692265" 
+c17: "warnings":["duplicate span IDs; skipping clock skew adjustment"]       2 "spanID":"f96b2e9d3ed68832" 
+c18: "warnings":["duplicate span IDs; skipping clock skew adjustment"]       2 "spanID":"e7a6254cf49517ca" 
+== tempo after its ingester flushed: the trace-repeating cases
+POST /flush 204
+c13: tempo=3
+c14: tempo=2
+c15: tempo=2
+c16: tempo=2
+c17: tempo=2
+c18: tempo=2
+== logs that mention an error
+-- r3-tempo
+-- r3-otelcol
+-- r3-jaeger

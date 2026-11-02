@@ -1,0 +1,240 @@
+diff --git a/src/Kronikol.Extensions.BigQuery/BigQueryTracker.cs b/src/Kronikol.Extensions.BigQuery/BigQueryTracker.cs
+index 969eec75..5ab22e77 100644
+--- a/src/Kronikol.Extensions.BigQuery/BigQueryTracker.cs
++++ b/src/Kronikol.Extensions.BigQuery/BigQueryTracker.cs
+@@ -52,7 +52,6 @@ public BigQueryTracker(BigQueryTrackingMessageHandlerOptions options, IHttpConte
+             label, logContent, uri, [],
+             _options.ServiceName, _options.CallerName,
+             RequestResponseType.Request, traceId, requestResponseId, false,
+-            MetaType: RequestResponseMetaType.Event,
+             DependencyCategory: DependencyCategories.BigQuery)
+         {
+             AttributionSource = testInfo.Value.Source,
+diff --git a/src/Kronikol.Extensions.Bigtable/BigtableTracker.cs b/src/Kronikol.Extensions.Bigtable/BigtableTracker.cs
+index a4c413b6..12249388 100644
+--- a/src/Kronikol.Extensions.Bigtable/BigtableTracker.cs
++++ b/src/Kronikol.Extensions.Bigtable/BigtableTracker.cs
+@@ -54,7 +54,6 @@ public BigtableTracker(BigtableTrackingOptions options, IHttpContextAccessor? ht
+             label, logContent, uri, [],
+             _options.ServiceName, _options.CallerName,
+             RequestResponseType.Request, traceId, requestResponseId, false,
+-            MetaType: RequestResponseMetaType.Event,
+             DependencyCategory: DependencyCategories.Bigtable)
+         {
+             AttributionSource = testInfo.Value.Source,
+diff --git a/src/Kronikol.Extensions.Spanner/SpannerTracker.cs b/src/Kronikol.Extensions.Spanner/SpannerTracker.cs
+index 51e91f89..08a3c01c 100644
+--- a/src/Kronikol.Extensions.Spanner/SpannerTracker.cs
++++ b/src/Kronikol.Extensions.Spanner/SpannerTracker.cs
+@@ -63,7 +63,6 @@ public SpannerTracker(SpannerTrackingOptions options, IHttpContextAccessor? http
+             method, logContent, uri, [],
+             _options.ServiceName, _options.CallerName,
+             RequestResponseType.Request, traceId, requestResponseId, false,
+-            MetaType: RequestResponseMetaType.Event,
+             DependencyCategory: DependencyCategories.Spanner)
+         {
+             AttributionSource = testInfo.Value.Source,
+diff --git a/src/Kronikol/Reports/Merge/MergeableReportReader.cs b/src/Kronikol/Reports/Merge/MergeableReportReader.cs
+index 51c2f2c2..2c220ebe 100644
+--- a/src/Kronikol/Reports/Merge/MergeableReportReader.cs
++++ b/src/Kronikol/Reports/Merge/MergeableReportReader.cs
+@@ -506,30 +506,19 @@ private static Dictionary<string, JsonElement> ReadObjectMap(JsonElement root, s
+     /// here: this is reading back a file that already holds the answer, and a merge must round-trip what
+     /// it was given rather than invent a label the run never wrote.</para>
+     /// </remarks>
+-    private static OneOf<HttpMethod, string> ReadMethod(string method, RequestResponseMetaType metaType)
+-    {
+-        if (metaType == RequestResponseMetaType.Event)
+-            return method;
+-
+-        // The NINE standard verbs, not "anything HttpMethod.Parse will take". Parse accepts any RFC-7230
+-        // token, so `Publish` - which a message-queue tracker writes as a LABEL - came back as an
+-        // HttpMethod, and the writer then upper-cased it to `PUBLISH`. Matching the known set is what
+-        // makes the round trip exact, and it is the rule InteractionRecord.ParseMethod already uses on
+-        // the ingestion side.
+-        return method.ToUpperInvariant() switch
+-        {
+-            "GET" => HttpMethod.Get,
+-            "POST" => HttpMethod.Post,
+-            "PUT" => HttpMethod.Put,
+-            "DELETE" => HttpMethod.Delete,
+-            "PATCH" => HttpMethod.Patch,
+-            "HEAD" => HttpMethod.Head,
+-            "OPTIONS" => HttpMethod.Options,
+-            "TRACE" => HttpMethod.Trace,
+-            "CONNECT" => HttpMethod.Connect,
+-            _ => method
+-        };
+-    }
++    private static OneOf<HttpMethod, string> ReadMethod(string method) => method switch
++    {
++        "GET" => HttpMethod.Get,
++        "POST" => HttpMethod.Post,
++        "PUT" => HttpMethod.Put,
++        "DELETE" => HttpMethod.Delete,
++        "PATCH" => HttpMethod.Patch,
++        "HEAD" => HttpMethod.Head,
++        "OPTIONS" => HttpMethod.Options,
++        "TRACE" => HttpMethod.Trace,
++        "CONNECT" => HttpMethod.Connect,
++        _ => method
++    };
+ 
+     /// <summary>
+     /// Rebuilds one scenario's captured traffic. Only the real interactions are in the file - the
+@@ -549,7 +538,7 @@ private static void ReadInteractions(JsonElement se, string testName, string tes
+         {
+             var metaType = ReadEnum(GetString(element, "metaType"), RequestResponseMetaType.Default);
+             var method = GetString(element, "method") ?? "";
+-            OneOf<HttpMethod, string> parsedMethod = ReadMethod(method, metaType);
++            OneOf<HttpMethod, string> parsedMethod = ReadMethod(method);
+ 
+             // Both shapes: 3.1.0 writes a number plus a label, older shards wrote the name alone. The
+             // enum is preferred when the number names one, so a round trip through a merge produces the
+diff --git a/src/Kronikol/Reports/ReportGenerator.cs b/src/Kronikol/Reports/ReportGenerator.cs
+index 6afff5da..c20bd6fb 100644
+--- a/src/Kronikol/Reports/ReportGenerator.cs
++++ b/src/Kronikol/Reports/ReportGenerator.cs
+@@ -6002,7 +6002,7 @@ private static string FormatInstant(DateTimeOffset instant) =>
+     /// </remarks>
+     internal static string? MethodText(OneOf<HttpMethod, string> method) => method.Value switch
+     {
+-        HttpMethod verb => verb.ToString().ToUpperInvariant(),
++        HttpMethod verb => verb.Method,
+         string label => label,
+         _ => null
+     };
+diff --git a/tests/Kronikol.Tests.BigQuery/BigQueryTrackerTests.cs b/tests/Kronikol.Tests.BigQuery/BigQueryTrackerTests.cs
+index e84fc176..981cb8d3 100644
+--- a/tests/Kronikol.Tests.BigQuery/BigQueryTrackerTests.cs
++++ b/tests/Kronikol.Tests.BigQuery/BigQueryTrackerTests.cs
+@@ -108,7 +108,7 @@ public void LogRequest_NoTestInfo_NoLog()
+     }
+ 
+     [Fact]
+-    public void LogRequest_Uses_event_metatype()
++    public void LogRequest_Uses_default_metatype()
+     {
+         var tracker = new BigQueryTracker(MakeOptions());
+         var op = new BigQueryOperationInfo(BigQueryOperation.Query, "query", null, "p", null);
+@@ -116,7 +116,7 @@ public void LogRequest_Uses_event_metatype()
+         tracker.LogRequest(op, "SELECT 1");
+ 
+         var log = GetLogsFromThisTest().First();
+-        Assert.Equal(RequestResponseMetaType.Event, log.MetaType);
++        Assert.Equal(RequestResponseMetaType.Default, log.MetaType);
+     }
+ 
+     [Fact]
+diff --git a/tests/Kronikol.Tests.Bigtable/BigtableTrackerTests.cs b/tests/Kronikol.Tests.Bigtable/BigtableTrackerTests.cs
+index 7f0a2e0d..0085a858 100644
+--- a/tests/Kronikol.Tests.Bigtable/BigtableTrackerTests.cs
++++ b/tests/Kronikol.Tests.Bigtable/BigtableTrackerTests.cs
+@@ -83,7 +83,7 @@ public void LogRequest_NoTestInfo_NoLog()
+     }
+ 
+     [Fact]
+-    public void LogRequest_Uses_event_metatype()
++    public void LogRequest_Uses_default_metatype()
+     {
+         var tracker = new BigtableTracker(MakeOptions());
+         var op = new BigtableOperationInfo(BigtableOperation.MutateRow, "projects/p/instances/i/tables/t", "row1");
+@@ -91,7 +91,7 @@ public void LogRequest_Uses_event_metatype()
+         tracker.LogRequest(op, null);
+ 
+         var log = GetLogsFromThisTest().First();
+-        Assert.Equal(RequestResponseMetaType.Event, log.MetaType);
++        Assert.Equal(RequestResponseMetaType.Default, log.MetaType);
+     }
+ 
+     [Fact]
+diff --git a/tests/Kronikol.Tests.Spanner/SpannerTrackerTests.cs b/tests/Kronikol.Tests.Spanner/SpannerTrackerTests.cs
+index a0b7b86a..23b9384c 100644
+--- a/tests/Kronikol.Tests.Spanner/SpannerTrackerTests.cs
++++ b/tests/Kronikol.Tests.Spanner/SpannerTrackerTests.cs
+@@ -83,7 +83,7 @@ public void LogRequest_NoTestInfo_NoLog()
+     }
+ 
+     [Fact]
+-    public void LogRequest_Uses_event_metatype()
++    public void LogRequest_Uses_default_metatype()
+     {
+         var tracker = new SpannerTracker(MakeOptions());
+         var op = new SpannerOperationInfo(SpannerOperation.Query, "Users");
+@@ -91,7 +91,7 @@ public void LogRequest_Uses_event_metatype()
+         tracker.LogRequest(op, "SELECT * FROM Users");
+ 
+         var log = GetLogsFromThisTest().First();
+-        Assert.Equal(RequestResponseMetaType.Event, log.MetaType);
++        Assert.Equal(RequestResponseMetaType.Default, log.MetaType);
+     }
+ 
+     [Fact]
+diff --git a/tests/Kronikol.Tests/Reports/Merge/MergeReadsEveryTrackersMethodTests.cs b/tests/Kronikol.Tests/Reports/Merge/MergeReadsEveryTrackersMethodTests.cs
+index 6fa53534..33603fc4 100644
+--- a/tests/Kronikol.Tests/Reports/Merge/MergeReadsEveryTrackersMethodTests.cs
++++ b/tests/Kronikol.Tests/Reports/Merge/MergeReadsEveryTrackersMethodTests.cs
+@@ -88,6 +88,63 @@ public void An_empty_method_round_trips_as_empty_rather_than_being_invented()
+         Assert.DoesNotContain("\"method\": \"CALL\"", ReportHtml.Read(Path.Combine(_dir, "Combined.json")), StringComparison.Ordinal);
+     }
+ 
++    /// <summary>
++    /// A label that is a verb in another casing is still a label: Cosmos DB's <c>Delete</c> and <c>Patch</c>, EF Core's and
++    /// BigQuery's <c>Delete</c>. Read as a verb it is written back in capitals, so the merged report names another call than
++    /// the run did, and history reads the difference as changed behaviour (plans/CALLS_AND_EVENTS_PLAN.md F1).
++    /// </summary>
++    [Theory]
++    [InlineData("Get")]
++    [InlineData("Post")]
++    [InlineData("Put")]
++    [InlineData("Delete")]
++    [InlineData("Patch")]
++    [InlineData("Head")]
++    [InlineData("Options")]
++    [InlineData("Trace")]
++    [InlineData("Connect")]
++    [InlineData("get")]
++    public void A_label_that_is_a_verb_in_another_casing_keeps_its_casing(string label)
++    {
++        WriteShard("runner1.json", label);
++
++        Assert.Equal(0, Merge().Exit);
++
++        var report = MergeableReportReader.Parse(ReportHtml.Read(Path.Combine(_dir, "Combined.json")));
++        Assert.Equal(label, report.Interactions.First().Method.Value);
++    }
++
++    /// <summary>The file holds a verb as it was built: history keeps it so, and a merge compares with history.</summary>
++    [Theory]
++    [InlineData("Patch")]
++    [InlineData("patch")]
++    [InlineData("Purge")]
++    [InlineData("PURGE")]
++    [InlineData("GET")]
++    public void A_verb_built_by_hand_is_written_as_it_was_built(string verb) =>
++        Assert.Equal(verb, Kronikol.Reports.ReportGenerator.MethodText(new HttpMethod(verb)));
++
++    /// <summary>A verb is written in capitals, whatever else the call is, so capitals are what the reader asks for.</summary>
++    [Theory]
++    [InlineData("GET")]
++    [InlineData("POST")]
++    [InlineData("PUT")]
++    [InlineData("DELETE")]
++    [InlineData("PATCH")]
++    [InlineData("HEAD")]
++    [InlineData("OPTIONS")]
++    [InlineData("TRACE")]
++    [InlineData("CONNECT")]
++    public void Each_verb_in_capitals_is_read_as_a_verb(string verb)
++    {
++        WriteShard("runner1.json", verb);
++
++        Assert.Equal(0, Merge().Exit);
++
++        var report = MergeableReportReader.Parse(ReportHtml.Read(Path.Combine(_dir, "Combined.json")));
++        Assert.Equal(new HttpMethod(verb), Assert.IsType<HttpMethod>(report.Interactions.First().Method.Value));
++    }
++
+     /// <summary>A genuine HTTP verb still becomes an <c>HttpMethod</c>, not a lookalike string.</summary>
+     [Fact]
+     public void A_real_verb_is_still_read_as_a_verb()

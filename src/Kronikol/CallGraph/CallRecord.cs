@@ -56,7 +56,7 @@ internal sealed record CallRecord
     public string? Category { get; init; }
     public string? CallerCategory { get; init; }
 
-    /// <summary>The record's meta type is <c>Event</c>, which Spanner, BigQuery and Bigtable write: no message call.</summary>
+    /// <summary>The record's meta type is <c>Event</c>. The protocol falls back on it for a call with no category. No sign of a message call: see <c>CallGraphBuilder.IsMessageCall</c>.</summary>
     public bool IsEvent { get; init; }
 
     /// <summary>The recorded phase, <c>Setup</c> or <c>Action</c>; null when none was recorded.</summary>

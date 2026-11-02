@@ -1,0 +1,986 @@
+send, stable names | default capture	dropped
+send, stable names | Messaging and Rpc captured | log	kind Default
+send, stable names | Messaging and Rpc captured | log	call app>kafka Send orders /orders OK
+send, stable names | Messaging and Rpc captured | log	under 6 app>kafka Send orders /orders OK
+send, stable names | Messaging and Rpc captured | log	under 7 app>kafka Send orders /orders OK
+send, stable names | Messaging and Rpc captured | log	under 8 app>kafka Send orders /orders OK
+send, stable names | Messaging and Rpc captured | log	under 9 app>kafka Send orders /orders OK
+send, stable names | Messaging and Rpc captured | log	under 10 app>kafka Send orders /orders OK
+send, stable names | Messaging and Rpc captured | log	under 11 app>kafka Send orders /orders OK
+send, stable names | Messaging and Rpc captured | log	raw HistoryRawCall { Caller = app, Service = kafka, Method = Send orders, Path = /orders, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+send, stable names | Messaging and Rpc captured | log	fingerprint set=2e33dad1 ordered=2e33dad1 calls=1
+send, stable names | Messaging and Rpc captured | log	dependencies app>kafka
+send, stable names | Messaging and Rpc captured | record	kind Default
+send, stable names | Messaging and Rpc captured | record	call app>kafka Send orders /orders OK
+send, stable names | Messaging and Rpc captured | record	under 6 app>kafka Send orders /orders OK
+send, stable names | Messaging and Rpc captured | record	under 7 app>kafka Send orders /orders OK
+send, stable names | Messaging and Rpc captured | record	under 8 app>kafka Send orders /orders OK
+send, stable names | Messaging and Rpc captured | record	under 9 app>kafka Send orders /orders OK
+send, stable names | Messaging and Rpc captured | record	under 10 app>kafka Send orders /orders OK
+send, stable names | Messaging and Rpc captured | record	under 11 app>kafka Send orders /orders OK
+send, stable names | Messaging and Rpc captured | record	raw HistoryRawCall { Caller = app, Service = kafka, Method = Send orders, Path = /orders, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+send, stable names | Messaging and Rpc captured | record	fingerprint set=2e33dad1 ordered=2e33dad1 calls=1
+send, stable names | Messaging and Rpc captured | record	dependencies app>kafka
+send, stable names | Messaging and Rpc captured | merged	records 2, captured by wire + span
+send, stable names | Messaging and Rpc captured | merged	kind Default
+send, stable names | Messaging and Rpc captured | merged	call app>kafka Send orders /orders OK
+send, stable names | Messaging and Rpc captured | merged	under 6 app>kafka Send orders /orders OK
+send, stable names | Messaging and Rpc captured | merged	under 7 app>kafka Send orders /orders OK
+send, stable names | Messaging and Rpc captured | merged	under 8 app>kafka Send orders /orders OK
+send, stable names | Messaging and Rpc captured | merged	under 9 app>kafka Send orders /orders OK
+send, stable names | Messaging and Rpc captured | merged	under 10 app>kafka Send orders /orders OK
+send, stable names | Messaging and Rpc captured | merged	under 11 app>kafka Send orders /orders OK
+send, stable names | Messaging and Rpc captured | merged	raw HistoryRawCall { Caller = app, Service = kafka, Method = Send orders, Path = /orders, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+send, stable names | Messaging and Rpc captured | merged	fingerprint set=2e33dad1 ordered=2e33dad1 calls=1
+send, stable names | Messaging and Rpc captured | merged	dependencies app>kafka
+publish, old names (Java agent) | default capture	dropped
+publish, old names (Java agent) | Messaging and Rpc captured | log	kind Default
+publish, old names (Java agent) | Messaging and Rpc captured | log	call app>kafka Publish orders /orders OK
+publish, old names (Java agent) | Messaging and Rpc captured | log	under 6 app>kafka Publish orders /orders OK
+publish, old names (Java agent) | Messaging and Rpc captured | log	under 7 app>kafka Publish orders /orders OK
+publish, old names (Java agent) | Messaging and Rpc captured | log	under 8 app>kafka Publish orders /orders OK
+publish, old names (Java agent) | Messaging and Rpc captured | log	under 9 app>kafka Publish orders /orders OK
+publish, old names (Java agent) | Messaging and Rpc captured | log	under 10 app>kafka Publish orders /orders OK
+publish, old names (Java agent) | Messaging and Rpc captured | log	under 11 app>kafka Publish orders /orders OK
+publish, old names (Java agent) | Messaging and Rpc captured | log	raw HistoryRawCall { Caller = app, Service = kafka, Method = Publish orders, Path = /orders, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+publish, old names (Java agent) | Messaging and Rpc captured | log	fingerprint set=ea5cd412 ordered=ea5cd412 calls=1
+publish, old names (Java agent) | Messaging and Rpc captured | log	dependencies app>kafka
+publish, old names (Java agent) | Messaging and Rpc captured | record	kind Default
+publish, old names (Java agent) | Messaging and Rpc captured | record	call app>kafka Publish orders /orders OK
+publish, old names (Java agent) | Messaging and Rpc captured | record	under 6 app>kafka Publish orders /orders OK
+publish, old names (Java agent) | Messaging and Rpc captured | record	under 7 app>kafka Publish orders /orders OK
+publish, old names (Java agent) | Messaging and Rpc captured | record	under 8 app>kafka Publish orders /orders OK
+publish, old names (Java agent) | Messaging and Rpc captured | record	under 9 app>kafka Publish orders /orders OK
+publish, old names (Java agent) | Messaging and Rpc captured | record	under 10 app>kafka Publish orders /orders OK
+publish, old names (Java agent) | Messaging and Rpc captured | record	under 11 app>kafka Publish orders /orders OK
+publish, old names (Java agent) | Messaging and Rpc captured | record	raw HistoryRawCall { Caller = app, Service = kafka, Method = Publish orders, Path = /orders, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+publish, old names (Java agent) | Messaging and Rpc captured | record	fingerprint set=ea5cd412 ordered=ea5cd412 calls=1
+publish, old names (Java agent) | Messaging and Rpc captured | record	dependencies app>kafka
+publish, old names (Java agent) | Messaging and Rpc captured | merged	records 2, captured by wire + span
+publish, old names (Java agent) | Messaging and Rpc captured | merged	kind Default
+publish, old names (Java agent) | Messaging and Rpc captured | merged	call app>kafka Publish orders /orders OK
+publish, old names (Java agent) | Messaging and Rpc captured | merged	under 6 app>kafka Publish orders /orders OK
+publish, old names (Java agent) | Messaging and Rpc captured | merged	under 7 app>kafka Publish orders /orders OK
+publish, old names (Java agent) | Messaging and Rpc captured | merged	under 8 app>kafka Publish orders /orders OK
+publish, old names (Java agent) | Messaging and Rpc captured | merged	under 9 app>kafka Publish orders /orders OK
+publish, old names (Java agent) | Messaging and Rpc captured | merged	under 10 app>kafka Publish orders /orders OK
+publish, old names (Java agent) | Messaging and Rpc captured | merged	under 11 app>kafka Publish orders /orders OK
+publish, old names (Java agent) | Messaging and Rpc captured | merged	raw HistoryRawCall { Caller = app, Service = kafka, Method = Publish orders, Path = /orders, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+publish, old names (Java agent) | Messaging and Rpc captured | merged	fingerprint set=ea5cd412 ordered=ea5cd412 calls=1
+publish, old names (Java agent) | Messaging and Rpc captured | merged	dependencies app>kafka
+create (batch publish) | default capture	dropped
+create (batch publish) | Messaging and Rpc captured | log	kind Default
+create (batch publish) | Messaging and Rpc captured | log	call app>gcp_pubsub Create orders /orders OK
+create (batch publish) | Messaging and Rpc captured | log	under 6 app>gcp_pubsub Create orders / OK
+create (batch publish) | Messaging and Rpc captured | log	under 7 app>gcp_pubsub Create orders / OK
+create (batch publish) | Messaging and Rpc captured | log	under 8 app>gcp_pubsub Create orders /orders OK
+create (batch publish) | Messaging and Rpc captured | log	under 9 app>gcp_pubsub Create orders /orders OK
+create (batch publish) | Messaging and Rpc captured | log	under 10 app>gcp_pubsub Create orders /orders OK
+create (batch publish) | Messaging and Rpc captured | log	under 11 app>gcp_pubsub Create orders /orders OK
+create (batch publish) | Messaging and Rpc captured | log	raw HistoryRawCall { Caller = app, Service = gcp_pubsub, Method = Create orders, Path = /orders, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = /, Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+create (batch publish) | Messaging and Rpc captured | log	fingerprint set=7c1fe958 ordered=7c1fe958 calls=1
+create (batch publish) | Messaging and Rpc captured | log	dependencies app>gcp_pubsub
+create (batch publish) | Messaging and Rpc captured | record	kind Default
+create (batch publish) | Messaging and Rpc captured | record	call app>gcp_pubsub Create orders /orders OK
+create (batch publish) | Messaging and Rpc captured | record	under 6 app>gcp_pubsub Create orders /gcp_pubsub://broker/orders OK
+create (batch publish) | Messaging and Rpc captured | record	under 7 app>gcp_pubsub Create orders /gcp_pubsub://broker/orders OK
+create (batch publish) | Messaging and Rpc captured | record	under 8 app>gcp_pubsub Create orders /orders OK
+create (batch publish) | Messaging and Rpc captured | record	under 9 app>gcp_pubsub Create orders /orders OK
+create (batch publish) | Messaging and Rpc captured | record	under 10 app>gcp_pubsub Create orders /orders OK
+create (batch publish) | Messaging and Rpc captured | record	under 11 app>gcp_pubsub Create orders /orders OK
+create (batch publish) | Messaging and Rpc captured | record	raw HistoryRawCall { Caller = app, Service = gcp_pubsub, Method = Create orders, Path = /orders, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = /gcp_pubsub://broker/orders, Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+create (batch publish) | Messaging and Rpc captured | record	fingerprint set=7c1fe958 ordered=7c1fe958 calls=1
+create (batch publish) | Messaging and Rpc captured | record	dependencies app>gcp_pubsub
+create (batch publish) | Messaging and Rpc captured | merged	records 2, captured by wire + span
+create (batch publish) | Messaging and Rpc captured | merged	kind Default
+create (batch publish) | Messaging and Rpc captured | merged	call app>gcp_pubsub Create orders /orders OK
+create (batch publish) | Messaging and Rpc captured | merged	under 6 app>gcp_pubsub Create orders /gcp_pubsub://broker/orders OK
+create (batch publish) | Messaging and Rpc captured | merged	under 7 app>gcp_pubsub Create orders /gcp_pubsub://broker/orders OK
+create (batch publish) | Messaging and Rpc captured | merged	under 8 app>gcp_pubsub Create orders /orders OK
+create (batch publish) | Messaging and Rpc captured | merged	under 9 app>gcp_pubsub Create orders /orders OK
+create (batch publish) | Messaging and Rpc captured | merged	under 10 app>gcp_pubsub Create orders /orders OK
+create (batch publish) | Messaging and Rpc captured | merged	under 11 app>gcp_pubsub Create orders /orders OK
+create (batch publish) | Messaging and Rpc captured | merged	raw HistoryRawCall { Caller = app, Service = gcp_pubsub, Method = Create orders, Path = /orders, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = /gcp_pubsub://broker/orders, Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+create (batch publish) | Messaging and Rpc captured | merged	fingerprint set=7c1fe958 ordered=7c1fe958 calls=1
+create (batch publish) | Messaging and Rpc captured | merged	dependencies app>gcp_pubsub
+send as CLIENT (a create span exists) | default capture	dropped
+send as CLIENT (a create span exists) | Messaging and Rpc captured | log	kind Default
+send as CLIENT (a create span exists) | Messaging and Rpc captured | log	call app>gcp_pubsub Publish orders /orders OK
+send as CLIENT (a create span exists) | Messaging and Rpc captured | log	under 6 app>gcp_pubsub Publish orders / OK
+send as CLIENT (a create span exists) | Messaging and Rpc captured | log	under 7 app>gcp_pubsub Publish orders / OK
+send as CLIENT (a create span exists) | Messaging and Rpc captured | log	under 8 app>gcp_pubsub Publish orders /orders OK
+send as CLIENT (a create span exists) | Messaging and Rpc captured | log	under 9 app>gcp_pubsub Publish orders /orders OK
+send as CLIENT (a create span exists) | Messaging and Rpc captured | log	under 10 app>gcp_pubsub Publish orders /orders OK
+send as CLIENT (a create span exists) | Messaging and Rpc captured | log	under 11 app>gcp_pubsub Publish orders /orders OK
+send as CLIENT (a create span exists) | Messaging and Rpc captured | log	raw HistoryRawCall { Caller = app, Service = gcp_pubsub, Method = Publish orders, Path = /orders, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = /, Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+send as CLIENT (a create span exists) | Messaging and Rpc captured | log	fingerprint set=0da85c98 ordered=0da85c98 calls=1
+send as CLIENT (a create span exists) | Messaging and Rpc captured | log	dependencies app>gcp_pubsub
+send as CLIENT (a create span exists) | Messaging and Rpc captured | record	kind Default
+send as CLIENT (a create span exists) | Messaging and Rpc captured | record	call app>gcp_pubsub Publish orders /orders OK
+send as CLIENT (a create span exists) | Messaging and Rpc captured | record	under 6 app>gcp_pubsub Publish orders /gcp_pubsub://broker/orders OK
+send as CLIENT (a create span exists) | Messaging and Rpc captured | record	under 7 app>gcp_pubsub Publish orders /gcp_pubsub://broker/orders OK
+send as CLIENT (a create span exists) | Messaging and Rpc captured | record	under 8 app>gcp_pubsub Publish orders /orders OK
+send as CLIENT (a create span exists) | Messaging and Rpc captured | record	under 9 app>gcp_pubsub Publish orders /orders OK
+send as CLIENT (a create span exists) | Messaging and Rpc captured | record	under 10 app>gcp_pubsub Publish orders /orders OK
+send as CLIENT (a create span exists) | Messaging and Rpc captured | record	under 11 app>gcp_pubsub Publish orders /orders OK
+send as CLIENT (a create span exists) | Messaging and Rpc captured | record	raw HistoryRawCall { Caller = app, Service = gcp_pubsub, Method = Publish orders, Path = /orders, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = /gcp_pubsub://broker/orders, Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+send as CLIENT (a create span exists) | Messaging and Rpc captured | record	fingerprint set=0da85c98 ordered=0da85c98 calls=1
+send as CLIENT (a create span exists) | Messaging and Rpc captured | record	dependencies app>gcp_pubsub
+send as CLIENT (a create span exists) | Messaging and Rpc captured | merged	records 2, captured by wire + span
+send as CLIENT (a create span exists) | Messaging and Rpc captured | merged	kind Default
+send as CLIENT (a create span exists) | Messaging and Rpc captured | merged	call app>gcp_pubsub Publish orders /orders OK
+send as CLIENT (a create span exists) | Messaging and Rpc captured | merged	under 6 app>gcp_pubsub Publish orders /gcp_pubsub://broker/orders OK
+send as CLIENT (a create span exists) | Messaging and Rpc captured | merged	under 7 app>gcp_pubsub Publish orders /gcp_pubsub://broker/orders OK
+send as CLIENT (a create span exists) | Messaging and Rpc captured | merged	under 8 app>gcp_pubsub Publish orders /orders OK
+send as CLIENT (a create span exists) | Messaging and Rpc captured | merged	under 9 app>gcp_pubsub Publish orders /orders OK
+send as CLIENT (a create span exists) | Messaging and Rpc captured | merged	under 10 app>gcp_pubsub Publish orders /orders OK
+send as CLIENT (a create span exists) | Messaging and Rpc captured | merged	under 11 app>gcp_pubsub Publish orders /orders OK
+send as CLIENT (a create span exists) | Messaging and Rpc captured | merged	raw HistoryRawCall { Caller = app, Service = gcp_pubsub, Method = Publish orders, Path = /orders, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = /gcp_pubsub://broker/orders, Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+send as CLIENT (a create span exists) | Messaging and Rpc captured | merged	fingerprint set=0da85c98 ordered=0da85c98 calls=1
+send as CLIENT (a create span exists) | Messaging and Rpc captured | merged	dependencies app>gcp_pubsub
+process | default capture	dropped
+process | Messaging and Rpc captured | log	kind Default
+process | Messaging and Rpc captured | log	call app>kafka Process orders /orders OK
+process | Messaging and Rpc captured | log	under 6 app>kafka Process orders /orders OK
+process | Messaging and Rpc captured | log	under 7 app>kafka Process orders /orders OK
+process | Messaging and Rpc captured | log	under 8 app>kafka Process orders /orders OK
+process | Messaging and Rpc captured | log	under 9 app>kafka Process orders /orders OK
+process | Messaging and Rpc captured | log	under 10 app>kafka Process orders /orders OK
+process | Messaging and Rpc captured | log	under 11 app>kafka Process orders /orders OK
+process | Messaging and Rpc captured | log	raw HistoryRawCall { Caller = app, Service = kafka, Method = Process orders, Path = /orders, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+process | Messaging and Rpc captured | log	fingerprint set=21da8cdc ordered=21da8cdc calls=1
+process | Messaging and Rpc captured | log	dependencies app>kafka
+process | Messaging and Rpc captured | record	kind Default
+process | Messaging and Rpc captured | record	call app>kafka Process orders /orders OK
+process | Messaging and Rpc captured | record	under 6 app>kafka Process orders /orders OK
+process | Messaging and Rpc captured | record	under 7 app>kafka Process orders /orders OK
+process | Messaging and Rpc captured | record	under 8 app>kafka Process orders /orders OK
+process | Messaging and Rpc captured | record	under 9 app>kafka Process orders /orders OK
+process | Messaging and Rpc captured | record	under 10 app>kafka Process orders /orders OK
+process | Messaging and Rpc captured | record	under 11 app>kafka Process orders /orders OK
+process | Messaging and Rpc captured | record	raw HistoryRawCall { Caller = app, Service = kafka, Method = Process orders, Path = /orders, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+process | Messaging and Rpc captured | record	fingerprint set=21da8cdc ordered=21da8cdc calls=1
+process | Messaging and Rpc captured | record	dependencies app>kafka
+process | Messaging and Rpc captured | merged	records 2, captured by wire + span
+process | Messaging and Rpc captured | merged	kind Default
+process | Messaging and Rpc captured | merged	call app>kafka Process orders /orders OK
+process | Messaging and Rpc captured | merged	under 6 app>kafka Process orders /orders OK
+process | Messaging and Rpc captured | merged	under 7 app>kafka Process orders /orders OK
+process | Messaging and Rpc captured | merged	under 8 app>kafka Process orders /orders OK
+process | Messaging and Rpc captured | merged	under 9 app>kafka Process orders /orders OK
+process | Messaging and Rpc captured | merged	under 10 app>kafka Process orders /orders OK
+process | Messaging and Rpc captured | merged	under 11 app>kafka Process orders /orders OK
+process | Messaging and Rpc captured | merged	raw HistoryRawCall { Caller = app, Service = kafka, Method = Process orders, Path = /orders, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+process | Messaging and Rpc captured | merged	fingerprint set=21da8cdc ordered=21da8cdc calls=1
+process | Messaging and Rpc captured | merged	dependencies app>kafka
+Pub/Sub's process (subscribe) | default capture	dropped
+Pub/Sub's process (subscribe) | Messaging and Rpc captured | log	kind Default
+Pub/Sub's process (subscribe) | Messaging and Rpc captured | log	call app>gcp_pubsub Subscribe orders /orders OK
+Pub/Sub's process (subscribe) | Messaging and Rpc captured | log	under 6 app>gcp_pubsub Subscribe orders / OK
+Pub/Sub's process (subscribe) | Messaging and Rpc captured | log	under 7 app>gcp_pubsub Subscribe orders / OK
+Pub/Sub's process (subscribe) | Messaging and Rpc captured | log	under 8 app>gcp_pubsub Subscribe orders /orders OK
+Pub/Sub's process (subscribe) | Messaging and Rpc captured | log	under 9 app>gcp_pubsub Subscribe orders /orders OK
+Pub/Sub's process (subscribe) | Messaging and Rpc captured | log	under 10 app>gcp_pubsub Subscribe orders /orders OK
+Pub/Sub's process (subscribe) | Messaging and Rpc captured | log	under 11 app>gcp_pubsub Subscribe orders /orders OK
+Pub/Sub's process (subscribe) | Messaging and Rpc captured | log	raw HistoryRawCall { Caller = app, Service = gcp_pubsub, Method = Subscribe orders, Path = /orders, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = /, Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+Pub/Sub's process (subscribe) | Messaging and Rpc captured | log	fingerprint set=bd2c1994 ordered=bd2c1994 calls=1
+Pub/Sub's process (subscribe) | Messaging and Rpc captured | log	dependencies app>gcp_pubsub
+Pub/Sub's process (subscribe) | Messaging and Rpc captured | record	kind Default
+Pub/Sub's process (subscribe) | Messaging and Rpc captured | record	call app>gcp_pubsub Subscribe orders /orders OK
+Pub/Sub's process (subscribe) | Messaging and Rpc captured | record	under 6 app>gcp_pubsub Subscribe orders /gcp_pubsub://broker/orders OK
+Pub/Sub's process (subscribe) | Messaging and Rpc captured | record	under 7 app>gcp_pubsub Subscribe orders /gcp_pubsub://broker/orders OK
+Pub/Sub's process (subscribe) | Messaging and Rpc captured | record	under 8 app>gcp_pubsub Subscribe orders /orders OK
+Pub/Sub's process (subscribe) | Messaging and Rpc captured | record	under 9 app>gcp_pubsub Subscribe orders /orders OK
+Pub/Sub's process (subscribe) | Messaging and Rpc captured | record	under 10 app>gcp_pubsub Subscribe orders /orders OK
+Pub/Sub's process (subscribe) | Messaging and Rpc captured | record	under 11 app>gcp_pubsub Subscribe orders /orders OK
+Pub/Sub's process (subscribe) | Messaging and Rpc captured | record	raw HistoryRawCall { Caller = app, Service = gcp_pubsub, Method = Subscribe orders, Path = /orders, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = /gcp_pubsub://broker/orders, Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+Pub/Sub's process (subscribe) | Messaging and Rpc captured | record	fingerprint set=bd2c1994 ordered=bd2c1994 calls=1
+Pub/Sub's process (subscribe) | Messaging and Rpc captured | record	dependencies app>gcp_pubsub
+Pub/Sub's process (subscribe) | Messaging and Rpc captured | merged	records 2, captured by wire + span
+Pub/Sub's process (subscribe) | Messaging and Rpc captured | merged	kind Default
+Pub/Sub's process (subscribe) | Messaging and Rpc captured | merged	call app>gcp_pubsub Subscribe orders /orders OK
+Pub/Sub's process (subscribe) | Messaging and Rpc captured | merged	under 6 app>gcp_pubsub Subscribe orders /gcp_pubsub://broker/orders OK
+Pub/Sub's process (subscribe) | Messaging and Rpc captured | merged	under 7 app>gcp_pubsub Subscribe orders /gcp_pubsub://broker/orders OK
+Pub/Sub's process (subscribe) | Messaging and Rpc captured | merged	under 8 app>gcp_pubsub Subscribe orders /orders OK
+Pub/Sub's process (subscribe) | Messaging and Rpc captured | merged	under 9 app>gcp_pubsub Subscribe orders /orders OK
+Pub/Sub's process (subscribe) | Messaging and Rpc captured | merged	under 10 app>gcp_pubsub Subscribe orders /orders OK
+Pub/Sub's process (subscribe) | Messaging and Rpc captured | merged	under 11 app>gcp_pubsub Subscribe orders /orders OK
+Pub/Sub's process (subscribe) | Messaging and Rpc captured | merged	raw HistoryRawCall { Caller = app, Service = gcp_pubsub, Method = Subscribe orders, Path = /orders, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = /gcp_pubsub://broker/orders, Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+Pub/Sub's process (subscribe) | Messaging and Rpc captured | merged	fingerprint set=bd2c1994 ordered=bd2c1994 calls=1
+Pub/Sub's process (subscribe) | Messaging and Rpc captured | merged	dependencies app>gcp_pubsub
+receive as CONSUMER (old semconv) | default capture	dropped
+receive as CONSUMER (old semconv) | Messaging and Rpc captured | log	kind Default
+receive as CONSUMER (old semconv) | Messaging and Rpc captured | log	call app>kafka Receive orders /orders OK
+receive as CONSUMER (old semconv) | Messaging and Rpc captured | log	under 6 app>kafka Receive orders /orders OK
+receive as CONSUMER (old semconv) | Messaging and Rpc captured | log	under 7 app>kafka Receive orders /orders OK
+receive as CONSUMER (old semconv) | Messaging and Rpc captured | log	under 8 app>kafka Receive orders /orders OK
+receive as CONSUMER (old semconv) | Messaging and Rpc captured | log	under 9 app>kafka Receive orders /orders OK
+receive as CONSUMER (old semconv) | Messaging and Rpc captured | log	under 10 app>kafka Receive orders /orders OK
+receive as CONSUMER (old semconv) | Messaging and Rpc captured | log	under 11 app>kafka Receive orders /orders OK
+receive as CONSUMER (old semconv) | Messaging and Rpc captured | log	raw HistoryRawCall { Caller = app, Service = kafka, Method = Receive orders, Path = /orders, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+receive as CONSUMER (old semconv) | Messaging and Rpc captured | log	fingerprint set=805febc3 ordered=805febc3 calls=1
+receive as CONSUMER (old semconv) | Messaging and Rpc captured | log	dependencies app>kafka
+receive as CONSUMER (old semconv) | Messaging and Rpc captured | record	kind Default
+receive as CONSUMER (old semconv) | Messaging and Rpc captured | record	call app>kafka Receive orders /orders OK
+receive as CONSUMER (old semconv) | Messaging and Rpc captured | record	under 6 app>kafka Receive orders /orders OK
+receive as CONSUMER (old semconv) | Messaging and Rpc captured | record	under 7 app>kafka Receive orders /orders OK
+receive as CONSUMER (old semconv) | Messaging and Rpc captured | record	under 8 app>kafka Receive orders /orders OK
+receive as CONSUMER (old semconv) | Messaging and Rpc captured | record	under 9 app>kafka Receive orders /orders OK
+receive as CONSUMER (old semconv) | Messaging and Rpc captured | record	under 10 app>kafka Receive orders /orders OK
+receive as CONSUMER (old semconv) | Messaging and Rpc captured | record	under 11 app>kafka Receive orders /orders OK
+receive as CONSUMER (old semconv) | Messaging and Rpc captured | record	raw HistoryRawCall { Caller = app, Service = kafka, Method = Receive orders, Path = /orders, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+receive as CONSUMER (old semconv) | Messaging and Rpc captured | record	fingerprint set=805febc3 ordered=805febc3 calls=1
+receive as CONSUMER (old semconv) | Messaging and Rpc captured | record	dependencies app>kafka
+receive as CONSUMER (old semconv) | Messaging and Rpc captured | merged	records 2, captured by wire + span
+receive as CONSUMER (old semconv) | Messaging and Rpc captured | merged	kind Default
+receive as CONSUMER (old semconv) | Messaging and Rpc captured | merged	call app>kafka Receive orders /orders OK
+receive as CONSUMER (old semconv) | Messaging and Rpc captured | merged	under 6 app>kafka Receive orders /orders OK
+receive as CONSUMER (old semconv) | Messaging and Rpc captured | merged	under 7 app>kafka Receive orders /orders OK
+receive as CONSUMER (old semconv) | Messaging and Rpc captured | merged	under 8 app>kafka Receive orders /orders OK
+receive as CONSUMER (old semconv) | Messaging and Rpc captured | merged	under 9 app>kafka Receive orders /orders OK
+receive as CONSUMER (old semconv) | Messaging and Rpc captured | merged	under 10 app>kafka Receive orders /orders OK
+receive as CONSUMER (old semconv) | Messaging and Rpc captured | merged	under 11 app>kafka Receive orders /orders OK
+receive as CONSUMER (old semconv) | Messaging and Rpc captured | merged	raw HistoryRawCall { Caller = app, Service = kafka, Method = Receive orders, Path = /orders, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+receive as CONSUMER (old semconv) | Messaging and Rpc captured | merged	fingerprint set=805febc3 ordered=805febc3 calls=1
+receive as CONSUMER (old semconv) | Messaging and Rpc captured | merged	dependencies app>kafka
+CONSUMER, no operation | default capture	dropped
+CONSUMER, no operation | Messaging and Rpc captured | log	kind Default
+CONSUMER, no operation | Messaging and Rpc captured | log	call app>kafka Receive orders /orders OK
+CONSUMER, no operation | Messaging and Rpc captured | log	under 6 app>kafka Receive orders /orders OK
+CONSUMER, no operation | Messaging and Rpc captured | log	under 7 app>kafka Receive orders /orders OK
+CONSUMER, no operation | Messaging and Rpc captured | log	under 8 app>kafka Receive orders /orders OK
+CONSUMER, no operation | Messaging and Rpc captured | log	under 9 app>kafka Receive orders /orders OK
+CONSUMER, no operation | Messaging and Rpc captured | log	under 10 app>kafka Receive orders /orders OK
+CONSUMER, no operation | Messaging and Rpc captured | log	under 11 app>kafka Receive orders /orders OK
+CONSUMER, no operation | Messaging and Rpc captured | log	raw HistoryRawCall { Caller = app, Service = kafka, Method = Receive orders, Path = /orders, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+CONSUMER, no operation | Messaging and Rpc captured | log	fingerprint set=805febc3 ordered=805febc3 calls=1
+CONSUMER, no operation | Messaging and Rpc captured | log	dependencies app>kafka
+CONSUMER, no operation | Messaging and Rpc captured | record	kind Default
+CONSUMER, no operation | Messaging and Rpc captured | record	call app>kafka Receive orders /orders OK
+CONSUMER, no operation | Messaging and Rpc captured | record	under 6 app>kafka Receive orders /orders OK
+CONSUMER, no operation | Messaging and Rpc captured | record	under 7 app>kafka Receive orders /orders OK
+CONSUMER, no operation | Messaging and Rpc captured | record	under 8 app>kafka Receive orders /orders OK
+CONSUMER, no operation | Messaging and Rpc captured | record	under 9 app>kafka Receive orders /orders OK
+CONSUMER, no operation | Messaging and Rpc captured | record	under 10 app>kafka Receive orders /orders OK
+CONSUMER, no operation | Messaging and Rpc captured | record	under 11 app>kafka Receive orders /orders OK
+CONSUMER, no operation | Messaging and Rpc captured | record	raw HistoryRawCall { Caller = app, Service = kafka, Method = Receive orders, Path = /orders, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+CONSUMER, no operation | Messaging and Rpc captured | record	fingerprint set=805febc3 ordered=805febc3 calls=1
+CONSUMER, no operation | Messaging and Rpc captured | record	dependencies app>kafka
+CONSUMER, no operation | Messaging and Rpc captured | merged	records 2, captured by wire + span
+CONSUMER, no operation | Messaging and Rpc captured | merged	kind Default
+CONSUMER, no operation | Messaging and Rpc captured | merged	call app>kafka Receive orders /orders OK
+CONSUMER, no operation | Messaging and Rpc captured | merged	under 6 app>kafka Receive orders /orders OK
+CONSUMER, no operation | Messaging and Rpc captured | merged	under 7 app>kafka Receive orders /orders OK
+CONSUMER, no operation | Messaging and Rpc captured | merged	under 8 app>kafka Receive orders /orders OK
+CONSUMER, no operation | Messaging and Rpc captured | merged	under 9 app>kafka Receive orders /orders OK
+CONSUMER, no operation | Messaging and Rpc captured | merged	under 10 app>kafka Receive orders /orders OK
+CONSUMER, no operation | Messaging and Rpc captured | merged	under 11 app>kafka Receive orders /orders OK
+CONSUMER, no operation | Messaging and Rpc captured | merged	raw HistoryRawCall { Caller = app, Service = kafka, Method = Receive orders, Path = /orders, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+CONSUMER, no operation | Messaging and Rpc captured | merged	fingerprint set=805febc3 ordered=805febc3 calls=1
+CONSUMER, no operation | Messaging and Rpc captured | merged	dependencies app>kafka
+poll (.NET Kafka instrumentation) | default capture	dropped
+poll (.NET Kafka instrumentation) | Messaging and Rpc captured | log	kind Default
+poll (.NET Kafka instrumentation) | Messaging and Rpc captured | log	call app>kafka Poll orders /orders OK
+poll (.NET Kafka instrumentation) | Messaging and Rpc captured | log	under 6 app>kafka Poll orders /orders OK
+poll (.NET Kafka instrumentation) | Messaging and Rpc captured | log	under 7 app>kafka Poll orders /orders OK
+poll (.NET Kafka instrumentation) | Messaging and Rpc captured | log	under 8 app>kafka Poll orders /orders OK
+poll (.NET Kafka instrumentation) | Messaging and Rpc captured | log	under 9 app>kafka Poll orders /orders OK
+poll (.NET Kafka instrumentation) | Messaging and Rpc captured | log	under 10 app>kafka Poll orders /orders OK
+poll (.NET Kafka instrumentation) | Messaging and Rpc captured | log	under 11 app>kafka Poll orders /orders OK
+poll (.NET Kafka instrumentation) | Messaging and Rpc captured | log	raw HistoryRawCall { Caller = app, Service = kafka, Method = Poll orders, Path = /orders, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+poll (.NET Kafka instrumentation) | Messaging and Rpc captured | log	fingerprint set=dc4f67ba ordered=dc4f67ba calls=1
+poll (.NET Kafka instrumentation) | Messaging and Rpc captured | log	dependencies app>kafka
+poll (.NET Kafka instrumentation) | Messaging and Rpc captured | record	kind Default
+poll (.NET Kafka instrumentation) | Messaging and Rpc captured | record	call app>kafka Poll orders /orders OK
+poll (.NET Kafka instrumentation) | Messaging and Rpc captured | record	under 6 app>kafka Poll orders /orders OK
+poll (.NET Kafka instrumentation) | Messaging and Rpc captured | record	under 7 app>kafka Poll orders /orders OK
+poll (.NET Kafka instrumentation) | Messaging and Rpc captured | record	under 8 app>kafka Poll orders /orders OK
+poll (.NET Kafka instrumentation) | Messaging and Rpc captured | record	under 9 app>kafka Poll orders /orders OK
+poll (.NET Kafka instrumentation) | Messaging and Rpc captured | record	under 10 app>kafka Poll orders /orders OK
+poll (.NET Kafka instrumentation) | Messaging and Rpc captured | record	under 11 app>kafka Poll orders /orders OK
+poll (.NET Kafka instrumentation) | Messaging and Rpc captured | record	raw HistoryRawCall { Caller = app, Service = kafka, Method = Poll orders, Path = /orders, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+poll (.NET Kafka instrumentation) | Messaging and Rpc captured | record	fingerprint set=dc4f67ba ordered=dc4f67ba calls=1
+poll (.NET Kafka instrumentation) | Messaging and Rpc captured | record	dependencies app>kafka
+poll (.NET Kafka instrumentation) | Messaging and Rpc captured | merged	records 2, captured by wire + span
+poll (.NET Kafka instrumentation) | Messaging and Rpc captured | merged	kind Default
+poll (.NET Kafka instrumentation) | Messaging and Rpc captured | merged	call app>kafka Poll orders /orders OK
+poll (.NET Kafka instrumentation) | Messaging and Rpc captured | merged	under 6 app>kafka Poll orders /orders OK
+poll (.NET Kafka instrumentation) | Messaging and Rpc captured | merged	under 7 app>kafka Poll orders /orders OK
+poll (.NET Kafka instrumentation) | Messaging and Rpc captured | merged	under 8 app>kafka Poll orders /orders OK
+poll (.NET Kafka instrumentation) | Messaging and Rpc captured | merged	under 9 app>kafka Poll orders /orders OK
+poll (.NET Kafka instrumentation) | Messaging and Rpc captured | merged	under 10 app>kafka Poll orders /orders OK
+poll (.NET Kafka instrumentation) | Messaging and Rpc captured | merged	under 11 app>kafka Poll orders /orders OK
+poll (.NET Kafka instrumentation) | Messaging and Rpc captured | merged	raw HistoryRawCall { Caller = app, Service = kafka, Method = Poll orders, Path = /orders, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+poll (.NET Kafka instrumentation) | Messaging and Rpc captured | merged	fingerprint set=dc4f67ba ordered=dc4f67ba calls=1
+poll (.NET Kafka instrumentation) | Messaging and Rpc captured | merged	dependencies app>kafka
+commit (settle) | default capture	dropped
+commit (settle) | Messaging and Rpc captured | log	kind Default
+commit (settle) | Messaging and Rpc captured | log	call app>kafka Commit orders /orders OK
+commit (settle) | Messaging and Rpc captured | log	under 6 app>kafka Commit orders /orders OK
+commit (settle) | Messaging and Rpc captured | log	under 7 app>kafka Commit orders /orders OK
+commit (settle) | Messaging and Rpc captured | log	under 8 app>kafka Commit orders /orders OK
+commit (settle) | Messaging and Rpc captured | log	under 9 app>kafka Commit orders /orders OK
+commit (settle) | Messaging and Rpc captured | log	under 10 app>kafka Commit orders /orders OK
+commit (settle) | Messaging and Rpc captured | log	under 11 app>kafka Commit orders /orders OK
+commit (settle) | Messaging and Rpc captured | log	raw HistoryRawCall { Caller = app, Service = kafka, Method = Commit orders, Path = /orders, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+commit (settle) | Messaging and Rpc captured | log	fingerprint set=18f17d40 ordered=18f17d40 calls=1
+commit (settle) | Messaging and Rpc captured | log	dependencies app>kafka
+commit (settle) | Messaging and Rpc captured | record	kind Default
+commit (settle) | Messaging and Rpc captured | record	call app>kafka Commit orders /orders OK
+commit (settle) | Messaging and Rpc captured | record	under 6 app>kafka Commit orders /orders OK
+commit (settle) | Messaging and Rpc captured | record	under 7 app>kafka Commit orders /orders OK
+commit (settle) | Messaging and Rpc captured | record	under 8 app>kafka Commit orders /orders OK
+commit (settle) | Messaging and Rpc captured | record	under 9 app>kafka Commit orders /orders OK
+commit (settle) | Messaging and Rpc captured | record	under 10 app>kafka Commit orders /orders OK
+commit (settle) | Messaging and Rpc captured | record	under 11 app>kafka Commit orders /orders OK
+commit (settle) | Messaging and Rpc captured | record	raw HistoryRawCall { Caller = app, Service = kafka, Method = Commit orders, Path = /orders, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+commit (settle) | Messaging and Rpc captured | record	fingerprint set=18f17d40 ordered=18f17d40 calls=1
+commit (settle) | Messaging and Rpc captured | record	dependencies app>kafka
+commit (settle) | Messaging and Rpc captured | merged	records 2, captured by wire + span
+commit (settle) | Messaging and Rpc captured | merged	kind Default
+commit (settle) | Messaging and Rpc captured | merged	call app>kafka Commit orders /orders OK
+commit (settle) | Messaging and Rpc captured | merged	under 6 app>kafka Commit orders /orders OK
+commit (settle) | Messaging and Rpc captured | merged	under 7 app>kafka Commit orders /orders OK
+commit (settle) | Messaging and Rpc captured | merged	under 8 app>kafka Commit orders /orders OK
+commit (settle) | Messaging and Rpc captured | merged	under 9 app>kafka Commit orders /orders OK
+commit (settle) | Messaging and Rpc captured | merged	under 10 app>kafka Commit orders /orders OK
+commit (settle) | Messaging and Rpc captured | merged	under 11 app>kafka Commit orders /orders OK
+commit (settle) | Messaging and Rpc captured | merged	raw HistoryRawCall { Caller = app, Service = kafka, Method = Commit orders, Path = /orders, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+commit (settle) | Messaging and Rpc captured | merged	fingerprint set=18f17d40 ordered=18f17d40 calls=1
+commit (settle) | Messaging and Rpc captured | merged	dependencies app>kafka
+CLIENT, no operation | default capture	dropped
+CLIENT, no operation | Messaging and Rpc captured | log	kind Default
+CLIENT, no operation | Messaging and Rpc captured | log	call app>kafka Publish orders /orders OK
+CLIENT, no operation | Messaging and Rpc captured | log	under 6 app>kafka Publish orders /orders OK
+CLIENT, no operation | Messaging and Rpc captured | log	under 7 app>kafka Publish orders /orders OK
+CLIENT, no operation | Messaging and Rpc captured | log	under 8 app>kafka Publish orders /orders OK
+CLIENT, no operation | Messaging and Rpc captured | log	under 9 app>kafka Publish orders /orders OK
+CLIENT, no operation | Messaging and Rpc captured | log	under 10 app>kafka Publish orders /orders OK
+CLIENT, no operation | Messaging and Rpc captured | log	under 11 app>kafka Publish orders /orders OK
+CLIENT, no operation | Messaging and Rpc captured | log	raw HistoryRawCall { Caller = app, Service = kafka, Method = Publish orders, Path = /orders, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+CLIENT, no operation | Messaging and Rpc captured | log	fingerprint set=ea5cd412 ordered=ea5cd412 calls=1
+CLIENT, no operation | Messaging and Rpc captured | log	dependencies app>kafka
+CLIENT, no operation | Messaging and Rpc captured | record	kind Default
+CLIENT, no operation | Messaging and Rpc captured | record	call app>kafka Publish orders /orders OK
+CLIENT, no operation | Messaging and Rpc captured | record	under 6 app>kafka Publish orders /orders OK
+CLIENT, no operation | Messaging and Rpc captured | record	under 7 app>kafka Publish orders /orders OK
+CLIENT, no operation | Messaging and Rpc captured | record	under 8 app>kafka Publish orders /orders OK
+CLIENT, no operation | Messaging and Rpc captured | record	under 9 app>kafka Publish orders /orders OK
+CLIENT, no operation | Messaging and Rpc captured | record	under 10 app>kafka Publish orders /orders OK
+CLIENT, no operation | Messaging and Rpc captured | record	under 11 app>kafka Publish orders /orders OK
+CLIENT, no operation | Messaging and Rpc captured | record	raw HistoryRawCall { Caller = app, Service = kafka, Method = Publish orders, Path = /orders, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+CLIENT, no operation | Messaging and Rpc captured | record	fingerprint set=ea5cd412 ordered=ea5cd412 calls=1
+CLIENT, no operation | Messaging and Rpc captured | record	dependencies app>kafka
+CLIENT, no operation | Messaging and Rpc captured | merged	records 2, captured by wire + span
+CLIENT, no operation | Messaging and Rpc captured | merged	kind Default
+CLIENT, no operation | Messaging and Rpc captured | merged	call app>kafka Publish orders /orders OK
+CLIENT, no operation | Messaging and Rpc captured | merged	under 6 app>kafka Publish orders /orders OK
+CLIENT, no operation | Messaging and Rpc captured | merged	under 7 app>kafka Publish orders /orders OK
+CLIENT, no operation | Messaging and Rpc captured | merged	under 8 app>kafka Publish orders /orders OK
+CLIENT, no operation | Messaging and Rpc captured | merged	under 9 app>kafka Publish orders /orders OK
+CLIENT, no operation | Messaging and Rpc captured | merged	under 10 app>kafka Publish orders /orders OK
+CLIENT, no operation | Messaging and Rpc captured | merged	under 11 app>kafka Publish orders /orders OK
+CLIENT, no operation | Messaging and Rpc captured | merged	raw HistoryRawCall { Caller = app, Service = kafka, Method = Publish orders, Path = /orders, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+CLIENT, no operation | Messaging and Rpc captured | merged	fingerprint set=ea5cd412 ordered=ea5cd412 calls=1
+CLIENT, no operation | Messaging and Rpc captured | merged	dependencies app>kafka
+receive with rpc.system (AWS SDK shape) | default capture	dropped
+receive with rpc.system (AWS SDK shape) | Messaging and Rpc captured | log	kind Default
+receive with rpc.system (AWS SDK shape) | Messaging and Rpc captured | log	call app>aws-api SQS/ReceiveMessage /SQS/ReceiveMessage OK
+receive with rpc.system (AWS SDK shape) | Messaging and Rpc captured | log	under 6 app>aws-api SQS/ReceiveMessage /SQS/ReceiveMessage OK
+receive with rpc.system (AWS SDK shape) | Messaging and Rpc captured | log	under 7 app>aws-api SQS/ReceiveMessage /SQS/ReceiveMessage OK
+receive with rpc.system (AWS SDK shape) | Messaging and Rpc captured | log	under 8 app>aws-api SQS/ReceiveMessage /SQS/ReceiveMessage OK
+receive with rpc.system (AWS SDK shape) | Messaging and Rpc captured | log	under 9 app>aws-api SQS/ReceiveMessage /SQS/ReceiveMessage OK
+receive with rpc.system (AWS SDK shape) | Messaging and Rpc captured | log	under 10 app>aws-api SQS/ReceiveMessage /SQS/ReceiveMessage OK
+receive with rpc.system (AWS SDK shape) | Messaging and Rpc captured | log	under 11 app>aws-api SQS/ReceiveMessage /SQS/ReceiveMessage OK
+receive with rpc.system (AWS SDK shape) | Messaging and Rpc captured | log	raw HistoryRawCall { Caller = app, Service = aws-api, Method = SQS/ReceiveMessage, Path = /SQS/ReceiveMessage, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+receive with rpc.system (AWS SDK shape) | Messaging and Rpc captured | log	fingerprint set=cbad7607 ordered=cbad7607 calls=1
+receive with rpc.system (AWS SDK shape) | Messaging and Rpc captured | log	dependencies app>aws-api
+receive with rpc.system (AWS SDK shape) | Messaging and Rpc captured | record	kind Default
+receive with rpc.system (AWS SDK shape) | Messaging and Rpc captured | record	call app>aws-api SQS/ReceiveMessage /SQS/ReceiveMessage OK
+receive with rpc.system (AWS SDK shape) | Messaging and Rpc captured | record	under 6 app>aws-api SQS/ReceiveMessage /SQS/ReceiveMessage OK
+receive with rpc.system (AWS SDK shape) | Messaging and Rpc captured | record	under 7 app>aws-api SQS/ReceiveMessage /SQS/ReceiveMessage OK
+receive with rpc.system (AWS SDK shape) | Messaging and Rpc captured | record	under 8 app>aws-api SQS/ReceiveMessage /SQS/ReceiveMessage OK
+receive with rpc.system (AWS SDK shape) | Messaging and Rpc captured | record	under 9 app>aws-api SQS/ReceiveMessage /SQS/ReceiveMessage OK
+receive with rpc.system (AWS SDK shape) | Messaging and Rpc captured | record	under 10 app>aws-api SQS/ReceiveMessage /SQS/ReceiveMessage OK
+receive with rpc.system (AWS SDK shape) | Messaging and Rpc captured | record	under 11 app>aws-api SQS/ReceiveMessage /SQS/ReceiveMessage OK
+receive with rpc.system (AWS SDK shape) | Messaging and Rpc captured | record	raw HistoryRawCall { Caller = app, Service = aws-api, Method = SQS/ReceiveMessage, Path = /SQS/ReceiveMessage, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+receive with rpc.system (AWS SDK shape) | Messaging and Rpc captured | record	fingerprint set=cbad7607 ordered=cbad7607 calls=1
+receive with rpc.system (AWS SDK shape) | Messaging and Rpc captured | record	dependencies app>aws-api
+receive with rpc.system (AWS SDK shape) | Messaging and Rpc captured | merged	records 2, captured by wire + span
+receive with rpc.system (AWS SDK shape) | Messaging and Rpc captured | merged	kind Default
+receive with rpc.system (AWS SDK shape) | Messaging and Rpc captured | merged	call app>aws-api SQS/ReceiveMessage /SQS/ReceiveMessage OK
+receive with rpc.system (AWS SDK shape) | Messaging and Rpc captured | merged	under 6 app>aws-api SQS/ReceiveMessage /SQS/ReceiveMessage OK
+receive with rpc.system (AWS SDK shape) | Messaging and Rpc captured | merged	under 7 app>aws-api SQS/ReceiveMessage /SQS/ReceiveMessage OK
+receive with rpc.system (AWS SDK shape) | Messaging and Rpc captured | merged	under 8 app>aws-api SQS/ReceiveMessage /SQS/ReceiveMessage OK
+receive with rpc.system (AWS SDK shape) | Messaging and Rpc captured | merged	under 9 app>aws-api SQS/ReceiveMessage /SQS/ReceiveMessage OK
+receive with rpc.system (AWS SDK shape) | Messaging and Rpc captured | merged	under 10 app>aws-api SQS/ReceiveMessage /SQS/ReceiveMessage OK
+receive with rpc.system (AWS SDK shape) | Messaging and Rpc captured | merged	under 11 app>aws-api SQS/ReceiveMessage /SQS/ReceiveMessage OK
+receive with rpc.system (AWS SDK shape) | Messaging and Rpc captured | merged	raw HistoryRawCall { Caller = app, Service = aws-api, Method = SQS/ReceiveMessage, Path = /SQS/ReceiveMessage, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+receive with rpc.system (AWS SDK shape) | Messaging and Rpc captured | merged	fingerprint set=cbad7607 ordered=cbad7607 calls=1
+receive with rpc.system (AWS SDK shape) | Messaging and Rpc captured | merged	dependencies app>aws-api
+send with rpc.system (AWS SDK shape) | default capture	dropped
+send with rpc.system (AWS SDK shape) | Messaging and Rpc captured | log	kind Default
+send with rpc.system (AWS SDK shape) | Messaging and Rpc captured | log	call app>aws_sqs Publish orders /orders OK
+send with rpc.system (AWS SDK shape) | Messaging and Rpc captured | log	under 6 app>aws_sqs Publish orders / OK
+send with rpc.system (AWS SDK shape) | Messaging and Rpc captured | log	under 7 app>aws_sqs Publish orders / OK
+send with rpc.system (AWS SDK shape) | Messaging and Rpc captured | log	under 8 app>aws_sqs Publish orders /orders OK
+send with rpc.system (AWS SDK shape) | Messaging and Rpc captured | log	under 9 app>aws_sqs Publish orders /orders OK
+send with rpc.system (AWS SDK shape) | Messaging and Rpc captured | log	under 10 app>aws_sqs Publish orders /orders OK
+send with rpc.system (AWS SDK shape) | Messaging and Rpc captured | log	under 11 app>aws_sqs Publish orders /orders OK
+send with rpc.system (AWS SDK shape) | Messaging and Rpc captured | log	raw HistoryRawCall { Caller = app, Service = aws_sqs, Method = Publish orders, Path = /orders, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = /, Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+send with rpc.system (AWS SDK shape) | Messaging and Rpc captured | log	fingerprint set=ba42b21e ordered=ba42b21e calls=1
+send with rpc.system (AWS SDK shape) | Messaging and Rpc captured | log	dependencies app>aws_sqs
+send with rpc.system (AWS SDK shape) | Messaging and Rpc captured | record	kind Default
+send with rpc.system (AWS SDK shape) | Messaging and Rpc captured | record	call app>aws_sqs Publish orders /orders OK
+send with rpc.system (AWS SDK shape) | Messaging and Rpc captured | record	under 6 app>aws_sqs Publish orders /aws_sqs://broker/orders OK
+send with rpc.system (AWS SDK shape) | Messaging and Rpc captured | record	under 7 app>aws_sqs Publish orders /aws_sqs://broker/orders OK
+send with rpc.system (AWS SDK shape) | Messaging and Rpc captured | record	under 8 app>aws_sqs Publish orders /orders OK
+send with rpc.system (AWS SDK shape) | Messaging and Rpc captured | record	under 9 app>aws_sqs Publish orders /orders OK
+send with rpc.system (AWS SDK shape) | Messaging and Rpc captured | record	under 10 app>aws_sqs Publish orders /orders OK
+send with rpc.system (AWS SDK shape) | Messaging and Rpc captured | record	under 11 app>aws_sqs Publish orders /orders OK
+send with rpc.system (AWS SDK shape) | Messaging and Rpc captured | record	raw HistoryRawCall { Caller = app, Service = aws_sqs, Method = Publish orders, Path = /orders, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = /aws_sqs://broker/orders, Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+send with rpc.system (AWS SDK shape) | Messaging and Rpc captured | record	fingerprint set=ba42b21e ordered=ba42b21e calls=1
+send with rpc.system (AWS SDK shape) | Messaging and Rpc captured | record	dependencies app>aws_sqs
+send with rpc.system (AWS SDK shape) | Messaging and Rpc captured | merged	records 2, captured by wire + span
+send with rpc.system (AWS SDK shape) | Messaging and Rpc captured | merged	kind Default
+send with rpc.system (AWS SDK shape) | Messaging and Rpc captured | merged	call app>aws_sqs Publish orders /orders OK
+send with rpc.system (AWS SDK shape) | Messaging and Rpc captured | merged	under 6 app>aws_sqs Publish orders /aws_sqs://broker/orders OK
+send with rpc.system (AWS SDK shape) | Messaging and Rpc captured | merged	under 7 app>aws_sqs Publish orders /aws_sqs://broker/orders OK
+send with rpc.system (AWS SDK shape) | Messaging and Rpc captured | merged	under 8 app>aws_sqs Publish orders /orders OK
+send with rpc.system (AWS SDK shape) | Messaging and Rpc captured | merged	under 9 app>aws_sqs Publish orders /orders OK
+send with rpc.system (AWS SDK shape) | Messaging and Rpc captured | merged	under 10 app>aws_sqs Publish orders /orders OK
+send with rpc.system (AWS SDK shape) | Messaging and Rpc captured | merged	under 11 app>aws_sqs Publish orders /orders OK
+send with rpc.system (AWS SDK shape) | Messaging and Rpc captured | merged	raw HistoryRawCall { Caller = app, Service = aws_sqs, Method = Publish orders, Path = /orders, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = /aws_sqs://broker/orders, Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+send with rpc.system (AWS SDK shape) | Messaging and Rpc captured | merged	fingerprint set=ba42b21e ordered=ba42b21e calls=1
+send with rpc.system (AWS SDK shape) | Messaging and Rpc captured | merged	dependencies app>aws_sqs
+INTERNAL with messaging.system | default capture	dropped
+INTERNAL with messaging.system | Messaging and Rpc captured | log	kind Default
+INTERNAL with messaging.system | Messaging and Rpc captured | log	call app>kafka Publish orders /orders OK
+INTERNAL with messaging.system | Messaging and Rpc captured | log	under 6 app>kafka Publish orders /orders OK
+INTERNAL with messaging.system | Messaging and Rpc captured | log	under 7 app>kafka Publish orders /orders OK
+INTERNAL with messaging.system | Messaging and Rpc captured | log	under 8 app>kafka Publish orders /orders OK
+INTERNAL with messaging.system | Messaging and Rpc captured | log	under 9 app>kafka Publish orders /orders OK
+INTERNAL with messaging.system | Messaging and Rpc captured | log	under 10 app>kafka Publish orders /orders OK
+INTERNAL with messaging.system | Messaging and Rpc captured | log	under 11 app>kafka Publish orders /orders OK
+INTERNAL with messaging.system | Messaging and Rpc captured | log	raw HistoryRawCall { Caller = app, Service = kafka, Method = Publish orders, Path = /orders, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+INTERNAL with messaging.system | Messaging and Rpc captured | log	fingerprint set=ea5cd412 ordered=ea5cd412 calls=1
+INTERNAL with messaging.system | Messaging and Rpc captured | log	dependencies app>kafka
+INTERNAL with messaging.system | Messaging and Rpc captured | record	kind Default
+INTERNAL with messaging.system | Messaging and Rpc captured | record	call app>kafka Publish orders /orders OK
+INTERNAL with messaging.system | Messaging and Rpc captured | record	under 6 app>kafka Publish orders /orders OK
+INTERNAL with messaging.system | Messaging and Rpc captured | record	under 7 app>kafka Publish orders /orders OK
+INTERNAL with messaging.system | Messaging and Rpc captured | record	under 8 app>kafka Publish orders /orders OK
+INTERNAL with messaging.system | Messaging and Rpc captured | record	under 9 app>kafka Publish orders /orders OK
+INTERNAL with messaging.system | Messaging and Rpc captured | record	under 10 app>kafka Publish orders /orders OK
+INTERNAL with messaging.system | Messaging and Rpc captured | record	under 11 app>kafka Publish orders /orders OK
+INTERNAL with messaging.system | Messaging and Rpc captured | record	raw HistoryRawCall { Caller = app, Service = kafka, Method = Publish orders, Path = /orders, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+INTERNAL with messaging.system | Messaging and Rpc captured | record	fingerprint set=ea5cd412 ordered=ea5cd412 calls=1
+INTERNAL with messaging.system | Messaging and Rpc captured | record	dependencies app>kafka
+INTERNAL with messaging.system | Messaging and Rpc captured | merged	records 2, captured by wire + span
+INTERNAL with messaging.system | Messaging and Rpc captured | merged	kind Default
+INTERNAL with messaging.system | Messaging and Rpc captured | merged	call app>kafka Publish orders /orders OK
+INTERNAL with messaging.system | Messaging and Rpc captured | merged	under 6 app>kafka Publish orders /orders OK
+INTERNAL with messaging.system | Messaging and Rpc captured | merged	under 7 app>kafka Publish orders /orders OK
+INTERNAL with messaging.system | Messaging and Rpc captured | merged	under 8 app>kafka Publish orders /orders OK
+INTERNAL with messaging.system | Messaging and Rpc captured | merged	under 9 app>kafka Publish orders /orders OK
+INTERNAL with messaging.system | Messaging and Rpc captured | merged	under 10 app>kafka Publish orders /orders OK
+INTERNAL with messaging.system | Messaging and Rpc captured | merged	under 11 app>kafka Publish orders /orders OK
+INTERNAL with messaging.system | Messaging and Rpc captured | merged	raw HistoryRawCall { Caller = app, Service = kafka, Method = Publish orders, Path = /orders, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+INTERNAL with messaging.system | Messaging and Rpc captured | merged	fingerprint set=ea5cd412 ordered=ea5cd412 calls=1
+INTERNAL with messaging.system | Messaging and Rpc captured | merged	dependencies app>kafka
+messaging.system.name only, PRODUCER | default capture	dropped
+messaging.system.name only, PRODUCER | Messaging and Rpc captured	dropped
+messaging.system.name only, INTERNAL | default capture	dropped
+messaging.system.name only, INTERNAL | Messaging and Rpc captured	dropped
+both names | default capture	dropped
+both names | Messaging and Rpc captured | log	kind Default
+both names | Messaging and Rpc captured | log	call app>aws_sqs Publish orders /orders OK
+both names | Messaging and Rpc captured | log	under 6 app>aws_sqs Publish orders / OK
+both names | Messaging and Rpc captured | log	under 7 app>aws_sqs Publish orders / OK
+both names | Messaging and Rpc captured | log	under 8 app>aws_sqs Publish orders /orders OK
+both names | Messaging and Rpc captured | log	under 9 app>aws_sqs Publish orders /orders OK
+both names | Messaging and Rpc captured | log	under 10 app>aws_sqs Publish orders /orders OK
+both names | Messaging and Rpc captured | log	under 11 app>aws_sqs Publish orders /orders OK
+both names | Messaging and Rpc captured | log	raw HistoryRawCall { Caller = app, Service = aws_sqs, Method = Publish orders, Path = /orders, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = /, Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+both names | Messaging and Rpc captured | log	fingerprint set=ba42b21e ordered=ba42b21e calls=1
+both names | Messaging and Rpc captured | log	dependencies app>aws_sqs
+both names | Messaging and Rpc captured | record	kind Default
+both names | Messaging and Rpc captured | record	call app>aws_sqs Publish orders /orders OK
+both names | Messaging and Rpc captured | record	under 6 app>aws_sqs Publish orders /aws_sqs://broker/orders OK
+both names | Messaging and Rpc captured | record	under 7 app>aws_sqs Publish orders /aws_sqs://broker/orders OK
+both names | Messaging and Rpc captured | record	under 8 app>aws_sqs Publish orders /orders OK
+both names | Messaging and Rpc captured | record	under 9 app>aws_sqs Publish orders /orders OK
+both names | Messaging and Rpc captured | record	under 10 app>aws_sqs Publish orders /orders OK
+both names | Messaging and Rpc captured | record	under 11 app>aws_sqs Publish orders /orders OK
+both names | Messaging and Rpc captured | record	raw HistoryRawCall { Caller = app, Service = aws_sqs, Method = Publish orders, Path = /orders, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = /aws_sqs://broker/orders, Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+both names | Messaging and Rpc captured | record	fingerprint set=ba42b21e ordered=ba42b21e calls=1
+both names | Messaging and Rpc captured | record	dependencies app>aws_sqs
+both names | Messaging and Rpc captured | merged	records 2, captured by wire + span
+both names | Messaging and Rpc captured | merged	kind Default
+both names | Messaging and Rpc captured | merged	call app>aws_sqs Publish orders /orders OK
+both names | Messaging and Rpc captured | merged	under 6 app>aws_sqs Publish orders /aws_sqs://broker/orders OK
+both names | Messaging and Rpc captured | merged	under 7 app>aws_sqs Publish orders /aws_sqs://broker/orders OK
+both names | Messaging and Rpc captured | merged	under 8 app>aws_sqs Publish orders /orders OK
+both names | Messaging and Rpc captured | merged	under 9 app>aws_sqs Publish orders /orders OK
+both names | Messaging and Rpc captured | merged	under 10 app>aws_sqs Publish orders /orders OK
+both names | Messaging and Rpc captured | merged	under 11 app>aws_sqs Publish orders /orders OK
+both names | Messaging and Rpc captured | merged	raw HistoryRawCall { Caller = app, Service = aws_sqs, Method = Publish orders, Path = /orders, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = /aws_sqs://broker/orders, Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+both names | Messaging and Rpc captured | merged	fingerprint set=ba42b21e ordered=ba42b21e calls=1
+both names | Messaging and Rpc captured | merged	dependencies app>aws_sqs
+PRODUCER, no messaging.system: what 5.27.13 exports for a message | default capture	dropped
+PRODUCER, no messaging.system: what 5.27.13 exports for a message | Messaging and Rpc captured	dropped
+PRODUCER, messaging.*: what R3 exports for the same message | default capture	dropped
+PRODUCER, messaging.*: what R3 exports for the same message | Messaging and Rpc captured | log	kind Default
+PRODUCER, messaging.*: what R3 exports for the same message | Messaging and Rpc captured | log	call app>PubSub Publish orders /orders OK
+PRODUCER, messaging.*: what R3 exports for the same message | Messaging and Rpc captured | log	under 6 app>PubSub Publish orders / OK
+PRODUCER, messaging.*: what R3 exports for the same message | Messaging and Rpc captured | log	under 7 app>PubSub Publish orders / OK
+PRODUCER, messaging.*: what R3 exports for the same message | Messaging and Rpc captured | log	under 8 app>PubSub Publish orders /orders OK
+PRODUCER, messaging.*: what R3 exports for the same message | Messaging and Rpc captured | log	under 9 app>PubSub Publish orders /orders OK
+PRODUCER, messaging.*: what R3 exports for the same message | Messaging and Rpc captured | log	under 10 app>PubSub Publish orders /orders OK
+PRODUCER, messaging.*: what R3 exports for the same message | Messaging and Rpc captured | log	under 11 app>PubSub Publish orders /orders OK
+PRODUCER, messaging.*: what R3 exports for the same message | Messaging and Rpc captured | log	raw HistoryRawCall { Caller = app, Service = PubSub, Method = Publish orders, Path = /orders, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = /, Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+PRODUCER, messaging.*: what R3 exports for the same message | Messaging and Rpc captured | log	fingerprint set=7751e728 ordered=7751e728 calls=1
+PRODUCER, messaging.*: what R3 exports for the same message | Messaging and Rpc captured | log	dependencies app>PubSub
+PRODUCER, messaging.*: what R3 exports for the same message | Messaging and Rpc captured | record	kind Default
+PRODUCER, messaging.*: what R3 exports for the same message | Messaging and Rpc captured | record	call app>PubSub Publish orders /orders OK
+PRODUCER, messaging.*: what R3 exports for the same message | Messaging and Rpc captured | record	under 6 app>PubSub Publish orders /gcp_pubsub://PubSub/orders OK
+PRODUCER, messaging.*: what R3 exports for the same message | Messaging and Rpc captured | record	under 7 app>PubSub Publish orders /gcp_pubsub://PubSub/orders OK
+PRODUCER, messaging.*: what R3 exports for the same message | Messaging and Rpc captured | record	under 8 app>PubSub Publish orders /orders OK
+PRODUCER, messaging.*: what R3 exports for the same message | Messaging and Rpc captured | record	under 9 app>PubSub Publish orders /orders OK
+PRODUCER, messaging.*: what R3 exports for the same message | Messaging and Rpc captured | record	under 10 app>PubSub Publish orders /orders OK
+PRODUCER, messaging.*: what R3 exports for the same message | Messaging and Rpc captured | record	under 11 app>PubSub Publish orders /orders OK
+PRODUCER, messaging.*: what R3 exports for the same message | Messaging and Rpc captured | record	raw HistoryRawCall { Caller = app, Service = PubSub, Method = Publish orders, Path = /orders, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = /gcp_pubsub://PubSub/orders, Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+PRODUCER, messaging.*: what R3 exports for the same message | Messaging and Rpc captured | record	fingerprint set=7751e728 ordered=7751e728 calls=1
+PRODUCER, messaging.*: what R3 exports for the same message | Messaging and Rpc captured | record	dependencies app>PubSub
+PRODUCER, messaging.*: what R3 exports for the same message | Messaging and Rpc captured | merged	records 2, captured by wire + span
+PRODUCER, messaging.*: what R3 exports for the same message | Messaging and Rpc captured | merged	kind Default
+PRODUCER, messaging.*: what R3 exports for the same message | Messaging and Rpc captured | merged	call app>PubSub Publish orders /orders OK
+PRODUCER, messaging.*: what R3 exports for the same message | Messaging and Rpc captured | merged	under 6 app>PubSub Publish orders /gcp_pubsub://PubSub/orders OK
+PRODUCER, messaging.*: what R3 exports for the same message | Messaging and Rpc captured | merged	under 7 app>PubSub Publish orders /gcp_pubsub://PubSub/orders OK
+PRODUCER, messaging.*: what R3 exports for the same message | Messaging and Rpc captured | merged	under 8 app>PubSub Publish orders /orders OK
+PRODUCER, messaging.*: what R3 exports for the same message | Messaging and Rpc captured | merged	under 9 app>PubSub Publish orders /orders OK
+PRODUCER, messaging.*: what R3 exports for the same message | Messaging and Rpc captured | merged	under 10 app>PubSub Publish orders /orders OK
+PRODUCER, messaging.*: what R3 exports for the same message | Messaging and Rpc captured | merged	under 11 app>PubSub Publish orders /orders OK
+PRODUCER, messaging.*: what R3 exports for the same message | Messaging and Rpc captured | merged	raw HistoryRawCall { Caller = app, Service = PubSub, Method = Publish orders, Path = /orders, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = /gcp_pubsub://PubSub/orders, Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+PRODUCER, messaging.*: what R3 exports for the same message | Messaging and Rpc captured | merged	fingerprint set=7751e728 ordered=7751e728 calls=1
+PRODUCER, messaging.*: what R3 exports for the same message | Messaging and Rpc captured | merged	dependencies app>PubSub
+CONSUMER, no messaging.system, nothing else | default capture	dropped
+CONSUMER, no messaging.system, nothing else | Messaging and Rpc captured	dropped
+CONSUMER with http.request.method (a push over HTTP) | default capture | log	kind Default
+CONSUMER with http.request.method (a push over HTTP) | default capture | log	call app>app POST /push OK
+CONSUMER with http.request.method (a push over HTTP) | default capture | log	under 6 app>app POST /push OK
+CONSUMER with http.request.method (a push over HTTP) | default capture | log	under 7 app>app POST /push OK
+CONSUMER with http.request.method (a push over HTTP) | default capture | log	under 8 app>app POST /push OK
+CONSUMER with http.request.method (a push over HTTP) | default capture | log	under 9 app>app POST /push OK
+CONSUMER with http.request.method (a push over HTTP) | default capture | log	under 10 app>app POST /push OK
+CONSUMER with http.request.method (a push over HTTP) | default capture | log	under 11 app>app POST /push OK
+CONSUMER with http.request.method (a push over HTTP) | default capture | log	raw HistoryRawCall { Caller = app, Service = app, Method = POST, Path = /push, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+CONSUMER with http.request.method (a push over HTTP) | default capture | log	fingerprint set=521d7b2f ordered=521d7b2f calls=1
+CONSUMER with http.request.method (a push over HTTP) | default capture | log	dependencies app>app
+CONSUMER with http.request.method (a push over HTTP) | default capture | record	kind Default
+CONSUMER with http.request.method (a push over HTTP) | default capture | record	call app>app POST /push OK
+CONSUMER with http.request.method (a push over HTTP) | default capture | record	under 6 app>app POST /push OK
+CONSUMER with http.request.method (a push over HTTP) | default capture | record	under 7 app>app POST /push OK
+CONSUMER with http.request.method (a push over HTTP) | default capture | record	under 8 app>app POST /push OK
+CONSUMER with http.request.method (a push over HTTP) | default capture | record	under 9 app>app POST /push OK
+CONSUMER with http.request.method (a push over HTTP) | default capture | record	under 10 app>app POST /push OK
+CONSUMER with http.request.method (a push over HTTP) | default capture | record	under 11 app>app POST /push OK
+CONSUMER with http.request.method (a push over HTTP) | default capture | record	raw HistoryRawCall { Caller = app, Service = app, Method = POST, Path = /push, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+CONSUMER with http.request.method (a push over HTTP) | default capture | record	fingerprint set=521d7b2f ordered=521d7b2f calls=1
+CONSUMER with http.request.method (a push over HTTP) | default capture | record	dependencies app>app
+CONSUMER with http.request.method (a push over HTTP) | default capture | merged	records 2, captured by wire + span
+CONSUMER with http.request.method (a push over HTTP) | default capture | merged	kind Default
+CONSUMER with http.request.method (a push over HTTP) | default capture | merged	call app>app POST /push OK
+CONSUMER with http.request.method (a push over HTTP) | default capture | merged	under 6 app>app POST /push OK
+CONSUMER with http.request.method (a push over HTTP) | default capture | merged	under 7 app>app POST /push OK
+CONSUMER with http.request.method (a push over HTTP) | default capture | merged	under 8 app>app POST /push OK
+CONSUMER with http.request.method (a push over HTTP) | default capture | merged	under 9 app>app POST /push OK
+CONSUMER with http.request.method (a push over HTTP) | default capture | merged	under 10 app>app POST /push OK
+CONSUMER with http.request.method (a push over HTTP) | default capture | merged	under 11 app>app POST /push OK
+CONSUMER with http.request.method (a push over HTTP) | default capture | merged	raw HistoryRawCall { Caller = app, Service = app, Method = POST, Path = /push, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+CONSUMER with http.request.method (a push over HTTP) | default capture | merged	fingerprint set=521d7b2f ordered=521d7b2f calls=1
+CONSUMER with http.request.method (a push over HTTP) | default capture | merged	dependencies app>app
+CONSUMER with http.request.method (a push over HTTP) | Messaging and Rpc captured | log	kind Default
+CONSUMER with http.request.method (a push over HTTP) | Messaging and Rpc captured | log	call app>app POST /push OK
+CONSUMER with http.request.method (a push over HTTP) | Messaging and Rpc captured | log	under 6 app>app POST /push OK
+CONSUMER with http.request.method (a push over HTTP) | Messaging and Rpc captured | log	under 7 app>app POST /push OK
+CONSUMER with http.request.method (a push over HTTP) | Messaging and Rpc captured | log	under 8 app>app POST /push OK
+CONSUMER with http.request.method (a push over HTTP) | Messaging and Rpc captured | log	under 9 app>app POST /push OK
+CONSUMER with http.request.method (a push over HTTP) | Messaging and Rpc captured | log	under 10 app>app POST /push OK
+CONSUMER with http.request.method (a push over HTTP) | Messaging and Rpc captured | log	under 11 app>app POST /push OK
+CONSUMER with http.request.method (a push over HTTP) | Messaging and Rpc captured | log	raw HistoryRawCall { Caller = app, Service = app, Method = POST, Path = /push, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+CONSUMER with http.request.method (a push over HTTP) | Messaging and Rpc captured | log	fingerprint set=521d7b2f ordered=521d7b2f calls=1
+CONSUMER with http.request.method (a push over HTTP) | Messaging and Rpc captured | log	dependencies app>app
+CONSUMER with http.request.method (a push over HTTP) | Messaging and Rpc captured | record	kind Default
+CONSUMER with http.request.method (a push over HTTP) | Messaging and Rpc captured | record	call app>app POST /push OK
+CONSUMER with http.request.method (a push over HTTP) | Messaging and Rpc captured | record	under 6 app>app POST /push OK
+CONSUMER with http.request.method (a push over HTTP) | Messaging and Rpc captured | record	under 7 app>app POST /push OK
+CONSUMER with http.request.method (a push over HTTP) | Messaging and Rpc captured | record	under 8 app>app POST /push OK
+CONSUMER with http.request.method (a push over HTTP) | Messaging and Rpc captured | record	under 9 app>app POST /push OK
+CONSUMER with http.request.method (a push over HTTP) | Messaging and Rpc captured | record	under 10 app>app POST /push OK
+CONSUMER with http.request.method (a push over HTTP) | Messaging and Rpc captured | record	under 11 app>app POST /push OK
+CONSUMER with http.request.method (a push over HTTP) | Messaging and Rpc captured | record	raw HistoryRawCall { Caller = app, Service = app, Method = POST, Path = /push, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+CONSUMER with http.request.method (a push over HTTP) | Messaging and Rpc captured | record	fingerprint set=521d7b2f ordered=521d7b2f calls=1
+CONSUMER with http.request.method (a push over HTTP) | Messaging and Rpc captured | record	dependencies app>app
+CONSUMER with http.request.method (a push over HTTP) | Messaging and Rpc captured | merged	records 2, captured by wire + span
+CONSUMER with http.request.method (a push over HTTP) | Messaging and Rpc captured | merged	kind Default
+CONSUMER with http.request.method (a push over HTTP) | Messaging and Rpc captured | merged	call app>app POST /push OK
+CONSUMER with http.request.method (a push over HTTP) | Messaging and Rpc captured | merged	under 6 app>app POST /push OK
+CONSUMER with http.request.method (a push over HTTP) | Messaging and Rpc captured | merged	under 7 app>app POST /push OK
+CONSUMER with http.request.method (a push over HTTP) | Messaging and Rpc captured | merged	under 8 app>app POST /push OK
+CONSUMER with http.request.method (a push over HTTP) | Messaging and Rpc captured | merged	under 9 app>app POST /push OK
+CONSUMER with http.request.method (a push over HTTP) | Messaging and Rpc captured | merged	under 10 app>app POST /push OK
+CONSUMER with http.request.method (a push over HTTP) | Messaging and Rpc captured | merged	under 11 app>app POST /push OK
+CONSUMER with http.request.method (a push over HTTP) | Messaging and Rpc captured | merged	raw HistoryRawCall { Caller = app, Service = app, Method = POST, Path = /push, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+CONSUMER with http.request.method (a push over HTTP) | Messaging and Rpc captured | merged	fingerprint set=521d7b2f ordered=521d7b2f calls=1
+CONSUMER with http.request.method (a push over HTTP) | Messaging and Rpc captured | merged	dependencies app>app
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | default capture | log	kind Default
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | default capture | log	call app>spanner SELECT /shop OK
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | default capture | log	under 6 app>spanner SELECT /shop OK
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | default capture | log	under 7 app>spanner SELECT /shop OK
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | default capture | log	under 8 app>spanner SELECT /shop OK
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | default capture | log	under 9 app>spanner SELECT /shop OK
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | default capture | log	under 10 app>spanner SELECT /shop OK
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | default capture | log	under 11 app>spanner SELECT /shop OK
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | default capture | log	raw HistoryRawCall { Caller = app, Service = spanner, Method = SELECT, Path = /shop, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | default capture | log	fingerprint set=6c8e5ba7 ordered=6c8e5ba7 calls=1
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | default capture | log	dependencies app>spanner
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | default capture | record	kind Default
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | default capture | record	call app>spanner SELECT /shop OK
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | default capture | record	under 6 app>spanner SELECT /shop OK
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | default capture | record	under 7 app>spanner SELECT /shop OK
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | default capture | record	under 8 app>spanner SELECT /shop OK
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | default capture | record	under 9 app>spanner SELECT /shop OK
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | default capture | record	under 10 app>spanner SELECT /shop OK
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | default capture | record	under 11 app>spanner SELECT /shop OK
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | default capture | record	raw HistoryRawCall { Caller = app, Service = spanner, Method = SELECT, Path = /shop, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | default capture | record	fingerprint set=6c8e5ba7 ordered=6c8e5ba7 calls=1
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | default capture | record	dependencies app>spanner
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | default capture | merged	records 2, captured by wire + span
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | default capture | merged	kind Default
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | default capture | merged	call app>spanner SELECT /shop OK
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | default capture | merged	under 6 app>spanner SELECT /shop OK
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | default capture | merged	under 7 app>spanner SELECT /shop OK
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | default capture | merged	under 8 app>spanner SELECT /shop OK
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | default capture | merged	under 9 app>spanner SELECT /shop OK
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | default capture | merged	under 10 app>spanner SELECT /shop OK
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | default capture | merged	under 11 app>spanner SELECT /shop OK
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | default capture | merged	raw HistoryRawCall { Caller = app, Service = spanner, Method = SELECT, Path = /shop, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | default capture | merged	fingerprint set=6c8e5ba7 ordered=6c8e5ba7 calls=1
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | default capture | merged	dependencies app>spanner
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | Messaging and Rpc captured | log	kind Default
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | Messaging and Rpc captured | log	call app>spanner SELECT /shop OK
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | Messaging and Rpc captured | log	under 6 app>spanner SELECT /shop OK
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | Messaging and Rpc captured | log	under 7 app>spanner SELECT /shop OK
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | Messaging and Rpc captured | log	under 8 app>spanner SELECT /shop OK
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | Messaging and Rpc captured | log	under 9 app>spanner SELECT /shop OK
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | Messaging and Rpc captured | log	under 10 app>spanner SELECT /shop OK
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | Messaging and Rpc captured | log	under 11 app>spanner SELECT /shop OK
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | Messaging and Rpc captured | log	raw HistoryRawCall { Caller = app, Service = spanner, Method = SELECT, Path = /shop, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | Messaging and Rpc captured | log	fingerprint set=6c8e5ba7 ordered=6c8e5ba7 calls=1
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | Messaging and Rpc captured | log	dependencies app>spanner
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | Messaging and Rpc captured | record	kind Default
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | Messaging and Rpc captured | record	call app>spanner SELECT /shop OK
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | Messaging and Rpc captured | record	under 6 app>spanner SELECT /shop OK
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | Messaging and Rpc captured | record	under 7 app>spanner SELECT /shop OK
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | Messaging and Rpc captured | record	under 8 app>spanner SELECT /shop OK
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | Messaging and Rpc captured | record	under 9 app>spanner SELECT /shop OK
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | Messaging and Rpc captured | record	under 10 app>spanner SELECT /shop OK
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | Messaging and Rpc captured | record	under 11 app>spanner SELECT /shop OK
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | Messaging and Rpc captured | record	raw HistoryRawCall { Caller = app, Service = spanner, Method = SELECT, Path = /shop, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | Messaging and Rpc captured | record	fingerprint set=6c8e5ba7 ordered=6c8e5ba7 calls=1
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | Messaging and Rpc captured | record	dependencies app>spanner
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | Messaging and Rpc captured | merged	records 2, captured by wire + span
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | Messaging and Rpc captured | merged	kind Default
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | Messaging and Rpc captured | merged	call app>spanner SELECT /shop OK
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | Messaging and Rpc captured | merged	under 6 app>spanner SELECT /shop OK
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | Messaging and Rpc captured | merged	under 7 app>spanner SELECT /shop OK
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | Messaging and Rpc captured | merged	under 8 app>spanner SELECT /shop OK
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | Messaging and Rpc captured | merged	under 9 app>spanner SELECT /shop OK
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | Messaging and Rpc captured | merged	under 10 app>spanner SELECT /shop OK
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | Messaging and Rpc captured | merged	under 11 app>spanner SELECT /shop OK
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | Messaging and Rpc captured | merged	raw HistoryRawCall { Caller = app, Service = spanner, Method = SELECT, Path = /shop, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | Messaging and Rpc captured | merged	fingerprint set=6c8e5ba7 ordered=6c8e5ba7 calls=1
+PRODUCER with db.system.name (Spanner as exported to 5.27.13) | Messaging and Rpc captured | merged	dependencies app>spanner
+CONSUMER with db.system | default capture | log	kind Default
+CONSUMER with db.system | default capture | log	call app>redis GET /db0/k get k OK
+CONSUMER with db.system | default capture | log	under 6 app>redis GET /k get k OK
+CONSUMER with db.system | default capture | log	under 7 app>redis GET /k get k OK
+CONSUMER with db.system | default capture | log	under 8 app>redis GET /db0/k get k OK
+CONSUMER with db.system | default capture | log	under 9 app>redis GET /db0/k get k OK
+CONSUMER with db.system | default capture | log	under 10 app>redis GET /db0/k get k OK
+CONSUMER with db.system | default capture | log	under 11 app>redis GET /db0/k get k OK
+CONSUMER with db.system | default capture | log	raw HistoryRawCall { Caller = app, Service = redis, Method = GET, Path = /db0/k, Operation = , Head = get k, Status = OK, Service6 = , Method7 = , Path7 = /k, Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+CONSUMER with db.system | default capture | log	fingerprint set=12fe67a3 ordered=12fe67a3 calls=1
+CONSUMER with db.system | default capture | log	dependencies app>redis
+CONSUMER with db.system | default capture | record	kind Default
+CONSUMER with db.system | default capture | record	call app>redis GET /db0/k get k OK
+CONSUMER with db.system | default capture | record	under 6 app>redis GET /k get k OK
+CONSUMER with db.system | default capture | record	under 7 app>redis GET /k get k OK
+CONSUMER with db.system | default capture | record	under 8 app>redis GET /db0/k get k OK
+CONSUMER with db.system | default capture | record	under 9 app>redis GET /db0/k get k OK
+CONSUMER with db.system | default capture | record	under 10 app>redis GET /db0/k get k OK
+CONSUMER with db.system | default capture | record	under 11 app>redis GET /db0/k get k OK
+CONSUMER with db.system | default capture | record	raw HistoryRawCall { Caller = app, Service = redis, Method = GET, Path = /db0/k, Operation = , Head = get k, Status = OK, Service6 = , Method7 = , Path7 = /k, Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+CONSUMER with db.system | default capture | record	fingerprint set=12fe67a3 ordered=12fe67a3 calls=1
+CONSUMER with db.system | default capture | record	dependencies app>redis
+CONSUMER with db.system | default capture | merged	records 2, captured by wire + span
+CONSUMER with db.system | default capture | merged	kind Default
+CONSUMER with db.system | default capture | merged	call app>redis GET /db0/k get k OK
+CONSUMER with db.system | default capture | merged	under 6 app>redis GET /k get k OK
+CONSUMER with db.system | default capture | merged	under 7 app>redis GET /k get k OK
+CONSUMER with db.system | default capture | merged	under 8 app>redis GET /db0/k get k OK
+CONSUMER with db.system | default capture | merged	under 9 app>redis GET /db0/k get k OK
+CONSUMER with db.system | default capture | merged	under 10 app>redis GET /db0/k get k OK
+CONSUMER with db.system | default capture | merged	under 11 app>redis GET /db0/k get k OK
+CONSUMER with db.system | default capture | merged	raw HistoryRawCall { Caller = app, Service = redis, Method = GET, Path = /db0/k, Operation = , Head = get k, Status = OK, Service6 = , Method7 = , Path7 = /k, Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+CONSUMER with db.system | default capture | merged	fingerprint set=12fe67a3 ordered=12fe67a3 calls=1
+CONSUMER with db.system | default capture | merged	dependencies app>redis
+CONSUMER with db.system | Messaging and Rpc captured | log	kind Default
+CONSUMER with db.system | Messaging and Rpc captured | log	call app>redis GET /db0/k get k OK
+CONSUMER with db.system | Messaging and Rpc captured | log	under 6 app>redis GET /k get k OK
+CONSUMER with db.system | Messaging and Rpc captured | log	under 7 app>redis GET /k get k OK
+CONSUMER with db.system | Messaging and Rpc captured | log	under 8 app>redis GET /db0/k get k OK
+CONSUMER with db.system | Messaging and Rpc captured | log	under 9 app>redis GET /db0/k get k OK
+CONSUMER with db.system | Messaging and Rpc captured | log	under 10 app>redis GET /db0/k get k OK
+CONSUMER with db.system | Messaging and Rpc captured | log	under 11 app>redis GET /db0/k get k OK
+CONSUMER with db.system | Messaging and Rpc captured | log	raw HistoryRawCall { Caller = app, Service = redis, Method = GET, Path = /db0/k, Operation = , Head = get k, Status = OK, Service6 = , Method7 = , Path7 = /k, Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+CONSUMER with db.system | Messaging and Rpc captured | log	fingerprint set=12fe67a3 ordered=12fe67a3 calls=1
+CONSUMER with db.system | Messaging and Rpc captured | log	dependencies app>redis
+CONSUMER with db.system | Messaging and Rpc captured | record	kind Default
+CONSUMER with db.system | Messaging and Rpc captured | record	call app>redis GET /db0/k get k OK
+CONSUMER with db.system | Messaging and Rpc captured | record	under 6 app>redis GET /k get k OK
+CONSUMER with db.system | Messaging and Rpc captured | record	under 7 app>redis GET /k get k OK
+CONSUMER with db.system | Messaging and Rpc captured | record	under 8 app>redis GET /db0/k get k OK
+CONSUMER with db.system | Messaging and Rpc captured | record	under 9 app>redis GET /db0/k get k OK
+CONSUMER with db.system | Messaging and Rpc captured | record	under 10 app>redis GET /db0/k get k OK
+CONSUMER with db.system | Messaging and Rpc captured | record	under 11 app>redis GET /db0/k get k OK
+CONSUMER with db.system | Messaging and Rpc captured | record	raw HistoryRawCall { Caller = app, Service = redis, Method = GET, Path = /db0/k, Operation = , Head = get k, Status = OK, Service6 = , Method7 = , Path7 = /k, Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+CONSUMER with db.system | Messaging and Rpc captured | record	fingerprint set=12fe67a3 ordered=12fe67a3 calls=1
+CONSUMER with db.system | Messaging and Rpc captured | record	dependencies app>redis
+CONSUMER with db.system | Messaging and Rpc captured | merged	records 2, captured by wire + span
+CONSUMER with db.system | Messaging and Rpc captured | merged	kind Default
+CONSUMER with db.system | Messaging and Rpc captured | merged	call app>redis GET /db0/k get k OK
+CONSUMER with db.system | Messaging and Rpc captured | merged	under 6 app>redis GET /k get k OK
+CONSUMER with db.system | Messaging and Rpc captured | merged	under 7 app>redis GET /k get k OK
+CONSUMER with db.system | Messaging and Rpc captured | merged	under 8 app>redis GET /db0/k get k OK
+CONSUMER with db.system | Messaging and Rpc captured | merged	under 9 app>redis GET /db0/k get k OK
+CONSUMER with db.system | Messaging and Rpc captured | merged	under 10 app>redis GET /db0/k get k OK
+CONSUMER with db.system | Messaging and Rpc captured | merged	under 11 app>redis GET /db0/k get k OK
+CONSUMER with db.system | Messaging and Rpc captured | merged	raw HistoryRawCall { Caller = app, Service = redis, Method = GET, Path = /db0/k, Operation = , Head = get k, Status = OK, Service6 = , Method7 = , Path7 = /k, Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+CONSUMER with db.system | Messaging and Rpc captured | merged	fingerprint set=12fe67a3 ordered=12fe67a3 calls=1
+CONSUMER with db.system | Messaging and Rpc captured | merged	dependencies app>redis
+real POST 1 span 1 Producer urn:message:Probe:OrderPlaced send | default capture	dropped
+real POST 1 span 1 Producer urn:message:Probe:OrderPlaced send | Messaging and Rpc captured | log	kind Default
+real POST 1 span 1 Producer urn:message:Probe:OrderPlaced send | Messaging and Rpc captured | log	call breakfast>in-memory Send urn:message:Probe:OrderPlaced /urn:message:Probe:OrderPlaced OK
+real POST 1 span 1 Producer urn:message:Probe:OrderPlaced send | Messaging and Rpc captured | log	under 6 breakfast>in-memory Send urn:message:Probe:OrderPlaced /urn:message:Probe:OrderPlaced OK
+real POST 1 span 1 Producer urn:message:Probe:OrderPlaced send | Messaging and Rpc captured | log	under 7 breakfast>in-memory Send urn:message:Probe:OrderPlaced /urn:message:Probe:OrderPlaced OK
+real POST 1 span 1 Producer urn:message:Probe:OrderPlaced send | Messaging and Rpc captured | log	under 8 breakfast>in-memory Send urn:message:Probe:OrderPlaced /urn:message:Probe:OrderPlaced OK
+real POST 1 span 1 Producer urn:message:Probe:OrderPlaced send | Messaging and Rpc captured | log	under 9 breakfast>in-memory Send urn:message:Probe:OrderPlaced /urn:message:Probe:OrderPlaced OK
+real POST 1 span 1 Producer urn:message:Probe:OrderPlaced send | Messaging and Rpc captured | log	under 10 breakfast>in-memory Send urn:message:Probe:OrderPlaced /urn:message:Probe:OrderPlaced OK
+real POST 1 span 1 Producer urn:message:Probe:OrderPlaced send | Messaging and Rpc captured | log	under 11 breakfast>in-memory Send urn:message:Probe:OrderPlaced /urn:message:Probe:OrderPlaced OK
+real POST 1 span 1 Producer urn:message:Probe:OrderPlaced send | Messaging and Rpc captured | log	raw HistoryRawCall { Caller = breakfast, Service = in-memory, Method = Send urn:message:Probe:OrderPlaced, Path = /urn:message:Probe:OrderPlaced, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+real POST 1 span 1 Producer urn:message:Probe:OrderPlaced send | Messaging and Rpc captured | log	fingerprint set=4316dea3 ordered=4316dea3 calls=1
+real POST 1 span 1 Producer urn:message:Probe:OrderPlaced send | Messaging and Rpc captured | log	dependencies breakfast>in-memory
+real POST 1 span 1 Producer urn:message:Probe:OrderPlaced send | Messaging and Rpc captured | record	kind Default
+real POST 1 span 1 Producer urn:message:Probe:OrderPlaced send | Messaging and Rpc captured | record	call breakfast>in-memory Send urn:message:Probe:OrderPlaced /urn:message:Probe:OrderPlaced OK
+real POST 1 span 1 Producer urn:message:Probe:OrderPlaced send | Messaging and Rpc captured | record	under 6 breakfast>in-memory Send urn:message:Probe:OrderPlaced /urn:message:Probe:OrderPlaced OK
+real POST 1 span 1 Producer urn:message:Probe:OrderPlaced send | Messaging and Rpc captured | record	under 7 breakfast>in-memory Send urn:message:Probe:OrderPlaced /urn:message:Probe:OrderPlaced OK
+real POST 1 span 1 Producer urn:message:Probe:OrderPlaced send | Messaging and Rpc captured | record	under 8 breakfast>in-memory Send urn:message:Probe:OrderPlaced /urn:message:Probe:OrderPlaced OK
+real POST 1 span 1 Producer urn:message:Probe:OrderPlaced send | Messaging and Rpc captured | record	under 9 breakfast>in-memory Send urn:message:Probe:OrderPlaced /urn:message:Probe:OrderPlaced OK
+real POST 1 span 1 Producer urn:message:Probe:OrderPlaced send | Messaging and Rpc captured | record	under 10 breakfast>in-memory Send urn:message:Probe:OrderPlaced /urn:message:Probe:OrderPlaced OK
+real POST 1 span 1 Producer urn:message:Probe:OrderPlaced send | Messaging and Rpc captured | record	under 11 breakfast>in-memory Send urn:message:Probe:OrderPlaced /urn:message:Probe:OrderPlaced OK
+real POST 1 span 1 Producer urn:message:Probe:OrderPlaced send | Messaging and Rpc captured | record	raw HistoryRawCall { Caller = breakfast, Service = in-memory, Method = Send urn:message:Probe:OrderPlaced, Path = /urn:message:Probe:OrderPlaced, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+real POST 1 span 1 Producer urn:message:Probe:OrderPlaced send | Messaging and Rpc captured | record	fingerprint set=4316dea3 ordered=4316dea3 calls=1
+real POST 1 span 1 Producer urn:message:Probe:OrderPlaced send | Messaging and Rpc captured | record	dependencies breakfast>in-memory
+real POST 1 span 1 Producer urn:message:Probe:OrderPlaced send | Messaging and Rpc captured | merged	records 2, captured by wire + span
+real POST 1 span 1 Producer urn:message:Probe:OrderPlaced send | Messaging and Rpc captured | merged	kind Default
+real POST 1 span 1 Producer urn:message:Probe:OrderPlaced send | Messaging and Rpc captured | merged	call breakfast>in-memory Send urn:message:Probe:OrderPlaced /urn:message:Probe:OrderPlaced OK
+real POST 1 span 1 Producer urn:message:Probe:OrderPlaced send | Messaging and Rpc captured | merged	under 6 breakfast>in-memory Send urn:message:Probe:OrderPlaced /urn:message:Probe:OrderPlaced OK
+real POST 1 span 1 Producer urn:message:Probe:OrderPlaced send | Messaging and Rpc captured | merged	under 7 breakfast>in-memory Send urn:message:Probe:OrderPlaced /urn:message:Probe:OrderPlaced OK
+real POST 1 span 1 Producer urn:message:Probe:OrderPlaced send | Messaging and Rpc captured | merged	under 8 breakfast>in-memory Send urn:message:Probe:OrderPlaced /urn:message:Probe:OrderPlaced OK
+real POST 1 span 1 Producer urn:message:Probe:OrderPlaced send | Messaging and Rpc captured | merged	under 9 breakfast>in-memory Send urn:message:Probe:OrderPlaced /urn:message:Probe:OrderPlaced OK
+real POST 1 span 1 Producer urn:message:Probe:OrderPlaced send | Messaging and Rpc captured | merged	under 10 breakfast>in-memory Send urn:message:Probe:OrderPlaced /urn:message:Probe:OrderPlaced OK
+real POST 1 span 1 Producer urn:message:Probe:OrderPlaced send | Messaging and Rpc captured | merged	under 11 breakfast>in-memory Send urn:message:Probe:OrderPlaced /urn:message:Probe:OrderPlaced OK
+real POST 1 span 1 Producer urn:message:Probe:OrderPlaced send | Messaging and Rpc captured | merged	raw HistoryRawCall { Caller = breakfast, Service = in-memory, Method = Send urn:message:Probe:OrderPlaced, Path = /urn:message:Probe:OrderPlaced, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+real POST 1 span 1 Producer urn:message:Probe:OrderPlaced send | Messaging and Rpc captured | merged	fingerprint set=4316dea3 ordered=4316dea3 calls=1
+real POST 1 span 1 Producer urn:message:Probe:OrderPlaced send | Messaging and Rpc captured | merged	dependencies breakfast>in-memory
+real POST 2 span 1 Consumer orders process | default capture	dropped
+real POST 2 span 1 Consumer orders process | Messaging and Rpc captured	dropped
+real POST 3 span 1 Consumer orders receive | default capture	dropped
+real POST 3 span 1 Consumer orders receive | Messaging and Rpc captured	dropped
+real POST 4 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | default capture	dropped
+real POST 4 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	kind Default
+real POST 4 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	call breakfast>kafka Send r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 4 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	under 6 breakfast>kafka Send r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 4 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	under 7 breakfast>kafka Send r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 4 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	under 8 breakfast>kafka Send r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 4 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	under 9 breakfast>kafka Send r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 4 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	under 10 breakfast>kafka Send r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 4 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	under 11 breakfast>kafka Send r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 4 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	raw HistoryRawCall { Caller = breakfast, Service = kafka, Method = Send r3-real-c26f6557eb3046fd80b98f966b973d80, Path = /r3-real-c26f6557eb3046fd80b98f966b973d80, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+real POST 4 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	fingerprint set=b0f35eea ordered=b0f35eea calls=1
+real POST 4 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	dependencies breakfast>kafka
+real POST 4 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	kind Default
+real POST 4 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	call breakfast>kafka Send r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 4 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	under 6 breakfast>kafka Send r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 4 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	under 7 breakfast>kafka Send r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 4 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	under 8 breakfast>kafka Send r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 4 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	under 9 breakfast>kafka Send r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 4 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	under 10 breakfast>kafka Send r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 4 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	under 11 breakfast>kafka Send r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 4 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	raw HistoryRawCall { Caller = breakfast, Service = kafka, Method = Send r3-real-c26f6557eb3046fd80b98f966b973d80, Path = /r3-real-c26f6557eb3046fd80b98f966b973d80, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+real POST 4 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	fingerprint set=b0f35eea ordered=b0f35eea calls=1
+real POST 4 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	dependencies breakfast>kafka
+real POST 4 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	records 2, captured by wire + span
+real POST 4 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	kind Default
+real POST 4 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	call breakfast>kafka Send r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 4 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	under 6 breakfast>kafka Send r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 4 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	under 7 breakfast>kafka Send r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 4 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	under 8 breakfast>kafka Send r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 4 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	under 9 breakfast>kafka Send r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 4 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	under 10 breakfast>kafka Send r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 4 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	under 11 breakfast>kafka Send r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 4 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	raw HistoryRawCall { Caller = breakfast, Service = kafka, Method = Send r3-real-c26f6557eb3046fd80b98f966b973d80, Path = /r3-real-c26f6557eb3046fd80b98f966b973d80, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+real POST 4 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	fingerprint set=b0f35eea ordered=b0f35eea calls=1
+real POST 4 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	dependencies breakfast>kafka
+real POST 5 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | default capture	dropped
+real POST 5 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	kind Default
+real POST 5 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	call breakfast>kafka Send r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 5 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	under 6 breakfast>kafka Send r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 5 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	under 7 breakfast>kafka Send r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 5 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	under 8 breakfast>kafka Send r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 5 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	under 9 breakfast>kafka Send r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 5 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	under 10 breakfast>kafka Send r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 5 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	under 11 breakfast>kafka Send r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 5 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	raw HistoryRawCall { Caller = breakfast, Service = kafka, Method = Send r3-real-c26f6557eb3046fd80b98f966b973d80, Path = /r3-real-c26f6557eb3046fd80b98f966b973d80, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+real POST 5 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	fingerprint set=b0f35eea ordered=b0f35eea calls=1
+real POST 5 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	dependencies breakfast>kafka
+real POST 5 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	kind Default
+real POST 5 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	call breakfast>kafka Send r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 5 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	under 6 breakfast>kafka Send r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 5 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	under 7 breakfast>kafka Send r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 5 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	under 8 breakfast>kafka Send r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 5 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	under 9 breakfast>kafka Send r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 5 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	under 10 breakfast>kafka Send r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 5 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	under 11 breakfast>kafka Send r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 5 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	raw HistoryRawCall { Caller = breakfast, Service = kafka, Method = Send r3-real-c26f6557eb3046fd80b98f966b973d80, Path = /r3-real-c26f6557eb3046fd80b98f966b973d80, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+real POST 5 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	fingerprint set=b0f35eea ordered=b0f35eea calls=1
+real POST 5 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	dependencies breakfast>kafka
+real POST 5 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	records 2, captured by wire + span
+real POST 5 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	kind Default
+real POST 5 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	call breakfast>kafka Send r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 5 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	under 6 breakfast>kafka Send r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 5 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	under 7 breakfast>kafka Send r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 5 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	under 8 breakfast>kafka Send r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 5 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	under 9 breakfast>kafka Send r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 5 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	under 10 breakfast>kafka Send r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 5 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	under 11 breakfast>kafka Send r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 5 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	raw HistoryRawCall { Caller = breakfast, Service = kafka, Method = Send r3-real-c26f6557eb3046fd80b98f966b973d80, Path = /r3-real-c26f6557eb3046fd80b98f966b973d80, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+real POST 5 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	fingerprint set=b0f35eea ordered=b0f35eea calls=1
+real POST 5 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	dependencies breakfast>kafka
+real POST 6 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | default capture	dropped
+real POST 6 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	kind Default
+real POST 6 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	call breakfast>kafka Poll r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 6 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	under 6 breakfast>kafka Poll r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 6 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	under 7 breakfast>kafka Poll r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 6 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	under 8 breakfast>kafka Poll r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 6 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	under 9 breakfast>kafka Poll r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 6 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	under 10 breakfast>kafka Poll r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 6 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	under 11 breakfast>kafka Poll r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 6 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	raw HistoryRawCall { Caller = breakfast, Service = kafka, Method = Poll r3-real-c26f6557eb3046fd80b98f966b973d80, Path = /r3-real-c26f6557eb3046fd80b98f966b973d80, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+real POST 6 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	fingerprint set=49969716 ordered=49969716 calls=1
+real POST 6 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	dependencies breakfast>kafka
+real POST 6 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	kind Default
+real POST 6 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	call breakfast>kafka Poll r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 6 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	under 6 breakfast>kafka Poll r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 6 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	under 7 breakfast>kafka Poll r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 6 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	under 8 breakfast>kafka Poll r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 6 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	under 9 breakfast>kafka Poll r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 6 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	under 10 breakfast>kafka Poll r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 6 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	under 11 breakfast>kafka Poll r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 6 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	raw HistoryRawCall { Caller = breakfast, Service = kafka, Method = Poll r3-real-c26f6557eb3046fd80b98f966b973d80, Path = /r3-real-c26f6557eb3046fd80b98f966b973d80, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+real POST 6 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	fingerprint set=49969716 ordered=49969716 calls=1
+real POST 6 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	dependencies breakfast>kafka
+real POST 6 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	records 2, captured by wire + span
+real POST 6 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	kind Default
+real POST 6 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	call breakfast>kafka Poll r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 6 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	under 6 breakfast>kafka Poll r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 6 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	under 7 breakfast>kafka Poll r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 6 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	under 8 breakfast>kafka Poll r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 6 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	under 9 breakfast>kafka Poll r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 6 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	under 10 breakfast>kafka Poll r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 6 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	under 11 breakfast>kafka Poll r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 6 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	raw HistoryRawCall { Caller = breakfast, Service = kafka, Method = Poll r3-real-c26f6557eb3046fd80b98f966b973d80, Path = /r3-real-c26f6557eb3046fd80b98f966b973d80, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+real POST 6 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	fingerprint set=49969716 ordered=49969716 calls=1
+real POST 6 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	dependencies breakfast>kafka
+real POST 7 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | default capture	dropped
+real POST 7 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	kind Default
+real POST 7 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	call breakfast>kafka Poll r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 7 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	under 6 breakfast>kafka Poll r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 7 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	under 7 breakfast>kafka Poll r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 7 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	under 8 breakfast>kafka Poll r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 7 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	under 9 breakfast>kafka Poll r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 7 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	under 10 breakfast>kafka Poll r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 7 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	under 11 breakfast>kafka Poll r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 7 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	raw HistoryRawCall { Caller = breakfast, Service = kafka, Method = Poll r3-real-c26f6557eb3046fd80b98f966b973d80, Path = /r3-real-c26f6557eb3046fd80b98f966b973d80, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+real POST 7 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	fingerprint set=49969716 ordered=49969716 calls=1
+real POST 7 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	dependencies breakfast>kafka
+real POST 7 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	kind Default
+real POST 7 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	call breakfast>kafka Poll r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 7 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	under 6 breakfast>kafka Poll r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 7 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	under 7 breakfast>kafka Poll r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 7 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	under 8 breakfast>kafka Poll r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 7 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	under 9 breakfast>kafka Poll r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 7 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	under 10 breakfast>kafka Poll r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 7 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	under 11 breakfast>kafka Poll r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 7 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	raw HistoryRawCall { Caller = breakfast, Service = kafka, Method = Poll r3-real-c26f6557eb3046fd80b98f966b973d80, Path = /r3-real-c26f6557eb3046fd80b98f966b973d80, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+real POST 7 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	fingerprint set=49969716 ordered=49969716 calls=1
+real POST 7 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	dependencies breakfast>kafka
+real POST 7 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	records 2, captured by wire + span
+real POST 7 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	kind Default
+real POST 7 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	call breakfast>kafka Poll r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 7 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	under 6 breakfast>kafka Poll r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 7 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	under 7 breakfast>kafka Poll r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 7 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	under 8 breakfast>kafka Poll r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 7 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	under 9 breakfast>kafka Poll r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 7 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	under 10 breakfast>kafka Poll r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 7 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	under 11 breakfast>kafka Poll r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 7 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	raw HistoryRawCall { Caller = breakfast, Service = kafka, Method = Poll r3-real-c26f6557eb3046fd80b98f966b973d80, Path = /r3-real-c26f6557eb3046fd80b98f966b973d80, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+real POST 7 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	fingerprint set=49969716 ordered=49969716 calls=1
+real POST 7 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	dependencies breakfast>kafka
+real POST 8 span 1 Consumer process r3-real-c26f6557eb3046fd80b98f966b973d80 | default capture	dropped
+real POST 8 span 1 Consumer process r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	kind Default
+real POST 8 span 1 Consumer process r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	call breakfast>kafka Process r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 8 span 1 Consumer process r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	under 6 breakfast>kafka Process r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 8 span 1 Consumer process r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	under 7 breakfast>kafka Process r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 8 span 1 Consumer process r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	under 8 breakfast>kafka Process r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 8 span 1 Consumer process r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	under 9 breakfast>kafka Process r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 8 span 1 Consumer process r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	under 10 breakfast>kafka Process r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 8 span 1 Consumer process r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	under 11 breakfast>kafka Process r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 8 span 1 Consumer process r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	raw HistoryRawCall { Caller = breakfast, Service = kafka, Method = Process r3-real-c26f6557eb3046fd80b98f966b973d80, Path = /r3-real-c26f6557eb3046fd80b98f966b973d80, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+real POST 8 span 1 Consumer process r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	fingerprint set=595e7c75 ordered=595e7c75 calls=1
+real POST 8 span 1 Consumer process r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	dependencies breakfast>kafka
+real POST 8 span 1 Consumer process r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	kind Default
+real POST 8 span 1 Consumer process r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	call breakfast>kafka Process r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 8 span 1 Consumer process r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	under 6 breakfast>kafka Process r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 8 span 1 Consumer process r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	under 7 breakfast>kafka Process r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 8 span 1 Consumer process r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	under 8 breakfast>kafka Process r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 8 span 1 Consumer process r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	under 9 breakfast>kafka Process r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 8 span 1 Consumer process r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	under 10 breakfast>kafka Process r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 8 span 1 Consumer process r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	under 11 breakfast>kafka Process r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 8 span 1 Consumer process r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	raw HistoryRawCall { Caller = breakfast, Service = kafka, Method = Process r3-real-c26f6557eb3046fd80b98f966b973d80, Path = /r3-real-c26f6557eb3046fd80b98f966b973d80, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+real POST 8 span 1 Consumer process r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	fingerprint set=595e7c75 ordered=595e7c75 calls=1
+real POST 8 span 1 Consumer process r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	dependencies breakfast>kafka
+real POST 8 span 1 Consumer process r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	records 2, captured by wire + span
+real POST 8 span 1 Consumer process r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	kind Default
+real POST 8 span 1 Consumer process r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	call breakfast>kafka Process r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 8 span 1 Consumer process r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	under 6 breakfast>kafka Process r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 8 span 1 Consumer process r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	under 7 breakfast>kafka Process r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 8 span 1 Consumer process r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	under 8 breakfast>kafka Process r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 8 span 1 Consumer process r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	under 9 breakfast>kafka Process r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 8 span 1 Consumer process r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	under 10 breakfast>kafka Process r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 8 span 1 Consumer process r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	under 11 breakfast>kafka Process r3-real-c26f6557eb3046fd80b98f966b973d80 /r3-real-{id} OK
+real POST 8 span 1 Consumer process r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	raw HistoryRawCall { Caller = breakfast, Service = kafka, Method = Process r3-real-c26f6557eb3046fd80b98f966b973d80, Path = /r3-real-c26f6557eb3046fd80b98f966b973d80, Operation = , Head = , Status = OK, Service6 = , Method7 = , Path7 = , Head7 = , Absent7 = False, Method8 = , Path8 = , Absent8 = False, Unanswered8 = False, Method9 = , Path9 = , Absent9 = False, Unanswered9 = False, Method10 = , Path10 = , Absent10 = False, Unanswered10 = False }
+real POST 8 span 1 Consumer process r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	fingerprint set=595e7c75 ordered=595e7c75 calls=1
+real POST 8 span 1 Consumer process r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	dependencies breakfast>kafka

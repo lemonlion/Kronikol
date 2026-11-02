@@ -1,0 +1,580 @@
+diff --git a/src/Kronikol.Extensions.EventBridge/EventBridgeTrackingMessageHandler.cs b/src/Kronikol.Extensions.EventBridge/EventBridgeTrackingMessageHandler.cs
+index 0d4b9ee8..cb6eb5f2 100644
+--- a/src/Kronikol.Extensions.EventBridge/EventBridgeTrackingMessageHandler.cs
++++ b/src/Kronikol.Extensions.EventBridge/EventBridgeTrackingMessageHandler.cs
+@@ -72,6 +72,12 @@ protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage
+         var requestResponseId = Guid.NewGuid();
+         var traceId = Guid.NewGuid();
+ 
++        // A call that moves a message is an event, and a response carries its request's kind. By the operation: at Raw the
++        // record is the HTTP request itself, whose verb and path do not name one.
++        var metaType = ebOp.Operation is EventBridgeOperation.PutEvents or EventBridgeOperation.PutPartnerEvents
++            ? RequestResponseMetaType.Event
++            : RequestResponseMetaType.Default;
++
+         var label = EventBridgeOperationClassifier.GetDiagramLabel(ebOp, effectiveVerbosity);
+ 
+         var logRequestContent = effectiveVerbosity == EventBridgeTrackingVerbosity.Summarised
+@@ -101,6 +107,7 @@ protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage
+             traceId,
+             requestResponseId,
+             false,
++            MetaType: metaType,
+             DependencyCategory: DependencyCategories.MessageQueue
+         )
+         {
+@@ -141,6 +148,7 @@ protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage
+             requestResponseId,
+             false,
+             response.StatusCode,
++            MetaType: metaType,
+             DependencyCategory: DependencyCategories.MessageQueue
+         )
+         {
+diff --git a/src/Kronikol.Extensions.EventHubs/EventHubsTracker.cs b/src/Kronikol.Extensions.EventHubs/EventHubsTracker.cs
+index c1cb8858..19ec6405 100644
+--- a/src/Kronikol.Extensions.EventHubs/EventHubsTracker.cs
++++ b/src/Kronikol.Extensions.EventHubs/EventHubsTracker.cs
+@@ -61,7 +61,7 @@ internal static bool ShowsContent(EventHubsTrackingOptions options) =>
+             label, logContent, uri, [],
+             _options.ServiceName, _options.CallerName,
+             RequestResponseType.Request, traceId, requestResponseId, false,
+-            MetaType: RequestResponseMetaType.Event,
++            MetaType: KindOf(operation.Operation),
+             DependencyCategory: DependencyCategories.MessageQueue)
+         {
+             AttributionSource = testInfo.Value.Source,
+@@ -106,6 +106,7 @@ internal void LogResponse(
+             label, logContent, uri, [],
+             _options.ServiceName, _options.CallerName,
+             RequestResponseType.Response, traceId, requestResponseId, false,
++            MetaType: KindOf(operation.Operation),
+             DependencyCategory: DependencyCategories.MessageQueue)
+         {
+             AttributionSource = testInfo.Value.Source,
+@@ -118,6 +119,13 @@ internal void LogResponse(
+                 [], false)));
+     }
+ 
++    // A call that moves a message is an event: making a batch, reading a hub's properties or starting a processor is not.
++    private static RequestResponseMetaType KindOf(EventHubsOperation operation) => operation is
++        EventHubsOperation.Send or EventHubsOperation.SendBatch or EventHubsOperation.ReadEvents or
++        EventHubsOperation.ReadEventsFromPartition or EventHubsOperation.ProcessEvent
++        ? RequestResponseMetaType.Event
++        : RequestResponseMetaType.Default;
++
+     /// <summary>A note at <paramref name="verbosity"/>: none at Summarised, the Raw content where there is one at Raw.</summary>
+     private static string? Note(string? content, string? rawContent, EventHubsTrackingVerbosity verbosity) =>
+         verbosity == EventHubsTrackingVerbosity.Summarised ? null
+diff --git a/src/Kronikol.Extensions.Kafka/KafkaTracker.cs b/src/Kronikol.Extensions.Kafka/KafkaTracker.cs
+index 9ee2e629..5914c299 100644
+--- a/src/Kronikol.Extensions.Kafka/KafkaTracker.cs
++++ b/src/Kronikol.Extensions.Kafka/KafkaTracker.cs
+@@ -392,7 +392,7 @@ private void Log(KafkaCall call, KafkaOperationInfo op, KafkaPayload payload, bo
+             verbosity == KafkaTrackingVerbosity.Summarised ? [] : payload.Headers,
+             service, caller,
+             RequestResponseType.Request, call.TraceId, entry.RequestResponseId, false,
+-            MetaType: RequestResponseMetaType.Event,
++            MetaType: KindOf(op.Operation),
+             DependencyCategory: DependencyCategories.MessageQueue)
+         {
+             AttributionSource = test.Source,
+@@ -411,6 +411,12 @@ private void Log(KafkaCall call, KafkaOperationInfo op, KafkaPayload payload, bo
+         return entry;
+     }
+ 
++    // A call that moves a message is an event: a subscription, a commit, a flush or a transaction call is not.
++    private static RequestResponseMetaType KindOf(KafkaOperation operation) => operation is
++        KafkaOperation.Produce or KafkaOperation.ProduceAsync or KafkaOperation.Consume
++        ? RequestResponseMetaType.Event
++        : RequestResponseMetaType.Default;
++
+     // An entry whose request is stored. Its response takes the test, phase, labels and ids the call captured, whenever
+     // and wherever it is answered; each caller answers once (KafkaProduceTracking and ConsumeScope see to it).
+     internal sealed class OpenEntry(KafkaTracker tracker, KafkaCall call, TestIdentity test, KafkaOperationInfo op, string label,
+@@ -429,7 +435,7 @@ internal void Answer(DateTimeOffset at, string? failureStatus, string? error)
+                 service, caller,
+                 RequestResponseType.Response, call.TraceId, requestResponseId, false,
+                 status,
+-                MetaType: RequestResponseMetaType.Event,
++                MetaType: KindOf(op.Operation),
+                 DependencyCategory: DependencyCategories.MessageQueue)
+             {
+                 AttributionSource = test.Source,
+diff --git a/src/Kronikol.Extensions.MassTransit/MassTransitTracker.cs b/src/Kronikol.Extensions.MassTransit/MassTransitTracker.cs
+index 5f5f89f6..fc249543 100644
+--- a/src/Kronikol.Extensions.MassTransit/MassTransitTracker.cs
++++ b/src/Kronikol.Extensions.MassTransit/MassTransitTracker.cs
+@@ -110,7 +110,7 @@ private void LogOutgoing(MassTransitOperationInfo op, object? message)
+             label, body, uri, [],
+             _options.ServiceName, _options.CallerName,
+             RequestResponseType.Request, traceId, requestResponseId, false,
+-            MetaType: RequestResponseMetaType.Event,
++            MetaType: KindOf(op.Operation),
+             DependencyCategory: DependencyCategories.MessageQueue)
+         {
+             AttributionSource = testInfo.Value.Source,
+@@ -128,7 +128,7 @@ private void LogOutgoing(MassTransitOperationInfo op, object? message)
+             label, null, uri, [],
+             _options.ServiceName, _options.CallerName,
+             RequestResponseType.Response, traceId, requestResponseId, false,
+-            MetaType: RequestResponseMetaType.Event,
++            MetaType: KindOf(op.Operation),
+             DependencyCategory: DependencyCategories.MessageQueue)
+         {
+             AttributionSource = testInfo.Value.Source,
+@@ -162,7 +162,7 @@ private void LogIncoming(MassTransitOperationInfo op, object? message)
+             label, body, uri, [],
+             _options.CallerName, _options.ServiceName,
+             RequestResponseType.Request, traceId, requestResponseId, false,
+-            MetaType: RequestResponseMetaType.Event,
++            MetaType: KindOf(op.Operation),
+             DependencyCategory: DependencyCategories.MessageQueue)
+         {
+             AttributionSource = testInfo.Value.Source,
+@@ -180,7 +180,7 @@ private void LogIncoming(MassTransitOperationInfo op, object? message)
+             label, null, uri, [],
+             _options.CallerName, _options.ServiceName,
+             RequestResponseType.Response, traceId, requestResponseId, false,
+-            MetaType: RequestResponseMetaType.Event,
++            MetaType: KindOf(op.Operation),
+             DependencyCategory: DependencyCategories.MessageQueue)
+         {
+             AttributionSource = testInfo.Value.Source,
+@@ -192,6 +192,12 @@ private void LogIncoming(MassTransitOperationInfo op, object? message)
+                 null, [], false)));
+     }
+ 
++    // A call that moves a message is an event. A fault record holds an exception and no message, and Other names nothing.
++    private static RequestResponseMetaType KindOf(MassTransitOperation operation) => operation is
++        MassTransitOperation.Send or MassTransitOperation.Publish or MassTransitOperation.Consume
++        ? RequestResponseMetaType.Event
++        : RequestResponseMetaType.Default;
++
+     private void LogFault(MassTransitOperationInfo op, Exception exception, bool outgoing)
+     {
+         var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
+@@ -212,7 +218,6 @@ private void LogFault(MassTransitOperationInfo op, Exception exception, bool out
+             label, exception.Message, uri, [],
+             svc, caller,
+             RequestResponseType.Request, traceId, requestResponseId, false,
+-            MetaType: RequestResponseMetaType.Event,
+             DependencyCategory: DependencyCategories.MessageQueue)
+         {
+             AttributionSource = testInfo.Value.Source,
+@@ -229,7 +234,6 @@ private void LogFault(MassTransitOperationInfo op, Exception exception, bool out
+             svc, caller,
+             RequestResponseType.Response, traceId, requestResponseId, false,
+             StatusCode: "Fault",
+-            MetaType: RequestResponseMetaType.Event,
+             DependencyCategory: DependencyCategories.MessageQueue)
+         {
+             AttributionSource = testInfo.Value.Source,
+diff --git a/src/Kronikol.Extensions.PubSub/PubSubTracker.cs b/src/Kronikol.Extensions.PubSub/PubSubTracker.cs
+index 9deb22b0..6180b2a2 100644
+--- a/src/Kronikol.Extensions.PubSub/PubSubTracker.cs
++++ b/src/Kronikol.Extensions.PubSub/PubSubTracker.cs
+@@ -68,7 +68,7 @@ internal static PubSubTrackingVerbosity[] DrawnAt(PubSubTrackingOptions options)
+             label, logContent, uri, [],
+             _options.ServiceName, _options.CallerName,
+             RequestResponseType.Request, traceId, requestResponseId, false,
+-            MetaType: RequestResponseMetaType.Event,
++            MetaType: KindOf(operation.Operation),
+             DependencyCategory: DependencyCategories.MessageQueue)
+         {
+             AttributionSource = testInfo.Value.Source,
+@@ -113,6 +113,7 @@ internal void LogResponse(
+             label, logContent, uri, [],
+             _options.ServiceName, _options.CallerName,
+             RequestResponseType.Response, traceId, requestResponseId, false,
++            MetaType: KindOf(operation.Operation),
+             DependencyCategory: DependencyCategories.MessageQueue)
+         {
+             AttributionSource = testInfo.Value.Source,
+@@ -125,6 +126,12 @@ internal void LogResponse(
+                 [], false)));
+     }
+ 
++    // A call that moves a message is an event: settling one or managing the subscriber is not.
++    private static RequestResponseMetaType KindOf(PubSubOperation operation) => operation is
++        PubSubOperation.Publish or PubSubOperation.PublishBatch or PubSubOperation.Pull or PubSubOperation.Receive
++        ? RequestResponseMetaType.Event
++        : RequestResponseMetaType.Default;
++
+     /// <summary>A note at <paramref name="verbosity"/>: none at Summarised, the Raw content where there is one at Raw.</summary>
+     private static string? Note(string? content, string? rawContent, PubSubTrackingVerbosity verbosity) =>
+         verbosity == PubSubTrackingVerbosity.Summarised ? null
+diff --git a/src/Kronikol.Extensions.SNS/SnsTrackingMessageHandler.cs b/src/Kronikol.Extensions.SNS/SnsTrackingMessageHandler.cs
+index e926c0a2..146f8f05 100644
+--- a/src/Kronikol.Extensions.SNS/SnsTrackingMessageHandler.cs
++++ b/src/Kronikol.Extensions.SNS/SnsTrackingMessageHandler.cs
+@@ -66,6 +66,12 @@ protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage
+         var requestResponseId = Guid.NewGuid();
+         var traceId = Guid.NewGuid();
+ 
++        // A call that moves a message is an event, and a response carries its request's kind. By the operation: at Raw the
++        // record is the HTTP request itself, whose verb and path do not name one.
++        var metaType = snsOp.Operation is SnsOperation.Publish or SnsOperation.PublishBatch
++            ? RequestResponseMetaType.Event
++            : RequestResponseMetaType.Default;
++
+         var label = SnsOperationClassifier.GetDiagramLabel(snsOp, effectiveVerbosity);
+ 
+         var logRequestContent = effectiveVerbosity == SnsTrackingVerbosity.Summarised
+@@ -95,6 +101,7 @@ protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage
+             traceId,
+             requestResponseId,
+             false,
++            MetaType: metaType,
+             DependencyCategory: DependencyCategories.MessageQueue
+         )
+         {
+@@ -135,6 +142,7 @@ protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage
+             requestResponseId,
+             false,
+             response.StatusCode,
++            MetaType: metaType,
+             DependencyCategory: DependencyCategories.MessageQueue
+         )
+         {
+diff --git a/src/Kronikol.Extensions.SQS/SqsTrackingMessageHandler.cs b/src/Kronikol.Extensions.SQS/SqsTrackingMessageHandler.cs
+index 31052d87..9d29e67d 100644
+--- a/src/Kronikol.Extensions.SQS/SqsTrackingMessageHandler.cs
++++ b/src/Kronikol.Extensions.SQS/SqsTrackingMessageHandler.cs
+@@ -66,6 +66,12 @@ protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage
+         var requestResponseId = Guid.NewGuid();
+         var traceId = Guid.NewGuid();
+ 
++        // A call that moves a message is an event, and a response carries its request's kind. By the operation: at Raw the
++        // record is the HTTP request itself, whose verb and path do not name one.
++        var metaType = sqsOp.Operation is SqsOperation.SendMessage or SqsOperation.SendMessageBatch or SqsOperation.ReceiveMessage
++            ? RequestResponseMetaType.Event
++            : RequestResponseMetaType.Default;
++
+         var label = SqsOperationClassifier.GetDiagramLabel(sqsOp, effectiveVerbosity);
+ 
+         var logRequestContent = effectiveVerbosity == SqsTrackingVerbosity.Summarised
+@@ -95,6 +101,7 @@ protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage
+             traceId,
+             requestResponseId,
+             false,
++            MetaType: metaType,
+             DependencyCategory: DependencyCategories.MessageQueue
+         )
+         {
+@@ -135,6 +142,7 @@ protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage
+             requestResponseId,
+             false,
+             response.StatusCode,
++            MetaType: metaType,
+             DependencyCategory: DependencyCategories.MessageQueue
+         )
+         {
+diff --git a/src/Kronikol.Extensions.StorageQueues/StorageQueueTrackingMessageHandler.cs b/src/Kronikol.Extensions.StorageQueues/StorageQueueTrackingMessageHandler.cs
+index ab7379b2..3e31c785 100644
+--- a/src/Kronikol.Extensions.StorageQueues/StorageQueueTrackingMessageHandler.cs
++++ b/src/Kronikol.Extensions.StorageQueues/StorageQueueTrackingMessageHandler.cs
+@@ -49,6 +49,12 @@ protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage
+         var requestResponseId = Guid.NewGuid();
+         var traceId = Guid.NewGuid();
+ 
++        // A call that moves a message is an event, and a response carries its request's kind. By the operation: at Raw the
++        // record is the HTTP request itself, whose verb and path do not name one.
++        var metaType = queueOp.Operation is StorageQueueOperation.SendMessage or StorageQueueOperation.ReceiveMessages or StorageQueueOperation.PeekMessages
++            ? RequestResponseMetaType.Event
++            : RequestResponseMetaType.Default;
++
+         var label = StorageQueueOperationClassifier.GetDiagramLabel(queueOp, effectiveVerbosity);
+ 
+         // Each note is made at its own verbosity from bodies read once: a phase's variant was given the effective
+@@ -79,6 +85,7 @@ protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage
+             traceId,
+             requestResponseId,
+             false,
++            MetaType: metaType,
+             DependencyCategory: DependencyCategories.MessageQueue
+         )
+         {
+@@ -117,6 +124,7 @@ protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage
+                 requestResponseId,
+                 false,
+                 FailedSend.Status(ex),
++                MetaType: metaType,
+                 DependencyCategory: DependencyCategories.MessageQueue
+             )
+             {
+@@ -151,6 +159,7 @@ protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage
+             requestResponseId,
+             false,
+             response.StatusCode,
++            MetaType: metaType,
+             DependencyCategory: DependencyCategories.MessageQueue
+         )
+         {
+diff --git a/tests/Kronikol.Tests.EventBridge/EventBridgeCardMessageTests.cs b/tests/Kronikol.Tests.EventBridge/EventBridgeCardMessageTests.cs
+index d1e736a3..2f6b4186 100644
+--- a/tests/Kronikol.Tests.EventBridge/EventBridgeCardMessageTests.cs
++++ b/tests/Kronikol.Tests.EventBridge/EventBridgeCardMessageTests.cs
+@@ -88,4 +88,21 @@ public async Task Putting_events_names_the_bus_where_the_handler_writes_it(Event
+         Assert.Equal(bus, TrackedMessages.Topic(call));
+         Assert.False(TrackedMessages.EmptyTarget(call));
+     }
++
++    // plans/CALLS_AND_EVENTS_PLAN.md 6.7: an event exactly when the call moves a message, at every verbosity, and a response
++    // carries its request's kind. The oracle is this class's own reading of the operation, not MessageTable: the table leaves
++    // a delivery Unknown, and cannot read a call recorded as its HTTP request or under its transport's address.
++    [Theory]
++    [MemberData(nameof(Calls))]
++    public async Task A_call_is_an_event_exactly_when_it_moves_a_message(EventBridgeOperation operation, EventBridgeTrackingVerbosity verbosity)
++    {
++        var call = await Track(operation, verbosity);
++        if (call is null)
++            return; // at Summarised the handler records no call it cannot name
++
++        var expected = Expected(operation) == "publishes" ? RequestResponseMetaType.Event : RequestResponseMetaType.Default;
++        Assert.Equal(expected, call.MetaType);
++        Assert.Equal(expected, RequestResponseLogger.RequestAndResponseLogs.Last(l =>
++            l.TestId == _testId && l.RequestResponseId == call.RequestResponseId && l.Type == RequestResponseType.Response).MetaType);
++    }
+ }
+diff --git a/tests/Kronikol.Tests.EventHubs/EventHubsCardMessageTests.cs b/tests/Kronikol.Tests.EventHubs/EventHubsCardMessageTests.cs
+index 3d641f93..5fae9c8b 100644
+--- a/tests/Kronikol.Tests.EventHubs/EventHubsCardMessageTests.cs
++++ b/tests/Kronikol.Tests.EventHubs/EventHubsCardMessageTests.cs
+@@ -75,4 +75,26 @@ public void A_send_to_a_hub_the_client_did_not_name_names_no_destination(EventHu
+         Assert.Null(TrackedMessages.Topic(call));
+         Assert.True(TrackedMessages.EmptyTarget(call));
+     }
++
++    // plans/CALLS_AND_EVENTS_PLAN.md 6.7: an event exactly when the call moves a message, at every verbosity, and a response
++    // carries its request's kind. The oracle is this class's own reading of the operation, not MessageTable: the table leaves
++    // a delivery Unknown, and cannot read a call recorded as its HTTP request or under its transport's address.
++    [Theory]
++    [MemberData(nameof(Calls))]
++    public void A_call_is_an_event_exactly_when_it_moves_a_message(EventHubsOperation operation, EventHubsTrackingVerbosity verbosity)
++    {
++        var tracker = new EventHubsTracker(new EventHubsTrackingOptions
++        {
++            ServiceName = "Event Hubs",
++            CallerName = TrackedMessages.Subject,
++            Verbosity = verbosity,
++            CurrentTestInfoFetcher = () => ("Order pancakes", _testId)
++        });
++        var info = new EventHubsOperationInfo(operation, "telemetry", "0", 3);
++        var (id, trace) = tracker.LogRequest(info, "{}");
++        tracker.LogResponse(info, id, trace, "{}");
++
++        var expected = Directions[operation] is "publishes" or "consumes" ? RequestResponseMetaType.Event : RequestResponseMetaType.Default;
++        Assert.All(RequestResponseLogger.RequestAndResponseLogs.Where(l => l.TestId == _testId), log => Assert.Equal(expected, log.MetaType));
++    }
+ }
+diff --git a/tests/Kronikol.Tests.Kafka/KafkaCardMessageTests.cs b/tests/Kronikol.Tests.Kafka/KafkaCardMessageTests.cs
+index 75ed1d61..5982a5a9 100644
+--- a/tests/Kronikol.Tests.Kafka/KafkaCardMessageTests.cs
++++ b/tests/Kronikol.Tests.Kafka/KafkaCardMessageTests.cs
+@@ -112,4 +112,19 @@ public void A_produce_names_its_topic_where_the_tracker_writes_one(KafkaTracking
+     [InlineData(KafkaTrackingVerbosity.Summarised, null)]
+     public void A_consume_names_its_topic_where_the_tracker_writes_one(KafkaTrackingVerbosity verbosity, string? topic) =>
+         Assert.Equal(topic, TrackedMessages.Topic(Track(KafkaOperation.Consume, verbosity)));
++
++    // plans/CALLS_AND_EVENTS_PLAN.md 6.7: an event exactly when the call moves a message, at every verbosity, and a response
++    // carries its request's kind. The oracle is this class's own reading of the operation, not MessageTable: the table leaves
++    // a delivery Unknown, and cannot read a call recorded as its HTTP request or under its transport's address.
++    [Theory]
++    [MemberData(nameof(Calls))]
++    public void A_call_is_an_event_exactly_when_it_moves_a_message(KafkaOperation operation, KafkaTrackingVerbosity verbosity)
++    {
++        var call = Track(operation, verbosity);
++
++        var expected = Directions[operation] is "publishes" or "consumes" ? RequestResponseMetaType.Event : RequestResponseMetaType.Default;
++        Assert.Equal(expected, call.MetaType);
++        Assert.Equal(expected, RequestResponseLogger.RequestAndResponseLogs.Last(l =>
++            l.TestId == _testId && l.RequestResponseId == call.RequestResponseId && l.Type == RequestResponseType.Response).MetaType);
++    }
+ }
+diff --git a/tests/Kronikol.Tests.Kafka/KafkaTrackerTests.cs b/tests/Kronikol.Tests.Kafka/KafkaTrackerTests.cs
+index 1c50a73e..b055599a 100644
+--- a/tests/Kronikol.Tests.Kafka/KafkaTrackerTests.cs
++++ b/tests/Kronikol.Tests.Kafka/KafkaTrackerTests.cs
+@@ -407,7 +407,7 @@ public void LogTransaction_Logs_when_TrackTransactions_true()
+     }
+ 
+     [Fact]
+-    public void LogTransaction_Uses_event_metatype()
++    public void LogTransaction_Uses_default_metatype()
+     {
+         var options = MakeOptions();
+         options.TrackTransactions = true;
+@@ -417,7 +417,7 @@ public void LogTransaction_Uses_event_metatype()
+         tracker.LogTransaction(op);
+ 
+         var log = GetLogsFromThisTest().First();
+-        Assert.Equal(RequestResponseMetaType.Event, log.MetaType);
++        Assert.Equal(RequestResponseMetaType.Default, log.MetaType);
+     }
+ 
+     // ─── LogConsume content ─────────────────────────────────
+diff --git a/tests/Kronikol.Tests.MassTransit/MassTransitCardMessageTests.cs b/tests/Kronikol.Tests.MassTransit/MassTransitCardMessageTests.cs
+index 4b523752..81d140b4 100644
+--- a/tests/Kronikol.Tests.MassTransit/MassTransitCardMessageTests.cs
++++ b/tests/Kronikol.Tests.MassTransit/MassTransitCardMessageTests.cs
+@@ -110,4 +110,19 @@ public void A_send_with_no_address_and_no_type_names_no_destination()
+         Assert.Null(TrackedMessages.Topic(call));
+         Assert.True(TrackedMessages.EmptyTarget(call));
+     }
++
++    // plans/CALLS_AND_EVENTS_PLAN.md 6.7: an event exactly when the call moves a message, at every verbosity, and a response
++    // carries its request's kind. The oracle is this class's own reading of the operation, not MessageTable: the table leaves
++    // a delivery Unknown, and cannot read a call recorded as its HTTP request or under its transport's address.
++    [Theory]
++    [MemberData(nameof(Calls))]
++    public void A_call_is_an_event_exactly_when_it_moves_a_message(MassTransitOperation operation, MassTransitTrackingVerbosity verbosity)
++    {
++        var call = Track(operation, verbosity);
++
++        var expected = operation is MassTransitOperation.Send or MassTransitOperation.Publish or MassTransitOperation.Consume ? RequestResponseMetaType.Event : RequestResponseMetaType.Default;
++        Assert.Equal(expected, call.MetaType);
++        Assert.Equal(expected, RequestResponseLogger.RequestAndResponseLogs.Last(l =>
++            l.TestId == _testId && l.RequestResponseId == call.RequestResponseId && l.Type == RequestResponseType.Response).MetaType);
++    }
+ }
+diff --git a/tests/Kronikol.Tests.PubSub/PubSubCardMessageTests.cs b/tests/Kronikol.Tests.PubSub/PubSubCardMessageTests.cs
+index 586929d7..1a770ccc 100644
+--- a/tests/Kronikol.Tests.PubSub/PubSubCardMessageTests.cs
++++ b/tests/Kronikol.Tests.PubSub/PubSubCardMessageTests.cs
+@@ -86,4 +86,26 @@ public void A_publish_to_a_topic_the_client_did_not_name_names_no_destination(Pu
+         Assert.Null(TrackedMessages.Topic(call));
+         Assert.True(TrackedMessages.EmptyTarget(call));
+     }
++
++    // plans/CALLS_AND_EVENTS_PLAN.md 6.7: an event exactly when the call moves a message, at every verbosity, and a response
++    // carries its request's kind. The oracle is this class's own reading of the operation, not MessageTable: the table leaves
++    // a delivery Unknown, and cannot read a call recorded as its HTTP request or under its transport's address.
++    [Theory]
++    [MemberData(nameof(Calls))]
++    public void A_call_is_an_event_exactly_when_it_moves_a_message(PubSubOperation operation, PubSubTrackingVerbosity verbosity)
++    {
++        var tracker = new PubSubTracker(new PubSubTrackingOptions
++        {
++            ServiceName = "Pub/Sub",
++            CallerName = TrackedMessages.Subject,
++            Verbosity = verbosity,
++            CurrentTestInfoFetcher = () => ("Order pancakes", _testId)
++        });
++        var info = new PubSubOperationInfo(operation, Topic, Subscription, 2);
++        var (id, trace) = tracker.LogRequest(info, "{}");
++        tracker.LogResponse(info, id, trace, "{}");
++
++        var expected = Directions[operation] is "publishes" or "consumes" ? RequestResponseMetaType.Event : RequestResponseMetaType.Default;
++        Assert.All(RequestResponseLogger.RequestAndResponseLogs.Where(l => l.TestId == _testId), log => Assert.Equal(expected, log.MetaType));
++    }
+ }
+diff --git a/tests/Kronikol.Tests.SNS/SnsCardMessageTests.cs b/tests/Kronikol.Tests.SNS/SnsCardMessageTests.cs
+index 3662daab..b3061c51 100644
+--- a/tests/Kronikol.Tests.SNS/SnsCardMessageTests.cs
++++ b/tests/Kronikol.Tests.SNS/SnsCardMessageTests.cs
+@@ -94,4 +94,21 @@ public async Task A_publish_recorded_as_its_http_request_names_no_topic()
+         Assert.Null(TrackedMessages.Topic(call));
+         Assert.False(TrackedMessages.EmptyTarget(call));
+     }
++
++    // plans/CALLS_AND_EVENTS_PLAN.md 6.7: an event exactly when the call moves a message, at every verbosity, and a response
++    // carries its request's kind. The oracle is this class's own reading of the operation, not MessageTable: the table leaves
++    // a delivery Unknown, and cannot read a call recorded as its HTTP request or under its transport's address.
++    [Theory]
++    [MemberData(nameof(Calls))]
++    public async Task A_call_is_an_event_exactly_when_it_moves_a_message(SnsOperation operation, SnsTrackingVerbosity verbosity)
++    {
++        var call = await Track(operation, verbosity);
++        if (call is null)
++            return; // at Summarised the handler records no call it cannot name
++
++        var expected = Directions[operation] is "publishes" or "consumes" ? RequestResponseMetaType.Event : RequestResponseMetaType.Default;
++        Assert.Equal(expected, call.MetaType);
++        Assert.Equal(expected, RequestResponseLogger.RequestAndResponseLogs.Last(l =>
++            l.TestId == _testId && l.RequestResponseId == call.RequestResponseId && l.Type == RequestResponseType.Response).MetaType);
++    }
+ }
+diff --git a/tests/Kronikol.Tests.SQS/SqsCardMessageTests.cs b/tests/Kronikol.Tests.SQS/SqsCardMessageTests.cs
+index 016965b2..6582d12f 100644
+--- a/tests/Kronikol.Tests.SQS/SqsCardMessageTests.cs
++++ b/tests/Kronikol.Tests.SQS/SqsCardMessageTests.cs
+@@ -96,4 +96,21 @@ public async Task A_send_recorded_as_its_http_request_names_no_queue()
+         Assert.Null(TrackedMessages.Topic(call));
+         Assert.False(TrackedMessages.EmptyTarget(call));
+     }
++
++    // plans/CALLS_AND_EVENTS_PLAN.md 6.7: an event exactly when the call moves a message, at every verbosity, and a response
++    // carries its request's kind. The oracle is this class's own reading of the operation, not MessageTable: the table leaves
++    // a delivery Unknown, and cannot read a call recorded as its HTTP request or under its transport's address.
++    [Theory]
++    [MemberData(nameof(Calls))]
++    public async Task A_call_is_an_event_exactly_when_it_moves_a_message(SqsOperation operation, SqsTrackingVerbosity verbosity)
++    {
++        var call = await Track(operation, verbosity);
++        if (call is null)
++            return; // at Summarised the handler records no call it cannot name
++
++        var expected = Directions[operation] is "publishes" or "consumes" ? RequestResponseMetaType.Event : RequestResponseMetaType.Default;
++        Assert.Equal(expected, call.MetaType);
++        Assert.Equal(expected, RequestResponseLogger.RequestAndResponseLogs.Last(l =>
++            l.TestId == _testId && l.RequestResponseId == call.RequestResponseId && l.Type == RequestResponseType.Response).MetaType);
++    }
+ }
+diff --git a/tests/Kronikol.Tests.ServiceBus/ServiceBusCardMessageTests.cs b/tests/Kronikol.Tests.ServiceBus/ServiceBusCardMessageTests.cs
+index e3ea4429..21e1c136 100644
+--- a/tests/Kronikol.Tests.ServiceBus/ServiceBusCardMessageTests.cs
++++ b/tests/Kronikol.Tests.ServiceBus/ServiceBusCardMessageTests.cs
+@@ -86,4 +86,26 @@ public void A_send_to_a_queue_the_client_did_not_name_names_no_destination(Servi
+         Assert.Null(TrackedMessages.Topic(call));
+         Assert.True(TrackedMessages.EmptyTarget(call));
+     }
++
++    // plans/CALLS_AND_EVENTS_PLAN.md 6.7: an event exactly when the call moves a message, at every verbosity, and a response
++    // carries its request's kind. The oracle is this class's own reading of the operation, not MessageTable: the table leaves
++    // a delivery Unknown, and cannot read a call recorded as its HTTP request or under its transport's address.
++    [Theory]
++    [MemberData(nameof(Calls))]
++    public void A_call_is_an_event_exactly_when_it_moves_a_message(ServiceBusOperation operation, ServiceBusTrackingVerbosity verbosity)
++    {
++        var tracker = new ServiceBusTracker(new ServiceBusTrackingOptions
++        {
++            ServiceName = "Service Bus",
++            CallerName = TrackedMessages.Subject,
++            Verbosity = verbosity,
++            CurrentTestInfoFetcher = () => ("Order pancakes", _testId)
++        });
++        var info = new ServiceBusOperationInfo(operation, "orders", "billing", 3);
++        var (id, trace) = tracker.LogRequest(info, "{}");
++        tracker.LogResponse(info, id, trace, "{}");
++
++        var expected = Directions[operation] is "publishes" or "consumes" ? RequestResponseMetaType.Event : RequestResponseMetaType.Default;
++        Assert.All(RequestResponseLogger.RequestAndResponseLogs.Where(l => l.TestId == _testId), log => Assert.Equal(expected, log.MetaType));
++    }
+ }
+diff --git a/tests/Kronikol.Tests.StorageQueues/StorageQueueCardMessageTests.cs b/tests/Kronikol.Tests.StorageQueues/StorageQueueCardMessageTests.cs
+index 8c398ebf..1b1a7396 100644
+--- a/tests/Kronikol.Tests.StorageQueues/StorageQueueCardMessageTests.cs
++++ b/tests/Kronikol.Tests.StorageQueues/StorageQueueCardMessageTests.cs
+@@ -95,4 +95,21 @@ public async Task A_send_recorded_as_its_http_request_names_no_queue()
+         Assert.Null(TrackedMessages.Topic(call));
+         Assert.False(TrackedMessages.EmptyTarget(call));
+     }
++
++    // plans/CALLS_AND_EVENTS_PLAN.md 6.7: an event exactly when the call moves a message, at every verbosity, and a response
++    // carries its request's kind. The oracle is this class's own reading of the operation, not MessageTable: the table leaves
++    // a delivery Unknown, and cannot read a call recorded as its HTTP request or under its transport's address.
++    [Theory]
++    [MemberData(nameof(Calls))]
++    public async Task A_call_is_an_event_exactly_when_it_moves_a_message(StorageQueueOperation operation, StorageQueueTrackingVerbosity verbosity)
++    {
++        var call = await Track(operation, verbosity);
++        if (call is null)
++            return; // at Summarised the handler records no call it cannot name
++
++        var expected = Operations[operation].Direction is "publishes" or "consumes" ? RequestResponseMetaType.Event : RequestResponseMetaType.Default;
++        Assert.Equal(expected, call.MetaType);
++        Assert.Equal(expected, RequestResponseLogger.RequestAndResponseLogs.Last(l =>
++            l.TestId == _testId && l.RequestResponseId == call.RequestResponseId && l.Type == RequestResponseType.Response).MetaType);
++    }
+ }

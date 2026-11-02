@@ -1,0 +1,86 @@
+194 rows, results/r3-span-kinds.tsv
+Section 5.5 read literally: 150 right, 44 wrong
+  pubsub        PubSubTracker                                        Receive                  Raw         label 'Receive topic= sub=projects/shop/subscriptions/orders-sub': says Client, is Consumer
+  pubsub        PubSubTracker                                        Receive                  Detailed    label 'Receive ← orders-sub': says Client, is Consumer
+  pubsub        PubSubTracker                                        Receive                  Summarised  label 'Receive': says Client, is Consumer
+  eventhubs     EventHubsTracker                                     ProcessEvent             Raw         label 'ProcessEvent hub=orders partition=0 count=1': says Client, is Consumer
+  eventhubs     EventHubsTracker                                     ProcessEvent             Detailed    label 'Process ← orders': says Client, is Consumer
+  eventhubs     EventHubsTracker                                     ProcessEvent             Summarised  label 'ProcessEvent': says Client, is Consumer
+  masstransit   LogConsume                                           Consume                  Summarised  label '← OrderPlaced': says Producer, is Consumer
+  sqs           SqsTrackingMessageHandler                            SendMessage              Raw         label 'POST': says Producer, is Client
+  sqs           SqsTrackingMessageHandler                            SendMessageBatch         Raw         label 'POST': says Producer, is Client
+  sqs           SqsTrackingMessageHandler                            ReceiveMessage           Raw         label 'POST': says Producer, is Client
+  sns           SnsTrackingMessageHandler                            Publish                  Raw         label 'POST': says Producer, is Client
+  sns           SnsTrackingMessageHandler                            PublishBatch             Raw         label 'POST': says Producer, is Client
+  eventbridge   EventBridgeTrackingMessageHandler                    PutEvents                Raw         label 'POST': says Producer, is Client
+  eventbridge   EventBridgeTrackingMessageHandler                    PutPartnerEvents         Raw         label 'POST': says Producer, is Client
+  storagequeue  StorageQueueTrackingMessageHandler                   SendMessage              Raw         label 'POST': says Producer, is Client
+  storagequeue  StorageQueueTrackingMessageHandler                   ReceiveMessages          Raw         label 'GET': says Producer, is Client
+  storagequeue  StorageQueueTrackingMessageHandler                   PeekMessages             Raw         label 'GET': says Producer, is Client
+  core          MessageTracker.TrackConsumeEvent                     kafka:// with a free-text consume label Detailed    label 'Kafka': says Producer, is Consumer
+  core          MessageTracker.TrackConsumeEvent                     pubsub:// with its tracker's own label Detailed    label 'Receive': says Client, is Consumer
+  core          MessageTracker.TrackConsumeEvent                     eventhubs:// with its tracker's own label Detailed    label 'Process ← orders': says Client, is Consumer
+  core          MessageTracker.TrackSendEvent                        event:// with a Process label Detailed    label 'Process order': says Consumer, is Producer
+  core          MessageTracker.TrackMessageRequest+Response          event:// with a Process label Detailed    label 'Process order': says Consumer, is Producer
+  core          MessageTracker.TrackSendEvent                        event:// with a Consume label Detailed    label 'Consume': says Consumer, is Producer
+  core          MessageTracker.TrackMessageRequest+Response          event:// with a Consume label Detailed    label 'Consume': says Consumer, is Producer
+  core          MessageTracker.TrackSendEvent                        event:// with a ProcessOrder label Detailed    label 'ProcessOrder': says Consumer, is Producer
+  core          MessageTracker.TrackMessageRequest+Response          event:// with a ProcessOrder label Detailed    label 'ProcessOrder': says Consumer, is Producer
+  core          MessageTracker.TrackSendEvent                        https:// with a Process label Detailed    label 'Process': says Consumer, is Producer
+  core          MessageTracker.TrackMessageRequest+Response          https:// with a Process label Detailed    label 'Process': says Consumer, is Producer
+  core          MessageTracker.TrackSendEvent                        kafka:// with a Process label Detailed    label 'Process order': says Consumer, is Producer
+  core          MessageTracker.TrackMessageRequest+Response          kafka:// with a Process label Detailed    label 'Process order': says Consumer, is Producer
+  core          MessageTracker.TrackSendEvent                        kafka:// with its tracker's consume label Detailed    label 'Consume (Kafka)': says Consumer, is Producer
+  core          MessageTracker.TrackMessageRequest+Response          kafka:// with its tracker's consume label Detailed    label 'Consume (Kafka)': says Consumer, is Producer
+  core          MessageTracker.TrackSendEvent                        masstransit:// with its tracker's consume label Detailed    label 'Consume OrderPlaced': says Consumer, is Producer
+  core          MessageTracker.TrackMessageRequest+Response          masstransit:// with its tracker's consume label Detailed    label 'Consume OrderPlaced': says Consumer, is Producer
+  core          MessageTracker.TrackSendEvent                        pubsub:// with its tracker's receive label Detailed    label 'Receive order': says Client, is Producer
+  core          MessageTracker.TrackMessageRequest+Response          pubsub:// with its tracker's receive label Detailed    label 'Receive order': says Client, is Producer
+  core          MessageTracker.TrackSendEvent                        eventhubs:// with its tracker's process label Detailed    label 'Process order': says Client, is Producer
+  core          MessageTracker.TrackMessageRequest+Response          eventhubs:// with its tracker's process label Detailed    label 'Process order': says Client, is Producer
+  core          MessageTracker.TrackSendEvent                        servicebus:// with its tracker's peek label Detailed    label 'Peek order': says Client, is Producer
+  core          MessageTracker.TrackMessageRequest+Response          servicebus:// with its tracker's peek label Detailed    label 'Peek order': says Client, is Producer
+  core          MessageTracker.TrackSendEvent                        sqs:// with its tracker's receive label Detailed    label 'ReceiveMessage': says Client, is Producer
+  core          MessageTracker.TrackMessageRequest+Response          sqs:// with its tracker's receive label Detailed    label 'ReceiveMessage': says Client, is Producer
+  core          new RequestResponseLog (by hand)                     event:// with a Process label Detailed    label 'Process order': says Consumer, is Producer
+  core          new RequestResponseLog (by hand)                     https:// with a Consume label Detailed    label 'Consume': says Consumer, is Producer
+First cut: 194 right, 0 wrong
+Rows where NDJSON gives another kind than in process, the service.name each way:
+  core          MessageTracker.TrackConsumeEvent                     kafka:// with a free-text consume label          Detailed    in process Consumer OrderService, through NDJSON Producer Caller
+  core          MessageTracker.TrackSendEvent                        event:// with a Process label                    Detailed    in process Producer Caller, through NDJSON Consumer Orders
+  core          MessageTracker.TrackMessageRequest+Response          event:// with a Process label                    Detailed    in process Producer Caller, through NDJSON Consumer Orders
+  core          MessageTracker.TrackSendEvent                        event:// with a Consume label                    Detailed    in process Producer Caller, through NDJSON Consumer Orders
+  core          MessageTracker.TrackMessageRequest+Response          event:// with a Consume label                    Detailed    in process Producer Caller, through NDJSON Consumer Orders
+  core          MessageTracker.TrackSendEvent                        https:// with a Process label                    Detailed    in process Producer Caller, through NDJSON Consumer Payments
+  core          MessageTracker.TrackMessageRequest+Response          https:// with a Process label                    Detailed    in process Producer Caller, through NDJSON Consumer Payments
+  core          MessageTracker.TrackSendEvent                        event:// with a Receive label                    Detailed    in process Producer Caller, through NDJSON Client Caller
+  core          MessageTracker.TrackMessageRequest+Response          event:// with a Receive label                    Detailed    in process Producer Caller, through NDJSON Client Caller
+  core          MessageTracker.TrackSendEvent                        kafka:// with a Process label                    Detailed    in process Producer Caller, through NDJSON Consumer Kafka
+  core          MessageTracker.TrackMessageRequest+Response          kafka:// with a Process label                    Detailed    in process Producer Caller, through NDJSON Consumer Kafka
+  core          MessageTracker.TrackSendEvent                        kafka:// with its tracker's consume label        Detailed    in process Producer Caller, through NDJSON Consumer OrderService
+  core          MessageTracker.TrackMessageRequest+Response          kafka:// with its tracker's consume label        Detailed    in process Producer Caller, through NDJSON Consumer OrderService
+  core          MessageTracker.TrackSendEvent                        masstransit:// with its tracker's consume label  Detailed    in process Producer Caller, through NDJSON Consumer Bus
+  core          MessageTracker.TrackMessageRequest+Response          masstransit:// with its tracker's consume label  Detailed    in process Producer Caller, through NDJSON Consumer Bus
+  core          MessageTracker.TrackSendEvent                        pubsub:// with its tracker's receive label       Detailed    in process Producer Caller, through NDJSON Consumer Caller
+  core          MessageTracker.TrackMessageRequest+Response          pubsub:// with its tracker's receive label       Detailed    in process Producer Caller, through NDJSON Consumer Caller
+  core          MessageTracker.TrackSendEvent                        pubsub:// with its tracker's ack label           Detailed    in process Producer Caller, through NDJSON Client Caller
+  core          MessageTracker.TrackMessageRequest+Response          pubsub:// with its tracker's ack label           Detailed    in process Producer Caller, through NDJSON Client Caller
+  core          MessageTracker.TrackSendEvent                        eventhubs:// with its tracker's process label    Detailed    in process Producer Caller, through NDJSON Consumer Caller
+  core          MessageTracker.TrackMessageRequest+Response          eventhubs:// with its tracker's process label    Detailed    in process Producer Caller, through NDJSON Consumer Caller
+  core          MessageTracker.TrackSendEvent                        servicebus:// with its tracker's peek label      Detailed    in process Producer Caller, through NDJSON Client Caller
+  core          MessageTracker.TrackMessageRequest+Response          servicebus:// with its tracker's peek label      Detailed    in process Producer Caller, through NDJSON Client Caller
+  core          MessageTracker.TrackSendEvent                        sqs:// with its tracker's receive label          Detailed    in process Producer Caller, through NDJSON Client Caller
+  core          MessageTracker.TrackMessageRequest+Response          sqs:// with its tracker's receive label          Detailed    in process Producer Caller, through NDJSON Client Caller
+  core          new RequestResponseLog (by hand)                     event:// with a Process label                    Detailed    in process Producer App, through NDJSON Consumer Broker
+  core          new RequestResponseLog (by hand)                     https:// with a Consume label                    Detailed    in process Producer App, through NDJSON Consumer Broker
+Rows where NDJSON gives the same kind and another service.name:
+  core          MessageTracker.TrackConsumeEvent                     pubsub:// with its tracker's own label           Detailed    Consumer: in process OrderService, through NDJSON Caller
+  core          MessageTracker.TrackConsumeEvent                     eventhubs:// with its tracker's own label        Detailed    Consumer: in process OrderService, through NDJSON Caller
+R3 alone: each record as its tracker wrote it, with R2 not applied, against today's kind and the expected column:
+  Producer -> Client, expected Client: 33 (pubsub, servicebus, eventhubs, kafka, masstransit)
+  Producer -> Consumer, expected Consumer: 35 (pubsub, eventhubs, kafka, masstransit, core)
+  right today and wrong on R3 alone: 0
+The tap, with Messaging captured, on each exported message span:
+  Event: 148
+  Default: 45
+  dropped: 1

@@ -83,7 +83,7 @@ public class SpannerTrackerTests
     }
 
     [Fact]
-    public void LogRequest_Uses_event_metatype()
+    public void LogRequest_Uses_default_metatype()
     {
         var tracker = new SpannerTracker(MakeOptions());
         var op = new SpannerOperationInfo(SpannerOperation.Query, "Users");
@@ -91,7 +91,7 @@ public class SpannerTrackerTests
         tracker.LogRequest(op, "SELECT * FROM Users");
 
         var log = GetLogsFromThisTest().First();
-        Assert.Equal(RequestResponseMetaType.Event, log.MetaType);
+        Assert.Equal(RequestResponseMetaType.Default, log.MetaType);
     }
 
     [Fact]

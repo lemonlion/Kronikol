@@ -1,0 +1,56 @@
+== the shard, as the run wrote it (published 5.27.13)
+service                        kind     method        
+Spanner tracker Raw            Event    Delete        
+Spanner tracker Summarised     Event    DELETE        
+Spanner tracker Detailed       Event    DELETE FROM Or
+BigQuery tracker Detailed      Event    Delete        
+Fix-sim Spanner Raw            Default  Delete        
+Fix-sim Spanner Summarised     Default  DELETE        
+Live BigQuery handler          Default  Delete        
+Live CosmosDB                  Default  Delete        
+Live CosmosDB                  Default  Patch         
+Live EF Core                   Default  Delete        
+Live BlobStorage               Default  Delete        
+Live MongoDB Summarised        Default  Delete        
+Live CloudStorage Summarised   Default  Delete        
+Live Elasticsearch Summarised  Default  Get           
+Control SQL Summarised         Default  DELETE        
+Control Redis                  Default  Get (Hit)     
+
+== after kronikol merge (published 5.27.13)
+service                        kind     method        
+Spanner tracker Raw            Event    Delete        
+Spanner tracker Summarised     Event    DELETE        
+Spanner tracker Detailed       Event    DELETE FROM Or
+BigQuery tracker Detailed      Event    Delete        
+Fix-sim Spanner Raw            Default  DELETE        
+Fix-sim Spanner Summarised     Default  DELETE        
+Live BigQuery handler          Default  DELETE        
+Live CosmosDB                  Default  DELETE        
+Live CosmosDB                  Default  PATCH         
+Live EF Core                   Default  DELETE        
+Live BlobStorage               Default  DELETE        
+Live MongoDB Summarised        Default  DELETE        
+Live CloudStorage Summarised   Default  DELETE        
+Live Elasticsearch Summarised  Default  GET           
+Control SQL Summarised         Default  DELETE        
+Control Redis                  Default  Get (Hit)     
+
+== after the prototype's merge, same shard
+service                        kind     method        
+Spanner tracker Raw            Event    Delete        
+Spanner tracker Summarised     Event    DELETE        
+Spanner tracker Detailed       Event    DELETE FROM Or
+BigQuery tracker Detailed      Event    Delete        
+Fix-sim Spanner Raw            Default  Delete        
+Fix-sim Spanner Summarised     Default  DELETE        
+Live BigQuery handler          Default  Delete        
+Live CosmosDB                  Default  Delete        
+Live CosmosDB                  Default  Patch         
+Live EF Core                   Default  Delete        
+Live BlobStorage               Default  Delete        
+Live MongoDB Summarised        Default  Delete        
+Live CloudStorage Summarised   Default  Delete        
+Live Elasticsearch Summarised  Default  Get           
+Control SQL Summarised         Default  DELETE        
+Control Redis                  Default  Get (Hit)     

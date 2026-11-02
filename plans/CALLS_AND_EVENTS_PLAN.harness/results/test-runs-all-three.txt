@@ -1,0 +1,101 @@
+Every test project on 27cc0e46 with these patches applied, in this order: r1-first-cut, r3-first-cut, r3-option-send-is-client, r2-first-cut,
+r2-option-warm-up-judges-publishes. 46 files, +1363 -86; source 23 files, +363 -73. dotnet test, Debug, Windows 11, on bundled browsers, 2026-11-02.
+The other project in tests/, Kronikol.Tests.xUnit2.Fixtures, holds no tests of its own. examples/ was not run.
+
+How it ran. The first attempt built every project first, and about five minutes after each of the first builds, package files went from those projects'
+bin folders (bin's time 15:13, its build 15:08), and a folder went from under a build in progress (CS2012 on obj\Debug\net10.0\refint, EventHubs). Fresh outputs stayed.
+The disk had 18 GB free. It looks like a sweep of the temp folder by file date, and what ran it is not established. Those test hosts stopped at start with
+'An assembly specified in the application dependencies manifest ... was not found', no test having run, so those projects and the browsers were built and run again.
+Each line says which attempt it comes from.
+
+project                                      failed  passed skipped   total  duration   attempt
+Kronikol.Tests                                    0   11682       2   11684  12 m 28 s  first
+Kronikol.Tests.AssertionTracking                  0    1432      28    1460  10 m 27 s  second
+Kronikol.Tests.AtlasDataApi                       0      58       0      58  435 ms     second
+Kronikol.Tests.BigQuery                           0     606       0     606  9 s        second
+Kronikol.Tests.Bigtable                           0      52       0      52  2 s        second
+Kronikol.Tests.BlobStorage                        0     475       0     475  3 s        second
+Kronikol.Tests.ClickHouse                         0     130       9     139  12 s       second
+Kronikol.Tests.CloudStorage                       0     370       0     370  3 s        second
+Kronikol.Tests.CosmosDB                           0     118       0     118  2 s        second
+Kronikol.Tests.Dapper                             0     151       0     151  1 s        second
+Kronikol.Tests.DispatchProxy                      0       6       0       6  2 s        second
+Kronikol.Tests.DynamoDB                           0      94       0      94  2 s        second
+Kronikol.Tests.EfCore.Relational                  0     247       4     251  11 s       second
+Kronikol.Tests.Elasticsearch                      0      60       0      60  2 s        second
+Kronikol.Tests.EndToEnd                           0    2089      28    2117  24 m 7 s   second
+Kronikol.Tests.EventBridge                        0     278       0     278  3 s        second
+Kronikol.Tests.EventHubs                          0     158       0     158  2 s        second
+Kronikol.Tests.Grpc                               0     261       0     261  2 s        second
+Kronikol.Tests.Kafka                              0     400       3     403  26 s       second
+Kronikol.Tests.Kafka.BuildInterception            0      76       0      76  30 s       second
+Kronikol.Tests.LightBDD.TUnit                     0      26       0      26  9 s        second
+Kronikol.Tests.LightBDD.xUnit2                    0      11       0      11  9 s        second
+Kronikol.Tests.LightBDD.xUnit3                    0      35       0      35  9 s        second
+Kronikol.Tests.MSTest                             0      85       0      85  2 s        second
+Kronikol.Tests.MassTransit                        0      92       0      92  2 s        second
+Kronikol.Tests.MediatR                            0       6       0       6  2 s        second
+Kronikol.Tests.MongoDB                            0     313       5     318  12 s       second
+Kronikol.Tests.MongoDB.V2                         0     313       5     318  12 s       second
+Kronikol.Tests.MySqlConnector                     0      23       0      23  2 s        second
+Kronikol.Tests.NUnit4                             0      49       0      49  1 s        second
+Kronikol.Tests.Npgsql                             0      27       0      27  2 s        second
+Kronikol.Tests.OpenTelemetry                      0       4       0       4  2 s        second
+Kronikol.Tests.Oracle                             0      30       0      30  1 s        second
+Kronikol.Tests.Otlp                               0     400       0     400  18 s       second
+Kronikol.Tests.PlantUml.Ikvm                      0      85       0      85  47 s       second
+Kronikol.Tests.Playwright                         2       8       0      10  4 s        second
+Kronikol.Tests.ProxyTap                           1     200       4     205  38 s       second
+Kronikol.Tests.PubSub                             0     130       0     130  2 s        second
+Kronikol.Tests.Redis                              0     164       0     164  2 s        second
+Kronikol.Tests.S3                                 0     119       0     119  2 s        second
+Kronikol.Tests.SNS                                0     140       0     140  2 s        second
+Kronikol.Tests.SQS                                0     154       0     154  2 s        second
+Kronikol.Tests.SearchEngine                       0     787       0     787  11 s       second
+Kronikol.Tests.ServiceBus                         0     248       0     248  2 s        first
+Kronikol.Tests.Spanner                            0     204       0     204  3 s        first
+Kronikol.Tests.SqlClient                          0      25       0      25  2 s        first
+Kronikol.Tests.Sqlite                             0      30       0      30  2 s        first
+Kronikol.Tests.StepTracking                       0      61       0      61  11 s       first
+Kronikol.Tests.StorageQueues                      0     467       0     467  2 s        first
+Kronikol.Tests.TUnit                              0      50       0      50  2 s        first
+Kronikol.Tests.TcpTap                             0     506       5     511  25 s       first
+Kronikol.Tests.TcpTap.Bson3                       0       1       0       1  800 ms     first
+Kronikol.Tests.xUnit2                             0     111       0     111  4 m 3 s    first
+Kronikol.Tests.xUnit3                             0      33       0      33  2 s        first
+all 54 projects                                   3   23680      93   23776
+
+The three failures.
+
+Kronikol.Tests.Playwright, 2: PlaywrightBrowserTests, at InitializeAsync, before any Kronikol code: 'Executable doesn't exist at ...\ms-playwright\chromium_headless_shell-1248\...'.
+The machine has the browsers the E2E project's package asks for, and not this project's. With that browser in a scratch folder (PLAYWRIGHT_BROWSERS_PATH), on the same tree:
+  Passed!  - Failed:     0, Passed:    10, Skipped:     0, Total:    10, Duration: 4 s - Kronikol.Tests.Playwright.dll (net10.0)
+
+Kronikol.Tests.ProxyTap, 1: ProxyTapForwardTargetTests.A_request_target_naming_another_host_is_forwarded_to_the_forward_base(template: "/\\localhost:{other}/x"). It passes alone. (F27)
+The whole project in turns on clean 27cc0e46 and on this tree, each line one run, names only:
+  clean 1: Passed!  - Failed:     0, Passed:   201, Skipped:     4, Total:   205, Duration: 37 s - Kronikol.Tests.ProxyTap.dll (net10.0)
+  stack 1: Passed!  - Failed:     0, Passed:   201, Skipped:     4, Total:   205, Duration: 36 s - Kronikol.Tests.ProxyTap.dll (net10.0)
+  clean 2: Passed!  - Failed:     0, Passed:   201, Skipped:     4, Total:   205, Duration: 37 s - Kronikol.Tests.ProxyTap.dll (net10.0)
+  stack 2: Passed!  - Failed:     0, Passed:   201, Skipped:     4, Total:   205, Duration: 36 s - Kronikol.Tests.ProxyTap.dll (net10.0)
+  clean 3: Passed!  - Failed:     0, Passed:   201, Skipped:     4, Total:   205, Duration: 37 s - Kronikol.Tests.ProxyTap.dll (net10.0)
+  stack 3: Passed!  - Failed:     0, Passed:   201, Skipped:     4, Total:   205, Duration: 37 s - Kronikol.Tests.ProxyTap.dll (net10.0)
+  clean 4: Passed!  - Failed:     0, Passed:   201, Skipped:     4, Total:   205, Duration: 37 s - Kronikol.Tests.ProxyTap.dll (net10.0)
+  stack 4: Passed!  - Failed:     0, Passed:   201, Skipped:     4, Total:   205, Duration: 37 s - Kronikol.Tests.ProxyTap.dll (net10.0)
+  clean 5: Passed!  - Failed:     0, Passed:   201, Skipped:     4, Total:   205, Duration: 37 s - Kronikol.Tests.ProxyTap.dll (net10.0)
+  stack 5: Passed!  - Failed:     0, Passed:   201, Skipped:     4, Total:   205, Duration: 37 s - Kronikol.Tests.ProxyTap.dll (net10.0)
+  clean 6: Passed!  - Failed:     0, Passed:   201, Skipped:     4, Total:   205, Duration: 37 s - Kronikol.Tests.ProxyTap.dll (net10.0)
+  stack 6: Passed!  - Failed:     0, Passed:   201, Skipped:     4, Total:   205, Duration: 37 s - Kronikol.Tests.ProxyTap.dll (net10.0)
+  clean 7: Passed!  - Failed:     0, Passed:   201, Skipped:     4, Total:   205, Duration: 37 s - Kronikol.Tests.ProxyTap.dll (net10.0)
+  stack 7: Passed!  - Failed:     0, Passed:   201, Skipped:     4, Total:   205, Duration: 37 s - Kronikol.Tests.ProxyTap.dll (net10.0)
+  clean 8: Passed!  - Failed:     0, Passed:   201, Skipped:     4, Total:   205, Duration: 37 s - Kronikol.Tests.ProxyTap.dll (net10.0)
+  stack 8: Kronikol.Tests.ProxyTap.ProxyTapOptionRangeTests.A_timeout_too_long_to_set_means_no_deadline(option: "ConnectTimeout", value: "TimeSpan.MaxValue") [FAIL] Failed!  - Failed:     1, Passed:   200, Skipped:     4, Total:   205, Duration: 36 s - Kronikol.Tests.ProxyTap.dll (net10.0)
+  clean 9: Passed!  - Failed:     0, Passed:   201, Skipped:     4, Total:   205, Duration: 37 s - Kronikol.Tests.ProxyTap.dll (net10.0)
+  stack 9: Kronikol.Tests.ProxyTap.ProxyTapHangUpTests.Ending_an_unclosed_response_never_throws(when: "after a failed write") [FAIL] Failed!  - Failed:     1, Passed:   200, Skipped:     4, Total:   205, Duration: 36 s - Kronikol.Tests.ProxyTap.dll (net10.0)
+  clean 10: Passed!  - Failed:     0, Passed:   201, Skipped:     4, Total:   205, Duration: 37 s - Kronikol.Tests.ProxyTap.dll (net10.0)
+  stack 10: Passed!  - Failed:     0, Passed:   201, Skipped:     4, Total:   205, Duration: 37 s - Kronikol.Tests.ProxyTap.dll (net10.0)
+
+The same again, 20 runs each, keeping each failure's message:
+  clean: 0 of 20 runs with a failure
+  stack: 0 of 20 runs with a failure
+So 3 of 31 whole-project runs on this tree have one failure, a different fact each time, and 0 of 30 on clean. None was repeated once the messages were being kept, so no message is held.
+Each of the three facts takes a port from StubUpstream.FreePort, which lets it go and listens on it later. LoopbackPort guards that within a process and not against another process, and other sessions' suites shared the machine. No patch touches src/Kronikol.Extensions.ProxyTap.

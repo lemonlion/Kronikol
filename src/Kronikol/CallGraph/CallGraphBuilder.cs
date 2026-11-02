@@ -214,8 +214,9 @@ internal static class CallGraphBuilder
 
     /// <summary>
     /// A call between the subject and another party that carries <c>MessageQueue</c> on either side, or whose scheme is a
-    /// row of the message table (Service Bus writes a category of its own). The meta type is no sign either way: Spanner,
-    /// BigQuery and Bigtable write Event on calls that are no messages, and the generic <c>MessageTracker</c> on its publishes.
+    /// row of the message table (Service Bus writes a category of its own). The meta type is no sign either way: a report
+    /// written before #220 was fixed holds Event on Spanner's, BigQuery's and Bigtable's calls, which are no messages, and it is a value
+    /// the writer sets, so a consumer's own record can hold it on anything.
     /// </summary>
     private static bool IsMessageCall(CallRecord request, string subject) =>
         (request.Caller == subject) != (request.Service == subject)

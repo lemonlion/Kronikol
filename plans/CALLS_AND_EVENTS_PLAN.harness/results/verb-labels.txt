@@ -1,0 +1,25 @@
+Redis              Get            Raw         labels: '' / ''
+Redis              Get            Detailed    labels: 'Get (Hit)' / 'Get (Hit)'
+Redis              Get            Summarised  labels: 'Get (Hit)' / 'Get (Hit)'
+Redis              Delete         Raw         labels: '' / ''
+Redis              Delete         Detailed    labels: 'Delete (Hit)' / 'Delete (Hit)'
+Redis              Delete         Summarised  labels: 'Delete (Hit)' / 'Delete (Hit)'
+MongoDB            Delete         Detailed    Delete   only with no table or object named   default verbosity
+MongoDB            Delete         Summarised  Delete   always                               
+CosmosDB           Patch          Detailed    Patch    always                               default verbosity
+CosmosDB           Patch          Summarised  Patch    always                               
+CosmosDB           Delete         Detailed    Delete   always                               default verbosity
+CosmosDB           Delete         Summarised  Delete   always                               
+Dapper             Delete         Raw         Delete   only with no table or object named   
+EfCore.Relational  Delete         Detailed    Delete   always                               default verbosity
+EfCore.Relational  Delete         Summarised  Delete   always                               
+CloudStorage       Delete         Raw         Delete   always                               
+CloudStorage       Delete         Detailed    Delete   only with no table or object named   default verbosity
+CloudStorage       Delete         Summarised  Delete   always                               
+BigQuery           Delete         Detailed    Delete   always                               default verbosity
+BigQuery           Delete         Summarised  Delete   always                               
+Spanner            Delete         Raw         Delete   only with no table or object named   
+BlobStorage        Delete         Detailed    Delete   always                               default verbosity
+BlobStorage        Delete         Summarised  Delete   always                               
+Elasticsearch      GetDocument    Summarised  Get      always                               
+Elasticsearch      DeleteDocument Summarised  Delete   always                               

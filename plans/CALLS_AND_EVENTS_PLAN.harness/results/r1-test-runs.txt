@@ -1,0 +1,13 @@
+R1 alone: prototype/r1-first-cut.patch on 27cc0e46. dotnet test on Debug, one project at a time, on a machine other sessions were using.
+
+== core, tests/Kronikol.Tests
+Passed!  - Failed:     0, Passed: 11602, Skipped:     2, Total: 11604, Duration: 15 m 3 s
+
+== tests/Kronikol.Tests.Spanner
+Passed!  - Failed:     0, Passed:   204, Skipped:     0, Total:   204, Duration: 4 s
+
+== tests/Kronikol.Tests.BigQuery
+Passed!  - Failed:     0, Passed:   606, Skipped:     0, Total:   606, Duration: 10 s
+
+== tests/Kronikol.Tests.Bigtable
+Passed!  - Failed:     0, Passed:    52, Skipped:     0, Total:    52, Duration: 3 s

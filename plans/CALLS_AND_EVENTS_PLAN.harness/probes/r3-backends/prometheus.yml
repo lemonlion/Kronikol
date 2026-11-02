@@ -1,0 +1,3 @@
+# Only receives Tempo's remote write.
+global:
+  scrape_interval: 1h

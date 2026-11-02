@@ -1,0 +1,57 @@
+Kronikol 5.27.13+c58d98c0f8c841a0e1432e6c753ed9afa2a6977f
+
+== options with a property naming a category
+SqsTrackingMessageHandlerOptions             none
+SnsTrackingMessageHandlerOptions             none
+EventBridgeTrackingMessageHandlerOptions     none
+StorageQueueTrackingMessageHandlerOptions    none
+PubSubTrackingOptions                        none
+EventHubsTrackingOptions                     none
+KafkaTrackingOptions                         none
+MassTransitTrackingOptions                   none
+ServiceBusTrackingOptions                    none
+MessageTrackerOptions                        DependencyCategory (String), CallerDependencyCategory (String)
+
+== one call of each: the label, category and kind as written; the edge's protocol as written; and with CaptureRedaction.Custom blanking the category
+SQS send                       SendMessage                    category MessageQueue  kind Default edge MessageQueue     blanked HTTP
+SQS delete                     DeleteMessage                  category MessageQueue  kind Default edge MessageQueue     blanked HTTP
+SNS publish                    Publish                        category MessageQueue  kind Default edge MessageQueue     blanked HTTP
+EventBridge put                PutEvents [OrderPlaced]        category MessageQueue  kind Default edge MessageQueue     blanked HTTP
+Storage Queues send            Send → orders                  category MessageQueue  kind Default edge MessageQueue     blanked HTTP
+Pub/Sub publish                Publish → orders               category MessageQueue  kind Event   edge MessageQueue     blanked Publish → orders
+Pub/Sub ack                    Ack                            category MessageQueue  kind Event   edge MessageQueue     blanked Ack
+Event Hubs send                Send → orders                  category MessageQueue  kind Event   edge MessageQueue     blanked Send → orders
+Event Hubs partitions          GetPartitionIds                category MessageQueue  kind Event   edge MessageQueue     blanked GetPartitionIds
+Kafka commit                   Commit                         category MessageQueue  kind Event   edge MessageQueue     blanked Commit
+MassTransit fault              Send Fault OrderPlaced         category MessageQueue  kind Event   edge MessageQueue     blanked Send Fault OrderPlaced
+MessageTracker, category ""    Consume (Kafka)                category (blank)       kind Event   edge Consume (Kafka)  blanked Consume (Kafka)
+
+== SequenceCollapser over a sequence of calls
+-- Detailed
+SQS send, send, delete, delete       2 arrows: SendMessage x2, DeleteMessage x2
+SQS send, receive, delete            3 arrows: SendMessage, ReceiveMessage, DeleteMessage
+SNS publish, publish, create, create 2 arrows: Publish x2, CreateTopic x2
+EventBridge put, put, rule, rule     2 arrows: PutEvents [OrderPlaced] x2, DescribeRule x2
+Queues send, send, peek, peek        2 arrows: Send → orders x2, Peek ← orders x2
+-- Raw
+SQS send, send, delete, delete       1 arrows: POST x4
+SQS send, receive, delete            1 arrows: POST x3
+SNS publish, publish, create, create 1 arrows: POST x4
+EventBridge put, put, rule, rule     1 arrows: POST x4
+Queues send, send, peek, peek        2 arrows: POST x2, GET x2
+
+== SQS at Detailed through PlantUmlCreator: each note's card, in order, and the start of what it holds
+.eventNote style block: False
+plain note  left   <color:#686868>[Host=sqs.us-east-1.amazonaws.com] <color:#686868>[x-amz-api-version=2012-1...
+plain note  right  { "MessageId": "m1", "MD5OfMessageBody": "0" }
+plain note  left   <color:#686868>[Host=sqs.us-east-1.amazonaws.com] <color:#686868>[x-amz-api-version=2012-1...
+plain note  right  { "Messages": [ { "MessageId": "m1", "ReceiptHandle": "rh", "Body": "{\"orderId\":\"order-...
+plain note  left   <color:#686868>[Host=sqs.us-east-1.amazonaws.com] <color:#686868>[x-amz-api-version=2012-1...
+plain note  right  { "MessageId": "m1", "MD5OfMessageBody": "0" }
+arrows:
+  caller -[#9B59B6]> sQS: SendMessage: /orders
+  sQS -[#9B59B6]-> caller: OK
+  caller -[#9B59B6]> sQS: ReceiveMessage: /orders
+  sQS -[#9B59B6]-> caller: OK
+  caller -[#9B59B6]> sQS: DeleteMessage: /orders
+  sQS -[#9B59B6]-> caller: OK

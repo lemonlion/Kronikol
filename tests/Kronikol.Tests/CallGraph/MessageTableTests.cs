@@ -213,7 +213,7 @@ public class MessageTableTests
         Assert.Empty(graph.EmptyTargets);
     }
 
-    // Spanner, BigQuery and Bigtable write the meta type Event, which once read as a publish (the first draft's rule); a
+    // Spanner, BigQuery and Bigtable wrote the meta type Event until 5.27.14, which once read as a publish (the first draft's rule); a
     // management call over HTTP to a broker carries no MessageQueue.
     [Fact]
     public void Spanner_bigquery_and_bigtable_events_and_http_to_a_broker_are_no_messages()

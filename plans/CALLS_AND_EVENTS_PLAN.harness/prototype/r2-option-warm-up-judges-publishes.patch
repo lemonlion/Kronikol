@@ -1,0 +1,113 @@
+diff --git a/plans/WARM_UP_PLAN.harness/warmup.py b/plans/WARM_UP_PLAN.harness/warmup.py
+index 99b1934c..ffca45c4 100644
+--- a/plans/WARM_UP_PLAN.harness/warmup.py
++++ b/plans/WARM_UP_PLAN.harness/warmup.py
+@@ -143,7 +143,9 @@ def load(loader):
+                         end=(start + round(dur * TICKS_PER_MS)) if (start is not None and dur is not None) else None,
+                         # Plan 4.1 step 1: the test's own call. Its caller never appears as a service in the
+                         # scenario (the rule PlantUmlCreator uses to pick the diagram's actor), and it is a
+-                        # request, not an event a broker delivered.
++                        # request, not an event a broker delivered. WarmUpCalls also judges an event MessageTable reads as a
++                        # publish (plans/CALLS_AND_EVENTS_PLAN.md Q5). No test-made event in the corpus reads so, so that
++                        # is not modelled here, and A_publish_the_test_makes_is_judged holds it.
+                         test=(c['caller'] not in services and c['meta'] != 'Event'))
+             call['shape'] = shape_of(call)
+             sc['calls'].append(call)
+diff --git a/src/Kronikol/Reports/WarmUpCalls.cs b/src/Kronikol/Reports/WarmUpCalls.cs
+index a7d1fed5..4b9e04bb 100644
+--- a/src/Kronikol/Reports/WarmUpCalls.cs
++++ b/src/Kronikol/Reports/WarmUpCalls.cs
+@@ -1,3 +1,4 @@
++using Kronikol.CallGraph;
+ using Kronikol.Constants;
+ using Kronikol.History;
+ using Kronikol.Tracking;
+@@ -44,8 +45,9 @@ internal sealed record WarmUpResult(IReadOnlyDictionary<Guid, WarmUpMark> Calls,
+ /// warm-up when it took at least <see cref="Ratio"/> times and <see cref="FloorMs"/> more than the median of the shape's
+ /// calls that started after it ended, and so is a call that waited for it. The rule's executable spec is
+ /// <c>plans/WARM_UP_PLAN.harness/warmup.py</c> (<c>marks</c>), which this must equal call for call, save a statement's
+-/// templated head: the spec does not model it, since no test-made call in its corpus is statement-shaped, and
+-/// <c>Statements_with_different_heads_on_one_connection_are_two_shapes</c> holds it instead.
++/// templated head and a publish: the spec models neither, since no test-made call in its corpus is statement-shaped or reads
++/// as a publish, and <c>Statements_with_different_heads_on_one_connection_are_two_shapes</c> and
++/// <c>A_publish_the_test_makes_is_judged</c> hold them instead.
+ /// </summary>
+ internal static class WarmUpCalls
+ {
+@@ -152,7 +154,7 @@ private static List<Call> TestCalls(IReadOnlyList<RequestResponseLog?> logs, Dic
+         var calls = new List<Call>(requests.Count);
+         foreach (var request in requests)
+         {
+-            if (request.MetaType == RequestResponseMetaType.Event || services[request.TestId].Contains(request.CallerName))
++            if (IsBrokersMove(request) || services[request.TestId].Contains(request.CallerName))
+                 continue;
+             responses.TryGetValue(request.RequestResponseId, out var response);
+             // Grouped by the upper-cased method (warmup.py's shape_of) and named with the method as the data file writes
+@@ -166,6 +168,14 @@ private static List<Call> TestCalls(IReadOnlyList<RequestResponseLog?> logs, Dic
+         return calls;
+     }
+ 
++    /// <summary>
++    /// An event a broker delivered, or one the test took from it, is no request of the test's: a long poll's time is the wait for a
++    /// message. A publish is, as the service card's table reads it from the record's scheme and label, so a slow first publish is judged.
++    /// </summary>
++    private static bool IsBrokersMove(RequestResponseLog request) =>
++        request.MetaType == RequestResponseMetaType.Event
++        && MessageTable.Read(MessageTable.Scheme(request.Uri.ToString()), MethodOf(request)) != MessageLabelKind.Publishes;
++
+     /// <summary>4.1 steps 3 to 6, for one shape's calls.</summary>
+     private static void Judge(List<Call> calls, Dictionary<Guid, WarmUpMark> marks)
+     {
+diff --git a/tests/Kronikol.Tests/Reports/WarmUpCallsTests.cs b/tests/Kronikol.Tests/Reports/WarmUpCallsTests.cs
+index 0541eb9b..35da1986 100644
+--- a/tests/Kronikol.Tests/Reports/WarmUpCallsTests.cs
++++ b/tests/Kronikol.Tests/Reports/WarmUpCallsTests.cs
+@@ -292,6 +292,48 @@ public void An_event_is_not_judged()
+         Assert.Empty(run.Find().Calls);
+     }
+ 
++    [Theory]
++    [InlineData("sns:///orders", "Publish")]
++    [InlineData("sqs:///orders", "SendMessage")]
++    [InlineData("eventbridge://orders-bus/", "PutEvents [OrderPlaced]")]
++    [InlineData("storagequeue:///orders", "Send \u2192 orders")]
++    [InlineData("kafka:///orders", "Produce \u2192 orders")]
++    [InlineData("servicebus://orders/", "Send \u2192 orders")]
++    [InlineData("pubsub:///orders", "Publish \u2192 orders")]
++    [InlineData("eventhubs:///orders", "Send \u2192 orders")]
++    [InlineData("masstransit:///orders", "Publish OrderPlaced")]
++    [InlineData("masstransit:///orders", "Send OrderPlaced")]
++    public void A_publish_the_test_makes_is_judged(string uri, string label)
++    {
++        var run = new Run().Scenario("s1");
++        var first = run.Call("s1", 0, 600, method: label, meta: RequestResponseMetaType.Event, service: "bus", uri: uri);
++        run.Call("s1", 700, 5, method: label, meta: RequestResponseMetaType.Event, service: "bus", uri: uri);
++
++        Assert.Equal(first, Assert.Single(run.Find().Calls).Key);
++    }
++
++    [Theory]
++    [InlineData("sqs:///orders", "ReceiveMessage")]
++    [InlineData("storagequeue:///orders", "Peek \u2190 orders")]
++    [InlineData("kafka:///orders", "Consume \u2190 orders")]
++    [InlineData("masstransit:///orders", "Consume OrderPlaced")]
++    [InlineData("event://cake_events", "Publish")]
++    // At Raw a broker's record is the request as it went: an endpoint on https, or MassTransit's own address.
++    [InlineData("https://sqs.us-east-1.amazonaws.com/", "POST")]
++    [InlineData("https://shop.queue.core.windows.net/orders/messages", "POST")]
++    [InlineData("https://shop.queue.core.windows.net/orders/messages", "GET")]
++    [InlineData("rabbitmq://localhost/orders", "Publish OrderPlaced \u2192 rabbitmq://localhost/orders")]
++    // A record's address may be relative: it has no scheme to read, and a report still has to be written.
++    [InlineData("orders", "Publish")]
++    public void An_event_the_table_does_not_read_as_a_publish_is_not_judged(string uri, string label)
++    {
++        var run = new Run().Scenario("s1");
++        run.Call("s1", 0, 600, method: label, meta: RequestResponseMetaType.Event, service: "bus", uri: uri);
++        run.Call("s1", 700, 5, method: label, meta: RequestResponseMetaType.Event, service: "bus", uri: uri);
++
++        Assert.Empty(run.Find().Calls);
++    }
++
+     [Fact]
+     public void A_call_in_the_background_is_neither_judged_nor_charged()
+     {

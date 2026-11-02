@@ -1,0 +1,29 @@
+== run 7's own report, against the ledger (published 5.27.13)
+history: nothing changed (against 6 earlier runs on local)
+no scenario in this run has a verdict other than stable · 10 scenarios read against 6 earlier r
+
+== run 7 through kronikol merge --history (published 5.27.13)
+  history: 6 behaviour changed (against 7 earlier runs on local)
+ledger bytes before and after the merge: 8234, 8234
+Control, an HTTP GET               stable
+Control, Redis Get (Hit)           stable
+Control, SQL DELETE in capitals    stable
+Spanner Delete as an Event         stable
+Spanner Delete as Default          behaviour-changed
+BigQuery Delete, the handler       behaviour-changed
+CosmosDB Delete, today             behaviour-changed
+CosmosDB Patch, today              behaviour-changed
+EF Core Delete, today              behaviour-changed
+Blob Storage Delete, today         behaviour-changed
+
+== the same run and ledger through the prototype's merge
+Control, an HTTP GET               stable
+Control, Redis Get (Hit)           stable
+Control, SQL DELETE in capitals    stable
+Spanner Delete as an Event         stable
+Spanner Delete as Default          stable
+BigQuery Delete, the handler       stable
+CosmosDB Delete, today             stable
+CosmosDB Patch, today              stable
+EF Core Delete, today              stable
+Blob Storage Delete, today         stable

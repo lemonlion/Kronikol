@@ -1,0 +1,16 @@
+shape	span kind	label	uri	metaType	MessageTable.Read	marks on the first call
+an uncalled worker's Kafka send	Producer	Send orders	kafka://broker/orders	Default	Unknown	first
+an uncalled worker's Kafka publish, old name	Producer	Publish orders	kafka://broker/orders	Default	Unknown	first
+an uncalled worker's Service Bus send	Producer	Send orders	servicebus://broker/orders	Default	Publishes	first
+an uncalled worker's Event Hubs send	Producer	Send orders	eventhubs://broker/orders	Default	Publishes	first
+an uncalled worker's Pub/Sub publish (create)	Producer	Create orders	gcp-pubsub://broker/orders	Default	Unknown	first
+an uncalled worker's Pub/Sub publish (send, CLIENT)	Client	Publish orders	gcp-pubsub://broker/orders	Default	Unknown	first
+an uncalled worker's SQS send	Producer	Send orders	aws-sqs://broker/orders	Default	Unknown	first
+an uncalled worker's SNS publish	Producer	Publish orders	aws-sns://broker/orders	Default	Unknown	first
+an uncalled worker's RabbitMQ publish	Producer	Publish orders	rabbitmq://broker/orders	Default	Unknown	first
+an uncalled worker's MassTransit send (in memory)	Producer	Send urn:message:Probe:OrderPlaced	in-memory://broker/urn:message:Probe:OrderPlaced	Default	Unknown	first
+a Kafka poll (long: the first waits for a message)	Client	Poll orders	kafka://broker/orders	Default	Unknown	first
+a Kafka process span	Consumer	Process orders	kafka://broker/orders	Default	Unknown	first
+a Kafka commit (settle)	Client	Commit orders	kafka://broker/orders	Default	Neither	first
+control: an HTTP span by the same worker	Client	GET	http://stock.example/items	Default	Unknown	first
+control: a database span by the same worker	Client	SELECT	postgresql:///shop	Default	Unknown	first

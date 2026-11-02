@@ -1,0 +1,168 @@
+
+=== uri (one shard, 4 runs)
+  run 4, its own console: (no history line)
+-- 5.27.13: kronikol merge exit 0: history: 2 behaviour changed (3 runs recorded in the main stream; flakiness and duration verdicts need 5)
+  own    : nothing changed (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:1004:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 33
+  merged : 2 behaviour changed (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:1004:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 33
+  Space end of path                            verdict Stable -> BehaviourChanged; set fingerprint moves
+      run's line : Caller>Svc GET /search/foo  200
+      merged line: Caller>Svc GET /search/foo 200
+      evidence   : same status, different calls: the same number of calls as gh:1003:1 (1), a different set
+  Space end of path, custom scheme             verdict Stable -> BehaviourChanged; set fingerprint moves
+      run's line : Caller>Svc GET /foo  200
+      merged line: Caller>Svc GET /foo 200
+      evidence   : same status, different calls: the same number of calls as gh:1003:1 (1), a different set
+  31 of 33 positions read the same on every field
+-- prototype: kronikol merge exit 0: history: 2 behaviour changed (3 runs recorded in the main stream; flakiness and duration verdicts need 5)
+  own    : nothing changed (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:1004:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 33
+  merged : 2 behaviour changed (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:1004:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 33
+  Space end of path                            verdict Stable -> BehaviourChanged; set fingerprint moves
+      run's line : Caller>Svc GET /search/foo  200
+      merged line: Caller>Svc GET /search/foo 200
+      evidence   : same status, different calls: the same number of calls as gh:1003:1 (1), a different set
+  Space end of path, custom scheme             verdict Stable -> BehaviourChanged; set fingerprint moves
+      run's line : Caller>Svc GET /foo  200
+      merged line: Caller>Svc GET /foo 200
+      evidence   : same status, different calls: the same number of calls as gh:1003:1 (1), a different set
+  31 of 33 positions read the same on every field
+
+=== uri-relative (one shard, 4 runs)
+  run 4, its own console: (no history line)
+-- 5.27.13: kronikol merge exit 0: (no history line)
+  own    : nothing changed (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:1004:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 10
+  merged : nothing changed (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:1004:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 10
+  10 of 10 positions read the same on every field
+-- prototype: kronikol merge exit 0: (no history line)
+  own    : nothing changed (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:1004:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 10
+  merged : nothing changed (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:1004:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 10
+  10 of 10 positions read the same on every field
+
+=== overlap-reversed (shards a,b, 4 runs)
+  record of run 2: recorded   gh:1002:1  fixture  4 scenarios from 2 shards  partial
+  record of run 3: recorded   gh:1003:1  fixture  4 scenarios from 2 shards  partial
+  run 4 shard a, its own console: history: 1 always failing (3 runs recorded in the main stream; flakiness and duration verdicts need 5)
+  run 4 shard b, its own console: history: 1 fixed (3 runs recorded in the main stream; flakiness and duration verdicts need 5)
+-- 5.27.13: kronikol merge exit 0: history: 1 broke, 1 fixed (3 runs recorded in the main stream; flakiness and duration verdicts need 5)
+  own    : 1 broke, 1 fixed (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:1004:1, suite fixture, stream main, rule 11, partial True, absent 0, new deps 0, deps 1, positions 4
+  merged : 1 broke, 1 fixed (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:1004:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 4
+  4 of 4 positions read the same on every field
+-- prototype: kronikol merge exit 0: history: 1 broke, 1 fixed (3 runs recorded in the main stream; flakiness and duration verdicts need 5)
+  own    : 1 broke, 1 fixed (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:1004:1, suite fixture, stream main, rule 11, partial True, absent 0, new deps 0, deps 1, positions 4
+  merged : 1 broke, 1 fixed (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:1004:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 4
+  4 of 4 positions read the same on every field
+
+=== two-shards-change (shards a,b, 7 runs)
+  record of run 2: recorded   gh:1002:1  fixture  4 scenarios from 2 shards  partial
+  record of run 6: recorded   gh:1006:1  fixture  4 scenarios from 2 shards  partial
+  run 4 shard a, its own console: (no history line)
+  run 4 shard b, its own console: (no history line)
+-- 5.27.13: kronikol merge exit 0: history: 2 behaviour changed (against 6 earlier runs on main)
+  own    : nothing changed (against 6 earlier runs on main); id gh:1007:1, suite fixture, stream main, rule 11, partial True, absent 0, new deps 0, deps 1, positions 4
+  merged : 2 behaviour changed (against 6 earlier runs on main); id gh:1007:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 4
+  Row 1 of a                                   verdict Stable -> BehaviourChanged
+      evidence   : same status, different calls: the same number of calls as gh:1001:1 (1), a different set
+  Row 1 of b                                   verdict Stable -> BehaviourChanged
+      evidence   : same status, different calls: the same number of calls as gh:1001:1 (1), a different set
+  2 of 4 positions read the same on every field
+-- prototype: kronikol merge exit 0: history: 2 behaviour changed (against 6 earlier runs on main)
+  own    : nothing changed (against 6 earlier runs on main); id gh:1007:1, suite fixture, stream main, rule 11, partial True, absent 0, new deps 0, deps 1, positions 4
+  merged : 2 behaviour changed (against 6 earlier runs on main); id gh:1007:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 4
+  Row 1 of a                                   verdict Stable -> BehaviourChanged
+      evidence   : same status, different calls: the same number of calls as gh:1001:1 (1), a different set
+  Row 1 of b                                   verdict Stable -> BehaviourChanged
+      evidence   : same status, different calls: the same number of calls as gh:1001:1 (1), a different set
+  2 of 4 positions read the same on every field
+
+=== two-shards-change-no-ledger (shards a,b, 7 runs)
+  run 4 shard a, its own console: (no history line)
+  run 4 shard b, its own console: (no history line)
+-- 5.27.13: kronikol merge exit 0: (no history line)
+  own    : nothing changed (against 6 earlier runs on main); id gh:1007:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 4
+  merged : nothing changed (against 6 earlier runs on main); id gh:1007:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 4
+  4 of 4 positions read the same on every field
+-- prototype: kronikol merge exit 0: (no history line)
+  own    : nothing changed (against 6 earlier runs on main); id gh:1007:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 4
+  merged : nothing changed (against 6 earlier runs on main); id gh:1007:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 4
+  4 of 4 positions read the same on every field
+
+=== retry-one-id-7 (one shard, 7 runs)
+  run 4, its own console: history: 1 flaky, 1 always failing (against 6 earlier runs on main)
+-- 5.27.13: kronikol merge exit 0: history: 1 flaky, 1 always failing (against 6 earlier runs on main)
+  own    : 1 flaky, 1 always failing (against 6 earlier runs on main); id gh:1007:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 3
+  merged : 1 flaky, 1 always failing (against 6 earlier runs on main); id gh:1007:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 3
+  Retried                                      calls 2 -> 4; ordered fingerprint moves
+  Retried                                      calls 2 -> 4; ordered fingerprint moves
+  1 of 3 positions read the same on every field
+-- prototype: kronikol merge exit 0: history: 1 flaky, 1 always failing (against 6 earlier runs on main)
+  own    : 1 flaky, 1 always failing (against 6 earlier runs on main); id gh:1007:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 3
+  merged : 1 flaky, 1 always failing (against 6 earlier runs on main); id gh:1007:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 3
+  Retried                                      calls 2 -> 4; ordered fingerprint moves
+  Retried                                      calls 2 -> 4; ordered fingerprint moves
+  1 of 3 positions read the same on every field
+
+=== count-7 (one shard, 7 runs)
+  run 4, its own console: history: 1 behaviour changed (against 6 earlier runs on main)
+-- 5.27.13: kronikol merge exit 0: (no history line)
+  own    : 1 behaviour changed (against 6 earlier runs on main); id gh:1007:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 2
+  merged : nothing changed (against 6 earlier runs on main); id gh:1007:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 2
+  A call made again                            verdict BehaviourChanged -> Stable
+      evidence   : calls 1 in gh:1006:1 to 2 now; a count verdict needs the new count held for 2 runs; passed in every one of the last 7 runs with a verdict
+  1 of 2 positions read the same on every field
+-- prototype: kronikol merge exit 0: (no history line)
+  own    : 1 behaviour changed (against 6 earlier runs on main); id gh:1007:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 2
+  merged : nothing changed (against 6 earlier runs on main); id gh:1007:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 2
+  A call made again                            verdict BehaviourChanged -> Stable
+      evidence   : calls 1 in gh:1006:1 to 2 now; a count verdict needs the new count held for 2 runs; passed in every one of the last 7 runs with a verdict
+  1 of 2 positions read the same on every field
+
+=== reorder-7 (one shard, 7 runs)
+  run 4, its own console: history: nothing changed (against 6 earlier runs on main)
+-- 5.27.13: kronikol merge exit 0: (no history line)
+  own    : nothing changed (against 6 earlier runs on main); id gh:1007:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 2
+  merged : nothing changed (against 6 earlier runs on main); id gh:1007:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 2
+  Two calls                                    verdict Reordered -> Stable
+      evidence   : passed in every one of the last 7 runs with a verdict
+  1 of 2 positions read the same on every field
+-- prototype: kronikol merge exit 0: (no history line)
+  own    : nothing changed (against 6 earlier runs on main); id gh:1007:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 2
+  merged : nothing changed (against 6 earlier runs on main); id gh:1007:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 2
+  Two calls                                    verdict Reordered -> Stable
+      evidence   : passed in every one of the last 7 runs with a verdict
+  1 of 2 positions read the same on every field
+
+=== flaky-min-runs (one shard, 7 runs)
+  run 4, its own console: history: 1 broke, 1 flaky (against 6 earlier runs on main)
+-- 5.27.13: kronikol merge exit 0: history: 1 broke, 1 flaky (against 6 earlier runs on main)
+  own    : 1 broke, 1 flaky (against 6 earlier runs on main); id gh:1007:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 2
+  merged : 1 broke, 1 flaky (against 6 earlier runs on main); id gh:1007:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 2
+  2 of 2 positions read the same on every field
+-- prototype: kronikol merge exit 0: history: 1 broke, 1 flaky (against 6 earlier runs on main)
+  own    : 1 broke, 1 flaky (against 6 earlier runs on main); id gh:1007:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 2
+  merged : 1 broke, 1 flaky (against 6 earlier runs on main); id gh:1007:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 2
+  2 of 2 positions read the same on every field
+
+=== gh-record-first (one shard, 4 runs)
+  run 4, its own console: history: 1 broke (3 runs recorded in the main stream; flakiness and duration verdicts need 5)
+-- 5.27.13: kronikol merge exit 0: history: 1 broke (3 runs recorded in the main stream; flakiness and duration verdicts need 5)
+  own    : 1 broke (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:1004:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 1
+  merged : 1 broke (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:1004:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 1
+  1 of 1 positions read the same on every field
+-- prototype: kronikol merge exit 0: history: 1 broke (3 runs recorded in the main stream; flakiness and duration verdicts need 5)
+  own    : 1 broke (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:1004:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 1
+  merged : 1 broke (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:1004:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 1
+  1 of 1 positions read the same on every field
+
+=== run-id-record-first (one shard, 4 runs)
+  run 4, its own console: history: 1 broke (3 runs recorded in the main stream; flakiness and duration verdicts need 5)
+-- 5.27.13: kronikol merge exit 0: history: 1 still failing (4 runs recorded in the main stream; flakiness and duration verdicts need 5)
+  own    : 1 broke (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id custom-4, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 1
+  merged : 1 still failing (4 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:1004:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 1
+  Named run                                    verdict Broke -> Failing
+      evidence   : failing since custom-4 (abc4), 2 runs
+  0 of 1 positions read the same on every field
+-- prototype: kronikol merge exit 0: history: 1 still failing (4 runs recorded in the main stream; flakiness and duration verdicts need 5)
+  own    : 1 broke (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id custom-4, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 1
+  merged : 1 still failing (4 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:1004:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 1
+  Named run                                    verdict Broke -> Failing
+      evidence   : failing since custom-4 (abc4), 2 runs
+  0 of 1 positions read the same on every field

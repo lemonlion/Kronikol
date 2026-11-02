@@ -2,6 +2,7 @@
   <PropertyGroup>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <RunSettingsFilePath>$(MSBuildProjectDirectory)\test.runsettings</RunSettingsFilePath>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="10.0.0">
@@ -21,6 +22,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Kronikol.Extensions.Spanner\Kronikol.Extensions.Spanner.csproj" />
+    <ProjectReference Include="..\..\src\Kronikol.Extensions.Otlp\Kronikol.Extensions.Otlp.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Kronikol.Tests\CultureRun.cs" Link="CultureRun.cs" />

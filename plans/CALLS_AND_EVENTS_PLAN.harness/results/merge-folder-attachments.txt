@@ -1,0 +1,10 @@
+== kronikol merge <folder> on a report folder with no attachments/*.json
+Wrote merged data to <scratch>\f24\a\out\x.krkl
+Kronikol: reports written to <scratch>\f24\a\out  (x.html · x.krkl · Failu
+exit 0
+
+== the same folder holding attachments/openapi.json, as a run with an attachment does
+  <scratch>\f24\shard\TestRunReport.krkl
+  <scratch>\f24\shard\attachments\openapi.json
+Failed to read a report: <scratch>\f24\shard\attachments\openapi.json: Not a
+exit 1

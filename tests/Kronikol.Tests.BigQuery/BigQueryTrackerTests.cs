@@ -108,7 +108,7 @@ public class BigQueryTrackerTests
     }
 
     [Fact]
-    public void LogRequest_Uses_event_metatype()
+    public void LogRequest_Uses_default_metatype()
     {
         var tracker = new BigQueryTracker(MakeOptions());
         var op = new BigQueryOperationInfo(BigQueryOperation.Query, "query", null, "p", null);
@@ -116,7 +116,7 @@ public class BigQueryTrackerTests
         tracker.LogRequest(op, "SELECT 1");
 
         var log = GetLogsFromThisTest().First();
-        Assert.Equal(RequestResponseMetaType.Event, log.MetaType);
+        Assert.Equal(RequestResponseMetaType.Default, log.MetaType);
     }
 
     [Fact]

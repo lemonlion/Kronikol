@@ -1,0 +1,25 @@
+BackForwardRestoreTests.R16, its three engines, each line one run alone. The one failure in the whole suite on R1, R2 and R3 together: engine webkit.
+
+== 27cc0e46, no patch, 10 runs
+Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 33 s
+Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 34 s
+Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 57 s
+Failed!  - Failed:     1, Passed:     2, Skipped:     0, Total:     3, Duration: 46 s
+Failed!  - Failed:     1, Passed:     2, Skipped:     0, Total:     3, Duration: 31 s
+Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 31 s
+Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 35 s
+Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 44 s
+Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 31 s
+Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 31 s
+
+== R1 + R2 + R3, 10 runs
+Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 33 s
+Failed!  - Failed:     1, Passed:     2, Skipped:     0, Total:     3, Duration: 31 s
+Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 36 s
+Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 32 s
+Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 35 s
+Failed!  - Failed:     1, Passed:     2, Skipped:     0, Total:     3, Duration: 34 s
+Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 31 s
+Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 31 s
+Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 36 s
+Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 28 s

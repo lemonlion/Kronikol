@@ -1,0 +1,208 @@
+=== the send that throws in each handler, and the line after it that reads the response body
+--- src/Kronikol.Extensions.SQS/SqsTrackingMessageHandler.cs:113
+        var response = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
+--- src/Kronikol.Extensions.SQS/SqsTrackingMessageHandler.cs:120
+            : await HttpContentReader.ReadContentAsStringAsync(response.Content, cancellationToken);
+--- src/Kronikol.Extensions.SNS/SnsTrackingMessageHandler.cs:113
+        var response = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
+--- src/Kronikol.Extensions.SNS/SnsTrackingMessageHandler.cs:120
+            : await HttpContentReader.ReadContentAsStringAsync(response.Content, cancellationToken);
+--- src/Kronikol.Extensions.EventBridge/EventBridgeTrackingMessageHandler.cs:119
+        var response = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
+--- src/Kronikol.Extensions.EventBridge/EventBridgeTrackingMessageHandler.cs:126
+            : await HttpContentReader.ReadContentAsStringAsync(response.Content, cancellationToken);
+
+=== a failed send elsewhere
+--- src/Kronikol.Extensions.StorageQueues/StorageQueueTrackingMessageHandler.cs:99
+            response = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
+--- src/Kronikol.Extensions.StorageQueues/StorageQueueTrackingMessageHandler.cs:119
+                FailedSend.Status(ex),
+--- src/Kronikol.Extensions.StorageQueues/StorageQueueTrackingMessageHandler.cs:126
+                RecordedBefore11 = RecordedBefore.NotRecorded
+--- src/Kronikol.Extensions.PubSub/TrackingPublisherClient.cs:50
+            _tracker.LogResponse(op, reqId, traceId, ex.Message);
+--- src/Kronikol.Extensions.PubSub/TrackingPublisherClient.cs:80
+            _tracker.LogResponse(op, reqId, traceId, ex.Message);
+--- src/Kronikol.Extensions.EventHubs/TrackingEventHubProducerClient.cs:66
+            _tracker.LogResponse(op, reqId, traceId, ex.Message);
+--- src/Kronikol.Extensions.EventHubs/TrackingEventHubProducerClient.cs:92
+            _tracker.LogResponse(op, reqId, traceId, ex.Message);
+--- src/Kronikol.Extensions.EventHubs/TrackingEventHubProducerClient.cs:112
+            _tracker.LogResponse(op, reqId, traceId, ex.Message);
+--- src/Kronikol.Extensions.ServiceBus/TrackingServiceBusSender.cs:46
+            _tracker.LogResponse(op, reqId, traceId, ex.Message);
+--- src/Kronikol.Extensions.ServiceBus/TrackingServiceBusSender.cs:71
+            _tracker.LogResponse(op, reqId, traceId, ex.Message);
+--- src/Kronikol.Extensions.ServiceBus/TrackingServiceBusSender.cs:95
+            _tracker.LogResponse(op, reqId, traceId, ex.Message);
+--- src/Kronikol.Extensions.Kafka/KafkaProduceTracking.cs:65-66
+    public void Failed(Exception exception) =>
+        Report(FailedOperation(exception), DateTimeOffset.UtcNow, Status(exception), Describe(exception));
+
+=== MassTransit
+--- src/Kronikol.Extensions.MassTransit/TrackingSendObserver.cs:27-42
+    public Task PostSend<T>(SendContext<T> context) where T : class
+    {
+        var op = MassTransitOperationClassifier.ClassifySend(context);
+        tracker.LogSend(op, context.Message);
+        return Task.CompletedTask;
+    }
+
+    public Task SendFault<T>(SendContext<T> context, Exception exception) where T : class
+    {
+        var op = new MassTransitOperationInfo(
+            MassTransitOperation.SendFault, typeof(T).Name,
+            context.DestinationAddress, context.SourceAddress,
+            context.MessageId, context.ConversationId);
+        tracker.LogSendFault(op, exception);
+        return Task.CompletedTask;
+    }
+--- src/Kronikol.Extensions.MassTransit/TrackingPublishObserver.cs:27-42
+    public Task PostPublish<T>(PublishContext<T> context) where T : class
+    {
+        var op = MassTransitOperationClassifier.ClassifyPublish(context);
+        tracker.LogPublish(op, context.Message);
+        return Task.CompletedTask;
+    }
+
+    public Task PublishFault<T>(PublishContext<T> context, Exception exception) where T : class
+    {
+        var op = new MassTransitOperationInfo(
+            MassTransitOperation.PublishFault, typeof(T).Name,
+            context.DestinationAddress, context.SourceAddress,
+            context.MessageId, context.ConversationId);
+        tracker.LogPublishFault(op, exception);
+        return Task.CompletedTask;
+    }
+--- src/Kronikol.Extensions.MassTransit/TrackingConsumeObserver.cs:24-42
+    public Task PostConsume<T>(ConsumeContext<T> context) where T : class
+    {
+        // The message's identity ends with the message; the next one names its own or none.
+        TestIdentityScope.ClearMessageIdentity();
+        var op = MassTransitOperationClassifier.ClassifyConsume(context);
+        tracker.LogConsume(op, context.Message);
+        return Task.CompletedTask;
+    }
+
+    public Task ConsumeFault<T>(ConsumeContext<T> context, Exception exception) where T : class
+    {
+        TestIdentityScope.ClearMessageIdentity();
+        var op = new MassTransitOperationInfo(
+            MassTransitOperation.ConsumeFault, typeof(T).Name,
+            context.ReceiveContext?.InputAddress, context.SourceAddress,
+            context.MessageId, context.ConversationId);
+        tracker.LogConsumeFault(op, exception);
+        return Task.CompletedTask;
+    }
+--- src/Kronikol.Extensions.MassTransit/MassTransitTrackingOptions.cs:30
+    public bool LogFaults { get; set; } = true;
+--- src/Kronikol/CallGraph/CallGraphBuilder.cs:105-109
+            {
+                deliveries.Add(call);
+                // MassTransit logs a consume's fault into the consumer too: a delivery still, and no message.
+                if (MessageTable.Read(scheme, request.Method) == MessageLabelKind.Neither)
+                    continue;
+--- src/Kronikol.Extensions.MassTransit/MassTransitOperationClassifier.cs:73-74
+            MassTransitTrackingVerbosity.Raw when op.DestinationAddress is not null =>
+                op.DestinationAddress,
+
+=== 2.2's reach
+--- src/Kronikol.Extensions.PubSub/TrackingPublisherClient.cs:36
+        var op = PubSubOperationClassifier.Classify(
+--- src/Kronikol.Extensions.PubSub/TrackingPublisherClient.cs:62
+        var op = PubSubOperationClassifier.Classify(
+--- src/Kronikol.Extensions.PubSub/TrackingSubscriberClient.cs:40
+            var op = PubSubOperationClassifier.Classify(
+--- src/Kronikol.Extensions.EventHubs/TrackingEventHubConsumerClient.cs:111
+        var op = EventHubsOperationClassifier.Classify(operation, _inner.EventHubName, partitionId);
+--- src/Kronikol.Extensions.EventHubs/TrackingEventHubProducerClient.cs:53
+        var op = EventHubsOperationClassifier.Classify(
+--- src/Kronikol.Extensions.EventHubs/TrackingEventHubProducerClient.cs:79
+        var op = EventHubsOperationClassifier.Classify(
+--- src/Kronikol.Extensions.EventHubs/TrackingEventHubProducerClient.cs:101
+        var op = EventHubsOperationClassifier.Classify(
+--- src/Kronikol.Extensions.Kafka/KafkaTrackingOptions.cs:40-44
+    public bool TrackSubscribe { get; set; } = false;
+    public bool TrackUnsubscribe { get; set; } = false;
+    public bool TrackCommit { get; set; } = false;
+    public bool TrackFlush { get; set; } = false;
+    public bool TrackTransactions { get; set; } = false;
+--- src/Kronikol.Extensions.Kafka/KafkaTracker.cs:360-369
+    private void LogOneInstant(KafkaOperationInfo op, bool track)
+    {
+        Interlocked.Increment(ref _invocationCount);
+
+        if (!track)
+            return;
+        var call = Capture();
+        if (!IsTracked(call.Phase))
+            return;
+        Log(call, op, KafkaPayload.Empty, incoming: false, call.At, failureStatus: null, error: null, ids: null);
+
+=== 2.3 and 5.4
+--- src/Kronikol.Extensions.ServiceBus/ServiceBusTracker.cs:63-68
+        var metaType = operation.Operation is
+            ServiceBusOperation.Send or ServiceBusOperation.SendBatch or
+            ServiceBusOperation.Receive or ServiceBusOperation.ReceiveBatch or
+            ServiceBusOperation.Schedule or ServiceBusOperation.Peek
+            ? RequestResponseMetaType.Event
+            : RequestResponseMetaType.Default;
+--- src/Kronikol/Reports/WarmUpCalls.cs:127-130
+    /// The calls the rule judges (4.1 step 1): a request paired with its response, in a scenario, made by the test
+    /// itself. The test's caller never appears as a service among its scenario's calls (the actor rule the sequence
+    /// diagram uses, <c>PlantUmlCreator</c>), and an event a broker delivered is not a request the test made.
+    /// </summary>
+--- src/Kronikol/Reports/WarmUpCalls.cs:155
+            if (request.MetaType == RequestResponseMetaType.Event || services[request.TestId].Contains(request.CallerName))
+--- src/Kronikol/Reports/ReportGenerator.cs:276
+        var warmUp = WarmUpCalls.Find(features, runLogs, shapeRules);
+--- src/Kronikol/PlantUml/PlantUmlCreator.cs:416
+                        builder.AppendLine($"note{GetNoteClass(trace.MetaType)} {noteSide}");
+--- src/Kronikol/PlantUml/PlantUmlCreator.cs:1191
+                builder.AppendLine($"note{GetNoteClass(trace!.MetaType)} right");
+--- src/Kronikol/PlantUml/PlantUmlCreator.cs:1266
+        tracesForTest.Any(x => x.MetaType == RequestResponseMetaType.Event)
+--- src/Kronikol/PlantUml/SequenceCollapser.cs:138
+            request.MetaType.ToString());
+--- src/Kronikol/ComponentDiagram/ComponentDiagramGenerator.cs:533
+        Protocol(log.DependencyCategory, log.MetaType == RequestResponseMetaType.Event, log.Method.Value?.ToString());
+--- src/Kronikol/ComponentDiagram/ComponentDiagramGenerator.cs:542
+    internal static string Protocol(string? dependencyCategory, bool isEvent, string? method)
+--- src/Kronikol/CallGraph/CallGraphBuilder.cs:64
+            var protocol = ComponentDiagramGenerator.Protocol(request.Category, request.IsEvent, request.Method);
+--- plans/WARM_UP_PLAN.harness/warmup.py:147
+                        test=(c['caller'] not in services and c['meta'] != 'Event'))
+
+=== the wiki at 670b1fc
+670b1fc Step Tracking: a Sub-Steps in Reqnroll Steps section says how a Reqnroll step gets sub-steps
+--- Integration-PubSub-Extension.md:66
+Both wrappers use `PubSubTracker` as a central logging helper. It implements `ITrackingComponent` and handles request/response logging with `RequestResponseMetaType.Event` for messaging semantics.
+--- Integration-PubSub-Extension.md:74-79
+| Receive | `PubSubOperation.Receive` | `TrackingSubscriberClient` callback |
+| Pull | `PubSubOperation.Pull` | Low-level API |
+| Acknowledge | `PubSubOperation.Acknowledge` | Low-level API |
+| ModifyAckDeadline | `PubSubOperation.ModifyAckDeadline` | Low-level API |
+| StartSubscriber | `PubSubOperation.StartSubscriber` | Lifecycle |
+| StopSubscriber | `PubSubOperation.StopSubscriber` | Lifecycle |
+--- Integration-EventHubs-Extension.md:73
+The `EventHubsTracker` (central logging helper) handles all request/response logging with `RequestResponseMetaType.Event` for async messaging notation in PlantUML diagrams.
+--- Integration-EventHubs-Extension.md:79-89
+| Send | `EventHubsOperation.Send` | Single event via `SendAsync` |
+| SendBatch | `EventHubsOperation.SendBatch` | Multiple events via `SendAsync` |
+| CreateBatch | `EventHubsOperation.CreateBatch` | `CreateBatchAsync` |
+| ReadEvents | `EventHubsOperation.ReadEvents` | `ReadEventsAsync` |
+| ReadEventsFromPartition | `EventHubsOperation.ReadEventsFromPartition` | `ReadEventsFromPartitionAsync` |
+| GetPartitionIds | `EventHubsOperation.GetPartitionIds` | `GetPartitionIdsAsync` |
+| GetEventHubProperties | `EventHubsOperation.GetEventHubProperties` | `GetEventHubPropertiesAsync` |
+| GetPartitionProperties | `EventHubsOperation.GetPartitionProperties` | `GetPartitionPropertiesAsync` |
+| StartProcessing | `EventHubsOperation.StartProcessing` | `StartProcessingAsync` |
+| StopProcessing | `EventHubsOperation.StopProcessing` | `StopProcessingAsync` |
+| ProcessEvent | `EventHubsOperation.ProcessEvent` | Event handler callback |
+--- Integration-EventHubs-Extension.md:99
+- `CreateBatchAsync()`: delegates without tracking
+--- Integration-Kafka-Extension.md:9
+The extension provides wrapper classes around Confluent.Kafka's `IProducer<TKey,TValue>` and `IConsumer<TKey,TValue>` interfaces. The wrappers intercept produce and consume calls, classify the operati
+--- Integration-MassTransit-Extension.md:11
+MassTransit provides observer interfaces (`ISendObserver`, `IPublishObserver`, `IConsumeObserver`) that fire on every message operation. The extension implements these observers to capture and classif
+--- Integration-MassTransit-Extension.md:173
+| `LogFaults` | `bool` | `true` | Whether to log fault (exception) events |

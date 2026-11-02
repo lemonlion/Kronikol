@@ -1,0 +1,210 @@
+diff --git a/src/Kronikol.Extensions.Otlp/OtlpSpanMapper.cs b/src/Kronikol.Extensions.Otlp/OtlpSpanMapper.cs
+index 02e5072..6eec0bc 100644
+--- a/src/Kronikol.Extensions.Otlp/OtlpSpanMapper.cs
++++ b/src/Kronikol.Extensions.Otlp/OtlpSpanMapper.cs
+@@ -281,7 +281,9 @@ public static OtlpExportSpan Map(RequestResponseLog? request, RequestResponseLog
+     /// <item>An HTTP verb on a web address, the request itself (SQS, SNS, Storage Queues and EventBridge at Raw): <c>CLIENT</c>, since an
+     /// HTTP span "MUST be CLIENT", and the label cannot separate a send from a receive there.</item>
+     /// <item><see cref="ReadingOf"/>, of how the record was logged: a delivery <c>CONSUMER</c>; a pull, a settlement or a management
+-    /// call <c>CLIENT</c>; a send, or a record that says nothing of itself, <c>PRODUCER</c>, as it always was.</item>
++    /// call <c>CLIENT</c>. A send, or a record that says nothing of itself, is <c>PRODUCER</c> only "if the context of the Send span is
++    /// used as creation context, otherwise CLIENT": only Kafka's tracker puts one on the message
++    /// (<c>KafkaProduceTracking.ToSend</c>), so Kafka's produce is <c>PRODUCER</c> and every other send <c>CLIENT</c>.</item>
+     /// </list>
+     /// </summary>
+     internal static OtlpSpanKind KindOf(RequestResponseLog log)
+@@ -297,10 +299,16 @@ internal static OtlpSpanKind KindOf(RequestResponseLog log)
+         {
+             MessageLabelKind.Delivers => OtlpSpanKind.Consumer,
+             MessageLabelKind.Receives or MessageLabelKind.Neither => OtlpSpanKind.Client,
+-            _ => OtlpSpanKind.Producer,
++            _ => IsKafkasProduce(log) ? OtlpSpanKind.Producer : OtlpSpanKind.Client,
+         };
+     }
+ 
++    private static bool IsKafkasProduce(RequestResponseLog log)
++    {
++        var scheme = MessageTable.Scheme(log.Uri.ToString());
++        return !log.LabelIsFree && scheme == "kafka" && MessageTable.Read(scheme, log.Method.Value?.ToString()) == MessageLabelKind.Publishes;
++    }
++
+     /// <summary>
+     /// What a record is, and whether it was logged as the broker's arrow into the consumer, from what says so, in order:
+     /// <list type="number">
+@@ -363,7 +371,7 @@ private static void AddMessagingAttributes(List<OtlpExportAttribute> attributes,
+             MessageLabelKind.Publishes => "send",
+             MessageLabelKind.Receives => "receive",
+             MessageLabelKind.Delivers => "process",
+-            MessageLabelKind.Unknown when kind == OtlpSpanKind.Producer => "send",
++            MessageLabelKind.Unknown when log.MetaType == RequestResponseMetaType.Event => "send",
+             _ => null,
+         };
+         attributes.Add(OtlpExportAttribute.Str("messaging.system", scheme switch
+diff --git a/tests/Kronikol.Tests.Otlp/OtlpExporterTests.cs b/tests/Kronikol.Tests.Otlp/OtlpExporterTests.cs
+index 6e060aa..02f1c60 100644
+--- a/tests/Kronikol.Tests.Otlp/OtlpExporterTests.cs
++++ b/tests/Kronikol.Tests.Otlp/OtlpExporterTests.cs
+@@ -247,7 +247,7 @@ public async Task Full_circle_an_exported_capture_round_trips_through_a_live_Otl
+ 
+     // What leaves as a message comes back as one: the tap reads messaging.system, and a PRODUCER with none was dropped.
+     [Theory]
+-    [InlineData("pubsub:///orders", "Publish → orders", "App", "PubSub", OtlpSpanKind.Producer, "Publish orders")]
++    [InlineData("pubsub:///orders", "Publish → orders", "App", "PubSub", OtlpSpanKind.Client, "Publish orders")]
+     [InlineData("sqs:///orders", "ReceiveMessage", "App", "SQS", OtlpSpanKind.Client, "ReceiveMessage orders")]
+     [InlineData("kafka:///orders", "Consume ← orders", "Kafka", "App", OtlpSpanKind.Consumer, "Consume orders")]
+     public async Task Full_circle_a_message_comes_back_a_message(string uri, string label, string caller, string service, OtlpSpanKind kind, string back)
+diff --git a/tests/Kronikol.Tests.Otlp/OtlpSpanMapperTests.cs b/tests/Kronikol.Tests.Otlp/OtlpSpanMapperTests.cs
+index a97ecd3..1574a75 100644
+--- a/tests/Kronikol.Tests.Otlp/OtlpSpanMapperTests.cs
++++ b/tests/Kronikol.Tests.Otlp/OtlpSpanMapperTests.cs
+@@ -242,21 +242,22 @@ private static OtlpExportSpan MapMessage(string uri, OneOf<HttpMethod, string> l
+             Message(uri, label, RequestResponseType.Response, metaType, service, caller),
+             Options(), ExportTime);
+ 
+-    // OTel's table, docs/messaging/messaging-spans.md at v1.44.0: send PRODUCER, receive CLIENT, process CONSUMER, settle CLIENT. Each
++    // OTel's table, docs/messaging/messaging-spans.md at v1.44.0: send PRODUCER only if its context is the message's creation context, which only Kafka's
++    // tracker makes it, otherwise CLIENT; receive CLIENT, process CONSUMER, settle CLIENT. Each
+     // label and scheme is what that broker's tracker writes (results/r3-span-kinds.tsv holds the real trackers at every verbosity).
+     [Theory]
+-    // Sends
+-    [InlineData("pubsub:///orders", "Publish → orders", OtlpSpanKind.Producer)]
+-    [InlineData("pubsub:///projects/p/topics/orders", "PublishBatch topic=projects/p/topics/orders sub=", OtlpSpanKind.Producer)]
+-    [InlineData("servicebus://orders/", "Schedule → orders", OtlpSpanKind.Producer)]
+-    [InlineData("eventhubs:///orders", "Send (×3) → orders", OtlpSpanKind.Producer)]
++    // Sends: Kafka's produce injects its context, and no other tracker does
++    [InlineData("pubsub:///orders", "Publish → orders", OtlpSpanKind.Client)]
++    [InlineData("pubsub:///projects/p/topics/orders", "PublishBatch topic=projects/p/topics/orders sub=", OtlpSpanKind.Client)]
++    [InlineData("servicebus://orders/", "Schedule → orders", OtlpSpanKind.Client)]
++    [InlineData("eventhubs:///orders", "Send (×3) → orders", OtlpSpanKind.Client)]
+     [InlineData("kafka:///orders", "Produce → orders", OtlpSpanKind.Producer)]
+     [InlineData("kafka:///", "Produce", OtlpSpanKind.Producer)]
+-    [InlineData("masstransit:///OrderPlaced", "→ OrderPlaced", OtlpSpanKind.Producer)]
+-    [InlineData("sqs:///orders", "SendMessage", OtlpSpanKind.Producer)]
+-    [InlineData("sns:///orders", "Publish", OtlpSpanKind.Producer)]
+-    [InlineData("eventbridge://orders-bus/", "PutEvents [OrderPlaced]", OtlpSpanKind.Producer)]
+-    [InlineData("storagequeue:///orders", "Send → orders", OtlpSpanKind.Producer)]
++    [InlineData("masstransit:///OrderPlaced", "→ OrderPlaced", OtlpSpanKind.Client)]
++    [InlineData("sqs:///orders", "SendMessage", OtlpSpanKind.Client)]
++    [InlineData("sns:///orders", "Publish", OtlpSpanKind.Client)]
++    [InlineData("eventbridge://orders-bus/", "PutEvents [OrderPlaced]", OtlpSpanKind.Client)]
++    [InlineData("storagequeue:///orders", "Send → orders", OtlpSpanKind.Client)]
+     // Pulls: the application asked
+     [InlineData("pubsub:///orders-sub", "Pull ← orders-sub", OtlpSpanKind.Client)]
+     [InlineData("servicebus://orders/", "Receive (×3) ← orders", OtlpSpanKind.Client)]
+@@ -280,15 +281,15 @@ private static OtlpExportSpan MapMessage(string uri, OneOf<HttpMethod, string> l
+     [InlineData("eventhubs:///orders", "GetPartitionIds", OtlpSpanKind.Client)]
+     [InlineData("masstransit:///OrderPlaced", "Consume Fault OrderPlaced", OtlpSpanKind.Client)]
+     // MassTransit at Raw: the transport's scheme, and a label that names that address
+-    [InlineData("rabbitmq://localhost/orders", "Send OrderPlaced → rabbitmq://localhost/orders", OtlpSpanKind.Producer)]
++    [InlineData("rabbitmq://localhost/orders", "Send OrderPlaced → rabbitmq://localhost/orders", OtlpSpanKind.Client)]
+     [InlineData("rabbitmq://localhost/orders", "Consume OrderPlaced → rabbitmq://localhost/orders", OtlpSpanKind.Consumer)]
+     [InlineData("rabbitmq://localhost/orders", "ConsumeFault OrderPlaced → rabbitmq://localhost/orders", OtlpSpanKind.Client)]
+-    // A log built by hand, on a scheme of nobody's table: its label is its author's own words, so it is a send, as it always was
+-    [InlineData("event://cake_events", "Publish", OtlpSpanKind.Producer)]
+-    [InlineData("event://cake_events", "Whatever the author wrote", OtlpSpanKind.Producer)]
+-    [InlineData("event://cake_events", "Consume", OtlpSpanKind.Producer)]
+-    [InlineData("event://cake_events", "Process cake", OtlpSpanKind.Producer)]
+-    [InlineData("event://cake_events", "Receive cake", OtlpSpanKind.Producer)]
++    // A log built by hand, on a scheme of nobody's table: its label is its author's own words, so it is a send
++    [InlineData("event://cake_events", "Publish", OtlpSpanKind.Client)]
++    [InlineData("event://cake_events", "Whatever the author wrote", OtlpSpanKind.Client)]
++    [InlineData("event://cake_events", "Consume", OtlpSpanKind.Client)]
++    [InlineData("event://cake_events", "Process cake", OtlpSpanKind.Client)]
++    [InlineData("event://cake_events", "Receive cake", OtlpSpanKind.Client)]
+     public void An_event_takes_the_kind_OpenTelemetrys_table_gives_its_operation(string uri, string label, OtlpSpanKind expected) =>
+         Assert.Equal(expected, MapMessage(uri, label).Kind);
+ 
+@@ -310,7 +311,8 @@ public void A_message_on_a_web_address_with_a_label_of_its_own_is_still_a_send()
+     {
+         var span = MapMessage("https://events.example/api/events", "Publish");
+ 
+-        Assert.Equal(OtlpSpanKind.Producer, span.Kind);
++        Assert.Equal(OtlpSpanKind.Client, span.Kind);
++        Assert.Equal("send", span.Attribute("messaging.operation.type"));
+         Assert.Equal("other", span.Attribute("messaging.system"));
+     }
+ 
+@@ -425,7 +427,7 @@ public void A_send_stays_a_send_whatever_its_label_reads(string label, string de
+             route(Tracker(testId, "App"));
+ 
+             var span = Tracked(testId);
+-            Assert.Equal(OtlpSpanKind.Producer, span.Kind);
++            Assert.Equal(OtlpSpanKind.Client, span.Kind);
+             Assert.Equal("App", span.ResourceServiceName);
+             Assert.Equal(destination, span.Attribute("peer.service"));
+             Assert.Equal("send", span.Attribute("messaging.operation.type"));
+@@ -442,7 +444,7 @@ public void An_event_logged_by_hand_is_a_send_whatever_its_label_reads(string la
+     {
+         var span = MapMessage(uri, label);
+ 
+-        Assert.Equal(OtlpSpanKind.Producer, span.Kind);
++        Assert.Equal(OtlpSpanKind.Client, span.Kind);
+         Assert.Equal("App", span.ResourceServiceName);
+         Assert.Equal("send", span.Attribute("messaging.operation.type"));
+     }
+@@ -465,11 +467,11 @@ private static RequestResponseLog ReadBack(RequestResponseLog log) =>
+     [InlineData("Receive receipt", "event://receipts", OtlpSpanKind.Client, "Caller")]
+     [InlineData("Poll", "event://receipts", OtlpSpanKind.Client, "Caller")]
+     [InlineData("ReceiveMessage orders", "aws-sqs://broker/orders", OtlpSpanKind.Client, "Caller")]
+-    [InlineData("Kafka", "kafka:///orders", OtlpSpanKind.Producer, "Caller")]
+-    [InlineData("Publish", "event://orders", OtlpSpanKind.Producer, "Caller")]
+-    [InlineData("ProcessOrder", "event://orders", OtlpSpanKind.Producer, "Caller")]
+-    [InlineData("Consumed", "event://orders", OtlpSpanKind.Producer, "Caller")]
+-    [InlineData("PollResult", "event://receipts", OtlpSpanKind.Producer, "Caller")]
++    [InlineData("Kafka", "kafka:///orders", OtlpSpanKind.Client, "Caller")]
++    [InlineData("Publish", "event://orders", OtlpSpanKind.Client, "Caller")]
++    [InlineData("ProcessOrder", "event://orders", OtlpSpanKind.Client, "Caller")]
++    [InlineData("Consumed", "event://orders", OtlpSpanKind.Client, "Caller")]
++    [InlineData("PollResult", "event://receipts", OtlpSpanKind.Client, "Caller")]
+     public void Read_back_from_a_record_its_label_is_all_that_says_what_it_is(string label, string uri, OtlpSpanKind kind, string self)
+     {
+         var log = ReadBack(Message(uri, label, service: "Service", caller: "Caller"));
+@@ -487,7 +489,7 @@ public void Read_back_from_a_record_its_label_is_all_that_says_what_it_is(string
+     [InlineData(InteractionMerger.SpanSource, "Process orders", OtlpSpanKind.Consumer)]
+     [InlineData(InteractionMerger.SpanSource, "Consume orders", OtlpSpanKind.Consumer)]
+     [InlineData(InteractionMerger.SpanSource, "Poll orders", OtlpSpanKind.Client)]
+-    [InlineData(InteractionMerger.SpanSource, "Send orders", OtlpSpanKind.Producer)]
++    [InlineData(InteractionMerger.SpanSource, "Send orders", OtlpSpanKind.Client)]
+     [InlineData(InteractionMerger.MergedSource, "Process orders", OtlpSpanKind.Consumer)]
+     [InlineData(InteractionMerger.MergedSource, "Consume orders", OtlpSpanKind.Consumer)]
+     [InlineData(InteractionMerger.MergedSource, "Poll orders", OtlpSpanKind.Client)]
+@@ -569,6 +571,17 @@ public void A_message_span_carries_what_the_conventions_require(string uri, stri
+         Assert.Equal(destination, span.Attribute("messaging.destination.name"));
+     }
+ 
++    [Fact]
++    public void Only_a_Kafka_producers_context_makes_a_send_a_producer_span()
++    {
++        Assert.Equal(OtlpSpanKind.Producer, MapMessage("kafka:///orders", "Produce \u2192 orders").Kind);
++        // Its label and scheme, but MessageTracker's call: no context of Kronikol's went on the message.
++        var testId = Guid.NewGuid().ToString("N");
++        Tracker(testId, "App").TrackSendEvent("Produce \u2192 orders", "Kafka", new Uri("kafka:///orders"), new { Id = 1 });
++        Assert.Equal(OtlpSpanKind.Client, Tracked(testId).Kind);
++        Assert.Equal(OtlpSpanKind.Client, MapMessage("pubsub:///orders", "Publish \u2192 orders").Kind);
++    }
++
+     [Fact]
+     public void A_settlement_names_its_system_and_operation_and_no_type_the_table_cannot_tell_it()
+     {
+@@ -594,7 +607,7 @@ public void A_record_with_a_relative_address_does_not_throw()
+     {
+         var log = Message("http://placeholder/", "Publish") with { Uri = new Uri("orders", UriKind.Relative) };
+ 
+-        Assert.Equal(OtlpSpanKind.Producer, OtlpSpanMapper.Map(log, null, Options(), ExportTime).Kind);
++        Assert.Equal(OtlpSpanKind.Client, OtlpSpanMapper.Map(log, null, Options(), ExportTime).Kind);
+     }
+ 
+     // F15: a pair is one span whichever method logged it. Paired on both ids, TrackSendEvent exported two orphans that shared a
+diff --git a/tests/Kronikol.Tests/Tool/ExportCommandTests.cs b/tests/Kronikol.Tests/Tool/ExportCommandTests.cs
+index e6a0389..5e6d65b 100644
+--- a/tests/Kronikol.Tests/Tool/ExportCommandTests.cs
++++ b/tests/Kronikol.Tests/Tool/ExportCommandTests.cs
+@@ -60,7 +60,7 @@ public void Dry_run_writes_decodable_otlp_json_and_prints_counts()
+ 
+     // The same mapper as the in-process paths, on what NDJSON carries (plans/CALLS_AND_EVENTS_PLAN.md 6.8).
+     [Theory]
+-    [InlineData("Publish → orders", "pubsub:///orders", OtlpSpanKind.Producer, "gcp_pubsub")]
++    [InlineData("Publish → orders", "pubsub:///orders", OtlpSpanKind.Client, "gcp_pubsub")]
+     [InlineData("Pull ← orders-sub", "pubsub:///orders-sub", OtlpSpanKind.Client, "gcp_pubsub")]
+     [InlineData("Receive ← orders-sub", "pubsub:///orders-sub", OtlpSpanKind.Consumer, "gcp_pubsub")]
+     [InlineData("Consume ← orders", "kafka:///orders", OtlpSpanKind.Consumer, "kafka")]

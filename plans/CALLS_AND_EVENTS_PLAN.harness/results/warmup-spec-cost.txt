@@ -1,0 +1,82 @@
+What "warmup.py must follow" costs under Q5 (b), on R1 + R2 + prototype/r2-option-warm-up-judges-publishes.patch.
+
+READ, at 27cc0e46:
+- plans/WARM_UP_PLAN.harness/warmup.py:147 is the script's whole test of an event: test=(c['caller'] not in services and c['meta'] != 'Event').
+- WarmUpCalls.cs:46 says the code "must equal [the script] call for call, save a statement's templated head".
+- The parity fact, WarmUpCorpusTests.The_pass_marks_what_the_spec_marks, reads tests/Kronikol.Tests/TestData/WarmUp/expected-marks.json, a file the script wrote once
+  (last changed in 4.16.3, 65b43fe4). It never runs the script. No file under .github names warmup, and no workflow's python runs it. So CI holds the code to stored marks, and nothing
+  holds the script to those marks or to MessageTable.
+- WarmUp/xunit and WarmUp/reqnroll, the two lanes the fact reads, are byte-for-byte corpus/ci-2026-10-05/xunit and reqnroll. So section 2 below is 36 lanes and two copies.
+
+RUN, probes/warmup-spec-cost.py:
+
+== 1. The stored marks against the script as it stands
+reqnroll: 18 marks, equal to expected-marks.json: True
+xunit: 10 marks, equal to expected-marks.json: True
+
+== 2. Every lane of the corpus: test-made events, and what the ported rows change
+lane                                                        calls  events  test-made  publishes  marks  ported  differ
+corpus/ci-2026-10-05/bddfy                                   1324     270         42          0     16      16       0
+corpus/ci-2026-10-05/docker-sut_bddfy                         378       0          0          0      9       9       0
+corpus/ci-2026-10-05/docker-sut_lightbdd                      378       0          0          0      7       7       0
+corpus/ci-2026-10-05/docker-sut_nunit                         379       0          0          0     10      10       0
+corpus/ci-2026-10-05/docker-sut_reqnroll                      363       0          0          0     13      13       0
+corpus/ci-2026-10-05/docker-sut_tunit                         379       0          0          0      9       9       0
+corpus/ci-2026-10-05/docker-sut_xunit                         379       0          0          0      9       9       0
+corpus/ci-2026-10-05/docker_bddfy                            1136     195          3          0     13      13       0
+corpus/ci-2026-10-05/docker_lightbdd                         1136     195          3          0     14      14       0
+corpus/ci-2026-10-05/docker_nunit                            1131     195          3          0      9       9       0
+corpus/ci-2026-10-05/docker_reqnroll                         1109     188          3          0     18      18       0
+corpus/ci-2026-10-05/docker_tunit                            1131     195          3          0     10      10       0
+corpus/ci-2026-10-05/docker_xunit                            1132     195          3          0      9       9       0
+corpus/ci-2026-10-05/lightbdd                                1324     270         42          0     17      17       0
+corpus/ci-2026-10-05/nunit                                   1324     270         42          0     13      13       0
+corpus/ci-2026-10-05/reqnroll                                1288     259         40          0     18      18       0
+corpus/ci-2026-10-05/tunit                                   1324     270         42          0      7       7       0
+corpus/ci-2026-10-05/xunit                                   1324     270         42          0     10      10       0
+corpus/example-api/BDDfy.xUnit3                                11       1          0          0      1       1       0
+corpus/example-api/LightBDD.TUnit                              18       1          0          0      0       0       0
+corpus/example-api/LightBDD.xUnit2                             18       1          0          0      1       1       0
+corpus/example-api/LightBDD.xUnit3                             18       1          0          0      0       0       0
+corpus/example-api/NUnit4                                      11       1          0          0      1       1       0
+corpus/example-api/ReqNRoll.TUnit                              11       1          0          0      0       0       0
+corpus/example-api/ReqNRoll.xUnit2                             11       1          0          0      1       1       0
+corpus/example-api/ReqNRoll.xUnit3                             23       3          0          0      2       2       0
+corpus/example-api/TUnit                                       11       1          0          0      0       0       0
+corpus/example-api/xUnit2                                      11       1          0          0      1       1       0
+corpus/example-api/xUnit3                                       0       0          0          0      0       0       0
+corpus/local-windows/ReqNRoll-1                              1286     258         40          0     40      40       0
+corpus/local-windows/ReqNRoll-2                              1288     259         40          0     38      38       0
+corpus/local-windows/ReqNRoll-3                              1287     258         40          0     42      42       0
+corpus/local-windows/xUnit-1                                 1325     270         42          0      9       9       0
+corpus/local-windows/xUnit-2                                 1324     270         42          0      9       9       0
+corpus/local-windows/xUnit-initialize-on-startup             1325     270         42          0      9       9       0
+corpus/local-windows/xUnit-initialize-with-warmup-query      1325     270         42          0      7       7       0
+WarmUp/reqnroll                                              1288     259         40          0     18      18       0
+WarmUp/xunit                                                 1324     270         42          0     10      10       0
+all 38 lanes                                                28854    5168        638          0    400     400       0
+
+Test-made events by scheme and leading word of the label, over every lane:
+  eventhub:// Consume: 575
+  kafka:// Consume: 42
+  pubsub:// Consume: 21
+
+== 3. A lane holding a publish the test makes, as a report under R2 writes one
+the script as it stands marks 0 of its 3 slow first publishes; with the rows ported, 3
+
+== 4. The size of the port
+23 lines of Python (the block between PORT BEGIN and PORT END in this file), plus the one condition at warmup.py:147
+20 publish labels over 9 schemes, and 2 fault labels
+
+RUN, probes/warmup-parity-lane.py: the parity fact, WarmUpCorpusTests, with that synthetic lane added as a third row. Its two facts over two lanes make 3 rows, so 4 with the lane.
+
+no option, the script's marks as it stands: Passed!  - Failed:     0, Passed:     4, Skipped:     0, Total:     4, Duration: 162 ms
+the option, the script's marks as it stands: Failed!  - Failed:     1, Passed:     3, Skipped:     0, Total:     4, Duration: 184 ms
+the option, the script's marks with the rows ported: Passed!  - Failed:     0, Passed:     4, Skipped:     0, Total:     4, Duration: 146 ms
+
+And over its own two lanes, on the option with no port, the fact is green: it is among the 115 of 115 in r2-test-runs.txt.
+
+So: to equal the code call for call the script needs MessageTable's publish rows and a condition, 23 lines and one. CI cannot tell: the parity fact stays green without them, since no
+test-made event in the corpus reads as a publish, and with them the script changes none of its 400 marks. It goes red only if a lane holding a test-made publish is added, and then only
+if the stored marks came from the unported script. The cheap path is the class's existing exception, which the option patch takes: one clause in WarmUpCalls' documentation beside a
+statement's templated head, a comment at warmup.py:147, and A_publish_the_test_makes_is_judged holding it, as Statements_with_different_heads_on_one_connection_are_two_shapes does.

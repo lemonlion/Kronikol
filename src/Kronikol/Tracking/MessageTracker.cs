@@ -216,8 +216,8 @@ public class MessageTracker : ITrackingComponent
     }
 
     /// <summary>
-    /// Logs a complete send event as a fire-and-forget pair (request + response)
-    /// in a single call. Ideal for event-driven patterns where there is no
+    /// Logs a complete send as a request and its response in a single call, both
+    /// <see cref="RequestResponseMetaType.Event"/>. Ideal for event-driven patterns where there is no
     /// meaningful response to track separately.
     /// </summary>
     /// <param name="protocol">The protocol or transport label shown in the diagram.</param>
@@ -232,9 +232,9 @@ public class MessageTracker : ITrackingComponent
     }
 
     /// <summary>
-    /// Logs a complete send as an atomic request+response pair with standard (non-event) styling.
-    /// Unlike <see cref="TrackSendEvent"/>, this produces standard arrows in diagrams rather
-    /// than event-styled blue notes. Use this when you want the arrow style to match HTTP calls.
+    /// Logs a complete send as one atomic request and response pair, and returns its correlation id.
+    /// Both halves are <see cref="RequestResponseMetaType.Event"/>, as for <see cref="TrackSendEvent"/>,
+    /// so its note is on the event card.
     /// </summary>
     /// <param name="protocol">The protocol or transport label shown in the diagram.</param>
     /// <param name="destinationName">The name of the destination service or topic shown in the diagram.</param>

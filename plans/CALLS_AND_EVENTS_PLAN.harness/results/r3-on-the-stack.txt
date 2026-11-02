@@ -1,0 +1,51 @@
+R1 + R3 + r2-first-cut.patch (sha1 bad512f4) + r2-option-warm-up-judges-publishes.patch (sha1 5bd2b8ca), against R1 + R3 alone: results/r3-span-kinds.tsv on each. r3-span-kinds applies R2's kinds to each record itself, so r1Kind equal to r2Kind on the stack says the kinds it assumes are the patch's kinds. today and r3Alone are computed from the record the tracker wrote, so they move with it; every other column is the same, firstCut among them.
+
+rows on the stack 194 rows on R3 alone 194
+r1Kind != r2Kind on the stack: 0
+rows identical to R3 alone: 149
+columns that move, with how many rows: {'r1Kind': 45, 'today': 45, 'r3Alone': 14}
+  pubsub PubSubTracker Acknowledge Raw {'today': ('Producer', 'Client')}
+  pubsub PubSubTracker ModifyAckDeadline Raw {'today': ('Producer', 'Client')}
+  pubsub PubSubTracker Acknowledge Detailed {'today': ('Producer', 'Client')}
+  pubsub PubSubTracker ModifyAckDeadline Detailed {'today': ('Producer', 'Client')}
+  pubsub PubSubTracker Acknowledge Summarised {'today': ('Producer', 'Client')}
+  pubsub PubSubTracker ModifyAckDeadline Summarised {'today': ('Producer', 'Client')}
+  eventhubs EventHubsTracker GetPartitionIds Raw {'today': ('Producer', 'Client')}
+  eventhubs EventHubsTracker GetPartitionIds Detailed {'today': ('Producer', 'Client')}
+  eventhubs EventHubsTracker GetPartitionIds Summarised {'today': ('Producer', 'Client')}
+  kafka KafkaTracker.LogCommit Commit Raw {'today': ('Producer', 'Client')}
+  kafka KafkaTracker.LogCommit Commit Detailed {'today': ('Producer', 'Client')}
+  kafka KafkaTracker.LogCommit Commit Summarised {'today': ('Producer', 'Client')}
+  masstransit LogConsumeFault ConsumeFault Raw {'today': ('Producer', 'Client')}
+  masstransit LogConsumeFault ConsumeFault Detailed {'today': ('Producer', 'Client')}
+  masstransit LogConsumeFault ConsumeFault Summarised {'today': ('Producer', 'Client')}
+  sqs SqsTrackingMessageHandler SendMessage Raw {'today': ('Client', 'Producer')}
+  sqs SqsTrackingMessageHandler SendMessageBatch Raw {'today': ('Client', 'Producer')}
+  sqs SqsTrackingMessageHandler ReceiveMessage Raw {'today': ('Client', 'Producer')}
+  sqs SqsTrackingMessageHandler SendMessage Detailed {'today': ('Client', 'Producer'), 'r3Alone': ('Client', 'Producer')}
+  sqs SqsTrackingMessageHandler SendMessageBatch Detailed {'today': ('Client', 'Producer'), 'r3Alone': ('Client', 'Producer')}
+  sqs SqsTrackingMessageHandler ReceiveMessage Detailed {'today': ('Client', 'Producer')}
+  sqs SqsTrackingMessageHandler SendMessage Summarised {'today': ('Client', 'Producer'), 'r3Alone': ('Client', 'Producer')}
+  sqs SqsTrackingMessageHandler SendMessageBatch Summarised {'today': ('Client', 'Producer'), 'r3Alone': ('Client', 'Producer')}
+  sqs SqsTrackingMessageHandler ReceiveMessage Summarised {'today': ('Client', 'Producer')}
+  sns SnsTrackingMessageHandler Publish Raw {'today': ('Client', 'Producer')}
+  sns SnsTrackingMessageHandler PublishBatch Raw {'today': ('Client', 'Producer')}
+  sns SnsTrackingMessageHandler Publish Detailed {'today': ('Client', 'Producer'), 'r3Alone': ('Client', 'Producer')}
+  sns SnsTrackingMessageHandler PublishBatch Detailed {'today': ('Client', 'Producer'), 'r3Alone': ('Client', 'Producer')}
+  sns SnsTrackingMessageHandler Publish Summarised {'today': ('Client', 'Producer'), 'r3Alone': ('Client', 'Producer')}
+  sns SnsTrackingMessageHandler PublishBatch Summarised {'today': ('Client', 'Producer'), 'r3Alone': ('Client', 'Producer')}
+  eventbridge EventBridgeTrackingMessageHandler PutEvents Raw {'today': ('Client', 'Producer')}
+  eventbridge EventBridgeTrackingMessageHandler PutPartnerEvents Raw {'today': ('Client', 'Producer')}
+  eventbridge EventBridgeTrackingMessageHandler PutEvents Detailed {'today': ('Client', 'Producer'), 'r3Alone': ('Client', 'Producer')}
+  eventbridge EventBridgeTrackingMessageHandler PutPartnerEvents Detailed {'today': ('Client', 'Producer'), 'r3Alone': ('Client', 'Producer')}
+  eventbridge EventBridgeTrackingMessageHandler PutEvents Summarised {'today': ('Client', 'Producer'), 'r3Alone': ('Client', 'Producer')}
+  eventbridge EventBridgeTrackingMessageHandler PutPartnerEvents Summarised {'today': ('Client', 'Producer'), 'r3Alone': ('Client', 'Producer')}
+  storagequeue StorageQueueTrackingMessageHandler SendMessage Raw {'today': ('Client', 'Producer')}
+  storagequeue StorageQueueTrackingMessageHandler ReceiveMessages Raw {'today': ('Client', 'Producer')}
+  storagequeue StorageQueueTrackingMessageHandler PeekMessages Raw {'today': ('Client', 'Producer')}
+  storagequeue StorageQueueTrackingMessageHandler SendMessage Detailed {'today': ('Client', 'Producer'), 'r3Alone': ('Client', 'Producer')}
+  storagequeue StorageQueueTrackingMessageHandler ReceiveMessages Detailed {'today': ('Client', 'Producer')}
+  storagequeue StorageQueueTrackingMessageHandler PeekMessages Detailed {'today': ('Client', 'Producer')}
+  storagequeue StorageQueueTrackingMessageHandler SendMessage Summarised {'today': ('Client', 'Producer'), 'r3Alone': ('Client', 'Producer')}
+  storagequeue StorageQueueTrackingMessageHandler ReceiveMessages Summarised {'today': ('Client', 'Producer')}
+  storagequeue StorageQueueTrackingMessageHandler PeekMessages Summarised {'today': ('Client', 'Producer')}

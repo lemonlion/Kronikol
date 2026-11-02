@@ -1,0 +1,50 @@
+== run 7's own Failures.md
+16:**History:** 1 broke (against 6 earlier runs on local). Failures are worked through regressions first, then those with no history, then those already failing, then tho
+24:History: **broke** — passed in probe-run-6, failing now · last runs `PPPPPPF`
+
+== the same run's Failures.md through kronikol merge --history, published 5.27.13
+  history: 1 still failing, 1 behaviour changed (against 7 earlier runs on local)
+16:**History:** 1 still failing, 1 behaviour changed (against 7 earlier runs on local). Failures are worked through regressions first, then those with no history, then th
+24:History: **failing** — failing since probe-run-7, 2 runs; same status, different calls: the same number of calls as probe-run-7 (1), a different set · last runs `PP
+
+== its CI summary (3950 bytes)
+61:**People:** open `out.html` in a browser to read the whole run, diagrams included, or `Failures.md` for every failure in context. This job wrote them to `<scratch>
+67:kronikol query summary '<scratch>\history-fail\merged\out.krkl'
+68:kronikol query failures '<scratch>\history-fail\merged\out.krkl'
+71:Read `Failures.md` beside the report first. Nothing to install and no network needed: `dotnet run --file <scratch>
+73:history: 1 still failing, 1 behaviour changed (against 7 earlier runs on local)
+
+== the prototype's merge of the same run
+  history: 1 still failing (against 7 earlier runs on local)
+16:**History:** 1 still failing (against 7 earlier runs on local). Failures are worked through regressions first, then those with no history, then those already failing, 
+24:History: **failing** — failing since probe-run-7, 2 runs · last runs `PPPPPPFF`
+-- CI summary:
+61:**People:** open `out.html` in a browser to read the whole run, diagrams included, or `Failures.md` for every failure in context. This job wrote them to `<scratch>
+67:kronikol query summary '<scratch>\history-fail\merged-proto\out.krkl'
+68:kronikol query failures '<scratch>\history-fail\merged-proto\out.krkl'
+71:Read `Failures.md` beside the report first. Nothing to install and no network needed: `dotnet run --file <scratch>
+73:history: 1 still failing (against 7 earlier runs on local)
+== CI's order: the ledger holds runs 1 to 6, and run 7 has not been recorded when the merge reads it
+-- published 5.27.13
+  history: 1 broke (against 6 earlier runs on local)
+**History:** 1 broke (against 6 earlier runs on local). Failures are worked through regressions first, then those with no history, then those already 
+History: **broke** — passed in gh:1006:1, failing now · last runs `PPPPPPF`
+-- prototype
+  history: 1 broke (against 6 earlier runs on local)
+**History:** 1 broke (against 6 earlier runs on local). Failures are worked through regressions first, then those with no history, then those already 
+History: **broke** — passed in gh:1006:1, failing now · last runs `PPPPPPF`
+
+== CI's order, passing: run 7 is not yet in the ledger. Runs 1-5 pass, run 6 pass, run 7 pass
+-- published 5.27.13 merge
+  history: 1 behaviour changed (against 6 earlier runs on local)
+-- prototype merge
+
+== CI's order, still-failing: run 7 is not yet in the ledger. Runs 1-5 pass, run 6 fail, run 7 fail
+-- published 5.27.13 merge
+  history: 1 still failing, 1 behaviour changed (against 6 earlier runs on local)
+**History:** 1 still failing, 1 behaviour changed (against 6 earlier runs on local). Failures are worked through regressions first, 
+History: **failing** — failing since gh:1006:1, 2 runs; same status, different calls: the same number of calls as gh:1006:1 (1), a
+-- prototype merge
+  history: 1 still failing (against 6 earlier runs on local)
+**History:** 1 still failing (against 6 earlier runs on local). Failures are worked through regressions first, then those with no hi
+History: **failing** — failing since gh:1006:1, 2 runs · last runs `PPPPPFF`

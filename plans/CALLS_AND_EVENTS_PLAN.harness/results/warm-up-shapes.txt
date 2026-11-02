@@ -1,0 +1,291 @@
+warm-up-shapes.cs on three builds. A first call takes 500 ms, the later four next to nothing; measured counts the calls that have a duration.
+today: Kronikol 5.27.13+c58d98c0f8c841a0e1432e6c753ed9afa2a6977f
+R2: Kronikol 5.27.13+27cc0e4612a1d36754da65e2bd23787ffed1e271, with prototype/r1-first-cut.patch and r2-first-cut.patch
+R2 + option: the same with prototype/r2-option-warm-up-judges-publishes.patch
+
+31 shapes. In short, the marks on each build:
+
+ 1. Kafka: hosted consumer, delivery recorded, commit tracked, slow first commit
+    today: none  |  R2: none  |  R2 + option: none
+ 2. Kafka: hosted consumer, delivery not recorded, commit tracked, slow first commit
+    today: none  |  R2: none  |  R2 + option: none
+ 3. Pub/Sub: hosted subscriber through the wrapper's route, slow first handler (Receive, the reply is on its response)
+    today: none  |  R2: none  |  R2 + option: none
+ 4. Pub/Sub: Ack logged by hand (no wrapper logs one), slow first, no call into the worker
+    today: none  |  R2: first Ack /orders  |  R2 + option: first Ack /orders
+ 5. Pub/Sub: Ack logged by hand, slow first, the test calls the worker
+    today: none  |  R2: none  |  R2 + option: none
+ 6. Event Hubs: GetPartitionIds logged by hand (the wrappers pass it through unlogged), slow first
+    today: none  |  R2: first GetPartitionIds /orders  |  R2 + option: first GetPartitionIds /orders
+ 7. MassTransit: send faults from the observer, a slow first attempt before the fault is reported
+    today: none  |  R2: none  |  R2 + option: none
+ 8. SNS: the test publishes itself, slow first (TLS, a first connection)
+    today: first Publish /  |  R2: none  |  R2 + option: first Publish /
+ 9. SQS: the test sends itself, slow first
+    today: first SendMessage /orders  |  R2: none  |  R2 + option: first SendMessage /orders
+10. SQS: the test long-polls for a message, the first waits 500 ms for it, later ones find one
+    today: first ReceiveMessage /orders  |  R2: none  |  R2 + option: none
+11. SQS: the test deletes messages, slow first (settlement, Default before and after)
+    today: first DeleteMessage /orders  |  R2: first DeleteMessage /orders  |  R2 + option: first DeleteMessage /orders
+12. EventBridge: the test puts events, slow first
+    today: first PutEvents [OrderPlaced] /orders-bus/  |  R2: none  |  R2 + option: first PutEvents [OrderPlaced] /orders-bus/
+13. Storage Queues: the test sends, slow first
+    today: first Send → orders /orders  |  R2: none  |  R2 + option: first Send → orders /orders
+14. Storage Queues: the test peeks, slow first
+    today: first Peek ← orders /orders  |  R2: none  |  R2 + option: none
+15. SNS: the service publishes while the test calls it (the second condition of WarmUpCalls.cs:155)
+    today: none  |  R2: none  |  R2 + option: none
+16. SNS: a worker publishes in a scenario that never calls it, slow first
+    today: first Publish /  |  R2: none  |  R2 + option: first Publish /
+17. Kafka: the test produces itself with a delivery report, slow first (metadata, a first connection)
+    today: none  |  R2: none  |  R2 + option: first Produce → orders /orders
+18. Service Bus: the test sends itself, slow first
+    today: none  |  R2: none  |  R2 + option: first Send → orders /orders/
+19. Service Bus: hosted receiver completes (the wrapper logs this, Default today), slow first, no call into the worker
+    today: first Complete /orders/  |  R2: first Complete /orders/  |  R2 + option: first Complete /orders/
+20. Pub/Sub: the test publishes itself through the wrapper, slow first
+    today: none  |  R2: none  |  R2 + option: first Publish → orders /orders
+21. Event Hubs: the test sends itself through the wrapper, slow first
+    today: none  |  R2: none  |  R2 + option: first Send → orders /orders
+22. MassTransit: the test publishes itself, slow first
+    today: none  |  R2: none  |  R2 + option: none
+23. MassTransit: the test sends itself, slow first
+    today: none  |  R2: none  |  R2 + option: none
+24. Storage Queues at Raw: the test sends, slow first (POST on https)
+    today: first POST /orders/messages  |  R2: none  |  R2 + option: none
+25. Storage Queues at Raw: the test receives, slow first (GET on https)
+    today: first GET /orders/messages  |  R2: none  |  R2 + option: none
+26. SQS at Raw: the test sends, slow first (POST on https)
+    today: first POST /  |  R2: none  |  R2 + option: none
+27. SNS at Raw: the test publishes, slow first (POST on https)
+    today: first POST /  |  R2: none  |  R2 + option: none
+28. EventBridge at Raw: the test puts events, slow first (POST on https)
+    today: first POST /  |  R2: none  |  R2 + option: none
+29. MassTransit at Raw: the test publishes on rabbitmq://, slow first
+    today: none  |  R2: none  |  R2 + option: none
+30. MessageTracker: the test publishes on its own scheme, event://, slow first
+    today: none  |  R2: none  |  R2 + option: none
+31. MessageTracker: the test publishes on a relative address, slow first
+    today: none  |  R2: none  |  R2 + option: none
+
+In full:
+
+Kafka: hosted consumer, delivery recorded, commit tracked, slow first commit
+    today       calls 6, measured 0, kinds Event=6
+                marked: none
+    R2          calls 6, measured 0, kinds Default=5 Event=1
+                marked: none
+    R2 + option calls 6, measured 0, kinds Default=5 Event=1
+                marked: none
+Kafka: hosted consumer, delivery not recorded, commit tracked, slow first commit
+    today       calls 5, measured 0, kinds Event=5
+                marked: none
+    R2          calls 5, measured 0, kinds Default=5
+                marked: none
+    R2 + option calls 5, measured 0, kinds Default=5
+                marked: none
+Pub/Sub: hosted subscriber through the wrapper's route, slow first handler (Receive, the reply is on its response)
+    today       calls 5, measured 5, kinds Event=5
+                marked: none
+    R2          calls 5, measured 5, kinds Event=5
+                marked: none
+    R2 + option calls 5, measured 5, kinds Event=5
+                marked: none
+Pub/Sub: Ack logged by hand (no wrapper logs one), slow first, no call into the worker
+    today       calls 5, measured 5, kinds Event=5
+                marked: none
+    R2          calls 5, measured 5, kinds Default=5
+                marked: first Ack /orders
+    R2 + option calls 5, measured 5, kinds Default=5
+                marked: first Ack /orders
+Pub/Sub: Ack logged by hand, slow first, the test calls the worker
+    today       calls 6, measured 6, kinds Default=1 Event=5
+                marked: none
+    R2          calls 6, measured 6, kinds Default=6
+                marked: none
+    R2 + option calls 6, measured 6, kinds Default=6
+                marked: none
+Event Hubs: GetPartitionIds logged by hand (the wrappers pass it through unlogged), slow first
+    today       calls 5, measured 5, kinds Event=5
+                marked: none
+    R2          calls 5, measured 5, kinds Default=5
+                marked: first GetPartitionIds /orders
+    R2 + option calls 5, measured 5, kinds Default=5
+                marked: first GetPartitionIds /orders
+MassTransit: send faults from the observer, a slow first attempt before the fault is reported
+    today       calls 5, measured 5, kinds Event=5
+                marked: none
+    R2          calls 5, measured 5, kinds Default=5
+                marked: none
+    R2 + option calls 5, measured 5, kinds Default=5
+                marked: none
+SNS: the test publishes itself, slow first (TLS, a first connection)
+    today       calls 5, measured 5, kinds Default=5
+                marked: first Publish /
+    R2          calls 5, measured 5, kinds Event=5
+                marked: none
+    R2 + option calls 5, measured 5, kinds Event=5
+                marked: first Publish /
+SQS: the test sends itself, slow first
+    today       calls 5, measured 5, kinds Default=5
+                marked: first SendMessage /orders
+    R2          calls 5, measured 5, kinds Event=5
+                marked: none
+    R2 + option calls 5, measured 5, kinds Event=5
+                marked: first SendMessage /orders
+SQS: the test long-polls for a message, the first waits 500 ms for it, later ones find one
+    today       calls 5, measured 5, kinds Default=5
+                marked: first ReceiveMessage /orders
+    R2          calls 5, measured 5, kinds Event=5
+                marked: none
+    R2 + option calls 5, measured 5, kinds Event=5
+                marked: none
+SQS: the test deletes messages, slow first (settlement, Default before and after)
+    today       calls 5, measured 5, kinds Default=5
+                marked: first DeleteMessage /orders
+    R2          calls 5, measured 5, kinds Default=5
+                marked: first DeleteMessage /orders
+    R2 + option calls 5, measured 5, kinds Default=5
+                marked: first DeleteMessage /orders
+EventBridge: the test puts events, slow first
+    today       calls 5, measured 5, kinds Default=5
+                marked: first PutEvents [OrderPlaced] /orders-bus/
+    R2          calls 5, measured 5, kinds Event=5
+                marked: none
+    R2 + option calls 5, measured 5, kinds Event=5
+                marked: first PutEvents [OrderPlaced] /orders-bus/
+Storage Queues: the test sends, slow first
+    today       calls 5, measured 5, kinds Default=5
+                marked: first Send → orders /orders
+    R2          calls 5, measured 5, kinds Event=5
+                marked: none
+    R2 + option calls 5, measured 5, kinds Event=5
+                marked: first Send → orders /orders
+Storage Queues: the test peeks, slow first
+    today       calls 5, measured 5, kinds Default=5
+                marked: first Peek ← orders /orders
+    R2          calls 5, measured 5, kinds Event=5
+                marked: none
+    R2 + option calls 5, measured 5, kinds Event=5
+                marked: none
+SNS: the service publishes while the test calls it (the second condition of WarmUpCalls.cs:155)
+    today       calls 6, measured 6, kinds Default=6
+                marked: none
+    R2          calls 6, measured 6, kinds Default=1 Event=5
+                marked: none
+    R2 + option calls 6, measured 6, kinds Default=1 Event=5
+                marked: none
+SNS: a worker publishes in a scenario that never calls it, slow first
+    today       calls 5, measured 5, kinds Default=5
+                marked: first Publish /
+    R2          calls 5, measured 5, kinds Event=5
+                marked: none
+    R2 + option calls 5, measured 5, kinds Event=5
+                marked: first Publish /
+Kafka: the test produces itself with a delivery report, slow first (metadata, a first connection)
+    today       calls 5, measured 5, kinds Event=5
+                marked: none
+    R2          calls 5, measured 5, kinds Event=5
+                marked: none
+    R2 + option calls 5, measured 5, kinds Event=5
+                marked: first Produce → orders /orders
+Service Bus: the test sends itself, slow first
+    today       calls 5, measured 5, kinds Event=5
+                marked: none
+    R2          calls 5, measured 5, kinds Event=5
+                marked: none
+    R2 + option calls 5, measured 5, kinds Event=5
+                marked: first Send → orders /orders/
+Service Bus: hosted receiver completes (the wrapper logs this, Default today), slow first, no call into the worker
+    today       calls 5, measured 5, kinds Default=5
+                marked: first Complete /orders/
+    R2          calls 5, measured 5, kinds Default=5
+                marked: first Complete /orders/
+    R2 + option calls 5, measured 5, kinds Default=5
+                marked: first Complete /orders/
+Pub/Sub: the test publishes itself through the wrapper, slow first
+    today       calls 5, measured 5, kinds Event=5
+                marked: none
+    R2          calls 5, measured 5, kinds Event=5
+                marked: none
+    R2 + option calls 5, measured 5, kinds Event=5
+                marked: first Publish → orders /orders
+Event Hubs: the test sends itself through the wrapper, slow first
+    today       calls 5, measured 5, kinds Event=5
+                marked: none
+    R2          calls 5, measured 5, kinds Event=5
+                marked: none
+    R2 + option calls 5, measured 5, kinds Event=5
+                marked: first Send → orders /orders
+MassTransit: the test publishes itself, slow first
+    today       calls 5, measured 5, kinds Event=5
+                marked: none
+    R2          calls 5, measured 5, kinds Event=5
+                marked: none
+    R2 + option calls 5, measured 5, kinds Event=5
+                marked: none
+MassTransit: the test sends itself, slow first
+    today       calls 5, measured 5, kinds Event=5
+                marked: none
+    R2          calls 5, measured 5, kinds Event=5
+                marked: none
+    R2 + option calls 5, measured 5, kinds Event=5
+                marked: none
+Storage Queues at Raw: the test sends, slow first (POST on https)
+    today       calls 5, measured 5, kinds Default=5
+                marked: first POST /orders/messages
+    R2          calls 5, measured 5, kinds Event=5
+                marked: none
+    R2 + option calls 5, measured 5, kinds Event=5
+                marked: none
+Storage Queues at Raw: the test receives, slow first (GET on https)
+    today       calls 5, measured 5, kinds Default=5
+                marked: first GET /orders/messages
+    R2          calls 5, measured 5, kinds Event=5
+                marked: none
+    R2 + option calls 5, measured 5, kinds Event=5
+                marked: none
+SQS at Raw: the test sends, slow first (POST on https)
+    today       calls 5, measured 5, kinds Default=5
+                marked: first POST /
+    R2          calls 5, measured 5, kinds Event=5
+                marked: none
+    R2 + option calls 5, measured 5, kinds Event=5
+                marked: none
+SNS at Raw: the test publishes, slow first (POST on https)
+    today       calls 5, measured 5, kinds Default=5
+                marked: first POST /
+    R2          calls 5, measured 5, kinds Event=5
+                marked: none
+    R2 + option calls 5, measured 5, kinds Event=5
+                marked: none
+EventBridge at Raw: the test puts events, slow first (POST on https)
+    today       calls 5, measured 5, kinds Default=5
+                marked: first POST /
+    R2          calls 5, measured 5, kinds Event=5
+                marked: none
+    R2 + option calls 5, measured 5, kinds Event=5
+                marked: none
+MassTransit at Raw: the test publishes on rabbitmq://, slow first
+    today       calls 5, measured 5, kinds Event=5
+                marked: none
+    R2          calls 5, measured 5, kinds Event=5
+                marked: none
+    R2 + option calls 5, measured 5, kinds Event=5
+                marked: none
+MessageTracker: the test publishes on its own scheme, event://, slow first
+    today       calls 5, measured 5, kinds Event=5
+                marked: none
+    R2          calls 5, measured 5, kinds Event=5
+                marked: none
+    R2 + option calls 5, measured 5, kinds Event=5
+                marked: none
+MessageTracker: the test publishes on a relative address, slow first
+    today       calls 5, measured 5, kinds Event=5
+                marked: none
+    R2          calls 5, measured 5, kinds Event=5
+                marked: none
+    R2 + option calls 5, measured 5, kinds Event=5
+                marked: none
+
+31 of 31 shapes: the probe's 'publishes judged' view of R2's records gives what the option's code marks.

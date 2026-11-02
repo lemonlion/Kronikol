@@ -1,0 +1,21 @@
+== kronikol query history over the merge's own data file (published 5.27.13, the merge that said 6 behaviour changed)
+! mergeable-format report
+! no History.run.json beside the report — behaviour verdicts are off; results, attempts and durations still compare
+history: nothing changed (against 7 earlier runs on local)
+ledger: .kronikol/history.jsonl · stream local · run local:20261102T101917Z:03f77298
+
+no scenario in this run has a verdict other than stable · 10 scenarios read against 7 earlier run(s)
+
+== kronikol history gate over the same merge, asked to fail on behaviour change
+history: nothing changed (against 7 earlier runs on local)
+ledger: .kronikol/history.jsonl · stream local · run local:20261102T101917Z:03f77298 · no History.run.json beside the report, behaviour verdicts off
+new-failures: 0
+flaky: 0
+duration-regression: 0
+behaviour-change: 0
+quarantined: 0
+pass rate 1.00
+gate: passed
+exit 0
+
+== History.run.json beside the merge: 0 (the shard has 1)

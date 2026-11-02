@@ -242,14 +242,16 @@ public enum DiagramMarkerKind
     Phase,
 }
 
-/// <summary>
-/// Categorises the interaction style of a tracked request/response pair.
-/// </summary>
+/// <summary>Whether a record is a call or a message operation.</summary>
 public enum RequestResponseMetaType
 {
-    /// <summary>A standard request/response exchange (HTTP call, database query, etc.).</summary>
+    /// <summary>A call: a database query, an HTTP or gRPC call, settling a message, managing a topic or a queue.</summary>
     Default,
 
-    /// <summary>A fire-and-forget event (e.g. message publish, event send).</summary>
+    /// <summary>
+    /// A message operation: one that hands a message to a broker, reads one from it or delivers one to a consumer, whatever
+    /// came back. An empty receive and a failed send are events too. A record written only to say a call failed, holding an
+    /// exception and no message, is a call. Drawn on the event card.
+    /// </summary>
     Event
 }

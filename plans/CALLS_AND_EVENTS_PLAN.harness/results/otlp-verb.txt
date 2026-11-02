@@ -1,0 +1,6 @@
+NDJSON route, SQL DELETE           name=DELETE   kind=Client    http.request.method=DELETE db.system.name=other_sql
+live logs, SQL DELETE              name=DELETE   kind=Client    http.request.method=- db.system.name=other_sql
+NDJSON route, CosmosDB Delete      name=DELETE   kind=Client    http.request.method=DELETE db.system.name=cosmosdb
+live logs, CosmosDB Delete         name=Delete   kind=Client    http.request.method=- db.system.name=cosmosdb
+NDJSON route, Redis GET            name=GET      kind=Client    http.request.method=GET db.system.name=redis
+live logs, Redis GET               name=GET      kind=Client    http.request.method=- db.system.name=redis

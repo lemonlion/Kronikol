@@ -1,0 +1,18 @@
+-- MessageTracker, no HTTP context
+TrackSendEvent	1 request(s), 1 response(s)	pair's trace ids same	PerTest: 1 span(s), 0 orphan(s), 1 distinct (trace, span)	PerPair: 1 span(s), 0 orphan(s)	kinds Producer
+TrackConsumeEvent	1 request(s), 1 response(s)	pair's trace ids same	PerTest: 1 span(s), 0 orphan(s), 1 distinct (trace, span)	PerPair: 1 span(s), 0 orphan(s)	kinds Consumer
+TrackMessageRequest + TrackMessageResponse	1 request(s), 1 response(s)	pair's trace ids same	PerTest: 1 span(s), 0 orphan(s), 1 distinct (trace, span)	PerPair: 1 span(s), 0 orphan(s)	kinds Producer
+TrackSendMessage	1 request(s), 1 response(s)	pair's trace ids same	PerTest: 1 span(s), 0 orphan(s), 1 distinct (trace, span)	PerPair: 1 span(s), 0 orphan(s)	kinds Producer
+-- MessageTracker, with an HTTP context
+headers carry a trace id	1 request(s), 1 response(s)	pair's trace ids same	PerTest: 1 span(s), 0 orphan(s), 1 distinct (trace, span)	PerPair: 1 span(s), 0 orphan(s)	kinds Producer
+the trace id header is not a Guid (MessageTracker.cs:378)	1 request(s), 1 response(s)	pair's trace ids same	PerTest: 1 span(s), 0 orphan(s), 1 distinct (trace, span)	PerPair: 1 span(s), 0 orphan(s)	kinds Producer
+request inside the HTTP context, response outside it	1 request(s), 1 response(s)	pair's trace ids DIFFERS	PerTest: 1 span(s), 0 orphan(s), 1 distinct (trace, span)	PerPair: 1 span(s), 0 orphan(s)	kinds Producer
+-- NDJSON: requestResponseId pairs, and traceId defaults to it (wiki Ingesting-External-Captures.md:28-29)
+traceId on both halves	1 request(s), 1 response(s)	pair's trace ids same	PerTest: 1 span(s), 0 orphan(s), 1 distinct (trace, span)	PerPair: 1 span(s), 0 orphan(s)	kinds Client
+traceId on neither	1 request(s), 1 response(s)	pair's trace ids same	PerTest: 1 span(s), 0 orphan(s), 1 distinct (trace, span)	PerPair: 1 span(s), 0 orphan(s)	kinds Client
+traceId on the request alone	1 request(s), 1 response(s)	pair's trace ids DIFFERS	PerTest: 1 span(s), 0 orphan(s), 1 distinct (trace, span)	PerPair: 1 span(s), 0 orphan(s)	kinds Client
+-- Calls under one Activity: the span id is the Activity's (OtlpSpanMapper.SpanIdFor)
+three TrackSendEvent	3 span(s), 1 distinct (trace, span, kind), 1 distinct (trace, span)
+-- A Kafka produce and the consume of that message, under one test, through the shipped path
+Produce → orders	kind Producer	service.name App	peer.service Kafka	trace 58e13103dae1cc20aaadf9ca4eb88dd0	span 27218e1217f21679
+Consume ← orders	kind Consumer	service.name App	peer.service Kafka	trace 58e13103dae1cc20aaadf9ca4eb88dd0	span 27218e1217f21679

@@ -1,0 +1,87 @@
+broker	route	operation	verbosity	label	(a)	(b)
+pubsub	PubSubTracker	Publish	Raw	Publish topic=projects/shop/topics/orders sub=	Producer	Client
+pubsub	PubSubTracker	PublishBatch	Raw	PublishBatch topic=projects/shop/topics/orders sub=	Producer	Client
+pubsub	PubSubTracker	Publish	Detailed	Publish → orders	Producer	Client
+pubsub	PubSubTracker	PublishBatch	Detailed	Publish (×3) → orders	Producer	Client
+pubsub	PubSubTracker	Publish	Summarised	Publish	Producer	Client
+pubsub	PubSubTracker	PublishBatch	Summarised	Publish	Producer	Client
+servicebus	ServiceBusTracker	SendMessage	Raw	Send	Producer	Client
+servicebus	ServiceBusTracker	SendMessages	Raw	SendBatch	Producer	Client
+servicebus	ServiceBusTracker	ScheduleMessage	Raw	Schedule	Producer	Client
+servicebus	ServiceBusTracker	SendMessage	Detailed	Send → orders	Producer	Client
+servicebus	ServiceBusTracker	SendMessages	Detailed	Send (batch) → orders	Producer	Client
+servicebus	ServiceBusTracker	ScheduleMessage	Detailed	Schedule → orders	Producer	Client
+servicebus	ServiceBusTracker	SendMessage	Summarised	Send	Producer	Client
+servicebus	ServiceBusTracker	SendMessages	Summarised	Send	Producer	Client
+servicebus	ServiceBusTracker	ScheduleMessage	Summarised	Schedule	Producer	Client
+eventhubs	EventHubsTracker	Send	Raw	Send hub=orders partition= count=1	Producer	Client
+eventhubs	EventHubsTracker	SendBatch	Raw	SendBatch hub=orders partition= count=3	Producer	Client
+eventhubs	EventHubsTracker	Send	Detailed	Send → orders	Producer	Client
+eventhubs	EventHubsTracker	SendBatch	Detailed	Send (×3) → orders	Producer	Client
+eventhubs	EventHubsTracker	Send	Summarised	Send	Producer	Client
+eventhubs	EventHubsTracker	SendBatch	Summarised	Send	Producer	Client
+masstransit	LogSend	Send	Raw	Send OrderPlaced → rabbitmq://localhost/orders	Producer	Client
+masstransit	LogPublish	Publish	Raw	Publish OrderPlaced → rabbitmq://localhost/orders	Producer	Client
+masstransit	LogSend	Send	Detailed	Send OrderPlaced	Producer	Client
+masstransit	LogPublish	Publish	Detailed	Publish OrderPlaced	Producer	Client
+masstransit	LogSend	Send	Summarised	→ OrderPlaced	Producer	Client
+masstransit	LogPublish	Publish	Summarised	→ OrderPlaced	Producer	Client
+sqs	SqsTrackingMessageHandler	SendMessage	Detailed	SendMessage	Producer	Client
+sqs	SqsTrackingMessageHandler	SendMessageBatch	Detailed	SendMessageBatch	Producer	Client
+sqs	SqsTrackingMessageHandler	SendMessage	Summarised	SendMessage	Producer	Client
+sqs	SqsTrackingMessageHandler	SendMessageBatch	Summarised	SendMessageBatch	Producer	Client
+sns	SnsTrackingMessageHandler	Publish	Detailed	Publish	Producer	Client
+sns	SnsTrackingMessageHandler	PublishBatch	Detailed	PublishBatch	Producer	Client
+sns	SnsTrackingMessageHandler	Publish	Summarised	Publish	Producer	Client
+sns	SnsTrackingMessageHandler	PublishBatch	Summarised	PublishBatch	Producer	Client
+eventbridge	EventBridgeTrackingMessageHandler	PutEvents	Detailed	PutEvents [OrderPlaced]	Producer	Client
+eventbridge	EventBridgeTrackingMessageHandler	PutPartnerEvents	Detailed	PutPartnerEvents	Producer	Client
+eventbridge	EventBridgeTrackingMessageHandler	PutEvents	Summarised	PutEvents	Producer	Client
+eventbridge	EventBridgeTrackingMessageHandler	PutPartnerEvents	Summarised	PutPartnerEvents	Producer	Client
+storagequeue	StorageQueueTrackingMessageHandler	SendMessage	Detailed	Send → orders	Producer	Client
+storagequeue	StorageQueueTrackingMessageHandler	SendMessage	Summarised	SendMessage	Producer	Client
+core	MessageTracker.TrackSendEvent	event://	Detailed	Publish	Producer	Client
+core	MessageTracker.TrackSendMessage	event://	Detailed	Publish	Producer	Client
+core	MessageTracker.TrackSendEvent	kafka://	Detailed	Kafka	Producer	Client
+core	MessageTracker.TrackSendMessage	kafka://	Detailed	Kafka	Producer	Client
+core	MessageTracker.TrackSendEvent	kafka:// with a free-text consume label	Detailed	Kafka	Producer	Client
+core	MessageTracker.TrackSendMessage	kafka:// with a free-text consume label	Detailed	Kafka	Producer	Client
+core	MessageTracker.TrackSendEvent	https:// with a free-text label	Detailed	Publish	Producer	Client
+core	MessageTracker.TrackSendMessage	https:// with a free-text label	Detailed	Publish	Producer	Client
+core	MessageTracker.TrackSendEvent	event:// with a Process label	Detailed	Process order	Producer	Client
+core	MessageTracker.TrackMessageRequest+Response	event:// with a Process label	Detailed	Process order	Producer	Client
+core	MessageTracker.TrackSendEvent	event:// with a Consume label	Detailed	Consume	Producer	Client
+core	MessageTracker.TrackMessageRequest+Response	event:// with a Consume label	Detailed	Consume	Producer	Client
+core	MessageTracker.TrackSendEvent	event:// with a ProcessOrder label	Detailed	ProcessOrder	Producer	Client
+core	MessageTracker.TrackMessageRequest+Response	event:// with a ProcessOrder label	Detailed	ProcessOrder	Producer	Client
+core	MessageTracker.TrackSendEvent	https:// with a Process label	Detailed	Process	Producer	Client
+core	MessageTracker.TrackMessageRequest+Response	https:// with a Process label	Detailed	Process	Producer	Client
+core	MessageTracker.TrackSendEvent	event:// with a Receive label	Detailed	Receive receipt	Producer	Client
+core	MessageTracker.TrackMessageRequest+Response	event:// with a Receive label	Detailed	Receive receipt	Producer	Client
+core	MessageTracker.TrackSendEvent	event:// with a PollResult label	Detailed	PollResult	Producer	Client
+core	MessageTracker.TrackMessageRequest+Response	event:// with a PollResult label	Detailed	PollResult	Producer	Client
+core	MessageTracker.TrackSendEvent	kafka:// with a Process label	Detailed	Process order	Producer	Client
+core	MessageTracker.TrackMessageRequest+Response	kafka:// with a Process label	Detailed	Process order	Producer	Client
+core	MessageTracker.TrackSendEvent	kafka:// with its tracker's consume label	Detailed	Consume (Kafka)	Producer	Client
+core	MessageTracker.TrackMessageRequest+Response	kafka:// with its tracker's consume label	Detailed	Consume (Kafka)	Producer	Client
+core	MessageTracker.TrackSendEvent	masstransit:// with its tracker's consume label	Detailed	Consume OrderPlaced	Producer	Client
+core	MessageTracker.TrackMessageRequest+Response	masstransit:// with its tracker's consume label	Detailed	Consume OrderPlaced	Producer	Client
+core	MessageTracker.TrackSendEvent	pubsub:// with its tracker's receive label	Detailed	Receive order	Producer	Client
+core	MessageTracker.TrackMessageRequest+Response	pubsub:// with its tracker's receive label	Detailed	Receive order	Producer	Client
+core	MessageTracker.TrackSendEvent	pubsub:// with its tracker's ack label	Detailed	Ack order	Producer	Client
+core	MessageTracker.TrackMessageRequest+Response	pubsub:// with its tracker's ack label	Detailed	Ack order	Producer	Client
+core	MessageTracker.TrackSendEvent	eventhubs:// with its tracker's process label	Detailed	Process order	Producer	Client
+core	MessageTracker.TrackMessageRequest+Response	eventhubs:// with its tracker's process label	Detailed	Process order	Producer	Client
+core	MessageTracker.TrackSendEvent	servicebus:// with its tracker's peek label	Detailed	Peek order	Producer	Client
+core	MessageTracker.TrackMessageRequest+Response	servicebus:// with its tracker's peek label	Detailed	Peek order	Producer	Client
+core	MessageTracker.TrackSendEvent	sqs:// with its tracker's receive label	Detailed	ReceiveMessage	Producer	Client
+core	MessageTracker.TrackMessageRequest+Response	sqs:// with its tracker's receive label	Detailed	ReceiveMessage	Producer	Client
+core	MessageTracker.TrackSendEvent	pubsub:// (BreakfastProvider)	Detailed	Publish (Pub/Sub)	Producer	Client
+core	MessageTracker.TrackMessageRequest+Response	pubsub:// (BreakfastProvider)	Detailed	Publish (Pub/Sub)	Producer	Client
+core	MessageTracker.TrackSendEvent	eventhub:// (BreakfastProvider)	Detailed	Publish (Event Hub)	Producer	Client
+core	MessageTracker.TrackMessageRequest+Response	eventhub:// (BreakfastProvider)	Detailed	Publish (Event Hub)	Producer	Client
+core	MessageTracker.TrackSendEvent	eventgrid:// (BreakfastProvider)	Detailed	Publish (Event Grid)	Producer	Client
+core	MessageTracker.TrackMessageRequest+Response	eventgrid:// (BreakfastProvider)	Detailed	Publish (Event Grid)	Producer	Client
+core	new RequestResponseLog (by hand)	eventgrid:// (BreakfastProvider)	Detailed	Publish (Event Grid)	Producer	Client
+core	new RequestResponseLog (by hand)	event:// with a Process label	Detailed	Process order	Producer	Client
+core	new RequestResponseLog (by hand)	https:// with a Consume label	Detailed	Consume	Producer	Client

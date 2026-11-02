@@ -9,7 +9,7 @@ public static partial class QueryCommand
 {
     /// <summary>
     /// Every request in scope with its exactly-paired response — null when the call is genuinely
-    /// unpaired: a fire-and-forget event, or a request whose response was never captured. Pairing is by
+    /// unpaired: an event logged with no reply, or a request whose response was never captured. Pairing is by
     /// <c>requestResponseId</c>, the identity the report itself groups on; the proximity heuristic
     /// survives only for entries that carry no id.
     /// </summary>
@@ -89,7 +89,7 @@ public static partial class QueryCommand
 
     /// <summary>
     /// The other half of a call, with the word for how it relates. Null for an entry that has no other
-    /// half — a marker, a user action, a fire-and-forget publish.
+    /// half — a marker, a user action, a publish logged with no reply.
     /// </summary>
     internal static (string Role, InteractionEntry Other)? Counterpart(ScenarioEntry scenario, InteractionEntry interaction) =>
         interaction.Type.Equals("Request", StringComparison.OrdinalIgnoreCase)

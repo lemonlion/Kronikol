@@ -4,6 +4,51 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.27.14] - 2026-11-02
+
+The patch part moves (5.27.13 to 5.27.14): bug fixes that change what readers see, with no new option and no new public
+member (#220; `plans/CALLS_AND_EVENTS_PLAN.md` R1).
+
+### Fixed
+
+- **A Spanner query is a call.** `SpannerTracker`, on each of its routes (the ADO.NET command, the gRPC interceptor and the
+  server observers), and a hand-called `BigQueryTracker` and `BigtableTracker` logged `MetaType: Event`. They log `Default`,
+  as BigQuery's message handler and every other database package already did. Behaviour changes: a query's note is on the
+  plain note, where it was on the event card, and in the PlantUML source it is 13 px where it was 11 px;
+  `kronikol query interactions --group-by kind` reads `Default`; OTLP exports `CLIENT`, where it exported `PRODUCER`; and a
+  query one of these makes for the test itself is judged by the warm-up rule, so it can now be marked `first` or `waited`. A
+  query the service under test makes is not judged, as before.
+- **A merge keeps what the run wrote.** `kronikol merge` read any casing of the nine HTTP verbs as a verb at `Default`, and
+  the data writers put a verb in capitals, so a label such as `Delete` came out as `DELETE`. It happened at default verbosity
+  to Cosmos DB's `Delete` and `Patch`, EF Core's `Delete`, BigQuery's handler, Blob Storage, Storage Queues, Redis's request and
+  any gRPC or `DispatchProxy` method named after a verb, and reached the merged data file, `kronikol query`, `Failures.md`'s Call
+  column, the Background calls table and `service.json`, where a call's `op` id moved and a Storage Queues `DELETE` read as a
+  message of no direction. A merged diagram is the shard's own text, so it never moved. A merge now reads a verb only in the
+  capitals a verb is written in, and a record's kind has no say. Behaviour change: a query or a file pinned on a merged `DELETE`
+  reads `Delete` again, and a merged card's `op` ids and `behaviourHash` move once, with no change of behaviour.
+- **A verb built by hand is written as it was built.** `new HttpMethod("Patch")` through the HTTP handler reached the data file
+  as `PATCH`, while history recorded `Patch`. A standard verb is unchanged, as it is in capitals already. A card's `op` id and
+  `behaviourHash` move once for such a call.
+- **`kronikol merge --history` reports no changed behaviour where none occurred.** With the label read back as `DELETE` and the
+  ledger holding the run's `Delete`, identical runs read `behaviour-changed` ("same status, different calls") in the merge's
+  console line, its History tab, the labs page, the CI summary and, on a scenario that keeps failing, `Failures.md`. No history
+  rule moves: a merge writes nothing to the ledger, and its reading now agrees with what is recorded. A run whose shards could
+  see the ledger at run time can still read a false change, for a reason that has nothing to do with the method (the plan's F20),
+  which follows in its own release.
+- **Doc comments, the data file's schema and the NDJSON contract state the rule.** `RequestResponseMetaType` had a
+  documented test, "fire-and-forget", that cannot be applied: a Pub/Sub publish has an answer, and its tracker logs it. It now
+  has a rule. `Event` means the call moves a message: it hands one to a broker, reads one from it or delivers one to a consumer,
+  whatever came back. `Default` is everything else. `TrackSendMessage` said "standard (non-event) styling" and sets `Event`, on
+  purpose since 2.28.18. The schema's `method` said `GET` for a cache, where Redis writes `Get`. The rule holds for the
+  database trackers now, and a source fact (`No_database_package_writes_an_event`) stops the next one. The messaging trackers do
+  not all follow it yet: SQS, SNS, EventBridge and Storage Queues log a publish as `Default`, and Pub/Sub, Event Hubs, Kafka and
+  MassTransit log settling, management and faults as `Event`. Those follow in their own release.
+
+A consumer's own `Event` records are written as before. With a library at this version and a tool pinned older, the old tool
+still flattens these labels, now for Spanner's Raw `Delete` and a hand-called `BigQueryTracker`'s `Delete` too. With a tool at
+this version and a library pinned older, the labels are fixed by the tool alone, and a verb built by hand keeps its false alarm
+until the library moves, as the old writer has already upper-cased it in the file.
+
 ## [5.27.13] - 2026-10-29
 
 The patch part moves (5.27.12 to 5.27.13): bug fixes in one package's build and packaging, with no new option and no

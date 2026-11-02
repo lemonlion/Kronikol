@@ -70,6 +70,22 @@ public class SpannerTrackingInterceptorTests
         return Assert.Single(GetLogs(), l => l.Type == RequestResponseType.Request);
     }
 
+    // #220: a database call is a call on this route as on the others (plans/CALLS_AND_EVENTS_PLAN.md 5.3).
+    [Fact]
+    public async Task Both_halves_of_a_statement_through_the_interceptor_are_calls()
+    {
+        var interceptor = CreateInterceptor(MakeOptions());
+        var request = new ExecuteSqlRequest { Sql = "SELECT * FROM Users", Session = "projects/p/instances/i/databases/d/sessions/s" };
+        var method = MakeMethod<ExecuteSqlRequest, ResultSet>("google.spanner.v1.Spanner", "ExecuteSql");
+
+        await interceptor.AsyncUnaryCall(request, new ClientInterceptorContext<ExecuteSqlRequest, ResultSet>(method, null, new CallOptions()),
+            (_, _) => FakeUnaryCall(new ResultSet())).ResponseAsync;
+
+        var logs = GetLogs();
+        Assert.Equal(2, logs.Length);
+        Assert.All(logs, log => Assert.Equal(RequestResponseMetaType.Default, log.MetaType));
+    }
+
     [Theory]
     [InlineData("INSERT INTO Users (Id) VALUES (1)", "INSERT INTO Users")]
     [InlineData("UPDATE Users SET Name = 'a' WHERE Id = 1", "UPDATE Users")]

@@ -1,0 +1,203 @@
+package	route	operation	label	category	statementShaped	uriScheme	requestKind	responseKind	responseLogged	tableVerdict	otlpSpanKind	otlpDbSystem
+Kronikol.Extensions.Spanner	SpannerTracker	Query	Select	Spanner	true	spanner	Default	Default	true	-	Client	spanner
+Kronikol.Extensions.Spanner	SpannerTracker	Read	Read	Spanner	true	spanner	Default	Default	true	-	Client	spanner
+Kronikol.Extensions.Spanner	SpannerTracker	StreamingRead	StreamingRead	Spanner	true	spanner	Default	Default	true	-	Client	spanner
+Kronikol.Extensions.Spanner	SpannerTracker	Insert	Insert	Spanner	true	spanner	Default	Default	true	-	Client	spanner
+Kronikol.Extensions.Spanner	SpannerTracker	Update	Update	Spanner	true	spanner	Default	Default	true	-	Client	spanner
+Kronikol.Extensions.Spanner	SpannerTracker	Delete	Delete	Spanner	true	spanner	Default	Default	true	-	Client	spanner
+Kronikol.Extensions.Spanner	SpannerTracker	InsertOrUpdate	InsertOrUpdate	Spanner	true	spanner	Default	Default	true	-	Client	spanner
+Kronikol.Extensions.Spanner	SpannerTracker	Replace	Replace	Spanner	true	spanner	Default	Default	true	-	Client	spanner
+Kronikol.Extensions.Spanner	SpannerTracker	Commit	Commit	Spanner	true	spanner	Default	Default	true	-	Client	spanner
+Kronikol.Extensions.Spanner	SpannerTracker	Rollback	Rollback	Spanner	true	spanner	Default	Default	true	-	Client	spanner
+Kronikol.Extensions.Spanner	SpannerTracker	BeginTransaction	BeginTransaction	Spanner	true	spanner	Default	Default	true	-	Client	spanner
+Kronikol.Extensions.Spanner	SpannerTracker	BatchDml	BatchDml	Spanner	true	spanner	Default	Default	true	-	Client	spanner
+Kronikol.Extensions.Spanner	SpannerTracker	PartitionQuery	PartitionQuery	Spanner	true	spanner	Default	Default	true	-	Client	spanner
+Kronikol.Extensions.Spanner	SpannerTracker	PartitionRead	PartitionRead	Spanner	true	spanner	Default	Default	true	-	Client	spanner
+Kronikol.Extensions.Spanner	SpannerTracker	Ddl	Create	Spanner	true	spanner	Default	Default	true	-	Client	spanner
+Kronikol.Extensions.Spanner	SpannerTracker	CreateSession	CreateSession	Spanner	true	spanner	Default	Default	true	-	Client	spanner
+Kronikol.Extensions.Spanner	SpannerTracker	DeleteSession	DeleteSession	Spanner	true	spanner	Default	Default	true	-	Client	spanner
+Kronikol.Extensions.Spanner	SpannerTracker	Other	Spanner	Spanner	true	spanner	Default	Default	true	-	Client	spanner
+Kronikol.Extensions.BigQuery	BigQueryTracker	Query	Query	BigQuery	true	bigquery	Default	Default	true	-	Client	bigquery
+Kronikol.Extensions.BigQuery	BigQueryTracker	Insert	Insert	BigQuery	true	bigquery	Default	Default	true	-	Client	bigquery
+Kronikol.Extensions.BigQuery	BigQueryTracker	Read	Read	BigQuery	true	bigquery	Default	Default	true	-	Client	bigquery
+Kronikol.Extensions.BigQuery	BigQueryTracker	List	List	BigQuery	true	bigquery	Default	Default	true	-	Client	bigquery
+Kronikol.Extensions.BigQuery	BigQueryTracker	Create	Create	BigQuery	true	bigquery	Default	Default	true	-	Client	bigquery
+Kronikol.Extensions.BigQuery	BigQueryTracker	Delete	Delete	BigQuery	true	bigquery	Default	Default	true	-	Client	bigquery
+Kronikol.Extensions.BigQuery	BigQueryTracker	Update	Update	BigQuery	true	bigquery	Default	Default	true	-	Client	bigquery
+Kronikol.Extensions.BigQuery	BigQueryTracker	Cancel	Cancel	BigQuery	true	bigquery	Default	Default	true	-	Client	bigquery
+Kronikol.Extensions.BigQuery	BigQueryTracker	Other	Other	BigQuery	true	bigquery	Default	Default	true	-	Client	bigquery
+Kronikol.Extensions.BigQuery	BigQueryTrackingMessageHandler	Create[CreateDataset]	POST	BigQuery	true	https	Default	Default	true	-	Client	bigquery
+Kronikol.Extensions.BigQuery	BigQueryTrackingMessageHandler	Read[GetDataset]	GET	BigQuery	true	https	Default	Default	true	-	Client	bigquery
+Kronikol.Extensions.BigQuery	BigQueryTrackingMessageHandler	List[ListDatasets]	GET	BigQuery	true	https	Default	Default	true	-	Client	bigquery
+Kronikol.Extensions.BigQuery	BigQueryTrackingMessageHandler	Create[CreateTable]	POST	BigQuery	true	https	Default	Default	true	-	Client	bigquery
+Kronikol.Extensions.BigQuery	BigQueryTrackingMessageHandler	Read[GetTable]	GET	BigQuery	true	https	Default	Default	true	-	Client	bigquery
+Kronikol.Extensions.BigQuery	BigQueryTrackingMessageHandler	List[ListTables]	GET	BigQuery	true	https	Default	Default	true	-	Client	bigquery
+Kronikol.Extensions.BigQuery	BigQueryTrackingMessageHandler	Update[PatchTable]	PATCH	BigQuery	true	https	Default	Default	true	-	Client	bigquery
+Kronikol.Extensions.BigQuery	BigQueryTrackingMessageHandler	Insert[InsertRow]	POST	BigQuery	true	https	Default	Default	true	-	Client	bigquery
+Kronikol.Extensions.BigQuery	BigQueryTrackingMessageHandler	List[ListRows]	GET	BigQuery	true	https	Default	Default	true	-	Client	bigquery
+Kronikol.Extensions.BigQuery	BigQueryTrackingMessageHandler	Query[ExecuteQuery]	POST	BigQuery	true	https	Default	Default	true	-	Client	bigquery
+Kronikol.Extensions.BigQuery	BigQueryTrackingMessageHandler	Create[CreateQueryJob]	POST	BigQuery	true	https	Default	Default	true	-	Client	bigquery
+Kronikol.Extensions.BigQuery	BigQueryTrackingMessageHandler	Query[Jobs.Query]	POST	BigQuery	true	https	Default	Default	true	-	Client	bigquery
+Kronikol.Extensions.BigQuery	BigQueryTrackingMessageHandler	Read[GetJob]	GET	BigQuery	true	https	Default	Default	true	-	Client	bigquery
+Kronikol.Extensions.BigQuery	BigQueryTrackingMessageHandler	List[ListJobs]	GET	BigQuery	true	https	Default	Default	true	-	Client	bigquery
+Kronikol.Extensions.BigQuery	BigQueryTrackingMessageHandler	Cancel[CancelJob]	POST	BigQuery	true	https	Default	Default	true	-	Client	bigquery
+Kronikol.Extensions.BigQuery	BigQueryTrackingMessageHandler	Delete[DeleteJob]	DELETE	BigQuery	true	https	Default	Default	true	-	Client	bigquery
+Kronikol.Extensions.BigQuery	BigQueryTrackingMessageHandler	Create[UploadCsv#1]	POST	BigQuery	true	https	Default	Default	true	-	Client	bigquery
+Kronikol.Extensions.BigQuery	BigQueryTrackingMessageHandler	Insert[UploadCsv#2]	PUT	BigQuery	true	https	Default	Default	true	-	Client	bigquery
+Kronikol.Extensions.BigQuery	BigQueryTrackingMessageHandler	List[ListProjects]	GET	BigQuery	true	https	Default	Default	true	-	Client	bigquery
+Kronikol.Extensions.BigQuery	BigQueryTrackingMessageHandler	Read[ServiceAccountEmail]	GET	BigQuery	true	https	Default	Default	true	-	Client	bigquery
+Kronikol.Extensions.BigQuery	BigQueryTrackingMessageHandler	List[ListModels]	GET	BigQuery	true	https	Default	Default	true	-	Client	bigquery
+Kronikol.Extensions.BigQuery	BigQueryTrackingMessageHandler	List[ListRoutines]	GET	BigQuery	true	https	Default	Default	true	-	Client	bigquery
+Kronikol.Extensions.BigQuery	BigQueryTrackingMessageHandler	Read[Tables.GetIamPolicy]	POST	BigQuery	true	https	Default	Default	true	-	Client	bigquery
+Kronikol.Extensions.BigQuery	BigQueryTrackingMessageHandler	Create[Datasets.Undelete]	POST	BigQuery	true	https	Default	Default	true	-	Client	bigquery
+Kronikol.Extensions.BigQuery	BigQueryTrackingMessageHandler	List[RowAccessPolicies.List]	GET	BigQuery	true	https	Default	Default	true	-	Client	bigquery
+Kronikol.Extensions.BigQuery	BigQueryTrackingMessageHandler	Delete[DeleteTable]	DELETE	BigQuery	true	https	Default	Default	true	-	Client	bigquery
+Kronikol.Extensions.BigQuery	BigQueryTrackingMessageHandler	Delete[DeleteDataset]	DELETE	BigQuery	true	https	Default	Default	true	-	Client	bigquery
+Kronikol.Extensions.BigQuery	BigQueryTrackingMessageHandler	Other[hand-shaped-unknown-collection]	GET	BigQuery	true	https	Default	Default	true	-	Client	bigquery
+Kronikol.Extensions.Bigtable	BigtableTracker	ReadRows	ReadRows table=projects/shop/instances/main/tables/orders row=row-1	Bigtable	true	bigtable	Default	Default	true	-	Client	bigtable
+Kronikol.Extensions.Bigtable	BigtableTracker	MutateRow	MutateRow table=projects/shop/instances/main/tables/orders row=row-1	Bigtable	true	bigtable	Default	Default	true	-	Client	bigtable
+Kronikol.Extensions.Bigtable	BigtableTracker	MutateRows	MutateRows table=projects/shop/instances/main/tables/orders row=	Bigtable	true	bigtable	Default	Default	true	-	Client	bigtable
+Kronikol.Extensions.Bigtable	BigtableTracker	CheckAndMutateRow	CheckAndMutateRow table=projects/shop/instances/main/tables/orders row=row-1	Bigtable	true	bigtable	Default	Default	true	-	Client	bigtable
+Kronikol.Extensions.Bigtable	BigtableTracker	ReadModifyWriteRow	ReadModifyWriteRow table=projects/shop/instances/main/tables/orders row=row-1	Bigtable	true	bigtable	Default	Default	true	-	Client	bigtable
+Kronikol.Extensions.Bigtable	BigtableTracker	SampleRowKeys	SampleRowKeys table=projects/shop/instances/main/tables/orders row=row-1	Bigtable	true	bigtable	Default	Default	true	-	Client	bigtable
+Kronikol.Extensions.Bigtable	BigtableTracker	Other	Other table=projects/shop/instances/main/tables/orders row=	Bigtable	true	bigtable	Default	Default	true	-	Client	bigtable
+Kronikol.Extensions.PubSub	PubSubTracker	Publish	Publish topic=projects/shop/topics/orders sub=	MessageQueue	false	pubsub	Event	Event	true	Publishes	Producer	-
+Kronikol.Extensions.PubSub	PubSubTracker	PublishBatch	PublishBatch topic=projects/shop/topics/orders sub=	MessageQueue	false	pubsub	Event	Event	true	Publishes	Producer	-
+Kronikol.Extensions.PubSub	PubSubTracker	Pull	Pull topic= sub=projects/shop/subscriptions/orders-sub	MessageQueue	false	pubsub	Event	Event	true	Receives	Producer	-
+Kronikol.Extensions.PubSub	PubSubTracker	Acknowledge	Acknowledge topic= sub=projects/shop/subscriptions/orders-sub	MessageQueue	false	pubsub	Default	Default	true	Neither	Client	-
+Kronikol.Extensions.PubSub	PubSubTracker	ModifyAckDeadline	ModifyAckDeadline topic= sub=projects/shop/subscriptions/orders-sub	MessageQueue	false	pubsub	Default	Default	true	Neither	Client	-
+Kronikol.Extensions.PubSub	PubSubTracker	Receive	Receive topic= sub=projects/shop/subscriptions/orders-sub	MessageQueue	false	pubsub	Event	Event	true	Receives	Producer	-
+Kronikol.Extensions.PubSub	PubSubTracker	StartSubscriber	StartSubscriber topic= sub=projects/shop/subscriptions/orders-sub	MessageQueue	false	pubsub	Default	Default	true	Neither	Client	-
+Kronikol.Extensions.PubSub	PubSubTracker	StopSubscriber	StopSubscriber topic= sub=projects/shop/subscriptions/orders-sub	MessageQueue	false	pubsub	Default	Default	true	Neither	Client	-
+Kronikol.Extensions.PubSub	PubSubTracker	Other	Other topic= sub=projects/shop/subscriptions/orders-sub	MessageQueue	false	pubsub	Default	Default	true	Unknown	Client	-
+Kronikol.Extensions.ServiceBus	ServiceBusTracker	Send	Send	ServiceBus	false	servicebus	Event	Event	true	Publishes	Producer	-
+Kronikol.Extensions.ServiceBus	ServiceBusTracker	SendBatch	SendBatch	ServiceBus	false	servicebus	Event	Event	true	Publishes	Producer	-
+Kronikol.Extensions.ServiceBus	ServiceBusTracker	Schedule	Schedule	ServiceBus	false	servicebus	Event	Event	true	Publishes	Producer	-
+Kronikol.Extensions.ServiceBus	ServiceBusTracker	CancelSchedule	CancelSchedule	ServiceBus	false	servicebus	Default	Default	true	Neither	Client	-
+Kronikol.Extensions.ServiceBus	ServiceBusTracker	Receive	Receive	ServiceBus	false	servicebus	Event	Event	true	Receives	Producer	-
+Kronikol.Extensions.ServiceBus	ServiceBusTracker	ReceiveBatch	ReceiveBatch	ServiceBus	false	servicebus	Event	Event	true	Receives	Producer	-
+Kronikol.Extensions.ServiceBus	ServiceBusTracker	Peek	Peek	ServiceBus	false	servicebus	Event	Event	true	Receives	Producer	-
+Kronikol.Extensions.ServiceBus	ServiceBusTracker	Complete	Complete	ServiceBus	false	servicebus	Default	Default	true	Neither	Client	-
+Kronikol.Extensions.ServiceBus	ServiceBusTracker	Abandon	Abandon	ServiceBus	false	servicebus	Default	Default	true	Neither	Client	-
+Kronikol.Extensions.ServiceBus	ServiceBusTracker	DeadLetter	DeadLetter	ServiceBus	false	servicebus	Default	Default	true	Neither	Client	-
+Kronikol.Extensions.ServiceBus	ServiceBusTracker	Defer	Defer	ServiceBus	false	servicebus	Default	Default	true	Neither	Client	-
+Kronikol.Extensions.ServiceBus	ServiceBusTracker	RenewMessageLock	RenewMessageLock	ServiceBus	false	servicebus	Default	Default	true	Neither	Client	-
+Kronikol.Extensions.ServiceBus	ServiceBusTracker	RenewSessionLock	RenewSessionLock	ServiceBus	false	servicebus	Default	Default	true	Neither	Client	-
+Kronikol.Extensions.ServiceBus	ServiceBusTracker	GetSessionState	GetSessionState	ServiceBus	false	servicebus	Default	Default	true	Neither	Client	-
+Kronikol.Extensions.ServiceBus	ServiceBusTracker	SetSessionState	SetSessionState	ServiceBus	false	servicebus	Default	Default	true	Neither	Client	-
+Kronikol.Extensions.ServiceBus	ServiceBusTracker	StartProcessing	StartProcessing	ServiceBus	false	servicebus	Default	Default	true	Neither	Client	-
+Kronikol.Extensions.ServiceBus	ServiceBusTracker	StopProcessing	StopProcessing	ServiceBus	false	servicebus	Default	Default	true	Neither	Client	-
+Kronikol.Extensions.ServiceBus	ServiceBusTracker	Other	Other	ServiceBus	false	servicebus	Default	Default	true	Unknown	Client	-
+Kronikol.Extensions.EventHubs	EventHubsTracker	Send	Send hub=orders partition= count=1	MessageQueue	false	eventhubs	Event	Event	true	Publishes	Producer	-
+Kronikol.Extensions.EventHubs	EventHubsTracker	SendBatch	SendBatch hub=orders partition= count=3	MessageQueue	false	eventhubs	Event	Event	true	Publishes	Producer	-
+Kronikol.Extensions.EventHubs	EventHubsTracker	CreateBatch	CreateBatch hub=orders partition= count=	MessageQueue	false	eventhubs	Default	Default	true	Neither	Client	-
+Kronikol.Extensions.EventHubs	EventHubsTracker	ReadEvents	ReadEvents hub=orders partition= count=	MessageQueue	false	eventhubs	Event	Event	true	Receives	Producer	-
+Kronikol.Extensions.EventHubs	EventHubsTracker	ReadEventsFromPartition	ReadEventsFromPartition hub=orders partition=0 count=	MessageQueue	false	eventhubs	Event	Event	true	Receives	Producer	-
+Kronikol.Extensions.EventHubs	EventHubsTracker	GetPartitionIds	GetPartitionIds hub=orders partition= count=	MessageQueue	false	eventhubs	Default	Default	true	Neither	Client	-
+Kronikol.Extensions.EventHubs	EventHubsTracker	GetEventHubProperties	GetEventHubProperties hub=orders partition= count=	MessageQueue	false	eventhubs	Default	Default	true	Neither	Client	-
+Kronikol.Extensions.EventHubs	EventHubsTracker	GetPartitionProperties	GetPartitionProperties hub=orders partition=0 count=	MessageQueue	false	eventhubs	Default	Default	true	Neither	Client	-
+Kronikol.Extensions.EventHubs	EventHubsTracker	StartProcessing	StartProcessing hub=orders partition= count=	MessageQueue	false	eventhubs	Default	Default	true	Neither	Client	-
+Kronikol.Extensions.EventHubs	EventHubsTracker	StopProcessing	StopProcessing hub=orders partition= count=	MessageQueue	false	eventhubs	Default	Default	true	Neither	Client	-
+Kronikol.Extensions.EventHubs	EventHubsTracker	ProcessEvent	ProcessEvent hub=orders partition=0 count=1	MessageQueue	false	eventhubs	Event	Event	true	Receives	Producer	-
+Kronikol.Extensions.EventHubs	EventHubsTracker	Other	Other hub=orders partition= count=	MessageQueue	false	eventhubs	Default	Default	true	Unknown	Client	-
+Kronikol.Extensions.Kafka	KafkaTracker.LogProduce	Produce	Produce orders[0]@7	MessageQueue	false	kafka	Event	Event	true	Publishes	Producer	-
+Kronikol.Extensions.Kafka	KafkaTracker.LogProduce	ProduceAsync	ProduceAsync orders[0]@7	MessageQueue	false	kafka	Event	Event	true	Publishes	Producer	-
+Kronikol.Extensions.Kafka	KafkaTracker.LogConsume	Consume	Consume orders[0]@7	MessageQueue	false	kafka	Event	Event	true	Unknown	Producer	-
+Kronikol.Extensions.Kafka	KafkaTracker.LogSubscribe	Subscribe	Subscribe orders	MessageQueue	false	kafka	Default	Default	true	Neither	Client	-
+Kronikol.Extensions.Kafka	KafkaTracker.LogUnsubscribe	Unsubscribe	Unsubscribe	MessageQueue	false	kafka	Default	Default	true	Neither	Client	-
+Kronikol.Extensions.Kafka	KafkaTracker.LogCommit	Commit	Commit	MessageQueue	false	kafka	Default	Default	true	Neither	Client	-
+Kronikol.Extensions.Kafka	KafkaTracker.LogFlush	Flush	Flush	MessageQueue	false	kafka	Default	Default	true	Neither	Client	-
+Kronikol.Extensions.Kafka	KafkaTracker.LogTransaction	InitTransactions	InitTransactions	MessageQueue	false	kafka	Default	Default	true	Neither	Client	-
+Kronikol.Extensions.Kafka	KafkaTracker.LogTransaction	BeginTransaction	BeginTransaction	MessageQueue	false	kafka	Default	Default	true	Neither	Client	-
+Kronikol.Extensions.Kafka	KafkaTracker.LogTransaction	CommitTransaction	CommitTransaction	MessageQueue	false	kafka	Default	Default	true	Neither	Client	-
+Kronikol.Extensions.Kafka	KafkaTracker.LogTransaction	AbortTransaction	AbortTransaction	MessageQueue	false	kafka	Default	Default	true	Neither	Client	-
+Kronikol.Extensions.Kafka	KafkaTracker.LogTransaction	SendOffsetsToTransaction	SendOffsetsToTransaction	MessageQueue	false	kafka	Default	Default	true	Neither	Client	-
+Kronikol.Extensions.Kafka	KafkaTracker.LogProduce	Other	Other orders	MessageQueue	false	kafka	Default	Default	true	Unknown	Client	-
+Kronikol.Extensions.Kafka	KafkaTracker.TrackProduce.Sent	Produce	Produce orders	MessageQueue	false	kafka	Event	Event	true	Publishes	Producer	-
+Kronikol.Extensions.Kafka	KafkaTracker.TrackProduce.Delivered	ProduceAsync	ProduceAsync orders[0]@7	MessageQueue	false	kafka	Event	Event	true	Publishes	Producer	-
+Kronikol.Extensions.Kafka	KafkaTracker.TrackProduce.Failed	Produce	Produce orders	MessageQueue	false	kafka	Event	Event	true	Publishes	Producer	-
+Kronikol.Extensions.Kafka	KafkaTracker.TrackConsume	Consume	Consume orders[0]@7	MessageQueue	false	kafka	Event	Event	true	Unknown	Producer	-
+Kronikol.Extensions.MassTransit	MassTransitTracker.LogSend	Send	Send OrderPlaced → rabbitmq://localhost/orders	MessageQueue	false	rabbitmq	Event	Event	true	-	Producer	-
+Kronikol.Extensions.MassTransit	MassTransitTracker.LogPublish	Publish	Publish OrderPlaced → rabbitmq://localhost/orders	MessageQueue	false	rabbitmq	Event	Event	true	-	Producer	-
+Kronikol.Extensions.MassTransit	MassTransitTracker.LogConsume	Consume	Consume OrderPlaced → rabbitmq://localhost/orders	MessageQueue	false	rabbitmq	Event	Event	true	-	Producer	-
+Kronikol.Extensions.MassTransit	MassTransitTracker.LogSendFault	SendFault	SendFault OrderPlaced → rabbitmq://localhost/orders	MessageQueue	false	rabbitmq	Default	Default	true	-	Client	-
+Kronikol.Extensions.MassTransit	MassTransitTracker.LogPublishFault	PublishFault	PublishFault OrderPlaced → rabbitmq://localhost/orders	MessageQueue	false	rabbitmq	Default	Default	true	-	Client	-
+Kronikol.Extensions.MassTransit	MassTransitTracker.LogConsumeFault	ConsumeFault	ConsumeFault OrderPlaced → rabbitmq://localhost/orders	MessageQueue	false	rabbitmq	Default	Default	true	-	Client	-
+Kronikol.Extensions.MassTransit	MassTransitTracker.LogSend	Other	Other OrderPlaced → rabbitmq://localhost/orders	MessageQueue	false	rabbitmq	Default	Default	true	-	Client	-
+Kronikol.Extensions.SQS	SqsTrackingMessageHandler	SendMessage	POST	MessageQueue	false	https	Event	Event	true	-	Producer	-
+Kronikol.Extensions.SQS	SqsTrackingMessageHandler	SendMessageBatch	POST	MessageQueue	false	https	Event	Event	true	-	Producer	-
+Kronikol.Extensions.SQS	SqsTrackingMessageHandler	ReceiveMessage	POST	MessageQueue	false	https	Event	Event	true	-	Producer	-
+Kronikol.Extensions.SQS	SqsTrackingMessageHandler	DeleteMessage	POST	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.SQS	SqsTrackingMessageHandler	DeleteMessageBatch	POST	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.SQS	SqsTrackingMessageHandler	ChangeMessageVisibility	POST	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.SQS	SqsTrackingMessageHandler	ChangeMessageVisibilityBatch	POST	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.SQS	SqsTrackingMessageHandler	CreateQueue	POST	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.SQS	SqsTrackingMessageHandler	DeleteQueue	POST	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.SQS	SqsTrackingMessageHandler	GetQueueUrl	POST	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.SQS	SqsTrackingMessageHandler	GetQueueAttributes	POST	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.SQS	SqsTrackingMessageHandler	SetQueueAttributes	POST	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.SQS	SqsTrackingMessageHandler	PurgeQueue	POST	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.SQS	SqsTrackingMessageHandler	ListQueues	POST	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.SQS	SqsTrackingMessageHandler	Other[ListQueueTags]	POST	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.SNS	SnsTrackingMessageHandler	Publish	POST	MessageQueue	false	https	Event	Event	true	-	Producer	-
+Kronikol.Extensions.SNS	SnsTrackingMessageHandler	PublishBatch	POST	MessageQueue	false	https	Event	Event	true	-	Producer	-
+Kronikol.Extensions.SNS	SnsTrackingMessageHandler	Subscribe	POST	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.SNS	SnsTrackingMessageHandler	Unsubscribe	POST	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.SNS	SnsTrackingMessageHandler	CreateTopic	POST	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.SNS	SnsTrackingMessageHandler	DeleteTopic	POST	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.SNS	SnsTrackingMessageHandler	ListTopics	POST	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.SNS	SnsTrackingMessageHandler	ListSubscriptions	POST	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.SNS	SnsTrackingMessageHandler	ListSubscriptionsByTopic	POST	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.SNS	SnsTrackingMessageHandler	GetTopicAttributes	POST	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.SNS	SnsTrackingMessageHandler	SetTopicAttributes	POST	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.SNS	SnsTrackingMessageHandler	ConfirmSubscription	POST	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.SNS	SnsTrackingMessageHandler	Other[ListTagsForResource]	POST	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.EventBridge	EventBridgeTrackingMessageHandler	PutEvents	POST	MessageQueue	false	https	Event	Event	true	-	Producer	-
+Kronikol.Extensions.EventBridge	EventBridgeTrackingMessageHandler	PutPartnerEvents	POST	MessageQueue	false	https	Event	Event	true	-	Producer	-
+Kronikol.Extensions.EventBridge	EventBridgeTrackingMessageHandler	TestEventPattern	POST	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.EventBridge	EventBridgeTrackingMessageHandler	PutRule	POST	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.EventBridge	EventBridgeTrackingMessageHandler	DeleteRule	POST	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.EventBridge	EventBridgeTrackingMessageHandler	DescribeRule	POST	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.EventBridge	EventBridgeTrackingMessageHandler	EnableRule	POST	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.EventBridge	EventBridgeTrackingMessageHandler	DisableRule	POST	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.EventBridge	EventBridgeTrackingMessageHandler	ListRules	POST	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.EventBridge	EventBridgeTrackingMessageHandler	PutTargets	POST	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.EventBridge	EventBridgeTrackingMessageHandler	RemoveTargets	POST	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.EventBridge	EventBridgeTrackingMessageHandler	ListTargetsByRule	POST	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.EventBridge	EventBridgeTrackingMessageHandler	CreateEventBus	POST	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.EventBridge	EventBridgeTrackingMessageHandler	DeleteEventBus	POST	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.EventBridge	EventBridgeTrackingMessageHandler	DescribeEventBus	POST	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.EventBridge	EventBridgeTrackingMessageHandler	ListEventBuses	POST	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.EventBridge	EventBridgeTrackingMessageHandler	CreateArchive	POST	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.EventBridge	EventBridgeTrackingMessageHandler	DeleteArchive	POST	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.EventBridge	EventBridgeTrackingMessageHandler	DescribeArchive	POST	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.EventBridge	EventBridgeTrackingMessageHandler	ListArchives	POST	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.EventBridge	EventBridgeTrackingMessageHandler	StartReplay	POST	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.EventBridge	EventBridgeTrackingMessageHandler	DescribeReplay	POST	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.EventBridge	EventBridgeTrackingMessageHandler	ListReplays	POST	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.EventBridge	EventBridgeTrackingMessageHandler	CreateApiDestination	POST	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.EventBridge	EventBridgeTrackingMessageHandler	CreateConnection	POST	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.EventBridge	EventBridgeTrackingMessageHandler	TagResource	POST	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.EventBridge	EventBridgeTrackingMessageHandler	UntagResource	POST	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.EventBridge	EventBridgeTrackingMessageHandler	ListTagsForResource	POST	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.EventBridge	EventBridgeTrackingMessageHandler	Other[ListConnections]	POST	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.StorageQueues	StorageQueueTrackingMessageHandler	CreateQueue	PUT	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.StorageQueues	StorageQueueTrackingMessageHandler	SendMessage	POST	MessageQueue	false	https	Event	Event	true	-	Producer	-
+Kronikol.Extensions.StorageQueues	StorageQueueTrackingMessageHandler	ReceiveMessages	GET	MessageQueue	false	https	Event	Event	true	-	Producer	-
+Kronikol.Extensions.StorageQueues	StorageQueueTrackingMessageHandler	PeekMessages	GET	MessageQueue	false	https	Event	Event	true	-	Producer	-
+Kronikol.Extensions.StorageQueues	StorageQueueTrackingMessageHandler	UpdateMessage	PUT	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.StorageQueues	StorageQueueTrackingMessageHandler	DeleteMessage	DELETE	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.StorageQueues	StorageQueueTrackingMessageHandler	ClearMessages	DELETE	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.StorageQueues	StorageQueueTrackingMessageHandler	GetProperties	GET	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.StorageQueues	StorageQueueTrackingMessageHandler	SetMetadata	PUT	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.StorageQueues	StorageQueueTrackingMessageHandler	ListQueues	GET	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.StorageQueues	StorageQueueTrackingMessageHandler	Other[GetAccessPolicy]	GET	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol.Extensions.StorageQueues	StorageQueueTrackingMessageHandler	DeleteQueue	DELETE	MessageQueue	false	https	Default	Default	true	-	Client	-
+Kronikol	MessageTracker.TrackSendEvent	TrackSendEvent[event://]	Publish	MessageQueue	false	event	Event	Event	true	-	Producer	-
+Kronikol	MessageTracker.TrackSendMessage	TrackSendMessage[event://]	Publish	MessageQueue	false	event	Event	Event	true	-	Producer	-
+Kronikol	MessageTracker.TrackConsumeEvent	TrackConsumeEvent[event://]	Consume	MessageQueue	false	event	Event	Event	true	-	Producer	-
+Kronikol	MessageTracker.TrackMessageRequest+TrackMessageResponse	TrackMessageRequest+TrackMessageResponse[event://]	Publish	MessageQueue	false	event	Event	Event	true	-	Producer	-
+Kronikol	MessageTracker.TrackSendEvent	TrackSendEvent[kafka://]	Kafka	MessageQueue	false	kafka	Event	Event	true	Unknown	Producer	-
+Kronikol	MessageTracker.TrackSendMessage	TrackSendMessage[kafka://]	Kafka	MessageQueue	false	kafka	Event	Event	true	Unknown	Producer	-
+Kronikol	MessageTracker.TrackConsumeEvent	TrackConsumeEvent[kafka://]	Consume (Kafka)	MessageQueue	false	kafka	Event	Event	true	Unknown	Producer	-
+Kronikol	MessageTracker.TrackMessageRequest+TrackMessageResponse	TrackMessageRequest+TrackMessageResponse[kafka://]	Kafka	MessageQueue	false	kafka	Event	Event	true	Unknown	Producer	-

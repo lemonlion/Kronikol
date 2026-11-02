@@ -52,7 +52,6 @@ public class BigQueryTracker : ITrackingComponent
             label, logContent, uri, [],
             _options.ServiceName, _options.CallerName,
             RequestResponseType.Request, traceId, requestResponseId, false,
-            MetaType: RequestResponseMetaType.Event,
             DependencyCategory: DependencyCategories.BigQuery)
         {
             AttributionSource = testInfo.Value.Source,

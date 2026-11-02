@@ -101,7 +101,7 @@ public sealed record InteractionRecord
     /// <summary><c>Setup</c>, <c>Action</c> or <c>Unknown</c>.</summary>
     [JsonPropertyName("phase")] public string? Phase { get; init; }
 
-    /// <summary><c>Default</c> (request/response) or <c>Event</c> (fire-and-forget styling).</summary>
+    /// <summary><c>Default</c> (a call) or <c>Event</c> (an operation that moves a message: it hands one to a broker, reads one from it or delivers one to a consumer).</summary>
     [JsonPropertyName("metaType")] public string? MetaType { get; init; }
 
     /// <summary>

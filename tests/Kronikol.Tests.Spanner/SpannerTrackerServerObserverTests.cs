@@ -36,6 +36,22 @@ public class SpannerTrackerServerObserverTests
         Assert.NotNull(onResponse);
     }
 
+    // #220: what a test's in-process server observes is a database call too (plans/CALLS_AND_EVENTS_PLAN.md 5.3).
+    [Fact]
+    public void Both_halves_of_an_observed_statement_are_calls()
+    {
+        var tracker = new SpannerTracker(MakeOptions());
+        var (onRequest, onResponse) = SpannerTracker.CreateServerObservers(tracker);
+        var request = new ExecuteSqlRequest { Sql = "SELECT * FROM Users" };
+
+        onRequest("ExecuteSql", request, DateTimeOffset.UtcNow);
+        onResponse("ExecuteSql", request, new ResultSet(), TimeSpan.FromMilliseconds(5), StatusCode.OK, DateTimeOffset.UtcNow);
+
+        var logs = GetLogs();
+        Assert.Equal(2, logs.Length);
+        Assert.All(logs, log => Assert.Equal(RequestResponseMetaType.Default, log.MetaType));
+    }
+
     [Fact]
     public void OnRequest_Logs_request_entry()
     {

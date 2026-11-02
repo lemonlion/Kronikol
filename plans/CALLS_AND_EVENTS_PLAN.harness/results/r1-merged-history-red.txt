@@ -1,0 +1,24 @@
+MergedRunHistoryTests on 27cc0e46's src with R1's tests applied (dotnet test, net10.0). Red facts must be red for the defect's reason; the controls must be green.
+Failed A_merge_keeps_a_calls_operation_id
+Failed A_merged_report_History_tab_says_nothing_changed
+Failed A_merged_run_reads_as_nothing_changed_against_its_own_ledger(written: "Delete", category: "BigQuery", builtByHand: False)
+Failed A_merged_run_reads_as_nothing_changed_against_its_own_ledger(written: "Delete", category: "BlobStorage", builtByHand: False)
+Failed A_merged_run_reads_as_nothing_changed_against_its_own_ledger(written: "Delete", category: "CosmosDB", builtByHand: False)
+Failed A_merged_run_reads_as_nothing_changed_against_its_own_ledger(written: "Delete", category: "MessageQueue", builtByHand: False)
+Failed A_merged_run_reads_as_nothing_changed_against_its_own_ledger(written: "Delete", category: "Redis", builtByHand: False)
+Failed A_merged_run_reads_as_nothing_changed_against_its_own_ledger(written: "Delete", category: "SQL", builtByHand: False)
+Failed A_merged_run_reads_as_nothing_changed_against_its_own_ledger(written: "Delete", category: null, builtByHand: False)
+Failed A_merged_run_reads_as_nothing_changed_against_its_own_ledger(written: "Get", category: "Redis", builtByHand: False)
+Failed A_merged_run_reads_as_nothing_changed_against_its_own_ledger(written: "Get", category: "gRPC", builtByHand: False)
+Failed A_merged_run_reads_as_nothing_changed_against_its_own_ledger(written: "Patch", category: "CosmosDB", builtByHand: False)
+Failed A_merged_run_reads_as_nothing_changed_against_its_own_ledger(written: "Patch", category: null, builtByHand: True)
+Failed A_merged_run_reads_as_nothing_changed_against_its_own_ledger(written: "patch", category: null, builtByHand: True)
+Failed A_scenario_that_keeps_failing_is_given_no_false_lead
+Passed A_merge_writes_nothing_to_the_ledger
+Passed A_merged_report_History_tab_names_a_real_change
+Passed A_real_change_of_call_is_still_named(recorded: "Delete", now: "DELETE")
+Passed A_real_change_of_call_is_still_named(recorded: "Delete", now: "Patch")
+Passed A_verb_in_capitals_still_reads_as_nothing_changed
+
+A_scenario_that_keeps_failing_is_given_no_false_lead's merge said:
+[xUnit.net 00:00:04.68]         history: 1 behaviour changed (against 6 earlier runs on local)

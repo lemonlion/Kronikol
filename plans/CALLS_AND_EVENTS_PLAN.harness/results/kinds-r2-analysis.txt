@@ -1,0 +1,70 @@
+== what moved, Detailed, request kind: 5.27.13 -> the prototype (operations, one row per route)
+EventBridge    Default -> Event   table says Publishes  2  PutEvents, PutPartnerEvents
+EventHubs        Event -> Default table says Neither    6  CreateBatch, GetEventHubProperties, GetPartitionIds, GetPartitionProperties, StartProcessing, StopProcessing
+EventHubs        Event -> Default table says Unknown    1  Other
+Kafka            Event -> Default table says Neither    9  AbortTransaction, BeginTransaction, Commit, CommitTransaction, Flush, InitTransactions, SendOffsetsToTransaction, Subscribe, Unsubscribe
+Kafka            Event -> Default table says Unknown    1  Other
+MassTransit      Event -> Default table says Neither    3  ConsumeFault, PublishFault, SendFault
+MassTransit      Event -> Default table says Unknown    1  Other
+PubSub           Event -> Default table says Neither    4  Acknowledge, ModifyAckDeadline, StartSubscriber, StopSubscriber
+PubSub           Event -> Default table says Unknown    1  Other
+SNS            Default -> Event   table says Publishes  2  Publish, PublishBatch
+SQS            Default -> Event   table says Publishes  2  SendMessage, SendMessageBatch
+SQS            Default -> Event   table says Receives   1  ReceiveMessage
+StorageQueues  Default -> Event   table says Publishes  1  SendMessage
+StorageQueues  Default -> Event   table says Receives   2  PeekMessages, ReceiveMessages
+to Event 10, to Default 26
+  to Default by verdict: {'Neither': 22, 'Unknown': 4}
+
+== a response whose kind differs from its request's
+Detailed    0
+Raw         0
+Summarised  0
+5.27.13 Detailed 21
+
+== the literal theory of 6.7 over each verbosity: Event exactly when the table says Publishes or Receives
+   (a row is a broker record the prototype wrote. 'Unknown' under the table = it cannot read the label or URI)
+-- Detailed: 132 rows, 3 disagree
+   Kafka         scheme kafka       table Unknown  kind Event    1 ops: Consume   labels: Consume ← orders
+   MassTransit   scheme masstransit table Unknown  kind Event    1 ops: Consume   labels: Consume OrderPlaced
+-- Raw: 132 rows, 15 disagree
+   EventBridge   scheme https       table -        kind Event    2 ops: PutEvents, PutPartnerEvents   labels: POST
+   Kafka         scheme kafka       table Unknown  kind Event    1 ops: Consume   labels: Consume orders[0]@7
+   MassTransit   scheme rabbitmq    table -        kind Event    3 ops: Consume, Publish, Send   labels: Consume OrderPlaced → rabbitmq://localhost/orders, Publish OrderPlaced → rabbitmq://localhost/orders, Send OrderPlaced → rabbitmq://localhost/orders
+   SNS           scheme https       table -        kind Event    2 ops: Publish, PublishBatch   labels: POST
+   SQS           scheme https       table -        kind Event    3 ops: ReceiveMessage, SendMessage, SendMessageBatch   labels: POST
+   StorageQueues scheme https       table -        kind Event    3 ops: PeekMessages, ReceiveMessages, SendMessage   labels: GET, POST
+-- Summarised: 129 rows, 3 disagree
+   Kafka         scheme kafka       table Unknown  kind Event    1 ops: Consume   labels: Consume
+   MassTransit   scheme masstransit table Unknown  kind Event    1 ops: Consume   labels: ← OrderPlaced
+
+== one label under one scheme carrying both kinds (the path is not compared here: readers-of-kind measures the collapse key)
+Detailed    0 []
+Raw         4 [('EventBridge', 'POST', 'https'), ('SNS', 'POST', 'https'), ('SQS', 'POST', 'https'), ('StorageQueues', 'GET', 'https')]
+Summarised  0 []
+
+== the theory by the operation: each operation's expected kind comes from 5.27.13's Detailed row (the table says Publishes or
+   Receives, or it is a delivery, Consume), and is held at every verbosity, where the label may be one the table cannot read
+Detailed    0 of 132 disagree []
+Raw         0 of 132 disagree []
+Summarised  0 of 129 disagree []
+
+== Detailed: every row against 5.27.13, on every column but the kinds and the span kind (the ones history and the card read)
+202 rows, 0 differ []
+rows only in one: []
+
+== OTLP span kind by verdict, Detailed: 5.27.13 -> the prototype (broker rows)
+EventBridge      Client -> Producer table says Publishes 2
+EventHubs      Producer -> Client   table says Neither   6
+EventHubs      Producer -> Client   table says Unknown   1
+Kafka          Producer -> Client   table says Neither   9
+Kafka          Producer -> Client   table says Unknown   1
+MassTransit    Producer -> Client   table says Neither   3
+MassTransit    Producer -> Client   table says Unknown   1
+PubSub         Producer -> Client   table says Neither   4
+PubSub         Producer -> Client   table says Unknown   1
+SNS              Client -> Producer table says Publishes 2
+SQS              Client -> Producer table says Publishes 2
+SQS              Client -> Producer table says Receives  1
+StorageQueues    Client -> Producer table says Publishes 1
+StorageQueues    Client -> Producer table says Receives  2

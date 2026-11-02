@@ -1347,7 +1347,7 @@ public class MessageTrackerTests
         Assert.False(log.NoteOnRight);
     }
 
-    // ─── TrackSendMessage (atomic, non-event arrows) ────────────
+    // ─── TrackSendMessage (atomic, the event card) ─────────────
 
     [Fact]
     public void TrackSendMessage_logs_request_and_response_pair()

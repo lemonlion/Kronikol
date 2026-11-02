@@ -1,0 +1,64 @@
+R1's mutations, each in the committed tree on 27cc0e46 plus R1, one at a time, with the named facts built and run (plans/CALLS_AND_EVENTS_PLAN.md 6.6).
+== ReadMethod back to any case: src/Kronikol/Reports/Merge/MergeableReportReader.cs
+   Kronikol.Tests: 27 failed of Total tests: 59
+     Kronikol.Tests.History.MergedRunHistoryTests.A_merge_keeps_a_calls_operation_id
+     Kronikol.Tests.History.MergedRunHistoryTests.A_merged_report_History_tab_says_nothing_changed
+     Kronikol.Tests.History.MergedRunHistoryTests.A_merged_run_reads_as_nothing_changed_against_its_own_ledger(written: "Delete", category: "BigQuery", bui
+     Kronikol.Tests.History.MergedRunHistoryTests.A_merged_run_reads_as_nothing_changed_against_its_own_ledger(written: "Delete", category: "BlobStorage", 
+     Kronikol.Tests.History.MergedRunHistoryTests.A_merged_run_reads_as_nothing_changed_against_its_own_ledger(written: "Delete", category: "CosmosDB", bui
+     Kronikol.Tests.History.MergedRunHistoryTests.A_merged_run_reads_as_nothing_changed_against_its_own_ledger(written: "Delete", category: "MessageQueue",
+     ... and 21 more
+   CAUGHT
+== its Event branch back: src/Kronikol/Reports/Merge/MergeableReportReader.cs
+   Kronikol.Tests: 1 failed of Total tests: 59
+     Kronikol.Tests.Reports.Merge.MergeReadsEveryTrackersMethodTests.The_kind_of_a_call_has_no_say_in_how_its_method_is_read(method: "DELETE", kind: "Event
+   CAUGHT
+== MethodText back to upper-casing: src/Kronikol/Reports/ReportGenerator.cs
+   Kronikol.Tests: 5 failed of Total tests: 59
+     Kronikol.Tests.History.MergedRunHistoryTests.A_merged_run_reads_as_nothing_changed_against_its_own_ledger(written: "Patch", category: null, builtByHan
+     Kronikol.Tests.History.MergedRunHistoryTests.A_merged_run_reads_as_nothing_changed_against_its_own_ledger(written: "patch", category: null, builtByHan
+     Kronikol.Tests.Reports.Merge.MergeReadsEveryTrackersMethodTests.A_verb_built_by_hand_is_written_as_it_was_built(verb: "Patch")
+     Kronikol.Tests.Reports.Merge.MergeReadsEveryTrackersMethodTests.A_verb_built_by_hand_is_written_as_it_was_built(verb: "Purge")
+     Kronikol.Tests.Reports.Merge.MergeReadsEveryTrackersMethodTests.A_verb_built_by_hand_is_written_as_it_was_built(verb: "patch")
+   CAUGHT
+== the line back in Spanner: src/Kronikol.Extensions.Spanner/SpannerTracker.cs
+   Kronikol.Tests.Spanner: 11 failed of Total tests: 215
+     Kronikol.Tests.Spanner.SpannerCallsAreCallsTests.A_data_file_says_nothing_of_a_calls_kind(format: Xml, file: "TestRunReport.xml")
+     Kronikol.Tests.Spanner.SpannerCallsAreCallsTests.A_data_file_says_nothing_of_a_calls_kind(format: Yaml, file: "TestRunReport.yml")
+     Kronikol.Tests.Spanner.SpannerCallsAreCallsTests.A_database_call_is_drawn_on_the_plain_note
+     Kronikol.Tests.Spanner.SpannerCallsAreCallsTests.A_database_query_the_test_makes_itself_is_judged
+     Kronikol.Tests.Spanner.SpannerCallsAreCallsTests.A_spanner_call_is_a_client_span
+     Kronikol.Tests.Spanner.SpannerCallsAreCallsTests.Both_halves_of_a_query_are_calls
+     ... and 5 more
+   Kronikol.Tests: 1 failed of Total tests: 5
+     Kronikol.Tests.Tracking.DatabaseCallsAreCallsSourceTests.No_database_package_writes_an_event
+   Kronikol.Tests.EndToEnd: 2 failed of Total tests: 2
+     Kronikol.Tests.EndToEnd.DatabaseAndEventCardsTests.A_database_note_is_on_the_plain_card_and_a_publish_on_the_event_card(scheme: "dark")
+     Kronikol.Tests.EndToEnd.DatabaseAndEventCardsTests.A_database_note_is_on_the_plain_card_and_a_publish_on_the_event_card(scheme: "light")
+   CAUGHT
+== the line back in BigQuery: src/Kronikol.Extensions.BigQuery/BigQueryTracker.cs
+   Kronikol.Tests.BigQuery: 3 failed of Total tests: 608
+     Kronikol.Tests.BigQuery.BigQueryTrackerTests.LogRequest_Uses_default_metatype
+     Kronikol.Tests.BigQuery.BigQueryTrackingMessageHandlerTests.A_database_call_is_drawn_on_the_plain_note
+     Kronikol.Tests.BigQuery.BigQueryTrackingMessageHandlerTests.BigQuery_logs_one_kind_whichever_route_records_the_call
+   Kronikol.Tests: 1 failed of Total tests: 5
+     Kronikol.Tests.Tracking.DatabaseCallsAreCallsSourceTests.No_database_package_writes_an_event
+   CAUGHT
+== the line back in Bigtable: src/Kronikol.Extensions.Bigtable/BigtableTracker.cs
+   Kronikol.Tests.Bigtable: 2 failed of Total tests: 53
+     Kronikol.Tests.Bigtable.BigtableTrackerTests.A_database_call_is_drawn_on_the_plain_note
+     Kronikol.Tests.Bigtable.BigtableTrackerTests.LogRequest_Uses_default_metatype
+   Kronikol.Tests: 1 failed of Total tests: 5
+     Kronikol.Tests.Tracking.DatabaseCallsAreCallsSourceTests.No_database_package_writes_an_event
+   CAUGHT
+== the guard reads no category: tests/Kronikol.Tests/Tracking/DatabaseCallsAreCallsSourceTests.cs
+   Kronikol.Tests: 3 failed of Total tests: 5
+     Kronikol.Tests.Tracking.DatabaseCallsAreCallsSourceTests.The_walk_reads_the_packages_that_once_broke_the_rule(package: "Kronikol.Extensions.BigQuery",
+     Kronikol.Tests.Tracking.DatabaseCallsAreCallsSourceTests.The_walk_reads_the_packages_that_once_broke_the_rule(package: "Kronikol.Extensions.Bigtable",
+     Kronikol.Tests.Tracking.DatabaseCallsAreCallsSourceTests.The_walk_reads_the_packages_that_once_broke_the_rule(package: "Kronikol.Extensions.Spanner", 
+   CAUGHT
+== the guard looks for another word: tests/Kronikol.Tests/Tracking/DatabaseCallsAreCallsSourceTests.cs
+   Kronikol.Tests: 1 failed of Total tests: 5
+     Kronikol.Tests.Tracking.DatabaseCallsAreCallsSourceTests.The_kind_the_guard_looks_for_is_the_enums_own_name
+   CAUGHT
+DONE

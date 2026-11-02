@@ -1,0 +1,28 @@
+== bp
+category      kind     calls errors   median      max bodi
+-             Default    550     97    27 ms   14.8 s    2
+CosmosDB      Default    266      7     0 ms   5.25 s    2
+SQL           Default    220      0     0 ms   302 ms     
+MessageQueue  Event      141      0     0 ms   2.06 s     
+              Event      117      0     0 ms     8 ms     
+gRPC          Default     50      4    26 ms   1.25 s     
+MongoDB       Default     16      0     8 ms   605 ms     
+Spanner       Event       12      0    21 ms   908 ms     
+ClickHouse    Default     12      0     6 ms   1.31 s     
+BigQuery      Default     11      0     1 ms   4.53 s     
+10 buckets
+
+== bp-cmock-reqnroll
+category      kind     calls errors   median      max bodi
+-             Default    535     99     4 ms   2.92 s    2
+SQL           Default    212      0     0 ms   1.25 s     
+CosmosDB      Default    197      7     0 ms   273 ms    1
+MessageQueue  Event      135      0     0 ms   944 ms     
+              Event      111      0     0 ms     0 ms     
+gRPC          Default     49      4     2 ms   162 ms     
+MongoDB       Default     16      0     1 ms    63 ms     
+Spanner       Event       12      0     4 ms    83 ms     
+ClickHouse    Default     12      0    13 ms   166 ms     
+BigQuery      Default     11      0     0 ms   300 ms     
+10 buckets
+

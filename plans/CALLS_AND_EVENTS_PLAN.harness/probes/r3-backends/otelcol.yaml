@@ -1,0 +1,30 @@
+# The OpenTelemetry Collector's service graph connector at its defaults, with its wait and flush shortened so a run takes seconds.
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:24318
+
+connectors:
+  servicegraph:
+    store:
+      ttl: 2s
+      max_items: 10000
+    store_expiration_loop: 1s
+    metrics_flush_interval: 1s
+
+exporters:
+  prometheus:
+    endpoint: 0.0.0.0:28889
+
+service:
+  telemetry:
+    metrics:
+      level: none
+  pipelines:
+    traces:
+      receivers: [otlp]
+      exporters: [servicegraph]
+    metrics:
+      receivers: [servicegraph]
+      exporters: [prometheus]

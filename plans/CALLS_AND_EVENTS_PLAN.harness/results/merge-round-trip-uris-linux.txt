@@ -1,0 +1,30 @@
+OS: Ubuntu 24.04.5 LTS
+values per form: 323; forms: 21
+cases: 6783
+rejected by new Uri: 911
+S1 differs from S0: 4
+line differs: 2
+S0 does not parse (about:blank): 0
+== http mid path (http://h/a{X}b): 0 of 323 lines differ
+== http end of path (http://h/a{X}): 1 of 323 lines differ
+   %20: [/a ] -> [/a]
+== http whole segment (http://h/x/{X}/y): 0 of 323 lines differ
+== http query key (http://h/a?k{X}=v): 0 of 323 lines differ
+== http query value (http://h/a?k=v{X}): 0 of 323 lines differ
+== http fragment (http://h/a#f{X}): 0 of 323 lines differ
+== custom scheme path (custom://h/a{X}b): 0 of 323 lines differ
+== custom scheme end (custom://h/a{X}): 1 of 323 lines differ
+   %20: [/a ] -> [/a]
+== custom scheme authority (custom://a{X}b/c): 0 of 323 lines differ
+== spanner path (spanner://p/a{X}b): 0 of 323 lines differ
+== s3 bucket (s3://b{X}x/k): 0 of 323 lines differ
+== s3 key (s3://bucket/k{X}x): 0 of 323 lines differ
+== servicebus queue (servicebus://q{X}x/): 0 of 323 lines differ
+== redis key (redis://db0/k{X}y): 0 of 323 lines differ
+== urn (urn:a:b{X}c): 0 of 323 lines differ
+== relative mid (a{X}b): 0 of 323 lines differ
+== relative end (a{X}): 0 of 323 lines differ
+== relative start ({X}a): 0 of 323 lines differ
+== rooted relative mid (/a{X}b): 0 of 323 lines differ
+== rooted relative end (/a{X}): 0 of 323 lines differ
+== double-rooted relative (//a{X}b/c): 0 of 323 lines differ

@@ -56,6 +56,7 @@
 		<InternalsVisibleTo Include="Kronikol.Extensions.Otlp" />
 		<InternalsVisibleTo Include="Kronikol.Tests.Otlp" />
 		<InternalsVisibleTo Include="Kronikol.Tests.Redis" />
+		<InternalsVisibleTo Include="Kronikol.Tests.Spanner" />
 		<InternalsVisibleTo Include="Kronikol.Extensions.ClickHouse" />
 		<InternalsVisibleTo Include="Kronikol.Extensions.Spanner" />
 		<!-- InternalFlowActivityListener: the Kafka trackers start it, as the HTTP handler and gRPC interceptor do -->

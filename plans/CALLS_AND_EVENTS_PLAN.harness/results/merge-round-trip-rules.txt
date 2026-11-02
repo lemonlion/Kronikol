@@ -1,0 +1,95 @@
+
+=== upgrade-10-to-11: runs on 5.27.8, 5.27.8, 5.27.8, 5.27.13; recorded by 5.27.13
+-- 5.27.13: kronikol merge exit 0: (no history line: nothing to say)
+  own    : 1 behaviour changed (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:2004:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 3, positions 5
+  merged : nothing changed (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:2004:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 3, positions 5
+  A label                                      set fingerprint moves
+      run's line : Caller>Svc Delete /label 200
+      merged line: Caller>Svc DELETE /label 200
+  A real change in the last run                verdict BehaviourChanged -> Stable
+      evidence   : the calls in gh:2003:1 were fingerprinted by an earlier rule; behaviour is compared from the next run; passed in every one of the last 4 runs with a verdict
+  3 of 5 positions read the same on every field
+  'earlier rule' evidence: own 0, merged 5
+-- prototype: kronikol merge exit 0: (no history line: nothing to say)
+  own    : 1 behaviour changed (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:2004:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 3, positions 5
+  merged : nothing changed (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:2004:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 3, positions 5
+  A real change in the last run                verdict BehaviourChanged -> Stable
+      evidence   : the calls in gh:2003:1 were fingerprinted by an earlier rule; behaviour is compared from the next run; passed in every one of the last 4 runs with a verdict
+  4 of 5 positions read the same on every field
+  'earlier rule' evidence: own 0, merged 5
+
+=== upgrade-8-to-11: runs on 5.27.2, 5.27.2, 5.27.2, 5.27.13; recorded by 5.27.13
+-- prototype: kronikol merge exit 0: (no history line: nothing to say)
+  own    : 1 behaviour changed (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:2004:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 3, positions 5
+  merged : nothing changed (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:2004:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 3, positions 5
+  A real change in the last run                verdict BehaviourChanged -> Stable
+      evidence   : the calls in gh:2003:1 were fingerprinted by an earlier rule; behaviour is compared from the next run; passed in every one of the last 4 runs with a verdict
+  4 of 5 positions read the same on every field
+  'earlier rule' evidence: own 0, merged 5
+
+=== upgrade-7-to-11: runs on 5.16.0, 5.16.0, 5.16.0, 5.27.13; recorded by 5.27.13
+-- prototype: kronikol merge exit 0: (no history line: nothing to say)
+  own    : 1 behaviour changed (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:2004:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 3, positions 5
+  merged : nothing changed (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:2004:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 3, positions 5
+  A real change in the last run                verdict BehaviourChanged -> Stable
+      evidence   : the calls in gh:2003:1 were fingerprinted by an earlier rule; behaviour is compared from the next run; passed in every one of the last 4 runs with a verdict
+  4 of 5 positions read the same on every field
+  'earlier rule' evidence: own 0, merged 5
+
+=== upgrade-6-to-11: runs on 5.12.1, 5.12.1, 5.12.1, 5.27.13; recorded by 5.27.13
+-- prototype: kronikol merge exit 0: (no history line: nothing to say)
+  own    : 1 behaviour changed (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:2004:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 3, positions 5
+  merged : nothing changed (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:2004:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 1, deps 3, positions 5
+    merged says new dependency: Caller>orders-host:5000
+  A real change in the last run                verdict BehaviourChanged -> Stable
+      evidence   : the calls in gh:2003:1 were fingerprinted by an earlier rule; behaviour is compared from the next run; passed in every one of the last 4 runs with a verdict
+  4 of 5 positions read the same on every field
+  'earlier rule' evidence: own 0, merged 5
+
+=== after-upgrade-window-mixed: runs on 5.27.8, 5.27.8, 5.27.8, 5.27.13, 5.27.13; recorded by 5.27.13
+-- prototype: kronikol merge exit 0: history: 1 behaviour changed (4 runs recorded in the main stream; flakiness and duration verdicts need 5)
+  own    : 1 behaviour changed (4 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:2005:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 3, positions 5
+  merged : 1 behaviour changed (4 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:2005:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 3, positions 5
+  5 of 5 positions read the same on every field
+
+=== package-behind-tool: runs on 5.27.8, 5.27.8, 5.27.8, 5.27.8; recorded by 5.27.13
+-- prototype: kronikol merge exit 0: (no history line: nothing to say)
+  own    : 1 behaviour changed (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:2004:1, suite fixture, stream main, rule 10, partial False, absent 0, new deps 0, deps 3, positions 5
+  merged : nothing changed (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:2004:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 3, positions 5
+  A real change in the last run                verdict BehaviourChanged -> Stable
+      evidence   : the calls in gh:2003:1 were fingerprinted by an earlier rule; behaviour is compared from the next run; passed in every one of the last 4 runs with a verdict
+  4 of 5 positions read the same on every field
+  'earlier rule' evidence: own 0, merged 5
+
+=== tool-behind-package-window-mixed: runs on 5.27.8, 5.27.8, 5.27.13, 5.27.13; recorded by 5.27.8
+-- 5.27.8 tool: kronikol merge exit 0: history: 3 behaviour changed (3 runs recorded in the main stream; flakiness and duration verdicts need 5)
+  own    : 1 behaviour changed (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:2004:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 3, positions 5
+  merged : 3 behaviour changed (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:2004:1, suite fixture, stream main, rule 10, partial False, absent 0, new deps 0, deps 3, positions 5
+  A label                                      verdict Stable -> BehaviourChanged; set fingerprint moves
+      run's line : Caller>Svc Delete /label 200
+      merged line: Caller>Svc DELETE /label 200
+      evidence   : same status, different calls: the same number of calls as gh:2003:1 (1), a different set
+  Recorded otherwise before rule 11            verdict Stable -> BehaviourChanged
+      evidence   : same status, different calls: the same number of calls as gh:2003:1 (1), a different set
+  3 of 5 positions read the same on every field
+
+=== tool-behind-package-window-all-new: runs on 5.27.13, 5.27.13, 5.27.13, 5.27.13; recorded by 5.27.8
+-- 5.27.8 tool: kronikol merge exit 0: (no history line: nothing to say)
+  own    : 1 behaviour changed (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:2004:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 3, positions 5
+  merged : nothing changed (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:2004:1, suite fixture, stream main, rule 10, partial False, absent 0, new deps 0, deps 3, positions 5
+  A label                                      set fingerprint moves
+      run's line : Caller>Svc Delete /label 200
+      merged line: Caller>Svc DELETE /label 200
+  A real change in the last run                verdict BehaviourChanged -> Stable
+      evidence   : the calls in gh:2003:1 were fingerprinted by an earlier rule; behaviour is compared from the next run; passed in every one of the last 4 runs with a verdict
+  3 of 5 positions read the same on every field
+  'earlier rule' evidence: own 0, merged 5
+
+=== upgrade-9-to-11: runs on 5.27.6, 5.27.6, 5.27.6, 5.27.13; recorded by 5.27.13
+-- prototype: kronikol merge exit 0: (no history line: nothing to say)
+  own    : 1 behaviour changed (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:2004:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 3, positions 5
+  merged : nothing changed (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:2004:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 3, positions 5
+  A real change in the last run                verdict BehaviourChanged -> Stable
+      evidence   : the calls in gh:2003:1 were fingerprinted by an earlier rule; behaviour is compared from the next run; passed in every one of the last 4 runs with a verdict
+  4 of 5 positions read the same on every field
+  'earlier rule' evidence: own 0, merged 5

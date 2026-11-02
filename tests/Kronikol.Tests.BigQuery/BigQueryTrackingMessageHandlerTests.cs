@@ -35,6 +35,41 @@ public class BigQueryTrackingMessageHandlerTests : IDisposable
         CurrentTestInfoFetcher = () => ("My Test", _testId),
     };
 
+    // #220: the handler has always logged a call, and the tracker a consumer calls by hand logged an event, for one call.
+    [Fact]
+    public async Task BigQuery_logs_one_kind_whichever_route_records_the_call()
+    {
+        using var invoker = CreateInvoker(MakeOptions());
+        using var _ = await invoker.SendAsync(MakeQueryRequest(), CancellationToken.None);
+        var byHandler = GetLogsFromThisTest();
+        Assert.Equal(2, byHandler.Length);
+
+        var tracker = new BigQueryTracker(MakeOptions());
+        var operation = new BigQueryOperationInfo(BigQueryOperation.Query, "query", null, "p", null);
+        var (id, trace) = tracker.LogRequest(operation, "SELECT 1");
+        tracker.LogResponse(operation, id, trace, "1 row");
+        var byTracker = GetLogsFromThisTest().Except(byHandler).ToArray();
+        Assert.Equal(2, byTracker.Length);
+
+        Assert.All(byHandler.Concat(byTracker), log => Assert.Equal(RequestResponseMetaType.Default, log.MetaType));
+    }
+
+    // The note's card: PlantUmlCreator gives a record the event card by its kind (plans/CALLS_AND_EVENTS_PLAN.md 6.3).
+    [Fact]
+    public void A_database_call_is_drawn_on_the_plain_note()
+    {
+        var tracker = new BigQueryTracker(MakeOptions());
+        var operation = new BigQueryOperationInfo(BigQueryOperation.Query, "query", null, "p", null);
+        var (id, trace) = tracker.LogRequest(operation, "SELECT 1");
+        tracker.LogResponse(operation, id, trace, "1 row");
+
+        var plantUml = Kronikol.PlantUml.PlantUmlCreator.GetPlantUmlImageTagsPerTestId(GetLogsFromThisTest()).Single().PlantUmls.First().PlainText;
+
+        Assert.Contains("SELECT 1", plantUml, StringComparison.Ordinal);
+        Assert.DoesNotContain("<<eventNote>>", plantUml, StringComparison.Ordinal);
+        Assert.DoesNotContain(".eventNote", plantUml, StringComparison.Ordinal);
+    }
+
     private static HttpRequestMessage MakeQueryRequest()
     {
         return new HttpRequestMessage(HttpMethod.Post, $"{BaseUrl}/queries")

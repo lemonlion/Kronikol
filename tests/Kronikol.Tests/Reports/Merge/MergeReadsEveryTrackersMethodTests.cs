@@ -8,8 +8,8 @@ namespace Kronikol.Tests.Reports.Merge;
 ///
 /// <para>`method` in the report is a **label**, not a verb — <c>DiagramMethod</c>'s own documentation says
 /// so, and names <c>"Cache Get (Hit)"</c> as an example. Every non-HTTP tracker in the repo writes one:
-/// <c>SELECT FROM CUSTOMERS</c> from SQL, <c>GET (Hit)</c> from Redis, <c>Sub/Method [unary]</c> from
-/// gRPC, and an **empty string** on a SQL response. The reader handed all of them to
+/// <c>SELECT FROM CUSTOMERS</c> from SQL, <c>Get (Hit)</c> from Redis, <c>/orders.Orders/Place [UnaryCall]</c> from
+/// gRPC at Raw, and an **empty string** on a SQL response. The reader handed all of them to
 /// <c>HttpMethod.Parse</c>, which is total only over RFC-7230 tokens.</para>
 ///
 /// <para>Two different failures came out of that, neither of which named the file it happened in. A
@@ -35,8 +35,8 @@ public class MergeReadsEveryTrackersMethodTests : IDisposable
 
     [Theory]
     [InlineData("SELECT FROM CUSTOMERS", "SQL, Summarised verbosity")]
-    [InlineData("GET (Hit)", "Redis")]
-    [InlineData("Orders/Place [unary]", "gRPC")]
+    [InlineData("Get (Hit)", "Redis")]
+    [InlineData("/orders.Orders/Place [UnaryCall]", "gRPC at Raw")]
     [InlineData("Blob Upload", "cloud storage")]
     [InlineData("", "a SQL response, which carries no label at all")]
     public void A_shard_from_a_non_http_tracker_merges(string method, string tracker)
@@ -88,6 +88,83 @@ public class MergeReadsEveryTrackersMethodTests : IDisposable
         Assert.DoesNotContain("\"method\": \"CALL\"", ReportHtml.Read(Path.Combine(_dir, "Combined.json")), StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// A label that is a verb in another casing is still a label: Cosmos DB's <c>Delete</c> and <c>Patch</c>, EF Core's and
+    /// BigQuery's <c>Delete</c>. Read as a verb it is written back in capitals, so the merged report names another call than
+    /// the run did, and history reads the difference as changed behaviour (plans/CALLS_AND_EVENTS_PLAN.md F1).
+    /// </summary>
+    [Theory]
+    [InlineData("Get")]
+    [InlineData("Post")]
+    [InlineData("Put")]
+    [InlineData("Delete")]
+    [InlineData("Patch")]
+    [InlineData("Head")]
+    [InlineData("Options")]
+    [InlineData("Trace")]
+    [InlineData("Connect")]
+    [InlineData("get")]
+    public void A_label_that_is_a_verb_in_another_casing_keeps_its_casing(string label)
+    {
+        WriteShard("runner1.json", label);
+
+        Assert.Equal(0, Merge().Exit);
+
+        var report = MergeableReportReader.Parse(ReportHtml.Read(Path.Combine(_dir, "Combined.json")));
+        Assert.Equal(label, report.Interactions.First().Method.Value);
+    }
+
+    /// <summary>The file holds a verb as it was built: history keeps it so, and a merge compares with history.</summary>
+    [Theory]
+    [InlineData("Patch")]
+    [InlineData("patch")]
+    [InlineData("Purge")]
+    [InlineData("PURGE")]
+    [InlineData("GET")]
+    public void A_verb_built_by_hand_is_written_as_it_was_built(string verb) =>
+        Assert.Equal(verb, Kronikol.Reports.ReportGenerator.MethodText(new HttpMethod(verb)));
+
+    /// <summary>A verb is written in capitals, whatever else the call is, so capitals are what the reader asks for.</summary>
+    [Theory]
+    [InlineData("GET")]
+    [InlineData("POST")]
+    [InlineData("PUT")]
+    [InlineData("DELETE")]
+    [InlineData("PATCH")]
+    [InlineData("HEAD")]
+    [InlineData("OPTIONS")]
+    [InlineData("TRACE")]
+    [InlineData("CONNECT")]
+    public void Each_verb_in_capitals_is_read_as_a_verb(string verb)
+    {
+        WriteShard("runner1.json", verb);
+
+        Assert.Equal(0, Merge().Exit);
+
+        var report = MergeableReportReader.Parse(ReportHtml.Read(Path.Combine(_dir, "Combined.json")));
+        Assert.Equal(new HttpMethod(verb), Assert.IsType<HttpMethod>(report.Interactions.First().Method.Value));
+    }
+
+    /// <summary>A record's kind says whether it moves a message, and nothing about that says how its method is written.</summary>
+    [Theory]
+    [InlineData("DELETE", "Default", true)]
+    [InlineData("DELETE", "Event", true)]
+    [InlineData("Delete", "Default", false)]
+    [InlineData("Delete", "Event", false)]
+    public void The_kind_of_a_call_has_no_say_in_how_its_method_is_read(string method, string kind, bool isVerb)
+    {
+        WriteShard("runner1.json", method, kind);
+
+        Assert.Equal(0, Merge().Exit);
+
+        var read = MergeableReportReader.Parse(ReportHtml.Read(Path.Combine(_dir, "Combined.json"))).Interactions.First();
+        Assert.Equal(Enum.Parse<Kronikol.Tracking.RequestResponseMetaType>(kind), read.MetaType);
+        if (isVerb)
+            Assert.Equal(new HttpMethod(method), Assert.IsType<HttpMethod>(read.Method.Value));
+        else
+            Assert.Equal(method, Assert.IsType<string>(read.Method.Value));
+    }
+
     /// <summary>A genuine HTTP verb still becomes an <c>HttpMethod</c>, not a lookalike string.</summary>
     [Fact]
     public void A_real_verb_is_still_read_as_a_verb()
@@ -131,7 +208,7 @@ public class MergeReadsEveryTrackersMethodTests : IDisposable
     /// A shard written by hand, because the point is the file a third-party or non-HTTP tracker produces
     /// and the .NET writer would not necessarily produce this exact shape from a constructed run.
     /// </summary>
-    private void WriteShard(string name, string method)
+    private void WriteShard(string name, string method, string kind = "Default")
     {
         var encoded = System.Text.Json.JsonSerializer.Serialize(method);
         File.WriteAllText(Path.Combine(_dir, name), $$"""
@@ -144,7 +221,7 @@ public class MergeReadsEveryTrackersMethodTests : IDisposable
                 { "name": "Orders", "scenarios": [
                   { "id": "r1s1", "name": "Place order", "result": "Passed", "durationSeconds": 1.0,
                     "httpInteractions": [
-                      { "type": "Request", "metaType": "Default", "method": {{encoded}},
+                      { "type": "Request", "metaType": "{{kind}}", "method": {{encoded}},
                         "uri": "sqlserver://orders/customers", "serviceName": "CustomersDb",
                         "callerName": "Tests", "requestResponseId": "8c96e4b8-8eb0-47f7-a357-b37d8bbb8f07",
                         "timestamp": "2026-01-01T10:00:01Z" }

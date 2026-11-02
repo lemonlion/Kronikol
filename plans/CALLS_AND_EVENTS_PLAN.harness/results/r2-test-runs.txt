@@ -1,0 +1,97 @@
+Every line below is the summary line dotnet test printed for that project, with its assembly name cut, then the sum. On Debug, one project after
+another, in a throwaway worktree of 27cc0e46 holding prototype/r1-first-cut.patch (MethodText writes verb.Method; A_verb_built_by_hand_is_written_as_it_was_built).
+Kafka's 3 skipped facts need a broker (KafkaBrokerTests). The core project references none of the eight packages, so R2's source cannot reach it. Playwright was not run.
+
+== R1 + prototype/r2-first-cut.patch
+Kronikol.Tests.SQS                       Passed!  - Failed:     0, Passed:   154, Skipped:     0, Total:   154, Duration: 1 s
+Kronikol.Tests.SNS                       Passed!  - Failed:     0, Passed:   140, Skipped:     0, Total:   140, Duration: 1 s
+Kronikol.Tests.EventBridge               Passed!  - Failed:     0, Passed:   278, Skipped:     0, Total:   278, Duration: 1 s
+Kronikol.Tests.StorageQueues             Passed!  - Failed:     0, Passed:   467, Skipped:     0, Total:   467, Duration: 1 s
+Kronikol.Tests.PubSub                    Passed!  - Failed:     0, Passed:   130, Skipped:     0, Total:   130, Duration: 1 s
+Kronikol.Tests.EventHubs                 Passed!  - Failed:     0, Passed:   158, Skipped:     0, Total:   158, Duration: 1 s
+Kronikol.Tests.Kafka                     Passed!  - Failed:     0, Passed:   400, Skipped:     3, Total:   403, Duration: 24 s
+Kronikol.Tests.Kafka.BuildInterception   Passed!  - Failed:     0, Passed:    76, Skipped:     0, Total:    76, Duration: 42 s
+Kronikol.Tests.MassTransit               Passed!  - Failed:     0, Passed:    92, Skipped:     0, Total:    92, Duration: 1 s
+Kronikol.Tests.ServiceBus                Passed!  - Failed:     0, Passed:   248, Skipped:     0, Total:   248, Duration: 1 s
+sum of 10 projects                       failed 0, passed 2143, skipped 3, total 2146
+
+== R1 + R2's source only: no test edited
+Kronikol.Tests.SQS                       Passed!  - Failed:     0, Passed:   109, Skipped:     0, Total:   109, Duration: 966 ms
+Kronikol.Tests.SNS                       Passed!  - Failed:     0, Passed:   101, Skipped:     0, Total:   101, Duration: 1 s
+Kronikol.Tests.EventBridge               Passed!  - Failed:     0, Passed:   191, Skipped:     0, Total:   191, Duration: 1 s
+Kronikol.Tests.StorageQueues             Passed!  - Failed:     0, Passed:   431, Skipped:     0, Total:   431, Duration: 2 s
+Kronikol.Tests.PubSub                    Passed!  - Failed:     0, Passed:   103, Skipped:     0, Total:   103, Duration: 1 s
+Kronikol.Tests.EventHubs                 Passed!  - Failed:     0, Passed:   122, Skipped:     0, Total:   122, Duration: 982 ms
+Kronikol.Tests.Kafka                     Failed!  - Failed:     1, Passed:   360, Skipped:     3, Total:   364, Duration: 21 s
+Kronikol.Tests.Kafka.BuildInterception   Passed!  - Failed:     0, Passed:    76, Skipped:     0, Total:    76, Duration: 19 s
+Kronikol.Tests.MassTransit               Passed!  - Failed:     0, Passed:    71, Skipped:     0, Total:    71, Duration: 1 s
+Kronikol.Tests.ServiceBus                Passed!  - Failed:     0, Passed:   194, Skipped:     0, Total:   194, Duration: 988 ms
+sum of 10 projects                       failed 1, passed 1758, skipped 3, total 1762
+failed:
+  KafkaTrackerTests.LogTransaction_Uses_event_metatype: 1
+
+== R1's source with R2's test edits: the renamed and flipped pin, and the 6.7 theory
+Kronikol.Tests.SQS                       Failed!  - Failed:     9, Passed:   145, Skipped:     0, Total:   154, Duration: 988 ms
+Kronikol.Tests.SNS                       Failed!  - Failed:     6, Passed:   134, Skipped:     0, Total:   140, Duration: 1 s
+Kronikol.Tests.EventBridge               Failed!  - Failed:     6, Passed:   272, Skipped:     0, Total:   278, Duration: 979 ms
+Kronikol.Tests.StorageQueues             Failed!  - Failed:     9, Passed:   458, Skipped:     0, Total:   467, Duration: 1 s
+Kronikol.Tests.PubSub                    Failed!  - Failed:    27, Passed:   103, Skipped:     0, Total:   130, Duration: 988 ms
+Kronikol.Tests.EventHubs                 Failed!  - Failed:    36, Passed:   122, Skipped:     0, Total:   158, Duration: 977 ms
+Kronikol.Tests.Kafka                     Failed!  - Failed:    31, Passed:   369, Skipped:     3, Total:   403, Duration: 21 s
+Kronikol.Tests.Kafka.BuildInterception   Passed!  - Failed:     0, Passed:    76, Skipped:     0, Total:    76, Duration: 26 s
+Kronikol.Tests.MassTransit               Failed!  - Failed:    12, Passed:    80, Skipped:     0, Total:    92, Duration: 1 s
+Kronikol.Tests.ServiceBus                Passed!  - Failed:     0, Passed:   248, Skipped:     0, Total:   248, Duration: 1 s
+sum of 10 projects                       failed 136, passed 2007, skipped 3, total 2146
+failed:
+  EventBridgeCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message: 6
+  EventHubsCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message: 36
+  KafkaCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message: 30
+  KafkaTrackerTests.LogTransaction_Uses_default_metatype: 1
+  MassTransitCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message: 12
+  PubSubCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message: 27
+  SnsCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message: 6
+  SqsCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message: 9
+  StorageQueueCardMessageTests.A_call_is_an_event_exactly_when_it_moves_a_message: 9
+
+== R1 alone (prototype/r1-first-cut.patch)
+Kronikol.Tests.SQS                       Passed!  - Failed:     0, Passed:   109, Skipped:     0, Total:   109, Duration: 1 s
+Kronikol.Tests.SNS                       Passed!  - Failed:     0, Passed:   101, Skipped:     0, Total:   101, Duration: 973 ms
+Kronikol.Tests.EventBridge               Passed!  - Failed:     0, Passed:   191, Skipped:     0, Total:   191, Duration: 971 ms
+Kronikol.Tests.StorageQueues             Passed!  - Failed:     0, Passed:   431, Skipped:     0, Total:   431, Duration: 1 s
+Kronikol.Tests.PubSub                    Passed!  - Failed:     0, Passed:   103, Skipped:     0, Total:   103, Duration: 1 s
+Kronikol.Tests.EventHubs                 Passed!  - Failed:     0, Passed:   122, Skipped:     0, Total:   122, Duration: 1 s
+Kronikol.Tests.Kafka                     Passed!  - Failed:     0, Passed:   361, Skipped:     3, Total:   364, Duration: 22 s
+Kronikol.Tests.Kafka.BuildInterception   Passed!  - Failed:     0, Passed:    76, Skipped:     0, Total:    76, Duration: 19 s
+Kronikol.Tests.MassTransit               Passed!  - Failed:     0, Passed:    71, Skipped:     0, Total:    71, Duration: 953 ms
+Kronikol.Tests.ServiceBus                Passed!  - Failed:     0, Passed:   194, Skipped:     0, Total:   194, Duration: 972 ms
+sum of 10 projects                       failed 0, passed 1759, skipped 3, total 1762
+
+== A_call_is_an_event_exactly_when_it_moves_a_message, the 6.7 theory, rows from the trx files
+suite                                     rows   red on R1's source
+Kronikol.Tests.SQS                          45                    9
+Kronikol.Tests.SNS                          39                    6
+Kronikol.Tests.EventBridge                  87                    6
+Kronikol.Tests.StorageQueues                36                    9
+Kronikol.Tests.PubSub                       27                   27
+Kronikol.Tests.EventHubs                    36                   36
+Kronikol.Tests.Kafka                        39                   30
+Kronikol.Tests.MassTransit                  21                   12
+Kronikol.Tests.ServiceBus                   54                    0
+all                                        384                  135
+
+== the core project, Kronikol.Tests, on R1 + prototype/r2-first-cut.patch
+names holding a broker, WarmUp, ComponentDiagram, CallGraph, MessageTable, ServiceCard, Collapse or Otlp: Passed!  - Failed:     0, Passed:   500, Skipped:     0, Total:   500, Duration: 31 s
+the whole project: Passed!  - Failed:     0, Passed: 11602, Skipped:     2, Total: 11604, Duration: 10 m 29 s
+
+== the core project's names holding WarmUp, with prototype/r2-option-warm-up-judges-publishes.patch over R1 + R2
+the patch: Passed!  - Failed:     0, Passed:   115, Skipped:     0, Total:   115, Duration: 12 s
+Its two new theories hold 20 rows: 10 publishes that are judged, 10 events that are not, the relative address among them. The parity fact is among the rest.
+the two theories alone, on the first cut's request.Uri.Scheme: Failed!  - Failed:     1, Passed:    19, Skipped:     0, Total:    20, Duration: 91 ms
+  failed: WarmUpCallsTests.An_event_the_table_does_not_read_as_a_publish_is_not_judged(uri: "orders", label: "Publish")
+  System.InvalidOperationException : This operation is not supported for a relative URI.
+
+== the sizes, git diff --shortstat against the tree prototype/r1-first-cut.patch makes of 27cc0e46
+R2's source: 8 files changed, 68 insertions(+), 10 deletions(-)
+R2's tests: 10 files changed, 166 insertions(+), 2 deletions(-)
+the whole of r2-first-cut.patch: 18 files changed, 234 insertions(+), 12 deletions(-)
+r2-option-warm-up-judges-publishes.patch: 3 files changed, 58 insertions(+), 4 deletions(-)

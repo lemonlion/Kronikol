@@ -126,7 +126,8 @@ internal static class WarmUpCalls
     /// <summary>
     /// The calls the rule judges (4.1 step 1): a request paired with its response, in a scenario, made by the test
     /// itself. The test's caller never appears as a service among its scenario's calls (the actor rule the sequence
-    /// diagram uses, <c>PlantUmlCreator</c>), and an event a broker delivered is not a request the test made.
+    /// diagram uses, <c>PlantUmlCreator</c>), and no event is judged, whichever way it moved: a delivery is not a request
+    /// the test made, and nor, for this rule, is its own publish.
     /// </summary>
     private static List<Call> TestCalls(IReadOnlyList<RequestResponseLog?> logs, Dictionary<string, Scenario> scenarios,
         Dictionary<string, int> listed, IReadOnlyDictionary<Guid, double> durations, HistoryShapeRules? rules)

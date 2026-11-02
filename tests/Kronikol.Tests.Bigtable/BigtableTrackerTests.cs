@@ -82,8 +82,25 @@ public class BigtableTrackerTests
         Assert.Equal(Guid.Empty, reqId);
     }
 
+    // The note's card: PlantUmlCreator gives a record the event card by its kind (plans/CALLS_AND_EVENTS_PLAN.md 6.3).
     [Fact]
-    public void LogRequest_Uses_event_metatype()
+    public void A_database_call_is_drawn_on_the_plain_note()
+    {
+        var tracker = new BigtableTracker(MakeOptions());
+        var operation = new BigtableOperationInfo(BigtableOperation.MutateRow, "projects/p/instances/i/tables/t", "row1");
+
+        var (id, trace) = tracker.LogRequest(operation, "a mutation");
+        tracker.LogResponse(operation, id, trace, null);
+
+        var logs = GetLogsFromThisTest();
+        Assert.All(logs, log => Assert.Equal(RequestResponseMetaType.Default, log.MetaType));
+        var plantUml = Kronikol.PlantUml.PlantUmlCreator.GetPlantUmlImageTagsPerTestId(logs).Single().PlantUmls.First().PlainText;
+        Assert.DoesNotContain("<<eventNote>>", plantUml, StringComparison.Ordinal);
+        Assert.DoesNotContain(".eventNote", plantUml, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void LogRequest_Uses_default_metatype()
     {
         var tracker = new BigtableTracker(MakeOptions());
         var op = new BigtableOperationInfo(BigtableOperation.MutateRow, "projects/p/instances/i/tables/t", "row1");
@@ -91,7 +108,7 @@ public class BigtableTrackerTests
         tracker.LogRequest(op, null);
 
         var log = GetLogsFromThisTest().First();
-        Assert.Equal(RequestResponseMetaType.Event, log.MetaType);
+        Assert.Equal(RequestResponseMetaType.Default, log.MetaType);
     }
 
     [Fact]

@@ -1,0 +1,129 @@
+R3's test runs, 2026-11-02, each suite's summary line as dotnet test printed it. The plan's R3 totals should be these.
+
+The patches, in prototype/, by sha1:
+  r1-first-cut.patch                        c4b32c2c6c485536d73ae1cd06b11a8c0af8f6d6
+  r3-first-cut.patch                        0381937f85c805bd77212b564b088598b1463e12
+  r3-option-send-is-client.patch            e2693fcafd20f8e5703aabe147c7de88697fe506
+  r2-first-cut.patch                        bad512f4b57294b54b73c55893cc011d0c8e7b83
+  r2-option-warm-up-judges-publishes.patch  5bd2b8ca773ad2dea20fc33f107adefff235fba6
+
+Every tree is 27cc0e46 with patches applied and nothing committed: <scratch>/proto-r3 for R1 + R3, a scratch copy of it for the rest.
+Each run is "dotnet test <project> -c Debug" with the filter named, each word a FullyQualifiedName~ term. No Playwright, no broker suite
+beyond its card facts.
+
+== R1 + R3, the final patches
+tests/Kronikol.Tests.Otlp
+Passed!  - Failed:     0, Passed:   399, Skipped:     0, Total:   399, Duration: 18 s - Kronikol.Tests.Otlp.dll (net10.0)
+tests/Kronikol.Tests, the whole project
+Passed!  - Failed:     0, Passed: 11662, Skipped:     2, Total: 11664, Duration: 11 m 44 s - Kronikol.Tests.dll (net10.0)
+tests/Kronikol.Tests, filter Otlp|Ingest|SpanTo|IngestSpan|MessageTracker|MessageTable|ExportCommand|Merger|CallGraph|CallNesting|Nesting|InternalFlow|SequenceCollapser|PlantUmlCreator|GenericMessageTracker|MergeReadsEveryTrackersMethod
+Passed!  - Failed:     0, Passed:  1489, Skipped:     0, Total:  1489, Duration: 3 m 14 s - Kronikol.Tests.dll (net10.0)
+
+What R3 adds. tests/Kronikol.Tests.Otlp lists 247 cases on R1 and 399 on R3: 153 new, and 1 gone, Event_meta_type_maps_to_producer_kind.
+tests/Kronikol.Tests's own list (dotnet test --list-tests, which leaves out 12 cases a run holds) is 11,592 on R1 and 11,652 on R3: 61 new, and 1
+gone, Each_scheme_reads_its_trackers_labels("eventhubs", "Process ← telemetry", "Receives"), now "Delivers". Those are the two pins that flip.
+The patch: 16 files, 9 source +259 -31 and 7 test +712 -3, so +971 -34.
+
+== The red run: the final facts on R1's behaviour
+R3's source reverted in the tree (git apply -R of src/Kronikol.Extensions.Otlp/*, src/Kronikol/Ingestion/*, src/Kronikol/Tracking/* and
+CallGraphBuilder.cs), its tests kept. MessageTable.cs stays, as the facts call its new API and would not compile without it, so the facts of
+MessageTable are not measured red. A_span_that_names_its_system_only_as_messaging_system_name_is_not_captured pins what R1 already does, so it
+is green here; it is red on the first cut below.
+tests/Kronikol.Tests.Otlp
+Failed!  - Failed:   111, Passed:   288, Skipped:     0, Total:   399, Duration: 18 s - Kronikol.Tests.Otlp.dll (net10.0)
+111 failed across 19 facts
+  4 A_delivery_logged_from_the_broker_is_the_consumers_span_and_the_broker_its_peer
+  2 A_delivery_logged_from_the_consumer_keeps_its_parties
+  6 A_message_a_span_saw_keeps_its_parties
+  1 A_message_on_a_web_address_with_a_label_of_its_own_is_still_a_send
+  7 A_message_span_carries_what_the_conventions_require
+  3 A_message_tracked_with_no_http_context_exports_one_span
+  7 A_messaging_span_is_an_event_when_it_moves_a_message
+  1 A_producer_span_that_is_also_rpc_takes_the_messaging_path_and_a_client_one_the_rpc_path
+  14 A_send_stays_a_send_whatever_its_label_reads
+  1 A_settlement_names_its_system_and_operation_and_no_type_the_table_cannot_tell_it
+  6 A_statement_written_as_an_event_is_a_client_span_and_no_message
+  3 An_event_logged_by_hand_is_a_send_whatever_its_label_reads
+  2 An_event_recorded_as_the_http_request_itself_is_a_client_span
+  21 An_event_takes_the_kind_OpenTelemetrys_table_gives_its_operation
+  3 Full_circle_a_message_comes_back_a_message
+  5 Only_a_call_on_the_web_carries_an_http_method
+  12 Read_back_from_a_record_its_label_is_all_that_says_what_it_is
+  3 The_deprecated_operation_attribute_says_the_same
+  10 TrackConsumeEvent_is_the_consumers_span_on_every_scheme
+tests/Kronikol.Tests, filter MessageTracker|ExportCommand|Merger|MessageTable|CallGraph
+Failed!  - Failed:    12, Passed:   387, Skipped:     0, Total:   399, Duration: 9 s - Kronikol.Tests.dll (net10.0)
+12 failed across 5 facts
+  1 A_merged_call_is_an_event_when_either_view_says_so
+  5 A_message_exports_the_kind_it_would_in_process
+  1 A_request_and_its_response_share_a_trace_id_with_no_http_context
+  1 A_trace_id_header_that_is_no_guid_leaves_a_request_and_its_response_on_one_trace
+  4 A_verb_on_no_web_address_exports_no_http_method
+
+== The review's facts on the first cut's code, before its defects were fixed
+tests/Kronikol.Tests.Otlp
+Failed!  - Failed:    45, Passed:   354, Skipped:     0, Total:   399, Duration: 18 s - Kronikol.Tests.Otlp.dll (net10.0)
+45 failed across 9 facts
+  2 A_message_a_span_saw_keeps_its_parties
+  14 A_send_stays_a_send_whatever_its_label_reads
+  4 A_span_that_names_its_system_only_as_messaging_system_name_is_not_captured
+  6 A_statement_written_as_an_event_is_a_client_span_and_no_message
+  3 An_event_logged_by_hand_is_a_send_whatever_its_label_reads
+  4 An_event_takes_the_kind_OpenTelemetrys_table_gives_its_operation
+  5 Only_a_call_on_the_web_carries_an_http_method
+  3 Read_back_from_a_record_its_label_is_all_that_says_what_it_is
+  4 TrackConsumeEvent_is_the_consumers_span_on_every_scheme
+
+== R1 + R3 with OtlpSpanMapper and OtlpExportSink pairing on RequestResponseId alone (a variant, measured and reverted; r3-trace-id-keyed-on-pair-id.txt)
+tests/Kronikol.Tests.Otlp
+Passed!  - Failed:     0, Passed:   399, Skipped:     0, Total:   399, Duration: 18 s - Kronikol.Tests.Otlp.dll (net10.0)
+tests/Kronikol.Tests, filter ExportCommand|Otlp
+Passed!  - Failed:     0, Passed:    30, Skipped:     0, Total:    30, Duration: 9 s - Kronikol.Tests.dll (net10.0)
+
+== Q6 (b): R1 + R3 + r3-option-send-is-client.patch (r3-option-send-is-client.txt)
+Its source alone, R3's facts not flipped: what moves
+tests/Kronikol.Tests.Otlp
+Failed!  - Failed:    41, Passed:   358, Skipped:     0, Total:   399, Duration: 18 s - Kronikol.Tests.Otlp.dll (net10.0)
+41 failed across 8 facts
+  1 A_message_a_span_saw_keeps_its_parties
+  1 A_message_on_a_web_address_with_a_label_of_its_own_is_still_a_send
+  1 A_record_with_a_relative_address_does_not_throw
+  14 A_send_stays_a_send_whatever_its_label_reads
+  3 An_event_logged_by_hand_is_a_send_whatever_its_label_reads
+  15 An_event_takes_the_kind_OpenTelemetrys_table_gives_its_operation
+  1 Full_circle_a_message_comes_back_a_message
+  5 Read_back_from_a_record_its_label_is_all_that_says_what_it_is
+tests/Kronikol.Tests, filter Otlp|Ingest|SpanTo|IngestSpan|MessageTracker|MessageTable|ExportCommand|Merger|CallGraph|GenericMessageTracker
+Failed!  - Failed:     1, Passed:   941, Skipped:     0, Total:   942, Duration: 3 m 3 s - Kronikol.Tests.dll (net10.0)
+1 failed across 1 facts
+  1 A_message_exports_the_kind_it_would_in_process
+The whole option patch, the facts flipped and one added (Only_a_Kafka_producers_context_makes_a_send_a_producer_span)
+tests/Kronikol.Tests.Otlp
+Passed!  - Failed:     0, Passed:   400, Skipped:     0, Total:   400, Duration: 18 s - Kronikol.Tests.Otlp.dll (net10.0)
+tests/Kronikol.Tests, the same filter
+Passed!  - Failed:     0, Passed:   942, Skipped:     0, Total:   942, Duration: 2 m 5 s - Kronikol.Tests.dll (net10.0)
+The whole option patch, and a span's own record exempt (CapturedBy == SpanSource keeps PRODUCER; a variant, measured and reverted)
+tests/Kronikol.Tests.Otlp
+Failed!  - Failed:     2, Passed:   398, Skipped:     0, Total:   400, Duration: 19 s - Kronikol.Tests.Otlp.dll (net10.0)
+  1 A_message_a_span_saw_keeps_its_parties
+  1 Full_circle_a_message_comes_back_a_message
+
+== R1 + R3 + r2-first-cut.patch + r2-option-warm-up-judges-publishes.patch, in that order (r3-on-the-stack.txt). Both apply with no conflict, as does the Q6 (b) patch on top of them.
+tests/Kronikol.Tests.Otlp
+Passed!  - Failed:     0, Passed:   399, Skipped:     0, Total:   399, Duration: 18 s - Kronikol.Tests.Otlp.dll (net10.0)
+Each broker's own project, filter Card: 796 in all
+Passed!  - Failed:     0, Passed:    84, Skipped:     0, Total:    84, Duration: 327 ms - Kronikol.Tests.Kafka.dll (net10.0)
+Passed!  - Failed:     0, Passed:    46, Skipped:     0, Total:    46, Duration: 345 ms - Kronikol.Tests.MassTransit.dll (net10.0)
+Passed!  - Failed:     0, Passed:    60, Skipped:     0, Total:    60, Duration: 136 ms - Kronikol.Tests.PubSub.dll (net10.0)
+Passed!  - Failed:     0, Passed:    75, Skipped:     0, Total:    75, Duration: 130 ms - Kronikol.Tests.EventHubs.dll (net10.0)
+Passed!  - Failed:     0, Passed:   111, Skipped:     0, Total:   111, Duration: 116 ms - Kronikol.Tests.ServiceBus.dll (net10.0)
+Passed!  - Failed:     0, Passed:    91, Skipped:     0, Total:    91, Duration: 116 ms - Kronikol.Tests.SQS.dll (net10.0)
+Passed!  - Failed:     0, Passed:    79, Skipped:     0, Total:    79, Duration: 128 ms - Kronikol.Tests.SNS.dll (net10.0)
+Passed!  - Failed:     0, Passed:    73, Skipped:     0, Total:    73, Duration: 146 ms - Kronikol.Tests.StorageQueues.dll (net10.0)
+Passed!  - Failed:     0, Passed:   177, Skipped:     0, Total:   177, Duration: 161 ms - Kronikol.Tests.EventBridge.dll (net10.0)
+tests/Kronikol.Tests, filter WarmUp|MessageTable|MessageTracker|ExportCommand|CallGraph|Merger
+Passed!  - Failed:     0, Passed:   514, Skipped:     0, Total:   514, Duration: 20 s - Kronikol.Tests.dll (net10.0)
+Not run on this stack: the whole of tests/Kronikol.Tests, and each broker project beyond its card facts.
+
+== Not run on any of these
+Playwright; the broker suites whole on R3; Linux or a floor build.

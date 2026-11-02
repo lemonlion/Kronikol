@@ -1,0 +1,4 @@
+# kronikol ingest of one NDJSON: Delete at metaType Event, Get at Default (published 5.27.13)
+service  kind     method  calls er
+Spanner  Event    DELETE      1   
+Redis    Default  GET         1   

@@ -1,0 +1,144 @@
+Kronikol 5.27.13+c58d98c0f8c841a0e1432e6c753ed9afa2a6977f
+MassTransit 9.0.0.0
+
+SQS: a send that throws
+    the caller saw: HttpRequestException. 1 records.
+    Request  SendMessage                        kind Default status -                        content other                error none                 table Publishes
+    1 requests, 0 responses, so an orphan request
+    fingerprint line: Caller>SQS SendMessage /orders -
+    arrow: caller -[#9B59B6]> sQS: SendMessage: /orders
+    plain note <color:#686868>[Host=sqs.us-east-1.amazonaws.com] <color:#686868>[x-amz-api-vers...
+
+SNS: a publish that throws
+    the caller saw: HttpRequestException. 1 records.
+    Request  Publish                            kind Default status -                        content other                error none                 table Publishes
+    1 requests, 0 responses, so an orphan request
+    fingerprint line: Caller>SNS Publish / -
+    arrow: caller -[#9B59B6]> sNS: Publish: /
+    plain note <color:#686868>[Host=sns.us-east-1.amazonaws.com] <color:#686868>[X-Amz-Content-...
+
+EventBridge: a put that throws
+    the caller saw: HttpRequestException. 1 records.
+    Request  PutEvents [OrderPlaced]            kind Default status -                        content other                error none                 table Publishes
+    1 requests, 0 responses, so an orphan request
+    fingerprint line: Caller>EventBridge PutEvents [OrderPlaced] /orders-bus/ -
+    arrow: caller -[#9B59B6]> eventBridge: PutEvents <U+005B>OrderPlaced<U+005D>: /
+    plain note <color:#686868>[Host=events.us-east-1.amazonaws.com] <color:#686868>[x-amz-api-v...
+
+Storage Queues: a send that throws
+    the caller saw: RequestFailedException. 2 records.
+    Request  Send → orders                      kind Default status -                        content other                error none                 table Publishes
+    Response Send → orders                      kind Default status !HttpRequestException    content none                 error the exception's text table Publishes
+    1 requests, 1 responses
+    fingerprint line: Caller>Storage Queues Send → orders /orders !HttpRequestException
+    arrow: caller -[#9B59B6]> storageQueues: Send → orders: /orders
+    arrow: storageQueues -[#9B59B6]-> caller: !HttpRequestException
+    plain note <color:#686868>[Accept=application/xml] ﻿~<QueueMessage>~<MessageText>hello~</Me...
+
+Pub/Sub: a publish that throws
+    the caller saw: InvalidOperationException. 2 records.
+    Request  Publish → orders                   kind Event   status -                        content other                error none                 table Publishes
+    Response Publish → orders                   kind Default status -                        content the exception's text error none                 table Publishes
+    1 requests, 1 responses
+    fingerprint line: Caller>Pub/Sub Publish → orders /orders -
+    arrow: caller -[#9B59B6]> pub_Sub: Publish → orders: /orders
+    arrow: pub_Sub -[#9B59B6]-> caller:
+    event card hello
+    plain note broker-refused
+
+Event Hubs: a send that throws
+    the caller saw: InvalidOperationException. 2 records.
+    Request  Send → orders                      kind Event   status -                        content other                error none                 table Publishes
+    Response Send → orders                      kind Default status -                        content the exception's text error none                 table Publishes
+    1 requests, 1 responses
+    fingerprint line: Caller>Event Hubs Send → orders /orders -
+    arrow: caller -[#9B59B6]> eventHubs: Send → orders: /orders
+    arrow: eventHubs -[#9B59B6]-> caller:
+    event card hello
+    plain note broker-refused
+
+Service Bus: a send that throws
+    the caller saw: InvalidOperationException. 2 records.
+    Request  Send → orders                      kind Event   status -                        content other                error none                 table Publishes
+    Response Send → orders                      kind Event   status -                        content the exception's text error none                 table Publishes
+    1 requests, 1 responses
+    fingerprint line: Caller>Service Bus Send → orders /orders/ -
+    arrow: caller -[#9B59B6]> serviceBus: Send → orders: /
+    arrow: serviceBus -[#9B59B6]-> caller:
+    event card hello
+    event card broker-refused
+
+Kafka: a produce whose delivery fails (the tracking TrackingKafkaProducer holds, Failed being what it calls)
+    the caller saw: nothing. 2 records.
+    Request  Produce → orders                   kind Event   status -                        content other                error none                 table Publishes
+    Response Produce → orders                   kind Event   status !Local_MsgTimedOut       content none                 error the exception's text table Publishes
+    1 requests, 1 responses
+    fingerprint line: Caller>Kafka Produce → orders /orders !Local_MsgTimedOut
+    arrow: caller -[#9B59B6]> kafka: Produce → orders: /orders
+    arrow: kafka -[#9B59B6]-> caller: !Local_MsgTimedOut
+    event card <b>Key</b> k v
+
+MassTransit control: a send that works (PostSend)
+    the caller saw: nothing. 2 records.
+    Request  Send OrderPlaced                   kind Event   status -                        content other                error none                 table Publishes
+    Response Send OrderPlaced                   kind Event   status -                        content none                 error none                 table Publishes
+    1 requests, 1 responses
+    fingerprint line: Test>RabbitMQ Send OrderPlaced /orders -
+    arrow: test -[#9B59B6]> rabbitMQ: Send OrderPlaced: /orders
+    arrow: rabbitMQ -[#9B59B6]-> test:
+    event card { "OrderId": "1" }
+
+MassTransit control: a publish that works (PostPublish)
+    the caller saw: nothing. 2 records.
+    Request  Publish OrderPlaced                kind Event   status -                        content other                error none                 table Publishes
+    Response Publish OrderPlaced                kind Event   status -                        content none                 error none                 table Publishes
+    1 requests, 1 responses
+    fingerprint line: Test>RabbitMQ Publish OrderPlaced /orders -
+    arrow: test -[#9B59B6]> rabbitMQ: Publish OrderPlaced: /orders
+    arrow: rabbitMQ -[#9B59B6]-> test:
+    event card { "OrderId": "1" }
+
+MassTransit control: a consume that works (PostConsume)
+    the caller saw: nothing. 2 records.
+    Request  Consume OrderPlaced                kind Event   status -                        content other                error none                 table Unknown
+    Response Consume OrderPlaced                kind Event   status -                        content none                 error none                 table Unknown
+    1 requests, 1 responses
+    fingerprint line: RabbitMQ>Test Consume OrderPlaced /unknown -
+    arrow: rabbitMQ -[#9B59B6]> test: Consume OrderPlaced: /unknown
+    arrow: test -[#9B59B6]-> rabbitMQ:
+    event card { "OrderId": "1" }
+
+MassTransit: a send that fails (SendFault)
+    the caller saw: nothing. 2 records.
+    Request  Send Fault OrderPlaced             kind Event   status -                        content the exception's text error none                 table Neither
+    Response Send Fault OrderPlaced             kind Event   status Fault                    content none                 error none                 table Neither
+    1 requests, 1 responses
+    fingerprint line: Test>RabbitMQ Send Fault OrderPlaced /orders Fault
+    arrow: test -[#9B59B6]> rabbitMQ: Send Fault OrderPlaced: /orders
+    arrow: rabbitMQ -[#9B59B6]-> test: Fault
+    event card broker-refused
+
+MassTransit: a publish that fails (PublishFault)
+    the caller saw: nothing. 2 records.
+    Request  Publish Fault OrderPlaced          kind Event   status -                        content the exception's text error none                 table Neither
+    Response Publish Fault OrderPlaced          kind Event   status Fault                    content none                 error none                 table Neither
+    1 requests, 1 responses
+    fingerprint line: Test>RabbitMQ Publish Fault OrderPlaced /orders Fault
+    arrow: test -[#9B59B6]> rabbitMQ: Publish Fault OrderPlaced: /orders
+    arrow: rabbitMQ -[#9B59B6]-> test: Fault
+    event card broker-refused
+
+MassTransit: a consumer that throws (ConsumeFault)
+    the caller saw: nothing. 2 records.
+    Request  Consume Fault OrderPlaced          kind Event   status -                        content the exception's text error none                 table Neither
+    Response Consume Fault OrderPlaced          kind Event   status Fault                    content none                 error none                 table Neither
+    1 requests, 1 responses
+    fingerprint line: RabbitMQ>Test Consume Fault OrderPlaced /unknown Fault
+    arrow: rabbitMQ -[#9B59B6]> test: Consume Fault OrderPlaced: /unknown
+    arrow: test -[#9B59B6]-> rabbitMQ: Fault
+    event card broker-refused
+
+F22: one SQS send that throws, as the handler logs it, and with the response Storage Queues' catch writes in its place
+    as logged:  Caller>SQS SendMessage /orders -
+    answered:   Caller>SQS SendMessage /orders !HttpRequestException
+    the same line: False

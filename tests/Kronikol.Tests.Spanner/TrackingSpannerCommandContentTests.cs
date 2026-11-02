@@ -17,6 +17,23 @@ public class TrackingSpannerCommandContentTests
 {
     private readonly string _testId = Guid.NewGuid().ToString();
 
+    // #220: the ADO.NET route, as a client most often reaches Spanner (plans/CALLS_AND_EVENTS_PLAN.md 5.3).
+    [Fact]
+    public void A_command_logs_a_call()
+    {
+        var options = new SpannerTrackingOptions { CurrentTestInfoFetcher = () => ("TestMethod", _testId) };
+        using var connection = new TrackingSpannerConnection(new FailureFakeDbConnection(), options);
+        using var command = new TrackingSpannerCommand(new FailureFakeDbCommand(new InvalidOperationException("not run")), connection, options)
+        {
+            CommandText = "SELECT * FROM Orders",
+        };
+
+        command.LogRequest();
+
+        var log = Assert.Single(RequestResponseLogger.RequestAndResponseLogs, l => l.TestId == _testId);
+        Assert.Equal(RequestResponseMetaType.Default, log.MetaType);
+    }
+
     [Fact]
     public void A_Detailed_phase_of_a_command_logged_at_Raw_leaves_the_SQL_out_when_LogSqlText_is_off()
     {

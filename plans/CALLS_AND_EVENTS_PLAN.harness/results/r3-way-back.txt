@@ -1,0 +1,21 @@
+shape	kind in	default CaptureKinds	with Messaging+Rpc: metaType	label	uri	caller	service	NDJSON metaType	kind out (IncludeSpanSourced)	service.name out	peer.service out	by default on the way out
+send, stable names	Producer	dropped	Event	Send orders	kafka://broker/orders	app	kafka	Event	Producer	app	kafka	skipped (echo)
+publish, old names (Java agent)	Producer	dropped	Event	Publish orders	kafka://broker/orders	app	kafka	Event	Producer	app	kafka	skipped (echo)
+create (batch publish)	Producer	dropped	Event	Create orders	gcp-pubsub://broker/orders	app	gcp_pubsub	Event	Producer	app	gcp_pubsub	skipped (echo)
+send as CLIENT (a create span exists)	Client	dropped	Event	Publish orders	gcp-pubsub://broker/orders	app	gcp_pubsub	Event	Producer	app	gcp_pubsub	skipped (echo)
+process	Consumer	dropped	Event	Process orders	kafka://broker/orders	app	kafka	Event	Consumer	app	kafka	skipped (echo)
+receive as CONSUMER (old semconv)	Consumer	dropped	Event	Receive orders	kafka://broker/orders	app	kafka	Event	Client	app	kafka	skipped (echo)
+CONSUMER, no operation	Consumer	dropped	Event	Receive orders	kafka://broker/orders	app	kafka	Event	Client	app	kafka	skipped (echo)
+poll (.NET Kafka instrumentation)	Client	dropped	Event	Poll orders	kafka://broker/orders	app	kafka	Event	Client	app	kafka	skipped (echo)
+commit (settle)	Client	dropped	Default	Commit orders	kafka://broker/orders	app	kafka	(none)	Client	app	kafka	skipped (echo)
+CLIENT, no operation	Client	dropped	Default	Publish orders	kafka://broker/orders	app	kafka	(none)	Client	app	kafka	skipped (echo)
+receive with rpc.system (AWS SDK shape)	Client	dropped	Default	SQS/ReceiveMessage	aws-api://unknown/SQS/ReceiveMessage	app	aws-api	(none)	Client	app	aws-api	skipped (echo)
+send with rpc.system (AWS SDK shape)	Producer	dropped	Event	Publish orders	aws-sqs://broker/orders	app	aws_sqs	Event	Producer	app	aws_sqs	skipped (echo)
+messaging.system.name only (semconv main)	Producer	dropped	DROPPED
+INTERNAL with messaging.system	Internal	dropped	Event	Publish orders	kafka://broker/orders	app	kafka	Event	Producer	app	kafka	skipped (echo)
+PRODUCER, no messaging.system (today's export of a message)	Producer	dropped	DROPPED
+CONSUMER, no messaging.system, nothing else	Consumer	dropped	DROPPED
+CONSUMER with http.request.method (a push over HTTP)	Consumer	mapped	Default	POST	http://app/push	app	app	(none)	Client	app	app	skipped (echo)
+PRODUCER with db.system.name (Spanner as exported to 5.27.13)	Producer	mapped	Default	SELECT	spanner:///shop	app	spanner	(none)	Client	app	spanner	skipped (echo)
+CONSUMER with db.system	Consumer	mapped	Default	GET	redis://db0/k	app	redis	(none)	Client	app	redis	skipped (echo)
+Pub/Sub's process (the page names its operation subscribe)	Consumer	dropped	Event	Subscribe orders	gcp-pubsub://broker/orders	app	gcp_pubsub	Event	Producer	app	gcp_pubsub	skipped (echo)

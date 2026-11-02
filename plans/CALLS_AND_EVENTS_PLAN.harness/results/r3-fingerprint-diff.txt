@@ -1,0 +1,114 @@
+< send, stable names | Messaging and Rpc captured | log	kind Default
+> send, stable names | Messaging and Rpc captured | log	kind Event
+< send, stable names | Messaging and Rpc captured | record	kind Default
+> send, stable names | Messaging and Rpc captured | record	kind Event
+< send, stable names | Messaging and Rpc captured | merged	kind Default
+> send, stable names | Messaging and Rpc captured | merged	kind Event
+< publish, old names (Java agent) | Messaging and Rpc captured | log	kind Default
+> publish, old names (Java agent) | Messaging and Rpc captured | log	kind Event
+< publish, old names (Java agent) | Messaging and Rpc captured | record	kind Default
+> publish, old names (Java agent) | Messaging and Rpc captured | record	kind Event
+< publish, old names (Java agent) | Messaging and Rpc captured | merged	kind Default
+> publish, old names (Java agent) | Messaging and Rpc captured | merged	kind Event
+< create (batch publish) | Messaging and Rpc captured | log	kind Default
+> create (batch publish) | Messaging and Rpc captured | log	kind Event
+< create (batch publish) | Messaging and Rpc captured | record	kind Default
+> create (batch publish) | Messaging and Rpc captured | record	kind Event
+< create (batch publish) | Messaging and Rpc captured | merged	kind Default
+> create (batch publish) | Messaging and Rpc captured | merged	kind Event
+< send as CLIENT (a create span exists) | Messaging and Rpc captured | log	kind Default
+> send as CLIENT (a create span exists) | Messaging and Rpc captured | log	kind Event
+< send as CLIENT (a create span exists) | Messaging and Rpc captured | record	kind Default
+> send as CLIENT (a create span exists) | Messaging and Rpc captured | record	kind Event
+< send as CLIENT (a create span exists) | Messaging and Rpc captured | merged	kind Default
+> send as CLIENT (a create span exists) | Messaging and Rpc captured | merged	kind Event
+< process | Messaging and Rpc captured | log	kind Default
+> process | Messaging and Rpc captured | log	kind Event
+< process | Messaging and Rpc captured | record	kind Default
+> process | Messaging and Rpc captured | record	kind Event
+< process | Messaging and Rpc captured | merged	kind Default
+> process | Messaging and Rpc captured | merged	kind Event
+< Pub/Sub's process (subscribe) | Messaging and Rpc captured | log	kind Default
+> Pub/Sub's process (subscribe) | Messaging and Rpc captured | log	kind Event
+< Pub/Sub's process (subscribe) | Messaging and Rpc captured | record	kind Default
+> Pub/Sub's process (subscribe) | Messaging and Rpc captured | record	kind Event
+< Pub/Sub's process (subscribe) | Messaging and Rpc captured | merged	kind Default
+> Pub/Sub's process (subscribe) | Messaging and Rpc captured | merged	kind Event
+< receive as CONSUMER (old semconv) | Messaging and Rpc captured | log	kind Default
+> receive as CONSUMER (old semconv) | Messaging and Rpc captured | log	kind Event
+< receive as CONSUMER (old semconv) | Messaging and Rpc captured | record	kind Default
+> receive as CONSUMER (old semconv) | Messaging and Rpc captured | record	kind Event
+< receive as CONSUMER (old semconv) | Messaging and Rpc captured | merged	kind Default
+> receive as CONSUMER (old semconv) | Messaging and Rpc captured | merged	kind Event
+< CONSUMER, no operation | Messaging and Rpc captured | log	kind Default
+> CONSUMER, no operation | Messaging and Rpc captured | log	kind Event
+< CONSUMER, no operation | Messaging and Rpc captured | record	kind Default
+> CONSUMER, no operation | Messaging and Rpc captured | record	kind Event
+< CONSUMER, no operation | Messaging and Rpc captured | merged	kind Default
+> CONSUMER, no operation | Messaging and Rpc captured | merged	kind Event
+< poll (.NET Kafka instrumentation) | Messaging and Rpc captured | log	kind Default
+> poll (.NET Kafka instrumentation) | Messaging and Rpc captured | log	kind Event
+< poll (.NET Kafka instrumentation) | Messaging and Rpc captured | record	kind Default
+> poll (.NET Kafka instrumentation) | Messaging and Rpc captured | record	kind Event
+< poll (.NET Kafka instrumentation) | Messaging and Rpc captured | merged	kind Default
+> poll (.NET Kafka instrumentation) | Messaging and Rpc captured | merged	kind Event
+< send with rpc.system (AWS SDK shape) | Messaging and Rpc captured | log	kind Default
+> send with rpc.system (AWS SDK shape) | Messaging and Rpc captured | log	kind Event
+< send with rpc.system (AWS SDK shape) | Messaging and Rpc captured | record	kind Default
+> send with rpc.system (AWS SDK shape) | Messaging and Rpc captured | record	kind Event
+< send with rpc.system (AWS SDK shape) | Messaging and Rpc captured | merged	kind Default
+> send with rpc.system (AWS SDK shape) | Messaging and Rpc captured | merged	kind Event
+< INTERNAL with messaging.system | Messaging and Rpc captured | log	kind Default
+> INTERNAL with messaging.system | Messaging and Rpc captured | log	kind Event
+< INTERNAL with messaging.system | Messaging and Rpc captured | record	kind Default
+> INTERNAL with messaging.system | Messaging and Rpc captured | record	kind Event
+< INTERNAL with messaging.system | Messaging and Rpc captured | merged	kind Default
+> INTERNAL with messaging.system | Messaging and Rpc captured | merged	kind Event
+< both names | Messaging and Rpc captured | log	kind Default
+> both names | Messaging and Rpc captured | log	kind Event
+< both names | Messaging and Rpc captured | record	kind Default
+> both names | Messaging and Rpc captured | record	kind Event
+< both names | Messaging and Rpc captured | merged	kind Default
+> both names | Messaging and Rpc captured | merged	kind Event
+< PRODUCER, messaging.*: what R3 exports for the same message | Messaging and Rpc captured | log	kind Default
+> PRODUCER, messaging.*: what R3 exports for the same message | Messaging and Rpc captured | log	kind Event
+< PRODUCER, messaging.*: what R3 exports for the same message | Messaging and Rpc captured | record	kind Default
+> PRODUCER, messaging.*: what R3 exports for the same message | Messaging and Rpc captured | record	kind Event
+< PRODUCER, messaging.*: what R3 exports for the same message | Messaging and Rpc captured | merged	kind Default
+> PRODUCER, messaging.*: what R3 exports for the same message | Messaging and Rpc captured | merged	kind Event
+< real POST 1 span 1 Producer urn:message:Probe:OrderPlaced send | Messaging and Rpc captured | log	kind Default
+> real POST 1 span 1 Producer urn:message:Probe:OrderPlaced send | Messaging and Rpc captured | log	kind Event
+< real POST 1 span 1 Producer urn:message:Probe:OrderPlaced send | Messaging and Rpc captured | record	kind Default
+> real POST 1 span 1 Producer urn:message:Probe:OrderPlaced send | Messaging and Rpc captured | record	kind Event
+< real POST 1 span 1 Producer urn:message:Probe:OrderPlaced send | Messaging and Rpc captured | merged	kind Default
+> real POST 1 span 1 Producer urn:message:Probe:OrderPlaced send | Messaging and Rpc captured | merged	kind Event
+< real POST 4 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	kind Default
+> real POST 4 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	kind Event
+< real POST 4 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	kind Default
+> real POST 4 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	kind Event
+< real POST 4 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	kind Default
+> real POST 4 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	kind Event
+< real POST 5 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	kind Default
+> real POST 5 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	kind Event
+< real POST 5 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	kind Default
+> real POST 5 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	kind Event
+< real POST 5 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	kind Default
+> real POST 5 span 1 Producer send r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	kind Event
+< real POST 6 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	kind Default
+> real POST 6 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	kind Event
+< real POST 6 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	kind Default
+> real POST 6 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	kind Event
+< real POST 6 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	kind Default
+> real POST 6 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	kind Event
+< real POST 7 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	kind Default
+> real POST 7 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	kind Event
+< real POST 7 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	kind Default
+> real POST 7 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	kind Event
+< real POST 7 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	kind Default
+> real POST 7 span 1 Client poll r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	kind Event
+< real POST 8 span 1 Consumer process r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	kind Default
+> real POST 8 span 1 Consumer process r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | log	kind Event
+< real POST 8 span 1 Consumer process r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	kind Default
+> real POST 8 span 1 Consumer process r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | record	kind Event
+< real POST 8 span 1 Consumer process r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	kind Default
+> real POST 8 span 1 Consumer process r3-real-c26f6557eb3046fd80b98f966b973d80 | Messaging and Rpc captured | merged	kind Event

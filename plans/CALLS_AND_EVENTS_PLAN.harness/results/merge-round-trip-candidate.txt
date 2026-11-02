@@ -1,0 +1,94 @@
+# Each case on a candidate Kronikol.dll and tool: the prototype plus probes/merge-round-trip-candidate-patch.py (A MethodText keeps a verb as held; B a fragment carries only the host's Partial; C a trailing space in a uri survives the parse; D a report's own two rows are two rows; E resultDefaulted travels). NOT a fix being shipped: a check that each counter-example closes.
+
+=== method (one shard, 4 runs)
+  run 4, its own console: (no history line)
+-- candidate: kronikol merge exit 0: (no history line)
+  own    : nothing changed (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:1004:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 15
+  merged : nothing changed (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:1004:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 15
+  15 of 15 positions read the same on every field
+
+=== method-real-handler (one shard, 4 runs)
+  run 4, its own console: (no history line)
+-- candidate: kronikol merge exit 0: (no history line)
+  own    : nothing changed (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:1004:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 7
+  merged : nothing changed (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:1004:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 7
+  7 of 7 positions read the same on every field
+
+=== uri (one shard, 4 runs)
+  run 4, its own console: (no history line)
+-- candidate: kronikol merge exit 0: (no history line)
+  own    : nothing changed (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:1004:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 33
+  merged : nothing changed (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:1004:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 33
+  33 of 33 positions read the same on every field
+
+=== repeat (one shard, 4 runs)
+  run 4, its own console: (no history line)
+-- candidate: kronikol merge exit 0: (no history line)
+  own    : nothing changed (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:1004:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 8
+  merged : nothing changed (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:1004:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 8
+  8 of 8 positions read the same on every field
+
+=== defaulted (one shard, 4 runs)
+  run 4, its own console: history: nothing changed (3 runs recorded in the main stream; flakiness and duration verdicts need 5)
+-- candidate: kronikol merge exit 0: history: nothing changed (3 runs recorded in the main stream; flakiness and duration verdicts need 5)
+  own    : nothing changed (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:1004:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 3
+  merged : nothing changed (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:1004:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 3
+  3 of 3 positions read the same on every field
+
+=== two-shards (shards a,b, 4 runs)
+  run 4 shard a, its own console: (no history line)
+  run 4 shard b, its own console: (no history line)
+-- candidate: kronikol merge exit 0: (no history line)
+  own    : nothing changed (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:1004:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 5, positions 8
+  merged : nothing changed (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:1004:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 3, positions 8
+    a dep only the run's own line has: Caller>Orphana
+    a dep only the run's own line has: Caller>Orphanb
+  8 of 8 positions read the same on every field
+
+=== two-shards-change (shards a,b, 7 runs)
+  run 4 shard a, its own console: (no history line)
+  run 4 shard b, its own console: (no history line)
+-- candidate: kronikol merge exit 0: (no history line)
+  own    : nothing changed (against 6 earlier runs on main); id gh:1007:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 4
+  merged : nothing changed (against 6 earlier runs on main); id gh:1007:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 4
+  4 of 4 positions read the same on every field
+
+=== two-shards-change-no-ledger (shards a,b, 7 runs)
+  run 4 shard a, its own console: (no history line)
+  run 4 shard b, its own console: (no history line)
+-- candidate: kronikol merge exit 0: (no history line)
+  own    : nothing changed (against 6 earlier runs on main); id gh:1007:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 4
+  merged : nothing changed (against 6 earlier runs on main); id gh:1007:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 4
+  4 of 4 positions read the same on every field
+
+=== two-shards-late-change (shards a,b, 7 runs)
+  run 4 shard a, its own console: history: 1 behaviour changed (against 6 earlier runs on main)
+  run 4 shard b, its own console: history: 1 behaviour changed (against 6 earlier runs on main)
+-- candidate: kronikol merge exit 0: history: 2 behaviour changed (against 6 earlier runs on main)
+  own    : 2 behaviour changed (against 6 earlier runs on main); id gh:1007:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 4
+  merged : 2 behaviour changed (against 6 earlier runs on main); id gh:1007:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 4
+  4 of 4 positions read the same on every field
+
+=== two-shards-late-change-pruned (shards a,b, 7 runs)
+  run 4 shard a, its own console: history: 1 behaviour changed (against 6 earlier runs on main)
+  run 4 shard b, its own console: history: 1 behaviour changed (against 6 earlier runs on main)
+  pruned to a window of 3: exit 0
+-- candidate: kronikol merge exit 0: history: 2 behaviour changed (3 runs recorded in the main stream; flakiness and duration verdicts need 5)
+  own    : 2 behaviour changed (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:1007:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 4
+  merged : 2 behaviour changed (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:1007:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 4
+  4 of 4 positions read the same on every field
+
+=== overlap (shards a,b, 4 runs)
+  run 4 shard a, its own console: history: 1 always failing (3 runs recorded in the main stream; flakiness and duration verdicts need 5)
+  run 4 shard b, its own console: history: 1 fixed (3 runs recorded in the main stream; flakiness and duration verdicts need 5)
+-- candidate: kronikol merge exit 0: history: 1 always failing (3 runs recorded in the main stream; flakiness and duration verdicts need 5)
+  own    : 1 always failing (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:1004:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 4
+  merged : 1 always failing (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:1004:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 4
+  4 of 4 positions read the same on every field
+
+=== real-change (one shard, 4 runs)
+  run 4, its own console: history: 1 behaviour changed (3 runs recorded in the main stream; flakiness and duration verdicts need 5)
+-- candidate: kronikol merge exit 0: history: 1 behaviour changed (3 runs recorded in the main stream; flakiness and duration verdicts need 5)
+  own    : 1 behaviour changed (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:1004:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 2
+  merged : 1 behaviour changed (3 runs recorded in the main stream; flakiness and duration verdicts need 5); id gh:1004:1, suite fixture, stream main, rule 11, partial False, absent 0, new deps 0, deps 1, positions 2
+  2 of 2 positions read the same on every field

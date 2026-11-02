@@ -1,0 +1,20 @@
+# consumed first by Consume
+# handled second by ConsumeAndProcessMessageAsync
+== what the instrumentations wrote
+source	name	kind	messaging.system	messaging.operation	messaging.operation.name	messaging.operation.type	messaging.destination.name	peer.service	server.address
+MassTransit	urn:message:Probe:OrderPlaced send	Producer	in-memory	send	-	-	urn:message:Probe:OrderPlaced	-	-
+MassTransit	orders process	Consumer	-	process	-	-	-	-	-
+MassTransit	orders receive	Consumer	-	receive	-	-	orders	-	-
+OpenTelemetry.Instrumentation.ConfluentKafka	send r3-real-topic	Producer	kafka	-	send	send	r3-real-topic	-	-
+OpenTelemetry.Instrumentation.ConfluentKafka	send r3-real-topic	Producer	kafka	-	send	send	r3-real-topic	-	-
+OpenTelemetry.Instrumentation.ConfluentKafka	poll r3-real-topic	Client	kafka	-	poll	receive	r3-real-topic	-	-
+OpenTelemetry.Instrumentation.ConfluentKafka	poll r3-real-topic	Client	kafka	-	poll	receive	r3-real-topic	-	-
+OpenTelemetry.Instrumentation.ConfluentKafka	process r3-real-topic	Consumer	kafka	-	process	process	r3-real-topic	-	-
+== what the tap made of them: 8 received, 6 mapped, 2 ignored
+metaType	label	uri	caller	service	category	kind out (IncludeSpanSourced)	service.name out	peer.service out	messaging.system out	messaging.operation.type out
+Event	Send urn:message:Probe:OrderPlaced	in-memory://broker/urn:message:Probe:OrderPlaced	breakfast	in-memory	MessageQueue	Producer	breakfast	in-memory	in-memory	send
+Event	Send r3-real-topic	kafka://broker/r3-real-topic	breakfast	kafka	MessageQueue	Producer	breakfast	kafka	kafka	send
+Event	Send r3-real-topic	kafka://broker/r3-real-topic	breakfast	kafka	MessageQueue	Producer	breakfast	kafka	kafka	send
+Event	Poll r3-real-topic	kafka://broker/r3-real-topic	breakfast	kafka	MessageQueue	Client	breakfast	kafka	kafka	receive
+Event	Poll r3-real-topic	kafka://broker/r3-real-topic	breakfast	kafka	MessageQueue	Client	breakfast	kafka	kafka	receive
+Event	Process r3-real-topic	kafka://broker/r3-real-topic	breakfast	kafka	MessageQueue	Consumer	breakfast	kafka	kafka	process

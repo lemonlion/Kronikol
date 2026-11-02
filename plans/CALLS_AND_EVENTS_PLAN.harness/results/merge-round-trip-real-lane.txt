@@ -1,0 +1,73 @@
+# A real consumer's real lane on 5.27.13 (BreakfastProvider at 640c190, xUnit in memory, GenerateMergeableData on, CI's environment). Aggregates only.
+
+== One process per run: 3 runs, 212 scenarios each. r1, r2 recorded; r3 merged and read.
+-- 513
+  own    : nothing changed; id gh:9003:1, suite xunit-in-memory, stream main, rule 11, partial False, absent 0, new deps 0, deps 19, positions 212
+  merged : 3 behaviour changed; id gh:9003:1, suite xunit-in-memory, stream main, rule 11, partial False, absent 0, new deps 0, deps 19, positions 212
+  209 of 212 positions read the same on every field
+  positions naming a difference: 3, dropped or added positions: 0
+scenarios 212 212 ids only before 0 ids only after 0
+calls compared 2796
+scenario keys that moved: {'exampleFlatValues': 58, 'durationSeconds': 13}
+call keys that moved: {'method': 6}
+top-level keys that differ: []
+background calls 0 0
+-- proto
+  own    : nothing changed; id gh:9003:1, suite xunit-in-memory, stream main, rule 11, partial False, absent 0, new deps 0, deps 19, positions 212
+  merged : nothing changed; id gh:9003:1, suite xunit-in-memory, stream main, rule 11, partial False, absent 0, new deps 0, deps 19, positions 212
+  212 of 212 positions read the same on every field
+  positions naming a difference: 0, dropped or added positions: 0
+scenarios 212 212 ids only before 0 ids only after 0
+calls compared 2796
+scenario keys that moved: {'exampleFlatValues': 58, 'durationSeconds': 13}
+call keys that moved: {}
+top-level keys that differ: []
+background calls 0 0
+
+== Two real shards per run, split by namespace into two processes under one run id (73 + 139): no ledger at run time
+recorded   gh:9101:1  xunit-in-memory  212 scenarios from 2 shards
+recorded   gh:9102:1  xunit-in-memory  212 scenarios from 2 shards
+recorded   gh:9103:1  xunit-in-memory  212 scenarios from 2 shards
+-- r3 on 513
+  own    : nothing changed; id gh:9103:1, suite xunit-in-memory, stream main, rule 11, partial False, absent 0, new deps 0, deps 19, positions 212
+  merged : 3 behaviour changed; id gh:9103:1, suite xunit-in-memory, stream main, rule 11, partial False, absent 0, new deps 0, deps 19, positions 212
+  209 of 212 positions read the same on every field
+  positions naming a difference: 3, dropped or added positions: 0
+-- r3 on proto
+  own    : nothing changed; id gh:9103:1, suite xunit-in-memory, stream main, rule 11, partial False, absent 0, new deps 0, deps 19, positions 212
+  merged : nothing changed; id gh:9103:1, suite xunit-in-memory, stream main, rule 11, partial False, absent 0, new deps 0, deps 19, positions 212
+  212 of 212 positions read the same on every field
+  positions naming a difference: 0, dropped or added positions: 0
+-- r3-reversed on 513
+  own    : nothing changed; id gh:9103:1, suite xunit-in-memory, stream main, rule 11, partial False, absent 0, new deps 0, deps 19, positions 212
+  merged : 3 behaviour changed; id gh:9103:1, suite xunit-in-memory, stream main, rule 11, partial False, absent 0, new deps 0, deps 19, positions 212
+  209 of 212 positions read the same on every field
+  positions naming a difference: 3, dropped or added positions: 0
+-- r3-reversed on proto
+  own    : nothing changed; id gh:9103:1, suite xunit-in-memory, stream main, rule 11, partial False, absent 0, new deps 0, deps 19, positions 212
+  merged : nothing changed; id gh:9103:1, suite xunit-in-memory, stream main, rule 11, partial False, absent 0, new deps 0, deps 19, positions 212
+  212 of 212 positions read the same on every field
+  positions naming a difference: 0, dropped or added positions: 0
+
+== The same shards with the ledger of r1..r3 visible at run time (KRONIKOL_HISTORY, what the history action's read step sets), and a real change in one test from r4 on. r4 recorded; r5 merged and read: r5 changed nothing.
+recorded   gh:9104:1  xunit-in-memory  212 scenarios from 2 shards  partial
+-- r5 on 513
+  own    : nothing changed; id gh:9105:1, suite xunit-in-memory, stream main, rule 11, partial True, absent 0, new deps 0, deps 19, positions 212
+  merged : 4 behaviour changed; id gh:9105:1, suite xunit-in-memory, stream main, rule 11, partial False, absent 0, new deps 0, deps 19, positions 212
+  208 of 212 positions read the same on every field
+  positions naming a difference: 4, dropped or added positions: 0
+-- r5 on proto
+  own    : nothing changed; id gh:9105:1, suite xunit-in-memory, stream main, rule 11, partial True, absent 0, new deps 0, deps 19, positions 212
+  merged : 1 behaviour changed; id gh:9105:1, suite xunit-in-memory, stream main, rule 11, partial False, absent 0, new deps 0, deps 19, positions 212
+  211 of 212 positions read the same on every field
+  positions naming a difference: 1, dropped or added positions: 0
+
+== r4 and r5 again on the candidate (results/merge-round-trip-candidate.txt's header)
+recorded   gh:9104:1  xunit-in-memory  212 scenarios from 2 shards
+  own    : nothing changed; id gh:9105:1, suite xunit-in-memory, stream main, rule 11, partial False, absent 0, new deps 0, deps 19, positions 212
+  merged : nothing changed; id gh:9105:1, suite xunit-in-memory, stream main, rule 11, partial False, absent 0, new deps 0, deps 19, positions 212
+  212 of 212 positions read the same on every field
+  positions naming a difference: 0, dropped or added positions: 0
+
+== A filtered run alone (shard a of r4) on the candidate: still judged partial at append
+recorded   gh:9104:1  xunit-in-memory  73 scenarios  partial

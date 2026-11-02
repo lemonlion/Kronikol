@@ -45,6 +45,8 @@
     <ProjectReference Include="..\..\src\Kronikol.Extensions.Grpc\Kronikol.Extensions.Grpc.csproj" />
     <!-- The MongoDB subscriber, so the note facts paint what it writes (plans/MONGODB_DETAILED_PAYLOADS_PLAN.md R1). -->
     <ProjectReference Include="..\..\src\Kronikol.Extensions.MongoDB\Kronikol.Extensions.MongoDB.csproj" />
+    <!-- The Spanner tracker, so a database note is painted from what it writes (plans/CALLS_AND_EVENTS_PLAN.md 6.5). -->
+    <ProjectReference Include="..\..\src\Kronikol.Extensions.Spanner\Kronikol.Extensions.Spanner.csproj" />
   </ItemGroup>
 
 </Project>

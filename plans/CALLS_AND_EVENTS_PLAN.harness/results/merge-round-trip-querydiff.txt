@@ -1,0 +1,16 @@
+
+=== bp-cmock-reqnroll
+-- 5.27.13: merge exit 0
+   service,kind,method,status         {'rows_before': 74, 'rows_after': 74, 'only_before': 1, 'only_after': 1, 'numbers_moved': 0, 'method_casing_pairs': 1, 'unexplained': 0}
+   caller,service,method,status       {'rows_before': 74, 'rows_after': 74, 'only_before': 1, 'only_after': 1, 'numbers_moved': 0, 'method_casing_pairs': 1, 'unexplained': 0}
+   service,method,route,status        {'rows_before': 200, 'rows_after': 200, 'only_before': 2, 'only_after': 2, 'numbers_moved': 0, 'method_casing_pairs': 2, 'unexplained': 0}
+   service,method,path,status         {'rows_before': 200, 'rows_after': 200, 'only_before': 2, 'only_after': 2, 'numbers_moved': 0, 'method_casing_pairs': 2, 'unexplained': 0}
+   category,kind,method               {'rows_before': 43, 'rows_after': 43, 'only_before': 1, 'only_after': 1, 'numbers_moved': 0, 'method_casing_pairs': 1, 'unexplained': 0}
+   service,capturedBy,phase           {'rows_before': 24, 'rows_after': 24, 'only_before': 0, 'only_after': 0, 'numbers_moved': 0, 'method_casing_pairs': 0, 'unexplained': 0}
+-- prototype: merge exit 0
+   service,kind,method,status         {'rows_before': 74, 'rows_after': 74, 'only_before': 0, 'only_after': 0, 'numbers_moved': 0, 'method_casing_pairs': 0, 'unexplained': 0}
+   caller,service,method,status       {'rows_before': 74, 'rows_after': 74, 'only_before': 0, 'only_after': 0, 'numbers_moved': 0, 'method_casing_pairs': 0, 'unexplained': 0}
+   service,method,route,status        {'rows_before': 200, 'rows_after': 200, 'only_before': 0, 'only_after': 0, 'numbers_moved': 0, 'method_casing_pairs': 0, 'unexplained': 0}
+   service,method,path,status         {'rows_before': 200, 'rows_after': 200, 'only_before': 0, 'only_after': 0, 'numbers_moved': 0, 'method_casing_pairs': 0, 'unexplained': 0}
+   category,kind,method               {'rows_before': 43, 'rows_after': 43, 'only_before': 0, 'only_after': 0, 'numbers_moved': 0, 'method_casing_pairs': 0, 'unexplained': 0}
+   service,capturedBy,phase           {'rows_before': 24, 'rows_after': 24, 'only_before': 0, 'only_after': 0, 'numbers_moved': 0, 'method_casing_pairs': 0, 'unexplained': 0}

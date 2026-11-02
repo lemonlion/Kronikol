@@ -1,0 +1,125 @@
+Kronikol 5.27.13+27cc0e4612a1d36754da65e2bd23787ffed1e271
+Kafka: hosted consumer, delivery recorded, commit tracked, slow first commit
+    calls 6, measured 0, kinds Default=5 Event=1
+    marked: none
+    publishes judged: none
+Kafka: hosted consumer, delivery not recorded, commit tracked, slow first commit
+    calls 5, measured 0, kinds Default=5
+    marked: none
+    publishes judged: none
+Pub/Sub: hosted subscriber through the wrapper's route, slow first handler (Receive, the reply is on its response)
+    calls 5, measured 5, kinds Event=5
+    marked: none
+    publishes judged: none
+Pub/Sub: Ack logged by hand (no wrapper logs one), slow first, no call into the worker
+    calls 5, measured 5, kinds Default=5
+    marked: first Ack /orders
+    publishes judged: first Ack /orders
+Pub/Sub: Ack logged by hand, slow first, the test calls the worker
+    calls 6, measured 6, kinds Default=6
+    marked: none
+    publishes judged: none
+Event Hubs: GetPartitionIds logged by hand (the wrappers pass it through unlogged), slow first
+    calls 5, measured 5, kinds Default=5
+    marked: first GetPartitionIds /orders
+    publishes judged: first GetPartitionIds /orders
+MassTransit: send faults from the observer, a slow first attempt before the fault is reported
+    calls 5, measured 5, kinds Default=5
+    marked: none
+    publishes judged: none
+SNS: the test publishes itself, slow first (TLS, a first connection)
+    calls 5, measured 5, kinds Event=5
+    marked: first Publish /
+    publishes judged: first Publish /
+SQS: the test sends itself, slow first
+    calls 5, measured 5, kinds Event=5
+    marked: first SendMessage /orders
+    publishes judged: first SendMessage /orders
+SQS: the test long-polls for a message, the first waits 500 ms for it, later ones find one
+    calls 5, measured 5, kinds Event=5
+    marked: none
+    publishes judged: none
+SQS: the test deletes messages, slow first (settlement, Default before and after)
+    calls 5, measured 5, kinds Default=5
+    marked: first DeleteMessage /orders
+    publishes judged: first DeleteMessage /orders
+EventBridge: the test puts events, slow first
+    calls 5, measured 5, kinds Event=5
+    marked: first PutEvents [OrderPlaced] /orders-bus/
+    publishes judged: first PutEvents [OrderPlaced] /orders-bus/
+Storage Queues: the test sends, slow first
+    calls 5, measured 5, kinds Event=5
+    marked: first Send → orders /orders
+    publishes judged: first Send → orders /orders
+Storage Queues: the test peeks, slow first
+    calls 5, measured 5, kinds Event=5
+    marked: none
+    publishes judged: none
+SNS: the service publishes while the test calls it (the second condition of WarmUpCalls.cs:155)
+    calls 6, measured 6, kinds Default=1 Event=5
+    marked: none
+    publishes judged: none
+SNS: a worker publishes in a scenario that never calls it, slow first
+    calls 5, measured 5, kinds Event=5
+    marked: first Publish /
+    publishes judged: first Publish /
+Kafka: the test produces itself with a delivery report, slow first (metadata, a first connection)
+    calls 5, measured 5, kinds Event=5
+    marked: first Produce → orders /orders
+    publishes judged: first Produce → orders /orders
+Service Bus: the test sends itself, slow first
+    calls 5, measured 5, kinds Event=5
+    marked: first Send → orders /orders/
+    publishes judged: first Send → orders /orders/
+Service Bus: hosted receiver completes (the wrapper logs this, Default today), slow first, no call into the worker
+    calls 5, measured 5, kinds Default=5
+    marked: first Complete /orders/
+    publishes judged: first Complete /orders/
+Pub/Sub: the test publishes itself through the wrapper, slow first
+    calls 5, measured 5, kinds Event=5
+    marked: first Publish → orders /orders
+    publishes judged: first Publish → orders /orders
+Event Hubs: the test sends itself through the wrapper, slow first
+    calls 5, measured 5, kinds Event=5
+    marked: first Send → orders /orders
+    publishes judged: first Send → orders /orders
+MassTransit: the test publishes itself, slow first
+    calls 5, measured 5, kinds Event=5
+    marked: none
+    publishes judged: none
+MassTransit: the test sends itself, slow first
+    calls 5, measured 5, kinds Event=5
+    marked: none
+    publishes judged: none
+Storage Queues at Raw: the test sends, slow first (POST on https)
+    calls 5, measured 5, kinds Event=5
+    marked: none
+    publishes judged: none
+Storage Queues at Raw: the test receives, slow first (GET on https)
+    calls 5, measured 5, kinds Event=5
+    marked: none
+    publishes judged: none
+SQS at Raw: the test sends, slow first (POST on https)
+    calls 5, measured 5, kinds Event=5
+    marked: none
+    publishes judged: none
+SNS at Raw: the test publishes, slow first (POST on https)
+    calls 5, measured 5, kinds Event=5
+    marked: none
+    publishes judged: none
+EventBridge at Raw: the test puts events, slow first (POST on https)
+    calls 5, measured 5, kinds Event=5
+    marked: none
+    publishes judged: none
+MassTransit at Raw: the test publishes on rabbitmq://, slow first
+    calls 5, measured 5, kinds Event=5
+    marked: none
+    publishes judged: none
+MessageTracker: the test publishes on its own scheme, event://, slow first
+    calls 5, measured 5, kinds Event=5
+    marked: none
+    publishes judged: none
+MessageTracker: the test publishes on a relative address, slow first
+    calls 5, measured 5, kinds Event=5
+    marked: none
+    publishes judged: none

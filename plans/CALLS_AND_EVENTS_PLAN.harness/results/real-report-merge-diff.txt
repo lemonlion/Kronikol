@@ -1,0 +1,5 @@
+rows: shard 47, merge 48
+== BreakfastProvider's real report (bp-cmock-reqnroll): rows only the shard has (<) and only its merge has (>)
+> ! 6 attachment(s) are not in the report: 6 not found when the report was drawn: C:\Users
+< SQL           Default  Delete
+> SQL           Default  DELETE

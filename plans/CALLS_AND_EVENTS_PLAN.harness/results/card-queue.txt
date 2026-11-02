@@ -1,0 +1,18 @@
+== shard
+{"op": "35f4e37199372b2b"}
+{"op": "35f4e37199372b2b"}
+{"method": "Delete", "op": "35f4e37199372b2b", "target": "/orders"}
+{"messages": []}
+
+== m
+{"op": "a9d787bdc0880214"}
+{"op": "a9d787bdc0880214"}
+{"method": "DELETE", "op": "a9d787bdc0880214", "target": "/orders"}
+{"messages": [{"direction": null, "op": "a9d787bdc0880214", "party": "Queue", "topic": "orders"}]}
+
+== mp
+{"op": "35f4e37199372b2b"}
+{"op": "35f4e37199372b2b"}
+{"method": "Delete", "op": "35f4e37199372b2b", "target": "/orders"}
+{"messages": []}
+

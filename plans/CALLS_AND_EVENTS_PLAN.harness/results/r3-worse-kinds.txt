@@ -1,0 +1,116 @@
+202 rows of kinds-by-tracker.tsv
+today -> R3 alone, by what OTel's table makes the row:
+  Client -> Client, truth Client: 102
+  Client -> Client, truth Producer: 7
+  Producer -> Client, truth Client: 62
+  Producer -> Consumer, truth Consumer: 7
+  Producer -> Producer, truth Client: 4
+  Producer -> Producer, truth Producer: 20
+Every row R3 alone moves:
+  Kronikol MessageTracker.TrackConsumeEvent TrackConsumeEvent[event://] 'Consume': Producer -> Consumer, truth Consumer
+  Kronikol MessageTracker.TrackConsumeEvent TrackConsumeEvent[kafka://] 'Consume (Kafka)': Producer -> Consumer, truth Consumer
+  Kronikol.Extensions.BigQuery BigQueryTracker Query 'Query': Producer -> Client, truth Client
+  Kronikol.Extensions.BigQuery BigQueryTracker Insert 'Insert': Producer -> Client, truth Client
+  Kronikol.Extensions.BigQuery BigQueryTracker Read 'Read': Producer -> Client, truth Client
+  Kronikol.Extensions.BigQuery BigQueryTracker List 'List': Producer -> Client, truth Client
+  Kronikol.Extensions.BigQuery BigQueryTracker Create 'Create': Producer -> Client, truth Client
+  Kronikol.Extensions.BigQuery BigQueryTracker Delete 'Delete': Producer -> Client, truth Client
+  Kronikol.Extensions.BigQuery BigQueryTracker Update 'Update': Producer -> Client, truth Client
+  Kronikol.Extensions.BigQuery BigQueryTracker Cancel 'Cancel': Producer -> Client, truth Client
+  Kronikol.Extensions.BigQuery BigQueryTracker Other 'Other': Producer -> Client, truth Client
+  Kronikol.Extensions.Bigtable BigtableTracker ReadRows 'ReadRows ← orders': Producer -> Client, truth Client
+  Kronikol.Extensions.Bigtable BigtableTracker MutateRow 'MutateRow → orders': Producer -> Client, truth Client
+  Kronikol.Extensions.Bigtable BigtableTracker MutateRows 'MutateRows (×3) → orders': Producer -> Client, truth Client
+  Kronikol.Extensions.Bigtable BigtableTracker CheckAndMutateRow 'CheckAndMutate → orders': Producer -> Client, truth Client
+  Kronikol.Extensions.Bigtable BigtableTracker ReadModifyWriteRow 'ReadModifyWrite → orders': Producer -> Client, truth Client
+  Kronikol.Extensions.Bigtable BigtableTracker SampleRowKeys 'SampleRowKeys ← orders': Producer -> Client, truth Client
+  Kronikol.Extensions.Bigtable BigtableTracker Other 'Other': Producer -> Client, truth Client
+  Kronikol.Extensions.EventHubs EventHubsTracker CreateBatch 'CreateBatch': Producer -> Client, truth Client
+  Kronikol.Extensions.EventHubs EventHubsTracker ReadEvents 'Read ← orders': Producer -> Client, truth Client
+  Kronikol.Extensions.EventHubs EventHubsTracker ReadEventsFromPartition 'Read ← orders[0]': Producer -> Client, truth Client
+  Kronikol.Extensions.EventHubs EventHubsTracker GetPartitionIds 'GetPartitionIds': Producer -> Client, truth Client
+  Kronikol.Extensions.EventHubs EventHubsTracker GetEventHubProperties 'GetEventHubProperties': Producer -> Client, truth Client
+  Kronikol.Extensions.EventHubs EventHubsTracker GetPartitionProperties 'GetPartitionProperties': Producer -> Client, truth Client
+  Kronikol.Extensions.EventHubs EventHubsTracker StartProcessing 'StartProcessing': Producer -> Client, truth Client
+  Kronikol.Extensions.EventHubs EventHubsTracker StopProcessing 'StopProcessing': Producer -> Client, truth Client
+  Kronikol.Extensions.EventHubs EventHubsTracker ProcessEvent 'Process ← orders': Producer -> Consumer, truth Consumer
+  Kronikol.Extensions.Kafka KafkaTracker.LogConsume Consume 'Consume ← orders': Producer -> Consumer, truth Consumer
+  Kronikol.Extensions.Kafka KafkaTracker.LogSubscribe Subscribe 'Subscribe orders': Producer -> Client, truth Client
+  Kronikol.Extensions.Kafka KafkaTracker.LogUnsubscribe Unsubscribe 'Unsubscribe': Producer -> Client, truth Client
+  Kronikol.Extensions.Kafka KafkaTracker.LogCommit Commit 'Commit': Producer -> Client, truth Client
+  Kronikol.Extensions.Kafka KafkaTracker.LogFlush Flush 'Flush': Producer -> Client, truth Client
+  Kronikol.Extensions.Kafka KafkaTracker.LogTransaction InitTransactions 'InitTransactions': Producer -> Client, truth Client
+  Kronikol.Extensions.Kafka KafkaTracker.LogTransaction BeginTransaction 'BeginTransaction': Producer -> Client, truth Client
+  Kronikol.Extensions.Kafka KafkaTracker.LogTransaction CommitTransaction 'CommitTransaction': Producer -> Client, truth Client
+  Kronikol.Extensions.Kafka KafkaTracker.LogTransaction AbortTransaction 'AbortTransaction': Producer -> Client, truth Client
+  Kronikol.Extensions.Kafka KafkaTracker.LogTransaction SendOffsetsToTransaction 'SendOffsetsToTransaction': Producer -> Client, truth Client
+  Kronikol.Extensions.Kafka KafkaTracker.TrackConsume Consume 'Consume ← orders': Producer -> Consumer, truth Consumer
+  Kronikol.Extensions.MassTransit MassTransitTracker.LogConsume Consume 'Consume OrderPlaced': Producer -> Consumer, truth Consumer
+  Kronikol.Extensions.MassTransit MassTransitTracker.LogSendFault SendFault 'Send Fault OrderPlaced': Producer -> Client, truth Client
+  Kronikol.Extensions.MassTransit MassTransitTracker.LogPublishFault PublishFault 'Publish Fault OrderPlaced': Producer -> Client, truth Client
+  Kronikol.Extensions.MassTransit MassTransitTracker.LogConsumeFault ConsumeFault 'Consume Fault OrderPlaced': Producer -> Client, truth Client
+  Kronikol.Extensions.PubSub PubSubTracker Pull 'Pull ← orders-sub': Producer -> Client, truth Client
+  Kronikol.Extensions.PubSub PubSubTracker Acknowledge 'Ack': Producer -> Client, truth Client
+  Kronikol.Extensions.PubSub PubSubTracker ModifyAckDeadline 'ModifyAckDeadline': Producer -> Client, truth Client
+  Kronikol.Extensions.PubSub PubSubTracker Receive 'Receive ← orders-sub': Producer -> Consumer, truth Consumer
+  Kronikol.Extensions.PubSub PubSubTracker StartSubscriber 'StartSubscriber': Producer -> Client, truth Client
+  Kronikol.Extensions.PubSub PubSubTracker StopSubscriber 'StopSubscriber': Producer -> Client, truth Client
+  Kronikol.Extensions.ServiceBus ServiceBusTracker Receive 'Receive ← orders': Producer -> Client, truth Client
+  Kronikol.Extensions.ServiceBus ServiceBusTracker ReceiveBatch 'Receive (batch) ← orders': Producer -> Client, truth Client
+  Kronikol.Extensions.ServiceBus ServiceBusTracker Peek 'Peek ← orders': Producer -> Client, truth Client
+  Kronikol.Extensions.Spanner SpannerTracker Query 'SELECT FROM Orders': Producer -> Client, truth Client
+  Kronikol.Extensions.Spanner SpannerTracker Read 'Read Orders': Producer -> Client, truth Client
+  Kronikol.Extensions.Spanner SpannerTracker StreamingRead 'StreamingRead Orders': Producer -> Client, truth Client
+  Kronikol.Extensions.Spanner SpannerTracker Insert 'INSERT INTO Orders': Producer -> Client, truth Client
+  Kronikol.Extensions.Spanner SpannerTracker Update 'UPDATE Orders': Producer -> Client, truth Client
+  Kronikol.Extensions.Spanner SpannerTracker Delete 'DELETE FROM Orders': Producer -> Client, truth Client
+  Kronikol.Extensions.Spanner SpannerTracker InsertOrUpdate 'InsertOrUpdate Orders': Producer -> Client, truth Client
+  Kronikol.Extensions.Spanner SpannerTracker Replace 'Replace Orders': Producer -> Client, truth Client
+  Kronikol.Extensions.Spanner SpannerTracker Commit 'Commit': Producer -> Client, truth Client
+  Kronikol.Extensions.Spanner SpannerTracker Rollback 'Rollback': Producer -> Client, truth Client
+  Kronikol.Extensions.Spanner SpannerTracker BeginTransaction 'BeginTransaction': Producer -> Client, truth Client
+  Kronikol.Extensions.Spanner SpannerTracker BatchDml 'BatchDml': Producer -> Client, truth Client
+  Kronikol.Extensions.Spanner SpannerTracker PartitionQuery 'PartitionQuery': Producer -> Client, truth Client
+  Kronikol.Extensions.Spanner SpannerTracker PartitionRead 'PartitionRead': Producer -> Client, truth Client
+  Kronikol.Extensions.Spanner SpannerTracker Ddl 'Ddl': Producer -> Client, truth Client
+  Kronikol.Extensions.Spanner SpannerTracker CreateSession 'CreateSession': Producer -> Client, truth Client
+  Kronikol.Extensions.Spanner SpannerTracker DeleteSession 'DeleteSession': Producer -> Client, truth Client
+  Kronikol.Extensions.Spanner SpannerTracker Other 'Other': Producer -> Client, truth Client
+Right today and wrong on R3 alone (worse): 0
+Wrong today and differently wrong on R3 alone: 0
+Wrong today and right on R3 alone: 69
+Wrong today and the same on R3 alone, for R2 to right: 11
+  Kronikol.Extensions.EventBridge: 2, Client where the table says Producer (PutEvents, PutPartnerEvents)
+  Kronikol.Extensions.EventHubs: 1, Producer where the table says Client (Other)
+  Kronikol.Extensions.Kafka: 1, Producer where the table says Client (Other)
+  Kronikol.Extensions.MassTransit: 1, Producer where the table says Client (Other)
+  Kronikol.Extensions.PubSub: 1, Producer where the table says Client (Other)
+  Kronikol.Extensions.SNS: 2, Client where the table says Producer (Publish, PublishBatch)
+  Kronikol.Extensions.SQS: 2, Client where the table says Producer (SendMessage, SendMessageBatch)
+  Kronikol.Extensions.StorageQueues: 1, Client where the table says Producer (SendMessage)
+
+Trying to break it. The same rows through NDJSON, where neither mark survives:
+  right today and wrong through NDJSON on R3 alone: 0; another kind than in process: 0
+Hand-logged, on real schemes, which the table does not hold. service.name beside each kind:
+  call	5.27.13's rule	in process	through NDJSON
+  TrackConsumeEvent("Consume (Pub/Sub)", "OrderService", pubsub:///orders-sub)	Producer Broker	Consumer OrderService	Consumer OrderService
+  TrackConsumeEvent("Consume (Event Hub)", "OrderService", eventhub:///orders)	Producer Broker	Consumer OrderService	Consumer OrderService
+  TrackConsumeEvent("Consume (Event Hub)", "OrderService", eventhubs:///orders)	Producer Broker	Consumer OrderService	Consumer OrderService
+  TrackConsumeEvent("Consume (Kafka)", "OrderService", kafka:///orders)	Producer Broker	Consumer OrderService	Consumer OrderService
+  TrackConsumeEvent("Kafka", "OrderService", kafka:///orders)	Producer Broker	Consumer OrderService	Producer Broker
+  TrackSendEvent("Process order", "Orders", event://orders)	Producer App	Producer App	Consumer Orders
+  TrackSendEvent("Consume", "Orders", event://orders)	Producer App	Producer App	Consumer Orders
+  TrackSendEvent("ProcessOrder", "Orders", event://orders)	Producer App	Producer App	Producer App
+  TrackSendEvent("Process", "Payments", https://payments.example/process)	Producer App	Producer App	Consumer Payments
+  TrackSendEvent("Consume (Kafka)", "OrderService", kafka:///orders)	Producer App	Producer App	Consumer OrderService
+  TrackSendEvent("Receive order", "PubSub", pubsub:///orders)	Producer App	Producer App	Consumer App
+  TrackSendEvent("Publish (Pub/Sub)", "PubSub", pubsub:///orders)	Producer App	Producer App	Producer App
+  TrackSendEvent("Kafka", "OrderService", kafka:///orders)	Producer App	Producer App	Producer App
+A MessageTracker whose options name a category:
+  category	call	5.27.13's rule	in process	through NDJSON	messaging.system
+  SQL	TrackSendEvent	Producer App	Client App	Client App	-
+  SQL	TrackConsumeEvent	Producer Broker	Client Broker	Client Broker	-
+  Redis	TrackSendEvent	Producer App	Client App	Client App	-
+  Redis	TrackConsumeEvent	Producer Broker	Client Broker	Client Broker	-
+  MessageQueue	TrackSendEvent	Producer App	Producer App	Producer App	event
+  MessageQueue	TrackConsumeEvent	Producer Broker	Consumer OrderService	Consumer OrderService	event

@@ -1,0 +1,16 @@
+interactions 2580, requests in a scenario 1290
+
+message rows: category, scheme, label, kind as recorded -> by R2's rule, requests, of which the test made (the caller is no service of its scenario), with a measured duration
+                eventhub   Consume (Event Hub)      Event   -> Event     37  by the test   37  timed   37
+                kafka      Consume (Kafka)          Event   -> Event     40  by the test    2  timed   40
+                pubsub     Consume (Pub/Sub)        Event   -> Event     34  by the test    1  timed   34
+  MessageQueue  eventgrid  Publish (Event Grid)     Event   -> Event     32  by the test    0  timed   32
+  MessageQueue  kafka      Produce                  Event   -> Event     38  by the test    0  timed   38
+  MessageQueue  pubsub     Publish (Pub/Sub)        Event   -> Event     65  by the test    0  timed   65
+records whose kind R2's rule moves, R1 aside: 0
+
+recorded                   18 marks
+R1                         18 marks
+R1 + R2                    18 marks
+R1 + R2 + publishes        18 marks
+R1 + R2 + every message    18 marks

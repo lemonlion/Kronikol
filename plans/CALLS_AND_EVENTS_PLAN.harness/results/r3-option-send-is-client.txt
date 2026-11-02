@@ -1,0 +1,46 @@
+Q6 (b) measured: prototype/r3-option-send-is-client.patch on R1 + R3, against R3 alone, which holds Q6 (a). A send and a free-text Event are CLIENT,
+except Kafka's produce. The test runs are in r3-test-runs.txt, and the rest in these files, each the named probe run on that tree:
+  r3-option-send-is-client-span-kinds.tsv, .txt   r3-span-kinds. Its firstCut column holds (b), and its expected column stays (a)'s, so its
+                                                  "wrong" rows are the moved rows
+  r3-option-send-is-client-moved.tsv              each row whose kind moves
+  r3-option-send-is-client-way-back.txt           r3-way-back
+  r3-option-send-is-client-real-capture.txt       r3-real-capture, a real broker through the tap
+  r3-option-send-is-client-real-capture-span-exempt.txt
+                                                  the same with a span's own record kept at PRODUCER, a variant measured and reverted:
+                                                  _ => IsKafkasProduce(log) || string.Equals(log.CapturedBy, InteractionMerger.SpanSource, StringComparison.OrdinalIgnoreCase) ? OtlpSpanKind.Producer : OtlpSpanKind.Client,
+OTel's condition on the Kafka produce itself is r3-kafka-creation-context.txt.
+
+rows: 194
+kinds under (a), in process: {'Producer': 89, 'Client': 70, 'Consumer': 35}
+kinds under (b), in process: {'Client': 156, 'Consumer': 35, 'Producer': 3}
+rows whose kind moves, (a) to (b): 86 {('Producer', 'Client'): 86}
+  by broker: {'core': 45, 'eventbridge': 4, 'eventhubs': 6, 'masstransit': 6, 'pubsub': 6, 'servicebus': 9, 'sns': 4, 'sqs': 4, 'storagequeue': 2}
+rows still Producer under (b): 3
+    kafka	KafkaTracker.TrackProduce.Sent	Produce	Raw	Produce orders
+    kafka	KafkaTracker.TrackProduce.Sent	Produce	Detailed	Produce → orders
+    kafka	KafkaTracker.TrackProduce.Sent	Produce	Summarised	Produce
+other columns that move: {'r3Alone': 72, 'viaNdjson': 9}
+way back, (a): 20 hand-made shapes, 17 mapped, 8 leave with another kind than they came in with
+    send as CLIENT (a create span exists): Client in, Producer out
+    receive as CONSUMER (old semconv): Consumer in, Client out
+    CONSUMER, no operation: Consumer in, Client out
+    INTERNAL with messaging.system: Internal in, Producer out
+    CONSUMER with http.request.method (a push over HTTP): Consumer in, Client out
+    PRODUCER with db.system.name (Spanner as exported to 5.27.13): Producer in, Client out
+    CONSUMER with db.system: Consumer in, Client out
+    Pub/Sub's process (the page names its operation subscribe): Consumer in, Producer out
+way back, (b): 20 hand-made shapes, 17 mapped, 11 leave with another kind than they came in with
+    send, stable names: Producer in, Client out
+    publish, old names (Java agent): Producer in, Client out
+    create (batch publish): Producer in, Client out
+    receive as CONSUMER (old semconv): Consumer in, Client out
+    CONSUMER, no operation: Consumer in, Client out
+    send with rpc.system (AWS SDK shape): Producer in, Client out
+    INTERNAL with messaging.system: Internal in, Client out
+    CONSUMER with http.request.method (a push over HTTP): Consumer in, Client out
+    PRODUCER with db.system.name (Spanner as exported to 5.27.13): Producer in, Client out
+    CONSUMER with db.system: Consumer in, Client out
+    Pub/Sub's process (the page names its operation subscribe): Consumer in, Client out
+
+Through NDJSON, rows that give another kind than in process: (a) 27, (b) 19 of 194
+Real capture, the kind a mapped span leaves with against the kind it came in with, of 6 rows: (a) 0 change; (b) 3 change, MassTransit Send urn:message:Probe:OrderPlaced and both Kafka Send, PRODUCER to CLIENT; (b) with a span's own record exempt 0 change, but OtlpExporterTests.Full_circle_a_message_comes_back_a_message goes red: Kronikol's own Publish, exported CLIENT, comes back PRODUCER.

@@ -1,0 +1,15 @@
+# Item 7: between the tools, on the same shards, which keys of the merged file move. Fixture data.
+-- method: 5.27.13's merge against the prototype's
+scenarios 15 15 ids only before 0 ids only after 0
+calls compared 30
+scenario keys that moved: {}
+call keys that moved: {'method': 5}
+top-level keys that differ: []
+background calls 0 0
+-- two-shards: 5.27.13's merge against the prototype's
+scenarios 8 8 ids only before 0 ids only after 0
+calls compared 16
+scenario keys that moved: {}
+call keys that moved: {'method': 4}
+top-level keys that differ: []
+background calls 4 4

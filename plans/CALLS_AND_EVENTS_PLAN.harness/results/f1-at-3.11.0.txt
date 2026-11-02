@@ -1,0 +1,5 @@
+== kronikol merge --history at 3.11.0, run 7 of 7 identical runs (a shard named as a file: a folder fails on History.run.json until 3.25.3)
+  history: 2 behaviour changed (against 6 earlier runs on local)
+
+== kronikol merge --help at 3.10.0: lines naming --history
+0

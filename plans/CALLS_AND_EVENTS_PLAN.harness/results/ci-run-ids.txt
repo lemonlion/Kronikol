@@ -1,0 +1,117 @@
+##### gh-broke gh fail pass
+  recorded   gh:9001:1  history-ci  1 scenarios
+  recorded   gh:9002:1  history-ci  1 scenarios
+  recorded   gh:9003:1  history-ci  1 scenarios
+  recorded   gh:9004:1  history-ci  1 scenarios
+  recorded   gh:9005:1  history-ci  1 scenarios
+  recorded   gh:9006:1  history-ci  1 scenarios
+-- ledger run ids: gh:9001:1 gh:9002:1 gh:9003:1 gh:9004:1 gh:9005:1 gh:9006:1 
+-- shard's own line:
+**History:** 1 broke (against 6 earlier runs on main). Failures are worked through regressions first, then tho
+History: **broke** — passed in gh:9006:1 (abc6), failing now · last runs `PPPPPPF`
+   fragment id: gh:9007:1 | branch: main | provider: GitHubActions
+-- order 1, CI's: merge BEFORE the run is recorded
+history: 1 broke (against 6 earlier runs on main)
+  history: 1 broke (against 6 earlier runs on main)
+History: **broke** — passed in gh:9006:1 (abc6), failing now · last runs `PPPPPPF`
+-- then record
+  recorded   gh:9007:1  history-ci  1 scenarios
+-- order 2, Merging-Parallel-Reports.md's: merge AFTER the run is recorded
+history: 1 broke (against 6 earlier runs on main)
+  history: 1 broke (against 6 earlier runs on main)
+History: **broke** — passed in gh:9006:1 (abc6), failing now · last runs `PPPPPPF`
+-- the merge's id, from the merged file's ci block
+
+##### ado-broke ado fail pass
+  recorded   ado:9001:1  history-ci  1 scenarios
+  recorded   ado:9002:1  history-ci  1 scenarios
+  recorded   ado:9003:1  history-ci  1 scenarios
+  recorded   ado:9004:1  history-ci  1 scenarios
+  recorded   ado:9005:1  history-ci  1 scenarios
+  recorded   ado:9006:1  history-ci  1 scenarios
+-- ledger run ids: ado:9001:1 ado:9002:1 ado:9003:1 ado:9004:1 ado:9005:1 ado:9006:1 
+-- shard's own line:
+**History:** 1 broke (against 6 earlier runs on refs/heads/main). Failures are worked through regressions firs
+History: **broke** — passed in ado:9006:1 (abc6), failing now · last runs `PPPPPPF`
+   fragment id: ado:9007:1 | branch: refs/heads/main | provider: AzureDevOps
+-- order 1, CI's: merge BEFORE the run is recorded
+history: 1 broke (against 6 earlier runs on refs/heads/main)
+  history: 1 broke (against 6 earlier runs on refs/heads/main)
+History: **broke** — passed in ado:9006:1 (abc6), failing now · last runs `PPPPPPF`
+-- then record
+  recorded   ado:9007:1  history-ci  1 scenarios
+-- order 2, Merging-Parallel-Reports.md's: merge AFTER the run is recorded
+history: 1 broke (against 6 earlier runs on refs/heads/main)
+  history: 1 broke (against 6 earlier runs on refs/heads/main)
+History: **broke** — passed in ado:9006:1 (abc6), failing now · last runs `PPPPPPF`
+-- the merge's id, from the merged file's ci block
+
+##### gitlab-broke gitlab fail pass
+  recorded   gitlab:9001:1  history-ci  1 scenarios
+  recorded   gitlab:9002:1  history-ci  1 scenarios
+  recorded   gitlab:9003:1  history-ci  1 scenarios
+  recorded   gitlab:9004:1  history-ci  1 scenarios
+  recorded   gitlab:9005:1  history-ci  1 scenarios
+  recorded   gitlab:9006:1  history-ci  1 scenarios
+-- ledger run ids: gitlab:9001:1 gitlab:9002:1 gitlab:9003:1 gitlab:9004:1 gitlab:9005:1 gitlab:9006:1 
+-- shard's own line:
+**History:** 1 broke (against 6 earlier runs on local). Failures are worked through regressions first, then th
+History: **broke** — passed in gitlab:9006:1, failing now · last runs `PPPPPPF`
+   fragment id: gitlab:9007:1 | branch: None | provider: None
+-- order 1, CI's: merge BEFORE the run is recorded
+  history: 1 broke (against 6 earlier runs on local)
+History: **broke** — passed in gitlab:9006:1, failing now · last runs `PPPPPPF`
+-- then record
+  recorded   gitlab:9007:1  history-ci  1 scenarios
+-- order 2, Merging-Parallel-Reports.md's: merge AFTER the run is recorded
+  history: 1 still failing, 1 behaviour changed (against 7 earlier runs on local)
+History: **failing** — failing since gitlab:9007:1, 2 runs; same status, different calls: the same number of calls as gitlab:9007:1 (1), a different set · last runs `PPPPPPFF`
+-- the merge's id, from the merged file's ci block
+
+##### local-broke local fail pass
+  recorded   local:20261102T124343Z:be359f1b  history-ci  1 scenarios
+  recorded   local:20261102T124345Z:be359f1b  history-ci  1 scenarios
+  recorded   local:20261102T124351Z:be359f1b  history-ci  1 scenarios
+  recorded   local:20261102T124355Z:be359f1b  history-ci  1 scenarios
+  recorded   local:20261102T124400Z:be359f1b  history-ci  1 scenarios
+  recorded   local:20261102T124403Z:be359f1b  history-ci  1 scenarios
+-- ledger run ids: local:20261102T124343Z:be359f1b local:20261102T124345Z:be359f1b local:20261102T124351Z:be359f1b local:20261102T124355Z:be359f1b local:20261102T124400Z:be359f1b local:20261102T124403
+-- shard's own line:
+**History:** 1 broke (against 6 earlier runs on local). Failures are worked through regressions first, then th
+History: **broke** — passed in local:20261102T124403Z:be359f1b, failing now · last runs `PPPPPPF`
+   fragment id: local:20261102T124405Z:be359f1b | branch: None | provider: None
+-- order 1, CI's: merge BEFORE the run is recorded
+  history: 1 broke (against 6 earlier runs on local)
+History: **broke** — passed in local:20261102T124403Z:be359f1b, failing now · last runs `PPPPPPF`
+-- then record
+  recorded   local:20261102T124405Z:be359f1b  history-ci  1 scenarios
+-- order 2, Merging-Parallel-Reports.md's: merge AFTER the run is recorded
+  history: 1 still failing, 1 behaviour changed (against 7 earlier runs on local)
+History: **failing** — failing since local:20261102T124405Z:be359f1b, 2 runs; same status, different calls: the same number of calls as local:20261102T124405Z:be359f1b (1), a different set
+-- the merge's id, from the merged file's ci block
+
+##### Actions, HistoryRunId set by the consumer: the shard is custom:7:1, the merge mints its own
+History: **broke** — passed in custom:6:1 (abc6), failing now · last runs `PPPPPPF`
+-- before record
+  history: 1 broke (against 6 earlier runs on main)
+History: **broke** — passed in custom:6:1 (abc6), failing now · last runs `PPPPPPF`
+recorded   custom:7:1  history-ci  1 scenarios
+-- after record
+  history: 1 still failing, 1 behaviour changed (against 7 earlier runs on main)
+History: **failing** — failing since custom:7:1 (abc7), 2 runs; same status, different calls: the same number of calls as custom:7:1 (1), a different set · last runs `
+
+##### Actions shard, merge with no Actions variables at all (a developer who downloaded the artifact)
+recorded   gh:9007:1  history-ci  1 scenarios
+  history: 1 broke (against 6 earlier runs on main)
+History: **broke** — passed in gh:9006:1 (abc6), failing now · last runs `PPPPPPF`
+
+##### Actions pull request: six runs on main, then the shard on 12/merge, with GITHUB_BASE_REF set
+**History:** 1 broke (against 6 earlier runs on main). Failures are worked through regress
+-- before record, PR env
+  history: 1 broke (against 6 earlier runs on main)
+recorded   gh:9007:1  history-ci  1 scenarios
+-- after record, PR env
+  history: 1 broke (against 6 earlier runs on main)
+-- after record, no env
+  history: nothing changed (0 runs recorded in the 12/merge stream; flakiness and duration verdicts need 5)
+**History:** nothing changed (0 runs recorded in the 12/merge stream; flakiness and duration verdicts need 5). Failures 

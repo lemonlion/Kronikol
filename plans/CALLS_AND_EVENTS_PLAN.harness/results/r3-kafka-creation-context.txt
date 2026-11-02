@@ -1,0 +1,9 @@
+case	traceparent on the message	ambient span	exported kind	exported trace	exported span	injected span is the exported span
+default, an Activity current	00-0eeb8c57ba1507e26047663f1e902934-d8b1800dad14836b-00	d8b1800dad14836b	Producer	0eeb8c57ba1507e26047663f1e902934	d8b1800dad14836b	yes, trace and span
+default, no Activity	00-3b21e766beb5e37b6d600d8d45bab151-3033d392b4f33a40-00	-	Producer	3b21e766beb5e37b6d600d8d45bab151	3033d392b4f33a40	yes, trace and span
+PropagateTraceContext off, an Activity current	-	f5987fcad6e950cd	Producer	add60702720edc9a11ec5331bc2ea972	f5987fcad6e950cd	nothing injected
+PropagateTraceContext off, no Activity	-	-	Producer	e9203be7426540fabc88b22cb4a10c28	03d9cc76726e458c	nothing injected
+the caller's own traceparent, no Activity	00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01	-	Producer	0af7651916cd43dd8448eb211c80319c	b7ad6b7169203331	yes, trace and span
+the caller's own traceparent, an Activity current	00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01	c0c5123137f5c908	Producer	0af7651916cd43dd8448eb211c80319c	b7ad6b7169203331	yes, trace and span
+KafkaTracker.LogProduce by hand	-	95a290acf12fd3cf	Producer	f63438d2dc2c0fea79cbcf4f96260f3e	95a290acf12fd3cf	nothing injected
+a real broker: TrackingKafkaProducer, read back by a plain consumer	00-3b03a0c0127aaf3f54c4f52957806479-9e7f3a340ed92c27-00	9e7f3a340ed92c27	Producer	3b03a0c0127aaf3f54c4f52957806479	9e7f3a340ed92c27	yes, trace and span

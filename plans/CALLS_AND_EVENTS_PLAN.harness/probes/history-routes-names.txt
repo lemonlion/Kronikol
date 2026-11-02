@@ -1,0 +1,15 @@
+Redis GET, the real tracker at its default
+Redis DEL, the real tracker at its default
+Redis SET, control
+Redis GET at Raw, control
+gRPC method named Get, default verbosity
+gRPC method named GetOrder, control
+DispatchProxy method named Delete
+DispatchProxy method named Find, control
+Storage Queues delete, default verbosity
+Hand new HttpMethod(patch)
+Hand HttpMethod.Parse(patch)
+Hand HttpMethod.Patch, control
+Hand string get
+Hand string DELETE, control
+Hand new HttpMethod(propfind)

@@ -1,0 +1,5 @@
+== with the prototype's ReadMethod
+Passed! - Failed: 0, Passed: 30, Skipped: 0, Total: 30, Duration: 8 s - Kronikol.Tests.dll (net10.0)
+
+== the same facts with 5.27.13's ReadMethod
+Failed! - Failed: 10, Passed: 20, Skipped: 0, Total: 30, Duration: 7 s - Kronikol.Tests.dll (net10.0)

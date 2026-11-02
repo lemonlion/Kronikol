@@ -1,0 +1,510 @@
+One whole report through a record whose address is relative: probes/relative-address-report.cs, one process per row. 'lost' is a file the control writes and this run does not.
+The control writes: AGENTS.md CLAUDE.md ComponentDiagram.html Failures.jsonl Failures.md History.run.json Run.json Specifications.html Specifications.yml TestRunReport.html TestRunReport.krkl TestRunReport.labs.html query.cs service.json
+
+== 5.27.13, published
+control                    event://orders, every option at its default
+                           diagram drawn; lost: nothing
+event                      the relative address, every option at its default (internal flow on)
+                           diagram lost; lost: Specifications.html, TestRunReport.html
+event-no-flow              the relative address, InternalFlowTracking off
+                           diagram lost; lost: nothing
+event-mergeable            the relative address, GenerateMergeableData on
+                           diagram lost; lost: Specifications.html, TestRunReport.html, TestRunReport.krkl, service.json
+event-data-only            the relative address, a shard's options: only the mergeable data file
+                           diagram lost; lost: TestRunReport.krkl, service.json
+event-data-only-no-flow    the relative address, a shard's options, InternalFlowTracking off
+                           diagram lost; lost: nothing
+call                       a Default call on the relative address, every option at its default
+                           diagram lost; lost: Specifications.html, TestRunReport.html
+
+== R1 + R2
+control                    event://orders, every option at its default
+                           diagram drawn; lost: nothing
+event                      the relative address, every option at its default (internal flow on)
+                           diagram lost; lost: Specifications.html, TestRunReport.html
+event-no-flow              the relative address, InternalFlowTracking off
+                           diagram lost; lost: nothing
+event-mergeable            the relative address, GenerateMergeableData on
+                           diagram lost; lost: Specifications.html, TestRunReport.html, TestRunReport.krkl, service.json
+event-data-only            the relative address, a shard's options: only the mergeable data file
+                           diagram lost; lost: TestRunReport.krkl, service.json
+event-data-only-no-flow    the relative address, a shard's options, InternalFlowTracking off
+                           diagram lost; lost: nothing
+call                       a Default call on the relative address, every option at its default
+                           diagram lost; lost: Specifications.html, TestRunReport.html
+
+== R1 + R2 + prototype/r2-option-warm-up-judges-publishes.patch, the fix
+control                    event://orders, every option at its default
+                           diagram drawn; lost: nothing
+event                      the relative address, every option at its default (internal flow on)
+                           diagram lost; lost: Specifications.html, TestRunReport.html
+event-no-flow              the relative address, InternalFlowTracking off
+                           diagram lost; lost: nothing
+event-mergeable            the relative address, GenerateMergeableData on
+                           diagram lost; lost: Specifications.html, TestRunReport.html, TestRunReport.krkl, service.json
+event-data-only            the relative address, a shard's options: only the mergeable data file
+                           diagram lost; lost: TestRunReport.krkl, service.json
+event-data-only-no-flow    the relative address, a shard's options, InternalFlowTracking off
+                           diagram lost; lost: nothing
+call                       a Default call on the relative address, every option at its default
+                           diagram lost; lost: Specifications.html, TestRunReport.html
+
+== R1 + R2 + the patch's first cut, which read request.Uri.Scheme
+event                      the relative address, every option at its default (internal flow on)
+                           THREW InvalidOperationException: This operation is not supported for a relative URI. at Kronikol.Reports.WarmUpCalls.IsBrokersMove(RequestResponseLog; no report file
+
+The output of each run, in the same order:
+
+--- today control
+Kronikol 5.27.13+c58d98c0f8c841a0e1432e6c753ed9afa2a6977f, mode control
+Report diagnostics: 2 log entries across 1 test(s).
+Warning: InternalFlowSpanStore has 0 spans — activity diagrams will be empty.
+Kronikol: reports written to <scratch>\runs\relative\today-control  (TestRunReport.html · TestRunReport.krkl · Failures.md · TestRunReport.labs.html)
+the run: no exception
+files written:
+  AGENTS.md
+  CLAUDE.md
+  ComponentDiagram.html
+  Failures.jsonl
+  Failures.md
+  History.run.json
+  Run.json
+  Specifications.html
+  Specifications.yml
+  TestRunReport.html
+  TestRunReport.krkl
+  TestRunReport.labs.html
+  query.cs
+  service.json
+
+--- today event
+Kronikol 5.27.13+c58d98c0f8c841a0e1432e6c753ed9afa2a6977f, mode event
+WARNING: could not build the diagram for scenario relative-address-scenario: InvalidOperationException: This operation is not supported for a relative URI.
+⚠ WARNING: could not write TestRunReport.html: InvalidOperationException: This operation is not supported for a relative URI.
+⚠ WARNING: could not write Specifications.html: InvalidOperationException: This operation is not supported for a relative URI.
+Report diagnostics: 2 log entries across 1 test(s).
+Warning: InternalFlowSpanStore has 0 spans — activity diagrams will be empty.
+Kronikol: reports written to <scratch>\runs\relative\today-event  (TestRunReport.krkl · Failures.md · TestRunReport.labs.html)
+the run: no exception
+files written:
+  AGENTS.md
+  CLAUDE.md
+  ComponentDiagram.html
+  Failures.jsonl
+  Failures.md
+  History.run.json
+  Run.json
+  Specifications.yml
+  TestRunReport.krkl
+  TestRunReport.labs.html
+  query.cs
+  service.json
+
+--- today event-no-flow
+Kronikol 5.27.13+c58d98c0f8c841a0e1432e6c753ed9afa2a6977f, mode event-no-flow
+WARNING: could not build the diagram for scenario relative-address-scenario: InvalidOperationException: This operation is not supported for a relative URI.
+Report diagnostics: 2 log entries across 1 test(s).
+Kronikol: reports written to <scratch>\runs\relative\today-event-no-flow  (TestRunReport.html · TestRunReport.krkl · Failures.md · TestRunReport.labs.html)
+the run: no exception
+files written:
+  AGENTS.md
+  CLAUDE.md
+  ComponentDiagram.html
+  Failures.jsonl
+  Failures.md
+  History.run.json
+  Run.json
+  Specifications.html
+  Specifications.yml
+  TestRunReport.html
+  TestRunReport.krkl
+  TestRunReport.labs.html
+  query.cs
+  service.json
+
+--- today event-mergeable
+Kronikol 5.27.13+c58d98c0f8c841a0e1432e6c753ed9afa2a6977f, mode event-mergeable
+WARNING: could not build the diagram for scenario relative-address-scenario: InvalidOperationException: This operation is not supported for a relative URI.
+⚠ WARNING: could not write TestRunReport.krkl: InvalidOperationException: This operation is not supported for a relative URI.
+⚠ WARNING: could not write TestRunReport.html: InvalidOperationException: This operation is not supported for a relative URI.
+⚠ WARNING: could not write Specifications.html: InvalidOperationException: This operation is not supported for a relative URI.
+Report diagnostics: 2 log entries across 1 test(s).
+Warning: InternalFlowSpanStore has 0 spans — activity diagrams will be empty.
+Kronikol: reports written to <scratch>\runs\relative\today-event-mergeable  (Failures.md · TestRunReport.labs.html)
+the run: no exception
+files written:
+  AGENTS.md
+  CLAUDE.md
+  ComponentDiagram.html
+  Failures.jsonl
+  Failures.md
+  History.run.json
+  Run.json
+  Specifications.yml
+  TestRunReport.labs.html
+  query.cs
+
+--- today event-data-only
+Kronikol 5.27.13+c58d98c0f8c841a0e1432e6c753ed9afa2a6977f, mode event-data-only
+WARNING: could not build the diagram for scenario relative-address-scenario: InvalidOperationException: This operation is not supported for a relative URI.
+⚠ WARNING: could not write TestRunReport.krkl: InvalidOperationException: This operation is not supported for a relative URI.
+Report diagnostics: 2 log entries across 1 test(s).
+Warning: InternalFlowSpanStore has 0 spans — activity diagrams will be empty.
+Kronikol: reports written to <scratch>\runs\relative\today-event-data-only  (Failures.md · TestRunReport.labs.html)
+the run: no exception
+files written:
+  AGENTS.md
+  CLAUDE.md
+  Failures.jsonl
+  Failures.md
+  History.run.json
+  Run.json
+  TestRunReport.labs.html
+  query.cs
+
+--- today event-data-only-no-flow
+Kronikol 5.27.13+c58d98c0f8c841a0e1432e6c753ed9afa2a6977f, mode event-data-only-no-flow
+WARNING: could not build the diagram for scenario relative-address-scenario: InvalidOperationException: This operation is not supported for a relative URI.
+Report diagnostics: 2 log entries across 1 test(s).
+Kronikol: reports written to <scratch>\runs\relative\today-event-data-only-no-flow  (TestRunReport.krkl · Failures.md · TestRunReport.labs.html)
+the run: no exception
+files written:
+  AGENTS.md
+  CLAUDE.md
+  Failures.jsonl
+  Failures.md
+  History.run.json
+  Run.json
+  TestRunReport.krkl
+  TestRunReport.labs.html
+  query.cs
+  service.json
+
+--- today call
+Kronikol 5.27.13+c58d98c0f8c841a0e1432e6c753ed9afa2a6977f, mode call
+WARNING: could not build the diagram for scenario relative-address-scenario: InvalidOperationException: This operation is not supported for a relative URI.
+⚠ WARNING: could not write TestRunReport.html: InvalidOperationException: This operation is not supported for a relative URI.
+⚠ WARNING: could not write Specifications.html: InvalidOperationException: This operation is not supported for a relative URI.
+Report diagnostics: 2 log entries across 1 test(s).
+Warning: InternalFlowSpanStore has 0 spans — activity diagrams will be empty.
+Warning: 1 tracking component(s) were registered but never invoked: MessageTracker (Bus). This usually means the component was added to the wrong pipeline or options. Enable DiagnosticMode for details.
+Kronikol: reports written to <scratch>\runs\relative\today-call  (TestRunReport.krkl · Failures.md · TestRunReport.labs.html)
+the run: no exception
+files written:
+  AGENTS.md
+  CLAUDE.md
+  ComponentDiagram.html
+  Failures.jsonl
+  Failures.md
+  History.run.json
+  Run.json
+  Specifications.yml
+  TestRunReport.krkl
+  TestRunReport.labs.html
+  query.cs
+  service.json
+
+--- r2 control
+Kronikol 5.27.13+27cc0e4612a1d36754da65e2bd23787ffed1e271, mode control
+Report diagnostics: 2 log entries across 1 test(s).
+Warning: InternalFlowSpanStore has 0 spans — activity diagrams will be empty.
+Kronikol: reports written to <scratch>\runs\relative\r2-control  (TestRunReport.html · TestRunReport.krkl · Failures.md · TestRunReport.labs.html)
+the run: no exception
+files written:
+  AGENTS.md
+  CLAUDE.md
+  ComponentDiagram.html
+  Failures.jsonl
+  Failures.md
+  History.run.json
+  Run.json
+  Specifications.html
+  Specifications.yml
+  TestRunReport.html
+  TestRunReport.krkl
+  TestRunReport.labs.html
+  query.cs
+  service.json
+
+--- r2 event
+Kronikol 5.27.13+27cc0e4612a1d36754da65e2bd23787ffed1e271, mode event
+WARNING: could not build the diagram for scenario relative-address-scenario: InvalidOperationException: This operation is not supported for a relative URI.
+⚠ WARNING: could not write Specifications.html: InvalidOperationException: This operation is not supported for a relative URI.
+⚠ WARNING: could not write TestRunReport.html: InvalidOperationException: This operation is not supported for a relative URI.
+Report diagnostics: 2 log entries across 1 test(s).
+Warning: InternalFlowSpanStore has 0 spans — activity diagrams will be empty.
+Kronikol: reports written to <scratch>\runs\relative\r2-event  (TestRunReport.krkl · Failures.md · TestRunReport.labs.html)
+the run: no exception
+files written:
+  AGENTS.md
+  CLAUDE.md
+  ComponentDiagram.html
+  Failures.jsonl
+  Failures.md
+  History.run.json
+  Run.json
+  Specifications.yml
+  TestRunReport.krkl
+  TestRunReport.labs.html
+  query.cs
+  service.json
+
+--- r2 event-no-flow
+Kronikol 5.27.13+27cc0e4612a1d36754da65e2bd23787ffed1e271, mode event-no-flow
+WARNING: could not build the diagram for scenario relative-address-scenario: InvalidOperationException: This operation is not supported for a relative URI.
+Report diagnostics: 2 log entries across 1 test(s).
+Kronikol: reports written to <scratch>\runs\relative\r2-event-no-flow  (TestRunReport.html · TestRunReport.krkl · Failures.md · TestRunReport.labs.html)
+the run: no exception
+files written:
+  AGENTS.md
+  CLAUDE.md
+  ComponentDiagram.html
+  Failures.jsonl
+  Failures.md
+  History.run.json
+  Run.json
+  Specifications.html
+  Specifications.yml
+  TestRunReport.html
+  TestRunReport.krkl
+  TestRunReport.labs.html
+  query.cs
+  service.json
+
+--- r2 event-mergeable
+Kronikol 5.27.13+27cc0e4612a1d36754da65e2bd23787ffed1e271, mode event-mergeable
+WARNING: could not build the diagram for scenario relative-address-scenario: InvalidOperationException: This operation is not supported for a relative URI.
+⚠ WARNING: could not write TestRunReport.krkl: InvalidOperationException: This operation is not supported for a relative URI.
+⚠ WARNING: could not write TestRunReport.html: InvalidOperationException: This operation is not supported for a relative URI.
+⚠ WARNING: could not write Specifications.html: InvalidOperationException: This operation is not supported for a relative URI.
+Report diagnostics: 2 log entries across 1 test(s).
+Warning: InternalFlowSpanStore has 0 spans — activity diagrams will be empty.
+Kronikol: reports written to <scratch>\runs\relative\r2-event-mergeable  (Failures.md · TestRunReport.labs.html)
+the run: no exception
+files written:
+  AGENTS.md
+  CLAUDE.md
+  ComponentDiagram.html
+  Failures.jsonl
+  Failures.md
+  History.run.json
+  Run.json
+  Specifications.yml
+  TestRunReport.labs.html
+  query.cs
+
+--- r2 event-data-only
+Kronikol 5.27.13+27cc0e4612a1d36754da65e2bd23787ffed1e271, mode event-data-only
+WARNING: could not build the diagram for scenario relative-address-scenario: InvalidOperationException: This operation is not supported for a relative URI.
+⚠ WARNING: could not write TestRunReport.krkl: InvalidOperationException: This operation is not supported for a relative URI.
+Report diagnostics: 2 log entries across 1 test(s).
+Warning: InternalFlowSpanStore has 0 spans — activity diagrams will be empty.
+Kronikol: reports written to <scratch>\runs\relative\r2-event-data-only  (Failures.md · TestRunReport.labs.html)
+the run: no exception
+files written:
+  AGENTS.md
+  CLAUDE.md
+  Failures.jsonl
+  Failures.md
+  History.run.json
+  Run.json
+  TestRunReport.labs.html
+  query.cs
+
+--- r2 event-data-only-no-flow
+Kronikol 5.27.13+27cc0e4612a1d36754da65e2bd23787ffed1e271, mode event-data-only-no-flow
+WARNING: could not build the diagram for scenario relative-address-scenario: InvalidOperationException: This operation is not supported for a relative URI.
+Report diagnostics: 2 log entries across 1 test(s).
+Kronikol: reports written to <scratch>\runs\relative\r2-event-data-only-no-flow  (TestRunReport.krkl · Failures.md · TestRunReport.labs.html)
+the run: no exception
+files written:
+  AGENTS.md
+  CLAUDE.md
+  Failures.jsonl
+  Failures.md
+  History.run.json
+  Run.json
+  TestRunReport.krkl
+  TestRunReport.labs.html
+  query.cs
+  service.json
+
+--- r2 call
+Kronikol 5.27.13+27cc0e4612a1d36754da65e2bd23787ffed1e271, mode call
+WARNING: could not build the diagram for scenario relative-address-scenario: InvalidOperationException: This operation is not supported for a relative URI.
+⚠ WARNING: could not write TestRunReport.html: InvalidOperationException: This operation is not supported for a relative URI.
+⚠ WARNING: could not write Specifications.html: InvalidOperationException: This operation is not supported for a relative URI.
+Report diagnostics: 2 log entries across 1 test(s).
+Warning: InternalFlowSpanStore has 0 spans — activity diagrams will be empty.
+Warning: 1 tracking component(s) were registered but never invoked: MessageTracker (Bus). This usually means the component was added to the wrong pipeline or options. Enable DiagnosticMode for details.
+Kronikol: reports written to <scratch>\runs\relative\r2-call  (TestRunReport.krkl · Failures.md · TestRunReport.labs.html)
+the run: no exception
+files written:
+  AGENTS.md
+  CLAUDE.md
+  ComponentDiagram.html
+  Failures.jsonl
+  Failures.md
+  History.run.json
+  Run.json
+  Specifications.yml
+  TestRunReport.krkl
+  TestRunReport.labs.html
+  query.cs
+  service.json
+
+--- option control
+Kronikol 5.27.13+27cc0e4612a1d36754da65e2bd23787ffed1e271, mode control
+Report diagnostics: 2 log entries across 1 test(s).
+Warning: InternalFlowSpanStore has 0 spans — activity diagrams will be empty.
+Kronikol: reports written to <scratch>\runs\relative\option-control  (TestRunReport.html · TestRunReport.krkl · Failures.md · TestRunReport.labs.html)
+the run: no exception
+files written:
+  AGENTS.md
+  CLAUDE.md
+  ComponentDiagram.html
+  Failures.jsonl
+  Failures.md
+  History.run.json
+  Run.json
+  Specifications.html
+  Specifications.yml
+  TestRunReport.html
+  TestRunReport.krkl
+  TestRunReport.labs.html
+  query.cs
+  service.json
+
+--- option event
+Kronikol 5.27.13+27cc0e4612a1d36754da65e2bd23787ffed1e271, mode event
+WARNING: could not build the diagram for scenario relative-address-scenario: InvalidOperationException: This operation is not supported for a relative URI.
+⚠ WARNING: could not write Specifications.html: InvalidOperationException: This operation is not supported for a relative URI.
+⚠ WARNING: could not write TestRunReport.html: InvalidOperationException: This operation is not supported for a relative URI.
+Report diagnostics: 2 log entries across 1 test(s).
+Warning: InternalFlowSpanStore has 0 spans — activity diagrams will be empty.
+Kronikol: reports written to <scratch>\runs\relative\option-event  (TestRunReport.krkl · Failures.md · TestRunReport.labs.html)
+the run: no exception
+files written:
+  AGENTS.md
+  CLAUDE.md
+  ComponentDiagram.html
+  Failures.jsonl
+  Failures.md
+  History.run.json
+  Run.json
+  Specifications.yml
+  TestRunReport.krkl
+  TestRunReport.labs.html
+  query.cs
+  service.json
+
+--- option event-no-flow
+Kronikol 5.27.13+27cc0e4612a1d36754da65e2bd23787ffed1e271, mode event-no-flow
+WARNING: could not build the diagram for scenario relative-address-scenario: InvalidOperationException: This operation is not supported for a relative URI.
+Report diagnostics: 2 log entries across 1 test(s).
+Kronikol: reports written to <scratch>\runs\relative\option-event-no-flow  (TestRunReport.html · TestRunReport.krkl · Failures.md · TestRunReport.labs.html)
+the run: no exception
+files written:
+  AGENTS.md
+  CLAUDE.md
+  ComponentDiagram.html
+  Failures.jsonl
+  Failures.md
+  History.run.json
+  Run.json
+  Specifications.html
+  Specifications.yml
+  TestRunReport.html
+  TestRunReport.krkl
+  TestRunReport.labs.html
+  query.cs
+  service.json
+
+--- option event-mergeable
+Kronikol 5.27.13+27cc0e4612a1d36754da65e2bd23787ffed1e271, mode event-mergeable
+WARNING: could not build the diagram for scenario relative-address-scenario: InvalidOperationException: This operation is not supported for a relative URI.
+⚠ WARNING: could not write TestRunReport.krkl: InvalidOperationException: This operation is not supported for a relative URI.
+⚠ WARNING: could not write Specifications.html: InvalidOperationException: This operation is not supported for a relative URI.
+⚠ WARNING: could not write TestRunReport.html: InvalidOperationException: This operation is not supported for a relative URI.
+Report diagnostics: 2 log entries across 1 test(s).
+Warning: InternalFlowSpanStore has 0 spans — activity diagrams will be empty.
+Kronikol: reports written to <scratch>\runs\relative\option-event-mergeable  (Failures.md · TestRunReport.labs.html)
+the run: no exception
+files written:
+  AGENTS.md
+  CLAUDE.md
+  ComponentDiagram.html
+  Failures.jsonl
+  Failures.md
+  History.run.json
+  Run.json
+  Specifications.yml
+  TestRunReport.labs.html
+  query.cs
+
+--- option event-data-only
+Kronikol 5.27.13+27cc0e4612a1d36754da65e2bd23787ffed1e271, mode event-data-only
+WARNING: could not build the diagram for scenario relative-address-scenario: InvalidOperationException: This operation is not supported for a relative URI.
+⚠ WARNING: could not write TestRunReport.krkl: InvalidOperationException: This operation is not supported for a relative URI.
+Report diagnostics: 2 log entries across 1 test(s).
+Warning: InternalFlowSpanStore has 0 spans — activity diagrams will be empty.
+Kronikol: reports written to <scratch>\runs\relative\option-event-data-only  (Failures.md · TestRunReport.labs.html)
+the run: no exception
+files written:
+  AGENTS.md
+  CLAUDE.md
+  Failures.jsonl
+  Failures.md
+  History.run.json
+  Run.json
+  TestRunReport.labs.html
+  query.cs
+
+--- option event-data-only-no-flow
+Kronikol 5.27.13+27cc0e4612a1d36754da65e2bd23787ffed1e271, mode event-data-only-no-flow
+WARNING: could not build the diagram for scenario relative-address-scenario: InvalidOperationException: This operation is not supported for a relative URI.
+Report diagnostics: 2 log entries across 1 test(s).
+Kronikol: reports written to <scratch>\runs\relative\option-event-data-only-no-flow  (TestRunReport.krkl · Failures.md · TestRunReport.labs.html)
+the run: no exception
+files written:
+  AGENTS.md
+  CLAUDE.md
+  Failures.jsonl
+  Failures.md
+  History.run.json
+  Run.json
+  TestRunReport.krkl
+  TestRunReport.labs.html
+  query.cs
+  service.json
+
+--- option call
+Kronikol 5.27.13+27cc0e4612a1d36754da65e2bd23787ffed1e271, mode call
+WARNING: could not build the diagram for scenario relative-address-scenario: InvalidOperationException: This operation is not supported for a relative URI.
+⚠ WARNING: could not write Specifications.html: InvalidOperationException: This operation is not supported for a relative URI.
+⚠ WARNING: could not write TestRunReport.html: InvalidOperationException: This operation is not supported for a relative URI.
+Report diagnostics: 2 log entries across 1 test(s).
+Warning: InternalFlowSpanStore has 0 spans — activity diagrams will be empty.
+Warning: 1 tracking component(s) were registered but never invoked: MessageTracker (Bus). This usually means the component was added to the wrong pipeline or options. Enable DiagnosticMode for details.
+Kronikol: reports written to <scratch>\runs\relative\option-call  (TestRunReport.krkl · Failures.md · TestRunReport.labs.html)
+the run: no exception
+files written:
+  AGENTS.md
+  CLAUDE.md
+  ComponentDiagram.html
+  Failures.jsonl
+  Failures.md
+  History.run.json
+  Run.json
+  Specifications.yml
+  TestRunReport.krkl
+  TestRunReport.labs.html
+  query.cs
+  service.json
+
+--- first-cut event
+Kronikol 5.27.13+27cc0e4612a1d36754da65e2bd23787ffed1e271, mode event
+the run: InvalidOperationException: This operation is not supported for a relative URI.
+    at Kronikol.Reports.WarmUpCalls.IsBrokersMove(RequestResponseLog request)
+files written:
+  (no folder)

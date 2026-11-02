@@ -63,7 +63,6 @@ public class SpannerTracker : ITrackingComponent
             method, logContent, uri, [],
             _options.ServiceName, _options.CallerName,
             RequestResponseType.Request, traceId, requestResponseId, false,
-            MetaType: RequestResponseMetaType.Event,
             DependencyCategory: DependencyCategories.Spanner)
         {
             AttributionSource = testInfo.Value.Source,

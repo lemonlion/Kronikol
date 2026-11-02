@@ -1,0 +1,17 @@
+label	uri	category	metaType	path	span name	http.request.method	db.system.name	kind
+Delete	cosmosdb:///shop/orders	CosmosDB	Default	in process	Delete	-	cosmosdb	Client
+Delete	cosmosdb:///shop/orders	CosmosDB	Default	through NDJSON	DELETE	-	cosmosdb	Client
+Patch	cosmosdb:///shop/orders	CosmosDB	Default	in process	Patch	-	cosmosdb	Client
+Patch	cosmosdb:///shop/orders	CosmosDB	Default	through NDJSON	PATCH	-	cosmosdb	Client
+Delete	bigquery:///shop/orders	BigQuery	Default	in process	Delete	-	bigquery	Client
+Delete	bigquery:///shop/orders	BigQuery	Default	through NDJSON	DELETE	-	bigquery	Client
+Delete	storagequeue:///orders	MessageQueue	Default	in process	Delete	-	-	Client
+Delete	storagequeue:///orders	MessageQueue	Default	through NDJSON	DELETE	-	-	Client
+DELETE	spanner:///shop	Spanner	Default	in process	DELETE	-	spanner	Client
+DELETE	spanner:///shop	Spanner	Default	through NDJSON	DELETE	-	spanner	Client
+GET	redis://db0/k	Redis	Default	in process	GET	-	redis	Client
+GET	redis://db0/k	Redis	Default	through NDJSON	GET	-	redis	Client
+Get	redis://db0/k	Redis	Default	in process	Get	-	redis	Client
+Get	redis://db0/k	Redis	Default	through NDJSON	GET	-	redis	Client
+Delete	event://cake_events	MessageQueue	Event	in process	Delete	-	-	Producer
+Delete	event://cake_events	MessageQueue	Event	through NDJSON	DELETE	-	-	Producer
