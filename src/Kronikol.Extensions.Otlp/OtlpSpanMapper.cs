@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Net;
+using Kronikol.CallGraph;
 using Kronikol.Constants;
 using Kronikol.Ingestion;
 using Kronikol.Tracking;
@@ -48,7 +49,7 @@ public sealed record OtlpExportSpan
     /// <summary>The span name — the Kronikol method label (<c>GET</c>, <c>Find ← Trial</c>).</summary>
     public required string Name { get; init; }
 
-    /// <summary>The span kind: <see cref="OtlpSpanKind.Client"/>, or <see cref="OtlpSpanKind.Producer"/> for events.</summary>
+    /// <summary>The span kind, by OpenTelemetry's messaging table: see <see cref="OtlpSpanMapper.KindOf"/>.</summary>
     public OtlpSpanKind Kind { get; init; } = OtlpSpanKind.Client;
 
     /// <summary>Start time, nanoseconds since the Unix epoch.</summary>
@@ -57,7 +58,7 @@ public sealed record OtlpExportSpan
     /// <summary>End time, nanoseconds since the Unix epoch.</summary>
     public ulong EndTimeUnixNano { get; init; }
 
-    /// <summary>The <c>service.name</c> resource attribute — the calling participant (<c>CallerName</c>).</summary>
+    /// <summary>The <c>service.name</c> resource attribute: the calling participant (<c>CallerName</c>), and on a delivery the consumer.</summary>
     public required string ResourceServiceName { get; init; }
 
     /// <summary>The span status.</summary>
@@ -204,18 +205,27 @@ public static class OtlpSpanMapper
             endNano = startNano;
 
         var (status, statusText, statusMessage) = StatusOf(response ?? primary);
-        var attributes = new List<OtlpExportAttribute>(13)
+        var kind = KindOf(primary);
+        // A CONSUMER span is the consumer's own, its peer the broker. TrackConsumeEvent, Kafka and MassTransit log a delivery as the
+        // broker's arrow into the consumer, so its caller is the broker: exported as it stands, the broker would read as consuming
+        // from the consumer.
+        var (self, peer) = kind == OtlpSpanKind.Consumer && ReadingOf(primary).FromTheBroker
+            ? (primary.ServiceName, primary.CallerName)
+            : (primary.CallerName, primary.ServiceName);
+        var attributes = new List<OtlpExportAttribute>(17)
         {
             OtlpExportAttribute.Str("url.full", primary.Uri.ToString()),
         };
 
-        if (primary.Method.Value is HttpMethod httpMethod)
+        // Only on the web: through NDJSON a label that reads as a verb is an HttpMethod on any scheme (a Cosmos DB Delete, a SQL DELETE).
+        if (primary.Method.Value is HttpMethod httpMethod && IsOnTheWeb(primary))
             attributes.Add(OtlpExportAttribute.Str("http.request.method", httpMethod.Method));
         if (statusText is not null)
             attributes.Add(OtlpExportAttribute.Int64("http.response.status_code", long.Parse(statusText, CultureInfo.InvariantCulture)));
         if (DbSystemFor(primary.DependencyCategory) is { } dbSystem)
             attributes.Add(OtlpExportAttribute.Str("db.system.name", dbSystem));
-        attributes.Add(OtlpExportAttribute.Str("peer.service", primary.ServiceName));
+        AddMessagingAttributes(attributes, primary);
+        attributes.Add(OtlpExportAttribute.Str("peer.service", peer));
         attributes.Add(OtlpExportAttribute.Str("kronikol.test.id", primary.TestId));
         if (!string.IsNullOrEmpty(primary.TestName))
             attributes.Add(OtlpExportAttribute.Str("kronikol.test.name", primary.TestName));
@@ -251,14 +261,151 @@ public static class OtlpSpanMapper
             TraceId = TraceIdFor(primary, options),
             SpanId = SpanIdFor(primary),
             Name = primary.Method.Value?.ToString() ?? "CALL",
-            Kind = primary.MetaType == RequestResponseMetaType.Event ? OtlpSpanKind.Producer : OtlpSpanKind.Client,
+            Kind = kind,
             StartTimeUnixNano = startNano,
             EndTimeUnixNano = endNano,
-            ResourceServiceName = primary.CallerName,
+            ResourceServiceName = self,
             Status = status,
             StatusMessage = statusMessage,
             Attributes = attributes,
         };
+    }
+
+    /// <summary>
+    /// The span kind of a record, by OpenTelemetry's tables (semantic conventions v1.44.0): the exporter's reading of the record, which
+    /// keeps the <see cref="RequestResponseLog.MetaType"/> it was written with. In order:
+    /// <list type="number">
+    /// <item>Not an <see cref="RequestResponseMetaType.Event"/>: <c>CLIENT</c>.</item>
+    /// <item>A statement-shaped category written as an event (a consumer's own, a capture from before the database trackers moved):
+    /// <c>CLIENT</c>, since a database span "SHOULD be CLIENT", and it carries no <c>messaging.*</c>.</item>
+    /// <item>An HTTP verb on a web address, the request itself (SQS, SNS, Storage Queues and EventBridge at Raw): <c>CLIENT</c>, since an
+    /// HTTP span "MUST be CLIENT", and the label cannot separate a send from a receive there.</item>
+    /// <item><see cref="ReadingOf"/>, of how the record was logged: a delivery <c>CONSUMER</c>; a pull, a settlement or a management
+    /// call <c>CLIENT</c>. A send, or a record that says nothing of itself, is <c>PRODUCER</c> only "if the context of the Send span is
+    /// used as creation context, otherwise CLIENT": only Kafka's tracker puts one on the message
+    /// (<c>KafkaProduceTracking.ToSend</c>), so Kafka's produce is <c>PRODUCER</c> and every other send <c>CLIENT</c>.</item>
+    /// </list>
+    /// </summary>
+    internal static OtlpSpanKind KindOf(RequestResponseLog log)
+    {
+        if (log.MetaType != RequestResponseMetaType.Event)
+            return OtlpSpanKind.Client;
+        if (DependencyCategories.IsStatementShaped(log.DependencyCategory))
+            return OtlpSpanKind.Client;
+        if (IsHttpRequest(log))
+            return OtlpSpanKind.Client;
+
+        return ReadingOf(log).Verdict switch
+        {
+            MessageLabelKind.Delivers => OtlpSpanKind.Consumer,
+            MessageLabelKind.Receives or MessageLabelKind.Neither => OtlpSpanKind.Client,
+            _ => IsKafkasProduce(log) ? OtlpSpanKind.Producer : OtlpSpanKind.Client,
+        };
+    }
+
+    private static bool IsKafkasProduce(RequestResponseLog log)
+    {
+        var scheme = MessageTable.Scheme(log.Uri.ToString());
+        return !log.LabelIsFree && scheme == "kafka" && MessageTable.Read(scheme, log.Method.Value?.ToString()) == MessageLabelKind.Publishes;
+    }
+
+    /// <summary>
+    /// What a record is, and whether it was logged as the broker's arrow into the consumer, from what says so, in order:
+    /// <list type="number">
+    /// <item><see cref="RequestResponseLog.NoteOnRight"/>, which <c>TrackConsumeEvent</c> sets, as a hand call of <c>TrackMessageRequest</c> may: a delivery from the broker, on any
+    /// scheme and under any label.</item>
+    /// <item><see cref="RequestResponseLog.LabelIsFree"/>: the rest of <c>MessageTracker</c>. Its label is its author's words, so it
+    /// says nothing, whatever it reads.</item>
+    /// <item>The row of the record's scheme, for what a tracker writes. Kafka and MassTransit log a delivery from the broker, Pub/Sub's
+    /// subscriber and Event Hubs' <c>Process</c> from the consumer.</item>
+    /// <item>Only where neither mark can exist, a record read back from NDJSON or one a span made: the label's first word. A delivery
+    /// read so is the service's own by the ingest contract (<c>serviceName</c> is the receiver), unless a span saw it.</item>
+    /// </list>
+    /// A span's own record is drawn from the service that sent the span, and a wire capturer's from the client of the connection, so
+    /// neither is the broker's arrow, whatever the span's kind.
+    /// </summary>
+    private static (MessageLabelKind Verdict, bool FromTheBroker) ReadingOf(RequestResponseLog log)
+    {
+        if (log.NoteOnRight)
+            return (MessageLabelKind.Delivers, true);
+        if (log.LabelIsFree)
+            return (MessageLabelKind.Unknown, false);
+
+        var uri = log.Uri.ToString();
+        var label = log.Method.Value?.ToString();
+        var fromASpan = string.Equals(log.CapturedBy, InteractionMerger.SpanSource, StringComparison.OrdinalIgnoreCase)
+                        || string.Equals(log.CapturedBy, InteractionMerger.MergedSource, StringComparison.OrdinalIgnoreCase);
+        var drawnFromItsCaller = fromASpan || string.Equals(log.CapturedBy, InteractionMerger.WireSource, StringComparison.OrdinalIgnoreCase);
+
+        var row = MessageTable.ReadTracked(uri, label);
+        if (row != MessageLabelKind.Unknown)
+            return (row, row == MessageLabelKind.Delivers && !drawnFromItsCaller && !MessageTable.DeliveryIsFromTheConsumer(MessageTable.Scheme(uri)));
+
+        if (!log.ReadFromRecord && !fromASpan)
+            return (MessageLabelKind.Unknown, false);
+
+        var word = MessageTable.ReadWord(label);
+        return (word, word == MessageLabelKind.Delivers && !drawnFromItsCaller);
+    }
+
+    private static bool IsOnTheWeb(RequestResponseLog log) => MessageTable.Scheme(log.Uri.ToString()) is "http" or "https";
+
+    private static bool IsHttpRequest(RequestResponseLog log) => log.Method.Value is HttpMethod && IsOnTheWeb(log);
+
+    /// <summary>
+    /// The attributes the messaging conventions require of a span, or none on a call on no broker's address: the span's kind says
+    /// nothing to a reader without <c>messaging.system</c>, and the tap drops a <c>PRODUCER</c> that has none. Names are v1.44.0's
+    /// well-known values; a broker with none (<c>storagequeue</c>, <c>masstransit</c>, <c>eventbridge</c>, a consumer's own scheme)
+    /// keeps a name of its own, which the conventions allow.
+    /// </summary>
+    private static void AddMessagingAttributes(List<OtlpExportAttribute> attributes, RequestResponseLog log)
+    {
+        var uri = log.Uri.ToString();
+        var scheme = MessageTable.Scheme(uri);
+        if (scheme is null || IsHttpRequest(log) || DependencyCategories.IsStatementShaped(log.DependencyCategory)
+            || (log.MetaType != RequestResponseMetaType.Event && !MessageTable.HasScheme(scheme)))
+            return;
+
+        var verdict = ReadingOf(log).Verdict;
+        var type = verdict switch
+        {
+            MessageLabelKind.Publishes => "send",
+            MessageLabelKind.Receives => "receive",
+            MessageLabelKind.Delivers => "process",
+            MessageLabelKind.Unknown when log.MetaType == RequestResponseMetaType.Event => "send",
+            _ => null,
+        };
+        attributes.Add(OtlpExportAttribute.Str("messaging.system", scheme switch
+        {
+            // The second name of each is the one a span from the tap comes back with, its system name as a scheme.
+            "pubsub" or "gcp-pubsub" => "gcp_pubsub",
+            "sqs" or "aws-sqs" => "aws_sqs",
+            "sns" or "aws-sns" => "aws.sns",
+            // A consumer's own message on a web address: the scheme names no messaging system.
+            "http" or "https" => "other",
+            _ => scheme,
+        }));
+        attributes.Add(OtlpExportAttribute.Str("messaging.operation.name", OperationNameOf(log, verdict, type)));
+        if (type is not null)
+            attributes.Add(OtlpExportAttribute.Str("messaging.operation.type", type));
+        // A span's own record is {system}://{broker}/{destination}, wherever that scheme's tracker puts its destination.
+        var fromASpan = string.Equals(log.CapturedBy, InteractionMerger.SpanSource, StringComparison.OrdinalIgnoreCase);
+        if ((fromASpan ? MessageTable.LastSegment(uri) : MessageTable.Destination(uri)) is { } destination)
+            attributes.Add(OtlpExportAttribute.Str("messaging.destination.name", destination));
+    }
+
+    // The label's first word where the label names an operation; a free-text label ("Kafka") or an arrow ("← OrderPlaced") does not.
+    private static string OperationNameOf(RequestResponseLog log, MessageLabelKind verdict, string? type)
+    {
+        var label = (log.Method.Value?.ToString() ?? "").Trim();
+        var end = label.IndexOfAny([' ', '(', '[', '\t']);
+        var word = end < 0 ? label : label[..end];
+        // MassTransit's "Consume Fault OrderPlaced" and Kafka's "Send Offsets": an operation of two words, as each enum names it.
+        var second = end < 0 ? "" : label[(end + 1)..].Split(' ', 2)[0];
+        if (second is "Fault" or "Offsets")
+            word += second;
+        var named = !log.LabelIsFree && verdict != MessageLabelKind.Unknown;
+        return named && word.Length > 0 && char.IsLetter(word[0]) ? word : type ?? (word.Length > 0 ? word : "call");
     }
 
     /// <summary>
@@ -348,7 +495,9 @@ public static class OtlpSpanMapper
     /// The reverse of <see cref="SpanToInteractionMapper"/>'s category mapping: the <c>db.system.name</c>
     /// to export for a <see cref="DependencyCategories"/> value, or null when the category is not a
     /// database (the attribute is omitted). Every value round-trips: importing what this exports yields
-    /// the original category (generic <c>Database</c>/<c>SQL</c> export as semconv <c>other_sql</c>).
+    /// the original category (generic <c>Database</c>/<c>SQL</c> export as semconv <c>other_sql</c>). The names
+    /// are the registry's well-known values at semantic conventions v1.44.0, which "MUST be used" where one
+    /// applies; BigQuery and Bigtable have none, so each keeps a name of its own, which the registry allows.
     /// </summary>
     internal static string? DbSystemFor(string? dependencyCategory) => dependencyCategory switch
     {
@@ -357,13 +506,13 @@ public static class OtlpSpanMapper
         DependencyCategories.BigQuery => "bigquery",
         DependencyCategories.PostgreSQL => "postgresql",
         DependencyCategories.MySQL => "mysql",
-        DependencyCategories.SqlServer => "mssql",
+        DependencyCategories.SqlServer => "microsoft.sql_server",
         DependencyCategories.SQLite => "sqlite",
-        DependencyCategories.Oracle => "oracle",
+        DependencyCategories.Oracle => "oracle.db",
         DependencyCategories.Elasticsearch => "elasticsearch",
-        DependencyCategories.CosmosDB => "cosmosdb",
-        DependencyCategories.DynamoDB => "dynamodb",
-        DependencyCategories.Spanner => "spanner",
+        DependencyCategories.CosmosDB => "azure.cosmosdb",
+        DependencyCategories.DynamoDB => "aws.dynamodb",
+        DependencyCategories.Spanner => "gcp.spanner",
         DependencyCategories.Bigtable => "bigtable",
         DependencyCategories.ClickHouse => "clickhouse",
         DependencyCategories.Database or DependencyCategories.SQL => "other_sql",

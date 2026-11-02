@@ -1,10 +1,15 @@
 namespace Kronikol.CallGraph;
 
-/// <summary>What the table says of a label: a publish, a receive, neither (settlement, management), or a label it does not know.</summary>
+/// <summary>
+/// What the table says of a label: a publish; a receive the subject asked for (a pull, whatever its client calls it); a
+/// delivery handed to the subject (a push: its client called its handler, or the tracker logs the message as the broker's
+/// arrow into it); neither (settlement, management); or a label it does not know.
+/// </summary>
 internal enum MessageLabelKind
 {
     Publishes,
     Receives,
+    Delivers,
     Neither,
     Unknown
 }
@@ -30,13 +35,14 @@ internal static class MessageTable
         Authority
     }
 
-    private sealed record Row(Place Destination, (string Prefix, MessageLabelKind Kind)[] Labels, string[] Placeholders);
+    private sealed record Row(Place Destination, (string Prefix, MessageLabelKind Kind)[] Labels, string[] Placeholders, bool DeliveryIsFromTheConsumer = false);
 
-    private static (string, MessageLabelKind)[] Labels(string[] publishes, string[] receives, string[] neither) =>
+    private static (string, MessageLabelKind)[] Labels(string[] publishes, string[] receives, string[] neither, string[]? delivers = null) =>
     [
         .. publishes.Select(p => (p, MessageLabelKind.Publishes)),
         .. receives.Select(p => (p, MessageLabelKind.Receives)),
-        .. neither.Select(p => (p, MessageLabelKind.Neither))
+        .. neither.Select(p => (p, MessageLabelKind.Neither)),
+        .. (delivers ?? []).Select(p => (p, MessageLabelKind.Delivers))
     ];
 
     // Each list is the labels the classifier writes, enum names at Raw and Summarised and the words its Detailed labels lead
@@ -50,21 +56,28 @@ internal static class MessageTable
             ["Produce", "ProduceAsync"],
             [],
             ["Subscribe", "Unsubscribe", "Commit", "Flush", "InitTransactions", "BeginTransaction", "CommitTransaction", "AbortTransaction",
-             "SendOffsetsToTransaction", "Init Txn", "Begin Txn", "Commit Txn", "Abort Txn", "Send Offsets"]), []),
+             "SendOffsetsToTransaction", "Init Txn", "Begin Txn", "Commit Txn", "Abort Txn", "Send Offsets"],
+            ["Consume"]), []),
+        // Read is the consumer client's own call. Process is a handler a processor calls, which nothing in the package logs; a
+        // consumer's hand-called tracker does, from the handler to the hub.
         ["eventhubs"] = new(Place.FirstSegment, Labels(
             ["Send", "SendBatch"],
-            ["ReadEvents", "ReadEventsFromPartition", "ProcessEvent", "Read", "Process"],
-            ["CreateBatch", "GetPartitionIds", "GetEventHubProperties", "GetPartitionProperties", "StartProcessing", "StopProcessing"]), ["unknown"]),
+            ["ReadEvents", "ReadEventsFromPartition", "Read"],
+            ["CreateBatch", "GetPartitionIds", "GetEventHubProperties", "GetPartitionProperties", "StartProcessing", "StopProcessing"],
+            ["ProcessEvent", "Process"]), ["unknown"], DeliveryIsFromTheConsumer: true),
         ["servicebus"] = new(Place.Authority, Labels(
             ["Send", "SendBatch", "Schedule"],
             ["Receive", "ReceiveBatch", "Peek"],
             ["CancelSchedule", "Complete", "Abandon", "DeadLetter", "Defer", "RenewMessageLock", "RenewSessionLock", "RenewLock",
              "GetSessionState", "SetSessionState", "StartProcessing", "StopProcessing"]), ["unknown"]),
         // Raw writes the full resource name, projects/{project}/topics/{topic}; the others its last segment alone.
+        // Receive is the subscriber calling the application's handler (TrackingSubscriberClient), for as long as it runs. Pull is
+        // the application's own call.
         ["pubsub"] = new(Place.LastSegment, Labels(
             ["Publish", "PublishBatch"],
-            ["Pull", "Receive"],
-            ["Acknowledge", "Ack", "ModifyAckDeadline", "StartSubscriber", "StopSubscriber"]), ["unknown"]),
+            ["Pull"],
+            ["Acknowledge", "Ack", "ModifyAckDeadline", "StartSubscriber", "StopSubscriber"],
+            ["Receive"]), ["unknown"], DeliveryIsFromTheConsumer: true),
         ["sqs"] = new(Place.FirstSegment, Labels(
             ["SendMessage", "SendMessageBatch"],
             ["ReceiveMessage"],
@@ -86,7 +99,8 @@ internal static class MessageTable
         ["masstransit"] = new(Place.FirstSegment, Labels(
             ["Send", "Publish", "→"],
             [],
-            ["SendFault", "PublishFault", "ConsumeFault", "Send Fault", "Publish Fault", "Consume Fault"]), ["unknown"]),
+            ["SendFault", "PublishFault", "ConsumeFault", "Send Fault", "Publish Fault", "Consume Fault"],
+            ["Consume", "←"]), ["unknown"]),
         ["eventbridge"] = new(Place.Authority, Labels(
             ["PutEvents", "PutPartnerEvents"],
             [],
@@ -116,6 +130,45 @@ internal static class MessageTable
                 best = (prefix.Length, kind);
         return best.Kind;
     }
+
+    /// <summary>
+    /// What a tracker's own label on <paramref name="uri"/> is: <see cref="Read"/> by the row of its scheme. MassTransit at Raw writes
+    /// the transport's address, whose scheme no row holds, and a label that names it (<c>Consume OrderPlaced → rabbitmq://host/q</c>).
+    /// </summary>
+    internal static MessageLabelKind ReadTracked(string uri, string? label)
+    {
+        var kind = Read(Scheme(uri), label);
+        return kind == MessageLabelKind.Unknown && label is not null && label.EndsWith("→ " + uri, StringComparison.Ordinal)
+            ? Read("masstransit", label)
+            : kind;
+    }
+
+    /// <summary>
+    /// What a label's first word says of itself, the whole word: all a record read back from NDJSON or made from a span has left to say
+    /// what it is, since neither can carry how it was logged. Never for a record <c>MessageTracker</c> or a consumer wrote in process,
+    /// whose label is its author's words. A word that says nothing is <see cref="MessageLabelKind.Unknown"/>.
+    /// </summary>
+    internal static MessageLabelKind ReadWord(string? label)
+    {
+        if (label is null)
+            return MessageLabelKind.Unknown;
+
+        var text = label.Trim();
+        foreach (var word in (string[])["Consume", "Process", "Deliver"])
+            if (Leads(text, word))
+                return MessageLabelKind.Delivers;
+        foreach (var word in (string[])["Receive", "ReceiveMessage", "ReceiveMessages", "Pull", "Poll", "Peek", "PeekMessages"])
+            if (Leads(text, word))
+                return MessageLabelKind.Receives;
+        return MessageLabelKind.Unknown;
+    }
+
+    /// <summary>
+    /// The scheme's own tracker logs a delivery from the consumer to the broker, so the consumer is its caller (Pub/Sub's subscriber,
+    /// Event Hubs' <c>Process</c>). Kafka's and MassTransit's log it as the broker's arrow into the consumer.
+    /// </summary>
+    internal static bool DeliveryIsFromTheConsumer(string? scheme) =>
+        scheme is not null && Rows.TryGetValue(scheme, out var row) && row.DeliveryIsFromTheConsumer;
 
     private static bool Leads(string label, string prefix) =>
         label.StartsWith(prefix, StringComparison.Ordinal)
@@ -152,6 +205,13 @@ internal static class MessageTable
 
         var last = segments.LastOrDefault();
         return !string.IsNullOrEmpty(last) ? last : string.IsNullOrEmpty(authority) ? null : authority;
+    }
+
+    /// <summary>The address's last segment, where a record a span made holds its destination, whichever scheme it carries.</summary>
+    internal static string? LastSegment(string uri)
+    {
+        var last = Split(uri).Segments.LastOrDefault();
+        return string.IsNullOrEmpty(last) ? null : last;
     }
 
     /// <summary>

@@ -71,6 +71,19 @@ public record RequestResponseLog(
     /// </summary>
     internal RecordedBefore? RecordedBefore11 { get; init; }
 
+    /// <summary>
+    /// The method is its author's own words (<see cref="MessageTracker"/>'s <c>protocol</c>), so the OTLP exporter takes no operation
+    /// from it, whatever it says. Set by <c>MessageTracker</c> alone and never written out, so a reader of a data file reads the label as it reads any.
+    /// </summary>
+    internal bool LabelIsFree { get; init; }
+
+    /// <summary>
+    /// The log was read back from an <see cref="Kronikol.Ingestion.InteractionRecord"/>, which carries neither <see cref="NoteOnRight"/>
+    /// nor <see cref="LabelIsFree"/>, so its label is all that says what it is. Set by <c>InteractionRecord.ToLog</c> alone and never
+    /// written out.
+    /// </summary>
+    internal bool ReadFromRecord { get; init; }
+
     public bool NoteOnRight { get; set; }
     public bool IsOverrideStart { get; set; }
     public bool IsOverrideEnd { get; set; }

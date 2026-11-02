@@ -11,7 +11,7 @@ public static class OtlpCaptureKinds
     /// <summary>HTTP client spans (<c>http.request.method</c> / <c>http.method</c>). On by default.</summary>
     public const string Http = "http";
 
-    /// <summary>Messaging producer/consumer spans (<c>messaging.system</c>). Off by default.</summary>
+    /// <summary>Messaging spans (<c>messaging.system</c>), of any kind that is no RPC call. Off by default.</summary>
     public const string Messaging = "messaging";
 
     /// <summary>RPC client spans (<c>rpc.system</c>, e.g. gRPC). Off by default.</summary>

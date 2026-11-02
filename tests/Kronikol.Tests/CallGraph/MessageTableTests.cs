@@ -19,10 +19,16 @@ public class MessageTableTests
         { "kafka", "Commit Txn", "Neither" },
         { "kafka", "Send Offsets", "Neither" },
         { "kafka", "Subscribe orders", "Neither" },
+        // A delivery: the broker's arrow, or a handler its client calls
+        { "kafka", "Consume ← orders", "Delivers" },
+        { "kafka", "Consume", "Delivers" },
+        { "kafka", "Consume orders[0]@7", "Delivers" },
         { "eventhubs", "Send (×3) → telemetry", "Publishes" },
         { "eventhubs", "SendBatch hub=telemetry partition= count=3", "Publishes" },
         { "eventhubs", "Read ← telemetry[0]", "Receives" },
-        { "eventhubs", "Process ← telemetry", "Receives" },
+        { "eventhubs", "Process ← telemetry", "Delivers" },
+        { "eventhubs", "ProcessEvent hub=telemetry partition=0 count=1", "Delivers" },
+        { "eventhubs", "ReadEvents hub=telemetry partition= count=", "Receives" },
         { "eventhubs", "CreateBatch", "Neither" },
         { "servicebus", "Send (batch) → orders", "Publishes" },
         { "servicebus", "Schedule", "Publishes" },
@@ -32,6 +38,8 @@ public class MessageTableTests
         { "servicebus", "Complete", "Neither" },
         { "pubsub", "Publish (×2) → orders", "Publishes" },
         { "pubsub", "Pull ← orders-sub", "Receives" },
+        { "pubsub", "Receive ← orders-sub", "Delivers" },
+        { "pubsub", "Receive topic= sub=projects/p/subscriptions/s", "Delivers" },
         { "pubsub", "Ack", "Neither" },
         { "sqs", "SendMessageBatch", "Publishes" },
         { "sqs", "ReceiveMessage", "Receives" },
@@ -45,6 +53,10 @@ public class MessageTableTests
         { "masstransit", "→ OrderPlaced", "Publishes" },
         { "masstransit", "Publish OrderPlaced", "Publishes" },
         { "masstransit", "Send Fault OrderPlaced", "Neither" },
+        { "masstransit", "Consume OrderPlaced", "Delivers" },
+        { "masstransit", "← OrderPlaced", "Delivers" },
+        { "masstransit", "Consume Fault OrderPlaced", "Neither" },
+        { "masstransit", "ConsumeFault OrderPlaced → rabbitmq://localhost/orders", "Neither" },
         { "masstransit", "PublishFault OrderPlaced → rabbitmq://localhost/orders", "Neither" },
         { "eventbridge", "PutEvents [OrderPlaced] x2", "Publishes" },
         { "eventbridge", "ManageRule", "Neither" },
@@ -58,6 +70,53 @@ public class MessageTableTests
     [MemberData(nameof(Labels))]
     public void Each_scheme_reads_its_trackers_labels(string scheme, string label, string expected) =>
         Assert.Equal(Enum.Parse<MessageLabelKind>(expected), MessageTable.Read(scheme, label));
+
+    // The label's first word, whole: what an ingested record or a span has left to say what it is.
+    [Theory]
+    [InlineData("Consume", "Delivers")]
+    [InlineData("Consume (Kafka)", "Delivers")]
+    [InlineData("Consume ← orders", "Delivers")]
+    [InlineData("Process cake", "Delivers")]
+    [InlineData("Deliver cake", "Delivers")]
+    [InlineData("Consumed cake", "Unknown")]
+    [InlineData("ProcessOrder", "Unknown")]
+    [InlineData("ConsumeFault OrderPlaced", "Unknown")]
+    [InlineData("Receive cake", "Receives")]
+    [InlineData("ReceiveMessage orders", "Receives")]
+    [InlineData("ReceiveMessages", "Receives")]
+    [InlineData("PeekMessages orders", "Receives")]
+    [InlineData("Pull", "Receives")]
+    [InlineData("Poll", "Receives")]
+    [InlineData("PollResult", "Unknown")]
+    [InlineData("Peek", "Receives")]
+    [InlineData("Publish", "Unknown")]
+    [InlineData("Whatever the author wrote", "Unknown")]
+    [InlineData(null, "Unknown")]
+    public void A_labels_first_word_says_what_it_can(string? label, string expected) =>
+        Assert.Equal(Enum.Parse<MessageLabelKind>(expected), MessageTable.ReadWord(label));
+
+    // Read by the scheme's row, and MassTransit at Raw by its label, which names its transport's address: the scheme is the transport's.
+    [Theory]
+    [InlineData("kafka:///orders", "Consume ← orders", "Delivers")]
+    [InlineData("kafka:///orders", "Process orders", "Unknown")]
+    [InlineData("rabbitmq://localhost/orders", "Send OrderPlaced → rabbitmq://localhost/orders", "Publishes")]
+    [InlineData("rabbitmq://localhost/orders", "Consume OrderPlaced → rabbitmq://localhost/orders", "Delivers")]
+    [InlineData("rabbitmq://localhost/orders", "ConsumeFault OrderPlaced → rabbitmq://localhost/orders", "Neither")]
+    [InlineData("loopback://localhost/orders", "Consume OrderPlaced → loopback://localhost/orders", "Delivers")]
+    [InlineData("rabbitmq://localhost/orders", "Consume OrderPlaced", "Unknown")]
+    [InlineData("rabbitmq://localhost/orders", "Consume OrderPlaced → rabbitmq://localhost/other", "Unknown")]
+    public void A_trackers_label_is_read_by_its_row(string uri, string label, string expected) =>
+        Assert.Equal(Enum.Parse<MessageLabelKind>(expected), MessageTable.ReadTracked(uri, label));
+
+    [Theory]
+    [InlineData("pubsub", true)]
+    [InlineData("eventhubs", true)]
+    [InlineData("kafka", false)]
+    [InlineData("masstransit", false)]
+    [InlineData("event", false)]
+    [InlineData(null, false)]
+    public void A_delivery_is_from_the_consumer_only_where_its_tracker_logs_it_so(string? scheme, bool expected) =>
+        Assert.Equal(expected, MessageTable.DeliveryIsFromTheConsumer(scheme));
 
     [Theory]
     [InlineData("kafka:///orders", "orders")]
@@ -171,6 +230,18 @@ public class MessageTableTests
         Assert.Equal(2, graph.Messages.Count);
         Assert.Single(graph.Messages.Select(m => m.Op).Distinct());
         Assert.Equal(["7", "8"], graph.Messages.Select(m => m.Topic));
+    }
+
+    // The table holds deliveries since 5.28.0, so a delivery the subject logs itself, as a hand call on a tracker's scheme may, is one it consumes.
+    [Theory]
+    [InlineData("Kafka", "Consume", "kafka:///orders", "orders")]
+    [InlineData("Event Hubs", "Process ← telemetry", "eventhubs:///telemetry", "telemetry")]
+    public void A_delivery_the_subject_logs_itself_consumes(string broker, string label, string uri, string topic)
+    {
+        var graph = Build(r => r.Call(S0, "Breakfast Provider", broker, label, uri, attribution: "RequestHeader", category: "MessageQueue"));
+
+        var message = Assert.Single(graph.Messages);
+        Assert.Equal(("consumes", broker, topic), (message.Direction, message.Party, message.Topic));
     }
 
     [Fact]

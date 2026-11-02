@@ -50,6 +50,9 @@ public sealed record MappedSpan(
     /// </summary>
     internal string? UriBefore8 { get; init; }
 
+    /// <summary>What the call is, by the rule of <see cref="RequestResponseMetaType"/>: <c>Event</c> when it moves a message.</summary>
+    internal RequestResponseMetaType MetaType { get; init; }
+
     /// <summary>
     /// The <see cref="InteractionRecord"/> pair for this call: request at <see cref="Start"/>, response at
     /// <see cref="End"/>, both stamped <c>capturedBy: span</c> so the ingest-time merge
@@ -74,8 +77,9 @@ public sealed record MappedSpan(
             activityTraceId: TraceId,
             activitySpanId: SpanId);
 
-        return (request with { CapturedBy = InteractionMerger.SpanSource },
-                response with { CapturedBy = InteractionMerger.SpanSource });
+        var metaType = MetaType == RequestResponseMetaType.Default ? null : MetaType.ToString();
+        return (request with { CapturedBy = InteractionMerger.SpanSource, MetaType = metaType },
+                response with { CapturedBy = InteractionMerger.SpanSource, MetaType = metaType });
     }
 
     /// <summary>The same pair as <see cref="RequestResponseLog"/> entries, ready for any <see cref="IRequestResponseSink"/>.</summary>
@@ -93,7 +97,7 @@ public sealed record MappedSpan(
         var request = new RequestResponseLog(
             name, TestId, InteractionRecord.ParseMethod(Method), RequestContent, uri, [],
             ServiceName, CallerName, RequestResponseType.Request, traceId, requestResponseId, false,
-            DependencyCategory: DependencyCategory)
+            MetaType: MetaType, DependencyCategory: DependencyCategory)
         {
             Timestamp = Start,
             ActivityTraceId = TraceId,
@@ -109,7 +113,7 @@ public sealed record MappedSpan(
         var response = new RequestResponseLog(
             name, TestId, InteractionRecord.ParseMethod(Method), ResponseContent, uri, [],
             ServiceName, CallerName, RequestResponseType.Response, traceId, requestResponseId, false,
-            status, DependencyCategory: DependencyCategory)
+            status, MetaType, DependencyCategory)
         {
             Timestamp = End,
             ActivityTraceId = TraceId,

@@ -245,6 +245,45 @@ public class OtlpExporterTests
         Assert.All(redisBack, l => Assert.Equal(TestId, l.ActivityTraceId));
     }
 
+    // What leaves as a message comes back as one: the tap reads messaging.system, and a PRODUCER with none was dropped.
+    [Theory]
+    [InlineData("pubsub:///orders", "Publish → orders", "App", "PubSub", OtlpSpanKind.Client, "Publish orders")]
+    [InlineData("sqs:///orders", "ReceiveMessage", "App", "SQS", OtlpSpanKind.Client, "ReceiveMessage orders")]
+    [InlineData("kafka:///orders", "Consume ← orders", "Kafka", "App", OtlpSpanKind.Consumer, "Consume orders")]
+    public async Task Full_circle_a_message_comes_back_a_message(string uri, string label, string caller, string service, OtlpSpanKind kind, string back)
+    {
+        var sink = new ListSink();
+        var tapOptions = new OtlpTapOptions { ListenPort = 0, Sink = sink };
+        tapOptions.CaptureKinds.Add(OtlpCaptureKinds.Messaging);
+        await using var tap = new OtlpTap(tapOptions);
+        await tap.StartAsync();
+
+        var id = Guid.NewGuid();
+        var request = new RequestResponseLog("My test", TestId, label, null, new Uri(uri), [], service, caller, RequestResponseType.Request,
+            id, id, false, MetaType: RequestResponseMetaType.Event, DependencyCategory: Kronikol.Constants.DependencyCategories.MessageQueue)
+        { Timestamp = T0 };
+        var response = request with { Type = RequestResponseType.Response };
+        response.Timestamp = T0.AddMilliseconds(5);
+
+        using var exporter = new OtlpExporter(new OtlpExportOptions { Endpoint = tap.TracesEndpoint });
+        Assert.True((await exporter.ExportAsync([request, response])).Success);
+        var first = OtlpSpanMapper.Map(request, response, new OtlpExportOptions { Endpoint = tap.TracesEndpoint }, T0);
+        Assert.Equal(kind, first.Kind);
+
+        await tap.DisposeAsync();
+
+        var logs = sink.Snapshot();
+        Assert.Equal(2, logs.Length);
+        Assert.All(logs, l => Assert.Equal(RequestResponseMetaType.Event, l.MetaType));
+        Assert.All(logs, l => Assert.Equal(back, l.Method.Value?.ToString()));
+        // A span from a tap is an echo: it goes out again only when asked. These shapes keep their kind; a record keeps none, so others do not.
+        Assert.True(OtlpSpanMapper.ShouldSkip(logs[0], new OtlpExportOptions { Endpoint = tap.TracesEndpoint }));
+        var again = OtlpSpanMapper.Map(logs[0], logs[1], new OtlpExportOptions { Endpoint = tap.TracesEndpoint, IncludeSpanSourced = true }, T0);
+        Assert.Equal(kind, again.Kind);
+        // And from the service that sent it: a record from a span is drawn from that service, whatever its kind.
+        Assert.Equal(first.ResourceServiceName, again.ResourceServiceName);
+    }
+
     // An export the tap answered 200 is mapped though the tap is disposed the moment the exporter has its answer: the
     // payload is queued before the response is written, and disposing drains the queue. The tap answered first and
     // queued after, so a dispose in between lost the payload (CI on 4.18.0, the full-circle fact above).

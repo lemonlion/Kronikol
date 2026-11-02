@@ -110,11 +110,11 @@ public class MessageTracker : ITrackingComponent
         if (!PhaseConfiguration.ShouldTrack(_trackDuringSetup, _trackDuringAction))
             return Guid.Empty;
 
-        var testInfo = GetTestInfo();
+        var requestResponseId = Guid.NewGuid();
+        var testInfo = GetTestInfo(requestResponseId);
         if (testInfo is null)
             return Guid.Empty;
 
-        var requestResponseId = Guid.NewGuid();
         var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(_verbosity, _setupVerbosity, _actionVerbosity);
         var content = effectiveVerbosity == MessageTrackerVerbosity.Summarised
             ? null
@@ -138,6 +138,7 @@ public class MessageTracker : ITrackingComponent
             CallerDependencyCategory: _callerDependencyCategory
         )
         {
+            LabelIsFree = true,
             AttributionSource = testInfo.Value.Source,
             Timestamp = DateTimeOffset.UtcNow,
             NoteOnRight = noteOnRight,
@@ -168,7 +169,7 @@ public class MessageTracker : ITrackingComponent
         if (!PhaseConfiguration.ShouldTrack(_trackDuringSetup, _trackDuringAction))
             return;
 
-        var testInfo = GetTestInfo();
+        var testInfo = GetTestInfo(requestResponseId);
         if (testInfo is null)
             return;
 
@@ -198,6 +199,7 @@ public class MessageTracker : ITrackingComponent
             CallerDependencyCategory: _callerDependencyCategory
         )
         {
+            LabelIsFree = true,
             AttributionSource = testInfo.Value.Source,
             Timestamp = DateTimeOffset.UtcNow,
             ActivitySpanId = Activity.Current?.SpanId.ToString(),
@@ -248,11 +250,11 @@ public class MessageTracker : ITrackingComponent
         if (!PhaseConfiguration.ShouldTrack(_trackDuringSetup, _trackDuringAction))
             return Guid.Empty;
 
-        var testInfo = GetTestInfo();
+        var requestResponseId = Guid.NewGuid();
+        var testInfo = GetTestInfo(requestResponseId);
         if (testInfo is null)
             return Guid.Empty;
 
-        var requestResponseId = Guid.NewGuid();
         var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(_verbosity, _setupVerbosity, _actionVerbosity);
         var content = effectiveVerbosity == MessageTrackerVerbosity.Summarised
             ? null
@@ -277,6 +279,7 @@ public class MessageTracker : ITrackingComponent
             MetaType: RequestResponseMetaType.Event
         )
         {
+            LabelIsFree = true,
             AttributionSource = testInfo.Value.Source,
             Timestamp = now,
             ActivitySpanId = Activity.Current?.SpanId.ToString(),
@@ -308,6 +311,7 @@ public class MessageTracker : ITrackingComponent
             MetaType: RequestResponseMetaType.Event
         )
         {
+            LabelIsFree = true,
             AttributionSource = testInfo.Value.Source,
             Timestamp = now,
             ActivitySpanId = Activity.Current?.SpanId.ToString(),
@@ -356,8 +360,11 @@ public class MessageTracker : ITrackingComponent
         return ReferenceEquals(requestAccessor, _httpContextAccessor);
     }
 
-    private (string TestName, string TestId, Guid TraceId, AttributionSource Source)? GetTestInfo()
+    // A call with no inbound trace id takes its pair's own id, which both halves know: the request and the response of one
+    // call are one trace, as InteractionRecord.ToLog reads a record that names none, and as OTLP pairs them.
+    private (string TestName, string TestId, Guid TraceId, AttributionSource Source)? GetTestInfo(Guid requestResponseId)
     {
+        var pairTrace = requestResponseId == Guid.Empty ? Guid.NewGuid() : requestResponseId;
         var context = _httpContextAccessor?.HttpContext;
         if (context is not null)
         {
@@ -375,7 +382,7 @@ public class MessageTracker : ITrackingComponent
                 return (
                     TrackingHeaderValue.Decode(testNameValues.First()!),
                     TrackingHeaderValue.Decode(testIdValues.First()!),
-                    Guid.TryParse(traceIdValues.First(), out var inboundTraceId) ? inboundTraceId : Guid.NewGuid(),
+                    Guid.TryParse(traceIdValues.First(), out var inboundTraceId) ? inboundTraceId : pairTrace,
                     AttributionSource.RequestHeader
                 );
             }
@@ -384,7 +391,7 @@ public class MessageTracker : ITrackingComponent
         // The shared chain: the framework context, an explicit scope, the global fallback — and a detached
         // flow, which resolves to nothing unless a scope names its scenario.
         var who = TestInfoResolver.ResolveWithSource(null, _testInfoFallback);
-        return who is { } identity ? (identity.Name, identity.Id, Guid.NewGuid(), identity.Source) : null;
+        return who is { } identity ? (identity.Name, identity.Id, pairTrace, identity.Source) : null;
     }
 
     /// <summary>

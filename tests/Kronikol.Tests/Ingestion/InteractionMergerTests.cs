@@ -50,6 +50,25 @@ public class InteractionMergerTests
         yield return response with { CapturedBy = capturedBy };
     }
 
+    [Theory]
+    [InlineData(null, "Event", "Event")]
+    [InlineData(null, null, null)]
+    [InlineData("Event", null, "Event")]
+    [InlineData("Default", "Event", "Default")]
+    public void A_merged_call_takes_the_wires_kind_and_else_the_spans(string? wireKind, string? spanKind, string? expected)
+    {
+        List<InteractionRecord> records =
+        [
+            .. Wire("Send → orders", "servicebus://orders/", 0, 12).Select(r => r with { MetaType = wireKind }),
+            .. Span("Send → orders", "servicebus://orders/", 1, 10).Select(r => r with { MetaType = spanKind }),
+        ];
+
+        var merged = InteractionMerger.Merge(records);
+
+        Assert.Equal(2, merged.Count);
+        Assert.All(merged, r => Assert.Equal(expected, r.MetaType));
+    }
+
     [Fact]
     public void A_wire_record_and_its_span_twin_become_one_arrow_with_the_span_identity_and_the_wire_body()
     {

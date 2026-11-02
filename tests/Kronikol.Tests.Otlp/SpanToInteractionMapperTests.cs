@@ -2,6 +2,7 @@ using Kronikol.Constants;
 using Kronikol.Extensions.Otlp;
 using Kronikol.Ingestion;
 using Kronikol.Tests.History;
+using Kronikol.Tracking;
 
 namespace Kronikol.Tests.Otlp;
 
@@ -55,6 +56,79 @@ public class SpanToInteractionMapperTests
         .Replace("""{ "key": "db.statement", "value": { "stringValue": "get insights:trials:2026-08-22" } },""", "")
         .Replace("""{ "key": "db.redis.database_index", "value": { "intValue": "0" } },""", ""));
 
+    // OpenTelemetry's names on the way out read back as what they name, which OtlpSpanMapper.DbSystemFor promises: a tap
+    // behind a Kronikol exporter reads the database it always did (plans/CALLS_AND_EVENTS_PLAN.md F17).
+    [Theory]
+    [InlineData(DependencyCategories.Redis, DependencyCategories.Redis)]
+    [InlineData(DependencyCategories.MongoDB, DependencyCategories.MongoDB)]
+    [InlineData(DependencyCategories.BigQuery, DependencyCategories.BigQuery)]
+    [InlineData(DependencyCategories.PostgreSQL, DependencyCategories.PostgreSQL)]
+    [InlineData(DependencyCategories.MySQL, DependencyCategories.MySQL)]
+    [InlineData(DependencyCategories.SqlServer, DependencyCategories.SqlServer)]
+    [InlineData(DependencyCategories.SQLite, DependencyCategories.SQLite)]
+    [InlineData(DependencyCategories.Oracle, DependencyCategories.Oracle)]
+    [InlineData(DependencyCategories.Elasticsearch, DependencyCategories.Elasticsearch)]
+    [InlineData(DependencyCategories.CosmosDB, DependencyCategories.CosmosDB)]
+    [InlineData(DependencyCategories.DynamoDB, DependencyCategories.DynamoDB)]
+    [InlineData(DependencyCategories.Spanner, DependencyCategories.Spanner)]
+    [InlineData(DependencyCategories.Bigtable, DependencyCategories.Bigtable)]
+    [InlineData(DependencyCategories.ClickHouse, DependencyCategories.ClickHouse)]
+    [InlineData(DependencyCategories.Database, DependencyCategories.Database)]
+    [InlineData(DependencyCategories.SQL, DependencyCategories.Database)]
+    public void What_the_exporter_names_a_database_reads_back_as_that_database(string category, string readBack)
+    {
+        var name = OtlpSpanMapper.DbSystemFor(category);
+        var span = WithAttributes($$$"""{ "key": "db.system.name", "value": { "stringValue": "{{{name}}}" } },""");
+
+        var mapped = SpanToInteractionMapper.Map(span, Options());
+
+        Assert.Equal(readBack, mapped!.DependencyCategory);
+    }
+
+    // What the exporter wrote before 5.28.0: a capture of then reads as the same database.
+    [Theory]
+    [InlineData("mssql", DependencyCategories.SqlServer)]
+    [InlineData("oracle", DependencyCategories.Oracle)]
+    [InlineData("cosmosdb", DependencyCategories.CosmosDB)]
+    [InlineData("dynamodb", DependencyCategories.DynamoDB)]
+    [InlineData("spanner", DependencyCategories.Spanner)]
+    public void What_the_exporter_once_named_a_database_reads_back_as_that_database(string name, string category)
+    {
+        var span = WithAttributes($$$"""{ "key": "db.system.name", "value": { "stringValue": "{{{name}}}" } },""");
+
+        Assert.Equal(category, SpanToInteractionMapper.Map(span, Options())!.DependencyCategory);
+    }
+
+    [Theory]
+    [InlineData("gcp.spanner", "gcp-spanner://")]
+    [InlineData("azure.cosmosdb", "azure-cosmosdb://")]
+    [InlineData("aws.dynamodb", "aws-dynamodb://")]
+    [InlineData("oracle.db", "oracle-db://")]
+    public void A_registry_name_gives_the_address_any_span_of_it_gets(string name, string scheme)
+    {
+        var span = WithAttributes($$$"""{ "key": "db.system.name", "value": { "stringValue": "{{{name}}}" } },""");
+
+        Assert.StartsWith(scheme, SpanToInteractionMapper.Map(span, Options())!.Uri, StringComparison.Ordinal);
+    }
+
+    // A map written for what the exporter wrote before 5.28.0 still names the database, and a map keyed on the registry's name reads an old capture.
+    [Theory]
+    [InlineData("azure.cosmosdb", "cosmosdb")]
+    [InlineData("gcp.spanner", "spanner")]
+    [InlineData("aws.dynamodb", "dynamodb")]
+    [InlineData("microsoft.sql_server", "mssql")]
+    [InlineData("oracle.db", "oracle")]
+    [InlineData("cosmosdb", "azure.cosmosdb")]
+    public void A_name_map_keyed_on_a_databases_other_name_still_hits(string system, string key)
+    {
+        var options = Options();
+        options.ServiceNameMap.Clear();
+        options.ServiceNameMap[key] = "Orders DB";
+        var span = WithAttributes($$$"""{ "key": "db.system.name", "value": { "stringValue": "{{{system}}}" } }, { "key": "peer.service", "value": { "stringValue": "Orders Store" } },""");
+
+        Assert.Equal("Orders DB", SpanToInteractionMapper.Map(span, options)!.ServiceName);
+    }
+
     [Theory]
     [InlineData("""{ "key": "messaging.system", "value": { "stringValue": "aws_sqs" } }, { "key": "messaging.destination.name", "value": { "stringValue": "orders" } },""", "aws-sqs://localhost/orders")]
     [InlineData("""{ "key": "messaging.system", "value": { "stringValue": "gcp_pubsub" } }, { "key": "messaging.destination.name", "value": { "stringValue": "orders" } },""", "gcp-pubsub://localhost/orders")]
@@ -99,6 +173,98 @@ public class SpanToInteractionMapperTests
 
         Assert.Equal(uri, log.Uri.ToString());
         Assert.Equal("http://unknown/" + mapped.UriBefore8, log.RecordedBefore8!.Uri.ToString());
+    }
+
+    private static OtlpSpan MessagingSpan(OtlpSpanKind kind, params (string Key, string Value)[] attributes)
+    {
+        var values = string.Join(',', attributes.Select(a => "{\"key\":\"" + a.Key + "\",\"value\":{\"stringValue\":\"" + a.Value + "\"}}"));
+        return Single("{\"resourceSpans\":[{\"resource\":{\"attributes\":[{\"key\":\"service.name\",\"value\":{\"stringValue\":\"app\"}}]},\"scopeSpans\":[{\"scope\":{\"name\":\"probe\"},\"spans\":[{"
+            + "\"traceId\":\"" + OtlpGoldens.TestTraceId + "\",\"spanId\":\"00f067aa0ba902b7\",\"name\":\"probe\",\"kind\":" + (int)kind
+            + ",\"startTimeUnixNano\":\"1755820800000000000\",\"endTimeUnixNano\":\"1755820800012000000\",\"attributes\":[" + values + "]}]}]}]}");
+    }
+
+    private static OtlpTapOptions MessagingOptions()
+    {
+        var options = Options();
+        options.CaptureKinds.Add(OtlpCaptureKinds.Messaging);
+        return options;
+    }
+
+    // Event means the call moves a message (plans/CALLS_AND_EVENTS_PLAN.md 5.1), and a pull or a batch's send is a CLIENT span that does.
+    [Theory]
+    [InlineData(OtlpSpanKind.Producer, "send", RequestResponseMetaType.Event)]
+    [InlineData(OtlpSpanKind.Producer, "create", RequestResponseMetaType.Event)]
+    [InlineData(OtlpSpanKind.Producer, null, RequestResponseMetaType.Event)]
+    [InlineData(OtlpSpanKind.Consumer, "process", RequestResponseMetaType.Event)]
+    [InlineData(OtlpSpanKind.Consumer, null, RequestResponseMetaType.Event)]
+    [InlineData(OtlpSpanKind.Client, "send", RequestResponseMetaType.Event)]
+    [InlineData(OtlpSpanKind.Client, "receive", RequestResponseMetaType.Event)]
+    [InlineData(OtlpSpanKind.Client, "settle", RequestResponseMetaType.Default)]
+    [InlineData(OtlpSpanKind.Client, null, RequestResponseMetaType.Default)]
+    public void A_messaging_span_is_an_event_when_it_moves_a_message(OtlpSpanKind kind, string? type, RequestResponseMetaType expected)
+    {
+        (string, string)[] attributes = type is null
+            ? [("messaging.system", "kafka"), ("messaging.destination.name", "orders")]
+            : [("messaging.system", "kafka"), ("messaging.destination.name", "orders"), ("messaging.operation.type", type)];
+
+        var mapped = SpanToInteractionMapper.Map(MessagingSpan(kind, attributes), MessagingOptions())!;
+
+        var (request, response) = mapped.ToLogs();
+        Assert.Equal(expected, request.MetaType);
+        Assert.Equal(expected, response.MetaType);
+        var (requestRecord, responseRecord) = mapped.ToRecords();
+        var written = expected == RequestResponseMetaType.Event ? "Event" : null;
+        Assert.Equal(written, requestRecord.MetaType);
+        Assert.Equal(written, responseRecord.MetaType);
+    }
+
+    [Theory]
+    [InlineData("publish", RequestResponseMetaType.Event)]
+    [InlineData("receive", RequestResponseMetaType.Event)]
+    [InlineData("deliver", RequestResponseMetaType.Event)]
+    [InlineData("settle", RequestResponseMetaType.Default)]
+    public void The_deprecated_operation_attribute_says_the_same(string operation, RequestResponseMetaType expected)
+    {
+        var mapped = SpanToInteractionMapper.Map(MessagingSpan(OtlpSpanKind.Client, ("messaging.system", "kafka"), ("messaging.operation", operation)), MessagingOptions())!;
+
+        Assert.Equal(expected, mapped.ToLogs().Request.MetaType);
+    }
+
+    // Pinned to the conventions' v1.44.0: a span that names its system only as main's newer attribute is captured no more than it was.
+    [Theory]
+    [InlineData(OtlpSpanKind.Producer)]
+    [InlineData(OtlpSpanKind.Consumer)]
+    [InlineData(OtlpSpanKind.Client)]
+    [InlineData(OtlpSpanKind.Internal)]
+    public void A_span_that_names_its_system_only_as_messaging_system_name_is_not_captured(OtlpSpanKind kind) =>
+        Assert.Null(SpanToInteractionMapper.Map(MessagingSpan(kind, ("messaging.system.name", "kafka"), ("messaging.destination.name", "orders")), MessagingOptions()));
+
+    [Theory]
+    [InlineData(OtlpSpanKind.Producer)]
+    [InlineData(OtlpSpanKind.Consumer)]
+    public void A_producer_or_consumer_span_that_names_no_family_is_no_call(OtlpSpanKind kind) =>
+        Assert.Null(SpanToInteractionMapper.Map(MessagingSpan(kind), MessagingOptions()));
+
+    [Theory]
+    [InlineData(OtlpSpanKind.Producer)]
+    [InlineData(OtlpSpanKind.Consumer)]
+    public void A_database_span_of_any_kind_is_a_call_not_an_event(OtlpSpanKind kind)
+    {
+        // What 5.27.13 exported for a Spanner query: PRODUCER with a db.system.name.
+        var mapped = SpanToInteractionMapper.Map(MessagingSpan(kind, ("db.system.name", "spanner"), ("db.namespace", "shop"), ("db.operation.name", "SELECT")), MessagingOptions())!;
+
+        Assert.Equal(RequestResponseMetaType.Default, mapped.ToLogs().Request.MetaType);
+    }
+
+    [Fact]
+    public void A_producer_span_that_is_also_rpc_takes_the_messaging_path_and_a_client_one_the_rpc_path()
+    {
+        // The AWS SDK's shape: messaging.system and rpc.system together. Map reads a PRODUCER or CONSUMER as messaging first, and a CLIENT as
+        // RPC first, so such a pull is no message on the way back, and is dropped unless RPC is captured.
+        (string, string)[] attributes = [("messaging.system", "aws_sqs"), ("rpc.system", "aws-api"), ("rpc.service", "SQS"), ("rpc.method", "ReceiveMessage")];
+
+        Assert.Equal(RequestResponseMetaType.Event, SpanToInteractionMapper.Map(MessagingSpan(OtlpSpanKind.Producer, attributes), MessagingOptions())!.ToLogs().Request.MetaType);
+        Assert.Null(SpanToInteractionMapper.Map(MessagingSpan(OtlpSpanKind.Client, attributes), MessagingOptions()));
     }
 
     [Fact]

@@ -4,6 +4,89 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.28.0] - 2026-11-02
+
+The minor part moves (5.27.14 to 5.28.0): OTLP export gains four attributes a dashboard can filter on (#220;
+`plans/CALLS_AND_EVENTS_PLAN.md` R3). It also changes documented output, a span's kind and five
+database names, so read the first entry below before you upgrade a dashboard. No option and no default moves.
+
+### Changed
+
+- **OTLP span kinds follow OpenTelemetry's tables** (semantic conventions v1.44.0, whose messaging page is at status
+  `Development`). A span was `CLIENT`, or `PRODUCER` for every event, among them deliveries, which OTel calls `CONSUMER`, and
+  acks, which it calls `CLIENT`. Now, in order:
+
+  | A record that is | Span kind |
+  |---|---|
+  | Not an `Event` | `CLIENT` |
+  | An `Event` on a database's category (a consumer's own, or a capture from before 5.27.14) | `CLIENT`, with no `messaging.*` |
+  | An `Event` with an HTTP verb on an `http` or `https` address | `CLIENT` |
+  | A delivery: `TrackConsumeEvent`, Kafka's and MassTransit's `Consume`, Pub/Sub's `Receive`, Event Hubs' `Process` | `CONSUMER` |
+  | A pull: `Receive`, `Peek`, `ReceiveMessage`, `ReadEvents`, Pub/Sub's `Pull` | `CLIENT` |
+  | Kafka's produce, whose tracker injects `traceparent` | `PRODUCER` |
+  | Any other send | `CLIENT` |
+
+  OTel's `send` is `PRODUCER` only "if the context of the Send span is used as creation context", and no other tracker injects
+  one. Behaviour change: a dashboard that filtered on `PRODUCER` to find messages should filter on
+  `messaging.operation.type`, which a span that moves a message carries. Over the plan's 194 measured records, of the 143 that read
+  `PRODUCER`, 105 move to `CLIENT` and 35 to `CONSUMER`, and 3 stay. Two Kafka routes inject nothing and still read `PRODUCER`:
+  `PropagateTraceContext` off, and `LogProduce` by hand. Kafka's `Consume` reads as a delivery on every route, though with
+  `TraceMessageProcessing` off, its default, `TrackingKafkaConsumer.Consume` is a poll the application makes, which OTel's table calls
+  `CLIENT` and `receive`, as a record does not say which route wrote it.
+- **A delivery's span is the consumer's own.** Where `TrackConsumeEvent`, Kafka and MassTransit log a delivery as the broker's
+  arrow into the consumer, the span's `service.name` is the consumer and its `peer.service` the broker. Exported as it stood, the
+  broker read as consuming from the consumer.
+- **What a trace backend draws moves.** Measured on hand-written payloads, as Kronikol's spans are flat, with no parent and no
+  links: the OpenTelemetry Collector's service graph draws a flat `CLIENT` and no flat `PRODUCER`, so the sends of Pub/Sub, Service
+  Bus, Event Hubs, MassTransit and `MessageTracker` gain an edge and none is lost. On Tempo, a delivery logged from the consumer
+  (Pub/Sub's `Receive`, Event Hubs' `ProcessEvent`) now reads broker to app, where it read backwards, and a Kafka produce and its
+  consume in one POST draw both edges, where they drew one. Jaeger draws an edge only from parent and child, so nothing moves there.
+- **`db.system.name` uses OpenTelemetry's registry.** `microsoft.sql_server`, `oracle.db`, `azure.cosmosdb`, `aws.dynamodb` and
+  `gcp.spanner`, where it wrote `mssql`, `oracle`, `cosmosdb`, `dynamodb` and `spanner`. The registry says one that applies MUST be
+  used. It names neither BigQuery nor Bigtable, so each keeps its name. A tap reads the old names and the new ones as the same
+  database, and through a tap the call's address is now `gcp-spanner://`, `azure-cosmosdb://`, `aws-dynamodb://` or
+  `oracle-db://`, as it already was for a span from any other OTel instrumentation.
+
+- **The service card reads a delivery.** A consumer's own `TrackSendEvent("Consume", ...)` on a table's scheme, from the service the
+  card is about, reads `consumes`, where it read no direction, as the table now holds deliveries. A tracker's own rows do not move.
+
+### Added
+
+- **`messaging.system`, `messaging.operation.name`, `messaging.operation.type` and `messaging.destination.name`** on a span on a
+  broker's address, which the conventions require of a message and which were not written. No measured backend's edge depends on
+  them, but the tap drops a `PRODUCER` that has no `messaging.system`, so an exporter feeding a tap with messaging capture on now
+  delivers those calls, once each, where it dropped them. `messaging.operation.type` is `send`, `receive` or `process`; a settlement
+  carries none, as Kronikol does not separate it from management.
+
+### Fixed
+
+- **A messaging span read through the tap is an `Event` when it moves a message** (`CaptureKinds` with `messaging`, off by
+  default). `SpanToInteractionMapper` read the span's kind and wrote no `MetaType`, so an ingested `PRODUCER` span was `Default`.
+  It now reads `messaging.operation.type` first, as a real Kafka poll is a `CLIENT` of type `receive`, then the kind; a `settle` is
+  `Default`. Merging a wire capture with its span keeps the span's kind where the wire named none.
+- **`MessageTracker` no longer splits a message's trace.** With no HTTP context, or with a trace header that is no GUID, a request
+  and its response each took a new trace id, and OTLP, which pairs on both ids, exported two orphan spans for one call. A request logged inside an HTTP context with its response
+  logged outside one still differs.
+- **`http.request.method` is written only on `http` and `https`.** Through NDJSON a Cosmos DB `Delete` or a Redis `GET` got it, beside
+  its `db.system.name`. The span's name stays flattened through NDJSON: `Delete` in process, `DELETE` from a file.
+
+### Costs, named
+
+- **A hand-logged `Event` through NDJSON.** A record read back from a file has no mark of how it was logged, so its label is all
+  that says what it is: `TrackSendEvent("Process order", ...)` reads `CONSUMER` from a file, where it reads as a send in process.
+  Of the 194 measured records, 19 differ so, none a tracker's own. Two more keep `CONSUMER` with the broker as `service.name`:
+  `TrackConsumeEvent` labelled `Receive` on `pubsub` or `Process` on `eventhubs`.
+- **A tapped publish's warm-up mark.** A tap with messaging capture on now reads a publish as an `Event`, which the warm-up rule
+  does not judge, so an uncalled worker's slow first publish through the tap goes from `first` to none.
+- **A span through a tap and out again does not keep its kind** (with `IncludeSpanSourced` on), as a record keeps none: 11 of the
+  plan's 17 hand-made shapes leave with another kind, among them `CONSUMER` spans that leave `CLIENT`, and 3 of 6 real spans in its
+  capture, MassTransit's `Send` and both Kafka `Send`.
+
+No history rule moves: a call's line holds no kind, and over 986 lines the only difference was `kind`. Two chains through a tap read as
+changed once. An exporter feeding a messaging-on tap gains a line, as above. And a label read as a verb through NDJSON no longer carries
+`http.request.method`, so a default tap, which read a Storage Queues `Delete` as `App>Store DELETE /orders OK`, now drops that span, as it
+drops any message, and reads it as `DELETE orders` with `messaging` on. Kronikol4J has no OTLP code, so only its ledger moves.
+
 ## [5.27.14] - 2026-11-02
 
 The patch part moves (5.27.13 to 5.27.14): bug fixes that change what readers see, with no new option and no new public

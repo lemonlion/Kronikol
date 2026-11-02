@@ -358,6 +358,7 @@ public sealed record InteractionRecord
             Error = string.IsNullOrWhiteSpace(Error) ? null : Error,
             TestDouble = string.IsNullOrWhiteSpace(TestDouble) ? null : TestDouble,
             RecordedBefore8 = mended is null ? null : new RecordedBefore(ParseMethod(Method), Unknown(Uri)),
+            ReadFromRecord = true,
         };
     }
 

@@ -130,7 +130,7 @@ public sealed class SpannerCallsAreCallsTests : IDisposable
         var span = OtlpSpanMapper.Map(logs[0], logs[1], new OtlpExportOptions { Endpoint = new Uri("http://localhost:4318/v1/traces") }, T0);
 
         Assert.Equal(OtlpSpanKind.Client, span.Kind);
-        Assert.Equal("spanner", span.Attributes.Single(a => a.Key == "db.system.name").Value);
+        Assert.Equal("gcp.spanner", span.Attributes.Single(a => a.Key == "db.system.name").Value);
     }
 
     private void WriteReport(DataFormat format)

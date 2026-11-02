@@ -121,7 +121,7 @@ internal static class CallGraphBuilder
                 direction = kind switch
                 {
                     MessageLabelKind.Publishes => "publishes",
-                    MessageLabelKind.Receives => "consumes",
+                    MessageLabelKind.Receives or MessageLabelKind.Delivers => "consumes",
                     _ => null
                 };
             }

@@ -204,6 +204,59 @@ public class MessageTrackerTests
         Assert.Equal(RequestResponseMetaType.Event, responseLog.MetaType);
     }
 
+    // ─── One call, one trace id (plans/CALLS_AND_EVENTS_PLAN.md F15) ───
+
+    [Fact]
+    public void A_request_and_its_response_share_a_trace_id_with_no_http_context()
+    {
+        var accessor = new HttpContextAccessor { HttpContext = null };
+        var tracker = CreateTracker(accessor, testInfoFallback: () => ("FallbackTest", "fallback-id-f15"));
+
+        var id = tracker.TrackMessageRequest("ServiceBus", "Queue", new Uri("servicebus://queue"), new { Msg = "hello" });
+        tracker.TrackMessageResponse("ServiceBus", "Queue", new Uri("servicebus://queue"), id);
+
+        var logs = GetLogsById(id);
+        Assert.Equal(2, logs.Length);
+        Assert.Equal(logs[0].TraceId, logs[1].TraceId);
+        Assert.NotEqual(Guid.Empty, logs[0].TraceId);
+    }
+
+    [Fact]
+    public void Two_calls_with_no_http_context_do_not_share_a_trace_id()
+    {
+        // What nesting reads: a shared trace id would make one call the parent of another.
+        var accessor = new HttpContextAccessor { HttpContext = null };
+        var tracker = CreateTracker(accessor, testInfoFallback: () => ("FallbackTest", "fallback-id-f15"));
+
+        var first = GetLogsById(tracker.TrackMessageRequest("ServiceBus", "Queue", new Uri("servicebus://queue"), new { Msg = 1 })).Single();
+        var second = GetLogsById(tracker.TrackMessageRequest("ServiceBus", "Queue", new Uri("servicebus://queue"), new { Msg = 2 })).Single();
+
+        Assert.NotEqual(first.TraceId, second.TraceId);
+    }
+
+    [Fact]
+    public void A_trace_id_header_that_is_no_guid_leaves_a_request_and_its_response_on_one_trace()
+    {
+        var tracker = CreateTracker(CreateHttpContextAccessor(traceId: "not-a-guid"));
+
+        var id = tracker.TrackMessageRequest("ServiceBus", "Queue", new Uri("servicebus://queue"), new { Msg = "hello" });
+        tracker.TrackMessageResponse("ServiceBus", "Queue", new Uri("servicebus://queue"), id);
+
+        var logs = GetLogsById(id);
+        Assert.Equal(logs[0].TraceId, logs[1].TraceId);
+    }
+
+    [Fact]
+    public void A_response_with_no_request_id_gets_a_trace_id_of_its_own()
+    {
+        var accessor = new HttpContextAccessor { HttpContext = null };
+        var tracker = CreateTracker(accessor, testInfoFallback: () => ("FallbackTest", "fallback-id-f15-empty"));
+
+        tracker.TrackMessageResponse("ServiceBus", "Queue", new Uri("servicebus://queue"), Guid.Empty);
+
+        Assert.NotEqual(Guid.Empty, RequestResponseLogger.RequestAndResponseLogs.Last(l => l.TestId == "fallback-id-f15-empty").TraceId);
+    }
+
     // ─── Fallback test info ─────────────────────────────────────
 
     [Fact]

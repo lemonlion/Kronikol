@@ -39,6 +39,7 @@ say so: `<scratch>` in a probe or a result stands for the folder that held the t
 | `probes/merge-round-trip-real.cs`, `-fragment.cs`, `-jsondiff.py`, `-querydiff.py` | The same over real reports and their fragments, by reflection: every scenario's call lines. Counts and generic labels only | `results/merge-round-trip-real-*.txt`, `-querydiff.txt` |
 | `probes/merge-round-trip-shards.sh`, `-bp-run.sh`, `-bp-bump.py` | A real consumer's lane in two shards, with and without the ledger visible at run time: C1 and C2 | `results/merge-round-trip-real-lane.txt` |
 | `probes/mutate.py`, `probes/mutations_r1.py` | R1's facts on unfixed source, and does each of its changes have a fact that fails without it? | `results/r1-merged-history-red.txt`, `results/r1-mutations.txt` |
+| `probes/mutate.py`, `probes/mutations_r3.py` | Does each of R3's changes have a fact that fails without it? | `results/r3-mutations.txt` |
 | `probes/merge-round-trip-candidate-patch.py`, `-shards-candidate.sh` | Candidate fixes for F20 and F21, checked in a copy, never against the repository's suite | `results/merge-round-trip-candidate.txt` |
 | `probes/warm-up-shapes.cs` | R2's warm-up table: 31 shapes through the real trackers, on today's build, R2 and R2 with Q5 (b) | `results/warm-up-shapes.txt`, `-5.27.13.txt`, `-r2.txt`, `-r2-option.txt` |
 | `probes/warm-up-replay-r2.cs` | The real report's marks with R2's kinds applied, and on the option's real code | `results/warm-up-replay-r2-breakfastprovider.txt`, `results/warm-up-replay-r2-option-breakfastprovider.txt` |

@@ -45,7 +45,7 @@ trackers. The report is right about Spanner. The suggested edit is right too, bu
 **What this plan does:** define the field (§5.1), stop a merge from reading it and keep every method as the run wrote it (§5.2), correct
 the three trackers and guard the rule (§5.3), all in one patch that closes #220 (R1). Then make OTLP's span kinds follow OTel's table
 (R3) and apply the rule to the messaging trackers (R2). **The prototypes change the order the owner approved:** R2 without R3 moves
-three receives from a right `CLIENT` to a wrong `PRODUCER`. R3 without R2 makes no tracker's row worse (RUN, 202 rows), at two narrow costs that §5.5 names, so this plan recommends shipping R3 before R2 (Q12).
+three receives from a right `CLIENT` to a wrong `PRODUCER`. R3 without R2 makes no tracker's row worse (RUN, 202 rows), at the costs that §5.5 names, so this plan recommends shipping R3 before R2 (Q12).
 
 Prototype results: on R1 the real data's 20,781 scenario positions make the same call lines with and without a merge, and all ten of the original
 history scenarios read `stable`. R2 is 8 source files with one test pin to flip. R3 is larger than the first draft said (§5.5).
@@ -173,7 +173,7 @@ The report's scripts never read the field (READ: no `metaType` in any `.js`). Th
 | F23 | R2 | §8 |
 | F10, F11, F15 | R3 | §6.8 |
 | F19 | R3 removes `http.request.method`. The span name stays flattened through NDJSON (F16, Q9) | §6.8 |
-| F17 | R3, if Q10 says so | §6.8 |
+| F17 | R3 | §6.8 |
 | F13 | Kronikol4J's own issue (Q7), and its ledger row in each release | The ledger |
 | F16 | Left (Q9). Its harms are F19, half fixed by R3's gate, and F2's on an ingest. Q9 (a) accepts them | |
 | F18 | Own issue (Q11). R1 corrects the wiki's false sentence | §8 |
@@ -396,11 +396,11 @@ So the mapper reads, in order, and the first that answers wins:
 1. Not `Event`: `CLIENT`.
 2. A statement-shaped category written as `Event`: `CLIENT`, and no `messaging.*`. The record keeps its `Event` (§5.1).
 3. An HTTP verb on `http(s)`: `CLIENT`. HTTP's table says MUST, and at `Raw` the label cannot separate SQS's send from its receive.
-4. `NoteOnRight`, which only `TrackConsumeEvent` sets: `CONSUMER`, on any scheme and under any label.
+4. `NoteOnRight`, which `TrackConsumeEvent` sets, as a hand call of `TrackMessageRequest` may: `CONSUMER`, on any scheme and under any label.
 5. `LabelIsFree`, the rest of `MessageTracker`: nothing is read, as the label is its author's words, so it is a send (step 8).
 6. The row of the record's scheme in `MessageTable`, MassTransit's `Raw` label included: `Delivers` is `CONSUMER`, `Receives` and `Neither` are `CLIENT`, `Publishes` is a send (step 8).
 7. Only a record read back from NDJSON, or one a span or a merge made, as neither mark is on the wire: the label's whole first word. `Consume`, `Process` and `Deliver` are `CONSUMER`; `Receive`, `ReceiveMessage`, `ReceiveMessages`, `Pull`, `Poll`, `Peek` and `PeekMessages` are `CLIENT`.
-8. A send, and anything else at `Event`: **Q6.** (a) `PRODUCER`, which is how the patch reads, or (b) `CLIENT` except Kafka's produce, which is OTel's letter, as only Kafka's tracker injects a context (`prototype/r3-option-send-is-client.patch`). By the letter 86 of the 89 `PRODUCER` rows are `CLIENT`, and the other three are `TrackProduce` (RUN). Two Kafka routes inject nothing and still read `PRODUCER`: `PropagateTraceContext` off, and `LogProduce` by hand (RUN, `r3-kafka-creation-context`).
+8. A send, and anything else at `Event`: **Q6, taken as (b).** (a) `PRODUCER`, as the wiki said, or (b) `CLIENT` except Kafka's produce, which is OTel's letter, as only Kafka's tracker injects a context (`prototype/r3-option-send-is-client.patch`). By the letter 86 of the 89 `PRODUCER` rows are `CLIENT`, and the other three are `TrackProduce` (RUN). Two Kafka routes inject nothing and still read `PRODUCER`: `PropagateTraceContext` off, and `LogProduce` by hand (RUN, `r3-kafka-creation-context`).
 
 **What R3 needs beyond the kind.** None of this was in the first draft:
 
@@ -426,11 +426,11 @@ What backends draw (RUN, `r3-backends`, read by edge):
 
 Kronikol's spans are flat, with no parent and no links (READ). So on the Collector today a Pub/Sub publish draws no edge and an SQS send does. Q6 (a) with R2 would take SQS's edge away (INFERRED from this table, not run through the real tracker). Under Q6 (b) no Collector edge is lost, and the sends of Pub/Sub, Service Bus, Event Hubs, MassTransit and `MessageTracker` gain one. On Tempo, at either Q6 value, six rows' app-to-broker edge (Pub/Sub `Receive`, Event Hubs `ProcessEvent`) becomes broker-to-app, which corrects a backward edge. A Kafka produce and its consume in one POST draw one of two Tempo edges today and both on R3 (c14, c15). This table comes from hand-written payloads posted with curl: it says what each shape of span draws, and `r3-span-kinds` says which shape each record takes.
 
-`Kronikol.csproj:56` grants the OTLP package core's internals, so `MessageTable` needs no new public surface (RUN). `kronikol export` uses the same mapper, with step 7 for what the wire loses. `CallGraphBuilder` takes one line for `Delivers`, and the card does not move (RUN, 796 card facts). **Prototyped:** 16 files, 9 source +259 -31 and 7 test +712 -3 (`prototype/r3-first-cut.patch`). The literal table of this section's first draft got 18 of 147 rows wrong with the whole suite green, because nothing pins a message's kind, and the five steps of its second draft got 44 of the final probe's 194 wrong (RUN, `r3-span-kinds`).
+`Kronikol.csproj:56` grants the OTLP package core's internals, so `MessageTable` needs no new public surface (RUN). `kronikol export` uses the same mapper, with step 7 for what the wire loses. `CallGraphBuilder` takes one line for `Delivers`, and a tracker's rows on the card do not move (RUN, 796 card facts). A consumer's own `TrackSendEvent("Consume", ...)` on a table's scheme does: it reads `consumes`, where it read no direction, as the table now holds deliveries. **Prototyped:** 16 files, 9 source +259 -31 and 7 test +712 -3 (`prototype/r3-first-cut.patch`). The literal table of this section's first draft got 18 of 147 rows wrong with the whole suite green, because nothing pins a message's kind, and the five steps of its second draft got 44 of the final probe's 194 wrong (RUN, `r3-span-kinds`).
 
 **Order.** R2 without R3 moves three receives (`ReceiveMessage`, `ReceiveMessages`, `PeekMessages`) from a right `CLIENT` to a wrong `PRODUCER` (RUN). R3 without R2 makes no tracker's row worse: of 202 rows 0 are worse, 69 better and 11 still wrong (4 `Other`, and 7 sends under Q6 (a)), because step 1 returns `CLIENT` for any record not at `Event` (RUN, `r3-worse-kinds`). So R3 ships first (Q12): the order cures the receives, and Q6 (b) cures the Collector edges. New captures of R1's database rows need nothing, as they are `Default`. An NDJSON file from before R1 takes step 2.
 
-**R3 has two narrow costs, at any order.** A hand-logged record through NDJSON, above. And **a tapped publish's warm-up mark:** F11 moves a Messaging-on tap's record from `Default` to `Event`, which `WarmUpCalls.cs:155` skips, so an uncalled worker's slow first publish through the tap goes from `first` to none. That is 10 of 10 shapes on R3 alone and 8 of 10 with Q5 (b), as `Send orders` on `kafka://` reads `Unknown`. A Kafka poll's false `first` goes with them. Settle, HTTP and database calls keep theirs. Messaging capture is off by default, so only a tap user who turned it on meets this (RUN, `r3-warm-up-tap*`).
+**R3 has these costs, at any order.** A hand-logged record through NDJSON, above. And **a tapped publish's warm-up mark:** F11 moves a Messaging-on tap's record from `Default` to `Event`, which `WarmUpCalls.cs:155` skips, so an uncalled worker's slow first publish through the tap goes from `first` to none. That is 10 of 10 shapes on R3 alone and 8 of 10 with Q5 (b), as `Send orders` on `kafka://` reads `Unknown`. A Kafka poll's false `first` goes with them. Settle, HTTP and database calls keep theirs. Messaging capture is off by default, so only a tap user who turned it on meets this (RUN, `r3-warm-up-tap*`).
 
 ### 5.6 Rejected
 
@@ -548,7 +548,7 @@ Proof: the matrix `kinds-by-tracker` on the release gives 0 bold rows of §2.2. 
 
 ### 6.8 OTLP (R3)
 
-The patch adds 152 OTLP cases and 60 core cases net, so `tests/Kronikol.Tests.Otlp` goes from 247 to 399 and passes, as does the whole core on R1 and R3, 11,662 passed and 2 skipped of 11,664. On R1's behaviour OTLP fails 111 of 399 across 19 facts, and the core's filter 12 of 399 across 5. The `MessageTable` facts need the new API, so they were not run red. On the first cut's code the facts added after the review fail 45 of 399 across 9 (RUN, `r3-test-runs`). Q6 (b) flips 41 cases in 8 OTLP facts and 1 core case, and adds one fact (RUN).
+The first patch added 152 OTLP cases and 60 core cases net, so `tests/Kronikol.Tests.Otlp` went from 247 to 399 (447 in the release, with the review's cases) and passed, as does the whole core on R1 and R3, 11,662 passed and 2 skipped of 11,664. On R1's behaviour OTLP fails 111 of 399 across 19 facts, and the core's filter 12 of 399 across 5. The `MessageTable` facts need the new API, so they were not run red. On the first cut's code the facts added after the review fail 45 of 399 across 9 (RUN, `r3-test-runs`). Q6 (b) flips 41 cases in 8 OTLP facts and 1 core case, and adds one fact (RUN).
 
 - One row per line of §5.5's broker table. The OTLP test project references only OTLP and core, so a tracker's real record reaches it through nine more references or through `r3-span-kinds`, whose 194 rows are the acceptance. Its expected column is hand-written, so it is checked against OTel's table, not against the code.
 - `kronikol export` over an NDJSON file: no tracker's row changes kind, and `Read_back_from_a_record_its_label_is_all_that_says_what_it_is` pins the hand-logged rows that do.
@@ -556,7 +556,7 @@ The patch adds 152 OTLP cases and 60 core cases net, so `tests/Kronikol.Tests.Ot
 - `TrackSendEvent` with no HTTP context exports one span, not two.
 - `A_verb_on_no_web_address_exports_no_http_method` (F19), which also pins the span name it leaves.
 - Two pins flip: `Event_meta_type_maps_to_producer_kind`, and `Each_scheme_reads_its_trackers_labels("eventhubs","Process ← telemetry","Receives")`, now `Delivers`.
-- `Db_categories_reverse_map_to_db_system_name` flips if Q10 says (b).
+- `Db_categories_reverse_map_to_db_system_name` flips.
 
 Proof: the probes `r3-span-kinds` and `r3-real-capture` on the release. `r3-backends` is the source of §5.5's edge table and proves nothing on the release, as it runs no Kronikol code.
 
@@ -579,7 +579,7 @@ Both parts go in one release (Q2): the tracker change must not reach anyone befo
 rewritten, three lines removed, a rule stated, and the facts of §6. The prototype's source diff is 15 lines added and 29 removed.
 
 **R3, a minor: OTLP follows OTel.** §5.5, §6.8. Larger than R1 and R2 together, and it changes what a trace backend draws, so its changelog says so in terms,
-gives §5.5's edge table and names its two narrow costs.
+says what a backend draws and names its costs.
 
 **R2, a patch: messaging follows the rule.** §5.4, §6.7. Report output moves for SQS, SNS, EventBridge, Storage
 Queues, Pub/Sub, Event Hubs, Kafka and MassTransit, and warm-up's marks with it (Q5), so the changelog lists what moves from which card.
@@ -671,7 +671,7 @@ and `MassTransitTracker`; `src/Kronikol/Reports/WarmUpCalls.cs:46,155` and a com
 - **Q4. MassTransit's fault records** (R2): (a) `Default`, as `MessageTable` already reads them, (b) stay `Event`.
   **Recommended: (a).** They record that a send, publish or consume failed, and the table's comment says "a fault is no message". On a working send the event card holds the message; under (b) the only card on a failed send would hold the exception's text in that slot, and "`Neither` is `Default`" would be false on three operations. (a) means a failed MassTransit send leaves no event, where Kafka's and Service Bus's keep one, as those log the call (§5.4). The best argument for (b) is that a consume fault did deliver its message (`CallGraphBuilder.cs:107`), yet `kind` shows no event; the record still holds no message. They give no warm-up mark either way (RUN).
 - **Q5. Warm-up in R2,** reversed since the first draft, which said a direction signal does not exist. `MessageTable.Read` gives it. (a) Leave warm-up's test: R2 loses a test's own publish marks on four packages. (b) One condition: an `Event` is skipped unless the table reads `Publishes`, which keeps those marks except at `Raw`, adds Kafka's, Service Bus's, Pub/Sub's and Event Hubs', and adds a clause to the class's exception, as `warmup.py` needs no port (§5.4). **Recommended: (b), in R2.** Without it R2 regresses a behaviour consumers have.
-- **Q6. A publish's span kind** (R3): (a) `PRODUCER` for all, as the wiki says today, (b) `CLIENT` except Kafka's produce, which is OTel's letter. **Recommended: (b).** Only Kafka's tracker injects a context. No Collector edge is lost, and the sends of Pub/Sub, Service Bus, Event Hubs, MassTransit and `MessageTracker` gain one, where (a) with R2 takes SQS's away. What it costs, measured (`r3-option-send-is-client`): 86 of 194 rows move from `PRODUCER` to `CLIENT`, so a dashboard that filters on `PRODUCER` needs `messaging.operation.type=send`; a real `PRODUCER` span through a tap and out again comes back `CLIENT` on 3 of 6 real rows; and two Kafka routes that inject nothing still read `PRODUCER`. The patch holds (a). (b) is a small change to one source file and 42 test cases (`prototype/r3-option-send-is-client.patch`).
+- **Q6. A publish's span kind** (R3): (a) `PRODUCER` for all, as the wiki says today, (b) `CLIENT` except Kafka's produce, which is OTel's letter. **Recommended: (b).** Only Kafka's tracker injects a context. No Collector edge is lost, and the sends of Pub/Sub, Service Bus, Event Hubs, MassTransit and `MessageTracker` gain one, where (a) with R2 takes SQS's away. What it costs, measured (`r3-option-send-is-client`): between (a) and (b), 86 of 194 rows move from `PRODUCER` to `CLIENT`. Against what an exporter writes today, 105 of the 143 `PRODUCER` rows go to `CLIENT`, 35 to `CONSUMER` and 3 stay, so a dashboard that filters on `PRODUCER` needs to filter on `messaging.operation.type` being present, as `send` alone drops 53 of the 143; a real `PRODUCER` span through a tap and out again comes back `CLIENT` on 3 of 6 real rows, and 11 of 17 shapes leave with another kind; and two Kafka routes that inject nothing still read `PRODUCER`. The first patch held (a). (b) was a small change to one source file and 42 test cases (`prototype/r3-option-send-is-client.patch`), and the release holds it.
 - **Q7. Kronikol4J:** file an issue for F13 when R1 ships, as `lemonlion/Kronikol4J#1` was for the service card? **Recommended: yes.**
 - **Q9. An ingest's labels (F16):** (a) leave them, (b) keep a mixed-case label as written. **Recommended: (a).** External capturers
   do send `get`, which should read as a verb, and it raises no false alarm. R3 removes half of F19, the `http.request.method`. The span name stays `DELETE` through NDJSON, and F2's harms on an ingest stay (its labels, `query`, `service.json`, a Storage Queues `DELETE` as a message row): (a) accepts them.
@@ -726,6 +726,16 @@ Not done: a real Actions or Azure DevOps runner (F18 is simulated), Linux and fl
 - **`A_merge_keeps_a_calls_operation_id` could not fail on its message half.** With no declared service a card lists no message rows, so its "no row" was empty either way. It now declares one, and that half is asserted first.
 - **The new Spanner facts wrote to the repository's real ledger.** That project now sets `KRONIKOL_HISTORY=off`, as `HistoryPathResolver` says test projects do. Kafka and Otlp do the same, so R4 gives them the same file.
 - **The guard's own fact did not test the guard,** its root walk counted levels and it cut a line at the slashes of `spanner://`. Each is fixed. The wiki's run id sentence dropped a custom `HistoryRunId`; ten pages kept `event-style (blue) arrows` and three lines "white background"; `WarmUpCalls`' comment said "no message operation is judged", false until R2; a browser row never checked the page was dark.
+
+**2026-11-02, R3 built as 5.28.0, Q6 taken as (b).** Whole suite: 54 projects, 23,381 passed, 93 skipped, and 1 failed, `R16_Back_lands_on_the_same_scenario_after_the_features_above_it_were_drawn` under WebKit, on a machine other runs shared, which passed three times of three alone. ProxyTap 30 of 30, Release build clean. All 21 mutations caught: `results/r3-mutations.txt`. An independent review found no fault in a kind on any table row, and these around them:
+
+- **The changelog's "86 move to `CLIENT`" was the gap between (a) and (b), not the upgrade.** Upgrading moves 105 of 143 `PRODUCER` rows to `CLIENT` and 35 to `CONSUMER`. Its advice to filter on `send` would have dropped 53 of the 143.
+- **Three rows of the decision had no failing fact,** as `CLIENT` is what falls through: a Kafka produce at `Default`, a statement read back from a file, and an HTTP call marked as a delivery each now have one. `A_call_that_is_no_message` held only an HTTP call, so `grpc://` joins it.
+- **The tap's own schemes reached the export as no system.** `gcp-pubsub`, `aws-sqs` and `aws-sns` left as themselves, and a span's own destination read the host's slot, so `servicebus://ServiceBus/orders` named `ServiceBus`. Both are fixed, and a tapped record keeps its parties.
+- **Two-word operations lost their second word,** `Consume Fault` read back as `Consume` and `Send Offsets` as `Send`.
+- **A name map keyed on a database's old name stopped hitting** once its spans moved to the registry's. `OtherNameOf` reads both ways.
+
+Still to prove once it is published: `r3-span-kinds`, `r3-real-capture`, and `r3-fingerprint-diff` again, as its 986 lines predate F17.
 
 ## Appendix A. The comment closing #220 (Q8), to post when R1 is published
 

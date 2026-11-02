@@ -58,6 +58,70 @@ public class ExportCommandTests : IDisposable
         Assert.Contains("dry run", stdout);
     }
 
+    // The same mapper as the in-process paths, on what NDJSON carries (plans/CALLS_AND_EVENTS_PLAN.md 6.8).
+    [Theory]
+    [InlineData("Publish → orders", "pubsub:///orders", OtlpSpanKind.Client, "gcp_pubsub")]
+    [InlineData("Pull ← orders-sub", "pubsub:///orders-sub", OtlpSpanKind.Client, "gcp_pubsub")]
+    [InlineData("Receive ← orders-sub", "pubsub:///orders-sub", OtlpSpanKind.Consumer, "gcp_pubsub")]
+    [InlineData("Consume ← orders", "kafka:///orders", OtlpSpanKind.Consumer, "kafka")]
+    [InlineData("Ack", "pubsub:///orders-sub", OtlpSpanKind.Client, "gcp_pubsub")]
+    public void A_message_exports_the_kind_it_would_in_process(string label, string uri, OtlpSpanKind kind, string system)
+    {
+        var (req, resp) = InteractionRecord.Pair(TestId, "cli › exports", label, uri, "Broker", "App",
+            statusCode: "OK", requestTimestamp: T0, responseTimestamp: T0.AddMilliseconds(5));
+        var path = Path.Combine(_dir, "messages.ndjson");
+        File.WriteAllLines(path, [(req with { MetaType = "Event" }).ToJson(), (resp with { MetaType = "Event" }).ToJson()]);
+        var outFile = Path.Combine(_dir, "export.json");
+
+        Assert.Equal(0, ExportCommand.Run([path, "--dry-run", "--out", outFile], new StringWriter(), new StringWriter()));
+
+        var span = Assert.Single(OtlpTraceReader.ReadJson(File.ReadAllBytes(outFile)));
+        Assert.Equal(kind, span.Kind);
+        Assert.Equal(system, span.Attribute("messaging.system"));
+    }
+
+    // F19 and F16 on the way out of NDJSON. A record's method reads as a verb in any case, so Cosmos DB's Delete is an HttpMethod here though it
+    // is a string in process. No database call is an HTTP call; the span's name is still the method as NDJSON gave it back, DELETE.
+    [Theory]
+    [InlineData("Delete", "cosmosdb:///shop/orders", "CosmosDB", "DELETE", "azure.cosmosdb")]
+    [InlineData("DELETE", "spanner:///shop", "Spanner", "DELETE", "gcp.spanner")]
+    [InlineData("GET", "redis://db0/k", "Redis", "GET", "redis")]
+    [InlineData("Delete", "storagequeue:///orders", "MessageQueue", "DELETE", null)]
+    public void A_verb_on_no_web_address_exports_no_http_method(string label, string uri, string category, string name, string? system)
+    {
+        var (req, resp) = InteractionRecord.Pair(TestId, "cli › exports", label, uri, "Store", "App",
+            statusCode: "OK", requestTimestamp: T0, responseTimestamp: T0.AddMilliseconds(5));
+        var path = Path.Combine(_dir, "verbs.ndjson");
+        File.WriteAllLines(path, [(req with { DependencyCategory = category }).ToJson(), (resp with { DependencyCategory = category }).ToJson()]);
+        var outFile = Path.Combine(_dir, "export.json");
+
+        Assert.Equal(0, ExportCommand.Run([path, "--dry-run", "--out", outFile], new StringWriter(), new StringWriter()));
+
+        var span = Assert.Single(OtlpTraceReader.ReadJson(File.ReadAllBytes(outFile)));
+        Assert.Null(span.Attribute("http.request.method"));
+        Assert.Equal(name, span.Name);
+        Assert.Equal(system, span.Attribute("db.system.name"));
+        Assert.Equal(OtlpSpanKind.Client, span.Kind);
+    }
+
+    // A record read back from a file has no mark of how it was logged, so its label is all that says what it is (OtlpSpanMapper.ReadingOf).
+    [Theory]
+    [InlineData("Process order", "event://orders", OtlpSpanKind.Consumer)]
+    [InlineData("Poll orders", "event://orders", OtlpSpanKind.Client)]
+    [InlineData("Publish", "event://orders", OtlpSpanKind.Client)]
+    public void A_hand_logged_event_exports_by_its_labels_first_word(string label, string uri, OtlpSpanKind kind)
+    {
+        var (req, resp) = InteractionRecord.Pair(TestId, "cli › exports", label, uri, "Bus", "App",
+            statusCode: "OK", requestTimestamp: T0, responseTimestamp: T0.AddMilliseconds(5));
+        var path = Path.Combine(_dir, "hand.ndjson");
+        File.WriteAllLines(path, [(req with { MetaType = "Event" }).ToJson(), (resp with { MetaType = "Event" }).ToJson()]);
+        var outFile = Path.Combine(_dir, "export.json");
+
+        Assert.Equal(0, ExportCommand.Run([path, "--dry-run", "--out", outFile], new StringWriter(), new StringWriter()));
+
+        Assert.Equal(kind, Assert.Single(OtlpTraceReader.ReadJson(File.ReadAllBytes(outFile))).Kind);
+    }
+
     [Fact]
     public void A_projected_stores_marker_records_export_no_span()
     {

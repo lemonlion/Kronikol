@@ -21,7 +21,7 @@ namespace Kronikol.Ingestion;
 /// content and no span id is wire-like. Records that are neither (or that carry no timestamp) are never
 /// merged; nothing is ever dropped without a twin.</para>
 /// <para>The merged pair keeps the wire record's position, content, status and label, takes the span
-/// record's <c>testId</c>/<c>traceId</c>/<c>activityTraceId</c>/<c>activitySpanId</c> (and its <c>phase</c>, when the
+/// record's <c>testId</c>/<c>traceId</c>/<c>activityTraceId</c>/<c>activitySpanId</c> (and its <c>phase</c> and <c>metaType</c>, when the
 /// wire record has none), and records the
 /// fact on the request as the pseudo-header <c>x-kronikol-captured-by: wire + span</c> (and in
 /// <see cref="InteractionRecord.CapturedBy"/>), so the diagram note says where the arrow came from.</para>
@@ -324,6 +324,8 @@ public static class InteractionMerger
         Phase = wire.ResolvedPhase == TestPhase.Unknown ? span.Phase ?? wire.Phase : wire.Phase,
         // What answered in the service's place, as either view saw it: the wire's when it said, else the span's (#190).
         TestDouble = wire.TestDouble ?? span.TestDouble,
+        // A wire capturer reads bytes, and may not know a message from a call; the span's kind does.
+        MetaType = wire.MetaType ?? span.MetaType,
         CapturedBy = MergedSource,
     };
 

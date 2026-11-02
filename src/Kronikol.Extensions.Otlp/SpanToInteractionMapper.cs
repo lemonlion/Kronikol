@@ -1,5 +1,6 @@
 using System.Globalization;
 using Kronikol.Constants;
+using Kronikol.Tracking;
 
 namespace Kronikol.Extensions.Otlp;
 
@@ -14,7 +15,8 @@ namespace Kronikol.Extensions.Otlp;
 /// <c>db.collection.name</c>←<c>db.mongodb.collection</c>, <c>db.namespace</c>←<c>db.name</c>/<c>db.redis.database_index</c>,
 /// <c>server.address</c>/<c>server.port</c>←<c>net.peer.name</c>/<c>net.peer.port</c>,
 /// <c>http.request.method</c>←<c>http.method</c>, <c>url.full</c>←<c>http.url</c>,
-/// <c>http.response.status_code</c>←<c>http.status_code</c>, <c>db.system.name</c>←<c>db.system</c>.</para>
+/// <c>http.response.status_code</c>←<c>http.status_code</c>, <c>db.system.name</c>←<c>db.system</c>,
+/// <c>messaging.operation.type</c>←<c>messaging.operation</c>.</para>
 /// <para><strong>Labels.</strong> Mongo uses the same directional arrows as
 /// <c>Kronikol.Extensions.MongoDB</c> (<c>Find ← Trial</c>, <c>Insert → Trial</c>,
 /// <c>FindAndModify ↔ Trial</c>) so a span-sourced arrow reads identically to an in-process one; the
@@ -348,8 +350,24 @@ public static class SpanToInteractionMapper
         var before = $"{system.ToLowerInvariant()}://{(host ?? "broker")}/{Escape(destination)}";
         var service = ResolveDependencyName(span, options, host, port, system);
         var body = Cap(span.Attribute("messaging.message.body.size", "messaging.message.id"), options.ContentCapBytes);
-        return Build(span, options, method, uri, service, body, DependencyCategories.MessageQueue) with { UriBefore8 = Before8(before, uri) };
+        return Build(span, options, method, uri, service, body, DependencyCategories.MessageQueue) with
+        {
+            UriBefore8 = Before8(before, uri),
+            MetaType = MovesAMessage(span) ? RequestResponseMetaType.Event : RequestResponseMetaType.Default,
+        };
     }
+
+    /// <summary>
+    /// Whether a messaging span moves a message, the rule of <see cref="RequestResponseMetaType.Event"/>: its operation type where it
+    /// has one, since a pull and a send may be <c>CLIENT</c> spans and a settlement always is; else its kind.
+    /// </summary>
+    private static bool MovesAMessage(OtlpSpan span) =>
+        span.Attribute("messaging.operation.type", "messaging.operation")?.Trim().ToLowerInvariant() switch
+        {
+            "send" or "publish" or "create" or "receive" or "process" or "deliver" => true,
+            "settle" => false,
+            _ => span.Kind is OtlpSpanKind.Producer or OtlpSpanKind.Consumer,
+        };
 
     private static MappedSpan MapRpc(OtlpSpan span, OtlpTapOptions options, string system)
     {
@@ -416,6 +434,21 @@ public static class SpanToInteractionMapper
         return (host, port);
     }
 
+    private static string? OtherNameOf(string system) => system switch
+    {
+        "microsoft.sql_server" => "mssql",
+        "mssql" => "microsoft.sql_server",
+        "oracle.db" => "oracle",
+        "oracle" => "oracle.db",
+        "azure.cosmosdb" => "cosmosdb",
+        "cosmosdb" => "azure.cosmosdb",
+        "aws.dynamodb" => "dynamodb",
+        "dynamodb" => "aws.dynamodb",
+        "gcp.spanner" => "spanner",
+        "spanner" => "gcp.spanner",
+        _ => null
+    };
+
     /// <summary>Participant name for the receiving side: the first <see cref="OtlpTapOptions.ServiceNameMap"/> hit among <c>peer.service</c>, <c>host:port</c>, <c>host</c> and the system name; else <c>host:port</c>, else the system name.</summary>
     private static string ResolveDependencyName(OtlpSpan span, OtlpTapOptions options, string? host, string? port, string fallback)
     {
@@ -427,6 +460,9 @@ public static class SpanToInteractionMapper
         if (host is not null)
             candidates.Add(host);
         candidates.Add(fallback);
+        // A database has two names: the registry's, which the exporter writes, and the one it wrote before. A map may be keyed on either.
+        if (OtherNameOf(fallback) is { } other)
+            candidates.Add(other);
 
         foreach (var candidate in candidates)
         {

@@ -304,7 +304,7 @@ internal static class ExportCommand
         w.WriteLine();
         w.WriteLine("  Pushes NDJSON interaction captures to an OTLP/HTTP collector as OpenTelemetry spans, so the");
         w.WriteLine("  traffic only Kronikol saw (proxy/TCP-tap hops, handler-captured calls) appears in Tempo/Jaeger");
-        w.WriteLine("  next to the app's real traces. One request/response pair becomes one CLIENT span; captured W3C");
+        w.WriteLine("  next to the app's real traces. One request/response pair becomes one span; captured W3C");
         w.WriteLine("  trace ids are preserved, and pairs without one group into one trace per test.");
         w.WriteLine();
         w.WriteLine("Arguments:");

@@ -1,0 +1,143 @@
+R3's mutations, each in the committed tree with the named facts built and run (plans/CALLS_AND_EVENTS_PLAN.md 6.8). 'the card reads no delivery' survived the first pass, so a fact was added and it was run again, below.
+== step 1: a call at Default: src/Kronikol.Extensions.Otlp/OtlpSpanMapper.cs
+   Kronikol.Tests.Otlp: 1 failed of Total tests: 447
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.A_call_that_moves_no_message_is_a_client_span_whatever_its_label_reads
+   CAUGHT
+== step 2: a statement written as an event: src/Kronikol.Extensions.Otlp/OtlpSpanMapper.cs
+   Kronikol.Tests.Otlp: 1 failed of Total tests: 447
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.A_statement_read_back_from_a_file_is_a_client_span_whatever_its_label_reads
+   CAUGHT
+== step 3: an event on the web: src/Kronikol.Extensions.Otlp/OtlpSpanMapper.cs
+   Kronikol.Tests.Otlp: 1 failed of Total tests: 447
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.An_http_call_marked_as_a_delivery_is_a_client_span
+   CAUGHT
+== a delivery mark: src/Kronikol.Extensions.Otlp/OtlpSpanMapper.cs
+   Kronikol.Tests.Otlp: 10 failed of Total tests: 447
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.TrackConsumeEvent_is_the_consumers_span_on_every_scheme(label: "Consume (Event Hub)", uri: "eventhub:///orders
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.TrackConsumeEvent_is_the_consumers_span_on_every_scheme(label: "Consume (Event Hub)", uri: "eventhubs:///order
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.TrackConsumeEvent_is_the_consumers_span_on_every_scheme(label: "Consume (Kafka)", uri: "kafka:///orders")
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.TrackConsumeEvent_is_the_consumers_span_on_every_scheme(label: "Consume (Kafka)", uri: "masstransit:///orders"
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.TrackConsumeEvent_is_the_consumers_span_on_every_scheme(label: "Consume (Pub/Sub)", uri: "pubsub:///orders-sub
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.TrackConsumeEvent_is_the_consumers_span_on_every_scheme(label: "Consume", uri: "https://events.example/api/eve
+     ... and 4 more
+   CAUGHT
+== a label its author wrote: src/Kronikol.Extensions.Otlp/OtlpSpanMapper.cs
+   Kronikol.Tests.Otlp: 7 failed of Total tests: 447
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.A_send_stays_a_send_whatever_its_label_reads(label: "Ack order", destination: "PubSub", uri: "pubsub:///orders
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.A_send_stays_a_send_whatever_its_label_reads(label: "Consume (Kafka)", destination: "OrderService", uri: "kafk
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.A_send_stays_a_send_whatever_its_label_reads(label: "Consume OrderPlaced", destination: "Bus", uri: "masstrans
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.A_send_stays_a_send_whatever_its_label_reads(label: "Peek order", destination: "Queue", uri: "servicebus://ord
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.A_send_stays_a_send_whatever_its_label_reads(label: "Process order", destination: "Hub", uri: "eventhubs:///or
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.A_send_stays_a_send_whatever_its_label_reads(label: "Receive order", destination: "PubSub", uri: "pubsub:///or
+     ... and 1 more
+   CAUGHT
+== a label read back: src/Kronikol.Extensions.Otlp/OtlpSpanMapper.cs
+   Kronikol.Tests.Otlp: 6 failed of Total tests: 447
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.A_poll_read_back_from_a_file_says_receive
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.Read_back_from_a_record_its_label_is_all_that_says_what_it_is(label: "Consume (Event Hub)", uri: "eventhub:///
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.Read_back_from_a_record_its_label_is_all_that_says_what_it_is(label: "Consume (Pub/Sub)", uri: "pubsub:///orde
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.Read_back_from_a_record_its_label_is_all_that_says_what_it_is(label: "Consume", uri: "event://orders", kind: C
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.Read_back_from_a_record_its_label_is_all_that_says_what_it_is(label: "Process order", uri: "event://orders", k
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.Read_back_from_a_record_its_label_is_all_that_says_what_it_is(label: "Process", uri: "https://payments.example
+   CAUGHT
+== Kafka reads as any other send: src/Kronikol.Extensions.Otlp/OtlpSpanMapper.cs
+   Kronikol.Tests.Otlp: 3 failed of Total tests: 447
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.An_event_takes_the_kind_OpenTelemetrys_table_gives_its_operation(uri: "kafka:///", label: "Produce", expected:
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.An_event_takes_the_kind_OpenTelemetrys_table_gives_its_operation(uri: "kafka:///orders", label: "Produce → ord
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.Only_a_Kafka_producers_context_makes_a_send_a_producer_span
+   CAUGHT
+== every send reads PRODUCER: src/Kronikol.Extensions.Otlp/OtlpSpanMapper.cs
+   Kronikol.Tests.Otlp: 42 failed of Total tests: 447
+     Kronikol.Tests.Otlp.OtlpExporterTests.Full_circle_a_message_comes_back_a_message(uri: "pubsub:///orders", label: "Publish → orders", caller: "App", se
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.A_message_a_span_saw_keeps_its_parties(capturedBy: "span", label: "Send orders", kind: Client)
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.A_message_on_a_web_address_with_a_label_of_its_own_is_still_a_send
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.A_record_with_a_relative_address_does_not_throw
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.A_send_stays_a_send_whatever_its_label_reads(label: "Ack order", destination: "PubSub", uri: "pubsub:///orders
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.A_send_stays_a_send_whatever_its_label_reads(label: "Consume (Kafka)", destination: "OrderService", uri: "kafk
+     ... and 36 more
+   CAUGHT
+== messaging on any scheme: src/Kronikol.Extensions.Otlp/OtlpSpanMapper.cs
+   Kronikol.Tests.Otlp: 2 failed of Total tests: 447
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.A_call_on_no_brokers_address_carries_no_messaging_attribute(uri: "grpc://orders/Get", label: "Get")
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.A_call_on_no_brokers_address_carries_no_messaging_attribute(uri: "mediatr://orders/Place", label: "Place")
+   CAUGHT
+== a wire record reads as the broker's arrow: src/Kronikol.Extensions.Otlp/OtlpSpanMapper.cs
+   Kronikol.Tests.Otlp: 1 failed of Total tests: 447
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.A_message_a_span_saw_keeps_its_parties(capturedBy: "wire", label: "Consume orders", kind: Consumer)
+   CAUGHT
+== the tap's Pub/Sub scheme is no system: src/Kronikol.Extensions.Otlp/OtlpSpanMapper.cs
+   Kronikol.Tests.Otlp: 1 failed of Total tests: 447
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.A_message_a_span_made_leaves_with_the_system_and_the_destination_it_came_with(uri: "gcp-pubsub://PubSub/orders
+   CAUGHT
+== the tap's SNS scheme is no system: src/Kronikol.Extensions.Otlp/OtlpSpanMapper.cs
+   Kronikol.Tests.Otlp: 1 failed of Total tests: 447
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.A_message_a_span_made_leaves_with_the_system_and_the_destination_it_came_with(uri: "aws-sns://SNS/orders", lab
+   CAUGHT
+== a span's destination read where a tracker writes it: src/Kronikol.Extensions.Otlp/OtlpSpanMapper.cs
+   Kronikol.Tests.Otlp: 2 failed of Total tests: 447
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.A_message_a_span_made_leaves_with_the_system_and_the_destination_it_came_with(uri: "eventbridge://EventBridge/
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.A_message_a_span_made_leaves_with_the_system_and_the_destination_it_came_with(uri: "servicebus://ServiceBus/or
+   CAUGHT
+== two words read as one: src/Kronikol.Extensions.Otlp/OtlpSpanMapper.cs
+   Kronikol.Tests.Otlp: 3 failed of Total tests: 447
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.An_operation_of_two_words_is_named_as_its_enum_names_it(uri: "kafka:///orders", label: "Send Offsets", name: "
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.An_operation_of_two_words_is_named_as_its_enum_names_it(uri: "masstransit:///orders", label: "Consume Fault Or
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.An_operation_of_two_words_is_named_as_its_enum_names_it(uri: "masstransit:///orders", label: "Send Fault Order
+   CAUGHT
+== http.request.method on any scheme: src/Kronikol.Extensions.Otlp/OtlpSpanMapper.cs
+   Kronikol.Tests.Otlp: 5 failed of Total tests: 447
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.Only_a_call_on_the_web_carries_an_http_method(uri: "cosmosdb:///shop/orders", verb: "DELETE", carries: False)
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.Only_a_call_on_the_web_carries_an_http_method(uri: "event://cake_events", verb: "DELETE", carries: False)
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.Only_a_call_on_the_web_carries_an_http_method(uri: "redis://db0/k", verb: "GET", carries: False)
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.Only_a_call_on_the_web_carries_an_http_method(uri: "spanner:///shop", verb: "DELETE", carries: False)
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.Only_a_call_on_the_web_carries_an_http_method(uri: "storagequeue:///orders", verb: "DELETE", carries: False)
+   CAUGHT
+== the old database name: src/Kronikol.Extensions.Otlp/OtlpSpanMapper.cs
+   Kronikol.Tests.Otlp: 3 failed of Total tests: 447
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.A_database_call_is_a_client_span_carrying_its_system
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.A_statement_written_as_an_event_is_a_client_span_and_no_message(category: "Spanner", uri: "spanner:///shop", l
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.Db_categories_reverse_map_to_db_system_name(category: "Spanner", expected: "gcp.spanner")
+   CAUGHT
+== a map keyed on the other name: src/Kronikol.Extensions.Otlp/SpanToInteractionMapper.cs
+   Kronikol.Tests.Otlp: 6 failed of Total tests: 447
+     Kronikol.Tests.Otlp.SpanToInteractionMapperTests.A_name_map_keyed_on_a_databases_other_name_still_hits(system: "aws.dynamodb", key: "dynamodb")
+     Kronikol.Tests.Otlp.SpanToInteractionMapperTests.A_name_map_keyed_on_a_databases_other_name_still_hits(system: "azure.cosmosdb", key: "cosmosdb")
+     Kronikol.Tests.Otlp.SpanToInteractionMapperTests.A_name_map_keyed_on_a_databases_other_name_still_hits(system: "cosmosdb", key: "azure.cosmosdb")
+     Kronikol.Tests.Otlp.SpanToInteractionMapperTests.A_name_map_keyed_on_a_databases_other_name_still_hits(system: "gcp.spanner", key: "spanner")
+     Kronikol.Tests.Otlp.SpanToInteractionMapperTests.A_name_map_keyed_on_a_databases_other_name_still_hits(system: "microsoft.sql_server", key: "mssql")
+     Kronikol.Tests.Otlp.SpanToInteractionMapperTests.A_name_map_keyed_on_a_databases_other_name_still_hits(system: "oracle.db", key: "oracle")
+   CAUGHT
+== a settlement moves a message: src/Kronikol.Extensions.Otlp/SpanToInteractionMapper.cs
+   Kronikol.Tests.Otlp: 2 failed of Total tests: 447
+     Kronikol.Tests.Otlp.SpanToInteractionMapperTests.A_messaging_span_is_an_event_when_it_moves_a_message(kind: Client, type: "settle", expected: Default)
+     Kronikol.Tests.Otlp.SpanToInteractionMapperTests.The_deprecated_operation_attribute_says_the_same(operation: "settle", expected: Default)
+   CAUGHT
+== a CLIENT send is no message: src/Kronikol.Extensions.Otlp/SpanToInteractionMapper.cs
+   Kronikol.Tests.Otlp: 2 failed of Total tests: 447
+     Kronikol.Tests.Otlp.OtlpExporterTests.Full_circle_a_message_comes_back_a_message(uri: "pubsub:///orders", label: "Publish → orders", caller: "App", se
+     Kronikol.Tests.Otlp.SpanToInteractionMapperTests.A_messaging_span_is_an_event_when_it_moves_a_message(kind: Client, type: "send", expected: Event)
+   CAUGHT
+== the card reads no delivery: src/Kronikol/CallGraph/CallGraphBuilder.cs
+   Kronikol.Tests: 0 failed of Total tests: 216
+   SURVIVED
+== a pair takes two traces: src/Kronikol/Tracking/MessageTracker.cs
+   Kronikol.Tests: 2 failed of Total tests: 100
+     Kronikol.Tests.Tracking.MessageTrackerTests.A_request_and_its_response_share_a_trace_id_with_no_http_context
+     Kronikol.Tests.Tracking.MessageTrackerTests.A_trace_id_header_that_is_no_guid_leaves_a_request_and_its_response_on_one_trace
+   Kronikol.Tests.Otlp: 28 failed of Total tests: 447
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.A_message_tracked_with_no_http_context_exports_one_span(route: "TrackConsumeEvent")
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.A_message_tracked_with_no_http_context_exports_one_span(route: "TrackMessageRequest")
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.A_message_tracked_with_no_http_context_exports_one_span(route: "TrackSendEvent")
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.A_send_stays_a_send_whatever_its_label_reads(label: "Ack order", destination: "PubSub", uri: "pubsub:///orders
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.A_send_stays_a_send_whatever_its_label_reads(label: "Consume (Kafka)", destination: "OrderService", uri: "kafk
+     Kronikol.Tests.Otlp.OtlpSpanMapperTests.A_send_stays_a_send_whatever_its_label_reads(label: "Consume OrderPlaced", destination: "Bus", uri: "masstrans
+     ... and 22 more
+   CAUGHT
+DONE
+
+== the card reads no delivery: src/Kronikol/CallGraph/CallGraphBuilder.cs
+   Kronikol.Tests: 2 failed of Total tests: 218
+     Kronikol.Tests.CallGraph.MessageTableTests.A_delivery_the_subject_logs_itself_consumes(broker: "Event Hubs", label: "Process ← telemetry", uri: "event
+     Kronikol.Tests.CallGraph.MessageTableTests.A_delivery_the_subject_logs_itself_consumes(broker: "Kafka", label: "Consume", uri: "kafka:///orders", topi
+   CAUGHT
+DONE
