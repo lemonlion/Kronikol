@@ -3,12 +3,20 @@ name: Release
 on:
   push:
     tags: [ 'v*' ]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: A tag that already exists, such as v5.27.14, whose own run could not publish it
+        required: true
 
 jobs:
   release:
     runs-on: ubuntu-24.04
     permissions:
       contents: write  # Required to create GitHub Releases
+      id-token: write  # Required for NuGet's trusted publishing
+    env:
+      RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
 
     steps:
       - name: Free disk space
@@ -17,6 +25,8 @@ jobs:
             /usr/share/swift /usr/local/graalvm /usr/local/share/powershell /opt/hostedtoolcache
 
       - uses: actions/checkout@v7
+        with:
+          ref: refs/tags/${{ env.RELEASE_TAG }}
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
@@ -25,7 +35,7 @@ jobs:
 
       - name: Extract version from tag
         id: version
-        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+        run: echo "VERSION=${RELEASE_TAG#v}" >> $GITHUB_OUTPUT
 
       - name: Restore
         run: dotnet restore release.slnf
@@ -39,11 +49,19 @@ jobs:
       - name: Pack
         run: dotnet pack release.slnf --configuration Release --no-build --output ./nupkgs -p:Version=${{ steps.version.outputs.VERSION }}
 
+      # Just before the push, as the key it gets lasts an hour.
+      - name: NuGet login
+        id: login
+        uses: NuGet/login@v1
+        with:
+          user: aryehcitron
+
       - name: Push to NuGet
-        run: dotnet nuget push ./nupkgs/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate --timeout 1200
+        run: dotnet nuget push ./nupkgs/*.nupkg --api-key ${{ steps.login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate --timeout 1200
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
         with:
+          tag_name: ${{ env.RELEASE_TAG }}
           generate_release_notes: true
           files: ./nupkgs/*.nupkg
