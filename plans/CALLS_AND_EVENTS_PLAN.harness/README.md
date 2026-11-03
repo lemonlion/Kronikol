@@ -59,6 +59,10 @@ say so: `<scratch>` in a probe or a result stands for the folder that held the t
 | `probes/r3-warm-up-tap.cs` | Warm-up marks on a Messaging-on tap's records: 5.27.13, R3 alone, R3 with Q5 (b) | `results/r3-warm-up-tap-5.27.13.txt`, `r3-warm-up-tap.txt`, `r3-warm-up-tap-with-q5.txt` |
 | `probes/r3-kafka-creation-context.cs` | OTel's condition on a send: does the `traceparent` on a Kafka message equal the exported span, on each route and through a real broker? | `results/r3-kafka-creation-context.txt` |
 | `probes/r3-backends/` | What the OpenTelemetry Collector 0.164.0, Tempo 2.10.10 and Jaeger 2.22.0 draw for each shape of span, in containers under podman | `results/r3-backends.txt` |
+| `probes/proxy_stress.py` | F27: a built `Kronikol.Tests.ProxyTap` under a chosen pressure, copies at once, busy loops, programs churning ports, keeping each failure's message. `<built> <label> <instances> <rounds> <out> [--cpu N] [--churn N] [--filter]`. It runs a built tree, not the published packages | `results/f27-proxytap.txt` |
+| `probes/mutations_r4.py`, `-r4b.py`, `-r4c.py`, `-r4d.py`, `probes/mutations_f27-all.txt` | R4's and F27's mutations: a change to the source each, and the facts that must fail | `results/r4-mutations.txt`, `results/f27-mutations.txt` |
+| `probes/linux-dual-mode.cs` | What Linux does to a socket's dual mode at the bind, which is why a fact of 5.28.2 failed there. Run in the SDK's container, as `::` raises a firewall prompt on Windows | `results/r4-linux-dual-mode.txt` |
+| The proofs on each published release | R1 on 5.27.14, R3 on 5.28.0, R2 on 5.28.1, from nuget.org, with the probes above | `results/r1-proof-*.txt`, `results/r3-proof-5.28.0.txt`, `results/r2-proof-5.28.1.txt` |
 
 No probe of their own, as they are `kronikol` commands over a file:
 

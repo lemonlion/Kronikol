@@ -1,0 +1,48 @@
+card-queue on Kronikol 5.27.14 from nuget.org, 2026-11-03. plans/CALLS_AND_EVENTS_PLAN.md 6.6, R1.
+
+What ran: probes/card-queue.cs and card-queue-read.py on scratch copies, as sweep-rerun.sh runs them, with 5.27.14's tool in place of the prototype's, and once more with the shard
+written by the 5.27.14 library. Changed in the copy: the version on the #:package lines.
+What the plan says R1 gives (results/card-queue.txt, 6.2): a merge keeps the op id, the method as written and no message row for a Storage Queues delete.
+What it gave: the merge equals the shard: op 35f4e37199372b2b, method Delete, messages []. The control's 5.27.13 merge moves the op to a9d787bdc0880214, writes DELETE and adds a message row of no direction.
+
+Against results/card-queue.txt:
+The control's shard: the same, line for line (4 lines)
+The control's 5.27.13 merge: the same, line for line (4 lines)
+5.27.14's merge of the 5.27.13 shard, against the prototype's: the same, line for line (4 lines)
+The 5.27.14 shard, against the same shard: the same, line for line (4 lines)
+5.27.14's merge of its own shard, against the prototype's: the same, line for line (4 lines)
+
+run on the 5.27.14 library, exit 0
+run on the 5.27.13 library, exit 0
+
+shard: the run on the 5.27.14 library; m: its 5.27.14 merge
+== shard
+{"op": "35f4e37199372b2b"}
+{"op": "35f4e37199372b2b"}
+{"method": "Delete", "op": "35f4e37199372b2b", "target": "/orders"}
+{"messages": []}
+
+== m
+{"op": "35f4e37199372b2b"}
+{"op": "35f4e37199372b2b"}
+{"method": "Delete", "op": "35f4e37199372b2b", "target": "/orders"}
+{"messages": []}
+
+the control. shard: the run on the 5.27.13 library; m: its 5.27.13 merge; mp: its 5.27.14 merge
+== shard
+{"op": "35f4e37199372b2b"}
+{"op": "35f4e37199372b2b"}
+{"method": "Delete", "op": "35f4e37199372b2b", "target": "/orders"}
+{"messages": []}
+
+== m
+{"op": "a9d787bdc0880214"}
+{"op": "a9d787bdc0880214"}
+{"method": "DELETE", "op": "a9d787bdc0880214", "target": "/orders"}
+{"messages": [{"direction": null, "op": "a9d787bdc0880214", "party": "Queue", "topic": "orders"}]}
+
+== mp
+{"op": "35f4e37199372b2b"}
+{"op": "35f4e37199372b2b"}
+{"method": "Delete", "op": "35f4e37199372b2b", "target": "/orders"}
+{"messages": []}

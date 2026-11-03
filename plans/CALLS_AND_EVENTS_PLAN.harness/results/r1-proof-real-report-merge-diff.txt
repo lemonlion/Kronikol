@@ -1,0 +1,56 @@
+real-report-merge-diff on Kronikol 5.27.14 from nuget.org, 2026-11-03. plans/CALLS_AND_EVENTS_PLAN.md 6.6, R1.
+
+What ran: no probe, the kronikol commands the harness README names: query interactions --group-by category,kind,method on a real report before and after kronikol merge, sorted, then diffed with
+every column of the query kept (calls, errors, timings), so this diff is stricter than the results file's, which shows the method alone. Over two reports:
+1. The report results/real-report-merge-diff.txt read, kept from that measurement: BreakfastProvider's bp-cmock-reqnroll, 214 scenarios, mergeable, written by Kronikol 4.26.4. It holds Spanner at Event,
+   which a merge keeps, as a file's kind is what it was written with.
+2. A report this proof wrote: BreakfastProvider's xUnit in memory lane on 5.27.14, 212 of 212 passed, with one line added to the scratch clone's KronikolHistory.cs (options.GenerateMergeableData = true),
+   as the harness's merge-round-trip-shards.sh does. It is given to the merge as its data file by name, as kronikol merge <folder> exits 1 on a real report folder, which is F24, planned for R4 (below).
+What the plan says R1 gives (results/real-report-merge-diff.txt, section 12): a merge changes no call line. Its one row that is not about the method, the note on attachments, stays.
+What it gave: report 1, only the note on attachments. Report 2, no row at all. The controls show SQL Delete becoming DELETE on 5.27.13, in report 1 as in the results file.
+
+Report 1. Its control against results/real-report-merge-diff.txt: the same 3 rows, in order.
+rows: shard 47, merge 48
+== merge 5.27.14: rows only the shard has (<) and only its merge has (>)
+> ! 6 attachment(s) are not in the report: 6 not found when the report was drawn: <path>
+(end of the diff; 1 rows differ)
+
+rows: shard 47, merge 48
+== the control, merge 5.27.13: rows only the shard has (<) and only its merge has (>)
+> ! 6 attachment(s) are not in the report: 6 not found when the report was drawn: <path>
+< SQL           Default  Delete                                    3      0     0 ms     0
+> SQL           Default  DELETE                                    3      0     0 ms     0
+(end of the diff; 3 rows differ)
+
+Report 2, the lane on 5.27.14.
+rows: shard 48, merge 48
+== merge 5.27.14: rows only the shard has (<) and only its merge has (>)
+(end of the diff; 0 rows differ)
+
+rows: shard 48, merge 48
+== the control, merge 5.27.13: rows only the shard has (<) and only its merge has (>)
+< SQL           Default  Delete                                    3      0     0 ms     1
+> SQL           Default  DELETE                                    3      0     0 ms     1
+(end of the diff; 2 rows differ)
+
+Report 2's service.json against its merge's (plan 6.2):
+merge 5.27.14: run.behaviourHash the same; op rows: shard 358, merge 358, only the shard has 0, only the merge has 0
+the control, merge 5.27.13: run.behaviourHash differs; op rows: shard 358, merge 358, only the shard has 6, only the merge has 6
+  only the shard: method Delete
+  only the shard: method None
+  only the shard: method Delete
+  only the merge: method DELETE
+  only the merge: method None
+  only the merge: method DELETE
+
+The report folder itself, F24, not R1's. Reproduced, as the plan's results/merge-folder-attachments.txt has it:
+kronikol merge <the lane's reports folder>, 5.27.14: exit 1
+Failed to read a report: <reports folder>\attachments\asyncapi.json: Not a recognised Kronikol test-run report (missing 'features').
+kronikol merge <the lane's reports folder>, 5.27.13: exit 1
+Failed to read a report: <reports folder>\attachments\asyncapi.json: Not a recognised Kronikol test-run report (missing 'features').
+
+a directory that holds a merge's data file, kronikol query summary <directory>:
+  5.27.14, directory with out.krkl: 1 line naming the report
+  5.27.14, directory with out.json: No TestRunReport.json or TestRunReport.krkl under <path>
+  5.27.13, directory with out.krkl: 1 line naming the report
+  5.27.13, directory with out.json: No TestRunReport.json or TestRunReport.krkl under <path>

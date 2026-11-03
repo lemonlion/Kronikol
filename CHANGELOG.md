@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [5.28.2] - 2026-11-02
+## [5.28.2] - 2026-11-03
 
 The patch part moves (5.28.1 to 5.28.2): bug fixes found while fixing #220, with no new option and no new public member
 (`plans/CALLS_AND_EVENTS_PLAN.md` F20, F21, F24, F25 and F27).

@@ -1,0 +1,325 @@
+BreakfastProvider on Kronikol 5.27.14 from nuget.org, 2026-11-02 and 2026-11-03. plans/CALLS_AND_EVENTS_PLAN.md 6.6, R1.
+
+What ran: a scratch clone of BreakfastProvider's main at 640c190, with its 27 Kronikol PackageReferences in 7 files moved from 5.14.0 to 5.27.14 (probes/merge-round-trip-bp-bump.py with its two versions changed).
+Nothing else was changed for the six lanes, and nothing was pushed: the clone's push address was disabled before anything else. Its 7 workflow refs were not moved, as no workflow ran.
+All six in-memory lanes, one after another, as _tests.yml and _tests-tunit.yml run them without the coverage wrapper: KRONIKOL_SUITE = the lane, dotnet test <csproj> -p:WarningLevel=0, and for TUnit dotnet build, then its exe.
+Every dependency in memory, by the appsettings the repository holds. Docker is off in those settings and no lane started it, and no external service is configured.
+What the plan says R1 gives (6.6): --group-by category,kind reads Spanner Default, and a script reading the painted DOM finds the Spanner note on the plain fill and a Pub/Sub publish on the event fill.
+What it gave: Spanner Default on 6 of 6 lanes, 12 calls each, and Spanner Event on the 5.27.13 control. Every lane passed: 212, 212, 212, 214, 187 and 212 scenarios, none failed. In the browser, every Spanner request note on the plain fill and every
+Pub/Sub publish on the event fill, on all 6 lanes in both schemes: Spanner in 12 of 12 readings and Pub/Sub in 14 of 14 with the control's two. The control's Spanner notes are on the event fill. Spanner is the only row of --group-by category,kind whose kind moved.
+
+== Where the packages came from
+Restored into the proof's own package folder, with nuget.org as the only source. A report's header reads Kronikol 5.27.14+9829a73f, the commit of tag v5.27.14. The older packages the clone needs were read from this machine's package folder.
+packages at 5.27.14 in the proof's own folder: 23
+  kronikol                                     same hash as nuget.org; signed: True; source: https://api.nuget.org/v3/index.json
+  kronikol.assertiontracking                   same hash as nuget.org; signed: True; source: https://api.nuget.org/v3/index.json
+  kronikol.bddfy.xunit3                        same hash as nuget.org; signed: True; source: https://api.nuget.org/v3/index.json
+  kronikol.extensions.bigquery                 same hash as nuget.org; signed: True; source: https://api.nuget.org/v3/index.json
+  kronikol.extensions.clickhouse               same hash as nuget.org; signed: True; source: https://api.nuget.org/v3/index.json
+  kronikol.extensions.clickhouse.driver        same hash as nuget.org; signed: True; source: https://api.nuget.org/v3/index.json
+  kronikol.extensions.cosmosdb                 same hash as nuget.org; signed: True; source: https://api.nuget.org/v3/index.json
+  kronikol.extensions.efcore.relational        same hash as nuget.org; signed: True; source: https://api.nuget.org/v3/index.json
+  kronikol.extensions.grpc                     same hash as nuget.org; signed: True; source: https://api.nuget.org/v3/index.json
+  kronikol.extensions.kafka                    same hash as nuget.org; signed: True; source: https://api.nuget.org/v3/index.json
+  kronikol.extensions.mongodb                  same hash as nuget.org; signed: True; source: https://api.nuget.org/v3/index.json
+  kronikol.extensions.pubsub                   same hash as nuget.org; signed: True; source: https://api.nuget.org/v3/index.json
+  kronikol.extensions.redis                    same hash as nuget.org; signed: True; source: https://api.nuget.org/v3/index.json
+  kronikol.extensions.spanner                  same hash as nuget.org; signed: True; source: https://api.nuget.org/v3/index.json
+  kronikol.extensions.storagequeues            same hash as nuget.org; signed: True; source: https://api.nuget.org/v3/index.json
+  kronikol.lightbdd.core                       same hash as nuget.org; signed: True; source: https://api.nuget.org/v3/index.json
+  kronikol.lightbdd.xunit3                     same hash as nuget.org; signed: True; source: https://api.nuget.org/v3/index.json
+  kronikol.nunit4                              same hash as nuget.org; signed: True; source: https://api.nuget.org/v3/index.json
+  kronikol.reqnroll.core                       same hash as nuget.org; signed: True; source: https://api.nuget.org/v3/index.json
+  kronikol.reqnroll.xunit3                     same hash as nuget.org; signed: True; source: https://api.nuget.org/v3/index.json
+  kronikol.steptracking                        same hash as nuget.org; signed: True; source: https://api.nuget.org/v3/index.json
+  kronikol.tunit                               same hash as nuget.org; signed: True; source: https://api.nuget.org/v3/index.json
+  kronikol.xunit3                              same hash as nuget.org; signed: True; source: https://api.nuget.org/v3/index.json
+23 from nuget.org, 0 not
+
+== The lanes, and --group-by category,kind on each real report
+Failures.md's first lines, the runner's own counts, and query interactions <reports folder> --group-by category,kind cut to its first three columns.
+== xunit-in-memory
+ total: 212  failed: 0  succeeded: 212  skipped: 0 
+# No failures
+All 212 scenarios passed. Kronikol 5.27.14+9829a73f5f552d3b31544907a3f195bc65fb27d1.
+written by Kronikol 5.27.14+9829a73f
+category      kind     calls 
+-             Default    550 
+CosmosDB      Default    266 
+SQL           Default    220 
+MessageQueue  Event      141 
+              Event      117 
+gRPC          Default     50 
+MongoDB       Default     16 
+BigQuery      Default     15 
+Spanner       Default     12 
+ClickHouse    Default     12 
+10 buckets
+
+== nunit-in-memory
+ total: 212  failed: 0  succeeded: 212  skipped: 0 
+# No failures
+All 212 scenarios passed. Kronikol 5.27.14+9829a73f5f552d3b31544907a3f195bc65fb27d1.
+written by Kronikol 5.27.14+9829a73f
+category      kind     calls 
+-             Default    550 
+CosmosDB      Default    266 
+SQL           Default    220 
+MessageQueue  Event      141 
+              Event      117 
+gRPC          Default     50 
+MongoDB       Default     16 
+BigQuery      Default     15 
+Spanner       Default     12 
+ClickHouse    Default     12 
+10 buckets
+
+== bddfy-in-memory
+ total: 212  failed: 0  succeeded: 212  skipped: 0 
+# No failures
+All 212 scenarios passed. Kronikol 5.27.14+9829a73f5f552d3b31544907a3f195bc65fb27d1.
+written by Kronikol 5.27.14+9829a73f
+category      kind     calls 
+-             Default    550 
+CosmosDB      Default    265 
+SQL           Default    220 
+MessageQueue  Event      141 
+              Event      117 
+gRPC          Default     50 
+MongoDB       Default     16 
+BigQuery      Default     15 
+Spanner       Default     12 
+ClickHouse    Default     12 
+10 buckets
+
+== reqnroll-in-memory
+ total: 214  failed: 0  succeeded: 214  skipped: 0 
+# No failures
+All 214 scenarios passed. Kronikol 5.27.14+9829a73f5f552d3b31544907a3f195bc65fb27d1.
+written by Kronikol 5.27.14+9829a73f
+category      kind     calls 
+-             Default    539 
+CosmosDB      Default    243 
+SQL           Default    212 
+MessageQueue  Event      136 
+              Event      111 
+gRPC          Default     49 
+MongoDB       Default     16 
+BigQuery      Default     15 
+Spanner       Default     12 
+ClickHouse    Default     12 
+10 buckets
+
+== lightbdd-in-memory
+ total: 187  failed: 0  succeeded: 187  skipped: 0 
+# No failures
+All 187 scenarios passed. Kronikol 5.27.14+9829a73f5f552d3b31544907a3f195bc65fb27d1.
+written by Kronikol 5.27.14+9829a73f
+category      kind     calls 
+-             Default    550 
+CosmosDB      Default    235 
+SQL           Default    220 
+MessageQueue  Event      141 
+              Event      117 
+gRPC          Default     50 
+MongoDB       Default     16 
+BigQuery      Default     15 
+Spanner       Default     12 
+ClickHouse    Default     12 
+10 buckets
+
+== tunit-in-memory
+ total: 212  failed: 0  succeeded: 212  skipped: 0 
+# No failures
+All 212 scenarios passed. Kronikol 5.27.14+9829a73f5f552d3b31544907a3f195bc65fb27d1.
+written by Kronikol 5.27.14+9829a73f
+category      kind     calls 
+-             Default    550 
+CosmosDB      Default    270 
+SQL           Default    220 
+MessageQueue  Event      141 
+              Event      117 
+gRPC          Default     50 
+MongoDB       Default     16 
+BigQuery      Default     15 
+Spanner       Default     12 
+ClickHouse    Default     12 
+10 buckets
+
+== the control: xUnit in memory, the same clone's commit on 5.27.13 (a run another session of this plan kept, results/merge-round-trip-real-lane.txt)
+category      kind     calls 
+-             Default    550 
+CosmosDB      Default    265 
+SQL           Default    220 
+MessageQueue  Event      141 
+              Event      117 
+gRPC          Default     50 
+MongoDB       Default     16 
+BigQuery      Default     15 
+Spanner       Event       12 
+ClickHouse    Default     12 
+10 buckets
+
+== The painted DOM
+paint-proof, a Node script on playwright-core with the bundled Chromium (no channel, no executable path). For every Spanner call and every Pub/Sub publish kronikol query lists, it opens the scenario by its #sid- link (an example row
+of an outline selects its row), waits for the diagram's role pass (data-k-roles), finds the arrow's label and the note level with it, which was the only card at that height in every reading, and reads that note's computed fill against
+the theme's --dg-note and --dg-event as the browser resolves them. One note of each kind is also read from a real screenshot of it: the most frequent colour inside the card. The control is a real run of the same lane on 5.27.13, kept from results/merge-round-trip-real-lane.txt.
+== BreakfastProvider xunit-in-memory on 5.27.14, light scheme: data-theme=light; --dg-note rgb(253, 246, 228), --dg-event rgb(238, 225, 247); browser 149.0.7827.55
+Spanner request notes: 12 read; 12 on the plain fill, 0 on the event fill, 0 on neither; 0 with class k-card-event; query lists 12
+  from a screenshot of one: rgb(253, 246, 228) (81% of the card) | computed rgb(253, 246, 228) | "2 InsertOrUpdate: /test-db/CustomerPreferences" | note "UPSERT CustomerPreferences"
+Pub/Sub publish notes: 68 read; 0 on the plain fill, 68 on the event fill, 0 on neither; 68 with class k-card-event; query lists 68
+  from a screenshot of one: rgb(238, 225, 247) (89% of the card) | computed rgb(238, 225, 247) | "18 Publish (Pub/Sub): /MuffinBatchCompletedEvent" | note "BatchId: <id>"
+scenarios opened: 72, not drawn in 60 s: 0, label and call counts that disagree: 0, page errors: 0, 20 s
+== BreakfastProvider xunit-in-memory on 5.27.14, dark scheme: data-theme=dark; --dg-note rgb(43, 38, 24), --dg-event rgb(42, 33, 64); browser 149.0.7827.55
+Spanner request notes: 12 read; 12 on the plain fill, 0 on the event fill, 0 on neither; 0 with class k-card-event; query lists 12
+  from a screenshot of one: rgb(43, 38, 24) (81% of the card) | computed rgb(43, 38, 24) | "2 InsertOrUpdate: /test-db/CustomerPreferences" | note "UPSERT CustomerPreferences"
+Pub/Sub publish notes: 68 read; 0 on the plain fill, 68 on the event fill, 0 on neither; 68 with class k-card-event; query lists 68
+  from a screenshot of one: rgb(42, 33, 64) (89% of the card) | computed rgb(42, 33, 64) | "18 Publish (Pub/Sub): /MuffinBatchCompletedEvent" | note "BatchId: <id>"
+scenarios opened: 72, not drawn in 60 s: 0, label and call counts that disagree: 0, page errors: 0, 19 s
+
+== BreakfastProvider nunit-in-memory on 5.27.14, light scheme: data-theme=light; --dg-note rgb(253, 246, 228), --dg-event rgb(238, 225, 247); browser 149.0.7827.55
+Spanner request notes: 12 read; 12 on the plain fill, 0 on the event fill, 0 on neither; 0 with class k-card-event; query lists 12
+  from a screenshot of one: rgb(253, 246, 228) (81% of the card) | computed rgb(253, 246, 228) | "2 InsertOrUpdate: /test-db/CustomerPreferences" | note "UPSERT CustomerPreferences"
+Pub/Sub publish notes: 68 read; 0 on the plain fill, 68 on the event fill, 0 on neither; 68 with class k-card-event; query lists 68
+  from a screenshot of one: rgb(238, 225, 247) (89% of the card) | computed rgb(238, 225, 247) | "18 Publish (Pub/Sub): /MuffinBatchCompletedEvent" | note "BatchId: "<id>"
+scenarios opened: 72, not drawn in 60 s: 0, label and call counts that disagree: 0, page errors: 0, 20 s
+== BreakfastProvider nunit-in-memory on 5.27.14, dark scheme: data-theme=dark; --dg-note rgb(43, 38, 24), --dg-event rgb(42, 33, 64); browser 149.0.7827.55
+Spanner request notes: 12 read; 12 on the plain fill, 0 on the event fill, 0 on neither; 0 with class k-card-event; query lists 12
+  from a screenshot of one: rgb(43, 38, 24) (81% of the card) | computed rgb(43, 38, 24) | "2 InsertOrUpdate: /test-db/CustomerPreferences" | note "UPSERT CustomerPreferences"
+Pub/Sub publish notes: 68 read; 0 on the plain fill, 68 on the event fill, 0 on neither; 68 with class k-card-event; query lists 68
+  from a screenshot of one: rgb(42, 33, 64) (89% of the card) | computed rgb(42, 33, 64) | "18 Publish (Pub/Sub): /MuffinBatchCompletedEvent" | note "BatchId: "<id>"
+scenarios opened: 72, not drawn in 60 s: 0, label and call counts that disagree: 0, page errors: 0, 19 s
+
+== BreakfastProvider bddfy-in-memory on 5.27.14, light scheme: data-theme=light; --dg-note rgb(253, 246, 228), --dg-event rgb(238, 225, 247); browser 149.0.7827.55
+Spanner request notes: 12 read; 12 on the plain fill, 0 on the event fill, 0 on neither; 0 with class k-card-event; query lists 12
+  from a screenshot of one: rgb(253, 246, 228) (77% of the card) | computed rgb(253, 246, 228) | "2 InsertOrUpdate: /test-db/CustomerPreferences" | note "UPSERT CustomerPreferences"
+Pub/Sub publish notes: 68 read; 0 on the plain fill, 68 on the event fill, 0 on neither; 68 with class k-card-event; query lists 68
+  from a screenshot of one: rgb(238, 225, 247) (91% of the card) | computed rgb(238, 225, 247) | "16 Publish (Pub/Sub): /MuffinBatchCompletedEvent" | note "BatchId: <id>"
+scenarios opened: 72, not drawn in 60 s: 0, label and call counts that disagree: 0, page errors: 0, 19 s
+== BreakfastProvider bddfy-in-memory on 5.27.14, dark scheme: data-theme=dark; --dg-note rgb(43, 38, 24), --dg-event rgb(42, 33, 64); browser 149.0.7827.55
+Spanner request notes: 12 read; 12 on the plain fill, 0 on the event fill, 0 on neither; 0 with class k-card-event; query lists 12
+  from a screenshot of one: rgb(43, 38, 24) (77% of the card) | computed rgb(43, 38, 24) | "2 InsertOrUpdate: /test-db/CustomerPreferences" | note "UPSERT CustomerPreferences"
+Pub/Sub publish notes: 68 read; 0 on the plain fill, 68 on the event fill, 0 on neither; 68 with class k-card-event; query lists 68
+  from a screenshot of one: rgb(42, 33, 64) (91% of the card) | computed rgb(42, 33, 64) | "16 Publish (Pub/Sub): /MuffinBatchCompletedEvent" | note "BatchId: <id>"
+scenarios opened: 72, not drawn in 60 s: 0, label and call counts that disagree: 0, page errors: 0, 21 s
+
+== BreakfastProvider reqnroll-in-memory on 5.27.14, light scheme: data-theme=light; --dg-note rgb(253, 246, 228), --dg-event rgb(238, 225, 247); browser 149.0.7827.55
+Spanner request notes: 12 read; 12 on the plain fill, 0 on the event fill, 0 on neither; 0 with class k-card-event; query lists 12
+  from a screenshot of one: rgb(253, 246, 228) (80% of the card) | computed rgb(253, 246, 228) | "2 InsertOrUpdate: /test-db/CustomerPreferences" | note "UPSERT CustomerPreferences"
+Pub/Sub publish notes: 66 read; 0 on the plain fill, 66 on the event fill, 0 on neither; 66 with class k-card-event; query lists 66
+  from a screenshot of one: rgb(238, 225, 247) (87% of the card) | computed rgb(238, 225, 247) | "18 Publish (Pub/Sub): /MuffinBatchCompletedEvent" | note "BatchId: <id>"
+scenarios opened: 70, not drawn in 60 s: 0, label and call counts that disagree: 0, page errors: 0, 20 s
+== BreakfastProvider reqnroll-in-memory on 5.27.14, dark scheme: data-theme=dark; --dg-note rgb(43, 38, 24), --dg-event rgb(42, 33, 64); browser 149.0.7827.55
+Spanner request notes: 12 read; 12 on the plain fill, 0 on the event fill, 0 on neither; 0 with class k-card-event; query lists 12
+  from a screenshot of one: rgb(43, 38, 24) (80% of the card) | computed rgb(43, 38, 24) | "2 InsertOrUpdate: /test-db/CustomerPreferences" | note "UPSERT CustomerPreferences"
+Pub/Sub publish notes: 66 read; 0 on the plain fill, 66 on the event fill, 0 on neither; 66 with class k-card-event; query lists 66
+  from a screenshot of one: rgb(42, 33, 64) (89% of the card) | computed rgb(42, 33, 64) | "18 Publish (Pub/Sub): /MuffinBatchCompletedEvent" | note "BatchId: <id>"
+scenarios opened: 70, not drawn in 60 s: 0, label and call counts that disagree: 0, page errors: 0, 19 s
+
+== BreakfastProvider lightbdd-in-memory on 5.27.14, light scheme: data-theme=light; --dg-note rgb(253, 246, 228), --dg-event rgb(238, 225, 247); browser 149.0.7827.55
+Spanner request notes: 12 read; 12 on the plain fill, 0 on the event fill, 0 on neither; 0 with class k-card-event; query lists 12
+  from a screenshot of one: rgb(253, 246, 228) (71% of the card) | computed rgb(253, 246, 228) | "2 InsertOrUpdate: /test-db/CustomerPreferences" | note "UPSERT CustomerPreferences"
+Pub/Sub publish notes: 68 read; 0 on the plain fill, 68 on the event fill, 0 on neither; 68 with class k-card-event; query lists 68
+  from a screenshot of one: rgb(238, 225, 247) (87% of the card) | computed rgb(238, 225, 247) | "18 Publish (Pub/Sub): /MuffinBatchCompletedEvent" | note "BatchId: "<id>"
+scenarios opened: 72, not drawn in 60 s: 0, label and call counts that disagree: 0, page errors: 0, 20 s
+== BreakfastProvider lightbdd-in-memory on 5.27.14, dark scheme: data-theme=dark; --dg-note rgb(43, 38, 24), --dg-event rgb(42, 33, 64); browser 149.0.7827.55
+Spanner request notes: 12 read; 12 on the plain fill, 0 on the event fill, 0 on neither; 0 with class k-card-event; query lists 12
+  from a screenshot of one: rgb(43, 38, 24) (71% of the card) | computed rgb(43, 38, 24) | "2 InsertOrUpdate: /test-db/CustomerPreferences" | note "UPSERT CustomerPreferences"
+Pub/Sub publish notes: 68 read; 0 on the plain fill, 68 on the event fill, 0 on neither; 68 with class k-card-event; query lists 68
+  from a screenshot of one: rgb(42, 33, 64) (89% of the card) | computed rgb(42, 33, 64) | "18 Publish (Pub/Sub): /MuffinBatchCompletedEvent" | note "BatchId: "<id>"
+scenarios opened: 72, not drawn in 60 s: 0, label and call counts that disagree: 0, page errors: 0, 20 s
+
+== BreakfastProvider tunit-in-memory on 5.27.14, light scheme: data-theme=light; --dg-note rgb(253, 246, 228), --dg-event rgb(238, 225, 247); browser 149.0.7827.55
+Spanner request notes: 12 read; 12 on the plain fill, 0 on the event fill, 0 on neither; 0 with class k-card-event; query lists 12
+  from a screenshot of one: rgb(253, 246, 228) (81% of the card) | computed rgb(253, 246, 228) | "2 InsertOrUpdate: /test-db/CustomerPreferences" | note "UPSERT CustomerPreferences"
+Pub/Sub publish notes: 68 read; 0 on the plain fill, 68 on the event fill, 0 on neither; 68 with class k-card-event; query lists 68
+  from a screenshot of one: rgb(238, 225, 247) (89% of the card) | computed rgb(238, 225, 247) | "18 Publish (Pub/Sub): /MuffinBatchCompletedEvent" | note "BatchId: "<id>"
+scenarios opened: 72, not drawn in 60 s: 0, label and call counts that disagree: 0, page errors: 0, 19 s
+== BreakfastProvider tunit-in-memory on 5.27.14, dark scheme: data-theme=dark; --dg-note rgb(43, 38, 24), --dg-event rgb(42, 33, 64); browser 149.0.7827.55
+Spanner request notes: 12 read; 12 on the plain fill, 0 on the event fill, 0 on neither; 0 with class k-card-event; query lists 12
+  from a screenshot of one: rgb(43, 38, 24) (81% of the card) | computed rgb(43, 38, 24) | "2 InsertOrUpdate: /test-db/CustomerPreferences" | note "UPSERT CustomerPreferences"
+Pub/Sub publish notes: 68 read; 0 on the plain fill, 68 on the event fill, 0 on neither; 68 with class k-card-event; query lists 68
+  from a screenshot of one: rgb(42, 33, 64) (89% of the card) | computed rgb(42, 33, 64) | "18 Publish (Pub/Sub): /MuffinBatchCompletedEvent" | note "BatchId: "<id>"
+scenarios opened: 72, not drawn in 60 s: 0, label and call counts that disagree: 0, page errors: 0, 20 s
+
+== the control: BreakfastProvider xUnit in memory on 5.27.13, light scheme: data-theme=light; --dg-note rgb(253, 246, 228), --dg-event rgb(238, 225, 247); browser 149.0.7827.55
+Spanner request notes: 12 read; 0 on the plain fill, 12 on the event fill, 0 on neither; 12 with class k-card-event; query lists 12
+  from a screenshot of one: rgb(238, 225, 247) (81% of the card) | computed rgb(238, 225, 247) | "2 InsertOrUpdate: /test-db/CustomerPreferences" | note "UPSERT CustomerPreferences"
+Pub/Sub publish notes: 68 read; 0 on the plain fill, 68 on the event fill, 0 on neither; 68 with class k-card-event; query lists 68
+  from a screenshot of one: rgb(238, 225, 247) (89% of the card) | computed rgb(238, 225, 247) | "18 Publish (Pub/Sub): /MuffinBatchCompletedEvent" | note "BatchId: <id>"
+scenarios opened: 72, not drawn in 60 s: 0, label and call counts that disagree: 0, page errors: 0, 19 s
+== the control: BreakfastProvider xUnit in memory on 5.27.13, dark scheme: data-theme=dark; --dg-note rgb(43, 38, 24), --dg-event rgb(42, 33, 64); browser 149.0.7827.55
+Spanner request notes: 12 read; 0 on the plain fill, 12 on the event fill, 0 on neither; 12 with class k-card-event; query lists 12
+  from a screenshot of one: rgb(42, 33, 64) (81% of the card) | computed rgb(42, 33, 64) | "2 InsertOrUpdate: /test-db/CustomerPreferences" | note "UPSERT CustomerPreferences"
+Pub/Sub publish notes: 68 read; 0 on the plain fill, 68 on the event fill, 0 on neither; 68 with class k-card-event; query lists 68
+  from a screenshot of one: rgb(42, 33, 64) (89% of the card) | computed rgb(42, 33, 64) | "18 Publish (Pub/Sub): /MuffinBatchCompletedEvent" | note "BatchId: <id>"
+scenarios opened: 72, not drawn in 60 s: 0, label and call counts that disagree: 0, page errors: 0, 19 s
+
+
+So each note read is the call's own:
+first word of each note read, light scheme, all seven reports:
+  spanner {'SELECT': 35, 'UPSERT': 28, 'INSERT': 21}
+  pubsub {'BatchId:': 278, 'ReservationId:': 49, 'OrderId:': 42, 'ItemId:': 42, 'ItemName:': 35, 'StaffId:': 21, 'ToppingId:': 7}
+
+== The PlantUML source of scenarios that make one Spanner call and no message call (plan 5.3, 6.3)
+Written to a file by kronikol query diagram, and only counted.
+xunit-in-memory on 5.27.14: s24 (2 calls): <<eventNote>> 0, .eventNote style block 0
+xunit-in-memory on 5.27.14: s26 (2 calls): <<eventNote>> 0, .eventNote style block 0
+xunit-in-memory on 5.27.14: s43 (2 calls): <<eventNote>> 0, .eventNote style block 0
+xunit-in-memory on 5.27.14: scenarios read: 3
+nunit-in-memory on 5.27.14: s24 (2 calls): <<eventNote>> 0, .eventNote style block 0
+nunit-in-memory on 5.27.14: s26 (2 calls): <<eventNote>> 0, .eventNote style block 0
+nunit-in-memory on 5.27.14: s43 (2 calls): <<eventNote>> 0, .eventNote style block 0
+nunit-in-memory on 5.27.14: scenarios read: 3
+bddfy-in-memory on 5.27.14: s25 (2 calls): <<eventNote>> 0, .eventNote style block 0
+bddfy-in-memory on 5.27.14: s26 (2 calls): <<eventNote>> 0, .eventNote style block 0
+bddfy-in-memory on 5.27.14: s45 (2 calls): <<eventNote>> 0, .eventNote style block 0
+bddfy-in-memory on 5.27.14: scenarios read: 3
+reqnroll-in-memory on 5.27.14: s30 (2 calls): <<eventNote>> 0, .eventNote style block 0
+reqnroll-in-memory on 5.27.14: s32 (2 calls): <<eventNote>> 0, .eventNote style block 0
+reqnroll-in-memory on 5.27.14: s53 (2 calls): <<eventNote>> 0, .eventNote style block 0
+reqnroll-in-memory on 5.27.14: scenarios read: 3
+lightbdd-in-memory on 5.27.14: s25 (2 calls): <<eventNote>> 0, .eventNote style block 0
+lightbdd-in-memory on 5.27.14: s26 (2 calls): <<eventNote>> 0, .eventNote style block 0
+lightbdd-in-memory on 5.27.14: s44 (2 calls): <<eventNote>> 0, .eventNote style block 0
+lightbdd-in-memory on 5.27.14: scenarios read: 3
+tunit-in-memory on 5.27.14: s24 (2 calls): <<eventNote>> 0, .eventNote style block 0
+tunit-in-memory on 5.27.14: s26 (2 calls): <<eventNote>> 0, .eventNote style block 0
+tunit-in-memory on 5.27.14: s43 (2 calls): <<eventNote>> 0, .eventNote style block 0
+tunit-in-memory on 5.27.14: scenarios read: 3
+the control, xunit-in-memory on 5.27.13: s24 (2 calls): <<eventNote>> 1, .eventNote style block 1
+the control, xunit-in-memory on 5.27.13: s26 (2 calls): <<eventNote>> 1, .eventNote style block 1
+the control, xunit-in-memory on 5.27.13: s43 (2 calls): <<eventNote>> 1, .eventNote style block 1
+the control, xunit-in-memory on 5.27.13: scenarios read: 3
+
+== Warm-up marks on Spanner calls (plan section 1, 6.4: a query the service makes is not judged)
+From the mergeable xUnit run, and the control. The marks are on Breakfast Provider's own calls, and their count moves with timing. None is on Spanner.
+xunit-in-memory on 5.27.14: warm-up marks 6; on Spanner 0; services marked: 1
+the control, xunit-in-memory on 5.27.13: warm-up marks 8; on Spanner 0; services marked: 1
+
+== What the lanes bind (the firewall)
+The fakes use http://localhost:<port> from each lane's appsettings.componenttests.ports.json, through UseUrls, and AssertPortIsNotInUse binds the address localhost resolves to. An extra NUnit lane, which also passed, was read while it ran.
+before the lane: firewall program rows: 611; naming BreakfastProvider or its fakes: 0
+[01:15:55] nunit-in-memory: exit 0 in 210 s
+ total: 212  failed: 0  succeeded: 212  skipped: 0 
+addresses seen listening on the lane's ports 5151 to 5155 while it ran:
+  127.0.0.1:5151
+  127.0.0.1:5152
+  127.0.0.1:5153
+  127.0.0.1:5154
+  127.0.0.1:5155
+  [::1]:5151
+  [::1]:5152
+  [::1]:5153
+  [::1]:5154
+  [::1]:5155
+after the lane: firewall program rows: 611; naming BreakfastProvider or its fakes: 0
+
+== Disk and Storage Sense on this machine
+Windows Storage Sense is on here, with its temp-file cleaning on and its cadence at low disk space (registry StoragePolicy 01, 04, 2048). It last ran at 2026-11-02 21:33:20 UTC, and the folder times of what went are 21:33:43 and 21:33:44. This proof's folder is under %TEMP%, and it lost old-dated
+files then, after the six lanes and the first pass of the probes had finished: Mono.Cecil*.dll from two extracted packages, a few DLLs from each installed tool. The first attempt at the extra xUnit run stopped at the weaver with "Could not load file or assembly Mono.Cecil". The nupkg holds those files. The two packages were extracted
+again and the tools installed again, from nuget.org, and the probes run again on them, which is what these files hold. That sweep may be what results/test-runs-all-three.txt saw when it said what ran it was not established: that is an inference, as this run dates only this sweep.
+
+== Not run
+The 12 docker and external-SUT lanes: they need docker compose stacks, and they are not part of 6.6. No workflow, no history gate, no coverage wrapper, nothing on a real CI runner.
+kronikol merge --history over a real lane (results/merge-round-trip-real-lane.txt's shape): 6.6 does not list it, so the false alarm on a real lane is not re-proved on the release here. Only the generated probes prove it.

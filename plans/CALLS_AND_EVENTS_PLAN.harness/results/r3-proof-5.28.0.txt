@@ -1,0 +1,8 @@
+R3's proofs on the published 5.28.0, 2026-11-02, from nuget.org.
+
+r3-span-kinds: 194 rows. Every row's kind is what results/r3-option-send-is-client-span-kinds.tsv measured for Q6 (b), the option taken: 0 differ.
+  The probe's expected column is written for (a), so it counts 86 rows wrong, each "says Client, is Producer". Those are the 86 rows Q6 (b) moves, and no other.
+  PRODUCER is left on KafkaTracker.TrackProduce alone.
+r3-fingerprint: re-run with F17 in the release, against results/r3-fingerprint-5.27.13.txt. 114 lines differ, every one a "kind" line. 0 others, so no fingerprint moves.
+r3-real-capture: MassTransit over its in-memory transport, no broker named. 3 spans received, 1 mapped, 2 ignored: the send, read as Event, leaving as CLIENT with messaging.operation.type send.
+  The Kafka half needs R3_KAFKA to name a broker, so it did not run here. results/r3-real-capture.txt keeps what it printed against a real broker on the prototype.

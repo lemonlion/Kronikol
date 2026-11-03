@@ -1,0 +1,100 @@
+merge-labels on Kronikol 5.27.14 from nuget.org, 2026-11-03. plans/CALLS_AND_EVENTS_PLAN.md 6.6, R1.
+
+What ran: probes/merge-labels.cs on scratch copies, with its #:package lines moved to 5.27.14, and unchanged on 5.27.13 as the control. The
+tools are Kronikol.Tool 5.27.14 and 5.27.13, installed with dotnet tool install --tool-path <scratch>. Rows are query interactions --group-by
+service,kind,method, cut to three columns as results/merge-labels.txt shows them. Changed in the copy: the version on the #:package lines.
+What the plan says R1 gives (section 12): the merged file differs from the shard in 0 rows, where 5.27.13 rewrites 9; and the real Spanner and
+BigQuery trackers log Default (5.3).
+What it gave: 0 rows, Delete stays Delete, and all four real tracker rows read Default. The control rewrites 9 rows.
+
+Against results/merge-labels.txt:
+The control, shard: the same, line for line (17 lines)
+The control, after its 5.27.13 merge: the same, line for line (17 lines)
+A 5.27.13 shard through 5.27.14's merge, against the prototype's block: the same, line for line (17 lines)
+
+run on the 5.27.13 library, exit 0
+run on the 5.27.14 library, exit 0
+5.27.13 merge of the 5.27.13 shard, exit 0
+5.27.14 merge of the 5.27.13 shard, exit 0
+5.27.14 merge of the 5.27.14 shard, exit 0
+
+== the shard, as the run wrote it (published 5.27.14)
+service                        kind     method        
+Spanner tracker Raw            Default  Delete        
+Spanner tracker Summarised     Default  DELETE        
+Spanner tracker Detailed       Default  DELETE FROM Or
+BigQuery tracker Detailed      Default  Delete        
+Fix-sim Spanner Raw            Default  Delete        
+Fix-sim Spanner Summarised     Default  DELETE        
+Live BigQuery handler          Default  Delete        
+Live CosmosDB                  Default  Delete        
+Live CosmosDB                  Default  Patch         
+Live EF Core                   Default  Delete        
+Live BlobStorage               Default  Delete        
+Live MongoDB Summarised        Default  Delete        
+Live CloudStorage Summarised   Default  Delete        
+Live Elasticsearch Summarised  Default  Get           
+Control SQL Summarised         Default  DELETE        
+Control Redis                  Default  Get (Hit)     
+
+== after kronikol merge (published 5.27.14), same shard
+service                        kind     method        
+Spanner tracker Raw            Default  Delete        
+Spanner tracker Summarised     Default  DELETE        
+Spanner tracker Detailed       Default  DELETE FROM Or
+BigQuery tracker Detailed      Default  Delete        
+Fix-sim Spanner Raw            Default  Delete        
+Fix-sim Spanner Summarised     Default  DELETE        
+Live BigQuery handler          Default  Delete        
+Live CosmosDB                  Default  Delete        
+Live CosmosDB                  Default  Patch         
+Live EF Core                   Default  Delete        
+Live BlobStorage               Default  Delete        
+Live MongoDB Summarised        Default  Delete        
+Live CloudStorage Summarised   Default  Delete        
+Live Elasticsearch Summarised  Default  Get           
+Control SQL Summarised         Default  DELETE        
+Control Redis                  Default  Get (Hit)     
+
+== rows that differ, a shard against its merge, in the three columns above
+5.27.14 library, 5.27.14 merge: 0 (the plan's R1: 0)
+5.27.13 library, 5.27.14 merge: 0 (the plan's prototype: 0)
+5.27.13 library, 5.27.13 merge, the control: 9 (results/merge-labels.txt: 9)
+
+== the control: the shard, as the run wrote it (published 5.27.13)
+service                        kind     method        
+Spanner tracker Raw            Event    Delete        
+Spanner tracker Summarised     Event    DELETE        
+Spanner tracker Detailed       Event    DELETE FROM Or
+BigQuery tracker Detailed      Event    Delete        
+Fix-sim Spanner Raw            Default  Delete        
+Fix-sim Spanner Summarised     Default  DELETE        
+Live BigQuery handler          Default  Delete        
+Live CosmosDB                  Default  Delete        
+Live CosmosDB                  Default  Patch         
+Live EF Core                   Default  Delete        
+Live BlobStorage               Default  Delete        
+Live MongoDB Summarised        Default  Delete        
+Live CloudStorage Summarised   Default  Delete        
+Live Elasticsearch Summarised  Default  Get           
+Control SQL Summarised         Default  DELETE        
+Control Redis                  Default  Get (Hit)     
+
+== the control: after kronikol merge (published 5.27.13), same shard
+service                        kind     method        
+Spanner tracker Raw            Event    Delete        
+Spanner tracker Summarised     Event    DELETE        
+Spanner tracker Detailed       Event    DELETE FROM Or
+BigQuery tracker Detailed      Event    Delete        
+Fix-sim Spanner Raw            Default  DELETE        
+Fix-sim Spanner Summarised     Default  DELETE        
+Live BigQuery handler          Default  DELETE        
+Live CosmosDB                  Default  DELETE        
+Live CosmosDB                  Default  PATCH         
+Live EF Core                   Default  DELETE        
+Live BlobStorage               Default  DELETE        
+Live MongoDB Summarised        Default  DELETE        
+Live CloudStorage Summarised   Default  DELETE        
+Live Elasticsearch Summarised  Default  GET           
+Control SQL Summarised         Default  DELETE        
+Control Redis                  Default  Get (Hit)     

@@ -1,0 +1,20 @@
+What Linux does to a socket's dual mode at the bind, probes/linux-dual-mode.cs in mcr.microsoft.com/dotnet/sdk:10.0, 2026-11-03. The second line is /proc/sys/net/ipv6/bindv6only.
+
+Linux 6.18.54.1-microsoft-standard-WSL2
+0
+::1, dual mode asked for: DualMode reads True before the bind, False after it
+::1, nothing asked for: DualMode reads False before the bind, False after it
+::, dual mode asked for: DualMode reads True before the bind, True after it
+::, nothing asked for: DualMode reads False before the bind, False after it
+exit 0
+
+Kronikol.Tests.TcpTap on Linux with the fact fixed, then with the tap's dual-mode line taken out (the ATapOnEveryInterface facts alone):
+
+whole exit 0
+Passed!  - Failed:     0, Passed:   508, Skipped:     5, Total:   513, Duration: 15 s - Kronikol.Tests.TcpTap.dll (net10.0)
+mutated exit 1
+[xUnit.net 00:00:00.65]     Kronikol.Tests.TcpTap.TcpTapLocalhostTests.ATapOnEveryInterfaceAsksForOneDualModeSocket(listenHost: "+") [FAIL]
+[xUnit.net 00:00:00.66]     Kronikol.Tests.TcpTap.TcpTapLocalhostTests.ATapOnEveryInterfaceAsksForOneDualModeSocket(listenHost: "*") [FAIL]
+[xUnit.net 00:00:00.67]     Kronikol.Tests.TcpTap.TcpTapLocalhostTests.ATapOnEveryInterfaceAnswersOnBothLoopbacks(listenHost: "+") [FAIL]
+[xUnit.net 00:00:00.67]     Kronikol.Tests.TcpTap.TcpTapLocalhostTests.ATapOnEveryInterfaceAnswersOnBothLoopbacks(listenHost: "*") [FAIL]
+Failed!  - Failed:     4, Passed:     0, Skipped:     0, Total:     4, Duration: 84 ms - Kronikol.Tests.TcpTap.dll (net10.0)

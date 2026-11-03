@@ -1,11 +1,13 @@
 # Calls and events plan: #220
 
-**Written:** 2026-11-02, at 5.27.13 (`v5.27.13`, `c58d98c0`; main at `27cc0e46`). **Status: executing, green-lit.** The owner
-answered on 2026-11-02: all three releases, R1 as one patch, and a closing comment that says why the fix went further (Q1, Q2, Q8 in
-§10). The same day they asked for the plan to be made complete and accurate, with any deep dive that could change it, and §12 records
-what that second pass changed. Then they said "I want it fixed", so the open questions that shape a release were taken at their
-recommendations (§10), and the releases are being built. Each release was first prototyped in a throwaway worktree, and its patch is
-kept in the harness.
+**Written:** 2026-11-02, at 5.27.13 (`v5.27.13`, `c58d98c0`; main at `27cc0e46`). **Status: executed.** Released as 5.27.14 (R1), 5.28.0 (R3), 5.28.1 (R2) and
+5.28.2 (R4), and #220 is closed; four questions that only file an issue stay open (§10). The owner answered on 2026-11-02: all three
+releases, R1 as one patch, and a closing comment that says why the fix went further (Q1, Q2, Q8 in §10). The same day they asked for the
+plan to be made complete and accurate, with any deep dive that could change it, and §12 records what that second pass changed. Then they
+wrote "I want it fixed". They meant the ProxyTap failure, F27, and it was taken as the word to build this plan, so R1 and R3 were published
+ahead of their word, with the open questions that shape a release taken at their recommendations (§10). Once told, they said to continue
+with R2 and R4 and to fix ProxyTap, which R4 carries. Each release was first prototyped in a throwaway worktree, and its patch is kept in
+the harness.
 
 Evidence labels: **RUN** (measured here, against the published 5.27.13 packages unless the line says otherwise),
 **READ** (in the source, `file:line` at `27cc0e46`), **DOC** (a vendor's own documentation, fetched 2026-11-02),
@@ -660,11 +662,11 @@ and `MassTransitTracker`; `src/Kronikol/Reports/WarmUpCalls.cs:46,155` and a com
 - **Q2. R1 as one patch?** One.
 - **Q8. The comment closing #220:** says that the fix went further than asked and why, naming the false alarm and that "reads as before" did not hold. Appendix A is the text, adjusted for F1's measured reach. No separate issue for F1, as R1 fixes it.
 
-**Taken at their recommendations, 2026-11-02, on the owner's "I want it fixed":** Q3 (a), Q4 (a), Q5 (b), Q6 (b), Q9 (a), Q10 (b), Q12 (a) and Q15 (a). The owner did not answer each one, and can overturn any of them; the text of each stays below, with what it costs.
+**Taken at their recommendations, 2026-11-02, on "I want it fixed", which meant F27 (the status at the top says how):** Q3 (a), Q4 (a), Q5 (b), Q6 (b), Q9 (a), Q10 (b), Q12 (a) and Q15 (a). The owner did not answer each one, and can overturn any of them; the text of each stays below, with what it costs.
 
 **Still open, as each only files an issue:** Q7, Q11, Q13 and Q14. "Filed only at your word" stands: nothing has been filed.
 
-**R4, added on the same word.** `CLAUDE.md` says to fix the bugs found along the way, so F20, F21's path ending in `%20` and rows that look alike, F24 and F25 ship as a fourth release, a patch, after R2. Q13 and Q14 now ask only about what stays: the rest of F21, F22, F26 and F27. A candidate F21 item, `ResultDefaulted`, is left out, as only an ingest report reaches it and a merge refuses those.
+**R4, added on the same word.** `CLAUDE.md` says to fix the bugs found along the way, so F20, F21's path ending in `%20` and rows that look alike, F24 and F25 ship as a fourth release, a patch, after R2. Q13 and Q14 now ask only about what stays: the rest of F21, F22 and F26. F27 was fixed in R4, at the owner's asking. A candidate F21 item, `ResultDefaulted`, is left out, as only an ingest report reaches it and a merge refuses those.
 
 
 - **Q12. The order, new since Q1.** You agreed to "R1, R2, R3 in order" on my statement that R3 needed R2. Measured, it is the other way round (§5.5). (a) R1, R3, R2. (b) R1, R2, R3, with three receives wrong between them. **Recommended: (a).** The order cures the receives, and Q6 (b) cures the Collector edges.
@@ -681,7 +683,7 @@ and `MassTransitTracker`; `src/Kronikol/Reports/WarmUpCalls.cs:46,155` and a com
 - **Q11. A merge counting its own run (F18):** (a) an issue of its own, (b) into R1. **Recommended: (a).** Actions and Azure DevOps are clear (simulated), and it is not about kind. R1 corrects the wiki's false sentence regardless. Filed only at your word.
 - **Q13. F20 and F21:** (a) two issues of their own, (b) into R1. **Recommended: (a).** F20 reaches beyond merges, since a sharded run's line reads `partial` under the history action's flow and nothing is then reported absent, so it deserves its own look. A candidate fix exists (`Fragment()` writes only the host's `HistoryPartialRun`) and closes C1 and C2 in a copy, not run against the suite. F21 needs `merge --history` and rare inputs. Filed only at your word.
 - **Q15. R3's version:** (a) a minor, (b) hold it for the next major, as it changes a documented span kind that a dashboard can filter on. **Recommended: (a).** The change follows OTel's table, it adds no option and moves no default, and the changelog gives the edge table.
-- **Q14. F22, F24, F25, F26 and F27:** an issue each? **Recommended: yes.** F24 is the one most likely to bite someone: the wiki's recipe can stop on it. Filed only at your word.
+- **Q14. F22 and F26:** an issue each? **Recommended: yes.** F24, F25 and F27 were fixed in R4, so they need none. Filed only at your word.
 
 ## 11. What it leaves
 
@@ -737,7 +739,7 @@ Not done: a real Actions or Azure DevOps runner (F18 is simulated), Linux and fl
 - **Two-word operations lost their second word,** `Consume Fault` read back as `Consume` and `Send Offsets` as `Send`.
 - **A name map keyed on a database's old name stopped hitting** once its spans moved to the registry's. `OtherNameOf` reads both ways.
 
-Still to prove once it is published: `r3-span-kinds`, `r3-real-capture`, and `r3-fingerprint-diff` again, as its 986 lines predate F17.
+On the published 5.28.0 (`results/r3-proof-5.28.0.txt`): `r3-span-kinds` gives 194 rows, each the kind Q6 (b) measured. `r3-fingerprint-diff` gives 114 lines, every one a `kind`, so no fingerprint moves. `r3-real-capture` ran MassTransit's half: the send, read as `Event`, leaves as `CLIENT`. Its Kafka half needs a broker, so it did not run on the release, and `results/r3-real-capture.txt` keeps what it printed against one on the prototype.
 
 **2026-11-02, R2 built as 5.28.1, Q5 taken as (b).** Whole suite: 54 projects, 23,798 passed, 93 skipped, none failed. Release build clean. ProxyTap 29 of 30, on a machine saturated on purpose by F27's stress runs: the one failure is in a package R2 does not touch, and F27 follows it. All 20 mutations caught, the browser fact among them: `results/r2-mutations.txt`. An independent review found no tracker that breaks the rule on an unambiguous input and no history line that moves, and these around them:
 
@@ -746,7 +748,7 @@ Still to prove once it is published: `r3-span-kinds`, `r3-real-capture`, and `r3
 - **A call that throws had no fact for the kind of its answer,** and Kafka's failed consume and its `Raw` produce none at all. Each now has one. `An_event_is_not_judged` said more than the rule does, and now names what it holds.
 - **Nine card test files said the table leaves a delivery `Unknown`,** which stopped being true with R3.
 
-The proof still to run once it is published: `kinds-by-tracker`, which must give 0 bold rows of §2.2.
+On the published 5.28.1 (`results/r2-proof-5.28.1.txt`): `kinds-by-tracker` at each verbosity gives 0 responses whose kind differs from their request's, against 21 on 5.27.13, and 0 of §2.2's bold rows are left.
 
 **2026-11-02, R4 built as 5.28.2.** Whole suite: 54 projects, 23,887 passed, 95 skipped. The first full run failed 4 in the core project, all this release's own, and the core project ran again whole after they were fixed. ProxyTap 30 of 30, Release build clean, and the suite wrote no line to the repository's ledger. All 37 mutations caught, four of them only once a new fact was written: `results/r4-mutations.txt`. An independent review found one fault that would have held the release, and more around it:
 
@@ -766,6 +768,10 @@ The proof still to run once it is published: `kinds-by-tracker`, which must give
 - **A port race between test programs.** 8 copies at once failed 5 of 48 runs, a different fact each time, each an `HttpListenerException` on start: "conflicts with an existing registration on the machine" or "being used by another process". `LoopbackPort.Free` bound port 0, let it go, and the listener started a moment later, and Windows offers ports in turn, so another program was offered the same number. It now hands out ports from below every system's ephemeral range, from a block of 256 only this program holds, claimed with a named mutex. The first cut of that range began at 10000, and the re-run caught it: a stock Windows reserves 10243 to 10247 in http.sys, which a socket cannot see, so the program that drew that block failed 4 facts with "Access is denied". The range begins at 11000, and http.sys is asked about each port. On the release's code, 8 copies at once beside 8 more programs and 24 busy loops: 48 runs, none failed.
 - **A fact racing a real limit.** `Stopping_the_tap_lets_an_answer_in_hand_finish` failed 2 of 6 runs with the CPU saturated, 5.5 of 8 MB through when the 2 s a stop allows ran out. The limit is right, so the fact gives itself longer through an internal `AnswerInHandPatience`, and a new fact holds the limit itself. On 16 programs and 24 busy loops, other timing facts ran out of patience too, so their waits are longer, which costs only a real hang's time to report. In that same run none of these facts failed.
 - **A real race in the tap, on Windows.** `A_caller_that_half_closes_mid_body_is_answered_400_and_let_go` heard a reset 3 times in 16,000 on a saturated machine. **The first fix did not cure it:** closing rather than aborting left it at 3 in 32,000, and a run that recorded what the tap did showed why. http.sys writes its own 400 first in all but 2 of 32,000 tries, so the tap's close is refused, and .NET aborts inside a close that fails. So the tap now gives http.sys 200 ms before it ends the exchange. Any other failed body read reset its caller every time, which the fact's Windows branch had allowed: that fact now asserts the 400 on every system. On the release's code, 32,000 tries beside 24 busy loops all heard the 400.
+
+**CI failed one lane on the tag's commit, on a fact of this release.** `ATapOnEveryInterfaceAsksForOneDualModeSocket` says "on every machine" and had run only on Windows. Bound to one IPv6 address, Linux makes a socket IPv6-only whatever it asked for, so the fact's loopback stand-in read false after the bind (`results/r4-linux-dual-mode.txt`). The tap was right, so the packages stand. `c394d17f` fixes the fact, with no bump. That lane stops at its first red project, so the projects after it first ran on that commit. On that commit CI passes, 33 of 33 lanes (run 41558786754), and so does CodeQL.
+
+**2026-11-03, R1's proofs on the published 5.27.14.** Both proofs of §6.6 pass, from nuget.org, with 5.27.13 as the control (`results/r1-proof-*.txt`). `merge-labels`: 0 rows differ, against 9. `history-across-merge`: ten `stable`, against six changed, and the ledger's bytes do not move. `history-routes`: 15 of 15 stable, against 8 changed, and R1's tool over a 5.27.13 shard says 2, the verbs built by hand. `card-queue`: a merge equals its shard. A real report's merge: no call line changes. BreakfastProvider's six in-memory lanes on 5.27.14, its pins moved in a scratch clone and nothing pushed: 0 failures, `Spanner Default 12` against `Spanner Event 12`, and all 12 Spanner notes painted on the plain fill in both themes. Not run on the release: its 12 docker and external-SUT lanes, `merge --history` over a real lane, and Linux.
 
 ## Appendix A. The comment closing #220 (Q8), to post when R1 is published
 

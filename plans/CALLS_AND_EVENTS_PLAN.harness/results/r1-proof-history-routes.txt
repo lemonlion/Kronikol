@@ -1,0 +1,95 @@
+history-routes on Kronikol 5.27.14 from nuget.org, 2026-11-03. plans/CALLS_AND_EVENTS_PLAN.md 6.6, R1.
+
+What ran: probes/history-routes.cs, -names.txt and -verdicts.py on scratch copies, in the two shapes of the harness. history-routes-on-r1.sh with the published
+packages in place of its worktree: every #:project line a #:package at 5.27.14, the released tool in place of dotnet Kronikol.Tool.dll. And sweep-rerun.sh's first
+block with the 5.27.13 packages and tool, and 5.27.14's tool in place of the prototype's. Run 7 is not yet in the ledger when it is read, as CI's order has it.
+What the plan says R1 gives (section 12): with the shard written by R1's own library, 15 of 15 stable, where 5.27.13's merge says 8 changed. R1's tool over a shard from
+5.27.13's library says 2 changed, the two verbs built by hand, as the old writer has already upper-cased them in the file.
+What it gave: 15 of 15 stable, and the merge's History section reads "nothing changed (against 6 earlier runs on local)", with no history line on its console, as a clean read prints none. 8 changed on the control, 2 changed on the mixed pair, the same two.
+Added for this proof: a real change on 5.27.14, one line of a scratch copy (a Redis GET scenario makes a SET), so a clean read cannot be a page with no verdicts at all. It reads
+1 behaviour changed, on that scenario alone. The copy keeps the probe's file name, as a file-based app's name is its suite and any other name reads against an empty stream.
+
+Against results/history-routes.txt:
+5.27.14 written, recorded and merged, against the block on R1's own library: the same, line for line (16 lines)
+The control, own view: the same, line for line (1 lines)
+The control, 5.27.13 merge: the same, line for line (16 lines)
+5.27.14's merge of 5.27.13 shards, against the prototype's block: the same, line for line (16 lines)
+
+seven runs, exits: 0 0 0 0 0 0 0
+== written, recorded and merged by 5.27.14 from nuget.org: run 7's own view, then its merge
+history: nothing changed (against 6 earlier runs on local)
+merge exit 0; its console lines naming history: 0
+Redis GET, the real tracker at its default       stable
+Redis DEL, the real tracker at its default       stable
+Redis SET, control                               stable
+Redis GET at Raw, control                        stable
+gRPC method named Get, default verbosity         stable
+gRPC method named GetOrder, control              stable
+DispatchProxy method named Delete                stable
+DispatchProxy method named Find, control         stable
+Storage Queues delete, default verbosity         stable
+Hand new HttpMethod(patch)                       stable
+Hand HttpMethod.Parse(patch)                     stable
+Hand HttpMethod.Patch, control                   stable
+Hand string get                                  stable
+Hand string DELETE, control                      stable
+Hand new HttpMethod(propfind)                    stable
+
+seven runs, exits: 0 0 0 0 0 0 0
+== shards written by the 5.27.13 library: run 7's own view, against the ledger (published 5.27.13)
+history: nothing changed (against 6 earlier runs on local)
+
+== run 7 through kronikol merge --history (published 5.27.13), the control
+  history: 8 behaviour changed (against 6 earlier runs on local)
+Redis GET, the real tracker at its default       behaviour-changed
+Redis DEL, the real tracker at its default       behaviour-changed
+Redis SET, control                               stable
+Redis GET at Raw, control                        stable
+gRPC method named Get, default verbosity         behaviour-changed
+gRPC method named GetOrder, control              stable
+DispatchProxy method named Delete                behaviour-changed
+DispatchProxy method named Find, control         stable
+Storage Queues delete, default verbosity         behaviour-changed
+Hand new HttpMethod(patch)                       behaviour-changed
+Hand HttpMethod.Parse(patch)                     stable
+Hand HttpMethod.Patch, control                   stable
+Hand string get                                  behaviour-changed
+Hand string DELETE, control                      stable
+Hand new HttpMethod(propfind)                    behaviour-changed
+
+== the same run and ledger through kronikol merge --history (published 5.27.14), where the plan's prototype read 2 changed
+  history: 2 behaviour changed (against 6 earlier runs on local)
+Redis GET, the real tracker at its default       stable
+Redis DEL, the real tracker at its default       stable
+Redis SET, control                               stable
+Redis GET at Raw, control                        stable
+gRPC method named Get, default verbosity         stable
+gRPC method named GetOrder, control              stable
+DispatchProxy method named Delete                stable
+DispatchProxy method named Find, control         stable
+Storage Queues delete, default verbosity         stable
+Hand new HttpMethod(patch)                       behaviour-changed
+Hand HttpMethod.Parse(patch)                     stable
+Hand HttpMethod.Patch, control                   stable
+Hand string get                                  stable
+Hand string DELETE, control                      stable
+Hand new HttpMethod(propfind)                    behaviour-changed
+
+== history-routes: a real change on 5.27.14. The ledger of runs 1 to 6, then a run whose Redis GET scenario makes a SET in its place
+-- the clean merge: page: history-section 1 | behaviour-changed pills 0
+--                  labs: history-section 1 | behaviour-changed pills 0
+   changed lines in the scratch copy: 1
+   run exit 0
+  history: 1 behaviour changed (against 6 earlier runs on local)
+Redis GET, the real tracker at its default       behaviour-changed
+   of 15 scenarios, stable: 14
+-- page: history-section 1 | behaviour-changed pills 1
+-- labs: history-section 1 | behaviour-changed pills 2
+
+
+== The History section of each merge, in words
+written, recorded and merged by 5.27.14, its merged page: nothing changed (against 6 earlier runs on local)
+the same merge, its labs page: nothing changed (against 6 earlier runs on local)
+5.27.14's merge of 5.27.13 shards, its merged page: 2 behaviour changed (against 6 earlier runs on local)
+the control, 5.27.13's merge, its merged page: 8 behaviour changed (against 6 earlier runs on local)
+the real change on 5.27.14, its merged page: 1 behaviour changed (against 6 earlier runs on local)

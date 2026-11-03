@@ -1,0 +1,91 @@
+history-across-merge on Kronikol 5.27.14 from nuget.org, 2026-11-03. plans/CALLS_AND_EVENTS_PLAN.md 6.6, R1.
+
+What ran: probes/history-across-merge.cs and probes/history-verdicts.py on scratch copies. Seven identical runs on one ledger, each one process,
+args <folder> <ledger> local-<n>, then run 7's own view (kronikol query history) and kronikol merge run7 --history <ledger>. The harness has no runner
+for this probe, so the loop follows its README line. All on 5.27.14, and all on 5.27.13 as the control, with 5.27.14's merge also reading that 5.27.13 run,
+as the prototype did. Changed in the copy: the version on the #:package lines.
+What the plan says R1 gives (section 12): ten scenarios stable, where 5.27.13 says six changed, and a merge writes nothing to the ledger (5.2).
+What it gave: ten stable, the ledger's bytes the same before and after the merge. The run's own report reads "history: nothing changed (against 6 earlier runs on local)".
+Its merge reads the same in words: the History section of its page and of its labs page say "nothing changed (against 7 earlier runs on local)" (below), and neither page says it on 5.27.13.
+Against 7 runs and not 6, as this probe's run wrote itself to the ledger at run time and the merge has an id of its own, on both versions (F18). The console and the CI summary print no history line on a clean read,
+the shape the release's own fact asserts (MergedRunHistoryTests.AssertReadsStable: "A run with nothing to say prints no history line, so what it read is on the page beside it") and the prototype's block in
+results/history-across-merge.txt shows. No behaviour-changed pill on either page, against 6 and 12 on 5.27.13.
+kronikol query history over a merge prints "nothing changed" on both versions alike, so that line alone proves nothing: plan section 0 says it has behaviour verdicts off over a merged report.
+The ledger holds 8160 bytes here and 8234 in the results file, the same on both versions here: what the probe compares is before and after.
+
+Against results/history-across-merge.txt:
+The control's verdicts: the same, line for line (10 lines)
+5.27.14's merge of a 5.27.14 run, against the prototype's block: the same, line for line (10 lines)
+5.27.14's merge of the 5.27.13 run, against the prototype's block: the same, line for line (10 lines)
+
+seven runs on the 5.27.13 library, exits: 0 0 0 0 0 0 0
+seven runs on the 5.27.14 library, exits: 0 0 0 0 0 0 0
+
+== run 7's own report, against the ledger (published 5.27.14)
+history: nothing changed (against 6 earlier runs on local)
+no scenario in this run has a verdict other than stable · 10 scenarios read against 6 earlier r
+
+== run 7 through kronikol merge --history (published 5.27.14)
+merge exit 0; its console lines naming history: 0
+ledger bytes before and after the merge: 8160, 8160
+Control, an HTTP GET               stable
+Control, Redis Get (Hit)           stable
+Control, SQL DELETE in capitals    stable
+Spanner Delete as an Event         stable
+Spanner Delete as Default          stable
+BigQuery Delete, the handler       stable
+CosmosDB Delete, today             stable
+CosmosDB Patch, today              stable
+EF Core Delete, today              stable
+Blob Storage Delete, today         stable
+
+== the control, every run on the 5.27.13 library, as results/history-across-merge.txt was measured
+-- run 7's own report, against the ledger (published 5.27.13)
+history: nothing changed (against 6 earlier runs on local)
+no scenario in this run has a verdict other than stable · 10 scenarios read against 6 earlier r
+-- run 7 through kronikol merge --history (published 5.27.13)
+  history: 6 behaviour changed (against 7 earlier runs on local)
+ledger bytes before and after the merge: 8160, 8160
+Control, an HTTP GET               stable
+Control, Redis Get (Hit)           stable
+Control, SQL DELETE in capitals    stable
+Spanner Delete as an Event         stable
+Spanner Delete as Default          behaviour-changed
+BigQuery Delete, the handler       behaviour-changed
+CosmosDB Delete, today             behaviour-changed
+CosmosDB Patch, today              behaviour-changed
+EF Core Delete, today              behaviour-changed
+Blob Storage Delete, today         behaviour-changed
+-- the same run and ledger through kronikol merge --history (published 5.27.14), where the plan's prototype read ten stable
+merge exit 0; its console lines naming history: 0
+Control, an HTTP GET               stable
+Control, Redis Get (Hit)           stable
+Control, SQL DELETE in capitals    stable
+Spanner Delete as an Event         stable
+Spanner Delete as Default          stable
+BigQuery Delete, the handler       stable
+CosmosDB Delete, today             stable
+CosmosDB Patch, today              stable
+EF Core Delete, today              stable
+Blob Storage Delete, today         stable
+
+== history-across-merge: what each merge wrote
+-- 5.27.14 library, 5.27.14 merge: page: history-section 1 | behaviour-changed pills 0
+--                                 labs: history-section 1 | behaviour-changed pills 0
+-- 5.27.14 merge's console lines naming history: 0 (a run with nothing to say prints none, and the release's own fact asserts it)
+-- 5.27.14 query history over that merge, which the plan says has behaviour verdicts off, so it does not tell the two versions apart:
+history: nothing changed (against 7 earlier runs on local)
+-- the control, 5.27.13 library, 5.27.13 merge: page: history-section 1 | behaviour-changed pills 6
+--                                              labs: history-section 1 | behaviour-changed pills 12
+-- 5.27.13 query history over its merge:
+history: nothing changed (against 7 earlier runs on local)
+
+== What a clean merge says in words: its pages and its CI summary
+-- 5.27.14 library, 5.27.14 merge
+   merged page: 1 times in its text: "ummaries Shown Hidden Clear All History nothing changed (against 7 earlier runs on local) stream loc"
+   labs page: 1 times in its text: "-03 01:10 UTC · Open the report History nothing changed (against 7 earlier runs on local) stream loc"
+   merge --ci-summary, exit 0; CiSummary.md's history line: 
+-- 5.27.13 library, 5.27.13 merge
+   merged page: 0 times in its text
+   labs page: 0 times in its text
+   merge --ci-summary, exit 0; CiSummary.md's history line: history: 6 behaviour changed (against 7 earlier runs on local)

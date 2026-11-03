@@ -1,0 +1,6 @@
+R2's proof on the published 5.28.1, 2026-11-02, from nuget.org: kinds-by-tracker at each verbosity, through kinds-r2-analyse.py.
+
+A response whose kind differs from its request's: 0 at Detailed, Raw and Summarised, against 21 on 5.27.13 at Detailed.
+The theory by the operation (a publish, a receive and a delivery are Event, everything else Default, at every verbosity): 0 of 132 disagree at Detailed, 0 of 132 at Raw, 0 of 129 at Summarised. So 0 of section 2.2's bold rows are left.
+The literal theory of section 6.7 reads the label, and disagrees on deliveries, as the analysis was written before R3 taught the table Delivers: EventHubs, Kafka, MassTransit and PubSub each read Delivers at Event, which is right. At Raw, where the label is the HTTP verb or a rabbitmq address, it disagrees as it did on the prototype.
+Summarised reports 6 FAILED rows, the same three services' Other operations the probe has always named: at Summarised an Other is logged to nobody, so it holds no row. Row counts match the prototype's (203, 203, 206).
