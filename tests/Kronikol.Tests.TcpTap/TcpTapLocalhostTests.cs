@@ -255,9 +255,10 @@ public class TcpTapLocalhostTests
     }
 
     /// <summary>
-    /// What a tap on every interface asks for, on every machine: one dual-mode socket. It is given one on the loopback, as a real one
-    /// makes Windows ask the person at the machine to let the program through its firewall, once for each path of the test program,
-    /// so once per worktree.
+    /// What a tap on every interface asks for, on every machine: one dual-mode socket. On Windows it is given one on the loopback, as a
+    /// real one makes Windows ask the person at the machine to let the program through its firewall, once for each path of the test
+    /// program, so once per worktree. Elsewhere it is given what it asked for: Linux makes a socket bound to one IPv6 address IPv6-only,
+    /// whatever it asked for, so a loopback one reads false there after the bind.
     /// </summary>
     [Theory]
     [InlineData("*")]
@@ -273,7 +274,7 @@ public class TcpTapLocalhostTests
         tap.CreateListener = (address, port) =>
         {
             asked.Add(address);
-            return made = new TcpListener(IPAddress.IPv6Loopback, port);
+            return made = new TcpListener(OperatingSystem.IsWindows() ? IPAddress.IPv6Loopback : address, port);
         };
 
         await tap.StartAsync();
