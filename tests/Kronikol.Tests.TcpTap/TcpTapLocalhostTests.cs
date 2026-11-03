@@ -255,8 +255,38 @@ public class TcpTapLocalhostTests
     }
 
     /// <summary>
+    /// What a tap on every interface asks for, on every machine: one dual-mode socket. It is given one on the loopback, as a real one
+    /// makes Windows ask the person at the machine to let the program through its firewall, once for each path of the test program,
+    /// so once per worktree.
+    /// </summary>
+    [Theory]
+    [InlineData("*")]
+    [InlineData("+")]
+    public async Task ATapOnEveryInterfaceAsksForOneDualModeSocket(string listenHost)
+    {
+        Assert.SkipUnless(CanListenOnIPv6Loopback(), "this machine cannot listen on the IPv6 loopback");
+        await using var server = Pong();
+        var log = new List<string>();
+        await using var tap = new RedisTap(Options(server, log, listenHost, "127.0.0.1"));
+        var asked = new List<IPAddress>();
+        TcpListener? made = null;
+        tap.CreateListener = (address, port) =>
+        {
+            asked.Add(address);
+            return made = new TcpListener(IPAddress.IPv6Loopback, port);
+        };
+
+        await tap.StartAsync();
+
+        Assert.Equal([IPAddress.IPv6Any], asked);
+        Assert.True(made!.Server.DualMode);
+        Assert.Equal("+PONG\r\n", await PingAsync(IPAddress.IPv6Loopback, tap.BoundPort));
+    }
+
+    /// <summary>
     /// <c>*</c> and <c>+</c> listen on every interface, IPv6 too, so a client that dials "localhost" is answered on ::1 at
-    /// once. On IPv4 alone such a client on Windows waited about 2 s on every connect for ::1's refusal.
+    /// once. On IPv4 alone such a client on Windows waited about 2 s on every connect for ::1's refusal. The real socket, so only where no
+    /// one is asked about the firewall: CI's Windows lane, CI's Linux one, or off Windows.
     /// </summary>
     [Theory]
     [InlineData("*")]
@@ -264,6 +294,8 @@ public class TcpTapLocalhostTests
     public async Task ATapOnEveryInterfaceAnswersOnBothLoopbacks(string listenHost)
     {
         Assert.SkipUnless(CanListenOnIPv6Loopback(), "this machine cannot listen on the IPv6 loopback");
+        Assert.SkipUnless(!OperatingSystem.IsWindows() || Environment.GetEnvironmentVariable("CI") is not null,
+            "a real socket on every interface raises a firewall prompt on a developer's Windows machine, once per worktree; CI runs this on Windows (Tap On Every Interface) and Linux");
         await using var server = Pong();
         var log = new List<string>();
         await using var tap = new RedisTap(Options(server, log, listenHost, "127.0.0.1"));

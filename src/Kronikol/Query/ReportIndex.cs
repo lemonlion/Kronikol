@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Kronikol.Reports;
+using Kronikol.Tracking;
 
 namespace Kronikol.Query;
 
@@ -398,7 +399,7 @@ internal sealed class InteractionEntry
 
     public string ShortUri()
     {
-        if (!System.Uri.TryCreate(Uri, UriKind.Absolute, out var uri))
+        if (!RecordedUri.TryAbsolute(Uri, out var uri))
             return Uri;
         var tail = uri.PathAndQuery;
         return tail is "/" or "" ? uri.Host : tail;

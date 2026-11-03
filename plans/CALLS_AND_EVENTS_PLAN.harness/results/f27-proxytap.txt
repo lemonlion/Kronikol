@@ -1,0 +1,38 @@
+F27: Kronikol.Tests.ProxyTap's failures, measured with probes/proxy_stress.py on 2026-11-02 (Windows 11, 20 logical processors, .NET 10).
+It runs the built project under a chosen pressure and keeps each failure's message. Each run is one whole project, 205 to 207 facts.
+
+== Before any fix, at 12ffd187's ProxyTap code
+8 copies at once, 6 rounds: 48 runs, 5 failed, 5 failures, a different fact each time, every one on starting a listener:
+  3 HttpListenerException: Failed to listen on prefix 'http://localhost:N/' because it conflicts with an existing registration on the machine.
+  2 HttpListenerException: The process cannot access the file because it is being used by another process.
+1 copy beside 8 programs that bind port 0 and let go as fast as they can (no http.sys), 8 rounds: 8 runs, 0 failed.
+1 copy beside 24 busy loops, 6 rounds: 6 runs, 2 failed, both Stopping_the_tap_lets_an_answer_in_hand_finish: "the answer was cut short: 5,505,024 of 8,388,608 bytes".
+One whole-project run while those ran: A_caller_that_half_closes_mid_body_is_answered_400_and_let_go heard "a reset (ConnectionReset)".
+That fact alone, 8 programs of 2,000 tries beside 24 busy loops: 15,995 heard the 400, 3 a reset, 2 failed to start on a port.
+A late read by the caller, a late abort by the tap and a late first read by the tap, 40 tries each, idle and under load: all 400. None forces the race.
+
+== The first fix: ports from a block at 10000 to 31999, and on a failed body read the tap closes rather than aborts (ea3b7b53)
+8 copies at once, 12 rounds: 96 runs, 7 failed, 28 failures, all in the copy that drew the first block, 4 facts each:
+  21 HttpListenerException: Access is denied.
+  7 HttpListenerException: Failed to listen on prefix 'http://localhost:10245/' because it conflicts with an existing registration on the machine.
+netsh http show urlacl: http://+:10243/WMPNSSv4/, https://+:10245/WMPNSSv4/, http://+:10246/MDEServer/, http://+:10247/apps/. A socket cannot see these.
+1 copy beside 24 busy loops, 6 rounds: 6 runs, 0 failed.
+The half-close fact, 8 programs of 4,000 tries beside 24 busy loops: 31,993 heard the 400, 3 a reset, 4 failed on those reserved ports. The first fix did not cure the reset.
+
+== Which side of the race (7cf4f740, ports from 11000, http.sys asked about each)
+The half-close fact, as above, recording whether the tap reached its abort:
+  31,967 HTTP/1.1 400 [the tap aborted]: http.sys answered first, so the tap's close was refused
+       2 HTTP/1.1 400 [no abort]: the tap's close got there first
+       6 a reset [the tap aborted]
+       8 nothing within 5 s [the tap aborted], 2 nothing within 5 s [no abort], 13 the tap never took the request: starved past the facts' patience
+       2 failed to start on a port: 4,000 tries take 31 blocks a program, so 8 programs ran out of the 82 and fell back to the old probe. A suite takes 2 or 3.
+Beside it, 8 copies, 12 rounds. While the loops ran, facts with fixed patience failed on the saturated machine, 44 failures over 6 rounds. Once they had ended:
+  6 rounds, 48 runs, 0 failed.
+
+== The release's code (d5f6d712): the tap gives http.sys 200 ms, and the timing facts wait longer
+Both at once: 8 copies of the project, and 8 programs of 800 tries over 5 rounds, beside 24 busy loops. Each round of the project took 5 to 7 minutes rather than 39 seconds.
+8 copies, 6 rounds: 48 runs, 0 failed, 0 failures.
+The half-close fact: 32,000 tries, 32,000 heard the 400. 0 resets, 0 starved, 0 failed on a port.
+
+== What the facts now hold
+results/f27-mutations.txt: 11 mutations of the fix, 10 caught, one of them ("http.sys is not asked") only once a new fact was written. "A socket is not asked" survives on Windows by design, as http.sys sees a port in use too; Linux has the socket alone, and CI runs it there.

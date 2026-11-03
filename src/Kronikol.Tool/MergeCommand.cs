@@ -330,6 +330,7 @@ internal static class MergeCommand
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var besideAReport = new SortedSet<string>(StringComparer.Ordinal);
         var skipped = 0;
+        var underAttachments = 0;
 
         void Add(string path)
         {
@@ -348,9 +349,12 @@ internal static class MergeCommand
                 // `runs/` holds the runs before this one. Sweeping either in as a shard would merge
                 // yesterday's results into today's: a green report gained a retained run's failure.
                 // What a sweep FINDS, not what it is GIVEN: `merge Reports/runs/gh_1_1` is still read.
-                foreach (var f in QueryCommand.DistinctReports(Directory.EnumerateFiles(input, "*", SearchOption.AllDirectories)
-                             .Where(f => (f.EndsWith(".json", StringComparison.OrdinalIgnoreCase) || f.EndsWith(".krkl", StringComparison.OrdinalIgnoreCase))
-                                         && !ReportFolders.IsReserved(input, f)), error))
+                var found = Directory.EnumerateFiles(input, "*", SearchOption.AllDirectories)
+                    .Where(f => f.EndsWith(".json", StringComparison.OrdinalIgnoreCase) || f.EndsWith(".krkl", StringComparison.OrdinalIgnoreCase))
+                    .ToArray();
+                // A run's or last-green's are routine, but a shard someone put under attachments/ would be lost without a word.
+                underAttachments += found.Count(f => ReportFolders.IsAttachment(input, f));
+                foreach (var f in QueryCommand.DistinctReports(found.Where(f => !ReportFolders.IsReserved(input, f)), error))
                 {
                     // What Kronikol itself writes beside a report, by name: none of them is a report, and
                     // the reader fails the whole merge on the first one (every history-enabled run has
@@ -391,6 +395,8 @@ internal static class MergeCommand
             }
         }
 
+        if (underAttachments > 0)
+            error.WriteLine($"left {underAttachments} file{(underAttachments == 1 ? "" : "s")} under attachments/, where a report's attachments are kept: name one explicitly to merge it");
         if (skipped > 0)
             error.WriteLine($"skipped {skipped} file{(skipped == 1 ? "" : "s")} Kronikol writes beside a report ({string.Join(", ", besideAReport)}) — name one explicitly to have it read");
 
@@ -413,7 +419,8 @@ internal static class MergeCommand
         w.WriteLine();
         w.WriteLine("Arguments:");
         w.WriteLine("  <inputs...>          Files, directories (searched recursively), or glob patterns.");
-        w.WriteLine("                       A `baseline` folder is skipped: it is last-green, not a shard.");
+        w.WriteLine("                       A `baseline`, `runs` or `attachments` folder is skipped: last-green, the runs");
+        w.WriteLine("                       before this one, and files a report attached, none of them a shard.");
         w.WriteLine("Options:");
         w.WriteLine("  -o, --output <path>  Output HTML path (default: TestRunReport.html). The data file takes the same");
         w.WriteLine("                       name with .json (.krkl, compressed, when a shard was or -o names a .krkl),");

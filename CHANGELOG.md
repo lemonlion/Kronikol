@@ -4,6 +4,51 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.28.2] - 2026-11-02
+
+The patch part moves (5.28.1 to 5.28.2): bug fixes found while fixing #220, with no new option and no new public member
+(`plans/CALLS_AND_EVENTS_PLAN.md` F20, F21, F24, F25 and F27).
+
+### Fixed
+
+- **A record with a relative address costs a run nothing.** `MessageTracker` and `RequestResponseLog` take any `Uri`, and the
+  readers on a run's way asked a relative one for a member it refuses, with a warning: "... not supported for a relative URI". It always lost the
+  scenario's diagram. With internal flow on, its default, it also lost `TestRunReport.html` and `Specifications.html`, and with
+  `GenerateMergeableData` on as well, `TestRunReport.krkl` and `service.json`. The address is now drawn as it was written.
+- **`kronikol merge <folder>` leaves `attachments/` alone.** It swept `attachments/*.json` as shards, so a shard holding
+  `attachments/openapi.json` stopped the merge with exit 1. A sweep of a folder now leaves what it finds under a folder of that name,
+  and says how many files it left, as a shard kept there is left too. A file named on the command line is still read, as is a folder of
+  that name given as the root. `kronikol query <parent>` follows the same rule, so it no longer finds a report under `attachments/`.
+  `history record` now leaves `attachments/` and `baseline/` too, where it took a fragment for a run of its own, and `history import` leaves
+  `attachments/`. Both still read `runs/`: `record` folds a retry's earlier attempts from it, and retained runs are what `import` is for.
+- **A sharded run's line is partial only when it is.** A shard that could see the ledger read itself as partial, as it holds a part
+  of the suite, and the fold kept any shard's `true`. The history action's flow does this, as it runs `read` in each test job before
+  the tests. So the whole run's line read `partial`, nothing was reported absent from it, and a merge, which is not partial, read
+  past it: with `--history` it raised a false `behaviour-changed`, or read nothing on a change and back, which is now `alternating`.
+  A fragment now carries only what the host said (`HistoryPartialRun`) and the threshold it set (`HistoryPartialThreshold`), and the
+  whole run is judged when its line is appended, against its own branch's last full run, as a run in process reads it. `HistoryPartialRun`
+  set to `false` on every shard now holds through the fold, where only `true` did. Behaviour change: a run under that flow now reports
+  what is absent from it. Lines already recorded stay as written, so where a ledger's only full line is its first and the suite has since
+  lost more than a tenth of it, new lines read `partial` until that line leaves the last 50.
+- **A merge reads a path ending in `%20` as the run recorded it.** The data file writes the space itself, and parsing that text
+  trimmed it, so `merge --history` read the call as changed. Only an absolute address loses one, so a relative one is left as written.
+- **On Linux a relative address is no file.** `query`, `--group-by path` and the `Failures.md` Call column took `/orders?page=1` for a
+  file's path, and printed `/orders%3Fpage=1`.
+- **`Kronikol.Extensions.ProxyTap` answers a request that never arrived whole on Windows too.** Where reading the body failed, the tap
+  aborted the response, and http.sys writes nothing on an abort, so a caller still listening had its connection reset. That abort could
+  also overtake the `400` http.sys writes itself for a caller that half-closes, which reset that caller as well, 6 times in 32,000 on a
+  saturated machine. The tap now gives http.sys 200 ms to finish and then closes with the status. Behaviour change: on Windows such a caller
+  hears `400 Bad Request`, not a reset, and that exchange ends 200 ms later.
+- **The test suite's own intermittent failures** (tests only, no package moves). A test program that bound port 0, let it go and listened on
+  it a moment later could lose the number to another program, as Windows offers ports in turn: 8 copies of `Kronikol.Tests.ProxyTap` at once
+  failed 5 of 48 runs that way, a different test each time. `LoopbackPort` now hands out ports from below every system's ephemeral range,
+  from a block only that program holds, and asks http.sys about each, as a socket cannot see what it has reserved. A stop's fact stopped
+  racing the 2 s a stop allows, and the tap's timing facts wait longer before they call a saturated machine a failure.
+- **A report's own rows that look alike stay two.** A data-driven test whose rows share a name, a result and a time read as a copy
+  of each other, so a merge dropped one, and history read it as absent from a run that ran it. A look-alike is now kept as many times
+  as the fullest report held it, whichever comes first, so a later report's copy of them is still dropped, as that is the copy the rule
+  exists for.
+
 ## [5.28.1] - 2026-11-02
 
 The patch part moves (5.28.0 to 5.28.1): bug fixes that change what readers see, with no new option and no new public

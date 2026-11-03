@@ -62,10 +62,10 @@ public class MergedRunHistoryTests : IDisposable
         }
     ];
 
-    private static RequestResponseLog[] Call(OneOf<HttpMethod, string> method, string? category, DateTimeOffset at)
+    private static RequestResponseLog[] Call(OneOf<HttpMethod, string> method, string? category, DateTimeOffset at, string address = "probe:///orders")
     {
         var (trace, pair) = (Guid.NewGuid(), Guid.NewGuid());
-        var uri = new Uri("probe:///orders");
+        var uri = new Uri(address);
         return
         [
             new RequestResponseLog(ScenarioName, ScenarioId, method, null, uri, [], "Dependency", "Orders Api",
@@ -76,27 +76,27 @@ public class MergedRunHistoryTests : IDisposable
     }
 
     /// <summary>The runs before this one, each recorded by the run itself, from the calls it made.</summary>
-    private void RecordEarlierRuns(OneOf<HttpMethod, string> method, string? category, int runs = 6)
+    private void RecordEarlierRuns(OneOf<HttpMethod, string> method, string? category, int runs = 6, string address = "probe:///orders")
     {
         for (var n = 1; n <= runs; n++)
-            Record(method, category, new DateTimeOffset(Start).AddHours(n - runs - 1), failed: false);
+            Record(method, category, new DateTimeOffset(Start).AddHours(n - runs - 1), failed: false, address);
     }
 
-    private void Record(OneOf<HttpMethod, string> method, string? category, DateTimeOffset at, bool failed)
+    private void Record(OneOf<HttpMethod, string> method, string? category, DateTimeOffset at, bool failed, string address = "probe:///orders")
     {
         var options = new ReportConfigurationOptions { HistoryFilePath = Ledger, HistoryBranch = "" };
-        var context = HistoryRunContext.Create(Features(failed), Call(method, category, at), null, null, at, options, _dir, "5.27.13", _ => null, _dir);
+        var context = HistoryRunContext.Create(Features(failed), Call(method, category, at, address), null, null, at, options, _dir, "5.27.13", _ => null, _dir);
         Assert.NotNull(context);
         Assert.Equal(HistoryAppendOutcome.Appended, context.Append()?.Outcome);
     }
 
     /// <summary>This run's shard, as a run writes it: the label as the tracker wrote it, in the file a merge reads.</summary>
-    private void WriteShard(OneOf<HttpMethod, string> method, string? category, bool failed = false)
+    private void WriteShard(OneOf<HttpMethod, string> method, string? category, bool failed = false, string address = "probe:///orders")
     {
         Directory.CreateDirectory(Shards);
         File.WriteAllText(Path.Combine(Shards, "runner1.json"), ReportGenerator.GenerateMergeableReportJson(
             Features(failed), Start, Start.AddMinutes(1), null, null, null, null, WholeTestFlowVisualization.None, null,
-            trackedLogs: Call(method, category, new DateTimeOffset(Start).AddSeconds(1))));
+            trackedLogs: Call(method, category, new DateTimeOffset(Start).AddSeconds(1), address)));
     }
 
     private string Merge(Func<string, string?>? environment = null)
@@ -156,6 +156,22 @@ public class MergedRunHistoryTests : IDisposable
     {
         RecordEarlierRuns(HttpMethod.Delete, DependencyCategories.SQL);
         WriteShard(HttpMethod.Delete, DependencyCategories.SQL);
+
+        AssertReadsStable(Merge());
+    }
+
+    /// <summary>
+    /// A path ending in an escaped space is written with the space itself, and parsing that text trims it, so a merge read another
+    /// path than the run recorded (plans/CALLS_AND_EVENTS_PLAN.md F21).
+    /// </summary>
+    [Theory]
+    [InlineData("http://svc/search/foo%20")]
+    [InlineData("http://svc/search/foo%20%20")]
+    [InlineData("probe:///foo%20")]
+    public void A_path_ending_in_an_escaped_space_reads_as_nothing_changed(string address)
+    {
+        RecordEarlierRuns(HttpMethod.Get, null, address: address);
+        WriteShard(HttpMethod.Get, null, address: address);
 
         AssertReadsStable(Merge());
     }

@@ -271,8 +271,9 @@ public class HistoryOutputsTests : IDisposable
             Run("r2", "test:2:1", one);
 
         Assert.Contains(collector.Entries, d => d.Kind == DiagnosticKind.HistoryPartialRun);
+        // The fragment leaves the question to whoever records it, as a shard cannot tell a filter from being one shard (plans/CALLS_AND_EVENTS_PLAN.md F20).
         var fragment = HistoryFragment.Parse(ReportHtml.Read(Path.Combine(Reports("r2"), HistoryFormat.FragmentFileName)));
-        Assert.True(fragment.Run.Partial);
+        Assert.Null(fragment.Run.Partial);
         Assert.True(HistoryLedgerReader.Read(Ledger, 50).Ledger!.Runs("HistorySuite")[^1].Partial);
     }
 

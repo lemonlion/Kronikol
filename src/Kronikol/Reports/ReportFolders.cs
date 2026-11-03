@@ -12,10 +12,12 @@ public sealed record RetainedRun(string Directory, RunManifest Manifest);
 /// <para>A reports directory holds the newest run at its top level, byte for byte what it always held.
 /// Beneath it, <c>runs/&lt;run&gt;/</c> holds the runs before it and <c>baseline/</c> the report a
 /// <c>diff --baseline</c> compares against. Both are full of files that look exactly like a report, so
-/// every recursive sweep — <c>kronikol merge &lt;dir&gt;</c>, <c>kronikol query &lt;parent&gt;</c>,
-/// <c>kronikol history record</c> — has to be told to leave them alone, or a retained failing run is
-/// merged into the green report beside it as one more shard. One helper, so the rule cannot be right in
-/// two sweeps and forgotten in the third.</para>
+/// a recursive sweep — <c>kronikol merge &lt;dir&gt;</c>, <c>kronikol query &lt;parent&gt;</c> — has to be told to leave them
+/// alone, or a retained failing run is merged into the green report beside it as one more shard.
+/// <c>attachments/</c> holds what a run attached, an <c>openapi.json</c> as much as a screenshot, and is no report
+/// whatever its name. One helper, so the rule cannot be right in one sweep and forgotten in the other.
+/// <c>kronikol history record</c> leaves <c>baseline/</c> and <c>attachments/</c> and reads <c>runs/</c>, where a retry's
+/// earlier attempts are kept.</para>
 /// </summary>
 public static class ReportFolders
 {
@@ -24,6 +26,9 @@ public static class ReportFolders
 
     /// <summary>The conventional folder a <c>--baseline</c> report lives in, beside the current one.</summary>
     public const string BaselineFolderName = "baseline";
+
+    /// <summary>The folder a run's attached files are kept in, beside its report.</summary>
+    internal const string AttachmentsFolderName = "attachments";
 
     /// <summary>
     /// What a rotation in flight is called under <c>runs/</c>: files are staged into
@@ -36,7 +41,7 @@ public static class ReportFolders
 
     /// <summary>
     /// Whether a sweep that started at <paramref name="root"/> leaves <paramref name="file"/> alone: true
-    /// when <c>runs</c> or <c>baseline</c> is a segment of the file's path <em>relative to the root</em>,
+    /// when <c>runs</c>, <c>baseline</c> or <c>attachments</c> is a segment of the file's path <em>relative to the root</em>,
     /// in any case.
     /// </summary>
     /// <remarks>
@@ -60,8 +65,20 @@ public static class ReportFolders
 
         return segments.Any(segment =>
             string.Equals(segment, RunsFolderName, StringComparison.OrdinalIgnoreCase)
-            || string.Equals(segment, BaselineFolderName, StringComparison.OrdinalIgnoreCase));
+            || string.Equals(segment, BaselineFolderName, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(segment, AttachmentsFolderName, StringComparison.OrdinalIgnoreCase));
     }
+
+    /// <summary>Whether <paramref name="file"/> is left out of a sweep of <paramref name="root"/> for lying under <c>attachments/</c>.</summary>
+    internal static bool IsAttachment(string root, string file) => IsUnder(root, file, AttachmentsFolderName);
+
+    /// <summary>Whether <paramref name="file"/> is left out of a sweep of <paramref name="root"/> for lying under <c>baseline/</c>.</summary>
+    internal static bool IsBaseline(string root, string file) => IsUnder(root, file, BaselineFolderName);
+
+    private static bool IsUnder(string root, string file, string folder) =>
+        IsReserved(root, file)
+        && Path.GetRelativePath(root, file).Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+            .Any(segment => string.Equals(segment, folder, StringComparison.OrdinalIgnoreCase));
 
     /// <summary>
     /// The runs retained under <paramref name="reportsDirectory"/>, newest first: every directory directly

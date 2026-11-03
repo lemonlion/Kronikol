@@ -1,5 +1,6 @@
 using Kronikol.Constants;
 using Kronikol.History;
+using Kronikol.Tracking;
 
 namespace Kronikol.Query;
 
@@ -167,7 +168,7 @@ public static partial class QueryCommand
     // The `path` dimension: the URI's path as recorded, ids and all; `route` is the call's operation, templated.
     private static string UriPath(string uri)
     {
-        if (System.Uri.TryCreate(uri, UriKind.Absolute, out var parsed))
+        if (RecordedUri.TryAbsolute(uri, out var parsed))
             return parsed.AbsolutePath;
         var question = uri.IndexOf('?');
         return question < 0 ? uri : uri[..question];

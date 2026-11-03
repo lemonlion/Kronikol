@@ -102,6 +102,74 @@ public class MergeKeepsEveryScenarioTests : IDisposable
         Assert.Single(Scenarios());
     }
 
+    /// <summary>
+    /// A report's own two rows that look alike are two rows, as its run wrote them: a data-driven test whose rows share a name, a
+    /// result and a time. They read as a copy of each other, so a merge dropped one, and history then read it as absent from a run
+    /// that ran it (plans/CALLS_AND_EVENTS_PLAN.md F21).
+    /// </summary>
+    [Fact]
+    public void A_reports_own_rows_that_look_alike_stay_two()
+    {
+        File.WriteAllText(Path.Combine(_dir, "runner1.json"), """
+            {
+              "mergeableFormatVersion": 1, "kronikolVersion": "5.27.13",
+              "startTime": "2026-01-01T10:00:00Z", "endTime": "2026-01-01T10:01:00Z",
+              "features": [ { "name": "Orders", "scenarios": [
+                { "id": "row-1", "name": "Untimed row", "result": "Passed", "durationSeconds": 0.0 },
+                { "id": "row-2", "name": "Untimed row", "result": "Passed", "durationSeconds": 0.0 }
+              ] } ]
+            }
+            """);
+
+        Assert.Equal(0, Merge().Exit);
+
+        Assert.Equal(2, Scenarios().Length);
+    }
+
+    /// <summary>Which report comes first decides nothing: a look-alike is kept as many times as the fullest report held it.</summary>
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Rows_that_look_alike_number_what_the_fullest_report_held_in_either_order(bool shortOneFirst)
+    {
+        const string one = """{ "id": "row-1", "name": "Untimed row", "result": "Passed", "durationSeconds": 0.0 }""";
+        const string two = """{ "id": "row-2", "name": "Untimed row", "result": "Passed", "durationSeconds": 0.0 }""";
+        string Report(string rows) => $$"""
+            {
+              "mergeableFormatVersion": 1, "kronikolVersion": "5.27.13",
+              "startTime": "2026-01-01T10:00:00Z", "endTime": "2026-01-01T10:01:00Z",
+              "features": [ { "name": "Orders", "scenarios": [ {{rows}} ] } ]
+            }
+            """;
+        File.WriteAllText(Path.Combine(_dir, shortOneFirst ? "a.json" : "b.json"), Report(one));
+        File.WriteAllText(Path.Combine(_dir, shortOneFirst ? "b.json" : "a.json"), Report(one + "," + two));
+
+        Assert.Equal(0, Merge().Exit);
+
+        Assert.Equal(2, Scenarios().Length);
+    }
+
+    /// <summary>The same two rows from a second report are the copy this rule exists for.</summary>
+    [Fact]
+    public void A_later_reports_copy_of_those_rows_is_dropped_whole()
+    {
+        File.WriteAllText(Path.Combine(_dir, "runner1.json"), """
+            {
+              "mergeableFormatVersion": 1, "kronikolVersion": "5.27.13",
+              "startTime": "2026-01-01T10:00:00Z", "endTime": "2026-01-01T10:01:00Z",
+              "features": [ { "name": "Orders", "scenarios": [
+                { "id": "row-1", "name": "Untimed row", "result": "Passed", "durationSeconds": 0.0 },
+                { "id": "row-2", "name": "Untimed row", "result": "Passed", "durationSeconds": 0.0 }
+              ] } ]
+            }
+            """);
+        File.Copy(Path.Combine(_dir, "runner1.json"), Path.Combine(_dir, "runner1-copy.json"));
+
+        Assert.Equal(0, Merge().Exit);
+
+        Assert.Equal(2, Scenarios().Length);
+    }
+
     private JsonElement[] Scenarios()
     {
         var root = JsonDocument.Parse(ReportHtml.Read(Path.Combine(_dir, "Combined.json"))).RootElement;

@@ -343,7 +343,7 @@ internal static partial class HistoryCommand
         {
             var (roster, run, shapes) = foldedRun;
             var line = run;
-            var previous = LastFullRoster(ledger, run.Suite);
+            var previous = LastFullRoster(ledger, run);
             // The ids Kronikol itself changed, which the line names (Q15): no rename to suggest, and no scenario missing.
             if (previous is not null && HistoryAliases.With(null, [line]) is { } own)
                 previous = own.Apply(previous);
@@ -387,7 +387,7 @@ internal static partial class HistoryCommand
             {
                 // The heuristic runs here, against the ledger as it stands, so eight shards that each
                 // lacked seven eighths of the suite do not each declare themselves partial.
-                line = line with { Partial = HistoryAnalyzer.IsPartial(roster, previous, 0.10) };
+                line = line with { Partial = HistoryAnalyzer.IsPartial(roster, previous, line.PartialThreshold ?? 0.10) };
             }
 
             // A fragment bridges every rule Kronikol keeps; the ledger's line keeps only those its window holds (#190 R0):
@@ -516,7 +516,8 @@ internal static partial class HistoryCommand
                 {
                     if (InAStagedRotation(full, file))
                         staged++;
-                    else
+                    // runs/ is read: a retry's earlier attempts are kept there, and they fold into the run as attempts.
+                    else if (!ReportFolders.IsAttachment(full, file) && !ReportFolders.IsBaseline(full, file))
                         files.Add(file);
                 }
             }
@@ -535,12 +536,13 @@ internal static partial class HistoryCommand
     /// <summary>The previous roster with every aliased id replaced by its current one, so a rename is not a missing scenario.</summary>
     private static HistoryRoster WithAliases(HistoryRoster previous, HistoryAliases aliases) => aliases.Apply(previous);
 
-    private static HistoryRoster? LastFullRoster(string ledger, string? suite)
+    private static HistoryRoster? LastFullRoster(string ledger, HistoryRun run)
     {
         var read = HistoryLedgerReader.Read(ledger, DefaultWindow);
         if (read.Ledger is not { } held)
             return null;
-        var runs = held.Runs(suite);
+        // Its own stream's, as a run in process reads it (HistoryAnalyzer): another branch's scenarios are none this run can be missing.
+        var runs = held.PriorRuns(run.Suite, run.Stream, run.Id, DefaultWindow);
         // Its tests: a scenario it recorded as not a test is none this run can be missing (HistoryAnalyzer.TestsOf).
         for (var i = runs.Count - 1; i >= 0; i--)
             if (runs[i].Partial != true && held.Roster(runs[i].RosterHash) is { } roster)

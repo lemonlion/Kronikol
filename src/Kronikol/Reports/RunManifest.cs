@@ -59,7 +59,10 @@ public sealed record RunManifest
     /// <summary>How many of them failed. What keeps the last failing run from being pruned.</summary>
     public int Failed { get; init; }
 
-    /// <summary>Whether history recorded the run as partial; null when history was off or had nothing to compare it with.</summary>
+    /// <summary>
+    /// Whether history recorded the run as partial; null when history was off or had nothing to compare it with, and on a manifest rebuilt
+    /// from a fragment that left the question to whoever records it.
+    /// </summary>
     public bool? Partial { get; init; }
 
     /// <summary>The Kronikol build that wrote the run.</summary>

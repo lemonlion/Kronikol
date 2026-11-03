@@ -86,6 +86,8 @@ public static class HistoryJson
             writer.WriteStartObject();
             writer.WriteNumber("historyFormatVersion", HistoryFormat.Version);
             writer.WriteString("generator", generator);
+            if (run.PartialThreshold is { } threshold)
+                writer.WriteNumber("partialThreshold", threshold);
             writer.WritePropertyName("roster");
             WriteRoster(writer, roster);
             writer.WritePropertyName("run");
@@ -602,6 +604,8 @@ public static class HistoryJson
                         StringComparer.Ordinal)
                 };
             }
+            if (root.TryGetProperty("partialThreshold", out var threshold) && threshold.ValueKind == JsonValueKind.Number)
+                run = run with { PartialThreshold = threshold.GetDouble() };
             return new HistoryFragment(version, roster, run, shapes)
             {
                 Generator = root.TryGetProperty("generator", out var generator) && generator.ValueKind == JsonValueKind.String ? generator.GetString() : null,

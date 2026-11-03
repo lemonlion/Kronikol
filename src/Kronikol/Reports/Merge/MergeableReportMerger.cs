@@ -297,7 +297,9 @@ public static class MergeableReportMerger
     private static (IReadOnlyList<MergeableReport> Kept, IReadOnlyList<DiagnosticEntry> Diagnostics) DropWhatWasAlreadySupplied(
         IReadOnlyList<MergeableReport> reports)
     {
-        var seen = new HashSet<string>(StringComparer.Ordinal);
+        // The report that first supplied each scenario: a report's own two rows that look alike are two rows, as its run wrote
+        // them, and only a later report's copy is one already supplied.
+        var keptOf = new Dictionary<string, int>(StringComparer.Ordinal);
         var shardsThatRan = new Dictionary<string, HashSet<int>>(StringComparer.Ordinal);
         var kept = new List<MergeableReport>(reports.Count);
         var dropped = 0;
@@ -306,6 +308,7 @@ public static class MergeableReportMerger
         for (var index = 0; index < reports.Count; index++)
         {
             var report = reports[index];
+            var heldHere = new Dictionary<string, int>(StringComparer.Ordinal);
             var survivors = 0;
             var survivorIds = new HashSet<string>(StringComparer.Ordinal);
             var duplicateIds = new HashSet<string>(StringComparer.Ordinal);
@@ -316,11 +319,15 @@ public static class MergeableReportMerger
                 var scenarios = new List<Scenario>(feature.Scenarios.Length);
                 foreach (var scenario in feature.Scenarios)
                 {
-                    if (!seen.Add(Identity(report.Suite, feature, scenario)))
+                    var identity = Identity(report.Suite, feature, scenario);
+                    // As many as the fullest report held, whichever comes first: a copy adds none, and a report's own look-alike rows stay.
+                    var held = heldHere[identity] = heldHere.GetValueOrDefault(identity) + 1;
+                    if (held <= keptOf.GetValueOrDefault(identity))
                     {
                         duplicateIds.Add(scenario.Id);
                         continue;
                     }
+                    keptOf[identity] = held;
 
                     scenarios.Add(scenario);
                     survivors++;

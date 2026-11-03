@@ -796,7 +796,7 @@ public static class InternalFlowSegmentBuilder
         logs?
             .Where(l => l.TestId == testId && l.Type == RequestResponseType.Request && l.Timestamp.HasValue && !l.IsDiagramMarker)
             .OrderBy(l => l.Timestamp!.Value)
-            .Select(l => ($"{l.Method.Value}: {l.Uri.PathAndQuery}", l.Timestamp!.Value))
+            .Select(l => ($"{l.Method.Value}: {RecordedUri.PathAndQuery(l.Uri)}", l.Timestamp!.Value))
             .ToArray() ?? [];
 
     /// <summary>

@@ -127,6 +127,10 @@ public sealed class ProxyTap : IAsyncDisposable
     // exception it names, on any platform. Null in production.
     internal Func<Stream, Stream>? WrapRequestBody { get; set; }
 
+    // How long a stop waits on an answer in hand (Kronikol.Tests.ProxyTap): on a saturated machine an answer can take longer, and a
+    // fact about what a stop lets finish should not race the limit. 2 s in production.
+    internal TimeSpan AnswerInHandPatience { get; set; } = TimeSpan.FromSeconds(2);
+
     // The phases a caller is watched in, as the watch and the tap's messages name them.
     internal const string BodyPhase = "request body";
     internal const string AnswerPhase = "answer";
@@ -551,7 +555,7 @@ public sealed class ProxyTap : IAsyncDisposable
                     return;
                 }
 
-                answer.StatusIfUnclosed = 400;
+                await answer.AnswerUnreadAsync(400).ConfigureAwait(false);
                 return;
             }
 
@@ -1274,6 +1278,9 @@ public sealed class ProxyTap : IAsyncDisposable
 
         public HttpListenerResponse Response { get; } = response;
 
+        /// <summary>How long http.sys is given to finish the 400 it writes itself. A kernel write, so far longer than it takes under any load measured.</summary>
+        private static readonly TimeSpan HttpSysAnswersWithin = TimeSpan.FromMilliseconds(200);
+
         /// <summary>The status a response not yet started is ended with: 502, or 400 when the request never arrived whole.</summary>
         public int StatusIfUnclosed { get; set; } = 502;
 
@@ -1318,6 +1325,33 @@ public sealed class ProxyTap : IAsyncDisposable
             {
                 Volatile.Write(ref _state, phase);
                 throw;
+            }
+        }
+
+        /// <summary>
+        /// Answers a caller whose request never arrived whole, and never throws. The managed listener (Linux, macOS) writes the
+        /// status on <see cref="EndUnclosed"/>, and its <see cref="HttpListenerResponse.Close()"/> would wait on a body that is not
+        /// coming. http.sys sends nothing on an abort, only a reset, so it closes here. It writes a 400 itself to a caller that
+        /// half-closes, and a close it refuses aborts inside .NET, which reset that caller if it got there first, 6 times in 32,000
+        /// on a saturated machine, so it is given <see cref="HttpSysAnswersWithin"/> to finish. Where it has answered, or the caller
+        /// has gone, the close throws and <see cref="EndUnclosed"/> ends what is left.
+        /// </summary>
+        public async Task AnswerUnreadAsync(int status)
+        {
+            StatusIfUnclosed = status;
+            if (!OperatingSystem.IsWindows() || Volatile.Read(ref _state) > Answering)
+                return;
+
+            await Task.Delay(HttpSysAnswersWithin).ConfigureAwait(false);
+            try
+            {
+                Response.StatusCode = status;
+                Response.KeepAlive = false;
+                Close();
+            }
+            catch (Exception)
+            {
+                // Answered by http.sys, the caller gone, or the listener closed: nothing more to send.
             }
         }
 
@@ -1427,7 +1461,7 @@ public sealed class ProxyTap : IAsyncDisposable
         foreach (var answer in _answers.Keys)
             answer.EndWhileReading(503);
 
-        for (var waited = 0; Volatile.Read(ref _inflight) > 0 && waited < 2_000; waited += 25)
+        for (var waited = 0; Volatile.Read(ref _inflight) > 0 && waited < AnswerInHandPatience.TotalMilliseconds; waited += 25)
             await Task.Delay(25).ConfigureAwait(false);
 
         foreach (var answer in _answers.Keys)

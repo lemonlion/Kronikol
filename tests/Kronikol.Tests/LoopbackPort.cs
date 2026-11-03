@@ -8,12 +8,31 @@ namespace Kronikol.Tests;
 /// Binding port 0 and letting it go does not reserve the number: Linux can offer it to the next probe at once, so two
 /// tests running at the same time each started a listener on one port, and the second failed with "conflicts with an
 /// existing registration on the machine". Linked into the test projects that start listeners this way.
+/// <para>
+/// Nor does it within a machine: two test programs running at once were offered one number, and 8 copies of the ProxyTap project
+/// failed 5 of 48 runs that way. So <see cref="Free()"/> takes its numbers from below where any system takes port 0 from, in a
+/// block of them only this program holds.
+/// </para>
 /// </summary>
 internal static class LoopbackPort
 {
-    private static readonly HashSet<int> HandedOut = [];
+    /// <summary>
+    /// Below every system's ephemeral range (Linux's starts at 32768, Windows' and macOS's at 49152), so nothing binding port 0 is
+    /// ever given one, and above the numbers a stock Windows reserves in http.sys for its own services (10243 to 10247).
+    /// </summary>
+    internal const int FirstPort = 11000;
 
-    public static int Free() => Free(Probe);
+    internal const int LastPort = 31999;
+
+    private const int BlockSize = 256;
+    private const int BlockCount = (LastPort - FirstPort + 1) / BlockSize;
+
+    private static readonly HashSet<int> HandedOut = [];
+    private static readonly List<Mutex> Claims = [];
+    private static int _next;
+    private static int _blockEnd;
+
+    public static int Free() => Free(NextInABlock);
 
     internal static int Free(Func<int> probe)
     {
@@ -78,7 +97,94 @@ internal static class LoopbackPort
         socket => ((IPEndPoint)socket.LocalEndPoint!).Port,
         socket => socket.Dispose());
 
-    private static int Probe()
+    /// <summary>
+    /// Claims a block of ports for as long as this process lives, the first free one from <paramref name="preferred"/> on, or -1
+    /// when every block is held. A mutex's name is the machine's, so it is the claim, and nothing ever waits on it: a second
+    /// holder of the name, this process or another, is told it did not create it.
+    /// </summary>
+    internal static int ClaimBlock(int preferred)
+    {
+        lock (Claims)
+        {
+            for (var offset = 0; offset < BlockCount; offset++)
+            {
+                var block = (preferred + offset) % BlockCount;
+                var claim = new Mutex(initiallyOwned: false, $"Kronikol.Tests.LoopbackPort.{block}", out var createdNew);
+                if (createdNew)
+                {
+                    Claims.Add(claim);
+                    return block;
+                }
+
+                claim.Dispose();
+            }
+        }
+
+        return -1;
+    }
+
+    private static int NextInABlock()
+    {
+        lock (Claims)
+        {
+            while (true)
+            {
+                if (_next == _blockEnd)
+                {
+                    var block = ClaimBlock(Environment.ProcessId % BlockCount);
+                    if (block < 0)
+                        return Ephemeral();
+
+                    _next = FirstPort + (block * BlockSize);
+                    _blockEnd = _next + BlockSize;
+                }
+
+                var port = _next++;
+                if (CanListen(port))
+                    return port;
+            }
+        }
+    }
+
+    /// <summary>
+    /// False when something else is on it, or the system keeps it for itself, as Hyper-V does with ranges of its own. On Windows
+    /// http.sys is asked too, as a socket cannot see what it holds: a reservation such as <c>http://+:10243/WMPNSSv4/</c>, which refuses
+    /// a listener on that port with "Access is denied", and another program's listener.
+    /// </summary>
+    internal static bool CanListen(int port)
+    {
+        var socket = new TcpListener(IPAddress.Loopback, port);
+        try
+        {
+            socket.Start();
+        }
+        catch (SocketException)
+        {
+            return false;
+        }
+        finally
+        {
+            socket.Stop();
+        }
+
+        if (!OperatingSystem.IsWindows())
+            return true;
+
+        var listener = new HttpListener();
+        listener.Prefixes.Add($"http://localhost:{port}/");
+        try
+        {
+            listener.Start();
+            listener.Close();
+            return true;
+        }
+        catch (HttpListenerException)
+        {
+            return false;
+        }
+    }
+
+    private static int Ephemeral()
     {
         var listener = new TcpListener(IPAddress.Loopback, 0);
         listener.Start();

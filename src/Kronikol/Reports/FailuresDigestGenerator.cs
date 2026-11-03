@@ -424,7 +424,7 @@ public static class FailuresDigestGenerator
         // As the data file writes it (ReportGenerator.MethodText): an operation label keeps its case, so the Call
         // column reads GetOrderStatus where TestRunReport.json does.
         var method = ReportGenerator.MethodText(log.Method);
-        var target = Uri.TryCreate(log.Uri.ToString(), UriKind.Absolute, out var uri)
+        var target = RecordedUri.TryAbsolute(log.Uri.ToString(), out var uri)
             ? uri.PathAndQuery is "/" or "" ? uri.Host : uri.PathAndQuery
             : log.Uri.ToString();
 

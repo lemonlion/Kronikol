@@ -610,6 +610,8 @@ public static class HistoryFold
         var anyShapes = false;
         var anyErrors = false;
         bool? partial = null;
+        var everyShardSaidNo = true;
+        double? threshold = null;
         // The rule the line claims, one every shard reaches (a shard on an older package is reached through the newer
         // shards' bridges, #192 R1), the rules it bridges besides, and each position as its shard made it under each.
         var foldRule = HistoryBridges.FoldRule(shards.Select(s => s.Run));
@@ -662,9 +664,11 @@ public static class HistoryFold
             anyErrors |= run.Errors is not null;
             if (run.Deps is { } shardDeps)
                 foreach (var dep in shardDeps) deps.Add(foldRule is null ? dep : HistoryBridges.PairUnder(run, foldRule, dep));
+            everyShardSaidNo &= run.Partial == false;
             // An explicit partial on any shard makes the whole run partial; undecided shards stay so and
             // the append resolves the run against the ledger.
             if (run.Partial == true) partial = true;
+            threshold ??= run.PartialThreshold;
         }
 
         // A fingerprint is comparable only with one the same rule made, and the rule is the pair of the
@@ -692,7 +696,8 @@ public static class HistoryFold
         {
             Id = first.Id,
             Suite = first.Suite,
-            Partial = partial,
+            Partial = partial ?? (everyShardSaidNo ? false : null),
+            PartialThreshold = threshold,
             At = shards.Max(s => s.Run.At),
             Branch = first.Branch,
             Commit = first.Commit,

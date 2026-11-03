@@ -21,7 +21,7 @@ public class ProxyTapHangUpTests
         "http.sys (Windows) drops a request whose connection died by itself, so no connection can be held there; the " +
         "managed listener (Linux, macOS) holds it, and Linux CI runs this fact (plans/PROXY_TAP_HANG_UP_PLAN.md section 2.2)";
 
-    private static readonly TimeSpan Patience = TimeSpan.FromSeconds(5);
+    private static readonly TimeSpan Patience = TimeSpan.FromSeconds(30);
 
     private static (int, byte[], string?, string?, Dictionary<string, string>?) Ok(HttpListenerRequest _, byte[] __) =>
         (200, "ok"u8.ToArray(), "text/plain", null, null);
@@ -75,6 +75,30 @@ public class ProxyTapHangUpTests
         Assert.Empty(upstream.Seen);
         Assert.Equal(0, tap.RequestsHandled);
         Assert.Empty(sink.Logs);
+    }
+
+    /// <summary>
+    /// Its own abort is what could overtake http.sys's 400, so the tap holds back. Nothing here can make that race happen on demand: it
+    /// was 6 in 32,000 on a saturated machine, so this holds the wait, and <c>probes/proxy_stress.py</c> measured what it does.
+    /// </summary>
+    [Fact]
+    public async Task On_Windows_a_failed_body_read_gives_http_sys_a_moment_before_the_tap_ends_it()
+    {
+        Assert.SkipUnless(OperatingSystem.IsWindows(), "http.sys is Windows'; the managed listener writes nothing of its own");
+        await using var upstream = new StubUpstream(Ok);
+        var thrownAt = DateTime.MinValue;
+        await using var tap = await StartAsync(upstream.BaseUri, new ListSink(), [], t =>
+            t.WrapRequestBody = body => new FailingReadStream(body, () =>
+            {
+                thrownAt = DateTime.UtcNow;
+                return new IOException("the read failed");
+            }));
+
+        using var client = new HttpClient { Timeout = Patience };
+        using var response = await client.PostAsync(new Uri(tap.ListenUri, "/query"), new StringContent("{}"));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.True(DateTime.UtcNow - thrownAt >= TimeSpan.FromMilliseconds(150), "the tap answered at once, ahead of what http.sys may still be writing");
     }
 
     [Fact]
@@ -164,15 +188,11 @@ public class ProxyTapHangUpTests
         {
             Assert.Fail($"the caller heard nothing within {Patience.TotalSeconds:0} s");
         }
-        catch (HttpRequestException) when (OperatingSystem.IsWindows())
-        {
-            // http.sys sends nothing on Abort(): the caller's connection is reset.
-        }
 
-        if (OperatingSystem.IsWindows())
-            Assert.True(status is null or HttpStatusCode.BadRequest, $"the caller was answered {status}");
-        else
-            Assert.Equal(HttpStatusCode.BadRequest, status);
+        // On Windows too. http.sys sends nothing on Abort(), so the tap closed with this status rather than abort: an abort reset
+        // a caller still listening, and under load it could reach http.sys ahead of the 400 it writes itself for a half-closed
+        // caller, 3 times in 16,000 on 2026-11-02 (plans/CALLS_AND_EVENTS_PLAN.md F27).
+        Assert.Equal(HttpStatusCode.BadRequest, status);
         Assert.True(await WaitUntilAsync(() => tap.InFlight == 0), "the exchange never ended");
         Assert.Equal(0, tap.ForwardFailures);
         Assert.Empty(Errors(log));

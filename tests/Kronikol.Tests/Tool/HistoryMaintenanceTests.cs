@@ -258,6 +258,57 @@ public class HistoryMaintenanceTests : IDisposable
         Assert.Matches(@"imported   gh:500:1  Suite  1 scenarios  2026-08-01T10:0\d:00Z", output);
     }
 
+    /// <summary>A file a report attached is no run to import, whatever its name. A retained run is, which is what import is for: <c>runs/</c> stays in.</summary>
+    [Theory]
+    [InlineData("attachments", new[] { "gh:500:1" })]
+    [InlineData("runs/gh_499_1", new[] { "gh:499:1", "gh:500:1" })]
+    public void Import_leaves_what_a_report_attached_and_reads_what_it_retained(string reserved, string[] imported)
+    {
+        var directory = Path.Combine(_dir, "with-reserved");
+        var folder = Path.Combine(directory, reserved.Replace('/', Path.DirectorySeparatorChar));
+        Directory.CreateDirectory(folder);
+        foreach (var (at, id) in new[] { (directory, "500"), (folder, "499") })
+            File.WriteAllText(Path.Combine(at, "TestRunReport.json"), $$"""
+                {
+                  "kronikolVersion": "3.2.0", "formatVersion": 1, "suite": "Suite",
+                  "startTime": "2026-08-01T10:00:00Z", "endTime": "2026-08-01T10:05:00Z",
+                  "ciMetadata": { "provider": "GitHubActions", "branch": "main", "commitSha": "abc", "runId": "{{id}}", "runAttempt": "1" },
+                  "features": [ { "name": "Checkout", "labels": [], "scenarios": [
+                    { "id": "t0", "stableId": "aaaabbbbccccdddd", "name": "Pay", "result": "Passed", "durationSeconds": 1.5, "labels": [], "categories": [], "steps": [], "httpInteractions": [] }
+                  ] } ]
+                }
+                """);
+
+        var (_, error, exit) = Run("import", directory, "--history", Ledger);
+
+        Assert.True(exit == 0, error);
+        Assert.Equal(imported, HistoryLedgerReader.Read(Ledger, 50).Ledger!.Runs("Suite").Select(run => run.Id).Order());
+    }
+
+    [Fact]
+    public void Import_of_ctrf_leaves_a_stray_file_under_attachments()
+    {
+        var directory = Path.Combine(_dir, "ctrf-attached");
+        Directory.CreateDirectory(Path.Combine(directory, "attachments"));
+        File.WriteAllText(Path.Combine(directory, "attachments", "notes.json"), "not json");
+        File.WriteAllText(Path.Combine(directory, "ctrf-report.json"), """
+            {
+              "reportFormat": "CTRF", "specVersion": "0.0.0",
+              "results": {
+                "tool": { "name": "Other" },
+                "summary": { "tests": 1, "passed": 1, "failed": 0, "pending": 0, "skipped": 0, "other": 0, "start": 1, "stop": 2 },
+                "tests": [ { "name": "Refund", "suite": "Checkout", "status": "passed", "duration": 40 } ],
+                "environment": { "branchName": "main", "commit": "abc1234", "buildNumber": "77" }
+              }
+            }
+            """);
+
+        var (_, error, exit) = Run("import", directory, "--from-ctrf", "--suite", "Suite", "--history", Ledger);
+
+        Assert.True(exit == 0, error);
+        Assert.Single(HistoryLedgerReader.Read(Ledger, 50).Ledger!.Runs("Suite"));
+    }
+
     [Fact]
     public void Import_reads_a_kronikol_report_that_has_no_fragment()
     {

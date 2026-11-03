@@ -57,8 +57,19 @@ public sealed class HistoryRunContext
     /// <summary>The rename aliases beside the ledger, when there are any.</summary>
     public HistoryAliases? Aliases { get; }
 
-    /// <summary>The fragment for this run — the shard unit <c>kronikol history record</c> folds.</summary>
-    public string Fragment() => HistoryFragment.Write(Roster, Run, Generator, Shapes, _rawCalls);
+    /// <summary>
+    /// The fragment for this run — the shard unit <c>kronikol history record</c> folds. It says a run is partial only where
+    /// the host said so: a shard that can see the ledger reads itself as partial, as it holds a part of the suite, and
+    /// the fold keeps any shard's <c>true</c>, so the whole run's line was marked partial, nothing was then reported absent, and
+    /// a merge read past that line. Whether a whole run is partial is judged when its line is appended.
+    /// </summary>
+    public string Fragment() => HistoryFragment.Write(Roster, Run with { Partial = HostPartial, PartialThreshold = HostThreshold }, Generator, Shapes, _rawCalls);
+
+    /// <summary><see cref="ReportConfigurationOptions.HistoryPartialRun"/>: what the host said of this run, null when it said nothing.</summary>
+    private bool? HostPartial { get; init; }
+
+    /// <summary>The threshold the host set, where it set one: what <c>history record</c> judges the fragment's line under.</summary>
+    private double? HostThreshold { get; init; }
 
     // The run's calls before any rule, which the fragment alone carries (#192 R1, Q18).
     private readonly HistoryRawCalls? _rawCalls;
@@ -185,7 +196,7 @@ public sealed class HistoryRunContext
                         run = run with { Partial = true };
                         if (options.HistoryPartialRun is null)
                             ReportDiagnosticsScope.Record(DiagnosticKind.HistoryPartialRun,
-                                $"this run has fewer than {100 - (int)(options.HistoryPartialThreshold * 100)}% of the previous run's scenarios and is recorded as partial: nothing is reported absent, and its durations and calls are not what the next full run is compared against (its passes and failures are read like any other run's). Set ReportConfigurationOptions.HistoryPartialRun to say otherwise.");
+                                $"this run has fewer than {100 - (int)(options.HistoryPartialThreshold * 100)}% of the previous run's scenarios and reads as partial (a shard's line is judged when its run is recorded, from every shard): nothing is reported absent, and its durations and calls are not what the next full run is compared against (its passes and failures are read like any other run's). Set ReportConfigurationOptions.HistoryPartialRun to say otherwise.");
                     }
                     else if (run.Partial is null)
                     {
@@ -205,7 +216,8 @@ public sealed class HistoryRunContext
             // `history record` folds it into a ledger this run did not read (#190 R0).
             var ledgerRun = ledger is null ? run : HistoryBridges.ForWindow(run, BridgeWindow(ledger, run, verdicts, window));
             return new HistoryRunContext(location, roster, run, shapes, verdicts, ledger, writeLedger && location.Path is not null && ledger is not null, generator, quarantine, aliases, ledgerRun,
-                built.RawCalls);
+                built.RawCalls)
+                { HostPartial = options.HistoryPartialRun, HostThreshold = options.HistoryPartialThreshold is 0.10 ? null : options.HistoryPartialThreshold };
         }
         catch (Exception exception)
         {

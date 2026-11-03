@@ -530,6 +530,21 @@ public static class MergeableReportReader
     };
 
     /// <summary>
+    /// An address as <see cref="Uri"/> takes it back. A path ending in <c>%20</c> is written with the space itself, as
+    /// <see cref="Uri.ToString"/> writes it, and parsing that text trims the space, so the path a merge read was not the one the
+    /// run recorded, and history read the call as changed.
+    /// </summary>
+    private static string? EndSpacesEscaped(string? address)
+    {
+        // Only an absolute address: Uri keeps a relative one's end space as it was written.
+        if (address is null || !RecordedUri.TryAbsolute(address, out _))
+            return address;
+
+        var kept = address.TrimEnd(' ');
+        return kept.Length == address.Length ? address : kept + string.Concat(Enumerable.Repeat("%20", address.Length - kept.Length));
+    }
+
+    /// <summary>
     /// Rebuilds one scenario's captured traffic. Only the real interactions are in the file - the
     /// diagram markers are dropped at write time - so <c>stepPath</c> is read back rather than
     /// re-derived: the derivation walks the markers, which are gone.
@@ -567,7 +582,7 @@ public static class MergeableReportReader
                 TestId: testId,
                 Method: parsedMethod,
                 Content: element.TryGetProperty("content", out var content) ? Payload(content, notes) : null,
-                Uri: Uri.TryCreate(GetString(element, "uri"), UriKind.RelativeOrAbsolute, out var uri) ? uri : new Uri("about:blank"),
+                Uri: Uri.TryCreate(EndSpacesEscaped(GetString(element, "uri")), UriKind.RelativeOrAbsolute, out var uri) ? uri : new Uri("about:blank"),
                 Headers: ReadHeaders(element),
                 ServiceName: GetString(element, "serviceName") ?? "",
                 CallerName: GetString(element, "callerName") ?? "",

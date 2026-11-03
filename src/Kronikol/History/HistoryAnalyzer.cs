@@ -83,7 +83,7 @@ public static partial class HistoryAnalyzer
         var previousFull = LastFull(prior, priorRosters);
         // The previous roster as its ids now are: a rename, or a change to what an id is computed from, misses no scenario.
         var previousTests = TestsOf(previousFull.Roster, previousFull.Run);
-        var partial = current.Partial ?? IsPartial(roster, previousTests is not null && aliases is not null ? aliases.Apply(previousTests) : previousTests, options.PartialThreshold);
+        var partial = current.Partial ?? IsPartial(roster, previousTests is not null && aliases is not null ? aliases.Apply(previousTests) : previousTests, current.PartialThreshold ?? options.PartialThreshold);
 
         // A partial run's speed is the median of whichever scenarios its filter left, so a full run is not
         // read against it: measured, the same scenarios' bars stood at 1.88x in a filtered run from the mix

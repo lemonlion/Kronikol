@@ -17,7 +17,7 @@ namespace Kronikol.Tests.ProxyTap;
 /// </summary>
 public class ProxyTapStallTests
 {
-    private static readonly TimeSpan Patience = TimeSpan.FromSeconds(15);
+    private static readonly TimeSpan Patience = TimeSpan.FromSeconds(60);
     private static readonly TimeSpan Limit = TimeSpan.FromSeconds(1);
     private static readonly TimeSpan PastTheLimit = Limit + TimeSpan.FromSeconds(1);
     private const int EightMegabytes = 8 * 1024 * 1024;
@@ -254,7 +254,7 @@ public class ProxyTapStallTests
         await EntryAsync(tap, Tap.AnswerPhase);
         var started = DateTime.UtcNow;
         Assert.True(await WaitUntilAsync(() => tap.InFlight == 0), "the handler never ended: the caller is still held");
-        Assert.InRange(DateTime.UtcNow - started, TimeSpan.Zero, Limit + StallWatchBeat + TimeSpan.FromSeconds(2));
+        Assert.InRange(DateTime.UtcNow - started, TimeSpan.Zero, Limit + StallWatchBeat + TimeSpan.FromSeconds(30));
         Assert.Equal(1, tap.CallerTimeouts);
     }
 

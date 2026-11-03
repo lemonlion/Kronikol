@@ -1,0 +1,69 @@
+== ports from the ephemeral range again: tests/Kronikol.Tests/LoopbackPort.cs
+   Kronikol.Tests: 1 failed of Total tests: 7
+     Kronikol.Tests.LoopbackPortTests.A_port_comes_from_below_every_systems_ephemeral_range
+   CAUGHT
+== a block is claimed twice: tests/Kronikol.Tests/LoopbackPort.cs
+   Kronikol.Tests: 4 failed of Total tests: 7
+     Kronikol.Tests.LoopbackPortTests.A_block_someone_holds_is_not_claimed_again
+     Kronikol.Tests.LoopbackPortTests.A_port_comes_from_below_every_systems_ephemeral_range
+     Kronikol.Tests.LoopbackPortTests.A_port_someone_is_listening_on_is_not_handed_out
+     Kronikol.Tests.LoopbackPortTests.Ports_handed_out_one_after_another_are_all_different
+   CAUGHT
+== a busy port is handed out: tests/Kronikol.Tests/LoopbackPort.cs
+   Kronikol.Tests: 1 failed of Total tests: 7
+     Kronikol.Tests.LoopbackPortTests.A_port_someone_is_listening_on_is_not_handed_out
+   CAUGHT
+== the range reaches Linux ephemeral ports: tests/Kronikol.Tests/LoopbackPort.cs
+   Kronikol.Tests: 1 failed of Total tests: 7
+     Kronikol.Tests.LoopbackPortTests.A_port_comes_from_below_every_systems_ephemeral_range
+   CAUGHT
+== a body that failed is aborted: src/Kronikol.Extensions.ProxyTap/ProxyTap.cs
+   Kronikol.Tests.ProxyTap: 4 failed of Total tests: 6
+     Kronikol.Tests.ProxyTap.ProxyTapHangUpTests.A_body_read_that_throws_is_the_callers_failure_whatever_the_exception(thrown: "HttpListenerException")
+     Kronikol.Tests.ProxyTap.ProxyTapHangUpTests.A_body_read_that_throws_is_the_callers_failure_whatever_the_exception(thrown: "IOException")
+     Kronikol.Tests.ProxyTap.ProxyTapHangUpTests.A_body_read_that_throws_is_the_callers_failure_whatever_the_exception(thrown: "InvalidOperationException")
+     Kronikol.Tests.ProxyTap.ProxyTapHangUpTests.A_body_read_that_throws_is_the_callers_failure_whatever_the_exception(thrown: "ObjectDisposedException")
+   CAUGHT
+== the close sends the default status: src/Kronikol.Extensions.ProxyTap/ProxyTap.cs
+   Kronikol.Tests.ProxyTap: 4 failed of Total tests: 6
+     Kronikol.Tests.ProxyTap.ProxyTapHangUpTests.A_body_read_that_throws_is_the_callers_failure_whatever_the_exception(thrown: "HttpListenerException")
+     Kronikol.Tests.ProxyTap.ProxyTapHangUpTests.A_body_read_that_throws_is_the_callers_failure_whatever_the_exception(thrown: "IOException")
+     Kronikol.Tests.ProxyTap.ProxyTapHangUpTests.A_body_read_that_throws_is_the_callers_failure_whatever_the_exception(thrown: "InvalidOperationException")
+     Kronikol.Tests.ProxyTap.ProxyTapHangUpTests.A_body_read_that_throws_is_the_callers_failure_whatever_the_exception(thrown: "ObjectDisposedException")
+   CAUGHT
+== a stop waits on as long as an answer takes: src/Kronikol.Extensions.ProxyTap/ProxyTap.cs
+   Kronikol.Tests.ProxyTap: 1 failed of Total tests: 6
+     Kronikol.Tests.ProxyTap.ProxyTapStoppingTests.Stopping_the_tap_ends_an_answer_still_open_when_its_patience_runs_out
+   CAUGHT
+DONE
+== http.sys is not asked: tests/Kronikol.Tests/LoopbackPort.cs
+   Kronikol.Tests: 0 failed of Total tests: 8
+   SURVIVED
+== the range begins where Windows reserves: tests/Kronikol.Tests/LoopbackPort.cs
+   Kronikol.Tests: 1 failed of Total tests: 8
+     Kronikol.Tests.LoopbackPortTests.A_port_comes_from_below_every_systems_ephemeral_range
+   CAUGHT
+== ports from the ephemeral range again: tests/Kronikol.Tests/LoopbackPort.cs
+   Kronikol.Tests: 1 failed of Total tests: 8
+     Kronikol.Tests.LoopbackPortTests.A_port_comes_from_below_every_systems_ephemeral_range
+   CAUGHT
+== a socket is not asked: tests/Kronikol.Tests/LoopbackPort.cs
+   Kronikol.Tests: 0 failed of Total tests: 8
+   SURVIVED
+DONE
+== http.sys is not asked: tests/Kronikol.Tests/LoopbackPort.cs
+   Kronikol.Tests: 4 failed of Total tests: 11
+     Kronikol.Tests.LoopbackPortTests.A_port_a_listener_is_refused_is_seen_as_taken(port: 10243)
+     Kronikol.Tests.LoopbackPortTests.A_port_a_listener_is_refused_is_seen_as_taken(port: 10245)
+     Kronikol.Tests.LoopbackPortTests.A_port_a_listener_is_refused_is_seen_as_taken(port: 10246)
+     Kronikol.Tests.LoopbackPortTests.A_port_a_listener_is_refused_is_seen_as_taken(port: 10247)
+   CAUGHT
+== a socket is not asked: tests/Kronikol.Tests/LoopbackPort.cs
+   Kronikol.Tests: 0 failed of Total tests: 11
+   SURVIVED
+DONE
+== the tap does not wait for http.sys: src/Kronikol.Extensions.ProxyTap/ProxyTap.cs
+   Kronikol.Tests.ProxyTap: 1 failed of Total tests: 6
+     Kronikol.Tests.ProxyTap.ProxyTapHangUpTests.On_Windows_a_failed_body_read_gives_http_sys_a_moment_before_the_tap_ends_it
+   CAUGHT
+DONE

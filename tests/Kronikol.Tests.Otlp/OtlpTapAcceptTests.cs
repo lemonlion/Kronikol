@@ -247,11 +247,11 @@ public class OtlpTapAcceptTests
     /// throw, so <c>StartAsync</c> failed after the tap had bound its socket and started serving.
     /// </summary>
     [Theory]
-    [InlineData("::1", "[::1]")]
-    [InlineData("[::1]", "[::1]")]
-    [InlineData("::", "localhost")]
-    [InlineData("::0", "localhost")]
-    public async Task A_tap_on_an_IPv6_address_starts_and_names_an_endpoint_an_exporter_can_dial(string listenHost, string shownHost)
+    [InlineData("::1", "[::1]", "::1")]
+    [InlineData("[::1]", "[::1]", "::1")]
+    [InlineData("::", "localhost", "::")]
+    [InlineData("::0", "localhost", "::")]
+    public async Task A_tap_on_an_IPv6_address_starts_and_names_an_endpoint_an_exporter_can_dial(string listenHost, string shownHost, string bound)
     {
         Assert.SkipUnless(CanListen(IPAddress.IPv6Loopback), "this machine cannot listen on the IPv6 loopback");
         var log = new List<string>();
@@ -262,9 +262,18 @@ public class OtlpTapAcceptTests
             Sink = new ListSink(),
             Log = line => { lock (log) log.Add(line); },
         });
+        // Given the loopback for what it asks: a real socket on every interface makes Windows ask the person at the machine to let
+        // the program through its firewall, once for each path of the test program, so once per worktree. This fact dials nothing.
+        var asked = new List<IPAddress>();
+        tap.CreateListener = (address, port) =>
+        {
+            asked.Add(address);
+            return new TcpListener(IPAddress.IPv6Loopback, port);
+        };
 
         await tap.StartAsync();
 
+        Assert.Equal([IPAddress.Parse(bound)], asked);
         Assert.True(tap.IsListening);
         Assert.Equal($"http://{shownHost}:{tap.BoundPort}/v1/traces", tap.TracesEndpoint.ToString());
         Assert.Single(Lines(log, $"otlp-tap listening on http://{shownHost}:{tap.BoundPort}/v1/traces"));

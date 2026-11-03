@@ -1,0 +1,30 @@
+# mutations_f27.py
+L = 'tests/Kronikol.Tests/LoopbackPort.cs'
+P = 'src/Kronikol.Extensions.ProxyTap/ProxyTap.cs'
+CORE = [('Kronikol.Tests', 'net10.0', 'FullyQualifiedName~LoopbackPortTests')]
+TAP = [('Kronikol.Tests.ProxyTap', None, 'FullyQualifiedName~A_body_read_that_throws|FullyQualifiedName~Stopping_the_tap_ends_an_answer|FullyQualifiedName~A_caller_that_half_closes')]
+MUTATIONS = [
+    ('ports from the ephemeral range again', L, 'public static int Free() => Free(NextInABlock);', 'public static int Free() => Free(Ephemeral);', CORE),
+    ('a block is claimed twice', L, 'if (createdNew)', 'if (true)', CORE),
+    ('a busy port is handed out', L, 'if (CanListen(port))', 'if (true)', CORE),
+    ('the range reaches Linux ephemeral ports', L, 'internal const int LastPort = 31999;', 'internal const int LastPort = 40000;', CORE),
+    ('a body that failed is aborted', P, 'answer.AnswerUnread(400);', 'answer.StatusIfUnclosed = 400;', TAP),
+    ('the close sends the default status', P, '                Response.StatusCode = status;\n                Response.KeepAlive = false;\n                Close();', '                Response.KeepAlive = false;\n                Close();', TAP),
+    ('a stop waits on as long as an answer takes', P, 'waited < AnswerInHandPatience.TotalMilliseconds', 'waited < 60_000', TAP),
+]
+
+# mutations_f27b.py
+L = 'tests/Kronikol.Tests/LoopbackPort.cs'
+CORE = [('Kronikol.Tests', 'net10.0', 'FullyQualifiedName~LoopbackPortTests')]
+MUTATIONS = [
+    ('http.sys is not asked', L, 'if (!OperatingSystem.IsWindows())\n            return true;', 'return true;\n#pragma warning disable CS0162', CORE),
+    ('a socket is not asked', L, '            socket.Start();', '', CORE),
+]
+
+# mutations_f27c.py
+P = 'src/Kronikol.Extensions.ProxyTap/ProxyTap.cs'
+TAP = [('Kronikol.Tests.ProxyTap', None, 'FullyQualifiedName~On_Windows_a_failed_body_read|FullyQualifiedName~A_body_read_that_throws|FullyQualifiedName~A_caller_that_half_closes')]
+MUTATIONS = [
+    ('the tap does not wait for http.sys', P, '            await Task.Delay(HttpSysAnswersWithin).ConfigureAwait(false);\n', '', TAP),
+]
+

@@ -353,7 +353,7 @@ public static partial class PlantUmlCreator
                     if (requestPostFormattingProcessor is not null)
                         noteContent = requestPostFormattingProcessor(noteContent);
 
-                    var fullPathAndQuery = effectiveUri.PathAndQuery;
+                    var fullPathAndQuery = RecordedUri.PathAndQuery(effectiveUri);
                     var pathAndQuery = fullPathAndQuery;
                     if (pathAndQuery.Length > maxUrlLength)
                         pathAndQuery = string.Join("\\n        ", pathAndQuery.ChunksUpTo(maxUrlLength));

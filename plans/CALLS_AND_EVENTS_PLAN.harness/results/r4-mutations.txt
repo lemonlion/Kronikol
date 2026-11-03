@@ -1,0 +1,235 @@
+== a fragment carries the shard's own reading: src/Kronikol/History/HistoryRunContext.cs
+   Kronikol.Tests: 5 failed of Total tests: 9
+     Kronikol.Tests.History.ShardPartialTests.A_merge_compares_with_the_run_before_it_and_raises_no_false_change
+     Kronikol.Tests.History.ShardPartialTests.A_merge_names_a_change_against_the_run_before_it
+     Kronikol.Tests.History.ShardPartialTests.A_merge_reads_a_change_and_back_as_alternating_where_it_read_nothing
+     Kronikol.Tests.History.ShardPartialTests.A_shard_that_reads_itself_as_partial_leaves_the_question_to_the_fold
+     Kronikol.Tests.History.ShardPartialTests.The_shards_of_a_whole_run_fold_into_a_line_that_is_not_partial
+   CAUGHT
+== a fragment forgets what the host said: src/Kronikol/History/HistoryRunContext.cs
+   Kronikol.Tests: 4 failed of Total tests: 9
+     Kronikol.Tests.History.ShardPartialTests.A_host_that_says_a_shard_is_partial_makes_the_run_partial
+     Kronikol.Tests.History.ShardPartialTests.A_merge_names_a_change_against_the_run_before_it
+     Kronikol.Tests.History.ShardPartialTests.What_the_host_said_stays_in_the_fragment(hostPartial: False)
+     Kronikol.Tests.History.ShardPartialTests.What_the_host_said_stays_in_the_fragment(hostPartial: True)
+   CAUGHT
+== an address read back with its end spaces: src/Kronikol/Reports/Merge/MergeableReportReader.cs
+   Kronikol.Tests: 3 failed of Total tests: 23
+     Kronikol.Tests.History.MergedRunHistoryTests.A_path_ending_in_an_escaped_space_reads_as_nothing_changed(address: "http://svc/search/foo%20")
+     Kronikol.Tests.History.MergedRunHistoryTests.A_path_ending_in_an_escaped_space_reads_as_nothing_changed(address: "http://svc/search/foo%20%20")
+     Kronikol.Tests.History.MergedRunHistoryTests.A_path_ending_in_an_escaped_space_reads_as_nothing_changed(address: "probe:///foo%20")
+   CAUGHT
+== a report's own rows read as a copy: src/Kronikol/Reports/Merge/MergeableReportMerger.cs
+   Kronikol.Tests: 2 failed of Total tests: 6
+     Kronikol.Tests.Reports.Merge.MergeKeepsEveryScenarioTests.A_later_reports_copy_of_those_rows_is_dropped_whole
+     Kronikol.Tests.Reports.Merge.MergeKeepsEveryScenarioTests.A_reports_own_rows_that_look_alike_stay_two
+   CAUGHT
+== a later report's copy is kept: src/Kronikol/Reports/Merge/MergeableReportMerger.cs
+   Kronikol.Tests: 2 failed of Total tests: 6
+     Kronikol.Tests.Reports.Merge.MergeKeepsEveryScenarioTests.A_later_reports_copy_of_those_rows_is_dropped_whole
+     Kronikol.Tests.Reports.Merge.MergeKeepsEveryScenarioTests.The_same_shard_supplied_twice_still_deduplicates
+   CAUGHT
+== attachments are swept as shards: src/Kronikol/Reports/ReportFolders.cs
+   Kronikol.Tests: 6 failed of Total tests: 62
+     Kronikol.Tests.Reports.Merge.MergeLeavesAttachmentsAloneTests.A_folder_holding_an_attached_json_file_merges(attachment: "Attachments/openapi.json")
+     Kronikol.Tests.Reports.Merge.MergeLeavesAttachmentsAloneTests.A_folder_holding_an_attached_json_file_merges(attachment: "attachments/nested/contract.j
+     Kronikol.Tests.Reports.Merge.MergeLeavesAttachmentsAloneTests.A_folder_holding_an_attached_json_file_merges(attachment: "attachments/openapi.json")
+     Kronikol.Tests.Reports.Merge.MergeLeavesAttachmentsAloneTests.Reserved_holds_for_attachments_as_for_the_other_folders
+     Kronikol.Tests.Reports.RunManifestTests.A_file_under_a_runs_or_a_baseline_folder_is_reserved_wherever_the_sweep_started(relative: "Shard1/Reports/Atta
+     Kronikol.Tests.Reports.RunManifestTests.A_file_under_a_runs_or_a_baseline_folder_is_reserved_wherever_the_sweep_started(relative: "attachments/openapi
+   CAUGHT
+== the helper asks a relative address for its path and query: src/Kronikol/Tracking/RecordedUri.cs
+   Kronikol.Tests: 7 failed of Total tests: 12
+     Kronikol.Tests.Reports.RelativeAddressRunTests.A_call_on_a_relative_address_costs_a_run_no_file
+     Kronikol.Tests.Reports.RelativeAddressRunTests.A_merge_reads_a_shard_holding_a_relative_address
+     Kronikol.Tests.Reports.RelativeAddressRunTests.A_relative_address_costs_a_run_no_file(configuration: "data-only")
+     Kronikol.Tests.Reports.RelativeAddressRunTests.A_relative_address_costs_a_run_no_file(configuration: "default")
+     Kronikol.Tests.Reports.RelativeAddressRunTests.A_relative_address_costs_a_run_no_file(configuration: "mergeable")
+     Kronikol.Tests.Reports.RelativeAddressRunTests.A_relative_address_costs_a_run_no_file(configuration: "no-flow")
+     ... and 1 more
+   CAUGHT
+== the helper asks a relative address for its path: src/Kronikol/Tracking/RecordedUri.cs
+   Kronikol.Tests: 0 failed of Total tests: 12
+   SURVIVED
+== the query is dropped from the drawn address: src/Kronikol/Tracking/RecordedUri.cs
+   Kronikol.Tests: 1 failed of Total tests: 12
+     Kronikol.Tests.Reports.RelativeAddressRunTests.The_diagram_names_a_relative_address_as_it_was_written
+   CAUGHT
+== the drawing reader asks the address again: src/Kronikol/PlantUml/PlantUmlCreator.cs
+   Kronikol.Tests: 7 failed of Total tests: 12
+     Kronikol.Tests.Reports.RelativeAddressRunTests.A_call_on_a_relative_address_costs_a_run_no_file
+     Kronikol.Tests.Reports.RelativeAddressRunTests.A_relative_address_costs_a_run_no_file(configuration: "data-only")
+     Kronikol.Tests.Reports.RelativeAddressRunTests.A_relative_address_costs_a_run_no_file(configuration: "default")
+     Kronikol.Tests.Reports.RelativeAddressRunTests.A_relative_address_costs_a_run_no_file(configuration: "mergeable")
+     Kronikol.Tests.Reports.RelativeAddressRunTests.A_relative_address_costs_a_run_no_file(configuration: "no-flow")
+     Kronikol.Tests.Reports.RelativeAddressRunTests.No_reader_asks_a_recorded_address_for_what_a_relative_one_refuses
+     ... and 1 more
+   CAUGHT
+== the collapser asks the address again: src/Kronikol/PlantUml/SequenceCollapser.cs
+   Kronikol.Tests: 1 failed of Total tests: 12
+     Kronikol.Tests.Reports.RelativeAddressRunTests.No_reader_asks_a_recorded_address_for_what_a_relative_one_refuses
+   CAUGHT
+== the component flow asks the address again: src/Kronikol/ComponentDiagram/ComponentFlowSegmentBuilder.cs
+   Kronikol.Tests: 1 failed of Total tests: 12
+     Kronikol.Tests.Reports.RelativeAddressRunTests.No_reader_asks_a_recorded_address_for_what_a_relative_one_refuses
+   CAUGHT
+== the internal flow asks the address again: src/Kronikol/InternalFlow/InternalFlowSegmentBuilder.cs
+   Kronikol.Tests: 6 failed of Total tests: 12
+     Kronikol.Tests.Reports.RelativeAddressRunTests.A_call_on_a_relative_address_costs_a_run_no_file
+     Kronikol.Tests.Reports.RelativeAddressRunTests.A_merge_reads_a_shard_holding_a_relative_address
+     Kronikol.Tests.Reports.RelativeAddressRunTests.A_relative_address_costs_a_run_no_file(configuration: "data-only")
+     Kronikol.Tests.Reports.RelativeAddressRunTests.A_relative_address_costs_a_run_no_file(configuration: "default")
+     Kronikol.Tests.Reports.RelativeAddressRunTests.A_relative_address_costs_a_run_no_file(configuration: "mergeable")
+     Kronikol.Tests.Reports.RelativeAddressRunTests.No_reader_asks_a_recorded_address_for_what_a_relative_one_refuses
+   CAUGHT
+DONE
+== the helper asks a relative address for its path: src/Kronikol/Tracking/RecordedUri.cs
+   Kronikol.Tests: 3 failed of Total tests: 17
+     Kronikol.Tests.Reports.RelativeAddressRunTests.The_call_ordering_reads_an_address_of_either_shape(written: "orders", path: "orders")
+     Kronikol.Tests.Reports.RelativeAddressRunTests.The_call_ordering_reads_an_address_of_either_shape(written: "orders#top", path: "orders")
+     Kronikol.Tests.Reports.RelativeAddressRunTests.The_call_ordering_reads_an_address_of_either_shape(written: "orders?page=1", path: "orders")
+   CAUGHT
+DONE
+== a fragment carries the shard's own reading: src/Kronikol/History/HistoryRunContext.cs
+   Kronikol.Tests: 6 failed of Total tests: 10
+     Kronikol.Tests.History.ShardPartialTests.A_merge_compares_with_the_run_before_it_and_raises_no_false_change
+     Kronikol.Tests.History.ShardPartialTests.A_merge_names_a_change_against_the_run_before_it
+     Kronikol.Tests.History.ShardPartialTests.A_merge_reads_a_change_and_back_as_alternating_where_it_read_nothing
+     Kronikol.Tests.History.ShardPartialTests.A_merge_reports_a_scenario_gone_since_the_run_before_it
+     Kronikol.Tests.History.ShardPartialTests.A_shard_that_reads_itself_as_partial_leaves_the_question_to_the_fold
+     Kronikol.Tests.History.ShardPartialTests.The_shards_of_a_whole_run_fold_into_a_line_that_is_not_partial
+   CAUGHT
+DONE
+== a fragment carries the shard's own reading: src/Kronikol/History/HistoryRunContext.cs
+   Kronikol.Tests: 6 failed of Total tests: 10
+     Kronikol.Tests.History.ShardPartialTests.A_merge_compares_with_the_run_before_it_and_raises_no_false_change
+     Kronikol.Tests.History.ShardPartialTests.A_merge_names_a_change_against_the_run_before_it
+     Kronikol.Tests.History.ShardPartialTests.A_merge_reads_a_change_and_back_as_alternating_where_it_read_nothing
+     Kronikol.Tests.History.ShardPartialTests.A_merge_reports_a_scenario_gone_since_the_run_before_it
+     Kronikol.Tests.History.ShardPartialTests.A_shard_that_reads_itself_as_partial_leaves_the_question_to_the_fold
+     Kronikol.Tests.History.ShardPartialTests.The_shards_of_a_whole_run_fold_into_a_line_that_is_not_partial
+   CAUGHT
+DONE
+== a line is read against every branch: src/Kronikol.Tool/HistoryCommand.cs
+   Kronikol.Tests: 2 failed of Total tests: 93
+     Kronikol.Tests.History.ShardPartialTests.A_branchs_first_line_is_not_partial_for_lacking_what_another_branch_has
+     Kronikol.Tests.History.ShardPartialTests.A_line_is_read_against_its_own_branch
+   CAUGHT
+== the threshold is not read at record: src/Kronikol.Tool/HistoryCommand.cs
+   Kronikol.Tests: 2 failed of Total tests: 93
+     Kronikol.Tests.History.ShardPartialTests.The_line_is_judged_under_the_threshold_the_run_set(threshold: 0.02, kept: 19, partial: True)
+     Kronikol.Tests.History.ShardPartialTests.The_line_is_judged_under_the_threshold_the_run_set(threshold: 0.5, kept: 7, partial: False)
+   CAUGHT
+== the fragment drops the threshold: src/Kronikol/History/HistoryRunContext.cs
+   Kronikol.Tests: 2 failed of Total tests: 93
+     Kronikol.Tests.History.ShardPartialTests.The_line_is_judged_under_the_threshold_the_run_set(threshold: 0.02, kept: 19, partial: True)
+     Kronikol.Tests.History.ShardPartialTests.The_line_is_judged_under_the_threshold_the_run_set(threshold: 0.5, kept: 7, partial: False)
+   CAUGHT
+== the fragment always names a threshold: src/Kronikol/History/HistoryRunContext.cs
+   Kronikol.Tests: 1 failed of Total tests: 93
+     Kronikol.Tests.History.ShardPartialTests.A_threshold_at_its_default_changes_no_fragment
+   CAUGHT
+== the fold drops the threshold: src/Kronikol/History/HistoryLedgerWriter.cs
+   Kronikol.Tests: 0 failed of Total tests: 93
+   SURVIVED
+== the analyzer ignores the threshold: src/Kronikol/History/HistoryAnalyzer.cs
+   Kronikol.Tests: 0 failed of Total tests: 93
+   SURVIVED
+== every shard saying no is not heard: src/Kronikol/History/HistoryLedgerWriter.cs
+   Kronikol.Tests: 1 failed of Total tests: 93
+     Kronikol.Tests.History.ShardPartialTests.A_host_that_says_no_run_is_partial_is_heard_through_the_fold
+   CAUGHT
+== one shard saying no is enough: src/Kronikol/History/HistoryLedgerWriter.cs
+   Kronikol.Tests: 1 failed of Total tests: 93
+     Kronikol.Tests.History.ShardPartialTests.A_shard_that_says_no_beside_one_that_says_nothing_leaves_it_to_the_ledger
+   CAUGHT
+== a relative address gets its end space escaped: src/Kronikol/Reports/Merge/MergeableReportReader.cs
+   Kronikol.Tests: 1 failed of Total tests: 93
+     Kronikol.Tests.Reports.RelativeAddressRunTests.A_merge_reads_a_shard_holding_a_relative_address(address: "orders ")
+   CAUGHT
+== a copy is kept: src/Kronikol/Reports/Merge/MergeableReportMerger.cs
+   Kronikol.Tests: 3 failed of Total tests: 93
+     Kronikol.Tests.Reports.Merge.MergeKeepsEveryScenarioTests.A_later_reports_copy_of_those_rows_is_dropped_whole
+     Kronikol.Tests.Reports.Merge.MergeKeepsEveryScenarioTests.Rows_that_look_alike_number_what_the_fullest_report_held_in_either_order(shortOneFirst: True
+     Kronikol.Tests.Reports.Merge.MergeKeepsEveryScenarioTests.The_same_shard_supplied_twice_still_deduplicates
+   CAUGHT
+== a look-alike counts one: src/Kronikol/Reports/Merge/MergeableReportMerger.cs
+   Kronikol.Tests: 1 failed of Total tests: 93
+     Kronikol.Tests.Reports.Merge.MergeKeepsEveryScenarioTests.A_later_reports_copy_of_those_rows_is_dropped_whole
+   CAUGHT
+== merge says nothing of attachments: src/Kronikol.Tool/MergeCommand.cs
+   Kronikol.Tests: 2 failed of Total tests: 93
+     Kronikol.Tests.Reports.Merge.MergeLeavesAttachmentsAloneTests.A_merge_of_nothing_but_attachments_says_why_it_found_no_shard
+     Kronikol.Tests.Reports.Merge.MergeLeavesAttachmentsAloneTests.A_merge_says_how_many_files_it_left_under_attachments
+   CAUGHT
+== every reserved folder counts as attachments: src/Kronikol/Reports/ReportFolders.cs
+   Kronikol.Tests: 0 failed of Total tests: 93
+   SURVIVED
+== history record sweeps a reserved folder: src/Kronikol.Tool/HistoryCommand.cs
+   Kronikol.Tests: 2 failed of Total tests: 93
+     Kronikol.Tests.History.ShardPartialTests.Recording_a_folder_leaves_what_a_reserved_folder_holds(reserved: "attachments")
+     Kronikol.Tests.History.ShardPartialTests.Recording_a_folder_leaves_what_a_reserved_folder_holds(reserved: "baseline")
+   CAUGHT
+== any scheme reads absolute: src/Kronikol/Tracking/RecordedUri.cs
+   Kronikol.Tests: 1 failed of Total tests: 93
+     Kronikol.Tests.Reports.RelativeAddressRunTests.An_address_is_absolute_when_it_says_so(address: "mailto:a@b", absolute: False)
+   CAUGHT
+== nothing reads absolute: src/Kronikol/Tracking/RecordedUri.cs
+   Kronikol.Tests: 5 failed of Total tests: 93
+     Kronikol.Tests.History.MergedRunHistoryTests.A_path_ending_in_an_escaped_space_reads_as_nothing_changed(address: "http://svc/search/foo%20")
+     Kronikol.Tests.History.MergedRunHistoryTests.A_path_ending_in_an_escaped_space_reads_as_nothing_changed(address: "http://svc/search/foo%20%20")
+     Kronikol.Tests.History.MergedRunHistoryTests.A_path_ending_in_an_escaped_space_reads_as_nothing_changed(address: "probe:///foo%20")
+     Kronikol.Tests.Reports.RelativeAddressRunTests.An_address_is_absolute_when_it_says_so(address: "http://svc/foo?x=1", absolute: True)
+     Kronikol.Tests.Reports.RelativeAddressRunTests.An_address_is_absolute_when_it_says_so(address: "kafka:///orders", absolute: True)
+   CAUGHT
+DONE
+== the fold drops the threshold: src/Kronikol/History/HistoryLedgerWriter.cs
+   Kronikol.Tests: 1 failed of Total tests: 63
+     Kronikol.Tests.History.ShardPartialTests.Two_shards_are_judged_under_the_threshold_they_set(threshold: 0.5, partial: False)
+   CAUGHT
+== the analyzer ignores the threshold: src/Kronikol/History/HistoryAnalyzer.cs
+   Kronikol.Tests: 1 failed of Total tests: 63
+     Kronikol.Tests.History.ShardPartialTests.The_analyzer_reads_a_fragment_under_the_threshold_it_carries(threshold: 0.5, partial: False)
+   CAUGHT
+== every reserved folder counts as attachments: src/Kronikol/Reports/ReportFolders.cs
+   Kronikol.Tests: 2 failed of Total tests: 63
+     Kronikol.Tests.Reports.Merge.MergeLeavesAttachmentsAloneTests.A_merge_says_nothing_of_what_it_left_in_the_runs_own_folders(reserved: "baseline")
+     Kronikol.Tests.Reports.Merge.MergeLeavesAttachmentsAloneTests.A_merge_says_nothing_of_what_it_left_in_the_runs_own_folders(reserved: "runs/gh_1_1")
+   CAUGHT
+== import sweeps a reserved folder: src/Kronikol.Tool/HistoryCommand.Maintenance.cs
+   Kronikol.Tests: 3 failed of Total tests: 63
+     Kronikol.Tests.Tool.HistoryMaintenanceTests.Import_leaves_a_report_under_a_reserved_folder(reserved: "attachments")
+     Kronikol.Tests.Tool.HistoryMaintenanceTests.Import_leaves_a_report_under_a_reserved_folder(reserved: "baseline")
+     Kronikol.Tests.Tool.HistoryMaintenanceTests.Import_leaves_a_report_under_a_reserved_folder(reserved: "runs/gh_1_1")
+   CAUGHT
+== import of ctrf sweeps a reserved folder: src/Kronikol.Tool/HistoryCommand.Maintenance.cs
+   Kronikol.Tests: 1 failed of Total tests: 63
+     Kronikol.Tests.Tool.HistoryMaintenanceTests.Import_of_ctrf_leaves_a_stray_file_under_attachments
+   CAUGHT
+DONE
+== history record sweeps attachments: src/Kronikol.Tool/HistoryCommand.cs
+   Kronikol.Tests: 1 failed of Total tests: 89
+     Kronikol.Tests.History.ShardPartialTests.Recording_a_folder_leaves_what_a_reserved_folder_holds(reserved: "attachments")
+   CAUGHT
+== history record sweeps baseline: src/Kronikol.Tool/HistoryCommand.cs
+   Kronikol.Tests: 1 failed of Total tests: 89
+     Kronikol.Tests.History.ShardPartialTests.Recording_a_folder_leaves_what_a_reserved_folder_holds(reserved: "baseline")
+   CAUGHT
+== history record leaves runs too: src/Kronikol.Tool/HistoryCommand.cs
+   Kronikol.Tests: 2 failed of Total tests: 89
+     Kronikol.Tests.Tool.HistoryCommandTests.Record_reads_a_retained_attempt_of_the_same_run_as_an_attempt_not_as_a_shard
+     Kronikol.Tests.Tool.HistoryCommandTests.Record_still_folds_shards_that_each_kept_an_attempt
+   CAUGHT
+== import leaves runs too: src/Kronikol.Tool/HistoryCommand.Maintenance.cs
+   Kronikol.Tests: 1 failed of Total tests: 89
+     Kronikol.Tests.Tool.HistoryMaintenanceTests.Import_leaves_what_a_report_attached_and_reads_what_it_retained(reserved: "runs/gh_499_1", imported:
+   CAUGHT
+== import sweeps attachments: src/Kronikol.Tool/HistoryCommand.Maintenance.cs
+   Kronikol.Tests: 1 failed of Total tests: 89
+     Kronikol.Tests.Tool.HistoryMaintenanceTests.Import_leaves_what_a_report_attached_and_reads_what_it_retained(reserved: "attachments", imported:
+   CAUGHT
+== import of ctrf sweeps attachments: src/Kronikol.Tool/HistoryCommand.Maintenance.cs
+   Kronikol.Tests: 1 failed of Total tests: 89
+     Kronikol.Tests.Tool.HistoryMaintenanceTests.Import_of_ctrf_leaves_a_stray_file_under_attachments
+   CAUGHT
+DONE

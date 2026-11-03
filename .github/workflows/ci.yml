@@ -145,6 +145,12 @@ jobs:
             os: windows-latest
             projects: tests/Kronikol.Tests
             filter: Kronikol.Tests.Templates
+          # A tap on every interface, on the host whose clients waited on ::1 (TcpTapLocalhostTests). A developer's machine
+          # would be asked about its firewall, so this is the Windows that runs the real socket.
+          - name: Tap On Every Interface (Windows)
+            os: windows-latest
+            projects: tests/Kronikol.Tests.TcpTap
+            filter: ATapOnEveryInterfaceAnswersOnBothLoopbacks
           - name: Template Actions (macOS)
             os: macos-latest
             projects: tests/Kronikol.Tests

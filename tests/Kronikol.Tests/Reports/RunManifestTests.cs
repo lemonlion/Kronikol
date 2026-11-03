@@ -247,6 +247,9 @@ public class RunManifestTests : IDisposable
     [InlineData("reruns/TestRunReport.json", false)]
     [InlineData("runs.json", false)]
     [InlineData("baseline-2/TestRunReport.json", false)]
+    [InlineData("attachments/openapi.json", true)]
+    [InlineData("Shard1/Reports/Attachments/TestRunReport.json", true)]
+    [InlineData("attachments.json", false)]
     public void A_file_under_a_runs_or_a_baseline_folder_is_reserved_wherever_the_sweep_started(string relative, bool reserved)
     {
         var file = Path.Combine(_dir, relative.Replace('/', Path.DirectorySeparatorChar));

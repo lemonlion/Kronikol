@@ -190,6 +190,12 @@ public sealed record HistoryRun
     /// </summary>
     public required bool? Partial { get; init; }
 
+    /// <summary>
+    /// The share of the previous roster a run may lack, where the run set its own (<see cref="ReportConfigurationOptions.HistoryPartialThreshold"/>):
+    /// the fragment carries it, as whoever reads the fragment judges <see cref="Partial"/> under it. A line holds none, being judged.
+    /// </summary>
+    internal double? PartialThreshold { get; init; }
+
     /// <summary>When the run finished. A label for a reader; never the ordering (§5.13).</summary>
     public required DateTimeOffset At { get; init; }
 

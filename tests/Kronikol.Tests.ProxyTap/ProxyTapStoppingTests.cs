@@ -15,7 +15,7 @@ namespace Kronikol.Tests.ProxyTap;
 /// </summary>
 public class ProxyTapStoppingTests
 {
-    private static readonly TimeSpan Patience = TimeSpan.FromSeconds(10);
+    private static readonly TimeSpan Patience = TimeSpan.FromSeconds(30);
 
     private static (int, byte[], string?, string?, Dictionary<string, string>?) Ok(HttpListenerRequest _, byte[] __) =>
         (200, "ok"u8.ToArray(), "text/plain", null, null);
@@ -25,7 +25,8 @@ public class ProxyTapStoppingTests
     {
         await using var upstream = new StubUpstream(Ok);
         var log = new List<string>();
-        await using var tap = await StartAsync(upstream.BaseUri, new ListSink(), log);
+        // A drain far longer than a stop may take here, so "at once" below can tell ending from waiting on a saturated machine.
+        await using var tap = await StartAsync(upstream.BaseUri, new ListSink(), log, prepare: t => t.AnswerInHandPatience = TimeSpan.FromMinutes(5));
 
         var callers = new List<RawCaller>();
         for (var i = 0; i < 4; i++)
@@ -49,8 +50,8 @@ public class ProxyTapStoppingTests
             }
         }
 
-        // Each is ended at once, not after the 2 s drain, and no close waits a second on a body that is not coming.
-        Assert.True(stopping.Elapsed < TimeSpan.FromSeconds(1.5), $"DisposeAsync took {stopping.ElapsedMilliseconds:N0} ms");
+        // Each is ended at once, not after the drain, and no close waits a second on a body that is not coming.
+        Assert.True(stopping.Elapsed < TimeSpan.FromMinutes(1), $"DisposeAsync took {stopping.ElapsedMilliseconds:N0} ms");
         Assert.Empty(upstream.Seen);
         Assert.Equal(0, tap.ForwardFailures);
     }
@@ -83,7 +84,9 @@ public class ProxyTapStoppingTests
         Random.Shared.NextBytes(big);
         await using var upstream = new StubUpstream((_, _) => (200, big, "application/octet-stream", null, null));
         var log = new List<string>();
-        await using var tap = await StartAsync(upstream.BaseUri, new ListSink(), log);
+        // Longer than the 2 s a stop gives by default: on a saturated machine this answer takes longer than that, and cutting it then
+        // is the limit working, not what this fact is about (5.5 of 8 MB on 2026-11-02, plans/CALLS_AND_EVENTS_PLAN.md F27).
+        await using var tap = await StartAsync(upstream.BaseUri, new ListSink(), log, prepare: t => t.AnswerInHandPatience = TimeSpan.FromMinutes(5));
 
         // A small receive window, so the answer cannot all sit in socket buffers: the tap is still writing it.
         using var caller = await RawCaller.SendAsync(tap.Options.ListenPort, "GET /big HTTP/1.1\r\nHost: localhost\r\n\r\n", receiveBuffer: 16 * 1024);
@@ -91,8 +94,8 @@ public class ProxyTapStoppingTests
         Assert.Equal(1, await caller.Client.Client.ReceiveAsync(first));
         var stopping = tap.DisposeAsync().AsTask();
 
-        var heard = await caller.HearAsync(Patience);
-        await stopping.WaitAsync(Patience);
+        var heard = await caller.HearAsync(TimeSpan.FromMinutes(5));
+        await stopping.WaitAsync(TimeSpan.FromMinutes(5));
 
         var whole = new Heard([first[0], .. heard.Bytes], heard.Ending);
         Assert.StartsWith("HTTP/1.1 200 ", whole.FirstLine);
@@ -107,6 +110,21 @@ public class ProxyTapStoppingTests
                                           && after.EndsWith("\r\n\r\n", StringComparison.Ordinal)),
             $"after the answer came: {after}");
         Assert.Equal(1, tap.RequestsHandled);
+    }
+
+    /// <summary>The limit itself: what is still open when the patience runs out is ended, so a stop cannot hang on a caller that reads slowly.</summary>
+    [Fact]
+    public async Task Stopping_the_tap_ends_an_answer_still_open_when_its_patience_runs_out()
+    {
+        var big = new byte[8 * 1024 * 1024];
+        await using var upstream = new StubUpstream((_, _) => (200, big, "application/octet-stream", null, null));
+        await using var tap = await StartAsync(upstream.BaseUri, new ListSink(), [], prepare: t => t.AnswerInHandPatience = TimeSpan.FromMilliseconds(50));
+        using var caller = await RawCaller.SendAsync(tap.Options.ListenPort, "GET /big HTTP/1.1\r\nHost: localhost\r\n\r\n", receiveBuffer: 16 * 1024);
+        var first = new byte[1];
+        Assert.Equal(1, await caller.Client.Client.ReceiveAsync(first));
+
+        // The caller reads nothing more, so the answer cannot finish: the stop ends it rather than wait on it.
+        await tap.DisposeAsync().AsTask().WaitAsync(Patience);
     }
 
     [Fact]

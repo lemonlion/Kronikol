@@ -413,7 +413,7 @@ public static class ComponentFlowSegmentBuilder
                     Caller: l.CallerName,
                     Service: l.ServiceName,
                     Method: l.Method.Value?.ToString() ?? "Unknown",
-                    Path: l.Uri.AbsolutePath)).ToArray();
+                    Path: RecordedUri.AbsolutePath(l.Uri))).ToArray();
 
                 return new TestCallOrdering(g.Key, ordered[0].TestName, entries);
             })

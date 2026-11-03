@@ -132,7 +132,7 @@ public static class SequenceCollapser
             request.CallerName,
             request.ServiceName,
             request.Method.Value?.ToString(),
-            request.Uri.PathAndQuery,
+            RecordedUri.PathAndQuery(request.Uri),
             graphQl,
             status,
             request.MetaType.ToString());

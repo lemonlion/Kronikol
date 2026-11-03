@@ -1,7 +1,7 @@
 <Project>
 
   <PropertyGroup>
-    <Version>5.28.1</Version>
+    <Version>5.28.2</Version>
     <TargetFramework>net10.0</TargetFramework>
     <MultiTargetFrameworks>net10.0</MultiTargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -10,6 +10,7 @@
     <PackageProjectUrl>https://github.com/lemonlion/Kronikol</PackageProjectUrl>
     <RepositoryUrl>https://github.com/lemonlion/Kronikol</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
+    <RunSettingsFilePath Condition="$(MSBuildProjectName.StartsWith('Kronikol.Tests'))">$(MSBuildThisFileDirectory)tests\history-off.runsettings</RunSettingsFilePath>
     <Authors>Aryeh Citron</Authors>
     <Copyright>Copyright (c) 2023-2026 Aryeh Citron</Copyright>
     <PackageTags>testing;diagrams;bdd;plantuml;sequence-diagram;http-tracking;xunit;nunit;mstest;tunit;lightbdd;reqnroll</PackageTags>

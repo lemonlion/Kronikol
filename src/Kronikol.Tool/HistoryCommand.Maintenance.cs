@@ -479,10 +479,10 @@ internal static partial class HistoryCommand
         foreach (var (roster, run, shapes, rawCalls) in runs.OrderBy(r => r.Run.At))
         {
             // The previous roster as its ids now are, through the alias file and the ids Kronikol itself changed (Q15).
-            var previous = LastFullRoster(ledgerPath, run.Suite);
+            var previous = LastFullRoster(ledgerPath, run);
             if (previous is not null && HistoryAliases.With(LoadAliasesOrNull(ledgerPath), [run]) is { } known)
                 previous = known.Apply(previous);
-            var line = run.Partial is null ? run with { Partial = HistoryAnalyzer.IsPartial(roster, previous, 0.10) } : run;
+            var line = run.Partial is null ? run with { Partial = HistoryAnalyzer.IsPartial(roster, previous, run.PartialThreshold ?? 0.10) } : run;
             // A fragment bridges every rule Kronikol keeps, and here the consumer's earlier patterns from its raw calls; the
             // ledger's line keeps only those its window holds, as record's does (#192 R1). The ledger as it stands, since
             // the runs imported before this one are in its window.
@@ -509,7 +509,7 @@ internal static partial class HistoryCommand
         var files = File.Exists(full)
             ? [full]
             : Directory.Exists(full)
-                ? QueryCommand.DistinctReports(Directory.EnumerateFiles(full, "*", SearchOption.AllDirectories).Where(QueryCommand.IsReportFile), error)
+                ? QueryCommand.DistinctReports(Directory.EnumerateFiles(full, "*", SearchOption.AllDirectories).Where(f => QueryCommand.IsReportFile(f) && !ReportFolders.IsAttachment(full, f)), error)
                 : throw new FileNotFoundException($"not found: {input}");
 
         foreach (var file in files)
@@ -527,7 +527,7 @@ internal static partial class HistoryCommand
     {
         var full = Path.GetFullPath(input);
         var files = File.Exists(full) ? [full]
-            : Directory.Exists(full) ? Directory.GetFiles(full, "*.json", SearchOption.AllDirectories).OrderBy(f => f, StringComparer.Ordinal).ToArray()
+            : Directory.Exists(full) ? Directory.GetFiles(full, "*.json", SearchOption.AllDirectories).Where(f => !ReportFolders.IsAttachment(full, f)).OrderBy(f => f, StringComparer.Ordinal).ToArray()
             : throw new FileNotFoundException($"not found: {input}");
 
         foreach (var file in files)

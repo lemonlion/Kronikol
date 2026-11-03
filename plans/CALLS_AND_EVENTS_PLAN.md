@@ -158,7 +158,7 @@ The report's scripts never read the field (READ: no `metaType` in any `.js`). Th
 | F24 | **`kronikol merge <folder>` exits 1 on a real report folder.** It sweeps `attachments/*.json` as shards, so a shard with `attachments/openapi.json` stops the merge. The wiki's recipe can hit it. Not about kind | RUN | `merge-folder-attachments` |
 | F25 | **A record with a relative URI costs part of the report,** with a warning: "... not supported for a relative URI". It always loses the scenario's diagram. With internal flow on, its default, it also loses `TestRunReport.html` and `Specifications.html`. With `GenerateMergeableData` on as well, it also loses `TestRunReport.krkl` and `service.json`. With flow off, only the diagram is lost. Not about kind | RUN | `relative-address-report`, `merge-round-trip-*` |
 | F26 | **A browser test is flaky, with or without these changes.** `BackForwardRestoreTests.R16_Back_lands_on_the_same_scenario_after_the_features_above_it_were_drawn`, run alone, fails 2 of 10 on clean `27cc0e46` and 2 of 10 with all three patches. The one failure in the full suite was its WebKit row. Not about kind | RUN | `e2e-r16-control` |
-| F27 | **`Kronikol.Tests.ProxyTap` fails now and then, and the cause is not shown.** 3 of 31 whole-project runs on all three patches have one failure, a different fact each time; 0 of 30 on clean `27cc0e46`, which is too few to tell apart. None came back once the messages were being kept. Each of the three facts takes a port from `StubUpstream.FreePort`, which lets it go and listens on it later. `LoopbackPort` guards that within a process and not against another process, and other sessions' suites shared the machine. No patch touches the package, so a port race is the likely cause (INFERRED) | RUN | `test-runs-all-three` |
+| F27 | **`Kronikol.Tests.ProxyTap` fails now and then, and the cause is not shown.** 3 of 31 whole-project runs on all three patches have one failure, a different fact each time; 0 of 30 on clean `27cc0e46`, which is too few to tell apart. None came back once the messages were being kept. Each of the three facts takes a port from `StubUpstream.FreePort`, which lets it go and listens on it later. `LoopbackPort` guards that within a process and not against another process, and other sessions' suites shared the machine. No patch touches the package, so a port race is the likely cause (INFERRED). **Found in R4: a port race, a fact racing a limit, and a real race in the tap on Windows (§12)** | RUN | `test-runs-all-three`, `f27-proxytap` |
 
 ### 3.1 Every finding and where it goes
 
@@ -181,7 +181,7 @@ The report's scripts never read the field (READ: no `metaType` in any `.js`). Th
 | The rest of F21 | Own issue (Q13) | |
 | F24, F25 | R4 | |
 | F22, F26 | Own issues (Q14) | |
-| F27 | Q14, and §6.6 looks again before each tag | §6.6 |
+| F27 | R4 | §12 |
 
 ## 4. The underlying problem
 
@@ -595,6 +595,8 @@ only makes a merge's method equal the run's recorded one. A merge bridges no rul
 `ReportDataSchema.java` with its own copy of .NET's schema (`ReportDataSchemaTest.java:19`), so nothing goes red in either repository; the row says to mirror it and re-capture. Kronikol4J has no OTLP code and no parity obligation
 there (its `README.md:271-273`), so R3's span kinds have no item, but F11 moves a Messaging-on tap user's report output, which R3's row says. F13 is Q7. The comment closing #220 is Appendix A.
 
+**R4, a patch: what fixing #220 found.** F20, F21's path ending in `%20` and rows that look alike, F24, F25, F27, with no new option and no new public member. Report output moves for a record with a relative address, which draws a diagram where it threw, and in a merge, for those rows and that path. A run under the history action's flow now reports what is absent from it, and its changelog entry says what that costs on an upgrade. The tests also stop writing to the repository's real ledger, and stop raising a firewall prompt on a developer's machine.
+
 ## 8. Edit sites
 
 **R1.**
@@ -686,7 +688,7 @@ and `MassTransitTracker`; `src/Kronikol/Reports/WarmUpCalls.cs:46,155` and a com
 - Reports already written keep what they say (§5.6).
 - `BigQueryTracker` stays, with no caller in its package: removing a public type would be a major. Bigtable keeps no automatic route (F4).
 - An ingest's labels (Q9).
-- A merge counting its own run (F18, Q11), the rest of a merge's other differences (F21, Q13), and F22, F26, F27 (Q14).
+- A merge counting its own run (F18, Q11), the rest of a merge's other differences (F21, Q13), and F22, F26 (Q14). Of F21's rest, `query`, `--group-by path`, `diff --body`, the `Failures.md` Call column and ingest still read `/foo` for `/foo%20`, as `Uri` trims it, and none of them raises a false alarm.
 - MediatR's `Publish` stays `Default` under the rule: it is in process, with no broker (READ).
 - A consumer who logs `Event` by hand on a database call keeps it. The guard reads Kronikol's own packages.
 - From R3's look at OTLP, each small and none about kind: `Neither` lumps settlement with management, so `messaging.operation.type=settle` waits for a split; `error.type` is not written, and span names are not per semconv; a `ConsumeFault` keeps `service.name=MassTransit`; a real SDK's SNS URI is `sns:///`, so its topic is lost (`SnsOperationClassifier.cs:13-17` parses JSON only); a `CLIENT` with `rpc.system`, the AWS shape, takes the RPC path and is dropped unless RPC capture is on; a tap's `CONSUMER` is drawn consumer to broker; spans under one Activity share an id.
@@ -745,6 +747,25 @@ Still to prove once it is published: `r3-span-kinds`, `r3-real-capture`, and `r3
 - **Nine card test files said the table leaves a delivery `Unknown`,** which stopped being true with R3.
 
 The proof still to run once it is published: `kinds-by-tracker`, which must give 0 bold rows of §2.2.
+
+**2026-11-02, R4 built as 5.28.2.** Whole suite: 54 projects, 23,887 passed, 95 skipped. The first full run failed 4 in the core project, all this release's own, and the core project ran again whole after they were fixed. ProxyTap 30 of 30, Release build clean, and the suite wrote no line to the repository's ledger. All 37 mutations caught, four of them only once a new fact was written: `results/r4-mutations.txt`. An independent review found one fault that would have held the release, and more around it:
+
+- **The fix read a line against every branch.** `LastFullRoster` ignored the stream, which mattered little while a run's own reading reached the ledger. Once every fragment left the question to `history record`, a branch with two more scenarios made main's next lines partial, the very false alarm F20 removes. Every fact was on one stream. A line now reads its own stream's last full run, as a run in process does.
+- **`HistoryPartialThreshold` no longer reached a line,** as the fragment had stopped carrying the reading made under it. A fragment now carries the threshold where the run set one, the fold keeps it, and the analyzer reads it for `history gate` and `query history`.
+- **A merge lost a shard under `attachments/` without a word.** It now says how many files it left there.
+- **A relative address had its end space escaped,** which raised the false alarm the fix removes. Only an absolute address loses one.
+- **Merge order decided the row count.** A look-alike is kept as many times as the fullest report held it.
+- **`HistoryPartialRun` set to `false` did not hold through the fold,** against its own doc. It holds when every shard says so.
+- **`history record` swept `attachments/` and `baseline/`,** so a fragment there was recorded as a run, and a stray file under `attachments/` stopped `history import --from-ctrf`. Each leaves those now. The first cut left out `runs/` too, and the whole suite caught it: a retry's earlier attempts are kept there.
+- **The real socket's fact was about Windows, and with the firewall change it ran on no Windows machine.** CI has a lane for it.
+- **Two facts could not fail:** `Assert.Contains("orders", page)` matched words in the page's scripts, and the guard's own test tested a shorter copy of its pattern. The guard's blind spots `Uri?.` and `Uri!.` are closed too.
+- **On Linux `/orders?page=1` parses as a file,** so `query`, `--group-by path` and the Call column would print `/orders%3Fpage=1`. `RecordedUri.TryAbsolute` asks for `://`.
+
+**F27, `Kronikol.Tests.ProxyTap`'s failures, found and fixed in the same release, at the owner's asking.** Until then the project had only been run again before each tag. `probes/proxy_stress.py` runs it under pressure and keeps every message, and it found three causes, not one. Before and after: `results/f27-proxytap.txt`.
+
+- **A port race between test programs.** 8 copies at once failed 5 of 48 runs, a different fact each time, each an `HttpListenerException` on start: "conflicts with an existing registration on the machine" or "being used by another process". `LoopbackPort.Free` bound port 0, let it go, and the listener started a moment later, and Windows offers ports in turn, so another program was offered the same number. It now hands out ports from below every system's ephemeral range, from a block of 256 only this program holds, claimed with a named mutex. The first cut of that range began at 10000, and the re-run caught it: a stock Windows reserves 10243 to 10247 in http.sys, which a socket cannot see, so the program that drew that block failed 4 facts with "Access is denied". The range begins at 11000, and http.sys is asked about each port. On the release's code, 8 copies at once beside 8 more programs and 24 busy loops: 48 runs, none failed.
+- **A fact racing a real limit.** `Stopping_the_tap_lets_an_answer_in_hand_finish` failed 2 of 6 runs with the CPU saturated, 5.5 of 8 MB through when the 2 s a stop allows ran out. The limit is right, so the fact gives itself longer through an internal `AnswerInHandPatience`, and a new fact holds the limit itself. On 16 programs and 24 busy loops, other timing facts ran out of patience too, so their waits are longer, which costs only a real hang's time to report. In that same run none of these facts failed.
+- **A real race in the tap, on Windows.** `A_caller_that_half_closes_mid_body_is_answered_400_and_let_go` heard a reset 3 times in 16,000 on a saturated machine. **The first fix did not cure it:** closing rather than aborting left it at 3 in 32,000, and a run that recorded what the tap did showed why. http.sys writes its own 400 first in all but 2 of 32,000 tries, so the tap's close is refused, and .NET aborts inside a close that fails. So the tap now gives http.sys 200 ms before it ends the exchange. Any other failed body read reset its caller every time, which the fact's Windows branch had allowed: that fact now asserts the 400 on every system. On the release's code, 32,000 tries beside 24 busy loops all heard the 400.
 
 ## Appendix A. The comment closing #220 (Q8), to post when R1 is published
 
