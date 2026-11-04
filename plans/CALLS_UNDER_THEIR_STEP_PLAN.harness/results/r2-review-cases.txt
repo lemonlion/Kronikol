@@ -1,0 +1,160 @@
+# Published 5.28.2 (pub) against R2 alone on 9d994a4b (r2): the fresh review's cases (probes-matcher/review-cases). Calls and flags only: trees and responses are in r2-responses-and-trees.txt. scripts/run_cases.py
+=== F1-kindstep-untimed-rows
+  pub: flags {}  (all builds the same)
+    s0 /basket=0 /pay=1 /send=2
+=== F1b-kindstep-untimed-row-overlap
+  pub: flags {}  (all builds the same)
+    s0 /first=0 /second=1
+=== F1c-kindstep-background-row
+  pub: flags {}  (all builds the same)
+    s0 /seed=b0 /pay=0
+=== F2-heuristic-bg-first-untimed
+  pub: flags {}
+    s0 /a=-
+    s1 /seed=b0 /b=b1
+  r2: flags {}
+    s0 /a=b1
+    s1 /seed=b0 /b=b1
+=== F2b-heuristic-bg-overlap-wrong
+  pub: flags {}
+    s0 /a=-
+    s1 /seed=b0 /b=b1
+  r2: flags {}
+    s0 /a=b1
+    s1 /seed=b0 /b=b1
+=== F2c-heuristic-bg-capture-own-bars
+  pub: flags {}
+    s0 /a=-
+    s1 /seed=b0 /b=b1
+  r2: flags {}
+    s0 /a=b1
+    s1 /seed=b0 /b=b1
+=== F3-no-text-row-capture-bars
+  pub: flags {}  (all builds the same)
+    s0 /basket=- /pay=-
+=== F3b-blank-text-row-capture-bars
+  pub: flags {}  (all builds the same)
+    s0 /basket=0 /pay=-
+=== F4-reused-id
+  pub: flags {}  (all builds the same)
+    s0 /retry=0 /retry=1
+=== F5b-bar-in-flight-tree
+  pub: flags {}  (all builds the same)
+    s0 /slow=0 /pay=1
+=== H1-reused-id-chronological
+  pub: flags {}  (all builds the same)
+    s0 /retry=0 /retry=1
+=== H2-bar-in-flight-chronological
+  pub: flags {}  (all builds the same)
+    s0 /slow=0 /pay=1
+=== H3-no-ids-no-times-raw-bars
+  pub: flags {}  (all builds the same)
+    s0 /same=0 /same=1
+=== H4-capture-bar-for-assertion-row
+  pub: flags {}  (all builds the same)
+    s0 /seed=0 /basket=1 /pay=2
+=== H5-blank-line-label-false-accept
+  pub: flags {}  (all builds the same)
+    s0 /pay=-
+=== H6-doc-string-cut-prefix
+  pub: flags {}  (all builds the same)
+    s0 /pay=-
+=== J1-skipped-first-scenario-no-times
+  pub: flags {}  (all builds the same)
+    s0 
+    s1 /seed=b0 /place=b1 /check=0
+    s2 /seed=b0 /place=b1 /check=0
+=== J10-literal-step-text-no-bar
+  pub: flags {}  (all builds the same)
+    s0 /a=-
+=== J11-all-no-text-rows-capture-bars
+  pub: flags {}  (all builds the same)
+    s0 /a=- /b=-
+=== J12-capture-doc-cut-prefix-escaped
+  pub: flags {}  (all builds the same)
+    s0 /pay=-
+=== J13-capture-doc-cut-prefix-wrapped
+  pub: flags {}  (all builds the same)
+    s0 /pay=-
+=== J14-capture-blank-line-label
+  pub: flags {}  (all builds the same)
+    s0 /pay=-
+=== J15-capture-case-only
+  pub: flags {}  (all builds the same)
+    s0 /pay=-
+=== J16-raw-closing-half-only
+  pub: flags {}  (all builds the same)
+    s0 /a=-
+=== J2-skipped-last-scenario-no-times
+  pub: flags {}  (all builds the same)
+    s0 
+    s1 /seed=b0 /place=b1 /check=0
+    s2 /seed=b0 /place=b1 /check=0
+=== J3-heuristic-second-untimed
+  pub: flags {}
+    s0 /b=-
+    s1 /seed=b0 /a=b1
+  r2: flags {}
+    s0 /b=b1
+    s1 /seed=b0 /a=b1
+=== J4-kindstep-failing-step
+  pub: flags {}  (all builds the same)
+    s0 /basket=0 /pay=1
+=== J5-retry-untimed-row-last-attempt
+  pub: flags {}
+    s0 /second=-
+  r2: flags {}
+    s0 /second=1
+=== J6-retry-raw-bars-only-in-first-attempt
+  pub: flags {}
+    s0 /second=-
+  r2: flags {}
+    s0 /second=0
+=== J7-retry-raw-untimed-bar-stays
+  pub: flags {}  (all builds the same)
+    s0 /second=-
+=== J8-levels
+  pub: flags {}
+    s0 /o=- /b=- /sb=- /n=- /p=-
+  r2: flags {}
+    s0 /o=- /b=1 /sb=1 /n=1 /p=3
+=== J9-literal-step-text
+  pub: flags {}  (all builds the same)
+    s0 /a=0 /b=1
+=== K1-identical-rows-substeps
+  pub: flags {}  (all builds the same)
+    s0 /x=1
+=== K2-no-text-middle-capture-bars
+  pub: flags {}  (all builds the same)
+    s0 /basket=0 /pay=- /send=-
+=== K3-no-text-then-repeat
+  pub: flags {}  (all builds the same)
+    s0 /first=- /second=1
+=== K4-capture-bars-not-for-background
+  pub: flags {}  (all builds the same)
+    s0 /basket=- /pay=-
+=== K5-one-instant
+  pub: flags {}  (all builds the same)
+    s0 /x=2
+=== K6-first-word-overlap-capture
+  pub: flags {}  (all builds the same)
+    s0 /x=-
+=== K7-annotations
+  pub: flags {}  (all builds the same)
+    s0 /a=0 /b=1
+=== L1-sibling-failed-early-unrun-steps-untimed
+  pub: flags {}
+    s0 /seed=-
+    s1 /seed=0 /place=1 /check=2
+    s2 /seed=0 /place=1 /check=2
+  r2: flags {}
+    s0 /seed=2
+    s1 /seed=0 /place=1 /check=2
+    s2 /seed=0 /place=1 /check=2
+=== L2-control-no-extraction
+  pub: flags {}
+    s0 /seed=-
+    s1 /seed=0 /place=1
+  r2: flags {}
+    s0 /seed=1
+    s1 /seed=0 /place=1

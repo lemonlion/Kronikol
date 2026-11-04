@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <TrackStepsEnabled>true</TrackStepsEnabled>
+    <AssemblyName>rnprobe</AssemblyName>
+    <RootNamespace>rnprobe</RootNamespace>
+    <NoWarn>$(NoWarn);xUnit1051;CS1998;CS4014;xUnit1031;CS0162;CS0414;CS8618</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\src\*.cs" />
+    <None Include="..\src\reqnroll.json" Link="reqnroll.json" CopyToOutputDirectory="Always" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
+    <PackageReference Include="Reqnroll" Version="3.3.4" />
+    <PackageReference Include="Reqnroll.xUnit" Version="3.3.4" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" />
+    <PackageReference Include="Kronikol.ReqNRoll.xUnit2" Version="5.28.2" />
+    <PackageReference Include="Kronikol.StepTracking" Version="5.28.2" />
+  </ItemGroup>
+</Project>

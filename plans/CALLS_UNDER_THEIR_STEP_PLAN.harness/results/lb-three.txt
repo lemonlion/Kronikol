@@ -1,0 +1,76 @@
+=== published
+Include="LightBDD.XUnit3" Version="3.12.0"
+Failed!  - Failed:     1, Passed:     2, Skipped:     0, Total:     3, Duration: 628 ms - Probe.LightBdd.dll (net10.0)
+--- A composite step with two sub steps [Passed]
+      0     GIVEN A basket is filled  0.1s  [i0-i4] 3 calls
+        0.0   An apple is added  0.01s
+        0.1   A pear is added
+      1     WHEN The order is placed  0s  [i6]
+    calls: composite-body=0  apple=0  pear=0  orders=1
+--- A composite whose first sub step fails [Failed]
+      0     GIVEN A basket is filled  0s  [i0-i4] 3 calls
+        0.0   An apple is added
+        0.1   A pear is added
+    ✗ 1     WHEN A composite that fails  0.04s  [i6]
+      ✗ 1.0   A sub step that fails  0.04s
+        1.1   A pear is added
+    calls: composite-body=0  apple=0  pear=0  about-to-fail=1
+--- A step makes a call after a composite ran [Passed]
+      0     GIVEN A composite with a nested composite  0.01s  [i0-i6] 4 calls
+        0.0   A basket is filled  0s
+          0.0.0 An apple is added
+          0.0.1 A pear is added
+        0.1   A pear is added
+      1     WHEN The order is placed
+    calls: composite-body=0  apple=0  pear=0  pear=0
+  BackgroundCalls ×1  1 call arrived after 'A step makes a call after a composite ran' ended and are listed as b…
+=== current
+Include="LightBDD.XUnit3" Version="3.12.0"
+Failed!  - Failed:     1, Passed:     2, Skipped:     0, Total:     3, Duration: 738 ms - Probe.LightBdd.dll (net10.0)
+--- A composite step with two sub steps [Passed]
+      0     GIVEN A basket is filled  0s  [i0-i4] 3 calls
+        0.0   An apple is added  [i2]
+        0.1   A pear is added  [i4]
+      1     WHEN The order is placed  [i6]
+    calls: composite-body=0  apple=0.0  pear=0.1  orders=1
+--- A composite whose first sub step fails [Failed]
+      0     GIVEN A basket is filled  0s  [i0-i4] 3 calls
+        0.0   An apple is added  [i2]
+        0.1   A pear is added  [i4]
+    ✗ 1     WHEN A composite that fails  0.05s  [i6]
+      ✗ 1.0   A sub step that fails  0.04s  [i6]
+        1.1   A pear is added
+    calls: composite-body=0  apple=0.0  pear=0.1  about-to-fail=1.0
+--- A step makes a call after a composite ran [Passed]
+      0     GIVEN A composite with a nested composite  0.15s  [i0-i6] 4 calls
+        0.0   A basket is filled  0.1s  [i0-i4] 3 calls
+          0.0.0 An apple is added  0.01s  [i2]
+          0.0.1 A pear is added  0s  [i4]
+        0.1   A pear is added  0s  [i6]
+      1     WHEN The order is placed  0s  [i8]
+    calls: composite-body=0.0  apple=0.0.0  pear=0.0.1  pear=0.1  orders=1
+=== floor
+Include="LightBDD.XUnit3" Version="3.12.0"
+Failed!  - Failed:     1, Passed:     2, Skipped:     0, Total:     3, Duration: 824 ms - Probe.LightBdd.dll (net10.0)
+--- A composite step with two sub steps [Passed]
+      0     GIVEN A basket is filled  0.01s  [i0-i4] 3 calls
+        0.0   An apple is added  0s  [i2]
+        0.1   A pear is added  [i4]
+      1     WHEN The order is placed  [i6]
+    calls: composite-body=0  apple=0.0  pear=0.1  orders=1
+--- A composite whose first sub step fails [Failed]
+      0     GIVEN A basket is filled  0.19s  [i0-i4] 3 calls
+        0.0   An apple is added  0.01s  [i2]
+        0.1   A pear is added  0s  [i4]
+    ✗ 1     WHEN A composite that fails  0.03s  [i6]
+      ✗ 1.0   A sub step that fails  0.03s  [i6]
+        1.1   A pear is added
+    calls: composite-body=0  apple=0.0  pear=0.1  about-to-fail=1.0
+--- A step makes a call after a composite ran [Passed]
+      0     GIVEN A composite with a nested composite  0.01s  [i0-i6] 4 calls
+        0.0   A basket is filled  0s  [i0-i4] 3 calls
+          0.0.0 An apple is added  [i2]
+          0.0.1 A pear is added  0s  [i4]
+        0.1   A pear is added  [i6]
+      1     WHEN The order is placed  [i8]
+    calls: composite-body=0.0  apple=0.0.0  pear=0.0.1  pear=0.1  orders=1

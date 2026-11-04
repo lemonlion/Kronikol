@@ -1,0 +1,54 @@
+
+s0  Probes › P0 control  [Passed]  0s
+  0     A customer is registered  [i0]
+  1     An order is submitted  [i2]
+      call> 0 /customers
+      call> 1 /orders
+
+s1  Probes › P1 a call between two steps  [Passed]  0s
+  0     A customer is registered  [i0-i2] 2 calls
+  1     An order is submitted  [i4]
+      call> 0 /customers
+      call> 0 /between
+      call> 1 /orders
+
+s2  Probes › P2 a call before the first step and after the last  [Passed]  0s
+  0     A customer is registered  [i2-i4] 2 calls
+   1 calls belong to no step (before the first step, or attribution was not trusted)
+      call> - /before
+      call> 0 /customers
+      call> 0 /after
+
+s3  Probes › P3 a call after a step that made none  [Passed]  0s
+  0     A customer is registered  [i0]
+  1     A step with no call  [i2]
+      call> 0 /customers
+      call> 1 /after-empty-step
+
+s4  Probes › P4 a call in teardown  [Passed]  0s
+  0     A customer is registered  [i0-i2] 2 calls
+      call> 0 /customers
+      call> 0 /teardown
+
+s5  Probes › P5 two steps in parallel the first ending first  [Passed]  0.2s
+  0     A fast parallel  0.11s
+  1     A slow parallel  0.2s  [i0-i2] 2 calls
+  2     An order is submitted  [i4]
+      call> 1 /fast
+      call> 1 /slow
+      call> 2 /orders
+
+s6  Probes › P6 a step longer than 110 characters  [Passed]  0.22s
+  0     A basket that held two apples and a pear last week but nothing at all this week while the …  0.18s
+  1     An order is submitted  [i2]
+   1 calls belong to no step (before the first step, or attribution was not trusted)
+      call> - /long
+      call> 1 /orders
+
+s7  Probes › P7 a step that starts another and ends first  [Passed]  0.29s
+  0     A step that starts another and ends first  0s  [i0-i2] 2 calls
+    0.0   A slow parallel  0.16s
+  1     An order is submitted  [i4]
+      call> 0 /own
+      call> 0 /slow
+      call> 1 /orders

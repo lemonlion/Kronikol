@@ -1,0 +1,14 @@
+# Sibling patches laid on #223's c7252f6c with this plan's layer, with git apply --check --3way. Nothing was settled, built or run.
+## prototype/226-measured-1100.patch
+cleanly: Tracking/StepCollector.cs
+cleanly: StepTracking/build/Kronikol.StepTracking.targets
+cleanly: StepTracking/WeaveStepsTask.cs
+cleanly: StepTracking/WeaveResult.cs
+cleanly: StepTracking/StepWeaver.cs
+cleanly: AssertionTracking/AssertionWeaver.cs
+## prototype/224-r1-r2-r3-measured.patch: with conflicts
+src/Kronikol.BDDfy.xUnit3/BDDfyStepTrackingExecutor.cs
+src/Kronikol.LightBDD.Core/StepTrackingStepDecorator.cs
+src/Kronikol.ReqNRoll.Core/ReqNRollTrackingHooks.cs
+src/Kronikol/Tracking/StepCollector.cs
+src/Kronikol/Tracking/TestTrackingMessageHandler.cs

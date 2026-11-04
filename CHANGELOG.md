@@ -4,6 +4,38 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.28.4] - 2026-11-04
+
+The patch part moves (5.28.3 to 5.28.4): bug fixes in how a call finds its step, with no new option and no new public member
+(`plans/CALLS_UNDER_THEIR_STEP_PLAN.md` R2, #128). A reader sees each change, as a call that read no step, or the wrong one, now reads its own.
+
+### Fixed
+
+- **A step's calls keep their step whatever its bar does to the label (#128).** A call finds its step by a walk over the test's step
+  bars, and the walk asked whether the bar held the step's text. Often a bar does not: `StepBarPlantUml.Build` wraps a label at 110
+  characters, escapes a backslash, loader markup such as `<$param>`, a builtin call such as `%date()` and a line separator, draws a
+  label's later lines apart, and cuts a very long one. Each of those left every call under that bar with no `stepPath` and a
+  `StepAttributionMismatch`, in any lane. The walk now also reads a bar as the step's when it is what `Build` draws for that step,
+  compared exactly up to where a cut ended the bar, and a bar that is not its row's still reads no step. What it allows is what
+  `StepText` does: a row with no keyword, or a bar with none, reads a text as `StepText` would have it on the other side. That covers
+  a step whose title keeps its `And` or `But`, as BDDfy's do, which draws `And And y`: on the real adapter, 25 of 34 calls read no
+  step on published where titles were escaped or long, or steps were untitled, and all 34 read their own now. Two steps that differ
+  only past a bar's cut, by another keyword, or apart only in a first letter with no keyword on either, cannot be told apart, and the
+  second reads the first's bar where published read none (the plan's §6.4 lists them).
+- **A row with no bar no longer costs a scenario its calls' steps.** The walk counted every row, and a tests file draws no bar for a
+  `background: true` row, the shape `Ingesting-External-Captures.md` documents, for an assertion or for a step with no time. So every
+  bar was one out, and every call in the scenario read no step, with nothing in the report to say so, or, where the row's text sat
+  inside the next bar, the wrong step. Those rows now stay out of the walk where the tests file draws the bars. Where a capture draws
+  them, raw or as `kind: step` records, a row counts as it did, so a bar a capture's assertion row does not hold still leaves the
+  scenario's later calls with no step. A step with no text, listed as `(step)` and drawn as `step`, keeps its own bar.
+- **A response reads its request's step.** The walk gave each record the step current when it was read, so a call in flight across a
+  bar was split, and `kronikol query http` on a response's address named another step than its request's. Where an id repeats, a
+  response reads the last request's.
+- **Two rows that read alike keep their own sub-steps.** `kronikol ingest` and the Cucumber merge keyed a row's children by the row, a
+  record, so two rows equal in every member were one key, and the second's sub-steps were listed under the first.
+- **`StepAttributionMismatch`'s doc comment, and the comment on the walk, said the text check catches a call a background thread logs
+  late.** It cannot, as that changes no bar, and such a call reads the following step. They now say what it does catch.
+
 ## [5.28.3] - 2026-11-04
 
 The patch part moves (5.28.2 to 5.28.3): bug fixes in the assertion weaver, with no new option and no new public member. A statement it now

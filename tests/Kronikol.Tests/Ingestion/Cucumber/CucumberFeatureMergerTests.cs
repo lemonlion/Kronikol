@@ -91,6 +91,25 @@ public class CucumberFeatureMergerTests : IDisposable
     }
 
     [Fact]
+    public void Assertions_under_two_steps_that_read_alike_stay_with_their_own_step()
+    {
+        // Two steps equal in every member are still two rows (plans/CALLS_UNDER_THEIR_STEP_PLAN.md F16).
+        const string testId = "t1";
+        var cucumber = BuildCucumber(testId, ("Given", "a basket", 0), ("Given", "a basket", 5));
+        var records = new[]
+        {
+            new TestRunRecord { Event = "assertion", TestId = testId, Text = "in the first", Status = "passed", Timestamp = T0.AddSeconds(0.5) },
+            new TestRunRecord { Event = "assertion", TestId = testId, Text = "in the second", Status = "passed", Timestamp = T0.AddSeconds(5.5) },
+        };
+
+        var merged = CucumberFeatureMerger.Merge(cucumber, FeatureSynthesizer.Build(records, null), records);
+
+        var steps = Assert.Single(merged.Features.SelectMany(f => f.Scenarios)).Steps!;
+        Assert.Equal($"{Track.PassSymbol} in the first", Assert.Single(steps[0].SubSteps!).Text);
+        Assert.Equal($"{Track.PassSymbol} in the second", Assert.Single(steps[1].SubSteps!).Text);
+    }
+
+    [Fact]
     public void An_assertion_before_every_step_becomes_a_top_level_row()
     {
         const string testId = "t1";

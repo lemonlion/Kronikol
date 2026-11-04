@@ -1,0 +1,28 @@
+# #226's patch 305e03ff (STEP_METHOD_SHAPES_PLAN.prototype.patch) laid on the final cut, #223's 638f275d with this plan's layer and R2, with git apply --reject --ignore-space-change.
+error: while searching for:
+error: patch failed: src/Kronikol/Tracking/StepCollector.cs:512
+error: while searching for:
+error: patch failed: src/Kronikol/Tracking/StepCollector.cs:530
+Applied patch src/Kronikol.AssertionTracking/AssertionWeaver.cs cleanly.
+Applied patch src/Kronikol.AssertionTracking/StackAnalysis.cs cleanly.
+Applied patch src/Kronikol.AssertionTracking/WeaveAssertionsTask.cs cleanly.
+Applied patch src/Kronikol.AssertionTracking/build/Kronikol.AssertionTracking.targets cleanly.
+Applied patch src/Kronikol.StepTracking/StepWeaver.cs cleanly.
+Applied patch src/Kronikol.StepTracking/WeaveResult.cs cleanly.
+Applied patch src/Kronikol.StepTracking/WeaveStepsTask.cs cleanly.
+Applied patch src/Kronikol.StepTracking/build/Kronikol.StepTracking.targets cleanly.
+Applying patch src/Kronikol/Tracking/StepCollector.cs with 2 rejects...
+Hunk #1 applied cleanly.
+Hunk #2 applied cleanly.
+Hunk #3 applied cleanly.
+Rejected hunk #4.
+Rejected hunk #5.
+# Rejected: each is one of CompleteStepAsync's catches, which R1 moves into AwaitStep. Settled as CompleteAwaited(step, false, MessageOf(ex)).
+./src/Kronikol/Tracking/StepCollector.cs.rej
+settled both catches
+== src/Kronikol.StepTracking/Kronikol.StepTracking.csproj
+    0 Error(s)
+== src/Kronikol.AssertionTracking/Kronikol.AssertionTracking.csproj
+    0 Error(s)
+== src/Kronikol/Kronikol.csproj
+    0 Error(s)

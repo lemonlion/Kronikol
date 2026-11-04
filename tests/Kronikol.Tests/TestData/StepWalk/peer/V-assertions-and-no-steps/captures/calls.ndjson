@@ -1,0 +1,2 @@
+{"type": "Request", "testId": "v0", "method": "POST", "uri": "http://shop.test/basket", "serviceName": "Shop", "callerName": "Tests", "content": "{}", "requestResponseId": "v0-basket-120", "timestamp": "2026-11-03T10:00:00.120000Z"}
+{"type": "Response", "testId": "v0", "method": "POST", "uri": "http://shop.test/basket", "serviceName": "Shop", "callerName": "Tests", "content": "{}", "statusCode": "200", "requestResponseId": "v0-basket-120", "timestamp": "2026-11-03T10:00:00.125000Z"}

@@ -1,0 +1,4 @@
+{"event": "start", "testId": "s", "testName": "t", "feature": "F", "timestamp": "2026-11-04T10:00:00.010000Z"}
+{"event": "step", "testId": "s", "status": "passed", "durationMs": 1, "timestamp": "2026-11-04T10:00:00.020000Z", "text": "pay\nnow C:\\x"}
+{"event": "step", "testId": "s", "status": "passed", "durationMs": 1, "timestamp": "2026-11-04T10:00:00.040000Z", "keyword": "Then", "text": "it works"}
+{"event": "end", "testId": "s", "status": "passed", "durationMs": 5, "timestamp": "2026-11-04T10:00:00.060000Z"}

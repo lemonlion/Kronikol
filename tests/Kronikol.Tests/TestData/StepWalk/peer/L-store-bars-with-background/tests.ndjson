@@ -1,0 +1,10 @@
+{"event": "start", "testId": "l0", "testName": "store 0", "feature": "F", "timestamp": "2026-11-03T10:00:00Z"}
+{"event": "step", "testId": "l0", "status": "passed", "durationMs": 100, "background": true, "keyword": "Given", "text": "a shop", "timestamp": "2026-11-03T10:00:00.010000Z"}
+{"event": "step", "testId": "l0", "status": "passed", "durationMs": 100, "keyword": "When", "text": "a basket", "timestamp": "2026-11-03T10:00:00.100000Z"}
+{"event": "step", "testId": "l0", "status": "passed", "durationMs": 100, "keyword": "Then", "text": "it is empty", "timestamp": "2026-11-03T10:00:00.200000Z"}
+{"event": "end", "testId": "l0", "status": "passed", "durationMs": 500, "timestamp": "2026-11-03T10:00:00.500000Z"}
+{"event": "start", "testId": "l1", "testName": "store 1", "feature": "F", "timestamp": "2026-11-03T10:00:10Z"}
+{"event": "step", "testId": "l1", "status": "passed", "durationMs": 100, "background": true, "keyword": "Given", "text": "a shop", "timestamp": "2026-11-03T10:00:10.010000Z"}
+{"event": "step", "testId": "l1", "status": "passed", "durationMs": 100, "keyword": "When", "text": "a basket", "timestamp": "2026-11-03T10:00:10.100000Z"}
+{"event": "step", "testId": "l1", "status": "passed", "durationMs": 100, "keyword": "Then", "text": "it is empty", "timestamp": "2026-11-03T10:00:10.200000Z"}
+{"event": "end", "testId": "l1", "status": "passed", "durationMs": 500, "timestamp": "2026-11-03T10:00:10.500000Z"}

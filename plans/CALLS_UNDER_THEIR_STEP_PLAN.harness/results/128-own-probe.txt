@@ -1,0 +1,66 @@
+=== published 5.28.2
+step label: 115 chars  (Given a basket that held two apples …)
+step label: 106 chars  (And a basket that held two apples …)
+step label: 38 chars  (When the shopper opens the basket p…)
+s0  Basket › A basket  [Passed]  0s
+
+  0     Given a basket that held two apples and a pear last week but nothing at all this week, whi…
+  1     And a basket that held two apples and a pear last week but nothing this week, while the sh…  [i2]
+  2     When the shopper opens the basket page  [i4]
+   1 calls belong to no step (before the first step, or attribution was not trusted)
+3 calls · interactions s0 · flow s0
+stepPath of each call: [None, '1', '2']
+=== R2 alone, on clean main (9d994a4b)
+step label: 115 chars  (Given a basket that held two apples …)
+step label: 106 chars  (And a basket that held two apples …)
+step label: 38 chars  (When the shopper opens the basket p…)
+s0  Basket › A basket  [Passed]  0s
+
+  0     Given a basket that held two apples and a pear last week but nothing at all this week, whi…  [i0]
+  1     And a basket that held two apples and a pear last week but nothing this week, while the sh…  [i2]
+  2     When the shopper opens the basket page  [i4]
+3 calls · interactions s0 · flow s0
+stepPath of each call: ['0', '1', '2']
+
+=== the two prototypes as one, with no R2 matcher: #223's stamp, this plan's flow, on 9d994a4b
+step label: 115 chars  (Given a basket that held two apples …)
+step label: 106 chars  (And a basket that held two apples …)
+step label: 38 chars  (When the shopper opens the basket p…)
+s0  Basket › A basket  [Passed]  0s
+
+  0     Given a basket that held two apples and a pear last week but nothing at all this week, whi…
+  1     And a basket that held two apples and a pear last week but nothing this week, while the sh…  [i2]
+  2     When the shopper opens the basket page  [i4]
+   1 calls belong to no step (before the first step, or attribution was not trusted)
+3 calls · interactions s0 · flow s0
+stepPath of each call: [None, '1', '2']
+
+=== the final cut: #223 at 10bbbe81 + this plan's layer, with the matcher, 5.28.3-proto225z
+--- A basket [Passed]
+      0     Given a basket that held two apples and a pear last week but nothing at all this week, w
+      1     And a basket that held two apples and a pear last week but nothing this week, while the 
+      2     When the shopper opens the basket page  [i4]
+    calls: step-0=0  step-1=1  step-2=2
+
+=== #223's prototype alone at 10bbbe81, no matcher
+--- A basket [Passed]
+      0     Given a basket that held two apples and a pear last week but nothing at all this week, w
+      1     And a basket that held two apples and a pear last week but nothing this week, while the 
+      2     When the shopper opens the basket page  [i4]
+       1 calls belong to no step (before the first step, or attribution was not trusted)
+    calls: step-0=None  step-1=1  step-2=2
+=== #223's c7252f6c with this plan's layer, whose matcher is R2's: hand-built rows carry no ids, so the walk reads them
+step label: 115 chars  (Given a basket that held two apples …)
+step label: 106 chars  (And a basket that held two apples …)
+step label: 38 chars  (When the shopper opens the basket p…)
+Report diagnostics: 12 log entries across 1 test(s).
+Warning: InternalFlowSpanStore has 0 spans — activity diagrams will be empty.
+Kronikol: reports written to C:\Code\k225-128\Reports  (TestRunReport.html · TestRunReport.krkl · Failures.md · TestRunReport.labs.html)
+report: C:\Code\k225-128\Reports
+s0  Basket › A basket  [Passed]  0s
+
+  0     Given a basket that held two apples and a pear last week but nothing at all this week, whi…  [i0]
+  1     And a basket that held two apples and a pear last week but nothing this week, while the sh…  [i2]
+  2     When the shopper opens the basket page  [i4]
+3 calls · interactions s0 · flow s0
+stepPath of each call: ['0', '1', '2']

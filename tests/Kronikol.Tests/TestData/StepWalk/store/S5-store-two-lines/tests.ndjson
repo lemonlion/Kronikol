@@ -1,0 +1,5 @@
+{"event":"start","testId":"s5","testName":"two lines","feature":"Store","timestamp":"2026-11-03T18:20:32.323852Z"}
+{"event":"step","testId":"s5","text":"the order is placed\nfor cash","status":"passed","durationMs":5,"keyword":"When","timestamp":"2026-11-03T18:20:32.3238536Z"}
+{"event":"step","testId":"s5","text":"the order is placed\nfor card","status":"passed","durationMs":5,"keyword":"And","timestamp":"2026-11-03T18:20:32.3399951Z"}
+{"event":"step","testId":"s5","text":"it is confirmed","status":"passed","durationMs":5,"keyword":"Then","timestamp":"2026-11-03T18:20:32.3559593Z"}
+{"event":"end","testId":"s5","status":"passed","durationMs":50,"timestamp":"2026-11-03T18:20:32.3711194Z"}

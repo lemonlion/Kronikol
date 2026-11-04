@@ -1,0 +1,17 @@
+##### published 5.27.13 tool reading the prototype's report: steps s4
+s4  Payments › A declined card rejects the order  [Failed]  0.75s
+  0     Given a registered customer with a full basket  0.26s
+    0.0   A customer is registered  0.24s  [i0]
+      0.0.0 Their address is verified  0.19s  [i2]
+    0.1   Items are added to the basket  0.01s  [i4-i8] 3 calls
+✗ 1     When the customer pays with a declined card  0.43s
+  ✗ 1.0   The payment is authorised  0.43s  [i10]
+        response.StatusCode should be HttpStatusCode.OK but was HttpStatusCode.PaymentRequired
+    ✗ 1.0.0 Response status code should be OK
+          response.StatusCode should be HttpStatusCode.OK but was HttpStatusCode.PaymentRequired   a
+##### same: failures s4
+  ✗ s4/1  When the customer pays with a declined card
+    ✗ s4/1.0  The payment is authorised
+      1 calls in this step:
+        s4/i10  Shop API  POST /payments  → 402
+      ✗ s4/1.0.0  Response status code should be OK

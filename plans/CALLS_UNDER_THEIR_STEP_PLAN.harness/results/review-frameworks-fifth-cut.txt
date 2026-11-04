@@ -1,0 +1,21 @@
+xunit3  variant A  tree same; calls moved between top-level steps: none
+xunit3  variant B  tree same; calls moved between top-level steps: none
+xunit3  variant C  tree same; calls moved between top-level steps: none
+xunit2  variant A  tree same; calls moved between top-level steps: none
+xunit2  variant B  tree same; calls moved between top-level steps: none
+xunit2  variant C  tree DIFFERS; calls moved between top-level steps: ['/body null -> 0', '/sub null -> 0.1']
+   base  : scenario attachments: 0; still active: True
+   proto : 0        [] Given wrapper opened in an async setup | 0.0      [Passed] { } | 0.1      [Passed] sub | scenario attachments: 0; still active: True
+nunit   variant A  tree same; calls moved between top-level steps: none
+nunit   variant B  tree same; calls moved between top-level steps: none
+nunit   variant C  tree same; calls moved between top-level steps: none
+nunit   variant R  tree same; calls moved between top-level steps: none
+mstest  variant A  tree same; calls moved between top-level steps: none
+mstest  variant B  tree same; calls moved between top-level steps: none
+mstest  variant C  tree same; calls moved between top-level steps: none
+mstest  variant R  tree same; calls moved between top-level steps: none
+tunit   variant A  tree same; calls moved between top-level steps: none
+tunit   variant B  tree same; calls moved between top-level steps: none
+tunit   variant C  tree same; calls moved between top-level steps: none
+tunit   variant R  tree same; calls moved between top-level steps: none
+variants with the same tree 17; calls 86, on a sub-step 20, moved 2

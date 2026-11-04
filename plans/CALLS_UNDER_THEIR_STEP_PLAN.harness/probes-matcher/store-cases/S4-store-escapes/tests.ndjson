@@ -1,0 +1,6 @@
+{"event":"start","testId":"s4","testName":"escapes","feature":"Store","timestamp":"2026-11-03T18:20:32.2619235Z"}
+{"event":"step","testId":"s4","text":"the customer with a very long name indeed with a very long name indeed with a very long name indeed with a very long name indeed with a very long name indeed with a very long name indeed with a very long name indeed with a very long name indeed exists","status":"passed","durationMs":5,"keyword":"Given","timestamp":"2026-11-03T18:20:32.2622893Z"}
+{"event":"step","testId":"s4","text":"the file C:\\temp\\new is read","status":"passed","durationMs":5,"keyword":"When","timestamp":"2026-11-03T18:20:32.2772759Z"}
+{"event":"step","testId":"s4","text":"a value \u003C$name\u003E and [link] and **bold** is sent","status":"passed","durationMs":5,"keyword":"And","timestamp":"2026-11-03T18:20:32.2927023Z"}
+{"event":"step","testId":"s4","text":"it is confirmed","status":"passed","durationMs":5,"keyword":"Then","timestamp":"2026-11-03T18:20:32.3082771Z"}
+{"event":"end","testId":"s4","status":"passed","durationMs":50,"timestamp":"2026-11-03T18:20:32.3238369Z"}

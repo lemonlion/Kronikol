@@ -1,0 +1,626 @@
+diff --git a/src/Kronikol.BDDfy.xUnit3/ScenarioInfoExtensions.cs b/src/Kronikol.BDDfy.xUnit3/ScenarioInfoExtensions.cs
+index 6f9ec034..3793fa63 100644
+--- a/src/Kronikol.BDDfy.xUnit3/ScenarioInfoExtensions.cs
++++ b/src/Kronikol.BDDfy.xUnit3/ScenarioInfoExtensions.cs
+@@ -109,6 +109,9 @@ private static ScenarioStep[] MapSteps(List<BDDfyStepInfo> steps, ScenarioStep[]
+         {
+             mapped[i] = new ScenarioStep
+             {
++                StepOrdinal = collectedSteps is not null && i < collectedSteps.Length
++                    ? collectedSteps[i].StepOrdinal
++                    : null,
+                 Keyword = steps[i].Keyword,
+                 Text = steps[i].Text,
+                 Status = steps[i].Result.ToStepResult(priorFailure),
+diff --git a/src/Kronikol.LightBDD.Core/FeatureResultExtensions.cs b/src/Kronikol.LightBDD.Core/FeatureResultExtensions.cs
+index bcb5b4ef..adf44f60 100644
+--- a/src/Kronikol.LightBDD.Core/FeatureResultExtensions.cs
++++ b/src/Kronikol.LightBDD.Core/FeatureResultExtensions.cs
+@@ -273,6 +273,7 @@ private static ScenarioStep MapStep(IStepResult step, bool priorFailure, bool sc
+             Text = text,
+             Status = MapStepStatus(step.Status, priorFailure, scenarioSkipped),
+             Duration = step.ExecutionTime?.Duration,
++            StepOrdinal = collected?.StepOrdinal,
+             SubSteps = subSteps,
+             Comments = comments is { Length: > 0 } ? comments : null,
+             Attachments = attachments is { Length: > 0 } ? attachments : null,
+diff --git a/src/Kronikol.ReqNRoll.Core/ScenarioInfoEnumerableExtensions.cs b/src/Kronikol.ReqNRoll.Core/ScenarioInfoEnumerableExtensions.cs
+index 001e3837..ecc81a23 100644
+--- a/src/Kronikol.ReqNRoll.Core/ScenarioInfoEnumerableExtensions.cs
++++ b/src/Kronikol.ReqNRoll.Core/ScenarioInfoEnumerableExtensions.cs
+@@ -105,6 +105,9 @@ private static ScenarioStep[] MapSteps(List<ReqNRollStepInfo> steps, ScenarioSte
+         {
+             mapped[i] = new ScenarioStep
+             {
++                StepOrdinal = collectedSteps is not null && i < collectedSteps.Length
++                    ? collectedSteps[i].StepOrdinal
++                    : null,
+                 Keyword = steps[i].Keyword,
+                 Text = steps[i].Text,
+                 Status = steps[i].Status.ToStepResult(priorFailure),
+diff --git a/src/Kronikol/Query/QueryCommand.Narrative.cs b/src/Kronikol/Query/QueryCommand.Narrative.cs
+index 5ac82d28..1ef1444f 100644
+--- a/src/Kronikol/Query/QueryCommand.Narrative.cs
++++ b/src/Kronikol/Query/QueryCommand.Narrative.cs
+@@ -133,6 +133,12 @@ string CutEvidence(string? text, int max, string address)
+                 writer.Line("  " + CutMessage(message, 240, scenario.Address));
+ 
+             var failingSteps = scenario.AllSteps().Where(s => s.Step.Failed).ToArray();
++            // Each call under the deepest failing step that covers it, so none is listed twice and none is lost.
++            bool InFailingStep(InteractionEntry i, string failing) =>
++                Address.PathCoveredBy(i.StepPath, failing)
++                && !failingSteps.Any(deeper => deeper.Path != failing
++                                               && Address.PathCoveredBy(deeper.Path, failing)
++                                               && Address.PathCoveredBy(i.StepPath, deeper.Path));
+             foreach (var (path, depth, step) in failingSteps)
+             {
+                 var indent = new string(' ', depth * 2);
+@@ -145,7 +151,7 @@ string CutEvidence(string? text, int max, string address)
+                 // one step's long list cannot push every other failure past the byte budget.
+                 WriteAttachments(writer, index, step.Attachments, $"  {indent}  ", $"attachments {scenario.Address}/{path}");
+ 
+-                var scoped = scenario.Interactions.Where(i => i.StepPath == path && i.Type == "Request").ToArray();
++                var scoped = scenario.Interactions.Where(i => InFailingStep(i, path) && i.Type == "Request").ToArray();
+                 if (scoped.Length > 0)
+                 {
+                     writer.Line($"  {indent}  {scoped.Length} calls in this step:");
+@@ -411,7 +417,9 @@ private static int Steps(ReportIndex index, QueryOptions options, QueryWriter wr
+             var duration = step.DurationSeconds is { } d and > 0.001 ? $"  {d:0.##}s" : "";
+ 
+             var range = "";
+-            if (byStep.TryGetValue(path, out var calls) && calls.Length > 0)
++            // A row answers for the step and everything under it, as a step's address does.
++            var calls = byStep.Where(e => Address.PathCoveredBy(e.Key, path)).SelectMany(e => e.Value).OrderBy(c => c.Ordinal).ToArray();
++            if (calls.Length > 0)
+                 range = calls.Length == 1
+                     ? $"  [i{calls[0].Ordinal}]"
+                     : $"  [i{calls[0].Ordinal}-i{calls[^1].Ordinal}] {calls.Length} calls";
+diff --git a/src/Kronikol/Reports/BackgroundStepsDetector.cs b/src/Kronikol/Reports/BackgroundStepsDetector.cs
+index e8998220..b9768f29 100644
+--- a/src/Kronikol/Reports/BackgroundStepsDetector.cs
++++ b/src/Kronikol/Reports/BackgroundStepsDetector.cs
+@@ -41,12 +41,9 @@ public static void DetectAndExtract(Scenario[] scenarios)
+                                  s.Steps![commonPrefixLength].Keyword is "Given" or "When"))
+                 continue;
+ 
+-            // Use the first scenario's steps as the background template
+-            var backgroundSteps = members[0].Steps!.Take(commonPrefixLength).ToArray();
+-
+             foreach (var scenario in members)
+             {
+-                scenario.BackgroundSteps = backgroundSteps;
++                scenario.BackgroundSteps = scenario.Steps!.Take(commonPrefixLength).ToArray();
+                 scenario.Steps = scenario.Steps!.Skip(commonPrefixLength).ToArray();
+             }
+         }
+diff --git a/src/Kronikol/Reports/FailuresDigestGenerator.cs b/src/Kronikol/Reports/FailuresDigestGenerator.cs
+index 3a8d5216..1490acd0 100644
+--- a/src/Kronikol/Reports/FailuresDigestGenerator.cs
++++ b/src/Kronikol/Reports/FailuresDigestGenerator.cs
+@@ -400,15 +400,8 @@ static bool IsError((int Index, RequestResponseLog Log) request, Dictionary<Guid
+     /// <para>Compared segment by segment rather than with <c>StartsWith</c>, which would make step
+     /// <c>1</c> an ancestor of step <c>10</c>.</para>
+     /// </summary>
+-    private static bool Covers(string attributed, string failingStep)
+-    {
+-        if (string.Equals(attributed, failingStep, StringComparison.Ordinal))
+-            return true;
+-
+-        return failingStep.Length > attributed.Length
+-               && failingStep[attributed.Length] == '.'
+-               && failingStep.AsSpan(0, attributed.Length).SequenceEqual(attributed);
+-    }
++    private static bool Covers(string attributed, string failingStep) =>
++        Query.Address.PathCoveredBy(attributed, failingStep) || Query.Address.PathCoveredBy(failingStep, attributed);
+ 
+     // The time the data file writes (ReportGenerator.ComputeInteractionDurations): a capturer's measurement first, then the
+     // gap between the two records. Until 4.7.3 the digest read the gap alone, so a call ingested as one record had none.
+diff --git a/src/Kronikol/Reports/ReportGenerator.cs b/src/Kronikol/Reports/ReportGenerator.cs
+index 6afff5da..3143bc5a 100644
+--- a/src/Kronikol/Reports/ReportGenerator.cs
++++ b/src/Kronikol/Reports/ReportGenerator.cs
+@@ -5390,9 +5390,16 @@ private static (Dictionary<string, List<string?>> StepPaths, Dictionary<string,
+             .GroupBy(s => s.Id)
+             .ToDictionary(g => g.Key, g => OrderedStepPaths(g.First()));
+ 
++        var ordinalsByTestId = features
++            .SelectMany(f => f.Scenarios)
++            .GroupBy(s => s.Id)
++            .ToDictionary(g => g.Key, g => PathsByOrdinal(g.First()));
++
+         foreach (var perTest in trackedLogs.GroupBy(l => l.TestId))
+         {
+             var ordered = stepsByTestId.TryGetValue(perTest.Key, out var s) ? s : [];
++            // Where each step the collector opened ended up. A record that names one of them needs nothing else.
++            var byOrdinal = ordinalsByTestId.TryGetValue(perTest.Key, out var o) ? o : [];
+             var paths = new List<string?>();
+             var found = new List<ScenarioAnnotation>();
+             string? current = null;
+@@ -5403,7 +5410,7 @@ private static (Dictionary<string, List<string?>> StepPaths, Dictionary<string,
+             {
+                 if (!log.IsDiagramMarker)
+                 {
+-                    paths.Add(current);
++                    paths.Add(log.StepOrdinal is { } stamped && byOrdinal.TryGetValue(stamped, out var path) ? path : current);
+                     interactionIndex++;
+                     continue;
+                 }
+@@ -5455,6 +5462,26 @@ private static (Dictionary<string, List<string?>> StepPaths, Dictionary<string,
+         return ordered;
+     }
+ 
++    /// <summary>The address of every step a collector opened, as the data file addresses it: b0, 0, 0.1.</summary>
++    private static Dictionary<int, string> PathsByOrdinal(Scenario scenario)
++    {
++        var paths = new Dictionary<int, string>();
++        void Walk(ScenarioStep[]? steps, string prefix, string separator)
++        {
++            for (var i = 0; i < (steps?.Length ?? 0); i++)
++            {
++                var path = $"{prefix}{separator}{i}";
++                if (steps![i].StepOrdinal is { } ordinal)
++                    paths[ordinal] = path;
++                Walk(steps[i].SubSteps, path, ".");
++            }
++        }
++
++        Walk(scenario.BackgroundSteps, "b", "");
++        Walk(scenario.Steps, "", "");
++        return paths;
++    }
++
+     /// <summary>
+     /// Whether a step delimiter's PlantUML belongs to a given step. The bar's label is the step text, but
+     /// possibly with the keyword prepended and the first letter capitalised, so this compares loosely: the
+diff --git a/src/Kronikol/Reports/ScenarioStep.cs b/src/Kronikol/Reports/ScenarioStep.cs
+index 62c3e941..5f34c3a8 100644
+--- a/src/Kronikol/Reports/ScenarioStep.cs
++++ b/src/Kronikol/Reports/ScenarioStep.cs
+@@ -5,6 +5,12 @@ namespace Kronikol.Reports;
+ /// </summary>
+ public record ScenarioStep
+ {
++    /// <summary>
++    /// The number the step collector gave this step, which a call's record names to say the step it was made under. Null
++    /// for a step no collector opened. Never written out.
++    /// </summary>
++    internal int? StepOrdinal { get; init; }
++
+     public string? Keyword { get; set; }
+ 
+     /// <summary>
+diff --git a/src/Kronikol/Tracking/RequestResponseLog.cs b/src/Kronikol/Tracking/RequestResponseLog.cs
+index 6eaf5bb3..c99e1189 100644
+--- a/src/Kronikol/Tracking/RequestResponseLog.cs
++++ b/src/Kronikol/Tracking/RequestResponseLog.cs
+@@ -71,6 +71,12 @@ public record RequestResponseLog(
+     /// </summary>
+     internal RecordedBefore? RecordedBefore11 { get; init; }
+ 
++    /// <summary>
++    /// The step this record was logged under (<see cref="Reports.ScenarioStep.StepOrdinal"/>); null when none was open or
++    /// the record did not come through the step collector's process. Never written out.
++    /// </summary>
++    internal int? StepOrdinal { get; init; }
++
+     public bool NoteOnRight { get; set; }
+     public bool IsOverrideStart { get; set; }
+     public bool IsOverrideEnd { get; set; }
+diff --git a/src/Kronikol/Tracking/RequestResponseLogger.cs b/src/Kronikol/Tracking/RequestResponseLogger.cs
+index 9e3294e1..b4558389 100644
+--- a/src/Kronikol/Tracking/RequestResponseLogger.cs
++++ b/src/Kronikol/Tracking/RequestResponseLogger.cs
+@@ -83,6 +83,10 @@ public static void Log(RequestResponseLog log)
+         if (log.Timestamp is null)
+             log = log with { Timestamp = DateTimeOffset.UtcNow };
+ 
++        // Which step it was made under is known now, and only now. The report reads it once the steps are final.
++        if (!log.IsDiagramMarker && log.StepOrdinal is null && StepCollector.OrdinalOfOpenStep(log.TestId) is { } step)
++            log = log with { StepOrdinal = step };
++
+         // A call the owner window answered for (DocumentOwnership) is held by its flow until an operation on
+         // the owner's document confirms it; a foreign operation or a query drops it instead.
+         if (log.AttributionSource == AttributionSource.DocumentFlow && TestIdentityScope.CurrentFlow is { } flow)
+diff --git a/src/Kronikol/Tracking/StepCollector.cs b/src/Kronikol/Tracking/StepCollector.cs
+index 4946362e..ce5ceb60 100644
+--- a/src/Kronikol/Tracking/StepCollector.cs
++++ b/src/Kronikol/Tracking/StepCollector.cs
+@@ -15,6 +15,12 @@ public static class StepCollector
+ {
+     private static readonly ConcurrentDictionary<string, TestStepState> States = new();
+ 
++    // The step this flow of execution is inside. It follows awaits, so two sub-steps running at once each see their own.
++    private static readonly AsyncLocal<CollectedStep?> FlowStep = new();
++
++    // Process-wide: a per-test count restarts when ClearSteps runs, and a stale stamp would read a new step.
++    private static int _lastOrdinal;
++
+     /// <summary>
+     /// Configuration options for step tracking behavior.
+     /// Set in test base class constructor or DI initialization.
+@@ -36,7 +42,7 @@ public static void StartStep(string? keyword, string text, string[]? paramNames,
+     /// </summary>
+     public static void CompleteStep(bool passed, string? errorMessage = null)
+     {
+-        CompleteStep(ResolveTestId(), passed, errorMessage);
++        CompleteStep(ResolveTestId(), passed, errorMessage, fromTheStepsFlow: true);
+     }
+ 
+     /// <summary>
+@@ -67,16 +73,27 @@ public static void StartStep(string? testId, string? keyword, string text, strin
+             Parameters = BuildParameters(paramNames, paramValues)
+         };
+ 
++        step.State = state;
+         var isTopLevel = false;
+         lock (state)
+         {
++            var parent = ParentOfNewStep(state);
++            step.Parent = parent;
++            step.Ordinal = Interlocked.Increment(ref _lastOrdinal);
++            if (parent is null)
++                state.LastTopLevel = step;
++
+             // Resolve effective keyword (Given/And/And sequencing)
+-            step.EffectiveKeyword = ResolveKeyword(state, keyword);
++            step.EffectiveKeyword = ResolveKeyword(state, keyword, isSubStep: parent is not null);
+ 
+-            isTopLevel = state.StepStack.Count == 0;
+-            state.StepStack.Push(step);
++            isTopLevel = parent is null;
++            // Its place among its siblings is kept from the start, so steps read in the order they began.
++            (parent?.SubSteps ?? state.TopLevel).Add(step);
++            state.Open.Add(step);
+         }
+ 
++        FlowStep.Value = step;
++
+         // Emit step delimiter hnote for top-level steps
+         if (isTopLevel && Options.ShowStepDelimiters)
+         {
+@@ -121,7 +138,11 @@ public static void StartStep(string? testId, string? keyword, string text, strin
+     /// <summary>
+     /// Completes the current active step for the given test.
+     /// </summary>
+-    public static void CompleteStep(string? testId, bool passed, string? errorMessage = null)
++    public static void CompleteStep(string? testId, bool passed, string? errorMessage = null) =>
++        CompleteStep(testId, passed, errorMessage, fromTheStepsFlow: false);
++
++    // A woven method ends in its own flow. Anyone else names only the test, so last in, first out, as they always had it.
++    private static void CompleteStep(string? testId, bool passed, string? errorMessage, bool fromTheStepsFlow)
+     {
+         if (testId is null)
+             return;
+@@ -132,27 +153,107 @@ public static void CompleteStep(string? testId, bool passed, string? errorMessag
+         CollectedStep? completed;
+         lock (state)
+         {
+-            if (state.StepStack.Count == 0)
++            completed = fromTheStepsFlow ? NearestOpenInFlow(state) ?? LastOpenInItsCaller(state) : LastOpenInItsCaller(state);
++            if (completed is null)
+                 return;
+ 
+-            completed = state.StepStack.Pop();
+-            completed.EndTime = Stopwatch.GetTimestamp();
+-            completed.Passed = passed;
+-            completed.ErrorMessage = errorMessage;
++            Complete(state, completed, passed, errorMessage);
++        }
+ 
+-            if (state.StepStack.Count > 0)
+-            {
+-                // Nested: add as sub-step of parent
+-                state.StepStack.Peek().SubSteps.Add(completed);
+-            }
+-            else
++        if (ReferenceEquals(FlowStep.Value, completed))
++            FlowStep.Value = completed.Parent;
++    }
++
++    private static void Complete(TestStepState state, CollectedStep step, bool passed, string? errorMessage)
++    {
++        if (!step.IsOpen)
++            return;
++
++        step.EndTime = Stopwatch.GetTimestamp();
++        step.Passed = passed;
++        step.ErrorMessage = errorMessage;
++        state.Open.Remove(step);
++    }
++
++    /// <summary>This flow's own step of this test, or its nearest ancestor still open; null when it has none. A flow whose step has ended knows nothing about now.</summary>
++    private static CollectedStep? NearestOpenInFlow(TestStepState state)
++    {
++        for (var step = FlowStep.Value; step is not null && ReferenceEquals(step.State, state); step = step.Parent)
++            if (step.IsOpen)
++                return step;
++
++        return null;
++    }
++
++    /// <summary>The step last opened whose caller has not moved on: what a stack would have on top, less a step left running, which closes by itself.</summary>
++    private static CollectedStep? LastOpenInItsCaller(TestStepState state)
++    {
++        for (var i = state.Open.Count - 1; i >= 0; i--)
++            if (!state.Open[i].Left)
++                return state.Open[i];
++
++        return null;
++    }
++
++    /// <summary>
++    /// The parent of a step starting now. A flow inside an open step: that step. A flow whose steps have all ended is a straggler, and
++    /// goes under whatever is running now, as a stack had it. A flow that was never in one, or has left them, passes over a step left
++    /// running. Call under the lock.
++    /// </summary>
++    private static CollectedStep? ParentOfNewStep(TestStepState state)
++    {
++        if (NearestOpenInFlow(state) is { } own)
++            return own;
++
++        var straggler = FlowStep.Value is { } flow && ReferenceEquals(flow.State, state);
++        return straggler ? (state.Open.Count > 0 ? state.Open[^1] : null) : LastOpenInItsCaller(state);
++    }
++
++    /// <summary>The step an assertion or an attachment belongs to. Call under the lock.</summary>
++    private static CollectedStep? CurrentOf(TestStepState state) =>
++        NearestOpenInFlow(state) ?? (state.Open.Count > 0 ? state.Open[^1] : null);
++
++    /// <summary>
++    /// The step a record logged now was made under, as a number the step keeps when the report is drawn (null: none). A
++    /// flow inside an open step of this test answers for itself. A record from elsewhere, a service's own thread or a loop whose
++    /// step has ended, reads what is open: the deepest step when one chain is open, and the nearest step they share when several run
++    /// at once, which is the most that can be said of it. With nothing open it stays with the last top-level step, the bar above it.
++    /// </summary>
++    internal static int? OrdinalOfOpenStep(string? testId)
++    {
++        if (testId is null || !States.TryGetValue(testId, out var state))
++            return null;
++
++        lock (state)
++        {
++            if (NearestOpenInFlow(state) is { } own)
++                return own.Ordinal;
++
++            CollectedStep? shared = null;
++            var any = false;
++            foreach (var step in state.Open)
+             {
+-                // Top-level step
+-                state.CompletedSteps.Add(completed);
++                if (state.Open.Any(other => ReferenceEquals(other.Parent, step)))
++                    continue;
++                shared = any ? (shared is null ? null : NearestShared(shared, step)) : step;
++                any = true;
+             }
++
++            return (shared ?? state.LastTopLevel)?.Ordinal;
+         }
+     }
+ 
++    private static CollectedStep? NearestShared(CollectedStep a, CollectedStep b)
++    {
++        var ancestors = new HashSet<CollectedStep>(ReferenceEqualityComparer.Instance);
++        for (var step = a; step is not null; step = step.Parent)
++            ancestors.Add(step);
++        for (var step = b; step is not null; step = step.Parent)
++            if (ancestors.Contains(step))
++                return step;
++        return null;
++    }
++
+     /// <summary>
+     /// Bypasses the current active step, resolving the test ID from the ambient context.
+     /// The step body is not executed; it is recorded as Bypassed with an optional reason.
+@@ -175,27 +276,20 @@ public static void BypassStep(string? testId, string? reason = null)
+         if (!States.TryGetValue(testId, out var state))
+             return;
+ 
++        CollectedStep? bypassed;
+         lock (state)
+         {
+-            if (state.StepStack.Count == 0)
++            bypassed = NearestOpenInFlow(state) ?? LastOpenInItsCaller(state);
++            if (bypassed is null)
+                 return;
+ 
+-            var bypassed = state.StepStack.Pop();
+-            bypassed.EndTime = Stopwatch.GetTimestamp();
+             bypassed.Bypassed = true;
+             bypassed.BypassReason = reason;
+-
+-            if (state.StepStack.Count > 0)
+-            {
+-                // Nested: add as sub-step of parent
+-                state.StepStack.Peek().SubSteps.Add(bypassed);
+-            }
+-            else
+-            {
+-                // Top-level step
+-                state.CompletedSteps.Add(bypassed);
+-            }
++            Complete(state, bypassed, passed: false, errorMessage: null);
+         }
++
++        if (ReferenceEquals(FlowStep.Value, bypassed))
++            FlowStep.Value = bypassed.Parent;
+     }
+ 
+     /// <summary>
+@@ -215,7 +309,8 @@ public static void AddAssertionSubStep(string? testId, string expression, bool p
+ 
+         lock (state)
+         {
+-            if (state.StepStack.Count == 0)
++            var current = CurrentOf(state);
++            if (current is null)
+                 return;
+ 
+             var subStep = new CollectedStep
+@@ -232,7 +327,7 @@ public static void AddAssertionSubStep(string? testId, string expression, bool p
+                 SourceLine = sourceLine > 0 ? sourceLine : null
+             };
+ 
+-            state.StepStack.Peek().SubSteps.Add(subStep);
++            current.SubSteps.Add(subStep);
+         }
+     }
+ 
+@@ -251,9 +346,8 @@ public static void AddAttachment(string? testId, string filePath, string? name)
+ 
+         lock (state)
+         {
+-            if (state.StepStack.Count > 0)
++            if (CurrentOf(state) is { } currentStep)
+             {
+-                var currentStep = state.StepStack.Peek();
+                 currentStep.Attachments ??= new List<FileAttachment>();
+                 currentStep.Attachments.Add(attachment);
+             }
+@@ -339,7 +433,7 @@ public static bool HasActiveStep(string? testId)
+ 
+         lock (state)
+         {
+-            return state.StepStack.Count > 0;
++            return state.Open.Count > 0;
+         }
+     }
+ 
+@@ -356,7 +450,7 @@ public static ScenarioStep[] GetSteps(string? testId)
+ 
+         lock (state)
+         {
+-            return state.CompletedSteps.Select(ToScenarioStep).ToArray();
++            return state.TopLevel.Select(ToScenarioStep).ToArray();
+         }
+     }
+ 
+@@ -387,7 +481,7 @@ public static void ClearSteps(string? testId)
+         return TestIdentityScope.Current?.Id;
+     }
+ 
+-    private static string? ResolveKeyword(TestStepState state, string? keyword)
++    private static string? ResolveKeyword(TestStepState state, string? keyword, bool isSubStep)
+     {
+         if (keyword is null)
+             return null;
+@@ -402,7 +496,7 @@ public static void ClearSteps(string? testId)
+         }
+ 
+         // Only apply sequencing at the current nesting level (top-level steps)
+-        if (state.StepStack.Count > 0)
++        if (isSubStep)
+             return displayKeyword; // Sub-steps keep their original keyword
+ 
+         if (state.LastKeywordCategory == categoryKeyword)
+@@ -473,12 +567,14 @@ private static ScenarioStep ToScenarioStep(CollectedStep step)
+             ? TimeSpan.FromTicks((long)((step.EndTime - step.StartTime) * ((double)TimeSpan.TicksPerSecond / Stopwatch.Frequency)))
+             : (TimeSpan?)null;
+ 
+-        var status = step.Bypassed
++        // A step still running when the report is drawn has no result yet, and says so by having none.
++        ExecutionResult? status = step.Bypassed
+             ? ExecutionResult.Bypassed
+-            : step.Passed ? ExecutionResult.Passed : ExecutionResult.Failed;
++            : step.IsOpen ? null : step.Passed ? ExecutionResult.Passed : ExecutionResult.Failed;
+ 
+         return new ScenarioStep
+         {
++            StepOrdinal = step.Ordinal > 0 ? step.Ordinal : null,
+             Keyword = step.EffectiveKeyword,
+             IsAssertion = step.IsAssertion,
+             Text = step.Text,
+@@ -503,48 +599,85 @@ private static ScenarioStep ToScenarioStep(CollectedStep step)
+     /// completion or failure. Called by the IL weaver for async step methods.
+     /// The original exception is preserved (re-thrown via await).
+     /// </summary>
+-    public static async Task CompleteStepAsync(Task task)
++    public static Task CompleteStepAsync(Task task) => AwaitStep(task, LeaveFlowStep());
++
++    private static async Task AwaitStep(Task task, CollectedStep? step)
+     {
+         try
+         {
+             await task.ConfigureAwait(false);
+-            CompleteStep(true, null);
++            CompleteAwaited(step, true, null);
+         }
+         catch (Exception ex)
+         {
+-            CompleteStep(false, ex.Message);
++            CompleteAwaited(step, false, ex.Message);
+             throw;
+         }
+     }
+ 
++    // Not async, on purpose: the caller's flow must leave the step before the caller carries on, so that the next
++    // step it starts is this one's sibling, while the step's own body keeps it across its awaits.
++    private static CollectedStep? LeaveFlowStep()
++    {
++        var step = FlowStep.Value;
++        if (step is null || !step.IsOpen)
++            return null;
++        // A stub whose StartStep found no test opened nothing: the flow's step is someone else's.
++        if (ResolveTestId() is not { } testId || !States.TryGetValue(testId, out var state) || !ReferenceEquals(step.State, state))
++            return null;
++        step.Left = true;
++        FlowStep.Value = step.Parent;
++        return step;
++    }
++
++    private static void CompleteAwaited(CollectedStep? step, bool passed, string? errorMessage)
++    {
++        if (step is null)
++        {
++            CompleteStep(passed, errorMessage);
++            return;
++        }
++
++        lock (step.State!)
++            Complete(step.State!, step, passed, errorMessage);
++    }
++
+     /// <summary>
+     /// Generic variant for async step methods returning Task&lt;T&gt;.
+     /// </summary>
+-    public static async Task<T> CompleteStepAsync<T>(Task<T> task)
++    public static Task<T> CompleteStepAsync<T>(Task<T> task) => AwaitStep(task, LeaveFlowStep());
++
++    private static async Task<T> AwaitStep<T>(Task<T> task, CollectedStep? step)
+     {
+         try
+         {
+             var result = await task.ConfigureAwait(false);
+-            CompleteStep(true, null);
++            CompleteAwaited(step, true, null);
+             return result;
+         }
+         catch (Exception ex)
+         {
+-            CompleteStep(false, ex.Message);
++            CompleteAwaited(step, false, ex.Message);
+             throw;
+         }
+     }
+ 
+     private class TestStepState
+     {
+-        public Stack<CollectedStep> StepStack { get; } = new();
+-        public List<CollectedStep> CompletedSteps { get; } = new();
++        public CollectedStep? LastTopLevel { get; set; }
++        public List<CollectedStep> Open { get; } = new();
++        public List<CollectedStep> TopLevel { get; } = new();
+         public string? LastKeywordCategory { get; set; }
+         public List<FileAttachment>? ScenarioAttachments { get; set; }
+     }
+ 
+     private class CollectedStep
+     {
++        public int Ordinal { get; set; }
++        public CollectedStep? Parent { get; set; }
++        public TestStepState? State { get; set; }
++        public bool IsOpen => EndTime == 0;
++        public bool Left { get; set; }
+         public bool IsAssertion { get; set; }
+         public string? OriginalKeyword { get; set; }
+         public string? EffectiveKeyword { get; set; }

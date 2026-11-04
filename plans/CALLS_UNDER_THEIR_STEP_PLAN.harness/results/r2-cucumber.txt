@@ -1,0 +1,6 @@
+# The checked-in Cucumber runs through published 5.28.2 and R2 alone on 9d994a4b. scripts/run_cucumber.py
+=== main : the same on every build, flags {}, 6 scenarios, 39 calls, 8 on no step
+=== main --include-hooks: the same on every build, flags {}, 6 scenarios, 39 calls, 12 on no step
+=== att : the same on every build, flags {}, 5 scenarios, 31 calls, 6 on no step
+=== att --include-hooks: the same on every build, flags {}, 5 scenarios, 31 calls, 3 on no step
+4 the same, 0 differ

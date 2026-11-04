@@ -1,0 +1,583 @@
+=== s0 H01 preserve on parallel kids [Passed]
+    0     Parent1  [i0-i7] 6 calls
+        · s
+        · hostsprobe.Sut
+      0.0   K1a  [i0-i6] 3 calls
+          · s
+          · hostsprobe.Sut
+      0.1   K1b  [i2-i7] 3 calls
+          · s
+          · hostsprobe.Sut
+    s0/i0      GET /do/K1a                                   -> 0.0
+    s0/i1      GET /downstream-K1a                           -> 0.0
+    s0/i2      GET /do/K1b                                   -> 0.1
+    s0/i3      GET /downstream-K1b                           -> 0.1
+    s0/i6      GET /downstream2-K1a                          -> 0.0
+    s0/i7      GET /downstream2-K1b                          -> 0.1
+=== s1 H02 preserve off parallel kids [Passed]
+    0     Parent1  [i0-i9] 6 calls
+        · s
+        · hostsprobe.Sut
+      0.0   K1a  [i0]
+          · s
+          · hostsprobe.Sut
+      0.1   K1b  [i3]
+          · s
+          · hostsprobe.Sut
+    s1/i0      GET /do/K1a                                   -> 0.0
+    s1/i1      GET /downstream-K1a                           -> 0
+    s1/i3      GET /do/K1b                                   -> 0.1
+    s1/i4      GET /downstream-K1b                           -> 0
+    s1/i5      GET /downstream2-K1a                          -> 0
+    s1/i9      GET /downstream2-K1b                          -> 0
+=== s2 H03 preserve off sequential [Passed]
+    0     Parent3  [i0-i9] 6 calls
+        · s
+        · hostsprobe.Sut
+      0.0   K3a  [i0-i3] 3 calls
+          · s
+          · hostsprobe.Sut
+      0.1   K3b  [i6-i9] 3 calls
+          · s
+          · hostsprobe.Sut
+    1     Next3  [i12-i15] 3 calls
+        · s
+        · hostsprobe.Sut
+    s2/i0      GET /do/K3a                                   -> 0.0
+    s2/i1      GET /downstream-K3a                           -> 0.0
+    s2/i3      GET /downstream2-K3a                          -> 0.0
+    s2/i6      GET /do/K3b                                   -> 0.1
+    s2/i7      GET /downstream-K3b                           -> 0.1
+    s2/i9      GET /downstream2-K3b                          -> 0.1
+    s2/i12     GET /do/Next3                                 -> 1
+    s2/i13     GET /downstream-Next3                         -> 1
+    s2/i15     GET /downstream2-Next3                        -> 1
+=== s3 H04 preserve on sequential [Passed]
+    0     Parent3  [i0-i9] 6 calls
+        · s
+        · hostsprobe.Sut
+      0.0   K3a  [i0-i3] 3 calls
+          · s
+          · hostsprobe.Sut
+      0.1   K3b  [i6-i9] 3 calls
+          · s
+          · hostsprobe.Sut
+    1     Next3  [i12-i15] 3 calls
+        · s
+        · hostsprobe.Sut
+    s3/i0      GET /do/K3a                                   -> 0.0
+    s3/i1      GET /downstream-K3a                           -> 0.0
+    s3/i3      GET /downstream2-K3a                          -> 0.0
+    s3/i6      GET /do/K3b                                   -> 0.1
+    s3/i7      GET /downstream-K3b                           -> 0.1
+    s3/i9      GET /downstream2-K3b                          -> 0.1
+    s3/i12     GET /do/Next3                                 -> 1
+    s3/i13     GET /downstream-Next3                         -> 1
+    s3/i15     GET /downstream2-Next3                        -> 1
+=== s4 H05 host started in a step [Passed]
+    0     Start in5  [i0-i2] 2 calls
+    1     Wait5  [i4-i7] 3 calls
+        · n
+        · B
+    2     Wait5  [i10-i13] 3 calls
+        · n
+        · C
+    s4/i0      GET /loop-tick-0                              -> 0
+    s4/i2      GET /loop-tick-1                              -> 0
+    s4/i4      GET /loop-tick-2                              -> 1
+    s4/i6      GET /loop-tick-3                              -> 1
+    s4/i7      GET /in-Wait5-B                               -> 1
+    s4/i10     GET /loop-tick-4                              -> 2
+    s4/i12     GET /loop-tick-5                              -> 2
+    s4/i13     GET /in-Wait5-C                               -> 2
+=== s5 H06 host started in a sub step [Passed]
+    0     Long6  [i0-i10] 6 calls
+      0.0   Start in6  [i0-i2] 2 calls
+      0.1   Other6  [i6]
+    1     After6  [i12-i16] 3 calls
+    s5/i0      GET /loop-tick-0                              -> 0.0
+    s5/i2      GET /loop-tick-1                              -> 0.0
+    s5/i4      GET /loop-tick-2                              -> 0
+    s5/i6      GET /in-Other6                                -> 0.1
+    s5/i8      GET /loop-tick-3                              -> 0
+    s5/i10     GET /loop-tick-4                              -> 0
+    s5/i12     GET /loop-tick-5                              -> 1
+    s5/i14     GET /loop-tick-6                              -> 1
+    s5/i16     GET /in-After6                                -> 1
+=== s6 H07 host started before any step [Passed]
+    0     A7  [i4-i6] 2 calls
+    1     Parallel7  [i8-i14] 5 calls
+      1.0   B7  [i14]
+      1.1   C7  [i13]
+     2 calls belong to no step (before the first step, or attribution was not trusted)
+    s6/i0      GET /loop-tick-0                              -> None
+    s6/i2      GET /loop-tick-1                              -> None
+    s6/i4      GET /loop-tick-2                              -> 0
+    s6/i6      GET /in-A7                                    -> 0
+    s6/i8      GET /loop-tick-3                              -> 1
+    s6/i10     GET /loop-tick-4                              -> 1
+    s6/i12     GET /loop-tick-5                              -> 1
+    s6/i13     GET /in-C7                                    -> 1.1
+    s6/i14     GET /in-B7                                    -> 1.0
+=== s7 H08 consumer handles message from earlier step [Passed]
+    0     Publish8  [i0]
+        · s
+        · hostsprobe.Sut
+        · me
+        · (hostsprobe.Hosts.H08_Consumer_handles_message_from_earlier_step, 8cc38ee8b3c7b374db8a33bcd5d1fd14f7…
+    1     Next8  [i2]
+        · s
+        · hostsprobe.Sut
+        · me
+        · (hostsprobe.Hosts.H08_Consumer_handles_message_from_earlier_step, 8cc38ee8b3c7b374db8a33bcd5d1fd14f7…
+    s7/i0      GET /consumed-published-in-Publish8           -> 0
+    s7/i2      GET /in-Next8                                 -> 1
+=== s8 H09 consumer while two kids run [Passed]
+    0     Parent9  [i0]
+        · s
+        · hostsprobe.Sut
+        · me
+        · (hostsprobe.Hosts.H09_Consumer_while_two_kids_run, eacfe74336a6ea1d4a6c3eab2f42ed10c2290af1b68d7657a…
+      0.0   K9a
+          · s
+          · hostsprobe.Sut
+          · me
+          · (hostsprobe.Hosts.H09_Consumer_while_two_kids_run, eacfe74336a6ea1d4a6c3eab2f42ed10c2290af1b68d7657a…
+      0.1   K9b
+    s8/i0      GET /consumed-published-in-K9a                -> 0
+=== s9 H10 consumer started in a step flow is stale [Passed]
+    0     Start consumer10
+    1     Publish10  [i0]
+        · s
+        · hostsprobe.Sut
+        · me
+        · (hostsprobe.Hosts.H10_Consumer_started_in_a_step_flow_is_stale, 371b0f994591c897de4ed31fc801e060c656…
+    s9/i0      GET /consumed-published-in-Publish10          -> 1
+=== s10 H11 step method in a service preserve off [Passed]
+    0     Parent11  [i0-i6] 4 calls
+        · s
+        · hostsprobe.Sut
+      0.0   Kid11  [i0-i4] 3 calls
+          · s
+          · hostsprobe.Sut
+        0.0.0 Handle in a step  [i1]
+            · label
+            · from-Kid11
+    1     Next11  [i8]
+    s10/i0     GET /stepped/from-Kid11                       -> 0.0
+    s10/i1     GET /in-HandleInAStep-from-Kid11              -> 0.0.0
+    s10/i4     GET /in-Kid11-after-service                   -> 0.0
+    s10/i6     GET /in-Parent11-after-kid                    -> 0
+    s10/i8     GET /in-Next11                                -> 1
+=== s11 H12 step method in a service preserve on [Passed]
+    0     Parent11  [i0-i6] 4 calls
+        · s
+        · hostsprobe.Sut
+      0.0   Kid11  [i0-i4] 3 calls
+          · s
+          · hostsprobe.Sut
+        0.0.0 Handle in a step  [i1]
+            · label
+            · from-Kid11
+    1     Next11  [i8]
+    s11/i0     GET /stepped/from-Kid11                       -> 0.0
+    s11/i1     GET /in-HandleInAStep-from-Kid11              -> 0.0.0
+    s11/i4     GET /in-Kid11-after-service                   -> 0.0
+    s11/i6     GET /in-Parent11-after-kid                    -> 0
+    s11/i8     GET /in-Next11                                -> 1
+=== s12 T1 [Passed]
+    0     Top  [i0-i8] 5 calls
+        · n
+        · p1-t1
+      0.0   Kid a  [i3-i6] 2 calls
+          · n
+          · p1-t1
+        0.0.0 Sub a  [i6]
+            · n
+            · p1-t1
+      0.1   Kid B  [i2]
+          · n
+          · p1-t1
+    1     Second  [i10]
+        · n
+        · p1-t1
+    s12/i0     GET /p1-t1-top                                -> 0
+    s12/i2     GET /p1-t1-kidB                               -> 0.1
+    s12/i3     GET /p1-t1-kidA                               -> 0.0
+    s12/i6     GET /p1-t1-subA                               -> 0.0.0
+    s12/i8     GET /p1-t1-top2                               -> 0
+    s12/i10    GET /p1-t1-second                             -> 1
+=== s13 T2 [Passed]
+    0     Top  [i0-i8] 5 calls
+        · n
+        · p1-t2
+      0.0   Kid a  [i3-i6] 2 calls
+          · n
+          · p1-t2
+        0.0.0 Sub a  [i6]
+            · n
+            · p1-t2
+      0.1   Kid B  [i2]
+          · n
+          · p1-t2
+    1     Second  [i10]
+        · n
+        · p1-t2
+    s13/i0     GET /p1-t2-top                                -> 0
+    s13/i2     GET /p1-t2-kidB                               -> 0.1
+    s13/i3     GET /p1-t2-kidA                               -> 0.0
+    s13/i6     GET /p1-t2-subA                               -> 0.0.0
+    s13/i8     GET /p1-t2-top2                               -> 0
+    s13/i10    GET /p1-t2-second                             -> 1
+=== s14 T3 [Passed]
+    0     Top  [i0-i8] 5 calls
+        · n
+        · p1-t3
+      0.0   Kid a  [i3-i6] 2 calls
+          · n
+          · p1-t3
+        0.0.0 Sub a  [i6]
+            · n
+            · p1-t3
+      0.1   Kid B  [i2]
+          · n
+          · p1-t3
+    1     Second  [i10]
+        · n
+        · p1-t3
+    s14/i0     GET /p1-t3-top                                -> 0
+    s14/i2     GET /p1-t3-kidB                               -> 0.1
+    s14/i3     GET /p1-t3-kidA                               -> 0.0
+    s14/i6     GET /p1-t3-subA                               -> 0.0.0
+    s14/i8     GET /p1-t3-top2                               -> 0
+    s14/i10    GET /p1-t3-second                             -> 1
+=== s15 T1 [Passed]
+    0     Top  [i0-i8] 5 calls
+        · n
+        · p2-t1
+      0.0   Kid a  [i4-i6] 2 calls
+          · n
+          · p2-t1
+        0.0.0 Sub a  [i6]
+            · n
+            · p2-t1
+      0.1   Kid B  [i2]
+          · n
+          · p2-t1
+    1     Second  [i10]
+        · n
+        · p2-t1
+    s15/i0     GET /p2-t1-top                                -> 0
+    s15/i2     GET /p2-t1-kidB                               -> 0.1
+    s15/i4     GET /p2-t1-kidA                               -> 0.0
+    s15/i6     GET /p2-t1-subA                               -> 0.0.0
+    s15/i8     GET /p2-t1-top2                               -> 0
+    s15/i10    GET /p2-t1-second                             -> 1
+=== s16 T2 [Passed]
+    0     Top  [i0-i8] 5 calls
+        · n
+        · p2-t2
+      0.0   Kid a  [i3-i6] 2 calls
+          · n
+          · p2-t2
+        0.0.0 Sub a  [i6]
+            · n
+            · p2-t2
+      0.1   Kid B  [i2]
+          · n
+          · p2-t2
+    1     Second  [i10]
+        · n
+        · p2-t2
+    s16/i0     GET /p2-t2-top                                -> 0
+    s16/i2     GET /p2-t2-kidB                               -> 0.1
+    s16/i3     GET /p2-t2-kidA                               -> 0.0
+    s16/i6     GET /p2-t2-subA                               -> 0.0.0
+    s16/i8     GET /p2-t2-top2                               -> 0
+    s16/i10    GET /p2-t2-second                             -> 1
+=== s17 T3 [Passed]
+    0     Top  [i0-i8] 5 calls
+        · n
+        · p2-t3
+      0.0   Kid a  [i2-i4] 2 calls
+          · n
+          · p2-t3
+        0.0.0 Sub a  [i4]
+            · n
+            · p2-t3
+      0.1   Kid B  [i5]
+          · n
+          · p2-t3
+    1     Second  [i10]
+        · n
+        · p2-t3
+    s17/i0     GET /p2-t3-top                                -> 0
+    s17/i2     GET /p2-t3-kidA                               -> 0.0
+    s17/i4     GET /p2-t3-subA                               -> 0.0.0
+    s17/i5     GET /p2-t3-kidB                               -> 0.1
+    s17/i8     GET /p2-t3-top2                               -> 0
+    s17/i10    GET /p2-t3-second                             -> 1
+=== s18 T1 [Passed]
+    0     Top  [i0-i8] 5 calls
+        · n
+        · p3-t1
+      0.0   Kid a  [i3-i6] 2 calls
+          · n
+          · p3-t1
+        0.0.0 Sub a  [i6]
+            · n
+            · p3-t1
+      0.1   Kid B  [i2]
+          · n
+          · p3-t1
+    1     Second  [i10]
+        · n
+        · p3-t1
+    s18/i0     GET /p3-t1-top                                -> 0
+    s18/i2     GET /p3-t1-kidB                               -> 0.1
+    s18/i3     GET /p3-t1-kidA                               -> 0.0
+    s18/i6     GET /p3-t1-subA                               -> 0.0.0
+    s18/i8     GET /p3-t1-top2                               -> 0
+    s18/i10    GET /p3-t1-second                             -> 1
+=== s19 T2 [Passed]
+    0     Top  [i0-i8] 5 calls
+        · n
+        · p3-t2
+      0.0   Kid a  [i3-i6] 2 calls
+          · n
+          · p3-t2
+        0.0.0 Sub a  [i6]
+            · n
+            · p3-t2
+      0.1   Kid B  [i2]
+          · n
+          · p3-t2
+    1     Second  [i10]
+        · n
+        · p3-t2
+    s19/i0     GET /p3-t2-top                                -> 0
+    s19/i2     GET /p3-t2-kidB                               -> 0.1
+    s19/i3     GET /p3-t2-kidA                               -> 0.0
+    s19/i6     GET /p3-t2-subA                               -> 0.0.0
+    s19/i8     GET /p3-t2-top2                               -> 0
+    s19/i10    GET /p3-t2-second                             -> 1
+=== s20 T3 [Passed]
+    0     Top  [i0-i8] 5 calls
+        · n
+        · p3-t3
+      0.0   Kid a  [i3-i6] 2 calls
+          · n
+          · p3-t3
+        0.0.0 Sub a  [i6]
+            · n
+            · p3-t3
+      0.1   Kid B  [i2]
+          · n
+          · p3-t3
+    1     Second  [i10]
+        · n
+        · p3-t3
+    s20/i0     GET /p3-t3-top                                -> 0
+    s20/i2     GET /p3-t3-kidB                               -> 0.1
+    s20/i3     GET /p3-t3-kidA                               -> 0.0
+    s20/i6     GET /p3-t3-subA                               -> 0.0.0
+    s20/i8     GET /p3-t3-top2                               -> 0
+    s20/i10    GET /p3-t3-second                             -> 1
+=== s21 T1 [Passed]
+    0     Top  [i0-i8] 5 calls
+        · n
+        · p4-t1
+      0.0   Kid a  [i2-i6] 2 calls
+          · n
+          · p4-t1
+        0.0.0 Sub a  [i6]
+            · n
+            · p4-t1
+      0.1   Kid B  [i4]
+          · n
+          · p4-t1
+    1     Second  [i10]
+        · n
+        · p4-t1
+    s21/i0     GET /p4-t1-top                                -> 0
+    s21/i2     GET /p4-t1-kidA                               -> 0.0
+    s21/i4     GET /p4-t1-kidB                               -> 0.1
+    s21/i6     GET /p4-t1-subA                               -> 0.0.0
+    s21/i8     GET /p4-t1-top2                               -> 0
+    s21/i10    GET /p4-t1-second                             -> 1
+=== s22 T2 [Passed]
+    0     Top  [i0-i8] 5 calls
+        · n
+        · p4-t2
+      0.0   Kid a  [i3-i6] 2 calls
+          · n
+          · p4-t2
+        0.0.0 Sub a  [i6]
+            · n
+            · p4-t2
+      0.1   Kid B  [i2]
+          · n
+          · p4-t2
+    1     Second  [i10]
+        · n
+        · p4-t2
+    s22/i0     GET /p4-t2-top                                -> 0
+    s22/i2     GET /p4-t2-kidB                               -> 0.1
+    s22/i3     GET /p4-t2-kidA                               -> 0.0
+    s22/i6     GET /p4-t2-subA                               -> 0.0.0
+    s22/i8     GET /p4-t2-top2                               -> 0
+    s22/i10    GET /p4-t2-second                             -> 1
+=== s23 T3 [Passed]
+    0     Top  [i0-i8] 5 calls
+        · n
+        · p4-t3
+      0.0   Kid a  [i3-i6] 2 calls
+          · n
+          · p4-t3
+        0.0.0 Sub a  [i6]
+            · n
+            · p4-t3
+      0.1   Kid B  [i2]
+          · n
+          · p4-t3
+    1     Second  [i10]
+        · n
+        · p4-t3
+    s23/i0     GET /p4-t3-top                                -> 0
+    s23/i2     GET /p4-t3-kidB                               -> 0.1
+    s23/i3     GET /p4-t3-kidA                               -> 0.0
+    s23/i6     GET /p4-t3-subA                               -> 0.0.0
+    s23/i8     GET /p4-t3-top2                               -> 0
+    s23/i10    GET /p4-t3-second                             -> 1
+=== s24 T1 [Passed]
+    0     Top  [i0-i8] 5 calls
+        · n
+        · p5-t1
+      0.0   Kid a  [i3-i6] 2 calls
+          · n
+          · p5-t1
+        0.0.0 Sub a  [i6]
+            · n
+            · p5-t1
+      0.1   Kid B  [i2]
+          · n
+          · p5-t1
+    1     Second  [i10]
+        · n
+        · p5-t1
+    s24/i0     GET /p5-t1-top                                -> 0
+    s24/i2     GET /p5-t1-kidB                               -> 0.1
+    s24/i3     GET /p5-t1-kidA                               -> 0.0
+    s24/i6     GET /p5-t1-subA                               -> 0.0.0
+    s24/i8     GET /p5-t1-top2                               -> 0
+    s24/i10    GET /p5-t1-second                             -> 1
+=== s25 T2 [Passed]
+    0     Top  [i0-i8] 5 calls
+        · n
+        · p5-t2
+      0.0   Kid a  [i3-i6] 2 calls
+          · n
+          · p5-t2
+        0.0.0 Sub a  [i6]
+            · n
+            · p5-t2
+      0.1   Kid B  [i2]
+          · n
+          · p5-t2
+    1     Second  [i10]
+        · n
+        · p5-t2
+    s25/i0     GET /p5-t2-top                                -> 0
+    s25/i2     GET /p5-t2-kidB                               -> 0.1
+    s25/i3     GET /p5-t2-kidA                               -> 0.0
+    s25/i6     GET /p5-t2-subA                               -> 0.0.0
+    s25/i8     GET /p5-t2-top2                               -> 0
+    s25/i10    GET /p5-t2-second                             -> 1
+=== s26 T3 [Passed]
+    0     Top  [i0-i8] 5 calls
+        · n
+        · p5-t3
+      0.0   Kid a  [i2-i6] 2 calls
+          · n
+          · p5-t3
+        0.0.0 Sub a  [i6]
+            · n
+            · p5-t3
+      0.1   Kid B  [i4]
+          · n
+          · p5-t3
+    1     Second  [i10]
+        · n
+        · p5-t3
+    s26/i0     GET /p5-t3-top                                -> 0
+    s26/i2     GET /p5-t3-kidA                               -> 0.0
+    s26/i4     GET /p5-t3-kidB                               -> 0.1
+    s26/i6     GET /p5-t3-subA                               -> 0.0.0
+    s26/i8     GET /p5-t3-top2                               -> 0
+    s26/i10    GET /p5-t3-second                             -> 1
+=== s27 T1 [Passed]
+    0     Top  [i0-i8] 5 calls
+        · n
+        · p6-t1
+      0.0   Kid a  [i3-i6] 2 calls
+          · n
+          · p6-t1
+        0.0.0 Sub a  [i6]
+            · n
+            · p6-t1
+      0.1   Kid B  [i2]
+          · n
+          · p6-t1
+    1     Second  [i10]
+        · n
+        · p6-t1
+    s27/i0     GET /p6-t1-top                                -> 0
+    s27/i2     GET /p6-t1-kidB                               -> 0.1
+    s27/i3     GET /p6-t1-kidA                               -> 0.0
+    s27/i6     GET /p6-t1-subA                               -> 0.0.0
+    s27/i8     GET /p6-t1-top2                               -> 0
+    s27/i10    GET /p6-t1-second                             -> 1
+=== s28 T2 [Passed]
+    0     Top  [i0-i8] 5 calls
+        · n
+        · p6-t2
+      0.0   Kid a  [i3-i6] 2 calls
+          · n
+          · p6-t2
+        0.0.0 Sub a  [i6]
+            · n
+            · p6-t2
+      0.1   Kid B  [i2]
+          · n
+          · p6-t2
+    1     Second  [i10]
+        · n
+        · p6-t2
+    s28/i0     GET /p6-t2-top                                -> 0
+    s28/i2     GET /p6-t2-kidB                               -> 0.1
+    s28/i3     GET /p6-t2-kidA                               -> 0.0
+    s28/i6     GET /p6-t2-subA                               -> 0.0.0
+    s28/i8     GET /p6-t2-top2                               -> 0
+    s28/i10    GET /p6-t2-second                             -> 1
+=== s29 T3 [Passed]
+    0     Top  [i0-i8] 5 calls
+        · n
+        · p6-t3
+      0.0   Kid a  [i2-i6] 2 calls
+          · n
+          · p6-t3
+        0.0.0 Sub a  [i6]
+            · n
+            · p6-t3
+      0.1   Kid B  [i4]
+          · n
+          · p6-t3
+    1     Second  [i10]
+        · n
+        · p6-t3
+    s29/i0     GET /p6-t3-top                                -> 0
+    s29/i2     GET /p6-t3-kidA                               -> 0.0
+    s29/i4     GET /p6-t3-kidB                               -> 0.1
+    s29/i6     GET /p6-t3-subA                               -> 0.0.0
+    s29/i8     GET /p6-t3-top2                               -> 0
+    s29/i10    GET /p6-t3-second                             -> 1

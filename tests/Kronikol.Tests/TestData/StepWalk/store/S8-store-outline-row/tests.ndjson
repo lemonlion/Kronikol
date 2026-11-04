@@ -1,0 +1,5 @@
+{"event":"start","testId":"s8","testName":"outline row","feature":"Store","timestamp":"2026-11-03T18:20:32.48186Z"}
+{"event":"step","testId":"s8","text":"a shop named \u003Cname\u003E","status":"passed","durationMs":5,"keyword":"Given","background":true,"timestamp":"2026-11-03T18:20:32.4818714Z"}
+{"event":"step","testId":"s8","text":"a basket","status":"passed","durationMs":5,"keyword":"When","timestamp":"2026-11-03T18:20:32.4975364Z"}
+{"event":"step","testId":"s8","text":"it is empty","status":"passed","durationMs":5,"keyword":"Then","timestamp":"2026-11-03T18:20:32.513406Z"}
+{"event":"end","testId":"s8","status":"passed","durationMs":50,"timestamp":"2026-11-03T18:20:32.5294005Z"}

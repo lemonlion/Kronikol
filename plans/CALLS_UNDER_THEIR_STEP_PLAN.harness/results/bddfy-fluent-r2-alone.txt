@@ -1,0 +1,20 @@
+# BDDfy on the real adapter, fluent And and But with titles and without, and reflective names: published 5.28.2 (pub) against R2 alone on 9d994a4b (r2). scripts/run_bddfy_fluent.sh, review-probes/bddfy-fluent-src.
+Passed!  - Failed:     0, Passed:     5, Skipped:     0, Total:     5, Duration: 200 ms - bddfyprobe.dll (net10.0)
+Passed!  - Failed:     0, Passed:     5, Skipped:     0, Total:     5, Duration: 180 ms - bddfyprobe.dll (net10.0)
+Escaped titles [Passed]
+  pub: /given=None /and=None /but=None /when=None /when-and=None /then=None /then-and=None
+  r2: /given=0 /and=1 /but=2 /when=3 /when-and=4 /then=5 /then-and=6
+Long titles [Passed]
+  pub: /given=None /and=None /but=None /when=None /when-and=None /then=None
+  r2: /given=0 /and=1 /but=2 /when=3 /when-and=4 /then=5
+No titles with a path [Passed]
+  pub: /given=None /and=None /but=None /when=None /when-and=None /then=None /then-and=None
+  r2: /given=0 /and=1 /but=2 /when=3 /when-and=4 /then=5 /then-and=6
+Plain titles [Passed]
+  pub: /given=0 /and=1 /but=2 /when=3 /when-and=4 /then=5 /then-and=6
+  r2: /given=0 /and=1 /but=2 /when=3 /when-and=4 /then=5 /then-and=6
+Reflective story [Passed]
+  pub: /given=None /and-given=None /but-given=None /when=3 /and-when=None /then=5 /and-then=None
+  r2: /given=0 /and-given=1 /but-given=2 /when=3 /and-when=4 /then=5 /and-then=6
+
+# The bars themselves on r2's run, from query diagram: 8 bars with a keyword before And or But, on the untitled and the reflective scenarios, such as 'And And get and, C:<U+005C><U+200B>tem' and 'And But no third user with a very long'.

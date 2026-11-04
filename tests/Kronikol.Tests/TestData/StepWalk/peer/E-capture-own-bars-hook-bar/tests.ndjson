@@ -1,0 +1,4 @@
+{"event": "start", "testId": "e0", "testName": "hook bar", "feature": "F", "timestamp": "2026-11-03T10:00:00Z"}
+{"event": "step", "testId": "e0", "status": "passed", "durationMs": 100, "keyword": "When", "text": "a basket", "timestamp": "2026-11-03T10:00:00.100000Z"}
+{"event": "step", "testId": "e0", "status": "passed", "durationMs": 100, "keyword": "Then", "text": "it is empty", "timestamp": "2026-11-03T10:00:00.200000Z"}
+{"event": "end", "testId": "e0", "status": "passed", "durationMs": 500, "timestamp": "2026-11-03T10:00:00.500000Z"}

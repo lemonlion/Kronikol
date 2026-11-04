@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <TrackStepsEnabled>true</TrackStepsEnabled>
+    <AssemblyName>tuprobe</AssemblyName>
+    <NoWarn>$(NoWarn);CS1998;CS4014;CS0162;CS8618;TUnit0023;TUnitAssertions0005</NoWarn>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\src\*.cs" />
+    <PackageReference Include="TUnit" Version="1.53.0" />
+    <ProjectReference Include="C:\Code\Kronikol-225r\src\Kronikol.TUnit\Kronikol.TUnit.csproj" />
+  </ItemGroup>
+  <UsingTask TaskName="Kronikol.StepTracking.WeaveStepsTask" AssemblyFile="C:\Code\Kronikol-225r\src\Kronikol.StepTracking\bin\Debug\netstandard2.0\Kronikol.StepTracking.dll" /><Import Project="C:\Code\Kronikol-225r\src\Kronikol.StepTracking\build\Kronikol.StepTracking.targets" />
+</Project>

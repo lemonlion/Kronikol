@@ -1,0 +1,5 @@
+{"event":"start","testId":"s9","testName":"outline untimed","feature":"Store","timestamp":"2026-11-03T18:20:32.529424Z"}
+{"event":"step","testId":"s9","text":"a basket","status":"passed","durationMs":5,"keyword":"Given"}
+{"event":"step","testId":"s9","text":"an order with \u003Camount\u003E","status":"passed","durationMs":5,"keyword":"When"}
+{"event":"step","testId":"s9","text":"it is confirmed","status":"passed","durationMs":5,"keyword":"Then"}
+{"event":"end","testId":"s9","status":"passed","durationMs":50,"timestamp":"2026-11-03T18:20:32.5751835Z"}

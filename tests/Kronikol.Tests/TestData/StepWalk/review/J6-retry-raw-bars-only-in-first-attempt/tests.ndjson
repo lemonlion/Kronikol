@@ -1,0 +1,7 @@
+{"event": "start", "testId": "s", "testName": "t", "feature": "F", "timestamp": "2026-11-03T10:00:00Z", "attempt": 1}
+{"event": "step", "testId": "s", "status": "passed", "durationMs": 100, "attempt": 1, "keyword": "Given", "text": "a basket", "timestamp": "2026-11-03T10:00:00.100000Z"}
+{"event": "end", "testId": "s", "status": "failed", "durationMs": 500, "timestamp": "2026-11-03T10:00:00.300000Z"}
+{"event": "start", "testId": "s", "testName": "t", "feature": "F", "timestamp": "2026-11-03T10:00:01Z", "attempt": 2}
+{"event": "step", "testId": "s", "status": "passed", "durationMs": 100, "attempt": 2, "background": true, "keyword": "Given", "text": "a customer", "timestamp": "2026-11-03T10:00:01.050000Z"}
+{"event": "step", "testId": "s", "status": "passed", "durationMs": 100, "attempt": 2, "keyword": "When", "text": "a basket", "timestamp": "2026-11-03T10:00:01.100000Z"}
+{"event": "end", "testId": "s", "status": "passed", "durationMs": 500, "timestamp": "2026-11-03T10:00:01.300000Z"}

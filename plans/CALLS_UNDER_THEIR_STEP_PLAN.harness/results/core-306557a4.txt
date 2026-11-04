@@ -1,0 +1,2 @@
+# #223's 306557a4 with this plan's layer (on-223-10bbbe81.patch applies on it with no conflict): the core suite.
+Passed!  - Failed:     0, Passed: 11825, Skipped:     2, Total: 11827, Duration: 6 m 52 s - Kronikol.Tests.dll (net10.0)

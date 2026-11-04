@@ -1,0 +1,40 @@
+##### s0
+s0  Composite Feature › A composite step with two sub steps  [Passed]  0.2s
+  0     GIVEN A basket is filled  0.08s  [i0-i4] 3 calls
+    0.0   An apple is added  0s  [i2]
+    0.1   A pear is added  [i4]
+  1     WHEN The order is placed  [i6]
+4 calls · interactions s0 · flow s0
+step  path             calls errors   median
+0     /composite-body      1      0     6 ms
+0.0   /items/apple         1      0     0 ms
+0.1   /items/pear          1      0     0 ms
+1     /orders              1      0     0 ms
+##### s1
+s1  Composite Feature › A composite whose first sub step fails  [Failed]  0.03s
+  0     GIVEN A basket is filled  0s  [i0-i4] 3 calls
+    0.0   An apple is added  [i2]
+    0.1   A pear is added  [i4]
+✗ 1     WHEN A composite that fails  0.02s  [i6]
+  ✗ 1.0   A sub step that fails  0.02s  [i6]
+    1.1   A pear is added
+4 calls · interactions s1 · flow s1
+step  path             calls errors   median
+0     /composite-body      1      0     0 ms
+0.0   /items/apple         1      0     0 ms
+0.1   /items/pear          1      0     0 ms
+1.0   /about-to-fail       1      0     0 ms
+##### s2
+s2  Composite Feature › A step makes a call after a composite ran  [Passed]  0.01s
+  0     GIVEN A composite with a nested composite  0.01s  [i0-i6] 4 calls
+    0.0   A basket is filled  0s  [i0-i4] 3 calls
+      0.0.0 An apple is added  [i2]
+      0.0.1 A pear is added  [i4]
+    0.1   A pear is added  [i6]
+  1     WHEN The order is placed
+4 calls · interactions s2 · flow s2
+step   path             calls errors   media
+0.0    /composite-body      1      0     0 m
+0.0.0  /items/apple         1      0     0 m
+0.0.1  /items/pear          1      0     0 m
+0.1    /items/pear          1      0     0 m

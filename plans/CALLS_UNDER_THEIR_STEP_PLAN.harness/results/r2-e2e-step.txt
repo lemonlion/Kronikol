@@ -1,0 +1,2 @@
+# dotnet test tests/Kronikol.Tests.EndToEnd --filter FullyQualifiedName~Step, on R2, in Release
+Passed!  - Failed:     0, Passed:   115, Skipped:     0, Total:   115, Duration: 3 m 7 s - Kronikol.Tests.EndToEnd.dll (net10.0)

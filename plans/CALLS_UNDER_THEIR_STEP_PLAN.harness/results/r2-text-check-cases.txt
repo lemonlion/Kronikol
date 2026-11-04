@@ -1,0 +1,24 @@
+# The text check's cases, K1 to K5: published 5.28.2 (pub) against R2 alone on 9d994a4b (r2). scripts/run_cases.py
+=== K1-keyword-row-bar-with-none-capital
+  pub: flags {}
+    s0 /pay=- /ship=1
+  r2: flags {}
+    s0 /pay=0 /ship=1
+=== K2-keyword-row-capital-bar-with-none-lower
+  pub: flags {}
+    s0 /pay=- /ship=1
+  r2: flags {}
+    s0 /pay=0 /ship=1
+=== K3-control-keyword-row-bar-with-none-same-case
+  pub: flags {}
+    s0 /pay=- /ship=1
+  r2: flags {}
+    s0 /pay=0 /ship=1
+=== K4-control-keyword-row-own-keyword-capital
+  pub: flags {}  (all builds the same)
+    s0 /pay=- /ship=1
+=== K5-no-text-keyword-row-bar-with-none
+  pub: flags {}
+    s0 /own=- /ship=1
+  r2: flags {}
+    s0 /own=0 /ship=1

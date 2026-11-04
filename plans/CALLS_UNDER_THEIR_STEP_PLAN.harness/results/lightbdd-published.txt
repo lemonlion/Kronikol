@@ -1,0 +1,44 @@
+s0    pass   0.01s     4 calls  A composite step with two sub steps
+s1    FAIL    1.1s     4 calls  A composite whose first sub step fails
+        Step 2.1: System.InvalidOperationException : a sub-step failed 	at Probe.LightBdd.
+s2    pass   0.02s     4 calls  A step makes a call after a composite ran
+3 scenarios
+##### s0 published steps
+s0  Composite Feature › A composite step with two sub steps  [Passed]  0.01s
+  0     GIVEN A basket is filled  0s  [i0-i4] 3 calls
+    0.0   An apple is added
+    0.1   A pear is added
+  1     WHEN The order is placed  0s  [i6]
+4 calls · interactions s0 · flow s0
+step  path             calls errors   me
+0     /composite-body      1      0     
+0     /items/apple         1      0     
+0     /items/pear          1      0     
+1     /orders              1      0     
+##### s1 published steps
+s1  Composite Feature › A composite whose first sub step fails  [Failed]  1.1s
+  0     GIVEN A basket is filled  0.12s  [i0-i4] 3 calls
+    0.0   An apple is added  0.01s
+    0.1   A pear is added  0s
+✗ 1     WHEN A composite that fails  0.04s  [i6]
+  ✗ 1.0   A sub step that fails  0.04s
+    1.1   A pear is added
+4 calls · interactions s1 · flow s1
+step  path             calls errors   me
+0     /composite-body      1      0     
+0     /items/apple         1      0     
+0     /items/pear          1      0     
+1     /about-to-fail       1      0     
+##### s2 published steps
+s2  Composite Feature › A step makes a call after a composite ran  [Passed]  0.02s
+  0     GIVEN A composite with a nested composite  0.02s  [i0-i6] 4 calls
+    0.0   A basket is filled  0s
+      0.0.0 An apple is added
+      0.0.1 A pear is added
+    0.1   A pear is added
+  1     WHEN The order is placed
+4 calls · interactions s2 · flow s2
+step  path             calls errors   me
+0     /items/pear          2      0     
+0     /composite-body      1      0     
+0     /items/apple         1      0     

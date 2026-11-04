@@ -1,0 +1,41 @@
+# Published 5.28.2 (pub) against R2 alone on 9d994a4b (r2): a store's own captures (probes-matcher/store-cases). scripts/run_cases.py
+=== S1-store-plain
+  pub: flags {}  (all builds the same)
+    s0 /shop=0 /basket=1 /check=2
+=== S10-store-nested
+  pub: flags {}  (all builds the same)
+    s0 /seed=0 /shop=0 /check=1
+=== S11-store-row-not-run
+  pub: flags {}  (all builds the same)
+    s0 /shop=- /check=-
+=== S12-store-same-text
+  pub: flags {}  (all builds the same)
+    s0 /one=0 /two=1 /check=2
+=== S2-store-background
+  pub: flags {}  (all builds the same)
+    s0 /shop=b0 /customer=b1 /basket=0 /check=1
+=== S3-store-untimed
+  pub: flags {}  (all builds the same)
+    s0 /shop=0 /basket=1 /check=2
+=== S4-store-escapes
+  pub: flags {}
+    s0 /long=- /read=- /send=- /confirm=3
+  r2: flags {}
+    s0 /long=0 /read=1 /send=2 /confirm=3
+=== S5-store-two-lines
+  pub: flags {}
+    s0 /cash=- /card=- /confirm=2
+  r2: flags {}
+    s0 /cash=0 /card=1 /confirm=2
+=== S6-store-hook-bar
+  pub: flags {}  (all builds the same)
+    s0 /seed=- /shop=- /basket=-
+=== S7-store-hook-bar-background
+  pub: flags {}  (all builds the same)
+    s0 /seed=- /shop=- /basket=- /check=-
+=== S8-store-outline-row
+  pub: flags {}  (all builds the same)
+    s0 /shop=- /basket=0 /check=1
+=== S9-store-outline-untimed
+  pub: flags {}  (all builds the same)
+    s0 /basket=0 /order=- /confirm=2

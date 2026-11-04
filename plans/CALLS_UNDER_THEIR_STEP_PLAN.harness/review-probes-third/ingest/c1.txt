@@ -1,0 +1,16 @@
+=== s0 Ingested one [Failed]
+    b0    Given a user exists  [i1]
+      b0.0  A nested thing
+  ✗ b1    When the user orders  [i2]
+        it broke
+     1 calls belong to no step (before the first step, or attribution was not trusted)
+    s0/i0      GET /one-given                                -> None
+    s0/i1      GET /one-nested                               -> b0
+    s0/i2      GET /one-when                                 -> b1
+=== s1 Ingested two [Passed]
+    b0    Given a user exists  [i0]
+      b0.0  A nested thing
+  ✗ b1    When the user orders  [i1]
+        it broke
+    s1/i0      GET /two-given                                -> b0
+    s1/i1      GET /two-when                                 -> b1

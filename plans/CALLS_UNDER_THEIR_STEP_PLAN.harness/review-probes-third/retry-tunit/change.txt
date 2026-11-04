@@ -1,0 +1,204 @@
+=== s0 T4 steps in hooks [Passed]
+    0     In sync before  [i0]
+    1     In async before  [i2]
+    2     Body4  [i4-i6] 2 calls
+      2.0   Sub4  [i6]
+    3     In sync after
+    s0/i0      GET /in-SyncBefore                            -> 0
+    s0/i2      GET /in-AsyncBefore                           -> 1
+    s0/i4      GET /in-Body4                                 -> 2
+    s0/i6      GET /in-Sub4                                  -> 2.0
+=== s1 T5 parallel [a] [Passed]
+  example: n=a
+    0     Top5  [i0-i3] 3 calls
+        · n
+        · a
+      0.0   Kid5  [i3]
+          · n
+          · a
+          · k
+          · 1
+      0.1   Kid5  [i2]
+          · n
+          · a
+          · k
+          · 2
+    1     Second5  [i6]
+        · n
+        · a
+    s1/i0      GET /a-top                                    -> 0
+    s1/i2      GET /a-kid2                                   -> 0.1
+    s1/i3      GET /a-kid1                                   -> 0.0
+    s1/i6      GET /a-second                                 -> 1
+=== s2 T5 parallel [b] [Passed]
+  example: n=b
+    0     Top5  [i0-i3] 3 calls
+        · n
+        · b
+      0.0   Kid5  [i2]
+          · n
+          · b
+          · k
+          · 1
+      0.1   Kid5  [i3]
+          · n
+          · b
+          · k
+          · 2
+    1     Second5  [i6]
+        · n
+        · b
+    s2/i0      GET /b-top                                    -> 0
+    s2/i2      GET /b-kid1                                   -> 0.0
+    s2/i3      GET /b-kid2                                   -> 0.1
+    s2/i6      GET /b-second                                 -> 1
+=== s3 T5 parallel [c] [Passed]
+  example: n=c
+    0     Top5  [i0-i3] 3 calls
+        · n
+        · c
+      0.0   Kid5  [i3]
+          · n
+          · c
+          · k
+          · 1
+      0.1   Kid5  [i2]
+          · n
+          · c
+          · k
+          · 2
+    1     Second5  [i6]
+        · n
+        · c
+    s3/i0      GET /c-top                                    -> 0
+    s3/i2      GET /c-kid2                                   -> 0.1
+    s3/i3      GET /c-kid1                                   -> 0.0
+    s3/i6      GET /c-second                                 -> 1
+=== s4 T5 parallel [d] [Passed]
+  example: n=d
+    0     Top5  [i0-i3] 3 calls
+        · n
+        · d
+      0.0   Kid5  [i3]
+          · n
+          · d
+          · k
+          · 1
+      0.1   Kid5  [i2]
+          · n
+          · d
+          · k
+          · 2
+    1     Second5  [i6]
+        · n
+        · d
+    s4/i0      GET /d-top                                    -> 0
+    s4/i2      GET /d-kid2                                   -> 0.1
+    s4/i3      GET /d-kid1                                   -> 0.0
+    s4/i6      GET /d-second                                 -> 1
+=== s5 T5 parallel [e] [Passed]
+  example: n=e
+    0     Top5  [i0-i4] 3 calls
+        · n
+        · e
+      0.0   Kid5  [i4]
+          · n
+          · e
+          · k
+          · 1
+      0.1   Kid5  [i2]
+          · n
+          · e
+          · k
+          · 2
+    1     Second5  [i6]
+        · n
+        · e
+    s5/i0      GET /e-top                                    -> 0
+    s5/i2      GET /e-kid2                                   -> 0.1
+    s5/i4      GET /e-kid1                                   -> 0.0
+    s5/i6      GET /e-second                                 -> 1
+=== s6 T5 parallel [f] [Passed]
+  example: n=f
+    0     Top5  [i0-i4] 3 calls
+        · n
+        · f
+      0.0   Kid5  [i4]
+          · n
+          · f
+          · k
+          · 1
+      0.1   Kid5  [i2]
+          · n
+          · f
+          · k
+          · 2
+    1     Second5  [i6]
+        · n
+        · f
+    s6/i0      GET /f-top                                    -> 0
+    s6/i2      GET /f-kid2                                   -> 0.1
+    s6/i4      GET /f-kid1                                   -> 0.0
+    s6/i6      GET /f-second                                 -> 1
+=== s7 T1 retry passes second attempt [Passed]
+    0     Given Given1  [i0-i2] 2 calls
+        · n
+        · 1
+      0.0   Sub1  [i2]
+          · n
+          · 1
+    1     When When1  [i4]
+        · n
+        · 1
+    2     Given Given1  [i6-i8] 2 calls
+        · n
+        · 2
+      2.0   Sub1  [i8]
+          · n
+          · 2
+    3     When When1  [i10]
+        · n
+        · 2
+    4     Then Then1  [i12]
+        · n
+        · 2
+    s7/i0      GET /in-Given1-attempt1                       -> 0
+    s7/i2      GET /in-Sub1-attempt1                         -> 0.0
+    s7/i4      GET /in-When1-attempt1                        -> 1
+    s7/i6      GET /in-Given1-attempt2                       -> 2
+    s7/i8      GET /in-Sub1-attempt2                         -> 2.0
+    s7/i10     GET /in-When1-attempt2                        -> 3
+    s7/i12     GET /in-Then1-attempt2                        -> 4
+=== s8 T2 retry fails in a step each time [Failed]
+  ✗ 0     Given Given2  [i0]
+        attempt 1 fails inside the step
+        · n
+        · 1
+  ✗ 1     And Given2  [i2]
+        attempt 2 fails inside the step
+        · n
+        · 2
+  ✗ 2     And Given2  [i4]
+        attempt 3 fails inside the step
+        · n
+        · 3
+    s8/i0      GET /in-Given2-attempt1                       -> 0
+    s8/i2      GET /in-Given2-attempt2                       -> 1
+    s8/i4      GET /in-Given2-attempt3                       -> 2
+=== s9 T3 parallel kids [Passed]
+    0     Parent3  [i0-i4] 3 calls
+      0.0   K3  [i1]
+          · n
+          · a
+          · d
+          · 5
+      0.1   K3  [i0]
+          · n
+          · b
+          · d
+          · 15
+    1     Next3  [i6]
+    s9/i0      GET /in-K3-b                                  -> 0.1
+    s9/i1      GET /in-K3-a                                  -> 0.0
+    s9/i4      GET /in-Parent3-after                         -> 0
+    s9/i6      GET /in-Next3                                 -> 1

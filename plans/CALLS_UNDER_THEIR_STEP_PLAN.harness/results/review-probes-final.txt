@@ -1,0 +1,132 @@
+The first review's probes on the final cut (#223 at 10bbbe81 + prototype/on-223-10bbbe81.patch). scripts/run_review_probes.sh.
+find: '/c/Code/k225-rv/probes/plain-proto/bin/Release': No such file or directory
+=================== rq proto
+Failed!  - Failed:     1, Passed:     6, Skipped:     0, Total:     7, Duration: 1 s - ProbeRq.dll (net10.0)
+s0  Review › Consumer a loop started in the Given handles messages from later steps  [Passed]  0.33s
+  0     Given the service is started  0s  [i0]
+  1     When a message is published  0.16s  [i2-i4] 2 calls
+  2     Then a second message is published  0.13s  [i6-i8] 2 calls
+0     /given-own               1      0   
+1     /when-own                1      0   
+1     /consumer/from-when      1      0   
+2     /then-own                1      0   
+2     /consumer/from-then      1      0   
+s1  Review › Control three plain steps  [Passed]  0s
+  0     Given a plain given  0s  [i0]
+  1     When a plain when  [i2]
+  2     Then the result is checked  [i4]
+0     /given-own      1      0     0 ms   
+1     /when-own       1      0     0 ms   
+2     /then-own       1      0     0 ms   
+s2  Review › Failing a failing step with passed sub-steps  [Failed]  0.12s
+✗ 0     When a step runs a sub-step then fails  0.06s  [i0-i4] 3 calls
+    0.0   A passing sub step  0.03s  [i0-i2] 2 calls
+0.0   /sub/one                 1      0   
+0.0   /sub/two                 1      0   
+0     /own/after-sub-step      1      0   
+s3  Review › Nested a step definition runs another Gherkin step  [Passed]  0.02s
+  0     Given a step that calls a step  0.02s  [i0-i4] 3 calls
+    0.0   When a plain when  0s  [i2]
+  1     When a plain when  [i6]
+0     /outer/before      1      0     0 ms
+0.0   /when-own          1      0     0 ms
+0     /outer/after       1      0     0 ms
+1     /when-own          1      0     0 ms
+s4  Review › Orphan a background task runs a sub-step after its Gherkin step ended  [Passed]  0.3s
+  0     Given a background task will run a sub-step  0.01s  [i0]
+  1     When a long step runs  0.26s  [i2-i6] 3 calls
+    1.0   A later sub step  0.02s  [i4]
+  2     Then the result is checked  0s  [i8]
+0     /given-own           1      0     0 
+1     /when-own/1          1      0     0 
+1.0   /later-sub-step      1      0     0 
+1     /when-own/2          1      0    18 
+2     /then-own            1      0     0 
+s5  Review › Userhook an async BeforeStep hook opens a step and an AfterStep hook closes it  [Passed]  
+  0     Given a plain given  0s  [i0]
+  ✗ 0.0   Opened by a user hook  0s
+        the user hook's step failed
+  1     When a plain when  0.01s  [i2]
+  ✗ 1.0   Opened by a user hook  0.01s
+        the user hook's step failed
+0     /given-own      1      0     0 ms   
+1     /when-own       1      0     0 ms   
+s6  Review › Zsynchook a sync hook opens a step by hand and leaves it open for the scenario  [Passed]  
+  0     Opened by a sync hook  0s
+  1     Given a plain given  [i0]
+  2     When a plain when  [i2]
+1     /given-own      1      0     0 ms   
+2     /when-own       1      0     0 ms   
+=================== lb proto
+Passed!  - Failed:     0, Passed:     4, Skipped:     0, Total:     4, Duration: 677 ms - lb-proto.dll (net10.
+s0  Composite Feature › S1 a composite with an assertion in its own body  [Passed]  0.04s
+  0     GIVEN A composite with an assertion first  0.04s  [i0-i4] 3 calls
+  · 0.0   { }
+    0.1   An apple is added  [i2]
+    0.2   A pear is added  [i4]
+  1     WHEN The order is placed  [i6]
+0     /composite-body      1      0     0 
+0.1   /items/apple         1      0     0 
+0.2   /items/pear          1      0     0 
+1     /orders              1      0     0 
+s1  Composite Feature › S2 a composite with a woven step in its own body  [Passed]  0.33s
+  0     GIVEN A composite with a woven step first  0.14s  [i0-i4] 3 calls
+    0.0   A woven preparation  0.08s  [i0]
+    0.1   An apple is added  0.01s  [i2]
+    0.2   A pear is added  [i4]
+  1     WHEN The order is placed  0s  [i6]
+0.0   /woven-preparation      1      0    
+0.1   /items/apple            1      0    
+0.2   /items/pear             1      0    
+1     /orders                 1      0    
+s2  Composite Feature › S3 control a composite with two sub steps  [Passed]  0.01s
+  0     GIVEN A basket is filled  0.01s  [i0-i4] 3 calls
+    0.0   An apple is added  [i2]
+    0.1   A pear is added  [i4]
+  1     WHEN The order is placed  [i6]
+0     /composite-body      1      0     0 
+0.0   /items/apple         1      0     0 
+0.1   /items/pear          1      0     0 
+1     /orders              1      0     0 
+s3  Composite Feature › S4 a sub step left running past its step  [Passed]  0.18s
+  0     GIVEN A step that leaves a sub step running  0.02s  [i2]
+    0.0   A slow sub step  0.17s  [i2]
+  1     WHEN A later step  0.15s  [i0]
+  2     THEN The order is placed  0s  [i4]
+1     /later       1      0     0 ms     0
+0.0   /slow        1      0     0 ms     0
+2     /orders      1      0     0 ms     0
+=================== bddfy proto
+Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 307 ms - bddfy-proto.dll (net
+s0  Probe Bddfy › Async story with sub step  [Passed]  0.15s
+  0     Given an async given with a sub step after its await  0.15s  [i0]
+  1     A sub step after the await  0.01s  [i2-i4] 2 calls
+  2     When a when  [i6]
+  3     Then a then  [i8]
+0     /given/before-await        1      0 
+1     /given/sub-step            1      0 
+1     /given/after-sub-step      1      0 
+2     /when                      1      0 
+3     /then                      1      0 
+s1  Probe Bddfy › Plain story  [Passed]  0.15s
+  0     Given a given  0.15s  [i0]
+  1     When a when  0s  [i2-i4] 2 calls
+    1.0   Inner  0s  [i2]
+  2     Then a then  [i6]
+0     /given           1      0     6 ms  
+1.0   /when/inner      1      0     0 ms  
+1     /when            1      0     0 ms  
+2     /then            1      0     0 ms  
+s2  Probe Bddfy › Reflective story with setup  [Passed]  0.15s
+  0     Given a user  [i2]
+  1     When they order  [i4]
+  2     Then it ships  [i6]
+   2 calls belong to no step (before the first step, or attribution was not trusted)
+-     /setup         1      0     6 ms    
+0     /given         1      0     0 ms    
+1     /when          1      0     0 ms    
+2     /then          1      0     0 ms    
+-     /teardown      1      0     0 ms    
+=================== plain proto
+no reports
+FINISHED

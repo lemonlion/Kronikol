@@ -1,0 +1,171 @@
+=== s0 L01 Baseline [Passed]
+    0     GIVEN A  [i0-i4] 3 calls
+      0.0   Sub a  [i2]
+    1     WHEN B  [i6]
+    2     THEN C  [i8]
+    s0/i0      GET /in-A                                     -> 0
+    s0/i2      GET /in-SubA                                  -> 0.0
+    s0/i4      GET /in-A-after                               -> 0
+    s0/i6      GET /in-B                                     -> 1
+    s0/i8      GET /in-C                                     -> 2
+=== s1 L02 Composite [Passed]
+    0     GIVEN A  [i0-i4] 3 calls
+      0.0   Sub a  [i2]
+    1     WHEN Comp  [i6-i12] 4 calls
+      1.0   Kid1  [i8-i10] 2 calls
+        1.0.0 Sub kid  [i10]
+      1.1   Kid2  [i12]
+    2     THEN C  [i14]
+    s1/i0      GET /in-A                                     -> 0
+    s1/i2      GET /in-SubA                                  -> 0.0
+    s1/i4      GET /in-A-after                               -> 0
+    s1/i6      GET /in-Comp-builder                          -> 1
+    s1/i8      GET /in-Kid1                                  -> 1.0
+    s1/i10     GET /in-SubKid                                -> 1.0.0
+    s1/i12     GET /in-Kid2                                  -> 1.1
+    s1/i14     GET /in-C                                     -> 2
+=== s2 L03 Composite nested twice [Passed]
+    0     GIVEN A  [i0-i4] 3 calls
+      0.0   Sub a  [i2]
+    1     WHEN CompOuter  [i6-i14] 5 calls
+      1.0   Comp  [i6-i12] 4 calls
+        1.0.0 Kid1  [i8-i10] 2 calls
+          1.0.0.0 Sub kid  [i10]
+        1.0.1 Kid2  [i12]
+      1.1   Kid2  [i14]
+    s2/i0      GET /in-A                                     -> 0
+    s2/i2      GET /in-SubA                                  -> 0.0
+    s2/i4      GET /in-A-after                               -> 0
+    s2/i6      GET /in-Comp-builder                          -> 1.0
+    s2/i8      GET /in-Kid1                                  -> 1.0.0
+    s2/i10     GET /in-SubKid                                -> 1.0.0.0
+    s2/i12     GET /in-Kid2                                  -> 1.0.1
+    s2/i14     GET /in-Kid2                                  -> 1.1
+=== s3 L04 Composite child fails [Failed]
+    0     GIVEN A  [i0-i4] 3 calls
+      0.0   Sub a  [i2]
+  ✗ 1     WHEN CompF  [i6-i8] 2 calls
+      1.0   Kid2  [i6]
+    ✗ 1.1   KidBad  [i8]
+    - 1.2   Kid1
+  - 2     THEN C
+    s3/i0      GET /in-A                                     -> 0
+    s3/i2      GET /in-SubA                                  -> 0.0
+    s3/i4      GET /in-A-after                               -> 0
+    s3/i6      GET /in-Kid2                                  -> 1.0
+    s3/i8      GET /in-KidBad                                -> 1.1
+=== s4 L05 Sub step fails [Failed]
+    0     GIVEN A  [i0-i4] 3 calls
+      0.0   Sub a  [i2]
+  ✗ 1     WHEN Boom  [i6-i8] 2 calls
+    ✗ 1.0   Bad sub  [i8]
+          sub step failed
+  - 2     THEN C
+    s4/i0      GET /in-A                                     -> 0
+    s4/i2      GET /in-SubA                                  -> 0.0
+    s4/i4      GET /in-A-after                               -> 0
+    s4/i6      GET /in-Boom                                  -> 1
+    s4/i8      GET /in-BadSub                                -> 1.0
+=== s5 L06 Step method before scenario and after [Passed]
+    0     GIVEN A  [i0-i4] 3 calls
+      0.0   Sub a  [i2]
+    1     THEN C  [i6]
+    s5/i0      GET /in-A                                     -> 0
+    s5/i2      GET /in-SubA                                  -> 0.0
+    s5/i4      GET /in-A-after                               -> 0
+    s5/i6      GET /in-C                                     -> 1
+=== s6 L07 Scenario decorator runs a step method [Passed]
+    0     Decorator step  [i2]
+    1     GIVEN A  [i4-i8] 3 calls
+      1.0   Sub a  [i6]
+    2     THEN C  [i10-i12] 2 calls
+     1 calls belong to no step (before the first step, or attribution was not trusted)
+    s6/i0      GET /in-scenario-decorator-before             -> None
+    s6/i2      GET /in-DecoratorStep                         -> 0
+    s6/i4      GET /in-A                                     -> 1
+    s6/i6      GET /in-SubA                                  -> 1.0
+    s6/i8      GET /in-A-after                               -> 1
+    s6/i10     GET /in-C                                     -> 2
+    s6/i12     GET /in-scenario-decorator-after              -> 2
+=== s7 L08 Step decorator makes calls [Passed]
+    0     GIVEN A  [i0-i4] 3 calls
+      0.0   Sub a  [i2]
+    1     THEN C  [i6]
+    s7/i0      GET /in-A                                     -> 0
+    s7/i2      GET /in-SubA                                  -> 0.0
+    s7/i4      GET /in-A-after                               -> 0
+    s7/i6      GET /in-C                                     -> 1
+=== s8 L09 Parallel sub steps [Passed]
+    0     GIVEN Par  [i0-i4] 3 calls
+      0.0   P1  [i0]
+      0.1   P2  [i2]
+    1     THEN C  [i6]
+    s8/i0      GET /in-P1                                    -> 0.0
+    s8/i2      GET /in-P2                                    -> 0.1
+    s8/i4      GET /in-Par-after                             -> 0
+    s8/i6      GET /in-C                                     -> 1
+=== s9 L10 Sync bypass in a step [Passed]
+    0     GIVEN WithBypass  [i0-i6] 4 calls
+    ~ 0.0   Maybe S
+          bypassed: no
+      0.1   Sub a  [i4]
+    1     THEN C  [i8]
+    s9/i0      GET /in-WithBypass-before                     -> 0
+    s9/i2      GET /in-WithBypass-after                      -> 0
+    s9/i4      GET /in-SubA                                  -> 0.1
+    s9/i6      GET /in-WithBypass-end                        -> 0
+    s9/i8      GET /in-C                                     -> 1
+=== s10 L11 Async bypass in a step [Passed]
+    0     GIVEN WithBypassA  [i0-i6] 4 calls
+    ~ 0.0   Maybe a
+          bypassed: no
+      0.1   Sub a  [i4]
+    1     THEN C  [i8]
+    s10/i0     GET /in-WithBypassA-before                    -> 0
+    s10/i2     GET /in-WithBypassA-after                     -> 0
+    s10/i4     GET /in-SubA                                  -> 0.1
+    s10/i6     GET /in-WithBypassA-end                       -> 0
+    s10/i8     GET /in-C                                     -> 1
+=== s11 L12 Detached into the next step [Passed]
+    0     GIVEN StartT
+    1     WHEN Release  [i0-i2] 2 calls
+    2     THEN C  [i4]
+    s11/i0     GET /detached-from-StartT                     -> 1
+    s11/i2     GET /in-Release                               -> 1
+    s11/i4     GET /in-C                                     -> 2
+=== s12 L13 Sub step outlives its step [Passed]
+    0     GIVEN LeavesRunning  [i0-i2] 2 calls
+      0.0   Left running  [i2]
+    1     WHEN Waits  [i4]
+    2     THEN C  [i6]
+    s12/i0     GET /in-LeavesRunning                         -> 0
+    s12/i2     GET /in-LeftRunning                           -> 0.0
+    s12/i4     GET /in-Waits                                 -> 1
+    s12/i6     GET /in-C                                     -> 2
+=== s13 L14 Ignored step [Skipped]
+    0     GIVEN A  [i0-i4] 3 calls
+      0.0   Sub a  [i2]
+  - 1     WHEN Ignored
+  - 2     THEN C
+    s13/i0     GET /in-A                                     -> 0
+    s13/i2     GET /in-SubA                                  -> 0.0
+    s13/i4     GET /in-A-after                               -> 0
+=== s14 L15 Attachments and assertions [Passed]
+  attachments: 2 on its steps · attachments s14
+    0     GIVEN Att
+        attachment: lb-step → C:\Code\k225-review\lightbdd\change\bin\Debug\net10.0\Reports\attachments\lb-step.txt
+    · 0.0   Assert-in-framework-step
+      0.1   Sub att
+          attachment: lb-sub → C:\Code\k225-review\lightbdd\change\bin\Debug\net10.0\Reports\attachments\lb-sub.txt
+      · 0.1.0 Assert-in-sub
+    · 0.2   Assert-in-framework-step-after
+    1     THEN C  [i0]
+    s14/i0     GET /in-C                                     -> 1
+=== s15 L16 Call in scenario body before runner [Passed]
+    0     GIVEN A  [i0-i4] 3 calls
+      0.0   Sub a  [i2]
+    1     THEN C  [i6]
+    s15/i0     GET /in-A                                     -> 0
+    s15/i2     GET /in-SubA                                  -> 0.0
+    s15/i4     GET /in-A-after                               -> 0
+    s15/i6     GET /in-C                                     -> 1

@@ -1,0 +1,20 @@
+Final cut (fifth-cut.patch plus scripts/apply_probe.py). Nine example suites.
+== BDDfy.xUnit3: 22 records, 0 on a sub-step
+       22  same top-level step
+== LightBDD.TUnit: 36 records, 24 on a sub-step
+       36  same top-level step
+== LightBDD.xUnit3: 36 records, 24 on a sub-step
+       36  same top-level step
+== NUnit4: 22 records, 0 on a sub-step
+       22  unstamped, walk has none
+== ReqNRoll.TUnit: 22 records, 0 on a sub-step
+       22  same top-level step
+== ReqNRoll.xUnit2: 22 records, 0 on a sub-step
+       22  same top-level step
+== ReqNRoll.xUnit3: 46 records, 0 on a sub-step
+       46  same top-level step
+== TUnit: 22 records, 0 on a sub-step
+       22  unstamped, walk has none
+== xUnit3: 22 records, 0 on a sub-step
+       22  unstamped, walk has none
+

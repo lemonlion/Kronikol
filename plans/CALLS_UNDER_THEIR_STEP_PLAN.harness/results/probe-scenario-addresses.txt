@@ -1,0 +1,21 @@
+s0    pass      0s     7 calls  A customer's order is confirmed
+s1    pass   0.82s     7 calls  A customer's order sends a confirmation 
+s2    pass   0.98s     5 calls  An order line for APPLE
+s3    pass      0s     5 calls  An order line for BANANA
+s4    FAIL   0.85s     6 calls  A declined card rejects the order
+s5    pass   0.82s     7 calls  A Given sub-step inside a When step
+s6    pass      0s     3 calls  A call in the step and calls in its sub-
+s7    pass   0.35s     3 calls  A call outlives its step
+s8    pass   0.32s     3 calls  A step whose label holds a backslash
+s9    pass   0.32s     3 calls  A step whose label is too long to draw o
+s10   pass   0.34s     3 calls  A step whose own label is too long to dr
+s11   pass   0.32s     3 calls  A sub-step is left running past its step
+s12   pass   0.01s     1 calls  A tracked call and an assertion from ano
+s13   pass   0.06s     1 calls  An assertion ends before a sub-step that
+s14   FAIL   0.82s     3 calls  One of two sub-steps at once fails
+s15   pass      0s     2 calls  One sub-step twice
+s16   pass   0.17s     4 calls  Two sub-steps run at once
+s17   pass   0.81s     4 calls  A step definition that is also a woven s
+s18   pass   0.81s     8 calls  Reference data is seeded by a hook
+s19   pass   0.81s     5 calls  The first scenario's order goes through
+s20   FAIL   0.01s     4 calls  The second scenario's payment is decline

@@ -1,0 +1,3 @@
+{"type": "Request", "testId": "s", "method": "POST", "uri": "http://shop.test/a", "serviceName": "Shop", "callerName": "Tests", "content": "{}", "timestamp": "2026-11-03T10:00:00.110000Z", "requestResponseId": "s-a-110"}
+{"type": "Response", "testId": "s", "method": "POST", "uri": "http://shop.test/a", "serviceName": "Shop", "callerName": "Tests", "content": "{}", "statusCode": "200", "timestamp": "2026-11-03T10:00:00.115000Z", "requestResponseId": "s-a-110"}
+{"kind": "marker", "markerKind": "Step", "type": "Request", "uri": "http://override.com/", "serviceName": "", "callerName": "", "testId": "s", "requestResponseId": "m", "timestamp": "2026-11-03T10:00:00.090000Z", "markerEnd": true}

@@ -1,0 +1,80 @@
+# The narrow check's cases: published 5.28.2 (pub) against R2 alone on 9d994a4b (r2). scripts/run_cases.py
+=== A1-first-letter-under-a-keyword
+  pub: flags {}  (all builds the same)
+    s0 /pay=-
+=== A2-another-keyword
+  pub: flags {}
+    s0 /pay=-
+  r2: flags {}
+    s0 /pay=0
+=== A2p-another-keyword-plain
+  pub: flags {}  (all builds the same)
+    s0 /pay=0
+=== A3-no-keyword-row-under-a-keyword-bar
+  pub: flags {}
+    s0 /pay=-
+  r2: flags {}
+    s0 /pay=0
+=== A4-quote-first
+  pub: flags {}  (all builds the same)
+    s0 /pay=-
+=== A5-digit-first
+  pub: flags {}  (all builds the same)
+    s0 /pay=-
+=== A6-camelCase-first
+  pub: flags {}  (all builds the same)
+    s0 /pay=-
+=== A7-no-capitalise
+  pub: flags {}
+    s0 /pay=-
+  r2: flags {}
+    s0 /pay=0
+=== A8-wrapped-first-line-blank-and-pipe
+  pub: flags {}
+    s0 /pay=-
+  r2: flags {}
+    s0 /pay=0
+=== B1-assertion-then-a-hook-bar-raw
+  pub: flags {}  (all builds the same)
+    s0 /hook=- /pay=1 /ship=2
+=== B2-assertion-then-a-hook-bar-kind-step
+  pub: flags {}  (all builds the same)
+    s0 /hook=- /pay=1 /ship=2
+=== C1-cut-after-a-table-name
+  pub: flags {}
+    s0 /pay=-
+  r2: flags {}
+    s0 /pay=0
+=== C1b-cut-inside-a-table-name
+  pub: flags {}
+    s0 /pay=-
+  r2: flags {}
+    s0 /pay=0
+=== C2-circled-letter
+  pub: flags {}
+    s0 /pay=-
+  r2: flags {}
+    s0 /pay=0
+=== C3-micro-sign
+  pub: flags {}  (all builds the same)
+    s0 /pay=-
+=== C4-two-word-keyword-other-case
+  pub: flags {}  (all builds the same)
+    s0 /pay=-
+=== A9-first-letter-wrapped-no-escape
+  pub: flags {}  (all builds the same)
+    s0 /pay=-
+=== B3-assertion-then-a-hook-bar-between
+  pub: flags {}  (all builds the same)
+    s0 /pay=- /hook=- /ship=2
+=== B4-control-no-assertion
+  pub: flags {}  (all builds the same)
+    s0 /hook=- /pay=- /ship=-
+=== B5-only-an-assertion-row
+  pub: flags {}  (all builds the same)
+    s0 /hook=-
+=== E1-past-a-cut-no-escape
+  pub: flags {}
+    s0 /pay=-
+  r2: flags {}
+    s0 /pay=0

@@ -1,0 +1,47 @@
+diff --git a/src/Kronikol/Reports/ReportGenerator.cs b/src/Kronikol/Reports/ReportGenerator.cs
+index fbe3c755..0c3b6a20 100644
+--- a/src/Kronikol/Reports/ReportGenerator.cs
++++ b/src/Kronikol/Reports/ReportGenerator.cs
+@@ -5398,12 +5398,16 @@ private static (Dictionary<string, List<string?>> StepPaths, Dictionary<string,
+             string? current = null;
+             var stepMarkerCount = 0;
+             var interactionIndex = 0;
++            var requestPaths = new Dictionary<Guid, string?>();
+ 
+             foreach (var log in perTest)
+             {
+                 if (!log.IsDiagramMarker)
+                 {
+-                    paths.Add(current);
++                    // A call in flight across a bar is one call: a response takes its request's step.
++                    if (log.Type == RequestResponseType.Request)
++                        requestPaths.TryAdd(log.RequestResponseId, current);
++                    paths.Add(log.Type == RequestResponseType.Response && requestPaths.TryGetValue(log.RequestResponseId, out var ofRequest) ? ofRequest : current);
+                     interactionIndex++;
+                     continue;
+                 }
+@@ -5465,11 +5469,21 @@ private static bool StepMarkerMatches(string plantUml, string stepText)
+         if (string.IsNullOrWhiteSpace(stepText))
+             return true;
+ 
+-        var marker = plantUml.Replace('\n', ' ').Trim();
+-        return marker.Contains(stepText, StringComparison.OrdinalIgnoreCase)
+-               || marker.Contains(StepText.CapitaliseIfEnabled(stepText) ?? stepText, StringComparison.OrdinalIgnoreCase);
++        var firstLine = stepText.Replace("\r", "").Trim().Split('\n')[0];
++        var wanted = FoldStepBar(Kronikol.PlantUml.PlantUmlCreator.EscapeOneLineMarkup(firstLine));
++        if (wanted.Length > StepMarkerMatchChars)
++            wanted = wanted[..StepMarkerMatchChars];
++
++        return FoldStepBar(plantUml).Contains(wanted, StringComparison.OrdinalIgnoreCase);
+     }
+ 
++    /// <summary>As much of a step's text as the matcher asks a bar for: well inside the shortest cap a bar has.</summary>
++    private const int StepMarkerMatchChars = 400;
++
++    /// <summary>A bar's text with what wrapping adds or moves taken out: a literal <c>\n</c>, a line feed and a space.</summary>
++    private static string FoldStepBar(string text) =>
++        text.Replace("\\n", "", StringComparison.Ordinal).Replace("\n", "", StringComparison.Ordinal).Replace(" ", "", StringComparison.Ordinal);
++
+     /// <summary>
+     /// The readable half of an annotation marker: everything after the PlantUML note preamble. Falls back to
+     /// the fragment as written when it is not a one-line note, because a partially-parsed annotation is

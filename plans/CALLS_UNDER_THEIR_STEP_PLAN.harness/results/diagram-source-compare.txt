@@ -1,0 +1,4 @@
+DIFF s11-d0.puml lines 51 -> 54, first at 26
+   published: shopTests -[#438DD5]> shopAPI: [[#iflow-GUID GET: /later-step/first]]
+   prototype: 
+same 20, different 1

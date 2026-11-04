@@ -1,0 +1,6 @@
+{"event": "start", "testId": "n0", "testName": "nested", "feature": "F", "timestamp": "2026-11-03T10:00:00Z"}
+{"event": "step", "testId": "n0", "status": "passed", "durationMs": 100, "table": [["a", "b"], ["1", "2"]], "keyword": "Given", "text": "a basket", "timestamp": "2026-11-03T10:00:00.100000Z"}
+{"event": "step", "testId": "n0", "status": "passed", "durationMs": 100, "level": 1, "text": "an inner step", "timestamp": "2026-11-03T10:00:00.130000Z"}
+{"event": "step", "testId": "n0", "status": "passed", "durationMs": 100, "docString": "{\n  \"a\": 1\n}", "keyword": "When", "text": "it is sent", "timestamp": "2026-11-03T10:00:00.200000Z"}
+{"event": "step", "testId": "n0", "status": "passed", "durationMs": 100, "keyword": "Then", "text": "it is empty", "timestamp": "2026-11-03T10:00:00.300000Z"}
+{"event": "end", "testId": "n0", "status": "passed", "durationMs": 500, "timestamp": "2026-11-03T10:00:00.500000Z"}

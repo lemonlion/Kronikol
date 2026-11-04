@@ -1,0 +1,10 @@
+# published 5.28.2, the probe suite's Failures.md: the lines naming the failing step of 'One of two sub-steps at once fails'.
+86:### 2. Probes › One of two sub-steps at once fails
+87-
+88-`s14` · stableId `23a7d6e327ed0e6c` · [open in the report](TestRunReport.html#sid-23a7d6e327ed0e6c) · written at `Features/Probes.feature:31` · 0.21s
+89-
+58:**Failing step** — `s4/1` When the customer pays with a declined card
+60:**Failing step** — `s4/1.0` The payment is authorised
+70:**Failing step** — `s4/1.0.0` Response status code should be OK (ShopDriver.cs:51)
+100:**Failing step** — `s14/0` When two sub-steps run at once and the first fails
+102:**Failing step** — `s14/0.0.0` The right side runs

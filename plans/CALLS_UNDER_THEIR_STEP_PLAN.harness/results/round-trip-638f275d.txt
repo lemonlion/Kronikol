@@ -1,0 +1,6 @@
+# Every call's stepPath against the rows its scenario lists (scripts/round_trip.py), the final cut: #223's 638f275d with this plan's layer and R2, no #222 under it.
+reqnroll/change-638f275d.txt: 263 calls on a step, 0 naming a row the scenario does not list
+flows/change-638f275d.txt: 166 calls on a step, 0 naming a row the scenario does not list
+hosts/change-638f275d.txt: 176 calls on a step, 0 naming a row the scenario does not list
+lightbdd/change-638f275d.txt: 74 calls on a step, 0 naming a row the scenario does not list
+bddfy/change-638f275d.txt: 53 calls on a step, 0 naming a row the scenario does not list

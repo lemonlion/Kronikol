@@ -1,0 +1,2 @@
+# dotnet build release.slnf -c Release on #223's 638f275d with this plan's layer and R2, every target framework
+    0 Error(s)

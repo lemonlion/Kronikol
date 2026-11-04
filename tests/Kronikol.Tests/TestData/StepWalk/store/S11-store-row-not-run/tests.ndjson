@@ -1,0 +1,5 @@
+{"event":"start","testId":"s11","testName":"row not run","feature":"Store","timestamp":"2026-11-03T18:20:32.5906115Z"}
+{"event":"step","testId":"s11","text":"a shop","status":"passed","durationMs":5,"keyword":"Given","timestamp":"2026-11-03T18:20:32.5906132Z"}
+{"event":"step","testId":"s11","text":"a step that did not run","status":"passed","durationMs":5,"keyword":"When"}
+{"event":"step","testId":"s11","text":"it is empty","status":"passed","durationMs":5,"keyword":"Then","timestamp":"2026-11-03T18:20:32.6067276Z"}
+{"event":"end","testId":"s11","status":"passed","durationMs":50,"timestamp":"2026-11-03T18:20:32.6220129Z"}

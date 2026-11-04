@@ -576,7 +576,7 @@ public static class IngestPipeline
             diagnostics.Add(DiagnosticKind.Other,
                 $"{earlierAttemptRecords} interaction record(s) of earlier attempts of retried tests left out: a retried test's "
                 + "scenario shows its last attempt, its retry badge counting the earlier ones.");
-        AddDiagramMarkers(records, current);
+        var barsInCapture = AddDiagramMarkers(records, current);
         if (options.SeparateSetup)
         {
             AddSetupBoundaries(records, current);
@@ -596,7 +596,7 @@ public static class IngestPipeline
 
         var setupKept = setupRecords > 0 ? setup : null;
         var synthesised = FeatureSynthesizer.Build(
-            testRecords, logs, request.DefaultFeatureName, request.ResultWhenUnknown, attachmentsBase, attempts, setupKept);
+            testRecords, logs, request.DefaultFeatureName, request.ResultWhenUnknown, attachmentsBase, attempts, setupKept, barsInCapture);
         // What the copier cannot see of the capture's attachments, for its one entry: read before the messages are merged in,
         // since the merge makes a result of its own.
         var attachmentContext = new AttachmentContext
@@ -1305,7 +1305,8 @@ public static class IngestPipeline
     /// the step list, or the diagram grows two sets of bars. The same rule the Cucumber path applies to the
     /// reporter's own step events for the scenarios the messages own.
     /// </summary>
-    private static void AddDiagramMarkers(List<InteractionRecord> records, List<TestRunRecord> testRecords)
+    /// <returns>The tests whose capture holds step bars, so whose rows are not read as the tests file's bars.</returns>
+    private static HashSet<string> AddDiagramMarkers(List<InteractionRecord> records, List<TestRunRecord> testRecords)
     {
         // The kind as the replay will read it: a comparison of its own would miss a kind the replay draws
         // as a Step bar (one written by number), and the scenario would get both sets of bars.
@@ -1313,6 +1314,11 @@ public static class IngestPipeline
             records
                 .Where(r => r.IsRawMarker && r.ResolvedMarkerKind == DiagramMarkerKind.Step)
                 .Select(r => r.TestId),
+            StringComparer.Ordinal);
+
+        // A capture's kind: step record draws a bar as well, though not in place of the tests file's.
+        var barsInCapture = new HashSet<string>(
+            drawnByCapture.Concat(records.Where(r => string.Equals(r.Kind, InteractionRecord.Kinds.Step, StringComparison.OrdinalIgnoreCase)).Select(r => r.TestId)),
             StringComparer.Ordinal);
 
         foreach (var record in testRecords)
@@ -1324,9 +1330,11 @@ public static class IngestPipeline
                     passed: !string.Equals(record.Status, "failed", StringComparison.OrdinalIgnoreCase)
                             && !string.Equals(record.Status, "fail", StringComparison.OrdinalIgnoreCase),
                     record.Timestamp!.Value, record.Error)
-                : InteractionRecord.StepMarker(record.TestId, record.Text ?? "step", record.Timestamp!.Value, record.Keyword,
+                : InteractionRecord.StepMarker(record.TestId, record.Text ?? ScenarioStep.NoTextOnABar, record.Timestamp!.Value, record.Keyword,
                     table: record.Table, docString: record.DocString));
         }
+
+        return barsInCapture;
     }
 
     /// <summary>

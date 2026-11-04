@@ -1,0 +1,59 @@
+# BreakfastProvider's four in-memory lanes: published 5.28.2 against R2 alone on 9d994a4b with #129's read forced (prototype/apply_r2.py + prototype/apply_forced_read.py), to read #129's flags. scripts/run_breakfastprovider.sh, scripts/compare_reports.py.
+== proto ReqNRoll 03:29:31
+  failed: 0
+  succeeded: 214
+== proto LightBDD 03:30:03
+  failed: 0
+  succeeded: 187
+== proto BDDfy 03:31:07
+  failed: 0
+  succeeded: 212
+== proto NUnit 03:32:16
+  failed: 0
+  succeeded: 212
+
+=== ReqNRoll: published against R2 alone, scenario by scenario
+   1342  calls compared
+   1342  call reads the same
+    214  scenarios compared
+      2  a call's count differs (the run's own wobble, or a real change)
+           A request with a correlation id should return the same id in the response: ('Publish (Pub/Sub)', 'pubsub:///MenuAvailabilityChangedEvent') 1 -> 0
+           A request with a correlation id should return the same id in the response: ('GET', 'http://localhost:5173/ingredients/milk/availability') 1 -> 0
+flags: {}
+
+=== LightBDD: published against R2 alone, scenario by scenario
+   1368  calls compared
+   1368  call reads the same
+    187  scenarios compared
+      1  tree differs
+           An Order Should Progress Through All Status Transitions To Completion: [('4.0', None, "Retrieval steps response created at should be close to '03/11/2026 21:10
+flags: {"StepAttributionMismatch": 20}
+
+=== BDDfy: published against R2 alone, scenario by scenario
+   1398  calls compared
+   1398  call reads the same
+    212  scenarios compared
+      2  tree differs
+           Creating an order should produce an audit log entry and events: [('3.0', None, "Order created events should contain [ e => e.CustomerName == 'TestCustomer_#' ]
+           Valid order should be created and an event published: [('3.0', None, "Order created events should contain [ e => e.CustomerName == 'TestCustomer_#' ]", 'Passed
+flags: {}
+
+=== NUnit: published against R2 alone, scenario by scenario
+   1399  calls compared
+   1399  call reads the same
+    212  scenarios compared
+flags: {}
+
+=== LightBDD's flags by scenario
+StepAttributionMismatch 20 in 10 scenarios
+s180: flags 2, records 6, with no step 0
+s1: flags 2, records 11, with no step 3
+s177: flags 2, records 6, with no step 0
+s186: flags 2, records 6, with no step 0
+s2: flags 2, records 11, with no step 3
+s3: flags 2, records 11, with no step 3
+s36: flags 2, records 2, with no step 0
+s133: flags 2, records 6, with no step 0
+s127: flags 2, records 5, with no step 0
+s126: flags 2, records 1, with no step 0
+records with no step in those scenarios 9

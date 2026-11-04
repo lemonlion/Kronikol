@@ -1,0 +1,153 @@
+=== s0 Async asserts [Passed]
+  attachments: 1 of its own · attachments s0
+    0     Given async asserts  [i0]
+    1     Then c  [i2]
+    s0/i0      GET /in-GivenAsyncAsserts                     -> 0
+    s0/i2      GET /in-C                                     -> 1
+=== s1 Async bypass inside [Passed]
+    0     Given bypassing async  [i0]
+    1     Then c  [i2]
+     2 calls belong to no step (before the first step, or attribution was not trusted)
+    s1/i0      GET /in-BypassingAsync-before                 -> 0
+    s1/i2      GET /in-BypassingAsync-after                  -> 1
+    s1/i4      GET /in-SubAsync                              -> None
+    s1/i6      GET /in-C                                     -> None
+=== s2 Async fails [Failed]
+  ✗ 0     Given async fails
+    1     Then c  [i0-i2] 2 calls
+    s2/i0      GET /in-SubAsync                              -> 1
+    s2/i2      GET /in-GivenAsyncFails                       -> 1
+=== s3 Async steps [Passed]
+    0     Given async  [i0]
+    1     When async  [i2-i4] 2 calls
+    2     Then c  [i6]
+     1 calls belong to no step (before the first step, or attribution was not trusted)
+    s3/i0      GET /in-GivenAsync                            -> 0
+    s3/i2      GET /in-SubAsync                              -> 1
+    s3/i4      GET /in-GivenAsync-after                      -> 1
+    s3/i6      GET /in-WhenAsync                             -> 2
+    s3/i8      GET /in-C                                     -> None
+=== s4 Blocking [Passed]
+    0     Given blocks  [i0-i2] 2 calls
+      0.0   Sub async
+    1     Then c  [i4]
+    s4/i0      GET /in-SubAsync                              -> 0
+    s4/i2      GET /in-GivenBlocks-after                     -> 0
+    s4/i4      GET /in-C                                     -> 1
+=== s5 Bypass inside [Passed]
+    0     Given bypassing  [i0-i2] 2 calls
+    ~ 0.0   Maybe
+          bypassed: no
+    1     Then c  [i4]
+     1 calls belong to no step (before the first step, or attribution was not trusted)
+    s5/i0      GET /in-Bypassing-before                      -> 0
+    s5/i2      GET /in-Bypassing-after                       -> 0
+    s5/i4      GET /in-Sub                                   -> 1
+    s5/i6      GET /in-C                                     -> None
+=== s6 Convention [Passed]
+    0     Given something
+      0.0   In setup step
+    1     When action
+      1.0   In given step
+    2     Then result
+     8 calls belong to no step (before the first step, or attribution was not trusted)
+    s6/i0      GET /in-Setup                                 -> None
+    s6/i2      GET /in-SetupSub                              -> None
+    s6/i4      GET /in-Given                                 -> None
+    s6/i6      GET /in-GivenSub                              -> None
+    s6/i8      GET /in-When                                  -> None
+    s6/i10     GET /in-Then                                  -> None
+    s6/i12     GET /in-TearDown                              -> None
+    s6/i14     GET /in-TearDownSub                           -> None
+=== s7 Detached [Passed]
+    0     Given start
+    1     When release  [i0-i1] 2 calls
+    2     Then c  [i4]
+    s7/i0      GET /detached-from-Start                      -> 1
+    s7/i1      GET /in-Release                               -> 1
+    s7/i4      GET /in-C                                     -> 2
+=== s8 Example table [Passed]
+    0     Given value <_v>  [i0-i2] 2 calls
+      0.0   Row sub
+    1     When row action <_v>  [i4]
+    2     Then row result <_v>  [i6]
+     8 calls belong to no step (before the first step, or attribution was not trusted)
+    s8/i0      GET /in-GivenValue-1                          -> 0
+    s8/i2      GET /in-RowSub-1                              -> 0
+    s8/i4      GET /in-WhenRow-1                             -> 1
+    s8/i6      GET /in-ThenRow-1                             -> 2
+    s8/i8      GET /in-GivenValue-2                          -> None
+    s8/i10     GET /in-RowSub-2                              -> None
+    s8/i12     GET /in-WhenRow-2                             -> None
+    s8/i14     GET /in-ThenRow-2                             -> None
+    s8/i16     GET /in-GivenValue-3                          -> None
+    s8/i18     GET /in-RowSub-3                              -> None
+    s8/i20     GET /in-WhenRow-3                             -> None
+    s8/i22     GET /in-ThenRow-3                             -> None
+=== s9 Example table second row fails [Passed]
+    0     Given value <_v>  [i0-i2] 2 calls
+      0.0   Row sub
+    1     When row fails <_v>  [i4]
+    2     Then row result <_v>  [i6]
+     7 calls belong to no step (before the first step, or attribution was not trusted)
+    s9/i0      GET /in-GivenValue-1                          -> 0
+    s9/i2      GET /in-RowSub-1                              -> 0
+    s9/i4      GET /in-WhenRowFails-1                        -> 1
+    s9/i6      GET /in-ThenRow-1                             -> 2
+    s9/i8      GET /in-GivenValue-2                          -> None
+    s9/i10     GET /in-RowSub-2                              -> None
+    s9/i12     GET /in-WhenRowFails-2                        -> None
+    s9/i14     GET /in-GivenValue-3                          -> None
+    s9/i16     GET /in-RowSub-3                              -> None
+    s9/i18     GET /in-WhenRowFails-3                        -> None
+    s9/i20     GET /in-ThenRow-3                             -> None
+=== s10 Failing step [Failed]
+    0     Given a  [i0-i2] 2 calls
+      0.0   Sub
+  ✗ 1     When boom  [i4]
+    2     Then c
+    s10/i0     GET /in-A                                     -> 0
+    s10/i2     GET /in-Sub                                   -> 0
+    s10/i4     GET /in-Boom                                  -> 1
+=== s11 Failing sub step [Failed]
+    0     Given a  [i0-i2] 2 calls
+      0.0   Sub
+  ✗ 1     When sub boom  [i4-i6] 2 calls
+    ✗ 1.0   Sub boom
+          boom in sub-step
+    2     Then c
+    s11/i0     GET /in-A                                     -> 0
+    s11/i2     GET /in-Sub                                   -> 0
+    s11/i4     GET /in-WhenSubBoom                           -> 1
+    s11/i6     GET /in-SubBoom                               -> 1
+=== s12 Fluent baseline [Passed]
+    0     Given a  [i0-i2] 2 calls
+      0.0   Sub
+    1     When b  [i4]
+    2     Then c  [i6]
+    s12/i0     GET /in-A                                     -> 0
+    s12/i2     GET /in-Sub                                   -> 0
+    s12/i4     GET /in-B                                     -> 1
+    s12/i6     GET /in-C                                     -> 2
+=== s13 Parallel subs [Passed]
+    0     Given parallel  [i0-i2] 2 calls
+      0.0   P1
+        0.0.0 P2
+    1     Then c  [i4]
+    s13/i0     GET /in-P1                                    -> 0
+    s13/i2     GET /in-P2                                    -> 0
+    s13/i4     GET /in-C                                     -> 1
+=== s14 Setup throws [Failed]
+    0     Given something
+    1     Then result
+     1 calls belong to no step (before the first step, or attribution was not trusted)
+    s14/i0     GET /in-SetupThrows                           -> None
+=== s15 Step outside [Passed]
+    0     Given a  [i0]
+    1     Then c  [i2-i4] 2 calls
+      1.0   Sub
+     1 calls belong to no step (before the first step, or attribution was not trusted)
+    s15/i0     GET /in-Outside                               -> 0
+    s15/i2     GET /in-A                                     -> 1
+    s15/i4     GET /in-Sub                                   -> 1
+    s15/i6     GET /in-C                                     -> None

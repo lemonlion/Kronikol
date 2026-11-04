@@ -1,0 +1,192 @@
+# The second narrow check's cases: published 5.28.2 (pub) against R2 alone on 9d994a4b (r2), no pass-over. scripts/run_cases.py
+=== C1-assertion-first
+  pub: flags {}  (all builds the same)
+    s0 /pay=- /ship=-
+=== C2-several-assertions
+  pub: flags {}  (all builds the same)
+    s0 /pay=- /ship=-
+=== C3-assertion-last-hook
+  pub: flags {}  (all builds the same)
+    s0 /pay=0 /hook=-
+=== C4-row-and-custom-markers
+  pub: flags {}  (all builds the same)
+    s0 /before=- /pay=- /ship=-
+=== C5-two-plain-hooks-then-rows
+  pub: flags {}  (all builds the same)
+    s0 /hook1=- /hook2=- /pay=2 /ship=3
+=== C6-assertion-holds-glyph-bar-late
+  pub: flags {}  (all builds the same)
+    s0 /pay=- /assertcall=- /ship=2
+=== F1-hook-bar-holds-next-rows-text
+  pub: flags {}  (all builds the same)
+    s0 /hook=- /pay=1 /ship=2
+=== F2-row-text-in-the-bar-prefix
+  pub: flags {}  (all builds the same)
+    s0 /hook=- /stepcall=1 /ship=2
+=== F3-blank-row-after-an-assertion
+  pub: flags {}  (all builds the same)
+    s0 /hook=- /blank=1 /ship=2
+=== F4-assertion-bar-no-glyph-holds-next-rows-text
+  pub: flags {}  (all builds the same)
+    s0 /assertcall=- /pay=1 /ship=2
+=== F5-run-of-assertions-hook-reads-a-later-one
+  pub: flags {}  (all builds the same)
+    s0 /hook1=- /hook2=- /pay=2 /ship=3 /bill=4
+=== F6-assertion-then-mid-list-assertion-hook
+  pub: flags {}  (all builds the same)
+    s0 /pay=0 /hook=1 /ship=- /bill=-
+=== S1-b3-longer-rows-after-the-hook
+  pub: flags {}  (all builds the same)
+    s0 /pay=- /hook=- /ship=2 /bill=3 /file=4
+=== S2-capture-kind-step-and-tests-file-both-draw
+  pub: flags {'MalformedLine': 2}
+    s0 /pay=- /ship=-
+  r2: flags {'MalformedLine': 2}
+    s0 /pay=2 /ship=2
+=== S3-row-bar-drawn-twice
+  pub: flags {}  (all builds the same)
+    s0 /pay1=- /pay2=1 /ship=2
+=== O01-no-kw-escape
+  pub: flags {}
+    s0 /own=- /tail=1
+  r2: flags {}
+    s0 /own=0 /tail=1
+=== O02-no-kw-escape-no-capitalise
+  pub: flags {}
+    s0 /own=- /tail=1
+  r2: flags {}
+    s0 /own=0 /tail=1
+=== O03-bar-capitalised-row-not
+  pub: flags {}  (all builds the same)
+    s0 /own=-
+=== O04-bar-not-row-capitalised
+  pub: flags {}  (all builds the same)
+    s0 /own=-
+=== O05-legacy-cut
+  pub: flags {}
+    s0 /own=- /tail=1
+  r2: flags {}
+    s0 /own=0 /tail=1
+=== O05b-legacy-cut-no-capitalise
+  pub: flags {}
+    s0 /own=- /tail=1
+  r2: flags {}
+    s0 /own=0 /tail=1
+=== O05c-legacy-cut-escape
+  pub: flags {}
+    s0 /own=- /tail=1
+  r2: flags {}
+    s0 /own=0 /tail=1
+=== O06-rich-cut-kw-table
+  pub: flags {}
+    s0 /own=- /tail=1
+  r2: flags {}
+    s0 /own=0 /tail=1
+=== O07-rich-cut-escape-no-kw-doc
+  pub: flags {}
+    s0 /own=- /tail=1
+  r2: flags {}
+    s0 /own=0 /tail=1
+=== O07b-rich-cut-escape-no-kw-no-capitalise
+  pub: flags {}
+    s0 /own=- /tail=1
+  r2: flags {}
+    s0 /own=0 /tail=1
+=== O08-multi-line
+  pub: flags {}
+    s0 /own=- /tail=1
+  r2: flags {}
+    s0 /own=0 /tail=1
+=== O09-keyword-trailing-space
+  pub: flags {}
+    s0 /own=- /tail=1
+  r2: flags {}
+    s0 /own=0 /tail=1
+=== O10-and-for-a-repeated-keyword
+  pub: flags {}  (all builds the same)
+    s0 /own=-
+=== O11-blank-keyword
+  pub: flags {}
+    s0 /own=- /tail=1
+  r2: flags {}
+    s0 /own=0 /tail=1
+=== O12-spaces-round-text
+  pub: flags {}
+    s0 /own=- /tail=1
+  r2: flags {}
+    s0 /own=0 /tail=1
+=== O13-crlf
+  pub: flags {}
+    s0 /own=- /tail=1
+  r2: flags {}
+    s0 /own=0 /tail=1
+=== O14-no-text
+  pub: flags {}
+    s0 /own=- /tail=1
+  r2: flags {}
+    s0 /own=0 /tail=1
+=== O14b-no-text-keyword
+  pub: flags {}
+    s0 /own=- /tail=1
+  r2: flags {}
+    s0 /own=0 /tail=1
+=== O15-table-then-doc-no-kw
+  pub: flags {}
+    s0 /own=- /tail=1
+  r2: flags {}
+    s0 /own=0 /tail=1
+=== O16-camel-and-glyph
+  pub: flags {}
+    s0 /own=- /own2=- /own3=-
+  r2: flags {}
+    s0 /own=0 /own2=1 /own3=2
+=== O17-micro-sign-row-on-bar-off
+  pub: flags {}  (all builds the same)
+    s0 /own=-
+=== O17b-micro-sign-short-control
+  pub: flags {}  (all builds the same)
+    s0 /own=-
+=== R1-retry-assertion-first-capture-bars
+  pub: flags {}  (all builds the same)
+    s0 /pay2=- /ship=-
+=== R2-retry-assertion-first-tests-file-bars
+  pub: flags {}
+    s0 /pay2=- /ship=-
+  r2: flags {}
+    s0 /pay2=1 /ship=2
+=== R3-retry-no-numbers
+  pub: flags {}  (all builds the same)
+    s0 /pay2=- /ship=-
+=== S2-kind-step-and-tests-file-both-draw
+  pub: flags {}  (all builds the same)
+    s0 /pay=1 /ship=-
+=== S2b-control-no-assertion
+  pub: flags {}  (all builds the same)
+    s0 /pay=- /ship=-
+=== S4-nested-assertion-bar-b3-kind
+  pub: flags {}  (all builds the same)
+    s0 /pay=- /assertcall=- /ship=2
+=== B1-bddfy-and-under-and-escape
+  pub: flags {}
+    s0 /x=- /y=-
+  r2: flags {}
+    s0 /x=0 /y=1
+=== B2-bddfy-and-under-and-short-control
+  pub: flags {}  (all builds the same)
+    s0 /x=0 /y=1
+=== F7-hook-bar-read-by-drawsstep-alone
+  pub: flags {}
+    s0 /hook=- /pay=- /ship=2
+  r2: flags {}
+    s0 /hook=- /pay=1 /ship=2
+=== N1-no-text-row-takes-a-two-word-bar
+  pub: flags {}  (all builds the same)
+    s0 /hook=- /ship=1
+=== N2-no-text-keyword-row-takes-a-two-word-bar
+  pub: flags {}  (all builds the same)
+    s0 /hook=- /ship=1
+=== N3-no-text-row-after-an-assertion
+  pub: flags {}
+    s0 /hook=- /own=- /ship=2
+  r2: flags {}
+    s0 /hook=- /own=1 /ship=2

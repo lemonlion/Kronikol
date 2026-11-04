@@ -1,0 +1,463 @@
+=== s0 None [Passed]
+    0     Given a background step  [i0-i2] 2 calls
+      0.0   Sub bg  [i2]
+    1     And a second background step  [i4]
+    2     When I act "one"  [i6-i10] 3 calls
+      2.0   Sub act  [i8]
+          · who
+          · one
+    3     Then I check  [i12]
+    s0/i0      GET /in-bg1                                   -> 0
+    s0/i2      GET /in-SubBg                                 -> 0.0
+    s0/i4      GET /in-bg2                                   -> 1
+    s0/i6      GET /in-act-one                               -> 2
+    s0/i8      GET /in-SubAct-one                            -> 2.0
+    s0/i10     GET /in-act-after-one                         -> 2
+    s0/i12     GET /in-check                                 -> 3
+=== s1 None [Passed]
+    0     Given a background step  [i0-i2] 2 calls
+      0.0   Sub bg  [i2]
+    1     And a second background step  [i4]
+    2     When I act "two"  [i6-i10] 3 calls
+      2.0   Sub act  [i8]
+          · who
+          · two
+    3     Then I check  [i12]
+    s1/i0      GET /in-bg1                                   -> 0
+    s1/i2      GET /in-SubBg                                 -> 0.0
+    s1/i4      GET /in-bg2                                   -> 1
+    s1/i6      GET /in-act-two                               -> 2
+    s1/i8      GET /in-SubAct-two                            -> 2.0
+    s1/i10     GET /in-act-after-two                         -> 2
+    s1/i12     GET /in-check                                 -> 3
+=== s2 None [Failed]
+    0     Given a plain given  [i0]
+  ✗ 1     When a step throws  [i2]
+    2     Then I check
+    3     And I check again
+    s2/i0      GET /in-plain                                 -> 0
+    s2/i2      GET /in-throws                                -> 1
+=== s3 None [Failed]
+    0     Given a plain given  [i0]
+  ✗ 1     When a step's sub step throws  [i2-i4] 2 calls
+    ✗ 1.0   Bad  [i4]
+          the sub step threw
+    2     Then I check
+    s3/i0      GET /in-plain                                 -> 0
+    s3/i2      GET /in-subthrows                             -> 1
+    s3/i4      GET /in-Bad                                   -> 1.0
+=== s4 None [Skipped]
+    0     Given a plain given  [i0]
+    1     When this step has no binding
+    2     Then I check
+    s4/i0      GET /in-plain                                 -> 0
+=== s5 None [Skipped]
+    0     Given a plain given  [i0]
+    1     When a step is pending  [i2]
+    2     Then I check
+    s5/i0      GET /in-plain                                 -> 0
+    s5/i2      GET /in-pending                               -> 1
+=== s6 None [Skipped]
+    0     Given this first step has no binding
+    1     Then I check
+=== s7 None [Passed]
+    0     Given a plain given  [i0]
+    1     When a step catches its sub step's failure  [i2-i4] 2 calls
+    ✗ 1.0   Bad  [i2]
+          the sub step threw
+    2     Then I check  [i6]
+    s7/i0      GET /in-plain                                 -> 0
+    s7/i2      GET /in-Bad                                   -> 1.0
+    s7/i4      GET /in-catches-after                         -> 1
+    s7/i6      GET /in-check                                 -> 2
+=== s8 None [Failed]
+    0     Given a plain given  [i0]
+  ✗ 1     When a step throws after a sub step  [i2-i4] 2 calls
+      1.0   Sub ok  [i2]
+    2     Then I check
+    s8/i0      GET /in-plain                                 -> 0
+    s8/i2      GET /in-SubOk                                 -> 1.0
+    s8/i4      GET /in-throwsafter                           -> 1
+=== s9 None [Failed]
+    0     Given a plain given  [i0]
+  ✗ 1     When an ambiguous step
+    2     Then I check
+    s9/i0      GET /in-plain                                 -> 0
+=== s10 None [Passed]
+    0     Given a step runs two sub steps at once  [i0-i4] 3 calls
+      0.0   K1  [i0]
+      0.1   K2  [i2]
+    1     Then I check  [i6]
+    s10/i0     GET /in-K1                                    -> 0.0
+    s10/i2     GET /in-K2                                    -> 0.1
+    s10/i4     GET /in-TwoAtOnce-after                       -> 0
+    s10/i6     GET /in-check                                 -> 1
+=== s11 None [Passed]
+    0     Given a step starts a task
+    1     When the task is released  [i0-i2] 2 calls
+    2     Then I check  [i4]
+    s11/i0     GET /detached-from-given                      -> 1
+    s11/i2     GET /in-release                               -> 1
+    s11/i4     GET /in-check                                 -> 2
+=== s12 None [Passed]
+    0     Given a step leaves a sub step running  [i0-i2] 2 calls
+      0.0   Left  [i2]
+          · go
+          · System.Threading.Tasks.TaskCompletionSource
+    1     When the left sub step calls  [i4]
+    2     Then I check  [i6]
+    s12/i0     GET /in-leaves                                -> 0
+    s12/i2     GET /in-Left-after-given-ended                -> 0.0
+    s12/i4     GET /in-leftcalls                             -> 1
+    s12/i6     GET /in-check                                 -> 2
+=== s13 None [Passed]
+    0     Given a step with a sync bypass  [i0-i6] 4 calls
+    ~ 0.0   Maybe S
+          bypassed: no
+      0.1   Sub ok  [i4]
+    1     Then I check  [i8]
+    s13/i0     GET /in-syncbypass-before                     -> 0
+    s13/i2     GET /in-syncbypass-after                      -> 0
+    s13/i4     GET /in-SubOk                                 -> 0.1
+    s13/i6     GET /in-syncbypass-end                        -> 0
+    s13/i8     GET /in-check                                 -> 1
+=== s14 None [Passed]
+    0     Given a step with an async bypass  [i0-i2] 2 calls
+    ~ 0.0   Maybe a
+          bypassed: no
+    1     Sub ok  [i4-i6] 2 calls
+    2     Then I check  [i8]
+    s14/i0     GET /in-asyncbypass-before                    -> 0
+    s14/i2     GET /in-asyncbypass-after                     -> 0
+    s14/i4     GET /in-SubOk                                 -> 1
+    s14/i6     GET /in-asyncbypass-end                       -> 1
+    s14/i8     GET /in-check                                 -> 2
+=== s15 None [Passed]
+  attachments: 3 on its steps · attachments s15
+    0     Given a step attaches
+        attachment: rn-output-helper.txt → C:\Code\k225-review\reqnroll\change\bin\Debug\net10.0\Reports\attachments\rn-output-helper.txt
+        attachment: rn-track → C:\Code\k225-review\reqnroll\change\bin\Debug\net10.0\Reports\attachments\rn-track.txt
+      0.0   Sub attach
+          attachment: rn-sub → C:\Code\k225-review\reqnroll\change\bin\Debug\net10.0\Reports\attachments\rn-sub.txt
+    1     Then I check  [i0]
+    s15/i0     GET /in-check                                 -> 1
+=== s16 None [Passed]
+    0     Given a step asserts
+    · 0.0   Assert-in-gherkin
+      0.1   Sub assert
+      · 0.1.0 Assert-in-sub
+    · 0.2   Assert-in-gherkin-after
+    1     Then I check  [i0]
+    s16/i0     GET /in-check                                 -> 1
+=== s17 None [Failed]
+  ✗ 0     Given a step with an async bypass then a failure  [i0]
+    ~ 0.0   Maybe a
+          bypassed: no
+    1     Then I check
+    s17/i0     GET /in-asyncbypassf-after                    -> 0
+=== s18 None [Passed]
+  example: row=r1
+    0     Given a plain given  [i0]
+    1     When I act "r1"  [i2-i6] 3 calls
+      1.0   Sub act  [i4]
+          · who
+          · r1
+    2     Then I check  [i8]
+    s18/i0     GET /in-plain                                 -> 0
+    s18/i2     GET /in-act-r1                                -> 1
+    s18/i4     GET /in-SubAct-r1                             -> 1.0
+    s18/i6     GET /in-act-after-r1                          -> 1
+    s18/i8     GET /in-check                                 -> 2
+=== s19 None [Passed]
+  example: row=r2
+    0     Given a plain given  [i0]
+    1     When I act "r2"  [i2-i6] 3 calls
+      1.0   Sub act  [i4]
+          · who
+          · r2
+    2     Then I check  [i8]
+    s19/i0     GET /in-plain                                 -> 0
+    s19/i2     GET /in-act-r2                                -> 1
+    s19/i4     GET /in-SubAct-r2                             -> 1.0
+    s19/i6     GET /in-act-after-r2                          -> 1
+    s19/i8     GET /in-check                                 -> 2
+=== s20 None [Passed]
+  example: row=r3
+    0     Given a plain given  [i0]
+    1     When I act "r3"  [i2-i6] 3 calls
+      1.0   Sub act  [i4]
+          · who
+          · r3
+    2     Then I check  [i8]
+    s20/i0     GET /in-plain                                 -> 0
+    s20/i2     GET /in-act-r3                                -> 1
+    s20/i4     GET /in-SubAct-r3                             -> 1.0
+    s20/i6     GET /in-act-after-r3                          -> 1
+    s20/i8     GET /in-check                                 -> 2
+=== s21 None [Passed]
+    0     Given Keyworded hook step  [i0]
+    1     Given a background step  [i2-i4] 2 calls
+      1.0   Sub bg  [i4]
+    2     When I act "hb1"  [i6-i10] 3 calls
+      2.0   Sub act  [i8]
+          · who
+          · hb1
+    3     Then I check  [i12]
+    s21/i0     GET /in-KeywordedHookStep                     -> 0
+    s21/i2     GET /in-bg1                                   -> 1
+    s21/i4     GET /in-SubBg                                 -> 1.0
+    s21/i6     GET /in-act-hb1                               -> 2
+    s21/i8     GET /in-SubAct-hb1                            -> 2.0
+    s21/i10    GET /in-act-after-hb1                         -> 2
+    s21/i12    GET /in-check                                 -> 3
+=== s22 None [Passed]
+    0     Given Keyworded hook step  [i0]
+    1     Given a background step  [i2-i4] 2 calls
+      1.0   Sub bg  [i4]
+    2     When I act "hb2"  [i6-i10] 3 calls
+      2.0   Sub act  [i8]
+          · who
+          · hb2
+    3     Then I check  [i12]
+    s22/i0     GET /in-KeywordedHookStep                     -> 0
+    s22/i2     GET /in-bg1                                   -> 1
+    s22/i4     GET /in-SubBg                                 -> 1.0
+    s22/i6     GET /in-act-hb2                               -> 2
+    s22/i8     GET /in-SubAct-hb2                            -> 2.0
+    s22/i10    GET /in-act-after-hb2                         -> 2
+    s22/i12    GET /in-check                                 -> 3
+=== s23 None [Passed]
+    0     Hook step  [i0]
+    1     Given a plain given  [i2]
+    2     When I act "h1"  [i4-i8] 3 calls
+      2.0   Sub act  [i6]
+          · who
+          · h1
+    3     Then I check  [i10]
+    s23/i0     GET /in-HookStep                              -> 0
+    s23/i2     GET /in-plain                                 -> 1
+    s23/i4     GET /in-act-h1                                -> 2
+    s23/i6     GET /in-SubAct-h1                             -> 2.0
+    s23/i8     GET /in-act-after-h1                          -> 2
+    s23/i10    GET /in-check                                 -> 3
+=== s24 None [Failed]
+  ✗ 0     Given a plain given  [i0]
+    1     When I act "h10"
+    2     Then I check
+    s24/i0     GET /in-throwing-BeforeStep                   -> 0
+=== s25 None [Failed]
+  ✗ 0     Given a plain given  [i0-i2] 2 calls
+    s25/i0     GET /in-plain                                 -> 0
+    s25/i2     GET /in-throwing-AfterStep                    -> 0
+=== s26 None [Failed]
+    0     Given a plain given  [i0]
+    1     When I act "h12"  [i2-i8] 4 calls
+      1.0   Sub act  [i4]
+          · who
+          · h12
+    s26/i0     GET /in-plain                                 -> 0
+    s26/i2     GET /in-act-h12                               -> 1
+    s26/i4     GET /in-SubAct-h12                            -> 1.0
+    s26/i6     GET /in-act-after-h12                         -> 1
+    s26/i8     GET /in-throwing-AfterScenario                -> 1
+=== s27 None [Failed]
+  ✗ 0     Bad hook step  [i0]
+        hook's step method failed
+    1     Given a plain given
+    2     When I act "h13"
+    3     Then I check
+    s27/i0     GET /in-BadHookStep                           -> 0
+=== s28 None [Passed]
+    0     Hook step async  [i0]
+    1     Given a plain given  [i2]
+    2     When I act "h2"  [i4-i8] 3 calls
+      2.0   Sub act  [i6]
+          · who
+          · h2
+    3     Then I check  [i10]
+    s28/i0     GET /in-HookStepAsync                         -> 0
+    s28/i2     GET /in-plain                                 -> 1
+    s28/i4     GET /in-act-h2                                -> 2
+    s28/i6     GET /in-SubAct-h2                             -> 2.0
+    s28/i8     GET /in-act-after-h2                          -> 2
+    s28/i10    GET /in-check                                 -> 3
+=== s29 None [Passed]
+    0     Given a plain given  [i0]
+    1     When I act "h3"  [i2-i6] 3 calls
+      1.0   Sub act  [i4]
+          · who
+          · h3
+    2     Hook step  [i8]
+    s29/i0     GET /in-plain                                 -> 0
+    s29/i2     GET /in-act-h3                                -> 1
+    s29/i4     GET /in-SubAct-h3                             -> 1.0
+    s29/i6     GET /in-act-after-h3                          -> 1
+    s29/i8     GET /in-HookStep                              -> 2
+=== s30 None [Passed]
+    0     Given a plain given  [i0-i2] 2 calls
+      0.0   Hook step  [i0]
+    1     When I act "h4"  [i4-i10] 4 calls
+      1.0   Hook step  [i4]
+      1.1   Sub act  [i8]
+          · who
+          · h4
+    s30/i0     GET /in-HookStep                              -> 0.0
+    s30/i2     GET /in-plain                                 -> 0
+    s30/i4     GET /in-HookStep                              -> 1.0
+    s30/i6     GET /in-act-h4                                -> 1
+    s30/i8     GET /in-SubAct-h4                             -> 1.1
+    s30/i10    GET /in-act-after-h4                          -> 1
+=== s31 None [Passed]
+    0     Given a plain given  [i0-i2] 2 calls
+      0.0   Hook step  [i2]
+    1     When I act "h5"  [i4-i10] 4 calls
+      1.0   Sub act  [i6]
+          · who
+          · h5
+      1.1   Hook step  [i10]
+    s31/i0     GET /in-plain                                 -> 0
+    s31/i2     GET /in-HookStep                              -> 0.0
+    s31/i4     GET /in-act-h5                                -> 1
+    s31/i6     GET /in-SubAct-h5                             -> 1.0
+    s31/i8     GET /in-act-after-h5                          -> 1
+    s31/i10    GET /in-HookStep                              -> 1.1
+=== s32 None [Passed]
+    0     Given a plain given  [i2-i6] 3 calls
+    1     When I act "h6"  [i8-i18] 6 calls
+      1.0   Sub act  [i12]
+          · who
+          · h6
+     1 calls belong to no step (before the first step, or attribution was not trusted)
+    s32/i0     GET /in-BeforeScenario-hook                   -> None
+    s32/i2     GET /in-BeforeStep-hook                       -> 0
+    s32/i4     GET /in-plain                                 -> 0
+    s32/i6     GET /in-AfterStep-hook                        -> 0
+    s32/i8     GET /in-BeforeStep-hook                       -> 1
+    s32/i10    GET /in-act-h6                                -> 1
+    s32/i12    GET /in-SubAct-h6                             -> 1.0
+    s32/i14    GET /in-act-after-h6                          -> 1
+    s32/i16    GET /in-AfterStep-hook                        -> 1
+    s32/i18    GET /in-AfterScenario-hook                    -> 1
+=== s33 None [Passed]
+  ✗ 0     Bad hook step  [i0]
+        hook's step method failed
+    1     Given a plain given  [i2]
+    2     When I act "h7"  [i4-i8] 3 calls
+      2.0   Sub act  [i6]
+          · who
+          · h7
+    3     Then I check  [i10]
+    s33/i0     GET /in-BadHookStep                           -> 0
+    s33/i2     GET /in-plain                                 -> 1
+    s33/i4     GET /in-act-h7                                -> 2
+    s33/i6     GET /in-SubAct-h7                             -> 2.0
+    s33/i8     GET /in-act-after-h7                          -> 2
+    s33/i10    GET /in-check                                 -> 3
+=== s34 None [Passed]
+    0     Running hook step  [i0]
+    1     Given a plain given  [i1]
+    2     When I act "h8"  [i4-i8] 3 calls
+      2.0   Sub act  [i6]
+          · who
+          · h8
+    3     Then I check  [i10]
+    s34/i0     GET /in-RunningHookStep                       -> 0
+    s34/i1     GET /in-plain                                 -> 1
+    s34/i4     GET /in-act-h8                                -> 2
+    s34/i6     GET /in-SubAct-h8                             -> 2.0
+    s34/i8     GET /in-act-after-h8                          -> 2
+    s34/i10    GET /in-check                                 -> 3
+=== s35 None [Failed]
+    0     Given a plain given
+    1     When I act "h9"
+     1 calls belong to no step (before the first step, or attribution was not trusted)
+    s35/i0     GET /in-throwing-BeforeScenario               -> None
+=== s36 None [Passed]
+    0     Given a shared given  [i0-i2] 2 calls
+      0.0   Sub sh  [i2]
+    1     And a second shared given  [i4]
+    2     When I act "p1"  [i6-i10] 3 calls
+      2.0   Sub act  [i8]
+          · who
+          · p1
+    3     Then I check  [i12]
+    s36/i0     GET /in-shared1                               -> 0
+    s36/i2     GET /in-SubSh                                 -> 0.0
+    s36/i4     GET /in-shared2                               -> 1
+    s36/i6     GET /in-act-p1                                -> 2
+    s36/i8     GET /in-SubAct-p1                             -> 2.0
+    s36/i10    GET /in-act-after-p1                          -> 2
+    s36/i12    GET /in-check                                 -> 3
+=== s37 None [Passed]
+    0     Given a shared given  [i0-i2] 2 calls
+      0.0   Sub sh  [i2]
+    1     And a second shared given  [i4]
+    2     When I act "p2"  [i6-i10] 3 calls
+      2.0   Sub act  [i8]
+          · who
+          · p2
+    3     Then I check  [i12]
+    s37/i0     GET /in-shared1                               -> 0
+    s37/i2     GET /in-SubSh                                 -> 0.0
+    s37/i4     GET /in-shared2                               -> 1
+    s37/i6     GET /in-act-p2                                -> 2
+    s37/i8     GET /in-SubAct-p2                             -> 2.0
+    s37/i10    GET /in-act-after-p2                          -> 2
+    s37/i12    GET /in-check                                 -> 3
+=== s38 None [Passed]
+    0     Given a plain given  [i0]
+    1     When a step runs another  [i2-i8] 4 calls
+      1.0   When the inner step  [i4-i6] 2 calls
+        1.0.0 Sub inner  [i6]
+    2     Then I check  [i10]
+    s38/i0     GET /in-plain                                 -> 0
+    s38/i2     GET /in-outer-before                          -> 1
+    s38/i4     GET /in-inner                                 -> 1.0
+    s38/i6     GET /in-SubInner                              -> 1.0.0
+    s38/i8     GET /in-outer-after                           -> 1
+    s38/i10    GET /in-check                                 -> 2
+=== s39 None [Failed]
+    0     Given a plain given  [i0]
+  ✗ 1     When a step runs another that fails  [i2-i6] 3 calls
+    ✗ 1.0   When the inner step fails  [i4]
+    2     Then I check
+    s39/i0     GET /in-plain                                 -> 0
+    s39/i2     GET /in-outerf-before                         -> 1
+    s39/i4     GET /in-innerf                                -> 1.0
+    s39/i6     GET /in-outerf-after                          -> 1
+=== s40 None [Skipped]
+    0     Given a plain given  [i0]
+    1     When a step runs an undefined one  [i2]
+      1.0   When nothing binds this inner step
+    2     Then I check
+    s40/i0     GET /in-plain                                 -> 0
+    s40/i2     GET /in-outeru-after                          -> 1
+=== s41 None [Passed]
+    0     Given a plain given  [i0]
+    1     When a step method runs a gherkin step  [i2-i12] 6 calls
+      1.0   Step runs  [i4-i10] 2 calls
+      1.1   When the inner step  [i6-i8] 2 calls
+        1.1.0 Sub inner  [i8]
+    2     Then I check  [i14]
+    s41/i0     GET /in-plain                                 -> 0
+    s41/i2     GET /in-SM-before                             -> 1
+    s41/i4     GET /in-StepRuns-before                       -> 1.0
+    s41/i6     GET /in-inner                                 -> 1.1
+    s41/i8     GET /in-SubInner                              -> 1.1.0
+    s41/i10    GET /in-StepRuns-after                        -> 1.0
+    s41/i12    GET /in-SM-after                              -> 1
+    s41/i14    GET /in-check                                 -> 2
+=== s42 None [Passed]
+    0     When a step runs two others  [i0-i10] 6 calls
+      0.0   When the inner step  [i0-i2] 2 calls
+        0.0.0 Sub inner  [i2]
+      0.1   When the inner step  [i6-i8] 2 calls
+        0.1.0 Sub inner  [i8]
+    1     Then I check  [i12]
+    s42/i0     GET /in-inner                                 -> 0.0
+    s42/i2     GET /in-SubInner                              -> 0.0.0
+    s42/i4     GET /in-between-inners                        -> 0
+    s42/i6     GET /in-inner                                 -> 0.1
+    s42/i8     GET /in-SubInner                              -> 0.1.0
+    s42/i10    GET /in-after-inners                          -> 0
+    s42/i12    GET /in-check                                 -> 1

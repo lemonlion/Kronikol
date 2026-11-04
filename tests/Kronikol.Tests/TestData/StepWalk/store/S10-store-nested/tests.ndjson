@@ -1,0 +1,5 @@
+{"event":"start","testId":"s10","testName":"nested","feature":"Store","timestamp":"2026-11-03T18:20:32.5751891Z"}
+{"event":"step","testId":"s10","text":"a shop","status":"passed","durationMs":5,"keyword":"Given","timestamp":"2026-11-03T18:20:32.5751908Z"}
+{"event":"step","testId":"s10","text":"seed the stock","status":"passed","durationMs":5,"timestamp":"2026-11-03T18:20:32.5753507Z","level":1}
+{"event":"step","testId":"s10","text":"it is empty","status":"passed","durationMs":5,"keyword":"Then","timestamp":"2026-11-03T18:20:32.5754647Z"}
+{"event":"end","testId":"s10","status":"passed","durationMs":50,"timestamp":"2026-11-03T18:20:32.5906058Z"}

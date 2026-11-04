@@ -1,0 +1,17 @@
+On the final cut. Published 5.27.13 first, each round; best of 5.
+--- round 1, published 5.27.13
+no step in this test               1409 ns per record
+step open, this flow inside it      977 ns per record
+step open, flow not inside it      1322 ns per record
+--- round 1, prototype
+no step in this test               1176 ns per record
+step open, this flow inside it     1527 ns per record
+step open, flow not inside it      1733 ns per record
+--- round 2, published 5.27.13
+no step in this test               1102 ns per record
+step open, this flow inside it     1403 ns per record
+step open, flow not inside it      1243 ns per record
+--- round 2, prototype
+no step in this test               1257 ns per record
+step open, this flow inside it     1314 ns per record
+step open, flow not inside it      1583 ns per record

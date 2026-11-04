@@ -1,0 +1,9 @@
+bp-cmock-reqnroll/TestRunReport.json: 214 scenarios, 705 top-level steps, 0 sub-steps, 888 assertions
+  scenarios with a sub-step: 0; bars per scenario now, median 3.0, max 7; with a bar per sub-step, median 3.0, max 7
+  calls 1290, of which under a top-level step that has sub-steps 0
+bp/TestRunReport.json: 212 scenarios, 5 top-level steps, 0 sub-steps, 13 assertions
+  scenarios with a sub-step: 0; bars per scenario now, median 0.0, max 5; with a bar per sub-step, median 0.0, max 5
+  calls 1395, of which under a top-level step that has sub-steps 0
+shard/TestRunReport.json: 214 scenarios, 705 top-level steps, 0 sub-steps, 888 assertions
+  scenarios with a sub-step: 0; bars per scenario now, median 3.0, max 7; with a bar per sub-step, median 3.0, max 7
+  calls 1290, of which under a top-level step that has sub-steps 0

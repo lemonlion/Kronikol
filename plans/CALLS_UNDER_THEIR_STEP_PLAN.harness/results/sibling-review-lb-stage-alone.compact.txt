@@ -1,0 +1,99 @@
+
+s0  Probes › L0 control  [Passed]  0.18s
+  0     GIVEN Given a registered customer  0.08s  [i0]
+    0.0   A customer is registered  0.05s
+  1     WHEN When the customer places the order  0s  [i2]
+    1.0   An order is submitted  0s
+  2     THEN Then the order is confirmed  [i4]
+    2.0   The order is read back
+      call> 0 /customers
+      call> 1 /orders
+      call> 2 /orders/1
+
+s1  Probes › L1 a step method in a scenario decorator  [Failed]  0.04s
+  0     GIVEN Given a registered customer
+  1     WHEN When the customer places the order
+  2     THEN Then the order is confirmed
+      call> buckets: at
+
+s2  Probes › L2 a step method before a composite steps own steps  [Passed]  0.01s
+  0     GIVEN Given a composite step that seeds first  0.01s  [i0-i4] 3 calls
+    0.0   Native sub step one
+    0.1   Native sub step two
+      0.1.0 A customer is registered
+    0.2   Native sub step two
+      0.2.0 An order is submitted
+  1     THEN Then the order is confirmed
+    1.0   The order is read back
+      call> 0 /seed
+      call> 0 /customers
+      call> 0 /orders
+
+s3  Probes › L3 a failing composite sub step  [Failed]  0.05s
+✗ 0     GIVEN Given a composite step whose first step fails  0.04s  [i0]
+  ✗ 0.0   Native sub step that fails  0.03s
+    0.1   Native sub step two
+  1     THEN Then the order is confirmed
+      call> 0 /payments
+
+s4  Probes › L4 a step method left running  [Passed]  0.01s
+  0     GIVEN Given a step method is left running  0s  [i0]
+    0.0   A slow background check  0.22s
+  1     WHEN When the customer places the order  [i2]
+    1.0   An order is submitted
+  2     THEN Then the order is confirmed
+    2.0   The order is read back
+      call> 0 /started
+      call> 1 /orders
+
+s5  Probes › L5 a step method fails in a scenario decorator  [Failed]  0.01s
+  0     GIVEN Given a registered customer
+  1     WHEN When the customer places the order
+  2     THEN Then the order is confirmed
+      call> buckets: at
+
+s6  Probes › L6 a forwarding step method left running  [Passed]  0.42s
+  0     GIVEN Given a forwarder is left running  0s  [i0]
+    0.0   A forwarding check  0.22s
+      0.0.0 A slow inner check  0.22s
+  1     WHEN When the order takes a while and is read back  0.42s  [i2-i6] 3 calls
+    1.0   An order is submitted slowly  0.42s
+    1.1   The order is read back
+  2     THEN Then the order is confirmed  [i8]
+    2.0   The order is read back
+      call> 0 /started
+      call> 1 /background
+      call> 1 /orders
+      call> 1 /orders/1
+      call> 2 /orders/1
+
+s7  Probes › V1 plain calls no step methods  [Passed]  0s
+  0     GIVEN Plain given  [i0]
+  1     WHEN Plain when  [i2]
+  2     THEN Plain then
+      call> 0 /v1
+      call> 1 /v2
+
+s8  Probes › V2 plain calls with a fourth step  [Passed]  0.01s
+  0     GIVEN Plain given  [i0]
+  1     WHEN Plain when  [i2]
+  2     THEN Plain then  [i4]
+  3     AND Plain and
+      call> 0 /v1
+      call> 1 /v2
+      call> 2 /v3
+
+s9  Probes › V3 plain calls on the control paths  [Passed]  0.01s
+  0     GIVEN Plain given  [i0]
+  1     WHEN Plain when prefix  [i2]
+  2     THEN Plain then same path  [i4]
+      call> 0 /v1
+      call> 1 /orders
+      call> 2 /orders/1
+
+s10  Probes › V4 step methods in given and then only  [Passed]  0s
+  0     GIVEN Given a registered customer  [i0]
+    0.0   A customer is registered
+  1     THEN Then the order is confirmed
+    1.0   The order is read back
+      call> 0 /customers

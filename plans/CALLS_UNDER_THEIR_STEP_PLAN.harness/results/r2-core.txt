@@ -1,0 +1,2 @@
+# The core suite on R2 alone, on 9d994a4b: prototype/r2-alone.patch
+Passed!  - Failed:     0, Passed: 11816, Skipped:     2, Total: 11818, Duration: 8 m 7 s - Kronikol.Tests.dll (net10.0)

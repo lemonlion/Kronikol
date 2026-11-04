@@ -1,0 +1,35 @@
+# dotnet build release.slnf -c Release on #223's c7252f6c with this plan's layer, every target framework
+    0 Error(s)
+    33 Warning(s)
+Build succeeded.
+Time Elapsed 00:01:03.70
+
+# The same with --no-incremental, its warnings grouped: 30 warnings, 0 errors. None is in a line this plan's layer adds (Tracking/StepCollector.cs, Reports/ReportGenerator.cs's new lines); StepPairing.cs's two are #223's doc comments, the rest are from before.
+4 src\Kronikol.Extensions.MongoDB.V2\Kronikol.Extensions.MongoDB.V2.csproj : warning NU1902: Package 'SharpCompress' 0.30.1 has a known moderate sever
+4 src\Kronikol.Extensions.MongoDB.V2\Kronikol.Extensions.MongoDB.V2.csproj : warning NU1903: Package 'Snappier' 1.0.0 has a known high severity vulner
+2 src\Kronikol\PlantUml\NodeJsPlantUmlRenderer.cs CS8604 Possible null reference argument for parameter 'expectedIntegrity' in 
+2 src\Kronikol\PlantUml\PlantUmlCreator.cs CS8604 Possible null reference argument for parameter 'content' in 'string Pl
+2 src\Kronikol\Query\QueryCommand.Narrative.cs CS8604 Possible null reference argument for parameter 'message' in 'void Quer
+2 src\Kronikol\Query\QueryCommand.History.cs CS1573 Parameter 'Verdicts' has no matching param tag in the XML comment for 
+2 src\Kronikol\Query\QueryCommand.History.cs CS1573 Parameter 'Subjects' has no matching param tag in the XML comment for 
+2 src\Kronikol\Query\QueryCommand.History.cs CS1573 Parameter 'LedgerPath' has no matching param tag in the XML comment fo
+2 src\Kronikol\Query\QueryCommand.History.cs CS1573 Parameter 'LedgerSource' has no matching param tag in the XML comment 
+2 src\Kronikol\Query\QueryCommand.History.cs CS1573 Parameter 'BehaviourVerdicts' has no matching param tag in the XML com
+2 src\Kronikol\Query\QueryCommand.History.cs CS1573 Parameter 'Analysis' has no matching param tag in the XML comment for 
+2 src\Kronikol\Query\QueryCommand.History.cs CS1573 Parameter 'Shapes' has no matching param tag in the XML comment for 'H
+2 src\Kronikol\Query\QueryCommand.History.cs CS1573 Parameter 'Subject' has no matching param tag in the XML comment for '
+2 src\Kronikol\Query\QueryCommand.History.cs CS1573 Parameter 'Entry' has no matching param tag in the XML comment for 'Ne
+2 src\Kronikol\Query\QueryCommand.History.cs CS1573 Parameter 'RunId' has no matching param tag in the XML comment for 'Ne
+2 src\Kronikol\Query\QueryCommand.History.cs CS1573 Parameter 'RunsAgo' has no matching param tag in the XML comment for '
+2 src\Kronikol\Reports\ReportGenerator.cs CS0419 Ambiguous reference in cref attribute: 'HistoryRunContext.Create'. Ass
+2 src\Kronikol\ScenarioTitleResolver.cs CS1573 Parameter 'displayName' has no matching param tag in the XML comment f
+2 src\Kronikol\ScenarioTitleResolver.cs CS1573 Parameter 'explicitDisplayName' has no matching param tag in the XML c
+2 src\Kronikol\ScenarioTitleResolver.cs CS1573 Parameter 'defaultNames' has no matching param tag in the XML comment 
+2 src\Kronikol\Sql\UnifiedSqlOperationInfo.cs CS0419 Ambiguous reference in cref attribute: 'UnifiedSqlClassifier.Classify'
+2 src\Kronikol\Tracking\StepPairing.cs CS1734 XML comment on 'StepPairing' has a paramref tag for 'notRunAfter', but
+2 src\Kronikol\Tracking\StepPairing.cs CS1734 XML comment on 'StepPairing' has a paramref tag for 'notRunUnder', but
+2 src\Kronikol.Extensions.Redis\RedisTrackingDatabase.cs CS1574 XML comment has cref attribute 'ToString' that could not be resolved
+2 src\Kronikol.Playwright\PlaywrightTestTrackingExtensions.cs CS1734 XML comment on 'PlaywrightTestTrackingExtensions' has a paramref tag f
+2 src\Kronikol.Extensions.PubSub\TrackingSubscriberClient.cs CS0672 Member 'TrackingSubscriberClient.StopAsync(CancellationToken)' overrid
+2 src\Kronikol.Extensions.PubSub\TrackingSubscriberClient.cs CS0618 'SubscriberClient.StopAsync(CancellationToken)' is obsolete: 'Use Stop
+2 src\Kronikol.Tool\CtrfCommand.cs CS0419 Ambiguous reference in cref attribute: 'CtrfReportGenerator.Generate'.

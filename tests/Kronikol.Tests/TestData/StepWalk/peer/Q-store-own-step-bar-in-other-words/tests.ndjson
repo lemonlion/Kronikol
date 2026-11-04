@@ -1,0 +1,5 @@
+{"event": "start", "testId": "q0", "testName": "store", "feature": "F", "timestamp": "2026-11-03T10:00:00Z"}
+{"event": "step", "testId": "q0", "status": "passed", "durationMs": 100, "keyword": "Given", "text": "a shop named <name>", "timestamp": "2026-11-03T10:00:00.010000Z"}
+{"event": "step", "testId": "q0", "status": "passed", "durationMs": 100, "keyword": "When", "text": "a basket", "timestamp": "2026-11-03T10:00:00.100000Z"}
+{"event": "step", "testId": "q0", "status": "passed", "durationMs": 100, "keyword": "Then", "text": "it is empty", "timestamp": "2026-11-03T10:00:00.200000Z"}
+{"event": "end", "testId": "q0", "status": "passed", "durationMs": 500, "timestamp": "2026-11-03T10:00:00.500000Z"}

@@ -1,0 +1,18 @@
+# R2's facts on the old code, 9d994a4b: the source under src/ as it was, the tests as they ship. xUnit shortens a long case name in its output, which is why two rows print twice.
+rows failed: 64  rows that differ: 63
+failed but published read the same: ['fresh/N1-two-word-keyword-escaped', 'second/S2-capture-kind-step-and-tests-file-both-dr', 'text/K3-control-keyword-row-bar-with-none-same-cas']
+differ but did not fail: ['second/S2-capture-kind-step-and-tests-file-both-draw', 'text/K3-control-keyword-row-bar-with-none-same-case']
+other facts failed:
+  Two_rows_that_read_alike_keep_their_own_sub_steps [1 s]
+  A_second_ingest_over_one_list_of_a_hosts_records_reads_as_fresh_records_do [434 ms]
+  A_label_the_bar_changes_records_no_mismatch [488 ms]
+  A_response_takes_its_requests_step_across_a_bar [370 ms]
+14 of A_label_keeps_its_calls_whatever_the_bar_does_to_it failed, which is F12's 14 of 20, and s5, s6, s8 and s10 passed.
+
+# The hand-built, Cucumber and BDDfy facts on the same tree. A_text_only_another_bars_tail_holds_... is a pin and passed.
+Failed Kronikol.Tests.BDDfy.BDDfyScenarioInfoExtensionsTests.A_steps_own_bar_is_read_where_its_title_keeps_its_And_or_But
+Failed Kronikol.Tests.BDDfy.BDDfyScenarioInfoExtensionsTests.A_steps_own_bar_is_read_where_its_title_keeps_its_And_or_But
+Failed Kronikol.Tests.BDDfy.BDDfyScenarioInfoExtensionsTests.A_steps_own_bar_is_read_where_its_title_keeps_its_And_or_But
+Failed Kronikol.Tests.Reports.ReportAttributionTests.A_hand_built_scenario_with_a_long_label_keeps_each_calls_step [1 ms]
+Failed Kronikol.Tests.Ingestion.Cucumber.CucumberFeatureMergerTests.Assertions_under_two_steps_that_read_alike_stay_with_their_own_step [7 ms]
+Failed Kronikol.Tests.Reports.ReportAttributionTests.A_row_with_no_keyword_keeps_its_step_under_a_bar_that_wrapped_it_and_has_one [< 1 ms]

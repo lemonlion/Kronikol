@@ -1,0 +1,76 @@
+# probes-service: an in-process service on TestServer's defaults, which makes an onward call for each request. scripts/run_service_probes.sh.
+
+=== published
+--- S0 sequential [Passed]
+      0     The parent  0.34s  [i0-i13] 8 calls
+        0.0   Sub a  0.09s
+        0.1   Sub b  0.08s
+    calls: own-before=0  onward-of-own-before=0  sub-a=0  onward-of-sub-a=0  sub-b=0  onward-of-sub-b=0  own-after=0  onward-of-own-after=0
+--- S1 two at once [Passed]
+      0     Both at once  0.2s  [i0-i5] 4 calls
+        0.0   Left  0.2s
+          0.0.0 Right  0.14s
+    calls: left-slow=0  right=0  onward-of-right=0  onward-of-left-slow=0
+--- S2 parent calls while a child runs [Passed]
+      0     Parent calls while a child runs  0.47s  [i0-i1] 2 calls
+        0.0   The running child  0.32s
+    calls: parent-own=0  onward-of-parent-own=0
+--- S3 two top level steps at once [Passed]
+      0     Top fast  0.18s  [i0-i5] 4 calls
+        0.0   Top slow  0.06s
+      1     The next  0.12s  [i8-i9] 2 calls
+    calls: fast=0  top-slow=0  onward-of-fast=0  onward-of-top-slow=0  next=1  onward-of-next=1
+--- S4 service goes on after it answers [Passed]
+      0     Starts work and moves on  0.01s  [i0]
+      1     The later step  0.33s
+    calls: work=0
+
+=== as-one
+--- S0 sequential [Passed]
+      0     The parent  0.37s  [i0-i13] 8 calls
+        0.0   Sub a  0.08s  [i4-i5] 2 calls
+        0.1   Sub b  0.09s  [i8-i9] 2 calls
+    calls: own-before=0  onward-of-own-before=0  sub-a=0.0  onward-of-sub-a=0.0  sub-b=0.1  onward-of-sub-b=0.1  own-after=0  onward-of-own-after=0
+--- S1 two at once [Passed]
+      0     Both at once  0.19s  [i0-i5] 4 calls
+        0.0   Left  0.19s  [i1-i5] 2 calls
+        0.1   Right  0.11s  [i0]
+    calls: right=0.1  left-slow=0.0  onward-of-right=0  onward-of-left-slow=0.0
+--- S2 parent calls while a child runs [Passed]
+      0     Parent calls while a child runs  0.39s  [i0-i1] 2 calls
+        0.0   The running child  0.39s  [i1]
+    calls: parent-own=0  onward-of-parent-own=0.0
+--- S3 two top level steps at once [Passed]
+      0     Top fast  0.05s  [i0]
+      1     Top slow  0.26s  [i1-i5] 3 calls
+      2     The next  0.09s  [i8-i9] 2 calls
+    calls: fast=0  top-slow=1  onward-of-fast=1  onward-of-top-slow=1  next=2  onward-of-next=2
+--- S4 service goes on after it answers [Passed]
+      0     Starts work and moves on  0.42s  [i0]
+      1     The later step  0.37s
+    calls: work=0
+
+=== end-state
+--- S0 sequential [Passed]
+      0     The parent  0.31s  [i0-i13] 8 calls
+        0.0   Sub a  0.1s  [i4-i5] 2 calls
+        0.1   Sub b  0.07s  [i8-i9] 2 calls
+    calls: own-before=0  onward-of-own-before=0  sub-a=0.0  onward-of-sub-a=0.0  sub-b=0.1  onward-of-sub-b=0.1  own-after=0  onward-of-own-after=0
+--- S1 two at once [Passed]
+      0     Both at once  0.75s  [i0-i5] 4 calls
+        0.0   Left  0.72s  [i1-i5] 2 calls
+        0.1   Right  0.59s  [i0-i2] 2 calls
+    calls: right=0.1  left-slow=0.0  onward-of-right=0.1  onward-of-left-slow=0.0
+--- S2 parent calls while a child runs [Passed]
+      0     Parent calls while a child runs  0.35s  [i0-i1] 2 calls
+        0.0   The running child  0.35s
+    calls: parent-own=0  onward-of-parent-own=0
+--- S3 two top level steps at once [Passed]
+      0     Top fast  0.12s  [i0-i2] 2 calls
+      1     Top slow  0.2s  [i1-i5] 2 calls
+      2     The next  0.15s  [i8-i9] 2 calls
+    calls: fast=0  top-slow=1  onward-of-fast=0  onward-of-top-slow=1  next=2  onward-of-next=2
+--- S4 service goes on after it answers [Passed]
+      0     Starts work and moves on  0s  [i0]
+      1     The later step  0.35s
+    calls: work=0

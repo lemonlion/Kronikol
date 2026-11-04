@@ -1,0 +1,12 @@
+# #224's final patch, cut 11 (prototype/224-cut11-r1-r2-r3.patch), checked with git apply --check --3way on the final cut, #223's 638f275d with this plan's layer and R2. Nothing was settled, built or run.
+Applied patch to 'src/Kronikol.BDDfy.xUnit3/BDDfyStepTrackingExecutor.cs' with conflicts.
+Applied patch to 'src/Kronikol.LightBDD.Core/LightBddTestTrackingMessageHandlerOptions.cs' cleanly.
+Applied patch to 'src/Kronikol.LightBDD.Core/StepTrackingStepDecorator.cs' with conflicts.
+Applied patch to 'src/Kronikol.ReqNRoll.Core/ReqNRollTrackingHooks.cs' with conflicts.
+Applied patch to 'src/Kronikol.StepTracking/StepWeaver.cs' cleanly.
+Applied patch to 'src/Kronikol/PlantUml/PlantUmlCreator.cs' cleanly.
+Applied patch to 'src/Kronikol/Tracking/PhaseConfiguration.cs' cleanly.
+Applied patch to 'src/Kronikol/Tracking/StepCollector.cs' with conflicts.
+Applied patch to 'src/Kronikol/Tracking/StepTrackingOptions.cs' cleanly.
+Applied patch to 'src/Kronikol/Tracking/TestTrackingMessageHandler.cs' with conflicts.
+Applied patch to 'src/Kronikol/TrackingDiagramOverride.cs' cleanly.

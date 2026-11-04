@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <TrackStepsEnabled>true</TrackStepsEnabled>
+    <AssemblyName>nuprobe</AssemblyName>
+    <NoWarn>$(NoWarn);CS1998;CS4014;CS0162;CS8618;NUnit2005;NUnit1033</NoWarn>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\src\*.cs" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
+    <PackageReference Include="NUnit" Version="4.6.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="6.2.0" />
+    <PackageReference Include="Kronikol.NUnit4" Version="5.28.2" /><PackageReference Include="Kronikol.StepTracking" Version="5.28.2" />
+  </ItemGroup>
+  
+</Project>

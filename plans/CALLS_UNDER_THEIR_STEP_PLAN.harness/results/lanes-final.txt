@@ -1,0 +1,23 @@
+Final cut, prototype/fifth-cut.patch on 27cc0e46, Release.
+
+Run on exactly the patch:
+=== Kronikol.Tests.StepTracking 13:32:17
+Passed!  - Failed:     0, Passed:    61, Skipped:     0, Total:    61, Duration: 8 s - Kronikol.Tests.StepTracking.dll (net10.0)
+=== Kronikol.Tests.xUnit2 13:32:38
+Passed!  - Failed:     0, Passed:   111, Skipped:     0, Total:   111, Duration: 3 m 4 s - Kronikol.Tests.xUnit2.dll (net10.0)
+
+Run earlier in the same worktree, before the differential. Its diff against 27cc0e46 afterwards differed from the patch only by the two probe lines the differential added after these finished, so these ran on the patch:
+=== Kronikol.Tests.NUnit4 13:05:46
+Passed!  - Failed:     0, Passed:    49, Skipped:     0, Total:    49, Duration: 7 s - Kronikol.Tests.NUnit4.dll (net10.0)
+=== Kronikol.Tests.MSTest 13:06:31
+Passed!  - Failed:     0, Passed:    85, Skipped:     0, Total:    85, Duration: 5 s - Kronikol.Tests.MSTest.dll (net10.0)
+=== Kronikol.Tests 13:07:02
+  Failed Kronikol.Tests.Templates.HistoryActionRecordTests.Writers_racing_on_a_first_run_all_land_once_with_no_duplicate_roster_line [1 m 23 s]
+Failed!  - Failed:     1, Passed: 11577, Skipped:     2, Total: 11580, Duration: 8 m 30 s - Kronikol.Tests.dll (net10.0)
+=== Kronikol.Tests.AssertionTracking 13:16:49
+Passed!  - Failed:     0, Passed:  1432, Skipped:    28, Total:  1460, Duration: 9 m 44 s - Kronikol.Tests.AssertionTracking.dll (net10.0)
+
+The one failure, run alone three times on the same build:
+Passed!  - Failed: 0, Passed: 1, Skipped: 0, Total: 1, Duration: 49 s
+Passed!  - Failed: 0, Passed: 1, Skipped: 0, Total: 1, Duration: 41 s
+Passed!  - Failed: 0, Passed: 1, Skipped: 0, Total: 1, Duration: 57 s

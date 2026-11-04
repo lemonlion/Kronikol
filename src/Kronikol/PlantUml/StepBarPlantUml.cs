@@ -109,7 +109,7 @@ internal static class StepBarPlantUml
         // prefixes that make the engine load a bundle or drop the text: LightBDD writes a table
         // parameter as <$name>, which the bar used to paint as "". The wrapper never cuts a word that
         // holds a `<`, so a `~` stays with the `<` it escapes.
-        var labelLine = string.Join(@"\n", DiagramWidth.WrapLines(PlantUmlCreator.EscapeOneLineMarkup(labelLines[0]), DiagramWidth.MaxNoteTextLineChars));
+        var labelLine = LabelLine(labelLines[0]);
 
         var body = new List<string>();
         // Multi-line marker text (the ingest format allows it) used to fold into the coloured bar as
@@ -161,6 +161,116 @@ internal static class StepBarPlantUml
         var content = string.Join(@"\n", body.Prepend(labelLine));
         return RichPrefix + PlantUmlStatementLimits.TruncateLabel(
             content, PlantUmlStatementLimits.MaxNoteLineChars - RichPrefix.Length);
+    }
+
+    /// <summary>A label's first line as a bar writes it: escaped, then wrapped.</summary>
+    private static string LabelLine(string line) =>
+        string.Join(@"\n", DiagramWidth.WrapLines(PlantUmlCreator.EscapeOneLineMarkup(line), DiagramWidth.MaxNoteTextLineChars));
+
+    /// <summary>How far short of its budget <see cref="PlantUmlStatementLimits.TruncateLabel"/> can stop, as it will not halve an escape.</summary>
+    private const int MostACutFallsShort = 16;
+
+    /// <summary>
+    /// Whether <paramref name="bar"/> is what <see cref="Build"/> draws for this step: its label written again as Build writes
+    /// it, wrapped at the same places, and compared with the bar, exactly, up to where a cut ended the bar. So a step whose text
+    /// the bar escaped, wrapped or cut finds its bar, and one whose text differs from the bar's late on, by a space or by case
+    /// does not. The bar's keyword is none, the step's own, or the bar's first word, as a collector writes And for a keyword it
+    /// repeats, and that word can come before the step's own keyword, as BDDfy leaves an And or a But in a step's title and draws
+    /// And And. The one difference it allows is the one <see cref="Reports.StepText"/> makes: it capitalises a step with no
+    /// keyword, in its row and on its bar, under a switch for each. What it cannot see: the rest of a text past a cut; a first
+    /// word of the text taken for a keyword, so a text with its first word gone reads as a bar with no keyword; the same text
+    /// under another keyword or none; two steps with no keyword that StepText makes alike; and two texts Build draws alike. A
+    /// row with no text says too little to spare the first word: <paramref name="anyFirstWord"/> keeps that to its own keyword.
+    /// </summary>
+    internal static bool DrawsStep(string bar, string? keyword, string text, bool anyFirstWord = true)
+    {
+        string content;
+        int budget;
+        if (bar.StartsWith(LegacyPrefix, StringComparison.Ordinal))
+            (content, budget) = (bar[LegacyPrefix.Length..], PlantUmlStatementLimits.MaxColouredNoteBarChars - LegacyPrefix.Length);
+        else if (bar.StartsWith(RichPrefix, StringComparison.Ordinal))
+            (content, budget) = (bar[RichPrefix.Length..], PlantUmlStatementLimits.MaxNoteLineChars - RichPrefix.Length);
+        else
+            return false;
+
+        var hasKeyword = !string.IsNullOrWhiteSpace(keyword);
+        if (DrawsText(content, budget, "", text) || (hasKeyword && DrawsLabel(content, budget, $"{keyword} {text}")))
+            return true;
+        if (!anyFirstWord)
+            return false;
+
+        var space = content.IndexOf(' ');
+        var lineBreak = content.IndexOf(@"\n", StringComparison.Ordinal);
+        var firstWord = space >= 0 && (lineBreak < 0 || space < lineBreak) ? space : lineBreak;
+        if (firstWord <= 0)
+            return false;
+
+        var before = $"{content[..firstWord]} ";
+        return hasKeyword
+            ? DrawsLabel(content, budget, before + text) || DrawsLabel(content, budget, $"{before}{keyword} {text}")
+            : DrawsText(content, budget, before, text);
+    }
+
+    /// <summary>
+    /// A text with no keyword of its own after this much of a label: as it is written, or as <see cref="Reports.StepText"/> would
+    /// have it on the other side, capitalised, or the text it capitalises to this one.
+    /// </summary>
+    private static bool DrawsText(string content, int budget, string before, string text)
+    {
+        if (DrawsLabel(content, budget, before + text))
+            return true;
+
+        var capitalised = Reports.StepText.Capitalise(text) ?? text;
+        if (capitalised != text)
+            return DrawsLabel(content, budget, before + capitalised);
+
+        var first = text.TakeWhile(c => char.ToLowerInvariant(c) == c).Count();
+        if (first == text.Length)
+            return false;
+
+        var lowered = text[..first] + char.ToLowerInvariant(text[first]) + text[(first + 1)..];
+        return Reports.StepText.Capitalise(lowered) == text && DrawsLabel(content, budget, before + lowered);
+    }
+
+    private static bool DrawsLabel(string content, int budget, string label)
+    {
+        var lines = label.Replace("\r", "").Trim().Split('\n');
+        var drawn = string.Join(@"\n", lines.Skip(1).SelectMany(EscapeWrappedBodyLine).Prepend(LabelLine(lines[0])));
+
+        var cut = content.Length > budget - MostACutFallsShort && content.EndsWith(PlantUmlStatementLimits.TruncationMarker, StringComparison.Ordinal);
+        var kept = cut ? content[..^PlantUmlStatementLimits.TruncationMarker.Length] : content;
+        if (cut && drawn.StartsWith(kept, StringComparison.Ordinal))
+            return true;
+
+        return kept.StartsWith(drawn, StringComparison.Ordinal) && FollowsALabel(kept.AsSpan(drawn.Length), cut);
+    }
+
+    /// <summary>
+    /// Whether this can come after a whole label: nothing, or what <see cref="Build"/> writes there, a table or a doc string under
+    /// a blank line, with a table's name above it where a step has several. A cut can leave only part of that. A break alone is
+    /// the label wrapping on past this text, and a later line is a longer text's, as a body line never opens with a pipe.
+    /// </summary>
+    private static bool FollowsALabel(ReadOnlySpan<char> rest, bool cut)
+    {
+        if (rest.IsEmpty)
+            return true;
+        if (!rest.StartsWith(@"\n\n", StringComparison.Ordinal))
+            return cut && rest.SequenceEqual(@"\n");
+
+        rest = rest[4..];
+        if (rest.IsEmpty)
+            return cut;
+        if (rest[0] == '|')
+            return true;
+
+        var nameEnd = rest.IndexOf(@"\n", StringComparison.Ordinal);
+        if (nameEnd < 0)
+            return cut;
+        if (nameEnd <= 0 || rest[nameEnd - 1] != ':')
+            return false;
+
+        var table = rest[(nameEnd + 2)..];
+        return table.StartsWith("|", StringComparison.Ordinal) || (cut && table.IsEmpty);
     }
 
     /// <summary>A line break inside a table cell: the engine reads a doubled backslash and an n there as one.</summary>

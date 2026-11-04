@@ -1,0 +1,1364 @@
+=== s0 F01 sequential baseline [Passed]
+    0     Given A  [i0]
+    1     When B  [i2-i6] 3 calls
+      1.0   Sub B  [i4]
+    2     Then C  [i8]
+    s0/i0      GET /in-GivenA                                -> 0
+    s0/i2      GET /in-WhenB-before-sub                      -> 1
+    s0/i4      GET /in-SubB                                  -> 1.0
+    s0/i6      GET /in-WhenB-after-sub                       -> 1
+    s0/i8      GET /in-ThenC                                 -> 2
+=== s1 F02 when all under parent [Passed]
+    0     Parent2  [i0-i8] 5 calls
+      0.0   Kid2a  [i1-i5] 2 calls
+      0.1   Kid2b  [i0-i4] 2 calls
+    1     After2  [i10]
+    s1/i0      GET /in-Kid2b                                 -> 0.1
+    s1/i1      GET /in-Kid2a                                 -> 0.0
+    s1/i4      GET /in-Kid2b-2                               -> 0.1
+    s1/i5      GET /in-Kid2a-2                               -> 0.0
+    s1/i8      GET /in-Parent2-after-kids                    -> 0
+    s1/i10     GET /in-After2                                -> 1
+=== s2 F03 when all top level and foreign call [Passed]
+    0     Top3a  [i1]
+        · gate
+        · System.Threading.Tasks.TaskCompletionSource
+    1     Top3b  [i0-i6] 2 calls
+     1 calls belong to no step (before the first step, or attribution was not trusted)
+    s2/i0      GET /in-Top3b                                 -> 1
+    s2/i1      GET /in-Top3a                                 -> 0
+    s2/i4      GET /from-service-thread-during-both          -> None
+    s2/i6      GET /after-both                               -> 1
+=== s3 F04 detached call outlives step [Passed]
+    0     Starter4  [i0]
+    1     Next4  [i2-i4] 2 calls
+    s3/i0      GET /in-Starter4                              -> 0
+    s3/i2      GET /detached-from-Starter4                   -> 1
+    s3/i4      GET /in-Next4                                 -> 1
+=== s4 F05 parallel for each async in parent [Passed]
+    0     Parent5  [i0-i3] 4 calls
+      0.0   Body5  [i2]
+          · i
+          · 0
+      0.1   Body5  [i3]
+          · i
+          · 1
+      0.2   Body5  [i0]
+          · i
+          · 2
+      0.3   Body5  [i1]
+          · i
+          · 3
+    s4/i0      GET /in-Body5-2                               -> 0.2
+    s4/i1      GET /in-Body5-3                               -> 0.3
+    s4/i2      GET /in-Body5-0                               -> 0.0
+    s4/i3      GET /in-Body5-1                               -> 0.1
+=== s5 F06 parallel for sync steps in parent [Passed]
+    0     Parent6  [i0-i3] 4 calls
+      0.0   Body6  [i1]
+          · i
+          · 2
+      0.1   Body6  [i3]
+          · i
+          · 3
+      0.2   Body6  [i2]
+          · i
+          · 0
+      0.3   Body6  [i0]
+          · i
+          · 1
+    s5/i0      GET /in-Body6-1                               -> 0.3
+    s5/i1      GET /in-Body6-2                               -> 0.0
+    s5/i2      GET /in-Body6-0                               -> 0.2
+    s5/i3      GET /in-Body6-3                               -> 0.1
+=== s6 F07 parallel for sync steps top level [Passed]
+    0     Body7  [i0-i3] 4 calls
+        · i
+        · 0
+      0.0   Body7  [i0-i2] 3 calls
+          · i
+          · 1
+        0.0.0 Body7  [i0-i1] 2 calls
+            · i
+            · 2
+          0.0.0.0 Body7  [i0]
+              · i
+              · 3
+    s6/i0      GET /in-Body7-3                               -> 0.0.0.0
+    s6/i1      GET /in-Body7-2                               -> 0.0.0
+    s6/i2      GET /in-Body7-1                               -> 0.0
+    s6/i3      GET /in-Body7-0                               -> 0
+=== s7 F08 step left running at test end [Passed]
+    0     Forever8  [i0-i2] 2 calls
+    s7/i0      GET /in-Forever8                              -> 0
+    s7/i2      GET /after-Forever8-started                   -> 0
+=== s8 F09 fire forget step then next [Passed]
+    0     Bg9  [i0-i4] 2 calls
+    1     Next9  [i2-i6] 2 calls
+    s8/i0      GET /in-Bg9                                   -> 0
+    s8/i2      GET /in-Next9                                 -> 1
+    s8/i4      GET /in-Bg9-2                                 -> 0
+    s8/i6      GET /after-all                                -> 1
+=== s9 F10 suppress flow in step [Passed]
+    0     Step10  [i0-i2] 2 calls
+    s9/i0      GET /suppressed-flow-from-Step10              -> 0
+    s9/i2      GET /in-Step10                                -> 0
+=== s10 F11 non async forwarder [Passed]
+    0     Fwd11  [i0]
+      0.0   Inner11  [i0]
+    1     Next11  [i2]
+    s10/i0     GET /in-Inner11                               -> 0.0
+    s10/i2     GET /in-Next11                                -> 1
+=== s11 F12 plain forwarder to step [Passed]
+    0     Stepped12  [i0-i2] 2 calls
+    s11/i0     GET /in-Stepped12                             -> 0
+    s11/i2     GET /after-Stepped12                          -> 0
+=== s12 F13 sync over async [Passed]
+    0     Sync13  [i0-i4] 3 calls
+      0.0   Async13  [i0]
+    s12/i0     GET /in-Async13                               -> 0.0
+    s12/i2     GET /in-Sync13-after                          -> 0
+    s12/i4     GET /after-Sync13                             -> 0
+=== s13 F14 value task step [Failed]
+=== s14 F14b value task overlaps next [Failed]
+=== s15 F15 throws before task returned [Passed]
+    0     Boom15  [i0-i2] 2 calls
+        · x
+        · null
+      0.0   Next15  [i0]
+    s15/i0     GET /in-Next15                                -> 0.0
+    s15/i2     GET /after-Next15                             -> 0
+=== s16 F16 async skip if under parent [Passed]
+    0     Parent16  [i0-i6] 4 calls
+    ~ 0.0   Skipped16
+          bypassed: nope
+      0.1   Kid16  [i4]
+    1     After16  [i8]
+    s16/i0     GET /in-Parent16-before                       -> 0
+    s16/i2     GET /in-Parent16-after-skip                   -> 0
+    s16/i4     GET /in-Kid16                                 -> 0.1
+    s16/i6     GET /in-Parent16-end                          -> 0
+    s16/i8     GET /in-After16                               -> 1
+=== s17 F17 sync skip if under parent [Passed]
+    0     Parent17  [i0-i4] 3 calls
+    ~ 0.0   Skipped17
+          bypassed: nope
+      0.1   Kid17  [i4]
+    1     After17  [i6]
+    s17/i0     GET /in-Parent17-before                       -> 0
+    s17/i2     GET /in-Parent17-after-skip                   -> 0
+    s17/i4     GET /in-Kid17                                 -> 0.1
+    s17/i6     GET /in-After17                               -> 1
+=== s18 F18 async skip if top level with sibling running [Passed]
+    0     Bg18  [i0-i2] 2 calls
+  ~ 1     Skipped18
+    s18/i0     GET /after-skip                               -> 0
+    s18/i2     GET /in-Bg18                                  -> 0
+=== s19 F19 sub step fails caught [Passed]
+    0     Parent19  [i0-i2] 2 calls
+    ✗ 0.0   Bad19  [i0]
+          Bad19 went wrong
+    s19/i0     GET /in-Bad19                                 -> 0.0
+    s19/i2     GET /in-Parent19-after-bad                    -> 0
+=== s20 F20 sub step fails and propagates [Failed]
+  ✗ 0     Parent20  [i0-i4] 3 calls
+        Bad20 went wrong
+      0.0   Ok20  [i2]
+    ✗ 0.1   Bad20  [i4]
+          Bad20 went wrong
+    s20/i0     GET /in-Parent20                              -> 0
+    s20/i2     GET /in-Ok20                                  -> 0.0
+    s20/i4     GET /in-Bad20                                 -> 0.1
+=== s21 F21 parallel kid fails [Failed]
+  ✗ 0     Parent21  [i0-i2] 2 calls
+        Bad21 went wrong
+      0.0   Good21  [i2]
+    ✗ 0.1   Bad21  [i0]
+          Bad21 went wrong
+    s21/i0     GET /in-Bad21                                 -> 0.1
+    s21/i2     GET /in-Good21                                -> 0.0
+=== s22 F22 assertion from sibling flows [Passed]
+    0     Parent22
+      0.0   A22
+      · 0.0.0 Assert-in-A22
+      0.1   B22
+      · 0.1.0 Assert-in-B22
+=== s23 F23 assertion from detached after step ended [Passed]
+  attachments: 1 on its steps · attachments s23
+    0     Starter23
+    1     Next23  [i0]
+        attachment: attach-from-Starter23-detached → C:\Code\k225-review\flows\change\bin\Debug\net10.0\Reports\attachments\tmp543uys.tmp
+    · 1.0   Assert-from-Starter23-detached
+    s23/i0     GET /x                                        -> 1
+=== s24 F24 attachment from sibling flows [Passed]
+  attachments: 2 on its steps · attachments s24
+    0     Parent24
+      0.0   A24
+          attachment: attach-in-A24 → C:\Code\k225-review\flows\change\bin\Debug\net10.0\Reports\attachments\tmp2tlbpg.tmp
+      0.1   B24
+          attachment: attach-in-B24 → C:\Code\k225-review\flows\change\bin\Debug\net10.0\Reports\attachments\tmp2kkznw.tmp
+=== s25 F25 deep nesting [Passed]
+    0     Deep  [i0-i46] 24 calls
+        · d
+        · 0
+      0.0   Deep  [i2-i44] 22 calls
+          · d
+          · 1
+        0.0.0 Deep  [i4-i42] 20 calls
+            · d
+            · 2
+          0.0.0.0 Deep  [i6-i40] 18 calls
+              · d
+              · 3
+            0.0.0.0.0 Deep  [i8-i38] 16 calls
+                · d
+                · 4
+              0.0.0.0.0.0 Deep  [i10-i36] 14 calls
+                  · d
+                  · 5
+                0.0.0.0.0.0.0 Deep  [i12-i34] 12 calls
+                    · d
+                    · 6
+                  0.0.0.0.0.0.0.0 Deep  [i14-i32] 10 calls
+                      · d
+                      · 7
+                    0.0.0.0.0.0.0.0.0 Deep  [i16-i30] 8 calls
+                        · d
+                        · 8
+                      0.0.0.0.0.0.0.0.0.0 Deep  [i18-i28] 6 calls
+                          · d
+                          · 9
+                        0.0.0.0.0.0.0.0.0.0.0 Deep  [i20-i26] 4 calls
+                            · d
+                            · 10
+                          0.0.0.0.0.0.0.0.0.0.0.0 Deep  [i22-i24] 2 calls
+                              · d
+                              · 11
+    s25/i0     GET /depth-0                                  -> 0
+    s25/i2     GET /depth-1                                  -> 0.0
+    s25/i4     GET /depth-2                                  -> 0.0.0
+    s25/i6     GET /depth-3                                  -> 0.0.0.0
+    s25/i8     GET /depth-4                                  -> 0.0.0.0.0
+    s25/i10    GET /depth-5                                  -> 0.0.0.0.0.0
+    s25/i12    GET /depth-6                                  -> 0.0.0.0.0.0.0
+    s25/i14    GET /depth-7                                  -> 0.0.0.0.0.0.0.0
+    s25/i16    GET /depth-8                                  -> 0.0.0.0.0.0.0.0.0
+    s25/i18    GET /depth-9                                  -> 0.0.0.0.0.0.0.0.0.0
+    s25/i20    GET /depth-10                                 -> 0.0.0.0.0.0.0.0.0.0.0
+    s25/i22    GET /depth-11                                 -> 0.0.0.0.0.0.0.0.0.0.0.0
+    s25/i24    GET /depth-11-back                            -> 0.0.0.0.0.0.0.0.0.0.0.0
+    s25/i26    GET /depth-10-back                            -> 0.0.0.0.0.0.0.0.0.0.0
+    s25/i28    GET /depth-9-back                             -> 0.0.0.0.0.0.0.0.0.0
+    s25/i30    GET /depth-8-back                             -> 0.0.0.0.0.0.0.0.0
+    s25/i32    GET /depth-7-back                             -> 0.0.0.0.0.0.0.0
+    s25/i34    GET /depth-6-back                             -> 0.0.0.0.0.0.0
+    s25/i36    GET /depth-5-back                             -> 0.0.0.0.0.0
+    s25/i38    GET /depth-4-back                             -> 0.0.0.0.0
+    s25/i40    GET /depth-3-back                             -> 0.0.0.0
+    s25/i42    GET /depth-2-back                             -> 0.0.0
+    s25/i44    GET /depth-1-back                             -> 0.0
+    s25/i46    GET /depth-0-back                             -> 0
+=== s26 F26 many steps [Passed]
+    0     Many  [i0]
+        · i
+        · 0
+    1     Many
+        · i
+        · 1
+    2     Many
+        · i
+        · 2
+    3     Many
+        · i
+        · 3
+    4     Many
+        · i
+        · 4
+    5     Many
+        · i
+        · 5
+    6     Many
+        · i
+        · 6
+    7     Many
+        · i
+        · 7
+    8     Many
+        · i
+        · 8
+    9     Many
+        · i
+        · 9
+    10    Many
+        · i
+        · 10
+    11    Many
+        · i
+        · 11
+    12    Many
+        · i
+        · 12
+    13    Many
+        · i
+        · 13
+    14    Many
+        · i
+        · 14
+    15    Many
+        · i
+        · 15
+    16    Many
+        · i
+        · 16
+    17    Many
+        · i
+        · 17
+    18    Many
+        · i
+        · 18
+    19    Many
+        · i
+        · 19
+    20    Many
+        · i
+        · 20
+    21    Many
+        · i
+        · 21
+    22    Many
+        · i
+        · 22
+    23    Many
+        · i
+        · 23
+    24    Many
+        · i
+        · 24
+    25    Many
+        · i
+        · 25
+    26    Many
+        · i
+        · 26
+    27    Many
+        · i
+        · 27
+    28    Many
+        · i
+        · 28
+    29    Many
+        · i
+        · 29
+    30    Many
+        · i
+        · 30
+    31    Many
+        · i
+        · 31
+    32    Many
+        · i
+        · 32
+    33    Many
+        · i
+        · 33
+    34    Many
+        · i
+        · 34
+    35    Many
+        · i
+        · 35
+    36    Many
+        · i
+        · 36
+    37    Many
+        · i
+        · 37
+    38    Many
+        · i
+        · 38
+    39    Many
+        · i
+        · 39
+    40    Many
+        · i
+        · 40
+    41    Many
+        · i
+        · 41
+    42    Many
+        · i
+        · 42
+    43    Many
+        · i
+        · 43
+    44    Many
+        · i
+        · 44
+    45    Many
+        · i
+        · 45
+    46    Many
+        · i
+        · 46
+    47    Many
+        · i
+        · 47
+    48    Many
+        · i
+        · 48
+    49    Many
+        · i
+        · 49
+    50    Many
+        · i
+        · 50
+    51    Many
+        · i
+        · 51
+    52    Many
+        · i
+        · 52
+    53    Many
+        · i
+        · 53
+    54    Many
+        · i
+        · 54
+    55    Many
+        · i
+        · 55
+    56    Many
+        · i
+        · 56
+    57    Many
+        · i
+        · 57
+    58    Many
+        · i
+        · 58
+    59    Many
+        · i
+        · 59
+    60    Many
+        · i
+        · 60
+    61    Many
+        · i
+        · 61
+    62    Many
+        · i
+        · 62
+    63    Many
+        · i
+        · 63
+    64    Many
+        · i
+        · 64
+    65    Many
+        · i
+        · 65
+    66    Many
+        · i
+        · 66
+    67    Many
+        · i
+        · 67
+    68    Many
+        · i
+        · 68
+    69    Many
+        · i
+        · 69
+    70    Many
+        · i
+        · 70
+    71    Many
+        · i
+        · 71
+    72    Many
+        · i
+        · 72
+    73    Many
+        · i
+        · 73
+    74    Many
+        · i
+        · 74
+    75    Many
+        · i
+        · 75
+    76    Many
+        · i
+        · 76
+    77    Many
+        · i
+        · 77
+    78    Many
+        · i
+        · 78
+    79    Many
+        · i
+        · 79
+    80    Many
+        · i
+        · 80
+    81    Many
+        · i
+        · 81
+    82    Many
+        · i
+        · 82
+    83    Many
+        · i
+        · 83
+    84    Many
+        · i
+        · 84
+    85    Many
+        · i
+        · 85
+    86    Many
+        · i
+        · 86
+    87    Many
+        · i
+        · 87
+    88    Many
+        · i
+        · 88
+    89    Many
+        · i
+        · 89
+    90    Many
+        · i
+        · 90
+    91    Many
+        · i
+        · 91
+    92    Many
+        · i
+        · 92
+    93    Many
+        · i
+        · 93
+    94    Many
+        · i
+        · 94
+    95    Many
+        · i
+        · 95
+    96    Many
+        · i
+        · 96
+    97    Many
+        · i
+        · 97
+    98    Many
+        · i
+        · 98
+    99    Many
+        · i
+        · 99
+    100   Many  [i2]
+        · i
+        · 100
+    101   Many
+        · i
+        · 101
+    102   Many
+        · i
+        · 102
+    103   Many
+        · i
+        · 103
+    104   Many
+        · i
+        · 104
+    105   Many
+        · i
+        · 105
+    106   Many
+        · i
+        · 106
+    107   Many
+        · i
+        · 107
+    108   Many
+        · i
+        · 108
+    109   Many
+        · i
+        · 109
+    110   Many
+        · i
+        · 110
+    111   Many
+        · i
+        · 111
+    112   Many
+        · i
+        · 112
+    113   Many
+        · i
+        · 113
+    114   Many
+        · i
+        · 114
+    115   Many
+        · i
+        · 115
+    116   Many
+        · i
+        · 116
+    117   Many
+        · i
+        · 117
+    118   Many
+        · i
+        · 118
+    119   Many
+        · i
+        · 119
+    120   Many
+        · i
+        · 120
+    121   Many
+        · i
+        · 121
+    122   Many
+        · i
+        · 122
+    123   Many
+        · i
+        · 123
+    124   Many
+        · i
+        · 124
+    125   Many
+        · i
+        · 125
+    126   Many
+        · i
+        · 126
+    127   Many
+        · i
+        · 127
+    128   Many
+        · i
+        · 128
+    129   Many
+        · i
+        · 129
+    130   Many
+        · i
+        · 130
+    131   Many
+        · i
+        · 131
+    132   Many
+        · i
+        · 132
+    133   Many
+        · i
+        · 133
+    134   Many
+        · i
+        · 134
+    135   Many
+        · i
+        · 135
+    136   Many
+        · i
+        · 136
+    137   Many
+        · i
+        · 137
+    138   Many
+        · i
+        · 138
+    139   Many
+        · i
+        · 139
+    140   Many
+        · i
+        · 140
+    141   Many
+        · i
+        · 141
+    142   Many
+        · i
+        · 142
+    143   Many
+        · i
+        · 143
+    144   Many
+        · i
+        · 144
+    145   Many
+        · i
+        · 145
+    146   Many
+        · i
+        · 146
+    147   Many
+        · i
+        · 147
+    148   Many
+        · i
+        · 148
+    149   Many
+        · i
+        · 149
+    150   Many
+        · i
+        · 150
+    151   Many
+        · i
+        · 151
+    152   Many
+        · i
+        · 152
+    153   Many
+        · i
+        · 153
+    154   Many
+        · i
+        · 154
+    155   Many
+        · i
+        · 155
+    156   Many
+        · i
+        · 156
+    157   Many
+        · i
+        · 157
+    158   Many
+        · i
+        · 158
+    159   Many
+        · i
+        · 159
+    160   Many
+        · i
+        · 160
+    161   Many
+        · i
+        · 161
+    162   Many
+        · i
+        · 162
+    163   Many
+        · i
+        · 163
+    164   Many
+        · i
+        · 164
+    165   Many
+        · i
+        · 165
+    166   Many
+        · i
+        · 166
+    167   Many
+        · i
+        · 167
+    168   Many
+        · i
+        · 168
+    169   Many
+        · i
+        · 169
+    170   Many
+        · i
+        · 170
+    171   Many
+        · i
+        · 171
+    172   Many
+        · i
+        · 172
+    173   Many
+        · i
+        · 173
+    174   Many
+        · i
+        · 174
+    175   Many
+        · i
+        · 175
+    176   Many
+        · i
+        · 176
+    177   Many
+        · i
+        · 177
+    178   Many
+        · i
+        · 178
+    179   Many
+        · i
+        · 179
+    180   Many
+        · i
+        · 180
+    181   Many
+        · i
+        · 181
+    182   Many
+        · i
+        · 182
+    183   Many
+        · i
+        · 183
+    184   Many
+        · i
+        · 184
+    185   Many
+        · i
+        · 185
+    186   Many
+        · i
+        · 186
+    187   Many
+        · i
+        · 187
+    188   Many
+        · i
+        · 188
+    189   Many
+        · i
+        · 189
+    190   Many
+        · i
+        · 190
+    191   Many
+        · i
+        · 191
+    192   Many
+        · i
+        · 192
+    193   Many
+        · i
+        · 193
+    194   Many
+        · i
+        · 194
+    195   Many
+        · i
+        · 195
+    196   Many
+        · i
+        · 196
+    197   Many
+        · i
+        · 197
+    198   Many
+        · i
+        · 198
+    199   Many
+        · i
+        · 199
+    200   Many  [i4]
+        · i
+        · 200
+    201   Many
+        · i
+        · 201
+    202   Many
+        · i
+        · 202
+    203   Many
+        · i
+        · 203
+    204   Many
+        · i
+        · 204
+    205   Many
+        · i
+        · 205
+    206   Many
+        · i
+        · 206
+    207   Many
+        · i
+        · 207
+    208   Many
+        · i
+        · 208
+    209   Many
+        · i
+        · 209
+    210   Many
+        · i
+        · 210
+    211   Many
+        · i
+        · 211
+    212   Many
+        · i
+        · 212
+    213   Many
+        · i
+        · 213
+    214   Many
+        · i
+        · 214
+    215   Many
+        · i
+        · 215
+    216   Many
+        · i
+        · 216
+    217   Many
+        · i
+        · 217
+    218   Many
+        · i
+        · 218
+    219   Many
+        · i
+        · 219
+    220   Many
+        · i
+        · 220
+    221   Many
+        · i
+        · 221
+    222   Many
+        · i
+        · 222
+    223   Many
+        · i
+        · 223
+    224   Many
+        · i
+        · 224
+    225   Many
+        · i
+        · 225
+    226   Many
+        · i
+        · 226
+    227   Many
+        · i
+        · 227
+    228   Many
+        · i
+        · 228
+    229   Many
+        · i
+        · 229
+    230   Many
+        · i
+        · 230
+    231   Many
+        · i
+        · 231
+    232   Many
+        · i
+        · 232
+    233   Many
+        · i
+        · 233
+    234   Many
+        · i
+        · 234
+    235   Many
+        · i
+        · 235
+    236   Many
+        · i
+        · 236
+    237   Many
+        · i
+        · 237
+    238   Many
+        · i
+        · 238
+    239   Many
+        · i
+        · 239
+    240   Many
+        · i
+        · 240
+    241   Many
+        · i
+        · 241
+    242   Many
+        · i
+        · 242
+    243   Many
+        · i
+        · 243
+    244   Many
+        · i
+        · 244
+    245   Many
+        · i
+        · 245
+    246   Many
+        · i
+        · 246
+    247   Many
+        · i
+        · 247
+    248   Many
+        · i
+        · 248
+    249   Many
+        · i
+        · 249
+    250   Many
+        · i
+        · 250
+    251   Many
+        · i
+        · 251
+    252   Many
+        · i
+        · 252
+    253   Many
+        · i
+        · 253
+    254   Many
+        · i
+        · 254
+    255   Many
+        · i
+        · 255
+    256   Many
+        · i
+        · 256
+    257   Many
+        · i
+        · 257
+    258   Many
+        · i
+        · 258
+    259   Many
+        · i
+        · 259
+    260   Many
+        · i
+        · 260
+    261   Many
+        · i
+        · 261
+    262   Many
+        · i
+        · 262
+    263   Many
+        · i
+        · 263
+    264   Many
+        · i
+        · 264
+    265   Many
+        · i
+        · 265
+    266   Many
+        · i
+        · 266
+    267   Many
+        · i
+        · 267
+    268   Many
+        · i
+        · 268
+    269   Many
+        · i
+        · 269
+    270   Many
+        · i
+        · 270
+    271   Many
+        · i
+        · 271
+    272   Many
+        · i
+        · 272
+    273   Many
+        · i
+        · 273
+    274   Many
+        · i
+        · 274
+    275   Many
+        · i
+        · 275
+    276   Many
+        · i
+        · 276
+    277   Many
+        · i
+        · 277
+    278   Many
+        · i
+        · 278
+    279   Many
+        · i
+        · 279
+    280   Many
+        · i
+        · 280
+    281   Many
+        · i
+        · 281
+    282   Many
+        · i
+        · 282
+    283   Many
+        · i
+        · 283
+    284   Many
+        · i
+        · 284
+    285   Many
+        · i
+        · 285
+    286   Many
+        · i
+        · 286
+    287   Many
+        · i
+        · 287
+    288   Many
+        · i
+        · 288
+    289   Many
+        · i
+        · 289
+    290   Many
+        · i
+        · 290
+    291   Many
+        · i
+        · 291
+    292   Many
+        · i
+        · 292
+    293   Many
+        · i
+        · 293
+    294   Many
+        · i
+        · 294
+    295   Many
+        · i
+        · 295
+    296   Many
+        · i
+        · 296
+    297   Many
+        · i
+        · 297
+    298   Many
+        · i
+        · 298
+    299   Many
+        · i
+        · 299
+    s26/i0     GET /many-0                                   -> 0
+    s26/i2     GET /many-100                                 -> 100
+    s26/i4     GET /many-200                                 -> 200
+=== s27 F27 child outlives parent [Passed]
+    0     Parent27  [i0-i2] 2 calls
+      0.0   Child27  [i2]
+    1     Next27  [i4-i6] 2 calls
+    s27/i0     GET /in-Parent27                              -> 0
+    s27/i2     GET /in-Child27                               -> 0.0
+    s27/i4     GET /in-Next27                                -> 1
+    s27/i6     GET /after-all                                -> 1
+=== s28 F28 task run around steps top level [Passed]
+    0     R28  [i0-i6] 4 calls
+        · n
+        · a
+      0.0   R28  [i0-i4] 2 calls
+          · n
+          · c
+        0.0.0 R28  [i4]
+            · n
+            · b
+    s28/i0     GET /in-R28-c                                 -> 0.0
+    s28/i1     GET /in-R28-a                                 -> 0
+    s28/i4     GET /in-R28-b                                 -> 0.0.0
+    s28/i6     GET /after-all                                -> 0
+=== s29 F29 foreign call while one chain open [Passed]
+    0     P29  [i0-i2] 2 calls
+      0.0   K29  [i0-i2] 2 calls
+          · me
+          · (Probe.Flows.F29_Foreign_call_while_one_chain_open, 96d408e3791878d6658ed5e0072cb125da0772c3cfbbde0f…
+    s29/i0     GET /foreign-while-K29                        -> 0.0
+    s29/i2     GET /in-K29                                   -> 0.0
+=== s30 F30 foreign call between steps [Passed]
+    0     A30  [i0-i4] 3 calls
+    1     B30  [i6]
+    s30/i0     GET /in-A30                                   -> 0
+    s30/i2     GET /foreign-between                          -> 0
+    s30/i4     GET /between                                  -> 0
+    s30/i6     GET /in-B30                                   -> 1
+=== s31 F31 call before any step [Passed]
+    0     A31  [i2-i4] 2 calls
+     1 calls belong to no step (before the first step, or attribution was not trusted)
+    s31/i0     GET /before-any-step                          -> None
+    s31/i2     GET /in-A31                                   -> 0
+    s31/i4     GET /after-A31                                -> 0
+=== s32 F32 skip if false [Passed]
+    0     Maybe32  [i0]
+    1     Next32  [i2]
+    s32/i0     GET /in-Maybe32                               -> 0
+    s32/i2     GET /in-Next32                                -> 1
+=== s33 F33 task of T steps [Passed]
+    0     Gen33  [i0-i2] 2 calls
+      0.0   Sub gen33  [i2]
+    1     Next33  [i4]
+    s33/i0     GET /in-Gen33                                 -> 0
+    s33/i2     GET /in-SubGen33                              -> 0.0
+    s33/i4     GET /in-Next33                                -> 1
+=== s34 F34 failure with step left running [Failed]
+    0     Forever34  [i0]
+    1     Done34  [i1]
+    s34/i0     GET /in-Forever34                             -> 0
+    s34/i1     GET /in-Done34                                -> 1
+=== s35 G01 step on suppressed flow during a parent [Passed]
+    0     Parent1  [i0-i2] 2 calls
+      0.0   On other1  [i0]
+    s35/i0     GET /in-OnOther1                              -> 0.0
+    s35/i2     GET /in-Parent1                               -> 0
+=== s36 G02 foreign assertion and attachment while two kids run [Passed]
+  attachments: 1 on its steps · attachments s36
+    0     Parent2  [i0]
+      0.0   K2a
+      0.1   K2b
+          · me
+          · (Probe.Flows2.G02_Foreign_assertion_and_attachment_while_two_kids_run, 01a32ddfce1f1659e78fe0f78cdf4…
+          attachment: attach-from-foreign-flow → C:\Code\k225-review\flows\change\bin\Debug\net10.0\Reports\attachments\k225-foreign.txt
+      · 0.1.0 Assert-from-foreign-flow
+    s36/i0     GET /call-from-foreign-flow                   -> 0
+=== s37 G03 value task around a step [Passed]
+    0     Stepped3  [i0-i2] 2 calls
+        · w
+        · around
+    1     Stepped3  [i4-i6] 2 calls
+        · w
+        · wrap
+    s37/i0     GET /in-Stepped3-around                       -> 0
+    s37/i2     GET /in-Around3-after-step                    -> 0
+    s37/i4     GET /in-Stepped3-wrap                         -> 1
+    s37/i6     GET /after-all                                -> 1
+=== s38 G04a step runs into the next test [Passed]
+    0     Linger4  [i0]
+      0.0   Linger sub4
+    s38/i0     GET /in-G04a-body                             -> 0
+=== s39 G04b the next test [Passed]
+    0     Next4  [i0]
+    1     Next4b  [i2]
+    s39/i0     GET /in-Next4                                 -> 0
+    s39/i2     GET /in-Next4b                                -> 1
+=== s40 G05 when any loser [Passed]
+    0     Parent5  [i0-i6] 3 calls
+      0.0   Fast5  [i0]
+      0.1   Slow5  [i6]
+    1     After5  [i4-i8] 2 calls
+    s40/i0     GET /in-Fast5                                 -> 0.0
+    s40/i2     GET /in-Parent5-after-any                     -> 0
+    s40/i4     GET /in-After5                                -> 1
+    s40/i6     GET /in-Slow5                                 -> 0.1
+    s40/i8     GET /after-loser-ended                        -> 1
+=== s41 G06 nested when all [Passed]
+    0     Top6  [i0-i9] 6 calls
+      0.0   Mid6  [i2-i7] 3 calls
+          · m
+          · a
+        0.0.0 Leaf6  [i3]
+            · l
+            · a1
+        0.0.1 Leaf6  [i2]
+            · l
+            · a2
+      0.1   Mid6  [i0-i9] 3 calls
+          · m
+          · b
+        0.1.0 Leaf6  [i1]
+            · l
+            · b1
+        0.1.1 Leaf6  [i0]
+            · l
+            · b2
+    s41/i0     GET /in-Leaf6-b2                              -> 0.1.1
+    s41/i1     GET /in-Leaf6-b1                              -> 0.1.0
+    s41/i2     GET /in-Leaf6-a2                              -> 0.0.1
+    s41/i3     GET /in-Leaf6-a1                              -> 0.0.0
+    s41/i7     GET /in-Mid6-a                                -> 0.0
+    s41/i9     GET /in-Mid6-b                                -> 0.1
+=== s42 G07 parent fails kid runs on [Passed]
+  ✗ 0     Parent7  [i0-i4] 2 calls
+        Parent7 failed
+      0.0   Kid7  [i4]
+    1     Next7  [i2]
+    s42/i0     GET /in-Parent7                               -> 0
+    s42/i2     GET /in-Next7                                 -> 1
+    s42/i4     GET /in-Kid7                                  -> 0.0
+=== s43 G09 manual api across helpers [Passed]
+    0     Given manual-async  [i0-i4] 3 calls
+      0.0   Nested9  [i2]
+  ✗ 1     Then manual-sync  [i6-i8] 2 calls
+        manual failure
+    s43/i0     GET /in-manual                                -> 0
+    s43/i2     GET /in-Nested9                               -> 0.0
+    s43/i4     GET /after-manual                             -> 0
+    s43/i6     GET /in-manual-sync                           -> 1
+    s43/i8     GET /after-manual-sync                        -> 1
+=== s44 G10 manual overlap [Passed]
+    0     Given manual-one  [i0-i2] 2 calls
+      0.0   When manual-two
+    s44/i0     GET /in-one-after-two                         -> 0
+    s44/i2     GET /after-both                               -> 0
+=== s45 G11 straggler starts a step [Passed]
+    0     Start11
+    1     Next11  [i0-i2] 2 calls
+      1.0   Late11  [i0]
+    s45/i0     GET /in-Late11-started-by-Start11             -> 1.0
+    s45/i2     GET /in-Next11                                -> 1
+=== s46 G12 parallel sync top level two [Passed]
+    0     S12  [i0-i1] 2 calls
+        · n
+        · b
+      0.0   S12  [i1]
+          · n
+          · a
+    s46/i0     GET /in-S12-b                                 -> 0
+    s46/i1     GET /in-S12-a                                 -> 0.0
+=== s47 G13 keywords with overlap [Passed]
+    0     Given A13  [i1]
+    1     And B13  [i0]
+    2     When C13  [i4]
+    3     Then D13  [i6]
+    s47/i0     GET /in-GivenB13                              -> 1
+    s47/i1     GET /in-GivenA13                              -> 0
+    s47/i4     GET /in-WhenC13                               -> 2
+    s47/i6     GET /in-ThenD13                               -> 3
+=== s48 G14 sync skip if with sibling running [Passed]
+    0     Bg14  [i0-i2] 2 calls
+  ~ 1     Skipped14
+    s48/i0     GET /after-skip                               -> 0
+    s48/i2     GET /in-Bg14                                  -> 0
+=== s49 G15 unobserved sub step failure [Passed]
+    0     Parent15  [i0-i2] 2 calls
+    ✗ 0.0   Bad15  [i2]
+          unobserved
+    s49/i0     GET /in-Parent15                              -> 0
+    s49/i2     GET /in-Bad15                                 -> 0.0
+=== s50 G16 assertion after own step ended nothing open [Passed]
+  attachments: 1 of its own · attachments s50
+    0     Start16
+=== s51 G08 lifecycle [Passed]
+    0     In ctor  [i0]
+    1     In init  [i2]
+    2     Body  [i4]
+    3     In dispose async  [i6]
+    s51/i0     GET /in-ctor                                  -> 0
+    s51/i2     GET /in-init                                  -> 1
+    s51/i4     GET /in-body                                  -> 2
+    s51/i6     GET /in-dispose                               -> 3

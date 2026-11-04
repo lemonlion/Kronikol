@@ -1,0 +1,24 @@
+s19  Shapes › The first scenario's shared step has one sub-step  [Passed]  0.42s
+  b0    Given a shared step whose sub-steps depend on the scenario  0.05s  [i0]
+    b0.0  The same sub step  0.03s  [i0]
+  b1    When a later step runs  0.32s  [i2-i4] 2 calls
+  0     Then the shape is small
+3 calls · interactions s19 · flow s19
+step  path                calls errors   med
+b0.0  /same/small-one         1      0     8
+b1    /later-step/first       1      0     0
+b1    /later-step/second      1      0     0
+s20  Shapes › The second scenario's shared step has three sub-steps  [Passed]  0.49s
+  b0    Given a shared step whose sub-steps depend on the scenario  [i0-i4] 3 calls
+    b0.0  The same sub step  [i0]
+    b0.1  The same sub step  [i2]
+    b0.2  The same sub step  [i4]
+  b1    When a later step runs  0.43s  [i6-i8] 2 calls
+  0     Then the shape is big  0s
+5 calls · interactions s20 · flow s20
+step  path                calls errors   med
+b0.0  /same/big-one           1      0     0
+b0.1  /same/big-two           1      0     0
+b0.2  /same/big-three         1      0     0
+b1    /later-step/first       1      0     0
+b1    /later-step/second      1      0     0

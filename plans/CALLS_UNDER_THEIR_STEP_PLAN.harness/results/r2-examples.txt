@@ -1,0 +1,36 @@
+# 17 projects in C:\Code\Kronikol-225r2
+examples/Example.Api/tests/Example.Api.Tests.CiPreview.AllFailing/Example.Api.Tests.CiPreview.AllFailing.csproj (65 s) exit 1
+  Failed!  - Failed:    11, Passed:     0, Skipped:     0, Total:    11
+examples/Example.Api/tests/Example.Api.Tests.CiPreview.AllPassing/Example.Api.Tests.CiPreview.AllPassing.csproj (56 s) exit 0
+  Passed!  - Failed:     0, Passed:    11, Skipped:     0, Total:    11
+examples/Example.Api/tests/Example.Api.Tests.CiPreview.FailingWithSteps/Example.Api.Tests.CiPreview.FailingWithSteps.csproj (73 s) exit 1
+  Failed!  - Failed:     5, Passed:     1, Skipped:     0, Total:     6
+examples/Example.Api/tests/Example.Api.Tests.CiPreview.Mixed/Example.Api.Tests.CiPreview.Mixed.csproj (58 s) exit 1
+  Failed!  - Failed:    15, Passed:     5, Skipped:     0, Total:    20
+examples/Example.Api/tests/Example.Api.Tests.Component.BDDfy.xUnit3/Example.Api.Tests.Component.BDDfy.xUnit3.csproj (45 s) exit 0
+  Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2
+examples/Example.Api/tests/Example.Api.Tests.Component.LightBDD.TUnit/Example.Api.Tests.Component.LightBDD.TUnit.csproj (3 s) exit 1
+  ERROR C:\Users\cex\.nuget\packages\microsoft.testing.platform.msbuild\2.2.3\buildMultiTargeting\Microsoft.Testing.Platform.MSBuild.targets(263,5): error : Testing with VSTest target is no longer supported b
+examples/Example.Api/tests/Example.Api.Tests.Component.LightBDD.xUnit2/Example.Api.Tests.Component.LightBDD.xUnit2.csproj (46 s) exit 0
+  Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3
+examples/Example.Api/tests/Example.Api.Tests.Component.LightBDD.xUnit3/Example.Api.Tests.Component.LightBDD.xUnit3.csproj (47 s) exit 0
+  Passed!  - Failed:     0, Passed:     6, Skipped:     0, Total:     6
+examples/Example.Api/tests/Example.Api.Tests.Component.NUnit4/Example.Api.Tests.Component.NUnit4.csproj (41 s) exit 0
+  Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2
+examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.TUnit/Example.Api.Tests.Component.ReqNRoll.TUnit.csproj (3 s) exit 1
+  ERROR C:\Users\cex\.nuget\packages\microsoft.testing.platform.msbuild\2.2.3\buildMultiTargeting\Microsoft.Testing.Platform.MSBuild.targets(263,5): error : Testing with VSTest target is no longer supported b
+examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.xUnit2/Example.Api.Tests.Component.ReqNRoll.xUnit2.csproj (39 s) exit 0
+  Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2
+examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.xUnit3/Example.Api.Tests.Component.ReqNRoll.xUnit3.csproj (32 s) exit 0
+  Passed!  - Failed:     0, Passed:    11, Skipped:     0, Total:    11
+examples/Example.Api/tests/Example.Api.Tests.Component.Shared/Example.Api.Tests.Component.Shared.csproj (2 s) exit 0
+examples/Example.Api/tests/Example.Api.Tests.Component.TUnit/Example.Api.Tests.Component.TUnit.csproj (4 s) exit 1
+  ERROR C:\Users\cex\.nuget\packages\microsoft.testing.platform.msbuild\2.2.3\buildMultiTargeting\Microsoft.Testing.Platform.MSBuild.targets(263,5): error : Testing with VSTest target is no longer supported b
+examples/Example.Api/tests/Example.Api.Tests.Component.xUnit2/Example.Api.Tests.Component.xUnit2.csproj (19 s) exit 0
+  Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2
+examples/Example.Api/tests/Example.Api.Tests.Component.xUnit3/Example.Api.Tests.Component.xUnit3.csproj (17 s) exit 0
+  Passed!  - Failed:     0, Passed:     5, Skipped:     0, Total:     5
+examples/Example.Api/tests/Example.Api.Tests.Integration/Example.Api.Tests.Integration.csproj (1095 s) exit 0
+  Passed!  - Failed:     0, Passed:   259, Skipped:     0, Total:   259
+# done, 6 failures
+# The three TUnit projects refuse dotnet test on this SDK, as CI's own step says, and ran through dotnet run: TUnit 12 passed, LightBDD.TUnit 3, ReqNRoll.TUnit 2. The three CiPreview projects fail as they are written to.

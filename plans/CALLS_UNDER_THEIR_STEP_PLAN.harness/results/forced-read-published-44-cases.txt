@@ -1,0 +1,169 @@
+# 44 ingest cases with the attribution read forced. pub: published 5.28.2. r2: R2's second form as it stood before a fresh review changed it, kept for the published column; r2-forced-read-cases.txt has the final form.
+=== A-bg-text-in-first-bar
+  pub: flags {'StepAttributionMismatch': 2}
+    s0 /orders=b0 /confirm=-
+    s1 /orders=b0 /confirm=-
+  r2: flags {}
+    s0 /orders=0 /confirm=1
+    s1 /orders=0 /confirm=1
+=== B-assertion-before-first-step
+  pub: flags {'StepAttributionMismatch': 2}
+    s0 /basket=- /check=-
+  r2: flags {}
+    s0 /basket=1 /check=2
+=== C-retry
+  pub: flags {}  (all builds the same)
+    s0 /basket=0 /check=1
+=== D-step-with-no-text
+  pub: flags {'StepAttributionMismatch': 1}
+    s0 /a=- /b=1
+  r2: flags {}
+    s0 /a=0 /b=1
+=== E-capture-own-bars-hook-bar
+  pub: flags {'StepAttributionMismatch': 2}  (all builds the same)
+    s0 /seed=- /basket=- /check=-
+=== F-untimed-rows-own-bars-one-bar-differs
+  pub: flags {'StepAttributionMismatch': 1}  (all builds the same)
+    s0 /basket=0 /order=- /confirm=2
+=== G-shared-first-line-one-out
+  pub: flags {'StepAttributionMismatch': 3}  (all builds the same)
+    s0 /seed=- /cash=- /card=- /confirm=-
+=== H-shared-400-chars-one-out
+  pub: flags {'StepAttributionMismatch': 3}  (all builds the same)
+    s0 /seed=- /cash=- /card=- /confirm=-
+=== I-raw-bars-unescaped
+  pub: flags {}  (all builds the same)
+    s0 /read=0 /send=1 /confirm=2
+=== J-fold-false-match-one-out
+  pub: flags {'StepAttributionMismatch': 3}  (all builds the same)
+    s0 /seed=- /n=- /m=- /confirm=-
+=== K-control
+  pub: flags {}  (all builds the same)
+    s0 /basket=0 /check=1
+=== L-store-bars-with-background
+  pub: flags {}  (all builds the same)
+    s0 /shop=b0 /basket=0 /check=1
+    s1 /shop=b0 /basket=0 /check=1
+=== M-store-hook-bar-and-background
+  pub: flags {'StepAttributionMismatch': 3}  (all builds the same)
+    s0 /seed=- /shop=- /basket=- /check=-
+=== N-nested-doc-table
+  pub: flags {}  (all builds the same)
+    s0 /basket=0 /inner=0 /send=1 /check=2
+=== O-heuristic-bg-other-outcome
+  pub: flags {}  (all builds the same)
+    s0 /shop=b0 /check=0
+    s1 /shop=b0 /check=0
+    s2 /shop=b0 /check=0
+=== P-store-bg-bar-in-other-words
+  pub: flags {'StepAttributionMismatch': 1}  (all builds the same)
+    s0 /shop=- /customer=b1 /basket=0 /check=1
+=== Q-store-own-step-bar-in-other-words
+  pub: flags {'StepAttributionMismatch': 1}  (all builds the same)
+    s0 /shop=- /basket=1 /check=2
+=== R-bg-first-line-is-a-steps
+  pub: flags {'StepAttributionMismatch': 2}
+    s0 /card=- /confirm=-
+  r2: flags {}
+    s0 /card=0 /confirm=1
+=== S-bg-text-in-a-bar-once-folded
+  pub: flags {'StepAttributionMismatch': 2}
+    s0 /order=- /confirm=-
+  r2: flags {}
+    s0 /order=0 /confirm=1
+=== U-assertions-before-the-first-step
+  pub: flags {'StepAttributionMismatch': 2}
+    s0 /basket=- /check=-
+  r2: flags {}
+    s0 /basket=2 /check=3
+=== V-assertions-and-no-steps
+  pub: flags {}  (all builds the same)
+    s0 /basket=-
+=== W-file-per-scenario-on-a-shared-step
+  pub: flags NO REPORT 3762504530  (all builds the same)
+=== X1-marked-background
+  pub: flags {'StepAttributionMismatch': 2}
+    s0 /seed=- /basket=- /check=-
+  r2: flags {}
+    s0 /seed=- /basket=0 /check=1
+=== X2-two-rows-two-scenarios
+  pub: flags {'StepAttributionMismatch': 4}
+    s0 /seed=- /basket=- /check=-
+    s1 /seed=- /basket=- /check=-
+  r2: flags {}
+    s0 /seed=- /basket=0 /check=1
+    s1 /seed=- /basket=0 /check=1
+=== X3-assertion-first
+  pub: flags {'StepAttributionMismatch': 2}
+    s0 /basket=- /check=-
+  r2: flags {}
+    s0 /basket=1 /check=2
+=== X4-untimed-row-between
+  pub: flags {'StepAttributionMismatch': 3}
+    s0 /basket=- /send=- /check=-
+  r2: flags {}
+    s0 /basket=1 /send=2 /check=3
+=== X5-marked-background-text-in-the-bar
+  pub: flags {'StepAttributionMismatch': 1}
+    s0 /orders=b0 /confirm=-
+  r2: flags {}
+    s0 /orders=0 /confirm=1
+=== X6-no-text-and-a-background
+  pub: flags {'StepAttributionMismatch': 2}
+    s0 /a=- /b=-
+  r2: flags {}
+    s0 /a=0 /b=1
+=== Y1-store-draws-a-marked-background
+  pub: flags {}  (all builds the same)
+    s0 /seed=b0 /basket=0 /check=1
+=== Y2-store-with-assertion-first
+  pub: flags {'StepAttributionMismatch': 2}
+    s0 /basket=- /check=-
+  r2: flags {}
+    s0 /basket=1 /check=2
+=== Y3-store-with-untimed-rows
+  pub: flags {}  (all builds the same)
+    s0 /basket=0 /send=1
+=== Y4-plain
+  pub: flags {}  (all builds the same)
+    s0 /basket=0 /check=1
+=== S1-store-plain
+  pub: flags {}  (all builds the same)
+    s0 /shop=0 /basket=1 /check=2
+=== S10-store-nested
+  pub: flags {}  (all builds the same)
+    s0 /seed=0 /shop=0 /check=1
+=== S11-store-row-not-run
+  pub: flags {'StepAttributionMismatch': 2}  (all builds the same)
+    s0 /shop=- /check=-
+=== S12-store-same-text
+  pub: flags {}  (all builds the same)
+    s0 /one=0 /two=1 /check=2
+=== S2-store-background
+  pub: flags {}  (all builds the same)
+    s0 /shop=b0 /customer=b1 /basket=0 /check=1
+=== S3-store-untimed
+  pub: flags {}  (all builds the same)
+    s0 /shop=0 /basket=1 /check=2
+=== S4-store-escapes
+  pub: flags {'StepAttributionMismatch': 3}
+    s0 /long=- /read=- /send=- /confirm=3
+  r2: flags {}
+    s0 /long=0 /read=1 /send=2 /confirm=3
+=== S5-store-two-lines
+  pub: flags {'StepAttributionMismatch': 2}
+    s0 /cash=- /card=- /confirm=2
+  r2: flags {}
+    s0 /cash=0 /card=1 /confirm=2
+=== S6-store-hook-bar
+  pub: flags {'StepAttributionMismatch': 2}  (all builds the same)
+    s0 /seed=- /shop=- /basket=-
+=== S7-store-hook-bar-background
+  pub: flags {'StepAttributionMismatch': 3}  (all builds the same)
+    s0 /seed=- /shop=- /basket=- /check=-
+=== S8-store-outline-row
+  pub: flags {'StepAttributionMismatch': 1}  (all builds the same)
+    s0 /shop=- /basket=0 /check=1
+=== S9-store-outline-untimed
+  pub: flags {'StepAttributionMismatch': 1}  (all builds the same)
+    s0 /basket=0 /order=- /confirm=2

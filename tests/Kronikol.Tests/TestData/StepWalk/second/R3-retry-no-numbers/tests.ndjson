@@ -1,0 +1,9 @@
+{"event": "start", "testId": "s", "testName": "t", "feature": "F", "timestamp": "2026-11-04T10:00:00.010000Z"}
+{"event": "assertion", "testId": "s", "text": "ready", "status": "passed", "timestamp": "2026-11-04T10:00:00.020000Z"}
+{"event": "step", "testId": "s", "status": "passed", "durationMs": 1, "timestamp": "2026-11-04T10:00:00.030000Z", "keyword": "When", "text": "pay"}
+{"event": "end", "testId": "s", "status": "failed", "durationMs": 5, "timestamp": "2026-11-04T10:00:00.060000Z"}
+{"event": "start", "testId": "s", "testName": "t", "feature": "F", "timestamp": "2026-11-04T10:00:00.070000Z"}
+{"event": "assertion", "testId": "s", "text": "ready", "status": "passed", "timestamp": "2026-11-04T10:00:00.080000Z"}
+{"event": "step", "testId": "s", "status": "passed", "durationMs": 1, "timestamp": "2026-11-04T10:00:00.090000Z", "keyword": "When", "text": "pay"}
+{"event": "step", "testId": "s", "status": "passed", "durationMs": 1, "timestamp": "2026-11-04T10:00:00.120000Z", "keyword": "When", "text": "ship"}
+{"event": "end", "testId": "s", "status": "passed", "durationMs": 5, "timestamp": "2026-11-04T10:00:00.150000Z"}

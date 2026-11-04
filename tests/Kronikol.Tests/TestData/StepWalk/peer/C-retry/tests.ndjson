@@ -1,0 +1,7 @@
+{"event": "start", "testId": "c0", "testName": "retried", "feature": "F", "timestamp": "2026-11-03T10:00:00Z", "attempt": 1}
+{"event": "step", "testId": "c0", "status": "passed", "durationMs": 100, "attempt": 1, "keyword": "When", "text": "a basket", "timestamp": "2026-11-03T10:00:00.100000Z"}
+{"event": "end", "testId": "c0", "status": "failed", "durationMs": 500, "timestamp": "2026-11-03T10:00:00.300000Z", "attempt": 1, "error": "boom"}
+{"event": "start", "testId": "c0", "testName": "retried", "feature": "F", "timestamp": "2026-11-03T10:00:01Z", "attempt": 2}
+{"event": "step", "testId": "c0", "status": "passed", "durationMs": 100, "attempt": 2, "keyword": "When", "text": "a basket", "timestamp": "2026-11-03T10:00:01.100000Z"}
+{"event": "step", "testId": "c0", "status": "passed", "durationMs": 100, "attempt": 2, "keyword": "Then", "text": "it is empty", "timestamp": "2026-11-03T10:00:01.200000Z"}
+{"event": "end", "testId": "c0", "status": "passed", "durationMs": 500, "timestamp": "2026-11-03T10:00:01.500000Z", "attempt": 2}

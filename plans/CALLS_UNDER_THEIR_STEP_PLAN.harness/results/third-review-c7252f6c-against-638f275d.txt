@@ -1,0 +1,106 @@
+# The third review's probes on the final cut, #223's 638f275d with this plan's layer and R2 (after), against c7252f6c's dumps (before). scripts/compare_dumps.py, scripts/dump_diff.py.
+
+=== flows
+DIFF F05 parallel for each async in parent [Passed]
+DIFF F06 parallel for sync steps in parent [Passed]
+DIFF F07 parallel for sync steps top level [Passed]
+DIFF F23 assertion from detached after step ended [Passed]
+DIFF F24 attachment from sibling flows [Passed]
+DIFF F28 task run around steps top level [Passed]
+48 scenarios read the same, 6 differ
+--- F05: 18 lines, 18 lines; only before 8, only after 8; same lines in another order: False
+    - 0.0 Body5 [i3]
+    - 0.1 Body5 [i0]
+    - 0.2 Body5 [i1]
+    - 0.3 Body5 [i2]
+    - s4/i0 GET /in-Body5-0 -> 0.1
+    - s4/i1 GET /in-Body5-1 -> 0.2
+    - s4/i2 GET /in-Body5-2 -> 0.3
+    + 0.0 Body5 [i2]
+    + 0.1 Body5 [i1]
+    + 0.2 Body5 [i3]
+    + 0.3 Body5 [i0]
+    + s4/i0 GET /in-Body5-3 -> 0.3
+    + s4/i1 GET /in-Body5-2 -> 0.1
+    + s4/i2 GET /in-Body5-0 -> 0.0
+--- F06: 18 lines, 18 lines; only before 7, only after 7; same lines in another order: False
+    - 0.0 Body6 [i3]
+    - 0.1 Body6 [i0]
+    - 0.2 Body6 [i2]
+    - s5/i0 GET /in-Body6-1 -> 0.1
+    - s5/i1 GET /in-Body6-3 -> 0.3
+    - s5/i2 GET /in-Body6-2 -> 0.2
+    - s5/i3 GET /in-Body6-0 -> 0.0
+    + 0.0 Body6 [i0]
+    + 0.1 Body6 [i2]
+    + 0.2 Body6 [i3]
+    + s5/i0 GET /in-Body6-3 -> 0.0
+    + s5/i1 GET /in-Body6-2 -> 0.3
+    + s5/i2 GET /in-Body6-0 -> 0.1
+    + s5/i3 GET /in-Body6-1 -> 0.2
+--- F07: 17 lines, 17 lines; only before 6, only after 6; same lines in another order: False
+    - 0.0.0 Body7 [i2-i3] 2 calls
+    - 0.0.0.0 Body7 [i3]
+    - s6/i0 GET /in-Body7-2 -> 0.0
+    - s6/i1 GET /in-Body7-0 -> 0
+    - s6/i2 GET /in-Body7-1 -> 0.0.0
+    - s6/i3 GET /in-Body7-3 -> 0.0.0.0
+    + 0.0.0 Body7 [i0-i1] 2 calls
+    + 0.0.0.0 Body7 [i0]
+    + s6/i0 GET /in-Body7-2 -> 0.0.0.0
+    + s6/i1 GET /in-Body7-1 -> 0.0.0
+    + s6/i2 GET /in-Body7-3 -> 0
+    + s6/i3 GET /in-Body7-0 -> 0.0
+--- F23: 7 lines, 7 lines; only before 1, only after 1; same lines in another order: False
+    - attachment: attach-from-Starter23-detached → C:\Code\k225-review\flows\change\bin\Debug\net10.0\Reports\attachments\tmpl
+    + attachment: attach-from-Starter23-detached → C:\Code\k225-review\flows\change\bin\Debug\net10.0\Reports\attachments\tmpg
+--- F24: 7 lines, 7 lines; only before 2, only after 2; same lines in another order: False
+    - attachment: attach-in-A24 → C:\Code\k225-review\flows\change\bin\Debug\net10.0\Reports\attachments\tmpdaqcre.tmp
+    - attachment: attach-in-B24 → C:\Code\k225-review\flows\change\bin\Debug\net10.0\Reports\attachments\tmppcpelo.tmp
+    + attachment: attach-in-A24 → C:\Code\k225-review\flows\change\bin\Debug\net10.0\Reports\attachments\tmpkxmbl1.tmp
+    + attachment: attach-in-B24 → C:\Code\k225-review\flows\change\bin\Debug\net10.0\Reports\attachments\tmpavr5l4.tmp
+--- F28: 14 lines, 14 lines; only before 5, only after 5; same lines in another order: False
+    - 0.0 R28 [i0-i1] 2 calls
+    - 0.0.0 R28 [i0]
+    - s28/i0 GET /in-R28-b -> 0.0.0
+    - s28/i1 GET /in-R28-a -> 0.0
+    - s28/i2 GET /in-R28-c -> 0
+    + 0.0 R28 [i0-i2] 2 calls
+    + 0.0.0 R28 [i2]
+    + s28/i0 GET /in-R28-c -> 0.0
+    + s28/i1 GET /in-R28-a -> 0
+    + s28/i2 GET /in-R28-b -> 0.0.0
+
+=== hosts
+DIFF H06 host started in a sub step [Passed]
+DIFF H07 host started before any step [Passed]
+13 scenarios read the same, 2 differ
+--- H06: 14 lines, 14 lines; only before 2, only after 2; same lines in another order: False
+    - 0.0 Start in6 [i0]
+    - s5/i2 GET /loop-tick-1 -> 0
+    + 0.0 Start in6 [i0-i2] 2 calls
+    + s5/i2 GET /loop-tick-1 -> 0.0
+--- H07: 16 lines, 15 lines; only before 9, only after 8; same lines in another order: False
+    - 0 A7 [i4-i8] 3 calls
+    - 1 Parallel7 [i10-i18] 5 calls
+    - 1.0 B7 [i15]
+    - 1.1 C7 [i14]
+    - s6/i6 GET /loop-tick-3 -> 0
+    - s6/i8 GET /in-A7 -> 0
+    - s6/i14 GET /in-C7 -> 1.1
+    + 0 A7 [i4-i6] 2 calls
+    + 1 Parallel7 [i8-i14] 5 calls
+    + 1.0 B7 [i14]
+    + 1.1 C7 [i13]
+    + s6/i6 GET /in-A7 -> 0
+    + s6/i8 GET /loop-tick-3 -> 1
+    + s6/i13 GET /in-C7 -> 1.1
+
+=== reqnroll
+58 scenarios read the same, 0 differ
+
+=== lightbdd
+16 scenarios read the same, 0 differ
+
+=== bddfy
+16 scenarios read the same, 0 differ

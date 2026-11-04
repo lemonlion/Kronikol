@@ -1,0 +1,15 @@
+{"event": "start", "testId": "z0", "testName": "lifted 0", "feature": "F", "timestamp": "2026-11-03T10:00:00Z"}
+{"event": "step", "testId": "z0", "status": "passed", "durationMs": 100, "keyword": "Given", "text": "a shop"}
+{"event": "step", "testId": "z0", "status": "passed", "durationMs": 100, "keyword": "When", "text": "basket 0", "timestamp": "2026-11-03T10:00:00.100000Z"}
+{"event": "step", "testId": "z0", "status": "passed", "durationMs": 100, "keyword": "Then", "text": "it is empty 0", "timestamp": "2026-11-03T10:00:00.200000Z"}
+{"event": "end", "testId": "z0", "status": "passed", "durationMs": 500, "timestamp": "2026-11-03T10:00:00.500000Z"}
+{"event": "start", "testId": "z1", "testName": "lifted 1", "feature": "F", "timestamp": "2026-11-03T10:00:10Z"}
+{"event": "step", "testId": "z1", "status": "passed", "durationMs": 100, "keyword": "Given", "text": "a shop"}
+{"event": "step", "testId": "z1", "status": "passed", "durationMs": 100, "keyword": "When", "text": "basket 1", "timestamp": "2026-11-03T10:00:10.100000Z"}
+{"event": "step", "testId": "z1", "status": "passed", "durationMs": 100, "keyword": "Then", "text": "it is empty 1", "timestamp": "2026-11-03T10:00:10.200000Z"}
+{"event": "end", "testId": "z1", "status": "passed", "durationMs": 500, "timestamp": "2026-11-03T10:00:10.500000Z"}
+{"event": "start", "testId": "z2", "testName": "lifted 2", "feature": "F", "timestamp": "2026-11-03T10:00:20Z"}
+{"event": "step", "testId": "z2", "status": "passed", "durationMs": 100, "keyword": "Given", "text": "a shop"}
+{"event": "step", "testId": "z2", "status": "passed", "durationMs": 100, "keyword": "When", "text": "basket 2", "timestamp": "2026-11-03T10:00:20.100000Z"}
+{"event": "step", "testId": "z2", "status": "passed", "durationMs": 100, "keyword": "Then", "text": "it is empty 2", "timestamp": "2026-11-03T10:00:20.200000Z"}
+{"event": "end", "testId": "z2", "status": "passed", "durationMs": 500, "timestamp": "2026-11-03T10:00:20.500000Z"}

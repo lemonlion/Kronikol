@@ -1,0 +1,751 @@
+=== s0 B1 Baseline one [Passed]
+  at Probe.feature:7
+  open: TestRunReport.html#sid-bdcf5a62616e613a
+    0     Given a background step  [i0-i2] 2 calls
+      0.0   Sub bg
+    1     And a second background step  [i4]
+    2     When I act "one"  [i6-i10] 3 calls
+      2.0   Sub act
+          · who
+          · one
+    3     Then I check  [i12]
+    s0/i0      GET /in-bg1                                   -> 0
+    s0/i2      GET /in-SubBg                                 -> 0
+    s0/i4      GET /in-bg2                                   -> 1
+    s0/i6      GET /in-act-one                               -> 2
+    s0/i8      GET /in-SubAct-one                            -> 2
+    s0/i10     GET /in-act-after-one                         -> 2
+    s0/i12     GET /in-check                                 -> 3
+=== s1 B2 Baseline two [Passed]
+  at Probe.feature:11
+  open: TestRunReport.html#sid-9aaf3ce727982e9e
+    0     Given a background step  [i0-i2] 2 calls
+      0.0   Sub bg
+    1     And a second background step  [i4]
+    2     When I act "two"  [i6-i10] 3 calls
+      2.0   Sub act
+          · who
+          · two
+    3     Then I check  [i12]
+    s1/i0      GET /in-bg1                                   -> 0
+    s1/i2      GET /in-SubBg                                 -> 0
+    s1/i4      GET /in-bg2                                   -> 1
+    s1/i6      GET /in-act-two                               -> 2
+    s1/i8      GET /in-SubAct-two                            -> 2
+    s1/i10     GET /in-act-after-two                         -> 2
+    s1/i12     GET /in-check                                 -> 3
+=== s2 BF1 The background step fails here [Failed]
+  at BgFails.feature:8
+  open: TestRunReport.html#sid-c6aff5efd6433a9b
+    b0    Given a background step  [i0-i2] 2 calls
+      b0.0  Sub bg
+  ✗ b1    When a background step fails when tagged  [i4]
+    s2/i0      GET /in-bg1                                   -> b0
+    s2/i2      GET /in-SubBg                                 -> b0
+    s2/i4      GET /in-bgmaybefails                          -> b1
+=== s3 BF2 The background step passes here [Passed]
+  at BgFails.feature:11
+  open: TestRunReport.html#sid-877d0b87d44a97cf
+    b0    Given a background step  [i0-i2] 2 calls
+      b0.0  Sub bg
+  ✗ b1    When a background step fails when tagged  [i4]
+    0     Then I check  [i6]
+    s3/i0      GET /in-bg1                                   -> b0
+    s3/i2      GET /in-SubBg                                 -> b0
+    s3/i4      GET /in-bgmaybefails                          -> b1
+    s3/i6      GET /in-check                                 -> 0
+=== s4 BV1 The first scenario of the feature [Passed]
+  at BgVaries.feature:7
+  open: TestRunReport.html#sid-506120feb750b0b9
+    b0    Given a background step that varies  [i0]
+      b0.0  Always
+    b1    When I act "v"  [i2-i6] 3 calls
+      b1.0  Sub act
+          · who
+          · v
+    0     Then I check  [i8]
+    s4/i0      GET /in-Always                                -> b0
+    s4/i2      GET /in-act-v                                 -> b1
+    s4/i4      GET /in-SubAct-v                              -> b1
+    s4/i6      GET /in-act-after-v                           -> b1
+    s4/i8      GET /in-check                                 -> 0
+=== s5 BV2 This scenario runs one more sub step in the shared background [Passed]
+  at BgVaries.feature:11
+  open: TestRunReport.html#sid-55a5177ab3c267c9
+    b0    Given a background step that varies  [i0-i2] 2 calls
+      b0.0  Always
+    b1    When I act "v"  [i4-i8] 3 calls
+      b1.0  Sub act
+          · who
+          · v
+    0     Then I check again  [i10]
+    s5/i0      GET /in-OnlySecond                            -> b0
+    s5/i2      GET /in-Always                                -> b0
+    s5/i4      GET /in-act-v                                 -> b1
+    s5/i6      GET /in-SubAct-v                              -> b1
+    s5/i8      GET /in-act-after-v                           -> b1
+    s5/i10     GET /in-check2                                -> 0
+=== s6 X1 A step throws [Failed]
+  at Fails.feature:3
+  open: TestRunReport.html#sid-a24438c7160beb40
+    0     Given a plain given  [i0]
+  ✗ 1     When a step throws  [i2]
+    s6/i0      GET /in-plain                                 -> 0
+    s6/i2      GET /in-throws                                -> 1
+=== s7 X2 A step method inside a step throws [Failed]
+  at Fails.feature:9
+  open: TestRunReport.html#sid-a2ef2391772fc465
+    0     Given a plain given  [i0]
+  ✗ 1     When a step's sub step throws  [i2-i4] 2 calls
+    ✗ 1.0   Bad
+          the sub step threw
+    s7/i0      GET /in-plain                                 -> 0
+    s7/i2      GET /in-subthrows                             -> 1
+    s7/i4      GET /in-Bad                                   -> 1
+=== s8 X3 A step is undefined [Skipped]
+  at Fails.feature:14
+  open: TestRunReport.html#sid-07250f62004bdddb
+    0     Given a plain given  [i0]
+    s8/i0      GET /in-plain                                 -> 0
+=== s9 X4 A step is pending [Skipped]
+  at Fails.feature:19
+  open: TestRunReport.html#sid-67be76093a76f92a
+    0     Given a plain given  [i0]
+    1     When a step is pending  [i2]
+    s9/i0      GET /in-plain                                 -> 0
+    s9/i2      GET /in-pending                               -> 1
+=== s10 X5 The first step is undefined [Skipped]
+  at Fails.feature:24
+  open: TestRunReport.html#sid-25601dac2b8427d5
+=== s11 X6 A sub step fails and the step catches it [Passed]
+  at Fails.feature:28
+  open: TestRunReport.html#sid-44c9b7402e001450
+    0     Given a plain given  [i0]
+    1     When a step catches its sub step's failure  [i2-i4] 2 calls
+    ✗ 1.0   Bad
+          the sub step threw
+    2     Then I check  [i6]
+    s11/i0     GET /in-plain                                 -> 0
+    s11/i2     GET /in-Bad                                   -> 1
+    s11/i4     GET /in-catches-after                         -> 1
+    s11/i6     GET /in-check                                 -> 2
+=== s12 X7 A step throws after a sub step passed [Failed]
+  at Fails.feature:33
+  open: TestRunReport.html#sid-f260b7d0142a9346
+    0     Given a plain given  [i0]
+  ✗ 1     When a step throws after a sub step  [i2-i4] 2 calls
+      1.0   Sub ok
+    s12/i0     GET /in-plain                                 -> 0
+    s12/i2     GET /in-SubOk                                 -> 1
+    s12/i4     GET /in-throwsafter                           -> 1
+=== s13 X8 An ambiguous step [Failed]
+  at Fails.feature:38
+  open: TestRunReport.html#sid-3f6d10e03276e250
+    0     Given a plain given  [i0]
+    s13/i0     GET /in-plain                                 -> 0
+=== s14 L1 Parallel sub steps in a step [Passed]
+  at Flows.feature:3
+  open: TestRunReport.html#sid-b13f7b755415a564
+    0     Given a step runs two sub steps at once  [i0-i4] 3 calls
+      0.0   K1
+        0.0.0 K2
+    1     Then I check  [i6]
+    s14/i0     GET /in-K1                                    -> 0
+    s14/i2     GET /in-K2                                    -> 0
+    s14/i4     GET /in-TwoAtOnce-after                       -> 0
+    s14/i6     GET /in-check                                 -> 1
+=== s15 L2 A task started in one Gherkin step calls in the next [Passed]
+  at Flows.feature:7
+  open: TestRunReport.html#sid-0f6b6ee759464c29
+    0     Given a step starts a task
+    1     When the task is released  [i0-i2] 2 calls
+    2     Then I check  [i4]
+    s15/i0     GET /detached-from-given                      -> 1
+    s15/i2     GET /in-release                               -> 1
+    s15/i4     GET /in-check                                 -> 2
+=== s16 L3 A sub step left running into the next Gherkin step [Passed]
+  at Flows.feature:12
+  open: TestRunReport.html#sid-cc3fad2f9e72527b
+    0     Given a step leaves a sub step running  [i0-i4] 3 calls
+      0.0   Left
+          · go
+          · System.Threading.Tasks.TaskCompletionSource
+      0.1   When the left sub step calls
+    1     When the left sub step calls
+    2     Then I check
+     1 calls belong to no step (before the first step, or attribution was not trusted)
+    s16/i0     GET /in-leaves                                -> 0
+    s16/i2     GET /in-Left-after-given-ended                -> 0
+    s16/i4     GET /in-leftcalls                             -> 0
+    s16/i6     GET /in-check                                 -> None
+=== s17 L4 A sync SkipIf inside a step [Passed]
+  at Flows.feature:17
+  open: TestRunReport.html#sid-cf3ae4896841e7ce
+    0     Given a step with a sync bypass  [i0-i2] 2 calls
+    ~ 0.0   Maybe S
+          bypassed: no
+    1     Then I check
+     3 calls belong to no step (before the first step, or attribution was not trusted)
+    s17/i0     GET /in-syncbypass-before                     -> 0
+    s17/i2     GET /in-syncbypass-after                      -> 0
+    s17/i4     GET /in-SubOk                                 -> None
+    s17/i6     GET /in-syncbypass-end                        -> None
+    s17/i8     GET /in-check                                 -> None
+=== s18 L5 An async SkipIf inside a step [Passed]
+  at Flows.feature:21
+  open: TestRunReport.html#sid-a5a0c35f79ca53a8
+    0     Given a step with an async bypass  [i0-i2] 2 calls
+    ~ 0.0   Maybe a
+          bypassed: no
+    1     Then I check
+     3 calls belong to no step (before the first step, or attribution was not trusted)
+    s18/i0     GET /in-asyncbypass-before                    -> 0
+    s18/i2     GET /in-asyncbypass-after                     -> 0
+    s18/i4     GET /in-SubOk                                 -> None
+    s18/i6     GET /in-asyncbypass-end                       -> None
+    s18/i8     GET /in-check                                 -> None
+=== s19 L6 Attachments everywhere [Passed]
+  at Flows.feature:25
+  open: TestRunReport.html#sid-1ff9d8f5ba6240a9
+  attachments: 3 on its steps · attachments s19
+    0     Given a step attaches
+        attachment: rn-output-helper.txt → C:\Code\k225-review\rn-xunit3\control\bin\Debug\net10.0\Reports\attachments\rn-output-helper.txt
+        attachment: rn-track → C:\Code\k225-review\rn-xunit3\control\bin\Debug\net10.0\Reports\attachments\rn-track.txt
+      0.0   Sub attach
+          attachment: rn-sub → C:\Code\k225-review\rn-xunit3\control\bin\Debug\net10.0\Reports\attachments\rn-sub.txt
+    1     Then I check  [i0]
+    s19/i0     GET /in-check                                 -> 1
+=== s20 L7 Assertion in a step [Passed]
+  at Flows.feature:29
+  open: TestRunReport.html#sid-24e51a16d3dd7e3c
+    0     Given a step asserts
+    · 0.0   Assert-in-gherkin
+      0.1   Sub assert
+      · 0.1.0 Assert-in-sub
+    · 0.2   Assert-in-gherkin-after
+    1     Then I check  [i0]
+    s20/i0     GET /in-check                                 -> 1
+=== s21 L8 Async SkipIf then a failure in the same step [Failed]
+  at Flows.feature:33
+  open: TestRunReport.html#sid-6ba022aee8847977
+  ✗ 0     Given a step with an async bypass then a failure  [i0]
+    ~ 0.0   Maybe a
+          bypassed: no
+    s21/i0     GET /in-asyncbypassf-after                    -> 0
+=== s22 L9 Outline rows [Passed]
+  at Flows.feature:37
+  open: TestRunReport.html#sid-2138065823305095
+  example: row=r1
+    0     Given a plain given  [i0]
+    1     When I act "r1"  [i2-i6] 3 calls
+      1.0   Sub act
+          · who
+          · r1
+    2     Then I check  [i8]
+    s22/i0     GET /in-plain                                 -> 0
+    s22/i2     GET /in-act-r1                                -> 1
+    s22/i4     GET /in-SubAct-r1                             -> 1
+    s22/i6     GET /in-act-after-r1                          -> 1
+    s22/i8     GET /in-check                                 -> 2
+=== s23 L9 Outline rows [Passed]
+  at Flows.feature:37
+  open: TestRunReport.html#sid-e218f454a2e71990
+  example: row=r2
+    0     Given a plain given  [i0]
+    1     When I act "r2"  [i2-i6] 3 calls
+      1.0   Sub act
+          · who
+          · r2
+    2     Then I check  [i8]
+    s23/i0     GET /in-plain                                 -> 0
+    s23/i2     GET /in-act-r2                                -> 1
+    s23/i4     GET /in-SubAct-r2                             -> 1
+    s23/i6     GET /in-act-after-r2                          -> 1
+    s23/i8     GET /in-check                                 -> 2
+=== s24 L9 Outline rows [Passed]
+  at Flows.feature:37
+  open: TestRunReport.html#sid-838efa46469fd23f
+  example: row=r3
+    0     Given a plain given  [i0]
+    1     When I act "r3"  [i2-i6] 3 calls
+      1.0   Sub act
+          · who
+          · r3
+    2     Then I check  [i8]
+    s24/i0     GET /in-plain                                 -> 0
+    s24/i2     GET /in-act-r3                                -> 1
+    s24/i4     GET /in-SubAct-r3                             -> 1
+    s24/i6     GET /in-act-after-r3                          -> 1
+    s24/i8     GET /in-check                                 -> 2
+=== s25 HA1 Async BeforeStep and AfterStep hooks run step methods and attach [Passed]
+  at HookAsync.feature:4
+  open: TestRunReport.html#sid-e2bd6b0161a84b19
+    0     Given a plain given  [i0-i6] 4 calls
+      0.0   Hook step async
+      0.1   Hook step async
+    1     When I act "ha1"  [i8-i18] 6 calls
+      1.0   Hook step async
+      1.1   Sub act
+          · who
+          · ha1
+      1.2   Hook step async
+    s25/i0     GET /in-HookStepAsync                         -> 0
+    s25/i2     GET /in-plain                                 -> 0
+    s25/i4     GET /in-HookStepAsync                         -> 0
+    s25/i6     GET /in-async-AfterStep-hook                  -> 0
+    s25/i8     GET /in-HookStepAsync                         -> 1
+    s25/i10    GET /in-act-ha1                               -> 1
+    s25/i12    GET /in-SubAct-ha1                            -> 1
+    s25/i14    GET /in-act-after-ha1                         -> 1
+    s25/i16    GET /in-HookStepAsync                         -> 1
+    s25/i18    GET /in-async-AfterStep-hook                  -> 1
+=== s26 HA2 An AfterStep hook runs a step method then throws [Failed]
+  at HookAsync.feature:9
+  open: TestRunReport.html#sid-d51fa2298b063148
+     2 calls belong to no step (before the first step, or attribution was not trusted)
+    s26/i0     GET /in-plain                                 -> None
+    s26/i2     GET /in-HookStep                              -> None
+=== s27 HA3 A BeforeStep hook's step method fails [Failed]
+  at HookAsync.feature:14
+  open: TestRunReport.html#sid-7e3d88abb085cab3
+  ✗ 0     Given a plain given  [i0]
+    ✗ 0.0   Bad hook step
+          hook's step method failed
+    s27/i0     GET /in-BadHookStep                           -> 0
+=== s28 HA4 An AfterScenario hook attaches and asserts [Passed]
+  at HookAsync.feature:19
+  open: TestRunReport.html#sid-e78c48845f34367b
+  attachments: 1 of its own · attachments s28
+    0     Given a plain given  [i0]
+    s28/i0     GET /in-plain                                 -> 0
+=== s29 HA5 A BeforeScenario hook attaches and asserts [Passed]
+  at HookAsync.feature:23
+  open: TestRunReport.html#sid-a65b9209253f5756
+  attachments: 1 of its own · attachments s29
+    0     Given a plain given  [i0]
+    s29/i0     GET /in-plain                                 -> 0
+=== s30 HA6 BeforeStep and AfterStep hooks attach and assert [Passed]
+  at HookAsync.feature:27
+  open: TestRunReport.html#sid-197ed7d7676e307c
+  attachments: 2 on its steps · attachments s30
+    0     Given a plain given  [i0]
+        attachment: rn-beforestep → C:\Code\k225-review\rn-xunit3\control\bin\Debug\net10.0\Reports\attachments\rn-beforestep.txt
+        attachment: rn-afterstep → C:\Code\k225-review\rn-xunit3\control\bin\Debug\net10.0\Reports\attachments\rn-afterstep.txt
+    · 0.0   Assert-in-BeforeStep
+    · 0.1   Assert-in-AfterStep
+    s30/i0     GET /in-plain                                 -> 0
+=== s31 HB1 A hook's step method ahead of a shared background [Passed]
+  at HookBg.feature:7
+  open: TestRunReport.html#sid-f2194ec7a0c83055
+    0     Given a background step
+    1     When I act "hb1"
+      1.0   Sub bg
+    2     Then I check
+      2.0   Sub act
+          · who
+          · hb1
+     7 calls belong to no step (before the first step, or attribution was not trusted)
+    s31/i0     GET /in-KeywordedHookStep                     -> None
+    s31/i2     GET /in-bg1                                   -> None
+    s31/i4     GET /in-SubBg                                 -> None
+    s31/i6     GET /in-act-hb1                               -> None
+    s31/i8     GET /in-SubAct-hb1                            -> None
+    s31/i10    GET /in-act-after-hb1                         -> None
+    s31/i12    GET /in-check                                 -> None
+=== s32 HB2 A hook's step method ahead of a shared background [Passed]
+  at HookBg.feature:11
+  open: TestRunReport.html#sid-6285657be0709032
+    0     Given a background step
+    1     When I act "hb2"
+      1.0   Sub bg
+    2     Then I check
+      2.0   Sub act
+          · who
+          · hb2
+     7 calls belong to no step (before the first step, or attribution was not trusted)
+    s32/i0     GET /in-KeywordedHookStep                     -> None
+    s32/i2     GET /in-bg1                                   -> None
+    s32/i4     GET /in-SubBg                                 -> None
+    s32/i6     GET /in-act-hb2                               -> None
+    s32/i8     GET /in-SubAct-hb2                            -> None
+    s32/i10    GET /in-act-after-hb2                         -> None
+    s32/i12    GET /in-check                                 -> None
+=== s33 HR1 A hook step ahead of a real background [Passed]
+  at HookBgReal.feature:8
+  open: TestRunReport.html#sid-ee65ef2952fcb1cc
+    b0    Given a background step
+    b1    When I act "hbr"
+      b1.0  Sub bg
+    0     Then I check
+      0.0   Sub act
+          · who
+          · hbr
+     7 calls belong to no step (before the first step, or attribution was not trusted)
+    s33/i0     GET /in-KeywordedHookStep                     -> None
+    s33/i2     GET /in-bg1                                   -> None
+    s33/i4     GET /in-SubBg                                 -> None
+    s33/i6     GET /in-act-hbr                               -> None
+    s33/i8     GET /in-SubAct-hbr                            -> None
+    s33/i10    GET /in-act-after-hbr                         -> None
+    s33/i12    GET /in-check                                 -> None
+=== s34 HR2 A hook step ahead of a real background [Passed]
+  at HookBgReal.feature:11
+  open: TestRunReport.html#sid-54656fbb1c365ec4
+    b0    Given a background step
+    b1    When I act "hbr"
+      b1.0  Sub bg
+    0     Then I check again
+      0.0   Sub act
+          · who
+          · hbr
+     7 calls belong to no step (before the first step, or attribution was not trusted)
+    s34/i0     GET /in-KeywordedHookStep                     -> None
+    s34/i2     GET /in-bg1                                   -> None
+    s34/i4     GET /in-SubBg                                 -> None
+    s34/i6     GET /in-act-hbr                               -> None
+    s34/i8     GET /in-SubAct-hbr                            -> None
+    s34/i10    GET /in-act-after-hbr                         -> None
+    s34/i12    GET /in-check2                                -> None
+=== s35 H1 BeforeScenario hook runs a step method [Passed]
+  at Hooks.feature:4
+  open: TestRunReport.html#sid-990e49235d396d01
+    0     Given a plain given
+    1     When I act "h1"
+    2     Then I check
+      2.0   Sub act
+          · who
+          · h1
+     6 calls belong to no step (before the first step, or attribution was not trusted)
+    s35/i0     GET /in-HookStep                              -> None
+    s35/i2     GET /in-plain                                 -> None
+    s35/i4     GET /in-act-h1                                -> None
+    s35/i6     GET /in-SubAct-h1                             -> None
+    s35/i8     GET /in-act-after-h1                          -> None
+    s35/i10    GET /in-check                                 -> None
+=== s36 H10 BeforeStep hook throws [Failed]
+  at Hooks.feature:53
+  open: TestRunReport.html#sid-6f8f7b52119bc193
+  ✗ 0     Given a plain given  [i0]
+    s36/i0     GET /in-throwing-BeforeStep                   -> 0
+=== s37 H11 AfterStep hook throws [Failed]
+  at Hooks.feature:59
+  open: TestRunReport.html#sid-b73779b7e52803e2
+     2 calls belong to no step (before the first step, or attribution was not trusted)
+    s37/i0     GET /in-plain                                 -> None
+    s37/i2     GET /in-throwing-AfterStep                    -> None
+=== s38 H13 BeforeScenario step method fails and fails the hook [Failed]
+  at Hooks.feature:70
+  open: TestRunReport.html#sid-ee91d6a9b0b9ddb4
+     1 calls belong to no step (before the first step, or attribution was not trusted)
+    s38/i0     GET /in-BadHookStep                           -> None
+=== s39 H2 Async BeforeScenario hook runs a step method [Passed]
+  at Hooks.feature:10
+  open: TestRunReport.html#sid-51fe76f509a13114
+    0     Given a plain given
+    1     When I act "h2"
+    2     Then I check
+      2.0   Sub act
+          · who
+          · h2
+     6 calls belong to no step (before the first step, or attribution was not trusted)
+    s39/i0     GET /in-HookStepAsync                         -> None
+    s39/i2     GET /in-plain                                 -> None
+    s39/i4     GET /in-act-h2                                -> None
+    s39/i6     GET /in-SubAct-h2                             -> None
+    s39/i8     GET /in-act-after-h2                          -> None
+    s39/i10    GET /in-check                                 -> None
+=== s40 H3 AfterScenario hook runs a step method [Passed]
+  at Hooks.feature:16
+  open: TestRunReport.html#sid-ccdf51748c59ba60
+    0     Given a plain given  [i0]
+    1     When I act "h3"  [i2-i6] 3 calls
+      1.0   Sub act
+          · who
+          · h3
+     1 calls belong to no step (before the first step, or attribution was not trusted)
+    s40/i0     GET /in-plain                                 -> 0
+    s40/i2     GET /in-act-h3                                -> 1
+    s40/i4     GET /in-SubAct-h3                             -> 1
+    s40/i6     GET /in-act-after-h3                          -> 1
+    s40/i8     GET /in-HookStep                              -> None
+=== s41 H4 BeforeStep hook runs a step method [Passed]
+  at Hooks.feature:21
+  open: TestRunReport.html#sid-019ac7c9a5bf45f5
+    0     Given a plain given  [i0-i2] 2 calls
+      0.0   Hook step
+    1     When I act "h4"  [i4-i10] 4 calls
+      1.0   Hook step
+      1.1   Sub act
+          · who
+          · h4
+    s41/i0     GET /in-HookStep                              -> 0
+    s41/i2     GET /in-plain                                 -> 0
+    s41/i4     GET /in-HookStep                              -> 1
+    s41/i6     GET /in-act-h4                                -> 1
+    s41/i8     GET /in-SubAct-h4                             -> 1
+    s41/i10    GET /in-act-after-h4                          -> 1
+=== s42 H5 AfterStep hook runs a step method [Passed]
+  at Hooks.feature:26
+  open: TestRunReport.html#sid-bbb11516e7acd7e7
+    0     Given a plain given  [i0-i2] 2 calls
+      0.0   Hook step
+    1     When I act "h5"  [i4-i10] 4 calls
+      1.0   Sub act
+          · who
+          · h5
+      1.1   Hook step
+    s42/i0     GET /in-plain                                 -> 0
+    s42/i2     GET /in-HookStep                              -> 0
+    s42/i4     GET /in-act-h5                                -> 1
+    s42/i6     GET /in-SubAct-h5                             -> 1
+    s42/i8     GET /in-act-after-h5                          -> 1
+    s42/i10    GET /in-HookStep                              -> 1
+=== s43 H6 Every hook makes a call [Passed]
+  at Hooks.feature:31
+  open: TestRunReport.html#sid-606d0de148313288
+    0     Given a plain given  [i2-i6] 3 calls
+    1     When I act "h6"  [i8-i18] 6 calls
+      1.0   Sub act
+          · who
+          · h6
+     1 calls belong to no step (before the first step, or attribution was not trusted)
+    s43/i0     GET /in-BeforeScenario-hook                   -> None
+    s43/i2     GET /in-BeforeStep-hook                       -> 0
+    s43/i4     GET /in-plain                                 -> 0
+    s43/i6     GET /in-AfterStep-hook                        -> 0
+    s43/i8     GET /in-BeforeStep-hook                       -> 1
+    s43/i10    GET /in-act-h6                                -> 1
+    s43/i12    GET /in-SubAct-h6                             -> 1
+    s43/i14    GET /in-act-after-h6                          -> 1
+    s43/i16    GET /in-AfterStep-hook                        -> 1
+    s43/i18    GET /in-AfterScenario-hook                    -> 1
+=== s44 H7 BeforeScenario step method fails and the hook catches it [Passed]
+  at Hooks.feature:36
+  open: TestRunReport.html#sid-196b1a93804df74d
+    0     Given a plain given
+    1     When I act "h7"
+    2     Then I check
+      2.0   Sub act
+          · who
+          · h7
+     6 calls belong to no step (before the first step, or attribution was not trusted)
+    s44/i0     GET /in-BadHookStep                           -> None
+    s44/i2     GET /in-plain                                 -> None
+    s44/i4     GET /in-act-h7                                -> None
+    s44/i6     GET /in-SubAct-h7                             -> None
+    s44/i8     GET /in-act-after-h7                          -> None
+    s44/i10    GET /in-check                                 -> None
+=== s45 H8 BeforeScenario hook leaves a step method running [Passed]
+  at Hooks.feature:42
+  open: TestRunReport.html#sid-f1657e1b04e012b9
+    0     Given a plain given
+      0.0   Given a plain given
+      0.1   When I act "h8"
+        0.1.0 Sub act
+            · who
+            · h8
+      0.2   Then I check
+    1     When I act "h8"
+    2     Then I check
+     6 calls belong to no step (before the first step, or attribution was not trusted)
+    s45/i0     GET /in-RunningHookStep                       -> None
+    s45/i1     GET /in-plain                                 -> None
+    s45/i4     GET /in-act-h8                                -> None
+    s45/i6     GET /in-SubAct-h8                             -> None
+    s45/i8     GET /in-act-after-h8                          -> None
+    s45/i10    GET /in-check                                 -> None
+=== s46 H9 BeforeScenario hook throws [Failed]
+  at Hooks.feature:48
+  open: TestRunReport.html#sid-1c66f44b5e046507
+     1 calls belong to no step (before the first step, or attribution was not trusted)
+    s46/i0     GET /in-throwing-BeforeScenario               -> None
+=== s47 OH1 Only this scenario's hook runs a step method [Passed]
+  at OneHook.feature:8
+  open: TestRunReport.html#sid-c8d0189766b00558
+    b0    Given a background step
+    b1    When I act "oh"
+      b1.0  Sub bg
+    0     Then I check
+      0.0   Sub act
+          · who
+          · oh
+     7 calls belong to no step (before the first step, or attribution was not trusted)
+    s47/i0     GET /in-KeywordedHookStep                     -> None
+    s47/i2     GET /in-bg1                                   -> None
+    s47/i4     GET /in-SubBg                                 -> None
+    s47/i6     GET /in-act-oh                                -> None
+    s47/i8     GET /in-SubAct-oh                             -> None
+    s47/i10    GET /in-act-after-oh                          -> None
+    s47/i12    GET /in-check                                 -> None
+=== s48 OH2 This one has no such hook [Passed]
+  at OneHook.feature:11
+  open: TestRunReport.html#sid-5dc1b4268983f766
+    b0    Given a background step  [i0-i2] 2 calls
+    b1    When I act "oh"  [i4-i8] 3 calls
+      b1.0  Sub bg
+    0     Then I check again  [i10]
+    s48/i0     GET /in-bg1                                   -> b0
+    s48/i2     GET /in-SubBg                                 -> b0
+    s48/i4     GET /in-act-oh                                -> b1
+    s48/i6     GET /in-SubAct-oh                             -> b1
+    s48/i8     GET /in-act-after-oh                          -> b1
+    s48/i10    GET /in-check2                                -> 0
+=== s49 P1 Common prefix one [Passed]
+  at Prefix.feature:3
+  open: TestRunReport.html#sid-d6cb2b5932235920
+    0     Given a shared given  [i0-i2] 2 calls
+      0.0   Sub sh
+    1     And a second shared given  [i4]
+    2     When I act "p1"  [i6-i10] 3 calls
+      2.0   Sub act
+          · who
+          · p1
+    3     Then I check  [i12]
+    s49/i0     GET /in-shared1                               -> 0
+    s49/i2     GET /in-SubSh                                 -> 0
+    s49/i4     GET /in-shared2                               -> 1
+    s49/i6     GET /in-act-p1                                -> 2
+    s49/i8     GET /in-SubAct-p1                             -> 2
+    s49/i10    GET /in-act-after-p1                          -> 2
+    s49/i12    GET /in-check                                 -> 3
+=== s50 P2 Common prefix two [Passed]
+  at Prefix.feature:9
+  open: TestRunReport.html#sid-4b2fb77bb248a5a9
+    0     Given a shared given  [i0-i2] 2 calls
+      0.0   Sub sh
+    1     And a second shared given  [i4]
+    2     When I act "p2"  [i6-i10] 3 calls
+      2.0   Sub act
+          · who
+          · p2
+    3     Then I check  [i12]
+    s50/i0     GET /in-shared1                               -> 0
+    s50/i2     GET /in-SubSh                                 -> 0
+    s50/i4     GET /in-shared2                               -> 1
+    s50/i6     GET /in-act-p2                                -> 2
+    s50/i8     GET /in-SubAct-p2                             -> 2
+    s50/i10    GET /in-act-after-p2                          -> 2
+    s50/i12    GET /in-check                                 -> 3
+=== s51 RB1 Shares a background [Passed]
+  at RealBg.feature:7
+  open: TestRunReport.html#sid-22ecd4b10466eb9a
+    b0    Given a background step  [i0-i2] 2 calls
+      b0.0  Sub bg
+    b1    When I act "bg"  [i4-i8] 3 calls
+      b1.0  Sub act
+          · who
+          · bg
+    0     Then I check  [i10]
+    s51/i0     GET /in-bg1                                   -> b0
+    s51/i2     GET /in-SubBg                                 -> b0
+    s51/i4     GET /in-act-bg                                -> b1
+    s51/i6     GET /in-SubAct-bg                             -> b1
+    s51/i8     GET /in-act-after-bg                          -> b1
+    s51/i10    GET /in-check                                 -> 0
+=== s52 RB2 Shares a background [Passed]
+  at RealBg.feature:10
+  open: TestRunReport.html#sid-1db9ae130afb1ef6
+    b0    Given a background step  [i0-i2] 2 calls
+      b0.0  Sub bg
+    b1    When I act "bg"  [i4-i8] 3 calls
+      b1.0  Sub act
+          · who
+          · bg
+    0     Then I check again  [i10]
+    s52/i0     GET /in-bg1                                   -> b0
+    s52/i2     GET /in-SubBg                                 -> b0
+    s52/i4     GET /in-act-bg                                -> b1
+    s52/i6     GET /in-SubAct-bg                             -> b1
+    s52/i8     GET /in-act-after-bg                          -> b1
+    s52/i10    GET /in-check2                                -> 0
+=== s53 RB3 Shares a background and has more [Passed]
+  at RealBg.feature:13
+  open: TestRunReport.html#sid-55754184aba87d4a
+    b0    Given a background step  [i0-i2] 2 calls
+      b0.0  Sub bg
+    b1    When I act "bg"  [i4-i8] 3 calls
+      b1.0  Sub act
+          · who
+          · bg
+    0     Then I check  [i10]
+    1     And I check again  [i12]
+    s53/i0     GET /in-bg1                                   -> b0
+    s53/i2     GET /in-SubBg                                 -> b0
+    s53/i4     GET /in-act-bg                                -> b1
+    s53/i6     GET /in-SubAct-bg                             -> b1
+    s53/i8     GET /in-act-after-bg                          -> b1
+    s53/i10    GET /in-check                                 -> 0
+    s53/i12    GET /in-check2                                -> 1
+=== s54 R1 A step runs another through ITestRunner [Passed]
+  at Runner.feature:3
+  open: TestRunReport.html#sid-dd2337e770875ac7
+    0     Given a plain given  [i0]
+    1     When the inner step
+      1.0   When the inner step
+        1.0.0 Sub inner
+    2     When a step runs another
+    3     Then I check
+     5 calls belong to no step (before the first step, or attribution was not trusted)
+    s54/i0     GET /in-plain                                 -> 0
+    s54/i2     GET /in-outer-before                          -> None
+    s54/i4     GET /in-inner                                 -> None
+    s54/i6     GET /in-SubInner                              -> None
+    s54/i8     GET /in-outer-after                           -> None
+    s54/i10    GET /in-check                                 -> None
+=== s55 R2 The inner step fails [Failed]
+  at Runner.feature:8
+  open: TestRunReport.html#sid-c3a137c359e273e5
+    0     Given a plain given  [i0]
+  ✗ 1     When the inner step fails
+    ✗ 1.0   When the inner step fails
+    2     When a step runs another that fails
+     3 calls belong to no step (before the first step, or attribution was not trusted)
+    s55/i0     GET /in-plain                                 -> 0
+    s55/i2     GET /in-outerf-before                         -> None
+    s55/i4     GET /in-innerf                                -> None
+    s55/i6     GET /in-outerf-after                          -> None
+=== s56 R3 The inner step is undefined [Skipped]
+  at Runner.feature:13
+  open: TestRunReport.html#sid-303ef9c98b937ca6
+    0     Given a plain given  [i0]
+    1     When a step runs an undefined one  [i2]
+    s56/i0     GET /in-plain                                 -> 0
+    s56/i2     GET /in-outeru-after                          -> 1
+=== s57 R4 A step method runs another step through ITestRunner [Passed]
+  at Runner.feature:18
+  open: TestRunReport.html#sid-c85d0a50a8956a49
+    0     Given a plain given  [i0]
+    1     When the inner step
+      1.0   Step runs
+        1.0.0 When the inner step
+          1.0.0.0 Sub inner
+    2     When a step method runs a gherkin step
+    3     Then I check
+     7 calls belong to no step (before the first step, or attribution was not trusted)
+    s57/i0     GET /in-plain                                 -> 0
+    s57/i2     GET /in-SM-before                             -> None
+    s57/i4     GET /in-StepRuns-before                       -> None
+    s57/i6     GET /in-inner                                 -> None
+    s57/i8     GET /in-SubInner                              -> None
+    s57/i10    GET /in-StepRuns-after                        -> None
+    s57/i12    GET /in-SM-after                              -> None
+    s57/i14    GET /in-check                                 -> None
+=== s58 R5 A step runs two, and calls after each [Passed]
+  at Runner.feature:23
+  open: TestRunReport.html#sid-e51f1837d1499ccc
+    0     When the inner step
+      0.0   When the inner step
+        0.0.0 Sub inner
+      0.1   When the inner step
+        0.1.0 Sub inner
+    1     When the inner step
+    2     When a step runs two others
+    3     Then I check
+     7 calls belong to no step (before the first step, or attribution was not trusted)
+    s58/i0     GET /in-inner                                 -> None
+    s58/i2     GET /in-SubInner                              -> None
+    s58/i4     GET /in-between-inners                        -> None
+    s58/i6     GET /in-inner                                 -> None
+    s58/i8     GET /in-SubInner                              -> None
+    s58/i10    GET /in-after-inners                          -> None
+    s58/i12    GET /in-check                                 -> None

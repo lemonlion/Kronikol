@@ -1,0 +1,9 @@
+# probes-matcher/reused-records on published 5.28.2 and R2 alone on 9d994a4b. scripts/run_reused_records.py
+=== pub
+  first: /basket=- /pay=-
+  fresh: /first=0 /basket=1 /pay=2
+  second: /first=0 /basket=1 /pay=2
+=== r2
+  first: /basket=1 /pay=2
+  fresh: /first=0 /basket=1 /pay=2
+  second: /first=0 /basket=1 /pay=2

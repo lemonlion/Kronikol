@@ -1,0 +1,4 @@
+{"event":"start","testId":"s6","testName":"hook bar","feature":"Store","timestamp":"2026-11-03T18:20:32.3711278Z"}
+{"event":"step","testId":"s6","text":"a shop","status":"passed","durationMs":5,"keyword":"Given","timestamp":"2026-11-03T18:20:32.3872171Z"}
+{"event":"step","testId":"s6","text":"a basket","status":"passed","durationMs":5,"keyword":"When","timestamp":"2026-11-03T18:20:32.4032667Z"}
+{"event":"end","testId":"s6","status":"passed","durationMs":50,"timestamp":"2026-11-03T18:20:32.4190696Z"}

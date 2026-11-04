@@ -1,0 +1,5 @@
+{"event":"start","testId":"s12","testName":"same text","feature":"Store","timestamp":"2026-11-03T18:20:32.6220191Z"}
+{"event":"step","testId":"s12","text":"a basket","status":"passed","durationMs":5,"keyword":"Given","timestamp":"2026-11-03T18:20:32.622021Z"}
+{"event":"step","testId":"s12","text":"a basket","status":"passed","durationMs":5,"keyword":"And","timestamp":"2026-11-03T18:20:32.6378237Z"}
+{"event":"step","testId":"s12","text":"it is empty","status":"passed","durationMs":5,"keyword":"Then","timestamp":"2026-11-03T18:20:32.6533623Z"}
+{"event":"end","testId":"s12","status":"passed","durationMs":50,"timestamp":"2026-11-03T18:20:32.6691021Z"}

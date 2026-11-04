@@ -1,0 +1,67 @@
+# BreakfastProvider's in-memory lanes: published 5.28.2 against #223's c7252f6c with this plan's layer (5.28.3-proto225r11), with no probe in the build, so no walk-against-final-path lines. scripts/run_breakfastprovider.sh, scripts/read_breakfastprovider.sh.
+  failed: 0
+  succeeded: 214
+  failed: 0
+  succeeded: 187
+  failed: 0
+  succeeded: 212
+  failed: 0
+  succeeded: 212
+== proto ReqNRoll 16:14:08
+  failed: 0
+  succeeded: 214
+== proto LightBDD 16:17:41
+  failed: 0
+  succeeded: 187
+== proto BDDfy 16:20:26
+  failed: 0
+  succeeded: 212
+== proto NUnit 16:22:55
+  failed: 0
+  succeeded: 212
+
+=== ReqNRoll: published against the prototype, scenario by scenario
+   1342  calls compared
+   1342  call reads the same
+    214  scenarios compared
+      2  a call's count differs (the run's own wobble, or a real change)
+           A request with a correlation id should return the same id in the response: ('Publish (Pub/Sub)', 'pubsub:///MenuAvailabilityChangedEvent') 0 -> 1
+           A request with a correlation id should return the same id in the response: ('GET', 'http://localhost:5173/ingredients/milk/availability') 0 -> 1
+
+=== ReqNRoll: in one run, published's walk against the path a record ends with
+=== LightBDD: published against the prototype, scenario by scenario
+   1367  calls compared
+    838  same top-level step, now a sub-step
+    520  call reads the same
+    187  scenarios compared
+      9  published had no step, prototype has one
+           Different Muffin Recipes Should Produce The Expect: http://localhost:5131/milk -> 0
+           Different Muffin Recipes Should Produce The Expect: http://localhost/milk -> 0
+           Different Muffin Recipes Should Produce The Expect: http://localhost/eggs -> 0
+           Different Muffin Recipes Should Produce The Expect: http://localhost:5131/milk -> 0
+           Different Muffin Recipes Should Produce The Expect: http://localhost/milk -> 0
+           Different Muffin Recipes Should Produce The Expect: http://localhost/eggs -> 0
+      1  a call's count differs (the run's own wobble, or a real change)
+           An Outbox Message Should Transition To Failed After Exhausting Retries: ('Query', 'https://localhost:9999/colls/orders') 3 -> 2
+      1  tree differs
+           An Order Should Progress Through All Status Transitions To Completion: [('4.0', None, "Retrieval steps response created at should be close to '03/11/2026 16:00:06', '00:0
+
+=== LightBDD: in one run, published's walk against the path a record ends with
+=== BDDfy: published against the prototype, scenario by scenario
+   1398  calls compared
+   1398  call reads the same
+    212  scenarios compared
+      1  tree differs
+           Creating an order should produce an audit log entry and events: [('3.0', None, "Order created events should contain [ e => e.CustomerName == 'TestCustomer_#' ]", 'Passed'
+
+=== BDDfy: in one run, published's walk against the path a record ends with
+=== NUnit: published against the prototype, scenario by scenario
+   1399  calls compared
+   1399  call reads the same
+    212  scenarios compared
+
+=== NUnit: in one run, published's walk against the path a record ends with
+
+# Reqnroll's correlation id scenario, read by query during this run, each call's stepPath on each side, since compare_reports.py does not compare a call found on one side alone.
+published s27: 1 GET /menu
+prototype s27: 1 GET /menu; 1 GET /ingredients/milk/availability; 1 Publish (Pub/Sub) /MenuAvailabilityChangedEvent

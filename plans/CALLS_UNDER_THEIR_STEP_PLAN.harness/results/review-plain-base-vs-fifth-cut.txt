@@ -1,0 +1,90 @@
+24c24
+<   call /sub-later                         -> stepPath 1
+---
+>   call /sub-later                         -> stepPath 1.0
+33,34c33,34
+<     0.0      [Passed] Given fast T
+<   1        [Passed] Then done T
+---
+>   1        [Passed] And fast T
+>   2        [Passed] Then done T
+36,37c36,37
+<   call /fast/1                            -> stepPath 0
+<   call /fast/2                            -> stepPath 0
+---
+>   call /fast/1                            -> stepPath 1
+>   call /fast/2                            -> stepPath 1
+39,40c39,40
+<   call /then-own                          -> stepPath 1
+<   bars drawn: 2; scenario attachments: 0
+---
+>   call /then-own                          -> stepPath 2
+>   bars drawn: 3; scenario attachments: 0
+46,47c46,47
+<     0.0      [Passed] When a long step T
+<   1        [Passed] Then done T
+---
+>   1        [Passed] When a long step T
+>   2        [Passed] Then done T
+49c49
+<   call /when-own/1                        -> stepPath 0
+---
+>   call /when-own/1                        -> stepPath 1
+51,53c51,53
+<   call /when-own/2                        -> stepPath 0
+<   call /then-own                          -> stepPath 1
+<   bars drawn: 2; scenario attachments: 0
+---
+>   call /when-own/2                        -> stepPath 1
+>   call /then-own                          -> stepPath 2
+>   bars drawn: 3; scenario attachments: 0
+105c105
+<   call /sub-after                         -> stepPath 0
+---
+>   call /sub-after                         -> stepPath 0.2
+126c126
+<   call /child-own                         -> stepPath 0
+---
+>   call /child-own                         -> stepPath 0.0
+128c128
+<   call /service-side-of-parent-call       -> stepPath 0
+---
+>   call /service-side-of-parent-call       -> stepPath 0.0
+157c157,160
+<   call /then-own                          -> stepPath null
+---
+>   0        [Failed] Given parent of a thrower T  msg=thrown before a task
+>     0.0      [] throws before returning a task (no duration)
+>       0.0.0    [Passed] Then done T
+>   call /then-own                          -> stepPath 0.0.0
+163,164c166,170
+<   call /then-own                          -> stepPath null
+<   bars drawn: 1; scenario attachments: 0
+---
+>   0        [Failed] Given parent that times out T  msg=gave up waiting for the sub-step
+>     0.0      [] hangs (no duration)
+>   1        [Passed] Then done T
+>   call /then-own                          -> stepPath 1
+>   bars drawn: 2; scenario attachments: 0
+171,176c177,182
+<     0.1      [Passed] When plain when T
+<     0.2      [Bypassed] Given skipped T
+<   1        [Passed] Then done T
+<   call /plain-when                        -> stepPath 0
+<   call /then-own                          -> stepPath 1
+<   bars drawn: 2; scenario attachments: 0
+---
+>   1        [Passed] When plain when T
+>   2        [Bypassed] Given skipped T
+>   3        [Passed] Then done T
+>   call /plain-when                        -> stepPath 1
+>   call /then-own                          -> stepPath 3
+>   bars drawn: 4; scenario attachments: 0
+185c191
+<   call /sub-after                         -> stepPath 0
+---
+>   call /sub-after                         -> stepPath 0.1
+203c209
+<       Content root path: C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\84bdf88c-b056-4543-a3d5-5d3
+---
+>       Content root path: C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\84bdf88c-b056-4543-a3d5-5d3

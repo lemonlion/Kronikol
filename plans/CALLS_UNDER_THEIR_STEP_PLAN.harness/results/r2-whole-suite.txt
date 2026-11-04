@@ -1,0 +1,108 @@
+# 53 projects in C:\Code\Kronikol-225r2
+tests/Kronikol.Tests.AssertionTracking/Kronikol.Tests.AssertionTracking.csproj (921 s) exit 0
+  Passed! 
+tests/Kronikol.Tests.AtlasDataApi/Kronikol.Tests.AtlasDataApi.csproj (15 s) exit 0
+  Passed! 
+tests/Kronikol.Tests.BigQuery/Kronikol.Tests.BigQuery.csproj (33 s) exit 0
+  Passed! 
+tests/Kronikol.Tests.Bigtable/Kronikol.Tests.Bigtable.csproj (29 s) exit 0
+  Passed! 
+tests/Kronikol.Tests.BlobStorage/Kronikol.Tests.BlobStorage.csproj (20 s) exit 0
+  Passed! 
+tests/Kronikol.Tests.ClickHouse/Kronikol.Tests.ClickHouse.csproj (37 s) exit 0
+  Passed! 
+tests/Kronikol.Tests.CloudStorage/Kronikol.Tests.CloudStorage.csproj (26 s) exit 0
+  Passed! 
+tests/Kronikol.Tests.CosmosDB/Kronikol.Tests.CosmosDB.csproj (18 s) exit 0
+  Passed! 
+tests/Kronikol.Tests.Dapper/Kronikol.Tests.Dapper.csproj (14 s) exit 0
+  Passed! 
+tests/Kronikol.Tests.DispatchProxy/Kronikol.Tests.DispatchProxy.csproj (14 s) exit 0
+  Passed! 
+tests/Kronikol.Tests.DynamoDB/Kronikol.Tests.DynamoDB.csproj (20 s) exit 0
+  Passed! 
+tests/Kronikol.Tests.EfCore.Relational/Kronikol.Tests.EfCore.Relational.csproj (32 s) exit 0
+  Passed! 
+tests/Kronikol.Tests.Elasticsearch/Kronikol.Tests.Elasticsearch.csproj (17 s) exit 0
+  Passed! 
+tests/Kronikol.Tests.EventBridge/Kronikol.Tests.EventBridge.csproj (19 s) exit 0
+  Passed! 
+tests/Kronikol.Tests.EventHubs/Kronikol.Tests.EventHubs.csproj (17 s) exit 0
+  Passed! 
+tests/Kronikol.Tests.Grpc/Kronikol.Tests.Grpc.csproj (15 s) exit 0
+  Passed! 
+tests/Kronikol.Tests.Kafka.BuildInterception/Kronikol.Tests.Kafka.BuildInterception.csproj (42 s) exit 0
+  Passed! 
+tests/Kronikol.Tests.Kafka/Kronikol.Tests.Kafka.csproj (37 s) exit 0
+  Passed! 
+tests/Kronikol.Tests.LightBDD.TUnit/Kronikol.Tests.LightBDD.TUnit.csproj (32 s) exit 0
+  Passed! 
+tests/Kronikol.Tests.LightBDD.xUnit2/Kronikol.Tests.LightBDD.xUnit2.csproj (22 s) exit 0
+  Passed! 
+tests/Kronikol.Tests.LightBDD.xUnit3/Kronikol.Tests.LightBDD.xUnit3.csproj (26 s) exit 0
+  Passed! 
+tests/Kronikol.Tests.MSTest/Kronikol.Tests.MSTest.csproj (18 s) exit 0
+  Passed! 
+tests/Kronikol.Tests.MassTransit/Kronikol.Tests.MassTransit.csproj (15 s) exit 0
+  Passed! 
+tests/Kronikol.Tests.MediatR/Kronikol.Tests.MediatR.csproj (15 s) exit 0
+  Passed! 
+tests/Kronikol.Tests.MongoDB.V2/Kronikol.Tests.MongoDB.V2.csproj (31 s) exit 0
+  Passed! 
+tests/Kronikol.Tests.MongoDB/Kronikol.Tests.MongoDB.csproj (27 s) exit 0
+  Passed! 
+tests/Kronikol.Tests.MySqlConnector/Kronikol.Tests.MySqlConnector.csproj (16 s) exit 0
+  Passed! 
+tests/Kronikol.Tests.NUnit4/Kronikol.Tests.NUnit4.csproj (14 s) exit 0
+  Passed! 
+tests/Kronikol.Tests.Npgsql/Kronikol.Tests.Npgsql.csproj (22 s) exit 0
+  Passed! 
+tests/Kronikol.Tests.OpenTelemetry/Kronikol.Tests.OpenTelemetry.csproj (25 s) exit 0
+  Passed! 
+tests/Kronikol.Tests.Oracle/Kronikol.Tests.Oracle.csproj (32 s) exit 0
+  Passed! 
+tests/Kronikol.Tests.Otlp/Kronikol.Tests.Otlp.csproj (50 s) exit 0
+  Passed! 
+tests/Kronikol.Tests.PlantUml.Ikvm/Kronikol.Tests.PlantUml.Ikvm.csproj (278 s) exit 0
+  Passed! 
+tests/Kronikol.Tests.Playwright/Kronikol.Tests.Playwright.csproj (67 s) exit 0
+  Passed! 
+tests/Kronikol.Tests.ProxyTap/Kronikol.Tests.ProxyTap.csproj (75 s) exit 0
+  Passed! 
+tests/Kronikol.Tests.PubSub/Kronikol.Tests.PubSub.csproj (30 s) exit 0
+  Passed! 
+tests/Kronikol.Tests.Redis/Kronikol.Tests.Redis.csproj (35 s) exit 0
+  Passed! 
+tests/Kronikol.Tests.S3/Kronikol.Tests.S3.csproj (50 s) exit 0
+  Passed! 
+tests/Kronikol.Tests.SNS/Kronikol.Tests.SNS.csproj (41 s) exit 0
+  Passed! 
+tests/Kronikol.Tests.SQS/Kronikol.Tests.SQS.csproj (38 s) exit 0
+  Passed! 
+tests/Kronikol.Tests.SearchEngine/Kronikol.Tests.SearchEngine.csproj (42 s) exit 0
+  Passed! 
+tests/Kronikol.Tests.ServiceBus/Kronikol.Tests.ServiceBus.csproj (27 s) exit 0
+  Passed! 
+tests/Kronikol.Tests.Spanner/Kronikol.Tests.Spanner.csproj (49 s) exit 0
+  Passed! 
+tests/Kronikol.Tests.SqlClient/Kronikol.Tests.SqlClient.csproj (41 s) exit 0
+  Passed! 
+tests/Kronikol.Tests.Sqlite/Kronikol.Tests.Sqlite.csproj (33 s) exit 0
+  Passed! 
+tests/Kronikol.Tests.StepTracking/Kronikol.Tests.StepTracking.csproj (63 s) exit 0
+  Passed! 
+tests/Kronikol.Tests.StorageQueues/Kronikol.Tests.StorageQueues.csproj (33 s) exit 0
+  Passed! 
+tests/Kronikol.Tests.TUnit/Kronikol.Tests.TUnit.csproj (51 s) exit 0
+  Passed! 
+tests/Kronikol.Tests.TcpTap.Bson3/Kronikol.Tests.TcpTap.Bson3.csproj (33 s) exit 0
+  Passed! 
+tests/Kronikol.Tests.TcpTap/Kronikol.Tests.TcpTap.csproj (59 s) exit 0
+  Passed! 
+tests/Kronikol.Tests.xUnit2/Kronikol.Tests.xUnit2.csproj (331 s) exit 0
+  Passed! 
+tests/Kronikol.Tests.xUnit3/Kronikol.Tests.xUnit3.csproj (21 s) exit 0
+  Passed! 
+tests/Kronikol.Tests/Kronikol.Tests.csproj (753 s) exit 1
+  Failed! 
+# done, 1 failures

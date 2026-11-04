@@ -1,0 +1,4 @@
+{"type": "Request", "testId": "s", "method": "POST", "uri": "http://shop.test/slow", "serviceName": "Shop", "callerName": "Tests", "content": "{}", "timestamp": "2026-11-03T10:00:00.110000Z", "requestResponseId": "s-slow-110"}
+{"type": "Response", "testId": "s", "method": "POST", "uri": "http://shop.test/slow", "serviceName": "Shop", "callerName": "Tests", "content": "{}", "statusCode": "200", "timestamp": "2026-11-03T10:00:00.250000Z", "requestResponseId": "s-slow-110"}
+{"type": "Request", "testId": "s", "method": "POST", "uri": "http://shop.test/pay", "serviceName": "Shop", "callerName": "Tests", "content": "{}", "timestamp": "2026-11-03T10:00:00.260000Z", "requestResponseId": "s-pay-260"}
+{"type": "Response", "testId": "s", "method": "POST", "uri": "http://shop.test/pay", "serviceName": "Shop", "callerName": "Tests", "content": "{}", "statusCode": "200", "timestamp": "2026-11-03T10:00:00.265000Z", "requestResponseId": "s-pay-260"}

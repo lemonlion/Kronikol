@@ -59,9 +59,9 @@ public enum DiagnosticKind
     CaptureDegraded,
 
     /// <summary>
-    /// A step delimiter in the log stream did not line up with the step it should have opened, so the
-    /// interactions after it carry no <c>stepPath</c>. Expected when a test does work on a background
-    /// thread, where a record can enqueue after the following step's marker.
+    /// A step delimiter in the log stream did not match the step it should have opened, as with a bar a hook
+    /// drew, so the interactions up to the next delimiter that does match carry no <c>stepPath</c>. Work on a
+    /// background thread does not cause this: a record that enqueues late changes no delimiter.
     /// </summary>
     StepAttributionMismatch,
 

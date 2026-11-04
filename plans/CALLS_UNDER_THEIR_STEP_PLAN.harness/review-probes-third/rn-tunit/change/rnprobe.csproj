@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <TrackStepsEnabled>true</TrackStepsEnabled>
+    <AssemblyName>rnprobe</AssemblyName>
+    <RootNamespace>rnprobe</RootNamespace>
+    <NoWarn>$(NoWarn);xUnit1051;CS1998;CS4014;xUnit1031;CS0162;CS0414;CS8618;TUnit0023</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\src\*.cs" />
+    <None Include="..\src\reqnroll.json" Link="reqnroll.json" CopyToOutputDirectory="Always" />
+    <PackageReference Include="Reqnroll" Version="3.3.4" /><PackageReference Include="Reqnroll.TUnit" Version="3.3.4" /><PackageReference Include="TUnit" Version="1.53.0" />
+    <ProjectReference Include="C:\Code\Kronikol-225r\src\Kronikol.ReqNRoll.TUnit\Kronikol.ReqNRoll.TUnit.csproj" />
+  </ItemGroup>
+  <UsingTask TaskName="Kronikol.StepTracking.WeaveStepsTask" AssemblyFile="C:\Code\Kronikol-225r\src\Kronikol.StepTracking\bin\Debug\netstandard2.0\Kronikol.StepTracking.dll" /><Import Project="C:\Code\Kronikol-225r\src\Kronikol.StepTracking\build\Kronikol.StepTracking.targets" />
+</Project>

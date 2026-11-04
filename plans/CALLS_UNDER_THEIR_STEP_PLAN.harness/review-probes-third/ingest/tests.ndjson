@@ -1,0 +1,9 @@
+{"event": "start", "testId": "0af7651916cd43dd8448eb211c80319c", "testName": "ingested one", "feature": "Ingest", "timestamp": "2026-11-03T10:00:00.000Z"}
+{"event": "step", "testId": "0af7651916cd43dd8448eb211c80319c", "text": "a user exists", "keyword": "Given", "timestamp": "2026-11-03T10:00:01.000Z", "durationMs": 2000, "status": "passed"}
+{"event": "step", "testId": "0af7651916cd43dd8448eb211c80319c", "text": "a nested thing", "level": 1, "timestamp": "2026-11-03T10:00:02.000Z", "durationMs": 500, "status": "passed"}
+{"event": "step", "testId": "0af7651916cd43dd8448eb211c80319c", "text": "the user orders", "keyword": "When", "timestamp": "2026-11-03T10:00:04.000Z", "durationMs": 2000, "status": "failed", "error": "it broke"}
+{"event": "end", "testId": "0af7651916cd43dd8448eb211c80319c", "status": "failed", "durationMs": 6000, "timestamp": "2026-11-03T10:00:06.000Z", "error": "it broke"}
+{"event": "start", "testId": "1af7651916cd43dd8448eb211c80319d", "testName": "ingested two", "feature": "Ingest", "timestamp": "2026-11-03T10:00:10.000Z"}
+{"event": "step", "testId": "1af7651916cd43dd8448eb211c80319d", "text": "a user exists", "keyword": "Given", "timestamp": "2026-11-03T10:00:11.000Z", "durationMs": 1000, "status": "passed"}
+{"event": "step", "testId": "1af7651916cd43dd8448eb211c80319d", "text": "the user orders", "keyword": "When", "timestamp": "2026-11-03T10:00:13.000Z", "durationMs": 1000, "status": "passed"}
+{"event": "end", "testId": "1af7651916cd43dd8448eb211c80319d", "status": "passed", "durationMs": 4000, "timestamp": "2026-11-03T10:00:15.000Z"}

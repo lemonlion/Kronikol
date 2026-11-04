@@ -1,0 +1,2 @@
+# The core suite on the final cut: #223's 638f275d with this plan's layer and R2, prototype/on-223-638f275d.patch
+Passed!  - Failed:     0, Passed: 11824, Skipped:     2, Total: 11826, Duration: 8 m - Kronikol.Tests.dll (net10.0)

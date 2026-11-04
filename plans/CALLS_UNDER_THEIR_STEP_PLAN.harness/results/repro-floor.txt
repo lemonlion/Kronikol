@@ -1,0 +1,348 @@
+# The probe suite on the end state before the last fixes, with Reqnroll 3.0.1, the lowest version that resolves, in place of 3.3.4. scripts/run_repro.sh.
+--- A Given sub-step inside a When step [Passed]
+    at Features/Phases.feature:3
+      0     Given a registered customer with a full basket  1s  [i0-i8] 5 calls
+        0.0   A customer is registered  0.99s  [i0-i2] 2 calls
+            · name
+            · customer-1
+          0.0.0 Their address is verified  0.94s  [i2]
+          · 0.0.0.0 Response is success status code should be true
+        0.1   Items are added to the basket  0s  [i4-i8] 3 calls
+            · count
+            · 3
+      1     When the customer applies a discount through a Given sub-step  0.01s  [i10-i12] 2 calls
+        1.0   Given A discount code is applied  [i10]
+            · code
+            · SAVE10
+        1.1   The order is submitted  0.01s  [i12]
+      2     Then the order is confirmed  0.5s
+      · 2.0   Shop order status should be "Confirmed"
+    calls: customers=0.0  address-check=0.0.0  0=0.1  1=0.1  2=0.1  SAVE10=1.0  orders=1.1
+--- A call in the step and calls in its sub-steps [Passed]
+    at Features/Probes.feature:20
+      0     Given a step makes its own calls around a sub-step  0s  [i0-i4] 3 calls
+        0.0   The same sub step  [i2]
+            · which
+            · inner
+    calls: before=0  inner=0.0  after=0
+--- A call outlives its step [Passed]
+    at Features/Probes.feature:6
+      0     Given a call is started and left running  0.01s
+      1     When a later step runs  0.32s  [i0-i4] 3 calls
+    calls: first=1  started-in-step-0=1  second=1
+--- A customer's order is confirmed [Passed]
+    at Features/Orders.feature:4
+      b0    Given a registered customer with a full basket  0s  [i0-i8] 5 calls
+        b0.0  A customer is registered  [i0-i2] 2 calls
+            · name
+            · customer-8
+          b0.0.0 Their address is verified  [i2]
+          · b0.0.0.0 Response is success status code should be true
+        b0.1  Items are added to the basket  [i4-i8] 3 calls
+            · count
+            · 3
+      b1    When the customer places the order  0s  [i10-i12] 2 calls
+        b1.0  The payment is authorised  [i10]
+            · amount
+            · 99.99
+            · card
+            · 4111
+        · b1.0.0 Response status code should be OK
+        b1.1  The order is submitted  [i12]
+      0     Then the order is confirmed
+      · 0.0   Shop order status should be "Confirmed"
+    calls: customers=b0.0  address-check=b0.0.0  0=b0.1  1=b0.1  2=b0.1  payments=b1.0  orders=b1.1
+--- A customer's order sends a confirmation email [Passed]
+    at Features/Orders.feature:9
+      b0    Given a registered customer with a full basket  0s  [i0-i8] 5 calls
+        b0.0  A customer is registered  [i0-i2] 2 calls
+            · name
+            · customer-8
+          b0.0.0 Their address is verified  [i2]
+          · b0.0.0.0 Response is success status code should be true
+        b0.1  Items are added to the basket  [i4-i8] 3 calls
+            · count
+            · 3
+      b1    When the customer places the order  0s  [i10-i12] 2 calls
+        b1.0  The payment is authorised  [i10]
+            · amount
+            · 99.99
+            · card
+            · 4111
+        · b1.0.0 Response status code should be OK
+        b1.1  The order is submitted  [i12]
+      0     Then a confirmation email is sent  0s
+        0.0   The confirmation email is queued
+        · 0.0.0 Order status should be "Confirmed"
+    calls: customers=b0.0  address-check=b0.0.0  0=b0.1  1=b0.1  2=b0.1  payments=b1.0  orders=b1.1
+--- A declined card rejects the order [Failed]
+    at Features/Payments.feature:3
+      0     Given a registered customer with a full basket  1s  [i0-i8] 5 calls
+        0.0   A customer is registered  0.99s  [i0-i2] 2 calls
+            · name
+            · customer-2
+          0.0.0 Their address is verified  0.93s  [i2]
+          · 0.0.0.0 Response is success status code should be true
+        0.1   Items are added to the basket  0s  [i4-i8] 3 calls
+            · count
+            · 3
+    ✗ 1     When the customer pays with a declined card  0.55s  [i10]
+      ✗ 1.0   The payment is authorised  0.55s  [i10]
+            response.StatusCode should be HttpStatusCode.OK but was HttpStatusCode.PaymentRequired
+            · amount
+            · 99.99
+            · card
+            · declined
+        ✗ 1.0.0 Response status code should be OK
+              response.StatusCode should be HttpStatusCode.OK but was HttpStatusCode.PaymentRequired
+      2     Then the order is rejected
+    calls: customers=0.0  address-check=0.0.0  0=0.1  1=0.1  2=0.1  payments=1.0
+--- A skipped sub-step under a Gherkin step [Passed]
+    at Features/Skipped.feature:3
+      0     Given a step skips an async sub-step and goes on  0.06s  [i0-i2] 2 calls
+      ~ 0.0   A skipped async sub step
+            bypassed: off
+        0.1   A sub step after the skip  [i2]
+      1     When a later step runs  0.45s  [i4-i6] 2 calls
+    calls: own=0  sub=0.1  first=1  second=1
+--- A skipped sync sub-step under a Gherkin step [Passed]
+    at Features/Skipped.feature:7
+      0     Given a step skips a sync sub-step and goes on  0s  [i0-i2] 2 calls
+      ~ 0.0   A skipped sync sub step
+            bypassed: off
+        0.1   A sub step after the skip  [i2]
+      1     When a later step runs  0.47s  [i4-i6] 2 calls
+    calls: own=0  sub=0.1  first=1  second=1
+--- A step definition that is also a woven step [Passed]
+    at Features/Reuse.feature:3
+      0     Given a registered customer  1s  [i0-i2] 2 calls
+        0.0   A registered customer  0.99s  [i0-i2] 2 calls
+          0.0.0 A customer is registered  0.99s  [i0-i2] 2 calls
+              · name
+              · customer-4
+            0.0.0.0 Their address is verified  0.94s  [i2]
+            · 0.0.0.0.0 Response is success status code should be true
+      1     When the customer places the order  0.52s  [i4-i6] 2 calls
+        1.0   The payment is authorised  0.52s  [i4]
+            · amount
+            · 99.99
+            · card
+            · 4111
+        · 1.0.0 Response status code should be OK
+        1.1   The order is submitted  [i6]
+      2     Then the order is confirmed
+      · 2.0   Shop order status should be "Confirmed"
+    calls: customers=0.0.0  address-check=0.0.0.0  payments=1.0  orders=1.1
+--- A step whose label holds a backslash [Passed]
+    at Features/Probes.feature:27
+      0     Given the shopper uploads C:\baskets\monday.csv  0s  [i0]
+      1     When a later step runs  0.4s  [i2-i4] 2 calls
+    calls: backslash=0  first=1  second=1
+--- A step whose label is too long to draw on one line and whose calls therefore lose their step, as reported in issue one hundred and twenty eight [Passed]
+    at Features/Probes.feature:10
+      0     Given a step with a long label and a call  0s  [i0]
+      1     When a later step runs  0.45s  [i2-i4] 2 calls
+    calls: long-label=0  first=1  second=1
+--- A step whose own label is too long to draw on one line [Passed]
+    at Features/Probes.feature:23
+      0     Given a basket that held two apples and a pear last week but nothing at all this week, w
+      1     When a later step runs  0.35s  [i2-i4] 2 calls
+    calls: long-own-label=0  first=1  second=1
+--- A sub-step is left running past its step [Passed]
+    at Features/Probes.feature:34
+      0     Given a sub-step is started and left running  0s  [i2]
+        0.0   A slow sub step  0.06s  [i2]
+      1     When a later step runs  0.4s  [i0-i4] 2 calls
+    calls: first=1  slow=0.0  second=1
+--- A tracked call and an assertion from another thread [Passed]
+    at Features/Probes.feature:38
+      0     When a sub-step hands its call to another thread  0.04s  [i0]
+        0.0   A call on another thread  0.02s  [i0]
+    calls: other-thread=0.0
+--- An assertion ends before a sub-step that began first [Passed]
+    at Features/Probes.feature:14
+      0     When a sub-step is still running at an assertion  0.19s  [i0]
+        0.0   A slow sub step  0.08s  [i0]
+      · 0.1   1 should be 1
+    calls: slow=0.0
+--- An order line for APPLE [Passed]
+    at Features/OutlineTable.feature:3
+    example: Holds=sku: APPLE, qty: 1
+      b0    Given the basket holds  0s  [i0-i4] 3 calls
+          · table
+          · sku
+          · qty
+          · APPLE
+          · 1
+        b0.0  A customer is registered  [i0-i2] 2 calls
+            · name
+            · customer-7
+          b0.0.0 Their address is verified  [i2]
+          · b0.0.0.0 Response is success status code should be true
+        b0.1  An item is added  [i4]
+            · sku
+            · APPLE
+            · qty
+            · 1
+      b1    When the customer places the order  0s  [i6-i8] 2 calls
+        b1.0  The payment is authorised  [i6]
+            · amount
+            · 99.99
+            · card
+            · 4111
+        · b1.0.0 Response status code should be OK
+        b1.1  The order is submitted  [i8]
+      b2    Then the order is confirmed
+      · b2.0  Shop order status should be "Confirmed"
+    calls: customers=b0.0  address-check=b0.0.0  APPLE=b0.1  payments=b1.0  orders=b1.1
+--- An order line for BANANA [Passed]
+    at Features/OutlineTable.feature:3
+    example: Holds=sku: BANANA, qty: 2
+      b0    Given the basket holds  0s  [i0-i4] 3 calls
+          · table
+          · sku
+          · qty
+          · APPLE
+          · 1
+        b0.0  A customer is registered  [i0-i2] 2 calls
+            · name
+            · customer-7
+          b0.0.0 Their address is verified  [i2]
+          · b0.0.0.0 Response is success status code should be true
+        b0.1  An item is added  [i4]
+            · sku
+            · APPLE
+            · qty
+            · 1
+      b1    When the customer places the order  0s  [i6-i8] 2 calls
+        b1.0  The payment is authorised  [i6]
+            · amount
+            · 99.99
+            · card
+            · 4111
+        · b1.0.0 Response status code should be OK
+        b1.1  The order is submitted  [i8]
+      b2    Then the order is confirmed
+      · b2.0  Shop order status should be "Confirmed"
+    calls: customers=b0.0  address-check=b0.0.0  BANANA=b0.1  payments=b1.0  orders=b1.1
+--- One of two sub-steps at once fails [Failed]
+    at Features/Probes.feature:31
+    ✗ 0     When two sub-steps run at once and the first fails  0.2s  [i0-i4] 3 calls
+      ✗ 0.0   The left side fails  0.05s  [i0]
+            the left side failed
+        0.1   The right side runs  0.16s  [i2-i4] 2 calls
+    calls: before-failing=0.0  one=0.1  two=0.1
+--- One sub-step twice [Passed]
+    at Features/Probes.feature:17
+      0     Given one sub-step runs twice  0s  [i0-i2] 2 calls
+        0.0   The same sub step  [i0]
+            · which
+            · first
+        0.1   The same sub step  [i2]
+            · which
+            · second
+    calls: first=0.0  second=0.1
+--- Reference data is seeded by a hook [Passed]
+    at Features/Seeding.feature:4
+      0     Reference data is seeded  0.07s  [i0]
+      1     Given a registered customer with a full basket  0.95s  [i2-i10] 5 calls
+        1.0   A customer is registered  0.95s  [i2-i4] 2 calls
+            · name
+            · customer-6
+          1.0.0 Their address is verified  0.94s  [i4]
+          · 1.0.0.0 Response is success status code should be true
+        1.1   Items are added to the basket  [i6-i10] 3 calls
+            · count
+            · 3
+      2     When the customer places the order  0.51s  [i12-i14] 2 calls
+        2.0   The payment is authorised  0.51s  [i12]
+            · amount
+            · 99.99
+            · card
+            · 4111
+        · 2.0.0 Response status code should be OK
+        2.1   The order is submitted  [i14]
+      3     Then the order is confirmed
+      · 3.0   Shop order status should be "Confirmed"
+    calls: seed=0  customers=1.0  address-check=1.0.0  0=1.1  1=1.1  2=1.1  payments=2.0  orders=2.1
+--- The first scenario's order goes through [Passed]
+    at Features/SharedPrefix.feature:4
+      b0    Given the basket holds  1s  [i0-i4] 3 calls
+          · table
+          · sku
+          · qty
+          · APPLE
+          · 1
+        b0.0  A customer is registered  0.97s  [i0-i2] 2 calls
+            · name
+            · customer-5
+          b0.0.0 Their address is verified  0.94s  [i2]
+          · b0.0.0.0 Response is success status code should be true
+        b0.1  An item is added  0s  [i4]
+            · sku
+            · APPLE
+            · qty
+            · 1
+      b1    When the customer places the order  0.5s  [i6-i8] 2 calls
+        b1.0  The payment is authorised  0.5s  [i6]
+            · amount
+            · 99.99
+            · card
+            · 4111
+        · b1.0.0 Response status code should be OK
+        b1.1  The order is submitted  [i8]
+      0     Then the order is confirmed
+      · 0.0   Shop order status should be "Confirmed"
+    calls: customers=b0.0  address-check=b0.0.0  APPLE=b0.1  payments=b1.0  orders=b1.1
+--- The first scenario's shared step has one sub-step [Passed]
+    at Features/Shapes.feature:4
+      b0    Given a shared step whose sub-steps depend on the scenario  0.06s  [i0]
+        b0.0  The same sub step  0.04s  [i0]
+            · which
+            · small-one
+      b1    When a later step runs  0.41s  [i2-i4] 2 calls
+      0     Then the shape is small
+    calls: small-one=b0.0  first=b1  second=b1
+--- The second scenario's payment is declined [Failed]
+    at Features/SharedPrefix.feature:12
+      b0    Given the basket holds  1s  [i0-i4] 3 calls
+          · table
+          · sku
+          · qty
+          · APPLE
+          · 1
+        b0.0  A customer is registered  0.97s  [i0-i2] 2 calls
+            · name
+            · customer-5
+          b0.0.0 Their address is verified  0.94s  [i2]
+          · b0.0.0.0 Response is success status code should be true
+        b0.1  An item is added  0s  [i4]
+            · sku
+            · APPLE
+            · qty
+            · 1
+      b1    When the customer places the order  0.5s  [i6]
+        b1.0  The payment is authorised  0.5s  [i6]
+            · amount
+            · 99.99
+            · card
+            · 4111
+        · b1.0.0 Response status code should be OK
+        b1.1  The order is submitted
+      0     Then the order is rejected
+    calls: customers=b0.0  address-check=b0.0.0  BANANA=b0.1  payments=b1.0
+--- The second scenario's shared step has three sub-steps [Passed]
+    at Features/Shapes.feature:10
+      b0    Given a shared step whose sub-steps depend on the scenario  0.06s  [i0-i4] 3 calls
+        b0.0  The same sub step  0.04s  [i0]
+            · which
+            · small-one
+      b1    When a later step runs  0.41s  [i6-i8] 2 calls
+      0     Then the shape is big
+    calls: big-one=b0.0  big-two=b0.1  big-three=b0.2  first=b1  second=b1
+--- Two sub-steps run at once [Passed]
+    at Features/Probes.feature:3
+      0     When two sub-steps run at once  0.35s  [i0-i6] 4 calls
+        0.0   The left side runs  0.13s  [i0-i4] 2 calls
+        0.1   The right side runs  0.19s  [i2-i6] 2 calls
+    calls: one=0.0  one=0.1  two=0.0  two=0.1

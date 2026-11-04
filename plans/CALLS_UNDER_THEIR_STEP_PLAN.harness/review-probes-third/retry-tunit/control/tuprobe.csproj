@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <TrackStepsEnabled>true</TrackStepsEnabled>
+    <AssemblyName>tuprobe</AssemblyName>
+    <NoWarn>$(NoWarn);CS1998;CS4014;CS0162;CS8618;TUnit0023;TUnitAssertions0005</NoWarn>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\src\*.cs" />
+    <PackageReference Include="TUnit" Version="1.53.0" />
+    <PackageReference Include="Kronikol.TUnit" Version="5.28.2" /><PackageReference Include="Kronikol.StepTracking" Version="5.28.2" />
+  </ItemGroup>
+  
+</Project>

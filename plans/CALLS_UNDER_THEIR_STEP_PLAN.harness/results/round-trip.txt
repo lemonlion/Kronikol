@@ -1,0 +1,14 @@
+# Every call's stepPath against the rows its scenario lists (scripts/round_trip.py), #223's c7252f6c with this plan's layer, no #222 under it.
+reqnroll/change-c7252f6c.txt: 263 calls on a step, 0 naming a row the scenario does not list
+flows/change-c7252f6c.txt: 166 calls on a step, 0 naming a row the scenario does not list
+hosts/change-c7252f6c.txt: 177 calls on a step, 0 naming a row the scenario does not list
+lightbdd/change-c7252f6c.txt: 74 calls on a step, 0 naming a row the scenario does not list
+bddfy/change-c7252f6c.txt: 53 calls on a step, 0 naming a row the scenario does not list
+
+# The same on the earlier final cut, #223's 10bbbe81 with this plan's layer.
+  change.txt: s5 BV2 This scenario runs one more sub step in the shared ba: GET /in-Always -> b0.1 (rows: 0 b0 b0.0 b1 b1.0)
+reqnroll/change.txt: 264 calls on a step, 1 naming a row the scenario does not list
+flows/change.txt: 162 calls on a step, 0 naming a row the scenario does not list
+hosts/change.txt: 176 calls on a step, 0 naming a row the scenario does not list
+lightbdd/change.txt: 74 calls on a step, 0 naming a row the scenario does not list
+bddfy/change.txt: 68 calls on a step, 0 naming a row the scenario does not list

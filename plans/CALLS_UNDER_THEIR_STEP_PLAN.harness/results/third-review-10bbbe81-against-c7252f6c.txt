@@ -1,0 +1,204 @@
+# The third review's probes, change.txt (#223's 10bbbe81 with this plan's layer) against change-c7252f6c.txt (#223's c7252f6c with the same layer). scripts/compare_dumps.py --show.
+# What moves: '-' now marks a row that did not run (a mark in query steps, #223's R11); each scenario shows its own Background rows (BV2, BF2); BDDfy's later rows of an example table are no longer listed (#223's R10); and in flows and hosts which parallel body started first and how many ticks a loop made, which vary by run.
+
+##### flows
+DIFF F05 parallel for each async in parent [Passed]
+   -     s/i      GET /in-Body5-1                               -> 0.0
+   -     s/i      GET /in-Body5-2                               -> 0.2
+   -     s/i      GET /in-Body5-3                               -> 0.3
+   +     s/i      GET /in-Body5-1                               -> 0.2
+   +     s/i      GET /in-Body5-2                               -> 0.3
+   +     s/i      GET /in-Body5-3                               -> 0.0
+DIFF F07 parallel for sync steps top level [Passed]
+   -             · 2
+   -           · 1
+   -     s/i      GET /in-Body7-1                               -> 0.0
+   -     s/i      GET /in-Body7-2                               -> 0.0.0
+   +             · 1
+   +           · 2
+   +     s/i      GET /in-Body7-1                               -> 0.0.0
+   +     s/i      GET /in-Body7-2                               -> 0.0
+DIFF F23 assertion from detached after step ended [Passed]
+   -         attachment: attach-from-Starter23-detached → C:\Code\k225-review\flows\change\bin\Debug\net1
+   +         attachment: attach-from-Starter23-detached → C:\Code\k225-review\flows\change\bin\Debug\net1
+DIFF F24 attachment from sibling flows [Passed]
+   -           attachment: attach-in-A24 → C:\Code\k225-review\flows\change\bin\Debug\net10.0\Reports\att
+   -           attachment: attach-in-B24 → C:\Code\k225-review\flows\change\bin\Debug\net10.0\Reports\att
+   +           attachment: attach-in-A24 → C:\Code\k225-review\flows\change\bin\Debug\net10.0\Reports\att
+   +           attachment: attach-in-B24 → C:\Code\k225-review\flows\change\bin\Debug\net10.0\Reports\att
+DIFF F28 task run around steps top level [Passed]
+   -           · c
+   -         · a
+   -     s/i     GET /in-R28-a                                 -> 0
+   -     s/i     GET /in-R28-c                                 -> 0.0
+   +           · a
+   +         · c
+   +     s/i     GET /in-R28-a                                 -> 0.0
+   +     s/i     GET /in-R28-c                                 -> 0
+DIFF G12 parallel sync top level two [Passed]
+   -           · a
+   -         · b
+   -     s/i     GET /in-S12-a                                 -> 0.0
+   -     s/i     GET /in-S12-b                                 -> 0
+   +           · b
+   +         · a
+   +     s/i     GET /in-S12-a                                 -> 0
+   +     s/i     GET /in-S12-b                                 -> 0.0
+only in second: S1 async parent whose last act is a skip [Passed]
+only in second: S2 sync parent whose last act is a skip [Passed]
+46 scenarios read the same, 8 differ
+
+##### hosts
+DIFF H05 host started in a step [Passed]
+   -     1     Wait5  [] 2 calls
+   -     s/i      GET /loop-tick-3                              -> 2
+   +     1     Wait5  [] 3 calls
+   +     s/i      GET /loop-tick-3                              -> 1
+   +     s/i     GET /loop-tick-5                              -> 2
+14 scenarios read the same, 1 differ
+
+##### reqnroll
+DIFF BF1 The background step fails here [Failed]
+   -     0     Then I check
+   +   - 0     Then I check
+DIFF BF2 The background step passes here [Passed]
+   -   ✗ b1    When a background step fails when tagged  []
+   +     b1    When a background step fails when tagged  []
+DIFF BV2 This scenario runs one more sub step in the shared background [Passed]
+   -       b0.0  Always  []
+   +       b0.0  Only second  []
+   +       b0.1  Always  []
+DIFF H10 BeforeStep hook throws [Failed]
+   -     1     When I act "h10"
+   -     2     Then I check
+   +   - 1     When I act "h10"
+   +   - 2     Then I check
+DIFF H13 BeforeScenario step method fails and fails the hook [Failed]
+   -     1     Given a plain given
+   -     2     When I act "h13"
+   -     3     Then I check
+   +   - 1     Given a plain given
+   +   - 2     When I act "h13"
+   +   - 3     Then I check
+DIFF H8 BeforeScenario hook leaves a step method running [Passed]
+   -     0     Running hook step  [] 2 calls
+   -     s/i    GET /in-RunningHookStep-2                     -> 0
+   +     0     Running hook step  []
+DIFF H9 BeforeScenario hook throws [Failed]
+   -     0     Given a plain given
+   -     1     When I act "h9"
+   +   - 0     Given a plain given
+   +   - 1     When I act "h9"
+DIFF HA3 A BeforeStep hook's step method fails [Failed]
+   -     1     When I act "ha3"
+   +   - 1     When I act "ha3"
+DIFF L8 Async SkipIf then a failure in the same step [Failed]
+   -     1     Then I check
+   +   - 1     Then I check
+DIFF R2 The inner step fails [Failed]
+   -     2     Then I check
+   +   - 2     Then I check
+DIFF R3 The inner step is undefined [Skipped]
+   -       1.0   When nothing binds this inner step
+   -     1     When a step runs an undefined one  []
+   -     2     Then I check
+   +     - 1.0   When nothing binds this inner step
+   +   - 1     When a step runs an undefined one  []
+   +   - 2     Then I check
+DIFF X1 A step throws [Failed]
+   -     2     Then I check
+   -     3     And I check again
+   +   - 2     Then I check
+   +   - 3     And I check again
+DIFF X2 A step method inside a step throws [Failed]
+   -     2     Then I check
+   +   - 2     Then I check
+DIFF X3 A step is undefined [Skipped]
+   -     1     When this step has no binding
+   -     2     Then I check
+   +   - 1     When this step has no binding
+   +   - 2     Then I check
+DIFF X4 A step is pending [Skipped]
+   -     1     When a step is pending  []
+   -     2     Then I check
+   +   - 1     When a step is pending  []
+   +   - 2     Then I check
+DIFF X5 The first step is undefined [Skipped]
+   -     0     Given this first step has no binding
+   -     1     Then I check
+   +   - 0     Given this first step has no binding
+   +   - 1     Then I check
+DIFF X7 A step throws after a sub step passed [Failed]
+   -     2     Then I check
+   +   - 2     Then I check
+DIFF X8 An ambiguous step [Failed]
+   -     2     Then I check
+   +   - 2     Then I check
+40 scenarios read the same, 18 differ
+
+##### lightbdd
+DIFF L04 Composite child fails [Failed]
+   -       1.2   Kid1
+   -     2     THEN C
+   +     - 1.2   Kid1
+   +   - 2     THEN C
+DIFF L05 Sub step fails [Failed]
+   -     2     THEN C
+   +   - 2     THEN C
+DIFF L14 Ignored step [Skipped]
+   -     1     WHEN Ignored
+   -     2     THEN C
+   +   - 1     WHEN Ignored
+   +   - 2     THEN C
+13 scenarios read the same, 3 differ
+
+##### bddfy
+DIFF Async fails [Failed]
+   -     1     Then c
+   +   - 1     Then c
+DIFF Example table [Passed]
+   -       3.0   Row sub  []
+   -       6.0   Row sub  []
+   -     3     Given value <_v>  [] 2 calls
+   -     4     When row action <_v>  []
+   -     5     Then row result <_v>  []
+   -     6     Given value <_v>  [] 2 calls
+   -     7     When row action <_v>  []
+   -     8     Then row result <_v>  []
+   +      8 calls belong to no step (before the first step, or attribution was not trusted)
+   +     s/i      GET /in-GivenValue-2                          -> None
+   +     s/i     GET /in-GivenValue-3                          -> None
+   +     s/i     GET /in-RowSub-2                              -> None
+   +     s/i     GET /in-RowSub-3                              -> None
+   +     s/i     GET /in-ThenRow-2                             -> None
+   +     s/i     GET /in-ThenRow-3                             -> None
+   +     s/i     GET /in-WhenRow-2                             -> None
+DIFF Example table second row fails [Passed]
+   -       3.0   Row sub  []
+   -       5.0   Row sub  []
+   -     3     Given value <_v>  [] 2 calls
+   -     5     Given value <_v>  [] 2 calls
+   -     6     When row fails <_v>  []
+   -     7     Then row result <_v>  []
+   -     s/i      GET /in-GivenValue-2                          -> 3
+   -     s/i     GET /in-GivenValue-3                          -> 5
+   +      7 calls belong to no step (before the first step, or attribution was not trusted)
+   +     s/i      GET /in-GivenValue-2                          -> None
+   +     s/i     GET /in-GivenValue-3                          -> None
+   +     s/i     GET /in-RowSub-2                              -> None
+   +     s/i     GET /in-RowSub-3                              -> None
+   +     s/i     GET /in-ThenRow-3                             -> None
+   +     s/i     GET /in-WhenRowFails-2                        -> None
+   +     s/i     GET /in-WhenRowFails-3                        -> None
+DIFF Failing step [Failed]
+   -     2     Then c
+   +   - 2     Then c
+DIFF Failing sub step [Failed]
+   -     2     Then c
+   +   - 2     Then c
+DIFF Setup throws [Failed]
+   -     0     Given something
+   -     1     Then result
+   +   - 0     Given something
+   +   - 1     Then result
+10 scenarios read the same, 6 differ

@@ -1,0 +1,14 @@
+The two prototypes built as one: prototype/on-223-abf7b0a3.patch on abf7b0a3, Release.
+=== Kronikol.Tests.StepTracking 15:42:07
+Passed!  - Failed:     0, Passed:    61, Skipped:     0, Total:    61, Duration: 13 s - Kronikol.Tests.StepTracking.dll (net10.0)
+=== Kronikol.Tests.AssertionTracking 15:42:41
+Passed!  - Failed:     0, Passed:  1432, Skipped:    28, Total:  1460, Duration: 5 m 33 s - Kronikol.Tests.AssertionTracking.dll (net10.0)
+=== Kronikol.Tests.xUnit2 15:48:38
+Passed!  - Failed:     0, Passed:   111, Skipped:     0, Total:   111, Duration: 2 m 24 s - Kronikol.Tests.xUnit2.dll (net10.0)
+=== Kronikol.Tests.NUnit4 15:51:09
+Passed!  - Failed:     0, Passed:    49, Skipped:     0, Total:    49, Duration: 5 s - Kronikol.Tests.NUnit4.dll (net10.0)
+=== Kronikol.Tests.MSTest 15:51:40
+Passed!  - Failed:     0, Passed:    85, Skipped:     0, Total:    85, Duration: 4 s - Kronikol.Tests.MSTest.dll (net10.0)
+=== Kronikol.Tests 15:51:57
+Passed!  - Failed:     0, Passed: 11578, Skipped:     2, Total: 11580, Duration: 6 m 48 s - Kronikol.Tests.dll (net10.0)
+FINISHED

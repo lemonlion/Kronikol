@@ -1,0 +1,2 @@
+example LightBDD suite: 6 scenarios; top-level 26 sub-steps 35 assertions 0
+bars per scenario now [4, 5, 5, 4, 4, 4] with a bar per sub-step [19, 15, 15, 4, 4, 4]

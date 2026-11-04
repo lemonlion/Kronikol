@@ -1,0 +1,7 @@
+# What P5's shape draws on the two prototypes built as one (probes-runtime-async A1, state machines): the bars and arrows, in order, from kronikol query diagram.
+hnote across <<stepDelimiter>> #black:<color:white>Fast
+hnote across <<stepDelimiter>> #black:<color:white>Slow
+shop -[#438DD5]-> tests: OK
+shop -[#438DD5]-> tests: OK
+hnote across <<stepDelimiter>> #black:<color:white>The next
+shop -[#438DD5]-> tests: OK

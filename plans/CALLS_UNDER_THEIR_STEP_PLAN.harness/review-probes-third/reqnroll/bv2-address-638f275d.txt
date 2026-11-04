@@ -1,0 +1,17 @@
+# reqnroll BV2 on the final cut, #223's 638f275d with this plan's layer and R2, no #222 under it: the rows and each call's address, from the dump.
+=== s5 BV2 This scenario runs one more sub step in the shared background [Passed]
+  open: TestRunReport.html#sid-565f9db1f4548684
+    b0    Given a background step that varies  [i0-i2] 2 calls
+      b0.0  Only second  [i0]
+      b0.1  Always  [i2]
+    b1    When I act "v"  [i4-i8] 3 calls
+      b1.0  Sub act  [i6]
+          · who
+          · v
+    0     Then I check again  [i10]
+    s5/i0      GET /in-OnlySecond                            -> b0.0
+    s5/i2      GET /in-Always                                -> b0.1
+    s5/i4      GET /in-act-v                                 -> b1
+    s5/i6      GET /in-SubAct-v                              -> b1.0
+    s5/i8      GET /in-act-after-v                           -> b1
+    s5/i10     GET /in-check2                                -> 0

@@ -1,0 +1,6 @@
+{"kind": "step", "testId": "s", "text": "pay", "timestamp": "2026-11-04T10:00:00.110000Z", "keyword": "When"}
+{"type": "Request", "testId": "s", "method": "POST", "uri": "http://shop.test/pay", "serviceName": "Shop", "callerName": "Tests", "content": "{}", "timestamp": "2026-11-04T10:00:00.120000Z", "requestResponseId": "s-pay-120"}
+{"type": "Response", "testId": "s", "method": "POST", "uri": "http://shop.test/pay", "serviceName": "Shop", "callerName": "Tests", "content": "{}", "statusCode": "200", "timestamp": "2026-11-04T10:00:00.121000Z", "requestResponseId": "s-pay-120"}
+{"kind": "step", "testId": "s", "text": "ship", "timestamp": "2026-11-04T10:00:00.130000Z", "keyword": "When"}
+{"type": "Request", "testId": "s", "method": "POST", "uri": "http://shop.test/ship", "serviceName": "Shop", "callerName": "Tests", "content": "{}", "timestamp": "2026-11-04T10:00:00.140000Z", "requestResponseId": "s-ship-140"}
+{"type": "Response", "testId": "s", "method": "POST", "uri": "http://shop.test/ship", "serviceName": "Shop", "callerName": "Tests", "content": "{}", "statusCode": "200", "timestamp": "2026-11-04T10:00:00.141000Z", "requestResponseId": "s-ship-140"}

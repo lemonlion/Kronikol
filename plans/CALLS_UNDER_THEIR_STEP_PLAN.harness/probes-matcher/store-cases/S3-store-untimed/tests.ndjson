@@ -1,0 +1,5 @@
+{"event":"start","testId":"s3","testName":"untimed","feature":"Store","timestamp":"2026-11-03T18:20:32.2146996Z"}
+{"event":"step","testId":"s3","text":"a shop","status":"passed","durationMs":5,"keyword":"Given"}
+{"event":"step","testId":"s3","text":"a basket","status":"passed","durationMs":5,"keyword":"When"}
+{"event":"step","testId":"s3","text":"it is empty","status":"passed","durationMs":5,"keyword":"Then"}
+{"event":"end","testId":"s3","status":"passed","durationMs":50,"timestamp":"2026-11-03T18:20:32.2619168Z"}

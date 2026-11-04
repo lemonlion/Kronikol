@@ -1,0 +1,20 @@
+# flows F20 on the final cut: a failing step with a passing sub-step that made a call.
+## failures --json
+s20/0 Parent20 callsTotal= 2 ['GET /in-Parent20', 'GET /in-Ok20']
+s20/0.1 Bad20 callsTotal= 1 ['GET /in-Bad20']
+## failures, text
+s20  Flows › F20 sub step fails and propagates
+  thrown at Probe.Flows.Bad20() — C:\Code\k225-review\flows\src\Flows.cs:140
+  rerun: dotnet test --filter "FullyQualifiedName~Probe.Flows.Bad20"
+  open: TestRunReport.html#sid-023d43389abdc8cb
+  history: unknown — no earlier run in this stream to compare against · F
+  Bad20 went wrong
+  ✗ s20/0  Parent20
+    Bad20 went wrong
+    2 calls in this step:
+      s20/i0  Svc  GET /in-Parent20
+      s20/i2  Svc  GET /in-Ok20
+    ✗ s20/0.1  Bad20
+      Bad20 went wrong
+      1 calls in this step:
+        s20/i4  Svc  GET /in-Bad20

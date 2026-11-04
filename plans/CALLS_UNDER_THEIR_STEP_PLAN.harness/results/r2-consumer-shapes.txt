@@ -1,0 +1,51 @@
+# Hand-built scenarios: published 5.28.2 (pub) against R2 alone on 9d994a4b (r2). scripts/run_consumer_shapes.sh
+    0 Error(s)
+    0 Error(s)
+== plain-control
+  pub     /given=0 /when=1
+  r2      /given=0 /when=1
+== mix-new-row
+  pub     /given=0 /when=1 /then=2
+  r2      /given=0 /when=1 /then=2
+== mix-background
+  pub     /shop=b0 /basket=0 /check=1
+  r2      /shop=b0 /basket=0 /check=1
+== hand-first-line
+  pub     /seed=- /cash=- /card=- /confirm=-
+  r2      /seed=- /cash=- /card=- /confirm=-
+== hand-400
+  pub     /seed=- /cash=- /card=- /confirm=-
+  r2      /seed=- /cash=- /card=- /confirm=-
+== hand-fold
+  pub     /seed=- /n=- /m=- /confirm=-
+  r2      /seed=- /n=- /m=- /confirm=-
+== manual-bar
+  pub     /given=0 /cleanup=-
+  r2      /given=0 /cleanup=-
+== with-copy
+  pub     /given=- /when=-
+  r2      /given=- /when=-
+== prepend-hand-row
+  pub     /given=- /when=-
+  r2      /given=- /when=-
+== hand-manual-raw
+  pub     /read=0 /send=1 /confirm=2
+  r2      /read=0 /send=1 /confirm=2
+== issue-128
+  pub     /a=- /b=1 /c=2
+  r2      /a=0 /b=1 /c=2
+== hand-tail-plain
+  pub     /seed=- /read=1 /tail=-
+  r2      /seed=- /read=1 /tail=-
+== hand-tail-escaped
+  pub     /seed=- /read=- /tail=-
+  r2      /seed=- /read=- /tail=-
+== hand-long-no-keyword
+  pub     /a=- /b=1
+  r2      /a=0 /b=1
+== null-test-id
+  pub     no report: files: 
+  r2      no report: files: 
+== null-scenario-id
+  pub     no report: files: 
+  r2      no report: files: 

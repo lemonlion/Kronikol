@@ -1,0 +1,5 @@
+{"event": "start", "testId": "b0", "testName": "assertion first", "feature": "F", "timestamp": "2026-11-03T10:00:00Z"}
+{"event": "assertion", "testId": "b0", "text": "the stack is up", "status": "passed", "timestamp": "2026-11-03T10:00:00.005000Z"}
+{"event": "step", "testId": "b0", "status": "passed", "durationMs": 100, "keyword": "When", "text": "a basket", "timestamp": "2026-11-03T10:00:00.100000Z"}
+{"event": "step", "testId": "b0", "status": "passed", "durationMs": 100, "keyword": "Then", "text": "it is empty", "timestamp": "2026-11-03T10:00:00.200000Z"}
+{"event": "end", "testId": "b0", "status": "passed", "durationMs": 500, "timestamp": "2026-11-03T10:00:00.500000Z"}

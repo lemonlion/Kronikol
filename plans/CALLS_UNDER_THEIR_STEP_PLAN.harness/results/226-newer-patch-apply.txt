@@ -1,0 +1,9 @@
+# #226's patch as of 2026-11-03 13:23 (STEP_METHOD_SHAPES_PLAN.prototype.patch, 9 files) laid on the final cut with git apply --3way.
+# Two hunks conflict, both in CompleteStepAsync's catches, as R1 moves those into AwaitStep: CompleteAwaited(step, false, ex.Message) against CompleteStep(false, MessageOf(ex)). Settled as CompleteAwaited(step, false, MessageOf(ex)).
+# Compiled, not run: the skip and runtime-async measurements are on its patch of 11:00 (prototype/226-measured-1100.patch).
+== src/Kronikol.StepTracking/Kronikol.StepTracking.csproj
+Build succeeded.
+== src/Kronikol.AssertionTracking/Kronikol.AssertionTracking.csproj
+Build succeeded.
+== src/Kronikol/Kronikol.csproj
+Build succeeded.

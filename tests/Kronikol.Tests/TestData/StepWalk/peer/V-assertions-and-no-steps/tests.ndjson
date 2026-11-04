@@ -1,0 +1,3 @@
+{"event": "start", "testId": "v0", "testName": "no steps", "feature": "F", "timestamp": "2026-11-03T10:00:00Z"}
+{"event": "assertion", "testId": "v0", "text": "the stack is up", "status": "passed", "timestamp": "2026-11-03T10:00:00.005000Z"}
+{"event": "end", "testId": "v0", "status": "passed", "durationMs": 500, "timestamp": "2026-11-03T10:00:00.500000Z"}

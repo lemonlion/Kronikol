@@ -1,0 +1,59 @@
+#:package Kronikol@4.5.0
+#:property InvariantGlobalization=true
+#:property PublishAot=false
+
+using System.Net;
+using Kronikol;
+using Kronikol.Reports;
+using Kronikol.Tracking;
+
+// One scenario, three steps, one tracked call in each. "Given " + the first step's text passes 110
+// characters; "And " + the second's stays under it; the third is short.
+var reportsDir = Path.Combine(Directory.GetCurrentDirectory(), "Reports");
+const string testId = "basket-scenario-1";
+(string Keyword, string Text)[] steps =
+[
+    ("Given", "a basket that held two apples and a pear last week but nothing at all this week, while the shop's prices rose"),
+    ("And", "a basket that held two apples and a pear last week but nothing this week, while the shop's prices rose"),
+    ("When", "the shopper opens the basket page"),
+];
+
+var start = DateTime.UtcNow;
+for (var i = 0; i < steps.Length; i++)
+{
+    StepCollector.StartStep(testId, steps[i].Keyword, steps[i].Text, null, null);
+    var traceId = Guid.NewGuid();
+    var callId = Guid.NewGuid();
+    var uri = new Uri($"http://shop.test/step-{i}");
+    RequestResponseLogger.Log(new RequestResponseLog("A basket", testId, HttpMethod.Get, null, uri, [], "Shop", "Caller",
+        RequestResponseType.Request, traceId, callId, false) { Timestamp = DateTimeOffset.UtcNow });
+    RequestResponseLogger.Log(new RequestResponseLog("A basket", testId, HttpMethod.Get, "{}", uri, [], "Shop", "Caller",
+        RequestResponseType.Response, traceId, callId, false, HttpStatusCode.OK) { Timestamp = DateTimeOffset.UtcNow });
+    StepCollector.CompleteStep(testId, true);
+}
+
+var end = DateTime.UtcNow;
+
+Feature[] features =
+[
+    new Feature
+    {
+        DisplayName = "Basket",
+        Scenarios =
+        [
+            new Scenario
+            {
+                Id = testId,
+                DisplayName = "A basket",
+                Result = ExecutionResult.Passed,
+                Steps = steps.Select(s => new ScenarioStep { Keyword = s.Keyword, Text = s.Text }).ToArray(),
+            },
+        ],
+    },
+];
+
+foreach (var (keyword, text) in steps)
+    Console.WriteLine($"step label: {keyword.Length + 1 + text.Length} chars  ({keyword} {text[..30]}…)");
+
+ReportGenerator.CreateStandardReportsWithDiagrams(features, start, end, new ReportConfigurationOptions { ReportsFolderPath = reportsDir });
+Console.WriteLine($"report: {reportsDir}");

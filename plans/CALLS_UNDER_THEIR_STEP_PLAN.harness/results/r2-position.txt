@@ -1,0 +1,87 @@
+# Published 5.28.2 (pub) against R2 alone on 9d994a4b (r2): the rows with no bar, X, Y and Z (probes-matcher/generators/make_position*.py). scripts/run_cases.py
+=== X1-marked-background
+  pub: flags {}
+    s0 /seed=- /basket=- /check=-
+  r2: flags {}
+    s0 /seed=- /basket=0 /check=1
+=== X2-two-rows-two-scenarios
+  pub: flags {}
+    s0 /seed=- /basket=- /check=-
+    s1 /seed=- /basket=- /check=-
+  r2: flags {}
+    s0 /seed=- /basket=0 /check=1
+    s1 /seed=- /basket=0 /check=1
+=== X3-assertion-first
+  pub: flags {}
+    s0 /basket=- /check=-
+  r2: flags {}
+    s0 /basket=1 /check=2
+=== X4-untimed-row-between
+  pub: flags {}
+    s0 /basket=- /send=- /check=-
+  r2: flags {}
+    s0 /basket=1 /send=2 /check=3
+=== X5-marked-background-text-in-the-bar
+  pub: flags {}
+    s0 /orders=b0 /confirm=-
+  r2: flags {}
+    s0 /orders=0 /confirm=1
+=== X6-no-text-and-a-background
+  pub: flags {}
+    s0 /a=- /b=-
+  r2: flags {}
+    s0 /a=0 /b=1
+=== Y1-store-draws-a-marked-background
+  pub: flags {}  (all builds the same)
+    s0 /seed=b0 /basket=0 /check=1
+=== Y2-store-with-assertion-first
+  pub: flags {}  (all builds the same)
+    s0 /basket=- /check=-
+=== Y3-store-with-untimed-rows
+  pub: flags {}  (all builds the same)
+    s0 /basket=0 /send=1
+=== Y4-plain
+  pub: flags {}  (all builds the same)
+    s0 /basket=0 /check=1
+=== Z1-detector-lifts-untimed-rows
+  pub: flags {}
+    s0 /basket=- /check=-
+    s1 /basket=- /check=-
+    s2 /basket=- /check=-
+  r2: flags {}
+    s0 /basket=1 /check=2
+    s1 /basket=1 /check=2
+    s2 /basket=1 /check=2
+=== Z2-detector-lifts-timed-rows
+  pub: flags {}  (all builds the same)
+    s0 /shop=0 /basket=1 /check=2
+    s1 /shop=0 /basket=1 /check=2
+    s2 /shop=0 /basket=1 /check=2
+=== Z3-retry-with-a-marked-background
+  pub: flags {}
+    s0 /basket=- /check=-
+  r2: flags {}
+    s0 /basket=0 /check=1
+=== Z4-nested-row-first
+  pub: flags {}
+    s0 /inner=- /basket=- /check=-
+  r2: flags {}
+    s0 /inner=- /basket=1 /check=2
+=== Z5-failing-assertion-first
+  pub: flags {}
+    s0 /basket=- /check=-
+  r2: flags {}
+    s0 /basket=1 /check=2
+=== Z6-long-label-and-a-background
+  pub: flags {}
+    s0 /long=- /check=-
+  r2: flags {}
+    s0 /long=0 /check=1
+=== Z7-background-text-is-the-next-row
+  pub: flags {}
+    s0 /own=b0 /check=-
+  r2: flags {}
+    s0 /own=0 /check=1
+=== Z8-only-marked-rows
+  pub: flags {}  (all builds the same)
+    s0 /call=-

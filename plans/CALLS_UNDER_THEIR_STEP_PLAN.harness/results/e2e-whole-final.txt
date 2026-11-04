@@ -1,0 +1,9 @@
+# Kronikol.Tests.EndToEnd, the whole suite, on the final cut (bundled Chromium). dotnet test -c Release
+  Failed Kronikol.Tests.EndToEnd.SplitDiagramZoomTests.A_diagram_in_parts_zoomed_partway_keeps_its_place_when_drawn_again_twice_while_not_displayed [3 s]
+Failed!  - Failed:     1, Passed:  2092, Skipped:    28, Total:  2121, Duration: 22 m 29 s - Kronikol.Tests.EndToEnd.dll (net10.0)
+[xUnit.net 00:01:19.79]     Kronikol.Tests.EndToEnd.SplitDiagramZoomTests.A_diagram_in_parts_zoomed_partway_keeps_its_place_when_drawn_again_twice_while_not_displayed [FA
+
+# The one failure alone, three runs on the same build:
+Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: 2 s - Kronikol.Test
+Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: 2 s - Kronikol.Test
+Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: 1 s - Kronikol.Test

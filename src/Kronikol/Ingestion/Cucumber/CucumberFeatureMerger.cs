@@ -368,7 +368,7 @@ public static class CucumberFeatureMerger
         {
             var windows = cucumber.StepWindows[testId];
             var extra = new List<ScenarioStep>();
-            var children = new Dictionary<ScenarioStep, List<ScenarioStep>>();
+            var children = new Dictionary<ScenarioStep, List<ScenarioStep>>(ReferenceEqualityComparer.Instance);
 
             foreach (var record in records.OrderBy(r => r.Timestamp ?? DateTimeOffset.MinValue))
             {

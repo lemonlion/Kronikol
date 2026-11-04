@@ -1,0 +1,10 @@
+DIFF s11-d0.puml lines 51 -> 54, first at 26
+   published: shopTests -[#438DD5]> shopAPI: [[#iflow-GUID GET: /later-step/first]]
+   prototype: 
+DIFF s23-d0.puml lines 65 -> 62, first at 34
+   published: 
+   prototype: shopTests -[#438DD5]> shopAPI: [[#iflow-GUID GET: /after-skip/sub]]
+DIFF s24-d0.puml lines 65 -> 62, first at 34
+   published: 
+   prototype: shopTests -[#438DD5]> shopAPI: [[#iflow-GUID GET: /after-skip/sub]]
+same 22, different 3

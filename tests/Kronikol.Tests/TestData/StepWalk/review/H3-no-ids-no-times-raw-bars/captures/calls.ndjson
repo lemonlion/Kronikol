@@ -1,0 +1,8 @@
+{"kind": "marker", "markerKind": "Step", "type": "Request", "uri": "http://override.com/", "serviceName": "", "callerName": "", "testId": "s", "requestResponseId": "s-bar-None", "plantUml": "\nhnote across <<stepDelimiter>> #black:<color:white>Given a basket\n\n"}
+{"kind": "marker", "markerKind": "Step", "type": "Request", "uri": "http://override.com/", "serviceName": "", "callerName": "", "testId": "s", "requestResponseId": "s-bar-None-e", "markerEnd": true}
+{"type": "Request", "testId": "s", "method": "POST", "uri": "http://shop.test/same", "serviceName": "Shop", "callerName": "Tests", "content": "{}"}
+{"type": "Response", "testId": "s", "method": "POST", "uri": "http://shop.test/same", "serviceName": "Shop", "callerName": "Tests", "content": "{}", "statusCode": "200"}
+{"kind": "marker", "markerKind": "Step", "type": "Request", "uri": "http://override.com/", "serviceName": "", "callerName": "", "testId": "s", "requestResponseId": "s-bar-None", "plantUml": "\nhnote across <<stepDelimiter>> #black:<color:white>When it is paid\n\n"}
+{"kind": "marker", "markerKind": "Step", "type": "Request", "uri": "http://override.com/", "serviceName": "", "callerName": "", "testId": "s", "requestResponseId": "s-bar-None-e", "markerEnd": true}
+{"type": "Request", "testId": "s", "method": "POST", "uri": "http://shop.test/same", "serviceName": "Shop", "callerName": "Tests", "content": "{}"}
+{"type": "Response", "testId": "s", "method": "POST", "uri": "http://shop.test/same", "serviceName": "Shop", "callerName": "Tests", "content": "{}", "statusCode": "200"}

@@ -1,0 +1,5 @@
+{"event": "start", "testId": "x", "testName": "both", "feature": "F", "timestamp": "2026-11-03T10:00:00Z"}
+{"event": "step", "testId": "x", "status": "passed", "durationMs": 100, "background": true, "keyword": "Given", "text": "the account exists", "timestamp": "2026-11-03T10:00:00.010000Z"}
+{"event": "step", "testId": "x", "status": "passed", "durationMs": 100, "keyword": "When", "timestamp": "2026-11-03T10:00:00.100000Z"}
+{"event": "step", "testId": "x", "status": "passed", "durationMs": 100, "keyword": "Then", "text": "it is empty", "timestamp": "2026-11-03T10:00:00.200000Z"}
+{"event": "end", "testId": "x", "status": "passed", "durationMs": 500, "timestamp": "2026-11-03T10:00:00.500000Z"}

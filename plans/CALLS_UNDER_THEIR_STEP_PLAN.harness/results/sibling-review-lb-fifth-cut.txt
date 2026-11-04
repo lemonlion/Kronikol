@@ -1,0 +1,202 @@
+    0 Error(s)
+Failed!  - Failed:     3, Passed:     8, Skipped:     0, Total:    11, Duration: 993 ms - HookSteps.
+Diagnostics (5):
+  BackgroundCalls ×5  1 call arrived after 'L0 control' ended and are listed as background calls  (summary --json lists all 5)
+next: failures
+
+### s0 steps
+s0  Probes › L0 control  [Passed]  0s
+stableId 76651aa08fa27e45
+open: TestRunReport.html#sid-76651aa08fa27e45
+
+  0     GIVEN Given a registered customer  [i0]
+    0.0   A customer is registered  [i0]
+  1     WHEN When the customer places the order  [i2]
+    1.0   An order is submitted  [i2]
+  2     THEN Then the order is confirmed
+    2.0   The order is read back
+2 calls · interactions s0 · flow s0
+
+### s0 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+0.0   POST    /customers      1      0     0 ms     0 ms      1       4 B
+1.0   POST    /orders         1      0     0 ms     0 ms      1       4 B
+2 buckets
+
+### s1 steps
+s1  Probes › L1 a step method in a scenario decorator  [Failed]  0.01s
+stableId db274a038b9b7a57
+open: TestRunReport.html#sid-db274a038b9b7a57
+
+  0     GIVEN Given a registered customer
+  1     WHEN When the customer places the order
+  2     THEN Then the order is confirmed
+0 calls · interactions s1 · flow s1
+
+### s1 calls: step, method, path
+step  method  path  calls errors   median      max bodies     bytes
+buckets: nothing at --offset 0 · 0 buckets in total
+
+### s2 steps
+s2  Probes › L2 a step method before a composite steps own steps  [Passed]  0.01s
+stableId 18f613ff6d91c9a8
+open: TestRunReport.html#sid-18f613ff6d91c9a8
+
+  0     GIVEN Given a composite step that seeds first  0.01s  [i0-i4] 3 calls
+    0.0   Native sub step one  [i0]
+    0.1   Native sub step two  [i2]
+      0.1.0 A customer is registered  [i2]
+    0.2   Native sub step two  [i4]
+      0.2.0 An order is submitted  [i4]
+  1     THEN Then the order is confirmed
+    1.0   The order is read back
+3 calls · interactions s2 · flow s2
+
+### s2 calls: step, method, path
+step   method  path        calls errors   median      max bodies     bytes
+0.0    POST    /seed           1      0     0 ms     0 ms      1       4 B
+0.1.0  POST    /customers      1      0     0 ms     0 ms      1       4 B
+0.2.0  POST    /orders         1      0     0 ms     0 ms      1       4 B
+3 buckets
+
+### s3 steps
+s3  Probes › L3 a failing composite sub step  [Failed]  0.01s
+stableId 6f7530d01c529d10
+open: TestRunReport.html#sid-6f7530d01c529d10
+
+✗ 0     GIVEN Given a composite step whose first step fails  0.01s  [i0]
+  ✗ 0.0   Native sub step that fails  0s  [i0]
+    0.1   Native sub step two
+  1     THEN Then the order is confirmed
+1 calls · interactions s3 · flow s3
+
+### s3 calls: step, method, path
+step  method  path       calls errors   median      max bodies     bytes
+0.0   POST    /payments      1      0     0 ms     0 ms      1       4 B
+1 buckets
+
+### s4 steps
+s4  Probes › L4 a step method left running  [Passed]  0.28s
+stableId 39c55b10e59ebcfd
+open: TestRunReport.html#sid-39c55b10e59ebcfd
+
+  0     GIVEN Given a step method is left running  0.11s  [i0]
+    0.0   A slow background check  0.21s
+  1     WHEN When the customer places the order  0.01s  [i2]
+    1.0   An order is submitted  0s  [i2]
+  2     THEN Then the order is confirmed  0s  [i4]
+    2.0   The order is read back  [i4]
+3 calls · interactions s4 · flow s4
+
+### s4 calls: step, method, path
+step  method  path       calls errors   median      max bodies     bytes
+0     POST    /started       1      0     4 ms     4 ms      1       4 B
+1.0   POST    /orders        1      0     0 ms     0 ms      1       4 B
+2.0   POST    /orders/1      1      0     0 ms     0 ms      1       4 B
+3 buckets
+
+### s5 steps
+s5  Probes › L5 a step method fails in a scenario decorator  [Failed]  0.07s
+stableId 455e2af918095cd1
+open: TestRunReport.html#sid-455e2af918095cd1
+
+  0     GIVEN Given a registered customer
+  1     WHEN When the customer places the order
+  2     THEN Then the order is confirmed
+0 calls · interactions s5 · flow s5
+
+### s5 calls: step, method, path
+step  method  path  calls errors   median      max bodies     bytes
+buckets: nothing at --offset 0 · 0 buckets in total
+
+### s6 steps
+s6  Probes › L6 a forwarding step method left running  [Passed]  0.42s
+stableId 537abded4cb16a7e
+open: TestRunReport.html#sid-537abded4cb16a7e
+
+  0     GIVEN Given a forwarder is left running  0s  [i0-i2] 2 calls
+    0.0   A forwarding check  0.2s  [i2]
+      0.0.0 A slow inner check  0.2s  [i2]
+  1     WHEN When the order takes a while and is read back  0.42s  [i4-i6] 2 calls
+    1.0   An order is submitted slowly  0.41s  [i4]
+    1.1   The order is read back  [i6]
+  2     THEN Then the order is confirmed  [i8]
+    2.0   The order is read back  [i8]
+5 calls · interactions s6 · flow s6
+
+### s6 calls: step, method, path
+step   method  path         calls errors   median      max bodies     bytes
+0      POST    /started         1      0     0 ms     0 ms      1       4 B
+0.0.0  POST    /background      1      0     0 ms     0 ms      1       4 B
+1.0    POST    /orders          1      0     0 ms     0 ms      1       4 B
+1.1    POST    /orders/1        1      0     0 ms     0 ms      1       4 B
+2.0    POST    /orders/1        1      0     0 ms     0 ms      1       4 B
+5 buckets
+
+### s7 steps
+s7  Probes › V1 plain calls no step methods  [Passed]  0.01s
+stableId ecebbcc94f674702
+open: TestRunReport.html#sid-ecebbcc94f674702
+
+  0     GIVEN Plain given  [i0]
+  1     WHEN Plain when  [i2]
+  2     THEN Plain then  [i4]
+3 calls · interactions s7 · flow s7
+
+### s7 calls: step, method, path
+step  method  path  calls errors   median      max bodies     bytes
+0     POST    /v1       1      0     0 ms     0 ms      1       4 B
+1     POST    /v2       1      0     0 ms     0 ms      1       4 B
+2     POST    /v3       1      0     0 ms     0 ms      1       4 B
+3 buckets
+
+### s8 steps
+s8  Probes › V2 plain calls with a fourth step  [Passed]  0.01s
+stableId c8b68de738ffb339
+open: TestRunReport.html#sid-c8b68de738ffb339
+
+  0     GIVEN Plain given  [i0]
+  1     WHEN Plain when  [i2]
+  2     THEN Plain then  [i4]
+  3     AND Plain and
+3 calls · interactions s8 · flow s8
+
+### s8 calls: step, method, path
+step  method  path  calls errors   median      max bodies     bytes
+0     POST    /v1       1      0     0 ms     0 ms      1       4 B
+1     POST    /v2       1      0     0 ms     0 ms      1       4 B
+2     POST    /v3       1      0     0 ms     0 ms      1       4 B
+3 buckets
+
+### s9 steps
+s9  Probes › V3 plain calls on the control paths  [Passed]  0s
+stableId a4eea3b756d59e3d
+open: TestRunReport.html#sid-a4eea3b756d59e3d
+
+  0     GIVEN Plain given  [i0]
+  1     WHEN Plain when prefix  [i2]
+  2     THEN Plain then same path  [i4]
+3 calls · interactions s9 · flow s9
+
+### s9 calls: step, method, path
+step  method  path       calls errors   median      max bodies     bytes
+0     POST    /v1            1      0     0 ms     0 ms      1       4 B
+1     POST    /orders        1      0     0 ms     0 ms      1       4 B
+2     POST    /orders/1      1      0     0 ms     0 ms      1       4 B
+3 buckets
+
+### s10 steps
+s10  Probes › V4 step methods in given and then only  [Passed]  0.01s
+stableId c2593ff840ad7cd2
+open: TestRunReport.html#sid-c2593ff840ad7cd2
+
+  0     GIVEN Given a registered customer  0s  [i0]
+    0.0   A customer is registered  [i0]
+  1     THEN Then the order is confirmed
+    1.0   The order is read back
+1 calls · interactions s10 · flow s10
+
+### s10 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+0.0   POST    /customers      1      0     0 ms     0 ms      1       4 B
+1 buckets

@@ -1,0 +1,12 @@
+# #224's patch of 16:58 (prototype/224-r1-r2-r3-cut10-1658.patch) checked with git apply --check --3way on #223's 306557a4 with this plan's layer. Nothing was settled, built or run: its session says it may move.
+Applied patch to 'src/Kronikol.BDDfy.xUnit3/BDDfyStepTrackingExecutor.cs' with conflicts.
+Applied patch to 'src/Kronikol.LightBDD.Core/LightBddTestTrackingMessageHandlerOptions.cs' cleanly.
+Applied patch to 'src/Kronikol.LightBDD.Core/StepTrackingStepDecorator.cs' with conflicts.
+Applied patch to 'src/Kronikol.ReqNRoll.Core/ReqNRollTrackingHooks.cs' with conflicts.
+Applied patch to 'src/Kronikol.StepTracking/StepWeaver.cs' cleanly.
+Applied patch to 'src/Kronikol/PlantUml/PlantUmlCreator.cs' cleanly.
+Applied patch to 'src/Kronikol/Tracking/PhaseConfiguration.cs' cleanly.
+Applied patch to 'src/Kronikol/Tracking/StepCollector.cs' with conflicts.
+Applied patch to 'src/Kronikol/Tracking/StepTrackingOptions.cs' cleanly.
+Applied patch to 'src/Kronikol/Tracking/TestTrackingMessageHandler.cs' with conflicts.
+Applied patch to 'src/Kronikol/TrackingDiagramOverride.cs' cleanly.

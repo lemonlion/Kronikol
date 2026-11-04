@@ -1,0 +1,992 @@
+diff --git a/src/Kronikol.BDDfy.xUnit3/BDDfyStepTrackingExecutor.cs b/src/Kronikol.BDDfy.xUnit3/BDDfyStepTrackingExecutor.cs
+index 396b2565..cb20d300 100644
+--- a/src/Kronikol.BDDfy.xUnit3/BDDfyStepTrackingExecutor.cs
++++ b/src/Kronikol.BDDfy.xUnit3/BDDfyStepTrackingExecutor.cs
+@@ -1,5 +1,6 @@
+ using System.Text.RegularExpressions;
+ using TestStack.BDDfy;
++using TestStack.BDDfy.Configuration;
+ using Kronikol.Reports;
+ using Kronikol.Tracking;
+ 
+@@ -25,33 +26,64 @@ public object Execute(Step step, object testObject)
+         };
+ 
+         CurrentStepTypeLocal.Value = keyword?.ToUpperInvariant();
+-        TestPhaseContext.Current = PhaseConfiguration.ResolvePhaseFromStepType(keyword);
+ 
+         // Resolve the xUnit test ID for StepCollector
+         string? testId = null;
+         try { testId = Xunit.TestContext.Current.Test?.UniqueID; } catch { /* not in xUnit context */ }
+ 
++        var phaseBefore = testId is not null && StepCollector.UnderOpenKeyword(testId) ? TestPhaseContext.Current : TestPhase.Unknown;
++        if (testId is null)
++            TestPhaseContext.Current = PhaseConfiguration.ResolvePhaseFromStepType(keyword);
++
+         var stepText = ExtractStepText(step.Title, keyword);
+         if (testId is not null)
+-            StepCollector.StartStep(testId, keyword, stepText, null, null);
++            StepCollector.StartStep(testId, keyword, stepText, null, null, table: null, docString: null, phaseKeyword: keyword);
+ 
++        var closed = false;
+         try
+         {
+-            return inner.Execute(step, testObject);
++            var result = inner.Execute(step, testObject);
++            if (testId is not null && Configurator.AsyncVoidSupportEnabled && result is Task task)
++            {
++                // Its own flow leaves it now, and its task closes it.
++                closed = true;
++                StepCollector.LeaveCompletedStep(testId);
++                return CloseWhenDone(testId, task);
++            }
++            return result;
+         }
+         catch (Exception)
+         {
+             if (testId is not null)
+                 StepCollector.CompleteStep(testId, passed: false);
++
++            // The finally would close the step above it.
++            closed = true;
+             throw;
+         }
+         finally
+         {
+-            if (testId is not null && StepCollector.HasActiveStep(testId))
++            if (!closed && testId is not null && StepCollector.HasActiveStep(testId))
+                 StepCollector.CompleteStep(testId, passed: true);
+             CurrentStepTypeLocal.Value = null;
+-            TestPhaseContext.Current = TestPhase.Unknown;
++            TestPhaseContext.Current = phaseBefore;
++        }
++    }
++
++    private static async Task CloseWhenDone(string testId, Task task)
++    {
++        try
++        {
++            await task.ConfigureAwait(false);
++        }
++        catch
++        {
++            StepCollector.CompleteStep(testId, passed: false);
++            throw;
+         }
++
++        if (StepCollector.HasActiveStep(testId))
++            StepCollector.CompleteStep(testId, passed: true);
+     }
+ 
+     /// <summary>
+diff --git a/src/Kronikol.LightBDD.Core/LightBddTestTrackingMessageHandlerOptions.cs b/src/Kronikol.LightBDD.Core/LightBddTestTrackingMessageHandlerOptions.cs
+index 04624a61..5255c72a 100644
+--- a/src/Kronikol.LightBDD.Core/LightBddTestTrackingMessageHandlerOptions.cs
++++ b/src/Kronikol.LightBDD.Core/LightBddTestTrackingMessageHandlerOptions.cs
+@@ -33,7 +33,10 @@ public LightBddTestTrackingMessageHandlerOptions()
+             info = parentStep;
+ 
+         var stepType = info.Name?.StepTypeName?.Name;
+-        TestPhaseContext.Current = PhaseConfiguration.ResolvePhaseFromStepType(stepType);
++        // Only for a suite with no step decorator (ReportWritersConfiguration's CreateStandardReportsWithDiagrams registers
++        // none): where the decorator runs, the phase is the test's, and a top-level AND is not a setup step.
++        if (!StepCollector.FrameworkStepsSetPhase())
++            TestPhaseContext.Current = PhaseConfiguration.ResolvePhaseFromStepType(stepType);
+         return stepType;
+     }
+ }
+\ No newline at end of file
+diff --git a/src/Kronikol.LightBDD.Core/StepTrackingStepDecorator.cs b/src/Kronikol.LightBDD.Core/StepTrackingStepDecorator.cs
+index 586c1f9b..eac080a2 100644
+--- a/src/Kronikol.LightBDD.Core/StepTrackingStepDecorator.cs
++++ b/src/Kronikol.LightBDD.Core/StepTrackingStepDecorator.cs
+@@ -25,7 +25,11 @@ public async Task ExecuteAsync(IStep step, Func<Task> stepInvocation)
+         catch { /* not in scenario context */ }
+ 
+         if (testId is not null)
+-            StepCollector.StartStep(testId, keyword, text, null, null);
++        {
++            // A suite's BUT continues the step before it, as LightBDD's own AND does.
++            var phaseKeyword = string.Equals(keyword, "BUT", StringComparison.OrdinalIgnoreCase) ? "AND" : keyword;
++            StepCollector.StartStep(testId, keyword, text, null, null, table: null, docString: null, phaseKeyword);
++        }
+ 
+         try
+         {
+@@ -37,11 +41,10 @@ public async Task ExecuteAsync(IStep step, Func<Task> stepInvocation)
+                 StepCollector.CompleteStep(testId, passed: false);
+             throw;
+         }
+-        finally
+-        {
+-            if (testId is not null && StepCollector.HasActiveStep(testId))
+-                StepCollector.CompleteStep(testId, passed: true);
+-        }
++
++        // Not in a finally: after the catch above has closed this step, it would close the step above it.
++        if (testId is not null && StepCollector.HasActiveStep(testId))
++            StepCollector.CompleteStep(testId, passed: true);
+     }
+ 
+     /// <summary>
+diff --git a/src/Kronikol.ReqNRoll.Core/ReqNRollTrackingHooks.cs b/src/Kronikol.ReqNRoll.Core/ReqNRollTrackingHooks.cs
+index c340e385..f122cf2b 100644
+--- a/src/Kronikol.ReqNRoll.Core/ReqNRollTrackingHooks.cs
++++ b/src/Kronikol.ReqNRoll.Core/ReqNRollTrackingHooks.cs
+@@ -92,7 +92,6 @@ public void BeforeStep()
+ 
+         var stepType = _scenarioContext.StepContext.StepInfo.StepInstance.StepDefinitionKeyword.ToString();
+         ReqNRollTestContext.CurrentStepType = stepType;
+-        TestPhaseContext.Current = PhaseConfiguration.ResolvePhaseFromStepType(stepType);
+         _scenarioContext[ReqNRollConstants.StepStopwatchKey] = Stopwatch.StartNew();
+ 
+         // Push a step onto StepCollector so assertion tracking sub-steps attach here. The step's
+@@ -100,8 +99,10 @@ public void BeforeStep()
+         // an outline step already has its <placeholders> substituted.
+         var scenarioId = (string)_scenarioContext[ReqNRollConstants.ScenarioRuntimeIdKey];
+         var stepInfo = _scenarioContext.StepContext.StepInfo;
++        // The keyword as written is the step's label. Its phase is the type Reqnroll resolved, And and But to the keyword
++        // they continue (#195).
+         StepCollector.StartStep(scenarioId, stepType, stepInfo.Text, null, null,
+-            ReqNRollStepArguments.ToBarRows(stepInfo.Table), stepInfo.MultilineText);
++            ReqNRollStepArguments.ToBarRows(stepInfo.Table), stepInfo.MultilineText, phaseKeyword: stepInfo.StepDefinitionType.ToString());
+     }
+ 
+     [AfterStep(Order = int.MaxValue)]
+diff --git a/src/Kronikol.StepTracking/StepWeaver.cs b/src/Kronikol.StepTracking/StepWeaver.cs
+index d404a899..e3876026 100644
+--- a/src/Kronikol.StepTracking/StepWeaver.cs
++++ b/src/Kronikol.StepTracking/StepWeaver.cs
+@@ -230,6 +230,27 @@ private void WrapMethodWithStepTracking(
+             preamble.Add(il.Create(OpCodes.Stloc, paramValuesLocal!));
+         }
+ 
++        // A getter that throws must find no step open.
++        VariableDefinition? skipLocal = null;
++        if (skipIf != null)
++        {
++            skipLocal = new VariableDefinition(method.Module.TypeSystem.Boolean);
++            body.Variables.Add(skipLocal);
++            if (skipIf.IsField)
++            {
++                if (!skipIf.IsStatic)
++                    preamble.Add(il.Create(OpCodes.Ldarg_0));
++                preamble.Add(il.Create(skipIf.IsStatic ? OpCodes.Ldsfld : OpCodes.Ldfld, method.Module.ImportReference(skipIf.FieldRef!)));
++            }
++            else
++            {
++                if (!skipIf.IsStatic)
++                    preamble.Add(il.Create(OpCodes.Ldarg_0));
++                preamble.Add(il.Create(skipIf.IsStatic ? OpCodes.Call : OpCodes.Callvirt, method.Module.ImportReference(skipIf.PropertyGetterRef!)));
++            }
++            preamble.Add(il.Create(OpCodes.Stloc, skipLocal));
++        }
++
+         // Call StepCollector.StartStep(keyword, text, paramNames, paramValues)
+         if (keyword != null)
+             preamble.Add(il.Create(OpCodes.Ldstr, keyword));
+@@ -256,21 +277,7 @@ private void WrapMethodWithStepTracking(
+         {
+             var bypassStepRef = GetBypassStepReference(method.Module);
+ 
+-            // Load the bool property/field
+-            if (skipIf.IsField)
+-            {
+-                if (!skipIf.IsStatic)
+-                    preamble.Add(il.Create(OpCodes.Ldarg_0)); // this
+-                preamble.Add(il.Create(skipIf.IsStatic ? OpCodes.Ldsfld : OpCodes.Ldfld,
+-                    method.Module.ImportReference(skipIf.FieldRef!)));
+-            }
+-            else
+-            {
+-                if (!skipIf.IsStatic)
+-                    preamble.Add(il.Create(OpCodes.Ldarg_0)); // this
+-                preamble.Add(il.Create(skipIf.IsStatic ? OpCodes.Call : OpCodes.Callvirt,
+-                    method.Module.ImportReference(skipIf.PropertyGetterRef!)));
+-            }
++            preamble.Add(il.Create(OpCodes.Ldloc, skipLocal!));
+ 
+             // brfalse → normalPath (originalFirst) — skip bypass if false
+             preamble.Add(il.Create(OpCodes.Brfalse, originalFirst));
+@@ -316,13 +323,24 @@ private void WrapMethodWithStepTracking(
+         // Replace all existing 'ret' instructions with 'leave' to the success block (after handler).
+         // We modify instructions in-place (not il.Replace) to preserve branch targets that
+         // reference these instructions — otherwise branches become dangling references.
+-        var rets = body.Instructions.Where(i => i.OpCode == OpCodes.Ret).ToList();
++        var syncBodyStart = body.Instructions.IndexOf(originalFirst);
++        var rets = body.Instructions.Where(i => i.OpCode == OpCodes.Ret && body.Instructions.IndexOf(i) >= syncBodyStart).ToList();
+         foreach (var ret in rets)
+         {
+             ret.OpCode = OpCodes.Leave;
+             ret.Operand = successNop;
+         }
+ 
++        // A tail call cannot sit in a try, and a handler the method ended in would swallow what is appended.
++        foreach (var prefix in body.Instructions.Where(i => i.OpCode == OpCodes.Tail).ToList())
++        {
++            prefix.OpCode = OpCodes.Nop;
++            prefix.Operand = null;
++        }
++
++        foreach (var inner in body.ExceptionHandlers.Where(h => h.HandlerEnd == null))
++            inner.HandlerEnd = catchStart;
++
+         // Append catch block after the body
+         body.Instructions.Add(catchStart);
+         body.Instructions.Add(catchLoadFalse);
+@@ -437,6 +455,27 @@ private void WrapAsyncMethodWithStepTracking(
+             preamble.Add(il.Create(OpCodes.Stloc, paramValuesLocal!));
+         }
+ 
++        // A getter that throws must find no step open.
++        VariableDefinition? skipLocal = null;
++        if (skipIf != null)
++        {
++            skipLocal = new VariableDefinition(method.Module.TypeSystem.Boolean);
++            body.Variables.Add(skipLocal);
++            if (skipIf.IsField)
++            {
++                if (!skipIf.IsStatic)
++                    preamble.Add(il.Create(OpCodes.Ldarg_0));
++                preamble.Add(il.Create(skipIf.IsStatic ? OpCodes.Ldsfld : OpCodes.Ldfld, method.Module.ImportReference(skipIf.FieldRef!)));
++            }
++            else
++            {
++                if (!skipIf.IsStatic)
++                    preamble.Add(il.Create(OpCodes.Ldarg_0));
++                preamble.Add(il.Create(skipIf.IsStatic ? OpCodes.Call : OpCodes.Callvirt, method.Module.ImportReference(skipIf.PropertyGetterRef!)));
++            }
++            preamble.Add(il.Create(OpCodes.Stloc, skipLocal));
++        }
++
+         // Call StepCollector.StartStep(keyword, text, paramNames, paramValues)
+         if (keyword != null)
+             preamble.Add(il.Create(OpCodes.Ldstr, keyword));
+@@ -463,21 +502,7 @@ private void WrapAsyncMethodWithStepTracking(
+         {
+             var bypassStepRef = GetBypassStepReference(method.Module);
+ 
+-            // Load the bool property/field
+-            if (skipIf.IsField)
+-            {
+-                if (!skipIf.IsStatic)
+-                    preamble.Add(il.Create(OpCodes.Ldarg_0)); // this
+-                preamble.Add(il.Create(skipIf.IsStatic ? OpCodes.Ldsfld : OpCodes.Ldfld,
+-                    method.Module.ImportReference(skipIf.FieldRef!)));
+-            }
+-            else
+-            {
+-                if (!skipIf.IsStatic)
+-                    preamble.Add(il.Create(OpCodes.Ldarg_0)); // this
+-                preamble.Add(il.Create(skipIf.IsStatic ? OpCodes.Call : OpCodes.Callvirt,
+-                    method.Module.ImportReference(skipIf.PropertyGetterRef!)));
+-            }
++            preamble.Add(il.Create(OpCodes.Ldloc, skipLocal!));
+ 
+             // brfalse → normalPath (originalFirst)
+             preamble.Add(il.Create(OpCodes.Brfalse, originalFirst));
+@@ -524,16 +549,88 @@ private void WrapAsyncMethodWithStepTracking(
+         // With:       [task on stack] call CompleteStepAsync ret
+         var completeStepAsyncRef = GetCompleteStepAsyncReference(module, method.ReturnType, asyncKind);
+ 
+-        var rets = body.Instructions.Where(i => i.OpCode == OpCodes.Ret).ToList();
+-        foreach (var ret in rets)
++        var bodyStartAll = body.Instructions.IndexOf(originalFirst);
++        var rets = body.Instructions.Where(i => i.OpCode == OpCodes.Ret && body.Instructions.IndexOf(i) >= bodyStartAll).ToList();
++
++        // A method that returns its task without being async can throw before it has one, and the step would then stay open for the
++        // rest of the test. An async method's kickoff cannot, so its IL stays as it was.
++        var isAsyncMethod = method.CustomAttributes.Any(a => a.AttributeType.Name == "AsyncStateMachineAttribute");
++        var bodyStart = body.Instructions.IndexOf(originalFirst);
++        var bodyRets = isAsyncMethod ? [] : rets.Where(r => body.Instructions.IndexOf(r) >= bodyStart).ToList();
++
++        foreach (var ret in rets.Except(bodyRets))
+         {
+             var callComplete = il.Create(OpCodes.Call, completeStepAsyncRef);
+             il.InsertBefore(ret, callComplete);
+         }
+ 
++        if (!isAsyncMethod)
++            CloseStepIfTaskStubThrows(method, il, originalFirst, bodyRets, completeStepAsyncRef, stepMethods.CompleteStepFailed);
++
+         body.OptimizeMacros();
+     }
+ 
++    private static void CloseStepIfTaskStubThrows(MethodDefinition method, ILProcessor il, Instruction tryStart, List<Instruction> rets,
++        MethodReference completeStepAsync, MethodReference completeStepFailed)
++    {
++        var body = method.Body;
++        var module = method.Module;
++
++        // A tail call hands the frame on, and this frame still has its catch and its end to run.
++        foreach (var prefix in body.Instructions.Where(i => i.OpCode == OpCodes.Tail).ToList())
++        {
++            prefix.OpCode = OpCodes.Nop;
++            prefix.Operand = null;
++        }
++
++        var exceptionType = module.ImportReference(typeof(Exception));
++        var getMessage = module.ImportReference(typeof(Exception).GetProperty(nameof(Exception.Message))!.GetGetMethod()!);
++        var resultLocal = new VariableDefinition(method.ReturnType);
++        var exceptionLocal = new VariableDefinition(exceptionType);
++        body.Variables.Add(resultLocal);
++        body.Variables.Add(exceptionLocal);
++
++        var afterCatch = il.Create(OpCodes.Ldloc, resultLocal);
++        foreach (var ret in rets)
++        {
++            // In place, so a branch to this ret still lands on it.
++            ret.OpCode = OpCodes.Stloc;
++            ret.Operand = resultLocal;
++            il.InsertAfter(ret, il.Create(OpCodes.Leave, afterCatch));
++        }
++
++        var catchStart = il.Create(OpCodes.Stloc, exceptionLocal);
++
++        // Cecil reads a null HandlerEnd as the method's end: a handler the method ended in would swallow all that is appended here.
++        foreach (var inner in body.ExceptionHandlers.Where(h => h.HandlerEnd == null))
++            inner.HandlerEnd = catchStart;
++
++        il.Append(catchStart);
++        if (method.DebugInformation?.HasSequencePoints == true)
++        {
++            var points = method.DebugInformation.SequencePoints;
++            points.Add(new SequencePoint(catchStart, points[0].Document) { StartLine = 0xFEEFEE, EndLine = 0xFEEFEE });
++        }
++
++        il.Append(il.Create(OpCodes.Ldc_I4_0));
++        il.Append(il.Create(OpCodes.Ldloc, exceptionLocal));
++        il.Append(il.Create(OpCodes.Callvirt, getMessage));
++        il.Append(il.Create(OpCodes.Call, completeStepFailed));
++        il.Append(il.Create(OpCodes.Rethrow));
++        il.Append(afterCatch);
++        il.Append(il.Create(OpCodes.Call, completeStepAsync));
++        il.Append(il.Create(OpCodes.Ret));
++
++        body.ExceptionHandlers.Add(new ExceptionHandler(ExceptionHandlerType.Catch)
++        {
++            TryStart = tryStart,
++            TryEnd = catchStart,
++            HandlerStart = catchStart,
++            HandlerEnd = afterCatch,
++            CatchType = exceptionType
++        });
++    }
++
+     private static MethodReference GetCompleteStepAsyncReference(ModuleDefinition module, TypeReference returnType, AsyncKind asyncKind)
+     {
+         var ttdAssemblyRef = module.AssemblyReferences
+diff --git a/src/Kronikol/PlantUml/PlantUmlCreator.cs b/src/Kronikol/PlantUml/PlantUmlCreator.cs
+index 4768a712..d911ad31 100644
+--- a/src/Kronikol/PlantUml/PlantUmlCreator.cs
++++ b/src/Kronikol/PlantUml/PlantUmlCreator.cs
+@@ -119,7 +119,8 @@ public static IEnumerable<PlantUmlForTest> GetPlantUmlImageTagsPerTestId(
+             .Select(testTraces =>
+         {
+             var traces = testTraces.ToList();
+-            var testName = testTraces.First().TestName;
++            // A boundary drawn before a test's first call carries the test's id as its name.
++            var testName = (testTraces.FirstOrDefault(t => !t.IsActionStart) ?? testTraces.First()).TestName;
+             var results = CreatePlantUml(
+                 traces, 
+                 requestPreFormattingProcessor,
+@@ -191,23 +192,42 @@ private static PlantUmlResult[] CreatePlantUml(
+         bool systemUiFont = false)
+     {
+         // Collapse poll/retry bursts and apply the arrow cap before rendering (no-op when both are off).
++        // With no partition to draw, the boundary is not on the page, so it must not end a run of identical calls.
++        // Nor with a call that takes its phase variant from its place: there it is on the page after all.
++        var heldBoundary = !separateSetup && collapseConsecutiveIdenticalCalls && !tracesForTest.Any(t => t.SetupVariant is not null || t.ActionVariant is not null)
++            ? tracesForTest.FindLastIndex(t => t.IsActionStart) : -1;
++        var afterBoundary = heldBoundary >= 0 ? tracesForTest.Skip(heldBoundary + 1).Where(t => !t.IsActionStart).ToList() : [];
++        var boundaryMarker = heldBoundary >= 0 ? tracesForTest[heldBoundary] : null;
++        if (boundaryMarker is not null)
++            tracesForTest = tracesForTest.Where(t => !t.IsActionStart).ToList();
++
+         var collapsed = SequenceCollapser.Apply(tracesForTest, collapseConsecutiveIdenticalCalls, collapseThreshold, maxArrowsPerDiagram);
+         tracesForTest = collapsed.Traces;
+         var omittedPairs = collapsed.OmittedPairs;
+-        if (tracesForTest.Count == 0)
++        if (tracesForTest.Count == 0 || tracesForTest.All(t => t.IsActionStart))
+             return [];
+ 
++        if (boundaryMarker is not null)
++        {
++            var kept = tracesForTest.ToHashSet();
++            var next = afterBoundary.FirstOrDefault(kept.Contains);
++            tracesForTest = [.. tracesForTest];
++            tracesForTest.Insert(next is null ? tracesForTest.Count : tracesForTest.IndexOf(next), boundaryMarker);
++        }
++
+         var builder = new DiagramBuilder(tracesForTest, plantUmlTheme, clientSideSplitting ? int.MaxValue : maxEncodedDiagramLength,
+             sequenceDiagramArrowColors, sequenceDiagramParticipantColors, dependencyColors, serviceTypeOverrides,
+             diagramNoteWrapWidth, systemUiFont);
+-        var lastTrace = tracesForTest[^1];
++        // The boundary draws nothing: a diagram split at the last call before it would leave one more, empty.
++        var lastTrace = tracesForTest.Last(t => !t.IsActionStart);
+ 
+         var currentlyOverriding = false;
+         var hasActionStart = separateSetup && tracesForTest.Any(t => t.IsActionStart);
+-        var actionStartIndex = tracesForTest.FindIndex(t => t.IsActionStart);
++        // The last marker wins: at most one a step or a client drew, and the first explicit StartAction() after it.
++        var actionStartIndex = tracesForTest.FindLastIndex(t => t.IsActionStart);
+         var hasSetupTraces = hasActionStart && tracesForTest
+             .Take(actionStartIndex)
+-            .Any(t => !t.IsOverrideStart && !t.IsOverrideEnd && !t.IsActionStart);
++            .Any(t => !t.IsOverrideStart && !t.IsOverrideEnd && !t.IsActionStart && !t.TrackingIgnore);
+         var setupPartitionClosed = false;
+         var effectiveColor = setupHighlightColor ?? DiagramLook.SetupFill;
+         var partitionLine = highlightSetup ? $"partition {effectiveColor} Setup" : "partition Setup";
+@@ -221,7 +241,7 @@ private static PlantUmlResult[] CreatePlantUml(
+         for (var i = actionStartIndex - 1; i >= 0; i--)
+         {
+             var t = tracesForTest[i];
+-            if (!t.IsOverrideStart && !t.IsOverrideEnd && !t.IsActionStart)
++            if (!t.IsOverrideStart && !t.IsOverrideEnd && !t.IsActionStart && !t.TrackingIgnore)
+             {
+                 lastSetupTraceIndex = i;
+                 break;
+@@ -234,9 +254,12 @@ private static PlantUmlResult[] CreatePlantUml(
+             traceIndex++;
+             if (trace.IsActionStart)
+             {
+-                builder.ClosePartition();
+-                setupPartitionClosed = true;
+-                isInActionPhase = true;
++                if (traceIndex == actionStartIndex)
++                {
++                    builder.ClosePartition();
++                    setupPartitionClosed = true;
++                    isInActionPhase = true;
++                }
+                 continue;
+             }
+ 
+diff --git a/src/Kronikol/Tracking/PhaseConfiguration.cs b/src/Kronikol/Tracking/PhaseConfiguration.cs
+index 44587daa..2f76997f 100644
+--- a/src/Kronikol/Tracking/PhaseConfiguration.cs
++++ b/src/Kronikol/Tracking/PhaseConfiguration.cs
+@@ -50,12 +50,39 @@ internal static T[] DrawnAt<T>(T defaultVerbosity, T? setupVerbosity, T? actionV
+             : [GetEffectiveVerbosity(defaultVerbosity, setupVerbosity, actionVerbosity)];
+ 
+     /// <summary>
+-    /// Maps a BDD step-type string (e.g. "Given", "When", "Then") to a <see cref="TestPhase"/>.
++    /// What a step's keyword says about its test's phase: the phase it moves the test to, <paramref name="previous"/> for
++    /// a keyword that continues the step before it, or null for no keyword or a word that says nothing about phases
++    /// (a LightBDD step type of the suite's own). <c>But</c> is <c>[ButStep]</c>'s, a setup step; an adapter gives a
++    /// framework's <c>But</c>, which continues the step before it, as the keyword it continues.
++    /// </summary>
++    /// <summary>The phase a step attribute's keyword, or a hand-made step's, says. Exact case: a word it does not know says nothing.</summary>
++    internal static TestPhase? PhaseOfAttribute(string? keyword) => keyword switch
++    {
++        "Given" or "But" => TestPhase.Setup,
++        "When" or "Then" or "ButWhen" => TestPhase.Action,
++        _ => null
++    };
++
++    internal static TestPhase? PhaseOfStep(string? keyword, TestPhase previous) => keyword?.ToUpperInvariant() switch
++    {
++        "GIVEN" or "SETUP" or "BUT" => TestPhase.Setup,
++        "WHEN" or "THEN" or "BUTWHEN" => TestPhase.Action,
++        "AND" => previous,
++        _ => null
++    };
++
++    /// <summary>
++    /// Maps a BDD step-type string (e.g. "Given", "When", "Then") to a <see cref="TestPhase"/>. It reads one word with
++    /// nothing before it, so <c>And</c> and <c>But</c>, which continue a step, read as <see cref="TestPhase.Setup"/>; a
++    /// test's steps go through <see cref="StepCollector"/>, which knows the step before.
+     /// </summary>
+     public static TestPhase ResolvePhaseFromStepType(string? stepType)
+     {
+         if (stepType is null) return TestPhase.Unknown;
+ 
++        if (stepType.StartsWith("BUTWHEN", StringComparison.OrdinalIgnoreCase))
++            return TestPhase.Action;
++
+         if (stepType.StartsWith("GIVEN", StringComparison.OrdinalIgnoreCase)
+             || stepType.StartsWith("AND", StringComparison.OrdinalIgnoreCase)
+             || stepType.StartsWith("BUT", StringComparison.OrdinalIgnoreCase))
+diff --git a/src/Kronikol/Tracking/StepCollector.cs b/src/Kronikol/Tracking/StepCollector.cs
+index 4946362e..d1e3440d 100644
+--- a/src/Kronikol/Tracking/StepCollector.cs
++++ b/src/Kronikol/Tracking/StepCollector.cs
+@@ -27,7 +27,8 @@ public static class StepCollector
+     /// </summary>
+     public static void StartStep(string? keyword, string text, string[]? paramNames, object?[]? paramValues)
+     {
+-        StartStep(ResolveTestId(), keyword, text, paramNames, paramValues);
++        var testId = ResolveTestId();
++        StartStep(testId, keyword, text, paramNames, paramValues, table: null, docString: null, phaseKeyword: null, frameworkStep: false);
+     }
+ 
+     /// <summary>
+@@ -53,6 +54,16 @@ public static void StartStep(string? testId, string? keyword, string text, strin
+     /// </summary>
+     public static void StartStep(string? testId, string? keyword, string text, string[]? paramNames, object?[]? paramValues,
+         string[][]? table, string? docString)
++        => StartStep(testId, keyword, text, paramNames, paramValues, table, docString, phaseKeyword: null, frameworkStep: false);
++
++    /// <summary>
++    /// Starts a new step whose phase a framework adapter names. <paramref name="phaseKeyword"/> stands in for
++    /// <paramref name="keyword"/> where the phase is concerned, so Reqnroll's And and But are written as they are and take
++    /// the phase of the keyword they continue (#195), and it holds whatever
++    /// <see cref="StepTrackingOptions.WhenTriggersAction"/> says, which is about step attributes.
++    /// </summary>
++    internal static void StartStep(string? testId, string? keyword, string text, string[]? paramNames, object?[]? paramValues,
++        string[][]? table, string? docString, string? phaseKeyword, bool frameworkStep = true)
+     {
+         if (testId is null)
+             return;
+@@ -68,15 +79,51 @@ public static void StartStep(string? testId, string? keyword, string text, strin
+         };
+ 
+         var isTopLevel = false;
++        var named = phaseKeyword is not null || FrameworkNamesThisFlow();
++        var flowPhase = TestPhaseContext.Current;
++        var phaseNow = TestPhase.Unknown;
++        var startsAction = false;
+         lock (state)
+         {
+             // Resolve effective keyword (Given/And/And sequencing)
+             step.EffectiveKeyword = ResolveKeyword(state, keyword);
+ 
+             isTopLevel = state.StepStack.Count == 0;
++
++            // The outermost open step that says anything about phases decides the test's phase, and a keyword under it is a
++            // label (#224). A step with no keyword says nothing, so the keywords under it still decide.
++            var says = phaseKeyword is not null
++                ? PhaseConfiguration.PhaseOfStep(phaseKeyword, flowPhase != TestPhase.Unknown ? flowPhase : state.Phase)
++                : Options.WhenTriggersAction ? PhaseConfiguration.PhaseOfAttribute(keyword) : null;
++            step.SaysPhase = says is not (null or TestPhase.Unknown);
++            if (step.SaysPhase && !OpenStepSaysPhase(testId))
++            {
++                phaseNow = says!.Value;
++
++                // A flow the framework does not name, or one that outlived the step it was forked inside, runs for the test and is not
++                // the test: its step keeps its phase to itself.
++                if (named && !OutlivedStepSaysPhase(testId) && (frameworkStep || !state.StepsSetPhase))
++                {
++                    if (frameworkStep && !state.StepsSetPhase)
++                        state.ActionStepSeen = false;
++
++                    // The Setup/Action boundary: the first time this test's steps go from Setup to Action, and never once an Action step
++                    // has run, as a Setup partition over it would hide an act.
++                    startsAction = says == TestPhase.Action && (state.Phase == TestPhase.Setup || (frameworkStep && state.CallInSetupStep)) && !state.ActionStartDrawn && !state.ActionStepSeen;
++                    state.ActionStepSeen |= says == TestPhase.Action;
++                    state.ActionStartDrawn |= startsAction;
++                    if (startsAction && frameworkStep)
++                        state.BoundaryStep = step;
++                    state.StepsSetPhase |= frameworkStep;
++                    state.Phase = phaseNow;
++                }
++            }
++
+             state.StepStack.Push(step);
+         }
+ 
++        EnterFlow(testId, step);
++
+         // Emit step delimiter hnote for top-level steps
+         if (isTopLevel && Options.ShowStepDelimiters)
+         {
+@@ -100,24 +147,196 @@ public static void StartStep(string? testId, string? keyword, string text, strin
+             DefaultTrackingDiagramOverride.InsertPlantUml(testId, bar, DiagramMarkerKind.Step);
+         }
+ 
+-        // Phase transitions: set ambient test phase based on keyword
+-        if (Options.WhenTriggersAction && keyword is not null)
++        // This flow reads its own step's phase from here on, and so does a flow the framework cannot name.
++        if (phaseNow != TestPhase.Unknown)
++            TestPhaseContext.Current = phaseNow;
++
++        // After the step's bar, so the bar closes the Setup partition as the first bar past the setup calls always has.
++        if (startsAction)
++            DefaultTrackingDiagramOverride.DrawBoundary(testId);
++    }
++
++    /// <summary>
++    /// Whether an HTTP handler still has to ask its <c>CurrentStepTypeFetcher</c> about this test: no while the test's own
++    /// steps set its phase, as every adapter's do, or once its boundary is drawn.
++    /// </summary>
++    internal static bool NeedsStepTypeFromHandler(string testId, object client)
++    {
++        if (!States.TryGetValue(testId, out var state))
++            return true;
++
++        lock (state)
++            return !state.StepsSetPhase && !state.ClientsPastBoundary.Contains(client);
++    }
++
++    /// <summary>
++    /// Draws the boundary from the step type an HTTP handler reports for a call, for a test whose framework starts no steps
++    /// here: a custom <c>CurrentStepTypeFetcher</c>, or LightBDD with no step decorator. What it has seen is the test's, not
++    /// the handler's: a handler shared by two tests drew the boundary for the first alone.
++    /// </summary>
++    internal static void NoteCallInStepType(string testId, string stepType, object client)
++    {
++        var inSetup = stepType.StartsWith("GIVEN", StringComparison.OrdinalIgnoreCase)
++                      || stepType.StartsWith("AND", StringComparison.OrdinalIgnoreCase)
++                      || (stepType.StartsWith("BUT", StringComparison.OrdinalIgnoreCase)
++                          && !stepType.StartsWith("BUTWHEN", StringComparison.OrdinalIgnoreCase));
++
++        var state = States.GetOrAdd(testId, _ => new TestStepState());
++        lock (state)
+         {
+-            switch (keyword)
++            if (inSetup)
+             {
+-                case "Given":
+-                case "But":
+-                    TestPhaseContext.Current = TestPhase.Setup;
+-                    break;
+-                case "When":
+-                case "Then":
+-                case "ButWhen":
+-                    TestPhaseContext.Current = TestPhase.Action;
+-                    break;
++                state.CallInSetupStep = true;
++                state.ClientsInSetup.Add(client);
++                return;
+             }
++
++            if (!state.ClientsInSetup.Contains(client))
++                return;
++
++            state.ClientsPastBoundary.Add(client);
++            if (state.ActionStartDrawn)
++                return;
++
++            state.ActionStartDrawn = true;
++            state.ClientDrewBoundary = true;
++        }
++
++        DefaultTrackingDiagramOverride.DrawBoundary(testId);
++    }
++
++    /// <summary>
++    /// Whether the framework itself says this flow is running a test. A <see cref="TestIdentityScope"/> alone, on a thread or on the
++    /// server's side of a call, runs for the test and is not the test.
++    /// </summary>
++    private static bool FrameworkNamesThisFlow()
++    {
++        // A detached flow inherits the framework's context and is nobody's test, as TestInfoResolver reads it.
++        if (TestIdentityScope.IsDetached)
++            return false;
++
++        if (Track.TestIdResolver is not { } resolver)
++            return true;
++
++        try
++        {
++            return resolver() is not null;
++        }
++        catch
++        {
++            return false;
++        }
++    }
++
++    /// <summary>A consumer's StartAction(): whether it is the first, as a second one asks for the same boundary again.</summary>
++    internal static bool NoteExplicitBoundary(string testId)
++    {
++        NotePhase(testId, TestPhase.Action);
++        var state = States.GetOrAdd(testId, _ => new TestStepState());
++        lock (state)
++        {
++            var superseded = state.ClientDrewBoundary || state.BoundaryStep is { EndTime: > 0, Bypassed: false };
++            var first = !state.ExplicitBoundaryDrawn && !superseded;
++            state.ExplicitBoundaryDrawn = true;
++            return first;
+         }
+     }
+ 
++    /// <summary>
++    /// Notes a phase the test set itself, with <c>StartSetup()</c> or <c>StartAction()</c>, so a step that continues the one
++    /// before it continues that, and a test that drew its own boundary draws no second one.
++    /// </summary>
++    internal static void NotePhase(string? testId, TestPhase phase)
++    {
++        if (testId is null)
++            return;
++
++        var state = States.GetOrAdd(testId, _ => new TestStepState());
++        lock (state)
++        {
++            state.Phase = phase;
++
++            state.ActionStartDrawn |= phase == TestPhase.Action;
++        }
++    }
++
++    /// <summary>
++    /// The steps open in this flow, innermost first. A step's parent is what opened it in its own flow, where the stack in
++    /// <see cref="TestStepState"/> is the whole test's: a step left running (not awaited, or in a Task.WhenAll) is above
++    /// nothing its caller starts next.
++    /// </summary>
++    private static readonly AsyncLocal<FlowStep?> CurrentFlowStep = new();
++
++    private sealed record FlowStep(string TestId, CollectedStep Step, FlowStep? Parent);
++
++    private static FlowStep? ChainOf(string testId)
++    {
++        var node = CurrentFlowStep.Value;
++        while (node is not null && node.TestId != testId)
++            node = node.Parent;
++        return node;
++    }
++
++    internal static bool UnderOpenKeyword(string testId) => OpenStepSaysPhase(testId);
++
++    private static bool OpenStepSaysPhase(string testId)
++    {
++        for (var node = CurrentFlowStep.Value; node is not null; node = node.Parent)
++            if (node.TestId == testId && node.Step.SaysPhase && !node.Step.Bypassed && node.Step.EndTime == 0)
++                return true;
++        return false;
++    }
++
++    // Every completer takes its own step off its flow's chain, so a closed step still on one means this flow was forked inside it and outlived it.
++    private static bool OutlivedStepSaysPhase(string testId)
++    {
++        for (var node = CurrentFlowStep.Value; node is not null; node = node.Parent)
++            if (node.TestId == testId && node.Step.SaysPhase && !node.Step.Bypassed && node.Step.EndTime != 0)
++                return true;
++        return false;
++    }
++
++    /// <summary>
++    /// Whether this test's framework has started a step that decided its phase, so the phase an HTTP handler's fetcher reports for a
++    /// call has nothing to add.
++    /// </summary>
++    internal static bool FrameworkStepsSetPhase()
++    {
++        if (ResolveTestId() is not { } testId || !States.TryGetValue(testId, out var state))
++            return false;
++
++        lock (state)
++            return state.StepsSetPhase;
++    }
++
++    /// <summary>
++    /// The innermost step of this test on this flow is the one completing here, whatever the stack popped: a step left running above it
++    /// (not awaited, or past a timeout) sits on the stack's top and takes this completion, and its own closes this one later.
++    /// </summary>
++    internal static void LeaveCompletedStep(string testId)
++    {
++        var node = CurrentFlowStep.Value;
++        while (node is not null && (node.TestId != testId || node.Step.Bypassed))
++            node = node.Parent;
++        if (node is not null)
++            CurrentFlowStep.Value = node.Parent;
++    }
++
++    private static void EnterFlow(string testId, CollectedStep step) =>
++        CurrentFlowStep.Value = new FlowStep(testId, step, CurrentFlowStep.Value);
++
++    /// <summary>The step whose stub is returning its task is no longer above what the caller does next.</summary>
++    private static void LeaveFlow()
++    {
++        var node = CurrentFlowStep.Value;
++
++        // A stub with no test id started nothing, so it has nothing to leave.
++        if (node is null || ResolveTestId() is not { } testId)
++            return;
++
++        LeaveCompletedStep(testId);
++    }
++
+     /// <summary>
+     /// Completes the current active step for the given test.
+     /// </summary>
+@@ -126,6 +345,8 @@ public static void CompleteStep(string? testId, bool passed, string? errorMessag
+         if (testId is null)
+             return;
+ 
++        LeaveCompletedStep(testId);
++
+         if (!States.TryGetValue(testId, out var state))
+             return;
+ 
+@@ -140,6 +361,13 @@ public static void CompleteStep(string? testId, bool passed, string? errorMessag
+             completed.Passed = passed;
+             completed.ErrorMessage = errorMessage;
+ 
++            for (var node = CurrentFlowStep.Value; node is not null; node = node.Parent)
++                if (ReferenceEquals(node.Step, completed))
++                {
++                    CurrentFlowStep.Value = node.Parent;
++                    break;
++                }
++
+             if (state.StepStack.Count > 0)
+             {
+                 // Nested: add as sub-step of parent
+@@ -185,6 +413,9 @@ public static void BypassStep(string? testId, string? reason = null)
+             bypassed.Bypassed = true;
+             bypassed.BypassReason = reason;
+ 
++            if (CurrentFlowStep.Value is { } head && ReferenceEquals(head.Step, bypassed))
++                CurrentFlowStep.Value = head.Parent;
++
+             if (state.StepStack.Count > 0)
+             {
+                 // Nested: add as sub-step of parent
+@@ -503,7 +734,14 @@ private static ScenarioStep ToScenarioStep(CollectedStep step)
+     /// completion or failure. Called by the IL weaver for async step methods.
+     /// The original exception is preserved (re-thrown via await).
+     /// </summary>
+-    public static async Task CompleteStepAsync(Task task)
++    public static Task CompleteStepAsync(Task task)
++    {
++        // Not async: this runs in the woven stub, which is the caller's flow, and an async method's write never reaches it.
++        LeaveFlow();
++        return CompleteWhenDoneAsync(task);
++    }
++
++    private static async Task CompleteWhenDoneAsync(Task task)
+     {
+         try
+         {
+@@ -520,7 +758,13 @@ public static async Task CompleteStepAsync(Task task)
+     /// <summary>
+     /// Generic variant for async step methods returning Task&lt;T&gt;.
+     /// </summary>
+-    public static async Task<T> CompleteStepAsync<T>(Task<T> task)
++    public static Task<T> CompleteStepAsync<T>(Task<T> task)
++    {
++        LeaveFlow();
++        return CompleteWhenDoneAsync(task);
++    }
++
++    private static async Task<T> CompleteWhenDoneAsync<T>(Task<T> task)
+     {
+         try
+         {
+@@ -540,6 +784,16 @@ private class TestStepState
+         public Stack<CollectedStep> StepStack { get; } = new();
+         public List<CollectedStep> CompletedSteps { get; } = new();
+         public string? LastKeywordCategory { get; set; }
++        public TestPhase Phase { get; set; }
++        public bool StepsSetPhase { get; set; }
++        public bool ActionStepSeen { get; set; }
++        public bool ActionStartDrawn { get; set; }
++        public bool ExplicitBoundaryDrawn { get; set; }
++        public HashSet<object> ClientsInSetup { get; } = [];
++        public HashSet<object> ClientsPastBoundary { get; } = [];
++        public CollectedStep? BoundaryStep { get; set; }
++        public bool ClientDrewBoundary { get; set; }
++        public bool CallInSetupStep { get; set; }
+         public List<FileAttachment>? ScenarioAttachments { get; set; }
+     }
+ 
+@@ -548,6 +802,7 @@ private class CollectedStep
+         public bool IsAssertion { get; set; }
+         public string? OriginalKeyword { get; set; }
+         public string? EffectiveKeyword { get; set; }
++        public bool SaysPhase { get; set; }
+         public string Text { get; set; } = "";
+         public long StartTime { get; set; }
+         public long EndTime { get; set; }
+diff --git a/src/Kronikol/Tracking/StepTrackingOptions.cs b/src/Kronikol/Tracking/StepTrackingOptions.cs
+index 2f9d0192..c00c52f1 100644
+--- a/src/Kronikol/Tracking/StepTrackingOptions.cs
++++ b/src/Kronikol/Tracking/StepTrackingOptions.cs
+@@ -12,7 +12,7 @@ public record StepTrackingOptions
+     /// <summary>Whether to include parameter values inline in step text. Default: true.</summary>
+     public bool InlineParameters { get; set; } = true;
+ 
+-    /// <summary>Whether [WhenStep] triggers Action phase transition (equivalent to StartAction()). Default: true.</summary>
++    /// <summary>Whether a step attribute's keyword moves the test's phase ([GivenStep] and [ButStep] to Setup, [WhenStep], [ThenStep] and [ButWhenStep] to Action), for a step with no keyword above it that does so, the first move from Setup to Action drawing the boundary StartAction() draws. A framework's own steps are not step attributes: Reqnroll's, LightBDD's and BDDfy's move the phase whatever this says. Default: true.</summary>
+     public bool WhenTriggersAction { get; set; } = true;
+ 
+     /// <summary>Whether to insert step delimiter hnotes into sequence diagrams when top-level steps start. Default: true.</summary>
+diff --git a/src/Kronikol/Tracking/TestTrackingMessageHandler.cs b/src/Kronikol/Tracking/TestTrackingMessageHandler.cs
+index 23b10ca3..e7f3a754 100644
+--- a/src/Kronikol/Tracking/TestTrackingMessageHandler.cs
++++ b/src/Kronikol/Tracking/TestTrackingMessageHandler.cs
+@@ -34,9 +34,6 @@ public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
+     private readonly bool _trackDuringSetup;
+     private readonly bool _trackDuringAction;
+     private readonly IReadOnlyCollection<string> _excludedHosts;
+-    private string? _lastStepType;
+-    private bool _wasInGivenSection;
+-    private bool _actionStartInjected;
+     private int _invocationCount;
+     private bool _listenerStarted;
+ 
+@@ -449,30 +446,22 @@ private static void AddIfAbsent(HttpRequestMessage request, string name, string?
+ 
+     private void InjectImplicitActionStartIfNeeded(TestIdentity currentTestInfo)
+     {
+-        if (_actionStartInjected || _currentStepTypeFetcher is null)
++        if (_currentStepTypeFetcher is null || !StepCollector.NeedsStepTypeFromHandler(currentTestInfo.Id, this))
+             return;
+ 
+-        var currentStepType = _currentStepTypeFetcher();
+-        if (currentStepType is null)
+-        {
+-            _lastStepType = null;
+-            return;
+-        }
+-
+-        var isGivenOrAnd = currentStepType.StartsWith("GIVEN", StringComparison.OrdinalIgnoreCase)
+-                           || currentStepType.StartsWith("AND", StringComparison.OrdinalIgnoreCase)
+-                           || currentStepType.StartsWith("BUT", StringComparison.OrdinalIgnoreCase);
+-
+-        if (isGivenOrAnd)
++        // A fetcher can throw for a call outside a scenario, as LightBDD's does, and a call under a TestIdentityScope is one. A call
++        // must not fail for want of a step type.
++        string? currentStepType;
++        try
+         {
+-            _wasInGivenSection = true;
++            currentStepType = _currentStepTypeFetcher();
+         }
+-        else if (_wasInGivenSection)
++        catch (InvalidOperationException)
+         {
+-            _actionStartInjected = true;
+-            DefaultTrackingDiagramOverride.StartAction(currentTestInfo.Id);
++            return;
+         }
+ 
+-        _lastStepType = currentStepType;
++        if (currentStepType is not null)
++            StepCollector.NoteCallInStepType(currentTestInfo.Id, currentStepType, this);
+     }
+ }
+\ No newline at end of file
+diff --git a/src/Kronikol/TrackingDiagramOverride.cs b/src/Kronikol/TrackingDiagramOverride.cs
+index 6b6968f4..76c49318 100644
+--- a/src/Kronikol/TrackingDiagramOverride.cs
++++ b/src/Kronikol/TrackingDiagramOverride.cs
+@@ -91,6 +91,20 @@ internal static string TestDelimiterStatement(string? testIdentifier)
+     public static void StartAction(string testId)
+     {
+         TestPhaseContext.Current = TestPhase.Action;
++        if (StepCollector.NoteExplicitBoundary(testId))
++            LogBoundary(testId);
++    }
++
++    /// <summary>The boundary a step or a client draws, which an explicit <see cref="StartAction(string)"/> overrides.</summary>
++    internal static void DrawBoundary(string testId)
++    {
++        TestPhaseContext.Current = TestPhase.Action;
++        StepCollector.NotePhase(testId, TestPhase.Action);
++        LogBoundary(testId);
++    }
++
++    private static void LogBoundary(string testId)
++    {
+         var log = new RequestResponseLog(
+             testId,
+             testId,
+@@ -114,6 +128,7 @@ public static void StartAction(string testId)
+     public static void StartSetup(string testId)
+     {
+         TestPhaseContext.Current = TestPhase.Setup;
++        StepCollector.NotePhase(testId, TestPhase.Setup);
+     }
+ 
+     // Delegate-based overloads for framework adapters

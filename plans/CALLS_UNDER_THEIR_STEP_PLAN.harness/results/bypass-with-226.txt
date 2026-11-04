@@ -1,0 +1,93 @@
+# R1 against #226 current patch (Kronikol-226r at 2026-11-03 11:00) on the final cut. scripts/run_bypass_with_226.sh. S1 and S2 are a parent whose last act is a skip (flows/src/FlowsLastActSkip.cs). With LeftABypass kept, sync S2 goes wrong: the parent completion is taken for the bypass, so After S2 nests at 0.1. With it removed, right.
+=== R1 with LeftABypass, #226's weave, no pass-through
+=== s16 F16 async skip if under parent [Passed]
+    0     Parent16  [i0-i6] 4 calls
+    ~ 0.0   Skipped16
+          bypassed: nope
+      0.1   Kid16  [i4]
+    1     After16  [i8]
+    s16/i0     GET /in-Parent16-before                       -> 0
+    s16/i2     GET /in-Parent16-after-skip                   -> 0
+    s16/i4     GET /in-Kid16                                 -> 0.1
+    s16/i6     GET /in-Parent16-end                          -> 0
+    s16/i8     GET /in-After16                               -> 1
+=== s17 F17 sync skip if under parent [Passed]
+    0     Parent17  [i0-i4] 3 calls
+    ~ 0.0   Skipped17
+          bypassed: nope
+      0.1   Kid17  [i4]
+    1     After17  [i6]
+    s17/i0     GET /in-Parent17-before                       -> 0
+    s17/i2     GET /in-Parent17-after-skip                   -> 0
+    s17/i4     GET /in-Kid17                                 -> 0.1
+    s17/i6     GET /in-After17                               -> 1
+=== s18 F18 async skip if top level with sibling running [Passed]
+    0     Bg18  [i0-i2] 2 calls
+  ~ 1     Skipped18
+    s18/i0     GET /after-skip                               -> 0
+    s18/i2     GET /in-Bg18                                  -> 0
+=== s48 G14 sync skip if with sibling running [Passed]
+    0     Bg14  [i0-i2] 2 calls
+  ~ 1     Skipped14
+    s48/i0     GET /after-skip                               -> 0
+    s48/i2     GET /in-Bg14                                  -> 0
+=== s52 S1 async parent whose last act is a skip [Passed]
+    0     Parent S1  [i0]
+    ~ 0.0   Skipped S1
+          bypassed: nope
+    1     After S1  [i2]
+    s52/i0     GET /in-ParentS1                              -> 0
+    s52/i2     GET /in-AfterS1                               -> 1
+=== s53 S2 sync parent whose last act is a skip [Passed]
+    0     Parent S2  [i0-i2] 2 calls
+    ~ 0.0   Skipped S2
+          bypassed: nope
+      0.1   After S2  [i2]
+    s53/i0     GET /in-ParentS2                              -> 0
+    s53/i2     GET /in-AfterS2                               -> 0.1
+=== LeftABypass removed, #226's weave
+=== s16 F16 async skip if under parent [Passed]
+    0     Parent16  [i0-i6] 4 calls
+    ~ 0.0   Skipped16
+          bypassed: nope
+      0.1   Kid16  [i4]
+    1     After16  [i8]
+    s16/i0     GET /in-Parent16-before                       -> 0
+    s16/i2     GET /in-Parent16-after-skip                   -> 0
+    s16/i4     GET /in-Kid16                                 -> 0.1
+    s16/i6     GET /in-Parent16-end                          -> 0
+    s16/i8     GET /in-After16                               -> 1
+=== s17 F17 sync skip if under parent [Passed]
+    0     Parent17  [i0-i4] 3 calls
+    ~ 0.0   Skipped17
+          bypassed: nope
+      0.1   Kid17  [i4]
+    1     After17  [i6]
+    s17/i0     GET /in-Parent17-before                       -> 0
+    s17/i2     GET /in-Parent17-after-skip                   -> 0
+    s17/i4     GET /in-Kid17                                 -> 0.1
+    s17/i6     GET /in-After17                               -> 1
+=== s18 F18 async skip if top level with sibling running [Passed]
+    0     Bg18  [i0-i2] 2 calls
+  ~ 1     Skipped18
+    s18/i0     GET /after-skip                               -> 0
+    s18/i2     GET /in-Bg18                                  -> 0
+=== s48 G14 sync skip if with sibling running [Passed]
+    0     Bg14  [i0-i2] 2 calls
+  ~ 1     Skipped14
+    s48/i0     GET /after-skip                               -> 0
+    s48/i2     GET /in-Bg14                                  -> 0
+=== s52 S1 async parent whose last act is a skip [Passed]
+    0     Parent S1  [i0]
+    ~ 0.0   Skipped S1
+          bypassed: nope
+    1     After S1  [i2]
+    s52/i0     GET /in-ParentS1                              -> 0
+    s52/i2     GET /in-AfterS1                               -> 1
+=== s53 S2 sync parent whose last act is a skip [Passed]
+    0     Parent S2  [i0]
+    ~ 0.0   Skipped S2
+          bypassed: nope
+    1     After S2  [i2]
+    s53/i0     GET /in-ParentS2                              -> 0
+    s53/i2     GET /in-AfterS2                               -> 1

@@ -1,0 +1,12 @@
+{"event": "start", "testId": "o0", "testName": "outcome 0", "feature": "F", "timestamp": "2026-11-03T10:00:00Z"}
+{"event": "step", "testId": "o0", "text": "a shop", "keyword": "Given", "status": "passed", "durationMs": 100, "timestamp": "2026-11-03T10:00:00.010000Z"}
+{"event": "step", "testId": "o0", "status": "passed", "durationMs": 100, "keyword": "Then", "text": "it works 0", "timestamp": "2026-11-03T10:00:00.100000Z"}
+{"event": "end", "testId": "o0", "status": "passed", "durationMs": 500, "timestamp": "2026-11-03T10:00:00.500000Z"}
+{"event": "start", "testId": "o1", "testName": "outcome 1", "feature": "F", "timestamp": "2026-11-03T10:00:10Z"}
+{"event": "step", "testId": "o1", "text": "a shop", "keyword": "Given", "status": "failed", "durationMs": 150, "timestamp": "2026-11-03T10:00:10.010000Z", "error": "no shop"}
+{"event": "step", "testId": "o1", "status": "passed", "durationMs": 100, "keyword": "Then", "text": "it works 1", "timestamp": "2026-11-03T10:00:10.100000Z"}
+{"event": "end", "testId": "o1", "status": "failed", "durationMs": 500, "timestamp": "2026-11-03T10:00:10.500000Z", "error": "no shop"}
+{"event": "start", "testId": "o2", "testName": "outcome 2", "feature": "F", "timestamp": "2026-11-03T10:00:20Z"}
+{"event": "step", "testId": "o2", "text": "a shop", "keyword": "Given", "status": "passed", "durationMs": 200, "timestamp": "2026-11-03T10:00:20.010000Z"}
+{"event": "step", "testId": "o2", "status": "passed", "durationMs": 100, "keyword": "Then", "text": "it works 2", "timestamp": "2026-11-03T10:00:20.100000Z"}
+{"event": "end", "testId": "o2", "status": "passed", "durationMs": 500, "timestamp": "2026-11-03T10:00:20.500000Z"}

@@ -1,0 +1,29 @@
+# reqnroll BV2 on #223's c7252f6c with this plan's layer, no #222 under it: a call's address, then that address asked of the report.
+=== s5 BV2 This scenario runs one more sub step in the shared background [Passed]
+    b0    Given a background step that varies  [i0-i2] 2 calls
+      b0.0  Only second  [i0]
+      b0.1  Always  [i2]
+    b1    When I act "v"  [i4-i8] 3 calls
+      b1.0  Sub act  [i6]
+    0     Then I check again  [i10]
+    s5/i0      GET /in-OnlySecond                            -> b0.0
+    s5/i2      GET /in-Always                                -> b0.1
+    s5/i4      GET /in-act-v                                 -> b1
+    s5/i6      GET /in-SubAct-v                              -> b1.0
+    s5/i8      GET /in-act-after-v                           -> b1
+    s5/i10     GET /in-check2                                -> 0
+## query steps s5/b0.1
+s5  BgVaries › BV2 This scenario runs one more sub step in the shared background  [Passed]  0.16s
+stableId 565f9db1f4548684
+at BgVaries.feature:11
+open: TestRunReport.html#sid-565f9db1f4548684
+
+## query interactions s5 --step b0.1
+s5/i2     Svc              GET /in-Always                                                 OK         8 ms  →
+1 calls
+## query flow s5/b0.0
+s5  BV2 This scenario runs one more sub step in the shared background  [Passed]
+
+── b0.0  Only second
+  s5/i0     Test → Svc  GET /in-OnlySecond  OK  10 ms
+1 calls shown · http s5/iN --keys for a payload

@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Kronikol.PlantUml;
 using Kronikol.Reports;
 using Kronikol.Tracking;
 
@@ -264,6 +265,77 @@ public class ReportAttributionTests
     }
 
     // ─── Helpers ───────────────────────────────────────────────
+
+    // ─── The walk reads the bars Kronikol draws (plans/CALLS_UNDER_THEIR_STEP_PLAN.md R2, #128) ───
+
+    [Fact]
+    public void A_hand_built_scenario_with_a_long_label_keeps_each_calls_step()
+    {
+        // #128's own repro: "Given " and the first text pass 110 characters, so the bar wraps; "And " and the second do not.
+        const string first = "a basket that held two apples and a pear last week but nothing at all this week, while the shop's prices rose";
+        const string second = "a basket that held two apples and a pear last week but nothing this week, while the shop's prices rose";
+        const string third = "the shopper opens the basket page";
+
+        var (paths, mismatches) = Walk(
+            [
+                new ScenarioStep { Keyword = "Given", Text = first },
+                new ScenarioStep { Keyword = "And", Text = second },
+                new ScenarioStep { Keyword = "When", Text = third },
+            ],
+            $"Given {first}", $"And {second}", $"When {third}");
+
+        Assert.Equal(["0", "1", "2"], paths);
+        Assert.Equal(0, mismatches);
+    }
+
+    [Fact]
+    public void A_row_with_no_keyword_keeps_its_step_under_a_bar_that_wrapped_it_and_has_one()
+    {
+        const string first = "a basket that held two apples and a pear last week but nothing at all this week, while the shop's prices rose";
+        const string second = "the shopper opens the basket page";
+
+        var (paths, mismatches) = Walk(
+            [new ScenarioStep { Text = first }, new ScenarioStep { Text = second }],
+            $"Given {first}", $"When {second}");
+
+        Assert.Equal(["0", "1"], paths);
+        Assert.Equal(0, mismatches);
+    }
+
+    [Fact]
+    public void A_text_only_another_bars_tail_holds_is_read_on_a_plain_label_as_published_and_refused_once_escaped()
+    {
+        // A bar with no row comes first, so each row meets the bar after its own. Published's own loose check takes a plain tail
+        // and only that: the bar is the row's only where it is what the bar draws for the row.
+        var (plain, _) = Walk(
+            [new ScenarioStep { Keyword = "When", Text = "we read the file" }, new ScenarioStep { Keyword = "And", Text = "the file" }],
+            "Seed the shop", "When we read the file", "And the file");
+        Assert.Equal([null, "1", null], plain);
+
+        var path = @"C:\temp";
+        var (escaped, mismatches) = Walk(
+            [new ScenarioStep { Keyword = "When", Text = "we read " + path }, new ScenarioStep { Keyword = "And", Text = path }],
+            "Seed the shop", "When we read " + path, "And " + path);
+        Assert.Equal([null, null, null], escaped);
+        Assert.Equal(2, mismatches);
+    }
+
+    /// <summary>One call under each bar, each drawn as a test's would be: what each call reads, and how many mismatches the walk recorded.</summary>
+    private static (string?[] Paths, int Mismatches) Walk(ScenarioStep[] rows, params string[] labels)
+    {
+        var testId = "attr-walk-" + Guid.NewGuid().ToString("N");
+        var logs = labels
+            .SelectMany(label => new[] { Marker(testId, DiagramMarkerKind.Step, StepBarPlantUml.Build(label)), Real(testId, "svc") })
+            .ToArray();
+        Feature[] features = [new Feature { DisplayName = "F", Scenarios = [new Scenario { Id = testId, DisplayName = "S", Steps = rows }] }];
+
+        var collector = new ReportDiagnosticsCollector();
+        using (ReportDiagnosticsScope.Begin(collector))
+        {
+            var paths = ReportGenerator.AttributeInteractionsToStepPaths(logs, features)[testId].ToArray();
+            return (paths, collector.Entries.Count(e => e.Kind == DiagnosticKind.StepAttributionMismatch));
+        }
+    }
 
     private static readonly DateTime Start = new(2026, 1, 1, 10, 0, 0, DateTimeKind.Utc);
     private static readonly DateTime End = new(2026, 1, 1, 10, 5, 0, DateTimeKind.Utc);

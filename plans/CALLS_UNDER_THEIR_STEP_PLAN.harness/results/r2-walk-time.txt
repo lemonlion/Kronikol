@@ -1,0 +1,7 @@
+# kronikol ingest, in seconds, on a run of assertion rows with as many bars (the check's cases-slow, not kept: 7.6 MB; its generator is in probes-matcher/narrow-check-cases/second): published 5.28.2 against R2 alone, no pass-over. time_cases.py
+# On the form with the look-ahead pass-over, as the second narrow check measured it beside other runs, its cases then read, published against R2: T1 1.7 s, 2.8 s; T2 1.9 s, 7.0 s; T3 1.6 s, 19.9 s; T4 2.0 s, 52.2 s; T5 1.7 s, 1.5 s. Its own output was not kept.
+T1-k1000-b1000                  pub    1.0s (exit 0)  r2    1.0s (exit 0)
+T2-k2000-b2000                  pub    1.1s (exit 0)  r2    1.1s (exit 0)
+T3-k4000-b4000                  pub    1.0s (exit 0)  r2    1.5s (exit 0)
+T4-k1000-b1000-text2000         pub    1.1s (exit 0)  r2    1.1s (exit 0)
+T5-control-k4000-b10            pub    0.9s (exit 0)  r2    0.8s (exit 0)

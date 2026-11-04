@@ -1,0 +1,2 @@
+# Kronikol.Tests.EndToEnd on #223's 638f275d with this plan's layer and R2, the classes and facts with Step in their names (bundled Chromium). dotnet test --filter FullyQualifiedName~Step
+Passed!  - Failed:     0, Passed:   115, Skipped:     0, Total:   115, Duration: 1 m 26 s - Kronikol.Tests.EndToEnd.dll (net10.0)

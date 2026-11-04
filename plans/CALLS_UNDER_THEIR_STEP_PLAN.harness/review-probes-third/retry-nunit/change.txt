@@ -1,0 +1,80 @@
+=== s0 N1 retry passes on second attempt [Passed]
+    0     Before  [i0]
+    1     Given Given1  [i2-i4] 2 calls
+        · n
+        · 1
+      1.0   Sub1  [i4]
+          · n
+          · 1
+    2     When When1  [i6]
+        · n
+        · 1
+    3     After  [i8]
+    4     Before  [i10]
+    5     Given Given1  [i12-i14] 2 calls
+        · n
+        · 2
+      5.0   Sub1  [i14]
+          · n
+          · 2
+    6     When When1  [i16]
+        · n
+        · 2
+    7     Then Then1  [i18]
+        · n
+        · 2
+    8     After  [i20]
+    s0/i0      GET /in-SetUp-step                            -> 0
+    s0/i2      GET /in-Given1-attempt1                       -> 1
+    s0/i4      GET /in-Sub1-attempt1                         -> 1.0
+    s0/i6      GET /in-When1-attempt1                        -> 2
+    s0/i8      GET /in-TearDown-step                         -> 3
+    s0/i10     GET /in-SetUp-step                            -> 4
+    s0/i12     GET /in-Given1-attempt2                       -> 5
+    s0/i14     GET /in-Sub1-attempt2                         -> 5.0
+    s0/i16     GET /in-When1-attempt2                        -> 6
+    s0/i18     GET /in-Then1-attempt2                        -> 7
+    s0/i20     GET /in-TearDown-step                         -> 8
+=== s1 N2 retry fails inside a step each time [Failed]
+    0     Before  [i0]
+  ✗ 1     Given Given2  [i2]
+        attempt 1 fails inside the step
+        · n
+        · 1
+    2     After  [i4]
+    3     Before  [i6]
+  ✗ 4     And Given2  [i8]
+        attempt 2 fails inside the step
+        · n
+        · 2
+    5     After  [i10]
+    s1/i0      GET /in-SetUp-step                            -> 0
+    s1/i2      GET /in-Given2-attempt1                       -> 1
+    s1/i4      GET /in-TearDown-step                         -> 2
+    s1/i6      GET /in-SetUp-step                            -> 3
+    s1/i8      GET /in-Given2-attempt2                       -> 4
+    s1/i10     GET /in-TearDown-step                         -> 5
+=== s2 N3 repeat [Passed]
+    0     Before  [i0]
+    1     Given Given3  [i2]
+        · n
+        · 1
+    2     After  [i4]
+    3     Before  [i6]
+    4     And Given3  [i8]
+        · n
+        · 2
+    5     After  [i10]
+    s2/i0      GET /in-SetUp-step                            -> 0
+    s2/i2      GET /in-Given3-attempt1                       -> 1
+    s2/i4      GET /in-TearDown-step                         -> 2
+    s2/i6      GET /in-SetUp-step                            -> 3
+    s2/i8      GET /in-Given3-attempt2                       -> 4
+    s2/i10     GET /in-TearDown-step                         -> 5
+=== s3 N4 set up and tear down steps [Passed]
+    0     Before  [i0]
+    1     Body4  [i2]
+    2     After  [i4]
+    s3/i0      GET /in-SetUp-step                            -> 0
+    s3/i2      GET /in-Body4                                 -> 1
+    s3/i4      GET /in-TearDown-step                         -> 2

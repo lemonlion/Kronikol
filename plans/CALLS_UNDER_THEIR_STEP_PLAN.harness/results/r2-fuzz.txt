@@ -1,0 +1,50 @@
+# seed 225, R2 alone on 9d994a4b
+completeness: 39658 bars; soundness: 316945 near misses
+    6196  row has no keyword, and the bar's is more than a word: as designed
+          first: keyword=[Sia dato, che] text=["" ~~wave~~  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx ... 0041> |a|, card   #  %date()⏎ %  &#39;⏎%]
+    6196  row has another keyword, and the bar's is more than a word: as designed
+          first: keyword=[Sia dato, che] text=["" ~~wave~~  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx ... 0041> |a|, card   #  %date()⏎ %  &#39;⏎%]
+    6196  row capitalised under its bar: the bar's keyword is more than a word, as designed
+          first: keyword=[Sia dato, che] text=["" ~~wave~~  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx ... 0041> |a|, card   #  %date()⏎ %  &#39;⏎%]
+    3506  cut bar, rest unseen: last character changed
+          first: keyword=[Then] drawn=[**bold**⏎⏎order⏎⏎  **bold**⏎--strike--, [[link]]⏎%Date()    wait…␍⏎%, {{ <$rows>⏎a, |a|⏎⏎for  100% \n &wait… # |a|␍⏎    ...    \n⏎~   ~ \n⏎⇥ for b the item, ﬁ⏎&amp;] read as=[**bold**⏎⏎order⏎⏎  **bold**⏎--strike--, [[link]]⏎%Date()    wait…⏎%, {{ <$rows>⏎a, |a|⏎⏎for  100% \n &wait… # |a|⏎   &⏎ ...    \n⏎~   ~ \n⏎⇥ for b the item, ﬁ⏎&ampQ]
+    3506  cut bar, rest unseen: a later line added
+          first: keyword=[Then] drawn=[**bold**⏎⏎order⏎⏎  **bold**⏎--strike--, [[link]]⏎%Date()    wait…␍⏎%, {{ <$rows>⏎a, |a|⏎⏎for  100% \n &wait… # |a|␍⏎    ...    \n⏎~   ~ \n⏎⇥ for b the item, ﬁ⏎&amp;] read as=[**bold**⏎⏎order⏎⏎  **bold**⏎--strike--, [[link]]⏎%Date()    wait…⏎%, {{ <$rows>⏎a, |a|⏎⏎for  100% \n &wait… # |a|⏎   &⏎ ...  item, ﬁ⏎&amp;⏎something else altogether]
+    3270  FALSE on a bar with no keyword: a tail of the text, a word shorter
+          first: keyword=[] drawn=[order ~, [[link]]⏎__under__, a,  yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy ... yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy] read as=[~, [[link]]⏎__under__, a,  yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy ... yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy]
+    2133  cut bar, rest unseen: a later letter's case changed
+          first: keyword=[Then] drawn=[**bold**⏎⏎order⏎⏎  **bold**⏎--strike--, [[link]]⏎%Date()    wait…␍⏎%, {{ <$rows>⏎a, |a|⏎⏎for  100% \n &wait… # |a|␍⏎    ...    \n⏎~   ~ \n⏎⇥ for b the item, ﬁ⏎&amp;] read as=[**bold**⏎⏎order⏎⏎  **bold**⏎--strike--, [[link]]⏎%Date()    wait…⏎%, {{ <$rows>⏎a, |a|⏎⏎for  100% \n &wait… # |a|⏎   &⏎ ...    \n⏎~   ~ \n⏎⇥ for b the item, ﬁ⏎&amp;]
+     641  cut bar, rest unseen: a tail of the text, a word shorter
+          first: keyword=[Sia dato, che] drawn=[yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy ... yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy] read as=[yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy ... yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy]
+     123  cut bar, rest unseen: a tail of the text, two words shorter
+          first: keyword=[Sia dato, che] drawn=[yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy ... yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy] read as=[yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy ... yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy]
+      30  FALSE on a bar with a keyword: a tail of the text, a word shorter
+          first: keyword=[%date()] drawn=[%date() &amp;   [[link]] order [[link]]…⏎<zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz ... nk]]⏎<b>bold</b>⏎⏎|a|   …⏎😀 <U+0041>\⏎a] read as=[&amp;   [[link]] order [[link]]…⏎<zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz ... nk]]⏎<b>bold</b>⏎⏎|a|   …⏎😀 <U+0041>\⏎a]
+       2  FALSE on a bar with no keyword: a space removed
+          first: keyword=[] drawn=[~ <&star>⏎is <⏎**bold**⏎⏎b the |a|    {{ placed⏎wait…card ""  .... tab⇥bed cash⏎⏎<$rows> a ı⏎a⏎⏎<$rows> is, C:\temp\new order \n b \n...., {{cash␍⏎placed] read as=[~<&star>⏎is <⏎**bold**⏎⏎b the |a|    {{ placed⏎wait…card ""  .... tab⇥bed cash⏎⏎<$rows> a ı⏎a⏎⏎<$rows> is, C:\temp\new order \n b \n...., {{cash⏎placed]
+worst shape: bar of 15992 chars, read as a text of 15799 that differs at its end: 0.9 ms, read as False
+# seed 128, R2 alone on 9d994a4b
+completeness: 39660 bars; soundness: 317229 near misses
+    6110  row has no keyword, and the bar's is more than a word: as designed
+          first: keyword=[Sia dato, che] text=[order␍⏎ﬁ]
+    6110  row has another keyword, and the bar's is more than a word: as designed
+          first: keyword=[Sia dato, che] text=[order␍⏎ﬁ]
+    6110  row capitalised under its bar: the bar's keyword is more than a word, as designed
+          first: keyword=[Sia dato, che] text=[order␍⏎ﬁ]
+    3498  cut bar, rest unseen: a later line added
+          first: keyword=[*] drawn=[wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww ... ar>⏎⏎{{, … ""⏎⏎order the⏎⏎<$rows> & 100%] read as=[wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww ... <$rows> & 100%⏎something else altogether]
+    3497  cut bar, rest unseen: last character changed
+          first: keyword=[*] drawn=[wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww ... ar>⏎⏎{{, … ""⏎⏎order the⏎⏎<$rows> & 100%] read as=[wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww ... ar>⏎⏎{{, … ""⏎⏎order the⏎⏎<$rows> & 100Q]
+    3287  FALSE on a bar with no keyword: a tail of the text, a word shorter
+          first: keyword=[] drawn=[.. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..  ... . .. .. .. .. .. .. .. .. .. .. .. .. ..] read as=[.. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..  ... . .. .. .. .. .. .. .. .. .. .. .. .. ..]
+    2206  cut bar, rest unseen: a later letter's case changed
+          first: keyword=[*] drawn=[wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww ... ar>⏎⏎{{, … ""⏎⏎order the⏎⏎<$rows> & 100%] read as=[wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww ... ar>⏎⏎{{, … ""⏎⏎order the⏎⏎<$rows> & 100%]
+     611  cut bar, rest unseen: a tail of the text, a word shorter
+          first: keyword=[] drawn=[#%Date()  for ı ....~<$x> \n⏎C:\temp\new, a⏎,␍⏎%⏎⏎order %⏎İ …   %a,[[link]] …] read as=[ for ı ....~<$x> \n⏎C:\temp\new, a⏎,⏎%⏎⏎order %⏎İ …   %a,[[link]] …]
+     137  cut bar, rest unseen: a tail of the text, two words shorter
+          first: keyword=[Given] drawn=[wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww ... wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww] read as=[wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww ... wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww]
+      27  FALSE on a bar with a keyword: a tail of the text, a word shorter
+          first: keyword=[%date()] drawn=[%date() %date()] read as=[%date()]
+       1  cut bar, rest unseen: a space removed
+          first: keyword=[] drawn=[~ <&star>, >  %date()   is␍⏎{{ {{   <$rows>   ....  [[link]]⏎[[link]] **bold**   |⏎⏎> C:\temp\new ﬁ &#39; |␍⏎.... %Date( ... date() | ﬁ␍⏎>␍⏎> ~<$x>   <U+0041>   😀⏎…] read as=[~<&star>, >  %date()   is⏎{{ {{   <$rows>   ....  [[link]]⏎[[link]] **bold**   |⏎⏎> C:\temp\new ﬁ &#39; |⏎.... %Date(),  ...  %date() | ﬁ⏎>⏎> ~<$x>   <U+0041>   😀⏎…]
+worst shape: bar of 15992 chars, read as a text of 15799 that differs at its end: 0.6 ms, read as False

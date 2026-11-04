@@ -14,6 +14,12 @@ public record ScenarioStep
     /// </summary>
     public bool IsAssertion { get; set; }
 
+    /// <summary>What a step with no text of its own is listed as.</summary>
+    internal const string NoText = "(step)";
+
+    /// <summary>What a step with no text of its own is drawn as.</summary>
+    internal const string NoTextOnABar = "step";
+
     public required string Text { get; set; }
     public ExecutionResult? Status { get; set; }
     public string? BypassReason { get; set; }

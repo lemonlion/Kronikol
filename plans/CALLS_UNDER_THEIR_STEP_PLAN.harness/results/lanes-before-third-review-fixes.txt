@@ -1,0 +1,47 @@
+=== StepTracking 09:59:05
+Passed!  - Failed:     0, Passed:    61, Skipped:     0, Total:    61, Duration: 18 s - Kronikol.Tests.StepTracking.dll (net10.0)
+=== AssertionTracking 10:00:02
+Passed!  - Failed:     0, Passed:  1432, Skipped:    28, Total:  1460, Duration: 14 m 11 s - Kronikol.Tests.AssertionTracking.dll (net10.0)
+=== xUnit2 10:14:45
+Passed!  - Failed:     0, Passed:   111, Skipped:     0, Total:   111, Duration: 5 m 28 s - Kronikol.Tests.xUnit2.dll (net10.0)
+=== xUnit3 10:20:25
+Passed!  - Failed:     0, Passed:    33, Skipped:     0, Total:    33, Duration: 5 s - Kronikol.Tests.xUnit3.dll (net10.0)
+=== NUnit4 10:21:02
+Passed!  - Failed:     0, Passed:    49, Skipped:     0, Total:    49, Duration: 4 s - Kronikol.Tests.NUnit4.dll (net10.0)
+=== MSTest 10:21:21
+Passed!  - Failed:     0, Passed:    85, Skipped:     0, Total:    85, Duration: 3 s - Kronikol.Tests.MSTest.dll (net10.0)
+=== TUnit 10:21:44
+Passed!  - Failed:     0, Passed:    50, Skipped:     0, Total:    50, Duration: 5 s - Kronikol.Tests.TUnit.dll (net10.0)
+=== LightBDD.xUnit3 10:22:10
+Passed!  - Failed:     0, Passed:    35, Skipped:     0, Total:    35, Duration: 22 s - Kronikol.Tests.LightBDD.xUnit3.dll (net10.0)
+=== LightBDD.xUnit2 10:23:27
+Passed!  - Failed:     0, Passed:    11, Skipped:     0, Total:    11, Duration: 19 s - Kronikol.Tests.LightBDD.xUnit2.dll (net10.0)
+=== LightBDD.TUnit 10:24:01
+Passed!  - Failed:     0, Passed:    26, Skipped:     0, Total:    26, Duration: 22 s - Kronikol.Tests.LightBDD.TUnit.dll (net10.0)
+=== core 10:24:50
+  Failed Kronikol.Tests.PlantUml.NodeJsPlantUmlRendererTests.A_diagram_that_asks_for_a_bundle_fails_alone_and_the_batch_after_it_still_draws [15 s]
+Failed!  - Failed:     1, Passed: 11815, Skipped:     2, Total: 11818, Duration: 14 m 47 s - Kronikol.Tests.dll (net10.0)
+[xUnit.net 00:01:24.70]     Kronikol.Tests.PlantUml.NodeJsPlantUmlRendererTests.A_diagram_that_asks_for_a_bundle_fails_alone_and_the_batch_after_it_still_draws [FAIL]
+=== example BDDfy.xUnit3 10:40:53
+Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2, Duration: 1 s - Example.Api.Tests.Component.BDDfy.xUnit3.dll (net10.0)
+=== example LightBDD.xUnit3 10:42:04
+Passed!  - Failed:     0, Passed:     6, Skipped:     0, Total:     6, Duration: 1 s - Example.Api.Tests.Component.LightBDD.xUnit3.dll (net10.0)
+=== example LightBDD.xUnit2 10:43:00
+Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 3 s - Example.Api.Tests.Component.LightBDD.xUnit2.dll (net10.0)
+=== example LightBDD.TUnit 10:44:10
+C:\Users\cex\.nuget\packages\microsoft.testing.platform.msbuild\2.2.3\buildMultiTargeting\Microsoft.Testing.Platform.MSBuild.targets(263,5): error : Testing with VSTest target is n
+=== example ReqNRoll.xUnit2 10:44:21
+Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2, Duration: 1 s - Example.Api.Tests.Component.ReqNRoll.xUnit2.dll (net10.0)
+=== example ReqNRoll.xUnit3 10:44:55
+Passed!  - Failed:     0, Passed:    11, Skipped:     0, Total:    11, Duration: 950 ms - Example.Api.Tests.Component.ReqNRoll.xUnit3.dll (net10.0)
+=== example ReqNRoll.TUnit 10:45:29
+C:\Users\cex\.nuget\packages\microsoft.testing.platform.msbuild\2.2.3\buildMultiTargeting\Microsoft.Testing.Platform.MSBuild.targets(263,5): error : Testing with VSTest target is n
+=== example xUnit3 10:45:34
+Passed!  - Failed:     0, Passed:     5, Skipped:     0, Total:     5, Duration: 1 s - Example.Api.Tests.Component.xUnit3.dll (net10.0)
+=== example xUnit2 10:46:08
+Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2, Duration: 1 s - Example.Api.Tests.Component.xUnit2.dll (net10.0)
+=== example NUnit4 10:46:37
+Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2, Duration: 623 ms - Example.Api.Tests.Component.NUnit4.dll (net10.0)
+=== example TUnit 10:46:57
+C:\Users\cex\.nuget\packages\microsoft.testing.platform.msbuild\2.2.3\buildMultiTargeting\Microsoft.Testing.Platform.MSBuild.targets(263,5): error : Testing with VSTest target is n
+== done 10:47:00

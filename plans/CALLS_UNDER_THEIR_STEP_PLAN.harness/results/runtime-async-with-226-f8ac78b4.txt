@@ -1,0 +1,65 @@
+# probes-runtime-async on the final cut with #226's patch f8ac78b4, LeftABypass removed as that order asks. scripts/run_runtime_async.sh. DOTNET_RuntimeAsync=1 for the second part.
+10.0.300
+=== state-machines
+Passed!  - Failed:     0, Passed:     6, Skipped:     0, Total:     6, Duration: 671 ms - ProbeRuntimeAsync.dll (net10.0)
+--- A0 one after another [Passed]
+      0     First  0s  [i0]
+      1     Second  [i2]
+    calls: first=0  second=1
+--- A1 two at the top level then a step [Passed]
+      0     Fast  0.03s  [i0]
+      1     Slow  0.13s  [i2]
+      2     The next  [i4]
+    calls: fast=0  slow=1  next=2
+--- A2 two inside a step [Passed]
+      0     Both at once  0.12s  [i0-i2] 2 calls
+        0.0   Fast  0.01s  [i0]
+        0.1   Slow  0.12s  [i2]
+    calls: fast=0.0  slow=0.1
+--- A3 one left running at the top level [Passed]
+      0     Slow  0.14s  [i2]
+      1     The next  0.02s  [i0]
+    calls: next=1  slow=0
+--- A4 a step starts one and calls [Passed]
+      0     Starts one and calls  0.12s  [i0-i2] 2 calls
+        0.0   Slow  0.12s  [i2]
+    calls: own=0  slow=0.0
+--- A5 two inside a step the first throws [Passed]
+    ✗ 0     One throws  0.09s  [i0-i2] 2 calls
+          this one threw
+      ✗ 0.0   Throws  0.01s  [i0]
+            this one threw
+        0.1   Goes on  0.09s  [i2]
+    calls: throws=0.0  goes-on=0.1
+=== runtime-async
+    0 Error(s)
+Passed!  - Failed:     0, Passed:     6, Skipped:     0, Total:     6, Duration: 672 ms - ProbeRuntimeAsync.dll (net10.0)
+--- A0 one after another [Passed]
+      0     First  [i0]
+      1     Second  [i2]
+    calls: first=0  second=1
+--- A1 two at the top level then a step [Passed]
+      0     Fast  0.05s  [i0-i2] 2 calls
+        0.0   Slow  0.13s  [i2]
+      1     The next  [i4]
+    calls: fast=0  slow=0.0  next=1
+--- A2 two inside a step [Passed]
+      0     Both at once  0.12s  [i0-i2] 2 calls
+        0.0   Fast  0.01s  [i0]
+        0.1   Slow  0.12s  [i2]
+    calls: fast=0.0  slow=0.1
+--- A3 one left running at the top level [Passed]
+      0     Slow  0.12s  [i0-i2] 2 calls
+        0.0   The next  [i0]
+    calls: next=0.0  slow=0
+--- A4 a step starts one and calls [Passed]
+      0     Starts one and calls  0.14s  [i0-i2] 2 calls
+        0.0   Slow  0.14s  [i2]
+    calls: own=0  slow=0.0
+--- A5 two inside a step the first throws [Passed]
+    ✗ 0     One throws  0.09s  [i0-i2] 2 calls
+          this one threw
+      ✗ 0.0   Throws  0.01s  [i0]
+            this one threw
+        0.1   Goes on  0.09s  [i2]
+    calls: throws=0.0  goes-on=0.1

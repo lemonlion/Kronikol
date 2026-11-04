@@ -1,0 +1,46 @@
+##### published 5.28.2's query engine (query.cs from a published run) reading the final cut's report: steps s4
+s4  Payments › A declined card rejects the order  [Failed]  1.04s
+stableId 58b51f7609db31ca
+at Features/Payments.feature:3
+open: TestRunReport.html#sid-58b51f7609db31ca
+
+  0     Given a registered customer with a full basket  0.31s
+    0.0   A customer is registered  0.3s  [i0]
+        · name
+        · customer-4
+      0.0.0 Their address is verified  0.27s  [i2]
+      · 0.0.0.0 Response is success status code should be true
+    0.1   Items are added to the basket  0s  [i4-i8] 3 calls
+        · count
+        · 3
+✗ 1     When the customer pays with a declined card  0.67s
+  ✗ 1.0   The payment is authorised  0.67s  [i10]
+        response.StatusCode should be HttpStatusCode.OK but was HttpStatusCode.PaymentRequired
+        · amount
+        · 99.99
+        · card
+        · declined
+    ✗ 1.0.0 Response status code should be OK
+          response.StatusCode should be HttpStatusCode.OK but was HttpStatusCode.PaymentRequired   at ShopDriv
+  2     Then the order is rejected
+
+##### the same engine: failures s14
+s14  Probes › One of two sub-steps at once fails
+  at Features/Probes.feature:31
+  thrown at Spike.Substeps.Features.ProbesFeature.OneOfTwoSub_StepsAtOnceFails() — C:\Code\k225-final\repro-
+  rerun: dotnet test --filter "FullyQualifiedName~Spike.Substeps.Features.ProbesFeature.OneOfTwoSub_StepsAtOnc
+  open: TestRunReport.html#sid-23a7d6e327ed0e6c
+  history: unknown — no earlier run in this stream to compare against · F
+  the left side failed
+  ✗ s14/0  When two sub-steps run at once and the first fails
+    ✗ s14/0.0  The left side fails
+      the left side failed
+      1 calls in this step:
+        s14/i0  Shop API  GET /left/before-failing
+
+1 failed · steps s? for the whole tree · grep "<value>" --values to trace a number
+
+##### the same engine: interactions s4 --step 0.0
+s4/i0     Shop API         POST /customers                                                OK         0 ms  bod
+s4/i2     Shop API         GET /customers/customer-4/address-check                        OK         0 ms  →
+2 calls

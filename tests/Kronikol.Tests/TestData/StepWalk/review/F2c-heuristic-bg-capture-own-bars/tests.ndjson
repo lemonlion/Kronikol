@@ -1,0 +1,8 @@
+{"event": "start", "testId": "s1", "testName": "s1", "feature": "F", "timestamp": "2026-11-03T10:00:00Z"}
+{"event": "start", "testId": "s2", "testName": "s2", "feature": "F", "timestamp": "2026-11-03T10:00:01Z"}
+{"event": "step", "testId": "s1", "status": "passed", "durationMs": 100, "keyword": "Given", "text": "a customer"}
+{"event": "step", "testId": "s1", "status": "passed", "durationMs": 100, "keyword": "Then", "text": "it is paid", "timestamp": "2026-11-03T10:00:00.100000Z"}
+{"event": "step", "testId": "s2", "status": "passed", "durationMs": 100, "keyword": "Given", "text": "a customer", "timestamp": "2026-11-03T10:00:01.100000Z"}
+{"event": "step", "testId": "s2", "status": "passed", "durationMs": 100, "keyword": "Then", "text": "it is paid", "timestamp": "2026-11-03T10:00:01.200000Z"}
+{"event": "end", "testId": "s1", "status": "passed", "durationMs": 500, "timestamp": "2026-11-03T10:00:00.500000Z"}
+{"event": "end", "testId": "s2", "status": "passed", "durationMs": 500, "timestamp": "2026-11-03T10:00:01.500000Z"}

@@ -6,6 +6,14 @@ namespace Kronikol.Reports;
 /// </summary>
 public record Scenario
 {
+    /// <summary>
+    /// The rows of this scenario the tests file listed and drew no bar for, by position in its background steps and then its
+    /// steps, so the walk over its bars leaves them out: a background's, an assertion's, and one with no time. Null where
+    /// the bars are not the tests file's. Kept here and not on the rows, as scenarios can share a background's rows, and the
+    /// position holds when the background detector moves a scenario's opening rows.
+    /// </summary>
+    internal int[]? BarlessRows { get; init; }
+
     public required string Id { get; set; }
     public required string DisplayName { get; set; }
 

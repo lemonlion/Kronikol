@@ -1,0 +1,5 @@
+# dotnet build release.slnf -c Release on the final cut, every target framework
+    0 Error(s)
+    7 Warning(s)
+Build succeeded.
+Time Elapsed 00:03:21.15

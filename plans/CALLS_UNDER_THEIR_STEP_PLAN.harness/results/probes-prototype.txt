@@ -1,0 +1,223 @@
+##### s4
+s4  Payments › A declined card rejects the order  [Failed]  0.75s
+  0     Given a registered customer with a full basket  0.26s  [i0-i8] 5 calls
+    0.0   A customer is registered  0.24s  [i0-i2] 2 calls
+        · name
+        · customer-3
+      0.0.0 Their address is verified  0.19s  [i2]
+      · 0.0.0.0 Response is success status code should be true
+    0.1   Items are added to the basket  0.01s  [i4-i8] 3 calls
+        · count
+        · 3
+✗ 1     When the customer pays with a declined card  0.43s  [i10]
+  ✗ 1.0   The payment is authorised  0.43s  [i10]
+        response.StatusCode should be HttpStatusCode.OK but was HttpStatusCode.PaymentRequired
+        · amount
+        · 99.99
+        · card
+        · declined
+    ✗ 1.0.0 Response status code should be OK
+          response.StatusCode should be HttpStatusCode.OK but was HttpStatusCode.PaymentRequired   at ShopDriv
+6 calls · interactions s4 · flow s4
+step   method  path                                 calls 
+0.0    POST    /customers                               1 
+0.0.0  GET     /customers/customer-3/address-check      1 
+0.1    PUT     /basket/customer-3/items/0               1 
+0.1    PUT     /basket/customer-3/items/1               1 
+0.1    PUT     /basket/customer-3/items/2               1 
+1.0    POST    /payments                                1 
+##### s6
+s6  Probes › A call in the step and calls in its sub-steps  [Passed]  0.03s
+  0     Given a step makes its own calls around a sub-step  0.03s  [i0-i4] 3 calls
+    0.0   The same sub step  0.03s  [i2]
+        · which
+        · inner
+3 calls · interactions s6 · flow s6
+step  method  path         calls errors   median      max 
+0     GET     /own/before      1      0     0 ms     0 ms 
+0.0   GET     /same/inner      1      0     0 ms     0 ms 
+0     GET     /own/after       1      0     0 ms     0 ms 
+##### s7
+s7  Probes › A call outlives its step  [Passed]  0.52s
+  0     Given a call is started and left running  0s
+  1     When a later step runs  0.5s  [i0-i4] 3 calls
+3 calls · interactions s7 · flow s7
+step  method  path                     calls errors   medi
+1     GET     /later-step/first            1      0     0 
+1     GET     /late/started-in-step-0      1      0     0 
+1     GET     /later-step/second           1      0     0 
+##### s8
+s8  Probes › A step whose label holds a backslash  [Passed]  0.6s
+  0     Given the shopper uploads C:\baskets\monday.csv  0s  [i0]
+  1     When a later step runs  0.54s  [i2-i4] 2 calls
+3 calls · interactions s8 · flow s8
+step  method  path                calls errors   median   
+0     GET     /backslash              1      0     0 ms   
+1     GET     /later-step/first       1      0     0 ms   
+1     GET     /later-step/second      1      0     0 ms   
+##### s10
+s10  Probes › A step whose own label is too long to draw on one line  [Passed]  0.39s
+  0     Given a basket that held two apples and a pear last week but nothing at all this week, whi…  0s  [i0
+  1     When a later step runs  0.37s  [i2-i4] 2 calls
+3 calls · interactions s10 · flow s10
+step  method  path                calls errors   median   
+0     GET     /long-own-label         1      0     0 ms   
+1     GET     /later-step/first       1      0     0 ms   
+1     GET     /later-step/second      1      0     0 ms   
+##### s11
+s11  Probes › A sub-step is left running past its step  [Passed]  0.49s
+  0     Given a sub-step is started and left running  0s  [i2]
+    0.0   A slow sub step  0.05s  [i2]
+  1     When a later step runs  0.32s  [i0-i4] 2 calls
+3 calls · interactions s11 · flow s11
+step  method  path                calls errors   median   
+1     GET     /later-step/first       1      0     0 ms   
+0.0   GET     /slow                   1      0     0 ms   
+1     GET     /later-step/second      1      0     0 ms   
+##### s12
+s12  Probes › A tracked call and an assertion from another thread  [Passed]  0.18s
+  0     When a sub-step hands its call to another thread  0.16s  [i0]
+    0.0   A call on another thread  0.06s  [i0]
+1 calls · interactions s12 · flow s12
+step  method  path           calls errors   median      ma
+0.0   GET     /other-thread      1      0     0 ms     0 m
+##### s13
+s13  Probes › An assertion ends before a sub-step that began first  [Passed]  0.19s
+  0     When a sub-step is still running at an assertion  0.16s  [i0]
+    0.0   A slow sub step  0.08s  [i0]
+  · 0.1   1 should be 1
+1 calls · interactions s13 · flow s13
+step  method  path   calls errors   median      max bodies
+0.0   GET     /slow      1      0     0 ms     0 ms      1
+##### s14
+s14  Probes › One of two sub-steps at once fails  [Failed]  0.73s
+✗ 0     When two sub-steps run at once and the first fails  0.24s  [i0-i4] 3 calls
+  ✗ 0.0   The left side fails  0.04s  [i0]
+        the left side failed
+    0.1   The right side runs  0.18s  [i2-i4] 2 calls
+3 calls · interactions s14 · flow s14
+step  method  path                  calls errors   median 
+0.0   GET     /left/before-failing      1      0     0 ms 
+0.1   GET     /right/one                1      0     0 ms 
+0.1   GET     /right/two                1      0     0 ms 
+##### s15
+s15  Probes › One sub-step twice  [Passed]  0.01s
+  0     Given one sub-step runs twice  0.01s  [i0-i2] 2 calls
+    0.0   The same sub step  0s  [i0]
+        · which
+        · first
+    0.1   The same sub step  [i2]
+        · which
+        · second
+2 calls · interactions s15 · flow s15
+step  method  path          calls errors   median      max
+0.0   GET     /same/first       1      0     0 ms     0 ms
+0.1   GET     /same/second      1      0     0 ms     0 ms
+##### s16
+s16  Probes › Two sub-steps run at once  [Passed]  0.21s
+  0     When two sub-steps run at once  0.19s  [i0-i6] 4 calls
+    0.0   The left side runs  0.12s  [i0-i4] 2 calls
+    0.1   The right side runs  0.17s  [i2-i6] 2 calls
+4 calls · interactions s16 · flow s16
+step  method  path        calls errors   median      max b
+0.0   GET     /left/one       1      0     0 ms     0 ms  
+0.1   GET     /right/one      1      0     0 ms     0 ms  
+0.0   GET     /left/two       1      0     0 ms     0 ms  
+0.1   GET     /right/two      1      0     0 ms     0 ms  
+##### s17
+s17  Reuse › A step definition that is also a woven step  [Passed]  0.69s
+  0     Given a registered customer  0.25s  [i0-i2] 2 calls
+    0.0   A registered customer  0.24s  [i0-i2] 2 calls
+      0.0.0 A customer is registered  0.24s  [i0-i2] 2 calls
+          · name
+          · customer-1
+        0.0.0.0 Their address is verified  0.2s  [i2]
+        · 0.0.0.0.0 Response is success status code should be true
+  1     When the customer places the order  0.39s  [i4-i6] 2 calls
+    1.0   The payment is authorised  0.39s  [i4]
+        · amount
+        · 99.99
+        · card
+        · 4111
+    · 1.0.0 Response status code should be OK
+    1.1   The order is submitted  [i6]
+  2     Then the order is confirmed
+  · 2.0   Shop order status should be "Confirmed"
+4 calls · interactions s17 · flow s17
+step     method  path                                 call
+0.0.0    POST    /customers                               
+0.0.0.0  GET     /customers/customer-1/address-check      
+1.0      POST    /payments                                
+1.1      POST    /orders                                  
+##### s18
+s18  Seeding › Reference data is seeded by a hook  [Passed]  0.69s
+  0     Given a registered customer with a full basket  0.24s  [i0]
+  1     When the customer places the order  0.39s  [i2-i10] 5 calls
+    1.0   A customer is registered  0.23s  [i2-i4] 2 calls
+        · name
+        · customer-5
+      1.0.0 Their address is verified  0.2s  [i4]
+      · 1.0.0.0 Response is success status code should be true
+    1.1   Items are added to the basket  0s  [i6-i10] 3 calls
+        · count
+        · 3
+  2     Then the order is confirmed  [i12-i14] 2 calls
+    2.0   The payment is authorised  0.39s  [i12]
+        · amount
+        · 99.99
+        · card
+        · 4111
+    · 2.0.0 Response status code should be OK
+    2.1   The order is submitted  [i14]
+8 calls · interactions s18 · flow s18
+step   method  path                                 calls 
+0      POST    /seed                                    1 
+1.0    POST    /customers                               1 
+1.0.0  GET     /customers/customer-5/address-check      1 
+1.1    PUT     /basket/customer-5/items/0               1 
+1.1    PUT     /basket/customer-5/items/1               1 
+1.1    PUT     /basket/customer-5/items/2               1 
+2.0    POST    /payments                                1 
+2.1    POST    /orders                                  1 
+##### the whole run, bars off
+! step "2" spans scenarios — the same path is a different 
+step     calls errors   median      max bodies     bytes
+0.1         11      0     0 ms     0 ms      1     112 B
+1           11      0     0 ms     0 ms      1      22 B
+b0.1        10      0     0 ms     0 ms      1     204 B
+0.0         10      0     0 ms     0 ms      1      62 B
+b0.0         6      0     0 ms     0 ms      1     139 B
+b0.0.0       6      0     0 ms     0 ms      1      12 B
+b1.0         6      1     0 ms     0 ms      2     219 B
+0            6      0     0 ms    10 ms      1      12 B
+b1.1         5      0     0 ms     0 ms      1     236 B
+1.1          5      0     0 ms     0 ms      2     145 B
+1.0          4      1     0 ms     0 ms      2     116 B
+0.0.0        3      0     0 ms     0 ms      1      27 B
+0.0.0.0      1      0     0 ms     0 ms      1       2 B
+1.0.0        1      0     0 ms     0 ms      1       2 B
+2.0          1      0     0 ms     0 ms      1      32 B
+2.1          1      0     0 ms     0 ms      1      47 B
+16 buckets
+Diagnostics (1):
+  HistoryUnavailable ×1  no history ledger: no .git or .kronikol directory above C:\Users\cex\AppDa
+next: failures
+##### the issue's commands
+step   method  path                                 calls errors   med
+0.0    POST    /customers                               1      0     2
+0.0.0  GET     /customers/customer-3/address-check      1      0     0
+0.1    PUT     /basket/customer-3/items/0               1      0     0
+0.1    PUT     /basket/customer-3/items/1               1      0     0
+0.1    PUT     /basket/customer-3/items/2               1      0     0
+5 buckets
+step   method  path                                 calls errors   med
+0.0    POST    /customers                               1      0     2
+0.0.0  GET     /customers/customer-3/address-check      1      0     0
+2 buckets
+s4  A declined card rejects the order  [Failed]
+
+── 0.1  Items are added to the basket
+  s4/i4     Shop Tests → Shop API  PUT /basket/customer-3/items/0  OK  0 ms  b:af6b6909 
+  s4/i6     Shop Tests → Shop API  PUT /basket/customer-3/items/1  OK  0 ms  b:20b2a53f 
+  s4/i8     Shop Tests → Shop API  PUT /basket/customer-3/items/2  OK  0 ms  b:db8d797f 
+3 calls shown · http s4/iN --keys for a payload

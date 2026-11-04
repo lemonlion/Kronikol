@@ -1,0 +1,57 @@
+=== StepTracking 02:43:17
+Passed!  - Failed:     0, Passed:    61, Skipped:     0, Total:    61, Duration: 7 s - Kronikol.Tests.StepTracking.dll (net10.0)
+=== AssertionTracking 02:43:30
+Passed!  - Failed:     0, Passed:  1432, Skipped:    28, Total:  1460, Duration: 5 m 39 s - Kronikol.Tests.AssertionTracking.dll (net10.0)
+=== xUnit2 02:49:15
+Passed!  - Failed:     0, Passed:   111, Skipped:     0, Total:   111, Duration: 2 m 1 s - Kronikol.Tests.xUnit2.dll (net10.0)
+=== xUnit3 02:51:23
+Passed!  - Failed:     0, Passed:    33, Skipped:     0, Total:    33, Duration: 958 ms - Kronikol.Tests.xUnit3.dll (net10.0)
+=== NUnit4 02:51:28
+Passed!  - Failed:     0, Passed:    49, Skipped:     0, Total:    49, Duration: 1 s - Kronikol.Tests.NUnit4.dll (net10.0)
+=== MSTest 02:51:33
+Passed!  - Failed:     0, Passed:    85, Skipped:     0, Total:    85, Duration: 1 s - Kronikol.Tests.MSTest.dll (net10.0)
+=== TUnit 02:51:38
+Passed!  - Failed:     0, Passed:    50, Skipped:     0, Total:    50, Duration: 965 ms - Kronikol.Tests.TUnit.dll (net10.0)
+=== LightBDD.xUnit3 02:51:44
+Passed!  - Failed:     0, Passed:    35, Skipped:     0, Total:    35, Duration: 1 s - Kronikol.Tests.LightBDD.xUnit3.dll (net10.0)
+=== LightBDD.xUnit2 02:51:51
+Passed!  - Failed:     0, Passed:    11, Skipped:     0, Total:    11, Duration: 1 s - Kronikol.Tests.LightBDD.xUnit2.dll (net10.0)
+=== LightBDD.TUnit 02:51:57
+Passed!  - Failed:     0, Passed:    26, Skipped:     0, Total:    26, Duration: 2 s - Kronikol.Tests.LightBDD.TUnit.dll (net10.0)
+=== core 02:52:03
+Passed!  - Failed:     0, Passed: 11824, Skipped:     2, Total: 11826, Duration: 4 m 58 s - Kronikol.Tests.dll (net10.0)
+=== example BDDfy.xUnit3 02:57:13
+Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2, Duration: 475 ms - Example.Api.Tests.Component.BDDfy.xUnit3.dll (net10.0)
+=== example LightBDD.xUnit3 02:57:26
+Passed!  - Failed:     0, Passed:     6, Skipped:     0, Total:     6, Duration: 616 ms - Example.Api.Tests.Component.LightBDD.xUnit3.dll (net10.0)
+=== example LightBDD.xUnit2 02:57:39
+Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 850 ms - Example.Api.Tests.Component.LightBDD.xUnit2.dll (net10.0)
+=== example LightBDD.TUnit 02:57:50
+  failed: 0
+  skipped: 0
+  succeeded: 3
+  total: 3
+Test run summary: Passed! - C:\Code\k225-w\examples\Example.Api\tests\Example.Api.Tests.Component.LightBDD.TUnit\bin\Release\net10.0\Example.Api.Tests.Component.LightBDD.TUnit.dll 
+=== example ReqNRoll.xUnit2 02:58:03
+Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2, Duration: 997 ms - Example.Api.Tests.Component.ReqNRoll.xUnit2.dll (net10.0)
+=== example ReqNRoll.xUnit3 02:58:17
+Passed!  - Failed:     0, Passed:    11, Skipped:     0, Total:    11, Duration: 500 ms - Example.Api.Tests.Component.ReqNRoll.xUnit3.dll (net10.0)
+=== example ReqNRoll.TUnit 02:58:32
+  failed: 0
+  skipped: 0
+  succeeded: 2
+  total: 2
+Test run summary: Passed! - C:\Code\k225-w\examples\Example.Api\tests\Example.Api.Tests.Component.ReqNRoll.TUnit\bin\Release\net10.0\Example.Api.Tests.Component.ReqNRoll.TUnit.dll 
+=== example xUnit3 02:58:46
+Passed!  - Failed:     0, Passed:     5, Skipped:     0, Total:     5, Duration: 469 ms - Example.Api.Tests.Component.xUnit3.dll (net10.0)
+=== example xUnit2 02:58:57
+Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2, Duration: 544 ms - Example.Api.Tests.Component.xUnit2.dll (net10.0)
+=== example NUnit4 02:59:07
+Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2, Duration: 418 ms - Example.Api.Tests.Component.NUnit4.dll (net10.0)
+=== example TUnit 02:59:17
+  failed: 0
+  skipped: 0
+  succeeded: 12
+  total: 12
+Test run summary: Passed! - C:\Code\k225-w\examples\Example.Api\tests\Example.Api.Tests.Component.TUnit\bin\Release\net10.0\Example.Api.Tests.Component.TUnit.dll (net10.0|x64)
+== done 02:59:27

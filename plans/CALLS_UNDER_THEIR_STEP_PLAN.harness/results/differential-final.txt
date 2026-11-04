@@ -1,0 +1,55 @@
+# The example suites on the final cut with the probe (scripts/run_examples_differential.sh). For each record: published's walk against the path it ends with.
+=== BDDfy.xUnit3 11:15:14
+Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2, Duration: 1 s - Example.Api.Tests.Component.BDDfy
+=== LightBDD.xUnit3 11:17:35
+Passed!  - Failed:     0, Passed:     6, Skipped:     0, Total:     6, Duration: 1 s - Example.Api.Tests.Component.Light
+=== LightBDD.xUnit2 11:18:23
+Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 2 s - Example.Api.Tests.Component.Light
+=== LightBDD.TUnit 11:19:02
+  failed: 0
+  succeeded: 3
+  total: 3
+Test run summary: Passed! - C:\Code\Kronikol-225y\examples\Example.Api\tests\Example.Api.Tests.Component.LightBDD.TUnit\
+=== ReqNRoll.xUnit2 11:19:39
+Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2, Duration: 572 ms - Example.Api.Tests.Component.Re
+=== ReqNRoll.xUnit3 11:19:59
+Passed!  - Failed:     0, Passed:    11, Skipped:     0, Total:    11, Duration: 991 ms - Example.Api.Tests.Component.Re
+=== ReqNRoll.TUnit 11:20:19
+  failed: 0
+  succeeded: 2
+  total: 2
+Test run summary: Passed! - C:\Code\Kronikol-225y\examples\Example.Api\tests\Example.Api.Tests.Component.ReqNRoll.TUnit\
+=== xUnit3 11:20:49
+Passed!  - Failed:     0, Passed:     5, Skipped:     0, Total:     5, Duration: 727 ms - Example.Api.Tests.Component.xU
+=== xUnit2 11:21:19
+Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2, Duration: 1 s - Example.Api.Tests.Component.xUnit
+=== NUnit4 11:22:48
+Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2, Duration: 1 s - Example.Api.Tests.Component.NUnit
+=== TUnit 11:23:28
+  failed: 0
+  succeeded: 12
+  total: 12
+Test run summary: Passed! - C:\Code\Kronikol-225y\examples\Example.Api\tests\Example.Api.Tests.Component.TUnit\bin\Relea
+== done 11:24:24
+== BDDfy.xUnit3: 22 records (11 requests), 4 answered by their own flow, 18 read from what was open, 0 on a sub-step
+       22  same top-level step
+== LightBDD.TUnit: 36 records (18 requests), 28 answered by their own flow, 8 read from what was open, 24 on a sub-step
+       36  same top-level step
+== LightBDD.xUnit2: 36 records (18 requests), 28 answered by their own flow, 8 read from what was open, 24 on a sub-step
+       36  same top-level step
+== LightBDD.xUnit3: 36 records (18 requests), 28 answered by their own flow, 8 read from what was open, 24 on a sub-step
+       36  same top-level step
+== NUnit4: 22 records (11 requests), 0 answered by their own flow, 0 read from what was open, 0 on a sub-step
+       22  unstamped: walk has none, final has none
+== ReqNRoll.TUnit: 22 records (11 requests), 16 answered by their own flow, 6 read from what was open, 0 on a sub-step
+       22  same top-level step
+== ReqNRoll.xUnit2: 22 records (11 requests), 16 answered by their own flow, 6 read from what was open, 0 on a sub-step
+       22  same top-level step
+== ReqNRoll.xUnit3: 46 records (23 requests), 32 answered by their own flow, 14 read from what was open, 0 on a sub-step
+       46  same top-level step
+== TUnit: 22 records (11 requests), 0 answered by their own flow, 0 read from what was open, 0 on a sub-step
+       22  unstamped: walk has none, final has none
+== xUnit2: 22 records (11 requests), 0 answered by their own flow, 0 read from what was open, 0 on a sub-step
+       22  unstamped: walk has none, final has none
+== xUnit3: 22 records (11 requests), 0 answered by their own flow, 0 read from what was open, 0 on a sub-step
+       22  unstamped: walk has none, final has none

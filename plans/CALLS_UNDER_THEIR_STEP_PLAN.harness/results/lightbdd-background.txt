@@ -1,0 +1,24 @@
+--- run 1
+s0    pass   0.01s     3 calls  A composite step with two sub steps
+s1    FAIL   0.04s     4 calls  A composite whose first sub step fails
+s2    pass    0.2s     5 calls  A step makes a call after a composite ra
+s3    pass   0.09s     5 calls  Z1 nested composite then a slow call
+s4    pass   0.01s     4 calls  Z2 flat composite then two steps
+s5    pass      0s     1 calls  Z3 no composite one step
+   1 call arrived after 'A composite step with two sub steps' ended and are listed as background calls
+--- run 2
+s0    pass   0.01s     3 calls  A composite step with two sub steps
+s1    FAIL   0.05s     4 calls  A composite whose first sub step fails
+s2    pass   0.23s     5 calls  A step makes a call after a composite ra
+s3    pass   0.13s     5 calls  Z1 nested composite then a slow call
+s4    pass   0.01s     4 calls  Z2 flat composite then two steps
+s5    pass      0s     1 calls  Z3 no composite one step
+   1 call arrived after 'A composite step with two sub steps' ended and are listed as background calls
+--- run 3
+s0    pass   0.01s     3 calls  A composite step with two sub steps
+s1    FAIL   0.06s     4 calls  A composite whose first sub step fails
+s2    pass    0.2s     5 calls  A step makes a call after a composite ra
+s3    pass    0.1s     5 calls  Z1 nested composite then a slow call
+s4    pass   0.01s     4 calls  Z2 flat composite then two steps
+s5    pass      0s     1 calls  Z3 no composite one step
+   1 call arrived after 'A composite step with two sub steps' ended and are listed as background calls

@@ -1,0 +1,35 @@
+# The issue's own commands on the final cut's report of its own suite.
+
+##### query interactions <reports> s4 --step 0
+s4/i0     Shop API         POST /customers                                                OK         0 ms  bod
+s4/i2     Shop API         GET /customers/customer-4/address-check                        OK         0 ms  →
+s4/i4     Shop API         PUT /basket/customer-4/items/0                                 OK         0 ms  bod
+s4/i6     Shop API         PUT /basket/customer-4/items/1                                 OK         0 ms  bod
+s4/i8     Shop API         PUT /basket/customer-4/items/2                                 OK         0 ms  bod
+5 calls
+
+##### query interactions <reports> s4 --step 0.0
+s4/i0     Shop API         POST /customers                                                OK         0 ms  bod
+s4/i2     Shop API         GET /customers/customer-4/address-check                        OK         0 ms  →
+2 calls
+
+##### query flow <reports> s4/0.1
+s4  A declined card rejects the order  [Failed]
+
+── 0.1  Items are added to the basket
+  s4/i4     Shop Tests → Shop API  PUT /basket/customer-4/items/0  OK  0 ms  b:af6b6909 15 B
+  s4/i6     Shop Tests → Shop API  PUT /basket/customer-4/items/1  OK  0 ms  b:20b2a53f 15 B
+  s4/i8     Shop Tests → Shop API  PUT /basket/customer-4/items/2  OK  0 ms  b:db8d797f 15 B
+3 calls shown · http s4/iN --keys for a payload
+
+##### query steps <reports> s4/0.1
+s4  Payments › A declined card rejects the order  [Failed]  1.04s
+stableId 58b51f7609db31ca
+at Features/Payments.feature:3
+open: TestRunReport.html#sid-58b51f7609db31ca
+
+scoped to step 0.1 and its sub-steps — `steps s4` for the whole scenario 
+  0.1   Items are added to the basket  0s  [i4-i8] 3 calls
+      · count
+      · 3
+6 calls · interactions s4 · flow s4

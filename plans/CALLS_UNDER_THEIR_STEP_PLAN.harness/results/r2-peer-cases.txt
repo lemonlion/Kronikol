@@ -1,0 +1,86 @@
+# Published 5.28.2 (pub) against R2 alone on 9d994a4b (r2): #223's session's cases A to W (probes-matcher/generators/make*.py), then #222's session's own (probes-matcher/peer-case-af). scripts/run_cases.py
+=== A-bg-text-in-first-bar
+  pub: flags {}
+    s0 /orders=b0 /confirm=-
+    s1 /orders=b0 /confirm=-
+  r2: flags {}
+    s0 /orders=0 /confirm=1
+    s1 /orders=0 /confirm=1
+=== B-assertion-before-first-step
+  pub: flags {}
+    s0 /basket=- /check=-
+  r2: flags {}
+    s0 /basket=1 /check=2
+=== C-retry
+  pub: flags {}  (all builds the same)
+    s0 /basket=0 /check=1
+=== D-step-with-no-text
+  pub: flags {}
+    s0 /a=- /b=1
+  r2: flags {}
+    s0 /a=0 /b=1
+=== E-capture-own-bars-hook-bar
+  pub: flags {}  (all builds the same)
+    s0 /seed=- /basket=- /check=-
+=== F-untimed-rows-own-bars-one-bar-differs
+  pub: flags {}  (all builds the same)
+    s0 /basket=0 /order=- /confirm=2
+=== G-shared-first-line-one-out
+  pub: flags {}  (all builds the same)
+    s0 /seed=- /cash=- /card=- /confirm=-
+=== H-shared-400-chars-one-out
+  pub: flags {}  (all builds the same)
+    s0 /seed=- /cash=- /card=- /confirm=-
+=== I-raw-bars-unescaped
+  pub: flags {}  (all builds the same)
+    s0 /read=0 /send=1 /confirm=2
+=== J-fold-false-match-one-out
+  pub: flags {}  (all builds the same)
+    s0 /seed=- /n=- /m=- /confirm=-
+=== K-control
+  pub: flags {}  (all builds the same)
+    s0 /basket=0 /check=1
+=== L-store-bars-with-background
+  pub: flags {}  (all builds the same)
+    s0 /shop=b0 /basket=0 /check=1
+    s1 /shop=b0 /basket=0 /check=1
+=== M-store-hook-bar-and-background
+  pub: flags {}  (all builds the same)
+    s0 /seed=- /shop=- /basket=- /check=-
+=== N-nested-doc-table
+  pub: flags {}  (all builds the same)
+    s0 /basket=0 /inner=0 /send=1 /check=2
+=== O-heuristic-bg-other-outcome
+  pub: flags {}  (all builds the same)
+    s0 /shop=b0 /check=0
+    s1 /shop=b0 /check=0
+    s2 /shop=b0 /check=0
+=== P-store-bg-bar-in-other-words
+  pub: flags {}  (all builds the same)
+    s0 /shop=- /customer=b1 /basket=0 /check=1
+=== Q-store-own-step-bar-in-other-words
+  pub: flags {}  (all builds the same)
+    s0 /shop=- /basket=1 /check=2
+=== R-bg-first-line-is-a-steps
+  pub: flags {}
+    s0 /card=- /confirm=-
+  r2: flags {}
+    s0 /card=0 /confirm=1
+=== S-bg-text-in-a-bar-once-folded
+  pub: flags {}
+    s0 /order=- /confirm=-
+  r2: flags {}
+    s0 /order=0 /confirm=1
+=== U-assertions-before-the-first-step
+  pub: flags {}
+    s0 /basket=- /check=-
+  r2: flags {}
+    s0 /basket=2 /check=3
+=== V-assertions-and-no-steps
+  pub: flags {}  (all builds the same)
+    s0 /basket=-
+=== W-file-per-scenario-on-a-shared-step
+  pub: flags NO REPORT 3762504530  (all builds the same)
+=== AF-unescaped-marker
+  pub: flags {}  (all builds the same)
+    s0 /x=0

@@ -1,0 +1,32 @@
+The two prototypes built as one, on the adapters: prototype/on-223-abf7b0a3.patch on abf7b0a3, Release.
+=== tests/Kronikol.Tests.LightBDD.xUnit3 16:00:32
+Passed!  - Failed:     0, Passed:    35, Skipped:     0, Total:    35, Duration: 8 s - Kronikol.Tests.LightBDD.xUnit3.dll (net10.0)
+=== tests/Kronikol.Tests.LightBDD.xUnit2 16:00:51
+Passed!  - Failed:     0, Passed:    11, Skipped:     0, Total:    11, Duration: 9 s - Kronikol.Tests.LightBDD.xUnit2.dll (net10.0)
+=== tests/Kronikol.Tests.xUnit3 16:01:14
+Passed!  - Failed:     0, Passed:    33, Skipped:     0, Total:    33, Duration: 2 s - Kronikol.Tests.xUnit3.dll (net10.0)
+=== tests/Kronikol.Tests.LightBDD.TUnit 16:01:29
+Run again alone, as the script's filter missed this runner's summary: Kronikol.Tests.LightBDD.TUnit  Total: 26, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0
+=== examples/Example.Api/tests/Example.Api.Tests.Component.BDDfy.xUnit3 16:02:03
+Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2, Duration: 1 s - Example.Api.Tests.Component.BDDfy.xUnit3.dll (net10.0)
+=== examples/Example.Api/tests/Example.Api.Tests.Component.LightBDD.xUnit3 16:02:23
+Passed!  - Failed:     0, Passed:     6, Skipped:     0, Total:     6, Duration: 888 ms - Example.Api.Tests.Component.LightBDD.xUnit3.dll (net10.0)
+=== examples/Example.Api/tests/Example.Api.Tests.Component.LightBDD.xUnit2 16:02:45
+Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 1 s - Example.Api.Tests.Component.LightBDD.xUnit2.dll (net10.0)
+=== examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.xUnit2 16:03:02
+Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2, Duration: 1 s - Example.Api.Tests.Component.ReqNRoll.xUnit2.dll (net10.0)
+=== examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.xUnit3 16:03:23
+Passed!  - Failed:     0, Passed:    11, Skipped:     0, Total:    11, Duration: 736 ms - Example.Api.Tests.Component.ReqNRoll.xUnit3.dll (net10.0)
+=== examples/Example.Api/tests/Example.Api.Tests.Component.LightBDD.TUnit 16:03:45
+Test run summary: Passed! - C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\84bdf88c-b056-4543-a3d5-5d3d039eba20\scratchpad\r225\one\examples\Example.Api\tests\Ex
+  total: 3
+  failed: 0
+  succeeded: 3
+  skipped: 0
+=== examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.TUnit 16:04:16
+Test run summary: Passed! - C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\84bdf88c-b056-4543-a3d5-5d3d039eba20\scratchpad\r225\one\examples\Example.Api\tests\Ex
+  total: 2
+  failed: 0
+  succeeded: 2
+  skipped: 0
+FINISHED

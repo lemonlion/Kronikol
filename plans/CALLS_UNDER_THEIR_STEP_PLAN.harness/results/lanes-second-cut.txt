@@ -1,0 +1,21 @@
+=== Kronikol.Tests.StepTracking 11:40:31
+Passed!  - Failed:     0, Passed:    61, Skipped:     0, Total:    61, Duration: 8 s - Kronikol.Tests.StepTracking.dll (
+=== Kronikol.Tests.AssertionTracking 11:40:48
+Passed!  - Failed:     0, Passed:  1432, Skipped:    28, Total:  1460, Duration: 11 m 1 s - Kronikol.Tests.AssertionTrac
+=== Kronikol.Tests.xUnit2 11:52:03
+Passed!  - Failed:     0, Passed:   111, Skipped:     0, Total:   111, Duration: 3 m 53 s - Kronikol.Tests.xUnit2.dll (n
+=== Kronikol.Tests.NUnit4 11:56:25
+Passed!  - Failed:     0, Passed:    49, Skipped:     0, Total:    49, Duration: 3 s - Kronikol.Tests.NUnit4.dll (net10.
+=== Kronikol.Tests.MSTest 11:56:40
+Passed!  - Failed:     0, Passed:    85, Skipped:     0, Total:    85, Duration: 2 s - Kronikol.Tests.MSTest.dll (net10.
+=== Kronikol.Tests 11:56:55
+Passed!  - Failed:     0, Passed: 11578, Skipped:     2, Total: 11580, Duration: 6 m 46 s - Kronikol.Tests.dll (net10.0)
+=== TUnit 12:04:16
+  total: 12
+  succeeded: 12
+=== LightBDD.TUnit 12:05:22
+  total: 3
+  succeeded: 3
+=== ReqNRoll.TUnit 12:06:46
+  total: 2
+  succeeded: 2

@@ -1,0 +1,414 @@
+diff --git a/src/Kronikol/Ingestion/Cucumber/CucumberFeatureMerger.cs b/src/Kronikol/Ingestion/Cucumber/CucumberFeatureMerger.cs
+index ef28a574..8a0fc863 100644
+--- a/src/Kronikol/Ingestion/Cucumber/CucumberFeatureMerger.cs
++++ b/src/Kronikol/Ingestion/Cucumber/CucumberFeatureMerger.cs
+@@ -368,7 +368,7 @@ private static void GraftAssertions(CucumberSynthesisResult cucumber, IEnumerabl
+         {
+             var windows = cucumber.StepWindows[testId];
+             var extra = new List<ScenarioStep>();
+-            var children = new Dictionary<ScenarioStep, List<ScenarioStep>>();
++            var children = new Dictionary<ScenarioStep, List<ScenarioStep>>(ReferenceEqualityComparer.Instance);
+ 
+             foreach (var record in records.OrderBy(r => r.Timestamp ?? DateTimeOffset.MinValue))
+             {
+diff --git a/src/Kronikol/Ingestion/Cucumber/CucumberFeatureSynthesizer.cs b/src/Kronikol/Ingestion/Cucumber/CucumberFeatureSynthesizer.cs
+index 8299c895..976318ad 100644
+--- a/src/Kronikol/Ingestion/Cucumber/CucumberFeatureSynthesizer.cs
++++ b/src/Kronikol/Ingestion/Cucumber/CucumberFeatureSynthesizer.cs
+@@ -608,7 +608,7 @@ private static BuiltScenario BuildScenario(
+             var gherkinStep = gherkin.FindStep(pickleStep);
+             var keyword = NormaliseKeyword(gherkinStep?.Keyword);
+             var isBackground = gherkinStep?.Id is { Length: > 0 } gid && gherkin.IsBackgroundStep(gid);
+-            var text = pickleStep.Text ?? gherkinStep?.Text ?? "(step)";
++            var text = pickleStep.Text ?? gherkinStep?.Text ?? ScenarioStep.NoText;
+ 
+             var occurrence = textOccurrences[text.Trim()] = textOccurrences.GetValueOrDefault(text.Trim()) + 1;
+             var fromTestsFile = bypassByText.GetValueOrDefault((text.Trim(), occurrence));
+diff --git a/src/Kronikol/Ingestion/FeatureSynthesizer.cs b/src/Kronikol/Ingestion/FeatureSynthesizer.cs
+index 4996cebf..efd51c5d 100644
+--- a/src/Kronikol/Ingestion/FeatureSynthesizer.cs
++++ b/src/Kronikol/Ingestion/FeatureSynthesizer.cs
+@@ -74,7 +74,8 @@ internal static Result Build(
+         ExecutionResult resultWhenUnknown,
+         string? attachmentsBase,
+         TestAttempts attempts,
+-        SetupWindow? setup = null)
++        SetupWindow? setup = null,
++        IReadOnlySet<string>? barsInCapture = null)
+     {
+         var logList = (logs ?? []).ToList();
+ 
+@@ -187,8 +188,9 @@ TestAccumulator Get(string testId)
+ 
+             // An earlier attempt makes no tag (plans/TAGS_PLAN.md §4.6): the attempt number carries it.
+             var tags = ScenarioTags.Classify(acc.Tags);
+-            var steps = BuildStepTree(acc.Steps);
++            var steps = BuildStepTree(acc.Steps, out var barlessSteps);
+             var backgroundSteps = BuildStepTree(acc.BackgroundSteps);
++            var backgroundCount = backgroundSteps?.Length ?? 0;
+ 
+             var scenario = new Scenario
+             {
+@@ -205,6 +207,10 @@ TestAccumulator Get(string testId)
+                     : null,
+                 Steps = steps,
+                 BackgroundSteps = backgroundSteps,
++                // A null set is a caller that drew no bars, and one holding this test is a capture whose bars are its rows'.
++                BarlessRows = barsInCapture is null || barsInCapture.Contains(testId)
++                    ? null
++                    : [.. Enumerable.Range(0, backgroundCount), .. barlessSteps.Select(row => backgroundCount + row)],
+                 Rule = acc.Rule,
+                 OutlineId = acc.OutlineId,
+                 OutlineTitle = acc.OutlineId,
+@@ -406,11 +412,18 @@ private static string AttachmentName(TestRunRecord record, string path)
+     /// Assertions honour <see cref="StepTrackingOptions.IncludeTrackedAssertionsInStepList"/>, like
+     /// Kronikol's own assertion tracking.
+     /// </summary>
+-    public static ScenarioStep[]? BuildStepTree(IEnumerable<TestRunRecord> records)
++    public static ScenarioStep[]? BuildStepTree(IEnumerable<TestRunRecord> records) => BuildStepTree(records, out _);
++
++    /// <inheritdoc cref="BuildStepTree(IEnumerable{TestRunRecord})"/>
++    /// <param name="records">The records.</param>
++    /// <param name="barless">The rows that draw no bar where the tests file draws them: an assertion's, one with no time, and a nested step that had no parent to go under.</param>
++    private static ScenarioStep[]? BuildStepTree(IEnumerable<TestRunRecord> records, out List<int> barless)
+     {
++        barless = [];
+         var includeAssertions = StepCollector.Options.IncludeTrackedAssertionsInStepList;
+         var roots = new List<ScenarioStep>();
+-        var children = new Dictionary<ScenarioStep, List<ScenarioStep>>();
++        // By reference: two rows that read alike are still two rows, each with its own children.
++        var children = new Dictionary<ScenarioStep, List<ScenarioStep>>(ReferenceEqualityComparer.Instance);
+         ScenarioStep? currentTop = null;
+ 
+         foreach (var record in records.OrderBy(r => r.Timestamp ?? DateTimeOffset.MinValue))
+@@ -430,6 +443,8 @@ private static string AttachmentName(TestRunRecord record, string path)
+             }
+             else
+             {
++                if (isAssertion || !record.IsDiagramMarker)
++                    barless.Add(roots.Count);
+                 roots.Add(step);
+                 if (!isAssertion)
+                     currentTop = step;
+@@ -464,7 +479,7 @@ private static ScenarioStep BuildAssertionStep(TestRunRecord record)
+ 
+     private static ScenarioStep BuildStep(TestRunRecord record)
+     {
+-        var text = record.Text ?? "(step)";
++        var text = record.Text ?? ScenarioStep.NoText;
+         var parameters = BuildTableParameter(record.Table);
+         return new ScenarioStep
+         {
+diff --git a/src/Kronikol/Ingestion/IngestPipeline.cs b/src/Kronikol/Ingestion/IngestPipeline.cs
+index c5161182..598aa3d8 100644
+--- a/src/Kronikol/Ingestion/IngestPipeline.cs
++++ b/src/Kronikol/Ingestion/IngestPipeline.cs
+@@ -576,7 +576,7 @@ private static IngestResult RunCore(IngestRequest request, ReportConfigurationOp
+             diagnostics.Add(DiagnosticKind.Other,
+                 $"{earlierAttemptRecords} interaction record(s) of earlier attempts of retried tests left out: a retried test's "
+                 + "scenario shows its last attempt, its retry badge counting the earlier ones.");
+-        AddDiagramMarkers(records, current);
++        var barsInCapture = AddDiagramMarkers(records, current);
+         if (options.SeparateSetup)
+         {
+             AddSetupBoundaries(records, current);
+@@ -596,7 +596,7 @@ private static IngestResult RunCore(IngestRequest request, ReportConfigurationOp
+ 
+         var setupKept = setupRecords > 0 ? setup : null;
+         var synthesised = FeatureSynthesizer.Build(
+-            testRecords, logs, request.DefaultFeatureName, request.ResultWhenUnknown, attachmentsBase, attempts, setupKept);
++            testRecords, logs, request.DefaultFeatureName, request.ResultWhenUnknown, attachmentsBase, attempts, setupKept, barsInCapture);
+         // What the copier cannot see of the capture's attachments, for its one entry: read before the messages are merged in,
+         // since the merge makes a result of its own.
+         var attachmentContext = new AttachmentContext
+@@ -1305,7 +1305,8 @@ private static bool Evaluate(Func<InteractionRecord, bool> predicate, Interactio
+     /// the step list, or the diagram grows two sets of bars. The same rule the Cucumber path applies to the
+     /// reporter's own step events for the scenarios the messages own.
+     /// </summary>
+-    private static void AddDiagramMarkers(List<InteractionRecord> records, List<TestRunRecord> testRecords)
++    /// <returns>The tests whose capture holds step bars, so whose rows are not read as the tests file's bars.</returns>
++    private static HashSet<string> AddDiagramMarkers(List<InteractionRecord> records, List<TestRunRecord> testRecords)
+     {
+         // The kind as the replay will read it: a comparison of its own would miss a kind the replay draws
+         // as a Step bar (one written by number), and the scenario would get both sets of bars.
+@@ -1315,6 +1316,11 @@ private static void AddDiagramMarkers(List<InteractionRecord> records, List<Test
+                 .Select(r => r.TestId),
+             StringComparer.Ordinal);
+ 
++        // A capture's kind: step record draws a bar as well, though not in place of the tests file's.
++        var barsInCapture = new HashSet<string>(
++            drawnByCapture.Concat(records.Where(r => string.Equals(r.Kind, InteractionRecord.Kinds.Step, StringComparison.OrdinalIgnoreCase)).Select(r => r.TestId)),
++            StringComparer.Ordinal);
++
+         foreach (var record in testRecords)
+         {
+             if (!record.IsDiagramMarker || string.IsNullOrWhiteSpace(record.TestId) || drawnByCapture.Contains(record.TestId))
+@@ -1324,9 +1330,11 @@ private static void AddDiagramMarkers(List<InteractionRecord> records, List<Test
+                     passed: !string.Equals(record.Status, "failed", StringComparison.OrdinalIgnoreCase)
+                             && !string.Equals(record.Status, "fail", StringComparison.OrdinalIgnoreCase),
+                     record.Timestamp!.Value, record.Error)
+-                : InteractionRecord.StepMarker(record.TestId, record.Text ?? "step", record.Timestamp!.Value, record.Keyword,
++                : InteractionRecord.StepMarker(record.TestId, record.Text ?? ScenarioStep.NoTextOnABar, record.Timestamp!.Value, record.Keyword,
+                     table: record.Table, docString: record.DocString));
+         }
++
++        return barsInCapture;
+     }
+ 
+     /// <summary>
+diff --git a/src/Kronikol/PlantUml/StepBarPlantUml.cs b/src/Kronikol/PlantUml/StepBarPlantUml.cs
+index 0f9c4c7e..fff80b97 100644
+--- a/src/Kronikol/PlantUml/StepBarPlantUml.cs
++++ b/src/Kronikol/PlantUml/StepBarPlantUml.cs
+@@ -109,7 +109,7 @@ public static string Build(string label, IReadOnlyList<StepBarTable>? tables = n
+         // prefixes that make the engine load a bundle or drop the text: LightBDD writes a table
+         // parameter as <$name>, which the bar used to paint as "". The wrapper never cuts a word that
+         // holds a `<`, so a `~` stays with the `<` it escapes.
+-        var labelLine = string.Join(@"\n", DiagramWidth.WrapLines(PlantUmlCreator.EscapeOneLineMarkup(labelLines[0]), DiagramWidth.MaxNoteTextLineChars));
++        var labelLine = LabelLine(labelLines[0]);
+ 
+         var body = new List<string>();
+         // Multi-line marker text (the ingest format allows it) used to fold into the coloured bar as
+@@ -163,6 +163,116 @@ public static string Build(string label, IReadOnlyList<StepBarTable>? tables = n
+             content, PlantUmlStatementLimits.MaxNoteLineChars - RichPrefix.Length);
+     }
+ 
++    /// <summary>A label's first line as a bar writes it: escaped, then wrapped.</summary>
++    private static string LabelLine(string line) =>
++        string.Join(@"\n", DiagramWidth.WrapLines(PlantUmlCreator.EscapeOneLineMarkup(line), DiagramWidth.MaxNoteTextLineChars));
++
++    /// <summary>How far short of its budget <see cref="PlantUmlStatementLimits.TruncateLabel"/> can stop, as it will not halve an escape.</summary>
++    private const int MostACutFallsShort = 16;
++
++    /// <summary>
++    /// Whether <paramref name="bar"/> is what <see cref="Build"/> draws for this step: its label written again as Build writes
++    /// it, wrapped at the same places, and compared with the bar, exactly, up to where a cut ended the bar. So a step whose text
++    /// the bar escaped, wrapped or cut finds its bar, and one whose text differs from the bar's late on, by a space or by case
++    /// does not. The bar's keyword is none, the step's own, or the bar's first word, as a collector writes And for a keyword it
++    /// repeats, and that word can come before the step's own keyword, as BDDfy leaves an And or a But in a step's title and draws
++    /// And And. The one difference it allows is the one <see cref="Reports.StepText"/> makes: it capitalises a step with no
++    /// keyword, in its row and on its bar, under a switch for each. What it cannot see: the rest of a text past a cut; a first
++    /// word of the text taken for a keyword, so a text with its first word gone reads as a bar with no keyword; the same text
++    /// under another keyword or none; two steps with no keyword that StepText makes alike; and two texts Build draws alike. A
++    /// row with no text says too little to spare the first word: <paramref name="anyFirstWord"/> keeps that to its own keyword.
++    /// </summary>
++    internal static bool DrawsStep(string bar, string? keyword, string text, bool anyFirstWord = true)
++    {
++        string content;
++        int budget;
++        if (bar.StartsWith(LegacyPrefix, StringComparison.Ordinal))
++            (content, budget) = (bar[LegacyPrefix.Length..], PlantUmlStatementLimits.MaxColouredNoteBarChars - LegacyPrefix.Length);
++        else if (bar.StartsWith(RichPrefix, StringComparison.Ordinal))
++            (content, budget) = (bar[RichPrefix.Length..], PlantUmlStatementLimits.MaxNoteLineChars - RichPrefix.Length);
++        else
++            return false;
++
++        var hasKeyword = !string.IsNullOrWhiteSpace(keyword);
++        if (DrawsText(content, budget, "", text) || (hasKeyword && DrawsLabel(content, budget, $"{keyword} {text}")))
++            return true;
++        if (!anyFirstWord)
++            return false;
++
++        var space = content.IndexOf(' ');
++        var lineBreak = content.IndexOf(@"\n", StringComparison.Ordinal);
++        var firstWord = space >= 0 && (lineBreak < 0 || space < lineBreak) ? space : lineBreak;
++        if (firstWord <= 0)
++            return false;
++
++        var before = $"{content[..firstWord]} ";
++        return hasKeyword
++            ? DrawsLabel(content, budget, before + text) || DrawsLabel(content, budget, $"{before}{keyword} {text}")
++            : DrawsText(content, budget, before, text);
++    }
++
++    /// <summary>
++    /// A text with no keyword of its own after this much of a label: as it is written, or as <see cref="Reports.StepText"/> would
++    /// have it on the other side, capitalised, or the text it capitalises to this one.
++    /// </summary>
++    private static bool DrawsText(string content, int budget, string before, string text)
++    {
++        if (DrawsLabel(content, budget, before + text))
++            return true;
++
++        var capitalised = Reports.StepText.Capitalise(text) ?? text;
++        if (capitalised != text)
++            return DrawsLabel(content, budget, before + capitalised);
++
++        var first = text.TakeWhile(c => char.ToLowerInvariant(c) == c).Count();
++        if (first == text.Length)
++            return false;
++
++        var lowered = text[..first] + char.ToLowerInvariant(text[first]) + text[(first + 1)..];
++        return Reports.StepText.Capitalise(lowered) == text && DrawsLabel(content, budget, before + lowered);
++    }
++
++    private static bool DrawsLabel(string content, int budget, string label)
++    {
++        var lines = label.Replace("\r", "").Trim().Split('\n');
++        var drawn = string.Join(@"\n", lines.Skip(1).SelectMany(EscapeWrappedBodyLine).Prepend(LabelLine(lines[0])));
++
++        var cut = content.Length > budget - MostACutFallsShort && content.EndsWith(PlantUmlStatementLimits.TruncationMarker, StringComparison.Ordinal);
++        var kept = cut ? content[..^PlantUmlStatementLimits.TruncationMarker.Length] : content;
++        if (cut && drawn.StartsWith(kept, StringComparison.Ordinal))
++            return true;
++
++        return kept.StartsWith(drawn, StringComparison.Ordinal) && FollowsALabel(kept.AsSpan(drawn.Length), cut);
++    }
++
++    /// <summary>
++    /// Whether this can come after a whole label: nothing, or what <see cref="Build"/> writes there, a table or a doc string under
++    /// a blank line, with a table's name above it where a step has several. A cut can leave only part of that. A break alone is
++    /// the label wrapping on past this text, and a later line is a longer text's, as a body line never opens with a pipe.
++    /// </summary>
++    private static bool FollowsALabel(ReadOnlySpan<char> rest, bool cut)
++    {
++        if (rest.IsEmpty)
++            return true;
++        if (!rest.StartsWith(@"\n\n", StringComparison.Ordinal))
++            return cut && rest.SequenceEqual(@"\n");
++
++        rest = rest[4..];
++        if (rest.IsEmpty)
++            return cut;
++        if (rest[0] == '|')
++            return true;
++
++        var nameEnd = rest.IndexOf(@"\n", StringComparison.Ordinal);
++        if (nameEnd < 0)
++            return cut;
++        if (nameEnd <= 0 || rest[nameEnd - 1] != ':')
++            return false;
++
++        var table = rest[(nameEnd + 2)..];
++        return table.StartsWith("|", StringComparison.Ordinal) || (cut && table.IsEmpty);
++    }
++
+     /// <summary>A line break inside a table cell: the engine reads a doubled backslash and an n there as one.</summary>
+     internal const string CellBreak = @"\\n";
+ 
+diff --git a/src/Kronikol/Reports/ReportGenerator.cs b/src/Kronikol/Reports/ReportGenerator.cs
+index fbe3c755..4a648bd0 100644
+--- a/src/Kronikol/Reports/ReportGenerator.cs
++++ b/src/Kronikol/Reports/ReportGenerator.cs
+@@ -5398,12 +5398,16 @@ private static (Dictionary<string, List<string?>> StepPaths, Dictionary<string,
+             string? current = null;
+             var stepMarkerCount = 0;
+             var interactionIndex = 0;
++            var requestPaths = new Dictionary<Guid, string?>();
+ 
+             foreach (var log in perTest)
+             {
+                 if (!log.IsDiagramMarker)
+                 {
+-                    paths.Add(current);
++                    // A call in flight across a bar is one call: a response takes the step of the request it answers.
++                    if (log.Type == RequestResponseType.Request)
++                        requestPaths[log.RequestResponseId] = current;
++                    paths.Add(log.Type == RequestResponseType.Response && requestPaths.TryGetValue(log.RequestResponseId, out var ofRequest) ? ofRequest : current);
+                     interactionIndex++;
+                     continue;
+                 }
+@@ -5415,7 +5419,7 @@ private static (Dictionary<string, List<string?>> StepPaths, Dictionary<string,
+                 switch (log.MarkerKind)
+                 {
+                     case DiagramMarkerKind.Step:
+-                        current = stepMarkerCount < ordered.Count && StepMarkerMatches(log.PlantUml, ordered[stepMarkerCount].Text)
++                        current = stepMarkerCount < ordered.Count && StepMarkerMatches(log.PlantUml, ordered[stepMarkerCount].Keyword, ordered[stepMarkerCount].Text)
+                             ? ordered[stepMarkerCount].Path
+                             : null;
+ 
+@@ -5441,33 +5445,44 @@ private static (Dictionary<string, List<string?>> StepPaths, Dictionary<string,
+     }
+ 
+     /// <summary>
+-    /// Every step of a scenario in the order its marker will arrive, paired with the address it gets in the
+-    /// data file: <c>b0</c>, <c>b1</c> for background steps, then <c>0</c>, <c>1</c> for the scenario's own.
+-    /// Only top-level steps appear — a step delimiter is emitted for those alone.
++    /// The steps of a scenario a marker can arrive for, in order, each with the address it gets in the data file:
++    /// <c>b0</c>, <c>b1</c> for background steps, then <c>0</c>, <c>1</c> for the scenario's own. Only top-level steps
++    /// appear, as a step delimiter is emitted for those alone, and not those <see cref="Scenario.BarlessRows"/> names.
+     /// </summary>
+-    private static List<(string Path, string Text)> OrderedStepPaths(Scenario scenario)
++    private static List<(string Path, string? Keyword, string Text)> OrderedStepPaths(Scenario scenario)
+     {
+-        var ordered = new List<(string, string)>();
+-        for (var i = 0; i < (scenario.BackgroundSteps?.Length ?? 0); i++)
+-            ordered.Add(($"b{i}", scenario.BackgroundSteps![i].Text));
+-        for (var i = 0; i < (scenario.Steps?.Length ?? 0); i++)
+-            ordered.Add(($"{i}", scenario.Steps![i].Text));
++        var ordered = new List<(string, string?, string)>();
++        var row = 0;
++
++        void Add(string prefix, ScenarioStep[]? steps)
++        {
++            for (var i = 0; i < (steps?.Length ?? 0); i++, row++)
++                if (scenario.BarlessRows?.Contains(row) != true)
++                    ordered.Add(($"{prefix}{i}", steps![i].Keyword, steps[i].Text));
++        }
++
++        Add("b", scenario.BackgroundSteps);
++        Add("", scenario.Steps);
+         return ordered;
+     }
+ 
+     /// <summary>
+-    /// Whether a step delimiter's PlantUML belongs to a given step. The bar's label is the step text, but
+-    /// possibly with the keyword prepended and the first letter capitalised, so this compares loosely: the
+-    /// answer is only used to decide whether to trust positional attribution at all.
++    /// Whether a step delimiter's PlantUML belongs to a given step. A bar written by hand, by another producer or by an
++    /// older version holds the step's text with whatever is around it, so this compares loosely: the answer is only used
++    /// to decide whether to trust positional attribution at all. A bar Kronikol draws changes the text, so it is also read
++    /// as what <see cref="Kronikol.PlantUml.StepBarPlantUml.Build"/> draws for the step.
+     /// </summary>
+-    private static bool StepMarkerMatches(string plantUml, string stepText)
++    private static bool StepMarkerMatches(string plantUml, string? keyword, string stepText)
+     {
+         if (string.IsNullOrWhiteSpace(stepText))
+             return true;
+ 
+         var marker = plantUml.Replace('\n', ' ').Trim();
+         return marker.Contains(stepText, StringComparison.OrdinalIgnoreCase)
+-               || marker.Contains(StepText.CapitaliseIfEnabled(stepText) ?? stepText, StringComparison.OrdinalIgnoreCase);
++               || marker.Contains(StepText.CapitaliseIfEnabled(stepText) ?? stepText, StringComparison.OrdinalIgnoreCase)
++               || (stepText == ScenarioStep.NoText
++                   ? Kronikol.PlantUml.StepBarPlantUml.DrawsStep(marker, keyword, ScenarioStep.NoTextOnABar, anyFirstWord: false)
++                   : Kronikol.PlantUml.StepBarPlantUml.DrawsStep(marker, keyword, stepText));
+     }
+ 
+     /// <summary>
+diff --git a/src/Kronikol/Reports/Scenario.cs b/src/Kronikol/Reports/Scenario.cs
+index 2ecdf10b..ed996dd7 100644
+--- a/src/Kronikol/Reports/Scenario.cs
++++ b/src/Kronikol/Reports/Scenario.cs
+@@ -6,6 +6,14 @@ namespace Kronikol.Reports;
+ /// </summary>
+ public record Scenario
+ {
++    /// <summary>
++    /// The rows of this scenario the tests file listed and drew no bar for, by position in its background steps and then its
++    /// steps, so the walk over its bars leaves them out: a background's, an assertion's, and one with no time. Null where
++    /// the bars are not the tests file's. Kept here and not on the rows, as scenarios can share a background's rows, and the
++    /// position holds when the background detector moves a scenario's opening rows.
++    /// </summary>
++    internal int[]? BarlessRows { get; init; }
++
+     public required string Id { get; set; }
+     public required string DisplayName { get; set; }
+ 
+diff --git a/src/Kronikol/Reports/ScenarioStep.cs b/src/Kronikol/Reports/ScenarioStep.cs
+index 62c3e941..795fa5e0 100644
+--- a/src/Kronikol/Reports/ScenarioStep.cs
++++ b/src/Kronikol/Reports/ScenarioStep.cs
+@@ -14,6 +14,12 @@ public record ScenarioStep
+     /// </summary>
+     public bool IsAssertion { get; set; }
+ 
++    /// <summary>What a step with no text of its own is listed as.</summary>
++    internal const string NoText = "(step)";
++
++    /// <summary>What a step with no text of its own is drawn as.</summary>
++    internal const string NoTextOnABar = "step";
++
+     public required string Text { get; set; }
+     public ExecutionResult? Status { get; set; }
+     public string? BypassReason { get; set; }

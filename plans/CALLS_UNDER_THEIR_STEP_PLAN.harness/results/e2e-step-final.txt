@@ -1,0 +1,2 @@
+# Kronikol.Tests.EndToEnd on the final cut, the classes and facts with Step in their names (bundled Chromium). dotnet test --filter FullyQualifiedName~Step
+Passed!  - Failed:     0, Passed:   115, Skipped:     0, Total:   115, Duration: 1 m 50 s - Kronikol.Tests.EndToEnd.dll (net10.0)

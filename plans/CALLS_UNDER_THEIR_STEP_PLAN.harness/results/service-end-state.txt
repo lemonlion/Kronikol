@@ -1,0 +1,33 @@
+Passed!  - Failed:     0, Passed:     6, Skipped:     0, Total:     6, Duration: 1 s - ProbeService.dll (net10.0)
+--- S0 sequential [Passed]
+      0     The parent  0.19s  [i0-i13] 8 calls
+        0.0   Sub a  0.05s  [i4-i5] 2 calls
+        0.1   Sub b  0.04s  [i8-i9] 2 calls
+    calls: own-before=0  onward-of-own-before=0  sub-a=0.0  onward-of-sub-a=0.0  sub-b=0.1  onward-of-sub-b=0.1  own-after=0  onward-of-own-after=0
+--- S1 two at once [Passed]
+      0     Both at once  0.15s  [i0-i5] 4 calls
+        0.0   Left  0.14s  [i0-i5] 2 calls
+        0.1   Right  0.07s  [i1-i2] 2 calls
+    calls: left-slow=0.0  right=0.1  onward-of-right=0.1  onward-of-left-slow=0.0
+--- S2 parent calls while a child runs [Passed]
+      0     Parent calls while a child runs  0.34s  [i0-i1] 2 calls
+        0.0   The running child  0.33s
+    calls: parent-own=0  onward-of-parent-own=0
+--- S3 two top level steps at once [Passed]
+      0     Top fast  0.07s  [i1-i2] 2 calls
+      1     Top slow  0.14s  [i0-i5] 2 calls
+      2     The next  0.05s  [i8-i9] 2 calls
+    calls: top-slow=1  fast=0  onward-of-fast=0  onward-of-top-slow=1  next=2  onward-of-next=2
+--- S4 service goes on after it answers [Passed]
+      0     Starts work and moves on  0s  [i0]
+      1     The later step  0.32s
+    calls: work=0
+--- S5 a step on a thread with no context [Passed]
+      0     Hands work to a thread with no context  0.45s  [i0-i1] 2 calls
+          · name
+          · ProbeService.ServiceProbes.S5_A_step_on_a_thread_with_no_context
+          · id
+          · 3d496c65d7aa0bd6f482c386e94d0aa071377f6a3223e392df2cdef3205717d5
+        0.0   On that thread  0.4s  [i0-i1] 2 calls
+      1     The next  0.04s  [i4-i5] 2 calls
+    calls: on-the-thread=0.0  onward-of-on-the-thread=0.0  next=1  onward-of-next=1

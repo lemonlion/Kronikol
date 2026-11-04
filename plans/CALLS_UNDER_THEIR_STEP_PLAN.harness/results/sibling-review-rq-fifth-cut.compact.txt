@@ -1,0 +1,125 @@
+
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under '880239a1-b…
+s0  Review probes › R00 a forwarding step method awaited normally is the control  [Passed]  0.9s
+  0     Given a forwarding step method is awaited  0.34s  [i0]
+    0.0   A forwarding check  0.32s  [i0]
+      0.0.0 A slow inner check  0.32s  [i0]
+  1     When the order takes a while and is then read back  0.51s  [i2-i4] 2 calls
+    1.0   An order is submitted slowly  0.51s  [i2]
+    1.1   The order is read back  [i4]
+  2     Then the order is confirmed  [i6]
+    2.0   The order is read back  [i6]
+      call> ! calls
+      call> step path
+      call> 0.0.0 /background
+      call> 1.0 /orders
+      call> 1.1 /orders/1
+      call> 2.0 /orders/1
+
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under '880239a1-b…
+s1  Review probes › R01 a forwarding step method left running  [Passed]  0.92s
+  0     Given a forwarding step method is left running  0s  [i0-i2] 2 calls
+    0.0   A forwarding check  0.31s  [i2]
+      0.0.0 A slow inner check  0.31s  [i2]
+  1     When the order takes a while and is then read back  0.8s  [i4-i6] 2 calls
+    1.0   An order is submitted slowly  0.57s  [i4]
+    1.1   The order is read back  [i6]
+  2     Then the order is confirmed  [i8]
+    2.0   The order is read back  [i8]
+      call> ! calls
+      call> step path
+      call> 0 /started
+      call> 0.0.0 /background
+      call> 1.0 /orders
+      call> 1.1 /orders/1
+      call> 2.0 /orders/1
+
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under '880239a1-b…
+s2  Review probes › R02 a sync step method that leaves one running  [Passed]  1.1s
+  0     Given a sync step method leaves one running  0.08s  [i0-i2] 2 calls
+    0.0   A sync wrapper  0.01s  [i2]
+      0.0.0 A slow inner check  0.32s  [i2]
+  1     When the order takes a while and is then read back  0.83s  [i4-i6] 2 calls
+    1.0   An order is submitted slowly  0.57s  [i4]
+    1.1   The order is read back  [i6]
+  2     Then the order is confirmed  0s  [i8]
+    2.0   The order is read back  [i8]
+      call> ! calls
+      call> step path
+      call> 0 /started
+      call> 0.0.0 /background
+      call> 1.0 /orders
+      call> 1.1 /orders/1
+      call> 2.0 /orders/1
+
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under '880239a1-b…
+s3  Review probes › R03 a hook leaves a step method running and the first step is undefined  [Skipped]  0.03s
+      call> ! calls
+      call> buckets: at
+
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under '880239a1-b…
+s4  Review probes › R05 a hook's step method runs a Gherkin step and then makes a call  [Passed]  0.03s
+  0     Given a registered customer  0s  [i0-i2] 2 calls
+    0.0   Given a registered customer  0s  [i0]
+      0.0.0 A customer is registered  [i0]
+  1     Given a registered customer  [i4]
+    1.0   A customer is registered  [i4]
+  2     When the customer places the order  [i6]
+    2.0   An order is submitted  [i6]
+      call> ! calls
+      call> step path
+      call> 0.0.0 /customers
+      call> 0 /seed-after
+      call> 1.0 /customers
+      call> 2.0 /orders
+
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under '880239a1-b…
+s5  Review probes › R06 two step methods in parallel in a hook, the first ending first  [Passed]  0.16s
+  0     Given a registered customer  0s  [i0]
+  1     When the customer places the order  0s  [i2]
+   2 calls belong to no step (before the first step, or attribution was not trusted)
+      call> ! calls
+      call> 0 /fast
+      call> 1 /slow
+      call> - /customers
+      call> - /orders
+
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under '880239a1-b…
+s6  Review probes › R17 the control for R01, the plan's T17 shape on the same later steps  [Passed]  0.55s
+  0     Given a step method is left running  0s  [i0-i2] 2 calls
+    0.0   A slow background check  0.31s  [i2]
+  1     When the order takes a while and is then read back  0.54s  [i4-i6] 2 calls
+    1.0   An order is submitted slowly  0.52s  [i4]
+    1.1   The order is read back  [i6]
+  2     Then the order is confirmed  [i8]
+    2.0   The order is read back  [i8]
+      call> ! calls
+      call> 0 /started
+      call> 0.0 /background
+      call> 1.0 /orders
+      call> 1.1 /orders/1
+      call> 2.0 /orders/1
+
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under '880239a1-b…
+s7  Review probes › R18 a failing forwarding step method left running, in a scenario that passes  [Passed]  0.67s
+  0     Given a failing forwarding step method is left running  0s  [i0]
+  ✗ 0.0   A failing forwarding check  0.11s
+        background check failed
+    ✗ 0.0.0 A failing inner check  0.11s
+          background check failed
+  1     When the order takes a while and is then read back  0.64s  [i2-i4] 2 calls
+    1.0   An order is submitted slowly  0.51s  [i2]
+    1.1   The order is read back  [i4]
+  2     Then the order is confirmed  [i6]
+    2.0   The order is read back  [i6]
+      call> ! calls
+      call> 0 /started
+      call> 1.0 /orders
+      call> 1.1 /orders/1
+      call> 2.0 /orders/1
+
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under '880239a1-b…
+s8  Review probes › R99 keeps the run alive past the left-running steps  [Passed]  1.57s
+  0     Given the run waits a while  1.55s
+      call> ! calls
+      call> buckets: at

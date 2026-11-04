@@ -608,7 +608,7 @@ public static class CucumberFeatureSynthesizer
             var gherkinStep = gherkin.FindStep(pickleStep);
             var keyword = NormaliseKeyword(gherkinStep?.Keyword);
             var isBackground = gherkinStep?.Id is { Length: > 0 } gid && gherkin.IsBackgroundStep(gid);
-            var text = pickleStep.Text ?? gherkinStep?.Text ?? "(step)";
+            var text = pickleStep.Text ?? gherkinStep?.Text ?? ScenarioStep.NoText;
 
             var occurrence = textOccurrences[text.Trim()] = textOccurrences.GetValueOrDefault(text.Trim()) + 1;
             var fromTestsFile = bypassByText.GetValueOrDefault((text.Trim(), occurrence));

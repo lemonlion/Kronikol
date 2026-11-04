@@ -1,0 +1,141 @@
+# Each record's step, responses included, and the step rows, on published 5.28.2 (pub), R2 alone on 9d994a4b (r2) and the final cut (cut). scripts/run_one_case.py
+=== H1-reused-id-chronological --chronological
+  pub:
+    0     Given a basket  0.1s  [i0]
+    1     When it is paid  0.1s  [i2]
+    i0 Request  retry    step s0/0
+    i1 Response retry    step s0/0
+    i2 Request  retry    step s0/1
+    i3 Response retry    step s0/1
+  r2:
+    0     Given a basket  0.1s  [i0]
+    1     When it is paid  0.1s  [i2]
+    i0 Request  retry    step s0/0
+    i1 Response retry    step s0/0
+    i2 Request  retry    step s0/1
+    i3 Response retry    step s0/1
+  cut:
+    0     Given a basket  0.1s  [i0]
+    1     When it is paid  0.1s  [i2]
+    i0 Request  retry    step s0/0
+    i1 Response retry    step s0/0
+    i2 Request  retry    step s0/1
+    i3 Response retry    step s0/1
+=== H2-bar-in-flight-chronological --chronological
+  pub:
+    0     Given a basket  0.1s  [i0]
+    1     When it is paid  0.1s  [i2]
+    i0 Request  slow     step s0/0
+    i1 Response slow     step s0/1
+    i2 Request  pay      step s0/1
+    i3 Response pay      step s0/1
+  r2:
+    0     Given a basket  0.1s  [i0]
+    1     When it is paid  0.1s  [i2]
+    i0 Request  slow     step s0/0
+    i1 Response slow     step s0/0
+    i2 Request  pay      step s0/1
+    i3 Response pay      step s0/1
+  cut:
+    0     Given a basket  0.1s  [i0]
+    1     When it is paid  0.1s  [i2]
+    i0 Request  slow     step s0/0
+    i1 Response slow     step s0/0
+    i2 Request  pay      step s0/1
+    i3 Response pay      step s0/1
+=== K1-identical-rows-substeps
+  pub:
+    0     Given a basket  0.1s
+    0.0   Given sub one  0.1s
+    0.1   Given sub two  0.1s
+    1     Given a basket  0.1s  [i0]
+    i0 Request  x        step s0/1
+    i1 Response x        step s0/1
+  r2:
+    0     Given a basket  0.1s
+    0.0   Given sub one  0.1s
+    1     Given a basket  0.1s  [i0]
+    1.0   Given sub two  0.1s
+    i0 Request  x        step s0/1
+    i1 Response x        step s0/1
+  cut:
+    0     Given a basket  0.1s
+    0.0   Given sub one  0.1s
+    1     Given a basket  0.1s  [i0]
+    1.0   Given sub two  0.1s
+    i0 Request  x        step s0/1
+    i1 Response x        step s0/1
+=== J15-capture-case-only
+  pub:
+    0     When pay <$X  0.1s
+    1     When PAY <$x  0.1s
+    1 calls belong to no step (before the first step, or attribution was not trusted)
+    i0 Request  pay      step -
+    i1 Response pay      step -
+  r2:
+    0     When pay <$X  0.1s
+    1     When PAY <$x  0.1s
+    1 calls belong to no step (before the first step, or attribution was not trusted)
+    i0 Request  pay      step -
+    i1 Response pay      step -
+  cut:
+    0     When pay <$X  0.1s
+    1     When PAY <$x  0.1s
+    1 calls belong to no step (before the first step, or attribution was not trusted)
+    i0 Request  pay      step -
+    i1 Response pay      step -
+=== N1-two-word-keyword-escaped
+  pub:
+    0     Given that the file C:\temp\new is read  0.1s
+    1     When it is paid  0.1s  [i2]
+    1 calls belong to no step (before the first step, or attribution was not trusted)
+    i0 Request  read     step -
+    i1 Response read     step -
+    i2 Request  pay      step s0/1
+    i3 Response pay      step s0/1
+  r2:
+    0     Given that the file C:\temp\new is read  0.1s  [i0]
+    1     When it is paid  0.1s  [i2]
+    i0 Request  read     step s0/0
+    i1 Response read     step s0/0
+    i2 Request  pay      step s0/1
+    i3 Response pay      step s0/1
+=== N2-line-break-after-label-no-cut
+  pub:
+    0     When word0 word1 word2 word3 word4 word5 word6 word7 word8 word9 word10 word11 word1
+    1     When word0 word1 word2 word3 word4 word5 word6 word7 word8 word9 word10 word11 word1
+    1 calls belong to no step (before the first step, or attribution was not trusted)
+    i0 Request  pay      step -
+    i1 Response pay      step -
+  r2:
+    0     When word0 word1 word2 word3 word4 word5 word6 word7 word8 word9 word10 word11 word1
+    1     When word0 word1 word2 word3 word4 word5 word6 word7 word8 word9 word10 word11 word1
+    1 calls belong to no step (before the first step, or attribution was not trusted)
+    i0 Request  pay      step -
+    i1 Response pay      step -
+=== N3-case-only-plain
+  pub:
+    0     When pay now  0.1s  [i0]
+    1     When PAY NOW  0.1s
+    i0 Request  pay      step s0/0
+    i1 Response pay      step s0/0
+  r2:
+    0     When pay now  0.1s  [i0]
+    1     When PAY NOW  0.1s
+    i0 Request  pay      step s0/0
+    i1 Response pay      step s0/0
+=== N4-K1-durations-apart
+  pub:
+    0     Given a basket  0.1s
+    0.0   Given sub one  0.1s
+    1     Given a basket  0.12s  [i0]
+    1.0   Given sub two  0.1s
+    i0 Request  x        step s0/1
+    i1 Response x        step s0/1
+  r2:
+    0     Given a basket  0.1s
+    0.0   Given sub one  0.1s
+    1     Given a basket  0.12s  [i0]
+    1.0   Given sub two  0.1s
+    i0 Request  x        step s0/1
+    i1 Response x        step s0/1

@@ -1,0 +1,75 @@
+=== StepTracking 15:53:22
+Passed!  - Failed:     0, Passed:    61, Skipped:     0, Total:    61, Duration: 15 s - Kronikol.Tests.StepTracking.dll (net10.0)
+=== AssertionTracking 15:54:01
+[xUnit.net 00:00:55.24]     Kronikol.Tests.AssertionTracking.TargetsBuildTests.NoWarn_silences_the_warning_for_statements_left_unwoven [FAIL]
+[xUnit.net 00:01:07.74]     Kronikol.Tests.AssertionTracking.TargetsBuildTests.A_visual_basic_project_that_imports_the_targets_builds [FAIL]
+[xUnit.net 00:01:18.22]     Kronikol.Tests.AssertionTracking.TargetsBuildTests.Two_ci_builds_at_different_paths_weave_the_same_bytes_with_the_statements_labels [FAIL]
+[xUnit.net 00:01:28.09]     Kronikol.Tests.AssertionTracking.TargetsBuildTests.A_ci_build_draws_its_assertions_as_a_local_build_does(debugType: "portable") [FAIL]
+[xUnit.net 00:01:35.13]     Kronikol.Tests.AssertionTracking.TargetsBuildTests.A_ci_build_draws_its_assertions_as_a_local_build_does(debugType: "embedded") [FAIL]
+[xUnit.net 00:01:40.42]     Kronikol.Tests.AssertionTracking.TargetsBuildTests.A_file_that_is_not_utf8_is_labelled_as_the_compiler_read_it [FAIL]
+[xUnit.net 00:01:49.06]     Kronikol.Tests.AssertionTracking.TargetsBuildTests.A_build_at_its_default_verbosity_warns_once_for_the_statements_it_left_unwoven [FAIL]
+[xUnit.net 00:02:06.40]     Kronikol.Tests.AssertionTracking.TargetsBuildTests.A_projects_own_PathMap_draws_its_assertions_as_a_local_build_does [FAIL]
+[xUnit.net 00:02:17.08]     Kronikol.Tests.AssertionTracking.TargetsBuildTests.The_terminal_logger_shows_the_warning_for_statements_left_unwoven [FAIL]
+[xUnit.net 00:02:38.80]     Kronikol.Tests.AssertionTracking.TargetsBuildTests.A_build_at_normal_verbosity_lists_each_statement_left_unwoven [FAIL]
+[xUnit.net 00:02:51.70]     Kronikol.Tests.AssertionTracking.TargetsBuildTests.A_ci_build_that_embeds_its_sources_draws_its_assertions_as_a_local_build_does [FAIL]
+[xUnit.net 00:03:10.49]     Kronikol.Tests.AssertionTracking.TargetsBuildTests.A_build_with_a_code_page_labels_its_statements_as_the_compiler_read_them [FAIL]
+=== xUnit2 16:11:53
+Passed!  - Failed:     0, Passed:   111, Skipped:     0, Total:   111, Duration: 5 m 37 s - Kronikol.Tests.xUnit2.dll (net10.0)
+=== xUnit3 16:17:47
+Passed!  - Failed:     0, Passed:    33, Skipped:     0, Total:    33, Duration: 3 s - Kronikol.Tests.xUnit3.dll (net10.0)
+=== NUnit4 16:18:18
+Passed!  - Failed:     0, Passed:    49, Skipped:     0, Total:    49, Duration: 3 s - Kronikol.Tests.NUnit4.dll (net10.0)
+=== MSTest 16:18:40
+Passed!  - Failed:     0, Passed:    85, Skipped:     0, Total:    85, Duration: 3 s - Kronikol.Tests.MSTest.dll (net10.0)
+=== TUnit 16:19:03
+Passed!  - Failed:     0, Passed:    50, Skipped:     0, Total:    50, Duration: 3 s - Kronikol.Tests.TUnit.dll (net10.0)
+=== LightBDD.xUnit3 16:19:30
+Passed!  - Failed:     0, Passed:    35, Skipped:     0, Total:    35, Duration: 7 s - Kronikol.Tests.LightBDD.xUnit3.dll (net10.0)
+=== LightBDD.xUnit2 16:20:09
+Passed!  - Failed:     0, Passed:    11, Skipped:     0, Total:    11, Duration: 5 s - Kronikol.Tests.LightBDD.xUnit2.dll (net10.0)
+=== LightBDD.TUnit 16:20:41
+Passed!  - Failed:     0, Passed:    26, Skipped:     0, Total:    26, Duration: 4 s - Kronikol.Tests.LightBDD.TUnit.dll (net10.0)
+=== core 16:21:10
+  Failed Kronikol.Tests.Ingestion.Cucumber.CucumberAttachmentIngestTests.With_hooks_kept_the_step_markers_match_the_steps [226 ms]
+Failed!  - Failed:     1, Passed: 11824, Skipped:     2, Total: 11827, Duration: 10 m 13 s - Kronikol.Tests.dll (net10.0)
+[xUnit.net 00:06:04.90]     Kronikol.Tests.Ingestion.Cucumber.CucumberAttachmentIngestTests.With_hooks_kept_the_step_markers_match_the_steps [FAIL]
+=== example BDDfy.xUnit3 16:32:37
+Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2, Duration: 1 s - Example.Api.Tests.Component.BDDfy.xUnit3.dll (net10.0)
+=== example LightBDD.xUnit3 16:33:22
+Passed!  - Failed:     0, Passed:     6, Skipped:     0, Total:     6, Duration: 1 s - Example.Api.Tests.Component.LightBDD.xUnit3.dll (net10.0)
+=== example LightBDD.xUnit2 16:34:04
+Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 2 s - Example.Api.Tests.Component.LightBDD.xUnit2.dll (net10.0)
+=== example LightBDD.TUnit 16:34:40
+  failed: 0
+  skipped: 0
+  succeeded: 3
+  total: 3
+Test run summary: Passed! - C:\Code\Kronikol-225w\examples\Example.Api\tests\Example.Api.Tests.Component.LightBDD.TUnit\bin\Release\net10.0\Example.Api.Tests.Component.LightBDD.TUn
+=== example ReqNRoll.xUnit2 16:35:14
+Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2, Duration: 2 s - Example.Api.Tests.Component.ReqNRoll.xUnit2.dll (net10.0)
+=== example ReqNRoll.xUnit3 16:35:46
+Passed!  - Failed:     0, Passed:    11, Skipped:     0, Total:    11, Duration: 1 s - Example.Api.Tests.Component.ReqNRoll.xUnit3.dll (net10.0)
+=== example ReqNRoll.TUnit 16:36:54
+  failed: 0
+  skipped: 0
+  succeeded: 2
+  total: 2
+Test run summary: Passed! - C:\Code\Kronikol-225w\examples\Example.Api\tests\Example.Api.Tests.Component.ReqNRoll.TUnit\bin\Release\net10.0\Example.Api.Tests.Component.ReqNRoll.TUn
+=== example xUnit3 16:37:59
+Passed!  - Failed:     0, Passed:     5, Skipped:     0, Total:     5, Duration: 1 s - Example.Api.Tests.Component.xUnit3.dll (net10.0)
+=== example xUnit2 16:38:59
+Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2, Duration: 1 s - Example.Api.Tests.Component.xUnit2.dll (net10.0)
+=== example NUnit4 16:39:32
+Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2, Duration: 1 s - Example.Api.Tests.Component.NUnit4.dll (net10.0)
+=== example TUnit 16:40:08
+  failed: 0
+  skipped: 0
+  succeeded: 12
+  total: 12
+Test run summary: Passed! - C:\Code\Kronikol-225w\examples\Example.Api\tests\Example.Api.Tests.Component.TUnit\bin\Release\net10.0\Example.Api.Tests.Component.TUnit.dll (net10.0|x6
+== done 16:40:43
+=== AssertionTracking again, whole, its summary line kept (scripts/run_lanes.sh's tail had cut it, and 12 of TargetsBuildTests had failed under load; alone they pass, 16 of 16)
+Passed!  - Failed:     0, Passed:  1432, Skipped:    28, Total:  1460, Duration: 13 m 1 s - Kronikol.Tests.AssertionTracking.dll (net10.0)
+
+=== TargetsBuildTests alone
+Passed!  - Failed:     0, Passed:    16, Skipped:     0, Total:    16, Duration: 2 m 36 s - Kronikol.Tests.AssertionTracking.dll (net10.0)

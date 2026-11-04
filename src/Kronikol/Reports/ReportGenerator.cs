@@ -5367,12 +5367,13 @@ public static class ReportGenerator
     /// under, plus the annotations worth exporting.
     ///
     /// <para>Attribution is positional: the <em>n</em>th step marker opens the <em>n</em>th step in
-    /// document order (background steps first). That is sound because <c>RequestResponseLogger</c> is a
-    /// FIFO queue, so one test's records keep their relative order however many tests run in parallel. It
-    /// is not sound for a test that does work on a background thread, where a record can enqueue after the
-    /// marker for the following step — so the marker's text is checked against the step's, and a
-    /// disagreement produces a null <c>stepPath</c> and a diagnostic rather than a confident wrong
-    /// answer.</para>
+    /// document order (background steps first, and leaving out what <see cref="Scenario.BarlessRows"/> names).
+    /// That holds because <c>RequestResponseLogger</c> is a FIFO queue, so one test's records keep their
+    /// relative order however many tests run in parallel. The marker's text is checked against the step's,
+    /// for a bar that is not its row's, such as a hook's: a disagreement produces a null <c>stepPath</c> and a
+    /// diagnostic rather than a confident wrong answer. The check cannot see a record a background thread
+    /// enqueues after the marker for the following step, as that changes no marker, and such a record reads
+    /// the following step.</para>
     /// </summary>
     internal static Dictionary<string, List<string?>> AttributeInteractionsToStepPaths(RequestResponseLog[]? trackedLogs, Feature[] features) =>
         AttributeInteractionsToSteps(trackedLogs, features).StepPaths;
@@ -5398,12 +5399,16 @@ public static class ReportGenerator
             string? current = null;
             var stepMarkerCount = 0;
             var interactionIndex = 0;
+            var requestPaths = new Dictionary<Guid, string?>();
 
             foreach (var log in perTest)
             {
                 if (!log.IsDiagramMarker)
                 {
-                    paths.Add(current);
+                    // A call in flight across a bar is one call: a response takes the step of the request it answers.
+                    if (log.Type == RequestResponseType.Request)
+                        requestPaths[log.RequestResponseId] = current;
+                    paths.Add(log.Type == RequestResponseType.Response && requestPaths.TryGetValue(log.RequestResponseId, out var ofRequest) ? ofRequest : current);
                     interactionIndex++;
                     continue;
                 }
@@ -5415,7 +5420,7 @@ public static class ReportGenerator
                 switch (log.MarkerKind)
                 {
                     case DiagramMarkerKind.Step:
-                        current = stepMarkerCount < ordered.Count && StepMarkerMatches(log.PlantUml, ordered[stepMarkerCount].Text)
+                        current = stepMarkerCount < ordered.Count && StepMarkerMatches(log.PlantUml, ordered[stepMarkerCount].Keyword, ordered[stepMarkerCount].Text)
                             ? ordered[stepMarkerCount].Path
                             : null;
 
@@ -5441,33 +5446,44 @@ public static class ReportGenerator
     }
 
     /// <summary>
-    /// Every step of a scenario in the order its marker will arrive, paired with the address it gets in the
-    /// data file: <c>b0</c>, <c>b1</c> for background steps, then <c>0</c>, <c>1</c> for the scenario's own.
-    /// Only top-level steps appear — a step delimiter is emitted for those alone.
+    /// The steps of a scenario a marker can arrive for, in order, each with the address it gets in the data file:
+    /// <c>b0</c>, <c>b1</c> for background steps, then <c>0</c>, <c>1</c> for the scenario's own. Only top-level steps
+    /// appear, as a step delimiter is emitted for those alone, and not those <see cref="Scenario.BarlessRows"/> names.
     /// </summary>
-    private static List<(string Path, string Text)> OrderedStepPaths(Scenario scenario)
+    private static List<(string Path, string? Keyword, string Text)> OrderedStepPaths(Scenario scenario)
     {
-        var ordered = new List<(string, string)>();
-        for (var i = 0; i < (scenario.BackgroundSteps?.Length ?? 0); i++)
-            ordered.Add(($"b{i}", scenario.BackgroundSteps![i].Text));
-        for (var i = 0; i < (scenario.Steps?.Length ?? 0); i++)
-            ordered.Add(($"{i}", scenario.Steps![i].Text));
+        var ordered = new List<(string, string?, string)>();
+        var row = 0;
+
+        void Add(string prefix, ScenarioStep[]? steps)
+        {
+            for (var i = 0; i < (steps?.Length ?? 0); i++, row++)
+                if (scenario.BarlessRows?.Contains(row) != true)
+                    ordered.Add(($"{prefix}{i}", steps![i].Keyword, steps[i].Text));
+        }
+
+        Add("b", scenario.BackgroundSteps);
+        Add("", scenario.Steps);
         return ordered;
     }
 
     /// <summary>
-    /// Whether a step delimiter's PlantUML belongs to a given step. The bar's label is the step text, but
-    /// possibly with the keyword prepended and the first letter capitalised, so this compares loosely: the
-    /// answer is only used to decide whether to trust positional attribution at all.
+    /// Whether a step delimiter's PlantUML belongs to a given step. A bar written by hand, by another producer or by an
+    /// older version holds the step's text with whatever is around it, so this compares loosely: the answer is only used
+    /// to decide whether to trust positional attribution at all. A bar Kronikol draws changes the text, so it is also read
+    /// as what <see cref="Kronikol.PlantUml.StepBarPlantUml.Build"/> draws for the step.
     /// </summary>
-    private static bool StepMarkerMatches(string plantUml, string stepText)
+    private static bool StepMarkerMatches(string plantUml, string? keyword, string stepText)
     {
         if (string.IsNullOrWhiteSpace(stepText))
             return true;
 
         var marker = plantUml.Replace('\n', ' ').Trim();
         return marker.Contains(stepText, StringComparison.OrdinalIgnoreCase)
-               || marker.Contains(StepText.CapitaliseIfEnabled(stepText) ?? stepText, StringComparison.OrdinalIgnoreCase);
+               || marker.Contains(StepText.CapitaliseIfEnabled(stepText) ?? stepText, StringComparison.OrdinalIgnoreCase)
+               || (stepText == ScenarioStep.NoText
+                   ? Kronikol.PlantUml.StepBarPlantUml.DrawsStep(marker, keyword, ScenarioStep.NoTextOnABar, anyFirstWord: false)
+                   : Kronikol.PlantUml.StepBarPlantUml.DrawsStep(marker, keyword, stepText));
     }
 
     /// <summary>

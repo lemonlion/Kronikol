@@ -1,0 +1,302 @@
+# The ingest cases on R2 alone on 9d994a4b with #129's read forced (prototype/apply_forced_read.py): each call's step and what the run flagged. scripts/run_cases.py
+=== A-bg-text-in-first-bar
+  r2: flags {}  (all builds the same)
+    s0 /orders=0 /confirm=1
+    s1 /orders=0 /confirm=1
+=== B-assertion-before-first-step
+  r2: flags {}  (all builds the same)
+    s0 /basket=1 /check=2
+=== C-retry
+  r2: flags {}  (all builds the same)
+    s0 /basket=0 /check=1
+=== D-step-with-no-text
+  r2: flags {}  (all builds the same)
+    s0 /a=0 /b=1
+=== E-capture-own-bars-hook-bar
+  r2: flags {'StepAttributionMismatch': 2}  (all builds the same)
+    s0 /seed=- /basket=- /check=-
+=== F-untimed-rows-own-bars-one-bar-differs
+  r2: flags {'StepAttributionMismatch': 1}  (all builds the same)
+    s0 /basket=0 /order=- /confirm=2
+=== G-shared-first-line-one-out
+  r2: flags {'StepAttributionMismatch': 3}  (all builds the same)
+    s0 /seed=- /cash=- /card=- /confirm=-
+=== H-shared-400-chars-one-out
+  r2: flags {'StepAttributionMismatch': 3}  (all builds the same)
+    s0 /seed=- /cash=- /card=- /confirm=-
+=== I-raw-bars-unescaped
+  r2: flags {}  (all builds the same)
+    s0 /read=0 /send=1 /confirm=2
+=== J-fold-false-match-one-out
+  r2: flags {'StepAttributionMismatch': 3}  (all builds the same)
+    s0 /seed=- /n=- /m=- /confirm=-
+=== K-control
+  r2: flags {}  (all builds the same)
+    s0 /basket=0 /check=1
+=== L-store-bars-with-background
+  r2: flags {}  (all builds the same)
+    s0 /shop=b0 /basket=0 /check=1
+    s1 /shop=b0 /basket=0 /check=1
+=== M-store-hook-bar-and-background
+  r2: flags {'StepAttributionMismatch': 3}  (all builds the same)
+    s0 /seed=- /shop=- /basket=- /check=-
+=== N-nested-doc-table
+  r2: flags {}  (all builds the same)
+    s0 /basket=0 /inner=0 /send=1 /check=2
+=== O-heuristic-bg-other-outcome
+  r2: flags {}  (all builds the same)
+    s0 /shop=b0 /check=0
+    s1 /shop=b0 /check=0
+    s2 /shop=b0 /check=0
+=== P-store-bg-bar-in-other-words
+  r2: flags {'StepAttributionMismatch': 1}  (all builds the same)
+    s0 /shop=- /customer=b1 /basket=0 /check=1
+=== Q-store-own-step-bar-in-other-words
+  r2: flags {'StepAttributionMismatch': 1}  (all builds the same)
+    s0 /shop=- /basket=1 /check=2
+=== R-bg-first-line-is-a-steps
+  r2: flags {}  (all builds the same)
+    s0 /card=0 /confirm=1
+=== S-bg-text-in-a-bar-once-folded
+  r2: flags {}  (all builds the same)
+    s0 /order=0 /confirm=1
+=== U-assertions-before-the-first-step
+  r2: flags {}  (all builds the same)
+    s0 /basket=2 /check=3
+=== V-assertions-and-no-steps
+  r2: flags {}  (all builds the same)
+    s0 /basket=-
+=== W-file-per-scenario-on-a-shared-step
+  r2: flags NO REPORT 3762504530  (all builds the same)
+=== AF-unescaped-marker
+  r2: flags {}  (all builds the same)
+    s0 /x=0
+=== X1-marked-background
+  r2: flags {}  (all builds the same)
+    s0 /seed=- /basket=0 /check=1
+=== X2-two-rows-two-scenarios
+  r2: flags {}  (all builds the same)
+    s0 /seed=- /basket=0 /check=1
+    s1 /seed=- /basket=0 /check=1
+=== X3-assertion-first
+  r2: flags {}  (all builds the same)
+    s0 /basket=1 /check=2
+=== X4-untimed-row-between
+  r2: flags {}  (all builds the same)
+    s0 /basket=1 /send=2 /check=3
+=== X5-marked-background-text-in-the-bar
+  r2: flags {}  (all builds the same)
+    s0 /orders=0 /confirm=1
+=== X6-no-text-and-a-background
+  r2: flags {}  (all builds the same)
+    s0 /a=0 /b=1
+=== Y1-store-draws-a-marked-background
+  r2: flags {}  (all builds the same)
+    s0 /seed=b0 /basket=0 /check=1
+=== Y2-store-with-assertion-first
+  r2: flags {'StepAttributionMismatch': 2}  (all builds the same)
+    s0 /basket=- /check=-
+=== Y3-store-with-untimed-rows
+  r2: flags {}  (all builds the same)
+    s0 /basket=0 /send=1
+=== Y4-plain
+  r2: flags {}  (all builds the same)
+    s0 /basket=0 /check=1
+=== Z1-detector-lifts-untimed-rows
+  r2: flags {}  (all builds the same)
+    s0 /basket=1 /check=2
+    s1 /basket=1 /check=2
+    s2 /basket=1 /check=2
+=== Z2-detector-lifts-timed-rows
+  r2: flags {}  (all builds the same)
+    s0 /shop=0 /basket=1 /check=2
+    s1 /shop=0 /basket=1 /check=2
+    s2 /shop=0 /basket=1 /check=2
+=== Z3-retry-with-a-marked-background
+  r2: flags {}  (all builds the same)
+    s0 /basket=0 /check=1
+=== Z4-nested-row-first
+  r2: flags {}  (all builds the same)
+    s0 /inner=- /basket=1 /check=2
+=== Z5-failing-assertion-first
+  r2: flags {}  (all builds the same)
+    s0 /basket=1 /check=2
+=== Z6-long-label-and-a-background
+  r2: flags {}  (all builds the same)
+    s0 /long=0 /check=1
+=== Z7-background-text-is-the-next-row
+  r2: flags {}  (all builds the same)
+    s0 /own=0 /check=1
+=== Z8-only-marked-rows
+  r2: flags {}  (all builds the same)
+    s0 /call=-
+=== S1-store-plain
+  r2: flags {}  (all builds the same)
+    s0 /shop=0 /basket=1 /check=2
+=== S10-store-nested
+  r2: flags {}  (all builds the same)
+    s0 /seed=0 /shop=0 /check=1
+=== S11-store-row-not-run
+  r2: flags {'StepAttributionMismatch': 2}  (all builds the same)
+    s0 /shop=- /check=-
+=== S12-store-same-text
+  r2: flags {}  (all builds the same)
+    s0 /one=0 /two=1 /check=2
+=== S2-store-background
+  r2: flags {}  (all builds the same)
+    s0 /shop=b0 /customer=b1 /basket=0 /check=1
+=== S3-store-untimed
+  r2: flags {}  (all builds the same)
+    s0 /shop=0 /basket=1 /check=2
+=== S4-store-escapes
+  r2: flags {}  (all builds the same)
+    s0 /long=0 /read=1 /send=2 /confirm=3
+=== S5-store-two-lines
+  r2: flags {}  (all builds the same)
+    s0 /cash=0 /card=1 /confirm=2
+=== S6-store-hook-bar
+  r2: flags {'StepAttributionMismatch': 2}  (all builds the same)
+    s0 /seed=- /shop=- /basket=-
+=== S7-store-hook-bar-background
+  r2: flags {'StepAttributionMismatch': 3}  (all builds the same)
+    s0 /seed=- /shop=- /basket=- /check=-
+=== S8-store-outline-row
+  r2: flags {'StepAttributionMismatch': 1}  (all builds the same)
+    s0 /shop=- /basket=0 /check=1
+=== S9-store-outline-untimed
+  r2: flags {'StepAttributionMismatch': 1}  (all builds the same)
+    s0 /basket=0 /order=- /confirm=2
+=== F1-kindstep-untimed-rows
+  r2: flags {}  (all builds the same)
+    s0 /basket=0 /pay=1 /send=2
+=== F1b-kindstep-untimed-row-overlap
+  r2: flags {}  (all builds the same)
+    s0 /first=0 /second=1
+=== F1c-kindstep-background-row
+  r2: flags {}  (all builds the same)
+    s0 /seed=b0 /pay=0
+=== F2-heuristic-bg-first-untimed
+  r2: flags {}  (all builds the same)
+    s0 /a=b1
+    s1 /seed=b0 /b=b1
+=== F2b-heuristic-bg-overlap-wrong
+  r2: flags {}  (all builds the same)
+    s0 /a=b1
+    s1 /seed=b0 /b=b1
+=== F2c-heuristic-bg-capture-own-bars
+  r2: flags {}  (all builds the same)
+    s0 /a=b1
+    s1 /seed=b0 /b=b1
+=== F3-no-text-row-capture-bars
+  r2: flags {'StepAttributionMismatch': 2}  (all builds the same)
+    s0 /basket=- /pay=-
+=== F3b-blank-text-row-capture-bars
+  r2: flags {'StepAttributionMismatch': 1}  (all builds the same)
+    s0 /basket=0 /pay=-
+=== F4-reused-id
+  r2: flags {}  (all builds the same)
+    s0 /retry=0 /retry=1
+=== F5b-bar-in-flight-tree
+  r2: flags {}  (all builds the same)
+    s0 /slow=0 /pay=1
+=== H1-reused-id-chronological
+  r2: flags {}  (all builds the same)
+    s0 /retry=0 /retry=1
+=== H2-bar-in-flight-chronological
+  r2: flags {}  (all builds the same)
+    s0 /slow=0 /pay=1
+=== H3-no-ids-no-times-raw-bars
+  r2: flags {}  (all builds the same)
+    s0 /same=0 /same=1
+=== H4-capture-bar-for-assertion-row
+  r2: flags {}  (all builds the same)
+    s0 /seed=0 /basket=1 /pay=2
+=== H5-blank-line-label-false-accept
+  r2: flags {'StepAttributionMismatch': 1}  (all builds the same)
+    s0 /pay=-
+=== H6-doc-string-cut-prefix
+  r2: flags {}  (all builds the same)
+    s0 /pay=-
+=== J1-skipped-first-scenario-no-times
+  r2: flags {}  (all builds the same)
+    s0 
+    s1 /seed=b0 /place=b1 /check=0
+    s2 /seed=b0 /place=b1 /check=0
+=== J10-literal-step-text-no-bar
+  r2: flags {'StepAttributionMismatch': 1}  (all builds the same)
+    s0 /a=-
+=== J11-all-no-text-rows-capture-bars
+  r2: flags {'StepAttributionMismatch': 2}  (all builds the same)
+    s0 /a=- /b=-
+=== J12-capture-doc-cut-prefix-escaped
+  r2: flags {'StepAttributionMismatch': 1}  (all builds the same)
+    s0 /pay=-
+=== J13-capture-doc-cut-prefix-wrapped
+  r2: flags {'StepAttributionMismatch': 1}  (all builds the same)
+    s0 /pay=-
+=== J14-capture-blank-line-label
+  r2: flags {'StepAttributionMismatch': 1}  (all builds the same)
+    s0 /pay=-
+=== J15-capture-case-only
+  r2: flags {'StepAttributionMismatch': 1}  (all builds the same)
+    s0 /pay=-
+=== J16-raw-closing-half-only
+  r2: flags {}  (all builds the same)
+    s0 /a=-
+=== J2-skipped-last-scenario-no-times
+  r2: flags {}  (all builds the same)
+    s0 
+    s1 /seed=b0 /place=b1 /check=0
+    s2 /seed=b0 /place=b1 /check=0
+=== J3-heuristic-second-untimed
+  r2: flags {}  (all builds the same)
+    s0 /b=b1
+    s1 /seed=b0 /a=b1
+=== J4-kindstep-failing-step
+  r2: flags {}  (all builds the same)
+    s0 /basket=0 /pay=1
+=== J5-retry-untimed-row-last-attempt
+  r2: flags {}  (all builds the same)
+    s0 /second=1
+=== J6-retry-raw-bars-only-in-first-attempt
+  r2: flags {}  (all builds the same)
+    s0 /second=0
+=== J7-retry-raw-untimed-bar-stays
+  r2: flags {'StepAttributionMismatch': 1}  (all builds the same)
+    s0 /second=-
+=== J8-levels
+  r2: flags {}  (all builds the same)
+    s0 /o=- /b=1 /sb=1 /n=1 /p=3
+=== J9-literal-step-text
+  r2: flags {}  (all builds the same)
+    s0 /a=0 /b=1
+=== K1-identical-rows-substeps
+  r2: flags {}  (all builds the same)
+    s0 /x=1
+=== K2-no-text-middle-capture-bars
+  r2: flags {'StepAttributionMismatch': 2}  (all builds the same)
+    s0 /basket=0 /pay=- /send=-
+=== K3-no-text-then-repeat
+  r2: flags {'StepAttributionMismatch': 1}  (all builds the same)
+    s0 /first=- /second=1
+=== K4-capture-bars-not-for-background
+  r2: flags {'StepAttributionMismatch': 2}  (all builds the same)
+    s0 /basket=- /pay=-
+=== K5-one-instant
+  r2: flags {}  (all builds the same)
+    s0 /x=2
+=== K6-first-word-overlap-capture
+  r2: flags {'StepAttributionMismatch': 1}  (all builds the same)
+    s0 /x=-
+=== K7-annotations
+  r2: flags {}  (all builds the same)
+    s0 /a=0 /b=1
+=== L1-sibling-failed-early-unrun-steps-untimed
+  r2: flags {}  (all builds the same)
+    s0 /seed=2
+    s1 /seed=0 /place=1 /check=2
+    s2 /seed=0 /place=1 /check=2
+=== L2-control-no-extraction
+  r2: flags {}  (all builds the same)
+    s0 /seed=1
+    s1 /seed=0 /place=1

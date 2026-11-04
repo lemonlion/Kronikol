@@ -74,7 +74,8 @@ public static class FeatureSynthesizer
         ExecutionResult resultWhenUnknown,
         string? attachmentsBase,
         TestAttempts attempts,
-        SetupWindow? setup = null)
+        SetupWindow? setup = null,
+        IReadOnlySet<string>? barsInCapture = null)
     {
         var logList = (logs ?? []).ToList();
 
@@ -187,8 +188,9 @@ public static class FeatureSynthesizer
 
             // An earlier attempt makes no tag (plans/TAGS_PLAN.md §4.6): the attempt number carries it.
             var tags = ScenarioTags.Classify(acc.Tags);
-            var steps = BuildStepTree(acc.Steps);
+            var steps = BuildStepTree(acc.Steps, out var barlessSteps);
             var backgroundSteps = BuildStepTree(acc.BackgroundSteps);
+            var backgroundCount = backgroundSteps?.Length ?? 0;
 
             var scenario = new Scenario
             {
@@ -205,6 +207,10 @@ public static class FeatureSynthesizer
                     : null,
                 Steps = steps,
                 BackgroundSteps = backgroundSteps,
+                // A null set is a caller that drew no bars, and one holding this test is a capture whose bars are its rows'.
+                BarlessRows = barsInCapture is null || barsInCapture.Contains(testId)
+                    ? null
+                    : [.. Enumerable.Range(0, backgroundCount), .. barlessSteps.Select(row => backgroundCount + row)],
                 Rule = acc.Rule,
                 OutlineId = acc.OutlineId,
                 OutlineTitle = acc.OutlineId,
@@ -406,11 +412,18 @@ public static class FeatureSynthesizer
     /// Assertions honour <see cref="StepTrackingOptions.IncludeTrackedAssertionsInStepList"/>, like
     /// Kronikol's own assertion tracking.
     /// </summary>
-    public static ScenarioStep[]? BuildStepTree(IEnumerable<TestRunRecord> records)
+    public static ScenarioStep[]? BuildStepTree(IEnumerable<TestRunRecord> records) => BuildStepTree(records, out _);
+
+    /// <inheritdoc cref="BuildStepTree(IEnumerable{TestRunRecord})"/>
+    /// <param name="records">The records.</param>
+    /// <param name="barless">The rows that draw no bar where the tests file draws them: an assertion's, one with no time, and a nested step that had no parent to go under.</param>
+    private static ScenarioStep[]? BuildStepTree(IEnumerable<TestRunRecord> records, out List<int> barless)
     {
+        barless = [];
         var includeAssertions = StepCollector.Options.IncludeTrackedAssertionsInStepList;
         var roots = new List<ScenarioStep>();
-        var children = new Dictionary<ScenarioStep, List<ScenarioStep>>();
+        // By reference: two rows that read alike are still two rows, each with its own children.
+        var children = new Dictionary<ScenarioStep, List<ScenarioStep>>(ReferenceEqualityComparer.Instance);
         ScenarioStep? currentTop = null;
 
         foreach (var record in records.OrderBy(r => r.Timestamp ?? DateTimeOffset.MinValue))
@@ -430,6 +443,8 @@ public static class FeatureSynthesizer
             }
             else
             {
+                if (isAssertion || !record.IsDiagramMarker)
+                    barless.Add(roots.Count);
                 roots.Add(step);
                 if (!isAssertion)
                     currentTop = step;
@@ -464,7 +479,7 @@ public static class FeatureSynthesizer
 
     private static ScenarioStep BuildStep(TestRunRecord record)
     {
-        var text = record.Text ?? "(step)";
+        var text = record.Text ?? ScenarioStep.NoText;
         var parameters = BuildTableParameter(record.Table);
         return new ScenarioStep
         {

@@ -1,0 +1,2 @@
+{"type": "Request", "testId": "z", "method": "POST", "uri": "http://shop.test/call", "serviceName": "Shop", "callerName": "Tests", "content": "{}", "requestResponseId": "z-call-120", "timestamp": "2026-11-03T10:00:00.120000Z"}
+{"type": "Response", "testId": "z", "method": "POST", "uri": "http://shop.test/call", "serviceName": "Shop", "callerName": "Tests", "content": "{}", "statusCode": "200", "requestResponseId": "z-call-120", "timestamp": "2026-11-03T10:00:00.125000Z"}

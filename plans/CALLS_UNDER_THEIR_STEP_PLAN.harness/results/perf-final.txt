@@ -1,0 +1,17 @@
+On the final cut. Published 5.28.2 first, each round; best of 5.
+--- round 1, 5.28.2
+no step in this test               1653 ns per record
+step open, this flow inside it     1731 ns per record
+step open, flow not inside it      1603 ns per record
+--- round 1, 5.28.3-proto225z
+no step in this test               1639 ns per record
+step open, this flow inside it     1605 ns per record
+step open, flow not inside it      1671 ns per record
+--- round 2, 5.28.2
+no step in this test               1399 ns per record
+step open, this flow inside it     1632 ns per record
+step open, flow not inside it      1632 ns per record
+--- round 2, 5.28.3-proto225z
+no step in this test               1517 ns per record
+step open, this flow inside it     1799 ns per record
+step open, flow not inside it      1684 ns per record

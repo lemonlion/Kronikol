@@ -1,0 +1,236 @@
+
+#### consumer
+
+=== consumer loop started in Given, handles a message from When
+  0        [Passed] Given the service is started 31ms
+  1        [Passed] When a message is published 111ms
+  2        [Passed] Then it is finished 108ms
+  call /given-own                         -> stepPath 0
+  call /when-own                          -> stepPath 1
+  call /consumer/from-when                -> stepPath 1
+  call /then-own                          -> stepPath 2
+  call /consumer/from-then                -> stepPath 2
+  bars drawn: 3; scenario attachments: 0
+
+#### orphan
+
+=== a sub-step begun by a background task after its step ended
+  0        [Passed] Given a background task will run a sub-step 15ms
+  1        [Passed] When a long step 164ms
+    1.0      [Passed] the later sub-step 15ms
+  2        [Passed] Then done 2ms
+  call /given-own                         -> stepPath 0
+  call /when-own/1                        -> stepPath 1
+  call /sub-later                         -> stepPath 1.0
+  call /when-own/2                        -> stepPath 1
+  call /then-own                          -> stepPath 2
+  bars drawn: 3; scenario attachments: 0
+
+#### toplevel
+
+=== two top-level steps at once: the first takes longer
+  0        [Passed] Given slow 137ms
+  1        [Passed] And fast 26ms
+  2        [Passed] Then done 2ms
+  call /slow/1                            -> stepPath 0
+  call /fast/1                            -> stepPath 1
+  call /fast/2                            -> stepPath 1
+  call /slow/2                            -> stepPath 0
+  call /then-own                          -> stepPath 2
+  bars drawn: 3; scenario attachments: 0
+
+#### toplevel2
+
+=== a top-level step awaited later, one after it in between
+  0        [Passed] Given slow 151ms
+  1        [Passed] When a long step 161ms
+  2        [Passed] Then done 2ms
+  call /slow/1                            -> stepPath 0
+  call /when-own/1                        -> stepPath 1
+  call /slow/2                            -> stepPath 0
+  call /when-own/2                        -> stepPath 1
+  call /then-own                          -> stepPath 2
+  bars drawn: 3; scenario attachments: 0
+
+#### bypass-top
+
+=== async top-level step bypassed by SkipIf
+  0        [Bypassed] Given skipped 15ms
+  1        [Passed] Then done 2ms
+  call /after-bypass                      -> stepPath 0
+  call /then-own                          -> stepPath 1
+  bars drawn: 2; scenario attachments: 0
+
+#### bypass-nested
+
+=== async sub-step bypassed by SkipIf inside a parent
+  (test threw: InvalidOperationException: parent failed after the skipped child)
+  0        [Failed] Given parent of a skipped child 80ms  msg=parent failed after the skipped child
+    0.0      [Bypassed] skipped child 0ms
+    0.1      [Passed] { } 0ms
+    0.2      [Passed] sibling after 4ms
+  call /parent/before                     -> stepPath 0
+  call /parent/after                      -> stepPath 0
+  call /sibling-after                     -> stepPath 0.2
+  bars drawn: 1; scenario attachments: 0
+
+#### bypass-nested-sync
+
+=== sync sub-step bypassed by SkipIf inside a parent
+  0        [Passed] Given sync parent of a skipped child 46ms
+    0.0      [Bypassed] skipped sync child 0ms
+    0.1      [Passed] { } 0ms
+  1        [Passed] Then done 3ms
+  call /parent/before                     -> stepPath 0
+  call /parent/after                      -> stepPath 0
+  call /then-own                          -> stepPath 1
+  bars drawn: 2; scenario attachments: 0
+
+#### detach
+
+=== a woven async step called with no identity inside a woven async step
+  0        [Passed] Given parent that detaches 49ms
+  1        [Passed] Then done 2ms
+  call /parent/before                     -> stepPath 0
+  call /parent/after                      -> stepPath 0
+  call /then-own                          -> stepPath 1
+  bars drawn: 2; scenario attachments: 0
+
+#### detach-gherkin
+
+=== as above under a Gherkin-style parent opened by id
+  0        [Failed] When gherkin step 93ms  msg=gherkin step failed  attachments=1
+    0.0      [Passed] a step called with no identity 19ms
+    0.1      [Passed] { } 0ms
+    0.2      [Passed] sub after 2ms
+  call /rest-of-gherkin-step              -> stepPath 0
+  call /sub-after                         -> stepPath 0.2
+  bars drawn: 1; scenario attachments: 0
+
+#### async-begin
+
+=== StartStep in an async helper, CompleteStep in the caller
+  0        [Passed] Given first 19ms
+  1        [Failed] When second 36ms  msg=second failed  attachments=1
+    1.0      [Passed] { } 0ms
+  2        [Passed] Then third 0ms
+  call /first                             -> stepPath 0
+  call /second                            -> stepPath 1
+  call /third                             -> stepPath 2
+  bars drawn: 3; scenario attachments: 0
+
+#### service-thread
+
+=== the parent's own service-side call while one sub-step runs
+  0        [Passed] Given parent 118ms
+    0.0      [Passed] child running 91ms
+  1        [Passed] Then done 1ms
+  call /child-own                         -> stepPath 0.0
+  call /parent-client-side                -> stepPath 0
+  call /service-side-of-parent-call       -> stepPath 0.0
+  call /then-own                          -> stepPath 1
+  bars drawn: 2; scenario attachments: 0
+
+#### foreign-close
+
+=== CompleteStep from a thread with no flow while an async step runs
+  0        [Passed] Given slow 19ms
+  1        [Passed] Then done 1ms
+  call /slow/1                            -> stepPath 0
+  call /slow/2                            -> stepPath 0
+  call /then-own                          -> stepPath 1
+  bars drawn: 2; scenario attachments: 0
+
+#### stale-assert
+
+=== an assertion from a flow whose step ended, a later step open
+  0        [Passed] Given a background assertion will run later 18ms
+  1        [Passed] When a long step 165ms  attachments=1
+    1.0      [Failed] throw new InvalidOperationException("background check failed") 0ms  msg=background check failed
+  2        [Passed] Then done 2ms
+  call /when-own/1                        -> stepPath 1
+  call /when-own/2                        -> stepPath 1
+  call /then-own                          -> stepPath 2
+  bars drawn: 3; scenario attachments: 0
+
+#### throws-sync
+
+=== a Task-returning sub-step that throws before returning a task
+  0        [Failed] Given parent of a thrower 17ms  msg=thrown before a task
+    0.0      [] throws before returning a task (no duration)
+      0.0.0    [Passed] Then done 3ms
+  call /then-own                          -> stepPath 0.0.0
+  bars drawn: 1; scenario attachments: 0
+
+#### hung
+
+=== a sub-step still running when its parent times out
+  0        [Failed] Given parent that times out 80ms  msg=gave up waiting for the sub-step
+    0.0      [] hangs (no duration)
+  1        [Passed] Then done 2ms
+  call /then-own                          -> stepPath 1
+  bars drawn: 2; scenario attachments: 0
+
+#### bypass-root
+
+=== a sub-step left running, an async bypass, then the next step
+  0        [Passed] Given leaves a child running 27ms
+    0.0      [Passed] child left running 212ms
+  1        [Passed] When plain when 1ms
+  2        [Bypassed] Given skipped 0ms
+  3        [Passed] Then done 2ms
+  call /plain-when                        -> stepPath 1
+  call /then-own                          -> stepPath 3
+  bars drawn: 4; scenario attachments: 0
+
+#### detach-parent
+
+=== no-identity stub directly under a step opened by id
+  0        [Failed] When gherkin step 76ms  msg=gherkin step failed  attachments=1
+    0.0      [Passed] { } 0ms
+    0.1      [Passed] sub after 2ms
+  call /rest-of-gherkin-step              -> stepPath 0
+  call /sub-after                         -> stepPath 0.1
+  bars drawn: 1; scenario attachments: 0
+
+#### child-start
+
+=== StartStep on a child flow, then two CompleteStep on the parent flow
+  0        [Passed] Given A 22ms
+    0.0      [Failed] B started on a child flow 2ms  msg=b failed
+  1        [Passed] Then C 0ms
+  call /while-b-open                      -> stepPath 0
+  bars drawn: 2; scenario attachments: 0
+
+#### host
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Production
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: C:\Code\k225-r1\probes\plain-proto\bin\Release\net10.0
+info: Microsoft.Hosting.Lifetime[0]
+      Application is shutting down...
+
+=== a host built inside the Given, its hosted consumer named per message
+  0        [Passed] Given the host is built 114ms
+  1        [Passed] When a message is published 111ms
+  2        [Passed] Then it is finished 109ms
+  call /given-own                         -> stepPath 0
+  call /when-own                          -> stepPath 1
+  call /consumer/from-when                -> stepPath 1
+  call /then-own                          -> stepPath 2
+  call /consumer/from-then                -> stepPath 2
+  bars drawn: 3; scenario attachments: 0
+
+#### stored-assertion
+
+=== an assertion task stored in the Given, ending during the When
+  0        [Passed] Given an assertion task is stored 17ms
+  1        [Passed] When a long step 158ms
+    1.0      [Failed] the slow call should succeed 0ms  msg=the slow call failed
+  2        [Passed] Then done 2ms
+  call /when-own/1                        -> stepPath 1
+  call /when-own/2                        -> stepPath 1
+  call /then-own                          -> stepPath 2
+  bars drawn: 3; scenario attachments: 0
