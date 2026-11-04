@@ -1,0 +1,28 @@
+label: prototype-debug-plus
+weaver: <home>/k226bin\Kronikol.StepTracking.dll
+runtime: 10.0.11
+shapes: 635, runs: 635, seconds: 312
+
+by outcome:
+  OK           635
+
+by family (runs ok / runs):
+  A sync value                         32 /   32
+  A sync value, control flow           27 /   27
+  B generic, ref, span, pointer returns   12 /   12
+  C Task, Task<T>                      21 /   21
+  D ValueTask, ValueTask<T>            25 /   25
+  E deferred work, other awaitables    20 /   20
+  F parameters                         33 /   33
+  G kinds of method                    31 /   31
+  H SkipIf, Task<T>                    32 /   32
+  H SkipIf, ValueTask<T>               28 /   28
+  H SkipIf, sync value                 39 /   39
+  H SkipIf, the member it names        27 /   27
+  I with assertion weaving, assertions-first   22 /   22
+  I with assertion weaving, steps-first   23 /   23
+  Z found by review                   104 /  104
+  Z found by review, assertions-first   78 /   78
+  Z found by review, steps-first       81 /   81
+
+not ok, one line per shape (the two configurations together where they agree):

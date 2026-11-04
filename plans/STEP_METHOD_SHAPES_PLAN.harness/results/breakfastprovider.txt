@@ -1,0 +1,13 @@
+BreakfastProvider at 640c190, pinned at 5.14.0, against the prototype's two weavers as 5.28.99-proto226 over its 5.14.0 core
+xunit published: exit 0,  failed: 0  succeeded: 212  total: 212 , KRONIKOL warnings: 0
+nunit published: exit 0,  failed: 0  succeeded: 212  total: 212 , KRONIKOL warnings: 0
+tunit published: exit 0,  failed: 0  succeeded: 212  total: 212 , KRONIKOL warnings: 0
+xunit prototype: exit 0,  failed: 0  succeeded: 212  total: 212 , KRONIKOL warnings: 0
+nunit prototype: exit 0,  failed: 0  succeeded: 212  total: 212 , KRONIKOL warnings: 0
+tunit prototype: exit 0,  failed: 0  succeeded: 212  total: 212 , KRONIKOL warnings: 0
+== xunit, the scenario with the woven steps, published against prototype, timings taken out:
+no line differs
+== nunit, the scenario with the woven steps, published against prototype, timings taken out:
+no line differs
+== tunit, the scenario with the woven steps, published against prototype, timings taken out:
+no line differs

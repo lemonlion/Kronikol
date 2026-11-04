@@ -1,0 +1,206 @@
+The weaver as 5.28.2 has it (the fix taken out), the two switch shapes left out as they fail ILVerify there: what took the wrong way, by library and build.
+rows failed 9, passed 3
+AwesomeAssertions, Release: 21 wrong of 44 calls
+    IfElse("a"): expected else, read then
+    IfThenMore("a"): expected more, read thenmore
+    EarlyReturn("a"): expected carried on, read returned
+    Guard("a"): expected no throw, read threw ArithmeticException
+    While("a"): expected 1, read 0
+    While("abcdefgh"): expected 8, read 0
+    For("a"): expected 1, read 0
+    For("abcdefgh"): expected 8, read 0
+    DoWhile("abcdefgh"): expected 8, read 1
+    EmptyLoop("a"): expected 1, read 0
+    EmptyLoop("abcdefgh"): expected 8, read 0
+    Break("a"): expected 1, read ran on
+    Break("abcdefgh"): expected 8, read ran on
+    And("a"): expected else, read then
+    Or("a"): expected else, read then
+    Not("abcdefgh"): expected then, read else
+    NullConditional("a"): expected else, read then
+    Pattern("a"): expected else, read then
+    InATry("a"): expected else, read then
+    InAUsing("a"): expected else, read then
+    Goto("abcdefgh"): expected then, read else
+AwesomeAssertions, ReleaseDebugPlus: 21 wrong of 44 calls
+    IfElse("a"): expected else, read then
+    IfThenMore("a"): expected more, read thenmore
+    EarlyReturn("a"): expected carried on, read returned
+    Guard("a"): expected no throw, read threw ArithmeticException
+    While("a"): expected 1, read 0
+    While("abcdefgh"): expected 8, read 0
+    For("a"): expected 1, read 0
+    For("abcdefgh"): expected 8, read 0
+    DoWhile("abcdefgh"): expected 8, read 1
+    EmptyLoop("a"): expected 1, read 0
+    EmptyLoop("abcdefgh"): expected 8, read 0
+    Break("a"): expected 1, read ran on
+    Break("abcdefgh"): expected 8, read ran on
+    And("a"): expected else, read then
+    Or("a"): expected else, read then
+    Not("abcdefgh"): expected then, read else
+    NullConditional("a"): expected else, read then
+    Pattern("a"): expected else, read then
+    InATry("a"): expected else, read then
+    InAUsing("a"): expected else, read then
+    Goto("abcdefgh"): expected then, read else
+FluentAssertions, Release: 21 wrong of 44 calls
+    IfElse("a"): expected else, read then
+    IfThenMore("a"): expected more, read thenmore
+    EarlyReturn("a"): expected carried on, read returned
+    Guard("a"): expected no throw, read threw ArithmeticException
+    While("a"): expected 1, read 0
+    While("abcdefgh"): expected 8, read 0
+    For("a"): expected 1, read 0
+    For("abcdefgh"): expected 8, read 0
+    DoWhile("abcdefgh"): expected 8, read 1
+    EmptyLoop("a"): expected 1, read 0
+    EmptyLoop("abcdefgh"): expected 8, read 0
+    Break("a"): expected 1, read ran on
+    Break("abcdefgh"): expected 8, read ran on
+    And("a"): expected else, read then
+    Or("a"): expected else, read then
+    Not("abcdefgh"): expected then, read else
+    NullConditional("a"): expected else, read then
+    Pattern("a"): expected else, read then
+    InATry("a"): expected else, read then
+    InAUsing("a"): expected else, read then
+    Goto("abcdefgh"): expected then, read else
+FluentAssertions, ReleaseDebugPlus: 21 wrong of 44 calls
+    IfElse("a"): expected else, read then
+    IfThenMore("a"): expected more, read thenmore
+    EarlyReturn("a"): expected carried on, read returned
+    Guard("a"): expected no throw, read threw ArithmeticException
+    While("a"): expected 1, read 0
+    While("abcdefgh"): expected 8, read 0
+    For("a"): expected 1, read 0
+    For("abcdefgh"): expected 8, read 0
+    DoWhile("abcdefgh"): expected 8, read 1
+    EmptyLoop("a"): expected 1, read 0
+    EmptyLoop("abcdefgh"): expected 8, read 0
+    Break("a"): expected 1, read ran on
+    Break("abcdefgh"): expected 8, read ran on
+    And("a"): expected else, read then
+    Or("a"): expected else, read then
+    Not("abcdefgh"): expected then, read else
+    NullConditional("a"): expected else, read then
+    Pattern("a"): expected else, read then
+    InATry("a"): expected else, read then
+    InAUsing("a"): expected else, read then
+    Goto("abcdefgh"): expected then, read else
+Shouldly, Release: 21 wrong of 44 calls
+    IfElse("a"): expected else, read then
+    IfThenMore("a"): expected more, read thenmore
+    EarlyReturn("a"): expected carried on, read returned
+    Guard("a"): expected no throw, read threw ArithmeticException
+    While("a"): expected 1, read 0
+    While("abcdefgh"): expected 8, read 0
+    For("a"): expected 1, read 0
+    For("abcdefgh"): expected 8, read 0
+    DoWhile("abcdefgh"): expected 8, read 1
+    EmptyLoop("a"): expected 1, read 0
+    EmptyLoop("abcdefgh"): expected 8, read 0
+    Break("a"): expected 1, read ran on
+    Break("abcdefgh"): expected 8, read ran on
+    And("a"): expected else, read then
+    Or("a"): expected else, read then
+    Not("abcdefgh"): expected then, read else
+    NullConditional("a"): expected else, read then
+    Pattern("a"): expected else, read then
+    InATry("a"): expected else, read then
+    InAUsing("a"): expected else, read then
+    Goto("abcdefgh"): expected then, read else
+Shouldly, ReleaseDebugPlus: 21 wrong of 44 calls
+    IfElse("a"): expected else, read then
+    IfThenMore("a"): expected more, read thenmore
+    EarlyReturn("a"): expected carried on, read returned
+    Guard("a"): expected no throw, read threw ArithmeticException
+    While("a"): expected 1, read 0
+    While("abcdefgh"): expected 8, read 0
+    For("a"): expected 1, read 0
+    For("abcdefgh"): expected 8, read 0
+    DoWhile("abcdefgh"): expected 8, read 1
+    EmptyLoop("a"): expected 1, read 0
+    EmptyLoop("abcdefgh"): expected 8, read 0
+    Break("a"): expected 1, read ran on
+    Break("abcdefgh"): expected 8, read ran on
+    And("a"): expected else, read then
+    Or("a"): expected else, read then
+    Not("abcdefgh"): expected then, read else
+    NullConditional("a"): expected else, read then
+    Pattern("a"): expected else, read then
+    InATry("a"): expected else, read then
+    InAUsing("a"): expected else, read then
+    Goto("abcdefgh"): expected then, read else
+TUnit, Debug: 23 wrong of 44 calls
+    IfElse("a"): expected else, read then
+    IfThenMore("a"): expected more, read thenmore
+    EarlyReturn("a"): expected carried on, read returned
+    Guard("a"): expected no throw, read threw ArithmeticException
+    While("a"): expected 1, read 0
+    While("abcdefgh"): expected 8, read 0
+    For("a"): expected 1, read 0
+    For("abcdefgh"): expected 8, read 0
+    DoWhile("abcdefgh"): expected 8, read 1
+    EmptyLoop("a"): expected 1, read 0
+    EmptyLoop("abcdefgh"): expected 8, read 0
+    LoopWithNoBody("a"): expected 2, read 1
+    LoopWithNoBody("abcdefgh"): expected 9, read 1
+    Break("a"): expected 1, read 0
+    Break("abcdefgh"): expected 8, read 0
+    And("a"): expected else, read then
+    Or("a"): expected else, read then
+    Not("abcdefgh"): expected then, read else
+    NullConditional("a"): expected else, read then
+    Pattern("a"): expected else, read then
+    InATry("a"): expected else, read then
+    InAUsing("a"): expected else, read then
+    Goto("a"): expected else, read then
+TUnit, Release: 23 wrong of 44 calls
+    IfElse("a"): expected else, read then
+    IfThenMore("a"): expected more, read thenmore
+    EarlyReturn("a"): expected carried on, read returned
+    Guard("a"): expected no throw, read threw ArithmeticException
+    While("a"): expected 1, read 0
+    While("abcdefgh"): expected 8, read 0
+    For("a"): expected 1, read 0
+    For("abcdefgh"): expected 8, read 0
+    DoWhile("abcdefgh"): expected 8, read 1
+    EmptyLoop("a"): expected 1, read 0
+    EmptyLoop("abcdefgh"): expected 8, read 0
+    LoopWithNoBody("a"): expected 2, read 1
+    LoopWithNoBody("abcdefgh"): expected 9, read 1
+    Break("a"): expected 1, read ran on
+    Break("abcdefgh"): expected 8, read ran on
+    And("a"): expected else, read then
+    Or("a"): expected else, read then
+    Not("abcdefgh"): expected then, read else
+    NullConditional("a"): expected else, read then
+    Pattern("a"): expected else, read then
+    InATry("a"): expected else, read then
+    InAUsing("a"): expected else, read then
+    Goto("abcdefgh"): expected then, read else
+TUnit, ReleaseDebugPlus: 23 wrong of 44 calls
+    IfElse("a"): expected else, read then
+    IfThenMore("a"): expected more, read thenmore
+    EarlyReturn("a"): expected carried on, read returned
+    Guard("a"): expected no throw, read threw ArithmeticException
+    While("a"): expected 1, read 0
+    While("abcdefgh"): expected 8, read 0
+    For("a"): expected 1, read 0
+    For("abcdefgh"): expected 8, read 0
+    DoWhile("abcdefgh"): expected 8, read 1
+    EmptyLoop("a"): expected 1, read 0
+    EmptyLoop("abcdefgh"): expected 8, read 0
+    LoopWithNoBody("a"): expected 2, read 1
+    LoopWithNoBody("abcdefgh"): expected 9, read 1
+    Break("a"): expected 1, read ran on
+    Break("abcdefgh"): expected 8, read ran on
+    And("a"): expected else, read then
+    Or("a"): expected else, read then
+    Not("abcdefgh"): expected then, read else
+    NullConditional("a"): expected else, read then
+    Pattern("a"): expected else, read then
+    InATry("a"): expected else, read then
+    InAUsing("a"): expected else, read then
+    Goto("abcdefgh"): expected then, read else

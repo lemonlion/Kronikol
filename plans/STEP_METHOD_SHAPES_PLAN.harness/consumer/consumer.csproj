@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- A consumer as a real build makes one: the core at a published version, the two weavers at the versions asked for, which
+       a prototype run serves from a local feed. Run as a program. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <KronikolVersion Condition="'$(KronikolVersion)' == ''">5.28.2</KronikolVersion>
+    <StepTrackingVersion Condition="'$(StepTrackingVersion)' == ''">$(KronikolVersion)</StepTrackingVersion>
+    <AssertionTrackingVersion Condition="'$(AssertionTrackingVersion)' == ''">$(KronikolVersion)</AssertionTrackingVersion>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <UseArtifactsOutput>false</UseArtifactsOutput>
+    <NoWarn>$(NoWarn);CS1998;CS0162;CS8321</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Kronikol" Version="$(KronikolVersion)" />
+    <PackageReference Include="Kronikol.AssertionTracking" Version="$(AssertionTrackingVersion)" PrivateAssets="all" />
+    <PackageReference Include="Kronikol.StepTracking" Version="$(StepTrackingVersion)" PrivateAssets="all" />
+    <PackageReference Include="Shouldly" Version="4.3.0" />
+  </ItemGroup>
+
+</Project>

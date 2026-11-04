@@ -1,0 +1,3 @@
+<Project>
+  <!-- Stops the repo's Directory.Build.props reaching this consumer: it stands where a user's project would. -->
+</Project>

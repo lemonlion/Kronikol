@@ -1,0 +1,4 @@
+=================== prototype, Kronikol.StepTracking 5.28.99-proto226
+warning KRONIKOL004: Kronikol.StepTracking: 2 step method(s) were left as written, so they run without a step. First: <home>/AppData\Local\Temp\kronikol-226-consumer\skipif-count\prototype\Program.cs, line 11, in Steps.A: it is an iterator, whose body runs while its caller enumerates it, after the method has returned. 1 of them carry a SkipIf that is not read, so their bodies run whatever it says. The build lis
+the body of a refused step with a SkipIf that is true ran: True
+exit 0

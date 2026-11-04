@@ -1,0 +1,316 @@
+=================== prototype-over-published-assertions, DebugType=portable, Debug
+0 Error(s)
+1 Warning(s)
+Build succeeded.
+<home>/.nuget\packages\kronikol.steptracking\5.28.99-proto226\buildTransitive\Kronikol.StepTracking.targets(156,5): warning KRONIKOL004: Kronikol.StepTracking: 2 step method(s) were left as written, so they run without a step. First: Program.cs, line 77, in ShopDriver.An_iterator: it is an ite
+file: consumer.pdb
+runtime 10.0.11, assembly consumer, all
+references: System.Runtime 10.0.0.0, System.Reflection.Metadata 10.0.0.0, Kronikol 5.28.2.0, System.Threading.Thread 10.0.0.0, Shouldly 4.3.0.0, System.Console 10.0.0.0, System.Linq 10.0.0.0, System.Private.CoreLib 10.0.0.0
+void
+step 'Void' Passed 42 ms, under it: Inner
+async Task
+step 'Task' Passed 36 ms, under it: Inner
+int (issue)
+value 42
+step 'A number is chosen' Passed 0 ms, under it: 
+async ValueTask (issue)
+step 'A value task step' Passed 104 ms, under it: Inner
+async ValueTask<int>
+value 7
+step 'A value task int' Passed 108 ms, under it: Inner
+value + assertion
+value 3
+step 'Value with assertion' Passed 381 ms, under it: (an assertion)
+Task with a synchronous throw
+threw InvalidOperationException: thrown before any task
+at ShopDriver.Throws_before_its_task() in Program.cs:line 76
+step 'Throws before its task' Failed 0 ms, under it: 
+iterator
+value 3
+step 'Inner' Passed 0 ms, under it: 
+async void
+step 'Inner' Passed 0 ms, under it: 
+a value step that throws, for its line number
+threw InvalidOperationException: from a value step
+at ShopDriver.A_value_that_throws() in Program.cs:line 79
+step 'A value that throws' Failed 0 ms, under it: 
+exit 0
+runtime 10.0.11, assembly consumer, ref
+references: System.Runtime 10.0.0.0, System.Reflection.Metadata 10.0.0.0, Kronikol 5.28.2.0, System.Threading.Thread 10.0.0.0, Shouldly 4.3.0.0, System.Console 10.0.0.0, System.Linq 10.0.0.0, System.P
+in parameter
+step 'Takes an in parameter' Passed 34 ms, under it: Inner
+ref parameter
+value 2
+step 'Takes a ref parameter' Passed 0 ms, under it: Inner
+out parameter
+value 7
+step 'Takes an out parameter' Passed 0 ms, under it: Inner
+exit of the ref run: 0
+=================== prototype-over-published-assertions, DebugType=portable, Release
+0 Error(s)
+1 Warning(s)
+Build succeeded.
+<home>/.nuget\packages\kronikol.steptracking\5.28.99-proto226\buildTransitive\Kronikol.StepTracking.targets(156,5): warning KRONIKOL004: Kronikol.StepTracking: 2 step method(s) were left as written, so they run without a step. First: Program.cs, line 77, in ShopDriver.An_iterator: it is an ite
+file: consumer.pdb
+runtime 10.0.11, assembly consumer, all
+references: System.Runtime 10.0.0.0, System.Reflection.Metadata 10.0.0.0, Kronikol 5.28.2.0, System.Threading.Thread 10.0.0.0, Shouldly 4.3.0.0, System.Console 10.0.0.0, System.Linq 10.0.0.0, System.Private.CoreLib 10.0.0.0
+void
+step 'Void' Passed 41 ms, under it: Inner
+async Task
+step 'Task' Passed 36 ms, under it: Inner
+int (issue)
+value 42
+step 'A number is chosen' Passed 0 ms, under it: 
+async ValueTask (issue)
+step 'A value task step' Passed 107 ms, under it: Inner
+async ValueTask<int>
+value 7
+step 'A value task int' Passed 109 ms, under it: Inner
+value + assertion
+value 3
+step 'Value with assertion' Passed 348 ms, under it: (an assertion)
+Task with a synchronous throw
+threw InvalidOperationException: thrown before any task
+at ShopDriver.Throws_before_its_task() in Program.cs:line 76
+step 'Throws before its task' Failed 0 ms, under it: 
+iterator
+value 3
+step 'Inner' Passed 0 ms, under it: 
+async void
+step 'Inner' Passed 0 ms, under it: 
+a value step that throws, for its line number
+threw InvalidOperationException: from a value step
+at ShopDriver.A_value_that_throws() in Program.cs:line 79
+step 'A value that throws' Failed 0 ms, under it: 
+exit 0
+runtime 10.0.11, assembly consumer, ref
+references: System.Runtime 10.0.0.0, System.Reflection.Metadata 10.0.0.0, Kronikol 5.28.2.0, System.Threading.Thread 10.0.0.0, Shouldly 4.3.0.0, System.Console 10.0.0.0, System.Linq 10.0.0.0, System.P
+in parameter
+step 'Takes an in parameter' Passed 36 ms, under it: Inner
+ref parameter
+value 2
+step 'Takes a ref parameter' Passed 0 ms, under it: Inner
+out parameter
+value 7
+step 'Takes an out parameter' Passed 0 ms, under it: Inner
+exit of the ref run: 0
+=================== prototype-over-published-assertions, DebugType=embedded, Debug
+0 Error(s)
+1 Warning(s)
+Build succeeded.
+<home>/.nuget\packages\kronikol.steptracking\5.28.99-proto226\buildTransitive\Kronikol.StepTracking.targets(156,5): warning KRONIKOL004: Kronikol.StepTracking: 2 step method(s) were left as written, so they run without a step. First: Program.cs, line 77, in ShopDriver.An_iterator: it is an ite
+runtime 10.0.11, assembly consumer, all
+references: System.Runtime 10.0.0.0, System.Reflection.Metadata 10.0.0.0, Kronikol 5.28.2.0, System.Threading.Thread 10.0.0.0, Shouldly 4.3.0.0, System.Console 10.0.0.0, System.Linq 10.0.0.0, System.Private.CoreLib 10.0.0.0
+void
+step 'Void' Passed 47 ms, under it: Inner
+async Task
+step 'Task' Passed 27 ms, under it: Inner
+int (issue)
+value 42
+step 'A number is chosen' Passed 0 ms, under it: 
+async ValueTask (issue)
+step 'A value task step' Passed 106 ms, under it: Inner
+async ValueTask<int>
+value 7
+step 'A value task int' Passed 120 ms, under it: Inner
+value + assertion
+value 3
+step 'Value with assertion' Passed 406 ms, under it: (an assertion)
+Task with a synchronous throw
+threw InvalidOperationException: thrown before any task
+at ShopDriver.Throws_before_its_task() in Program.cs:line 76
+step 'Throws before its task' Failed 1 ms, under it: 
+iterator
+value 3
+step 'Inner' Passed 0 ms, under it: 
+async void
+step 'Inner' Passed 0 ms, under it: 
+a value step that throws, for its line number
+threw InvalidOperationException: from a value step
+at ShopDriver.A_value_that_throws() in Program.cs:line 79
+step 'A value that throws' Failed 0 ms, under it: 
+exit 0
+runtime 10.0.11, assembly consumer, ref
+references: System.Runtime 10.0.0.0, System.Reflection.Metadata 10.0.0.0, Kronikol 5.28.2.0, System.Threading.Thread 10.0.0.0, Shouldly 4.3.0.0, System.Console 10.0.0.0, System.Linq 10.0.0.0, System.P
+in parameter
+step 'Takes an in parameter' Passed 28 ms, under it: Inner
+ref parameter
+value 2
+step 'Takes a ref parameter' Passed 0 ms, under it: Inner
+out parameter
+value 7
+step 'Takes an out parameter' Passed 0 ms, under it: Inner
+exit of the ref run: 0
+=================== prototype-over-published-assertions, DebugType=embedded, Release
+0 Error(s)
+1 Warning(s)
+Build succeeded.
+<home>/.nuget\packages\kronikol.steptracking\5.28.99-proto226\buildTransitive\Kronikol.StepTracking.targets(156,5): warning KRONIKOL004: Kronikol.StepTracking: 2 step method(s) were left as written, so they run without a step. First: Program.cs, line 77, in ShopDriver.An_iterator: it is an ite
+runtime 10.0.11, assembly consumer, all
+references: System.Runtime 10.0.0.0, System.Reflection.Metadata 10.0.0.0, Kronikol 5.28.2.0, System.Threading.Thread 10.0.0.0, Shouldly 4.3.0.0, System.Console 10.0.0.0, System.Linq 10.0.0.0, System.Private.CoreLib 10.0.0.0
+void
+step 'Void' Passed 54 ms, under it: Inner
+async Task
+step 'Task' Passed 41 ms, under it: Inner
+int (issue)
+value 42
+step 'A number is chosen' Passed 0 ms, under it: 
+async ValueTask (issue)
+step 'A value task step' Passed 102 ms, under it: Inner
+async ValueTask<int>
+value 7
+step 'A value task int' Passed 107 ms, under it: Inner
+value + assertion
+value 3
+step 'Value with assertion' Passed 368 ms, under it: (an assertion)
+Task with a synchronous throw
+threw InvalidOperationException: thrown before any task
+at ShopDriver.Throws_before_its_task() in Program.cs:line 76
+step 'Throws before its task' Failed 0 ms, under it: 
+iterator
+value 3
+step 'Inner' Passed 0 ms, under it: 
+async void
+step 'Inner' Passed 0 ms, under it: 
+a value step that throws, for its line number
+threw InvalidOperationException: from a value step
+at ShopDriver.A_value_that_throws() in Program.cs:line 79
+step 'A value that throws' Failed 0 ms, under it: 
+exit 0
+runtime 10.0.11, assembly consumer, ref
+references: System.Runtime 10.0.0.0, System.Reflection.Metadata 10.0.0.0, Kronikol 5.28.2.0, System.Threading.Thread 10.0.0.0, Shouldly 4.3.0.0, System.Console 10.0.0.0, System.Linq 10.0.0.0, System.P
+in parameter
+step 'Takes an in parameter' Passed 25 ms, under it: Inner
+ref parameter
+value 2
+step 'Takes a ref parameter' Passed 0 ms, under it: Inner
+out parameter
+value 7
+step 'Takes an out parameter' Passed 0 ms, under it: Inner
+exit of the ref run: 0
+=================== prototype-over-published-assertions, DebugType=none, Debug
+0 Error(s)
+2 Warning(s)
+Build succeeded.
+<home>/.nuget\packages\kronikol.assertiontracking\5.28.2\buildTransitive\Kronikol.AssertionTracking.targets(58,5): warning KRONIKOL001: Kronikol.AssertionTracking: [assembly: TrackAssertions] is declared, but no assertion was instrumented: the build writes no symbols (<DebugType>none</DebugTyp
+<home>/.nuget\packages\kronikol.steptracking\5.28.99-proto226\buildTransitive\Kronikol.StepTracking.targets(156,5): warning KRONIKOL004: Kronikol.StepTracking: 2 step method(s) were left as written, so they run without a step. First: ShopDriver.An_iterator: it is an iterator, whose body runs w
+runtime 10.0.11, assembly consumer, all
+references: System.Runtime 10.0.0.0, System.Reflection.Metadata 10.0.0.0, Kronikol 5.28.2.0, System.Threading.Thread 10.0.0.0, Shouldly 4.3.0.0, System.Console 10.0.0.0, System.Linq 10.0.0.0
+void
+step 'Void' Passed 55 ms, under it: Inner
+async Task
+step 'Task' Passed 29 ms, under it: Inner
+int (issue)
+value 42
+step 'A number is chosen' Passed 0 ms, under it: 
+async ValueTask (issue)
+step 'A value task step' Passed 106 ms, under it: Inner
+async ValueTask<int>
+value 7
+step 'A value task int' Passed 109 ms, under it: Inner
+value + assertion
+value 3
+step 'Value with assertion' Passed 359 ms, under it: 
+Task with a synchronous throw
+threw InvalidOperationException: thrown before any task
+at ShopDriver.Throws_before_its_task()
+step 'Throws before its task' Failed 0 ms, under it: 
+iterator
+value 3
+step 'Inner' Passed 0 ms, under it: 
+async void
+step 'Inner' Passed 0 ms, under it: 
+a value step that throws, for its line number
+threw InvalidOperationException: from a value step
+at ShopDriver.A_value_that_throws()
+step 'A value that throws' Failed 0 ms, under it: 
+exit 0
+runtime 10.0.11, assembly consumer, ref
+references: System.Runtime 10.0.0.0, System.Reflection.Metadata 10.0.0.0, Kronikol 5.28.2.0, System.Threading.Thread 10.0.0.0, Shouldly 4.3.0.0, System.Console 10.0.0.0, System.Linq 10.0.0.0
+in parameter
+step 'Takes an in parameter' Passed 32 ms, under it: Inner
+ref parameter
+value 2
+step 'Takes a ref parameter' Passed 0 ms, under it: Inner
+out parameter
+value 7
+step 'Takes an out parameter' Passed 0 ms, under it: Inner
+exit of the ref run: 0
+=================== prototype-over-published-assertions, DebugType=none, Release
+0 Error(s)
+2 Warning(s)
+Build succeeded.
+<home>/.nuget\packages\kronikol.assertiontracking\5.28.2\buildTransitive\Kronikol.AssertionTracking.targets(58,5): warning KRONIKOL001: Kronikol.AssertionTracking: [assembly: TrackAssertions] is declared, but no assertion was instrumented: the build writes no symbols (<DebugType>none</DebugTyp
+<home>/.nuget\packages\kronikol.steptracking\5.28.99-proto226\buildTransitive\Kronikol.StepTracking.targets(156,5): warning KRONIKOL004: Kronikol.StepTracking: 2 step method(s) were left as written, so they run without a step. First: ShopDriver.An_iterator: it is an iterator, whose body runs w
+runtime 10.0.11, assembly consumer, all
+references: System.Runtime 10.0.0.0, System.Reflection.Metadata 10.0.0.0, Kronikol 5.28.2.0, System.Threading.Thread 10.0.0.0, Shouldly 4.3.0.0, System.Console 10.0.0.0, System.Linq 10.0.0.0
+void
+step 'Void' Passed 50 ms, under it: Inner
+async Task
+step 'Task' Passed 30 ms, under it: Inner
+int (issue)
+value 42
+step 'A number is chosen' Passed 0 ms, under it: 
+async ValueTask (issue)
+step 'A value task step' Passed 104 ms, under it: Inner
+async ValueTask<int>
+value 7
+step 'A value task int' Passed 108 ms, under it: Inner
+value + assertion
+value 3
+step 'Value with assertion' Passed 322 ms, under it: 
+Task with a synchronous throw
+threw InvalidOperationException: thrown before any task
+at ShopDriver.Throws_before_its_task()
+step 'Throws before its task' Failed 0 ms, under it: 
+iterator
+value 3
+step 'Inner' Passed 0 ms, under it: 
+async void
+step 'Inner' Passed 0 ms, under it: 
+a value step that throws, for its line number
+threw InvalidOperationException: from a value step
+at ShopDriver.A_value_that_throws()
+step 'A value that throws' Failed 0 ms, under it: 
+exit 0
+runtime 10.0.11, assembly consumer, ref
+references: System.Runtime 10.0.0.0, System.Reflection.Metadata 10.0.0.0, Kronikol 5.28.2.0, System.Threading.Thread 10.0.0.0, Shouldly 4.3.0.0, System.Console 10.0.0.0, System.Linq 10.0.0.0
+in parameter
+step 'Takes an in parameter' Passed 23 ms, under it: Inner
+ref parameter
+value 2
+step 'Takes a ref parameter' Passed 0 ms, under it: Inner
+out parameter
+value 7
+step 'Takes an out parameter' Passed 0 ms, under it: Inner
+exit of the ref run: 0
+=================== prototype-over-published-assertions, normal verbosity: the weavers in the order they ran, and what they listed
+1><home>/.nuget\packages\kronikol.steptracking\5.28.99-proto226\buildTransitive\Kronikol.StepTracking.targets(156,5): warning KRONIKOL004: Kronikol.StepTracking: 2 step method(s) were left as written, so they run without a step. First: Program.cs, line 7
+Kronikol.StepTracking: Left 2 step method(s) unwoven; they run as written, without a step:
+Program.cs, line 77, in ShopDriver.An_iterator: it is an iterator, whose body runs while its caller enumerates it, after the method has returned
+Program.cs, line 78, in ShopDriver.An_async_void: it is async void, which nothing can wait for, so its step would close at its first await
+Kronikol.StepTracking: Instrumented 12 step method(s) (505ms)
+_WeaveAssertionTracking:
+<home>/.nuget\packages\kronikol.steptracking\5.28.99-proto226\buildTransitive\Kronikol.StepTracking.targets(156,5): warning KRONIKOL004: Kronikol.StepTracking: 2 step method(s) were left as written, so they run without a step. First: Program.cs, line 77,
+=================== prototype-over-published-assertions, terminal logger, -v:m -tl:on
+<home>/.nuget\packages\kronikol.steptracking\5.28.99-proto226\buildTransitive\Kronikol.StepTracking.targets(156,5): warning KRONIKOL004: Kronikol.StepTracking: 2 step method(s) were left as written, so they run without a step. First: Program.cs, line 77,
+=================== prototype-over-published-assertions, NoWarn: lines naming KRONIKOL004 at -v:m -tl:off
+0
+=================== prototype-over-published-assertions, PdbFile: symbols written somewhere other than beside the assembly
+Build succeeded.
+<home>/.nuget\packages\kronikol.assertiontracking\5.28.2\buildTransitive\Kronikol.AssertionTracking.targets(58,5): warning KRONIKOL001: Kronikol.AssertionTracking: [assembly: TrackAssertions] is declared, but no assertion was instrume
+<home>/.nuget\packages\kronikol.steptracking\5.28.99-proto226\buildTransitive\Kronikol.StepTracking.targets(156,5): warning KRONIKOL004: Kronikol.StepTracking: 2 step method(s) were left as written, so they run without a step. First: 
+void
+step 'Void' Passed, under it: Inner
+async Task
+step 'Task' Passed, under it: Inner
+--
+value + assertion
+value 3
+step 'Value with assertion' Passed, under it: 
+Task with a synchronous throw
+--
+a value step that throws, for its line number
+threw InvalidOperationException: from a value step
+at ShopDriver.A_value_that_throws() in Program.cs:line 79
+step 'A value that throws' Failed, under it: 

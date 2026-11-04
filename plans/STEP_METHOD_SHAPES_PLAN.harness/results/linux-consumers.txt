@@ -1,0 +1,415 @@
+sdk 10.0.401, Linux 6.18.54.1-microsoft-standard-WSL2
+=================== published, AssemblyName=App, PdbFile=symbols/app.pdb
+Build succeeded.
+  at ShopDriver.A_value_that_throws() in /tmp/c/published-case/Program.cs:line 79
+=================== published, DebugType=portable, Debug
+Build succeeded.
+Kronikol.AssertionTracking.targets(58,5): warning KRONIKOL003: Kronikol.AssertionTracking: 1 assertion statement(s) were left as written, so they run without a note. First: Program.cs, line 75, in Sho
+void
+  step 'Void' Passed 43 ms, under it: Inner
+async Task
+  step 'Task' Passed 25 ms, under it: Inner
+int (issue)
+  threw InvalidProgramException: Common Language Runtime detected an invalid program.
+async ValueTask (issue)
+  threw InvalidProgramException: Common Language Runtime detected an invalid program.
+async ValueTask<int>
+  threw InvalidProgramException: Common Language Runtime detected an invalid program.
+value + assertion
+  threw InvalidProgramException: Common Language Runtime detected an invalid program.
+Task with a synchronous throw
+  threw InvalidOperationException: thrown before any task
+  a step was left open
+iterator
+  threw InvalidProgramException: Common Language Runtime detected an invalid program.
+async void
+  step 'An async void' Passed 0 ms, under it: 
+  step 'Inner' Passed 0 ms, under it: 
+a value step that throws, for its line number
+  threw InvalidOperationException: from a value step
+  step 'A value that throws' Failed 0 ms, under it: 
+exit 0
+in parameter
+exit of the ref run: 139
+=================== published, DebugType=portable, Release
+Build succeeded.
+Kronikol.AssertionTracking.targets(58,5): warning KRONIKOL003: Kronikol.AssertionTracking: 1 assertion statement(s) were left as written, so they run without a note. First: Program.cs, line 75, in Sho
+void
+  step 'Void' Passed 55 ms, under it: Inner
+async Task
+  step 'Task' Passed 28 ms, under it: Inner
+int (issue)
+  threw InvalidProgramException: Common Language Runtime detected an invalid program.
+async ValueTask (issue)
+  threw InvalidProgramException: Common Language Runtime detected an invalid program.
+async ValueTask<int>
+  threw InvalidProgramException: Common Language Runtime detected an invalid program.
+value + assertion
+  threw InvalidProgramException: Common Language Runtime detected an invalid program.
+Task with a synchronous throw
+  threw InvalidOperationException: thrown before any task
+  a step was left open
+iterator
+  threw InvalidProgramException: Common Language Runtime detected an invalid program.
+async void
+  step 'An async void' Passed 1 ms, under it: 
+  step 'Inner' Passed 0 ms, under it: 
+a value step that throws, for its line number
+  threw InvalidOperationException: from a value step
+  step 'A value that throws' Failed 0 ms, under it: 
+exit 0
+in parameter
+exit of the ref run: 139
+=================== published, DebugType=embedded, Debug
+Build succeeded.
+void
+async Task
+int (issue)
+  value 42
+async ValueTask (issue)
+async ValueTask<int>
+  value 7
+value + assertion
+  value 3
+Task with a synchronous throw
+  threw InvalidOperationException: thrown before any task
+iterator
+  value 3
+async void
+a value step that throws, for its line number
+  threw InvalidOperationException: from a value step
+exit 0
+in parameter
+ref parameter
+  value 2
+out parameter
+  value 7
+exit of the ref run: 0
+=================== published, DebugType=embedded, Release
+Build succeeded.
+void
+async Task
+int (issue)
+  value 42
+async ValueTask (issue)
+async ValueTask<int>
+  value 7
+value + assertion
+  value 3
+Task with a synchronous throw
+  threw InvalidOperationException: thrown before any task
+iterator
+  value 3
+async void
+a value step that throws, for its line number
+  threw InvalidOperationException: from a value step
+exit 0
+in parameter
+ref parameter
+  value 2
+out parameter
+  value 7
+exit of the ref run: 0
+=================== published, DebugType=none, Debug
+Build succeeded.
+Kronikol.AssertionTracking.targets(58,5): warning KRONIKOL001: Kronikol.AssertionTracking: [assembly: TrackAssertions] is declared, but no assertion was instrumented: the build writes no symbols (<Deb
+void
+async Task
+int (issue)
+  value 42
+async ValueTask (issue)
+async ValueTask<int>
+  value 7
+value + assertion
+  value 3
+Task with a synchronous throw
+  threw InvalidOperationException: thrown before any task
+iterator
+  value 3
+async void
+a value step that throws, for its line number
+  threw InvalidOperationException: from a value step
+exit 0
+in parameter
+ref parameter
+  value 2
+out parameter
+  value 7
+exit of the ref run: 0
+=================== published, DebugType=none, Release
+Build succeeded.
+Kronikol.AssertionTracking.targets(58,5): warning KRONIKOL001: Kronikol.AssertionTracking: [assembly: TrackAssertions] is declared, but no assertion was instrumented: the build writes no symbols (<Deb
+void
+async Task
+int (issue)
+  value 42
+async ValueTask (issue)
+async ValueTask<int>
+  value 7
+value + assertion
+  value 3
+Task with a synchronous throw
+  threw InvalidOperationException: thrown before any task
+iterator
+  value 3
+async void
+a value step that throws, for its line number
+  threw InvalidOperationException: from a value step
+exit 0
+in parameter
+ref parameter
+  value 2
+out parameter
+  value 7
+exit of the ref run: 0
+=================== prototype, AssemblyName=App, PdbFile=symbols/app.pdb
+Build succeeded.
+  at ShopDriver.A_value_that_throws() in /tmp/c/prototype-case/Program.cs:line 79
+=================== prototype, DebugType=portable, Debug
+Build succeeded.
+Kronikol.StepTracking.targets(156,5): warning KRONIKOL004: Kronikol.StepTracking: 2 step method(s) were left as written, so they run without a step. First: Program.cs, line 77, in ShopDriver.An_iterat
+void
+  step 'Void' Passed 42 ms, under it: Inner
+async Task
+  step 'Task' Passed 25 ms, under it: Inner
+int (issue)
+  value 42
+  step 'A number is chosen' Passed 0 ms, under it: 
+async ValueTask (issue)
+  step 'A value task step' Passed 101 ms, under it: Inner
+async ValueTask<int>
+  value 7
+  step 'A value task int' Passed 102 ms, under it: Inner
+value + assertion
+  value 3
+  step 'Value with assertion' Passed 49 ms, under it: (an assertion)
+Task with a synchronous throw
+  threw InvalidOperationException: thrown before any task
+  step 'Throws before its task' Failed 0 ms, under it: 
+iterator
+  value 3
+  step 'Inner' Passed 0 ms, under it: 
+async void
+  step 'Inner' Passed 0 ms, under it: 
+a value step that throws, for its line number
+  threw InvalidOperationException: from a value step
+  step 'A value that throws' Failed 0 ms, under it: 
+exit 0
+in parameter
+  step 'Takes an in parameter' Passed 29 ms, under it: Inner
+ref parameter
+  value 2
+  step 'Takes a ref parameter' Passed 0 ms, under it: Inner
+out parameter
+  value 7
+  step 'Takes an out parameter' Passed 0 ms, under it: Inner
+exit of the ref run: 0
+=================== prototype, DebugType=portable, Release
+Build succeeded.
+Kronikol.StepTracking.targets(156,5): warning KRONIKOL004: Kronikol.StepTracking: 2 step method(s) were left as written, so they run without a step. First: Program.cs, line 77, in ShopDriver.An_iterat
+void
+  step 'Void' Passed 51 ms, under it: Inner
+async Task
+  step 'Task' Passed 37 ms, under it: Inner
+int (issue)
+  value 42
+  step 'A number is chosen' Passed 0 ms, under it: 
+async ValueTask (issue)
+  step 'A value task step' Passed 102 ms, under it: Inner
+async ValueTask<int>
+  value 7
+  step 'A value task int' Passed 102 ms, under it: Inner
+value + assertion
+  value 3
+  step 'Value with assertion' Passed 79 ms, under it: (an assertion)
+Task with a synchronous throw
+  threw InvalidOperationException: thrown before any task
+  step 'Throws before its task' Failed 0 ms, under it: 
+iterator
+  value 3
+  step 'Inner' Passed 0 ms, under it: 
+async void
+  step 'Inner' Passed 0 ms, under it: 
+a value step that throws, for its line number
+  threw InvalidOperationException: from a value step
+  step 'A value that throws' Failed 0 ms, under it: 
+exit 0
+in parameter
+  step 'Takes an in parameter' Passed 78 ms, under it: Inner
+ref parameter
+  value 2
+  step 'Takes a ref parameter' Passed 0 ms, under it: Inner
+out parameter
+  value 7
+  step 'Takes an out parameter' Passed 0 ms, under it: Inner
+exit of the ref run: 0
+=================== prototype, DebugType=embedded, Debug
+Build succeeded.
+Kronikol.StepTracking.targets(156,5): warning KRONIKOL004: Kronikol.StepTracking: 2 step method(s) were left as written, so they run without a step. First: Program.cs, line 77, in ShopDriver.An_iterat
+void
+  step 'Void' Passed 51 ms, under it: Inner
+async Task
+  step 'Task' Passed 22 ms, under it: Inner
+int (issue)
+  value 42
+  step 'A number is chosen' Passed 0 ms, under it: 
+async ValueTask (issue)
+  step 'A value task step' Passed 101 ms, under it: Inner
+async ValueTask<int>
+  value 7
+  step 'A value task int' Passed 102 ms, under it: Inner
+value + assertion
+  value 3
+  step 'Value with assertion' Passed 52 ms, under it: (an assertion)
+Task with a synchronous throw
+  threw InvalidOperationException: thrown before any task
+  step 'Throws before its task' Failed 0 ms, under it: 
+iterator
+  value 3
+  step 'Inner' Passed 0 ms, under it: 
+async void
+  step 'Inner' Passed 0 ms, under it: 
+a value step that throws, for its line number
+  threw InvalidOperationException: from a value step
+  step 'A value that throws' Failed 0 ms, under it: 
+exit 0
+in parameter
+  step 'Takes an in parameter' Passed 41 ms, under it: Inner
+ref parameter
+  value 2
+  step 'Takes a ref parameter' Passed 0 ms, under it: Inner
+out parameter
+  value 7
+  step 'Takes an out parameter' Passed 0 ms, under it: Inner
+exit of the ref run: 0
+=================== prototype, DebugType=embedded, Release
+Build succeeded.
+Kronikol.StepTracking.targets(156,5): warning KRONIKOL004: Kronikol.StepTracking: 2 step method(s) were left as written, so they run without a step. First: Program.cs, line 77, in ShopDriver.An_iterat
+void
+  step 'Void' Passed 64 ms, under it: Inner
+async Task
+  step 'Task' Passed 26 ms, under it: Inner
+int (issue)
+  value 42
+  step 'A number is chosen' Passed 0 ms, under it: 
+async ValueTask (issue)
+  step 'A value task step' Passed 102 ms, under it: Inner
+async ValueTask<int>
+  value 7
+  step 'A value task int' Passed 102 ms, under it: Inner
+value + assertion
+  value 3
+  step 'Value with assertion' Passed 59 ms, under it: (an assertion)
+Task with a synchronous throw
+  threw InvalidOperationException: thrown before any task
+  step 'Throws before its task' Failed 0 ms, under it: 
+iterator
+  value 3
+  step 'Inner' Passed 0 ms, under it: 
+async void
+  step 'Inner' Passed 0 ms, under it: 
+a value step that throws, for its line number
+  threw InvalidOperationException: from a value step
+  step 'A value that throws' Failed 0 ms, under it: 
+exit 0
+in parameter
+  step 'Takes an in parameter' Passed 49 ms, under it: Inner
+ref parameter
+  value 2
+  step 'Takes a ref parameter' Passed 0 ms, under it: Inner
+out parameter
+  value 7
+  step 'Takes an out parameter' Passed 0 ms, under it: Inner
+exit of the ref run: 0
+=================== prototype, DebugType=none, Debug
+Build succeeded.
+Kronikol.AssertionTracking.targets(58,5): warning KRONIKOL001: Kronikol.AssertionTracking: [assembly: TrackAssertions] is declared, but no assertion was instrumented: the build writes no symbols (<Deb
+Kronikol.StepTracking.targets(156,5): warning KRONIKOL004: Kronikol.StepTracking: 2 step method(s) were left as written, so they run without a step. First: ShopDriver.An_iterator: it is an iterator, w
+void
+  step 'Void' Passed 39 ms, under it: Inner
+async Task
+  step 'Task' Passed 27 ms, under it: Inner
+int (issue)
+  value 42
+  step 'A number is chosen' Passed 0 ms, under it: 
+async ValueTask (issue)
+  step 'A value task step' Passed 101 ms, under it: Inner
+async ValueTask<int>
+  value 7
+  step 'A value task int' Passed 102 ms, under it: Inner
+value + assertion
+  value 3
+  step 'Value with assertion' Passed 5 ms, under it: 
+Task with a synchronous throw
+  threw InvalidOperationException: thrown before any task
+  step 'Throws before its task' Failed 0 ms, under it: 
+iterator
+  value 3
+  step 'Inner' Passed 0 ms, under it: 
+async void
+  step 'Inner' Passed 0 ms, under it: 
+a value step that throws, for its line number
+  threw InvalidOperationException: from a value step
+  step 'A value that throws' Failed 0 ms, under it: 
+exit 0
+in parameter
+  step 'Takes an in parameter' Passed 41 ms, under it: Inner
+ref parameter
+  value 2
+  step 'Takes a ref parameter' Passed 0 ms, under it: Inner
+out parameter
+  value 7
+  step 'Takes an out parameter' Passed 0 ms, under it: Inner
+exit of the ref run: 0
+=================== prototype, DebugType=none, Release
+Build succeeded.
+Kronikol.AssertionTracking.targets(58,5): warning KRONIKOL001: Kronikol.AssertionTracking: [assembly: TrackAssertions] is declared, but no assertion was instrumented: the build writes no symbols (<Deb
+Kronikol.StepTracking.targets(156,5): warning KRONIKOL004: Kronikol.StepTracking: 2 step method(s) were left as written, so they run without a step. First: ShopDriver.An_iterator: it is an iterator, w
+void
+  step 'Void' Passed 49 ms, under it: Inner
+async Task
+  step 'Task' Passed 23 ms, under it: Inner
+int (issue)
+  value 42
+  step 'A number is chosen' Passed 0 ms, under it: 
+async ValueTask (issue)
+  step 'A value task step' Passed 102 ms, under it: Inner
+async ValueTask<int>
+  value 7
+  step 'A value task int' Passed 102 ms, under it: Inner
+value + assertion
+  value 3
+  step 'Value with assertion' Passed 6 ms, under it: 
+Task with a synchronous throw
+  threw InvalidOperationException: thrown before any task
+  step 'Throws before its task' Failed 0 ms, under it: 
+iterator
+  value 3
+  step 'Inner' Passed 0 ms, under it: 
+async void
+  step 'Inner' Passed 0 ms, under it: 
+a value step that throws, for its line number
+  threw InvalidOperationException: from a value step
+  step 'A value that throws' Failed 0 ms, under it: 
+exit 0
+in parameter
+  step 'Takes an in parameter' Passed 43 ms, under it: Inner
+ref parameter
+  value 2
+  step 'Takes a ref parameter' Passed 0 ms, under it: Inner
+out parameter
+  value 7
+  step 'Takes an out parameter' Passed 0 ms, under it: Inner
+exit of the ref run: 0
+=================== lock, published
+linux-published: Kronikol.StepTracking 5.28.2 
+build 0 exit 0: 
+build 1 exit 0: 
+build 2 exit 0: 
+build 3 exit 0: 
+=================== lock, prototype
+linux-prototype: Kronikol.StepTracking 5.28.99-proto226 
+build 0 exit 0: 
+build 1 exit 0: 
+build 2 exit 0: 
+build 3 exit 0: 

@@ -1,0 +1,9 @@
+published: dotnet test on three facts, the second calling [Step] void M(in int x)
+xunit-probe -> bin\Debug\net10.0\xunit-probe.dll
+Test run for bin\Debug\net10.0\xunit-probe.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:01:02.96]     [FATAL ERROR] Xunit.Sdk.TestPipelineException
+[xUnit.net 00:01:02.96] Catastrophic failure: Test process crashed with exit code -1073741819.
+No test is available in bin\Debug\net10.0\xunit-probe.dll. Make sure that test discoverer & executors are registered and platform & framework version settings are appropriate and try again.
+Additionally, path to test adapters can be specified using /TestAdapterPath command. Example  /TestAdapterPath:<pathToCustomAdapters>.
+exit 1

@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- What the .NET 11 SDK does to a step: a net11.0 test project under C# 15, as it comes and with runtime async on, under the
+       real xUnit adapter, so a test has an identity and its steps reach a report. -p:Features=runtime-async=on for the second. -->
+  <PropertyGroup>
+    <TargetFramework>net11.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <UseArtifactsOutput>false</UseArtifactsOutput>
+    <NoWarn>$(NoWarn);CS1998</NoWarn>
+    <KronikolVersion Condition="'$(KronikolVersion)' == ''">5.28.2</KronikolVersion>
+    <StepTrackingVersion Condition="'$(StepTrackingVersion)' == ''">$(KronikolVersion)</StepTrackingVersion>
+    <AssertionTrackingVersion Condition="'$(AssertionTrackingVersion)' == ''">$(KronikolVersion)</AssertionTrackingVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Kronikol.xUnit3" Version="$(KronikolVersion)" />
+    <PackageReference Include="Kronikol.StepTracking" Version="$(StepTrackingVersion)" PrivateAssets="all" />
+    <PackageReference Include="Kronikol.AssertionTracking" Version="$(AssertionTrackingVersion)" PrivateAssets="all" />
+    <PackageReference Include="Shouldly" Version="4.3.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.5.1" />
+    <PackageReference Include="xunit.v3" Version="3.2.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" PrivateAssets="all" />
+  </ItemGroup>
+
+</Project>

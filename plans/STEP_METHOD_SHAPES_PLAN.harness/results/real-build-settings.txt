@@ -1,0 +1,239 @@
+=================== published, net10.0, DebugType=full, Debug
+Build succeeded.
+portable pdb
+      5   threw InvalidProgramException: Common Language Runtime detected an invalid program.
+      1   step 'Void' Passed, under it: Inner
+      1   step 'Task' Passed, under it: Inner
+      1   step 'Inner' Passed, under it: 
+      1   step 'An async void' Passed, under it: 
+=================== published, net10.0, DebugType=full, Release
+Build succeeded.
+portable pdb
+      5   threw InvalidProgramException: Common Language Runtime detected an invalid program.
+      1   step 'Void' Passed, under it: Inner
+      1   step 'Task' Passed, under it: Inner
+      1   step 'Inner' Passed, under it: 
+      1   step 'An async void' Passed, under it: 
+=================== published, net10.0, DebugType=pdbonly, Debug
+Build succeeded.
+portable pdb
+      5   threw InvalidProgramException: Common Language Runtime detected an invalid program.
+      1   step 'Void' Passed, under it: Inner
+      1   step 'Task' Passed, under it: Inner
+      1   step 'Inner' Passed, under it: 
+      1   step 'An async void' Passed, under it: 
+=================== published, net10.0, DebugType=pdbonly, Release
+Build succeeded.
+portable pdb
+      5   threw InvalidProgramException: Common Language Runtime detected an invalid program.
+      1   step 'Void' Passed, under it: Inner
+      1   step 'Task' Passed, under it: Inner
+      1   step 'Inner' Passed, under it: 
+      1   step 'An async void' Passed, under it: 
+=================== published, netstandard2.0, DebugType=portable
+Build succeeded.
+Kronikol.StepTracking: Instrumented 2 step method(s)
+portable pdb
+=================== published, netstandard2.0, DebugType=full
+Build succeeded.
+Kronikol.StepTracking: Instrumented 2 step method(s)
+portable pdb
+=================== published, netstandard2.0, DebugType=pdbonly
+Build succeeded.
+Kronikol.StepTracking: Instrumented 2 step method(s)
+portable pdb
+=================== published, Visual Studio's MSBuild 18.6.3.22110, on .NET Framework, DebugType=portable, Debug
+references: System.Runtime 10.0.0.0, System.Reflection.Metadata 10.0.0.0, Kronikol 5.28.2.0, System.Threading.Thread 10.0.0.0, Shouldly 4.3.0.0, System.Console 10.0.0.0, System.Linq 10.0.0.0, mscorlib
+  step 'Void' Passed, under it: Inner
+  step 'Task' Passed, under it: Inner
+  threw InvalidProgramException: Common Language Runtime detected an invalid program.
+  threw InvalidProgramException: Common Language Runtime detected an invalid program.
+  threw InvalidProgramException: Common Language Runtime detected an invalid program.
+  threw InvalidProgramException: Common Language Runtime detected an invalid program.
+  threw InvalidProgramException: Common Language Runtime detected an invalid program.
+  step 'An async void' Passed, under it: 
+  step 'Inner' Passed, under it: 
+  step 'A value that throws' Failed, under it: 
+=================== published, DebugType=portable, then none, with no clean between
+Build succeeded.
+<home>\.nuget\packages\kronikol.steptracking\5.28.2\buildTransitive\Kronikol.StepTracking.targets(156,5): error :    at Kronikol.StepTracking.StepWeaver.Weave(String assemblyPath, String pdbPath
+<home>\.nuget\packages\kronikol.steptracking\5.28.2\buildTransitive\Kronikol.StepTracking.targets(156,5): error :    at Kronikol.StepTracking.WeaveStepsTask.Execute() [<home>\AppData\Local
+<home>\.nuget\packages\kronikol.steptracking\5.28.2\buildTransitive\Kronikol.StepTracking.targets(156,5): error :    at Kronikol.StepTracking.WeaveStepsTask.ExecuteCore() [<home>\AppData\L
+<home>\.nuget\packages\kronikol.steptracking\5.28.2\buildTransitive\Kronikol.StepTracking.targets(156,5): error :    at Mono.Cecil.AssemblyDefinition.ReadAssembly(Stream stream, ReaderParameters
+<home>\.nuget\packages\kronikol.steptracking\5.28.2\buildTransitive\Kronikol.StepTracking.targets(156,5): error :    at Mono.Cecil.ModuleDefinition.ReadModule(Disposable`1 stream, String fileNam
+<home>\.nuget\packages\kronikol.steptracking\5.28.2\buildTransitive\Kronikol.StepTracking.targets(156,5): error :    at Mono.Cecil.ModuleDefinition.ReadModule(Stream stream, ReaderParameters par
+<home>\.nuget\packages\kronikol.steptracking\5.28.2\buildTransitive\Kronikol.StepTracking.targets(156,5): error :    at Mono.Cecil.ModuleDefinition.ReadSymbols(ISymbolReader reader, Boolean thro
+<home>\.nuget\packages\kronikol.steptracking\5.28.2\buildTransitive\Kronikol.StepTracking.targets(156,5): error :    at Mono.Cecil.ModuleReader.CreateModule(Image image, ReaderParameters paramet
+<home>\.nuget\packages\kronikol.steptracking\5.28.2\buildTransitive\Kronikol.StepTracking.targets(156,5): error :    at Mono.Cecil.ModuleReader.ReadSymbols(ModuleDefinition module, ReaderParamet
+error: Symbols were found but are not matching the assembly
+  at ShopDriver.Throws_before_its_task() in Program.cs:line 76
+  at ShopDriver.A_value_that_throws() in Program.cs:line 79
+=================== published, DebugType=portable, then embedded, with no clean between
+Build succeeded.
+Build succeeded.
+<home>\.nuget\packages\kronikol.assertiontracking\5.28.2\buildTransitive\Kronikol.AssertionTracking.targets(58,5): warning KRONIKOL003: Kronikol.AssertionTracking: 1 assertion statement(s) were 
+=================== published, TargetName=renamed
+Build succeeded.
+<home>\.nuget\packages\kronikol.assertiontracking\5.28.2\buildTransitive\Kronikol.AssertionTracking.targets(58,5): warning KRONIKOL003: Kronikol.AssertionTracking: 
+  at ShopDriver.Throws_before_its_task() in Program.cs:line 76
+  at ShopDriver.A_value_that_throws() in Program.cs:line 79
+=================== published, PdbFile under PathMap, two clones
+consumer.dll: the same in both
+times the clone's folder is in consumer.dll: 0
+  at ShopDriver.A_value_that_throws() in /_/Program.cs:line 79
+  at ShopDriver.Throws_before_its_task() in /_/Program.cs:line 76
+=================== published, PdbFile=symbols/custom.pdb
+Build succeeded.
+<home>\.nuget\packages\kronikol.assertiontracking\5.28.2\buildTransitive\Kronikol.AssertionTracking.targets(58,5): warning KRONIKOL001: Kronikol.AssertionTracking: 
+in bin: custom.pdb
+  at ShopDriver.Throws_before_its_task() in Program.cs:line 76
+  at ShopDriver.A_value_that_throws() in Program.cs:line 79
+=================== published, PdbFile=symbols/custom
+Build succeeded.
+<home>\.nuget\packages\kronikol.assertiontracking\5.28.2\buildTransitive\Kronikol.AssertionTracking.targets(58,5): warning KRONIKOL001: Kronikol.AssertionTracking: 
+in bin: custom.pdb
+  at ShopDriver.Throws_before_its_task() in Program.cs:line 76
+  at ShopDriver.A_value_that_throws() in Program.cs:line 79
+=================== published, PdbFile=symbols/custom.sym
+Build succeeded.
+<home>\.nuget\packages\kronikol.assertiontracking\5.28.2\buildTransitive\Kronikol.AssertionTracking.targets(58,5): warning KRONIKOL001: Kronikol.AssertionTracking: 
+in bin: custom.pdb
+  at ShopDriver.Throws_before_its_task() in Program.cs:line 76
+  at ShopDriver.A_value_that_throws() in Program.cs:line 79
+=================== prototype, net10.0, DebugType=full, Debug
+Build succeeded.
+portable pdb
+      2   step 'Inner' Passed, under it: 
+      1   step 'Void' Passed, under it: Inner
+      1   step 'Value with assertion' Passed, under it: (an assertion)
+      1   step 'Throws before its task' Failed, under it: 
+      1   step 'Task' Passed, under it: Inner
+=================== prototype, net10.0, DebugType=full, Release
+Build succeeded.
+portable pdb
+      2   step 'Inner' Passed, under it: 
+      1   step 'Void' Passed, under it: Inner
+      1   step 'Value with assertion' Passed, under it: (an assertion)
+      1   step 'Throws before its task' Failed, under it: 
+      1   step 'Task' Passed, under it: Inner
+=================== prototype, net10.0, DebugType=pdbonly, Debug
+Build succeeded.
+portable pdb
+      2   step 'Inner' Passed, under it: 
+      1   step 'Void' Passed, under it: Inner
+      1   step 'Value with assertion' Passed, under it: (an assertion)
+      1   step 'Throws before its task' Failed, under it: 
+      1   step 'Task' Passed, under it: Inner
+=================== prototype, net10.0, DebugType=pdbonly, Release
+Build succeeded.
+portable pdb
+      2   step 'Inner' Passed, under it: 
+      1   step 'Void' Passed, under it: Inner
+      1   step 'Value with assertion' Passed, under it: (an assertion)
+      1   step 'Throws before its task' Failed, under it: 
+      1   step 'Task' Passed, under it: Inner
+=================== prototype, netstandard2.0, DebugType=portable
+Build succeeded.
+Kronikol.StepTracking: Instrumented 2 step method(s)
+portable pdb
+=================== prototype, netstandard2.0, DebugType=full
+Build succeeded.
+Kronikol.StepTracking: Instrumented 2 step method(s)
+portable pdb
+=================== prototype, netstandard2.0, DebugType=pdbonly
+Build succeeded.
+Kronikol.StepTracking: Instrumented 2 step method(s)
+portable pdb
+=================== prototype, Visual Studio's MSBuild 18.6.3.22110, on .NET Framework, DebugType=portable, Debug
+references: System.Runtime 10.0.0.0, System.Reflection.Metadata 10.0.0.0, Kronikol 5.28.2.0, System.Threading.Thread 10.0.0.0, Shouldly 4.3.0.0, System.Console 10.0.0.0, System.Linq 10.0.0.0, mscorlib
+  step 'Void' Passed, under it: Inner
+  step 'Task' Passed, under it: Inner
+  step 'A number is chosen' Passed, under it: 
+  step 'A value task step' Passed, under it: Inner
+  step 'A value task int' Passed, under it: Inner
+  step 'Value with assertion' Passed, under it: (an assertion)
+  step 'Throws before its task' Failed, under it: 
+  step 'Inner' Passed, under it: 
+  step 'Inner' Passed, under it: 
+  step 'A value that throws' Failed, under it: 
+=================== prototype, DebugType=portable, then none, with no clean between
+Build succeeded.
+Build succeeded.
+<home>\.nuget\packages\kronikol.assertiontracking\5.28.99-proto226\buildTransitive\Kronikol.AssertionTracking.targets(58,5): warning KRONIKOL001: Kronikol.AssertionTracking: [assembly: TrackAsse
+<home>\.nuget\packages\kronikol.steptracking\5.28.99-proto226\buildTransitive\Kronikol.StepTracking.targets(156,5): warning KRONIKOL004: Kronikol.StepTracking: 2 step method(s) were left as writ
+=================== prototype, DebugType=portable, then embedded, with no clean between
+Build succeeded.
+Build succeeded.
+<home>\.nuget\packages\kronikol.steptracking\5.28.99-proto226\buildTransitive\Kronikol.StepTracking.targets(156,5): warning KRONIKOL004: Kronikol.StepTracking: 2 step method(s) were left as writ
+  at ShopDriver.Throws_before_its_task() in Program.cs:line 76
+  at ShopDriver.A_value_that_throws() in Program.cs:line 79
+=================== prototype, TargetName=renamed
+Build succeeded.
+  at ShopDriver.Throws_before_its_task() in Program.cs:line 76
+  at ShopDriver.A_value_that_throws() in Program.cs:line 79
+=================== prototype, PdbFile under PathMap, two clones
+consumer.dll: the same in both
+times the clone's folder is in consumer.dll: 0
+  at ShopDriver.A_value_that_throws() in /_/Program.cs:line 79
+  at ShopDriver.Throws_before_its_task() in /_/Program.cs:line 76
+=================== prototype, PdbFile=symbols/custom.pdb
+Build succeeded.
+in bin: custom.pdb
+  at ShopDriver.Throws_before_its_task() in Program.cs:line 76
+  at ShopDriver.A_value_that_throws() in Program.cs:line 79
+=================== prototype, PdbFile=symbols/custom
+Build succeeded.
+in bin: custom.pdb
+  at ShopDriver.Throws_before_its_task() in Program.cs:line 76
+  at ShopDriver.A_value_that_throws() in Program.cs:line 79
+=================== prototype, PdbFile=symbols/custom.sym
+Build succeeded.
+in bin: custom.pdb
+  at ShopDriver.Throws_before_its_task() in Program.cs:line 76
+  at ShopDriver.A_value_that_throws() in Program.cs:line 79
+=================== prototype-over-published-assertions, DebugType=portable, then none, with no clean between
+Build succeeded.
+<home>\.nuget\packages\kronikol.assertiontracking\5.28.2\buildTransitive\Kronikol.AssertionTracking.targets(58,5): error :    at Kronikol.AssertionTracking.AssertionWeaver.Weave(String assemblyP
+<home>\.nuget\packages\kronikol.assertiontracking\5.28.2\buildTransitive\Kronikol.AssertionTracking.targets(58,5): error :    at Kronikol.AssertionTracking.WeaveAssertionsTask.Execute() [C:\User
+<home>\.nuget\packages\kronikol.assertiontracking\5.28.2\buildTransitive\Kronikol.AssertionTracking.targets(58,5): error :    at Kronikol.AssertionTracking.WeaveAssertionsTask.ExecuteCore() [C:\
+<home>\.nuget\packages\kronikol.assertiontracking\5.28.2\buildTransitive\Kronikol.AssertionTracking.targets(58,5): error :    at Mono.Cecil.AssemblyDefinition.ReadAssembly(Stream stream, ReaderP
+<home>\.nuget\packages\kronikol.assertiontracking\5.28.2\buildTransitive\Kronikol.AssertionTracking.targets(58,5): error :    at Mono.Cecil.ModuleDefinition.ReadModule(Disposable`1 stream, Strin
+<home>\.nuget\packages\kronikol.assertiontracking\5.28.2\buildTransitive\Kronikol.AssertionTracking.targets(58,5): error :    at Mono.Cecil.ModuleDefinition.ReadModule(Stream stream, ReaderParam
+<home>\.nuget\packages\kronikol.assertiontracking\5.28.2\buildTransitive\Kronikol.AssertionTracking.targets(58,5): error :    at Mono.Cecil.ModuleDefinition.ReadSymbols(ISymbolReader reader, Boo
+<home>\.nuget\packages\kronikol.assertiontracking\5.28.2\buildTransitive\Kronikol.AssertionTracking.targets(58,5): error :    at Mono.Cecil.ModuleReader.CreateModule(Image image, ReaderParameter
+<home>\.nuget\packages\kronikol.assertiontracking\5.28.2\buildTransitive\Kronikol.AssertionTracking.targets(58,5): error :    at Mono.Cecil.ModuleReader.ReadSymbols(ModuleDefinition module, Read
+<home>\.nuget\packages\kronikol.steptracking\5.28.99-proto226\buildTransitive\Kronikol.StepTracking.targets(156,5): warning KRONIKOL004: Kronikol.StepTracking: 2 step method(s) were left as writ
+error: Symbols were found but are not matching the assembly
+  at ShopDriver.Throws_before_its_task() in Program.cs:line 76
+  at ShopDriver.A_value_that_throws() in Program.cs:line 79
+=================== prototype-over-published-assertions, DebugType=portable, then embedded, with no clean between
+Build succeeded.
+Build succeeded.
+<home>\.nuget\packages\kronikol.steptracking\5.28.99-proto226\buildTransitive\Kronikol.StepTracking.targets(156,5): warning KRONIKOL004: Kronikol.StepTracking: 2 step method(s) were left as writ
+=================== prototype-over-published-assertions, TargetName=renamed
+Build succeeded.
+  at ShopDriver.Throws_before_its_task() in Program.cs:line 76
+  at ShopDriver.A_value_that_throws() in Program.cs:line 79
+=================== prototype-over-published-assertions, PdbFile under PathMap, two clones
+consumer.dll: the same in both
+times the clone's folder is in consumer.dll: 0
+  at ShopDriver.A_value_that_throws() in /_/Program.cs:line 79
+  at ShopDriver.Throws_before_its_task() in /_/Program.cs:line 76
+=================== prototype-over-published-assertions, PdbFile=symbols/custom.pdb
+Build succeeded.
+<home>\.nuget\packages\kronikol.assertiontracking\5.28.2\buildTransitive\Kronikol.AssertionTracking.targets(58,5): warning KRONIKOL001: Kronikol.AssertionTracking: 
+in bin: custom.pdb
+  at ShopDriver.Throws_before_its_task() in Program.cs:line 76
+  at ShopDriver.A_value_that_throws() in Program.cs:line 79
+=================== prototype-over-published-assertions, PdbFile=symbols/custom
+Build succeeded.
+<home>\.nuget\packages\kronikol.assertiontracking\5.28.2\buildTransitive\Kronikol.AssertionTracking.targets(58,5): warning KRONIKOL001: Kronikol.AssertionTracking: 
+in bin: custom.pdb
+  at ShopDriver.Throws_before_its_task() in Program.cs:line 76
+  at ShopDriver.A_value_that_throws() in Program.cs:line 79
+=================== prototype-over-published-assertions, PdbFile=symbols/custom.sym
+Build succeeded.
+<home>\.nuget\packages\kronikol.assertiontracking\5.28.2\buildTransitive\Kronikol.AssertionTracking.targets(58,5): warning KRONIKOL001: Kronikol.AssertionTracking: 
+in bin: custom.pdb
+  at ShopDriver.Throws_before_its_task() in Program.cs:line 76
+  at ShopDriver.A_value_that_throws() in Program.cs:line 79

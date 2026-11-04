@@ -1,0 +1,127 @@
+published: Reqnroll + Kronikol.ReqNRoll.xUnit2 5.28.2, Kronikol.StepTracking 5.28.2
+Build succeeded.
+<home>/.nuget\packages\kronikol.assertiontracking\5.28.2\buildTransitive\Kronikol.AssertionTracking.targets(58,5): warning KRONIKOL003: Kronikol.AssertionTracking: 1 assertion statement(s) were left as written, so they run without a note. First: Steps.cs, line 80, in Spike.Shapes.ShopDriver.Takes_a_quantity: a branch from outside the statement lands inside it. The build lists each one at normal verbosity (-v:n). 
+
+=== dotnet test, the @byref scenario alone
+The active test run was aborted. Reason: Test host process crashed : Fatal error.
+exit 0
+
+=== dotnet test, the rest
+Failed The issue's number [97 ms]
+Failed A guard clause in a task step [11 ms]
+Failed A guard clause in a value task step [2 ms]
+Failed A value task with a number [4 ms]
+Failed The issue's value task [4 ms]
+Failed!  - Failed:     5, Passed:     2, Skipped:     0, Total:     7, Duration: 598 ms - Spike.Shapes.dll (net10.0)
+
+=== the report's scenarios
+s0    pass   0.02s     2 calls  A bypassed sub-step inside another step
+s1    FAIL   0.01s     0 calls  A guard clause in a task step
+s2    FAIL      0s     0 calls  A guard clause in a value task step
+s3    pass   0.13s     2 calls  A task step and a void step, which work today
+s4    FAIL      0s     0 calls  A value task with a number
+s5    FAIL   0.09s     0 calls  The issue's number
+s6    FAIL      0s     0 calls  The issue's value task
+
+--- steps s0
+s0  Step method shapes › A bypassed sub-step inside another step  [Passed]  0.02s
+stableId ce343793ee703ec6
+at Features/Shapes.feature:25
+open: TestRunReport.html#sid-ce343793ee703ec6
+0     When a step calls a sub-step that is bypassed and then a sub-step that runs  0.02s  [i0]
+0.0   A step with a bypassed sub step  0s
+~ 0.0.0 A bypassed sub step
+bypassed: Already done
+0.1   A sub step that runs  0.02s
+1     Then the next step is the Gherkin step's own  0s  [i2]
+2 calls · interactions s0 · flow s0
+
+--- steps s1
+s1  Step method shapes › A guard clause in a task step  [Failed]  0.01s
+stableId 1ddccc60693ac70a
+at Features/Shapes.feature:19
+open: TestRunReport.html#sid-1ddccc60693ac70a
+✗ 0     When a task step throws before it has a task  0.01s
+0 calls · interactions s1 · flow s1
+
+--- steps s2
+s2  Step method shapes › A guard clause in a value task step  [Failed]  0s
+stableId c0ec791abc30943d
+at Features/Shapes.feature:22
+open: TestRunReport.html#sid-c0ec791abc30943d
+✗ 0     When a value task step throws before it has a task  0s
+0 calls · interactions s2 · flow s2
+
+--- steps s3
+s3  Step method shapes › A task step and a void step, which work today  [Passed]  0.13s
+stableId 7d7ec118258d3df5
+at Features/Shapes.feature:15
+open: TestRunReport.html#sid-7d7ec118258d3df5
+0     When a task step and a void step run  0.12s  [i0]
+0.0   A task step  0.12s
+0.0.0 A void step
+1     Then the next step is the Gherkin step's own  [i2]
+2 calls · interactions s3 · flow s3
+
+--- steps s4
+s4  Step method shapes › A value task with a number  [Failed]  0s
+stableId 9b651afadf5e6ab4
+at Features/Shapes.feature:11
+open: TestRunReport.html#sid-9b651afadf5e6ab4
+✗ 0     When a value task step hands back a number  0s
+0 calls · interactions s4 · flow s4
+
+--- steps s5
+s5  Step method shapes › The issue's number  [Failed]  0.09s
+stableId f0eb7fc867c9cfac
+at Features/Shapes.feature:7
+open: TestRunReport.html#sid-f0eb7fc867c9cfac
+✗ 0     Given a number is chosen  0.05s
+✗ 0.0   Shop a_number_is_chosen() should be 42
+Common Language Runtime detected an invalid program.   at Steps.cs:90
+0 calls · interactions s5 · flow s5
+
+--- steps s6
+s6  Step method shapes › The issue's value task  [Failed]  0s
+stableId 832208d5b7ce1253
+at Features/Shapes.feature:3
+open: TestRunReport.html#sid-832208d5b7ce1253
+✗ 0     When a value task step runs  0s
+0 calls · interactions s6 · flow s6
+
+=== Failures.md, without the file's own header
+## Clusters
+Failures whose error messages begin with the same line (with a Shouldly message's check, from its second line; for one Shouldly wrote without the test's source, whose first line is the actual value, its check and expected value instead). One of each group is worked through in full below; the rest are listed here with their addresses. The grouping is by that text and nothing more, so treat a group as a strong hint that one caus
+### Common Language Runtime detected an invalid program. — 4 scenarios
+| Address | stableId | Scenario |
+|---|---|---|
+| `s2` | `c0ec791abc30943d` | A guard clause in a value task step |
+| `s4` | `9b651afadf5e6ab4` | A value task with a number |
+| `s5` | `f0eb7fc867c9cfac` | The issue's number |
+| `s6` | `832208d5b7ce1253` | The issue's value task |
+## Failures
+### 1. Step method shapes › A guard clause in a task step
+`s1` · stableId `1ddccc60693ac70a` · [open in the report](TestRunReport.html#sid-1ddccc60693ac70a) · written at `Features/Shapes.feature:19` · 0.01s
+Thrown at `Spike.Shapes.Features.StepMethodShapesFeature.AGuardClauseInATaskStep()` — `Features\Shapes.feature:20`
+Re-run: `dotnet test --filter "FullyQualifiedName~Spike.Shapes.Features.StepMethodShapesFeature.AGuardClauseInATaskStep"`
+**Error**
+```
+Error calling binding method 'Spike.Shapes:Spike.Shapes.ShapeSteps.WhenATaskStepThrowsBeforeItHasATask()': A name is required (Parameter 'name')
+```
+**Failing step** — `s1/0` When a task step throws before it has a task
+### 2. Step method shapes › A guard clause in a value task step
+`s2` · stableId `c0ec791abc30943d` · [open in the report](TestRunReport.html#sid-c0ec791abc30943d) · written at `Features/Shapes.feature:22` · 0s
+Thrown at `Spike.Shapes.Features.StepMethodShapesFeature.AGuardClauseInAValueTaskStep()` — `Features\Shapes.feature:23`
+Re-run: `dotnet test --filter "FullyQualifiedName~Spike.Shapes.Features.StepMethodShapesFeature.AGuardClauseInAValueTaskStep"`
+**Error**
+```
+Common Language Runtime detected an invalid program.
+```
+**Failing step** — `s2/0` When a value task step throws before it has a task
+## 3 further failures
+Not worked through here — clustered above, or past this file's budget. Every one of them is in `Failures.jsonl`, and `kronikol query failures .` has them all; `kronikol query attachments . sN` lists a row's attachments:
+| Address | stableId | Scenario | Error | Attachments |
+|---|---|---|---|---|
+| `s4` | `9b651afadf5e6ab4` | A value task with a number | Common Language Runtime detected an invalid program. |  |
+| `s5` | `f0eb7fc867c9cfac` | The issue's number | Common Language Runtime detected an invalid program. |  |
+| `s6` | `832208d5b7ce1253` | The issue's value task | Common Language Runtime detected an invalid program. |  |

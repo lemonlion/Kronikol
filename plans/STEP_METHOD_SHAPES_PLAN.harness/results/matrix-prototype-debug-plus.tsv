@@ -1,0 +1,636 @@
+id	config	family	outcome	all	value	threw	tree	ms	open	weaved	unwoven	ilverify	warnings	detail
+A00-issue-int	ReleasePlus	A sync value	OK		42		M:Passed	9	False	2				
+A00-void	ReleasePlus	A sync value	OK				M:Passed[Inner:Passed]	77	False	2				
+A01-array	ReleasePlus	A sync value	OK		System.Int32[]		M:Passed[Inner:Passed]	83	False	2				
+A01-bigstruct	ReleasePlus	A sync value	OK		Big(7)		M:Passed[Inner:Passed]	71	False	2				
+A01-bool	ReleasePlus	A sync value	OK		True		M:Passed[Inner:Passed]	76	False	2				
+A01-byte	ReleasePlus	A sync value	OK		7		M:Passed[Inner:Passed]	80	False	2				
+A01-char	ReleasePlus	A sync value	OK		7		M:Passed[Inner:Passed]	76	False	2				
+A01-class	ReleasePlus	A sync value	OK		Customer { Name = 7 }		M:Passed[Inner:Passed]	76	False	2				
+A01-datetime	ReleasePlus	A sync value	OK		07/07/0007 00:00:00		M:Passed[Inner:Passed]	76	False	2				
+A01-decimal	ReleasePlus	A sync value	OK		7		M:Passed[Inner:Passed]	81	False	2				
+A01-double	ReleasePlus	A sync value	OK		7		M:Passed[Inner:Passed]	83	False	2				
+A01-enum	ReleasePlus	A sync value	OK		Blue		M:Passed[Inner:Passed]	85	False	2				
+A01-float	ReleasePlus	A sync value	OK		7		M:Passed[Inner:Passed]	76	False	2				
+A01-guid	ReleasePlus	A sync value	OK		00000000-0000-0000-0000-000000000007		M:Passed[Inner:Passed]	82	False	2				
+A01-int	ReleasePlus	A sync value	OK		7		M:Passed[Inner:Passed]	85	False	2				
+A01-long	ReleasePlus	A sync value	OK		7		M:Passed[Inner:Passed]	77	False	2				
+A01-nint	ReleasePlus	A sync value	OK		7		M:Passed[Inner:Passed]	84	False	2				
+A01-nuint	ReleasePlus	A sync value	OK		7		M:Passed[Inner:Passed]	82	False	2				
+A01-nullable	ReleasePlus	A sync value	OK		7		M:Passed[Inner:Passed]	85	False	2				
+A01-object	ReleasePlus	A sync value	OK		7		M:Passed[Inner:Passed]	78	False	2				
+A01-sbyte	ReleasePlus	A sync value	OK		7		M:Passed[Inner:Passed]	80	False	2				
+A01-short	ReleasePlus	A sync value	OK		7		M:Passed[Inner:Passed]	85	False	2				
+A01-string	ReleasePlus	A sync value	OK		7		M:Passed[Inner:Passed]	82	False	2				
+A01-timespan	ReleasePlus	A sync value	OK		00:00:07		M:Passed[Inner:Passed]	83	False	2				
+A01-tuple	ReleasePlus	A sync value	OK		(7, 7)		M:Passed[Inner:Passed]	77	False	2				
+A01-uint	ReleasePlus	A sync value	OK		7		M:Passed[Inner:Passed]	79	False	2				
+A01-ulong	ReleasePlus	A sync value	OK		7		M:Passed[Inner:Passed]	82	False	2				
+A01-ushort	ReleasePlus	A sync value	OK		7		M:Passed[Inner:Passed]	81	False	2				
+A02-customer	ReleasePlus	A sync value	OK		Alice		M:Passed[Inner:Passed,A customer is registered(name=Alice):Passed]	93	False	3				
+A02-delegate	ReleasePlus	A sync value	OK		7		M:Passed[Inner:Passed]	82	False	2				
+A02-disposable	ReleasePlus	A sync value	OK		ok		M:Passed[Inner:Passed]	80	False	2				
+A02-dynamic	ReleasePlus	A sync value	OK		7		M:Passed[Inner:Passed]	81	False	2				
+A10-branch-to-ret	ReleasePlus	A sync value, control flow	OK		1		M(b=True):Passed[Inner:Passed]	91	False	2				
+A10-two-returns	ReleasePlus	A sync value, control flow	OK		2		M(b=False):Passed[Inner:Passed]	86	False	2				
+A11-ternary	ReleasePlus	A sync value, control flow	OK		1		M(b=True):Passed[Inner:Passed]	83	False	2				
+A12-switch-expr	ReleasePlus	A sync value, control flow	OK		c		M(k=3):Passed[Inner:Passed]	76	False	2				
+A12-switch-jump	ReleasePlus	A sync value, control flow	OK		12		M(k=2):Passed[Inner:Passed]	81	False	2				
+A13-starts-in-try	ReleasePlus	A sync value, control flow	OK		1		M:Passed[Inner:Passed]	80	False	2				
+A13-try-finally	ReleasePlus	A sync value, control flow	OK		1		M:Passed[Inner:Passed]	83	False	2				
+A14-catch-rethrow	ReleasePlus	A sync value, control flow	OK			InvalidOperationException	M:Failed[Inner:Passed]	92	False	2				
+A14-filter	ReleasePlus	A sync value, control flow	OK		7		M(k=1):Passed[Inner:Passed]	96	False	2				
+A14-plain-task-ends-in-catch	ReleasePlus	A sync value, control flow	OK			InvalidOperationException	M:Failed[Inner:Passed]	84	False	2				
+A14-try-catch	ReleasePlus	A sync value, control flow	OK		3		M:Passed[Inner:Passed]	77	False	2				
+A14-void-ends-in-catch	ReleasePlus	A sync value, control flow	OK			InvalidOperationException	M:Failed[Inner:Passed]	93	False	2				
+A14-void-ends-in-finally	ReleasePlus	A sync value, control flow	OK			InvalidOperationException	M:Failed[Inner:Passed]	78	False	2				
+A15-lock	ReleasePlus	A sync value, control flow	OK		5		M:Passed[Inner:Passed]	80	False	2				
+A15-using	ReleasePlus	A sync value, control flow	OK		4		M:Passed[Inner:Passed]	77	False	2				
+A16-loop	ReleasePlus	A sync value, control flow	OK		6		M:Passed[Inner:Passed]	76	False	2				
+A16-starts-with-loop	ReleasePlus	A sync value, control flow	OK		2		M:Passed[Inner:Passed]	76	False	2				
+A17-only-throws	ReleasePlus	A sync value, control flow	OK			InvalidOperationException	M:Failed	10	False	2				
+A17-throws-after-work	ReleasePlus	A sync value, control flow	OK			InvalidOperationException	M:Failed[Inner:Passed]	86	False	2				
+A18-recursion	ReleasePlus	A sync value, control flow	OK		1		M(k=1):Passed[M(k=0):Passed]	11	False	2				
+A19-stackalloc	ReleasePlus	A sync value, control flow	OK		8		M:Passed[Inner:Passed]	78	False	2				
+A19-void-branches	ReleasePlus	A sync value, control flow	OK				M(b=True):Passed[Inner:Passed]	81	False	2				
+A19-void-try	ReleasePlus	A sync value, control flow	OK				M:Passed[Inner:Passed]	94	False	2				
+A20-tail-value	ReleasePlus	A sync value, control flow	OK		4		M:Passed[Inner:Passed]	96	False	2				
+A20-tail-void	ReleasePlus	A sync value, control flow	OK		ok		M:Passed[Inner:Passed]	137	False	2				
+A21-full-opt-value	ReleasePlus	A sync value, control flow	OK		42		M:Passed[Inner:Passed]	100	False	2				
+A21-full-opt-value-task	ReleasePlus	A sync value, control flow	OK		42		M:Passed[Inner:Passed]	84	False	2				
+B01-generic-method-int	ReleasePlus	B generic, ref, span, pointer returns	OK		7		M(v=7):Passed[Inner:Passed]	80	False	2				
+B01-generic-method-string	ReleasePlus	B generic, ref, span, pointer returns	OK		7		M(v=7):Passed[Inner:Passed]	75	False	2				
+B02-generic-class	ReleasePlus	B generic, ref, span, pointer returns	OK		7		M(v=7):Passed[Inner:Passed]	75	False	2				
+B03-ref	ReleasePlus	B generic, ref, span, pointer returns	OK		5		M:Passed[Inner:Passed]	77	False	2		M: ReturnPtrToStack		
+B04-ref-readonly	ReleasePlus	B generic, ref, span, pointer returns	OK		6		M:Passed[Inner:Passed]	77	False	2		M: ReturnPtrToStack		
+B04-ref-readonly-virtual	ReleasePlus	B generic, ref, span, pointer returns	OK		6		M:Passed[Inner:Passed]	77	False	2		M: ReturnPtrToStack		
+B05-ref-generic	ReleasePlus	B generic, ref, span, pointer returns	OK		5		M(a=System.Int32[]):Passed[Inner:Passed]	89	False	2		M: ReturnPtrToStack		
+B06-readonly-span	ReleasePlus	B generic, ref, span, pointer returns	OK		3		M:Passed[Inner:Passed]	75	False	2				
+B06-span	ReleasePlus	B generic, ref, span, pointer returns	OK		2		M:Passed[Inner:Passed]	81	False	2				
+B07-ref-struct	ReleasePlus	B generic, ref, span, pointer returns	OK		4		M:Passed[Inner:Passed]	88	False	2				
+B08-pointer	ReleasePlus	B generic, ref, span, pointer returns	OK		16		M:Passed[Inner:Passed]	86	False	2		M: UnmanagedPointer		
+B09-function-pointer	ReleasePlus	B generic, ref, span, pointer returns	OK		9		M:Passed[Inner:Passed]	81	False	2				
+C01-async-task	ReleasePlus	C Task, Task<T>	OK				M:Passed[Inner:Passed]	75	False	2				
+C02-async-task-guid	ReleasePlus	C Task, Task<T>	OK		00000000-0000-0000-0000-000000000000		M:Passed[Inner:Passed]	73	False	2				
+C02-async-task-int	ReleasePlus	C Task, Task<T>	OK		42		M:Passed[Inner:Passed]	82	False	2				
+C02-async-task-string	ReleasePlus	C Task, Task<T>	OK		s		M:Passed[Inner:Passed]	79	False	2				
+C03-plain-task	ReleasePlus	C Task, Task<T>	OK				M:Passed[Inner:Passed]	80	False	2				
+C03-plain-task-int	ReleasePlus	C Task, Task<T>	OK		3		M:Passed[Inner:Passed]	84	False	2				
+C04-plain-task-completed	ReleasePlus	C Task, Task<T>	OK				M:Passed[Inner:Passed]	9	False	2				
+C05-plain-task-int-sync-throw	ReleasePlus	C Task, Task<T>	OK			InvalidOperationException	M:Failed	13	False	2				
+C05-plain-task-sync-throw	ReleasePlus	C Task, Task<T>	OK			InvalidOperationException	M:Failed[Inner:Passed]	10	False	2				
+C05-sync-guard-clause	ReleasePlus	C Task, Task<T>	OK			ArgumentNullException	M(name=null):Failed	11	False	2				
+C05-sync-throw-then-next-step	ReleasePlus	C Task, Task<T>	OK				M:Failed,Next:Passed	9	False	3				
+C06-async-throw-after-await	ReleasePlus	C Task, Task<T>	OK			InvalidOperationException	M:Failed[Inner:Passed]	85	False	2				
+C06-async-throw-before-await	ReleasePlus	C Task, Task<T>	OK			InvalidOperationException	M:Failed[Inner:Passed]	10	False	2				
+C07-faulted	ReleasePlus	C Task, Task<T>	OK			InvalidOperationException	M:Failed	10	False	2				
+C08-cancelled	ReleasePlus	C Task, Task<T>	OK			TaskCanceledException	M:Failed	11	False	2				
+C09-multiple-returns	ReleasePlus	C Task, Task<T>	OK				M(b=False):Passed[Inner:Passed]	72	False	2				
+C10-null-task	ReleasePlus	C Task, Task<T>	OK			NullReferenceException	M:Failed	18	False	2				
+C11-generic-class	ReleasePlus	C Task, Task<T>	OK		7		M(v=7):Passed[Inner:Passed]	80	False	2				
+C11-generic-method	ReleasePlus	C Task, Task<T>	OK		7		M(v=7):Passed[Inner:Passed]	78	False	2				
+C12-task-subclass	ReleasePlus	C Task, Task<T>	OK		ok		Inner:Passed	-1	False	1	<home>/AppData\Local\Temp\kronikol-226-probe\run\prototype-debug-plus\ReleasePlus\S_C12_task_subclass_ReleasePlus.cs, line 20, in Steps.M: it returns MyTask, which the weaver cannot wait for, so its step would close when the method returns			
+C13-whenall-keeps-both-faults	ReleasePlus	C Task, Task<T>	OK		1		M:Failed	12	False	2				
+D00-issue-value-task	ReleasePlus	D ValueTask, ValueTask<T>	OK				M:Passed[Inner:Passed]	127	False	2				
+D01-async-value-task	ReleasePlus	D ValueTask, ValueTask<T>	OK				M:Passed[Inner:Passed]	99	False	2				
+D02-async-big	ReleasePlus	D ValueTask, ValueTask<T>	OK		Big(4)		M:Passed[Inner:Passed]	74	False	2				
+D02-async-guid	ReleasePlus	D ValueTask, ValueTask<T>	OK		00000000-0000-0000-0000-000000000000		M:Passed[Inner:Passed]	82	False	2				
+D02-async-int	ReleasePlus	D ValueTask, ValueTask<T>	OK		42		M:Passed[Inner:Passed]	73	False	2				
+D02-async-string	ReleasePlus	D ValueTask, ValueTask<T>	OK		s		M:Passed[Inner:Passed]	92	False	2				
+D03-completed	ReleasePlus	D ValueTask, ValueTask<T>	OK				M:Passed[Inner:Passed]	22	False	2				
+D03-default	ReleasePlus	D ValueTask, ValueTask<T>	OK				M:Passed[Inner:Passed]	15	False	2				
+D04-from-result	ReleasePlus	D ValueTask, ValueTask<T>	OK		42		M:Passed[Inner:Passed]	19	False	2				
+D04-from-result-api	ReleasePlus	D ValueTask, ValueTask<T>	OK		42		M:Passed[Inner:Passed]	19	False	2				
+D05-wraps-task	ReleasePlus	D ValueTask, ValueTask<T>	OK				M:Passed[Inner:Passed]	83	False	2				
+D05-wraps-task-int	ReleasePlus	D ValueTask, ValueTask<T>	OK		3		M:Passed[Inner:Passed]	82	False	2				
+D06-source-backed	ReleasePlus	D ValueTask, ValueTask<T>	OK				M:Passed[Inner:Passed]	78	False	2				
+D06-source-backed-int	ReleasePlus	D ValueTask, ValueTask<T>	OK		5		M:Passed[Inner:Passed]	73	False	2				
+D07-pooling-builder	ReleasePlus	D ValueTask, ValueTask<T>	OK				M:Passed[Inner:Passed]	76	False	2				
+D07-pooling-builder-int	ReleasePlus	D ValueTask, ValueTask<T>	OK		3		M:Passed[Inner:Passed]	95	False	2				
+D08-sync-throw	ReleasePlus	D ValueTask, ValueTask<T>	OK			InvalidOperationException	M:Failed[Inner:Passed]	16	False	2				
+D08-sync-throw-int	ReleasePlus	D ValueTask, ValueTask<T>	OK			InvalidOperationException	M:Failed	28	False	2				
+D09-faulted	ReleasePlus	D ValueTask, ValueTask<T>	OK			InvalidOperationException	M:Failed	18	False	2				
+D09-throw-after-await	ReleasePlus	D ValueTask, ValueTask<T>	OK			InvalidOperationException	M:Failed[Inner:Passed]	98	False	2				
+D10-cancelled	ReleasePlus	D ValueTask, ValueTask<T>	OK			TaskCanceledException	M:Failed	12	False	2				
+D11-generic-class	ReleasePlus	D ValueTask, ValueTask<T>	OK		7		M(v=7):Passed[Inner:Passed]	83	False	2				
+D11-generic-method	ReleasePlus	D ValueTask, ValueTask<T>	OK		7		M(v=7):Passed[Inner:Passed]	85	False	2				
+D12-as-task-by-caller	ReleasePlus	D ValueTask, ValueTask<T>	OK		2		M:Passed[Inner:Passed]	94	False	2				
+D13-multiple-returns	ReleasePlus	D ValueTask, ValueTask<T>	OK		2		M(b=False):Passed[Inner:Passed]	12	False	2				
+E01-iterator	ReleasePlus	E deferred work, other awaitables	OK		3		Inner:Passed	-1	False	1	<home>/AppData\Local\Temp\kronikol-226-probe\run\prototype-debug-plus\ReleasePlus\S_E01_iterator_ReleasePlus.cs, line 20, in Steps.M: it is an iterator, whose body runs while its caller enumerates it, after the method has returned			
+E02-iterator-enumerator	ReleasePlus	E deferred work, other awaitables	OK		1		Inner:Passed	-1	False	1	<home>/AppData\Local\Temp\kronikol-226-probe\run\prototype-debug-plus\ReleasePlus\S_E02_iterator_enumerator_ReleasePlus.cs, line 20, in Steps.M: it is an iterator, whose body runs while its caller enumerates it, after the method has returned			
+E03-async-iterator	ReleasePlus	E deferred work, other awaitables	OK		3		Inner:Passed	-1	False	1	<home>/AppData\Local\Temp\kronikol-226-probe\run\prototype-debug-plus\ReleasePlus\S_E03_async_iterator_ReleasePlus.cs, line 20, in Steps.M: it is an iterator, whose body runs while its caller enumerates it, after the method has returned			
+E04-async-enumerator	ReleasePlus	E deferred work, other awaitables	OK		1		Inner:Passed	-1	False	1	<home>/AppData\Local\Temp\kronikol-226-probe\run\prototype-debug-plus\ReleasePlus\S_E04_async_enumerator_ReleasePlus.cs, line 20, in Steps.M: it is an iterator, whose body runs while its caller enumerates it, after the method has returned			
+E05-async-void	ReleasePlus	E deferred work, other awaitables	OK		ok		Inner:Passed	-1	False	1	<home>/AppData\Local\Temp\kronikol-226-probe\run\prototype-debug-plus\ReleasePlus\S_E05_async_void_ReleasePlus.cs, line 20, in Steps.M: it is async void, which nothing can wait for, so its step would close at its first await			
+E06-task-like	ReleasePlus	E deferred work, other awaitables	OK		ok		Inner:Passed	-1	False	1	<home>/AppData\Local\Temp\kronikol-226-probe\run\prototype-debug-plus\ReleasePlus\S_E06_task_like_ReleasePlus.cs, line 40, in Steps.M: it returns MyLike, which the weaver cannot wait for, so its step would close when the method returns			
+E07-awaitable-struct	ReleasePlus	E deferred work, other awaitables	OK		ok		Inner:Passed	-1	False	1	<home>/AppData\Local\Temp\kronikol-226-probe\run\prototype-debug-plus\ReleasePlus\S_E07_awaitable_struct_ReleasePlus.cs, line 20, in Steps.M: it returns Aw, which the weaver cannot wait for, so its step would close when the method returns			
+E08-configured-task	ReleasePlus	E deferred work, other awaitables	OK		ok		Inner:Passed	-1	False	1	<home>/AppData\Local\Temp\kronikol-226-probe\run\prototype-debug-plus\ReleasePlus\S_E08_configured_task_ReleasePlus.cs, line 20, in Steps.M: it returns ConfiguredTaskAwaitable, which the weaver cannot wait for, so its step would close when the method returns			
+E09-configured-value-task	ReleasePlus	E deferred work, other awaitables	OK		ok		Inner:Passed	-1	False	1	<home>/AppData\Local\Temp\kronikol-226-probe\run\prototype-debug-plus\ReleasePlus\S_E09_configured_value_task_ReleasePlus.cs, line 20, in Steps.M: it returns ConfiguredValueTaskAwaitable, which the weaver cannot wait for, so its step would close when the method returns			
+E10-yield-awaitable	ReleasePlus	E deferred work, other awaitables	OK		ok		Inner:Passed	-1	False	1	<home>/AppData\Local\Temp\kronikol-226-probe\run\prototype-debug-plus\ReleasePlus\S_E10_yield_awaitable_ReleasePlus.cs, line 20, in Steps.M: it returns YieldAwaitable, which the weaver cannot wait for, so its step would close when the method returns			
+E11-awaitable-interface	ReleasePlus	E deferred work, other awaitables	OK		ok		Inner:Passed	-1	False	1	<home>/AppData\Local\Temp\kronikol-226-probe\run\prototype-debug-plus\ReleasePlus\S_E11_awaitable_interface_ReleasePlus.cs, line 20, in Steps.M: it returns IAw, which the weaver cannot wait for, so its step would close when the method returns			
+E12-awaitable-base-interface	ReleasePlus	E deferred work, other awaitables	OK		ok		Inner:Passed	-1	False	1	<home>/AppData\Local\Temp\kronikol-226-probe\run\prototype-debug-plus\ReleasePlus\S_E12_awaitable_base_interface_ReleasePlus.cs, line 20, in Steps.M: it returns IAw2, which the weaver cannot wait for, so its step would close when the method returns			
+E20-lazy-linq	ReleasePlus	E deferred work, other awaitables	OK		5		M:Passed[Inner:Passed]	76	False	2				
+E21-func-task	ReleasePlus	E deferred work, other awaitables	OK		ok		M:Passed[Inner:Passed]	73	False	2				
+E22-object-holding-task	ReleasePlus	E deferred work, other awaitables	OK		True		M:Passed[Inner:Passed]	74	False	2				
+E23-list	ReleasePlus	E deferred work, other awaitables	OK		1		M:Passed[Inner:Passed]	81	False	2				
+E24-own-type-named-task	ReleasePlus	E deferred work, other awaitables	OK		True		M:Passed[Inner:Passed]	72	False	2				
+E25-array-of-tasks	ReleasePlus	E deferred work, other awaitables	OK		1		M:Passed[Inner:Passed]	71	False	2				
+E26-generic-task-constraint	ReleasePlus	E deferred work, other awaitables	OK		ok		Inner:Passed	-1	False	1	<home>/AppData\Local\Temp\kronikol-226-probe\run\prototype-debug-plus\ReleasePlus\S_E26_generic_task_constraint_ReleasePlus.cs, line 20, in Steps.M: it returns T, which the weaver cannot wait for, so its step would close when the method returns			
+E27-nullable-value-task	ReleasePlus	E deferred work, other awaitables	OK		False		M:Passed[Inner:Passed]	75	False	2				
+F00-by-value	ReleasePlus	F parameters	OK				M(x=1,s=a):Passed[Inner:Passed]	82	False	2				
+F01-ref-int	ReleasePlus	F parameters	OK		2		M(x=1):Passed[Inner:Passed]	82	False	2				
+F02-out-int	ReleasePlus	F parameters	OK		7		M:Passed[Inner:Passed]	83	False	2				
+F03-in-int	ReleasePlus	F parameters	OK				M(x=5):Passed[Inner:Passed]	83	False	2				
+F03-in-interface	ReleasePlus	F parameters	OK				M(x=5):Passed[Inner:Passed]	86	False	2				
+F03-in-virtual	ReleasePlus	F parameters	OK				M(x=5):Passed[Inner:Passed]	75	False	2				
+F03-ref-readonly-int	ReleasePlus	F parameters	OK				M(x=5):Passed[Inner:Passed]	82	False	2				
+F04-in-big	ReleasePlus	F parameters	OK				M(b=Big(3)):Passed[Inner:Passed]	85	False	2				
+F05-ref-string	ReleasePlus	F parameters	OK		b		M(s=a):Passed[Inner:Passed]	78	False	2				
+F06-out-string	ReleasePlus	F parameters	OK		b		M:Passed[Inner:Passed]	75	False	2				
+F07-ref-generic-int	ReleasePlus	F parameters	OK				M(v=4):Passed[Inner:Passed]	84	False	2				
+F07-ref-generic-string	ReleasePlus	F parameters	OK				M(v=a):Passed[Inner:Passed]	83	False	2				
+F08-out-and-value	ReleasePlus	F parameters	OK		3		M(a=1):Passed[Inner:Passed]	74	False	2				
+F10-span	ReleasePlus	F parameters	OK				M(s=[Span<Int32>]):Passed[Inner:Passed]	85	False	2				
+F11-readonly-span	ReleasePlus	F parameters	OK		3		M(s=[ReadOnlySpan<Char>]):Passed[Inner:Passed]	79	False	2				
+F12-ref-struct	ReleasePlus	F parameters	OK				M(r=[Rs]):Passed[Inner:Passed]	87	False	2				
+F13-pointer	ReleasePlus	F parameters	OK				M(p=[Int32*]):Passed[Inner:Passed]	89	False	2				
+F14-function-pointer	ReleasePlus	F parameters	OK				M(p=[delegate*]):Passed[Inner:Passed]	85	False	2				
+F15-allows-ref-struct	ReleasePlus	F parameters	OK				M(v=[T]):Passed[Inner:Passed]	73	False	2				
+F15-allows-ref-struct-int	ReleasePlus	F parameters	OK				M(v=[T]):Passed[Inner:Passed]	78	False	2				
+F15-params-span	ReleasePlus	F parameters	OK				M(xs=[ReadOnlySpan<Int32>]):Passed[Inner:Passed]	90	False	2				
+F16-arglist	ReleasePlus	F parameters	OK				M:Passed[Inner:Passed]	75	False	2				
+F16-params-array	ReleasePlus	F parameters	OK				M(xs=System.Int32[]):Passed[Inner:Passed]	90	False	2				
+F16-ref-allows-ref-struct	ReleasePlus	F parameters	OK				M(v=[T]):Passed[Inner:Passed]	81	False	2				
+F16-ref-array	ReleasePlus	F parameters	OK				M(a=System.Int32[]):Passed[Inner:Passed]	88	False	2				
+F16-ref-span	ReleasePlus	F parameters	OK				M(s=[Span<Int32>]):Passed[Inner:Passed]	87	False	2				
+F16-typed-reference	ReleasePlus	F parameters	OK				M(r=[TypedReference]):Passed[Inner:Passed]	90	False	2				
+F17-generic-by-value	ReleasePlus	F parameters	OK				M(v=1):Passed[Inner:Passed]	83	False	2				
+F18-nullable-null	ReleasePlus	F parameters	OK				M(v=null,s=null):Passed[Inner:Passed]	74	False	2				
+F19-plain-task-ref	ReleasePlus	F parameters	OK		2		M(x=1):Passed[Inner:Passed]	81	False	2				
+F20-value-task-in	ReleasePlus	F parameters	OK		ok		M(x=1):Passed[Inner:Passed]	78	False	2				
+F21-tostring-throws	ReleasePlus	F parameters	OK		1		M(b=[Bad]):Passed[Inner:Passed]	79	False	2				
+F22-async-tostring-throws	ReleasePlus	F parameters	OK		1		M(b=[Bad]):Passed[Inner:Passed]	85	False	2				
+G01-static	ReleasePlus	G kinds of method	OK		1		M:Passed[Inner:Passed]	73	False	2				
+G02-override	ReleasePlus	G kinds of method	OK		2		M:Passed[M:Passed]	81	False	2				
+G03-interface-default	ReleasePlus	G kinds of method	OK		1		M:Passed	92	False	1				
+G04-explicit-interface	ReleasePlus	G kinds of method	OK		1		M:Passed	79	False	1				
+G05-property-get	ReleasePlus	G kinds of method	OK		1		M:Passed[Inner:Passed]	91	False	2				
+G05-property-init	ReleasePlus	G kinds of method	OK		3		M(value=3):Passed[Inner:Passed]	83	False	2				
+G05-property-set	ReleasePlus	G kinds of method	OK		2		M(value=2):Passed[Inner:Passed]	90	False	2				
+G06-indexer	ReleasePlus	G kinds of method	OK		3		M(i=3):Passed[Inner:Passed]	78	False	2				
+G07-operator	ReleasePlus	G kinds of method	OK		1		M(a=Steps,b=Steps):Passed	86	False	1				
+G08-extension	ReleasePlus	G kinds of method	OK		2		M(x=1):Passed	85	False	1				
+G10-local-function	ReleasePlus	G kinds of method	OK		1		M:Passed[Inner:Passed]	83	False	2				
+G10-local-function-name	ReleasePlus	G kinds of method	OK		1		The local step:Passed	-1	False	2				
+G10-local-function-void-name	ReleasePlus	G kinds of method	OK		ok		The local step:Passed	-1	False	2				
+G11-local-capturing-struct	ReleasePlus	G kinds of method	OK		2		M:Passed[Inner:Passed]	78	False	2				
+G11-local-void-capturing	ReleasePlus	G kinds of method	OK		2		M:Passed[Inner:Passed]	97	False	2				
+G12-async-lambda	ReleasePlus	G kinds of method	OK		1		M:Passed	87	False	2				
+G12-lambda	ReleasePlus	G kinds of method	OK		1		M:Passed	75	False	2				
+G12-lambda-capturing	ReleasePlus	G kinds of method	OK		2		M:Passed	89	False	2				
+G12-lambda-name	ReleasePlus	G kinds of method	OK		1		The method:Passed	-1	False	2				
+G12-lambda-void-name	ReleasePlus	G kinds of method	OK		ok		The method:Passed	-1	False	2				
+G13-struct-method	ReleasePlus	G kinds of method	OK		2		M:Passed	80	False	1				
+G13-struct-void	ReleasePlus	G kinds of method	OK		1		M:Passed	122	False	1				
+G14-readonly-struct	ReleasePlus	G kinds of method	OK		1		M:Passed	88	False	1				
+G15-ref-struct-method	ReleasePlus	G kinds of method	OK		2		M:Passed	86	False	1				
+G16-partial	ReleasePlus	G kinds of method	OK		1		M:Passed[Inner:Passed]	87	False	2				
+G17-static-abstract	ReleasePlus	G kinds of method	OK		1		M:Passed	80	False	1				
+G18-nested	ReleasePlus	G kinds of method	OK		1		M:Passed	71	False	1				
+G19-abstract-declared	ReleasePlus	G kinds of method	OK		1			-1	False	0				
+G20-keyword-attributes	ReleasePlus	G kinds of method	OK		15		M:Passed,W:Passed,Th:Passed,B:Passed,Bw:Passed	73	False	6				
+G21-finalizer	ReleasePlus	G kinds of method	OK		ok			-1	False	2				
+G22-returns-allows-ref-struct	ReleasePlus	G kinds of method	OK		3		M(v=[T]):Passed[Inner:Passed]	76	False	2				
+H00-task	ReleasePlus	H SkipIf, Task<T>	OK		ok		M:Bypassed	10	False	2				
+H00-value-task	ReleasePlus	H SkipIf, ValueTask<T>	OK		ok		M:Bypassed	14	False	2				
+H00-void	ReleasePlus	H SkipIf, sync value	OK		ok		M:Bypassed	10	False	2				
+H01-array	ReleasePlus	H SkipIf, sync value	OK		(null)		M:Bypassed	10	False	2				
+H01-bigstruct	ReleasePlus	H SkipIf, sync value	OK		Big(0)		M:Bypassed	9	False	2				
+H01-bool	ReleasePlus	H SkipIf, sync value	OK		False		M:Bypassed	12	False	2				
+H01-byte	ReleasePlus	H SkipIf, sync value	OK		0		M:Bypassed	12	False	2				
+H01-char	ReleasePlus	H SkipIf, sync value	OK		 		M:Bypassed	11	False	2				
+H01-class	ReleasePlus	H SkipIf, sync value	OK		(null)		M:Bypassed	14	False	2				
+H01-datetime	ReleasePlus	H SkipIf, sync value	OK		01/01/0001 00:00:00		M:Bypassed	10	False	2				
+H01-decimal	ReleasePlus	H SkipIf, sync value	OK		0		M:Bypassed	10	False	2				
+H01-double	ReleasePlus	H SkipIf, sync value	OK		0		M:Bypassed	10	False	2				
+H01-enum	ReleasePlus	H SkipIf, sync value	OK		Red		M:Bypassed	17	False	2				
+H01-float	ReleasePlus	H SkipIf, sync value	OK		0		M:Bypassed	11	False	2				
+H01-guid	ReleasePlus	H SkipIf, sync value	OK		00000000-0000-0000-0000-000000000000		M:Bypassed	15	False	2				
+H01-int	ReleasePlus	H SkipIf, sync value	OK		0		M:Bypassed	10	False	2				
+H01-long	ReleasePlus	H SkipIf, sync value	OK		0		M:Bypassed	10	False	2				
+H01-nint	ReleasePlus	H SkipIf, sync value	OK		0		M:Bypassed	11	False	2				
+H01-nuint	ReleasePlus	H SkipIf, sync value	OK		0		M:Bypassed	11	False	2				
+H01-nullable	ReleasePlus	H SkipIf, sync value	OK		(null)		M:Bypassed	12	False	2				
+H01-object	ReleasePlus	H SkipIf, sync value	OK		(null)		M:Bypassed	12	False	2				
+H01-sbyte	ReleasePlus	H SkipIf, sync value	OK		0		M:Bypassed	13	False	2				
+H01-short	ReleasePlus	H SkipIf, sync value	OK		0		M:Bypassed	10	False	2				
+H01-string	ReleasePlus	H SkipIf, sync value	OK		(null)		M:Bypassed	10	False	2				
+H01-timespan	ReleasePlus	H SkipIf, sync value	OK		00:00:00		M:Bypassed	13	False	2				
+H01-tuple	ReleasePlus	H SkipIf, sync value	OK		(0, )		M:Bypassed	9	False	2				
+H01-uint	ReleasePlus	H SkipIf, sync value	OK		0		M:Bypassed	14	False	2				
+H01-ulong	ReleasePlus	H SkipIf, sync value	OK		0		M:Bypassed	9	False	2				
+H01-ushort	ReleasePlus	H SkipIf, sync value	OK		0		M:Bypassed	11	False	2				
+H02-array	ReleasePlus	H SkipIf, Task<T>	OK		(null)		M:Bypassed	12	False	2				
+H02-bigstruct	ReleasePlus	H SkipIf, Task<T>	OK		Big(0)		M:Bypassed	9	False	2				
+H02-bool	ReleasePlus	H SkipIf, Task<T>	OK		False		M:Bypassed	9	False	2				
+H02-byte	ReleasePlus	H SkipIf, Task<T>	OK		0		M:Bypassed	10	False	2				
+H02-char	ReleasePlus	H SkipIf, Task<T>	OK		 		M:Bypassed	9	False	2				
+H02-class	ReleasePlus	H SkipIf, Task<T>	OK		(null)		M:Bypassed	22	False	2				
+H02-datetime	ReleasePlus	H SkipIf, Task<T>	OK		01/01/0001 00:00:00		M:Bypassed	10	False	2				
+H02-decimal	ReleasePlus	H SkipIf, Task<T>	OK		0		M:Bypassed	11	False	2				
+H02-double	ReleasePlus	H SkipIf, Task<T>	OK		0		M:Bypassed	10	False	2				
+H02-enum	ReleasePlus	H SkipIf, Task<T>	OK		Red		M:Bypassed	17	False	2				
+H02-float	ReleasePlus	H SkipIf, Task<T>	OK		0		M:Bypassed	10	False	2				
+H02-guid	ReleasePlus	H SkipIf, Task<T>	OK		00000000-0000-0000-0000-000000000000		M:Bypassed	10	False	2				
+H02-int	ReleasePlus	H SkipIf, Task<T>	OK		0		M:Bypassed	10	False	2				
+H02-long	ReleasePlus	H SkipIf, Task<T>	OK		0		M:Bypassed	13	False	2				
+H02-nint	ReleasePlus	H SkipIf, Task<T>	OK		0		M:Bypassed	11	False	2				
+H02-nuint	ReleasePlus	H SkipIf, Task<T>	OK		0		M:Bypassed	15	False	2				
+H02-nullable	ReleasePlus	H SkipIf, Task<T>	OK		(null)		M:Bypassed	11	False	2				
+H02-object	ReleasePlus	H SkipIf, Task<T>	OK		(null)		M:Bypassed	11	False	2				
+H02-sbyte	ReleasePlus	H SkipIf, Task<T>	OK		0		M:Bypassed	10	False	2				
+H02-short	ReleasePlus	H SkipIf, Task<T>	OK		0		M:Bypassed	13	False	2				
+H02-string	ReleasePlus	H SkipIf, Task<T>	OK		(null)		M:Bypassed	12	False	2				
+H02-timespan	ReleasePlus	H SkipIf, Task<T>	OK		00:00:00		M:Bypassed	18	False	2				
+H02-tuple	ReleasePlus	H SkipIf, Task<T>	OK		(0, )		M:Bypassed	13	False	2				
+H02-uint	ReleasePlus	H SkipIf, Task<T>	OK		0		M:Bypassed	11	False	2				
+H02-ulong	ReleasePlus	H SkipIf, Task<T>	OK		0		M:Bypassed	9	False	2				
+H02-ushort	ReleasePlus	H SkipIf, Task<T>	OK		0		M:Bypassed	10	False	2				
+H03-array	ReleasePlus	H SkipIf, ValueTask<T>	OK		(null)		M:Bypassed	10	False	2				
+H03-bigstruct	ReleasePlus	H SkipIf, ValueTask<T>	OK		Big(0)		M:Bypassed	10	False	2				
+H03-bool	ReleasePlus	H SkipIf, ValueTask<T>	OK		False		M:Bypassed	13	False	2				
+H03-byte	ReleasePlus	H SkipIf, ValueTask<T>	OK		0		M:Bypassed	9	False	2				
+H03-char	ReleasePlus	H SkipIf, ValueTask<T>	OK		 		M:Bypassed	12	False	2				
+H03-class	ReleasePlus	H SkipIf, ValueTask<T>	OK		(null)		M:Bypassed	14	False	2				
+H03-datetime	ReleasePlus	H SkipIf, ValueTask<T>	OK		01/01/0001 00:00:00		M:Bypassed	13	False	2				
+H03-decimal	ReleasePlus	H SkipIf, ValueTask<T>	OK		0		M:Bypassed	14	False	2				
+H03-double	ReleasePlus	H SkipIf, ValueTask<T>	OK		0		M:Bypassed	9	False	2				
+H03-enum	ReleasePlus	H SkipIf, ValueTask<T>	OK		Red		M:Bypassed	9	False	2				
+H03-float	ReleasePlus	H SkipIf, ValueTask<T>	OK		0		M:Bypassed	9	False	2				
+H03-guid	ReleasePlus	H SkipIf, ValueTask<T>	OK		00000000-0000-0000-0000-000000000000		M:Bypassed	10	False	2				
+H03-int	ReleasePlus	H SkipIf, ValueTask<T>	OK		0		M:Bypassed	11	False	2				
+H03-long	ReleasePlus	H SkipIf, ValueTask<T>	OK		0		M:Bypassed	10	False	2				
+H03-nint	ReleasePlus	H SkipIf, ValueTask<T>	OK		0		M:Bypassed	9	False	2				
+H03-nuint	ReleasePlus	H SkipIf, ValueTask<T>	OK		0		M:Bypassed	11	False	2				
+H03-nullable	ReleasePlus	H SkipIf, ValueTask<T>	OK		(null)		M:Bypassed	10	False	2				
+H03-object	ReleasePlus	H SkipIf, ValueTask<T>	OK		(null)		M:Bypassed	14	False	2				
+H03-sbyte	ReleasePlus	H SkipIf, ValueTask<T>	OK		0		M:Bypassed	10	False	2				
+H03-short	ReleasePlus	H SkipIf, ValueTask<T>	OK		0		M:Bypassed	11	False	2				
+H03-string	ReleasePlus	H SkipIf, ValueTask<T>	OK		(null)		M:Bypassed	12	False	2				
+H03-timespan	ReleasePlus	H SkipIf, ValueTask<T>	OK		00:00:00		M:Bypassed	11	False	2				
+H03-tuple	ReleasePlus	H SkipIf, ValueTask<T>	OK		(0, )		M:Bypassed	10	False	2				
+H03-uint	ReleasePlus	H SkipIf, ValueTask<T>	OK		0		M:Bypassed	10	False	2				
+H03-ulong	ReleasePlus	H SkipIf, ValueTask<T>	OK		0		M:Bypassed	13	False	2				
+H03-ushort	ReleasePlus	H SkipIf, ValueTask<T>	OK		0		M:Bypassed	11	False	2				
+H04-generic-method	ReleasePlus	H SkipIf, sync value	OK		0		M(v=7):Bypassed	11	False	2				
+H04-generic-method-ref	ReleasePlus	H SkipIf, sync value	OK		(null)		M(v=x):Bypassed	11	False	2				
+H05-task-generic-int	ReleasePlus	H SkipIf, Task<T>	OK		0		M(v=7):Bypassed	11	False	2				
+H05-task-generic-string	ReleasePlus	H SkipIf, Task<T>	OK		(null)		M(v=x):Bypassed	11	False	2				
+H06-span	ReleasePlus	H SkipIf, sync value	OK		0		M:Bypassed	10	False	2		M: ReturnPtrToStack		
+H07-pointer	ReleasePlus	H SkipIf, sync value	OK		0		M:Bypassed	10	False	2		M: UnmanagedPointer		
+H08-ref-off	ReleasePlus	H SkipIf, sync value	OK		3		M:Passed	10	False	2		M: ReturnPtrToStack	KRONIKOL005 SkipIf on 'Steps.M': a method that returns a ref has nothing to return when it is bypassed. Step will execute normally.	
+H09-out-param	ReleasePlus	H SkipIf, sync value	OK		(null)		M:Bypassed	9	False	2				
+H09-out-span	ReleasePlus	H SkipIf, sync value	OK		0		M:Bypassed	9	False	2				
+H10-false-runs-task	ReleasePlus	H SkipIf, Task<T>	OK		00000000-0000-0000-0000-000000000000		M:Passed[Inner:Passed]	92	False	2				
+H10-false-runs-value	ReleasePlus	H SkipIf, sync value	OK		42		M:Passed[Inner:Passed]	72	False	2				
+H10-false-runs-value-task	ReleasePlus	H SkipIf, ValueTask<T>	OK		42		M:Passed[Inner:Passed]	86	False	2				
+H11-nested-bypass-task	ReleasePlus	H SkipIf, Task<T>	OK		ok		M:Passed[S:Bypassed,Inner:Passed]	80	False	3				
+H11-nested-bypass-task-int	ReleasePlus	H SkipIf, Task<T>	OK		ok		M:Passed[S:Bypassed,Inner:Passed]	72	False	3				
+H11-nested-bypass-value	ReleasePlus	H SkipIf, sync value	OK		ok		M:Passed[S:Bypassed,Inner:Passed]	75	False	3				
+H11-nested-bypass-void	ReleasePlus	H SkipIf, sync value	OK		ok		M:Passed[S:Bypassed,Inner:Passed]	75	False	3				
+H12-bypassed-with-reason-then-next	ReleasePlus	H SkipIf, sync value	OK		ok		S:Bypassed,Next:Passed	-1	False	3				
+H13-skip-locals-init	ReleasePlus	H SkipIf, sync value	OK		0		M:Bypassed	13	False	2				
+H20-property	ReleasePlus	H SkipIf, the member it names	OK		ok		M:Bypassed	12	False	2				
+H21-field	ReleasePlus	H SkipIf, the member it names	OK		ok		M:Bypassed	10	False	2				
+H22-static-on-static	ReleasePlus	H SkipIf, the member it names	OK		ok		M:Bypassed	10	False	2				
+H23-static-on-instance	ReleasePlus	H SkipIf, the member it names	OK		ok		M:Bypassed	10	False	2				
+H24-instance-on-static	ReleasePlus	H SkipIf, the member it names	OK		ok		M:Passed	72	False	2			KRONIKOL005 SkipIf member 'Off' on type 'Steps' is an instance member, and step 'M' is static, so it has no instance to read it from. Step will execute normally.	
+H24-instance-on-static-arg	ReleasePlus	H SkipIf, the member it names	OK		ok		M(s=a):Passed	76	False	2			KRONIKOL005 SkipIf member 'Off' on type 'Steps' is an instance member, and step 'M' is static, so it has no instance to read it from. Step will execute normally.	
+H25-generic-class-field	ReleasePlus	H SkipIf, the member it names	OK		ok		M:Bypassed	11	False	1				
+H25-generic-class-property	ReleasePlus	H SkipIf, the member it names	OK		ok		M:Bypassed	9	False	1				
+H25-generic-class-static	ReleasePlus	H SkipIf, the member it names	OK		ok		M:Bypassed	9	False	1				
+H26-generic-base-field	ReleasePlus	H SkipIf, the member it names	OK		ok		M:Bypassed	10	False	1				
+H26-generic-base-property	ReleasePlus	H SkipIf, the member it names	OK		ok		M:Bypassed	9	False	1				
+H27-private-base-field	ReleasePlus	H SkipIf, the member it names	OK		ok		M:Passed	87	False	1			KRONIKOL005 SkipIf member 'Off' on type 'B' cannot be read from 'Steps'. Step will execute normally.	
+H27-private-base-property	ReleasePlus	H SkipIf, the member it names	OK		ok		M:Passed	81	False	1			KRONIKOL005 SkipIf member 'Off' on type 'B' cannot be read from 'Steps'. Step will execute normally.	
+H28-private-protected	ReleasePlus	H SkipIf, the member it names	OK		ok		M:Bypassed	9	False	1				
+H28-protected-base	ReleasePlus	H SkipIf, the member it names	OK		ok		M:Bypassed	12	False	1				
+H29-struct-field	ReleasePlus	H SkipIf, the member it names	OK		ok		M:Bypassed	16	False	1				
+H29-struct-generic	ReleasePlus	H SkipIf, the member it names	OK		ok		M:Bypassed	9	False	1				
+H29-struct-property	ReleasePlus	H SkipIf, the member it names	OK		ok		M:Bypassed	13	False	1				
+H30-virtual-property	ReleasePlus	H SkipIf, the member it names	OK		ok		M:Bypassed	11	False	2				
+H31-not-bool	ReleasePlus	H SkipIf, the member it names	OK		ok		M:Passed	79	False	2			KRONIKOL005 SkipIf member 'Off' on type 'Steps' is not a bool property (found System.Int32). Step will execute normally.	
+H32-not-found	ReleasePlus	H SkipIf, the member it names	OK		ok		M:Passed	100	False	2			KRONIKOL005 SkipIf member 'Nope' not found on type 'Steps' or its base types. Step will execute normally.	
+H33-write-only-property	ReleasePlus	H SkipIf, the member it names	OK		ok		M:Passed	121	False	2			KRONIKOL005 SkipIf member 'Off' not found on type 'Steps' or its base types. Step will execute normally.	
+H34-method-not-member	ReleasePlus	H SkipIf, the member it names	OK		ok		M:Passed	74	False	2			KRONIKOL005 SkipIf member 'Off' not found on type 'Steps' or its base types. Step will execute normally.	
+H35-on-iterator	ReleasePlus	H SkipIf, the member it names	OK		1			-1	False	1	<home>/AppData\Local\Temp\kronikol-226-probe\run\prototype-debug-plus\ReleasePlus\S_H35_on_iterator_ReleasePlus.cs, line 20, in Steps.M: it is an iterator, whose body runs while its caller enumerates it, after the method has returned, and its SkipIf is not read, so the body runs whatever that says			
+H36-indexer-named	ReleasePlus	H SkipIf, the member it names	OK		ok		M:Passed	87	False	2			KRONIKOL005 SkipIf member 'Item' not found on type 'Steps' or its base types. Step will execute normally.	
+H37-generic-chain	ReleasePlus	H SkipIf, the member it names	OK		ok		M:Bypassed	9	False	1				
+H38-generic-self-through-base	ReleasePlus	H SkipIf, the member it names	OK		ok		M:Bypassed	9	False	1				
+I01-value-assertions-first	ReleasePlus	I with assertion weaving, assertions-first	OK		42		M:Passed[~assert:Passed]	31	False	1				
+I01-value-steps-first	ReleasePlus	I with assertion weaving, steps-first	OK		42		M:Passed[~assert:Passed]	29	False	1				
+I02-value-task-assertions-first	ReleasePlus	I with assertion weaving, assertions-first	OK		ok		M:Passed[~assert:Passed]	115	False	1				
+I02-value-task-steps-first	ReleasePlus	I with assertion weaving, steps-first	OK		ok		M:Passed[~assert:Passed]	104	False	1				
+I03-value-task-int-assertions-first	ReleasePlus	I with assertion weaving, assertions-first	OK		3		M:Passed[~assert:Passed]	111	False	1				
+I03-value-task-int-steps-first	ReleasePlus	I with assertion weaving, steps-first	OK		3		M:Passed[~assert:Passed]	102	False	1				
+I04-plain-task-assertions-first	ReleasePlus	I with assertion weaving, assertions-first	OK		1		M:Passed[~assert:Passed]	29	False	1				
+I04-plain-task-steps-first	ReleasePlus	I with assertion weaving, steps-first	OK		1		M:Passed[~assert:Passed]	29	False	1				
+I05-branches-assertions-first	ReleasePlus	I with assertion weaving, assertions-first	OK		1		M(b=True):Passed[~assert:Passed]	34	False	1				
+I05-branches-steps-first	ReleasePlus	I with assertion weaving, steps-first	OK		1		M(b=True):Passed[~assert:Passed]	36	False	1				
+I06-failing-assertions-first	ReleasePlus	I with assertion weaving, assertions-first	OK			ShouldAssertException	M:Failed[~assert:Failed]	60	False	1				
+I06-failing-steps-first	ReleasePlus	I with assertion weaving, steps-first	OK			ShouldAssertException	M:Failed[~assert:Failed]	60	False	1				
+I07-returned-assertion-assertions-first	ReleasePlus	I with assertion weaving, assertions-first	OK		x		M:Passed[~assert:Passed]	39	False	1				
+I07-returned-assertion-steps-first	ReleasePlus	I with assertion weaving, steps-first	OK		x		M:Passed[~assert:Passed]	31	False	1				
+I08-void-assertions-first	ReleasePlus	I with assertion weaving, assertions-first	OK		ok		M:Passed[~assert:Passed]	29	False	1				
+I08-void-steps-first	ReleasePlus	I with assertion weaving, steps-first	OK		ok		M:Passed[~assert:Passed]	35	False	1				
+I09-async-task-assertions-first	ReleasePlus	I with assertion weaving, assertions-first	OK		ok		M:Passed[~assert:Passed]	109	False	1				
+I09-async-task-steps-first	ReleasePlus	I with assertion weaving, steps-first	OK		ok		M:Passed[~assert:Passed]	92	False	1				
+I10-bypass-assertions-first	ReleasePlus	I with assertion weaving, assertions-first	OK		0		M:Bypassed	10	False	1				
+I10-bypass-steps-first	ReleasePlus	I with assertion weaving, steps-first	OK		0		M:Bypassed	9	False	1				
+I11-expression-void-assertions-first	ReleasePlus	I with assertion weaving, assertions-first	OK		ok		M:Passed[~assert:Passed]	28	False	1				
+I11-expression-void-steps-first	ReleasePlus	I with assertion weaving, steps-first	OK		ok		M:Passed[~assert:Passed]	46	False	1				
+I12-expression-value-assertions-first	ReleasePlus	I with assertion weaving, assertions-first	OK		a		M:Passed[~assert:Passed]	28	False	1				
+I12-expression-value-steps-first	ReleasePlus	I with assertion weaving, steps-first	OK		a		M:Passed[~assert:Passed]	54	False	1				
+I13-expression-task-assertions-first	ReleasePlus	I with assertion weaving, assertions-first	OK		x		M:Passed[~assert:Passed]	45	False	1				
+I13-expression-task-steps-first	ReleasePlus	I with assertion weaving, steps-first	OK		x		M:Passed[~assert:Passed]	97	False	1				
+I14-expression-in-parameter-assertions-first	ReleasePlus	I with assertion weaving, assertions-first	OK		ok		M(x=2):Passed[~assert:Passed]	52	False	1				
+I14-expression-in-parameter-steps-first	ReleasePlus	I with assertion weaving, steps-first	OK		ok		M(x=2):Passed[~assert:Passed]	47	False	1				
+I15-returned-value-assertions-first	ReleasePlus	I with assertion weaving, assertions-first	OK		a		M:Passed[~assert:Passed]	38	False	1				
+I15-returned-value-steps-first	ReleasePlus	I with assertion weaving, steps-first	OK		a		M:Passed[~assert:Passed]	40	False	1				
+I16-expression-failing-assertions-first	ReleasePlus	I with assertion weaving, assertions-first	OK			ShouldAssertException	M:Failed[~assert:Failed]	50	False	1				
+I16-expression-failing-steps-first	ReleasePlus	I with assertion weaving, steps-first	OK			ShouldAssertException	M:Failed[~assert:Failed]	83	False	1				
+Z01a-skipif-const-true	ReleasePlus	Z found by review	OK		ok		M:Bypassed	10	False	2				
+Z01b-skipif-const-false	ReleasePlus	Z found by review	OK		ok		M:Passed	9	False	2				
+Z02a-skipif-getter-throws	ReleasePlus	Z found by review	OK		ok		M:Failed,Next:Passed	11	False	3				
+Z02b-skipif-getter-throws-task	ReleasePlus	Z found by review	OK		ok		M:Failed,Next:Passed	9	False	3				
+Z03a-nested-derived-private-property	ReleasePlus	Z found by review	OK		ok		M:Bypassed	9	False	1				
+Z03b-nested-derived-private-field	ReleasePlus	Z found by review	OK		ok		M:Bypassed	9	False	1				
+Z03c-ivt-internal-base	ReleasePlus	Z found by review	OK		ok		M:Bypassed	21	False	1				
+Z04-private-hides-public-further-up	ReleasePlus	Z found by review	OK		ok		M:Bypassed	10	False	1				
+Z05a-static-virtual-member	ReleasePlus	Z found by review	OK		ok		M:Bypassed	9	False	1				
+Z05b-static-abstract-member	ReleasePlus	Z found by review	OK		ok		M:Passed	13	False	1			KRONIKOL005 SkipIf member 'Off' on type 'IS' is static abstract, so it has no value without a type argument. Step will execute normally.	
+Z06-extension-block-method	ReleasePlus	Z found by review	OK		2		M(x=1):Passed	77	False	1				
+Z07-extension-block-skipif	ReleasePlus	Z found by review	OK		0		M(x=1):Bypassed	10	False	1				
+Z08-extension-property	ReleasePlus	Z found by review	OK		4		M(x=2):Passed	77	False	1				
+Z09-extension-generic	ReleasePlus	Z found by review	OK		1		M(l=[List<Int32>]):Passed	89	False	1				
+Z10-extension-iterator	ReleasePlus	Z found by review	OK		1			-1	False	0	<home>/AppData\Local\Temp\kronikol-226-probe\run\prototype-debug-plus\ReleasePlus\S_Z10_extension_iterator_ReleasePlus.cs, line 18, in Ext.It: it is an iterator, whose body runs while its caller enumerates it, after the method has returned			
+Z100-no-body-interface-with-an-implementation	ReleasePlus	Z found by review	OK		1		M:Passed[Inner:Passed]	78	False	2				
+Z100-no-body-with-an-override	ReleasePlus	Z found by review	OK		1		M:Passed[Inner:Passed]	84	False	2				
+Z101-function-pointer-in-a-base-chain	ReleasePlus	Z found by review	OK		ok		M:Bypassed	10	False	1				
+Z101-function-pointer-member-not-found	ReleasePlus	Z found by review	OK		ok		M:Passed	75	False	1			KRONIKOL005 SkipIf member 'Nope' not found on type 'Steps`1' or its base types. Step will execute normally.	
+Z102-reference-held-open-while-weaving	ReleasePlus	Z found by review	OK		ok		M(s=[LibStruct]):Passed[Inner:Passed]	85	False	2				
+Z103-friend-named-in-another-case	ReleasePlus	Z found by review	OK		ok		M:Bypassed	9	False	1				
+Z104-ignores-access-checks	ReleasePlus	Z found by review	OK		ok		M:Bypassed	8	False	1		M: MethodAccess		
+Z105-message-getter-throws-async	ReleasePlus	Z found by review	OK			BadEx	M:Failed[Inner:Passed]	13	False	2				
+Z105-message-getter-throws-plain-task	ReleasePlus	Z found by review	OK			BadEx	M:Failed[Inner:Passed]	9	False	2				
+Z105-message-getter-throws-void	ReleasePlus	Z found by review	OK			BadEx	M:Failed[Inner:Passed]	9	False	2				
+Z106-partial-async-void-reads-as-void	ReleasePlus	Z found by review	OK		ok		M:Passed,Inner:Passed	10	False	2				
+Z106-partial-iterator-reads-as-a-value	ReleasePlus	Z found by review	OK		1		M:Passed,Inner:Passed	9	False	2				
+Z108-generic-getawaiter	ReleasePlus	Z found by review	OK		True		M:Passed[Inner:Passed]	78	False	2				
+Z108-getawaiter-returning-void	ReleasePlus	Z found by review	OK		True		M:Passed[Inner:Passed]	80	False	2				
+Z108-internal-getawaiter-other-assembly	ReleasePlus	Z found by review	OK		True		M:Passed[Inner:Passed]	72	False	2				
+Z108-protected-getawaiter	ReleasePlus	Z found by review	OK		True		M:Passed[Inner:Passed]	86	False	2				
+Z109-ref-task-reads-as-a-value	ReleasePlus	Z found by review	OK		ok		M:Passed[Inner:Passed]	77	False	2		M: ReturnPtrToStack		
+Z10b-extension-async	ReleasePlus	Z found by review	OK		2		M(x=1):Passed	84	False	1				
+Z10c-extension-static	ReleasePlus	Z found by review	OK		2		M:Passed	81	False	1				
+Z110-volatile-field	ReleasePlus	Z found by review	OK		ok		M:Bypassed	9	False	1				
+Z110-volatile-field-of-a-generic-base	ReleasePlus	Z found by review	OK		ok		M:Bypassed	9	False	1				
+Z111-static-virtual-member	ReleasePlus	Z found by review	OK		ok		M:Passed	78	False	1				
+Z112-explicit-generic-interface-name	ReleasePlus	Z found by review	OK		1		M:Passed	71	False	1				
+Z112-explicit-interface-name	ReleasePlus	Z found by review	OK		1		M:Passed	77	False	1				
+Z112-lambda-in-file-local-field-initializer	ReleasePlus	Z found by review	OK		1		Steps:Passed	-1	False	1				
+Z112-lambda-in-generic-field-initializer	ReleasePlus	Z found by review	OK		1		Steps:Passed	-1	False	1				
+Z112__lambda-in-a-file-local-field-initializer	ReleasePlus	Z found by review	OK		1		Steps:Passed	-1	False	1				
+Z113-value-task-source-status-throws	ReleasePlus	Z found by review	OK			InvalidOperationException	M:Failed[Inner:Passed]	9	False	2				
+Z11a-compound-assignment	ReleasePlus	Z found by review	OK		2		M(v=2):Passed	84	False	1				
+Z11b-instance-increment-struct	ReleasePlus	Z found by review	OK		1		M:Passed	74	False	1				
+Z12-field-keyword	ReleasePlus	Z found by review	OK		2		M:Passed[Inner:Passed]	71	False	2				
+Z120-assertion-first-in-a-catch-assertions-first	ReleasePlus	I with assertion weaving, assertions-first	OK		ok		M:Passed[~assert:Passed]	29	False	1				
+Z120-assertion-first-in-a-catch-steps-first	ReleasePlus	I with assertion weaving, steps-first	OK		ok		M:Passed[~assert:Passed]	33	False	1				
+Z120-assertion-first-in-a-finally-and-more-assertions-first	ReleasePlus	I with assertion weaving, assertions-first	OK		ok		M:Passed[~assert:Passed]	29	False	1				
+Z120-assertion-first-in-a-finally-and-more-steps-first	ReleasePlus	I with assertion weaving, steps-first	OK		ok		M:Passed[~assert:Passed]	34	False	1				
+Z120-assertion-first-in-a-finally-assertions-first	ReleasePlus	I with assertion weaving, assertions-first	OK		ok		M:Passed[~assert:Passed]	33	False	1				
+Z120-assertion-first-in-a-finally-steps-first	ReleasePlus	I with assertion weaving, steps-first	OK		ok		M:Passed[~assert:Passed]	29	False	1				
+Z124-assertion-in-a-short-circuit-steps-first	ReleasePlus	I with assertion weaving, steps-first	OK		True		M(s=a):Passed	12	False	1				ASSERTION-UNWOVEN: Steps.M, line 21: a way through the statement returns from the step
+Z125-assertion-in-a-short-circuit-of-a-plain-method-assertions-first	ReleasePlus	I with assertion weaving, assertions-first	OK		True		M:Passed	10	False	1				ASSERTION-UNWOVEN: Steps.Go, line 21: the statement returns from the method part-way
+Z125-assertion-in-a-short-circuit-of-a-plain-method-steps-first	ReleasePlus	I with assertion weaving, steps-first	OK		True		M:Passed	10	False	1				ASSERTION-UNWOVEN: Steps.Go, line 21: the statement returns from the method part-way
+Z127-a-stale-pdb-assertions-first	ReleasePlus	I with assertion weaving, assertions-first	OK		ok		M:Passed	13	False	1				
+Z127-a-stale-pdb-steps-first	ReleasePlus	I with assertion weaving, steps-first	OK		ok		M:Passed	13	False	1				
+Z127b-a-stale-pdb-beside-an-embedded-one-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		ok		M:Passed[~assert:Passed]	95	False	1				
+Z127b-a-stale-pdb-beside-an-embedded-one-steps-first	ReleasePlus	Z found by review, steps-first	OK		ok		M:Passed[~assert:Passed]	27	False	1				
+Z128-null-path-in-a-lock-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		7		M(s=a):Passed[~assert:Passed]	26	False	1				
+Z128-null-path-in-a-lock-steps-first	ReleasePlus	Z found by review, steps-first	OK		7		M(s=a):Passed[~assert:Passed]	30	False	1				
+Z128-null-path-in-a-plain-method-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		7		M:Passed[~assert:Passed]	25	False	1				
+Z128-null-path-in-a-plain-method-steps-first	ReleasePlus	Z found by review, steps-first	OK		7		M:Passed[~assert:Passed]	26	False	1				
+Z128-null-path-in-a-task-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		7		M(s=a):Passed[~assert:Passed]	35	False	1				
+Z128-null-path-in-a-task-steps-first	ReleasePlus	Z found by review, steps-first	OK		7		M(s=a):Passed[~assert:Passed]	28	False	1				
+Z128-null-path-in-a-try-finally-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		7		M(s=a):Passed[~assert:Passed]	27	False	1				
+Z128-null-path-in-a-try-finally-steps-first	ReleasePlus	Z found by review, steps-first	OK		7		M(s=a):Passed[~assert:Passed]	29	False	1				
+Z128-null-path-in-a-using-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		7		M(s=a):Passed[~assert:Passed]	34	False	1				
+Z128-null-path-in-a-using-steps-first	ReleasePlus	Z found by review, steps-first	OK		7		M(s=a):Passed[~assert:Passed]	31	False	1				
+Z128-null-path-in-an-init-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		7		M:Passed[~assert:Passed]	26	False	1				
+Z128-null-path-in-an-init-steps-first	ReleasePlus	Z found by review, steps-first	OK		7		M:Passed[~assert:Passed]	24	False	1				
+Z128-null-path-taken-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		7		M(s=null):Passed	10	False	1				
+Z128-null-path-taken-steps-first	ReleasePlus	Z found by review, steps-first	OK		7		M(s=null):Passed	11	False	1				
+Z128-null-path-under-runtime-async-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		7		M(s=a):Passed[~assert:Passed]	30	False	1				
+Z128-null-path-under-runtime-async-steps-first	ReleasePlus	Z found by review, steps-first	OK		7		M(s=a):Passed[~assert:Passed]	39	False	1				
+Z129-throw-ends-a-task-step-assertions-first	ReleasePlus	Z found by review, assertions-first	OK			ArithmeticException	M(s=a):Failed	11	False	1				ASSERTION-UNWOVEN: Steps.M, line 21: the statement ends by throwing
+Z129-throw-ends-a-task-step-steps-first	ReleasePlus	Z found by review, steps-first	OK			ArithmeticException	M(s=a):Failed	15	False	1				ASSERTION-UNWOVEN: Steps.M, line 21: the statement ends by throwing
+Z129-throw-ends-a-void-step-assertions-first	ReleasePlus	Z found by review, assertions-first	OK			ArithmeticException	M(s=a):Failed	11	False	1				ASSERTION-UNWOVEN: Steps.M, line 21: the statement ends by throwing
+Z129-throw-ends-a-void-step-steps-first	ReleasePlus	Z found by review, steps-first	OK			ArithmeticException	M(s=a):Failed	16	False	1				ASSERTION-UNWOVEN: Steps.M, line 21: the statement ends by throwing
+Z129-throw-ends-an-async-step-assertions-first	ReleasePlus	Z found by review, assertions-first	OK			ArithmeticException	M(s=a):Failed	42	False	1				ASSERTION-UNWOVEN: Steps/<M>d__0.MoveNext, line 21: the statement ends by throwing
+Z129-throw-ends-an-async-step-steps-first	ReleasePlus	Z found by review, steps-first	OK			ArithmeticException	M(s=a):Failed	13	False	1				ASSERTION-UNWOVEN: Steps/<M>d__0.MoveNext, line 21: the statement ends by throwing
+Z129-throw-ends-an-expression-step-assertions-first	ReleasePlus	Z found by review, assertions-first	OK			ArithmeticException	M(s=a):Failed	11	False	1				ASSERTION-UNWOVEN: Steps.M, line 21: the statement ends by throwing
+Z129-throw-ends-an-expression-step-steps-first	ReleasePlus	Z found by review, steps-first	OK			ArithmeticException	M(s=a):Failed	12	False	1				ASSERTION-UNWOVEN: Steps.M, line 21: the statement ends by throwing
+Z129-throw-in-a-catch-assertions-first	ReleasePlus	Z found by review, assertions-first	OK			ArithmeticException	M(s=a):Failed	16	False	1				ASSERTION-UNWOVEN: Steps.M, line 21: the statement ends by throwing
+Z129-throw-in-a-catch-steps-first	ReleasePlus	Z found by review, steps-first	OK			ArithmeticException	M(s=a):Failed	11	False	1				ASSERTION-UNWOVEN: Steps.M, line 21: the statement ends by throwing
+Z129-throw-in-a-plain-method-assertions-first	ReleasePlus	Z found by review, assertions-first	OK			ArithmeticException	M:Failed	10	False	1				ASSERTION-UNWOVEN: Steps.Go, line 21: the statement ends by throwing
+Z129-throw-in-a-plain-method-steps-first	ReleasePlus	Z found by review, steps-first	OK			ArithmeticException	M:Failed	11	False	1				ASSERTION-UNWOVEN: Steps.Go, line 21: the statement ends by throwing
+Z129-throw-in-a-try-assertions-first	ReleasePlus	Z found by review, assertions-first	OK			ArithmeticException	M(s=a):Failed	17	False	1				ASSERTION-UNWOVEN: Steps.M, line 21: the statement ends by throwing
+Z129-throw-in-a-try-steps-first	ReleasePlus	Z found by review, steps-first	OK			ArithmeticException	M(s=a):Failed	12	False	1				ASSERTION-UNWOVEN: Steps.M, line 21: the statement ends by throwing
+Z129-throw-in-a-using-assertions-first	ReleasePlus	Z found by review, assertions-first	OK			ArithmeticException	M(s=a):Failed	12	False	1				ASSERTION-UNWOVEN: Steps.M, line 21: the statement ends by throwing
+Z129-throw-in-a-using-steps-first	ReleasePlus	Z found by review, steps-first	OK			ArithmeticException	M(s=a):Failed	11	False	1				ASSERTION-UNWOVEN: Steps.M, line 21: the statement ends by throwing
+Z129-throw-in-every-arm-assertions-first	ReleasePlus	Z found by review, assertions-first	OK			ArithmeticException	M(s=a):Failed	18	False	1				ASSERTION-UNWOVEN: Steps.M, line 21: the statement ends by throwing | Steps.M, line 21: the statement ends by throwing
+Z129-throw-in-every-arm-steps-first	ReleasePlus	Z found by review, steps-first	OK			ArithmeticException	M(s=a):Failed	15	False	1				ASSERTION-UNWOVEN: Steps.M, line 21: the statement ends by throwing | Steps.M, line 21: the statement ends by throwing
+Z129-throw-should-throw-assertions-first	ReleasePlus	Z found by review, assertions-first	OK			InvalidOperationException	M:Failed	14	False	1				ASSERTION-UNWOVEN: Steps.M, line 21: the statement ends by throwing
+Z129-throw-should-throw-steps-first	ReleasePlus	Z found by review, steps-first	OK			InvalidOperationException	M:Failed	12	False	1				ASSERTION-UNWOVEN: Steps.M, line 21: the statement ends by throwing
+Z129-throw-with-skipif-assertions-first	ReleasePlus	Z found by review, assertions-first	OK			ArithmeticException	M(s=a):Failed	14	False	1				ASSERTION-UNWOVEN: Steps.M, line 21: the statement ends by throwing
+Z129-throw-with-skipif-steps-first	ReleasePlus	Z found by review, steps-first	OK			ArithmeticException	M(s=a):Failed	11	False	1				ASSERTION-UNWOVEN: Steps.M, line 21: the statement ends by throwing
+Z13-partial-property	ReleasePlus	Z found by review	OK		1		M:Passed[Inner:Passed]	75	False	2				
+Z130-async-void-with-skipif-bypassed	ReleasePlus	Z found by review	OK		0		M:Bypassed	10	False	1				
+Z130-async-void-with-skipif-running	ReleasePlus	Z found by review	OK		1		M:Passed	12	False	1				
+Z131-assertion-first-in-a-second-catch-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		ok		M:Passed[~assert:Passed]	67	False	1				
+Z131-assertion-first-in-a-second-catch-steps-first	ReleasePlus	Z found by review, steps-first	OK		ok		M:Passed[~assert:Passed]	24	False	1				
+Z132-assertion-in-a-filter-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		ok		M(s=a):Passed	54	False	1				ASSERTION-UNWOVEN: Steps.M, line 21: the statement is in an exception filter
+Z132-assertion-in-a-filter-steps-first	ReleasePlus	Z found by review, steps-first	OK		ok		M(s=a):Passed	14	False	1				ASSERTION-UNWOVEN: Steps.M, line 21: the statement is in an exception filter
+Z133-awaited-assertion-in-a-finally-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		ok		M:Passed	21	False	1				ASSERTION-UNWOVEN: Steps/<M>d__1.MoveNext, line 21: the statement ends by throwing
+Z133-awaited-assertion-in-a-finally-steps-first	ReleasePlus	Z found by review, steps-first	OK		ok		M:Passed	19	False	1				ASSERTION-UNWOVEN: Steps/<M>d__1.MoveNext, line 21: the statement ends by throwing
+Z134-assertion-whose-exception-message-throws-assertions-first	ReleasePlus	Z found by review, assertions-first	OK			InvalidOperationException	M:Failed	9	False	1				
+Z134-assertion-whose-exception-message-throws-steps-first	ReleasePlus	Z found by review, steps-first	OK			InvalidOperationException	M:Failed	9	False	1				
+Z135-type-parameter-that-is-a-task	ReleasePlus	Z found by review	OK		ok			-1	False	0	<home>/AppData\Local\Temp\kronikol-226-probe\run\prototype-debug-plus\ReleasePlus\S_Z135_type_parameter_that_is_a_task_ReleasePlus.cs, line 20, in Steps.M: it returns T0, which the weaver cannot wait for, so its step would close when the method returns			
+Z135-type-parameter-that-is-a-task-of-int	ReleasePlus	Z found by review	OK		4			-1	False	0	<home>/AppData\Local\Temp\kronikol-226-probe\run\prototype-debug-plus\ReleasePlus\S_Z135_type_parameter_that_is_a_task_of_int_ReleasePlus.cs, line 20, in Steps.M: it returns T0, which the weaver cannot wait for, so its step would close when the method returns			
+Z135-type-parameter-through-another	ReleasePlus	Z found by review	OK		ok			-1	False	0	<home>/AppData\Local\Temp\kronikol-226-probe\run\prototype-debug-plus\ReleasePlus\S_Z135_type_parameter_through_another_ReleasePlus.cs, line 20, in Steps.M: it returns T0, which the weaver cannot wait for, so its step would close when the method returns			
+Z136-a-pdb-named-for-itself-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		ok		M:Passed[~assert:Passed]	26	False	1				
+Z136-a-pdb-named-for-itself-steps-first	ReleasePlus	Z found by review, steps-first	OK		ok		M:Passed[~assert:Passed]	26	False	1				
+Z136c-a-file-bearing-the-pdb-name-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		ok		M:Passed[~assert:Passed]	30	False	1				
+Z136c-a-file-bearing-the-pdb-name-steps-first	ReleasePlus	Z found by review, steps-first	OK		ok		M:Passed[~assert:Passed]	27	False	1				
+Z136d-a-pdb-differing-only-by-case-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		ok		M:Passed[~assert:Passed]	31	False	1				
+Z136d-a-pdb-differing-only-by-case-steps-first	ReleasePlus	Z found by review, steps-first	OK		ok		M:Passed[~assert:Passed]	25	False	1				
+Z137-null-path-after-the-assertion-in-a-lock-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		7		M:Passed[~assert:Passed]	29	False	1				
+Z137-null-path-after-the-assertion-in-a-lock-steps-first	ReleasePlus	Z found by review, steps-first	OK		7		M:Passed[~assert:Passed]	30	False	1				
+Z137-null-path-after-the-assertion-in-a-try-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		7		M:Passed[~assert:Passed]	34	False	1				
+Z137-null-path-after-the-assertion-in-a-try-steps-first	ReleasePlus	Z found by review, steps-first	OK		7		M:Passed[~assert:Passed]	51	False	1				
+Z137-null-path-after-the-assertion-in-a-using-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		7		M:Passed[~assert:Passed]	33	False	1				
+Z137-null-path-after-the-assertion-in-a-using-steps-first	ReleasePlus	Z found by review, steps-first	OK		7		M:Passed[~assert:Passed]	29	False	1				
+Z137-null-path-in-a-value-lambda-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		7		M:Passed[~assert:Passed]	32	False	1				
+Z137-null-path-in-a-value-lambda-steps-first	ReleasePlus	Z found by review, steps-first	OK		7		M:Passed[~assert:Passed]	31	False	1				
+Z137-null-path-in-a-void-method-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		ok		M:Passed[~assert:Passed]	27	False	1				
+Z137-null-path-in-a-void-method-steps-first	ReleasePlus	Z found by review, steps-first	OK		ok		M:Passed[~assert:Passed]	27	False	1				
+Z137-return-of-its-value-in-a-lock-on-a-step-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		1		M(s=a):Passed[~assert:Passed]	35	False	1				
+Z137-return-of-its-value-in-a-lock-on-a-step-steps-first	ReleasePlus	Z found by review, steps-first	OK		1		M(s=a):Passed[~assert:Passed]	44	False	1				
+Z137-return-of-its-value-in-a-try-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		1		M:Passed[~assert:Passed]	39	False	1				
+Z137-return-of-its-value-in-a-try-steps-first	ReleasePlus	Z found by review, steps-first	OK		1		M:Passed[~assert:Passed]	43	False	1				
+Z137-return-of-its-value-in-a-using-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		1		M:Passed[~assert:Passed]	24	False	1				
+Z137-return-of-its-value-in-a-using-on-a-step-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		1		M(s=a):Passed[~assert:Passed]	26	False	1				
+Z137-return-of-its-value-in-a-using-on-a-step-steps-first	ReleasePlus	Z found by review, steps-first	OK		1		M(s=a):Passed[~assert:Passed]	51	False	1				
+Z137-return-of-its-value-in-a-using-steps-first	ReleasePlus	Z found by review, steps-first	OK		1		M:Passed[~assert:Passed]	32	False	1				
+Z137-should-throw-chain-in-a-using-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		7		M:Passed[~assert:Passed]	35	False	1				
+Z137-should-throw-chain-in-a-using-steps-first	ReleasePlus	Z found by review, steps-first	OK		7		M:Passed[~assert:Passed]	29	False	1				
+Z137-ternary-of-assertions-in-a-using-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		7		M:Passed[~assert:Passed]	27	False	1				
+Z137-ternary-of-assertions-in-a-using-steps-first	ReleasePlus	Z found by review, steps-first	OK		7		M:Passed[~assert:Passed]	51	False	1				
+Z138-init-accessor-with-a-step-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		ok		M(value=a):Passed[~assert:Passed]	32	False	1				
+Z138-init-accessor-with-a-step-steps-first	ReleasePlus	Z found by review, steps-first	OK		ok		M(value=a):Passed[~assert:Passed]	44	False	1				
+Z138-init-accessor-with-no-step-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		ok		M:Passed[~assert:Passed]	50	False	1				
+Z138-init-accessor-with-no-step-steps-first	ReleasePlus	Z found by review, steps-first	OK		ok		M:Passed[~assert:Passed]	26	False	1				
+Z139-first-catch-rethrows-second-opens-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		ok		M:Passed[~assert:Passed]	27	False	1				
+Z139-first-catch-rethrows-second-opens-steps-first	ReleasePlus	Z found by review, steps-first	OK		ok		M:Passed[~assert:Passed]	27	False	1				
+Z139-two-catches-both-open-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		ok		M:Passed[~assert:Passed]	35	False	1				
+Z139-two-catches-both-open-steps-first	ReleasePlus	Z found by review, steps-first	OK		ok		M:Passed[~assert:Passed]	28	False	1				
+Z14-partial-event	ReleasePlus	Z found by review	OK		ok		M(value=System.Action):Passed	84	False	1				
+Z140-assertion-that-fails-in-a-statement-that-ends-by-throwing-assertions-first	ReleasePlus	Z found by review, assertions-first	OK			ShouldAssertException	M:Failed	31	False	1				ASSERTION-UNWOVEN: Steps.M, line 21: the statement ends by throwing
+Z140-assertion-that-fails-in-a-statement-that-ends-by-throwing-steps-first	ReleasePlus	Z found by review, steps-first	OK			ShouldAssertException	M:Failed	28	False	1				ASSERTION-UNWOVEN: Steps.M, line 21: the statement ends by throwing
+Z141-assertion-in-a-short-circuit-under-a-void-step-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		True		M:Passed	15	False	1				ASSERTION-UNWOVEN: Steps.Go, line 21: the statement returns from the method part-way
+Z141-assertion-in-a-short-circuit-under-a-void-step-steps-first	ReleasePlus	Z found by review, steps-first	OK		True		M:Passed	9	False	1				ASSERTION-UNWOVEN: Steps.Go, line 21: the statement returns from the method part-way
+Z142-an-arm-that-returns-beside-one-that-throws-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		1		M(b=True,s=a):Passed	12	False	1				ASSERTION-UNWOVEN: Steps.M, line 21: every way on from its assertion throws
+Z142-an-arm-that-returns-beside-one-that-throws-steps-first	ReleasePlus	Z found by review, steps-first	OK		1		M(b=True,s=a):Passed	16	False	1				ASSERTION-UNWOVEN: Steps.M, line 21: every way on from its assertion throws
+Z142b-the-arm-that-throws-assertions-first	ReleasePlus	Z found by review, assertions-first	OK			ArithmeticException	M(b=False,s=a):Failed	16	False	1				ASSERTION-UNWOVEN: Steps.M, line 21: every way on from its assertion throws
+Z142b-the-arm-that-throws-steps-first	ReleasePlus	Z found by review, steps-first	OK			ArithmeticException	M(b=False,s=a):Failed	12	False	1				ASSERTION-UNWOVEN: Steps.M, line 21: every way on from its assertion throws
+Z142c-a-coalesce-that-throws-assertions-first	ReleasePlus	Z found by review, assertions-first	OK			ArithmeticException	M(s=a,t=null):Failed	12	False	1				ASSERTION-UNWOVEN: Steps.M, line 21: the statement ends by throwing
+Z142c-a-coalesce-that-throws-steps-first	ReleasePlus	Z found by review, steps-first	OK			ArithmeticException	M(s=a,t=null):Failed	11	False	1				ASSERTION-UNWOVEN: Steps.M, line 21: every way on from its assertion throws
+Z142d-in-a-plain-method-assertions-first	ReleasePlus	Z found by review, assertions-first	OK			ArithmeticException	M:Failed	11	False	1				ASSERTION-UNWOVEN: Steps.Go, line 21: every way on from its assertion throws
+Z142d-in-a-plain-method-steps-first	ReleasePlus	Z found by review, steps-first	OK			ArithmeticException	M:Failed	10	False	1				ASSERTION-UNWOVEN: Steps.Go, line 21: every way on from its assertion throws
+Z142e-a-throw-with-another-way-on-keeps-its-note-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		a		M(v=a):Passed	10	False	1				ASSERTION-UNWOVEN: Steps.M, line 21: the statement ends by throwing
+Z142e-a-throw-with-another-way-on-keeps-its-note-steps-first	ReleasePlus	Z found by review, steps-first	OK		a		M(v=a):Passed[~assert:Passed]	32	False	1				
+Z143-a-guard-that-does-not-throw-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		ok		M:Passed	9	False	1				ASSERTION-UNWOVEN: Steps.Go, line 21: a branch out of the statement goes somewhere other than what follows it
+Z143-a-guard-that-does-not-throw-steps-first	ReleasePlus	Z found by review, steps-first	OK		ok		M:Passed	10	False	1				ASSERTION-UNWOVEN: Steps.Go, line 21: a branch out of the statement goes somewhere other than what follows it
+Z143-awaited-in-a-condition-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		else		M:Passed	19	False	1				ASSERTION-UNWOVEN: Steps/<Go>d__2.MoveNext, line 21: a branch out of the statement goes somewhere other than what follows it
+Z143-awaited-in-a-condition-steps-first	ReleasePlus	Z found by review, steps-first	OK		else		M:Passed	25	False	1				ASSERTION-UNWOVEN: Steps/<Go>d__2.MoveNext, line 21: a branch out of the statement goes somewhere other than what follows it
+Z143-in-a-while-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		3		M:Passed	13	False	1				ASSERTION-UNWOVEN: Steps.Go, line 21: a branch out of the statement goes somewhere other than what follows it
+Z143-in-a-while-steps-first	ReleasePlus	Z found by review, steps-first	OK		3		M:Passed	12	False	1				ASSERTION-UNWOVEN: Steps.Go, line 21: a branch out of the statement goes somewhere other than what follows it
+Z143-in-a-while-true-with-a-break-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		3		M:Passed	9	False	1				ASSERTION-UNWOVEN: Steps.Go, line 21: a branch out of the statement goes somewhere other than what follows it
+Z143-in-a-while-true-with-a-break-steps-first	ReleasePlus	Z found by review, steps-first	OK		3		M:Passed	11	False	1				ASSERTION-UNWOVEN: Steps.Go, line 21: a branch out of the statement goes somewhere other than what follows it
+Z143-in-an-if-takes-the-else-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		else		M:Passed	9	False	1				ASSERTION-UNWOVEN: Steps.Go, line 21: a branch out of the statement goes somewhere other than what follows it
+Z143-in-an-if-takes-the-else-steps-first	ReleasePlus	Z found by review, steps-first	OK		else		M:Passed	10	False	1				ASSERTION-UNWOVEN: Steps.Go, line 21: a branch out of the statement goes somewhere other than what follows it
+Z143-in-an-if-takes-the-then-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		then		M:Passed	9	False	1				ASSERTION-UNWOVEN: Steps.Go, line 21: a branch out of the statement goes somewhere other than what follows it
+Z143-in-an-if-takes-the-then-steps-first	ReleasePlus	Z found by review, steps-first	OK		then		M:Passed	10	False	1				ASSERTION-UNWOVEN: Steps.Go, line 21: a branch out of the statement goes somewhere other than what follows it
+Z143-on-a-value-step-carries-on-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		2		M(s=a):Passed	10	False	1				ASSERTION-UNWOVEN: Steps.M, line 21: a branch out of the statement goes somewhere other than what follows it
+Z143-on-a-value-step-carries-on-steps-first	ReleasePlus	Z found by review, steps-first	OK		2		M(s=a):Passed	14	False	1				ASSERTION-UNWOVEN: Steps.M, line 21: a branch out of the statement goes somewhere other than what follows it
+Z143-on-a-value-step-returns-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		1		M(s=abcdefgh):Passed	13	False	1				ASSERTION-UNWOVEN: Steps.M, line 21: a branch out of the statement goes somewhere other than what follows it
+Z143-on-a-value-step-returns-steps-first	ReleasePlus	Z found by review, steps-first	OK		1		M(s=abcdefgh):Passed	16	False	1				ASSERTION-UNWOVEN: Steps.M, line 21: a branch out of the statement goes somewhere other than what follows it
+Z143-on-a-value-step-with-an-and-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		False		M(s=):Passed	10	False	1				ASSERTION-UNWOVEN: Steps.M, line 21: a branch out of the statement goes somewhere other than what follows it
+Z143-on-a-value-step-with-an-and-steps-first	ReleasePlus	Z found by review, steps-first	OK		False		M(s=):Passed	9	False	1				ASSERTION-UNWOVEN: Steps.M, line 21: a branch out of the statement goes somewhere other than what follows it
+Z143-with-a-null-conditional-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		else		M:Passed	14	False	1				ASSERTION-UNWOVEN: Steps.Go, line 21: a branch out of the statement goes somewhere other than what follows it
+Z143-with-a-null-conditional-steps-first	ReleasePlus	Z found by review, steps-first	OK		else		M:Passed	10	False	1				ASSERTION-UNWOVEN: Steps.Go, line 21: a branch out of the statement goes somewhere other than what follows it
+Z143-with-an-and-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		else		M:Passed	8	False	1				ASSERTION-UNWOVEN: Steps.Go, line 21: a branch out of the statement goes somewhere other than what follows it
+Z143-with-an-and-steps-first	ReleasePlus	Z found by review, steps-first	OK		else		M:Passed	10	False	1				ASSERTION-UNWOVEN: Steps.Go, line 21: a branch out of the statement goes somewhere other than what follows it
+Z143b-a-null-path-in-a-then-arm-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		0		M:Passed[~assert:Passed]	29	False	1				
+Z143b-a-null-path-in-a-then-arm-steps-first	ReleasePlus	Z found by review, steps-first	OK		0		M:Passed[~assert:Passed]	26	False	1				
+Z143b-a-null-path-in-a-then-arm-with-more-after-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		2		M:Passed[~assert:Passed]	41	False	1				
+Z143b-a-null-path-in-a-then-arm-with-more-after-steps-first	ReleasePlus	Z found by review, steps-first	OK		2		M:Passed[~assert:Passed]	23	False	1				
+Z143b-a-null-path-in-a-try-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		ok		M:Passed[~assert:Passed]	46	False	1				
+Z143b-a-null-path-in-a-try-steps-first	ReleasePlus	Z found by review, steps-first	OK		ok		M:Passed[~assert:Passed]	27	False	1				
+Z144-a-step-named-movenext-with-an-and-steps-first	ReleasePlus	Z found by review, steps-first	OK		True		Move next(s=a):Passed	-1	False	1				ASSERTION-UNWOVEN: Steps.MoveNext, line 21: a way through the statement returns from the step
+Z144-a-step-named-movenext-with-arms-steps-first	ReleasePlus	Z found by review, steps-first	OK		b		Move next(b=False):Passed	-1	False	1				ASSERTION-UNWOVEN: Steps.MoveNext, line 21: a way through the statement returns from the step
+Z145-a-null-path-that-runs-has-no-note-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		7		M:Passed	9	False	1				
+Z145-a-null-path-that-runs-has-no-note-steps-first	ReleasePlus	Z found by review, steps-first	OK		7		M:Passed	9	False	1				
+Z146-a-task-handed-back-that-fails-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		ShouldAssertException		M:Failed[~assert:Failed]	77	False	1				
+Z146-a-task-handed-back-that-fails-steps-first	ReleasePlus	Z found by review, steps-first	OK		ShouldAssertException		M:Failed[~assert:Failed]	60	False	1				
+Z15-async-ref-local	ReleasePlus	Z found by review	OK		2		M:Passed[Inner:Passed]	72	False	2				
+Z16-generic-virtual-nested	ReleasePlus	Z found by review	OK		2		M(a=a,b=1,c=2):Passed	74	False	1				
+Z17-null-ref-param	ReleasePlus	Z found by review	OK		ok		M(x=null):Passed[Inner:Passed]	11	False	2				
+Z19a-internal-getawaiter	ReleasePlus	Z found by review	OK		ok		Inner:Passed	-1	False	1	<home>/AppData\Local\Temp\kronikol-226-probe\run\prototype-debug-plus\ReleasePlus\S_Z19a_internal_getawaiter_ReleasePlus.cs, line 20, in Steps.M: it returns Aw, which the weaver cannot wait for, so its step would close when the method returns			
+Z19b-public-on-internal-class	ReleasePlus	Z found by review	OK		ok		Inner:Passed	-1	False	1	<home>/AppData\Local\Temp\kronikol-226-probe\run\prototype-debug-plus\ReleasePlus\S_Z19b_public_on_internal_class_ReleasePlus.cs, line 20, in Steps.M: it returns Aw, which the weaver cannot wait for, so its step would close when the method returns			
+Z20-lambda-in-explicit-generic-interface	ReleasePlus	Z found by review	OK		1		M:Passed	11	False	1				
+Z21-local-in-explicit-generic-interface	ReleasePlus	Z found by review	OK		1		The local:Passed	-1	False	1				
+Z22-lambda-in-field-initializer	ReleasePlus	Z found by review	OK		1		Steps:Passed	-1	False	2				
+Z23-primary-constructor	ReleasePlus	Z found by review	OK		2		M:Passed[Inner:Passed]	85	False	2				
+Z24-unscoped-ref-this	ReleasePlus	Z found by review	OK		5		M:Passed	84	False	1				
+Z27-expr-with-skipif-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		ok		M:Passed[~assert:Passed]	32	False	1				
+Z27-expr-with-skipif-steps-first	ReleasePlus	Z found by review, steps-first	OK		ok		M:Passed[~assert:Passed]	39	False	1				
+Z28-block-with-skipif-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		1		M:Passed[~assert:Passed]	28	False	1				
+Z28-block-with-skipif-steps-first	ReleasePlus	Z found by review, steps-first	OK		1		M:Passed[~assert:Passed]	27	False	1				
+Z29a-returned-should-throw-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		x		M:Passed[~assert:Passed]	33	False	1				
+Z29a-returned-should-throw-steps-first	ReleasePlus	Z found by review, steps-first	OK		x		M:Passed[~assert:Passed]	31	False	1				
+Z29b-expression-should-throw-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		x		M:Passed[~assert:Passed]	41	False	1				
+Z29b-expression-should-throw-steps-first	ReleasePlus	Z found by review, steps-first	OK		x		M:Passed[~assert:Passed]	38	False	1				
+Z29c-plain-method-no-step-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		ok		M:Passed[~assert:Passed]	42	False	1				
+Z29c-plain-method-no-step-steps-first	ReleasePlus	Z found by review, steps-first	OK		ok		M:Passed[~assert:Passed]	34	False	1				
+Z30-value-task-plain-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		ok		M:Passed[~assert:Passed]	30	False	1				
+Z30-value-task-plain-steps-first	ReleasePlus	Z found by review, steps-first	OK		ok		M:Passed[~assert:Passed]	27	False	1				
+Z31-value-in-try-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		5		M:Passed[~assert:Passed]	34	False	1				
+Z31-value-in-try-steps-first	ReleasePlus	Z found by review, steps-first	OK		5		M:Passed[~assert:Passed]	26	False	1				
+Z32-ref-return-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		1		M:Passed[~assert:Passed]	35	False	1		M: ReturnPtrToStack		
+Z32-ref-return-steps-first	ReleasePlus	Z found by review, steps-first	OK		1		M:Passed[~assert:Passed]	37	False	1		M: ReturnPtrToStack		
+Z33-span-return-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		2		M:Passed[~assert:Passed]	35	False	1				
+Z33-span-return-steps-first	ReleasePlus	Z found by review, steps-first	OK		2		M:Passed[~assert:Passed]	30	False	1				
+Z34-ends-in-catch-assertions-first	ReleasePlus	Z found by review, assertions-first	OK			ShouldAssertException	M:Failed[~assert:Failed]	99	False	1				
+Z34-ends-in-catch-steps-first	ReleasePlus	Z found by review, steps-first	OK			ShouldAssertException	M:Failed[~assert:Failed]	70	False	1				
+Z35-expression-ternary-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		a		M(b=True):Passed	11	False	1				ASSERTION-UNWOVEN: Steps.M, line 21: the statement returns from the method part-way
+Z35-expression-ternary-steps-first	ReleasePlus	Z found by review, steps-first	OK		a		M(b=True):Passed	11	False	1				ASSERTION-UNWOVEN: Steps.M, line 21: a way through the statement returns from the step
+Z35b-expression-ternary-the-arm-that-leaves-first-steps-first	ReleasePlus	Z found by review, steps-first	OK		b		M(b=False):Passed	11	False	1				ASSERTION-UNWOVEN: Steps.M, line 21: a way through the statement returns from the step
+Z36-throw-last-assertions-first	ReleasePlus	Z found by review, assertions-first	OK			InvalidOperationException	M:Failed[~assert:Passed]	31	False	1				
+Z36-throw-last-steps-first	ReleasePlus	Z found by review, steps-first	OK			InvalidOperationException	M:Failed[~assert:Passed]	25	False	1				
+Z37-local-task-with-closure	ReleasePlus	Z found by review	OK		ok		M:Passed[Inner:Passed]	72	False	2				
+Z38-local-generic-closure	ReleasePlus	Z found by review	OK		1		M:Passed	74	False	1				
+Z39-generic-struct-generic-method	ReleasePlus	Z found by review	OK		(null)		M(u=x):Bypassed	12	False	1				
+Z40-static-generic-self	ReleasePlus	Z found by review	OK		(null)		M(u=1):Bypassed	17	False	1				
+Z41-outer-generic-nested-base	ReleasePlus	Z found by review	OK		ok		M:Bypassed	9	False	1				
+Z42-protected-generic-base	ReleasePlus	Z found by review	OK		ok		M:Bypassed	9	False	1				
+Z43-protected-static-field-generic-base	ReleasePlus	Z found by review	OK		ok		M:Bypassed	13	False	1				
+Z44-pointer-in-generic-chain	ReleasePlus	Z found by review	OK		ok		M:Bypassed	9	False	1				
+Z45-allows-ref-struct-on-class	ReleasePlus	Z found by review	OK				M(v=[T]):Passed[Inner:Passed]	75	False	2				
+Z47-auto-property-skipif	ReleasePlus	Z found by review	OK		0		M:Bypassed	10	False	2				
+Z49-skipif-body-starts-with-loop	ReleasePlus	Z found by review	OK		2		M:Passed[Inner:Passed]	77	False	2				
+Z50-skipif-body-starts-in-try	ReleasePlus	Z found by review	OK		1		M:Passed[Inner:Passed]	88	False	2				
+Z51-lambda-ref-param	ReleasePlus	Z found by review	OK		2		M(x=1):Passed	84	False	2				
+Z60-trace-void-multi-line	ReleasePlus	Z found by review	OK		   at Steps.M(Boolean b) in <home>/AppData\Local\Temp\kronikol-226-probe\run\prototype-debug-plus\ReleasePlus\S_Z60_trace_void_multi_line_ReleasePlus.cs:line 23     at Driver.Run() in <home>/AppData\Local\Temp\kronikol-226-probe\run\prototype-debug-plus\ReleasePlus\S_Z60_trace_void_multi_line_ReleasePlus.cs:line 34		M(b=True):Failed	12	False	2				
+Z61-trace-plain-task-multi-line	ReleasePlus	Z found by review	OK		   at Steps.M(Boolean b) in <home>/AppData\Local\Temp\kronikol-226-probe\run\prototype-debug-plus\ReleasePlus\S_Z61_trace_plain_task_multi_line_ReleasePlus.cs:line 23     at Driver.Run() in <home>/AppData\Local\Temp\kronikol-226-probe\run\prototype-debug-plus\ReleasePlus\S_Z61_trace_plain_task_multi_line_ReleasePlus.cs:line 34		M(b=True):Failed	13	False	2				
+Z62-trace-callee-throws	ReleasePlus	Z found by review	OK		   at Steps.Boom() in <home>/AppData\Local\Temp\kronikol-226-probe\run\prototype-debug-plus\ReleasePlus\S_Z62_trace_callee_throws_ReleasePlus.cs:line 20     at Steps.M() in <home>/AppData\Local\Temp\kronikol-226-probe\run\prototype-debug-plus\ReleasePlus\S_Z62_trace_callee_throws_ReleasePlus.cs:line 23     at Driver.Run() in <home>/AppData\Local\Temp\kronikol-226-probe\run\prototype-debug-plus\ReleasePlus\S_Z62_trace_callee_throws_ReleasePlus.cs:line 34		M:Failed	15	False	2				
+Z70-runtime-async-task-int	ReleasePlus	Z found by review	OK		42		M:Passed[Inner:Passed]	85	False	2				
+Z71-runtime-async-task	ReleasePlus	Z found by review	OK		ok		M:Passed[Inner:Passed]	73	False	2				
+Z72-runtime-async-value-task	ReleasePlus	Z found by review	OK		42		M:Passed[Inner:Passed]	77	False	2				
+Z73-generic-iterator-in-generic-class	ReleasePlus	Z found by review	OK		1			-1	False	0	<home>/AppData\Local\Temp\kronikol-226-probe\run\prototype-debug-plus\ReleasePlus\S_Z73_generic_iterator_in_generic_class_ReleasePlus.cs, line 18, in Steps`1.M: it is an iterator, whose body runs while its caller enumerates it, after the method has returned			
+Z74-tabular-getter-throws	ReleasePlus	Z found by review	OK		ok		M(rows=[TabularInputs<Row>]):Passed[Inner:Passed]	20	False	2				
+Z75-assertion-over-a-referenced-type-assertions-first	ReleasePlus	Z found by review, assertions-first	OK		ok		M:Passed[~assert:Passed]	37	False	1				
+Z75-assertion-over-a-referenced-type-steps-first	ReleasePlus	Z found by review, steps-first	OK		ok		M:Passed[~assert:Passed]	59	False	1				
+Z76-step-returns-a-referenced-type	ReleasePlus	Z found by review	OK		7		M:Passed	10	False	2				
+Z77-runtime-async-value-task-void	ReleasePlus	Z found by review	OK		ok		M:Passed[Inner:Passed]	77	False	2				
+Z78-runtime-async-throws-after-await	ReleasePlus	Z found by review	OK			InvalidOperationException	M:Failed	77	False	1				
+Z79-runtime-async-throws-before-await	ReleasePlus	Z found by review	OK			InvalidOperationException	M:Failed	11	False	1				
+Z80-runtime-async-skipif	ReleasePlus	Z found by review	OK		0		M:Bypassed	10	False	1				
+Z81-runtime-async-siblings	ReleasePlus	Z found by review	OK		1		M:Passed[A:Passed[Inner:Passed],A:Passed[Inner:Passed]]	75	False	3				
+Z82-runtime-async-nested-bypass	ReleasePlus	Z found by review	OK		ok		M:Passed[S:Bypassed,Inner:Passed]	75	False	3				
+Z83-runtime-async-assertion-assertions-first	ReleasePlus	I with assertion weaving, assertions-first	OK		ok		M:Passed[~assert:Passed]	35	False	1				
+Z83-runtime-async-assertion-steps-first	ReleasePlus	I with assertion weaving, steps-first	OK		ok		M:Passed[~assert:Passed]	29	False	1				
+Z84-fixed	ReleasePlus	Z found by review	OK		4		M(a=System.Int32[]):Passed[Inner:Passed]	89	False	2				
+Z85-goto-back	ReleasePlus	Z found by review	OK		3		M:Passed[Inner:Passed]	78	False	2				
+Z86-first-instruction-is-a-branch-target	ReleasePlus	Z found by review	OK		3		M(n=0):Passed[Inner:Passed]	82	False	2				
+Z87-skipif-false-starts-in-try	ReleasePlus	Z found by review	OK		1		M:Passed[Inner:Passed]	77	False	2				
+Z88-using	ReleasePlus	Z found by review	OK		1		M:Passed[Inner:Passed]	85	False	2				
+Z89-await-using	ReleasePlus	Z found by review	OK		1		M:Passed[Inner:Passed]	86	False	2				
+Z91-two-step-attributes	ReleasePlus	Z found by review	OK		1		M:Passed[Inner:Passed]	74	False	2				
+Z92-long-body-20	ReleasePlus	Z found by review	OK		20		M(b=True):Passed[Inner:Passed]	74	False	2				
+Z92-long-body-24	ReleasePlus	Z found by review	OK		24		M(b=True):Passed[Inner:Passed]	80	False	2				
+Z92-long-body-26	ReleasePlus	Z found by review	OK		26		M(b=True):Passed[Inner:Passed]	82	False	2				
+Z92-long-body-28	ReleasePlus	Z found by review	OK		28		M(b=True):Passed[Inner:Passed]	75	False	2				
+Z92-long-body-29	ReleasePlus	Z found by review	OK		29		M(b=True):Passed[Inner:Passed]	75	False	2				
+Z92-long-body-30	ReleasePlus	Z found by review	OK		30		M(b=True):Passed[Inner:Passed]	87	False	2				

@@ -797,16 +797,17 @@ public class AssertionWeaver
 
             // Collect conditional/unconditional branches jumping outside the statement range.
             // These come from null-propagation (?.) which generates brfalse/brtrue that skip
-            // past the expression. We exclude leave/leave.s since those are structural control
+            // past the expression, and from a condition or a switch on what the assertion handed back.
+            // We exclude leave/leave.s since those are structural control
             // flow for exception handling (e.g. async state machine's outer try/catch exit), and
             // a trailing br, which stays after the wrapper.
             var range = statementInstructions.SkipWhile(i => i != start).ToList();
             var startOffset = start.Offset;
             var endOffset = range[range.Count - 1].Offset + 1;
+            bool Outside(Instruction target) => target.Offset < startOffset || target.Offset >= endOffset;
             var outboundBranches = range
                 .Where(i => i.OpCode != OpCodes.Leave && i.OpCode != OpCodes.Leave_S && i != trailingJump &&
-                    i.Operand is Instruction target &&
-                    (target.Offset < startOffset || target.Offset >= endOffset))
+                    (i.Operand is Instruction target && Outside(target) || i.Operand is Instruction[] targets && targets.Any(Outside)))
                 .ToList();
 
             var isAwaited = mergePoint != null;
@@ -2868,6 +2869,10 @@ public class AssertionWeaver
             (method.ReturnType.MetadataType != MetadataType.Void || end.Next?.OpCode != OpCodes.Ret))
             return "the statement returns from the method part-way";
 
+        // A filter has the exception on the stack as it starts and can only end at its endfilter.
+        if (method.Body.ExceptionHandlers.Any(h => h.HandlerType == ExceptionHandlerType.Filter && Range(h.FilterStart, h.HandlerStart).Contains(start)))
+            return "the statement is in an exception filter";
+
         // A try is entered only through its first instruction: a branch from outside the statement to any later one
         // would jump into it. An awaited statement is entered at its merge point by both of the await's paths.
         if (EntersPartWay(method, start, end))
@@ -2888,6 +2893,10 @@ public class AssertionWeaver
         // stores the exit values: it must arrive with as many as the statement's end leaves.
         foreach (var branch in assertion.OutboundBranches)
         {
+            // The exit carries on with what follows the statement, so a branch that goes anywhere else, as the condition of
+            // an if or a loop does, would take the wrong way with no word from anything, and a switch has no one way to send on.
+            if (branch.Operand is not Instruction goesTo || !IsWhatFollows(end, goesTo))
+                return "a branch out of the statement goes somewhere other than what follows it";
             var at = branch.Operand is Instruction target ? analysis.StackBefore(target) : null;
             if (at == null || at.Length != after.Length)
                 return "a branch out of the statement leaves the stack at another depth than its end";
@@ -2895,6 +2904,29 @@ public class AssertionWeaver
 
         entry = before;
         exit = after;
+        return null;
+    }
+
+    /// <summary>Whether the code after the statement's end comes to this instruction with nothing run on the way, or returns as it does.</summary>
+    private static bool IsWhatFollows(Instruction end, Instruction target)
+    {
+        var next = PastJumps(end.Next);
+        var goesTo = PastJumps(target);
+        return next != null && (next == goesTo || (next.OpCode == OpCodes.Ret && goesTo?.OpCode == OpCodes.Ret));
+    }
+
+    /// <summary>The first instruction from here that does something, past any nop, br or leave.</summary>
+    private static Instruction? PastJumps(Instruction? at)
+    {
+        for (var hops = 0; at != null && hops < 32; hops++)
+        {
+            if (at.OpCode == OpCodes.Nop)
+                at = at.Next;
+            else if (at.OpCode == OpCodes.Br || at.OpCode == OpCodes.Br_S || at.OpCode == OpCodes.Leave || at.OpCode == OpCodes.Leave_S)
+                at = (Instruction)at.Operand;
+            else
+                return at;
+        }
         return null;
     }
 

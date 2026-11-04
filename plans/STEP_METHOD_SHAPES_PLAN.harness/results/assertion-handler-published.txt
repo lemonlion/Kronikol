@@ -1,0 +1,8 @@
+=================== published, Kronikol.AssertionTracking 5.28.2, Debug
+catch: ran
+finally: ran
+exit 0
+=================== published, Kronikol.AssertionTracking 5.28.2, Release
+catch: InvalidProgramException
+finally: InvalidProgramException
+exit 2

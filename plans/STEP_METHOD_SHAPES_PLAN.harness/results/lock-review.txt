@@ -1,0 +1,3 @@
+The independent review's run of the first cut of the prototype, which did not dispose its resolver: its project set, plain dotnet build, a reused node. MSBuild's own words:
+Microsoft.Common.CurrentVersion.targets(4919,5): error MSB3027: Could not copy "obj\Debug\net10.0\Dep.dll" to "bin\Debug\net10.0\Dep.dll". Exceeded retry count of 10. Failed. The file is locked by: ".NET Host (15308), .NET Host (35712)"
+Rebuilds that failed that way: 3 of 3 with plain dotnet build, 3 of 4 with -m:3. The published weaver: 0 of 7. The same prototype with the resolver disposed: 0 of 3.

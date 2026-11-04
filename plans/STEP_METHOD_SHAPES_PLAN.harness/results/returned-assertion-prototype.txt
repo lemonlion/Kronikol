@@ -1,0 +1,12 @@
+=================== prototype, both weavers 5.28.99-proto226, Debug
+the library references Kronikol at 0.0.0.0
+returned: step 'Returned' Passed, with a note
+as an expression: step 'As an expression' Passed, with a note
+awaited, for comparison: step 'Awaited' Passed, with a note
+exit 0
+=================== prototype, both weavers 5.28.99-proto226, Release
+the library references Kronikol at 0.0.0.0
+returned: step 'Returned' Passed, with a note
+as an expression: step 'As an expression' Passed, with a note
+awaited, for comparison: step 'Awaited' Passed, with a note
+exit 0

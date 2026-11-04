@@ -1,0 +1,4 @@
+prototype: Kronikol.StepTracking 5.28.99-proto226, 3000 step methods
+Kronikol.StepTracking: Instrumented 3000 step method(s) (1250ms)
+Kronikol.StepTracking: Instrumented 3000 step method(s) (1280ms)
+Kronikol.StepTracking: Instrumented 3000 step method(s) (1261ms)

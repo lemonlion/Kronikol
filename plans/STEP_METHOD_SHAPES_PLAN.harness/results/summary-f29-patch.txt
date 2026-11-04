@@ -1,0 +1,520 @@
+label: f29-patch
+weaver: <home>/k226bin-f29\Kronikol.StepTracking.dll
+runtime: 10.0.11
+shapes: 635, runs: 1270, seconds: 1231
+
+by outcome:
+  JIT          649
+  OK           334
+  RUN-IPE      90
+  TREE         40
+  CRASH        40
+  RUN-OTHER    38
+  BAD-IL       22
+  OPEN         20
+  LOCKED       12
+  SYMBOLS-LOST 12
+  THROWS       4
+  WEAVE-THROW  4
+  PDB-PATH     4
+  ASSERTION-LOST 1
+
+by family (runs ok / runs):
+  A sync value                          2 /   64
+  A sync value, control flow            9 /   54
+  B generic, ref, span, pointer returns    0 /   24
+  C Task, Task<T>                      32 /   42
+  D ValueTask, ValueTask<T>             4 /   50
+  E deferred work, other awaitables     0 /   40
+  F parameters                         10 /   66
+  G kinds of method                    12 /   62
+  H SkipIf, Task<T>                    34 /   64
+  H SkipIf, ValueTask<T>                0 /   56
+  H SkipIf, sync value                  4 /   78
+  H SkipIf, the member it names        24 /   54
+  I with assertion weaving, assertions-first   17 /   44
+  I with assertion weaving, steps-first   10 /   46
+  Z found by review                    30 /  208
+  Z found by review, assertions-first   71 /  156
+  Z found by review, steps-first       75 /  162
+
+not ok, one line per shape (the two configurations together where they agree):
+  A00-issue-int                    both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  A01-array                        both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  A01-bigstruct                    both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  A01-bool                         both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  A01-byte                         both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  A01-char                         both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  A01-class                        both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  A01-datetime                     both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  A01-decimal                      both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  A01-double                       both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  A01-enum                         both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  A01-float                        both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  A01-guid                         both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  A01-int                          both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  A01-long                         both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  A01-nint                         both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  A01-nuint                        both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  A01-nullable                     both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  A01-object                       both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  A01-sbyte                        both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  A01-short                        both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  A01-string                       both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  A01-timespan                     both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  A01-tuple                        both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  A01-uint                         both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  A01-ulong                        both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  A01-ushort                       both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  A02-customer                     both    JIT         JIT A_customer_is_registered: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.A_customer_is_r...
+  A02-delegate                     both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  A02-disposable                   both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  A02-dynamic                      both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  A10-branch-to-ret                both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(Boolean b)
+  A10-two-returns                  both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(Boolean b)
+  A11-ternary                      both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(Boolean b)
+  A12-switch-expr                  both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(Int32 k)
+  A12-switch-jump                  both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(Int32 k)
+  A13-starts-in-try                both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  A13-try-finally                  both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  A14-catch-rethrow                both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  A14-filter                       both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(Int32 k)
+  A14-plain-task-ends-in-catch     both    OPEN        tree '', expected 'M:Failed[Inner:Passed]'; a step was left open; step closed after -1 ms, its work took at least 50
+  A14-try-catch                    both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  A14-void-ends-in-catch           both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  A14-void-ends-in-finally         both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  A15-lock                         both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  A15-using                        both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  A16-loop                         both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  A16-starts-with-loop             both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  A18-recursion                    both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(Int32 k)
+  A19-stackalloc                   both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  A20-tail-value                   both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  A20-tail-void                    Release JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  A21-full-opt-value               both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  A21-full-opt-value-task          both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  B01-generic-method-int           both    RUN-IPE     InvalidProgramException at the call: at Steps.M[T](T v)
+  B01-generic-method-string        both    RUN-IPE     InvalidProgramException at the call: at Steps.M[T](T v)
+  B02-generic-class                both    RUN-IPE     InvalidProgramException at the call: at Steps`1.M(T v)
+  B03-ref                          both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  B04-ref-readonly                 both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  B04-ref-readonly-virtual         both    RUN-IPE     InvalidProgramException at the call: at Steps.M()
+  B05-ref-generic                  both    RUN-IPE     InvalidProgramException at the call: at Steps.M[T](T[] a)
+  B06-readonly-span                both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  B06-span                         both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  B07-ref-struct                   both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  B08-pointer                      both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  B09-function-pointer             both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  C05-plain-task-int-sync-throw    both    OPEN        tree '', expected 'M:Failed'; a step was left open
+  C05-plain-task-sync-throw        both    OPEN        tree '', expected 'M:Failed[Inner:Passed]'; a step was left open
+  C05-sync-guard-clause            both    OPEN        tree '', expected 'M(name=null):Failed'; a step was left open
+  C05-sync-throw-then-next-step    both    OPEN        tree '', expected 'M:Failed,Next:Passed'; a step was left open
+  C12-task-subclass                both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(); the weave did not list this metho...
+  D00-issue-value-task             both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  D01-async-value-task             both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  D02-async-big                    both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  D02-async-guid                   both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  D02-async-int                    both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  D02-async-string                 both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  D03-completed                    both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  D03-default                      both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  D04-from-result                  both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  D04-from-result-api              both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  D05-wraps-task                   both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  D05-wraps-task-int               both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  D06-source-backed                both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  D06-source-backed-int            both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  D07-pooling-builder              both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  D07-pooling-builder-int          both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  D09-faulted                      both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  D09-throw-after-await            both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  D10-cancelled                    both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  D11-generic-class                both    RUN-IPE     InvalidProgramException at the call: at Steps`1.M(T v)
+  D11-generic-method               both    RUN-IPE     InvalidProgramException at the call: at Steps.M[T](T v)
+  D12-as-task-by-caller            both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  D13-multiple-returns             both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(Boolean b)
+  E01-iterator                     both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(); the weave did not list this metho...
+  E02-iterator-enumerator          both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(); the weave did not list this metho...
+  E03-async-iterator               both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(); the weave did not list this metho...
+  E04-async-enumerator             both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(); the weave did not list this metho...
+  E05-async-void                   both    TREE        tree 'M:Passed,Inner:Passed', expected 'Inner:Passed'; the weave did not list this method as left unwoven
+  E06-task-like                    both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(); the weave did not list this metho...
+  E07-awaitable-struct             both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(); the weave did not list this metho...
+  E08-configured-task              both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(); the weave did not list this metho...
+  E09-configured-value-task        both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(); the weave did not list this metho...
+  E10-yield-awaitable              both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(); the weave did not list this metho...
+  E11-awaitable-interface          both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(); the weave did not list this metho...
+  E12-awaitable-base-interface     both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(); the weave did not list this metho...
+  E20-lazy-linq                    both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  E21-func-task                    both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  E22-object-holding-task          both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  E23-list                         both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  E24-own-type-named-task          both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  E25-array-of-tasks               both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  E26-generic-task-constraint      both    RUN-IPE     InvalidProgramException at the call: at Steps.M[T](T t); the weave did not list this method as left unwoven
+  E27-nullable-value-task          both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  F01-ref-int                      both    CRASH       exit 0xC0000005: Fatal error.  Internal CLR error. (0x80131506)     at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(System.Object, IntPtr*)     at System....
+  F02-out-int                      both    CRASH       exit 0xC0000005: Fatal error.  Internal CLR error. (0x80131506)     at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(System.Object, IntPtr*)     at System....
+  F03-in-int                       both    CRASH       exit 0xC0000005: Fatal error.  Internal CLR error. (0x80131506)     at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(System.Object, IntPtr*)     at System....
+  F03-in-interface                 both    CRASH       exit 0xC0000005: Fatal error.  Internal CLR error. (0x80131506)     at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(System.Object, IntPtr*)     at System....
+  F03-in-virtual                   both    CRASH       exit 0xC0000005: Fatal error.  Internal CLR error. (0x80131506)     at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(System.Object, IntPtr*)     at System....
+  F03-ref-readonly-int             both    CRASH       exit 0xC0000005: Fatal error.  Internal CLR error. (0x80131506)     at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(System.Object, IntPtr*)     at System....
+  F04-in-big                       both    CRASH       exit 0xC0000005: Fatal error.  Internal CLR error. (0x80131506)     at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(System.Object, IntPtr*)     at System....
+  F05-ref-string                   both    CRASH       exit 0xC0000005: Fatal error.  Internal CLR error. (0x80131506)     at System.Runtime.InteropServices.DynamicInterfaceCastableHelpers.IsInterfaceImplemented(System.Runtim...
+  F06-out-string                   both    CRASH       exit 0xC0000005: Fatal error.  Internal CLR error. (0x80131506)     at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(System.Object, IntPtr*)     at System....
+  F07-ref-generic-int              both    CRASH       exit 0xC0000005: Fatal error.  Internal CLR error. (0x80131506)     at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(System.Object, IntPtr*)     at System....
+  F07-ref-generic-string           both    CRASH       exit 0xC0000005: Fatal error.  Internal CLR error. (0x80131506)     at System.Runtime.InteropServices.DynamicInterfaceCastableHelpers.IsInterfaceImplemented(System.Runtim...
+  F08-out-and-value                both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(Int32 a, Int32& b)
+  F10-span                         both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(Span`1 s)
+  F11-readonly-span                both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(ReadOnlySpan`1 s)
+  F12-ref-struct                   both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(Rs r)
+  F13-pointer                      both    RUN-OTHER   threw NullReferenceException: Object reference not set to an instance of an object.; tree '', expected 'M(p=[Int32*]):Passed[Inner:Passed]'; step closed after -1 ms, its ...
+  F14-function-pointer             both    CRASH       exit 0xC0000005: Fatal error.  Internal CLR error. (0x80131506)     at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(System.Object, IntPtr*)     at System....
+  F15-allows-ref-struct            both    RUN-IPE     InvalidProgramException at the call: at Steps.M[T](T v)
+  F15-allows-ref-struct-int        both    TREE        tree 'M(v=5):Passed[Inner:Passed]', expected 'M(v=[T]):Passed[Inner:Passed]'
+  F15-params-span                  both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(ReadOnlySpan`1 xs)
+  F16-ref-allows-ref-struct        both    RUN-OTHER   threw NullReferenceException: Object reference not set to an instance of an object.; tree '', expected 'M(v=[T]):Passed[Inner:Passed]'; step closed after -1 ms, its work ...
+  F16-ref-array                    both    CRASH       exit 0xC0000005: Fatal error.  Internal CLR error. (0x80131506)     at System.Runtime.InteropServices.DynamicInterfaceCastableHelpers.IsInterfaceImplemented(System.Runtim...
+  F16-ref-span                     both    RUN-OTHER   threw NullReferenceException: Object reference not set to an instance of an object.; tree '', expected 'M(s=[Span<Int32>]):Passed[Inner:Passed]'; step closed after -1 ms,...
+  F16-typed-reference              both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(TypedReference r)
+  F19-plain-task-ref               both    CRASH       exit 0xC0000005: Fatal error.  Internal CLR error. (0x80131506)     at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(System.Object, IntPtr*)     at System....
+  F20-value-task-in                both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(Int32& x)
+  F21-tostring-throws              both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(Bad b)
+  F22-async-tostring-throws        both    RUN-OTHER   threw InvalidOperationException: no; value '', expected '1'; tree '', expected 'M(b=[Bad]):Passed[Inner:Passed]'; step closed after -1 ms, its work took at least 50
+  G01-static                       both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  G02-override                     both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  G03-interface-default            both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at IS.M()
+  G04-explicit-interface           both    RUN-IPE     InvalidProgramException at the call: at Steps.IS.M()
+  G05-property-get                 both    JIT         JIT get_P: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.get_P()
+  G06-indexer                      both    JIT         JIT get_Item: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.get_Item(Int32 i)
+  G07-operator                     both    JIT         JIT op_Addition: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.op_Addition(Steps a, Steps b...
+  G08-extension                    both    JIT         JIT Plus: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Ext.Plus(Int32 x)
+  G10-local-function               both    JIT         JIT <Go>g__L|0_0: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.<Go>g__L|0_0()
+  G10-local-function-name          both    JIT         JIT <Go>g__The_local_step|0_0: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.<Go>g__The_loc...
+  G10-local-function-void-name     both    TREE        tree '<go>g the local step|0 0:Passed', expected 'The local step:Passed'
+  G11-local-capturing-struct       both    JIT         JIT <Go>g__L|0_0: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.<Go>g__L|0_0(<>c__DisplayCl...
+  G11-local-void-capturing         both    CRASH       exit 0xC0000005: Fatal error.  Internal CLR error. (0x80131506)     at System.Runtime.InteropServices.DynamicInterfaceCastableHelpers.IsInterfaceImplemented(System.Runtim...
+  G12-lambda                       both    JIT         JIT <Go>b__0_0: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.<>c.<Go>b__0_0()
+  G12-lambda-capturing             both    JIT         JIT <Go>b__0: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.<>c__DisplayClass0_0.<Go>b__0()
+  G12-lambda-name                  both    JIT         JIT <The_method>b__0_0: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.<>c.<The_method>b__0_...
+  G12-lambda-void-name             both    TREE        tree '<the method>b 0 0:Passed', expected 'The method:Passed'
+  G13-struct-method                both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  G14-readonly-struct              both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  G15-ref-struct-method            both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  G16-partial                      both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  G17-static-abstract              both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  G18-nested                       both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Outer.Steps.M()
+  G20-keyword-attributes           both    JIT         JIT G: InvalidProgramException: Common Language Runtime detected an invalid program.; JIT W: InvalidProgramException: Common Language Runtime detected an invalid program....
+  G22-returns-allows-ref-struct    both    RUN-IPE     InvalidProgramException at the call: at Steps.M[T](T v)
+  H00-value-task                   both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H01-array                        both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H01-bigstruct                    both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H01-bool                         both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H01-byte                         both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H01-char                         both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H01-class                        both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H01-datetime                     both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H01-decimal                      both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H01-double                       both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H01-enum                         both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H01-float                        both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H01-guid                         both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H01-int                          both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H01-long                         both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H01-nint                         both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H01-nuint                        both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H01-nullable                     both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H01-object                       both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H01-sbyte                        both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H01-short                        both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H01-string                       both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H01-timespan                     both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H01-tuple                        both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H01-uint                         both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H01-ulong                        both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H01-ushort                       both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H02-bigstruct                    both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H02-datetime                     both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H02-decimal                      both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H02-guid                         both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H02-nint                         both    BAD-IL      
+  H02-nuint                        both    BAD-IL      
+  H02-nullable                     both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H02-timespan                     both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H02-tuple                        both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H02-ulong                        both    BAD-IL      
+  H03-array                        both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H03-bigstruct                    both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H03-bool                         both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H03-byte                         both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H03-char                         both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H03-class                        both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H03-datetime                     both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H03-decimal                      both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H03-double                       both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H03-enum                         both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H03-float                        both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H03-guid                         both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H03-int                          both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H03-long                         both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H03-nint                         both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H03-nuint                        both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H03-nullable                     both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H03-object                       both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H03-sbyte                        both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H03-short                        both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H03-string                       both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H03-timespan                     both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H03-tuple                        both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H03-uint                         both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H03-ulong                        both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H03-ushort                       both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H04-generic-method               both    RUN-IPE     InvalidProgramException at the call: at Steps.M[T](T v)
+  H04-generic-method-ref           both    RUN-IPE     InvalidProgramException at the call: at Steps.M[T](T v)
+  H05-task-generic-int             both    RUN-IPE     InvalidProgramException at the call: at Steps.M[T](T v)
+  H05-task-generic-string          both    BAD-IL      
+  H06-span                         both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H07-pointer                      both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H08-ref-off                      both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(); expected a build warning containi...
+  H09-out-param                    both    RUN-OTHER   threw NullReferenceException: Object reference not set to an instance of an object.; value '', expected '(null)'; tree '', expected 'M:Bypassed'
+  H09-out-span                     both    CRASH       exit 0xC0000005: Fatal error.  Internal CLR error. (0x80131506)     at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(System.Object, IntPtr*)     at System....
+  H10-false-runs-task              both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H10-false-runs-value             both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H10-false-runs-value-task        both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H11-nested-bypass-task           both    TREE        tree 'M:Passed[S:Bypassed],Inner:Passed', expected 'M:Passed[S:Bypassed,Inner:Passed]'; step closed after 25 ms, its work took at least 50
+  H11-nested-bypass-task-int       both    TREE        tree 'M:Passed[S:Bypassed],Inner:Passed', expected 'M:Passed[S:Bypassed,Inner:Passed]'; step closed after 22 ms, its work took at least 50
+  H11-nested-bypass-value          both    JIT         JIT S: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.S()
+  H11-nested-bypass-void           both    TREE        tree 'M:Passed[S:Bypassed],Inner:Passed', expected 'M:Passed[S:Bypassed,Inner:Passed]'; step closed after 21 ms, its work took at least 50
+  H13-skip-locals-init             both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  H24-instance-on-static           both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(); expected a build warning containi...
+  H24-instance-on-static-arg       both    TREE        tree 'M(s=a):Bypassed', expected 'M(s=a):Passed'; step closed after 30 ms, its work took at least 50; expected a build warning containing 'SkipIf', got ''
+  H25-generic-class-field          both    BAD-IL      
+  H25-generic-class-property       both    RUN-OTHER   threw InvalidOperationException: Could not execute the method because either the method itself or the containing type is not fully instantiated.; value '', expected 'ok';...
+  H25-generic-class-static         both    RUN-OTHER   threw TypeInitializationException: The type initializer for 'Steps`1' threw an exception.; value '', expected 'ok'; tree '', expected 'M:Bypassed'; a step was left open
+  H26-generic-base-field           both    BAD-IL      
+  H26-generic-base-property        both    RUN-OTHER   threw InvalidOperationException: Could not execute the method because either the method itself or the containing type is not fully instantiated.; value '', expected 'ok';...
+  H27-private-base-field           both    RUN-OTHER   threw FieldAccessException: Attempt by method 'Steps.M()' to access field 'B.Off' failed.; value '', expected 'ok'; tree '', expected 'M:Passed'; a step was left open; st...
+  H27-private-base-property        both    RUN-OTHER   threw MethodAccessException: Attempt by method 'Steps.M()' to access method 'B.get_Off()' failed.; value '', expected 'ok'; tree '', expected 'M:Passed'; a step was left ...
+  H29-struct-generic               both    RUN-OTHER   threw InvalidOperationException: Could not execute the method because either the method itself or the containing type is not fully instantiated.; value '', expected 'ok';...
+  H29-struct-property              both    BAD-IL      
+  H35-on-iterator                  both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(); the weave did not list this metho...
+  H36-indexer-named                both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(); expected a build warning containi...
+  H37-generic-chain                both    RUN-OTHER   threw InvalidOperationException: Could not execute the method because either the method itself or the containing type is not fully instantiated.; value '', expected 'ok';...
+  H38-generic-self-through-base    both    BAD-IL      
+  I01-value-assertions-first       both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  I01-value-steps-first            both    JIT         ASSERTION-UNWOVEN: Steps.M, line 21: the method's evaluation stack could not be followed; JIT M: InvalidProgramException: Common Language Runtime detected an invalid prog...
+  I02-value-task-assertions-first  both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  I02-value-task-steps-first       both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  I03-value-task-int-assertions-first both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  I03-value-task-int-steps-first   both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  I05-branches-assertions-first    both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(Boolean b)
+  I05-branches-steps-first         both    JIT         ASSERTION-UNWOVEN: Steps.M, line 21: the method's evaluation stack could not be followed; JIT M: InvalidProgramException: Common Language Runtime detected an invalid prog...
+  I06-failing-assertions-first     both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  I06-failing-steps-first          both    JIT         ASSERTION-UNWOVEN: Steps.M, line 21: the method's evaluation stack could not be followed; JIT M: InvalidProgramException: Common Language Runtime detected an invalid prog...
+  I07-returned-assertion-steps-first Release ASSERTION-LOST an assertion ran with no note, and the build said nothing; 
+  I10-bypass-assertions-first      both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  I10-bypass-steps-first           both    JIT         ASSERTION-UNWOVEN: Steps.M, line 21: the method's evaluation stack could not be followed; JIT M: InvalidProgramException: Common Language Runtime detected an invalid prog...
+  I11-expression-void-steps-first  both    TREE        ASSERTION-UNWOVEN: Steps.M, line 21: a branch from outside the statement lands inside it; tree 'M:Passed', expected 'M:Passed[~assert:Passed]'
+  I12-expression-value-assertions-first both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  I12-expression-value-steps-first both    JIT         ASSERTION-UNWOVEN: Steps.M, line 21: the method's evaluation stack could not be followed; JIT M: InvalidProgramException: Common Language Runtime detected an invalid prog...
+  I13-expression-task-steps-first  both    TREE        tree 'M:Passed', expected 'M:Passed[~assert:Passed]'
+  I14-expression-in-parameter-assertions-first both    CRASH       exit 0xC0000005: Fatal error.  Internal CLR error. (0x80131506)     at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(System.Object, IntPtr*)     at System....
+  I14-expression-in-parameter-steps-first both    CRASH       exit 0xC0000005: Fatal error.  Internal CLR error. (0x80131506)     at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(System.Object, IntPtr*)     at System....
+  I15-returned-value-assertions-first both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  I15-returned-value-steps-first   both    JIT         ASSERTION-UNWOVEN: Steps.M, line 21: the method's evaluation stack could not be followed; JIT M: InvalidProgramException: Common Language Runtime detected an invalid prog...
+  I16-expression-failing-steps-first both    TREE        ASSERTION-UNWOVEN: Steps.M, line 21: a branch from outside the statement lands inside it; tree 'M:Failed', expected 'M:Failed[~assert:Failed]'
+  Z01a-skipif-const-true           both    JIT         JIT M: MissingFieldException: Field not found: 'Steps.Off'.; threw MissingFieldException: Field not found: 'Steps.Off'.; value '', expected 'ok'; tree '', expected 'M:Byp...
+  Z01b-skipif-const-false          both    JIT         JIT M: MissingFieldException: Field not found: 'Steps.Off'.; threw MissingFieldException: Field not found: 'Steps.Off'.; value '', expected 'ok'; tree '', expected 'M:Pas...
+  Z02a-skipif-getter-throws        both    OPEN        tree '', expected 'M:Failed,Next:Passed'; a step was left open
+  Z02b-skipif-getter-throws-task   both    OPEN        tree '', expected 'M:Failed,Next:Passed'; a step was left open
+  Z03c-ivt-internal-base           both    LOCKED      
+  Z04-private-hides-public-further-up both    RUN-OTHER   threw MethodAccessException: Attempt by method 'Steps.M()' to access method 'B.get_Off()' failed.; value '', expected 'ok'; tree '', expected 'M:Bypassed'; a step was lef...
+  Z05b-static-abstract-member      both    JIT         JIT M: BadImageFormatException: Bad IL format.; threw BadImageFormatException: Bad IL format.; value '', expected 'ok'; tree '', expected 'M:Passed'; expected a build war...
+  Z06-extension-block-method       both    JIT         JIT Plus: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Ext.Plus(Int32 x)
+  Z07-extension-block-skipif       both    JIT         JIT Plus: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Ext.Plus(Int32 x); expected no build warn...
+  Z08-extension-property           both    JIT         JIT get_Twice: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Ext.get_Twice(Int32 x)
+  Z09-extension-generic            both    RUN-IPE     InvalidProgramException at the call: at Ext.Cnt[T](List`1 l)
+  Z10-extension-iterator           both    JIT         JIT It: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Ext.It(Int32 x); the weave did not list thi...
+  Z100-no-body-interface-with-an-implementation both    RUN-IPE     InvalidProgramException at the call: at Steps.M()
+  Z100-no-body-with-an-override    both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  Z101-function-pointer-in-a-base-chain both    LOCKED      
+  Z101-function-pointer-member-not-found both    LOCKED      
+  Z102-reference-held-open-while-weaving both    TREE        tree 'M(s=LibStruct):Passed[Inner:Passed]', expected 'M(s=[LibStruct]):Passed[Inner:Passed]'
+  Z103-friend-named-in-another-case both    LOCKED      
+  Z104-ignores-access-checks       both    LOCKED      
+  Z105-message-getter-throws-async both    THROWS      expected BadEx, threw InvalidOperationException; tree '', expected 'M:Failed[Inner:Passed]'; a step was left open
+  Z105-message-getter-throws-plain-task both    OPEN        tree '', expected 'M:Failed[Inner:Passed]'; a step was left open
+  Z105-message-getter-throws-void  both    THROWS      expected BadEx, threw InvalidOperationException; tree '', expected 'M:Failed[Inner:Passed]'; a step was left open
+  Z106-partial-iterator-reads-as-a-value both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  Z108-generic-getawaiter          both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  Z108-getawaiter-returning-void   both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  Z108-internal-getawaiter-other-assembly both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  Z108-protected-getawaiter        both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  Z109-ref-task-reads-as-a-value   both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  Z10c-extension-static            both    JIT         JIT Two: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Ext.Two()
+  Z110-volatile-field              both    RUN-OTHER   threw Exception: ran; value '', expected 'ok'; tree 'M:Failed', expected 'M:Bypassed'; expected no build warning, got 'SkipIf member 'Off' on type 'Steps' is not a bool f...
+  Z110-volatile-field-of-a-generic-base both    RUN-OTHER   threw Exception: ran; value '', expected 'ok'; tree 'M:Failed', expected 'M:Bypassed'; expected no build warning, got 'SkipIf member 'Off' on type 'Steps' is not a bool f...
+  Z112-explicit-generic-interface-name both    RUN-IPE     InvalidProgramException at the call: at Steps.IS<System.Int32>.M()
+  Z112-explicit-interface-name     both    RUN-IPE     InvalidProgramException at the call: at Steps.IS.M()
+  Z112-lambda-in-file-local-field-initializer both    JIT         JIT <.ctor>b__1_0: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at <S_Z112_lambda_in_file_local_fie...
+  Z112-lambda-in-generic-field-initializer both    RUN-IPE     InvalidProgramException at the call: at Steps`1.<>c.<.ctor>b__1_0()
+  Z112__lambda-in-a-file-local-field-initializer both    JIT         JIT <.ctor>b__1_0: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at <S_Z112__lambda_in_a_file_local_...
+  Z113-value-task-source-status-throws both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  Z12-field-keyword                both    JIT         JIT get_P: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.get_P()
+  Z120-assertion-first-in-a-catch-assertions-first Release JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  Z120-assertion-first-in-a-catch-steps-first Release JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  Z120-assertion-first-in-a-finally-and-more-assertions-first Release JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  Z120-assertion-first-in-a-finally-and-more-steps-first Release JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  Z120-assertion-first-in-a-finally-assertions-first Release JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  Z120-assertion-first-in-a-finally-steps-first Release JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  Z124-assertion-in-a-short-circuit-steps-first both    JIT         ASSERTION-UNWOVEN: Steps.M, line 21: the method's evaluation stack could not be followed; JIT M: InvalidProgramException: Common Language Runtime detected an invalid prog...
+  Z125-assertion-in-a-short-circuit-of-a-plain-method-assertions-first both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  Z125-assertion-in-a-short-circuit-of-a-plain-method-steps-first both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  Z127-a-stale-pdb-assertions-first both    WEAVE-THROW weaver threw SymbolsNotMatchingException: Symbols were found but are not matching the assembly
+  Z127-a-stale-pdb-steps-first     both    WEAVE-THROW weaver threw SymbolsNotMatchingException: Symbols were found but are not matching the assembly
+  Z127b-a-stale-pdb-beside-an-embedded-one-assertions-first both    SYMBOLS-LOST the assembly no longer embeds its symbols; 
+  Z127b-a-stale-pdb-beside-an-embedded-one-steps-first both    SYMBOLS-LOST the assembly no longer embeds its symbols; 
+  Z128-null-path-in-a-lock-assertions-first both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(String s)
+  Z128-null-path-in-a-lock-steps-first both    JIT         ASSERTION-UNWOVEN: Steps.M, line 21: the method's evaluation stack could not be followed; JIT M: InvalidProgramException: Common Language Runtime detected an invalid prog...
+  Z128-null-path-in-a-plain-method-assertions-first both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  Z128-null-path-in-a-plain-method-steps-first both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  Z128-null-path-in-a-try-finally-assertions-first both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(String s)
+  Z128-null-path-in-a-try-finally-steps-first both    JIT         ASSERTION-UNWOVEN: Steps.M, line 21: the method's evaluation stack could not be followed; JIT M: InvalidProgramException: Common Language Runtime detected an invalid prog...
+  Z128-null-path-in-a-using-assertions-first both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(String s)
+  Z128-null-path-in-a-using-steps-first both    JIT         ASSERTION-UNWOVEN: Steps.M, line 21: the method's evaluation stack could not be followed; JIT M: InvalidProgramException: Common Language Runtime detected an invalid prog...
+  Z128-null-path-in-an-init-assertions-first both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  Z128-null-path-in-an-init-steps-first both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  Z128-null-path-taken-assertions-first both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(String s)
+  Z128-null-path-taken-steps-first both    JIT         ASSERTION-UNWOVEN: Steps.M, line 21: the method's evaluation stack could not be followed; JIT M: InvalidProgramException: Common Language Runtime detected an invalid prog...
+  Z128-null-path-under-runtime-async-assertions-first both    RUN-IPE     InvalidProgramException at the call: at Steps.M(String s)
+  Z128-null-path-under-runtime-async-steps-first both    RUN-IPE     InvalidProgramException at the call: at Steps.M(String s)
+  Z129-throw-ends-a-task-step-assertions-first both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(String s)
+  Z129-throw-ends-a-task-step-steps-first both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(String s)
+  Z129-throw-ends-a-void-step-assertions-first both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(String s)
+  Z129-throw-ends-an-async-step-assertions-first both    RUN-IPE     InvalidProgramException at the call: at Steps.M(String s)
+  Z129-throw-ends-an-async-step-steps-first both    RUN-IPE     InvalidProgramException at the call: at Steps.M(String s)
+  Z129-throw-ends-an-expression-step-assertions-first both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(String s)
+  Z129-throw-in-a-catch-assertions-first both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(String s)
+  Z129-throw-in-a-catch-steps-first both    JIT         ASSERTION-UNWOVEN: Steps.M, line 21: a branch from outside the statement lands inside it; JIT M: InvalidProgramException: Common Language Runtime detected an invalid prog...
+  Z129-throw-in-a-plain-method-assertions-first both    RUN-IPE     InvalidProgramException at the call: at Steps.Go(String s)
+  Z129-throw-in-a-plain-method-steps-first both    RUN-IPE     InvalidProgramException at the call: at Steps.Go(String s)
+  Z129-throw-in-a-try-assertions-first both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(String s)
+  Z129-throw-in-a-try-steps-first  both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(String s)
+  Z129-throw-in-a-using-assertions-first both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(String s)
+  Z129-throw-in-a-using-steps-first both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(String s)
+  Z129-throw-in-every-arm-assertions-first both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(String s)
+  Z129-throw-in-every-arm-steps-first both    TREE        ASSERTION-UNWOVEN: Steps.M, line 21: a branch from outside the statement lands inside it; tree 'M(s=a):Failed[~assert:Failed]', expected 'M(s=a):Failed'
+  Z129-throw-should-throw-assertions-first both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  Z129-throw-with-skipif-assertions-first both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(String s)
+  Z13-partial-property             both    JIT         JIT get_P: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.get_P()
+  Z131-assertion-first-in-a-second-catch-assertions-first Release JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  Z131-assertion-first-in-a-second-catch-steps-first Release JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  Z133-awaited-assertion-in-a-finally-assertions-first Release RUN-IPE     InvalidProgramException at the call: at Steps.M()
+  Z133-awaited-assertion-in-a-finally-steps-first Release RUN-IPE     InvalidProgramException at the call: at Steps.M()
+  Z135-type-parameter-that-is-a-task both    RUN-IPE     InvalidProgramException at the call: at Steps.M[T0](T0 v); the weave did not list this method as left unwoven
+  Z135-type-parameter-that-is-a-task-of-int both    RUN-IPE     InvalidProgramException at the call: at Steps.M[T0](T0 v); the weave did not list this method as left unwoven
+  Z135-type-parameter-through-another both    RUN-IPE     InvalidProgramException at the call: at Steps.M[T0,T1](T0 v); the weave did not list this method as left unwoven
+  Z136-a-pdb-named-for-itself-assertions-first both    SYMBOLS-LOST the assembly names its symbols 'S_Z136_a_pdb_named_for_itself_assertions_first_Debug.pdb'; the assembly names its symbols S_Z136_a_pdb_named_for_itself_assertions_first_D...
+  Z136-a-pdb-named-for-itself-steps-first both    SYMBOLS-LOST the assembly names its symbols 'S_Z136_a_pdb_named_for_itself_steps_first_Debug.pdb'; the assembly names its symbols S_Z136_a_pdb_named_for_itself_steps_first_Debug.pdb; 
+  Z136c-a-file-bearing-the-pdb-name-assertions-first both    SYMBOLS-LOST the assembly names its symbols 'S_Z136c_a_file_bearing_the_pdb_name_assertions_first_Debug.pdb'; the assembly names its symbols S_Z136c_a_file_bearing_the_pdb_name_assert...
+  Z136c-a-file-bearing-the-pdb-name-steps-first both    SYMBOLS-LOST the assembly names its symbols 'S_Z136c_a_file_bearing_the_pdb_name_steps_first_Debug.pdb'; the assembly names its symbols S_Z136c_a_file_bearing_the_pdb_name_steps_first...
+  Z136d-a-pdb-differing-only-by-case-assertions-first both    PDB-PATH    the assembly names its symbols 'S_Z136d_a_pdb_differing_only_by_case_assertions_first_Debug.pdb'; 
+  Z136d-a-pdb-differing-only-by-case-steps-first both    PDB-PATH    the assembly names its symbols 'S_Z136d_a_pdb_differing_only_by_case_steps_first_Debug.pdb'; 
+  Z137-return-of-its-value-in-a-lock-on-a-step-assertions-first both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(String s)
+  Z137-return-of-its-value-in-a-lock-on-a-step-steps-first both    JIT         ASSERTION-UNWOVEN: Steps.M, line 21: the method's evaluation stack could not be followed; JIT M: InvalidProgramException: Common Language Runtime detected an invalid prog...
+  Z137-return-of-its-value-in-a-using-on-a-step-assertions-first both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(String s)
+  Z137-return-of-its-value-in-a-using-on-a-step-steps-first both    JIT         ASSERTION-UNWOVEN: Steps.M, line 21: the method's evaluation stack could not be followed; JIT M: InvalidProgramException: Common Language Runtime detected an invalid prog...
+  Z138-init-accessor-with-a-step-assertions-first Release TREE        ASSERTION-UNWOVEN: Steps.set_V, line 21: the statement returns from the method part-way; tree 'M(value=a):Passed', expected 'M(value=a):Passed[~assert:Passed]'
+  Z138-init-accessor-with-no-step-assertions-first Release TREE        ASSERTION-UNWOVEN: Steps.set_V, line 21: the statement returns from the method part-way; tree 'M:Passed', expected 'M:Passed[~assert:Passed]'
+  Z138-init-accessor-with-no-step-steps-first Release TREE        ASSERTION-UNWOVEN: Steps.set_V, line 21: the statement returns from the method part-way; tree 'M:Passed', expected 'M:Passed[~assert:Passed]'
+  Z139-first-catch-rethrows-second-opens-assertions-first Release JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  Z139-first-catch-rethrows-second-opens-steps-first Release JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  Z139-two-catches-both-open-assertions-first Release JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  Z139-two-catches-both-open-steps-first Release JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  Z140-assertion-that-fails-in-a-statement-that-ends-by-throwing-assertions-first both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  Z142-an-arm-that-returns-beside-one-that-throws-assertions-first both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(Boolean b, String s)
+  Z142-an-arm-that-returns-beside-one-that-throws-steps-first both    JIT         ASSERTION-UNWOVEN: Steps.M, line 21: the method's evaluation stack could not be followed; JIT M: InvalidProgramException: Common Language Runtime detected an invalid prog...
+  Z142b-the-arm-that-throws-assertions-first both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(Boolean b, String s)
+  Z142b-the-arm-that-throws-steps-first both    JIT         ASSERTION-UNWOVEN: Steps.M, line 21: the method's evaluation stack could not be followed; JIT M: InvalidProgramException: Common Language Runtime detected an invalid prog...
+  Z142c-a-coalesce-that-throws-assertions-first both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(String s, String t)
+  Z142c-a-coalesce-that-throws-steps-first both    JIT         ASSERTION-UNWOVEN: Steps.M, line 21: the method's evaluation stack could not be followed; JIT M: InvalidProgramException: Common Language Runtime detected an invalid prog...
+  Z142d-in-a-plain-method-assertions-first both    TREE        tree 'M:Failed[~assert:Failed]', expected 'M:Failed'
+  Z142d-in-a-plain-method-steps-first both    TREE        tree 'M:Failed[~assert:Failed]', expected 'M:Failed'
+  Z142e-a-throw-with-another-way-on-keeps-its-note-assertions-first both    RUN-IPE     InvalidProgramException at the call: at Steps.M[T](T v)
+  Z142e-a-throw-with-another-way-on-keeps-its-note-steps-first both    RUN-IPE     ASSERTION-UNWOVEN: Steps.M, line 21: the method's evaluation stack could not be followed; InvalidProgramException at the call: at Steps.M[T](T v)
+  Z143-on-a-value-step-carries-on-assertions-first both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(String s)
+  Z143-on-a-value-step-carries-on-steps-first both    JIT         ASSERTION-UNWOVEN: Steps.M, line 21: the method's evaluation stack could not be followed; JIT M: InvalidProgramException: Common Language Runtime detected an invalid prog...
+  Z143-on-a-value-step-returns-assertions-first both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(String s)
+  Z143-on-a-value-step-returns-steps-first both    JIT         ASSERTION-UNWOVEN: Steps.M, line 21: the method's evaluation stack could not be followed; JIT M: InvalidProgramException: Common Language Runtime detected an invalid prog...
+  Z143-on-a-value-step-with-an-and-assertions-first both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(String s)
+  Z143-on-a-value-step-with-an-and-steps-first both    JIT         ASSERTION-UNWOVEN: Steps.M, line 21: the method's evaluation stack could not be followed; JIT M: InvalidProgramException: Common Language Runtime detected an invalid prog...
+  Z144-a-step-named-movenext-with-an-and-steps-first both    JIT         ASSERTION-UNWOVEN: Steps.MoveNext, line 21: the method's evaluation stack could not be followed; JIT MoveNext: InvalidProgramException: Common Language Runtime detected a...
+  Z144-a-step-named-movenext-with-arms-steps-first both    JIT         ASSERTION-UNWOVEN: Steps.MoveNext, line 21: the method's evaluation stack could not be followed; JIT MoveNext: InvalidProgramException: Common Language Runtime detected a...
+  Z146-a-task-handed-back-that-fails-steps-first both    TREE        tree 'M:Failed[~assert:Passed]', expected 'M:Failed[~assert:Failed]'
+  Z16-generic-virtual-nested       both    RUN-IPE     InvalidProgramException at the call: at Outer`1.Steps`1.M[C](A a, B b, C c)
+  Z17-null-ref-param               both    BAD-IL      
+  Z19a-internal-getawaiter         both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(); the weave did not list this metho...
+  Z19b-public-on-internal-class    both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(); the weave did not list this metho...
+  Z20-lambda-in-explicit-generic-interface both    JIT         JIT <IS<System.Int32>.M>b__0_0: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.<>c.<IS<Syste...
+  Z21-local-in-explicit-generic-interface both    JIT         JIT <IS<System.Int32>.M>g__The_local|0_0: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.<IS...
+  Z22-lambda-in-field-initializer  both    JIT         JIT <.ctor>b__2_0: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.<>c.<.ctor>b__2_0()
+  Z23-primary-constructor          both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  Z24-unscoped-ref-this            both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  Z27-expr-with-skipif-steps-first both    TREE        ASSERTION-UNWOVEN: Steps.M, line 21: a branch from outside the statement lands inside it; tree 'M:Passed', expected 'M:Passed[~assert:Passed]'
+  Z28-block-with-skipif-assertions-first both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  Z28-block-with-skipif-steps-first both    JIT         ASSERTION-UNWOVEN: Steps.M, line 21: the method's evaluation stack could not be followed; JIT M: InvalidProgramException: Common Language Runtime detected an invalid prog...
+  Z29a-returned-should-throw-steps-first Release TREE        tree 'M:Passed', expected 'M:Passed[~assert:Passed]'
+  Z29b-expression-should-throw-steps-first both    TREE        tree 'M:Passed', expected 'M:Passed[~assert:Passed]'
+  Z30-value-task-plain-assertions-first both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  Z30-value-task-plain-steps-first both    JIT         ASSERTION-UNWOVEN: Steps.M, line 21: the method's evaluation stack could not be followed; JIT M: InvalidProgramException: Common Language Runtime detected an invalid prog...
+  Z31-value-in-try-assertions-first both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  Z31-value-in-try-steps-first     both    JIT         ASSERTION-UNWOVEN: Steps.M, line 21: the method's evaluation stack could not be followed; JIT M: InvalidProgramException: Common Language Runtime detected an invalid prog...
+  Z32-ref-return-assertions-first  both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  Z32-ref-return-steps-first       both    JIT         ASSERTION-UNWOVEN: Steps.M, line 21: the method's evaluation stack could not be followed; JIT M: InvalidProgramException: Common Language Runtime detected an invalid prog...
+  Z33-span-return-assertions-first both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  Z33-span-return-steps-first      both    JIT         ASSERTION-UNWOVEN: Steps.M, line 21: the method's evaluation stack could not be followed; JIT M: InvalidProgramException: Common Language Runtime detected an invalid prog...
+  Z35-expression-ternary-assertions-first both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(Boolean b)
+  Z35-expression-ternary-steps-first both    JIT         ASSERTION-UNWOVEN: Steps.M, line 21: the method's evaluation stack could not be followed; JIT M: InvalidProgramException: Common Language Runtime detected an invalid prog...
+  Z35b-expression-ternary-the-arm-that-leaves-first-steps-first both    JIT         ASSERTION-UNWOVEN: Steps.M, line 21: the method's evaluation stack could not be followed; JIT M: InvalidProgramException: Common Language Runtime detected an invalid prog...
+  Z37-local-task-with-closure      both    CRASH       exit 0xC0000005: Fatal error.  Internal CLR error. (0x80131506)     at System.Runtime.InteropServices.DynamicInterfaceCastableHelpers.IsInterfaceImplemented(System.Runtim...
+  Z38-local-generic-closure        both    RUN-IPE     InvalidProgramException at the call: at Steps.<Go>g__L|0_0[T](<>c__DisplayClass0_0`1&)
+  Z39-generic-struct-generic-method both    RUN-IPE     InvalidProgramException at the call: at Steps`1.M[U](U u)
+  Z40-static-generic-self          both    RUN-OTHER   threw TypeInitializationException: The type initializer for 'Steps`1' threw an exception.; value '', expected '(null)'; tree '', expected 'M(u=1):Bypassed'; a step was le...
+  Z41-outer-generic-nested-base    both    BAD-IL      
+  Z42-protected-generic-base       both    RUN-OTHER   threw InvalidOperationException: Could not execute the method because either the method itself or the containing type is not fully instantiated.; value '', expected 'ok';...
+  Z43-protected-static-field-generic-base both    RUN-OTHER   threw TypeInitializationException: The type initializer for 'B`1' threw an exception.; value '', expected 'ok'; tree '', expected 'M:Bypassed'; a step was left open
+  Z44-pointer-in-generic-chain     both    BAD-IL      
+  Z45-allows-ref-struct-on-class   both    RUN-IPE     InvalidProgramException at the call: at Steps`1.M(T v)
+  Z47-auto-property-skipif         both    JIT         JIT get_P: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.get_P()
+  Z49-skipif-body-starts-with-loop both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  Z50-skipif-body-starts-in-try    both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  Z51-lambda-ref-param             both    CRASH       exit 0xC0000005: Fatal error.  Internal CLR error. (0x80131506)     at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(System.Object, IntPtr*)     at System....
+  Z61-trace-plain-task-multi-line  both    OPEN        a step was left open
+  Z70-runtime-async-task-int       both    RUN-IPE     InvalidProgramException at the call: at Steps.M()
+  Z71-runtime-async-task           both    RUN-IPE     InvalidProgramException at the call: at Steps.M()
+  Z72-runtime-async-value-task     both    RUN-IPE     InvalidProgramException at the call: at Steps.M()
+  Z73-generic-iterator-in-generic-class both    RUN-IPE     InvalidProgramException at the call: at Steps`1.M[T](T t); the weave did not list this method as left unwoven
+  Z74-tabular-getter-throws        both    RUN-OTHER   threw InvalidOperationException: no; value '', expected 'ok'; tree '', expected 'M(rows=[TabularInputs<Row>]):Passed[Inner:Passed]'
+  Z75-assertion-over-a-referenced-type-assertions-first Release LOCKED      
+  Z75-assertion-over-a-referenced-type-steps-first Release LOCKED      
+  Z76-step-returns-a-referenced-type both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  Z78-runtime-async-throws-after-await both    OPEN        tree '', expected 'M:Failed'; a step was left open
+  Z79-runtime-async-throws-before-await both    RUN-IPE     InvalidProgramException at the call: at Steps.M()
+  Z80-runtime-async-skipif         both    RUN-IPE     InvalidProgramException at the call: at Steps.M()
+  Z81-runtime-async-siblings       both    RUN-IPE     InvalidProgramException at the call: at Steps.M()
+  Z82-runtime-async-nested-bypass  both    RUN-IPE     InvalidProgramException at the call: at Steps.M()
+  Z83-runtime-async-assertion-assertions-first both    RUN-IPE     ASSERTION-UNWOVEN: Steps.M, line 21: the method's evaluation stack could not be followed; InvalidProgramException at the call: at Steps.M()
+  Z83-runtime-async-assertion-steps-first both    RUN-IPE     ASSERTION-UNWOVEN: Steps.M, line 21: the method's evaluation stack could not be followed; InvalidProgramException at the call: at Steps.M()
+  Z84-fixed                        both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(Int32[] a)
+  Z85-goto-back                    both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  Z86-first-instruction-is-a-branch-target both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(Int32 n)
+  Z87-skipif-false-starts-in-try   both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  Z88-using                        both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  Z89-await-using                  both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  Z91-two-step-attributes          both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M()
+  Z92-long-body-20                 both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(Boolean b)
+  Z92-long-body-24                 both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(Boolean b)
+  Z92-long-body-26                 both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(Boolean b)
+  Z92-long-body-28                 both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(Boolean b)
+  Z92-long-body-29                 both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(Boolean b)
+  Z92-long-body-30                 both    JIT         JIT M: InvalidProgramException: Common Language Runtime detected an invalid program.; InvalidProgramException at the call: at Steps.M(Boolean b)

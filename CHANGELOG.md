@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.28.3] - 2026-11-04
+
+The patch part moves (5.28.2 to 5.28.3): bug fixes in the assertion weaver, with no new option and no new public member. A statement it now
+leaves as written gets the `KRONIKOL003` that 5.27.0 added (`plans/STEP_METHOD_SHAPES_PLAN.md` F27, F29 and F30, and its Q9, which ships this ahead of the rest).
+
+### Fixed
+
+- **An assertion whose result a condition uses took the wrong way, with no word.** `if (s.ShouldNotBeNull().Length > 5)` ran the then-part whatever the
+  length, a `while` or a `for` over such a condition ran the wrong number of times, `while (true) { if (...) break; }` never ended, and a guard threw, so a test
+  could pass or fail for the wrong reason, or never finish. It took assertion tracking and nothing else: no step, under Shouldly, FluentAssertions and
+  AwesomeAssertions in Release, and under TUnit in Debug too, as any awaited assertion is wrong in every build (21 and 23 of 44 calls took the wrong way in the facts'
+  shapes). The weave sent every branch out of a statement to the statement's end. That is right for a null-conditional, whose branch goes there anyway, and wrong for a
+  condition, whose branch goes to the else. Such a statement is now left as the compiler wrote it, and the build says so.
+  **Behaviour changes:** a test that passed only because it went the wrong way now fails, which is the fix. The statement draws no note in Release, where 5.28.2 drew one
+  on one way and took the wrong way on the other. Debug keeps the note of a synchronous one, where its branch sits outside the statement. And a build under `-warnaserror`, or
+  with `KRONIKOL003` in its `WarningsAsErrors`, that has such a statement now fails until the code changes or `NoWarn` names the code. An assertion on a line of its own
+  before the condition keeps its note: `var checkedValue = s.ShouldNotBeNull(); if (checkedValue.Length > 5)`.
+- **A `switch` on an assertion's result threw `InvalidProgramException` at every call.** A switch expression in Release, and a `switch` statement over an awaited
+  assertion in any build, when the cases were close enough for the compiler to write a jump table: the weave read a branch with one target, so that one's array of targets
+  stayed inside the wrapper. It is now left as written, with the same word.
+- **An assertion in an exception filter threw `InvalidProgramException` at every call in Debug.** `catch (E) when (Check(s.ShouldNotBeNull()))`: a filter starts with the
+  exception on the stack and can only end at its `endfilter`, so no wrapper can stand round it. It is now left as written, with the same word.
+
 ## [5.28.2] - 2026-11-03
 
 The patch part moves (5.28.1 to 5.28.2): bug fixes found while fixing #220, with no new option and no new public member

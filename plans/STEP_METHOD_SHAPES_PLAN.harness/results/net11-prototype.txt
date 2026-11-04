@@ -1,0 +1,29 @@
+prototype, SDK 11.0.100-rc.3.26522.148, Kronikol.StepTracking 5.28.99-proto226
+=================== prototype, default, Debug
+Passed!  - Failed:     0, Passed:    21, Skipped:     0, Total:    21 - net11.dll (net11.0)
+An_async_task: impl IL, state machine True, runtime 11.0.0
+after a sync [WhenStep], the caller's phase: Action (Setup before it)
+after an async [WhenStep] that never suspends, the caller's phase: Action (Setup before it)
+after an async [WhenStep], the caller's phase: Action (Setup before it)
+inside an async [WhenStep], after its await: Action (Setup before it)
+=================== prototype, default, Release
+Passed!  - Failed:     0, Passed:    21, Skipped:     0, Total:    21 - net11.dll (net11.0)
+An_async_task: impl IL, state machine True, runtime 11.0.0
+after a sync [WhenStep], the caller's phase: Action (Setup before it)
+after an async [WhenStep] that never suspends, the caller's phase: Action (Setup before it)
+after an async [WhenStep], the caller's phase: Action (Setup before it)
+inside an async [WhenStep], after its await: Action (Setup before it)
+=================== prototype, runtime-async, Debug
+Passed!  - Failed:     0, Passed:    21, Skipped:     0, Total:    21 - net11.dll (net11.0)
+An_async_task: impl Async, state machine False, runtime 11.0.0
+after a sync [WhenStep], the caller's phase: Action (Setup before it)
+after an async [WhenStep] that never suspends, the caller's phase: Setup (Setup before it)
+after an async [WhenStep], the caller's phase: Setup (Setup before it)
+inside an async [WhenStep], after its await: Action (Setup before it)
+=================== prototype, runtime-async, Release
+Passed!  - Failed:     0, Passed:    21, Skipped:     0, Total:    21 - net11.dll (net11.0)
+An_async_task: impl Async, state machine False, runtime 11.0.0
+after a sync [WhenStep], the caller's phase: Action (Setup before it)
+after an async [WhenStep] that never suspends, the caller's phase: Setup (Setup before it)
+after an async [WhenStep], the caller's phase: Setup (Setup before it)
+inside an async [WhenStep], after its await: Action (Setup before it)

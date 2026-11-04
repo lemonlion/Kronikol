@@ -1,0 +1,24 @@
+=================== f29-patch, Kronikol.AssertionTracking 5.28.99-f29, Debug
+warning KRONIKOL003: Kronikol.AssertionTracking: 1 assertion statement(s) were left as wri
+if and else: expected else, read else
+while over 3: expected 3, read 3
+for over 3: expected 3, read 3
+do while over 3: expected 3, read 3
+if and a return: expected carried on, read carried on
+a guard: expected no throw, read no throw
+an exception's message: expected else, read else
+an awaited exception's message: expected else, read else
+while true with a break: expected 3, read 3
+exit 0
+=================== f29-patch, Kronikol.AssertionTracking 5.28.99-f29, Release
+warning KRONIKOL003: Kronikol.AssertionTracking: 9 assertion statement(s) were left as wri
+if and else: expected else, read else
+while over 3: expected 3, read 3
+for over 3: expected 3, read 3
+do while over 3: expected 3, read 3
+if and a return: expected carried on, read carried on
+a guard: expected no throw, read no throw
+an exception's message: expected else, read else
+an awaited exception's message: expected else, read else
+while true with a break: expected 3, read 3
+exit 0

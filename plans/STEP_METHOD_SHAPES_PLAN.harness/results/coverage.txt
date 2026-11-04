@@ -1,0 +1,7 @@
+=================== published
+Passed!  - Failed:     0, Passed:     7, Skipped:     0, Total:     7 - xunit-probe.dll (net10.0)
+=================== prototype
+Passed!  - Failed:     0, Passed:     7, Skipped:     0, Total:     7 - xunit-probe.dll (net10.0)
+published: lines 29 of 57, branches 12 of 18
+prototype: lines 29 of 57, branches 12 of 18
+methods 33 and 33; methods whose lines, hits or branches differ: 0

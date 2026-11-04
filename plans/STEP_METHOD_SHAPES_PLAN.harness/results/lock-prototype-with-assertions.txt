@@ -1,0 +1,5 @@
+prototype-with-assertions: Kronikol.StepTracking 5.28.99-proto226 with <PackageReference Include="Kronikol.AssertionTracking" Version="5.28.99-proto226" PrivateAssets="all" /><PackageReference Include="Shouldly" Version="4.3.0" />
+build 0 exit 0: 
+build 1 exit 0: 
+build 2 exit 0: 
+build 3 exit 0: 

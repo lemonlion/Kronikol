@@ -1,0 +1,250 @@
+=================== baseline, DebugType=portable, Debug
+0 Error(s)
+1 Warning(s)
+Build succeeded.
+<home>/.nuget\packages\kronikol.assertiontracking\5.28.2\buildTransitive\Kronikol.AssertionTracking.targets(58,5): warning KRONIKOL003: Kronikol.AssertionTracking: 1 assertion statement(s) were left as written, so they run without a note. First: Program.cs, line 75, in ShopDriver.Value_with_as
+file: consumer.pdb
+runtime 10.0.11, assembly consumer, all
+references: System.Runtime 10.0.0.0, System.Reflection.Metadata 10.0.0.0, Kronikol 5.28.2.0, System.Threading.Thread 10.0.0.0, Shouldly 4.3.0.0, System.Console 10.0.0.0, System.Linq 10.0.0.0, System.Private.CoreLib 10.0.0.0
+void
+step 'Void' Passed 48 ms, under it: Inner
+async Task
+step 'Task' Passed 33 ms, under it: Inner
+int (issue)
+threw InvalidProgramException: Common Language Runtime detected an invalid program.
+at ShopDriver.A_number_is_chosen()
+async ValueTask (issue)
+threw InvalidProgramException: Common Language Runtime detected an invalid program.
+at ShopDriver.A_value_task_step()
+async ValueTask<int>
+threw InvalidProgramException: Common Language Runtime detected an invalid program.
+at ShopDriver.A_value_task_int()
+value + assertion
+threw InvalidProgramException: Common Language Runtime detected an invalid program.
+at ShopDriver.Value_with_assertion()
+Task with a synchronous throw
+threw InvalidOperationException: thrown before any task
+at ShopDriver.Throws_before_its_task() in Program.cs:line 76
+a step was left open
+iterator
+threw InvalidProgramException: Common Language Runtime detected an invalid program.
+at ShopDriver.An_iterator()
+async void
+step 'An async void' Passed 0 ms, under it: 
+step 'Inner' Passed 0 ms, under it: 
+a value step that throws, for its line number
+threw InvalidOperationException: from a value step
+at ShopDriver.A_value_that_throws() in Program.cs:line 79
+step 'A value that throws' Failed 0 ms, under it: 
+exit 0
+runtime 10.0.11, assembly consumer, ref
+references: System.Runtime 10.0.0.0, System.Reflection.Metadata 10.0.0.0, Kronikol 5.28.2.0, System.Threading.Thread 10.0.0.0, Shouldly 4.3.0.0, System.Console 10.0.0.0, System.Linq 10.0.0.0, System.P
+in parameter
+Fatal error.
+Internal CLR error. (0x80131506)
+exit of the ref run: 139
+=================== baseline, DebugType=portable, Release
+0 Error(s)
+1 Warning(s)
+Build succeeded.
+<home>/.nuget\packages\kronikol.assertiontracking\5.28.2\buildTransitive\Kronikol.AssertionTracking.targets(58,5): warning KRONIKOL003: Kronikol.AssertionTracking: 1 assertion statement(s) were left as written, so they run without a note. First: Program.cs, line 75, in ShopDriver.Value_with_as
+file: consumer.pdb
+runtime 10.0.11, assembly consumer, all
+references: System.Runtime 10.0.0.0, System.Reflection.Metadata 10.0.0.0, Kronikol 5.28.2.0, System.Threading.Thread 10.0.0.0, Shouldly 4.3.0.0, System.Console 10.0.0.0, System.Linq 10.0.0.0, System.Private.CoreLib 10.0.0.0
+void
+step 'Void' Passed 93 ms, under it: Inner
+async Task
+step 'Task' Passed 76 ms, under it: Inner
+int (issue)
+threw InvalidProgramException: Common Language Runtime detected an invalid program.
+at ShopDriver.A_number_is_chosen()
+async ValueTask (issue)
+threw InvalidProgramException: Common Language Runtime detected an invalid program.
+at ShopDriver.A_value_task_step()
+async ValueTask<int>
+threw InvalidProgramException: Common Language Runtime detected an invalid program.
+at ShopDriver.A_value_task_int()
+value + assertion
+threw InvalidProgramException: Common Language Runtime detected an invalid program.
+at ShopDriver.Value_with_assertion()
+Task with a synchronous throw
+threw InvalidOperationException: thrown before any task
+at ShopDriver.Throws_before_its_task() in Program.cs:line 76
+a step was left open
+iterator
+threw InvalidProgramException: Common Language Runtime detected an invalid program.
+at ShopDriver.An_iterator()
+async void
+step 'An async void' Passed 1 ms, under it: 
+step 'Inner' Passed 0 ms, under it: 
+a value step that throws, for its line number
+threw InvalidOperationException: from a value step
+at ShopDriver.A_value_that_throws() in Program.cs:line 79
+step 'A value that throws' Failed 0 ms, under it: 
+exit 0
+runtime 10.0.11, assembly consumer, ref
+references: System.Runtime 10.0.0.0, System.Reflection.Metadata 10.0.0.0, Kronikol 5.28.2.0, System.Threading.Thread 10.0.0.0, Shouldly 4.3.0.0, System.Console 10.0.0.0, System.Linq 10.0.0.0, System.P
+in parameter
+Fatal error.
+Internal CLR error. (0x80131506)
+exit of the ref run: 139
+=================== baseline, DebugType=embedded, Debug
+0 Error(s)
+0 Warning(s)
+Build succeeded.
+runtime 10.0.11, assembly consumer, all
+references: System.Runtime 10.0.0.0, System.Reflection.Metadata 10.0.0.0, Kronikol 5.28.2.0, System.Threading.Thread 10.0.0.0, Shouldly 4.3.0.0, System.Console 10.0.0.0, System.Linq 10.0.0.0, System.Private.CoreLib 10.0.0.0
+void
+async Task
+int (issue)
+value 42
+async ValueTask (issue)
+async ValueTask<int>
+value 7
+value + assertion
+value 3
+Task with a synchronous throw
+threw InvalidOperationException: thrown before any task
+at ShopDriver.Throws_before_its_task() in Program.cs:line 76
+iterator
+value 3
+async void
+a value step that throws, for its line number
+threw InvalidOperationException: from a value step
+at ShopDriver.A_value_that_throws() in Program.cs:line 79
+exit 0
+runtime 10.0.11, assembly consumer, ref
+references: System.Runtime 10.0.0.0, System.Reflection.Metadata 10.0.0.0, Kronikol 5.28.2.0, System.Threading.Thread 10.0.0.0, Shouldly 4.3.0.0, System.Console 10.0.0.0, System.Linq 10.0.0.0, System.P
+in parameter
+ref parameter
+value 2
+out parameter
+value 7
+exit of the ref run: 0
+=================== baseline, DebugType=embedded, Release
+0 Error(s)
+0 Warning(s)
+Build succeeded.
+runtime 10.0.11, assembly consumer, all
+references: System.Runtime 10.0.0.0, System.Reflection.Metadata 10.0.0.0, Kronikol 5.28.2.0, System.Threading.Thread 10.0.0.0, Shouldly 4.3.0.0, System.Console 10.0.0.0, System.Linq 10.0.0.0, System.Private.CoreLib 10.0.0.0
+void
+async Task
+int (issue)
+value 42
+async ValueTask (issue)
+async ValueTask<int>
+value 7
+value + assertion
+value 3
+Task with a synchronous throw
+threw InvalidOperationException: thrown before any task
+at ShopDriver.Throws_before_its_task() in Program.cs:line 76
+iterator
+value 3
+async void
+a value step that throws, for its line number
+threw InvalidOperationException: from a value step
+at ShopDriver.A_value_that_throws() in Program.cs:line 79
+exit 0
+runtime 10.0.11, assembly consumer, ref
+references: System.Runtime 10.0.0.0, System.Reflection.Metadata 10.0.0.0, Kronikol 5.28.2.0, System.Threading.Thread 10.0.0.0, Shouldly 4.3.0.0, System.Console 10.0.0.0, System.Linq 10.0.0.0, System.P
+in parameter
+ref parameter
+value 2
+out parameter
+value 7
+exit of the ref run: 0
+=================== baseline, DebugType=none, Debug
+0 Error(s)
+1 Warning(s)
+Build succeeded.
+<home>/.nuget\packages\kronikol.assertiontracking\5.28.2\buildTransitive\Kronikol.AssertionTracking.targets(58,5): warning KRONIKOL001: Kronikol.AssertionTracking: [assembly: TrackAssertions] is declared, but no assertion was instrumented: the build writes no symbols (<DebugType>none</DebugTyp
+runtime 10.0.11, assembly consumer, all
+references: System.Runtime 10.0.0.0, System.Reflection.Metadata 10.0.0.0, Kronikol 5.28.2.0, System.Threading.Thread 10.0.0.0, Shouldly 4.3.0.0, System.Console 10.0.0.0, System.Linq 10.0.0.0
+void
+async Task
+int (issue)
+value 42
+async ValueTask (issue)
+async ValueTask<int>
+value 7
+value + assertion
+value 3
+Task with a synchronous throw
+threw InvalidOperationException: thrown before any task
+at ShopDriver.Throws_before_its_task()
+iterator
+value 3
+async void
+a value step that throws, for its line number
+threw InvalidOperationException: from a value step
+at ShopDriver.A_value_that_throws()
+exit 0
+runtime 10.0.11, assembly consumer, ref
+references: System.Runtime 10.0.0.0, System.Reflection.Metadata 10.0.0.0, Kronikol 5.28.2.0, System.Threading.Thread 10.0.0.0, Shouldly 4.3.0.0, System.Console 10.0.0.0, System.Linq 10.0.0.0
+in parameter
+ref parameter
+value 2
+out parameter
+value 7
+exit of the ref run: 0
+=================== baseline, DebugType=none, Release
+0 Error(s)
+1 Warning(s)
+Build succeeded.
+<home>/.nuget\packages\kronikol.assertiontracking\5.28.2\buildTransitive\Kronikol.AssertionTracking.targets(58,5): warning KRONIKOL001: Kronikol.AssertionTracking: [assembly: TrackAssertions] is declared, but no assertion was instrumented: the build writes no symbols (<DebugType>none</DebugTyp
+runtime 10.0.11, assembly consumer, all
+references: System.Runtime 10.0.0.0, System.Reflection.Metadata 10.0.0.0, Kronikol 5.28.2.0, System.Threading.Thread 10.0.0.0, Shouldly 4.3.0.0, System.Console 10.0.0.0, System.Linq 10.0.0.0
+void
+async Task
+int (issue)
+value 42
+async ValueTask (issue)
+async ValueTask<int>
+value 7
+value + assertion
+value 3
+Task with a synchronous throw
+threw InvalidOperationException: thrown before any task
+at ShopDriver.Throws_before_its_task()
+iterator
+value 3
+async void
+a value step that throws, for its line number
+threw InvalidOperationException: from a value step
+at ShopDriver.A_value_that_throws()
+exit 0
+runtime 10.0.11, assembly consumer, ref
+references: System.Runtime 10.0.0.0, System.Reflection.Metadata 10.0.0.0, Kronikol 5.28.2.0, System.Threading.Thread 10.0.0.0, Shouldly 4.3.0.0, System.Console 10.0.0.0, System.Linq 10.0.0.0
+in parameter
+ref parameter
+value 2
+out parameter
+value 7
+exit of the ref run: 0
+=================== baseline, normal verbosity: the weavers in the order they ran, and what they listed
+_WeaveStepTracking:
+Kronikol.StepTracking: Instrumented 14 step method(s) (396ms)
+_WeaveAssertionTracking:
+1><home>/.nuget\packages\kronikol.assertiontracking\5.28.2\buildTransitive\Kronikol.AssertionTracking.targets(58,5): warning KRONIKOL003: Kronikol.AssertionTracking: 1 assertion statement(s) were left as written, so they run without a note. First: Progra
+<home>/.nuget\packages\kronikol.assertiontracking\5.28.2\buildTransitive\Kronikol.AssertionTracking.targets(58,5): warning KRONIKOL003: Kronikol.AssertionTracking: 1 assertion statement(s) were left as written, so they run without a note. First: Program.
+=================== baseline, terminal logger, -v:m -tl:on
+<home>/.nuget\packages\kronikol.assertiontracking\5.28.2\buildTransitive\Kronikol.AssertionTracking.targets(58,5): warning KRONIKOL003: Kronikol.AssertionTracking: 1 assertion statement(s) were left as written, so they run without a note. First: Program.
+=================== baseline, NoWarn: lines naming KRONIKOL004 at -v:m -tl:off
+0
+=================== baseline, PdbFile: symbols written somewhere other than beside the assembly
+Build succeeded.
+<home>/.nuget\packages\kronikol.assertiontracking\5.28.2\buildTransitive\Kronikol.AssertionTracking.targets(58,5): warning KRONIKOL001: Kronikol.AssertionTracking: [assembly: TrackAssertions] is declared, but no assertion was instrume
+void
+async Task
+int (issue)
+value 42
+--
+value + assertion
+value 3
+Task with a synchronous throw
+threw InvalidOperationException: thrown before any task
+--
+a value step that throws, for its line number
+threw InvalidOperationException: from a value step
+at ShopDriver.A_value_that_throws() in Program.cs:line 79

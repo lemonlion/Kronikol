@@ -1,0 +1,17 @@
+The differential at main, 9d994a4b. Each row holds one body twice, with an assertion and with a plain identity in its place: 15 conditions, 31 statement forms, in a plain method under a step and as a value step, Debug and Release. An outcome other than OK and ASSERTION-LOST is a run the weave changed.
+runs 1860 [('JIT', 840), ('OK', 592), ('VALUE', 405), ('ASSERTION-LOST', 23)]
+form [('break', 45), ('catch', 45), ('continue', 45), ('dowhile', 45), ('finally', 45), ('for', 45), ('goto', 45), ('if', 45), ('ifelse', 45), ('ifreturn', 45), ('incatch', 45), ('infinally', 45), ('iterator', 45), ('lock', 45), ('nested', 45), ('switchexpr', 45), ('using', 45), ('usingreturn', 45), ('when', 45), ('while', 45), ('whilefirst', 45), ('assign', 30), ('async', 30), ('asyncfinally', 30), ('asyncwhile', 30), ('bool', 30), ('lambda', 30), ('local', 30), ('returnvalue', 30), ('stored', 
+condition [('and', 83), ('call', 83), ('cast', 83), ('eqtrue', 83), ('gt', 83), ('list', 83), ('not', 83), ('nullcond', 83), ('or', 83), ('orsecond', 83), ('pattern', 83), ('second', 83), ('ternary', 83), ('two', 83), ('value', 83)]
+kind [('step', 885), ('plain', 360)]
+config [('Release', 810), ('Debug', 435)]
+D-and-assign-step Debug JIT | [a,1: threw InvalidProgramException vs b][abcdefgh,5: threw InvalidProgramException vs a][ | ASSERTION-UNWOVEN: Steps.Go, line 22: the method's evaluation stack could not be followed; JIT Go: InvalidProgramException: Common Language Runtime de
+assertion lost with no word, by form [('switchexpr', 15), ('lambda', 4), ('local', 4)]
+plain Debug ASSERTION-LOST 23
+plain Debug OK 427
+plain Debug VALUE 15
+plain Release OK 120
+plain Release VALUE 345
+step Debug JIT 420
+step Debug OK 45
+step Release JIT 420
+step Release VALUE 45

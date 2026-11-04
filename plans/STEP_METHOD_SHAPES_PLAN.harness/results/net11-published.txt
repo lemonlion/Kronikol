@@ -1,0 +1,75 @@
+published, SDK 11.0.100-rc.3.26522.148, Kronikol.StepTracking 5.28.2
+=================== published, default, Debug
+Failed Shapes.A_static_interface_member 
+Failed Shapes.A_step_returns_a_closed_class [< 1 ms]
+Failed Shapes.A_step_returns_a_union [< 1 ms]
+Failed Shapes.An_async_value_task_of_int_step [< 1 ms]
+Failed Shapes.An_async_value_task_step 
+Failed Shapes.An_extension_indexers_accessor [< 1 ms]
+Failed Shapes.Every_method_compiles 
+Failed Shapes.Labeled_break_and_continue 
+Failed Shapes.Steps_in_a_step 
+Failed!  - Failed:     9, Passed:    12, Skipped:     0, Total:    21 - net11.dll (net11.0)
+An_async_task: impl IL, state machine True, runtime 11.0.0
+after a sync [WhenStep], the caller's phase: Action (Setup before it)
+after an async [WhenStep] that never suspends, the caller's phase: Action (Setup before it)
+after an async [WhenStep], the caller's phase: Action (Setup before it)
+inside an async [WhenStep], after its await: Action (Setup before it)
+=================== published, default, Release
+Failed Shapes.A_static_interface_member [< 1 ms]
+Failed Shapes.A_step_returns_a_closed_class [< 1 ms]
+Failed Shapes.A_step_returns_a_union [< 1 ms]
+Failed Shapes.An_async_value_task_of_int_step 
+Failed Shapes.An_async_value_task_step [< 1 ms]
+Failed Shapes.An_extension_indexers_accessor [< 1 ms]
+Failed Shapes.Every_method_compiles 
+Failed Shapes.Labeled_break_and_continue [< 1 ms]
+Failed Shapes.Steps_in_a_step 
+Failed!  - Failed:     9, Passed:    12, Skipped:     0, Total:    21 - net11.dll (net11.0)
+An_async_task: impl IL, state machine True, runtime 11.0.0
+after a sync [WhenStep], the caller's phase: Action (Setup before it)
+after an async [WhenStep] that never suspends, the caller's phase: Action (Setup before it)
+after an async [WhenStep], the caller's phase: Action (Setup before it)
+inside an async [WhenStep], after its await: Action (Setup before it)
+=================== published, runtime-async, Debug
+Failed Shapes.A_bypassed_async_step 
+Failed Shapes.A_static_interface_member 
+Failed Shapes.A_step_returns_a_closed_class [< 1 ms]
+Failed Shapes.A_step_returns_a_union [< 1 ms]
+Failed Shapes.A_task_of_a_union [< 1 ms]
+Failed Shapes.An_async_task_of_int_step [< 1 ms]
+Failed Shapes.An_async_task_step 
+Failed Shapes.An_async_value_task_of_int_step [< 1 ms]
+Failed Shapes.An_async_when_step_moves_the_phase_for_its_caller [< 1 ms]
+Failed Shapes.An_async_when_step_with_no_await_moves_the_phase_for_its_caller [< 1 ms]
+Failed Shapes.An_extension_indexers_accessor [< 1 ms]
+Failed Shapes.Assertions_in_async_methods 
+Failed Shapes.Every_method_compiles 
+Failed Shapes.Inside_an_async_when_step_the_phase_is_moved [< 1 ms]
+Failed Shapes.Labeled_break_and_continue [< 1 ms]
+Failed Shapes.Steps_in_a_step [< 1 ms]
+<home>/.nuget\packages\kronikol.assertiontracking\5.28.2\buildTransitive\Kronikol.AssertionTracking.targets(58,5): warning KRONIKOL003: Kronikol.AssertionTracking: 2 assertion statement(s) were 
+Failed!  - Failed:    16, Passed:     5, Skipped:     0, Total:    21 - net11.dll (net11.0)
+An_async_task: impl Async, state machine False, runtime 11.0.0
+after a sync [WhenStep], the caller's phase: Action (Setup before it)
+=================== published, runtime-async, Release
+Failed Shapes.A_bypassed_async_step 
+Failed Shapes.A_static_interface_member [< 1 ms]
+Failed Shapes.A_step_returns_a_closed_class [< 1 ms]
+Failed Shapes.A_step_returns_a_union [< 1 ms]
+Failed Shapes.A_task_of_a_union [< 1 ms]
+Failed Shapes.An_async_task_of_int_step 
+Failed Shapes.An_async_task_step 
+Failed Shapes.An_async_value_task_of_int_step 
+Failed Shapes.An_async_when_step_moves_the_phase_for_its_caller [< 1 ms]
+Failed Shapes.An_async_when_step_with_no_await_moves_the_phase_for_its_caller 
+Failed Shapes.An_extension_indexers_accessor [< 1 ms]
+Failed Shapes.Assertions_in_async_methods 
+Failed Shapes.Every_method_compiles 
+Failed Shapes.Inside_an_async_when_step_the_phase_is_moved 
+Failed Shapes.Labeled_break_and_continue [< 1 ms]
+Failed Shapes.Steps_in_a_step [< 1 ms]
+<home>/.nuget\packages\kronikol.assertiontracking\5.28.2\buildTransitive\Kronikol.AssertionTracking.targets(58,5): warning KRONIKOL003: Kronikol.AssertionTracking: 2 assertion statement(s) were 
+Failed!  - Failed:    16, Passed:     5, Skipped:     0, Total:    21 - net11.dll (net11.0)
+An_async_task: impl Async, state machine False, runtime 11.0.0
+after a sync [WhenStep], the caller's phase: Action (Setup before it)

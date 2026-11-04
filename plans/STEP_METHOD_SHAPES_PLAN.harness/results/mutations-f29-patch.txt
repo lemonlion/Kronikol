@@ -1,0 +1,13 @@
+Each decision of the F29 patch taken out in turn, against tests/Kronikol.Tests.AssertionTracking/AssertionInAConditionTests.cs. 9 of 10 killed.
+F8, no hop past a leave, survives there: only a step weaver's rewritten return is a leave a null path can reach, and that project has no step weaver. mutations.py has it, against StepShapeTests' Z143b rows.
+
+F1 a condition is sent to the exit as on 5.28.2	KILLED	45 failed	A_Debug_build_keeps_the_note_of_a_condition_it_can_follow_and_says_why_of_an_awaited_one, An_assertion_in_a_condition_takes_the_way_the_condition_says, An_optimised_build_leaves_such_a_statement_as_written_and_says_why, The_weave_does_not_change_what_a_program_does, What_an_assertion_hands_back_reads_the_same_with_and_without_an_await
+F2 a switch not refused for what it is	KILLED	2 failed	An_optimised_build_leaves_such_a_statement_as_written_and_says_why
+F3 a switch not collected	KILLED	11 failed	An_assertion_in_a_condition_takes_the_way_the_condition_says, An_optimised_build_leaves_such_a_statement_as_written_and_says_why
+F4 what follows read as the next instruction alone	KILLED	3 failed	A_Debug_build_keeps_the_note_of_a_condition_it_can_follow_and_says_why_of_an_awaited_one, A_null_path_that_goes_where_the_statement_ends_keeps_its_note
+F5 two returns taken for two ways on	KILLED	2 failed	A_null_path_that_goes_where_the_statement_ends_keeps_its_note
+F6 no hop past a nop	KILLED	1 failed	A_Debug_build_keeps_the_note_of_a_condition_it_can_follow_and_says_why_of_an_awaited_one
+F7 no hop past a br	KILLED	2 failed	A_null_path_that_goes_where_the_statement_ends_keeps_its_note
+F8 no hop past a leave	SURVIVED	0 failed	
+F9 a filter not refused	KILLED	18 failed	An_assertion_in_an_exception_filter_is_left_as_written, The_weave_does_not_change_what_a_program_does
+F10 only one hop	KILLED	4 failed	A_Debug_build_keeps_the_note_of_a_condition_it_can_follow_and_says_why_of_an_awaited_one, A_null_path_that_goes_where_the_statement_ends_keeps_its_note

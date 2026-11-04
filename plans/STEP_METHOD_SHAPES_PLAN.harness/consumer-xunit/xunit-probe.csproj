@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- What a test run sees when a [Step] takes a by-ref parameter: three facts on the published packages, the middle one
+       calling such a step. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <UseArtifactsOutput>false</UseArtifactsOutput>
+    <KronikolVersion Condition="'$(KronikolVersion)' == ''">5.28.2</KronikolVersion>
+    <StepTrackingVersion Condition="'$(StepTrackingVersion)' == ''">$(KronikolVersion)</StepTrackingVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Kronikol.xUnit3" Version="$(KronikolVersion)" />
+    <PackageReference Include="Kronikol.StepTracking" Version="$(StepTrackingVersion)" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.5.1" />
+    <PackageReference Include="xunit.v3" Version="3.2.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" PrivateAssets="all" />
+  </ItemGroup>
+
+</Project>

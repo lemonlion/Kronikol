@@ -1,0 +1,7 @@
+The differential on the prototype, as main's file says.
+runs 1860 [('OK', 1814), ('ASSERTION-LOST', 46)]
+form []
+condition []
+kind []
+config []
+assertion lost with no word, by form [('switchexpr', 30), ('lambda', 8), ('local', 8)]

@@ -1,0 +1,127 @@
+prototype: Reqnroll + Kronikol.ReqNRoll.xUnit2 5.28.2, Kronikol.StepTracking 5.28.99-proto226
+Build succeeded.
+
+=== dotnet test, the @byref scenario alone
+Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: 1 s - Spike.Shapes.dll (net10.0)
+exit 0
+
+=== dotnet test, the rest
+Failed A guard clause in a task step [11 ms]
+Failed A guard clause in a value task step [3 ms]
+Failed!  - Failed:     2, Passed:     5, Skipped:     0, Total:     7, Duration: 835 ms - Spike.Shapes.dll (net10.0)
+
+=== the report's scenarios
+s0    pass      0s     2 calls  A bypassed sub-step inside another step
+s1    FAIL   0.01s     0 calls  A guard clause in a task step
+s2    FAIL      0s     0 calls  A guard clause in a value task step
+s3    pass   0.11s     2 calls  A task step and a void step, which work today
+s4    pass   0.12s     2 calls  A value task with a number
+s5    pass   0.12s     1 calls  The issue's number
+s6    pass   0.13s     2 calls  The issue's value task
+
+--- steps s0
+s0  Step method shapes › A bypassed sub-step inside another step  [Passed]  0s
+stableId ce343793ee703ec6
+at Features/Shapes.feature:25
+open: TestRunReport.html#sid-ce343793ee703ec6
+0     When a step calls a sub-step that is bypassed and then a sub-step that runs  0s  [i0]
+0.0   A step with a bypassed sub step  0s
+~ 0.0.0 A bypassed sub step
+bypassed: Already done
+0.0.1 A sub step that runs
+1     Then the next step is the Gherkin step's own  [i2]
+2 calls · interactions s0 · flow s0
+
+--- steps s1
+s1  Step method shapes › A guard clause in a task step  [Failed]  0.01s
+stableId 1ddccc60693ac70a
+at Features/Shapes.feature:19
+open: TestRunReport.html#sid-1ddccc60693ac70a
+✗ 0     When a task step throws before it has a task  0s
+✗ 0.0   Throws before it has a task
+A name is required (Parameter 'name')
+· name
+0 calls · interactions s1 · flow s1
+
+--- steps s2
+s2  Step method shapes › A guard clause in a value task step  [Failed]  0s
+stableId c0ec791abc30943d
+at Features/Shapes.feature:22
+open: TestRunReport.html#sid-c0ec791abc30943d
+✗ 0     When a value task step throws before it has a task  0s
+✗ 0.0   Throws before it has a value task
+A name is required (Parameter 'name')
+· name
+0 calls · interactions s2 · flow s2
+
+--- steps s3
+s3  Step method shapes › A task step and a void step, which work today  [Passed]  0.11s
+stableId 7d7ec118258d3df5
+at Features/Shapes.feature:15
+open: TestRunReport.html#sid-7d7ec118258d3df5
+0     When a task step and a void step run  0.11s  [i0]
+0.0   A task step  0.1s
+0.0.0 A void step
+1     Then the next step is the Gherkin step's own  [i2]
+2 calls · interactions s3 · flow s3
+
+--- steps s4
+s4  Step method shapes › A value task with a number  [Passed]  0.12s
+stableId 9b651afadf5e6ab4
+at Features/Shapes.feature:11
+open: TestRunReport.html#sid-9b651afadf5e6ab4
+0     When a value task step hands back a number  0.11s  [i0]
+0.0   A value task step with a number  0.11s
+· 0.1   (await shop.A_value_task_step_with_a_number()) should be 7
+1     Then the next step is the Gherkin step's own  [i2]
+2 calls · interactions s4 · flow s4
+
+--- steps s5
+s5  Step method shapes › The issue's number  [Passed]  0.12s
+stableId f0eb7fc867c9cfac
+at Features/Shapes.feature:7
+open: TestRunReport.html#sid-f0eb7fc867c9cfac
+0     Given a number is chosen  0.05s
+0.0   A number is chosen
+· 0.1   Shop a_number_is_chosen() should be 42
+1     Then the next step is the Gherkin step's own  0.03s  [i0]
+1 calls · interactions s5 · flow s5
+
+--- steps s6
+s6  Step method shapes › The issue's value task  [Passed]  0.13s
+stableId 832208d5b7ce1253
+at Features/Shapes.feature:3
+open: TestRunReport.html#sid-832208d5b7ce1253
+0     When a value task step runs  0.13s  [i0]
+0.0   A value task step  0.12s
+1     Then the next step is the Gherkin step's own  [i2]
+2 calls · interactions s6 · flow s6
+
+=== Failures.md, without the file's own header
+## Failures
+### 1. Step method shapes › A guard clause in a task step
+`s1` · stableId `1ddccc60693ac70a` · [open in the report](TestRunReport.html#sid-1ddccc60693ac70a) · written at `Features/Shapes.feature:19` · 0.01s
+Thrown at `Spike.Shapes.Features.StepMethodShapesFeature.AGuardClauseInATaskStep()` — `Features\Shapes.feature:20`
+Re-run: `dotnet test --filter "FullyQualifiedName~Spike.Shapes.Features.StepMethodShapesFeature.AGuardClauseInATaskStep"`
+**Error**
+```
+Error calling binding method 'Spike.Shapes:Spike.Shapes.ShapeSteps.WhenATaskStepThrowsBeforeItHasATask()': A name is required (Parameter 'name')
+```
+**Failing step** — `s1/0` When a task step throws before it has a task
+**Failing step** — `s1/0.0` Throws before it has a task
+```
+A name is required (Parameter 'name')
+```
+### 2. Step method shapes › A guard clause in a value task step
+`s2` · stableId `c0ec791abc30943d` · [open in the report](TestRunReport.html#sid-c0ec791abc30943d) · written at `Features/Shapes.feature:22` · 0s
+Thrown at `Spike.Shapes.Features.StepMethodShapesFeature.AGuardClauseInAValueTaskStep()` — `Features\Shapes.feature:23`
+Re-run: `dotnet test --filter "FullyQualifiedName~Spike.Shapes.Features.StepMethodShapesFeature.AGuardClauseInAValueTaskStep"`
+**Error**
+```
+Error calling binding method 'Spike.Shapes:Spike.Shapes.ShapeSteps.WhenAValueTaskStepThrowsBeforeItHasATask()': A name is required (Parameter 'name')
+```
+**Failing step** — `s2/0` When a value task step throws before it has a task
+**Failing step** — `s2/0.0` Throws before it has a value task
+```
+A name is required (Parameter 'name')
+```

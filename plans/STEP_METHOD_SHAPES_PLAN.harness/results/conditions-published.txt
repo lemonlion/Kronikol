@@ -1,0 +1,22 @@
+=================== published, Kronikol.AssertionTracking 5.28.2, Debug
+if and else: expected else, read else
+while over 3: expected 3, read 3
+for over 3: expected 3, read 3
+do while over 3: expected 3, read 3
+if and a return: expected carried on, read carried on
+a guard: expected no throw, read no throw
+an exception's message: expected else, read else
+an awaited exception's message: expected else, read then  WRONG
+while true with a break: expected 3, read 3
+exit 0
+=================== published, Kronikol.AssertionTracking 5.28.2, Release
+if and else: expected else, read then  WRONG
+while over 3: expected 3, read 0  WRONG
+for over 3: expected 3, read 0  WRONG
+do while over 3: expected 3, read 1  WRONG
+if and a return: expected carried on, read returned early  WRONG
+a guard: expected no throw, read threw ArithmeticException  WRONG
+an exception's message: expected else, read then  WRONG
+an awaited exception's message: expected else, read then  WRONG
+while true with a break: expected 3, read nothing in 10 seconds  WRONG
+exit 0
