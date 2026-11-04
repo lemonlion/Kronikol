@@ -159,34 +159,52 @@ public class DiagramColourFrameTests : PlaywrightTestBase
         Assert.Equal(0, watch.Count);
     }
 
+    // The suite's own pattern for holding the engine's answer back, the render call wrapped and not the network, in before the page's own
+    // scripts: the report queues its first scenario's diagrams as the page loads, so a wrap made after the load came too late when the first
+    // answer was quick. Every drawing waits for the watchers to be on, and part 0's answer is held back after that.
+    private const string HoldTheEngineBackJs = """
+        (() => {
+            let shim, open = false;
+            const waiting = [];
+            window.__heldBack = 0;
+            window.__landed = [];
+            window.__startDrawing = () => {
+                new MutationObserver(records => records.forEach(r => {
+                    if (r.attributeName === 'data-rendered' && r.target.classList.contains('puml-fragment')) window.__landed.push(r.target.dataset.fragment);
+                })).observe(document.body, { subtree: true, attributes: true, attributeFilter: ['data-rendered'] });
+                open = true;
+                waiting.splice(0).forEach(go => go());
+            };
+            Object.defineProperty(window, 'plantuml', {
+                configurable: true,
+                get: () => shim,
+                set: value => {
+                    shim = value;
+                    const render = value.render;
+                    value.render = function (...args) {
+                        const go = () => {
+                            if (/-frag-0$/.test(args[1] || '')) { window.__heldBack++; setTimeout(() => render.apply(value, args), 2500); }
+                            else render.apply(value, args);
+                        };
+                        if (open) go(); else waiting.push(go);
+                    };
+                }
+            });
+        })();
+        """;
+
     // F2: the first drawing of a diagram in parts, part 0's answer held back so part 1 lands first
     [Fact]
     public async Task A_first_drawing_whose_later_part_lands_first_never_shows_the_engines_colours()
     {
+        await Page.AddInitScriptAsync(HoldTheEngineBackJs);
         await Page.GotoReportAsync(Long.Value, new() { Timeout = PageOpenTimeout });
         await Page.WaitForFunctionAsync("() => !!(window.plantuml && window.plantuml.render)", null, new() { Timeout = 60_000, PollingInterval = 200 });
         var parallel = await Page.EvaluateAsync<int>("() => window.plantuml.maxParallel || 1");
         Assert.True(parallel >= 2, $"the engine draws {parallel} at a time, so a later part can land first");
-        // the suite's own pattern for holding the engine's answer back: the render call wrapped, not the network
-        await Page.EvaluateAsync("""
-            () => {
-                var render = window.plantuml.render;
-                window.__heldBack = 0;
-                window.__landed = [];
-                window.plantuml.render = function (lines, id, opts) {
-                    var self = this, args = arguments;
-                    if (/-frag-0$/.test(id || '')) { window.__heldBack++; setTimeout(function () { render.apply(self, args); }, 2500); return; }
-                    return render.apply(this, args);
-                };
-                new MutationObserver(function (records) {
-                    records.forEach(function (r) {
-                        if (r.attributeName === 'data-rendered' && r.target.classList.contains('puml-fragment')) window.__landed.push(r.target.dataset.fragment);
-                    });
-                }).observe(document.body, { subtree: true, attributes: true, attributeFilter: ['data-rendered'] });
-            }
-            """);
         await Page.EvaluateAsync(WatchFramesJs);
         await ShowLongDiagramAsync();
+        await Page.EvaluateAsync("() => window.__startDrawing()");
         await WaitForDrawnPartsAsync();
         var watch = await StopAsync("__frames");
 
